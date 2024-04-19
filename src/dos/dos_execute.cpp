@@ -458,7 +458,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		if ((pspseg+memsize)<(RealSegment(sssp)+(RealOffset(sssp)>>4)))
 			LOG(LOG_EXEC,LOG_ERROR)("stack outside memory block at EXEC");
 
-		Program::ResetLastWrittenChar('\0'); // triggers newline injection after DOS programs
+		// triggers newline injection after DOS programs
+		CONSOLE_ResetLastWrittenChar('\0');
 	}
 
 	if ((flags==LOAD) || (flags==LOADNGO)) {
