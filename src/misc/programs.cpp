@@ -893,8 +893,8 @@ void CONFIG::Run(void)
 				if (!change_success) {
 					trim(value);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         value.c_str(),
-					         pvars[1].c_str());
+					         pvars[1].c_str(),
+					         value.c_str());
 				}
 
 				tsec->ExecuteInit(false);
@@ -1068,7 +1068,7 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
 
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for setting '%s'.\n");
+	        "Invalid '%s' setting: '%s', using the existing value\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
