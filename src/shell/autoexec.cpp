@@ -339,8 +339,13 @@ AutoExecModule::AutoExecModule(Section* configuration)
 
 	unsigned int index = 1;
 	while (cmdline->FindCommand(index++, argument)) {
-		// Check if argument is a file/directory
+		if (argument.starts_with("-")) {
+			LOG_WARNING("CONFIG: Illegal command line switch '%s'",
+			            argument.c_str());
+			continue;
+		}
 
+		// Check if argument is a file/directory
 		std_fs::path path = argument;
 		bool is_directory = std_fs::is_directory(path);
 		if (!is_directory) {
@@ -357,7 +362,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		path = argument;
 
 		// Retrieve file extension
-
 		auto extension_ucase = path.extension().string();
 		if (!extension_ucase.empty() && extension_ucase[0] == '.') {
 			extension_ucase = extension_ucase.substr(1);
@@ -365,7 +369,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		upcase(extension_ucase);
 
 		// Check if argument is a batch file
-
 		if (extension_ucase == "BAT") {
 			ReMountDirAsDriveC(path.parent_path().string());
 			// BATch files are called else exit will not work
@@ -376,7 +379,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 
 		// Check if argument is a boot image file
-
 		if (extension_ucase == "IMG" || extension_ucase == "IMA") {
 			AddLine(Placement::CommandsAfterAutoexecSection,
 			        CmdBoot + Quote + argument + Quote);
@@ -386,7 +388,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 
 		// Check if argument is a CD image
-
 		if (extension_ucase == "ISO" || extension_ucase == "CUE") {
 			if (!cdrom_images.empty()) {
 				cdrom_images += " ";
@@ -396,7 +397,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 
 		// Consider argument as executable
-
 		ReMountDirAsDriveC(path.parent_path().string());
 		AddLine(Placement::CommandsAfterAutoexecSection,
 		        path.filename().string());
