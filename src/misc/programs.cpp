@@ -855,8 +855,8 @@ void CONFIG::Run(void)
 				if (!change_success) {
 					trim(value);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         value.c_str(),
-					         pvars[1].c_str());
+					         pvars[1].c_str(),
+					         value.c_str());
 				}
 
 				tsec->ExecuteInit(false);
@@ -1027,10 +1027,12 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR",
+	        "Section [color=light-cyan][%s][reset] doesn't exist.\n");
 
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for setting '%s'.\n");
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
+	        "using the existing value\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
@@ -1057,10 +1059,11 @@ void PROGRAMS_Init(Section* sec)
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
 	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
 
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
+	        "No such section or property: [color=light-green]'%s'[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property '%s' in section [%s]\n");
+	        "There is no property [color=light-green]'%s'[reset] in section [color=light-cyan][%s][reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
 	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
