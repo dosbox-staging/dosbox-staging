@@ -2576,49 +2576,30 @@ Puede ejecutar programas o archivos con extensiones [color=red].exe .bat[reset] 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
 [erases=entire][color=light-green]Cómo montar una unidad real o virtual de CD-ROM en DOSBox:[reset]
-DOSBox provee emulación de CD-ROM en dos niveles.
-
-El nivel [color=brown]básico[reset] funciona en todos los directorios normales. Instala MSCDEX y
-marca los archivos como sólo-lectura. Generalmente esto es suficiente para la
-mayoría de los juegos:
+El comando [color=light-blue]mount[reset] funciona en todos los directorios normales. Instala MSCDEX y
+marca los archivos como sólo-lectura.
+Esto suele ser suficiente para la mayoría de los juegos:
 [color=light-blue]mount D C:\ejemplo -t cdrom[reset]
 Si no funciona, es posible que tenga que indicarle a DOSBox la etiqueta del
 CD-ROM:
 [color=light-blue]mount D C:\ejemplo -t cdrom -label ETIQUETA[reset]
 
-El nivel [color=brown]siguiente[reset] agrega algo de soporte de bajo nivel.
-Por ende, sólo funciona en unidades de CD-ROM:
-[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
-Reemplace [color=red]D:\ [reset]por la ubicación de su CD-ROM.
-Reemplace el [color=yellow]0[reset] en [color=light-blue]-usecd [color=yellow]0[reset] por el número reportado para su CD-ROM al escribir:
-[color=light-blue]mount -listcd[reset]
-
-Adicionalmente, puede usar imgmount para montar imágenes ISO o CUE/BIN:
+Adicionalmente, puede usar [color=light-blue]imgmount[reset] para montar imágenes ISO o CUE/BIN:
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
 [erases=entire][color=light-green]Cómo montar una unidad real o virtual de CD-ROM en DOSBox:[reset]
-DOSBox provee emulación de CD-ROM en dos niveles.
-
-El nivel [color=brown]básico[reset] funciona en todos los directorios normales. Instala MSCDEX y
-marca los archivos como sólo-lectura. Generalmente esto es suficiente para la
-mayoría de los juegos:
+El comando [color=light-blue]mount[reset] funciona en todos los directorios normales. Instala MSCDEX y
+marca los archivos como sólo-lectura.
+Esto suele ser suficiente para la mayoría de los juegos:
 [color=light-blue]mount D ~/ejemplo -t cdrom[reset]
 Si no funciona, es posible que tenga que indicarle a DOSBox la etiqueta del
 CD-ROM:
 [color=light-blue]mount D ~/ejemplo -t cdrom -label ETIQUETA[reset]
 
-El nivel [color=brown]siguiente[reset] agrega algo de soporte de bajo nivel.
-Por ende, sólo funciona en unidades de CD-ROM:
-[color=light-blue]mount d[reset] [color=red]~/ejemplo[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
-
-Reemplace [color=red]~/ejemplo[reset] por la ubicación de su CD-ROM.
-Reemplace el [color=yellow]0[reset] en [color=light-blue]-usecd [color=yellow]0[reset] por el número reportado para su CD-ROM al escribir:
-[color=light-blue]mount -listcd[reset]
-
-Adicionalmente, puede usar imgmount para montar imágenes ISO o CUE/BIN:
+Adicionalmente, puede usar [color=light-blue]imgmount[reset] para montar imágenes ISO o CUE/BIN:
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
