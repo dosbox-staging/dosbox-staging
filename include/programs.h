@@ -30,9 +30,9 @@
 #include <string>
 #include <vector>
 
+#include "console.h"
 #include "dos_inc.h"
 #include "help_util.h"
-#include "string_utils.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 
@@ -133,12 +133,7 @@ public:
 	template <typename... Args>
 	void WriteOut(const char* format, const Args&... args)
 	{
-		if (SuppressWriteOut(format)) {
-			return;
-		}
-
-		const auto str = format_str(format, args...);
-		WriteToStdOut(str);
+		CONSOLE_Write(format, args...);
 	}
 
 	// TODO Only used by the unit tests, try to get rid of it later
@@ -160,9 +155,6 @@ public:
 
 protected:
 	HELP_Detail help_detail{};
-
-private:
-	void WriteToStdOut(std::string_view output);
 };
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
