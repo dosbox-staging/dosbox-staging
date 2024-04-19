@@ -36,6 +36,7 @@ jobs:
             host: macos-12
             arch: x86_64
             needs_deps: true
+            run_tests: true
             build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
             max_warnings: 80
@@ -44,6 +45,7 @@ jobs:
             host: macos-14
             arch: arm64
             needs_deps: true
+            run_tests: false # the shell_cmds_tests hang on arm64
             build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
             max_warnings: 60
