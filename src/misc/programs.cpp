@@ -49,31 +49,7 @@ using comdata_t = std::vector<uint8_t>;
 static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
-static uint8_t last_written_character = '\n';
-
 constexpr int WriteOutBufSize = 16384;
-
-void Program::WriteToStdOut(std::string_view output)
-{
-	dos.internal_output = true;
-
-	for (const auto& chr : output) {
-		uint8_t out;
-		uint16_t bytes_to_write = 1;
-
-		if (chr == '\n' && last_written_character != '\r') {
-			out = '\r';
-			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
-		}
-
-		out = static_cast<uint8_t>(chr);
-
-		last_written_character = out;
-
-		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
-	}
-	dos.internal_output = false;
-}
 
 void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 {
@@ -221,7 +197,7 @@ void Program::WriteOut(const char* format, const char* arguments)
 	char buf[WriteOutBufSize];
 	std::snprintf(buf, WriteOutBufSize, format, arguments);
 
-	WriteToStdOut(buf);
+	CONSOLE_RawWrite(buf);
 }
 
 void Program::WriteOut_NoParsing(const char* str)
@@ -230,26 +206,7 @@ void Program::WriteOut_NoParsing(const char* str)
 		return;
 	}
 
-	WriteToStdOut(str);
-}
-
-void Program::ResetLastWrittenChar(char c)
-{
-	last_written_character = c;
-}
-
-void Program::InjectMissingNewline()
-{
-	if (last_written_character == '\n') {
-		return;
-	}
-
-	uint16_t n       = 2;
-	uint8_t dos_nl[] = "\r\n";
-
-	dos.internal_output = true;
-	DOS_WriteFile(STDOUT, dos_nl, &n);
-	last_written_character = '\n';
+	CONSOLE_RawWrite(str);
 }
 
 bool Program::HelpRequested()

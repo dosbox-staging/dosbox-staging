@@ -53,11 +53,11 @@ void DOS_Shell::ShowPrompt()
 	// DOS_GetCurrentDir doesn't always return something.
 	// (if drive is messed up)
 	DOS_GetCurrentDir(0, dir);
-	InjectMissingNewline();
+	CONSOLE_InjectMissingNewline();
 	WriteOut("%c:\\%s>", drive, dir);
 
 	// prevents excessive newline if cmd prints nothing
-	ResetLastWrittenChar('\n');
+	CONSOLE_ResetLastWrittenChar('\n');
 }
 
 void DOS_Shell::InputCommand(char* line)
