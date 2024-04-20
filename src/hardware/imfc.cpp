@@ -13400,24 +13400,29 @@ static void imfc_init(Section* sec)
 	// https://www.youtube.com/watch?v=WHVWDi15AIw. The results are
 	// virtually indistinguishable from the real thing by ear and spectrum
 	// analysis.
-	const std::string filter_choice = conf->Get_string("imfc_filter");
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+	//
+	auto enable_filter = [&]() {
+		constexpr auto Order        = 2;
+		constexpr auto CutoffFreqHz = 3500;
 
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order       = 2;
-		constexpr auto cutoff_freq = 3500;
-		channel->ConfigureLowPassFilter(order, cutoff_freq);
+		channel->ConfigureLowPassFilter(Order, CutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+	};
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+	const std::string filter_choice = conf->Get_string("imfc_filter");
+
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		if (*maybe_bool) {
+			enable_filter();
+		} else {
+			channel->SetLowPassFilter(FilterState::Off);
 		}
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'on'",
+		            filter_choice.c_str());
 
-		channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("imfc", "imfc_filter", "off");
+		set_section_property_value("imfc", "imfc_filter", "on");
+		enable_filter();
 	}
 
 	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
