@@ -642,6 +642,8 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 		audio_channel->SetHighPassFilter(FilterState::Off);
 		audio_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("gus", "gus_filter", "off");
 	}
 
 	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
