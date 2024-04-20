@@ -109,17 +109,22 @@ private:
 	bool can_trigger_irq = false;
 };
 
-static void setup_filter(mixer_channel_t &channel)
+static void setup_filter(mixer_channel_t& channel, const bool filter_enabled)
 {
-	constexpr auto hp_order       = 3;
-	constexpr auto hp_cutoff_freq = 160;
-	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
-	channel->SetHighPassFilter(FilterState::On);
+	if (filter_enabled) {
+		constexpr auto HpfOrder        = 3;
+		constexpr auto HpfCutoffFreqHz = 160;
+		channel->ConfigureHighPassFilter(HpfOrder, HpfCutoffFreqHz);
+		channel->SetHighPassFilter(FilterState::On);
 
-	constexpr auto lp_order       = 1;
-	constexpr auto lp_cutoff_freq = 2100;
-	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
-	channel->SetLowPassFilter(FilterState::On);
+		constexpr auto LpfOrder        = 1;
+		constexpr auto LpfCutoffFreqHz = 2100;
+		channel->ConfigureLowPassFilter(LpfOrder, LpfCutoffFreqHz);
+		channel->SetLowPassFilter(FilterState::On);
+	} else {
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
 }
 
 Ps1Dac::Ps1Dac(const std::string& filter_choice)
@@ -134,26 +139,24 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::DigitalAudio});
 
-	// Setup filters
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
+	// Setup DAC filters
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
 		// Using the same filter settings for the DAC as for the PSG
 		// synth. It's unclear whether this is accurate, but in any
 		// case, the filters do a good approximation of how a small
 		// integrated speaker would sound.
-		setup_filter(channel);
+		const auto filter_enabled = *maybe_bool;
+		setup_filter(channel, filter_enabled);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
-		}
+		LOG_WARNING(
+		        "PS1DAC: Invalid 'ps1audio_dac_filter' setting: '%s', "
+		        "using 'on'",
+		        filter_choice.c_str());
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("speaker", "ps1audio_dac_filter", "off");
+		const auto filter_enabled = true;
+		setup_filter(channel, filter_enabled);
+		set_section_property_value("speaker", "ps1audio_dac_filter", "on");
 	}
 
 	// Register DAC per-port read handlers
@@ -425,25 +428,23 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::Synthesizer});
 
-	// Setup filters
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
+	// Setup PSG filters
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
 		// The filter parameters have been tweaked by analysing real
 		// hardware recordings. The results are virtually
 		// indistinguishable from the real thing by ear only.
-		setup_filter(channel);
+		const auto filter_enabled = *maybe_bool;
+		setup_filter(channel, filter_enabled);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("PS1: Invalid 'ps1audio_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
-		}
+		LOG_WARNING(
+		        "PS1: Invalid 'ps1audio_filter' setting: '%s', "
+		        "using 'on'",
+		        filter_choice.c_str());
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("speaker", "ps1audio_filter", "off");
+		const auto filter_enabled = true;
+		setup_filter(channel, filter_enabled);
+		set_section_property_value("speaker", "ps1audio_filter", "on");
 	}
 
 	// Setup the resampler
