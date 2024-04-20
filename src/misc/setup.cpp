@@ -1508,6 +1508,20 @@ bool has_false(const std::string_view setting)
 	return (has_bool && *has_bool == false);
 }
 
+void set_section_property_value(const std::string_view section_name,
+                                const std::string_view property_name,
+                                const std::string_view property_value)
+{
+	auto* sect_updater = static_cast<Section_prop*>(
+	        control->GetSection(section_name));
+	assertm(sect_updater, "Invalid section name");
+
+	auto* property = sect_updater->Get_prop(property_name);
+	assertm(property, "Invalid property name");
+
+	property->SetValue(std::string(property_value));
+}
+
 void Config::ParseEnv()
 {
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
