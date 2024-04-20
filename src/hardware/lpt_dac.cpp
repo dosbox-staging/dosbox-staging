@@ -187,6 +187,8 @@ void LPT_DAC_Init(Section *section)
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' setting: '%s', using 'off'",
 			            filter_choice.data());
 			assert(filter_state == FilterState::Off);
+
+			set_section_property_value("speaker", "lpt_dac_filter", "off");
 		}
 
 		lpt_dac->ConfigureFilters(filter_state);
