@@ -486,7 +486,9 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	                            ChannelFeature::Synthesizer});
 
 	// Setup fadeout
-	channel->ConfigureFadeOut(fadeout_choice);
+	if (!channel->ConfigureFadeOut(fadeout_choice)) {
+		set_section_property_value("speaker", "tandy_fadeout", "off");
+	}
 
 	// Set up PSG filters
 	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
