@@ -1752,7 +1752,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	LOG_WARNING("%s: Invalid custom fade-out definition: '%s'. Must be "
 	            "specified in \"WAIT FADE\" format where WAIT is between "
 	            "%d and %d (in milliseconds) and FADE is between %d and "
-	            "%d (in milliseconds). Using 'off'",
+	            "%d (in milliseconds); using 'off'.",
 	            channel.GetName().c_str(),
 	            prefs.c_str(),
 	            min_wait_ms,
