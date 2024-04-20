@@ -819,6 +819,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
 		mixer_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("mt32", "mt32_filter", "off");
 	}
 
 	// Double the baseline PCM prebuffer because MIDI is demanding and
