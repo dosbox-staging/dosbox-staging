@@ -397,6 +397,8 @@ public:
 
 	Property* Get_prop(int index);
 
+	Property* Get_prop(const std::string_view propname);
+
 	int Get_int(const std::string& _propname) const;
 
 	std::string Get_string(const std::string& _propname) const;
