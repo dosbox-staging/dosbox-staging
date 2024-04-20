@@ -13416,6 +13416,8 @@ static void imfc_init(Section* sec)
 		}
 
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("imfc", "imfc_filter", "off");
 	}
 
 	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
