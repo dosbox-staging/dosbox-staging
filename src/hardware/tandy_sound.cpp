@@ -226,6 +226,8 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "tandy_dac_filter", "off");
 	}
 
 	// Register DAC per-port read handlers
@@ -497,6 +499,8 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "tandy_filter", "off");
 	}
 
 	// Setup the resampler
