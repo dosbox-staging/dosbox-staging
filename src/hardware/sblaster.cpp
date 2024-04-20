@@ -466,21 +466,21 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 		config.zoh_rate_hz     = native_dac_rate_hz;
 	};
 
-	const auto filter_type = determine_filter_type(filter_choice, sb_type);
+	const auto filter_type = [&]() {
+		if (const auto maybe_filter_type = determine_filter_type(filter_choice,
+		                                                         sb_type)) {
+			return *maybe_filter_type;
+		} else {
+			LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'modern'",
+			            sb_log_prefix(),
+			            filter_choice.c_str());
 
-	if (!filter_type) {
-		LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'off'",
-		            CardType(),
-		            filter_choice.c_str());
+			set_section_property_value("sblaster", "sb_filter", "modern");
+			return FilterType::Modern;
+		}
+	}();
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("sblaster", "sb_filter", "off");
-		return;
-	}
-
-	switch (*filter_type) {
+	switch (filter_type) {
 	case FilterType::None: enable_zoh_upsampler(); break;
 
 	case FilterType::SB1:
@@ -515,7 +515,7 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 	}
 
 	constexpr auto OutputType = "DAC";
-	log_filter_config(CardType(), OutputType, *filter_type);
+	log_filter_config(sb_log_prefix(), OutputType, filter_type);
 	set_filter(channel, config);
 }
 
