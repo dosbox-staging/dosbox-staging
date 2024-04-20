@@ -601,10 +601,13 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 
 			set_section_property_value("sblaster", "opl_filter", "auto");
 
-			const auto filter_type = determine_filter_type("auto",
-			                                               sb_type);
-			assert(filter_type);
-			return *filter_type;
+			if (const auto filter_type = determine_filter_type("auto", sb_type);
+			    filter_type) {
+				return *filter_type;
+			} else {
+				assert(false);
+				return FilterType::None;
+			}
 		}
 	}();
 
