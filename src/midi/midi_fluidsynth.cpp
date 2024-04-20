@@ -518,6 +518,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
 		fluidsynth_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("fluidsynth", "fsynth_filter", "off");
 	}
 
 	// Double the baseline PCM prebuffer because MIDI is demanding and
