@@ -1298,9 +1298,7 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 {
-	const auto string_prop = get_render_section()->GetStringProp(
-	        "monochrome_palette");
-	string_prop->SetValue(to_string(palette));
+	set_section_property_value("render", "monochrome_palette", to_string(palette));
 }
 
 static bool handle_shader_changes()
