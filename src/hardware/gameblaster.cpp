@@ -106,6 +106,8 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'off'",
 			            filter_choice.c_str());
+
+			set_section_property_value("sblaster", "cms_filter", "off");
 		}
 
 		channel->SetLowPassFilter(FilterState::Off);
