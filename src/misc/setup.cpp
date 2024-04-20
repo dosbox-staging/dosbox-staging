@@ -1274,10 +1274,10 @@ Config::~Config()
 	}
 }
 
-Section* Config::GetSection(const std::string& section_name) const
+Section* Config::GetSection(const std::string_view section_name) const
 {
 	for (auto* el : sectionlist) {
-		if (!strcasecmp(el->GetName(), section_name.c_str())) {
+		if (iequals(el->GetName(), section_name)) {
 			return el;
 		}
 	}
