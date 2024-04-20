@@ -475,6 +475,8 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("sblaster", "sb_filter", "off");
 		return;
 	}
 
@@ -568,6 +570,8 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 
 		opl_channel->SetHighPassFilter(FilterState::Off);
 		opl_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("sblaster", "opl_filter", "off");
 		return;
 	}
 
