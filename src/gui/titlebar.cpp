@@ -603,11 +603,7 @@ static void sync_config()
 		}
 	}
 
-	assert(control);
-	auto section = static_cast<Section_prop*>(control->GetSection("sdl"));
-	assert(section);
-	const auto string_prop = section->GetStringProp("window_titlebar");
-	string_prop->SetValue(setting_str);
+	set_section_property_value("sdl", "window_titlebar", setting_str);
 }
 
 static void parse_config(const std::string& new_setting_str)
@@ -725,7 +721,7 @@ static void parse_config(const std::string& new_setting_str)
 			continue;
 		}
 
-		LOG_WARNING("SDL: Invalid 'window_titlebar' setting '%s', ignoring",
+		LOG_WARNING("SDL: Invalid 'window_titlebar' setting: '%s', ignoring",
 		            setting_str.c_str());
 		config_needs_sync = true;
 	}
