@@ -72,6 +72,8 @@ void PCSPEAKER_Init(Section *section)
 			LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', using 'off'",
 			            filter_choice.data());
 			pc_speaker->SetFilterState(FilterState::Off);
+
+			set_section_property_value("speaker", "pcspeaker_filter", "off");
 		}
 	}
 
