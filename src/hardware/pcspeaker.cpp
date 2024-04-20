@@ -47,33 +47,35 @@ void PCSPEAKER_Init(Section *section)
 
 	if (model_choice_has_bool && *model_choice_has_bool == false) {
 		return;
+
 	} else if (model_choice == "discrete") {
 		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
+
 	} else if (model_choice == "impulse") {
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+
 	} else {
 		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
 		        model_choice.data());
 		return;
 	}
+	assert(pc_speaker);
 
 	// Get the user's filering choice
 	const std::string filter_choice = prop->Get_string("pcspeaker_filter");
 
-	assert(pc_speaker);
-
 	if (!pc_speaker->TryParseAndSetCustomFilter(filter_choice)) {
-		const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-		if (filter_choice_has_bool) {
-			if (*filter_choice_has_bool) {
-				pc_speaker->SetFilterState(FilterState::On);
-			}
+		if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+			pc_speaker->SetFilterState(*maybe_bool ? FilterState::On
+			                                       : FilterState::Off);
 		} else {
-			LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
-			pc_speaker->SetFilterState(FilterState::Off);
+			LOG_WARNING(
+			        "PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', "
+			        "using 'on'",
+			        filter_choice.c_str());
 
-			set_section_property_value("speaker", "pcspeaker_filter", "off");
+			pc_speaker->SetFilterState(FilterState::On);
+			set_section_property_value("speaker", "pcspeaker_filter", "on");
 		}
 	}
 
