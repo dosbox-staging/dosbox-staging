@@ -160,6 +160,17 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 	const auto& user_default = mouse_predefined.sensitivity_user_default;
 	const auto default_value = coeff * user_default;
 
+	auto set_mouse_sensitivity_setting = [](const int value) {
+		set_section_property_value("mouse",
+		                           "mouse_sensitivity",
+		                           format_str("%d", value));
+	};
+	auto set_mouse_sensitivity_settings = [](const int val_x, const int val_y) {
+		set_section_property_value("mouse",
+		                           "mouse_sensitivity",
+		                           format_str("%d %d", val_x, val_y));
+	};
+
 	// Split input string into values
 	auto values_str = split(sensitivity_str, " \t,;");
 	if (values_str.size() > 2) {
@@ -167,6 +178,8 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 		            user_default);
 		mouse_config.sensitivity_coeff_x = default_value;
 		mouse_config.sensitivity_coeff_y = default_value;
+
+		set_mouse_sensitivity_setting(user_default);
 		return;
 	}
 
@@ -174,6 +187,8 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 	if (values_str.empty()) {
 		mouse_config.sensitivity_coeff_x = default_value;
 		mouse_config.sensitivity_coeff_y = default_value;
+
+		set_mouse_sensitivity_setting(user_default);
 		return;
 	}
 
@@ -183,6 +198,7 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 	bool out_of_range   = false;
 	const int value_min = -mouse_predefined.sensitivity_user_max;
 	const int value_max = mouse_predefined.sensitivity_user_max;
+
 	for (auto& value_str : values_str) {
 		// Remove trailing '%' signs, if present
 		if (value_str.ends_with('%')) {
@@ -192,9 +208,12 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 		const auto value = parse_int(value_str);
 		if (!value) {
 			LOG_WARNING("MOUSE: Invalid 'mouse_sensitivity' setting: '%s', using '%d'",
-			            value_str.c_str(), user_default);
+			            value_str.c_str(),
+			            user_default);
 			mouse_config.sensitivity_coeff_x = default_value;
 			mouse_config.sensitivity_coeff_y = default_value;
+
+			set_mouse_sensitivity_setting(user_default);
 			return;
 		}
 
@@ -213,13 +232,18 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 
 	// Set the actual values
 	assert(values_int.size() == 1 || values_int.size() == 2);
-	const auto value_float_0 = static_cast<float>(values_int[0]);
+	const auto value_float_0         = static_cast<float>(values_int[0]);
 	mouse_config.sensitivity_coeff_x = coeff * value_float_0;
+
 	if (values_int.size() == 2) {
 		const auto value_float_1 = static_cast<float>(values_int[1]);
 		mouse_config.sensitivity_coeff_y = coeff * value_float_1;
+
+		set_mouse_sensitivity_settings(values_int[0], values_int[1]);
 	} else {
 		mouse_config.sensitivity_coeff_y = mouse_config.sensitivity_coeff_x;
+
+		set_mouse_sensitivity_setting(values_int[0]);
 	}
 
 	return;
