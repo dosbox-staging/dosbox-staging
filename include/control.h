@@ -125,7 +125,7 @@ public:
 		return sectionlist.end();
 	}
 
-	Section* GetSection(const std::string& section_name) const;
+	Section* GetSection(const std::string_view section_name) const;
 	Section* GetSectionFromProperty(const char* prop) const;
 
 	void OverwriteAutoexec(const std::string& conf, const std::string& line);
