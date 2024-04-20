@@ -101,6 +101,8 @@ void Innovation::Open(const std::string_view model_choice,
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
 		mixer_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("innovation", "innovation_filter", "off");
 	}
 
 	const auto frame_rate_hz = mixer_channel->GetSampleRate();
