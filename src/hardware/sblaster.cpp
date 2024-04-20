@@ -590,26 +590,29 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
 	};
 
-	const auto filter_type = determine_filter_type(filter_choice, sb_type);
-
-	if (!filter_type) {
-		if (filter_choice != "off") {
-			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'off'",
+	const auto filter_type = [&]() {
+		if (const auto maybe_filter_type = determine_filter_type(filter_choice,
+		                                                         sb_type)) {
+			return *maybe_filter_type;
+		} else {
+			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'auto'",
 			            sb_log_prefix(),
 			            filter_choice.c_str());
+
+			set_section_property_value("sblaster", "opl_filter", "auto");
+
+			const auto filter_type = determine_filter_type("auto",
+			                                               sb_type);
+			assert(filter_type);
+			return *filter_type;
 		}
-
-		opl_channel->SetHighPassFilter(FilterState::Off);
-		opl_channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("sblaster", "opl_filter", "off");
-		return;
-	}
+	}();
 
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the real
 	// thing by ear only.
-	switch (*filter_type) {
+	switch (filter_type)
+	{
 	case FilterType::None:
 	case FilterType::SB16:
 	case FilterType::Modern: break;
@@ -622,7 +625,7 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 	}
 
 	constexpr auto OutputType = "OPL";
-	log_filter_config(ChannelName::Opl, OutputType, *filter_type);
+	log_filter_config(ChannelName::Opl, OutputType, filter_type);
 	set_filter(opl_channel, config);
 }
 
