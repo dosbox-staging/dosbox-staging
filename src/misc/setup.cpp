@@ -1637,8 +1637,6 @@ void MSG_Init(Section_prop*);
 // -conf's, and finally the local dosbox.conf
 void Config::ParseConfigFiles(const std_fs::path& config_dir)
 {
-	std::string config_file;
-
 	// First: parse the user's primary 'dosbox-staging.conf' config file
 	const bool load_primary_config = !arguments.noprimaryconf;
 
