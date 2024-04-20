@@ -955,7 +955,7 @@ Property* Section_prop::Get_prop(int index)
 	return nullptr;
 }
 
-Property* Section_prop::Get_prop(const std::string& propname)
+Property* Section_prop::Get_prop(const std::string_view propname)
 {
 	for (Property* property : properties) {
 		if (property->propname == propname) {
