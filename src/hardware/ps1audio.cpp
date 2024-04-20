@@ -152,6 +152,8 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "ps1audio_dac_filter", "off");
 	}
 
 	// Register DAC per-port read handlers
@@ -442,6 +444,8 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "ps1audio_filter", "off");
 	}
 
 	// Setup the resampler
