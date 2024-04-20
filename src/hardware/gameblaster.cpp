@@ -96,22 +96,27 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order          = 1;
-		constexpr auto cutoff_freq_hz = 6000;
-		channel->ConfigureLowPassFilter(order, cutoff_freq_hz);
+	//
+	auto enable_filter = [&]() {
+		constexpr auto Order        = 1;
+		constexpr auto CutoffFreqHz = 6000;
+
+		channel->ConfigureLowPassFilter(Order, CutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+	};
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'off'",
-			            filter_choice.c_str());
-
-			set_section_property_value("sblaster", "cms_filter", "off");
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		if (*maybe_bool) {
+			enable_filter();
+		} else {
+			channel->SetLowPassFilter(FilterState::Off);
 		}
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'on'",
+		            filter_choice.c_str());
 
-		channel->SetLowPassFilter(FilterState::Off);
+		set_section_property_value("sblaster", "cms_filter", "on");
+		enable_filter();
 	}
 
 	// Calculate rates and ratio based on the mixer's rate
