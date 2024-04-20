@@ -1151,20 +1151,16 @@ static uint32_t determine_vmem_delay_ns()
 	constexpr auto OnDelayNs  = 3000;
 	constexpr auto OffDelayNs = 0;
 
-	auto set_setting_value = [](const std::string& val) {
-		auto* sect_updater = static_cast<Section_prop*>(
-		        control->GetSection("dosbox"));
-		assert(sect_updater);
-
-		sect_updater->Get_prop("vmem_delay")->SetValue(val);
+	auto set_default_vmem_delay_setting = []() {
+		set_section_property_value("dosbox", "vmem_delay", "off");
 	};
 
-	if (const auto maybe_bool = parse_bool_setting(vmem_delay_str); maybe_bool) {
+	if (const auto maybe_bool = parse_bool_setting(vmem_delay_str)) {
 		return *maybe_bool ? OnDelayNs : OffDelayNs;
 
 	} else {
 		// Try to parse it as a number
-		if (const auto maybe_int = parse_int(vmem_delay_str); maybe_int) {
+		if (const auto maybe_int = parse_int(vmem_delay_str)) {
 			const auto vmem_delay_ns = *maybe_int;
 
 			if (vmem_delay_ns < MinDelayNs || vmem_delay_ns > MaxDelayNs) {
@@ -1174,7 +1170,7 @@ static uint32_t determine_vmem_delay_ns()
 				        MinDelayNs,
 				        MaxDelayNs);
 
-				set_setting_value("off");
+				set_default_vmem_delay_setting();
 				return OffDelayNs;
 			} else {
 				return vmem_delay_ns;
@@ -1183,7 +1179,7 @@ static uint32_t determine_vmem_delay_ns()
 			LOG_ERR("VGA: Invalid 'vmem_delay' setting: '%s', using 'off'",
 			        vmem_delay_str.c_str());
 
-			set_setting_value("off");
+			set_default_vmem_delay_setting();
 			return OffDelayNs;
 		}
 	}
