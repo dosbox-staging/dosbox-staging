@@ -9,13 +9,13 @@ hide:
 
 ### Current stable version
 
-[Download DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
+[Download DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
 <br>
 <small>
-sha256: TODO<wbr>TODO
+sha256: 034b08a941a7fd0279a81b10af620999<wbr>c569f7e81b786e7f4b59a0b94e46d399
 </small>
 
-Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn
+Check out the [0.81.0 release notes](release-notes/0.81.0.md) to learn
 about the changes and improvements introduced in this release.
 
 Our pre-compiled builds run on most Linux distributions (x86\_64 only
@@ -143,12 +143,6 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
-- [DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
-  <br>
-  <small>
-  sha256: 034b08a941a7fd0279a81b10af620999<wbr>c569f7e81b786e7f4b59a0b94e46d399
-  </small>
-
 - [DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
   <br>
   <small>
@@ -221,7 +215,6 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
-[0_81_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-linux-v0.81.1.tar.xz
 [0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-linux-v0.81.0.tar.xz
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz
