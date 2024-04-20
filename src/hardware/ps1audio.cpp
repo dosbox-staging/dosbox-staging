@@ -53,7 +53,7 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	Ps1Dac(const std::string_view filter_choice);
+	Ps1Dac(const std::string& filter_choice);
 	~Ps1Dac();
 
 private:
@@ -122,7 +122,7 @@ static void setup_filter(mixer_channel_t &channel)
 	channel->SetLowPassFilter(FilterState::On);
 }
 
-Ps1Dac::Ps1Dac(const std::string_view filter_choice)
+Ps1Dac::Ps1Dac(const std::string& filter_choice)
 {
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
 
@@ -152,6 +152,8 @@ Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "ps1audio_dac_filter", "off");
 	}
 
 	// Register DAC per-port read handlers
@@ -376,7 +378,7 @@ Ps1Dac::~Ps1Dac()
 
 class Ps1Synth {
 public:
-	Ps1Synth(const std::string_view filter_choice);
+	Ps1Synth(const std::string& filter_choice);
 	~Ps1Synth();
 
 private:
@@ -410,7 +412,7 @@ private:
 	double last_rendered_ms     = 0.0;
 };
 
-Ps1Synth::Ps1Synth(const std::string_view filter_choice)
+Ps1Synth::Ps1Synth(const std::string& filter_choice)
         : device(nullptr, nullptr, ps1_psg_clock_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
@@ -440,6 +442,8 @@ Ps1Synth::Ps1Synth(const std::string_view filter_choice)
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("speaker", "ps1audio_filter", "off");
 	}
 
 	// Setup the resampler
