@@ -1058,7 +1058,9 @@ OPL::OPL(Section* configuration, const OplMode oplmode)
 	channel->Set0dbScalar(opl_volume_scale_factor);
 
 	// Setup fadeout
-	channel->ConfigureFadeOut(section->Get_string("opl_fadeout"));
+	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {
+		set_section_property_value("sblaster", "opl_fadeout", "off");
+	}
 
 	ctrl.wants_dc_bias_removed = section->Get_bool("opl_remove_dc_bias");
 	if (ctrl.wants_dc_bias_removed) {
