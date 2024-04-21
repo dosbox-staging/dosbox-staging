@@ -43,14 +43,29 @@ function set_build_version(gh_api_artifacts, os_name) {
       }
 
       response.json().then(data => {
-        let version_regexp = "dosbox-staging-[a-zA-Z0-9-]*-([0-9]+\.[0-9]+\.[0-9]+.+)"
-        let release = data.artifacts.find(a => a.name.match(version_regexp))
+        // Extract version and Git hash from the artifact name.
+        // Examples of valid artifact names:
+        //
+        //   dosbox-staging-linux-x86_64-0.82.0-alpha-7342e
+        //   dosbox-staging-macOS-universal-0.82.0-alpha-7342e
+        //   dosbox-staging-windows-x64-0.82.0-alpha-7342e
+        //
+        let platform_re = "[\\w-]*"
+        let version_re  = "(\\d+\.\\d+\.\\d+)"
+        let hash_re     = "([\\w-\.]+)"
+
+        let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
+        let release = data.artifacts.find(a => a.name.match(re))
 
         if (release === undefined) {
           return
         }
-        let version = release.name.match(version_regexp)[1]
-        get_build_version_el(os_name).textContent = version
+
+        let match = release.name.match(re)
+        let version = match[1]
+        let hash    = match[2]
+
+        get_build_version_el(os_name).textContent = `${version}-${hash}`
       })
     })
     .catch(err => {
