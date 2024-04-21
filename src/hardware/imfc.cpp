@@ -3168,7 +3168,6 @@ private:
 	std::queue<AudioFrame> fifo   = {};
 	double last_rendered_ms       = 0.0;
 	double ms_per_render          = 0.0;
-	int frame_rate_hz             = 0;
 
 	int tl_tab[TL_TAB_LEN]{};
 	unsigned int sin_tab[SIN_LEN]{};

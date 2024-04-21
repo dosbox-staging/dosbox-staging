@@ -256,12 +256,12 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	// Per the FluidSynth API, the sample-rate should be part of the
 	// settings used to instantiate the synth, so we use the mixer's native
 	// rate to configure FluidSynth.
-	const auto audio_frame_rate_hz = MIXER_GetSampleRate();
-	ms_per_audio_frame             = millis_in_second / audio_frame_rate_hz;
+	const auto sample_rate_hz = MIXER_GetSampleRate();
+	ms_per_audio_frame        = millis_in_second / sample_rate_hz;
 
 	fluid_settings_setnum(fluid_settings.get(),
 	                      "synth.sample-rate",
-	                      audio_frame_rate_hz);
+	                      sample_rate_hz);
 
 	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
@@ -496,7 +496,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	                                      std::placeholders::_1);
 
 	auto fluidsynth_channel = MIXER_AddChannel(mixer_callback,
-	                                           audio_frame_rate_hz,
+	                                           sample_rate_hz,
 	                                           ChannelName::FluidSynth,
 	                                           {ChannelFeature::Sleep,
 	                                            ChannelFeature::Stereo,
@@ -527,8 +527,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO
-	assert(audio_frame_rate_hz > 8000); // sane lower-bound of 8 KHz
-	const auto audio_frames_per_ms = iround(audio_frame_rate_hz / millis_in_second);
+	assert(sample_rate_hz > 8000); // sane lower-bound of 8 KHz
+	const auto audio_frames_per_ms = iround(sample_rate_hz / millis_in_second);
 	audio_frame_fifo.Resize(
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
