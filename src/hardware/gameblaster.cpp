@@ -113,14 +113,14 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	}
 
 	// Calculate rates and ratio based on the mixer's rate
-	const auto frame_rate_hz = channel->GetSampleRate();
+	const auto sample_rate_hz = channel->GetSampleRate();
 
 	// Set up the resampler to convert from the render rate to the mixer's
 	// frame rate
-	const auto max_rate_hz = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
+	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
 	for (auto& r : resamplers) {
 		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-		                                              frame_rate_hz,
+		                                              sample_rate_hz,
 		                                              max_rate_hz));
 	}
 

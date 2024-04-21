@@ -101,15 +101,15 @@ void Innovation::Open(const std::string_view model_choice,
 		mixer_channel->SetLowPassFilter(FilterState::Off);
 	}
 
-	const auto frame_rate_hz = mixer_channel->GetSampleRate();
+	const auto sample_rate_hz = mixer_channel->GetSampleRate();
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.
-	const double passband = 0.9 * frame_rate_hz / 2;
+	const double passband = 0.9 * sample_rate_hz / 2;
 
 	// Assign the sampling parameters
 	sid_service->setSamplingParameters(chip_clock,
 	                                   reSIDfp::RESAMPLE,
-	                                   frame_rate_hz,
+	                                   sample_rate_hz,
 	                                   passband);
 
 	// Setup and assign the port address
