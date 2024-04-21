@@ -472,7 +472,7 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 			return *maybe_filter_type;
 		} else {
 			LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'modern'",
-			            sb_log_prefix(),
+			            CardType(),
 			            filter_choice.c_str());
 
 			set_section_property_value("sblaster", "sb_filter", "modern");
@@ -515,7 +515,7 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 	}
 
 	constexpr auto OutputType = "DAC";
-	log_filter_config(sb_log_prefix(), OutputType, filter_type);
+	log_filter_config(CardType(), OutputType, filter_type);
 	set_filter(channel, config);
 }
 
@@ -566,7 +566,7 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 			return *maybe_filter_type;
 		} else {
 			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'auto'",
-			            sb_log_prefix(),
+			            CardType(),
 			            filter_choice.c_str());
 
 			set_section_property_value("sblaster", "opl_filter", "auto");
