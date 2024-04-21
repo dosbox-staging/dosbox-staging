@@ -339,7 +339,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 
 	unsigned int index = 1;
 	while (cmdline->FindCommand(index++, argument)) {
-		if (argument.starts_with("-")) {
+		if (starts_with(argument, "-")) {
 			LOG_WARNING("CONFIG: Illegal command line switch '%s'",
 			            argument.c_str());
 			continue;
