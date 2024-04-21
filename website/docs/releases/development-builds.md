@@ -38,16 +38,17 @@ function get_build_date_el(os_name) {
 function set_build_version(gh_api_artifacts, os_name) {
   fetch(gh_api_artifacts, { method: "GET", headers: headers })
     .then(response => {
-      if (response.status !== 200)
+      if (response.status !== 200) {
         return
+      }
 
       response.json().then(data => {
         let version_regexp = "dosbox-staging-[a-zA-Z0-9-]*-([0-9]+\.[0-9]+\.[0-9]+.+)"
         let release = data.artifacts.find(a => a.name.match(version_regexp))
 
-        if (release === undefined)
+        if (release === undefined) {
           return
-
+        }
         let version = release.name.match(version_regexp)[1]
         get_build_version_el(os_name).textContent = version
       })
@@ -75,18 +76,18 @@ function set_ci_status(workflow_file, os_name, description) {
   let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
 
   let filter_branch = "main"
-  let filter_event = "push"
+  let filter_event  = "push"
   let filter_status = "success"
 
   const queryParams = new URLSearchParams()
-  queryParams.set("page", page)
+  queryParams.set("page",     page)
   queryParams.set("per_page", per_page)
-  queryParams.set("branch", filter_branch)
-  queryParams.set("event", filter_event)
-  queryParams.set("status", filter_status)
+  queryParams.set("branch",   filter_branch)
+  queryParams.set("event",    filter_event)
+  queryParams.set("status",   filter_status)
 
-  let gh_api_workflows = gh_api_url + "actions/workflows/" + workflow_file + "/runs?" +
-            queryParams.toString()
+  let gh_api_workflows = gh_api_url + "actions/workflows/" + workflow_file +
+                         "/runs?" + queryParams.toString()
 
   fetch(gh_api_workflows, { method: "GET", headers: headers })
     .then(response => {
@@ -94,7 +95,10 @@ function set_ci_status(workflow_file, os_name, description) {
       if (response.status !== 200) {
         console.warn("Looks like there was a problem." +
                      "Status Code: " + response.status)
-        handle_error('Error accessing GitHub API', 'Please try again later', 'Status: ' + response.status, os_name)
+
+        handle_error('Error accessing GitHub API',
+                     'Please try again later',
+                     'Status: ' + response.status, os_name)
         return
       }
 
@@ -131,8 +135,8 @@ function set_ci_status(workflow_file, os_name, description) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  set_ci_status("linux.yml", "linux", "Linux")
-  set_ci_status("macos.yml", "macos", "macOS ¹")
+  set_ci_status("linux.yml",        "linux",   "Linux")
+  set_ci_status("macos.yml",        "macos",   "macOS ¹")
   set_ci_status("windows-msvc.yml", "windows", "Windows ²")
 })
 
