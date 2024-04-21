@@ -359,7 +359,7 @@ private:
 	bool last_samples_were_stereo  = false;
 	bool last_samples_were_silence = true;
 
-	ResampleMethod resample_method = {};
+	ResampleMethod resample_method = ResampleMethod::Resample;
 	bool do_resample               = false;
 	bool do_zoh_upsample           = false;
 
