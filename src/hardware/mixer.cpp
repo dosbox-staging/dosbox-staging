@@ -1167,9 +1167,31 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	}
 }
 
-void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
-                                           const uint16_t cutoff_freq_hz)
+static uint16_t clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_name,
+                                         const uint16_t cutoff_freq_hz)
 {
+	const auto max_cutoff_freq_hz = check_cast<uint16_t>(
+	        mixer.sample_rate_hz / 2 - 1);
+
+	if (cutoff_freq_hz <= max_cutoff_freq_hz) {
+		return cutoff_freq_hz;
+	} else {
+		LOG_DEBUG(
+		        "%s: Filter cutoff frequency %d Hz is not below half of the "
+		        "sample rate, clamping to %d Hz",
+		        channel_name.c_str(),
+		        cutoff_freq_hz,
+		        max_cutoff_freq_hz);
+
+		return max_cutoff_freq_hz;
+	}
+}
+
+void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
+                                           const uint16_t _cutoff_freq_hz)
+{
+	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
+
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.highpass.hpf) {
 		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
@@ -1180,8 +1202,10 @@ void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
 }
 
 void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
-                                          const uint16_t cutoff_freq_hz)
+                                          const uint16_t _cutoff_freq_hz)
 {
+	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
+
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.lowpass.lpf) {
 		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
@@ -1245,19 +1269,6 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			        filter_name,
 			        cutoff_freq_pref.c_str());
 			return false;
-		}
-
-		const uint16_t max_cutoff_freq_hz = check_cast<uint16_t>(
-		        (do_zoh_upsample ? zoh_upsampler.target_rate_hz : sample_rate_hz) / 2 - 1);
-
-		if (cutoff_freq_hz > max_cutoff_freq_hz) {
-			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
-			            "Must be lower than half the sample rate; clamping to %d Hz.",
-			            name.c_str(),
-			            cutoff_freq_pref.c_str(),
-			            max_cutoff_freq_hz);
-
-			cutoff_freq_hz = max_cutoff_freq_hz;
 		}
 
 		if (type_pref == "lpf") {
