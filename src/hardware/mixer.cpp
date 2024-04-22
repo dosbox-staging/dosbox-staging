@@ -1147,7 +1147,7 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 
 	if (do_highpass_filter) {
 		log_filter_settings(name,
-		                    "Highpass",
+		                    "High-pass",
 		                    state,
 		                    filters.highpass.order,
 		                    filters.highpass.cutoff_freq_hz);
@@ -1160,7 +1160,7 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 
 	if (do_lowpass_filter) {
 		log_filter_settings(name,
-		                    "Lowpass",
+		                    "Low-pass",
 		                    state,
 		                    filters.lowpass.order,
 		                    filters.lowpass.cutoff_freq_hz);
@@ -1219,22 +1219,31 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	auto set_filter = [&](const std::string& type_pref,
 	                      const std::string& order_pref,
 	                      const std::string& cutoff_freq_pref) {
+		const auto filter_name = (type_pref == "lpf") ? "low-pass"
+		                                              : "high-pass";
+
 		int order;
 		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
 		    order > max_filter_order) {
-			LOG_WARNING("%s: Invalid custom filter order: '%s'. Must be an integer between 1 and %d.",
-			            name.c_str(),
-			            order_pref.c_str(),
-			            max_filter_order);
+			LOG_WARNING(
+			        "%s: Invalid custom %s filter order: '%s'. "
+			        "Must be an integer between 1 and %d.",
+			        name.c_str(),
+			        filter_name,
+			        order_pref.c_str(),
+			        max_filter_order);
 			return false;
 		}
 
 		uint16_t cutoff_freq_hz;
 		if (!sscanf(cutoff_freq_pref.c_str(), "%" SCNu16, &cutoff_freq_hz) ||
 		    cutoff_freq_hz <= 0) {
-			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. Must be a positive number.",
-			            name.c_str(),
-			            cutoff_freq_pref.c_str());
+			LOG_WARNING(
+			        "%s: Invalid custom %s filter cutoff frequency: '%s'. "
+			        "Must be a positive number.",
+			        name.c_str(),
+			        filter_name,
+			        cutoff_freq_pref.c_str());
 			return false;
 		}
 
