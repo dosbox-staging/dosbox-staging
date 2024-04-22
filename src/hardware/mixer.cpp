@@ -110,7 +110,7 @@ struct ReverbSettings {
 	           const float density, const float bandwidth_freq_hz,
 	           const float decay, const float dampening_freq_hz,
 	           const float synth_level, const float digital_level,
-	           const float highpass_freq_hz, const uint16_t sample_rate_hz)
+	           const float highpass_freq_hz, const int sample_rate_hz)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
@@ -143,7 +143,7 @@ struct ChorusSettings {
 	float digital_audio_send_level = 0.0f;
 
 	void Setup(const float synth_level, const float digital_level,
-	           const uint16_t sample_rate_hz)
+	           const int sample_rate_hz)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
@@ -172,23 +172,27 @@ struct MixerSettings {
 	std::map<std::string, MixerChannelSettings> channel_settings_cache = {};
 
 	// Counters accessed by multiple threads
-	std::atomic<work_index_t> pos      = 0;
+	std::atomic<int> pos               = 0;
 	std::atomic<int> frames_done       = 0;
 	std::atomic<int> frames_needed     = 0;
 	std::atomic<int> min_frames_needed = 0;
 	std::atomic<int> max_frames_needed = 0;
-	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
+
+	// Samples needed per millisecond tick
+	std::atomic<int> tick_add = 0;
 
 	int tick_counter = 0;
-	std::atomic<uint16_t> sample_rate_hz = 0; // sample rate negotiated with SDL
-	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
-	uint16_t prebuffer_ms = 25; // user-adjustable in conf
+	// Sample rate negotiated with SDL
+	std::atomic<int> sample_rate_hz = 0;
+
+	// Matches SDL AudioSpec.samples type
+	int blocksize = 0;
+	int prebuffer_ms = 25;
 
 	SDL_AudioDeviceID sdldevice = 0;
 
-	MixerState state = MixerState::Uninitialized; // use set_mixer_state()
-	                                              // to change
+	MixerState state = MixerState::Uninitialized;
 
 	HighpassFilter highpass_filter = {};
 	Compressor compressor          = {};
@@ -208,6 +212,7 @@ struct MixerSettings {
 
 static struct MixerSettings mixer = {};
 
+// TODO This is hacky and should be removed. Only the PS1 Audio uses it.
 alignas(sizeof(float)) uint8_t MixTemp[MixerBufferLength] = {};
 
 void MixerChannel::SetLineoutMap(const StereoLine map)
@@ -230,7 +235,7 @@ static Section_prop* get_mixer_section()
 	return section;
 }
 
-uint16_t MIXER_GetPreBufferMs()
+int MIXER_GetPreBufferMs()
 {
 	assert(mixer.prebuffer_ms > 0);
 	assert(mixer.prebuffer_ms <= MaxPrebufferMs);
@@ -238,7 +243,7 @@ uint16_t MIXER_GetPreBufferMs()
 	return mixer.prebuffer_ms;
 }
 
-uint16_t MIXER_GetSampleRate()
+int MIXER_GetSampleRate()
 {
 	const auto sample_rate_hz = mixer.sample_rate_hz.load();
 	assert(sample_rate_hz > 0);
@@ -644,7 +649,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
-                                 const uint16_t sample_rate_hz, const char* name,
+                                 const int sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
@@ -653,9 +658,9 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
 
 	const auto chan_rate_hz = chan->GetSampleRate();
 	if (chan_rate_hz == mixer.sample_rate_hz) {
-		LOG_MSG("%s: Operating at %u Hz without resampling", name, chan_rate_hz);
+		LOG_MSG("%s: Operating at %d Hz without resampling", name, chan_rate_hz);
 	} else {
-		LOG_MSG("%s: Operating at %u Hz and %s to the output rate",
+		LOG_MSG("%s: Operating at %d Hz and %s to the output rate",
 		        name,
 		        chan_rate_hz,
 		        chan_rate_hz > mixer.sample_rate_hz ? "downsampling"
@@ -825,7 +830,7 @@ void MixerChannel::Enable(const bool should_enable)
 
 	// Prepare the channel to accept samples
 	if (should_enable) {
-		freq_counter = 0u;
+		freq_counter = 0;
 		// Don't start with a deficit
 		if (frames_done < mixer.frames_done) {
 			frames_done = mixer.frames_done.load();
@@ -837,8 +842,8 @@ void MixerChannel::Enable(const bool should_enable)
 		// start clean if/when this channel is re-enabled.
 		// Samples can be buffered into disable channels, so
 		// we don't perform this zero'ing in the enable phase.
-		frames_done   = 0u;
-		frames_needed = 0u;
+		frames_done   = 0;
+		frames_needed = 0;
 
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
@@ -917,8 +922,7 @@ void MixerChannel::ConfigureResampler()
 	case ResampleMethod::Resample:
 		const spx_uint32_t in_rate_hz  = do_zoh_upsample
 		                                       ? zoh_upsampler.target_rate_hz
-		                                       : check_cast<spx_uint32_t>(
-                                                                channel_rate_hz);
+		                                       : channel_rate_hz;
 		const spx_uint32_t out_rate_hz = mixer_rate_hz;
 
 		do_resample = (in_rate_hz != out_rate_hz);
@@ -981,13 +985,13 @@ void MixerChannel::ClearResampler()
 	}
 }
 
-void MixerChannel::SetSampleRate(const uint16_t new_sample_rate_hz)
+void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 {
 	// If the requested rate is zero, then avoid resampling by running the
 	// channel at the mixer's rate
-	const uint16_t target_rate_hz = new_sample_rate_hz
-	                                      ? new_sample_rate_hz
-	                                      : mixer.sample_rate_hz.load();
+	const int target_rate_hz = new_sample_rate_hz
+	                                 ? new_sample_rate_hz
+	                                 : mixer.sample_rate_hz.load();
 	assert(target_rate_hz > 0);
 
 	// Nothing to do: the channel is already running at the requested rate
@@ -1019,9 +1023,9 @@ const std::string& MixerChannel::GetName() const
 	return name;
 }
 
-uint16_t MixerChannel::GetSampleRate() const
+int MixerChannel::GetSampleRate() const
 {
-	return check_cast<uint16_t>(sample_rate_hz);
+	return sample_rate_hz;
 }
 
 void MixerChannel::SetPeakAmplitude(const int peak)
@@ -1033,7 +1037,7 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 	                EnvelopeExpiresAfterSeconds);
 }
 
-void MixerChannel::Mix(const uint16_t frames_requested)
+void MixerChannel::Mix(const int frames_requested)
 {
 	if (!is_enabled) {
 		return;
@@ -1052,10 +1056,9 @@ void MixerChannel::Mix(const uint16_t frames_requested)
 			break;
 		}
 		// avoid overflow
-		frames_remaining = std::min(clamp_to_uint16(frames_remaining),
-		                            MixerBufferLength);
+		frames_remaining = std::min(frames_remaining, MixerBufferLength);
 
-		handler(static_cast<work_index_t>(frames_remaining));
+		handler(frames_remaining);
 	}
 
 	if (do_sleep) {
@@ -1082,8 +1085,7 @@ void MixerChannel::AddSilence()
 			const auto mapped_output_right = output_map.right;
 
 			// Position where to write the data
-			auto mixpos = check_cast<work_index_t>(
-			        (mixer.pos + frames_done) & MixerBufferMask);
+			auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
 
 			while (frames_done < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
@@ -1091,7 +1093,7 @@ void MixerChannel::AddSilence()
 				// rate.
 				constexpr auto f = 4.0f;
 
-				for (size_t ch = 0; ch < 2; ++ch) {
+				for (auto ch = 0; ch < 2; ++ch) {
 					if (prev_frame[ch] > f) {
 						next_frame[ch] = prev_frame[ch] - f;
 					} else if (prev_frame[ch] < -f) {
@@ -1110,8 +1112,7 @@ void MixerChannel::AddSilence()
 
 				prev_frame = next_frame;
 
-				mixpos = static_cast<work_index_t>(
-				        (mixpos + 1) & MixerBufferMask);
+				mixpos = (mixpos + 1) & MixerBufferMask;
 				frames_done++;
 				freq_counter = FreqNext;
 			}
@@ -1124,8 +1125,8 @@ void MixerChannel::AddSilence()
 
 static void log_filter_settings(const std::string& channel_name,
                                 const std::string& filter_name,
-                                const FilterState state, const uint8_t order,
-                                const uint16_t cutoff_freq_hz)
+                                const FilterState state, const int order,
+                                const int cutoff_freq_hz)
 {
 	// we programmatically expect only 'on' and 'forced-on' states:
 	assert(state != FilterState::Off);
@@ -1133,7 +1134,7 @@ static void log_filter_settings(const std::string& channel_name,
 
 	constexpr auto db_per_order = 6;
 
-	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %u Hz)",
+	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %d Hz)",
 	        channel_name.c_str(),
 	        filter_name.c_str(),
 	        state == FilterState::ForcedOn ? " (forced)" : "",
@@ -1167,11 +1168,10 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	}
 }
 
-static uint16_t clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_name,
-                                         const uint16_t cutoff_freq_hz)
+static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_name,
+                                    const int cutoff_freq_hz)
 {
-	const auto max_cutoff_freq_hz = check_cast<uint16_t>(
-	        mixer.sample_rate_hz / 2 - 1);
+	const auto max_cutoff_freq_hz = mixer.sample_rate_hz / 2 - 1;
 
 	if (cutoff_freq_hz <= max_cutoff_freq_hz) {
 		return cutoff_freq_hz;
@@ -1187,8 +1187,8 @@ static uint16_t clamp_filter_cutoff_freq([[maybe_unused]] const std::string& cha
 	}
 }
 
-void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
-                                           const uint16_t _cutoff_freq_hz)
+void MixerChannel::ConfigureHighPassFilter(const int order,
+                                           const int _cutoff_freq_hz)
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1201,8 +1201,8 @@ void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
 	filters.highpass.cutoff_freq_hz = cutoff_freq_hz;
 }
 
-void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
-                                          const uint16_t _cutoff_freq_hz)
+void MixerChannel::ConfigureLowPassFilter(const int order,
+                                          const int _cutoff_freq_hz)
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1259,8 +1259,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			return false;
 		}
 
-		uint16_t cutoff_freq_hz;
-		if (!sscanf(cutoff_freq_pref.c_str(), "%" SCNu16, &cutoff_freq_hz) ||
+		int cutoff_freq_hz;
+		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
 		    cutoff_freq_hz <= 0) {
 			LOG_WARNING(
 			        "%s: Invalid custom %s filter cutoff frequency: '%s'. "
@@ -1272,12 +1272,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		}
 
 		if (type_pref == "lpf") {
-			ConfigureLowPassFilter(check_cast<uint8_t>(order),
-			                       cutoff_freq_hz);
+			ConfigureLowPassFilter(order, cutoff_freq_hz);
 			SetLowPassFilter(FilterState::On);
 
 		} else if (type_pref == "hpf") {
-			ConfigureHighPassFilter(check_cast<uint8_t>(order),
+			ConfigureHighPassFilter(order,
 			                        cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
 
@@ -1291,7 +1290,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	};
 
 	if (single_filter) {
-		size_t i = 0;
+		auto i = 0;
 
 		const auto filter_type           = parts[i++];
 		const auto filter_order          = parts[i++];
@@ -1299,7 +1298,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 
 		return set_filter(filter_type, filter_order, filter_cutoff_freq_hz);
 	} else {
-		size_t i = 0;
+		auto i = 0;
 
 		const auto filter1_type           = parts[i++];
 		const auto filter1_order          = parts[i++];
@@ -1325,7 +1324,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	}
 }
 
-void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const uint16_t target_rate_hz)
+void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz)
 {
 	// TODO make sure that the ZOH target frequency cannot be set after the
 	// filter has been configured
@@ -1501,12 +1500,12 @@ constexpr void fill_8to16_lut()
 }
 
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const work_index_t pos)
+AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 {
 	AudioFrame frame = {};
 
-	const auto left_pos  = static_cast<work_index_t>(pos * 2 + 0);
-	const auto right_pos = static_cast<work_index_t>(pos * 2 + 1);
+	const auto left_pos  = pos * 2 + 0;
+	const auto right_pos = pos * 2 + 1;
 
 	if (sizeof(Type) == 1) {
 		// Integer types
@@ -1627,7 +1626,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const work_index_t p
 // Converts sample stream to floats, performs output channel mappings, removes
 // clicks, and optionally performs zero-order-hold-upsampling.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::ConvertSamples(const Type* data, const uint16_t frames,
+void MixerChannel::ConvertSamples(const Type* data, const int frames,
                                   std::vector<float>& out)
 {
 	// read-only aliases to avoid repeated dereferencing and to inform the
@@ -1638,7 +1637,7 @@ void MixerChannel::ConvertSamples(const Type* data, const uint16_t frames,
 	const auto mapped_channel_left  = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
-	work_index_t pos = 0;
+	auto pos = 0;
 	std::array<float, 2> out_frame;
 
 	out.resize(0);
@@ -1725,9 +1724,9 @@ bool MixerChannel::ConfigureFadeOut(const std::string& prefs)
 bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 {
 	auto set_wait_and_fade = [&](const int wait_ms, const int fade_ms) {
-		fadeout_or_sleep_after_ms = check_cast<uint16_t>(wait_ms);
+		fadeout_or_sleep_after_ms = wait_ms;
 
-		fadeout_decrement_per_ms = 1.0f / static_cast<uint16_t>(fade_ms);
+		fadeout_decrement_per_ms = 1.0f / fade_ms;
 
 		LOG_MSG("%s: Fade-out enabled (wait %d ms then fade for %d ms)",
 		        channel.GetName().c_str(),
@@ -1797,7 +1796,7 @@ void MixerChannel::Sleeper::DecrementFadeLevel(const int64_t awake_for_ms)
 	fadeout_level = std::clamp(max_level - decrement, min_level, max_level);
 }
 
-MixerChannel::Sleeper::Sleeper(MixerChannel& c, const uint16_t sleep_after_ms)
+MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
         : channel(c),
           fadeout_or_sleep_after_ms(sleep_after_ms)
 {
@@ -1870,7 +1869,7 @@ bool MixerChannel::WakeUp()
 }
 
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
+void MixerChannel::AddSamples(const int frames, const Type* data)
 {
 	assert(frames > 0);
 
@@ -1935,12 +1934,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 			// number of temporary buffers
 
 		case ResampleMethod::Resample: {
-			auto in_frames = check_cast<uint32_t>(
-			                         mixer.resample_temp.size()) /
-			                 2u;
+			spx_uint32_t in_frames = check_cast<spx_uint32_t>(
+			        mixer.resample_temp.size() / 2);
 
-			auto out_frames = estimate_max_out_frames(
-			        speex_resampler.state, in_frames);
+			spx_uint32_t out_frames = check_cast<spx_uint32_t>(
+			        estimate_max_out_frames(speex_resampler.state,
+			                                in_frames));
 
 			mixer.resample_out.resize(out_frames * 2);
 
@@ -1964,13 +1963,10 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 
 	// Optionally filter, apply crossfeed, then mix the results to the
 	// master output
-	const uint16_t out_frames = static_cast<uint16_t>(mixer.resample_out.size()) /
-	                            2;
+	const auto out_frames = mixer.resample_out.size() / 2;
 
-	auto pos = mixer.resample_out.begin();
-
-	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
-	                                       MixerBufferMask);
+	auto pos    = mixer.resample_out.begin();
+	auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
 
 	while (pos != mixer.resample_out.end()) {
 		AudioFrame frame = {*pos++, *pos++};
@@ -2008,14 +2004,14 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 		mixer.work[mixpos][0] += frame.left;
 		mixer.work[mixpos][1] += frame.right;
 
-		mixpos = static_cast<work_index_t>((mixpos + 1) & MixerBufferMask);
+		mixpos = (mixpos + 1) & MixerBufferMask;
 	}
-	frames_done += out_frames;
+	frames_done += check_cast<int>(out_frames);
 
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
+void MixerChannel::AddStretched(const int len, int16_t* data)
 {
 	MIXER_LockAudioDevice();
 
@@ -2030,8 +2026,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
 	auto index     = 0;
 	auto index_add = (len << FreqShift) / frames_remaining;
 
-	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
-	                                       MixerBufferMask);
+	auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
 
 	auto pos = 0;
 
@@ -2069,7 +2064,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
 		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
 		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
 
-		mixpos = static_cast<work_index_t>((mixpos + 1) & MixerBufferMask);
+		mixpos = (mixpos + 1) & MixerBufferMask;
 	}
 
 	frames_done = frames_needed;
@@ -2077,75 +2072,75 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::AddSamples_m8(const uint16_t len, const uint8_t* data)
+void MixerChannel::AddSamples_m8(const int len, const uint8_t* data)
 {
 	AddSamples<uint8_t, false, false, true>(len, data);
 }
-void MixerChannel::AddSamples_s8(const uint16_t len, const uint8_t* data)
+void MixerChannel::AddSamples_s8(const int len, const uint8_t* data)
 {
 	AddSamples<uint8_t, true, false, true>(len, data);
 }
-void MixerChannel::AddSamples_m8s(const uint16_t len, const int8_t* data)
+void MixerChannel::AddSamples_m8s(const int len, const int8_t* data)
 {
 	AddSamples<int8_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s8s(const uint16_t len, const int8_t* data)
+void MixerChannel::AddSamples_s8s(const int len, const int8_t* data)
 {
 	AddSamples<int8_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16(const uint16_t len, const int16_t* data)
+void MixerChannel::AddSamples_m16(const int len, const int16_t* data)
 {
 	AddSamples<int16_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s16(const uint16_t len, const int16_t* data)
+void MixerChannel::AddSamples_s16(const int len, const int16_t* data)
 {
 	AddSamples<int16_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16u(const uint16_t len, const uint16_t* data)
+void MixerChannel::AddSamples_m16u(const int len, const uint16_t* data)
 {
 	AddSamples<uint16_t, false, false, true>(len, data);
 }
-void MixerChannel::AddSamples_s16u(const uint16_t len, const uint16_t* data)
+void MixerChannel::AddSamples_s16u(const int len, const uint16_t* data)
 {
 	AddSamples<uint16_t, true, false, true>(len, data);
 }
-void MixerChannel::AddSamples_m32(const uint16_t len, const int32_t* data)
+void MixerChannel::AddSamples_m32(const int len, const int32_t* data)
 {
 	AddSamples<int32_t, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_s32(const uint16_t len, const int32_t* data)
+void MixerChannel::AddSamples_s32(const int len, const int32_t* data)
 {
 	AddSamples<int32_t, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_mfloat(const uint16_t len, const float* data)
+void MixerChannel::AddSamples_mfloat(const int len, const float* data)
 {
 	AddSamples<float, false, true, true>(len, data);
 }
-void MixerChannel::AddSamples_sfloat(const uint16_t len, const float* data)
+void MixerChannel::AddSamples_sfloat(const int len, const float* data)
 {
 	AddSamples<float, true, true, true>(len, data);
 }
-void MixerChannel::AddSamples_m16_nonnative(const uint16_t len, const int16_t* data)
+void MixerChannel::AddSamples_m16_nonnative(const int len, const int16_t* data)
 {
 	AddSamples<int16_t, false, true, false>(len, data);
 }
-void MixerChannel::AddSamples_s16_nonnative(const uint16_t len, const int16_t* data)
+void MixerChannel::AddSamples_s16_nonnative(const int len, const int16_t* data)
 {
 	AddSamples<int16_t, true, true, false>(len, data);
 }
-void MixerChannel::AddSamples_m16u_nonnative(const uint16_t len, const uint16_t* data)
+void MixerChannel::AddSamples_m16u_nonnative(const int len, const uint16_t* data)
 {
 	AddSamples<uint16_t, false, false, false>(len, data);
 }
-void MixerChannel::AddSamples_s16u_nonnative(const uint16_t len, const uint16_t* data)
+void MixerChannel::AddSamples_s16u_nonnative(const int len, const uint16_t* data)
 {
 	AddSamples<uint16_t, true, false, false>(len, data);
 }
-void MixerChannel::AddSamples_m32_nonnative(const uint16_t len, const int32_t* data)
+void MixerChannel::AddSamples_m32_nonnative(const int len, const int32_t* data)
 {
 	AddSamples<int32_t, false, true, false>(len, data);
 }
-void MixerChannel::AddSamples_s32_nonnative(const uint16_t len, const int32_t* data)
+void MixerChannel::AddSamples_s32_nonnative(const int len, const int32_t* data)
 {
 	AddSamples<int32_t, true, true, false>(len, data);
 }
@@ -2163,7 +2158,7 @@ void MixerChannel::FillUp()
 		        frames_remaining, 0, static_cast<int>(MixerBufferLength));
 
 		MIXER_LockAudioDevice();
-		Mix(check_cast<work_index_t>(frames_to_mix));
+		Mix(frames_to_mix);
 		MIXER_UnlockAudioDevice();
 		// Let SDL fetch frames after each chunk
 
@@ -2249,15 +2244,14 @@ static void mix_samples(const int frames_requested)
 {
 	constexpr auto capture_buf_frames = 1024;
 
-	const auto frames_added = check_cast<work_index_t>(
-	        std::min(frames_requested - mixer.frames_done, capture_buf_frames));
+	const auto frames_added = std::min(frames_requested - mixer.frames_done,
+	                                   capture_buf_frames);
 
-	const auto start_pos = check_cast<work_index_t>(
-	        (mixer.pos + mixer.frames_done) & MixerBufferMask);
+	const auto start_pos = (mixer.pos + mixer.frames_done) & MixerBufferMask;
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
-		channel->Mix(check_cast<work_index_t>(frames_requested));
+		channel->Mix(frames_requested);
 	}
 
 	if (mixer.do_reverb) {
@@ -2265,12 +2259,12 @@ static void mix_samples(const int frames_requested)
 		// results to the master output
 		auto pos = start_pos;
 
-		for (work_index_t i = 0; i < frames_added; ++i) {
+		for (auto i = 0; i < frames_added; ++i) {
 			AudioFrame frame = {mixer.aux_reverb[pos][0],
 			                    mixer.aux_reverb[pos][1]};
 
 			// High-pass filter the reverb input
-			for (size_t ch = 0; ch < 2; ++ch) {
+			for (auto ch = 0; ch < 2; ++ch) {
 				frame[ch] = mixer.reverb.highpass_filter[ch].filter(
 				        frame[ch]);
 			}
@@ -2300,7 +2294,7 @@ static void mix_samples(const int frames_requested)
 		// results to the master output
 		auto pos = start_pos;
 
-		for (work_index_t i = 0; i < frames_added; ++i) {
+		for (auto i = 0; i < frames_added; ++i) {
 			AudioFrame frame = {mixer.aux_chorus[pos][0],
 			                    mixer.aux_chorus[pos][1]};
 
@@ -2317,8 +2311,8 @@ static void mix_samples(const int frames_requested)
 	{
 		auto pos = start_pos;
 
-		for (work_index_t i = 0; i < frames_added; ++i) {
-			for (size_t ch = 0; ch < 2; ++ch) {
+		for (auto i = 0; i < frames_added; ++i) {
+			for (auto ch = 0; ch < 2; ++ch) {
 				mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
 						mixer.work[pos][ch]);
 			}
@@ -2330,7 +2324,7 @@ static void mix_samples(const int frames_requested)
 		// Apply compressor to the master output as the very last step
 		auto pos = start_pos;
 
-		for (work_index_t i = 0; i < frames_added; ++i) {
+		for (auto i = 0; i < frames_added; ++i) {
 			AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
 
 			frame = mixer.compressor.Process(frame);
@@ -2347,7 +2341,7 @@ static void mix_samples(const int frames_requested)
 		int16_t out[capture_buf_frames][2];
 		auto pos = start_pos;
 
-		for (work_index_t i = 0; i < frames_added; i++) {
+		for (auto i = 0; i < frames_added; i++) {
 			const auto left = static_cast<uint16_t>(clamp_to_int16(
 			        static_cast<int>(mixer.work[pos][0])));
 
@@ -2428,9 +2422,10 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	memset(stream, 0, static_cast<size_t>(len));
 
 	auto frames_requested = len / MixerFrameSize;
-	auto output           = reinterpret_cast<int16_t*>(stream);
-	auto reduce_frames    = 0;
-	work_index_t pos      = 0;
+
+	auto output        = reinterpret_cast<int16_t*>(stream);
+	auto reduce_frames = 0;
+	auto pos           = 0;
 
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
@@ -2519,10 +2514,13 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			}
 		}
 	} else {
-		/* There is way too much data in the buffer */
-		//		LOG_WARNING("overflow run requested %u, have %u,
-		// min %u", frames_requested, mixer.frames_done.load(),
-		// mixer.min_frames_needed.load());
+		// There is way too much data in the buffer
+#ifdef DEBUG_MIXER
+		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
+		            frames_requested,
+		            mixer.frames_done.load(),
+		            mixer.min_frames_needed.load());
+#endif
 		if (mixer.frames_done > MixerBufferLength) {
 			index_add = MixerBufferLength - 2 * mixer.min_frames_needed;
 		} else {
@@ -2549,13 +2547,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	mixer.frames_needed      = frames_needed;
 
 	pos       = mixer.pos;
-	mixer.pos = check_cast<work_index_t>((mixer.pos + reduce_frames) &
-	                                     MixerBufferMask);
+	mixer.pos = (mixer.pos + reduce_frames) & MixerBufferMask;
 
 	if (frames_requested != reduce_frames) {
 		while (frames_requested--) {
-			const auto i = check_cast<work_index_t>(
-			        (pos + (index >> IndexShiftLocal)) & MixerBufferMask);
+			const auto i = (pos + (index >> IndexShiftLocal)) &
+			               MixerBufferMask;
 			index += index_add;
 
 			*output++ = clamp_to_int16(
@@ -2725,7 +2722,7 @@ static bool init_sdl_sound(Section_prop* section)
 
 	// Does SDL want something other than stereo output?
 	if (obtained.channels != spec.channels) {
-		E_Exit("SDL gave us %u-channel output but we require %u channels",
+		E_Exit("SDL gave us %d-channel output but we require %d channels",
 		       obtained.channels,
 		       spec.channels);
 	}
@@ -2736,7 +2733,7 @@ static bool init_sdl_sound(Section_prop* section)
 		            mixer.sample_rate_hz.load(),
 		            obtained.freq);
 
-		mixer.sample_rate_hz = check_cast<uint16_t>(obtained.freq);
+		mixer.sample_rate_hz = obtained.freq;
 		set_section_property_value("mixer",
 		                           "rate",
 		                           format_str("%d",
@@ -2747,7 +2744,7 @@ static bool init_sdl_sound(Section_prop* section)
 	const auto obtained_blocksize = obtained.samples;
 
 	if (obtained_blocksize != mixer.blocksize) {
-		LOG_WARNING("MIXER: SDL changed the requested blocksize of %u to %u frames",
+		LOG_WARNING("MIXER: SDL changed the requested blocksize of %d to %d frames",
 		            mixer.blocksize,
 		            obtained_blocksize);
 
@@ -2757,7 +2754,7 @@ static bool init_sdl_sound(Section_prop* section)
 		                           format_str("%d", mixer.blocksize));
 	}
 
-	LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
+	LOG_MSG("MIXER: Negotiated %d-channel %d Hz audio of %d-frame blocks",
 	        obtained.channels,
 	        mixer.sample_rate_hz.load(),
 	        mixer.blocksize);
@@ -2804,8 +2801,8 @@ void MIXER_Init(Section* sec)
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
-	mixer.sample_rate_hz = check_cast<uint16_t>(section->Get_int("rate"));
-	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
+	mixer.sample_rate_hz = section->Get_int("rate");
+	mixer.blocksize = section->Get_int("blocksize");
 
 	const auto configured_state = section->Get_bool("nosound")
 	                                    ? MixerState::NoSound
@@ -2829,8 +2826,7 @@ void MIXER_Init(Section* sec)
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
-	mixer.prebuffer_ms = check_cast<uint16_t>(
-	        clamp(requested_prebuffer_ms, 1, MaxPrebufferMs));
+	mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
 
 	const auto prebuffer_frames = (mixer.sample_rate_hz * mixer.prebuffer_ms) /
 	                              1000;
@@ -2919,17 +2915,17 @@ static void handle_toggle_mute(const bool was_pressed)
 
 void init_mixer_dosbox_settings(Section_prop& sec_prop)
 {
-	constexpr uint16_t default_sample_rate_hz = 48000;
+	constexpr auto default_sample_rate_hz = 48000;
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
-	constexpr uint16_t default_blocksize    = 1024;
-	constexpr uint16_t default_prebuffer_ms = 25;
+	constexpr auto default_blocksize    = 1024;
+	constexpr auto default_prebuffer_ms = 25;
 	constexpr bool default_allow_negotiate  = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
-	constexpr uint16_t default_blocksize    = 512;
-	constexpr uint16_t default_prebuffer_ms = 20;
+	constexpr auto default_blocksize    = 512;
+	constexpr auto default_prebuffer_ms = 20;
 	constexpr bool default_allow_negotiate  = true;
 #endif
 
