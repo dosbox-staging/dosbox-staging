@@ -2723,7 +2723,12 @@ static bool init_sdl_sound(Section_prop* section)
 		LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
 		            mixer.sample_rate.load(),
 		            obtained.freq);
+
 		mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
+		set_section_property_value(
+		        "mixer",
+		        "rate",
+		        format_string("%d", mixer.sample_rate.load()));
 	}
 
 	// Does SDL want a different blocksize?
@@ -2733,7 +2738,11 @@ static bool init_sdl_sound(Section_prop* section)
 		LOG_WARNING("MIXER: SDL changed the requested blocksize of %u to %u frames",
 		            mixer.blocksize,
 		            obtained_blocksize);
+
 		mixer.blocksize = obtained_blocksize;
+		set_section_property_value("mixer",
+		                           "blocksize",
+		                           format_string("%d", mixer.blocksize));
 	}
 
 	LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
