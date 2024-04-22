@@ -40,22 +40,23 @@
 
 #include <Iir.h>
 
-typedef void (*MIXER_MixHandler)(uint8_t* sampdate, uint32_t len);
+typedef void (*MIXER_MixHandler)(uint8_t* sampdate, int len);
 
 // The mixer callback can accept a static function or a member function
 // using a std::bind. The callback typically requests enough frames to
 // fill one millisecond with of audio. For an audio channel running at
 // 48000 Hz, that's 48 frames.
-using MIXER_Handler = std::function<void(uint16_t frames)>;
+using MIXER_Handler = std::function<void(int frames)>;
 
 enum class MixerState { Uninitialized, NoSound, On, Muted };
 
-using work_index_t = uint16_t;
+static constexpr int MixerBufferLength = {16 * 1024};
+static constexpr int MixerBufferMask   = {MixerBufferLength - 1};
 
-static constexpr work_index_t MixerBufferLength = {16 * 1024};
-static constexpr work_index_t MixerBufferMask   = {MixerBufferLength - 1};
-
+// TODO This is hacky and should be removed. Only the PS1 Audio uses it.
 extern uint8_t MixTemp[MixerBufferLength];
+
+// TODO This seems like is a general-purpose lookup, consider moving it
 extern int16_t lut_u8to16[UINT8_MAX + 1];
 
 constexpr auto Max16BitSampleValue = INT16_MAX;
@@ -66,7 +67,7 @@ static constexpr auto max_filter_order = 16;
 static constexpr auto millis_in_second   = 1000.0;
 static constexpr auto millis_in_second_f = 1000.0f;
 
-static constexpr uint8_t use_mixer_rate = 0;
+static constexpr int use_mixer_rate = 0;
 
 // Get a DOS-formatted silent-sample when there's a chance it will
 // be processed using AddSamples_nonnative()
@@ -178,7 +179,7 @@ public:
 	bool HasFeature(ChannelFeature feature) const;
 	std::set<ChannelFeature> GetFeatures() const;
 	const std::string& GetName() const;
-	uint16_t GetSampleRate() const;
+	int GetSampleRate() const;
 
 	void Set0dbScalar(const float f);
 	void RecalcCombinedVolume();
@@ -195,9 +196,9 @@ public:
 	StereoLine GetLineoutMap() const;
 
 	std::string DescribeLineout() const;
-	void SetSampleRate(const uint16_t sample_rate_hz);
+	void SetSampleRate(const int sample_rate_hz);
 	void SetPeakAmplitude(const int peak);
-	void Mix(const uint16_t frames_requested);
+	void Mix(const int frames_requested);
 
 	MixerChannelSettings GetSettings() const;
 	void SetSettings(const MixerChannelSettings& s);
@@ -207,14 +208,14 @@ public:
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
-	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq_hz);
-	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq_hz);
+	void ConfigureHighPassFilter(const int order, const int cutoff_freq_hz);
+	void ConfigureLowPassFilter(const int order, const int cutoff_freq_hz);
 	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
 
 	bool ConfigureFadeOut(const std::string& fadeout_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
-	void SetZeroOrderHoldUpsamplerTargetRate(const uint16_t target_rate_hz);
+	void SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz);
 
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength() const;
@@ -226,28 +227,28 @@ public:
 	float GetChorusLevel() const;
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void AddSamples(const uint16_t len, const Type* data);
+	void AddSamples(const int len, const Type* data);
 
-	void AddSamples_m8(const uint16_t len, const uint8_t* data);
-	void AddSamples_s8(const uint16_t len, const uint8_t* data);
-	void AddSamples_m8s(const uint16_t len, const int8_t* data);
-	void AddSamples_s8s(const uint16_t len, const int8_t* data);
-	void AddSamples_m16(const uint16_t len, const int16_t* data);
-	void AddSamples_s16(const uint16_t len, const int16_t* data);
-	void AddSamples_m16u(const uint16_t len, const uint16_t* data);
-	void AddSamples_s16u(const uint16_t len, const uint16_t* data);
-	void AddSamples_m32(const uint16_t len, const int32_t* data);
-	void AddSamples_s32(const uint16_t len, const int32_t* data);
-	void AddSamples_mfloat(const uint16_t len, const float* data);
-	void AddSamples_sfloat(const uint16_t len, const float* data);
-	void AddSamples_m16_nonnative(const uint16_t len, const int16_t* data);
-	void AddSamples_s16_nonnative(const uint16_t len, const int16_t* data);
-	void AddSamples_m16u_nonnative(const uint16_t len, const uint16_t* data);
-	void AddSamples_s16u_nonnative(const uint16_t len, const uint16_t* data);
-	void AddSamples_m32_nonnative(const uint16_t len, const int32_t* data);
-	void AddSamples_s32_nonnative(const uint16_t len, const int32_t* data);
+	void AddSamples_m8(const int len, const uint8_t* data);
+	void AddSamples_s8(const int len, const uint8_t* data);
+	void AddSamples_m8s(const int len, const int8_t* data);
+	void AddSamples_s8s(const int len, const int8_t* data);
+	void AddSamples_m16(const int len, const int16_t* data);
+	void AddSamples_s16(const int len, const int16_t* data);
+	void AddSamples_m16u(const int len, const uint16_t* data);
+	void AddSamples_s16u(const int len, const uint16_t* data);
+	void AddSamples_m32(const int len, const int32_t* data);
+	void AddSamples_s32(const int len, const int32_t* data);
+	void AddSamples_mfloat(const int len, const float* data);
+	void AddSamples_sfloat(const int len, const float* data);
+	void AddSamples_m16_nonnative(const int len, const int16_t* data);
+	void AddSamples_s16_nonnative(const int len, const int16_t* data);
+	void AddSamples_m16u_nonnative(const int len, const uint16_t* data);
+	void AddSamples_s16u_nonnative(const int len, const uint16_t* data);
+	void AddSamples_m32_nonnative(const int len, const int32_t* data);
+	void AddSamples_s32_nonnative(const int len, const int32_t* data);
 
-	void AddStretched(const uint16_t len, int16_t* data);
+	void AddStretched(const int len, int16_t* data);
 
 	void FillUp();
 	void Enable(const bool should_enable);
@@ -266,10 +267,10 @@ private:
 	MixerChannel(const MixerChannel&) = delete;
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	AudioFrame ConvertNextFrame(const Type* data, const work_index_t pos);
+	AudioFrame ConvertNextFrame(const Type* data, const int pos);
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void ConvertSamples(const Type* data, const uint16_t frames,
+	void ConvertSamples(const Type* data, const int frames,
 	                    std::vector<float>& out);
 
 	void ConfigureResampler();
@@ -358,7 +359,7 @@ private:
 	} lerp_upsampler = {};
 
 	struct {
-		uint16_t target_rate_hz = 0;
+		int target_rate_hz = 0;
 		float pos               = 0.0f;
 		float step              = 0.0f;
 	} zoh_upsampler = {};
@@ -370,14 +371,14 @@ private:
 	struct {
 		struct {
 			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
-			uint8_t order           = 0;
-			uint16_t cutoff_freq_hz = 0;
+			int order           = 0;
+			int cutoff_freq_hz = 0;
 		} highpass = {};
 
 		struct {
 			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
-			uint8_t order           = 0;
-			uint16_t cutoff_freq_hz = 0;
+			int order           = 0;
+			int cutoff_freq_hz = 0;
 		} lowpass = {};
 	} filters               = {};
 	bool do_highpass_filter = false;
@@ -406,7 +407,7 @@ private:
 	public:
 		Sleeper() = delete;
 		Sleeper(MixerChannel& c,
-		        const uint16_t sleep_after_ms = default_wait_ms);
+		        const int sleep_after_ms = default_wait_ms);
 		bool ConfigureFadeOut(const std::string& prefs);
 		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
 		void MaybeSleep();
@@ -425,7 +426,7 @@ private:
 		int64_t woken_at_ms                = {};
 		float fadeout_level                = {};
 		float fadeout_decrement_per_ms     = {};
-		uint16_t fadeout_or_sleep_after_ms = {};
+		int fadeout_or_sleep_after_ms = {};
 
 		bool wants_fadeout = false;
 		bool had_signal    = false;
@@ -437,7 +438,7 @@ private:
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
-                                 const uint16_t sample_rate_hz, const char* name,
+                                 const int sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features);
 
 mixer_channel_t MIXER_FindChannel(const char* name);
@@ -447,8 +448,8 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t& conf);
-uint16_t MIXER_GetSampleRate();
-uint16_t MIXER_GetPreBufferMs();
+int MIXER_GetSampleRate();
+int MIXER_GetPreBufferMs();
 
 const AudioFrame MIXER_GetMasterVolume();
 void MIXER_SetMasterVolume(const AudioFrame volume);

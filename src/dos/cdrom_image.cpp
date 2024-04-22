@@ -755,11 +755,13 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 
 	// Assign the mixer function associated with this track's content type
 	if (track_file->getEndian() == AUDIO_S16SYS) {
-		player.addFrames = track_channels ==  2  ? &MixerChannel::AddSamples_s16 \
-		                                         : &MixerChannel::AddSamples_m16;
+		player.addFrames = (track_channels == 2)
+		                         ? &MixerChannel::AddSamples_s16
+		                         : &MixerChannel::AddSamples_m16;
 	} else {
-		player.addFrames = track_channels ==  2  ? &MixerChannel::AddSamples_s16_nonnative \
-		                                         : &MixerChannel::AddSamples_m16_nonnative;
+		player.addFrames = (track_channels == 2)
+		                         ? &MixerChannel::AddSamples_s16_nonnative
+		                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
 
 	/**

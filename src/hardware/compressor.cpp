@@ -37,7 +37,7 @@ Compressor::Compressor() = default;
 
 Compressor::~Compressor() = default;
 
-void Compressor::Configure(const uint16_t _sample_rate_hz,
+void Compressor::Configure(const int _sample_rate_hz,
                            const float _0dbfs_sample_value, const float threshold_db,
                            const float _ratio, const float attack_time_ms,
                            const float release_time_ms, const float rms_window_ms)
@@ -49,7 +49,7 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 	assert(release_time_ms > 0.0f);
 	assert(rms_window_ms > 0.0f);
 
-	sample_rate_hz = _sample_rate_hz;
+	sample_rate_hz = static_cast<float>(_sample_rate_hz);
 
 	scale_in  = 1.0f / _0dbfs_sample_value;
 	scale_out = _0dbfs_sample_value;
