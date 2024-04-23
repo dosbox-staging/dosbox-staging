@@ -47,7 +47,7 @@
 // ----------------
 
 // AdLib emulation state constant
-constexpr uint8_t ADLIB_CMD_DEFAULT = 85u;
+constexpr uint8_t ADLIB_CMD_DEFAULT = 85;
 
 // Environment variable names
 const auto ultrasnd_env_name = "ULTRASND";
@@ -63,21 +63,21 @@ constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER
 constexpr double MS_PER_DMA_XFER = millis_in_second / DMA_TRANSFERS_PER_S;
 
 // Voice-channel and state related constants
-constexpr uint8_t MAX_VOICES          = 32u;
-constexpr uint8_t MIN_VOICES          = 14u;
-constexpr uint8_t VOICE_DEFAULT_STATE = 3u;
+constexpr uint8_t MAX_VOICES          = 32;
+constexpr uint8_t MIN_VOICES          = 14;
+constexpr uint8_t VOICE_DEFAULT_STATE = 3;
 
 // DMA and IRQ extents and quantities
-constexpr uint8_t MIN_DMA_ADDRESS        = 0u;
-constexpr uint8_t MAX_DMA_ADDRESS        = 7u;
-constexpr uint8_t MIN_IRQ_ADDRESS        = 0u;
-constexpr uint8_t MAX_IRQ_ADDRESS        = 15u;
-constexpr uint8_t DMA_IRQ_ADDRESSES      = 8u; // number of IRQ and DMA channels
+constexpr uint8_t MIN_DMA_ADDRESS        = 0;
+constexpr uint8_t MAX_DMA_ADDRESS        = 7;
+constexpr uint8_t MIN_IRQ_ADDRESS        = 0;
+constexpr uint8_t MAX_IRQ_ADDRESS        = 15;
+constexpr uint8_t DMA_IRQ_ADDRESSES      = 8; // number of IRQ and DMA channels
 constexpr uint16_t DMA_TC_STATUS_BITMASK = 0b100000000; // Status in 9th bit
 
 // Pan position constants
-constexpr uint8_t PAN_DEFAULT_POSITION = 7u;
-constexpr uint8_t PAN_POSITIONS = 16u; // 0: -45-deg, 7: centre, 15: +45-deg
+constexpr uint8_t PAN_DEFAULT_POSITION = 7;
+constexpr uint8_t PAN_POSITIONS = 16; // 0: -45-deg, 7: centre, 15: +45-deg
 
 // Timer delay constants
 constexpr double TIMER_1_DEFAULT_DELAY = 0.080;
@@ -86,21 +86,21 @@ constexpr double TIMER_2_DEFAULT_DELAY = 0.320;
 // Volume scaling and dampening constants
 constexpr auto DELTA_DB             = 0.002709201; // 0.0235 dB increments
 constexpr int16_t VOLUME_INC_SCALAR = 512; // Volume index increment scalar
-constexpr uint16_t VOLUME_LEVELS    = 4096u;
+constexpr uint16_t VOLUME_LEVELS    = 4096;
 
 // Interwave addressing constant
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 
 // IO address quantities
-constexpr uint8_t READ_HANDLERS  = 8u;
-constexpr uint8_t WRITE_HANDLERS = 9u;
+constexpr uint8_t READ_HANDLERS  = 8;
+constexpr uint8_t WRITE_HANDLERS = 9;
 
 // A group of parameters defining the Gus's voice IRQ control that's also shared
 // (as a reference) into each instantiated voice.
 struct VoiceIrq {
-	uint32_t vol_state  = 0u;
-	uint32_t wave_state = 0u;
-	uint8_t status      = 0u;
+	uint32_t vol_state  = 0;
+	uint32_t wave_state = 0;
+	uint8_t status      = 0;
 };
 
 // A group of parameters used in the Voice class to track the Wave and Volume
@@ -154,8 +154,8 @@ public:
 	VoiceCtrl vol_ctrl;
 	VoiceCtrl wave_ctrl;
 
-	uint32_t generated_8bit_ms  = 0u;
-	uint32_t generated_16bit_ms = 0u;
+	uint32_t generated_8bit_ms  = 0;
+	uint32_t generated_16bit_ms = 0;
 
 private:
 	Voice()                        = delete;
@@ -185,7 +185,7 @@ private:
 		DECREASING    = 0x40,
 	};
 
-	uint32_t irq_mask = 0u;
+	uint32_t irq_mask = 0;
 	uint8_t& shared_irq_status;
 	uint8_t pan_position = PAN_DEFAULT_POSITION;
 };
@@ -298,37 +298,37 @@ private:
 	uint8_t& adlib_command_reg = adlib_commandreg;
 
 	// Port address
-	io_port_t port_base = 0u;
+	io_port_t port_base = 0;
 
 	// Voice states
-	uint32_t active_voice_mask = 0u;
-	uint16_t voice_index       = 0u;
-	uint8_t active_voices      = 0u;
-	uint8_t prev_logged_voices = 0u;
+	uint32_t active_voice_mask = 0;
+	uint16_t voice_index       = 0;
+	uint8_t active_voices      = 0;
+	uint8_t prev_logged_voices = 0;
 
 	// RAM and register data
-	uint32_t dram_addr        = 0u;
-	uint16_t register_data    = 0u;
-	uint8_t selected_register = 0u;
+	uint32_t dram_addr        = 0;
+	uint16_t register_data    = 0;
+	uint8_t selected_register = 0;
 
 	// Control states
 	uint8_t mix_ctrl    = 0x0b; // latches enabled, LINEs disabled
-	uint8_t sample_ctrl = 0u;
-	uint8_t timer_ctrl  = 0u;
+	uint8_t sample_ctrl = 0;
+	uint8_t timer_ctrl  = 0;
 
 	// DMA states
-	uint16_t dma_addr       = 0u;
-	uint8_t dma_addr_nibble = 0u;
+	uint16_t dma_addr       = 0;
+	uint8_t dma_addr_nibble = 0;
 	// dma_ctrl would normally be a uint8_t as real hardware uses 8 bits,
 	// but we store the DMA terminal count status in the 9th bit
-	uint16_t dma_ctrl = 0u;
-	uint8_t dma1      = 0u; // playback DMA
-	uint8_t dma2      = 0u; // recording DMA
+	uint16_t dma_ctrl = 0;
+	uint8_t dma1      = 0; // playback DMA
+	uint8_t dma2      = 0; // recording DMA
 
 	// IRQ states
-	uint8_t irq1       = 0u; // playback IRQ
-	uint8_t irq2       = 0u; // MIDI IRQ
-	uint8_t irq_status = 0u;
+	uint8_t irq1       = 0; // playback IRQ
+	uint8_t irq2       = 0; // MIDI IRQ
+	uint8_t irq_status = 0;
 
 	bool dac_enabled                = false;
 	bool irq_enabled                = false;
@@ -494,7 +494,7 @@ float Voice::PopVolScalar(const vol_scalars_array_t& vol_scalars)
 // Read an 8-bit sample scaled into the 16-bit range, returned as a float
 float Voice::Read8BitSample(const ram_array_t& ram, const int32_t addr) const noexcept
 {
-	const auto i                   = static_cast<size_t>(addr) & 0xfffffu;
+	const auto i                   = static_cast<size_t>(addr) & 0xfffff;
 	constexpr auto bits_in_16      = std::numeric_limits<int16_t>::digits;
 	constexpr auto bits_in_8       = std::numeric_limits<int8_t>::digits;
 	constexpr float to_16bit_range = 1 << (bits_in_16 - bits_in_8);
@@ -531,7 +531,7 @@ uint8_t Voice::ReadWaveState() const noexcept
 
 void Voice::ResetCtrls() noexcept
 {
-	vol_ctrl.pos = 0u;
+	vol_ctrl.pos = 0;
 	UpdateVolState(0x1);
 	UpdateWaveState(0x1);
 	WritePanPot(PAN_DEFAULT_POSITION);
@@ -589,7 +589,7 @@ void Voice::WritePanPot(uint8_t pos) noexcept
 void Voice::WriteVolRate(uint16_t val) noexcept
 {
 	vol_ctrl.rate                  = val;
-	constexpr uint8_t bank_lengths = 63u;
+	constexpr uint8_t bank_lengths = 63;
 	const int pos_in_bank          = val & bank_lengths;
 	const int decimator            = 1 << (3 * (val >> 6));
 	vol_ctrl.inc = ceil_sdivide(pos_in_bank * VOLUME_INC_SCALAR, decimator);
@@ -922,8 +922,8 @@ bool Gus::PerformDmaTransfer()
 		auto ram_pos           = ram.begin() + offset;
 		const auto ram_pos_end = ram_pos + bytes_transfered;
 		// adjust our start and skip size if handling 16-bit PCM samples
-		ram_pos += IsDmaPcm16Bit() ? 1u : 0u;
-		const auto skip = IsDmaPcm16Bit() ? 2u : 1u;
+		ram_pos += IsDmaPcm16Bit() ? 1 : 0;
+		const auto skip = IsDmaPcm16Bit() ? 2 : 1;
 		assert(ram_pos >= ram.begin() && ram_pos <= ram_pos_end &&
 		       ram_pos_end <= ram.end());
 		while (ram_pos < ram_pos_end) {
@@ -1109,10 +1109,10 @@ void Gus::PrepareForPlayback() noexcept
 void Gus::PrintStats()
 {
 	// Aggregate stats from all voices
-	uint32_t combined_8bit_ms  = 0u;
-	uint32_t combined_16bit_ms = 0u;
-	uint32_t used_8bit_voices  = 0u;
-	uint32_t used_16bit_voices = 0u;
+	uint32_t combined_8bit_ms  = 0;
+	uint32_t combined_16bit_ms = 0;
+	uint32_t used_8bit_voices  = 0;
+	uint32_t used_16bit_voices = 0;
 	for (const auto& voice : voices) {
 		if (voice.generated_8bit_ms) {
 			combined_8bit_ms += voice.generated_8bit_ms;
@@ -1158,7 +1158,7 @@ uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 	case 0x206: return irq_status;
 	case 0x208:
 		uint8_t time;
-		time = 0u;
+		time = 0;
 		if (timer_one.has_expired) {
 			time |= (1 << 6);
 		}
@@ -1251,7 +1251,7 @@ uint16_t Gus::ReadFromRegister()
 	if (!target_voice) {
 		return (selected_register == 0x80 || selected_register == 0x8d)
 		             ? 0x0300
-		             : 0u;
+		             : 0;
 	}
 
 	// Registers that read from from the current voice
@@ -1330,19 +1330,19 @@ void Gus::StopPlayback()
 	irq_status                 = 0;
 	irq_previously_interrupted = false;
 
-	dma_ctrl    = 0u;
+	dma_ctrl    = 0;
 	mix_ctrl    = 0xb; // latches enabled, LINEs disabled
-	timer_ctrl  = 0u;
-	sample_ctrl = 0u;
+	timer_ctrl  = 0;
+	sample_ctrl = 0;
 
 	target_voice  = nullptr;
-	voice_index   = 0u;
-	active_voices = 0u;
+	voice_index   = 0;
+	active_voices = 0;
 
 	UpdateDmaAddr(0);
-	dram_addr             = 0u;
-	register_data         = 0u;
-	selected_register     = 0u;
+	dram_addr             = 0;
+	register_data         = 0;
+	selected_register     = 0;
 	should_change_irq_dma = false;
 	PIC_RemoveEvents(GUS_TimerEvent);
 	is_running = false;
@@ -1432,7 +1432,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		should_change_irq_dma = false;
 		if (mix_ctrl & 0x40) {
 			// IRQ configuration, only use low bits for irq 1
-			const auto i        = val & 7u;
+			const auto i        = val & 7;
 			const auto& address = irq_addresses.at(i);
 			if (address) {
 				irq1 = address;
@@ -1525,7 +1525,7 @@ void Gus::WriteToRegister()
 		return;
 	case 0x42: // Gravis DRAM DMA address register
 		dma_addr        = register_data;
-		dma_addr_nibble = 0u; // invalidate the nibble
+		dma_addr_nibble = 0; // invalidate the nibble
 		return;
 	case 0x43: // LSW Peek/poke DRAM position
 		dram_addr = (0xf0000 & dram_addr) |
