@@ -413,7 +413,7 @@ private:
 		bool WakeUp();
 
 	private:
-		void DecrementFadeLevel(const int64_t awake_for_ms);
+		void DecrementFadeLevel(const int awake_for_ms);
 
 		MixerChannel& channel;
 

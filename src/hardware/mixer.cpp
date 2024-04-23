@@ -112,6 +112,9 @@ struct ReverbSettings {
 	           const float synth_level, const float digital_level,
 	           const float highpass_freq_hz, const int sample_rate_hz)
 	{
+		assert(highpass_freq_hz > 0);
+		assert(sample_rate_hz > 0);
+
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
 		highpass_cutoff_freq_hz  = highpass_freq_hz;
@@ -145,6 +148,8 @@ struct ChorusSettings {
 	void Setup(const float synth_level, const float digital_level,
 	           const int sample_rate_hz)
 	{
+		assert(sample_rate_hz > 0);
+
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
 
@@ -654,6 +659,9 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
                                  const int sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features)
 {
+	// We allow 0 for the UseMixerRate special value
+	assert(sample_rate_hz >= 0);
+
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(sample_rate_hz);
 	chan->SetAppVolume({1.0f, 1.0f});
@@ -991,11 +999,14 @@ void MixerChannel::ClearResampler()
 
 void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 {
+	// We allow 0 for the UseMixerRate special value
+	assert(new_sample_rate_hz >= 0);
+
 	// If the requested rate is zero, then avoid resampling by running the
 	// channel at the mixer's rate
-	const int target_rate_hz = new_sample_rate_hz
-	                                 ? new_sample_rate_hz
-	                                 : mixer.sample_rate_hz.load();
+	const int target_rate_hz = (new_sample_rate_hz == UseMixerRate)
+	                                 ? mixer.sample_rate_hz.load()
+	                                 : new_sample_rate_hz;
 	assert(target_rate_hz > 0);
 
 	// Nothing to do: the channel is already running at the requested rate
@@ -1043,6 +1054,8 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 
 void MixerChannel::Mix(const int frames_requested)
 {
+	assert(frames_requested >= 0);
+
 	if (!is_enabled) {
 		return;
 	}
@@ -1132,6 +1145,9 @@ static void log_filter_settings(const std::string& channel_name,
                                 const FilterState state, const int order,
                                 const int cutoff_freq_hz)
 {
+	assert(order > 0);
+	assert(cutoff_freq_hz > 0);
+
 	// we programmatically expect only 'on' and 'forced-on' states:
 	assert(state != FilterState::Off);
 	assert(state == FilterState::On || state == FilterState::ForcedOn);
@@ -1175,6 +1191,8 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_name,
                                     const int cutoff_freq_hz)
 {
+	assert(cutoff_freq_hz > 0);
+
 	const auto max_cutoff_freq_hz = mixer.sample_rate_hz / 2 - 1;
 
 	if (cutoff_freq_hz <= max_cutoff_freq_hz) {
@@ -1193,6 +1211,9 @@ static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_
 
 void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_freq_hz)
 {
+	assert(order > 0);
+	assert(_cutoff_freq_hz > 0);
+
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
 	assert(order > 0 && order <= MaxFilterOrder);
@@ -1206,6 +1227,9 @@ void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_fr
 
 void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_freq_hz)
 {
+	assert(order > 0);
+	assert(_cutoff_freq_hz > 0);
+
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
 	assert(order > 0 && order <= MaxFilterOrder);
@@ -1329,6 +1353,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 
 void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz)
 {
+	assert(target_rate_hz > 0);
+
 	// TODO make sure that the ZOH target frequency cannot be set after the
 	// filter has been configured
 	zoh_upsampler.target_rate_hz = target_rate_hz;
@@ -1505,6 +1531,8 @@ constexpr void fill_8to16_lut()
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 {
+	assert(pos >= 0);
+
 	AudioFrame frame = {};
 
 	const auto left_pos  = pos * 2 + 0;
@@ -1636,6 +1664,8 @@ template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::ConvertSamples(const Type* data, const int frames,
                                   std::vector<float>& out)
 {
+	assert(frames >= 0);
+
 	// read-only aliases to avoid repeated dereferencing and to inform the
 	// compiler their values don't change
 	const auto mapped_output_left  = output_map.left;
@@ -1791,8 +1821,9 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	return false;
 }
 
-void MixerChannel::Sleeper::DecrementFadeLevel(const int64_t awake_for_ms)
+void MixerChannel::Sleeper::DecrementFadeLevel(const int awake_for_ms)
 {
+	assert(awake_for_ms >= 0);
 	assert(awake_for_ms >= fadeout_or_sleep_after_ms);
 	const auto elapsed_fade_ms = static_cast<float>(
 	        awake_for_ms - fadeout_or_sleep_after_ms);
@@ -1808,6 +1839,8 @@ MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
         : channel(c),
           fadeout_or_sleep_after_ms(sleep_after_ms)
 {
+	assert(sleep_after_ms >= 0);
+
 	// The constructed sleep period is programmatically controlled (so assert)
 	assert(fadeout_or_sleep_after_ms >= MinWaitMs);
 	assert(fadeout_or_sleep_after_ms <= MaxWaitMs);
@@ -2022,6 +2055,8 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 
 void MixerChannel::AddStretched(const int len, int16_t* data)
 {
+	assert(len >= 0);
+
 	MIXER_LockAudioDevice();
 
 	if (frames_done >= frames_needed) {
@@ -2244,6 +2279,8 @@ static inline bool is_mixer_irq_important()
 
 static constexpr int calc_tickadd(const int freq)
 {
+	assert(freq > 0);
+
 	const auto freq64 = static_cast<int64_t>(freq);
 	return check_cast<int>((freq64 << TickShift) / 1000);
 }
@@ -2251,6 +2288,8 @@ static constexpr int calc_tickadd(const int freq)
 // Mix a certain amount of new sample frames
 static void mix_samples(const int frames_requested)
 {
+	assert(frames_requested >= 0);
+
 	constexpr auto CaptureBufFrames = 1024;
 
 	const auto frames_added = std::min(frames_requested - mixer.frames_done,
@@ -2394,6 +2433,8 @@ static void handle_mix_samples()
 
 static void reduce_channels_done_counts(const int at_most)
 {
+	assert(at_most >= 0);
+
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->frames_done -= std::min(channel->frames_done.load(), at_most);
 	}
