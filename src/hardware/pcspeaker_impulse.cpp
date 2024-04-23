@@ -415,7 +415,7 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 		phase = sinc_oversampling_factor - phase;
 	}
 
-	for (uint16_t i = 0; i < sinc_filter_quality; ++i) {
+	for (auto i = 0; i < sinc_filter_quality; ++i) {
 		const auto wave_i    = check_cast<uint16_t>(offset + i);
 		const auto impulse_i = check_cast<uint16_t>(
 		        phase + i * sinc_oversampling_factor);
@@ -435,7 +435,7 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 }
 #endif
 
-void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
+void PcSpeakerImpulse::ChannelCallback(int requested_frames)
 {
 	ForwardPIT(1.0f);
 	pit.last_index = 0;
@@ -545,7 +545,7 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 
 	LOG_MSG("%s: Initialised %s model", device_name, model_name);
 
-	channel->SetPeakAmplitude(static_cast<uint32_t>(positive_amplitude));
+	channel->SetPeakAmplitude(positive_amplitude);
 }
 
 PcSpeakerImpulse::~PcSpeakerImpulse()
