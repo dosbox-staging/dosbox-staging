@@ -56,7 +56,7 @@
 
 CHECK_NARROWING();
 
-//#define DEBUG_MIXER
+// #define DEBUG_MIXER
 
 constexpr auto MixerFrameSize = 4;
 
@@ -187,7 +187,7 @@ struct MixerSettings {
 	std::atomic<int> sample_rate_hz = 0;
 
 	// Matches SDL AudioSpec.samples type
-	int blocksize = 0;
+	int blocksize    = 0;
 	int prebuffer_ms = 25;
 
 	SDL_AudioDeviceID sdldevice = 0;
@@ -330,7 +330,8 @@ static CrossfeedPreset crossfeed_pref_to_preset(const std::string& pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
-		return *pref_has_bool ? DefaultCrossfeedPreset : CrossfeedPreset::None;
+		return *pref_has_bool ? DefaultCrossfeedPreset
+		                      : CrossfeedPreset::None;
 	}
 	if (pref == "light") {
 		return CrossfeedPreset::Light;
@@ -401,7 +402,8 @@ void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset)
 	sync_crossfeed_setting(c.preset);
 
 	if (mixer.do_crossfeed) {
-		LOG_MSG("MIXER: Crossfeed enabled ('%s' preset)", to_string(c.preset));
+		LOG_MSG("MIXER: Crossfeed enabled ('%s' preset)",
+		        to_string(c.preset));
 	} else {
 		LOG_MSG("MIXER: Crossfeed disabled");
 	}
@@ -702,15 +704,17 @@ mixer_channel_t MIXER_FindChannel(const char* name)
 	if (it == mixer.channels.end()) {
 		// Deprecated alias SPKR to PCSPEAKER
 		if (std::string_view(name) == "SPKR") {
-			LOG_WARNING("MIXER: 'SPKR' is deprecated due to inconsistent "
-			            "naming, please use 'PCSPEAKER' instead");
+			LOG_WARNING(
+			        "MIXER: 'SPKR' is deprecated due to inconsistent "
+			        "naming, please use 'PCSPEAKER' instead");
 			it = mixer.channels.find(ChannelName::PcSpeaker);
 
 			// Deprecated alias FM to OPL
 		} else if (std::string_view(name) == "FM") {
-			LOG_WARNING("MIXER: 'FM' is deprecated due to inconsistent "
-			            "naming, please use '%s' instead",
-			            ChannelName::Opl);
+			LOG_WARNING(
+			        "MIXER: 'FM' is deprecated due to inconsistent "
+			        "naming, please use '%s' instead",
+			        ChannelName::Opl);
 			it = mixer.channels.find(ChannelName::Opl);
 		}
 	}
@@ -785,7 +789,7 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 	        name,
 	        static_cast<double>(left),
 	        static_cast<double>(right),
-	        static_cast<double>(app_volume_scalar.left * 100.0f),
+	        static_cast<double>(app_volume_scalar.left  * 100.0f),
 	        static_cast<double>(app_volume_scalar.right * 100.0f));
 #endif
 }
@@ -1187,8 +1191,7 @@ static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_
 	}
 }
 
-void MixerChannel::ConfigureHighPassFilter(const int order,
-                                           const int _cutoff_freq_hz)
+void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_freq_hz)
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1201,8 +1204,7 @@ void MixerChannel::ConfigureHighPassFilter(const int order,
 	filters.highpass.cutoff_freq_hz = cutoff_freq_hz;
 }
 
-void MixerChannel::ConfigureLowPassFilter(const int order,
-                                          const int _cutoff_freq_hz)
+void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_freq_hz)
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1233,10 +1235,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	const auto dual_filter   = (parts.size() == 6);
 
 	if (!(single_filter || dual_filter)) {
-		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
-		            "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
-		            name.c_str(),
-		            filter_prefs.c_str());
+		LOG_WARNING(
+		        "%s: Invalid custom filter definition: '%s'. Must be "
+		        "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
+		        name.c_str(),
+		        filter_prefs.c_str());
 		return false;
 	}
 
@@ -1276,8 +1279,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			SetLowPassFilter(FilterState::On);
 
 		} else if (type_pref == "hpf") {
-			ConfigureHighPassFilter(order,
-			                        cutoff_freq_hz);
+			ConfigureHighPassFilter(order, cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
 
 		} else {
@@ -1309,10 +1311,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		const auto filter2_cutoff_freq_hz = parts[i++];
 
 		if (filter1_type == filter2_type) {
-			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
-			            "The two filters must be of different types.",
-			            name.c_str(),
-			            filter_prefs.c_str());
+			LOG_WARNING(
+			        "%s: Invalid custom filter definition: '%s'. "
+			        "The two filters must be of different types.",
+			        name.c_str(),
+			        filter_prefs.c_str());
 			return false;
 		}
 
@@ -1539,6 +1542,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 					        data + left_pos);
 					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
 					        data + right_pos);
+
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(host_pt0);
 						frame[1] = (int16_t)host_readw(host_pt1);
@@ -1555,6 +1559,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 				} else {
 					auto host_pt = reinterpret_cast<const uint8_t* const>(
 					        data + pos);
+
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(host_pt);
 					} else {
@@ -1578,6 +1583,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 					        data + left_pos);
 					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
 					        data + right_pos);
+
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
@@ -1605,6 +1611,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 				} else {
 					auto host_pt = reinterpret_cast<const uint8_t* const>(
 					        data + pos);
+
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
@@ -1670,7 +1677,7 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 		envelope.Process(stereo, frame_with_gain);
 
 		out_frame = {0.0f, 0.0f};
-		out_frame[mapped_output_left] += frame_with_gain.left;
+		out_frame[mapped_output_left]  += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
 		out.emplace_back(out_frame[0]);
@@ -1709,7 +1716,7 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 	auto pan = [](const float sample, const float pan) -> AudioFrame {
 		return {(1.0f - pan) * sample, pan * sample};
 	};
-	const auto a = pan(frame.left, crossfeed.pan_left);
+	const auto a = pan(frame.left,  crossfeed.pan_left);
 	const auto b = pan(frame.right, crossfeed.pan_right);
 	return {a.left + b.left, a.right + b.right};
 }
@@ -1768,16 +1775,17 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 		}
 	}
 	// Otherwise inform the user and disable the fade
-	LOG_WARNING("%s: Invalid custom fade-out definition: '%s'. Must be "
-	            "specified in \"WAIT FADE\" format where WAIT is between "
-	            "%d and %d (in milliseconds) and FADE is between %d and "
-	            "%d (in milliseconds); using 'off'.",
-	            channel.GetName().c_str(),
-	            prefs.c_str(),
-	            min_wait_ms,
-	            max_wait_ms,
-	            min_fade_ms,
-	            max_fade_ms);
+	LOG_WARNING(
+	        "%s: Invalid custom fade-out definition: '%s'. Must be "
+	        "specified in \"WAIT FADE\" format where WAIT is between "
+	        "%d and %d (in milliseconds) and FADE is between %d and "
+	        "%d (in milliseconds); using 'off'.",
+	        channel.GetName().c_str(),
+	        prefs.c_str(),
+	        min_wait_ms,
+	        max_wait_ms,
+	        min_fade_ms,
+	        max_fade_ms);
 
 	wants_fadeout = false;
 	return false;
@@ -1815,7 +1823,7 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 	if (!had_signal) {
 		// Otherwise, we simply passively listen for signal
 		constexpr auto silence_threshold = 1.0f;
-		had_signal = fabsf(frame.left) > silence_threshold ||
+		had_signal = fabsf(frame.left)  > silence_threshold ||
 		             fabsf(frame.right) > silence_threshold;
 	}
 	return frame;
@@ -1847,7 +1855,7 @@ void MixerChannel::Sleeper::MaybeSleep()
 bool MixerChannel::Sleeper::WakeUp()
 {
 	// Always reset for another round of awakeness
-	woken_at_ms = GetTicks();
+	woken_at_ms   = GetTicks();
 	fadeout_level = 1.0f;
 	had_signal    = false;
 
@@ -1904,17 +1912,18 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 				s.pos += s.step;
 
 #ifdef DEBUG_MIXER
-				LOG_DEBUG("%s: AddSamples last %.1f:%.1f curr %.1f:%.1f"
-				          " -> out %.1f:%.1f, pos=%.2f, step=%.2f",
-				          name.c_str(),
-				          s.last_frame.left,
-				          s.last_frame.right,
-				          curr_frame.left,
-				          curr_frame.right,
-				          out_left,
-				          out_right,
-				          s.pos,
-				          s.step);
+				LOG_DEBUG(
+				        "%s: AddSamples last %.1f:%.1f curr %.1f:%.1f"
+				        " -> out %.1f:%.1f, pos=%.2f, step=%.2f",
+				        name.c_str(),
+				        s.last_frame.left,
+				        s.last_frame.right,
+				        curr_frame.left,
+				        curr_frame.right,
+				        out_left,
+				        out_right,
+				        s.pos,
+				        s.step);
 #endif
 
 				if (s.pos > 1.0f) {
@@ -1972,11 +1981,11 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
-			frame.left = filters.highpass.hpf[0].filter(frame.left);
+			frame.left  = filters.highpass.hpf[0].filter(frame.left);
 			frame.right = filters.highpass.hpf[1].filter(frame.right);
 		}
 		if (do_lowpass_filter) {
-			frame.left = filters.lowpass.lpf[0].filter(frame.left);
+			frame.left  = filters.lowpass.lpf[0].filter(frame.left);
 			frame.right = filters.lowpass.lpf[1].filter(frame.right);
 		}
 		if (do_crossfeed) {
@@ -2061,7 +2070,7 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
 		}
 
-		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
+		mixer.work[mixpos][mapped_output_left]  += frame_with_gain.left;
 		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
 
 		mixpos = (mixpos + 1) & MixerBufferMask;
@@ -2314,7 +2323,7 @@ static void mix_samples(const int frames_requested)
 		for (auto i = 0; i < frames_added; ++i) {
 			for (auto ch = 0; ch < 2; ++ch) {
 				mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
-						mixer.work[pos][ch]);
+				        mixer.work[pos][ch]);
 			}
 			pos = (pos + 1) & MixerBufferMask;
 		}
@@ -2461,8 +2470,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 				                     : frames_needed) -
 				            frames_remaining;
 
-				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz +
-				                              (diff * 3));
+				mixer.tick_add = calc_tickadd(
+				        mixer.sample_rate_hz + (diff * 3));
 				frames_remaining = 0; // No stretching as we
 				                      // compensate with the
 				                      // tick_add value
@@ -2502,13 +2511,13 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			}
 
 			if (diff > (mixer.min_frames_needed >> 1)) {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
-				                              (diff / 5));
+				mixer.tick_add = calc_tickadd(
+				        mixer.sample_rate_hz - (diff / 5));
 			}
 
 			else if (diff > (mixer.min_frames_needed >> 2)) {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
-				                              (diff >> 3));
+				mixer.tick_add = calc_tickadd(
+				        mixer.sample_rate_hz - (diff >> 3));
 			} else {
 				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 			}
@@ -2802,7 +2811,7 @@ void MIXER_Init(Section* sec)
 	assert(section);
 
 	mixer.sample_rate_hz = section->Get_int("rate");
-	mixer.blocksize = section->Get_int("blocksize");
+	mixer.blocksize      = section->Get_int("blocksize");
 
 	const auto configured_state = section->Get_bool("nosound")
 	                                    ? MixerState::NoSound
@@ -2831,9 +2840,9 @@ void MIXER_Init(Section* sec)
 	const auto prebuffer_frames = (mixer.sample_rate_hz * mixer.prebuffer_ms) /
 	                              1000;
 
-	mixer.pos           = 0;
-	mixer.frames_done   = 0;
-	mixer.frames_needed = mixer.min_frames_needed + 1;
+	mixer.pos               = 0;
+	mixer.frames_done       = 0;
+	mixer.frames_needed     = mixer.min_frames_needed + 1;
 	mixer.min_frames_needed = 0;
 	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
 
@@ -2918,15 +2927,15 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	constexpr auto default_sample_rate_hz = 48000;
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
-	constexpr auto default_blocksize    = 1024;
-	constexpr auto default_prebuffer_ms = 25;
-	constexpr bool default_allow_negotiate  = false;
+	constexpr auto default_blocksize       = 1024;
+	constexpr auto default_prebuffer_ms    = 25;
+	constexpr bool default_allow_negotiate = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
-	constexpr auto default_blocksize    = 512;
-	constexpr auto default_prebuffer_ms = 20;
-	constexpr bool default_allow_negotiate  = true;
+	constexpr auto default_blocksize       = 512;
+	constexpr auto default_prebuffer_ms    = 20;
+	constexpr bool default_allow_negotiate = true;
 #endif
 
 	constexpr auto always        = Property::Changeable::Always;
@@ -2946,8 +2955,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	int_prop->Set_help("Mixer sample rate in Hz (%s by default).");
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
-	int_prop->Set_values(
-	        {"128", "256", "512", "1024", "2048", "4096", "8192"});
+	int_prop->Set_values({"128", "256", "512", "1024", "2048", "4096", "8192"});
 	int_prop->Set_help(
 	        "Mixer block size in sample frames (%s by default). Larger values might help\n"
 	        "with sound stuttering but the sound will also be more lagged.");
@@ -2966,10 +2974,11 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	const auto default_on = true;
 	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
-	bool_prop->Set_help("Enable the auto-leveling compressor on the master channel to prevent clipping\n"
-	                    "of the audio output:\n"
-	                    "  off:  Disable compressor.\n"
-	                    "  on:   Enable compressor (default).");
+	bool_prop->Set_help(
+	        "Enable the auto-leveling compressor on the master channel to prevent clipping\n"
+	        "of the audio output:\n"
+	        "  off:  Disable compressor.\n"
+	        "  on:   Enable compressor (default).");
 
 	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
 	string_prop->Set_help(
