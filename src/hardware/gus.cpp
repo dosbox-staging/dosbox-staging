@@ -291,7 +291,7 @@ private:
 	// Playback related
 	double last_rendered_ms = 0.0;
 	double ms_per_render    = 0.0;
-	uint16_t sample_rate_hz = 0;
+	int sample_rate_hz      = 0;
 
 	uint8_t &adlib_command_reg = adlib_commandreg;
 
@@ -667,8 +667,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// Gravis' calculation to convert from number of active voices
 		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
 		// v2.22 (21 December 1994), pp. 3 of 113.
-		sample_rate_hz = static_cast<uint16_t>(
-		        1000000.0 / (1.619695497 * active_voices));
+		sample_rate_hz = 1000000.0 / (1.619695497 * active_voices);
 
 		ms_per_render = millis_in_second / sample_rate_hz;
 
