@@ -57,7 +57,7 @@ static const char* to_string(const OplMode opl_mode)
 	// clang-format on
 }
 
-Timer::Timer(int16_t micros)
+Timer::Timer(const int micros)
         : clock_interval(micros * 0.001) // interval in milliseconds
 {
 	SetCounter(0);
@@ -307,11 +307,11 @@ int16_t remove_dc_bias(const int16_t back_sample)
 {
 	// Calculate the number of samples we need average across to maintain
 	// the lowest frequency given an assumed playback rate.
-	constexpr int16_t PcmPlaybackRateHz      = 16000;
-	constexpr int16_t LowestFreqToMaintainHz = 200;
-	constexpr int16_t NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
+	constexpr auto PcmPlaybackRateHz      = 16000;
+	constexpr auto LowestFreqToMaintainHz = 200;
+	constexpr auto NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
 
-	static int32_t sum = 0;
+	static int sum = 0;
 
 	static std::queue<int16_t> samples = {};
 
@@ -390,7 +390,7 @@ void Opl::RenderUpToNow()
 	}
 }
 
-void Opl::AudioCallback(const uint16_t requested_frames)
+void Opl::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 #if 0
