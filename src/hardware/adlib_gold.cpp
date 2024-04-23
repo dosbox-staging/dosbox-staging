@@ -30,7 +30,7 @@ CHECK_NARROWING();
 // Yamaha YM7128B Surround Processor emulation
 // -------------------------------------------
 
-SurroundProcessor::SurroundProcessor(const uint16_t sample_rate_hz)
+SurroundProcessor::SurroundProcessor(const int sample_rate_hz)
 {
 	assert(sample_rate_hz >= 10);
 
@@ -104,7 +104,7 @@ AudioFrame SurroundProcessor::Process(const AudioFrame frame)
 // Philips Semiconductors TDA8425 hi-fi stereo audio processor emulation
 // ---------------------------------------------------------------------
 
-StereoProcessor::StereoProcessor(const uint16_t _sample_rate_hz)
+StereoProcessor::StereoProcessor(const int _sample_rate_hz)
         : sample_rate_hz(_sample_rate_hz)
 {
 	assert(sample_rate_hz > 0);
@@ -147,8 +147,10 @@ void StereoProcessor::Reset()
 	ControlWrite(StereoProcessorControlReg::Treble, shelf_filter_0db_value);
 
 	StereoProcessorSwitchFunctions sf = {};
-	sf.source_selector                = static_cast<uint8_t>(
-                StereoProcessorSourceSelector::Stereo1);
+
+	sf.source_selector = static_cast<uint8_t>(
+	        StereoProcessorSourceSelector::Stereo1);
+
 	sf.stereo_mode = static_cast<uint8_t>(StereoProcessorStereoMode::LinearStereo);
 
 	ControlWrite(StereoProcessorControlReg::SwitchFunctions, sf.data);
@@ -326,7 +328,7 @@ AudioFrame StereoProcessor::Process(const AudioFrame frame)
 // AdLib Gold module
 // -----------------
 
-AdlibGold::AdlibGold(const uint16_t sample_rate_hz)
+AdlibGold::AdlibGold(const int sample_rate_hz)
         : surround_processor(nullptr),
           stereo_processor(nullptr)
 {
@@ -347,7 +349,7 @@ void AdlibGold::SurroundControlWrite(const uint8_t val)
 	surround_processor->ControlWrite(val);
 }
 
-void AdlibGold::Process(const int16_t* in, const uint32_t frames, float* out)
+void AdlibGold::Process(const int16_t* in, const int frames, float* out)
 {
 	auto frames_remaining = frames;
 
