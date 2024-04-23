@@ -778,57 +778,8 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);
 #endif
 
-	secprop = control->AddSection_prop("sblaster",
-	                                   &SBLASTER_Init,
-	                                   changeable_at_runtime);
-
-	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values(
-	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
-	pstring->Set_help(
-	        "Sound Blaster model to emulate ('sb16' by default).\n"
-	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
-	        "  gb:        Game Blaster          - CMS\n"
-	        "  sb1:       Sound Blaster 1.0     - OPL2, CMS\n"
-	        "  sb2:       Sound Blaster 2.0     - OPL2\n"
-	        "  sbpro1:    Sound Blaster Pro     - Dual OPL2\n"
-	        "  sbpro2:    Sound Blaster Pro 2   - OPL3\n"
-	        "  sb16:      Sound Blaster 16      - OPL3 (default)\n"
-	        "  ess:       ESS ES1688 AudioDrive - ESFM\n"
-	        "  none/off:  Disable Sound Blaster emulation.\n"
-	        "Notes:\n"
-	        "  - Creative Music System was later rebranded to Game Blaster; they are the\n"
-	        "    same card.\n"
-	        "  - The 'ess' option is for getting ESS Enhanced FM music via the card's ESFM\n"
-	        "    synthesiser in games that support it. The ESS DAC is not emulated but the\n"
-	        "    card is Sound Blaster Pro compatible; just configure the game for Sound\n"
-	        "    Blaster digital sound.");
-
-	phex = secprop->Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
-	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
-
-	pint = secprop->Add_int("irq", when_idle, 7);
-	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
-	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
-
-	pint = secprop->Add_int("dma", when_idle, 1);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
-
-	pint = secprop->Add_int("hdma", when_idle, 5);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
-
-	pbool = secprop->Add_bool("sbmixer", when_idle, true);
-	pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).");
-
-	pint = secprop->Add_int("sbwarmup", when_idle, 100);
-	pint->Set_help(
-	        "Silence initial DMA audio after card power-on, in milliseconds\n"
-	        "(100 by default). This mitigates pops heard when starting many SB-based games.\n"
-	        "Reduce this if you notice intial playback is missing audio.");
-	pint->SetMinMax(0, 100);
+	// Configure Sound Blaster and ESS
+	SB_AddConfigSection(control);
 
 	pint = secprop->Add_int("oplrate", deprecated, false);
 	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.\n");

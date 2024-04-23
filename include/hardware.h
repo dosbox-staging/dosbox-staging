@@ -38,7 +38,11 @@ void CMS_Init(Section *sec);
 void CMS_ShutDown(Section* sec = nullptr);
 
 bool PS1AUDIO_IsEnabled();
+
 bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
+
+// Sound Blaster and ESS configuration and initialization
+void SB_AddConfigSection(const config_ptr_t &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
