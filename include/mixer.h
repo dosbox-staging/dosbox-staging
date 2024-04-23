@@ -360,8 +360,8 @@ private:
 
 	struct {
 		int target_rate_hz = 0;
-		float pos               = 0.0f;
-		float step              = 0.0f;
+		float pos          = 0.0f;
+		float step         = 0.0f;
 	} zoh_upsampler = {};
 
 	struct {
@@ -371,13 +371,13 @@ private:
 	struct {
 		struct {
 			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
-			int order           = 0;
+			int order          = 0;
 			int cutoff_freq_hz = 0;
 		} highpass = {};
 
 		struct {
 			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
-			int order           = 0;
+			int order          = 0;
 			int cutoff_freq_hz = 0;
 		} lowpass = {};
 	} filters               = {};
@@ -406,8 +406,7 @@ private:
 	class Sleeper {
 	public:
 		Sleeper() = delete;
-		Sleeper(MixerChannel& c,
-		        const int sleep_after_ms = default_wait_ms);
+		Sleeper(MixerChannel& c, const int sleep_after_ms = default_wait_ms);
 		bool ConfigureFadeOut(const std::string& prefs);
 		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
 		void MaybeSleep();
@@ -423,10 +422,10 @@ private:
 		static constexpr auto default_wait_ms = 500;
 		static constexpr auto max_wait_ms     = 5000;
 
-		int64_t woken_at_ms                = {};
-		float fadeout_level                = {};
-		float fadeout_decrement_per_ms     = {};
-		int fadeout_or_sleep_after_ms = {};
+		int64_t woken_at_ms            = {};
+		float fadeout_level            = {};
+		float fadeout_decrement_per_ms = {};
+		int fadeout_or_sleep_after_ms  = {};
 
 		bool wants_fadeout = false;
 		bool had_signal    = false;
