@@ -30,7 +30,7 @@
 
 class SurroundProcessor {
 public:
-	SurroundProcessor(const uint16_t sample_rate_hz);
+	SurroundProcessor(const int sample_rate_hz);
 	~SurroundProcessor();
 
 	void ControlWrite(const uint8_t val);
@@ -86,7 +86,7 @@ enum class StereoProcessorStereoMode : uint8_t {
 
 class StereoProcessor {
 public:
-	StereoProcessor(const uint16_t sample_rate_hz);
+	StereoProcessor(const int sample_rate_hz);
 	~StereoProcessor();
 
 	void Reset();
@@ -102,7 +102,7 @@ public:
 	StereoProcessor& operator=(const StereoProcessor&) = delete;
 
 private:
-	uint16_t sample_rate_hz = 0;
+	int sample_rate_hz = 0;
 
 	AudioFrame gain = {};
 
@@ -123,14 +123,14 @@ private:
 
 class AdlibGold {
 public:
-	AdlibGold(const uint16_t sample_rate_hz);
+	AdlibGold(const int sample_rate_hz);
 	~AdlibGold();
 
 	void SurroundControlWrite(const uint8_t val);
 	void StereoControlWrite(const StereoProcessorControlReg reg,
 	                        const uint8_t data);
 
-	void Process(const int16_t* in, const uint32_t frames, float* out);
+	void Process(const int16_t* in, const int frames, float* out);
 
 private:
 	std::unique_ptr<SurroundProcessor> surround_processor = {};
