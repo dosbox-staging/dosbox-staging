@@ -72,11 +72,11 @@ constexpr auto IndexShiftLocal = 14;
 
 // Over how many milliseconds will we permit a signal to grow from
 // zero up to peak amplitude? (recommended 10 to 20ms)
-constexpr auto EnvelopeMaxExpansionOverMs = 15u;
+constexpr auto EnvelopeMaxExpansionOverMs = 15;
 
 // Regardless if the signal needed to be eveloped or not, how long
 // should the envelope monitor the initial signal? (recommended > 5s)
-constexpr auto EnvelopeExpiresAfterSeconds = 10u;
+constexpr auto EnvelopeExpiresAfterSeconds = 10;
 
 constexpr auto MaxPrebufferMs = 100;
 
@@ -1084,11 +1084,14 @@ void MixerChannel::AddSilence()
 	if (frames_done < frames_needed) {
 		if (prev_frame.left == 0.0f && prev_frame.right == 0.0f) {
 			frames_done = frames_needed;
+
 			// Make sure the next samples are zero when they get
 			// switched to prev
 			next_frame = {0.0f, 0.0f};
+
 			// This should trigger an instant request for new samples
 			freq_counter = FreqNext;
+
 		} else {
 			bool stereo = last_samples_were_stereo;
 
@@ -1133,6 +1136,7 @@ void MixerChannel::AddSilence()
 			}
 		}
 	}
+
 	last_samples_were_silence = true;
 
 	MIXER_UnlockAudioDevice();
@@ -1403,7 +1407,8 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.strength = strength;
 
 	// map [0, 1] range to [0.5, 0]
-	auto p                = (1.0f - strength) / 2.0f;
+	auto p = (1.0f - strength) / 2.0f;
+
 	constexpr auto Center = 0.5f;
 	crossfeed.pan_left    = Center - p;
 	crossfeed.pan_right   = Center + p;
@@ -2353,10 +2358,12 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			for (auto ch = 0; ch < 2; ++ch) {
-				mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
-				        mixer.work[pos][ch]);
-			}
+			mixer.work[pos].left = mixer.highpass_filter[0].filter(
+			        mixer.work[pos].left);
+
+			mixer.work[pos].right = mixer.highpass_filter[1].filter(
+			        mixer.work[pos].right);
+
 			pos = (pos + 1) & MixerBufferMask;
 		}
 	}
