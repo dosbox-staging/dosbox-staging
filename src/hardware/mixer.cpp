@@ -1114,12 +1114,16 @@ void MixerChannel::AddSilence()
 					}
 				}
 
+				const auto frame_with_gain =
+				        (stereo ? prev_frame
+				                : AudioFrame{prev_frame.left}) *
+				        combined_volume_gain;
+
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_frame.left * combined_volume_gain.left;
+				        frame_with_gain.left;
 
 				mixer.work[mixpos][mapped_output_right] +=
-				        (stereo ? prev_frame.right : prev_frame.left) *
-				        combined_volume_gain.right;
+				        frame_with_gain.right;
 
 				prev_frame = next_frame;
 
@@ -1691,11 +1695,14 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 			        data, pos);
 		}
 
-		AudioFrame frame_with_gain = {
-		        prev_frame[mapped_channel_left] * combined_volume_gain.left,
-		        (stereo ? prev_frame[mapped_channel_right]
-		                : prev_frame[mapped_channel_left]) *
-		                combined_volume_gain.right};
+		AudioFrame frame_with_gain = {};
+		if (stereo) {
+			frame_with_gain = {prev_frame[mapped_channel_left],
+			                   prev_frame[mapped_channel_right]};
+		} else {
+			frame_with_gain = {prev_frame[mapped_channel_left]};
+		}
+		frame_with_gain *= combined_volume_gain;
 
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
