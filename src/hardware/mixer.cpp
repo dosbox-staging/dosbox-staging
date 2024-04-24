@@ -1851,7 +1851,7 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 {
 	if (wants_fadeout) {
 		// When fading, we actively drive down the channel level
-		return {frame.left * fadeout_level, frame.right * fadeout_level};
+		return frame * fadeout_level;
 	}
 	if (!had_signal) {
 		// Otherwise, we simply passively listen for signal
@@ -2028,14 +2028,12 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		if (do_reverb_send) {
 			// Mix samples to the reverb aux buffer, scaled by the
 			// reverb send volume
-			mixer.aux_reverb[mixpos].left  += frame.left * reverb.send_gain;
-			mixer.aux_reverb[mixpos].right += frame.right * reverb.send_gain;
+			mixer.aux_reverb[mixpos] += frame * reverb.send_gain;
 		}
 		if (do_chorus_send) {
 			// Mix samples to the chorus aux buffer, scaled by the
 			// chorus send volume
-			mixer.aux_chorus[mixpos].left  += frame.left * chorus.send_gain;
-			mixer.aux_chorus[mixpos].right += frame.right * chorus.send_gain;
+			mixer.aux_chorus[mixpos] += frame * chorus.send_gain;
 		}
 
 		if (do_sleep) {
@@ -2043,8 +2041,7 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		}
 
 		// Mix samples to the master output
-		mixer.work[mixpos].left  += frame.left;
-		mixer.work[mixpos].right += frame.right;
+		mixer.work[mixpos] += frame;
 
 		mixpos = (mixpos + 1) & MixerBufferMask;
 	}
@@ -2342,12 +2339,9 @@ static void mix_samples(const int frames_requested)
 
 		for (auto i = 0; i < frames_added; ++i) {
 			AudioFrame frame = mixer.aux_chorus[pos];
-
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 
-			mixer.work[pos].left  += frame.left;
-			mixer.work[pos].right += frame.right;
-
+			mixer.work[pos] += frame;
 			pos = (pos + 1) & MixerBufferMask;
 		}
 	}
@@ -2370,10 +2364,7 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			auto frame = mixer.compressor.Process(mixer.work[pos]);
-
-			mixer.work[pos].left  = frame.left;
-			mixer.work[pos].right = frame.right;
+			mixer.work[pos] = mixer.compressor.Process(mixer.work[pos]);
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
