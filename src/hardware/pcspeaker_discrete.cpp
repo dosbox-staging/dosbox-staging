@@ -471,7 +471,7 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 	                                std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           device_name,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,

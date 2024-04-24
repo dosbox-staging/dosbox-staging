@@ -788,7 +788,7 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	}
 
 	mixer_channel = MIXER_AddChannel(&RMMixerChannelCallback,
-	                                 use_mixer_rate,
+	                                 UseMixerRate,
 	                                 ChannelName::ReelMagic,
 	                                 {// ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,

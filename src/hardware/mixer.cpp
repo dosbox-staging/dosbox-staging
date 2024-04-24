@@ -150,9 +150,9 @@ struct ChorusSettings {
 
 		chorus_engine.setSampleRate(static_cast<float>(sample_rate_hz));
 
-		constexpr auto chorus1_enabled  = true;
-		constexpr auto chorus2_disabled = false;
-		chorus_engine.setEnablesChorus(chorus1_enabled, chorus2_disabled);
+		constexpr auto Chorus1Enabled  = true;
+		constexpr auto Chorus2Disabled = false;
+		chorus_engine.setEnablesChorus(Chorus1Enabled, Chorus2Disabled);
 	}
 };
 
@@ -775,9 +775,9 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 {
 	// Constrain application-defined volume between 0% and 100%
 	auto clamp_to_unity = [](const float vol) {
-		constexpr auto min_unity_volume = 0.0f;
-		constexpr auto max_unity_volume = 1.0f;
-		return clamp(vol, min_unity_volume, max_unity_volume);
+		constexpr auto MinUnityVolume = 0.0f;
+		constexpr auto MaxUnityVolume = 1.0f;
+		return clamp(vol, MinUnityVolume, MaxUnityVolume);
 	};
 	app_volume_scalar = {clamp_to_unity(volume.left),
 	                     clamp_to_unity(volume.right)};
@@ -935,13 +935,13 @@ void MixerChannel::ConfigureResampler()
 		}
 
 		if (!speex_resampler.state) {
-			constexpr auto num_channels = 2; // always stereo
-			constexpr auto quality      = 5;
+			constexpr auto NumChannels     = 2; // always stereo
+			constexpr auto ResampleQuality = 5;
 
-			speex_resampler.state = speex_resampler_init(num_channels,
+			speex_resampler.state = speex_resampler_init(NumChannels,
 			                                             in_rate_hz,
 			                                             out_rate_hz,
-			                                             quality,
+			                                             ResampleQuality,
 			                                             nullptr);
 		}
 		speex_resampler_set_rate(speex_resampler.state, in_rate_hz, out_rate_hz);
@@ -1136,13 +1136,13 @@ static void log_filter_settings(const std::string& channel_name,
 	assert(state != FilterState::Off);
 	assert(state == FilterState::On || state == FilterState::ForcedOn);
 
-	constexpr auto db_per_order = 6;
+	constexpr auto DbPerOrder = 6;
 
 	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %d Hz)",
 	        channel_name.c_str(),
 	        filter_name.c_str(),
 	        state == FilterState::ForcedOn ? " (forced)" : "",
-	        order * db_per_order,
+	        order * DbPerOrder,
 	        cutoff_freq_hz);
 }
 
@@ -1195,7 +1195,7 @@ void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_fr
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= max_filter_order);
+	assert(order > 0 && order <= MaxFilterOrder);
 	for (auto& f : filters.highpass.hpf) {
 		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
 	}
@@ -1208,7 +1208,7 @@ void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_fre
 {
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= max_filter_order);
+	assert(order > 0 && order <= MaxFilterOrder);
 	for (auto& f : filters.lowpass.lpf) {
 		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
 	}
@@ -1251,14 +1251,14 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 
 		int order;
 		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
-		    order > max_filter_order) {
+		    order > MaxFilterOrder) {
 			LOG_WARNING(
 			        "%s: Invalid custom %s filter order: '%s'. "
 			        "Must be an integer between 1 and %d.",
 			        name.c_str(),
 			        filter_name,
 			        order_pref.c_str(),
-			        max_filter_order);
+			        MaxFilterOrder);
 			return false;
 		}
 
@@ -1380,9 +1380,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 
 	// map [0, 1] range to [0.5, 0]
 	auto p                = (1.0f - strength) / 2.0f;
-	constexpr auto center = 0.5f;
-	crossfeed.pan_left    = center - p;
-	crossfeed.pan_right   = center + p;
+	constexpr auto Center = 0.5f;
+	crossfeed.pan_left    = Center - p;
+	crossfeed.pan_right   = Center + p;
 
 #ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Crossfeed strength: %.3f",
@@ -1398,28 +1398,28 @@ float MixerChannel::GetCrossfeedStrength() const
 
 void MixerChannel::SetReverbLevel(const float level)
 {
-	constexpr auto level_min    = 0.0f;
-	constexpr auto level_max    = 1.0f;
-	constexpr auto level_min_db = -40.0f;
-	constexpr auto level_max_db = 0.0f;
+	constexpr auto LevelMin    = 0.0f;
+	constexpr auto LevelMax    = 1.0f;
+	constexpr auto LevelMinDb = -40.0f;
+	constexpr auto LevelMaxDb = 0.0f;
 
-	assert(level >= level_min);
-	assert(level <= level_max);
+	assert(level >= LevelMin);
+	assert(level <= LevelMax);
 
-	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
+	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > LevelMin);
 
 	if (!do_reverb_send) {
 #ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Reverb send is off", name.c_str());
 #endif
-		reverb.level     = level_min;
-		reverb.send_gain = level_min_db;
+		reverb.level     = LevelMin;
+		reverb.send_gain = LevelMinDb;
 		return;
 	}
 
 	reverb.level = level;
 
-	const auto level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
+	const auto level_db = remap(LevelMin, LevelMax, LevelMinDb, LevelMaxDb, level);
 
 	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
@@ -1439,28 +1439,28 @@ float MixerChannel::GetReverbLevel() const
 
 void MixerChannel::SetChorusLevel(const float level)
 {
-	constexpr auto level_min    = 0.0f;
-	constexpr auto level_max    = 1.0f;
-	constexpr auto level_min_db = -24.0f;
-	constexpr auto level_max_db = 0.0f;
+	constexpr auto LevelMin    = 0.0f;
+	constexpr auto LevelMax    = 1.0f;
+	constexpr auto LevelMinDb = -24.0f;
+	constexpr auto LevelMaxDb = 0.0f;
 
-	assert(level >= level_min);
-	assert(level <= level_max);
+	assert(level >= LevelMin);
+	assert(level <= LevelMax);
 
-	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > level_min);
+	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > LevelMin);
 
 	if (!do_chorus_send) {
 #ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Chorus send is off", name.c_str());
 #endif
-		chorus.level     = level_min;
-		chorus.send_gain = level_min_db;
+		chorus.level     = LevelMin;
+		chorus.send_gain = LevelMinDb;
 		return;
 	}
 
 	chorus.level = level;
 
-	const auto level_db = remap(level_min, level_max, level_min_db, level_max_db, level);
+	const auto level_db = remap(LevelMin, LevelMax, LevelMinDb, LevelMaxDb, level);
 
 	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
@@ -1485,8 +1485,8 @@ constexpr int16_t u8to16(const int u_val)
 	assert(u_val >= 0 && u_val <= UINT8_MAX);
 	const auto s_val = u_val - 128;
 	if (s_val > 0) {
-		constexpr auto scalar = Max16BitSampleValue / 127.0;
-		return static_cast<int16_t>(round(s_val * scalar));
+		constexpr auto Scalar = Max16BitSampleValue / 127.0;
+		return static_cast<int16_t>(round(s_val * Scalar));
 	}
 	return static_cast<int16_t>(s_val * 256);
 }
@@ -1747,25 +1747,25 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	}
 	// Enable fade-out with defaults
 	if (has_true(prefs)) {
-		set_wait_and_fade(default_wait_ms, default_wait_ms);
+		set_wait_and_fade(DefaultWaitMs, DefaultWaitMs);
 		wants_fadeout = true;
 		return true;
 	}
 
 	// Let the fade-out last between 10 ms and 3 seconds.
-	constexpr auto min_fade_ms = 10;
-	constexpr auto max_fade_ms = 3000;
+	constexpr auto MinFadeMs = 10;
+	constexpr auto MaxFadeMs = 3000;
 
 	// Custom setting in 'WAIT FADE' syntax, where both are milliseconds.
 	if (auto prefs_vec = split(prefs); prefs_vec.size() == 2) {
 		const auto wait_ms = parse_int(prefs_vec[0]);
 		const auto fade_ms = parse_int(prefs_vec[1]);
 		if (wait_ms && fade_ms) {
-			const auto wait_is_valid = (*wait_ms >= min_wait_ms &&
-			                            *wait_ms <= max_wait_ms);
+			const auto wait_is_valid = (*wait_ms >= MinWaitMs &&
+			                            *wait_ms <= MaxWaitMs);
 
-			const auto fade_is_valid = (*fade_ms >= min_fade_ms &&
-			                            *fade_ms <= max_fade_ms);
+			const auto fade_is_valid = (*fade_ms >= MinFadeMs &&
+			                            *fade_ms <= MaxFadeMs);
 
 			if (wait_is_valid && fade_is_valid) {
 				set_wait_and_fade(*wait_ms, *fade_ms);
@@ -1782,10 +1782,10 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	        "%d (in milliseconds); using 'off'.",
 	        channel.GetName().c_str(),
 	        prefs.c_str(),
-	        min_wait_ms,
-	        max_wait_ms,
-	        min_fade_ms,
-	        max_fade_ms);
+	        MinWaitMs,
+	        MaxWaitMs,
+	        MinFadeMs,
+	        MaxFadeMs);
 
 	wants_fadeout = false;
 	return false;
@@ -1799,9 +1799,9 @@ void MixerChannel::Sleeper::DecrementFadeLevel(const int64_t awake_for_ms)
 
 	const auto decrement = fadeout_decrement_per_ms * elapsed_fade_ms;
 
-	constexpr auto min_level = 0.0f;
-	constexpr auto max_level = 1.0f;
-	fadeout_level = std::clamp(max_level - decrement, min_level, max_level);
+	constexpr auto MinLevel = 0.0f;
+	constexpr auto MaxLevel = 1.0f;
+	fadeout_level = std::clamp(MaxLevel - decrement, MinLevel, MaxLevel);
 }
 
 MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
@@ -1809,8 +1809,8 @@ MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
           fadeout_or_sleep_after_ms(sleep_after_ms)
 {
 	// The constructed sleep period is programmatically controlled (so assert)
-	assert(fadeout_or_sleep_after_ms >= min_wait_ms);
-	assert(fadeout_or_sleep_after_ms <= max_wait_ms);
+	assert(fadeout_or_sleep_after_ms >= MinWaitMs);
+	assert(fadeout_or_sleep_after_ms <= MaxWaitMs);
 }
 
 // Either fades the frame or checks if the channel had any signal output.
@@ -1822,9 +1822,9 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 	}
 	if (!had_signal) {
 		// Otherwise, we simply passively listen for signal
-		constexpr auto silence_threshold = 1.0f;
-		had_signal = fabsf(frame.left)  > silence_threshold ||
-		             fabsf(frame.right) > silence_threshold;
+		constexpr auto SilenceThreshold = 1.0f;
+		had_signal = fabsf(frame.left)  > SilenceThreshold ||
+		             fabsf(frame.right) > SilenceThreshold;
 	}
 	return frame;
 }
@@ -2251,10 +2251,10 @@ static constexpr int calc_tickadd(const int freq)
 // Mix a certain amount of new sample frames
 static void mix_samples(const int frames_requested)
 {
-	constexpr auto capture_buf_frames = 1024;
+	constexpr auto CaptureBufFrames = 1024;
 
 	const auto frames_added = std::min(frames_requested - mixer.frames_done,
-	                                   capture_buf_frames);
+	                                   CaptureBufFrames);
 
 	const auto start_pos = (mixer.pos + mixer.frames_done) & MixerBufferMask;
 
@@ -2288,8 +2288,8 @@ static void mix_samples(const int frames_requested)
 
 			const auto in         = reverb_buf;
 			auto out              = reverb_buf;
-			constexpr auto frames = 1;
-			mixer.reverb.mverb.process(in, out, frames);
+			constexpr auto Frames = 1;
+			mixer.reverb.mverb.process(in, out, Frames);
 
 			mixer.work[pos][0] += reverb_buf[0][0];
 			mixer.work[pos][1] += reverb_buf[1][0];
@@ -2347,7 +2347,7 @@ static void mix_samples(const int frames_requested)
 
 	// Capture audio output if requested
 	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
-		int16_t out[capture_buf_frames][2];
+		int16_t out[CaptureBufFrames][2];
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; i++) {
@@ -2682,9 +2682,11 @@ void MIXER_CloseAudioDevice()
 	TIMER_DelTickHandler(handle_mix_no_sound);
 
 	MIXER_LockAudioDevice();
+
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->Enable(false);
 	}
+
 	MIXER_UnlockAudioDevice();
 
 	if (mixer.sdldevice) {
@@ -2720,9 +2722,9 @@ static bool init_sdl_sound(Section_prop* section)
 #endif
 	}
 
-	constexpr auto sdl_error = 0;
+	constexpr auto SdlError = 0;
 	if ((mixer.sdldevice = SDL_OpenAudioDevice(
-	             nullptr, 0, &spec, &obtained, sdl_allow_flags)) == sdl_error) {
+	             nullptr, 0, &spec, &obtained, sdl_allow_flags)) == SdlError) {
 		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output disabled",
 		            SDL_GetError());
 
@@ -2795,9 +2797,9 @@ static void init_master_highpass_filter()
 	// high-pass filtering only once at the very end of the processing
 	// chain, instead of doing it on every single mixer channel.
 	//
-	constexpr auto highpass_cutoff_freq_hz = 20.0;
+	constexpr auto HighpassCutoffFreqHz = 20.0;
 	for (auto& f : mixer.highpass_filter) {
-		f.setup(mixer.sample_rate_hz, highpass_cutoff_freq_hz);
+		f.setup(mixer.sample_rate_hz, HighpassCutoffFreqHz);
 	}
 }
 
@@ -2924,63 +2926,63 @@ static void handle_toggle_mute(const bool was_pressed)
 
 void init_mixer_dosbox_settings(Section_prop& sec_prop)
 {
-	constexpr auto default_sample_rate_hz = 48000;
+	constexpr auto DefaultSampleRateHz = 48000;
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
-	constexpr auto default_blocksize       = 1024;
-	constexpr auto default_prebuffer_ms    = 25;
-	constexpr bool default_allow_negotiate = false;
+	constexpr auto DefaultBlocksize      = 1024;
+	constexpr auto DefaultPrebufferMs    = 25;
+	constexpr bool DefaultAllowNegotiate = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
-	constexpr auto default_blocksize       = 512;
-	constexpr auto default_prebuffer_ms    = 20;
-	constexpr bool default_allow_negotiate = true;
+	constexpr auto DefaultBlocksize      = 512;
+	constexpr auto DefaultPrebufferMs    = 20;
+	constexpr bool DefaultAllowNegotiate = true;
 #endif
 
-	constexpr auto always        = Property::Changeable::Always;
-	constexpr auto when_idle     = Property::Changeable::WhenIdle;
-	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+	constexpr auto Always      = Property::Changeable::Always;
+	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
+	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto bool_prop = sec_prop.Add_bool("nosound", always, false);
+	auto bool_prop = sec_prop.Add_bool("nosound", Always, false);
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable silent mode (disabled by default).\n"
 	        "Sound is still fully emulated in silent mode, but DOSBox outputs silence.");
 
-	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_sample_rate_hz);
+	auto int_prop = sec_prop.Add_int("rate", OnlyAtStart, DefaultSampleRateHz);
 	assert(int_prop);
 	int_prop->Set_values(
 	        {"8000", "11025", "16000", "22050", "32000", "44100", "48000"});
 	int_prop->Set_help("Mixer sample rate in Hz (%s by default).");
 
-	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
+	int_prop = sec_prop.Add_int("blocksize", OnlyAtStart, DefaultBlocksize);
 	int_prop->Set_values({"128", "256", "512", "1024", "2048", "4096", "8192"});
 	int_prop->Set_help(
 	        "Mixer block size in sample frames (%s by default). Larger values might help\n"
 	        "with sound stuttering but the sound will also be more lagged.");
 
-	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
+	int_prop = sec_prop.Add_int("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
 	int_prop->Set_help(
 	        "How many milliseconds of sound to render on top of the blocksize\n"
 	        "(%s by default). Larger values might help with sound stuttering but the sound\n"
 	        "will also be more lagged.");
 
-	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
+	bool_prop = sec_prop.Add_bool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
 	bool_prop->Set_help(
 	        "Let the system audio driver negotiate possibly better sample rate and blocksize\n"
 	        "settings (%s by default).");
 
-	const auto default_on = true;
-	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
+	constexpr auto DefaultOn = true;
+	bool_prop = sec_prop.Add_bool("compressor", WhenIdle, DefaultOn);
 	bool_prop->Set_help(
 	        "Enable the auto-leveling compressor on the master channel to prevent clipping\n"
 	        "of the audio output:\n"
 	        "  off:  Disable compressor.\n"
 	        "  on:   Enable compressor (default).");
 
-	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
+	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
 	string_prop->Set_help(
 	        "Enable crossfeed globally on all stereo channels for headphone listening:\n"
 	        "  off:     No crossfeed (default).\n"
@@ -2991,7 +2993,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "Note: You can fine-tune each channel's crossfeed strength using the MIXER.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
-	string_prop = sec_prop.Add_string("reverb", when_idle, "off");
+	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
 	string_prop->Set_help(
 	        "Enable reverb globally to add a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
@@ -3010,7 +3012,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	string_prop->Set_values(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
-	string_prop = sec_prop.Add_string("chorus", when_idle, "off");
+	string_prop = sec_prop.Add_string("chorus", WhenIdle, "off");
 	string_prop->Set_help(
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
@@ -3029,11 +3031,11 @@ void MIXER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto ChangeableAtRuntime = true;
 
 	Section_prop* sec = conf->AddSection_prop("mixer",
 	                                          &MIXER_Init,
-	                                          changeable_at_runtime);
+	                                          ChangeableAtRuntime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 }
