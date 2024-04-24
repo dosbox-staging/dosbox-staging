@@ -41,20 +41,23 @@ bool PS1AUDIO_IsEnabled();
 
 bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
 
-// Sound Blaster and ESS configuration and initialization
+// Sound Blaster and ESS configuration and initialisation
 void SB_AddConfigSection(const config_ptr_t &conf);
+
+// CMS/Game Blaster, OPL, and ESFM configuration and initialisation
+void OPL_AddConfigSettings(const config_ptr_t &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
 extern uint8_t adlib_commandreg;
 
-// Gravis UltraSound configuration and initialization
+// Gravis UltraSound configuration and initialisation
 void GUS_AddConfigSection(const config_ptr_t &conf);
 
-// IBM Music Feature Card configuration and initialization
+// IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const config_ptr_t& conf);
 
-// Innovation SSI-2001 configuration and initialization
+// Innovation SSI-2001 configuration and initialisation
 void INNOVATION_AddConfigSection(const config_ptr_t &conf);
 
 #endif
