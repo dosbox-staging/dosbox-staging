@@ -1095,7 +1095,7 @@ void MixerChannel::AddSilence()
 					if (prev_frame[ch] > f) {
 						next_frame[ch] = prev_frame[ch] - f;
 					} else if (prev_frame[ch] < -f) {
-						next_frame[ch] = prev_frame[0] + f;
+						next_frame[ch] = prev_frame[ch] + f;
 					} else {
 						next_frame[ch] = 0.0f;
 					}
