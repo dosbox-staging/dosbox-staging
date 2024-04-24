@@ -50,8 +50,8 @@ using MIXER_Handler = std::function<void(int frames)>;
 
 enum class MixerState { Uninitialized, NoSound, On, Muted };
 
-static constexpr int MixerBufferLength = {16 * 1024};
-static constexpr int MixerBufferMask   = {MixerBufferLength - 1};
+static constexpr int MixerBufferLength = 16 * 1024;
+static constexpr int MixerBufferMask   = MixerBufferLength - 1;
 
 // TODO This is hacky and should be removed. Only the PS1 Audio uses it.
 extern uint8_t MixTemp[MixerBufferLength];

@@ -162,10 +162,9 @@ struct ChorusSettings {
 };
 
 struct MixerSettings {
-	// Complex types
-	matrix<float, MixerBufferLength, 2> work       = {};
-	matrix<float, MixerBufferLength, 2> aux_reverb = {};
-	matrix<float, MixerBufferLength, 2> aux_chorus = {};
+	std::array<AudioFrame, MixerBufferLength> work       = {};
+	std::array<AudioFrame, MixerBufferLength> aux_reverb = {};
+	std::array<AudioFrame, MixerBufferLength> aux_chorus = {};
 
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out  = {};
@@ -2029,14 +2028,14 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		if (do_reverb_send) {
 			// Mix samples to the reverb aux buffer, scaled by the
 			// reverb send volume
-			mixer.aux_reverb[mixpos][0] += frame.left * reverb.send_gain;
-			mixer.aux_reverb[mixpos][1] += frame.right * reverb.send_gain;
+			mixer.aux_reverb[mixpos].left  += frame.left * reverb.send_gain;
+			mixer.aux_reverb[mixpos].right += frame.right * reverb.send_gain;
 		}
 		if (do_chorus_send) {
 			// Mix samples to the chorus aux buffer, scaled by the
 			// chorus send volume
-			mixer.aux_chorus[mixpos][0] += frame.left * chorus.send_gain;
-			mixer.aux_chorus[mixpos][1] += frame.right * chorus.send_gain;
+			mixer.aux_chorus[mixpos].left  += frame.left * chorus.send_gain;
+			mixer.aux_chorus[mixpos].right += frame.right * chorus.send_gain;
 		}
 
 		if (do_sleep) {
@@ -2044,8 +2043,8 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		}
 
 		// Mix samples to the master output
-		mixer.work[mixpos][0] += frame.left;
-		mixer.work[mixpos][1] += frame.right;
+		mixer.work[mixpos].left  += frame.left;
+		mixer.work[mixpos].right += frame.right;
 
 		mixpos = (mixpos + 1) & MixerBufferMask;
 	}
@@ -2309,12 +2308,11 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			AudioFrame frame = {mixer.aux_reverb[pos][0],
-			                    mixer.aux_reverb[pos][1]};
+			AudioFrame frame = mixer.aux_reverb[pos];
 
 			// High-pass filter the reverb input
 			frame.left  = mixer.reverb.highpass_filter[0].filter(frame.left);
-			frame.right = mixer.reverb.highpass_filter[1].filter( frame.right);
+			frame.right = mixer.reverb.highpass_filter[1].filter(frame.right);
 
 			// MVerb operates on two non-interleaved sample streams
 			static float in_left[1]     = {};
@@ -2324,13 +2322,14 @@ static void mix_samples(const int frames_requested)
 			in_left[0]  = frame.left;
 			in_right[0] = frame.right;
 
-			const auto in         = reverb_buf;
-			auto out              = reverb_buf;
-			constexpr auto Frames = 1;
-			mixer.reverb.mverb.process(in, out, Frames);
+			const auto in = reverb_buf;
+			auto out      = reverb_buf;
 
-			mixer.work[pos][0] += reverb_buf[0][0];
-			mixer.work[pos][1] += reverb_buf[1][0];
+			constexpr auto NumFrames = 1;
+			mixer.reverb.mverb.process(in, out, NumFrames);
+
+			mixer.work[pos].left  += reverb_buf[0][0];
+			mixer.work[pos].right += reverb_buf[1][0];
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
@@ -2342,13 +2341,12 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			AudioFrame frame = {mixer.aux_chorus[pos][0],
-			                    mixer.aux_chorus[pos][1]};
+			AudioFrame frame = mixer.aux_chorus[pos];
 
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 
-			mixer.work[pos][0] += frame.left;
-			mixer.work[pos][1] += frame.right;
+			mixer.work[pos].left  += frame.left;
+			mixer.work[pos].right += frame.right;
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
@@ -2372,12 +2370,10 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};
+			auto frame = mixer.compressor.Process(mixer.work[pos]);
 
-			frame = mixer.compressor.Process(frame);
-
-			mixer.work[pos][0] = frame.left;
-			mixer.work[pos][1] = frame.right;
+			mixer.work[pos].left  = frame.left;
+			mixer.work[pos].right = frame.right;
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
@@ -2390,10 +2386,10 @@ static void mix_samples(const int frames_requested)
 
 		for (auto i = 0; i < frames_added; i++) {
 			const auto left = static_cast<uint16_t>(clamp_to_int16(
-			        static_cast<int>(mixer.work[pos][0])));
+			        static_cast<int>(mixer.work[pos].left)));
 
 			const auto right = static_cast<uint16_t>(clamp_to_int16(
-			        static_cast<int>(mixer.work[pos][1])));
+			        static_cast<int>(mixer.work[pos].right)));
 
 			out[i][0] = static_cast<int16_t>(host_to_le16(left));
 			out[i][1] = static_cast<int16_t>(host_to_le16(right));
@@ -2445,17 +2441,16 @@ static void handle_mix_no_sound()
 
 	mix_samples(mixer.frames_needed);
 
-	/* Clear piece we've just generated */
+	// Clear piece we've just generated
 	for (auto i = 0; i < mixer.frames_needed; ++i) {
-		mixer.work[mixer.pos][0] = 0;
-		mixer.work[mixer.pos][1] = 0;
+		mixer.work[mixer.pos] = {};
 
 		mixer.pos = (mixer.pos + 1) & MixerBufferMask;
 	}
 
 	reduce_channels_done_counts(mixer.frames_needed);
 
-	/* Set values for next tick */
+	// Set values for next tick
 	mixer.tick_counter += mixer.tick_add;
 	mixer.frames_needed = mixer.tick_counter >> TickShift;
 	mixer.tick_counter &= TickMask;
@@ -2605,22 +2600,17 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			index += index_add;
 
 			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[i][0]));
+			        static_cast<int>(mixer.work[i].left));
 			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[i][1]));
+			        static_cast<int>(mixer.work[i].right));
 		}
 		// Clean the used buffers
 		while (reduce_frames--) {
 			pos &= MixerBufferMask;
 
-			mixer.work[pos][0] = 0.0f;
-			mixer.work[pos][1] = 0.0f;
-
-			mixer.aux_reverb[pos][0] = 0.0f;
-			mixer.aux_reverb[pos][1] = 0.0f;
-
-			mixer.aux_chorus[pos][0] = 0.0f;
-			mixer.aux_chorus[pos][1] = 0.0f;
+			mixer.work[pos]       = {};
+			mixer.aux_reverb[pos] = {};
+			mixer.aux_chorus[pos] = {};
 
 			++pos;
 		}
@@ -2629,18 +2619,13 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			pos &= MixerBufferMask;
 
 			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[pos][0]));
+			        static_cast<int>(mixer.work[pos].left));
 			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[pos][1]));
+			        static_cast<int>(mixer.work[pos].right));
 
-			mixer.work[pos][0] = 0.0f;
-			mixer.work[pos][1] = 0.0f;
-
-			mixer.aux_reverb[pos][0] = 0.0f;
-			mixer.aux_reverb[pos][1] = 0.0f;
-
-			mixer.aux_chorus[pos][0] = 0.0f;
-			mixer.aux_chorus[pos][1] = 0.0f;
+			mixer.work[pos]       = {};
+			mixer.aux_reverb[pos] = {};
+			mixer.aux_chorus[pos] = {};
 
 			++pos;
 		}
