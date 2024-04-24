@@ -293,13 +293,13 @@ private:
 	int freq_counter = 0u;
 
 	// Timing on how many samples were needed by the mixer
-	int frames_needed = 0u;
+	int frames_needed = 0;
 
 	// Previous and next sample fames
 	AudioFrame prev_frame = {};
 	AudioFrame next_frame = {};
 
-	int sample_rate_hz = 0u;
+	int sample_rate_hz = 0;
 
 	// Volume gains
 	// ~~~~~!~~~~~~
