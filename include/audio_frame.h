@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ struct AudioFrame {
 	          right(r)
 	{}
 
+	// Indexing
 	constexpr float& operator[](const size_t i) noexcept
 	{
 		assert(i < 2);
@@ -52,9 +53,45 @@ struct AudioFrame {
 		return i == 0 ? left : right;
 	}
 
+	// Equality
 	constexpr bool operator==(const AudioFrame& that) const
 	{
 		return (left == that.left && right == that.right);
+	}
+
+	// Accumulation
+	constexpr AudioFrame& operator+=(const AudioFrame& that)
+	{
+		*this = *this + that;
+		return *this;
+	}
+
+	constexpr AudioFrame operator+(const AudioFrame& that) const
+	{
+		return {left + that.left, right + that.right};
+	}
+
+	// Gain
+	constexpr AudioFrame& operator*=(const float gain)
+	{
+		*this = *this * gain;
+		return *this;
+	}
+
+	constexpr AudioFrame operator*(const float gain) const
+	{
+		return {left * gain, right * gain};
+	}
+
+	constexpr AudioFrame& operator*=(const AudioFrame& gain)
+	{
+		*this = *this * gain;
+		return *this;
+	}
+
+	constexpr AudioFrame operator*(const AudioFrame& gain) const
+	{
+		return {left * gain.left, right * gain.right};
 	}
 };
 
