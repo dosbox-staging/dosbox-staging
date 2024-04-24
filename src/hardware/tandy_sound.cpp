@@ -158,7 +158,7 @@ private:
 	static constexpr auto render_divisor = 16;
 	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
+	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
 
 	// Runtime states
 	device_sound_interface *dsi       = nullptr;
@@ -199,7 +199,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyDac,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -477,7 +477,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::FadeOut,

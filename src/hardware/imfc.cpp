@@ -4843,7 +4843,7 @@ ym2151_device::ym2151_device(mixer_channel_t&& channel)
 	device_reset();
 
 	assert(audio_channel);
-	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
+	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
 	audio_channel->Enable(true);
 }
 

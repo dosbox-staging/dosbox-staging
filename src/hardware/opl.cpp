@@ -228,7 +228,7 @@ void Opl::Init()
 		OPL3_Reset(&opl.chip, OplSampleRateHz);
 	}
 
-	ms_per_frame = millis_in_second / OplSampleRateHz;
+	ms_per_frame = MillisInSecond / OplSampleRateHz;
 
 	memset(cache, 0, ARRAY_LEN(cache));
 

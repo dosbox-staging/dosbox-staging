@@ -62,12 +62,12 @@ extern int16_t lut_u8to16[UINT8_MAX + 1];
 constexpr auto Max16BitSampleValue = INT16_MAX;
 constexpr auto Min16BitSampleValue = INT16_MIN;
 
-static constexpr auto max_filter_order = 16;
+static constexpr auto MaxFilterOrder = 16;
 
-static constexpr auto millis_in_second   = 1000.0;
-static constexpr auto millis_in_second_f = 1000.0f;
+static constexpr auto MillisInSecond   = 1000.0;
+static constexpr auto MillisInSecondF = 1000.0f;
 
-static constexpr int use_mixer_rate = 0;
+static constexpr int UseMixerRate = 0;
 
 // Get a DOS-formatted silent-sample when there's a chance it will
 // be processed using AddSamples_nonnative()
@@ -370,13 +370,13 @@ private:
 
 	struct {
 		struct {
-			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
+			std::array<Iir::Butterworth::HighPass<MaxFilterOrder>, 2> hpf = {};
 			int order          = 0;
 			int cutoff_freq_hz = 0;
 		} highpass = {};
 
 		struct {
-			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
+			std::array<Iir::Butterworth::LowPass<MaxFilterOrder>, 2> lpf = {};
 			int order          = 0;
 			int cutoff_freq_hz = 0;
 		} lowpass = {};
@@ -406,7 +406,7 @@ private:
 	class Sleeper {
 	public:
 		Sleeper() = delete;
-		Sleeper(MixerChannel& c, const int sleep_after_ms = default_wait_ms);
+		Sleeper(MixerChannel& c, const int sleep_after_ms = DefaultWaitMs);
 		bool ConfigureFadeOut(const std::string& prefs);
 		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
 		void MaybeSleep();
@@ -418,9 +418,9 @@ private:
 		MixerChannel& channel;
 
 		// The wait before fading or sleeping is bound between:
-		static constexpr auto min_wait_ms     = 100;
-		static constexpr auto default_wait_ms = 500;
-		static constexpr auto max_wait_ms     = 5000;
+		static constexpr auto MinWaitMs     = 100;
+		static constexpr auto DefaultWaitMs = 500;
+		static constexpr auto MaxWaitMs     = 5000;
 
 		int64_t woken_at_ms            = {};
 		float fadeout_level            = {};

@@ -28,7 +28,7 @@
 
 class Covox final : public LptDac {
 public:
-	Covox() : LptDac(ChannelName::CovoxDac, use_mixer_rate) {}
+	Covox() : LptDac(ChannelName::CovoxDac, UseMixerRate) {}
 	void BindToPort(const io_port_t lpt_port) final;
 	void ConfigureFilters(const FilterState state) final;
 

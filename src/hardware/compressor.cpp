@@ -58,11 +58,9 @@ void Compressor::Configure(const int _sample_rate_hz,
 	ratio           = _ratio;
 
 	attack_coeff = std::exp(-1.0f / (attack_time_ms * sample_rate_hz));
+	release_coeff = std::exp(-MillisInSecondF / (release_time_ms * sample_rate_hz));
 
-	release_coeff = std::exp(-millis_in_second_f /
-	                         (release_time_ms * sample_rate_hz));
-
-	rms_coeff = std::exp(-millis_in_second_f / (rms_window_ms * sample_rate_hz));
+	rms_coeff = std::exp(-MillisInSecondF / (rms_window_ms * sample_rate_hz));
 
 	Reset();
 }

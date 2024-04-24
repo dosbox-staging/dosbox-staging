@@ -425,7 +425,7 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 
 #else
 	// Mathematically intensive reference implementation
-	const auto portion_of_ms = static_cast <double>(index) / millis_in_second;
+	const auto portion_of_ms = static_cast <double>(index) / MillisInSecond;
 	for (size_t i = 0; i < waveform_deque.size(); ++i) {
 		const auto impulse_time = static_cast<double>(i) / sample_rate_hz -
 		                          portion_of_ms;

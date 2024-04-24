@@ -494,7 +494,7 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 			                                      this, std::placeholders::_1);
 
 			player.channel = MIXER_AddChannel(mixer_callback,
-			                                  use_mixer_rate,
+			                                  UseMixerRate,
 			                                  ChannelName::CdAudio,
 			                                  {ChannelFeature::Stereo,
 			                                   ChannelFeature::DigitalAudio});

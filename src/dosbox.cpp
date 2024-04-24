@@ -451,7 +451,7 @@ static void DOSBOX_RealInit(Section* sec)
 double DOSBOX_GetUptime()
 {
 	static auto start_ms = GetTicks();
-	return GetTicksSince(start_ms) / millis_in_second;
+	return GetTicksSince(start_ms) / MillisInSecond;
 }
 
 void DOSBOX_Init()

@@ -60,7 +60,7 @@ constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MB
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
 constexpr uint32_t ISA_BUS_THROUGHPUT = 32 * 1024 * 1024; // 32 MB/s
 constexpr uint16_t DMA_TRANSFERS_PER_S = ISA_BUS_THROUGHPUT / BYTES_PER_DMA_XFER;
-constexpr double MS_PER_DMA_XFER = millis_in_second / DMA_TRANSFERS_PER_S;
+constexpr double MS_PER_DMA_XFER = MillisInSecond / DMA_TRANSFERS_PER_S;
 
 // Voice-channel and state related constants
 constexpr uint8_t MAX_VOICES          = 32;
@@ -629,7 +629,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	                                      std::placeholders::_1);
 
 	audio_channel = MIXER_AddChannel(mixer_callback,
-	                                 use_mixer_rate,
+	                                 UseMixerRate,
 	                                 ChannelName::GravisUltrasound,
 	                                 {ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
@@ -656,7 +656,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 		set_section_property_value("gus", "gus_filter", "off");
 	}
 
-	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
+	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
 
 	UpdateDmaAddress(dma_pref);
 
@@ -681,7 +681,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// v2.22 (21 December 1994), pp. 3 of 113.
 		sample_rate_hz = 1000000.0 / (1.619695497 * active_voices);
 
-		ms_per_render = millis_in_second / sample_rate_hz;
+		ms_per_render = MillisInSecond / sample_rate_hz;
 
 		audio_channel->SetSampleRate(sample_rate_hz);
 	}
