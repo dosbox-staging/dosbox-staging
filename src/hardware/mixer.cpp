@@ -1088,7 +1088,7 @@ void MixerChannel::AddSilence()
 	MIXER_LockAudioDevice();
 
 	if (frames_done < frames_needed) {
-		if (prev_frame[0] == 0.0f && prev_frame[1] == 0.0f) {
+		if (prev_frame.left == 0.0f && prev_frame.right == 0.0f) {
 			frames_done = frames_needed;
 			// Make sure the next samples are zero when they get
 			// switched to prev
@@ -1544,19 +1544,19 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 		// unsigned 8-bit
 		if (!signeddata) {
 			if (stereo) {
-				frame[0] = lut_u8to16[static_cast<uint8_t>(data[left_pos])];
-				frame[1] = lut_u8to16[static_cast<uint8_t>(data[right_pos])];
+				frame.left  = lut_u8to16[static_cast<uint8_t>(data[left_pos])];
+				frame.right = lut_u8to16[static_cast<uint8_t>(data[right_pos])];
 			} else {
-				frame[0] = lut_u8to16[static_cast<uint8_t>(data[pos])];
+				frame.left = lut_u8to16[static_cast<uint8_t>(data[pos])];
 			}
 		}
 		// signed 8-bit
 		else {
 			if (stereo) {
-				frame[0] = lut_s8to16[static_cast<int8_t>(data[left_pos])];
-				frame[1] = lut_s8to16[static_cast<int8_t>(data[right_pos])];
+				frame.left  = lut_s8to16[static_cast<int8_t>(data[left_pos])];
+				frame.right = lut_s8to16[static_cast<int8_t>(data[right_pos])];
 			} else {
-				frame[0] = lut_s8to16[static_cast<int8_t>(data[pos])];
+				frame.left = lut_s8to16[static_cast<int8_t>(data[pos])];
 			}
 		}
 	} else {
@@ -1564,8 +1564,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 		if (signeddata) {
 			if (stereo) {
 				if (nativeorder) {
-					frame[0] = static_cast<float>(data[left_pos]);
-					frame[1] = static_cast<float>(data[right_pos]);
+					frame.left  = static_cast<float>(data[left_pos]);
+					frame.right = static_cast<float>(data[right_pos]);
 				} else {
 					auto host_pt0 = reinterpret_cast<const uint8_t* const>(
 					        data + left_pos);
@@ -1573,26 +1573,26 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 					        data + right_pos);
 
 					if (sizeof(Type) == 2) {
-						frame[0] = (int16_t)host_readw(host_pt0);
-						frame[1] = (int16_t)host_readw(host_pt1);
+						frame.left  = (int16_t)host_readw(host_pt0);
+						frame.right = (int16_t)host_readw(host_pt1);
 					} else {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        (int32_t)host_readd(host_pt0));
-						frame[1] = static_cast<float>(
+						frame.right = static_cast<float>(
 						        (int32_t)host_readd(host_pt1));
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
-					frame[0] = static_cast<float>(data[pos]);
+					frame.left = static_cast<float>(data[pos]);
 				} else {
 					auto host_pt = reinterpret_cast<const uint8_t* const>(
 					        data + pos);
 
 					if (sizeof(Type) == 2) {
-						frame[0] = (int16_t)host_readw(host_pt);
+						frame.left = (int16_t)host_readw(host_pt);
 					} else {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        (int32_t)host_readd(host_pt));
 					}
 				}
@@ -1601,10 +1601,10 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 			const auto offs = 32768;
 			if (stereo) {
 				if (nativeorder) {
-					frame[0] = static_cast<float>(
+					frame.left = static_cast<float>(
 					        static_cast<int>(data[left_pos]) -
 					        offs);
-					frame[1] = static_cast<float>(
+					frame.right = static_cast<float>(
 					        static_cast<int>(data[right_pos]) -
 					        offs);
 				} else {
@@ -1614,20 +1614,20 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 					        data + right_pos);
 
 					if (sizeof(Type) == 2) {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                host_pt0)) -
 						        offs);
-						frame[1] = static_cast<float>(
+						frame.right = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                host_pt1)) -
 						        offs);
 					} else {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                host_pt0)) -
 						        offs);
-						frame[1] = static_cast<float>(
+						frame.right = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                host_pt1)) -
 						        offs);
@@ -1635,19 +1635,19 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 				}
 			} else { // mono
 				if (nativeorder) {
-					frame[0] = static_cast<float>(
+					frame.left = static_cast<float>(
 					        static_cast<int>(data[pos]) - offs);
 				} else {
 					auto host_pt = reinterpret_cast<const uint8_t* const>(
 					        data + pos);
 
 					if (sizeof(Type) == 2) {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        static_cast<int>(host_readw(
 						                host_pt)) -
 						        offs);
 					} else {
-						frame[0] = static_cast<float>(
+						frame.left = static_cast<float>(
 						        static_cast<int>(host_readd(
 						                host_pt)) -
 						        offs);
@@ -1675,8 +1675,8 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 	const auto mapped_channel_left  = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
-	auto pos = 0;
-	std::array<float, 2> out_frame;
+	auto pos             = 0;
+	AudioFrame out_frame = {};
 
 	out.resize(0);
 
@@ -1711,8 +1711,8 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 		out_frame[mapped_output_left]  += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
-		out.emplace_back(out_frame[0]);
-		out.emplace_back(out_frame[1]);
+		out.emplace_back(out_frame.left);
+		out.emplace_back(out_frame.right);
 
 		if (do_zoh_upsample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
@@ -2313,10 +2313,8 @@ static void mix_samples(const int frames_requested)
 			                    mixer.aux_reverb[pos][1]};
 
 			// High-pass filter the reverb input
-			for (auto ch = 0; ch < 2; ++ch) {
-				frame[ch] = mixer.reverb.highpass_filter[ch].filter(
-				        frame[ch]);
-			}
+			frame.left  = mixer.reverb.highpass_filter[0].filter(frame.left);
+			frame.right = mixer.reverb.highpass_filter[1].filter( frame.right);
 
 			// MVerb operates on two non-interleaved sample streams
 			static float in_left[1]     = {};
