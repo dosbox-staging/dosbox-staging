@@ -36,9 +36,19 @@ struct AudioFrame {
 	          right(r)
 	{}
 
+	constexpr AudioFrame(const float m)
+	        : left(m),
+	          right(m)
+	{}
+
 	constexpr AudioFrame(const int16_t l, const int16_t r)
 	        : left(l),
 	          right(r)
+	{}
+
+	constexpr AudioFrame(const int16_t m)
+	        : left(m),
+	          right(m)
 	{}
 
 	// Indexing
