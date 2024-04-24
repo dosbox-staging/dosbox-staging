@@ -752,11 +752,8 @@ void MixerChannel::Set0dbScalar(const float scalar)
 
 void MixerChannel::RecalcCombinedVolume()
 {
-	combined_volume_gain.left = user_volume_gain.left * app_volume_gain.left *
-	                            mixer.master_volume.left * db0_volume_gain;
-
-	combined_volume_gain.right = user_volume_gain.right * app_volume_gain.right *
-	                             mixer.master_volume.right * db0_volume_gain;
+	combined_volume_gain = user_volume_gain * app_volume_gain *
+	                       mixer.master_volume * db0_volume_gain;
 }
 
 const AudioFrame MixerChannel::GetUserVolume() const
@@ -1704,7 +1701,7 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, frame_with_gain);
 
-		out_frame = {0.0f, 0.0f};
+		out_frame = {};
 		out_frame[mapped_output_left]  += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
@@ -2093,8 +2090,8 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 		auto sample = prev_frame.left +
 		              static_cast<float>((diff * diff_mul) >> FreqShift);
 
-		AudioFrame frame_with_gain = {sample * combined_volume_gain.left,
-		                              sample * combined_volume_gain.right};
+		AudioFrame frame     = {sample, sample};
+		auto frame_with_gain = frame * combined_volume_gain;
 
 		if (do_sleep) {
 			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
