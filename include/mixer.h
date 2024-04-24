@@ -301,18 +301,18 @@ private:
 
 	int sample_rate_hz = 0u;
 
-	// Volume scalars
-	// ~~~~~~~~~~~~~~
+	// Volume gains
+	// ~~~~~!~~~~~~
 	// The user sets this via MIXER.COM, which lets them magnify or diminish
 	// the channel's volume relative to other adjustments, such as any
 	// adjustments done by the application at runtime.
-	AudioFrame user_volume_scalar = {1.0f, 1.0f};
+	AudioFrame user_volume_gain = {1.0f, 1.0f};
 
 	// The application (might) adjust a channel's volume programmatically at
 	// runtime via the Sound Blaster or ReelMagic control interfaces.
-	AudioFrame app_volume_scalar = {1.0f, 1.0f};
+	AudioFrame app_volume_gain = {1.0f, 1.0f};
 
-	// The 0 dB volume scalar is used to bring a channel to 0 dB in the
+	// The 0 dB volume gain is used to bring a channel to 0 dB in the
 	// signed 16-bit [-32k, +32k] range.
 	//
 	// Two examples:
@@ -323,13 +323,13 @@ private:
 	//  2. The GUS's simultaneous voices can accumulate to ~100%+RMS
 	//     above 0 dB, so for that channel we set this to RMS (sqrt of half).
 	//
-	float db0_volume_scalar = 1.0f;
+	float db0_volume_gain = 1.0f;
 
 	// All three of these are multiplied together to form the combined
-	// volume scalar. This means we can apply one float-multiply per sample
+	// volume gain. This means we can apply one float-multiply per sample
 	// and perform all three adjustments at once.
 	//
-	AudioFrame combined_volume_scalar = {1.0f, 1.0f};
+	AudioFrame combined_volume_gain = {1.0f, 1.0f};
 
 	// Defines the peak sample amplitude we can expect in this channel.
 	// Default to signed 16bit max, however channel's that know their own

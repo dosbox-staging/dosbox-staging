@@ -745,37 +745,35 @@ void MixerChannel::Set0dbScalar(const float scalar)
 	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
 	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(Max16BitSampleValue));
 
-	db0_volume_scalar = scalar;
+	db0_volume_gain = scalar;
 
 	RecalcCombinedVolume();
 }
 
 void MixerChannel::RecalcCombinedVolume()
 {
-	combined_volume_scalar.left = user_volume_scalar.left *
-	                              app_volume_scalar.left *
-	                              mixer.master_volume.left * db0_volume_scalar;
+	combined_volume_gain.left = user_volume_gain.left * app_volume_gain.left *
+	                            mixer.master_volume.left * db0_volume_gain;
 
-	combined_volume_scalar.right = user_volume_scalar.right *
-	                               app_volume_scalar.right *
-	                               mixer.master_volume.right * db0_volume_scalar;
+	combined_volume_gain.right = user_volume_gain.right * app_volume_gain.right *
+	                             mixer.master_volume.right * db0_volume_gain;
 }
 
 const AudioFrame MixerChannel::GetUserVolume() const
 {
-	return user_volume_scalar;
+	return user_volume_gain;
 }
 
 void MixerChannel::SetUserVolume(const AudioFrame volume)
 {
 	// Allow unconstrained user-defined values
-	user_volume_scalar = volume;
+	user_volume_gain = volume;
 	RecalcCombinedVolume();
 }
 
 const AudioFrame MixerChannel::GetAppVolume() const
 {
-	return app_volume_scalar;
+	return app_volume_gain;
 }
 
 void MixerChannel::SetAppVolume(const AudioFrame volume)
@@ -786,8 +784,8 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 		constexpr auto MaxUnityVolume = 1.0f;
 		return clamp(vol, MinUnityVolume, MaxUnityVolume);
 	};
-	app_volume_scalar = {clamp_to_unity(volume.left),
-	                     clamp_to_unity(volume.right)};
+	app_volume_gain = {clamp_to_unity(volume.left),
+	                   clamp_to_unity(volume.right)};
 	RecalcCombinedVolume();
 
 #ifdef DEBUG
@@ -796,8 +794,8 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 	        name,
 	        static_cast<double>(left),
 	        static_cast<double>(right),
-	        static_cast<double>(app_volume_scalar.left  * 100.0f),
-	        static_cast<double>(app_volume_scalar.right * 100.0f));
+	        static_cast<double>(app_volume_gain.left  * 100.0f),
+	        static_cast<double>(app_volume_gain.right * 100.0f));
 #endif
 }
 
@@ -1120,11 +1118,11 @@ void MixerChannel::AddSilence()
 				}
 
 				mixer.work[mixpos][mapped_output_left] +=
-				        prev_frame.left * combined_volume_scalar.left;
+				        prev_frame.left * combined_volume_gain.left;
 
 				mixer.work[mixpos][mapped_output_right] +=
 				        (stereo ? prev_frame.right : prev_frame.left) *
-				        combined_volume_scalar.right;
+				        combined_volume_gain.right;
 
 				prev_frame = next_frame;
 
@@ -1697,10 +1695,10 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 		}
 
 		AudioFrame frame_with_gain = {
-		        prev_frame[mapped_channel_left] * combined_volume_scalar.left,
+		        prev_frame[mapped_channel_left] * combined_volume_gain.left,
 		        (stereo ? prev_frame[mapped_channel_right]
 		                : prev_frame[mapped_channel_left]) *
-		                combined_volume_scalar.right};
+		                combined_volume_gain.right};
 
 		// Process initial samples through an expanding envelope to
 		// prevent severe clicks and pops. Becomes a no-op when done.
@@ -2095,8 +2093,8 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 		auto sample = prev_frame.left +
 		              static_cast<float>((diff * diff_mul) >> FreqShift);
 
-		AudioFrame frame_with_gain = {sample * combined_volume_scalar.left,
-		                              sample * combined_volume_scalar.right};
+		AudioFrame frame_with_gain = {sample * combined_volume_gain.left,
+		                              sample * combined_volume_gain.right};
 
 		if (do_sleep) {
 			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
