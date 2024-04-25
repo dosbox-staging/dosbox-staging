@@ -2560,7 +2560,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	mixer.pos = (mixer.pos + reduce_frames) & MixerBufferMask;
 
 	if (frames_requested != reduce_frames) {
-		while (frames_requested--) {
+		auto frames = std::min(reduce_frames, frames_requested);
+		while (frames--) {
 			const auto i = (pos + (index >> IndexShiftLocal)) &
 			               MixerBufferMask;
 			index += index_add;
