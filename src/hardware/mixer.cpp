@@ -43,6 +43,7 @@
 #include "mem.h"
 #include "midi.h"
 #include "pic.h"
+#include "ring_buffer.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
@@ -153,8 +154,8 @@ struct ChorusSettings {
 
 struct MixerSettings {
 	std::array<AudioFrame, MixerBufferByteSize> work       = {};
-	std::array<AudioFrame, MixerBufferByteSize> aux_reverb = {};
-	std::array<AudioFrame, MixerBufferByteSize> aux_chorus = {};
+	RingBuffer<AudioFrame, MixerBufferByteSize> aux_reverb = {};
+	RingBuffer<AudioFrame, MixerBufferByteSize> aux_chorus = {};
 
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out  = {};
@@ -2006,6 +2007,10 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 	auto pos    = mixer.resample_out.begin();
 	auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
 
+	const auto pos_offset = mixer.pos + frames_done;
+	auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
+	auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
+
 	while (pos != mixer.resample_out.end()) {
 		AudioFrame frame = {*pos++, *pos++};
 
@@ -2022,14 +2027,24 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		}
 
 		if (do_reverb_send) {
-			// Mix samples to the reverb aux buffer, scaled by the
-			// reverb send volume
-			mixer.aux_reverb[mixpos] += frame * reverb.send_gain;
+			// Accumulate reverb sends from the individual channels
+			// in the reverb aux buffer. Once we've done this for
+			// all our channels, we can feed the accumulated inputs
+			// through the reverb only once. The reverb is
+			// configured for 100% wet output.
+			//
+			// Our reverb algorithm is a linear process, so applying
+			// the reverb effect individually to N channels would
+			// yield bit-identical results, but it would be N-times
+			// more expensive.
+			*aux_reverb_pos++ += (frame * reverb.send_gain);
 		}
+
 		if (do_chorus_send) {
-			// Mix samples to the chorus aux buffer, scaled by the
-			// chorus send volume
-			mixer.aux_chorus[mixpos] += frame * chorus.send_gain;
+			// Similarly to reverb processing, we accumulate chorus
+			// sends from the individual channels in the chorus aux
+			// buffer. The chorus configured for 100% wet output.
+			*aux_chorus_pos++ += (frame * chorus.send_gain);
 		}
 
 		if (do_sleep) {
@@ -2281,39 +2296,46 @@ static void mix_samples(const int frames_requested)
 
 	const auto start_pos = (mixer.pos + mixer.frames_done) & MixerBufferMask;
 
+	const auto pos_offset = mixer.pos + mixer.frames_done;
+
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->Mix(frames_requested);
 	}
 
 	if (mixer.do_reverb) {
-		// Apply reverb effect to the reverb aux buffer, then mix the
-		// results to the master output
+		// Use the contents of the reverb aux buffer as the reverb's
+		// input, then mix its output to the master mix buffer.
 		auto pos = start_pos;
 
+		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos_offset;
+
 		for (auto i = 0; i < frames_added; ++i) {
-			AudioFrame frame = mixer.aux_reverb[pos];
+			auto reverb_in_frame = *aux_reverb_pos++;
 
 			// High-pass filter the reverb input
-			frame.left  = mixer.reverb.highpass_filter[0].filter(frame.left);
-			frame.right = mixer.reverb.highpass_filter[1].filter(frame.right);
+			reverb_in_frame.left = mixer.reverb.highpass_filter[0].filter(
+			        reverb_in_frame.left);
+
+			reverb_in_frame.right = mixer.reverb.highpass_filter[1].filter(
+			        reverb_in_frame.right);
 
 			// MVerb operates on two non-interleaved sample streams
 			static float in_left[1]     = {};
 			static float in_right[1]    = {};
-			static float* reverb_buf[2] = {in_left, in_right};
+			static float* reverb_out_buf[2] = {in_left, in_right};
 
-			in_left[0]  = frame.left;
-			in_right[0] = frame.right;
+			in_left[0]  = reverb_in_frame.left;
+			in_right[0] = reverb_in_frame.right;
 
-			const auto in = reverb_buf;
-			auto out      = reverb_buf;
+			const auto in = reverb_out_buf;
+			auto out      = reverb_out_buf;
 
 			constexpr auto NumFrames = 1;
 			mixer.reverb.mverb.process(in, out, NumFrames);
 
-			mixer.work[pos].left  += reverb_buf[0][0];
-			mixer.work[pos].right += reverb_buf[1][0];
+			mixer.work[pos].left  += reverb_out_buf[0][0];
+			mixer.work[pos].right += reverb_out_buf[1][0];
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
@@ -2324,8 +2346,10 @@ static void mix_samples(const int frames_requested)
 		// results to the master output
 		auto pos = start_pos;
 
+		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos_offset;
+
 		for (auto i = 0; i < frames_added; ++i) {
-			AudioFrame frame = mixer.aux_chorus[pos];
+			auto frame = *aux_chorus_pos++;
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 
 			mixer.work[pos] += frame;
@@ -2559,12 +2583,15 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		auto pos    = mixer.pos.load();
 		auto frames = reduce_frames;
 
+		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos;
+		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos;
+
 		while (frames--) {
 			pos &= MixerBufferMask;
 
 			mixer.work[pos]       = {};
-			mixer.aux_reverb[pos] = {};
-			mixer.aux_chorus[pos] = {};
+			*aux_reverb_pos++ = {0.0f};
+			*aux_chorus_pos++ = {0.0f};
 
 			++pos;
 		}
