@@ -63,6 +63,9 @@
 #define AUDIO_DECODE_BUFFER_SIZE 16512u
 #define SAMPLES_PER_REDBOOK_FRAME (BYTES_PER_RAW_REDBOOK_FRAME / REDBOOK_BPS)
 
+// Number of letters in the English alphabet (A to Z)
+constexpr auto MaxNumDosDriveLetters = 26;
+
 struct TMSF
 {
 	unsigned char min;
@@ -121,6 +124,10 @@ public:
 protected:
 	void LagDriveResponse() const;
 };
+
+namespace CDROM {
+extern std::array<std::unique_ptr<CDROM_Interface>, MaxNumDosDriveLetters> cdroms;
+}
 
 class CDROM_Interface_Fake final : public CDROM_Interface {
 public:
@@ -292,7 +299,7 @@ public:
 		bool                       mode2      = false;
 	};
 
-	CDROM_Interface_Image(uint8_t sub_unit);
+	CDROM_Interface_Image();
 
 	~CDROM_Interface_Image() override;
 	void InitNewMedia() override {}
@@ -320,7 +327,6 @@ public:
 	{
 		return true;
 	}
-	static CDROM_Interface_Image* images[26];
 
 private:
 	static struct imagePlayer {

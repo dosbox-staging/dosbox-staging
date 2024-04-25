@@ -28,6 +28,10 @@
 #include "pic.h"
 #include "string_utils.h"
 
+namespace CDROM {
+std::array<std::unique_ptr<CDROM_Interface>, MaxNumDosDriveLetters> cdroms;
+}
+
 // ******************************************************
 // Fake CDROM
 // ******************************************************
