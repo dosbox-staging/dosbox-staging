@@ -50,10 +50,10 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
               "libmt32emu >= 2.5.0 required (using " MT32EMU_VERSION ")");
 
+using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
+
 class MidiHandler_mt32 final : public MidiHandler {
 public:
-	using service_t = std::unique_ptr<MT32Emu::Service>;
-
 	MidiHandler_mt32() = default;
 	~MidiHandler_mt32() override;
 	void Close() override;
@@ -75,7 +75,7 @@ public:
 	void PrintStats();
 
 private:
-	service_t GetService();
+	Mt32ServicePtr GetService();
 	void MixerCallBack(uint16_t len);
 	void ProcessWorkFromFifo();
 
@@ -89,7 +89,7 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 
 	std::mutex service_mutex = {};
-	service_t service        = {};
+	Mt32ServicePtr service   = {};
 	std::thread renderer     = {};
 
 	std::optional<ModelAndDir> model_and_dir = {};
