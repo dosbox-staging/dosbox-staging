@@ -60,8 +60,6 @@ constexpr auto FreqShift = 14;
 constexpr auto FreqNext  = (1 << FreqShift);
 constexpr auto FreqMask  = (FreqNext - 1);
 
-constexpr auto IndexShiftLocal = 14;
-
 // Over how many milliseconds will we permit a signal to grow from
 // zero up to peak amplitude? (recommended 10 to 20ms)
 constexpr auto EnvelopeMaxExpansionOverMs = 15;
@@ -2386,7 +2384,6 @@ static void mix_samples(const int frames_requested)
 
 	// Reset the frames_per_tick
 	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-
 	mixer.frames_done = frames_requested;
 }
 
@@ -2455,6 +2452,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
+	constexpr auto IndexShiftLocal = 14;
+
 	auto index_add = (1 << IndexShiftLocal);
 	auto index     = (index_add % frames_requested) ? frames_requested : 0;
 
@@ -2486,8 +2485,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 #endif
 			reduce_frames = frames_requested - frames_remaining;
 
-			index_add = (reduce_frames << IndexShiftLocal) /
-			            frames_requested;
 		} else {
 			reduce_frames = frames_requested;
 #if 0
@@ -2497,32 +2494,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			        mixer.min_frames_needed.load(),
 			        frames_remaining);
 #endif
-
-			// Mixer tick value being updated:
-			//
-			// 1) A lot too high? Division by 5, but maxed by 2*min
-			//    to prevent too fast drops.
-			//
-			// 2) A little too high? Division by 8.
-			//
-			// 3) A little to nothing above the min_needed buffer?
-			//    Use the default value.
-			//
-			const auto diff = clamp(frames_remaining - mixer.min_frames_needed,
-			                        0,
-			                        mixer.min_frames_needed * 2);
-
-			if (diff > (mixer.min_frames_needed / 2)) {
-				mixer.frames_per_tick = calc_frames_per_tick(
-				        mixer.sample_rate_hz - (diff / 5));
-
-			} else if (diff > (mixer.min_frames_needed / 4)) {
-				mixer.frames_per_tick = calc_frames_per_tick(
-				        mixer.sample_rate_hz - (diff / 8));
-			} else {
-				mixer.frames_per_tick = calc_frames_per_tick(
-				        mixer.sample_rate_hz);
-			}
 		}
 
 	} else {
@@ -2541,9 +2512,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 		index_add = (index_add << IndexShiftLocal) / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
-
-		mixer.frames_per_tick = calc_frames_per_tick(
-		        mixer.sample_rate_hz - (mixer.min_frames_needed / 5));
 	}
 
 	reduce_channels_done_counts(reduce_frames);
