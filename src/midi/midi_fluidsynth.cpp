@@ -263,7 +263,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	                      "synth.sample-rate",
 	                      sample_rate_hz);
 
-	fsynth_ptr_t fluid_synth(new_fluid_synth(fluid_settings.get()),
+	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                         delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
