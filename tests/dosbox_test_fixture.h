@@ -52,7 +52,7 @@ private:
 	char const *arg_c_str;
 	const char *argv[1];
 	CommandLine com_line;
-	config_ptr_t config;
+	ConfigPtr config;
 	// Only init these sections for our tests
 	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
 	                                  "midi",   "sblaster", "speaker",

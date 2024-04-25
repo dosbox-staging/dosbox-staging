@@ -931,7 +931,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 
 static void fluid_init([[maybe_unused]] Section* sec) {}
 
-void FLUID_AddConfigSection(const config_ptr_t& conf)
+void FLUID_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);

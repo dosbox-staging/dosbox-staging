@@ -1768,7 +1768,7 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void GUS_AddConfigSection(const config_ptr_t& conf)
+void GUS_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

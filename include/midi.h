@@ -236,13 +236,13 @@ struct MidiWork {
 };
 
 #if C_FLUIDSYNTH
-void FLUID_AddConfigSection(const config_ptr_t& conf);
+void FLUID_AddConfigSection(const ConfigPtr& conf);
 #endif
 
 #if C_MT32EMU
-void MT32_AddConfigSection(const config_ptr_t& conf);
+void MT32_AddConfigSection(const ConfigPtr& conf);
 #endif
 
-void MIDI_AddConfigSection(const config_ptr_t& conf);
+void MIDI_AddConfigSection(const ConfigPtr& conf);
 
 #endif

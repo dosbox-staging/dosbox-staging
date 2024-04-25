@@ -13469,7 +13469,7 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void IMFC_AddConfigSection(const config_ptr_t& conf)
+void IMFC_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

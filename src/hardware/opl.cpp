@@ -985,7 +985,7 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 }
 
 // Must be called after SB_AddConfigSection
-void OPL_AddConfigSettings(const config_ptr_t& conf)
+void OPL_AddConfigSettings(const ConfigPtr& conf)
 {
 	assert(conf);
 	auto secprop = static_cast<Section_prop*>(conf->GetSection("sblaster"));

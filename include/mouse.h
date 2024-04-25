@@ -33,7 +33,7 @@
 // ***************************************************************************
 
 void MOUSE_Init(Section *);
-void MOUSE_AddConfigSection(const config_ptr_t &);
+void MOUSE_AddConfigSection(const ConfigPtr &);
 
 // ***************************************************************************
 // Data types
