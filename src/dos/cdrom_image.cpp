@@ -1370,7 +1370,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	return true;
 }
 
-bool CDROM_Interface_Image::HasDataTrack(void)
+bool CDROM_Interface_Image::HasDataTrack() const
 {
 	//Data track has attribute 0x40
 	for (const auto &track : tracks) {
