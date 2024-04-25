@@ -2485,17 +2485,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		            mixer.min_frames_needed.load());
 #endif
 
-		if ((frames_requested - mixer.frames_done) >
-		    (frames_requested >> 7)) {
-			// Max 1 percent stretch.
-			LOG_WARNING("MIXER:     Stretch more than 1 percent");
-			return;
-		}
 		reduce_frames = mixer.frames_done;
-		index_add = (reduce_frames << IndexShiftLocal) / frames_requested;
-
-		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz +
-		                              mixer.min_frames_needed);
 
 	} else if (mixer.frames_done < mixer.max_frames_needed) {
 		auto frames_remaining = mixer.frames_done - frames_requested;
@@ -2535,7 +2525,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			            frames_requested;
 		} else {
 			reduce_frames = frames_requested;
-#if 1
+#if 0
 			LOG_MSG("MIXER: Regular run requested %d, have %d, min %d, remaining %d",
 			        frames_requested,
 			        mixer.frames_done.load(),
