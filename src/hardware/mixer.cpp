@@ -2478,12 +2478,17 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	/* Enough room in the buffer ? */
 	if (mixer.frames_done < frames_requested) {
-		//		LOG_WARNING("Full underrun requested %d, have
-		//%d, min %d", frames_requested, mixer.frames_done.load(),
-		// mixer.min_frames_needed.load());
+#if 1
+		LOG_WARNING("MIXER: Full underrun requested %d, have %d, min %d",
+		            frames_requested,
+		            mixer.frames_done.load(),
+		            mixer.min_frames_needed.load());
+#endif
+
 		if ((frames_requested - mixer.frames_done) >
-		    (frames_requested >> 7)) { // Max 1 percent
-			                       // stretch.
+		    (frames_requested >> 7)) {
+			// Max 1 percent stretch.
+			LOG_WARNING("MIXER:     Stretch more than 1 percent");
 			return;
 		}
 		reduce_frames = mixer.frames_done;
@@ -2517,20 +2522,26 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 				frames_remaining = 1 + (2 * frames_remaining) /
 				                               mixer.min_frames_needed; // frames_remaining=1,2,3
 			}
-			//			LOG_WARNING("needed underrun
-			// requested %d, have %d, min %d, frames_remaining %d",
-			// frames_requested, mixer.frames_done.load(),
-			// mixer.min_frames_needed.load(), frames_remaining);
+#if 1
+			LOG_WARNING("MIXER: Needed underrun requested %d, have %d, min %d, remaining %d",
+			            frames_requested,
+			            mixer.frames_done.load(),
+			            mixer.min_frames_needed.load(),
+			            frames_remaining);
+#endif
 			reduce_frames = frames_requested - frames_remaining;
 
 			index_add = (reduce_frames << IndexShiftLocal) /
 			            frames_requested;
 		} else {
 			reduce_frames = frames_requested;
-			//			LOG_MSG("regular run requested
-			//%d, have %d, min %d, frames_remaining %d",
-			// frames_requested, mixer.frames_done.load(),
-			// mixer.min_frames_needed.load(), frames_remaining);
+#if 1
+			LOG_MSG("MIXER: Regular run requested %d, have %d, min %d, remaining %d",
+			        frames_requested,
+			        mixer.frames_done.load(),
+			        mixer.min_frames_needed.load(),
+			        frames_remaining);
+#endif
 
 			/* Mixer tick value being updated:
 			 * 3 cases:
@@ -2559,7 +2570,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		}
 	} else {
 		// There is way too much data in the buffer
-#ifdef DEBUG_MIXER
+#if 1
 		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
 		            frames_requested,
 		            mixer.frames_done.load(),
