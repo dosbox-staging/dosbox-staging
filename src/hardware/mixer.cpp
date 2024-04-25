@@ -19,8 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-// #define DEBUG 1
-
 #include "mixer.h"
 
 #include <algorithm>
@@ -61,10 +59,6 @@ CHECK_NARROWING();
 constexpr auto FreqShift = 14;
 constexpr auto FreqNext  = (1 << FreqShift);
 constexpr auto FreqMask  = (FreqNext - 1);
-
-constexpr auto TickShift = 24;
-constexpr auto TickNext  = (1 << TickShift);
-constexpr auto TickMask  = (TickNext - 1);
 
 constexpr auto IndexShiftLocal = 14;
 
@@ -179,13 +173,12 @@ struct MixerSettings {
 	std::atomic<int> frames_needed     = 0;
 	std::atomic<int> min_frames_needed = 0;
 	std::atomic<int> max_frames_needed = 0;
+	std::atomic<float> frames_per_tick = 0;
 
-	// Samples needed per millisecond tick
-	std::atomic<int> tick_add = 0;
+	float frame_counter = 0;
 
-	int tick_counter = 0;
-
-	// Sample rate negotiated with SDL
+	// Sample rate negotiated with SDL (technically, this is rate of sample
+	// *frames* per second).
 	std::atomic<int> sample_rate_hz = 0;
 
 	// Matches SDL AudioSpec.samples type
@@ -2270,12 +2263,12 @@ MixerChannel::~MixerChannel()
 	}
 }
 
-static constexpr int calc_tickadd(const int freq)
+static constexpr float calc_frames_per_tick(const int freq_hz)
 {
-	assert(freq > 0);
+	assert(freq_hz > 0);
 
-	const auto freq64 = static_cast<int64_t>(freq);
-	return check_cast<int>((freq64 << TickShift) / 1000);
+	constexpr auto MillisecondsPerTick = 1000;
+	return freq_hz / MillisecondsPerTick;
 }
 
 // Mix a certain amount of new sample frames
@@ -2391,8 +2384,8 @@ static void mix_samples(const int frames_requested)
 		                     reinterpret_cast<int16_t*>(out));
 	}
 
-	// Reset the tick_add
-	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
+	// Reset the frames_per_tick
+	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
 
 	mixer.frames_done = frames_requested;
 }
@@ -2402,13 +2395,11 @@ static void handle_mix_samples()
 	MIXER_LockAudioDevice();
 
 	mix_samples(mixer.frames_needed);
-	mixer.tick_counter += mixer.tick_add;
 
-	const auto frames_needed = mixer.frames_needed +
-	                           (mixer.tick_counter >> TickShift);
-	mixer.frames_needed = frames_needed;
+	mixer.frame_counter += mixer.frames_per_tick;
+	mixer.frames_needed += mixer.frame_counter;
 
-	mixer.tick_counter &= TickMask;
+	mixer.frame_counter -= floor(mixer.frame_counter);
 
 	MIXER_UnlockAudioDevice();
 }
@@ -2438,9 +2429,10 @@ static void handle_mix_no_sound()
 	reduce_channels_done_counts(mixer.frames_needed);
 
 	// Set values for next tick
-	mixer.tick_counter += mixer.tick_add;
-	mixer.frames_needed = mixer.tick_counter >> TickShift;
-	mixer.tick_counter &= TickMask;
+	mixer.frame_counter += mixer.frames_per_tick;
+	mixer.frames_needed = mixer.frame_counter;
+
+	mixer.frame_counter -= floor(mixer.frame_counter);
 	mixer.frames_done = 0;
 
 	MIXER_UnlockAudioDevice();
@@ -2516,21 +2508,20 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			// 3) A little to nothing above the min_needed buffer?
 			//    Use the default value.
 			//
-			int diff = frames_remaining - mixer.min_frames_needed;
+			const auto diff = clamp(frames_remaining - mixer.min_frames_needed,
+			                        0,
+			                        mixer.min_frames_needed * 2);
 
-			if (diff > (mixer.min_frames_needed << 1)) {
-				diff = mixer.min_frames_needed << 1;
-			}
-
-			if (diff > (mixer.min_frames_needed >> 1)) {
-				mixer.tick_add = calc_tickadd(
+			if (diff > (mixer.min_frames_needed / 2)) {
+				mixer.frames_per_tick = calc_frames_per_tick(
 				        mixer.sample_rate_hz - (diff / 5));
 
-			} else if (diff > (mixer.min_frames_needed >> 2)) {
-				mixer.tick_add = calc_tickadd(
-				        mixer.sample_rate_hz - (diff >> 3));
+			} else if (diff > (mixer.min_frames_needed / 4)) {
+				mixer.frames_per_tick = calc_frames_per_tick(
+				        mixer.sample_rate_hz - (diff / 8));
 			} else {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
+				mixer.frames_per_tick = calc_frames_per_tick(
+				        mixer.sample_rate_hz);
 			}
 		}
 
@@ -2551,14 +2542,14 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		index_add = (index_add << IndexShiftLocal) / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
 
-		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
-		                              (mixer.min_frames_needed / 5));
+		mixer.frames_per_tick = calc_frames_per_tick(
+		        mixer.sample_rate_hz - (mixer.min_frames_needed / 5));
 	}
 
 	reduce_channels_done_counts(reduce_frames);
 
-	// Reset mixer.tick_add
-	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
+	// Reset mixer.frames_per_tick
+	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
 
 	mixer.frames_done -= reduce_frames;
 
@@ -2831,9 +2822,8 @@ void MIXER_Init(Section* sec)
 		}
 	}
 
-	mixer.tick_counter = (mixer.sample_rate_hz % (1000 / 8)) ? TickNext : 0;
-
-	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
+	mixer.frame_counter   = 0;
+	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
