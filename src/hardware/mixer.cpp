@@ -2446,9 +2446,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	auto frames_requested = bytes_requested / BytesPerSampleFrame;
 
-	auto output        = reinterpret_cast<int16_t*>(stream);
 	auto reduce_frames = 0;
-	auto pos           = 0;
 
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
@@ -2524,11 +2522,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	const auto frames_needed = mixer.frames_needed - reduce_frames;
 	mixer.frames_needed      = frames_needed;
 
-	pos       = mixer.pos;
-	mixer.pos = (mixer.pos + reduce_frames) & MixerBufferMask;
+	auto output = reinterpret_cast<int16_t*>(stream);
 
 	if (frames_requested != reduce_frames) {
+		auto pos    = mixer.pos.load();
 		auto frames = std::min(reduce_frames, frames_requested);
+
 		while (frames--) {
 			const auto i = (pos + (index >> IndexShiftLocal)) &
 			               MixerBufferMask;
@@ -2539,24 +2538,29 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			*output++ = clamp_to_int16(
 			        static_cast<int>(mixer.work[i].right));
 		}
-		// Clean the used buffers
-		while (reduce_frames--) {
-			pos &= MixerBufferMask;
-
-			mixer.work[pos]       = {};
-			mixer.aux_reverb[pos] = {};
-			mixer.aux_chorus[pos] = {};
-
-			++pos;
-		}
 	} else {
-		while (reduce_frames--) {
+		auto pos    = mixer.pos.load();
+		auto frames = reduce_frames;
+
+		while (frames--) {
 			pos &= MixerBufferMask;
 
 			*output++ = clamp_to_int16(
 			        static_cast<int>(mixer.work[pos].left));
 			*output++ = clamp_to_int16(
 			        static_cast<int>(mixer.work[pos].right));
+
+			++pos;
+		}
+	}
+
+	// Clean the used buffers
+	{
+		auto pos    = mixer.pos.load();
+		auto frames = reduce_frames;
+
+		while (frames--) {
+			pos &= MixerBufferMask;
 
 			mixer.work[pos]       = {};
 			mixer.aux_reverb[pos] = {};
@@ -2565,6 +2569,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			++pos;
 		}
 	}
+
+	mixer.pos = (mixer.pos + reduce_frames) & MixerBufferMask;
 }
 
 static void stop_mixer([[maybe_unused]] Section* sec) {}
