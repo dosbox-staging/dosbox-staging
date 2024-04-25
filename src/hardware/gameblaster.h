@@ -69,7 +69,7 @@ private:
 	const char *CardName() const;
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	IO_WriteHandleObject write_handlers[4]           = {};
 	IO_WriteHandleObject write_handler_for_detection = {};

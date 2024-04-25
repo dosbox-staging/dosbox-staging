@@ -85,7 +85,7 @@ private:
 	static constexpr auto bytes_pending_limit =  fifo_size << frac_shift;
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	IO_ReadHandleObject read_handlers[5] = {};
 	IO_WriteHandleObject write_handlers[4] = {};
 	Ps1Registers regs = {};
@@ -107,7 +107,7 @@ private:
 	bool can_trigger_irq = false;
 };
 
-static void setup_filter(mixer_channel_t& channel, const bool filter_enabled)
+static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
 	if (filter_enabled) {
 		constexpr auto HpfOrder        = 3;
@@ -397,7 +397,7 @@ private:
 	void WriteSoundGeneratorPort205(io_port_t port, io_val_t, io_width_t);
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	IO_WriteHandleObject write_handler = {};
 	sn76496_device device;
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};

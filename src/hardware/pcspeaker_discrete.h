@@ -71,7 +71,7 @@ private:
 
 	std::queue<DelayEntry> entries = {};
 
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	PpiPortB port_b      = {};
 	PpiPortB prev_port_b = {};

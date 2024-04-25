@@ -314,7 +314,7 @@ private:
 	static struct imagePlayer {
 		// Objects, pointers, and then scalars; in descending size-order.
 		std::weak_ptr<TrackFile> trackFile = {};
-		mixer_channel_t channel = nullptr;
+		MixerChannelPtr channel = nullptr;
 		CDROM_Interface_Image    *cd                = nullptr;
 		void (MixerChannel::*addFrames)(int, const int16_t *) = nullptr;
 		uint32_t                 playedTrackFrames  = 0;
@@ -370,7 +370,7 @@ private:
 	void CdAudioCallback(const uint16_t requested_frames);
 	void CdReaderLoop();
 
-	mixer_channel_t mixer_channel  = {};
+	MixerChannelPtr mixer_channel  = {};
 	std::thread thread             = {};
 	std::mutex mutex               = {};
 	std::condition_variable waiter = {};
