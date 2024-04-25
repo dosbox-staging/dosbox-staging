@@ -93,6 +93,7 @@ unit_tests = [
     {'name': 'math_utils', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
     {'name': 'mixer', 'deps': [dosbox_dep, libiir_dep], 'extra_cpp': []},
     {'name': 'rect', 'deps': []},
+    {'name': 'ring_buffer', 'deps': []},
     {'name': 'rgb', 'deps': []},
     {'name': 'rwqueue', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
     {'name': 'semaphore_internal', 'deps': [dosbox_dep]},
