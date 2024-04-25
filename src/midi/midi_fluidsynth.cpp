@@ -240,7 +240,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 {
 	Close();
 
-	fluid_settings_ptr_t fluid_settings(new_fluid_settings(),
+	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
 	                                    delete_fluid_settings);
 	if (!fluid_settings) {
 		LOG_WARNING("FSYNTH: new_fluid_settings failed");
