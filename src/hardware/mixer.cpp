@@ -160,9 +160,9 @@ struct ChorusSettings {
 };
 
 struct MixerSettings {
-	std::array<AudioFrame, MixerBufferLength> work       = {};
-	std::array<AudioFrame, MixerBufferLength> aux_reverb = {};
-	std::array<AudioFrame, MixerBufferLength> aux_chorus = {};
+	std::array<AudioFrame, MixerBufferByteSize> work       = {};
+	std::array<AudioFrame, MixerBufferByteSize> aux_reverb = {};
+	std::array<AudioFrame, MixerBufferByteSize> aux_chorus = {};
 
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out  = {};
@@ -215,7 +215,7 @@ struct MixerSettings {
 static struct MixerSettings mixer = {};
 
 // TODO This is hacky and should be removed. Only the PS1 Audio uses it.
-alignas(sizeof(float)) uint8_t MixTemp[MixerBufferLength] = {};
+alignas(sizeof(float)) uint8_t MixTemp[MixerBufferByteSize] = {};
 
 void MixerChannel::SetLineoutMap(const StereoLine map)
 {
@@ -1065,7 +1065,7 @@ void MixerChannel::Mix(const int frames_requested)
 			break;
 		}
 		// avoid overflow
-		frames_remaining = std::min(frames_remaining, MixerBufferLength);
+		frames_remaining = std::min(frames_remaining, MixerBufferByteSize);
 
 		handler(frames_remaining);
 	}
@@ -2201,7 +2201,7 @@ void MixerChannel::FillUp()
 	auto frames_remaining = static_cast<int>(index * mixer.frames_needed);
 	while (frames_remaining > 0) {
 		const auto frames_to_mix = std::clamp(
-		        frames_remaining, 0, static_cast<int>(MixerBufferLength));
+		        frames_remaining, 0, static_cast<int>(MixerBufferByteSize));
 
 		MIXER_LockAudioDevice();
 		Mix(frames_to_mix);
@@ -2542,8 +2542,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		            mixer.frames_done.load(),
 		            mixer.min_frames_needed.load());
 #endif
-		if (mixer.frames_done > MixerBufferLength) {
-			index_add = MixerBufferLength - 2 * mixer.min_frames_needed;
+		if (mixer.frames_done > MixerBufferByteSize) {
+			index_add = MixerBufferByteSize - 2 * mixer.min_frames_needed;
 		} else {
 			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
 		}
