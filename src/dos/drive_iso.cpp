@@ -177,7 +177,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int 
 			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
 			Set_Label(buffer,discLabel,true);
 
-		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
+		} else if (CDROM::cdroms[subUnit]->HasDataTrack() == false) { // Audio only cdrom
 			safe_strcpy(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
@@ -194,16 +194,13 @@ int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_uni
 {
 	if (MSCDEX_HasDrive(drive_letter)) {
 		sub_unit = MSCDEX_GetSubUnit(drive_letter);
-		CDROM_Interface_Image *oldCdrom = CDROM_Interface_Image::images[sub_unit];
-		CDROM_Interface *cdrom = new CDROM_Interface_Image(sub_unit);
+		std::unique_ptr<CDROM_Interface> cdrom = std::make_unique<CDROM_Interface_Image>();
 		char pathCopy[CROSS_LEN];
 		safe_strcpy(pathCopy, path);
 		if (!cdrom->SetDevice(pathCopy)) {
-			CDROM_Interface_Image::images[sub_unit] = oldCdrom;
-			delete cdrom;
 			return 3;
 		}
-		MSCDEX_ReplaceDrive(cdrom, sub_unit);
+		MSCDEX_ReplaceDrive(std::move(cdrom), sub_unit);
 		return 0;
 	} else {
 		return MSCDEX_AddDrive(drive_letter, path, sub_unit);
@@ -478,7 +475,7 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 
 	// check if the entry is valid and contains the correct sector
 	if (!he.valid || he.sector != sector) {
-		if (!CDROM_Interface_Image::images[subUnit]->ReadSector(he.data, false, sector)) {
+		if (!CDROM::cdroms[subUnit]->ReadSector(he.data, false, sector)) {
 			return false;
 		}
 		he.valid = true;
@@ -489,8 +486,8 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 	return true;
 }
 
-inline bool isoDrive :: readSector(uint8_t *buffer, uint32_t sector) {
-	return CDROM_Interface_Image::images[subUnit]->ReadSector(buffer, false, sector);
+inline bool isoDrive::readSector(uint8_t *buffer, uint32_t sector) {
+	return CDROM::cdroms[subUnit]->ReadSector(buffer, false, sector);
 }
 
 int isoDrive :: readDirEntry(isoDirEntry *de, uint8_t *data) {

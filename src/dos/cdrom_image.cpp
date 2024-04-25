@@ -479,15 +479,13 @@ int CDROM_Interface_Image::AudioFile::getLength()
 
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
-CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player;
 
-CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
+CDROM_Interface_Image::CDROM_Interface_Image()
         : tracks{},
           readBuffer{},
           mcn("")
 {
-	images[sub_unit] = this;
 	if (refCount == 0) {
 		if (!player.channel) {
 			const auto mixer_callback = std::bind(&CDROM_Interface_Image::CDAudioCallBack,
