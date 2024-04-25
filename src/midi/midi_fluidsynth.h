@@ -68,10 +68,10 @@ private:
 
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
-	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
+	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 
 	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
-	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
+	FluidSynthPtr synth{nullptr, &delete_fluid_synth};
 
 	MixerChannelPtr mixer_channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};
