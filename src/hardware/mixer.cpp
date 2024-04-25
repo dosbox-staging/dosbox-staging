@@ -2448,15 +2448,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	auto reduce_frames = 0;
 
-	// Local resampling counter to manipulate the data when sending it off
-	// to the callback
-	constexpr auto IndexShiftLocal = 14;
-
-	auto index_add = (1 << IndexShiftLocal);
-	auto index     = (index_add % frames_requested) ? frames_requested : 0;
+	// Used for time-stretching the audio in the buffer overrun scenario.
+	float index     = {};
+	float index_add = {};
 
 	if (mixer.frames_done < frames_requested) {
-		// Underrun
+		// Buffer underrun
 #if 1
 		LOG_WARNING("MIXER: Full underrun requested %d, have %d, min %d",
 		            frames_requested,
@@ -2495,7 +2492,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		}
 
 	} else {
-		// Overrun
+		// Buffer overrun -- this usually happens in fast-forward mode.
 #if 1
 		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
 		            frames_requested,
@@ -2508,7 +2505,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
 		}
 
-		index_add = (index_add << IndexShiftLocal) / frames_requested;
+		index_add = index_add / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
 	}
 
@@ -2525,18 +2522,23 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	auto output = reinterpret_cast<int16_t*>(stream);
 
 	if (frames_requested != reduce_frames) {
+		// We're doing a very crude sample-skipping style audio stretching
+		// here. However, it's worth keeping it as this path is almost
+		// exclusively used in the fast-forward mode to achieves that cool
+		// "tape speed-up" effect.
+		//
+		// Without this effect, the audio becomes a crackling mess when
+		// fast-forwarding.
 		auto pos    = mixer.pos.load();
 		auto frames = std::min(reduce_frames, frames_requested);
 
 		while (frames--) {
-			const auto i = (pos + (index >> IndexShiftLocal)) &
+			const auto i = (pos + static_cast<int>(index)) &
 			               MixerBufferMask;
 			index += index_add;
 
-			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[i].left));
-			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[i].right));
+			*output++ = clamp_to_int16(mixer.work[i].left);
+			*output++ = clamp_to_int16(mixer.work[i].right);
 		}
 	} else {
 		auto pos    = mixer.pos.load();
@@ -2545,10 +2547,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		while (frames--) {
 			pos &= MixerBufferMask;
 
-			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[pos].left));
-			*output++ = clamp_to_int16(
-			        static_cast<int>(mixer.work[pos].right));
+			*output++ = clamp_to_int16(mixer.work[pos].left);
+			*output++ = clamp_to_int16(mixer.work[pos].right);
 
 			++pos;
 		}
