@@ -1506,7 +1506,7 @@ float MixerChannel::GetChorusLevel() const
 
 // Floating-point conversion from unsigned 8-bit to signed 16-bit.
 // This is only used to populate a lookup table that's 20-fold faster.
-constexpr int16_t u8to16(const int u_val)
+static constexpr int16_t u8to16(const int u_val)
 {
 	assert(u_val >= 0 && u_val <= UINT8_MAX);
 	const auto s_val = u_val - 128;
@@ -1519,9 +1519,10 @@ constexpr int16_t u8to16(const int u_val)
 
 // 8-bit to 16-bit lookup tables
 int16_t lut_u8to16[UINT8_MAX + 1] = {};
-constexpr int16_t* lut_s8to16     = lut_u8to16 + 128;
 
-constexpr void fill_8to16_lut()
+static constexpr int16_t* lut_s8to16 = lut_u8to16 + 128;
+
+static constexpr void fill_8to16_lut()
 {
 	for (int i = 0; i <= UINT8_MAX; ++i) {
 		lut_u8to16[i] = u8to16(i);
@@ -1725,8 +1726,8 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 	}
 }
 
-spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
-                                     const spx_uint32_t in_frames)
+static spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
+                                            const spx_uint32_t in_frames)
 {
 	assert(resampler_state);
 	assert(in_frames);
@@ -2965,7 +2966,7 @@ static void handle_toggle_mute(const bool was_pressed)
 	};
 }
 
-void init_mixer_dosbox_settings(Section_prop& sec_prop)
+static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 {
 	constexpr auto DefaultSampleRateHz = 48000;
 #if defined(WIN32)
