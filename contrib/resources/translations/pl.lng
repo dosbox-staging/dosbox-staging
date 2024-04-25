@@ -642,11 +642,26 @@ Ustawienie 'auto' (domyślne) wybiera typową dla danej karty graficznej.
 Dozwolone wartości dla poszczególnych kart graficznych opisane przy opcji
 'machine'.
 .
+:CONFIG_VMEM_DELAY
+Emulacja opóźnienia dostępu do pamięci graficznej (domyślnie wyłączone).
+  off:      Wyłącza emulację opóźnienia (domyślne). Ustawienie odpowiednie
+            dla większości gier, nie powoduje utraty wydajności.
+  on:       Włącza emulację opóźnienia (3000 ns). Może zredukować lub
+            całkowicie zlikwidować migotanie obrazu w grach dla kart Hercules,
+            CGA, EGA, lub wczesnych gier dla kart VGA.
+  <value>:  Włącza emulację opóźnienia, o długości podanej w nanosekundach,
+            dozwolone wartości to od 0 do 20000 ns; najbardziej użyteczne
+            wartości to od 500 do 5000 ns.
+Uwaga: Ustawienie powoduje utratę wydajności emulacji, należy używać wyłącznie
+       dla wymagających go gier.
+.
 :CONFIG_DOS_RATE
 Częstotliwość odświeżania emulowanego obrazu:
-  default:  Określone przez tryb graficzny (zalecane, domyślne).
+  default:  Określona przez tryb graficzny (domyślne).
   host:     Taka, jak w systemie gospodarza (patrz parametr 'host_rate').
-  <value>:  Dokładna wartość, pomiędzy 24.000 oraz 1000.000 (Hz).
+  <value>:  Dokładna wartość, pomiędzy 24.000 oraz 1000.000 Hz.
+Uwaga: Zalecane jest ustawienie domyślne, innych wartości należy zawsze używać
+       tylko dla konkretnej gry.
 .
 :CONFIG_VESA_MODES
 Dostępne tryby graficzne VESA 1.2 oraz 2.0:
@@ -1998,7 +2013,7 @@ Obraz dysku jest tylko do odczytu! To może powodować problemy.
 :PROGRAM_BOOT_PRINT_ERROR
 To polecenie bootuje system operacyjny z obrazu dyskietki lub dysku twardego.
 
-Można podać kilka obrazów dyskietek, przełączanych za pomocą %s+F4. Opcją -l
+Można podać kilka obrazów dyskietek, przełączanych za pomocą [color=yellow]%s+F4[reset]. Opcją -l
 można podać dysk, z którego ma zostać uruchomiony system, domyślny to A.
 Jedyne dozwolone litery dysków to A, C, oraz D. Aby wystartować system z
 obrazu dysku twardego (C lub D) musi on być wcześniej zamontowany poleceniem
@@ -2118,13 +2133,17 @@ Gdzie:
              bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
 
 Uwagi:
-  - %s+F4 przechodzi do następnego dysku z listy [color=light-cyan]CD-LISTA[reset] lub [color=light-cyan]BOOTOBRAZ[reset].
+  - Mozna używać znaków wieloznaczności do zamontowania kilku obrazów:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] przechodzi do następnego dysku z listy [color=light-cyan]CD-LISTA[reset] lub [color=light-cyan]BOOTOBRAZ[reset].
   - Flaga -ro montuje dysk tylko do odczytu (read-only).
   - Flaga -ide włącza emulację kontrolera IDE z zamontowanym obrazem CD.
 
 Przykłady:
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -2136,11 +2155,12 @@ Podaj numer dysku (0 - 3), gdzie zamontowany będzie obraz (0=fda, 1=fdb, 2=hda,
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Dla obrazów [color=brown]CD-ROM[reset]:           [color=light-blue]IMGMOUNT dysk plikobraz -t iso[reset]
+Dla obrazów płyt CD-ROM:
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]PLIKOBRAZ[reset] -t iso
+Dla obrazów dysków twardych należy podać geometrię w formacie:
+  bajtów-na-sektor,sektorów-na-głowicę,ilość-głowic,ilość-cylindrów
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]PLIKOBRAZ[reset] -size bps,spc,hpc,cyl
 
-Dla obrazów [color=brown]dysków twardych[reset]:  Geometria w formacie
-bajtów-na-sektor,sektorów-na-głowicę,ilość-głowic,ilość-cylindrów
-[color=light-blue]IMGMOUNT dysk plikobraz -size bps,spc,hpc,cyl[reset]
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
 Żaden obraz nie został zamontowany.
@@ -2177,7 +2197,7 @@ Nie znaleziono pliku obrazu.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Aby zamontować katalog użyj polecenia '[color=light-blue]mount[reset], a nie [color=light-blue]imgmount[reset].
+Aby zamontować katalog użyj polecenia '[color=light-green]mount[reset], a nie [color=light-green]imgmount[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -2193,11 +2213,7 @@ Dysk %d jest zamontowany jako '%s'.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-Obraz musi znajdować się na dysku widocznym dla systemu gospodarza.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Używanie wielu plików jest obsługiwane tylko dla obrazów CUE/ISO.
+Obraz musi znajdować się na dysku widocznym w systemie gospodarza.
 
 .
 :PROGRAM_INTRO_HELP
