@@ -229,6 +229,12 @@ bool CDROM_Interface_Ioctl::GetMediaTrayStatus(bool& mediaPresent,
 	return true;
 }
 
+bool CDROM_Interface_Ioctl::ReadSector(uint8_t* /*buffer*/, const bool /*raw*/,
+                                       const uint32_t /*sector*/)
+{
+	return false; /*TODO*/
+}
+
 bool CDROM_Interface_Ioctl::ReadSectors(PhysPt buffer, const bool raw,
                                         const uint32_t sector, const uint16_t num)
 {
@@ -355,6 +361,11 @@ std::vector<int16_t> CDROM_Interface_Ioctl::ReadAudio(const uint32_t sector, con
 	}
 
 	return audio_samples;
+}
+
+bool CDROM_Interface_Ioctl::HasDataTrack() const
+{
+	return true; /*TODO*/
 }
 
 #endif // Linux

@@ -281,6 +281,12 @@ bool CDROM_Interface_Win32::GetMediaTrayStatus(bool& mediaPresent,
 // LaserLock currently does not work with CDROM_Interface_Image or
 // CDROM_Interface_Ioctl either which does implement these. I could not find any
 // other game that uses this.
+bool CDROM_Interface_Win32::ReadSector(uint8_t* buffer, const bool raw,
+                                       const uint32_t sector)
+{
+	return false;
+}
+
 bool CDROM_Interface_Win32::ReadSectors(PhysPt buffer, const bool raw,
                                         const uint32_t sector, const uint16_t num)
 {
@@ -314,6 +320,37 @@ bool CDROM_Interface_Win32::LoadUnloadMedia(bool unload)
 	                       output_buffer_size,
 	                       bytes_returned,
 	                       overlapped);
+}
+
+bool CDROM_Interface_Win32::HasDataTrack() const
+{
+	CDROM_TOC toc = {};
+
+	DWORD control_code       = IOCTL_CDROM_READ_TOC;
+	LPVOID input_buffer      = NULL;
+	DWORD input_buffer_size  = 0;
+	LPVOID output_buffer     = &toc;
+	DWORD output_buffer_size = sizeof(toc);
+	LPDWORD bytes_returned   = NULL;
+	LPOVERLAPPED overlapped  = NULL;
+
+	if (!DeviceIoControl(cdrom_handle,
+	                     control_code,
+	                     input_buffer,
+	                     input_buffer_size,
+	                     output_buffer,
+	                     output_buffer_size,
+	                     bytes_returned,
+	                     overlapped)) {
+		return false;
+	}
+
+	for (auto i = 0; i < toc.LastTrack; ++i) {
+		if (toc.TrackData[i].Control == 0x4 && toc.TrackData[i].Adr == 0x0) {
+			return true;
+		}	
+	}
+	return false;
 }
 
 std::vector<int16_t> CDROM_Interface_Win32::ReadAudio(const uint32_t sector,
