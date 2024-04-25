@@ -2272,15 +2272,6 @@ MixerChannel::~MixerChannel()
 	}
 }
 
-extern bool ticksLocked;
-static inline bool is_mixer_irq_important()
-{
-	/* In some states correct timing of the irqs is more important than
-	 * non stuttering audo */
-	return (ticksLocked || CAPTURE_IsCapturingAudio() ||
-	        CAPTURE_IsCapturingVideo());
-}
-
 static constexpr int calc_tickadd(const int freq)
 {
 	assert(freq > 0);
@@ -2402,10 +2393,8 @@ static void mix_samples(const int frames_requested)
 		                     reinterpret_cast<int16_t*>(out));
 	}
 
-	// Reset the tick_add for constant speed
-	if (is_mixer_irq_important()) {
-		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
-	}
+	// Reset the tick_add
+	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 
 	mixer.frames_done = frames_requested;
 }
@@ -2491,27 +2480,11 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		auto frames_remaining = mixer.frames_done - frames_requested;
 
 		if (frames_remaining < mixer.min_frames_needed) {
-			if (!is_mixer_irq_important()) {
-				auto frames_needed = mixer.frames_needed -
-				                     frames_requested;
+			frames_remaining = (mixer.min_frames_needed -
+								frames_remaining);
 
-				auto diff = (mixer.min_frames_needed > frames_needed
-				                     ? mixer.min_frames_needed.load()
-				                     : frames_needed) -
-				            frames_remaining;
-
-				mixer.tick_add = calc_tickadd(
-				        mixer.sample_rate_hz + (diff * 3));
-				frames_remaining = 0; // No stretching as we
-				                      // compensate with the
-				                      // tick_add value
-			} else {
-				frames_remaining = (mixer.min_frames_needed -
-				                    frames_remaining);
-
-				frames_remaining = 1 + (2 * frames_remaining) /
-				                               mixer.min_frames_needed; // frames_remaining=1,2,3
-			}
+			frames_remaining = 1 + (2 * frames_remaining) /
+			                               mixer.min_frames_needed;
 #if 1
 			LOG_WARNING("MIXER: Needed underrun requested %d, have %d, min %d, remaining %d",
 			            frames_requested,
@@ -2581,10 +2554,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	reduce_channels_done_counts(reduce_frames);
 
-	// Reset mixer.tick_add when irqs are important
-	if (is_mixer_irq_important()) {
-		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
-	}
+	// Reset mixer.tick_add
+	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 
 	mixer.frames_done -= reduce_frames;
 
