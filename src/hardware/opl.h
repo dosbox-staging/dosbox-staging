@@ -99,7 +99,7 @@ enum class EsfmMode { Legacy, Native };
 
 class Opl {
 public:
-	mixer_channel_t channel = {};
+	MixerChannelPtr channel = {};
 
 	OplRegisterCache cache = {};
 

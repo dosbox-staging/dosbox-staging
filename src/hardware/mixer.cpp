@@ -169,7 +169,7 @@ struct MixerSettings {
 
 	AudioFrame master_volume = {1.0f, 1.0f};
 
-	std::map<std::string, mixer_channel_t> channels = {};
+	std::map<std::string, MixerChannelPtr> channels = {};
 
 	std::map<std::string, MixerChannelSettings> channel_settings_cache = {};
 
@@ -287,7 +287,7 @@ bool StereoLine::operator==(const StereoLine other) const
 	return left == other.left && right == other.right;
 }
 
-static void set_global_crossfeed(const mixer_channel_t& channel)
+static void set_global_crossfeed(const MixerChannelPtr& channel)
 {
 	assert(channel);
 
@@ -298,7 +298,7 @@ static void set_global_crossfeed(const mixer_channel_t& channel)
 	}
 }
 
-static void set_global_reverb(const mixer_channel_t& channel)
+static void set_global_reverb(const MixerChannelPtr& channel)
 {
 	assert(channel);
 
@@ -313,7 +313,7 @@ static void set_global_reverb(const mixer_channel_t& channel)
 	}
 }
 
-static void set_global_chorus(const mixer_channel_t& channel)
+static void set_global_chorus(const MixerChannelPtr& channel)
 {
 	assert(channel);
 
@@ -624,7 +624,7 @@ static void init_compressor(const bool compressor_enabled)
 	LOG_MSG("MIXER: Master compressor enabled");
 }
 
-void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
+void MIXER_DeregisterChannel(MixerChannelPtr& channel_to_remove)
 {
 	if (!channel_to_remove) {
 		return;
@@ -652,7 +652,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 	MIXER_UnlockAudioDevice();
 }
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
+MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
                                  const int sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features)
 {
@@ -700,7 +700,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
 	return chan;
 }
 
-mixer_channel_t MIXER_FindChannel(const char* name)
+MixerChannelPtr MIXER_FindChannel(const char* name)
 {
 	MIXER_LockAudioDevice();
 
@@ -731,7 +731,7 @@ mixer_channel_t MIXER_FindChannel(const char* name)
 	return chan;
 }
 
-std::map<std::string, mixer_channel_t>& MIXER_GetChannels()
+std::map<std::string, MixerChannelPtr>& MIXER_GetChannels()
 {
 	return mixer.channels;
 }

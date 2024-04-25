@@ -736,7 +736,7 @@ void ReelMagic_DeleteAllPlayers()
 //
 // audio stuff begins here...
 //
-mixer_channel_t mixer_channel = nullptr;
+MixerChannelPtr mixer_channel = nullptr;
 static AudioFifo* active_fifo = nullptr;
 
 static void ActivatePlayerAudioFifo(AudioFifo& audio_fifo)

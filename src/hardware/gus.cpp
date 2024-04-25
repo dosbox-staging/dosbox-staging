@@ -288,7 +288,7 @@ private:
 	VoiceIrq voice_irq            = {};
 	Voice* target_voice           = nullptr;
 	DmaChannel* dma_channel       = nullptr;
-	mixer_channel_t audio_channel = nullptr;
+	MixerChannelPtr audio_channel = nullptr;
 
 	// Playback related
 	double last_rendered_ms = 0.0;

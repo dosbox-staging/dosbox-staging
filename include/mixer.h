@@ -434,16 +434,16 @@ private:
 	const bool do_sleep = false;
 };
 
-using mixer_channel_t = std::shared_ptr<MixerChannel>;
+using MixerChannelPtr = std::shared_ptr<MixerChannel>;
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
+MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
                                  const int sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features);
 
-mixer_channel_t MIXER_FindChannel(const char* name);
-std::map<std::string, mixer_channel_t>& MIXER_GetChannels();
+MixerChannelPtr MIXER_FindChannel(const char* name);
+std::map<std::string, MixerChannelPtr>& MIXER_GetChannels();
 
-void MIXER_DeregisterChannel(mixer_channel_t& channel);
+void MIXER_DeregisterChannel(MixerChannelPtr& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t& conf);

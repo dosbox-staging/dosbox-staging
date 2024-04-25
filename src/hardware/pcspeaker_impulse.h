@@ -114,7 +114,7 @@ private:
 
 	std::array<float, sinc_filter_width> impulse_lut = {};
 
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	PpiPortB prev_port_b = {};
 

@@ -120,7 +120,7 @@ private:
 	DMA dma = {};
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	IO_ReadHandleObject read_handler = {};
 	IO_WriteHandleObject write_handlers[2] = {};
 
@@ -148,7 +148,7 @@ private:
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
 
 	// Managed objects
-	mixer_channel_t channel                                  = nullptr;
+	MixerChannelPtr channel                                  = nullptr;
 	IO_WriteHandleObject write_handlers[2]                   = {};
 	std::unique_ptr<sn76496_base_device> device              = {};
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
@@ -165,7 +165,7 @@ private:
 	double last_rendered_ms           = 0.0;
 };
 
-static void setup_filter(mixer_channel_t& channel, const bool filter_enabled)
+static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
 	// The filters are meant to emulate the bandwidth limited sound of the
 	// small integrated speaker of the Tandy. This more accurately

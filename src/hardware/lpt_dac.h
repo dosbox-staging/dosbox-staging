@@ -60,7 +60,7 @@ protected:
 	void AudioCallback(const uint16_t requested_frames);
 	std::queue<AudioFrame> render_queue = {};
 
-	mixer_channel_t channel = {};
+	MixerChannelPtr channel = {};
 
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
