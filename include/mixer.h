@@ -50,11 +50,11 @@ using MIXER_Handler = std::function<void(int frames)>;
 
 enum class MixerState { Uninitialized, NoSound, On, Muted };
 
-static constexpr int MixerBufferLength = 16 * 1024;
-static constexpr int MixerBufferMask   = MixerBufferLength - 1;
+static constexpr int MixerBufferByteSize = 16 * 1024;
+static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
 
 // TODO This is hacky and should be removed. Only the PS1 Audio uses it.
-extern uint8_t MixTemp[MixerBufferLength];
+extern uint8_t MixTemp[MixerBufferByteSize];
 
 // TODO This seems like is a general-purpose lookup, consider moving it
 extern int16_t lut_u8to16[UINT8_MAX + 1];
@@ -64,7 +64,7 @@ constexpr auto Min16BitSampleValue = INT16_MIN;
 
 static constexpr auto MaxFilterOrder = 16;
 
-static constexpr auto MillisInSecond   = 1000.0;
+static constexpr auto MillisInSecond  = 1000.0;
 static constexpr auto MillisInSecondF = 1000.0f;
 
 static constexpr int UseMixerRate = 0;
