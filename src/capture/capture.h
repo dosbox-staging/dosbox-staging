@@ -43,7 +43,7 @@ enum class CaptureType {
 
 enum class CaptureState { Off, Pending, InProgress };
 
-void CAPTURE_AddConfigSection(const config_ptr_t& conf);
+void CAPTURE_AddConfigSection(const ConfigPtr& conf);
 
 // TODO move raw OPL and serial log capture into the capture module too
 

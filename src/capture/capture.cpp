@@ -691,7 +691,7 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	assert(str_prop);
 }
 
-void CAPTURE_AddConfigSection(const config_ptr_t& conf)
+void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

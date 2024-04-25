@@ -829,7 +829,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "applications, or when debugging MIDI issues.");
 }
 
-void MIDI_AddConfigSection(const config_ptr_t& conf)
+void MIDI_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

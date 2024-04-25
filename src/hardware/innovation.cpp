@@ -328,7 +328,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void INNOVATION_AddConfigSection(const config_ptr_t& conf)
+void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

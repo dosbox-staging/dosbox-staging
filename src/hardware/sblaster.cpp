@@ -3304,7 +3304,7 @@ void shutdown_sblaster(Section* /*sec*/) {
 	sblaster = {};
 }
 
-void SB_AddConfigSection(const config_ptr_t& conf)
+void SB_AddConfigSection(const ConfigPtr& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 

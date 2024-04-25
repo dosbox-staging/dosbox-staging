@@ -446,7 +446,7 @@ std::map<std::string, MixerChannelPtr>& MIXER_GetChannels();
 void MIXER_DeregisterChannel(MixerChannelPtr& channel);
 
 // Mixer configuration and initialization
-void MIXER_AddConfigSection(const config_ptr_t& conf);
+void MIXER_AddConfigSection(const ConfigPtr& conf);
 int MIXER_GetSampleRate();
 int MIXER_GetPreBufferMs();
 

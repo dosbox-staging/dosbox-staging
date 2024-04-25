@@ -1256,7 +1256,7 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-void RENDER_AddConfigSection(const config_ptr_t& conf)
+void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
