@@ -58,8 +58,6 @@ CHECK_NARROWING();
 
 // #define DEBUG_MIXER
 
-constexpr auto MixerFrameSize = 4;
-
 constexpr auto FreqShift = 14;
 constexpr auto FreqNext  = (1 << FreqShift);
 constexpr auto FreqMask  = (FreqNext - 1);
@@ -2449,12 +2447,15 @@ static void handle_mix_no_sound()
 }
 
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
-                                   Uint8* stream, int len)
+                                   Uint8* stream, int bytes_requested)
 {
 	ZoneScoped;
-	memset(stream, 0, static_cast<size_t>(len));
+	memset(stream, 0, static_cast<size_t>(bytes_requested));
 
-	auto frames_requested = len / MixerFrameSize;
+	constexpr auto BytesPer16BitSample = 2;
+	constexpr auto BytesPerSampleFrame = BytesPer16BitSample * 2; // stereo
+
+	auto frames_requested = bytes_requested / BytesPerSampleFrame;
 
 	auto output        = reinterpret_cast<int16_t*>(stream);
 	auto reduce_frames = 0;
@@ -2465,8 +2466,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	auto index_add = (1 << IndexShiftLocal);
 	auto index     = (index_add % frames_requested) ? frames_requested : 0;
 
-	/* Enough room in the buffer ? */
 	if (mixer.frames_done < frames_requested) {
+		// Underrun
 #if 1
 		LOG_WARNING("MIXER: Full underrun requested %d, have %d, min %d",
 		            frames_requested,
@@ -2480,8 +2481,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		auto frames_remaining = mixer.frames_done - frames_requested;
 
 		if (frames_remaining < mixer.min_frames_needed) {
-			frames_remaining = (mixer.min_frames_needed -
-								frames_remaining);
+			frames_remaining = (mixer.min_frames_needed - frames_remaining);
 
 			frames_remaining = 1 + (2 * frames_remaining) /
 			                               mixer.min_frames_needed;
@@ -2506,13 +2506,16 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			        frames_remaining);
 #endif
 
-			/* Mixer tick value being updated:
-			 * 3 cases:
-			 * 1) A lot too high. >division by 5. but maxed by 2*
-			 * min to prevent too fast drops. 2) A little too high >
-			 * division by 8 3) A little to nothing above the
-			 * min_needed buffer > go to default value
-			 */
+			// Mixer tick value being updated:
+			//
+			// 1) A lot too high? Division by 5, but maxed by 2*min
+			//    to prevent too fast drops.
+			//
+			// 2) A little too high? Division by 8.
+			//
+			// 3) A little to nothing above the min_needed buffer?
+			//    Use the default value.
+			//
 			int diff = frames_remaining - mixer.min_frames_needed;
 
 			if (diff > (mixer.min_frames_needed << 1)) {
@@ -2522,17 +2525,17 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			if (diff > (mixer.min_frames_needed >> 1)) {
 				mixer.tick_add = calc_tickadd(
 				        mixer.sample_rate_hz - (diff / 5));
-			}
 
-			else if (diff > (mixer.min_frames_needed >> 2)) {
+			} else if (diff > (mixer.min_frames_needed >> 2)) {
 				mixer.tick_add = calc_tickadd(
 				        mixer.sample_rate_hz - (diff >> 3));
 			} else {
 				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 			}
 		}
+
 	} else {
-		// There is way too much data in the buffer
+		// Overrun
 #if 1
 		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
 		            frames_requested,
