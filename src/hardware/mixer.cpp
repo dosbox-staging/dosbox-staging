@@ -117,9 +117,12 @@ struct ReverbSettings {
 		mverb.setParameter(EmVerb::BANDWIDTHFREQ, bandwidth_freq_hz);
 		mverb.setParameter(EmVerb::DECAY, decay);
 		mverb.setParameter(EmVerb::DAMPINGFREQ, dampening_freq_hz);
-		mverb.setParameter(EmVerb::GAIN, 1.0f); // Always max gain (no
-		                                        // attenuation)
-		mverb.setParameter(EmVerb::MIX, 1.0f); // Always 100% wet signal
+
+		// Always max gain (no attenuation)
+		mverb.setParameter(EmVerb::GAIN, 1.0f);
+
+		// Always 100% wet output signal
+		mverb.setParameter(EmVerb::MIX, 1.0f);
 
 		mverb.setSampleRate(static_cast<float>(sample_rate_hz));
 
@@ -149,6 +152,9 @@ struct ChorusSettings {
 		constexpr auto Chorus1Enabled  = true;
 		constexpr auto Chorus2Disabled = false;
 		chorus_engine.setEnablesChorus(Chorus1Enabled, Chorus2Disabled);
+
+		// The chorus effect can only operates in 100% wet output mode,
+		// so we don't need to configure it for that.
 	}
 };
 
