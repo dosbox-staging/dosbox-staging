@@ -2311,31 +2311,24 @@ static void mix_samples(const int frames_requested)
 		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			auto reverb_in_frame = *aux_reverb_pos++;
+			auto in_frame = *aux_reverb_pos++;
 
 			// High-pass filter the reverb input
-			reverb_in_frame.left = mixer.reverb.highpass_filter[0].filter(
-			        reverb_in_frame.left);
+			auto& hpf = mixer.reverb.highpass_filter;
 
-			reverb_in_frame.right = mixer.reverb.highpass_filter[1].filter(
-			        reverb_in_frame.right);
+			in_frame = {hpf[0].filter(in_frame.left),
+			            hpf[1].filter(in_frame.right)};
 
 			// MVerb operates on two non-interleaved sample streams
-			static float in_left[1]     = {};
-			static float in_right[1]    = {};
-			static float* reverb_out_buf[2] = {in_left, in_right};
+			float* in_buf[2] = {&in_frame.left, &in_frame.right};
 
-			in_left[0]  = reverb_in_frame.left;
-			in_right[0] = reverb_in_frame.right;
-
-			const auto in = reverb_out_buf;
-			auto out      = reverb_out_buf;
+			AudioFrame out_frame = {};
+			float* out_buf[2] = {&out_frame.left, &out_frame.right};
 
 			constexpr auto NumFrames = 1;
-			mixer.reverb.mverb.process(in, out, NumFrames);
+			mixer.reverb.mverb.process(in_buf, out_buf, NumFrames);
 
-			mixer.work[pos].left  += reverb_out_buf[0][0];
-			mixer.work[pos].right += reverb_out_buf[1][0];
+			mixer.work[pos] += out_frame;
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
