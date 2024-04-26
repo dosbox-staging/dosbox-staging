@@ -2297,7 +2297,8 @@ static void mix_samples(const int frames_requested)
 	const auto frames_added = std::min(frames_requested - mixer.frames_done,
 	                                   CaptureBufFrames);
 
-	const auto pos_offset = mixer.pos + mixer.frames_done;
+	const auto pos_offset     = mixer.pos + mixer.frames_done;
+	const auto start_work_pos = mixer.work.begin() + pos_offset;
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
@@ -2307,10 +2308,11 @@ static void mix_samples(const int frames_requested)
 	if (mixer.do_reverb) {
 		// Use the contents of the reverb aux buffer as the reverb's
 		// input, then mix its output to the master mix buffer.
-		auto work_pos       = mixer.work.begin() + pos_offset;
+		auto work_pos       = start_work_pos;
 		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos_offset;
+		auto num_frames     = frames_added;
 
-		for (auto i = 0; i < frames_added; ++i) {
+		while (num_frames--) {
 			auto in_frame = *aux_reverb_pos++;
 
 			// High-pass filter the reverb input
@@ -2335,10 +2337,11 @@ static void mix_samples(const int frames_requested)
 	if (mixer.do_chorus) {
 		// Apply chorus effect to the chorus aux buffer, then mix the
 		// results to the master output
-		auto work_pos       = mixer.work.begin() + pos_offset;
+		auto work_pos       = start_work_pos;
 		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos_offset;
+		auto num_frames     = frames_added;
 
-		for (auto i = 0; i < frames_added; ++i) {
+		while (num_frames--) {
 			auto frame = *aux_chorus_pos++;
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 
@@ -2348,9 +2351,10 @@ static void mix_samples(const int frames_requested)
 
 	// Apply high-pass filter to the master output
 	{
-		auto work_pos = mixer.work.begin() + pos_offset;
+		auto work_pos   = start_work_pos;
+		auto num_frames = frames_added;
 
-		for (auto i = 0; i < frames_added; ++i) {
+		while (num_frames--) {
 			auto& hpf = mixer.highpass_filter;
 
 			const auto frame = *work_pos;
@@ -2361,9 +2365,10 @@ static void mix_samples(const int frames_requested)
 
 	if (mixer.do_compressor) {
 		// Apply compressor to the master output as the very last step
-		auto work_pos = mixer.work.begin() + pos_offset;
+		auto work_pos   = start_work_pos;
+		auto num_frames = frames_added;
 
-		for (auto i = 0; i < frames_added; ++i) {
+		while (num_frames--) {
 			const auto frame = *work_pos;
 			*work_pos++      = mixer.compressor.Process(frame);
 		}
@@ -2371,10 +2376,13 @@ static void mix_samples(const int frames_requested)
 
 	// Capture audio output if requested
 	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
-		int16_t out[CaptureBufFrames][2];
-		auto work_pos = mixer.work.begin() + pos_offset;
+		int16_t out[CaptureBufFrames][2] = {};
 
-		for (auto i = 0; i < frames_added; i++) {
+		auto work_pos   = start_work_pos;
+		auto num_frames = frames_added;
+		assert(num_frames <= CaptureBufFrames);
+
+		for (auto i = 0; i < frames_added; ++i) {
 			const auto in_frame = *work_pos++;
 
 			const auto left = static_cast<uint16_t>(
@@ -2394,7 +2402,7 @@ static void mix_samples(const int frames_requested)
 
 	// Reset the frames_per_tick
 	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-	mixer.frames_done = frames_requested;
+	mixer.frames_done     = frames_requested;
 }
 
 static void handle_mix_samples()
@@ -2427,10 +2435,16 @@ static void handle_mix_no_sound()
 	mix_samples(mixer.frames_needed);
 
 	// Clear piece we've just generated
-	auto work_pos = mixer.work.begin() + mixer.pos;
+	auto work_pos   = mixer.work.begin() + mixer.pos;
+	auto num_frames = mixer.frames_needed.load();
+
+	mixer.pos += num_frames;
+	if (mixer.pos >= mixer.work.size()) {
+		mixer.pos -= mixer.work.size();
+	}
 
 	constexpr AudioFrame Silence = {0.0f};
-	for (auto i = 0; i < mixer.frames_needed; ++i) {
+	while (num_frames--) {
 		*work_pos++ = Silence;
 	}
 
