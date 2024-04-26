@@ -159,7 +159,7 @@ struct ChorusSettings {
 };
 
 struct MixerSettings {
-	std::array<AudioFrame, MixerBufferByteSize> work       = {};
+	RingBuffer<AudioFrame, MixerBufferByteSize> work       = {};
 	RingBuffer<AudioFrame, MixerBufferByteSize> aux_reverb = {};
 	RingBuffer<AudioFrame, MixerBufferByteSize> aux_chorus = {};
 
@@ -1094,8 +1094,7 @@ void MixerChannel::AddSilence()
 			const auto mapped_output_left  = output_map.left;
 			const auto mapped_output_right = output_map.right;
 
-			// Position where to write the data
-			auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
+			auto work_pos = mixer.work.begin() + mixer.pos + frames_done;
 
 			while (frames_done < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
@@ -1118,16 +1117,14 @@ void MixerChannel::AddSilence()
 				                : AudioFrame{prev_frame.left}) *
 				        combined_volume_gain;
 
-				mixer.work[mixpos][mapped_output_left] +=
-				        frame_with_gain.left;
+				AudioFrame out_frame = {};
+				out_frame[mapped_output_left]  = frame_with_gain.left;
+				out_frame[mapped_output_right] = frame_with_gain.right;
 
-				mixer.work[mixpos][mapped_output_right] +=
-				        frame_with_gain.right;
+				*work_pos++ += out_frame;
 
 				prev_frame = next_frame;
-
-				mixpos = (mixpos + 1) & MixerBufferMask;
-				frames_done++;
+				++frames_done;
 				freq_counter = FreqNext;
 			}
 		}
@@ -2010,15 +2007,15 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 	// master output
 	const auto out_frames = mixer.resample_out.size() / 2;
 
-	auto pos    = mixer.resample_out.begin();
-	auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
-
 	const auto pos_offset = mixer.pos + frames_done;
+	auto work_pos         = mixer.work.begin() + pos_offset;
 	auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
 	auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
 
-	while (pos != mixer.resample_out.end()) {
-		AudioFrame frame = {*pos++, *pos++};
+	auto resample_out_pos = mixer.resample_out.begin();
+
+	while (resample_out_pos != mixer.resample_out.end()) {
+		AudioFrame frame = {*resample_out_pos++, *resample_out_pos++};
 
 		if (do_highpass_filter) {
 			frame = {filters.highpass.hpf[0].filter(frame.left),
@@ -2058,11 +2055,10 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		}
 
 		// Mix samples to the master output
-		mixer.work[mixpos] += frame;
-
-		mixpos = (mixpos + 1) & MixerBufferMask;
+		*work_pos++ += frame;
 	}
-	frames_done += check_cast<int>(out_frames);
+
+	frames_done += out_frames;
 
 	MIXER_UnlockAudioDevice();
 }
@@ -2084,7 +2080,7 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 	auto index     = 0;
 	auto index_add = (len << FreqShift) / frames_remaining;
 
-	auto mixpos = (mixer.pos + frames_done) & MixerBufferMask;
+	auto work_pos = mixer.work.begin() + mixer.pos + frames_done;
 
 	auto pos = 0;
 
@@ -2112,17 +2108,18 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 		auto sample = prev_frame.left +
 		              static_cast<float>((diff * diff_mul) >> FreqShift);
 
-		AudioFrame frame     = {sample, sample};
-		auto frame_with_gain = frame * combined_volume_gain;
+		auto frame_with_gain = AudioFrame{sample, sample} *
+		                       combined_volume_gain;
 
 		if (do_sleep) {
 			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
 		}
 
-		mixer.work[mixpos][mapped_output_left]  += frame_with_gain.left;
-		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
+		AudioFrame out_frame = {};
+		out_frame[mapped_output_left]  = frame_with_gain.left;
+		out_frame[mapped_output_right] = frame_with_gain.right;
 
-		mixpos = (mixpos + 1) & MixerBufferMask;
+		*work_pos++ += out_frame;
 	}
 
 	frames_done = frames_needed;
@@ -2300,8 +2297,6 @@ static void mix_samples(const int frames_requested)
 	const auto frames_added = std::min(frames_requested - mixer.frames_done,
 	                                   CaptureBufFrames);
 
-	const auto start_pos = (mixer.pos + mixer.frames_done) & MixerBufferMask;
-
 	const auto pos_offset = mixer.pos + mixer.frames_done;
 
 	// Render all channels and accumulate results in the master mixbuffer
@@ -2312,8 +2307,7 @@ static void mix_samples(const int frames_requested)
 	if (mixer.do_reverb) {
 		// Use the contents of the reverb aux buffer as the reverb's
 		// input, then mix its output to the master mix buffer.
-		auto pos = start_pos;
-
+		auto work_pos       = mixer.work.begin() + pos_offset;
 		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; ++i) {
@@ -2334,69 +2328,63 @@ static void mix_samples(const int frames_requested)
 			constexpr auto NumFrames = 1;
 			mixer.reverb.mverb.process(in_buf, out_buf, NumFrames);
 
-			mixer.work[pos] += out_frame;
-
-			pos = (pos + 1) & MixerBufferMask;
+			*work_pos++ += out_frame;
 		}
 	}
 
 	if (mixer.do_chorus) {
 		// Apply chorus effect to the chorus aux buffer, then mix the
 		// results to the master output
-		auto pos = start_pos;
-
+		auto work_pos       = mixer.work.begin() + pos_offset;
 		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; ++i) {
 			auto frame = *aux_chorus_pos++;
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 
-			mixer.work[pos] += frame;
-			pos = (pos + 1) & MixerBufferMask;
+			*work_pos++ += frame;
 		}
 	}
 
 	// Apply high-pass filter to the master output
 	{
-		auto pos = start_pos;
+		auto work_pos = mixer.work.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; ++i) {
 			auto& hpf = mixer.highpass_filter;
 
-			mixer.work[pos] = {hpf[0].filter(mixer.work[pos].left),
-			                   hpf[1].filter(mixer.work[pos].right)};
-
-			pos = (pos + 1) & MixerBufferMask;
+			const auto frame = *work_pos;
+			*work_pos++      = {hpf[0].filter(frame.left),
+			                    hpf[1].filter(frame.right)};
 		}
 	}
 
 	if (mixer.do_compressor) {
 		// Apply compressor to the master output as the very last step
-		auto pos = start_pos;
+		auto work_pos = mixer.work.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			mixer.work[pos] = mixer.compressor.Process(mixer.work[pos]);
-
-			pos = (pos + 1) & MixerBufferMask;
+			const auto frame = *work_pos;
+			*work_pos++      = mixer.compressor.Process(frame);
 		}
 	}
 
 	// Capture audio output if requested
 	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
 		int16_t out[CaptureBufFrames][2];
-		auto pos = start_pos;
+		auto work_pos = mixer.work.begin() + pos_offset;
 
 		for (auto i = 0; i < frames_added; i++) {
-			const auto left = static_cast<uint16_t>(clamp_to_int16(
-			        static_cast<int>(mixer.work[pos].left)));
+			const auto in_frame = *work_pos++;
 
-			const auto right = static_cast<uint16_t>(clamp_to_int16(
-			        static_cast<int>(mixer.work[pos].right)));
+			const auto left = static_cast<uint16_t>(
+			        clamp_to_int16(static_cast<int>(in_frame.left)));
+
+			const auto right = static_cast<uint16_t>(
+			        clamp_to_int16(static_cast<int>(in_frame.right)));
 
 			out[i][0] = static_cast<int16_t>(host_to_le16(left));
 			out[i][1] = static_cast<int16_t>(host_to_le16(right));
-
-			pos = (pos + 1) & MixerBufferMask;
 		}
 
 		CAPTURE_AddAudioData(mixer.sample_rate_hz,
@@ -2439,10 +2427,11 @@ static void handle_mix_no_sound()
 	mix_samples(mixer.frames_needed);
 
 	// Clear piece we've just generated
-	for (auto i = 0; i < mixer.frames_needed; ++i) {
-		mixer.work[mixer.pos] = {};
+	auto work_pos = mixer.work.begin() + mixer.pos;
 
-		mixer.pos = (mixer.pos + 1) & MixerBufferMask;
+	constexpr AudioFrame Silence = {0.0f};
+	for (auto i = 0; i < mixer.frames_needed; ++i) {
+		*work_pos++ = Silence;
 	}
 
 	reduce_channels_done_counts(mixer.frames_needed);
@@ -2466,7 +2455,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	constexpr auto BytesPer16BitSample = 2;
 	constexpr auto BytesPerSampleFrame = BytesPer16BitSample * 2; // stereo
 
-	auto frames_requested = bytes_requested / BytesPerSampleFrame;
+	const auto frames_requested = bytes_requested / BytesPerSampleFrame;
 
 	auto reduce_frames = 0;
 
@@ -2551,51 +2540,51 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		//
 		// Without this effect, the audio becomes a crackling mess when
 		// fast-forwarding.
-		auto pos    = mixer.pos.load();
-		auto frames = std::min(reduce_frames, frames_requested);
+		auto frames   = std::min(reduce_frames, frames_requested);
+		auto work_pos = mixer.work.begin() + mixer.pos.load();
 
 		while (frames--) {
-			const auto i = (pos + static_cast<int>(index)) &
-			               MixerBufferMask;
 			index += index_add;
 
-			*output++ = clamp_to_int16(mixer.work[i].left);
-			*output++ = clamp_to_int16(mixer.work[i].right);
+			const auto frame = *(work_pos + static_cast<int>(index));
+
+			*output++ = clamp_to_int16(frame.left);
+			*output++ = clamp_to_int16(frame.right);
 		}
 	} else {
-		auto pos    = mixer.pos.load();
-		auto frames = reduce_frames;
+		auto frames   = reduce_frames;
+		auto work_pos = mixer.work.begin() + mixer.pos.load();
 
 		while (frames--) {
-			pos &= MixerBufferMask;
+			const auto frame = *work_pos++;
 
-			*output++ = clamp_to_int16(mixer.work[pos].left);
-			*output++ = clamp_to_int16(mixer.work[pos].right);
-
-			++pos;
+			*output++ = clamp_to_int16(frame.left);
+			*output++ = clamp_to_int16(frame.right);
 		}
 	}
 
-	// Clean the used buffers
+	// Clear the used buffers
 	{
-		auto pos    = mixer.pos.load();
 		auto frames = reduce_frames;
 
-		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos;
-		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos;
+		const auto pos_offset = mixer.pos.load();
+		auto work_pos         = mixer.work.begin() + pos_offset;
+		auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
+		auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
 
 		while (frames--) {
-			pos &= MixerBufferMask;
+			constexpr AudioFrame Silence = {0.0f};
 
-			mixer.work[pos]       = {};
-			*aux_reverb_pos++ = {0.0f};
-			*aux_chorus_pos++ = {0.0f};
-
-			++pos;
+			*work_pos++       = Silence;
+			*aux_reverb_pos++ = Silence;
+			*aux_chorus_pos++ = Silence;
 		}
 	}
 
-	mixer.pos = (mixer.pos + reduce_frames) & MixerBufferMask;
+	mixer.pos += reduce_frames;
+	if (mixer.pos >= mixer.work.size()) {
+		mixer.pos -= mixer.work.size();
+	}
 }
 
 static void stop_mixer([[maybe_unused]] Section* sec) {}
