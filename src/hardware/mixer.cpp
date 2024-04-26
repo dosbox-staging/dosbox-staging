@@ -2015,12 +2015,12 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
-			frame.left  = filters.highpass.hpf[0].filter(frame.left);
-			frame.right = filters.highpass.hpf[1].filter(frame.right);
+			frame = {filters.highpass.hpf[0].filter(frame.left),
+			         filters.highpass.hpf[1].filter(frame.right)};
 		}
 		if (do_lowpass_filter) {
-			frame.left  = filters.lowpass.lpf[0].filter(frame.left);
-			frame.right = filters.lowpass.lpf[1].filter(frame.right);
+			frame = {filters.lowpass.lpf[0].filter(frame.left),
+			         filters.lowpass.lpf[1].filter(frame.right)};
 		}
 		if (do_crossfeed) {
 			frame = ApplyCrossfeed(frame);
@@ -2355,11 +2355,10 @@ static void mix_samples(const int frames_requested)
 		auto pos = start_pos;
 
 		for (auto i = 0; i < frames_added; ++i) {
-			mixer.work[pos].left = mixer.highpass_filter[0].filter(
-			        mixer.work[pos].left);
+			auto& hpf = mixer.highpass_filter;
 
-			mixer.work[pos].right = mixer.highpass_filter[1].filter(
-			        mixer.work[pos].right);
+			mixer.work[pos] = {hpf[0].filter(mixer.work[pos].left),
+			                   hpf[1].filter(mixer.work[pos].right)};
 
 			pos = (pos + 1) & MixerBufferMask;
 		}
