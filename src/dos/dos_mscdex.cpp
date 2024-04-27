@@ -324,11 +324,11 @@ int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUni
 	}
 	// Set return type to ok
 	int result = 0;
-	CDROM::cdroms[numDrives] = create_cdrom_interface(physicalPath);
-	if (!CDROM::cdroms[numDrives]) {
+	auto cdrom = create_cdrom_interface(physicalPath);
+	if (!cdrom) {
 		return 3;
 	}
-	if (!CDROM::cdroms[numDrives]->HasFullMscdexSupport()) {
+	if (!cdrom->HasFullMscdexSupport()) {
 		result = 5;
 	}
 
@@ -384,16 +384,19 @@ int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUni
 	devHeader.SetNumSubUnits(devHeader.GetNumSubUnits()+1);
 
 	if (dinfo[0].drive - 1 == _drive) {
-		auto _cdrom = std::move(CDROM::cdroms[numDrives]);
-		for (uint16_t i = GetNumDrives(); i > 0; i--) {
+		// Perform a push_front on dinfo and CDROM::cdroms
+		for (auto i = GetNumDrives(); i > 0; --i) {
+			// Shift all data one step to the right to make room
 			dinfo[i]         = dinfo[i - 1];
 			CDROM::cdroms[i] = std::move(CDROM::cdroms[i - 1]);
 		}
-		CDROM::cdroms[0]   = std::move(_cdrom);
+		CDROM::cdroms[0]   = std::move(cdrom);
 		dinfo[0].drive     = (uint8_t)_drive;
 		dinfo[0].physDrive = (uint8_t)toupper(physicalPath[0]);
 		subUnit            = 0;
 	} else {
+		// Perform a push_back on dinfo and CDROM::cdroms
+		CDROM::cdroms[numDrives]   = std::move(cdrom); 
 		dinfo[numDrives].drive     = (uint8_t)_drive;
 		dinfo[numDrives].physDrive = (uint8_t)toupper(physicalPath[0]);
 		subUnit                    = (uint8_t)numDrives;
