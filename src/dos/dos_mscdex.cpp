@@ -287,7 +287,7 @@ static std::unique_ptr<CDROM_Interface> create_cdrom_interface(const char *path)
 
 	if (!is_directory(path)) {
 		if (auto cdrom_interface = std::make_unique<CDROM_Interface_Image>();
-		                                   cdrom_interface->SetDevice(path)) {
+		    cdrom_interface->SetDevice(path)) {
 			return cdrom_interface;
 		} else {
 			return {};
