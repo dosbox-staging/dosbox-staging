@@ -2190,8 +2190,7 @@ static SB_TYPES determine_sbtype(const std::string& pref)
 static OplMode determine_oplmode(const std::string& pref, const SB_TYPES sb_type)
 {
 	if (pref == "cms") {
-		// Skip for backward compatibility with existing configurations
-		return OplMode::None;
+		return OplMode::Cms;
 
 	} else if (pref == "opl2") {
 		return OplMode::Opl2;
@@ -2208,7 +2207,7 @@ static OplMode determine_oplmode(const std::string& pref, const SB_TYPES sb_type
 	} else if (pref == "auto") {
 		// Invalid settings result in defaulting to 'auto'
 		switch (sb_type) {
-		case SBT_GB: return OplMode::None;
+		case SBT_GB: return OplMode::Cms;
 		case SBT_1: return OplMode::Opl2;
 		case SBT_2: return OplMode::Opl2;
 		case SBT_PRO1: return OplMode::DualOpl2;
