@@ -622,17 +622,22 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 	return false;
 }
 
-static void SetTextLines(void) {
-	// check for scanline backwards compatibility (VESA text modes??)
-	switch (real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) & 0x90) {
-	case 0x80: // 200 lines emulation
+static void set_text_lines()
+{
+	// Check for scanline backwards compatibility (VESA text modes?)
+	const BiosVgaFlagsRec vga_flags_rec = {
+	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
+
+	switch (vga_flags_rec.text_mode_scan_lines()) {
+	case 2: // 200-line mode
 		if (CurMode->mode <= 3) {
 			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
 		break;
-	case 0x00: // 350 lines emulation
+
+	case 0: // 350-line mode
 		if (CurMode->mode <= 3) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
@@ -685,7 +690,9 @@ void INT10_SetCurMode(void) {
 				mode_changed = SetCurMode(ModeList_VGA, bios_mode);
 				break;
 			}
-			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
+			if (mode_changed && CurMode->type == M_TEXT) {
+				set_text_lines();
+			}
 			break;
 
 		default: assertm(false, "Invalid MachineType value");
@@ -1063,7 +1070,8 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  First read mode setup settings from bios area
 	//	uint8_t video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
 	//	uint8_t vga_switches=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES);
-	uint8_t modeset_ctl = real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset);
+	const BiosVgaFlagsRec vga_flags_rec = {
+	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
 
 	if (IS_VGA_ARCH) {
 		if (svga.accepts_mode) {
@@ -1090,7 +1098,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 				return false;
 			}
 		}
-		if (CurMode->type==M_TEXT) SetTextLines();
+		if (CurMode->type == M_TEXT) {
+			set_text_lines();
+		}
 	} else {
 		if (!SetCurMode(ModeList_EGA,mode)){
 			log_invalid_video_mode_error(mode);
@@ -1687,7 +1697,7 @@ att_text16:
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
-	if ((modeset_ctl & 8)==0) {
+	if (vga_flags_rec.load_default_palette) {
 		// Set up Palette Registers
 #if 0
 		LOG_DEBUG("INT10H: Set up Palette Registers");
@@ -1771,9 +1781,7 @@ dac_text16:
 		}
 
 		if (IS_VGA_ARCH) {
-			//  check if gray scale summing is enabled
-			if (real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) &
-			    2) {
+			if (vga_flags_rec.is_grayscale_summing_enabled) {
 				INT10_PerformGrayScaleSumming(0, 256);
 			}
 		}

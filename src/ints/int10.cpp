@@ -679,7 +679,7 @@ static void INT10_Seg40Init(void) {
 		// Set the basic screen we have
 		real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0xF9);
 		// Set the basic modeset options
-		real_writeb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset, 0x51);
+		real_writeb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset,0x51);
 		// Set the pointer to video save pointer table
 		real_writed(BIOSMEM_SEG,BIOSMEM_VS_POINTER,int10.rom.video_save_pointers);
 	}
