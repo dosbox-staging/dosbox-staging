@@ -69,10 +69,6 @@ constexpr uint16_t VgaFlagsRecOffset = 0x89;
 #define BIOSMEM_VIDEO_CTL     0x87
 #define BIOSMEM_SWITCHES      0x88
 
-// Bit flags containing to the status of the VGA (VGA only)
-// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
-#define BIOSMEM_MODESET_CTL   0x89
-
 // Current display combo (VGA only)
 //
 // One field of the VgaSavePtr2Rec points to a VgaDccRec.  This structure is
