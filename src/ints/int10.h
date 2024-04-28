@@ -23,19 +23,35 @@
 
 #include <vector>
 
+#include "bit_view.h"
 #include "mem.h"
 #include "vga.h"
 
 // forward declarations
 class Rgb666;
 
+namespace BiosDataArea {
+
+// The BIOS Data Area is located at segment 40h.
+// Ref:
+//   http://www.techhelpmanual.com/93-rom_bios_variables.html
+//   https://www.ecsdump.net/?page_id=691
+constexpr uint16_t Segment = 0x40;
+
+// Bit flags containing to the status of the VGA (VGA only)
+// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
+constexpr uint16_t VgaFlagsRecOffset = 0x89;
+
+} // namespace BiosDataArea
+
+// TODO Remove once the migration to BiosDataArea::Segment is complete
 #define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
 #define BIOSMEM_CURRENT_MODE  0x49
-#define BIOSMEM_NB_COLS       0x4A
-#define BIOSMEM_PAGE_SIZE     0x4C
-#define BIOSMEM_CURRENT_START 0x4E
+#define BIOSMEM_NB_COLS       0x4a
+#define BIOSMEM_PAGE_SIZE     0x4c
+#define BIOSMEM_CURRENT_START 0x4e
 #define BIOSMEM_CURSOR_POS    0x50
 #define BIOSMEM_CURSOR_TYPE   0x60
 #define BIOSMEM_CURRENT_PAGE  0x62
@@ -43,18 +59,72 @@ class Rgb666;
 #define BIOSMEM_CURRENT_MSR   0x65
 #define BIOSMEM_CURRENT_PAL   0x66
 #define BIOSMEM_NB_ROWS       0x84
+
+// The word starting at this address contains the height of the character
+// matrix in scan lines.
 #define BIOSMEM_CHAR_HEIGHT   0x85
+
+// Both bytes contain bit flags about to the status of the EGA and VGA.
+// http://www.techhelpmanual.com/72-egamiscinforec.html
 #define BIOSMEM_VIDEO_CTL     0x87
 #define BIOSMEM_SWITCHES      0x88
+
+// Bit flags containing to the status of the VGA (VGA only)
+// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
 #define BIOSMEM_MODESET_CTL   0x89
-#define BIOSMEM_DCC_INDEX     0x8A
-#define BIOSMEM_CRTCPU_PAGE   0x8A
-#define BIOSMEM_VS_POINTER    0xA8
+
+// Current display combo (VGA only)
+//
+// One field of the VgaSavePtr2Rec points to a VgaDccRec.  This structure is
+// initialized by the VGA video system BIOS to point to a table in ROM.
+// Information in this structure identifies valid combinations of video
+// subsystems which are supported by your VGA BIOS.
+//
+// Ref: http://www.techhelpmanual.com/81-vgadccrec.html
+#define BIOSMEM_DCC_INDEX     0x8a
+
+#define BIOSMEM_CRTCPU_PAGE   0x8a
+
+// The 4-byte pointer at 0040:00a8 has been named SAVE_PTR by an imaginative
+// programmer. It points to a table of EGA/VGA data block pointers. You can
+// change this address to point to a different data area in which you define
+// your own fonts and other options.
+// Ref: http://www.techhelpmanual.com/74-egasaveptrrec.html
+#define BIOSMEM_VS_POINTER    0xa8
 
 constexpr uint16_t MaxEgaBiosModeNumber = 0x10;
 
 constexpr uint16_t MinVesaBiosModeNumber = 0x100;
 constexpr uint16_t MaxVesaBiosModeNumber = 0x7ff;
+
+// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
+union BiosVgaFlagsRec {
+	uint8_t data = 0;
+
+	bit_view<0, 1> is_vga_active;
+	bit_view<1, 1> is_grayscale_summing_enabled;
+
+	// 0 - colour monitor, 1 - monochrome monitor
+	bit_view<2, 1> is_monochrome_monitor;
+
+	// 0 - keep same colours, 1 - load default palette
+	bit_view<3, 1> load_default_palette;
+
+	// bit1  bit0  value
+	//  0     0      0    350-line mode
+	//  0     1      1    400-line mode
+	//  1     0      2    200-line mode
+	//  1     1      3    reserved
+	bit_view<4, 1> text_mode_scan_lines_bit0;
+	bit_view<7, 1> text_mode_scan_lines_bit1;
+
+	bit_view<6, 1> is_dcc_switching_enabled;
+
+	uint8_t text_mode_scan_lines() const
+	{
+		return text_mode_scan_lines_bit0 | (text_mode_scan_lines_bit1 << 1);
+	}
+};
 
 /*
  *
