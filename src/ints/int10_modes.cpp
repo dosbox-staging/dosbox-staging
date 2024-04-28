@@ -624,7 +624,7 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 
 static void SetTextLines(void) {
 	// check for scanline backwards compatibility (VESA text modes??)
-	switch (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x90) {
+	switch (real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) & 0x90) {
 	case 0x80: // 200 lines emulation
 		if (CurMode->mode <= 3) {
 			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
@@ -1063,7 +1063,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  First read mode setup settings from bios area
 	//	uint8_t video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
 	//	uint8_t vga_switches=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES);
-	uint8_t modeset_ctl = real_readb(BIOSMEM_SEG, BIOSMEM_MODESET_CTL);
+	uint8_t modeset_ctl = real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset);
 
 	if (IS_VGA_ARCH) {
 		if (svga.accepts_mode) {
@@ -1772,8 +1772,9 @@ dac_text16:
 
 		if (IS_VGA_ARCH) {
 			//  check if gray scale summing is enabled
-			if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
-				INT10_PerformGrayScaleSumming(0,256);
+			if (real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) &
+			    2) {
+				INT10_PerformGrayScaleSumming(0, 256);
 			}
 		}
 	} else {
