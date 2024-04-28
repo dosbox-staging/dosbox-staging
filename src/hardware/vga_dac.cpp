@@ -118,17 +118,22 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 
 	auto msg = format_str("palette_idx: %d, color_idx: %d", palette_idx, color_idx);
 	if (log_warning) {
-		LOG_WARNING("%s, color: %02x %02x %02x",
+		LOG_WARNING("VGA: %s, color: %02x %02x %02x",
 		            msg.c_str(),
 		            rgb666.red,
 		            rgb666.green,
 		            rgb666.blue);
 	} else {
-		LOG_TRACE(msg);
+		LOG_TRACE("VGA: %s", msg.c_str());
 	}
 #endif
 
+	// If a palette entry was set to a non-EGA colour after the mode change
+	// was completed, we need to notify the renderer so it can re-init
+	// itself and potentially switch the current shader.
+	//
 	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
+	    !vga.mode_change_in_progress &&
 	    bios_mode_number <= MaxEgaBiosModeNumber) {
 		bool non_ega_color = false;
 
@@ -146,19 +151,12 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 
 		if (non_ega_color) {
 			vga.ega_mode_with_vga_colors = true;
-
-			// If we're inside a mode change, the
-			// `ega_mode_with_vga_color` will be taken into account
-			// in VGA_GetCurrentVideoMode() which concludes the mode
-			// change process.
-			//
-			// But if a palette entry was set to a non-EGA colour
-			// after the mode change was completed, we need to
-			// notify the renderer so it can re-init itself and
-			// potentially switch the current shader.
-			if (!vga.mode_change_in_progress) {
-				RENDER_NotifyEgaModeWithVgaPalette();
-			}
+#if 0
+			LOG_TRACE(
+			        "VGA: EGA mode with VGA palette detected, "
+			        "notifying renderer");
+#endif
+			RENDER_NotifyEgaModeWithVgaPalette();
 		}
 	}
 
