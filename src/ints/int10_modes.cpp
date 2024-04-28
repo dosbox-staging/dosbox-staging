@@ -39,7 +39,8 @@
 
 #define SEQ_REGS 0x05
 #define GFX_REGS 0x09
-#define ATT_REGS 0x15
+
+constexpr auto NumAttributeRegisters = 0x15;
 
 // clang-format off
 std::vector<VideoModeBlock> ModeList_VGA = {
@@ -1586,9 +1587,12 @@ bool INT10_SetVideoMode(uint16_t mode)
 		IO_Write(0x3ce,ct);
 		IO_Write(0x3cf,gfx_data[ct]);
 	}
-	uint8_t att_data[ATT_REGS];
-	memset(att_data,0,ATT_REGS);
-	att_data[0x12]=0xf;				//Always have all color planes enabled
+
+	uint8_t att_data[NumAttributeRegisters];
+	memset(att_data, 0, NumAttributeRegisters);
+	// Always have all color planes enabled
+	att_data[0x12] = 0xf;
+
 	//  Program Attribute Controller
 	switch (CurMode->type) {
 	case M_EGA:
@@ -1706,7 +1710,7 @@ att_text16:
 #if 0
 		LOG_DEBUG("INT10H: Set up Palette Registers");
 #endif
-		for (auto ct = 0; ct < ATT_REGS; ++ct) {
+		for (auto ct = 0; ct < NumAttributeRegisters; ++ct) {
 			IO_Write(0x3c0, ct);
 			IO_Write(0x3c0, att_data[ct]);
 		}
@@ -1809,7 +1813,7 @@ att_text16:
 			}
 		}
 	} else {
-		for (auto ct = 0x10; ct < ATT_REGS; ++ct) {
+		for (auto ct = 0; ct < NumAttributeRegisters; ++ct) {
 			// Skip overscan register
 			if (ct == 0x11) {
 				continue;
