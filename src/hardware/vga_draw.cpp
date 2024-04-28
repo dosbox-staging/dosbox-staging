@@ -2921,6 +2921,10 @@ static void finalise_mode_change()
 	// If this assumption turns out to be false, we'll need to
 	// revisit the logic that resets this flag.
 	vga.mode_change_in_progress = false;
+
+#ifdef DEBUG_VGA_DRAW
+	LOG_TRACE("VGA: vga.mode_change_in_progress END");
+#endif
 }
 
 void VGA_SetupDrawing(uint32_t /*val*/)

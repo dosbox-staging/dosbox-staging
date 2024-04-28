@@ -606,6 +606,9 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 
 				// The flag will be reset by VGA_SetupDrawing()
 				// at the end of the mode change process.
+#if 0
+				LOG_TRACE("VGA: vga.mode_change_in_progress START");
+#endif
 				vga.mode_change_in_progress = true;
 
 				// Clear flag when setting up a new mode. This
@@ -1686,6 +1689,24 @@ att_text16:
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
 	if ((modeset_ctl & 8)==0) {
+		// Set up Palette Registers
+#if 0
+		LOG_DEBUG("INT10H: Set up Palette Registers");
+#endif
+		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
+		}
+
+		vga.config.pel_panning = 0;
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
+		IO_Write(0x3c0, 0x00);
+
+		// Reset PEL mask
+		IO_Write(0x3c6, 0xff);
+
 		// Set up Color Registers (DAC colours)
 #if 0
 		LOG_DEBUG("INT10H: Set up Color Registers");
@@ -1749,24 +1770,6 @@ dac_text16:
 			assert(false);
 			break;
 		}
-
-		// Set up Palette Registers
-#if 0
-		LOG_DEBUG("INT10H: Set up Palette Registers");
-#endif
-		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
-			IO_Write(0x3c0, ct);
-			IO_Write(0x3c0, att_data[ct]);
-		}
-
-		vga.config.pel_panning = 0;
-
-		// Disable palette access
-		IO_Write(0x3c0, 0x20);
-		IO_Write(0x3c0, 0x00);
-
-		// Reset PEL mask
-		IO_Write(0x3c6, 0xff);
 
 		if (IS_VGA_ARCH) {
 			//  check if gray scale summing is enabled
