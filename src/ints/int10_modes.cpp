@@ -629,17 +629,21 @@ static void set_text_lines()
 	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
 
 	switch (vga_flags_rec.text_mode_scan_lines()) {
-	case 2: // 200-line mode
+	case 0: // 350-line mode
 		if (CurMode->mode <= 3) {
-			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
+			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
 		break;
 
-	case 0: // 350-line mode
+	case 1: // 400-line mode
+		// unhandled
+		break;
+
+	case 2: // 200-line mode
 		if (CurMode->mode <= 3) {
-			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
+			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
@@ -1697,12 +1701,12 @@ att_text16:
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
-	if (vga_flags_rec.load_default_palette) {
+	if (!vga_flags_rec.load_default_palette) {
 		// Set up Palette Registers
 #if 0
 		LOG_DEBUG("INT10H: Set up Palette Registers");
 #endif
-		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+		for (auto ct = 0; ct < ATT_REGS; ++ct) {
 			IO_Write(0x3c0, ct);
 			IO_Write(0x3c0, att_data[ct]);
 		}
@@ -1724,45 +1728,63 @@ att_text16:
 
 		switch (CurMode->type) {
 		case M_EGA:
-			if (CurMode->mode > 0xf)
-				goto dac_text16;
-			else if (CurMode->mode == 0xf)
+			if (CurMode->mode > 0xf) {
+				// Added for CAD Software
+				//
+				// This covers this EGA mode:
+				//   10h - 640x350 4 or 16-colour graphics mode
+				//
+				// And these additional VGA modes:
+				//   11h - 640x480 monochrome graphics mode
+				//   12h - 640x480  16-colour graphics mode
+				//   13h - 320x200 256-colour graphics mode
+				//
+				write_palette_dac_data(palette.ega);
+
+			} else if (CurMode->mode == 0xf) {
+				// Monochrome 640x350 text mode on EGA & VGA
 				write_palette_dac_data(palette.mono_text_s3);
-			else
+			} else {
 				write_palette_dac_data(palette.cga64);
+			}
 			break;
+
 		case M_CGA2:
 		case M_CGA4:
 		case M_TANDY16:
-			// TODO: TANDY_16 seems like an oversight here, as
-			//       this function is supposed to deal with
-			//       MCH_EGA and MCH_VGA only.
+			// TODO: TANDY_16 seems like an oversight here, as this
+			// function is supposed to deal with MCH_EGA and MCH_VGA
+			// only.
 			write_palette_dac_data(palette.cga64);
 			break;
+
 		case M_TEXT:
-			if (CurMode->mode==7) {
-				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio))
+			if (CurMode->mode == 7) {
+				// Non-standard 80x25 (720x350) monochrome text
+				// mode on VGA
+				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio)) {
 					write_palette_dac_data(palette.mono_text_s3);
-				else
+				} else {
 					write_palette_dac_data(palette.mono_text);
+				}
 				break;
 			}
 			[[fallthrough]];
-		case M_LIN4: //Added for CAD Software
-dac_text16:
-			write_palette_dac_data(palette.ega);
-			break;
+		case M_LIN4: write_palette_dac_data(palette.ega); break;
+
 		case M_VGA:
 		case M_LIN8:
 		case M_LIN15:
 		case M_LIN16:
 		case M_LIN24:
 		case M_LIN32:
-			// IBM and clones use 248 default colors in the palette for 256-color mode.
-			// The last 8 colors of the palette are only initialized to 0 at BIOS init.
-			// Palette index is left at 0xf8 as on most clones, IBM leaves it at 0x10.
+			// IBM and clones use 248 default colors in the palette
+			// for 256-color mode. The last 8 colors of the palette
+			// are set to RGB(0,0,0) at BIOS init. Palette index is
+			// left at 0xf8 as on most clones, IBM leaves it at 0x10.
 			write_palette_dac_data(palette.vga);
 			break;
+
 		case M_CGA16:
 		case M_CGA2_COMPOSITE:
 		case M_CGA4_COMPOSITE:
@@ -1774,36 +1796,50 @@ dac_text16:
 		case M_HERC_TEXT:
 		case M_HERC_GFX:
 		case M_ERROR:
-			// This code should be unreachable, as this function deals only
-			// with MCH_EGA and MCH_VGA.
+			// This code should be unreachable, as this function
+			// deals only with MCH_EGA and MCH_VGA.
 			assert(false);
 			break;
 		}
 
 		if (IS_VGA_ARCH) {
 			if (vga_flags_rec.is_grayscale_summing_enabled) {
-				INT10_PerformGrayScaleSumming(0, 256);
+				constexpr auto StartReg = 0;
+				INT10_PerformGrayScaleSumming(StartReg, NumVgaColors);
 			}
 		}
 	} else {
-		for (uint8_t ct=0x10;ct<ATT_REGS;ct++) {
-			if (ct==0x11) continue;	// skip overscan register
-			IO_Write(0x3c0,ct);
-			IO_Write(0x3c0,att_data[ct]);
+		for (auto ct = 0x10; ct < ATT_REGS; ++ct) {
+			// Skip overscan register
+			if (ct == 0x11) {
+				continue;
+			}
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
 		}
+
 		vga.config.pel_panning = 0;
-		IO_Write(0x3c0,0x20); //Disable palette access
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
 	}
-	//  Write palette register data to dynamic save area if pointer is non-zero
-	RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-	RealPt dsapt=real_readd(RealSegment(vsavept),RealOffset(vsavept)+4);
+
+	// Write palette register data to dynamic save area if pointer is non-zero
+	const RealPt vsavept = real_readd(BIOSMEM_SEG, BIOSMEM_VS_POINTER);
+	const RealPt dsapt   = real_readd(RealSegment(vsavept),
+                                        RealOffset(vsavept) + 4);
+
 	if (dsapt) {
-		for (uint8_t ct=0;ct<0x10;ct++) {
-			real_writeb(RealSegment(dsapt),RealOffset(dsapt)+ct,att_data[ct]);
+		for (auto ct = 0; ct < 0x10; ++ct) {
+			real_writeb(RealSegment(dsapt),
+			            RealOffset(dsapt) + ct,
+			            att_data[ct]);
 		}
-		real_writeb(RealSegment(dsapt),RealOffset(dsapt)+0x10,0); // overscan
+		// Overscan
+		real_writeb(RealSegment(dsapt), RealOffset(dsapt) + 0x10, 0);
 	}
-	//  Setup some special stuff for different modes
+
+	// Set up some special stuff for different modes
 	switch (CurMode->type) {
 	case M_CGA2:
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x1e);
