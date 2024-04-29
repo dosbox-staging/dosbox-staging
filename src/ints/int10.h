@@ -294,6 +294,7 @@ void INT10_SetupPalette();
 
 bool INT10_SetVideoMode(uint16_t mode);
 void INT10_SetCurMode(void);
+bool INT10_VideoModeChangeInProgress();
 
 bool INT10_IsTextMode(const VideoModeBlock& mode_block);
 
@@ -394,5 +395,6 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer);
 /* Video Parameter Tables */
 uint16_t INT10_SetupVideoParameterTable(PhysPt basepos);
 void INT10_SetupBasicVideoParameterTable(void);
+
 
 #endif
