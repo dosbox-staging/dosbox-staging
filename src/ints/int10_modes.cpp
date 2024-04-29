@@ -37,9 +37,8 @@
 #include "vga.h"
 #include "video.h"
 
-#define SEQ_REGS 0x05
-#define GFX_REGS 0x09
-
+constexpr auto NumSequencerRegisters = 0x05;
+constexpr auto NumGraphicsRegisters  = 0x09;
 constexpr auto NumAttributeRegisters = 0x15;
 
 // clang-format off
@@ -1152,10 +1151,13 @@ bool INT10_SetVideoMode(uint16_t mode)
 	}
 	IO_Write(0x3c2,misc_output);		//Setup for 3b4 or 3d4
 
-	//  Program Sequencer
-	uint8_t seq_data[SEQ_REGS];
-	memset(seq_data,0,SEQ_REGS);
-	seq_data[1]|=0x01;	//8 dot fonts by default
+	// Program sequencer
+	uint8_t seq_data[NumSequencerRegisters];
+	memset(seq_data, 0, NumSequencerRegisters);
+
+	// 8 dot fonts by default
+	seq_data[1] |= 0x01;
+
 	if (CurMode->special & EGA_HALF_CLOCK)
 		seq_data[1] |= 0x08; // Check for half clock
 	if ((machine == MCH_EGA) && (CurMode->special & EGA_HALF_CLOCK))
@@ -1207,11 +1209,14 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
-	for (uint8_t ct=0;ct<SEQ_REGS;ct++) {
-		IO_Write(0x3c4,ct);
-		IO_Write(0x3c5,seq_data[ct]);
+
+	for (auto ct = 0; ct < NumSequencerRegisters; ++ct) {
+		IO_Write(0x3c4, ct);
+		IO_Write(0x3c5, seq_data[ct]);
 	}
-	vga.config.compatible_chain4 = true; // this may be changed by SVGA chipset emulation
+
+	// This may be changed by the SVGA chipset emulation
+	vga.config.compatible_chain4 = true;
 
 	//  Program CRTC
 	//  First disable write protection
@@ -1528,13 +1533,18 @@ bool INT10_SetVideoMode(uint16_t mode)
 		IO_WriteB(crtc_base,0x67);IO_WriteB(crtc_base+1,misc_control_2);
 	}
 
-	//  Write Misc Output
-	IO_Write(0x3c2,misc_output);
-	//  Program Graphics controller
-	uint8_t gfx_data[GFX_REGS];
-	memset(gfx_data,0,GFX_REGS);
-	gfx_data[0x7] = 0xf;  //  Color don't care
-	gfx_data[0x8] = 0xff; //  BitMask
+	// Write misc output
+	IO_Write(0x3c2, misc_output);
+
+	// Program graphics controller
+	uint8_t gfx_data[NumGraphicsRegisters];
+	memset(gfx_data, 0, NumGraphicsRegisters);
+
+	// Color don't care
+	gfx_data[0x7] = 0xf;
+	// BitMask
+	gfx_data[0x8] = 0xff;
+
 	switch (CurMode->type) {
 	case M_TEXT:
 		gfx_data[0x5]|=0x10;		//Odd-Even Mode
@@ -1583,9 +1593,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
-	for (uint8_t ct=0;ct<GFX_REGS;ct++) {
-		IO_Write(0x3ce,ct);
-		IO_Write(0x3cf,gfx_data[ct]);
+	for (auto ct = 0; ct < NumGraphicsRegisters; ++ct) {
+		IO_Write(0x3ce, ct);
+		IO_Write(0x3cf, gfx_data[ct]);
 	}
 
 	uint8_t att_data[NumAttributeRegisters];
