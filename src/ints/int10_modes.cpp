@@ -600,7 +600,7 @@ bool INT10_VideoModeChangeInProgress()
 	return video_mode_change_in_progress;
 }
 
-static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
+static bool set_cur_mode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
 {
 	size_t i = 0;
 	while (modeblock[i].mode != 0xffff) {
@@ -667,40 +667,47 @@ void INT10_SetCurMode(void) {
 
 		switch (machine) {
 		case MCH_CGA:
-			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			if (bios_mode < 7) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			}
 			break;
 
 		case MCH_PCJR:
 		case MCH_TANDY:
-			if (bios_mode!=7 && bios_mode<=0xa) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			if (bios_mode != 7 && bios_mode <= 0xa) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			}
 			break;
 
 		case MCH_HERC:
-			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
-			else if (bios_mode == 7) {
+			if (bios_mode < 7) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			} else if (bios_mode == 7) {
 				mode_changed = true;
 				CurMode = Hercules_Mode.begin();
 			}
 			break;
 
 		case MCH_EGA:
-			mode_changed=SetCurMode(ModeList_EGA,bios_mode);
+			mode_changed = set_cur_mode(ModeList_EGA, bios_mode);
 			break;
 
 		case MCH_VGA:
 			switch (svgaCard) {
 			case SVGA_TsengET4K:
 			case SVGA_TsengET3K:
-				mode_changed=SetCurMode(ModeList_VGA_Tseng,bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA_Tseng,
+				                            bios_mode);
 				break;
 			case SVGA_ParadisePVGA1A:
-				mode_changed=SetCurMode(ModeList_VGA_Paradise,bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA_Paradise,
+				                            bios_mode);
 				break;
 			case SVGA_S3Trio:
 				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
 				// fall-through
 			default:
-				mode_changed = SetCurMode(ModeList_VGA, bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA, bios_mode);
 				break;
 			}
 			if (mode_changed && CurMode->type == M_TEXT) {
@@ -735,7 +742,7 @@ bool INT10_IsTextMode(const VideoModeBlock& mode_block)
 	}
 }
 
-static void FinishSetMode(bool clearmem) {
+static void finish_set_mode(bool clearmem) {
 	//  Clear video memory if needs be
 	if (clearmem) {
 		switch (CurMode->type) {
@@ -843,24 +850,26 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	case MCH_TANDY:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on invalid mode 7
-		if (!SetCurMode(ModeList_OTHER,mode)) {
+		if (!set_cur_mode(ModeList_OTHER, mode)) {
 			log_invalid_video_mode_error(mode);
 			return false;
 		}
 		break;
+
 	case MCH_HERC:
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
-			if (!SetCurMode(ModeList_OTHER, mode)) {
+			if (!set_cur_mode(ModeList_OTHER, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
-			FinishSetMode(clearmem);
+			finish_set_mode(clearmem);
 			return true;
 		}
 		CurMode = Hercules_Mode.begin();
 		mode=7; // in case the video parameter table is modified
 		break;
+
 	case MCH_EGA:
 	case MCH_VGA:
 		// This code should be unreachable, as MCH_EGA and MCH_VGA are
@@ -1052,7 +1061,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 			IO_WriteW(crtc_base, i | (real_readb(RealSegment(vparams),
 				RealOffset(vparams) + i + crtc_block_index*16) << 8));
 	}
-	FinishSetMode(clearmem);
+	finish_set_mode(clearmem);
 
 	return true;
 }
@@ -1107,19 +1116,21 @@ bool INT10_SetVideoMode(uint16_t mode)
 		switch(svgaCard) {
 		case SVGA_TsengET4K:
 		case SVGA_TsengET3K:
-			if (!SetCurMode(ModeList_VGA_Tseng,mode)){
+			if (!set_cur_mode(ModeList_VGA_Tseng, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
+
 		case SVGA_ParadisePVGA1A:
-			if (!SetCurMode(ModeList_VGA_Paradise,mode)){
+			if (!set_cur_mode(ModeList_VGA_Paradise, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
+
 		default:
-			if (!SetCurMode(ModeList_VGA, mode)) {
+			if (!set_cur_mode(ModeList_VGA, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
@@ -1128,7 +1139,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			set_text_lines();
 		}
 	} else {
-		if (!SetCurMode(ModeList_EGA,mode)){
+		if (!set_cur_mode(ModeList_EGA, mode)) {
 			log_invalid_video_mode_error(mode);
 			return false;
 		}
@@ -1991,7 +2002,7 @@ att_text16:
 		svga.set_video_mode(crtc_base, &modeData);
 	}
 
-	FinishSetMode(clearmem);
+	finish_set_mode(clearmem);
 
 	//  Set vga attrib register into defined state
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
