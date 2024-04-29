@@ -1153,8 +1153,8 @@ bool INT10_SetVideoMode(uint16_t mode)
 	IO_Write(0x3c2,misc_output);		//Setup for 3b4 or 3d4
 
 	// Program sequencer
-	uint8_t seq_data[NumSequencerRegisters];
-	memset(seq_data, 0, NumSequencerRegisters);
+	uint8_t seq_data[NumVgaSequencerRegisters];
+	memset(seq_data, 0, NumVgaSequencerRegisters);
 
 	// 8 dot fonts by default
 	seq_data[1] |= 0x01;
@@ -1211,7 +1211,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		break;
 	}
 
-	for (auto ct = 0; ct < NumSequencerRegisters; ++ct) {
+	for (auto ct = 0; ct < NumVgaSequencerRegisters; ++ct) {
 		IO_Write(0x3c4, ct);
 		IO_Write(0x3c5, seq_data[ct]);
 	}
@@ -1538,8 +1538,8 @@ bool INT10_SetVideoMode(uint16_t mode)
 	IO_Write(0x3c2, misc_output);
 
 	// Program graphics controller
-	uint8_t gfx_data[NumGraphicsRegisters];
-	memset(gfx_data, 0, NumGraphicsRegisters);
+	uint8_t gfx_data[NumVgaGraphicsRegisters];
+	memset(gfx_data, 0, NumVgaGraphicsRegisters);
 
 	// Color don't care
 	gfx_data[0x7] = 0xf;
@@ -1594,13 +1594,13 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
-	for (auto ct = 0; ct < NumGraphicsRegisters; ++ct) {
+	for (auto ct = 0; ct < NumVgaGraphicsRegisters; ++ct) {
 		IO_Write(0x3ce, ct);
 		IO_Write(0x3cf, gfx_data[ct]);
 	}
 
-	uint8_t att_data[NumAttributeRegisters];
-	memset(att_data, 0, NumAttributeRegisters);
+	uint8_t att_data[NumVgaAttributeRegisters];
+	memset(att_data, 0, NumVgaAttributeRegisters);
 	// Always have all color planes enabled
 	att_data[0x12] = 0xf;
 
@@ -1721,7 +1721,7 @@ att_text16:
 #if 0
 		LOG_DEBUG("INT10H: Set up Palette Registers");
 #endif
-		for (auto ct = 0; ct < NumAttributeRegisters; ++ct) {
+		for (auto ct = 0; ct < NumVgaAttributeRegisters; ++ct) {
 			IO_Write(0x3c0, ct);
 			IO_Write(0x3c0, att_data[ct]);
 		}
@@ -1824,7 +1824,7 @@ att_text16:
 			}
 		}
 	} else {
-		for (auto ct = 0; ct < NumAttributeRegisters; ++ct) {
+		for (auto ct = 0; ct < NumVgaAttributeRegisters; ++ct) {
 			// Skip overscan register
 			if (ct == 0x11) {
 				continue;
