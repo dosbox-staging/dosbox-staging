@@ -593,6 +593,13 @@ static void log_invalid_video_mode_error(const uint16_t mode) {
 	LOG_ERR("INT10H: Trying to set invalid video mode: %02Xh", mode);
 }
 
+bool video_mode_change_in_progress = false;
+
+bool INT10_VideoModeChangeInProgress()
+{
+	return video_mode_change_in_progress;
+}
+
 static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
 {
 	size_t i = 0;
@@ -603,13 +610,12 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 			if (!int10.vesa_oldvbe ||
 			    ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
-
-				// The flag will be reset by VGA_SetupDrawing()
-				// at the end of the mode change process.
 #if 0
-				LOG_TRACE("VGA: vga.mode_change_in_progress START");
+				if (!video_mode_change_in_progress) {
+					LOG_ERR("INT10: video_mode_change_in_progress START");
+				}
 #endif
-				vga.mode_change_in_progress = true;
+				video_mode_change_in_progress = true;
 
 				// Clear flag when setting up a new mode. This
 				// flag is only set when a non-EGA DAC palette
@@ -708,6 +714,13 @@ void INT10_SetCurMode(void) {
 		if (mode_changed) {
 		//	LOG_MSG("INT10H: BIOS video mode changed to %02Xh", bios_mode);
 		}
+
+#if 0
+		if (video_mode_change_in_progress) {
+			LOG_ERR("INT10: video_mode_change_in_progress END");
+		}
+#endif
+		video_mode_change_in_progress = false;
 	}
 }
 
@@ -810,6 +823,13 @@ static void FinishSetMode(bool clearmem) {
 	for (uint8_t ct=0;ct<8;ct++) INT10_SetCursorPos(0,0,ct);
 	// Set active page 0
 	INT10_SetActivePage(0);
+
+#if 0
+	if (video_mode_change_in_progress) {
+		LOG_ERR("INT10: video_mode_change_in_progress END");
+	}
+#endif
+	video_mode_change_in_progress = false;
 }
 
 static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
@@ -1033,6 +1053,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 				RealOffset(vparams) + i + crtc_block_index*16) << 8));
 	}
 	FinishSetMode(clearmem);
+
 	return true;
 }
 

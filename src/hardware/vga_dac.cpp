@@ -102,8 +102,6 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 
 	constexpr auto ega_mode_640x350_16color = 0x10;
 #if 0
-	// We might be in the middle of a mode change, so we can't use
-	// VGA_GetCurrentVideoMode().
 	const auto log_warning = (CurMode->mode == ega_mode_640x350_16color)
 	                               ? !is_ega_color(rgb666)
 	                               : !is_cga_color(rgb666);
@@ -132,13 +130,19 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 	// Fortunately, no commercial game developers seemed to use such
 	// horrible practices.
 	//
-	if (machine == MCH_VGA && !vga.mode_change_in_progress &&
+	if (machine == MCH_VGA && !INT10_VideoModeChangeInProgress() &&
 	    !vga.ega_mode_with_vga_colors) {
 
-		const auto curr_mode = VGA_GetCurrentVideoMode();
+		// Even thought the video mode change has been completed at this
+		// point at the BIOS interrupt level, the actual changing of the
+		// resolution is probably yet to be performed (that's delayed by
+		// up to ~50 ms to let the VGA register state "stabilise" before
+		// calculating the new timings), so we can't call
+		// VGA_GetCurrentVideoMode() here.
+		const auto curr_mode = CurMode->mode;
 
 		const auto is_non_ega_color = [&]() {
-			if (curr_mode.bios_mode_number == ega_mode_640x350_16color) {
+			if (curr_mode == ega_mode_640x350_16color) {
 				// The 640x350 16-colour EGA mode (mode 10h) is
 				// special: the 16 colors can be freely chosen
 				// from a gamut of 64 colours (6-bit RGB).
@@ -151,7 +155,7 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 			}
 		};
 
-		if (curr_mode.bios_mode_number <= MaxEgaBiosModeNumber &&
+		if (curr_mode <= MaxEgaBiosModeNumber &&
 		    is_non_ega_color()) {
 
 			vga.ega_mode_with_vga_colors = true;

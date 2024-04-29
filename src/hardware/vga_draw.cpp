@@ -2914,27 +2914,12 @@ ImageInfo setup_drawing()
 	return img_info;
 }
 
-static void finalise_mode_change()
-{
-	// The assumption is that all mode changes eventually call
-	// VGA_SetupDrawing() which concludes the mode change process.
-	// If this assumption turns out to be false, we'll need to
-	// revisit the logic that resets this flag.
-	vga.mode_change_in_progress = false;
-
-#ifdef DEBUG_VGA_DRAW
-	LOG_TRACE("VGA: vga.mode_change_in_progress END");
-#endif
-}
-
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
-
-		finalise_mode_change();
 		return;
 	}
 
@@ -3004,8 +2989,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		previous_video_mode = image_info.video_mode;
 	}
-
-	finalise_mode_change();
 }
 
 void VGA_KillDrawing(void) {

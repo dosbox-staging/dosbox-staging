@@ -1092,9 +1092,6 @@ struct VgaType {
 	// that, we stop checking palette changes until the next screen mode
 	// change.
 	bool ega_mode_with_vga_colors = false;
-
-	// Flag to signal that we're in the middle of a mode change.
-	bool mode_change_in_progress = false;
 };
 
 // Hercules & CGA monochrome palette

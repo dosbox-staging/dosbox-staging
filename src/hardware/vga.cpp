@@ -482,10 +482,18 @@ void SVGA_Setup_Driver(void) {
 
 const VideoMode& VGA_GetCurrentVideoMode()
 {
-	// This function would most likely return the previous video mode if
-	// called in the middle of a mode change.
-	assert(!vga.mode_change_in_progress);
-
+	// This function is only 100% safe to call from *outside* of the VGA
+	// code! Outside of the VGA and video BIOS related code, this function
+	// is safe to call and should always return the current video mode.
+	//
+	// Care must be taken when using this function from within the VGA and
+	// video BIOS related code. Depending on how and where you use it, it
+	// *might* return the *previous* video mode in some circumstances if you
+	// end up calling in the middle of a mode change! In such scenarios, you
+	// might want to prefer reading `CurMode` directly which is more likely
+	// to contain the current mode, or the mode that's currently being set
+	// up.
+	//
 	return vga.draw.image_info.video_mode;
 }
 
