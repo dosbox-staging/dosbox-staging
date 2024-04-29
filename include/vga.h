@@ -375,7 +375,7 @@ struct VgaS3 {
 	uint8_t reg_55 = 0;
 	uint8_t reg_58 = 0;
 	uint8_t reg_6b = 0; // LFB BIOS scratchpad
-	                    //
+
 	uint8_t ex_hor_overflow = 0;
 	uint8_t ex_ver_overflow = 0;
 
@@ -383,7 +383,7 @@ struct VgaS3 {
 	uint8_t misc_control_2    = 0;
 	uint8_t ext_mem_ctrl      = 0;
 	uint16_t xga_screen_width = 0; // from 640 to 1600
-	                               //
+
 	VGAModes xga_color_mode = {};
 
 	struct clk_t {
@@ -396,7 +396,7 @@ struct VgaS3 {
 	clk_t mclk   = {};
 
 	struct pll_t {
-		// Extended Sequencer Access Rgister SR8 (pp. 124)
+		// Extended Sequencer Access Register SR8 (pp. 124)
 		uint8_t lock = 0;
 
 		// CLKSYN Control 2 Register SR15 (pp. 130)
