@@ -167,15 +167,16 @@ struct VideoMode {
 	// EGA modes and most sub-400-line (S)VGA & VESA modes)
 	bool is_double_scanned_mode = false;
 
-	// True for all (S)VGA and VESA modes, and for 200-line EGA modes on VGA
-	// that reprogram the default canonical 16-colour CGA palette BIOS to
-	// custom 18-bit VGA colours.
+	// True for all (S)VGA and VESA modes, and for EGA modes on emulated VGA
+	// adapters that reprogram the default canonical 16-colour CGA palette
+	// to custom 18-bit VGA DAC colours.
 	//
 	// Useful for differentiating "true EGA" modes used for backwards
 	// compatibility on VGA (i.e., to run EGA games) from "repurposed" EGA
-	// modes (typical for demos and ports of Amiga action/platformer games;
-	// many of these use the planar 320x200 16-colour EGA mode to achieve
-	// faster smooth-scrolling, but with custom 18-bit VGA colours).
+	// modes (typical used in demos and ports of Amiga action/platformer
+	// games; many of these use the planar 320x200 16-colour EGA mode to
+	// achieve faster smooth-scrolling, but with custom 18-bit VGA DAC
+	// colours).
 	bool has_vga_colors = false;
 
 	constexpr bool operator==(const VideoMode& that) const
