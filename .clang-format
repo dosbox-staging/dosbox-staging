@@ -376,7 +376,7 @@ MaxEmptyLinesToKeep: 1
 
 # No empty line at the start of a block.
 #
-KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLinesAtTheStartOfBlocks: true
 
 # Line breaking penalties
 #
