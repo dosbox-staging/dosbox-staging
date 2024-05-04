@@ -679,7 +679,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		// Gravis' calculation to convert from number of active voices
 		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
 		// v2.22 (21 December 1994), pp. 3 of 113.
-		sample_rate_hz = 1000000.0 / (1.619695497 * active_voices);
+		sample_rate_hz = ifloor(1000000.0 / (1.619695497 * active_voices));
 
 		ms_per_render = MillisInSecond / sample_rate_hz;
 
