@@ -1864,7 +1864,10 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 
 void MixerChannel::Sleeper::MaybeSleep()
 {
-	const auto awake_for_ms = GetTicksSince(woken_at_ms);
+	// A signed integer can a durration of ~24 days in milliseconds, which is
+	// surely more than enough.
+	const auto awake_for_ms = check_cast<int>(GetTicksSince(woken_at_ms));
+
 	// Not enough time has passed.. .. try to sleep later
 	if (awake_for_ms < fadeout_or_sleep_after_ms) {
 		return;
@@ -2005,8 +2008,6 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 
 	// Optionally filter, apply crossfeed, then mix the results to the
 	// master output
-	const auto out_frames = mixer.resample_out.size() / 2;
-
 	const auto pos_offset = mixer.pos + frames_done;
 	auto work_pos         = mixer.work.begin() + pos_offset;
 	auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
@@ -2057,6 +2058,8 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 		// Mix samples to the master output
 		*work_pos++ += frame;
 	}
+
+	const auto out_frames = check_cast<int>(mixer.resample_out.size() / 2);
 
 	frames_done += out_frames;
 
@@ -2412,9 +2415,9 @@ static void handle_mix_samples()
 	mix_samples(mixer.frames_needed);
 
 	mixer.frame_counter += mixer.frames_per_tick;
-	mixer.frames_needed += mixer.frame_counter;
+	mixer.frames_needed += ifloor(mixer.frame_counter);
 
-	mixer.frame_counter -= floor(mixer.frame_counter);
+	mixer.frame_counter -= ifloor(mixer.frame_counter);
 
 	MIXER_UnlockAudioDevice();
 }
@@ -2439,8 +2442,10 @@ static void handle_mix_no_sound()
 	auto num_frames = mixer.frames_needed.load();
 
 	mixer.pos += num_frames;
-	if (mixer.pos >= mixer.work.size()) {
-		mixer.pos -= mixer.work.size();
+
+	const auto work_size = check_cast<int>(mixer.work.size());
+	if (mixer.pos >= work_size) {
+		mixer.pos -= work_size;
 	}
 
 	constexpr AudioFrame Silence = {0.0f};
@@ -2452,9 +2457,9 @@ static void handle_mix_no_sound()
 
 	// Set values for next tick
 	mixer.frame_counter += mixer.frames_per_tick;
-	mixer.frames_needed = mixer.frame_counter;
+	mixer.frames_needed = ifloor(mixer.frame_counter);
 
-	mixer.frame_counter -= floor(mixer.frame_counter);
+	mixer.frame_counter -= ifloor(mixer.frame_counter);
 	mixer.frames_done = 0;
 
 	MIXER_UnlockAudioDevice();
@@ -2596,8 +2601,10 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	}
 
 	mixer.pos += reduce_frames;
-	if (mixer.pos >= mixer.work.size()) {
-		mixer.pos -= mixer.work.size();
+
+	const auto work_size = check_cast<int>(mixer.work.size());
+	if (mixer.pos >= work_size) {
+		mixer.pos -= work_size;
 	}
 }
 
@@ -2703,7 +2710,7 @@ static bool init_sdl_sound(Section_prop* section)
 	spec.channels = 2;
 	spec.callback = mixer_callback;
 	spec.userdata = nullptr;
-	spec.samples  = mixer.blocksize;
+	spec.samples  = check_cast<uint16_t>(mixer.blocksize);
 
 	int sdl_allow_flags = 0;
 
