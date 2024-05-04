@@ -2289,7 +2289,7 @@ static constexpr float calc_frames_per_tick(const int freq_hz)
 	assert(freq_hz > 0);
 
 	constexpr auto MillisecondsPerTick = 1000;
-	return freq_hz / MillisecondsPerTick;
+	return static_cast<float>(freq_hz) / MillisecondsPerTick;
 }
 
 // Mix a certain amount of new sample frames
