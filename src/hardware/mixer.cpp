@@ -2484,7 +2484,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	if (mixer.frames_done < frames_requested) {
 		// Buffer underrun
-#if 1
+#if 0
 		LOG_WARNING("MIXER: Full underrun requested %d, have %d, min %d",
 		            frames_requested,
 		            mixer.frames_done.load(),
@@ -2501,7 +2501,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 			frames_remaining = 1 + (2 * frames_remaining) /
 			                               mixer.min_frames_needed;
-#if 1
+#if 0
 			LOG_WARNING("MIXER: Needed underrun requested %d, have %d, min %d, remaining %d",
 			            frames_requested,
 			            mixer.frames_done.load(),
@@ -2523,7 +2523,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	} else {
 		// Buffer overrun -- this usually happens in fast-forward mode.
-#if 1
+#if 0
 		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
 		            frames_requested,
 		            mixer.frames_done.load(),
