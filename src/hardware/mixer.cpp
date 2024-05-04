@@ -2612,13 +2612,13 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 static void stop_mixer([[maybe_unused]] Section* sec) {}
 
-[[maybe_unused]] static const char* MixerStateToString(const MixerState s)
+[[maybe_unused]] static const char* to_string(const MixerState s)
 {
 	switch (s) {
-	case MixerState::Uninitialized: return "uninitialized";
-	case MixerState::NoSound: return "no sound";
-	case MixerState::On: return "on";
-	case MixerState::Muted: return "mute";
+	case MixerState::Uninitialized: return "Uninitialized";
+	case MixerState::NoSound: return "No sound";
+	case MixerState::On: return "On";
+	case MixerState::Muted: return "Mute";
 	}
 	return "unknown!";
 }
@@ -2641,25 +2641,35 @@ static void set_mixer_state(const MixerState requested)
 
 	if (mixer.state == new_state) {
 		// Nothing to do.
-		// LOG_MSG("MIXER: Is already %s, skipping",
-		// MixerStateToString(mixer.state));
+#ifdef DEBUG_MIXER
+		LOG_MSG("MIXER: Already in '%s' state, skipping",
+		        to_string(mixer.state));
+#endif
 
 	} else if (mixer.state == MixerState::On && new_state != MixerState::On) {
 		TIMER_DelTickHandler(handle_mix_samples);
 		TIMER_AddTickHandler(handle_mix_no_sound);
-		// LOG_MSG("MIXER: Changed from on to %s",
-		// MixerStateToString(new_state));
+#ifdef DEBUG_MIXER
+		LOG_MSG("MIXER: Changed mixer state from on to '%s'",
+		        to_string(new_state));
+#endif
 
 	} else if (mixer.state != MixerState::On && new_state == MixerState::On) {
 		TIMER_DelTickHandler(handle_mix_no_sound);
 		TIMER_AddTickHandler(handle_mix_samples);
-		// LOG_MSG("MIXER: Changed from %s to on",
-		// MixerStateToString(mixer.state));
+#ifdef DEBUG_MIXER
+		LOG_MSG("MIXER: Changed mixer state from '%s' to on",
+		        to_string(mixer.state));
+#endif
 
 	} else {
 		// Nothing to do.
-		// LOG_MSG("MIXER: Skipping unecessary change from %s to %s",
-		// MixerStateToString(mixer.state), MixerStateToString(new_state));
+#ifdef DEBUG_MIXER
+		LOG_MSG("MIXER: Skipping unnecessary mixer state change change "
+		        "from '%s' to '%s'",
+		        to_string(mixer.state),
+		        to_string(new_state));
+#endif
 	}
 	mixer.state = new_state;
 
