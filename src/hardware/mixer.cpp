@@ -1360,7 +1360,8 @@ void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz)
 void MixerChannel::InitZohUpsamplerState()
 {
 	zoh_upsampler.step = std::min(static_cast<float>(sample_rate_hz) /
-	                                      zoh_upsampler.target_rate_hz,
+	                                      static_cast<float>(
+	                                              zoh_upsampler.target_rate_hz),
 	                              1.0f);
 	zoh_upsampler.pos  = 0.0f;
 }
@@ -1368,7 +1369,8 @@ void MixerChannel::InitZohUpsamplerState()
 void MixerChannel::InitLerpUpsamplerState()
 {
 	lerp_upsampler.step = std::min(static_cast<float>(sample_rate_hz) /
-	                                       mixer.sample_rate_hz.load(),
+	                                       static_cast<float>(
+	                                               mixer.sample_rate_hz.load()),
 	                               1.0f);
 
 	lerp_upsampler.pos        = 0.0f;
@@ -1763,7 +1765,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	auto set_wait_and_fade = [&](const int wait_ms, const int fade_ms) {
 		fadeout_or_sleep_after_ms = wait_ms;
 
-		fadeout_decrement_per_ms = 1.0f / fade_ms;
+		fadeout_decrement_per_ms = 1.0f / static_cast<float>(fade_ms);
 
 		LOG_MSG("%s: Fade-out enabled (wait %d ms then fade for %d ms)",
 		        channel.GetName().c_str(),
@@ -2382,8 +2384,6 @@ static void mix_samples(const int frames_requested)
 		int16_t out[CaptureBufFrames][2] = {};
 
 		auto work_pos   = start_work_pos;
-		auto num_frames = frames_added;
-		assert(num_frames <= CaptureBufFrames);
 
 		for (auto i = 0; i < frames_added; ++i) {
 			const auto in_frame = *work_pos++;
@@ -2417,7 +2417,7 @@ static void handle_mix_samples()
 	mixer.frame_counter += mixer.frames_per_tick;
 	mixer.frames_needed += ifloor(mixer.frame_counter);
 
-	mixer.frame_counter -= ifloor(mixer.frame_counter);
+	mixer.frame_counter -= floor(mixer.frame_counter);
 
 	MIXER_UnlockAudioDevice();
 }
@@ -2459,7 +2459,7 @@ static void handle_mix_no_sound()
 	mixer.frame_counter += mixer.frames_per_tick;
 	mixer.frames_needed = ifloor(mixer.frame_counter);
 
-	mixer.frame_counter -= ifloor(mixer.frame_counter);
+	mixer.frame_counter -= floor(mixer.frame_counter);
 	mixer.frames_done = 0;
 
 	MIXER_UnlockAudioDevice();
@@ -2530,12 +2530,14 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		            mixer.min_frames_needed.load());
 #endif
 		if (mixer.frames_done > MixerBufferByteSize) {
-			index_add = MixerBufferByteSize - 2 * mixer.min_frames_needed;
+			index_add = static_cast<float>(
+			        MixerBufferByteSize - 2 * mixer.min_frames_needed);
 		} else {
-			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
+			index_add = static_cast<float>(
+			        mixer.frames_done - 2 * mixer.min_frames_needed);
 		}
 
-		index_add = index_add / frames_requested;
+		index_add = index_add / static_cast<float>(frames_requested);
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
 	}
 
