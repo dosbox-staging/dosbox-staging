@@ -572,14 +572,14 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	                                                     pattern,
 	                                                     pos);
 	if (search_file) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = search_file->isdir;
+		FatAttributeFlags search_attr = {FatAttributeFlags::ReadOnly};
+		search_attr.directory = search_file->isdir;
 
 		dta.SetResult(search_file->name.c_str(),
 		              search_file->data->size(),
 		              search_file->date,
 		              search_file->time,
-		              attr);
+		              search_attr);
 		search_file = search_file->next;
 		return true;
 	}
