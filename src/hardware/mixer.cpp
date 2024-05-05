@@ -1013,8 +1013,6 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 
 	sample_rate_hz = target_rate_hz;
 
-	freq_add = (sample_rate_hz << FreqShift) / mixer.sample_rate_hz;
-
 	envelope.Update(sample_rate_hz,
 	                peak_amplitude,
 	                EnvelopeMaxExpansionOverMs,
@@ -1052,17 +1050,18 @@ void MixerChannel::Mix(const int frames_requested)
 
 	frames_needed = frames_requested;
 
-	while (frames_needed > frames_done) {
-		auto frames_remaining = frames_needed - frames_done;
-		frames_remaining *= freq_add;
-		frames_remaining = (frames_remaining >> FreqShift) +
-		                   ((frames_remaining & FreqMask) != 0);
+	auto freq_add = static_cast<float>(sample_rate_hz) /
+	                static_cast<float>(mixer.sample_rate_hz);
 
-		// avoid underflow
+	while (frames_needed > frames_done) {
+		auto frames_remaining = iceil(
+		        static_cast<float>(frames_needed - frames_done) + freq_add);
+
+		// Avoid underflow
 		if (frames_remaining <= 0) {
 			break;
 		}
-		// avoid overflow
+		// Avoid overflow
 		frames_remaining = std::min(frames_remaining, MixerBufferByteSize);
 
 		handler(frames_remaining);

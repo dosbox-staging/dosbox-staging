@@ -286,9 +286,6 @@ private:
 
 	std::set<ChannelFeature> features = {};
 
-	// This gets added the frequency counter each mixer step
-	int freq_add = 0u;
-
 	// When this flows over a new sample needs to be read from the device
 	int freq_counter = 0u;
 
