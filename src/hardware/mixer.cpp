@@ -57,10 +57,6 @@ CHECK_NARROWING();
 
 // #define DEBUG_MIXER
 
-constexpr auto FreqShift = 14;
-constexpr auto FreqNext  = (1 << FreqShift);
-constexpr auto FreqMask  = (FreqNext - 1);
-
 // Over how many milliseconds will we permit a signal to grow from
 // zero up to peak amplitude? (recommended 10 to 20ms)
 constexpr auto EnvelopeMaxExpansionOverMs = 15;
@@ -1084,9 +1080,6 @@ void MixerChannel::AddSilence()
 			// switched to prev
 			next_frame = {0.0f, 0.0f};
 
-			// This should trigger an instant request for new samples
-			freq_counter = FreqNext;
-
 		} else {
 			bool stereo = last_samples_were_stereo;
 
@@ -1124,7 +1117,6 @@ void MixerChannel::AddSilence()
 
 				prev_frame = next_frame;
 				++frames_done;
-				freq_counter = FreqNext;
 			}
 		}
 	}
@@ -1664,8 +1656,6 @@ void MixerChannel::ConvertSamples(const Type* data, const int frames,
 {
 	assert(frames >= 0);
 
-	// read-only aliases to avoid repeated dereferencing and to inform the
-	// compiler their values don't change
 	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
 
@@ -1935,6 +1925,7 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 			while (in_pos != mixer.resample_temp.end()) {
 				AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
 
+				assert(s.pos >= 0.0f && s.pos <= 1.0f);
 				const auto out_left = lerp(s.last_frame.left,
 				                           curr_frame.left,
 				                           s.pos);
@@ -2078,52 +2069,45 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 		MIXER_UnlockAudioDevice();
 		return;
 	}
-	// Target samples this inputs gets stretched into
+
+	// Stretch mono input stream into this many output frames
 	auto frames_remaining = frames_needed - frames_done;
 
-	auto index     = 0;
-	auto index_add = (len << FreqShift) / frames_remaining;
+	// Used for time-stretching the audio
+	float pos = 0;
+	float step = static_cast<float>(len) / static_cast<float>(frames_remaining);
 
 	auto work_pos = mixer.work.begin() + mixer.pos + frames_done;
 
-	auto pos = 0;
-
-	// read-only aliases to avoid dereferencing and inform compiler their
-	// values don't change
 	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
 
 	while (frames_remaining--) {
-		const auto new_pos = index >> FreqShift;
-		if (pos != new_pos) {
-			pos = new_pos;
-			// Forward the previous sample
-			prev_frame.left = data[0];
-			data++;
-		}
+		auto prev_sample = prev_frame.left;
+		auto curr_sample = static_cast<float>(*data);
 
-		assert(prev_frame.left <= Max16BitSampleValue);
-		assert(prev_frame.left >= Min16BitSampleValue);
-		const auto diff = data[0] - static_cast<int16_t>(prev_frame.left);
+		assert(pos >= 0.0f && pos <= 1.0f);
+		auto out_sample = lerp(prev_sample, curr_sample, pos);
 
-		const auto diff_mul = index & FreqMask;
-		index += index_add;
-
-		auto sample = prev_frame.left +
-		              static_cast<float>((diff * diff_mul) >> FreqShift);
-
-		auto frame_with_gain = AudioFrame{sample, sample} *
-		                       combined_volume_gain;
+		auto frame_with_gain = AudioFrame{out_sample} * combined_volume_gain;
 
 		if (do_sleep) {
 			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
 		}
 
-		AudioFrame out_frame = {};
+		AudioFrame out_frame           = {};
 		out_frame[mapped_output_left]  = frame_with_gain.left;
 		out_frame[mapped_output_right] = frame_with_gain.right;
 
 		*work_pos++ += out_frame;
+
+		// Advance input position
+		pos += step;
+		if (pos > 1.0f) {
+			pos -= 1.0f;
+			prev_frame = {curr_sample};
+			++data;
+		}
 	}
 
 	frames_done = frames_needed;
