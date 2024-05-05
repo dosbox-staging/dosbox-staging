@@ -37,10 +37,6 @@
 #include "vga.h"
 #include "video.h"
 
-constexpr auto NumSequencerRegisters = 0x05;
-constexpr auto NumGraphicsRegisters  = 0x09;
-constexpr auto NumAttributeRegisters = 0x15;
-
 using namespace bit;
 using namespace bit::literals;
 
