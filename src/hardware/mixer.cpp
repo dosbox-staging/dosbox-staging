@@ -2058,6 +2058,10 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 	MIXER_UnlockAudioDevice();
 }
 
+// TODO Move this into the Sound Blaster code.
+// This is only called in the "Direct DAC" (non-DMA) operational mode of the
+// Sound Blaster where the DAC is controlled by the CPU.
+//
 void MixerChannel::AddStretched(const int len, int16_t* data)
 {
 	assert(len >= 0);
@@ -2085,9 +2089,18 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 	while (frames_remaining--) {
 		auto prev_sample = prev_frame.left;
 		auto curr_sample = static_cast<float>(*data);
+		float out_sample = {};
 
-		assert(pos >= 0.0f && pos <= 1.0f);
-		auto out_sample = lerp(prev_sample, curr_sample, pos);
+		switch (resample_method) {
+		case ResampleMethod::LinearInterpolation:
+		case ResampleMethod::Resample:
+			assert(pos >= 0.0f && pos <= 1.0f);
+			out_sample = lerp(prev_sample, curr_sample, pos);
+			break;
+
+		case ResampleMethod::ZeroOrderHoldAndResample:
+			out_sample = curr_sample;
+		}
 
 		auto frame_with_gain = AudioFrame{out_sample} * combined_volume_gain;
 
