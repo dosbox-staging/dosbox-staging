@@ -104,6 +104,22 @@ inline int ifloor(const float x)
 	return static_cast<int>(floorf(x));
 }
 
+inline int iceil(double x)
+{
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(ceil(x));
+}
+
+inline int iceil(const float x)
+{
+	assert(std::isfinite(x));
+	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
+	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
+	return static_cast<int>(ceilf(x));
+}
+
 // Determine if two numbers are equal "enough" based on an epsilon value.
 // Uses a dynamic adjustment based on the magnitude of the numbers.
 // Based on ideas from Bruce Dawson's blog post:
