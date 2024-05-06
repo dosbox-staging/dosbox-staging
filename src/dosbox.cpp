@@ -63,7 +63,6 @@ bool shutdown_requested = false;
 MachineType machine;
 SVGACards svgaCard;
 
-/* The whole load of startups for all the subfunctions */
 void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
@@ -89,7 +88,9 @@ void VOODOO_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
-void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
+//TODO This should setup INT 16 too but ok ;)
+void KEYBOARD_Init(Section*);
+
 void JOYSTICK_Init(Section*);
 void SBLASTER_Init(Section*);
 void PCSPEAKER_Init(Section*);
@@ -114,7 +115,7 @@ void MSCDEX_Init(Section*);
 void DRIVES_Init(Section*);
 void CDROM_Image_Init(Section*);
 
-/* Dos Internal mostly */
+// DOS internals mostly
 void EMS_Init(Section*);
 void XMS_Init(Section*);
 
@@ -131,13 +132,15 @@ static int64_t ticksAdded;
 int64_t ticksDone;
 int64_t ticksScheduled;
 bool ticksLocked;
-void increaseticks();
 
-bool mono_cga=false;
+bool mono_cga = false;
 
 void Null_Init([[maybe_unused]] Section *sec) {
 	// do nothing
 }
+
+// forward declaration
+static void increase_ticks();
 
 static Bitu Normal_Loop() {
 	Bits ret;
@@ -165,28 +168,36 @@ static Bitu Normal_Loop() {
 			if (ticksRemain > 0) {
 				TIMER_AddTick();
 				ticksRemain--;
-			} else {increaseticks();return 0;}
+			} else {increase_ticks();return 0;}
 		}
 	}
 }
 
-void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
+static void increase_ticks()
+{
+	// Make it return ticksRemain and set it in the function above to remove the
+    // global variable.
 	ZoneScoped;
-	if (ticksLocked) { // For Fast Forward Mode
-		ticksRemain=5;
-		/* Reset any auto cycle guessing for this frame */
-		ticksLast = GetTicks();
-		ticksAdded = 0;
-		ticksDone = 0;
+
+	// For fast-forward mode
+	if (ticksLocked) {
+		ticksRemain = 5;
+
+		// Reset any auto cycle guessing for this frame
+		ticksLast      = GetTicks();
+		ticksAdded     = 0;
+		ticksDone      = 0;
 		ticksScheduled = 0;
 		return;
 	}
 
 	const auto ticksNewUs = GetTicksUs();
-	const auto ticksNew = ticksNewUs / 1000;
+	const auto ticksNew   = ticksNewUs / 1000;
 
 	ticksScheduled += ticksAdded;
-	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
+
+    // Lower should not be possible, only equal
+	if (ticksNew <= ticksLast) {
 		ticksAdded = 0;
 
 		static int64_t cumulativeTimeSlept = 0;
@@ -205,34 +216,48 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 			cumulativeTimeSlept %= 1000;
 		}
 
-		if (ticksDone < 0)
+		if (ticksDone < 0) {
 			ticksDone = 0;
-		return; //0
+		}
+		return; // 0
 
-		// If we do work this tick and sleep till the next tick, then ticksDone is decreased,
-		// despite the fact that work was done as well in this tick. Maybe make it depend on an extra parameter.
-		// What do we know: ticksRemain = 0 (condition to enter this function)
-		// ticksNew = time before sleeping
+		// If we do work this tick and sleep till the next tick, then
+		// ticksDone is decreased, despite the fact that work was done
+		// as well in this tick. Maybe make it depend on an extra
+		// parameter. What do we know: ticksRemain = 0 (condition to
+		// enter this function) ticksNew = time before sleeping
 
-		// maybe keep track of sleeped time in this frame, and use sleeped and done as indicators. (and take care of the fact there
-		// are frames that have both.
+		// Maybe keep track of sleeped time in this frame, and use
+		// sleeped and done as indicators (and take care of the fact
+		// there are frames that have both.)
 	}
 
-	//TicksNew > ticksLast
+	// TicksNew > ticksLast
 	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
-	ticksLast = ticksNew;
+	ticksLast   = ticksNew;
 	ticksDone += ticksRemain;
-	if ( ticksRemain > 20 ) {
-//		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
+
+	if (ticksRemain > 20) {
+#if 0
+		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
+#endif
 		ticksRemain = 20;
 	}
+
 	ticksAdded = ticksRemain;
 
-	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
-	if (!CPU_CycleAutoAdjust) return;
+	// Is the system in auto cycle guessing mode? If not, do nothing.
+	if (!CPU_CycleAutoAdjust) {
+		return;
+	}
 
-	if (ticksScheduled >= 100 || ticksDone >= 100 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
-		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+	if (ticksScheduled >= 100 || ticksDone >= 100 ||
+	    (ticksAdded > 15 && ticksScheduled >= 5)) {
+		if (ticksDone < 1) {
+		    // Protect against div by zero
+			ticksDone = 1;
+		}
+
 		// Ratio we are aiming for is 100% usage
 		int32_t ratio = static_cast<int32_t>(
 		        (ticksScheduled * (CPU_CyclePercUsed * 1024 / 100)) /
@@ -240,79 +265,120 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 		int32_t new_cmax = CPU_CycleMax;
 		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticksScheduled;
-		double ratioremoved = 0.0; //increase scope for logging
+
+		// Increase scope for logging
+		double ratioremoved = 0.0;
+
 		if (cproc > 0) {
-			/* ignore the cycles added due to the IO delay code in order
-			   to have smoother auto cycle adjustments */
-			ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
+			// Ignore the cycles added due to the IO delay code in
+			// order to have smoother auto cycle adjustments.
+			ratioremoved = (double)CPU_IODelayRemoved / (double)cproc;
 			if (ratioremoved < 1.0) {
 				double ratio_not_removed = 1 - ratioremoved;
 				ratio = (int32_t)((double)ratio * ratio_not_removed);
 
-				/* Don't allow very high ratio which can cause us to lock as we don't scale down
-				 * for very low ratios. High ratio might result because of timing resolution */
-				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 16384)
+				// Don't allow very high ratios; they can cause
+				// locking as we don't scale down for very low
+				// ratios. High ratios might be the resul of
+				// timing resolution.
+				if (ticksScheduled >= 100 && ticksDone < 10 &&
+				    ratio > 16384) {
 					ratio = 16384;
+				}
 
-				// Limit the ratio even more when the cycles are already way above the realmode default.
-				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+				// Limit the ratio even more when the cycles are
+				// already way above the realmode default.
+				if (ticksScheduled >= 100 && ticksDone < 10 &&
+				    ratio > 5120 && CPU_CycleMax > 50000) {
 					ratio = 5120;
+				}
 
-				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
+				// When downscaling multiple times in a row,
+				// ensure a minimum amount of downscaling
+				if (ticksAdded > 15 && ticksScheduled >= 5 &&
+				    ticksScheduled <= 20 && ratio > 800) {
 					ratio = 800;
+				}
 
 				if (ratio <= 1024) {
-					// ratio_not_removed = 1.0; //enabling this restores the old formula
-					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + 1024.0/(static_cast<double>(ratio)));
-					new_cmax = 1 + static_cast<int32_t>(CPU_CycleMax * r);
+					// Uncommenting the below line restores the old formula:
+					// ratio_not_removed = 1.0;
+
+					double r = (1.0 + ratio_not_removed) /
+					           (ratio_not_removed +
+					            1024.0 / (static_cast<double>(
+					                             ratio)));
+					new_cmax = 1 + static_cast<int32_t>(
+					                       CPU_CycleMax * r);
 				} else {
-					int64_t ratio_with_removed = (int64_t) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
-					int64_t cmax_scaled = (int64_t)CPU_CycleMax * ratio_with_removed;
-					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (int64_t)2048);
+					int64_t ratio_with_removed =
+					        (int64_t)((((double)ratio - 1024.0) *
+					                   ratio_not_removed) +
+					                  1024.0);
+
+					int64_t cmax_scaled = (int64_t)CPU_CycleMax *
+					                      ratio_with_removed;
+
+					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) +
+					                     cmax_scaled /
+					                             (int64_t)2048);
 				}
 			}
 		}
 
-		if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
+		if (new_cmax < CPU_CYCLES_LOWER_LIMIT) {
 			new_cmax = CPU_CYCLES_LOWER_LIMIT;
-		/*
-		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
-			CPU_CycleMax,
-			new_cmax,
-			ratio,
-			ticksDone,
-			ticksScheduled,
-			ticksAdded,
-			ratioremoved);
-		*/
+		}
 
-		/* ratios below 1% are considered to be dropouts due to
-		   temporary load imbalance, the cycles adjusting is skipped */
+#if 0
+		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
+		         CPU_CycleMax,
+		         new_cmax,
+		         ratio,
+		         ticksDone,
+		         ticksScheduled,
+		         ticksAdded,
+		         ratioremoved);
+#endif
+
+		// Ratios below 1% are considered to be dropouts due to
+		// temporary load imbalance, the cycles adjusting is skipped.
 		if (ratio > 10) {
-			/* ratios below 12% along with a large time since the last update
-			   has taken place are most likely caused by heavy load through a
-			   different application, the cycles adjusting is skipped as well */
+
+			// Ratios below 12% along with a large time since the
+			// last update has taken place are most likely caused by
+			// heavy load through a different application, the
+			// cycles adjusting is skipped as well.
 			if ((ratio > 120) || (ticksDone < 700)) {
 				CPU_CycleMax = new_cmax;
+
 				if (CPU_CycleLimit > 0) {
-					if (CPU_CycleMax > CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
-				} else if (CPU_CycleMax > 2000000) CPU_CycleMax = 2000000; //Hardcoded limit, if no limit was specified.
+					if (CPU_CycleMax > CPU_CycleLimit) {
+						CPU_CycleMax = CPU_CycleLimit;
+					}
+				} else if (CPU_CycleMax > 2000000) {
+					// Hardcoded limit if the limit wasn't explicitly
+					// specified.
+					CPU_CycleMax = 2000000;
+				}
 			}
 		}
 
-		//Reset cycleguessing parameters.
+		// Reset cycleguessing parameters.
 		CPU_IODelayRemoved = 0;
-		ticksDone = 0;
-		ticksScheduled = 0;
+		ticksDone          = 0;
+		ticksScheduled     = 0;
+
 	} else if (ticksAdded > 15) {
-		/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
-		   but do not reset the scheduled/done ticks to take them into
-		   account during the next auto cycle adjustment */
+		// ticksAdded > 15 but ticksScheduled < 5, lower the cycles
+		// but do not reset the scheduled/done ticks to take them into
+		// account during the next auto cycle adjustment.
 		CPU_CycleMax /= 3;
-		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
+
+		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT) {
 			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
-	} //if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
+		}
+	}
 }
 
 const char* DOSBOX_GetVersion() noexcept
