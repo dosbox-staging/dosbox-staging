@@ -76,7 +76,10 @@ void LOADFIX::Run(void)
 			}
 			// Use shell to start program
 			DOS_Shell shell;
+			// If it's a batch file, this call places it into an internal data structure.
 			shell.ExecuteProgram(filename, args);
+			// Actually run the batch file. This is a no-op if it's an executable.
+			shell.RunBatchFile();
 			DOS_FreeMemory(segment);
 			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
 		}
