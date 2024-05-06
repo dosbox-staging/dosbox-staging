@@ -2289,14 +2289,12 @@ static void CPU_CycleDecrease(bool pressed)
 	}
 }
 
-extern int64_t ticksDone;
-extern int64_t ticksScheduled;
-
 void CPU_Reset_AutoAdjust(void)
 {
 	CPU_IODelayRemoved = 0;
-	ticksDone          = 0;
-	ticksScheduled     = 0;
+
+	DOSBOX_SetTicksDone(0);
+	DOSBOX_SetTicksScheduled(0);
 }
 
 class CPU final {
