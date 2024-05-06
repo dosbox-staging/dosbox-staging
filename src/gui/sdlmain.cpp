@@ -2354,12 +2354,11 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
-extern int64_t ticksDone;
-
 void GFX_EndUpdate(const uint16_t* changedLines)
 {
-	static int64_t cumulative_time_rendered = 0;
-	const auto start                        = GetTicksUs();
+	static int64_t cumulative_time_rendered_us = 0;
+
+	const auto start_us = GetTicksUs();
 
 	sdl.frame.update(changedLines);
 
@@ -2400,18 +2399,25 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 		}
 	}
 
-	const auto elapsed = GetTicksUsSince(start);
-	cumulative_time_rendered += elapsed;
-	// Update ticksDone with the rendering time
-	if (cumulative_time_rendered >= 1000) {
-		const auto cumulative_ticks_rendered = cumulative_time_rendered / 1000;
+	const auto elapsed_us = GetTicksUsSince(start_us);
+	cumulative_time_rendered_us += elapsed_us;
+
+	// Update "ticks done" with the rendering time
+	constexpr auto MicrosInMillisecond = 1000;
+
+	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
+		// 1 tick == 1 millisecond
+		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
+		                                       MicrosInMillisecond;
 
 		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
 
-		cumulative_time_rendered %= 1000;
+		// Keep the fractional microseconds part
+		cumulative_time_rendered_us %= MicrosInMillisecond;
 	}
 
 	sdl.updating = false;
+
 	FrameMark;
 }
 
