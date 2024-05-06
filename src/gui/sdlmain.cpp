@@ -2405,7 +2405,9 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 	// Update ticksDone with the rendering time
 	if (cumulative_time_rendered >= 1000) {
 		const auto cumulative_ticks_rendered = cumulative_time_rendered / 1000;
-		ticksDone -= cumulative_ticks_rendered;
+
+		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
+
 		cumulative_time_rendered %= 1000;
 	}
 
