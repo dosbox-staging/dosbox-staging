@@ -132,6 +132,7 @@ void Descriptor::Load(PhysPt address)
 	*(data + 1)    = mem_readd(address + 4);
 	cpu.mpl        = 3;
 }
+
 void Descriptor::Save(PhysPt address)
 {
 	cpu.mpl        = 0;
@@ -2758,12 +2759,12 @@ void CPU_Reset_AutoAdjust(void)
 	ticksScheduled     = 0;
 }
 
-class CPU final : public Module_base {
+class CPU final {
 private:
 	static bool inited;
 
 public:
-	CPU(Section* configuration) : Module_base(configuration)
+	CPU(Section* configuration)
 	{
 		if (inited) {
 			Change_Config(configuration);
@@ -2833,9 +2834,9 @@ public:
 		CPU_JMP(false, 0, 0, 0); // Setup the first cpu core
 	}
 
-	~CPU() override = default;
+	~CPU() = default;
 
-	bool Change_Config(Section* newconfig) override
+	bool Change_Config(Section* newconfig)
 	{
 		Section_prop* section = static_cast<Section_prop*>(newconfig);
 		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
