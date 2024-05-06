@@ -503,7 +503,7 @@ public:
 	std::string data = {};
 };
 
-/* Base for all hardware and software "devices" */
+// Base for all hardware and software "devices"
 class Module_base {
 protected:
 	Section* m_configuration;
