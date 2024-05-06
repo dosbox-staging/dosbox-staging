@@ -126,12 +126,29 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-static int64_t ticksRemain;
-static int64_t ticksLast;
-static int64_t ticksAdded;
-int64_t ticksDone;
-int64_t ticksScheduled;
-bool ticksLocked;
+static struct {
+	int64_t remain    = {};
+	int64_t last      = {};
+	int64_t added     = {};
+	int64_t done      = {};
+	int64_t scheduled = {};
+	bool locked       = {};
+} ticks = {};
+
+int64_t DOSBOX_GetTicksDone()
+{
+	return ticks.done;
+}
+
+void DOSBOX_SetTicksDone(const int64_t ticks_done)
+{
+	ticks.done = ticks_done;
+}
+
+void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
+{
+	ticks.scheduled = ticks_scheduled;
+}
 
 bool mono_cga = false;
 
@@ -142,9 +159,11 @@ void Null_Init([[maybe_unused]] Section *sec) {
 // forward declaration
 static void increase_ticks();
 
-static Bitu Normal_Loop() {
+static Bitu Normal_Loop()
+{
 	Bits ret;
-	while (1) {
+
+	while (true) {
 		if (PIC_RunQueue()) {
 			ret = (*cpudecoder)();
 			if (ret < 0) {
@@ -160,45 +179,51 @@ static Bitu Normal_Loop() {
 				}
 			}
 #if C_DEBUG
-			if (DEBUG_ExitLoop()) return 0;
+			if (DEBUG_ExitLoop()) {
+				return 0;
+			}
 #endif
 		} else {
-			if (!GFX_Events())
+			if (!GFX_Events()) {
 				return 0;
-			if (ticksRemain > 0) {
+			}
+			if (ticks.remain > 0) {
 				TIMER_AddTick();
-				ticksRemain--;
-			} else {increase_ticks();return 0;}
+				--ticks.remain;
+			} else {
+				increase_ticks();
+				return 0;
+			}
 		}
 	}
 }
 
 static void increase_ticks()
 {
-	// Make it return ticksRemain and set it in the function above to remove the
-    // global variable.
+	// Make it return ticks.remain and set it in the function above to
+	// remove the global variable.
 	ZoneScoped;
 
 	// For fast-forward mode
-	if (ticksLocked) {
-		ticksRemain = 5;
+	if (ticks.locked) {
+		ticks.remain = 5;
 
 		// Reset any auto cycle guessing for this frame
-		ticksLast      = GetTicks();
-		ticksAdded     = 0;
-		ticksDone      = 0;
-		ticksScheduled = 0;
+		ticks.last      = GetTicks();
+		ticks.added     = 0;
+		ticks.done      = 0;
+		ticks.scheduled = 0;
 		return;
 	}
 
 	const auto ticksNewUs = GetTicksUs();
 	const auto ticksNew   = ticksNewUs / 1000;
 
-	ticksScheduled += ticksAdded;
+	ticks.scheduled += ticks.added;
 
     // Lower should not be possible, only equal
-	if (ticksNew <= ticksLast) {
-		ticksAdded = 0;
+	if (ticksNew <= ticks.last) {
+		ticks.added = 0;
 
 		static int64_t cumulativeTimeSlept = 0;
 
@@ -209,22 +234,22 @@ static void increase_ticks()
 
 		cumulativeTimeSlept += timeslept;
 
-		// Update ticksDone with the total time spent sleeping
+		// Update ticks.done with the total time spent sleeping
 		if (cumulativeTimeSlept >= 1000) {
 			const auto cumulativeTicksSlept = cumulativeTimeSlept / 1000;
-			ticksDone -= cumulativeTicksSlept;
+			ticks.done -= cumulativeTicksSlept;
 			cumulativeTimeSlept %= 1000;
 		}
 
-		if (ticksDone < 0) {
-			ticksDone = 0;
+		if (ticks.done < 0) {
+			ticks.done = 0;
 		}
 		return; // 0
 
 		// If we do work this tick and sleep till the next tick, then
-		// ticksDone is decreased, despite the fact that work was done
+		// ticks.done is decreased, despite the fact that work was done
 		// as well in this tick. Maybe make it depend on an extra
-		// parameter. What do we know: ticksRemain = 0 (condition to
+		// parameter. What do we know: ticks.remain = 0 (condition to
 		// enter this function) ticksNew = time before sleeping
 
 		// Maybe keep track of sleeped time in this frame, and use
@@ -232,39 +257,39 @@ static void increase_ticks()
 		// there are frames that have both.)
 	}
 
-	// TicksNew > ticksLast
-	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
-	ticksLast   = ticksNew;
-	ticksDone += ticksRemain;
+	// ticksNew > ticks.last
+	ticks.remain = GetTicksDiff(ticksNew, ticks.last);
+	ticks.last   = ticksNew;
+	ticks.done += ticks.remain;
 
-	if (ticksRemain > 20) {
+	if (ticks.remain > 20) {
 #if 0
-		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
+		LOG(LOG_MISC,LOG_ERROR)("large remain %d", ticks.remain);
 #endif
-		ticksRemain = 20;
+		ticks.remain = 20;
 	}
 
-	ticksAdded = ticksRemain;
+	ticks.added = ticks.remain;
 
 	// Is the system in auto cycle guessing mode? If not, do nothing.
 	if (!CPU_CycleAutoAdjust) {
 		return;
 	}
 
-	if (ticksScheduled >= 100 || ticksDone >= 100 ||
-	    (ticksAdded > 15 && ticksScheduled >= 5)) {
-		if (ticksDone < 1) {
+	if (ticks.scheduled >= 100 || ticks.done >= 100 ||
+	    (ticks.added > 15 && ticks.scheduled >= 5)) {
+		if (ticks.done < 1) {
 		    // Protect against div by zero
-			ticksDone = 1;
+			ticks.done = 1;
 		}
 
 		// Ratio we are aiming for is 100% usage
 		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * 1024 / 100)) /
-		        ticksDone);
+		        (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
+		        ticks.done);
 
 		int32_t new_cmax = CPU_CycleMax;
-		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticksScheduled;
+		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticks.scheduled;
 
 		// Increase scope for logging
 		double ratioremoved = 0.0;
@@ -281,22 +306,22 @@ static void increase_ticks()
 				// locking as we don't scale down for very low
 				// ratios. High ratios might be the resul of
 				// timing resolution.
-				if (ticksScheduled >= 100 && ticksDone < 10 &&
+				if (ticks.scheduled >= 100 && ticks.done < 10 &&
 				    ratio > 16384) {
 					ratio = 16384;
 				}
 
 				// Limit the ratio even more when the cycles are
 				// already way above the realmode default.
-				if (ticksScheduled >= 100 && ticksDone < 10 &&
+				if (ticks.scheduled >= 100 && ticks.done < 10 &&
 				    ratio > 5120 && CPU_CycleMax > 50000) {
 					ratio = 5120;
 				}
 
 				// When downscaling multiple times in a row,
 				// ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 &&
-				    ticksScheduled <= 20 && ratio > 800) {
+				if (ticks.added > 15 && ticks.scheduled >= 5 &&
+				    ticks.scheduled <= 20 && ratio > 800) {
 					ratio = 800;
 				}
 
@@ -335,9 +360,9 @@ static void increase_ticks()
 		         CPU_CycleMax,
 		         new_cmax,
 		         ratio,
-		         ticksDone,
-		         ticksScheduled,
-		         ticksAdded,
+		         ticks.done,
+		         ticks.scheduled,
+		         ticks.added,
 		         ratioremoved);
 #endif
 
@@ -349,7 +374,7 @@ static void increase_ticks()
 			// last update has taken place are most likely caused by
 			// heavy load through a different application, the
 			// cycles adjusting is skipped as well.
-			if ((ratio > 120) || (ticksDone < 700)) {
+			if ((ratio > 120) || (ticks.done < 700)) {
 				CPU_CycleMax = new_cmax;
 
 				if (CPU_CycleLimit > 0) {
@@ -366,11 +391,11 @@ static void increase_ticks()
 
 		// Reset cycleguessing parameters.
 		CPU_IODelayRemoved = 0;
-		ticksDone          = 0;
-		ticksScheduled     = 0;
+		ticks.done         = 0;
+		ticks.scheduled    = 0;
 
-	} else if (ticksAdded > 15) {
-		// ticksAdded > 15 but ticksScheduled < 5, lower the cycles
+	} else if (ticks.added > 15) {
+		// ticks.added > 15 but ticks.scheduled < 5, lower the cycles
 		// but do not reset the scheduled/done ticks to take them into
 		// account during the next auto cycle adjustment.
 		CPU_CycleMax /= 3;
@@ -409,9 +434,11 @@ void DOSBOX_RunMachine()
 
 static void DOSBOX_UnlockSpeed( bool pressed ) {
 	static bool autoadjust = false;
+
 	if (pressed) {
 		LOG_MSG("Fast Forward ON");
-		ticksLocked = true;
+		ticks.locked = true;
+
 		if (CPU_CycleAutoAdjust) {
 			autoadjust = true;
 			CPU_CycleAutoAdjust = false;
@@ -420,7 +447,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 		}
 	} else {
 		LOG_MSG("Fast Forward OFF");
-		ticksLocked = false;
+		ticks.locked = false;
+
 		if (autoadjust) {
 			autoadjust = false;
 			CPU_CycleAutoAdjust = true;
@@ -476,10 +504,12 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 static void DOSBOX_RealInit(Section* sec)
 {
 	Section_prop* section = static_cast<Section_prop*>(sec);
-	/* Initialize some dosbox internals */
-	ticksRemain = 0;
-	ticksLast   = GetTicks();
-	ticksLocked = false;
+
+	// Initialize some dosbox internals
+	ticks.remain = 0;
+	ticks.last   = GetTicks();
+	ticks.locked = false;
+
 	DOSBOX_SetLoop(&Normal_Loop);
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");

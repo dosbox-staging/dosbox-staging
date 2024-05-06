@@ -2229,13 +2229,14 @@ MixerChannel::~MixerChannel()
 	}
 }
 
-extern bool ticksLocked;
 static inline bool is_mixer_irq_important()
 {
-	/* In some states correct timing of the irqs is more important than
-	 * non stuttering audo */
-	return (ticksLocked || CAPTURE_IsCapturingAudio() ||
-	        CAPTURE_IsCapturingVideo());
+	// TODO I'm removing this funny "important IRQ" business in my PR current
+	// in review; just making a comment here to trigger a conflict.
+	//
+	// We'll always do the accurate timing from now on, so what I'm removing
+	// is the dodgy "sloppy mode" which doesn't seem to improve anything...
+	return true;
 }
 
 static constexpr int calc_tickadd(const int freq)
