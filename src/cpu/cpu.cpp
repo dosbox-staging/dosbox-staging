@@ -2767,20 +2767,20 @@ void CPU_Reset_AutoAdjust(void)
 	DOSBOX_SetTicksScheduled(0);
 }
 
-class CPU final {
+class Cpu final {
 private:
-	static bool inited;
+	static bool initialised;
 
 public:
-	CPU(Section* configuration)
+	Cpu(Section* sec)
 	{
-		if (inited) {
-			Change_Config(configuration);
+		if (initialised) {
+			ChangeConfig(sec);
 			return;
 		}
-		//		Section_prop * section=static_cast<Section_prop
-		//*>(configuration);
-		inited  = true;
+
+		initialised = true;
+
 		reg_eax = 0;
 		reg_ebx = 0;
 		reg_ecx = 0;
@@ -2797,14 +2797,19 @@ public:
 		SegSet16(gs, 0);
 		SegSet16(ss, 0);
 
-		CPU_SetFlags(FLAG_IF, FMASK_ALL); // Enable interrupts
+		// Enable interrupts
+		CPU_SetFlags(FLAG_IF, FMASK_ALL);
 		cpu.cr0 = 0xffffffff;
-		CPU_SET_CRX(0, 0); // Initialize
+
+		// Initialise
+		CPU_SET_CRX(0, 0);
+
 		cpu.code.big      = false;
 		cpu.stack.mask    = 0xffff;
 		cpu.stack.notmask = 0xffff0000;
 		cpu.stack.big     = false;
 		cpu.trap_skip     = false;
+
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 
@@ -2812,14 +2817,16 @@ public:
 			cpu.drx[i] = 0;
 			cpu.trx[i] = 0;
 		}
+
 		if (CPU_ArchitectureType >= ArchitectureType::Pentium) {
 			cpu.drx[6] = 0xffff0ff0;
 		} else {
 			cpu.drx[6] = 0xffff1ff0;
 		}
+
 		cpu.drx[7] = 0x00000400;
 
-		/* Init the cpu cores */
+		// Init the CPU cores
 		CPU_Core_Normal_Init();
 		CPU_Core_Simple_Init();
 		CPU_Core_Full_Init();
@@ -2833,22 +2840,28 @@ public:
 		                  PRIMARY_MOD,
 		                  "cycledown",
 		                  "Dec Cycles");
+
 		MAPPER_AddHandler(CPU_CycleIncrease,
 		                  SDL_SCANCODE_F12,
 		                  PRIMARY_MOD,
 		                  "cycleup",
 		                  "Inc Cycles");
-		Change_Config(configuration);
-		CPU_JMP(false, 0, 0, 0); // Setup the first cpu core
+
+		ChangeConfig(sec);
+
+		// Setup the first cpu core
+		CPU_JMP(false, 0, 0, 0);
 	}
 
-	~CPU() = default;
+	~Cpu() = default;
 
-	bool Change_Config(Section* newconfig)
+	bool ChangeConfig(Section* sec)
 	{
-		Section_prop* section = static_cast<Section_prop*>(newconfig);
+		Section_prop* secprop = static_cast<Section_prop*>(sec);
 		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
-		// CPU_CycleLeft=0;//needed ?
+
+		// TODO needed ?
+		// CPU_CycleLeft=0;
 		CPU_Cycles = 0;
 
 		// Sets the value if the string in within the min and max values
@@ -2859,14 +2872,16 @@ public:
 			std::istringstream stream(str);
 			int v = 0;
 			stream >> v;
+
 			const bool within_min = (v >= min_value);
 			const bool within_max = (!max_value || v <= max_value);
+
 			if (within_min && within_max) {
 				value = v;
 			}
 		};
 
-		PropMultiVal* p  = section->GetMultiVal("cycles");
+		PropMultiVal* p  = secprop->GetMultiVal("cycles");
 		std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
@@ -2937,86 +2952,112 @@ public:
 			CPU_CycleAutoAdjust = false;
 		}
 
-		CPU_CycleUp   = section->Get_int("cycleup");
-		CPU_CycleDown = section->Get_int("cycledown");
-		std::string core(section->Get_string("core"));
+		CPU_CycleUp   = secprop->Get_int("cycleup");
+		CPU_CycleDown = secprop->Get_int("cycledown");
+
+		std::string core(secprop->Get_string("core"));
+
 		cpudecoder = &CPU_Core_Normal_Run;
+
 		if (core == "normal") {
 			cpudecoder = &CPU_Core_Normal_Run;
+
 		} else if (core == "simple") {
 			cpudecoder = &CPU_Core_Simple_Run;
+
 		} else if (core == "full") {
 			cpudecoder = &CPU_Core_Full_Run;
+
 		} else if (core == "auto") {
 			cpudecoder = &CPU_Core_Normal_Run;
-#if (C_DYNAMIC_X86)
+
+#if C_DYNAMIC_X86
 			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+
 		} else if (core == "dynamic") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(true);
+
 		} else if (core == "dynamic_nodhfpu") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
-#elif (C_DYNREC)
+#elif C_DYNREC
 			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+
 		} else if (core == "dynamic") {
 			cpudecoder = &CPU_Core_Dynrec_Run;
 #else
-
 #endif
 		}
 
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") ||
 		                            (core == "dynamic_nodhfpu"));
-#elif (C_DYNREC)
+#elif C_DYNREC
 		CPU_Core_Dynrec_Cache_Init(core == "dynamic");
 #endif
 
 		CPU_ArchitectureType = ArchitectureType::Mixed;
-		std::string cputype(section->Get_string("cputype"));
+
+		std::string cputype(secprop->Get_string("cputype"));
+
 		if (cputype == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
+
 		} else if (cputype == "386_fast") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
+
 		} else if (cputype == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
+
 			if (core == "normal") {
 				cpudecoder            = &CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 16;
+
 			} else if (core == "auto") {
 				cpudecoder            = &CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 16;
 				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
+
 		} else if (cputype == "386") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Slow;
+
 		} else if (cputype == "486") {
 			CPU_ArchitectureType = ArchitectureType::Intel486OldSlow;
+
 		} else if (cputype == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
+
 			if (core == "normal") {
 				cpudecoder            = &CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 32;
+
 			} else if (core == "auto") {
 				cpudecoder            = &CPU_Core_Prefetch_Run;
 				CPU_PrefetchQueueSize = 32;
 				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
+
 		} else if (cputype == "pentium") {
 			CPU_ArchitectureType = ArchitectureType::Pentium;
+
 		} else if (cputype == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
 		}
 
 		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
 			CPU_extflags_toggle = (FLAG_ID | FLAG_AC);
+
 		} else if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
 			CPU_extflags_toggle = (FLAG_AC);
+
 		} else {
 			CPU_extflags_toggle = 0;
 		}
@@ -3030,6 +3071,7 @@ public:
 		if (CPU_CycleDown <= 0) {
 			CPU_CycleDown = 20;
 		}
+
 		if (CPU_CycleAutoAdjust) {
 			GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 		} else {
@@ -3040,7 +3082,7 @@ public:
 	}
 };
 
-static CPU* test;
+static std::unique_ptr<Cpu> cpu_instance = nullptr;
 
 void CPU_ShutDown([[maybe_unused]] Section* sec)
 {
@@ -3049,18 +3091,16 @@ void CPU_ShutDown([[maybe_unused]] Section* sec)
 #elif (C_DYNREC)
 	CPU_Core_Dynrec_Cache_Close();
 #endif
-	delete test;
 }
 
 void CPU_Init(Section* sec)
 {
 	assert(sec);
-
-	test = new (std::nothrow) CPU(sec);
+	cpu_instance = std::make_unique<Cpu>(sec);
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
 }
 
-// initialize static members
-bool CPU::inited = false;
+// Initialise static members
+bool Cpu::initialised = false;
