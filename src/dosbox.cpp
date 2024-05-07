@@ -42,6 +42,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "memory.h"
 #include "midi.h"
 #include "mixer.h"
@@ -292,11 +293,10 @@ static void increase_ticks()
 		}
 
 		// Ratio we are aiming for is 100% usage
-		int32_t ratio = static_cast<int32_t>(
-		        (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
-		        ticks.done);
+		auto ratio = (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
+		             ticks.done;
 
-		int32_t new_cycle_max = CPU_CycleMax;
+		auto new_cycle_max = CPU_CycleMax;
 		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticks.scheduled;
 
 		// Increase scope for logging
@@ -310,11 +310,13 @@ static void increase_ticks()
 		if (cproc > 0) {
 			// Ignore the cycles added due to the IO delay code in
 			// order to have smoother auto cycle adjustments.
-			ratio_removed = (double)CPU_IODelayRemoved / (double)cproc;
+			ratio_removed = static_cast<double>(CPU_IODelayRemoved) /
+			                static_cast<double>(cproc);
 
 			if (ratio_removed < 1.0) {
 				double ratio_not_removed = 1 - ratio_removed;
-				ratio = (int32_t)((double)ratio * ratio_not_removed);
+				ratio = ifloor(static_cast<double>(ratio) *
+				               ratio_not_removed);
 
 				// Don't allow very high ratios; they can cause
 				// locking as we don't scale down for very low
@@ -349,8 +351,7 @@ static void increase_ticks()
 					            1024.0 / (static_cast<double>(
 					                             ratio)));
 
-					new_cycle_max = 1 + static_cast<int32_t>(
-					                            CPU_CycleMax * r);
+					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
 				} else {
 					int64_t ratio_with_removed =
 					        (int64_t)((((double)ratio - 1024.0) *
@@ -405,7 +406,7 @@ static void increase_ticks()
 			}
 		}
 
-		// Reset cycleguessing parameters.
+		// Reset cycle guessing parameters.
 		CPU_IODelayRemoved = 0;
 		ticks.done         = 0;
 		ticks.scheduled    = 0;

@@ -56,12 +56,12 @@ enum class ArchitectureType {
 };
 
 /* CPU Cycle Timing */
-extern int32_t CPU_Cycles;
-extern int32_t CPU_CycleLeft;
-extern int32_t CPU_CycleMax;
-extern int32_t CPU_OldCycleMax;
-extern int32_t CPU_CyclePercUsed;
-extern int32_t CPU_CycleLimit;
+extern int CPU_Cycles;
+extern int CPU_CycleLeft;
+extern int CPU_CycleMax;
+extern int CPU_OldCycleMax;
+extern int CPU_CyclePercUsed;
+extern int CPU_CycleLimit;
 extern int64_t CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
