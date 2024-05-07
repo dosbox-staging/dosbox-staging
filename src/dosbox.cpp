@@ -216,50 +216,56 @@ static void increase_ticks()
 		return;
 	}
 
-	const auto ticksNewUs = GetTicksUs();
-	const auto ticksNew   = ticksNewUs / 1000;
+	constexpr auto MicrosInMillisecond = 1000;
+
+	const auto ticks_new_us = GetTicksUs();
+	const auto ticks_new    = ticks_new_us / MicrosInMillisecond;
 
 	ticks.scheduled += ticks.added;
 
-    // Lower should not be possible, only equal
-	if (ticksNew <= ticks.last) {
+	// Lower should not be possible, only equal
+	if (ticks_new <= ticks.last) {
 		ticks.added = 0;
 
-		static int64_t cumulativeTimeSlept = 0;
+		static int64_t cumulative_time_slept_us = 0;
 
-		constexpr auto sleepDuration = std::chrono::microseconds(1000);
-		std::this_thread::sleep_for(sleepDuration);
+		constexpr auto sleep_duration = std::chrono::microseconds(1000);
+		std::this_thread::sleep_for(sleep_duration);
 
-		const auto timeslept = GetTicksUsSince(ticksNewUs);
-
-		cumulativeTimeSlept += timeslept;
+		const auto time_slept_us = GetTicksUsSince(ticks_new_us);
+		cumulative_time_slept_us += time_slept_us;
 
 		// Update ticks.done with the total time spent sleeping
-		if (cumulativeTimeSlept >= 1000) {
-			const auto cumulativeTicksSlept = cumulativeTimeSlept / 1000;
-			ticks.done -= cumulativeTicksSlept;
-			cumulativeTimeSlept %= 1000;
+		if (cumulative_time_slept_us >= MicrosInMillisecond) {
+			// 1 tick == 1 millisecond
+			const auto cumulative_ticks_slept = cumulative_time_slept_us /
+			                                    MicrosInMillisecond;
+			ticks.done -= cumulative_ticks_slept;
+
+			// Keep the fractional microseconds part
+			cumulative_time_slept_us %= MicrosInMillisecond;
 		}
 
 		if (ticks.done < 0) {
 			ticks.done = 0;
 		}
-		return; // 0
 
 		// If we do work this tick and sleep till the next tick, then
 		// ticks.done is decreased, despite the fact that work was done
 		// as well in this tick. Maybe make it depend on an extra
 		// parameter. What do we know: ticks.remain = 0 (condition to
-		// enter this function) ticksNew = time before sleeping
+		// enter this function) ticks_new = time before sleeping
 
-		// Maybe keep track of sleeped time in this frame, and use
-		// sleeped and done as indicators (and take care of the fact
-		// there are frames that have both.)
+		// Maybe keep track of slept time in this frame, and use slept
+		// and done as indicators, and take care of the fact there are
+		// frames that have both.
+		
+		return;
 	}
 
-	// ticksNew > ticks.last
-	ticks.remain = GetTicksDiff(ticksNew, ticks.last);
-	ticks.last   = ticksNew;
+	// ticks_new > ticks.last
+	ticks.remain = GetTicksDiff(ticks_new, ticks.last);
+	ticks.last   = ticks_new;
 	ticks.done += ticks.remain;
 
 	if (ticks.remain > 20) {
@@ -279,7 +285,7 @@ static void increase_ticks()
 	if (ticks.scheduled >= 100 || ticks.done >= 100 ||
 	    (ticks.added > 15 && ticks.scheduled >= 5)) {
 		if (ticks.done < 1) {
-		    // Protect against div by zero
+			// Protect against division by zero.
 			ticks.done = 1;
 		}
 
@@ -288,23 +294,24 @@ static void increase_ticks()
 		        (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
 		        ticks.done);
 
-		int32_t new_cmax = CPU_CycleMax;
+		int32_t new_cycle_max = CPU_CycleMax;
 		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticks.scheduled;
 
 		// Increase scope for logging
-		double ratioremoved = 0.0;
+		double ratio_removed = 0.0;
 
 		if (cproc > 0) {
 			// Ignore the cycles added due to the IO delay code in
 			// order to have smoother auto cycle adjustments.
-			ratioremoved = (double)CPU_IODelayRemoved / (double)cproc;
-			if (ratioremoved < 1.0) {
-				double ratio_not_removed = 1 - ratioremoved;
+			ratio_removed = (double)CPU_IODelayRemoved / (double)cproc;
+
+			if (ratio_removed < 1.0) {
+				double ratio_not_removed = 1 - ratio_removed;
 				ratio = (int32_t)((double)ratio * ratio_not_removed);
 
 				// Don't allow very high ratios; they can cause
 				// locking as we don't scale down for very low
-				// ratios. High ratios might be the resul of
+				// ratios. High ratios might be the result of
 				// timing resolution.
 				if (ticks.scheduled >= 100 && ticks.done < 10 &&
 				    ratio > 16384) {
@@ -326,15 +333,16 @@ static void increase_ticks()
 				}
 
 				if (ratio <= 1024) {
-					// Uncommenting the below line restores the old formula:
-					// ratio_not_removed = 1.0;
+					// Uncommenting the below line restores
+					// the old formula: ratio_not_removed
+					// = 1.0;
 
 					double r = (1.0 + ratio_not_removed) /
 					           (ratio_not_removed +
 					            1024.0 / (static_cast<double>(
 					                             ratio)));
-					new_cmax = 1 + static_cast<int32_t>(
-					                       CPU_CycleMax * r);
+					new_cycle_max = 1 + static_cast<int32_t>(
+					                            CPU_CycleMax * r);
 				} else {
 					int64_t ratio_with_removed =
 					        (int64_t)((((double)ratio - 1024.0) *
@@ -344,26 +352,26 @@ static void increase_ticks()
 					int64_t cmax_scaled = (int64_t)CPU_CycleMax *
 					                      ratio_with_removed;
 
-					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) +
-					                     cmax_scaled /
-					                             (int64_t)2048);
+					new_cycle_max =
+					        (int32_t)(1 + (CPU_CycleMax >> 1) +
+					                  cmax_scaled / (int64_t)2048);
 				}
 			}
 		}
 
-		if (new_cmax < CPU_CYCLES_LOWER_LIMIT) {
-			new_cmax = CPU_CYCLES_LOWER_LIMIT;
+		if (new_cycle_max < CPU_CYCLES_LOWER_LIMIT) {
+			new_cycle_max = CPU_CYCLES_LOWER_LIMIT;
 		}
 
 #if 0
 		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
 		         CPU_CycleMax,
-		         new_cmax,
+		         new_cycle_max,
 		         ratio,
 		         ticks.done,
 		         ticks.scheduled,
 		         ticks.added,
-		         ratioremoved);
+		         ratio_removed);
 #endif
 
 		// Ratios below 1% are considered to be dropouts due to
@@ -375,16 +383,16 @@ static void increase_ticks()
 			// heavy load through a different application, the
 			// cycles adjusting is skipped as well.
 			if ((ratio > 120) || (ticks.done < 700)) {
-				CPU_CycleMax = new_cmax;
+				CPU_CycleMax = new_cycle_max;
 
 				if (CPU_CycleLimit > 0) {
 					if (CPU_CycleMax > CPU_CycleLimit) {
 						CPU_CycleMax = CPU_CycleLimit;
 					}
-				} else if (CPU_CycleMax > 2000000) {
-					// Hardcoded limit if the limit wasn't explicitly
-					// specified.
-					CPU_CycleMax = 2000000;
+				} else if (CPU_CycleMax > 2'000'000) {
+					// Hardcoded limit if the limit wasn't
+					// explicitly specified.
+					CPU_CycleMax = 2'000'000;
 				}
 			}
 		}
