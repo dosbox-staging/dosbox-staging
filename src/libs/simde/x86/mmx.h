@@ -1,5 +1,5 @@
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/x86/mmx.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -31,7 +31,7 @@
 #define SIMDE_X86_MMX_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-common.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -58,13 +58,14 @@
  * Copyright:
  *   2017-2020 Evan Nemerson <evan@nemerson.com>
  *   2023      Yi-Yen Chung <eric681@andestech.com> (Copyright owned by Andes Technology)
+ *   2023      Ju-Hung Li <jhlee@pllab.cs.nthu.edu.tw> (Copyright owned by NTHU pllab)
  */
 
 #if !defined(SIMDE_COMMON_H)
 #define SIMDE_COMMON_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/hedley.h :: */
 /* Hedley - https://nemequ.github.io/hedley
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -252,6 +253,7 @@
 #  undef HEDLEY_EMSCRIPTEN_VERSION
 #endif
 #if defined(__EMSCRIPTEN__)
+#  include <emscripten.h>
 #  define HEDLEY_EMSCRIPTEN_VERSION HEDLEY_VERSION_ENCODE(__EMSCRIPTEN_major__, __EMSCRIPTEN_minor__, __EMSCRIPTEN_tiny__)
 #endif
 
@@ -2114,7 +2116,7 @@ HEDLEY_DIAGNOSTIC_POP
 
 #define SIMDE_VERSION_MAJOR 0
 #define SIMDE_VERSION_MINOR 8
-#define SIMDE_VERSION_MICRO 0
+#define SIMDE_VERSION_MICRO 2
 #define SIMDE_VERSION HEDLEY_VERSION_ENCODE(SIMDE_VERSION_MAJOR, SIMDE_VERSION_MINOR, SIMDE_VERSION_MICRO)
 // Also update meson.build in the root directory of the repository
 
@@ -2122,7 +2124,7 @@ HEDLEY_DIAGNOSTIC_POP
 #include <stdint.h>
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-detect-clang.h :: */
 /* Detect Clang Version
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -2186,7 +2188,11 @@ HEDLEY_DIAGNOSTIC_POP
  */
 
 #if defined(__clang__) && !defined(SIMDE_DETECT_CLANG_VERSION)
-#  if __has_attribute(unsafe_buffer_usage)  // no new warnings in 17.0
+#  if __has_warning("-Wmissing-designated-field-initializers")
+#    define SIMDE_DETECT_CLANG_VERSION 190000
+#  elif __has_warning("-Woverriding-option")
+#    define SIMDE_DETECT_CLANG_VERSION 180000
+#  elif __has_attribute(unsafe_buffer_usage)  // no new warnings in 17.0
 #    define SIMDE_DETECT_CLANG_VERSION 170000
 #  elif __has_attribute(nouwtable)  // no new warnings in 16.0
 #    define SIMDE_DETECT_CLANG_VERSION 160000
@@ -2253,7 +2259,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif /* !defined(SIMDE_DETECT_CLANG_H) */
 /* :: End simde/simde-detect-clang.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-arch.h :: */
 /* Architecture detection
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -2300,7 +2306,7 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_ARCH_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* Alpha
    <https://en.wikipedia.org/wiki/DEC_Alpha> */
@@ -2379,16 +2385,49 @@ HEDLEY_DIAGNOSTIC_POP
 #    define SIMDE_ARCH_ARM_NEON SIMDE_ARCH_ARM
 #  endif
 #endif
-#if defined(__ARM_FEATURE_SVE)
-#  define SIMDE_ARCH_ARM_SVE
+#if defined(__ARM_FEATURE_AES) && __ARM_FEATURE_AES
+#  define SIMDE_ARCH_ARM_AES
+#endif
+#if defined(__ARM_FEATURE_COMPLEX) && __ARM_FEATURE_COMPLEX
+#  define SIMDE_ARCH_ARM_COMPLEX
+#endif
+#if defined(__ARM_FEATURE_CRYPTO) && __ARM_FEATURE_CRYPTO
+#  define SIMDE_ARCH_ARM_CRYPTO
+#endif
+#if defined(__ARM_FEATURE_DOTPROD) && __ARM_FEATURE_DOTPROD
+#  define SIMDE_ARCH_ARM_DOTPROD
 #endif
 #if defined(__ARM_FEATURE_FMA) && __ARM_FEATURE_FMA
 #  define SIMDE_ARCH_ARM_FMA
 #endif
-#if defined(__ARM_FEATURE_CRYPTO)
-#  define SIMDE_ARCH_ARM_CRYPTO
+#if defined(__ARM_FEATURE_FP16_FML) && __ARM_FEATURE_FP16_FML
+#  define SIMDE_ARCH_ARM_FP16_FML
 #endif
-#if defined(__ARM_FEATURE_QRDMX)
+#if defined(__ARM_FEATURE_FRINT) && __ARM_FEATURE_FRINT
+#  define SIMDE_ARCH_ARM_FRINT
+#endif
+#if defined(__ARM_FEATURE_MATMUL_INT8) && __ARM_FEATURE_MATMUL_INT8
+#  define SIMDE_ARCH_ARM_MATMUL_INT8
+#endif
+#if defined(__ARM_FEATURE_SHA2) && __ARM_FEATURE_SHA2 && !defined(__APPLE_CC__)
+#  define SIMDE_ARCH_ARM_SHA2
+#endif
+#if defined(__ARM_FEATURE_SHA3) && __ARM_FEATURE_SHA3
+#  define SIMDE_ARCH_ARM_SHA3
+#endif
+#if defined(__ARM_FEATURE_SHA512) && __ARM_FEATURE_SHA512
+#  define SIMDE_ARCH_ARM_SHA512
+#endif
+#if defined(__ARM_FEATURE_SM3) && __ARM_FEATURE_SM3
+#  define SIMDE_ARCH_ARM_SM3
+#endif
+#if defined(__ARM_FEATURE_SM4) && __ARM_FEATURE_SM4
+#  define SIMDE_ARCH_ARM_SM4
+#endif
+#if defined(__ARM_FEATURE_SVE) && __ARM_FEATURE_SVE
+#  define SIMDE_ARCH_ARM_SVE
+#endif
+#if defined(__ARM_FEATURE_QRDMX) && __ARM_FEATURE_QRDMX
 #  define SIMDE_ARCH_ARM_QRDMX
 #endif
 
@@ -2737,8 +2776,40 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_ARCH_POWER_ALTIVEC_CHECK(version) (0)
 #endif
 
-#if defined(__riscv) && __riscv_xlen==64
-#  define SIMDE_ARCH_RISCV64
+/* RISC-V
+   <https://en.wikipedia.org/wiki/RISC-V> */
+#if defined(__riscv) || defined(__riscv__)
+#  if __riscv_xlen == 64
+#     define SIMDE_ARCH_RISCV64
+#  elif __riscv_xlen == 32
+#     define SIMDE_ARCH_RISCV32
+#  endif
+#endif
+
+/* RISC-V SIMD ISA extensions */
+#if defined(__riscv_zve32x)
+#  define SIMDE_ARCH_RISCV_ZVE32X 1
+#endif
+#if defined(__riscv_zve32f)
+#  define SIMDE_ARCH_RISCV_ZVE32F 1
+#endif
+#if defined(__riscv_zve64x)
+#  define SIMDE_ARCH_RISCV_ZVE64X 1
+#endif
+#if defined(__riscv_zve64f)
+#  define SIMDE_ARCH_RISCV_ZVE64F 1
+#endif
+#if defined(__riscv_zve64d)
+#  define SIMDE_ARCH_RISCV_ZVE64D 1
+#endif
+#if defined(__riscv_v)
+#  define SIMDE_ARCH_RISCV_V 1
+#endif
+#if defined(__riscv_zvfh)
+#  define SIMDE_ARCH_RISCV_ZVFH 1
+#endif
+#if defined(__riscv_zvfhmin)
+#  define SIMDE_ARCH_RISCV_ZVFHMIN 1
 #endif
 
 /* SPARC
@@ -2880,7 +2951,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif /* !defined(SIMDE_ARCH_H) */
 /* :: End simde/simde-arch.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-features.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -2906,6 +2977,7 @@ HEDLEY_DIAGNOSTIC_POP
  *
  * Copyright:
  *   2020      Evan Nemerson <evan@nemerson.com>
+ *   2023      Ju-Hung Li <jhlee@pllab.cs.nthu.edu.tw> (Copyright owned by NTHU pllab)
  */
 
 /* simde-arch.h is used to determine which features are available according
@@ -2916,9 +2988,9 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_FEATURES_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-diagnostic.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -2970,11 +3042,11 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_DIAGNOSTIC_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* This is only to help us implement functions like _mm_undefined_ps. */
 #if defined(SIMDE_DIAGNOSTIC_DISABLE_UNINITIALIZED_)
@@ -3197,7 +3269,7 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_DIAGNOSTIC_DISABLE_CAST_FUNCTION_TYPE_
 #endif
 
-/* clang will emit this warning when we use C99 extensions whan not in
+/* clang will emit this warning when we use C99 extensions when not in
  * C99 mode, even though it does support this.  In such cases we check
  * the compiler and version first, so we know it's not a problem. */
 #if HEDLEY_HAS_WARNING("-Wc99-extensions")
@@ -3725,6 +3797,15 @@ HEDLEY_DIAGNOSTIC_POP
   #endif
 #endif
 
+#if !defined(SIMDE_RISCV_V_NATIVE) && !defined(SIMDE_RISCV_V_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
+  #if defined(SIMDE_ARCH_RISCV_V)
+    #define SIMDE_RISCV_V_NATIVE
+  #endif
+#endif
+#if defined(SIMDE_RISCV_V_NATIVE)
+  #include <riscv_vector.h>
+#endif
+
 #if !defined(SIMDE_WASM_SIMD128_NATIVE) && !defined(SIMDE_WASM_SIMD128_NO_NATIVE) && !defined(SIMDE_NO_NATIVE)
   #if defined(SIMDE_ARCH_WASM_SIMD128)
     #define SIMDE_WASM_SIMD128_NATIVE
@@ -3896,6 +3977,9 @@ HEDLEY_DIAGNOSTIC_POP
     #define SIMDE_NATURAL_FLOAT_VECTOR_SIZE (128)
     #define SIMDE_NATURAL_INT_VECTOR_SIZE (64)
     #define SIMDE_NATURAL_DOUBLE_VECTOR_SIZE (0)
+  #elif defined(SIMDE_RISCV_V_NATIVE) && defined(__riscv_v_fixed_vlen)
+        //FIXME : SIMDE_NATURAL_VECTOR_SIZE == __riscv_v_fixed_vlen
+        #define SIMDE_NATURAL_VECTOR_SIZE (128)
   #endif
 
   #if !defined(SIMDE_NATURAL_VECTOR_SIZE)
@@ -4037,6 +4121,10 @@ HEDLEY_DIAGNOSTIC_POP
     #define SIMDE_ARM_SVE_ENABLE_NATIVE_ALIASES
   #endif
 
+  #if !defined(SIMDE_RISCV_V_NATIVE)
+    #define SIMDE_RISCV_V_ENABLE_NATIVE_ALIASES
+  #endif
+
   #if !defined(SIMDE_MIPS_MSA_NATIVE)
     #define SIMDE_MIPS_MSA_ENABLE_NATIVE_ALIASES
   #endif
@@ -4099,9 +4187,9 @@ HEDLEY_DIAGNOSTIC_POP
 #endif /* !defined(SIMDE_FEATURES_H) */
 /* :: End simde/simde-features.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-math.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -4139,9 +4227,9 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_MATH_H 1
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 #include <stdint.h>
 #if defined(SIMDE_ARM_NEON_A64V8_NATIVE)
@@ -5373,7 +5461,7 @@ simde_math_fpclass(double v, const int imm8) {
 
 #if !defined(simde_math_roundeven)
   #if \
-     (!defined(HEDLEY_EMSCRIPTEN_VERSION) && HEDLEY_HAS_BUILTIN(__builtin_roundeven)) || \
+     ((!defined(HEDLEY_EMSCRIPTEN_VERSION) || HEDLEY_EMSCRIPTEN_VERSION_CHECK(3, 1, 43)) && HEDLEY_HAS_BUILTIN(__builtin_roundeven)) || \
       HEDLEY_GCC_VERSION_CHECK(10,0,0)
     #define simde_math_roundeven(v) __builtin_roundeven(v)
   #elif defined(simde_math_round) && defined(simde_math_fabs)
@@ -5393,7 +5481,7 @@ simde_math_fpclass(double v, const int imm8) {
 
 #if !defined(simde_math_roundevenf)
   #if \
-     (!defined(HEDLEY_EMSCRIPTEN_VERSION) && HEDLEY_HAS_BUILTIN(__builtin_roundevenf)) || \
+     ((!defined(HEDLEY_EMSCRIPTEN_VERSION) || HEDLEY_EMSCRIPTEN_VERSION_CHECK(3, 1, 43)) && HEDLEY_HAS_BUILTIN(__builtin_roundevenf)) || \
       HEDLEY_GCC_VERSION_CHECK(10,0,0)
     #define simde_math_roundevenf(v) __builtin_roundevenf(v)
   #elif defined(simde_math_roundf) && defined(simde_math_fabsf)
@@ -6172,7 +6260,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif /* !defined(SIMDE_MATH_H) */
 /* :: End simde/simde-math.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-constify.h :: */
 /* SPDX-License-Identifier: MIT
  *
@@ -6227,7 +6315,7 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_CONSTIFY_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 HEDLEY_DIAGNOSTIC_PUSH
 SIMDE_DIAGNOSTIC_DISABLE_VARIADIC_MACROS_
@@ -6574,7 +6662,7 @@ HEDLEY_DIAGNOSTIC_POP
 #endif
 /* :: End simde/simde-constify.h :: */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/simde-align.h :: */
 /* Alignment
  * Created by Evan Nemerson <evan@nemerson.com>
@@ -6589,7 +6677,7 @@ HEDLEY_DIAGNOSTIC_POP
  **********************************************************************
  *
  * This is portability layer which should help iron out some
- * differences across various compilers, as well as various verisons of
+ * differences across various compilers, as well as various versions of
  * C and C++.
  *
  * It was originally developed for SIMD Everywhere
@@ -6631,10 +6719,10 @@ HEDLEY_DIAGNOSTIC_POP
 #define SIMDE_ALIGN_H
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 
 /* I know this seems a little silly, but some non-hosted compilers
- * don't have stddef.h, so we try to accomodate them. */
+ * don't have stddef.h, so we try to accommodate them. */
 #if !defined(SIMDE_ALIGN_SIZE_T_)
   #if defined(__SIZE_TYPE__)
     #define SIMDE_ALIGN_SIZE_T_ __SIZE_TYPE__
@@ -6984,7 +7072,7 @@ HEDLEY_DIAGNOSTIC_POP
 
 /* SIMDE_ALIGN_ASSUME_LIKE(Pointer, Type)
  *
- * Tihs is similar to SIMDE_ALIGN_ASSUME_TO, except that it takes a
+ * This is similar to SIMDE_ALIGN_ASSUME_TO, except that it takes a
  * type instead of a numeric value. */
 #if defined(SIMDE_ALIGN_OF) && defined(SIMDE_ALIGN_ASSUME_TO)
   #define SIMDE_ALIGN_ASSUME_LIKE(Pointer, Type) SIMDE_ALIGN_ASSUME_TO(Pointer, SIMDE_ALIGN_OF(Type))
@@ -7829,7 +7917,7 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_float64_as_uint64,      uint64_t, simde_
 SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64_t)
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/check.h :: */
 /* Check (assertions)
  * Portable Snippets - https://github.com/nemequ/portable-snippets
@@ -7851,9 +7939,9 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
 #endif
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 #include <stdint.h>
 
 #if !defined(_WIN32)
@@ -7894,7 +7982,7 @@ SIMDE_DEFINE_CONVERSION_FUNCTION_(simde_uint64_as_float64, simde_float64, uint64
 #  endif
 
 /* AUTOMATICALLY GENERATED FILE, DO NOT MODIFY */
-/* 589c7d599ae2213823acc4334a3ae8ef8caefe18 */
+/* 71fd833d9666141edcd1d3c109a80e228303d8d7 */
 /* :: Begin simde/debug-trap.h :: */
 /* Debugging assertions and traps
  * Portable Snippets - https://github.com/nemequ/portable-snippets
@@ -8387,17 +8475,23 @@ HEDLEY_DIAGNOSTIC_POP
 #      define SIMDE_BUG_GCC_95399
 #      define SIMDE_BUG_GCC_95471
 #      define SIMDE_BUG_GCC_111609
-#    elif defined(SIMDE_ARCH_POWER)
+#      if SIMDE_ARCH_ARM_CHECK(8,0)
+#        define SIMDE_BUG_GCC_113065
+#      endif
+#    endif
+#    if defined(SIMDE_ARCH_POWER)
 #      define SIMDE_BUG_GCC_95227
 #      define SIMDE_BUG_GCC_95782
 #      if !HEDLEY_GCC_VERSION_CHECK(12,0,0)
 #        define SIMDE_BUG_VEC_CPSGN_REVERSED_ARGS
 #      endif
-#    elif defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)
+#    endif
+#    if defined(SIMDE_ARCH_X86) || defined(SIMDE_ARCH_AMD64)
 #      if !HEDLEY_GCC_VERSION_CHECK(10,2,0) && !defined(__OPTIMIZE__)
 #        define SIMDE_BUG_GCC_96174
 #      endif
-#    elif defined(SIMDE_ARCH_ZARCH)
+#    endif
+#    if defined(SIMDE_ARCH_ZARCH)
 #      define SIMDE_BUG_GCC_95782
 #      if HEDLEY_GCC_VERSION_CHECK(10,0,0)
 #        define SIMDE_BUG_GCC_101614
@@ -8538,6 +8632,34 @@ HEDLEY_DIAGNOSTIC_POP
   #define SIMDE_CAST_VECTOR_SHIFT_COUNT(width, value) HEDLEY_STATIC_CAST(uint##width##_t, (value))
 #else
   #define SIMDE_CAST_VECTOR_SHIFT_COUNT(width, value) HEDLEY_STATIC_CAST(int##width##_t, (value))
+#endif
+
+/* Initial support for RISCV V extensions based on ZVE64D. */
+#if defined(SIMDE_ARCH_RISCV_ZVE64D) && SIMDE_NATURAL_VECTOR_SIZE >= 64
+  #define RVV_FIXED_TYPE_DEF(name, lmul) \
+    typedef vint8##name##_t  fixed_vint8##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vint16##name##_t fixed_vint16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vint32##name##_t fixed_vint32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint8##name##_t fixed_vuint8##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint16##name##_t fixed_vuint16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint32##name##_t fixed_vuint32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vfloat32##name##_t fixed_vfloat32##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF(mf2, 1/2);
+    RVV_FIXED_TYPE_DEF(m1, 1);
+    RVV_FIXED_TYPE_DEF(m2, 2);
+  #define RVV_FIXED_TYPE_DEF_64B(name, lmul) \
+    typedef vint64##name##_t fixed_vint64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vuint64##name##_t fixed_vuint64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul))); \
+    typedef vfloat64##name##_t fixed_vfloat64##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF_64B(m1, 1);
+    RVV_FIXED_TYPE_DEF_64B(m2, 2);
+  #if defined(SIMDE_ARCH_RISCV_ZVFH)
+    #define RVV_FIXED_TYPE_DEF_16F(name, lmul) \
+      typedef vfloat16##name##_t fixed_vfloat16##name##_t __attribute__((riscv_rvv_vector_bits(__riscv_v_fixed_vlen * lmul)));
+    RVV_FIXED_TYPE_DEF_16F(mf2, 1/2);
+    RVV_FIXED_TYPE_DEF_16F(m1, 1);
+    RVV_FIXED_TYPE_DEF_16F(m2, 2);
+  #endif
 #endif
 
 /* SIMDE_DIAGNOSTIC_DISABLE_USED_BUT_MARKED_UNUSED_ */
