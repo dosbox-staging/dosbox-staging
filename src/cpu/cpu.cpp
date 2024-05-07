@@ -2300,19 +2300,19 @@ void CPU_Reset_AutoAdjust(void)
 	DOSBOX_SetTicksScheduled(0);
 }
 
-class CPU final {
+class Cpu final {
 private:
-	static bool inited;
+	static bool initialised;
 
 public:
-	CPU(Section* configuration)
+	Cpu(Section* sec)
 	{
-		if (inited) {
-			Change_Config(configuration);
+		if (initialised) {
+			Configure(sec);
 			return;
 		}
 
-		inited  = true;
+		initialised = true;
 
 		reg_eax = 0;
 		reg_ebx = 0;
@@ -2334,13 +2334,15 @@ public:
 		CPU_SetFlags(FLAG_IF, FMASK_ALL);
 		cpu.cr0 = 0xffffffff;
 
-		// Initialize
+		// Initialise
 		CPU_SET_CRX(0, 0);
+
 		cpu.code.big      = false;
 		cpu.stack.mask    = 0xffff;
 		cpu.stack.notmask = 0xffff0000;
 		cpu.stack.big     = false;
 		cpu.trap_skip     = false;
+
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 
@@ -2354,9 +2356,10 @@ public:
 		} else {
 			cpu.drx[6] = 0xffff1ff0;
 		}
+
 		cpu.drx[7] = 0x00000400;
 
-		// Init the cpu cores
+		// Init the CPU cores
 		CPU_Core_Normal_Init();
 		CPU_Core_Simple_Init();
 		CPU_Core_Full_Init();
@@ -2377,20 +2380,20 @@ public:
 		                  "cycleup",
 		                  "Inc Cycles");
 
-		Change_Config(configuration);
+		Configure(sec);
 
-		// Setup the first cpu core
+		// Set up the first CPU core
 		CPU_JMP(false, 0, 0, 0);
 	}
 
-	~CPU() = default;
+	~Cpu() = default;
 
-	bool Change_Config(Section* newconfig)
+	bool Configure(Section* sec)
 	{
-		Section_prop* section = static_cast<Section_prop*>(newconfig);
+		Section_prop* secprop = static_cast<Section_prop*>(sec);
 		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
 
-		//needed ?
+		// TODO needed ?
 		// CPU_CycleLeft=0;
 		CPU_Cycles = 0;
 
@@ -2411,13 +2414,13 @@ public:
 			}
 		};
 
-		PropMultiVal* p  = section->GetMultiVal("cycles");
+		PropMultiVal* p  = secprop->GetMultiVal("cycles");
 		std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
 
-		constexpr auto min_percent = 0;
-		constexpr auto max_percent = 100;
+		constexpr auto MinPercent = 0;
+		constexpr auto MaxPercent = 100;
 
 		if (type == "max") {
 			CPU_CycleMax        = 0;
@@ -2432,8 +2435,8 @@ public:
 						        str.pop_back();
 						        set_if_in_range(str,
 						                        CPU_CyclePercUsed,
-						                        min_percent,
-						                        max_percent);
+						                        MinPercent,
+						                        MaxPercent);
 					} else if (str == "limit") {
 						        ++cmdnum;
 						        if (cmd.FindCommand(cmdnum,
@@ -2461,8 +2464,8 @@ public:
 							        set_if_in_range(
 							                str,
 							                CPU_CyclePercUsed,
-							                min_percent,
-							                max_percent);
+							                MinPercent,
+							                MaxPercent);
 
 						        } else if (str == "limit") {
 							        ++cmdnum;
@@ -2489,10 +2492,10 @@ public:
 			CPU_CycleAutoAdjust = false;
 		}
 
-		CPU_CycleUp   = section->Get_int("cycleup");
-		CPU_CycleDown = section->Get_int("cycledown");
+		CPU_CycleUp   = secprop->Get_int("cycleup");
+		CPU_CycleDown = secprop->Get_int("cycledown");
 
-		std::string core(section->Get_string("core"));
+		std::string core(secprop->Get_string("core"));
 
 		cpudecoder = &CPU_Core_Normal_Run;
 
@@ -2507,7 +2510,8 @@ public:
 
 		} else if (core == "auto") {
 			cpudecoder = &CPU_Core_Normal_Run;
-#if (C_DYNAMIC_X86)
+
+#if C_DYNAMIC_X86
 			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
 
 		} else if (core == "dynamic") {
@@ -2517,27 +2521,25 @@ public:
 		} else if (core == "dynamic_nodhfpu") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
-
-#elif (C_DYNREC)
+#elif C_DYNREC
 			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
 
 		} else if (core == "dynamic") {
 			cpudecoder = &CPU_Core_Dynrec_Run;
 #else
-
 #endif
 		}
 
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") ||
 		                            (core == "dynamic_nodhfpu"));
-#elif (C_DYNREC)
+#elif C_DYNREC
 		CPU_Core_Dynrec_Cache_Init(core == "dynamic");
 #endif
 
 		CPU_ArchitectureType = ArchitectureType::Mixed;
 
-		std::string cputype(section->Get_string("cputype"));
+		std::string cputype(secprop->Get_string("cputype"));
 
 		if (cputype == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
@@ -2626,7 +2628,7 @@ public:
 	}
 };
 
-static CPU* test;
+static std::unique_ptr<Cpu> cpu_instance = nullptr;
 
 void CPU_ShutDown([[maybe_unused]] Section* sec)
 {
@@ -2635,18 +2637,16 @@ void CPU_ShutDown([[maybe_unused]] Section* sec)
 #elif (C_DYNREC)
 	CPU_Core_Dynrec_Cache_Close();
 #endif
-	delete test;
 }
 
 void CPU_Init(Section* sec)
 {
 	assert(sec);
+	cpu_instance = std::make_unique<Cpu>(sec);
 
-	test = new (std::nothrow) CPU(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+	sec->AddDestroyFunction(&CPU_ShutDown, ChangeableAtRuntime);
 }
 
-// Initialize static members
-bool CPU::inited = false;
+// Initialise static members
+bool Cpu::initialised = false;
