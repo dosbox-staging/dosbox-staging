@@ -38,7 +38,8 @@
 #define CPU_AUTODETERMINE_SHIFT 0x02
 #define CPU_AUTODETERMINE_MASK  0x03
 
-#define CPU_CYCLES_LOWER_LIMIT 200
+constexpr auto CpuCyclesMin = 200;
+constexpr auto CpuCyclesMax = 2'000'000;
 
 enum class ArchitectureType {
 	Intel86         = 0x05,
