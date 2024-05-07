@@ -285,6 +285,7 @@ static void increase_ticks()
 
 	if (ticks.scheduled >= 100 || ticks.done >= 100 ||
 	    (ticks.added > 15 && ticks.scheduled >= 5)) {
+
 		if (ticks.done < 1) {
 			// Protect against division by zero.
 			ticks.done = 1;
@@ -295,10 +296,12 @@ static void increase_ticks()
 		             ticks.done;
 
 		auto new_cycle_max = CPU_CycleMax;
-		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticks.scheduled;
+
+		auto cproc = static_cast<int64_t>(CPU_CycleMax) *
+		             static_cast<int64_t>(ticks.scheduled);
 
 		// Increase scope for logging
-		double ratio_removed = 0.0;
+		auto ratio_removed = 0.0;
 
 		// TODO This is full of magic constants with zero explanation.
 		// Where are they coming from, what do the signify, why these
@@ -344,24 +347,23 @@ static void increase_ticks()
 					// the old formula: ratio_not_removed
 					// = 1.0;
 
-					double r = (1.0 + ratio_not_removed) /
-					           (ratio_not_removed +
-					            1024.0 / (static_cast<double>(
-					                             ratio)));
+					auto r = (1.0 + ratio_not_removed) /
+					         (ratio_not_removed +
+					          1024.0 / (static_cast<double>(ratio)));
 
 					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
 				} else {
-					int64_t ratio_with_removed =
-					        (int64_t)((((double)ratio - 1024.0) *
-					                   ratio_not_removed) +
-					                  1024.0);
+					auto ratio_with_removed = static_cast<int64_t>(
+					        ((static_cast<double>(ratio) - 1024.0) *
+					         ratio_not_removed) +
+					        1024.0);
 
-					int64_t cmax_scaled = (int64_t)CPU_CycleMax *
-					                      ratio_with_removed;
+					auto cmax_scaled = check_cast<int64_t>(
+					        CPU_CycleMax * ratio_with_removed);
 
-					new_cycle_max =
-					        (int32_t)(1 + (CPU_CycleMax >> 1) +
-					                  cmax_scaled / (int64_t)2048);
+					new_cycle_max = static_cast<int>(
+					        1 + (CPU_CycleMax / 2) +
+					        cmax_scaled / 2048LL);
 				}
 			}
 		}
