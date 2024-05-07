@@ -50,9 +50,9 @@ CPUBlock cpu      = {};
 Segments Segs     = {};
 
 int CPU_Cycles        = 0;
-int CPU_CycleLeft     = 3000;
-int CPU_CycleMax      = 3000;
-int CPU_OldCycleMax   = 3000;
+int CPU_CycleLeft     = CpuCyclesRealModeDefault;
+int CPU_CycleMax      = CpuCyclesRealModeDefault;
+int CPU_OldCycleMax   = CpuCyclesRealModeDefault;
 int CPU_CyclePercUsed = 100;
 int CPU_CycleLimit    = -1;
 int CPU_CycleUp       = 0;
@@ -2879,6 +2879,7 @@ public:
 			CPU_CyclePercUsed   = 100;
 			CPU_CycleAutoAdjust = true;
 			CPU_CycleLimit      = -1;
+
 			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount();
 			     ++cmdnum) {
 				if (cmd.FindCommand(cmdnum, str)) {
@@ -2899,9 +2900,11 @@ public:
 		} else {
 			if (type == "auto") {
 				CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CYCLES;
-				CPU_CycleMax      = 3000;
-				CPU_OldCycleMax   = 3000;
+
+				CPU_CycleMax      = CpuCyclesRealModeDefault;
+				CPU_OldCycleMax   = CpuCyclesRealModeDefault;
 				CPU_CyclePercUsed = 100;
+
 				for (unsigned int cmdnum = 0;
 				     cmdnum <= cmd.GetCount();
 				     ++cmdnum) {
@@ -3019,7 +3022,7 @@ public:
 		}
 
 		if (CPU_CycleMax <= 0) {
-			CPU_CycleMax = 3000;
+			CPU_CycleMax = CpuCyclesRealModeDefault;
 		}
 		if (CPU_CycleUp <= 0) {
 			CPU_CycleUp = 500;
@@ -3032,6 +3035,7 @@ public:
 		} else {
 			GFX_NotifyCyclesChanged(CPU_CycleMax);
 		}
+
 		return true;
 	}
 };

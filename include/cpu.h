@@ -41,6 +41,8 @@
 constexpr auto CpuCyclesMin = 200;
 constexpr auto CpuCyclesMax = 2'000'000;
 
+constexpr auto CpuCyclesRealModeDefault = 3000;
+
 enum class ArchitectureType {
 	Intel86         = 0x05,
 	Intel186        = 0x15,
