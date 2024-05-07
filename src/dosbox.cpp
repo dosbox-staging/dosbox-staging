@@ -198,6 +198,8 @@ static Bitu Normal_Loop()
 	}
 }
 
+constexpr auto auto_cpu_cycles_min = 200;
+
 static void increase_ticks()
 {
 	// Make it return ticks.remain and set it in the function above to
@@ -300,6 +302,11 @@ static void increase_ticks()
 		// Increase scope for logging
 		double ratio_removed = 0.0;
 
+		// TODO This is full of magic constants with zero explanation.
+		// Where are they coming from, what do the signify, why these
+		// numbers and not some other numbers, etc.--there's lots of
+		// explaining to do here.
+
 		if (cproc > 0) {
 			// Ignore the cycles added due to the IO delay code in
 			// order to have smoother auto cycle adjustments.
@@ -341,6 +348,7 @@ static void increase_ticks()
 					           (ratio_not_removed +
 					            1024.0 / (static_cast<double>(
 					                             ratio)));
+
 					new_cycle_max = 1 + static_cast<int32_t>(
 					                            CPU_CycleMax * r);
 				} else {
@@ -359,8 +367,8 @@ static void increase_ticks()
 			}
 		}
 
-		if (new_cycle_max < CPU_CYCLES_LOWER_LIMIT) {
-			new_cycle_max = CPU_CYCLES_LOWER_LIMIT;
+		if (new_cycle_max < auto_cpu_cycles_min) {
+			new_cycle_max = auto_cpu_cycles_min;
 		}
 
 #if 0
@@ -389,10 +397,10 @@ static void increase_ticks()
 					if (CPU_CycleMax > CPU_CycleLimit) {
 						CPU_CycleMax = CPU_CycleLimit;
 					}
-				} else if (CPU_CycleMax > 2'000'000) {
+				} else if (CPU_CycleMax > CpuCyclesMax) {
 					// Hardcoded limit if the limit wasn't
 					// explicitly specified.
-					CPU_CycleMax = 2'000'000;
+					CPU_CycleMax = CpuCyclesMax;
 				}
 			}
 		}
@@ -408,8 +416,8 @@ static void increase_ticks()
 		// account during the next auto cycle adjustment.
 		CPU_CycleMax /= 3;
 
-		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT) {
-			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
+		if (CPU_CycleMax < auto_cpu_cycles_min) {
+			CPU_CycleMax = auto_cpu_cycles_min;
 		}
 	}
 }
