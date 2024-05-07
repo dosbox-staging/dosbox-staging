@@ -55,14 +55,14 @@ CPU_Regs cpu_regs = {};
 CPUBlock cpu      = {};
 Segments Segs     = {};
 
-int32_t CPU_Cycles        = 0;
-int32_t CPU_CycleLeft     = 3000;
-int32_t CPU_CycleMax      = 3000;
-int32_t CPU_OldCycleMax   = 3000;
-int32_t CPU_CyclePercUsed = 100;
-int32_t CPU_CycleLimit    = -1;
-int32_t CPU_CycleUp       = 0;
-int32_t CPU_CycleDown     = 0;
+int CPU_Cycles        = 0;
+int CPU_CycleLeft     = 3000;
+int CPU_CycleMax      = 3000;
+int CPU_OldCycleMax   = 3000;
+int CPU_CyclePercUsed = 100;
+int CPU_CycleLimit    = -1;
+int CPU_CycleUp       = 0;
+int CPU_CycleDown     = 0;
 
 int64_t CPU_IODelayRemoved = 0;
 
@@ -2153,7 +2153,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 }
 
 // Estimate the CPU speed in MHz given the amount of cycles emulated
-static double get_estimated_cpu_mhz(const int32_t cycles)
+static double get_estimated_cpu_mhz(const int cycles)
 {
 	assert(CPU_ArchitectureType >= ArchitectureType::Pentium);
 
@@ -2222,11 +2222,11 @@ static void CPU_CycleIncrease(bool pressed)
 		GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 
 	} else {
-		int32_t old_cycles = CPU_CycleMax;
+		auto old_cycles = CPU_CycleMax;
 		if (CPU_CycleUp < 100) {
-			CPU_CycleMax = (int32_t)(CPU_CycleMax *
-			                         (1 + static_cast<float>(CPU_CycleUp) /
-			                                      100.0f));
+			CPU_CycleMax = static_cast<int>(
+			        CPU_CycleMax *
+			        (1 + static_cast<float>(CPU_CycleUp) / 100.0f));
 		} else {
 			CPU_CycleMax = CPU_CycleMax + CPU_CycleUp;
 		}
@@ -2255,12 +2255,14 @@ static void CPU_CycleDecrease(bool pressed)
 
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed -= 5;
+
 		if (CPU_CyclePercUsed <= 0) {
 			CPU_CyclePercUsed = 1;
 		}
 
 		if (CPU_CyclePercUsed <= 70) {
-			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",
+			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, "
+			        "try a fixed cycles amount in DOSBox's options.",
 			        CPU_CyclePercUsed);
 		} else {
 			LOG_MSG("CPU speed: max %d percent.", CPU_CyclePercUsed);
@@ -2270,9 +2272,9 @@ static void CPU_CycleDecrease(bool pressed)
 
 	} else {
 		if (CPU_CycleDown < 100) {
-			CPU_CycleMax = (int32_t)(CPU_CycleMax /
-			                         (1 + static_cast<float>(CPU_CycleDown) /
-			                                      100.0f));
+			CPU_CycleMax = static_cast<int>(
+			        CPU_CycleMax /
+			        (1 + static_cast<float>(CPU_CycleDown) / 100.0f));
 		} else {
 			CPU_CycleMax = CPU_CycleMax - CPU_CycleDown;
 		}
@@ -2283,6 +2285,7 @@ static void CPU_CycleDecrease(bool pressed)
 		if (CPU_CycleMax <= 0) {
 			CPU_CycleMax = 1;
 		}
+
 		LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
 
 		GFX_NotifyCyclesChanged(CPU_CycleMax);
