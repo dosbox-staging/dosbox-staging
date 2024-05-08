@@ -2780,6 +2780,183 @@ void CPU_Reset_AutoAdjust(void)
 	DOSBOX_SetTicksScheduled(0);
 }
 
+struct CpuCyclesConfig {
+	std::optional<int> fixed           = {};
+	std::optional<int> percentage      = {};
+	std::optional<int> limit           = {};
+};
+
+constexpr CpuCyclesConfig DefaultConfig = {.fixed = CpuCyclesRealModeDefault,
+                                           .percentage = 100,
+                                           .limit      = 60000};
+
+// All valid cycles setting variations supported by original DOSBox:
+//
+//   12000
+//   fixed 12000
+//
+//   max
+//   max limit 50000
+//   max 90%
+//   max 90% limit 50000
+//
+//   auto limit 50000           (implicit "3000" for real mode & "max 100%")
+//   auto 90%                   (implicit "3000" for real mode)
+//   auto 90% limit 50000       (implicit "3000" for real mode]
+//
+//   auto max                   (implicit "3000" for real mode)
+//   auto max limit 50000       (implicit "3000" for real mode)
+//   auto max 90%               (implicit "3000" for real mode)
+//   auto max 90% limit 50000   (implicit "3000" for real mode)
+//
+//   auto 12000                 (implicit "max 100%"
+//   auto 12000 limit 50000     (implicit "max 100%")
+//   auto 12000 90%
+//   auto 12000 90% limit 50000
+//   auto 12000 max
+//   auto 12000 max limit 50000
+//   auto 12000 max 90%
+//   auto 12000 max 90% limit 50000
+//
+static std::optional<CpuCyclesConfig> parse_cpu_cycles_settings(const std::string& pref)
+{
+	enum State {
+		Start,
+		FixedValue,
+		AutoKeyword,
+		AutoValueOrMax,
+		MaxKeyword,
+		MaxValue,
+		PercentageValue,
+		LimitValue
+	};
+
+	const auto tokens  = split(pref);
+	auto curr_token_it = tokens.begin();
+	auto next_token    = [&]() { ++curr_token_it; };
+
+	State state = State::Start;
+
+	CpuCyclesConfig config = {};
+
+	while (curr_token_it != tokens.end()) {
+		const auto& token  = *curr_token_it;
+		const auto is_last = (std::next(curr_token_it) == tokens.end());
+
+		switch (state) {
+		case State::Start:
+			if (token == "fixed") {
+				state = State::FixedValue;
+				next_token();
+
+			} else if (token == "auto") {
+				state = State::AutoKeyword;
+				next_token();
+
+			} else if (token == "max") {
+				state = State::MaxKeyword;
+
+			} else {
+				state = State::FixedValue;
+				next_token();
+			}
+			break;
+
+		case State::FixedValue:
+			if (const auto i = parse_int(token); i && is_last) {
+				config.fixed = *i;
+				return config;
+			} else {
+				return {};
+			}
+			break;
+
+		case State::AutoKeyword:
+			if (const auto i = parse_int(token); i) {
+				// Implicit protected mode default; this might
+				// get overridden later
+				config.percentage = 100;
+
+				config.fixed = *i;
+				state        = State::AutoValueOrMax;
+				next_token();
+
+			} else {
+				// Implicit real mode default
+				config.fixed = CpuCyclesRealModeDefault;
+
+				if (token == "max") {
+					state = State::MaxKeyword;
+
+				} else if (token == "limit") {
+					state = State::LimitValue;
+					next_token();
+
+				} else {
+					state = State::PercentageValue;
+				}
+			}
+			break;
+
+		case State::AutoValueOrMax:
+			if (is_last) {
+				return config;
+			} else if (token == "max") {
+				state = State::MaxKeyword;
+			} else {
+				state = State::PercentageValue;
+			}
+			break;
+
+		case State::MaxKeyword:
+			if (is_last) {
+				config.percentage = 100;
+				return config;
+			} else {
+				state = State::MaxValue;
+				next_token();
+			}
+			break;
+
+		case State::MaxValue:
+			if (token == "limit") {
+				state = State::LimitValue;
+				next_token();
+			} else {
+				state = State::PercentageValue;
+				next_token();
+			}
+			break;
+
+		case State::PercentageValue:
+			if (const auto p = parse_percentage_with_percent_sign(token);
+			    p) {
+				if (is_last) {
+					config.percentage = *p;
+					return config;
+				} else {
+					return {};
+				}
+			}
+			break;
+
+		case State::LimitValue:
+			if (const auto i = parse_int(token); i && is_last) {
+				config.limit = *i;
+				return config;
+			} else {
+				return {};
+			}
+			break;
+		}
+	}
+
+	// We get here if there are trailing tokens after an otherwise valid
+	// sequence of tokens. Doing "relaxed" parsing by ignoring trailing
+	// tokens is inviting trouble, so we'll just raise an error.
+	return {};
+}
+
 class Cpu final {
 private:
 	static bool initialised;
