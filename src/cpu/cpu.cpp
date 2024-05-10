@@ -3080,6 +3080,8 @@ public:
 		constexpr auto max_percent = 100;
 
 		if (type == "max") {
+			// Legacy DOSBox settings (except for "max" only)
+
 			CPU_CycleMax        = 0;
 			CPU_CyclePercUsed   = 100;
 			CPU_CycleAutoAdjust = true;
@@ -3102,43 +3104,97 @@ public:
 					}
 				}
 			}
-		} else {
-			if (type == "auto") {
-				CPU_AutoDetermineMode.auto_cycles = true;
+		} else if (type == "auto") {
+			// Legacy DOSBox settings
 
-				CPU_CycleMax      = CpuCyclesRealModeDefault;
-				CPU_OldCycleMax   = CpuCyclesRealModeDefault;
-				CPU_CyclePercUsed = 100;
+			CPU_AutoDetermineMode.auto_cycles = true;
 
-				for (unsigned int cmdnum = 0;
-				     cmdnum <= cmd.GetCount();
-				     ++cmdnum) {
-					if (cmd.FindCommand(cmdnum, str)) {
-						if (str.back() == '%') {
-							str.pop_back();
-							set_if_in_range(str,
-							                CPU_CyclePercUsed,
-							                min_percent,
-							                max_percent);
-						} else if (str == "limit") {
-							++cmdnum;
-							if (cmd.FindCommand(cmdnum,
-							                    str)) {
-								set_if_in_range(str, CPU_CycleLimit);
-							}
-						} else {
-							set_if_in_range(str, CPU_CycleMax);
-							set_if_in_range(str, CPU_OldCycleMax);
+			CPU_CycleMax        = CpuCyclesRealModeDefault;
+			CPU_OldCycleMax     = CpuCyclesRealModeDefault;
+			CPU_CyclePercUsed   = 100;
+			CPU_CycleAutoAdjust = false;
+
+			for (unsigned int cmdnum = 0; cmdnum <= cmd.GetCount();
+			     ++cmdnum) {
+				if (cmd.FindCommand(cmdnum, str)) {
+					if (str.back() == '%') {
+						str.pop_back();
+						set_if_in_range(str,
+						                CPU_CyclePercUsed,
+						                min_percent,
+						                max_percent);
+					} else if (str == "limit") {
+						++cmdnum;
+						if (cmd.FindCommand(cmdnum, str)) {
+							set_if_in_range(str, CPU_CycleLimit);
 						}
+					} else {
+						set_if_in_range(str, CPU_CycleMax);
+						set_if_in_range(str, CPU_OldCycleMax);
 					}
 				}
-			} else if (type == "fixed") {
-				if (cmd.FindCommand(1, str)) {
-					set_if_in_range(str, CPU_CycleMax);
+			}
+
+		} else if (type == "fixed") {
+			// Legacy DOSBox setting
+
+			CPU_CycleAutoAdjust = false;
+
+			if (cmd.FindCommand(1, str)) {
+				set_if_in_range(str, CPU_CycleMax);
+			}
+
+		} else if (type == "real") {
+			// Revised Staging specific settings
+
+			auto params = p->GetSection()->Get_string("parameters");
+			lowcase(params);
+
+			auto parts = split(params);
+
+			if ((parts.size() == 3 || parts.size() == 4) &&
+			    parts[1] == "protected") {
+				// "real C protected max" or
+				// "real C protected P throttled"
+
+				const auto real_val = parse_int(parts[0]);
+				if (!real_val) {
+					// return ERROR
+				}
+
+				CPU_AutoDetermineMode.auto_cycles = true;
+
+				CPU_CycleAutoAdjust = false;
+				CPU_CycleMax        = *real_val;
+				CPU_OldCycleMax     = *real_val;
+
+				const auto protected_val = parts[2];
+				if (protected_val == "max") {
+					// "real C protected max"
+
+					CPU_CyclePercUsed = 100;
+
+				} else if (parts.size() == 4 &&
+				           parts[3] == "throttled") {
+					// "real C protected P throttled"
+
+					if (const auto protected_int = parse_int(
+					            protected_val)) {
+						CPU_CycleLimit = *protected_int;
+					} else {
+						// return ERROR
+					}
+
+				} else {
+					// return ERROR
 				}
 			} else {
-				set_if_in_range(type, CPU_CycleMax);
+				// return ERROR
 			}
+
+		} else {
+			// Fixed cycles setting
+			set_if_in_range(type, CPU_CycleMax);
 			CPU_CycleAutoAdjust = false;
 		}
 

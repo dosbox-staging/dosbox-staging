@@ -811,18 +811,31 @@ void DOSBOX_Init()
 
 	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
 	pmulti_remain->Set_help(
-	        "Number of instructions DOSBox tries to emulate per millisecond\n"
-	        "('auto' by default). Setting this value too high may result in sound drop-outs\n"
-			"and lags.\n"
-	        "  auto:            Try to guess what a game needs. It usually works, but can\n"
-	        "                   fail with certain games.\n"
-	        "  fixed <number>:  Set a fixed number of cycles. This is what you usually\n"
-	        "                   need if 'auto' fails (e.g. 'fixed 4000').\n"
-	        "  max:             Allocate as much cycles as your computer is able to handle.");
+	        "Speed of the emulated CPU ('real 3000 protected 60000 throttled' by default).\n"
+	        "Numerical values mean the number of CPU instructions to emulate per millisecond\n"
+	        "(roughly equals to MIPS figures).\n"
+	        "  max:          Emulate as many cycles as your host CPU can handle on a single\n"
+	        "                core.\n"
+	        "  C:            Emulate fixed C number of cycles.\n"
+	        "  C throttled:  Emulate fixed C number of cycles, but throttle down dynamically\n"
+	        "                if your host CPU cannot keep up.\n"
+	        "  real C protected max:\n"
+	        "                Fixed C number of cycles for real mode programs, and as many\n"
+	        "                cycles as your host CPU can handle for protected mode programs.\n"
+	        "  real C protected P throttled:\n"
+	        "                Fixed C number of cycles for real mode programs, and up to P\n"
+	        "                number of cycles for protected mode programs (throttle down\n"
+	        "                dynamically if your host CPU cannot keep up).\n"
+	        "Notes:\n"
+	        "  - Setting the CPU speed too high may result in sound drop-outs and lags.\n"
+	        "  - For the best results, set the lowest fixed cycles value that runs the game\n"
+	        "    at an acceptable speed, but not higher.\n"
+	        "  - Legacy DOSBox cycles settings are also accepted with a deprecation\n"
+	        "    warning.");
 
 	pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
 	pmulti_remain->SetValue("auto");
-	pstring->Set_values({"auto", "fixed", "max", "%u"});
+	pstring->Set_values({"auto", "fixed", "max", "%u", "real"});
 
 	pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
