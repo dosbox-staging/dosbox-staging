@@ -477,18 +477,20 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
+	using enum ReverbPreset;
+
 	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
-	case ReverbPreset::None:   break;
-	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case ReverbPreset::Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case None:   break;
+	case Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
+	case Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
+	case Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
+	case Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
+	case Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
 	// Configure the channels
-	mixer.do_reverb = (r.preset != ReverbPreset::None);
+	mixer.do_reverb = (r.preset != None);
 
 	for (const auto& [_, channel] : mixer.channels) {
 		set_global_reverb(channel);
@@ -568,16 +570,18 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
+	using enum ChorusPreset;
+
 	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
-	case ChorusPreset::None:   break;
-	case ChorusPreset::Light:  c.Setup(_16dB, 0.00f, rate_hz); break;
-	case ChorusPreset::Normal: c.Setup(_11dB, 0.00f, rate_hz); break;
-	case ChorusPreset::Strong: c.Setup(__6dB, 0.00f, rate_hz); break;
+	case None:   break;
+	case Light:  c.Setup(_16dB, 0.00f, rate_hz); break;
+	case Normal: c.Setup(_11dB, 0.00f, rate_hz); break;
+	case Strong: c.Setup(__6dB, 0.00f, rate_hz); break;
 	}
 	// clang-format on
 
 	// Configure the channels
-	mixer.do_chorus = (c.preset != ChorusPreset::None);
+	mixer.do_chorus = (c.preset != None);
 
 	for (const auto& [_, channel] : mixer.channels) {
 		set_global_chorus(channel);
