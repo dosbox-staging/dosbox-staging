@@ -103,8 +103,6 @@ private:
 	std_fs::path path;
 };
 
-extern std::unique_ptr<ShellHistory> global_shell_history;
-
 class DOS_Shell : public Program {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
@@ -116,7 +114,7 @@ private:
 
 	friend class AutoexecEditor;
 
-	ShellHistory& history                  = *global_shell_history;
+	std::shared_ptr<ShellHistory> history  = {};
 	std::stack<BatchFile> batchfiles       = {};
 	uint16_t input_handle                  = STDIN;
 	bool call                              = false;

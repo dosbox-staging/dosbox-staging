@@ -1109,7 +1109,6 @@ void DOSBOX_Init()
 	pstring = secprop->Add_path("shell_history_file",
 	                            only_at_start,
 	                            "shell_history.txt");
-	global_shell_history = std::make_unique<ShellHistory>();
 
 	pstring->Set_help(
 	        "File containing persistent command line history ('shell_history.txt'\n"
