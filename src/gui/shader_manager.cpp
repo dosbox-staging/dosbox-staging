@@ -42,36 +42,38 @@ CHECK_NARROWING();
 
 void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 {
+	using enum ShaderMode;
+
 	if (shader_name == AutoGraphicsStandardShaderName) {
-		if (mode != ShaderMode::AutoGraphicsStandard) {
-			mode = ShaderMode::AutoGraphicsStandard;
+		if (mode != AutoGraphicsStandard) {
+			mode = AutoGraphicsStandard;
 
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
 		}
 	} else if (shader_name == AutoMachineShaderName) {
-		if (mode != ShaderMode::AutoMachine) {
-			mode = ShaderMode::AutoMachine;
+		if (mode != AutoMachine) {
+			mode = AutoMachine;
 
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
 		}
 	} else if (shader_name == AutoArcadeShaderName) {
-		if (mode != ShaderMode::AutoArcade) {
-			mode = ShaderMode::AutoArcade;
+		if (mode != AutoArcade) {
+			mode = AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (normal variant)");
 		}
 	} else if (shader_name == AutoArcadeSharpShaderName) {
-		if (mode != ShaderMode::AutoArcadeSharp) {
-			mode = ShaderMode::AutoArcadeSharp;
+		if (mode != AutoArcadeSharp) {
+			mode = AutoArcadeSharp;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader (sharp variant)");
 		}
 	} else {
-		mode = ShaderMode::Single;
+		mode = Single;
 	}
 
 	shader_name_from_config = shader_name;
@@ -374,6 +376,8 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 
 void ShaderManager::MaybeAutoSwitchShader()
 {
+	using enum ShaderMode;
+
 	auto maybe_load_shader = [&](const std::string& shader_name) {
 		if (current_shader.info.name == shader_name) {
 			return false;
@@ -382,7 +386,7 @@ void ShaderManager::MaybeAutoSwitchShader()
 		return true;
 	};
 
-	if (mode == ShaderMode::Single) {
+	if (mode == Single) {
 		const auto shader_changed = maybe_load_shader(shader_name_from_config);
 		if (shader_changed) {
 			LOG_MSG("RENDER: Using shader '%s'",
@@ -393,20 +397,20 @@ void ShaderManager::MaybeAutoSwitchShader()
 		auto shader_changed = false;
 
 		switch (mode) {
-		case ShaderMode::AutoGraphicsStandard:
+		case AutoGraphicsStandard:
 			shader_changed = maybe_load_shader(
 			        FindShaderAutoGraphicsStandard());
 			break;
 
-		case ShaderMode::AutoMachine:
+		case AutoMachine:
 			shader_changed = maybe_load_shader(FindShaderAutoMachine());
 			break;
 
-		case ShaderMode::AutoArcade:
+		case AutoArcade:
 			shader_changed = maybe_load_shader(FindShaderAutoArcade());
 			break;
 
-		case ShaderMode::AutoArcadeSharp:
+		case AutoArcadeSharp:
 			shader_changed = maybe_load_shader(
 			        FindShaderAutoArcadeSharp());
 			break;
@@ -531,27 +535,29 @@ std::string ShaderManager::GetVgaShader() const
 
 std::string ShaderManager::FindShaderAutoGraphicsStandard() const
 {
+	using enum GraphicsStandard;
+
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
 	}
 
 	switch (video_mode.graphics_standard) {
-	case GraphicsStandard::Hercules: return GetHerculesShader();
+	case Hercules: return GetHerculesShader();
 
-	case GraphicsStandard::Cga:
-	case GraphicsStandard::Pcjr: return GetCgaShader();
+	case Cga:
+	case Pcjr: return GetCgaShader();
 
-	case GraphicsStandard::Tga: return GetEgaShader();
+	case Tga: return GetEgaShader();
 
-	case GraphicsStandard::Ega:
+	case Ega:
 		// Use VGA shaders for VGA games that use EGA modes with an
 		// 18-bit VGA palette (these games won't even work on an EGA
 		// card).
 		return video_mode.has_vga_colors ? GetVgaShader() : GetEgaShader();
 
-	case GraphicsStandard::Vga:
-	case GraphicsStandard::Svga:
-	case GraphicsStandard::Vesa: return GetVgaShader();
+	case Vga:
+	case Svga:
+	case Vesa: return GetVgaShader();
 
 	default: assertm(false, "Invalid GraphicsStandard value"); return {};
 	}
