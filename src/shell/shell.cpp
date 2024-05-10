@@ -42,7 +42,6 @@ callback_number_t call_shellstop = 0;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
 DOS_Shell *first_shell = nullptr;
-std::unique_ptr<ShellHistory> global_shell_history;
 
 static Bitu shellstop_handler()
 {
@@ -60,6 +59,13 @@ DOS_Shell::DOS_Shell()
 	               HELP_Category::Misc,
 	               HELP_CmdType::Program,
 	               "COMMAND"};
+
+	static std::weak_ptr<ShellHistory> global_shell_history = {};
+	history = global_shell_history.lock();
+	if (!history) {
+		history = std::make_shared<ShellHistory>();
+		global_shell_history = history;
+	}
 }
 
 void DOS_Shell::GetRedirection(char *line,
@@ -1372,6 +1378,4 @@ void SHELL_Init() {
 	first_shell->Run();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
-	
-	global_shell_history.reset();
 }
