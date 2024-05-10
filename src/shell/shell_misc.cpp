@@ -78,7 +78,7 @@ void DOS_Shell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
 
-	history.Append(command, get_utf8_code_page());
+	global_shell_history.Append(command, get_utf8_code_page());
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
 	        control->GetSection("dos"));
@@ -104,7 +104,7 @@ void DOS_Shell::InputCommand(char* line)
 
 std::string DOS_Shell::ReadCommand()
 {
-	std::vector<std::string> history_clone = history.GetCommands(
+	std::vector<std::string> history_clone = global_shell_history.GetCommands(
 	        get_utf8_code_page());
 	const auto last_command = [&history_clone]() -> std::string {
 		if (history_clone.empty()) {

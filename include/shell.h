@@ -90,20 +90,16 @@ class ShellHistory {
 public:
 	std::vector<std::string> GetCommands(uint16_t code_page) const;
 	void Append(std::string command, uint16_t code_page);
-
-	ShellHistory();
-	~ShellHistory();
-	ShellHistory(const ShellHistory&)            = delete;
-	ShellHistory& operator=(const ShellHistory&) = delete;
-	ShellHistory(ShellHistory&&)                 = delete;
-	ShellHistory& operator=(ShellHistory&&)      = delete;
+	void SetPathFromConfig();
+	void ReadHistoryFromFile();
+	void WriteHistoryToFile();
 
 private:
-	std::vector<std::string> commands{};
-	std_fs::path path;
+	std::vector<std::string> commands = {};
+	std_fs::path path = {};
 };
 
-extern std::unique_ptr<ShellHistory> global_shell_history;
+extern ShellHistory global_shell_history;
 
 class DOS_Shell : public Program {
 private:
@@ -116,7 +112,6 @@ private:
 
 	friend class AutoexecEditor;
 
-	ShellHistory& history                  = *global_shell_history;
 	std::stack<BatchFile> batchfiles       = {};
 	uint16_t input_handle                  = STDIN;
 	bool call                              = false;

@@ -31,7 +31,6 @@ CHECK_NARROWING();
 static constexpr int HistoryMaxLineLength = 256;
 static constexpr int HistoryMaxNumLines   = 500;
 
-static std_fs::path get_shell_history_path();
 static bool command_is_exit(std::string_view command);
 
 void ShellHistory::Append(std::string command, uint16_t code_page)
@@ -69,7 +68,7 @@ std::vector<std::string> ShellHistory::GetCommands(uint16_t code_page) const
 	return dos_encoded_commands;
 }
 
-ShellHistory::ShellHistory() : path(get_shell_history_path())
+void ShellHistory::ReadHistoryFromFile()
 {
 	// Must check arguments directly as control->SwitchToSecureMode()
 	// will not be called until the first shell is run
@@ -99,7 +98,7 @@ ShellHistory::ShellHistory() : path(get_shell_history_path())
 	}
 }
 
-ShellHistory::~ShellHistory()
+void ShellHistory::WriteHistoryToFile()
 {
 	// Secure mode can be enabled from the shell during runtime.
 	// On exit, we must check this value instead.
@@ -125,17 +124,15 @@ ShellHistory::~ShellHistory()
 	}
 }
 
-static std_fs::path get_shell_history_path()
+void ShellHistory::SetPathFromConfig()
 {
 	const auto* section = dynamic_cast<Section_prop*>(control->GetSection("dos"));
 	assert(section);
 
-	const auto* path = section->Get_path("shell_history_file"); //-V522
-	if (path == nullptr) {
-		return {};
+	const auto* config_path = section->Get_path("shell_history_file"); //-V522
+	if (config_path) {
+		path = config_path->realpath;
 	}
-
-	return path->realpath;
 }
 
 static bool command_is_exit(std::string_view command)

@@ -42,7 +42,7 @@ callback_number_t call_shellstop = 0;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
 DOS_Shell *first_shell = nullptr;
-std::unique_ptr<ShellHistory> global_shell_history;
+ShellHistory global_shell_history = {};
 
 static Bitu shellstop_handler()
 {
@@ -1366,12 +1366,15 @@ void SHELL_Init() {
 	// Load SETVER fake version table from external file
 	SETVER::LoadTableFromFile();
 
+	global_shell_history.SetPathFromConfig();
+	global_shell_history.ReadHistoryFromFile();
+
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly
 	first_shell = new DOS_Shell;
 	first_shell->Run();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
-	
-	global_shell_history.reset();
+
+	global_shell_history.WriteHistoryToFile();
 }
