@@ -98,19 +98,21 @@ bool CAPTURE_IsCapturingVideo()
 
 static const char* capture_type_to_string(const CaptureType type)
 {
+	using enum CaptureType;
+	
 	switch (type) {
-	case CaptureType::Audio: return "audio output";
-	case CaptureType::Midi: return "MIDI output";
-	case CaptureType::RawOplStream: return "rawl OPL output";
-	case CaptureType::RadOplInstruments: return "RAD capture";
+	case Audio: return "audio output";
+	case Midi: return "MIDI output";
+	case RawOplStream: return "rawl OPL output";
+	case RadOplInstruments: return "RAD capture";
 
-	case CaptureType::Video: return "video output";
+	case Video: return "video output";
 
-	case CaptureType::RawImage: return "raw image";
-	case CaptureType::UpscaledImage: return "upscaled image";
-	case CaptureType::RenderedImage: return "rendered image";
+	case RawImage: return "raw image";
+	case UpscaledImage: return "upscaled image";
+	case RenderedImage: return "rendered image";
 
-	case CaptureType::SerialLog: return "serial log";
+	case SerialLog: return "serial log";
 
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
@@ -118,19 +120,21 @@ static const char* capture_type_to_string(const CaptureType type)
 
 static const char* capture_type_to_basename(const CaptureType type)
 {
+	using enum CaptureType;
+
 	switch (type) {
-	case CaptureType::Audio: return "audio";
-	case CaptureType::Midi: return "midi";
-	case CaptureType::RawOplStream: return "rawopl";
-	case CaptureType::RadOplInstruments: return "oplinstr";
+	case Audio: return "audio";
+	case Midi: return "midi";
+	case RawOplStream: return "rawopl";
+	case RadOplInstruments: return "oplinstr";
 
-	case CaptureType::Video: return "video";
+	case Video: return "video";
 
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage: return "image";
+	case RawImage:
+	case UpscaledImage:
+	case RenderedImage: return "image";
 
-	case CaptureType::SerialLog: return "serial";
+	case SerialLog: return "serial";
 
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
@@ -138,19 +142,21 @@ static const char* capture_type_to_basename(const CaptureType type)
 
 static const char* capture_type_to_extension(const CaptureType type)
 {
+	using enum CaptureType;
+
 	switch (type) {
-	case CaptureType::Audio: return ".wav";
-	case CaptureType::Midi: return ".mid";
-	case CaptureType::RawOplStream: return ".dro";
-	case CaptureType::RadOplInstruments: return ".rad";
+	case Audio: return ".wav";
+	case Midi: return ".mid";
+	case RawOplStream: return ".dro";
+	case RadOplInstruments: return ".rad";
 
-	case CaptureType::Video: return ".avi";
+	case Video: return ".avi";
 
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage: return ".png";
+	case RawImage:
+	case UpscaledImage:
+	case RenderedImage: return ".png";
 
-	case CaptureType::SerialLog: return ".serlog";
+	case SerialLog: return ".serlog";
 
 	default: assertm(false, "Unknown CaptureType"); return "";
 	}
@@ -158,9 +164,11 @@ static const char* capture_type_to_extension(const CaptureType type)
 
 static const char* capture_type_to_postfix(const CaptureType type)
 {
+	using enum CaptureType;
+
 	switch (type) {
-	case CaptureType::RawImage: return "-raw";
-	case CaptureType::RenderedImage: return "-rendered";
+	case RawImage: return "-raw";
+	case RenderedImage: return "-rendered";
 	default: return "";
 	}
 }
@@ -222,27 +230,29 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 
 static void set_next_capture_index(const CaptureType type, int32_t index)
 {
-	switch (type) {
-	case CaptureType::Audio: capture.next_index.audio = index; break;
-	case CaptureType::Midi: capture.next_index.midi = index; break;
+	using enum CaptureType;
 
-	case CaptureType::RawOplStream:
+	switch (type) {
+	case Audio: capture.next_index.audio = index; break;
+	case Midi: capture.next_index.midi = index; break;
+
+	case RawOplStream:
 		capture.next_index.raw_opl_stream = index;
 		break;
 
-	case CaptureType::RadOplInstruments:
+	case RadOplInstruments:
 		capture.next_index.rad_opl_instrument = index;
 		break;
 
-	case CaptureType::Video: capture.next_index.video = index; break;
+	case Video: capture.next_index.video = index; break;
 
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage:
+	case RawImage:
+	case UpscaledImage:
+	case RenderedImage:
 		capture.next_index.image = index;
 		break;
 
-	case CaptureType::SerialLog:
+	case SerialLog:
 		capture.next_index.serial_log = index;
 		break;
 
@@ -262,15 +272,17 @@ static bool maybe_create_capture_dir_and_init_capture_indices()
 		return false;
 	}
 
-	constexpr CaptureType all_capture_types[] = {CaptureType::Audio,
-	                                             CaptureType::Midi,
-	                                             CaptureType::RawOplStream,
-	                                             CaptureType::RadOplInstruments,
-	                                             CaptureType::Video,
-	                                             CaptureType::RawImage,
-	                                             CaptureType::UpscaledImage,
-	                                             CaptureType::RenderedImage,
-	                                             CaptureType::SerialLog};
+	using enum CaptureType;
+
+	constexpr CaptureType all_capture_types[] = {Audio,
+	                                             Midi,
+	                                             RawOplStream,
+	                                             RadOplInstruments,
+	                                             Video,
+	                                             RawImage,
+	                                             UpscaledImage,
+	                                             RenderedImage,
+	                                             SerialLog};
 
 	for (auto type : all_capture_types) {
 		const auto index = find_highest_capture_index(type);
@@ -288,27 +300,29 @@ static bool maybe_create_capture_dir_and_init_capture_indices()
 
 int32_t get_next_capture_index(const CaptureType type)
 {
+	using enum CaptureType;
+
 	if (!maybe_create_capture_dir_and_init_capture_indices()) {
 		return 0;
 	}
 
 	switch (type) {
-	case CaptureType::Audio: return capture.next_index.audio++;
-	case CaptureType::Midi: return capture.next_index.midi++;
+	case Audio: return capture.next_index.audio++;
+	case Midi: return capture.next_index.midi++;
 
-	case CaptureType::RawOplStream:
+	case RawOplStream:
 		return capture.next_index.raw_opl_stream++;
 
-	case CaptureType::RadOplInstruments:
+	case RadOplInstruments:
 		return capture.next_index.rad_opl_instrument++;
 
-	case CaptureType::Video: return capture.next_index.video++;
+	case Video: return capture.next_index.video++;
 
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage: return capture.next_index.image++;
+	case RawImage:
+	case UpscaledImage:
+	case RenderedImage: return capture.next_index.image++;
 
-	case CaptureType::SerialLog: return capture.next_index.serial_log++;
+	case SerialLog: return capture.next_index.serial_log++;
 
 	default: assertm(false, "Unknown CaptureType"); return 0;
 	}
@@ -368,20 +382,24 @@ void CAPTURE_StartVideoCapture()
 
 void CAPTURE_StopVideoCapture()
 {
+	using enum CaptureState;
+
 	switch (capture.state.video) {
-	case CaptureState::Off:
+	case Off:
 		LOG_WARNING("CAPTURE: Not capturing video output");
 		break;
-	case CaptureState::Pending:
+
+	case Pending:
 		// It's very hard to hit this branch; handling it for
 		// completeness only
 		LOG_MSG("CAPTURE: Cancelling pending video output capture");
-		capture.state.video = CaptureState::Off;
+		capture.state.video = Off;
 		GFX_NotifyVideoCaptureStatus(false);
 		break;
-	case CaptureState::InProgress:
+
+	case InProgress:
 		capture_video_finalise();
-		capture.state.video = CaptureState::Off;
+		capture.state.video = Off;
 		GFX_NotifyVideoCaptureStatus(false);
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 	}
@@ -389,16 +407,18 @@ void CAPTURE_StopVideoCapture()
 
 void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second)
 {
+	using enum CaptureState;
+
 	if (image_capturer) {
 		image_capturer->MaybeCaptureImage(image);
 	}
 
 	switch (capture.state.video) {
-	case CaptureState::Off: break;
-	case CaptureState::Pending:
-		capture.state.video = CaptureState::InProgress;
+	case Off: break;
+	case Pending:
+		capture.state.video = InProgress;
 		[[fallthrough]];
-	case CaptureState::InProgress:
+	case InProgress:
 		capture_video_add_frame(image, frames_per_second);
 		break;
 	}
@@ -414,12 +434,14 @@ void CAPTURE_AddPostRenderImage(const RenderedImage& image)
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
                           const int16_t* sample_frames)
 {
+	using enum CaptureState;
+
 	switch (capture.state.video) {
-	case CaptureState::Off: break;
-	case CaptureState::Pending:
-		capture.state.video = CaptureState::InProgress;
+	case Off: break;
+	case Pending:
+		capture.state.video = InProgress;
 		[[fallthrough]];
-	case CaptureState::InProgress:
+	case InProgress:
 		capture_video_add_audio_data(sample_rate,
 		                             num_sample_frames,
 		                             sample_frames);
@@ -427,11 +449,11 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 	}
 
 	switch (capture.state.audio) {
-	case CaptureState::Off: break;
-	case CaptureState::Pending:
-		capture.state.audio = CaptureState::InProgress;
+	case Off: break;
+	case Pending:
+		capture.state.audio = InProgress;
 		[[fallthrough]];
-	case CaptureState::InProgress:
+	case InProgress:
 		capture_audio_add_data(sample_rate, num_sample_frames, sample_frames);
 		break;
 	}
@@ -439,34 +461,38 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data)
 {
-	if (capture.state.midi == CaptureState::Pending) {
-		capture.state.midi = CaptureState::InProgress;
+	using enum CaptureState;
+
+	if (capture.state.midi == Pending) {
+		capture.state.midi = InProgress;
 	}
 	capture_midi_add_data(sysex, len, data);
 }
 
 static void handle_capture_audio_event(bool pressed)
 {
+	using enum CaptureState;
+
 	// Ignore key-release events
 	if (!pressed) {
 		return;
 	}
 
 	switch (capture.state.audio) {
-	case CaptureState::Off:
+	case Off:
 		// Capturing the audio output will start in the next few
 		// milliseconds when CAPTURE_AddAudioData is called
-		capture.state.audio = CaptureState::Pending;
+		capture.state.audio = Pending;
 		break;
-	case CaptureState::Pending:
+	case Pending:
 		// It's practically impossible to hit this branch; handling it
 		// for completeness only
-		capture.state.audio = CaptureState::Off;
+		capture.state.audio = Off;
 		LOG_MSG("CAPTURE: Cancelled pending audio output capture");
 		break;
-	case CaptureState::InProgress:
+	case InProgress:
 		capture_audio_finalise();
-		capture.state.audio = CaptureState::Off;
+		capture.state.audio = Off;
 		LOG_MSG("CAPTURE: Stopped capturing audio output");
 		break;
 	}
@@ -474,28 +500,30 @@ static void handle_capture_audio_event(bool pressed)
 
 static void handle_capture_midi_event(bool pressed)
 {
+	using enum CaptureState;
+
 	// Ignore key-release events
 	if (!pressed) {
 		return;
 	}
 
 	switch (capture.state.midi) {
-	case CaptureState::Off:
-		capture.state.midi = CaptureState::Pending;
+	case Off:
+		capture.state.midi = Pending;
 
 		// We need to log this because the actual sending of MIDI data
 		// might happen much later
 		LOG_MSG("CAPTURE: Preparing to capture MIDI output; "
 		        "capturing will start on the first MIDI message");
 		break;
-	case CaptureState::Pending:
-		capture.state.midi = CaptureState::Off;
+	case Pending:
+		capture.state.midi = Off;
 		LOG_MSG("CAPTURE: Stopped capturing MIDI output before any "
 		        "MIDI message was output (no MIDI file has been created)");
 		break;
-	case CaptureState::InProgress:
+	case InProgress:
 		capture_midi_finalise();
-		capture.state.midi = CaptureState::Off;
+		capture.state.midi = Off;
 		LOG_MSG("CAPTURE: Stopped capturing MIDI output");
 		break;
 	}
@@ -547,34 +575,38 @@ static void handle_capture_single_rendered_screenshot_event(const bool pressed)
 
 static void handle_capture_video_event(bool pressed)
 {
+	using enum CaptureState;
+
 	// Ignore key-release events
 	if (!pressed) {
 		return;
 	}
-	if (capture.state.video != CaptureState::Off) {
+	if (capture.state.video != Off) {
 		CAPTURE_StopVideoCapture();
-	} else if (capture.state.video == CaptureState::Off) {
+	} else if (capture.state.video == Off) {
 		CAPTURE_StartVideoCapture();
 	}
 }
 
 static void capture_destroy(Section* /*sec*/)
 {
-	if (capture.state.audio == CaptureState::InProgress) {
+	using enum CaptureState;
+
+	if (capture.state.audio == InProgress) {
 		capture_audio_finalise();
-		capture.state.audio = CaptureState::Off;
+		capture.state.audio = Off;
 	}
-	if (capture.state.midi == CaptureState::InProgress) {
+	if (capture.state.midi == InProgress) {
 		capture_midi_finalise();
-		capture.state.midi = CaptureState::Off;
+		capture.state.midi = Off;
 	}
 	// When destructed, the threaded image capturer instances do a blocking
 	// wait until all pending capture tasks are processed.
 	image_capturer = {};
 
-	if (capture.state.video == CaptureState::InProgress) {
+	if (capture.state.video == InProgress) {
 		capture_video_finalise();
-		capture.state.video = CaptureState::Off;
+		capture.state.video = Off;
 	}
 
 	capture = {};
