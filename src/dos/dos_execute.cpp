@@ -123,65 +123,86 @@ void DOS_ClearLaunchedProgramNames()
 // Program execute/terminate support
 // ***************************************************************************
 
-void DOS_Terminate(uint16_t pspseg, bool tsr, uint8_t exitcode)
+void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
+                   const uint8_t exit_code)
 {
-	erase_canonical_name(pspseg);
+	erase_canonical_name(psp_seg);
 
-	dos.return_code=exitcode;
-	dos.return_mode=(tsr)?(uint8_t)RETURN_TSR:(uint8_t)RETURN_EXIT;
-	
-	DOS_PSP curpsp(pspseg);
-	if (pspseg==curpsp.GetParent()) return;
-	/* Free Files owned by process */
-	if (!tsr) curpsp.CloseFiles();
-	
-	/* Get the termination address */
+	dos.return_code = exit_code;
+	dos.return_mode = (is_terminate_and_stay_resident) ? (uint8_t)RETURN_TSR
+	                                                   : (uint8_t)RETURN_EXIT;
+
+	DOS_PSP curpsp(psp_seg);
+	if (psp_seg == curpsp.GetParent()) {
+		return;
+	}
+
+	// Free files owned by process
+	if (!is_terminate_and_stay_resident) {
+		curpsp.CloseFiles();
+	}
+
+	// Get the termination address
 	RealPt old22 = curpsp.GetInt22();
-	/* Restore vector 22,23,24 */
+
+	// Restore vector 22,23,24
 	curpsp.RestoreVectors();
-	/* Set the parent PSP */
+
+	// Set the parent PSP
 	dos.psp(curpsp.GetParent());
 	DOS_PSP parentpsp(curpsp.GetParent());
 
-	/* Restore the SS:SP to the previous one */
-	SegSet16(ss,RealSegment(parentpsp.GetStack()));
-	reg_sp = RealOffset(parentpsp.GetStack());		
-	/* Restore registers */
-	reg_ax = real_readw(SegValue(ss),reg_sp+ 0);
-	reg_bx = real_readw(SegValue(ss),reg_sp+ 2);
-	reg_cx = real_readw(SegValue(ss),reg_sp+ 4);
-	reg_dx = real_readw(SegValue(ss),reg_sp+ 6);
-	reg_si = real_readw(SegValue(ss),reg_sp+ 8);
-	reg_di = real_readw(SegValue(ss),reg_sp+10);
-	reg_bp = real_readw(SegValue(ss),reg_sp+12);
-	SegSet16(ds,real_readw(SegValue(ss),reg_sp+14));
-	SegSet16(es,real_readw(SegValue(ss),reg_sp+16));
-	reg_sp+=18;
-	/* Set the CS:IP stored in int 0x22 back on the stack */
-	real_writew(SegValue(ss),reg_sp+0,RealOffset(old22));
-	real_writew(SegValue(ss),reg_sp+2,RealSegment(old22));
-	/* set IOPL=3 (Strike Commander), nested task set,
-	   interrupts enabled, test flags cleared */
-	real_writew(SegValue(ss),reg_sp+4,0x7202);
+	// Restore the SS:SP to the previous one
+	SegSet16(ss, RealSegment(parentpsp.GetStack()));
+	reg_sp = RealOffset(parentpsp.GetStack());
+
+	// Restore registers
+	reg_ax = real_readw(SegValue(ss), reg_sp + 0);
+	reg_bx = real_readw(SegValue(ss), reg_sp + 2);
+	reg_cx = real_readw(SegValue(ss), reg_sp + 4);
+	reg_dx = real_readw(SegValue(ss), reg_sp + 6);
+	reg_si = real_readw(SegValue(ss), reg_sp + 8);
+	reg_di = real_readw(SegValue(ss), reg_sp + 10);
+	reg_bp = real_readw(SegValue(ss), reg_sp + 12);
+
+	SegSet16(ds, real_readw(SegValue(ss), reg_sp + 14));
+	SegSet16(es, real_readw(SegValue(ss), reg_sp + 16));
+
+	reg_sp += 18;
+
+	// Set the CS:IP stored in int 0x22 back on the stack
+	real_writew(SegValue(ss), reg_sp + 0, RealOffset(old22));
+	real_writew(SegValue(ss), reg_sp + 2, RealSegment(old22));
+
+	// Set IOPL=3 (Strike Commander), nested task set interrupts enabled,
+	// test flags cleared
+	real_writew(SegValue(ss), reg_sp + 4, 0x7202);
+
 	// Free memory owned by process
-	if (!tsr) DOS_FreeProcessMemory(pspseg);
+	if (!is_terminate_and_stay_resident) {
+		DOS_FreeProcessMemory(psp_seg);
+	}
+
 	DOS_UpdateCurrentProgramName();
 
-	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
+	if ((!(CPU_AutoDetermineMode >> CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) {
+		return;
+	}
 
-	CPU_AutoDetermineMode>>=CPU_AUTODETERMINE_SHIFT;
-	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
-		CPU_CycleAutoAdjust=false;
-		CPU_CycleLeft=0;
-		CPU_Cycles=0;
-		CPU_CycleMax=CPU_OldCycleMax;
+	CPU_AutoDetermineMode >>= CPU_AUTODETERMINE_SHIFT;
+	if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CYCLES) {
+		CPU_CycleAutoAdjust = false;
+		CPU_CycleLeft       = 0;
+		CPU_Cycles          = 0;
+		CPU_CycleMax        = CPU_OldCycleMax;
+
 		GFX_NotifyCyclesChanged(CPU_OldCycleMax);
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
-	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-		cpudecoder=&CPU_Core_Normal_Run;
-		CPU_CycleLeft=0;
-		CPU_Cycles=0;
+	if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+		cpudecoder = &CPU_Core_Normal_Run;
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
 	}
 #endif
 
