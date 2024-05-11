@@ -1594,7 +1594,7 @@ Bitu CPU_SIDT_limit(void) {
 	return cpu.idt.GetLimit();
 }
 
-static bool printed_cycles_auto_info = false;
+static bool displayed_max_cycles_warning = false;
 
 void CPU_SET_CRX(Bitu cr, Bitu value)
 {
@@ -1627,9 +1627,13 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 
 				GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 
-				if (!printed_cycles_auto_info) {
-					        printed_cycles_auto_info = true;
-					        LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
+				if (!displayed_max_cycles_warning) {
+					LOG_WARNING(
+					        "CPU: Switched to max cycles for protected mode program. "
+					        "Try setting a fixed cycles value if you're getting audio "
+					        "drop-outs or the programs runs too fast.");
+
+					displayed_max_cycles_warning = true;
 				}
 			} else {
 				GFX_RefreshTitle();
