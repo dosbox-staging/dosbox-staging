@@ -129,8 +129,9 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 	erase_canonical_name(psp_seg);
 
 	dos.return_code = exit_code;
-	dos.return_mode = (is_terminate_and_stay_resident) ? (uint8_t)RETURN_TSR
-	                                                   : (uint8_t)RETURN_EXIT;
+	dos.return_mode = (is_terminate_and_stay_resident)
+	                        ? DosReturnMode::TerminateAndStayResident
+	                        : DosReturnMode::Exit;
 
 	DOS_PSP curpsp(psp_seg);
 	if (psp_seg == curpsp.GetParent()) {
