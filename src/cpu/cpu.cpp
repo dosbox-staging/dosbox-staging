@@ -2006,6 +2006,7 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 		}
 		cpu.cr0 = value;
 		if (value & CR0_PROTECTION) {
+			LOG_TRACE("*** Entering protected mode: %02Xh", CPU_AutoDetermineMode);
 			cpu.pmode = true;
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
 			PAGING_Enable((value & CR0_PAGING) > 0);
@@ -2781,14 +2782,10 @@ void CPU_Reset_AutoAdjust(void)
 }
 
 struct CpuCyclesConfig {
-	std::optional<int> fixed           = {};
-	std::optional<int> percentage      = {};
-	std::optional<int> limit           = {};
+	std::optional<int> fixed      = {};
+	std::optional<int> percentage = {};
+	bool throttled                = false;
 };
-
-constexpr CpuCyclesConfig DefaultConfig = {.fixed = CpuCyclesRealModeDefault,
-                                           .percentage = 100,
-                                           .limit      = 60000};
 
 // All valid cycles setting variations supported by original DOSBox:
 //
@@ -2818,7 +2815,7 @@ constexpr CpuCyclesConfig DefaultConfig = {.fixed = CpuCyclesRealModeDefault,
 //   auto 12000 max 90%
 //   auto 12000 max 90% limit 50000
 //
-static std::optional<CpuCyclesConfig> parse_cpu_cycles_settings(const std::string& pref)
+/*static std::optional<CpuCyclesConfig> parse_cpu_cycles_settings(const std::string& pref)
 {
 	enum State {
 		Start,
@@ -2955,7 +2952,7 @@ static std::optional<CpuCyclesConfig> parse_cpu_cycles_settings(const std::strin
 	// sequence of tokens. Doing "relaxed" parsing by ignoring trailing
 	// tokens is inviting trouble, so we'll just raise an error.
 	return {};
-}
+} */
 
 class Cpu final {
 private:
