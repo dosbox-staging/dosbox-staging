@@ -198,11 +198,13 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 		CPU_CycleLeft       = 0;
 		CPU_Cycles          = 0;
 		CPU_CycleMax        = CPU_OldCycleMax;
+
 		GFX_NotifyCyclesChanged(CPU_OldCycleMax);
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode.auto_core) {
-		cpudecoder    = &CPU_Core_Normal_Run;
+		cpudecoder = &CPU_Core_Normal_Run;
+
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
 	}
