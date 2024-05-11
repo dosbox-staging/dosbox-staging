@@ -68,8 +68,10 @@ int64_t CPU_IODelayRemoved = 0;
 
 CPU_Decoder* cpudecoder;
 
-bool CPU_CycleAutoAdjust   = false;
-Bitu CPU_AutoDetermineMode = 0;
+bool CPU_CycleAutoAdjust = false;
+
+CpuAutoDetermineMode CPU_AutoDetermineMode     = {};
+CpuAutoDetermineMode CPU_LastAutoDetermineMode = {};
 
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
 
@@ -1605,16 +1607,19 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
 			PAGING_Enable((value & CR0_PAGING) > 0);
 
-			if (!(CPU_AutoDetermineMode & CPU_AUTODETERMINE_MASK)) {
+			if (!CPU_AutoDetermineMode.auto_core &&
+			    !CPU_AutoDetermineMode.auto_cycles) {
 				break;
 			}
 
-			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CYCLES) {
+			if (CPU_AutoDetermineMode.auto_cycles) {
 				CPU_CycleAutoAdjust = true;
 				CPU_CycleLeft       = 0;
 				CPU_Cycles          = 0;
 				CPU_OldCycleMax     = CPU_CycleMax;
+
 				GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
+
 				if (!printed_cycles_auto_info) {
 					        printed_cycles_auto_info = true;
 					        LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
@@ -1624,17 +1629,18 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			}
 
 #if (C_DYNAMIC_X86)
-			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+			if (CPU_AutoDetermineMode.auto_core) {
 				CPU_Core_Dyn_X86_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dyn_X86_Run;
 			}
 #elif (C_DYNREC)
-			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+			if (CPU_AutoDetermineMode.auto_core) {
 				CPU_Core_Dynrec_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dynrec_Run;
 			}
 #endif
-			CPU_AutoDetermineMode <<= CPU_AUTODETERMINE_SHIFT;
+			CPU_LastAutoDetermineMode = CPU_AutoDetermineMode;
+			CPU_AutoDetermineMode     = {};
 
 		} else {
 			cpu.pmode = false;
@@ -2391,7 +2397,7 @@ public:
 	bool Configure(Section* sec)
 	{
 		Section_prop* secprop = static_cast<Section_prop*>(sec);
-		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
+		CPU_AutoDetermineMode = {};
 
 		// TODO needed ?
 		// CPU_CycleLeft=0;
@@ -2449,7 +2455,7 @@ public:
 
 		} else {
 			if (type == "auto") {
-				CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CYCLES;
+				CPU_AutoDetermineMode.auto_cycles = true;
 
 				CPU_CycleMax      = CpuCyclesRealModeDefault;
 				CPU_OldCycleMax   = CpuCyclesRealModeDefault;
@@ -2512,7 +2518,7 @@ public:
 			cpudecoder = &CPU_Core_Normal_Run;
 
 #if C_DYNAMIC_X86
-			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+			CPU_AutoDetermineMode.auto_core = true;
 
 		} else if (core == "dynamic") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
@@ -2522,7 +2528,7 @@ public:
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
 #elif C_DYNREC
-			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+			CPU_AutoDetermineMode.auto_core = true;
 
 		} else if (core == "dynamic") {
 			cpudecoder = &CPU_Core_Dynrec_Run;
@@ -2559,7 +2565,7 @@ public:
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize = 16;
-				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+				CPU_AutoDetermineMode.auto_core = false;
 
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
@@ -2583,7 +2589,7 @@ public:
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize = 32;
-				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+				CPU_AutoDetermineMode.auto_core = false;
 
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");

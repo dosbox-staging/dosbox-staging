@@ -33,15 +33,7 @@
 	#include "mem.h"
 #endif
 
-#define CPU_AUTODETERMINE_NONE   0x00
-#define CPU_AUTODETERMINE_CORE   0x01
-#define CPU_AUTODETERMINE_CYCLES 0x02
-
-#define CPU_AUTODETERMINE_SHIFT 0x02
-#define CPU_AUTODETERMINE_MASK  0x03
-
-constexpr auto CpuCyclesMax = 2'000'000;
-
+constexpr auto CpuCyclesMax             = 2'000'000;
 constexpr auto CpuCyclesRealModeDefault = 3000;
 
 enum class ArchitectureType {
@@ -66,7 +58,14 @@ extern int CPU_CyclePercUsed;
 extern int CPU_CycleLimit;
 extern int64_t CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
-extern Bitu CPU_AutoDetermineMode;
+
+struct CpuAutoDetermineMode {
+	bool auto_core   = false;
+	bool auto_cycles = false;
+};
+
+extern CpuAutoDetermineMode CPU_AutoDetermineMode;
+extern CpuAutoDetermineMode CPU_LastAutoDetermineMode;
 
 extern ArchitectureType CPU_ArchitectureType;
 
