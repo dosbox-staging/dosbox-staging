@@ -222,7 +222,9 @@ void DOS_ShutDownDevices();
 bool DOS_NewPSP(uint16_t pspseg,uint16_t size);
 bool DOS_ChildPSP(uint16_t pspseg,uint16_t size);
 bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
-void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode);
+
+void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
+                   const uint8_t exit_code);
 
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
