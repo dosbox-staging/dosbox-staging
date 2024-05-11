@@ -2089,7 +2089,7 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 	while (frames_remaining--) {
 		auto prev_sample = prev_frame.left;
 		auto curr_sample = static_cast<float>(*data);
-		float out_sample = {};
+		float out_sample = 0;
 
 		switch (resample_method) {
 		case ResampleMethod::LinearInterpolation:
@@ -2464,6 +2464,8 @@ static void handle_mix_no_sound()
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    Uint8* stream, int bytes_requested)
 {
+	assert(bytes_requested >= 0);
+
 	ZoneScoped;
 	memset(stream, 0, static_cast<size_t>(bytes_requested));
 
@@ -2475,8 +2477,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	auto reduce_frames = 0;
 
 	// Used for time-stretching the audio in the buffer overrun scenario.
-	float index     = {};
-	float index_add = {};
+	float index     = 0;
+	float index_add = 0;
 
 	if (mixer.frames_done < frames_requested) {
 		// Buffer underrun
