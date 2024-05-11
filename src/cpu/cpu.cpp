@@ -2017,10 +2017,17 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			}
 
 			if (CPU_AutoDetermineMode.auto_cycles) {
-				CPU_CycleAutoAdjust = true;
-				CPU_CycleLeft       = 0;
-				CPU_Cycles          = 0;
-				CPU_OldCycleMax     = CPU_CycleMax;
+//				CPU_CycleAutoAdjust = true;
+//				CPU_CycleLeft       = 0;
+//				CPU_Cycles          = 0;
+//				CPU_OldCycleMax     = CPU_CycleMax;
+
+				CPU_CycleAutoAdjust = false;
+				CPU_CycleLeft       = 8000;
+				CPU_Cycles          = 8000;
+				CPU_CycleMax        = 8000;
+				CPU_OldCycleMax     = 8000;
+				CPU_CycleLimit      = -1;
 
 				GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 
