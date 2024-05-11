@@ -920,11 +920,14 @@ static Bitu DOS_21Handler(void) {
 		if (result_errorcode)
 			dos.return_code = result_errorcode;
 		break;
-	case 0x4d:					/* Get Return code */
-		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
-		reg_ah=dos.return_mode;
+
+	case 0x4d: // Get return code
+		// Officially read from SDA and clear when read
+		reg_al = dos.return_code;
+		reg_ah = enum_val(dos.return_mode);
 		CALLBACK_SCF(false);
 		break;
+
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_FindFirst(name1, reg_cl)) {
