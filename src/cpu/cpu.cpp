@@ -51,14 +51,29 @@ CPU_Regs cpu_regs = {};
 CPUBlock cpu      = {};
 Segments Segs     = {};
 
-int CPU_Cycles        = 0;
-int CPU_CycleLeft     = CpuCyclesRealModeDefault;
-int CPU_CycleMax      = CpuCyclesRealModeDefault;
-int CPU_OldCycleMax   = CpuCyclesRealModeDefault;
+// Current CPU cycles
+int CPU_Cycles = 0;
+
+// TODO
+int CPU_CycleLeft = CpuCyclesRealModeDefault;
+
+// Target fixed cycles value
+int CPU_CycleMax = CpuCyclesRealModeDefault;
+
+// Target protected mode cycles value
+int CPU_CycleMaxProtected = -1;
+
+// Old fixed cycles value to restore when exiting protected mode
+int CPU_OldCycleMax = CpuCyclesRealModeDefault;
+
+// Host CPU limit: max utilisation of a single host CPU core
 int CPU_CyclePercUsed = 100;
-int CPU_CycleLimit    = -1;
-int CPU_CycleUp       = 0;
-int CPU_CycleDown     = 0;
+
+// Cycle limit: max cycles in throttled mode
+int CPU_CycleLimit = -1;
+
+int CPU_CycleUp   = 0;
+int CPU_CycleDown = 0;
 
 int64_t CPU_IODelayRemoved = 0;
 
@@ -2006,10 +2021,13 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 		}
 		cpu.cr0 = value;
 		if (value & CR0_PROTECTION) {
-			LOG_TRACE("*** Entering protected mode: %02Xh", CPU_AutoDetermineMode);
 			cpu.pmode = true;
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
 			PAGING_Enable((value & CR0_PAGING) > 0);
+
+			if (CPU_CycleMaxProtected > -1) {
+				CPU_CycleMax = CPU_CycleMaxProtected;
+			}
 
 			if (!CPU_AutoDetermineMode.auto_core &&
 			    !CPU_AutoDetermineMode.auto_cycles) {
@@ -2017,17 +2035,17 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			}
 
 			if (CPU_AutoDetermineMode.auto_cycles) {
-//				CPU_CycleAutoAdjust = true;
-//				CPU_CycleLeft       = 0;
-//				CPU_Cycles          = 0;
-//				CPU_OldCycleMax     = CPU_CycleMax;
+				CPU_CycleAutoAdjust = true;
+				CPU_CycleLeft       = 0;
+				CPU_Cycles          = 0;
+				CPU_OldCycleMax     = CPU_CycleMax;
 
-				CPU_CycleAutoAdjust = false;
-				CPU_CycleLeft       = 8000;
-				CPU_Cycles          = 8000;
-				CPU_CycleMax        = 8000;
-				CPU_OldCycleMax     = 8000;
-				CPU_CycleLimit      = -1;
+//				CPU_CycleAutoAdjust = false;
+//				CPU_CycleLeft       = 8000;
+//				CPU_Cycles          = 8000;
+//				CPU_CycleMax        = 8000;
+//				CPU_OldCycleMax     = 8000;
+//				CPU_CycleLimit      = -1;
 
 				GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 
@@ -3168,23 +3186,26 @@ public:
 
 				CPU_AutoDetermineMode.auto_cycles = true;
 
-				CPU_CycleAutoAdjust = false;
 				CPU_CycleMax        = *real_val;
 				CPU_OldCycleMax     = *real_val;
+				CPU_CyclePercUsed   = 100;
+				CPU_CycleAutoAdjust = false;
 
 				const auto protected_val = parts[2];
 				if (protected_val == "max") {
 					// "real C protected max"
+					CPU_CycleLimit = -1;
 
-					CPU_CyclePercUsed = 100;
-
-				} else if (parts.size() == 4 &&
-				           parts[3] == "throttled") {
-					// "real C protected P throttled"
-
-					if (const auto protected_int = parse_int(
-					            protected_val)) {
+				} else if (const auto protected_int = parse_int(protected_val)) {
+					if (parts.size() == 3) {
+						CPU_AutoDetermineMode.auto_cycles = false;
+						// "real C protected P"
+						CPU_CycleMaxProtected = *protected_int;
+						
+					} else if (parts.size() == 4 && parts[3] == "throttled") {
+						// "real C protected P throttled"
 						CPU_CycleLimit = *protected_int;
+
 					} else {
 						// return ERROR
 					}
