@@ -79,7 +79,13 @@ union bootSector {
 
 
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
-enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
+
+enum class DosReturnMode : uint8_t {
+	Exit                     = 0,
+	CtrlC                    = 1,
+	Abort                    = 2,
+	TerminateAndStayResident = 3
+};
 
 #define DOS_FILES   255
 #define DOS_DRIVES  26
@@ -878,7 +884,8 @@ struct DOS_Block {
 	RealPt dta() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA(); }
 	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
 
-	uint8_t return_code,return_mode;
+	uint8_t return_code;
+	DosReturnMode return_mode = {};
 
 	uint8_t current_drive;
 	bool verify;
