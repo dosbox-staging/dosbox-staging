@@ -330,12 +330,11 @@ private:
 void CONFIG::Run(void)
 {
 	static const char* const params[] = {
-	        "-r",        "-wcd",       "-wc",          "-writeconf",
-	        "-l",        "-rmconf",    "-h",           "-help",
-	        "-?",        "-axclear",   "-axadd",       "-axtype",
-	        "-avistart", "-avistop",   "-startmapper", "-get",
-	        "-set",      "-writelang", "-wl",          "-securemode",
-	        ""};
+	        "-r",      "-wcd",       "-wc",      "-writeconf",   "-l",
+	        "-h",      "-help",      "-?",       "-axclear",     "-axadd",
+	        "-axtype", "-avistart",  "-avistop", "-startmapper", "-get",
+	        "-set",    "-writelang", "-wl",      "-securemode",  ""};
+
 	enum prs {
 		P_NOMATCH,
 		P_NOPARAMS, // fixed return values for GetParameterFromList
@@ -344,7 +343,6 @@ void CONFIG::Run(void)
 		P_WRITECONF,
 		P_WRITECONF2,
 		P_LISTCONF,
-		P_KILLCONF,
 		P_HELP,
 		P_HELP2,
 		P_HELP3,
