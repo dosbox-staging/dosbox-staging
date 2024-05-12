@@ -613,8 +613,15 @@ void CONFIG::Run(void)
 
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 						         p->propname.c_str(),
-						         sec->GetName(),
-						         p->GetHelp().c_str());
+						         sec->GetName());
+
+						if (p->IsDeprecated()) {
+							WriteOut(MSG_Get("PROGRAM_CONFIG_DEPRECATED"));
+							WriteOut("\n");
+						}
+
+						WriteOut(p->GetHelp().c_str());
+						WriteOut("\n\n");
 
 						if (!p->IsDeprecated()) {
 							if (!possible_values.empty()) {
@@ -1034,4 +1041,8 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE", "Property '%s' is not changeable at runtime.");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
+	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
+	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
 }
