@@ -993,8 +993,8 @@ void PROGRAMS_Init(Section* sec)
 	        "  -securemode       enable secure mode");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
-	        "[color=white]Purpose of property [color=light-green]'%s'[color=white] "
-	        "(contained in section [color=light-cyan][%s][color=white]):[reset]\n\n%s\n\n");
+	        "[color=white]Description of the [color=light-green]'%s'[color=white] "
+	        "setting in the [color=light-cyan][%s][color=white] section:[reset]\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES",
 	        "[color=white]Possible values:[reset]  %s\n");
@@ -1006,7 +1006,8 @@ void PROGRAMS_Init(Section* sec)
 	        "[color=white]Current value:[reset]    %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
-	        "[color=white]Purpose of section [%s]:[reset]\n"
+	        "[color=white]Description of the "
+	        "[color=light-cyan][%s][color=white] section:[reset]\n"
 	        "%s\n[color=white]Current value:[reset]\n%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
@@ -1015,12 +1016,13 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
-	        "[color=white]Section [color=light-cyan][%s] [color=white]contains the following properties:[reset]\n");
+	        "[color=white]List of settings in the "
+	        "[color=light-cyan][%s][color=white] section:[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
-	        "[color=white]DOSBox configuration contains the following sections:[reset]\n");
+	        "[color=white]List of configuration sections:[reset]\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Switched to secure mode.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Secure mode enabled.\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
@@ -1046,7 +1048,8 @@ void PROGRAMS_Init(Section* sec)
 
 	MSG_Add("CONJUNCTION_AND", "and");
 
-	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE", "Property '%s' is not changeable at runtime.");
+	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	        "Property '%s' is not changeable at runtime.");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
