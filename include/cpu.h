@@ -33,8 +33,12 @@
 	#include "mem.h"
 #endif
 
-constexpr auto CpuCyclesMax             = 2'000'000;
-constexpr auto CpuCyclesRealModeDefault = 3000;
+constexpr auto CpuCyclesMin = 50;
+constexpr auto CpuCyclesMax = 2'000'000;
+
+constexpr auto CpuCyclesRealModeDefault      = 3000;
+constexpr auto CpuCyclesProtectedModeDefault = 60000;
+constexpr auto CpuThrottleDefault            = false;
 
 enum class ArchitectureType {
 	Intel86         = 0x05,
