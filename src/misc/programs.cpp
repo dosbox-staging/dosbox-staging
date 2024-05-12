@@ -988,7 +988,9 @@ void PROGRAMS_Init(Section* sec)
 	        "                    show the value of a single config property\n"
 	        "\n"
 	        "  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
-	        "                    set the value of a config property");
+	        "                    set the value of a config property"
+	        "\n\n"
+	        "  -securemode       enable secure mode");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
 	        "[color=white]Purpose of property [color=light-green]'%s'[color=white] "
