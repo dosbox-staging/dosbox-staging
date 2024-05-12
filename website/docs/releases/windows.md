@@ -12,13 +12,13 @@ hide:
 [Download DOSBox Staging 0.81.1 (Installer)][0_81_1_INSTALLER]
 <br>
 <small>
-sha256: TODO<wbr>TODO
+sha256: 4bb5e63bfef41d4a6ee8f7af3b8c5ee6<wbr>756987c4247197db0b16d888c6ac0705
 </small>
 
 [Download DOSBox Staging 0.81.1 (zip)][0_81_1_ZIP]
 <br>
 <small>
-sha256: TODO<wbr>TODO
+sha256: cb45e4e56b85cac7b8b1eb63a1bbd934<wbr>30a226215a5c04f2700076c279d10e12
 </small>
 
 DOSBox Staging requires 64-bit Windows.

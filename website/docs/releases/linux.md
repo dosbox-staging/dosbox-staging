@@ -12,7 +12,7 @@ hide:
 [Download DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
 <br>
 <small>
-sha256: TODO<wbr>TODO
+sha256: 5aee92774569cf1e39ade3fccff03994<wbr>464d17b396b0ae98360af61e9d37cba7
 </small>
 
 Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn
