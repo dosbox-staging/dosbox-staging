@@ -57,9 +57,9 @@ public:
 	BatchFile& operator=(const BatchFile&) = delete;
 	BatchFile(BatchFile&&)                 = delete;
 	BatchFile& operator=(BatchFile&&)      = delete;
-	virtual ~BatchFile()                   = default;
+	~BatchFile()                           = default;
 
-	virtual bool ReadLine(char* line);
+	bool ReadLine(char* line);
 	bool Goto(std::string_view label);
 	void Shift();
 	void SetEcho(bool echo_on);
