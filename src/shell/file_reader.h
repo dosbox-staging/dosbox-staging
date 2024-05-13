@@ -28,7 +28,7 @@
 
 class FileReader final : public LineReader {
 public:
-	static std::optional<FileReader> GetFileReader(const std::string& file);
+	static std::unique_ptr<FileReader> GetFileReader(const std::string& file);
 
 	void Reset() final;
 	std::optional<std::string> Read() final;

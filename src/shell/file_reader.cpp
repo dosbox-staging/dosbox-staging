@@ -20,7 +20,7 @@
 
 #include "file_reader.h"
 
-std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
+std::unique_ptr<FileReader> FileReader::GetFileReader(const std::string& filename)
 {
 	auto fullname = DOS_Canonicalize(filename.c_str());
 
@@ -29,7 +29,7 @@ std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
 		return {};
 	}
 	DOS_CloseFile(handle);
-	return FileReader(std::move(fullname));
+	return std::unique_ptr<FileReader>(new FileReader(std::move(fullname)));
 }
 
 FileReader::FileReader(std::string filename)
