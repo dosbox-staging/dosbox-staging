@@ -4344,10 +4344,10 @@ static void config_add_sdl()
 #else
 		"texture_default",
 #endif
-		        "texture", "texturenb",
 #if C_OPENGL
-		        "opengl"
+		        "opengl",
 #endif
+		        "texture", "texturenb",
 	});
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
