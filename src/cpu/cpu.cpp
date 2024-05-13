@@ -41,38 +41,42 @@
 #include "video.h"
 
 #if 1
-#undef LOG
-#if defined (_MSC_VER)
-#define LOG_CONSUME(...) (void)sizeof(__VA_ARGS__)
-#define LOG(X, Y) LOG_CONSUME
-#else
-#define LOG(X,Y) CPU_LOG
-#define CPU_LOG(...)
-#endif
+	#undef LOG
+	#if defined(_MSC_VER)
+		#define LOG_CONSUME(...) (void)sizeof(__VA_ARGS__)
+		#define LOG(X, Y)        LOG_CONSUME
+	#else
+		#define LOG(X, Y) CPU_LOG
+		#define CPU_LOG(...)
+	#endif
 #endif
 
 CPU_Regs cpu_regs = {};
-CPUBlock cpu = {};
-Segments Segs = {};
+CPUBlock cpu      = {};
+Segments Segs     = {};
 
-int32_t CPU_Cycles = 0;
-int32_t CPU_CycleLeft = 3000;
-int32_t CPU_CycleMax = 3000;
-int32_t CPU_OldCycleMax = 3000;
+int32_t CPU_Cycles        = 0;
+int32_t CPU_CycleLeft     = 3000;
+int32_t CPU_CycleMax      = 3000;
+int32_t CPU_OldCycleMax   = 3000;
 int32_t CPU_CyclePercUsed = 100;
-int32_t CPU_CycleLimit = -1;
-int32_t CPU_CycleUp = 0;
-int32_t CPU_CycleDown = 0;
+int32_t CPU_CycleLimit    = -1;
+int32_t CPU_CycleUp       = 0;
+int32_t CPU_CycleDown     = 0;
+
 int64_t CPU_IODelayRemoved = 0;
-CPU_Decoder * cpudecoder;
-bool CPU_CycleAutoAdjust = false;
+
+CPU_Decoder* cpudecoder;
+
+bool CPU_CycleAutoAdjust   = false;
 Bitu CPU_AutoDetermineMode = 0;
 
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
 
-Bitu CPU_extflags_toggle=0;	// ID and AC flags may be toggled depending on emulated CPU architecture
+// ID and AC flags may be toggled depending on emulated CPU architecture
+Bitu CPU_extflags_toggle = 0;
 
-Bitu CPU_PrefetchQueueSize=0;
+Bitu CPU_PrefetchQueueSize = 0;
 
 void CPU_Core_Full_Init(void);
 void CPU_Core_Normal_Init(void);
@@ -88,18 +92,18 @@ void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 void CPU_Core_Dynrec_Cache_Close(void);
 #endif
 
-/* In debug mode exceptions are tested and dosbox exits when 
- * a unhandled exception state is detected. 
+/* In debug mode exceptions are tested and dosbox exits when
+ * a unhandled exception state is detected.
  * USE CHECK_EXCEPT to raise an exception in that case to see if that exception
  * solves the problem.
- * 
+ *
  * In non-debug mode dosbox doesn't do detection (and hence doesn't crash at
  * that point). (game might crash later due to the unhandled exception) */
 
 #if C_DEBUG
 // #define CPU_CHECK_EXCEPT 1
 // #define CPU_CHECK_IGNORE 1
- /* Use CHECK_EXCEPT when something doesn't work to see if a exception is 
+ /* Use CHECK_EXCEPT when something doesn't work to see if a exception is
  * needed that isn't enabled by default.*/
 #else
 /* NORMAL NO CHECKING => More Speed */
@@ -246,7 +250,7 @@ bool CPU_PUSHF(Bitu use32) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	}
 	FillFlags();
-	if (use32) 
+	if (use32)
 		CPU_Push32(reg_flags & 0xfcffff);
 	else CPU_Push16(reg_flags);
 	return false;
@@ -260,7 +264,7 @@ void CPU_CheckSegments(void) {
 		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
 		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
 		case DESC_CODE_N_NC_A:  	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:  	case DESC_CODE_R_NC_NA:
-			if (cpu.cpl > desc.DPL()) needs_invalidation = true; 
+			if (cpu.cpl > desc.DPL()) needs_invalidation = true;
 			break;
 		default: break;	}
 	if (needs_invalidation) CPU_SetSegGeneral(es,0);
@@ -371,7 +375,7 @@ enum TSwitchType {
 bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 	FillFlags();
 	TaskStateSegment new_tss;
-	if (!new_tss.SetSelector(new_tss_selector)) 
+	if (!new_tss.SetSelector(new_tss_selector))
 		E_Exit("Illegal TSS for switch, selector=%" sBitfs(x) ", switchtype=%x",new_tss_selector,tstype);
 	if (tstype==TSwitch_IRET) {
 		if (!new_tss.desc.IsBusy())
@@ -477,7 +481,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		new_fs = SegValue(fs);
 		new_gs = SegValue(gs);
 	} else {
-	
+
 		/* Setup the new cr3 */
 		PAGING_SetDirBase(new_cr3);
 
@@ -616,7 +620,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 				CPU_Exception(EXCEPTION_GP,0);
 				return;
 			}
-		} 
+		}
 
 		Descriptor gate;
 		if (!cpu.idt.GetDescriptor(num<<3,gate)) {
@@ -726,7 +730,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 						}
 //						LOG_MSG("INT:Gate to inner level SS:%X SP:%X",n_ss,n_esp);
 						goto do_interrupt;
-					} 
+					}
 					if (cs_dpl!=cpu.cpl)
 						E_Exit("Non-conforming intra privilege INT with DPL!=CPL");
 					[[fallthrough]];
@@ -752,7 +756,7 @@ do_interrupt:
 						CPU_Push16(oldeip);
 						if (type & CPU_INT_HAS_ERROR) CPU_Push16(cpu.exception.error);
 					}
-					break;		
+					break;
 				default:
 				        E_Exit("INT:Gate Selector points to illegal descriptor with type 0x%x",
 				               cs_desc.Type());
@@ -845,7 +849,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				return;
 			}
 		}
-		/* Check if this is task IRET */	
+		/* Check if this is task IRET */
 		if (GETFLAG(NT)) {
 			if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
 			CPU_CHECK_COND(!cpu_tss.IsValid(),
@@ -892,7 +896,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				reg_esp=n_esp;
 				cpu.code.big=false;
 				SegSet16(cs,n_cs_sel);
-				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);	
+				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);
 				return;
 			}
 			if (n_flags & FLAG_VM) E_Exit("IRET from pmode to v86 with CPL!=0");
@@ -940,7 +944,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			"IRET with nonpresent code segment",
 			EXCEPTION_NP,n_cs_sel & 0xfffc)
 
-		if (n_cs_rpl==cpu.cpl) {	
+		if (n_cs_rpl==cpu.cpl) {
 			/* Return to same level */
 
 			// commit point
@@ -1132,7 +1136,7 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 				"CALL:CODE:NC:DPL!=CPL",
 				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:NC to %X:%X",selector,offset);
-			goto call_code;	
+			goto call_code;
 		case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
 			CPU_CHECK_COND(call.DPL()>cpu.cpl,
@@ -1159,7 +1163,7 @@ call_code:
 			cpu.code.big=call.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			return;
-		case DESC_386_CALL_GATE: 
+		case DESC_386_CALL_GATE:
 		case DESC_286_CALL_GATE:
 			{
 				CPU_CHECK_COND(call.DPL()<cpu.cpl,
@@ -1230,7 +1234,7 @@ call_code:
 						// catch pagefaults
 						if (call.saved.gate.paramcount&31) {
 							if (call.Type()==DESC_386_CALL_GATE) {
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									mem_readd(o_stack+i*4);
 							} else {
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
@@ -1266,7 +1270,7 @@ call_code:
 							CPU_Push32(o_ss);		//save old stack
 							CPU_Push32(o_esp);
 							if (call.saved.gate.paramcount&31)
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									CPU_Push32(mem_readd(o_stack+i*4));
 							CPU_Push32(oldcs);
 							CPU_Push32(oldeip);
@@ -1280,7 +1284,7 @@ call_code:
 							CPU_Push16(oldeip);
 						}
 
-						break;		
+						break;
 					} else if (n_cs_dpl > cpu.cpl)
 						E_Exit("CALL:GATE:CS DPL>CPL");		// or #GP(sel)
 					[[fallthrough]];
@@ -1370,7 +1374,7 @@ void CPU_RET(bool use32,Bitu bytes, [[maybe_unused]] Bitu oldeip) {
 			"RET:CS beyond limits",
 			EXCEPTION_GP,selector & 0xfffc)
 
-		if (cpu.cpl==rpl) {	
+		if (cpu.cpl==rpl) {
 			/* Return to same level */
 			switch (desc.Type()) {
 			case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
@@ -1547,7 +1551,7 @@ bool CPU_LTR(Bitu selector) {
 		cpu_tss.desc.SetBusy(true);
 		cpu_tss.SaveSelector();
 	} else {
-		/* Descriptor was no available TSS descriptor */ 
+		/* Descriptor was no available TSS descriptor */
 		LOG(LOG_CPU,LOG_NORMAL)("LTR failed, selector=%X (type=%X)",selector,desc.Type());
 		return CPU_PrepareException(EXCEPTION_GP,selector);
 	}
@@ -1581,62 +1585,71 @@ Bitu CPU_SIDT_limit(void) {
 }
 
 static bool printed_cycles_auto_info = false;
-void CPU_SET_CRX(Bitu cr,Bitu value) {
+
+void CPU_SET_CRX(Bitu cr, Bitu value)
+{
 	switch (cr) {
-	case 0:
-		{
-			value|=CR0_FPUPRESENT;
-			Bitu changed=cpu.cr0 ^ value;
-			if (!changed) return;
-			cpu.cr0=value;
-			if (value & CR0_PROTECTION) {
-				cpu.pmode=true;
-				LOG(LOG_CPU,LOG_NORMAL)("Protected mode");
-				PAGING_Enable((value & CR0_PAGING)>0);
+	case 0: {
+		value |= CR0_FPUPRESENT;
+		Bitu changed = cpu.cr0 ^ value;
 
-				if (!(CPU_AutoDetermineMode&CPU_AUTODETERMINE_MASK)) break;
-
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
-					CPU_CycleAutoAdjust=true;
-					CPU_CycleLeft=0;
-					CPU_Cycles=0;
-					CPU_OldCycleMax=CPU_CycleMax;
-				        GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
-				        if(!printed_cycles_auto_info) {
-						printed_cycles_auto_info = true;
-						LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
-					}
-				} else {
-				        GFX_RefreshTitle();
-			        }
-#if (C_DYNAMIC_X86)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dyn_X86_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dyn_X86_Run;
-				}
-#elif (C_DYNREC)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dynrec_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dynrec_Run;
-				}
-#endif
-				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
-			} else {
-				cpu.pmode=false;
-				if (value & CR0_PAGING) LOG_MSG("Paging requested without PE=1");
-				PAGING_Enable(false);
-				LOG(LOG_CPU,LOG_NORMAL)("Real mode");
-			}
-			break;
+		if (!changed) {
+			return;
 		}
-	case 2:
-		paging.cr2=value;
+
+		cpu.cr0 = value;
+
+		if (value & CR0_PROTECTION) {
+			cpu.pmode = true;
+			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
+			PAGING_Enable((value & CR0_PAGING) > 0);
+
+			if (!(CPU_AutoDetermineMode & CPU_AUTODETERMINE_MASK)) {
+				break;
+			}
+
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CYCLES) {
+				CPU_CycleAutoAdjust = true;
+				CPU_CycleLeft       = 0;
+				CPU_Cycles          = 0;
+				CPU_OldCycleMax     = CPU_CycleMax;
+				GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
+				if (!printed_cycles_auto_info) {
+					        printed_cycles_auto_info = true;
+					        LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
+				}
+			} else {
+				GFX_RefreshTitle();
+			}
+
+#if (C_DYNAMIC_X86)
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+				CPU_Core_Dyn_X86_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dyn_X86_Run;
+			}
+#elif (C_DYNREC)
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+				CPU_Core_Dynrec_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dynrec_Run;
+			}
+#endif
+			CPU_AutoDetermineMode <<= CPU_AUTODETERMINE_SHIFT;
+
+		} else {
+			cpu.pmode = false;
+			if (value & CR0_PAGING) {
+				LOG_MSG("Paging requested without PE=1");
+			}
+
+			PAGING_Enable(false);
+			LOG(LOG_CPU, LOG_NORMAL)("Real mode");
+		}
 		break;
-	case 3:
-		PAGING_SetDirBase(value);
-		break;
+	}
+	case 2: paging.cr2 = value; break;
+	case 3: PAGING_SetDirBase(value); break;
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
+		LOG(LOG_CPU, LOG_ERROR)("Unhandled MOV CR%d,%X", cr, value);
 		break;
 	}
 }
@@ -1773,7 +1786,7 @@ Bitu CPU_SMSW(void) {
 bool CPU_LMSW(Bitu word) {
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	word&=0xf;
-	if (cpu.cr0 & 1) word|=1; 
+	if (cpu.cr0 & 1) word|=1;
 	word|=(cpu.cr0&0xfffffff0);
 	CPU_SET_CRX(0,word);
 	return false;
@@ -1787,9 +1800,9 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 		SETFLAGBIT(ZF,true);
 	} else {
 		SETFLAGBIT(ZF,false);
-	} 
+	}
 }
-	
+
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	FillFlags();
 	if (selector & 0xfffc) {
@@ -1877,8 +1890,8 @@ void CPU_VERR(Bitu selector) {
 		return;
 	}
 	switch (desc.Type()){
-	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:	
-		//Conforming readable code segments can be always read 
+	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
+		//Conforming readable code segments can be always read
 		break;
 	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
 	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
@@ -2032,10 +2045,10 @@ bool CPU_CPUID(void) {
 	if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) return false;
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
-		reg_eax=1;  /* Maximum level */ 
-		reg_ebx='G' | ('e' << 8) | ('n' << 16) | ('u'<< 24); 
-		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24); 
-		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24); 
+		reg_eax=1;  /* Maximum level */
+		reg_ebx='G' | ('e' << 8) | ('n' << 16) | ('u'<< 24);
+		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24);
+		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24);
 		break;
 	case 1: // Get processor type/family/model/stepping and feature flags
 		if ((CPU_ArchitectureType == ArchitectureType::Intel486NewSlow) ||
@@ -2082,25 +2095,27 @@ bool CPU_CPUID(void) {
 	return true;
 }
 
-static Bits HLT_Decode(void) {
-	/* Once an interrupt occurs, it should change cpu core */
-	if (reg_eip!=cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
-		cpudecoder=cpu.hlt.old_decoder;
+static Bits HLT_Decode(void)
+{
+	// Once an interrupt occurs, it should change CPU core
+	if (reg_eip != cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
+		cpudecoder = cpu.hlt.old_decoder;
 	} else {
 		CPU_IODelayRemoved += CPU_Cycles;
-		CPU_Cycles=0;
+		CPU_Cycles = 0;
 	}
 	return 0;
 }
 
-void CPU_HLT(Bitu oldeip) {
-	reg_eip=oldeip;
+void CPU_HLT(Bitu oldeip)
+{
+	reg_eip = oldeip;
 	CPU_IODelayRemoved += CPU_Cycles;
-	CPU_Cycles=0;
-	cpu.hlt.cs=SegValue(cs);
-	cpu.hlt.eip=reg_eip;
-	cpu.hlt.old_decoder=cpudecoder;
-	cpudecoder=&HLT_Decode;
+	CPU_Cycles          = 0;
+	cpu.hlt.cs          = SegValue(cs);
+	cpu.hlt.eip         = reg_eip;
+	cpu.hlt.old_decoder = cpudecoder;
+	cpudecoder          = &HLT_Decode;
 }
 
 void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
@@ -2112,7 +2127,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 		mem_writew(SegPhys(ss)+sp_index,reg_bp);
 		reg_bp=(uint16_t)(reg_esp-2);
 		if (level) {
-			for (Bitu i=1;i<level;i++) {	
+			for (Bitu i=1;i<level;i++) {
 				sp_index-=2;bp_index-=2;
 				mem_writew(SegPhys(ss)+sp_index,mem_readw(SegPhys(ss)+bp_index));
 			}
@@ -2124,7 +2139,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
         mem_writed(SegPhys(ss)+sp_index,reg_ebp);
 		reg_ebp=(reg_esp-4);
 		if (level) {
-			for (Bitu i=1;i<level;i++) {	
+			for (Bitu i=1;i<level;i++) {
 				sp_index-=4;bp_index-=4;
 				mem_writed(SegPhys(ss)+sp_index,mem_readd(SegPhys(ss)+bp_index));
 			}
@@ -2148,7 +2163,7 @@ static double get_estimated_cpu_mhz(const int32_t cycles)
 	// https://www.tomshardware.com/reviews/pentium-mmx-live-expectations,19.html
 
 	constexpr double DivisorPentium    = 575.0;
-	constexpr double DivisorPentiumMmx = DivisorPentium * 1.16;	
+	constexpr double DivisorPentiumMmx = DivisorPentium * 1.16;
 
 	if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		return cycles / DivisorPentium;
@@ -2191,54 +2206,84 @@ void CPU_ReadTSC()
 	reg_eax = static_cast<uint32_t>(tsc_rounded & 0xffffffff);
 }
 
-static void CPU_CycleIncrease(bool pressed) {
-	if (!pressed) return;
+static void CPU_CycleIncrease(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
 	if (CPU_CycleAutoAdjust) {
-		CPU_CyclePercUsed+=5;
-		if (CPU_CyclePercUsed>100) CPU_CyclePercUsed=100;
-		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
+		CPU_CyclePercUsed += 5;
+		if (CPU_CyclePercUsed > 100) {
+			CPU_CyclePercUsed = 100;
+		}
+		LOG_MSG("CPU speed: max %d percent.", CPU_CyclePercUsed);
+
 		GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
+
 	} else {
-		int32_t old_cycles=CPU_CycleMax;
+		int32_t old_cycles = CPU_CycleMax;
 		if (CPU_CycleUp < 100) {
 			CPU_CycleMax = (int32_t)(CPU_CycleMax *
-			                        (1 + static_cast<float>(CPU_CycleUp) /
-			                                     100.0f));
+			                         (1 + static_cast<float>(CPU_CycleUp) /
+			                                      100.0f));
 		} else {
 			CPU_CycleMax = CPU_CycleMax + CPU_CycleUp;
 		}
-	    
-		CPU_CycleLeft=0;CPU_Cycles=0;
-		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
-		if(CPU_CycleMax > 15000 ) 
-			LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
-		else
-			LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
+
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+		if (CPU_CycleMax == old_cycles) {
+			CPU_CycleMax++;
+		}
+
+		if (CPU_CycleMax > 15000) {
+			LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",
+			        CPU_CycleMax);
+		} else {
+			LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
+		}
 		GFX_NotifyCyclesChanged(CPU_CycleMax);
 	}
 }
 
-static void CPU_CycleDecrease(bool pressed) {
-	if (!pressed) return;
+static void CPU_CycleDecrease(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+
 	if (CPU_CycleAutoAdjust) {
-		CPU_CyclePercUsed-=5;
-		if (CPU_CyclePercUsed<=0) CPU_CyclePercUsed=1;
-		if(CPU_CyclePercUsed <=70)
-			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
-		else
-			LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
+		CPU_CyclePercUsed -= 5;
+		if (CPU_CyclePercUsed <= 0) {
+			CPU_CyclePercUsed = 1;
+		}
+
+		if (CPU_CyclePercUsed <= 70) {
+			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",
+			        CPU_CyclePercUsed);
+		} else {
+			LOG_MSG("CPU speed: max %d percent.", CPU_CyclePercUsed);
+		}
+
 		GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
+
 	} else {
 		if (CPU_CycleDown < 100) {
 			CPU_CycleMax = (int32_t)(CPU_CycleMax /
-			                        (1 + static_cast<float>(CPU_CycleDown) /
-			                                     100.0f));
+			                         (1 + static_cast<float>(CPU_CycleDown) /
+			                                      100.0f));
 		} else {
 			CPU_CycleMax = CPU_CycleMax - CPU_CycleDown;
 		}
-		CPU_CycleLeft=0;CPU_Cycles=0;
-		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
-		LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
+
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+
+		if (CPU_CycleMax <= 0) {
+			CPU_CycleMax = 1;
+		}
+		LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
+
 		GFX_NotifyCyclesChanged(CPU_CycleMax);
 	}
 }
@@ -2246,62 +2291,70 @@ static void CPU_CycleDecrease(bool pressed) {
 extern int64_t ticksDone;
 extern int64_t ticksScheduled;
 
-void CPU_Reset_AutoAdjust(void) {
+void CPU_Reset_AutoAdjust(void)
+{
 	CPU_IODelayRemoved = 0;
-	ticksDone = 0;
-	ticksScheduled = 0;
+	ticksDone          = 0;
+	ticksScheduled     = 0;
 }
 
 class CPU final : public Module_base {
 private:
 	static bool inited;
+
 public:
-	CPU(Section* configuration):Module_base(configuration) {
-		if(inited) {
+	CPU(Section* configuration) : Module_base(configuration)
+	{
+		if (inited) {
 			Change_Config(configuration);
 			return;
 		}
-//		Section_prop * section=static_cast<Section_prop *>(configuration);
-		inited=true;
-		reg_eax=0;
-		reg_ebx=0;
-		reg_ecx=0;
-		reg_edx=0;
-		reg_edi=0;
-		reg_esi=0;
-		reg_ebp=0;
-		reg_esp=0;
-	
-		SegSet16(cs,0);
-		SegSet16(ds,0);
-		SegSet16(es,0);
-		SegSet16(fs,0);
-		SegSet16(gs,0);
-		SegSet16(ss,0);
-	
-		CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
-		cpu.cr0=0xffffffff;
-		CPU_SET_CRX(0,0);						//Initialize
-		cpu.code.big=false;
-		cpu.stack.mask=0xffff;
-		cpu.stack.notmask=0xffff0000;
-		cpu.stack.big=false;
-		cpu.trap_skip=false;
+
+		inited  = true;
+
+		reg_eax = 0;
+		reg_ebx = 0;
+		reg_ecx = 0;
+		reg_edx = 0;
+		reg_edi = 0;
+		reg_esi = 0;
+		reg_ebp = 0;
+		reg_esp = 0;
+
+		SegSet16(cs, 0);
+		SegSet16(ds, 0);
+		SegSet16(es, 0);
+		SegSet16(fs, 0);
+		SegSet16(gs, 0);
+		SegSet16(ss, 0);
+
+		// Enable interrupts
+		CPU_SetFlags(FLAG_IF, FMASK_ALL);
+		cpu.cr0 = 0xffffffff;
+
+		// Initialize
+		CPU_SET_CRX(0, 0);
+		cpu.code.big      = false;
+		cpu.stack.mask    = 0xffff;
+		cpu.stack.notmask = 0xffff0000;
+		cpu.stack.big     = false;
+		cpu.trap_skip     = false;
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 
-		for (Bitu i=0; i<7; i++) {
-			cpu.drx[i]=0;
-			cpu.trx[i]=0;
+		for (Bitu i = 0; i < 7; i++) {
+			cpu.drx[i] = 0;
+			cpu.trx[i] = 0;
 		}
-		if (CPU_ArchitectureType>=ArchitectureType::Pentium) {
-			cpu.drx[6]=0xffff0ff0;
-		} else {
-			cpu.drx[6]=0xffff1ff0;
-		}
-		cpu.drx[7]=0x00000400;
 
-		/* Init the cpu cores */
+		if (CPU_ArchitectureType >= ArchitectureType::Pentium) {
+			cpu.drx[6] = 0xffff0ff0;
+		} else {
+			cpu.drx[6] = 0xffff1ff0;
+		}
+		cpu.drx[7] = 0x00000400;
+
+		// Init the cpu cores
 		CPU_Core_Normal_Init();
 		CPU_Core_Simple_Init();
 		CPU_Core_Full_Init();
@@ -2310,37 +2363,53 @@ public:
 #elif (C_DYNREC)
 		CPU_Core_Dynrec_Init();
 #endif
-		MAPPER_AddHandler(CPU_CycleDecrease, SDL_SCANCODE_F11,
-		                  PRIMARY_MOD, "cycledown", "Dec Cycles");
-		MAPPER_AddHandler(CPU_CycleIncrease, SDL_SCANCODE_F12,
-		                  PRIMARY_MOD, "cycleup", "Inc Cycles");
+		MAPPER_AddHandler(CPU_CycleDecrease,
+		                  SDL_SCANCODE_F11,
+		                  PRIMARY_MOD,
+		                  "cycledown",
+		                  "Dec Cycles");
+
+		MAPPER_AddHandler(CPU_CycleIncrease,
+		                  SDL_SCANCODE_F12,
+		                  PRIMARY_MOD,
+		                  "cycleup",
+		                  "Inc Cycles");
+
 		Change_Config(configuration);
-		CPU_JMP(false,0,0,0);					//Setup the first cpu core
+
+		// Setup the first cpu core
+		CPU_JMP(false, 0, 0, 0);
 	}
 
 	~CPU() override = default;
 
-	bool Change_Config(Section *newconfig) override
+	bool Change_Config(Section* newconfig) override
 	{
-		Section_prop * section=static_cast<Section_prop *>(newconfig);
-		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
-		//CPU_CycleLeft=0;//needed ?
-		CPU_Cycles=0;
+		Section_prop* section = static_cast<Section_prop*>(newconfig);
+		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
+
+		//needed ?
+		// CPU_CycleLeft=0;
+		CPU_Cycles = 0;
 
 		// Sets the value if the string in within the min and max values
-		auto set_if_in_range = [](const std::string &str, int &value,
+		auto set_if_in_range = [](const std::string& str,
+		                          int& value,
 		                          const int min_value = 1,
 		                          const int max_value = 0) {
 			std::istringstream stream(str);
 			int v = 0;
 			stream >> v;
+
 			const bool within_min = (v >= min_value);
 			const bool within_max = (!max_value || v <= max_value);
-			if (within_min && within_max)
+
+			if (within_min && within_max) {
 				value = v;
+			}
 		};
 
-		PropMultiVal *p = section->GetMultiVal("cycles");
+		PropMultiVal* p  = section->GetMultiVal("cycles");
 		std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
@@ -2349,152 +2418,216 @@ public:
 		constexpr auto max_percent = 100;
 
 		if (type == "max") {
-			CPU_CycleMax = 0;
-			CPU_CyclePercUsed = 100;
+			CPU_CycleMax        = 0;
+			CPU_CyclePercUsed   = 100;
 			CPU_CycleAutoAdjust = true;
-			CPU_CycleLimit = -1;
-			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount(); ++cmdnum) {
+			CPU_CycleLimit      = -1;
+
+			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount();
+			     ++cmdnum) {
 				if (cmd.FindCommand(cmdnum, str)) {
 					if (str.back() == '%') {
-						str.pop_back();
-						set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
+						        str.pop_back();
+						        set_if_in_range(str,
+						                        CPU_CyclePercUsed,
+						                        min_percent,
+						                        max_percent);
 					} else if (str == "limit") {
-						++cmdnum;
-						if (cmd.FindCommand(cmdnum, str)) {
-							set_if_in_range(str, CPU_CycleLimit);
-						}
+						        ++cmdnum;
+						        if (cmd.FindCommand(cmdnum,
+						                            str)) {
+							        set_if_in_range(str, CPU_CycleLimit);
+						        }
 					}
 				}
 			}
+
 		} else {
 			if (type == "auto") {
 				CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CYCLES;
-				CPU_CycleMax = 3000;
-				CPU_OldCycleMax = 3000;
+
+				CPU_CycleMax      = 3000;
+				CPU_OldCycleMax   = 3000;
 				CPU_CyclePercUsed = 100;
-				for (unsigned int cmdnum = 0; cmdnum <= cmd.GetCount(); ++cmdnum) {
+
+				for (unsigned int cmdnum = 0;
+				     cmdnum <= cmd.GetCount();
+				     ++cmdnum) {
 					if (cmd.FindCommand(cmdnum, str)) {
-						if (str.back() == '%') {
-							str.pop_back();
-							set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
-						} else if (str == "limit") {
-							++cmdnum;
-							if (cmd.FindCommand(cmdnum, str)) {
-								set_if_in_range(str, CPU_CycleLimit);
-							}
-						} else {
-							set_if_in_range(str, CPU_CycleMax);
-							set_if_in_range(str, CPU_OldCycleMax);
-						}
+						        if (str.back() == '%') {
+							        str.pop_back();
+							        set_if_in_range(
+							                str,
+							                CPU_CyclePercUsed,
+							                min_percent,
+							                max_percent);
+
+						        } else if (str == "limit") {
+							        ++cmdnum;
+							        if (cmd.FindCommand(cmdnum,
+							                            str)) {
+								        set_if_in_range(str, CPU_CycleLimit);
+							        }
+
+						        } else {
+							        set_if_in_range(str, CPU_CycleMax);
+							        set_if_in_range(str, CPU_OldCycleMax);
+						        }
 					}
 				}
+
 			} else if (type == "fixed") {
 				if (cmd.FindCommand(1, str)) {
 					set_if_in_range(str, CPU_CycleMax);
 				}
+
 			} else {
 				set_if_in_range(type, CPU_CycleMax);
 			}
 			CPU_CycleAutoAdjust = false;
 		}
 
-		CPU_CycleUp=section->Get_int("cycleup");
-		CPU_CycleDown=section->Get_int("cycledown");
+		CPU_CycleUp   = section->Get_int("cycleup");
+		CPU_CycleDown = section->Get_int("cycledown");
+
 		std::string core(section->Get_string("core"));
-		cpudecoder=&CPU_Core_Normal_Run;
+
+		cpudecoder = &CPU_Core_Normal_Run;
+
 		if (core == "normal") {
-			cpudecoder=&CPU_Core_Normal_Run;
-		} else if (core =="simple") {
-			cpudecoder=&CPU_Core_Simple_Run;
+			cpudecoder = &CPU_Core_Normal_Run;
+
+		} else if (core == "simple") {
+			cpudecoder = &CPU_Core_Simple_Run;
+
 		} else if (core == "full") {
-			cpudecoder=&CPU_Core_Full_Run;
+			cpudecoder = &CPU_Core_Full_Run;
+
 		} else if (core == "auto") {
-			cpudecoder=&CPU_Core_Normal_Run;
+			cpudecoder = &CPU_Core_Normal_Run;
 #if (C_DYNAMIC_X86)
-			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
-		}
-		else if (core == "dynamic") {
-			cpudecoder=&CPU_Core_Dyn_X86_Run;
+			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+
+		} else if (core == "dynamic") {
+			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(true);
+
 		} else if (core == "dynamic_nodhfpu") {
-			cpudecoder=&CPU_Core_Dyn_X86_Run;
+			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
+
 #elif (C_DYNREC)
-			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
-		}
-		else if (core == "dynamic") {
-			cpudecoder=&CPU_Core_Dynrec_Run;
+			CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+
+		} else if (core == "dynamic") {
+			cpudecoder = &CPU_Core_Dynrec_Run;
 #else
 
 #endif
 		}
 
 #if (C_DYNAMIC_X86)
-		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") || (core == "dynamic_nodhfpu"));
+		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") ||
+		                            (core == "dynamic_nodhfpu"));
 #elif (C_DYNREC)
-		CPU_Core_Dynrec_Cache_Init( core == "dynamic" );
+		CPU_Core_Dynrec_Cache_Init(core == "dynamic");
 #endif
 
 		CPU_ArchitectureType = ArchitectureType::Mixed;
+
 		std::string cputype(section->Get_string("cputype"));
+
 		if (cputype == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
+
 		} else if (cputype == "386_fast") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
+
 		} else if (cputype == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
+
 			if (core == "normal") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
 				CPU_PrefetchQueueSize = 16;
+
 			} else if (core == "auto") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
 				CPU_PrefetchQueueSize = 16;
-				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
+
 		} else if (cputype == "386") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Slow;
+
 		} else if (cputype == "486") {
 			CPU_ArchitectureType = ArchitectureType::Intel486OldSlow;
+
 		} else if (cputype == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
+
 			if (core == "normal") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
 				CPU_PrefetchQueueSize = 32;
+
 			} else if (core == "auto") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
 				CPU_PrefetchQueueSize = 32;
-				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+				CPU_AutoDetermineMode &= (~CPU_AUTODETERMINE_CORE);
+
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
+
 		} else if (cputype == "pentium") {
 			CPU_ArchitectureType = ArchitectureType::Pentium;
+
 		} else if (cputype == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
+
 		}
 
-		if (CPU_ArchitectureType>=ArchitectureType::Intel486NewSlow) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);
-		else if (CPU_ArchitectureType>=ArchitectureType::Intel486OldSlow) CPU_extflags_toggle=(FLAG_AC);
-		else CPU_extflags_toggle=0;
+		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
+			CPU_extflags_toggle = (FLAG_ID | FLAG_AC);
 
+		} else if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
+			CPU_extflags_toggle = (FLAG_AC);
 
-		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
-		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
-		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
+		} else {
+			CPU_extflags_toggle = 0;
+
+		}
+
+		if (CPU_CycleMax <= 0) {
+			CPU_CycleMax = 3000;
+		}
+		if (CPU_CycleUp <= 0) {
+			CPU_CycleUp = 500;
+		}
+		if (CPU_CycleDown <= 0) {
+			CPU_CycleDown = 20;
+		}
+
 		if (CPU_CycleAutoAdjust) {
 			GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 		} else {
 			GFX_NotifyCyclesChanged(CPU_CycleMax);
 		}
+
 		return true;
 	}
 };
 
-static CPU * test;
+static CPU* test;
 
-void CPU_ShutDown([[maybe_unused]] Section* sec) {
+void CPU_ShutDown([[maybe_unused]] Section* sec)
+{
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Cache_Close();
 #elif (C_DYNREC)
@@ -2513,5 +2646,5 @@ void CPU_Init(Section* sec)
 	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
 }
 
-//initialize static members
-bool CPU::inited=false;
+// Initialize static members
+bool CPU::inited = false;
