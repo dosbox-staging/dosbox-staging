@@ -476,8 +476,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 
 		if (auto reader = FileReader::GetFileReader(fullname)) {
 			batchfiles.emplace(*psp,
-			                   std::make_unique<FileReader>(
-			                           std::move(*reader)),
+			                   std::move(reader),
 			                   name,
 			                   args,
 			                   current_echo);
