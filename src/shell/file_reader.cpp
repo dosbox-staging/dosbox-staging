@@ -28,6 +28,7 @@ std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
 	if (!DOS_OpenFile(fullname.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle)) {
 		return {};
 	}
+	DOS_CloseFile(handle);
 	return FileReader(std::move(fullname));
 }
 
