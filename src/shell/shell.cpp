@@ -43,6 +43,8 @@ callback_number_t call_shellstop = 0;
  * remove things from the environment */
 DOS_Shell *first_shell = nullptr;
 
+constexpr uint16_t InvalidFileHandle = DOS_FILES;
+
 static Bitu shellstop_handler()
 {
 	return CBRET_STOP;
@@ -131,47 +133,42 @@ void DOS_Shell::GetRedirection(char *line,
 	*line_write = 0;
 }
 
-bool get_pipe_status(const char *out_file,
+static uint16_t get_output_redirection(const char *out_file,
                      const char *pipe_file,
                      char (&pipe_tempfile)[270],
                      const bool append,
                      bool &failed_pipe)
 {
+	constexpr bool fcb = true;
 	FatAttributeFlags fattr = {};
-	uint16_t dummy = 0;
-	uint16_t dummy2 = 0;
+	uint16_t file_handle = InvalidFileHandle;
 	uint32_t bigdummy = 0;
-	bool status = true;
+	bool success = true;
 	/* Create if not exist. Open if exist. Both in read/write mode */
 	if (!pipe_file && append) {
 		if (DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
-			status = false;
-		} else if ((status = DOS_OpenFile(out_file, OPEN_READWRITE, &dummy))) {
-			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END);
+			success = false;
+		} else if ((success = DOS_OpenFile(out_file, OPEN_READWRITE, &file_handle, fcb))) {
+			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END, fcb);
 		} else {
 			// Create if not exists.
-			status = DOS_CreateFile(out_file,
+			success = DOS_CreateFile(out_file,
 			                        FatAttributeFlags::Archive,
-			                        &dummy);
+			                        &file_handle, fcb);
 		}
 	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		status = false;
+		success = false;
 	} else {
 		if (pipe_file &&
 		    DOS_FindFirst(pipe_tempfile, FatAttributeFlags::NotVolume) &&
 		    !DOS_UnlinkFile(pipe_tempfile)) {
 			failed_pipe = true;
 		}
-		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile
-		                                                        : out_file,
-		                              OPEN_READWRITE,
-		                              FatAttributeFlags::Archive,
-		                              0x12,
-		                              &dummy,
-		                              &dummy2);
-		if (pipe_file && (failed_pipe || !status) &&
+		success = DOS_CreateFile((pipe_file && !failed_pipe) ? pipe_tempfile : out_file,
+		                         FatAttributeFlags::Archive, &file_handle, fcb);
+		if (pipe_file && (failed_pipe || !success) &&
 		    (Drives[0] || Drives[2] || Drives[24]) &&
 		    !strchr(pipe_tempfile, '\\')) {
 			// Insert a drive prefix into the pipe filename path.
@@ -187,55 +184,18 @@ bool get_pipe_status(const char *out_file,
 			    !DOS_UnlinkFile(pipe_tempfile)) {
 				failed_pipe = true;
 			} else {
-				status = DOS_OpenFileExtended(pipe_tempfile,
-				                              OPEN_READWRITE,
-				                              FatAttributeFlags::Archive,
-				                              0x12,
-				                              &dummy,
-				                              &dummy2);
+				if (success) {
+					DOS_CloseFile(file_handle, fcb);
+				}
+				success = DOS_CreateFile(pipe_tempfile, FatAttributeFlags::Archive, &file_handle, fcb);
 			}
 		}
 	}
-	return status;
-}
-
-constexpr uint16_t failed_open = 0xff;
-uint16_t open_stdin_as(const char *name)
-{
-	uint16_t success_open;
-	if (DOS_OpenFile(name, OPEN_READ, &success_open))
-		return success_open;
-	else
-		return failed_open;
-}
-
-uint16_t open_stdout_as(const char *name)
-{
-	uint16_t success_open;
-	if (DOS_OpenFile(name, OPEN_READWRITE, &success_open))
-		return success_open;
-	else
-		return failed_open;
-}
-
-void close_stdin(const bool condition = true)
-{
-	if (condition)
-		DOS_CloseFile(0);
-}
-
-void close_stdout(const bool condition = true)
-{
-	if (condition)
-		DOS_CloseFile(1);
-}
-
-void open_console_device(const bool condition = true)
-{
-	if (condition) {
-		uint16_t dummy;
-		DOS_OpenFile("con", OPEN_READWRITE, &dummy);
+	if (success) {
+		assert(file_handle != InvalidFileHandle);
+		return file_handle;
 	}
+	return InvalidFileHandle;
 }
 
 uint16_t get_tick_random_number() {
@@ -251,28 +211,25 @@ void DOS_Shell::ParseLine(char *line)
 		line[0] = ' ';
 	line = trim(line);
 
+	constexpr bool fcb = true;
+
 	/* Do redirection and pipe checks */
 	std::string in_file = "";
 	std::string out_file = "";
 	std::string pipe_file = "";
 
-	uint16_t dummy    = 0;
 	bool append = false;
-	bool normalstdin = false;  /* whether stdin/out are open on start. */
-	bool normalstdout = false; /* Bug: Assumed is they are "con"      */
+	const auto old_stdin  = psp->GetFileHandle(STDIN);
+	const auto old_stdout = psp->GetFileHandle(STDOUT);
+
+	auto input_redirection = InvalidFileHandle;
+	auto output_redirection = InvalidFileHandle;
 
 	GetRedirection(line, in_file, out_file, pipe_file, &append);
-	if (in_file.length() || out_file.length() || pipe_file.length()) {
-		normalstdin = (psp->GetFileHandle(0) != failed_open);
-		normalstdout = (psp->GetFileHandle(1) != failed_open);
-	}
 	if (in_file.length()) {
-		if ((dummy = open_stdin_as(in_file.c_str())) != failed_open) { // Test if
-			// file exists
-			DOS_CloseFile(dummy);
+		if (DOS_OpenFile(in_file.c_str(), OPEN_READ, &input_redirection, fcb)) {
 			LOG_MSG("SHELL: Redirect input from %s", in_file.c_str());
-			close_stdin(normalstdin);
-			open_stdin_as(in_file.c_str()); // Open new stdin
+			assert(input_redirection != InvalidFileHandle);
 		} else {
 			WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
 			                         ? "SHELL_ACCESS_DENIED"
@@ -308,49 +265,60 @@ void DOS_Shell::ParseLine(char *line)
 			         out_file.c_str());
 		// LOG_MSG("SHELL: Redirecting output to %s",
 		//         pipe_file.length() ? pipe_tempfile : out_file.c_str());
-		close_stdout(normalstdout);
-		open_console_device(!normalstdin && !in_file.length());
-		if (!get_pipe_status(out_file.length() ? out_file.c_str() : nullptr,
-		                     pipe_file.length() ? pipe_file.c_str() : nullptr,
-		                     pipe_tempfile, append, failed_pipe) &&
-		    normalstdout) {
-			// Read only file, open con again
-			open_console_device();
+		output_redirection = get_output_redirection(
+		        out_file.length() ? out_file.c_str() : nullptr,
+		        pipe_file.length() ? pipe_file.c_str() : nullptr,
+		        pipe_tempfile,
+		        append,
+		        failed_pipe);
+		if (output_redirection == InvalidFileHandle) {
 			if (!pipe_file.length()) {
 				WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
 				                         ? "SHELL_ACCESS_DENIED"
 				                         : "SHELL_FILE_CREATE_ERROR"),
 				         out_file.length() ? out_file.c_str()
 				                           : "(unnamed)");
-				close_stdout();
-				open_stdout_as("nul");
+				DOS_OpenFile("nul", OPEN_READWRITE, &output_redirection, fcb);
 			}
 		}
-		close_stdin(!normalstdin && !in_file.length());
 	}
+
+	// Replace stdin and stdout with redirection
+	if (input_redirection != InvalidFileHandle) {
+		psp->SetFileHandle(STDIN, input_redirection);
+	}
+	if (output_redirection != InvalidFileHandle) {
+		psp->SetFileHandle(STDOUT, output_redirection);
+	}
+
 	/* Run the actual command */
 	DoCommand(line);
+
 	/* Restore handles */
-	if (in_file.length()) {
-		close_stdin();
-		open_console_device(normalstdin);
+	if (input_redirection != InvalidFileHandle) {
+		psp->SetFileHandle(STDIN, old_stdin);
+		DOS_CloseFile(input_redirection, fcb);
 	}
-	if (out_file.length() || pipe_file.length()) {
-		close_stdout();
-		open_console_device(!normalstdin);
-		open_console_device(normalstdout);
-		close_stdin(!normalstdin);
+	if (output_redirection != InvalidFileHandle) {
+		psp->SetFileHandle(STDOUT, old_stdout);
+		DOS_CloseFile(output_redirection, fcb);
 	}
+
 	if (pipe_file.length()) {
+		uint16_t pipe_handle = InvalidFileHandle;
 		// Test if file can be opened for reading
-		if (!failed_pipe &&
-		    (dummy = open_stdin_as(pipe_tempfile)) != failed_open) {
-			DOS_CloseFile(dummy);
-			close_stdin(normalstdin);
-			open_stdin_as(pipe_tempfile); // Open new stdin
-			ParseLine((char *)pipe_file.c_str());
-			close_stdin();
-			open_console_device(normalstdin);
+		if (!failed_pipe && DOS_OpenFile(pipe_tempfile, OPEN_READ, &pipe_handle, fcb)) {
+			assert(pipe_handle != InvalidFileHandle);
+			psp->SetFileHandle(STDIN, pipe_handle);
+
+			assert(pipe_file.length() < CMD_MAXLINE);
+			char mutable_pipe_file[CMD_MAXLINE];
+			safe_strcpy(mutable_pipe_file, pipe_file.c_str());
+
+			ParseLine(mutable_pipe_file);
+
+			psp->SetFileHandle(STDIN, old_stdin);
+			DOS_CloseFile(pipe_handle, fcb);
 		} else {
 			WriteOut(MSG_Get("SHELL_CMD_FAILED_PIPE"));
 			LOG_MSG("SHELL: Failed to write pipe content to temporary file");
