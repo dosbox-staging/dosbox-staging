@@ -203,6 +203,11 @@ uint16_t get_tick_random_number() {
 	return (uint16_t)(GetTicks() % random_uplimit);
 }
 
+// Yo dawg MSVC-Clang likes to complain about pragmas
+// So here's a pragma so you stop complaining about pragmas
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunknown-pragmas"
+
 // Disable PVS warning 1020 for this function.
 // It's a false positive about needing to call DOS_CloseFile()
 #pragma pvs(push)
@@ -338,6 +343,8 @@ void DOS_Shell::ParseLine(char *line)
 }
 
 #pragma pvs(pop)
+
+#pragma clang diagnostic pop
 
 void DOS_Shell::RunBatchFile()
 {
