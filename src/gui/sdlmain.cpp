@@ -1527,8 +1527,6 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	}
 
 	top += (type==GL_VERTEX_SHADER) ? "#define VERTEX 1\n":"#define FRAGMENT 1\n";
-	if (!sdl.opengl.bilinear)
-		top += "#define OPENGLNB 1\n";
 
 	src_strings[0] = top.c_str();
 	src_strings[1] = shaderSrc;
@@ -3155,17 +3153,9 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
-	} else if (output.starts_with("opengl")) {
-		if (output == "opengl") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::Bilinear;
-			sdl.opengl.bilinear    = true;
-
-		} else if (output == "openglnb") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-			sdl.opengl.bilinear = false;
-		}
+	} else if (output == "opengl") {
+		sdl.want_rendering_backend = RenderingBackend::OpenGl;
+		sdl.interpolation_mode     = InterpolationMode::Bilinear;
 #endif
 
 	} else {
@@ -4323,20 +4313,27 @@ static void config_add_sdl()
 	const std::string default_output = "texture";
 #endif
 	pstring = sdl_sec->Add_string("output", always, default_output.c_str());
+
 	pstring->SetOptionHelp("opengl_default",
-	        "Video system to use for output ('opengl' by default).\n"
-	        "Some shaders require bilinear interpolation, making that the safest choice.");
-	pstring->SetOptionHelp(
-	        "texture_default",
-	        "Video system to use for output ('texture' by default).\n"
-	        "Some shaders require bilinear interpolation, making that the safest choice.");
-	pstring->SetOptionHelp("opengl", "  opengl:     Uses bilinear interpolation.");
-	pstring->SetOptionHelp("texture",   "  texture:    Uses bilinear interpolation.");
-	pstring->SetOptionHelp("openglnb",  "  openglnb:   Uses nearest-neighbour interpolation (no bilinear).");
-	pstring->SetOptionHelp("texturenb", "  texturenb:  Uses nearest-neighbour interpolation (no bilinear).");
+	                       "Rendering backend to use for graphics output ('opengl' by default).\n"
+	                       "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
+						   "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
+						   "non-existent OpenGL drivers (this is extremely rare).");
+
+	pstring->SetOptionHelp("texture_default",
+	                       "Rendering backend to use for graphics output ('texture' by default).\n");
+
+	pstring->SetOptionHelp("opengl",
+	                       "  opengl:     OpenGL backend with shader support (default).");
+	pstring->SetOptionHelp("texture",
+	                       "  texture:    SDL's texture backend with bilinear interpolation.");
+	pstring->SetOptionHelp("texturenb",
+	                       "  texturenb:  SDL's texture backend with nearest-neighbour interpolation\n"
+						   "              (no bilinear).");
 #if C_OPENGL
 	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
 	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglnb", "opengl");
 #else
 	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
@@ -4347,9 +4344,9 @@ static void config_add_sdl()
 #else
 		"texture_default",
 #endif
-		"texture", "texturenb",
+		        "texture", "texturenb",
 #if C_OPENGL
-		"opengl", "openglnb",
+		        "opengl"
 #endif
 	});
 
