@@ -269,7 +269,6 @@ struct SDL_Block {
 		GLuint texture;
 		GLuint displaylist;
 		GLint max_texsize;
-		bool bilinear;
 		bool npot_textures_supported = false;
 		bool use_shader;
 		bool framebuffer_is_srgb_encoded;
