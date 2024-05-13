@@ -203,6 +203,11 @@ uint16_t get_tick_random_number() {
 	return (uint16_t)(GetTicks() % random_uplimit);
 }
 
+// Disable PVS warning 1020 for this function.
+// It's a false positive about needing to call DOS_CloseFile()
+#pragma pvs(push)
+#pragma pvs(disable: 1020)
+
 void DOS_Shell::ParseLine(char *line)
 {
 	LOG(LOG_EXEC, LOG_ERROR)("Parsing command line: %s", line);
@@ -331,6 +336,8 @@ void DOS_Shell::ParseLine(char *line)
 		}
 	}
 }
+
+#pragma pvs(pop)
 
 void DOS_Shell::RunBatchFile()
 {
