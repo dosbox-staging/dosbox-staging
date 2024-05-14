@@ -268,7 +268,7 @@ bool Property::ValidateValue(const Value& in)
 	}
 }
 
-static std::string create_config_name(const std::string& propname) 
+static std::string create_config_name(const std::string& propname)
 {
 	std::string result = "CONFIG_" + propname;
 	upcase(result);
@@ -1037,7 +1037,10 @@ bool Section_prop::HandleInputline(const std::string& line)
 		if (p->IsDeprecated()) {
 			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
 			LOG_WARNING("CONFIG: %s", p->GetHelp().c_str());
-			return false;
+
+			if (!p->IsDeprecatedButAllowed()) {
+				return false;
+			}
 		}
 
 		return p->SetValue(val);
@@ -1911,7 +1914,7 @@ void Config::ParseArguments()
 	                        cmdline->FindRemoveBoolArgument("resetmapper");
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
-	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') || 
+	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
 	                     cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
