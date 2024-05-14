@@ -556,21 +556,19 @@ static bool force_no_pixel_doubling = false;
 //
 static void setup_scan_and_pixel_doubling()
 {
-	const auto nearest_neighbour_on = (GFX_GetInterpolationMode() ==
-	                                   InterpolationMode::NearestNeighbour);
-
 	switch (GFX_GetRenderingBackend()) {
-	case RenderingBackend::Texture:
+	case RenderingBackend::Texture: {
+		const auto nearest_neighbour_on = (GFX_GetTextureInterpolationMode() ==
+		                                   InterpolationMode::NearestNeighbour);
+
 		force_vga_single_scan   = nearest_neighbour_on;
 		force_no_pixel_doubling = nearest_neighbour_on;
-		break;
+	} break;
 
 	case RenderingBackend::OpenGl: {
 		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
 		const auto none_shader_active = (shader_info.name == NoneShaderName);
-
-		const auto double_scan_enabled = (nearest_neighbour_on &&
-		                                  none_shader_active);
+		const auto double_scan_enabled = none_shader_active;
 
 		force_vga_single_scan = (shader_info.settings.force_single_scan ||
 		                         double_scan_enabled);

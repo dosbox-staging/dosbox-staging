@@ -191,7 +191,6 @@ struct SDL_Block {
 	RenderingBackend rendering_backend      = RenderingBackend::Texture;
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
 
-	InterpolationMode interpolation_mode    = InterpolationMode::Bilinear;
 	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
 
 	struct {
@@ -307,6 +306,8 @@ struct SDL_Block {
 		SDL_Surface* input_surface   = nullptr;
 		SDL_Texture* texture         = nullptr;
 		SDL_PixelFormat* pixelFormat = nullptr;
+
+		InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
 	} texture = {};
 
 	struct {

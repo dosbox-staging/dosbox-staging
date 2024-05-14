@@ -2002,12 +2002,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
-		                              ? GL_NEAREST
-		                              : GL_LINEAR);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
 		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
@@ -2984,7 +2980,6 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction is requested.
 //
 // This function returns a refined size and additionally populates the
@@ -2996,7 +2991,6 @@ static void save_window_size(const int w, const int h)
 //  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 //
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
-                                         const InterpolationMode interpolation_mode,
                                          const bool wants_aspect_ratio_correction)
 {
 	// Get the coarse resolution from the users setting, and adjust
@@ -3027,21 +3021,11 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
 
-	auto describe_interpolation_mode = [interpolation_mode]() -> const char* {
-		switch (interpolation_mode) {
-		case InterpolationMode::Bilinear: return "bilinear";
-		case InterpolationMode::NearestNeighbour:
-			return "nearest-neighbour";
-		}
-		return "unknown";
-	};
-
 	// Let the user know the resulting window properties
 	// TODO pixels or logical unit?
-	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
+	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode on display-%d",
 	        refined_size.x,
 	        refined_size.y,
-	        describe_interpolation_mode(),
 	        sdl.display_number);
 }
 
@@ -3128,9 +3112,9 @@ void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
 	sdl.integer_scaling_mode = mode;
 }
 
-InterpolationMode GFX_GetInterpolationMode()
+InterpolationMode GFX_GetTextureInterpolationMode()
 {
-	return sdl.interpolation_mode;
+	return sdl.texture.interpolation_mode;
 }
 
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
@@ -3142,20 +3126,20 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	// it's the job of everything after this to re-engage it.
 
 	if (output == "texture") {
-		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::Bilinear;
+		sdl.want_rendering_backend     = RenderingBackend::Texture;
+		sdl.texture.interpolation_mode = InterpolationMode::Bilinear;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	} else if (output == "texturenb") {
 		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-		// Currently the default, but... oh well
+		sdl.texture.interpolation_mode = InterpolationMode::NearestNeighbour;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
 	} else if (output == "opengl") {
 		sdl.want_rendering_backend = RenderingBackend::OpenGl;
-		sdl.interpolation_mode     = InterpolationMode::Bilinear;
 #endif
 
 	} else {
@@ -3187,7 +3171,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	        section->Get_string("window_position"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
-	                             sdl.interpolation_mode,
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
