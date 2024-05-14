@@ -101,26 +101,30 @@ COMPAT_VARYING vec2 vTexCoord;
 
 void main()
 {
-	// We're going to sample a a 4x4 grid of texels surrounding the target UV coordinate. We'll do this by rounding
-	// down the sample location to get the exact center of our "starting" texel. The starting texel will be at
-	// location [1, 1] in the grid, where [0, 0] is the top left corner.
+	// We're going to sample a a 4x4 grid of texels surrounding the target
+	// UV coordinate. We'll do this by rounding down the sample location to
+	// get the exact center of our "starting" texel. The starting texel will
+	// be at location [1, 1] in the grid, where [0, 0] is the top left corner.
 	vec2 samplePos = vTexCoord * rubyTextureSize;
 	vec2 texCoord1 = floor(samplePos - 0.5) + 0.5;
 
-	// Compute the fractional offset from our starting texel to our original sample location, which we'll
-	// feed into the Catmull-Rom spline function to get our filter weights.
+	// Compute the fractional offset from our starting texel to our original
+	// sample location, which we'll feed into the Catmull-Rom spline
+	// function to get our filter weights.
 	vec2 f = samplePos - texCoord1;
 
-	// Compute the Catmull-Rom weights using the fractional offset that we calculated earlier.
-	// These equations are pre-expanded based on our knowledge of where the texels will be located,
-	// which lets us avoid having to evaluate a piece-wise function.
+	// Compute the Catmull-Rom weights using the fractional offset that we
+	// calculated earlier. These equations are pre-expanded based on our
+	// knowledge of where the texels will be located, which lets us avoid
+	// having to evaluate a piece-wise function.
 	vec2 w0 = f * (-0.5 + f * (1.0 - 0.5 * f));
 	vec2 w1 = 1.0 + f * f * (-2.5 + 1.5 * f);
 	vec2 w2 = f * (0.5 + f * (2.0 - 1.5 * f));
 	vec2 w3 = f * f * (-0.5 + 0.5 * f);
 
-	// Work out weighting factors and sampling offsets that will let us use bilinear filtering to
-	// simultaneously evaluate the middle 2 samples from the 4x4 grid.
+	// Work out weighting factors and sampling offsets that will let us use
+	// bilinear filtering to simultaneously evaluate the middle 2 samples
+	// from the 4x4 grid.
 	vec2 w12 = w1 + w2;
 	vec2 offset12 = w2 / (w1 + w2);
 
