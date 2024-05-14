@@ -3022,8 +3022,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	save_window_size(refined_size.x, refined_size.y);
 
 	// Let the user know the resulting window properties
-	// TODO pixels or logical unit?
-	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode on display-%d",
+	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
 	        refined_size.x,
 	        refined_size.y,
 	        sdl.display_number);
