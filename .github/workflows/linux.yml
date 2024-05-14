@@ -89,7 +89,7 @@ jobs:
       matrix:
         conf:
 
-          - name: GCC 10, Ubuntu 22.04
+          - name: GCC 12, Ubuntu 22.04
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
@@ -105,7 +105,7 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: GCC 12, +debugger
+          - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
@@ -126,7 +126,7 @@ jobs:
             needs_min_deps: true
             max_warnings: -1
 
-          - name: GCC, Debian 11, ARMv7
+          - name: GCC 11, Debian 11, ARMv7
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
             max_warnings: 0
@@ -136,7 +136,7 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC, Debian 11, aarch64
+          - name: GCC 11, Debian 11, aarch64
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 0
@@ -146,7 +146,7 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC, Debian 11, ppc64le
+          - name: GCC 11, Debian 11, ppc64le
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 21
