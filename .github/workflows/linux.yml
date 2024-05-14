@@ -127,7 +127,7 @@ jobs:
             max_warnings: -1
 
           - name: GCC 11, Debian 11, ARMv7
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
@@ -137,7 +137,7 @@ jobs:
             needs_min_deps: false
 
           - name: GCC 11, Debian 11, aarch64
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
@@ -147,7 +147,7 @@ jobs:
             needs_min_deps: false
 
           - name: GCC 11, Debian 11, ppc64le
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 21
             run_tests: true
