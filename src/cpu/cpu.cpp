@@ -2405,15 +2405,8 @@ public:
 
 	~Cpu() = default;
 
-	bool Configure(Section* sec)
+	void ConfigureCycles(Section_prop* secprop)
 	{
-		Section_prop* secprop = static_cast<Section_prop*>(sec);
-		CPU_AutoDetermineMode = {};
-
-		// TODO needed ?
-		// CPU_CycleLeft=0;
-		CPU_Cycles = 0;
-
 		// Sets the value if the string in within the min and max values
 		auto set_if_in_range = [](const std::string& str,
 		                          int& value,
@@ -2431,8 +2424,8 @@ public:
 			}
 		};
 
-		PropMultiVal* p  = secprop->GetMultiVal("cycles");
-		std::string type = p->GetSection()->Get_string("type");
+		PropMultiVal* p = secprop->GetMultiVal("cycles");
+		const std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
 
@@ -2508,110 +2501,108 @@ public:
 			}
 			CPU_CycleAutoAdjust = false;
 		}
+	}
 
-		CPU_CycleUp   = secprop->Get_int("cycleup");
-		CPU_CycleDown = secprop->Get_int("cycledown");
-
-		std::string core(secprop->Get_string("core"));
-
+	void ConfigureCpuCore(const std::string& cpu_core)
+	{
 		cpudecoder = &CPU_Core_Normal_Run;
 
-		if (core == "normal") {
+		if (cpu_core == "normal") {
 			cpudecoder = &CPU_Core_Normal_Run;
 
-		} else if (core == "simple") {
+		} else if (cpu_core == "simple") {
 			cpudecoder = &CPU_Core_Simple_Run;
 
-		} else if (core == "full") {
+		} else if (cpu_core == "full") {
 			cpudecoder = &CPU_Core_Full_Run;
 
-		} else if (core == "auto") {
+		} else if (cpu_core == "auto") {
 			cpudecoder = &CPU_Core_Normal_Run;
 
 #if C_DYNAMIC_X86
 			CPU_AutoDetermineMode.auto_core = true;
 
-		} else if (core == "dynamic") {
+		} else if (cpu_core == "dynamic") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(true);
 
-		} else if (core == "dynamic_nodhfpu") {
+		} else if (cpu_core == "dynamic_nodhfpu") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
 #elif C_DYNREC
 			CPU_AutoDetermineMode.auto_core = true;
 
-		} else if (core == "dynamic") {
+		} else if (cpu_core == "dynamic") {
 			cpudecoder = &CPU_Core_Dynrec_Run;
 #else
 #endif
 		}
 
 #if C_DYNAMIC_X86
-		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") ||
-		                            (core == "dynamic_nodhfpu"));
+		CPU_Core_Dyn_X86_Cache_Init((cpu_core == "dynamic") ||
+		                            (cpu_core == "dynamic_nodhfpu"));
 #elif C_DYNREC
-		CPU_Core_Dynrec_Cache_Init(core == "dynamic");
+		CPU_Core_Dynrec_Cache_Init(cpu_core == "dynamic");
 #endif
+	}
 
+	void ConfigureCpuType(const std::string& cpu_core, const std::string& cpu_type)
+	{
 		CPU_ArchitectureType = ArchitectureType::Mixed;
 
-		std::string cputype(secprop->Get_string("cputype"));
-
-		if (cputype == "auto") {
+		if (cpu_type == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
 
-		} else if (cputype == "386_fast") {
+		} else if (cpu_type == "386_fast") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
 
-		} else if (cputype == "386_prefetch") {
+		} else if (cpu_type == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
 
-			if (core == "normal") {
+			if (cpu_core == "normal") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize = 16;
 
-			} else if (core == "auto") {
+			} else if (cpu_core == "auto") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
-				CPU_PrefetchQueueSize = 16;
+				CPU_PrefetchQueueSize           = 16;
 				CPU_AutoDetermineMode.auto_core = false;
 
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
 
-		} else if (cputype == "386") {
+		} else if (cpu_type == "386") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Slow;
 
-		} else if (cputype == "486") {
+		} else if (cpu_type == "486") {
 			CPU_ArchitectureType = ArchitectureType::Intel486OldSlow;
 
-		} else if (cputype == "486_prefetch") {
+		} else if (cpu_type == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
 
-			if (core == "normal") {
+			if (cpu_core == "normal") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize = 32;
 
-			} else if (core == "auto") {
+			} else if (cpu_core == "auto") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
-				CPU_PrefetchQueueSize = 32;
+				CPU_PrefetchQueueSize           = 32;
 				CPU_AutoDetermineMode.auto_core = false;
 
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
 
-		} else if (cputype == "pentium") {
+		} else if (cpu_type == "pentium") {
 			CPU_ArchitectureType = ArchitectureType::Pentium;
 
-		} else if (cputype == "pentium_mmx") {
+		} else if (cpu_type == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
-
 		}
 
 		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
@@ -2622,8 +2613,30 @@ public:
 
 		} else {
 			CPU_extflags_toggle = 0;
-
 		}
+	}
+
+	bool Configure(Section* sec)
+	{
+		Section_prop* secprop = static_cast<Section_prop*>(sec);
+
+		// TODO needed?
+		// CPU_CycleLeft = 0;
+		CPU_Cycles            = 0;
+		CPU_AutoDetermineMode = {};
+
+		LOG_TRACE("%s", secprop->Get_string("cycles").c_str());
+
+		ConfigureCycles(secprop);
+
+		const std::string cpu_core = secprop->Get_string("core");
+		const std::string cpu_type = secprop->Get_string("cputype");
+
+		ConfigureCpuCore(cpu_core);
+		ConfigureCpuType(cpu_core, cpu_type);
+
+		CPU_CycleUp   = secprop->Get_int("cycleup");
+		CPU_CycleDown = secprop->Get_int("cycledown");
 
 		if (CPU_CycleMax <= 0) {
 			CPU_CycleMax = CpuCyclesRealModeDefault;
