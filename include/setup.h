@@ -129,7 +129,13 @@ private:
 class Property {
 public:
 	struct Changeable {
-		enum Value { Always, WhenIdle, OnlyAtStart, Deprecated };
+		enum Value {
+			Always,
+			WhenIdle,
+			OnlyAtStart,
+			Deprecated,
+			DeprecatedButAllowed
+		};
 	};
 
 	const std::string propname;
@@ -176,7 +182,13 @@ public:
 
 	bool IsDeprecated() const
 	{
-		return (change == Changeable::Value::Deprecated);
+		return (change == Changeable::Value::Deprecated ||
+		        change == Changeable::Value::DeprecatedButAllowed);
+	}
+
+	bool IsDeprecatedButAllowed() const
+	{
+		return change == Changeable::Value::DeprecatedButAllowed;
 	}
 
 	virtual const std::vector<Value>& GetValues() const;
