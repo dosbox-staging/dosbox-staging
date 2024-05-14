@@ -112,6 +112,20 @@ jobs:
             max_warnings: 0
             needs_all_deps: true
 
+          - name: GCC 11, Ubuntu 22.04, minimal build
+            os: ubuntu-22.04
+            build_flags: >-
+              -Dbuildtype=minsize
+              -Dunit_tests=disabled
+              -Duse_alsa=false
+              -Duse_fluidsynth=false
+              -Duse_mt32emu=false
+              -Duse_opengl=false
+              -Duse_sdl2_net=false
+              -Duse_slirp=false
+            needs_min_deps: true
+            max_warnings: -1
+
           - name: GCC, Debian 11, ARMv7
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
@@ -141,22 +155,6 @@ jobs:
             arch: ppc64el
             deb_vers: 11
             needs_min_deps: false
-
-          - name: GCC 9, minimum build
-            os: ubuntu-20.04
-            packages: g++-9
-            build_flags: >-
-              -Dbuildtype=minsize
-              -Dunit_tests=disabled
-              -Duse_alsa=false
-              -Duse_fluidsynth=false
-              -Duse_mt32emu=false
-              -Duse_opengl=false
-              -Duse_sdl2_net=false
-              -Duse_slirp=false
-              --native-file=.github/meson/native-gcc-9.ini
-            needs_min_deps: true
-            max_warnings: -1
 
     steps:
       - name: Checkout repository
