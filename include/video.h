@@ -383,7 +383,7 @@ void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_sour
 void GFX_SetIntegerScalingMode(const IntegerScalingMode mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();
 
-InterpolationMode GFX_GetInterpolationMode();
+InterpolationMode GFX_GetTextureInterpolationMode();
 
 struct VideoMode;
 class Fraction;

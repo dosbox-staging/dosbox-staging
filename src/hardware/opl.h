@@ -37,7 +37,7 @@
 
 class Timer {
 public:
-	Timer(int16_t micros);
+	Timer(const int micros);
 
 	bool Update(const double time);
 	void Reset();
@@ -99,7 +99,7 @@ enum class EsfmMode { Legacy, Native };
 
 class Opl {
 public:
-	mixer_channel_t channel = {};
+	MixerChannelPtr channel = {};
 
 	OplRegisterCache cache = {};
 
@@ -159,7 +159,7 @@ private:
 
 	void Init();
 
-	void AudioCallback(const uint16_t frames);
+	void AudioCallback(const int frames);
 	AudioFrame RenderFrame();
 	void RenderUpToNow();
 

@@ -53,7 +53,7 @@ LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
 	                           dac_name.c_str(),
 	                           features);
 
-	ms_per_frame = millis_in_second / channel->GetSampleRate();
+	ms_per_frame = MillisInSecond / channel->GetSampleRate();
 
 	// Update our status to indicate we're ready
 	status_reg.error = false;

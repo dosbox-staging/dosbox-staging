@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 
 CHECK_NARROWING();
 
-Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, use_mixer_rate)
+Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, UseMixerRate)
 {
 	// Prime the FIFO with a single silent sample
 	fifo.emplace(data_reg);
@@ -55,7 +55,7 @@ void Disney::ConfigureFilters(const FilterState state)
 
 	// Pull audio frames from the Disney DAC at 7 kHz
 	channel->SetSampleRate(dss_7khz_rate_hz);
-	ms_per_frame = millis_in_second / dss_7khz_rate_hz;
+	ms_per_frame = MillisInSecond / dss_7khz_rate_hz;
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth

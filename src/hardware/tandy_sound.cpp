@@ -120,7 +120,7 @@ private:
 	DMA dma = {};
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	IO_ReadHandleObject read_handler = {};
 	IO_WriteHandleObject write_handlers[2] = {};
 
@@ -148,7 +148,7 @@ private:
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
 
 	// Managed objects
-	mixer_channel_t channel                                  = nullptr;
+	MixerChannelPtr channel                                  = nullptr;
 	IO_WriteHandleObject write_handlers[2]                   = {};
 	std::unique_ptr<sn76496_base_device> device              = {};
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
@@ -158,14 +158,14 @@ private:
 	static constexpr auto render_divisor = 16;
 	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
+	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
 
 	// Runtime states
 	device_sound_interface *dsi       = nullptr;
 	double last_rendered_ms           = 0.0;
 };
 
-static void setup_filter(mixer_channel_t& channel, const bool filter_enabled)
+static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
 	// The filters are meant to emulate the bandwidth limited sound of the
 	// small integrated speaker of the Tandy. This more accurately
@@ -199,7 +199,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyDac,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -477,7 +477,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::FadeOut,

@@ -54,7 +54,7 @@ private:
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
 
 	// Managed objects
-	mixer_channel_t channel               = nullptr;
+	MixerChannelPtr channel               = nullptr;
 	IO_ReadHandleObject read_handler      = {};
 	IO_WriteHandleObject write_handler    = {};
 	std::unique_ptr<reSIDfp::SID> service = {};

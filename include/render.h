@@ -188,7 +188,7 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_Init(Section*);
 void RENDER_Reinit();
 
-void RENDER_AddConfigSection(const config_ptr_t& conf);
+void RENDER_AddConfigSection(const ConfigPtr& conf);
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 

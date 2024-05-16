@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -102,6 +102,22 @@ inline int ifloor(const float x)
 	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
 	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
 	return static_cast<int>(floorf(x));
+}
+
+inline int iceil(double x)
+{
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(ceil(x));
+}
+
+inline int iceil(const float x)
+{
+	assert(std::isfinite(x));
+	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
+	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
+	return static_cast<int>(ceilf(x));
 }
 
 // Determine if two numbers are equal "enough" based on an epsilon value.

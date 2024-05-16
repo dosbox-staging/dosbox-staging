@@ -50,7 +50,7 @@ LASynthModel::LASynthModel(const std::string &rom_name,
 	assert(ctrl_full || (ctrl_a && ctrl_b));
 }
 
-std::optional<std_fs::path> LASynthModel::find_rom(const service_t& service,
+std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service,
                                                    const std_fs::path& dir,
                                                    const Rom* rom)
 {
@@ -95,7 +95,7 @@ std::optional<std_fs::path> LASynthModel::find_rom(const service_t& service,
 }
 
 // Checks if its ROMs can be positively found in the provided directory
-bool LASynthModel::InDir(const service_t& service, const std_fs::path& dir) const
+bool LASynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const
 {
 	assert(service);
 
@@ -109,7 +109,7 @@ bool LASynthModel::InDir(const service_t& service, const std_fs::path& dir) cons
 }
 
 // If present, loads either the full or partial ROMs from the provided directory
-bool LASynthModel::Load(const service_t& service, const std_fs::path& dir) const
+bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) const
 {
 	if (!service) {
 		return false;

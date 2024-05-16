@@ -736,7 +736,7 @@ void ReelMagic_DeleteAllPlayers()
 //
 // audio stuff begins here...
 //
-mixer_channel_t mixer_channel = nullptr;
+MixerChannelPtr mixer_channel = nullptr;
 static AudioFifo* active_fifo = nullptr;
 
 static void ActivatePlayerAudioFifo(AudioFifo& audio_fifo)
@@ -788,7 +788,7 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	}
 
 	mixer_channel = MIXER_AddChannel(&RMMixerChannelCallback,
-	                                 use_mixer_rate,
+	                                 UseMixerRate,
 	                                 ChannelName::ReelMagic,
 	                                 {// ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,

@@ -89,7 +89,7 @@ jobs:
       matrix:
         conf:
 
-          - name: GCC 10, Ubuntu 22.04
+          - name: GCC 12, Ubuntu 22.04
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
@@ -105,46 +105,15 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: GCC 12, +debugger
+          - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
             max_warnings: 0
             needs_all_deps: true
 
-          - name: GCC, Debian 11, ARMv7
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, aarch64
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: arm64
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, ppc64le
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 21
-            run_tests: true
-            cross: true
-            arch: ppc64el
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC 9, minimum build
-            os: ubuntu-20.04
-            packages: g++-9
+          - name: GCC 11, Ubuntu 22.04, minimal build
+            os: ubuntu-22.04
             build_flags: >-
               -Dbuildtype=minsize
               -Dunit_tests=disabled
@@ -154,9 +123,38 @@ jobs:
               -Duse_opengl=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
-              --native-file=.github/meson/native-gcc-9.ini
             needs_min_deps: true
             max_warnings: -1
+
+          - name: GCC 11, Debian 11, ARMv7
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 11
+            needs_min_deps: false
+
+          - name: GCC 11, Debian 11, aarch64
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 11
+            needs_min_deps: false
+
+          - name: GCC 11, Debian 11, ppc64le
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 21
+            run_tests: true
+            cross: true
+            arch: ppc64el
+            deb_vers: 11
+            needs_min_deps: false
 
     steps:
       - name: Checkout repository
@@ -267,7 +265,7 @@ jobs:
 
   build_linux_release:
     name: Release build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     needs: cache_subprojects
     steps:
@@ -281,7 +279,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
-            $(cat packages/ubuntu-20.04-apt.txt)
+            $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Restore subprojects cache
@@ -329,7 +327,6 @@ jobs:
             -Ddefault_library=static \
             --wrap-mode=forcefallback \
             -Db_lto=true -Db_lto_threads=$(nproc) \
-            --native-file=.github/meson/native-gcc-9.ini \
             build \
           || ( cat build/meson-logs/meson-log.txt ; exit 1 )
 

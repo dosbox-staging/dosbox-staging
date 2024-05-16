@@ -75,8 +75,6 @@ void INTRO::Run(void) {
 		output.Display();
 		return;
 	}
-    /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
-    if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
     if (cmd->FindExist("cdrom",false)) {
 #ifdef WIN32
         WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));

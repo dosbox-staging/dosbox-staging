@@ -66,14 +66,14 @@ private:
 	void RenderAudioFramesToFifo(const uint16_t num_audio_frames = 1);
 	void Render();
 
-	using fluid_settings_ptr_t =
+	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
-	using fsynth_ptr_t = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
+	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 
-	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
-	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
+	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
+	FluidSynthPtr synth{nullptr, &delete_fluid_synth};
 
-	mixer_channel_t mixer_channel = nullptr;
+	MixerChannelPtr mixer_channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};

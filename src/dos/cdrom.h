@@ -43,6 +43,7 @@
 // CDROM data and audio format constants
 #define BYTES_PER_RAW_REDBOOK_FRAME    2352u
 #define BYTES_PER_COOKED_REDBOOK_FRAME 2048u
+
 #define REDBOOK_FRAMES_PER_SECOND        75u
 #define REDBOOK_CHANNELS                  2u
 #define REDBOOK_BPS                       2u // bytes per sample
@@ -314,16 +315,29 @@ private:
 	static struct imagePlayer {
 		// Objects, pointers, and then scalars; in descending size-order.
 		std::weak_ptr<TrackFile> trackFile = {};
-		mixer_channel_t channel = nullptr;
-		CDROM_Interface_Image    *cd                = nullptr;
-		void (MixerChannel::*addFrames)(uint16_t, const int16_t *) = nullptr;
-		uint32_t                 playedTrackFrames  = 0;
-		uint32_t                 totalTrackFrames   = 0;
-		uint32_t                 startSector        = 0;
-		uint32_t                 totalRedbookFrames = 0;
-		int16_t buffer[MixerBufferLength * REDBOOK_CHANNELS] = {0};
-		bool                     isPlaying          = false;
-		bool                     isPaused           = false;
+		MixerChannelPtr channel            = nullptr;
+		CDROM_Interface_Image* cd          = nullptr;
+
+		void (MixerChannel::*addFrames)(int, const int16_t*) = nullptr;
+
+		uint32_t playedTrackFrames  = 0;
+		uint32_t totalTrackFrames   = 0;
+		uint32_t startSector        = 0;
+		uint32_t totalRedbookFrames = 0;
+		bool isPlaying              = false;
+		bool isPaused               = false;
+
+		// TODO `MixerBufferByteSize` is hardcoded to 1024 * 16 bytes,
+		// so this buffer has been 32k long for a while now. There's
+		// potential for buffer overflows, though; the code that writes
+		// to the buffer asserts the max length of the writes, but
+		// allows lengths far greater than the 32k limit. So it kinda
+		// works, but by fluke.
+		//
+		// Probably the safest way going forward is to turn this into a
+		// `std::vector` and size it as needed at runtime.
+		//
+		int16_t buffer[MixerBufferByteSize * 2] = {};
 	} player;
 
 	// Private utility functions
@@ -370,7 +384,7 @@ private:
 	void CdAudioCallback(const uint16_t requested_frames);
 	void CdReaderLoop();
 
-	mixer_channel_t mixer_channel  = {};
+	MixerChannelPtr mixer_channel  = {};
 	std::thread thread             = {};
 	std::mutex mutex               = {};
 	std::condition_variable waiter = {};

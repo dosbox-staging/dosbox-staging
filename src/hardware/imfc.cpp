@@ -3108,7 +3108,7 @@ constexpr auto EG_OFF = 0;
 class ym2151_device {
 public:
 	// construction/destruction
-	explicit ym2151_device(mixer_channel_t&& channel);
+	explicit ym2151_device(MixerChannelPtr&& channel);
 	~ym2151_device();
 
 	// configuration helpers
@@ -3164,7 +3164,7 @@ private:
 	};
 
 	// Playback related
-	mixer_channel_t audio_channel = nullptr;
+	MixerChannelPtr audio_channel = nullptr;
 	std::queue<AudioFrame> fifo   = {};
 	double last_rendered_ms       = 0.0;
 	double ms_per_render          = 0.0;
@@ -4835,7 +4835,7 @@ void ym2151_device::advance()
 //  ym2151_device - constructor
 //-------------------------------------------------
 
-ym2151_device::ym2151_device(mixer_channel_t&& channel)
+ym2151_device::ym2151_device(MixerChannelPtr&& channel)
         : audio_channel(std::move(channel))
 {
 	device_start();
@@ -4843,7 +4843,7 @@ ym2151_device::ym2151_device(mixer_channel_t&& channel)
 	device_reset();
 
 	assert(audio_channel);
-	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
+	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
 	audio_channel->Enable(true);
 }
 
@@ -12865,7 +12865,7 @@ public:
 	MusicFeatureCard(const MusicFeatureCard&)            = delete;
 	MusicFeatureCard& operator=(const MusicFeatureCard&) = delete;
 
-	MusicFeatureCard(mixer_channel_t&& audio_channel, const io_port_t port,
+	MusicFeatureCard(MixerChannelPtr&& audio_channel, const io_port_t port,
 	                 const uint8_t irq)
 	        : m_ya2151(std::move(audio_channel)),
 	          // create all the instances
@@ -13469,7 +13469,7 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void IMFC_AddConfigSection(const config_ptr_t& conf)
+void IMFC_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

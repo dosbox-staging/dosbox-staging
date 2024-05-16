@@ -454,7 +454,7 @@ static void config_init(Section_prop &secprop)
 	                    "Note: Requires PS/2 mouse to be enabled.");
 }
 
-void MOUSE_AddConfigSection(const config_ptr_t& conf)
+void MOUSE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

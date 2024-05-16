@@ -1527,8 +1527,6 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	}
 
 	top += (type==GL_VERTEX_SHADER) ? "#define VERTEX 1\n":"#define FRAGMENT 1\n";
-	if (!sdl.opengl.bilinear)
-		top += "#define OPENGLNB 1\n";
 
 	src_strings[0] = top.c_str();
 	src_strings[1] = shaderSrc;
@@ -2004,12 +2002,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
-		                              ? GL_NEAREST
-		                              : GL_LINEAR);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
 		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
@@ -2986,7 +2980,6 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction is requested.
 //
 // This function returns a refined size and additionally populates the
@@ -2998,7 +2991,6 @@ static void save_window_size(const int w, const int h)
 //  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 //
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
-                                         const InterpolationMode interpolation_mode,
                                          const bool wants_aspect_ratio_correction)
 {
 	// Get the coarse resolution from the users setting, and adjust
@@ -3029,21 +3021,10 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
 
-	auto describe_interpolation_mode = [interpolation_mode]() -> const char* {
-		switch (interpolation_mode) {
-		case InterpolationMode::Bilinear: return "bilinear";
-		case InterpolationMode::NearestNeighbour:
-			return "nearest-neighbour";
-		}
-		return "unknown";
-	};
-
 	// Let the user know the resulting window properties
-	// TODO pixels or logical unit?
-	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
+	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
 	        refined_size.x,
 	        refined_size.y,
-	        describe_interpolation_mode(),
 	        sdl.display_number);
 }
 
@@ -3130,9 +3111,9 @@ void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
 	sdl.integer_scaling_mode = mode;
 }
 
-InterpolationMode GFX_GetInterpolationMode()
+InterpolationMode GFX_GetTextureInterpolationMode()
 {
-	return sdl.interpolation_mode;
+	return sdl.texture.interpolation_mode;
 }
 
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
@@ -3144,28 +3125,20 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	// it's the job of everything after this to re-engage it.
 
 	if (output == "texture") {
-		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::Bilinear;
+		sdl.want_rendering_backend     = RenderingBackend::Texture;
+		sdl.texture.interpolation_mode = InterpolationMode::Bilinear;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	} else if (output == "texturenb") {
 		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-		// Currently the default, but... oh well
+		sdl.texture.interpolation_mode = InterpolationMode::NearestNeighbour;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
-	} else if (output.starts_with("opengl")) {
-		if (output == "opengl") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::Bilinear;
-			sdl.opengl.bilinear    = true;
-
-		} else if (output == "openglnb") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-			sdl.opengl.bilinear = false;
-		}
+	} else if (output == "opengl") {
+		sdl.want_rendering_backend = RenderingBackend::OpenGl;
 #endif
 
 	} else {
@@ -3197,7 +3170,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	        section->Get_string("window_position"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
-	                             sdl.interpolation_mode,
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
@@ -4323,20 +4295,27 @@ static void config_add_sdl()
 	const std::string default_output = "texture";
 #endif
 	pstring = sdl_sec->Add_string("output", always, default_output.c_str());
+
 	pstring->SetOptionHelp("opengl_default",
-	        "Video system to use for output ('opengl' by default).\n"
-	        "Some shaders require bilinear interpolation, making that the safest choice.");
-	pstring->SetOptionHelp(
-	        "texture_default",
-	        "Video system to use for output ('texture' by default).\n"
-	        "Some shaders require bilinear interpolation, making that the safest choice.");
-	pstring->SetOptionHelp("opengl", "  opengl:     Uses bilinear interpolation.");
-	pstring->SetOptionHelp("texture",   "  texture:    Uses bilinear interpolation.");
-	pstring->SetOptionHelp("openglnb",  "  openglnb:   Uses nearest-neighbour interpolation (no bilinear).");
-	pstring->SetOptionHelp("texturenb", "  texturenb:  Uses nearest-neighbour interpolation (no bilinear).");
+	                       "Rendering backend to use for graphics output ('opengl' by default).\n"
+	                       "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
+						   "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
+						   "non-existent OpenGL drivers (this is extremely rare).");
+
+	pstring->SetOptionHelp("texture_default",
+	                       "Rendering backend to use for graphics output ('texture' by default).\n");
+
+	pstring->SetOptionHelp("opengl",
+	                       "  opengl:     OpenGL backend with shader support (default).");
+	pstring->SetOptionHelp("texture",
+	                       "  texture:    SDL's texture backend with bilinear interpolation.");
+	pstring->SetOptionHelp("texturenb",
+	                       "  texturenb:  SDL's texture backend with nearest-neighbour interpolation\n"
+						   "              (no bilinear).");
 #if C_OPENGL
 	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
 	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglnb", "opengl");
 #else
 	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
@@ -4347,10 +4326,10 @@ static void config_add_sdl()
 #else
 		"texture_default",
 #endif
-		"texture", "texturenb",
 #if C_OPENGL
-		"opengl", "openglnb",
+		        "opengl",
 #endif
+		        "texture", "texturenb",
 	});
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");

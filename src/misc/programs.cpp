@@ -330,12 +330,11 @@ private:
 void CONFIG::Run(void)
 {
 	static const char* const params[] = {
-	        "-r",        "-wcd",       "-wc",          "-writeconf",
-	        "-l",        "-rmconf",    "-h",           "-help",
-	        "-?",        "-axclear",   "-axadd",       "-axtype",
-	        "-avistart", "-avistop",   "-startmapper", "-get",
-	        "-set",      "-writelang", "-wl",          "-securemode",
-	        ""};
+	        "-r",      "-wcd",       "-wc",      "-writeconf",   "-l",
+	        "-h",      "-help",      "-?",       "-axclear",     "-axadd",
+	        "-axtype", "-avistart",  "-avistop", "-startmapper", "-get",
+	        "-set",    "-writelang", "-wl",      "-securemode",  ""};
+
 	enum prs {
 		P_NOMATCH,
 		P_NOPARAMS, // fixed return values for GetParameterFromList
@@ -344,7 +343,6 @@ void CONFIG::Run(void)
 		P_WRITECONF,
 		P_WRITECONF2,
 		P_LISTCONF,
-		P_KILLCONF,
 		P_HELP,
 		P_HELP2,
 		P_HELP3,
@@ -615,8 +613,15 @@ void CONFIG::Run(void)
 
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 						         p->propname.c_str(),
-						         sec->GetName(),
-						         p->GetHelp().c_str());
+						         sec->GetName());
+
+						if (p->IsDeprecated()) {
+							WriteOut(MSG_Get("PROGRAM_CONFIG_DEPRECATED"));
+							WriteOut("\n");
+						}
+
+						WriteOut(p->GetHelp().c_str());
+						WriteOut("\n\n");
 
 						if (!p->IsDeprecated()) {
 							if (!possible_values.empty()) {
@@ -965,6 +970,10 @@ void PROGRAMS_Init(Section* sec)
 	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    show the description and the current value of a config\n"
 	        "                    property\n"
+			"\n"
+	        "  -help sections\n"
+	        "  -h    sections\n"
+	        "  -?    sections    [reset]list the names of all config sections\n"
 	        "\n"
 	        "  -axclear          clear the [autoexec] section\n"
 	        "  -axadd [color=white]LINE[reset]       append a line to the end of the [autoexec] section\n"
@@ -979,11 +988,13 @@ void PROGRAMS_Init(Section* sec)
 	        "                    show the value of a single config property\n"
 	        "\n"
 	        "  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
-	        "                    set the value of a config property");
+	        "                    set the value of a config property"
+	        "\n\n"
+	        "  -securemode       enable secure mode");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
-	        "[color=white]Purpose of property [color=light-green]'%s'[color=white] "
-	        "(contained in section [color=light-cyan][%s][color=white]):[reset]\n\n%s\n\n");
+	        "[color=white]Description of the [color=light-green]'%s'[color=white] "
+	        "setting in the [color=light-cyan][%s][color=white] section:[reset]\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES",
 	        "[color=white]Possible values:[reset]  %s\n");
@@ -995,7 +1006,8 @@ void PROGRAMS_Init(Section* sec)
 	        "[color=white]Current value:[reset]    %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
-	        "[color=white]Purpose of section [%s]:[reset]\n"
+	        "[color=white]Description of the "
+	        "[color=light-cyan][%s][color=white] section:[reset]\n"
 	        "%s\n[color=white]Current value:[reset]\n%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
@@ -1004,12 +1016,13 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
-	        "[color=white]Section [color=light-cyan][%s] [color=white]contains the following properties:[reset]\n");
+	        "[color=white]List of settings in the "
+	        "[color=light-cyan][%s][color=white] section:[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
-	        "[color=white]DOSBox configuration contains the following sections:[reset]\n");
+	        "[color=white]List of configuration sections:[reset]\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Switched to secure mode.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Secure mode enabled.\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
@@ -1035,5 +1048,10 @@ void PROGRAMS_Init(Section* sec)
 
 	MSG_Add("CONJUNCTION_AND", "and");
 
-	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE", "Property '%s' is not changeable at runtime.");
+	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	        "Property '%s' is not changeable at runtime.");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
+	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
+	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
 }

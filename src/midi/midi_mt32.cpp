@@ -449,7 +449,7 @@ static std::string get_model_setting()
 	return section->Get_string("model");
 }
 
-static std::set<const LASynthModel*> find_models(const MidiHandler_mt32::service_t& service,
+static std::set<const LASynthModel*> find_models(const Mt32ServicePtr& service,
                                                  const std_fs::path& dir)
 {
 	std::set<const LASynthModel*> models = {};
@@ -461,7 +461,7 @@ static std::set<const LASynthModel*> find_models(const MidiHandler_mt32::service
 	return models;
 }
 
-static std::optional<ModelAndDir> load_model(const MidiHandler_mt32::service_t& service,
+static std::optional<ModelAndDir> load_model(const Mt32ServicePtr& service,
                                              const std::string& wanted_model_name,
                                              const std::deque<std_fs::path>& rom_dirs)
 {
@@ -576,10 +576,10 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
+Mt32ServicePtr MidiHandler_mt32::GetService()
 {
 	const std::lock_guard<std::mutex> lock(service_mutex);
-	service_t mt32_service = std::make_unique<MT32Emu::Service>();
+	Mt32ServicePtr mt32_service = std::make_unique<MT32Emu::Service>();
 	// Has libmt32emu already created a context?
 	if (!mt32_service->getContext()) {
 		mt32_service->createContext(get_report_handler_interface(), this);
@@ -609,7 +609,7 @@ static size_t get_max_dir_width(const char* indent, const char* column_delim)
 using DirsWithModels = std::map<std_fs::path, std::set<const LASynthModel*>>;
 
 static std::set<const LASynthModel*> populate_available_models(
-        const MidiHandler_mt32::service_t& service, DirsWithModels& dirs_with_models)
+        const Mt32ServicePtr& service, DirsWithModels& dirs_with_models)
 {
 	std::set<const LASynthModel*> available_models;
 
@@ -774,7 +774,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 
-	ms_per_audio_frame = millis_in_second / sample_rate_hz;
+	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
 
 	mt32_service->setAnalogOutputMode(AnalogMode);
 	mt32_service->selectRendererType(RenderingType);
@@ -832,7 +832,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	// Size the out-bound audio frame FIFO
 	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
 
-	const auto audio_frames_per_ms = iround(sample_rate_hz / millis_in_second);
+	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
 	audio_frame_fifo.Resize(
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
@@ -1062,7 +1062,7 @@ void MidiHandler_mt32::Render()
 
 static void mt32_init([[maybe_unused]] Section* sec) {}
 
-void MT32_AddConfigSection(const config_ptr_t& conf)
+void MT32_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 	Section_prop* sec_prop = conf->AddSection_prop("mt32", &mt32_init);
