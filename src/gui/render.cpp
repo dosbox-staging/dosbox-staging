@@ -724,7 +724,7 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
-		LOG_WARNING("RENDER: Invalid 'aspect' setting '%s', using 'auto'",
+		LOG_WARNING("RENDER: Invalid 'aspect' setting: '%s', using 'auto'",
 		            mode.c_str());
 		return AspectRatioCorrectionMode::Auto;
 	}
