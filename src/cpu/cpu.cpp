@@ -33,10 +33,12 @@
 #include "pic.h"
 #include "lazyflags.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "memory.h"
 #include "paging.h"
 #include "programs.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "video.h"
 
@@ -55,12 +57,37 @@ CPU_Regs cpu_regs = {};
 CPUBlock cpu      = {};
 Segments Segs     = {};
 
-int CPU_Cycles        = 0;
-int CPU_CycleLeft     = CpuCyclesRealModeDefault;
+// Current cycles values
+int CPU_Cycles    = 0;
+int CPU_CycleLeft = CpuCyclesRealModeDefault;
+
+// Cycles settings for both "legacy" and "modern" modes
 int CPU_CycleMax      = CpuCyclesRealModeDefault;
-int CPU_OldCycleMax   = CpuCyclesRealModeDefault;
 int CPU_CyclePercUsed = 100;
 int CPU_CycleLimit    = -1;
+
+static int old_cycle_max       = CpuCyclesRealModeDefault;
+static bool legacy_cycles_mode = false;
+
+// Cycles settings for 'modern mode' only
+static struct {
+	// Fixed real mode cycles or "max cycles" if not set
+	std::optional<int> real_mode = {};
+
+	// Fixed protected mode cycles or "max cycles" if not set
+	std::optional<int> protected_mode = {};
+
+	// If true, the real mode setting controls protected mode as well
+	bool protected_mode_auto = false;
+
+	// If true, CPU throttling is enabled for both real and protected mode
+	// for fixed cycles modes. The flag is ignored in "max cycle" mode (as
+	// that always throttles implicitly).
+	bool throttle = false;
+
+} modern_cycles_config;
+
+enum class CpuMode { Real, Protected };
 
 // Cycle up & down counts
 static int cpu_cycle_up   = 0;
@@ -72,8 +99,8 @@ CPU_Decoder* cpudecoder;
 
 bool CPU_CycleAutoAdjust = false;
 
-CpuAutoDetermineMode CPU_AutoDetermineMode     = {};
-CpuAutoDetermineMode CPU_LastAutoDetermineMode = {};
+CpuAutoDetermineMode auto_determine_mode      = {};
+CpuAutoDetermineMode last_auto_determine_mode = {};
 
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
 
@@ -131,6 +158,83 @@ void CPU_Core_Dynrec_Cache_Close();
 }
 #endif
 
+static void set_modern_cycles_config(const CpuMode mode)
+{
+	auto& conf = modern_cycles_config;
+
+	const auto new_cycles = [&]() -> std::optional<int> {
+		switch (mode) {
+		case CpuMode::Real: return conf.real_mode;
+		case CpuMode::Protected:
+			if (conf.protected_mode_auto) {
+				// 'cpu_cycles' controls both real and protected mode
+				return conf.real_mode;
+			} else {
+				return conf.protected_mode;
+			}
+		}
+		assert(false);
+		return {};
+	}();
+
+	const auto fixed_cycles = new_cycles.has_value();
+	if (fixed_cycles) {
+		if (conf.throttle) {
+			CPU_CycleAutoAdjust = true;
+			CPU_CyclePercUsed   = 100;
+			CPU_CycleLimit      = *new_cycles;
+		} else {
+			CPU_CycleAutoAdjust = false;
+			CPU_CycleMax        = *new_cycles;
+		}
+	} else {
+		// "max cycles" mode
+		CPU_CycleAutoAdjust = true;
+		CPU_CyclePercUsed   = 100;
+		CPU_CycleLimit      = -1;
+	}
+
+	CPU_Cycles    = 0;
+	CPU_CycleLeft = 0;
+
+	const auto real_mode_with_max_cycles = (mode == CpuMode::Real &&
+	                                        !fixed_cycles);
+	if (!real_mode_with_max_cycles) {
+		auto_determine_mode.auto_cycles = true;
+	}
+}
+
+void CPU_RestoreRealModeCyclesConfig()
+{
+	if (cpu.pmode || (!last_auto_determine_mode.auto_core &&
+	                  !last_auto_determine_mode.auto_cycles)) {
+		return;
+	}
+
+	auto_determine_mode      = last_auto_determine_mode;
+	last_auto_determine_mode = {};
+
+	if (auto_determine_mode.auto_cycles) {
+		if (legacy_cycles_mode) {
+			CPU_CycleAutoAdjust = false;
+			CPU_CycleLeft       = 0;
+			CPU_Cycles          = 0;
+			CPU_CycleMax        = old_cycle_max;
+		} else {
+			set_modern_cycles_config(CpuMode::Real);
+		}
+
+		GFX_NotifyCyclesChanged();
+	}
+#if (C_DYNAMIC_X86) || (C_DYNREC)
+	if (auto_determine_mode.auto_core) {
+		cpudecoder = &CPU_Core_Normal_Run;
+
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+	}
+#endif
+}
 
 void Descriptor::Load(PhysPt address) {
 	cpu.mpl=0;
@@ -1619,44 +1723,54 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
 			PAGING_Enable((value & CR0_PAGING) > 0);
 
-			if (!CPU_AutoDetermineMode.auto_core &&
-			    !CPU_AutoDetermineMode.auto_cycles) {
+			if (!auto_determine_mode.auto_core &&
+			    !auto_determine_mode.auto_cycles) {
 				break;
 			}
 
-			if (CPU_AutoDetermineMode.auto_cycles) {
-				CPU_CycleAutoAdjust = true;
-				CPU_CycleLeft       = 0;
-				CPU_Cycles          = 0;
-				CPU_OldCycleMax     = CPU_CycleMax;
+			if (legacy_cycles_mode) {
+				if (auto_determine_mode.auto_cycles) {
+					CPU_CycleAutoAdjust = true;
+					CPU_CycleLeft       = 0;
+					CPU_Cycles          = 0;
+					old_cycle_max       = CPU_CycleMax;
 
-				GFX_NotifyCyclesChanged();
+					GFX_NotifyCyclesChanged();
 
-				if (!displayed_max_cycles_warning) {
-					LOG_WARNING(
-					        "CPU: Switched to max cycles for protected mode program. "
-					        "Try setting a fixed cycles value if you're getting audio "
-					        "drop-outs or the programs runs too fast.");
+					if (!displayed_max_cycles_warning) {
+						LOG_WARNING(
+								"CPU: Switched to max cycles for protected mode program. "
+								"Try setting a fixed cycles value if you're getting audio "
+								"drop-outs or the programs runs too fast.");
 
-					displayed_max_cycles_warning = true;
+						displayed_max_cycles_warning = true;
+					}
+
+				} else {
+					GFX_RefreshTitle();
 				}
 			} else {
-				GFX_RefreshTitle();
+				// Modern cycles mode
+				if (auto_determine_mode.auto_cycles) {
+					set_modern_cycles_config(CpuMode::Protected);
+
+					GFX_NotifyCyclesChanged();
+				}
 			}
 
 #if (C_DYNAMIC_X86)
-			if (CPU_AutoDetermineMode.auto_core) {
+			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dyn_X86_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dyn_X86_Run;
 			}
 #elif (C_DYNREC)
-			if (CPU_AutoDetermineMode.auto_core) {
+			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dynrec_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dynrec_Run;
 			}
 #endif
-			CPU_LastAutoDetermineMode = CPU_AutoDetermineMode;
-			CPU_AutoDetermineMode     = {};
+			last_auto_determine_mode = auto_determine_mode;
+			auto_determine_mode      = {};
 
 		} else {
 			cpu.pmode = false;
@@ -2229,11 +2343,26 @@ void CPU_ReadTSC()
 	reg_eax = static_cast<uint32_t>(tsc_rounded & 0xffffffff);
 }
 
-static void cpu_increase_cycles(bool pressed)
+static int calc_cycles_increase(const int cycles, const int cycle_up)
 {
-	if (!pressed) {
-		return;
+	auto new_cycles = [&] {
+		if (cycle_up < 100) {
+			auto percentage_increment = 1 + static_cast<float>(cycle_up) /
+			                                        100.0f;
+			return iround(cycles * percentage_increment);
+		} else {
+			return cycles + cpu_cycle_up;
+		}
+	}();
+
+	if (new_cycles == cycles) {
+		++new_cycles;
 	}
+	return clamp(new_cycles, CpuCyclesMin, CpuCyclesMax);
+}
+
+static void cpu_increase_cycles_legacy()
+{
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed += 5;
 		if (CPU_CyclePercUsed > 100) {
@@ -2242,39 +2371,115 @@ static void cpu_increase_cycles(bool pressed)
 		LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
 
 	} else {
-		auto old_cycles = CPU_CycleMax;
-		if (cpu_cycle_up < 100) {
-			CPU_CycleMax = static_cast<int>(
-			        CPU_CycleMax *
-			        (1 + static_cast<float>(cpu_cycle_up) / 100.0f));
-		} else {
-			CPU_CycleMax = CPU_CycleMax + cpu_cycle_up;
-		}
-
+		CPU_CycleMax  = calc_cycles_increase(CPU_CycleMax, cpu_cycle_up);
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
-		if (CPU_CycleMax == old_cycles) {
-			CPU_CycleMax++;
-		}
 
-		if (CPU_CycleMax > 15000) {
-			LOG_MSG("CPU: fixed %d cycles. If you need more than 20000, "
-			        "try core=dynamic in DOSBox's options.",
+		if (CPU_CycleMax > 20000) {
+			LOG_MSG("CPU: Fixed %d cycles If you need more than 20000, "
+			        "try setting 'core = dynamic' for increased performance.",
 			        CPU_CycleMax);
 		} else {
-			LOG_MSG("CPU: fixed %d cycles.", CPU_CycleMax);
+			LOG_MSG("CPU: Fixed %d cycles", CPU_CycleMax);
 		}
 	}
-
-	GFX_NotifyCyclesChanged();
 }
 
-static void cpu_decrease_cycles(bool pressed)
+static void sync_modern_cycles_settings()
+{
+	auto& conf = modern_cycles_config;
+
+	const auto cycles_val = [&] {
+		if (conf.real_mode) {
+			return format_str("%d", *conf.real_mode);
+		} else {
+			return std::string("max");
+		}
+	}();
+
+	set_section_property_value("cpu", "cpu_cycles", cycles_val);
+
+	const auto cycles_protected_val = [&] {
+		if (conf.protected_mode_auto) {
+			return std::string("auto");
+		} else if (conf.protected_mode) {
+			return format_str("%d", *conf.protected_mode);
+		} else {
+			return std::string("max");
+		}
+	}();
+
+	set_section_property_value("cpu", "cpu_cycles_protected", cycles_protected_val);
+}
+
+static void cpu_increase_cycles_modern()
+{
+	auto& conf = modern_cycles_config;
+
+	if (cpu.pmode) {
+		if (conf.protected_mode_auto) {
+			// 'cpu_cycles' controls both real and protected mode;
+			// nothing to do if we're in 'max' mode.
+			if (conf.real_mode) {
+				conf.real_mode = calc_cycles_increase(*conf.real_mode,
+				                                      cpu_cycle_up);
+			}
+		} else {
+			// Nothing to do if we're in 'max' mode.
+			if (conf.protected_mode) {
+				conf.protected_mode = calc_cycles_increase(
+				        *conf.protected_mode, cpu_cycle_up);
+			}
+		}
+		sync_modern_cycles_settings();
+		set_modern_cycles_config(CpuMode::Protected);
+
+	} else {
+		// Real mode
+		if (conf.real_mode) {
+			conf.real_mode = calc_cycles_increase(*conf.real_mode,
+			                                      cpu_cycle_up);
+			sync_modern_cycles_settings();
+			set_modern_cycles_config(CpuMode::Real);
+		}
+	}
+}
+
+static void cpu_increase_cycles(bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
 
+	if (legacy_cycles_mode) {
+		cpu_increase_cycles_legacy();
+	} else {
+		cpu_increase_cycles_modern();
+	}
+
+	GFX_NotifyCyclesChanged();
+}
+
+static int calc_cycles_decrease(const int cycles, const int cycle_down)
+{
+	auto new_cycles = [&] {
+		if (cycle_down < 100) {
+			auto percentage_decrement = 1 + static_cast<float>(cycle_down) /
+			                                        100.0f;
+			return iround(cycles / percentage_decrement);
+		} else {
+			return cycles - cpu_cycle_down;
+		}
+	}();
+
+	if (new_cycles == cycles) {
+		--new_cycles;
+	}
+	return clamp(new_cycles, CpuCyclesMin, CpuCyclesMax);
+}
+
+static void cpu_decrease_cycles_legacy()
+{
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed -= 5;
 
@@ -2283,30 +2488,65 @@ static void cpu_decrease_cycles(bool pressed)
 		}
 
 		if (CPU_CyclePercUsed <= 70) {
-			LOG_MSG("CPU: max %d percent. If the game runs too fast, "
-			        "try a fixed cycles amount in DOSBox's options.",
+			LOG_MSG("CPU: max %d percent cycles. If the game runs too fast, "
+			        "try setting a fixed cycles value.",
 			        CPU_CyclePercUsed);
 		} else {
 			LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
 		}
 
 	} else {
-		if (cpu_cycle_down < 100) {
-			CPU_CycleMax = static_cast<int>(
-			        CPU_CycleMax /
-			        (1 + static_cast<float>(cpu_cycle_down) / 100.0f));
-		} else {
-			CPU_CycleMax = CPU_CycleMax - cpu_cycle_down;
-		}
-
+		CPU_CycleMax = calc_cycles_decrease(CPU_CycleMax, cpu_cycle_down);
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
 
-		if (CPU_CycleMax <= 0) {
-			CPU_CycleMax = 1;
-		}
-
 		LOG_MSG("CPU: fixed %d cycles.", CPU_CycleMax);
+	}
+}
+
+static void cpu_decrease_cycles_modern()
+{
+	auto& conf = modern_cycles_config;
+
+	if (cpu.pmode) {
+		if (conf.protected_mode_auto) {
+			// 'cpu_cycles' controls both real and protected mode;
+			// Nothing to do if we're in 'max' mode.
+			if (conf.real_mode) {
+				conf.real_mode = calc_cycles_decrease(*conf.real_mode,
+				                                      cpu_cycle_down);
+			}
+		} else {
+			// Nothing to do if we're in 'max' mode
+			if (conf.protected_mode) {
+				conf.protected_mode = calc_cycles_decrease(
+				        *conf.protected_mode, cpu_cycle_down);
+			}
+		}
+		sync_modern_cycles_settings();
+		set_modern_cycles_config(CpuMode::Protected);
+
+	} else {
+		// Real mode
+		if (conf.real_mode) {
+			conf.real_mode = calc_cycles_decrease(*conf.real_mode,
+			                                      cpu_cycle_down);
+			sync_modern_cycles_settings();
+			set_modern_cycles_config(CpuMode::Real);
+		}
+	}
+}
+
+static void cpu_decrease_cycles(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+
+	if (legacy_cycles_mode) {
+		cpu_decrease_cycles_legacy();
+	} else {
+		cpu_decrease_cycles_modern();
 	}
 
 	GFX_NotifyCyclesChanged();
@@ -2322,17 +2562,59 @@ void CPU_ResetAutoAdjust()
 
 std::string CPU_GetCyclesConfigAsString()
 {
-	if (CPU_CycleAutoAdjust) {
-		if (CPU_CycleLimit > 0) {
-			return format_str("max %d%% limit %d",
-			                  CPU_CyclePercUsed,
-			                  CPU_CycleLimit);
+	static const auto CyclesPerMs = " cycles/ms";
+
+	if (legacy_cycles_mode) {
+		std::string s = {};
+
+		if (CPU_CycleAutoAdjust) {
+			if (CPU_CycleLimit > 0) {
+				s += format_str("max %d%% limit %d",
+				                  CPU_CyclePercUsed,
+				                  CPU_CycleLimit);
+			} else {
+				s += format_str("max %d%%", CPU_CyclePercUsed);
+			}
 		} else {
-			return format_str("max %d%%", CPU_CyclePercUsed);
+			s += format_str("%d", CPU_CycleMax);
 		}
+		return s += CyclesPerMs;
 
 	} else {
-		return format_str("%d", CPU_CycleMax);
+		// Modern mode
+		auto& conf = modern_cycles_config;
+
+		std::string s = {};
+		bool max_mode = false;
+
+		auto format_cycles = [&](const std::optional<int> cycles) {
+			if (cycles) {
+				s += format_str("%d", *cycles);
+			} else {
+				s += "max";
+				max_mode = true;
+			}
+		};
+
+		if (cpu.pmode) {
+			if (conf.protected_mode_auto) {
+				// 'cpu_cycles' controls both real and protected
+				// mode
+				format_cycles(conf.real_mode);
+			} else {
+				format_cycles(conf.protected_mode);
+			}
+		} else {
+			// Real mode
+			format_cycles(conf.real_mode);
+		}
+
+		s += CyclesPerMs;
+
+		if (modern_cycles_config.throttle && !max_mode) {
+			s += " (throttled)";
+		}
+		return s;
 	}
 }
 
@@ -2424,7 +2706,130 @@ public:
 
 	~Cpu() = default;
 
-	void ConfigureCycles(Section_prop* secprop)
+	void ConfigureCyclesModern(Section_prop* secprop)
+	{
+		modern_cycles_config = {};
+
+		auto clamp_and_sync_cycles =
+		        [](const int cycles, const std::string& setting_name) -> int {
+			if (cycles < CpuCyclesMin || cycles > CpuCyclesMax) {
+				const auto new_cycles = clamp(cycles,
+				                              CpuCyclesMin,
+				                              CpuCyclesMax);
+				LOG_WARNING(
+				        "CPU: Invalid '%s' setting: '%d'; "
+				        "must be between %d and %d, using '%d'",
+				        setting_name.c_str(),
+				        cycles,
+				        CpuCyclesMin,
+				        CpuCyclesMax,
+				        new_cycles);
+
+				set_section_property_value("cpu",
+				                           setting_name,
+				                           format_str("%d", new_cycles));
+				return new_cycles;
+			} else {
+				return cycles;
+			}
+		};
+
+		// Real mode
+		const std::string cpu_cycles_pref = secprop->Get_string("cpu_cycles");
+
+		if (cpu_cycles_pref == "max") {
+			modern_cycles_config.real_mode = {};
+
+		} else if (const auto maybe_int = parse_int(cpu_cycles_pref)) {
+			const auto new_cycles = *maybe_int;
+			modern_cycles_config.real_mode =
+			        clamp_and_sync_cycles(new_cycles, "cpu_cycles");
+
+		} else {
+			modern_cycles_config.real_mode = CpuCyclesRealModeDefault;
+
+			LOG_WARNING("CPU: Invalid 'cpu_cycles' setting: '%s', using '%d'",
+			            cpu_cycles_pref.c_str(),
+			            *modern_cycles_config.real_mode);
+
+			set_section_property_value(
+			        "cpu",
+			        "cpu_cycles",
+			        format_str("%d", *modern_cycles_config.real_mode));
+		}
+
+		auto handle_cpu_cycles_protected_auto = [&] {
+			// 'cpu_cycles' controls both real and protected mode
+			modern_cycles_config.protected_mode_auto = true;
+		};
+
+		// Protected mode
+		const std::string cpu_cycles_protected_pref = secprop->Get_string(
+		        "cpu_cycles_protected");
+
+		if (cpu_cycles_protected_pref == "auto") {
+			handle_cpu_cycles_protected_auto();
+
+		} else if (cpu_cycles_protected_pref == "max") {
+			modern_cycles_config.protected_mode = {};
+
+		} else if (const auto maybe_int = parse_int(cpu_cycles_protected_pref)) {
+			if (cpu_cycles_pref == "max") {
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s'; "
+				        "fixed values are not allowed if 'cpu_cycles' is "
+				        "'max', using 'auto'",
+				        cpu_cycles_protected_pref.c_str());
+
+				set_section_property_value("cpu",
+				                           "cpu_cycles_protected",
+				                           "auto");
+
+				handle_cpu_cycles_protected_auto();
+
+			} else {
+				// Different fixed cycles values for real and
+				// protected mode
+				const auto new_cycles = *maybe_int;
+
+				modern_cycles_config.protected_mode = clamp_and_sync_cycles(
+				        new_cycles, "cpu_cycles_protected");
+			}
+		} else {
+			if (cpu_cycles_pref == "max") {
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s', "
+				        "using 'auto'",
+				        cpu_cycles_protected_pref.c_str());
+
+				set_section_property_value("cpu",
+				                           "cpu_cycles_protected",
+				                           "auto");
+
+				handle_cpu_cycles_protected_auto();
+
+			} else {
+				modern_cycles_config.protected_mode = CpuCyclesProtectedModeDefault;
+
+				// fixed cycles
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s', "
+				        "using '%d'",
+				        cpu_cycles_protected_pref.c_str(),
+				        *modern_cycles_config.protected_mode);
+
+				set_section_property_value(
+				        "cpu",
+				        "cpu_cycles_protected",
+				        format_str("%d", *modern_cycles_config.protected_mode));
+			}
+		}
+
+		// Throttling
+		modern_cycles_config.throttle = secprop->Get_bool("cpu_throttle");
+	}
+
+	void ConfigureCyclesLegacy(Section_prop* secprop)
 	{
 		// Sets the value if the string in within the min and max values
 		auto set_if_in_range = [](const std::string& str,
@@ -2444,6 +2849,7 @@ public:
 		};
 
 		PropMultiVal* p = secprop->GetMultiVal("cycles");
+
 		const std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
@@ -2478,10 +2884,10 @@ public:
 
 		} else {
 			if (type == "auto") {
-				CPU_AutoDetermineMode.auto_cycles = true;
+				auto_determine_mode.auto_cycles = true;
 
 				CPU_CycleMax      = CpuCyclesRealModeDefault;
-				CPU_OldCycleMax   = CpuCyclesRealModeDefault;
+				old_cycle_max     = CpuCyclesRealModeDefault;
 				CPU_CyclePercUsed = 100;
 
 				for (unsigned int cmdnum = 0;
@@ -2505,7 +2911,7 @@ public:
 
 						        } else {
 							        set_if_in_range(str, CPU_CycleMax);
-							        set_if_in_range(str, CPU_OldCycleMax);
+							        set_if_in_range(str, old_cycle_max);
 						        }
 					}
 				}
@@ -2519,6 +2925,10 @@ public:
 				set_if_in_range(type, CPU_CycleMax);
 			}
 			CPU_CycleAutoAdjust = false;
+		}
+
+		if (CPU_CycleMax <= 0) {
+			CPU_CycleMax = CpuCyclesRealModeDefault;
 		}
 	}
 
@@ -2539,7 +2949,7 @@ public:
 			cpudecoder = &CPU_Core_Normal_Run;
 
 #if C_DYNAMIC_X86
-			CPU_AutoDetermineMode.auto_core = true;
+			auto_determine_mode.auto_core = true;
 
 		} else if (cpu_core == "dynamic") {
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
@@ -2549,7 +2959,7 @@ public:
 			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
 #elif C_DYNREC
-			CPU_AutoDetermineMode.auto_core = true;
+			auto_determine_mode.auto_core = true;
 
 		} else if (cpu_core == "dynamic") {
 			cpudecoder = &CPU_Core_Dynrec_Run;
@@ -2586,10 +2996,12 @@ public:
 			} else if (cpu_core == "auto") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
-				CPU_PrefetchQueueSize           = 16;
-				CPU_AutoDetermineMode.auto_core = false;
+				CPU_PrefetchQueueSize         = 16;
+				auto_determine_mode.auto_core = false;
 
 			} else {
+				// TODO Should be a warning and the relevant settings should
+				// be automatically set instead of of hard quitting.
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
 
@@ -2611,7 +3023,7 @@ public:
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize           = 32;
-				CPU_AutoDetermineMode.auto_core = false;
+				auto_determine_mode.auto_core = false;
 
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
@@ -2639,14 +3051,52 @@ public:
 	{
 		Section_prop* secprop = static_cast<Section_prop*>(sec);
 
+		{
+			PropMultiVal *p = secprop->GetMultiVal("cycles");
+			std::string type = p->GetSection()->Get_string("type");
+			std::string str;
+			CommandLine cmd("", p->GetSection()->Get_string("parameters"));
+		}
+
 		// TODO needed?
 		// CPU_CycleLeft = 0;
-		CPU_Cycles            = 0;
-		CPU_AutoDetermineMode = {};
+		CPU_Cycles          = 0;
+		auto_determine_mode = {};
 
-		LOG_TRACE("%s", secprop->Get_string("cycles").c_str());
+		auto cycles_pref = secprop->Get_string("cycles");
+		trim(cycles_pref);
 
-		ConfigureCycles(secprop);
+		if (!cycles_pref.empty()) {
+			// "Legacy cycles mode" is enabled by setting 'cycles'
+			// to a non-blank value (the default value is a single
+			// space character).
+			legacy_cycles_mode = true;
+
+			// Clear new CPU settings in "legacy cycles mode" to
+			// avoid confusion.
+			//
+			// The rationale behind this is that setting 'cycles' is
+			// our legacy backwards compatible mode; if an existing
+			// game config sets 'cycles' explicitly, that will
+			// override the new settings.
+			//
+			set_section_property_value("cpu", "cpu_cycles", "");
+			set_section_property_value("cpu", "cpu_cycles_protected", "");
+			set_section_property_value("cpu", "cpu_throttle", "false");
+		}
+
+		if (legacy_cycles_mode) {
+			LOG_WARNING(
+			        "CPU: 'cycles' setting is deprecated but still accepted; "
+			        "please use the 'cpu_cycles', 'cpu_cycles_protected' and "
+			        "'cpu_throttle' settings instead as support will be "
+			        "removed in the future.");
+
+			ConfigureCyclesLegacy(secprop);
+		} else {
+			ConfigureCyclesModern(secprop);
+			set_modern_cycles_config(CpuMode::Real);
+		}
 
 		const std::string cpu_core = secprop->Get_string("core");
 		const std::string cpu_type = secprop->Get_string("cputype");
@@ -2657,9 +3107,6 @@ public:
 		cpu_cycle_up   = secprop->Get_int("cycleup");
 		cpu_cycle_down = secprop->Get_int("cycledown");
 
-		if (CPU_CycleMax <= 0) {
-			CPU_CycleMax = CpuCyclesRealModeDefault;
-		}
 		if (cpu_cycle_up <= 0) {
 			cpu_cycle_up = 500;
 		}

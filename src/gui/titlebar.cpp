@@ -367,9 +367,7 @@ void GFX_RefreshTitle()
 
 	// Cycles, mouse hint, pause/recording mark
 	if (config.show_cycles) {
-		const auto cycles_str = CPU_GetCyclesConfigAsString() + " " +
-		                        MSG_GetRaw("TITLEBAR_CYCLES_MS");
-		state.title_no_tags += Separator + cycles_str;
+		state.title_no_tags += Separator + CPU_GetCyclesConfigAsString();
 	}
 	const auto hint_str = get_mouse_hint();
 	if (!hint_str.empty()) {

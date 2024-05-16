@@ -186,29 +186,7 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 
 	DOS_UpdateCurrentProgramName();
 
-	if (cpu.pmode || (!CPU_LastAutoDetermineMode.auto_core &&
-	                  !CPU_LastAutoDetermineMode.auto_cycles)) {
-		return;
-	}
-
-	CPU_AutoDetermineMode = CPU_LastAutoDetermineMode;
-
-	if (CPU_AutoDetermineMode.auto_cycles) {
-		CPU_CycleAutoAdjust = false;
-		CPU_CycleLeft       = 0;
-		CPU_Cycles          = 0;
-		CPU_CycleMax        = CPU_OldCycleMax;
-
-		GFX_NotifyCyclesChanged();
-	}
-#if (C_DYNAMIC_X86) || (C_DYNREC)
-	if (CPU_AutoDetermineMode.auto_core) {
-		cpudecoder = &CPU_Core_Normal_Run;
-
-		CPU_CycleLeft = 0;
-		CPU_Cycles    = 0;
-	}
-#endif
+	CPU_RestoreRealModeCyclesConfig();
 
 	return;
 }
