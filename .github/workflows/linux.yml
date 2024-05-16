@@ -24,29 +24,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_COMPRESS:      "true"
-  CCACHE_COMPRESSLEVEL: "6"
-  CCACHE_DIR:           "/dev/shm/.ccache"
-  CCACHE_DIRECT:        "true"
-  CCACHE_MAXSIZE:       "128M"
-  CCACHE_SLOPPINESS:    "pch_defines,time_macros"
-  CCACHE_UMASK:         "002"
-
-  CLAMDB_DIR:      "/var/lib/clamav"
-
+  # Docker commmand to run if performing cross builds.defaults:
+  # The command removes the container on exit, runs the 
+  # container as the specified UID:GID, mounts the current
+  # dir into the container at the same path, passes in host 
+  # HOME environment variable, sets the container working directory 
+  # and specifies the image to use. The tag is added in the jobs.
   DOCKER_RUN: >-
     docker run --rm
     -u "$(id --user):$(id --group)"
     -v "$PWD:$PWD"
-    -v "$CCACHE_DIR:$CCACHE_DIR"
     -e HOME
-    -e CCACHE_COMPRESS
-    -e CCACHE_COMPRESSLEVEL
-    -e CCACHE_DIR
-    -e CCACHE_DIRECT
-    -e CCACHE_MAXSIZE
-    -e CCACHE_SLOPPINESS
-    -e CCACHE_UMASK
     --workdir "$PWD"
     ghcr.io/dosbox-staging/debian-cross
 
@@ -161,25 +149,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: false
-
-#      - name: Update host repository
-#        run: |
-          # use the following to force full upgrades
-          # sudo apt-get -y upgrade
-          # sudo apt-get -y --with-new-pkgs upgrade
-          # sudo apt-get -y install -y aptitude
-          # echo -e "n\ny\ny" | sudo aptitude -y -f full-upgrade
-          # sudo apt-get update
-          # sudo apt-get -y upgrade
-
+      
+      # Note: not run for cross builds
       - name: Install minimum dependencies
-        if:   matrix.conf.needs_min_deps
+        if:  matrix.conf.needs_min_deps
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
+          sudo apt-get install -y build-essential libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
           sudo pip3 install --upgrade meson ninja
-
+      
+      # Note: not run for cross builds
       - name: Install all dependencies
         if:   matrix.conf.needs_all_deps
         run: |
@@ -190,44 +170,44 @@ jobs:
             $(cat packages/${{ matrix.conf.os }}-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "dir=$CCACHE_DIR"                                                 >> $GITHUB_OUTPUT
-          echo "today=$(date -I)"                                                >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
-          echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
-
-      - uses:  actions/cache@v4.0.1
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
-          restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
-
       - name: Log environment
         run:  ./scripts/log-env.sh
 
+      # Uses the ./scripts/docker-cross-tag.sh helper script
+      # to set the docker image tag, and check if it exists
+      # in the registry.
+      - name: Get docker image tag and test if exists
+        if: matrix.conf.cross
+        id: docker_tag
+        run: |
+          tag_hash=$(./scripts/docker-cross-tag.sh hash-files ./packages/Dockerfile.debian ./packages/debian-11-docker-apt.txt)
+          tag="${{matrix.conf.deb_vers}}-${{matrix.conf.arch}}-${tag_hash}"
+          echo "IMG_TAG=${tag}" >> $GITHUB_OUTPUT
+          echo "IMG_TAG_EXISTS=$(./scripts/docker-cross-tag.sh tag-exists debian-cross $tag)" >> $GITHUB_OUTPUT
+      
+      # If the image tag does not exist (from previous step), 
+      # Build a new image and push it to the registry using 
+      # the composite action created for the task.
+      - name: Build debian cross docker image if required
+        if: ${{ matrix.conf.cross && steps.docker_tag.outputs.IMG_TAG_EXISTS == 'false' }}
+        uses: ./.github/composite-actions/build-debian-docker
+        with:
+          img-name: debian-cross
+          deb-vers: ${{matrix.conf.deb_vers}}
+          arch: ${{matrix.conf.arch}}
+          tag: ${{ steps.docker_tag.outputs.IMG_TAG }}
+          user: ${{ github.actor }}
+          pass: ${{ secrets.GITHUB_TOKEN }}
+
+      # Set either host meson or docker command depending on
+      # if we are cross compiling
       - name: Set binary names
         id: bins
         run: |
-          set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
           if [ -z "${{matrix.conf.cross}}" ]; then
             echo "MESON_BIN=meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=ccache" >> $GITHUB_OUTPUT
           else
-            if $(git describe | grep -qs '-'); then
-              vers="${{matrix.conf.deb_vers}}-$(git describe | cut -d '-' -f 1)-dev-${{matrix.conf.arch}}"
-            else
-              vers="${{matrix.conf.deb_vers}}-$(git describe)-${{matrix.conf.arch}}"
-            fi
-            echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
+            echo "MESON_BIN=${{env.DOCKER_RUN}}:${{steps.docker_tag.outputs.IMG_TAG}} meson" >> $GITHUB_OUTPUT
           fi
 
       - name: Restore subprojects cache
@@ -249,9 +229,7 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          ${{steps.bins.outputs.CCACHE_BIN}} -z
           ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
-          ${{steps.bins.outputs.CCACHE_BIN}} -s
 
       - name: Run tests
         if:   matrix.conf.run_tests
@@ -292,23 +270,6 @@ jobs:
 
       - name: Extract subprojects cache
         run:  scripts/extract-subprojects-tar.sh
-
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "dir=$CCACHE_DIR"                       >> $GITHUB_OUTPUT
-          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
-
-      - uses:  actions/cache@v4.0.1
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}-1
-          restore-keys: |
-            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}-1
 
       - name: Log environment
         run:  ./scripts/log-env.sh
