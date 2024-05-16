@@ -53,29 +53,29 @@ enum class ArchitectureType {
 	Mixed           = 0xff,
 };
 
-/* CPU Cycle Timing */
+// Current cycles values
 extern int CPU_Cycles;
 extern int CPU_CycleLeft;
+
+// Cycles settings for both "legacy" and "modern" modes
+extern bool CPU_CycleAutoAdjust;
 extern int CPU_CycleMax;
-extern int CPU_OldCycleMax;
 extern int CPU_CyclePercUsed;
 extern int CPU_CycleLimit;
+
 extern int64_t CPU_IODelayRemoved;
-extern bool CPU_CycleAutoAdjust;
 
 struct CpuAutoDetermineMode {
 	bool auto_core   = false;
 	bool auto_cycles = false;
 };
 
-extern CpuAutoDetermineMode CPU_AutoDetermineMode;
-extern CpuAutoDetermineMode CPU_LastAutoDetermineMode;
-
 extern ArchitectureType CPU_ArchitectureType;
-
 extern Bitu CPU_PrefetchQueueSize;
 
 uint8_t CPU_GetLastInterrupt();
+
+void CPU_RestoreRealModeCyclesConfig();
 
 std::string CPU_GetCyclesConfigAsString();
 
