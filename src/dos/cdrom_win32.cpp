@@ -298,7 +298,7 @@ bool CDROM_Interface_Win32::LoadUnloadMedia(bool unload)
 		return false;
 	}
 	DWORD control_code       = unload ? IOCTL_STORAGE_EJECT_MEDIA
-	                                  : IOCTL_CDROM_LOAD_MEDIA;
+	                                  : IOCTL_DISK_LOAD_MEDIA;
 	LPVOID input_buffer      = NULL;
 	DWORD input_buffer_size  = 0;
 	LPVOID output_buffer     = NULL;
