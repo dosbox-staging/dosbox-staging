@@ -199,7 +199,7 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 		CPU_Cycles          = 0;
 		CPU_CycleMax        = CPU_OldCycleMax;
 
-		GFX_NotifyCyclesChanged(CPU_OldCycleMax);
+		GFX_NotifyCyclesChanged();
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode.auto_core) {

@@ -410,7 +410,7 @@ void GFX_NotifyVideoCaptureStatus(const bool is_capturing);
 void GFX_NotifyAudioMutedStatus(const bool is_muted);
 void GFX_NotifyProgramName(const std::string& segment_name,
                            const std::string& canonical_name);
-void GFX_NotifyCyclesChanged(const int32_t cycles);
+void GFX_NotifyCyclesChanged();
 
 enum class MouseHint {
 	None,                    // no hint to display

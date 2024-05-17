@@ -73,6 +73,8 @@ extern Bitu CPU_PrefetchQueueSize;
 
 uint8_t CPU_GetLastInterrupt();
 
+std::string CPU_GetCyclesConfigAsString();
+
 // A CPU handler
 typedef Bits(CPU_Decoder)(void);
 
