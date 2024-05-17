@@ -89,8 +89,6 @@ static struct {
 	std::string segment_name   = {};
 	std::string canonical_name = {}; // path + name + extension
 
-	int num_cycles = 0;
-
 	std::string title_no_tags = {};
 
 	SDL_TimerID timer_id           = {};
@@ -228,27 +226,6 @@ static std::string get_dosbox_version()
 	} else {
 		return result;
 	}
-}
-
-static std::string get_cycles_display()
-{
-	std::string cycles = {};
-
-	if (!config.show_cycles) {
-		return cycles;
-	}
-
-	if (!CPU_CycleAutoAdjust) {
-		cycles = format_str("%d", state.num_cycles);
-	} else if (CPU_CycleLimit > 0) {
-		cycles = format_str("max %d%% limit %d",
-		                    state.num_cycles,
-		                    CPU_CycleLimit);
-	} else {
-		cycles = format_str("max %d%%", state.num_cycles);
-	}
-
-	return cycles + " " + MSG_GetRaw("TITLEBAR_CYCLES_MS");
 }
 
 static std::string get_mouse_hint_simple()
@@ -389,8 +366,9 @@ void GFX_RefreshTitle()
 	}
 
 	// Cycles, mouse hint, pause/recording mark
-	const auto cycles_str = get_cycles_display();
-	if (!cycles_str.empty()) {
+	if (config.show_cycles) {
+		const auto cycles_str = CPU_GetCyclesConfigAsString() + " " +
+		                        MSG_GetRaw("TITLEBAR_CYCLES_MS");
 		state.title_no_tags += Separator + cycles_str;
 	}
 	const auto hint_str = get_mouse_hint();
@@ -463,12 +441,9 @@ void GFX_NotifyProgramName(const std::string& segment_name,
 	GFX_RefreshTitle();
 }
 
-void GFX_NotifyCyclesChanged(const int32_t cycles)
+void GFX_NotifyCyclesChanged()
 {
-	if (cycles >= 0 && state.num_cycles != cycles) {
-		state.num_cycles = cycles;
-		GFX_RefreshTitle();
-	}
+	GFX_RefreshTitle();
 }
 
 void GFX_SetMouseHint(const MouseHint hint_id)
