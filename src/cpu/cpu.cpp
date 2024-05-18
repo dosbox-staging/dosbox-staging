@@ -61,8 +61,10 @@ int CPU_CycleMax      = CpuCyclesRealModeDefault;
 int CPU_OldCycleMax   = CpuCyclesRealModeDefault;
 int CPU_CyclePercUsed = 100;
 int CPU_CycleLimit    = -1;
-int CPU_CycleUp       = 0;
-int CPU_CycleDown     = 0;
+
+// Cycle up & down counts
+static int cpu_cycle_up   = 0;
+static int cpu_cycle_down = 0;
 
 int64_t CPU_IODelayRemoved = 0;
 
@@ -76,7 +78,7 @@ CpuAutoDetermineMode CPU_LastAutoDetermineMode = {};
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
 
 // ID and AC flags may be toggled depending on emulated CPU architecture
-Bitu CPU_extflags_toggle = 0;
+static Bitu cpu_extflags_toggle = 0;
 
 Bitu CPU_PrefetchQueueSize = 0;
 
@@ -188,10 +190,11 @@ uint32_t CPU_Pop32()
 
 void CPU_SetFlags(const uint32_t word, uint32_t mask)
 {
-	mask |= CPU_extflags_toggle; // ID-flag and AC-flag can be toggled on
-	                             // CPUID-supporting CPUs
-	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
-	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
+	// ID-flag and AC-flag can be toggled on  CPUID-supporting CPUs
+	mask |= cpu_extflags_toggle;
+
+	reg_flags     = (reg_flags & ~mask) | (word & mask) | 2;
+	cpu.direction = 1 - ((reg_flags & FLAG_DF) >> 9);
 }
 
 void CPU_SetFlagsd(const uint32_t word)
@@ -259,7 +262,8 @@ bool CPU_PUSHF(Bitu use32) {
 	return false;
 }
 
-void CPU_CheckSegments(void) {
+static void cpu_check_segments(void)
+{
 	bool needs_invalidation = false;
 	Descriptor desc;
 	if (!cpu.gdt.GetDescriptor(SegValue(es),desc)) needs_invalidation = true;
@@ -369,13 +373,14 @@ public:
 	bool valid = false;
 };
 
-TaskStateSegment cpu_tss;
+static TaskStateSegment cpu_tss;
 
 enum TSwitchType {
 	TSwitch_JMP,TSwitch_CALL_INT,TSwitch_IRET
 };
 
-bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
+static bool cpu_switch_task(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip)
+{
 	FillFlags();
 	TaskStateSegment new_tss;
 	if (!new_tss.SetSelector(new_tss_selector))
@@ -791,7 +796,7 @@ do_interrupt:
 				"INT:Gate segment not present",
 				EXCEPTION_NP,num*8+2+((type&CPU_INT_SOFTWARE)?0:1))
 
-			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT,oldeip);
+			cpu_switch_task(gate.GetSelector(),TSwitch_CALL_INT,oldeip);
 			if (type & CPU_INT_HAS_ERROR) {
 				//TODO Be sure about this, seems somewhat unclear
 				if (cpu_tss.is386) CPU_Push32(cpu.exception.error);
@@ -869,7 +874,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				LOG(LOG_CPU,LOG_ERROR)("TASK Iret:TSS not busy");
 			}
 			Bitu back_link=cpu_tss.Get_back();
-			CPU_SwitchTask(back_link,TSwitch_IRET,oldeip);
+			cpu_switch_task(back_link,TSwitch_IRET,oldeip);
 			return;
 		}
 		Bitu n_cs_sel,n_eip,n_flags;
@@ -1036,7 +1041,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			}
 
 			// borland extender, zrdx
-			CPU_CheckSegments();
+			cpu_check_segments();
 
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
@@ -1102,7 +1107,7 @@ CODE_jmp:
 				"JMP:TSS:dpl<rpl",
 				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:TSS to %X",selector);
-			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
+			cpu_switch_task(selector,TSwitch_JMP,oldeip);
 			break;
 		default:
 			E_Exit("JMP Illegal descriptor type 0x%x", desc.Type());
@@ -1335,7 +1340,7 @@ call_code:
 				EXCEPTION_NP,selector & 0xfffc)
 
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
-			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
+			cpu_switch_task(selector,TSwitch_CALL_INT,oldeip);
 			break;
 		case DESC_DATA_EU_RW_NA:	// vbdos
 		case DESC_INVALID:			// used by some installers
@@ -1513,7 +1518,7 @@ RET_same_level:
 				reg_sp=(n_esp & 0xffff)+bytes;
 			}
 
-			CPU_CheckSegments();
+			cpu_check_segments();
 
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
@@ -2113,7 +2118,7 @@ bool CPU_CPUID(void) {
 	return true;
 }
 
-static Bits HLT_Decode(void)
+static Bits hlt_decode(void)
 {
 	// Once an interrupt occurs, it should change CPU core
 	if (reg_eip != cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
@@ -2133,7 +2138,7 @@ void CPU_HLT(Bitu oldeip)
 	cpu.hlt.cs          = SegValue(cs);
 	cpu.hlt.eip         = reg_eip;
 	cpu.hlt.old_decoder = cpudecoder;
-	cpudecoder          = &HLT_Decode;
+	cpudecoder          = &hlt_decode;
 }
 
 void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
@@ -2224,7 +2229,7 @@ void CPU_ReadTSC()
 	reg_eax = static_cast<uint32_t>(tsc_rounded & 0xffffffff);
 }
 
-static void CPU_CycleIncrease(bool pressed)
+static void cpu_increase_cycles(bool pressed)
 {
 	if (!pressed) {
 		return;
@@ -2238,12 +2243,12 @@ static void CPU_CycleIncrease(bool pressed)
 
 	} else {
 		auto old_cycles = CPU_CycleMax;
-		if (CPU_CycleUp < 100) {
+		if (cpu_cycle_up < 100) {
 			CPU_CycleMax = static_cast<int>(
 			        CPU_CycleMax *
-			        (1 + static_cast<float>(CPU_CycleUp) / 100.0f));
+			        (1 + static_cast<float>(cpu_cycle_up) / 100.0f));
 		} else {
-			CPU_CycleMax = CPU_CycleMax + CPU_CycleUp;
+			CPU_CycleMax = CPU_CycleMax + cpu_cycle_up;
 		}
 
 		CPU_CycleLeft = 0;
@@ -2264,7 +2269,7 @@ static void CPU_CycleIncrease(bool pressed)
 	GFX_NotifyCyclesChanged();
 }
 
-static void CPU_CycleDecrease(bool pressed)
+static void cpu_decrease_cycles(bool pressed)
 {
 	if (!pressed) {
 		return;
@@ -2286,12 +2291,12 @@ static void CPU_CycleDecrease(bool pressed)
 		}
 
 	} else {
-		if (CPU_CycleDown < 100) {
+		if (cpu_cycle_down < 100) {
 			CPU_CycleMax = static_cast<int>(
 			        CPU_CycleMax /
-			        (1 + static_cast<float>(CPU_CycleDown) / 100.0f));
+			        (1 + static_cast<float>(cpu_cycle_down) / 100.0f));
 		} else {
-			CPU_CycleMax = CPU_CycleMax - CPU_CycleDown;
+			CPU_CycleMax = CPU_CycleMax - cpu_cycle_down;
 		}
 
 		CPU_CycleLeft = 0;
@@ -2399,13 +2404,13 @@ public:
 #elif (C_DYNREC)
 		CPU_Core_Dynrec_Init();
 #endif
-		MAPPER_AddHandler(CPU_CycleDecrease,
+		MAPPER_AddHandler(cpu_decrease_cycles,
 		                  SDL_SCANCODE_F11,
 		                  PRIMARY_MOD,
 		                  "cycledown",
 		                  "Dec Cycles");
 
-		MAPPER_AddHandler(CPU_CycleIncrease,
+		MAPPER_AddHandler(cpu_increase_cycles,
 		                  SDL_SCANCODE_F12,
 		                  PRIMARY_MOD,
 		                  "cycleup",
@@ -2620,13 +2625,13 @@ public:
 		}
 
 		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
-			CPU_extflags_toggle = (FLAG_ID | FLAG_AC);
+			cpu_extflags_toggle = (FLAG_ID | FLAG_AC);
 
 		} else if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
-			CPU_extflags_toggle = (FLAG_AC);
+			cpu_extflags_toggle = (FLAG_AC);
 
 		} else {
-			CPU_extflags_toggle = 0;
+			cpu_extflags_toggle = 0;
 		}
 	}
 
@@ -2649,17 +2654,17 @@ public:
 		ConfigureCpuCore(cpu_core);
 		ConfigureCpuType(cpu_core, cpu_type);
 
-		CPU_CycleUp   = secprop->Get_int("cycleup");
-		CPU_CycleDown = secprop->Get_int("cycledown");
+		cpu_cycle_up   = secprop->Get_int("cycleup");
+		cpu_cycle_down = secprop->Get_int("cycledown");
 
 		if (CPU_CycleMax <= 0) {
 			CPU_CycleMax = CpuCyclesRealModeDefault;
 		}
-		if (CPU_CycleUp <= 0) {
-			CPU_CycleUp = 500;
+		if (cpu_cycle_up <= 0) {
+			cpu_cycle_up = 500;
 		}
-		if (CPU_CycleDown <= 0) {
-			CPU_CycleDown = 20;
+		if (cpu_cycle_down <= 0) {
+			cpu_cycle_down = 20;
 		}
 
 		GFX_NotifyCyclesChanged();
@@ -2670,7 +2675,7 @@ public:
 
 static std::unique_ptr<Cpu> cpu_instance = nullptr;
 
-void CPU_ShutDown([[maybe_unused]] Section* sec)
+static void cpu_shutdown([[maybe_unused]] Section* sec)
 {
 #if (C_DYNAMIC_X86)
 	CPU_Core_Dyn_X86_Cache_Close();
@@ -2685,7 +2690,7 @@ void CPU_Init(Section* sec)
 	cpu_instance = std::make_unique<Cpu>(sec);
 
 	constexpr auto ChangeableAtRuntime = true;
-	sec->AddDestroyFunction(&CPU_ShutDown, ChangeableAtRuntime);
+	sec->AddDestroyFunction(&cpu_shutdown, ChangeableAtRuntime);
 }
 
 // Initialise static members
