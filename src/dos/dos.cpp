@@ -1526,6 +1526,8 @@ public:
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
 		DOS_ShutDownDevices();
+
+		DOS_FreeTableMemory();
 	}
 };
 
