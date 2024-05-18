@@ -51,6 +51,11 @@ uint16_t DOS_GetMemory(uint16_t pages) {
 	return page;
 }
 
+void DOS_FreeTableMemory()
+{
+	dos_memseg = DOS_PRIVATE_SEGMENT;
+}
+
 static Bitu DOS_CaseMapFunc(void) {
 	//LOG(LOG_DOSMISC,LOG_ERROR)("Case map routine called : %c",reg_al);
 	return CBRET_NONE;
