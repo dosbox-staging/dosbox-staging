@@ -260,9 +260,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
-          export VERSION=$(git describe --abbrev=5)
+          VERSION=$(./scripts/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Inject package name
