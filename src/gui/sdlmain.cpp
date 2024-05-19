@@ -93,7 +93,7 @@
  */
 typedef void (APIENTRYP PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
 typedef void (APIENTRYP PFNGLCOMPILESHADERPROC) (GLuint shader);
-typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) (void);
+typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) ();
 typedef GLuint (APIENTRYP PFNGLCREATESHADERPROC) (GLenum type);
 typedef void (APIENTRYP PFNGLDELETEPROGRAMPROC) (GLuint program);
 typedef void (APIENTRYP PFNGLDELETESHADERPROC) (GLuint shader);
@@ -250,7 +250,7 @@ static bool is_debugger_event(const SDL_Event &event)
 	return false;
 }
 
-SDL_Window *GFX_GetSDLWindow(void)
+SDL_Window *GFX_GetSDLWindow()
 {
 	return sdl.window;
 }
@@ -591,7 +591,7 @@ void GFX_DisengageRendering()
 	sdl.frame.present = present_frame_noop;
 }
 
-void GFX_ResetScreen(void)
+void GFX_ResetScreen()
 {
 	GFX_Stop();
 	if (sdl.draw.callback) {
@@ -1414,11 +1414,11 @@ static SDL_Rect get_desktop_size()
 	int bottom = 0;
 	int right  = 0;
 
-	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
-	                               &top,
-	                               &left,
-	                               &bottom,
-	                               &right);
+	SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
+	                         &top,
+	                         &left,
+	                         &bottom,
+	                         &right);
 
 	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
 	desktop.w -= (left + right);
@@ -4432,7 +4432,7 @@ static int edit_primary_config()
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
-void MIXER_CloseAudioDevice(void);
+void MIXER_CloseAudioDevice();
 
 void restart_dosbox(std::vector<std::string> &parameters) {
 #ifdef WIN32
