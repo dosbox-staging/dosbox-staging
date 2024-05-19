@@ -1026,7 +1026,7 @@ static Bitu Reboot_Handler(void) {
 	const auto start = PIC_FullIndex();
 	while ((PIC_FullIndex() - start) < 3000.0)
 		CALLBACK_Idle();
-	throw 1;
+	restart_dosbox();
 	return CBRET_NONE;
 }
 
