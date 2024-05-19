@@ -4303,7 +4303,7 @@ static void config_add_sdl()
 						   "non-existent OpenGL drivers (this is extremely rare).");
 
 	pstring->SetOptionHelp("texture_default",
-	                       "Rendering backend to use for graphics output ('texture' by default).\n");
+	                       "Rendering backend to use for graphics output ('texture' by default).");
 
 	pstring->SetOptionHelp("opengl",
 	                       "  opengl:     OpenGL backend with shader support (default).");
