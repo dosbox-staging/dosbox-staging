@@ -4430,7 +4430,7 @@ extern void DEBUG_ShutDown(Section * /*sec*/);
 
 void MIXER_CloseAudioDevice(void);
 
-void restart_program(std::vector<std::string> & parameters) {
+void restart_dosbox(std::vector<std::string> &parameters) {
 #ifdef WIN32
 	std::string command_line = {};
 	bool first = true;
@@ -4516,7 +4516,7 @@ void restart_program(std::vector<std::string> & parameters) {
 
 void Restart(bool pressed) { // mapper handler
 	(void) pressed; // deliberately unused but required for API compliance
-	restart_program(control->startup_params);
+	restart_dosbox();
 }
 
 static void list_glshaders()

@@ -162,4 +162,6 @@ public:
 using ConfigPtr = std::unique_ptr<Config>;
 extern ConfigPtr control;
 
+void restart_dosbox(std::vector<std::string> &parameters = control->startup_params);
+
 #endif
