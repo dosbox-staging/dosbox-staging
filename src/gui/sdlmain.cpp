@@ -3284,7 +3284,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 }
 
 // extern void UI_Run(bool);
-void Restart(bool pressed);
 
 static void apply_active_settings()
 {
@@ -3336,6 +3335,11 @@ static void set_priority_levels(const std::string& active_pref,
 
 	sdl.priority.active   = to_level(active_pref);
 	sdl.priority.inactive = to_level(inactive_pref);
+}
+
+static void restart_hotkey_handler([[maybe_unused]] bool pressed)
+{
+	restart_dosbox();
 }
 
 static void read_gui_config(Section* sec)
@@ -3446,7 +3450,7 @@ static void read_gui_config(Section* sec)
 	                  "shutdown", "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, PRIMARY_MOD | MMOD2, "restart", "Restart");
+	MAPPER_AddHandler(restart_hotkey_handler, SDL_SCANCODE_HOME, PRIMARY_MOD | MMOD2, "restart", "Restart");
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
 	                  SDL_SCANCODE_F10,
 	                  PRIMARY_MOD,
@@ -4512,11 +4516,6 @@ void restart_dosbox(std::vector<std::string> &parameters) {
 	}
 	delete [] newargs;
 #endif // WIN32
-}
-
-void Restart(bool pressed) { // mapper handler
-	(void) pressed; // deliberately unused but required for API compliance
-	restart_dosbox();
 }
 
 static void list_glshaders()
