@@ -23,6 +23,7 @@
 
 #if defined(WIN32)
 
+#include <devioctl.h>
 #include <ntddcdrm.h>
 #include <windows.h>
 
