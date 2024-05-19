@@ -876,7 +876,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	constexpr auto when_idle  = Property::Changeable::WhenIdle;
 
 	auto pint = secprop.Add_int("oplrate", deprecated, false);
-	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.\n");
+	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.");
 
 	auto pstring = secprop.Add_string("cms", when_idle, "auto");
 	pstring->Set_values({"on", "off", "auto"});
@@ -897,7 +897,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
 	        "  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
 	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
-	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth)."
+	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).\n"
 	        "  none/off:  Disable OPL emulation.\n"
 	        "Notes:\n"
 	        "  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
