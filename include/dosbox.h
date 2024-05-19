@@ -74,10 +74,6 @@ void DOSBOX_Init(void);
 
 void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
 
-class Config;
-using ConfigPtr = std::unique_ptr<Config>;
-extern ConfigPtr control;
-
 enum SVGACards {
 	SVGA_None,
 	SVGA_S3Trio,

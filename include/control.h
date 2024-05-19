@@ -159,4 +159,7 @@ public:
 	Verbosity GetStartupVerbosity() const;
 };
 
+using ConfigPtr = std::unique_ptr<Config>;
+extern ConfigPtr control;
+
 #endif

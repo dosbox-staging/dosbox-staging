@@ -27,6 +27,8 @@
 #include <cstdio>
 #include <string>
 
+#include "control.h"
+
 class Section;
 
 enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
