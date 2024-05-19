@@ -175,8 +175,8 @@ when the option supports multiple values.
    to reset FluidSynth: `meson subprojects update --reset fluidsynth`.
 
 5. If Meson hangs due to low memory availability, make sure to pass
-   `-j1` to the `meson compile` command, to limit parallel jobs. This is
-   usefully when compiling on Raspberry Pi like system with only 1GB of memory.
+   `-j1` to the `meson compile` command to limit parallel jobs. This is
+   useful when compiling on Raspberry Pi like system with only 1GB of memory.
 
 6. If that doesn't help, try resetting your build area with:
 
