@@ -292,7 +292,6 @@ void Program::AddToHelpList()
 }
 
 bool MSG_Write(const char*);
-void restart_program(std::vector<std::string>& parameters);
 
 class CONFIG final : public Program {
 public:
@@ -376,7 +375,7 @@ void CONFIG::Run(void)
 				return;
 			}
 			if (pvars.size() == 0) {
-				restart_program(control->startup_params);
+				restart_dosbox();
 			} else {
 				std::vector<std::string> restart_params;
 				restart_params.push_back(
@@ -389,7 +388,7 @@ void CONFIG::Run(void)
 				                      remaining_args.begin(),
 				                      remaining_args.end());
 
-				restart_program(restart_params);
+				restart_dosbox(restart_params);
 			}
 			return;
 
