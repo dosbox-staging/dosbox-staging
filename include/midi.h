@@ -27,6 +27,7 @@
 #include <array>
 #include <cassert>
 
+#include "control.h"
 #include "setup.h"
 
 class Program;

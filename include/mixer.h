@@ -36,6 +36,7 @@
 
 #include "../src/hardware/compressor.h"
 #include "audio_frame.h"
+#include "control.h"
 #include "envelope.h"
 
 #include <Iir.h>

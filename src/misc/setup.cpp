@@ -44,7 +44,7 @@ extern char** environ;
 #endif
 
 // Commonly accessed global that holds configuration records
-std::unique_ptr<Config> control = {};
+ConfigPtr control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std_fs::path current_config_dir;
