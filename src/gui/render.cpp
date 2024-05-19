@@ -69,7 +69,7 @@ uint8_t get_bits_per_pixel(const PixelFormat pf)
 
 static void render_callback(GFX_CallBackFunctions_t function);
 
-static void check_palette(void)
+static void check_palette()
 {
 	// Clean up any previous changed palette data
 	if (render.pal.changed) {
@@ -193,7 +193,7 @@ static void clear_cache_handler(const void* src)
 	render.scale.lineHandler(src);
 }
 
-bool RENDER_StartUpdate(void)
+bool RENDER_StartUpdate()
 {
 	if (render.updating) {
 		return false;
@@ -249,7 +249,7 @@ bool RENDER_StartUpdate(void)
 	return true;
 }
 
-static void halt_render(void)
+static void halt_render()
 {
 	RENDER_DrawLine = empty_line_handler;
 	GFX_EndUpdate(nullptr);
@@ -338,7 +338,7 @@ void RENDER_Reinit()
 	RENDER_Init(get_render_section());
 }
 
-static void render_reset(void)
+static void render_reset()
 {
 	static std::mutex render_reset_mutex;
 
