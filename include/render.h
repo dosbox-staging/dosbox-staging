@@ -206,7 +206,7 @@ void RENDER_AddMessages();
 
 void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second);
 
-bool RENDER_StartUpdate(void);
+bool RENDER_StartUpdate();
 void RENDER_EndUpdate(bool abort);
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
