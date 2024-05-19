@@ -598,7 +598,7 @@ void GFX_ResetScreen()
 		(sdl.draw.callback)(GFX_CallBackReset);
 	}
 	GFX_Start();
-	CPU_Reset_AutoAdjust();
+	CPU_ResetAutoAdjust();
 
 	VGA_SetupDrawing(0);
 }
