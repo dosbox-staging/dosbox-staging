@@ -430,11 +430,14 @@ Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/r
 :TITLEBAR_CYCLES_MS
 cykli/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUZA)
+:TITLEBAR_MUTED
+WYCISZONE
 .
-:TITLEBAR_HINT_NOMOUSE
-tryb bez użycia myszy
+:TITLEBAR_PAUSED
+PAUZA
+.
+:TITLEBAR_HINT_CAPTURED
+mysz przejęta
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 mysz przejęta, wciśnij %s+F10 aby zwolnić
@@ -540,12 +543,23 @@ Tryb wyświetlania ramek obrazu:
   vfr:   Wyświetlanie zmienionych ramek obrazu, ze zmienną częstotliwością.
 Domyślnie 'auto'.
 .
-:CONFIG_OUTPUT
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Wybór wyjścia obrazu (domyślnie 'opengl').
-Ustawienia 'texture' oraz 'opengl' używają interpolacji bilinearnej, podczas
-gdy 'texturenb' oraz 'openglnb' rysują najbliższy sąsiedni piksel.
-Niektóre shadery wymagają interpolacji bilinearnej, przez co jest to
-najbezpieczniejszy wybór.
+Tylko 'opengl' obsługuje shadery. 'texture' jest zalecane jedynie jedynie
+w rzadkich sytuacjach braku lub nieprawidłowo działającego sterownika OpenGL.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Wybór wyjścia obrazu (domyślnie 'texture').
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Używa sterownika OpenGL.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Używa tekstury biblioteki SDL z interpolacją bilinearną.
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Używa tekstury biblioteki SDL, zawsze rysuje najbliższy sąsiedni
+              piksel (bez interpolacji).
 .
 :CONFIG_TEXTURE_RENDERER
 Wybór renderera dla 'output = texture'.
@@ -586,6 +600,50 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   allow:  Zezwala na włącznie wygaszacza ekranu podczas działania emulatora.
   block:  Nie zezwala systemowi gospodarza na jego włączenie.
 Domyślnie 'auto'.
+.
+:CONFIG_WINDOW_TITLEBAR
+Rozdzielona spacjami lista wartości, które zostaną wyświetlone na pasku
+tytułowym okna (domyślnie 'program=name dosbox=auto cycles=on mouse=full').
+Jeśli wartość danego parametru nie jest podana, użyta zostanie jego wartość
+domyślna. Możliwe ustawienia:
+  animation=<wartość>:  Ustawienie 'on' (domyślne) włącza animację znacznika
+                        nagrywania. Ustawienie 'off' wyłącza animacje;
+                        przydatne jeśli używana czcionka ekranowa powoduje
+                        powstawanie dziwnych efektów.
+  program=<wartość>:    Wyświetla nazwę aktualnie uruchomionego programu.
+                        <wartość> to jedno z ustawień:
+                          none/off:  Nie wyświetla nazwy programu.
+                          name:      Nazwa wraz z rozszerzeniem (domyślne).
+                          path:      Nazwa, rozszerzenie, ścieżka bezwzględna.
+                          segment:   Nazwa segmentu pamięci.
+                          'Nazwa':   Nazwa podana przez użytkownika, dozwolone
+                                     są również formy "Nazwa", (Nazwa),
+                                     <Nazwa>, lub [Nazwa].
+                        Uwaga: W niektórych przypadkach (np. jeśli uruchomiono
+                        Windows 3.1x w trybie rozszerzonym) rozpoznanie pełnej
+                        nazwy programu lub ścieżki może być niemożliwe;
+                        w takim przypadku używana jest wartość 'segment'.
+  dosbox=<wartość>:     Wyświetla 'DOSBox Staging' na pasku tytułowym.
+                        <wartość> to jedno z ustawień:
+                          always:   Zawsze wyświetla 'DOSBox Staging'.
+                          auto:     Wyświetla tylko jeśli żaden program
+                                    nie jest uruchomiony lub jeśli
+                                    'program=none' (domyślne).
+  version=<wartość>:    Wyświetla wersję DOSBoksa.
+                        <wartość> to jedno z ustawień:
+                          none/off:  Nie wyświetla wersji (domyślne).
+                          simple:    Wyświetla uproszczoną informację.
+                          detailed:  Wyświetla wersję oraz również hasz Git,
+                                     jeśli jest znany.
+  cycles=<wartość>:     Jeśli 'on' (domyślne), wyświetla ustawienie 'cycles'.
+                        Ustawienie 'off' wyłącza wyświetlanie liczby cykli.
+  mouse=<wartość>:      Poziom szczegółowości informacji o myszy:
+                          none/off:  Nie wyświetla żadnych informacji.
+                          short:     Wyświetla tylko informację, że kursor
+                                     myszy został przejęty.
+                          full:      Wyświetla szczegółowe informacje jak
+                                     przejąć lub zwolnić kursor myszy
+                                     (domyślne).
 .
 :CONFIG_LANGUAGE
 Język interfejsu: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', lub 'ru'
@@ -732,7 +790,7 @@ zamiast 'config -set sbtype sb16' wystarczy wykonać 'sbtype sb16', a zamiast
 Użyj ustawienia 'host_rate'.
 .
 :CONFIG_ASPECT
-Korekcja proporcji obrazu (domyślnie włączone):
+Korekcja proporcji obrazu (domyślnie 'auto'):
   auto, on:            Koryguje proporcje obrazu dla współczesnych płaskich
                        monitorów o kwadratowych pikselach, żeby obraz wyglądał
                        tak jak na monitorze CRT o proporcjach 4:3, dla których
@@ -833,7 +891,7 @@ Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
     'viewport', rozważ użycie 'integer_scaling'.
   - W innym przypadku spróbuj użyj opcji 'glshader'.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Wybór shadera w trybach OpenGL. Lista dostępnych shaderów adaptacyjnych,
 symulujących obraz monitora kineskopowego (CRT):
   crt-auto:               Shader symulujący obraz monitora z okresu wydania
@@ -1114,28 +1172,61 @@ Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
 Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_MIDIDEVICE
-Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
-  oss          Interfejs OSS (dla systemu Linux).
-  alsa         Interfejs ALSA (dla systemu Linux).
-  fluidsynth:  Wbudowany syntetyzer, patrz sekcja [fluidsynth].
-  mt32:        Emulacja syntetyzatora Roland MT-32, patrz sekcja [mt32].
-  auto:        Pierwszy działający zewnętrzny syntetyzator; może to być
-               synteza programowa lub fizyczne urządzenie.
+Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401
+(domyślnie 'auto'). Jedno z:
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
+  coremidi:    Urządzenie MIDI skonfigurowane w ustawieniach macOS.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Sytetyzer MIDI wbudowany w macOS.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Sytetyzer MIDI Win32.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
+  oss:         Interfejs MIDI Linux OSS.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
+  alsa:        Interfejs MIDI Linux ALSA.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:  Wbudowany syntetyzer MIDI FluidSynth, używający plików
+               SoundFont, patrz sekcja [fluidsynth].
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:        Wbudowany syntetyzer MIDI Roland MT-32, patrz sekcja [mt32].
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
+  auto:        Albo jeden z wbudowanych syntetyzerów MIDI (jeśli `midiconfig`
+               jest ustawione na 'fluidsynth' lub 'mt32'), albo zewnętrzny
+               syntetyzer (każde inne ustawienie 'midiconfig') - może to być
+               zarówno syntetyzer programowy, jak i urządzenie sprzętowe.
+               Domyślne.
+.
+:CONFIGITEM_MIDIDEVICE_NONE
   none:        Wyłącz wyjście MIDI.
-Domyślnie 'auto'.
 .
 :CONFIG_MIDICONFIG
 Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
 syntetyzatora - można je sprawdzić poleceniem DOSu 'MIXER /LISTMIDI'.
 Uwagi:
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
-    (mididevice = fluidsynth lub mt32).
-  - Dla systemu Linux i podsystemu dźwiękowego ALSA, wyświetl listę portów
-    MIDI poleceniem 'aconnect -l' i wpisz wybrany, np. 'midiconfig=14:0' dla
-    klienta numer 14 i portu 0.
+    ('fluidsynth' lub 'mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Dla 'coreaudio', you can specify a SoundFont here.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
+  - Dla 'alsa'', wyświetl listę portów MIDI poleceniem 'aconnect -l' i wpisz
+    wybrany, np. 'midiconfig = 14:0' dla klienta numer 14 i portu 0.
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Fizyczny Roland MT-32 w płytą główną w wersji 0 może potrzebować
     opóźnienia, inaczej przepełni się jego wewnętrzny bufor. W takim wypadku
-    dodaj parametr 'delaysysex', np.: 'midiconfig=2 delaysysex'.
+    dodaj parametr 'delaysysex', np.: 'midiconfig = 2 delaysysex'.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401 (domyślnie 'intelligent').
@@ -1247,7 +1338,21 @@ Załadowany z
 .
 :CONFIG_SBTYPE
 Model karty muzycznej Sound Blaster (domyślnie 'sb').
-Wartość 'gb' oznacza kartę Game Blaster.
+  gb:        Game Blaster          - CMS
+  sb1:       Sound Blaster 1.0     - OPL2, CMS
+  sb2:       Sound Blaster 2.0     - OPL2
+  sbpro1:    Sound Blaster Pro     - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2   - OPL3
+  sb16:      Sound Blaster 16      - OPL3 (domyślne)
+  ess:       ESS ES1688 AudioDrive - ESFM
+  none/off:  Wyłącza emulację karty Sound Blaster.
+Uwagi:
+  - Creative Music System został później przemianowany na Game Blaster;
+    są to te same karty.
+  - Ustawienie 'ess' umożliwia rozszerzoną syntezę FM w grach obsługujących
+    moduł ESFM. DAC nie jest emulowany, ale karta jest kompatybilna z
+    Sound Blaster Pro - skonfiguruj grę, żeby używała tej karty dla efektów
+    dźwiękowych.
 .
 :CONFIG_SBBASE
 Adres bazowy (I/O) karty muzycznej Sound Blaster (domyślnie 220).
@@ -1272,11 +1377,29 @@ jeśli zauważysz ucięty początek dźwięku.
 .
 :CONFIG_OPLRATE
 Częstotliwość dźwięku syntetyzowanego OPL jest obecnie taka sama, jak
-częstotliwość miksowania, dzięki czemu nie jest potrzebny resampling.
+częstotliwość miksowania.
+.
+:CONFIG_CMS
+Emulacja układu CMS (domyślnie 'auto').
+  off:   Wyłącza emulację CMS (chyba, że karta Game Blaster jest emulowana).
+  on:    Włącza emulację CMS na kartach Sound Blaster 1 i 2.
+  auto:  Włącza emulację CMS na kartach Sound Blaster 1 oraz Game Blaster.
 .
 :CONFIG_OPLMODE
-Typ emulowanego układu OPL. 'auto' (domyślne) wybiera typ w zależności od
-'sbtype'. Wszystkie z wyjątkiem 'cms' są kompatybilne z kartami AdLib.
+Typ emulowanego układu OPL (domyślnie 'auto').
+  auto:      Wybiera typ odpowiedni dla 'sbtype'.
+  opl2:      Yamaha OPL2 (YM3812, mono).
+  dualopl2:  Dual OPL2 (dwa układy OPL2 w konfiguracji stereo).
+  opl3:      Yamaha OPL3 (YMF262, stereo).
+  opl3gold:  OPL3 wraz z modułem AdLib Gold Surround.
+             Razem z 'sbtype = sb16' emuluje kartę AdLib Gold 1000.
+  esfm:      ESS ESFM (rozszerzona synteza FM kompatybilna z Yamaha OPL3).
+  none/off:  Wyłącz emulację układu OPL.
+Uwagi:
+  - 'sbtype = none' wraz z 'oplmode = opl2' emuluje oryginalną kartę AdLib.
+  - Ustawienie 'oplmode = esfm' nie wystarczy, żeby uzyskać rozszerzoną
+    syntezę FM w grach; należy ustawić również 'sbtype = ess'. Można natomiast
+    za pomocą 'oplmode = esfm' uzyskać nieco odmienny dźwięk układu OPL.
 .
 :CONFIG_OPL_FADEOUT
 Wycisz dźwięk układu OPL po ostatnim zapisie do portu IO:
@@ -1467,7 +1590,7 @@ Filtrowanie dźwięku urządzenia LPT DAC:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_DISNEY
-Żeby włączyć Disney Sound Source użyj 'lpt_dac=disney'.
+Żeby włączyć Disney Sound Source użyj 'lpt_dac = disney'.
 .
 :CONFIG_PS1AUDIO
 Włącza emulację urządzenia dźwiękowego IBM PS/1 (domyślnie wyłączone).
@@ -1647,10 +1770,10 @@ Pamięć komputera PCjr (domyślnie 'expanded').
   standard:  128 KB pamięci, aplikacje rezydują poniżej 96 KB.
              Wymagane dla kilu starszych gier (np., Jumpman, Troll).
 .
-:CONFIG_IPX
+:CONFIGITEM_IPX
 Włącza emulację protokołu IPX po UDP/IP (domyślnie wyłączone).
 .
-:CONFIG_NE2000
+:CONFIGITEM_NE2000_SLIRP
 Włącza emulację karty sieciowej Novell NE2000 podłączonej do wirtualnej
 sieci 'libslirp' z parametrami jak poniżej:
   10.0.2.0       : Adres wirtualnej sieci LAN.
@@ -1665,20 +1788,20 @@ Uwagi:
     przekierowanie portów z systemu gospodarza do DOSa, oraz z routera
     do gospodarza.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Adres bazowy (I/O) karty sieciowej NE2000 (domyślnie 300).
 Uwaga: Adresy 220 oraz 240 mogą być niedostępne, gdyż są domyślnie przypisane
        do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 Numer przerwania (IRQ) karty sieciowej NE2000 (domyślnie 3).
 Uwaga: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
        do portu COM2 i karty muzycznej Gravis UltraSound.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 Adres MAC karty sieciowej NE2000 (domyślnie 'AC:DE:48:88:99:AA').
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Przekierowuje jeden lub więcej portów UDP z systemu gospodarza do DOSu
 Format:
   port1  port2  port3 ... (np., 21 80 443)
@@ -1697,7 +1820,7 @@ Uwagi:
   - W razie konfliktu portów gospodarza, tylko pierwszy zostanie ustawiony.
   - W razie konfliktu portów gościa, tylko ostatni zostanie ustawiony.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Przekierowuje jeden lub więcej portów UDP z systemu gospodarza do DOSu.
 Format jest taki sam jak dla portów TCP.
 .
@@ -1799,10 +1922,10 @@ Gdzie [color=white]POLECENIE[reset] jest jednym z:
   -set [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset][=][color=white]VALUE[reset]
                     ustaw wartość parametru konfiguracji
 
+  -securemode       włącza tryb bezpieczny
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Informacja o parametrze [color=light-green]'%s'[color=white] (zawartym w sekcji [color=light-cyan][%s][color=white]):[reset]
-%s
+[color=white]Informacja o parametrze [color=light-green]'%s'[color=white] zawartym w sekcji [color=light-cyan][%s][color=white]:[reset]
 
 
 .
@@ -1819,7 +1942,7 @@ Gdzie [color=white]POLECENIE[reset] jest jednym z:
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Informacja o sekcji [%s]:[reset]
+[color=white]Informacja o sekcji [color=light-cyan][%s][color=white]:[reset]
 %s
 [color=white]Aktualna wartość:[reset]
 %s
@@ -1833,7 +1956,7 @@ Ten parametr nie może być zmieniony w trakcie pracy.
 dodatnia liczba całkowita
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]Sekcja [color=light-cyan][%s] [color=white]zawiera następujące parametry:[reset]
+[color=white]Sekcja [color=light-cyan][%s][color=white] zawiera następujące parametry:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
@@ -1841,7 +1964,7 @@ dodatnia liczba całkowita
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Przełączono w tryb bezpieczny.
+Tryb bezpieczny włączony.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
@@ -2140,11 +2263,26 @@ Uwagi:
   - Flaga -ide włącza emulację kontrolera IDE z zamontowanym obrazem CD.
 
 Przykłady:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Gry\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/UŻYTKOWNIK/Gry/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/UŻYTKOWNIK/gry/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 Podaj literę dysku, pod którą zamontowany będzie obraz.
@@ -2287,47 +2425,28 @@ ich nazwy w wierszu poleceń.
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
 [erases=entire][color=light-green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
-DOSBox emuluje napędy CD-ROM na dwóch poziomach.
-
-Poziom [color=brown]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
-i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
+Polecenie [color=light-blue]mount[reset] działa ze wszystkimi normalnymi katalogami. Instaluje ono
+program MSCDEX i oznacza pliki jako tylko-do-odczytu.
+To wystarcza do większości gier:
 [color=light-blue]mount D C:\katalog -t cdrom[reset]
 Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
 [color=light-blue]mount D C:\katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [color=brown]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
-Działa tylko z rzeczywistymi napędami CD-ROM:
-[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
-Zastąp [color=red]D:\[reset] przez lokację Twojego napędu CD-ROM.
-Zastąp [color=yellow]0[reset] w parametrze [color=light-blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[color=light-blue]mount -listcd[reset]
-
-Dodatkowo, poleceniem [color=light-blue]imgmount[reset] możesz użyć montować obrazy w formatach ISO
-lub CUE/BIN:
+Ponadto poleceniem [color=light-blue]imgmount[reset] można zamontować obraz ISO lub CUE/BIN:
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
 [erases=entire][color=light-green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
-DOSBox emuluje napędy CD-ROM na dwóch poziomach.
-
-Poziom [color=brown]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
-i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
+Polecenie [color=light-blue]mount[reset] działa ze wszystkimi normalnymi katalogami. Instaluje ono
+program MSCDEX i oznacza pliki jako tylko-do-odczytu.
+To wystarcza do większości gier:
 [color=light-blue]mount D ~/katalog -t cdrom[reset]
 Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
 [color=light-blue]mount D ~/katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [color=brown]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
-Działa tylko z rzeczywistymi napędami CD-ROM:
-[color=light-blue]mount d[reset] [color=red]~/przykład[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
-
-Zastąp [color=red]~/przykład[reset] przez lokację Twojego napędu CD-ROM.
-Zastąp [color=yellow]0[reset] w parametrze [color=light-blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[color=light-blue]mount -listcd[reset]
-
-Dodatkowo, poleceniem [color=light-blue]imgmount[reset] możesz montować obrazy płyt w formatach ISO
-lub CUE/BIN:
+Ponadto poleceniem [color=light-blue]imgmount[reset] można zamontować obraz ISO lub CUE/BIN:
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
@@ -2636,8 +2755,7 @@ Montuj fizyczny katalog lub dysk.
 Montuj katalog z systemu gospodarza pod literę dysku.
 
 Składnia:
-  [color=light-green]mount[reset] [color=white]DYSK[reset] [color=light-cyan]KATALOG[reset] [-t TYP] [-usecd #] [-freesize ROZMIAR] [-label ETYKIETA]
-  [color=light-green]mount[reset] -listcd / -cd  (wyświetla wykryte napędy CD-ROM i ich numery)
+  [color=light-green]mount[reset] [color=white]DYSK[reset] [color=light-cyan]KATALOG[reset] [-t TYP] [-freesize ROZMIAR] [-label ETYKIETA]
   [color=light-green]mount[reset] -u [color=white]DYSK[reset]        (odmontowuje dysk)
 
 Gdzie:
@@ -2650,15 +2768,28 @@ Gdzie:
 
 Uwagi:
   Parametr '-t overlay' przekierowuje operacje zapisu do innego katalogu.
-  Parametr '-usecd ID' daje dostęp do fizycznego napędu CD-ROM, jest to
-  potrzebne do obsługi ścieżek dźwiękowych (tylko w systemach Windows oraz
-  Linux). Listę fizycznych napędów można wyświetlić poleceniem 'mount -cd'.
   Dodatkowe opcje są opisane (po angielsku) w podręczniku (README, chapter 4).
 
 Przykłady:
-  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
-  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Gra CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/UŻYTKOWNIK/Gra CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
 Znalezione napędy CD-ROM: %d
@@ -2731,10 +2862,6 @@ Błąd montowania nakładki ('overlay').
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Nakładka ('overlay') '%s' zamontowana na dysku %c.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Nie można przenieść dysku Z. Dysk %c jest już zamontowany.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
