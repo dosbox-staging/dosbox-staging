@@ -43,7 +43,7 @@
 #if 1
 	#undef LOG
 	#if defined(_MSC_VER)
-		#define LOG_CONSUME(...) (void)sizeof(__VA_ARGS__)
+		#define LOG_CONSUME(...) sizeof(__VA_ARGS__)
 		#define LOG(X, Y)        LOG_CONSUME
 	#else
 		#define LOG(X, Y) CPU_LOG
@@ -82,18 +82,18 @@ static Bitu cpu_extflags_toggle = 0;
 
 Bitu CPU_PrefetchQueueSize = 0;
 
-void CPU_Core_Full_Init(void);
-void CPU_Core_Normal_Init(void);
-void CPU_Core_Simple_Init(void);
+void CPU_Core_Full_Init();
+void CPU_Core_Normal_Init();
+void CPU_Core_Simple_Init();
 #if (C_DYNAMIC_X86)
-void CPU_Core_Dyn_X86_Init(void);
+void CPU_Core_Dyn_X86_Init();
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
-void CPU_Core_Dyn_X86_Cache_Close(void);
+void CPU_Core_Dyn_X86_Cache_Close();
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
 #elif (C_DYNREC)
-void CPU_Core_Dynrec_Init(void);
+void CPU_Core_Dynrec_Init();
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
-void CPU_Core_Dynrec_Cache_Close(void);
+void CPU_Core_Dynrec_Cache_Close();
 #endif
 
 /* In debug mode exceptions are tested and dosbox exits when
@@ -216,7 +216,7 @@ bool CPU_PrepareException(Bitu which, Bitu error)
 	return true;
 }
 
-bool CPU_CLI(void) {
+bool CPU_CLI() {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
@@ -225,7 +225,7 @@ bool CPU_CLI(void) {
 	}
 }
 
-bool CPU_STI(void) {
+bool CPU_STI() {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
@@ -262,7 +262,7 @@ bool CPU_PUSHF(Bitu use32) {
 	return false;
 }
 
-static void cpu_check_segments(void)
+static void cpu_check_segments()
 {
 	bool needs_invalidation = false;
 	Descriptor desc;
@@ -316,13 +316,13 @@ public:
 
 	bool IsValid() const { return valid; }
 
-	Bitu Get_back(void) {
+	Bitu Get_back() {
 		cpu.mpl=0;
 		uint16_t backlink=mem_readw(base);
 		cpu.mpl=3;
 		return backlink;
 	}
-	void SaveSelector(void) {
+	void SaveSelector() {
 		cpu.gdt.SetDescriptor(selector,desc);
 	}
 	void Get_SSx_ESPx(Bitu level,Bitu & _ss,Bitu & _esp) {
@@ -1529,7 +1529,7 @@ RET_same_level:
 }
 
 
-Bitu CPU_SLDT(void) {
+Bitu CPU_SLDT() {
 	return cpu.gdt.SLDT();
 }
 
@@ -1542,7 +1542,7 @@ bool CPU_LLDT(Bitu selector) {
 	return false;
 }
 
-Bitu CPU_STR(void) {
+Bitu CPU_STR() {
 	return cpu_tss.selector;
 }
 
@@ -1585,17 +1585,17 @@ void CPU_LIDT(Bitu limit,Bitu base) {
 	cpu.idt.SetBase(base);
 }
 
-Bitu CPU_SGDT_base(void) {
+Bitu CPU_SGDT_base() {
 	return cpu.gdt.GetBase();
 }
-Bitu CPU_SGDT_limit(void) {
+Bitu CPU_SGDT_limit() {
 	return cpu.gdt.GetLimit();
 }
 
-Bitu CPU_SIDT_base(void) {
+Bitu CPU_SIDT_base() {
 	return cpu.idt.GetBase();
 }
-Bitu CPU_SIDT_limit(void) {
+Bitu CPU_SIDT_limit() {
 	return cpu.idt.GetLimit();
 }
 
@@ -1802,7 +1802,7 @@ bool CPU_READ_TRX(Bitu tr,uint32_t & retvalue) {
 }
 
 
-Bitu CPU_SMSW(void) {
+Bitu CPU_SMSW() {
 	return cpu.cr0;
 }
 
@@ -2064,7 +2064,7 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 	return false;
 }
 
-bool CPU_CPUID(void) {
+bool CPU_CPUID() {
 	if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) return false;
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
@@ -2118,7 +2118,7 @@ bool CPU_CPUID(void) {
 	return true;
 }
 
-static Bits hlt_decode(void)
+static Bits hlt_decode()
 {
 	// Once an interrupt occurs, it should change CPU core
 	if (reg_eip != cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
@@ -2312,7 +2312,7 @@ static void cpu_decrease_cycles(bool pressed)
 	GFX_NotifyCyclesChanged();
 }
 
-void CPU_ResetAutoAdjust(void)
+void CPU_ResetAutoAdjust()
 {
 	CPU_IODelayRemoved = 0;
 

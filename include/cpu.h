@@ -76,7 +76,7 @@ uint8_t CPU_GetLastInterrupt();
 std::string CPU_GetCyclesConfigAsString();
 
 // A CPU handler
-typedef Bits(CPU_Decoder)(void);
+typedef Bits(CPU_Decoder)();
 
 extern CPU_Decoder* cpudecoder;
 
@@ -97,7 +97,7 @@ Bits CPU_Core_Dynrec_Trap_Run() noexcept;
 Bits CPU_Core_Prefetch_Run() noexcept;
 Bits CPU_Core_Prefetch_Trap_Run() noexcept;
 
-void CPU_ResetAutoAdjust(void);
+void CPU_ResetAutoAdjust();
 
 extern uint16_t parity_lookup[256];
 
@@ -106,12 +106,12 @@ bool CPU_LTR(Bitu selector);
 void CPU_LIDT(Bitu limit, Bitu base);
 void CPU_LGDT(Bitu limit, Bitu base);
 
-Bitu CPU_STR(void);
-Bitu CPU_SLDT(void);
-Bitu CPU_SIDT_base(void);
-Bitu CPU_SIDT_limit(void);
-Bitu CPU_SGDT_base(void);
-Bitu CPU_SGDT_limit(void);
+Bitu CPU_STR();
+Bitu CPU_SLDT();
+Bitu CPU_SIDT_base();
+Bitu CPU_SIDT_limit();
+Bitu CPU_SGDT_base();
+Bitu CPU_SGDT_limit();
 
 void CPU_ARPL(Bitu& dest_sel, Bitu src_sel);
 void CPU_LAR(Bitu selector, Bitu& ar);
@@ -128,7 +128,7 @@ bool CPU_READ_DRX(Bitu dr, uint32_t& retvalue);
 bool CPU_WRITE_TRX(Bitu dr, Bitu value);
 bool CPU_READ_TRX(Bitu dr, uint32_t& retvalue);
 
-Bitu CPU_SMSW(void);
+Bitu CPU_SMSW();
 bool CPU_LMSW(Bitu word);
 
 void CPU_VERR(Bitu selector);
@@ -142,11 +142,11 @@ void CPU_HLT(Bitu oldeip);
 
 bool CPU_POPF(Bitu use32);
 bool CPU_PUSHF(Bitu use32);
-bool CPU_CLI(void);
-bool CPU_STI(void);
+bool CPU_CLI();
+bool CPU_STI();
 
 bool CPU_IO_Exception(Bitu port, Bitu size);
-void CPU_RunException(void);
+void CPU_RunException();
 
 void CPU_ENTER(bool use32, Bitu bytes, Bitu level);
 
@@ -176,7 +176,7 @@ void CPU_DebugException(uint32_t triggers, Bitu oldeip);
 bool CPU_SetSegGeneral(SegNames seg, Bitu value);
 bool CPU_PopSeg(SegNames seg, bool use32);
 
-bool CPU_CPUID(void);
+bool CPU_CPUID();
 
 void CPU_ReadTSC();
 
@@ -422,11 +422,11 @@ public:
 
 class DescriptorTable {
 public:
-	PhysPt GetBase(void)
+	PhysPt GetBase()
 	{
 		return table_base;
 	}
-	Bitu GetLimit(void)
+	Bitu GetLimit()
 	{
 		return table_limit;
 	}
@@ -493,7 +493,7 @@ public:
 			return true;
 		}
 	}
-	Bitu SLDT(void)
+	Bitu SLDT()
 	{
 		return ldt_value;
 	}
@@ -529,11 +529,11 @@ private:
 
 class TSS_Descriptor final : public Descriptor {
 public:
-	Bitu IsBusy(void)
+	Bitu IsBusy()
 	{
 		return saved.seg.type & 2;
 	}
-	Bitu Is386(void)
+	Bitu Is386()
 	{
 		return saved.seg.type & 8;
 	}
