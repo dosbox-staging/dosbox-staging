@@ -2305,7 +2305,7 @@ static void CPU_CycleDecrease(bool pressed)
 	}
 }
 
-void CPU_Reset_AutoAdjust(void)
+void CPU_ResetAutoAdjust(void)
 {
 	CPU_IODelayRemoved = 0;
 
