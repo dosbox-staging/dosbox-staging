@@ -2234,7 +2234,7 @@ static void CPU_CycleIncrease(bool pressed)
 		if (CPU_CyclePercUsed > 100) {
 			CPU_CyclePercUsed = 100;
 		}
-		LOG_MSG("CPU speed: max %d percent.", CPU_CyclePercUsed);
+		LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
 
 	} else {
 		auto old_cycles = CPU_CycleMax;
@@ -2253,10 +2253,11 @@ static void CPU_CycleIncrease(bool pressed)
 		}
 
 		if (CPU_CycleMax > 15000) {
-			LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",
+			LOG_MSG("CPU: fixed %d cycles. If you need more than 20000, "
+			        "try core=dynamic in DOSBox's options.",
 			        CPU_CycleMax);
 		} else {
-			LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
+			LOG_MSG("CPU: fixed %d cycles.", CPU_CycleMax);
 		}
 	}
 
@@ -2277,11 +2278,11 @@ static void CPU_CycleDecrease(bool pressed)
 		}
 
 		if (CPU_CyclePercUsed <= 70) {
-			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, "
+			LOG_MSG("CPU: max %d percent. If the game runs too fast, "
 			        "try a fixed cycles amount in DOSBox's options.",
 			        CPU_CyclePercUsed);
 		} else {
-			LOG_MSG("CPU speed: max %d percent.", CPU_CyclePercUsed);
+			LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
 		}
 
 	} else {
@@ -2300,7 +2301,7 @@ static void CPU_CycleDecrease(bool pressed)
 			CPU_CycleMax = 1;
 		}
 
-		LOG_MSG("CPU speed: fixed %d cycles.", CPU_CycleMax);
+		LOG_MSG("CPU: fixed %d cycles.", CPU_CycleMax);
 	}
 
 	GFX_NotifyCyclesChanged();
