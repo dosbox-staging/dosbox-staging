@@ -579,10 +579,11 @@ void DOSBOX_Init()
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
-	constexpr auto always = Property::Changeable::Always;
+	constexpr auto always     = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
+	constexpr auto deprecated_but_allowed = Property::Changeable::DeprecatedButAllowed;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto when_idle     = Property::Changeable::WhenIdle;
 
 	constexpr auto changeable_at_runtime = true;
 
@@ -811,11 +812,13 @@ void DOSBOX_Init()
 	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
 	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
 
-	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
+	pmulti_remain = secprop->AddMultiValRemain("cycles",
+	                                           deprecated_but_allowed,
+	                                           " ");
 	pmulti_remain->Set_help(
 	        "Number of instructions DOSBox tries to emulate per millisecond\n"
 	        "('auto' by default). Setting this value too high may result in sound drop-outs\n"
-			"and lags.\n"
+	        "and lags.\n"
 	        "  auto:            Try to guess what a game needs. It usually works, but can\n"
 	        "                   fail with certain games.\n"
 	        "  fixed <number>:  Set a fixed number of cycles. This is what you usually\n"
@@ -823,7 +826,7 @@ void DOSBOX_Init()
 	        "  max:             Allocate as much cycles as your computer is able to handle.");
 
 	pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
-	pmulti_remain->SetValue("auto");
+	pmulti_remain->SetValue(" ");
 	pstring->Set_values({"auto", "fixed", "max", "%u"});
 
 	pmulti_remain->GetSection()->Add_string("parameters", always, "");
