@@ -67,8 +67,6 @@ enum {
 	CBRET_NONE=0,CBRET_STOP=1
 };
 
-extern uint8_t lastint;
-
 static inline RealPt CALLBACK_RealPointer(callback_number_t cb_number)
 {
 	const auto offset = CB_SOFFSET + cb_number * CB_SIZE;

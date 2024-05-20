@@ -71,6 +71,8 @@ extern ArchitectureType CPU_ArchitectureType;
 
 extern Bitu CPU_PrefetchQueueSize;
 
+uint8_t CPU_GetLastInterrupt();
+
 // A CPU handler
 typedef Bits(CPU_Decoder)(void);
 
