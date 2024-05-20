@@ -99,6 +99,10 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
 
+constexpr int SftHeaderSize = 6;
+constexpr int SftEntrySize = 59;
+constexpr int SftNumEntries = 16;
+
 /* internal Dos Tables */
 
 extern DOS_File * Files[DOS_FILES];

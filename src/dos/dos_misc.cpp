@@ -69,10 +69,10 @@ static bool DOS_MultiplexFunctions(void) {
 		LOG(LOG_DOSMISC,LOG_ERROR)("Some BAD filetable call used bx=%X",reg_bx);
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
-		if (reg_bx<16) {
+		if (reg_bx < SftNumEntries) {
 			RealPt sftrealpt=mem_readd(RealToPhysical(dos_infoblock.GetPointer())+4);
 			PhysPt sftptr=RealToPhysical(sftrealpt);
-			Bitu sftofs=0x06+reg_bx*0x3b;
+			Bitu sftofs= SftHeaderSize + reg_bx * SftEntrySize;
 
 			if (Files[reg_bx]) mem_writeb(sftptr+sftofs,Files[reg_bx]->refCtr);
 			else mem_writeb(sftptr+sftofs,0);
