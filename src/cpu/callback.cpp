@@ -66,7 +66,7 @@ void CALLBACK_DeAllocate(callback_number_t cb_num)
 	CallBack_Handlers[cb_num] = &illegal_handler;
 }
 
-void CALLBACK_Idle(void) {
+void CALLBACK_Idle() {
 /* this makes the cpu execute instructions to handle irq's and then come back */
 	const auto oldIF = GETFLAG(IF);
 	SETFLAGBIT(IF,true);
@@ -82,14 +82,14 @@ void CALLBACK_Idle(void) {
 		CPU_Cycles=0;
 }
 
-static Bitu default_handler(void)
+static Bitu default_handler()
 {
 	LOG(LOG_CPU, LOG_ERROR)
 	("Illegal Unhandled Interrupt Called %X", CPU_GetLastInterrupt());
 	return CBRET_NONE;
 }
 
-static Bitu stop_handler(void) {
+static Bitu stop_handler() {
 	return CBRET_STOP;
 }
 
