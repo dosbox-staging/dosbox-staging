@@ -577,13 +577,20 @@ void CPU_Exception(Bitu which,Bitu error ) {
 	CPU_Interrupt(which,CPU_INT_EXCEPTION | ((which>=8) ? CPU_INT_HAS_ERROR : 0),reg_eip);
 }
 
-uint8_t lastint;
+static uint8_t last_interrupt;
+
+uint8_t CPU_GetLastInterrupt()
+{
+	return last_interrupt;
+}
+
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	if (num == EXCEPTION_DB && (type&CPU_INT_EXCEPTION) == 0) {
 		CPU_DebugException(0,oldeip); // DR6 bits need updating
 		return;
 	}
-	lastint=num;
+	last_interrupt = num;
+
 	FillFlags();
 #if C_DEBUG
 	switch (num) {
