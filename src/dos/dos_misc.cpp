@@ -63,6 +63,10 @@ static Bitu INT2A_Handler(void) {
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
+	case 0x1000:
+		// Report that SHARE.EXE is installed
+		reg_al = 0xff;
+		return true;
 	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
 		// reg_bx is a system file table entry, should coincide with
 		// the file handle so just use that
