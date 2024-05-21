@@ -460,7 +460,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
+bool Overlay_Drive::FileOpen(DOS_File** file, char* name, uint8_t flags) {
 	const char* type;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;

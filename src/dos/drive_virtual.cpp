@@ -418,7 +418,7 @@ Virtual_Drive::Virtual_Drive() : search_file()
 		parent_dir = std::make_shared<VFILE_Block>();
 }
 
-bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
+bool Virtual_Drive::FileOpen(DOS_File** file, char* name, uint8_t flags) {
 	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
