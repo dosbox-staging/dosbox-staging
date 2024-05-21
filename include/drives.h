@@ -88,7 +88,7 @@ public:
 	           uint8_t _sectors_cluster, uint16_t _total_clusters,
 	           uint16_t _free_clusters, uint8_t _mediaid,
 	           bool _always_open_ro_files = false);
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
 	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
 	bool FileCreate(DOS_File** file, char* name,
@@ -200,7 +200,7 @@ public:
 	         bool roflag);
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
@@ -276,7 +276,7 @@ public:
 	           uint16_t _bytes_sector, uint8_t _sectors_cluster,
 	           uint16_t _total_clusters, uint16_t _free_clusters,
 	           uint8_t _mediaid, int& error);
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
@@ -377,7 +377,7 @@ public:
 	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid,
 	         int& error);
 	~isoDrive() override;
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
@@ -449,7 +449,7 @@ using vfile_block_t = std::shared_ptr<VFILE_Block>;
 class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
@@ -494,7 +494,7 @@ public:
 	              uint8_t _mediaid,
 	              uint8_t &error);
 
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
+	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;

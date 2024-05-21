@@ -1125,7 +1125,7 @@ bool fatDrive::FileExists(const char *name) {
 	return found;
 }
 
-bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
+bool fatDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {

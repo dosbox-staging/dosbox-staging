@@ -345,7 +345,7 @@ public:
 	DOS_Drive();
 	virtual ~DOS_Drive() = default;
 
-	virtual bool FileOpen(DOS_File** file, char* name, uint32_t flags) = 0;
+	virtual bool FileOpen(DOS_File** file, char* name, uint8_t flags) = 0;
 	virtual bool FileCreate(DOS_File** file, char* name,
 	                        FatAttributeFlags attributes) = 0;
 	virtual bool FileUnlink(char* _name)=0;
