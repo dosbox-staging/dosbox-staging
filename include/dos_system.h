@@ -129,7 +129,7 @@ public:
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
-	uint32_t flags   = 0;
+	uint8_t flags    = 0;
 	uint16_t time    = 0;
 	uint16_t date    = 0;
 	FatAttributeFlags attr = {};

@@ -713,7 +713,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 bool localFile::Write(uint8_t *data, uint16_t *size)
 {
-	uint32_t lastflags = this->flags & 0xf;
+	uint8_t lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
