@@ -375,7 +375,7 @@ static void increase_ticks()
 		}
 
 #if 0
-		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
+		LOG_INFO("CPU: cycles: curr %7d | new %7d | ratio %5d | done %3d | sched %3d | add %3d | rem %4.2f",
 		         CPU_CycleMax,
 		         new_cycle_max,
 		         ratio,
