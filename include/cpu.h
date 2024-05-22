@@ -73,6 +73,8 @@ struct CpuAutoDetermineMode {
 extern ArchitectureType CPU_ArchitectureType;
 extern Bitu CPU_PrefetchQueueSize;
 
+void CPU_AddConfigSection(const ConfigPtr& conf);
+
 uint8_t CPU_GetLastInterrupt();
 
 void CPU_RestoreRealModeCyclesConfig();

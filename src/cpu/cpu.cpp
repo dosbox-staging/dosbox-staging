@@ -25,17 +25,14 @@
 #include <cstddef>
 #include <sstream>
 
+#include "control.h"
 #include "debug.h"
-#include "mapper.h"
-#include "setup.h"
-#include "programs.h"
-#include "paging.h"
-#include "pic.h"
 #include "lazyflags.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "memory.h"
 #include "paging.h"
+#include "pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "string_utils.h"
@@ -3126,12 +3123,6 @@ public:
 		}
 
 		if (legacy_cycles_mode) {
-			LOG_WARNING(
-			        "CPU: 'cycles' setting is deprecated but still accepted; "
-			        "please use the 'cpu_cycles', 'cpu_cycles_protected' and "
-			        "'cpu_throttle' settings instead as support will be "
-			        "removed in the future.");
-
 			ConfigureCyclesLegacy(secprop);
 		} else {
 			ConfigureCyclesModern(secprop);
@@ -3160,6 +3151,9 @@ public:
 	}
 };
 
+// Initialise static members
+bool Cpu::initialised = false;
+
 static std::unique_ptr<Cpu> cpu_instance = nullptr;
 
 static void cpu_shutdown([[maybe_unused]] Section* sec)
@@ -3171,7 +3165,7 @@ static void cpu_shutdown([[maybe_unused]] Section* sec)
 #endif
 }
 
-void CPU_Init(Section* sec)
+static void cpu_init(Section* sec)
 {
 	assert(sec);
 	cpu_instance = std::make_unique<Cpu>(sec);
@@ -3180,5 +3174,134 @@ void CPU_Init(Section* sec)
 	sec->AddDestroyFunction(&cpu_shutdown, ChangeableAtRuntime);
 }
 
-// Initialise static members
-bool Cpu::initialised = false;
+void init_cpu_dosbox_settings(Section_prop& secprop)
+{
+	constexpr auto Always   = Property::Changeable::Always;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
+	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
+
+	auto pstring = secprop.Add_string("core", WhenIdle, "auto");
+	pstring->Set_values({
+		"auto",
+#if (C_DYNAMIC_X86) || (C_DYNREC)
+		        "dynamic",
+#endif
+		        "normal", "simple"
+	});
+	pstring->Set_help(
+	        "CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
+	        "if available and appropriate.");
+
+	pstring = secprop.Add_string("cputype", Always, "auto");
+	pstring->Set_values(
+	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
+
+	pstring->Set_help(
+	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.\n"
+	        "Prefetch variant emulates the prefetch queue and requires the 'normal' core.");
+
+	pstring->SetDeprecatedWithAlternateValue("386_slow", "386");
+	pstring->SetDeprecatedWithAlternateValue("486_slow", "486");
+	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
+	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
+
+	// Legacy `cycles` setting
+	auto pmulti_remain = secprop.AddMultiValRemain("cycles",
+	                                               DeprecatedButAllowed,
+	                                               " ");
+	pmulti_remain->Set_help(
+	        "The 'cycles' setting is deprecated but still accepted; please use the\n"
+	        "'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' settings instead as\n"
+	        "support will be removed in the future.");
+
+	pstring = pmulti_remain->GetSection()->Add_string("type", Always, "auto");
+	pmulti_remain->SetValue(" ");
+	pstring->Set_values({"auto", "fixed", "max", "%u"});
+
+	pmulti_remain->GetSection()->Add_string("parameters", Always, "");
+
+	// Revised CPU cycles related settings
+	const auto cpu_cycles_default = format_str("%d", CpuCyclesRealModeDefault);
+
+	pstring = secprop.Add_string("cpu_cycles", Always, cpu_cycles_default.c_str());
+	pstring->Set_help(format_str(
+	        "Speed of the emulated CPU ('%d' by default). If 'cpu_cycles_protected' is on\n"
+	        "'auto', this sets the cycles for both real and protected mode programs.\n"
+	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
+	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
+	        "             core. The number of cycles per millisecond can vary; this might\n"
+	        "             cause issues in some DOS programs.\n"
+	        "Notes:\n"
+	        "  - Setting the CPU speed to 'max' or to high fixed values may result in sound\n"
+	        "    drop-outs and general lagginess.\n"
+	        "  - Set the lowest fixed cycles value that runs the game at an acceptable speed\n"
+	        "    for the best results.\n"
+	        "  - Ballpark cycles values for common CPUs. DOSBox does not do cycle-accurate\n"
+	        "    CPU emulation, so treat these as starting points, then fine-tune per game.\n"
+	        "      8088 (4.77 MHz)     300\n"
+	        "      286-8               700\n"
+	        "      286-12             1500\n"
+	        "      386SX-20           3000\n"
+	        "      386DX-33           6000\n"
+	        "      386DX-40           8000\n"
+	        "      486DX-33          12000\n"
+	        "      486DX/2-66        25000\n"
+	        "      Pentium 90        50000\n"
+	        "      Pentium MMX-166  100000\n"
+	        "      Pentium II 300   200000",
+	        CpuCyclesRealModeDefault,
+	        CpuCyclesMin,
+	        CpuCyclesMax));
+
+	const auto cpu_cycles_protected_default =
+	        format_str("%d", CpuCyclesProtectedModeDefault);
+
+	pstring = secprop.Add_string("cpu_cycles_protected",
+	                             Always,
+	                             cpu_cycles_protected_default.c_str());
+	pstring->Set_help(format_str(
+	        "Speed of the emulated CPU for protected mode programs only\n"
+	        "('%d' by default).\n"
+	        "  auto:      Use the `cpu_cycles' setting.\n"
+	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
+	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
+	        "             core. The number of cycles per millisecond can vary; this might\n"
+	        "             cause issues in some DOS programs.\n"
+	        "Note: See 'cpu_cycles' setting for further info.",
+	        CpuCyclesProtectedModeDefault,
+	        CpuCyclesMin,
+	        CpuCyclesMax));
+
+	auto pbool = secprop.Add_bool("cpu_throttle", Always, CpuThrottleDefault);
+	pbool->Set_help(format_str(
+	        "Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
+	        "cannot keep up (%s by default).\n"
+	        "Only affects fixed cycles settings. When enabled, the number of cycles per\n"
+	        "millisecond can vary; this might cause issues in some DOS programs.",
+	        (CpuThrottleDefault ? "enabled" : "disabled")));
+
+	auto pint = secprop.Add_int("cycleup", Always, 10);
+	pint->SetMinMax(1, 1000000);
+	pint->Set_help(
+	        "Number of cycles added with the increase cycles hotkey (10 by default).\n"
+	        "Setting it lower than 100 will be a percentage.");
+
+	pint = secprop.Add_int("cycledown", Always, 20);
+	pint->SetMinMax(1, 1000000);
+	pint->Set_help(
+	        "Number of cycles subtracted with the decrease cycles hotkey (20 by default).\n"
+	        "Setting it lower than 100 will be a percentage.");
+}
+
+void CPU_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	constexpr auto ChangeableAtRuntime = true;
+
+	Section_prop* sec = conf->AddSection_prop("cpu", &cpu_init, ChangeableAtRuntime);
+	assert(sec);
+	init_cpu_dosbox_settings(*sec);
+}
