@@ -579,8 +579,8 @@ void DOSBOX_Init()
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
-	constexpr auto always     = Property::Changeable::Always;
-	constexpr auto deprecated = Property::Changeable::Deprecated;
+	constexpr auto always        = Property::Changeable::Always;
+	constexpr auto deprecated    = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle     = Property::Changeable::WhenIdle;
 
@@ -612,31 +612,32 @@ void DOSBOX_Init()
 	                     "svga_paradise",
 	                     "vesa_nolfb",
 	                     "vesa_oldvbe"});
+
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->Set_help(
-            "Set the video adapter or machine to emulate:\n"
-            "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
-            "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
-            "                  'monochrome_palette').\n"
-            "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
-            "                  video emulation (see [composite] section).\n"
-            "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
-            "                  video emulation (see [composite] section).\n"
-            "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
-            "                  sound and composite video emulation (see [composite]\n"
-            "                  section).\n"
-            "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
-            "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
-            "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
-            "                  closest to IBM's original VGA adapter.\n"
-            "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
-            "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
-            "                  default, can be set to 256K or 512K with 'vmemsize').\n"
-            "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
-            "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
-            "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
-            "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
-            "                  framebuffer\" hack (needed only by a few games).");
+	        "Set the video adapter or machine to emulate:\n"
+	        "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
+	        "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
+	        "                  'monochrome_palette').\n"
+	        "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
+	        "                  video emulation (see [composite] section).\n"
+	        "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
+	        "                  video emulation (see [composite] section).\n"
+	        "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
+	        "                  sound and composite video emulation (see [composite]\n"
+	        "                  section).\n"
+	        "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
+	        "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
+	        "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
+	        "                  closest to IBM's original VGA adapter.\n"
+	        "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
+	        "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
+	        "                  default, can be set to 256K or 512K with 'vmemsize').\n"
+	        "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
+	        "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
+	        "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
+	        "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
+	        "                  framebuffer\" hack (needed only by a few games).");
 
 	pstring = secprop->Add_path("captures", deprecated, "capture");
 	pstring->Set_help("Moved to [capture] section and renamed to 'capture_dir'.");
@@ -648,6 +649,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
+
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
@@ -663,16 +665,25 @@ void DOSBOX_Init()
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
 	        "  deny:    Quit (and report) when faults are detected.");
+
 	pstring->Set_values({"repair", "report", "allow", "deny"});
 
 	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
-	pstring->Set_values({
-	        "auto",
-	        // values in MB
-	        "1", "2", "4", "8",
-	        // values in KB
-	        "256", "512", "1024", "2048", "4096", "8192"});
+
+	pstring->Set_values({"auto",
+	                     // values in MB
+	                     "1",
+	                     "2",
+	                     "4",
+	                     "8",
+	                     // values in KB
+	                     "256",
+	                     "512",
+	                     "1024",
+	                     "2048",
+	                     "4096",
+	                     "8192"});
 	pstring->Set_help(
 	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
@@ -927,11 +938,12 @@ void DOSBOX_Init()
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("lpt_dac", when_idle, "none");
-	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
-	                  "  disney:    Disney Sound Source.\n"
-	                  "  covox:     Covox Speech Thing.\n"
-	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
-	                  "  none/off:  Don't use a parallel port DAC (default).");
+	pstring->Set_help(
+	        "Type of DAC plugged into the parallel port:\n"
+	        "  disney:    Disney Sound Source.\n"
+	        "  covox:     Covox Speech Thing.\n"
+	        "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
+	        "  none/off:  Don't use a parallel port DAC (default).");
 	pstring->Set_values({"none", "disney", "covox", "ston1", "off"});
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
@@ -993,14 +1005,17 @@ void DOSBOX_Init()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop=control->AddSection_prop("joystick", &BIOS_Init);
+	secprop = control->AddSection_prop("joystick", &BIOS_Init);
 
 	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
+	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses
+	                                       // CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("joysticktype", when_idle, "auto");
+
 	pstring->Set_values(
 	        {"auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "hidden", "disabled"});
+
 	pstring->Set_help(
 	        "Type of joystick to emulate:\n"
 	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
@@ -1017,16 +1032,19 @@ void DOSBOX_Init()
 	        "Remember to reset DOSBox's mapperfile if you saved it earlier.");
 
 	pbool = secprop->Add_bool("timed", when_idle, true);
-	pbool->Set_help("Enable timed intervals for axis (enabled by default).\n"
-	                "Experiment with this option, if your joystick drifts away.");
+	pbool->Set_help(
+	        "Enable timed intervals for axis (enabled by default).\n"
+	        "Experiment with this option, if your joystick drifts away.");
 
 	pbool = secprop->Add_bool("autofire", when_idle, false);
-	pbool->Set_help("Fire continuously as long as the button is pressed\n"
-	                "(disabled by default).");
+	pbool->Set_help(
+	        "Fire continuously as long as the button is pressed\n"
+	        "(disabled by default).");
 
 	pbool = secprop->Add_bool("swap34", when_idle, false);
-	pbool->Set_help("Swap the 3rd and the 4th axis (disabled by default).\n"
-	                "Can be useful for certain joysticks.");
+	pbool->Set_help(
+	        "Swap the 3rd and the 4th axis (disabled by default).\n"
+	        "Can be useful for certain joysticks.");
 
 	pbool = secprop->Add_bool("buttonwrap", when_idle, false);
 	pbool->Set_help("Enable button wrapping at the number of emulated buttons (disabled by default).");
@@ -1038,8 +1056,9 @@ void DOSBOX_Init()
 
 	pint = secprop->Add_int("deadzone", when_idle, 10);
 	pint->SetMinMax(0, 100);
-	pint->Set_help("Percentage of motion to ignore (10 by default).\n"
-	               "100 turns the stick into a digital one.");
+	pint->Set_help(
+	        "Percentage of motion to ignore (10 by default).\n"
+	        "100 turns the stick into a digital one.");
 
 	pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	pbool->Set_help(
@@ -1112,8 +1131,9 @@ void DOSBOX_Init()
 	pmulti_remain->Set_help("See 'serial1' ('disabled' by default).");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
-	pstring->Set_help("File used to map fake phone numbers to addresses\n"
-	                  "('phonebook.txt' by default).");
+	pstring->Set_help(
+	        "File used to map fake phone numbers to addresses\n"
+	        "('phonebook.txt' by default).");
 
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
@@ -1135,9 +1155,10 @@ void DOSBOX_Init()
 	pbool->Set_help("Enable UMB support (enabled by default).");
 
 	pstring = secprop->Add_string("ver", when_idle, "5.0");
-	pstring->Set_help("Set DOS version (5.0 by default). Specify in major.minor format.\n"
-	                  "A single number is treated as the major version.\n"
-	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
+	pstring->Set_help(
+	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
+	        "A single number is treated as the major version.\n"
+	        "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
 	// DOS locale settings
 
@@ -1192,12 +1213,11 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
 	pstring->Set_values({"expanded", "standard"});
 	pstring->Set_help(
-		"PCjr memory layout ('expanded' by default).\n"
-		"  expanded:  640 KB total memory with applications residing above 128 KB.\n"
-		"             Compatible with most games.\n"
-		"  standard:  128 KB total memory with applications residing below 96 KB.\n"
-		"             Required for some older games (e.g., Jumpman, Troll)."
-	);
+	        "PCjr memory layout ('expanded' by default).\n"
+	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
+	        "             Compatible with most games.\n"
+	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
+	        "             Required for some older games (e.g., Jumpman, Troll).");
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
@@ -1267,7 +1287,8 @@ void DOSBOX_Init()
 #endif
 
 	pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
-	pstring->SetOptionHelp("SLIRP",
+	pstring->SetOptionHelp(
+	        "SLIRP",
 	        "Forward one or more TCP ports from the host into the DOS guest\n"
 	        "(unset by default).\n"
 	        "The format is:\n"
@@ -1291,7 +1312,8 @@ void DOSBOX_Init()
 #endif
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
-	pstring->SetOptionHelp("SLIRP",
+	pstring->SetOptionHelp(
+	        "SLIRP",
 	        "Forward one or more UDP ports from the host into the DOS guest\n"
 	        "(unset by default). The format is the same as for TCP port forwards.");
 #if C_SLIRP
@@ -1304,23 +1326,25 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&VIRTUALBOX_Init);
 	secprop->AddInitFunction(&VMWARE_Init);
 
-	//TODO ?
+	// TODO ?
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);
+
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
-		"Lines in this section will be run at startup.\n"
-		"You can put your MOUNT lines here.\n"
-	);
+	        "Lines in this section will be run at startup.\n"
+	        "You can put your MOUNT lines here.\n");
+
 	MSG_Add("CONFIGFILE_INTRO",
 	        "# This is the configuration file for " DOSBOX_PROJECT_NAME
 	        " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
+
 	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
 	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");
 
 	// Initialize the uptime counter when launching the first shell. This
 	// ensures that slow-performing configurable tasks (like loading MIDI
 	// SF2 files) have already been performed and won't affect this time.
-	(void)DOSBOX_GetUptime();
+	DOSBOX_GetUptime();
 
 	control->SetStartUp(&SHELL_Init);
 }
