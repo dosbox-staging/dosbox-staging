@@ -26,6 +26,7 @@
 #include "bitops.h"
 #include "checks.h"
 #include "config.h"
+#include "control.h"
 #include "inout.h"
 #include "mem.h"
 #include "pic.h"
@@ -673,8 +674,7 @@ static bool is_cmd_vendor_lines(const Command command)
 
 static void request_system_reset()
 {
-	E_Exit("I8042: System reset requested");
-	// TODO: we need a proper reset implementation
+	restart_dosbox();
 }
 
 static void execute_command(const Command command)
