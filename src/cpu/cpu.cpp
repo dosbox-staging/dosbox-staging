@@ -85,7 +85,7 @@ static struct {
 	// that always throttles implicitly).
 	bool throttle = false;
 
-} modern_cycles_config;
+} modern_cycles_config = {};
 
 enum class CpuMode { Real, Protected };
 
@@ -3023,8 +3023,6 @@ public:
 
 	void ConfigureCpuType(const std::string& cpu_core, const std::string& cpu_type)
 	{
-		CPU_ArchitectureType = ArchitectureType::Mixed;
-
 		if (cpu_type == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
 
@@ -3080,6 +3078,9 @@ public:
 
 		} else if (cpu_type == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
+
+		} else {
+			CPU_ArchitectureType = ArchitectureType::Mixed;
 		}
 
 		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
@@ -3096,13 +3097,6 @@ public:
 	bool Configure(Section* sec)
 	{
 		Section_prop* secprop = static_cast<Section_prop*>(sec);
-
-		{
-			PropMultiVal *p = secprop->GetMultiVal("cycles");
-			std::string type = p->GetSection()->Get_string("type");
-			std::string str;
-			CommandLine cmd("", p->GetSection()->Get_string("parameters"));
-		}
 
 		// TODO needed?
 		// CPU_CycleLeft = 0;
