@@ -878,48 +878,71 @@ private:
 extern DOS_InfoBlock dos_infoblock;
 
 struct DOS_Block {
-	DOS_Date date;
-	DOS_Version version;
-	uint16_t firstMCB;
-	uint16_t errorcode;
+	DOS_Date date       = {};
+	DOS_Version version = {};
+	uint16_t firstMCB   = {};
+	uint16_t errorcode  = {};
 
-	uint16_t psp() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP(); }
-	void psp(uint16_t seg) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg); }
+	uint16_t psp()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP();
+	}
 
-	uint16_t env;
-	RealPt cpmentry;
+	void psp(uint16_t seg)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg);
+	}
 
-	RealPt dta() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA(); }
-	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
+	uint16_t env    = {};
+	RealPt cpmentry = {};
 
-	uint8_t return_code;
+	RealPt dta()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA();
+	}
+	void dta(RealPt dtap)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap);
+	}
+
+	uint8_t return_code       = {};
 	DosReturnMode return_mode = {};
 
-	uint8_t current_drive;
-	bool verify;
-	bool breakcheck;
-	bool echo;          // if set to true dev_con::read will echo input 
-	bool direct_output;
-	bool internal_output;
-	struct  {
-		RealPt mediaid;
-		RealPt tempdta;
-		RealPt tempdta_fcbdelete;
-		RealPt dbcs;
-		RealPt filenamechar;
-		RealPt collatingseq;
-		RealPt upcase;
-		uint8_t* country;//Will be copied to dos memory. resides in real mem
-		uint16_t dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
-	} tables;
-	uint16_t loaded_codepage;
-	uint16_t dcp;
+	uint8_t current_drive = {};
+	bool verify           = {};
+	bool breakcheck       = {};
+
+	// if set to true dev_con::read will echo input
+	bool echo = {};
+
+	bool direct_output   = {};
+	bool internal_output = {};
+
+	struct {
+		RealPt mediaid           = {};
+		RealPt tempdta           = {};
+		RealPt tempdta_fcbdelete = {};
+		RealPt dbcs              = {};
+		RealPt filenamechar      = {};
+		RealPt collatingseq      = {};
+		RealPt upcase            = {};
+
+		// Will be copied to dos memory. resides in real mem
+		uint8_t* country = {};
+
+		// Fake Disk parameter system using only the first entry so the
+		// drive letter matches
+		uint16_t dpb = {};
+	} tables = {};
+
+	uint16_t loaded_codepage = {};
+	uint16_t dcp = {};
 };
 
 extern DOS_Block dos;
 
 static inline uint8_t RealHandle(uint16_t handle) {
-	DOS_PSP psp(dos.psp());	
+	DOS_PSP psp(dos.psp());
 	return psp.GetFileHandle(handle);
 }
 
