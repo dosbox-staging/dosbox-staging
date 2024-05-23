@@ -405,7 +405,7 @@ jobs:
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
-  # https://www.dosbox-staging.org/downloads/devel/
+  # https://www.dosbox-staging.org/releases/development-builds/
   #
   publish_additional_artifacts:
     name: Publish additional artifacts
