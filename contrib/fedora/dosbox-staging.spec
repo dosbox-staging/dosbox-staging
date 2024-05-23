@@ -3,7 +3,7 @@ Version: 0.80.1
 Release: 1%{?dist}
 Summary: DOS/x86 emulator focusing on ease of use
 License: GPLv2+
-URL:     https://dosbox-staging.github.io/
+URL:     https://www.dosbox-staging.org/
 
 Source0: https://github.com/dosbox-staging/dosbox-staging/archive/v%{version}/%{name}-%{version}.tar.gz
 

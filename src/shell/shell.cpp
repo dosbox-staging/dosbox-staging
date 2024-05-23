@@ -731,7 +731,7 @@ void SHELL_Init() {
 	        "║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_END",
-	        "║ [color=yellow]https://dosbox-staging.github.io[color=white]                                   ║\n"
+	        "║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║\n"
 	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
 	        "\n");
 
