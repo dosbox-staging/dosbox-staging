@@ -2829,6 +2829,52 @@ public:
 		modern_cycles_config.throttle = secprop->Get_bool("cpu_throttle");
 	}
 
+	// The legacy 'cycles' config setting accepts all the following value
+	// permutations as valid. There are probably more valid permutations as
+	// the ordering is somewhat freeform.
+	//
+	// Error handling is very minimal (almost non-existent), which
+	// makes it unclear from the user's point of view whether a new 'cycles'
+	// setting was accepted, rejected, or accepted but clamped to valid
+	// limits, etc. To confuse matters even more, many weird
+	// looking-permutations are accepted as valid because of the "relaxed"
+	// parsing logic.
+	//
+	// All these issues make the 'cycles' setting very non-intuitive to use,
+	// hard to document, and hard to troubleshoot. Unfortunately, we might
+	// need keep it around in perpetuity as a fallback "legacy mode" option
+	// for all the existing configs out there from the last 20 years out
+	// there.
+	//
+	// So these are all valid settings:
+	//
+	//   12000
+	//   fixed 12000
+	//
+	//   max
+	//   max limit 50000
+	//   max 90%
+	//   max 90% limit 50000
+	//
+	//   auto limit 50000       (implicit "3000" for real mode & "max 100%")
+	//   auto 90%               (implicit "3000" for real mode)
+	//   auto 90% limit 50000   (implicit "3000" for real mode]
+	//
+	//   auto max                   (implicit "3000" for real mode)
+	//   auto max limit 50000       (implicit "3000" for real mode)
+	//   auto max 90%               (implicit "3000" for real mode)
+	//   auto max 90% limit 50000   (implicit "3000" for real mode)
+	//
+	//   auto 12000                 (implicit "max 100%"
+	//   auto 12000 limit 50000     (implicit "max 100%")
+	//   auto 12000 90%
+	//   auto 12000 90% limit 50000
+	//
+	//   auto 12000 max
+	//   auto 12000 max limit 50000
+	//   auto 12000 max 90%
+	//   auto 12000 max 90% limit 50000
+	//
 	void ConfigureCyclesLegacy(Section_prop* secprop)
 	{
 		// Sets the value if the string in within the min and max values
