@@ -21,6 +21,15 @@ support today's systems.
 
 [![Coverity status][coverity-badge]][3]
 
+## Stable release builds
+
+[Linux](https://www.dosbox-staging.org/releases/linux/),
+[Windows](https://www.dosbox-staging.org/releases/windows/),
+[macOS](https://www.dosbox-staging.org/releases/macos/)
+
+## Test builds & development snapshots
+
+[Development builds].
 
 ## Key features for developers
 
@@ -45,7 +54,7 @@ support today's systems.
 [4]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [5]: https://github.com/emilk/loguru
 [6]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
-[Development builds]: https://dosbox-staging.github.io/releases/development-builds/
+[Development builds]: https://www.dosbox-staging.org/releases/development-builds/
 
 
 ## Stable release builds

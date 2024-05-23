@@ -3,7 +3,7 @@
 ## Overview
 
 The website and documentation at
-[https://dosbox-staging.github.io/][website] are generated
+[https://www.dosbox-staging.org/][website] are generated
 from the [MkDocs][mkdocs] sources in the [`website`](/website) directory of
 this repository. We use a customised version of the [Material for
 MkDocs]([mkdocs-material]) theme.
@@ -43,10 +43,10 @@ If you're unfamiliar with MkDocs, here are a few pointers to get you started:
 ## Branching strategy
 
 The _current website and documentation_ is always generated from the last stable
-release branch (e.g., `release/0.80.x`) to https://dosbox-staging.github.io/.
+release branch (e.g., `release/0.80.x`) to https://www.dosbox-staging.org/.
 
 The _work-in-progress documentation_ for the _next major release_ is deployed from
-the `main` branch to https://dosbox-staging.github.io/preview/dev/.
+the `main` branch to https://www.dosbox-staging.org/preview/dev/.
 
 Other work-in-progress documentation revisions might be published under the
 `preview` path prefix as needed.
@@ -109,7 +109,7 @@ The website and documentation are deployed via the  [Deploy
 website][deploy-website] GitHub workflow. This will generate the website from
 the MkDocs sources and push the generated content into our [organisation-level
 GitHub Pages repo][dosbox-github-pages]. The changes should automatically
-appear on the [https://dosbox-staging.github.io/][website] project website
+appear on the [https://www.dosbox-staging.org/][website] project website
 after a few minutes (it might take a bit longer when GitHub is overloaded).
 
 When deploying manually, just accept the defaults when deploying the _current_
@@ -159,8 +159,7 @@ to `website/site`.
 
 To use the convenient live preview feature of MkDocs, run `mkdocs serve` from
 the [`website`](/website) directory. You can view the generated documentation
-at <http://127.0.0.1:8000/dosbox-staging.github.io/> in your browser when this
-command is running.
+at <http://127.0.0.1:8000/> in your browser when this command is running.
 
 Whenever you make changes to the source files under `docs`, the website will
 be automatically regenerated and the page in your browser will be refreshed.
@@ -263,7 +262,7 @@ then check in both the `.css` and the `.scss` files.
 [mkdocs]: https://www.mkdocs.org/
 [mkdocs-material]: https://squidfunk.github.io/mkdocs-material/
 
-[website]: https://dosbox-staging.github.io/
+[website]: https://www.dosbox-staging.org/
 [dosbox-staging]: https://github.com/dosbox-staging/dosbox-staging/
 [dosbox-github-pages]: https://github.com/dosbox-staging/dosbox-staging.github.io/
 [deploy-website]: https://github.com/dosbox-staging/dosbox-staging/actions/workflows/deploy-website.yml
