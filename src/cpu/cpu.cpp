@@ -87,6 +87,11 @@ static struct {
 enum class CpuMode { Real, Protected };
 
 // Cycle up & down counts
+static constexpr auto CpuCycleStepMin     = 1;
+static constexpr auto CpuCycleStepMax     = 1'000'000;
+static constexpr auto DefaultCpuCycleUp   = 10;
+static constexpr auto DefaultCpuCycleDown = 20;
+
 static int cpu_cycle_up   = 0;
 static int cpu_cycle_down = 0;
 
@@ -3138,13 +3143,6 @@ public:
 		cpu_cycle_up   = secprop->Get_int("cycleup");
 		cpu_cycle_down = secprop->Get_int("cycledown");
 
-		if (cpu_cycle_up <= 0) {
-			cpu_cycle_up = 500;
-		}
-		if (cpu_cycle_down <= 0) {
-			cpu_cycle_down = 20;
-		}
-
 		GFX_NotifyCyclesChanged();
 
 		return true;
@@ -3282,17 +3280,19 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "millisecond can vary; this might cause issues in some DOS programs.",
 	        (CpuThrottleDefault ? "enabled" : "disabled")));
 
-	auto pint = secprop.Add_int("cycleup", Always, 10);
-	pint->SetMinMax(1, 1000000);
+	auto pint = secprop.Add_int("cycleup", Always, DefaultCpuCycleUp);
+	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
 	pint->Set_help(
-	        "Number of cycles added with the increase cycles hotkey (10 by default).\n"
-	        "Setting it lower than 100 will be a percentage.");
+	        format_str("Number of cycles to add with the 'Inc Cycles' hotkey (%d by default).\n"
+	                   "Values lower than 100 are treated as a percentage increase.",
+	                   DefaultCpuCycleUp));
 
-	pint = secprop.Add_int("cycledown", Always, 20);
-	pint->SetMinMax(1, 1000000);
+	pint = secprop.Add_int("cycledown", Always, DefaultCpuCycleDown);
+	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
 	pint->Set_help(
-	        "Number of cycles subtracted with the decrease cycles hotkey (20 by default).\n"
-	        "Setting it lower than 100 will be a percentage.");
+	        format_str("Number of cycles to subtract with the 'Dec Cycles' hotkey (%d by default).\n"
+	                   "Values lower than 100 are treated as a percentage decrease.",
+	                   DefaultCpuCycleDown));
 }
 
 void CPU_AddConfigSection(const ConfigPtr& conf)
