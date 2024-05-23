@@ -2,7 +2,7 @@
 #define DOSBoxAppDirName "DOSBox Staging"
 #define DOSBoxAppVersion "DOSBOX-STAGING-VERSION"
 #define DOSBoxAppInternal "dosbox-staging"
-#define DOSBoxAppURL "https://dosbox-staging.github.io/"
+#define DOSBoxAppURL "https://www.dosbox-staging.org/"
 #define DOSBoxAppExeName "dosbox.exe"
 #define DOSBoxAppExeDebuggerName "dosbox_with_debugger.exe"
 #define DOSBoxAppExeMSVCName "dosbox_msvc.exe"
