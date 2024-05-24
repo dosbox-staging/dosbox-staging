@@ -98,6 +98,11 @@ struct DosFilename {
 	std::string ext  = {};
 };
 
+struct FileRegionLock {
+	uint32_t pos = 0;
+	uint32_t len = 0;
+};
+
 class DOS_File {
 public:
 	DOS_File() = default;
@@ -137,6 +142,7 @@ public:
 	bool open        = false;
 	std::string name = {};
 	bool newtime     = false;
+	std::vector<FileRegionLock> region_locks = {};
 	/* Some Device Specific Stuff */
 private:
 	uint8_t hdrive = 0xff;

@@ -180,6 +180,35 @@ static bool file_is_locked(const char *file_name, const uint8_t drive, const uin
 	return false;
 }
 
+static bool regions_overlap(const uint32_t pos1, const uint32_t len1, const uint32_t pos2, const uint32_t len2)
+{
+	return !((pos1 >= pos2 + len2) || (pos1 + len1 <= pos2));
+}
+
+static bool region_is_locked(const int file_handle, const uint32_t pos, const uint32_t len)
+{
+	for (int i = 0; i < DOS_FILES; ++i) {
+		// Ignore locks held by the current file handle,
+		// Need to check other handles pointing to the same file.
+		if (i != file_handle && Files[i]) {
+			const auto drive_match =
+				(Files[i]->GetDrive() == Files[file_handle]->GetDrive());
+
+			const auto filename_match =
+				(Files[i]->IsName(Files[file_handle]->GetName()));
+
+			if (drive_match && filename_match) {
+				for (const auto &lock : Files[i]->region_locks) {
+					if (regions_overlap(pos, len, lock.pos, lock.len)) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
 uint8_t DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
 	uint8_t d = DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -598,6 +627,16 @@ bool DOS_ReadFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 	}
 */
 	uint16_t toread=*amount;
+
+	// Get current position
+	uint32_t pos = 0;
+	Files[handle]->Seek(&pos, SEEK_CUR);
+
+	if (region_is_locked(handle, pos, toread)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	bool ret=Files[handle]->Read(data,&toread);
 	*amount=toread;
 	return ret;
@@ -620,6 +659,16 @@ bool DOS_WriteFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 	}
 */
 	uint16_t towrite=*amount;
+
+	// Get current position
+	uint32_t pos = 0;
+	Files[handle]->Seek(&pos, SEEK_CUR);
+
+	if (region_is_locked(handle, pos, towrite)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	bool ret=Files[handle]->Write(data,&towrite);
 	*amount=towrite;
 	return ret;
@@ -1720,4 +1769,47 @@ void DOS_SetupFiles()
 
 	Drives.at(z_drive_index) = DriveManager::RegisterFilesystemImage(
 	        z_drive_index, std::make_unique<Virtual_Drive>());
+}
+
+bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
+{
+	const auto handle = RealHandle(entry);
+	if (handle >= DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (region_is_locked(handle, pos, len)) {
+		DOS_SetError(DOSERR_LOCK_VIOLATION);
+		return false;
+	}
+	FileRegionLock lock = {};
+	lock.pos = pos;
+	lock.len = len;
+	Files[handle]->region_locks.push_back(lock);
+	return true;
+}
+
+bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
+{
+	const auto handle = RealHandle(entry);
+	if (handle >= DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	for (auto it = Files[handle]->region_locks.begin(); it != Files[handle]->region_locks.end(); ++it) {
+		if (it->pos == pos && it->len == len) {
+			Files[handle]->region_locks.erase(it);
+			return true;
+		}
+	}
+	DOS_SetError(DOSERR_LOCK_VIOLATION);
+	return false;
 }
