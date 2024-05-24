@@ -1059,14 +1059,11 @@ static Bitu DOS_21Handler(void) {
 		{
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			uint16_t handle;
-			if (DOS_OpenFile(name1,0,&handle)) {
-				DOS_CloseFile(handle);
+			if (DOS_FileExists(name1)) {
 				DOS_SetError(DOSERR_FILE_ALREADY_EXISTS);
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-				break;
-			}
-			if (DOS_CreateFile(name1, reg_cl, &handle)) {
+			} else if (DOS_CreateFile(name1, reg_cl, &handle)) {
 				reg_ax=handle;
 				CALLBACK_SCF(false);
 			} else {
