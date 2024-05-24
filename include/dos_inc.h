@@ -198,6 +198,8 @@ bool DOS_Canonicalize(const char* const name, char* const canonicalized);
 std::string DOS_Canonicalize(const char* const name);
 bool DOS_CreateTempFile(char* const name, uint16_t* entry);
 bool DOS_FileExists(const char* const name);
+bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
+bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
 
 /* Helper Functions */
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive);
@@ -312,6 +314,7 @@ static inline uint16_t long2para(uint32_t size) {
 #define DOSERR_REMOVE_CURRENT_DIRECTORY 16
 #define DOSERR_NOT_SAME_DEVICE 17
 #define DOSERR_NO_MORE_FILES 18
+#define DOSERR_LOCK_VIOLATION 33
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
 /* Wait/check user input */

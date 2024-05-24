@@ -1073,10 +1073,27 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x5c:			/* FLOCK File region locking */
-		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
-		reg_ax = dos.errorcode;
-		CALLBACK_SCF(true);
-		break;
+		{
+			const uint16_t entry = reg_bx;
+			const uint32_t pos = (static_cast<uint32_t>(reg_cx) << 16) | static_cast<uint32_t>(reg_dx);
+			const uint32_t len = (static_cast<uint32_t>(reg_si) << 16) | static_cast<uint32_t>(reg_di);
+			bool success = false;
+			if (reg_al == 0) {
+				success = DOS_LockFile(entry, pos, len);
+			} else if (reg_al == 1) {
+				success = DOS_UnlockFile(entry, pos, len);
+			} else {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			}
+			if (success) {
+				reg_ax = 0;
+				CALLBACK_SCF(false);
+			} else {
+				reg_ax = dos.errorcode;
+				CALLBACK_SCF(true);
+			}
+			break;
+		}
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
