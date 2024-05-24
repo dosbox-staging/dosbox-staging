@@ -2973,9 +2973,13 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto int_prop = sec_prop.Add_int("rate", OnlyAtStart, DefaultSampleRateHz);
 	assert(int_prop);
-	int_prop->Set_values(
-	        {"8000", "11025", "16000", "22050", "32000", "44100", "48000"});
-	int_prop->Set_help("Mixer sample rate in Hz (%s by default).");
+	int_prop->SetMinMax(8000, 96000);
+	int_prop->Set_help(
+	        "Sample rate of DOSBox's internal audio mixer in Hz (%s by default).\n"
+	        "Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio\n"
+	        "hardware uses a native rate of 48000 Hz. Recommend leaving this as-is unless\n"
+	        "you have good reason to change it. The OS will most likely resample non-standard\n"
+	        "sample rates to 48000 Hz anyway.");
 
 	int_prop = sec_prop.Add_int("blocksize", OnlyAtStart, DefaultBlocksize);
 	int_prop->Set_values({"128", "256", "512", "1024", "2048", "4096", "8192"});

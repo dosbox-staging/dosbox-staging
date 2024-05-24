@@ -49,7 +49,7 @@ void Disney::ConfigureFilters(const FilterState state)
 	assert(channel);
 
 	// Run the ZoH up-sampler at the higher mixer rate
-	const auto mixer_rate_hz = check_cast<uint16_t>(channel->GetSampleRate());
+	const auto mixer_rate_hz = channel->GetSampleRate();
 	channel->SetZeroOrderHoldUpsamplerTargetRate(mixer_rate_hz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
