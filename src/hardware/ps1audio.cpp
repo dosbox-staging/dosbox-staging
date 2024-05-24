@@ -175,7 +175,7 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	                          io_width_t::byte);
 
 	// Operate at native sampling rates
-	sample_rate_hz = check_cast<uint32_t>(channel->GetSampleRate());
+	sample_rate_hz = channel->GetSampleRate();
 	last_write = 0;
 	Reset(true);
 }
