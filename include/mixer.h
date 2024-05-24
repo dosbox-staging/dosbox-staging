@@ -137,10 +137,11 @@ struct MixerChannelSettings {
 };
 
 enum class ResampleMethod {
-	// Use simple linear interpolation to resample from the channel sample
-	// rate to the mixer rate. This is the legacy behaviour, and it acts as a
-	// sort of a low-pass filter.
-	LinearInterpolation,
+	// If the channel sample rate is higher than the mixer sample rate,
+	// we'll do proper downsampling via Speex (e.g., when the mixer rate is
+	// 44,100 Hz but the Sound Blaster is running at its 45,454 Hz maximum
+	// rate, or the OPL channel at its native 49,716 Hz rate).
+	LerpUpsampleOrResample,
 
 	// Upsample from the channel sample rate to the zero-order-hold target
 	// frequency first (this is basically the "nearest-neighbour" equivalent
@@ -284,8 +285,8 @@ private:
 	AudioFrame ConvertNextFrame(const Type* data, const int pos);
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void ConvertSamples(const Type* data, const int frames,
-	                    std::vector<float>& out);
+	void ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames,
+	                                       std::vector<float>& out);
 
 	void ConfigureResampler();
 	void ClearResampler();
@@ -360,8 +361,10 @@ private:
 	bool last_samples_were_silence = true;
 
 	ResampleMethod resample_method = ResampleMethod::Resample;
-	bool do_resample               = false;
-	bool do_zoh_upsample           = false;
+
+	bool do_lerp_upsample = false;
+	bool do_zoh_upsample  = false;
+	bool do_resample      = false;
 
 	struct {
 		float pos             = 0.0f;
