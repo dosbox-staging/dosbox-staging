@@ -252,14 +252,14 @@ constexpr uint32_t clamp_to_uint32(const T val)
 	return static_cast<uint32_t>(std::clamp(val, min_val, max_val));
 }
 
-constexpr uint8_t read_low_nibble(const uint8_t byte)
+constexpr uint8_t low_nibble(const uint8_t byte)
 {
-	return static_cast<uint8_t>(byte & 0x0f);
+	return byte & 0x0f;
 }
 
-constexpr uint8_t read_high_nibble(const uint8_t byte)
+constexpr uint8_t high_nibble(const uint8_t byte)
 {
-	return static_cast<uint8_t>(byte >> 4);
+	return (byte & 0xf0) >> 4;
 }
 
 inline float decibel_to_gain(const float decibel)
