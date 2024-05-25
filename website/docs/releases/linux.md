@@ -9,17 +9,27 @@ hide:
 
 ### Current stable version
 
+<section class="release-downloads" markdown>
+
 [Download DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
 <br>
 <small>
 sha256: 5aee92774569cf1e39ade3fccff03994<wbr>464d17b396b0ae98360af61e9d37cba7
 </small>
 
+</section>
+
+
+Our pre-compiled builds run on most Linux distributions (x86\_64 only for
+now). They depend on a few packages, though, which you might need to install
+manually (see instructions below).
+
+Please run the `install-icons.sh` script included with the release to install
+the application icons.
+
 Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn
 about the changes and improvements introduced in this release.
 
-Our pre-compiled builds run on most Linux distributions (x86\_64 only
-for now). They depend on the following packages:
 
 ### Install dependencies on Fedora
 
@@ -34,10 +44,6 @@ Ubuntu 18.04 or newer, and Debian 9 or newer is required.
 ### Install dependencies on Arch and Manjaro
 
     sudo pacman -S sdl2 sdl2_net opusfile
-
-
-Please run the `install-icons.sh` script included with the release to install
-the application icons.
 
 
 ## External repository packages
