@@ -672,14 +672,28 @@ small {
     .blurb {
       width: 100%;
       max-width: 28rem;
-      margin: 2.0rem auto auto auto;
+      margin: 2.5rem auto 2.5rem auto;
       font-size: 1.1rem;
       text-align: center;
       color: #333;
 
+      @media screen and (min-width: $min-width-3col) {
+        margin-bottom: 1.5rem;
+      }
+
       em {
         font-style: normal;
         font-weight: bold;
+      }
+
+      a {
+        border-bottom: 2px solid #999;
+
+        &:hover {
+          color: #222;
+          border-color: #222;
+          border-width: 3px;
+        }
       }
     }
 
@@ -764,7 +778,7 @@ small {
   }
 
   section {
-    margin-top: 3.0rem;
+    margin-top: 2.5rem;
     text-align: center;
 
     & > h1 {
@@ -783,7 +797,7 @@ small {
     }
 
     @media screen and (min-width: $min-width-2col) {
-      margin-top: 4.0rem;
+      margin-top: 3.5rem;
 
       & > p {
         margin-bottom: 1.4rem;
@@ -984,8 +998,8 @@ small {
       gap: 1.8rem;
 
       .logo img {
-        width: 14rem;
-        margin-top: 1.9rem;
+        width: 14.5rem;
+        margin-top: 2.1rem;
         max-width: none;
       }
     }
