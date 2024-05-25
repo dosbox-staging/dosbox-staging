@@ -7,13 +7,17 @@ hide:
 
 ## Current stable version
 
+<section class="release-downloads" markdown>
+
 **[Download DOSBox Staging 0.81.1 Universal Binary (dmg)][0_81_1]**
 <br>
 <small>
 sha256: 0f89f42d93c39fe96634934e19ef5a9f<wbr>0a6978d6568e853e95c3f2154b9dbe9c
 </small>
 
-This package is compatible with macOS 10.15 (Catalina) or newer and supports both
+</section>
+
+DOSBos Staging requires **macOS 10.15 (Catalina) or later**, and supports both
 Intel and Apple silicon Macs.
 
 Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn about
@@ -78,7 +82,7 @@ Apple's Gatekeeper feature only permits the running of notarized software, one
 aspect of which involves developers making yearly payments to Apple.
 
 As DOSBox Staging is a volunteer effort, we were not in a position to make
-such payments prior to version 0.81.0 and therefore asked users to bypass
+such payments prior to version 0.81.0, and therefore asked users to bypass
 Apple's Gatekeeper manually.
 
 
