@@ -845,4 +845,29 @@ small {
   filter: drop-shadow(rgba(0, 0, 0, 0.3215686275) 0.2rem 0.3rem 0.6rem);
 }
 
+/*--------------------------------------------------------------------------*/
+/* Release pages                                                            */
+/*--------------------------------------------------------------------------*/
+.md-content .release-downloads {
+  padding: 0.1rem 1.2rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 0.6em;
+}
+.md-content .release-downloads ul {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+.md-content .release-downloads ul li {
+  margin-left: 0;
+  padding-left: 0;
+}
+.md-content .release-downloads ul li:not(:last-child) {
+  margin-bottom: 1em;
+}
+.md-content .release-downloads ul li p {
+  margin: 0;
+  padding: 0;
+}
+
 /*# sourceMappingURL=extra.css.map */
