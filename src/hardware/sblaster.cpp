@@ -2225,6 +2225,45 @@ static void dsp_change_stereo(const bool stereo)
 	sb.dma.stereo = stereo;
 }
 
+static inline uint8_t map_nibble_to_5bit(const uint8_t v)
+{
+	assert(v <= 0x0f);
+
+	// Nibble (4-bit, 0-15) to 5-bit (0-31) mapping:
+	//
+	// 0 -> 0
+	// 1 -> 2
+	// 2 -> 4
+	// 3 -> 6
+	// ....
+	// 7 -> 14
+	// 8 -> 17
+	// 9 -> 19
+	// 10 -> 21
+	// 11 -> 23
+	// ....
+	// 15 -> 31
+	//
+	return (v << 1) | (v >> 3);
+}
+
+static void map_nibble_to_5bit_stereo(const uint8_t val, uint8_t *out)
+{
+	out[0] = map_nibble_to_5bit(high_nibble(val));
+	out[1] = map_nibble_to_5bit(low_nibble(val));
+}
+
+static uint8_t map_5bit_to_nibble_stereo(const uint8_t v[2])
+{
+	assert(v[0] <= 0x1f);
+	assert(v[1] <= 0x1f);
+
+	// 5-bit (0-31) to nibble (4-bit, 0-15) mapping
+	const auto high_nibble = v[0] >> 1;
+	const auto low_nibble  = v[1] >> 1;
+	return (high_nibble << 4) + low_nibble;
+}
+
 static void ctmixer_write(const uint8_t val)
 {
 	switch (sb.mixer.index) {
@@ -2289,6 +2328,13 @@ static void ctmixer_write(const uint8_t val)
 		("Mixer set to %s", sb.dma.stereo ? "STEREO" : "MONO");
 		break;
 
+	case 0x14: // Audio 1 Play Volume (ESS)
+		if (sb.ess_type != EssType::None) {
+			map_nibble_to_5bit_stereo(val, sb.mixer.dac);
+			ctmixer_update_volumes();
+		}
+		break;
+
 	case 0x22: // Master Volume (SBPRO)
 		set_sb_pro_volume(sb.mixer.master, val);
 		ctmixer_update_volumes();
@@ -2324,9 +2370,15 @@ static void ctmixer_write(const uint8_t val)
 		}
 		break;
 
-	case 0x32: // DAC Volume Left (SB16)
+	case 0x32:
+		// DAC Volume Left (SB16)
+		// Master Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.dac[0] = val >> 3;
+			ctmixer_update_volumes();
+
+		} else if (sb.ess_type != EssType::None) {
+			map_nibble_to_5bit_stereo(val, sb.mixer.master);
 			ctmixer_update_volumes();
 		}
 		break;
@@ -2352,9 +2404,15 @@ static void ctmixer_write(const uint8_t val)
 		}
 		break;
 
-	case 0x36: // CD Volume Left (SB16)
+	case 0x36:
+		// CD Volume Left (SB16)
+		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.cda[0] = val >> 3;
+			ctmixer_update_volumes();
+
+		} else if (sb.ess_type != EssType::None) {
+			map_nibble_to_5bit_stereo(val, sb.mixer.fm);
 			ctmixer_update_volumes();
 		}
 		break;
@@ -2366,9 +2424,15 @@ static void ctmixer_write(const uint8_t val)
 		}
 		break;
 
-	case 0x38: // Line-in Volume Left (SB16)
+	case 0x38:
+		// Line-in Volume Left (SB16)
+		// AuxA (CD) Volume Register (ESS)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.lin[0] = val >> 3;
+
+		} else if (sb.ess_type != EssType::None) {
+			map_nibble_to_5bit_stereo(val, sb.mixer.cda);
+			ctmixer_update_volumes();
 		}
 		break;
 
@@ -2378,9 +2442,15 @@ static void ctmixer_write(const uint8_t val)
 		}
 		break;
 
-	case 0x3a:
+	case 0x3a: // Mic Volume (SB16)
 		if (sb.type == SbType::SB16) {
 			sb.mixer.mic = val >> 3;
+		}
+		break;
+
+	case 0x3e: // Line Volume (ESS)
+		if (sb.ess_type != EssType::None) {
+			map_nibble_to_5bit_stereo(val, sb.mixer.lin);
 		}
 		break;
 
@@ -2437,7 +2507,7 @@ static void ctmixer_write(const uint8_t val)
 
 static uint8_t ctmixer_read()
 {
-	uint8_t ret;
+	uint8_t ret = 0;
 	// if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 
 	switch (sb.mixer.index) {
@@ -2446,6 +2516,12 @@ static uint8_t ctmixer_read()
 
 	case 0x02: // Master Volume (SB2 only)
 		return ((sb.mixer.master[1] >> 1) & 0xe);
+
+	case 0x14: // Audio 1 Play Volume (ESS)
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.dac);
+		}
+		break;
 
 	case 0x22: // Master Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.master);
@@ -2493,9 +2569,14 @@ static uint8_t ctmixer_read()
 		ret = 0xa;
 		break;
 
-	case 0x32: // DAC Volume Left (SB16)
+	case 0x32:
+		// DAC Volume Left (SB16)
+		// Master Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.dac[0] << 3;
+		}
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.master);
 		}
 		ret = 0xa;
 		break;
@@ -2507,9 +2588,14 @@ static uint8_t ctmixer_read()
 		ret = 0xa;
 		break;
 
-	case 0x34: // FM Volume Left (SB16)
+	case 0x34:
+		// FM Volume Left (SB16)
+		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.fm[0] << 3;
+		}
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.fm);
 		}
 		ret = 0xa;
 		break;
@@ -2535,9 +2621,14 @@ static uint8_t ctmixer_read()
 		ret = 0xa;
 		break;
 
-	case 0x38: // Line-in Volume Left (SB16)
+	case 0x38:
+		// Line-in Volume Left (SB16)
+		// AuxA (CD) Volume Register (ESS)
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.lin[0] << 3;
+		}
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.cda);
 		}
 		ret = 0xa;
 		break;
@@ -2556,7 +2647,13 @@ static uint8_t ctmixer_read()
 		ret = 0xa;
 		break;
 
-    case 0x40: // ESS Identification Value (ES1488 and later)
+	case 0x3e: // Line Volume (ESS)
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.lin);
+		}
+		break;
+
+	case 0x40: // ESS Identification Value (ES1488 and later)
 		switch (sb.ess_type) {
 		case EssType::None:
 		case EssType::Es1688:
