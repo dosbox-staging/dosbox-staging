@@ -191,15 +191,17 @@ struct SbInfo {
 
 	struct {
 		uint8_t index     = 0;
+
 		uint8_t dac[2]    = {};
 		uint8_t fm[2]     = {};
 		uint8_t cda[2]    = {};
 		uint8_t master[2] = {};
 		uint8_t lin[2]    = {};
 		uint8_t mic       = 0;
-		bool stereo       = false;
-		bool enabled      = false;
-		bool filtered     = false;
+
+		bool stereo   = false;
+		bool enabled  = false;
+		bool filtered = false;
 
 		uint8_t unhandled[0x48] = {};
 
@@ -2197,13 +2199,13 @@ static void ctmixer_reset()
 	ctmixer_update_volumes();
 }
 
-static void set_sb_pro_volume(uint8_t* dest, const uint8_t value)
+static void write_sb_pro_volume(uint8_t* dest, const uint8_t value)
 {
 	dest[0] = ((((value)&0xf0) >> 3) | (sb.type == SbType::SB16 ? 1 : 3));
 	dest[1] = ((((value)&0x0f) << 1) | (sb.type == SbType::SB16 ? 1 : 3));
 }
 
-static uint8_t make_sb_pro_volume(const uint8_t* src)
+static uint8_t read_sb_pro_volume(const uint8_t* src)
 {
 	return ((((src[0] & 0x1e) << 3) | ((src[1] & 0x1e) >> 1)) |
 	        ((sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2) ? 0x11 : 0));
@@ -2275,19 +2277,19 @@ static void ctmixer_write(const uint8_t val)
 		break;
 
 	case 0x02: // Master Volume (SB2 Only)
-		set_sb_pro_volume(sb.mixer.master, (val & 0xf) | (val << 4));
+		write_sb_pro_volume(sb.mixer.master, (val & 0xf) | (val << 4));
 		ctmixer_update_volumes();
 		break;
 
 	case 0x04: // DAC Volume (SBPRO)
-		set_sb_pro_volume(sb.mixer.dac, val);
+		write_sb_pro_volume(sb.mixer.dac, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x06: { // FM output selection
 		// Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only)
 		// volume controls both channels
-		set_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
+		write_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
 
 		ctmixer_update_volumes();
 
@@ -2299,7 +2301,7 @@ static void ctmixer_write(const uint8_t val)
 	} break;
 
 	case 0x08: // CDA Volume (SB2 Only)
-		set_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
+		write_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
 		ctmixer_update_volumes();
 		break;
 
@@ -2338,22 +2340,22 @@ static void ctmixer_write(const uint8_t val)
 		break;
 
 	case 0x22: // Master Volume (SBPRO)
-		set_sb_pro_volume(sb.mixer.master, val);
+		write_sb_pro_volume(sb.mixer.master, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x26: // FM Volume (SBPRO)
-		set_sb_pro_volume(sb.mixer.fm, val);
+		write_sb_pro_volume(sb.mixer.fm, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x28: // CD Audio Volume (SBPRO)
-		set_sb_pro_volume(sb.mixer.cda, val);
+		write_sb_pro_volume(sb.mixer.cda, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x2e: // Line-in Volume (SBPRO)
-		set_sb_pro_volume(sb.mixer.lin, val);
+		write_sb_pro_volume(sb.mixer.lin, val);
 		break;
 
 	// case 0x20: // Master Volume Left (SBPRO) ?
@@ -2526,10 +2528,10 @@ static uint8_t ctmixer_read()
 		break;
 
 	case 0x22: // Master Volume (SB Pro)
-		return make_sb_pro_volume(sb.mixer.master);
+		return read_sb_pro_volume(sb.mixer.master);
 
 	case 0x04: // DAC Volume (SB Pro)
-		return make_sb_pro_volume(sb.mixer.dac);
+		return read_sb_pro_volume(sb.mixer.dac);
 
 	case 0x06: // FM Volume (SB2 only) + FM output selection
 		return ((sb.mixer.fm[1] >> 1) & 0xe);
@@ -2549,13 +2551,13 @@ static uint8_t ctmixer_read()
 		       (sb.mixer.filtered ? 0x20 : 0x00);
 
 	case 0x26: // FM Volume (SB Pro)
-		return make_sb_pro_volume(sb.mixer.fm);
+		return read_sb_pro_volume(sb.mixer.fm);
 
 	case 0x28: // CD Audio Volume (SB Pro)
-		return make_sb_pro_volume(sb.mixer.cda);
+		return read_sb_pro_volume(sb.mixer.cda);
 
 	case 0x2e: // Line-in Volume (SB Pro)
-		return make_sb_pro_volume(sb.mixer.lin);
+		return read_sb_pro_volume(sb.mixer.lin);
 
 	case 0x30: // Master Volume Left (SB16)
 		if (sb.type == SbType::SB16) {
