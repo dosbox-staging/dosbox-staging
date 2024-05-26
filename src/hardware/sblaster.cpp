@@ -171,10 +171,12 @@ struct SbInfo {
 
 		uint8_t test_register        = 0;
 		uint8_t write_status_counter = 0;
-		uint32_t reset_tally         = 0;
-		uint8_t cold_warmup_ms       = 0;
-		uint8_t hot_warmup_ms        = 0;
-		uint16_t warmup_remaining_ms = 0;
+
+		uint32_t reset_tally = 0;
+
+		int cold_warmup_ms      = 0;
+		int hot_warmup_ms       = 0;
+		int warmup_remaining_ms = 0;
 	} dsp = {};
 
 	struct {
@@ -338,6 +340,7 @@ static void dsp_set_speaker(const bool requested_state)
 	if (requested_state) {
 		PIC_RemoveEvents(suppress_dma_transfer);
 		flush_remainig_dma_transfer();
+
 		// Speaker powered-on after cold-state, give it warmup time
 		sb.dsp.warmup_remaining_ms = sb.dsp.cold_warmup_ms;
 	}
@@ -850,7 +853,7 @@ static std::array<uint8_t, 2> decode_adpcm_4bit(const uint8_t data)
 template <typename T>
 static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
 {
-	if (!sb.dsp.warmup_remaining_ms) {
+	if (sb.dsp.warmup_remaining_ms <= 0) {
 		return buffer;
 	}
 
@@ -861,7 +864,7 @@ static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
 		quiet_buffer.resize(num_samples, Silent);
 	}
 
-	sb.dsp.warmup_remaining_ms--;
+	--sb.dsp.warmup_remaining_ms;
 	return quiet_buffer.data();
 }
 
@@ -1854,7 +1857,6 @@ static void dsp_do_command()
 			// If the game is courteous enough to ask if the speaker
 			// is ready, then we can be confident it won't play
 			// garbage content, so we zero the warmup count down.
-			// remaining warmup time.
 			sb.dsp.warmup_remaining_ms = 0;
 		} else {
 			dsp_add_data(0x00);
@@ -3105,10 +3107,10 @@ public:
 		sb.hw.base = section->Get_hex("sbbase");
 		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
 
-		sb.dsp.cold_warmup_ms = check_cast<uint8_t>(
-		        section->Get_int("sbwarmup"));
+		sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
 
-		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms >> 5;
+		// Magic 32 divisor was probably the result of experimentation
+		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
 
 		sb.mixer.enabled = section->Get_bool("sbmixer");
 		sb.mixer.stereo  = false;
