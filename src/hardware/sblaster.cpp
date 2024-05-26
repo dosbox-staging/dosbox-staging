@@ -857,7 +857,7 @@ static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
 		return buffer;
 	}
 
-	static std::vector<T> quiet_buffer;
+	static std::vector<T> quiet_buffer = {};
 	constexpr auto Silent = Mixer_GetSilentDOSSample<T>();
 
 	if (quiet_buffer.size() < num_samples) {
