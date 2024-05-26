@@ -2590,12 +2590,8 @@ static uint8_t ctmixer_read()
 
 	case 0x34:
 		// FM Volume Left (SB16)
-		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.fm[0] << 3;
-		}
-		if (sb.ess_type != EssType::None) {
-			return map_5bit_to_nibble_stereo(sb.mixer.fm);
 		}
 		ret = 0xa;
 		break;
@@ -2607,9 +2603,14 @@ static uint8_t ctmixer_read()
 		ret = 0xa;
 		break;
 
-	case 0x36: // CD Volume Left (SB16)
+	case 0x36:
+		// CD Volume Left (SB16)
+		// FM Volume (ESS)
 		if (sb.type == SbType::SB16) {
 			return sb.mixer.cda[0] << 3;
+		}
+		if (sb.ess_type != EssType::None) {
+			return map_5bit_to_nibble_stereo(sb.mixer.fm);
 		}
 		ret = 0xa;
 		break;
