@@ -130,8 +130,8 @@ struct SbInfo {
 		uint32_t remain_size = 0;
 	} dma = {};
 
-	bool speaker = false;
-	bool midi    = false;
+	bool speaker_enabled = false;
+	bool midi_enabled    = false;
 
 	uint8_t time_constant = 0;
 
@@ -320,7 +320,7 @@ static void play_dma_transfer(const uint32_t size);
 typedef void (*process_dma_f)(uint32_t);
 static process_dma_f ProcessDMATransfer;
 
-static void dsp_set_speaker(const bool requested_state)
+static void dsp_enable_speaker(const bool enabled)
 {
 	// Speaker output is always enabled on the SB16 and ESS cards; speaker
 	// enable/disable commands are simply ignored. Only the SB Pro and
@@ -331,13 +331,13 @@ static void dsp_set_speaker(const bool requested_state)
 	}
 
 	// Speaker-output is already in the requested state
-	if (sb.speaker == requested_state) {
+	if (sb.speaker_enabled == enabled) {
 		return;
 	}
 
 	// If the speaker's being turned on, then flush old
 	// content before releasing the channel for playback.
-	if (requested_state) {
+	if (enabled) {
 		PIC_RemoveEvents(suppress_dma_transfer);
 		flush_remainig_dma_transfer();
 
@@ -345,14 +345,14 @@ static void dsp_set_speaker(const bool requested_state)
 		sb.dsp.warmup_remaining_ms = sb.dsp.cold_warmup_ms;
 	}
 
-	sb.chan->Enable(requested_state);
-	sb.speaker = requested_state;
+	sb.chan->Enable(enabled);
+	sb.speaker_enabled = enabled;
 
 #if 0
 	// This can be very noisy as some games toggle the speaker for every effect
 	LOG_MSG("%s: Speaker-output has been toggled %s",
 	        sb_log_prefix(),
-	        (requested_state ? "on" : "off"));
+	        (enabled ? "on" : "off"));
 #endif
 }
 
@@ -368,15 +368,15 @@ static void init_speaker_state()
 
 		sb.dsp.warmup_remaining_ms = is_cold_start ? sb.dsp.cold_warmup_ms
 		                                           : sb.dsp.hot_warmup_ms;
-		sb.speaker = true;
+		sb.speaker_enabled = true;
 
 	} else {
 		// SB Pro and earlier models have the speaker-output disabled by
 		// default.
-		sb.speaker = false;
+		sb.speaker_enabled = false;
 	}
 
-	sb.chan->Enable(sb.speaker);
+	sb.chan->Enable(sb.speaker_enabled);
 }
 
 static void log_filter_config(const char* channel_name, const char* output_type,
@@ -1204,7 +1204,7 @@ static void flush_remainig_dma_transfer()
 		return;
 	}
 
-	if (!sb.speaker && sb.type != SbType::SB16) {
+	if (!sb.speaker_enabled && sb.type != SbType::SB16) {
 		const auto num_bytes = std::min(sb.dma.min, sb.dma.left);
 		const double delay   = (num_bytes * 1000.0) / sb.dma.rate;
 
@@ -1728,7 +1728,7 @@ static void dsp_do_command()
 		break;
 
 	case 0x38: // Write to SB MIDI Output
-		if (sb.midi == true) {
+		if (sb.midi_enabled == true) {
 			MIDI_RawOutByte(sb.dsp.in.data[0]);
 		}
 		break;
@@ -1838,11 +1838,11 @@ static void dsp_do_command()
 		break;
 
 	case 0xd1: // Enable Speaker
-		dsp_set_speaker(true);
+		dsp_enable_speaker(true);
 		break;
 
 	case 0xd3: // Disable Speaker
-		dsp_set_speaker(false);
+		dsp_enable_speaker(false);
 		break;
 
 	case 0xd8: // Speaker status
@@ -1852,7 +1852,7 @@ static void dsp_do_command()
 
 		dsp_flush_data();
 
-		if (sb.speaker) {
+		if (sb.speaker_enabled) {
 			dsp_add_data(0xff);
 			// If the game is courteous enough to ask if the speaker
 			// is ready, then we can be confident it won't play
@@ -3264,11 +3264,11 @@ public:
 
 		SetupEnvironment();
 
-		// Sound Blaster midi interface
+		// Sound Blaster MIDI interface
 		if (!MIDI_Available()) {
-			sb.midi = false;
+			sb.midi_enabled = false;
 		} else {
-			sb.midi = true;
+			sb.midi_enabled = true;
 		}
 
 		if (sb.type == SbType::SB16) {
