@@ -1436,7 +1436,7 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	const auto level_db = remap(LevelMin, LevelMax, LevelMinDb, LevelMaxDb, level);
 
-	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
+	reverb.send_gain = decibel_to_gain(level_db);
 
 #ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Reverb send is on: level: %4.2f, level_db: %6.2f, gain: %4.2f",
@@ -1477,7 +1477,7 @@ void MixerChannel::SetChorusLevel(const float level)
 
 	const auto level_db = remap(LevelMin, LevelMax, LevelMinDb, LevelMaxDb, level);
 
-	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
+	chorus.send_gain = decibel_to_gain(level_db);
 
 #ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Chorus send is on: level: %4.2f, level_db: %6.2f, gain: %4.2f",
