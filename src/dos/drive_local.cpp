@@ -593,8 +593,9 @@ Bits localDrive::UnMount()
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
                        uint16_t _free_clusters, uint8_t _mediaid,
-                       bool _always_open_ro_files)
-        : always_open_ro_files(_always_open_ro_files),
+                       bool _readonly, bool _always_open_ro_files)
+        : readonly(_readonly),
+          always_open_ro_files(_always_open_ro_files),
           write_protected_files{},
           allocation{_bytes_sector, _sectors_cluster, _total_clusters, _free_clusters, _mediaid}
 {
@@ -914,7 +915,8 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	             _sectors_cluster,
 	             _total_clusters,
 	             _free_clusters,
-	             _mediaid),
+	             _mediaid,
+	             true),
 	  subUnit(0),
 	  driveLetter(_driveLetter)
 {

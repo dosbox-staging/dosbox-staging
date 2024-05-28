@@ -370,6 +370,7 @@ public:
 	virtual uint8_t GetMediaByte(void)=0;
 	virtual void SetDir(const char *path);
 	virtual void EmptyCache() { dirCache.EmptyCache(); }
+	virtual bool IsReadOnly() const = 0;
 	virtual bool isRemote(void)=0;
 	virtual bool isRemovable(void)=0;
 	virtual Bits UnMount(void)=0;

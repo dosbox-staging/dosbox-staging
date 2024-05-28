@@ -87,7 +87,7 @@ public:
 	localDrive(const char* startdir, uint16_t _bytes_sector,
 	           uint8_t _sectors_cluster, uint16_t _total_clusters,
 	           uint16_t _free_clusters, uint8_t _mediaid,
-	           bool _always_open_ro_files = false);
+	           bool _readonly, bool _always_open_ro_files = false);
 	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
 	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
@@ -107,6 +107,7 @@ public:
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
+	bool IsReadOnly() const override { return readonly; }
 	bool isRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
@@ -123,7 +124,8 @@ protected:
 
 private:
 	bool IsFirstEncounter(const std::string& filename);
-	bool always_open_ro_files;
+	const bool readonly;
+	const bool always_open_ro_files;
 	std::unordered_set<std::string> write_protected_files;
 	struct {
 		uint16_t bytes_sector;
@@ -216,6 +218,7 @@ public:
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
+	bool IsReadOnly() const override { return readonly; }
 	bool isRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
@@ -235,7 +238,6 @@ public:
 	uint32_t getFirstFreeClust(void);
 	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
-	bool isReadOnly() const { return readonly; }
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
@@ -393,6 +395,7 @@ public:
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
 	void EmptyCache(void) override {}
+	bool IsReadOnly() const override { return true; }
 	bool isRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
@@ -464,6 +467,7 @@ public:
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte() override;
 	void EmptyCache() override;
+	bool IsReadOnly() const override { return true; }
 	bool isRemote() override;
 	bool isRemovable() override;
 	Bits UnMount() override;
