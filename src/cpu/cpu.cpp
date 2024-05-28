@@ -160,6 +160,20 @@ void CPU_Core_Dynrec_Cache_Close();
 }
 #endif
 
+static void maybe_display_max_cycles_warning()
+{
+	static bool displayed_warning = false;
+
+	if (!displayed_warning) {
+		LOG_WARNING(
+		        "CPU: Switched to max cycles. Try setting a fixed cycles "
+		        "value if you're getting audio drop-outs or the programs "
+		        "runs too fast.");
+
+		displayed_warning = true;
+	}
+}
+
 static void set_modern_cycles_config(const CpuMode mode)
 {
 	auto& conf = modern_cycles_config;
@@ -194,6 +208,8 @@ static void set_modern_cycles_config(const CpuMode mode)
 		CPU_CycleAutoAdjust = true;
 		CPU_CyclePercUsed   = 100;
 		CPU_CycleLimit      = -1;
+
+		maybe_display_max_cycles_warning();
 	}
 
 	CPU_Cycles    = 0;
@@ -1738,15 +1754,7 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 					old_cycle_max       = CPU_CycleMax;
 
 					GFX_NotifyCyclesChanged();
-
-					if (!displayed_max_cycles_warning) {
-						LOG_WARNING(
-								"CPU: Switched to max cycles for protected mode program. "
-								"Try setting a fixed cycles value if you're getting audio "
-								"drop-outs or the programs runs too fast.");
-
-						displayed_max_cycles_warning = true;
-					}
+					maybe_display_max_cycles_warning();
 
 				} else {
 					GFX_RefreshTitle();
