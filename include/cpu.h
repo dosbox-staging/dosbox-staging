@@ -24,6 +24,7 @@
 
 #include "dosbox.h"
 
+#include "control.h"
 #include "support.h"
 
 #ifndef DOSBOX_REGS_H
