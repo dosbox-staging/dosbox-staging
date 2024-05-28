@@ -154,7 +154,7 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	// check if file opened in read-only mode
-	if ((this->flags & 0xf) == OPEN_READ || myDrive->isReadOnly()) {
+	if ((this->flags & 0xf) == OPEN_READ || myDrive->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -286,7 +286,7 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 
 bool fatFile::Close()
 {
-	if ((flags & 0xf) != OPEN_READ && !myDrive->isReadOnly()) {
+	if ((flags & 0xf) != OPEN_READ && !myDrive->IsReadOnly()) {
 		if (newtime || set_archive_on_close) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
