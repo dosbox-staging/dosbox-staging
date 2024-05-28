@@ -162,6 +162,17 @@ void CPU_Core_Dynrec_Cache_Close();
 }
 #endif
 
+static bool is_dynamic_core_active()
+{
+#if C_DYNAMIC_X86
+	return (cpudecoder == &CPU_Core_Dyn_X86_Run);
+#elif C_DYNREC
+	return (cpudecoder == &CPU_Core_Dynrec_Run);
+#else
+	return false;
+#endif
+}
+
 static void maybe_display_max_cycles_warning()
 {
 	static bool displayed_warning = false;
@@ -173,6 +184,23 @@ static void maybe_display_max_cycles_warning()
 		        "runs too fast.");
 
 		displayed_warning = true;
+	}
+}
+
+static bool maybe_display_switch_to_dynamic_core_warning(const int cycles)
+{
+	constexpr auto CyclesThreshold = 20000;
+
+	if (!is_dynamic_core_active() && cycles > CyclesThreshold) {
+		LOG_WARNING(
+		        "CPU: Setting fixed %d cycles. Try setting 'core = dynamic' "
+		        "for increased performance if you need more than %d cycles.",
+		        CPU_CycleMax,
+		        CyclesThreshold);
+		return true;
+
+	} else {
+		return false;
 	}
 }
 
@@ -205,6 +233,8 @@ static void set_modern_cycles_config(const CpuMode mode)
 			CPU_CycleAutoAdjust = false;
 			CPU_CycleMax        = *new_cycles;
 		}
+		maybe_display_switch_to_dynamic_core_warning(*new_cycles);
+
 	} else {
 		// "max cycles" mode
 		CPU_CycleAutoAdjust = true;
@@ -1723,8 +1753,6 @@ Bitu CPU_SIDT_limit() {
 	return cpu.idt.GetLimit();
 }
 
-static bool displayed_max_cycles_warning = false;
-
 void CPU_SET_CRX(Bitu cr, Bitu value)
 {
 	switch (cr) {
@@ -2383,15 +2411,11 @@ static void cpu_increase_cycles_legacy()
 		LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
 
 	} else {
-		CPU_CycleMax  = calc_cycles_increase(CPU_CycleMax, cpu_cycle_up);
+		CPU_CycleMax = calc_cycles_increase(CPU_CycleMax, cpu_cycle_up);
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
 
-		if (CPU_CycleMax > 20000) {
-			LOG_MSG("CPU: Fixed %d cycles If you need more than 20000, "
-			        "try setting 'core = dynamic' for increased performance.",
-			        CPU_CycleMax);
-		} else {
+		if (!maybe_display_switch_to_dynamic_core_warning(CPU_CycleMax)) {
 			LOG_MSG("CPU: Fixed %d cycles", CPU_CycleMax);
 		}
 	}
@@ -2514,7 +2538,7 @@ static void cpu_decrease_cycles_legacy()
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
 
-		LOG_MSG("CPU: fixed %d cycles.", CPU_CycleMax);
+		LOG_MSG("CPU: Fixed %d cycles.", CPU_CycleMax);
 	}
 }
 
@@ -2917,6 +2941,16 @@ public:
 		constexpr auto MinPercent = 0;
 		constexpr auto MaxPercent = 100;
 
+		bool displayed_dynamic_core_warning = false;
+
+		auto display_dynamic_core_warning_once = [&] {
+			if (!displayed_dynamic_core_warning) {
+				displayed_dynamic_core_warning =
+				        maybe_display_switch_to_dynamic_core_warning(
+				                CPU_CycleMax);
+			}
+		};
+
 		if (type == "max") {
 			CPU_CycleMax        = 0;
 			CPU_CyclePercUsed   = 100;
@@ -2975,10 +3009,13 @@ public:
 			} else if (type == "fixed") {
 				if (cmd.FindCommand(1, str)) {
 					set_if_in_range(str, CPU_CycleMax);
+					display_dynamic_core_warning_once();
 				}
 			} else {
 				set_if_in_range(type, CPU_CycleMax);
+				display_dynamic_core_warning_once();
 			}
+
 			CPU_CycleAutoAdjust = false;
 		}
 
