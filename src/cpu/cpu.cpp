@@ -3078,21 +3078,26 @@ public:
 		} else if (cpu_type == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
 
-			if (cpu_core == "normal") {
-				cpudecoder = &CPU_Core_Prefetch_Run;
-
-				CPU_PrefetchQueueSize = 16;
-
-			} else if (cpu_core == "auto") {
+			if (cpu_core == "auto") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
 				CPU_PrefetchQueueSize         = 16;
 				auto_determine_mode.auto_core = false;
 
 			} else {
-				// TODO Should be a warning and the relevant settings should
-				// be automatically set instead of of hard quitting.
-				E_Exit("prefetch queue emulation requires the normal core setting.");
+				if (cpu_core != "normal") {
+					LOG_WARNING(
+					        "CPU: 'core = 386_prefetch' requires the 'normal' "
+					        "core, using 'core = normal'");
+
+					set_section_property_value("cpu",
+					                           "core",
+					                           "normal");
+				}
+
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize = 16;
 			}
 
 		} else if (cpu_type == "386") {
@@ -3104,19 +3109,26 @@ public:
 		} else if (cpu_type == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
 
-			if (cpu_core == "normal") {
+			if (cpu_core == "auto") {
 				cpudecoder = &CPU_Core_Prefetch_Run;
 
-				CPU_PrefetchQueueSize = 32;
-
-			} else if (cpu_core == "auto") {
-				cpudecoder = &CPU_Core_Prefetch_Run;
-
-				CPU_PrefetchQueueSize           = 32;
+				CPU_PrefetchQueueSize         = 32;
 				auto_determine_mode.auto_core = false;
 
 			} else {
-				E_Exit("prefetch queue emulation requires the normal core setting.");
+				if (cpu_core != "normal") {
+					LOG_WARNING(
+					        "CPU: 'core = 486_prefetch' requires the 'normal' "
+					        "core, using 'core = normal'");
+
+					set_section_property_value("cpu",
+					                           "core",
+					                           "normal");
+				}
+
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize = 32;
 			}
 
 		} else if (cpu_type == "pentium") {
