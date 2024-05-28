@@ -3240,21 +3240,59 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	pstring->Set_values({
 		"auto",
 #if C_DYNAMIC_X86 || C_DYNREC
-		        "dynamic",
+		"dynamic",
 #endif
-		        "normal", "simple"
+		"normal", "simple"
 	});
+
 	pstring->Set_help(
-	        "CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
-	        "if available and appropriate.");
+	        "Type of CPU emulation core to use ('auto' by default).\n"
+	        "  auto:     'normal' core for real mode programs, 'dynamic' core for protected\n"
+	        "            mode programs (default). Most programs will run correctly with this\n"
+	        "            setting.\n"
+	        "  normal:   The DOS program is interpreted instruction by instruction. This\n"
+	        "            yields the most accurate timings, but puts 3-5 times more load on\n"
+	        "            the host CPU compared to the 'dynamic' core. Therefore, it's\n"
+	        "            generally only recommended for real mode programs that don't need\n"
+	        "            a fast emulated CPU or are timing-sensitive. The 'normal' core is\n"
+	        "            also necessary for programs that self-modify their code.\n"
+	        "  simple:   The 'normal' core optimised for old real mode programs; it might\n"
+	        "            give you slightly better compatibility with older games. Auto-\n"
+	        "            switches to the 'normal' core in protected mode.\n"
+	        "  dynamic:  The instructions of the DOS program are translated to host CPU\n"
+	        "            instructions in blocks and are then executed directly. This puts\n"
+	        "            3-5 times less load on the host CPU compared to the 'normal' core,\n"
+	        "            but the timings might be less accurate. The 'dynamic' core is a\n"
+	        "            necessity for demanding DOS programs (e.g., 3D SVGA games).\n"
+	        "            Programs that self-modify their code might misbehave or crash on\n"
+	        "            the 'dynamic' core; use the 'normal' core for such programs.");
 
 	pstring = secprop.Add_string("cputype", Always, "auto");
 	pstring->Set_values(
 	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 
 	pstring->Set_help(
-	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.\n"
-	        "Prefetch variant emulates the prefetch queue and requires the 'normal' core.");
+	        "CPU type to emulate ('auto' by default).\n"
+	        "You should only change this if the program doesn't run correctly on 'auto'.\n"
+	        "  auto:          The fastest and most compatible setting (default).\n"
+	        "                 Technically, this is '386_fast' plus 486 CPUID, 486 CR\n"
+	        "                 register behaviour, and extra 486 instructions.\n"
+	        "  386:           386 CPUID and 386 specific page access level calculation.\n"
+	        "  386_fast:      Same as '386' but with loose page privilege checks which is\n"
+	        "                 much faster.\n"
+	        "  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.\n"
+	        "                 This is necessary for programs that self-modify their code or\n"
+	        "                 employ anti-debugging tricks. Games that require '386_prefetch'\n"
+	        "                 include Contra, FIFA International Soccer (1994), Terminator 1,\n"
+	        "                 and X-Men: Madness in The Murderworld.\n"
+	        "  486:           486 CPUID, 486+ specific page access level calculation, 486 CR\n"
+	        "                 register behaviour, and extra 486 instructions.\n"
+	        "  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register\n"
+	        "                 behaviour, and RDTSC instruction support. Recommended for\n"
+	        "                 Windows 3.x games (e.g., Betrayal in Antara).\n"
+	        "  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few\n"
+	        "                 games use MMX instructions; it's mostly only useful for\n"
+	        "                 demoscene productions.");
 
 	pstring->SetDeprecatedWithAlternateValue("386_slow", "386");
 	pstring->SetDeprecatedWithAlternateValue("486_slow", "486");
