@@ -381,25 +381,6 @@ bool isoDrive::FileExists(const char *name) {
 	return (lookup(&de, name) && !IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
-	isoDirEntry de;
-	bool success = lookup(&de, name);
-
-	if (success) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = IS_DIR(FLAGS1);
-
-		stat_block->date = DOS_PackDate(1900 + de.dateYear,
-		                                de.dateMonth,
-		                                de.dateDay);
-		stat_block->time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		stat_block->size = DATA_LENGTH(de);
-		stat_block->attr = attr._data;
-	}
-
-	return success;
-}
-
 uint8_t isoDrive::GetMediaByte(void) {
 	return mediaid;
 }

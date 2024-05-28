@@ -1156,11 +1156,6 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
 	return true;
 }
 
-bool fatDrive::FileStat(const char * /*name*/, FileStat_Block *const /*stat_block*/) {
-	/* TODO: Stub */
-	return false;
-}
-
 bool fatDrive::FileUnlink(char * name) {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);

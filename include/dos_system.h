@@ -367,7 +367,6 @@ public:
 	                            uint16_t* _total_clusters,
 	                            uint16_t* _free_clusters) = 0;
 	virtual bool FileExists(const char* name)=0;
-	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
 	virtual uint8_t GetMediaByte(void)=0;
 	virtual void SetDir(const char *path);
 	virtual void EmptyCache() { dirCache.EmptyCache(); }
