@@ -324,10 +324,17 @@ static void maybe_add_recording_pause_mark(std::string& title_str)
 
 static void set_window_title()
 {
-	auto title_str = state.title_no_tags;
-	maybe_add_muted_mark(title_str);
-	maybe_add_recording_pause_mark(title_str);
-	SDL_SetWindowTitle(sdl.window, title_str.c_str());
+	static std::string last_title_str = {};
+
+	auto new_title_str = state.title_no_tags;
+
+	maybe_add_muted_mark(new_title_str);
+	maybe_add_recording_pause_mark(new_title_str);
+
+	if (new_title_str != last_title_str) {
+		SDL_SetWindowTitle(sdl.window, new_title_str.c_str());
+		last_title_str = new_title_str;
+	}
 }
 
 void GFX_RefreshAnimatedTitle()
