@@ -2927,21 +2927,20 @@ public:
 			     ++cmdnum) {
 				if (cmd.FindCommand(cmdnum, str)) {
 					if (str.back() == '%') {
-						        str.pop_back();
-						        set_if_in_range(str,
-						                        CPU_CyclePercUsed,
-						                        MinPercent,
-						                        MaxPercent);
+						str.pop_back();
+						set_if_in_range(str,
+										CPU_CyclePercUsed,
+										MinPercent,
+										MaxPercent);
+
 					} else if (str == "limit") {
-						        ++cmdnum;
-						        if (cmd.FindCommand(cmdnum,
-						                            str)) {
-							        set_if_in_range(str, CPU_CycleLimit);
-						        }
+						++cmdnum;
+						if (cmd.FindCommand(cmdnum, str)) {
+							set_if_in_range(str, CPU_CycleLimit);
+						}
 					}
 				}
 			}
-
 		} else {
 			if (type == "auto") {
 				auto_determine_mode.auto_cycles = true;
@@ -2954,33 +2953,29 @@ public:
 				     cmdnum <= cmd.GetCount();
 				     ++cmdnum) {
 					if (cmd.FindCommand(cmdnum, str)) {
-						        if (str.back() == '%') {
-							        str.pop_back();
-							        set_if_in_range(
-							                str,
+						if (str.back() == '%') {
+							str.pop_back();
+							set_if_in_range(str,
 							                CPU_CyclePercUsed,
 							                MinPercent,
 							                MaxPercent);
 
-						        } else if (str == "limit") {
-							        ++cmdnum;
-							        if (cmd.FindCommand(cmdnum,
-							                            str)) {
-								        set_if_in_range(str, CPU_CycleLimit);
-							        }
+						} else if (str == "limit") {
+							++cmdnum;
+							if (cmd.FindCommand(cmdnum, str)) {
+								set_if_in_range(str, CPU_CycleLimit);
+							}
 
-						        } else {
-							        set_if_in_range(str, CPU_CycleMax);
-							        set_if_in_range(str, old_cycle_max);
-						        }
+						} else {
+							set_if_in_range(str, CPU_CycleMax);
+							set_if_in_range(str, old_cycle_max);
+						}
 					}
 				}
-
 			} else if (type == "fixed") {
 				if (cmd.FindCommand(1, str)) {
 					set_if_in_range(str, CPU_CycleMax);
 				}
-
 			} else {
 				set_if_in_range(type, CPU_CycleMax);
 			}
