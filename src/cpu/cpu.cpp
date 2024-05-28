@@ -114,12 +114,14 @@ Bitu CPU_PrefetchQueueSize = 0;
 void CPU_Core_Full_Init();
 void CPU_Core_Normal_Init();
 void CPU_Core_Simple_Init();
-#if (C_DYNAMIC_X86)
+
+#if C_DYNAMIC_X86
 void CPU_Core_Dyn_X86_Init();
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 void CPU_Core_Dyn_X86_Cache_Close();
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
-#elif (C_DYNREC)
+
+#elif C_DYNREC
 void CPU_Core_Dynrec_Init();
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 void CPU_Core_Dynrec_Cache_Close();
@@ -244,7 +246,7 @@ void CPU_RestoreRealModeCyclesConfig()
 
 		GFX_NotifyCyclesChanged();
 	}
-#if (C_DYNAMIC_X86) || (C_DYNREC)
+#if C_DYNAMIC_X86 || C_DYNREC
 	if (auto_determine_mode.auto_core) {
 		cpudecoder = &CPU_Core_Normal_Run;
 
@@ -1768,12 +1770,12 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 				}
 			}
 
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dyn_X86_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dyn_X86_Run;
 			}
-#elif (C_DYNREC)
+#elif C_DYNREC
 			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dynrec_Cache_Init(true);
 				cpudecoder = &CPU_Core_Dynrec_Run;
@@ -2200,7 +2202,7 @@ bool CPU_CPUID() {
 	case 1: // Get processor type/family/model/stepping and feature flags
 		if ((CPU_ArchitectureType == ArchitectureType::Intel486NewSlow) ||
 		    (CPU_ArchitectureType == ArchitectureType::Mixed)) {
-#if (C_FPU)
+#if C_FPU
 			reg_eax = 0x402; // Intel 486DX
 			reg_edx = 0x1;   // FPU
 #else
@@ -2210,7 +2212,7 @@ bool CPU_CPUID() {
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
 		} else if (CPU_ArchitectureType == ArchitectureType::Pentium) {
-#if (C_FPU)
+#if C_FPU
 			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
 			reg_edx = 0x11;  // FPU + Time Stamp Counter (RDTSC)
 #else
@@ -2693,9 +2695,9 @@ public:
 		CPU_Core_Normal_Init();
 		CPU_Core_Simple_Init();
 		CPU_Core_Full_Init();
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 		CPU_Core_Dyn_X86_Init();
-#elif (C_DYNREC)
+#elif C_DYNREC
 		CPU_Core_Dynrec_Init();
 #endif
 		MAPPER_AddHandler(cpu_decrease_cycles,
@@ -3166,9 +3168,9 @@ static std::unique_ptr<Cpu> cpu_instance = nullptr;
 
 static void cpu_shutdown([[maybe_unused]] Section* sec)
 {
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 	CPU_Core_Dyn_X86_Cache_Close();
-#elif (C_DYNREC)
+#elif C_DYNREC
 	CPU_Core_Dynrec_Cache_Close();
 #endif
 
@@ -3193,7 +3195,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	auto pstring = secprop.Add_string("core", WhenIdle, "auto");
 	pstring->Set_values({
 		"auto",
-#if (C_DYNAMIC_X86) || (C_DYNREC)
+#if C_DYNAMIC_X86 || C_DYNREC
 		        "dynamic",
 #endif
 		        "normal", "simple"
