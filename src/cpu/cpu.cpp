@@ -3163,6 +3163,8 @@ static void cpu_shutdown([[maybe_unused]] Section* sec)
 #elif (C_DYNREC)
 	CPU_Core_Dynrec_Cache_Close();
 #endif
+
+	cpu_instance.reset();
 }
 
 static void cpu_init(Section* sec)
