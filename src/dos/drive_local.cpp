@@ -570,34 +570,6 @@ bool localDrive::FileExists(const char* name)
 	return true;
 }
 
-bool localDrive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-	struct stat temp_stat;
-
-	FatAttributeFlags attributes = {};
-	if (stat(newname, &temp_stat) != 0 ||
-	    local_drive_get_attributes(newname, attributes) != DOSERR_NONE) {
-		return false;
-	}
-
-	/* Convert the stat to a FileStat */
-	stat_block->attr = attributes._data;
-	struct tm datetime;
-	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
-		stat_block->time = DOS_PackTime(datetime);
-		stat_block->date = DOS_PackDate(datetime);
-	} else {
-		LOG_MSG("FS: error while converting date in: %s", name);
-	}
-	stat_block->size=(uint32_t)temp_stat.st_size;
-	return true;
-}
-
 uint8_t localDrive::GetMediaByte(void)
 {
 	return allocation.mediaid;

@@ -106,7 +106,6 @@ public:
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
 	bool isRemote(void) override;
 	bool isRemovable(void) override;
@@ -216,7 +215,6 @@ public:
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
 	bool isRemote(void) override;
 	bool isRemovable(void) override;
@@ -393,7 +391,6 @@ public:
 	                    uint16_t* total_clusters,
 	                    uint16_t* free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
 	void EmptyCache(void) override {}
 	bool isRemote(void) override;
@@ -465,7 +462,6 @@ public:
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte() override;
 	void EmptyCache() override;
 	bool isRemote() override;
@@ -504,7 +500,6 @@ public:
 	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool FileExists(const char* name) override;
 	bool Rename(char* oldname, char* newname) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	void EmptyCache(void) override;
 
 	std::pair<FILE*, std_fs::path> create_file_in_overlay(const char* dos_filename,

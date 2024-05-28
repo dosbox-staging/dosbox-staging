@@ -464,23 +464,6 @@ bool Virtual_Drive::TestDir(char * dir) {
 	return find_vfile_dir_by_name(dir).get();
 }
 
-bool Virtual_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	assert(name);
-	auto vfile = find_vfile_by_name(name);
-	if (vfile) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = vfile->isdir;
-
-		stat_block->attr = attr._data;
-		stat_block->size = vfile->data->size();
-		stat_block->date = default_date;
-		stat_block->time = default_time;
-		return true;
-	}
-	return false;
-}
-
 bool Virtual_Drive::FileExists(const char* name){
 	assert(name);
 	auto vfile = find_vfile_by_name(name);

@@ -1334,36 +1334,6 @@ bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	return localDrive::FindFirst(_dir,dta,fcb_findfirst);
 }
 
-bool Overlay_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	char overlayname[CROSS_LEN];
-	safe_strcpy(overlayname, overlaydir);
-	safe_strcat(overlayname, name);
-	CROSS_FILENAME(overlayname);
-	struct stat temp_stat;
-
-	FatAttributeFlags attributes = {};
-	if (stat(overlayname, &temp_stat) != 0 ||
-	    local_drive_get_attributes(overlayname, attributes) != DOSERR_NONE) {
-		if (is_deleted_file(name)) {
-			return false;
-		}
-		return localDrive::FileStat(name, stat_block);
-	}
-
-	/* Convert the stat to a FileStat */
-	stat_block->attr = attributes._data;
-	struct tm datetime;
-	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
-		stat_block->time = DOS_PackTime(datetime);
-		stat_block->date = DOS_PackDate(datetime);
-	} else {
-		LOG_MSG("OVERLAY: Error while converting date in: %s", name);
-	}
-	stat_block->size=(uint32_t)temp_stat.st_size;
-	return true;
-}
-
 Bits Overlay_Drive::UnMount()
 {
 	return 0;
