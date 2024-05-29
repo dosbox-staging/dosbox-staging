@@ -1773,6 +1773,10 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
+	if (Files[handle]->IsOnReadOnlyMedium()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	Files[handle]->time = ntime;
 	Files[handle]->date = ndate;
 	Files[handle]->newtime = true;
