@@ -454,6 +454,7 @@ static std::unique_ptr<Config> specify_drive_config()
 	prop->Add_string("path", on_startup, "");
 	prop->Add_string("override_drive", on_startup, "");
 	prop->Add_bool("verbose", on_startup, true);
+	prop->Add_bool("readonly", on_startup, false);
 
 	return conf;
 }
@@ -498,7 +499,9 @@ std::tuple<std::string, std::string, std::string, bool> parse_drive_conf(
 		drive_label.insert(0, " -label ");
 	}
 
-	const auto mount_args = drive_type + drive_label;
+	const auto is_readonly = settings->Get_bool("readonly");
+
+	const auto mount_args = drive_type + drive_label + (is_readonly ? " -ro" : "");
 
 	const std::string path_val = settings->Get_string("path");
 

@@ -765,7 +765,8 @@ void DOSBOX_Init()
 	        "  label   = custom_label\n"
 	        "  path    = path-specification, ie: path = %%path%%;c:\\tools\n"
 	        "  override_drive = mount the directory to this drive instead (default empty)\n"
-	        "  verbose = true or false");
+	        "  verbose = true or false\n"
+	        "  readonly = true or false");
 
 	pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	pstring->Set_values({"auto", "high", "low", "quiet"});
