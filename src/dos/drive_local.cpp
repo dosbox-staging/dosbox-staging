@@ -100,12 +100,22 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	return true;
 }
 
-bool localDrive::IsFirstEncounter(const std::string& filename)
+// Inform the user that the file is being protected against modification.
+// If the DOS program /really/ needs to write to the file, it will
+// crash/exit and this will be one of the last messages on the screen,
+// so the user can decide to un-write-protect the file if they wish.
+// We only print one message per file to eliminate redundant messaging.
+void localDrive::MaybeLogFilesystemProtection(const std::string& filename)
 {
 	const auto ret = write_protected_files.insert(filename);
 
 	const bool was_inserted = ret.second;
-	return was_inserted;
+	if (was_inserted) {
+		// For brevity and clarity to the user, we show just the
+		// filename instead of the more cluttered absolute path.
+		LOG_MSG("FILESYSTEM: protected from modification: %s",
+				get_basename(filename).c_str());
+	}
 }
 
 // Search the Files[] inventory for an open file matching the requested
@@ -136,24 +146,37 @@ DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
 
 bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 {
-	const char *type = nullptr;
-	switch (flags&0xf) {
-	case OPEN_READ:        type = "rb" ; break;
-	case OPEN_WRITE:       type = "rb+"; break;
-	case OPEN_READWRITE:   type = "rb+"; break;
-	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
-	default:
-		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
-		return false;
+	bool write_access = false;
+	switch (flags & 0xf) {
+		case OPEN_READ:
+		//No modification of dates. LORD4.07 uses this
+		case OPEN_READ_NO_MOD:
+			write_access = false;
+			break;
+		case OPEN_WRITE:
+		case OPEN_READWRITE:
+			write_access = true;
+			break;
+		default:
+			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
+			return false;
 	}
+
+	const std::string host_filename = MapDosToHostFilename(name);
+	bool fallback_to_readonly = false;
 
 	// Don't allow opening read-only files in write mode,
 	// unless configured otherwise
-	if (!always_open_ro_files &&
-	    ((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
-	    FileIsReadOnly(name)) {
-		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+	if (write_access && FileIsReadOnly(name)) {
+		if (always_open_ro_files) {
+			flags = OPEN_READ;
+			write_access = false;
+			fallback_to_readonly = true;
+		} else {
+			MaybeLogFilesystemProtection(host_filename);
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 	}
 
 	// If the file's already open then flush it before continuing
@@ -163,77 +186,27 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 		open_file->Flush();
 	}
 
-	const std::string host_filename = MapDosToHostFilename(name);
-
-	FILE* fhandle = fopen(host_filename.c_str(), type);
-
-#ifdef DEBUG
-	std::string open_msg;
-	std::string flags_str;
-	switch (flags & 0xf) {
-		case OPEN_READ:        flags_str = "R";  break;
-		case OPEN_WRITE:       flags_str = "W";  break;
-		case OPEN_READWRITE:   flags_str = "RW"; break;
-		case OPEN_READ_NO_MOD: flags_str = "RN"; break;
-		default:               flags_str = "--";
-	}
-#endif
+	FILE* fhandle = fopen(host_filename.c_str(), write_access ? "rb+" : "rb");
 
 	// If we couldn't open the file, then it's possible that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
-	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
+	if (!fhandle && write_access && always_open_ro_files) {
 		// If yes, check if the file can be opened with Read-only access:
 		fhandle = fopen(host_filename.c_str(), "rb");
 		if (fhandle) {
-			if (!always_open_ro_files) {
-				fclose(fhandle);
-				fhandle = nullptr;
-			}
-
-#ifdef DEBUG
-			if (always_open_ro_files) {
-				open_msg = "wanted writes but opened read-only";
-			} else {
-				open_msg = "wanted writes but file is read-only";
-			}
-#else
-			// Inform the user that the file is being protected against modification.
-			// If the DOS program /really/ needs to write to the file, it will
-			// crash/exit and this will be one of the last messages on the screen,
-			// so the user can decide to un-write-protect the file if they wish.
-			// We only print one message per file to eliminate redundant messaging.
-			if (IsFirstEncounter(host_filename)) {
-				// For brevity and clarity to the user, we show just the
-				// filename instead of the more cluttered absolute path.
-				LOG_MSG("FILESYSTEM: protected from modification: %s",
-				        get_basename(host_filename).c_str());
-			}
-#endif
+			flags = OPEN_READ;
+			fallback_to_readonly = true;
 		}
-
-#ifdef DEBUG
-		else {
-			open_msg += "failed desired and with read-only";
-		}
-#endif
 	}
-
-#ifdef DEBUG
-	else if (!fhandle) {
-		open_msg = "failed with desired flags";
-	} else {
-		open_msg = "succeeded with desired flags";
-	}
-	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
-	        flags_str.c_str(),
-	        get_basename(host_filename).c_str(),
-	        open_msg.c_str());
-#endif
 
 	if (!fhandle) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
+	}
+
+	if (fallback_to_readonly) {
+		MaybeLogFilesystemProtection(host_filename);
 	}
 
 	*file = new localFile(name, host_filename, fhandle, basedir, IsReadOnly());
