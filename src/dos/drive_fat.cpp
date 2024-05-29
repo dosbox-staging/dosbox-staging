@@ -41,7 +41,7 @@ static constexpr uint16_t BytePerSector = 512;
 
 class fatFile final : public DOS_File {
 public:
-	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, fatDrive *useDrive);
+	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, fatDrive *useDrive, bool _read_only_medium);
 	fatFile(const fatFile&) = delete; // prevent copy
 	fatFile& operator=(const fatFile&) = delete; // prevent assignment
 	bool Read(uint8_t * data,uint16_t * size) override;
@@ -50,7 +50,9 @@ public:
 	bool Close() override;
 	uint16_t GetInformation(void) override;
 	bool UpdateDateTimeFromHost(void) override;
+	bool IsOnReadOnlyMedium() const override;
 public:
+	fatDrive* myDrive                   = nullptr;
 	uint32_t firstCluster               = 0;
 	uint32_t seekpos                    = 0;
 	uint32_t filelength                 = 0;
@@ -61,10 +63,9 @@ public:
 	uint32_t dirCluster = 0;
 	uint32_t dirIndex   = 0;
 
-	bool set_archive_on_close = false;
-
-	bool loadedSector = false;
-	fatDrive* myDrive = nullptr;
+	bool set_archive_on_close   = false;
+	bool loadedSector           = false;
+	const bool read_only_medium = false;
 };
 
 /* IN - char * filename: Name in regular filename format, e.g. bob.txt */
@@ -86,10 +87,11 @@ static void convToDirFile(char *filename, char *filearray) {
 }
 
 fatFile::fatFile(const char* /*name*/, uint32_t startCluster, uint32_t fileLen,
-                 fatDrive* useDrive)
-        : firstCluster(startCluster),
+                 fatDrive* useDrive, bool _read_only_medium)
+        : myDrive(useDrive),
+          firstCluster(startCluster),
           filelength(fileLen),
-          myDrive(useDrive)
+          read_only_medium(_read_only_medium)
 {
 	uint32_t seekto = 0;
 	open = true;
@@ -311,6 +313,11 @@ bool fatFile::Close()
 	set_archive_on_close = false;
 
 	return true;
+}
+
+bool fatFile::IsOnReadOnlyMedium() const
+{
+	return read_only_medium;
 }
 
 uint16_t fatFile::GetInformation(void) {
@@ -1103,7 +1110,8 @@ bool fatDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attribu
 	auto fat_file        = new fatFile(name,
                                     fileEntry.loFirstClust,
                                     fileEntry.entrysize,
-                                    this);
+                                    this,
+                                    IsReadOnly());
 	fat_file->flags      = OPEN_READWRITE;
 	fat_file->dirCluster = dirClust;
 	fat_file->dirIndex   = subEntry;
@@ -1144,7 +1152,8 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
 	auto fat_file = new fatFile(name,
 	                            fileEntry.loFirstClust,
 	                            fileEntry.entrysize,
-	                            this);
+	                            this,
+	                            IsReadOnly());
 
 	fat_file->flags      = flags;
 	fat_file->dirCluster = dirClust;

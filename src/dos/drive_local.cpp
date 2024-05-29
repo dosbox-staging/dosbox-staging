@@ -82,7 +82,7 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, expanded_name, file_pointer, basedir);
+	*file = new localFile(name, expanded_name, file_pointer, basedir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 
@@ -229,7 +229,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 		return false;
 	}
 
-	*file = new localFile(name, newname, fhandle, basedir);
+	*file = new localFile(name, newname, fhandle, basedir, IsReadOnly());
 	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
 
 	return true;
@@ -852,10 +852,11 @@ uint16_t localFile::GetInformation(void)
 }
 
 localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
-                     const char* _basedir)
+                     const char* _basedir, const bool _read_only_medium)
         : fhandle(handle),
           path(path),
-          basedir(_basedir)
+          basedir(_basedir),
+          read_only_medium(_read_only_medium)
 {
 	open = true;
 	localFile::UpdateDateTimeFromHost();
@@ -942,8 +943,6 @@ bool cdromDrive::FileOpen(DOS_File** file, char* name, uint8_t flags)
 		return false;
 	}
 	bool success = localDrive::FileOpen(file, name, flags);
-	if (success)
-		(*file)->SetFlagReadOnlyMedium();
 	return success;
 }
 

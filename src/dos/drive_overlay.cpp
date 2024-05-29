@@ -207,8 +207,8 @@ bool Overlay_Drive::TestDir(char * dir) {
 class OverlayFile final : public localFile {
 public:
 	OverlayFile(const char* name, const std_fs::path& path, FILE* handle,
-	            const char* basedir)
-	        : localFile(name, path, handle, basedir),
+	            const char* basedir, const bool _read_only_medium)
+	        : localFile(name, path, handle, basedir, _read_only_medium),
 	          overlay_active(false)
 	{
 		if (logoverlay)
@@ -347,7 +347,8 @@ static OverlayFile* ccc(DOS_File* file) {
 	OverlayFile* ret = new OverlayFile(l->GetName(),
 	                                   l->GetPath(),
 	                                   l->fhandle,
-	                                   l->GetBaseDir());
+	                                   l->GetBaseDir(),
+	                                   l->IsOnReadOnlyMedium());
 	ret->flags = l->flags;
 	ret->refCtr = l->refCtr;
 	delete l;
@@ -500,7 +501,7 @@ bool Overlay_Drive::FileOpen(DOS_File** file, char* name, uint8_t flags) {
 	bool fileopened = false;
 	if (hand) {
 		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
-		*file = new localFile(name, newname, hand, overlaydir);
+		*file = new localFile(name, newname, hand, overlaydir, IsReadOnly());
 
 		(*file)->flags = flags;
 		fileopened = true;
@@ -542,7 +543,7 @@ bool Overlay_Drive::FileCreate(DOS_File** file, char* name,
 		}
 		return false;
 	}
-	*file = new localFile(name, path, f, overlaydir);
+	*file = new localFile(name, path, f, overlaydir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 	OverlayFile* of = ccc(*file);
