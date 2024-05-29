@@ -60,6 +60,8 @@ bool localDrive::FileIsReadOnly(char* name)
 
 bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
 {
+	assert(!IsReadOnly());
+
 	// Don't allow overwriting read-only files.
 	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -232,6 +234,8 @@ std::string localDrive::MapDosToHostFilename(const char* const dos_name)
 // Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(char* name)
 {
+	assert(!IsReadOnly());
+
 	if (!FileExists(name)) {
 		LOG_DEBUG("FS: Skipping removal of '%s' because it doesn't exist",
 		          name);
@@ -440,6 +444,7 @@ bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 
 bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
+	assert(!IsReadOnly());
 	const std::string host_filename = MapDosToHostFilename(name);
 
 	const auto result = local_drive_set_attributes(host_filename, attr);
@@ -455,6 +460,8 @@ bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 
 bool localDrive::MakeDir(char* dir)
 {
+	assert(!IsReadOnly());
+
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
@@ -470,6 +477,8 @@ bool localDrive::MakeDir(char* dir)
 
 bool localDrive::RemoveDir(char* dir)
 {
+	assert(!IsReadOnly());
+
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
@@ -498,6 +507,7 @@ bool localDrive::TestDir(char* dir)
 
 bool localDrive::Rename(char* oldname, char* newname)
 {
+	assert(!IsReadOnly());
 	const std::string old_host_filename = MapDosToHostFilename(oldname);
 
 	char newnew[CROSS_LEN];
@@ -656,6 +666,9 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		return false;
 	}
 
+	// File should always be opened in read-only mode if on read-only drive
+	assert(!IsOnReadOnlyMedium());
+
 	// Seek if we last read
 	if (last_action == LastAction::Read)
 		if (ftell_and_check())
@@ -753,6 +766,7 @@ bool localFile::Close()
 	// only close if one reference left
 	if (refCtr == 1) {
 		if (set_archive_on_close) {
+			assert(!IsOnReadOnlyMedium());
 			FatAttributeFlags attributes = {};
 			if (DOSERR_NONE !=
 			    local_drive_get_attributes(path, attributes)) {
@@ -775,6 +789,7 @@ bool localFile::Close()
 	};
 
 	if (newtime) {
+		assert(!IsOnReadOnlyMedium());
 		// backport from DOS_PackDate() and DOS_PackTime()
 		struct tm tim = {};
 		tim.tm_sec = (time & 0x1f) * 2;
