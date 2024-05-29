@@ -331,8 +331,7 @@ void IMGMOUNT::Run(void)
 					        "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 					return;
 				}
-				ldp->GetSystemFilename(tmp, fullname);
-				temp_line = tmp;
+				temp_line = ldp->MapDosToHostFilename(fullname);
 
 				if (!path_exists(temp_line)) {
 					if (add_wildcard_paths(temp_line, paths)) {
