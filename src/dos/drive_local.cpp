@@ -46,11 +46,22 @@
 #include "cross.h"
 #include "inout.h"
 
+bool localDrive::FileIsReadOnly(char* name)
+{
+	if (IsReadOnly()) {
+		return true;
+	}
+	FatAttributeFlags test_attr = {};
+	if (GetFileAttr(name, &test_attr)) {
+		return test_attr.read_only;
+	}
+	return false;
+}
+
 bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
 {
 	// Don't allow overwriting read-only files.
-	FatAttributeFlags test_attr = {};
-	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
+	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -138,10 +149,9 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 
 	// Don't allow opening read-only files in write mode,
 	// unless configured otherwise
-	FatAttributeFlags test_attr = {};
 	if (!always_open_ro_files &&
 	    ((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
-	    (GetFileAttr(name, &test_attr) && test_attr.read_only)) {
+	    FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -266,8 +276,7 @@ bool localDrive::FileUnlink(char* name)
 	}
 
 	// Don't allow deleting read-only files.
-	FatAttributeFlags test_attr = {};
-	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
+	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
