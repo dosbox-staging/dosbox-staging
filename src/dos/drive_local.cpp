@@ -256,13 +256,13 @@ FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const typ
 	return fopen(newname,type);
 }
 
-bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
+std::string localDrive::MapDosToHostFilename(const char* const dos_name)
 {
-	strcpy(sysName, basedir);
-	strcat(sysName, dosName);
-	CROSS_FILENAME(sysName);
-	dirCache.ExpandNameAndNormaliseCase(sysName);
-	return true;
+	char newname[CROSS_LEN];
+	safe_strcpy(newname, basedir);
+	safe_strcat(newname, dos_name);
+	CROSS_FILENAME(newname);
+	return dirCache.GetExpandNameAndNormaliseCase(newname);
 }
 
 // Attempt to delete the file name from our local drive mount

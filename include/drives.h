@@ -90,7 +90,7 @@ public:
 	           bool _readonly, bool _always_open_ro_files = false);
 	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
 	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
-	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
+	std::string MapDosToHostFilename(const char* const dos_name);
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
