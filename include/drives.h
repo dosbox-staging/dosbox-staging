@@ -123,7 +123,7 @@ protected:
 	} srchInfo[MAX_OPENDIRS];
 
 private:
-	bool IsFirstEncounter(const std::string& filename);
+	void MaybeLogFilesystemProtection(const std::string& filename);
 	bool FileIsReadOnly(char* name);
 	const bool readonly;
 	const bool always_open_ro_files;
