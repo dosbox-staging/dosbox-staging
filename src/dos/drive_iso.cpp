@@ -41,6 +41,7 @@ public:
 	bool Seek(uint32_t *pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override;
 
 private:
 	isoDrive *drive = nullptr;
@@ -141,6 +142,11 @@ bool isoFile::Close() {
 
 uint16_t isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
+}
+
+bool isoFile::IsOnReadOnlyMedium() const
+{
+	return true;
 }
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int &error)

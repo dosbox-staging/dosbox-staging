@@ -330,6 +330,7 @@ public:
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation() override;
+	bool IsOnReadOnlyMedium() const override;
 
 private:
 	const vfile_data_t file_data;
@@ -408,6 +409,11 @@ bool Virtual_File::Close()
 
 uint16_t Virtual_File::GetInformation() {
 	return 0x40;	// read-only drive
+}
+
+bool Virtual_File::IsOnReadOnlyMedium() const
+{
+	return true;
 }
 
 Virtual_Drive::Virtual_Drive() : search_file()

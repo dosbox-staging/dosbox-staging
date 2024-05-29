@@ -125,12 +125,12 @@ public:
 	virtual bool	Seek(uint32_t * pos,uint32_t type)=0;
 	virtual bool	Close()=0;
 	virtual uint16_t	GetInformation(void)=0;
+	virtual bool IsOnReadOnlyMedium() const = 0;
 
 	virtual bool IsOpen() { return open; }
 	virtual void AddRef() { refCtr++; }
 	virtual Bits RemoveRef() { return --refCtr; }
 	virtual bool UpdateDateTimeFromHost() { return true; }
-	virtual void SetFlagReadOnlyMedium() {}
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
@@ -172,6 +172,7 @@ public:
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override { return false; }
 	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
 	                                    uint16_t* retcode);
 	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
@@ -189,7 +190,7 @@ private:
 class localFile : public DOS_File {
 public:
 	localFile(const char* name, const std_fs::path& path, FILE* handle,
-	          const char* basedir);
+	          const char* basedir, bool _read_only_medium);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
 	bool Read(uint8_t* data, uint16_t* size) override;
@@ -199,10 +200,7 @@ public:
 	uint16_t GetInformation() override;
 	bool UpdateDateTimeFromHost() override;
 	void Flush();
-	void SetFlagReadOnlyMedium() override
-	{
-		read_only_medium = true;
-	}
+	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
 	const char* GetBaseDir() const
 	{
 		return basedir;
@@ -221,8 +219,8 @@ private:
 	void fseek_and_check(int whence);
 	bool fseek_to_and_check(long pos, int whence);
 
-	bool read_only_medium     = false;
-	bool set_archive_on_close = false;
+	const bool read_only_medium = false;
+	bool set_archive_on_close   = false;
 
 	enum class LastAction : uint8_t { None, Read, Write };
 	LastAction last_action = LastAction::None;
