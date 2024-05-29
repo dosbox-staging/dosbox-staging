@@ -970,6 +970,9 @@ bool DOS_GetFileAttr(const char* const name, FatAttributeFlags* attr)
 	}
 
 	if (Drives.at(drive)->GetFileAttr(fullname, attr)) {
+		if (Drives.at(drive)->IsReadOnly()) {
+			attr->read_only = true;
+		}
 		return true;
 	} else {
 		*attr = 0;
