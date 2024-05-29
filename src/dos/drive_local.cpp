@@ -156,19 +156,16 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 		return false;
 	}
 
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-
 	// If the file's already open then flush it before continuing
 	// (Betrayal in Antara)
 	auto open_file = dynamic_cast<localFile *>(FindOpenFile(this, name));
-	if (open_file)
+	if (open_file) {
 		open_file->Flush();
+	}
 
-	FILE* fhandle = fopen(newname, type);
+	const std::string host_filename = MapDosToHostFilename(name);
+
+	FILE* fhandle = fopen(host_filename.c_str(), type);
 
 #ifdef DEBUG
 	std::string open_msg;
@@ -187,7 +184,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 	// RW access.  So check if this is the case:
 	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
 		// If yes, check if the file can be opened with Read-only access:
-		fhandle = fopen(newname, "rb");
+		fhandle = fopen(host_filename.c_str(), "rb");
 		if (fhandle) {
 			if (!always_open_ro_files) {
 				fclose(fhandle);
@@ -206,11 +203,11 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 			// crash/exit and this will be one of the last messages on the screen,
 			// so the user can decide to un-write-protect the file if they wish.
 			// We only print one message per file to eliminate redundant messaging.
-			if (IsFirstEncounter(newname)) {
+			if (IsFirstEncounter(host_filename)) {
 				// For brevity and clarity to the user, we show just the
 				// filename instead of the more cluttered absolute path.
 				LOG_MSG("FILESYSTEM: protected from modification: %s",
-				        get_basename(newname).c_str());
+				        get_basename(host_filename).c_str());
 			}
 #endif
 		}
@@ -230,7 +227,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 	}
 	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
 	        flags_str.c_str(),
-	        get_basename(newname).c_str(),
+	        get_basename(host_filename).c_str(),
 	        open_msg.c_str());
 #endif
 
@@ -239,7 +236,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 		return false;
 	}
 
-	*file = new localFile(name, newname, fhandle, basedir, IsReadOnly());
+	*file = new localFile(name, host_filename, fhandle, basedir, IsReadOnly());
 	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
 
 	return true;
@@ -247,13 +244,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 
 FILE* localDrive::GetHostFilePtr(const char* const name, const char* const type)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-
-	return fopen(newname,type);
+	return fopen(MapDosToHostFilename(name).c_str(), type);
 }
 
 std::string localDrive::MapDosToHostFilename(const char* const dos_name)
@@ -460,13 +451,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 
 bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-
-	if (local_drive_get_attributes(newname, *attr) != DOSERR_NONE) {
+	if (local_drive_get_attributes(MapDosToHostFilename(name), *attr) != DOSERR_NONE) {
 		// The caller is responsible to act accordingly, possibly
 		// it should set DOS error code (setting it here is not allowed)
 		*attr = 0;
@@ -482,14 +467,10 @@ bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 
 bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
+	const std::string host_filename = MapDosToHostFilename(name);
 
-	const auto result = local_drive_set_attributes(newname, attr);
-	dirCache.CacheOut(newname);
+	const auto result = local_drive_set_attributes(host_filename, attr);
+	dirCache.CacheOut(host_filename.c_str());
 
 	if (result != DOSERR_NONE) {
 		DOS_SetError(result);
@@ -527,37 +508,34 @@ bool localDrive::RemoveDir(char* dir)
 
 bool localDrive::TestDir(char* dir)
 {
-	char newdir[CROSS_LEN];
-	safe_strcpy(newdir, basedir);
-	safe_strcat(newdir, dir);
-	CROSS_FILENAME(newdir);
-	dirCache.ExpandNameAndNormaliseCase(newdir);
+	const std::string host_dir = MapDosToHostFilename(dir);
 	// Skip directory test, if "\"
-	size_t len = safe_strlen(newdir);
-	if (len && (newdir[len-1]!='\\')) {
+	if (!host_dir.empty() && host_dir.back() != '\\') {
 		// It has to be a directory !
 		struct stat test;
-		if (stat(newdir,&test))			return false;
-		if ((test.st_mode & S_IFDIR)==0)	return false;
-	};
-	return path_exists(newdir);
+		if (stat(host_dir.c_str(), &test)) {
+			return false;
+		}
+		if ((test.st_mode & S_IFDIR) == 0) {
+			return false;
+		}
+	}
+	return path_exists(host_dir);
 }
 
 bool localDrive::Rename(char* oldname, char* newname)
 {
-	char newold[CROSS_LEN];
-	safe_strcpy(newold, basedir);
-	safe_strcat(newold, oldname);
-	CROSS_FILENAME(newold);
-	dirCache.ExpandNameAndNormaliseCase(newold);
+	const std::string old_host_filename = MapDosToHostFilename(oldname);
 
 	char newnew[CROSS_LEN];
 	safe_strcpy(newnew, basedir);
 	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
-	int temp = rename(newold, dirCache.GetExpandNameAndNormaliseCase(newnew));
-	if (temp==0) dirCache.CacheOut(newnew);
-	return (temp == 0);
+	int temp = rename(old_host_filename.c_str(), dirCache.GetExpandNameAndNormaliseCase(newnew));
+	if (temp == 0) {
+		dirCache.CacheOut(newnew);
+	}
+	return temp == 0;
 }
 
 bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
@@ -572,14 +550,14 @@ bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_clust
 
 bool localDrive::FileExists(const char* name)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
+	const std::string host_filename = MapDosToHostFilename(name);
 	struct stat temp_stat;
-	if (stat(newname,&temp_stat)!=0) return false;
-	if (temp_stat.st_mode & S_IFDIR) return false;
+	if (stat(host_filename.c_str(), &temp_stat) != 0) {
+		return false;
+	}
+	if (temp_stat.st_mode & S_IFDIR) {
+		return false;
+	}
 	return true;
 }
 
