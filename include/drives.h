@@ -89,7 +89,7 @@ public:
 	           uint16_t _free_clusters, uint8_t _mediaid,
 	           bool _readonly, bool _always_open_ro_files = false);
 	bool FileOpen(DOS_File** file, char* name, uint8_t flags) override;
-	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
+	FILE* GetHostFilePtr(const char* const name, const char* const type);
 	std::string MapDosToHostFilename(const char* const dos_name);
 	bool FileCreate(DOS_File** file, char* name,
 	                FatAttributeFlags attributes) override;

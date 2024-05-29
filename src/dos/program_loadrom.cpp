@@ -55,7 +55,7 @@ void LOADROM::Run(void)
 			return;
 		}
 
-		FILE* tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		FILE* tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			WriteOut(MSG_Get("PROGRAM_LOADROM_CANT_OPEN"));
 			return;
