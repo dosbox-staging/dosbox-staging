@@ -941,7 +941,7 @@ void MixerChannel::ConfigureResampler()
 		speex_resampler_set_rate(speex_resampler.state, in_rate_hz, out_rate_hz);
 
 #ifdef DEBUG_MIXER
-		LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz)",
+		LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz",
 		          name.c_str(),
 		          in_rate_hz,
 		          out_rate_hz);
@@ -1127,15 +1127,11 @@ void MixerChannel::AddSilence()
 }
 
 static void log_filter_settings(const std::string& channel_name,
-                                const std::string& filter_name,
-                                const FilterState state, const int order,
+                                const std::string& filter_name, const int order,
                                 const int cutoff_freq_hz)
 {
 	assert(order > 0);
 	assert(cutoff_freq_hz > 0);
-
-	// we programmatically expect only 'on' and 'forced-on' states:
-	assert(state != FilterState::Off);
 
 	constexpr auto DbPerOrder = 6;
 
@@ -1148,12 +1144,14 @@ static void log_filter_settings(const std::string& channel_name,
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
-	do_highpass_filter = state != FilterState::Off;
+	filters.highpass.state = state;
 
-	if (do_highpass_filter) {
+	if (filters.highpass.state == FilterState::On) {
+		assert(filters.highpass.order > 0);
+		assert(filters.highpass.cutoff_freq_hz > 0);
+
 		log_filter_settings(name,
 		                    "High-pass",
-		                    state,
 		                    filters.highpass.order,
 		                    filters.highpass.cutoff_freq_hz);
 	}
@@ -1161,12 +1159,14 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
-	do_lowpass_filter = state != FilterState::Off;
+	filters.lowpass.state = state;
 
-	if (do_lowpass_filter) {
+	if (filters.lowpass.state == FilterState::On) {
+		assert(filters.lowpass.order > 0);
+		assert(filters.lowpass.cutoff_freq_hz > 0);
+
 		log_filter_settings(name,
 		                    "Low-pass",
-		                    state,
 		                    filters.lowpass.order,
 		                    filters.lowpass.cutoff_freq_hz);
 	}
@@ -2008,11 +2008,11 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 	while (resample_out_pos != mixer.resample_out.end()) {
 		AudioFrame frame = {*resample_out_pos++, *resample_out_pos++};
 
-		if (do_highpass_filter) {
+		if (filters.highpass.state == FilterState::On) {
 			frame = {filters.highpass.hpf[0].filter(frame.left),
 			         filters.highpass.hpf[1].filter(frame.right)};
 		}
-		if (do_lowpass_filter) {
+		if (filters.lowpass.state == FilterState::On) {
 			frame = {filters.lowpass.lpf[0].filter(frame.left),
 			         filters.lowpass.lpf[1].filter(frame.right)};
 		}
