@@ -446,6 +446,12 @@ bool DOS_MakeDir(const char* const dir)
 		return false;
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
+
+	if (Drives.at(drive)->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	if (Drives.at(drive)->MakeDir(fulldir)) {
 		return true;
 	}
@@ -476,6 +482,11 @@ bool DOS_RemoveDir(const char* const dir)
 	DOS_GetCurrentDir(drive + 1 ,currdir);
 	if(strcmp(currdir,fulldir) == 0) {
 		DOS_SetError(DOSERR_REMOVE_CURRENT_DIRECTORY);
+		return false;
+	}
+
+	if (Drives.at(drive)->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
@@ -533,6 +544,11 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 	if (!Drives.at(driveold)->GetFileAttr(fullold, &attr)) {
 		if (!PathExists(oldname)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+
+	if (Drives.at(drivenew)->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
@@ -757,7 +773,7 @@ bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
 		return false;
 	}
 
-	if (file_is_locked(fullname, drive, OPEN_READWRITE)) {
+	if (Drives.at(drive)->IsReadOnly() || file_is_locked(fullname, drive, OPEN_READWRITE)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -937,6 +953,11 @@ bool DOS_UnlinkFile(const char* const name)
 		return false;
 	}
 
+	if (Drives.at(drive)->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	return Drives.at(drive)->FileUnlink(fullname);
 }
 
@@ -963,8 +984,7 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (Drives[drive]->GetType() == DosDriveType::Cdrom ||
-	    Drives[drive]->GetType() == DosDriveType::Iso) {
+	if (Drives.at(drive)->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
