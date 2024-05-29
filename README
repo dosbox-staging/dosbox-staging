@@ -611,6 +611,9 @@ MOUNT -u "Emulated Drive letter"
   -u
         Removes the mount. Doesn't work for Z:\.
 
+  -ro
+        Mounts the drive as read-only.
+
   Note: It's possible to mount a local directory as CD-ROM drive,
         but hardware support is then missing.
 

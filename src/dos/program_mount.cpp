@@ -131,6 +131,7 @@ void MOUNT::Run(void) {
 	std::string type="dir";
 	cmd->FindString("-t",type,true);
 	bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
+	const bool readonly = cmd->FindExist("-ro", true);
 	if (type=="floppy" || type=="dir" || type=="cdrom" || type =="overlay") {
 		uint16_t sizes[4] ={0};
 		uint8_t mediaid;
@@ -356,7 +357,7 @@ void MOUNT::Run(void) {
 				        sizes[2],
 				        sizes[3],
 				        mediaid,
-				        false,
+				        readonly,
 				        section->Get_bool(
 				                "allow_write_protected_files"));
 			}
@@ -373,14 +374,18 @@ void MOUNT::Run(void) {
 	/* Set the correct media byte in the table */
 	mem_writeb(RealToPhysical(dos.tables.mediaid) + (drive_index(drive)) * 9,
 	           drive_pointer->GetMediaByte());
-	if (type != "overlay")
+	if (type != "overlay") {
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
 		         drive_pointer->GetInfoString().c_str(),
 		         drive);
-	else
+		if (readonly) {
+			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
+		}
+	} else {
 		WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_STATUS"),
 		         temp_line.c_str(),
 		         drive);
+	}
 	/* check if volume label is given and don't allow it to updated in the future */
 	if (cmd->FindString("-label", label, true)) {
 		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
@@ -423,6 +428,7 @@ void MOUNT::AddMessages() {
 	        "\n"
 	        "Notes:\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
+	        "  - '-ro' mounts the drive as read-only.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
 	        "Examples:\n");
