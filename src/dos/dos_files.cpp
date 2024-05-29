@@ -447,17 +447,19 @@ bool DOS_MakeDir(const char* const dir)
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 
-	if (Drives.at(drive)->IsReadOnly()) {
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
+	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
-	if (Drives.at(drive)->MakeDir(fulldir)) {
+	if (drive_ptr->MakeDir(fulldir)) {
 		return true;
 	}
 
 	/* Determine reason for failing */
-	if (Drives.at(drive)->TestDir(fulldir)) {
+	if (drive_ptr->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 	} else
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -472,8 +474,11 @@ bool DOS_RemoveDir(const char* const dir)
 	 */
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
+
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
 	/* Check if exists */
-	if (!Drives.at(drive)->TestDir(fulldir)) {
+	if (!drive_ptr->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
@@ -485,12 +490,12 @@ bool DOS_RemoveDir(const char* const dir)
 		return false;
 	}
 
-	if (Drives.at(drive)->IsReadOnly()) {
+	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
-	if (Drives.at(drive)->RemoveDir(fulldir)) {
+	if (drive_ptr->RemoveDir(fulldir)) {
 		return true;
 	}
 
@@ -534,25 +539,31 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 		DOS_SetError(DOSERR_NOT_SAME_DEVICE);
 		return false;
 	}
+
+	DOS_Drive* new_ptr = Drives.at(drivenew);
+
 	/*Test if target exists => no access */
 	FatAttributeFlags attr = {};
-	if (Drives.at(drivenew)->GetFileAttr(fullnew, &attr)) {
+	if (new_ptr->GetFileAttr(fullnew, &attr)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+
+	DOS_Drive* old_ptr = Drives.at(driveold);
+
 	/* Source must exist */
-	if (!Drives.at(driveold)->GetFileAttr(fullold, &attr)) {
+	if (!old_ptr->GetFileAttr(fullold, &attr)) {
 		if (!PathExists(oldname)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 
-	if (Drives.at(drivenew)->IsReadOnly()) {
+	if (new_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
-	if (Drives.at(drivenew)->Rename(fullold, fullnew)) {
+	if (new_ptr->Rename(fullold, fullnew)) {
 		return true;
 	}
 	/* Rename failed despite checks => no access */
@@ -987,13 +998,16 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (Drives.at(drive)->IsReadOnly()) {
+
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
+	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
 	FatAttributeFlags old_attr = {};
-	if (!Drives.at(drive)->GetFileAttr(fullname, &old_attr)) {
+	if (!drive_ptr->GetFileAttr(fullname, &old_attr)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
@@ -1009,7 +1023,7 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	attr.volume    = old_attr.volume;
 	attr.directory = old_attr.directory;
 
-	return Drives.at(drive)->SetFileAttr(fullname, attr);
+	return drive_ptr->SetFileAttr(fullname, attr);
 }
 
 bool DOS_Canonicalize(const char* const name, char* const canonicalized)
