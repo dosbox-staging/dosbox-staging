@@ -201,7 +201,9 @@ struct SbInfo {
 
 		bool stereo   = false;
 		bool enabled  = false;
-		bool filtered = false;
+
+		bool filtered         = false;
+		bool filter_always_on = false;
 
 		uint8_t unhandled[0x48] = {};
 
@@ -425,15 +427,13 @@ struct FilterConfig {
 
 static void set_filter(MixerChannelPtr channel, const FilterConfig& config)
 {
-	if (config.hpf_state == FilterState::On ||
-	    config.hpf_state == FilterState::ForcedOn) {
+	if (config.hpf_state == FilterState::On) {
 		channel->ConfigureHighPassFilter(config.hpf_order,
 		                                 config.hpf_cutoff_freq_hz);
 	}
 	channel->SetHighPassFilter(config.hpf_state);
 
-	if (config.lpf_state == FilterState::On ||
-	    config.lpf_state == FilterState::ForcedOn) {
+	if (config.lpf_state == FilterState::On) {
 		channel->ConfigureLowPassFilter(config.lpf_order,
 		                                config.lpf_cutoff_freq_hz);
 	}
@@ -488,7 +488,6 @@ static std::optional<FilterType> determine_filter_type(const std::string& filter
 
 static void configure_sb_filter_for_model(MixerChannelPtr channel,
                                           const std::string& filter_prefs,
-                                          const bool filter_always_on,
                                           const SbType sb_type)
 {
 	const auto filter_prefs_parts = split(filter_prefs);
@@ -500,9 +499,7 @@ static void configure_sb_filter_for_model(MixerChannelPtr channel,
 	FilterConfig config = {};
 
 	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
-		config.lpf_state = filter_always_on ? FilterState::ForcedOn
-		                                    : FilterState::On;
-
+		config.lpf_state          = FilterState::On;
 		config.lpf_order          = order;
 		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
 	};
@@ -569,12 +566,14 @@ static void configure_sb_filter(MixerChannelPtr channel,
                                 const std::string& filter_prefs,
                                 const bool filter_always_on, const SbType sb_type)
 {
-	// When a custom filter is set, we're doing zero-order-hold upsampling to
-	// the native Sound Blaster DAC rate, apply the custom filter, then
+	sb.mixer.filter_always_on = filter_always_on;
+
+	// When a custom filter is set, we're doing zero-order-hold upsampling
+	// to the native Sound Blaster DAC rate, apply the custom filter, then
 	// resample to the host rate.
 	//
-	// We need to enable the ZOH upsampler and the correct upsample rate first
-	// for the filter cutoff frequency validation to work correctly.
+	// We need to enable the ZOH upsampler and the correct upsample rate
+	// first for the filter cutoff frequency validation to work correctly.
 	//
 	channel->SetZeroOrderHoldUpsamplerTargetRate(NativeDacRateHz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
@@ -582,10 +581,7 @@ static void configure_sb_filter(MixerChannelPtr channel,
 	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		// Not a custom filter setting; try to parse it as a
 		// model-specific setting.
-		configure_sb_filter_for_model(channel,
-		                              filter_prefs,
-		                              filter_always_on,
-		                              sb_type);
+		configure_sb_filter_for_model(channel, filter_prefs, sb_type);
 	}
 }
 
@@ -2319,21 +2315,24 @@ static void ctmixer_write(const uint8_t val)
 		}
 		break;
 
-	case 0x0e: // Output/Stereo Select
-		sb.mixer.stereo   = (val & 0x2) > 0;
+	case 0x0e: {
+		// Output/Stereo Select
+		sb.mixer.stereo   = (val & 0x02) > 0;
 		sb.mixer.filtered = (val & 0x20) > 0;
 
-		if (sb.sb_filter_state != FilterState::ForcedOn) {
-			sb.sb_filter_state = sb.mixer.filtered ? FilterState::On
-			                                       : FilterState::Off;
-			sb.chan->SetLowPassFilter(sb.sb_filter_state);
+		// Disallow toggling the filter programmatically if 'filter_always_on'
+		// is set
+		if (!sb.mixer.filter_always_on) {
+			sb.chan->SetLowPassFilter(sb.mixer.filtered
+			                                  ? FilterState::On
+			                                  : FilterState::Off);
 		}
 
 		dsp_change_stereo(sb.mixer.stereo);
 
 		LOG(LOG_SB, LOG_WARN)
 		("Mixer set to %s", sb.dma.stereo ? "STEREO" : "MONO");
-		break;
+	} break;
 
 	case 0x14: // Audio 1 Play Volume (ESS)
 		if (sb.ess_type != EssType::None) {
