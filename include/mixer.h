@@ -125,7 +125,7 @@ enum class ChannelFeature {
 	Synthesizer,
 };
 
-enum class FilterState { Off, On, ForcedOn };
+enum class FilterState { Off, On };
 
 struct MixerChannelSettings {
 	bool is_enabled          = {};

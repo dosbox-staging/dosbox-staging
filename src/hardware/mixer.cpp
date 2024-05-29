@@ -1136,14 +1136,12 @@ static void log_filter_settings(const std::string& channel_name,
 
 	// we programmatically expect only 'on' and 'forced-on' states:
 	assert(state != FilterState::Off);
-	assert(state == FilterState::On || state == FilterState::ForcedOn);
 
 	constexpr auto DbPerOrder = 6;
 
-	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %d Hz)",
+	LOG_MSG("%s: %s filter enabled (%d dB/oct at %d Hz)",
 	        channel_name.c_str(),
 	        filter_name.c_str(),
-	        state == FilterState::ForcedOn ? " (forced)" : "",
 	        order * DbPerOrder,
 	        cutoff_freq_hz);
 }
