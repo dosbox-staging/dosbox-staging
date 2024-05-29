@@ -49,7 +49,7 @@ void BIOSTEST::Run(void) {
 		if (!ldp)
 			return;
 
-		FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		FILE *tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			WriteOut("Can't open a file");
 			return;

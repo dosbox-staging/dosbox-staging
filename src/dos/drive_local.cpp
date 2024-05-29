@@ -245,7 +245,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 	return true;
 }
 
-FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)
+FILE* localDrive::GetHostFilePtr(const char* const name, const char* const type)
 {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
