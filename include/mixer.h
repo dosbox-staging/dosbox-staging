@@ -183,11 +183,22 @@ public:
 	int GetSampleRate() const;
 
 	void Set0dbScalar(const float f);
-	void RecalcCombinedVolume();
+	void UpdateCombinedVolume();
 
+	// The "user volume" is the volume level of the built-in DOSBox mixer
+	// (MIXER command)
 	const AudioFrame GetUserVolume() const;
 	void SetUserVolume(const AudioFrame volume);
 
+	// The "app volume" is the volume level set programmatically by DOS
+	// programs (on audio devices that support that, e.g., the Sound
+	// Blaster mixer, or the CD Audio volume level).
+	//
+	// For example, if you set the volume level of the CDAUDIO channel to 50%
+	// in the mixer via `MIXER CDAUDIO 50`, then you also set the CD audio
+	// music level in a game to "half volume", the final volume will be around
+	// 25%.
+	//
 	const AudioFrame GetAppVolume() const;
 	void SetAppVolume(const AudioFrame volume);
 

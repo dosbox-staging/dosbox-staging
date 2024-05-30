@@ -739,11 +739,13 @@ void MixerChannel::Set0dbScalar(const float scalar)
 
 	db0_volume_gain = scalar;
 
-	RecalcCombinedVolume();
+	UpdateCombinedVolume();
 }
 
-void MixerChannel::RecalcCombinedVolume()
+void MixerChannel::UpdateCombinedVolume()
 {
+	// TODO Now that we use floats, we should apply the master volume at the
+	// very end as it has no risk of overloading the 16-bit range
 	combined_volume_gain = user_volume_gain * app_volume_gain *
 	                       mixer.master_volume * db0_volume_gain;
 }
@@ -757,7 +759,7 @@ void MixerChannel::SetUserVolume(const AudioFrame volume)
 {
 	// Allow unconstrained user-defined values
 	user_volume_gain = volume;
-	RecalcCombinedVolume();
+	UpdateCombinedVolume();
 }
 
 const AudioFrame MixerChannel::GetAppVolume() const
@@ -775,7 +777,7 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 	};
 	app_volume_gain = {clamp_to_unity(volume.left),
 	                   clamp_to_unity(volume.right)};
-	RecalcCombinedVolume();
+	UpdateCombinedVolume();
 
 #ifdef DEBUG
 	LOG_MSG("MIXER: %-7s channel: application requested volume "
@@ -798,7 +800,7 @@ void MIXER_SetMasterVolume(const AudioFrame volume)
 	mixer.master_volume = volume;
 
 	for (const auto& [_, channel] : mixer.channels) {
-		channel->RecalcCombinedVolume();
+		channel->UpdateCombinedVolume();
 	}
 }
 
