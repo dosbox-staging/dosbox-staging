@@ -489,7 +489,7 @@ void Opl::AdlibGoldControlWrite(const uint8_t val)
 		ctrl.rvol = val;
 
 	setvol:
-		if (ctrl.mixer) {
+		if (ctrl.mixer_enabled) {
 			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
 			channel->SetAppVolume(
@@ -769,7 +769,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
-	ctrl.mixer = section->Get_bool("sbmixer");
+	ctrl.mixer_enabled = section->Get_bool("sbmixer");
 
 	std::set channel_features = {ChannelFeature::Sleep,
 	                             ChannelFeature::FadeOut,
