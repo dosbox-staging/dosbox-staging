@@ -552,7 +552,7 @@ bool make_writable(const std_fs::path &p)
 
 	// Result and verification
 	if (ec)
-		LOG_WARNING("FILESYSTEM: Failed to add write permissions for '%s': %s",
+		LOG_WARNING("DOS: Error adding write permissions to file '%s': %s",
 		            p.string().c_str(), ec.message().c_str());
 	else
 		assert(is_writable(p));
@@ -577,7 +577,7 @@ bool make_readonly(const std_fs::path &p)
 
 	// Result and verification
 	if (ec)
-		LOG_WARNING("FILESYSTEM: Failed to remove write permissions for '%s': %s",
+		LOG_WARNING("DOS: Error removing write permissions from file '%s': %s",
 		            p.string().c_str(), ec.message().c_str());
 	else
 		assert(is_readonly(p));

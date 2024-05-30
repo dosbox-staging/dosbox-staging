@@ -384,7 +384,7 @@ FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly)
 	fp = fopen(filename.c_str(), "rb");
 	if (fp) {
 		is_readonly = true;
-		LOG_INFO("FILESYSTEM: Opened %s read-only per host filesystem permissions",
+		LOG_INFO("DOS: Opened file '%s' as read-only per host filesystem permissions",
 		         filename.c_str());
 	}
 	// Note: if failed, the caller should provide a context-specific message

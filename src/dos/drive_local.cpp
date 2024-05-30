@@ -72,7 +72,7 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
 
 	if (!file_pointer) {
-		LOG_MSG("Warning: file creation failed: %s", expanded_name);
+		LOG_ERR("DOS: Error creating file '%s'", expanded_name);
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -199,7 +199,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 			if (IsFirstEncounter(newname)) {
 				// For brevity and clarity to the user, we show just the
 				// filename instead of the more cluttered absolute path.
-				LOG_MSG("FILESYSTEM: protected from modification: %s",
+				LOG_MSG("DOS: Protected file '%s' from modifications",
 				        get_basename(newname).c_str());
 			}
 #endif
@@ -218,10 +218,10 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
 	} else {
 		open_msg = "succeeded with desired flags";
 	}
-	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
-	        flags_str.c_str(),
-	        get_basename(newname).c_str(),
-	        open_msg.c_str());
+	LOG_DEBUG("DOS: flags=%2s, %-12s %s",
+	          flags_str.c_str(),
+	          get_basename(newname).c_str(),
+	          open_msg.c_str());
 #endif
 
 	if (!fhandle) {
@@ -259,7 +259,7 @@ bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
 bool localDrive::FileUnlink(char* name)
 {
 	if (!FileExists(name)) {
-		LOG_DEBUG("FS: Skipping removal of '%s' because it doesn't exist",
+		LOG_DEBUG("DOS: Skipping removal of file '%s' because it doesn't exist",
 		          name);
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
@@ -301,7 +301,7 @@ bool localDrive::FileUnlink(char* name)
 			return true;
 		}
 	}
-	LOG_DEBUG("FS: Unable to remove file '%s'", fullname);
+	LOG_DEBUG("DOS: Unable to remove file '%s'", fullname);
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -592,7 +592,7 @@ bool localDrive::FileStat(const char* name, FileStat_Block* const stat_block)
 		stat_block->time = DOS_PackTime(datetime);
 		stat_block->date = DOS_PackDate(datetime);
 	} else {
-		LOG_MSG("FS: error while converting date in: %s", name);
+		LOG_ERR("DOS: Error converting date of file '%s'", name);
 	}
 	stat_block->size=(uint32_t)temp_stat.st_size;
 	return true;
@@ -642,7 +642,7 @@ bool localFile::ftell_and_check()
 	if (stream_pos >= 0)
 		return true;
 
-	LOG_DEBUG("FS: Failed obtaining position in file '%s'", name.c_str());
+	LOG_DEBUG("DOS: Failed obtaining position in file '%s'", name.c_str());
 	return false;
 }
 
@@ -656,7 +656,7 @@ bool localFile::fseek_to_and_check(long pos, int whence)
 		stream_pos = pos;
 		return true;
 	}
-	LOG_DEBUG("FS: Failed seeking to byte %ld in file '%s'",
+	LOG_DEBUG("DOS: Failed seeking to byte %ld in file '%s'",
 	          stream_pos,
 	          name.c_str());
 	return false;
@@ -688,7 +688,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	*size = actual; // always save the actual
 
 	if (actual != requested) {
-		// LOG_DEBUG("FS: Only read %u of %u requested bytes from file '%s'",
+		// LOG_DEBUG("DOS: Only read %u of %u requested bytes from file '%s'",
 		//           actual,
 		//           requested,
 		//           name.c_str());
@@ -731,7 +731,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	if (*size == 0) {
 		const auto file = cross_fileno(fhandle);
 		if (file == -1) {
-			LOG_DEBUG("FS: Could not resolve file number for '%s'",
+			LOG_DEBUG("DOS: Could not resolve file number for '%s'",
 			          name.c_str());
 			return false;
 		}
@@ -739,7 +739,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 			return false;
 		}
 		if (ftruncate(file, stream_pos) != 0) {
-			LOG_DEBUG("FS: Failed truncating file '%s'", name.c_str());
+			LOG_DEBUG("DOS: Failed truncating file '%s'", name.c_str());
 			return false;
 		}
 		// Truncation succeeded if we made it here
@@ -750,7 +750,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	const auto requested = *size;
 	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
 	if (actual != requested) {
-		LOG_DEBUG("FS: Only wrote %u of %u requested bytes to file '%s'",
+		LOG_DEBUG("DOS: Only wrote %u of %u requested bytes to file '%s'",
 		          actual,
 		          requested,
 		          name.c_str());

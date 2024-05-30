@@ -89,14 +89,13 @@ std::string to_native_path(const std::string &path) noexcept
 		return "";
 	}
 	if (err != 0) {
-		LOG_DEBUG("FS: glob error (%d) while searching for '%s'",
-		          err,
-		          path.c_str());
+		LOG_DEBUG("DOS: Glob error while searching for '%s', error code: %d",
+		          path.c_str(), err);
 		globfree(&pglob);
 		return "";
 	}
 	if (pglob.gl_pathc > 1) {
-		LOG_DEBUG("FS: Searching for path '%s' gives ambiguous results:",
+		LOG_DEBUG("DOS: Searching for path '%s' gives ambiguous results",
 		          path.c_str());
 
 		for (size_t i = 0; i < pglob.gl_pathc; i++) {
@@ -224,8 +223,9 @@ static std::optional<FatAttributeFlags> get_xattr(const std_fs::path& path)
 	}
 
 	if (static_cast<size_t>(length) > XattrMaxLength) {
-		LOG_MSG("DOS: Incorrect '%s' extended attribute in '%s'",
-		        XattrName.c_str(), path.c_str());
+		LOG_WARNING("DOS: File '%s' has invalid extended attribute: '%s'",
+		            XattrName.c_str(),
+		            path.c_str());
 		return {};
 	}
 
