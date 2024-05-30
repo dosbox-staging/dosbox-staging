@@ -198,8 +198,9 @@ struct SbInfo {
 		bool stereo   = false;
 		bool enabled  = false;
 
-		bool filtered         = false;
-		bool filter_always_on = false;
+		bool filtered          = false;
+		bool filter_configured = false;
+		bool filter_always_on  = false;
 
 		uint8_t unhandled[0x48] = {};
 
@@ -579,6 +580,9 @@ static void configure_sb_filter(MixerChannelPtr channel,
 		// model-specific setting.
 		configure_sb_filter_for_model(channel, filter_prefs, sb_type);
 	}
+
+	sb.mixer.filter_configured = (channel->GetLowPassFilterState() ==
+	                              FilterState::On);
 }
 
 static void configure_opl_filter_for_model(MixerChannelPtr opl_channel,
@@ -2316,7 +2320,7 @@ static void ctmixer_write(const uint8_t val)
 
 		// Disallow toggling the filter programmatically if 'filter_always_on'
 		// is set
-		if (!sb.mixer.filter_always_on) {
+		if (sb.mixer.filter_configured && !sb.mixer.filter_always_on) {
 			sb.chan->SetLowPassFilter(sb.mixer.filtered
 			                                  ? FilterState::On
 			                                  : FilterState::Off);
