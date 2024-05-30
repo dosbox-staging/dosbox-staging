@@ -223,109 +223,177 @@ void DOS_SetDefaultDrive(uint8_t drive) {
 
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 {
-	if(!name || *name == 0 || *name == ' ') {
-		/* Both \0 and space are seperators and
-		 * empty filenames report file not found */
+	if (!name || *name == 0 || *name == ' ') {
+		// Both \0 and space are seperators and
+		// empty filenames report file not found
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
-	const char * name_int = name;
+	const char* name_int = name;
 	char tempdir[DOS_PATHLENGTH];
 	char upname[DOS_PATHLENGTH];
-	Bitu r,w;
+
+	Bitu r, w;
 	uint8_t c;
+
 	*drive = DOS_GetDefaultDrive();
-	/* First get the drive */
-	if (name_int[1]==':') {
-		*drive=(name_int[0] | 0x20)-'a';
-		name_int+=2;
+
+	// First get the drive
+	if (name_int[1] == ':') {
+		*drive = (name_int[0] | 0x20) - 'a';
+		name_int += 2;
 	}
-	if (*drive>=DOS_DRIVES || !Drives[*drive]) { 
+	if (*drive >= DOS_DRIVES || !Drives[*drive]) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
-		return false; 
+		return false;
 	}
-	r=0;w=0;
+
+	r = 0;
+	w = 0;
+
 	while (r < DOS_PATHLENGTH && name_int[r] != 0) {
-		c=name_int[r++];
-		if ((c>='a') && (c<='z')) c-=32;
-		else if (c==' ') continue; /* should be separator */
-		else if (c=='/') c='\\';
-		upname[w++]=c;
+		c = name_int[r++];
+		if ((c >= 'a') && (c <= 'z')) {
+			c -= 32;
+		} else if (c == ' ') {
+			// should be separator
+			continue;
+		} else if (c == '/') {
+			c = '\\';
+		}
+		upname[w++] = c;
 	}
-	while (r>0 && name_int[r-1]==' ') r--;
-	if (r>=DOS_PATHLENGTH) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
-	upname[w]=0;
-	/* Now parse the new file name to make the final filename */
-	if (upname[0]!='\\') strcpy(fullname,Drives[*drive]->curdir);
-	else fullname[0]=0;
-	uint32_t lastdir=0;uint32_t t=0;
-	while (fullname[t]!=0) {
-		if ((fullname[t]=='\\') && (fullname[t+1]!=0)) lastdir=t;
+
+	while (r > 0 && name_int[r - 1] == ' ') {
+		r--;
+	}
+
+	if (r >= DOS_PATHLENGTH) {
+		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+		return false;
+	}
+
+	upname[w] = 0;
+
+	// Now parse the new file name to make the final filename
+	if (upname[0] != '\\') {
+		strcpy(fullname, Drives[*drive]->curdir);
+	} else {
+		fullname[0] = 0;
+	}
+
+	uint32_t lastdir = 0;
+	uint32_t t       = 0;
+
+	while (fullname[t] != 0) {
+		if ((fullname[t] == '\\') && (fullname[t + 1] != 0)) {
+			lastdir = t;
+		}
 		t++;
 	};
-	r=0;w=0;
-	tempdir[0]=0;
-	bool stop=false;
+
+	r = 0;
+	w = 0;
+
+	tempdir[0] = 0;
+	bool stop  = false;
+
 	while (!stop) {
-		if (upname[r]==0) stop=true;
-		if ((upname[r]=='\\') || (upname[r]==0)){
-			tempdir[w]=0;
-			if (tempdir[0]==0) { w=0;r++;continue;}
-			if (strcmp(tempdir,".")==0) {
-				tempdir[0]=0;			
-				w=0;r++;
+		if (upname[r] == 0) {
+			stop = true;
+		}
+
+		if ((upname[r] == '\\') || (upname[r] == 0)) {
+			tempdir[w] = 0;
+			if (tempdir[0] == 0) {
+				w = 0;
+				r++;
+				continue;
+			}
+
+			if (strcmp(tempdir, ".") == 0) {
+				tempdir[0] = 0;
+				w          = 0;
+				r++;
 				continue;
 			}
 
 			int32_t iDown;
-			bool dots = true;
-			int32_t templen=(int32_t)strlen(tempdir);
-			for(iDown=0;(iDown < templen) && dots;iDown++)
-				if(tempdir[iDown] != '.')
+			bool dots       = true;
+			int32_t templen = (int32_t)strlen(tempdir);
+
+			for (iDown = 0; (iDown < templen) && dots; iDown++) {
+				if (tempdir[iDown] != '.') {
 					dots = false;
+				}
+			}
 
 			// only dots?
 			if (dots && (templen > 1)) {
 				int32_t cDots = templen - 1;
-				for(iDown=(int32_t)strlen(fullname)-1;iDown>=0;iDown--) {
-					if(fullname[iDown]=='\\' || iDown==0) {
+
+				for (iDown = (int32_t)strlen(fullname) - 1;
+				     iDown >= 0;
+				     iDown--) {
+
+					if (fullname[iDown] == '\\' || iDown == 0) {
 						lastdir = iDown;
 						cDots--;
-						if(cDots==0)
+						if (cDots == 0) {
 							break;
+						}
 					}
 				}
-				fullname[lastdir]=0;
-				t=0;lastdir=0;
-				while (fullname[t]!=0) {
-					if ((fullname[t]=='\\') && (fullname[t+1]!=0)) lastdir=t;
+
+				fullname[lastdir] = 0;
+
+				t       = 0;
+				lastdir = 0;
+
+				while (fullname[t] != 0) {
+					if ((fullname[t] == '\\') &&
+					    (fullname[t + 1] != 0)) {
+						lastdir = t;
+					}
 					t++;
 				}
-				tempdir[0]=0;
-				w=0;r++;
+
+				tempdir[0] = 0;
+
+				w = 0;
+				r++;
 				continue;
 			}
-			
 
-			lastdir=(uint32_t)strlen(fullname);
+			lastdir = (uint32_t)strlen(fullname);
 
-			if (lastdir!=0) strcat(fullname,"\\");
-			char * ext=strchr(tempdir,'.');
+			if (lastdir != 0) {
+				strcat(fullname, "\\");
+			}
+
+			char* ext = strchr(tempdir, '.');
+
 			if (ext) {
-				if(strchr(ext+1,'.')) { 
-				//another dot in the extension =>file not found
-				//Or path not found depending on wether 
-				//we are still in dir check stage or file stage
-					if(stop)
+				if (strchr(ext + 1, '.')) {
+					// another dot in the extension =>file
+					// not found Or path not found depending
+					// on wether we are still in dir check
+					// stage or file stage
+					if (stop) {
 						DOS_SetError(DOSERR_FILE_NOT_FOUND);
-					else
+					} else {
 						DOS_SetError(DOSERR_PATH_NOT_FOUND);
+					}
 					return false;
 				}
-				
+
 				ext[4] = 0;
-				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
-			} else tempdir[8]=0;
+				if ((strlen(tempdir) - strlen(ext)) > 8) {
+					memmove(tempdir + 8, ext, 5);
+				}
+			} else {
+				tempdir[8] = 0;
+			}
 
 			const auto tempdir_len = strlen(tempdir);
 			for (size_t i = 0; i < tempdir_len; ++i) {
@@ -340,29 +408,57 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 					continue;
 				}
 				switch (c) {
-				case '$':	case '#':	case '@':	case '(':	case ')':
-				case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
-				case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-				case '\'':	case '+':	case '^':	case 246:	case 255:	case 0xa0:
-				case 0xe5:	case 0xbd:	case 0x9d:
-					break;
+				case '$':
+				case '#':
+				case '@':
+				case '(':
+				case ')':
+				case '!':
+				case '%':
+				case '{':
+				case '}':
+				case '`':
+				case '~':
+				case '_':
+				case '-':
+				case '.':
+				case '*':
+				case '?':
+				case '&':
+				case '\'':
+				case '+':
+				case '^':
+				case 246:
+				case 255:
+				case 0xa0:
+				case 0xe5:
+				case 0xbd:
+				case 0x9d: break;
+
 				default:
-					LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X in %s!",c,c,name);
-					DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
+					LOG(LOG_FILES, LOG_NORMAL)
+					("Makename encountered an illegal char %c hex:%X in %s!",
+					 c,
+					 c,
+					 name);
+					DOS_SetError(DOSERR_PATH_NOT_FOUND);
+					return false;
 					break;
 				}
 			}
 
-			if (strlen(fullname)+strlen(tempdir)>=DOS_PATHLENGTH) {
-				DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
+			if (strlen(fullname) + strlen(tempdir) >= DOS_PATHLENGTH) {
+				DOS_SetError(DOSERR_PATH_NOT_FOUND);
+				return false;
 			}
-		   
-			strcat(fullname,tempdir);
-			tempdir[0]=0;
-			w=0;r++;
+
+			strcat(fullname, tempdir);
+			tempdir[0] = 0;
+			w          = 0;
+			r++;
 			continue;
 		}
-		tempdir[w++]=upname[r++];
+		tempdir[w++] = upname[r++];
 	}
 	return true;
 }
