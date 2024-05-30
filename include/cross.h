@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,35 +31,35 @@
 #include <sys/types.h>
 #include <vector>
 
-#if defined (_MSC_VER)						/* MS Visual C++ */
-#include <direct.h>
-#include <io.h>
-#define LONGTYPE(a) a##i64
-#else										/* LINUX / GCC */
-#include <dirent.h>
-#include <unistd.h>
-#define LONGTYPE(a) a##LL
+#if defined(_MSC_VER)
+	#include <direct.h>
+	#include <io.h>
+	#define LONGTYPE(a) a##i64
+#else
+	#include <dirent.h>
+	#include <unistd.h>
+	#define LONGTYPE(a) a##LL
 #endif
 
 #include "std_filesystem.h"
 
-#define CROSS_LEN 512						/* Maximum filename size */
+// Maximum filename size
+#define CROSS_LEN 512
 
-
-#if defined (WIN32)
-#define CROSS_FILENAME(blah) 
-#define CROSS_FILESPLIT '\\'
+#if defined(WIN32)
+	#define CROSS_FILENAME(name)
+	#define CROSS_FILESPLIT '\\'
 #else
-#define	CROSS_FILENAME(blah) strreplace(blah,'\\','/')
-#define CROSS_FILESPLIT '/'
+	#define CROSS_FILENAME(name) strreplace(name, '\\', '/')
+	#define CROSS_FILESPLIT      '/'
 #endif
 
-#define CROSS_NONE	0
-#define CROSS_FILE	1
-#define CROSS_DIR	2
+#define CROSS_NONE 0
+#define CROSS_FILE 1
+#define CROSS_DIR  2
 
-#if defined (WIN32) && !defined (__MINGW32__)
-#define ftruncate(blah,blah2) chsize(blah,blah2)
+#if defined(WIN32) && !defined(__MINGW32__)
+	#define ftruncate(path, length) chsize(path, length)
 #endif
 
 /* Large file support */
@@ -68,16 +68,16 @@
 	// typedef their equivalents
 	#define cross_ftello _ftelli64
 	#define cross_fseeko _fseeki64
-	#define cross_off_t __int64
+	#define cross_off_t  __int64
 #else
-	// All other platforms should have POSIX fstream 'o' support
-	// Note: Meson automatically sets preprocessor defines for us
+// All other platforms should have POSIX fstream 'o' support
+// Note: Meson automatically sets preprocessor defines for us
 
-	// Check that off_t is 64 bits
-	static_assert(sizeof(off_t) == sizeof(int64_t), "off_t not 64 bits");
+// Check that off_t is 64 bits
+static_assert(sizeof(off_t) == sizeof(int64_t), "off_t not 64 bits");
 	#define cross_ftello ftello
 	#define cross_fseeko fseeko
-	#define cross_off_t off_t
+	#define cross_off_t  off_t
 #endif
 
 // fileno is a POSIX function (not mentioned in ISO/C++), which means it might
@@ -86,17 +86,17 @@
 // using (platform-specific) _fileno. On other platforms we can use fileno
 // because it's either a POSIX-compliant system, or the function is available
 // when compiling with GNU extensions.
-#if defined (_MSC_VER)
-#define cross_fileno(s) _fileno(s)
+#if defined(_MSC_VER)
+	#define cross_fileno(s) _fileno(s)
 #else
-#define cross_fileno(s) fileno(s)
+	#define cross_fileno(s) fileno(s)
 #endif
 
 namespace cross {
 
 #if defined(WIN32)
 
-struct tm *localtime_r(const time_t *timep, struct tm *result);
+struct tm* localtime_r(const time_t* timep, struct tm* result);
 
 #else
 
@@ -115,27 +115,27 @@ std_fs::path GetConfigDir();
 std::string GetPrimaryConfigName();
 std_fs::path GetPrimaryConfigPath();
 
-std_fs::path resolve_home(const std::string &str) noexcept;
+std_fs::path resolve_home(const std::string& str) noexcept;
 
-#if defined (WIN32)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
+#if defined(WIN32)
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
+	#include <windows.h>
 
 typedef struct dir_struct {
-	HANDLE          handle;
-	char            base_path[MAX_PATH+4];
+	HANDLE handle;
+	char base_path[MAX_PATH + 4];
 	WIN32_FIND_DATA search_data;
 } dir_information;
 
 #else
 
-//#include <sys/types.h> //Included above
-#include <dirent.h>
+	// #include <sys/types.h> //Included above
+	#include <dirent.h>
 
-typedef struct dir_struct { 
-	DIR*  dir;
+typedef struct dir_struct {
+	DIR* dir;
 	char base_path[CROSS_LEN];
 } dir_information;
 
@@ -146,15 +146,13 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
 void close_directory(dir_information* dirp);
 
-FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
+FILE* fopen_wrap_ro_fallback(const std::string& filename, bool& is_readonly);
 
-bool wild_match(const char *haystack, const char *needle);
-bool WildFileCmp(const char *file, const char *wild, bool long_compare = false);
+bool wild_match(const char* haystack, const char* needle);
+bool WildFileCmp(const char* file, const char* wild, bool long_compare = false);
 
-bool get_expanded_files(const std::string &path,
-                        std::vector<std::string> &files,
-                        bool files_only,
-                        bool skip_native_path = false) noexcept;
+bool get_expanded_files(const std::string& path, std::vector<std::string>& files,
+                        bool files_only, bool skip_native_path = false) noexcept;
 
 std::string get_language_from_os();
 
