@@ -236,35 +236,51 @@ private:
 
 class DOS_Drive_Cache {
 public:
-	enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
-	DOS_Drive_Cache            (void);
-	DOS_Drive_Cache            (const char* path);
-	DOS_Drive_Cache            (const DOS_Drive_Cache&) = delete; // prevent copying
-	DOS_Drive_Cache& operator= (const DOS_Drive_Cache&) = delete; // prevent assignment
-	~DOS_Drive_Cache           (void);
+	enum TDirSort {
+		NOSORT,
+		ALPHABETICAL,
+		DIRALPHABETICAL,
+		ALPHABETICALREV,
+		DIRALPHABETICALREV
+	};
+	DOS_Drive_Cache(void);
+	DOS_Drive_Cache(const char* path);
 
-	void SetBaseDir(const char *path);
-	void SetDirSort(TDirSort sort) { sortDirType = sort; }
+	// prevent copying
+	DOS_Drive_Cache(const DOS_Drive_Cache&) = delete; 
 
-	bool  OpenDir              (const char* path, uint16_t& id);
-	bool  ReadDir              (uint16_t id, char* &result);
+	// prevent assignment
+	DOS_Drive_Cache& operator=(const DOS_Drive_Cache&) = delete; 
+	~DOS_Drive_Cache(void);
+
+	void SetBaseDir(const char* path);
+	void SetDirSort(TDirSort sort)
+	{
+		sortDirType = sort;
+	}
+
+	bool OpenDir(const char* path, uint16_t& id);
+	bool ReadDir(uint16_t id, char*& result);
 
 	void ExpandNameAndNormaliseCase(char* path);
 	char* GetExpandNameAndNormaliseCase(const char* path);
 	bool GetShortName(const char* fullname, char* shortname);
 
-	bool  FindFirst            (char* path, uint16_t& id);
-	bool  FindNext             (uint16_t id, char* &result);
+	bool FindFirst(char* path, uint16_t& id);
+	bool FindNext(uint16_t id, char*& result);
 
-	void  CacheOut             (const char* path, bool ignoreLastDir = false);
-	void  AddEntry             (const char* path, bool checkExist = false);
-	void  AddEntryDirOverlay   (const char* path, bool checkExist = false);
+	void CacheOut(const char* path, bool ignoreLastDir = false);
+	void AddEntry(const char* path, bool checkExist = false);
+	void AddEntryDirOverlay(const char* path, bool checkExist = false);
 
-	void  DeleteEntry          (const char* path, bool ignoreLastDir = false);
-	void  EmptyCache           (void);
+	void DeleteEntry(const char* path, bool ignoreLastDir = false);
+	void EmptyCache(void);
 
-	void SetLabel(const char *name, bool cdrom, bool allowupdate);
-	const char *GetLabel() const { return label; }
+	void SetLabel(const char* name, bool cdrom, bool allowupdate);
+	const char* GetLabel() const
+	{
+		return label;
+	}
 
 	class CFileInfo {
 	public:
@@ -289,52 +305,65 @@ public:
 			longNameList.clear();
 		}
 
-		char        orgname[CROSS_LEN];
-		char        shortname[DOS_NAMELENGTH_ASCII];
-		bool        isOverlayDir;
-		bool        isDir;
-		uint16_t      id;
-		Bitu        nextEntry;
-		unsigned    shortNr;
+		char orgname[CROSS_LEN];
+		char shortname[DOS_NAMELENGTH_ASCII];
+		bool isOverlayDir;
+		bool isDir;
+		uint16_t id;
+		Bitu nextEntry;
+		unsigned shortNr;
 		// contents
 		std::vector<CFileInfo*> fileList;
 		std::vector<CFileInfo*> longNameList;
 	};
 
 private:
-	void ClearFileInfo(CFileInfo *dir);
-	void DeleteFileInfo(CFileInfo *dir);
+	void ClearFileInfo(CFileInfo* dir);
+	void DeleteFileInfo(CFileInfo* dir);
 
-	bool		RemoveTrailingDot	(char* shortname);
-	Bits		GetLongName		(CFileInfo* info, char* shortname, const size_t shortname_len);
-	void		CreateShortName		(CFileInfo* dir, CFileInfo* info);
-	unsigned        CreateShortNameID       (CFileInfo* dir, const char* name);
-	int		CompareShortname	(const char* compareName, const char* shortName);
-	bool		SetResult		(CFileInfo* dir, char * &result, Bitu entryNr);
-	bool		IsCachedIn		(CFileInfo* dir);
-	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
-	bool		RemoveSpaces		(char* str);
-	bool		OpenDir			(CFileInfo* dir, const char* path, uint16_t& id);
-	void		CreateEntry		(CFileInfo* dir, const char* name, bool is_directory);
-	void		CopyEntry		(CFileInfo* dir, CFileInfo* from);
-	uint16_t		GetFreeID		(CFileInfo* dir);
-	void		Clear			(void);
+	bool RemoveTrailingDot(char* shortname);
 
-	CFileInfo*	dirBase;
-	char		dirPath				[CROSS_LEN];
-	char		basePath			[CROSS_LEN];
-	TDirSort	sortDirType;
-	CFileInfo*	save_dir;
-	char		save_path			[CROSS_LEN];
-	char		save_expanded		[CROSS_LEN];
+	Bits GetLongName(CFileInfo* info, char* shortname, const size_t shortname_len);
 
-	uint16_t		srchNr;
-	CFileInfo*	dirSearch			[MAX_OPENDIRS];
-	CFileInfo*	dirFindFirst		[MAX_OPENDIRS];
-	uint16_t		nextFreeFindFirst;
+	void CreateShortName(CFileInfo* dir, CFileInfo* info);
 
-	char		label				[CROSS_LEN];
-	bool		updatelabel;
+	unsigned CreateShortNameID(CFileInfo* dir, const char* name);
+
+	int CompareShortname(const char* compareName, const char* shortName);
+
+	bool SetResult(CFileInfo* dir, char*& result, Bitu entryNr);
+
+	bool IsCachedIn(CFileInfo* dir);
+
+	CFileInfo* FindDirInfo(const char* path, char* expandedPath);
+
+	bool RemoveSpaces(char* str);
+
+	bool OpenDir(CFileInfo* dir, const char* path, uint16_t& id);
+
+	void CreateEntry(CFileInfo* dir, const char* name, bool is_directory);
+
+	void CopyEntry(CFileInfo* dir, CFileInfo* from);
+
+	uint16_t GetFreeID(CFileInfo* dir);
+
+	void Clear(void);
+
+	CFileInfo* dirBase;
+	char dirPath[CROSS_LEN];
+	char basePath[CROSS_LEN];
+	TDirSort sortDirType;
+	CFileInfo* save_dir;
+	char save_path[CROSS_LEN];
+	char save_expanded[CROSS_LEN];
+
+	uint16_t srchNr;
+	CFileInfo* dirSearch[MAX_OPENDIRS];
+	CFileInfo* dirFindFirst[MAX_OPENDIRS];
+	uint16_t nextFreeFindFirst;
+
+	char label[CROSS_LEN];
+	bool updatelabel;
 };
 
 enum class DosDriveType : uint16_t {
