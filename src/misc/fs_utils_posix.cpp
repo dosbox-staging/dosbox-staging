@@ -298,6 +298,7 @@ static bool set_xattr([[maybe_unused]] const int file_descriptor,
 FILE* local_drive_create_file(const std_fs::path& path,
                               const FatAttributeFlags attributes)
 {
+	LOG_TRACE("local_drive_create_file: %s", path.c_str());
 	FILE* file_pointer = nullptr;
 
 	const auto file_descriptor = open(path.c_str(),

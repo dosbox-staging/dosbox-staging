@@ -312,6 +312,7 @@ public:
 		uint16_t id;
 		Bitu nextEntry;
 		unsigned shortNr;
+
 		// contents
 		std::vector<CFileInfo*> fileList;
 		std::vector<CFileInfo*> longNameList;

@@ -248,6 +248,7 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 //		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
 	}
 }
+
 void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 	// Get Last part...
 	char file	[CROSS_LEN];
@@ -891,6 +892,7 @@ void DOS_Drive_Cache::CopyEntry(CFileInfo* dir, CFileInfo* from) {
 }
 
 bool DOS_Drive_Cache::ReadDir(uint16_t id, char* &result) {
+	LOG_TRACE("read dir");
 	// shouldnt happen...
 	if (id >= MAX_OPENDIRS)
 		return false;

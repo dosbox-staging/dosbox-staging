@@ -40,11 +40,19 @@
 #endif
 
 #include "dos_inc.h"
+#include "dos_locale.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
 #include "string_utils.h"
 #include "cross.h"
 #include "inout.h"
+
+static std::string map_dos_filename_to_utf8(const char* filename)
+{
+	std::string utf8_mapped_name = {};
+	dos_to_utf8(std::string(filename), utf8_mapped_name, DefaultCodePage437);
+	return utf8_mapped_name;
+}
 
 bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
 {
@@ -68,8 +76,10 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 
 	const bool file_exists = FileExists(expanded_name);
 
+	const auto expanded_name_utf8 = map_dos_filename_to_utf8(expanded_name);
+
 	attributes.archive = true;
-	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
+	FILE* file_pointer = local_drive_create_file(expanded_name_utf8, attributes);
 
 	if (!file_pointer) {
 		LOG_ERR("DOS: Error creating file '%s'", expanded_name);
@@ -82,7 +92,7 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, expanded_name, file_pointer, basedir);
+	*file = new localFile(name, expanded_name_utf8, file_pointer, basedir);
 
 	(*file)->flags = OPEN_READWRITE;
 

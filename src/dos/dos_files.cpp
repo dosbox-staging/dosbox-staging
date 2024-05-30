@@ -436,12 +436,13 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 				case 0x9d: break;
 
 				default:
-					LOG(LOG_FILES, LOG_NORMAL)
-					("Makename encountered an illegal char %c hex:%X in %s!",
+					LOG_TRACE("Makename encountered an illegal char %c hex:%X in %s!",
 					 c,
 					 c,
 					 name);
+
 					DOS_SetError(DOSERR_PATH_NOT_FOUND);
+
 					return false;
 					break;
 				}
@@ -460,6 +461,7 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 		}
 		tempdir[w++] = upname[r++];
 	}
+
 	return true;
 }
 
@@ -698,9 +700,9 @@ bool DOS_FindNext(void) {
 	if(i >= DOS_DRIVES || !Drives[i]) {
 		/* Corrupt search. */
 		LOG(LOG_FILES,LOG_ERROR)("Corrupt search!!!!");
-		DOS_SetError(DOSERR_NO_MORE_FILES); 
+		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
-	} 
+	}
 	if (Drives[i]->FindNext(dta)) return true;
 	return false;
 }
@@ -871,7 +873,7 @@ bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
 		return false;
 	}
 	bool foundit = Drives.at(drive)->FileCreate(&Files[handle], fullname, attributes);
-	if (foundit) { 
+	if (foundit) {
 		Files[handle]->SetDrive(drive);
 		Files[handle]->AddRef();
 		if (!fcb) psp.SetFileHandle(*entry,handle);
@@ -945,7 +947,7 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 			return false;
 		dos.errorcode = old_errorcode;
 	}
-	if (exists || device ) { 
+	if (exists || device ) {
 		Files[handle]->AddRef();
 		if (!fcb) psp.SetFileHandle(*entry,handle);
 		return true;
@@ -955,7 +957,7 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 		    Drives.at(drive)->FileExists(fullname)) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 		} else {
-			if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND); 
+			if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
 			else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		}
 		return false;
@@ -1150,7 +1152,7 @@ bool DOS_DuplicateEntry(uint16_t entry,uint16_t * newentry) {
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
-	Files[handle]->AddRef();	
+	Files[handle]->AddRef();
 	psp.SetFileHandle(*newentry,handle);
 	return true;
 }
@@ -1217,7 +1219,7 @@ char DOS_ToUpper(char c) {
 	unsigned char uc = *reinterpret_cast<unsigned char*>(&c);
 	if (uc > 0x60 && uc < 0x7B) uc -= 0x20;
 	else if (uc > 0x7F && uc < 0xA5) {
-		const unsigned char t[0x25] = { 
+		const unsigned char t[0x25] = {
 			0x00, 0x9a, 0x45, 0x41, 0x8E, 0x41, 0x8F, 0x80, 0x45, 0x45, 0x45, 0x49, 0x49, 0x49, 0x00, 0x00,
 			0x00, 0x92, 0x00, 0x4F, 0x99, 0x4F, 0x55, 0x55, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 			0x41, 0x49, 0x4F, 0x55, 0xA5};
@@ -1231,7 +1233,7 @@ char DOS_ToUpper(char c) {
 #define ILLEGAL ":.;,=+ \t/\"[]<>|"
 
 static bool isvalid(const char in){
-	const char ill[]=ILLEGAL;    
+	const char ill[]=ILLEGAL;
 	return (uint8_t(in)>0x1F) && (!strchr(ill,in));
 }
 
@@ -1290,7 +1292,7 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 		char sep[] = FCB_SEP;char a[2];
 		a[0] = *string;a[1] = '\0';
 		if (strcspn(a,sep) == 0) string++;
-	} 
+	}
 
 	/* Skip following spaces as well */
 	while((*string==' ')||(*string=='\t')) string++;
@@ -1321,7 +1323,7 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 	hasname = true;
 	fill = ' ';
 	index = 0;
-	/* Copy the name */	
+	/* Copy the name */
 	while (true) {
 		unsigned char nc = *reinterpret_cast<const unsigned char*>(
 		        &string[0]);
@@ -1332,12 +1334,12 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 		}
 		if (ncs == '?' && !ret && index < 8) ret = 1; //Don't override bad drive
 		if (!isvalid(ncs)) { //Fill up the name.
-			while(index < 8) 
-				fcb_name.part.name[index++] = fill; 
+			while(index < 8)
+				fcb_name.part.name[index++] = fill;
 			break;
 		}
-		if (index < 8) { 
-			fcb_name.part.name[index++] = (fill == '?')?fill:ncs; 
+		if (index < 8) {
+			fcb_name.part.name[index++] = (fill == '?')?fill:ncs;
 		}
 		string++;
 	}
@@ -1358,12 +1360,12 @@ checkext:
 		}
 		if (ncs == '?' && !ret && index < 3) ret = 1;
 		if (!isvalid(ncs)) { //Fill up the name.
-			while(index < 3) 
-				fcb_name.part.ext[index++] = fill; 
+			while(index < 3)
+				fcb_name.part.ext[index++] = fill;
 			break;
 		}
-		if (index < 3) { 
-			fcb_name.part.ext[index++] = (fill=='?')?fill:ncs; 
+		if (index < 3) {
+			fcb_name.part.ext[index++] = (fill=='?')?fill:ncs;
 		}
 		string++;
 	}
@@ -1545,7 +1547,7 @@ uint8_t DOS_FCBRead(uint16_t seg, uint16_t offset, uint16_t recno)
 	}
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
-	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_READ_NODATA; 
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_READ_NODATA;
 	uint16_t toread=rec_size;
 	if (!DOS_ReadFile(fhandle,dos_copybuf,&toread,true)) return FCB_READ_NODATA;
 	if (toread == 0)
@@ -1578,7 +1580,7 @@ uint8_t DOS_FCBWrite(uint16_t seg, uint16_t offset, uint16_t recno)
 	}
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
-	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE; 
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE;
 	MEM_BlockRead(RealToPhysical(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	uint16_t towrite=rec_size;
 	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite,true)) return FCB_ERR_WRITE;
@@ -1593,7 +1595,7 @@ uint8_t DOS_FCBWrite(uint16_t seg, uint16_t offset, uint16_t recno)
 	Files[fhandle]->time = time;
 	Files[fhandle]->date = date;
 	fcb.SetSizeDateTime(size,date,time);
-	if (++cur_rec>127) { cur_block++;cur_rec=0; }	
+	if (++cur_rec>127) { cur_block++;cur_rec=0; }
 	fcb.SetRecord(cur_block,cur_rec);
 	return FCB_SUCCESS;
 }
@@ -1606,7 +1608,7 @@ uint8_t DOS_FCBIncreaseSize(uint16_t seg, uint16_t offset)
 	fcb.GetSeqData(fhandle,rec_size);
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
-	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE; 
+	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE;
 	uint16_t towrite=0;
 	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite,true)) return FCB_ERR_WRITE;
 	uint32_t size;uint16_t date,time;
@@ -1656,7 +1658,7 @@ uint8_t DOS_FCBRandomRead(uint16_t seg, uint16_t offset, uint16_t* numRec, bool 
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position only when restore is false*/
-	if(!restore) fcb.SetRandom(new_block*128+new_rec); 
+	if(!restore) fcb.SetRandom(new_block*128+new_rec);
 	return error;
 }
 
@@ -1687,7 +1689,7 @@ uint8_t DOS_FCBRandomWrite(uint16_t seg, uint16_t offset, uint16_t* numRec, bool
 	fcb.GetRecord(new_block,new_rec);
 	if (restore) fcb.SetRecord(old_block,old_rec);
 	/* Update the random record pointer with new position only when restore is false */
-	if (!restore) fcb.SetRandom(new_block*128+new_rec); 
+	if (!restore) fcb.SetRandom(new_block*128+new_rec);
 	return error;
 }
 
@@ -1705,7 +1707,7 @@ bool DOS_FCBGetFileSize(uint16_t seg, uint16_t offset)
 	uint8_t handle; uint16_t rec_size;
 	fcb.GetSeqData(handle,rec_size);
 	if (rec_size == 0) rec_size = 128; //Use default if missing.
-	
+
 	uint32_t random=(size/rec_size);
 	if (size % rec_size) random++;
 	fcb.SetRandom(random);
@@ -1828,7 +1830,7 @@ bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate)
 	};
 	if (!Files[handle]->UpdateDateTimeFromHost()) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false; 
+		return false;
 	}
 	*otime = Files[handle]->time;
 	*odate = Files[handle]->date;
