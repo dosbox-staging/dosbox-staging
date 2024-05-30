@@ -413,16 +413,16 @@ static void log_filter_config(const char* channel_name, const char* output_type,
 }
 
 struct FilterConfig {
-	FilterState hpf_state       = FilterState::Off;
-	uint8_t hpf_order           = {};
-	uint16_t hpf_cutoff_freq_hz = {};
+	FilterState hpf_state  = FilterState::Off;
+	int hpf_order          = {};
+	int hpf_cutoff_freq_hz = {};
 
-	FilterState lpf_state       = FilterState::Off;
-	uint8_t lpf_order           = {};
-	uint16_t lpf_cutoff_freq_hz = {};
+	FilterState lpf_state  = FilterState::Off;
+	int lpf_order          = {};
+	int lpf_cutoff_freq_hz = {};
 
 	ResampleMethod resample_method = {};
-	uint16_t zoh_rate_hz           = {};
+	int zoh_rate_hz                = {};
 };
 
 static void set_filter(MixerChannelPtr channel, const FilterConfig& config)
@@ -498,7 +498,7 @@ static void configure_sb_filter_for_model(MixerChannelPtr channel,
 
 	FilterConfig config = {};
 
-	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
+	auto enable_lpf = [&](const int order, const int cutoff_freq_hz) {
 		config.lpf_state          = FilterState::On;
 		config.lpf_order          = order;
 		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
@@ -598,7 +598,7 @@ static void configure_opl_filter_for_model(MixerChannelPtr opl_channel,
 	FilterConfig config    = {};
 	config.resample_method = ResampleMethod::Resample;
 
-	auto enable_lpf = [&](const uint8_t order, const uint16_t cutoff_freq_hz) {
+	auto enable_lpf = [&](const int order, const int cutoff_freq_hz) {
 		config.lpf_state          = FilterState::On;
 		config.lpf_order          = order;
 		config.lpf_cutoff_freq_hz = cutoff_freq_hz;
@@ -1229,7 +1229,7 @@ static void flush_remainig_dma_transfer()
 	}
 }
 
-static void set_channel_rate_hz(const uint32_t requested_rate_hz)
+static void set_channel_rate_hz(const int requested_rate_hz)
 {
 	// The official guide states the following:
 	// "Valid output rates range from 5000 to 45 000 Hz, inclusive."
@@ -1250,9 +1250,7 @@ static void set_channel_rate_hz(const uint32_t requested_rate_hz)
 	//
 	constexpr int MinRateHz = 5000;
 
-	const auto rate_hz = std::clamp(static_cast<int>(requested_rate_hz),
-	                                MinRateHz,
-	                                NativeDacRateHz);
+	const auto rate_hz = std::clamp(requested_rate_hz, MinRateHz, NativeDacRateHz);
 
 	assert(sb.chan);
 	if (sb.chan->GetSampleRate() != rate_hz) {
