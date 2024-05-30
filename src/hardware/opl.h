@@ -151,8 +151,8 @@ private:
 		uint8_t lvol  = default_volume;
 		uint8_t rvol  = default_volume;
 
-		bool active = false;
-		bool mixer  = false;
+		bool active        = false;
+		bool mixer_enabled = false;
 
 		bool wants_dc_bias_removed = false;
 	} ctrl = {};
