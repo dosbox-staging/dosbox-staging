@@ -141,10 +141,6 @@ struct SbInfo {
 	// ESS chipset emulation, to be set only for SbType::SBPro2
 	EssType ess_type = EssType::None;
 
-	FilterType sb_filter_type   = FilterType::None;
-	FilterType opl_filter_type  = FilterType::None;
-	FilterState sb_filter_state = FilterState::Off;
-
 	struct {
 		bool pending_8bit;
 		bool pending_16bit;
