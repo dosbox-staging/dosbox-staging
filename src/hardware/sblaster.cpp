@@ -569,9 +569,13 @@ static void configure_sb_filter(MixerChannelPtr channel,
                                 const std::string& filter_prefs,
                                 const bool filter_always_on, const SbType sb_type)
 {
-	// A bit unfortunate, but we need to enable the ZOH upsampler and the
-	// correct upsample rate first for the filter cutoff frequency
-	// validation to work correctly.
+	// When a custom filter is set, we're doing zero-order-hold upsampling to
+	// the native Sound Blaster DAC rate, apply the custom filter, then
+	// resample to the host rate.
+	//
+	// We need to enable the ZOH upsampler and the correct upsample rate first
+	// for the filter cutoff frequency validation to work correctly.
+	//
 	channel->SetZeroOrderHoldUpsamplerTargetRate(NativeDacRateHz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
