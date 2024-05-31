@@ -186,16 +186,28 @@ struct SbInfo {
 	} dac = {};
 
 	struct {
-		uint8_t index     = 0;
+		uint8_t index = 0;
 
-		uint8_t dac[2]    = {};
-		uint8_t fm[2]     = {};
-		uint8_t cda[2]    = {};
+		// If true, DOS software can programmatically change the Sound
+		// Blaster mixer's volume levels on SB Pro 1 and later card for
+		// the SB (DAC), OPL (FM) and CDAUDIO channels. These are called
+		// "app levels". The final output level is the "user level" set
+		// in the DOSBox mixer multiplied with the "app level" for these
+		// channels.
+		//
+		// If the Sound Blaster mixer is disabled, the "app levels"
+		// default to unity gain.
+		//
+		bool enabled = false;
+
+		uint8_t dac[2] = {}; // can be controlled programmatically
+		uint8_t fm[2]  = {}; // can be controlled programmatically
+		uint8_t cda[2] = {}; // can be controlled programmatically
+
 		uint8_t master[2] = {};
 		uint8_t lin[2]    = {};
 		uint8_t mic       = 0;
 
-		bool enabled  = false;
 		bool stereo_enabled = false;
 
 		bool filter_enabled    = false;
@@ -3380,7 +3392,17 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
 	auto pbool = secprop.Add_bool("sbmixer", when_idle, true);
-	pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).");
+	pbool->Set_help(
+	        "Allow the Sound Blaster mixer to modify volume levels (enabled by default).\n"
+	        "Sound Blaster Pro 1 and later cards allow programs to set the volume of the\n"
+	        "digital audio (DAC), FM synth, and CD Audio output. These correspond to the\n"
+	        "SB, OPL, and CDAUDIO DOSBox mixer channels, respectively.\n"
+	        "  on:   The final level of the above channels is a combination of the volume\n"
+	        "        set by the program, and the volume set in the DOSBox mixer.\n"
+	        "  off:  Only the DOSBox mixer determines the volume of these channels.\n"
+	        "Note: Some games change the volume levels dynamically (e.g., lower the FM music\n"
+	        "      volume when speech is playing); it's best to leave 'sbmixer' enabled for\n"
+	        "      such games.");
 
 	pint = secprop.Add_int("sbwarmup", when_idle, 100);
 	pint->Set_help(
