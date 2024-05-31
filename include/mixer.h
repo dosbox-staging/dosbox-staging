@@ -209,6 +209,8 @@ public:
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
+	FilterState GetHighPassFilterState() const;
+	FilterState GetLowPassFilterState() const;
 	void ConfigureHighPassFilter(const int order, const int cutoff_freq_hz);
 	void ConfigureLowPassFilter(const int order, const int cutoff_freq_hz);
 	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
