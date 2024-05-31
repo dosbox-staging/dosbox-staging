@@ -1510,7 +1510,7 @@ static void dsp_do_reset(const uint8_t val)
 		// 20 microseconds
 		PIC_AddEvent(dsp_finish_reset, 20.0 / 1000.0, 0);
 
-		LOG_MSG("%s: DSP was reset", sb_log_prefix());
+		LOG_MSG("%s: Resetting DSP", sb_log_prefix());
 	}
 }
 
@@ -2328,14 +2328,36 @@ static void ctmixer_write(const uint8_t val)
 	case 0x0e: {
 		// Output/Stereo Select
 		sb.mixer.stereo_enabled = (val & 0x02) > 0;
-		sb.mixer.filter_enabled = (val & 0x20) > 0;
 
-		// Disallow toggling the filter programmatically if 'filter_always_on'
-		// is set
-		if (sb.mixer.filter_configured && !sb.mixer.filter_always_on) {
-			sb.chan->SetLowPassFilter(sb.mixer.filter_enabled
-			                                  ? FilterState::On
-			                                  : FilterState::Off);
+		const auto last_filter_enabled = sb.mixer.filter_enabled;
+		sb.mixer.filter_enabled        = (val & 0x20) > 0;
+
+		if (sb.type == SbType::SBPro2) {
+			// Toggling the filter programmatically is only possible
+			// on the Sound Blaster Pro 2.
+
+			if (sb.mixer.filter_configured &&
+			    sb.mixer.filter_enabled != last_filter_enabled) {
+
+				if (sb.mixer.filter_always_on) {
+					LOG_DEBUG("%s: Filter always on; ignoring %s low-pass filter command",
+					          sb_log_prefix(),
+					          sb.mixer.filter_enabled
+					                  ? "enable"
+					                  : "disable");
+				} else {
+					LOG_DEBUG("%s: %s low-pass filter",
+					          sb_log_prefix(),
+					          sb.mixer.filter_enabled
+					                  ? "Enabling"
+					                  : "Disabling");
+
+					sb.chan->SetLowPassFilter(
+					        sb.mixer.filter_enabled
+					                ? FilterState::On
+					                : FilterState::Off);
+				}
+			}
 		}
 
 		dsp_change_stereo(sb.mixer.stereo_enabled);
