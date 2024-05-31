@@ -1776,6 +1776,17 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 				break;
 			}
 
+#if C_DYNAMIC_X86
+			if (auto_determine_mode.auto_core) {
+				CPU_Core_Dyn_X86_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dyn_X86_Run;
+			}
+#elif C_DYNREC
+			if (auto_determine_mode.auto_core) {
+				CPU_Core_Dynrec_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dynrec_Run;
+			}
+#endif
 			if (legacy_cycles_mode) {
 				if (auto_determine_mode.auto_cycles) {
 					CPU_CycleAutoAdjust = true;
@@ -1798,17 +1809,6 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 				}
 			}
 
-#if C_DYNAMIC_X86
-			if (auto_determine_mode.auto_core) {
-				CPU_Core_Dyn_X86_Cache_Init(true);
-				cpudecoder = &CPU_Core_Dyn_X86_Run;
-			}
-#elif C_DYNREC
-			if (auto_determine_mode.auto_core) {
-				CPU_Core_Dynrec_Cache_Init(true);
-				cpudecoder = &CPU_Core_Dynrec_Run;
-			}
-#endif
 			last_auto_determine_mode = auto_determine_mode;
 			auto_determine_mode      = {};
 
