@@ -195,10 +195,10 @@ struct SbInfo {
 		uint8_t lin[2]    = {};
 		uint8_t mic       = 0;
 
-		bool stereo   = false;
 		bool enabled  = false;
+		bool stereo_enabled = false;
 
-		bool filtered          = false;
+		bool filter_enabled    = false;
 		bool filter_configured = false;
 		bool filter_always_on  = false;
 
@@ -1363,9 +1363,9 @@ static void dsp_prepare_dma_old(const DmaMode mode, const bool autoinit,
 	sb.dma.chan = DMA_GetChannel(sb.hw.dma8);
 
 	dsp_do_dma_transfer(mode,
-	                    sb.freq_hz / (sb.mixer.stereo ? 2 : 1),
+	                    sb.freq_hz / (sb.mixer.stereo_enabled ? 2 : 1),
 	                    autoinit,
-	                    sb.mixer.stereo);
+	                    sb.mixer.stereo_enabled);
 }
 
 static void dsp_prepare_dma_new(const DmaMode mode, const uint32_t length,
@@ -1535,7 +1535,7 @@ static void dsp_change_rate(const uint32_t freq_hz)
 {
 	if (sb.freq_hz != freq_hz && sb.dma.mode != DmaMode::None) {
 		sb.chan->FillUp();
-		set_channel_rate_hz(freq_hz / (sb.mixer.stereo ? 2 : 1));
+		set_channel_rate_hz(freq_hz / (sb.mixer.stereo_enabled ? 2 : 1));
 		sb.dma.rate = (freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 	}
@@ -2315,18 +2315,18 @@ static void ctmixer_write(const uint8_t val)
 
 	case 0x0e: {
 		// Output/Stereo Select
-		sb.mixer.stereo   = (val & 0x02) > 0;
-		sb.mixer.filtered = (val & 0x20) > 0;
+		sb.mixer.stereo_enabled = (val & 0x02) > 0;
+		sb.mixer.filter_enabled = (val & 0x20) > 0;
 
 		// Disallow toggling the filter programmatically if 'filter_always_on'
 		// is set
 		if (sb.mixer.filter_configured && !sb.mixer.filter_always_on) {
-			sb.chan->SetLowPassFilter(sb.mixer.filtered
+			sb.chan->SetLowPassFilter(sb.mixer.filter_enabled
 			                                  ? FilterState::On
 			                                  : FilterState::Off);
 		}
 
-		dsp_change_stereo(sb.mixer.stereo);
+		dsp_change_stereo(sb.mixer.stereo_enabled);
 
 		LOG(LOG_SB, LOG_WARN)
 		("Mixer set to %s", sb.dma.stereo ? "STEREO" : "MONO");
@@ -2547,8 +2547,8 @@ static uint8_t ctmixer_read()
 		}
 
 	case 0x0e: // Output/Stereo Select
-		return 0x11 | (sb.mixer.stereo ? 0x02 : 0x00) |
-		       (sb.mixer.filtered ? 0x20 : 0x00);
+		return 0x11 | (sb.mixer.stereo_enabled ? 0x02 : 0x00) |
+		       (sb.mixer.filter_enabled ? 0x20 : 0x00);
 
 	case 0x26: // FM Volume (SB Pro)
 		return read_sb_pro_volume(sb.mixer.fm);
@@ -3115,7 +3115,7 @@ public:
 		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
 
 		sb.mixer.enabled = section->Get_bool("sbmixer");
-		sb.mixer.stereo  = false;
+		sb.mixer.stereo_enabled = false;
 
 		const auto sbtype_pref = section->Get_string("sbtype");
 
