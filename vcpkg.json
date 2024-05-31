@@ -17,8 +17,5 @@
     "tracy",
     "zlib-ng"
   ],
-  "vcpkg-configuration": {
-    "overlay-ports": ["./vcpkg-overlay"]
-  },
-  "builtin-baseline": "ab231c2c666d2aa259a08e48e50dfeffb5c7fbe3"
+  "builtin-baseline": "01f602195983451bc83e72f4214af2cbc495aa94"
 }
