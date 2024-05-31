@@ -627,7 +627,7 @@ bool Virtual_Drive::IsRemote() {
 	return false;
 }
 
-bool Virtual_Drive::isRemovable() {
+bool Virtual_Drive::IsRemovable() {
 	return false;
 }
 

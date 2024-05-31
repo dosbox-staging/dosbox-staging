@@ -395,7 +395,7 @@ bool isoDrive::IsRemote(void) {
 	return true;
 }
 
-bool isoDrive::isRemovable(void) {
+bool isoDrive::IsRemovable(void) {
 	return true;
 }
 

@@ -312,7 +312,7 @@ bool localDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	FatAttributeFlags search_attr = {};
 	dta.GetSearchParams(search_attr, tempDir);
 
-	if (this->IsRemote() && this->isRemovable()) {
+	if (this->IsRemote() && this->IsRemovable()) {
 		// cdroms behave a bit different than regular drives
 		if (search_attr == FatAttributeFlags::Volume) {
 			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
@@ -554,7 +554,7 @@ bool localDrive::IsRemote(void)
 	return false;
 }
 
-bool localDrive::isRemovable(void)
+bool localDrive::IsRemovable(void)
 {
 	return false;
 }
@@ -992,7 +992,7 @@ bool cdromDrive::IsRemote()
 	return true;
 }
 
-bool cdromDrive::isRemovable()
+bool cdromDrive::IsRemovable()
 {
 	return true;
 }

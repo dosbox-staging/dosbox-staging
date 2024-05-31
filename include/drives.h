@@ -109,7 +109,7 @@ public:
 	uint8_t GetMediaByte(void) override;
 	bool IsReadOnly() const override { return readonly; }
 	bool IsRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	const char* GetBasedir() const
 	{
@@ -221,7 +221,7 @@ public:
 	uint8_t GetMediaByte(void) override;
 	bool IsReadOnly() const override { return readonly; }
 	bool IsRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	void EmptyCache(void) override {}
 
@@ -288,7 +288,7 @@ public:
 	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	void SetDir(const char* path) override;
 	bool IsRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 
 private:
@@ -398,7 +398,7 @@ public:
 	void EmptyCache(void) override {}
 	bool IsReadOnly() const override { return true; }
 	bool IsRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	bool readSector(uint8_t* buffer, uint32_t sector);
 	const char* GetLabel() override
@@ -470,7 +470,7 @@ public:
 	void EmptyCache() override;
 	bool IsReadOnly() const override { return true; }
 	bool IsRemote() override;
-	bool isRemovable() override;
+	bool IsRemovable() override;
 	Bits UnMount() override;
 	const char* GetLabel() override;
 
