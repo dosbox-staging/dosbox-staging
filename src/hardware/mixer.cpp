@@ -1172,6 +1172,16 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	}
 }
 
+FilterState MixerChannel::GetHighPassFilterState() const
+{
+	return filters.highpass.state;
+}
+
+FilterState MixerChannel::GetLowPassFilterState() const
+{
+	return filters.lowpass.state;
+}
+
 static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_name,
                                     const int cutoff_freq_hz)
 {
