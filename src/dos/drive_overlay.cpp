@@ -78,7 +78,7 @@ bool logoverlay = false;
 //Either upgrade addentry to support directories. (without actually caching stuff in! (code in testing))
 //Or create an empty directory in local drive base. 
 
-bool Overlay_Drive::RemoveDir(char * dir) {
+bool Overlay_Drive::RemoveDir(const char * dir) {
 	//DOS_RemoveDir checks if directory exists.
 #if OVERLAY_DIR
 	if (logoverlay) LOG_MSG("Overlay: trying to remove directory: %s",dir);
@@ -144,7 +144,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 	}
 }
 
-bool Overlay_Drive::MakeDir(char * dir) {
+bool Overlay_Drive::MakeDir(const char * dir) {
 	//DOS_MakeDir tries first, before checking if the directory already exists, so doing it here as well, so that case is handled.
 	if (TestDir(dir)) return false;
 	if (overlap_folder == dir) return false; //TODO Test
@@ -181,7 +181,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 	return (temp == 0);// || ((temp!=0) && (errno==EEXIST));
 }
 
-bool Overlay_Drive::TestDir(char * dir) {
+bool Overlay_Drive::TestDir(const char * dir) {
 	//First check if directory exist exclusively in the overlay. 
 	//Currently using the update_cache cache, alternatively access the directory itself.
 
@@ -462,7 +462,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File** file, char* name, uint8_t flags) {
+bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
 	const char* type;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;
@@ -527,7 +527,7 @@ bool Overlay_Drive::FileOpen(DOS_File** file, char* name, uint8_t flags) {
 	return fileopened;
 }
 
-bool Overlay_Drive::FileCreate(DOS_File** file, char* name,
+bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
                                FatAttributeFlags /*attributes*/)
 {
 	// TODO Check if it exists in the dirCache ? // fix addentry ?  or just
@@ -931,7 +931,7 @@ again:
 
 
 
-bool Overlay_Drive::FileUnlink(char * name) {
+bool Overlay_Drive::FileUnlink(const char * name) {
 	// TODO check the basedir for file existence in order if we need to add the file to deleted file list.
 	const auto a = logoverlay ? GetTicks() : 0;
 	if (logoverlay)
@@ -1031,7 +1031,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	}
 }
 
-bool Overlay_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool Overlay_Drive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
@@ -1230,7 +1230,7 @@ bool Overlay_Drive::FileExists(const char* name) {
 }
 
 #if 1
-bool Overlay_Drive::Rename(char * oldname,char * newname) {
+bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 	//TODO with cache function!
 	//Tricky function.
 	//Renaming directories is currently not supported, due the drive_cache not handling that smoothly.
@@ -1324,7 +1324,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 }
 #endif
 
-bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
+bool Overlay_Drive::FindFirst(const char * _dir, DOS_DTA & dta, bool fcb_findfirst) {
 	if (logoverlay) LOG_MSG("FindFirst in %s",_dir);
 	
 	if (is_deleted_path(_dir)) {

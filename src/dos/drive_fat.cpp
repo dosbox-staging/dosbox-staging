@@ -443,7 +443,7 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 	}
 }
 
-bool fatDrive::getEntryName(char *fullname, char *entname) {
+bool fatDrive::getEntryName(const char *fullname, char *entname) {
 	char dirtoken[DOS_PATHLENGTH];
 
 	char * findDir;
@@ -531,7 +531,7 @@ bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
 	return true;
 }
 
-bool fatDrive::getDirClustNum(char* dir, uint32_t* clustNum, bool parDir)
+bool fatDrive::getDirClustNum(const char* dir, uint32_t* clustNum, bool parDir)
 {
 	uint32_t len = (uint32_t)strnlen(dir, DOS_PATHLENGTH);
 	char dirtoken[DOS_PATHLENGTH];
@@ -1055,7 +1055,7 @@ uint8_t fatDrive::GetMediaByte(void) {
 }
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length
-bool fatDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
+bool fatDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags attributes)
 {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -1133,7 +1133,7 @@ bool fatDrive::FileExists(const char *name) {
 	return found;
 }
 
-bool fatDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
+bool fatDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
@@ -1165,7 +1165,7 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
 	return true;
 }
 
-bool fatDrive::FileUnlink(char * name) {
+bool fatDrive::FileUnlink(const char * name) {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -1201,7 +1201,7 @@ bool fatDrive::FileUnlink(char * name) {
 	return true;
 }
 
-bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
+bool fatDrive::FindFirst(const char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 	direntry dummyClust;
 #if 0
 	uint8_t attr;char pattern[DOS_NAMELENGTH_ASCII];
@@ -1364,7 +1364,7 @@ bool fatDrive::FindNext(DOS_DTA &dta) {
 	return FindNextInternal(dta.GetDirIDCluster(), dta, &dummyClust);
 }
 
-bool fatDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool fatDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	/* you CAN get file attr root directory */
 	if (*name == 0) {
@@ -1535,7 +1535,7 @@ void fatDrive::zeroOutCluster(uint32_t clustNumber) {
 	}
 }
 
-bool fatDrive::MakeDir(char* dir)
+bool fatDrive::MakeDir(const char* dir)
 {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -1592,7 +1592,7 @@ bool fatDrive::MakeDir(char* dir)
 	return true;
 }
 
-bool fatDrive::RemoveDir(char *dir) {
+bool fatDrive::RemoveDir(const char *dir) {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -1649,7 +1649,7 @@ bool fatDrive::RemoveDir(char *dir) {
 	return true;
 }
 
-bool fatDrive::Rename(char * oldname, char * newname) {
+bool fatDrive::Rename(const char * oldname, const char * newname) {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -1693,7 +1693,7 @@ bool fatDrive::Rename(char * oldname, char * newname) {
 	return false;
 }
 
-bool fatDrive::TestDir(char *dir) {
+bool fatDrive::TestDir(const char *dir) {
 	uint32_t dummyClust;
 	return getDirClustNum(dir, &dummyClust, false);
 }
