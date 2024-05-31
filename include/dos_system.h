@@ -369,7 +369,7 @@ public:
 	virtual void SetDir(const char *path);
 	virtual void EmptyCache() { dirCache.EmptyCache(); }
 	virtual bool IsReadOnly() const = 0;
-	virtual bool isRemote(void)=0;
+	virtual bool IsRemote(void)=0;
 	virtual bool isRemovable(void)=0;
 	virtual Bits UnMount(void)=0;
 

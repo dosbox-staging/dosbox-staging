@@ -391,7 +391,7 @@ uint8_t isoDrive::GetMediaByte(void) {
 	return mediaid;
 }
 
-bool isoDrive::isRemote(void) {
+bool isoDrive::IsRemote(void) {
 	return true;
 }
 
