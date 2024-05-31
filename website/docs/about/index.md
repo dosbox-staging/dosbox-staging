@@ -11,7 +11,7 @@ hide:
 and current development practices.
 
 It is a (mostly) drop-in replacement for older DOSBox versions---your
-existing configurations will continue to work, but you will have access to
+existing configurations will continue to work, and you will have access to
 many advanced features.
 
 **DOSBox Staging** comes with sensible defaults, so you'll need to write
@@ -57,14 +57,14 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 
 - **Support legacy or "modern retro" hardware.** DOSBox Staging is a
   self-contained emulator; its aim is to emulate all PC hardware it supports in
-  software. Legacy and retro hardware are not supported (e.g., ISA boards, CRT monitors, RetroWare OPL3 and similar devices, etc.).
+  software. Legacy and retro hardware are not supported (e.g., ISA boards, CRT monitors, RetroWave OPL3 and similar devices, etc.).
 
 - **Support the use of Windows 9x/Me in the emulator.** Windows 9x/Me emulation
   is supported by projects such as [QEMU](https://www.qemu.org),
   [VirtualBox](https://www.virtualbox.org/) and the
   [DOSBox-X](https://www.dosbox-x.com/) and
   [DOSBox Pure](https://github.com/schellingb/dosbox-pure) forks.
-  This may change if the DOSBox Staging community wants it in general.
+  This may change if the DOSBox Staging community wants it.
 
 - **Pursue hardware accuracy above all else.** If you’re after a more faithful
   emulation of an entire PC, look into
