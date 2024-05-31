@@ -349,18 +349,18 @@ public:
 	DOS_Drive();
 	virtual ~DOS_Drive() = default;
 
-	virtual bool FileOpen(DOS_File** file, char* name, uint8_t flags) = 0;
-	virtual bool FileCreate(DOS_File** file, char* name,
+	virtual bool FileOpen(DOS_File** file, const char* name, uint8_t flags) = 0;
+	virtual bool FileCreate(DOS_File** file, const char* name,
 	                        FatAttributeFlags attributes) = 0;
-	virtual bool FileUnlink(char* _name)=0;
-	virtual bool RemoveDir(char * _dir)=0;
-	virtual bool MakeDir(char * _dir)=0;
-	virtual bool TestDir(char * _dir)=0;
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
+	virtual bool FileUnlink(const char* _name)=0;
+	virtual bool RemoveDir(const char * _dir)=0;
+	virtual bool MakeDir(const char * _dir)=0;
+	virtual bool TestDir(const char * _dir)=0;
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
-	virtual bool GetFileAttr(char* name, FatAttributeFlags* attr) = 0;
+	virtual bool GetFileAttr(const char* name, FatAttributeFlags* attr) = 0;
 	virtual bool SetFileAttr(const char* name, const FatAttributeFlags attr) = 0;
-	virtual bool Rename(char* oldname, char* newname) = 0;
+	virtual bool Rename(const char* oldname, const char* newname) = 0;
 	virtual bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                            uint16_t* _total_clusters,
 	                            uint16_t* _free_clusters) = 0;

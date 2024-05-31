@@ -214,7 +214,7 @@ void isoDrive::Activate(void) {
 	UpdateMscdex(driveLetter, fileName, subUnit);
 }
 
-bool isoDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
+bool isoDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
 	if ((flags & 0x0f) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -235,34 +235,34 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint8_t flags) {
 	return success;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+bool isoDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
                           FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::FileUnlink(char* /*name*/) {
+bool isoDrive::FileUnlink(const char* /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::RemoveDir(char* /*dir*/) {
+bool isoDrive::RemoveDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::MakeDir(char* /*dir*/) {
+bool isoDrive::MakeDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::TestDir(char *dir) {
+bool isoDrive::TestDir(const char *dir) {
 	isoDirEntry de;
 	return (lookup(&de, dir) && IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FindFirst(char* dir, DOS_DTA& dta, bool fcb_findfirst)
+bool isoDrive::FindFirst(const char* dir, DOS_DTA& dta, bool fcb_findfirst)
 {
 	isoDirEntry de;
 	if (!lookup(&de, dir)) {
@@ -341,12 +341,12 @@ bool isoDrive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
+bool isoDrive::Rename(const char* /*oldname*/, const char* /*newname*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool isoDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	*attr = {};
 	isoDirEntry de;

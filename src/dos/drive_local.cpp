@@ -46,7 +46,7 @@
 #include "cross.h"
 #include "inout.h"
 
-bool localDrive::FileIsReadOnly(char* name)
+bool localDrive::FileIsReadOnly(const char* name)
 {
 	if (IsReadOnly()) {
 		return true;
@@ -58,7 +58,7 @@ bool localDrive::FileIsReadOnly(char* name)
 	return false;
 }
 
-bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
+bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags attributes)
 {
 	assert(!IsReadOnly());
 
@@ -146,7 +146,7 @@ DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
 	return nullptr;
 }
 
-bool localDrive::FileOpen(DOS_File **file, char *name, uint8_t flags)
+bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 {
 	bool write_access = false;
 	switch (flags & 0xf) {
@@ -232,7 +232,7 @@ std::string localDrive::MapDosToHostFilename(const char* const dos_name)
 }
 
 // Attempt to delete the file name from our local drive mount
-bool localDrive::FileUnlink(char* name)
+bool localDrive::FileUnlink(const char* name)
 {
 	assert(!IsReadOnly());
 
@@ -283,7 +283,7 @@ bool localDrive::FileUnlink(char* name)
 	return false;
 }
 
-bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
+bool localDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 {
 	char tempDir[CROSS_LEN];
 	safe_strcpy(tempDir, basedir);
@@ -426,7 +426,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool localDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	if (local_drive_get_attributes(MapDosToHostFilename(name), *attr) != DOSERR_NONE) {
 		// The caller is responsible to act accordingly, possibly
@@ -458,7 +458,7 @@ bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 	return true;
 }
 
-bool localDrive::MakeDir(char* dir)
+bool localDrive::MakeDir(const char* dir)
 {
 	assert(!IsReadOnly());
 
@@ -475,7 +475,7 @@ bool localDrive::MakeDir(char* dir)
 	return (result == DOSERR_NONE);
 }
 
-bool localDrive::RemoveDir(char* dir)
+bool localDrive::RemoveDir(const char* dir)
 {
 	assert(!IsReadOnly());
 
@@ -488,7 +488,7 @@ bool localDrive::RemoveDir(char* dir)
 	return (temp==0);
 }
 
-bool localDrive::TestDir(char* dir)
+bool localDrive::TestDir(const char* dir)
 {
 	const std::string host_dir = MapDosToHostFilename(dir);
 	// Skip directory test, if "\"
@@ -505,7 +505,7 @@ bool localDrive::TestDir(char* dir)
 	return path_exists(host_dir);
 }
 
-bool localDrive::Rename(char* oldname, char* newname)
+bool localDrive::Rename(const char* oldname, const char* newname)
 {
 	assert(!IsReadOnly());
 	const std::string old_host_filename = MapDosToHostFilename(oldname);
@@ -909,7 +909,7 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 }
 
-bool cdromDrive::FileOpen(DOS_File** file, char* name, uint8_t flags)
+bool cdromDrive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
 {
 	if ((flags & 0xf) == OPEN_READWRITE) {
 		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
@@ -921,38 +921,38 @@ bool cdromDrive::FileOpen(DOS_File** file, char* name, uint8_t flags)
 	return success;
 }
 
-bool cdromDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+bool cdromDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
                             FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::FileUnlink(char* /*name*/)
+bool cdromDrive::FileUnlink(const char* /*name*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::RemoveDir(char* /*dir*/)
+bool cdromDrive::RemoveDir(const char* /*dir*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::MakeDir(char* /*dir*/)
+bool cdromDrive::MakeDir(const char* /*dir*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::Rename(char* /*oldname*/, char* /*newname*/)
+bool cdromDrive::Rename(const char* /*oldname*/, const char* /*newname*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool cdromDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	const bool result = localDrive::GetFileAttr(name, attr);
 	if (result) {
@@ -963,7 +963,7 @@ bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	return result;
 }
 
-bool cdromDrive::FindFirst(char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
+bool cdromDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
 {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
