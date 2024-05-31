@@ -930,29 +930,6 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	pstring = secprop.Add_string("oplemu", deprecated, "");
 	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
-	pstring = secprop.Add_string("sb_filter", when_idle, "modern");
-	pstring->Set_help(
-	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
-	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
-	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
-	        "             Use the filter of this Sound Blaster model.\n"
-	        "  modern:    Use linear interpolation upsampling that acts as a low-pass\n"
-	        "             filter; this is the legacy DOSBox behaviour (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  One or two custom filters in the following format:\n"
-	        "               TYPE ORDER FREQ\n"
-	        "             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),\n"
-	        "             ORDER is the order of the filter from 1 to 16\n"
-	        "             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),\n"
-	        "             and FREQ is the cutoff frequency in Hz. Examples:\n"
-	        "                lpf 2 12000\n"
-	        "                hpf 3 120 lfp 1 6500");
-
-	pbool = secprop.Add_bool("sb_filter_always_on", when_idle, false);
-	pbool->Set_help(
-	        "Force the Sound Blaster Pro 2 filter to be always on (disabled by default).\n"
-	        "Other Sound Blaster models don't allow toggling the filter in software.");
-
 	pstring = secprop.Add_string("opl_filter", when_idle, "auto");
 	pstring->Set_help(
 	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
