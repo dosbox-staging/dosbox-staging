@@ -577,7 +577,7 @@ static Bitu DOS_21Handler(void) {
 			uint8_t drive=reg_dl;
 			if (!drive || reg_ah==0x1f) drive = DOS_GetDefaultDrive();
 			else drive--;
-			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->isRemovable()) {
+			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->IsRemovable()) {
 				reg_al = 0x00;
 				SegSet16(ds,dos.tables.dpb);
 				reg_bx = drive*9;
@@ -954,7 +954,7 @@ static Bitu DOS_21Handler(void) {
 	// case 0x51: Get current PSP, co-located with case 0x62
 	case 0x52: {				/* Get list of lists */
 		uint8_t count=2; // floppy drives always counted
-		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->isRemovable()) count++;
+		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->IsRemovable()) count++;
 		dos_infoblock.SetBlockDevices(count);
 		RealPt addr=dos_infoblock.GetPointer();
 		SegSet16(es,RealSegment(addr));
@@ -1369,7 +1369,7 @@ static uint16_t DOS_SectorAccess(const bool read)
 
 static Bitu DOS_25Handler(void)
 {
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
@@ -1391,7 +1391,7 @@ static Bitu DOS_25Handler(void)
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC, LOG_NORMAL)("int 26 called: hope for the best!");
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {

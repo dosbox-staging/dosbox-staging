@@ -1043,7 +1043,7 @@ uint32_t fatDrive::getFirstFreeClust(void) {
 }
 
 bool fatDrive::IsRemote(void) {	return false; }
-bool fatDrive::isRemovable(void) { return false; }
+bool fatDrive::IsRemovable(void) { return false; }
 
 Bits fatDrive::UnMount()
 {
