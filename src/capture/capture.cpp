@@ -617,8 +617,8 @@ static void init_key_mappings()
 	                  "Rec. Audio");
 
 	MAPPER_AddHandler(handle_capture_midi_event,
-	                  SDL_SCANCODE_UNKNOWN,
-	                  0,
+	                  SDL_SCANCODE_F6,
+	                  PRIMARY_MOD | MMOD2,
 	                  "caprawmidi",
 	                  "Rec. MIDI");
 
