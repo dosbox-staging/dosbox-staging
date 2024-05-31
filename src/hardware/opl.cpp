@@ -950,8 +950,8 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 
 	pbool = secprop.Add_bool("sb_filter_always_on", when_idle, false);
 	pbool->Set_help(
-	        "Force the Sound Blaster filter to be always on\n"
-	        "(disallow programs from turning the filter off; disabled by default).");
+	        "Force the Sound Blaster Pro 2 filter to be always on (disabled by default).\n"
+	        "Other Sound Blaster models don't allow toggling the filter in software.");
 
 	pstring = secprop.Add_string("opl_filter", when_idle, "auto");
 	pstring->Set_help(
