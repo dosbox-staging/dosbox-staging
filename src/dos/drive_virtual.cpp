@@ -623,7 +623,7 @@ uint8_t Virtual_Drive::GetMediaByte() {
 	return 0xF8;
 }
 
-bool Virtual_Drive::isRemote() {
+bool Virtual_Drive::IsRemote() {
 	return false;
 }
 

@@ -108,7 +108,7 @@ public:
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
 	bool IsReadOnly() const override { return readonly; }
-	bool isRemote(void) override;
+	bool IsRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
 	const char* GetBasedir() const
@@ -220,7 +220,7 @@ public:
 	bool FileExists(const char* name) override;
 	uint8_t GetMediaByte(void) override;
 	bool IsReadOnly() const override { return readonly; }
-	bool isRemote(void) override;
+	bool IsRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
 	void EmptyCache(void) override {}
@@ -287,7 +287,7 @@ public:
 	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
 	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	void SetDir(const char* path) override;
-	bool isRemote(void) override;
+	bool IsRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
 
@@ -397,7 +397,7 @@ public:
 	uint8_t GetMediaByte(void) override;
 	void EmptyCache(void) override {}
 	bool IsReadOnly() const override { return true; }
-	bool isRemote(void) override;
+	bool IsRemote(void) override;
 	bool isRemovable(void) override;
 	Bits UnMount(void) override;
 	bool readSector(uint8_t* buffer, uint32_t sector);
@@ -469,7 +469,7 @@ public:
 	uint8_t GetMediaByte() override;
 	void EmptyCache() override;
 	bool IsReadOnly() const override { return true; }
-	bool isRemote() override;
+	bool IsRemote() override;
 	bool isRemovable() override;
 	Bits UnMount() override;
 	const char* GetLabel() override;

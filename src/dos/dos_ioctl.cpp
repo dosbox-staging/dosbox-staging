@@ -139,7 +139,7 @@ bool DOS_IOCTL(void) {
 		}
 		return true;
 	case 0x09:		/* Check if block device remote */
-		if ((drive >= 2) && Drives[drive]->isRemote()) {
+		if ((drive >= 2) && Drives[drive]->IsRemote()) {
 			reg_dx=0x1000;	// device is remote
 			// undocumented bits always clear
 		} else {
