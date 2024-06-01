@@ -387,6 +387,6 @@ void CMOS_Init(Section* sec)
 
 	test = new CMOS(sec);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto changeable_at_runtime = false;
 	sec->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
 }
