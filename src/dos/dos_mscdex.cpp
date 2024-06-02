@@ -1456,6 +1456,10 @@ bool MSCDEX_HasMediaChanged(uint8_t subUnit)
 }
 
 void MSCDEX_ShutDown(Section* /*sec*/) {
+	std::for_each(CDROM::cdroms.begin(),
+	              CDROM::cdroms.end(),
+	              [](auto& cdrom_ptr) { cdrom_ptr.reset(); });
+
 	delete mscdex;
 	mscdex = nullptr;
 	curReqheaderPtr = 0;
