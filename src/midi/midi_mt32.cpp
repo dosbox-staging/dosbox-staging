@@ -51,7 +51,14 @@
 // ----------------
 
 // Analogue circuit modes: DIGITAL_ONLY, COARSE, ACCURATE, OVERSAMPLED
+//
+// Accurate mode achieves finer emulation of LPF circuit. Output signal is
+// upsampled to 48 kHz to allow emulation of audible mirror spectra above 16
+// kHz which is passed through the LPF circuit without significant
+// attenuation.
 constexpr auto AnalogMode = MT32Emu::AnalogOutputMode_ACCURATE;
+
+constexpr auto AccurateAnalogModeSampleRateHz = 48'000;
 
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 //
@@ -65,9 +72,6 @@ constexpr auto DacEmulationMode = MT32Emu::DACInputMode_NICE;
 // model based on logarithmic fixed-point computations and LUTs. Maximum
 // emulation accuracy and speed (it's a lot faster than the FLOAT renderer).
 constexpr auto RenderingType = MT32Emu::RendererType_BIT16S;
-
-// Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
-constexpr auto ResamplingQuality = MT32Emu::SamplerateConversionQuality_BEST;
 
 // Prefer amp ramp interpolation to avoid clicks (the hardware doesn't
 // always interpolate).
@@ -795,14 +799,12 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	        rom_info.control_rom_description,
 	        loaded_model_and_dir->second.string().c_str());
 
-	const auto sample_rate_hz = MIXER_GetSampleRate();
+	const auto sample_rate_hz = AccurateAnalogModeSampleRateHz;
 
 	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
 
 	mt32_service->setAnalogOutputMode(AnalogMode);
 	mt32_service->selectRendererType(RenderingType);
-	mt32_service->setStereoOutputSampleRate(sample_rate_hz);
-	mt32_service->setSamplerateConversionQuality(ResamplingQuality);
 	mt32_service->setDACInputMode(DacEmulationMode);
 	mt32_service->setNiceAmpRampEnabled(UseNiceRamp);
 	mt32_service->setNicePanningEnabled(UseNicePanning);
@@ -825,6 +827,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::Stereo,
 	                                       ChannelFeature::Synthesizer});
+
+	mixer_channel->SetResampleMethod(ResampleMethod::Resample);
 
 	// libmt32emu renders float audio frames between -1.0f and +1.0f, so we
 	// ask the channel to scale all the samples up to its 0db level.
