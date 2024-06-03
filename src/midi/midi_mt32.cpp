@@ -62,28 +62,38 @@ constexpr auto AccurateAnalogModeSampleRateHz = 48'000;
 
 // DAC Emulation modes: NICE, PURE, GENERATION1, and GENERATION2
 //
-// Produce samples at double the volume, without tricks.
-// Nicer overdrive characteristics than the DAC hacks (it simply clips samples
-// within range) Higher quality than the real devices
+// "Nice" mode produces samples at double the volume, without tricks, and
+// results in nicer overdrive characteristics than the DAC hacks (it simply
+// clips samples within range). Higher quality than the real devices.
 constexpr auto DacEmulationMode = MT32Emu::DACInputMode_NICE;
 
 // Analog rendering types: BIT16S, FLOAT
+//
 // Use 16-bit signed samples in the renderer and the accurate wave generator
 // model based on logarithmic fixed-point computations and LUTs. Maximum
 // emulation accuracy and speed (it's a lot faster than the FLOAT renderer).
 constexpr auto RenderingType = MT32Emu::RendererType_BIT16S;
 
-// Prefer amp ramp interpolation to avoid clicks (the hardware doesn't
-// always interpolate).
+// In this mode, we want to ensure that amp ramp never jumps to the target
+// value and always gradually increases or decreases. It seems that real units
+// do not bother to always check if a newly started ramp leads to a jump.
+// We also prefer the quality improvement over the emulation accuracy,
+// so this mode is enabled by default.
 constexpr bool UseNiceRamp = true;
 
-// Prefer higher panning resolution over the coarser positions used by the
-// hardware (this allows for "true center" pan positions which is not
-// possible on the real hardwre).
+// Despite the Roland's manual specifies allowed panpot values in range 0-14,
+// the LA-32 only receives 3-bit pan setting in fact. In particular, this
+// makes it impossible to set the "middle" panning for a single partial.
+// In the NicePanning mode, we enlarge the pan setting accuracy to 4 bits
+// making it smoother thus sacrificing the emulation accuracy.
 constexpr bool UseNicePanning = true;
 
-// Force always in-phase partial mixing to avoid the sometimes out-of-phase
-// partials of the original units which can result in phasing artifacts.
+// LA-32 is known to mix partials either in-phase (so that they are added)
+// or in counter-phase (so that they are subtracted instead).
+// In some cases, this quirk isn't highly desired because a pair of closely
+// sounding partials may occasionally cancel out.
+// In the NicePartialMixing mode, the mixing is always performed in-phase,
+// thus making the behaviour more predictable.
 constexpr bool UseNicePartialMixing = true;
 
 // Do not attempt to emulate delays introduced by the slow MIDI transfer
@@ -104,7 +114,6 @@ constexpr bool UseNicePartialMixing = true;
 // emulation bug in DOSBox, disabling the delay mode emulation in libmt32
 // effectively fixes the problem and makes the resulting music sound closer to
 // the composer's intentions.
-//
 //
 constexpr auto MidiDelayMode = MT32Emu::MIDIDelayMode_IMMEDIATE;
 
