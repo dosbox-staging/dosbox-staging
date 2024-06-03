@@ -82,9 +82,9 @@ constexpr bool UseNiceRamp = true;
 // possible on the real hardwre).
 constexpr bool UseNicePanning = true;
 
-// Prefer not forcing always in-phase partial mixing (this is more authentic
-// sounding).
-constexpr bool UseNicePartialMixing = false;
+// Force always in-phase partial mixing to avoid the sometimes out-of-phase
+// partials of the original units which can result in phasing artifacts.
+constexpr bool UseNicePartialMixing = true;
 
 // Do not attempt to emulate delays introduced by the slow MIDI transfer
 // protocol.
