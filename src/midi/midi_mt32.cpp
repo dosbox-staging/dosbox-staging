@@ -81,6 +81,28 @@ constexpr bool UseNicePanning = true;
 // sounding).
 constexpr bool UseNicePartialMixing = false;
 
+// Do not attempt to emulate delays introduced by the slow MIDI transfer
+// protocol.
+//
+// Enabling delay emulation could result in missed MIDI events if the MT-32
+// receives a large number of events in quick bursts, causing its internal
+// ring buffers to overflow. This can be heard as missed notes and
+// wrong sounding instrument (e.g., in the intro tune of Bumpy's Arcade
+// Fantasy).
+//
+// Emulating MIDI protocol induced micro-delays are neither musically
+// significant nor desirable. Most importantly, these odd up to 1-3 ms delays
+// on some events are not noticeable. Losing MIDI events that potentially set
+// up the correct sounds when the game starts is a much more important concern.
+//
+// While such transfer bursts are most likely an MPU-401 intelligent mode
+// emulation bug in DOSBox, disabling the delay mode emulation in libmt32
+// effectively fixes the problem and makes the resulting music sound closer to
+// the composer's intentions.
+//
+//
+constexpr auto MidiDelayMode = MT32Emu::MIDIDelayMode_IMMEDIATE;
+
 using Rom = LASynthModel::Rom;
 
 // MT-32
@@ -784,6 +806,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	mt32_service->setNiceAmpRampEnabled(UseNiceRamp);
 	mt32_service->setNicePanningEnabled(UseNicePanning);
 	mt32_service->setNicePartialMixingEnabled(UseNicePartialMixing);
+	mt32_service->setMIDIDelayMode(MidiDelayMode);
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
