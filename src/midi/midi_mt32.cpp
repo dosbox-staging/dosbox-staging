@@ -60,10 +60,11 @@ constexpr auto AnalogMode = MT32Emu::AnalogOutputMode_ACCURATE;
 // within range) Higher quality than the real devices
 constexpr auto DacEmulationMode = MT32Emu::DACInputMode_NICE;
 
-// Analog rendering types: int16_t, FLOAT
-// Use float samples in the renderer and simplified wave generator model.
-// Maximum output quality and minimum noise.
-constexpr auto RenderingType = MT32Emu::RendererType_FLOAT;
+// Analog rendering types: BIT16S, FLOAT
+// Use 16-bit signed samples in the renderer and the accurate wave generator
+// model based on logarithmic fixed-point computations and LUTs. Maximum
+// emulation accuracy and speed (it's a lot faster than the FLOAT renderer).
+constexpr auto RenderingType = MT32Emu::RendererType_BIT16S;
 
 // Sample rate conversion quality: FASTEST, FAST, GOOD, BEST
 constexpr auto ResamplingQuality = MT32Emu::SamplerateConversionQuality_BEST;
