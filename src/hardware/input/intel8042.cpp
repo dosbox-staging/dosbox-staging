@@ -672,11 +672,6 @@ static bool is_cmd_vendor_lines(const Command command)
 	return (code >= 0xb0) && (code <= 0xbd);
 }
 
-static void request_system_reset()
-{
-	restart_dosbox();
-}
-
 static void execute_command(const Command command)
 {
 	// LOG_INFO("I8042: Command 0x%02x", static_cast<int>(command));
@@ -928,7 +923,7 @@ static void execute_command(const Command command, const uint8_t param)
 		MEM_A20_Enable(bit::is(param, b1));
 		if (!bit::is(param, b0)) {
 			LOG_WARNING("I8042: Clearing P2 bit 0 locks a real PC");
-			request_system_reset();
+			restart_dosbox();
 		}
 		break;
 	case Command::SimulateInputKbd: // 0xd2
@@ -963,7 +958,8 @@ static void execute_command(const Command command, const uint8_t param)
 				warn_line_pulse();
 			}
 			if (code == 0xf0 && !(lines & 0b0001)) {
-				request_system_reset();
+				// System reset via keyboard controller
+				restart_dosbox();
 			}
 		} else {
 			// If we are here, than either this function
