@@ -2180,7 +2180,7 @@ ImageInfo setup_drawing()
 		video_mode.graphics_standard = GraphicsStandard::Vga;
 		video_mode.color_depth       = ColorDepth::IndexedColor256;
 
-		const bool num_scanline_repeats = vga.crtc.maximum_scan_line.maximum_scan_line;
+		const auto num_scanline_repeats = vga.crtc.maximum_scan_line.maximum_scan_line;
 
 		// We assume the two scanline doubling methods cannot be stacked, but
 		// not sure if this is true.
@@ -2305,7 +2305,7 @@ ImageInfo setup_drawing()
 			// double-scan" on VGA (render single-scanned, then double the
 			// image vertically with a scaler).
 			//
-			const bool num_scanline_repeats =
+			const auto num_scanline_repeats =
 			        vga.crtc.maximum_scan_line.maximum_scan_line;
 
 			// We assume the two scanline doubling methods cannot be
