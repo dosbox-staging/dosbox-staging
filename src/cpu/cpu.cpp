@@ -3154,12 +3154,18 @@ public:
 
 	bool Configure(Section* sec)
 	{
-		Section_prop* secprop = static_cast<Section_prop*>(sec);
-
 		// TODO needed?
 		// CPU_CycleLeft = 0;
 		CPU_Cycles          = 0;
 		auto_determine_mode = {};
+
+		Section_prop* secprop = static_cast<Section_prop*>(sec);
+
+		const std::string cpu_core = secprop->Get_string("core");
+		const std::string cpu_type = secprop->Get_string("cputype");
+
+		ConfigureCpuCore(cpu_core);
+		ConfigureCpuType(cpu_core, cpu_type);
 
 		auto cycles_pref = secprop->Get_string("cycles");
 		trim(cycles_pref);
@@ -3189,12 +3195,6 @@ public:
 			ConfigureCyclesModern(secprop);
 			set_modern_cycles_config(CpuMode::Real);
 		}
-
-		const std::string cpu_core = secprop->Get_string("core");
-		const std::string cpu_type = secprop->Get_string("cputype");
-
-		ConfigureCpuCore(cpu_core);
-		ConfigureCpuType(cpu_core, cpu_type);
 
 		cpu_cycle_up   = secprop->Get_int("cycleup");
 		cpu_cycle_down = secprop->Get_int("cycledown");
