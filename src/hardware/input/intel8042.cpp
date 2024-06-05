@@ -915,10 +915,6 @@ static void execute_command(const Command command, const uint8_t param)
 		// firmware allow everything? writing bits 4,5 and 6
 		// should be safe in real implementation, how about here?
 		sanitize_config_byte();
-		// Make sure only the needed IRQs are activated
-		PIC_DeActivateIRQ(get_irq_mouse());
-		PIC_DeActivateIRQ(get_irq_keyboard());
-		activate_irqs_if_needed();
 		break;
 	case Command::WriteControllerMode: // 0xcb
 		// Changes controller mode to PS/2 or AT
@@ -1001,7 +997,6 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 	}
 
 	if (is_data_from_aux) {
-		PIC_DeActivateIRQ(get_irq_mouse());
 		assert(waiting_bytes_from_aux);
 		--waiting_bytes_from_aux;
 		if (I8042_IsReadyForAuxFrame()) {
@@ -1010,7 +1005,6 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 	}
 
 	if (is_data_from_kbd) {
-		PIC_DeActivateIRQ(get_irq_keyboard());
 		assert(waiting_bytes_from_kbd);
 		--waiting_bytes_from_kbd;
 		if (I8042_IsReadyForKbdFrame()) {
