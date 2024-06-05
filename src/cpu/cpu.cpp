@@ -195,7 +195,7 @@ static bool maybe_display_switch_to_dynamic_core_warning(const int cycles)
 		LOG_WARNING(
 		        "CPU: Setting fixed %d cycles. Try setting 'core = dynamic' "
 		        "for increased performance if you need more than %d cycles.",
-		        CPU_CycleMax,
+		        cycles,
 		        CyclesThreshold);
 		return true;
 
