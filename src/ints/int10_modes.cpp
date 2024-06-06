@@ -627,12 +627,14 @@ static void set_text_lines()
 	const BiosVgaFlagsRec vga_flags_rec = {
 	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
 
+	constexpr auto mode_07h_offset = 4;
+
 	switch (vga_flags_rec.text_mode_scan_lines()) {
 	case 0: // 350-line mode
 		if (CurMode->mode <= 3) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
-			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
+			CurMode = ModeList_VGA_Text_350lines.begin() + mode_07h_offset;
 		}
 		break;
 
@@ -644,16 +646,18 @@ static void set_text_lines()
 		if (CurMode->mode <= 3) {
 			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
-			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
+			CurMode = ModeList_VGA_Text_350lines.begin() + mode_07h_offset;
 		}
 		break;
 	}
 }
 
-void INT10_SetCurMode(void) {
-	uint16_t bios_mode=(uint16_t)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
+void INT10_SetCurMode(void)
+{
+	uint16_t bios_mode = (uint16_t)real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE);
+
 	if (CurMode->mode != bios_mode) {
-		bool mode_changed=false;
+		bool mode_changed = false;
 
 		switch (machine) {
 		case MCH_CGA:
@@ -674,7 +678,7 @@ void INT10_SetCurMode(void) {
 				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
 			} else if (bios_mode == 7) {
 				mode_changed = true;
-				CurMode = Hercules_Mode.begin();
+				CurMode      = Hercules_Mode.begin();
 			}
 			break;
 
@@ -694,8 +698,11 @@ void INT10_SetCurMode(void) {
 				                            bios_mode);
 				break;
 			case SVGA_S3Trio:
-				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
-				// fall-through
+				if (bios_mode >= 0x68 &&
+				    CurMode->mode == (bios_mode + 0x98)) {
+					break;
+				}
+				[[fallthrough]];
 			default:
 				mode_changed = set_cur_mode(ModeList_VGA, bios_mode);
 				break;
@@ -709,9 +716,9 @@ void INT10_SetCurMode(void) {
 		}
 
 		if (mode_changed) {
-		//	LOG_MSG("INT10H: BIOS video mode changed to %02Xh", bios_mode);
+			LOG_DEBUG("INT10H: BIOS video mode changed to %02Xh",
+			          bios_mode);
 		}
-
 #if 0
 		if (video_mode_change_in_progress) {
 			LOG_ERR("INT10: video_mode_change_in_progress END");
