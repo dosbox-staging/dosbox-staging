@@ -600,6 +600,9 @@ union MaximumScanLineRegister {
 union ClockingModeRegister {
 	uint8_t data = 0;
 	// Characters are drawn 8 pixels wide (or 9 if cleared)
+	// This selects between 8-dot and 9-dot fonts, which also switches the
+	// horizontal resolution from 640 pixels to 720 in 80-column modes, and
+	// from 1056 to 1188 in 132-column modes.
 	bit_view<0, 1> is_eight_dot_mode;
 
 	// When this bit and bit 4 are set to 0, the video serializers are
@@ -882,6 +885,7 @@ struct VgaSeq {
 	uint8_t reset = 0;
 
 	ClockingModeRegister clocking_mode = {};
+
 	// Let the user force the clocking mode's 8/9-dot-mode bit high
 	bool wants_vga_8dot_font = false;
 
