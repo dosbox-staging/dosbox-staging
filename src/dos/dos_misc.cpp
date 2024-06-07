@@ -25,6 +25,8 @@
 #include "mem.h"
 #include "regs.h"
 
+RealPt fake_sft_table = 0;
+
 static callback_number_t call_int2f = 0;
 static callback_number_t call_int2a = 0;
 
@@ -74,9 +76,12 @@ static bool DOS_MultiplexFunctions(void) {
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
 		if (reg_bx < SftNumEntries) {
-			RealPt sftrealpt=mem_readd(RealToPhysical(dos_infoblock.GetPointer())+4);
-			PhysPt sftptr=RealToPhysical(sftrealpt);
-			Bitu sftofs= SftHeaderSize + reg_bx * SftEntrySize;
+			// Initalized by DOS_SetupTables()
+			assert(fake_sft_table != 0);
+
+			RealPt sftrealpt = fake_sft_table;
+			PhysPt sftptr = RealToPhysical(sftrealpt);
+			Bitu sftofs = SftHeaderSize + reg_bx * SftEntrySize;
 
 			if (Files[reg_bx]) mem_writeb(sftptr+sftofs,Files[reg_bx]->refCtr);
 			else mem_writeb(sftptr+sftofs,0);

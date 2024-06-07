@@ -185,4 +185,16 @@ void DOS_SetupTables(void) {
 	/* Add it to country structure */
 	host_writed(country_info + 0x12, CALLBACK_RealPointer(call_casemap));
 	dos.tables.country=country_info;
+
+	// Allocate a fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
+	constexpr int BytesPerPage = 16;
+	constexpr int TotalBytes = SftHeaderSize + (SftEntrySize * SftNumEntries);
+	constexpr int NumPages = (TotalBytes / BytesPerPage) + std::min(TotalBytes % BytesPerPage, 1);
+
+	const auto fake_sft_segment = DOS_GetMemory(NumPages);
+
+	real_writed(fake_sft_segment, SftNextTableOffset, SftEndPointer);
+	real_writeb(fake_sft_segment, SftNumberOfFilesOffset, SftNumEntries);
+
+	fake_sft_table = RealMake(fake_sft_segment, 0);
 }
