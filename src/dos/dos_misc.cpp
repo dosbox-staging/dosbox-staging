@@ -75,7 +75,7 @@ static bool DOS_MultiplexFunctions(void) {
 		LOG(LOG_DOSMISC,LOG_ERROR)("Some BAD filetable call used bx=%X",reg_bx);
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
-		if (reg_bx < SftNumEntries) {
+		if (reg_bx < FakeSftEntries) {
 			// Initalized by DOS_SetupTables()
 			assert(fake_sft_table != 0);
 
