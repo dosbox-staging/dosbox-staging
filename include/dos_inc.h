@@ -107,7 +107,6 @@ enum class DosReturnMode : uint8_t {
 
 constexpr int SftHeaderSize = 6;
 constexpr int SftEntrySize = 59;
-constexpr int SftNumEntries = 16;
 
 constexpr uint32_t SftEndPointer = 0xffffffff;
 constexpr uint16_t SftNextTableOffset = 0x0;
@@ -115,6 +114,7 @@ constexpr uint16_t SftNumberOfFilesOffset = 0x04;
 
 // Fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
 extern RealPt fake_sft_table;
+constexpr int FakeSftEntries = 16;
 
 /* internal Dos Tables */
 

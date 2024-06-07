@@ -188,13 +188,13 @@ void DOS_SetupTables(void) {
 
 	// Allocate a fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
 	constexpr int BytesPerPage = 16;
-	constexpr int TotalBytes = SftHeaderSize + (SftEntrySize * SftNumEntries);
+	constexpr int TotalBytes = SftHeaderSize + (SftEntrySize * FakeSftEntries);
 	constexpr int NumPages = (TotalBytes / BytesPerPage) + std::min(TotalBytes % BytesPerPage, 1);
 
 	const auto fake_sft_segment = DOS_GetMemory(NumPages);
 
 	real_writed(fake_sft_segment, SftNextTableOffset, SftEndPointer);
-	real_writeb(fake_sft_segment, SftNumberOfFilesOffset, SftNumEntries);
+	real_writeb(fake_sft_segment, SftNumberOfFilesOffset, FakeSftEntries);
 
 	fake_sft_table = RealMake(fake_sft_segment, 0);
 }
