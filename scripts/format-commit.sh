@@ -56,8 +56,9 @@ main () {
 
 handle_dependencies () {
 	assign_gnu_sed
+	assign_clang_format
 	assert_min_version git 1007010 "Use git version 1.7.10 or newer."
-	assert_min_version clang-format 15000000 "Use clang-format version 15.0.0 or newer."
+	assert_min_version "$CLANG_FORMAT" 15000000 "Use clang-format version 15.0.0 or newer."
 }
 
 SED=""
@@ -76,6 +77,30 @@ assign_gnu_sed () {
 		else
 			echo "Install GNU sed with your package manager."
 		fi
+		exit 1
+	fi
+}
+
+CLANG_FORMAT=""
+assign_clang_format() {
+	local -r binaries=(
+		"clang-format-18"
+		"clang-format-17"
+		"clang-format-16"
+		"clang-format-15"
+		"clang-format"
+	)
+
+	for binary in "${binaries[@]}"
+	do
+		if command -v "$binary" &> /dev/null; then
+			CLANG_FORMAT=$binary
+			break
+		fi
+	done
+
+	if [[ $CLANG_FORMAT == "" ]]; then
+		echo "Failed to find clang-format."
 		exit 1
 	fi
 }
@@ -164,8 +189,8 @@ run_clang_format () {
 		done < <(git_diff_to_clang_line_range "$src_file" "$since_ref")
 
 		if (( "${#ranges[@]}" )); then
-			echo "clang-format -i ${ranges[*]} \"$src_file\""
-			clang-format -i "${ranges[@]}" "$src_file"
+			echo "$CLANG_FORMAT -i ${ranges[*]} \"$src_file\""
+			$CLANG_FORMAT -i "${ranges[@]}" "$src_file"
 		fi
 	done
 }
