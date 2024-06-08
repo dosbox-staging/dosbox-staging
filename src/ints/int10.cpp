@@ -220,64 +220,82 @@ static Bitu INT10_Handler(void) {
 		// Text mode functions
 		// ===================
 		// Load user font
-		case 0x00:
-			[[fallthrough]];
+		case 0x00: [[fallthrough]];
 		// Load and activate user font
-		case 0x10:
-			INT10_LoadFont(SegPhys(es) + reg_bp,
-			               reg_al == 0x10,
-			               reg_cx,
-			               reg_dx,
-			               reg_bl & 0x7f,
-			               reg_bh);
-			break;
+		case 0x10: {
+			const auto font_data = SegPhys(es) + reg_bp;
+			const auto reload    = (reg_al == 0x10);
+			const auto count     = reg_cx;
+			const auto offset    = reg_dx;
+			const auto map       = reg_bl & 0x7f;
+			const auto height    = reg_bh;
+
+			INT10_LoadFont(font_data, reload, count, offset, map, height);
+		} break;
 
 		// Load ROM 8x14 font
-		case 0x01:
-			[[fallthrough]];
+		case 0x01: [[fallthrough]];
 		// Load and activate ROM 8x14 font
-		case 0x11:
-			INT10_LoadFont(RealToPhysical(int10.rom.font_14),
-			               reg_al == 0x11,
-			               256,
-			               0,
-			               reg_bl & 0x7f,
-			               14);
-			break;
+		case 0x11: {
+			const auto reload     = (reg_al == 0x11);
+			constexpr auto Count  = 256;
+			constexpr auto Offset = 0;
+			const auto map        = reg_bl & 0x7f;
+			constexpr auto Height = 14;
 
+			INT10_LoadFont(RealToPhysical(int10.rom.font_14),
+			               reload,
+			               Count,
+			               Offset,
+			               map,
+			               Height);
+		} break;
 
 		// Load ROM 8x8 font
-		case 0x02:
-			[[fallthrough]];
+		case 0x02: [[fallthrough]];
 		// Load and activate ROM 8x8 font
-		case 0x12:
+		case 0x12: {
+			const auto reload     = (reg_al == 0x12);
+			constexpr auto Count  = 256;
+			constexpr auto Offset = 0;
+			const auto map        = reg_bl & 0x7f;
+			constexpr auto Height = 8;
+
 			INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
-			               reg_al == 0x12,
-			               256,
-			               0,
-			               reg_bl & 0x7f,
-			               8);
-			break;
+			               reload,
+			               Count,
+			               Offset,
+			               map,
+			               Height);
+		} break;
 
 		// Set Block Specifier
 		case 0x03:
-			IO_Write(0x3c4,0x3);IO_Write(0x3c5,reg_bl);
+			IO_Write(0x3c4, 0x3);
+			IO_Write(0x3c5, reg_bl);
 			break;
 
 		// Load ROM 8x16 font
 		case 0x04:
 		// Load and activate ROM 8x16 font
-		case 0x14:
+		case 0x14: {
 			if (!IS_VGA_ARCH) {
 				break;
 			}
+
+			const auto reload     = (reg_al == 0x14);
+			constexpr auto Count  = 256;
+			constexpr auto Offset = 0;
+			const auto map        = reg_bl & 0x7f;
+			constexpr auto Height = 16;
+
 			INT10_LoadFont(RealToPhysical(int10.rom.font_16),
-			               reg_al == 0x14,
-			               256,
-			               0,
-			               reg_bl & 0x7f,
-			               16);
-			break;
+			               reload,
+			               Count,
+			               Offset,
+			               map,
+			               Height);
+		} break;
 
 		// Graphics mode calls
 		// ===================
