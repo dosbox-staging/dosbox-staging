@@ -158,19 +158,18 @@ const char* CALLBACK_GetDescription(callback_number_t cb_num)
 static uint8_t callback_setup_extra(const callback_number_t callback_number,
                                     const uint8_t callback_type,
                                     const PhysPt start_address,
-                                    const bool should_use_callback = true)
+                                    const bool use_callback = true)
 {
 	if (callback_number >= CB_MAX) {
-		E_Exit("Unknown callback number 0x%04x", callback_number);
+		LOG_ERR("CPU: Unknown callback number 0x%04x", callback_number);
 		return 0;
 	}
 
-	// TODO: temporary, until rework is complete
-	auto physAddress = start_address;
-	auto cb_num      = callback_number;
-	auto use_cb      = should_use_callback;
-
 	auto current_address = start_address;
+
+	auto advance = [&](const uint8_t bytes) {
+		current_address += bytes;
+	};
 
 	auto add_instruction_1 = [&](const uint8_t byte) {
 		phys_writeb(current_address, byte);
@@ -180,6 +179,24 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 	auto add_instruction_2 = [&](const uint8_t byte1, const uint8_t byte2) {
 		add_instruction_1(byte1);
 		add_instruction_1(byte2);
+	};
+
+	auto add_instruction_3 = [&](const uint8_t byte1,
+	                             const uint8_t byte2,
+	                             const uint8_t byte3) {
+		add_instruction_1(byte1);
+		add_instruction_1(byte2);
+		add_instruction_1(byte3);
+	};
+
+	auto add_instruction_4 = [&](const uint8_t byte1,
+	                             const uint8_t byte2,
+	                             const uint8_t byte3,
+	                             const uint8_t byte4) {
+		add_instruction_1(byte1);
+		add_instruction_1(byte2);
+		add_instruction_1(byte3);
+		add_instruction_1(byte4);
 	};
 
 	// Effectively 4-byte long - reflect it in the lambda name, to make
@@ -192,384 +209,324 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 
 	switch (callback_type) {
 	case CB_RETN:
-		if (should_use_callback) {
+		if (use_callback) {
 			add_native_call_4(callback_number);
 		}
-		add_instruction_1(0xc3); // RETN
+		add_instruction_1(0xc3);                   // retn
 		break;
 	case CB_RETF:
-		if (should_use_callback) {
+		if (use_callback) {
 			add_native_call_4(callback_number);
 		}
-		add_instruction_1(0xcb); // RETF
+		add_instruction_1(0xcb);                   // retf
 		break;
 	case CB_RETF8:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0xCA);		//A RETF 8 Instruction
-		phys_writew(physAddress+0x01,(uint16_t)0x0008);
-		return (use_cb?7:3);
+		add_instruction_3(0xca, 0x08, 0x00);       // retf 8
+		break;
 	case CB_RETF_STI:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCB);		//A RETF Instruction
-		return (use_cb?6:2);
+		add_instruction_1(0xcb);                   // retf
+		break;
 	case CB_RETF_CLI:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFA);		//CLI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfa);                   // cli
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCB);		//A RETF Instruction
-		return (use_cb?6:2);
+		add_instruction_1(0xcb);                   // retf
+		break;
 	case CB_IRET:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02,
-			            cb_num); // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0xCF);		//An IRET Instruction
-		return (use_cb?5:1);
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_IRETD:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0x66);		//An IRETD Instruction
-		phys_writeb(physAddress+0x01,(uint8_t)0xCF);
-		return (use_cb?6:2);
+		add_instruction_2(0x66, 0xcf);             // iretd
+		break;
 	case CB_IRET_STI:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
-		return (use_cb?6:2);
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_IRET_EOI_PIC1:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
-		phys_writeb(physAddress+0x01,(uint8_t)0xb0);		// mov al, 0x20
-		phys_writeb(physAddress+0x02,(uint8_t)0x20);
-		phys_writeb(physAddress+0x03,(uint8_t)0xe6);		// out 0x20, al
-		phys_writeb(physAddress+0x04,(uint8_t)0x20);
-		phys_writeb(physAddress+0x05,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x06,(uint8_t)0xcf);		//An IRET Instruction
-		return (use_cb?0x0b:0x07);
-	case CB_IRQ0:	// timer int8
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
+	case CB_IRQ0: // timer INT8
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0x1e);		// push ds
-		phys_writeb(physAddress+0x02,(uint8_t)0x50);		// push ax
-		phys_writeb(physAddress+0x03,(uint8_t)0x52);		// push dx
-		phys_writew(physAddress+0x04,(uint16_t)0x1ccd);	// int 1c
-		phys_writeb(physAddress+0x06,(uint8_t)0xfa);		// cli
-		phys_writew(physAddress+0x07,(uint16_t)0x20b0);	// mov al, 0x20
-		phys_writew(physAddress+0x09,(uint16_t)0x20e6);	// out 0x20, al
-		phys_writeb(physAddress+0x0b,(uint8_t)0x5a);		// pop dx
-		phys_writeb(physAddress+0x0c,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x0d,(uint8_t)0x1f);		// pop ds
-		phys_writeb(physAddress+0x0e,(uint8_t)0xcf);		//An IRET Instruction
-		return (use_cb?0x13:0x0f);
-	case CB_IRQ1:	// keyboard int9
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);			// push ax
-		phys_writew(physAddress+0x01,(uint16_t)0x60e4);		// in al, 0x60
-		phys_writew(physAddress+0x03,(uint16_t)0x4fb4);		// mov ah, 0x4f
-		phys_writeb(physAddress+0x05,(uint8_t)0xf9);			// stc
-		phys_writew(physAddress+0x06,(uint16_t)0x15cd);		// int 15
-		if (use_cb) {
-			phys_writew(physAddress+0x08,(uint16_t)0x0473);	// jc skip
-			phys_writeb(physAddress+0x0a,(uint8_t)0xFE);		//GRP 4
-			phys_writeb(physAddress+0x0b,(uint8_t)0x38);		//Extra Callback instruction
-			phys_writew(physAddress + 0x0c, cb_num);                // The immediate word
+		add_instruction_1(0x1e);                   // push ds
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_1(0x52);                   // push dx
+		add_instruction_2(0xcd, 0x1c);             // int 0x1c
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x5a);                   // pop dx
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0x1f);                   // pop ds
+		add_instruction_1(0xcf);                   // iret
+		break;
+	case CB_IRQ1: // keyboard INT9
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xe4, 0x60);             // in al, 0x60
+		add_instruction_2(0xb4, 0x4f);             // mov ah, 0x4f
+		add_instruction_1(0xf9);                   // stc
+		add_instruction_2(0xcd, 0x15);             // int 0x15
+		if (use_callback) {
+			add_instruction_2(0x73, 0x04);     // jc skip
+			add_native_call_4(callback_number);
 			// jump here to (skip):
-			physAddress+=6;
 		}
-		phys_writeb(physAddress+0x08,(uint8_t)0xfa);			// cli
-		phys_writew(physAddress+0x09,(uint16_t)0x20b0);		// mov al, 0x20
-		phys_writew(physAddress+0x0b,(uint16_t)0x20e6);		// out 0x20, al
-		phys_writeb(physAddress+0x0d,(uint8_t)0x58);			// pop ax
-		phys_writeb(physAddress+0x0e,(uint8_t)0xcf);			//An IRET Instruction
-		phys_writeb(physAddress+0x0f,(uint8_t)0xfa);			// cli
-		phys_writew(physAddress+0x10,(uint16_t)0x20b0);		// mov al, 0x20
-		phys_writew(physAddress+0x12,(uint16_t)0x20e6);		// out 0x20, al
-		phys_writeb(physAddress+0x14,(uint8_t)0x55);			// push bp
-		phys_writew(physAddress+0x15,(uint16_t)0x05cd);		// int 5
-		phys_writeb(physAddress+0x17,(uint8_t)0x5d);			// pop bp
-		phys_writeb(physAddress+0x18,(uint8_t)0x58);			// pop ax
-		phys_writeb(physAddress+0x19,(uint8_t)0xcf);			//An IRET Instruction
-		return (use_cb?0x20:0x1a);
-	case CB_IRQ9:	// pic cascade interrupt
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x55);                   // push bp
+		add_instruction_2(0xcd, 0x05);             // int 0x05
+		add_instruction_1(0x5d);                   // pop bp
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
+	case CB_IRQ9: // PIC cascade interrupt
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
-		phys_writew(physAddress+0x01,(uint16_t)0x61b0);	// mov al, 0x61
-		phys_writew(physAddress+0x03,(uint16_t)0xa0e6);	// out 0xa0, al
-		phys_writew(physAddress+0x05,(uint16_t)0x0acd);	// int a
-		phys_writeb(physAddress+0x07,(uint8_t)0xfa);		// cli
-		phys_writeb(physAddress+0x08,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x09,(uint8_t)0xcf);		//An IRET Instruction
-		return (use_cb?0x0e:0x0a);
-	case CB_IRQ12:	// ps2 mouse int74
-		if (!use_cb) E_Exit("int74 callback must implement a callback handler!");
-		phys_writeb(physAddress+0x00,(uint8_t)0xfb);		// sti
-		phys_writeb(physAddress+0x01,(uint8_t)0x1e);		// push ds
-		phys_writeb(physAddress+0x02,(uint8_t)0x06);		// push es
-		phys_writew(physAddress+0x03,(uint16_t)0x6066);	// pushad
-		phys_writeb(physAddress+0x05,(uint8_t)0xFE);		//GRP 4
-		phys_writeb(physAddress+0x06,(uint8_t)0x38);		//Extra Callback instruction
-		phys_writew(physAddress + 0x07, cb_num);                // The immediate word
-		phys_writeb(physAddress + 0x09, (uint8_t)0x50);         // push ax
-		phys_writew(physAddress + 0x0a, (uint16_t)0x20b0);      // mov al, 0x20
-		phys_writew(physAddress + 0x0c, (uint16_t)0xa0e6);      // out 0xa0, al
-		phys_writew(physAddress + 0x0e, (uint16_t)0x20e6);      // out 0x20, al
-		phys_writeb(physAddress + 0x10, (uint8_t)0x58);         // pop ax
-		phys_writeb(physAddress + 0x11, (uint8_t)0xfc);         // cld
-		phys_writeb(physAddress + 0x12, (uint8_t)0xCB);         // A RETF Instruction
-		return 0x13;
-	case CB_IRQ12_RET:	// ps2 mouse int74 return
-		phys_writeb(physAddress+0x00,(uint8_t)0xfa);		// cli
-		phys_writew(physAddress+0x01,(uint16_t)0x20b0);	// mov al, 0x20
-		phys_writew(physAddress+0x03,(uint16_t)0xa0e6);	// out 0xa0, al
-		phys_writew(physAddress+0x05,(uint16_t)0x20e6);	// out 0x20, al
-		if (use_cb) {
-			phys_writeb(physAddress+0x07,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x08,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x09, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xb0, 0x61);             // mov al, 0x61
+		add_instruction_2(0xe6, 0xa0);             // out 0xa0, al
+		add_instruction_2(0xcd, 0x0a);             // int 0x0a
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
+	case CB_IRQ12: // PS/2 mouse INT7
+		if (!use_callback) {
+			LOG_ERR("CPU: INT74 callback must implement a callback handler!");
+			return 0;
 		}
-		phys_writew(physAddress+0x07,(uint16_t)0x6166);	// popad
-		phys_writeb(physAddress+0x09,(uint8_t)0x07);		// pop es
-		phys_writeb(physAddress+0x0a,(uint8_t)0x1f);		// pop ds
-		phys_writeb(physAddress+0x0b,(uint8_t)0xcf);		//An IRET Instruction
-		return (use_cb?0x10:0x0c);
-	case CB_IRQ6_PCJR:	// pcjr keyboard interrupt
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);			// push ax
-		phys_writew(physAddress+0x01,(uint16_t)0x60e4);		// in al, 0x60
-		phys_writew(physAddress+0x03,(uint16_t)0xe03c);		// cmp al, 0xe0
-		if (use_cb) {
-			phys_writew(physAddress+0x05,(uint16_t)0x0b74);	// je skip
-			phys_writeb(physAddress+0x07,(uint8_t)0xFE);		//GRP 4
-			phys_writeb(physAddress+0x08,(uint8_t)0x38);		//Extra Callback instruction
-			phys_writew(physAddress + 0x09, cb_num);                // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		add_instruction_1(0x1e);                   // push ds
+		add_instruction_1(0x06);                   // push es
+		add_instruction_2(0x66, 0x60);             // pushad
+		add_native_call_4(callback_number);
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0xa0);             // out 0xa0, al
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xfc);                   // cld
+		add_instruction_1(0xcb);                   // retf
+		break;
+	case CB_IRQ12_RET: // PS/2 mouse INT74 return
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0xa0);             // out 0xa0, al
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		if (use_callback) {
+			add_native_call_4(callback_number);
+		}
+		add_instruction_2(0x66, 0x61);             // popad
+		add_instruction_1(0x07);                   // pop es
+		add_instruction_1(0x1f);                   // pop ds
+		add_instruction_1(0xcf);                   // iret
+		break;
+	case CB_IRQ6_PCJR: // PCjr keyboard interrupt
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xe4, 0x60);             // in al, 0x60
+		add_instruction_2(0x3c, 0xe0);             // cmp al, 0xe0
+		if (use_callback) {
+			add_instruction_2(0x74, 0x0b);     // je skip
+			add_native_call_4(callback_number);
 		} else {
-			phys_writew(physAddress+0x05,(uint16_t)0x0774);	// je skip
+			add_instruction_2(0x74, 0x07);     // je skip
 		}
-		phys_writeb(physAddress+0x07,(uint8_t)0x1e);			// push ds
-		phys_writew(physAddress+0x08,(uint16_t)0x406a);		// push 0x0040
-		phys_writeb(physAddress+0x0a,(uint8_t)0x1f);			// pop ds
-		phys_writew(physAddress+0x0b,(uint16_t)0x09cd);		// int 9
-		phys_writeb(physAddress+0x0d,(uint8_t)0x1f);			// pop ds
-		// jump here to (skip):
-		phys_writeb(physAddress+0x0e,(uint8_t)0xfa);			// cli
-		phys_writew(physAddress+0x0f,(uint16_t)0x20b0);		// mov al, 0x20
-		phys_writew(physAddress+0x11,(uint16_t)0x20e6);		// out 0x20, al
-		phys_writeb(physAddress+0x13,(uint8_t)0x58);			// pop ax
-		phys_writeb(physAddress+0x14,(uint8_t)0xcf);			//An IRET Instruction
-		return (use_cb?0x19:0x15);
+		add_instruction_1(0x1e);                   // push ds
+		add_instruction_2(0x6a, 0x40);             // push 0x0040
+		add_instruction_1(0x1f);                   // pop ds
+		add_instruction_2(0xcd, 0x09);             // int 0x09
+		add_instruction_1(0x1f);                   // pop ds
+		// label: skip
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_MOUSE:
-		phys_writew(physAddress+0x00,(uint16_t)0x07eb);		// jmp i33hd
-		physAddress+=9;
-		// jump here to (i33hd):
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_2(0xeb, 0x07);             // jmp i33hd
+		advance(7);
+		// label: i33hd
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0xCF);		//An IRET Instruction
-		return (use_cb?0x0e:0x0a);
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_INT16:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
-		for (uint8_t i = 0; i <= 0x0b; ++i)
-			phys_writeb(physAddress + 0x02 + i, 0x90);
-		phys_writew(physAddress + 0x0e, (uint16_t)0xedeb); // jmp callback
-		return (use_cb ? 0x10 : 0x0c);
+		add_instruction_1(0xcf);                   // iret
+		for (auto i = 0; i <= 0x0b; ++i) {
+			add_instruction_1(0x90);           // nop
+		}
+		add_instruction_2(0xeb, 0xed);             // jmp callback
+		break;
 	case CB_INT29: // fast console output
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);	// push ax
-		phys_writeb(physAddress+0x01,(uint8_t)0x53);	// push bx
-		phys_writew(physAddress+0x02,(uint16_t)0x0eb4);	// mov ah, 0x0e
-		phys_writeb(physAddress+0x04,(uint8_t)0xbb);	// mov bx,
-		phys_writew(physAddress+0x05,(uint16_t)0x0007);	// 0x0007
-		phys_writew(physAddress+0x07,(uint16_t)0x10cd);	// int 10
-		phys_writeb(physAddress+0x09,(uint8_t)0x5b);	// pop bx
-		phys_writeb(physAddress+0x0a,(uint8_t)0x58);	// pop ax
-		phys_writeb(physAddress+0x0b,(uint8_t)0xcf);	//An IRET Instruction
-		return (use_cb?0x10:0x0c);
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_1(0x53);                   // push bx
+		add_instruction_2(0xb4, 0x0e);             // mov ah, 0x0e
+		add_instruction_3(0xbb, 0x07, 0x00);       // mov bx, 0x0007
+		add_instruction_2(0xcd, 0x10);             // int 0x10
+		add_instruction_1(0x5b);                   // pop bx
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_HOOKABLE:
-		phys_writeb(physAddress+0x00,(uint8_t)0xEB);		//jump near
-		phys_writeb(physAddress+0x01,(uint8_t)0x03);		//offset
-		phys_writeb(physAddress+0x02,(uint8_t)0x90);		//NOP
-		phys_writeb(physAddress+0x03,(uint8_t)0x90);		//NOP
-		phys_writeb(physAddress+0x04,(uint8_t)0x90);		//NOP
-		if (use_cb) {
-			phys_writeb(physAddress+0x05,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x06,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x07, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_2(0xeb, 0x03);             // jmp after nops
+		add_instruction_1(0x90);                   // nop
+		add_instruction_1(0x90);                   // nop
+		add_instruction_1(0x90);                   // nop
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x05,(uint8_t)0xCB);		//A RETF Instruction
-		return (use_cb?0x0a:0x06);
-	case CB_TDE_IRET:	// TandyDAC end transfer
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xcb);                   // retf
+		break;
+	case CB_TDE_IRET: // Tandy DAC end transfer
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0x50);		// push ax
-		phys_writeb(physAddress+0x01,(uint8_t)0xb8);		// mov ax, 0x91fb
-		phys_writew(physAddress+0x02,(uint16_t)0x91fb);
-		phys_writew(physAddress+0x04,(uint16_t)0x15cd);	// int 15
-		phys_writeb(physAddress+0x06,(uint8_t)0xfa);		// cli
-		phys_writew(physAddress+0x07,(uint16_t)0x20b0);	// mov al, 0x20
-		phys_writew(physAddress+0x09,(uint16_t)0x20e6);	// out 0x20, al
-		phys_writeb(physAddress+0x0b,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x0c,(uint8_t)0xcf);		//An IRET Instruction
-		return (use_cb?0x11:0x0d);
-/*	case CB_IPXESR:		// IPX ESR
-		if (!use_cb) E_Exit("ipx esr must implement a callback handler!");
-		phys_writeb(physAddress+0x00,(uint8_t)0x1e);		// push ds
-		phys_writeb(physAddress+0x01,(uint8_t)0x06);		// push es
-		phys_writew(physAddress+0x02,(uint16_t)0xa00f);	// push fs
-		phys_writew(physAddress+0x04,(uint16_t)0xa80f);	// push gs
-		phys_writeb(physAddress+0x06,(uint8_t)0x60);		// pusha
-		phys_writeb(physAddress+0x07,(uint8_t)0xFE);		//GRP 4
-		phys_writeb(physAddress+0x08,(uint8_t)0x38);		//Extra Callback instruction
-		phys_writew(physAddress+0x09,(uint16_t)callback);	//The immediate word
-		phys_writeb(physAddress+0x0b,(uint8_t)0xCB);		//A RETF Instruction
-		return 0x0c;
-	case CB_IPXESR_RET:		// IPX ESR return
-		if (use_cb) E_Exit("ipx esr return must not implement a callback handler!");
-		phys_writeb(physAddress+0x00,(uint8_t)0xfa);		// cli
-		phys_writew(physAddress+0x01,(uint16_t)0x20b0);	// mov al, 0x20
-		phys_writew(physAddress+0x03,(uint16_t)0xa0e6);	// out 0xa0, al
-		phys_writew(physAddress+0x05,(uint16_t)0x20e6);	// out 0x20, al
-		phys_writeb(physAddress+0x07,(uint8_t)0x61);		// popa
-		phys_writew(physAddress+0x08,(uint16_t)0xA90F);	// pop gs
-		phys_writew(physAddress+0x0a,(uint16_t)0xA10F);	// pop fs
-		phys_writeb(physAddress+0x0c,(uint8_t)0x07);		// pop es
-		phys_writeb(physAddress+0x0d,(uint8_t)0x1f);		// pop ds
-		phys_writeb(physAddress+0x0e,(uint8_t)0xcf);		//An IRET Instruction
-		return 0x0f; */
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_3(0xb8, 0xfb, 0x91);       // mov ax, 0x91fb
+		add_instruction_2(0xcd, 0x15);             // int 0x15
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcf);                   // iret
+		break;
+/*	
+	case CB_IPXESR: // IPX ESR
+		if (!use_callback) {
+			LOG_ERR("CPU: IPX esr must implement a callback handler!");
+			return 0;
+		}
+		add_instruction_1(0x1e);                   // push ds
+		add_instruction_1(0x06);                   // push es
+		add_instruction_2(0x0f, 0xa0);             // push fs
+		add_instruction_2(0x0f, 0xa8);             // push gs		
+		add_instruction_1(0x60);                   // pusha
+		add_native_call_4(callback_number);
+		add_instruction_1(0xcb);                   // retf
+		break;
+	case CB_IPXESR_RET: // IPX ESR return
+		if (use_callback) {
+			LOG_ERR("CPU: IPX esr return must not implement a callback handler!");
+			return 0;
+		}
+		add_instruction_1(0xfa);                   // cli
+		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
+		add_instruction_2(0xe6, 0xa0);             // out 0xa0, al
+		add_instruction_2(0xe6, 0x20);             // out 0x20, al
+		add_instruction_1(0x61);                   // popa
+		add_instruction_2(0x0f, 0xa9);             // pop gs
+		add_instruction_2(0x0f, 0xa1);             // pop fs
+		add_instruction_1(0x07);                   // pop es
+		add_instruction_1(0x1f);                   // pop ds
+		add_instruction_1(0xcf);                   // iret
+		break;
+*/
 	case CB_INT21:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
-		phys_writeb(physAddress+0x02,(uint8_t)0xCB);		//A RETF Instruction
-		phys_writeb(physAddress+0x03,(uint8_t)0x51);		// push cx
-		phys_writeb(physAddress+0x04,(uint8_t)0xB9);		// mov cx,
-		phys_writew(physAddress+0x05,(uint16_t)0x0140);		// 0x140
-		phys_writew(physAddress+0x07,(uint16_t)0xFEE2);		// loop $-2
-		phys_writeb(physAddress+0x09,(uint8_t)0x59);		// pop cx
-		phys_writeb(physAddress+0x0A,(uint8_t)0xCF);		//An IRET Instruction
-		return (use_cb?15:11);
+		add_instruction_1(0xcf);                   // iret
+		add_instruction_1(0xcb);                   // retf
+		add_instruction_1(0x51);                   // push cx
+		add_instruction_3(0xb9, 0x40, 0x01);       // mov cx, 0x0140		
+		add_instruction_2(0xe2, 0xfe);             // loop $-2
+		add_instruction_1(0x59);                   // pop cx
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_INT13:
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		//STI
-		if (use_cb) {
-			phys_writeb(physAddress+0x01,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x02,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x03, cb_num);        // The immediate word
-			physAddress += 4;
+		add_instruction_1(0xfb);                   // sti
+		if (use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x01,(uint8_t)0xCF);		//An IRET Instruction
-		phys_writew(physAddress+0x02,(uint16_t)0x0ECD);		// int 0e
-		phys_writeb(physAddress+0x04,(uint8_t)0xCF);		//An IRET Instruction
-		return (use_cb?9:5);
+		add_instruction_1(0xcf);                   // iret
+		add_instruction_2(0xcd, 0x0e);             // int 0x0e
+		add_instruction_1(0xcf);                   // iret
+		break;
 	case CB_VESA_WAIT:
-		if (use_cb) E_Exit("VESA wait must not implement a callback handler!");
-		phys_writeb(physAddress+0x00,(uint8_t)0xFB);		// sti
-		phys_writeb(physAddress+0x01,(uint8_t)0x50);		// push ax
-		phys_writeb(physAddress+0x02,(uint8_t)0x52);		// push dx
-		phys_writeb(physAddress+0x03,(uint8_t)0xBA);		// mov dx,
-		phys_writew(physAddress+0x04,(uint16_t)0x03DA);	// 0x3da
-		phys_writeb(physAddress+0x06,(uint8_t)0xEC);		// in al,dx
-		phys_writew(physAddress+0x07,(uint16_t)0x08A8);	// test al,8
-		phys_writew(physAddress+0x09,(uint16_t)0xFB75);	// jne $-5
-		phys_writeb(physAddress+0x0B,(uint8_t)0xEC);		// in al,dx
-		phys_writew(physAddress+0x0C,(uint16_t)0x08A8);	// test al,8
-		phys_writew(physAddress+0x0E,(uint16_t)0xFB74);	// je $-5
-		phys_writeb(physAddress+0x10,(uint8_t)0x5A);		// pop dx
-		phys_writeb(physAddress+0x11,(uint8_t)0x58);		// pop ax
-		phys_writeb(physAddress+0x12,(uint8_t)0xCB);		//A RETF Instruction
-		return 19;
-	case CB_VESA_PM:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (use_callback) {
+			LOG_ERR("CPU: VESA wait must not implement a callback handler!");
+			return 0;
 		}
-		phys_writew(physAddress+0x00,(uint16_t)0xC3F6);	// test bl,
-		phys_writeb(physAddress+0x02,(uint8_t)0x80);		// 0x80
-		phys_writew(physAddress+0x03,(uint16_t)0x1674);	// je $+22
-		phys_writew(physAddress+0x05,(uint16_t)0x5066);	// push ax
-		phys_writew(physAddress+0x07,(uint16_t)0x5266);	// push dx
-		phys_writew(physAddress+0x09,(uint16_t)0xBA66);	// mov dx,
-		phys_writew(physAddress+0x0B,(uint16_t)0x03DA);	// 0x3da
-		phys_writeb(physAddress+0x0D,(uint8_t)0xEC);		// in al,dx
-		phys_writew(physAddress+0x0E,(uint16_t)0x08A8);	// test al,8
-		phys_writew(physAddress+0x10,(uint16_t)0xFB75);	// jne $-5
-		phys_writeb(physAddress+0x12,(uint8_t)0xEC);		// in al,dx
-		phys_writew(physAddress+0x13,(uint16_t)0x08A8);	// test al,8
-		phys_writew(physAddress+0x15,(uint16_t)0xFB74);	// je $-5
-		phys_writew(physAddress+0x17,(uint16_t)0x5A66);	// pop dx
-		phys_writew(physAddress+0x19,(uint16_t)0x5866);	// pop ax
-		if (use_cb)
-			phys_writeb(physAddress+0x1B,(uint8_t)0xC3);	//A RETN Instruction
-		return (use_cb?32:27);
+		add_instruction_1(0xfb);                   // sti
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_1(0x52);                   // push dx
+		add_instruction_3(0xba, 0xda, 0x03);       // mov dx, 0x03da
+		add_instruction_1(0xec);                   // in al, dx
+		add_instruction_2(0xa8, 0x08);             // test al, 0x08
+		add_instruction_2(0x75, 0xfb);             // jne $-5
+		add_instruction_1(0xec);                   // in al, dx
+		add_instruction_2(0xa8, 0x08);             // test al, 0x08
+		add_instruction_2(0x74, 0xfb);             // je $-5
+		add_instruction_1(0x5a);                   // pop dx
+		add_instruction_1(0x58);                   // pop ax
+		add_instruction_1(0xcb);                   // retf
+		break;
+	case CB_VESA_PM:
+		if (use_callback) {
+			add_native_call_4(callback_number);
+		}
+		add_instruction_3(0xf6, 0xc3, 0x80);       // test bl, 0x80
+		add_instruction_2(0x74, 0x16);             // je $+22
+		add_instruction_2(0x66, 0x50);             // push ax
+		add_instruction_2(0x66, 0x52);             // push dx
+		add_instruction_4(0x66, 0xba, 0xda, 0x03); // mov dx, 0x03da
+		add_instruction_1(0xec);                   // in al, dx
+		add_instruction_2(0xa8, 0x08);             // test al, 0x08
+		add_instruction_2(0x75, 0xfb);             // jne $-5
+		add_instruction_1(0xec);                   // in al, dx
+		add_instruction_2(0xa8, 0x08);             // test al, 0x08
+		add_instruction_2(0x74, 0xfb);             // je $-5
+		add_instruction_2(0x66, 0x5a);             // pop dx
+		add_instruction_2(0x66, 0x58);             // pop ax
+		if (use_callback) {
+			add_instruction_1(0xc3);           // retn
+		}
+		break;
 	default:
-		E_Exit("Unknown callback type 0x%04x", callback_type);
+		LOG_ERR("CPU: Unknown callback type 0x%04x", callback_type);
 		return 0;
 	}
 
@@ -580,8 +537,8 @@ bool CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu typ
 {
 	if (cb_num >= CB_MAX)
 		return false;
-	const bool should_use_callback = (handler != nullptr);
-	callback_setup_extra(cb_num, type, CALLBACK_PhysPointer(cb_num), should_use_callback);
+	const bool use_callback = (handler != nullptr);
+	callback_setup_extra(cb_num, type, CALLBACK_PhysPointer(cb_num), use_callback);
 	CallBack_Handlers[cb_num] = handler;
 	CALLBACK_SetDescription(cb_num, descr);
 	return true;
@@ -592,9 +549,9 @@ callback_number_t CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler hand
 	if (cb_num >= CB_MAX)
 		return 0;
 
-	const bool should_use_callback = (handler != nullptr);
+	const bool use_callback = (handler != nullptr);
 
-	const auto csize = callback_setup_extra(cb_num, type, addr, should_use_callback);
+	const auto csize = callback_setup_extra(cb_num, type, addr, use_callback);
 	if (csize > 0) {
 		CallBack_Handlers[cb_num] = handler;
 		CALLBACK_SetDescription(cb_num, descr);
