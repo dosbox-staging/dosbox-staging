@@ -262,6 +262,16 @@ constexpr uint8_t high_nibble(const uint8_t byte)
 	return (byte & 0xf0) >> 4;
 }
 
+constexpr uint8_t low_byte(const uint16_t word)
+{
+	return static_cast<uint8_t>(word & 0xff);
+}
+
+constexpr uint8_t high_byte(const uint16_t word)
+{
+	return static_cast<uint8_t>((word & 0xff00) >> 8);
+}
+
 inline float decibel_to_gain(const float decibel)
 {
 	return powf(10.0f, decibel / 20.0f);

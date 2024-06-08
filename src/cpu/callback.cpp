@@ -22,10 +22,11 @@
 #include <limits>
 #include <string>
 
-#include "dosbox.h"
 #include "callback.h"
-#include "mem.h"
 #include "cpu.h"
+#include "dosbox.h"
+#include "math_utils.h"
+#include "mem.h"
 
 /* CallBack are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
    And they are 16 bytes each and you can define them to behave in certain ways like a
@@ -154,29 +155,54 @@ const char* CALLBACK_GetDescription(callback_number_t cb_num)
 	return CallBack_Description[cb_num].c_str();
 }
 
-callback_number_t CALLBACK_SetupExtra(callback_number_t cb_num, Bitu type, PhysPt physAddress, bool use_cb = true)
+static uint8_t callback_setup_extra(const callback_number_t callback_number,
+                                    const uint8_t callback_type,
+                                    const PhysPt start_address,
+                                    const bool should_use_callback = true)
 {
-	if (cb_num >= CB_MAX)
+	if (callback_number >= CB_MAX) {
+		E_Exit("Unknown callback number 0x%04x", callback_number);
 		return 0;
-	switch (type) {
+	}
+
+	// TODO: temporary, until rework is complete
+	auto physAddress = start_address;
+	auto cb_num      = callback_number;
+	auto use_cb      = should_use_callback;
+
+	auto current_address = start_address;
+
+	auto add_instruction_1 = [&](const uint8_t byte) {
+		phys_writeb(current_address, byte);
+		++current_address;
+	};
+
+	auto add_instruction_2 = [&](const uint8_t byte1, const uint8_t byte2) {
+		add_instruction_1(byte1);
+		add_instruction_1(byte2);
+	};
+
+	// Effectively 4-byte long - reflect it in the lambda name, to make
+	// it easier to calculate relative jump addresses
+	auto add_native_call_4 = [&](const callback_number_t cb_num) {
+		add_instruction_1(0xfe); // GRP 4
+		add_instruction_1(0x38); // extra callback instruction
+		add_instruction_2(low_byte(cb_num), high_byte(cb_num));
+	};
+
+	switch (callback_type) {
 	case CB_RETN:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (should_use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0xC3);		//A RETN Instruction
-		return (use_cb?5:1);
+		add_instruction_1(0xc3); // RETN
+		break;
 	case CB_RETF:
-		if (use_cb) {
-			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
-			phys_writeb(physAddress+0x01,(uint8_t)0x38);	//Extra Callback instruction
-			phys_writew(physAddress + 0x02, cb_num);        // The immediate word
-			physAddress += 4;
+		if (should_use_callback) {
+			add_native_call_4(callback_number);
 		}
-		phys_writeb(physAddress+0x00,(uint8_t)0xCB);		//A RETF Instruction
-		return (use_cb?5:1);
+		add_instruction_1(0xcb); // RETF
+		break;
 	case CB_RETF8:
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(uint8_t)0xFE);	//GRP 4
@@ -543,9 +569,11 @@ callback_number_t CALLBACK_SetupExtra(callback_number_t cb_num, Bitu type, PhysP
 			phys_writeb(physAddress+0x1B,(uint8_t)0xC3);	//A RETN Instruction
 		return (use_cb?32:27);
 	default:
-		E_Exit("CALLBACK:Setup:Illegal type %" sBitfs(u),type);
+		E_Exit("Unknown callback type 0x%04x", callback_type);
+		return 0;
 	}
-	return 0;
+
+	return check_cast<uint8_t>(current_address - start_address);
 }
 
 bool CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu type, const char* descr)
@@ -553,7 +581,7 @@ bool CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu typ
 	if (cb_num >= CB_MAX)
 		return false;
 	const bool should_use_callback = (handler != nullptr);
-	CALLBACK_SetupExtra(cb_num, type, CALLBACK_PhysPointer(cb_num) + 0, should_use_callback);
+	callback_setup_extra(cb_num, type, CALLBACK_PhysPointer(cb_num), should_use_callback);
 	CallBack_Handlers[cb_num] = handler;
 	CALLBACK_SetDescription(cb_num, descr);
 	return true;
@@ -566,7 +594,7 @@ callback_number_t CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler hand
 
 	const bool should_use_callback = (handler != nullptr);
 
-	const auto csize = CALLBACK_SetupExtra(cb_num, type, addr, should_use_callback);
+	const auto csize = callback_setup_extra(cb_num, type, addr, should_use_callback);
 	if (csize > 0) {
 		CallBack_Handlers[cb_num] = handler;
 		CALLBACK_SetDescription(cb_num, descr);
