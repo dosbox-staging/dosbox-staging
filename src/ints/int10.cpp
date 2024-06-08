@@ -205,34 +205,82 @@ static Bitu INT10_Handler(void) {
 			break;
 		}
 		break;
-	case 0x11:								/* Character generator functions */
-		if (!IS_EGAVGA_ARCH)
+
+	// Character generator functions
+	case 0x11:
+		if (!IS_EGAVGA_ARCH) {
 			break;
-		if ((reg_al & 0xf0) == 0x10)
+		}
+
+		if ((reg_al & 0xf0) == 0x10) {
 			MOUSEDOS_BeforeNewVideoMode();
+		}
+
 		switch (reg_al) {
-/* Textmode calls */
-		case 0x00:			/* Load user font */
+		// Text mode functions
+		// ===================
+		// Load user font
+		case 0x00:
+			[[fallthrough]];
+		// Load and activate user font
 		case 0x10:
-			INT10_LoadFont(SegPhys(es)+reg_bp,reg_al==0x10,reg_cx,reg_dx,reg_bl&0x7f,reg_bh);
+			INT10_LoadFont(SegPhys(es) + reg_bp,
+			               reg_al == 0x10,
+			               reg_cx,
+			               reg_dx,
+			               reg_bl & 0x7f,
+			               reg_bh);
 			break;
-		case 0x01:			/* Load 8x14 font */
+
+		// Load ROM 8x14 font
+		case 0x01:
+			[[fallthrough]];
+		// Load and activate ROM 8x14 font
 		case 0x11:
-			INT10_LoadFont(RealToPhysical(int10.rom.font_14),reg_al==0x11,256,0,reg_bl&0x7f,14);
+			INT10_LoadFont(RealToPhysical(int10.rom.font_14),
+			               reg_al == 0x11,
+			               256,
+			               0,
+			               reg_bl & 0x7f,
+			               14);
 			break;
-		case 0x02:			/* Load 8x8 font */
+
+
+		// Load ROM 8x8 font
+		case 0x02:
+			[[fallthrough]];
+		// Load and activate ROM 8x8 font
 		case 0x12:
-			INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),reg_al==0x12,256,0,reg_bl&0x7f,8);
+			INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
+			               reg_al == 0x12,
+			               256,
+			               0,
+			               reg_bl & 0x7f,
+			               8);
 			break;
-		case 0x03:			/* Set Block Specifier */
+
+		// Set Block Specifier
+		case 0x03:
 			IO_Write(0x3c4,0x3);IO_Write(0x3c5,reg_bl);
 			break;
-		case 0x04:			/* Load 8x16 font */
+
+		// Load ROM 8x16 font
+		case 0x04:
+		// Load and activate ROM 8x16 font
 		case 0x14:
-			if (!IS_VGA_ARCH) break;
-			INT10_LoadFont(RealToPhysical(int10.rom.font_16),reg_al==0x14,256,0,reg_bl&0x7f,16);
+			if (!IS_VGA_ARCH) {
+				break;
+			}
+			INT10_LoadFont(RealToPhysical(int10.rom.font_16),
+			               reg_al == 0x14,
+			               256,
+			               0,
+			               reg_bl & 0x7f,
+			               16);
 			break;
-/* Graphics mode calls */
+
+		// Graphics mode calls
+		// ===================
 		case 0x20:			/* Set User 8x8 Graphics characters */
 			RealSetVec(0x1f,RealMake(SegValue(es),reg_bp));
 			break;

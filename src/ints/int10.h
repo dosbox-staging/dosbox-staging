@@ -122,11 +122,9 @@ union BiosVgaFlagsRec {
 	}
 };
 
-/*
- *
- * VGA registers
- *
- */
+// VGA registers
+// TODO convert these to namespaced constants
+//
 #define VGAREG_ACTL_ADDRESS            0x3c0
 #define VGAREG_ACTL_WRITE_DATA         0x3c0
 #define VGAREG_ACTL_READ_DATA          0x3c1
@@ -240,13 +238,19 @@ using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
 extern video_mode_block_iterator_t CurMode;
 
 enum class VesaModePref {
-	Compatible,  // Prunes the available S3 modes to maximize DOS game compatibility
-	Halfline, // Replaces mode 120h with the halfline mode used by Extreme Assault
-	All, // Enables all S3 864 and Trio VESA modes (but some games might not handle them properly)
+	// Prunes the available S3 modes to maximize DOS game compatibility
+	Compatible,
+
+	// Replaces mode 120h with the halfline mode used by Extreme Assault
+	Halfline,
+
+	// Enables all S3 864 and Trio VESA modes (but some games might not
+	// handle them properly)
+	All,
 };
 
 struct Int10Data {
-	struct Int10DataRom{
+	struct Int10DataRom {
 		RealPt font_8_first;
 		RealPt font_8_second;
 		RealPt font_14;
@@ -269,10 +273,12 @@ struct Int10Data {
 		uint16_t pmode_interface_palette;
 		uint16_t used;
 	} rom = {};
+
 	uint16_t vesa_setmode = 0;
 
 	VesaModePref vesa_mode_preference = VesaModePref::Compatible;
-	bool vesa_nolfb = false;
+
+	bool vesa_nolfb  = false;
 	bool vesa_oldvbe = false;
 };
 
@@ -330,7 +336,7 @@ void INT10_WriteCharViaInterrupt(const uint8_t char_value, const uint8_t attribu
 void INT10_WriteString(uint8_t row, uint8_t col, uint8_t flag, uint8_t attr,
                        PhysPt string, uint16_t count, uint8_t page);
 
-/* Graphics Stuff */
+// Graphics functions
 void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color);
 void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color);
 
@@ -338,7 +344,7 @@ void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color);
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height);
 void INT10_ReloadFont(void);
 
-/* Palette Group */
+// Palette functions
 void INT10_SetBackgroundBorder(uint8_t val);
 void INT10_SetColorSelect(uint8_t val);
 void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val);
@@ -359,7 +365,7 @@ void INT10_GetPelMask(uint8_t & mask);
 void INT10_PerformGrayScaleSumming(uint16_t start_reg,uint16_t count);
 
 
-/* Vesa Group */
+// VESA functions
 uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset);
 bool VESA_IsVesaMode(const uint16_t bios_mode_number);
 uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off);
