@@ -43,9 +43,10 @@ static const std::vector<uint16_t> map_offset = {
 	0x0000, 0x4000, 0x8000, 0xc000,
 	0x2000, 0x6000, 0xa000, 0xe000
 };
+// clang-format on
 
-void INT10_LoadFont(PhysPt font, bool reload, Bitu count, Bitu offset, Bitu map,
-                    Bitu height)
+void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
+                    const int offset, const int map, const int height)
 {
 	PhysPt ftwhere = PhysicalMake(0xa000,
 	                              map_offset[map & 0x7] +
@@ -78,13 +79,15 @@ void INT10_LoadFont(PhysPt font, bool reload, Bitu count, Bitu offset, Bitu map,
 	IO_Write(0x3cf, 0x04);
 
 	// Load character patterns
-	for (Bitu i = 0; i < count; i++) {
+	auto font = _font;
+
+	for (auto i = 0; i < count; i++) {
 		MEM_BlockCopy(ftwhere + i * 32, font, height);
 		font += height;
 	}
 	// Load alternate character patterns
 	if (map & 0x80) {
-		while (Bitu chr = (Bitu)mem_readb(font++)) {
+		while (auto chr = mem_readb(font++)) {
 			MEM_BlockCopy(ftwhere + chr * 32, font, height);
 			font += height;
 		}
@@ -119,8 +122,8 @@ void INT10_LoadFont(PhysPt font, bool reload, Bitu count, Bitu offset, Bitu map,
 		IO_Write(base + 1, (IO_Read(base + 1) & 0xe0) | (height - 1));
 
 		// Vertical display end
-		Bitu rows = CurMode->sheight / height;
-		Bitu vdend = rows * height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
+		auto rows = CurMode->sheight / height;
+		auto vdend = rows * height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
 		IO_Write(base, 0x12);
 		IO_Write(base + 1, (uint8_t)vdend);
 
@@ -143,13 +146,10 @@ void INT10_LoadFont(PhysPt font, bool reload, Bitu count, Bitu offset, Bitu map,
 		bios_pagesize += 0x100;
 		real_writew(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE, bios_pagesize);
 
-		// Cursor shape
-		if (height >= 14) {
-			// Move up one line on 14+ line fonts
-			--height;
-		}
+		// Move up one line on 14+ line fonts
+		auto cursor_height = height >= 14 ? (height - 1) : height;
 
-		INT10_SetCursorShape(height - 2, height - 1);
+		INT10_SetCursorShape(cursor_height - 2, cursor_height - 1);
 	}
 }
 

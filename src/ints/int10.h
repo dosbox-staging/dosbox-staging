@@ -340,8 +340,10 @@ void INT10_WriteString(uint8_t row, uint8_t col, uint8_t flag, uint8_t attr,
 void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color);
 void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color);
 
-/* Font Stuff */
-void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height);
+// Font funtions
+void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
+                    const int offset, const int map, const int height);
+
 void INT10_ReloadFont(void);
 
 // Palette functions
