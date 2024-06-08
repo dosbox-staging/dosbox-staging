@@ -565,12 +565,26 @@ Seleziona la modalità di presentazione dei fotogrammi:
   vfr:       Visualizza sempre i fotogrammi DOS modificati ad una frequenza
              variabile.
 .
-:CONFIG_OUTPUT
-Modalità di uscita video da utilizzare (predefinito 'opengl').
-'texture' e 'opengl' utilizzano il metodo di ricampionamento Bilineare,
-'texturenb' e 'openglnb' utilizzano il metodo di ricampionamento Vicino più
-Prossimo (non bilineare). Alcuni shader richiedono il metodo di ricampionamento
-Bilineare, rendendolo la scelta più sicura.
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
+Backend di rendering da utilizzare per l'uscita video (predefinito 'opengl').
+Il supporto per gli shader è disponibile solamente utilizzando il backend di
+rendering 'opengl', rendendolo la scelta ottimale. È consigliabile usare il 
+backend 'texture' solo come ultima risorsa, un ripiego per driver OpenGL 
+inesistenti o con bug (circostanza estremamente rara).
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Backend di rendering da utilizzare per l'uscita video (predefinito 'texture').
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Il backend OpenGL con supporto agli shader (predefinito).
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Il backend texture di SDL con metodo di ricampionamento 
+              bilineare. 
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Il backend texture di SDL con metodo di ricampionamento 
+              nearest-neighbor (non bilineare). 
 .
 :CONFIG_TEXTURE_RENDERER
 Driver di rendering da utilizzare nella modalità di uscita 'texture'
@@ -702,7 +716,7 @@ Personalizza la frequenza dei fotogrammi della modalità video emulata:
   <valore>:  Imposta la frequenza su un valore intero o decimale compreso 
              tra 24.000 e 1000.000 Hz.
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
-provare ed impostare in base al gioco.
+è possibile provare a regolarla in base al gioco.
 .
 :CONFIG_VESA_MODES
 Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
@@ -752,6 +766,7 @@ un file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
   path    = percorso di ricerca eseguibili, cioè: path = %%path%%;c:\tools
   override_drive = monta invece la directory su questa unità (predef. vuoto)
   verbose = true o false
+  readonly = true o false
 .
 :CONFIG_STARTUP_VERBOSITY
 Determina il livello di verbosità prima di avviare l'emulatore
@@ -984,8 +999,9 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
 'auto' passerà a 'dynamic' se disponibile e appropriato.
 .
 :CONFIG_CPUTYPE
-Tipo di CPU usata nell'emulazione (predefinito 'auto').
-'auto' è la scelta più veloce.
+Tipo di CPU usata nell'emulazione (predefinito 'auto'). 'auto' è la scelta 
+più veloce. La variante prefetch emula la coda di prefetch e richiede il core
+'normal'.
 .
 :CONFIG_CYCLES
 Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
@@ -993,18 +1009,18 @@ Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
 e ritardi.
   auto:           Prova a indovinare le necessità del gioco.
                   Di solito funziona, ma può fallire con alcuni giochi.
-  fixed <numero>: Imposta un numero fisso di cicli. Questo è ciò di cui hai
-                  bisogno di solito se 'auto' fallisce (es. 'fixed 4000').
+  fixed <numero>: Imposta un numero fisso di cicli. Se 'auto' non funziona, si
+                  consiglia di provare questa impostazione (es. 'fixed 4000').
   max:            Allocherà tanti cicli quanti il tuo computer è in grado di
                   gestire.
 .
 :CONFIG_CYCLEUP
 Numero di cicli di cui aumentare utilizzando l'apposito tasto di scelta rapida
-(predefinito 10).
+(predefinito 10). Valori inferiori a 100 saranno trattati come una percentuale.
 .
 :CONFIG_CYCLEDOWN
 Numero di cicli di cui diminuire utilizzando l'apposito tasto di scelta rapida
-(predefinito 20). Un valore più basso di 100 indica una percentuale.
+(predefinito 20). Valori inferiori a 100 saranno trattati come una percentuale.
 .
 :CONFIG_VOODOO
 Abilita l'emulazione 3dfx Voodoo (predefinito abilitato).
@@ -1161,7 +1177,7 @@ In questa modalità, il suono è ancora completamente emulato ma non viene
 riprodotto da DOSBox.
 .
 :CONFIG_RATE
-Frequenza di campionamento del mixer (predefinito 48000).
+Frequenza di campionamento del mixer in Hz (predefinito 48000).
 .
 :CONFIG_BLOCKSIZE
 Dimensione dei blocchi del mixer misurato in campioni (predefinito 1024).
@@ -1251,9 +1267,20 @@ Opzioni di configurazione per l'interfaccia MIDI selezionata
 Di solito è l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
 (trova l'ID/nome con il comando DOS 'MIXER /LISTMIDI').
 Note:
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
     intergrati ('mididevice = fluidsynth' o 'mididevice = mt32').
-  - Quando si utilizza 'coreaudio', puoi specificare un SoundFont qui.
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Quando si utilizza 'coreaudio', è qui possibile specificare un SoundFont.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
+  - Quando si utilizza ALSA, usare il comando 'aconnect -l' per visualizzare
+    l'elenco di tutte le porte MIDI aperte e selezionarne una (e.g.
+    'midiconfig = 14:0' per usare il sequenziatore client 14, porta 0).
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
     potrebbe richiedere un ritardo per evitare che il suo buffer si
     sovraccarichi. In tal caso, aggiungi 'delaysysex'
@@ -1377,8 +1404,25 @@ ROM attiva
 Caricata da
 .
 :CONFIG_SBTYPE
-Tipo di Sound Blaster da emulare (predefinito 'sb16').
-'gb' è il Game Blaster.
+Modello di Sound Blaster da emulare (predefinito 'sb16').
+Sono elencati anche i modelli scelti automaticamente con quando 'oplmode' e 
+'cms' sono impostate su 'auto'.
+  gb:        Game Blaster          - CMS
+  sb1:       Sound Blaster 1.0     - OPL2, CMS
+  sb2:       Sound Blaster 2.0     - OPL2
+  sbpro1:    Sound Blaster Pro     - Due OPL2
+  sbpro2:    Sound Blaster Pro 2   - OPL3
+  sb16:      Sound Blaster 16      - OPL3 (default)
+  ess:       ESS ES1688 AudioDrive - ESFM
+  none/off:  Disabilita l'emulazione della Sound Blaster.
+Note:
+  - Il Creative Music System è stato successivamente distribuito con il marchio
+    Game Blaster; sono la stessa scheda audio.
+  - L'opzione 'ess' permette di ottenere una migliore resa delle tracce
+    musicali attraverso il sintetizzatore ESFM nei giochi che lo supportano.
+    Il DAC ESS non è emulato, ma la scheda è comunque compatibile con la Sound
+    Blaster Pro, è quindi possibile configurare il gioco per utilizzare 
+    Sound Blaster per riprodurre gli effetti sonori.
 .
 :CONFIG_SBBASE
 Indirizzo porta I/O della scheda Sound Blaster (predefinito 220).
@@ -1395,44 +1439,22 @@ Canale High DMA della scheda Sound Blaster 16 (predefinito 5).
 :CONFIG_SBMIXER
 Permette al mixer della scheda Sound Blaster di modificare il mixer
 di DOSBox (predefinito abilitato).
+La scheda Sound Blaster Pro 1 e successive permettono ai programmi di
+importare il volume per l'audio digitale (DAC), sintetizzatore FM, e output
+CD audio. Questi corrispondono ai canali del mixer di DOSBox SB, OPL, e 
+CDAUDIO, rispettivamente.
+  on:   Il volume di questi canali è una combinazione del volume impostato 
+        dal programma e del volume impostato nel mixer di DOSBox.
+  off:  Solo il mixer di DOSBox determina il volume di questi canali.
+Nota: Alcuni giochi cambiano i livelli di volume dinamicamente (e.g. abbassano
+      la traccia FM se qualcuno sta parlando); è meglio lasciare 'sbmixer'
+      abilitato in questi casi.
 .
 :CONFIG_SBWARMUP
 Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
 in millisecondi (predefinito 100). Questo attenua gli artefatti audio che si
 sentono quando si avviano molti dei giochi compatibili con Sound Blaster.
 Riduci questo valore se noti che nella riproduzione iniziale manca l'audio.
-.
-:CONFIG_OPLRATE
-La forma d'onda OPL viene ora campionata alla frequenza di riproduzione
-del mixer per evitare il ricampionamento.
-.
-:CONFIG_OPLMODE
-Tipo di emulazione OPL (predefinito 'auto').
-Se 'auto', la modalità è determinata da 'sbtype'.
-Tutte le modalità OPL sono compatibili con AdLib, eccetto per 'cms'.
-.
-:CONFIG_OPL_FADEOUT
-Dissolvenza in chiusura dell'uscita audio del sintetizzatore OPL dopo l'ultima
-scrittura della porta I/O:
-  off:              Non applica la dissolvenza; l'audio residuo verrà
-                    riprodotto per sempre (predefinito).
-  on:               Attende 0,5s prima di applicare la dissolvenza su un
-                    periodo di 0,5s.
-  <personalizzato>: Definizione di una dissolvenza personalizzata nel seguente
-                    formato:
-                      ATTESA DISSOLVENZA
-                    Dove ATTESA è il tempo trascorso tra l'ultima scrittura
-                    della porta I/O e l'inizio della dissolvenza, compreso tra
-                    100 e 5000 millisecondi, mentre DISSOLVENZA è il periodo
-                    di tempo in cui viene applicata la dissolvenza, compreso
-                    tra 10 e 3000 millisecondi. Esempi:
-                       300 200 (Attende 300ms prima di applicare la dissolvenza
-                                su un periodo di 200ms.)
-                       1000 3000 (Attende 1s prima di applicare la dissolvenza
-                                  su un periodo di 3s.)
-.
-:CONFIG_OPLEMU
-Ora è supportata solo l'emulazione OPL 'nuked'.
 .
 :CONFIG_SB_FILTER
 Tipo di filtro da emulare per l'uscita audio digitale della scheda
@@ -1457,6 +1479,53 @@ Sound Blaster:
 :CONFIG_SB_FILTER_ALWAYS_ON
 Forza il filtro della scheda Sound Blaster ad essere sempre attivo
 (impedisce ai programmi di disattivare il filtro; predefinito disabilitato).
+.
+:CONFIG_OPLRATE
+L'output OPL viene ora ricampionato alla frequenza di riproduzione
+del mixer.
+.
+:CONFIG_OPLMODE
+Tipo di emulazione OPL (predefinito 'auto').
+  auto:      Usa il modello appropriato determinato da 'sbtype'.
+  opl2:      Yamaha OPL2 (YM3812, mono).
+  dualopl2:  Due OPL2 (due chip OPL2 in configurazione stereo).
+  opl3:      Yamaha OPL3 (YMF262, stereo).
+  opl3gold:  OPL3 e il modulo opzionale AdLib Gold Surround.
+             Da utilizzare con 'sbtype = sb16' per emulare schede 
+             AdLib Gold 1000.
+  esfm:      ESS ESFM (sintetizzatore FM migliorato, ma compatibile 
+             con Yamaha OPL3).
+  none/off:  Disabilitare l'emulazione OPL.
+Note:
+  - La combinazione di impostazioni 'sbtype = none' e 'oplmode = opl2' 
+    emulano la scheda AdLib originale.
+  - Non è sufficiente impostare 'oplmode = esfm' per permettere ai giochi di 
+    utilizzare la musica FM ESS; è necessario impostare anche 'sbtype = ess'.
+    'oplmode = esfm' è utile per dare la possibilità di usare un OPL simil-ESFM 
+    con i modelli Sound Blaster originali.
+.
+:CONFIG_OPL_FADEOUT
+Dissolvenza in chiusura dell'uscita audio del sintetizzatore OPL dopo l'ultima
+scrittura della porta I/O:
+  off:              Non applica la dissolvenza; l'audio residuo verrà
+                    riprodotto per sempre (predefinito).
+  on:               Attende 0,5s prima di applicare la dissolvenza su un
+                    periodo di 0,5s.
+  <personalizzato>: Definizione di una dissolvenza personalizzata nel seguente
+                    formato:
+                      ATTESA DISSOLVENZA
+                    Dove ATTESA è il tempo trascorso tra l'ultima scrittura
+                    della porta I/O e l'inizio della dissolvenza, compreso tra
+                    100 e 5000 millisecondi, mentre DISSOLVENZA è il periodo
+                    di tempo in cui viene applicata la dissolvenza, compreso
+                    tra 10 e 3000 millisecondi. Esempi:
+                       300 200 (Attende 300ms prima di applicare la dissolvenza
+                                su un periodo di 200ms.)
+                       1000 3000 (Attende 1s prima di applicare la dissolvenza
+                                  su un periodo di 3s.)
+.
+:CONFIG_OPLEMU
+Ora è supportata solo l'emulazione OPL 'nuked'.
 .
 :CONFIG_OPL_FILTER
 Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
@@ -1627,7 +1696,7 @@ Filtro per i dispositivi audio DAC LPT:
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_DISNEY
-Usa 'lpt_dac=disney' per abilitare l'emulazione Disney Sound Source.
+Usa 'lpt_dac = disney' per abilitare l'emulazione Disney Sound Source.
 .
 :CONFIG_PS1AUDIO
 Abilita l'emulazione audio IBM PS/1 (predefinito disabilitato).
@@ -1970,6 +2039,10 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
                     mostra la descrizione e il valore corrente di una proprietà
                     di configurazione
 
+  -help sections
+  -h    sections
+  -?    sections    [reset]elenca i nomi di tutte le sezioni di configurazione
+
   -axclear          pulisce la sezione [autoexec]
   -axadd [color=white]RIGA[reset]       aggiunge una riga alla fine della sezione [autoexec]
   -axtype           mostra il contenuto della sezione [autoexec]
@@ -1985,12 +2058,11 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 
   -set [color=light-cyan][SEZIONE][reset] [color=white]PROPRIETÀ[reset][=][color=white]VALORE[reset]
                     imposta il valore di una proprietà di configurazione
+
+  -securemode       abilita la modalità sicura
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Scopo della proprietà [color=light-green]'%s'[color=white] (contenuto nella sezione [color=light-cyan][%s][color=white]):[reset]
-
-%s
-
+[color=white]Descrizione della proprietà [color=light-green]'%s'[color=white] della sezione [color=light-cyan][%s][color=white]:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
@@ -2006,7 +2078,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Scopo della sezione [%s]:[reset]
+[color=white]Descrizione della sezione [color=light-cyan][%s][color=white]:[reset]
 %s
 [color=white]Valore corrente:[reset]
 %s
@@ -2020,11 +2092,11 @@ Questa proprietà non può essere modificata mentre l'emulatore è in esecuzione
 numero intero positivo.
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]La sezione [color=light-cyan][%s] [color=white]contiene le seguenti proprietà:[reset]
+[color=white]Lista delle impostazioni della sezione [color=light-cyan][%s][color=white]:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-[color=white]La configurazione di DOSBox contiene le seguenti sezioni:[reset]
+[color=white]Lista delle sezioni di configurazione:[reset]
 
 .
 :PROGRAM_CONFIG_SECURE_ON
@@ -2067,12 +2139,29 @@ File eseguibile non trovato: '%s'
 .
 :CONJUNCTION_AND
 e
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+La proprietà '%s' non è modificabile a runtime.
+.
+:PROGRAM_CONFIG_DEPRECATED
+[color=light-red]Questa impostazione è deprecata, ed è supportata solo per 
+compatibilità con vecchi file di configurazione. Si prega di utilizzare le 
+alternative suggerite; il supporto a questa impostazione sarà rimosso in 
+futuro.[reset]
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Elenco non supportato
 .
 :MIDI_DEVICE_NOT_CONFIGURED
 Dispositivo non configurato
+.
+:BIOS_REBOOTING_3
+Riavvio in 3 secondi...
+.
+:BIOS_REBOOTING_2
+Riavvio in 2 secondi...
+.
+:BIOS_REBOOTING_1
+Riavvio in 1 secondo...
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
 Directory locale
@@ -2271,6 +2360,10 @@ Scambia slot
 Le unità attualmente montate sono:
 
 .
+:PROGRAM_MOUNT_READONLY
+Montato in modalità sola lettura
+
+.
 :PROGRAM_IMGMOUNT_HELP_LONG
 Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 
@@ -2445,23 +2538,14 @@ Puoi eseguire programmi/file con estensione [color=red].exe[reset], [color=red].
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
 [erases=entire][color=light-green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
-DOSBox fornisce un'emulazione CD-ROM su due livelli.
-
-Il livello [color=brown]base[reset] funziona su tutte le directory normali, installa MSCDEX e
-contrassegna i file in sola lettura. Di solito questo è sufficiente per la
-maggior parte dei giochi:
+Il comando [color=light-blue]mount[reset] funziona con tutte le directory normali, ed è programmato per
+installare MSCDEX e impostare tutti i file in sola lettura.
+Solitamente, ciò è sufficiente per la maggior parte dei giochi:
 [color=light-blue]mount D C:\esempio -t cdrom[reset]
 Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 [color=light-blue]mount D C:\esempio -t cdrom -label ETICHETTACD[reset]
 
-Il livello [color=brown]successivo[reset] aggiunge un supporto di basso livello.
-Pertanto funziona solo su unità CD-ROM reali:
-[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
-Sostituisci [color=red]D:\ [reset]con la posizione della tua unità CD-ROM.
-Sostituisci lo [color=yellow]0[reset] nel parametro [color=light-blue]-usecd [color=yellow]0[reset] con il numero della tua unità CD-ROM
-riportato dal comando: [color=light-blue]mount -listcd[reset]
-
-Inoltre puoi usare imgmount per montare immagini ISO o CUE/BIN:
+Inoltre puoi usare [color=light-blue]imgmount[reset] per montare immagini ISO o CUE/BIN:
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
@@ -2470,21 +2554,14 @@ Inoltre puoi usare imgmount per montare immagini ISO o CUE/BIN:
 [erases=entire][color=light-green]Come montare un'unità CD-ROM reale/virtuale in DOSBox:[reset]
 DOSBox fornisce un'emulazione CD-ROM su due livelli.
 
-Il livello [color=brown]base[reset] funziona su tutte le directory normali, installa MSCDEX e
-contrassegna i file in sola lettura. Di solito questo è sufficiente per la
-maggior parte dei giochi:
+Il comando [color=light-blue]mount[reset] funziona con tutte le directory normali, ed è programmato per
+installare MSCDEX e impostare tutti i file in sola lettura.
+Solitamente, ciò è sufficiente per la maggior parte dei giochi:
 [color=light-blue]mount D ~/esempio -t cdrom[reset]
 Se non funziona, potresti dover specificare a DOSBox l'etichetta del CD-ROM:
 [color=light-blue]mount D ~/esempio -t cdrom -label ETICHETTACD[reset]
 
-Il livello [color=brown]successivo[reset] aggiunge un supporto di basso livello.
-Pertanto funziona solo su unità CD-ROM reali:
-[color=light-blue]mount d[reset] [color=red]~/esempio[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
-Sostituisci [color=red]~/esempio[reset] con la posizione della tua unità CD-ROM.
-Sostituisci lo [color=yellow]0[reset] nel parametro [color=light-blue]-usecd [color=yellow]0[reset] con il numero della tua unità CD-ROM
-riportato dal comando: [color=light-blue]mount -listcd[reset]
-
-Inoltre puoi usare imgmount per montare immagini ISO o CUE/BIN:
+Inoltre puoi usare [color=light-blue]imgmount[reset] per montare immagini ISO o CUE/BIN:
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
@@ -2920,9 +2997,8 @@ Mappa cartelle fisiche o unità su una lettera di unità virtuale.
 Monta una directory del sistema su una lettera di unità virtuale.
 
 Utilizzo:
-  [color=light-green]mount[reset] [color=white]UNITÀ[reset] [color=light-cyan]DIRECTORY[reset] [-t TIPO] [-usecd #] [-freesize DIM] [-label ETICHETTA]
-  [color=light-green]mount[reset] -listcd / -cd (elenca le unità CD-ROM rilevate e i relativi numeri)
-  [color=light-green]mount[reset] -u [color=white]UNITÀ[reset]  (smonta la directory dell'[color=white]UNITÀ[reset])
+  [color=light-green]mount[reset] [color=white]UNITÀ[reset] [color=light-cyan]DIRECTORY[reset] [-t TIPO] [-freesize DIM] [-label ETICHETTA]
+  [color=light-green]mount[reset] -u [color=white]UNITÀ[reset]  (smonta la directory dell'UNITÀ)
 
 Parametri:
   [color=white]UNITÀ[reset]      lettera dell'unità in cui verrà montata la directory: A, C, D, ...
@@ -2934,15 +3010,31 @@ Parametri:
 Note:
   - '-t overlay' reindirizza le scritture per l'unità montata in un'altra
     directory.
-  - '-usecd ID' permette l'accesso diretto ad un'unità CD-ROM.
-    Questo è necessario per la riproduzione CD audio (supportato solo su
-    Windows e Linux). Esegui 'mount -cd' per trovare l'elenco degli ID validi.
+  - '-ro' monta l'unità come sola lettura.
   - Ulteriori opzioni sono descritte nel manuale (file README, capitolo 4).
 
 Esempi:
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\giochiDos[reset]
   [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]file_di_salvataggio[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\giochi[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]i_miei_salvataggi[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/giochi[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/CD del Gioco"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]i_miei_salvataggi[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/giochi[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/UTENTE/CD del Gioco"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]i_miei_salvataggi[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
