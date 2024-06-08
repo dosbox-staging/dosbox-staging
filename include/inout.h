@@ -115,6 +115,23 @@ static inline uint8_t IO_Read(io_port_t port)
 }
 
 // Hardware I/O port numbers
+//
+// TODO fix casings and used namespaced constants; e.g.:
+//
+//   IoPort::i8042::Data
+//   IoPort::i8042::Status
+//   IoPort::i8042::Command
+//
+// Also move over VGAREG_* definitions from `int10.h`, e.g.:
+//
+//   IoPort::Vga::InputStatus
+//   IoPort::Vga::VideoEnable
+//   IoPort::Vga::SequencerAddress
+//   IoPort::Vga::SequencerData
+//
+// This should make it easy to import only a subset with the `using` keyword,
+// e.g.: `using namespace IoPort::Vga`.
+//
 
 namespace Port {
 
