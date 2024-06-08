@@ -187,8 +187,6 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 	DOS_UpdateCurrentProgramName();
 
 	CPU_RestoreRealModeCyclesConfig();
-
-	return;
 }
 
 static bool MakeEnv(char * name,uint16_t * segment) {
