@@ -25,6 +25,8 @@
 #include "mem.h"
 #include "regs.h"
 
+RealPt fake_sft_table = 0;
+
 static callback_number_t call_int2f = 0;
 static callback_number_t call_int2a = 0;
 
@@ -63,16 +65,23 @@ static Bitu INT2A_Handler(void) {
 
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
+	case 0x1000:
+		// Report that SHARE.EXE is installed
+		reg_al = 0xff;
+		return true;
 	case 0x1216:	/* GET ADDRESS OF SYSTEM FILE TABLE ENTRY */
 		// reg_bx is a system file table entry, should coincide with
 		// the file handle so just use that
 		LOG(LOG_DOSMISC,LOG_ERROR)("Some BAD filetable call used bx=%X",reg_bx);
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
-		if (reg_bx<16) {
-			RealPt sftrealpt=mem_readd(RealToPhysical(dos_infoblock.GetPointer())+4);
-			PhysPt sftptr=RealToPhysical(sftrealpt);
-			Bitu sftofs=0x06+reg_bx*0x3b;
+		if (reg_bx < FakeSftEntries) {
+			// Initalized by DOS_SetupTables()
+			assert(fake_sft_table != 0);
+
+			RealPt sftrealpt = fake_sft_table;
+			PhysPt sftptr = RealToPhysical(sftrealpt);
+			Bitu sftofs = SftHeaderSize + reg_bx * SftEntrySize;
 
 			if (Files[reg_bx]) mem_writeb(sftptr+sftofs,Files[reg_bx]->refCtr);
 			else mem_writeb(sftptr+sftofs,0);

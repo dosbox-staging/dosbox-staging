@@ -7,29 +7,34 @@ hide:
 
 ## Current stable version
 
-### Windows 8.x or newer
+<section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.81.0 (Installer)][0_81_0_INSTALLER]
-<br>
-<small>
-sha256: 7de2cbdd8b320017dcf904c3df58b150<wbr>88047954b053757c870279cbbb301393
-</small>
+- [Download DOSBox Staging 0.81.1 (Installer)][0_81_1_INSTALLER]
+  <br>
+  <small>
+  sha256: 4bb5e63bfef41d4a6ee8f7af3b8c5ee6<wbr>756987c4247197db0b16d888c6ac0705
+  </small>
 
-[Download DOSBox Staging 0.81.0 (zip)][0_81_0_ZIP]
-<br>
-<small>
-sha256: ce772a963716d63610e6cb0e817b16f1<wbr>b5a3cbfd3d5ad802726ddd583f32b79d
-</small>
+- [Download DOSBox Staging 0.81.1 (Portable ZIP)][0_81_1_ZIP]
+  <br>
+  <small>
+  sha256: cb45e4e56b85cac7b8b1eb63a1bbd934<wbr>30a226215a5c04f2700076c279d10e12
+  </small>
 
-DOSBox Staging requires 64-bit Windows.
+</section>
 
-Check out the [0.81.0 release notes](release-notes/0.81.0.md) to learn about
+DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
+
+Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn about
 the changes and improvements introduced in this release.
 
 !!! important
 
-    If Windows prevents you from running DOSBox Staging via Microsoft Defender
-    SmartScreen, see the [section below](#microsoft-defender-smartscreen).
+    If Windows Security prevents you from running DOSBox Staging via **Windows
+    Defender SmartScreen** (the built-in Windows antivirus), please follow
+    [these instructions](#windows-defender).
+
+### Legacy Windows support
 
 ### Windows 7
 
@@ -38,9 +43,9 @@ The official distribution packages only support Windows 7 up to version
 
 For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
 in the [installer][0_80_1_x64_INSTALLER] and is also available as a [portable
-ZIP archive][0_80_1_x64_ZIP].
+ZIP package][0_80_1_x64_ZIP].
 
-For 32-bit Windows 7, use the 32-bit MSVC build [portable ZIP archive][0_80_1_x32_ZIP]
+For 32-bit Windows 7, use the 32-bit MSVC build [portable ZIP package][0_80_1_x32_ZIP]
 
 ### Windows Vista
 
@@ -68,15 +73,25 @@ These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
 
-## Microsoft Defender SmartScreen
+## Windows Defender
 
-You'll need to do the following when launching DOSBox Staging for the first
-time (you'll need to repeat these steps every time after having upgraded to a newer version).
+Windows Defender (the built-in Windows antivirus starting from Windows 8)
+might prevent you from running DOSBox Staging when you start it for the first
+time.
+
+This is a false positive; DOSBox Staging has no malicious code whatsoever,
+just antivirus software tend to be mistakenly flag emulators as "malware".
+
+If this happens, please follow the below steps to grant Windows permission to
+run DOSBox Staging. You may need to repeat these steps after upgrading
+to a newer version.
 
 ### Method 1
 
 Start the application, then click on **More info** in the appearing dialog.
 Click the **Run anyway** button in the second dialog.
+
+<div class="image-grid" markdown>
 
 <figure markdown>
   ![SmartScreen window 1](images/smartscreen1.png)
@@ -85,6 +100,11 @@ Click the **Run anyway** button in the second dialog.
 <figure markdown>
   ![SmartScreen window 2](images/smartscreen2.png)
 </figure>
+
+</div>
+
+Consider also performing [Method 3](#method-3) to make DOSBox Staging start up
+faster.
 
 
 ### Method 2
@@ -95,6 +115,20 @@ In your installation folder, right-click on the `dosbox.exe`, select **Propertie
 <figure markdown>
   ![Properties window](images/properties.png)
 </figure>
+
+Consider also performing [Method 3](#method-3) to make DOSBox Staging start up
+faster.
+
+
+### Method 3
+
+Add an exclusion to Windows Security to whitelist the DOSBox Staging
+executable or the folder in which it resides. We recommend doing so even if
+you've already performed either of the previous methods, as it can eliminate
+the 3--5 second startup delay caused by the real-time antivirus scan.
+
+See the steps on how to do this [here](https://support.microsoft.com/en-au/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26)
+and [here](https://docs.rackspace.com/docs/set-windows-defender-folder-exclusions).
 
 
 ### Explanation
@@ -117,6 +151,18 @@ command-line install parameters, please see [Inno's documentation page](https://
 
 
 ## Older releases
+
+- [Download DOSBox Staging 0.81.0 (Installer)][0_81_0_INSTALLER]
+  <br>
+  <small>
+  sha256: 7de2cbdd8b320017dcf904c3df58b150<wbr>88047954b053757c870279cbbb301393
+  </small>
+
+- [Download DOSBox Staging 0.81.0 (zip)][0_81_0_ZIP]
+  <br>
+  <small>
+  sha256: ce772a963716d63610e6cb0e817b16f1<wbr>b5a3cbfd3d5ad802726ddd583f32b79d
+  </small>
 
 - [DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER]
   <br>
@@ -251,6 +297,8 @@ command-line install parameters, please see [Inno's documentation page](https://
   </small>
 
 
+[0_81_1_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-windows-v0.81.1-setup.exe
+[0_81_1_ZIP]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-windows-v0.81.1.zip
 [0_81_0_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-windows-v0.81.0-setup.exe
 [0_81_0_ZIP]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-windows-v0.81.0.zip
 [0_80_1_x64_INSTALLER]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-v0.80.1-setup.exe

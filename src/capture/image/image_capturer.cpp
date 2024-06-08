@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "std_filesystem.h"
 
 #include "checks.h"
+#include "setup.h"
 #include "string_utils.h"
 
 CHECK_NARROWING();
@@ -43,10 +44,16 @@ ImageCapturer::ImageCapturer(const std::string& grouped_mode_prefs)
 
 void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 {
+	constexpr const char* DefaultSetting = "upscaled";
+
 	auto set_defaults = [&] {
 		grouped_mode.wants_raw      = false;
 		grouped_mode.wants_upscaled = true;
 		grouped_mode.wants_rendered = false;
+
+		set_section_property_value("capture",
+		                           "default_image_capture_formats",
+		                           DefaultSetting);
 	};
 
 	grouped_mode.wants_raw      = false;
@@ -55,15 +62,19 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 
 	const auto formats = split_with_empties(prefs, ' ');
 	if (formats.size() == 0) {
-		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified, "
-		            "using 'upscaled'");
+		LOG_WARNING(
+		        "CAPTURE: 'default_image_capture_formats' not specified, "
+		        "using '%s'",
+		        DefaultSetting);
 		set_defaults();
 		return;
 	}
 	if (formats.size() > 3) {
-		LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
-		            "Must not contain more than 3 formats, using 'upscaled'.",
-		            prefs.c_str());
+		LOG_WARNING(
+		        "CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
+		        "Must not contain more than 3 formats, using '%s'.",
+		        prefs.c_str(),
+		        DefaultSetting);
 		set_defaults();
 		return;
 	}
@@ -76,10 +87,12 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 		} else if (format == "rendered") {
 			grouped_mode.wants_rendered = true;
 		} else {
-			LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
-			            "Valid formats are 'raw', 'upscaled', and 'rendered'; "
-			            "using 'upscaled'.",
-			            format.c_str());
+			LOG_WARNING(
+			        "CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
+			        "Valid formats are 'raw', 'upscaled', and 'rendered'; "
+			        "using '%s'.",
+			        format.c_str(),
+			        DefaultSetting);
 			set_defaults();
 			return;
 		}

@@ -69,7 +69,7 @@ private:
 	const char *CardName() const;
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	IO_WriteHandleObject write_handlers[4]           = {};
 	IO_WriteHandleObject write_handler_for_detection = {};
@@ -85,7 +85,7 @@ private:
 	static constexpr auto render_divisor = 32;
 	static constexpr auto render_rate_hz = ceil_sdivide(chip_clock,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
+	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
 
 	// Runtime states
 	double last_rendered_ms        = 0;

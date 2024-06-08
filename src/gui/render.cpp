@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
@@ -67,7 +69,7 @@ uint8_t get_bits_per_pixel(const PixelFormat pf)
 
 static void render_callback(GFX_CallBackFunctions_t function);
 
-static void check_palette(void)
+static void check_palette()
 {
 	// Clean up any previous changed palette data
 	if (render.pal.changed) {
@@ -191,7 +193,7 @@ static void clear_cache_handler(const void* src)
 	render.scale.lineHandler(src);
 }
 
-bool RENDER_StartUpdate(void)
+bool RENDER_StartUpdate()
 {
 	if (render.updating) {
 		return false;
@@ -247,7 +249,7 @@ bool RENDER_StartUpdate(void)
 	return true;
 }
 
-static void halt_render(void)
+static void halt_render()
 {
 	RENDER_DrawLine = empty_line_handler;
 	GFX_EndUpdate(nullptr);
@@ -336,7 +338,7 @@ void RENDER_Reinit()
 	RENDER_Init(get_render_section());
 }
 
-static void render_reset(void)
+static void render_reset()
 {
 	static std::mutex render_reset_mutex;
 
@@ -556,21 +558,19 @@ static bool force_no_pixel_doubling = false;
 //
 static void setup_scan_and_pixel_doubling()
 {
-	const auto nearest_neighbour_on = (GFX_GetInterpolationMode() ==
-	                                   InterpolationMode::NearestNeighbour);
-
 	switch (GFX_GetRenderingBackend()) {
-	case RenderingBackend::Texture:
+	case RenderingBackend::Texture: {
+		const auto nearest_neighbour_on = (GFX_GetTextureInterpolationMode() ==
+		                                   InterpolationMode::NearestNeighbour);
+
 		force_vga_single_scan   = nearest_neighbour_on;
 		force_no_pixel_doubling = nearest_neighbour_on;
-		break;
+	} break;
 
 	case RenderingBackend::OpenGl: {
 		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
 		const auto none_shader_active = (shader_info.name == NoneShaderName);
-
-		const auto double_scan_enabled = (nearest_neighbour_on &&
-		                                  none_shader_active);
+		const auto double_scan_enabled = none_shader_active;
 
 		force_vga_single_scan = (shader_info.settings.force_single_scan ||
 		                         double_scan_enabled);
@@ -724,7 +724,7 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
-		LOG_WARNING("RENDER: Invalid 'aspect' setting '%s', using 'auto'",
+		LOG_WARNING("RENDER: Invalid 'aspect' setting: '%s', using 'auto'",
 		            mode.c_str());
 		return AspectRatioCorrectionMode::Auto;
 	}
@@ -1258,7 +1258,7 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
-void RENDER_AddConfigSection(const config_ptr_t& conf)
+void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
@@ -1292,9 +1292,7 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 {
-	const auto string_prop = get_render_section()->GetStringProp(
-	        "monochrome_palette");
-	string_prop->SetValue(to_string(palette));
+	set_section_property_value("render", "monochrome_palette", to_string(palette));
 }
 
 static bool handle_shader_changes()

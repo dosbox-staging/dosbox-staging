@@ -330,6 +330,7 @@ public:
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation() override;
+	bool IsOnReadOnlyMedium() const override;
 
 private:
 	const vfile_data_t file_data;
@@ -410,6 +411,11 @@ uint16_t Virtual_File::GetInformation() {
 	return 0x40;	// read-only drive
 }
 
+bool Virtual_File::IsOnReadOnlyMedium() const
+{
+	return true;
+}
+
 Virtual_Drive::Virtual_Drive() : search_file()
 {
 	type = DosDriveType::Virtual;
@@ -418,7 +424,7 @@ Virtual_Drive::Virtual_Drive() : search_file()
 		parent_dir = std::make_shared<VFILE_Block>();
 }
 
-bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
+bool Virtual_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
 	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -435,50 +441,33 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	return false;
 }
 
-bool Virtual_Drive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+bool Virtual_Drive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
                                FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool Virtual_Drive::FileUnlink(char * /*name*/) {
+bool Virtual_Drive::FileUnlink(const char * /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool Virtual_Drive::RemoveDir(char * /*dir*/) {
+bool Virtual_Drive::RemoveDir(const char * /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool Virtual_Drive::MakeDir(char * /*dir*/) {
+bool Virtual_Drive::MakeDir(const char * /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool Virtual_Drive::TestDir(char * dir) {
+bool Virtual_Drive::TestDir(const char * dir) {
 	assert(dir);
 	if (!dir[0]) return true;		//only valid dir is the empty dir
 
 	return find_vfile_dir_by_name(dir).get();
-}
-
-bool Virtual_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	assert(name);
-	auto vfile = find_vfile_by_name(name);
-	if (vfile) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = vfile->isdir;
-
-		stat_block->attr = attr._data;
-		stat_block->size = vfile->data->size();
-		stat_block->date = default_date;
-		stat_block->time = default_time;
-		return true;
-	}
-	return false;
 }
 
 bool Virtual_Drive::FileExists(const char* name){
@@ -490,7 +479,7 @@ bool Virtual_Drive::FileExists(const char* name){
 	return false;
 }
 
-bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
+bool Virtual_Drive::FindFirst(const char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 {
 	assert(_dir);
 	unsigned int position = 0;
@@ -572,14 +561,14 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	                                                     pattern,
 	                                                     pos);
 	if (search_file) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = search_file->isdir;
+		FatAttributeFlags search_attr = {FatAttributeFlags::ReadOnly};
+		search_attr.directory = search_file->isdir;
 
 		dta.SetResult(search_file->name.c_str(),
 		              search_file->data->size(),
 		              search_file->date,
 		              search_file->time,
-		              attr);
+		              search_attr);
 		search_file = search_file->next;
 		return true;
 	}
@@ -587,7 +576,7 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool Virtual_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool Virtual_Drive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	*attr = {};
 	assert(name);
@@ -618,7 +607,7 @@ bool Virtual_Drive::SetFileAttr(const char* name,
 	return false;
 }
 
-bool Virtual_Drive::Rename([[maybe_unused]] char * oldname, [[maybe_unused]] char * newname) {
+bool Virtual_Drive::Rename([[maybe_unused]] const char * oldname, [[maybe_unused]] const char * newname) {
 	return false;
 }
 
@@ -634,11 +623,11 @@ uint8_t Virtual_Drive::GetMediaByte() {
 	return 0xF8;
 }
 
-bool Virtual_Drive::isRemote() {
+bool Virtual_Drive::IsRemote() {
 	return false;
 }
 
-bool Virtual_Drive::isRemovable() {
+bool Virtual_Drive::IsRemovable() {
 	return false;
 }
 

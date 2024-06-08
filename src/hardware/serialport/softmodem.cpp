@@ -32,6 +32,7 @@
 #include "softmodem.h"
 #include "math_utils.h"
 #include "misc_util.h"
+#include "version.h"
 
 class PhonebookEntry {
 public:
@@ -609,8 +610,12 @@ void CSerialModem::DoCommand()
 		}
 		case 'I': // Some strings about firmware
 			switch (ScanNumber(scanbuf)) {
-			case 3: SendLine("DOSBox Emulated Modem Firmware V1.00"); break;
-			case 4: SendLine("Modem compiled for DOSBox version " VERSION); break;
+			case 3:
+				SendLine("DOSBox Staging Emulated Modem Firmware V1.00");
+				break;
+			case 4:
+				SendLine("Modem compiled for DOSBox version " DOSBOX_VERSION);
+				break;
 			}
 			break;
 		case 'E': // Echo on/off

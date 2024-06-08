@@ -78,7 +78,7 @@ bool logoverlay = false;
 //Either upgrade addentry to support directories. (without actually caching stuff in! (code in testing))
 //Or create an empty directory in local drive base. 
 
-bool Overlay_Drive::RemoveDir(char * dir) {
+bool Overlay_Drive::RemoveDir(const char * dir) {
 	//DOS_RemoveDir checks if directory exists.
 #if OVERLAY_DIR
 	if (logoverlay) LOG_MSG("Overlay: trying to remove directory: %s",dir);
@@ -144,7 +144,7 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 	}
 }
 
-bool Overlay_Drive::MakeDir(char * dir) {
+bool Overlay_Drive::MakeDir(const char * dir) {
 	//DOS_MakeDir tries first, before checking if the directory already exists, so doing it here as well, so that case is handled.
 	if (TestDir(dir)) return false;
 	if (overlap_folder == dir) return false; //TODO Test
@@ -181,7 +181,7 @@ bool Overlay_Drive::MakeDir(char * dir) {
 	return (temp == 0);// || ((temp!=0) && (errno==EEXIST));
 }
 
-bool Overlay_Drive::TestDir(char * dir) {
+bool Overlay_Drive::TestDir(const char * dir) {
 	//First check if directory exist exclusively in the overlay. 
 	//Currently using the update_cache cache, alternatively access the directory itself.
 
@@ -207,16 +207,16 @@ bool Overlay_Drive::TestDir(char * dir) {
 class OverlayFile final : public localFile {
 public:
 	OverlayFile(const char* name, const std_fs::path& path, FILE* handle,
-	            const char* basedir)
-	        : localFile(name, path, handle, basedir),
+	            const char* basedir, const bool _read_only_medium)
+	        : localFile(name, path, handle, basedir, _read_only_medium),
 	          overlay_active(false)
 	{
 		if (logoverlay)
 			LOG_MSG("constructing OverlayFile: %s", name);
 	}
 
-	bool Write(uint8_t * data,uint16_t * size) override {
-		uint32_t f = flags&0xf;
+	bool Write(uint8_t* data, uint16_t* size) override {
+		uint8_t f = flags & 0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
 			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
 			if (*data == 0) {
@@ -347,7 +347,8 @@ static OverlayFile* ccc(DOS_File* file) {
 	OverlayFile* ret = new OverlayFile(l->GetName(),
 	                                   l->GetPath(),
 	                                   l->fhandle,
-	                                   l->GetBaseDir());
+	                                   l->GetBaseDir(),
+	                                   l->IsOnReadOnlyMedium());
 	ret->flags = l->flags;
 	ret->refCtr = l->refCtr;
 	delete l;
@@ -367,7 +368,8 @@ Overlay_Drive::Overlay_Drive(const char *startdir,
                      _sectors_cluster,
                      _total_clusters,
                      _free_clusters,
-                     _mediaid),
+                     _mediaid,
+                     false),
           deleted_files_in_base{},
           deleted_paths_in_base{},
           overlap_folder(),
@@ -460,7 +462,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
+bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
 	const char* type;
 	switch (flags&0xf) {
 	case OPEN_READ:        type = "rb" ; break;
@@ -499,7 +501,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	bool fileopened = false;
 	if (hand) {
 		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
-		*file = new localFile(name, newname, hand, overlaydir);
+		*file = new localFile(name, newname, hand, overlaydir, IsReadOnly());
 
 		(*file)->flags = flags;
 		fileopened = true;
@@ -525,7 +527,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	return fileopened;
 }
 
-bool Overlay_Drive::FileCreate(DOS_File** file, char* name,
+bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
                                FatAttributeFlags /*attributes*/)
 {
 	// TODO Check if it exists in the dirCache ? // fix addentry ?  or just
@@ -541,7 +543,7 @@ bool Overlay_Drive::FileCreate(DOS_File** file, char* name,
 		}
 		return false;
 	}
-	*file = new localFile(name, path, f, overlaydir);
+	*file = new localFile(name, path, f, overlaydir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 	OverlayFile* of = ccc(*file);
@@ -929,7 +931,7 @@ again:
 
 
 
-bool Overlay_Drive::FileUnlink(char * name) {
+bool Overlay_Drive::FileUnlink(const char * name) {
 	// TODO check the basedir for file existence in order if we need to add the file to deleted file list.
 	const auto a = logoverlay ? GetTicks() : 0;
 	if (logoverlay)
@@ -1029,7 +1031,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	}
 }
 
-bool Overlay_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool Overlay_Drive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
@@ -1228,7 +1230,7 @@ bool Overlay_Drive::FileExists(const char* name) {
 }
 
 #if 1
-bool Overlay_Drive::Rename(char * oldname,char * newname) {
+bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 	//TODO with cache function!
 	//Tricky function.
 	//Renaming directories is currently not supported, due the drive_cache not handling that smoothly.
@@ -1322,7 +1324,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 }
 #endif
 
-bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
+bool Overlay_Drive::FindFirst(const char * _dir, DOS_DTA & dta, bool fcb_findfirst) {
 	if (logoverlay) LOG_MSG("FindFirst in %s",_dir);
 	
 	if (is_deleted_path(_dir)) {
@@ -1332,36 +1334,6 @@ bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	}
 
 	return localDrive::FindFirst(_dir,dta,fcb_findfirst);
-}
-
-bool Overlay_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	char overlayname[CROSS_LEN];
-	safe_strcpy(overlayname, overlaydir);
-	safe_strcat(overlayname, name);
-	CROSS_FILENAME(overlayname);
-	struct stat temp_stat;
-
-	FatAttributeFlags attributes = {};
-	if (stat(overlayname, &temp_stat) != 0 ||
-	    local_drive_get_attributes(overlayname, attributes) != DOSERR_NONE) {
-		if (is_deleted_file(name)) {
-			return false;
-		}
-		return localDrive::FileStat(name, stat_block);
-	}
-
-	/* Convert the stat to a FileStat */
-	stat_block->attr = attributes._data;
-	struct tm datetime;
-	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
-		stat_block->time = DOS_PackTime(datetime);
-		stat_block->date = DOS_PackDate(datetime);
-	} else {
-		LOG_MSG("OVERLAY: Error while converting date in: %s", name);
-	}
-	stat_block->size=(uint32_t)temp_stat.st_size;
-	return true;
 }
 
 Bits Overlay_Drive::UnMount()

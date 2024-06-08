@@ -27,9 +27,11 @@
 #include <cstdio>
 #include <string>
 
+#include "control.h"
+
 class Section;
 
-enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold };
+enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
 
 void OPL_Init(Section *sec, OplMode mode);
 void OPL_ShutDown(Section* sec = nullptr);
@@ -38,19 +40,26 @@ void CMS_Init(Section *sec);
 void CMS_ShutDown(Section* sec = nullptr);
 
 bool PS1AUDIO_IsEnabled();
+
 bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
+
+// Sound Blaster and ESS configuration and initialisation
+void SB_AddConfigSection(const ConfigPtr &conf);
+
+// CMS/Game Blaster, OPL, and ESFM configuration and initialisation
+void OPL_AddConfigSettings(const ConfigPtr &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
 extern uint8_t adlib_commandreg;
 
-// Gravis UltraSound configuration and initialization
-void GUS_AddConfigSection(const config_ptr_t &conf);
+// Gravis UltraSound configuration and initialisation
+void GUS_AddConfigSection(const ConfigPtr &conf);
 
-// IBM Music Feature Card configuration and initialization
-void IMFC_AddConfigSection(const config_ptr_t& conf);
+// IBM Music Feature Card configuration and initialisation
+void IMFC_AddConfigSection(const ConfigPtr& conf);
 
-// Innovation SSI-2001 configuration and initialization
-void INNOVATION_AddConfigSection(const config_ptr_t &conf);
+// Innovation SSI-2001 configuration and initialisation
+void INNOVATION_AddConfigSection(const ConfigPtr &conf);
 
 #endif

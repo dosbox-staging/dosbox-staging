@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ Compressor::Compressor() = default;
 
 Compressor::~Compressor() = default;
 
-void Compressor::Configure(const uint16_t _sample_rate_hz,
+void Compressor::Configure(const int _sample_rate_hz,
                            const float _0dbfs_sample_value, const float threshold_db,
                            const float _ratio, const float attack_time_ms,
                            const float release_time_ms, const float rms_window_ms)
@@ -49,7 +49,7 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 	assert(release_time_ms > 0.0f);
 	assert(rms_window_ms > 0.0f);
 
-	sample_rate_hz = _sample_rate_hz;
+	sample_rate_hz = static_cast<float>(_sample_rate_hz);
 
 	scale_in  = 1.0f / _0dbfs_sample_value;
 	scale_out = _0dbfs_sample_value;
@@ -58,11 +58,9 @@ void Compressor::Configure(const uint16_t _sample_rate_hz,
 	ratio           = _ratio;
 
 	attack_coeff = std::exp(-1.0f / (attack_time_ms * sample_rate_hz));
+	release_coeff = std::exp(-MillisInSecondF / (release_time_ms * sample_rate_hz));
 
-	release_coeff = std::exp(-millis_in_second_f /
-	                         (release_time_ms * sample_rate_hz));
-
-	rms_coeff = std::exp(-millis_in_second_f / (rms_window_ms * sample_rate_hz));
+	rms_coeff = std::exp(-MillisInSecondF / (rms_window_ms * sample_rate_hz));
 
 	Reset();
 }

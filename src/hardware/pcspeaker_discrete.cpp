@@ -443,13 +443,13 @@ void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
 		// sound than the raw unfiltered output, and it's a lot
 		// more pleasant to listen to, especially in headphones.
 		constexpr auto hp_order       = 3;
-		constexpr auto hp_cutoff_freq = 120;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+		constexpr auto hp_cutoff_freq_hz = 120;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 		channel->SetHighPassFilter(FilterState::On);
 
 		constexpr auto lp_order       = 2;
-		constexpr auto lp_cutoff_freq = 4800;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_cutoff_freq_hz = 4800;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
@@ -471,7 +471,7 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 	                                std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           device_name,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -479,10 +479,10 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
-	sample_rate = channel->GetSampleRate();
+	sample_rate_hz = channel->GetSampleRate();
 
-	minimum_tick_rate = (PIT_TICK_RATE + sample_rate / 2 - 1) /
-	                    (sample_rate / 2);
+	minimum_tick_rate = (PIT_TICK_RATE + sample_rate_hz / 2 - 1) /
+	                    (sample_rate_hz / 2);
 
 	channel->SetPeakAmplitude(static_cast<uint32_t>(amp_positive));
 

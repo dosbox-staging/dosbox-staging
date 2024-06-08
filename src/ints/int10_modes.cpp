@@ -37,10 +37,6 @@
 #include "vga.h"
 #include "video.h"
 
-#define SEQ_REGS 0x05
-#define GFX_REGS 0x09
-#define ATT_REGS 0x15
-
 // clang-format off
 std::vector<VideoModeBlock> ModeList_VGA = {
   //     mode     type     sw    sh    tw  th  cw ch  pt pstart    plength htot  vtot  hde  vde    special flags
@@ -590,7 +586,14 @@ static void log_invalid_video_mode_error(const uint16_t mode) {
 	LOG_ERR("INT10H: Trying to set invalid video mode: %02Xh", mode);
 }
 
-static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
+bool video_mode_change_in_progress = false;
+
+bool INT10_VideoModeChangeInProgress()
+{
+	return video_mode_change_in_progress;
+}
+
+static bool set_cur_mode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
 {
 	size_t i = 0;
 	while (modeblock[i].mode != 0xffff) {
@@ -600,15 +603,17 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 			if (!int10.vesa_oldvbe ||
 			    ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
-
-				// The flag will be reset by VGA_SetupDrawing()
-				// at the end of the mode change process.
-				vga.mode_change_in_progress = true;
+#if 0
+				if (!video_mode_change_in_progress) {
+					LOG_ERR("INT10: video_mode_change_in_progress START");
+				}
+#endif
+				video_mode_change_in_progress = true;
 
 				// Clear flag when setting up a new mode. This
-				// will only be set to true when the first
-				// non-EGA DAC palette colour is set in an EGA
-				// mode on a VGA adapter.
+				// flag is only set when a non-EGA DAC palette
+				// colour is set in an EGA mode on an emulated
+				// VGA adapter after the mode change is completed.
 				vga.ega_mode_with_vga_colors = false;
 
 				return true;
@@ -619,19 +624,28 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 	return false;
 }
 
-static void SetTextLines(void) {
-	// check for scanline backwards compatibility (VESA text modes??)
-	switch (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x90) {
-	case 0x80: // 200 lines emulation
+static void set_text_lines()
+{
+	// Check for scanline backwards compatibility (VESA text modes?)
+	const BiosVgaFlagsRec vga_flags_rec = {
+	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
+
+	switch (vga_flags_rec.text_mode_scan_lines()) {
+	case 0: // 350-line mode
 		if (CurMode->mode <= 3) {
-			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
+			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
 		break;
-	case 0x00: // 350 lines emulation
+
+	case 1: // 400-line mode
+		// unhandled
+		break;
+
+	case 2: // 200-line mode
 		if (CurMode->mode <= 3) {
-			CurMode = ModeList_VGA_Text_350lines.begin() + CurMode->mode;
+			CurMode = ModeList_VGA_Text_200lines.begin() + CurMode->mode;
 		} else if (CurMode->mode == 7) {
 			CurMode = ModeList_VGA_Text_350lines.begin() + 4;
 		}
@@ -646,43 +660,52 @@ void INT10_SetCurMode(void) {
 
 		switch (machine) {
 		case MCH_CGA:
-			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			if (bios_mode < 7) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			}
 			break;
 
 		case MCH_PCJR:
 		case MCH_TANDY:
-			if (bios_mode!=7 && bios_mode<=0xa) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
+			if (bios_mode != 7 && bios_mode <= 0xa) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			}
 			break;
 
 		case MCH_HERC:
-			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
-			else if (bios_mode == 7) {
+			if (bios_mode < 7) {
+				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
+			} else if (bios_mode == 7) {
 				mode_changed = true;
 				CurMode = Hercules_Mode.begin();
 			}
 			break;
 
 		case MCH_EGA:
-			mode_changed=SetCurMode(ModeList_EGA,bios_mode);
+			mode_changed = set_cur_mode(ModeList_EGA, bios_mode);
 			break;
 
 		case MCH_VGA:
 			switch (svgaCard) {
 			case SVGA_TsengET4K:
 			case SVGA_TsengET3K:
-				mode_changed=SetCurMode(ModeList_VGA_Tseng,bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA_Tseng,
+				                            bios_mode);
 				break;
 			case SVGA_ParadisePVGA1A:
-				mode_changed=SetCurMode(ModeList_VGA_Paradise,bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA_Paradise,
+				                            bios_mode);
 				break;
 			case SVGA_S3Trio:
 				if (bios_mode>=0x68 && CurMode->mode==(bios_mode+0x98)) break;
 				// fall-through
 			default:
-				mode_changed = SetCurMode(ModeList_VGA, bios_mode);
+				mode_changed = set_cur_mode(ModeList_VGA, bios_mode);
 				break;
 			}
-			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
+			if (mode_changed && CurMode->type == M_TEXT) {
+				set_text_lines();
+			}
 			break;
 
 		default: assertm(false, "Invalid MachineType value");
@@ -691,6 +714,13 @@ void INT10_SetCurMode(void) {
 		if (mode_changed) {
 		//	LOG_MSG("INT10H: BIOS video mode changed to %02Xh", bios_mode);
 		}
+
+#if 0
+		if (video_mode_change_in_progress) {
+			LOG_ERR("INT10: video_mode_change_in_progress END");
+		}
+#endif
+		video_mode_change_in_progress = false;
 	}
 }
 
@@ -705,7 +735,7 @@ bool INT10_IsTextMode(const VideoModeBlock& mode_block)
 	}
 }
 
-static void FinishSetMode(bool clearmem) {
+static void finish_set_mode(bool clearmem) {
 	//  Clear video memory if needs be
 	if (clearmem) {
 		switch (CurMode->type) {
@@ -793,6 +823,13 @@ static void FinishSetMode(bool clearmem) {
 	for (uint8_t ct=0;ct<8;ct++) INT10_SetCursorPos(0,0,ct);
 	// Set active page 0
 	INT10_SetActivePage(0);
+
+#if 0
+	if (video_mode_change_in_progress) {
+		LOG_ERR("INT10: video_mode_change_in_progress END");
+	}
+#endif
+	video_mode_change_in_progress = false;
 }
 
 static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
@@ -806,24 +843,26 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	case MCH_TANDY:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on invalid mode 7
-		if (!SetCurMode(ModeList_OTHER,mode)) {
+		if (!set_cur_mode(ModeList_OTHER, mode)) {
 			log_invalid_video_mode_error(mode);
 			return false;
 		}
 		break;
+
 	case MCH_HERC:
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
-			if (!SetCurMode(ModeList_OTHER, mode)) {
+			if (!set_cur_mode(ModeList_OTHER, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
-			FinishSetMode(clearmem);
+			finish_set_mode(clearmem);
 			return true;
 		}
 		CurMode = Hercules_Mode.begin();
 		mode=7; // in case the video parameter table is modified
 		break;
+
 	case MCH_EGA:
 	case MCH_VGA:
 		// This code should be unreachable, as MCH_EGA and MCH_VGA are
@@ -1015,7 +1054,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 			IO_WriteW(crtc_base, i | (real_readb(RealSegment(vparams),
 				RealOffset(vparams) + i + crtc_block_index*16) << 8));
 	}
-	FinishSetMode(clearmem);
+	finish_set_mode(clearmem);
+
 	return true;
 }
 
@@ -1060,7 +1100,8 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  First read mode setup settings from bios area
 	//	uint8_t video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
 	//	uint8_t vga_switches=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES);
-	uint8_t modeset_ctl = real_readb(BIOSMEM_SEG, BIOSMEM_MODESET_CTL);
+	const BiosVgaFlagsRec vga_flags_rec = {
+	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
 
 	if (IS_VGA_ARCH) {
 		if (svga.accepts_mode) {
@@ -1070,26 +1111,30 @@ bool INT10_SetVideoMode(uint16_t mode)
 		switch(svgaCard) {
 		case SVGA_TsengET4K:
 		case SVGA_TsengET3K:
-			if (!SetCurMode(ModeList_VGA_Tseng,mode)){
+			if (!set_cur_mode(ModeList_VGA_Tseng, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
+
 		case SVGA_ParadisePVGA1A:
-			if (!SetCurMode(ModeList_VGA_Paradise,mode)){
+			if (!set_cur_mode(ModeList_VGA_Paradise, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
+
 		default:
-			if (!SetCurMode(ModeList_VGA, mode)) {
+			if (!set_cur_mode(ModeList_VGA, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 		}
-		if (CurMode->type==M_TEXT) SetTextLines();
+		if (CurMode->type == M_TEXT) {
+			set_text_lines();
+		}
 	} else {
-		if (!SetCurMode(ModeList_EGA,mode)){
+		if (!set_cur_mode(ModeList_EGA, mode)) {
 			log_invalid_video_mode_error(mode);
 			return false;
 		}
@@ -1134,10 +1179,13 @@ bool INT10_SetVideoMode(uint16_t mode)
 	}
 	IO_Write(0x3c2,misc_output);		//Setup for 3b4 or 3d4
 
-	//  Program Sequencer
-	uint8_t seq_data[SEQ_REGS];
-	memset(seq_data,0,SEQ_REGS);
-	seq_data[1]|=0x01;	//8 dot fonts by default
+	// Program sequencer
+	uint8_t seq_data[NumVgaSequencerRegisters];
+	memset(seq_data, 0, NumVgaSequencerRegisters);
+
+	// 8 dot fonts by default
+	seq_data[1] |= 0x01;
+
 	if (CurMode->special & EGA_HALF_CLOCK)
 		seq_data[1] |= 0x08; // Check for half clock
 	if ((machine == MCH_EGA) && (CurMode->special & EGA_HALF_CLOCK))
@@ -1189,11 +1237,14 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
-	for (uint8_t ct=0;ct<SEQ_REGS;ct++) {
-		IO_Write(0x3c4,ct);
-		IO_Write(0x3c5,seq_data[ct]);
+
+	for (auto ct = 0; ct < NumVgaSequencerRegisters; ++ct) {
+		IO_Write(0x3c4, ct);
+		IO_Write(0x3c5, seq_data[ct]);
 	}
-	vga.config.compatible_chain4 = true; // this may be changed by SVGA chipset emulation
+
+	// This may be changed by the SVGA chipset emulation
+	vga.config.compatible_chain4 = true;
 
 	//  Program CRTC
 	//  First disable write protection
@@ -1510,13 +1561,18 @@ bool INT10_SetVideoMode(uint16_t mode)
 		IO_WriteB(crtc_base,0x67);IO_WriteB(crtc_base+1,misc_control_2);
 	}
 
-	//  Write Misc Output
-	IO_Write(0x3c2,misc_output);
-	//  Program Graphics controller
-	uint8_t gfx_data[GFX_REGS];
-	memset(gfx_data,0,GFX_REGS);
-	gfx_data[0x7] = 0xf;  //  Color don't care
-	gfx_data[0x8] = 0xff; //  BitMask
+	// Write misc output
+	IO_Write(0x3c2, misc_output);
+
+	// Program graphics controller
+	uint8_t gfx_data[NumVgaGraphicsRegisters];
+	memset(gfx_data, 0, NumVgaGraphicsRegisters);
+
+	// Color don't care
+	gfx_data[0x7] = 0xf;
+	// BitMask
+	gfx_data[0x8] = 0xff;
+
 	switch (CurMode->type) {
 	case M_TEXT:
 		gfx_data[0x5]|=0x10;		//Odd-Even Mode
@@ -1565,13 +1621,16 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
-	for (uint8_t ct=0;ct<GFX_REGS;ct++) {
-		IO_Write(0x3ce,ct);
-		IO_Write(0x3cf,gfx_data[ct]);
+	for (auto ct = 0; ct < NumVgaGraphicsRegisters; ++ct) {
+		IO_Write(0x3ce, ct);
+		IO_Write(0x3cf, gfx_data[ct]);
 	}
-	uint8_t att_data[ATT_REGS];
-	memset(att_data,0,ATT_REGS);
-	att_data[0x12]=0xf;				//Always have all color planes enabled
+
+	uint8_t att_data[NumVgaAttributeRegisters];
+	memset(att_data, 0, NumVgaAttributeRegisters);
+	// Always have all color planes enabled
+	att_data[0x12] = 0xf;
+
 	//  Program Attribute Controller
 	switch (CurMode->type) {
 	case M_EGA:
@@ -1684,76 +1743,12 @@ att_text16:
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
-	if ((modeset_ctl & 8)==0) {
-		// Set up Color Registers (DAC colours)
-#if 0
-		LOG_DEBUG("INT10H: Set up Color Registers");
-#endif
-		IO_Write(0x3c8, 0);
-
-		switch (CurMode->type) {
-		case M_EGA:
-			if (CurMode->mode > 0xf)
-				goto dac_text16;
-			else if (CurMode->mode == 0xf)
-				write_palette_dac_data(palette.mono_text_s3);
-			else
-				write_palette_dac_data(palette.cga64);
-			break;
-		case M_CGA2:
-		case M_CGA4:
-		case M_TANDY16:
-			// TODO: TANDY_16 seems like an oversight here, as
-			//       this function is supposed to deal with
-			//       MCH_EGA and MCH_VGA only.
-			write_palette_dac_data(palette.cga64);
-			break;
-		case M_TEXT:
-			if (CurMode->mode==7) {
-				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio))
-					write_palette_dac_data(palette.mono_text_s3);
-				else
-					write_palette_dac_data(palette.mono_text);
-				break;
-			}
-			[[fallthrough]];
-		case M_LIN4: //Added for CAD Software
-dac_text16:
-			write_palette_dac_data(palette.ega);
-			break;
-		case M_VGA:
-		case M_LIN8:
-		case M_LIN15:
-		case M_LIN16:
-		case M_LIN24:
-		case M_LIN32:
-			// IBM and clones use 248 default colors in the palette for 256-color mode.
-			// The last 8 colors of the palette are only initialized to 0 at BIOS init.
-			// Palette index is left at 0xf8 as on most clones, IBM leaves it at 0x10.
-			write_palette_dac_data(palette.vga);
-			break;
-		case M_CGA16:
-		case M_CGA2_COMPOSITE:
-		case M_CGA4_COMPOSITE:
-		case M_CGA_TEXT_COMPOSITE:
-		case M_TANDY2:
-		case M_TANDY4:
-		// case M_TANDY16:
-		case M_TANDY_TEXT:
-		case M_HERC_TEXT:
-		case M_HERC_GFX:
-		case M_ERROR:
-			// This code should be unreachable, as this function deals only
-			// with MCH_EGA and MCH_VGA.
-			assert(false);
-			break;
-		}
-
+	if (!vga_flags_rec.load_default_palette) {
 		// Set up Palette Registers
 #if 0
 		LOG_DEBUG("INT10H: Set up Palette Registers");
 #endif
-		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+		for (auto ct = 0; ct < NumVgaAttributeRegisters; ++ct) {
 			IO_Write(0x3c0, ct);
 			IO_Write(0x3c0, att_data[ct]);
 		}
@@ -1767,31 +1762,126 @@ dac_text16:
 		// Reset PEL mask
 		IO_Write(0x3c6, 0xff);
 
+		// Set up Color Registers (DAC colours)
+#if 0
+		LOG_DEBUG("INT10H: Set up Color Registers");
+#endif
+		IO_Write(0x3c8, 0);
+
+		switch (CurMode->type) {
+		case M_EGA:
+			if (CurMode->mode > 0xf) {
+				// Added for CAD Software
+				//
+				// This covers this EGA mode:
+				//   10h - 640x350 4 or 16-colour graphics mode
+				//
+				// And these additional VGA modes:
+				//   11h - 640x480 monochrome graphics mode
+				//   12h - 640x480  16-colour graphics mode
+				//   13h - 320x200 256-colour graphics mode
+				//
+				write_palette_dac_data(palette.ega);
+
+			} else if (CurMode->mode == 0xf) {
+				// Monochrome 640x350 text mode on EGA & VGA
+				write_palette_dac_data(palette.mono_text_s3);
+			} else {
+				write_palette_dac_data(palette.cga64);
+			}
+			break;
+
+		case M_CGA2:
+		case M_CGA4:
+		case M_TANDY16:
+			// TODO: TANDY_16 seems like an oversight here, as this
+			// function is supposed to deal with MCH_EGA and MCH_VGA
+			// only.
+			write_palette_dac_data(palette.cga64);
+			break;
+
+		case M_TEXT:
+			if (CurMode->mode == 7) {
+				// Non-standard 80x25 (720x350) monochrome text
+				// mode on VGA
+				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio)) {
+					write_palette_dac_data(palette.mono_text_s3);
+				} else {
+					write_palette_dac_data(palette.mono_text);
+				}
+				break;
+			}
+			[[fallthrough]];
+		case M_LIN4: write_palette_dac_data(palette.ega); break;
+
+		case M_VGA:
+		case M_LIN8:
+		case M_LIN15:
+		case M_LIN16:
+		case M_LIN24:
+		case M_LIN32:
+			// IBM and clones use 248 default colors in the palette
+			// for 256-color mode. The last 8 colors of the palette
+			// are set to RGB(0,0,0) at BIOS init. Palette index is
+			// left at 0xf8 as on most clones, IBM leaves it at 0x10.
+			write_palette_dac_data(palette.vga);
+			break;
+
+		case M_CGA16:
+		case M_CGA2_COMPOSITE:
+		case M_CGA4_COMPOSITE:
+		case M_CGA_TEXT_COMPOSITE:
+		case M_TANDY2:
+		case M_TANDY4:
+		// case M_TANDY16:
+		case M_TANDY_TEXT:
+		case M_HERC_TEXT:
+		case M_HERC_GFX:
+		case M_ERROR:
+			// This code should be unreachable, as this function
+			// deals only with MCH_EGA and MCH_VGA.
+			assert(false);
+			break;
+		}
+
 		if (IS_VGA_ARCH) {
-			//  check if gray scale summing is enabled
-			if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
-				INT10_PerformGrayScaleSumming(0,256);
+			if (vga_flags_rec.is_grayscale_summing_enabled) {
+				constexpr auto StartReg = 0;
+				INT10_PerformGrayScaleSumming(StartReg, NumVgaColors);
 			}
 		}
 	} else {
-		for (uint8_t ct=0x10;ct<ATT_REGS;ct++) {
-			if (ct==0x11) continue;	// skip overscan register
-			IO_Write(0x3c0,ct);
-			IO_Write(0x3c0,att_data[ct]);
+		for (auto ct = 0; ct < NumVgaAttributeRegisters; ++ct) {
+			// Skip overscan register
+			if (ct == 0x11) {
+				continue;
+			}
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
 		}
+
 		vga.config.pel_panning = 0;
-		IO_Write(0x3c0,0x20); //Disable palette access
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
 	}
-	//  Write palette register data to dynamic save area if pointer is non-zero
-	RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-	RealPt dsapt=real_readd(RealSegment(vsavept),RealOffset(vsavept)+4);
+
+	// Write palette register data to dynamic save area if pointer is non-zero
+	const RealPt vsavept = real_readd(BIOSMEM_SEG, BIOSMEM_VS_POINTER);
+	const RealPt dsapt   = real_readd(RealSegment(vsavept),
+                                        RealOffset(vsavept) + 4);
+
 	if (dsapt) {
-		for (uint8_t ct=0;ct<0x10;ct++) {
-			real_writeb(RealSegment(dsapt),RealOffset(dsapt)+ct,att_data[ct]);
+		for (auto ct = 0; ct < 0x10; ++ct) {
+			real_writeb(RealSegment(dsapt),
+			            RealOffset(dsapt) + ct,
+			            att_data[ct]);
 		}
-		real_writeb(RealSegment(dsapt),RealOffset(dsapt)+0x10,0); // overscan
+		// Overscan
+		real_writeb(RealSegment(dsapt), RealOffset(dsapt) + 0x10, 0);
 	}
-	//  Setup some special stuff for different modes
+
+	// Set up some special stuff for different modes
 	switch (CurMode->type) {
 	case M_CGA2:
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x1e);
@@ -1907,7 +1997,7 @@ dac_text16:
 		svga.set_video_mode(crtc_base, &modeData);
 	}
 
-	FinishSetMode(clearmem);
+	finish_set_mode(clearmem);
 
 	//  Set vga attrib register into defined state
 	IO_Read(mono_mode ? 0x3ba : 0x3da);

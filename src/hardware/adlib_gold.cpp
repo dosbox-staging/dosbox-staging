@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,12 +30,12 @@ CHECK_NARROWING();
 // Yamaha YM7128B Surround Processor emulation
 // -------------------------------------------
 
-SurroundProcessor::SurroundProcessor(const uint16_t sample_rate)
+SurroundProcessor::SurroundProcessor(const int sample_rate_hz)
 {
-	assert(sample_rate >= 10);
+	assert(sample_rate_hz >= 10);
 
 	YM7128B_ChipIdeal_Ctor(&chip);
-	YM7128B_ChipIdeal_Setup(&chip, sample_rate);
+	YM7128B_ChipIdeal_Setup(&chip, sample_rate_hz);
 	YM7128B_ChipIdeal_Reset(&chip);
 	YM7128B_ChipIdeal_Start(&chip);
 }
@@ -104,33 +104,33 @@ AudioFrame SurroundProcessor::Process(const AudioFrame frame)
 // Philips Semiconductors TDA8425 hi-fi stereo audio processor emulation
 // ---------------------------------------------------------------------
 
-StereoProcessor::StereoProcessor(const uint16_t _sample_rate)
-        : sample_rate(_sample_rate)
+StereoProcessor::StereoProcessor(const int _sample_rate_hz)
+        : sample_rate_hz(_sample_rate_hz)
 {
-	assert(sample_rate > 0);
+	assert(sample_rate_hz > 0);
 
-	constexpr auto allpass_freq = 400.0;
-	constexpr auto q_factor     = 1.7;
-	allpass.setup(sample_rate, allpass_freq, q_factor);
+	constexpr auto allpass_freq_hz = 400.0;
+	constexpr auto q_factor        = 1.7;
+	allpass.setup(sample_rate_hz, allpass_freq_hz, q_factor);
 
 	Reset();
 }
 
 void StereoProcessor::SetLowShelfGain(const double gain_db)
 {
-	constexpr auto cutoff_freq = 400.0;
-	constexpr auto slope       = 0.5;
+	constexpr auto cutoff_freq_hz = 400.0;
+	constexpr auto slope          = 0.5;
 	for (auto& f : lowshelf) {
-		f.setup(sample_rate, cutoff_freq, gain_db, slope);
+		f.setup(sample_rate_hz, cutoff_freq_hz, gain_db, slope);
 	}
 }
 
 void StereoProcessor::SetHighShelfGain(const double gain_db)
 {
-	constexpr auto cutoff_freq = 2500.0;
-	constexpr auto slope       = 0.5;
+	constexpr auto cutoff_freq_hz = 2500.0;
+	constexpr auto slope          = 0.5;
 	for (auto& f : highshelf) {
-		f.setup(sample_rate, cutoff_freq, gain_db, slope);
+		f.setup(sample_rate_hz, cutoff_freq_hz, gain_db, slope);
 	}
 }
 
@@ -147,8 +147,10 @@ void StereoProcessor::Reset()
 	ControlWrite(StereoProcessorControlReg::Treble, shelf_filter_0db_value);
 
 	StereoProcessorSwitchFunctions sf = {};
-	sf.source_selector                = static_cast<uint8_t>(
-                StereoProcessorSourceSelector::Stereo1);
+
+	sf.source_selector = static_cast<uint8_t>(
+	        StereoProcessorSourceSelector::Stereo1);
+
 	sf.stereo_mode = static_cast<uint8_t>(StereoProcessorStereoMode::LinearStereo);
 
 	ControlWrite(StereoProcessorControlReg::SwitchFunctions, sf.data);
@@ -326,12 +328,12 @@ AudioFrame StereoProcessor::Process(const AudioFrame frame)
 // AdLib Gold module
 // -----------------
 
-AdlibGold::AdlibGold(const uint16_t sample_rate)
+AdlibGold::AdlibGold(const int sample_rate_hz)
         : surround_processor(nullptr),
           stereo_processor(nullptr)
 {
-	surround_processor = std::make_unique<SurroundProcessor>(sample_rate);
-	stereo_processor   = std::make_unique<StereoProcessor>(sample_rate);
+	surround_processor = std::make_unique<SurroundProcessor>(sample_rate_hz);
+	stereo_processor   = std::make_unique<StereoProcessor>(sample_rate_hz);
 }
 
 AdlibGold::~AdlibGold() = default;
@@ -347,7 +349,7 @@ void AdlibGold::SurroundControlWrite(const uint8_t val)
 	surround_processor->ControlWrite(val);
 }
 
-void AdlibGold::Process(const int16_t* in, const uint32_t frames, float* out)
+void AdlibGold::Process(const int16_t* in, const int frames, float* out)
 {
 	auto frames_remaining = frames;
 

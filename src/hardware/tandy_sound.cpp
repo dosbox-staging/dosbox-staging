@@ -120,14 +120,14 @@ private:
 	DMA dma = {};
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	IO_ReadHandleObject read_handler = {};
 	IO_WriteHandleObject write_handlers[2] = {};
 
 	// States
-	Registers regs = {};
-	int sample_rate = 0;
-	bool is_enabled = false;
+	Registers regs     = {};
+	int sample_rate_hz = 0;
+	bool is_enabled    = false;
 };
 
 class TandyPSG {
@@ -148,7 +148,7 @@ private:
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
 
 	// Managed objects
-	mixer_channel_t channel                                  = nullptr;
+	MixerChannelPtr channel                                  = nullptr;
 	IO_WriteHandleObject write_handlers[2]                   = {};
 	std::unique_ptr<sn76496_base_device> device              = {};
 	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
@@ -158,28 +158,34 @@ private:
 	static constexpr auto render_divisor = 16;
 	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
 	                                                    render_divisor);
-	static constexpr auto ms_per_render  = millis_in_second / render_rate_hz;
+	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
 
 	// Runtime states
 	device_sound_interface *dsi       = nullptr;
 	double last_rendered_ms           = 0.0;
 };
 
-static void setup_filters(mixer_channel_t &channel) {
+static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
+{
 	// The filters are meant to emulate the bandwidth limited sound of the
 	// small integrated speaker of the Tandy. This more accurately
 	// reflects people's actual experience of the Tandy sound than the raw
 	// unfiltered output, and it's a lot more pleasant to listen to,
 	// especially in headphones.
-	constexpr auto hp_order       = 3;
-	constexpr auto hp_cutoff_freq = 120;
-	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
-	channel->SetHighPassFilter(FilterState::On);
+	if (filter_enabled) {
+		constexpr auto hp_order          = 3;
+		constexpr auto hp_cutoff_freq_hz = 120;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
+		channel->SetHighPassFilter(FilterState::On);
 
-	constexpr auto lp_order       = 2;
-	constexpr auto lp_cutoff_freq = 4800;
-	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
-	channel->SetLowPassFilter(FilterState::On);
+		constexpr auto lp_order          = 2;
+		constexpr auto lp_cutoff_freq_hz = 4800;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
+		channel->SetLowPassFilter(FilterState::On);
+	} else {
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
 }
 
 TandyDAC::TandyDAC(const ConfigProfile config_profile,
@@ -193,7 +199,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	const auto callback = std::bind(&TandyDAC::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyDac,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -201,27 +207,30 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	                            ChannelFeature::DigitalAudio});
 
 	const auto mixer_rate_hz = channel->GetSampleRate();
-	sample_rate = mixer_rate_hz;
 
-	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
-	// DACs
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(check_cast<uint16_t>(sample_rate));
+	sample_rate_hz = mixer_rate_hz;
+
+	// Set up zero-order-hold resampler to emulate the "crunchiness" of
+	// early DACs
+	channel->SetZeroOrderHoldUpsamplerTargetRate(
+	        check_cast<uint16_t>(sample_rate_hz));
+
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
-	// Setup filters
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		setup_filters(channel);
+	// Set up DAC filters
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		const auto filter_enabled = *maybe_bool;
+		setup_filter(channel, filter_enabled);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("TANDYDAC: Invalid 'tandy_dac_filter' setting: '%s', using 'off'",
-			            filter_choice.c_str());
-		}
+		LOG_WARNING(
+		        "TANDYDAC: Invalid 'tandy_dac_filter' setting: '%s', "
+		        "using 'on'",
+		        filter_choice.c_str());
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
+		const auto filter_enabled = true;
+		setup_filter(channel, filter_enabled);
+		set_section_property_value("speaker", "tandy_dac_filter", "on");
 	}
 
 	// Register DAC per-port read handlers
@@ -304,14 +313,15 @@ void TandyDAC::ChangeMode()
 			return;
 		}
 
-		if (const auto new_sample_rate = tandy_psg_clock_hz / regs.clock_divider;
-		    new_sample_rate < DacMaxSampleRateHz) {
+		if (const auto new_sample_rate_hz = tandy_psg_clock_hz / regs.clock_divider;
+		    new_sample_rate_hz < DacMaxSampleRateHz) {
 			assert(channel);
 
 			// Fill using the prior sample rate
 			channel->FillUp();
 
-			channel->SetSampleRate(check_cast<uint16_t>(new_sample_rate));
+			channel->SetSampleRate(
+			        check_cast<uint16_t>(new_sample_rate_hz));
 
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
 
@@ -329,7 +339,7 @@ void TandyDAC::ChangeMode()
 					channel->Enable(true);
 #if 0
 					LOG_MSG("TANDYDAC: playback started with freqency %i, volume %f",
-					        sample_rate,
+					        sample_rate_hz,
 					        vol);
 #endif
 				}
@@ -467,7 +477,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::FadeOut,
@@ -476,30 +486,34 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	                            ChannelFeature::Synthesizer});
 
 	// Setup fadeout
-	channel->ConfigureFadeOut(fadeout_choice);
-
-	// Setup filters
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		setup_filters(channel);
-
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("TANDY: Invalid 'tandy_filter' value: '%s', using 'off'",
-			            filter_choice.c_str());
-		}
-
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
+	if (!channel->ConfigureFadeOut(fadeout_choice)) {
+		set_section_property_value("speaker", "tandy_fadeout", "off");
 	}
 
-	// Setup the resampler
-	const auto sample_rate = channel->GetSampleRate();
-	const auto max_freq    = std::max(sample_rate * 0.9 / 2, 8000.0);
+	// Set up PSG filters
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		const auto filter_enabled = *maybe_bool;
+		setup_filter(channel, filter_enabled);
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		LOG_WARNING(
+		        "TANDY: Invalid 'tandy_filter' value: '%s', "
+		        "using 'on'",
+		        filter_choice.c_str());
+
+		const auto filter_enabled = true;
+		setup_filter(channel, filter_enabled);
+		set_section_property_value("speaker", "tandy_filter", "on");
+	}
+
+	// Set up the resampler
+	const auto sample_rate_hz = channel->GetSampleRate();
+
+	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
+
 	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-	                                                      sample_rate,
-	                                                      max_freq));
+	                                                      sample_rate_hz,
+	                                                      max_rate_hz));
 
 	// Configure and start the MAME device
 	dsi = static_cast<device_sound_interface *>(device.get());

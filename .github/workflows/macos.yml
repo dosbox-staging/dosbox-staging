@@ -36,6 +36,7 @@ jobs:
             host: macos-12
             arch: x86_64
             needs_deps: true
+            run_tests: true
             build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
             max_warnings: 80
@@ -44,9 +45,10 @@ jobs:
             host: macos-14
             arch: arm64
             needs_deps: true
+            run_tests: false # the shell_cmds_tests hang on arm64
             build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
-            max_warnings: 60
+            max_warnings: 42
 
     steps:
       - name: Checkout repository
@@ -159,9 +161,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
-          export VERSION=$(git describe --abbrev=5)
+          VERSION=$(./scripts/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup and build release
@@ -204,9 +204,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
-          export VERSION=$(git describe --abbrev=5)
+          VERSION=$(./scripts/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install brew depedencies
@@ -234,45 +232,12 @@ jobs:
           hdiutil create \
               -volname "DOSBox Staging" \
               -srcfolder dist \
-              -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
+              -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
 
       - name: Upload disk image
         uses: actions/upload-artifact@v4
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal
-          path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
-          overwrite: true
-
-  # This job exists only to publish an artifact with version info when building
-  # from main branch, so snapshot build version will be visible on:
-  # https://dosbox-staging.github.io/downloads/devel/
-  #
-  publish_additional_artifacts:
-    name: Publish additional artifacts
-    needs: build_macos_release
-    runs-on: macos-14
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: Generate changelog
-        run: |
-          set +x
-          git fetch --unshallow
-          git fetch --all --tags --force
-          VERSION=$(git describe --abbrev=4)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          NEWEST_TAG=$(git describe --abbrev=0)
-          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-
-      - uses: actions/upload-artifact@v4
-        with:
-          # Keep exactly this artifact name; it's being used to propagate
-          # version info via GitHub REST API
-          name: changelog-${{ env.VERSION }}.txt
-          path: changelog-${{ env.VERSION }}.txt
-          overwrite: true
+          name: dosbox-staging-macOS-universal-${{ env.VERSION }}
+          path: dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg

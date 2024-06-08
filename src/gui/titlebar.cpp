@@ -89,8 +89,6 @@ static struct {
 	std::string segment_name   = {};
 	std::string canonical_name = {}; // path + name + extension
 
-	int num_cycles = 0;
-
 	std::string title_no_tags = {};
 
 	SDL_TimerID timer_id           = {};
@@ -215,7 +213,7 @@ static std::string get_dosbox_version()
 	case TitlebarConfig::VersionDisplay::None:
 		return result;
 	case TitlebarConfig::VersionDisplay::Simple:
-		result += VERSION;
+		result += DOSBOX_GetVersion();
 		break;
 	case TitlebarConfig::VersionDisplay::Detailed:
 		result += DOSBOX_GetDetailedVersion();
@@ -228,27 +226,6 @@ static std::string get_dosbox_version()
 	} else {
 		return result;
 	}
-}
-
-static std::string get_cycles_display()
-{
-	std::string cycles = {};
-
-	if (!config.show_cycles) {
-		return cycles;
-	}
-
-	if (!CPU_CycleAutoAdjust) {
-		cycles = format_str("%d", state.num_cycles);
-	} else if (CPU_CycleLimit > 0) {
-		cycles = format_str("max %d%% limit %d",
-		                    state.num_cycles,
-		                    CPU_CycleLimit);
-	} else {
-		cycles = format_str("max %d%%", state.num_cycles);
-	}
-
-	return cycles + " " + MSG_GetRaw("TITLEBAR_CYCLES_MS");
 }
 
 static std::string get_mouse_hint_simple()
@@ -347,10 +324,17 @@ static void maybe_add_recording_pause_mark(std::string& title_str)
 
 static void set_window_title()
 {
-	auto title_str = state.title_no_tags;
-	maybe_add_muted_mark(title_str);
-	maybe_add_recording_pause_mark(title_str);
-	SDL_SetWindowTitle(sdl.window, title_str.c_str());
+	static std::string last_title_str = {};
+
+	auto new_title_str = state.title_no_tags;
+
+	maybe_add_muted_mark(new_title_str);
+	maybe_add_recording_pause_mark(new_title_str);
+
+	if (new_title_str != last_title_str) {
+		SDL_SetWindowTitle(sdl.window, new_title_str.c_str());
+		last_title_str = new_title_str;
+	}
 }
 
 void GFX_RefreshAnimatedTitle()
@@ -389,9 +373,8 @@ void GFX_RefreshTitle()
 	}
 
 	// Cycles, mouse hint, pause/recording mark
-	const auto cycles_str = get_cycles_display();
-	if (!cycles_str.empty()) {
-		state.title_no_tags += Separator + cycles_str;
+	if (config.show_cycles) {
+		state.title_no_tags += Separator + CPU_GetCyclesConfigAsString();
 	}
 	const auto hint_str = get_mouse_hint();
 	if (!hint_str.empty()) {
@@ -463,12 +446,9 @@ void GFX_NotifyProgramName(const std::string& segment_name,
 	GFX_RefreshTitle();
 }
 
-void GFX_NotifyCyclesChanged(const int32_t cycles)
+void GFX_NotifyCyclesChanged()
 {
-	if (cycles >= 0 && state.num_cycles != cycles) {
-		state.num_cycles = cycles;
-		GFX_RefreshTitle();
-	}
+	GFX_RefreshTitle();
 }
 
 void GFX_SetMouseHint(const MouseHint hint_id)
@@ -603,11 +583,7 @@ static void sync_config()
 		}
 	}
 
-	assert(control);
-	auto section = static_cast<Section_prop*>(control->GetSection("sdl"));
-	assert(section);
-	const auto string_prop = section->GetStringProp("window_titlebar");
-	string_prop->SetValue(setting_str);
+	set_section_property_value("sdl", "window_titlebar", setting_str);
 }
 
 static void parse_config(const std::string& new_setting_str)
@@ -725,7 +701,7 @@ static void parse_config(const std::string& new_setting_str)
 			continue;
 		}
 
-		LOG_WARNING("SDL: Invalid 'window_titlebar' setting '%s', ignoring",
+		LOG_WARNING("SDL: Invalid 'window_titlebar' setting: '%s', ignoring",
 		            setting_str.c_str());
 		config_needs_sync = true;
 	}

@@ -25,6 +25,19 @@
 
 #include <memory>
 
+// Project name, lower-case and without spaces
+#define DOSBOX_PROJECT_NAME "dosbox-staging"
+
+// Name of the emulator
+#define DOSBOX_NAME "DOSBox Staging"
+
+// Development team name
+#define DOSBOX_TEAM "The " DOSBOX_NAME " Team"
+
+// Copyright string
+#define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
+
+
 int sdl_main(int argc, char *argv[]);
 
 // The shutdown_requested bool is a conditional break in the parse-loop and
@@ -48,7 +61,9 @@ class Section_prop;
 
 typedef Bitu (LoopHandler)(void);
 
-const char *DOSBOX_GetDetailedVersion() noexcept;
+const char* DOSBOX_GetVersion() noexcept;
+const char* DOSBOX_GetDetailedVersion() noexcept;
+
 double DOSBOX_GetUptime();
 
 void DOSBOX_RunMachine();
@@ -59,9 +74,9 @@ void DOSBOX_Init(void);
 
 void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
 
-class Config;
-using config_ptr_t = std::unique_ptr<Config>;
-extern config_ptr_t control;
+int64_t DOSBOX_GetTicksDone();
+void DOSBOX_SetTicksDone(const int64_t ticks_done);
+void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
 
 enum SVGACards {
 	SVGA_None,

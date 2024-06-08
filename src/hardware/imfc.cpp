@@ -3108,7 +3108,7 @@ constexpr auto EG_OFF = 0;
 class ym2151_device {
 public:
 	// construction/destruction
-	explicit ym2151_device(mixer_channel_t&& channel);
+	explicit ym2151_device(MixerChannelPtr&& channel);
 	~ym2151_device();
 
 	// configuration helpers
@@ -3164,11 +3164,10 @@ private:
 	};
 
 	// Playback related
-	mixer_channel_t audio_channel = nullptr;
+	MixerChannelPtr audio_channel = nullptr;
 	std::queue<AudioFrame> fifo   = {};
 	double last_rendered_ms       = 0.0;
 	double ms_per_render          = 0.0;
-	int frame_rate_hz             = 0;
 
 	int tl_tab[TL_TAB_LEN]{};
 	unsigned int sin_tab[SIN_LEN]{};
@@ -4836,7 +4835,7 @@ void ym2151_device::advance()
 //  ym2151_device - constructor
 //-------------------------------------------------
 
-ym2151_device::ym2151_device(mixer_channel_t&& channel)
+ym2151_device::ym2151_device(MixerChannelPtr&& channel)
         : audio_channel(std::move(channel))
 {
 	device_start();
@@ -4844,7 +4843,7 @@ ym2151_device::ym2151_device(mixer_channel_t&& channel)
 	device_reset();
 
 	assert(audio_channel);
-	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
+	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
 	audio_channel->Enable(true);
 }
 
@@ -12866,7 +12865,7 @@ public:
 	MusicFeatureCard(const MusicFeatureCard&)            = delete;
 	MusicFeatureCard& operator=(const MusicFeatureCard&) = delete;
 
-	MusicFeatureCard(mixer_channel_t&& audio_channel, const io_port_t port,
+	MusicFeatureCard(MixerChannelPtr&& audio_channel, const io_port_t port,
 	                 const uint8_t irq)
 	        : m_ya2151(std::move(audio_channel)),
 	          // create all the instances
@@ -13404,22 +13403,29 @@ static void imfc_init(Section* sec)
 	// https://www.youtube.com/watch?v=WHVWDi15AIw. The results are
 	// virtually indistinguishable from the real thing by ear and spectrum
 	// analysis.
-	const std::string filter_choice = conf->Get_string("imfc_filter");
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+	//
+	auto enable_filter = [&]() {
+		constexpr auto Order        = 2;
+		constexpr auto CutoffFreqHz = 3500;
 
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order       = 2;
-		constexpr auto cutoff_freq = 3500;
-		channel->ConfigureLowPassFilter(order, cutoff_freq);
+		channel->ConfigureLowPassFilter(Order, CutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+	};
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'off'",
-			            filter_choice.c_str());
+	const std::string filter_choice = conf->Get_string("imfc_filter");
+
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		if (*maybe_bool) {
+			enable_filter();
+		} else {
+			channel->SetLowPassFilter(FilterState::Off);
 		}
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'on'",
+		            filter_choice.c_str());
 
-		channel->SetLowPassFilter(FilterState::Off);
+		set_section_property_value("imfc", "imfc_filter", "on");
+		enable_filter();
 	}
 
 	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
@@ -13463,7 +13469,7 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void IMFC_AddConfigSection(const config_ptr_t& conf)
+void IMFC_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

@@ -98,6 +98,11 @@ struct DosFilename {
 	std::string ext  = {};
 };
 
+struct FileRegionLock {
+	uint32_t pos = 0;
+	uint32_t len = 0;
+};
+
 class DOS_File {
 public:
 	DOS_File() = default;
@@ -120,16 +125,16 @@ public:
 	virtual bool	Seek(uint32_t * pos,uint32_t type)=0;
 	virtual bool	Close()=0;
 	virtual uint16_t	GetInformation(void)=0;
+	virtual bool IsOnReadOnlyMedium() const = 0;
 
 	virtual bool IsOpen() { return open; }
 	virtual void AddRef() { refCtr++; }
 	virtual Bits RemoveRef() { return --refCtr; }
 	virtual bool UpdateDateTimeFromHost() { return true; }
-	virtual void SetFlagReadOnlyMedium() {}
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
-	uint32_t flags   = 0;
+	uint8_t flags    = 0;
 	uint16_t time    = 0;
 	uint16_t date    = 0;
 	FatAttributeFlags attr = {};
@@ -137,6 +142,7 @@ public:
 	bool open        = false;
 	std::string name = {};
 	bool newtime     = false;
+	std::vector<FileRegionLock> region_locks = {};
 	/* Some Device Specific Stuff */
 private:
 	uint8_t hdrive = 0xff;
@@ -166,6 +172,7 @@ public:
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override { return false; }
 	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
 	                                    uint16_t* retcode);
 	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
@@ -183,7 +190,7 @@ private:
 class localFile : public DOS_File {
 public:
 	localFile(const char* name, const std_fs::path& path, FILE* handle,
-	          const char* basedir);
+	          const char* basedir, bool _read_only_medium);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
 	bool Read(uint8_t* data, uint16_t* size) override;
@@ -193,10 +200,7 @@ public:
 	uint16_t GetInformation() override;
 	bool UpdateDateTimeFromHost() override;
 	void Flush();
-	void SetFlagReadOnlyMedium() override
-	{
-		read_only_medium = true;
-	}
+	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
 	const char* GetBaseDir() const
 	{
 		return basedir;
@@ -215,8 +219,8 @@ private:
 	void fseek_and_check(int whence);
 	bool fseek_to_and_check(long pos, int whence);
 
-	bool read_only_medium     = false;
-	bool set_archive_on_close = false;
+	const bool read_only_medium = false;
+	bool set_archive_on_close   = false;
 
 	enum class LastAction : uint8_t { None, Read, Write };
 	LastAction last_action = LastAction::None;
@@ -345,28 +349,28 @@ public:
 	DOS_Drive();
 	virtual ~DOS_Drive() = default;
 
-	virtual bool FileOpen(DOS_File** file, char* name, uint32_t flags) = 0;
-	virtual bool FileCreate(DOS_File** file, char* name,
+	virtual bool FileOpen(DOS_File** file, const char* name, uint8_t flags) = 0;
+	virtual bool FileCreate(DOS_File** file, const char* name,
 	                        FatAttributeFlags attributes) = 0;
-	virtual bool FileUnlink(char* _name)=0;
-	virtual bool RemoveDir(char * _dir)=0;
-	virtual bool MakeDir(char * _dir)=0;
-	virtual bool TestDir(char * _dir)=0;
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
+	virtual bool FileUnlink(const char* _name)=0;
+	virtual bool RemoveDir(const char * _dir)=0;
+	virtual bool MakeDir(const char * _dir)=0;
+	virtual bool TestDir(const char * _dir)=0;
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
-	virtual bool GetFileAttr(char* name, FatAttributeFlags* attr) = 0;
+	virtual bool GetFileAttr(const char* name, FatAttributeFlags* attr) = 0;
 	virtual bool SetFileAttr(const char* name, const FatAttributeFlags attr) = 0;
-	virtual bool Rename(char* oldname, char* newname) = 0;
+	virtual bool Rename(const char* oldname, const char* newname) = 0;
 	virtual bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                            uint16_t* _total_clusters,
 	                            uint16_t* _free_clusters) = 0;
 	virtual bool FileExists(const char* name)=0;
-	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
 	virtual uint8_t GetMediaByte(void)=0;
 	virtual void SetDir(const char *path);
 	virtual void EmptyCache() { dirCache.EmptyCache(); }
-	virtual bool isRemote(void)=0;
-	virtual bool isRemovable(void)=0;
+	virtual bool IsReadOnly() const = 0;
+	virtual bool IsRemote(void)=0;
+	virtual bool IsRemovable(void)=0;
 	virtual Bits UnMount(void)=0;
 
 	DosDriveType GetType() const

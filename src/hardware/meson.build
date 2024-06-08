@@ -44,6 +44,7 @@ libhardware_sources = files(
     'mpu401.cpp',
     'ne2000.cpp',
     'opl.cpp',
+    'opl_capture.cpp',
     'pci_bus.cpp',
     'pcspeaker.cpp',
     'pcspeaker_discrete.cpp',
@@ -82,6 +83,7 @@ libhardware = static_library(
     include_directories: incdir,
     dependencies: [
         ghc_dep,
+        libesfmu_dep,
         libiir_dep,
         libloguru_dep,
         libnuked_dep,

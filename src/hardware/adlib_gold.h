@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 
 class SurroundProcessor {
 public:
-	SurroundProcessor(const uint16_t sample_rate);
+	SurroundProcessor(const int sample_rate_hz);
 	~SurroundProcessor();
 
 	void ControlWrite(const uint8_t val);
@@ -86,7 +86,7 @@ enum class StereoProcessorStereoMode : uint8_t {
 
 class StereoProcessor {
 public:
-	StereoProcessor(const uint16_t sample_rate);
+	StereoProcessor(const int sample_rate_hz);
 	~StereoProcessor();
 
 	void Reset();
@@ -102,7 +102,7 @@ public:
 	StereoProcessor& operator=(const StereoProcessor&) = delete;
 
 private:
-	uint16_t sample_rate = 0;
+	int sample_rate_hz = 0;
 
 	AudioFrame gain = {};
 
@@ -123,14 +123,14 @@ private:
 
 class AdlibGold {
 public:
-	AdlibGold(const uint16_t sample_rate);
+	AdlibGold(const int sample_rate_hz);
 	~AdlibGold();
 
 	void SurroundControlWrite(const uint8_t val);
 	void StereoControlWrite(const StereoProcessorControlReg reg,
 	                        const uint8_t data);
 
-	void Process(const int16_t* in, const uint32_t frames, float* out);
+	void Process(const int16_t* in, const int frames, float* out);
 
 private:
 	std::unique_ptr<SurroundProcessor> surround_processor = {};

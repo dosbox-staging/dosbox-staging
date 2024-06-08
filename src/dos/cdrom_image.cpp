@@ -479,22 +479,20 @@ int CDROM_Interface_Image::AudioFile::getLength()
 
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
-CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player;
 
-CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
+CDROM_Interface_Image::CDROM_Interface_Image()
         : tracks{},
           readBuffer{},
           mcn("")
 {
-	images[sub_unit] = this;
 	if (refCount == 0) {
 		if (!player.channel) {
 			const auto mixer_callback = std::bind(&CDROM_Interface_Image::CDAudioCallBack,
 			                                      this, std::placeholders::_1);
 
 			player.channel = MIXER_AddChannel(mixer_callback,
-			                                  use_mixer_rate,
+			                                  UseMixerRate,
 			                                  ChannelName::CdAudio,
 			                                  {ChannelFeature::Stereo,
 			                                   ChannelFeature::DigitalAudio});
@@ -527,7 +525,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	}
 }
 
-bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const int cd_number)
+bool CDROM_Interface_Image::SetDevice(const char* path)
 {
 	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
@@ -540,10 +538,10 @@ bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const i
 	return result;
 }
 
-bool CDROM_Interface_Image::GetUPC(unsigned char& attr, char* upc)
+bool CDROM_Interface_Image::GetUPC(unsigned char& attr, std::string& upc)
 {
 	attr = 0;
-	strcpy(upc, this->mcn.c_str());
+	upc = mcn;
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetUPC => returned %s", upc);
 #endif
@@ -755,11 +753,13 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 
 	// Assign the mixer function associated with this track's content type
 	if (track_file->getEndian() == AUDIO_S16SYS) {
-		player.addFrames = track_channels ==  2  ? &MixerChannel::AddSamples_s16 \
-		                                         : &MixerChannel::AddSamples_m16;
+		player.addFrames = (track_channels == 2)
+		                         ? &MixerChannel::AddSamples_s16
+		                         : &MixerChannel::AddSamples_m16;
 	} else {
-		player.addFrames = track_channels ==  2  ? &MixerChannel::AddSamples_s16_nonnative \
-		                                         : &MixerChannel::AddSamples_m16_nonnative;
+		player.addFrames = (track_channels == 2)
+		                         ? &MixerChannel::AddSamples_s16_nonnative
+		                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
 
 	/**
@@ -1368,7 +1368,7 @@ bool CDROM_Interface_Image::AddTrack(Track &curr,
 	return true;
 }
 
-bool CDROM_Interface_Image::HasDataTrack(void)
+bool CDROM_Interface_Image::HasDataTrack() const
 {
 	//Data track has attribute 0x40
 	for (const auto &track : tracks) {
@@ -1410,9 +1410,9 @@ bool CDROM_Interface_Image::GetRealFileName(std::string &filename, std::string &
 
 	const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 	if (ldp) {
-		ldp->GetSystemFilename(tmp, fullname);
-		if (path_exists(tmp)) {
-			filename = tmp;
+		const std::string host_filename = ldp->MapDosToHostFilename(fullname);
+		if (path_exists(host_filename)) {
+			filename = host_filename;
 			return true;
 		}
 	}

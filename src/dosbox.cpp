@@ -42,6 +42,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "memory.h"
 #include "midi.h"
 #include "mixer.h"
@@ -63,7 +64,6 @@ bool shutdown_requested = false;
 MachineType machine;
 SVGACards svgaCard;
 
-/* The whole load of startups for all the subfunctions */
 void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
@@ -89,7 +89,9 @@ void VOODOO_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
-void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
+//TODO This should setup INT 16 too but ok ;)
+void KEYBOARD_Init(Section*);
+
 void JOYSTICK_Init(Section*);
 void SBLASTER_Init(Section*);
 void PCSPEAKER_Init(Section*);
@@ -114,7 +116,7 @@ void MSCDEX_Init(Section*);
 void DRIVES_Init(Section*);
 void CDROM_Image_Init(Section*);
 
-/* Dos Internal mostly */
+// DOS internals mostly
 void EMS_Init(Section*);
 void XMS_Init(Section*);
 
@@ -125,23 +127,44 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-static int64_t ticksRemain;
-static int64_t ticksLast;
-static int64_t ticksAdded;
-int64_t ticksDone;
-int64_t ticksScheduled;
-bool ticksLocked;
-void increaseticks();
+static struct {
+	int64_t remain    = {};
+	int64_t last      = {};
+	int64_t added     = {};
+	int64_t done      = {};
+	int64_t scheduled = {};
+	bool locked       = {};
+} ticks = {};
 
-bool mono_cga=false;
+int64_t DOSBOX_GetTicksDone()
+{
+	return ticks.done;
+}
+
+void DOSBOX_SetTicksDone(const int64_t ticks_done)
+{
+	ticks.done = ticks_done;
+}
+
+void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
+{
+	ticks.scheduled = ticks_scheduled;
+}
+
+bool mono_cga = false;
 
 void Null_Init([[maybe_unused]] Section *sec) {
 	// do nothing
 }
 
-static Bitu Normal_Loop() {
+// forward declaration
+static void increase_ticks();
+
+static Bitu Normal_Loop()
+{
 	Bits ret;
-	while (1) {
+
+	while (true) {
 		if (PIC_RunQueue()) {
 			ret = (*cpudecoder)();
 			if (ret < 0) {
@@ -157,162 +180,261 @@ static Bitu Normal_Loop() {
 				}
 			}
 #if C_DEBUG
-			if (DEBUG_ExitLoop()) return 0;
+			if (DEBUG_ExitLoop()) {
+				return 0;
+			}
 #endif
 		} else {
-			if (!GFX_Events())
+			if (!GFX_Events()) {
 				return 0;
-			if (ticksRemain > 0) {
+			}
+			if (ticks.remain > 0) {
 				TIMER_AddTick();
-				ticksRemain--;
-			} else {increaseticks();return 0;}
+				--ticks.remain;
+			} else {
+				increase_ticks();
+				return 0;
+			}
 		}
 	}
 }
 
-void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
+constexpr auto auto_cpu_cycles_min = 200;
+
+static void increase_ticks()
+{
+	// Make it return ticks.remain and set it in the function above to
+	// remove the global variable.
 	ZoneScoped;
-	if (ticksLocked) { // For Fast Forward Mode
-		ticksRemain=5;
-		/* Reset any auto cycle guessing for this frame */
-		ticksLast = GetTicks();
-		ticksAdded = 0;
-		ticksDone = 0;
-		ticksScheduled = 0;
+
+	// For fast-forward mode
+	if (ticks.locked) {
+		ticks.remain = 5;
+
+		// Reset any auto cycle guessing for this frame
+		ticks.last      = GetTicks();
+		ticks.added     = 0;
+		ticks.done      = 0;
+		ticks.scheduled = 0;
 		return;
 	}
 
-	const auto ticksNewUs = GetTicksUs();
-	const auto ticksNew = ticksNewUs / 1000;
+	constexpr auto MicrosInMillisecond = 1000;
 
-	ticksScheduled += ticksAdded;
-	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
-		ticksAdded = 0;
+	const auto ticks_new_us = GetTicksUs();
+	const auto ticks_new    = ticks_new_us / MicrosInMillisecond;
 
-		static int64_t cumulativeTimeSlept = 0;
+	ticks.scheduled += ticks.added;
 
-		constexpr auto sleepDuration = std::chrono::microseconds(1000);
-		std::this_thread::sleep_for(sleepDuration);
+	// Lower should not be possible, only equal
+	if (ticks_new <= ticks.last) {
+		ticks.added = 0;
 
-		const auto timeslept = GetTicksUsSince(ticksNewUs);
+		static int64_t cumulative_time_slept_us = 0;
 
-		cumulativeTimeSlept += timeslept;
+		constexpr auto sleep_duration = std::chrono::microseconds(1000);
+		std::this_thread::sleep_for(sleep_duration);
 
-		// Update ticksDone with the total time spent sleeping
-		if (cumulativeTimeSlept >= 1000) {
-			const auto cumulativeTicksSlept = cumulativeTimeSlept / 1000;
-			ticksDone -= cumulativeTicksSlept;
-			cumulativeTimeSlept %= 1000;
+		const auto time_slept_us = GetTicksUsSince(ticks_new_us);
+		cumulative_time_slept_us += time_slept_us;
+
+		// Update ticks.done with the total time spent sleeping
+		if (cumulative_time_slept_us >= MicrosInMillisecond) {
+			// 1 tick == 1 millisecond
+			const auto cumulative_ticks_slept = cumulative_time_slept_us /
+			                                    MicrosInMillisecond;
+			ticks.done -= cumulative_ticks_slept;
+
+			// Keep the fractional microseconds part
+			cumulative_time_slept_us %= MicrosInMillisecond;
 		}
 
-		if (ticksDone < 0)
-			ticksDone = 0;
-		return; //0
+		if (ticks.done < 0) {
+			ticks.done = 0;
+		}
 
-		// If we do work this tick and sleep till the next tick, then ticksDone is decreased,
-		// despite the fact that work was done as well in this tick. Maybe make it depend on an extra parameter.
-		// What do we know: ticksRemain = 0 (condition to enter this function)
-		// ticksNew = time before sleeping
+		// If we do work this tick and sleep till the next tick, then
+		// ticks.done is decreased, despite the fact that work was done
+		// as well in this tick. Maybe make it depend on an extra
+		// parameter. What do we know: ticks.remain = 0 (condition to
+		// enter this function) ticks_new = time before sleeping
 
-		// maybe keep track of sleeped time in this frame, and use sleeped and done as indicators. (and take care of the fact there
-		// are frames that have both.
+		// Maybe keep track of slept time in this frame, and use slept
+		// and done as indicators, and take care of the fact there are
+		// frames that have both.
+
+		return;
 	}
 
-	//TicksNew > ticksLast
-	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
-	ticksLast = ticksNew;
-	ticksDone += ticksRemain;
-	if ( ticksRemain > 20 ) {
-//		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
-		ticksRemain = 20;
+	// ticks_new > ticks.last
+	ticks.remain = GetTicksDiff(ticks_new, ticks.last);
+	ticks.last   = ticks_new;
+	ticks.done += ticks.remain;
+
+	if (ticks.remain > 20) {
+#if 0
+		LOG(LOG_MISC,LOG_ERROR)("large remain %d", ticks.remain);
+#endif
+		ticks.remain = 20;
 	}
-	ticksAdded = ticksRemain;
 
-	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
-	if (!CPU_CycleAutoAdjust) return;
+	ticks.added = ticks.remain;
 
-	if (ticksScheduled >= 100 || ticksDone >= 100 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
-		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+	// Is the system in auto cycle guessing mode? If not, do nothing.
+	if (!CPU_CycleAutoAdjust) {
+		return;
+	}
+
+	if (ticks.scheduled >= 100 || ticks.done >= 100 ||
+	    (ticks.added > 15 && ticks.scheduled >= 5)) {
+
+		if (ticks.done < 1) {
+			// Protect against division by zero.
+			ticks.done = 1;
+		}
+
 		// Ratio we are aiming for is 100% usage
-		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * 1024 / 100)) /
-		        ticksDone);
+		auto ratio = (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
+		             ticks.done;
 
-		int32_t new_cmax = CPU_CycleMax;
-		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticksScheduled;
-		double ratioremoved = 0.0; //increase scope for logging
+		auto new_cycle_max = CPU_CycleMax;
+
+		auto cproc = static_cast<int64_t>(CPU_CycleMax) *
+		             static_cast<int64_t>(ticks.scheduled);
+
+		// Increase scope for logging
+		auto ratio_removed = 0.0;
+
+		// TODO This is full of magic constants with zero explanation.
+		// Where are they coming from, what do the signify, why these
+		// numbers and not some other numbers, etc.--there's lots of
+		// explaining to do here.
+
 		if (cproc > 0) {
-			/* ignore the cycles added due to the IO delay code in order
-			   to have smoother auto cycle adjustments */
-			ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
-			if (ratioremoved < 1.0) {
-				double ratio_not_removed = 1 - ratioremoved;
-				ratio = (int32_t)((double)ratio * ratio_not_removed);
+			// Ignore the cycles added due to the IO delay code in
+			// order to have smoother auto cycle adjustments.
+			ratio_removed = static_cast<double>(CPU_IODelayRemoved) /
+			                static_cast<double>(cproc);
 
-				/* Don't allow very high ratio which can cause us to lock as we don't scale down
-				 * for very low ratios. High ratio might result because of timing resolution */
-				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 16384)
+			if (ratio_removed < 1.0) {
+				double ratio_not_removed = 1 - ratio_removed;
+				ratio = ifloor(static_cast<double>(ratio) *
+				               ratio_not_removed);
+
+				// Don't allow very high ratios; they can cause
+				// locking as we don't scale down for very low
+				// ratios. High ratios might be the result of
+				// timing resolution.
+				if (ticks.scheduled >= 100 && ticks.done < 10 &&
+				    ratio > 16384) {
 					ratio = 16384;
+				}
 
-				// Limit the ratio even more when the cycles are already way above the realmode default.
-				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+				// Limit the ratio even more when the cycles are
+				// already way above the realmode default.
+				if (ticks.scheduled >= 100 && ticks.done < 10 &&
+				    ratio > 5120 && CPU_CycleMax > 50000) {
 					ratio = 5120;
+				}
 
-				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
+				// When downscaling multiple times in a row,
+				// ensure a minimum amount of downscaling
+				if (ticks.added > 15 && ticks.scheduled >= 5 &&
+				    ticks.scheduled <= 20 && ratio > 800) {
 					ratio = 800;
+				}
 
 				if (ratio <= 1024) {
-					// ratio_not_removed = 1.0; //enabling this restores the old formula
-					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + 1024.0/(static_cast<double>(ratio)));
-					new_cmax = 1 + static_cast<int32_t>(CPU_CycleMax * r);
+					// Uncommenting the below line restores
+					// the old formula: ratio_not_removed
+					// = 1.0;
+
+					auto r = (1.0 + ratio_not_removed) /
+					         (ratio_not_removed +
+					          1024.0 / (static_cast<double>(ratio)));
+
+					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
 				} else {
-					int64_t ratio_with_removed = (int64_t) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
-					int64_t cmax_scaled = (int64_t)CPU_CycleMax * ratio_with_removed;
-					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (int64_t)2048);
+					auto ratio_with_removed = static_cast<int64_t>(
+					        ((static_cast<double>(ratio) - 1024.0) *
+					         ratio_not_removed) +
+					        1024.0);
+
+					auto cmax_scaled = check_cast<int64_t>(
+					        CPU_CycleMax * ratio_with_removed);
+
+					new_cycle_max = static_cast<int>(
+					        1 + (CPU_CycleMax / 2) +
+					        cmax_scaled / 2048LL);
 				}
 			}
 		}
 
-		if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
-			new_cmax = CPU_CYCLES_LOWER_LIMIT;
-		/*
-		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
-			CPU_CycleMax,
-			new_cmax,
-			ratio,
-			ticksDone,
-			ticksScheduled,
-			ticksAdded,
-			ratioremoved);
-		*/
+		if (new_cycle_max < auto_cpu_cycles_min) {
+			new_cycle_max = auto_cpu_cycles_min;
+		}
 
-		/* ratios below 1% are considered to be dropouts due to
-		   temporary load imbalance, the cycles adjusting is skipped */
+#if 0
+		LOG_INFO("CPU: cycles: curr %7d | new %7d | ratio %5d | done %3d | sched %3d | add %3d | rem %4.2f",
+		         CPU_CycleMax,
+		         new_cycle_max,
+		         ratio,
+		         ticks.done,
+		         ticks.scheduled,
+		         ticks.added,
+		         ratio_removed);
+#endif
+
+		// Ratios below 1% are considered to be dropouts due to
+		// temporary load imbalance, the cycles adjusting is skipped.
 		if (ratio > 10) {
-			/* ratios below 12% along with a large time since the last update
-			   has taken place are most likely caused by heavy load through a
-			   different application, the cycles adjusting is skipped as well */
-			if ((ratio > 120) || (ticksDone < 700)) {
-				CPU_CycleMax = new_cmax;
+
+			// Ratios below 12% along with a large time since the
+			// last update has taken place are most likely caused by
+			// heavy load through a different application, the
+			// cycles adjusting is skipped as well.
+			if ((ratio > 120) || (ticks.done < 700)) {
+				CPU_CycleMax = new_cycle_max;
+
 				if (CPU_CycleLimit > 0) {
-					if (CPU_CycleMax > CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
-				} else if (CPU_CycleMax > 2000000) CPU_CycleMax = 2000000; //Hardcoded limit, if no limit was specified.
+					if (CPU_CycleMax > CPU_CycleLimit) {
+						CPU_CycleMax = CPU_CycleLimit;
+					}
+				} else if (CPU_CycleMax > CpuCyclesMax) {
+					// Hardcoded limit if the limit wasn't
+					// explicitly specified.
+					CPU_CycleMax = CpuCyclesMax;
+				}
 			}
 		}
 
-		//Reset cycleguessing parameters.
+		// Reset cycle guessing parameters.
 		CPU_IODelayRemoved = 0;
-		ticksDone = 0;
-		ticksScheduled = 0;
-	} else if (ticksAdded > 15) {
-		/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
-		   but do not reset the scheduled/done ticks to take them into
-		   account during the next auto cycle adjustment */
+		ticks.done         = 0;
+		ticks.scheduled    = 0;
+
+	} else if (ticks.added > 15) {
+		// ticks.added > 15 but ticks.scheduled < 5, lower the cycles
+		// but do not reset the scheduled/done ticks to take them into
+		// account during the next auto cycle adjustment.
 		CPU_CycleMax /= 3;
-		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
-			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
-	} //if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
+
+		if (CPU_CycleMax < auto_cpu_cycles_min) {
+			CPU_CycleMax = auto_cpu_cycles_min;
+		}
+	}
+}
+
+const char* DOSBOX_GetVersion() noexcept
+{
+	static constexpr char version[] = DOSBOX_VERSION;
+	return version;
+}
+
+const char* DOSBOX_GetDetailedVersion() noexcept
+{
+	static constexpr char version[] = DOSBOX_VERSION " (" BUILD_GIT_HASH ")";
+	return version;
 }
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
@@ -331,9 +453,11 @@ void DOSBOX_RunMachine()
 
 static void DOSBOX_UnlockSpeed( bool pressed ) {
 	static bool autoadjust = false;
+
 	if (pressed) {
 		LOG_MSG("Fast Forward ON");
-		ticksLocked = true;
+		ticks.locked = true;
+
 		if (CPU_CycleAutoAdjust) {
 			autoadjust = true;
 			CPU_CycleAutoAdjust = false;
@@ -342,7 +466,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 		}
 	} else {
 		LOG_MSG("Fast Forward OFF");
-		ticksLocked = false;
+		ticks.locked = false;
+
 		if (autoadjust) {
 			autoadjust = false;
 			CPU_CycleAutoAdjust = true;
@@ -398,10 +523,12 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 static void DOSBOX_RealInit(Section* sec)
 {
 	Section_prop* section = static_cast<Section_prop*>(sec);
-	/* Initialize some dosbox internals */
-	ticksRemain = 0;
-	ticksLast   = GetTicks();
-	ticksLocked = false;
+
+	// Initialize some dosbox internals
+	ticks.remain = 0;
+	ticks.last   = GetTicks();
+	ticks.locked = false;
+
 	DOSBOX_SetLoop(&Normal_Loop);
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");
@@ -439,7 +566,7 @@ static void DOSBOX_RealInit(Section* sec)
 double DOSBOX_GetUptime()
 {
 	static auto start_ms = GetTicks();
-	return GetTicksSince(start_ms) / millis_in_second;
+	return GetTicksSince(start_ms) / MillisInSecond;
 }
 
 void DOSBOX_Init()
@@ -452,10 +579,10 @@ void DOSBOX_Init()
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
-	constexpr auto always = Property::Changeable::Always;
-	constexpr auto deprecated = Property::Changeable::Deprecated;
+	constexpr auto always        = Property::Changeable::Always;
+	constexpr auto deprecated    = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto when_idle     = Property::Changeable::WhenIdle;
 
 	constexpr auto changeable_at_runtime = true;
 
@@ -485,31 +612,32 @@ void DOSBOX_Init()
 	                     "svga_paradise",
 	                     "vesa_nolfb",
 	                     "vesa_oldvbe"});
+
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->Set_help(
-            "Set the video adapter or machine to emulate:\n"
-            "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
-            "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
-            "                  'monochrome_palette').\n"
-            "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
-            "                  video emulation (see [composite] section).\n"
-            "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
-            "                  video emulation (see [composite] section).\n"
-            "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
-            "                  sound and composite video emulation (see [composite]\n"
-            "                  section).\n"
-            "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
-            "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
-            "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
-            "                  closest to IBM's original VGA adapter.\n"
-            "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
-            "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
-            "                  default, can be set to 256K or 512K with 'vmemsize').\n"
-            "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
-            "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
-            "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
-            "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
-            "                  framebuffer\" hack (needed only by a few games).");
+	        "Set the video adapter or machine to emulate:\n"
+	        "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
+	        "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
+	        "                  'monochrome_palette').\n"
+	        "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
+	        "                  video emulation (see [composite] section).\n"
+	        "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
+	        "                  video emulation (see [composite] section).\n"
+	        "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
+	        "                  sound and composite video emulation (see [composite]\n"
+	        "                  section).\n"
+	        "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
+	        "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
+	        "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
+	        "                  closest to IBM's original VGA adapter.\n"
+	        "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
+	        "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
+	        "                  default, can be set to 256K or 512K with 'vmemsize').\n"
+	        "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
+	        "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
+	        "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
+	        "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
+	        "                  framebuffer\" hack (needed only by a few games).");
 
 	pstring = secprop->Add_path("captures", deprecated, "capture");
 	pstring->Set_help("Moved to [capture] section and renamed to 'capture_dir'.");
@@ -521,6 +649,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
+
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
@@ -536,16 +665,25 @@ void DOSBOX_Init()
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
 	        "  deny:    Quit (and report) when faults are detected.");
+
 	pstring->Set_values({"repair", "report", "allow", "deny"});
 
 	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
-	pstring->Set_values({
-	        "auto",
-	        // values in MB
-	        "1", "2", "4", "8",
-	        // values in KB
-	        "256", "512", "1024", "2048", "4096", "8192"});
+
+	pstring->Set_values({"auto",
+	                     // values in MB
+	                     "1",
+	                     "2",
+	                     "4",
+	                     "8",
+	                     // values in KB
+	                     "256",
+	                     "512",
+	                     "1024",
+	                     "2048",
+	                     "4096",
+	                     "8192"});
 	pstring->Set_help(
 	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
@@ -627,7 +765,8 @@ void DOSBOX_Init()
 	        "  label   = custom_label\n"
 	        "  path    = path-specification, ie: path = %%path%%;c:\\tools\n"
 	        "  override_drive = mount the directory to this drive instead (default empty)\n"
-	        "  verbose = true or false");
+	        "  verbose = true or false\n"
+	        "  readonly = true or false");
 
 	pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	pstring->Set_values({"auto", "high", "low", "quiet"});
@@ -661,55 +800,7 @@ void DOSBOX_Init()
 	VGA_AddCompositeSettings(*control);
 
 	// Configure CPU settings
-	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
-	pstring = secprop->Add_string("core", when_idle, "auto");
-	pstring->Set_values({
-		        "auto",
-#if (C_DYNAMIC_X86) || (C_DYNREC)
-		        "dynamic",
-#endif
-		        "normal", "simple"
-	});
-	pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
-	                  "if available and appropriate.");
-
-	pstring = secprop->Add_string("cputype", always, "auto");
-	pstring->Set_values(
-	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
-	pstring->Set_help(
-	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.\n"
-	        "Prefetch variant emulates the prefetch queue and requires the 'normal' core.");
-	pstring->SetDeprecatedWithAlternateValue("386_slow", "386");
-	pstring->SetDeprecatedWithAlternateValue("486_slow", "486");
-	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
-	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
-
-	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
-	pmulti_remain->Set_help(
-	        "Number of instructions DOSBox tries to emulate per millisecond\n"
-	        "('auto' by default). Setting this value too high may result in sound drop-outs\n"
-			"and lags.\n"
-	        "  auto:            Try to guess what a game needs. It usually works, but can\n"
-	        "                   fail with certain games.\n"
-	        "  fixed <number>:  Set a fixed number of cycles. This is what you usually\n"
-	        "                   need if 'auto' fails (e.g. 'fixed 4000').\n"
-	        "  max:             Allocate as much cycles as your computer is able to handle.");
-
-	pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
-	pmulti_remain->SetValue("auto");
-	pstring->Set_values({"auto", "fixed", "max", "%u"});
-
-	pmulti_remain->GetSection()->Add_string("parameters", always, "");
-
-	pint = secprop->Add_int("cycleup", always, 10);
-	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Number of cycles added with the increase cycles hotkey (10 by default).\n"
-	               "Setting it lower than 100 will be a percentage.");
-
-	pint = secprop->Add_int("cycledown", always, 20);
-	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Number of cycles subtracted with the decrease cycles hotkey (20 by default).\n"
-	               "Setting it lower than 100 will be a percentage.");
+	CPU_AddConfigSection(control);
 
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
@@ -766,141 +857,12 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);
 #endif
 
-	secprop = control->AddSection_prop("sblaster",
-	                                   &SBLASTER_Init,
-	                                   changeable_at_runtime);
+	// Configure Sound Blaster and ESS
+	SB_AddConfigSection(control);
 
-	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values({"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none"});
-	pstring->Set_help(
-	        "Sound Blaster model to emulate ('sb16' by default).\n"
-	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
-	        "  gb:        Game Blaster        - CMS\n"
-	        "  sb1:       Sound Blaster 1.0   - OPL2, CMS\n"
-	        "  sb2:       Sound Blaster 2.0   - OPL2\n"
-	        "  sbpro1:    Sound Blaster Pro   - Dual OPL2\n"
-	        "  sbpro2:    Sound Blaster Pro 2 - OPL3\n"
-	        "  sb16:      Sound Blaster 16    - OPL3 (default)\n"
-	        "  none/off:  Disable Sound Blaster emulation.\n"
-	        "Note: Creative Music System was later rebranded to Game Blaster; they are the\n"
-	        "      same card.");
-
-	phex = secprop->Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values(
-	        {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
-	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
-
-	pint                 = secprop->Add_int("irq", when_idle, 7);
-	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
-	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
-
-	pint                 = secprop->Add_int("dma", when_idle, 1);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
-
-	pint = secprop->Add_int("hdma", when_idle, 5);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
-
-	pbool = secprop->Add_bool("sbmixer", when_idle, true);
-	pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).");
-
-	pint = secprop->Add_int("sbwarmup", when_idle, 100);
-	pint->Set_help(
-	        "Silence initial DMA audio after card power-on, in milliseconds\n"
-	        "(100 by default). This mitigates pops heard when starting many SB-based games.\n"
-	        "Reduce this if you notice intial playback is missing audio.");
-	pint->SetMinMax(0, 100);
-
-	pint = secprop->Add_int("oplrate", deprecated, false);
-	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid\n"
-	               "resampling.");
-
-	pstring = secprop->Add_string("cms", when_idle, "auto");
-	pstring->Set_values({"on", "off", "auto"});
-	pstring->Set_help(
-	        "Enable CMS emulation ('auto' by default).\n"
-	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
-	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
-	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
-
-	pstring = secprop->Add_string("oplmode", when_idle, "auto");
-	pstring->Set_values(
-	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none"});
-	pstring->Set_help(
-	        "OPL model to emulate ('auto' by default).\n"
-	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
-	        "  opl2:      OPL2 (mono).\n"
-	        "  dualopl2:  Dual OPL2 (stereo).\n"
-	        "  opl3:      OPL3 (stereo).\n"
-	        "  opl3gold:  OPL3 (stereo) and the optional AdLib Gold Surround module.\n"
-	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
-	        "  none/off:  Disable OPL emulation.\n"
-	        "Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.");
-
-	pstring = secprop->Add_string("opl_fadeout", when_idle, "off");
-	pstring->Set_help(
-	        "Fade out the OPL synth output after the last IO port write:\n"
-	        "  off:       Don't fade out; residual output will play forever (default).\n"
-	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
-	        "  <custom>:  A custom fade-out definition in the following format:\n"
-	        "               WAIT FADE\n"
-	        "             Where WAIT is how long after the last IO port write fading begins,\n"
-	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
-	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
-	        "             Examples:\n"
-	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
-	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
-
-	pbool = secprop->Add_bool("opl_remove_dc_bias", when_idle, false);
-	pbool->Set_help(
-	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
-	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
-	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
-	        "(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other\n"
-	        "affected games.");
-
-	pstring = secprop->Add_string("oplemu", deprecated, "");
-	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
-
-	pstring = secprop->Add_string("sb_filter", when_idle, "modern");
-	pstring->Set_help(
-	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
-	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
-	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
-	        "             Use the filter of this Sound Blaster model.\n"
-	        "  modern:    Use linear interpolation upsampling that acts as a low-pass\n"
-	        "             filter; this is the legacy DOSBox behaviour (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  One or two custom filters in the following format:\n"
-	        "               TYPE ORDER FREQ\n"
-	        "             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),\n"
-	        "             ORDER is the order of the filter from 1 to 16\n"
-	        "             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),\n"
-	        "             and FREQ is the cutoff frequency in Hz. Examples:\n"
-	        "                lpf 2 12000\n"
-	        "                hpf 3 120 lfp 1 6500");
-
-	pbool = secprop->Add_bool("sb_filter_always_on", when_idle, false);
-	pbool->Set_help(
-	        "Force the Sound Blaster filter to be always on\n"
-	        "(disallow programs from turning the filter off; disabled by default).");
-
-	pstring = secprop->Add_string("opl_filter", when_idle, "auto");
-	pstring->Set_help(
-	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
-	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
-	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
-	        "             Use the filter of this Sound Blaster model.\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-
-	pstring = secprop->Add_string("cms_filter", when_idle, "on");
-	pstring->Set_help(
-	        "Filter for the Sound Blaster CMS output:\n"
-	        "  on:        Filter the output (default).\n"
-	        "  off:       Don't filter the output.\n"
-	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+	// Configure CMS/Game Blaster, OPL and ESFM
+	// Must be called after SB_AddConfigSection
+	OPL_AddConfigSettings(control);
 
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
@@ -977,11 +939,12 @@ void DOSBOX_Init()
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("lpt_dac", when_idle, "none");
-	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
-	                  "  disney:    Disney Sound Source.\n"
-	                  "  covox:     Covox Speech Thing.\n"
-	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
-	                  "  none/off:  Don't use a parallel port DAC (default).");
+	pstring->Set_help(
+	        "Type of DAC plugged into the parallel port:\n"
+	        "  disney:    Disney Sound Source.\n"
+	        "  covox:     Covox Speech Thing.\n"
+	        "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
+	        "  none/off:  Don't use a parallel port DAC (default).");
 	pstring->Set_values({"none", "disney", "covox", "ston1", "off"});
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
@@ -993,7 +956,7 @@ void DOSBOX_Init()
 
 	// Deprecate the overloaded Disney setting
 	pbool = secprop->Add_bool("disney", deprecated, false);
-	pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
+	pbool->Set_help("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
@@ -1043,14 +1006,17 @@ void DOSBOX_Init()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop=control->AddSection_prop("joystick", &BIOS_Init);
+	secprop = control->AddSection_prop("joystick", &BIOS_Init);
 
 	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
+	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses
+	                                       // CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("joysticktype", when_idle, "auto");
+
 	pstring->Set_values(
 	        {"auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "hidden", "disabled"});
+
 	pstring->Set_help(
 	        "Type of joystick to emulate:\n"
 	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
@@ -1067,16 +1033,19 @@ void DOSBOX_Init()
 	        "Remember to reset DOSBox's mapperfile if you saved it earlier.");
 
 	pbool = secprop->Add_bool("timed", when_idle, true);
-	pbool->Set_help("Enable timed intervals for axis (enabled by default).\n"
-	                "Experiment with this option, if your joystick drifts away.");
+	pbool->Set_help(
+	        "Enable timed intervals for axis (enabled by default).\n"
+	        "Experiment with this option, if your joystick drifts away.");
 
 	pbool = secprop->Add_bool("autofire", when_idle, false);
-	pbool->Set_help("Fire continuously as long as the button is pressed\n"
-	                "(disabled by default).");
+	pbool->Set_help(
+	        "Fire continuously as long as the button is pressed\n"
+	        "(disabled by default).");
 
 	pbool = secprop->Add_bool("swap34", when_idle, false);
-	pbool->Set_help("Swap the 3rd and the 4th axis (disabled by default).\n"
-	                "Can be useful for certain joysticks.");
+	pbool->Set_help(
+	        "Swap the 3rd and the 4th axis (disabled by default).\n"
+	        "Can be useful for certain joysticks.");
 
 	pbool = secprop->Add_bool("buttonwrap", when_idle, false);
 	pbool->Set_help("Enable button wrapping at the number of emulated buttons (disabled by default).");
@@ -1088,8 +1057,9 @@ void DOSBOX_Init()
 
 	pint = secprop->Add_int("deadzone", when_idle, 10);
 	pint->SetMinMax(0, 100);
-	pint->Set_help("Percentage of motion to ignore (10 by default).\n"
-	               "100 turns the stick into a digital one.");
+	pint->Set_help(
+	        "Percentage of motion to ignore (10 by default).\n"
+	        "100 turns the stick into a digital one.");
 
 	pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	pbool->Set_help(
@@ -1162,8 +1132,9 @@ void DOSBOX_Init()
 	pmulti_remain->Set_help("See 'serial1' ('disabled' by default).");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
-	pstring->Set_help("File used to map fake phone numbers to addresses\n"
-	                  "('phonebook.txt' by default).");
+	pstring->Set_help(
+	        "File used to map fake phone numbers to addresses\n"
+	        "('phonebook.txt' by default).");
 
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
@@ -1185,9 +1156,10 @@ void DOSBOX_Init()
 	pbool->Set_help("Enable UMB support (enabled by default).");
 
 	pstring = secprop->Add_string("ver", when_idle, "5.0");
-	pstring->Set_help("Set DOS version (5.0 by default). Specify in major.minor format.\n"
-	                  "A single number is treated as the major version.\n"
-	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
+	pstring->Set_help(
+	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
+	        "A single number is treated as the major version.\n"
+	        "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
 	// DOS locale settings
 
@@ -1226,7 +1198,6 @@ void DOSBOX_Init()
 	pstring = secprop->Add_path("shell_history_file",
 	                            only_at_start,
 	                            "shell_history.txt");
-	global_shell_history = std::make_unique<ShellHistory>();
 
 	pstring->Set_help(
 	        "File containing persistent command line history ('shell_history.txt'\n"
@@ -1243,12 +1214,11 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
 	pstring->Set_values({"expanded", "standard"});
 	pstring->Set_help(
-		"PCjr memory layout ('expanded' by default).\n"
-		"  expanded:  640 KB total memory with applications residing above 128 KB.\n"
-		"             Compatible with most games.\n"
-		"  standard:  128 KB total memory with applications residing below 96 KB.\n"
-		"             Required for some older games (e.g., Jumpman, Troll)."
-	);
+	        "PCjr memory layout ('expanded' by default).\n"
+	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
+	        "             Compatible with most games.\n"
+	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
+	        "             Required for some older games (e.g., Jumpman, Troll).");
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
@@ -1318,7 +1288,8 @@ void DOSBOX_Init()
 #endif
 
 	pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
-	pstring->SetOptionHelp("SLIRP",
+	pstring->SetOptionHelp(
+	        "SLIRP",
 	        "Forward one or more TCP ports from the host into the DOS guest\n"
 	        "(unset by default).\n"
 	        "The format is:\n"
@@ -1342,7 +1313,8 @@ void DOSBOX_Init()
 #endif
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
-	pstring->SetOptionHelp("SLIRP",
+	pstring->SetOptionHelp(
+	        "SLIRP",
 	        "Forward one or more UDP ports from the host into the DOS guest\n"
 	        "(unset by default). The format is the same as for TCP port forwards.");
 #if C_SLIRP
@@ -1355,22 +1327,25 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&VIRTUALBOX_Init);
 	secprop->AddInitFunction(&VMWARE_Init);
 
-	//TODO ?
+	// TODO ?
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);
+
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
-		"Lines in this section will be run at startup.\n"
-		"You can put your MOUNT lines here.\n"
-	);
+	        "Lines in this section will be run at startup.\n"
+	        "You can put your MOUNT lines here.\n");
+
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
+	        "# This is the configuration file for " DOSBOX_PROJECT_NAME
+	        " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
+
 	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
 	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");
 
 	// Initialize the uptime counter when launching the first shell. This
 	// ensures that slow-performing configurable tasks (like loading MIDI
 	// SF2 files) have already been performed and won't affect this time.
-	(void)DOSBOX_GetUptime();
+	DOSBOX_GetUptime();
 
 	control->SetStartUp(&SHELL_Init);
 }

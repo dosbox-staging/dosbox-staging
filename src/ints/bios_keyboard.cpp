@@ -363,7 +363,12 @@ static Bitu IRQ1_Handler(void) {
 				/* normal pause key, enter loop */
 				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
 				IO_Write(0x20,0x20);
-				while (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) CALLBACK_Idle();	// pause loop
+				// Interrupts screen output by BIOS until another key is pressed
+				// This is seemingly accurate behavior as tested in 86box
+				// https://en.wikipedia.org/wiki/Break_key
+				while (!shutdown_requested && (mem_readb(BIOS_KEYBOARD_FLAGS2) & 8)) {
+					CALLBACK_Idle();
+				}
 				reg_ip+=5;	// skip out 20,20
 				return CBRET_NONE;
 			}

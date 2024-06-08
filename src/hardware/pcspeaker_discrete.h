@@ -71,7 +71,7 @@ private:
 
 	std::queue<DelayEntry> entries = {};
 
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	PpiPortB port_b      = {};
 	PpiPortB prev_port_b = {};
@@ -89,6 +89,6 @@ private:
 	float volcur       = 0.0f;
 	float last_index   = 0.0f;
 
-	int sample_rate       = 0;
+	int sample_rate_hz    = 0;
 	int minimum_tick_rate = 0;
 };

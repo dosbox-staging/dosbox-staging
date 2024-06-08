@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 
 CHECK_NARROWING();
 
-Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, use_mixer_rate)
+Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, UseMixerRate)
 {
 	// Prime the FIFO with a single silent sample
 	fifo.emplace(data_reg);
@@ -50,12 +50,12 @@ void Disney::ConfigureFilters(const FilterState state)
 
 	// Run the ZoH up-sampler at the higher mixer rate
 	const auto mixer_rate_hz = check_cast<uint16_t>(channel->GetSampleRate());
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(mixer_rate_hz);
+	channel->SetZeroOrderHoldUpsamplerTargetRate(mixer_rate_hz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Pull audio frames from the Disney DAC at 7 kHz
-	channel->SetSampleRate(dss_7khz_rate);
-	ms_per_frame = millis_in_second / dss_7khz_rate;
+	channel->SetSampleRate(dss_7khz_rate_hz);
+	ms_per_frame = MillisInSecond / dss_7khz_rate_hz;
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth
@@ -63,13 +63,13 @@ void Disney::ConfigureFilters(const FilterState state)
 		// against LGR Oddware's recordings of an authentic Disney Sound
 		// Source in ref: https://youtu.be/A1YThKmV2dk?t=1126
 
-		constexpr auto hp_order       = 2;
-		constexpr auto hp_cutoff_freq = 100;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+		constexpr auto hp_order          = 2;
+		constexpr auto hp_cutoff_freq_hz = 100;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 
-		constexpr auto lp_order       = 2;
-		constexpr auto lp_cutoff_freq = 2000;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_order          = 2;
+		constexpr auto lp_cutoff_freq_hz = 2000;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetHighPassFilter(state);
 	channel->SetLowPassFilter(state);

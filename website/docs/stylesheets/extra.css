@@ -547,14 +547,27 @@ small {
 .front-page .header .blurb {
   width: 100%;
   max-width: 28rem;
-  margin: 2rem auto auto auto;
+  margin: 2.5rem auto 2.5rem auto;
   font-size: 1.1rem;
   text-align: center;
   color: #333;
 }
+@media screen and (min-width: 60em) {
+  .front-page .header .blurb {
+    margin-bottom: 1.5rem;
+  }
+}
 .front-page .header .blurb em {
   font-style: normal;
   font-weight: bold;
+}
+.front-page .header .blurb a {
+  border-bottom: 2px solid #999;
+}
+.front-page .header .blurb a:hover {
+  color: #222;
+  border-color: #222;
+  border-width: 3px;
 }
 .front-page .header .download {
   max-width: 19.3rem;
@@ -627,7 +640,7 @@ small {
   vertical-align: -0.3rem;
 }
 .front-page section {
-  margin-top: 3rem;
+  margin-top: 2.5rem;
   text-align: center;
 }
 .front-page section > h1 {
@@ -646,7 +659,7 @@ small {
 }
 @media screen and (min-width: 45em) {
   .front-page section {
-    margin-top: 4rem;
+    margin-top: 3.5rem;
   }
   .front-page section > p {
     margin-bottom: 1.4rem;
@@ -828,8 +841,8 @@ small {
     gap: 1.8rem;
   }
   .front-page .header .logo img {
-    width: 14rem;
-    margin-top: 1.9rem;
+    width: 14.5rem;
+    margin-top: 2.1rem;
     max-width: none;
   }
   .front-page .features {
@@ -843,6 +856,31 @@ small {
 .about-logo {
   padding: 0 1rem 1rem 1rem;
   filter: drop-shadow(rgba(0, 0, 0, 0.3215686275) 0.2rem 0.3rem 0.6rem);
+}
+
+/*--------------------------------------------------------------------------*/
+/* Release pages                                                            */
+/*--------------------------------------------------------------------------*/
+.md-content .release-downloads {
+  padding: 0.1rem 1.2rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 0.6em;
+}
+.md-content .release-downloads ul {
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+.md-content .release-downloads ul li {
+  margin-left: 0;
+  padding-left: 0;
+}
+.md-content .release-downloads ul li:not(:last-child) {
+  margin-bottom: 1em;
+}
+.md-content .release-downloads ul li p {
+  margin: 0;
+  padding: 0;
 }
 
 /*# sourceMappingURL=extra.css.map */

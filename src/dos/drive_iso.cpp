@@ -41,6 +41,7 @@ public:
 	bool Seek(uint32_t *pos, uint32_t type) override;
 	bool Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override;
 
 private:
 	isoDrive *drive = nullptr;
@@ -143,6 +144,11 @@ uint16_t isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
 }
 
+bool isoFile::IsOnReadOnlyMedium() const
+{
+	return true;
+}
+
 isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int &error)
         : nextFreeDirIterator(0),
           iso(false),
@@ -171,7 +177,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int 
 			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
 			Set_Label(buffer,discLabel,true);
 
-		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
+		} else if (CDROM::cdroms[subUnit]->HasDataTrack() == false) { // Audio only cdrom
 			safe_strcpy(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
@@ -188,16 +194,13 @@ int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_uni
 {
 	if (MSCDEX_HasDrive(drive_letter)) {
 		sub_unit = MSCDEX_GetSubUnit(drive_letter);
-		CDROM_Interface_Image *oldCdrom = CDROM_Interface_Image::images[sub_unit];
-		CDROM_Interface *cdrom = new CDROM_Interface_Image(sub_unit);
+		std::unique_ptr<CDROM_Interface> cdrom = std::make_unique<CDROM_Interface_Image>();
 		char pathCopy[CROSS_LEN];
 		safe_strcpy(pathCopy, path);
-		if (!cdrom->SetDevice(pathCopy, 0)) {
-			CDROM_Interface_Image::images[sub_unit] = oldCdrom;
-			delete cdrom;
+		if (!cdrom->SetDevice(pathCopy)) {
 			return 3;
 		}
-		MSCDEX_ReplaceDrive(cdrom, sub_unit);
+		MSCDEX_ReplaceDrive(std::move(cdrom), sub_unit);
 		return 0;
 	} else {
 		return MSCDEX_AddDrive(drive_letter, path, sub_unit);
@@ -208,7 +211,7 @@ void isoDrive::Activate(void) {
 	UpdateMscdex(driveLetter, fileName, subUnit);
 }
 
-bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
+bool isoDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
 	if ((flags & 0x0f) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -229,34 +232,34 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	return success;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+bool isoDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
                           FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::FileUnlink(char* /*name*/) {
+bool isoDrive::FileUnlink(const char* /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::RemoveDir(char* /*dir*/) {
+bool isoDrive::RemoveDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::MakeDir(char* /*dir*/) {
+bool isoDrive::MakeDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::TestDir(char *dir) {
+bool isoDrive::TestDir(const char *dir) {
 	isoDirEntry de;
 	return (lookup(&de, dir) && IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FindFirst(char* dir, DOS_DTA& dta, bool fcb_findfirst)
+bool isoDrive::FindFirst(const char* dir, DOS_DTA& dta, bool fcb_findfirst)
 {
 	isoDirEntry de;
 	if (!lookup(&de, dir)) {
@@ -335,12 +338,12 @@ bool isoDrive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
+bool isoDrive::Rename(const char* /*oldname*/, const char* /*newname*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool isoDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	*attr = {};
 	isoDirEntry de;
@@ -381,34 +384,15 @@ bool isoDrive::FileExists(const char *name) {
 	return (lookup(&de, name) && !IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
-	isoDirEntry de;
-	bool success = lookup(&de, name);
-
-	if (success) {
-		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
-		attr.directory = IS_DIR(FLAGS1);
-
-		stat_block->date = DOS_PackDate(1900 + de.dateYear,
-		                                de.dateMonth,
-		                                de.dateDay);
-		stat_block->time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		stat_block->size = DATA_LENGTH(de);
-		stat_block->attr = attr._data;
-	}
-
-	return success;
-}
-
 uint8_t isoDrive::GetMediaByte(void) {
 	return mediaid;
 }
 
-bool isoDrive::isRemote(void) {
+bool isoDrive::IsRemote(void) {
 	return true;
 }
 
-bool isoDrive::isRemovable(void) {
+bool isoDrive::IsRemovable(void) {
 	return true;
 }
 
@@ -491,7 +475,7 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 
 	// check if the entry is valid and contains the correct sector
 	if (!he.valid || he.sector != sector) {
-		if (!CDROM_Interface_Image::images[subUnit]->ReadSector(he.data, false, sector)) {
+		if (!CDROM::cdroms[subUnit]->ReadSector(he.data, false, sector)) {
 			return false;
 		}
 		he.valid = true;
@@ -502,8 +486,8 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 	return true;
 }
 
-inline bool isoDrive :: readSector(uint8_t *buffer, uint32_t sector) {
-	return CDROM_Interface_Image::images[subUnit]->ReadSector(buffer, false, sector);
+inline bool isoDrive::readSector(uint8_t *buffer, uint32_t sector) {
+	return CDROM::cdroms[subUnit]->ReadSector(buffer, false, sector);
 }
 
 int isoDrive :: readDirEntry(isoDirEntry *de, uint8_t *data) {

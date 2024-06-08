@@ -79,7 +79,13 @@ union bootSector {
 
 
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
-enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
+
+enum class DosReturnMode : uint8_t {
+	Exit                     = 0,
+	CtrlC                    = 1,
+	Abort                    = 2,
+	TerminateAndStayResident = 3
+};
 
 #define DOS_FILES   255
 #define DOS_DRIVES  26
@@ -98,6 +104,17 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
+
+constexpr int SftHeaderSize = 6;
+constexpr int SftEntrySize = 59;
+
+constexpr uint32_t SftEndPointer = 0xffffffff;
+constexpr uint16_t SftNextTableOffset = 0x0;
+constexpr uint16_t SftNumberOfFilesOffset = 0x04;
+
+// Fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
+extern RealPt fake_sft_table;
+constexpr int FakeSftEntries = 16;
 
 /* internal Dos Tables */
 
@@ -194,6 +211,8 @@ bool DOS_Canonicalize(const char* const name, char* const canonicalized);
 std::string DOS_Canonicalize(const char* const name);
 bool DOS_CreateTempFile(char* const name, uint16_t* entry);
 bool DOS_FileExists(const char* const name);
+bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
+bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
 
 /* Helper Functions */
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive);
@@ -222,7 +241,9 @@ void DOS_ShutDownDevices();
 bool DOS_NewPSP(uint16_t pspseg,uint16_t size);
 bool DOS_ChildPSP(uint16_t pspseg,uint16_t size);
 bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
-void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode);
+
+void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
+                   const uint8_t exit_code);
 
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
@@ -231,6 +252,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks);
 bool DOS_FreeMemory(uint16_t segment);
 void DOS_FreeProcessMemory(uint16_t pspseg);
 uint16_t DOS_GetMemory(uint16_t pages);
+void DOS_FreeTableMemory();
 bool DOS_SetMemAllocStrategy(uint16_t strat);
 void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref);
 uint16_t DOS_GetMemAllocStrategy(void);
@@ -307,6 +329,7 @@ static inline uint16_t long2para(uint32_t size) {
 #define DOSERR_REMOVE_CURRENT_DIRECTORY 16
 #define DOSERR_NOT_SAME_DEVICE 17
 #define DOSERR_NO_MORE_FILES 18
+#define DOSERR_LOCK_VIOLATION 33
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
 /* Wait/check user input */
@@ -862,47 +885,71 @@ private:
 extern DOS_InfoBlock dos_infoblock;
 
 struct DOS_Block {
-	DOS_Date date;
-	DOS_Version version;
-	uint16_t firstMCB;
-	uint16_t errorcode;
+	DOS_Date date       = {};
+	DOS_Version version = {};
+	uint16_t firstMCB   = {};
+	uint16_t errorcode  = {};
 
-	uint16_t psp() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP(); }
-	void psp(uint16_t seg) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg); }
+	uint16_t psp()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP();
+	}
 
-	uint16_t env;
-	RealPt cpmentry;
+	void psp(uint16_t seg)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg);
+	}
 
-	RealPt dta() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA(); }
-	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
+	uint16_t env    = {};
+	RealPt cpmentry = {};
 
-	uint8_t return_code,return_mode;
+	RealPt dta()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA();
+	}
+	void dta(RealPt dtap)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap);
+	}
 
-	uint8_t current_drive;
-	bool verify;
-	bool breakcheck;
-	bool echo;          // if set to true dev_con::read will echo input 
-	bool direct_output;
-	bool internal_output;
-	struct  {
-		RealPt mediaid;
-		RealPt tempdta;
-		RealPt tempdta_fcbdelete;
-		RealPt dbcs;
-		RealPt filenamechar;
-		RealPt collatingseq;
-		RealPt upcase;
-		uint8_t* country;//Will be copied to dos memory. resides in real mem
-		uint16_t dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
-	} tables;
-	uint16_t loaded_codepage;
-	uint16_t dcp;
+	uint8_t return_code       = {};
+	DosReturnMode return_mode = {};
+
+	uint8_t current_drive = {};
+	bool verify           = {};
+	bool breakcheck       = {};
+
+	// if set to true dev_con::read will echo input
+	bool echo = {};
+
+	bool direct_output   = {};
+	bool internal_output = {};
+
+	struct {
+		RealPt mediaid           = {};
+		RealPt tempdta           = {};
+		RealPt tempdta_fcbdelete = {};
+		RealPt dbcs              = {};
+		RealPt filenamechar      = {};
+		RealPt collatingseq      = {};
+		RealPt upcase            = {};
+
+		// Will be copied to dos memory. resides in real mem
+		uint8_t* country = {};
+
+		// Fake Disk parameter system using only the first entry so the
+		// drive letter matches
+		uint16_t dpb = {};
+	} tables = {};
+
+	uint16_t loaded_codepage = {};
+	uint16_t dcp = {};
 };
 
 extern DOS_Block dos;
 
 static inline uint8_t RealHandle(uint16_t handle) {
-	DOS_PSP psp(dos.psp());	
+	DOS_PSP psp(dos.psp());
 	return psp.GetFileHandle(handle);
 }
 

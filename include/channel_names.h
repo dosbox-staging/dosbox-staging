@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,11 @@
 
 namespace ChannelName {
 
+// The CDAUDIO channel has numbered suffixes (ex. CDAUDIO_0, CDAUDIO_1) appened for physical CDROM devices.
+// This is to avoid conflicts with multiple drives and CDROM_Interface_Image (which does not have a suffix).
 constexpr auto CdAudio              = "CDAUDIO";
+constexpr auto MaxCdAudioChannel    = 32;
+
 constexpr auto Cms                  = "CMS";
 constexpr auto CovoxDac             = "COVOX";
 constexpr auto DisneySoundSourceDac = "DISNEY";

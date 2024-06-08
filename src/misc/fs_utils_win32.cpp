@@ -66,18 +66,25 @@ constexpr uint8_t WindowsAttributesMask = 0x3f;
 FILE* local_drive_create_file(const std_fs::path& path,
                               const FatAttributeFlags attributes)
 {
-	// NOTE: If changing this implementation, test if 'Crystal Caves' game
-	// can save a game to the same slot it was loaded from. Previous
-	// implementation, utilizing 'CreateFileW', did not work in such case,
-	// game was producing FILE ERROR - see the issue:
-	// https://github.com/dosbox-staging/dosbox-staging/issues/3262
+	FILE* file_pointer          = nullptr;
+	const auto win32_attributes = (attributes._data != 0)
+	                                    ? static_cast<DWORD>(attributes._data)
+	                                    : FILE_ATTRIBUTE_NORMAL;
 
-	FILE* file_pointer = fopen(path.string().c_str(), "wb+");
-	if (file_pointer) {
-		if (!SetFileAttributesW(path.c_str(), attributes._data)) {
-			fclose(file_pointer);
-			return nullptr;
-		}
+	const auto win32_handle = CreateFileW(path.c_str(),
+	                                      GENERIC_READ | GENERIC_WRITE,
+	                                      FILE_SHARE_READ | FILE_SHARE_WRITE |
+	                                              FILE_SHARE_DELETE,
+	                                      nullptr,
+	                                      CREATE_ALWAYS,
+	                                      win32_attributes,
+	                                      nullptr);
+
+	if (win32_handle != INVALID_HANDLE_VALUE) {
+		const int file_descriptor =
+		        _open_osfhandle(reinterpret_cast<intptr_t>(win32_handle),
+		                        _O_RDWR | _O_BINARY);
+		file_pointer = _fdopen(file_descriptor, "wb+");
 	}
 
 	return file_pointer;

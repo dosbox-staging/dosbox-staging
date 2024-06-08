@@ -70,6 +70,21 @@ char drive_letter(uint8_t index)
 	return 'A' + index;
 }
 
+char get_drive_letter_from_path(const char* path)
+{
+	if (strlen(path) < 2) {
+		return 0;
+	}
+	if (path[1] != ':') {
+		return 0;
+	}
+	const char drive_letter = toupper(path[0]);
+	if (drive_letter >= 'A' && drive_letter <= 'Z') {
+		return drive_letter;
+	}
+	return 0;
+}
+
 std::string get_basename(const std::string &filename)
 {
 	// Guard against corner cases: '', '/', '\', 'a'
@@ -303,14 +318,14 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 
 	// Third priority is a potentially customized --datadir specified at
 	// compile time.
-	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
+	add_if_exists(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME);
 
 	// Fourth priority is the user and system XDG data specification
 #if !defined(WIN32) && !defined(MACOSX)
-	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
+	add_if_exists(get_xdg_data_home() / DOSBOX_PROJECT_NAME);
 
 	for (const auto& data_dir : get_xdg_data_dirs()) {
-		add_if_exists(data_dir / CANONICAL_PROJECT_NAME);
+		add_if_exists(data_dir / DOSBOX_PROJECT_NAME);
 	}
 #endif
 
@@ -320,7 +335,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	// portability of the install tree (do not replace this with --prefix,
 	// which would destroy this portable aspect).
 	//
-	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
+	add_if_exists(GetExecutablePath() / "../share" / DOSBOX_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
 	add_if_exists(GetConfigDir());

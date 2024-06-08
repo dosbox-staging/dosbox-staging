@@ -5,18 +5,18 @@ hide:
 
 # About
 
-[![DOSBox Staging](../assets/images/dosbox-staging-no-border.svg){ align=right width=33% .about-logo }](https://dosbox-staging.github.io/)
+[![DOSBox Staging](../assets/images/dosbox-staging-no-border.svg){ align=right width=33% .about-logo }](https://www.dosbox-staging.org/)
 
 **DOSBox Staging** is a modern continuation of DOSBox with advanced features
 and current development practices.
 
-It is meant as a (mostly) drop-in replacement for older DOSBox versions---your
-existing configurations will continue to work, but you will have access to
+It is a (mostly) drop-in replacement for older DOSBox versions---your
+existing configurations will continue to work, and you will have access to
 many advanced features.
 
-Because **DOSBox Staging** comes with sensible defaults, you'll need to write
+**DOSBox Staging** comes with sensible defaults, so you'll need to write
 a lot less configuration than with older DOSBox versions. Most games and
-application software require no tweaking and will work fine with the stock
+applications require no tweaking and will work fine with the stock
 settings. However, the extensive configuration options and advanced features
 are available if you wish to delve deeper. Please refer to the [Feature
 highlights](../index.md#feature-highlights) on our front page to learn more
@@ -28,11 +28,13 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 ## Goals
 
 - Faithfully emulate the **DOS operating environment** running on IBM PC
-  compatibles and the IBM PCjr with the primary goal of running **all PC
+  compatibles and the IBM PCjr, with the primary goal of running **all PC
   Booter, DOS and Windows 3.x games** released in the 1981--2000 period. Running
   applications and demoscene productions or more recent DOS software is a
   secondary objective.
 - Improve the **out-of-the-box experience**.
+- Provide a **self-contained emulator** that requires no extra legacy or "modern
+  retro" hardware to function.
 - Focus on supporting up-to-date, **current operating systems** and **modern
  hardware**.
 - Implement **new features** and **quality-of-life** improvements.
@@ -48,19 +50,23 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 
 ## Non-goals
 
-- Support old, end-of-life operating systems (e.g., Windows 7 or older, OS/2,
+- **Support old, end-of-life operating systems** (e.g., Windows 7 or older, OS/2,
   or Mac OS X 10.5 or older) and limited CPU/memory hardware, which are
   constraints the original [DOSBox](https://www.dosbox.com/) continues to
   support.
 
-- Support the use of Windows 9x/Me in the emulator. Windows 9x/Me emulation
+- **Support legacy or "modern retro" hardware.** DOSBox Staging is a
+  self-contained emulator; its aim is to emulate all PC hardware it supports in
+  software. Legacy and retro hardware are not supported (e.g., ISA boards, CRT monitors, RetroWave OPL3 and similar devices, etc.).
+
+- **Support the use of Windows 9x/Me in the emulator.** Windows 9x/Me emulation
   is supported by projects such as [QEMU](https://www.qemu.org),
   [VirtualBox](https://www.virtualbox.org/) and the
   [DOSBox-X](https://www.dosbox-x.com/) and
   [DOSBox Pure](https://github.com/schellingb/dosbox-pure) forks.
-  This may change if the DOSBox Staging community wants it in general.
+  This may change if the DOSBox Staging community wants it.
 
-- Pursue hardware accuracy above all else. If you’re after a more faithful
+- **Pursue hardware accuracy above all else.** If you’re after a more faithful
   emulation of an entire PC, look into
   [MartyPC](https://github.com/dbalsom/martypc),
   [PCem](https://pcem-emulator.co.uk/), [86Box](https://86box.net),
@@ -69,17 +75,17 @@ The key features for developers are summarised [here](https://github.com/dosbox-
   (although DOSBox Staging often matches or surpasses the graphics and
   especially audio emulation fidelity of these other emulators).
 
-- Be the fastest DOS emulator on x86 hardware. Linux users interested in
+- **Be the fastest DOS emulator on x86 hardware.** Linux users interested in
   emulation speed should look at [dosemu2](https://github.com/dosemu2/dosemu2).
 
-- Act as a general-purpose DOS operating system. For that, there is
+- **Act as a general-purpose DOS operating system.** For that, there is
   [FreeDOS](https://www.freedos.org/).
 
 
 ## Relationship to the original DOSBox project
 
-**DOSBox Staging** is separate from and not supported by the
-SourceForge-hosted [DOSBox](https://www.dosbox.com/) project or its
+**DOSBox Staging** is separate from, and not supported by, the
+SourceForge-hosted [DOSBox](https://www.dosbox.com/) project, or its
 development team, the DOSBox Team.
 
 We acknowledge and are thankful for the work shared by all DOSBox
@@ -88,8 +94,7 @@ contributors.
 
 ## Team
 
-This project is maintained by the [DOSBox Staging
-team](https://github.com/orgs/dosbox-staging/people).
+This project is maintained by the **DOSBox Staging team**.
 
 
 ## License

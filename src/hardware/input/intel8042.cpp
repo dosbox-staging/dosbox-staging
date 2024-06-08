@@ -26,6 +26,7 @@
 #include "bitops.h"
 #include "checks.h"
 #include "config.h"
+#include "control.h"
 #include "inout.h"
 #include "mem.h"
 #include "pic.h"
@@ -430,6 +431,30 @@ static void restart_kbd_disabled_timer()
 // Controller buffer support
 // ***************************************************************************
 
+static uint8_t get_irq_mouse()
+{
+	return IrqNumMouse;
+}
+
+static uint8_t get_irq_keyboard()
+{
+	if (machine == MCH_PCJR) {
+		return IrqNumKbdPcjr;
+	} else {
+		return IrqNumKbdIbmPc;
+	}
+}
+
+static void activate_irqs_if_needed()
+{
+	if (is_data_from_aux && is_irq_active_aux) {
+		PIC_ActivateIRQ(get_irq_mouse());
+	}
+	if (is_data_from_kbd && is_irq_active_kbd) {
+		PIC_ActivateIRQ(get_irq_keyboard());
+	}
+}
+
 static void flush_buffer()
 {
 	is_data_new      = false;
@@ -510,18 +535,7 @@ static void maybe_transfer_buffer()
 	is_data_from_kbd = buffer[idx].is_from_kbd;
 	is_data_new      = true;
 	restart_delay_timer();
-
-	// If needed, activate interrupt
-	if (is_data_from_aux && is_irq_active_aux) {
-		PIC_ActivateIRQ(IrqNumMouse);
-	}
-	if (is_data_from_kbd && is_irq_active_kbd) {
-		if (machine == MCH_PCJR) {
-			PIC_ActivateIRQ(IrqNumKbdPcjr);
-		} else {
-			PIC_ActivateIRQ(IrqNumKbdIbmPc);
-		}
-	}
+	activate_irqs_if_needed();
 }
 
 static void buffer_add(const uint8_t byte,
@@ -660,8 +674,7 @@ static bool is_cmd_vendor_lines(const Command command)
 
 static void request_system_reset()
 {
-	E_Exit("I8042: System reset requested");
-	// TODO: we need a proper reset implementation
+	restart_dosbox();
 }
 
 static void execute_command(const Command command)
@@ -902,6 +915,10 @@ static void execute_command(const Command command, const uint8_t param)
 		// firmware allow everything? writing bits 4,5 and 6
 		// should be safe in real implementation, how about here?
 		sanitize_config_byte();
+		// Make sure only the needed IRQs are activated
+		PIC_DeActivateIRQ(get_irq_mouse());
+		PIC_DeActivateIRQ(get_irq_keyboard());
+		activate_irqs_if_needed();
 		break;
 	case Command::WriteControllerMode: // 0xcb
 		// Changes controller mode to PS/2 or AT
@@ -984,6 +1001,7 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 	}
 
 	if (is_data_from_aux) {
+		PIC_DeActivateIRQ(get_irq_mouse());
 		assert(waiting_bytes_from_aux);
 		--waiting_bytes_from_aux;
 		if (I8042_IsReadyForAuxFrame()) {
@@ -992,6 +1010,7 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 	}
 
 	if (is_data_from_kbd) {
+		PIC_DeActivateIRQ(get_irq_keyboard());
 		assert(waiting_bytes_from_kbd);
 		--waiting_bytes_from_kbd;
 		if (I8042_IsReadyForKbdFrame()) {

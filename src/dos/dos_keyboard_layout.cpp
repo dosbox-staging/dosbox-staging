@@ -61,7 +61,7 @@ static FILE_unique_ptr open_layout_file(const char *name, const char *resource_d
 		// try to open file on mounted drive first
 		const auto ldp = dynamic_cast<localDrive*>(Drives[drive]);
 		if (ldp) {
-			if (const auto fp = ldp->GetSystemFilePtr(fullname, file_perms); fp) {
+			if (const auto fp = ldp->GetHostFilePtr(fullname, file_perms); fp) {
 				return FILE_unique_ptr(fp);
 			}
 		}

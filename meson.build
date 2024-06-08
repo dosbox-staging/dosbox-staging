@@ -1,8 +1,11 @@
 project(
-    'dosbox-staging',
-    'c',
-    'cpp',
-    version: '0.82.0-alpha',
+    'dosbox-staging', 'c', 'cpp',
+
+    version: run_command(
+      meson.project_source_root() + '/scripts/get-version.sh',
+      'version', check: true,
+    ).stdout().strip(),
+
     license: 'GPL-2.0-or-later',
     meson_version: '>= 0.59.0',
     default_options: [
@@ -98,7 +101,6 @@ foreach flag : [
     '-Wduplicated-branches',
     '-Weffc++',
     '-Wextra-semi',
-    '-Wfloat-conversion',
     '-Wlogical-op',
     '-Wlogical-not-parentheses',
     '-Wredundant-decls',
@@ -409,9 +411,14 @@ add_project_link_arguments(link_supported_arguments, language: 'cpp')
 # The actual config.h file will be generated after interpreting
 # all the build files in all the subdirs.
 #
+git_hash = run_command(
+  './scripts/get-version.sh', 'hash', check: true,
+).stdout().strip()
+
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 conf_data.set('project_name', meson.project_name())
+conf_data.set('git_hash', git_hash)
 conf_data.set_quoted(
     'CUSTOM_DATADIR',
     get_option('prefix') / get_option('datadir'),
@@ -1215,7 +1222,7 @@ if host_machine.system() in ['windows', 'cygwin']
     summary('Windows Multimedia support', winmm_dep.found())
 endif
 
-# Setup include directories
+# Set up include directories
 incdir = [
     include_directories('include', '.'),
     include_directories('src/libs', is_system: true),
@@ -1232,10 +1239,11 @@ subdir('src/libs/ghc')
 subdir('src/libs/loguru')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
+subdir('src/libs/ESFMu')
 subdir('src/libs/residfp')
-subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+
 if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')
 endif
@@ -1256,7 +1264,6 @@ third_party_deps = [
     ghc_dep,
     libiir_dep,
     libloguru_dep,
-    libsdlcd_dep,
     tracy_dep,
     libwhereami_dep,
     libtalchorus_dep,
@@ -1292,11 +1299,10 @@ configure_file(
 )
 
 
-# Setup the executable and libraries
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Set up the executable and libraries
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-version_file = vcs_tag(input: 'src/version.cpp.in', output: 'version.cpp')
-dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp', version_file]
+dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp']
 
 # Add Windows resources file if building on Windows
 if host_machine.system() == 'windows'
@@ -1317,7 +1323,7 @@ executable(
 # create a library so we can test things inside DOSBOX dep path
 libdosbox = static_library(
     'dosbox',
-    ['src/dosbox.cpp', version_file],
+    ['src/dosbox.cpp'],
     include_directories: incdir,
     dependencies: internal_deps + third_party_deps,
 )
@@ -1325,12 +1331,9 @@ libdosbox = static_library(
 dosbox_dep = declare_dependency(link_with: libdosbox)
 
 
-# Setup unit tests
-# ~~~~~~~~~~~~~~~~
-# Some tests use relative paths; in meson 0.56.0 this can be replaced
-# with meson.project_source_root().
+# Set up unit tests
+# ~~~~~~~~~~~~~~~~~
 #
 if wants_tests
-    project_source_root = meson.current_source_dir()
     subdir('tests')
 endif

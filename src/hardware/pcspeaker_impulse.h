@@ -44,7 +44,7 @@ public:
 private:
 	void AddImpulse(float index, const int16_t amplitude);
 	void AddPITOutput(const float index);
-	void ChannelCallback(uint16_t requested_frames);
+	void ChannelCallback(int requested_frames);
 	void ForwardPIT(const float new_index);
 	float CalcImpulse(const double t) const;
 	void InitializeImpulseLUT();
@@ -69,20 +69,21 @@ private:
 	static constexpr float ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
 
 	// Mixer channel constants
-	static constexpr uint16_t sample_rate        = 32000u;
-	static constexpr uint16_t sample_rate_per_ms = sample_rate / 1000u;
+	static constexpr auto sample_rate_hz     = 32000;
+	static constexpr auto sample_rate_per_ms = sample_rate_hz / 1000;
 
-	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate;
+	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate_hz;
 
 	// must be greater than 0.0f
 	static constexpr float cutoff_margin = 0.2f;
 
 	// Should be selected based on sampling rate
-	static constexpr float sinc_amplitude_fade         = 0.999f;
-	static constexpr uint16_t sinc_filter_quality      = 100u;
-	static constexpr uint16_t sinc_oversampling_factor = 32u;
-	static constexpr uint16_t sinc_filter_width = sinc_filter_quality *
-	                                              sinc_oversampling_factor;
+	static constexpr float sinc_amplitude_fade     = 0.999f;
+	static constexpr auto sinc_filter_quality      = 100;
+	static constexpr auto sinc_oversampling_factor = 32;
+
+	static constexpr auto sinc_filter_width = sinc_filter_quality *
+	                                          sinc_oversampling_factor;
 
 	static constexpr float max_possible_pit_ms = 1320000.0f / PIT_TICK_RATE;
 
@@ -113,7 +114,7 @@ private:
 
 	std::array<float, sinc_filter_width> impulse_lut = {};
 
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 
 	PpiPortB prev_port_b = {};
 

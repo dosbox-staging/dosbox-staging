@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 // because they would be fatal (ie, -Werror) or too verbose (ie, -Wnarrowing
 // generating 3,400+ warnings!)
 //
-// So this per-file approach lets us focus down one file at a time and then
+// So this per file approach lets us focus down one file at a time and then
 // declare that it's free from the issue(s) we're checking.
 //
 // Usage:
@@ -43,10 +43,10 @@
 //
 // How to add new checks:
 //
-//   1. Assess how much work it would be to enable it at the project-level. If
+//   1. Assess how much work it would be to enable it at the project level. If
 //      the check is too burdensome, then carry on.
 //
-//   2. The C98 and c++11 standards supports the _Pragma() function to add
+//   2. The C98 and C++11 standards supports the _Pragma() function to add
 //      #pragma strings. We can use it to add compiler-specific features.
 //
 //   3. Finish the macro with END_MACRO to swalllow the semicolon and avoid
@@ -55,10 +55,12 @@
 #define END_MACRO \
 	struct END_MACRO_##__FILE__##__LINE__ {}
 
+// `-Wconversion` enables a few noisy warnings wholesale that we then need
+// to disable manually.
 #ifdef __GNUC__
 #	define CHECK_NARROWING() \
-		_Pragma("GCC diagnostic warning \"-Wsign-conversion\"") \
 		_Pragma("GCC diagnostic warning \"-Wconversion\"") \
+		_Pragma("GCC diagnostic ignored \"-Wsign-conversion\"") \
 		_Pragma("GCC diagnostic warning \"-Wnarrowing\"") \
 		END_MACRO
 #else

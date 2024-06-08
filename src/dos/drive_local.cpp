@@ -46,11 +46,24 @@
 #include "cross.h"
 #include "inout.h"
 
-bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
+bool localDrive::FileIsReadOnly(const char* name)
 {
-	// Don't allow overwriting read-only files.
+	if (IsReadOnly()) {
+		return true;
+	}
 	FatAttributeFlags test_attr = {};
-	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
+	if (GetFileAttr(name, &test_attr)) {
+		return test_attr.read_only;
+	}
+	return false;
+}
+
+bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags attributes)
+{
+	assert(!IsReadOnly());
+
+	// Don't allow overwriting read-only files.
+	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -82,19 +95,29 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, expanded_name, file_pointer, basedir);
+	*file = new localFile(name, expanded_name, file_pointer, basedir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 
 	return true;
 }
 
-bool localDrive::IsFirstEncounter(const std::string& filename)
+// Inform the user that the file is being protected against modification.
+// If the DOS program /really/ needs to write to the file, it will
+// crash/exit and this will be one of the last messages on the screen,
+// so the user can decide to un-write-protect the file if they wish.
+// We only print one message per file to eliminate redundant messaging.
+void localDrive::MaybeLogFilesystemProtection(const std::string& filename)
 {
 	const auto ret = write_protected_files.insert(filename);
 
 	const bool was_inserted = ret.second;
-	return was_inserted;
+	if (was_inserted) {
+		// For brevity and clarity to the user, we show just the
+		// filename instead of the more cluttered absolute path.
+		LOG_MSG("FILESYSTEM: protected from modification: %s",
+				get_basename(filename).c_str());
+	}
 }
 
 // Search the Files[] inventory for an open file matching the requested
@@ -123,141 +146,96 @@ DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
 	return nullptr;
 }
 
-bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
+bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 {
-	const char *type = nullptr;
-	switch (flags&0xf) {
-	case OPEN_READ:        type = "rb" ; break;
-	case OPEN_WRITE:       type = "rb+"; break;
-	case OPEN_READWRITE:   type = "rb+"; break;
-	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
-	default:
-		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
-		return false;
+	bool write_access = false;
+	switch (flags & 0xf) {
+		case OPEN_READ:
+		//No modification of dates. LORD4.07 uses this
+		case OPEN_READ_NO_MOD:
+			write_access = false;
+			break;
+		case OPEN_WRITE:
+		case OPEN_READWRITE:
+			write_access = true;
+			break;
+		default:
+			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
+			return false;
 	}
+
+	const std::string host_filename = MapDosToHostFilename(name);
+	bool fallback_to_readonly = false;
 
 	// Don't allow opening read-only files in write mode,
 	// unless configured otherwise
-	FatAttributeFlags test_attr = {};
-	if (!always_open_ro_files &&
-	    ((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
-	    (GetFileAttr(name, &test_attr) && test_attr.read_only)) {
-		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+	if (write_access && FileIsReadOnly(name)) {
+		if (always_open_ro_files) {
+			flags = OPEN_READ;
+			write_access = false;
+			fallback_to_readonly = true;
+		} else {
+			MaybeLogFilesystemProtection(host_filename);
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 	}
-
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
 
 	// If the file's already open then flush it before continuing
 	// (Betrayal in Antara)
 	auto open_file = dynamic_cast<localFile *>(FindOpenFile(this, name));
-	if (open_file)
+	if (open_file) {
 		open_file->Flush();
-
-	FILE* fhandle = fopen(newname, type);
-
-#ifdef DEBUG
-	std::string open_msg;
-	std::string flags_str;
-	switch (flags & 0xf) {
-		case OPEN_READ:        flags_str = "R";  break;
-		case OPEN_WRITE:       flags_str = "W";  break;
-		case OPEN_READWRITE:   flags_str = "RW"; break;
-		case OPEN_READ_NO_MOD: flags_str = "RN"; break;
-		default:               flags_str = "--";
 	}
-#endif
+
+	FILE* fhandle = fopen(host_filename.c_str(), write_access ? "rb+" : "rb");
 
 	// If we couldn't open the file, then it's possible that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
-	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
+	if (!fhandle && write_access && always_open_ro_files) {
 		// If yes, check if the file can be opened with Read-only access:
-		fhandle = fopen(newname, "rb");
+		fhandle = fopen(host_filename.c_str(), "rb");
 		if (fhandle) {
-			if (!always_open_ro_files) {
-				fclose(fhandle);
-				fhandle = nullptr;
-			}
-
-#ifdef DEBUG
-			if (always_open_ro_files) {
-				open_msg = "wanted writes but opened read-only";
-			} else {
-				open_msg = "wanted writes but file is read-only";
-			}
-#else
-			// Inform the user that the file is being protected against modification.
-			// If the DOS program /really/ needs to write to the file, it will
-			// crash/exit and this will be one of the last messages on the screen,
-			// so the user can decide to un-write-protect the file if they wish.
-			// We only print one message per file to eliminate redundant messaging.
-			if (IsFirstEncounter(newname)) {
-				// For brevity and clarity to the user, we show just the
-				// filename instead of the more cluttered absolute path.
-				LOG_MSG("FILESYSTEM: protected from modification: %s",
-				        get_basename(newname).c_str());
-			}
-#endif
+			flags = OPEN_READ;
+			fallback_to_readonly = true;
 		}
-
-#ifdef DEBUG
-		else {
-			open_msg += "failed desired and with read-only";
-		}
-#endif
 	}
-
-#ifdef DEBUG
-	else if (!fhandle) {
-		open_msg = "failed with desired flags";
-	} else {
-		open_msg = "succeeded with desired flags";
-	}
-	LOG_MSG("FILESYSTEM: flags=%2s, %-12s %s",
-	        flags_str.c_str(),
-	        get_basename(newname).c_str(),
-	        open_msg.c_str());
-#endif
 
 	if (!fhandle) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
 
-	*file = new localFile(name, newname, fhandle, basedir);
+	if (fallback_to_readonly) {
+		MaybeLogFilesystemProtection(host_filename);
+	}
+
+	*file = new localFile(name, host_filename, fhandle, basedir, IsReadOnly());
 	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
 
 	return true;
 }
 
-FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)
+FILE* localDrive::GetHostFilePtr(const char* const name, const char* const type)
+{
+	return fopen(MapDosToHostFilename(name).c_str(), type);
+}
+
+std::string localDrive::MapDosToHostFilename(const char* const dos_name)
 {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
+	safe_strcat(newname, dos_name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-
-	return fopen(newname,type);
-}
-
-bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
-{
-	strcpy(sysName, basedir);
-	strcat(sysName, dosName);
-	CROSS_FILENAME(sysName);
-	dirCache.ExpandNameAndNormaliseCase(sysName);
-	return true;
+	return dirCache.GetExpandNameAndNormaliseCase(newname);
 }
 
 // Attempt to delete the file name from our local drive mount
-bool localDrive::FileUnlink(char* name)
+bool localDrive::FileUnlink(const char* name)
 {
+	assert(!IsReadOnly());
+
 	if (!FileExists(name)) {
 		LOG_DEBUG("FS: Skipping removal of '%s' because it doesn't exist",
 		          name);
@@ -266,8 +244,7 @@ bool localDrive::FileUnlink(char* name)
 	}
 
 	// Don't allow deleting read-only files.
-	FatAttributeFlags test_attr = {};
-	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
+	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -306,7 +283,7 @@ bool localDrive::FileUnlink(char* name)
 	return false;
 }
 
-bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
+bool localDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 {
 	char tempDir[CROSS_LEN];
 	safe_strcpy(tempDir, basedir);
@@ -335,7 +312,7 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	FatAttributeFlags search_attr = {};
 	dta.GetSearchParams(search_attr, tempDir);
 
-	if (this->isRemote() && this->isRemovable()) {
+	if (this->IsRemote() && this->IsRemovable()) {
 		// cdroms behave a bit different than regular drives
 		if (search_attr == FatAttributeFlags::Volume) {
 			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
@@ -449,19 +426,17 @@ bool localDrive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool localDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-
-	if (local_drive_get_attributes(newname, *attr) != DOSERR_NONE) {
+	if (local_drive_get_attributes(MapDosToHostFilename(name), *attr) != DOSERR_NONE) {
 		// The caller is responsible to act accordingly, possibly
 		// it should set DOS error code (setting it here is not allowed)
 		*attr = 0;
 		return false;
+	}
+
+	if (IsReadOnly()) {
+		attr->read_only = true;
 	}
 
 	return true;
@@ -469,14 +444,11 @@ bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 
 bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
+	assert(!IsReadOnly());
+	const std::string host_filename = MapDosToHostFilename(name);
 
-	const auto result = local_drive_set_attributes(newname, attr);
-	dirCache.CacheOut(newname);
+	const auto result = local_drive_set_attributes(host_filename, attr);
+	dirCache.CacheOut(host_filename.c_str());
 
 	if (result != DOSERR_NONE) {
 		DOS_SetError(result);
@@ -486,8 +458,10 @@ bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 	return true;
 }
 
-bool localDrive::MakeDir(char* dir)
+bool localDrive::MakeDir(const char* dir)
 {
+	assert(!IsReadOnly());
+
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
@@ -501,8 +475,10 @@ bool localDrive::MakeDir(char* dir)
 	return (result == DOSERR_NONE);
 }
 
-bool localDrive::RemoveDir(char* dir)
+bool localDrive::RemoveDir(const char* dir)
 {
+	assert(!IsReadOnly());
+
 	char newdir[CROSS_LEN];
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
@@ -512,39 +488,37 @@ bool localDrive::RemoveDir(char* dir)
 	return (temp==0);
 }
 
-bool localDrive::TestDir(char* dir)
+bool localDrive::TestDir(const char* dir)
 {
-	char newdir[CROSS_LEN];
-	safe_strcpy(newdir, basedir);
-	safe_strcat(newdir, dir);
-	CROSS_FILENAME(newdir);
-	dirCache.ExpandNameAndNormaliseCase(newdir);
+	const std::string host_dir = MapDosToHostFilename(dir);
 	// Skip directory test, if "\"
-	size_t len = safe_strlen(newdir);
-	if (len && (newdir[len-1]!='\\')) {
+	if (!host_dir.empty() && host_dir.back() != '\\') {
 		// It has to be a directory !
 		struct stat test;
-		if (stat(newdir,&test))			return false;
-		if ((test.st_mode & S_IFDIR)==0)	return false;
-	};
-	return path_exists(newdir);
+		if (stat(host_dir.c_str(), &test)) {
+			return false;
+		}
+		if ((test.st_mode & S_IFDIR) == 0) {
+			return false;
+		}
+	}
+	return path_exists(host_dir);
 }
 
-bool localDrive::Rename(char* oldname, char* newname)
+bool localDrive::Rename(const char* oldname, const char* newname)
 {
-	char newold[CROSS_LEN];
-	safe_strcpy(newold, basedir);
-	safe_strcat(newold, oldname);
-	CROSS_FILENAME(newold);
-	dirCache.ExpandNameAndNormaliseCase(newold);
+	assert(!IsReadOnly());
+	const std::string old_host_filename = MapDosToHostFilename(oldname);
 
 	char newnew[CROSS_LEN];
 	safe_strcpy(newnew, basedir);
 	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
-	int temp = rename(newold, dirCache.GetExpandNameAndNormaliseCase(newnew));
-	if (temp==0) dirCache.CacheOut(newnew);
-	return (temp == 0);
+	int temp = rename(old_host_filename.c_str(), dirCache.GetExpandNameAndNormaliseCase(newnew));
+	if (temp == 0) {
+		dirCache.CacheOut(newnew);
+	}
+	return temp == 0;
 }
 
 bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
@@ -559,42 +533,14 @@ bool localDrive::AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_clust
 
 bool localDrive::FileExists(const char* name)
 {
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
+	const std::string host_filename = MapDosToHostFilename(name);
 	struct stat temp_stat;
-	if (stat(newname,&temp_stat)!=0) return false;
-	if (temp_stat.st_mode & S_IFDIR) return false;
-	return true;
-}
-
-bool localDrive::FileStat(const char* name, FileStat_Block* const stat_block)
-{
-	char newname[CROSS_LEN];
-	safe_strcpy(newname, basedir);
-	safe_strcat(newname, name);
-	CROSS_FILENAME(newname);
-	dirCache.ExpandNameAndNormaliseCase(newname);
-	struct stat temp_stat;
-
-	FatAttributeFlags attributes = {};
-	if (stat(newname, &temp_stat) != 0 ||
-	    local_drive_get_attributes(newname, attributes) != DOSERR_NONE) {
+	if (stat(host_filename.c_str(), &temp_stat) != 0) {
 		return false;
 	}
-
-	/* Convert the stat to a FileStat */
-	stat_block->attr = attributes._data;
-	struct tm datetime;
-	if (cross::localtime_r(&temp_stat.st_mtime, &datetime)) {
-		stat_block->time = DOS_PackTime(datetime);
-		stat_block->date = DOS_PackDate(datetime);
-	} else {
-		LOG_MSG("FS: error while converting date in: %s", name);
+	if (temp_stat.st_mode & S_IFDIR) {
+		return false;
 	}
-	stat_block->size=(uint32_t)temp_stat.st_size;
 	return true;
 }
 
@@ -603,12 +549,12 @@ uint8_t localDrive::GetMediaByte(void)
 	return allocation.mediaid;
 }
 
-bool localDrive::isRemote(void)
+bool localDrive::IsRemote(void)
 {
 	return false;
 }
 
-bool localDrive::isRemovable(void)
+bool localDrive::IsRemovable(void)
 {
 	return false;
 }
@@ -621,8 +567,9 @@ Bits localDrive::UnMount()
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
                        uint16_t _free_clusters, uint8_t _mediaid,
-                       bool _always_open_ro_files)
-        : always_open_ro_files(_always_open_ro_files),
+                       bool _readonly, bool _always_open_ro_files)
+        : readonly(_readonly),
+          always_open_ro_files(_always_open_ro_files),
           write_protected_files{},
           allocation{_bytes_sector, _sectors_cluster, _total_clusters, _free_clusters, _mediaid}
 {
@@ -713,11 +660,14 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 bool localFile::Write(uint8_t *data, uint16_t *size)
 {
-	uint32_t lastflags = this->flags & 0xf;
+	uint8_t lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+
+	// File should always be opened in read-only mode if on read-only drive
+	assert(!IsOnReadOnlyMedium());
 
 	// Seek if we last read
 	if (last_action == LastAction::Read)
@@ -816,6 +766,7 @@ bool localFile::Close()
 	// only close if one reference left
 	if (refCtr == 1) {
 		if (set_archive_on_close) {
+			assert(!IsOnReadOnlyMedium());
 			FatAttributeFlags attributes = {};
 			if (DOSERR_NONE !=
 			    local_drive_get_attributes(path, attributes)) {
@@ -838,6 +789,7 @@ bool localFile::Close()
 	};
 
 	if (newtime) {
+		assert(!IsOnReadOnlyMedium());
 		// backport from DOS_PackDate() and DOS_PackTime()
 		struct tm tim = {};
 		tim.tm_sec = (time & 0x1f) * 2;
@@ -875,10 +827,11 @@ uint16_t localFile::GetInformation(void)
 }
 
 localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
-                     const char* _basedir)
+                     const char* _basedir, const bool _read_only_medium)
         : fhandle(handle),
           path(path),
-          basedir(_basedir)
+          basedir(_basedir),
+          read_only_medium(_read_only_medium)
 {
 	open = true;
 	localFile::UpdateDateTimeFromHost();
@@ -942,7 +895,8 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	             _sectors_cluster,
 	             _total_clusters,
 	             _free_clusters,
-	             _mediaid),
+	             _mediaid,
+	             true),
 	  subUnit(0),
 	  driveLetter(_driveLetter)
 {
@@ -955,7 +909,7 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 }
 
-bool cdromDrive::FileOpen(DOS_File** file, char* name, uint32_t flags)
+bool cdromDrive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
 {
 	if ((flags & 0xf) == OPEN_READWRITE) {
 		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
@@ -964,43 +918,41 @@ bool cdromDrive::FileOpen(DOS_File** file, char* name, uint32_t flags)
 		return false;
 	}
 	bool success = localDrive::FileOpen(file, name, flags);
-	if (success)
-		(*file)->SetFlagReadOnlyMedium();
 	return success;
 }
 
-bool cdromDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+bool cdromDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
                             FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::FileUnlink(char* /*name*/)
+bool cdromDrive::FileUnlink(const char* /*name*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::RemoveDir(char* /*dir*/)
+bool cdromDrive::RemoveDir(const char* /*dir*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::MakeDir(char* /*dir*/)
+bool cdromDrive::MakeDir(const char* /*dir*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::Rename(char* /*oldname*/, char* /*newname*/)
+bool cdromDrive::Rename(const char* /*oldname*/, const char* /*newname*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+bool cdromDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 {
 	const bool result = localDrive::GetFileAttr(name, attr);
 	if (result) {
@@ -1011,7 +963,7 @@ bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	return result;
 }
 
-bool cdromDrive::FindFirst(char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
+bool cdromDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
 {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
@@ -1035,12 +987,12 @@ void cdromDrive::SetDir(const char* path)
 	localDrive::SetDir(path);
 }
 
-bool cdromDrive::isRemote()
+bool cdromDrive::IsRemote()
 {
 	return true;
 }
 
-bool cdromDrive::isRemovable()
+bool cdromDrive::IsRemovable()
 {
 	return true;
 }

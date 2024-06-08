@@ -449,11 +449,14 @@ Uso: [color=light-green]config [reset]-set [color=light-cyan][SECCIÓN][reset] [
 :TITLEBAR_CYCLES_MS
 ciclos/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUSADO)
+:TITLEBAR_MUTED
+MUDO
 .
-:TITLEBAR_HINT_NOMOUSE
-modo sin ratón
+:TITLEBAR_PAUSED
+PAUSADO
+.
+:TITLEBAR_HINT_CAPTURED
+ratón capturado
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 ratón capturado, liberar con %s+F10
@@ -568,13 +571,27 @@ Modo de presentación de fotogramas:
   vfr:   Siempre presentar fotogramas de DOS con cambios a una frecuencia
          variable.
 .
-:CONFIG_OUTPUT
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Sistema de video a usar para la salida ('opengl' por defecto).
-'texture' (textura) y 'opengl' usan interpolación bilineal,
-'texturenb' y 'openglnb' (no bilineal) usan el método vecino más cercano
-(nearest-neighbour).
-Algunos shaders requieren interpolación bilineal, convirtiéndola en la opción
-más segura.
+Algunos shaders requieren interpolación bilineal, haciéndola la opción más
+segura.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Sistema de video a usar para la salida ('texture' por defecto).
+Algunos shaders requieren interpolación bilineal, haciéndola la opción más
+segura.
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Usa interpolación bilineal.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Usa interpolación bilineal.
+.
+:CONFIGITEM_OUTPUT_OPENGLNB
+  openglnb:   Usa interpolación por el vecino más cercano (no bilineal).
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Usa interpolación por el vecino más cercano (no bilineal).
 .
 :CONFIG_TEXTURE_RENDERER
 Controlador de renderizado a usar en modos de salida de textura
@@ -620,8 +637,52 @@ SDL_VIDEO_ALLOW_SCREENSAVER, que generalmente bloquea el protector de pantallas
 del sistema operativo mientras el emulador se está ejecutando
 ('auto' por defecto).
 .
+:CONFIG_WINDOW_TITLEBAR
+Lista separada por espacios de la información a mostrar en la barra de título
+de la ventana ('program=name dosbox=auto cycles=on mouse=full' por defecto). Si
+no se especifica un parámetro, se usa su valor por defecto.
+Los datos posibles a mostrar son:
+  animation=<valor>:  Si es 'on' (por defecto), animar la marca de grabación de
+                      audio/video. Establézcalo en 'off' para deshabilitar la
+                      animación; esto es útil si el tipo de letra de la barra
+                      de títulos produce resultados extraños.
+  program=<valor>:    Mostrar el nombre del programa en ejecución.
+                      <valor> puede ser:
+                        none/off:  No mostrar el nombre del programa.
+                        name:      Nombre del programa, con la extensión del
+                                   archivo (por defecto).
+                        path:      Nombre, extensión y ruta absoluta completa.
+                        segment:   Nombre de segmento de memoria del programa.
+                        'Título':  Nombre personalizado. Alternativamente,
+                                   puede usar el formato "Título", (Título),
+                                   <Título> o [Título].
+                      Nota: Con algunos programas (como Windows 3.1x en modo
+                      mejorado) es imposible reconocer el nombre o ruta
+                      completa del programa; en esos casos se usa 'segment'.
+  dosbox=<valor>:     Mostrar 'DOSBox Staging' en la barra de título.
+                      <valor> puede ser:
+                        always:   Siempre mostrar 'DOSBox Staging'.
+                        auto:     Sólo mostrarlo si no hay un programa en
+                                  ejecución o si se estableció 'program=none'
+                                  (por defecto).
+  version=<valor>:    Muestra información de la versión de DOSBox.
+                      <valor> puede ser:
+                         none/off:  No mostrar la versión de DOSBox (por
+                                    defecto).
+                         simple:    Información de versión simple.
+                         detailed:  Incluir hash de Git si está disponible.
+  cycles=<valor>:     Si es 'on' (por defecto), mostrar la configuración de
+                      ciclos de CPU. Si es 'off' no mostrar la configuración de
+                      ciclos.
+  mouse=<valor>:      Nivel de verbosidad de sugerencia de captura del cursor
+                      del ratón:
+                        none/off:  No mostrar sugerencias.
+                        short:     Sólo mostrarlas si el cursor está capturado.
+                        full:      Mostrar información detallada de cómo
+                                   capturar y liberar el cursor (por defecto).
+.
 :CONFIG_LANGUAGE
-Idioma a usar: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', o 'ru'
+Idioma a usar: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', o 'ru'
 (en blanco por defecto; equivale a 'en').
 Notas:
   - Esta propiedad anulará la variable de entorno 'LANG', si se ha establecido.
@@ -680,15 +741,27 @@ Memoria de video en MB (1-8) o KB (256 a 8192).
 'auto' usa el valor predeterminado del adaptador de video seleccionado.
 Vea en la propiedad 'machine' las opciones válidas por adaptador.
 .
+:CONFIG_VMEM_DELAY
+Emulación de retraso de acceso a la memoria de video (deshabilitada por
+defecto).
+  off:      Deshabilitar la emulación del retraso de acceso (predeterminado).
+            Esto es preferible para evitar ralentizaciones en la mayoría de los
+            juegos.
+  on:       Emular el retraso de acceso (3000 ns).
+            Esto puede ayudar a reducir o eliminar parpadeos en juegos
+            Hercules, CGA, EGA, y los VGA más antiguos.
+  <valor>:  Retraso de acceso en nanosegundos. El rango válido es entre 0 y
+            20000 ns; 500 a 5000 ns es el rango más útil.
+Nota: Sólo establezca ésto por cada juego cuando sea necesario, ya que retrasa
+      todo el emulador.
+.
 :CONFIG_DOS_RATE
-Tasa de fotogramas en Hz del modo de video emulado:
-  default:  Predeterminado; el modo de video de DOS determina la tasa
-            (recomendado).
+Tasa de fotogramas del modo de video emulado:
+  default:  Predeterminado; el modo de video de DOS determina la tasa.
   host:     Igualar la tasa de DOS a la del anfitrión (vea la propiedad
             'host_rate').
-  <valor>:  Establecer la tasa en un valor exacto, entre 24.000 y 1000.000
-            (Hz).
-Recomendamos 'default'; en caso contrario, pruebe y establézcala por cada
+  <valor>:  Establecer la tasa en un valor exacto entre 24.000 y 1000.000 Hz.
+Nota: Recomendamos 'default'; en caso contrario, pruebe y establézcala por cada
 juego.
 .
 :CONFIG_VESA_MODES
@@ -707,6 +780,12 @@ Controla la selección de modos VESA 1.2 y 2.0 ofrecidos:
 :CONFIG_VGA_8DOT_FONT
 Usar fuentes de 8 píxeles de ancho en adaptadores VGA
 (deshabilitado por defecto).
+.
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Emular renderizado VGA preciso por línea de escaneo (habilitado por defecto).
+Actualmente es necesario deshabilitar esto para algunos juegos; en caso
+contrario, fallarán al iniciar (por ejemplo, Deus, Ishar 3, Robinson's Requiem,
+Time Warriors).
 .
 :CONFIG_SPEED_MODS
 Permitir cambios que se sabe que mejoran el rendimiento
@@ -767,7 +846,7 @@ el comando 'sbtype'.
 Considere limitar la tasa de fotogramas usando la propiedad 'host_rate'.
 .
 :CONFIG_ASPECT
-Modo de corrección de relación de aspecto (habilitado por defecto):
+Modo de corrección de relación de aspecto ('auto' por defecto):
   auto, on:            Aplicar corrección de relación de aspecto en pantallas
                        planas modernas con píxeles cuadrados, para que los
                        modos de video de DOS con píxeles no cuadrados se vean
@@ -897,7 +976,7 @@ por hardware:
   - Si usaba un escalador avanzado, considere en su lugar una de las opciones
     'glshader'.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Shader adaptativo de emulación de monitor CRT, o shader GLSL regular, en modos
 de salida OpenGL. Opciones de shaders CRT adaptativos:
   crt-auto:               Shader CRT que prioriza la intención del artista
@@ -964,8 +1043,9 @@ Núcleo de CPU usado en la emulación ('auto' por defecto).
 'auto' cambiará a 'dynamic' si está disponible y es apropiado.
 .
 :CONFIG_CPUTYPE
-Tipo de CPU usado en la emulación ('auto' por defecto).
-'auto' es la opción más rápida.
+Tipo de CPU usado en la emulación ('auto' por defecto). 'auto' es la opción más
+rápida. La variante prefetch emula la cola de captación previa y requiere el
+núcleo 'normal'.
 .
 :CONFIG_CYCLES
 Número de instrucciones que DOSBox intenta emular cada milisegundo
@@ -1139,23 +1219,23 @@ En el modo silencioso, el sonido continúa siendo emulado, pero la salida de
 DOSBox es silencio.
 .
 :CONFIG_RATE
-Frecuencia de muestreo del mezclador (48000 por defecto).
+Frecuencia de muestreo del mezclador en Hz (%s por defecto).
 .
 :CONFIG_BLOCKSIZE
-Tamaño de bloque del mezclador en cuadros de muestra (512 por defecto).
+Tamaño de bloque del mezclador en cuadros de muestra (%s por defecto).
 Valores más altos podrían ayudar a reducir el tartamudeo de sonido, pero el
 sonido estará más retrasado.
 .
 :CONFIG_PREBUFFER
 Cuántos milisegundos de sonido renderizar encima del tamaño de bloque
-(20 por defecto).
+(%s por defecto).
 Valores más grandes podrían ayudar a reducir el tartamudeo de sonido, pero el
 sonido estará más retrasado.
 .
 :CONFIG_NEGOTIATE
 Permitir que el controlador de audio del sistema negocie configuraciones
 posiblemente mejores de la frecuencia de muestreo y el tamaño de bloque
-(habilitado por defecto).
+(%s por defecto).
 .
 :CONFIG_COMPRESSOR
 Habilitar el compresor autonivelante en el canal maestro para prevenir recortes
@@ -1209,31 +1289,61 @@ Nota: Puede afinar el nivel de coro de cada canal usando el comando MIXER.
 :CONFIG_MIDIDEVICE
 Dónde se envían los datos MIDI de la interfaz emulada MPU-401
 ('auto' por defecto):
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
+  coremidi:    Cualquier dispositivo que haya sido configurado en la
+               configuración de audio MIDI de macOS.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Sintetizador MIDI incluido en macOS.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Interfaz de reproducción MIDI de Win32.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
   oss:         Interfaz de reproducción MIDI de Linux OSS.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
   alsa:        Interfaz de reproducción MIDI de Linux ALSA.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  Sintetizador MIDI FluidSynth incorporado (reproductor de
                SoundFont). Puede configurarlo en la sección [fluidsynth].
+.
+:CONFIGITEM_MIDIDEVICE_MT32
   mt32:        Sintetizador Roland MT-32 incorporado. Puede configurarlo en la
                sección [mt32].
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
   auto:        O algunos de los sintetizadores MIDI incluidos (si 'midiconfig'
                está establecido en 'fluidsynth' o 'mt32'), o un dispositivo
                MIDI externo a DOSBox (con cualquier otro valor de
                'midiconfig'). Esto último puede ser un sintetizador de software
                o un dispositivo físico.
                Este es el comportamiento por defecto.
-  none:        Deshabilitar la salida MIDI.
 .
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:        Deshabilitar la salida MIDI.
 :CONFIG_MIDICONFIG
 Opciones de configuración para la interfaz MIDI seleccionada
 (en blanco por defecto).
 Generalmente es el ID o el nombre del sintetizador MIDI que quiere usar
 (puede obtenerlo con el comando de DOS 'MIXER /LISTMIDI').
 Notas:
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Esta opción no tiene efecto cuando se usan los sintetizadores
     integrados ('mididevice = fluidsynth' o 'mididevice = mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Si se usa 'coreaudio', puede especificar una SoundFont aquí.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
   - Cuando use ALSA, utilice el comando Linux 'aconnect -l' para listar todos
     los puertos MIDI abiertos, y seleccione uno (por ejemplo,
     'midiconfig = 14:0' para el cliente secuenciador 14, puerto 0).
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Si está usando un Roland MT-32 físico con PCB revisión 0, el hardware
     puede requerir un retraso para evitar que se desborde su búfer. En ese
     caso, agregue 'delaysysex', (por ejemplo, 'midiconfig = 2 delaysysex').
@@ -1355,8 +1465,18 @@ ROM activa
 Cargada de    
 .
 :CONFIG_SBTYPE
-Tipo de Sound Blaster a emular ('sb16' por defecto).
-'gb' es Game Blaster.
+Modelo de Sound Blaster a emular ('sb16' por defecto).
+También se listan los modelos auto-seleccionados con 'oplmode' y 'cms'
+establecidos en 'auto'.
+  gb:        Game Blaster        - CMS
+  sb1:       Sound Blaster 1.0   - OPL2, CMS
+  sb2:       Sound Blaster 2.0   - OPL2
+  sbpro1:    Sound Blaster Pro   - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2 - OPL3
+  sb16:      Sound Blaster 16    - OPL3 (por defecto)
+  none/off:  Deshabilitar la emulación de Sound Blaster.
+Nota: La Creative Music System fue luego renombrada a Game Blaster; se trata de
+      la misma tarjeta.
 .
 :CONFIG_SBBASE
 Dirección base de E/S de la Sound Blaster (220 por defecto).
@@ -1384,10 +1504,23 @@ SB. Reduzca esto si nota que a la reproducción inicial le falta audio.
 La forma de onda de OPL ahora es muestreada a la velocidad de reproducción del
 mezclador para evitar el remuestreo.
 .
+:CONFIG_CMS
+Emulación de CMS ('auto' por defecto).
+  off:   Deshabilitar la emulación de CMS (excepto si se selecciona la Game
+         Blaster).
+  on:    Habilitar la emulación de CMS en la Sound Blaster 1 y 2.
+  auto:  Auto-habilitar la emulación de CMS para la Sound Blaster 1 y Game Blaster.
+.
 :CONFIG_OPLMODE
-Tipo de emulación OPL ('auto' por defecto).
-En 'auto' el modo está determinado por 'sbtype'.
-Todos los modos OPL son compatibles con AdLib, excepto 'cms'.
+Modelo de OPL a emular ('auto' por defecto).
+  auto:      Usar el modelo apropiado según el valor de 'sbtype'.
+  opl2:      OPL2 (mono).
+  dualopl2:  Dual OPL2 (estéreo).
+  opl3:      OPL3 (estéreo).
+  opl3gold:  OPL3 (estéreo) y el módulo opcional AdLib Gold Surround.
+             Úsela con 'sbtype = sb16' para emular la AdLib Gold 1000.
+  none/off:  Deshabilitar la emulación de OPL.
+Nota: 'sbtype = none' y 'oplmode = opl2' emulan la tarjeta AdLib original.
 .
 :CONFIG_OPL_FADEOUT
 Desvanecer la salida del sintetizador OPL luego de la última escritura al
@@ -1405,6 +1538,13 @@ puerto de E/S:
                     10 y 3000 milisegundos. Ejemplos:
                     300 200 (Esperar 300ms antes de desvanecer durante 200ms)
                     1000 3000 (Esperar 1s antes de desvanecer durante 3s)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Elimina el sesgo de corriente continua de la salida OPL. Esto debería ser usado
+sólo como último recurso para corregir estallidos en juegos que reproducen
+audio PCM usando el sintetizador OPL en una tarjeta Sound Blaster o AdLib, como
+por ejemplo en: Golden Eagle (1991), Wizardry 6 (1990), y Wizardry 7 (1992).
+Por favor, repórtenos el problema si encuentra otros juegos afectados.
 .
 :CONFIG_OPLEMU
 Ahora sólo se soporta la emulación de OPL 'nuked'.
@@ -1776,7 +1916,9 @@ Si se establece en 'auto', se usará el código de país correspondiente a la
 distribución del teclado seleccionada.
 .
 :CONFIG_KEYBOARDLAYOUT
-Código de idioma de la distribución del teclado, o 'auto' ('auto' por defecto).
+Código de la distribución del teclado ('auto' por defecto), por ejemplo 'us'
+para la distribución en inglés norteamericano.
+Se aceptan los mismos valores que en FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Expandir variables de entorno tales como %PATH% en el intérprete de comandos de
@@ -1794,10 +1936,18 @@ Archivo que contiene la lista de aplicaciones y versiones de DOS asignadas, en
 formato separado por tabulaciones, usado por SETVER.EXE como almacenamiento
 persistente (en blanco por defecto).
 .
-:CONFIG_IPX
-Habilitar emulación de IPX sobre UDP/IP (habilitada por defecto).
+:CONFIG_PCJR_MEMORY_CONFIG
+Disposición de memoria de PCjr ('expanded' por defecto).
+  expanded:  640 KB de memoria total, con las aplicaciones residiendo por
+             encima de los 128 KB. Compatible con la mayoría de los juegos.
+  standard:  128 KB de memoria total, con las aplicaciones residiendo por
+             debajo de los 96 KB. Requerido por algunos juegos más antiguos
+             (por ejemplo, Jumpman, Troll).
 .
-:CONFIG_NE2000
+:CONFIGITEM_IPX
+Habilitar emulación de IPX sobre UDP/IP (deshabilitada por defecto).
+.
+:CONFIGITEM_NE2000_SLIRP
 Habilitar emulación de una tarjeta de red Novell NE2000 sobre una red basada en
 software (usando libslirp) con las siguientes propiedades
 (habilitado por defecto):
@@ -1810,20 +1960,20 @@ Nota: Dentro de DOS, configurar esto requiere un controlador de paquetes
       puertos desde el anfitrión hacia el invitado DOS, y desde su router hacia
       su anfitrión cuando actúe como servidor para juegos multijugador.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Dirección base de la tarjeta NE2000 (300 por defecto).
 Nota: Las direcciones 220 y 240 podrían no estar disponibles, ya que están
       asignadas a Sound Blaster y Gravis UltraSound por defecto.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 Interrupción usada por la tarjeta NE2000 (3 por defecto).
 Nota: Las IRQs 3 y 5 podrían no estar disponibles, ya que están asignadas a
       'serial2' y a Gravis UltraSound por defecto.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 Dirección MAC de la tarjeta NE2000 ('AC:DE:48:88:99:AA' por defecto).
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Desviar uno o más puertos TCP desde el anfitrión hacia el invitado DOS
 (en blanco por defecto).
 El formato es:
@@ -1845,7 +1995,7 @@ Notas:
   - Si se dan puertos en conflicto del invitado, la última regla tiene
     prioridad.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Desviar uno o más puertos UDP desde el anfitrión hacia el invitado DOS
 (en blanco por defecto).
 El formato es el mismo que para los desvíos de puerto TCP.
@@ -1900,7 +2050,7 @@ Gestionar la configuración y otras acciones misceláneas.
 Uso:
   [color=light-green]config[reset] [color=white]COMANDO[reset] [color=light-cyan][PARÁMETROS][reset]
 
-Donde [color=white]COMANDO[reset] es uno de:
+Donde [color=white]COMANDO[reset] puede ser:
   -writeconf
   -wc               escribir la configuración actual al archivo de configuración
                     local `dosbox.conf` en el directorio de trabajo actual
@@ -2035,6 +2185,9 @@ Archivo ejecutable no encontrado: '%s'
 :CONJUNCTION_AND
 y
 .
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+La propiedad '%s' no puede ser modificada durante la ejecución.
+.
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Listado no soportado
 .
@@ -2131,7 +2284,7 @@ No se puede abrir el archivo de imagen de disco de arranque. Abortando.
 Este comando arranca DOSBox desde una imagen de disquete o de disco rígido.
 
 Para este comando, se puede especificar una sucesión de disquetes
-intercambiables presionando %s+F4, y '-l' especifica la unidad montada desde
+intercambiables presionando [color=yellow]%s+F4[reset], y '-l' especifica la unidad montada desde
 la que arrancar. Si no se especifica una letra de unidad, se arranca desde la
 unidad A. Sólo se puede arrancar desde las unidades A, C, y D. Para arrancar
 desde un disco rígido (C o D), la imagen ya debería haber sido montada usando
@@ -2253,7 +2406,9 @@ Parámetros:
   [color=light-cyan]IMG-ARRANQUE[reset]  imagen de disco de arranque con -size GEOMETRÍA:
                 bytes-por-sector,sectores-por-cabeza,cabezas,cilindros
 Notas:
-  - %s+F4 intercambia y monta el siguiente [color=light-cyan]SET-CDROM[reset] o [color=light-cyan]IMG-ARRANQUE[reset], si se
+  - Puede usar comodines para montar múltiples imágenes, por ejemplo:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] intercambia y monta el siguiente [color=light-cyan]SET-CDROM[reset] o [color=light-cyan]IMG-ARRANQUE[reset], si se
     provee.
   - El parámetro '-ro' monta la imagen de disco en modo sólo-lectura (protegido
     contra escritura).
@@ -2262,9 +2417,24 @@ Notas:
     real mediante una imagen de arranque de disco rígido.
 
 Ejemplos:
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Juegos\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USUARIO/Juegos/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USUARIO/juegos/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete1.img disquete2.img disquete3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]arranque.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -2278,15 +2448,15 @@ Debe especificar en qué número de unidad (0 o 3) montar la imagen
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Para imágenes de [color=brown]CD-ROM[reset]:   [color=light-blue]IMGMOUNT letra-de-unidad ubicación-de-imagen -t iso[reset]
-
-Para imágenes de [color=brown]disco rígido[reset]: Debe especificar la geometría de la unidad:
-bytes-por-sector,sectores-por-cabeza,cabezas-por-cilindro,cilindros
-[color=light-blue]IMGMOUNT letra-de-unidad ubicación-de-imagen -size bps,spc,cpc,cil[reset]
+Para imágenes de CD-ROM:
+  [color=light-green]imgmount[reset] [color=white]UNIDAD[reset] [color=light-cyan]ARCHIVO[reset] -t iso
+Para imágenes de disco rígido, debe especificar la geometría de la unidad:
+  bytes-por-sector,sectores-por-cabeza,cabezas-por-cilindro,cilindros
+  [color=light-green]imgmount[reset] [color=white]UNIDAD[reset] [color=light-cyan]ARCHIVO[reset] -size bps,spc,cpc,cil
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-No hay unidades disponibles
+No hay unidades disponibles.
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
@@ -2320,7 +2490,7 @@ Archivo de imagen no encontrado.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Para montar directorios, use el comando [color=light-blue]MOUNT[reset], no [color=light-blue]IMGMOUNT[reset].
+Para montar directorios, use el comando [color=light-green]MOUNT[reset], no [color=green-blue]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -2332,15 +2502,11 @@ No se puede crear la unidad desde el archivo.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Unidad número %d montada como %s
+Unidad número %d montada como %s.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
 La imagen debe estar en una unidad anfitriona o local.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Usar múltiples archivos sólo está soportado para imágenes CUE/ISO.
 
 .
 :PROGRAM_INTRO_HELP
@@ -2410,49 +2576,30 @@ Puede ejecutar programas o archivos con extensiones [color=red].exe .bat[reset] 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
 [erases=entire][color=light-green]Cómo montar una unidad real o virtual de CD-ROM en DOSBox:[reset]
-DOSBox provee emulación de CD-ROM en dos niveles.
-
-El nivel [color=brown]básico[reset] funciona en todos los directorios normales. Instala MSCDEX y
-marca los archivos como sólo-lectura. Generalmente esto es suficiente para la
-mayoría de los juegos:
+El comando [color=light-blue]mount[reset] funciona en todos los directorios normales. Instala MSCDEX y
+marca los archivos como sólo-lectura.
+Esto suele ser suficiente para la mayoría de los juegos:
 [color=light-blue]mount D C:\ejemplo -t cdrom[reset]
 Si no funciona, es posible que tenga que indicarle a DOSBox la etiqueta del
 CD-ROM:
 [color=light-blue]mount D C:\ejemplo -t cdrom -label ETIQUETA[reset]
 
-El nivel [color=brown]siguiente[reset] agrega algo de soporte de bajo nivel.
-Por ende, sólo funciona en unidades de CD-ROM:
-[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
-Reemplace [color=red]D:\ [reset]por la ubicación de su CD-ROM.
-Reemplace el [color=yellow]0[reset] en [color=light-blue]-usecd [color=yellow]0[reset] por el número reportado para su CD-ROM al escribir:
-[color=light-blue]mount -listcd[reset]
-
-Adicionalmente, puede usar imgmount para montar imágenes ISO o CUE/BIN:
+Adicionalmente, puede usar [color=light-blue]imgmount[reset] para montar imágenes ISO o CUE/BIN:
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
 [erases=entire][color=light-green]Cómo montar una unidad real o virtual de CD-ROM en DOSBox:[reset]
-DOSBox provee emulación de CD-ROM en dos niveles.
-
-El nivel [color=brown]básico[reset] funciona en todos los directorios normales. Instala MSCDEX y
-marca los archivos como sólo-lectura. Generalmente esto es suficiente para la
-mayoría de los juegos:
+El comando [color=light-blue]mount[reset] funciona en todos los directorios normales. Instala MSCDEX y
+marca los archivos como sólo-lectura.
+Esto suele ser suficiente para la mayoría de los juegos:
 [color=light-blue]mount D ~/ejemplo -t cdrom[reset]
 Si no funciona, es posible que tenga que indicarle a DOSBox la etiqueta del
 CD-ROM:
 [color=light-blue]mount D ~/ejemplo -t cdrom -label ETIQUETA[reset]
 
-El nivel [color=brown]siguiente[reset] agrega algo de soporte de bajo nivel.
-Por ende, sólo funciona en unidades de CD-ROM:
-[color=light-blue]mount d[reset] [color=red]~/ejemplo[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
-
-Reemplace [color=red]~/ejemplo[reset] por la ubicación de su CD-ROM.
-Reemplace el [color=yellow]0[reset] en [color=light-blue]-usecd [color=yellow]0[reset] por el número reportado para su CD-ROM al escribir:
-[color=light-blue]mount -listcd[reset]
-
-Adicionalmente, puede usar imgmount para montar imágenes ISO o CUE/BIN:
+Adicionalmente, puede usar [color=light-blue]imgmount[reset] para montar imágenes ISO o CUE/BIN:
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
@@ -2538,22 +2685,25 @@ Archivo de página de códigos inexistente o inválido para la distribución %s.
 Cargar un programa en la región de memoria específica y ejecutarlo.
 
 Uso:
-  [color=light-green]loadfix[reset] [color=light-cyan]PROGRAMA[reset] [color=white][PARÁMETROS][reset]
+  [color=light-green]loadfix[reset] [color=white][-TAMAÑÓ][reset] [color=light-cyan]JUEGO[reset] [color=white][PARÁMETROS][reset]
   [color=light-green]loadfix[reset] [/d] (o [/f])[reset]
 
 Parámetros:
-  [color=light-cyan]PROGRAMA[reset]  programa o juego a cargar, opcionalmente con parámetros
+  [color=light-cyan]JUEGO[reset]      juego o programa a cargar, opcionalmente con parámetros
+  [color=white]-TAMAÑÓ[reset]    TAMAÑÓ indica el número de kilobytes a asignar
+  /d (o /f)  Libera la memoria previamente asignada.
 
 Notas:
-  - Los casos de uso más comunes de este comando son para corregir juegos o
-    programas de DOS que al ejecutarse muestran el mensaje de error
-    "[color=white]Archivo Empaquetado Corrupto[reset]" o "[color=white]No hay suficiente memoria[reset]" (por ejemplo,
-    en algunos juegos de los 1980's tales como California Games II).
+  - El caso de uso más común de este comando es corregir juegos tales como
+    California Games II y Wing Commander 2 que muestran mensajes de error
+    similares a "[color=white]Archivo Empaquetado Corrupto[reset]" o "[color=white]No hay suficiente memoria[reset]".
   - Ejecutar [color=light-green]loadfix[reset] sin argumentos simplemente asigna memoria para que su juego
     se ejecute; puede liberar la memoria con la opción /d o /f cuando finalice.
 
 Ejemplos:
-  [color=light-green]loadfix[reset] [color=light-cyan]mijuego[reset] [color=white]argumentos[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
   [color=light-green]loadfix[reset] /d
 
 .
@@ -2884,8 +3034,7 @@ Asignar carpetas o unidades físicas a una letra de unidad virtual.
 Montar un directorio del sistema operativo anfitrión a una letra de unidad.
 
 Uso:
-  [color=light-green]mount[reset] [color=white]UNIDAD[reset] [color=light-cyan]DIR[reset] [-t TIPO] [-usecd #] [-freesize TAMAÑO] [-label ETIQUETA]
-  [color=light-green]mount[reset] -listcd / -cd  (lista las unidades de CD-ROM detectadas y sus números)
+  [color=light-green]mount[reset] [color=white]UNIDAD[reset] [color=light-cyan]DIR[reset] [-t TIPO] [-freesize TAMAÑO] [-label ETIQUETA]
   [color=light-green]mount[reset] -u [color=white]UNIDAD[reset]  (desmonta el directorio de la UNIDAD)
 
 Parámetros:
@@ -2897,14 +3046,26 @@ Parámetros:
 
 Notas:
   - '-t overlay' redirige las escrituras en la unidad montada a otro directorio.
-  - '-usecd ID' provee acceso directo a una unidad de CD-ROM.
-    Esto es necesario para audio de CD (sólo soportado en Windows y Linux).
-    Ejecute 'mount -cd' para ver la lista IDs válidos.
   - Se describen opciones adicionales en el manual (archivo README, capítulo 4).
 
 Ejemplos:
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\juegosdos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mis_partidas_guardadas[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/juegosdos[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USUARIO/CD juego"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/CD juego"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mis_partidas_guardadas[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/juegosdos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USUARIO/CD juego"[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mis_partidas_guardadas[reset] -t overlay
 
 .
@@ -2979,10 +3140,6 @@ Algo salió mal.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Superposición %s montada en la unidad %c.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-No se puede mover la unidad Z. La unidad %c ya está montada.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
@@ -3680,7 +3837,7 @@ Tenga en cuenta que sólo es posible usar SUBST en unidades locales.
 
 .
 :SHELL_STARTUP_END
-║ [color=yellow]https://dosbox-staging.github.io[color=white]                                           ║
+║ [color=yellow]https://www.dosbox-staging.org[color=white]                                             ║
 ╚════════════════════════════════════════════════════════════════════════════╝[reset]
 
 

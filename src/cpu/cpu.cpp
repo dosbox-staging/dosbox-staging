@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
@@ -23,81 +25,120 @@
 #include <cstddef>
 #include <sstream>
 
+#include "control.h"
 #include "debug.h"
-#include "mapper.h"
-#include "setup.h"
-#include "programs.h"
-#include "paging.h"
-#include "pic.h"
 #include "lazyflags.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "memory.h"
 #include "paging.h"
+#include "pic.h"
 #include "programs.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
 #include "video.h"
 
 #if 1
-#undef LOG
-#if defined (_MSC_VER)
-#define LOG_CONSUME(...) (void)sizeof(__VA_ARGS__)
-#define LOG(X, Y) LOG_CONSUME
-#else
-#define LOG(X,Y) CPU_LOG
-#define CPU_LOG(...)
-#endif
+	#undef LOG
+	#if defined(_MSC_VER)
+		#define LOG_CONSUME(...) sizeof(__VA_ARGS__)
+		#define LOG(X, Y)        LOG_CONSUME
+	#else
+		#define LOG(X, Y) CPU_LOG
+		#define CPU_LOG(...)
+	#endif
 #endif
 
 CPU_Regs cpu_regs = {};
-CPUBlock cpu = {};
-Segments Segs = {};
+CPUBlock cpu      = {};
+Segments Segs     = {};
 
-int32_t CPU_Cycles = 0;
-int32_t CPU_CycleLeft = 3000;
-int32_t CPU_CycleMax = 3000;
-int32_t CPU_OldCycleMax = 3000;
-int32_t CPU_CyclePercUsed = 100;
-int32_t CPU_CycleLimit = -1;
-int32_t CPU_CycleUp = 0;
-int32_t CPU_CycleDown = 0;
+// Current cycles values
+int CPU_Cycles    = 0;
+int CPU_CycleLeft = CpuCyclesRealModeDefault;
+
+// Cycles settings for both "legacy" and "modern" modes
+int CPU_CycleMax      = CpuCyclesRealModeDefault;
+int CPU_CyclePercUsed = 100;
+int CPU_CycleLimit    = -1;
+
+static int old_cycle_max       = CpuCyclesRealModeDefault;
+static bool legacy_cycles_mode = false;
+
+// Cycles settings for 'modern mode' only
+static struct {
+	// Fixed real mode cycles or "max cycles" if not set
+	std::optional<int> real_mode = {};
+
+	// Fixed protected mode cycles or "max cycles" if not set
+	std::optional<int> protected_mode = {};
+
+	// If true, the real mode setting controls protected mode as well
+	bool protected_mode_auto = false;
+
+	// If true, CPU throttling is enabled for both real and protected mode
+	// for fixed cycles modes. The flag is ignored in "max cycle" mode (as
+	// that always throttles implicitly).
+	bool throttle = false;
+
+} modern_cycles_config = {};
+
+enum class CpuMode { Real, Protected };
+
+// Cycle up & down counts
+static constexpr auto CpuCycleStepMin     = 1;
+static constexpr auto CpuCycleStepMax     = 1'000'000;
+static constexpr auto DefaultCpuCycleUp   = 10;
+static constexpr auto DefaultCpuCycleDown = 20;
+
+static int cpu_cycle_up   = 0;
+static int cpu_cycle_down = 0;
+
 int64_t CPU_IODelayRemoved = 0;
-CPU_Decoder * cpudecoder;
+
+CPU_Decoder* cpudecoder;
+
 bool CPU_CycleAutoAdjust = false;
-Bitu CPU_AutoDetermineMode = 0;
+
+CpuAutoDetermineMode auto_determine_mode      = {};
+CpuAutoDetermineMode last_auto_determine_mode = {};
 
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
 
-Bitu CPU_extflags_toggle=0;	// ID and AC flags may be toggled depending on emulated CPU architecture
+// ID and AC flags may be toggled depending on emulated CPU architecture
+static Bitu cpu_extflags_toggle = 0;
 
-Bitu CPU_PrefetchQueueSize=0;
+Bitu CPU_PrefetchQueueSize = 0;
 
-void CPU_Core_Full_Init(void);
-void CPU_Core_Normal_Init(void);
-void CPU_Core_Simple_Init(void);
-#if (C_DYNAMIC_X86)
-void CPU_Core_Dyn_X86_Init(void);
+void CPU_Core_Full_Init();
+void CPU_Core_Normal_Init();
+void CPU_Core_Simple_Init();
+
+#if C_DYNAMIC_X86
+void CPU_Core_Dyn_X86_Init();
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
-void CPU_Core_Dyn_X86_Cache_Close(void);
+void CPU_Core_Dyn_X86_Cache_Close();
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
-#elif (C_DYNREC)
-void CPU_Core_Dynrec_Init(void);
+
+#elif C_DYNREC
+void CPU_Core_Dynrec_Init();
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
-void CPU_Core_Dynrec_Cache_Close(void);
+void CPU_Core_Dynrec_Cache_Close();
 #endif
 
-/* In debug mode exceptions are tested and dosbox exits when 
- * a unhandled exception state is detected. 
+/* In debug mode exceptions are tested and dosbox exits when
+ * a unhandled exception state is detected.
  * USE CHECK_EXCEPT to raise an exception in that case to see if that exception
  * solves the problem.
- * 
+ *
  * In non-debug mode dosbox doesn't do detection (and hence doesn't crash at
  * that point). (game might crash later due to the unhandled exception) */
 
 #if C_DEBUG
 // #define CPU_CHECK_EXCEPT 1
 // #define CPU_CHECK_IGNORE 1
- /* Use CHECK_EXCEPT when something doesn't work to see if a exception is 
+ /* Use CHECK_EXCEPT when something doesn't work to see if a exception is
  * needed that isn't enabled by default.*/
 #else
 /* NORMAL NO CHECKING => More Speed */
@@ -121,6 +162,129 @@ void CPU_Core_Dynrec_Cache_Close(void);
 }
 #endif
 
+static bool is_dynamic_core_active()
+{
+#if C_DYNAMIC_X86
+	return (cpudecoder == &CPU_Core_Dyn_X86_Run);
+#elif C_DYNREC
+	return (cpudecoder == &CPU_Core_Dynrec_Run);
+#else
+	return false;
+#endif
+}
+
+static void maybe_display_max_cycles_warning()
+{
+	static bool displayed_warning = false;
+
+	if (!displayed_warning) {
+		LOG_WARNING(
+		        "CPU: Switched to max cycles. Try setting a fixed cycles "
+		        "value if you're getting audio drop-outs or the programs "
+		        "runs too fast.");
+
+		displayed_warning = true;
+	}
+}
+
+static bool maybe_display_switch_to_dynamic_core_warning(const int cycles)
+{
+	constexpr auto CyclesThreshold = 20000;
+
+	if (!is_dynamic_core_active() && cycles > CyclesThreshold) {
+		LOG_WARNING(
+		        "CPU: Setting fixed %d cycles. Try setting 'core = dynamic' "
+		        "for increased performance if you need more than %d cycles.",
+		        cycles,
+		        CyclesThreshold);
+		return true;
+
+	} else {
+		return false;
+	}
+}
+
+static void set_modern_cycles_config(const CpuMode mode)
+{
+	auto& conf = modern_cycles_config;
+
+	const auto new_cycles = [&]() -> std::optional<int> {
+		switch (mode) {
+		case CpuMode::Real: return conf.real_mode;
+		case CpuMode::Protected:
+			if (conf.protected_mode_auto) {
+				// 'cpu_cycles' controls both real and protected mode
+				return conf.real_mode;
+			} else {
+				return conf.protected_mode;
+			}
+		}
+		assert(false);
+		return {};
+	}();
+
+	const auto fixed_cycles = new_cycles.has_value();
+	if (fixed_cycles) {
+		if (conf.throttle) {
+			CPU_CycleAutoAdjust = true;
+			CPU_CyclePercUsed   = 100;
+			CPU_CycleLimit      = *new_cycles;
+		} else {
+			CPU_CycleAutoAdjust = false;
+			CPU_CycleMax        = *new_cycles;
+		}
+		maybe_display_switch_to_dynamic_core_warning(*new_cycles);
+
+	} else {
+		// "max cycles" mode
+		CPU_CycleAutoAdjust = true;
+		CPU_CyclePercUsed   = 100;
+		CPU_CycleLimit      = -1;
+
+		maybe_display_max_cycles_warning();
+	}
+
+	CPU_Cycles    = 0;
+	CPU_CycleLeft = 0;
+
+	const auto real_mode_with_max_cycles = (mode == CpuMode::Real &&
+	                                        !fixed_cycles);
+	if (!real_mode_with_max_cycles) {
+		auto_determine_mode.auto_cycles = true;
+	}
+}
+
+void CPU_RestoreRealModeCyclesConfig()
+{
+	if (cpu.pmode || (!last_auto_determine_mode.auto_core &&
+	                  !last_auto_determine_mode.auto_cycles)) {
+		return;
+	}
+
+	auto_determine_mode      = last_auto_determine_mode;
+	last_auto_determine_mode = {};
+
+	if (auto_determine_mode.auto_cycles) {
+		if (legacy_cycles_mode) {
+			CPU_CycleAutoAdjust = false;
+			CPU_CycleLeft       = 0;
+			CPU_Cycles          = 0;
+			CPU_CycleMax        = old_cycle_max;
+		} else {
+			set_modern_cycles_config(CpuMode::Real);
+		}
+
+		GFX_NotifyCyclesChanged();
+	}
+#if C_DYNAMIC_X86 || C_DYNREC
+	if (auto_determine_mode.auto_core) {
+		cpudecoder = &CPU_Core_Normal_Run;
+
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+	}
+#endif
+}
 
 void Descriptor::Load(PhysPt address) {
 	cpu.mpl=0;
@@ -129,7 +293,8 @@ void Descriptor::Load(PhysPt address) {
 	*(data+1) = mem_readd(address+4);
 	cpu.mpl=3;
 }
-void Descriptor:: Save(PhysPt address) {
+
+void Descriptor::Save(PhysPt address) {
 	cpu.mpl=0;
 	uint32_t* data = (uint32_t*)&saved;
 	mem_writed(address,*data);
@@ -179,10 +344,11 @@ uint32_t CPU_Pop32()
 
 void CPU_SetFlags(const uint32_t word, uint32_t mask)
 {
-	mask |= CPU_extflags_toggle; // ID-flag and AC-flag can be toggled on
-	                             // CPUID-supporting CPUs
-	reg_flags=(reg_flags & ~mask)|(word & mask)|2;
-	cpu.direction=1-((reg_flags & FLAG_DF) >> 9);
+	// ID-flag and AC-flag can be toggled on  CPUID-supporting CPUs
+	mask |= cpu_extflags_toggle;
+
+	reg_flags     = (reg_flags & ~mask) | (word & mask) | 2;
+	cpu.direction = 1 - ((reg_flags & FLAG_DF) >> 9);
 }
 
 void CPU_SetFlagsd(const uint32_t word)
@@ -204,7 +370,7 @@ bool CPU_PrepareException(Bitu which, Bitu error)
 	return true;
 }
 
-bool CPU_CLI(void) {
+bool CPU_CLI() {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
@@ -213,7 +379,7 @@ bool CPU_CLI(void) {
 	}
 }
 
-bool CPU_STI(void) {
+bool CPU_STI() {
 	if (cpu.pmode && ((!GETFLAG(VM) && (GETFLAG_IOPL<cpu.cpl)) || (GETFLAG(VM) && (GETFLAG_IOPL<3)))) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	} else {
@@ -244,13 +410,14 @@ bool CPU_PUSHF(Bitu use32) {
 		return CPU_PrepareException(EXCEPTION_GP,0);
 	}
 	FillFlags();
-	if (use32) 
+	if (use32)
 		CPU_Push32(reg_flags & 0xfcffff);
 	else CPU_Push16(reg_flags);
 	return false;
 }
 
-void CPU_CheckSegments(void) {
+static void cpu_check_segments()
+{
 	bool needs_invalidation = false;
 	Descriptor desc;
 	if (!cpu.gdt.GetDescriptor(SegValue(es),desc)) needs_invalidation = true;
@@ -258,7 +425,7 @@ void CPU_CheckSegments(void) {
 		case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
 		case DESC_DATA_ED_RO_NA:	case DESC_DATA_ED_RO_A:	case DESC_DATA_ED_RW_NA:	case DESC_DATA_ED_RW_A:
 		case DESC_CODE_N_NC_A:  	case DESC_CODE_N_NC_NA:	case DESC_CODE_R_NC_A:  	case DESC_CODE_R_NC_NA:
-			if (cpu.cpl > desc.DPL()) needs_invalidation = true; 
+			if (cpu.cpl > desc.DPL()) needs_invalidation = true;
 			break;
 		default: break;	}
 	if (needs_invalidation) CPU_SetSegGeneral(es,0);
@@ -303,13 +470,13 @@ public:
 
 	bool IsValid() const { return valid; }
 
-	Bitu Get_back(void) {
+	Bitu Get_back() {
 		cpu.mpl=0;
 		uint16_t backlink=mem_readw(base);
 		cpu.mpl=3;
 		return backlink;
 	}
-	void SaveSelector(void) {
+	void SaveSelector() {
 		cpu.gdt.SetDescriptor(selector,desc);
 	}
 	void Get_SSx_ESPx(Bitu level,Bitu & _ss,Bitu & _esp) {
@@ -360,16 +527,17 @@ public:
 	bool valid = false;
 };
 
-TaskStateSegment cpu_tss;
+static TaskStateSegment cpu_tss;
 
 enum TSwitchType {
 	TSwitch_JMP,TSwitch_CALL_INT,TSwitch_IRET
 };
 
-bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
+static bool cpu_switch_task(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip)
+{
 	FillFlags();
 	TaskStateSegment new_tss;
-	if (!new_tss.SetSelector(new_tss_selector)) 
+	if (!new_tss.SetSelector(new_tss_selector))
 		E_Exit("Illegal TSS for switch, selector=%" sBitfs(x) ", switchtype=%x",new_tss_selector,tstype);
 	if (tstype==TSwitch_IRET) {
 		if (!new_tss.desc.IsBusy())
@@ -475,7 +643,7 @@ bool CPU_SwitchTask(Bitu new_tss_selector,TSwitchType tstype,Bitu old_eip) {
 		new_fs = SegValue(fs);
 		new_gs = SegValue(gs);
 	} else {
-	
+
 		/* Setup the new cr3 */
 		PAGING_SetDirBase(new_cr3);
 
@@ -568,13 +736,20 @@ void CPU_Exception(Bitu which,Bitu error ) {
 	CPU_Interrupt(which,CPU_INT_EXCEPTION | ((which>=8) ? CPU_INT_HAS_ERROR : 0),reg_eip);
 }
 
-uint8_t lastint;
+static uint8_t last_interrupt;
+
+uint8_t CPU_GetLastInterrupt()
+{
+	return last_interrupt;
+}
+
 void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	if (num == EXCEPTION_DB && (type&CPU_INT_EXCEPTION) == 0) {
 		CPU_DebugException(0,oldeip); // DR6 bits need updating
 		return;
 	}
-	lastint=num;
+	last_interrupt = num;
+
 	FillFlags();
 #if C_DEBUG
 	switch (num) {
@@ -614,7 +789,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 				CPU_Exception(EXCEPTION_GP,0);
 				return;
 			}
-		} 
+		}
 
 		Descriptor gate;
 		if (!cpu.idt.GetDescriptor(num<<3,gate)) {
@@ -724,7 +899,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 						}
 //						LOG_MSG("INT:Gate to inner level SS:%X SP:%X",n_ss,n_esp);
 						goto do_interrupt;
-					} 
+					}
 					if (cs_dpl!=cpu.cpl)
 						E_Exit("Non-conforming intra privilege INT with DPL!=CPL");
 					[[fallthrough]];
@@ -750,7 +925,7 @@ do_interrupt:
 						CPU_Push16(oldeip);
 						if (type & CPU_INT_HAS_ERROR) CPU_Push16(cpu.exception.error);
 					}
-					break;		
+					break;
 				default:
 				        E_Exit("INT:Gate Selector points to illegal descriptor with type 0x%x",
 				               cs_desc.Type());
@@ -775,7 +950,7 @@ do_interrupt:
 				"INT:Gate segment not present",
 				EXCEPTION_NP,num*8+2+((type&CPU_INT_SOFTWARE)?0:1))
 
-			CPU_SwitchTask(gate.GetSelector(),TSwitch_CALL_INT,oldeip);
+			cpu_switch_task(gate.GetSelector(),TSwitch_CALL_INT,oldeip);
 			if (type & CPU_INT_HAS_ERROR) {
 				//TODO Be sure about this, seems somewhat unclear
 				if (cpu_tss.is386) CPU_Push32(cpu.exception.error);
@@ -843,7 +1018,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				return;
 			}
 		}
-		/* Check if this is task IRET */	
+		/* Check if this is task IRET */
 		if (GETFLAG(NT)) {
 			if (GETFLAG(VM)) E_Exit("Pmode IRET with VM bit set");
 			CPU_CHECK_COND(!cpu_tss.IsValid(),
@@ -853,7 +1028,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				LOG(LOG_CPU,LOG_ERROR)("TASK Iret:TSS not busy");
 			}
 			Bitu back_link=cpu_tss.Get_back();
-			CPU_SwitchTask(back_link,TSwitch_IRET,oldeip);
+			cpu_switch_task(back_link,TSwitch_IRET,oldeip);
 			return;
 		}
 		Bitu n_cs_sel,n_eip,n_flags;
@@ -890,7 +1065,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 				reg_esp=n_esp;
 				cpu.code.big=false;
 				SegSet16(cs,n_cs_sel);
-				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);	
+				LOG(LOG_CPU,LOG_NORMAL)("IRET:Back to V86: CS:%X IP %X SS:%X SP %X FLAGS:%X",SegValue(cs),reg_eip,SegValue(ss),reg_esp,reg_flags);
 				return;
 			}
 			if (n_flags & FLAG_VM) E_Exit("IRET from pmode to v86 with CPL!=0");
@@ -938,7 +1113,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			"IRET with nonpresent code segment",
 			EXCEPTION_NP,n_cs_sel & 0xfffc)
 
-		if (n_cs_rpl==cpu.cpl) {	
+		if (n_cs_rpl==cpu.cpl) {
 			/* Return to same level */
 
 			// commit point
@@ -1020,7 +1195,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			}
 
 			// borland extender, zrdx
-			CPU_CheckSegments();
+			cpu_check_segments();
 
 			LOG(LOG_CPU,LOG_NORMAL)("IRET:Outer level:%X:%X big %d",n_cs_sel,n_eip,cpu.code.big);
 		}
@@ -1086,7 +1261,7 @@ CODE_jmp:
 				"JMP:TSS:dpl<rpl",
 				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("JMP:TSS to %X",selector);
-			CPU_SwitchTask(selector,TSwitch_JMP,oldeip);
+			cpu_switch_task(selector,TSwitch_JMP,oldeip);
 			break;
 		default:
 			E_Exit("JMP Illegal descriptor type 0x%x", desc.Type());
@@ -1130,7 +1305,7 @@ void CPU_CALL(bool use32,Bitu selector,Bitu offset,Bitu oldeip) {
 				"CALL:CODE:NC:DPL!=CPL",
 				EXCEPTION_GP,selector & 0xfffc)
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:CODE:NC to %X:%X",selector,offset);
-			goto call_code;	
+			goto call_code;
 		case DESC_CODE_N_C_A:case DESC_CODE_N_C_NA:
 		case DESC_CODE_R_C_A:case DESC_CODE_R_C_NA:
 			CPU_CHECK_COND(call.DPL()>cpu.cpl,
@@ -1157,7 +1332,7 @@ call_code:
 			cpu.code.big=call.Big()>0;
 			Segs.val[cs]=(selector & 0xfffc) | cpu.cpl;
 			return;
-		case DESC_386_CALL_GATE: 
+		case DESC_386_CALL_GATE:
 		case DESC_286_CALL_GATE:
 			{
 				CPU_CHECK_COND(call.DPL()<cpu.cpl,
@@ -1228,7 +1403,7 @@ call_code:
 						// catch pagefaults
 						if (call.saved.gate.paramcount&31) {
 							if (call.Type()==DESC_386_CALL_GATE) {
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									mem_readd(o_stack+i*4);
 							} else {
 								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
@@ -1264,7 +1439,7 @@ call_code:
 							CPU_Push32(o_ss);		//save old stack
 							CPU_Push32(o_esp);
 							if (call.saved.gate.paramcount&31)
-								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--) 
+								for (Bits i=(call.saved.gate.paramcount&31)-1;i>=0;i--)
 									CPU_Push32(mem_readd(o_stack+i*4));
 							CPU_Push32(oldcs);
 							CPU_Push32(oldeip);
@@ -1278,7 +1453,7 @@ call_code:
 							CPU_Push16(oldeip);
 						}
 
-						break;		
+						break;
 					} else if (n_cs_dpl > cpu.cpl)
 						E_Exit("CALL:GATE:CS DPL>CPL");		// or #GP(sel)
 					[[fallthrough]];
@@ -1319,7 +1494,7 @@ call_code:
 				EXCEPTION_NP,selector & 0xfffc)
 
 			LOG(LOG_CPU,LOG_NORMAL)("CALL:TSS to %X",selector);
-			CPU_SwitchTask(selector,TSwitch_CALL_INT,oldeip);
+			cpu_switch_task(selector,TSwitch_CALL_INT,oldeip);
 			break;
 		case DESC_DATA_EU_RW_NA:	// vbdos
 		case DESC_INVALID:			// used by some installers
@@ -1368,7 +1543,7 @@ void CPU_RET(bool use32,Bitu bytes, [[maybe_unused]] Bitu oldeip) {
 			"RET:CS beyond limits",
 			EXCEPTION_GP,selector & 0xfffc)
 
-		if (cpu.cpl==rpl) {	
+		if (cpu.cpl==rpl) {
 			/* Return to same level */
 			switch (desc.Type()) {
 			case DESC_CODE_N_NC_A:case DESC_CODE_N_NC_NA:
@@ -1497,7 +1672,7 @@ RET_same_level:
 				reg_sp=(n_esp & 0xffff)+bytes;
 			}
 
-			CPU_CheckSegments();
+			cpu_check_segments();
 
 //			LOG(LOG_MISC,LOG_ERROR)("RET - Higher level to %X:%X RPL %X DPL %X",selector,offset,rpl,desc.DPL());
 			return;
@@ -1508,7 +1683,7 @@ RET_same_level:
 }
 
 
-Bitu CPU_SLDT(void) {
+Bitu CPU_SLDT() {
 	return cpu.gdt.SLDT();
 }
 
@@ -1521,7 +1696,7 @@ bool CPU_LLDT(Bitu selector) {
 	return false;
 }
 
-Bitu CPU_STR(void) {
+Bitu CPU_STR() {
 	return cpu_tss.selector;
 }
 
@@ -1545,7 +1720,7 @@ bool CPU_LTR(Bitu selector) {
 		cpu_tss.desc.SetBusy(true);
 		cpu_tss.SaveSelector();
 	} else {
-		/* Descriptor was no available TSS descriptor */ 
+		/* Descriptor was no available TSS descriptor */
 		LOG(LOG_CPU,LOG_NORMAL)("LTR failed, selector=%X (type=%X)",selector,desc.Type());
 		return CPU_PrepareException(EXCEPTION_GP,selector);
 	}
@@ -1564,77 +1739,94 @@ void CPU_LIDT(Bitu limit,Bitu base) {
 	cpu.idt.SetBase(base);
 }
 
-Bitu CPU_SGDT_base(void) {
+Bitu CPU_SGDT_base() {
 	return cpu.gdt.GetBase();
 }
-Bitu CPU_SGDT_limit(void) {
+Bitu CPU_SGDT_limit() {
 	return cpu.gdt.GetLimit();
 }
 
-Bitu CPU_SIDT_base(void) {
+Bitu CPU_SIDT_base() {
 	return cpu.idt.GetBase();
 }
-Bitu CPU_SIDT_limit(void) {
+Bitu CPU_SIDT_limit() {
 	return cpu.idt.GetLimit();
 }
 
-static bool printed_cycles_auto_info = false;
-void CPU_SET_CRX(Bitu cr,Bitu value) {
+void CPU_SET_CRX(Bitu cr, Bitu value)
+{
 	switch (cr) {
-	case 0:
-		{
-			value|=CR0_FPUPRESENT;
-			Bitu changed=cpu.cr0 ^ value;
-			if (!changed) return;
-			cpu.cr0=value;
-			if (value & CR0_PROTECTION) {
-				cpu.pmode=true;
-				LOG(LOG_CPU,LOG_NORMAL)("Protected mode");
-				PAGING_Enable((value & CR0_PAGING)>0);
+	case 0: {
+		value |= CR0_FPUPRESENT;
+		Bitu changed = cpu.cr0 ^ value;
 
-				if (!(CPU_AutoDetermineMode&CPU_AUTODETERMINE_MASK)) break;
-
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
-					CPU_CycleAutoAdjust=true;
-					CPU_CycleLeft=0;
-					CPU_Cycles=0;
-					CPU_OldCycleMax=CPU_CycleMax;
-				        GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
-				        if(!printed_cycles_auto_info) {
-						printed_cycles_auto_info = true;
-						LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
-					}
-				} else {
-				        GFX_RefreshTitle();
-			        }
-#if (C_DYNAMIC_X86)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dyn_X86_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dyn_X86_Run;
-				}
-#elif (C_DYNREC)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dynrec_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dynrec_Run;
-				}
-#endif
-				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
-			} else {
-				cpu.pmode=false;
-				if (value & CR0_PAGING) LOG_MSG("Paging requested without PE=1");
-				PAGING_Enable(false);
-				LOG(LOG_CPU,LOG_NORMAL)("Real mode");
-			}
-			break;
+		if (!changed) {
+			return;
 		}
-	case 2:
-		paging.cr2=value;
+
+		cpu.cr0 = value;
+
+		if (value & CR0_PROTECTION) {
+			cpu.pmode = true;
+			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
+			PAGING_Enable((value & CR0_PAGING) > 0);
+
+			if (!auto_determine_mode.auto_core &&
+			    !auto_determine_mode.auto_cycles) {
+				break;
+			}
+
+#if C_DYNAMIC_X86
+			if (auto_determine_mode.auto_core) {
+				CPU_Core_Dyn_X86_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dyn_X86_Run;
+			}
+#elif C_DYNREC
+			if (auto_determine_mode.auto_core) {
+				CPU_Core_Dynrec_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dynrec_Run;
+			}
+#endif
+			if (legacy_cycles_mode) {
+				if (auto_determine_mode.auto_cycles) {
+					CPU_CycleAutoAdjust = true;
+					CPU_CycleLeft       = 0;
+					CPU_Cycles          = 0;
+					old_cycle_max       = CPU_CycleMax;
+
+					GFX_NotifyCyclesChanged();
+					maybe_display_max_cycles_warning();
+
+				} else {
+					GFX_RefreshTitle();
+				}
+			} else {
+				// Modern cycles mode
+				if (auto_determine_mode.auto_cycles) {
+					set_modern_cycles_config(CpuMode::Protected);
+
+					GFX_NotifyCyclesChanged();
+				}
+			}
+
+			last_auto_determine_mode = auto_determine_mode;
+			auto_determine_mode      = {};
+
+		} else {
+			cpu.pmode = false;
+			if (value & CR0_PAGING) {
+				LOG_MSG("Paging requested without PE=1");
+			}
+
+			PAGING_Enable(false);
+			LOG(LOG_CPU, LOG_NORMAL)("Real mode");
+		}
 		break;
-	case 3:
-		PAGING_SetDirBase(value);
-		break;
+	}
+	case 2: paging.cr2 = value; break;
+	case 3: PAGING_SetDirBase(value); break;
 	default:
-		LOG(LOG_CPU,LOG_ERROR)("Unhandled MOV CR%d,%X",cr,value);
+		LOG(LOG_CPU, LOG_ERROR)("Unhandled MOV CR%d,%X", cr, value);
 		break;
 	}
 }
@@ -1764,14 +1956,14 @@ bool CPU_READ_TRX(Bitu tr,uint32_t & retvalue) {
 }
 
 
-Bitu CPU_SMSW(void) {
+Bitu CPU_SMSW() {
 	return cpu.cr0;
 }
 
 bool CPU_LMSW(Bitu word) {
 	if (cpu.pmode && (cpu.cpl>0)) return CPU_PrepareException(EXCEPTION_GP,0);
 	word&=0xf;
-	if (cpu.cr0 & 1) word|=1; 
+	if (cpu.cr0 & 1) word|=1;
 	word|=(cpu.cr0&0xfffffff0);
 	CPU_SET_CRX(0,word);
 	return false;
@@ -1785,9 +1977,9 @@ void CPU_ARPL(Bitu & dest_sel,Bitu src_sel) {
 		SETFLAGBIT(ZF,true);
 	} else {
 		SETFLAGBIT(ZF,false);
-	} 
+	}
 }
-	
+
 void CPU_LAR(Bitu selector,Bitu & ar) {
 	FillFlags();
 	if (selector & 0xfffc) {
@@ -1875,8 +2067,8 @@ void CPU_VERR(Bitu selector) {
 		return;
 	}
 	switch (desc.Type()){
-	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:	
-		//Conforming readable code segments can be always read 
+	case DESC_CODE_R_C_A:		case DESC_CODE_R_C_NA:
+		//Conforming readable code segments can be always read
 		break;
 	case DESC_DATA_EU_RO_NA:	case DESC_DATA_EU_RO_A:
 	case DESC_DATA_EU_RW_NA:	case DESC_DATA_EU_RW_A:
@@ -2026,19 +2218,19 @@ bool CPU_PopSeg(SegNames seg,bool use32) {
 	return false;
 }
 
-bool CPU_CPUID(void) {
+bool CPU_CPUID() {
 	if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) return false;
 	switch (reg_eax) {
 	case 0:	/* Vendor ID String and maximum level? */
-		reg_eax=1;  /* Maximum level */ 
-		reg_ebx='G' | ('e' << 8) | ('n' << 16) | ('u'<< 24); 
-		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24); 
-		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24); 
+		reg_eax=1;  /* Maximum level */
+		reg_ebx='G' | ('e' << 8) | ('n' << 16) | ('u'<< 24);
+		reg_edx='i' | ('n' << 8) | ('e' << 16) | ('I'<< 24);
+		reg_ecx='n' | ('t' << 8) | ('e' << 16) | ('l'<< 24);
 		break;
 	case 1: // Get processor type/family/model/stepping and feature flags
 		if ((CPU_ArchitectureType == ArchitectureType::Intel486NewSlow) ||
 		    (CPU_ArchitectureType == ArchitectureType::Mixed)) {
-#if (C_FPU)
+#if C_FPU
 			reg_eax = 0x402; // Intel 486DX
 			reg_edx = 0x1;   // FPU
 #else
@@ -2048,7 +2240,7 @@ bool CPU_CPUID(void) {
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
 		} else if (CPU_ArchitectureType == ArchitectureType::Pentium) {
-#if (C_FPU)
+#if C_FPU
 			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
 			reg_edx = 0x11;  // FPU + Time Stamp Counter (RDTSC)
 #else
@@ -2080,25 +2272,27 @@ bool CPU_CPUID(void) {
 	return true;
 }
 
-static Bits HLT_Decode(void) {
-	/* Once an interrupt occurs, it should change cpu core */
-	if (reg_eip!=cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
-		cpudecoder=cpu.hlt.old_decoder;
+static Bits hlt_decode()
+{
+	// Once an interrupt occurs, it should change CPU core
+	if (reg_eip != cpu.hlt.eip || SegValue(cs) != cpu.hlt.cs) {
+		cpudecoder = cpu.hlt.old_decoder;
 	} else {
 		CPU_IODelayRemoved += CPU_Cycles;
-		CPU_Cycles=0;
+		CPU_Cycles = 0;
 	}
 	return 0;
 }
 
-void CPU_HLT(Bitu oldeip) {
-	reg_eip=oldeip;
+void CPU_HLT(Bitu oldeip)
+{
+	reg_eip = oldeip;
 	CPU_IODelayRemoved += CPU_Cycles;
-	CPU_Cycles=0;
-	cpu.hlt.cs=SegValue(cs);
-	cpu.hlt.eip=reg_eip;
-	cpu.hlt.old_decoder=cpudecoder;
-	cpudecoder=&HLT_Decode;
+	CPU_Cycles          = 0;
+	cpu.hlt.cs          = SegValue(cs);
+	cpu.hlt.eip         = reg_eip;
+	cpu.hlt.old_decoder = cpudecoder;
+	cpudecoder          = &hlt_decode;
 }
 
 void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
@@ -2110,7 +2304,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 		mem_writew(SegPhys(ss)+sp_index,reg_bp);
 		reg_bp=(uint16_t)(reg_esp-2);
 		if (level) {
-			for (Bitu i=1;i<level;i++) {	
+			for (Bitu i=1;i<level;i++) {
 				sp_index-=2;bp_index-=2;
 				mem_writew(SegPhys(ss)+sp_index,mem_readw(SegPhys(ss)+bp_index));
 			}
@@ -2122,7 +2316,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
         mem_writed(SegPhys(ss)+sp_index,reg_ebp);
 		reg_ebp=(reg_esp-4);
 		if (level) {
-			for (Bitu i=1;i<level;i++) {	
+			for (Bitu i=1;i<level;i++) {
 				sp_index-=4;bp_index-=4;
 				mem_writed(SegPhys(ss)+sp_index,mem_readd(SegPhys(ss)+bp_index));
 			}
@@ -2135,7 +2329,7 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 }
 
 // Estimate the CPU speed in MHz given the amount of cycles emulated
-static double get_estimated_cpu_mhz(const int32_t cycles)
+static double get_estimated_cpu_mhz(const int cycles)
 {
 	assert(CPU_ArchitectureType >= ArchitectureType::Pentium);
 
@@ -2146,7 +2340,7 @@ static double get_estimated_cpu_mhz(const int32_t cycles)
 	// https://www.tomshardware.com/reviews/pentium-mmx-live-expectations,19.html
 
 	constexpr double DivisorPentium    = 575.0;
-	constexpr double DivisorPentiumMmx = DivisorPentium * 1.16;	
+	constexpr double DivisorPentiumMmx = DivisorPentium * 1.16;
 
 	if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		return cycles / DivisorPentium;
@@ -2189,173 +2383,590 @@ void CPU_ReadTSC()
 	reg_eax = static_cast<uint32_t>(tsc_rounded & 0xffffffff);
 }
 
-static void CPU_CycleIncrease(bool pressed) {
-	if (!pressed) return;
-	if (CPU_CycleAutoAdjust) {
-		CPU_CyclePercUsed+=5;
-		if (CPU_CyclePercUsed>100) CPU_CyclePercUsed=100;
-		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
-		GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
-	} else {
-		int32_t old_cycles=CPU_CycleMax;
-		if (CPU_CycleUp < 100) {
-			CPU_CycleMax = (int32_t)(CPU_CycleMax *
-			                        (1 + static_cast<float>(CPU_CycleUp) /
-			                                     100.0f));
+static int calc_cycles_increase(const int cycles, const int cycle_up)
+{
+	auto new_cycles = [&] {
+		if (cycle_up < 100) {
+			auto percentage_increment = 1 + static_cast<float>(cycle_up) /
+			                                        100.0f;
+			return iround(cycles * percentage_increment);
 		} else {
-			CPU_CycleMax = CPU_CycleMax + CPU_CycleUp;
+			return cycles + cpu_cycle_up;
 		}
-	    
-		CPU_CycleLeft=0;CPU_Cycles=0;
-		if (CPU_CycleMax==old_cycles) CPU_CycleMax++;
-		if(CPU_CycleMax > 15000 ) 
-			LOG_MSG("CPU speed: fixed %d cycles. If you need more than 20000, try core=dynamic in DOSBox's options.",CPU_CycleMax);
-		else
-			LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
-		GFX_NotifyCyclesChanged(CPU_CycleMax);
+	}();
+
+	if (new_cycles == cycles) {
+		++new_cycles;
+	}
+	return clamp(new_cycles, CpuCyclesMin, CpuCyclesMax);
+}
+
+static void cpu_increase_cycles_legacy()
+{
+	if (CPU_CycleAutoAdjust) {
+		CPU_CyclePercUsed += 5;
+		if (CPU_CyclePercUsed > 100) {
+			CPU_CyclePercUsed = 100;
+		}
+		LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
+
+	} else {
+		CPU_CycleMax = calc_cycles_increase(CPU_CycleMax, cpu_cycle_up);
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+
+		if (!maybe_display_switch_to_dynamic_core_warning(CPU_CycleMax)) {
+			LOG_MSG("CPU: Fixed %d cycles", CPU_CycleMax);
+		}
 	}
 }
 
-static void CPU_CycleDecrease(bool pressed) {
-	if (!pressed) return;
-	if (CPU_CycleAutoAdjust) {
-		CPU_CyclePercUsed-=5;
-		if (CPU_CyclePercUsed<=0) CPU_CyclePercUsed=1;
-		if(CPU_CyclePercUsed <=70)
-			LOG_MSG("CPU speed: max %d percent. If the game runs too fast, try a fixed cycles amount in DOSBox's options.",CPU_CyclePercUsed);
-		else
-			LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
-		GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
-	} else {
-		if (CPU_CycleDown < 100) {
-			CPU_CycleMax = (int32_t)(CPU_CycleMax /
-			                        (1 + static_cast<float>(CPU_CycleDown) /
-			                                     100.0f));
+static void sync_modern_cycles_settings()
+{
+	const auto cycles_val = [&] {
+		auto& conf = modern_cycles_config;
+
+		if (conf.real_mode) {
+			return format_str("%d", *conf.real_mode);
 		} else {
-			CPU_CycleMax = CPU_CycleMax - CPU_CycleDown;
+			return std::string("max");
 		}
-		CPU_CycleLeft=0;CPU_Cycles=0;
-		if (CPU_CycleMax <= 0) CPU_CycleMax=1;
-		LOG_MSG("CPU speed: fixed %d cycles.",CPU_CycleMax);
-		GFX_NotifyCyclesChanged(CPU_CycleMax);
+	}();
+
+	set_section_property_value("cpu", "cpu_cycles", cycles_val);
+
+	const auto cycles_protected_val = [&] {
+		auto& conf = modern_cycles_config;
+
+		if (conf.protected_mode_auto) {
+			return std::string("auto");
+		} else if (conf.protected_mode) {
+			return format_str("%d", *conf.protected_mode);
+		} else {
+			return std::string("max");
+		}
+	}();
+
+	set_section_property_value("cpu", "cpu_cycles_protected", cycles_protected_val);
+}
+
+static void cpu_increase_cycles_modern()
+{
+	auto& conf = modern_cycles_config;
+
+	if (cpu.pmode) {
+		if (conf.protected_mode_auto) {
+			// 'cpu_cycles' controls both real and protected mode;
+			// nothing to do if we're in 'max' mode.
+			if (conf.real_mode) {
+				conf.real_mode = calc_cycles_increase(*conf.real_mode,
+				                                      cpu_cycle_up);
+			}
+		} else {
+			// Nothing to do if we're in 'max' mode.
+			if (conf.protected_mode) {
+				conf.protected_mode = calc_cycles_increase(
+				        *conf.protected_mode, cpu_cycle_up);
+			}
+		}
+		sync_modern_cycles_settings();
+		set_modern_cycles_config(CpuMode::Protected);
+
+	} else {
+		// Real mode
+		if (conf.real_mode) {
+			conf.real_mode = calc_cycles_increase(*conf.real_mode,
+			                                      cpu_cycle_up);
+			sync_modern_cycles_settings();
+			set_modern_cycles_config(CpuMode::Real);
+		}
 	}
 }
 
-extern int64_t ticksDone;
-extern int64_t ticksScheduled;
+static void cpu_increase_cycles(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
 
-void CPU_Reset_AutoAdjust(void) {
+	if (legacy_cycles_mode) {
+		cpu_increase_cycles_legacy();
+	} else {
+		cpu_increase_cycles_modern();
+	}
+
+	GFX_NotifyCyclesChanged();
+}
+
+static int calc_cycles_decrease(const int cycles, const int cycle_down)
+{
+	auto new_cycles = [&] {
+		if (cycle_down < 100) {
+			auto percentage_decrement = 1 + static_cast<float>(cycle_down) /
+			                                        100.0f;
+			return iround(cycles / percentage_decrement);
+		} else {
+			return cycles - cpu_cycle_down;
+		}
+	}();
+
+	if (new_cycles == cycles) {
+		--new_cycles;
+	}
+	return clamp(new_cycles, CpuCyclesMin, CpuCyclesMax);
+}
+
+static void cpu_decrease_cycles_legacy()
+{
+	if (CPU_CycleAutoAdjust) {
+		CPU_CyclePercUsed -= 5;
+
+		if (CPU_CyclePercUsed <= 0) {
+			CPU_CyclePercUsed = 1;
+		}
+
+		if (CPU_CyclePercUsed <= 70) {
+			LOG_MSG("CPU: max %d percent cycles. If the game runs too fast, "
+			        "try setting a fixed cycles value.",
+			        CPU_CyclePercUsed);
+		} else {
+			LOG_MSG("CPU: max %d percent.", CPU_CyclePercUsed);
+		}
+
+	} else {
+		CPU_CycleMax = calc_cycles_decrease(CPU_CycleMax, cpu_cycle_down);
+		CPU_CycleLeft = 0;
+		CPU_Cycles    = 0;
+
+		LOG_MSG("CPU: Fixed %d cycles.", CPU_CycleMax);
+	}
+}
+
+static void cpu_decrease_cycles_modern()
+{
+	auto& conf = modern_cycles_config;
+
+	if (cpu.pmode) {
+		if (conf.protected_mode_auto) {
+			// 'cpu_cycles' controls both real and protected mode;
+			// Nothing to do if we're in 'max' mode.
+			if (conf.real_mode) {
+				conf.real_mode = calc_cycles_decrease(*conf.real_mode,
+				                                      cpu_cycle_down);
+			}
+		} else {
+			// Nothing to do if we're in 'max' mode
+			if (conf.protected_mode) {
+				conf.protected_mode = calc_cycles_decrease(
+				        *conf.protected_mode, cpu_cycle_down);
+			}
+		}
+		sync_modern_cycles_settings();
+		set_modern_cycles_config(CpuMode::Protected);
+
+	} else {
+		// Real mode
+		if (conf.real_mode) {
+			conf.real_mode = calc_cycles_decrease(*conf.real_mode,
+			                                      cpu_cycle_down);
+			sync_modern_cycles_settings();
+			set_modern_cycles_config(CpuMode::Real);
+		}
+	}
+}
+
+static void cpu_decrease_cycles(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+
+	if (legacy_cycles_mode) {
+		cpu_decrease_cycles_legacy();
+	} else {
+		cpu_decrease_cycles_modern();
+	}
+
+	GFX_NotifyCyclesChanged();
+}
+
+void CPU_ResetAutoAdjust()
+{
 	CPU_IODelayRemoved = 0;
-	ticksDone = 0;
-	ticksScheduled = 0;
+
+	DOSBOX_SetTicksDone(0);
+	DOSBOX_SetTicksScheduled(0);
 }
 
-class CPU final : public Module_base {
+std::string CPU_GetCyclesConfigAsString()
+{
+	static const auto CyclesPerMs = " cycles/ms";
+
+	if (legacy_cycles_mode) {
+		std::string s = {};
+
+		if (CPU_CycleAutoAdjust) {
+			if (CPU_CycleLimit > 0) {
+				s += format_str("max %d%% limit %d",
+				                  CPU_CyclePercUsed,
+				                  CPU_CycleLimit);
+			} else {
+				s += format_str("max %d%%", CPU_CyclePercUsed);
+			}
+		} else {
+			s += format_str("%d", CPU_CycleMax);
+		}
+		return s += CyclesPerMs;
+
+	} else {
+		// Modern mode
+		auto& conf = modern_cycles_config;
+
+		std::string s = {};
+		bool max_mode = false;
+
+		auto format_cycles = [&](const std::optional<int> cycles) {
+			if (cycles) {
+				s += format_str("%d", *cycles);
+			} else {
+				s += "max";
+				max_mode = true;
+			}
+		};
+
+		if (cpu.pmode) {
+			if (conf.protected_mode_auto) {
+				// 'cpu_cycles' controls both real and protected
+				// mode
+				format_cycles(conf.real_mode);
+			} else {
+				format_cycles(conf.protected_mode);
+			}
+		} else {
+			// Real mode
+			format_cycles(conf.real_mode);
+		}
+
+		s += CyclesPerMs;
+
+		if (modern_cycles_config.throttle && !max_mode) {
+			s += " (throttled)";
+		}
+		return s;
+	}
+}
+
+class Cpu final {
 private:
-	static bool inited;
+	static bool initialised;
+
 public:
-	CPU(Section* configuration):Module_base(configuration) {
-		if(inited) {
-			Change_Config(configuration);
+	Cpu(Section* sec)
+	{
+		if (initialised) {
+			Configure(sec);
 			return;
 		}
-//		Section_prop * section=static_cast<Section_prop *>(configuration);
-		inited=true;
-		reg_eax=0;
-		reg_ebx=0;
-		reg_ecx=0;
-		reg_edx=0;
-		reg_edi=0;
-		reg_esi=0;
-		reg_ebp=0;
-		reg_esp=0;
-	
-		SegSet16(cs,0);
-		SegSet16(ds,0);
-		SegSet16(es,0);
-		SegSet16(fs,0);
-		SegSet16(gs,0);
-		SegSet16(ss,0);
-	
-		CPU_SetFlags(FLAG_IF,FMASK_ALL);		//Enable interrupts
-		cpu.cr0=0xffffffff;
-		CPU_SET_CRX(0,0);						//Initialize
-		cpu.code.big=false;
-		cpu.stack.mask=0xffff;
-		cpu.stack.notmask=0xffff0000;
-		cpu.stack.big=false;
-		cpu.trap_skip=false;
+
+		initialised = true;
+
+		reg_eax = 0;
+		reg_ebx = 0;
+		reg_ecx = 0;
+		reg_edx = 0;
+		reg_edi = 0;
+		reg_esi = 0;
+		reg_ebp = 0;
+		reg_esp = 0;
+
+		SegSet16(cs, 0);
+		SegSet16(ds, 0);
+		SegSet16(es, 0);
+		SegSet16(fs, 0);
+		SegSet16(gs, 0);
+		SegSet16(ss, 0);
+
+		// Enable interrupts
+		CPU_SetFlags(FLAG_IF, FMASK_ALL);
+		cpu.cr0 = 0xffffffff;
+
+		// Initialise
+		CPU_SET_CRX(0, 0);
+
+		cpu.code.big      = false;
+		cpu.stack.mask    = 0xffff;
+		cpu.stack.notmask = 0xffff0000;
+		cpu.stack.big     = false;
+		cpu.trap_skip     = false;
+
 		cpu.idt.SetBase(0);
 		cpu.idt.SetLimit(1023);
 
-		for (Bitu i=0; i<7; i++) {
-			cpu.drx[i]=0;
-			cpu.trx[i]=0;
+		for (Bitu i = 0; i < 7; i++) {
+			cpu.drx[i] = 0;
+			cpu.trx[i] = 0;
 		}
-		if (CPU_ArchitectureType>=ArchitectureType::Pentium) {
-			cpu.drx[6]=0xffff0ff0;
-		} else {
-			cpu.drx[6]=0xffff1ff0;
-		}
-		cpu.drx[7]=0x00000400;
 
-		/* Init the cpu cores */
+		if (CPU_ArchitectureType >= ArchitectureType::Pentium) {
+			cpu.drx[6] = 0xffff0ff0;
+		} else {
+			cpu.drx[6] = 0xffff1ff0;
+		}
+
+		cpu.drx[7] = 0x00000400;
+
+		// Init the CPU cores
 		CPU_Core_Normal_Init();
 		CPU_Core_Simple_Init();
 		CPU_Core_Full_Init();
-#if (C_DYNAMIC_X86)
+#if C_DYNAMIC_X86
 		CPU_Core_Dyn_X86_Init();
-#elif (C_DYNREC)
+#elif C_DYNREC
 		CPU_Core_Dynrec_Init();
 #endif
-		MAPPER_AddHandler(CPU_CycleDecrease, SDL_SCANCODE_F11,
-		                  PRIMARY_MOD, "cycledown", "Dec Cycles");
-		MAPPER_AddHandler(CPU_CycleIncrease, SDL_SCANCODE_F12,
-		                  PRIMARY_MOD, "cycleup", "Inc Cycles");
-		Change_Config(configuration);
-		CPU_JMP(false,0,0,0);					//Setup the first cpu core
+		MAPPER_AddHandler(cpu_decrease_cycles,
+		                  SDL_SCANCODE_F11,
+		                  PRIMARY_MOD,
+		                  "cycledown",
+		                  "Dec Cycles");
+
+		MAPPER_AddHandler(cpu_increase_cycles,
+		                  SDL_SCANCODE_F12,
+		                  PRIMARY_MOD,
+		                  "cycleup",
+		                  "Inc Cycles");
+
+		Configure(sec);
+
+		// Set up the first CPU core
+		CPU_JMP(false, 0, 0, 0);
 	}
 
-	~CPU() override = default;
+	~Cpu() = default;
 
-	bool Change_Config(Section *newconfig) override
+	void ConfigureCyclesModern(Section_prop* secprop)
 	{
-		Section_prop * section=static_cast<Section_prop *>(newconfig);
-		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
-		//CPU_CycleLeft=0;//needed ?
-		CPU_Cycles=0;
+		modern_cycles_config = {};
 
+		auto clamp_and_sync_cycles =
+		        [](const int cycles, const std::string& setting_name) -> int {
+			if (cycles < CpuCyclesMin || cycles > CpuCyclesMax) {
+				const auto new_cycles = clamp(cycles,
+				                              CpuCyclesMin,
+				                              CpuCyclesMax);
+				LOG_WARNING(
+				        "CPU: Invalid '%s' setting: '%d'; "
+				        "must be between %d and %d, using '%d'",
+				        setting_name.c_str(),
+				        cycles,
+				        CpuCyclesMin,
+				        CpuCyclesMax,
+				        new_cycles);
+
+				set_section_property_value("cpu",
+				                           setting_name,
+				                           format_str("%d", new_cycles));
+				return new_cycles;
+			} else {
+				return cycles;
+			}
+		};
+
+		// Real mode
+		const std::string cpu_cycles_pref = secprop->Get_string("cpu_cycles");
+
+		if (cpu_cycles_pref == "max") {
+			modern_cycles_config.real_mode = {};
+
+		} else if (const auto maybe_int = parse_int(cpu_cycles_pref)) {
+			const auto new_cycles = *maybe_int;
+			modern_cycles_config.real_mode =
+			        clamp_and_sync_cycles(new_cycles, "cpu_cycles");
+
+		} else {
+			modern_cycles_config.real_mode = CpuCyclesRealModeDefault;
+
+			LOG_WARNING("CPU: Invalid 'cpu_cycles' setting: '%s', using '%d'",
+			            cpu_cycles_pref.c_str(),
+			            *modern_cycles_config.real_mode);
+
+			set_section_property_value(
+			        "cpu",
+			        "cpu_cycles",
+			        format_str("%d", *modern_cycles_config.real_mode));
+		}
+
+		auto handle_cpu_cycles_protected_auto = [&] {
+			// 'cpu_cycles' controls both real and protected mode
+			modern_cycles_config.protected_mode_auto = true;
+		};
+
+		// Protected mode
+		const std::string cpu_cycles_protected_pref = secprop->Get_string(
+		        "cpu_cycles_protected");
+
+		if (cpu_cycles_protected_pref == "auto") {
+			handle_cpu_cycles_protected_auto();
+
+		} else if (cpu_cycles_protected_pref == "max") {
+			modern_cycles_config.protected_mode = {};
+
+		} else if (const auto maybe_int = parse_int(cpu_cycles_protected_pref)) {
+			if (cpu_cycles_pref == "max") {
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s'; "
+				        "fixed values are not allowed if 'cpu_cycles' is "
+				        "'max', using 'auto'",
+				        cpu_cycles_protected_pref.c_str());
+
+				set_section_property_value("cpu",
+				                           "cpu_cycles_protected",
+				                           "auto");
+
+				handle_cpu_cycles_protected_auto();
+
+			} else {
+				// Different fixed cycles values for real and
+				// protected mode
+				const auto new_cycles = *maybe_int;
+
+				modern_cycles_config.protected_mode = clamp_and_sync_cycles(
+				        new_cycles, "cpu_cycles_protected");
+			}
+		} else {
+			if (cpu_cycles_pref == "max") {
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s', "
+				        "using 'auto'",
+				        cpu_cycles_protected_pref.c_str());
+
+				set_section_property_value("cpu",
+				                           "cpu_cycles_protected",
+				                           "auto");
+
+				handle_cpu_cycles_protected_auto();
+
+			} else {
+				modern_cycles_config.protected_mode = CpuCyclesProtectedModeDefault;
+
+				// fixed cycles
+				LOG_WARNING(
+				        "CPU: Invalid 'cpu_cycles_protected' setting: '%s', "
+				        "using '%d'",
+				        cpu_cycles_protected_pref.c_str(),
+				        *modern_cycles_config.protected_mode);
+
+				set_section_property_value(
+				        "cpu",
+				        "cpu_cycles_protected",
+				        format_str("%d", *modern_cycles_config.protected_mode));
+			}
+		}
+
+		// Throttling
+		modern_cycles_config.throttle = secprop->Get_bool("cpu_throttle");
+	}
+
+	// The legacy 'cycles' config setting accepts all the following value
+	// permutations as valid. There are probably more valid permutations as
+	// the ordering is somewhat freeform.
+	//
+	// Error handling is very minimal (almost non-existent), which
+	// makes it unclear from the user's point of view whether a new 'cycles'
+	// setting was accepted, rejected, or accepted but clamped to valid
+	// limits, etc. To confuse matters even more, many weird
+	// looking-permutations are accepted as valid because of the "relaxed"
+	// parsing logic.
+	//
+	// All these issues make the 'cycles' setting very non-intuitive to use,
+	// hard to document, and hard to troubleshoot. Unfortunately, we might
+	// need keep it around in perpetuity as a fallback "legacy mode" option
+	// for all the existing configs out there from the last 20 years out
+	// there.
+	//
+	// So these are all valid settings:
+	//
+	//   12000
+	//   fixed 12000
+	//
+	//   max
+	//   max limit 50000
+	//   max 90%
+	//   max 90% limit 50000
+	//
+	//   auto limit 50000       (implicit "3000" for real mode & "max 100%")
+	//   auto 90%               (implicit "3000" for real mode)
+	//   auto 90% limit 50000   (implicit "3000" for real mode]
+	//
+	//   auto max                   (implicit "3000" for real mode)
+	//   auto max limit 50000       (implicit "3000" for real mode)
+	//   auto max 90%               (implicit "3000" for real mode)
+	//   auto max 90% limit 50000   (implicit "3000" for real mode)
+	//
+	//   auto 12000                 (implicit "max 100%"
+	//   auto 12000 limit 50000     (implicit "max 100%")
+	//   auto 12000 90%
+	//   auto 12000 90% limit 50000
+	//
+	//   auto 12000 max
+	//   auto 12000 max limit 50000
+	//   auto 12000 max 90%
+	//   auto 12000 max 90% limit 50000
+	//
+	void ConfigureCyclesLegacy(Section_prop* secprop)
+	{
 		// Sets the value if the string in within the min and max values
-		auto set_if_in_range = [](const std::string &str, int &value,
+		auto set_if_in_range = [](const std::string& str,
+		                          int& value,
 		                          const int min_value = 1,
 		                          const int max_value = 0) {
 			std::istringstream stream(str);
 			int v = 0;
 			stream >> v;
+
 			const bool within_min = (v >= min_value);
 			const bool within_max = (!max_value || v <= max_value);
-			if (within_min && within_max)
+
+			if (within_min && within_max) {
 				value = v;
+			}
 		};
 
-		PropMultiVal *p = section->GetMultiVal("cycles");
-		std::string type = p->GetSection()->Get_string("type");
+		PropMultiVal* p = secprop->GetMultiVal("cycles");
+
+		const std::string type = p->GetSection()->Get_string("type");
 		std::string str;
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
 
-		constexpr auto min_percent = 0;
-		constexpr auto max_percent = 100;
+		constexpr auto MinPercent = 0;
+		constexpr auto MaxPercent = 100;
+
+		bool displayed_dynamic_core_warning = false;
+
+		auto display_dynamic_core_warning_once = [&] {
+			if (!displayed_dynamic_core_warning) {
+				displayed_dynamic_core_warning =
+				        maybe_display_switch_to_dynamic_core_warning(
+				                CPU_CycleMax);
+			}
+		};
 
 		if (type == "max") {
-			CPU_CycleMax = 0;
-			CPU_CyclePercUsed = 100;
+			CPU_CycleMax        = 0;
+			CPU_CyclePercUsed   = 100;
 			CPU_CycleAutoAdjust = true;
-			CPU_CycleLimit = -1;
-			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount(); ++cmdnum) {
+			CPU_CycleLimit      = -1;
+
+			for (unsigned int cmdnum = 1; cmdnum <= cmd.GetCount();
+			     ++cmdnum) {
 				if (cmd.FindCommand(cmdnum, str)) {
 					if (str.back() == '%') {
 						str.pop_back();
-						set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
+						set_if_in_range(str,
+										CPU_CyclePercUsed,
+										MinPercent,
+										MaxPercent);
+
 					} else if (str == "limit") {
 						++cmdnum;
 						if (cmd.FindCommand(cmdnum, str)) {
@@ -2366,150 +2977,427 @@ public:
 			}
 		} else {
 			if (type == "auto") {
-				CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CYCLES;
-				CPU_CycleMax = 3000;
-				CPU_OldCycleMax = 3000;
+				auto_determine_mode.auto_cycles = true;
+
+				CPU_CycleMax      = CpuCyclesRealModeDefault;
+				old_cycle_max     = CpuCyclesRealModeDefault;
 				CPU_CyclePercUsed = 100;
-				for (unsigned int cmdnum = 0; cmdnum <= cmd.GetCount(); ++cmdnum) {
+
+				for (unsigned int cmdnum = 0;
+				     cmdnum <= cmd.GetCount();
+				     ++cmdnum) {
 					if (cmd.FindCommand(cmdnum, str)) {
 						if (str.back() == '%') {
 							str.pop_back();
-							set_if_in_range(str, CPU_CyclePercUsed, min_percent, max_percent);
+							set_if_in_range(str,
+							                CPU_CyclePercUsed,
+							                MinPercent,
+							                MaxPercent);
+
 						} else if (str == "limit") {
 							++cmdnum;
 							if (cmd.FindCommand(cmdnum, str)) {
 								set_if_in_range(str, CPU_CycleLimit);
 							}
+
 						} else {
 							set_if_in_range(str, CPU_CycleMax);
-							set_if_in_range(str, CPU_OldCycleMax);
+							set_if_in_range(str, old_cycle_max);
 						}
 					}
 				}
 			} else if (type == "fixed") {
 				if (cmd.FindCommand(1, str)) {
 					set_if_in_range(str, CPU_CycleMax);
+					display_dynamic_core_warning_once();
 				}
 			} else {
 				set_if_in_range(type, CPU_CycleMax);
+				display_dynamic_core_warning_once();
 			}
+
 			CPU_CycleAutoAdjust = false;
 		}
 
-		CPU_CycleUp=section->Get_int("cycleup");
-		CPU_CycleDown=section->Get_int("cycledown");
-		std::string core(section->Get_string("core"));
-		cpudecoder=&CPU_Core_Normal_Run;
-		if (core == "normal") {
-			cpudecoder=&CPU_Core_Normal_Run;
-		} else if (core =="simple") {
-			cpudecoder=&CPU_Core_Simple_Run;
-		} else if (core == "full") {
-			cpudecoder=&CPU_Core_Full_Run;
-		} else if (core == "auto") {
-			cpudecoder=&CPU_Core_Normal_Run;
-#if (C_DYNAMIC_X86)
-			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
+		if (CPU_CycleMax <= 0) {
+			CPU_CycleMax = CpuCyclesRealModeDefault;
 		}
-		else if (core == "dynamic") {
-			cpudecoder=&CPU_Core_Dyn_X86_Run;
+	}
+
+	void ConfigureCpuCore(const std::string& cpu_core)
+	{
+		cpudecoder = &CPU_Core_Normal_Run;
+
+		if (cpu_core == "normal") {
+			cpudecoder = &CPU_Core_Normal_Run;
+
+		} else if (cpu_core == "simple") {
+			cpudecoder = &CPU_Core_Simple_Run;
+
+		} else if (cpu_core == "full") {
+			cpudecoder = &CPU_Core_Full_Run;
+
+		} else if (cpu_core == "auto") {
+			cpudecoder = &CPU_Core_Normal_Run;
+
+#if C_DYNAMIC_X86
+			auto_determine_mode.auto_core = true;
+
+		} else if (cpu_core == "dynamic") {
+			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(true);
-		} else if (core == "dynamic_nodhfpu") {
-			cpudecoder=&CPU_Core_Dyn_X86_Run;
+
+		} else if (cpu_core == "dynamic_nodhfpu") {
+			cpudecoder = &CPU_Core_Dyn_X86_Run;
 			CPU_Core_Dyn_X86_SetFPUMode(false);
-#elif (C_DYNREC)
-			CPU_AutoDetermineMode|=CPU_AUTODETERMINE_CORE;
-		}
-		else if (core == "dynamic") {
-			cpudecoder=&CPU_Core_Dynrec_Run;
+#elif C_DYNREC
+			auto_determine_mode.auto_core = true;
+
+		} else if (cpu_core == "dynamic") {
+			cpudecoder = &CPU_Core_Dynrec_Run;
 #else
-
 #endif
 		}
 
-#if (C_DYNAMIC_X86)
-		CPU_Core_Dyn_X86_Cache_Init((core == "dynamic") || (core == "dynamic_nodhfpu"));
-#elif (C_DYNREC)
-		CPU_Core_Dynrec_Cache_Init( core == "dynamic" );
+#if C_DYNAMIC_X86
+		CPU_Core_Dyn_X86_Cache_Init((cpu_core == "dynamic") ||
+		                            (cpu_core == "dynamic_nodhfpu"));
+#elif C_DYNREC
+		CPU_Core_Dynrec_Cache_Init(cpu_core == "dynamic");
 #endif
+	}
 
-		CPU_ArchitectureType = ArchitectureType::Mixed;
-		std::string cputype(section->Get_string("cputype"));
-		if (cputype == "auto") {
+	void ConfigureCpuType(const std::string& cpu_core, const std::string& cpu_type)
+	{
+		if (cpu_type == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
-		} else if (cputype == "386_fast") {
+
+		} else if (cpu_type == "386_fast") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
-		} else if (cputype == "386_prefetch") {
+
+		} else if (cpu_type == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
-			if (core == "normal") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
-				CPU_PrefetchQueueSize = 16;
-			} else if (core == "auto") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
-				CPU_PrefetchQueueSize = 16;
-				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+
+			if (cpu_core == "auto") {
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize         = 16;
+				auto_determine_mode.auto_core = false;
+
 			} else {
-				E_Exit("prefetch queue emulation requires the normal core setting.");
+				if (cpu_core != "normal") {
+					LOG_WARNING(
+					        "CPU: 'core = 386_prefetch' requires the 'normal' "
+					        "core, using 'core = normal'");
+
+					set_section_property_value("cpu",
+					                           "core",
+					                           "normal");
+				}
+
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize = 16;
 			}
-		} else if (cputype == "386") {
+
+		} else if (cpu_type == "386") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Slow;
-		} else if (cputype == "486") {
+
+		} else if (cpu_type == "486") {
 			CPU_ArchitectureType = ArchitectureType::Intel486OldSlow;
-		} else if (cputype == "486_prefetch") {
+
+		} else if (cpu_type == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
-			if (core == "normal") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
-				CPU_PrefetchQueueSize = 32;
-			} else if (core == "auto") {
-				cpudecoder=&CPU_Core_Prefetch_Run;
-				CPU_PrefetchQueueSize = 32;
-				CPU_AutoDetermineMode&=(~CPU_AUTODETERMINE_CORE);
+
+			if (cpu_core == "auto") {
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize         = 32;
+				auto_determine_mode.auto_core = false;
+
 			} else {
-				E_Exit("prefetch queue emulation requires the normal core setting.");
+				if (cpu_core != "normal") {
+					LOG_WARNING(
+					        "CPU: 'core = 486_prefetch' requires the 'normal' "
+					        "core, using 'core = normal'");
+
+					set_section_property_value("cpu",
+					                           "core",
+					                           "normal");
+				}
+
+				cpudecoder = &CPU_Core_Prefetch_Run;
+
+				CPU_PrefetchQueueSize = 32;
 			}
-		} else if (cputype == "pentium") {
+
+		} else if (cpu_type == "pentium") {
 			CPU_ArchitectureType = ArchitectureType::Pentium;
-		} else if (cputype == "pentium_mmx") {
+
+		} else if (cpu_type == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
-		}
 
-		if (CPU_ArchitectureType>=ArchitectureType::Intel486NewSlow) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);
-		else if (CPU_ArchitectureType>=ArchitectureType::Intel486OldSlow) CPU_extflags_toggle=(FLAG_AC);
-		else CPU_extflags_toggle=0;
-
-
-		if(CPU_CycleMax <= 0) CPU_CycleMax = 3000;
-		if(CPU_CycleUp <= 0)   CPU_CycleUp = 500;
-		if(CPU_CycleDown <= 0) CPU_CycleDown = 20;
-		if (CPU_CycleAutoAdjust) {
-			GFX_NotifyCyclesChanged(CPU_CyclePercUsed);
 		} else {
-			GFX_NotifyCyclesChanged(CPU_CycleMax);
+			CPU_ArchitectureType = ArchitectureType::Mixed;
 		}
+
+		if (CPU_ArchitectureType >= ArchitectureType::Intel486NewSlow) {
+			cpu_extflags_toggle = (FLAG_ID | FLAG_AC);
+
+		} else if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
+			cpu_extflags_toggle = (FLAG_AC);
+
+		} else {
+			cpu_extflags_toggle = 0;
+		}
+	}
+
+	bool Configure(Section* sec)
+	{
+		// TODO needed?
+		// CPU_CycleLeft = 0;
+		CPU_Cycles          = 0;
+		auto_determine_mode = {};
+
+		Section_prop* secprop = static_cast<Section_prop*>(sec);
+
+		const std::string cpu_core = secprop->Get_string("core");
+		const std::string cpu_type = secprop->Get_string("cputype");
+
+		ConfigureCpuCore(cpu_core);
+		ConfigureCpuType(cpu_core, cpu_type);
+
+		auto cycles_pref = secprop->Get_string("cycles");
+		trim(cycles_pref);
+
+		if (!cycles_pref.empty()) {
+			// "Legacy cycles mode" is enabled by setting 'cycles'
+			// to a non-blank value (the default value is a single
+			// space character).
+			legacy_cycles_mode = true;
+
+			// Clear new CPU settings in "legacy cycles mode" to
+			// avoid confusion.
+			//
+			// The rationale behind this is that setting 'cycles' is
+			// our legacy backwards compatible mode; if an existing
+			// game config sets 'cycles' explicitly, that will
+			// override the new settings.
+			//
+			set_section_property_value("cpu", "cpu_cycles", "");
+			set_section_property_value("cpu", "cpu_cycles_protected", "");
+			set_section_property_value("cpu", "cpu_throttle", "false");
+		}
+
+		if (legacy_cycles_mode) {
+			ConfigureCyclesLegacy(secprop);
+		} else {
+			ConfigureCyclesModern(secprop);
+			set_modern_cycles_config(CpuMode::Real);
+		}
+
+		cpu_cycle_up   = secprop->Get_int("cycleup");
+		cpu_cycle_down = secprop->Get_int("cycledown");
+
+		GFX_NotifyCyclesChanged();
+
 		return true;
 	}
 };
 
-static CPU * test;
+// Initialise static members
+bool Cpu::initialised = false;
 
-void CPU_ShutDown([[maybe_unused]] Section* sec) {
-#if (C_DYNAMIC_X86)
+static std::unique_ptr<Cpu> cpu_instance = nullptr;
+
+static void cpu_shutdown([[maybe_unused]] Section* sec)
+{
+#if C_DYNAMIC_X86
 	CPU_Core_Dyn_X86_Cache_Close();
-#elif (C_DYNREC)
+#elif C_DYNREC
 	CPU_Core_Dynrec_Cache_Close();
 #endif
-	delete test;
+
+	cpu_instance.reset();
 }
 
-void CPU_Init(Section* sec)
+static void cpu_init(Section* sec)
 {
 	assert(sec);
+	cpu_instance = std::make_unique<Cpu>(sec);
 
-	test = new (std::nothrow) CPU(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+	sec->AddDestroyFunction(&cpu_shutdown, ChangeableAtRuntime);
 }
 
-//initialize static members
-bool CPU::inited=false;
+void init_cpu_dosbox_settings(Section_prop& secprop)
+{
+	constexpr auto Always   = Property::Changeable::Always;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
+	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
+
+	auto pstring = secprop.Add_string("core", WhenIdle, "auto");
+	pstring->Set_values({
+		"auto",
+#if C_DYNAMIC_X86 || C_DYNREC
+		"dynamic",
+#endif
+		"normal", "simple"
+	});
+
+	pstring->Set_help(
+	        "Type of CPU emulation core to use ('auto' by default).\n"
+	        "  auto:     'normal' core for real mode programs, 'dynamic' core for protected\n"
+	        "            mode programs (default). Most programs will run correctly with this\n"
+	        "            setting.\n"
+	        "  normal:   The DOS program is interpreted instruction by instruction. This\n"
+	        "            yields the most accurate timings, but puts 3-5 times more load on\n"
+	        "            the host CPU compared to the 'dynamic' core. Therefore, it's\n"
+	        "            generally only recommended for real mode programs that don't need\n"
+	        "            a fast emulated CPU or are timing-sensitive. The 'normal' core is\n"
+	        "            also necessary for programs that self-modify their code.\n"
+	        "  simple:   The 'normal' core optimised for old real mode programs; it might\n"
+	        "            give you slightly better compatibility with older games. Auto-\n"
+	        "            switches to the 'normal' core in protected mode.\n"
+	        "  dynamic:  The instructions of the DOS program are translated to host CPU\n"
+	        "            instructions in blocks and are then executed directly. This puts\n"
+	        "            3-5 times less load on the host CPU compared to the 'normal' core,\n"
+	        "            but the timings might be less accurate. The 'dynamic' core is a\n"
+	        "            necessity for demanding DOS programs (e.g., 3D SVGA games).\n"
+	        "            Programs that self-modify their code might misbehave or crash on\n"
+	        "            the 'dynamic' core; use the 'normal' core for such programs.");
+
+	pstring = secprop.Add_string("cputype", Always, "auto");
+	pstring->Set_values(
+	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
+
+	pstring->Set_help(
+	        "CPU type to emulate ('auto' by default).\n"
+	        "You should only change this if the program doesn't run correctly on 'auto'.\n"
+	        "  auto:          The fastest and most compatible setting (default).\n"
+	        "                 Technically, this is '386_fast' plus 486 CPUID, 486 CR\n"
+	        "                 register behaviour, and extra 486 instructions.\n"
+	        "  386:           386 CPUID and 386 specific page access level calculation.\n"
+	        "  386_fast:      Same as '386' but with loose page privilege checks which is\n"
+	        "                 much faster.\n"
+	        "  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.\n"
+	        "                 This is necessary for programs that self-modify their code or\n"
+	        "                 employ anti-debugging tricks. Games that require '386_prefetch'\n"
+	        "                 include Contra, FIFA International Soccer (1994), Terminator 1,\n"
+	        "                 and X-Men: Madness in The Murderworld.\n"
+	        "  486:           486 CPUID, 486+ specific page access level calculation, 486 CR\n"
+	        "                 register behaviour, and extra 486 instructions.\n"
+	        "  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register\n"
+	        "                 behaviour, and RDTSC instruction support. Recommended for\n"
+	        "                 Windows 3.x games (e.g., Betrayal in Antara).\n"
+	        "  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few\n"
+	        "                 games use MMX instructions; it's mostly only useful for\n"
+	        "                 demoscene productions.");
+
+	pstring->SetDeprecatedWithAlternateValue("386_slow", "386");
+	pstring->SetDeprecatedWithAlternateValue("486_slow", "486");
+	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
+	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
+
+	// Legacy `cycles` setting
+	auto pmulti_remain = secprop.AddMultiValRemain("cycles",
+	                                               DeprecatedButAllowed,
+	                                               " ");
+	pmulti_remain->Set_help(
+	        "The 'cycles' setting is deprecated but still accepted; please use the\n"
+	        "'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' settings instead as\n"
+	        "support will be removed in the future.");
+
+	pstring = pmulti_remain->GetSection()->Add_string("type", Always, "auto");
+	pmulti_remain->SetValue(" ");
+	pstring->Set_values({"auto", "fixed", "max", "%u"});
+
+	pmulti_remain->GetSection()->Add_string("parameters", Always, "");
+
+	// Revised CPU cycles related settings
+	const auto cpu_cycles_default = format_str("%d", CpuCyclesRealModeDefault);
+
+	pstring = secprop.Add_string("cpu_cycles", Always, cpu_cycles_default.c_str());
+	pstring->Set_help(format_str(
+	        "Speed of the emulated CPU ('%d' by default). If 'cpu_cycles_protected' is on\n"
+	        "'auto', this sets the cycles for both real and protected mode programs.\n"
+	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
+	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
+	        "             core. The number of cycles per millisecond can vary; this might\n"
+	        "             cause issues in some DOS programs.\n"
+	        "Notes:\n"
+	        "  - Setting the CPU speed to 'max' or to high fixed values may result in sound\n"
+	        "    drop-outs and general lagginess.\n"
+	        "  - Set the lowest fixed cycles value that runs the game at an acceptable speed\n"
+	        "    for the best results.\n"
+	        "  - Ballpark cycles values for common CPUs. DOSBox does not do cycle-accurate\n"
+	        "    CPU emulation, so treat these as starting points, then fine-tune per game.\n"
+	        "      8088 (4.77 MHz)     300\n"
+	        "      286-8               700\n"
+	        "      286-12             1500\n"
+	        "      386SX-20           3000\n"
+	        "      386DX-33           6000\n"
+	        "      386DX-40           8000\n"
+	        "      486DX-33          12000\n"
+	        "      486DX/2-66        25000\n"
+	        "      Pentium 90        50000\n"
+	        "      Pentium MMX-166  100000\n"
+	        "      Pentium II 300   200000",
+	        CpuCyclesRealModeDefault,
+	        CpuCyclesMin,
+	        CpuCyclesMax));
+
+	const auto cpu_cycles_protected_default =
+	        format_str("%d", CpuCyclesProtectedModeDefault);
+
+	pstring = secprop.Add_string("cpu_cycles_protected",
+	                             Always,
+	                             cpu_cycles_protected_default.c_str());
+	pstring->Set_help(format_str(
+	        "Speed of the emulated CPU for protected mode programs only\n"
+	        "('%d' by default).\n"
+	        "  auto:      Use the `cpu_cycles' setting.\n"
+	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
+	        "             equivalent to MIPS). Valid range is from %d to %d.\n"
+	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
+	        "             core. The number of cycles per millisecond can vary; this might\n"
+	        "             cause issues in some DOS programs.\n"
+	        "Note: See 'cpu_cycles' setting for further info.",
+	        CpuCyclesProtectedModeDefault,
+	        CpuCyclesMin,
+	        CpuCyclesMax));
+
+	auto pbool = secprop.Add_bool("cpu_throttle", Always, CpuThrottleDefault);
+	pbool->Set_help(format_str(
+	        "Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
+	        "cannot keep up (%s by default).\n"
+	        "Only affects fixed cycles settings. When enabled, the number of cycles per\n"
+	        "millisecond can vary; this might cause issues in some DOS programs.",
+	        (CpuThrottleDefault ? "enabled" : "disabled")));
+
+	auto pint = secprop.Add_int("cycleup", Always, DefaultCpuCycleUp);
+	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
+	pint->Set_help(
+	        format_str("Number of cycles to add with the 'Inc Cycles' hotkey (%d by default).\n"
+	                   "Values lower than 100 are treated as a percentage increase.",
+	                   DefaultCpuCycleUp));
+
+	pint = secprop.Add_int("cycledown", Always, DefaultCpuCycleDown);
+	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
+	pint->Set_help(
+	        format_str("Number of cycles to subtract with the 'Dec Cycles' hotkey (%d by default).\n"
+	                   "Values lower than 100 are treated as a percentage decrease.",
+	                   DefaultCpuCycleDown));
+}
+
+void CPU_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	constexpr auto ChangeableAtRuntime = true;
+
+	Section_prop* sec = conf->AddSection_prop("cpu", &cpu_init, ChangeableAtRuntime);
+	assert(sec);
+	init_cpu_dosbox_settings(*sec);
+}

@@ -577,7 +577,7 @@ static Bitu DOS_21Handler(void) {
 			uint8_t drive=reg_dl;
 			if (!drive || reg_ah==0x1f) drive = DOS_GetDefaultDrive();
 			else drive--;
-			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->isRemovable()) {
+			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->IsRemovable()) {
 				reg_al = 0x00;
 				SegSet16(ds,dos.tables.dpb);
 				reg_bx = drive*9;
@@ -920,11 +920,14 @@ static Bitu DOS_21Handler(void) {
 		if (result_errorcode)
 			dos.return_code = result_errorcode;
 		break;
-	case 0x4d:					/* Get Return code */
-		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
-		reg_ah=dos.return_mode;
+
+	case 0x4d: // Get return code
+		// Officially read from SDA and clear when read
+		reg_al = dos.return_code;
+		reg_ah = enum_val(dos.return_mode);
 		CALLBACK_SCF(false);
 		break;
+
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_FindFirst(name1, reg_cl)) {
@@ -951,7 +954,7 @@ static Bitu DOS_21Handler(void) {
 	// case 0x51: Get current PSP, co-located with case 0x62
 	case 0x52: {				/* Get list of lists */
 		uint8_t count=2; // floppy drives always counted
-		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->isRemovable()) count++;
+		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->IsRemovable()) count++;
 		dos_infoblock.SetBlockDevices(count);
 		RealPt addr=dos_infoblock.GetPointer();
 		SegSet16(es,RealSegment(addr));
@@ -1059,14 +1062,11 @@ static Bitu DOS_21Handler(void) {
 		{
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			uint16_t handle;
-			if (DOS_OpenFile(name1,0,&handle)) {
-				DOS_CloseFile(handle);
+			if (DOS_FileExists(name1)) {
 				DOS_SetError(DOSERR_FILE_ALREADY_EXISTS);
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-				break;
-			}
-			if (DOS_CreateFile(name1, reg_cl, &handle)) {
+			} else if (DOS_CreateFile(name1, reg_cl, &handle)) {
 				reg_ax=handle;
 				CALLBACK_SCF(false);
 			} else {
@@ -1076,10 +1076,27 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x5c:			/* FLOCK File region locking */
-		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
-		reg_ax = dos.errorcode;
-		CALLBACK_SCF(true);
-		break;
+		{
+			const uint16_t entry = reg_bx;
+			const uint32_t pos = (static_cast<uint32_t>(reg_cx) << 16) | static_cast<uint32_t>(reg_dx);
+			const uint32_t len = (static_cast<uint32_t>(reg_si) << 16) | static_cast<uint32_t>(reg_di);
+			bool success = false;
+			if (reg_al == 0) {
+				success = DOS_LockFile(entry, pos, len);
+			} else if (reg_al == 1) {
+				success = DOS_UnlockFile(entry, pos, len);
+			} else {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			}
+			if (success) {
+				reg_ax = 0;
+				CALLBACK_SCF(false);
+			} else {
+				reg_ax = dos.errorcode;
+				CALLBACK_SCF(true);
+			}
+			break;
+		}
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
@@ -1352,7 +1369,7 @@ static uint16_t DOS_SectorAccess(const bool read)
 
 static Bitu DOS_25Handler(void)
 {
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
@@ -1374,7 +1391,7 @@ static Bitu DOS_25Handler(void)
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC, LOG_NORMAL)("int 26 called: hope for the best!");
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
@@ -1526,6 +1543,8 @@ public:
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
 		DOS_ShutDownDevices();
+
+		DOS_FreeTableMemory();
 	}
 };
 

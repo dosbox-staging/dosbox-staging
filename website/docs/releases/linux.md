@@ -9,17 +9,27 @@ hide:
 
 ### Current stable version
 
-[Download DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
+<section class="release-downloads" markdown>
+
+[Download DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
 <br>
 <small>
-sha256: 034b08a941a7fd0279a81b10af620999<wbr>c569f7e81b786e7f4b59a0b94e46d399
+sha256: 5aee92774569cf1e39ade3fccff03994<wbr>464d17b396b0ae98360af61e9d37cba7
 </small>
 
-Check out the [0.81.0 release notes](release-notes/0.81.0.md) to learn
+</section>
+
+
+Our pre-compiled builds run on most Linux distributions (x86\_64 only for
+now). They depend on a few packages, though, which you might need to install
+manually (see instructions below).
+
+Please run the `install-icons.sh` script included with the release to install
+the application icons.
+
+Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn
 about the changes and improvements introduced in this release.
 
-Our pre-compiled builds run on most Linux distributions (x86\_64 only
-for now). They depend on the following packages:
 
 ### Install dependencies on Fedora
 
@@ -27,17 +37,13 @@ for now). They depend on the following packages:
 
 ### Install dependencies on Ubuntu and Debian
 
-Ubuntu 20.04 or newer, and Debian 11 or newer is required.
+Ubuntu 18.04 or newer, and Debian 9 or newer is required.
 
     sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
 ### Install dependencies on Arch and Manjaro
 
     sudo pacman -S sdl2 sdl2_net opusfile
-
-
-Please run the `install-icons.sh` script included with the release to install
-the application icons.
 
 
 ## External repository packages
@@ -143,6 +149,12 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
+- [DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
+  <br>
+  <small>
+  sha256: 034b08a941a7fd0279a81b10af620999<wbr>c569f7e81b786e7f4b59a0b94e46d399
+  </small>
+
 - [DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
   <br>
   <small>
@@ -215,6 +227,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_81_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-linux-v0.81.1.tar.xz
 [0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-linux-v0.81.0.tar.xz
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz

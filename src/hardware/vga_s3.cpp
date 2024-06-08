@@ -35,6 +35,11 @@
 
 void PCI_AddSVGAS3_Device();
 
+static bool SVGA_S3_HWCursorActive()
+{
+	return (vga.s3.hgc.curmode & 0x1) != 0;
+}
+
 void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
@@ -111,11 +116,15 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 			(3d4h index 13h). (801/5,928) Only active if 3d4h index 51h bits 4-5
 			are 0
 		*/
-	case 0x45:  /* Hardware cursor mode */
+	case 0x45: { /* Hardware cursor mode */
+		const bool was_active = SVGA_S3_HWCursorActive();
 		vga.s3.hgc.curmode = val;
-		// Activate hardware cursor code if needed
-		(void)VGA_ActivateHardwareCursor();
+		if (SVGA_S3_HWCursorActive() != was_active) {
+			// Activate hardware cursor code if needed
+			VGA_ActivateHardwareCursor();
+		}
 		break;
+	}
 	case 0x46:
 		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0x00ff) | (val << 8);
 		break;
@@ -632,10 +641,6 @@ uint32_t SVGA_S3_GetClock(void)
 		clock /= 2;
 	}
 	return clock;
-}
-
-bool SVGA_S3_HWCursorActive(void) {
-	return (vga.s3.hgc.curmode & 0x1) != 0;
 }
 
 bool SVGA_S3_AcceptsMode(Bitu mode) {

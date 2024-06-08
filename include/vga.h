@@ -124,6 +124,10 @@ enum VGAModes {
 constexpr auto NumCgaColors = 16;
 constexpr auto NumVgaColors = 256;
 
+constexpr auto NumVgaSequencerRegisters = 0x05;
+constexpr auto NumVgaGraphicsRegisters  = 0x09;
+constexpr auto NumVgaAttributeRegisters = 0x15;
+
 constexpr auto vesa_2_0_modes_start = 0x120;
 
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
@@ -375,7 +379,7 @@ struct VgaS3 {
 	uint8_t reg_55 = 0;
 	uint8_t reg_58 = 0;
 	uint8_t reg_6b = 0; // LFB BIOS scratchpad
-	                    //
+
 	uint8_t ex_hor_overflow = 0;
 	uint8_t ex_ver_overflow = 0;
 
@@ -383,7 +387,7 @@ struct VgaS3 {
 	uint8_t misc_control_2    = 0;
 	uint8_t ext_mem_ctrl      = 0;
 	uint16_t xga_screen_width = 0; // from 640 to 1600
-	                               //
+
 	VGAModes xga_color_mode = {};
 
 	struct clk_t {
@@ -396,7 +400,7 @@ struct VgaS3 {
 	clk_t mclk   = {};
 
 	struct pll_t {
-		// Extended Sequencer Access Rgister SR8 (pp. 124)
+		// Extended Sequencer Access Register SR8 (pp. 124)
 		uint8_t lock = 0;
 
 		// CLKSYN Control 2 Register SR15 (pp. 130)
@@ -1088,9 +1092,6 @@ struct VgaType {
 	// that, we stop checking palette changes until the next screen mode
 	// change.
 	bool ega_mode_with_vga_colors = false;
-
-	// Flag to signal that we're in the middle of a mode change.
-	bool mode_change_in_progress = false;
 };
 
 // Hercules & CGA monochrome palette

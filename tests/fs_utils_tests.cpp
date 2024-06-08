@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -61,8 +61,13 @@ TEST(PathConversion, SimpleTest)
 	ASSERT_TRUE(path_exists(expected_result));
 	EXPECT_TRUE(path_exists(to_native_path(input)));
 #if !defined(WIN32)
+#if defined(MACOSX)
+    // macOS file systems are case-insensitive but case-preserving
+    EXPECT_NE(expected_result, to_native_path(input));
+#else
 	EXPECT_EQ(expected_result, to_native_path(input));
-#endif
+#endif // MACOSX
+#endif // WIN32
 }
 
 TEST(PathConversion, MissingFile)

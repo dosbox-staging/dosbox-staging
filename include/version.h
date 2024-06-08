@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,14 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
+#ifndef DOSBOX_VERSION_H
+#define DOSBOX_VERSION_H
 
-const char *DOSBOX_GetDetailedVersion() noexcept
-{
-	static constexpr char version[] = "@VCS_TAG@";
-	// Git tag names start with a letter v (by convention).
-	if constexpr (version[0] == 'v')
-		return version + 1;
-	else
-		return version;
-}
+#define DOSBOX_VERSION "0.82.0-alpha"
+
+#endif

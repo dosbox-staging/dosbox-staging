@@ -18,31 +18,31 @@
   <screenshots>
     <screenshot type="default">
       <caption>DOSBox Staging window (splash screen)</caption>
-      <image type="source" width="660" height="535">https://dosbox-staging.github.io/gnome-splash-screen.png</image>
+      <image type="source" width="660" height="535">https://www.dosbox-staging.org/gnome-splash-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>DOSBox Staging window</caption>
-      <image type="source" width="660" height="535">https://dosbox-staging.github.io/gnome-init-screen.png</image>
+      <image type="source" width="660" height="535">https://www.dosbox-staging.org/gnome-init-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>Heroes of Might and Magic 2 (1996), pixel-perfect</caption>
-      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/homm2-pp-2x2.png</image>
+      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/homm2-pp-2x2.png</image>
     </screenshot>
     <screenshot>
       <caption>Wolfenstein 3D (1992), pixel-perfect</caption>
-      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/wolf3d-pp-4x5.png</image>
+      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/wolf3d-pp-4x5.png</image>
     </screenshot>
     <screenshot>
       <caption>Battle Chess (1988), sharp-bilinear scaling</caption>
-      <image type="source" width="1920" height="1080">https://dosbox-staging.github.io/bc.png</image>
+      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/bc.png</image>
     </screenshot>
   </screenshots>
   <categories>
     <category>Emulator</category>
   </categories>
   <releases>
-    <release version="0.82.0-alpha" date="2023-12-20"/>
-    <release version="0.81.0-rc1" date="2023-12-20"/>
+    <release version="0.81.1" date="2024-05-12"/>
+    <release version="0.81.0" date="2024-02-14"/>
     <release version="0.80.1" date="2023-01-06"/>
     <release version="0.80.0" date="2022-12-20"/>
     <release version="0.79.1" date="2022-09-30"/>
@@ -68,7 +68,7 @@
   <launchable type="desktop-id">dosbox-staging.desktop</launchable>
   <developer_name>The DOSBox Staging Team</developer_name>
   <update_contact>dreamer.tan@gmail.com</update_contact>
-  <url type="homepage">https://dosbox-staging.github.io/</url>
+  <url type="homepage">https://www.dosbox-staging.org/</url>
   <url type="bugtracker">https://github.com/dosbox-staging/dosbox-staging/issues</url>
   <content_rating type="oars-1.0"/>
 </component>

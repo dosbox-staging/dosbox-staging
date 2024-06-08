@@ -57,9 +57,9 @@ public:
 	BatchFile& operator=(const BatchFile&) = delete;
 	BatchFile(BatchFile&&)                 = delete;
 	BatchFile& operator=(BatchFile&&)      = delete;
-	virtual ~BatchFile()                   = default;
+	~BatchFile()                           = default;
 
-	virtual bool ReadLine(char* line);
+	bool ReadLine(char* line);
 	bool Goto(std::string_view label);
 	void Shift();
 	void SetEcho(bool echo_on);
@@ -103,8 +103,6 @@ private:
 	std_fs::path path;
 };
 
-extern std::unique_ptr<ShellHistory> global_shell_history;
-
 class DOS_Shell : public Program {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
@@ -116,7 +114,7 @@ private:
 
 	friend class AutoexecEditor;
 
-	ShellHistory& history                  = *global_shell_history;
+	std::shared_ptr<ShellHistory> history  = {};
 	std::stack<BatchFile> batchfiles       = {};
 	uint16_t input_handle                  = STDIN;
 	bool call                              = false;

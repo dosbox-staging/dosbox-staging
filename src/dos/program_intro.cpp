@@ -75,8 +75,6 @@ void INTRO::Run(void) {
 		output.Display();
 		return;
 	}
-    /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
-    if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
     if (cmd->FindExist("cdrom",false)) {
 #ifdef WIN32
         WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
@@ -168,43 +166,26 @@ void INTRO::AddMessages() {
 		);
 	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
 	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-	        "DOSBox provides CD-ROM emulation on two levels.\n"
-	        "\n"
-	        "The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX\n"
-	        "and marks the files read-only. Usually this is enough for most games:\n"
+	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
+	        "the files as read-only.\n"
+	        "Usually this is enough for most games:\n"
 	        "[color=light-blue]mount D C:\\example -t cdrom[reset]\n"
 	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
 	        "[color=light-blue]mount D C:\\example -t cdrom -label CDLABEL[reset]\n"
 	        "\n"
-	        "The [color=brown]next[reset] level adds some low-level support.\n"
-	        "Therefore only works on CD-ROM drives:\n"
-	        "[color=light-blue]mount d[reset] [color=red]D:\\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]\n"
-	        "Replace [color=red]D:\\ [reset]with the location of your CD-ROM.\n"
-	        "Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:\n"
-	        "[color=light-blue]mount -listcd[reset]\n"
-	        "\n"
-	        "Additionally, you can use imgmount to mount ISO or CUE/BIN images:\n"
+	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n");
 	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
 	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-	        "DOSBox provides CD-ROM emulation on two levels.\n"
-	        "\n"
-	        "The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX\n"
-	        "and marks the files read-only. Usually this is enough for most games:\n"
+	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
+	        "the files as read-only.\n"
+	        "Usually this is enough for most games:\n"
 	        "[color=light-blue]mount D ~/example -t cdrom[reset]\n"
 	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
 	        "[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]\n"
 	        "\n"
-	        "The [color=brown]next[reset] level adds some low-level support.\n"
-	        "Therefore only works on CD-ROM drives:\n"
-	        "[color=light-blue]mount d[reset] [color=red]~/example[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]\n"
-	        "\n"
-	        "Replace [color=red]~/example[reset] with the location of your CD-ROM.\n"
-	        "Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:\n"
-	        "[color=light-blue]mount -listcd[reset]\n"
-	        "\n"
-	        "Additionally, you can use imgmount to mount ISO or CUE/BIN images:\n"
+	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n");
 	MSG_Add("PROGRAM_INTRO_SPECIAL",

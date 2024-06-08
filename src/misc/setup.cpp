@@ -35,6 +35,7 @@
 #include "fs_utils.h"
 #include "string_utils.h"
 #include "support.h"
+#include "version.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char** _environ;
@@ -43,7 +44,7 @@ extern char** environ;
 #endif
 
 // Commonly accessed global that holds configuration records
-std::unique_ptr<Config> control = {};
+ConfigPtr control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std_fs::path current_config_dir;
@@ -267,7 +268,7 @@ bool Property::ValidateValue(const Value& in)
 	}
 }
 
-static std::string create_config_name(const std::string& propname) 
+static std::string create_config_name(const std::string& propname)
 {
 	std::string result = "CONFIG_" + propname;
 	upcase(result);
@@ -310,27 +311,29 @@ std::string Property::GetHelp() const
 			help_text = format_str(help_text,
 			                       GetDefaultValue().ToString().c_str());
 		}
-		result.append(help_text).append("\n");
+		result.append(help_text);
 	}
 
-	const auto configitem_has_message = [this](const auto& value) {
-		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
-		       (iequals(value, propname) &&
+	const auto configitem_has_message = [this](const auto& val) {
+		return MSG_Exists(create_config_item_name(propname, val).c_str()) ||
+		       (iequals(val, propname) &&
 		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
 	};
 	if (std::any_of(enabled_options.begin(),
 	                enabled_options.end(),
 	                configitem_has_message)) {
-		for (const auto& value : enabled_options) {
-			if (iequals(value, propname) &&
+		for (const auto& val : enabled_options) {
+			if (!result.empty()) {
+				result.append("\n");
+			}
+			if (iequals(val, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
 				result.append(MSG_Get(
 				        create_config_item_name(propname, {}).c_str()));
 			} else {
 				result.append(MSG_Get(
-				        create_config_item_name(propname, value).c_str()));
+				        create_config_item_name(propname, val).c_str()));
 			}
-			result.append("\n");
 		}
 	}
 	if (result.empty()) {
@@ -350,27 +353,29 @@ std::string Property::GetHelpUtf8() const
 			help_text = format_str(help_text,
 			                       GetDefaultValue().ToString().c_str());
 		}
-		result.append(help_text).append("\n");
+		result.append(help_text);
 	}
 
-	const auto configitem_has_message = [this](const auto& value) {
-		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
-		       (iequals(value, propname) &&
+	const auto configitem_has_message = [this](const auto& val) {
+		return MSG_Exists(create_config_item_name(propname, val).c_str()) ||
+		       (iequals(val, propname) &&
 		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
 	};
 	if (std::any_of(enabled_options.begin(),
 	                enabled_options.end(),
 	                configitem_has_message)) {
-		for (const auto& value : enabled_options) {
-			if (iequals(value, propname) &&
+		for (const auto& val : enabled_options) {
+			if (!result.empty()) {
+				result.append("\n");
+			}
+			if (iequals(val, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
 				result.append(MSG_GetRaw(
 				        create_config_item_name(propname, {}).c_str()));
 			} else {
 				result.append(MSG_GetRaw(
-				        create_config_item_name(propname, value).c_str()));
+				        create_config_item_name(propname, val).c_str()));
 			}
-			result.append("\n");
 		}
 	}
 	if (result.empty()) {
@@ -950,7 +955,7 @@ Property* Section_prop::Get_prop(int index)
 	return nullptr;
 }
 
-Property* Section_prop::Get_prop(const std::string& propname)
+Property* Section_prop::Get_prop(const std::string_view propname)
 {
 	for (Property* property : properties) {
 		if (property->propname == propname) {
@@ -1032,7 +1037,10 @@ bool Section_prop::HandleInputline(const std::string& line)
 		if (p->IsDeprecated()) {
 			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
 			LOG_WARNING("CONFIG: %s", p->GetHelp().c_str());
-			return false;
+
+			if (!p->IsDeprecatedButAllowed()) {
+				return false;
+			}
 		}
 
 		return p->SetValue(val);
@@ -1107,7 +1115,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	}
 
 	// Print start of config file and add a return to improve readibility
-	fprintf(outfile, MSG_GetRaw("CONFIGFILE_INTRO"), VERSION);
+	fprintf(outfile, MSG_GetRaw("CONFIGFILE_INTRO"), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
@@ -1381,10 +1389,10 @@ Config::~Config()
 	}
 }
 
-Section* Config::GetSection(const std::string& section_name) const
+Section* Config::GetSection(const std::string_view section_name) const
 {
 	for (auto* el : sectionlist) {
-		if (!strcasecmp(el->GetName(), section_name.c_str())) {
+		if (iequals(el->GetName(), section_name)) {
 			return el;
 		}
 	}
@@ -1605,6 +1613,20 @@ bool has_false(const std::string_view setting)
 	return (has_bool && *has_bool == false);
 }
 
+void set_section_property_value(const std::string_view section_name,
+                                const std::string_view property_name,
+                                const std::string_view property_value)
+{
+	auto* sect_updater = static_cast<Section_prop*>(
+	        control->GetSection(section_name));
+	assertm(sect_updater, "Invalid section name");
+
+	auto* property = sect_updater->Get_prop(property_name);
+	assertm(property, "Invalid property name");
+
+	property->SetValue(std::string(property_value));
+}
+
 void Config::ParseEnv()
 {
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
@@ -1720,8 +1742,6 @@ void MSG_Init(Section_prop*);
 // -conf's, and finally the local dosbox.conf
 void Config::ParseConfigFiles(const std_fs::path& config_dir)
 {
-	std::string config_file;
-
 	// First: parse the user's primary 'dosbox-staging.conf' config file
 	const bool load_primary_config = !arguments.noprimaryconf;
 
@@ -1894,7 +1914,7 @@ void Config::ParseArguments()
 	                        cmdline->FindRemoveBoolArgument("resetmapper");
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
-	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') || 
+	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
 	                     cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");

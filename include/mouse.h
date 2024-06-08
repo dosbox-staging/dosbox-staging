@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "control.h"
 #include "rect.h"
 
 // ***************************************************************************
@@ -33,7 +34,7 @@
 // ***************************************************************************
 
 void MOUSE_Init(Section *);
-void MOUSE_AddConfigSection(const config_ptr_t &);
+void MOUSE_AddConfigSection(const ConfigPtr &);
 
 // ***************************************************************************
 // Data types

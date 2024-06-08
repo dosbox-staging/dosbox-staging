@@ -50,6 +50,165 @@ DOS_File* Files[DOS_FILES] = {};
 // the drive manager class.
 std::array<DOS_Drive*, DOS_DRIVES> Drives = {};
 
+enum class FileSharingMode
+{
+	Compatibility,
+	DenyReadWrite,
+	DenyWrite,
+	DenyRead,
+	DenyNone
+};
+
+// https://stanislavs.org/helppc/int_21-3d.html
+union FileFlagBits
+{
+	uint8_t data = 0;
+	bit_view<0, 3> access_mode;
+	bit_view<4, 3> sharing_mode;
+};
+
+struct FileAccessMode
+{
+	bool read = false;
+	bool write = false;
+};
+
+struct FileOpenFlags
+{
+	FileSharingMode sharing = FileSharingMode::Compatibility;
+	FileAccessMode access = {};
+};
+
+static FileOpenFlags parse_file_flags(const uint8_t flags)
+{
+	FileOpenFlags ret = {};
+
+	const FileFlagBits flag_bits = {flags};
+
+	switch (flag_bits.access_mode) {
+		case OPEN_READ:
+		case OPEN_READ_NO_MOD:
+			ret.access.read = true;
+			ret.access.write = false;
+			break;
+		case OPEN_WRITE:
+			ret.access.read = false;
+			ret.access.write = true;
+			break;
+		case OPEN_READWRITE:
+			ret.access.read = true;
+			ret.access.write = true;
+			break;
+		default:
+			// Assume read/write access for the purpose of file locking checks
+			// This should throw an error when the file actually tries to open
+			ret.access.read = true;
+			ret.access.write = true;
+	}
+
+	switch (flag_bits.sharing_mode) {
+		case 0b000:
+			ret.sharing = FileSharingMode::Compatibility;
+			break;
+		case 0b001:
+			ret.sharing = FileSharingMode::DenyReadWrite;
+			break;
+		case 0b010:
+			ret.sharing = FileSharingMode::DenyWrite;
+			break;
+		case 0b011:
+			ret.sharing = FileSharingMode::DenyRead;
+			break;
+		case 0b100:
+			ret.sharing = FileSharingMode::DenyNone;
+			break;
+		default:
+			// If we somehow get something invalid, assume compatibiliy mode.
+			ret.sharing = FileSharingMode::Compatibility;
+	}
+
+	return ret;
+}
+
+static bool single_directional_sharing_check(const FileOpenFlags& new_file, const FileOpenFlags& existing_file)
+{
+	switch (new_file.sharing) {
+		case FileSharingMode::Compatibility:
+			return existing_file.sharing == FileSharingMode::Compatibility;
+		case FileSharingMode::DenyReadWrite:
+			return false;
+		case FileSharingMode::DenyWrite:
+			if (existing_file.sharing == FileSharingMode::Compatibility) {
+				return false;
+			} else {
+				return !existing_file.access.write;
+			}
+		case FileSharingMode::DenyRead:
+			if (existing_file.sharing == FileSharingMode::Compatibility) {
+				return false;
+			} else {
+				return !existing_file.access.read;
+			}
+		case FileSharingMode::DenyNone:
+			return existing_file.sharing != FileSharingMode::Compatibility;
+	}
+	assertm(false, "Invalid enum value");
+	return false;
+}
+
+static bool file_modes_are_compatible(const FileOpenFlags& new_file, const FileOpenFlags& existing_file)
+{
+	// Needs a two-way check
+	// Run this function twice with arguments reversed the second time
+	return single_directional_sharing_check(new_file, existing_file)
+		&& single_directional_sharing_check(existing_file, new_file);
+}
+
+static bool file_is_locked(const char *file_name, const uint8_t drive, const uint8_t flags)
+{
+	const FileOpenFlags new_file = parse_file_flags(flags);
+
+	for (int i = 0; i < DOS_FILES; ++i) {
+		if (Files[i] && Files[i]->GetDrive() == drive && Files[i]->IsName(file_name)) {
+			const FileOpenFlags existing_file = parse_file_flags(Files[i]->flags);
+			if (!file_modes_are_compatible(new_file, existing_file)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+static bool regions_overlap(const uint32_t pos1, const uint32_t len1, const uint32_t pos2, const uint32_t len2)
+{
+	return !((pos1 >= pos2 + len2) || (pos1 + len1 <= pos2));
+}
+
+static bool region_is_locked(const int file_handle, const uint32_t pos, const uint32_t len)
+{
+	for (int i = 0; i < DOS_FILES; ++i) {
+		// Ignore locks held by the current file handle,
+		// Need to check other handles pointing to the same file.
+		if (i != file_handle && Files[i]) {
+			const auto drive_match =
+				(Files[i]->GetDrive() == Files[file_handle]->GetDrive());
+
+			const auto filename_match =
+				(Files[i]->IsName(Files[file_handle]->GetName()));
+
+			if (drive_match && filename_match) {
+				for (const auto &lock : Files[i]->region_locks) {
+					if (regions_overlap(pos, len, lock.pos, lock.len)) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
 uint8_t DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
 	uint8_t d = DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -287,12 +446,20 @@ bool DOS_MakeDir(const char* const dir)
 		return false;
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	if (Drives.at(drive)->MakeDir(fulldir)) {
+
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
+	if (drive_ptr->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	if (drive_ptr->MakeDir(fulldir)) {
 		return true;
 	}
 
 	/* Determine reason for failing */
-	if (Drives.at(drive)->TestDir(fulldir)) {
+	if (drive_ptr->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 	} else
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -307,8 +474,11 @@ bool DOS_RemoveDir(const char* const dir)
 	 */
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
+
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
 	/* Check if exists */
-	if (!Drives.at(drive)->TestDir(fulldir)) {
+	if (!drive_ptr->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
@@ -320,7 +490,12 @@ bool DOS_RemoveDir(const char* const dir)
 		return false;
 	}
 
-	if (Drives.at(drive)->RemoveDir(fulldir)) {
+	if (drive_ptr->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	if (drive_ptr->RemoveDir(fulldir)) {
 		return true;
 	}
 
@@ -364,20 +539,31 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 		DOS_SetError(DOSERR_NOT_SAME_DEVICE);
 		return false;
 	}
+
+	DOS_Drive* new_ptr = Drives.at(drivenew);
+
 	/*Test if target exists => no access */
 	FatAttributeFlags attr = {};
-	if (Drives.at(drivenew)->GetFileAttr(fullnew, &attr)) {
+	if (new_ptr->GetFileAttr(fullnew, &attr)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+
+	DOS_Drive* old_ptr = Drives.at(driveold);
+
 	/* Source must exist */
-	if (!Drives.at(driveold)->GetFileAttr(fullold, &attr)) {
+	if (!old_ptr->GetFileAttr(fullold, &attr)) {
 		if (!PathExists(oldname)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 
-	if (Drives.at(drivenew)->Rename(fullold, fullnew)) {
+	if (new_ptr->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	if (new_ptr->Rename(fullold, fullnew)) {
 		return true;
 	}
 	/* Rename failed despite checks => no access */
@@ -468,6 +654,16 @@ bool DOS_ReadFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 	}
 */
 	uint16_t toread=*amount;
+
+	// Get current position
+	uint32_t pos = 0;
+	Files[handle]->Seek(&pos, SEEK_CUR);
+
+	if (region_is_locked(handle, pos, toread)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	bool ret=Files[handle]->Read(data,&toread);
 	*amount=toread;
 	return ret;
@@ -490,6 +686,16 @@ bool DOS_WriteFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 	}
 */
 	uint16_t towrite=*amount;
+
+	// Get current position
+	uint32_t pos = 0;
+	Files[handle]->Seek(&pos, SEEK_CUR);
+
+	if (region_is_locked(handle, pos, towrite)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	bool ret=Files[handle]->Write(data,&towrite);
 	*amount=towrite;
 	return ret;
@@ -578,6 +784,11 @@ bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
 		return false;
 	}
 
+	if (Drives.at(drive)->IsReadOnly() || file_is_locked(fullname, drive, OPEN_READWRITE)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	/* We have a position in the main table now find one in the psp table */
 	DOS_PSP psp(dos.psp());
 	*entry = fcb?handle:psp.FindFreeFileEntry();
@@ -652,6 +863,10 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 	if (device) {
 		Files[handle]=new DOS_Device(*Devices[devnum]);
 	} else {
+		if (file_is_locked(fullname, drive, flags)) {
+			DOS_SetError(DOSERR_ACCESS_DENIED);
+			return false;
+		}
 		const auto old_errorcode = dos.errorcode;
 		dos.errorcode = 0;
 		exists = Drives.at(drive)->FileOpen(&Files[handle], fullname, flags);
@@ -749,6 +964,11 @@ bool DOS_UnlinkFile(const char* const name)
 		return false;
 	}
 
+	if (Drives.at(drive)->IsReadOnly()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	return Drives.at(drive)->FileUnlink(fullname);
 }
 
@@ -761,6 +981,9 @@ bool DOS_GetFileAttr(const char* const name, FatAttributeFlags* attr)
 	}
 
 	if (Drives.at(drive)->GetFileAttr(fullname, attr)) {
+		if (Drives.at(drive)->IsReadOnly()) {
+			attr->read_only = true;
+		}
 		return true;
 	} else {
 		*attr = 0;
@@ -775,14 +998,16 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (Drives[drive]->GetType() == DosDriveType::Cdrom ||
-	    Drives[drive]->GetType() == DosDriveType::Iso) {
+
+	DOS_Drive* drive_ptr = Drives.at(drive);
+
+	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
 	FatAttributeFlags old_attr = {};
-	if (!Drives.at(drive)->GetFileAttr(fullname, &old_attr)) {
+	if (!drive_ptr->GetFileAttr(fullname, &old_attr)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
@@ -798,7 +1023,7 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	attr.volume    = old_attr.volume;
 	attr.directory = old_attr.directory;
 
-	return Drives.at(drive)->SetFileAttr(fullname, attr);
+	return drive_ptr->SetFileAttr(fullname, attr);
 }
 
 bool DOS_Canonicalize(const char* const name, char* const canonicalized)
@@ -1562,6 +1787,10 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
+	if (Files[handle]->IsOnReadOnlyMedium()) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
 	Files[handle]->time = ntime;
 	Files[handle]->date = ndate;
 	Files[handle]->newtime = true;
@@ -1581,4 +1810,47 @@ void DOS_SetupFiles()
 
 	Drives.at(z_drive_index) = DriveManager::RegisterFilesystemImage(
 	        z_drive_index, std::make_unique<Virtual_Drive>());
+}
+
+bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
+{
+	const auto handle = RealHandle(entry);
+	if (handle >= DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (region_is_locked(handle, pos, len)) {
+		DOS_SetError(DOSERR_LOCK_VIOLATION);
+		return false;
+	}
+	FileRegionLock lock = {};
+	lock.pos = pos;
+	lock.len = len;
+	Files[handle]->region_locks.push_back(lock);
+	return true;
+}
+
+bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
+{
+	const auto handle = RealHandle(entry);
+	if (handle >= DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	}
+	for (auto it = Files[handle]->region_locks.begin(); it != Files[handle]->region_locks.end(); ++it) {
+		if (it->pos == pos && it->len == len) {
+			Files[handle]->region_locks.erase(it);
+			return true;
+		}
+	}
+	DOS_SetError(DOSERR_LOCK_VIOLATION);
+	return false;
 }

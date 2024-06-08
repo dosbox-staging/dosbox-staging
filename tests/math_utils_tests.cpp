@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -330,6 +330,15 @@ TEST(clamp_to_int32, unsigned_literals)
 	EXPECT_EQ(clamp_to_int32(1'000'000u), 1'000'000);
 	EXPECT_EQ(clamp_to_int32(1'000'000'000u), 1'000'000'000);
 	EXPECT_EQ(clamp_to_int32(10'000'000'000u), INT32_MAX);
+}
+
+TEST(ascii_to_bcd, test_string)
+{
+	std::vector<uint8_t> bcd = ascii_to_bcd("12345");
+	ASSERT_EQ(bcd.size(), 3);
+	EXPECT_EQ(bcd[0], (1 << 4) | 2);
+	EXPECT_EQ(bcd[1], (3 << 4) | 4);
+	EXPECT_EQ(bcd[2], 5 << 4);
 }
 
 } // namespace

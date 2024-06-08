@@ -132,14 +132,14 @@ bool DOS_IOCTL(void) {
 	case 0x08:		/* Check if block device removable */
 		/* cdrom drives and drive a&b are removable */
 		if (drive < 2) reg_ax=0;
-		else if (!Drives[drive]->isRemovable()) reg_ax=1;
+		else if (!Drives[drive]->IsRemovable()) reg_ax=1;
 		else {
 			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 			return false;
 		}
 		return true;
 	case 0x09:		/* Check if block device remote */
-		if ((drive >= 2) && Drives[drive]->isRemote()) {
+		if ((drive >= 2) && Drives[drive]->IsRemote()) {
 			reg_dx=0x1000;	// device is remote
 			// undocumented bits always clear
 		} else {
@@ -161,7 +161,7 @@ bool DOS_IOCTL(void) {
 				DOS_SetError(DOSERR_ACCESS_DENIED);
 				return false;
 			}
-			if (reg_ch != 0x08 || Drives[drive]->isRemovable()) {
+			if (reg_ch != 0x08 || Drives[drive]->IsRemovable()) {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
 			}
@@ -215,7 +215,7 @@ bool DOS_IOCTL(void) {
 		if (drive < 2) {
 			if (Drives[drive]) reg_al=drive+1;
 			else reg_al=1;
-		} else if (Drives[drive]->isRemovable()) {
+		} else if (Drives[drive]->IsRemovable()) {
 			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 			return false;
 		} else reg_al=0;	/* Only 1 logical drive assigned */

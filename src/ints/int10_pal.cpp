@@ -235,7 +235,7 @@ void INT10_GetAllPaletteRegisters(PhysPt data) {
 
 void INT10_SetSingleDACRegister(uint8_t index,uint8_t red,uint8_t green,uint8_t blue) {
 	IO_Write(VGAREG_DAC_WRITE_ADDRESS,(uint8_t)index);
-	if ((real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x06)==0) {
+	if ((real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) & 0x06) == 0) {
 		IO_Write(VGAREG_DAC_DATA,red);
 		IO_Write(VGAREG_DAC_DATA,green);
 		IO_Write(VGAREG_DAC_DATA,blue);
@@ -258,7 +258,7 @@ void INT10_GetSingleDACRegister(uint8_t index,uint8_t * red,uint8_t * green,uint
 
 void INT10_SetDACBlock(uint16_t index,uint16_t count,PhysPt data) {
  	IO_Write(VGAREG_DAC_WRITE_ADDRESS,(uint8_t)index);
-	if ((real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL)&0x06)==0) {
+	if ((real_readb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset) & 0x06) == 0) {
 		for (;count>0;count--) {
 			IO_Write(VGAREG_DAC_DATA,mem_readb(data++));
 			IO_Write(VGAREG_DAC_DATA,mem_readb(data++));

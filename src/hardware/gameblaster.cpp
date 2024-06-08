@@ -85,7 +85,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
-	                           use_mixer_rate,
+	                           UseMixerRate,
 	                           ChannelName::Cms,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,
@@ -96,29 +96,40 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order       = 1;
-		constexpr auto cutoff_freq = 6000;
-		channel->ConfigureLowPassFilter(order, cutoff_freq);
+	//
+	auto enable_filter = [&]() {
+		constexpr auto Order        = 1;
+		constexpr auto CutoffFreqHz = 6000;
+
+		channel->ConfigureLowPassFilter(Order, CutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+	};
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
-			LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'off'",
-			            filter_choice.c_str());
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		if (*maybe_bool) {
+			enable_filter();
+		} else {
+			channel->SetLowPassFilter(FilterState::Off);
 		}
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'on'",
+		            filter_choice.c_str());
 
-		channel->SetLowPassFilter(FilterState::Off);
+		set_section_property_value("sblaster", "cms_filter", "on");
+		enable_filter();
 	}
 
 	// Calculate rates and ratio based on the mixer's rate
-	const auto frame_rate_hz = channel->GetSampleRate();
+	const auto sample_rate_hz = channel->GetSampleRate();
 
-	// Set up the resampler to convert from the render rate to the mixer's frame rate
-	const auto max_freq = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
-	for (auto &r : resamplers)
-		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz, frame_rate_hz, max_freq));
+	// Set up the resampler to convert from the render rate to the mixer's
+	// frame rate
+	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
+	for (auto& r : resamplers) {
+		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
+		                                              sample_rate_hz,
+		                                              max_rate_hz));
+	}
 
 	LOG_MSG("CMS: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
 	        base_port,

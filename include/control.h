@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -125,7 +125,7 @@ public:
 		return sectionlist.end();
 	}
 
-	Section* GetSection(const std::string& section_name) const;
+	Section* GetSection(const std::string_view section_name) const;
 	Section* GetSectionFromProperty(const char* prop) const;
 
 	void OverwriteAutoexec(const std::string& conf, const std::string& line);
@@ -158,5 +158,10 @@ public:
 
 	Verbosity GetStartupVerbosity() const;
 };
+
+using ConfigPtr = std::unique_ptr<Config>;
+extern ConfigPtr control;
+
+void restart_dosbox(std::vector<std::string> &parameters = control->startup_params);
 
 #endif

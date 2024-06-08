@@ -45,6 +45,10 @@ std::optional<bool> parse_bool_setting(const std::string_view setting);
 bool has_true(const std::string_view setting);
 bool has_false(const std::string_view setting);
 
+void set_section_property_value(const std::string_view section_name,
+                                const std::string_view property_name,
+                                const std::string_view property_value);
+
 class Hex {
 private:
 	int value;
@@ -125,7 +129,13 @@ private:
 class Property {
 public:
 	struct Changeable {
-		enum Value { Always, WhenIdle, OnlyAtStart, Deprecated };
+		enum Value {
+			Always,
+			WhenIdle,
+			OnlyAtStart,
+			Deprecated,
+			DeprecatedButAllowed
+		};
 	};
 
 	const std::string propname;
@@ -172,7 +182,13 @@ public:
 
 	bool IsDeprecated() const
 	{
-		return (change == Changeable::Value::Deprecated);
+		return (change == Changeable::Value::Deprecated ||
+		        change == Changeable::Value::DeprecatedButAllowed);
+	}
+
+	bool IsDeprecatedButAllowed() const
+	{
+		return change == Changeable::Value::DeprecatedButAllowed;
 	}
 
 	virtual const std::vector<Value>& GetValues() const;
@@ -406,7 +422,7 @@ public:
 	                                      const std::string& sep);
 
 	Property* Get_prop(int index);
-	Property* Get_prop(const std::string& propname);
+	Property* Get_prop(const std::string_view propname);
 
 	int Get_int(const std::string& _propname) const;
 
@@ -499,7 +515,7 @@ public:
 	std::string data = {};
 };
 
-/* Base for all hardware and software "devices" */
+// Base for all hardware and software "devices"
 class Module_base {
 protected:
 	Section* m_configuration;

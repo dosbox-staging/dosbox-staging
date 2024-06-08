@@ -2180,7 +2180,7 @@ ImageInfo setup_drawing()
 		video_mode.graphics_standard = GraphicsStandard::Vga;
 		video_mode.color_depth       = ColorDepth::IndexedColor256;
 
-		const bool num_scanline_repeats = vga.crtc.maximum_scan_line.maximum_scan_line;
+		const auto num_scanline_repeats = vga.crtc.maximum_scan_line.maximum_scan_line;
 
 		// We assume the two scanline doubling methods cannot be stacked, but
 		// not sure if this is true.
@@ -2305,7 +2305,7 @@ ImageInfo setup_drawing()
 			// double-scan" on VGA (render single-scanned, then double the
 			// image vertically with a scaler).
 			//
-			const bool num_scanline_repeats =
+			const auto num_scanline_repeats =
 			        vga.crtc.maximum_scan_line.maximum_scan_line;
 
 			// We assume the two scanline doubling methods cannot be
@@ -2661,8 +2661,6 @@ ImageInfo setup_drawing()
 
 		vga.draw.blocks = horiz_end;
 
-		video_mode.width = horiz_end * vga.draw.pixels_per_character;
-
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
 		               vga.draw.pixel_doubling_allowed;
 
@@ -2670,6 +2668,7 @@ ImageInfo setup_drawing()
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
+
 			pixel_format = PixelFormat::BGRX32_ByteArray;
 
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
@@ -2678,6 +2677,8 @@ ImageInfo setup_drawing()
 			// Text mode double scanning can only be done by setting
 			// the Double Scanning bit.
 			video_mode.is_double_scanned_mode = is_vga_scan_doubling_bit_set();
+
+			video_mode.width = horiz_end * vga.draw.pixels_per_character;
 
 			if (video_mode.is_double_scanned_mode) {
 				video_mode.height = vert_end / 2;
@@ -2699,6 +2700,7 @@ ImageInfo setup_drawing()
 		} else { // M_EGA
 			vga.draw.pixels_per_character = PixelsPerChar::Eight;
 
+			video_mode.width  = horiz_end * vga.draw.pixels_per_character;
 			video_mode.height = vert_end;
 
 			render_width  = video_mode.width;
@@ -2922,23 +2924,12 @@ ImageInfo setup_drawing()
 	return img_info;
 }
 
-static void finalise_mode_change()
-{
-	// The assumption is that all mode changes eventually call
-	// VGA_SetupDrawing() which concludes the mode change process.
-	// If this assumption turns out to be false, we'll need to
-	// revisit the logic that resets this flag.
-	vga.mode_change_in_progress = false;
-}
-
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
-
-		finalise_mode_change();
 		return;
 	}
 
@@ -3008,8 +2999,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		previous_video_mode = image_info.video_mode;
 	}
-
-	finalise_mode_change();
 }
 
 void VGA_KillDrawing(void) {

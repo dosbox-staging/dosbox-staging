@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -188,7 +191,7 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_Init(Section*);
 void RENDER_Reinit();
 
-void RENDER_AddConfigSection(const config_ptr_t& conf);
+void RENDER_AddConfigSection(const ConfigPtr& conf);
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 
@@ -203,7 +206,7 @@ void RENDER_AddMessages();
 
 void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second);
 
-bool RENDER_StartUpdate(void);
+bool RENDER_StartUpdate();
 void RENDER_EndUpdate(bool abort);
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,

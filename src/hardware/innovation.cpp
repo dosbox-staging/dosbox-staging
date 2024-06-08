@@ -75,13 +75,14 @@ void Innovation::Open(const std::string_view model_choice,
 	else if (clock_choice == "hardsid")
 		chip_clock = 1000000.0;
 	assert(chip_clock);
-	ms_per_clock = millis_in_second / chip_clock;
+
+	ms_per_clock = MillisInSecond / chip_clock;
 
 	// Setup the mixer and get it's sampling rate
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                      use_mixer_rate,
+	                                      UseMixerRate,
 	                                      ChannelName::InnovationSsi2001,
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::ReverbSend,
@@ -99,17 +100,19 @@ void Innovation::Open(const std::string_view model_choice,
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
 		mixer_channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("innovation", "innovation_filter", "off");
 	}
 
-	const auto frame_rate_hz = mixer_channel->GetSampleRate();
+	const auto sample_rate_hz = mixer_channel->GetSampleRate();
 
 	// Determine the passband frequency, which is capped at 90% of Nyquist.
-	const double passband = 0.9 * frame_rate_hz / 2;
+	const double passband = 0.9 * sample_rate_hz / 2;
 
 	// Assign the sampling parameters
 	sid_service->setSamplingParameters(chip_clock,
 	                                   reSIDfp::RESAMPLE,
-	                                   frame_rate_hz,
+	                                   sample_rate_hz,
 	                                   passband);
 
 	// Setup and assign the port address
@@ -325,7 +328,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-void INNOVATION_AddConfigSection(const config_ptr_t& conf)
+void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

@@ -5,132 +5,176 @@ hide:
 
 # Development builds
 
+<style>
+span.error {
+  font-weight: bold;
+  font-size: 95%;
+  color: red;
+}
+</style>
+
 <script>
 
-function set_build_version(gh_api_artifacts, os_name) {
-    fetch(gh_api_artifacts)
-        .then(response => {
-            if (response.status !== 200)
-                return;
-
-            response.json().then(data => {
-                let changelog = data.artifacts
-                    .find(a => a.name.startsWith("changelog-"));
-
-                if (changelog === undefined)
-                    return;
-
-                let n = changelog.name.length;
-                let version = changelog.name.substring(10, n - 4);
-                let version_el = document.getElementById(os_name + "-build-version");
-                version_el.textContent = version;
-            });
-        })
-        .catch(err => {
-            console.log('Fetch Error :-S', err);
-        });
+// For local testing only: uncomment and replace API_TOKEN with a valid GitHub
+// API token. This is to bypass the low hourly rate limits for unauthenticated
+// API access during testing (only 60 requests per hour).
+//
+// !!! IMPORTANT -- *NEVER* check in your API token into the repo !!!
+//
+let headers = {
+//  "Authorization": "bearer API_TOKEN"
 }
 
-function handle_error(error_message, os_name) {
-  let build_link_tr_el = document.getElementById(os_name + "-build-link");
-  build_link_tr_el.innerHTML = error_message;
+function get_build_link_tr_el(os_name) {
+  return document.getElementById(os_name + "-build-link")
+}
+function get_build_version_el(os_name) {
+  return document.getElementById(os_name + "-build-version")
+}
+function get_build_date_el(os_name) {
+  return document.getElementById(os_name + "-build-date")
+}
 
-  let version_el = document.getElementById(os_name + "-build-version");
-  version_el.textContent = '';
+function set_build_version(gh_api_artifacts, os_name) {
+  fetch(gh_api_artifacts, { method: "GET", headers: headers })
+    .then(response => {
+      if (response.status !== 200) {
+        return
+      }
 
-  let date_el = document.getElementById(os_name + "-build-date");
-  date_el.textContent = '';
+      response.json().then(data => {
+        // Extract version and Git hash from the artifact name.
+        // Examples of valid artifact names:
+        //
+        //   dosbox-staging-linux-x86_64-0.82.0-alpha-7342e
+        //   dosbox-staging-macOS-universal-0.82.0-alpha-7342e
+        //   dosbox-staging-windows-x64-0.82.0-alpha-7342e
+        //
+        let platform_re = "[\\w-]*"
+        let version_re  = "(\\d+\.\\d+\.\\d+)"
+        let hash_re     = "([\\w-\.]+)"
+
+        let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
+        let release = data.artifacts.find(a => a.name.match(re))
+
+        if (release === undefined) {
+          return
+        }
+
+        let match = release.name.match(re)
+        let version = match[1]
+        let hash    = match[2]
+
+        get_build_version_el(os_name).textContent = `${version}-${hash}`
+      })
+    })
+    .catch(err => {
+      console.log("Fetch error", err)
+    })
+}
+
+function handle_error(msg1, msg2, msg3, os_name) {
+  console.log(get_build_link_tr_el(os_name));
+  get_build_link_tr_el(os_name).innerHTML = '<span class="error">' + msg1 + '</span>'
+  get_build_version_el(os_name).innerHTML = '<span class="error">' + msg2 + '</span>'
+  get_build_date_el(os_name).innerHTML    = '<span class="error">' + msg3 + '</span>'
 }
 
 // Fetch build status using GitHub API and update HTML
 function set_ci_status(workflow_file, os_name, description) {
 
-    // GitHub has strict rate-limits for anonymous users: 60 requests per hour;
-    // We are requesting only one page, with a limit of 1, with the filter query params.
+  // GitHub has strict rate limits for anonymous users: 60 requests per hour.
+  // We are requesting only one page, with a limit of 1, with the filter query
+  // params.
+  let page = 1
+  let per_page = 1
+  let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
 
-    let page = 1;
-    let per_page = 1;
-    let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
+  let filter_branch = "main"
+  let filter_event  = "push"
+  let filter_status = "success"
 
-    let filter_branch = "main";
-    let filter_event = "push";
-    let filter_status = "success";
+  const queryParams = new URLSearchParams()
+  queryParams.set("page",     page)
+  queryParams.set("per_page", per_page)
+  queryParams.set("branch",   filter_branch)
+  queryParams.set("event",    filter_event)
+  queryParams.set("status",   filter_status)
 
-    const queryParams = new URLSearchParams();
-    queryParams.set("page", page);
-    queryParams.set("per_page", per_page);
-    queryParams.set("branch", filter_branch);
-    queryParams.set("event", filter_event);
-    queryParams.set("status", filter_status);
+  let gh_api_workflows = gh_api_url + "actions/workflows/" + workflow_file +
+                         "/runs?" + queryParams.toString()
 
-    fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs?" +
-          queryParams.toString())
-        .then(response => {
+  fetch(gh_api_workflows, { method: "GET", headers: headers })
+    .then(response => {
+      // Handle HTTP error
+      if (response.status !== 200) {
+        console.warn("Looks like there was a problem." +
+                     "Status Code: " + response.status)
 
-            // Handle HTTP error
-            if (response.status !== 200) {
-                console.log("Looks like there was a problem." +
-                            "Status Code: " + response.status);
-                handle_error(`HTTP Error Code ${response.status}`, os_name);
-                return;
-            }
+        handle_error('Error accessing GitHub API',
+                     'Please try again later',
+                     'Status: ' + response.status, os_name)
+        return
+      }
 
-            response.json().then(data => {
+      response.json().then(data => {
+        // console.log(data.workflow_runs)
+        const status = data.workflow_runs.length && data.workflow_runs[0]
 
-                console.log(data.workflow_runs);
+        // If result not found, query the next page
+        if (status == undefined) {
+            const error_message = `No builds found for ${workflow_file}`
+            console.warn(error_message)
+            handle_error(error_message, os_name)
+            return
+        }
 
-                const status = data.workflow_runs.length && data.workflow_runs[0];
+        // Update HTML elements
+        let build_link = document.createElement("a")
+        build_link.textContent = description
+        build_link.setAttribute("href", status.html_url)
 
-                // If result not found, query the next page
-                if (status == undefined) {
-                    const error_message = `No builds found for ${workflow_file}`;
-                    console.warn(error_message);
-                    handle_error(error_message, os_name);
-                    return;
-                }
+        let build_link_tr_el = get_build_link_tr_el(os_name)
+        build_link_tr_el.innerHTML = ""
+        build_link_tr_el.appendChild(build_link)
 
-                // Update HTML elements
-                let build_link = document.createElement("a");
-                build_link.textContent = description;
-                build_link.setAttribute("href", status.html_url);
-                let build_link_tr_el = document.getElementById(os_name + "-build-link");
-                build_link_tr_el.innerHTML = '';
-                build_link_tr_el.appendChild(build_link);
+        let build_date = new Date(status.updated_at)
+        get_build_date_el(os_name).textContent = build_date.toUTCString()
 
-                let build_date = new Date(status.updated_at);
-                let date_el = document.getElementById(os_name + "-build-date");
-                date_el.textContent = build_date.toUTCString();
-
-                set_build_version(status.artifacts_url, os_name);
-            });
-        })
-        .catch(err => {
-            console.log('Fetch Error :-S', err);
-        });
+        set_build_version(status.artifacts_url, os_name)
+      })
+    })
+    .catch(err => {
+      console.warn("Fetch error", err)
+    })
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    set_ci_status("linux.yml", "linux", "Linux");
-    set_ci_status("macos.yml", "macos", "macOS ¹");
-    set_ci_status("windows-msvc.yml", "windows", "Windows ²");
-});
+  set_ci_status("linux.yml",        "linux",   "Linux")
+  set_ci_status("macos.yml",        "macos",   "macOS ¹")
+  set_ci_status("windows-msvc.yml", "windows", "Windows ²")
+})
 
 </script>
 
 
 !!! warning
 
-    These are unstable development snapshots intended for testing and showcasing new features; if you want to download a stable build, head on to the [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md) download pages.
+    These are unstable development snapshots intended for testing and
+    showcasing new features; if you want to download a stable build, head on
+    to the [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md)
+    download pages.
 
-    Build artifacts are hosted on GitHub; you need to be logged in to download them.
+    Build artifacts are hosted on GitHub; you need to be logged in to download
+    them.
 
 
 <div class="compact">
 <table>
   <tr>
-    <th style="width: 260px">Download link</th>
-    <th style="width: 260px">Build version</th>
-    <th style="width: 260px">Date</th>
+    <th style="width: 240px">Download link</th>
+    <th style="width: 250px">Build version</th>
+    <th style="width: 300px">Date</th>
   </tr>
   <tr>
     <td id="linux-build-link">
@@ -170,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ¹ macOS builds include Intel, Apple silicon, and universal binaries.
 
-² Windows builds include 32 and 64-bit portable ZIP variants.
+² Windows build is a 64-bit portable ZIP package.
 
 
 ## Installation notes

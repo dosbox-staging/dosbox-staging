@@ -30,6 +30,7 @@
 #include "pci_bus.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "version.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01
@@ -48,7 +49,7 @@ static struct {
 static const std::string string_oem         = "S3 Incorporated. Trio64";
 static const std::string string_vendorname  = DOSBOX_TEAM;
 static const std::string string_productname = DOSBOX_NAME;
-static const std::string string_productrev  = VERSION;
+static const std::string string_productrev  = DOSBOX_VERSION;
 
 #ifdef _MSC_VER
 #pragma pack (1)

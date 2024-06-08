@@ -122,13 +122,13 @@ void DOS_InfoBlock::SetLocation(uint16_t segment)
 	const RealPt sft_addr = RealMake(segment, sft_offset);
 	SSET_DWORD(sDIB, firstFileTable, sft_addr);
 	// Next File Table
-	real_writed(segment, sft_offset + 0x00, RealMake(segment + 0x26, 0));
+	real_writed(segment, sft_offset + SftNextTableOffset, RealMake(segment + 0x26, 0));
 	// File Table supports 100 files
-	real_writew(segment, sft_offset + 0x04, 100);
+	real_writew(segment, sft_offset + SftNumberOfFilesOffset, 100);
 	// Last File Table
-	real_writed(segment + 0x26, 0x00, 0xffffffff);
+	real_writed(segment + 0x26, SftNextTableOffset, SftEndPointer);
 	// File Table supports 100 files
-	real_writew(segment + 0x26, 0x04, 100);
+	real_writew(segment + 0x26, SftNumberOfFilesOffset, 100);
 }
 
 void DOS_InfoBlock::SetBuffers(uint16_t x, uint16_t y)

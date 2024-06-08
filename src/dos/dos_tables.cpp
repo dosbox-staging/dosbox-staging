@@ -51,6 +51,11 @@ uint16_t DOS_GetMemory(uint16_t pages) {
 	return page;
 }
 
+void DOS_FreeTableMemory()
+{
+	dos_memseg = DOS_PRIVATE_SEGMENT;
+}
+
 static Bitu DOS_CaseMapFunc(void) {
 	//LOG(LOG_DOSMISC,LOG_ERROR)("Case map routine called : %c",reg_al);
 	return CBRET_NONE;
@@ -180,4 +185,16 @@ void DOS_SetupTables(void) {
 	/* Add it to country structure */
 	host_writed(country_info + 0x12, CALLBACK_RealPointer(call_casemap));
 	dos.tables.country=country_info;
+
+	// Allocate a fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
+	constexpr int BytesPerPage = 16;
+	constexpr int TotalBytes = SftHeaderSize + (SftEntrySize * FakeSftEntries);
+	constexpr int NumPages = (TotalBytes / BytesPerPage) + std::min(TotalBytes % BytesPerPage, 1);
+
+	const auto fake_sft_segment = DOS_GetMemory(NumPages);
+
+	real_writed(fake_sft_segment, SftNextTableOffset, SftEndPointer);
+	real_writeb(fake_sft_segment, SftNumberOfFilesOffset, FakeSftEntries);
+
+	fake_sft_table = RealMake(fake_sft_segment, 0);
 }

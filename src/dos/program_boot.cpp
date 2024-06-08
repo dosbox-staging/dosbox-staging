@@ -55,7 +55,7 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		if (!ldp)
 			return nullptr;
 
-		tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			if (!tryload)
 				*error = 1;
@@ -71,12 +71,12 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		*bsize = ftell(tmpfile);
 		fclose(tmpfile);
 
-		tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb+");
 		if (tmpfile == nullptr) {
 			//				if (!tryload) *error=2;
 			//				return NULL;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+			tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 			if (tmpfile == nullptr) {
 				if (!tryload)
 					*error = 1;

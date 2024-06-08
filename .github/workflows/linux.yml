@@ -24,29 +24,17 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_COMPRESS:      "true"
-  CCACHE_COMPRESSLEVEL: "6"
-  CCACHE_DIR:           "/dev/shm/.ccache"
-  CCACHE_DIRECT:        "true"
-  CCACHE_MAXSIZE:       "128M"
-  CCACHE_SLOPPINESS:    "pch_defines,time_macros"
-  CCACHE_UMASK:         "002"
-
-  CLAMDB_DIR:      "/var/lib/clamav"
-
+  # Docker commmand to run if performing cross builds.defaults:
+  # The command removes the container on exit, runs the 
+  # container as the specified UID:GID, mounts the current
+  # dir into the container at the same path, passes in host 
+  # HOME environment variable, sets the container working directory 
+  # and specifies the image to use. The tag is added in the jobs.
   DOCKER_RUN: >-
     docker run --rm
     -u "$(id --user):$(id --group)"
     -v "$PWD:$PWD"
-    -v "$CCACHE_DIR:$CCACHE_DIR"
     -e HOME
-    -e CCACHE_COMPRESS
-    -e CCACHE_COMPRESSLEVEL
-    -e CCACHE_DIR
-    -e CCACHE_DIRECT
-    -e CCACHE_MAXSIZE
-    -e CCACHE_SLOPPINESS
-    -e CCACHE_UMASK
     --workdir "$PWD"
     ghcr.io/dosbox-staging/debian-cross
 
@@ -89,7 +77,7 @@ jobs:
       matrix:
         conf:
 
-          - name: GCC 10, Ubuntu 22.04
+          - name: GCC 12, Ubuntu 22.04
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
@@ -105,46 +93,15 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: GCC 12, +debugger
+          - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
             max_warnings: 0
             needs_all_deps: true
 
-          - name: GCC, Debian 11, ARMv7
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, aarch64
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: arm64
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, ppc64le
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 21
-            run_tests: true
-            cross: true
-            arch: ppc64el
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC 9, minimum build
-            os: ubuntu-20.04
-            packages: g++-9
+          - name: GCC 11, Ubuntu 22.04, minimal build
+            os: ubuntu-22.04
             build_flags: >-
               -Dbuildtype=minsize
               -Dunit_tests=disabled
@@ -154,34 +111,55 @@ jobs:
               -Duse_opengl=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
-              --native-file=.github/meson/native-gcc-9.ini
             needs_min_deps: true
             max_warnings: -1
+
+          - name: GCC 11, Debian 11, ARMv7
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: armhf
+            deb_vers: 11
+            needs_min_deps: false
+
+          - name: GCC 11, Debian 11, aarch64
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: arm64
+            deb_vers: 11
+            needs_min_deps: false
+
+          - name: GCC 11, Debian 11, ppc64le
+            os: ubuntu-22.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 21
+            run_tests: true
+            cross: true
+            arch: ppc64el
+            deb_vers: 11
+            needs_min_deps: false
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: false
-
-#      - name: Update host repository
-#        run: |
-          # use the following to force full upgrades
-          # sudo apt-get -y upgrade
-          # sudo apt-get -y --with-new-pkgs upgrade
-          # sudo apt-get -y install -y aptitude
-          # echo -e "n\ny\ny" | sudo aptitude -y -f full-upgrade
-          # sudo apt-get update
-          # sudo apt-get -y upgrade
-
+      
+      # Note: not run for cross builds
       - name: Install minimum dependencies
-        if:   matrix.conf.needs_min_deps
+        if:  matrix.conf.needs_min_deps
         run: |
           export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
+          sudo apt-get install -y build-essential libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
           sudo pip3 install --upgrade meson ninja
-
+      
+      # Note: not run for cross builds
       - name: Install all dependencies
         if:   matrix.conf.needs_all_deps
         run: |
@@ -192,44 +170,44 @@ jobs:
             $(cat packages/${{ matrix.conf.os }}-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "dir=$CCACHE_DIR"                                                 >> $GITHUB_OUTPUT
-          echo "today=$(date -I)"                                                >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
-          echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
-
-      - uses:  actions/cache@v4.0.1
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
-          restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
-
       - name: Log environment
         run:  ./scripts/log-env.sh
 
+      # Uses the ./scripts/docker-cross-tag.sh helper script
+      # to set the docker image tag, and check if it exists
+      # in the registry.
+      - name: Get docker image tag and test if exists
+        if: matrix.conf.cross
+        id: docker_tag
+        run: |
+          tag_hash=$(./scripts/docker-cross-tag.sh hash-files ./packages/Dockerfile.debian ./packages/debian-11-docker-apt.txt)
+          tag="${{matrix.conf.deb_vers}}-${{matrix.conf.arch}}-${tag_hash}"
+          echo "IMG_TAG=${tag}" >> $GITHUB_OUTPUT
+          echo "IMG_TAG_EXISTS=$(./scripts/docker-cross-tag.sh tag-exists debian-cross $tag)" >> $GITHUB_OUTPUT
+      
+      # If the image tag does not exist (from previous step), 
+      # Build a new image and push it to the registry using 
+      # the composite action created for the task.
+      - name: Build debian cross docker image if required
+        if: ${{ matrix.conf.cross && steps.docker_tag.outputs.IMG_TAG_EXISTS == 'false' }}
+        uses: ./.github/composite-actions/build-debian-docker
+        with:
+          img-name: debian-cross
+          deb-vers: ${{matrix.conf.deb_vers}}
+          arch: ${{matrix.conf.arch}}
+          tag: ${{ steps.docker_tag.outputs.IMG_TAG }}
+          user: ${{ github.actor }}
+          pass: ${{ secrets.GITHUB_TOKEN }}
+
+      # Set either host meson or docker command depending on
+      # if we are cross compiling
       - name: Set binary names
         id: bins
         run: |
-          set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
           if [ -z "${{matrix.conf.cross}}" ]; then
             echo "MESON_BIN=meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=ccache" >> $GITHUB_OUTPUT
           else
-            if $(git describe | grep -qs '-'); then
-              vers="${{matrix.conf.deb_vers}}-$(git describe | cut -d '-' -f 1)-dev-${{matrix.conf.arch}}"
-            else
-              vers="${{matrix.conf.deb_vers}}-$(git describe)-${{matrix.conf.arch}}"
-            fi
-            echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
+            echo "MESON_BIN=${{env.DOCKER_RUN}}:${{steps.docker_tag.outputs.IMG_TAG}} meson" >> $GITHUB_OUTPUT
           fi
 
       - name: Restore subprojects cache
@@ -251,9 +229,7 @@ jobs:
       - name: Build
         run: |
           set -xo pipefail
-          ${{steps.bins.outputs.CCACHE_BIN}} -z
           ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
-          ${{steps.bins.outputs.CCACHE_BIN}} -s
 
       - name: Run tests
         if:   matrix.conf.run_tests
@@ -267,7 +243,7 @@ jobs:
 
   build_linux_release:
     name: Release build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     needs: cache_subprojects
     steps:
@@ -281,7 +257,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
-            $(cat packages/ubuntu-20.04-apt.txt)
+            $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Restore subprojects cache
@@ -295,32 +271,13 @@ jobs:
       - name: Extract subprojects cache
         run:  scripts/extract-subprojects-tar.sh
 
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "dir=$CCACHE_DIR"                       >> $GITHUB_OUTPUT
-          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
-
-      - uses:  actions/cache@v4.0.1
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-linux-release-${{ steps.prep-ccache.outputs.today }}-1
-          restore-keys: |
-            ccache-linux-release-${{ steps.prep-ccache.outputs.yesterday }}-1
-
       - name: Log environment
         run:  ./scripts/log-env.sh
 
       - name: Inject version string
         run: |
           set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
-          export VERSION=$(git describe --abbrev=5)
+          VERSION=$(./scripts/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup release build
@@ -331,7 +288,6 @@ jobs:
             -Ddefault_library=static \
             --wrap-mode=forcefallback \
             -Db_lto=true -Db_lto_threads=$(nproc) \
-            --native-file=.github/meson/native-gcc-9.ini \
             build \
           || ( cat build/meson-logs/meson-log.txt ; exit 1 )
 
@@ -344,35 +300,12 @@ jobs:
           ./scripts/create-package.sh \
             -p linux \
             build \
-            "dosbox-staging-linux-$VERSION"
+            "dosbox-staging-linux-x86_64-$VERSION"
 
       - name: Create tarball
-        run: tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
-
-      - name:  Prepare Clam AV DB cache
-        id:    prep-clamdb
-        shell: bash
         run: |
-          sudo mkdir -p "${CLAMDB_DIR}"
-          sudo chmod 777 "${CLAMDB_DIR}"
-          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
-      - uses:  actions/cache@v4.0.1
-        id:    cache-clamdb
-        with:
-          path: ${{ env.CLAMDB_DIR }}/*.cvd
-          key:  clamdb-linux-${{ steps.prep-clamdb.outputs.today }}-1
-          restore-keys: |
-            clamdb-linux-${{ steps.prep-clamdb.outputs.yesterday }}-1
-
-      - name: Clam AV scan
-        run: |
-          set -x
-          sudo apt-get install clamav
-          sudo systemctl stop clamav-freshclam
-          sudo sed -i 's/30/20000/g' /etc/clamav/freshclam.conf
-          sudo freshclam --foreground
-          clamscan --heuristic-scan-precedence=yes --recursive --infected .
+          tar -cJf "dosbox-staging-linux-x86_64-$VERSION.tar.xz" \
+            "dosbox-staging-linux-x86_64-$VERSION"
 
       - name: Upload tarball
         uses: actions/upload-artifact@v4.3.1
@@ -380,39 +313,5 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64
-          path: dosbox-staging-linux-${{ env.VERSION }}.tar.xz
-          overwrite: true
-
-
-  # This job exists only to publish an artifact with version info when building
-  # from main branch, so snapshot build version will be visible on:
-  # https://dosbox-staging.github.io/downloads/devel/
-  #
-  publish_additional_artifacts:
-    name: Publish additional artifacts
-    needs: build_linux_release
-    runs-on: ubuntu-22.04
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: Generate changelog
-        run: |
-          set +x
-          git fetch --unshallow
-          git fetch --all --tags --force
-          VERSION=$(git describe --abbrev=4)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          NEWEST_TAG=$(git describe --abbrev=0)
-          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-
-      - uses: actions/upload-artifact@v4.3.1
-        with:
-          # Keep exactly this artifact name; it's being used to propagate
-          # version info via GitHub REST API
-          name: changelog-${{ env.VERSION }}.txt
-          path: changelog-${{ env.VERSION }}.txt
-          overwrite: true
+          name: dosbox-staging-linux-x86_64-${{ env.VERSION }}
+          path: dosbox-staging-linux-x86_64-${{ env.VERSION }}.tar.xz
