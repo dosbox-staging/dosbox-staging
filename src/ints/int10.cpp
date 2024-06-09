@@ -309,33 +309,48 @@ static Bitu INT10_Handler(void) {
 		case 0x20:			/* Set User 8x8 Graphics characters */
 			RealSetVec(0x1f,RealMake(SegValue(es),reg_bp));
 			break;
+
 		case 0x21:			/* Set user graphics characters */
 			RealSetVec(0x43,RealMake(SegValue(es),reg_bp));
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,reg_cx);
 			goto graphics_chars;
+
 		case 0x22:			/* Rom 8x14 set */
 			RealSetVec(0x43,int10.rom.font_14);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,14);
 			goto graphics_chars;
+
 		case 0x23:			/* Rom 8x8 double dot set */
 			RealSetVec(0x43,int10.rom.font_8_first);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,8);
 			goto graphics_chars;
+
 		case 0x24:			/* Rom 8x16 set */
-			if (!IS_VGA_ARCH) break;
+			if (!IS_VGA_ARCH) {
+				break;
+			}
 			RealSetVec(0x43,int10.rom.font_16);
 			real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,16);
 			goto graphics_chars;
+
 graphics_chars:
 			switch (reg_bl) {
-			case 0x00:real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,reg_dl-1);break;
-			case 0x01:real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,13);break;
-			case 0x03:real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,42);break;
+			case 0x00:
+				real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, reg_dl - 1);
+				break;
+			case 0x01:
+				real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, 13);
+				break;
+			case 0x03:
+				real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, 42);
+				break;
 			case 0x02:
-			default:real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,24);break;
+			default:
+				real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, 24);
+				break;
 			}
 			break;
-/* General */
+			/* General */
 		case 0x30:/* Get Font Information */
 			switch (reg_bh) {
 			case 0x00:	/* interupt 0x1f vector */
@@ -345,6 +360,7 @@ graphics_chars:
 					reg_bp=RealOffset(int_1f);
 				}
 				break;
+
 			case 0x01:	/* interupt 0x43 vector */
 				{
 					RealPt int_43=RealGetVec(0x43);
@@ -352,51 +368,68 @@ graphics_chars:
 					reg_bp=RealOffset(int_43);
 				}
 				break;
+
 			case 0x02:	/* font 8x14 */
 				SegSet16(es,RealSegment(int10.rom.font_14));
 				reg_bp=RealOffset(int10.rom.font_14);
 				break;
+
 			case 0x03:	/* font 8x8 first 128 */
 				SegSet16(es,RealSegment(int10.rom.font_8_first));
 				reg_bp=RealOffset(int10.rom.font_8_first);
 				break;
+
 			case 0x04:	/* font 8x8 second 128 */
 				SegSet16(es,RealSegment(int10.rom.font_8_second));
 				reg_bp=RealOffset(int10.rom.font_8_second);
 				break;
+
 			case 0x05:	/* alpha alternate 9x14 */
 				SegSet16(es,RealSegment(int10.rom.font_14_alternate));
 				reg_bp=RealOffset(int10.rom.font_14_alternate);
 				break;
+
 			case 0x06:	/* font 8x16 */
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
 				SegSet16(es,RealSegment(int10.rom.font_16));
 				reg_bp=RealOffset(int10.rom.font_16);
 				break;
+
 			case 0x07:	/* alpha alternate 9x16 */
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
 				SegSet16(es,RealSegment(int10.rom.font_16_alternate));
 				reg_bp=RealOffset(int10.rom.font_16_alternate);
 				break;
+
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Function 11:30 Request for font %2X",reg_bh);
 				break;
 			}
+
 			if ((reg_bh<=7) || (svgaCard==SVGA_TsengET4K)) {
 				reg_cx=real_readw(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 				reg_dl=real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS);
 			}
 			break;
+
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 11:Unsupported character generator call %2X",reg_al);
 			break;
+
 		}
-		if ((reg_al & 0xf0) == 0x10)
+		if ((reg_al & 0xf0) == 0x10) {
 			MOUSEDOS_AfterNewVideoMode(false);
+		}
 		break;
+
 	case 0x12:								/* alternate function select */
-		if (!IS_EGAVGA_ARCH)
+		if (!IS_EGAVGA_ARCH) {
 			break;
+		}
 		switch (reg_bl) {
 		case 0x10:							/* Get EGA Information */
 			reg_bh=(real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS)==0x3B4);
@@ -404,12 +437,18 @@ graphics_chars:
 			reg_cl=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) & 0x0F;
 			reg_ch=real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES) >> 4;
 			break;
+
 		case 0x20:							/* Set alternate printscreen */
 			break;
+
 		case 0x30:							/* Select vertical resolution */
 			{
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
+
 				LOG(LOG_INT10,LOG_WARN)("Function 12:Call %2X (select vertical resolution)",reg_bl);
+
 				if (reg_al > 2) {
 					reg_al = 0;	// invalid VGA subfunction
 					break;
@@ -422,19 +461,23 @@ graphics_chars:
 					modeset_ctl |= 0x80;
 					video_switches |= 8;	// ega normal/cga emulation
 					break;
+
 				case 1: // 350
 					modeset_ctl &= 0x6f;
 					video_switches |= 9;	// ega enhanced
 					break;
+
 				case 2: // 400
 					modeset_ctl &= 0x6f;
 					modeset_ctl |= 0x10;	// use 400-line mode at next mode set
 					video_switches |= 9;	// ega enhanced
 					break;
+
 				default:
 					modeset_ctl &= 0xef;
 					video_switches |= 8;	// ega normal/cga emulation
 					break;
+
 				}
 				real_writeb(BIOSMEM_SEG, BiosDataArea::VgaFlagsRecOffset,modeset_ctl);
 				real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,video_switches);
@@ -443,7 +486,9 @@ graphics_chars:
 			}
 		case 0x31:							/* Palette loading on modeset */
 			{
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
 				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
 				if (reg_al>1) {
 					reg_al=0;		//invalid subfunction
@@ -456,15 +501,20 @@ graphics_chars:
 				break;
 			}
 		case 0x32:							/* Video addressing */
-			if (!IS_VGA_ARCH) break;
+			if (!IS_VGA_ARCH) {
+				break;
+			}
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			if (svgaCard==SVGA_TsengET4K) reg_al&=1;
 			if (reg_al>1) reg_al=0;		//invalid subfunction
 			else reg_al=0x12;			//fake a success call
 			break;
+
 		case 0x33: /* SWITCH GRAY-SCALE SUMMING */
 			{
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
 				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
 				if (reg_al>1) {
 					reg_al=0;
@@ -479,7 +529,9 @@ graphics_chars:
 		case 0x34: /* ALTERNATE FUNCTION SELECT (VGA) - CURSOR EMULATION */
 			{
 				// bit 0: 0=enable, 1=disable
-				if (!IS_VGA_ARCH) break;
+				if (!IS_VGA_ARCH) {
+					break;
+				}
 				if (svgaCard==SVGA_TsengET4K) reg_al&=1;
 				if (reg_al>1) {
 					reg_al=0;
@@ -491,12 +543,17 @@ graphics_chars:
 				break;
 			}
 		case 0x35:
-			if (!IS_VGA_ARCH) break;
+			if (!IS_VGA_ARCH) {
+				break;
+			}
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			reg_al=0x12;
 			break;
+
 		case 0x36: {						/* VGA Refresh control */
-			if (!IS_VGA_ARCH) break;
+			if (!IS_VGA_ARCH) {
+				break;
+			}
 			if ((svgaCard==SVGA_S3Trio) && (reg_al>1)) {
 				reg_al=0;
 				break;
@@ -519,31 +576,43 @@ graphics_chars:
 			break;
 		}
 		break;
+
 	case 0x13:								/* Write String */
 		INT10_WriteString(reg_dh,reg_dl,reg_al,reg_bl,SegPhys(es)+reg_bp,reg_cx,reg_bh);
 		break;
+
 	case 0x1A:								/* Display Combination */
-		if (!IS_VGA_ARCH) break;
+		if (!IS_VGA_ARCH) {
+			break;
+		}
 		if (reg_al<2) {
 			INT10_DisplayCombinationCode(&reg_bx,reg_al==1);
 			reg_ax=0x1A;	// high part destroyed or zeroed depending on BIOS
 		}
 		break;
+
 	case 0x1B:								/* functionality State Information */
-		if (!IS_VGA_ARCH) break;
+		if (!IS_VGA_ARCH) {
+			break;
+		}
 		switch (reg_bx) {
 		case 0x0000:
 			INT10_GetFuncStateInformation(SegPhys(es)+reg_di);
 			reg_al=0x1B;
 			break;
+
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("1B:Unhandled call BX %2X",reg_bx);
 			reg_al=0;
 			break;
+
 		}
 		break;
+
 	case 0x1C:	/* Video Save Area */
-		if (!IS_VGA_ARCH) break;
+		if (!IS_VGA_ARCH) {
+			break;
+		}
 		switch (reg_al) {
 			case 0: {
 				Bitu ret=INT10_VideoState_GetSize(reg_cx);
@@ -567,27 +636,34 @@ graphics_chars:
 				break;
 		}
 		break;
+
 	case 0x4f:								/* VESA Calls */
-		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio)) break;
+		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio)) {
+			break;
+		}
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
 			reg_al=0x4f;
 			reg_ah=VESA_GetSVGAInformation(SegValue(es),reg_di);
 			break;
+
 		case 0x01:							/* Get SVGA Mode Information */
 			reg_al=0x4f;
 			reg_ah=VESA_GetSVGAModeInformation(reg_cx,SegValue(es),reg_di);
 			break;
+
 		case 0x02:							/* Set videomode */
 			MOUSEDOS_BeforeNewVideoMode();
 			reg_al=0x4f;
 			reg_ah=VESA_SetSVGAMode(reg_bx);
 			MOUSEDOS_AfterNewVideoMode(true);
 			break;
+
 		case 0x03:							/* Get videomode */
 			reg_al=0x4f;
 			reg_ah=VESA_GetSVGAMode(reg_bx);
 			break;
+
 		case 0x04:							/* Save/restore state */
 			reg_al=0x4f;
 			switch (reg_dl) {
@@ -599,19 +675,23 @@ graphics_chars:
 					} else reg_ah=1;
 					}
 					break;
+
 				case 1:
 					if (INT10_VideoState_Save(reg_cx,RealMake(SegValue(es),reg_bx))) reg_ah=0;
 					else reg_ah=1;
 					break;
+
 				case 2:
 					if (INT10_VideoState_Restore(reg_cx,RealMake(SegValue(es),reg_bx))) reg_ah=0;
 					else reg_ah=1;
 					break;
+
 				default:
 					reg_ah=1;
 					break;
 			}
 			break;
+
 		case 0x05:
 			if (reg_bh==0) {				/* Set CPU Window */
 				reg_ah=VESA_SetCPUWindow(reg_bl,reg_dl);
@@ -624,10 +704,12 @@ graphics_chars:
 				reg_ah=0x01;
 			}
 			break;
+
 		case 0x06:
 			reg_al=0x4f;
 			reg_ah=VESA_ScanLineLength(reg_bl,reg_cx,reg_bx,reg_cx,reg_dx);
 			break;
+
 		case 0x07:
 			switch (reg_bl) {
 			case 0x80:						/* Set Display Start during retrace */
@@ -635,17 +717,20 @@ graphics_chars:
 				reg_al=0x4f;
 				reg_ah=VESA_SetDisplayStart(reg_cx,reg_dx,reg_bl==0x80);
 				break;
+
 			case 0x01:
 				reg_al=0x4f;
 				reg_bh=0x00;				//reserved
 				reg_ah=VESA_GetDisplayStart(reg_cx,reg_dx);
 				break;
+
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bl);
 				reg_ah=0x1;
 				break;
 			}
 			break;
+
 		case 0x09:
 			switch (reg_bl) {
 			case 0x80:						/* Set Palette during retrace */
@@ -653,16 +738,19 @@ graphics_chars:
 				reg_ah=VESA_SetPalette(SegPhys(es)+reg_di,reg_dx,reg_cx,reg_bl==0x80);
 				reg_al=0x4f;
 				break;
+
 			case 0x01:						/* Get Palette */
 				reg_ah=VESA_GetPalette(SegPhys(es)+reg_di,reg_dx,reg_cx);
 				reg_al=0x4f;
 				break;
+
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bl);
 				reg_ah=0x01;
 				break;
 			}
 			break;
+
 		case 0x0a:							/* Get Pmode Interface */
 			if (int10.vesa_oldvbe) {
 				reg_ax=0x014f;
@@ -675,24 +763,28 @@ graphics_chars:
 				reg_cx=int10.rom.pmode_interface_size;
 				reg_ax=0x004f;
 				break;
+
 			case 0x01:						/* Get code for "set window" */
 				SegSet16(es,RealSegment(int10.rom.pmode_interface));
 				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_window;
 				reg_cx=int10.rom.pmode_interface_start-int10.rom.pmode_interface_window;
 				reg_ax=0x004f;
 				break;
+
 			case 0x02:						/* Get code for "set display start" */
 				SegSet16(es,RealSegment(int10.rom.pmode_interface));
 				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_start;
 				reg_cx=int10.rom.pmode_interface_palette-int10.rom.pmode_interface_start;
 				reg_ax=0x004f;
 				break;
+
 			case 0x03:						/* Get code for "set palette" */
 				SegSet16(es,RealSegment(int10.rom.pmode_interface));
 				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_palette;
 				reg_cx=int10.rom.pmode_interface_size-int10.rom.pmode_interface_palette;
 				reg_ax=0x004f;
 				break;
+
 			default:
 				reg_ax=0x014f;
 				break;
@@ -705,36 +797,45 @@ graphics_chars:
 			break;
 		}
 		break;
+
 	case 0xf0:
 		INT10_EGA_RIL_ReadRegister(reg_bl, reg_dx);
 		break;
+
 	case 0xf1:
 		INT10_EGA_RIL_WriteRegister(reg_bl, reg_bh, reg_dx);
 		break;
+
 	case 0xf2:
 		INT10_EGA_RIL_ReadRegisterRange(reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
 		break;
+
 	case 0xf3:
 		INT10_EGA_RIL_WriteRegisterRange(reg_ch, reg_cl, reg_dx, SegPhys(es)+reg_bx);
 		break;
+
 	case 0xf4:
 		INT10_EGA_RIL_ReadRegisterSet(reg_cx, SegPhys(es)+reg_bx);
 		break;
+
 	case 0xf5:
 		INT10_EGA_RIL_WriteRegisterSet(reg_cx, SegPhys(es)+reg_bx);
 		break;
+
 	case 0xfa: {
 		RealPt pt=INT10_EGA_RIL_GetVersionPt();
 		SegSet16(es,RealSegment(pt));
 		reg_bx=RealOffset(pt);
 		}
 		break;
+
 	case 0xff:
 		if (!warned_ff) {
 			LOG(LOG_INT10, LOG_NORMAL)("INT10: FF:Weird NC call");
 		}
 		warned_ff = true;
 		break;
+
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("Function %4X not supported",reg_ax);
 //		reg_al=0x00;		//Successfull, breaks marriage
