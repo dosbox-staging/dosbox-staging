@@ -37,15 +37,22 @@ static Bitu INT10_Handler(void) {
 	case 0x02:
 	case 0x03:
 	case 0x09:
-	case 0xc:
-	case 0xd:
+	case 0x0c:
+	case 0x0d:
 	case 0x0e:
 	case 0x10:
 	case 0x4f:
-
 		break;
 	default:
-		LOG(LOG_INT10,LOG_NORMAL)("Function AX:%04X , BX %04X DX %04X",reg_ax,reg_bx,reg_dx);
+		LOG_DEBUG("INT10: Function AX: %02X %02X, BX: %02X %02X, CX: %02X %02X, DX: %02X %02X",
+		          reg_ah,
+		          reg_al,
+		          reg_bh,
+		          reg_bl,
+		          reg_ch,
+		          reg_cl,
+		          reg_dh,
+		          reg_dl);
 		break;
 	}
 #endif
@@ -723,8 +730,10 @@ graphics_chars:
 		}
 		break;
 	case 0xff:
-		if (!warned_ff) LOG(LOG_INT10,LOG_NORMAL)("INT10:FF:Weird NC call");
-		warned_ff=true;
+		if (!warned_ff) {
+			LOG(LOG_INT10, LOG_NORMAL)("INT10: FF:Weird NC call");
+		}
+		warned_ff = true;
 		break;
 	default:
 		LOG(LOG_INT10,LOG_ERROR)("Function %4X not supported",reg_ax);
