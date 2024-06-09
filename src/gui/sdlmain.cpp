@@ -4246,6 +4246,8 @@ static void config_add_sdl()
 	pbool = sdl_sec->Add_bool("window_decorations", always, true);
 	pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
 
+	TITLEBAR_AddConfig(*sdl_sec);
+
 	pint = sdl_sec->Add_int("transparency", always, 0);
 	pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
@@ -4396,8 +4398,6 @@ static void config_add_sdl()
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
 	pstring->Set_values({"auto", "allow", "block"});
-
-	TITLEBAR_AddConfig(*sdl_sec);
 }
 
 static int edit_primary_config()
