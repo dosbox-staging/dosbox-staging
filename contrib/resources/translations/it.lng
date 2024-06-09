@@ -1017,6 +1017,57 @@ e ritardi.
   max:            Allocherà tanti cicli quanti il tuo computer è in grado di
                   gestire.
 .
+:CONFIG_CPU_CYCLES
+Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è 
+'auto', imposta i cicli sia per i programmi in modalità reale che protetta.
+Speed of the emulated CPU ('3000' by default). If 'cpu_cycles_protected' is on
+'auto', this sets the cycles for both real and protected mode programs.
+  <number>:  Emula un numero fisso di cicli per millisecondo (circa 
+             corrispondente ai MIPS). L'intervallo di valori valido va da 50
+             a 2000000.
+  max:       Emula quanti pìu cicli la macchina host è in grado di sostenere in
+             un singolo core. Il numero di cicli per millisecondo può variare;
+             ciò può creare problemi in alcuni programmi DOS.
+Note:
+  - Impostare la velocità della CPU a 'max' o valori alti può causare 
+    rallentamenti e interruzioni dell'audio.
+  - Per un risultato ottimale, impostare questo valore al minimo possibile che
+    permette di eseguire il gioco ad una velocità accettabile.
+  - Questa tabella mostra valori di cicli approssimativi per i modelli di CPU 
+    più comuni. DOSBox non emula la CPU in maniera accurata al ciclo: questi 
+    valori sono solo punti di partenza, da regolare poi con precisione in base
+    al gioco.
+      8088 (4.77 MHz)     300
+      286-8               700
+      286-12             1500
+      386SX-20           3000
+      386DX-33           6000
+      386DX-40           8000
+      486DX-33          12000
+      486DX/2-66        25000
+      Pentium 90        50000
+      Pentium MMX-166  100000
+      Pentium II 300   200000
+.
+:CONFIG_CPU_CYCLES_PROTECTED
+Velocità della CPU emulata solo per i programmi in modalità protetta
+('60000' predefinito).
+  auto:      Utilizza l'impostazione 'cpu_cycles'.
+  <number>:  Emula un numero fisso di cicli per millisecondo (circa 
+             corrispondente ai MIPS). L'intervallo di valori valido va da 50
+             a 2000000.
+  max:       Emula quanti pìu cicli la macchina host è in grado di sostenere in
+             un singolo core. Il numero di cicli per millisecondo può variare;
+             ciò può creare problemi in alcuni programmi DOS.
+Nota: Consultare l'impostazione 'cpu_cycles' per informazioni aggiuntive.
+.
+:CONFIG_CPU_THROTTLE
+Abbass automaticamente il numero dei cicli CPU emulati dinamicamente se la CPU
+della macchina host non riesce a sostenere l'emulazione (predefinito 
+disabilitato). Ha effetto solo se i cicli sono impostati ad un valore fisso.
+Quando abilitato, il numero di cicli per millisecondo può variare; ciò può
+creare problemi in alcuni programmi DOS.
+.
 :CONFIG_CYCLEUP
 Numero di cicli di cui aumentare utilizzando l'apposito tasto di scelta rapida
 (predefinito 10). Valori inferiori a 100 saranno trattati come una percentuale.
