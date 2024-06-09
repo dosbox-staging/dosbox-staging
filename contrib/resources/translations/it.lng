@@ -631,6 +631,55 @@ Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
 d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
 del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
+:CONFIG_WINDOW_TITLEBAR
+Lista di informazioni separate da spazi da visualizzare nella barra dei titoli
+della finestra ( predefinito'program=nome dosbox=auto cycles=on mouse=full').
+Se un parametro non è specificato, significa che è utilizzato il suo valore
+di default.
+È possibile mostrare le seguenti informazioni:
+  animation=<value>:  Se impostato ad 'on' (predefinito), verrà mostrata
+                      un'animazione sull'icona di registrazione audio/video.
+                      Impostare ad 'off' per disabilitarla, utile quando il 
+                      font utilizzato produce strani effetti.
+  program=<value>:    Visualizza il nome del programma in esecuzione.
+                      <value> puo essere uno tra:
+                        none/off:  Non visualizzare il nome del programma.
+                        name:      Nome del programma con estensione 
+                                   (predefinito).
+                        path:      Nome, estensione, e percorso di file 
+                                   assoluto.
+                        segment:   Visualizza il nome del segmento della 
+                                   memoria del programma.
+                        'Titolo':  Personalizzato. È possibile usare una 
+                                   qualsiasi tra queste notazioni: "Titolo", 
+                                   (Titolo), <Titolo> o [Titolo].
+                      Nota: Con alcuni software (come Windows 3.1x in modalità 
+                      avanzata) è impossibile riconoscere il nome o il
+                      percorso completo del programma; in questi casi è
+                      utilizzato 'segment'.
+  dosbox=<value>:     Visualizza 'DOSBox Staging' nella barra del titolo.
+                      <value> può essere uno tra:
+                        always:   Visualizza sempre 'DOSBox Staging'.
+                        auto:     Visualizza solo se nessun programma è in
+                                  esecuzione oppure se 'program' è impostato
+                                  a 'none' (predefinito).
+  version=<value>:    Visualizza le informazioni di versione di DOSBox.
+                      <value> può essere uno tra:
+                         none/off:  Non visualizzare le informazioni di 
+                                    versione (predefinito).
+                         simple:    Semplice visualizzazione della versione.
+                         detailed:  Include l'hash Git, se disponibile.
+  cycles=<value>:     Se impostato ad 'on' (predefinito), mostra il valore dei
+                      cicli della CPU. Se non si desidera visualizzarli,
+                      impostarlo ad 'off'.
+  mouse=<value>:      Livello di verbosità delle indicazioni di cattura del
+                      mouse:
+                        none/off:  Non visualizzare alcuna indicazione.
+                        short:     Visualizza solo se il mouse è catturato.
+                        full:      Visualizza informazioni complete su come
+                                   catturare o rilasciare il mouse
+                                   (predefinito).
+.
 :CONFIG_LANGUAGE
 Seleziona la lingua da utilizzare: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl',
 'pl' o 'ru' (predefinito non impostato; equivalente ad 'en').
@@ -1559,6 +1608,14 @@ Forza il filtro della scheda Sound Blaster ad essere sempre attivo
 L'output OPL viene ora ricampionato alla frequenza di riproduzione
 del mixer.
 .
+:CONFIG_CMS
+Abilita l'emulazione CMS (predefinito 'auto').
+  off:   Disabilita l'emulazione CMS (eccetto il caso in cui è utilizzata
+         l'emulazione Game Blaster).
+  on:    Abilita l'emulazione CMS per Sound Blaster 1 e 2.
+  auto:  Abilita automaticamente l'emulazione CMS per Sound Blaster 1 e Game
+         Blaster.
+.
 :CONFIG_OPLMODE
 Tipo di emulazione OPL (predefinito 'auto').
   auto:      Usa il modello appropriato determinato da 'sbtype'.
@@ -1598,6 +1655,13 @@ scrittura della porta I/O:
                                 su un periodo di 200ms.)
                        1000 3000 (Attende 1s prima di applicare la dissolvenza
                                   su un periodo di 3s.)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Rimuovi il DC offset dall'output OPL. Da utilizzare solo come ultima risorsa 
+per risolvere problemi di scoppiettio dell'audio in giochi che riproducono PCM 
+audio tramite il sintetizzatore OPL in schede Sound Blaster o Adlib, come ad 
+esempio Golden Eagle (1991), Wizardry 6 (1990) e Wizardry 7 (1992). Si prega 
+di aprire un ticket in caso altri giochi sono affetti dallo stesso problema.
 .
 :CONFIG_OPLEMU
 Ora è supportata solo l'emulazione OPL 'nuked'.
