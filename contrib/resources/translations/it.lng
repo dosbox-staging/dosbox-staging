@@ -443,11 +443,14 @@ Utilizzo: [color=light-green]config [reset]-set [color=light-cyan][SEZIONE][rese
 :TITLEBAR_CYCLES_MS
 cicli/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUSA)
+:TITLEBAR_MUTED
+NO AUDIO
 .
-:TITLEBAR_HINT_NOMOUSE
-modalità senza mouse
+:TITLEBAR_PAUSED
+PAUSA
+.
+:TITLEBAR_HINT_CAPTURED
+mouse catturato
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 mouse catturato, %s+F10 per rilasciarlo
@@ -928,7 +931,7 @@ hardware:
  - Se hai utilizzato in passato uno scaler avanzato, considera invece una
    delle opzioni 'glshader'.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
 schermo a tubo catodico visualizza le immagini, o un normale shader GLSL nelle
 modalità di uscita OpenGL.
@@ -1245,21 +1248,42 @@ Nota: È possibile regolare con precisione i livelli di coro di ciascun canale
 :CONFIG_MIDIDEVICE
 Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
 (predefinito 'auto'):
-  coremidi:   Utilizza qualsiasi dispositivo configurato nelle impostazioni
-              audio MIDI di MacOS.
-  coreaudio:  Utilizza il sintetizzatore MIDI integrato in MacOS.
-  fluidsynth: Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
-              Fare riferimento alla sezione [fluidsynth] per una configurazione
-              dettagliata.
-  mt32:       Utilizza il sintetizzatore Roland MT-32 incluso in DOSBox.
-              Fare riferimento alla sezione [mt32] per una configurazione
-              dettagliata.
-  auto:       Utilizza uno dei sintetizzatori MIDI inclusi in DOSBox
-              (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
-              dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
-              'midiconfig'). Quest'ultimo potrebbe essere un sintetizzatore
-              software o un dispositivo fisico (predefinito).
-  none:       Disabilita l'uscita MIDI.
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
+  coremidi:    Utilizza qualsiasi dispositivo configurato nelle impostazioni
+               audio MIDI di MacOS.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Utilizza il sintetizzatore MIDI integrato in MacOS.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Utilizza l'interfaccia di riproduzione MIDI Win32.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
+  oss:         Utilizza l'interfaccia di riproduzione MIDI OSS (Linux).
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
+  alsa:        Utilizza l'interfaccia di riproduzione MIDI ALSA (Linux).
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:  Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
+               Fare riferimento alla sezione [fluidsynth] per una 
+               configurazione dettagliata.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:        Utilizza il sintetizzatore Roland MT-32 incluso in DOSBox.
+               Fare riferimento alla sezione [mt32] per una configurazione
+               dettagliata.
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
+  auto:        Utilizza uno dei sintetizzatori MIDI inclusi in DOSBox
+               (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
+               dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
+               'midiconfig'). Quest'ultimo potrebbe essere un sintetizzatore
+               software o un dispositivo fisico (predefinito).
+.
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:        Disabilita l'uscita MIDI.
 .
 :CONFIG_MIDICONFIG
 Opzioni di configurazione per l'interfaccia MIDI selezionata
@@ -1896,11 +1920,11 @@ Configurazione della memoria della macchina PCjr (predefinito 'expanded').
   standard:  Memoria totale di 128 KB con le applicazioni che risiedono al di
              sotto dei 96 KB. Richiesto per alcuni giochi più vecchi
              (ad esempio Jumpman, Troll).
-:CONFIG_IPX
+:CONFIGITEM_IPX
 Abilita il protocollo IPX tramite l'emulazione UDP/IP
 (predefinito disabilitato).
 .
-:CONFIG_NE2000
+:CONFIGITEM_NE2000_SLIRP
 Abilita l'emulazione della scheda di rete Novell NE2000 su una rete basata su
 software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
   - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
@@ -1912,21 +1936,21 @@ Nota: All'interno del DOS, la configurazione richiede un pacchetto driver
       inoltrare le porte dall'host al guest DOS, e dal router al tuo host
       quando funge da server per i giochi multigiocatore.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Indirizzo di base della scheda NE2000 (predefinito 300).
 Nota: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
       assegnati alle schede Sound Blaster e Gravis UltraSound per impostazione
       predefinita.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 Numero IRQ della scheda NE2000 (predefinito 3).
 Nota: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
       'serial2' e Gravis UltraSound per impostazione predefinita.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 Indirizzo MAC della scheda NE2000 (predefinito 'AC:DE:48:88:99:AA').
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Inoltra una o più porte TCP dall'host al guest DOS (predefinito non impostato).
 Il formato è:
   porta1  porta2  porta3 ... (ad es. 21 80 443)
@@ -1947,7 +1971,7 @@ Note:
   - Se vengono fornite porte guest in conflitto, l'ultima regola ha la
     precedenza.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
 Il formato è lo stesso dell'inoltro porte TCP.
 .
@@ -2391,7 +2415,21 @@ Note:
     un'immagine disco rigido avviabile.
 
 Esempi:
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Giochi\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Utenti/NOMEUTENTE/Giochi/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/NOMEUTENTE/giochi/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
@@ -3109,10 +3147,6 @@ Qualcosa è andato storto.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Sovrapposizione %s nell'unità %c montata.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Impossibile montare l'unità Z. L'unità %c risulta già montata.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
