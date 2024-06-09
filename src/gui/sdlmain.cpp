@@ -4334,12 +4334,15 @@ static void config_add_sdl()
 	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
 	pstring->Set_values({
 #if C_OPENGL
-		"opengl_default",
+		        "opengl",
+#endif
+		        "texture", "texturenb",
+	});
+	pstring->SetEnabledOptions({
+#if C_OPENGL
+		"opengl_default", "opengl",
 #else
 		"texture_default",
-#endif
-#if C_OPENGL
-		        "opengl",
 #endif
 		        "texture", "texturenb",
 	});
