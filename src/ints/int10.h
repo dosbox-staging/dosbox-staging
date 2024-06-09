@@ -371,7 +371,7 @@ void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color);
 void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
                     const int offset, const int map, const int height);
 
-void INT10_ReloadFont(void);
+void INT10_ReloadFont();
 
 // Palette functions
 void INT10_SetBackgroundBorder(uint8_t val);

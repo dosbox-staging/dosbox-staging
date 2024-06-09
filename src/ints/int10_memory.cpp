@@ -85,8 +85,10 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 		MEM_BlockCopy(ftwhere + i * 32, font, height);
 		font += height;
 	}
-	// Load alternate character patterns
-	if (map & 0x80) {
+
+	// Load alternate 9x14 or 9x16 character patterns on VGA based on
+	// state of the clocking mode register
+	if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
 		while (auto chr = mem_readb(font++)) {
 			MEM_BlockCopy(ftwhere + chr * 32, font, height);
 			font += height;
@@ -153,28 +155,45 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 	}
 }
 
-void INT10_ReloadFont(void) {
-	Bitu map=0;
-	switch(CurMode->cheight) {
+void INT10_ReloadFont()
+{
+	constexpr auto Reload   = false;
+	constexpr auto NumChars = 256;
+	constexpr auto Offset   = 0;
+	constexpr auto Map      = 0;
+
+	switch (CurMode->cheight) {
 	case 8:
-		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),false,256,0,map,8);
+
+		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               CurMode->cheight);
 		break;
+
 	case 14:
-		if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
-			map = 0x80;
-		}
-		INT10_LoadFont(RealToPhysical(int10.rom.font_14), false, 256, 0, map, 14);
+		INT10_LoadFont(RealToPhysical(int10.rom.font_14),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               CurMode->cheight);
 		break;
+
 	case 16:
 	default:
-		if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
-			map = 0x80;
-		}
-		INT10_LoadFont(RealToPhysical(int10.rom.font_16), false, 256, 0, map, 16);
+		constexpr auto Height = 16;
+		INT10_LoadFont(RealToPhysical(int10.rom.font_16),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               Height);
 		break;
 	}
 }
-
 
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
