@@ -1375,6 +1375,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	max_scanline|=(line_compare & 0x200) >> 3;
 	ver_overflow|=(line_compare & 0x400) >> 4;
 	uint8_t underline=0;
+
 	//  Maximum scanline / Underline Location
 	if (CurMode->special & EGA_LINE_DOUBLE) {
 		if (machine!=MCH_EGA) max_scanline|=0x80;
@@ -1429,8 +1430,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 		break;
 	case M_LIN24:
 		offset = 3 * CurMode->swidth / 8;
-		//  Mode 0x212 has 128 extra bytes per scan line (8 bytes per offset) for compatibility with Windows
-		//  640x480 24-bit S3 Trio drivers
+		//  Mode 0x212 has 128 extra bytes per scan line (8 bytes per
+		//  offset) for compatibility with Windows 640x480 24-bit S3
+		//  Trio drivers
 		if (CurMode->mode == 0x212)
 			offset += 16;
 		break;
@@ -1443,7 +1445,8 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	if (svgaCard == SVGA_S3Trio) {
 		//  Extended System Control 2 Register
-		//  This register actually has more bits but only use the extended offset ones
+		//  This register actually has more bits but only use the
+		//  extended offset ones
 		IO_Write(crtc_base, 0x51);
 		IO_Write(crtc_base + 1, (uint8_t)((offset & 0x300) >> 4));
 		//  Clear remaining bits of the display start
@@ -1465,18 +1468,23 @@ bool INT10_SetVideoMode(uint16_t mode)
 		break;
 	case M_LIN4:
 	case M_EGA:
-		if (CurMode->mode==0x11) // 0x11 also sets address wrap.  thought maybe all 2 color modes did but 0x0f doesn't.
-			mode_control=0xc3; // so.. 0x11 or 0x0f a one off?
-		else {
-			if (machine==MCH_EGA) {
-				if (CurMode->special & EGA_LINE_DOUBLE)
+		// 0x11 also sets address wrap, though maybe all 2
+		// color modes do but 0x0f doesn't.
+		if (CurMode->mode == 0x11) {
+			// so.. 0x11 or 0x0f a one off?
+			mode_control = 0xc3;
+		} else {
+			if (machine == MCH_EGA) {
+				if (CurMode->special & EGA_LINE_DOUBLE) {
 					mode_control = 0xc3;
-				else
+				} else {
 					mode_control = 0x8b;
+				}
 			} else {
-				mode_control=0xe3;
-				if (CurMode->special & VGA_PIXEL_DOUBLE)
+				mode_control = 0xe3;
+				if (CurMode->special & VGA_PIXEL_DOUBLE) {
 					mode_control |= 0x08;
+				}
 			}
 		}
 		break;
@@ -1488,8 +1496,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_LIN24:
 	case M_LIN32:
 		mode_control=0xa3;
-		if (CurMode->special & VGA_PIXEL_DOUBLE)
+		if (CurMode->special & VGA_PIXEL_DOUBLE) {
 			mode_control |= 0x08;
+		}
 		break;
 	case M_CGA16:
 	case M_CGA2_COMPOSITE:
@@ -1579,34 +1588,52 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	switch (CurMode->type) {
 	case M_TEXT:
-		gfx_data[0x5]|=0x10;		//Odd-Even Mode
-		gfx_data[0x6]|=mono_mode ? 0x0a : 0x0e;		//Either b800 or b000
+		// Odd-Even Mode
+		gfx_data[0x5] |= 0x10;
+		// Either b800 or b000
+		gfx_data[0x6] |= mono_mode ? 0x0a : 0x0e;
 		break;
+
 	case M_LIN8:
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN24:
 	case M_LIN32:
 	case M_VGA:
-		gfx_data[0x5]|=0x40;		//256 color mode
-		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
+		// 256 color mode
+		gfx_data[0x5]|=0x40;
+
+		// graphics mode at 0xa000-affff
+		gfx_data[0x6]|=0x05;
 		break;
+
 	case M_LIN4:
 	case M_EGA:
-		if (CurMode->mode == 0x0f)
-			gfx_data[0x7]=0x05;		// only planes 0 and 2 are used
-		gfx_data[0x6]|=0x05;		//graphics mode at 0xa000-affff
+		if (CurMode->mode == 0x0f) {
+			// only planes 0 and 2 are used
+			gfx_data[0x7] = 0x05;
+		}
+		// graphics mode at 0xa000-affff
+		gfx_data[0x6] |= 0x05;
 		break;
+
 	case M_CGA4:
-		gfx_data[0x5]|=0x20;		//CGA mode
-		gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
-		if (machine==MCH_EGA) gfx_data[0x5]|=0x10;
+		// CGA mode
+		gfx_data[0x5]|=0x20;
+		// graphics mode at at 0xb800=0xbfff
+		gfx_data[0x6]|=0x0f;
+		if (machine == MCH_EGA) {
+			gfx_data[0x5] |= 0x10;
+		}
 		break;
+
 	case M_CGA2:
-		if (machine==MCH_EGA) {
-			gfx_data[0x6]|=0x0d;		//graphics mode at at 0xb800=0xbfff
+		if (machine == MCH_EGA) {
+			// graphics mode at at 0xb800=0xbfff
+			gfx_data[0x6] |= 0x0d;
 		} else {
-			gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
+			// graphics mode at at 0xb800=0xbfff
+			gfx_data[0x6] |= 0x0f;
 		}
 		break;
 	case M_CGA16:
@@ -1625,6 +1652,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		assert(false);
 		break;
 	}
+
 	for (auto ct = 0; ct < NumVgaGraphicsRegisters; ++ct) {
 		IO_Write(0x3ce, ct);
 		IO_Write(0x3cf, gfx_data[ct]);
@@ -1639,7 +1667,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 	switch (CurMode->type) {
 	case M_EGA:
 	case M_LIN4:
-		att_data[0x10]=0x01;		//Color Graphics
+		//Color Graphics
+		att_data[0x10]=0x01;
+
 		switch (CurMode->mode) {
 		case 0x0f:
 			att_data[0x12]=0x05;	// planes 0 and 2 enabled
@@ -1651,84 +1681,112 @@ bool INT10_SetVideoMode(uint16_t mode)
 			att_data[0x09]=0x08; // low-intensity in blink-off case
 			att_data[0x0d]=0x18; // high-intensity in blink-off
 			break;
+
 		case 0x11:
 			for (i=1;i<16;i++) att_data[i]=0x3f;
 			break;
+
 		case 0x10:
 		case 0x12:
 			goto att_text16;
+
 		default:
-			if ( CurMode->type == M_LIN4 )
+			if (CurMode->type == M_LIN4) {
 				goto att_text16;
-			for (uint8_t ct=0;ct<8;ct++) {
-				att_data[ct]=ct;
-				att_data[ct+8]=ct+0x10;
+			}
+			for (uint8_t ct = 0; ct < 8; ct++) {
+				att_data[ct]     = ct;
+				att_data[ct + 8] = ct + 0x10;
 			}
 			break;
 		}
 		break;
+
 	case M_TANDY16:
 		// TODO: TANDY_16 seems like an oversight here, as
 		//       this function is supposed to deal with
 		//       MCH_EGA and MCH_VGA only.
-		att_data[0x10]=0x01;		//Color Graphics
-		for (uint8_t ct=0;ct<16;ct++) att_data[ct]=ct;
+
+		// Color Graphics
+		att_data[0x10] = 0x01;
+		for (uint8_t ct = 0; ct < 16; ct++) {
+			att_data[ct] = ct;
+		}
 		break;
+
 	case M_TEXT:
-		if (CurMode->cwidth==9) {
-			att_data[0x13]=0x08;	//Pel panning on 8, although we don't have 9 dot text mode
-			att_data[0x10]=0x0C;	//Color Text with blinking, 9 Bit characters
+		if (CurMode->cwidth == 9) {
+			att_data[0x13] = 0x08; // Pel panning on 8, although we
+			                       // don't have 9 dot text mode
+			att_data[0x10] = 0x0C; // Color Text with blinking, 9
+			                       // Bit characters
 		} else {
-			att_data[0x13]=0x00;
-			att_data[0x10]=0x08;	//Color Text with blinking, 8 Bit characters
+			att_data[0x13] = 0x00;
+			att_data[0x10] = 0x08; // Color Text with blinking, 8
+			                       // Bit characters
 		}
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
-att_text16:
-		if (CurMode->mode==7) {
-			att_data[0]=0x00;
-			att_data[8]=0x10;
-			for (i=1; i<8; i++) {
-				att_data[i]=0x08;
-				att_data[i+8]=0x18;
+		real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAL, 0x30);
+
+	att_text16:
+		if (CurMode->mode == 7) {
+			att_data[0] = 0x00;
+			att_data[8] = 0x10;
+			for (i = 1; i < 8; i++) {
+				att_data[i]     = 0x08;
+				att_data[i + 8] = 0x18;
 			}
 		} else {
-			for (uint8_t ct=0;ct<8;ct++) {
-				att_data[ct]=ct;
-				att_data[ct+8]=ct+0x38;
+			for (uint8_t ct = 0; ct < 8; ct++) {
+				att_data[ct]     = ct;
+				att_data[ct + 8] = ct + 0x38;
 			}
-			att_data[0x06]=0x14;	//Odd Color 6 yellow/brown.
+			att_data[0x06] = 0x14; // Odd Color 6 yellow/brown.
 		}
 		break;
+
 	case M_CGA2:
-		att_data[0x10]=0x01;		//Color Graphics
-		att_data[0]=0x0;
-		for (i=1;i<0x10;i++) att_data[i]=0x17;
-		att_data[0x12]=0x1;			//Only enable 1 plane
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x3f);
+		// Color Graphics
+		att_data[0x10] = 0x01;
+		att_data[0]    = 0x0;
+		for (i = 1; i < 0x10; i++) {
+			att_data[i] = 0x17;
+		}
+		att_data[0x12] = 0x1; // Only enable 1 plane
+		real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAL, 0x3f);
 		break;
+
 	case M_CGA4:
-		att_data[0x10]=0x01;		//Color Graphics
-		att_data[0]=0x0;
-		att_data[1]=0x13;
-		att_data[2]=0x15;
-		att_data[3]=0x17;
-		att_data[4]=0x02;
-		att_data[5]=0x04;
-		att_data[6]=0x06;
-		att_data[7]=0x07;
-		for (uint8_t ct=0x8;ct<0x10;ct++)
+		// Color Graphics
+		att_data[0x10] = 0x01;
+
+		att_data[0] = 0x0;
+		att_data[1] = 0x13;
+		att_data[2] = 0x15;
+		att_data[3] = 0x17;
+		att_data[4] = 0x02;
+		att_data[5] = 0x04;
+		att_data[6] = 0x06;
+		att_data[7] = 0x07;
+
+		for (uint8_t ct = 0x8; ct < 0x10; ct++) {
 			att_data[ct] = ct + 0x8;
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,0x30);
+		}
+		real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAL, 0x30);
 		break;
+
 	case M_VGA:
 	case M_LIN8:
 	case M_LIN15:
 	case M_LIN16:
 	case M_LIN24:
 	case M_LIN32:
-		for (uint8_t ct=0;ct<16;ct++) att_data[ct]=ct;
-		att_data[0x10]=0x41;		//Color Graphics 8-bit
+		for (uint8_t ct = 0; ct < 16; ct++) {
+			att_data[ct] = ct;
+		}
+		// Color Graphics 8-bit
+		att_data[0x10] = 0x41;
 		break;
+
 	case M_CGA16:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
@@ -1745,6 +1803,7 @@ att_text16:
 		assert(false);
 		break;
 	}
+
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
 	if (!vga_flags_rec.load_default_palette) {
@@ -1887,46 +1946,64 @@ att_text16:
 
 	// Set up some special stuff for different modes
 	switch (CurMode->type) {
-	case M_CGA2:
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x1e);
-		break;
+	case M_CGA2: real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x1e); break;
+
 	case M_CGA4:
-		if (CurMode->mode==4) real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2a);
-		else if (CurMode->mode==5) real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2e);
-		else real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2);
-		break;
-	case M_TEXT:
-		switch (CurMode->mode) {
-		case 0:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2c);break;
-		case 1:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x28);break;
-		case 2:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x2d);break;
-		case 3:
-		case 7:real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29);break;
+		if (CurMode->mode == 4) {
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x2a);
+		} else if (CurMode->mode == 5) {
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x2e);
+		} else {
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x2);
 		}
 		break;
+
+	case M_TEXT:
+		switch (CurMode->mode) {
+		case 0:
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x2c);
+			break;
+		case 1:
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x28);
+			break;
+		case 2:
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x2d);
+			break;
+		case 3:
+		case 7:
+			real_writeb(BIOSMEM_SEG, BIOSMEM_CURRENT_MSR, 0x29);
+			break;
+		}
+		break;
+
 	default:
 		break;
 	}
 
 	if (svgaCard == SVGA_S3Trio) {
-		//  Setup the CPU Window
-		IO_Write(crtc_base,0x6a);
-		IO_Write(crtc_base+1,0);
-		//  Setup the linear frame buffer
-		IO_Write(crtc_base,0x59);
+		//  Set up the CPU Window
+		IO_Write(crtc_base, 0x6a);
+		IO_Write(crtc_base + 1, 0);
+
+		//  Set up the linear frame buffer
+		IO_Write(crtc_base, 0x59);
 		IO_Write(crtc_base + 1,
 		         static_cast<uint8_t>((PciGfxLfbBase >> 24) & 0xff));
+
 		IO_Write(crtc_base, 0x5a);
 		IO_Write(crtc_base + 1,
 		         static_cast<uint8_t>((PciGfxLfbBase >> 16) & 0xff));
+
 		IO_Write(crtc_base, 0x6b); // BIOS scratchpad
 		IO_Write(crtc_base + 1,
 		         static_cast<uint8_t>((PciGfxLfbBase >> 24) & 0xff));
 
-		//  Setup some remaining S3 registers
-		IO_Write(crtc_base,0x41); // BIOS scratchpad
+		//  Set up some remaining S3 registers
+		// BIOS scratchpad
+		IO_Write(crtc_base,0x41);
 		IO_Write(crtc_base+1,0x88);
-		IO_Write(crtc_base,0x52); // extended BIOS scratchpad
+		// Extended BIOS scratchpad
+		IO_Write(crtc_base,0x52);
 		IO_Write(crtc_base+1,0x80);
 
 		IO_Write(0x3c4,0x15);
@@ -1953,51 +2030,67 @@ att_text16:
 		IO_WriteB(crtc_base,0x50); IO_WriteB(crtc_base+1,reg_50);
 
 		uint8_t reg_31, reg_3a;
-		switch (CurMode->type) {
-			case M_LIN15:
-			case M_LIN16:
-			case M_LIN24:
-			case M_LIN32:
-				reg_3a=0x15;
-				break;
-			case M_LIN8:
-				// S3VBE20 does it this way. The other double pixel bit does not
-				// seem to have an effect on the Trio64.
-			        if (CurMode->special & VGA_PIXEL_DOUBLE)
-				        reg_3a = 0x5;
-			        else
-				        reg_3a = 0x15;
-			        break;
-		        default: reg_3a = 5; break;
-		        };
 
 		switch (CurMode->type) {
-		case M_LIN4: // <- Theres a discrepance with real hardware on this
+		case M_LIN15:
+		case M_LIN16:
+		case M_LIN24:
+		case M_LIN32: reg_3a = 0x15; break;
+
+		case M_LIN8:
+			// S3VBE20 does it this way. The other double pixel bit
+			// does not seem to have an effect on the Trio64.
+			if (CurMode->special & VGA_PIXEL_DOUBLE) {
+				reg_3a = 0x5;
+			} else {
+				reg_3a = 0x15;
+			}
+			break;
+		default: reg_3a = 5; break;
+		};
+
+		switch (CurMode->type) {
+		case M_LIN4:
+			// Theres a discrepancy with real hardware on this
 		case M_LIN8:
 		case M_LIN15:
 		case M_LIN16:
 		case M_LIN24:
-		case M_LIN32:
-			reg_31 = 9;
-			break;
-		default:
-			reg_31 = 5;
-			break;
+		case M_LIN32: reg_31 = 9; break;
+		default: reg_31 = 5; break;
 		}
-		IO_Write(crtc_base,0x3a);IO_Write(crtc_base+1,reg_3a);
-		IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,reg_31);	//Enable banked memory and 256k+ access
-		IO_Write(crtc_base,0x58);IO_Write(crtc_base+1,0x3);		//Enable 8 mb of linear addressing
 
-		IO_Write(crtc_base,0x38);IO_Write(crtc_base+1,0x48);	//Register lock 1
-		IO_Write(crtc_base,0x39);IO_Write(crtc_base+1,0xa5);	//Register lock 2
+		IO_Write(crtc_base,0x3a);
+		IO_Write(crtc_base+1,reg_3a);
+
+		// Enable banked memory and 256k+ access
+		IO_Write(crtc_base,0x31);
+		IO_Write(crtc_base+1,reg_31);
+
+		// Enable 8 mb of linear addressing
+		IO_Write(crtc_base,0x58);
+		IO_Write(crtc_base+1,0x3);
+
+		// Register lock 1
+		IO_Write(crtc_base,0x38);
+		IO_Write(crtc_base+1,0x48);
+
+		// Register lock 2
+		IO_Write(crtc_base,0x39);
+		IO_Write(crtc_base+1,0xa5);
+
 	} else if (svga.set_video_mode) {
 		VGA_ModeExtraData modeData;
+
 		modeData.ver_overflow = ver_overflow;
 		modeData.hor_overflow = hor_overflow;
+
 		modeData.offset = offset;
+
 		modeData.modeNo = CurMode->mode;
 		modeData.htotal = CurMode->htotal;
 		modeData.vtotal = CurMode->vtotal;
+
 		svga.set_video_mode(crtc_base, &modeData);
 	}
 
@@ -2009,10 +2102,11 @@ att_text16:
 	// Disable palette access
 	IO_Write(0x3c0, 0x20);
 
-	IO_Read(mono_mode ? 0x3ba : 0x3da); // Kukoo2 demo
+	// Fix for Kukoo2 demo
+	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
 	//  Load text mode font
-	if (CurMode->type==M_TEXT) {
+	if (CurMode->type == M_TEXT) {
 		INT10_ReloadFont();
 	}
 
