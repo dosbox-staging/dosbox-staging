@@ -571,8 +571,8 @@ Seleziona la modalità di presentazione dei fotogrammi:
 :CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Backend di rendering da utilizzare per l'uscita video (predefinito 'opengl').
 Il supporto per gli shader è disponibile solamente utilizzando il backend di
-rendering 'opengl', rendendolo la scelta ottimale. È consigliabile usare il 
-backend 'texture' solo come ultima risorsa, un ripiego per driver OpenGL 
+rendering 'opengl', rendendolo la scelta ottimale. È consigliabile usare il
+backend 'texture' solo come ultima risorsa, un ripiego per driver OpenGL
 inesistenti o con bug (circostanza estremamente rara).
 .
 :CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
@@ -582,12 +582,12 @@ Backend di rendering da utilizzare per l'uscita video (predefinito 'texture').
   opengl:     Il backend OpenGL con supporto agli shader (predefinito).
 .
 :CONFIGITEM_OUTPUT_TEXTURE
-  texture:    Il backend texture di SDL con metodo di ricampionamento 
-              bilineare. 
+  texture:    Il backend texture di SDL con metodo di ricampionamento
+              bilineare.
 .
 :CONFIGITEM_OUTPUT_TEXTURENB
-  texturenb:  Il backend texture di SDL con metodo di ricampionamento 
-              nearest-neighbor (non bilineare). 
+  texturenb:  Il backend texture di SDL con metodo di ricampionamento
+              nearest-neighbor (non bilineare).
 .
 :CONFIG_TEXTURE_RENDERER
 Driver di rendering da utilizzare nella modalità di uscita 'texture'
@@ -639,21 +639,21 @@ di default.
 È possibile mostrare le seguenti informazioni:
   animation=<value>:  Se impostato ad 'on' (predefinito), verrà mostrata
                       un'animazione sull'icona di registrazione audio/video.
-                      Impostare ad 'off' per disabilitarla, utile quando il 
+                      Impostare ad 'off' per disabilitarla, utile quando il
                       font utilizzato produce strani effetti.
   program=<value>:    Visualizza il nome del programma in esecuzione.
                       <value> puo essere uno tra:
                         none/off:  Non visualizzare il nome del programma.
-                        name:      Nome del programma con estensione 
+                        name:      Nome del programma con estensione
                                    (predefinito).
-                        path:      Nome, estensione, e percorso di file 
+                        path:      Nome, estensione, e percorso di file
                                    assoluto.
-                        segment:   Visualizza il nome del segmento della 
+                        segment:   Visualizza il nome del segmento della
                                    memoria del programma.
-                        'Titolo':  Personalizzato. È possibile usare una 
-                                   qualsiasi tra queste notazioni: "Titolo", 
+                        'Titolo':  Personalizzato. È possibile usare una
+                                   qualsiasi tra queste notazioni: "Titolo",
                                    (Titolo), <Titolo> o [Titolo].
-                      Nota: Con alcuni software (come Windows 3.1x in modalità 
+                      Nota: Con alcuni software (come Windows 3.1x in modalità
                       avanzata) è impossibile riconoscere il nome o il
                       percorso completo del programma; in questi casi è
                       utilizzato 'segment'.
@@ -665,7 +665,7 @@ di default.
                                   a 'none' (predefinito).
   version=<value>:    Visualizza le informazioni di versione di DOSBox.
                       <value> può essere uno tra:
-                         none/off:  Non visualizzare le informazioni di 
+                         none/off:  Non visualizzare le informazioni di
                                     versione (predefinito).
                          simple:    Semplice visualizzazione della versione.
                          detailed:  Include l'hash Git, se disponibile.
@@ -765,7 +765,7 @@ Personalizza la frequenza dei fotogrammi della modalità video emulata:
              (predefinito).
   host:      Abbina la frequenza DOS alla frequenza di aggiornamento dello
              schermo (vedi impostazione 'host_rate').
-  <valore>:  Imposta la frequenza su un valore intero o decimale compreso 
+  <valore>:  Imposta la frequenza su un valore intero o decimale compreso
              tra 24.000 e 1000.000 Hz.
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 è possibile provare a regolarla in base al gioco.
@@ -1051,7 +1051,7 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
 'auto' passerà a 'dynamic' se disponibile e appropriato.
 .
 :CONFIG_CPUTYPE
-Tipo di CPU usata nell'emulazione (predefinito 'auto'). 'auto' è la scelta 
+Tipo di CPU usata nell'emulazione (predefinito 'auto'). 'auto' è la scelta
 più veloce. La variante prefetch emula la coda di prefetch e richiede il core
 'normal'.
 .
@@ -1067,23 +1067,23 @@ e ritardi.
                   gestire.
 .
 :CONFIG_CPU_CYCLES
-Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è 
+Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è
 'auto', imposta i cicli sia per i programmi in modalità reale che protetta.
 Speed of the emulated CPU ('3000' by default). If 'cpu_cycles_protected' is on
 'auto', this sets the cycles for both real and protected mode programs.
-  <number>:  Emula un numero fisso di cicli per millisecondo (circa 
+  <number>:  Emula un numero fisso di cicli per millisecondo (circa
              corrispondente ai MIPS). L'intervallo di valori valido va da 50
              a 2000000.
   max:       Emula quanti pìu cicli la macchina host è in grado di sostenere in
              un singolo core. Il numero di cicli per millisecondo può variare;
              ciò può creare problemi in alcuni programmi DOS.
 Note:
-  - Impostare la velocità della CPU a 'max' o valori alti può causare 
+  - Impostare la velocità della CPU a 'max' o valori alti può causare
     rallentamenti e interruzioni dell'audio.
   - Per un risultato ottimale, impostare questo valore al minimo possibile che
     permette di eseguire il gioco ad una velocità accettabile.
-  - Questa tabella mostra valori di cicli approssimativi per i modelli di CPU 
-    più comuni. DOSBox non emula la CPU in maniera accurata al ciclo: questi 
+  - Questa tabella mostra valori di cicli approssimativi per i modelli di CPU
+    più comuni. DOSBox non emula la CPU in maniera accurata al ciclo: questi
     valori sono solo punti di partenza, da regolare poi con precisione in base
     al gioco.
       8088 (4.77 MHz)     300
@@ -1102,7 +1102,7 @@ Note:
 Velocità della CPU emulata solo per i programmi in modalità protetta
 ('60000' predefinito).
   auto:      Utilizza l'impostazione 'cpu_cycles'.
-  <number>:  Emula un numero fisso di cicli per millisecondo (circa 
+  <number>:  Emula un numero fisso di cicli per millisecondo (circa
              corrispondente ai MIPS). L'intervallo di valori valido va da 50
              a 2000000.
   max:       Emula quanti pìu cicli la macchina host è in grado di sostenere in
@@ -1112,7 +1112,7 @@ Nota: Consultare l'impostazione 'cpu_cycles' per informazioni aggiuntive.
 .
 :CONFIG_CPU_THROTTLE
 Abbass automaticamente il numero dei cicli CPU emulati dinamicamente se la CPU
-della macchina host non riesce a sostenere l'emulazione (predefinito 
+della macchina host non riesce a sostenere l'emulazione (predefinito
 disabilitato). Ha effetto solo se i cicli sono impostati ad un valore fisso.
 Quando abilitato, il numero di cicli per millisecondo può variare; ciò può
 creare problemi in alcuni programmi DOS.
@@ -1367,7 +1367,7 @@ Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
 .
 :CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
-               Fare riferimento alla sezione [fluidsynth] per una 
+               Fare riferimento alla sezione [fluidsynth] per una
                configurazione dettagliata.
 .
 :CONFIGITEM_MIDIDEVICE_MT32
@@ -1529,7 +1529,7 @@ Caricata da
 .
 :CONFIG_SBTYPE
 Modello di Sound Blaster da emulare (predefinito 'sb16').
-Sono elencati anche i modelli scelti automaticamente con quando 'oplmode' e 
+Sono elencati anche i modelli scelti automaticamente con quando 'oplmode' e
 'cms' sono impostate su 'auto'.
   gb:        Game Blaster          - CMS
   sb1:       Sound Blaster 1.0     - OPL2, CMS
@@ -1545,7 +1545,7 @@ Note:
   - L'opzione 'ess' permette di ottenere una migliore resa delle tracce
     musicali attraverso il sintetizzatore ESFM nei giochi che lo supportano.
     Il DAC ESS non è emulato, ma la scheda è comunque compatibile con la Sound
-    Blaster Pro, è quindi possibile configurare il gioco per utilizzare 
+    Blaster Pro, è quindi possibile configurare il gioco per utilizzare
     Sound Blaster per riprodurre gli effetti sonori.
 .
 :CONFIG_SBBASE
@@ -1565,9 +1565,9 @@ Permette al mixer della scheda Sound Blaster di modificare il mixer
 di DOSBox (predefinito abilitato).
 La scheda Sound Blaster Pro 1 e successive permettono ai programmi di
 importare il volume per l'audio digitale (DAC), sintetizzatore FM, e output
-CD audio. Questi corrispondono ai canali del mixer di DOSBox SB, OPL, e 
+CD audio. Questi corrispondono ai canali del mixer di DOSBox SB, OPL, e
 CDAUDIO, rispettivamente.
-  on:   Il volume di questi canali è una combinazione del volume impostato 
+  on:   Il volume di questi canali è una combinazione del volume impostato
         dal programma e del volume impostato nel mixer di DOSBox.
   off:  Solo il mixer di DOSBox determina il volume di questi canali.
 Nota: Alcuni giochi cambiano i livelli di volume dinamicamente (e.g. abbassano
@@ -1623,17 +1623,17 @@ Tipo di emulazione OPL (predefinito 'auto').
   dualopl2:  Due OPL2 (due chip OPL2 in configurazione stereo).
   opl3:      Yamaha OPL3 (YMF262, stereo).
   opl3gold:  OPL3 e il modulo opzionale AdLib Gold Surround.
-             Da utilizzare con 'sbtype = sb16' per emulare schede 
+             Da utilizzare con 'sbtype = sb16' per emulare schede
              AdLib Gold 1000.
-  esfm:      ESS ESFM (sintetizzatore FM migliorato, ma compatibile 
+  esfm:      ESS ESFM (sintetizzatore FM migliorato, ma compatibile
              con Yamaha OPL3).
   none/off:  Disabilitare l'emulazione OPL.
 Note:
-  - La combinazione di impostazioni 'sbtype = none' e 'oplmode = opl2' 
+  - La combinazione di impostazioni 'sbtype = none' e 'oplmode = opl2'
     emulano la scheda AdLib originale.
-  - Non è sufficiente impostare 'oplmode = esfm' per permettere ai giochi di 
+  - Non è sufficiente impostare 'oplmode = esfm' per permettere ai giochi di
     utilizzare la musica FM ESS; è necessario impostare anche 'sbtype = ess'.
-    'oplmode = esfm' è utile per dare la possibilità di usare un OPL simil-ESFM 
+    'oplmode = esfm' è utile per dare la possibilità di usare un OPL simil-ESFM
     con i modelli Sound Blaster originali.
 .
 :CONFIG_OPL_FADEOUT
@@ -1657,10 +1657,10 @@ scrittura della porta I/O:
                                   su un periodo di 3s.)
 .
 :CONFIG_OPL_REMOVE_DC_BIAS
-Rimuovi il DC offset dall'output OPL. Da utilizzare solo come ultima risorsa 
-per risolvere problemi di scoppiettio dell'audio in giochi che riproducono PCM 
-audio tramite il sintetizzatore OPL in schede Sound Blaster o Adlib, come ad 
-esempio Golden Eagle (1991), Wizardry 6 (1990) e Wizardry 7 (1992). Si prega 
+Rimuovi il DC offset dall'output OPL. Da utilizzare solo come ultima risorsa
+per risolvere problemi di scoppiettio dell'audio in giochi che riproducono PCM
+audio tramite il sintetizzatore OPL in schede Sound Blaster o Adlib, come ad
+esempio Golden Eagle (1991), Wizardry 6 (1990) e Wizardry 7 (1992). Si prega
 di aprire un ticket in caso altri giochi sono affetti dallo stesso problema.
 .
 :CONFIG_OPLEMU
@@ -2282,9 +2282,9 @@ e
 La proprietà '%s' non è modificabile a runtime.
 .
 :PROGRAM_CONFIG_DEPRECATED
-[color=light-red]Questa impostazione è deprecata, ed è supportata solo per 
-compatibilità con vecchi file di configurazione. Si prega di utilizzare le 
-alternative suggerite; il supporto a questa impostazione sarà rimosso in 
+[color=light-red]Questa impostazione è deprecata, ed è supportata solo per
+compatibilità con vecchi file di configurazione. Si prega di utilizzare le
+alternative suggerite; il supporto a questa impostazione sarà rimosso in
 futuro.[reset]
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
