@@ -209,20 +209,47 @@ extern palette_t palette;
 
 struct VideoModeBlock {
 	// BIOS video mode number
-	uint16_t mode;
+	uint16_t mode = 0;
 
-	VGAModes type;
+	// Video mode type primarily based on the memory organisation of the
+	// mode (see vga.h)
+	VGAModes type = {};
 
-	uint16_t swidth, sheight;
-	uint8_t twidth, theight;
-	uint8_t cwidth, cheight;
-	uint8_t ptotal;
-	uint32_t pstart;
-	uint32_t plength;
+	// Screen width & height in pixels
+	uint16_t swidth  = 0;
+	uint16_t sheight = 0;
 
-	uint16_t htotal, vtotal;
-	uint16_t hdispend, vdispend;
-	uint16_t special;
+	// Text mode width & height in number of characters
+	uint8_t twidth  = 0;
+	uint8_t theight = 0;
+
+	// Character matrix width & height in pixels
+	uint8_t cwidth  = 0;
+	uint8_t cheight = 0;
+
+	// Total number of video pages
+	uint8_t ptotal = 0;
+
+	// Start address of the first page in the video memory
+	uint32_t pstart = 0;
+
+	// Length of a single page in bytes
+	uint32_t plength = 0;
+
+	// Horizontal total (in number of clock pulses?)
+	uint16_t htotal = 0;
+
+	// Vertical total in lines
+	uint16_t vtotal = 0;
+
+	// Horizontal display end (number of clock pulses?)
+	uint16_t hdispend = 0;
+
+	// Vertical display end (line number)
+	uint16_t vdispend = 0;
+
+	// Special flags
+	uint16_t special = 0;
 };
 
 extern std::vector<VideoModeBlock> ModeList_VGA;
