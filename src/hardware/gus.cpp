@@ -1747,19 +1747,19 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	int_prop->Set_values({"0", "1", "3", "5", "6", "7"});
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
 
-	auto* str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
-	assert(str_prop);
-	str_prop->Set_help(
-	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
-	        "In this directory there should be a 'MIDI' directory that contains the patch\n"
-	        "files for GUS playback.");
-
-	str_prop = secprop.Add_string("gus_filter", when_idle, "off");
+	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the Gravis UltraSound audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+
+	str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
+	        "In this directory there should be a 'MIDI' directory that contains the patch\n"
+	        "files for GUS playback.");
 }
 
 void GUS_AddConfigSection(const ConfigPtr& conf)
