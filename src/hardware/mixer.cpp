@@ -1713,10 +1713,10 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 // clicks, and optionally performs zero-order-hold-upsampling.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
-                                                     const int frames,
+                                                     const int num_frames,
                                                      std::vector<float>& out)
 {
-	assert(frames >= 0);
+	assert(num_frames >= 0);
 
 	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
@@ -1729,7 +1729,7 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 
 	out.resize(0);
 
-	while (pos < frames) {
+	while (pos < num_frames) {
 		prev_frame = next_frame;
 
 		if (std::is_same<Type, float>::value) {
@@ -1966,9 +1966,9 @@ bool MixerChannel::WakeUp()
 }
 
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::AddSamples(const int frames, const Type* data)
+void MixerChannel::AddSamples(const int num_frames, const Type* data)
 {
-	assert(frames > 0);
+	assert(num_frames > 0);
 
 	last_samples_were_stereo = stereo;
 
@@ -1989,7 +1989,7 @@ void MixerChannel::AddSamples(const int frames, const Type* data)
 	                               : mixer.out_buf;
 
 	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
-	        data, frames, convert_dest_buf);
+	        data, num_frames, convert_dest_buf);
 
 	if (do_lerp_upsample) {
 		auto& s = lerp_upsampler;
@@ -2192,77 +2192,94 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::AddSamples_m8(const int len, const uint8_t* data)
+void MixerChannel::AddSamples_m8(const int num_frames, const uint8_t* data)
 {
-	AddSamples<uint8_t, false, false, true>(len, data);
+	AddSamples<uint8_t, false, false, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_s8(const int len, const uint8_t* data)
+
+void MixerChannel::AddSamples_s8(const int num_frames, const uint8_t* data)
 {
-	AddSamples<uint8_t, true, false, true>(len, data);
+	AddSamples<uint8_t, true, false, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_m8s(const int len, const int8_t* data)
+
+void MixerChannel::AddSamples_m8s(const int num_frames, const int8_t* data)
 {
-	AddSamples<int8_t, false, true, true>(len, data);
+	AddSamples<int8_t, false, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_s8s(const int len, const int8_t* data)
+
+void MixerChannel::AddSamples_s8s(const int num_frames, const int8_t* data)
 {
-	AddSamples<int8_t, true, true, true>(len, data);
+	AddSamples<int8_t, true, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_m16(const int len, const int16_t* data)
+
+void MixerChannel::AddSamples_m16(const int num_frames, const int16_t* data)
 {
-	AddSamples<int16_t, false, true, true>(len, data);
+	AddSamples<int16_t, false, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_s16(const int len, const int16_t* data)
+
+void MixerChannel::AddSamples_s16(const int num_frames, const int16_t* data)
 {
-	AddSamples<int16_t, true, true, true>(len, data);
+	AddSamples<int16_t, true, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_m16u(const int len, const uint16_t* data)
+
+void MixerChannel::AddSamples_m16u(const int num_frames, const uint16_t* data)
 {
-	AddSamples<uint16_t, false, false, true>(len, data);
+	AddSamples<uint16_t, false, false, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_s16u(const int len, const uint16_t* data)
+
+void MixerChannel::AddSamples_s16u(const int num_frames, const uint16_t* data)
 {
-	AddSamples<uint16_t, true, false, true>(len, data);
+	AddSamples<uint16_t, true, false, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_m32(const int len, const int32_t* data)
+
+void MixerChannel::AddSamples_m32(const int num_frames, const int32_t* data)
 {
-	AddSamples<int32_t, false, true, true>(len, data);
+	AddSamples<int32_t, false, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_s32(const int len, const int32_t* data)
+
+void MixerChannel::AddSamples_s32(const int num_frames, const int32_t* data)
 {
-	AddSamples<int32_t, true, true, true>(len, data);
+	AddSamples<int32_t, true, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_mfloat(const int len, const float* data)
+
+void MixerChannel::AddSamples_mfloat(const int num_frames, const float* data)
 {
-	AddSamples<float, false, true, true>(len, data);
+	AddSamples<float, false, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_sfloat(const int len, const float* data)
+
+void MixerChannel::AddSamples_sfloat(const int num_frames, const float* data)
 {
-	AddSamples<float, true, true, true>(len, data);
+	AddSamples<float, true, true, true>(num_frames, data);
 }
-void MixerChannel::AddSamples_m16_nonnative(const int len, const int16_t* data)
+
+void MixerChannel::AddSamples_m16_nonnative(const int num_frames, const int16_t* data)
 {
-	AddSamples<int16_t, false, true, false>(len, data);
+	AddSamples<int16_t, false, true, false>(num_frames, data);
 }
-void MixerChannel::AddSamples_s16_nonnative(const int len, const int16_t* data)
+
+void MixerChannel::AddSamples_s16_nonnative(const int num_frames, const int16_t* data)
 {
-	AddSamples<int16_t, true, true, false>(len, data);
+	AddSamples<int16_t, true, true, false>(num_frames, data);
 }
-void MixerChannel::AddSamples_m16u_nonnative(const int len, const uint16_t* data)
+
+void MixerChannel::AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data)
 {
-	AddSamples<uint16_t, false, false, false>(len, data);
+	AddSamples<uint16_t, false, false, false>(num_frames, data);
 }
-void MixerChannel::AddSamples_s16u_nonnative(const int len, const uint16_t* data)
+
+void MixerChannel::AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data)
 {
-	AddSamples<uint16_t, true, false, false>(len, data);
+	AddSamples<uint16_t, true, false, false>(num_frames, data);
 }
-void MixerChannel::AddSamples_m32_nonnative(const int len, const int32_t* data)
+
+void MixerChannel::AddSamples_m32_nonnative(const int num_frames, const int32_t* data)
 {
-	AddSamples<int32_t, false, true, false>(len, data);
+	AddSamples<int32_t, false, true, false>(num_frames, data);
 }
-void MixerChannel::AddSamples_s32_nonnative(const int len, const int32_t* data)
+
+void MixerChannel::AddSamples_s32_nonnative(const int num_frames, const int32_t* data)
 {
-	AddSamples<int32_t, true, true, false>(len, data);
+	AddSamples<int32_t, true, true, false>(num_frames, data);
 }
 
 void MixerChannel::FillUp()
@@ -2616,17 +2633,17 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	auto output = reinterpret_cast<int16_t*>(stream);
 
 	if (frames_requested != reduce_frames) {
-		// We're doing a very crude sample-skipping style audio stretching
-		// here. However, it's worth keeping it as this path is almost
-		// exclusively used in the fast-forward mode to achieves that cool
-		// "tape speed-up" effect.
+		// We're doing a very crude sample-skipping style audio
+		// stretching here. However, it's worth keeping it as this path
+		// is almost exclusively used in the fast-forward mode to
+		// achieves that cool "tape speed-up" effect.
 		//
 		// Without this effect, the audio becomes a crackling mess when
 		// fast-forwarding.
-		auto frames   = std::min(reduce_frames, frames_requested);
-		auto work_pos = mixer.work.begin() + mixer.pos.load();
+		auto num_frames = std::min(reduce_frames, frames_requested);
+		auto work_pos   = mixer.work.begin() + mixer.pos.load();
 
-		while (frames--) {
+		while (num_frames--) {
 			index += index_add;
 
 			const auto frame = *(work_pos + static_cast<int>(index));
@@ -2635,10 +2652,10 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			*output++ = clamp_to_int16(frame.right);
 		}
 	} else {
-		auto frames   = reduce_frames;
-		auto work_pos = mixer.work.begin() + mixer.pos.load();
+		auto num_frames = reduce_frames;
+		auto work_pos   = mixer.work.begin() + mixer.pos.load();
 
-		while (frames--) {
+		while (num_frames--) {
 			const auto frame = *work_pos++;
 
 			*output++ = clamp_to_int16(frame.left);
@@ -2648,14 +2665,14 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	// Clear the used buffers
 	{
-		auto frames = reduce_frames;
+		auto num_frames = reduce_frames;
 
 		const auto pos_offset = mixer.pos.load();
 		auto work_pos         = mixer.work.begin() + pos_offset;
 		auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
 		auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
 
-		while (frames--) {
+		while (num_frames--) {
 			constexpr AudioFrame Silence = {0.0f};
 
 			*work_pos++       = Silence;

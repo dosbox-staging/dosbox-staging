@@ -41,8 +41,6 @@
 
 #include <Iir.h>
 
-typedef void (*MIXER_MixHandler)(uint8_t* sampdate, int len);
-
 // The mixer callback can accept a static function or a member function
 // using a std::bind. The callback typically requests enough frames to
 // fill one millisecond with of audio. For an audio channel running at
@@ -242,28 +240,28 @@ public:
 	float GetChorusLevel() const;
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void AddSamples(const int len, const Type* data);
+	void AddSamples(const int num_frames, const Type* data);
 
-	void AddSamples_m8(const int len, const uint8_t* data);
-	void AddSamples_s8(const int len, const uint8_t* data);
-	void AddSamples_m8s(const int len, const int8_t* data);
-	void AddSamples_s8s(const int len, const int8_t* data);
-	void AddSamples_m16(const int len, const int16_t* data);
-	void AddSamples_s16(const int len, const int16_t* data);
-	void AddSamples_m16u(const int len, const uint16_t* data);
-	void AddSamples_s16u(const int len, const uint16_t* data);
-	void AddSamples_m32(const int len, const int32_t* data);
-	void AddSamples_s32(const int len, const int32_t* data);
-	void AddSamples_mfloat(const int len, const float* data);
-	void AddSamples_sfloat(const int len, const float* data);
-	void AddSamples_m16_nonnative(const int len, const int16_t* data);
-	void AddSamples_s16_nonnative(const int len, const int16_t* data);
-	void AddSamples_m16u_nonnative(const int len, const uint16_t* data);
-	void AddSamples_s16u_nonnative(const int len, const uint16_t* data);
-	void AddSamples_m32_nonnative(const int len, const int32_t* data);
-	void AddSamples_s32_nonnative(const int len, const int32_t* data);
+	void AddSamples_m8(const int num_frames, const uint8_t* data);
+	void AddSamples_s8(const int num_frames, const uint8_t* data);
+	void AddSamples_m8s(const int num_frames, const int8_t* data);
+	void AddSamples_s8s(const int num_frames, const int8_t* data);
+	void AddSamples_m16(const int num_frames, const int16_t* data);
+	void AddSamples_s16(const int num_frames, const int16_t* data);
+	void AddSamples_m16u(const int num_frames, const uint16_t* data);
+	void AddSamples_s16u(const int num_frames, const uint16_t* data);
+	void AddSamples_m32(const int num_frames, const int32_t* data);
+	void AddSamples_s32(const int num_frames, const int32_t* data);
+	void AddSamples_mfloat(const int num_frames, const float* data);
+	void AddSamples_sfloat(const int num_frames, const float* data);
+	void AddSamples_m16_nonnative(const int num_frames, const int16_t* data);
+	void AddSamples_s16_nonnative(const int num_frames, const int16_t* data);
+	void AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data);
+	void AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data);
+	void AddSamples_m32_nonnative(const int num_frames, const int32_t* data);
+	void AddSamples_s32_nonnative(const int num_frames, const int32_t* data);
 
-	void AddStretched(const int len, int16_t* data);
+	void AddStretched(const int num_frames, int16_t* data);
 
 	void FillUp();
 	void Enable(const bool should_enable);
