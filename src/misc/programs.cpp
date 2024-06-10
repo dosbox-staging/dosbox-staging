@@ -305,7 +305,8 @@ public:
 	void Run(void) override;
 
 private:
-	void restart(const char* useconfig);
+	void DisplayHelp();
+	void HandleHelpCommand(std::vector<std::string> pvars);
 
 	void WriteConfig(const std::string& name)
 	{
