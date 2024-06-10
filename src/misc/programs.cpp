@@ -306,7 +306,8 @@ public:
 
 private:
 	void DisplayHelp();
-	void HandleHelpCommand(std::vector<std::string> pvars);
+
+	void HandleHelpCommand(const std::vector<std::string>& pvars);
 
 	void WriteConfig(const std::string& name)
 	{
@@ -326,6 +327,208 @@ private:
 		return false;
 	}
 };
+
+void CONFIG::DisplayHelp() {
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
+	output.Display();
+}
+
+void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
+{
+	auto pvars = pvars_in;
+
+	switch (pvars.size()) {
+	case 0: DisplayHelp(); return;
+
+	case 1: {
+		if (!strcasecmp("sections", pvars[0].c_str())) {
+			// List the sections
+			WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
+			for (const Section* sec : *control) {
+				if (sec->IsActive()) {
+					WriteOut("  - %s\n", sec->GetName());
+				}
+			}
+			return;
+		}
+
+		// If it's a section, leave it as single param
+		Section* sec = control->GetSection(pvars[0]);
+		if (!sec || !sec->IsActive()) {
+			// Could be a property
+			sec = control->GetSectionFromProperty(pvars[0].c_str());
+			if (!sec || !sec->IsActive()) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+				         pvars[0].c_str());
+				return;
+			}
+			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+		}
+		break;
+	}
+	case 2: {
+		Section* sec = control->GetSection(pvars[0]);
+		if (sec && !sec->IsActive()) {
+			sec = nullptr;
+		}
+
+		Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+
+		if (!sec || !sec->IsActive()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			         pvars[0].c_str());
+			return;
+
+		} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			         pvars[1].c_str());
+			return;
+		}
+		break;
+	}
+	default: DisplayHelp(); return;
+	}
+
+	// If we have a single value in pvars, it's a section.
+	// If we have two values, that's a section and a property.
+	Section* sec = control->GetSection(pvars[0]);
+
+	if (sec == nullptr || !sec->IsActive()) {
+		WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+		return;
+	}
+
+	Section_prop* psec = dynamic_cast<Section_prop*>(sec);
+	if (psec == nullptr) {
+		// Failed; maybe it's the autoexec section?
+		Section_line* pline = dynamic_cast<Section_line*>(sec);
+		if (pline == nullptr) {
+			E_Exit("Section dynamic cast failed.");
+		}
+
+		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_LINEHLP"),
+		         pline->GetName(),
+		         // This is 'unclean' but the autoexec section has no
+		         // help description.
+		         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"),
+		         pline->data.c_str());
+		return;
+	}
+
+	if (pvars.size() == 1) {
+		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"), pvars[0].c_str());
+
+		size_t i = 0;
+		while (true) {
+			// List the properties
+			Property* p = psec->Get_prop(i++);
+			if (p == nullptr) {
+				break;
+			}
+			if (p->IsDeprecated()) {
+				continue;
+			}
+			WriteOut("  - %s\n", p->propname.c_str());
+		}
+
+	} else {
+		// pvars has more than 1 element
+
+		// Find the property by it's name
+		size_t i = 0;
+
+		while (true) {
+			Property* p = psec->Get_prop(i++);
+			if (p == nullptr) {
+				break;
+			}
+
+			if (!strcasecmp(p->propname.c_str(), pvars[1].c_str())) {
+				// Found it; make the list of possible values
+				std::string possible_values;
+				std::vector<Value> pv = p->GetValues();
+
+				if (p->Get_type() == Value::V_BOOL) {
+					// Possible values for boolean are true
+					// & false
+					possible_values += "true, false";
+
+				} else if (p->Get_type() == Value::V_INT) {
+					// Print min & max for integer values if
+					// used
+					Prop_int* pint = dynamic_cast<Prop_int*>(p);
+					if (pint == nullptr) {
+						E_Exit("Int property dynamic cast failed.");
+					}
+
+					if (pint->GetMin() != pint->GetMax()) {
+						std::ostringstream oss;
+						oss << pint->GetMin();
+						oss << "..";
+						oss << pint->GetMax();
+						possible_values += oss.str();
+					}
+				}
+
+				for (Bitu k = 0; k < pv.size(); k++) {
+					if (pv[k].ToString() == "%u") {
+						possible_values += MSG_Get(
+						        "PROGRAM_CONFIG_HLP_POSINT");
+					} else {
+						possible_values += pv[k].ToString();
+					}
+					if ((k + 1) < pv.size()) {
+						possible_values += ", ";
+					}
+				}
+
+				WriteOut("\n");
+				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
+				         p->propname.c_str(),
+				         sec->GetName());
+
+				if (p->IsDeprecated()) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_DEPRECATED"));
+					WriteOut("\n");
+				}
+
+				WriteOut(p->GetHelp().c_str());
+				WriteOut("\n\n");
+
+				auto write_last_newline = false;
+
+				if (!p->IsDeprecated()) {
+					if (!possible_values.empty()) {
+						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
+						         possible_values.c_str());
+					}
+
+					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
+					         p->GetDefaultValue().ToString().c_str());
+
+					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
+					         p->GetValue().ToString().c_str());
+
+					write_last_newline = true;
+				}
+
+				// Print 'changability'
+				if (p->GetChange() ==
+				    Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_NOCHANGE"));
+
+					write_last_newline = true;
+				}
+
+				if (write_last_newline) {
+					WriteOut("\n");
+				}
+				return;
+			}
+		}
+	}
+}
 
 void CONFIG::Run(void)
 {
@@ -359,17 +562,14 @@ void CONFIG::Run(void)
 		P_SECURE
 	} presult = P_NOMATCH;
 
-	auto display_help = [this]() {
-		MoreOutputStrings output(*this);
-		output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
-		output.Display();
-	};
-
 	bool first = true;
-	std::vector<std::string> pvars;
+
+	std::vector<std::string> pvars = {};
+
 	// Loop through the passed parameters
 	while (presult != P_NOPARAMS) {
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
+
 		switch (presult) {
 		case P_RESTART:
 			if (CheckSecureMode()) {
@@ -466,211 +666,13 @@ void CONFIG::Run(void)
 			}
 			[[fallthrough]];
 
-		case P_NOMATCH: display_help(); return;
+		case P_NOMATCH: DisplayHelp(); return;
 
 		case P_HELP:
 		case P_HELP2:
-		case P_HELP3: {
-			switch (pvars.size()) {
-			case 0: display_help(); return;
-			case 1: {
-				if (!strcasecmp("sections", pvars[0].c_str())) {
-					// list the sections
-					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
-					for (const Section* sec : *control) {
-						if (sec->IsActive()) {
-							WriteOut("  - %s\n",
-							         sec->GetName());
-						}
-					}
-					return;
-				}
-				// if it's a section, leave it as one-param
-				Section* sec = control->GetSection(pvars[0]);
-				if (!sec || !sec->IsActive()) {
-					// could be a property
-					sec = control->GetSectionFromProperty(
-					        pvars[0].c_str());
-					if (!sec || !sec->IsActive()) {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-						         pvars[0].c_str());
-						return;
-					}
-					pvars.insert(pvars.begin(),
-					             std::string(sec->GetName()));
-				}
-				break;
-			}
-			case 2: {
-				Section* sec = control->GetSection(pvars[0]);
-				if (sec && !sec->IsActive()) {
-					sec = nullptr;
-				}
+		case P_HELP3:
+			HandleHelpCommand(pvars); return;
 
-				Section* sec2 = control->GetSectionFromProperty(
-				        pvars[1].c_str());
-
-				if (!sec || !sec->IsActive()) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-					         pvars[0].c_str());
-					return;
-
-				} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-					         pvars[1].c_str());
-					return;
-				}
-				break;
-			}
-			default: display_help(); return;
-			}
-			// if we have one value in pvars, it's a section
-			// two values are section + property
-			Section* sec = control->GetSection(pvars[0]);
-			if (sec == nullptr || !sec->IsActive()) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-				         pvars[0].c_str());
-				return;
-			}
-			Section_prop* psec = dynamic_cast<Section_prop*>(sec);
-			if (psec == nullptr) {
-				// failed; maybe it's the autoexec section?
-				Section_line* pline = dynamic_cast<Section_line*>(sec);
-				if (pline == nullptr) {
-					E_Exit("Section dynamic cast failed.");
-				}
-
-				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_LINEHLP"),
-				         pline->GetName(),
-				         // this is 'unclean' but the autoexec
-				         // section has no help associated
-				         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"),
-				         pline->data.c_str());
-				return;
-			}
-			if (pvars.size() == 1) {
-				size_t i = 0;
-				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),
-				         pvars[0].c_str());
-				while (true) {
-					// list the properties
-					Property* p = psec->Get_prop(i++);
-					if (p == nullptr) {
-						break;
-					}
-					if (p->IsDeprecated()) {
-						continue;
-					}
-					WriteOut("  - %s\n", p->propname.c_str());
-				}
-			} else {
-				// find the property by it's name
-				size_t i = 0;
-				while (true) {
-					Property* p = psec->Get_prop(i++);
-					if (p == nullptr) {
-						break;
-					}
-					if (!strcasecmp(p->propname.c_str(),
-					                pvars[1].c_str())) {
-						// found it; make the list of
-						// possible values
-						std::string possible_values;
-						std::vector<Value> pv = p->GetValues();
-
-						if (p->Get_type() == Value::V_BOOL) {
-							// possible values for
-							// boolean are true, false
-							possible_values += "true, false";
-						} else if (p->Get_type() ==
-						           Value::V_INT) {
-							// print min, max for
-							// integer values if used
-							Prop_int* pint =
-							        dynamic_cast<Prop_int*>(
-							                p);
-							if (pint == nullptr) {
-								E_Exit("Int property dynamic cast failed.");
-							}
-							if (pint->GetMin() !=
-							    pint->GetMax()) {
-								std::ostringstream oss;
-								oss << pint->GetMin();
-								oss << "..";
-								oss << pint->GetMax();
-								possible_values +=
-								        oss.str();
-							}
-						}
-						for (Bitu k = 0; k < pv.size(); k++) {
-							if (pv[k].ToString() == "%u") {
-								possible_values += MSG_Get(
-								        "PROGRAM_CONFIG_HLP_POSINT");
-							} else {
-								possible_values +=
-								        pv[k].ToString();
-							}
-							if ((k + 1) < pv.size()) {
-								possible_values += ", ";
-							}
-						}
-
-						WriteOut("\n");
-						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
-						         p->propname.c_str(),
-						         sec->GetName());
-
-						if (p->IsDeprecated()) {
-							WriteOut(MSG_Get("PROGRAM_CONFIG_DEPRECATED"));
-							WriteOut("\n");
-						}
-
-						WriteOut(p->GetHelp().c_str());
-						WriteOut("\n\n");
-
-						auto write_last_newline = false;
-
-						if (!p->IsDeprecated()) {
-							if (!possible_values.empty()) {
-								WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
-								         possible_values
-								                 .c_str());
-							}
-
-							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
-							         p->GetDefaultValue()
-							                 .ToString()
-							                 .c_str());
-
-							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
-							         p->GetValue()
-							                 .ToString()
-							                 .c_str());
-
-							write_last_newline = true;
-						}
-
-						// print 'changability'
-						if (p->GetChange() ==
-						    Property::Changeable::OnlyAtStart) {
-
-							WriteOut("\n");
-							WriteOut(MSG_Get(
-							        "PROGRAM_CONFIG_HLP_NOCHANGE"));
-
-							write_last_newline = true;
-						}
-
-						if (write_last_newline) {
-							WriteOut("\n");
-						}
-						return;
-					}
-				}
-				break;
-			}
-			return;
-		}
 		case P_AUTOEXEC_CLEAR: {
 			Section_line* sec = dynamic_cast<Section_line*>(
 			        control->GetSection(std::string("autoexec")));
