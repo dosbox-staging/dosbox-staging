@@ -1339,8 +1339,8 @@ void DOSBOX_Init()
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);
 
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
-	        "Lines in this section will be run at startup.\n"
-	        "You can put your MOUNT lines here.\n");
+	        "Each line in this section is executed at startup as a DOS command.\n"
+	        "Important: The [autoexec] section must be the last section in the config!");
 
 	MSG_Add("CONFIGFILE_INTRO",
 	        "# This is the configuration file for " DOSBOX_PROJECT_NAME
