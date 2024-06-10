@@ -288,7 +288,17 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 		break;
 	case CB_IRQ1: // keyboard INT9
 		add_instruction_1(0x50);                   // push ax
+		// Disable keyboard port
+		add_instruction_2(0xb0, 0xad);             // mov al, 0xad
+		add_instruction_2(0xe6, 0x64);             // out 0x64, al
+		// Read the keyboard input
 		add_instruction_2(0xe4, 0x60);             // in al, 0x60
+		// Re-enable keyboard port
+		add_instruction_1(0x50);                   // push ax
+		add_instruction_2(0xb0, 0xae);             // mov al, 0xae
+		add_instruction_2(0xe6, 0x64);             // out 0x64, al
+		add_instruction_1(0x58);                   // pop ax
+		// Handle keyboard interception via INT 15h
 		add_instruction_2(0xb4, 0x4f);             // mov ah, 0x4f
 		add_instruction_1(0xf9);                   // stc
 		add_instruction_2(0xcd, 0x15);             // int 0x15
@@ -297,6 +307,7 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 			add_native_call_4(callback_number);
 			// jump here to (skip):
 		}
+		// Process the key, handle PIC
 		add_instruction_1(0xfa);                   // cli
 		add_instruction_2(0xb0, 0x20);             // mov al, 0x20
 		add_instruction_2(0xe6, 0x20);             // out 0x20, al

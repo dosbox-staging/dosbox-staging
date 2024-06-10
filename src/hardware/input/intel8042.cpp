@@ -371,63 +371,6 @@ static uint8_t get_translated(const uint8_t byte)
 }
 
 // ***************************************************************************
-// Port disable workaround
-// ***************************************************************************
-
-// TODO: This part is a workaround for 'Ultima VIII: Pagan' problem with
-// non-working keyboard. The proper fix would require larger rework:
-// - it seems that even if keyboard is disabled, the 8042 should fire the
-//   interrupt
-// - testing with 86Box revealed that command 0xad (disable keyboard port) and
-//   0xae (enable port) are being sent by BIOS with each and every key press;
-//   our internal BIOS does not work this way
-//
-// Ignoring command 0xad totally might be risky, as Windows 3.11 for Workgroups
-// disables/reenables the keyboard port during startup and shutdown, issuing
-// controller commands in between; if something disturbs it, we might run into
-// a problem with keyboard/mouse not responding at all.
-//
-// This code re-enables the keyboard after certain time - unless there is
-// some command currently being issued to the controller.
-
-static bool kbd_disabled_timer_running = false;
-static bool kbd_disabled_timer_expired = true;
-
-// Make the delay a little longer than between two bytes of a scancode,
-// even lower values are enough
-constexpr double KbdDisabledDurationMs = PortDelayMs * 1.5f;
-
-// Forward declaration
-static void restart_kbd_disabled_timer();
-
-static void maybe_reenable_kbd_port()
-{
-	if (is_disabled_kbd && kbd_disabled_timer_expired) {
-		is_disabled_kbd = false;
-	}
-}
-
-static void kbd_disabled_timer_handler(uint32_t /*val*/)
-{
-	kbd_disabled_timer_running = false;
-	kbd_disabled_timer_expired = true;
-
-	if (current_command != Command::None) {
-		restart_kbd_disabled_timer();
-	}
-}
-
-static void restart_kbd_disabled_timer()
-{
-	if (kbd_disabled_timer_running) {
-		PIC_RemoveEvents(kbd_disabled_timer_handler);
-	}
-	PIC_AddEvent(kbd_disabled_timer_handler, KbdDisabledDurationMs);
-	kbd_disabled_timer_running = true;
-	kbd_disabled_timer_expired = false;
-}
-
-// ***************************************************************************
 // Controller buffer support
 // ***************************************************************************
 
@@ -776,7 +719,6 @@ static void execute_command(const Command command)
 		is_disabled_kbd      = true;
 		uses_kbd_translation = true;
 		passed_self_test     = true;
-		restart_kbd_disabled_timer();
 		flush_buffer();
 		buffer_add(0x55);
 		break;
@@ -785,7 +727,6 @@ static void execute_command(const Command command)
 		// (as with aux port test)
 		// Disables the keyboard port
 		is_disabled_kbd = true;
-		restart_kbd_disabled_timer();
 		flush_buffer();
 		buffer_add(0x00); // as with TestPortAux
 		break;
@@ -811,7 +752,6 @@ static void execute_command(const Command command)
 		// Disable keyboard port; any keyboard command
 		// reenables the port
 		is_disabled_kbd = true;
-		restart_kbd_disabled_timer();
 		break;
 	case Command::EnablePortKbd: // 0xae
 		// Enable the keyboard port
@@ -1037,9 +977,6 @@ static void write_data_port(io_port_t, io_val_t value, io_width_t) // port 0x60
 		// A controller command is waiting for a parameter
 		const auto command = current_command;
 		current_command    = Command::None;
-		if (is_disabled_kbd) {
-			restart_kbd_disabled_timer();
-		}
 
 		const bool should_notify_aux = !I8042_IsReadyForAuxFrame();
 		const bool should_notify_kbd = !I8042_IsReadyForKbdFrame();
@@ -1083,9 +1020,6 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t) // port 0x
 	status_byte.was_last_write_cmd = true;
 
 	current_command = Command::None;
-	if (is_disabled_kbd) {
-		restart_kbd_disabled_timer();
-	}
 	if ((byte <= 0x1f) || (byte >= 0x40 && byte <= 0x5f)) {
 		// AMI BIOS systems command aliases
 		execute_command(static_cast<Command>(byte + 0x20));
@@ -1176,7 +1110,6 @@ bool I8042_IsReadyForAuxFrame()
 
 bool I8042_IsReadyForKbdFrame()
 {
-	maybe_reenable_kbd_port();
 	return !waiting_bytes_from_kbd && !is_disabled_kbd && !is_diagnostic_dump;
 }
 
