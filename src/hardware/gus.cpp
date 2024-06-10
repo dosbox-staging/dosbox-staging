@@ -273,7 +273,6 @@ private:
 	uint16_t ReadFromPort(io_port_t port, io_width_t width);
 
 	void RegisterIoHandlers();
-	void Reset(uint8_t state);
 
 	const std::vector<AudioFrame>& RenderFrames(const int num_requested_frames);
 
