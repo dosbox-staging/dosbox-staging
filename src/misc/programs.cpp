@@ -610,6 +610,7 @@ void CONFIG::Run(void)
 							}
 						}
 
+						WriteOut("\n");
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 						         p->propname.c_str(),
 						         sec->GetName());
@@ -621,6 +622,8 @@ void CONFIG::Run(void)
 
 						WriteOut(p->GetHelp().c_str());
 						WriteOut("\n\n");
+
+						auto write_last_newline = false;
 
 						if (!p->IsDeprecated()) {
 							if (!possible_values.empty()) {
@@ -638,6 +641,8 @@ void CONFIG::Run(void)
 							         p->GetValue()
 							                 .ToString()
 							                 .c_str());
+
+							write_last_newline = true;
 						}
 
 						// print 'changability'
@@ -645,6 +650,12 @@ void CONFIG::Run(void)
 						    Property::Changeable::OnlyAtStart) {
 							WriteOut(MSG_Get(
 							        "PROGRAM_CONFIG_HLP_NOCHANGE"));
+
+							write_last_newline = true;
+						}
+
+						if (write_last_newline) {
+							WriteOut("\n");
 						}
 						return;
 					}
