@@ -28,6 +28,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "dos_inc.h"
 #include "help_util.h"
