@@ -250,16 +250,12 @@ public:
 	void AddSamples_s16(const int num_frames, const int16_t* data);
 	void AddSamples_m16u(const int num_frames, const uint16_t* data);
 	void AddSamples_s16u(const int num_frames, const uint16_t* data);
-	void AddSamples_m32(const int num_frames, const int32_t* data);
-	void AddSamples_s32(const int num_frames, const int32_t* data);
 	void AddSamples_mfloat(const int num_frames, const float* data);
 	void AddSamples_sfloat(const int num_frames, const float* data);
 	void AddSamples_m16_nonnative(const int num_frames, const int16_t* data);
 	void AddSamples_s16_nonnative(const int num_frames, const int16_t* data);
 	void AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data);
 	void AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data);
-	void AddSamples_m32_nonnative(const int num_frames, const int32_t* data);
-	void AddSamples_s32_nonnative(const int num_frames, const int32_t* data);
 
 	void AddStretched(const int num_frames, int16_t* data);
 

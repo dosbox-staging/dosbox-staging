@@ -2232,16 +2232,6 @@ void MixerChannel::AddSamples_s16u(const int num_frames, const uint16_t* data)
 	AddSamples<uint16_t, true, false, true>(num_frames, data);
 }
 
-void MixerChannel::AddSamples_m32(const int num_frames, const int32_t* data)
-{
-	AddSamples<int32_t, false, true, true>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_s32(const int num_frames, const int32_t* data)
-{
-	AddSamples<int32_t, true, true, true>(num_frames, data);
-}
-
 void MixerChannel::AddSamples_mfloat(const int num_frames, const float* data)
 {
 	AddSamples<float, false, true, true>(num_frames, data);
@@ -2270,16 +2260,6 @@ void MixerChannel::AddSamples_m16u_nonnative(const int num_frames, const uint16_
 void MixerChannel::AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data)
 {
 	AddSamples<uint16_t, true, false, false>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_m32_nonnative(const int num_frames, const int32_t* data)
-{
-	AddSamples<int32_t, false, true, false>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_s32_nonnative(const int num_frames, const int32_t* data)
-{
-	AddSamples<int32_t, true, true, false>(num_frames, data);
 }
 
 void MixerChannel::FillUp()
