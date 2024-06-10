@@ -4200,30 +4200,83 @@ static void messages_add_sdl()
 static void config_add_sdl()
 {
 	constexpr bool changeable_at_runtime = true;
-	Section_prop *sdl_sec=control->AddSection_prop("sdl", &read_config,
-	                                               changeable_at_runtime);
+
+	Section_prop* sdl_sec = control->AddSection_prop("sdl",
+	                                                 &read_config,
+	                                                 changeable_at_runtime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
-	Prop_bool *pbool;
-	Prop_string *pstring;
-	Prop_int *pint;
-	PropMultiVal* pmulti;
-	Section_prop* psection;
 
-	constexpr auto always = Property::Changeable::Always;
+	constexpr auto always     = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
-	constexpr auto on_start = Property::Changeable::OnlyAtStart;
+	constexpr auto on_start   = Property::Changeable::OnlyAtStart;
 
-	pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	pbool->Set_help("Start directly in fullscreen (disabled by default).\n"
-	                "Run INTRO and see Special Keys for window control hotkeys.");
+#if C_OPENGL
+	const std::string default_output = "opengl";
+#else
+	const std::string default_output = "texture";
+#endif
+	auto pstring = sdl_sec->Add_string("output", always, default_output.c_str());
 
-	pint = sdl_sec->Add_int("display", on_start, 0);
-	pint->Set_help("Number of display to use; values depend on OS and user "
-	               "settings (0 by default).");
+	pstring->SetOptionHelp(
+	        "opengl_default",
+	        "Rendering backend to use for graphics output ('opengl' by default).\n"
+	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
+	        "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
+	        "non-existent OpenGL drivers (this is extremely rare).");
+
+	pstring->SetOptionHelp("texture_default",
+	                       "Rendering backend to use for graphics output ('texture' by default).");
+
+	pstring->SetOptionHelp("opengl",
+	                       "  opengl:     OpenGL backend with shader support (default).");
+	pstring->SetOptionHelp("texture",
+	                       "  texture:    SDL's texture backend with bilinear interpolation.");
+	pstring->SetOptionHelp("texturenb",
+	                       "  texturenb:  SDL's texture backend with nearest-neighbour interpolation\n"
+	                       "              (no bilinear).");
+#if C_OPENGL
+	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglnb", "opengl");
+#else
+	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
+#endif
+	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
+	pstring->Set_values({
+#if C_OPENGL
+		"opengl",
+#endif
+		        "texture", "texturenb",
+	});
+	pstring->SetEnabledOptions({
+#if C_OPENGL
+		"opengl_default", "opengl",
+#else
+		"texture_default",
+#endif
+		        "texture", "texturenb",
+	});
+
+	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
+	pstring->Set_help(
+	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
+	        "Use 'texture_renderer = auto' for an automatic choice.");
+	pstring->Set_values(get_sdl_texture_renderers());
+
+	auto pint = sdl_sec->Add_int("display", on_start, 0);
+	pint->Set_help(
+	        "Number of display to use; values depend on OS and user "
+	        "settings (0 by default).");
+
+	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
+	pbool->Set_help(
+	        "Start directly in fullscreen (disabled by default).\n"
+	        "Run INTRO and see Special Keys for window control hotkeys.");
 
 	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
-	pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
-	                  "or a fixed size, e.g. 1024x768 ('desktop' by default).");
+	pstring->Set_help(
+	        "What resolution to use for fullscreen: 'original', 'desktop'\n"
+	        "or a fixed size, e.g. 1024x768 ('desktop' by default).");
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
@@ -4249,8 +4302,9 @@ static void config_add_sdl()
 	TITLEBAR_AddConfig(*sdl_sec);
 
 	pint = sdl_sec->Add_int("transparency", always, 0);
-	pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
-	               "From 0 (no transparency) to 90 (high transparency).");
+	pint->Set_help(
+	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
+	        "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
 	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
@@ -4289,9 +4343,10 @@ static void config_add_sdl()
 	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
-	               "next frame. For example, a value of 7000 is roughly half the frame time\n"
-	               "at 70 Hz. 0 disables this and will always render (default).");
+	pint->Set_help(
+	        "Number of microseconds to allow rendering to block before skipping the\n"
+	        "next frame. For example, a value of 7000 is roughly half the frame time\n"
+	        "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
@@ -4303,58 +4358,7 @@ static void config_add_sdl()
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
 	pstring->Set_values({"auto", "cfr", "vfr"});
 
-#if C_OPENGL
-	const std::string default_output = "opengl";
-#else
-	const std::string default_output = "texture";
-#endif
-	pstring = sdl_sec->Add_string("output", always, default_output.c_str());
-
-	pstring->SetOptionHelp("opengl_default",
-	                       "Rendering backend to use for graphics output ('opengl' by default).\n"
-	                       "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
-						   "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
-						   "non-existent OpenGL drivers (this is extremely rare).");
-
-	pstring->SetOptionHelp("texture_default",
-	                       "Rendering backend to use for graphics output ('texture' by default).");
-
-	pstring->SetOptionHelp("opengl",
-	                       "  opengl:     OpenGL backend with shader support (default).");
-	pstring->SetOptionHelp("texture",
-	                       "  texture:    SDL's texture backend with bilinear interpolation.");
-	pstring->SetOptionHelp("texturenb",
-	                       "  texturenb:  SDL's texture backend with nearest-neighbour interpolation\n"
-						   "              (no bilinear).");
-#if C_OPENGL
-	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
-	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
-	pstring->SetDeprecatedWithAlternateValue("openglnb", "opengl");
-#else
-	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
-#endif
-	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
-	pstring->Set_values({
-#if C_OPENGL
-		        "opengl",
-#endif
-		        "texture", "texturenb",
-	});
-	pstring->SetEnabledOptions({
-#if C_OPENGL
-		"opengl_default", "opengl",
-#else
-		"texture_default",
-#endif
-		        "texture", "texturenb",
-	});
-
-	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
-	                  "Use 'texture_renderer = auto' for an automatic choice.");
-	pstring->Set_values(get_sdl_texture_renderers());
-
-	pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
+	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
 
 	pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
@@ -4368,11 +4372,12 @@ static void config_add_sdl()
 
 	pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	pmulti->SetValue("auto auto");
-	pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
-	                 "('auto auto' by default)\n"
-	                 "'auto' lets the host operating system manage the priority.");
+	pmulti->Set_help(
+	        "Priority levels to apply when active and inactive, respectively.\n"
+	        "('auto auto' by default)\n"
+	        "'auto' lets the host operating system manage the priority.");
 
-	psection = pmulti->GetSection();
+	auto psection = pmulti->GetSection();
 	psection->Add_string("active", always, "auto")
 	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 	psection->Add_string("inactive", always, "auto")
