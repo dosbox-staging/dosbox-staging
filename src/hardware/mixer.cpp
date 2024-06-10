@@ -2158,7 +2158,6 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 		switch (resample_method) {
 		case ResampleMethod::LerpUpsampleOrResample:
 		case ResampleMethod::Resample:
-			assert(pos >= 0.0f && pos <= 1.0f);
 			out_sample = lerp(prev_sample, curr_sample, pos);
 			break;
 
