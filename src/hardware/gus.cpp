@@ -254,7 +254,6 @@ private:
 
 	void ActivateVoices(uint8_t requested_voices);
 	void AudioCallback(uint16_t requested_frames);
-	void BeginPlayback() noexcept;
 	void CheckIrq();
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
@@ -276,8 +275,10 @@ private:
 
 	const std::vector<AudioFrame>& RenderFrames(const int num_requested_frames);
 
+	void StartRunning() noexcept;
+	void StopAndReset() noexcept;
+
 	void RenderUpToNow();
-	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
 	void UpdateWaveMsw(int32_t& addr) const noexcept;
 	void UpdateWaveLsw(int32_t& addr) const noexcept;
@@ -1088,7 +1089,7 @@ void Gus::PopulatePanScalars() noexcept
 	}
 }
 
-void Gus::BeginPlayback() noexcept
+void Gus::StartRunning() noexcept
 {
 	assert(reset_register.is_running);
 
@@ -1322,7 +1323,7 @@ void Gus::RegisterIoHandlers()
 	write_handlers.at(8).Install(0x20b + port_base, write_to, io_width_t::byte);
 }
 
-void Gus::StopPlayback()
+void Gus::StopAndReset() noexcept
 {
 	assert(!reset_register.is_running);
 
@@ -1566,7 +1567,7 @@ void Gus::WriteToRegister()
 		return;
 	case 0x4c: // Reset register
 		reset_register.data = static_cast<uint8_t>(register_data >> 8);
-		reset_register.is_running ? BeginPlayback() : StopPlayback();
+		reset_register.is_running ? StartRunning() : StopAndReset();
 		return;
 	default:
 		break;
@@ -1650,7 +1651,7 @@ void Gus::WriteToRegister()
 Gus::~Gus()
 {
 	LOG_MSG("GUS: Shutting down");
-	StopPlayback();
+	StopAndReset();
 
 	// Prevent discovery of the GUS via the environment
 	ClearEnvironment();
