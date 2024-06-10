@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "autoexec.h"
+#include "bitops.h"
 #include "channel_names.h"
 #include "control.h"
 #include "dma.h"
@@ -234,7 +235,7 @@ private:
 
 	void ActivateVoices(uint8_t requested_voices);
 	void AudioCallback(uint16_t requested_frames);
-	void BeginPlayback();
+	void BeginPlayback() noexcept;
 	void CheckIrq();
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
@@ -250,7 +251,6 @@ private:
 
 	void PopulatePanScalars() noexcept;
 	void PopulateVolScalars() noexcept;
-	void PrepareForPlayback() noexcept;
 	uint16_t ReadFromPort(io_port_t port, io_width_t width);
 
 	void RegisterIoHandlers();
@@ -767,24 +767,6 @@ void Gus::AudioCallback(const uint16_t num_requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
-void Gus::BeginPlayback()
-{
-	dac_enabled = ((register_data & 0x200) != 0);
-	irq_enabled = ((register_data & 0x400) != 0);
-
-	audio_channel->Enable(true);
-
-	if (prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %d Hz",
-		        active_voices,
-		        sample_rate_hz);
-
-		prev_logged_voices = active_voices;
-	}
-
-	is_running = true;
-}
-
 void Gus::CheckIrq()
 {
 	const bool should_interrupt = irq_status & (irq_enabled ? 0xff : 0x9f);
@@ -1086,7 +1068,7 @@ void Gus::PopulatePanScalars() noexcept
 	}
 }
 
-void Gus::PrepareForPlayback() noexcept
+void Gus::BeginPlayback() noexcept
 {
 	// Initialize the voice states
 	for (auto& voice : voices) {
@@ -1100,10 +1082,16 @@ void Gus::PrepareForPlayback() noexcept
 	timer_one = Timer{TIMER_1_DEFAULT_DELAY};
 	timer_two = Timer{TIMER_2_DEFAULT_DELAY};
 
-	if (!is_running) {
-		register_data = 0x100; // DAC/IRQ disabled
-		is_running    = true;
+	if (active_voices > 0 && prev_logged_voices != active_voices) {
+		LOG_MSG("GUS: Activated %u voices at %d Hz",
+		        active_voices,
+		        sample_rate_hz);
+
+		prev_logged_voices = active_voices;
 	}
+
+	audio_channel->Enable(true);
+	is_running = true;
 }
 
 void Gus::PrintStats()
@@ -1563,16 +1551,30 @@ void Gus::WriteToRegister()
 			StartDmaTransfers();
 		}
 		return;
-	case 0x4c: // Runtime control
+	case 0x4c: // Reset register
 	{
-		const auto state = (register_data >> 8) & 7;
-		if (state == 0) {
+		// The reset register bits control runtime state such as
+		// stoping, starting, and if the DAC or IRQs will be used.
+
+		const auto reset_register = static_cast<uint8_t>(register_data >> 8);
+
+		// From section 2.6.1.9, page 16, of the UltraSound Software
+		// Development Kit (SDK) Version 2.22
+
+		// Bit 0 - GF1 Master Reset. 0 = reset, 1 = run. As long as this
+		//         is a 0, it will be held in a reset state.
+		if (bit::cleared(reset_register, bit::literals::b0)) {
 			StopPlayback();
-		} else if (state == 1) {
-			PrepareForPlayback();
-		} else if (active_voices) {
+		} else {
 			BeginPlayback();
 		}
+
+		// Bit 1 - Enable DAC output. DAC's will not run unless its set.
+		dac_enabled = bit::is(reset_register, bit::literals::b1);
+
+		// Bit 2 - Master IRQ enable. This bit MUST be set to get ANY of
+		//         the GF1-generated IRQs (wavetable, volume, etc).
+		irq_enabled = bit::is(reset_register, bit::literals::b2);
 	}
 		return;
 	default:
