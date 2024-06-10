@@ -882,15 +882,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	auto pint = secprop.Add_int("oplrate", deprecated, false);
 	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.");
 
-	auto pstring = secprop.Add_string("cms", when_idle, "auto");
-	pstring->Set_values({"on", "off", "auto"});
-	pstring->Set_help(
-	        "Enable CMS emulation ('auto' by default).\n"
-	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
-	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
-	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
-
-	pstring = secprop.Add_string("oplmode", when_idle, "auto");
+	auto pstring = secprop.Add_string("oplmode", when_idle, "auto");
 	pstring->Set_values(
 	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
 	pstring->Set_help(
@@ -942,6 +934,14 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "             Use the filter of this Sound Blaster model.\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+
+	pstring = secprop.Add_string("cms", when_idle, "auto");
+	pstring->Set_values({"on", "off", "auto"});
+	pstring->Set_help(
+	        "Enable CMS emulation ('auto' by default).\n"
+	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
+	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
+	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
 
 	pstring = secprop.Add_string("cms_filter", when_idle, "on");
 	pstring->Set_help(
