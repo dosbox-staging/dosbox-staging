@@ -317,7 +317,7 @@ private:
 		return;
 	}
 
-	bool securemode_check()
+	bool CheckSecureMode()
 	{
 		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
@@ -372,7 +372,7 @@ void CONFIG::Run(void)
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
 		switch (presult) {
 		case P_RESTART:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() == 0) {
@@ -426,7 +426,7 @@ void CONFIG::Run(void)
 			break;
 		}
 		case P_WRITECONF_DEFAULT: {
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() > 0) {
@@ -438,7 +438,7 @@ void CONFIG::Run(void)
 		}
 		case P_WRITECONF:
 		case P_WRITECONF2:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() > 1) {
@@ -714,7 +714,7 @@ void CONFIG::Run(void)
 		case P_REC_AVI_START: CAPTURE_StartVideoCapture(); break;
 		case P_REC_AVI_STOP: CAPTURE_StopVideoCapture(); break;
 		case P_START_MAPPER:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			MAPPER_Run(false);
@@ -888,7 +888,7 @@ void CONFIG::Run(void)
 		case P_WRITELANG2:
 			// In secure mode don't allow a new languagefile to be
 			// created Who knows which kind of file we would overwrite.
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() < 1) {
