@@ -1163,6 +1163,15 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("umb", when_idle, true);
 	pbool->Set_help("Enable UMB support (enabled by default).");
 
+	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
+	pstring->Set_values({"expanded", "standard"});
+	pstring->Set_help(
+	        "PCjr memory layout ('expanded' by default).\n"
+	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
+	        "             Compatible with most games.\n"
+	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
+	        "             Required for some older games (e.g., Jumpman, Troll).");
+
 	pstring = secprop->Add_string("ver", when_idle, "5.0");
 	pstring->Set_help(
 	        "Set DOS version (5.0 by default). Specify in major.minor format.\n"
@@ -1218,15 +1227,6 @@ void DOSBOX_Init()
 	        "File containing the list of applications and assigned DOS versions, in a\n"
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
-
-	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
-	pstring->Set_values({"expanded", "standard"});
-	pstring->Set_help(
-	        "PCjr memory layout ('expanded' by default).\n"
-	        "  expanded:  640 KB total memory with applications residing above 128 KB.\n"
-	        "             Compatible with most games.\n"
-	        "  standard:  128 KB total memory with applications residing below 96 KB.\n"
-	        "             Required for some older games (e.g., Jumpman, Troll).");
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
