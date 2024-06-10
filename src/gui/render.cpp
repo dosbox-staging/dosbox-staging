@@ -1017,7 +1017,42 @@ static void init_render_settings(Section_prop& secprop)
 	int_prop->Set_help(
 	        "Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = secprop.Add_string("aspect", always, "auto");
+	auto* string_prop = secprop.Add_string("glshader", always, "crt-auto");
+	string_prop->SetOptionHelp(
+	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
+	        "output modes. Adaptive CRT shader options:\n"
+	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
+	        "                          how people experienced the game at the time of\n"
+	        "                          release (default). The appropriate shader variant is\n"
+	        "                          automatically selected based the graphics standard of\n"
+	        "                          the current video mode and the viewport size,\n"
+	        "                          irrespective of the 'machine' setting. This means\n"
+	        "                          that even on an emulated VGA card you'll get\n"
+	        "                          authentic single-scanned EGA monitor emulation with\n"
+	        "                          visible \"thick scanlines\" in EGA games.\n"
+	        "  crt-auto-machine:       Similar to 'crt-auto', but this picks a fixed CRT\n"
+	        "                          monitor appropriate for the video adapter configured\n"
+	        "                          via the 'machine' setting. E.g., CGA and EGA games\n"
+	        "                          will appear double-scanned on an emulated VGA\n"
+	        "                          adapter.\n"
+	        "  crt-auto-arcade:        Emulation of an arcade or home computer monitor less\n"
+	        "                          sharp than a typical PC monitor with thick scanlines\n"
+	        "                          in low-resolution modes. This fantasy option does not\n"
+	        "                          exist in real life, but it can be a lot of fun,\n"
+	        "                          especially with DOS ports of Amiga games.\n"
+	        "  crt-auto-arcade-sharp:  A sharper variant of the arcade shader for those who\n"
+	        "                          like the thick scanlines but want to retain the\n"
+	        "                          horizontal sharpness of a typical PC monitor.\n"
+	        "Other options include 'sharp', 'none', a shader listed using the\n"
+	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
+	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
+	string_prop->SetEnabledOptions({
+#if C_OPENGL
+		"glshader",
+#endif
+	});
+
+	string_prop = secprop.Add_string("aspect", always, "auto");
 	string_prop->Set_help(
 	        "Set the aspect ratio correction mode (auto by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
@@ -1144,41 +1179,6 @@ static void init_render_settings(Section_prop& secprop)
 	        "    or 'viewport' instead, or consider using 'integer_scaling'.\n"
 	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
 	        "    options instead.");
-
-	string_prop = secprop.Add_string("glshader", always, "crt-auto");
-	string_prop->SetOptionHelp(
-	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
-	        "output modes. Adaptive CRT shader options:\n"
-	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
-	        "                          how people experienced the game at the time of\n"
-	        "                          release (default). The appropriate shader variant is\n"
-	        "                          automatically selected based the graphics standard of\n"
-	        "                          the current video mode and the viewport size,\n"
-	        "                          irrespective of the 'machine' setting. This means\n"
-	        "                          that even on an emulated VGA card you'll get\n"
-	        "                          authentic single-scanned EGA monitor emulation with\n"
-	        "                          visible \"thick scanlines\" in EGA games.\n"
-	        "  crt-auto-machine:       Similar to 'crt-auto', but this picks a fixed CRT\n"
-	        "                          monitor appropriate for the video adapter configured\n"
-	        "                          via the 'machine' setting. E.g., CGA and EGA games\n"
-	        "                          will appear double-scanned on an emulated VGA\n"
-	        "                          adapter.\n"
-	        "  crt-auto-arcade:        Emulation of an arcade or home computer monitor less\n"
-	        "                          sharp than a typical PC monitor with thick scanlines\n"
-	        "                          in low-resolution modes. This fantasy option does not\n"
-	        "                          exist in real life, but it can be a lot of fun,\n"
-	        "                          especially with DOS ports of Amiga games.\n"
-	        "  crt-auto-arcade-sharp:  A sharper variant of the arcade shader for those who\n"
-	        "                          like the thick scanlines but want to retain the\n"
-	        "                          horizontal sharpness of a typical PC monitor.\n"
-	        "Other options include 'sharp', 'none', a shader listed using the\n"
-	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
-	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
-	string_prop->SetEnabledOptions({
-#if C_OPENGL
-		"glshader",
-#endif
-	});
 }
 
 enum { Horiz, Vert };
