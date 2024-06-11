@@ -465,9 +465,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					// Print min & max for integer values if
 					// used
 					Prop_int* pint = dynamic_cast<Prop_int*>(p);
-					if (pint == nullptr) {
-						E_Exit("Int property dynamic cast failed.");
-					}
+					assert(pint);
 
 					if (pint->GetMin() != pint->GetMax()) {
 						std::ostringstream oss;
@@ -490,7 +488,6 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					}
 				}
 
-				output.AddString("\n");
 				output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 				                 p->propname.c_str(),
 				                 sec->GetName());
@@ -764,9 +761,7 @@ void CONFIG::Run(void)
 						// autoexec section
 						Section_line* pline =
 						        dynamic_cast<Section_line*>(sec);
-						if (pline == nullptr) {
-							E_Exit("Section dynamic cast failed.");
-						}
+						assert(pline);
 
 						WriteOut("%s", pline->data.c_str());
 						break;
@@ -923,8 +918,9 @@ void CONFIG::Run(void)
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_ON"));
 			return;
 
-		default: E_Exit("bug"); break;
+		default: assert(false); break;
 		}
+
 		first = false;
 	}
 }
