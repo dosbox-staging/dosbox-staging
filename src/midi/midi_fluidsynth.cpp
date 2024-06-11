@@ -59,7 +59,7 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "'soundfonts' directory within your DOSBox configuration directory.\n"
 	        "An optional percentage value after the name will scale the SoundFont's volume.\n"
 	        "This is useful for normalising the volume of different SoundFonts.\n"
-	        "E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%.\n"
+	        "E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%%.\n"
 	        "The percentage value can range from 1 to 800.");
 
 	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");

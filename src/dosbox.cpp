@@ -1200,7 +1200,7 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
 	pstring->Set_values({"auto", "true", "false"});
 	pstring->Set_help(
-	        "Enable expanding environment variables such as %PATH% in the DOS command shell\n"
+	        "Enable expanding environment variables such as %%PATH%% in the DOS command shell\n"
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
