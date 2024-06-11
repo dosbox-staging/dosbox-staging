@@ -1020,7 +1020,7 @@ static void init_render_settings(Section_prop& secprop)
 	auto* string_prop = secprop.Add_string("glshader", always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
-	        "output modes. Adaptive CRT shader options:\n"
+	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
 	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
 	        "                          how people experienced the game at the time of\n"
 	        "                          release (default). The appropriate shader variant is\n"
@@ -1054,7 +1054,7 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop = secprop.Add_string("aspect", always, "auto");
 	string_prop->Set_help(
-	        "Set the aspect ratio correction mode (auto by default):\n"
+	        "Set the aspect ratio correction mode ('auto' by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
@@ -1080,11 +1080,11 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
-	        "value so the image still fits into the viewport. The configured aspect ratio is\n"
-	        "always maintained according to the 'aspect' and 'viewport' settings, which may\n"
-	        "result in a non-integer scaling factor in the other dimension. If the image is\n"
-	        "larger than the viewport, the integer scaling constraint is auto-disabled (same\n"
-	        "as 'off'). Possible values:\n"
+	        "value so the image still fits into the viewport ('auto' by default). The\n"
+	        "configured aspect ratio is always maintained according to the 'aspect' and\n"
+	        "'viewport' settings, which may result in a non-integer scaling factor in the\n"
+	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
+	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
 	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only\n"
 	        "               (see 'glshader'), otherwise 'off' (default).\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
@@ -1098,9 +1098,9 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop = secprop.Add_string("viewport", always, "fit");
 	string_prop->Set_help(
-	        "Set the viewport size (maximum drawable area). The video output is always\n"
-	        "contained within the viewport while taking the configured aspect ratio into\n"
-	        "account (see 'aspect'). Possible values:\n"
+	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
+	        "the video output is always contained within the viewport while taking the\n"
+	        "configured aspect ratio into account (see 'aspect'). Possible values:\n"
 	        "  fit:             Fit the viewport into the available window/screen (default).\n"
 	        "                   There might be padding (black areas) around the image with\n"
 	        "                   'integer_scaling' enabled.\n"
@@ -1139,8 +1139,8 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
 	string_prop->Set_help(
-	        "Set the interpretation of CGA RGBI colours. Affects all machine types capable\n"
-	        "of displaying CGA or better graphics. Built-in presets:\n"
+	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
+	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
 	        "                 (default).\n"
 	        "  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown\n"
