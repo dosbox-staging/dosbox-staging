@@ -400,19 +400,14 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	}
 
 	Section_prop* psec = dynamic_cast<Section_prop*>(sec);
-	if (psec == nullptr) {
-		// Failed; maybe it's the autoexec section?
-		Section_line* pline = dynamic_cast<Section_line*>(sec);
-		if (pline == nullptr) {
-			E_Exit("Section dynamic cast failed.");
-		}
 
-		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_LINEHLP"),
-		         pline->GetName(),
-		         // This is 'unclean' but the autoexec section has no
-		         // help description.
-		         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"),
-		         pline->data.c_str());
+	// Special [autoexec] section handling (if has no properties like all
+	// the other sections).
+	if (psec == nullptr) {
+		WriteOut("\n");
+		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
+		         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
+		WriteOut("\n");
 		return;
 	}
 
@@ -1024,10 +1019,10 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE",
 	        "[color=white]Current value:[reset]    %s\n");
 
-	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
+	MSG_Add("PROGRAM_CONFIG_HLP_AUTOEXEC",
 	        "[color=white]Description of the "
-	        "[color=light-cyan][%s][color=white] section:[reset]\n"
-	        "%s\n[color=white]Current value:[reset]\n%s\n");
+	        "[color=light-cyan][autoexec][color=white] section:[reset]\n\n"
+	        "%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
 	        "[color=brown]This property cannot be changed at runtime.[reset]\n");
