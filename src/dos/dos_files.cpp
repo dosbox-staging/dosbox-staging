@@ -702,6 +702,10 @@ bool DOS_WriteFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 }
 
 bool DOS_SeekFile(uint16_t entry,uint32_t * pos,uint32_t type,bool fcb) {
+	if (type > DOS_SEEK_END) {
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		return false;
+	}
 	uint32_t handle = fcb?entry:RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
