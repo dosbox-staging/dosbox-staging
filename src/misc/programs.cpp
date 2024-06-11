@@ -637,6 +637,7 @@ void CONFIG::Run(void)
 
 			if (size == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
+
 			} else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),
 				         control->configfiles.front().c_str());
@@ -651,15 +652,19 @@ void CONFIG::Run(void)
 					}
 				}
 			}
+
 			if (control->startup_params.size() > 0) {
 				std::string test;
 				for (size_t k = 0; k < control->startup_params.size();
 				     ++k) {
 					test += control->startup_params[k] + " ";
 				}
+
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRINT_STARTUP"),
 				         test.c_str());
 			}
+
+			WriteOut("\n");
 			break;
 		}
 
