@@ -1145,7 +1145,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					continue;
 				}
 
-				std::string help = p->GetHelpUtf8();
+				auto help = p->GetHelpUtf8();
 
 				std::string::size_type pos = std::string::npos;
 
@@ -1154,11 +1154,18 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					help.replace(pos, 1, prefix);
 				}
 
+				// Percentage signs are encoded as '%%' in the
+				// config descriptions because they are sent
+				// through printf-like functions (e.g.,
+				// WriteOut()). So we need to de-escape them before
+				// writing them into the config.
+				auto s = format_str(help.c_str());
+
 				fprintf(outfile,
 				        "# %*s: %s",
 				        intmaxwidth,
 				        p->propname.c_str(),
-				        help.c_str());
+				        s.c_str());
 
 				auto print_values = [&](const char* values_msg_key,
 				                        const std::vector<Value>& values) {
