@@ -70,15 +70,20 @@ constexpr int WriteOutBufSize         = 16384;
 static void write_to_stdout(std::string_view output)
 {
 	dos.internal_output = true;
+
 	for (const auto& chr : output) {
 		uint8_t out;
 		uint16_t bytes_to_write = 1;
+
 		if (chr == '\n' && last_written_character != '\r') {
 			out = '\r';
 			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
 		}
-		out                    = static_cast<uint8_t>(chr);
+
+		out = static_cast<uint8_t>(chr);
+
 		last_written_character = out;
+
 		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
 	}
 	dos.internal_output = false;
@@ -89,10 +94,12 @@ static void truncated_chars_message(int size)
 	if (size > WriteOutBufSize) {
 		constexpr int MessageSize = 128;
 		char message[MessageSize];
+
 		snprintf(message,
 		         MessageSize,
 		         "\n\nERROR: OUTPUT TOO LONG: %d CHARS TRUNCATED",
 		         size - WriteOutBufSize);
+
 		write_to_stdout(message);
 	}
 }
@@ -129,7 +136,7 @@ void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 
 static Bitu PROGRAMS_Handler(void)
 {
-	/* This sets up everything for a program start up call */
+	// This sets up everything for a program start up call
 	Bitu size = sizeof(uint8_t);
 	uint8_t index;
 
@@ -137,40 +144,53 @@ static Bitu PROGRAMS_Handler(void)
 	constexpr auto exec_block_size = exe_block.size();
 	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
 
-	/* Read the index from program code in memory */
+	// Read the index from program code in memory
 	PhysPt reader = PhysicalMake(dos.psp(),
-		256 + static_cast<uint16_t>(exec_block_size));
+	                             256 + static_cast<uint16_t>(exec_block_size));
+
 	HostPt writer = (HostPt)&index;
+
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
 	}
+
 	const PROGRAMS_Creator& creator = internal_progs.at(index);
-	const auto new_program          = creator();
+
+	const auto new_program = creator();
+
 	new_program->Run();
+
 	return CBRET_NONE;
 }
 
-/* Main functions used in all program */
+// Main functions used in all program
 
 Program::Program()
 {
-	/* Find the command line and setup the PSP */
+	// Find the command line and setup the PSP
 	psp = new DOS_PSP(dos.psp());
-	/* Scan environment for filename */
+
+	// Scan environment for filename
 	PhysPt envscan = PhysicalMake(psp->GetEnvironment(), 0);
 	while (mem_readb(envscan)) {
 		envscan += mem_strlen(envscan) + 1;
 	}
+
 	envscan += 3;
 	CommandTail tail;
+
 	MEM_BlockRead(PhysicalMake(dos.psp(), 128), &tail, 128);
+
 	if (tail.count < 127) {
 		tail.buffer[tail.count] = 0;
 	} else {
 		tail.buffer[126] = 0;
 	}
+
 	char filename[256 + 1];
+
 	MEM_StrCopy(envscan, filename, 256);
+
 	cmd = new CommandLine(filename, tail.buffer);
 }
 
@@ -178,16 +198,14 @@ extern std::string full_arguments;
 
 void Program::ChangeToLongCmd()
 {
-	/*
-	 * Get arguments directly from the shell instead of the psp.
-	 * this is done in securemode: (as then the arguments to mount and
-	 * friends can only be given on the shell ( so no int 21 4b) Securemode
-	 * part is disabled as each of the internal command has already protection
-	 * for it. (and it breaks games like cdman) it is also done for long
-	 * arguments to as it is convient (as the total commandline can be
-	 * longer then 127 characters. imgmount with lot's of parameters Length
-	 * of arguments can be ~120. but switch when above 100 to be sure
-	 */
+	// Get arguments directly from the shell instead of the psp.
+	// this is done in securemode: (as then the arguments to mount and
+	// friends can only be given on the shell ( so no int 21 4b) Securemode
+	// part is disabled as each of the internal command has already
+	// protection for it. (and it breaks games like cdman) it is also done
+	// for long arguments to as it is convient (as the total commandline can
+	// be longer then 127 characters. imgmount with lot's of parameters
+	// Length of arguments can be ~120. but switch when above 100 to be sure
 
 	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),
@@ -195,19 +213,24 @@ void Program::ChangeToLongCmd()
 		delete cmd;
 		cmd = temp;
 	}
-	full_arguments.assign(""); // Clear so it gets even more save
+
+	// Clear so it gets even more save
+	full_arguments.assign(""); 
 }
 
 bool Program::SuppressWriteOut(const char* format)
 {
 	// Have we encountered an executable thus far?
 	static bool encountered_executable = false;
+
 	if (encountered_executable) {
 		return false;
 	}
+
 	if (control->GetStartupVerbosity() >= Verbosity::Low) {
 		return false;
 	}
+
 	if (!control->cmdline->HasExecutableName()) {
 		return false;
 	}
@@ -270,11 +293,11 @@ void Program::InjectMissingNewline()
 		return;
 	}
 
-	uint16_t n          = 2;
-	uint8_t dos_nl[]    = "\r\n";
+	uint16_t n       = 2;
+	uint8_t dos_nl[] = "\r\n";
+
 	dos.internal_output = true;
 	DOS_WriteFile(STDOUT, dos_nl, &n);
-	dos.internal_output    = false;
 	last_written_character = '\n';
 }
 
@@ -312,6 +335,7 @@ private:
 	void WriteConfig(const std::string& name)
 	{
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
+
 		if (!control->WriteConfig(name)) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"), name.c_str());
 		}
@@ -423,7 +447,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),
 		                 pvars[0].c_str());
 
-		size_t i = 0;
+		auto i = 0;
 		while (true) {
 			// List the properties
 			Property* p = psec->Get_prop(i++);
@@ -476,7 +500,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					}
 				}
 
-				for (Bitu k = 0; k < pv.size(); k++) {
+				for (size_t k = 0; k < pv.size(); ++k) {
 					if (pv[k].ToString() == "%u") {
 						possible_values += MSG_Get(
 						        "PROGRAM_CONFIG_HLP_POSINT");
@@ -604,20 +628,24 @@ void CONFIG::Run(void)
 			return;
 
 		case P_LISTCONF: {
-			Bitu size = control->configfiles.size();
+			auto size = control->configfiles.size();
 			const std_fs::path config_path = GetConfigDir();
+
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         DOSBOX_GetVersion(),
 			         config_path.c_str());
+
 			if (size == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
 			} else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),
 				         control->configfiles.front().c_str());
+
 				if (size > 1) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_CONFIG_ADDITIONAL_CONF"));
-					for (Bitu i = 1; i < size; i++) {
+
+					for (size_t i = 1; i < size; ++i) {
 						WriteOut("%s\n",
 						         control->configfiles[i].c_str());
 					}
@@ -625,9 +653,8 @@ void CONFIG::Run(void)
 			}
 			if (control->startup_params.size() > 0) {
 				std::string test;
-				for (size_t k = 0;
-				     k < control->startup_params.size();
-				     k++) {
+				for (size_t k = 0; k < control->startup_params.size();
+				     ++k) {
 					test += control->startup_params[k] + " ";
 				}
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRINT_STARTUP"),
@@ -635,6 +662,7 @@ void CONFIG::Run(void)
 			}
 			break;
 		}
+
 		case P_WRITECONF_DEFAULT: {
 			if (CheckSecureMode()) {
 				return;
@@ -646,6 +674,7 @@ void CONFIG::Run(void)
 			WriteConfig(GetPrimaryConfigPath().string());
 			break;
 		}
+
 		case P_WRITECONF:
 		case P_WRITECONF2:
 			if (CheckSecureMode()) {
@@ -693,6 +722,7 @@ void CONFIG::Run(void)
 			sec->data.clear();
 			break;
 		}
+
 		case P_AUTOEXEC_ADD: {
 			if (pvars.size() == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
@@ -711,6 +741,7 @@ void CONFIG::Run(void)
 			}
 			break;
 		}
+
 		case P_AUTOEXEC_TYPE: {
 			Section_line* sec = dynamic_cast<Section_line*>(
 			        control->GetSection(std::string("autoexec")));
@@ -723,6 +754,7 @@ void CONFIG::Run(void)
 			WriteOut("\n%s", line_dos.c_str());
 			break;
 		}
+
 		case P_REC_AVI_START: CAPTURE_StartVideoCapture(); break;
 		case P_REC_AVI_STOP: CAPTURE_StopVideoCapture(); break;
 		case P_START_MAPPER:
@@ -731,6 +763,7 @@ void CONFIG::Run(void)
 			}
 			MAPPER_Run(false);
 			break;
+
 		case P_GETPROP: {
 			// "section property"
 			// "property"
@@ -740,13 +773,16 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
 				return;
 			}
+
 			std::string::size_type spcpos = pvars[0].find_first_of(' ');
+
 			// split on the ' '
 			if (spcpos != std::string::npos) {
 				pvars.insert(pvars.begin() + 1,
 				             pvars[0].substr(spcpos + 1));
 				pvars[0].erase(spcpos);
 			}
+
 			switch (pvars.size()) {
 			case 1: {
 				// property/section only
@@ -754,9 +790,10 @@ void CONFIG::Run(void)
 				Section* sec = control->GetSection(pvars[0]);
 				if (sec) {
 					// list properties in section
-					Bitu i = 0;
+					auto i = 0;
 					Section_prop* psec =
 					        dynamic_cast<Section_prop*>(sec);
+
 					if (psec == nullptr) {
 						// autoexec section
 						Section_line* pline =
@@ -780,6 +817,7 @@ void CONFIG::Run(void)
 						         p->propname.c_str(),
 						         val_dos.c_str());
 					}
+
 				} else {
 					// no: maybe it's a property?
 					sec = control->GetSectionFromProperty(
@@ -801,6 +839,7 @@ void CONFIG::Run(void)
 				}
 				break;
 			}
+
 			case 2: {
 				// section + property
 				const char* sec_name  = pvars[0].c_str();
@@ -832,6 +871,7 @@ void CONFIG::Run(void)
 			}
 			return;
 		}
+
 		case P_SETPROP: {
 			if (pvars.size() == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
@@ -843,44 +883,58 @@ void CONFIG::Run(void)
 			if (cmd->GetStringRemain(rest)) {
 				pvars.push_back(rest);
 			}
+
 			const char* result = control->SetProp(pvars);
+
 			if (strlen(result)) {
 				WriteOut(result);
+
 			} else {
 				auto* tsec = dynamic_cast<Section_prop *>(control->GetSection(pvars[0]));
 				if (!tsec) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
 					return;
 				}
+
 				const auto* property = tsec->Get_prop(pvars[1]);
+
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
 					return;
 				}
+
 				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
 					return;
 				}
+
 				// Input has been parsed (pvar[0]=section,
 				// [1]=property, [2]=value) now execute
 				std::string value(pvars[2]);
+
 				// Due to parsing there can be a = at the start
 				// of value.
 				while (value.size() && (value.at(0) == ' ' ||
 				                        value.at(0) == '=')) {
 					value.erase(0, 1);
 				}
-				for (Bitu i = 3; i < pvars.size(); i++) {
+
+				for (size_t i = 3; i < pvars.size(); ++i) {
 					value += (std::string(" ") + pvars[i]);
 				}
+
 				if (value.empty()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 					return;
 				}
+
 				std::string inputline = pvars[1] + "=" + value;
+
 				tsec->ExecuteDestroy(false);
+
 				std::string line_utf8 = {};
 				dos_to_utf8(inputline, line_utf8);
+
 				bool change_success = tsec->HandleInputline(
 				        line_utf8.c_str());
 
@@ -890,10 +944,12 @@ void CONFIG::Run(void)
 					         value.c_str(),
 					         pvars[1].c_str());
 				}
+
 				tsec->ExecuteInit(false);
 			}
 			return;
 		}
+
 		case P_WRITELANG:
 		case P_WRITELANG2:
 			// In secure mode don't allow a new languagefile to be
@@ -901,10 +957,12 @@ void CONFIG::Run(void)
 			if (CheckSecureMode()) {
 				return;
 			}
+
 			if (pvars.size() < 1) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
+
 			if (!MSG_Write(pvars[0].c_str())) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),
 				         pvars[0].c_str());
