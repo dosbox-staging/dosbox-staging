@@ -510,4 +510,13 @@ TEST(Replace, Valid)
 	EXPECT_EQ(replace("", 'd', 'D'), "");
 }
 
+TEST(ReplaceAll, Valid)
+{
+	const auto s1 = "%% foo%%bar quz%baz%";
+	EXPECT_EQ(replace_all(s1, "%%", "%"), "% foo%bar quz%baz%");
+
+	const auto s2 = "\nthe quick brown fox jumps\nover the\nlazy dog";
+	EXPECT_EQ(replace_all(s2, "the", "a"), "\na quick brown fox jumps\nover a\nlazy dog");
+}
+
 } // namespace

@@ -376,3 +376,18 @@ std::optional<float> parse_percentage_with_optional_percent_sign(const std::stri
 	return parse_percentage(s, is_percent_sign_optional);
 }
 
+std::string replace_all(const std::string& str, const std::string& from,
+                        const std::string& to)
+{
+	auto new_str = str;
+
+	size_t pos = 0;
+	while ((pos = new_str.find(from, pos)) != std::string::npos) {
+		new_str.replace(pos, from.length(), to);
+
+		// Handles case where `to` is a substring of `from`
+		pos += to.length();
+	}
+	return new_str;
+}
+
