@@ -745,13 +745,18 @@ void CONFIG::Run(void)
 		case P_AUTOEXEC_TYPE: {
 			Section_line* sec = dynamic_cast<Section_line*>(
 			        control->GetSection(std::string("autoexec")));
+
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
+
 			std::string line_dos = {};
 			utf8_to_dos(sec->data, line_dos, UnicodeFallback::Box);
-			WriteOut("\n%s", line_dos.c_str());
+
+			MoreOutputStrings output(*this);
+			output.AddString("\n%s\n\n", line_dos.c_str());
+			output.Display();
 			break;
 		}
 
