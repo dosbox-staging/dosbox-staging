@@ -652,6 +652,8 @@ void CONFIG::Run(void)
 						// print 'changability'
 						if (p->GetChange() ==
 						    Property::Changeable::OnlyAtStart) {
+
+							WriteOut("\n");
 							WriteOut(MSG_Get(
 							        "PROGRAM_CONFIG_HLP_NOCHANGE"));
 
@@ -1025,7 +1027,7 @@ void PROGRAMS_Init(Section* sec)
 	        "%s\n[color=white]Current value:[reset]\n%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
-	        "This property cannot be changed at runtime.\n");
+	        "[color=brown]This property cannot be changed at runtime.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
@@ -1063,7 +1065,7 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
-	        "Property '%s' is not changeable at runtime.");
+	        "Property '%s' is not changeable at runtime.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
