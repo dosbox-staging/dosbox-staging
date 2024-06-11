@@ -344,12 +344,16 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	case 1: {
 		if (!strcasecmp("sections", pvars[0].c_str())) {
 			// List the sections
-			WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
+			MoreOutputStrings output(*this);
+			output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
+
 			for (const Section* sec : *control) {
 				if (sec->IsActive()) {
-					WriteOut("  - %s\n", sec->GetName());
+					output.AddString("  - %s\n", sec->GetName());
 				}
 			}
+			output.AddString("\n");
+			output.Display();
 			return;
 		}
 
@@ -367,6 +371,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		}
 		break;
 	}
+
 	case 2: {
 		Section* sec = control->GetSection(pvars[0]);
 		if (sec && !sec->IsActive()) {
@@ -387,6 +392,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		}
 		break;
 	}
+
 	default: DisplayHelp(); return;
 	}
 
@@ -404,15 +410,18 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	// Special [autoexec] section handling (if has no properties like all
 	// the other sections).
 	if (psec == nullptr) {
-		WriteOut("\n");
-		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
-		         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
-		WriteOut("\n");
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
+		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
+		output.AddString("\n");
+		output.Display();
 		return;
 	}
 
 	if (pvars.size() == 1) {
-		WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"), pvars[0].c_str());
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),
+		                 pvars[0].c_str());
 
 		size_t i = 0;
 		while (true) {
@@ -424,14 +433,17 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 			if (p->IsDeprecated()) {
 				continue;
 			}
-			WriteOut("  - %s\n", p->propname.c_str());
+			output.AddString("  - %s\n", p->propname.c_str());
 		}
+		output.AddString("\n");
+		output.Display();
 
 	} else {
 		// pvars has more than 1 element
+		MoreOutputStrings output(*this);
 
-		// Find the property by it's name
-		size_t i = 0;
+		// Find the property by its name
+		auto i = 0;
 
 		while (true) {
 			Property* p = psec->Get_prop(i++);
@@ -478,32 +490,36 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					}
 				}
 
-				WriteOut("\n");
-				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
-				         p->propname.c_str(),
-				         sec->GetName());
+				output.AddString("\n");
+				output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
+				                 p->propname.c_str(),
+				                 sec->GetName());
 
 				if (p->IsDeprecated()) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_DEPRECATED"));
-					WriteOut("\n");
+					output.AddString(MSG_Get(
+					        "PROGRAM_CONFIG_DEPRECATED"));
+					output.AddString("\n");
 				}
 
-				WriteOut(p->GetHelp().c_str());
-				WriteOut("\n\n");
+				output.AddString(p->GetHelp().c_str());
+				output.AddString("\n\n");
 
 				auto write_last_newline = false;
 
 				if (!p->IsDeprecated()) {
 					if (!possible_values.empty()) {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
-						         possible_values.c_str());
+						output.AddString(
+						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
+						        possible_values.c_str());
 					}
 
-					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
-					         p->GetDefaultValue().ToString().c_str());
+					output.AddString(
+					        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
+					        p->GetDefaultValue().ToString().c_str());
 
-					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
-					         p->GetValue().ToString().c_str());
+					output.AddString(
+					        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
+					        p->GetValue().ToString().c_str());
 
 					write_last_newline = true;
 				}
@@ -511,17 +527,19 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				// Print 'changability'
 				if (p->GetChange() ==
 				    Property::Changeable::OnlyAtStart) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_NOCHANGE"));
+					output.AddString(MSG_Get(
+					        "PROGRAM_CONFIG_HLP_NOCHANGE"));
 
 					write_last_newline = true;
 				}
 
 				if (write_last_newline) {
-					WriteOut("\n");
+					output.AddString("\n");
 				}
-				return;
 			}
 		}
+
+		output.Display();
 	}
 }
 
