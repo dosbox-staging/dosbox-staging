@@ -501,9 +501,8 @@ void CONFIG::Run(void)
 				break;
 			}
 			case 2: {
-				// sanity check
-				Section* sec  = control->GetSection(pvars[0]);
-				if (!sec->IsActive()) {
+				Section* sec = control->GetSection(pvars[0]);
+				if (sec && !sec->IsActive()) {
 					sec = nullptr;
 				}
 				Section* sec2 = control->GetSectionFromProperty(
