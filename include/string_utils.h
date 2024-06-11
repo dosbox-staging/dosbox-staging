@@ -397,4 +397,7 @@ inline std::string safe_tostring(const char* str, const std::size_t maxlen) noex
 	return std::string(str, strnlen(str, maxlen));
 }
 
+std::string replace_all(const std::string& str, const std::string& from,
+                        const std::string& to);
+
 #endif
