@@ -1096,7 +1096,7 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
 
-	string_prop = secprop.Add_path("viewport", always, "fit");
+	string_prop = secprop.Add_string("viewport", always, "fit");
 	string_prop->Set_help(
 	        "Set the viewport size (maximum drawable area). The video output is always\n"
 	        "contained within the viewport while taking the configured aspect ratio into\n"

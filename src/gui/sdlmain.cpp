@@ -4306,10 +4306,10 @@ static void config_add_sdl()
 	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
+	pstring = sdl_sec->Add_string("max_resolution", deprecated, "");
 	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
 
-	pstring = sdl_sec->Add_path("viewport_resolution", deprecated, "");
+	pstring = sdl_sec->Add_string("viewport_resolution", deprecated, "");
 	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
