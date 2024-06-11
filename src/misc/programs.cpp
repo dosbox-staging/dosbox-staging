@@ -505,14 +505,19 @@ void CONFIG::Run(void)
 				if (sec && !sec->IsActive()) {
 					sec = nullptr;
 				}
+
 				Section* sec2 = control->GetSectionFromProperty(
 				        pvars[1].c_str());
+
 				if (!sec || !sec->IsActive()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 					         pvars[0].c_str());
+					return;
+
 				} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 					         pvars[1].c_str());
+					return;
 				}
 				break;
 			}
