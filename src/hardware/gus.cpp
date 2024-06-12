@@ -1328,8 +1328,6 @@ void Gus::RegisterIoHandlers()
 
 void Gus::StopAndReset() noexcept
 {
-	assert(!reset_register.is_running);
-
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
 
@@ -1351,6 +1349,8 @@ void Gus::StopAndReset() noexcept
 	selected_register     = 0;
 	should_change_irq_dma = false;
 	PIC_RemoveEvents(GUS_TimerEvent);
+
+	reset_register.data = {};
 }
 
 static void GUS_TimerEvent(uint32_t t)
