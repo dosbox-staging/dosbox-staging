@@ -551,11 +551,11 @@ static void DOSBOX_RealInit(Section* sec)
 
 	const std::string pref = section->Get_string("vesa_modes");
 	if (pref == "compatible") {
-		int10.vesa_mode_preference = VesaModePref::Compatible;
+		int10.vesa_modes = VesaModes::Compatible;
 	} else if (pref == "halfline") {
-		int10.vesa_mode_preference = VesaModePref::Halfline;
+		int10.vesa_modes = VesaModes::Halfline;
 	} else {
-		int10.vesa_mode_preference = VesaModePref::All;
+		int10.vesa_modes = VesaModes::All;
 	}
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
