@@ -206,7 +206,7 @@ bool Overlay_Drive::TestDir(const char * dir) {
 
 class OverlayFile final : public localFile {
 public:
-	OverlayFile(const char* name, const std_fs::path& path, FILE* handle,
+	OverlayFile(const char* name, const std_fs::path& path, NativeFileHandle handle,
 	            const char* basedir, const bool _read_only_medium)
 	        : localFile(name, path, handle, basedir, _read_only_medium),
 	          overlay_active(false)
@@ -242,10 +242,10 @@ public:
 //Create leading directories of a file being overlayed if they exist in the original (localDrive).
 //This function is used to create copies of existing files, so all leading directories exist in the original.
 
-std::pair<FILE*, std_fs::path> Overlay_Drive::create_file_in_overlay(
-        const char* dos_filename, const char* mode)
+std::pair<NativeFileHandle, std_fs::path> Overlay_Drive::create_file_in_overlay(
+        const char* dos_filename, const FatAttributeFlags attributes)
 {
-	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
+	if (logoverlay) LOG_MSG("create_file_in_overlay called %s", dos_filename);
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, overlaydir); // TODO GOG make part of class and
 	                                  // join in
@@ -253,86 +253,84 @@ std::pair<FILE*, std_fs::path> Overlay_Drive::create_file_in_overlay(
 	                                    // Linux TODO
 	CROSS_FILENAME(newname);
 
-	FILE* f = fopen(newname,mode);
+	NativeFileHandle file_handle = create_native_file(newname, attributes);
 	//Check if a directories are part of the name:
 	const char *dir = strrchr(dos_filename, '\\');
 
-	if (!f && dir && *dir) {
+	if (file_handle == InvalidNativeFileHandle && dir && *dir) {
 		if (logoverlay) LOG_MSG("Overlay: warning creating a file inside a directory %s",dos_filename);
 		//ensure they exist, else make them in the overlay if they exist in the original....
 		Sync_leading_dirs(dos_filename);
 		//try again
-		f = fopen(newname,mode);
+		file_handle = create_native_file(newname, attributes);
 	}
 
-	return {f, newname};
+	return {file_handle, newname};
 }
 
 #ifndef BUFSIZ
 #define BUFSIZ 2048
 #endif
 
+static void copy_file_contents(const NativeFileHandle src, const NativeFileHandle dst)
+{
+	uint8_t buffer[BUFSIZ] = {};
+	while (true) {
+		const auto ret = read_native_file(src, buffer, BUFSIZ);
+		if (ret.num_bytes > 0) {
+			write_native_file(dst, buffer, ret.num_bytes);
+		} else {
+			break;
+		}
+	}
+}
+
 bool OverlayFile::create_copy() {
 	//test if open/valid/etc
 	//ensure file position
 	if (logoverlay) LOG_MSG("create_copy called %s",GetName());
 
-	FILE* lhandle = this->fhandle;
-	assert(lhandle);
+	assert(file_handle != InvalidNativeFileHandle);
 
-	const auto lhandle_pos = ftell(lhandle);
-	if (lhandle_pos < 0) {
+	const auto location_in_old_file = get_native_file_position(file_handle);
+	if (location_in_old_file == NativeSeekFailed) {
 		LOG_ERR("OVERLAY: Failed getting current position in file '%s': %s",
 		        GetName(), strerror(errno));
-		fclose(lhandle);
 		return false;
 	}
-	if (fseek(lhandle, lhandle_pos, SEEK_SET) != 0) {
-		LOG_ERR("OVERLAY: Failed seeking to position %ld in file '%s': %s",
-		        lhandle_pos, GetName(), strerror(errno));
-		fclose(lhandle);
-		return false;
-	}
-
-	const auto location_in_old_file = ftell(lhandle);
-	if (location_in_old_file < 0) {
-		LOG_ERR("OVERLAY: Failed getting current position in file '%s': %s",
-		        GetName(), strerror(errno));
-		fclose(lhandle);
-		return false;
-	}
-	if (fseek(lhandle, 0L, SEEK_SET) != 0) {
+	if (seek_native_file(file_handle, 0, NativeSeek::Set) == NativeSeekFailed) {
 		LOG_ERR("OVERLAY: Failed seeking to the beginning of file '%s': %s",
 		        GetName(), strerror(errno));
-		fclose(lhandle);
 		return false;
 	}
 
-	FILE* newhandle = nullptr;
+	NativeFileHandle newhandle = InvalidNativeFileHandle;
 	uint8_t drive_set = GetDrive();
 	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
 		const auto od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
 		if (od) {
-			std_fs::path path = {};
-			// TODO: check wb+
-			std::tie(newhandle, path) = od->create_file_in_overlay(GetName(), "wb+");
+			FatAttributeFlags attributes = {};
+			local_drive_get_attributes(GetPath(), attributes);
+			std_fs::path newpath = {};
+			std::tie(newhandle, newpath) = od->create_file_in_overlay(GetName(), attributes);
 		}
 	}
- 
-	if (!newhandle) return false;
-	char buffer[BUFSIZ];
-	size_t s;
-	while ( (s = fread(buffer,1,BUFSIZ,lhandle)) != 0 ) fwrite(buffer, 1, s, newhandle);
-	fclose(lhandle);
 
-	//Set copied file handle to position of the old one
-	if (fseek(newhandle, location_in_old_file, SEEK_SET) != 0) {
-		LOG_ERR("OVERLAY: Failed seeking to position %ld in file '%s': %s",
-		        location_in_old_file, GetName(), strerror(errno));
-		fclose(newhandle);
+	if (newhandle == InvalidNativeFileHandle) {
 		return false;
 	}
-	this->fhandle = newhandle;
+
+	copy_file_contents(file_handle, newhandle);
+
+	//Set copied file handle to position of the old one
+	if (seek_native_file(newhandle, location_in_old_file, NativeSeek::Set) == NativeSeekFailed) {
+		LOG_ERR("OVERLAY: Failed seeking to position %lld in file '%s': %s",
+		        static_cast<long long>(location_in_old_file), GetName(), strerror(errno));
+		close_native_file(newhandle);
+		return false;
+	}
+	close_native_file(file_handle);
+	file_handle = newhandle;
 	//Flags ?
 	if (logoverlay) LOG_MSG("success");
 	return true;
@@ -346,7 +344,7 @@ static OverlayFile* ccc(DOS_File* file) {
 	//Create an overlayFile
 	OverlayFile* ret = new OverlayFile(l->GetName(),
 	                                   l->GetPath(),
-	                                   l->fhandle,
+	                                   l->file_handle,
 	                                   l->GetBaseDir(),
 	                                   l->IsOnReadOnlyMedium());
 	ret->flags = l->flags;
@@ -462,31 +460,22 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
-	const char* type;
-	switch (flags&0xf) {
-	case OPEN_READ:        type = "rb" ; break;
-	case OPEN_WRITE:       type = "rb+"; break;
-	case OPEN_READWRITE:   type = "rb+"; break;
-	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
-	default:
-		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
-		return false;
-	}
-
-	//Flush the buffer of handles for the same file. (Betrayal in Antara)
-	uint8_t drive = DOS_DRIVES;
-	for (uint8_t i = 0; i < DOS_DRIVES; ++i) {
-		if (Drives[i]==this) {
-			drive=i;
+bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
+{
+	bool write_access = false;
+	switch (flags & 0xf) {
+		case OPEN_READ:
+		//No modification of dates. LORD4.07 uses this
+		case OPEN_READ_NO_MOD:
+			write_access = false;
 			break;
-		}
-	}
-	for (uint8_t i = 0; i < DOS_FILES; ++i) {
-		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
-			localFile *lfp = dynamic_cast<localFile *>(Files[i]);
-			if (lfp) lfp->Flush();
-		}
+		case OPEN_WRITE:
+		case OPEN_READWRITE:
+			write_access = true;
+			break;
+		default:
+			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
+			return false;
 	}
 
 	//Todo check name first against local tree
@@ -497,11 +486,11 @@ bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 
-	FILE * hand = fopen(newname,type);
+	NativeFileHandle file_handle = open_native_file(newname, write_access);
 	bool fileopened = false;
-	if (hand) {
+	if (file_handle != InvalidNativeFileHandle) {
 		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
-		*file = new localFile(name, newname, hand, overlaydir, IsReadOnly());
+		*file = new localFile(name, newname, file_handle, overlaydir, IsReadOnly());
 
 		(*file)->flags = flags;
 		fileopened = true;
@@ -528,7 +517,7 @@ bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
 }
 
 bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
-                               FatAttributeFlags /*attributes*/)
+                               FatAttributeFlags attributes)
 {
 	// TODO Check if it exists in the dirCache ? // fix addentry ?  or just
 	// double check (ld and overlay) AddEntry looks sound to me..
@@ -536,14 +525,14 @@ bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
 	//check if leading part of filename is a deleted directory
 	if (check_if_leading_is_deleted(name)) return false;
 
-	auto [f, path] = create_file_in_overlay(name, "wb+");
-	if (!f) {
+	auto [file_handle, path] = create_file_in_overlay(name, attributes);
+	if (file_handle == InvalidNativeFileHandle) {
 		if (logoverlay) {
 			LOG_MSG("File creation in overlay system failed %s", name);
 		}
 		return false;
 	}
-	*file = new localFile(name, path, f, overlaydir, IsReadOnly());
+	*file = new localFile(name, path, file_handle, overlaydir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 	OverlayFile* of = ccc(*file);
@@ -1288,17 +1277,16 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 		safe_strcat(newold, oldname);
 		CROSS_FILENAME(newold);
 		dirCache.ExpandNameAndNormaliseCase(newold);
-		FILE* o = fopen(newold,"rb");
-		if (!o) return false;
-		auto [n, path] = create_file_in_overlay(newname, "wb+");
-		if (!n) {
-			fclose(o);
+		NativeFileHandle o = open_native_file(newold, false);
+		if (o == InvalidNativeFileHandle) return false;
+		auto [n, path] = create_file_in_overlay(newname, attr);
+		if (n == InvalidNativeFileHandle) {
+			close_native_file(o);
 			return false;
 		}
-		char buffer[BUFSIZ];
-		size_t s;
-		while ( (s = fread(buffer,1,BUFSIZ,o)) ) fwrite(buffer, 1, s, n);
-		fclose(o); fclose(n);
+		copy_file_contents(o, n);
+		close_native_file(o);
+		close_native_file(n);
 
 		//File copied.
 		//Mark old file as deleted

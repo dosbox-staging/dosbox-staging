@@ -82,9 +82,9 @@ bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags
 	const bool file_exists = FileExists(expanded_name);
 
 	attributes.archive = true;
-	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
+	NativeFileHandle file_handle = create_native_file(expanded_name, attributes);
 
-	if (!file_pointer) {
+	if (file_handle == InvalidNativeFileHandle) {
 		LOG_MSG("Warning: file creation failed: %s", expanded_name);
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -95,7 +95,7 @@ bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, expanded_name, file_pointer, basedir, IsReadOnly());
+	*file = new localFile(name, expanded_name, file_handle, basedir, IsReadOnly());
 
 	(*file)->flags = OPEN_READWRITE;
 
@@ -181,28 +181,21 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 		}
 	}
 
-	// If the file's already open then flush it before continuing
-	// (Betrayal in Antara)
-	auto open_file = dynamic_cast<localFile *>(FindOpenFile(this, name));
-	if (open_file) {
-		open_file->Flush();
-	}
-
-	FILE* fhandle = fopen(host_filename.c_str(), write_access ? "rb+" : "rb");
+	NativeFileHandle file_handle = open_native_file(host_filename, write_access);
 
 	// If we couldn't open the file, then it's possible that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
-	if (!fhandle && write_access && always_open_ro_files) {
+	if (file_handle == InvalidNativeFileHandle && write_access && always_open_ro_files) {
 		// If yes, check if the file can be opened with Read-only access:
-		fhandle = fopen(host_filename.c_str(), "rb");
-		if (fhandle) {
+		file_handle = open_native_file(host_filename, false);
+		if (file_handle != InvalidNativeFileHandle) {
 			flags = OPEN_READ;
 			fallback_to_readonly = true;
 		}
 	}
 
-	if (!fhandle) {
+	if (file_handle == InvalidNativeFileHandle) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
@@ -211,7 +204,7 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 		MaybeLogFilesystemProtection(host_filename);
 	}
 
-	*file = new localFile(name, host_filename, fhandle, basedir, IsReadOnly());
+	*file = new localFile(name, host_filename, file_handle, basedir, IsReadOnly());
 	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
 
 	return true;
@@ -579,43 +572,6 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 	dirCache.SetBaseDir(basedir);
 }
 
-// Updates the internal file's current position
-bool localFile::ftell_and_check()
-{
-	if (!fhandle)
-		return false;
-
-	stream_pos = ftell(fhandle);
-	if (stream_pos >= 0)
-		return true;
-
-	LOG_DEBUG("FS: Failed obtaining position in file '%s'", name.c_str());
-	return false;
-}
-
-// Seeks the internal file to the specified position relative to whence
-bool localFile::fseek_to_and_check(long pos, int whence)
-{
-	if (!fhandle)
-		return false;
-
-	if (fseek(fhandle, pos, whence) == 0) {
-		stream_pos = pos;
-		return true;
-	}
-	LOG_DEBUG("FS: Failed seeking to byte %ld in file '%s'",
-	          stream_pos,
-	          name.c_str());
-	return false;
-}
-
-// Seeks the internal file to the internal position relative to whence
-void localFile::fseek_and_check(int whence)
-{
-	static_cast<void>(fseek_to_and_check(stream_pos, whence));
-}
-
-//TODO Maybe use fflush, but that seemed to fuck up in visual c
 bool localFile::Read(uint8_t *data, uint16_t *size)
 {
 	// check if the file is opened in write-only mode
@@ -624,28 +580,11 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		return false;
 	}
 
-	// Seek if we last wrote
-	if (last_action == LastAction::Write)
-		if (ftell_and_check())
-			fseek_and_check(SEEK_SET);
-
-	last_action = LastAction::Read;
-	const auto requested = *size;
-	const auto actual = static_cast<uint16_t>(fread(data, 1, requested, fhandle));
-	*size = actual; // always save the actual
-
-	if (actual != requested) {
-		// LOG_DEBUG("FS: Only read %u of %u requested bytes from file '%s'",
-		//           actual,
-		//           requested,
-		//           name.c_str());
-
-		// Check for host read error
-		if (ferror(fhandle)) {
-			clearerr(fhandle);
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
+	const auto ret = read_native_file(file_handle, data, *size);
+	*size = check_cast<uint16_t>(ret.num_bytes);
+	if (ret.error) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
 	}
 
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
@@ -669,26 +608,11 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	// File should always be opened in read-only mode if on read-only drive
 	assert(!IsOnReadOnlyMedium());
 
-	// Seek if we last read
-	if (last_action == LastAction::Read)
-		if (ftell_and_check())
-			fseek_and_check(SEEK_SET);
-
-	last_action = LastAction::Write;
 	set_archive_on_close = true;
 
 	// Truncate the file
 	if (*size == 0) {
-		const auto file = cross_fileno(fhandle);
-		if (file == -1) {
-			LOG_DEBUG("FS: Could not resolve file number for '%s'",
-			          name.c_str());
-			return false;
-		}
-		if (!ftell_and_check()) {
-			return false;
-		}
-		if (ftruncate(file, stream_pos) != 0) {
+		if (!truncate_native_file(file_handle)) {
 			LOG_DEBUG("FS: Failed truncating file '%s'", name.c_str());
 			return false;
 		}
@@ -697,65 +621,61 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	}
 
 	// Otherwise we have some data to write
-	const auto requested = *size;
-	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
-	if (actual != requested) {
-		LOG_DEBUG("FS: Only wrote %u of %u requested bytes to file '%s'",
-		          actual,
-		          requested,
-		          name.c_str());
-
-		// Check for host write error
-		if (ferror(fhandle)) {
-			clearerr(fhandle);
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
+	const auto ret = write_native_file(file_handle, data, *size);
+	*size = check_cast<uint16_t>(ret.num_bytes);
+	if (ret.error) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
 	}
-	*size = actual; // always save the actual
-	return true;    // always return true, even if partially written
+
+	return true;
 }
 
 bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
-	int seektype;
+	NativeSeek seek_type;
 	switch (type) {
-	case DOS_SEEK_SET:seektype=SEEK_SET;break;
-	case DOS_SEEK_CUR:seektype=SEEK_CUR;break;
-	case DOS_SEEK_END:seektype=SEEK_END;break;
-	default:
-	//TODO Give some doserrorcode;
-		return false;//ERROR
+		case DOS_SEEK_SET:
+			seek_type = NativeSeek::Set;
+			break;
+		case DOS_SEEK_CUR:
+			seek_type = NativeSeek::Current;
+			break;
+		case DOS_SEEK_END:
+			seek_type = NativeSeek::End;
+			break;
+		default:
+			assertm(false, "Invalid seek type");
+			return false;
 	}
 
 	// The inbound position is actually an int32_t being passed through a
 	// uint32_t* pointer (pos_addr), so reinterpret the underlying memory as
 	// such to prevent rollover into the unsigned range.
-	const auto pos = *reinterpret_cast<int32_t *>(pos_addr);
-	if (!fseek_to_and_check(pos, seektype)) {
+	const auto requested_pos = *reinterpret_cast<int32_t *>(pos_addr);
+
+	auto returned_pos = seek_native_file(file_handle, requested_pos, seek_type);
+
+	// TODO: Test Black Throne and see if this hack is still needed
+	// We're now using native file I/O which may have changed behavior
+	// Should we just be throwing a DOS error code here?
+	if (returned_pos == NativeSeekFailed) {
 		// Failed to seek, but try again this time seeking to
 		// the end of file, which satisfies Black Thorne.
-		stream_pos = 0;
-		fseek_and_check(SEEK_END);
+		returned_pos = seek_native_file(file_handle, 0, NativeSeek::End);
+		if (returned_pos == NativeSeekFailed) {
+			// Unlikely to fail but this matches behavior of the old code using fseek()
+			returned_pos = 0;
+		}
 	}
-#if 0
-	fpos_t temppos;
-	fgetpos(fhandle,&temppos);
-	uint32_t * fake_pos=(uint32_t*)&temppos;
-	*pos_addr = *fake_pos;
-#endif
-	static_cast<void>(ftell_and_check());
 
 	// The inbound position is actually an int32_t being passed through a
 	// uint32_t* pointer (pos_addr), so before we save the seeked position
 	// back into it we first ensure the current long stream_pos (which is a
 	// signed 64-bit on some platforms + OSes) can fit within the int32_t
 	// range before assigning it.
-	assert(stream_pos >= std::numeric_limits<int32_t>::min() &&
-	       stream_pos <= std::numeric_limits<int32_t>::max());
-	*reinterpret_cast<int32_t *>(pos_addr) = static_cast<int32_t>(stream_pos);
+	*reinterpret_cast<int32_t *>(pos_addr) = check_cast<int32_t>(returned_pos);
 
-	last_action = LastAction::None;
 	return true;
 }
 
@@ -781,10 +701,10 @@ bool localFile::Close()
 			set_archive_on_close = false;
 		}
 
-		if (fhandle) {
-			fclose(fhandle);
+		if (file_handle != InvalidNativeFileHandle) {
+			close_native_file(file_handle);
 		}
-		fhandle = nullptr;
+		file_handle = InvalidNativeFileHandle;
 		open = false;
 	};
 
@@ -826,9 +746,9 @@ uint16_t localFile::GetInformation(void)
 	return read_only_medium ? 0x40 : 0;
 }
 
-localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
+localFile::localFile(const char* _name, const std_fs::path& path, const NativeFileHandle handle,
                      const char* _basedir, const bool _read_only_medium)
-        : fhandle(handle),
+        : file_handle(handle),
           path(path),
           basedir(_basedir),
           read_only_medium(_read_only_medium)
@@ -842,40 +762,16 @@ localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
 
 bool localFile::UpdateDateTimeFromHost()
 {
-	if (!open)
+	if (!open) {
 		return false;
+	}
 
-	// Legal defaults if we're unable to populate them
-	time = 1;
-	date = 1;
+	const auto dos_time = get_dos_file_time(file_handle);
 
-	const auto file = cross_fileno(fhandle);
-	if (file == -1)
-		return true; // use defaults
+	time = dos_time.time;
+	date = dos_time.date;
 
-	struct stat temp_stat;
-	if (fstat(file, &temp_stat) == -1)
-		return true; // use defaults
-
-	struct tm datetime;
-	if (!cross::localtime_r(&temp_stat.st_mtime, &datetime))
-		return true; // use defaults
-
-	time = DOS_PackTime(datetime);
-	date = DOS_PackDate(datetime);
 	return true;
-}
-
-void localFile::Flush()
-{
-	if (last_action != LastAction::Write)
-		return;
-
-	if (ftell_and_check())
-		fseek_and_check(SEEK_SET);
-
-	// Always reset the state even if the file is broken
-	last_action = LastAction::None;
 }
 
 // ********************************************

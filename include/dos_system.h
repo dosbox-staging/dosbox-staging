@@ -27,6 +27,7 @@
 
 #include "bit_view.h"
 #include "cross.h"
+#include "fs_utils.h"
 #include "mem.h"
 #include "support.h"
 
@@ -189,7 +190,7 @@ private:
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, const std_fs::path& path, FILE* handle,
+	localFile(const char* name, const std_fs::path& path, const NativeFileHandle handle,
 	          const char* basedir, bool _read_only_medium);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
@@ -199,7 +200,6 @@ public:
 	bool Close() override;
 	uint16_t GetInformation() override;
 	bool UpdateDateTimeFromHost() override;
-	void Flush();
 	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
 	const char* GetBaseDir() const
 	{
@@ -209,21 +209,13 @@ public:
 	{
 		return path;
 	}
-	FILE* fhandle = nullptr; // todo handle this properly
+	NativeFileHandle file_handle = InvalidNativeFileHandle;
 private:
 	const std_fs::path path = {};
 	const char* basedir     = nullptr;
-	long stream_pos         = 0;
-
-	bool ftell_and_check();
-	void fseek_and_check(int whence);
-	bool fseek_to_and_check(long pos, int whence);
 
 	const bool read_only_medium = false;
 	bool set_archive_on_close   = false;
-
-	enum class LastAction : uint8_t { None, Read, Write };
-	LastAction last_action = LastAction::None;
 };
 
 /* The following variable can be lowered to free up some memory.
