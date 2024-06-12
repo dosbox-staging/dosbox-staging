@@ -681,16 +681,17 @@ void replace_mode_120h_with_halfline()
 	}
 }
 
-void filter_s3_modes_to_oem_only()
+void filter_compatible_s3_vesa_modes()
 {
 	enum dram_size_t {
 		kb_512 = 1 << 0,
-		mb_1 = 1 << 1,
-		mb_2 = 1 << 2,
-		mb_4 = 1 << 3,
-		mb_8 = 1 << 4,
+		mb_1   = 1 << 1,
+		mb_2   = 1 << 2,
+		mb_4   = 1 << 3,
+		mb_8   = 1 << 4,
 	};
-	auto hash = [](uint16_t w, uint16_t h, int d) -> uint32_t {
+
+	auto hash = [](const uint16_t w, const uint16_t h, const int d) -> uint32_t {
 		return check_cast<uint32_t>((w + h) * d);
 	};
 
@@ -748,31 +749,65 @@ void filter_s3_modes_to_oem_only()
 	case 4096 * 1024: dram_size = mb_4; break;
 	case 8192 * 1024: dram_size = mb_8; break;
 	}
-	auto mode_not_allowed = [&](const VideoModeBlock &m) -> bool {
-		// Permit common VESA modes except 320x200 hi-color that were
-		// rarely properly supported until the late 90s.
-		constexpr auto s3_vesa_modes_start = 0x150;
-		if (m.mode < s3_vesa_modes_start)
-			return (m.mode == 0x10d || m.mode == 0x10e || m.mode == 0x10f);
 
-		// Allow all modes that aren't part of the VESA VGA set (CGA/EGA/Hercules/etc)
-		if (!VESA_IsVesaMode(m.mode)) {
-			return false;
+	auto mode_allowed = [&](const VideoModeBlock& m) {
+		// Allow all text modes
+		if (m.type == M_TEXT) {
+			return true;
 		}
 
+		// Allow all non-VESA modes (standard VGA modes, and CGA and EGA
+		// as emulated by VGA adapters)
+		if (!VESA_IsVesaMode(m.mode)) {
+			return true;
+		}
+
+		// Allow common standard VESA modes, except 320x200 hi-color
+		// modes that were rarely properly supported until the late 90s.
+		constexpr auto s3_vesa_modes_start = 0x150;
+
+		if (m.mode < s3_vesa_modes_start) {
+			constexpr auto _320x200_15bit = 0x10d;
+			constexpr auto _320x200_16bit = 0x10e;
+			constexpr auto _320x200_32bit = 0x10f;
+
+			return !(m.mode == _320x200_15bit || m.mode == _320x200_16bit ||
+			         m.mode == _320x200_32bit);
+		}
+
+		// Selectively allow S3-specific VESA modes.
+
 		// Does the S3 OEM list have this mode for the given DRAM size?
-		const auto it = oem_modes.find(hash(m.swidth, m.sheight, enum_val(m.type)));
-		const bool is_an_oem_mode = (it != oem_modes.end()) && (it->second & dram_size);
+		const auto it = oem_modes.find(
+		        hash(m.swidth, m.sheight, enum_val(m.type)));
 
-		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_vesa_mode=%d is_an_oem_mode=%d",
-		//         m.mode, m.swidth, m.sheight, m.type, VESA_IsVesaMode(m.mode), is_an_oem_mode);
-
-		return !is_an_oem_mode;
+		const bool is_oem_mode = (it != oem_modes.end()) &&
+		                         (it->second & dram_size);
+#if 0
+		auto mode_info = format_str("S3: mode %Xh: %4u x %4u - m.type: %3d",
+		                            m.mode,
+		                            m.swidth,
+		                            m.sheight,
+		                            m.type);
+		if (is_oem_mode) {
+			LOG_DEBUG(mode_info.c_str());
+		} else {
+			LOG_ERR(mode_info.c_str());
+		}
+#endif
+		return is_oem_mode;
 	};
+
+	auto mode_not_allowed = [&](const VideoModeBlock& m) {
+		return !mode_allowed(m);
+	};
+
 	// We don't need the return value
 	ModeList_VGA.erase(std::remove_if(ModeList_VGA.begin(),
-	                                  ModeList_VGA.end(), mode_not_allowed),
+	                                  ModeList_VGA.end(),
+	                                  mode_not_allowed),
 	                   ModeList_VGA.end());
+
 	CurMode = std::prev(ModeList_VGA.end());
 }
 
@@ -823,7 +858,7 @@ void SVGA_Setup_S3Trio(void)
 
 	switch (int10.vesa_modes) {
 	case VesaModes::Compatible:
-		filter_s3_modes_to_oem_only();
+		filter_compatible_s3_vesa_modes();
 		description += " compatible";
 		break;
 
