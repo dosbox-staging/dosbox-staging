@@ -806,45 +806,64 @@ void filter_compatible_s3_vesa_modes()
 	CurMode = std::prev(ModeList_VGA.end());
 }
 
-void SVGA_Setup_S3Trio(void)
+void SVGA_Setup_S3Trio()
 {
 	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
-	svga.read_p3d5 = &SVGA_S3_ReadCRTC;
+	svga.read_p3d5  = &SVGA_S3_ReadCRTC;
 	svga.write_p3c5 = &SVGA_S3_WriteSEQ;
-	svga.read_p3c5 = &SVGA_S3_ReadSEQ;
-	svga.write_p3c0 = nullptr; /* no S3-specific functionality */
-	svga.read_p3c1 = nullptr; /* no S3-specific functionality */
+	svga.read_p3c5  = &SVGA_S3_ReadSEQ;
 
-	svga.set_video_mode = nullptr; /* implemented in core */
-	svga.determine_mode = nullptr; /* implemented in core */
-	svga.set_clock = nullptr; /* implemented in core */
-	svga.get_clock = &SVGA_S3_GetClock;
+	// No S3-specific functionality
+	svga.write_p3c0 = nullptr;
+
+	// No S3-specific functionality
+	svga.read_p3c1 = nullptr;
+
+	// Implemented in core
+	svga.set_video_mode = nullptr;
+
+	// Implemented in core
+	svga.determine_mode = nullptr;
+
+	// Implemented in core
+	svga.set_clock              = nullptr;
+	svga.get_clock              = &SVGA_S3_GetClock;
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
-	svga.accepts_mode = &SVGA_S3_AcceptsMode;
+	svga.accepts_mode           = &SVGA_S3_AcceptsMode;
 
-	if (vga.vmemsize == 0)
+	if (vga.vmemsize == 0) {
 		vga.vmemsize = 4 * 1024 * 1024;
+	}
 
-
-	// Set CRTC 36 to specify amount of VRAM and PCI
+	// Set CRTC reg 36 to specify amount of VRAM and PCI
 	std::string ram_type = "EDO DRAM";
+
 	if (vga.vmemsize < 1024 * 1024) {
 		vga.vmemsize = 512 * 1024;
-		vga.s3.reg_36 = 0b1111'1010; // less than 1mb EDO RAM
+		// Less than 1 MB EDO RAM
+		vga.s3.reg_36 = 0b1111'1010;
+
 	} else if (vga.vmemsize < 2048 * 1024) {
 		vga.vmemsize = 1024 * 1024;
-		vga.s3.reg_36 = 0b1101'1010; // 1mb EDO RAM
+		// 1 MB EDO RAM
+		vga.s3.reg_36 = 0b1101'1010;
+
 	} else if (vga.vmemsize < 4096 * 1024) {
 		vga.vmemsize = 2048 * 1024;
-		vga.s3.reg_36 = 0b1001'1010; // 2mb EDO RAM
+		// 2 MB EDO RAM
+		vga.s3.reg_36 = 0b1001'1010;
+
 	} else if (vga.vmemsize < 8192 * 1024) {
 		vga.vmemsize = 4096 * 1024;
-		vga.s3.reg_36 = 0b0001'1110; // 4mb fast page mode RAM
-		ram_type = "FP DRAM";
+		// 4 MB fast page mode RAM
+		vga.s3.reg_36 = 0b0001'1110;
+		ram_type      = "FP DRAM";
+
 	} else {
 		vga.vmemsize = 8192 * 1024;
-		vga.s3.reg_36 = 0b0111'1110; // 8mb fast page mode RAM
-		ram_type = "FP DRAM";
+		// 8 MB fast page mode RAM
+		vga.s3.reg_36 = 0b0111'1110;
+		ram_type      = "FP DRAM";
 	}
 
 	std::string description = "S3 Trio64 ";
@@ -865,8 +884,9 @@ void SVGA_Setup_S3Trio(void)
 	case VesaModes::All: break;
 	}
 
-	if (int10.vesa_nolfb)
+	if (int10.vesa_nolfb) {
 		description += " without LFB";
+	}
 
 	const auto num_modes = ModeList_VGA.size();
 	VGA_LogInitialization(description.c_str(), ram_type.c_str(), num_modes);
