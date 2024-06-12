@@ -649,31 +649,26 @@ bool SVGA_S3_AcceptsMode(Bitu mode) {
 
 void replace_mode_120h_with_halfline()
 {
-	// when C++20 is available, replace this with designated initializers
-	auto make_halfline_block = []() {
-		VideoModeBlock block = {};
+	constexpr VideoModeBlock halfline_block = {.mode     = 0x120,
+	                                           .type     = M_LIN16,
+	                                           .swidth   = 640,
+	                                           .sheight  = 400,
+	                                           .twidth   = 80,
+	                                           .theight  = 25,
+	                                           .cwidth   = 8,
+	                                           .cheight  = 16,
+	                                           .ptotal   = 1,
+	                                           .pstart   = 0xa0000,
+	                                           .plength  = 0x10000,
+	                                           .htotal   = 200,
+	                                           .vtotal   = 449,
+	                                           .hdispend = 160,
+	                                           .vdispend = 400,
+	                                           .special  = 0};
 
-		block.mode     = 0x120;
-		block.type     = M_LIN16;
-		block.swidth   = 640;
-		block.sheight  = 400;
-		block.twidth   = 80;
-		block.theight  = 25;
-		block.cwidth   = 8;
-		block.cheight  = 16;
-		block.ptotal   = 1;
-		block.pstart   = 0xA0000;
-		block.plength  = 0x10000;
-		block.htotal   = 200;
-		block.vtotal   = 449;
-		block.hdispend = 160;
-		block.vdispend = 400;
-		return block;
-	};
-	constexpr auto halfline_block = make_halfline_block();
-	constexpr auto halfline_mode  = halfline_block.mode;
+	constexpr auto halfline_mode = halfline_block.mode;
 
-	for (auto &block : ModeList_VGA) {
+	for (auto& block : ModeList_VGA) {
 		if (block.mode == halfline_mode) {
 			block = halfline_block;
 			break;
