@@ -63,33 +63,6 @@ int create_dir(const std_fs::path& path, [[maybe_unused]] uint32_t mode,
 
 constexpr uint8_t WindowsAttributesMask = 0x3f;
 
-FILE* local_drive_create_file(const std_fs::path& path,
-                              const FatAttributeFlags attributes)
-{
-	FILE* file_pointer          = nullptr;
-	const auto win32_attributes = (attributes._data != 0)
-	                                    ? static_cast<DWORD>(attributes._data)
-	                                    : FILE_ATTRIBUTE_NORMAL;
-
-	const auto win32_handle = CreateFileW(path.c_str(),
-	                                      GENERIC_READ | GENERIC_WRITE,
-	                                      FILE_SHARE_READ | FILE_SHARE_WRITE |
-	                                              FILE_SHARE_DELETE,
-	                                      nullptr,
-	                                      CREATE_ALWAYS,
-	                                      win32_attributes,
-	                                      nullptr);
-
-	if (win32_handle != INVALID_HANDLE_VALUE) {
-		const int file_descriptor =
-		        _open_osfhandle(reinterpret_cast<intptr_t>(win32_handle),
-		                        _O_RDWR | _O_BINARY);
-		file_pointer = _fdopen(file_descriptor, "wb+");
-	}
-
-	return file_pointer;
-}
-
 uint16_t local_drive_get_attributes(const std_fs::path& path,
                                     FatAttributeFlags& attributes)
 {
@@ -111,6 +84,169 @@ uint16_t local_drive_set_attributes(const std_fs::path& path,
 	}
 
 	return DOSERR_NONE;
+}
+
+NativeFileHandle open_native_file(const std_fs::path& path, const bool write_access)
+{
+	DWORD access = GENERIC_READ;
+	if (write_access) {
+		access |= GENERIC_WRITE;
+	}
+
+	return CreateFileW(path.c_str(),
+	                   access,
+	                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                   nullptr,
+	                   OPEN_EXISTING,
+	                   FILE_ATTRIBUTE_NORMAL,
+	                   nullptr);
+}
+
+NativeFileHandle create_native_file(const std_fs::path& path,
+                                    const std::optional<FatAttributeFlags> attributes)
+{
+	const auto win32_attributes = (attributes && attributes->_data != 0)
+	                                    ? static_cast<DWORD>(attributes->_data)
+	                                    : FILE_ATTRIBUTE_NORMAL;
+
+	return CreateFileW(path.c_str(),
+	                   GENERIC_READ | GENERIC_WRITE,
+	                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                   nullptr,
+	                   CREATE_ALWAYS,
+	                   win32_attributes,
+	                   nullptr);
+}
+
+// ReadFile() and WriteFile() should work with a single call
+// However, they take in a 32-bit unsigned DWORD and we take in an int64_t
+// "future proof" this with a loop so we can read large files if we ever need to
+NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
+                                const int64_t num_bytes_requested)
+{
+	constexpr auto max_dword = std::numeric_limits<DWORD>::max();
+
+	NativeIoResult ret = {};
+	ret.num_bytes = 0;
+	ret.error = false;
+	while (ret.num_bytes < num_bytes_requested) {
+		int64_t clamped_bytes_requested = num_bytes_requested - ret.num_bytes;
+		if (clamped_bytes_requested > max_dword) {
+			clamped_bytes_requested = max_dword;
+		}
+		DWORD num_bytes_read = 0;
+		const auto success = ReadFile(handle, buffer + ret.num_bytes, clamped_bytes_requested, &num_bytes_read, nullptr);
+		ret.num_bytes += num_bytes_read;
+		ret.error = !success;
+		if (ret.error || num_bytes_read == 0) {
+			break;
+		}
+	}
+	return ret;
+}
+
+NativeIoResult write_native_file(const NativeFileHandle handle,
+                                 const uint8_t* buffer,
+                                 const int64_t num_bytes_requested)
+{
+	constexpr auto max_dword = std::numeric_limits<DWORD>::max();
+
+	NativeIoResult ret = {};
+	ret.num_bytes = 0;
+	ret.error = false;
+	while (ret.num_bytes < num_bytes_requested) {
+		int64_t clamped_bytes_requested = num_bytes_requested - ret.num_bytes;
+		if (clamped_bytes_requested > max_dword) {
+			clamped_bytes_requested = max_dword;
+		}
+		DWORD num_bytes_written = 0;
+		const auto success = WriteFile(handle, buffer + ret.num_bytes, clamped_bytes_requested, &num_bytes_written, nullptr);
+		ret.num_bytes += num_bytes_written;
+		ret.error = !success;
+		if (ret.error || num_bytes_written == 0) {
+			break;
+		}
+	}
+	return ret;
+}
+
+int64_t seek_native_file(const NativeFileHandle handle,
+                         const int64_t offset, const NativeSeek type)
+{
+	DWORD win32_seek_type = FILE_BEGIN;
+	switch (type) {
+		case NativeSeek::Set:
+			win32_seek_type = FILE_BEGIN;
+			break;
+		case NativeSeek::Current:
+			win32_seek_type = FILE_CURRENT;
+			break;
+		case NativeSeek::End:
+			win32_seek_type = FILE_END;
+			break;
+		default:
+			assertm(false, "Invalid seek type");
+			return NativeSeekFailed;
+	}
+
+	// Microsoft in their infinite knowledge decided to split the offset
+	// into two arguments (a low 32-bit word and a high 32-bit word)
+	// They use this LARGE_INTEGER union to handle this on their example code
+	// https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointer
+
+	LARGE_INTEGER li;
+	li.QuadPart = offset;
+
+	// HighPart is both an input and output value
+	li.LowPart = SetFilePointer(handle, li.LowPart, &li.HighPart, win32_seek_type);
+
+	// If we have a large offset, INVALID_SET_FILE_POINTER is also valid as the low word
+	// So we must also check GetLastError() to know if we failed
+	if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
+		return NativeSeekFailed;
+	}
+
+	return li.QuadPart;
+}
+
+void close_native_file(const NativeFileHandle handle)
+{
+	CloseHandle(handle);
+}
+
+// Sets the file size to be equal to the current file position
+bool truncate_native_file(const NativeFileHandle handle)
+{
+	return SetEndOfFile(handle);
+}
+
+DosDateTime get_dos_file_time(const NativeFileHandle handle)
+{
+	// Legal defaults if we're unable to populate them
+	DosDateTime ret = {};
+	ret.time        = 1;
+	ret.date        = 1;
+
+	FILETIME last_write_time = {};
+	if (!GetFileTime(handle, nullptr, nullptr, &last_write_time)) {
+		return ret;
+	}
+
+	SYSTEMTIME system_time = {};
+	if (!FileTimeToSystemTime(&last_write_time, &system_time)) {
+		return ret;
+	}
+
+	ret.time = DOS_PackTime(system_time.wHour,
+	                        system_time.wMinute,
+	                        system_time.wSecond);
+
+	ret.date = DOS_PackDate(system_time.wYear,
+	                        system_time.wMonth,
+	                        system_time.wDay);
+
+
+	return ret;
 }
 
 #endif

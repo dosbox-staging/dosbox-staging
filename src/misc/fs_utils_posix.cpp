@@ -295,22 +295,6 @@ static bool set_xattr([[maybe_unused]] const int file_descriptor,
 	return (result == 0);
 }
 
-FILE* local_drive_create_file(const std_fs::path& path,
-                              const FatAttributeFlags attributes)
-{
-	FILE* file_pointer = nullptr;
-
-	const auto file_descriptor = open(path.c_str(),
-	                                  O_CREAT | O_RDWR | O_TRUNC,
-	                                  PermissionsRW);
-	if (file_descriptor != -1) {
-		set_xattr(file_descriptor, attributes);
-		file_pointer = fdopen(file_descriptor, "wb+");
-	}
-
-	return file_pointer;
-}
-
 uint16_t local_drive_get_attributes(const std_fs::path& path,
                                     FatAttributeFlags& attributes)
 {
@@ -352,6 +336,125 @@ uint16_t local_drive_set_attributes(const std_fs::path& path,
 	}
 
 	return status ? DOSERR_NONE : DOSERR_ACCESS_DENIED;
+}
+
+NativeFileHandle open_native_file(const std_fs::path& path,
+                                  const bool write_access)
+{
+	return open(path.c_str(), write_access ? O_RDWR : O_RDONLY);
+}
+
+NativeFileHandle create_native_file(const std_fs::path& path,
+                                    const std::optional<FatAttributeFlags> attributes)
+{
+	const auto file_descriptor = open(path.c_str(),
+	                                  O_CREAT | O_RDWR | O_TRUNC,
+	                                  PermissionsRW);
+	if (attributes && file_descriptor != InvalidNativeFileHandle) {
+		set_xattr(file_descriptor, *attributes);
+	}
+
+	return file_descriptor;
+}
+
+// POSIX does not guarantee to read or write all bytes requested at once.
+// On Linux, it will read the entire chunk in one call (assuming it's a normal file).
+// On Windows, it does not always do so (although we're not using these functions on Windows).
+// On Mac and the various BSDs, who knows. So be safe and do a loop.
+NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t *buffer, const int64_t num_bytes_requested)
+{
+	NativeIoResult ret = {};
+	ret.num_bytes = 0;
+	ret.error = false;
+	while (ret.num_bytes < num_bytes_requested) {
+		const auto num_bytes_read = read(handle, buffer + ret.num_bytes, num_bytes_requested - ret.num_bytes);
+		if (num_bytes_read <= 0) {
+			ret.error = num_bytes_read < 0;
+			break;
+		}
+		ret.num_bytes += num_bytes_read;
+	}
+	return ret;
+}
+
+NativeIoResult write_native_file(const NativeFileHandle handle, const uint8_t *buffer, const int64_t num_bytes_requested)
+{
+	NativeIoResult ret = {};
+	ret.num_bytes = 0;
+	ret.error = false;
+	while (ret.num_bytes < num_bytes_requested) {
+		const auto num_bytes_written = write(handle, buffer + ret.num_bytes, num_bytes_requested - ret.num_bytes);
+		if (num_bytes_written <= 0) {
+			ret.error = num_bytes_written < 0;
+			break;
+		}
+		ret.num_bytes += num_bytes_written;
+	}
+	return ret;
+}
+
+int64_t seek_native_file(const NativeFileHandle handle, const int64_t offset, const NativeSeek type)
+{
+	int posix_seek_type = SEEK_SET;
+	switch (type) {
+		case NativeSeek::Set:
+			posix_seek_type = SEEK_SET;
+			break;
+		case NativeSeek::Current:
+			posix_seek_type = SEEK_CUR;
+			break;
+		case NativeSeek::End:
+			posix_seek_type = SEEK_END;
+			break;
+		default:
+			assertm(false, "Invalid seek type");
+			return NativeSeekFailed;
+	}
+
+	const auto position = lseek(handle, offset, posix_seek_type);
+	if (position < 0) {
+		return NativeSeekFailed;
+	}
+
+	return position;
+}
+
+void close_native_file(const NativeFileHandle handle)
+{
+	close(handle);
+}
+
+// Sets the file size to be equal to the current file position
+bool truncate_native_file(const NativeFileHandle handle)
+{
+	const auto current_position = lseek(handle, 0, SEEK_CUR);
+	if (current_position < 0) {
+		return false;
+	}
+	return ftruncate(handle, current_position) == 0;
+}
+
+DosDateTime get_dos_file_time(const NativeFileHandle handle)
+{
+	// Legal defaults if we're unable to populate them
+	DosDateTime ret = {};
+	ret.time = 1;
+	ret.date = 1;
+
+	struct stat file_info = {};
+	if (fstat(handle, &file_info) == -1) {
+		return ret;
+	}
+
+	struct tm datetime = {};
+	if (!cross::localtime_r(&file_info.st_mtime, &datetime)) {
+		return ret;
+	}
+
+	ret.time = DOS_PackTime(datetime);
+	ret.date = DOS_PackDate(datetime);
+
+	return ret;
 }
 
 #endif
