@@ -740,6 +740,7 @@ void filter_s3_modes_to_oem_only()
 	};
 
 	dram_size_t dram_size = mb_1;
+
 	switch (vga.vmemsize) {
 	case 512 * 1024: dram_size = kb_512; break;
 	case 1024 * 1024: dram_size = mb_1; break;
@@ -820,17 +821,20 @@ void SVGA_Setup_S3Trio(void)
 
 	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
 
-	switch (int10.vesa_mode_preference) {
-	case VesaModePref::Compatible:
+	switch (int10.vesa_modes) {
+	case VesaModes::Compatible:
 		filter_s3_modes_to_oem_only();
 		description += " compatible";
 		break;
-	case VesaModePref::Halfline:
+
+	case VesaModes::Halfline:
 		replace_mode_120h_with_halfline();
 		description += " halfline";
 		break;
-	case VesaModePref::All: break;
+
+	case VesaModes::All: break;
 	}
+
 	if (int10.vesa_nolfb)
 		description += " without LFB";
 

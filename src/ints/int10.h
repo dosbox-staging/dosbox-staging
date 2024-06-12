@@ -264,7 +264,7 @@ using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
 // M_CGA4 into M_TANDY4 or M_CGA4_COMPOSITE, etc.)
 extern video_mode_block_iterator_t CurMode;
 
-enum class VesaModePref {
+enum class VesaModes {
 	// Prunes the available S3 modes to maximize DOS game compatibility
 	Compatible,
 
@@ -273,7 +273,7 @@ enum class VesaModePref {
 
 	// Enables all S3 864 and Trio VESA modes (but some games might not
 	// handle them properly)
-	All,
+	All
 };
 
 struct Int10Data {
@@ -303,7 +303,7 @@ struct Int10Data {
 
 	uint16_t vesa_setmode = 0;
 
-	VesaModePref vesa_mode_preference = VesaModePref::Compatible;
+	VesaModes vesa_modes = VesaModes::Compatible;
 
 	bool vesa_nolfb  = false;
 	bool vesa_oldvbe = false;
