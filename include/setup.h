@@ -149,10 +149,16 @@ public:
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);
 
+	// The string may contain a single '%s' marker. If present, it will be
+	// substitued with the settings's default value (see `GetHelp()` and
+	// `GetHelpUtf8()`).
 	void Set_help(const std::string& str);
+
 	void SetOptionHelp(const std::string& option, const std::string& in);
 	void SetOptionHelp(const std::string& in);
 
+	// If the setting's help text contains a '%s' marker, the `GetHelp`
+	// functions will substitute it with the setting's default value.
 	std::string GetHelp() const;
 	std::string GetHelpUtf8() const;
 
