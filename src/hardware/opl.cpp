@@ -824,9 +824,8 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	const auto write_to  = std::bind(&Opl::PortWrite, this, _1, _2, _3);
 
 	// 0x388-0x38b ports (read/write)
-	constexpr io_port_t port_0x388 = 0x388;
-	WriteHandler[0].Install(port_0x388, write_to, io_width_t::byte, 4);
-	ReadHandler[0].Install(port_0x388, read_from, io_width_t::byte, 4);
+	WriteHandler[0].Install(Port::AdLib::Command, write_to, io_width_t::byte, 4);
+	ReadHandler[0].Install(Port::AdLib::Command, read_from, io_width_t::byte, 4);
 
 	// 0x220-0x223 ports (read/write)
 	if (dual_opl) {
@@ -845,7 +844,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	        channel->GetName().c_str(),
 	        to_string(opl.mode),
 	        base,
-	        port_0x388);
+	        Port::AdLib::Command);
 }
 
 Opl::~Opl()

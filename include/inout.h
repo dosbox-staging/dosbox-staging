@@ -116,6 +116,15 @@ static inline uint8_t IO_Read(io_port_t port)
 
 // Hardware I/O port numbers
 
+namespace Port {
+
+namespace AdLib {
+
+constexpr io_port_t Command = 0x388u;
+
+}
+} // namespace Port
+
 // Intel 8042 keyboard/mouse port microcontroller
 constexpr io_port_t port_num_i8042_data    = 0x60u;
 constexpr io_port_t port_num_i8042_status  = 0x64u; // read-only
