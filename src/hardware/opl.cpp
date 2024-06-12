@@ -657,6 +657,11 @@ void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			        format_str("Invalid OPL mode: %s",
 			                   to_string(opl.mode)));
 		}
+
+		// Pass the command value onto the GUS (regardless of OPL card type)
+		if (port == Port::AdLib::Command) {
+			GUS_MirrorAdLibCommandPortWrite(port, val);
+		}
 	}
 }
 
