@@ -687,7 +687,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
-	        "the list of valid options per adapter.");
+	        "the list of valid options and defaults per adapter.");
 
 	pstring = secprop->Add_string("vmem_delay", only_at_start, "off");
 	pstring->Set_help(
@@ -714,15 +714,23 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
 	pstring->Set_values({"compatible", "all", "halfline"});
 	pstring->Set_help(
-	        "Controls the selection of VESA 1.2 and 2.0 modes offered:\n"
-	        "  compatible:  A tailored selection that maximizes game compatibility.\n"
-	        "               This is recommended along with 4 or 8 MB of video memory\n"
-	        "               (default).\n"
-	        "  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by\n"
-	        "               Extreme Assault. Use only if needed, as it's not S3 compatible.\n"
-	        "  all:         All modes for a given video memory size, however some games may\n"
-	        "               not use them properly (flickering) or may need more system\n"
-	        "               memory to use them.");
+	        "Controls which VESA video modes are available:\n"
+	        "  compatible:  Only the most compatible VESA modes for the configured video\n"
+	        "               memory size (default). Recommended with 4 or 8 MB of video\n"
+	        "               memory ('vmemsize') for the widest compatiblity with games.\n"
+	        "               320x200 high colour modes are excluded as they were not\n"
+	        "               properly supported until the late '90s. The 256-colour linear\n"
+	        "               framebuffer 320x240, 400x300, and 512x384 modes are also\n"
+	        "               excluded as they cause timing problems in Build Engine games.\n"
+	        "  halfline:    Same as 'compatible', but the 120h VESA mode is replaced with\n"
+	        "               a special halfline mode used by Extreme Assault. Use only if\n"
+	        "               needed.\n"
+	        "  all:         All modes are available, including extra DOSBox-specific VESA\n"
+	        "               modes. Use 8 MB of video memory for the best results. Some\n"
+	        "               games misbehave in the presence of certain VESA modes; try\n"
+	        "               'compatible' mode if this happens. The 320x200 high colour\n"
+	        "               modes available in this mode are often required by late '90s\n"
+	        "               demoscene productions.");
 
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
 	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters (disabled by default).");
