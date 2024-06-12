@@ -3172,7 +3172,7 @@ public:
 		// Init OPL
 		switch (oplmode) {
 		case OplMode::None:
-			write_handlers[0].Install(0x388,
+			write_handlers[0].Install(Port::AdLib::Command,
 			                          adlib_gus_forward,
 			                          io_width_t::byte);
 			break;
