@@ -1231,7 +1231,7 @@ struct SVGA_Driver {
 
 extern SVGA_Driver svga;
 
-void SVGA_Setup_S3Trio(void);
+void SVGA_Setup_S3Trio();
 void SVGA_Setup_TsengET4K(void);
 void SVGA_Setup_TsengET3K(void);
 void SVGA_Setup_ParadisePVGA1A(void);
