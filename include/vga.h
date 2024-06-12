@@ -66,22 +66,26 @@ enum VGAModes {
 	// 320x400, 256x256, etc.) that use mode 13h as a starting point.
 	M_VGA = 1 << 3,
 
-	// 16-colour SVGA & VESA modes
+	// 16-colour planar SVGA & VESA modes
 	M_LIN4 = 1 << 4,
 
-	// 256-colour SVGA & VESA modes (other than mode 13h)
+	// 256-colour planar SVGA & VESA modes (other than mode 13h)
 	M_LIN8 = 1 << 5,
 
-	// 15-bit high colour (32K-colour) VESA modes
+	// 15-bit (5:5:5) high colour (32K-colour) VESA modes
 	M_LIN15 = 1 << 6,
 
-	// 16-bit high colour (65K-colour) VESA modes
+	// 16-bit (5:6:5) high colour (65K-colour) VESA modes
 	M_LIN16 = 1 << 7,
 
-	// 24-bit true colour (16.7M-colour) VESA modes
+	// 24-bit (8:8:8) true colour (16.7M-colour) VESA modes
 	M_LIN24 = 1 << 8,
 
-	// 32-bit true colour (16.7M-colour) VESA modes
+	// 32-bit (8:8:8:8) true colour (16.7M-colour) VESA modes
+	//
+	// Same as 24-bit (8:8:8) as the last 8-bit component is simply unused.
+	// Many graphics cards preferred the 32-bit true colour mode for faster
+	// video memory access due to 32-bit memory alignment.
 	M_LIN32 = 1 << 9,
 
 	// All EGA, VGA, SVGA & VESA text modes
