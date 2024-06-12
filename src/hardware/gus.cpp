@@ -233,6 +233,7 @@ public:
 	virtual ~Gus();
 
 	bool CheckTimer(size_t t);
+	void MirrorAdLibCommandRegister(const uint8_t reg_value);
 	void PrintStats();
 
 	struct Timer {
@@ -314,7 +315,7 @@ private:
 	double ms_per_render    = 0.0;
 	int sample_rate_hz      = 0;
 
-	uint8_t& adlib_command_reg = adlib_commandreg;
+	uint8_t adlib_command_reg = ADLIB_CMD_DEFAULT;
 
 	// Port address
 	io_port_t port_base = 0;
@@ -354,9 +355,6 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
-
-// External Tie-in for OPL FM-audio
-uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 
 static std::unique_ptr<Gus> gus = nullptr;
 
@@ -1116,6 +1114,11 @@ void Gus::StartRunning() noexcept
 	audio_channel->Enable(true);
 }
 
+void Gus::MirrorAdLibCommandRegister(const uint8_t reg_value)
+{
+	adlib_command_reg = reg_value;
+}
+
 void Gus::PrintStats()
 {
 	// Aggregate stats from all voices
@@ -1672,6 +1675,17 @@ Gus::~Gus()
 	// pull samples from DMA.
 	if (dma_channel) {
 		dma_channel->Reset();
+	}
+}
+
+void GUS_MirrorAdLibCommandPortWrite([[maybe_unused]] const io_port_t port,
+                                     const io_val_t reg_value, const io_width_t)
+{
+	// We must only be fed values from the AdLib's command port
+	assert(port == Port::AdLib::Command);
+
+	if (gus) {
+		gus->MirrorAdLibCommandRegister(check_cast<uint8_t>(reg_value));
 	}
 }
 
