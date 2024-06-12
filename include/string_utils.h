@@ -361,6 +361,9 @@ std::optional<float> parse_percentage_with_optional_percent_sign(const std::stri
 template <typename... Args>
 std::string format_str(const std::string& format, const Args&... args) noexcept
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
+
 	// Perform a non-writing format to determine the size
 	const auto required_size = std::snprintf(nullptr, 0, format.c_str(), args...);
 	if (required_size <= 0) {
@@ -376,6 +379,7 @@ std::string format_str(const std::string& format, const Args&... args) noexcept
 	std::string result(out_size, '\0');
 
 	std::snprintf(result.data(), result.size(), format.c_str(), args...);
+#pragma clang diagnostic pop
 
 	// The buffer should now have the determined output length plus the
 	// terminating zero
