@@ -2873,12 +2873,6 @@ static void write_sb(const io_port_t port, const io_val_t value, const io_width_
 	}
 }
 
-static void adlib_gus_forward(const io_port_t, const io_val_t value, const io_width_t)
-{
-	const auto val = check_cast<uint8_t>(value);
-	adlib_commandreg = (uint8_t)(val & 0xff);
-}
-
 bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 {
 	sbaddr = 0;
@@ -3173,7 +3167,7 @@ public:
 		switch (oplmode) {
 		case OplMode::None:
 			write_handlers[0].Install(Port::AdLib::Command,
-			                          adlib_gus_forward,
+			                          GUS_MirrorAdLibCommandPortWrite,
 			                          io_width_t::byte);
 			break;
 

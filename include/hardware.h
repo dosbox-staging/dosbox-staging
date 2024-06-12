@@ -28,6 +28,7 @@
 #include <string>
 
 #include "control.h"
+#include "inout.h"
 
 class Section;
 
@@ -51,10 +52,14 @@ void OPL_AddConfigSettings(const ConfigPtr &conf);
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
-extern uint8_t adlib_commandreg;
-
 // Gravis UltraSound configuration and initialisation
 void GUS_AddConfigSection(const ConfigPtr &conf);
+
+// The Gravis UltraSound mirrors the AdLib's command register (written to the
+// command port 388h) on its own port 20Ah. This function passes the command
+// onto the GUS (if available)
+void GUS_MirrorAdLibCommandPortWrite(const io_port_t port, const io_val_t reg_value,
+                                     const io_width_t = io_width_t::byte);
 
 // IBM Music Feature Card configuration and initialisation
 void IMFC_AddConfigSection(const ConfigPtr& conf);
