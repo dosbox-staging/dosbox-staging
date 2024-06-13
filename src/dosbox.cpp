@@ -532,7 +532,7 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 		svgaCard = SVGA_ParadisePVGA1A;
 
 	} else {
-		E_Exit("DOSBOX: Invalid machine type '%s'", machine_pref.c_str());
+		assert(false, "Invalid machine type");
 	}
 
 	// VGA machine types need a valid SVGA card, an SVGA cards are only
