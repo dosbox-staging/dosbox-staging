@@ -67,6 +67,19 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x069,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
         { 0x06A,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 128,  663, 100,  600,                                  0},
 
+ // Custom DOSBox additions -- the MODE command uses these extra text modes.
+ //
+ // These should not cause any conflicts because there is no way to detect the
+ // available non-VESA BIOS video modes.
+ //
+ // The timings of these modes have been tweaked for exact 4:3 aspect ratio.
+ //
+        { 0x070,  M_TEXT,  720,  392,  80, 28, 9, 14, 1, 0xB8000,  0x4000, 100,  440,  80,  392,                                  0},
+        { 0x071,  M_TEXT,  720,  480,  80, 30, 9, 16, 1, 0xB8000,  0x4000, 100,  525,  80,  480,                                  0},
+        { 0x072,  M_TEXT,  720,  476,  80, 34, 9, 14, 1, 0xB8000,  0x4000, 100,  534,  80,  476,                                  0},
+        { 0x073,  M_TEXT,  640,  344,  80, 43, 8,  8, 1, 0xB8000,  0x4000, 100,  386,  80,  344,                                  0},
+        { 0x074,  M_TEXT,  640,  400,  80, 50, 8,  8, 8, 0xB8000,  0x1000, 100,  449,  80,  400,                                  0},
+
  // Follow VESA 1.2 mode list from 0x100 to 0x11B
         { 0x100,  M_LIN8,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                                  0},
         { 0x101,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
@@ -187,6 +200,16 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x224, M_LIN16,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 264,  525, 212,  480,                                  0},
         { 0x225, M_LIN32,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 132,  525, 106,  480,                                  0},
 
+ // The MODE command uses these extra 132-column text modes
+ //
+ // The timings of these modes have been tweaked for exact 3:2 aspect ratio.
+ // This is a resonable compromise that works well on 16:9, 16:10, and 3:2
+ // displays.
+ //
+        { 0x230,  M_TEXT, 1056,  392, 132, 28, 8, 14, 1, 0xB8000,  0x2000, 160,  512, 132,  392,                                  0},
+        { 0x231,  M_TEXT, 1056,  480, 132, 30, 8, 16, 2, 0xB8000,  0x4000, 160,  611, 132,  480,                                  0},
+        { 0x232,  M_TEXT, 1056,  476, 132, 34, 8, 14, 2, 0xB8000,  0x4000, 160,  622, 132,  476,                                  0},
+
         {0xFFFF, M_ERROR,    0,    0,   0,  0, 0,  0, 0, 0x00000,  0x0000,   0,    0,   0,    0,                                  0},
 };
 
@@ -208,7 +231,7 @@ std::vector<VideoModeBlock> ModeList_VGA_Text_350lines = {
 };
 
 std::vector<VideoModeBlock> ModeList_VGA_Tseng = {
-  //     mode     type     sw    sh    tw  th  cw ch  pt pstart    plength htot  vtot  hde  vde    special flags
+  //      mode    type     sw    sh    tw  th  cw ch  pt pstart    plength htot  vtot  hde  vde    special flags
         { 0x000,  M_TEXT,  360,  400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50,  449,  40,  400,                     EGA_HALF_CLOCK},
         { 0x001,  M_TEXT,  360,  400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50,  449,  40,  400,                     EGA_HALF_CLOCK},
         { 0x002,  M_TEXT,  720,  400,  80, 25, 9, 16, 8, 0xB8000,  0x1000, 100,  449,  80,  400,                                  0},
@@ -245,6 +268,19 @@ std::vector<VideoModeBlock> ModeList_VGA_Tseng = {
         { 0x03E,  M_LIN4, 1280,  960, 160, 60, 8, 16, 1, 0xA0000,  0xA000, 160, 1024, 160,  960,                                  0}, //  Definicon only
         { 0x06A,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000,  0xA000, 128,  663, 100,  600,                                  0}, //  newer ET4000
 
+  // Custom DOSBox additions -- the MODE command uses these extra text modes.
+  //
+  // These should not cause any conflicts because there is no way to detect the
+  // available non-VESA BIOS video modes.
+  //
+  // The timings of these modes have been tweaked for exact 4:3 aspect ratio.
+  //
+        { 0x070,  M_TEXT,  720,  392,  80, 28, 9, 14, 1, 0xB8000,  0x4000, 100,  440,  80,  392,                                  0},
+        { 0x071,  M_TEXT,  720,  480,  80, 30, 9, 16, 1, 0xB8000,  0x4000, 100,  525,  80,  480,                                  0},
+        { 0x072,  M_TEXT,  720,  476,  80, 34, 9, 14, 1, 0xB8000,  0x4000, 100,  534,  80,  476,                                  0},
+        { 0x073,  M_TEXT,  640,  344,  80, 43, 8,  8, 1, 0xB8000,  0x4000, 100,  386,  80,  344,                                  0},
+        { 0x074,  M_TEXT,  640,  400,  80, 50, 8,  8, 8, 0xB8000,  0x1000, 100,  449,  80,  400,                                  0},
+
   // Sierra SC1148x Hi-Color DAC modes
         { 0x213, M_LIN15,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x22D, M_LIN15,  640,  350,  80, 25, 8, 14, 1, 0xA0000, 0x10000, 200,  449, 160,  350,                                  0},
@@ -256,7 +292,7 @@ std::vector<VideoModeBlock> ModeList_VGA_Tseng = {
 };
 
 std::vector<VideoModeBlock> ModeList_VGA_Paradise = {
-  //     mode     type     sw    sh   tw  th  cw ch  pt pstart    plength htot vtot  hde  vde    special flags
+  //      mode    type     sw    sh   tw  th  cw ch  pt pstart    plength htot vtot  hde vde  special flags
         { 0x000,  M_TEXT,  360, 400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50, 449,  40, 400,                   EGA_HALF_CLOCK},
         { 0x001,  M_TEXT,  360, 400,  40, 25, 9, 16, 8, 0xB8000,  0x0800,  50, 449,  40, 400,                   EGA_HALF_CLOCK},
         { 0x002,  M_TEXT,  720, 400,  80, 25, 9, 16, 8, 0xB8000,  0x1000, 100, 449,  80, 400,                                0},
@@ -286,11 +322,24 @@ std::vector<VideoModeBlock> ModeList_VGA_Paradise = {
         { 0x05E,  M_LIN8,  640, 400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100, 449,  80, 400,                                0},
         { 0x05F,  M_LIN8,  640, 480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100, 525,  80, 480,                                0},
 
+ // Custom DOSBox additions -- the MODE command uses these extra text modes.
+ //
+ // These should not cause any conflicts because there is no way to detect the
+ // available non-VESA BIOS video modes.
+ //
+ // The timings of these modes have been tweaked for exact 4:3 aspect ratio.
+ //
+        { 0x070,  M_TEXT,  720,  392,  80, 28, 9, 14, 1, 0xB8000, 0x4000, 100, 440,  80,  392,                               0},
+        { 0x071,  M_TEXT,  720,  480,  80, 30, 9, 16, 1, 0xB8000, 0x4000, 100, 525,  80,  480,                               0},
+        { 0x072,  M_TEXT,  720,  476,  80, 34, 9, 14, 1, 0xB8000, 0x4000, 100, 534,  80,  476,                               0},
+        { 0x073,  M_TEXT,  640,  344,  80, 43, 8,  8, 1, 0xB8000, 0x4000, 100, 386,  80,  344,                               0},
+        { 0x074,  M_TEXT,  640,  400,  80, 50, 8,  8, 8, 0xB8000, 0x1000, 100, 449,  80,  400,                               0},
+
         {0xFFFF, M_ERROR,    0,   0,   0,  0, 0,  0, 0, 0x00000,  0x0000,   0,   0,   0,   0,                                0},
 };
 
 std::vector<VideoModeBlock> ModeList_EGA = {
-  //     mode     type    sw   sh   tw th  cw ch  pt  pstart   plength htot vtot hde vde    special flags
+  //      mode    type    sw   sh   tw th  cw ch  pt  pstart   plength htot vtot hde vde  special flags
         { 0x000,  M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 366, 40, 350,                  EGA_LINE_DOUBLE},
         { 0x001,  M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 366, 40, 350,                  EGA_LINE_DOUBLE},
         { 0x002,  M_TEXT, 640, 350, 80, 25, 8, 14, 8, 0xB8000, 0x1000,  96, 366, 80, 350,                                0},
