@@ -479,43 +479,64 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
-		//update value in config (else no matching against suggested values
-		section->HandleInputline(std::string("machine=") +
-		                         arguments->machine);
+		// Update value in config (else no matching against suggested
+		// values
+		section->HandleInputline(std::string("machine=") + arguments->machine);
 	}
 
-	std::string mtype = section->Get_string("machine");
-	svgaCard = SVGA_None;
-	machine = MCH_VGA;
-	int10.vesa_nolfb = false;
+	const std::string machine_pref = section->Get_string("machine");
+
+	svgaCard          = SVGA_None;
+	machine           = MCH_VGA;
+	int10.vesa_nolfb  = false;
 	int10.vesa_oldvbe = false;
-	if      (mtype == "cga")      { machine = MCH_CGA; mono_cga = false; }
-	else if (mtype == "cga_mono") { machine = MCH_CGA; mono_cga = true; }
-	else if (mtype == "tandy")    { machine = MCH_TANDY; }
-	else if (mtype == "pcjr")     { machine = MCH_PCJR;
-	} else if (mtype == "hercules") {
+
+	if (machine_pref == "cga") {
+		machine  = MCH_CGA;
+		mono_cga = false;
+
+	} else if (machine_pref == "cga_mono") {
+		machine  = MCH_CGA;
+		mono_cga = true;
+
+	} else if (machine_pref == "tandy") {
+		machine = MCH_TANDY;
+
+	} else if (machine_pref == "pcjr") {
+		machine = MCH_PCJR;
+
+	} else if (machine_pref == "hercules") {
 		machine = MCH_HERC;
-	} else if (mtype == "ega") {
+
+	} else if (machine_pref == "ega") {
 		machine = MCH_EGA;
-	} else if (mtype == "svga_s3") {
+
+	} else if (machine_pref == "svga_s3") {
 		svgaCard = SVGA_S3Trio;
-	} else if (mtype == "vesa_nolfb") {
-		svgaCard = SVGA_S3Trio;
+
+	} else if (machine_pref == "vesa_nolfb") {
+		svgaCard         = SVGA_S3Trio;
 		int10.vesa_nolfb = true;
-	} else if (mtype == "vesa_oldvbe") {
-		svgaCard = SVGA_S3Trio;
+
+	} else if (machine_pref == "vesa_oldvbe") {
+		svgaCard          = SVGA_S3Trio;
 		int10.vesa_oldvbe = true;
-	} else if (mtype == "svga_et4000") {
+
+	} else if (machine_pref == "svga_et4000") {
 		svgaCard = SVGA_TsengET4K;
-	} else if (mtype == "svga_et3000") {
+
+	} else if (machine_pref == "svga_et3000") {
 		svgaCard = SVGA_TsengET3K;
-	} else if (mtype == "svga_paradise") {
+
+	} else if (machine_pref == "svga_paradise") {
 		svgaCard = SVGA_ParadisePVGA1A;
+
 	} else {
-		E_Exit("DOSBOX: Invalid machine type '%s'", mtype.c_str());
+		E_Exit("DOSBOX: Invalid machine type '%s'", machine_pref.c_str());
 	}
 
-	// VGA-type machine needs an valid SVGA card and vice-versa
+	// VGA machine types need a valid SVGA card, an SVGA cards are only
+	// valid for VGA machine types
 	assert((machine == MCH_VGA && svgaCard != SVGA_None) ||
 	       (machine != MCH_VGA && svgaCard == SVGA_None));
 }
