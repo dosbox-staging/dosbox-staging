@@ -190,8 +190,9 @@ private:
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, const std_fs::path& path, const NativeFileHandle handle,
-	          const char* basedir, bool _read_only_medium);
+	localFile(const char* name, const std_fs::path& path,
+	          const NativeFileHandle handle, const char* basedir,
+	          bool _read_only_medium);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
 	bool Read(uint8_t* data, uint16_t* size) override;
@@ -210,6 +211,7 @@ public:
 		return path;
 	}
 	NativeFileHandle file_handle = InvalidNativeFileHandle;
+
 private:
 	const std_fs::path path = {};
 	const char* basedir     = nullptr;
