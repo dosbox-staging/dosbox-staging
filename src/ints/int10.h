@@ -265,14 +265,22 @@ using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
 extern video_mode_block_iterator_t CurMode;
 
 enum class VesaModes {
-	// Prunes the available S3 modes to maximize DOS game compatibility
+	// Only the most compatible S3 VESA modes for the configured video
+	// memory size.
+	//
+	// 320x200 high colour modes are excluded as they were not
+	// properly supported until the late '90s. The 256-colour linear
+	// framebuffer 320x240, 400x300, and 512x384 modes are also
+	// excluded as they cause timing problems in Build Engine games.
 	Compatible,
 
-	// Replaces mode 120h with the halfline mode used by Extreme Assault
+	// Same as `Compatible`, but the 120h VESA mode is replaced with a special
+	// halfline mode used by Extreme Assault.
 	Halfline,
 
-	// Enables all S3 864 and Trio VESA modes (but some games might not
-	// handle them properly)
+	// Enables all S3 VESA modes, including extra DOSBox-specific VESA modes.
+	// The 320x200 high colour modes available in this mode are often required
+	// by late '90s demoscene productions.
 	All
 };
 
