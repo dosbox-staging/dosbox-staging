@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2024  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@
 #include "math_utils.h"
 #include "midi.h"
 #include "mixer.h"
+#include "notifications.h"
 #include "pic.h"
 #include "rwqueue.h"
 #include "sblaster.h"
@@ -579,9 +580,12 @@ static void configure_sb_filter_for_model(MixerChannelPtr channel,
 		                                                         sb_type)) {
 			return *maybe_filter_type;
 		} else {
-			LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'modern'",
-			            sb_log_prefix(),
-			            filter_choice.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "Invalid [color=light-green]'sb_filter'[reset] setting: "
+			                      "[color=white]'%s'[reset], "
+			                      "using [color=white]'modern'[reset]",
+			                      filter_choice.c_str());
 
 			set_section_property_value("sblaster", "sb_filter", "modern");
 			return FilterType::Modern;
@@ -677,9 +681,12 @@ static void configure_opl_filter_for_model(MixerChannelPtr opl_channel,
 		                                                         sb_type)) {
 			return *maybe_filter_type;
 		} else {
-			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'auto'",
-			            sb_log_prefix(),
-			            filter_choice.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "Invalid [color=light-green]'opl_filter'[reset] setting: "
+			                      "[color=white]'%s'[reset], "
+			                      "using [color=white]'auto'[reset]",
+			                      filter_choice.c_str());
 
 			set_section_property_value("sblaster", "opl_filter", "auto");
 
@@ -3314,17 +3321,22 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 		// "falsey" setting ("off", "none", "false", etc.)
 		return OplMode::None;
 
-	} else { // ESS
+	} else {
+		// ESS
 		if (pref == "esfm" || pref == "auto") {
 			return OplMode::Esfm;
 
 		} else {
-			LOG_WARNING(
-			        "OPL: Invalid 'oplmode' setting for the ESS card: '%s', "
-			        "using 'auto'", pref.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "OPL",
+			                      "Invalid [color=light-green]'oplmode'[reset] "
+			                      "setting for the ESS card: [color=white]'%s'[reset], "
+			                      "using [color=white]'auto'[reset]",
+			                      pref.c_str());
 
 			auto* sect_updater = static_cast<Section_prop*>(
 			        control->GetSection("sblaster"));
+
 			sect_updater->Get_prop("oplmode")->SetValue("auto");
 
 			return OplMode::Esfm;
@@ -3340,43 +3352,59 @@ static bool is_cms_enabled(const SbType sbtype)
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
 		if (sect->Get_string("oplmode") == "cms") {
-			LOG_WARNING(
-			        "%s: The 'cms' setting for 'oplmode' is deprecated; "
-			        "use 'cms = on' instead.",
-			        sb_log_prefix());
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        sb_log_prefix(),
+			        "The [color=white]'cms'[reset] setting for "
+			        "[color=light-green]'oplmode'[reset] is deprecated; "
+			        "use [color=white]'cms = on'[reset] instead.");
+
 			return true;
+
 		} else {
 			const auto cms_str = sect->Get_string("cms");
 			const auto cms_enabled_opt = parse_bool_setting(cms_str);
+
 			if (cms_enabled_opt) {
 				return *cms_enabled_opt;
+
 			} else if (cms_str == "auto") {
-				return sbtype == SbType::SB1 || sbtype == SbType::GameBlaster;
+				return sbtype == SbType::SB1 ||
+				       sbtype == SbType::GameBlaster;
 			}
 			return false;
 		}
 	}();
 
 	switch (sbtype) {
-	case SbType::SB2: // CMS is optional for Sound Blaster 1 and 2
+	// CMS is optional for Sound Blaster 1 and 2
+	case SbType::SB2:
 	case SbType::SB1: return cms_enabled;
+
 	case SbType::GameBlaster:
 		if (!cms_enabled) {
-			LOG_WARNING(
-			        "%s: 'cms' setting is 'off', but is forced to 'auto' "
-			        "on the Game Blaster.",
-			        sb_log_prefix());
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        sb_log_prefix(),
+			        "[color=light-green]'cms'[reset] setting is "
+			        "[color=white]'off'[reset], but is forced to "
+			        "[color=white]'auto'[reset] on the Game Blaster.");
+
 			auto* sect_updater = static_cast<Section_prop*>(
 			        control->GetSection("sblaster"));
+
 			sect_updater->Get_prop("cms")->SetValue("auto");
 		}
-		return true; // Game Blaster is CMS
+		// Game Blaster is CMS
+		return true;
 	default:
 		if (cms_enabled) {
-			LOG_WARNING(
-			        "%s: 'cms' setting 'on' not supported on this card, "
-			        "using 'auto'.",
-			        sb_log_prefix());
+			NOTIFY_DisplayWarning(
+			        Notification::Source::Console,
+			        sb_log_prefix(),
+			        "[color=light-green]'cms'[reset] setting "
+			        "[color=white]'on'[reset] not supported on "
+			        "this card, forcing [color=white]'auto'[reset].");
 
 			auto* sect_updater = static_cast<Section_prop*>(
 			        control->GetSection("sblaster"));
