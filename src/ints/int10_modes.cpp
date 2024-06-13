@@ -63,8 +63,21 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x055,  M_TEXT, 1056,  400, 132, 25, 8, 16, 1, 0xB8000,  0x2000, 160,  449, 132,  400,                                  0},
         { 0x064,  M_TEXT, 1056,  480, 132, 60, 8,  8, 2, 0xB8000,  0x4000, 160,  531, 132,  480,                                  0},
 
- // Alias of mode 101
+ // Alias of VESA mode 101h
+		//
+		// The VESA 1.2 standard does not mention this 7-bit VESA mode alias,
+		// so it's unclear where this mode is coming from.
+		//
         { 0x069,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
+
+ // Alias of VESA mode 102h
+ 		//
+		// From the VESA 1.2 standard:
+		//
+		//   To date, VESA has defined a 7-bit video mode number, 6Ah, for the
+		//   800x600, 16-color, 4-plane graphics mode. The corresponding
+		//   15-bit mode number for this mode is 102h.
+		//
         { 0x06A,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 128,  663, 100,  600,                                  0},
 
  // Custom DOSBox additions -- the MODE command uses these extra text modes.
@@ -80,7 +93,12 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x073,  M_TEXT,  640,  344,  80, 43, 8,  8, 1, 0xB8000,  0x4000, 100,  386,  80,  344,                                  0},
         { 0x074,  M_TEXT,  640,  400,  80, 50, 8,  8, 8, 0xB8000,  0x1000, 100,  449,  80,  400,                                  0},
 
- // Follow VESA 1.2 mode list from 0x100 to 0x11B
+ // Standard VESA 1.2 modes from 0x100 to 0x11B
+ // -------------------------------------------
+ // The VESA standard defines these modes, see here:
+ // http://qzx.com/pc-gpe/vesasp12.txt
+ //
+ // VESA 1.2 -- 16 and 256-colour modes (planar modes)
         { 0x100,  M_LIN8,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                                  0},
         { 0x101,  M_LIN8,  640,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                                  0},
         { 0x102,  M_LIN4,  800,  600, 100, 37, 8, 16, 1, 0xA0000, 0x10000, 132,  628, 100,  600,                                  0},
@@ -90,14 +108,14 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x106,  M_LIN4, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
         { 0x107,  M_LIN8, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
 
- // VESA text modes
+ // VESA 1.2 -- text modes
         { 0x108,  M_TEXT,  640,  480,  80, 60, 8,  8, 2, 0xB8000,  0x4000, 100,  525,  80,  480,                                  0},
         { 0x109,  M_TEXT, 1056,  400, 132, 25, 8, 16, 1, 0xB8000,  0x2000, 160,  449, 132,  400,                                  0},
         { 0x10A,  M_TEXT, 1056,  688, 132, 43, 8,  8, 1, 0xB8000,  0x4000, 160,  449, 132,  344,                                  0},
         { 0x10B,  M_TEXT, 1056,  400, 132, 50, 8,  8, 1, 0xB8000,  0x4000, 160,  449, 132,  400,                                  0},
         { 0x10C,  M_TEXT, 1056,  480, 132, 60, 8,  8, 2, 0xB8000,  0x4000, 160,  531, 132,  480,                                  0},
 
- // VESA higher color modes
+ // VESA 1.2 -- high and true colour modes
         { 0x10D, M_LIN15,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x10E, M_LIN16,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x10F, M_LIN32,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
@@ -114,12 +132,20 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x11A, M_LIN16, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 320, 1024,                                  0},
         { 0x11B, M_LIN32, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
 
- // 1600x1200 S3 specific modes
+ // S3 specific 1600x1200 VESA modes
+ // TODO Are these VESA 2.0 modes or non-standard VESA 1.2 additions?
         { 0x120,  M_LIN8, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 200, 1200,                                  0},
         { 0x121, M_LIN15, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
         { 0x122, M_LIN16, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
 
- // Custom modes
+ // S3 specific VESA 2.0 modes
+ // --------------------------
+ // The VESA 2.0 defines no more mode numbers, and treats old VBE 1.2 modes
+ // number as deprecated.
+ //
+ // Software should not rely on any hardcoded mode numbers but discover
+ // available video modes via standard VESA 2.0 BIOS calls.
+ //
         { 0x150,  M_LIN8,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x151,  M_LIN8,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x152,  M_LIN8,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
@@ -182,7 +208,6 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x191, M_LIN32,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400, VGA_PIXEL_DOUBLE                  },
         { 0x192, M_LIN32,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000,  50,  525,  40,  480, VGA_PIXEL_DOUBLE                  },
 
- // Remaining S3 specific modes
         { 0x207,  M_LIN8, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 144,  864,                                  0},
         { 0x209, M_LIN15, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 288,  864,                                  0},
         { 0x20A, M_LIN16, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 288,  864,                                  0},
@@ -193,6 +218,8 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x216, M_LIN15,  512,  384,  64, 24, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x217, M_LIN16,  512,  384,  64, 48, 8, 16, 1, 0xA0000, 0x10000, 168,  806, 128,  768, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x218, M_LIN32,  512,  384,  64, 24, 8, 16, 1, 0xA0000, 0x10000,  80,  449,  64,  384,                                  0},
+
+ // Additional DOSBox specific VESA 2.0 modes
 
  // A nice 16:9 mode
         { 0x222,  M_LIN8,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 132,  525, 106,  480,                                  0},
