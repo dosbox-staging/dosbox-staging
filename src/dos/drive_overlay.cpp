@@ -206,8 +206,9 @@ bool Overlay_Drive::TestDir(const char * dir) {
 
 class OverlayFile final : public localFile {
 public:
-	OverlayFile(const char* name, const std_fs::path& path, NativeFileHandle handle,
-	            const char* basedir, const bool _read_only_medium)
+	OverlayFile(const char* name, const std_fs::path& path,
+	            NativeFileHandle handle, const char* basedir,
+	            const bool _read_only_medium)
 	        : localFile(name, path, handle, basedir, _read_only_medium),
 	          overlay_active(false)
 	{
@@ -245,7 +246,9 @@ public:
 std::pair<NativeFileHandle, std_fs::path> Overlay_Drive::create_file_in_overlay(
         const char* dos_filename, const FatAttributeFlags attributes)
 {
-	if (logoverlay) LOG_MSG("create_file_in_overlay called %s", dos_filename);
+	if (logoverlay) {
+		LOG_MSG("create_file_in_overlay called %s", dos_filename);
+	}
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, overlaydir); // TODO GOG make part of class and
 	                                  // join in
@@ -285,7 +288,8 @@ static void copy_file_contents(const NativeFileHandle src, const NativeFileHandl
 	}
 }
 
-bool OverlayFile::create_copy() {
+bool OverlayFile::create_copy()
+{
 	//test if open/valid/etc
 	//ensure file position
 	if (logoverlay) LOG_MSG("create_copy called %s",GetName());
@@ -295,12 +299,14 @@ bool OverlayFile::create_copy() {
 	const auto location_in_old_file = get_native_file_position(file_handle);
 	if (location_in_old_file == NativeSeekFailed) {
 		LOG_ERR("OVERLAY: Failed getting current position in file '%s': %s",
-		        GetName(), strerror(errno));
+		        GetName(),
+		        strerror(errno));
 		return false;
 	}
 	if (seek_native_file(file_handle, 0, NativeSeek::Set) == NativeSeekFailed) {
 		LOG_ERR("OVERLAY: Failed seeking to the beginning of file '%s': %s",
-		        GetName(), strerror(errno));
+		        GetName(),
+		        strerror(errno));
 		return false;
 	}
 
@@ -312,7 +318,9 @@ bool OverlayFile::create_copy() {
 			FatAttributeFlags attributes = {};
 			local_drive_get_attributes(GetPath(), attributes);
 			std_fs::path newpath = {};
-			std::tie(newhandle, newpath) = od->create_file_in_overlay(GetName(), attributes);
+			std::tie(newhandle,
+			         newpath) = od->create_file_in_overlay(GetName(),
+			                                               attributes);
 		}
 	}
 
@@ -323,20 +331,21 @@ bool OverlayFile::create_copy() {
 	copy_file_contents(file_handle, newhandle);
 
 	//Set copied file handle to position of the old one
-	if (seek_native_file(newhandle, location_in_old_file, NativeSeek::Set) == NativeSeekFailed) {
+	if (seek_native_file(newhandle, location_in_old_file, NativeSeek::Set) ==
+	    NativeSeekFailed) {
 		LOG_ERR("OVERLAY: Failed seeking to position %lld in file '%s': %s",
-		        static_cast<long long>(location_in_old_file), GetName(), strerror(errno));
+		        static_cast<long long>(location_in_old_file),
+		        GetName(),
+		        strerror(errno));
 		close_native_file(newhandle);
 		return false;
 	}
 	close_native_file(file_handle);
 	file_handle = newhandle;
-	//Flags ?
+	// Flags ?
 	if (logoverlay) LOG_MSG("success");
 	return true;
 }
-
-
 
 static OverlayFile* ccc(DOS_File* file) {
 	localFile* l = dynamic_cast<localFile*>(file);
@@ -464,18 +473,12 @@ bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
 {
 	bool write_access = false;
 	switch (flags & 0xf) {
-		case OPEN_READ:
-		//No modification of dates. LORD4.07 uses this
-		case OPEN_READ_NO_MOD:
-			write_access = false;
-			break;
-		case OPEN_WRITE:
-		case OPEN_READWRITE:
-			write_access = true;
-			break;
-		default:
-			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
-			return false;
+	case OPEN_READ:
+	// No modification of dates. LORD4.07 uses this
+	case OPEN_READ_NO_MOD: write_access = false; break;
+	case OPEN_WRITE:
+	case OPEN_READWRITE: write_access = true; break;
+	default: DOS_SetError(DOSERR_ACCESS_CODE_INVALID); return false;
 	}
 
 	//Todo check name first against local tree
@@ -1278,7 +1281,9 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 		CROSS_FILENAME(newold);
 		dirCache.ExpandNameAndNormaliseCase(newold);
 		NativeFileHandle o = open_native_file(newold, false);
-		if (o == InvalidNativeFileHandle) return false;
+		if (o == InvalidNativeFileHandle) {
+			return false;
+		}
 		auto [n, path] = create_file_in_overlay(newname, attr);
 		if (n == InvalidNativeFileHandle) {
 			close_native_file(o);

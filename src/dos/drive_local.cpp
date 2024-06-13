@@ -186,11 +186,12 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 	// If we couldn't open the file, then it's possible that
 	// the file is simply write-protected and the flags requested
 	// RW access.  So check if this is the case:
-	if (file_handle == InvalidNativeFileHandle && write_access && always_open_ro_files) {
+	if (file_handle == InvalidNativeFileHandle && write_access &&
+	    always_open_ro_files) {
 		// If yes, check if the file can be opened with Read-only access:
 		file_handle = open_native_file(host_filename, false);
 		if (file_handle != InvalidNativeFileHandle) {
-			flags = OPEN_READ;
+			flags                = OPEN_READ;
 			fallback_to_readonly = true;
 		}
 	}
@@ -581,7 +582,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	}
 
 	const auto ret = read_native_file(file_handle, data, *size);
-	*size = check_cast<uint16_t>(ret.num_bytes);
+	*size          = check_cast<uint16_t>(ret.num_bytes);
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -622,7 +623,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 
 	// Otherwise we have some data to write
 	const auto ret = write_native_file(file_handle, data, *size);
-	*size = check_cast<uint16_t>(ret.num_bytes);
+	*size          = check_cast<uint16_t>(ret.num_bytes);
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -635,24 +636,16 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
 	NativeSeek seek_type;
 	switch (type) {
-		case DOS_SEEK_SET:
-			seek_type = NativeSeek::Set;
-			break;
-		case DOS_SEEK_CUR:
-			seek_type = NativeSeek::Current;
-			break;
-		case DOS_SEEK_END:
-			seek_type = NativeSeek::End;
-			break;
-		default:
-			assertm(false, "Invalid seek type");
-			return false;
+	case DOS_SEEK_SET: seek_type = NativeSeek::Set; break;
+	case DOS_SEEK_CUR: seek_type = NativeSeek::Current; break;
+	case DOS_SEEK_END: seek_type = NativeSeek::End; break;
+	default: assertm(false, "Invalid seek type"); return false;
 	}
 
 	// The inbound position is actually an int32_t being passed through a
 	// uint32_t* pointer (pos_addr), so reinterpret the underlying memory as
 	// such to prevent rollover into the unsigned range.
-	const auto requested_pos = *reinterpret_cast<int32_t *>(pos_addr);
+	const auto requested_pos = *reinterpret_cast<int32_t*>(pos_addr);
 
 	auto returned_pos = seek_native_file(file_handle, requested_pos, seek_type);
 
@@ -664,7 +657,8 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 		// the end of file, which satisfies Black Thorne.
 		returned_pos = seek_native_file(file_handle, 0, NativeSeek::End);
 		if (returned_pos == NativeSeekFailed) {
-			// Unlikely to fail but this matches behavior of the old code using fseek()
+			// Unlikely to fail but this matches behavior of the old
+			// code using fseek()
 			returned_pos = 0;
 		}
 	}
@@ -674,7 +668,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 	// back into it we first ensure the current long stream_pos (which is a
 	// signed 64-bit on some platforms + OSes) can fit within the int32_t
 	// range before assigning it.
-	*reinterpret_cast<int32_t *>(pos_addr) = check_cast<int32_t>(returned_pos);
+	*reinterpret_cast<int32_t*>(pos_addr) = check_cast<int32_t>(returned_pos);
 
 	return true;
 }
@@ -746,8 +740,9 @@ uint16_t localFile::GetInformation(void)
 	return read_only_medium ? 0x40 : 0;
 }
 
-localFile::localFile(const char* _name, const std_fs::path& path, const NativeFileHandle handle,
-                     const char* _basedir, const bool _read_only_medium)
+localFile::localFile(const char* _name, const std_fs::path& path,
+                     const NativeFileHandle handle, const char* _basedir,
+                     const bool _read_only_medium)
         : file_handle(handle),
           path(path),
           basedir(_basedir),

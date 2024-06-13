@@ -46,21 +46,14 @@
 
 constexpr int64_t NativeSeekFailed = -1;
 
-struct NativeIoResult
-{
+struct NativeIoResult {
 	int64_t num_bytes = 0;
-	bool error = false;
+	bool error        = false;
 };
 
-enum class NativeSeek
-{
-	Set,
-	Current,
-	End
-};
+enum class NativeSeek { Set, Current, End };
 
-struct DosDateTime
-{
+struct DosDateTime {
 	uint16_t date = 0;
 	uint16_t time = 0;
 };
@@ -207,17 +200,20 @@ uint16_t local_drive_get_attributes(const std_fs::path& path,
 uint16_t local_drive_set_attributes(const std_fs::path& path,
                                     const FatAttributeFlags attributes);
 
-
 // Native file I/O wrappers.
-// Currently only used by local drive and overlay drive but suitable for use elsewhere.
+// Currently only used by local drive and overlay drive but suitable for use
+// elsewhere.
 NativeFileHandle open_native_file(const std_fs::path& path, const bool write_access);
 NativeFileHandle create_native_file(const std_fs::path& path,
                                     const std::optional<FatAttributeFlags> attributes);
 
-NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t *buffer, const int64_t num_bytes_requested);
-NativeIoResult write_native_file(const NativeFileHandle handle, const uint8_t *buffer, const int64_t num_bytes_requested);
+NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
+                                const int64_t num_bytes_requested);
+NativeIoResult write_native_file(const NativeFileHandle handle, const uint8_t* buffer,
+                                 const int64_t num_bytes_requested);
 
-int64_t seek_native_file(const NativeFileHandle handle, const int64_t offset, const NativeSeek type);
+int64_t seek_native_file(const NativeFileHandle handle, const int64_t offset,
+                         const NativeSeek type);
 
 // Returns offset from beginning of file
 int64_t get_native_file_position(const NativeFileHandle handle);

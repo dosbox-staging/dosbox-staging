@@ -127,15 +127,19 @@ NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
 	constexpr auto max_dword = std::numeric_limits<DWORD>::max();
 
 	NativeIoResult ret = {};
-	ret.num_bytes = 0;
-	ret.error = false;
+	ret.num_bytes      = 0;
+	ret.error          = false;
 	while (ret.num_bytes < num_bytes_requested) {
 		int64_t clamped_bytes_requested = num_bytes_requested - ret.num_bytes;
 		if (clamped_bytes_requested > max_dword) {
 			clamped_bytes_requested = max_dword;
 		}
 		DWORD num_bytes_read = 0;
-		const auto success = ReadFile(handle, buffer + ret.num_bytes, clamped_bytes_requested, &num_bytes_read, nullptr);
+		const auto success   = ReadFile(handle,
+                                              buffer + ret.num_bytes,
+                                              clamped_bytes_requested,
+                                              &num_bytes_read,
+                                              nullptr);
 		ret.num_bytes += num_bytes_read;
 		ret.error = !success;
 		if (ret.error || num_bytes_read == 0) {
@@ -145,22 +149,25 @@ NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
 	return ret;
 }
 
-NativeIoResult write_native_file(const NativeFileHandle handle,
-                                 const uint8_t* buffer,
+NativeIoResult write_native_file(const NativeFileHandle handle, const uint8_t* buffer,
                                  const int64_t num_bytes_requested)
 {
 	constexpr auto max_dword = std::numeric_limits<DWORD>::max();
 
 	NativeIoResult ret = {};
-	ret.num_bytes = 0;
-	ret.error = false;
+	ret.num_bytes      = 0;
+	ret.error          = false;
 	while (ret.num_bytes < num_bytes_requested) {
 		int64_t clamped_bytes_requested = num_bytes_requested - ret.num_bytes;
 		if (clamped_bytes_requested > max_dword) {
 			clamped_bytes_requested = max_dword;
 		}
 		DWORD num_bytes_written = 0;
-		const auto success = WriteFile(handle, buffer + ret.num_bytes, clamped_bytes_requested, &num_bytes_written, nullptr);
+		const auto success      = WriteFile(handle,
+                                               buffer + ret.num_bytes,
+                                               clamped_bytes_requested,
+                                               &num_bytes_written,
+                                               nullptr);
 		ret.num_bytes += num_bytes_written;
 		ret.error = !success;
 		if (ret.error || num_bytes_written == 0) {
@@ -170,23 +177,15 @@ NativeIoResult write_native_file(const NativeFileHandle handle,
 	return ret;
 }
 
-int64_t seek_native_file(const NativeFileHandle handle,
-                         const int64_t offset, const NativeSeek type)
+int64_t seek_native_file(const NativeFileHandle handle, const int64_t offset,
+                         const NativeSeek type)
 {
 	DWORD win32_seek_type = FILE_BEGIN;
 	switch (type) {
-		case NativeSeek::Set:
-			win32_seek_type = FILE_BEGIN;
-			break;
-		case NativeSeek::Current:
-			win32_seek_type = FILE_CURRENT;
-			break;
-		case NativeSeek::End:
-			win32_seek_type = FILE_END;
-			break;
-		default:
-			assertm(false, "Invalid seek type");
-			return NativeSeekFailed;
+	case NativeSeek::Set: win32_seek_type = FILE_BEGIN; break;
+	case NativeSeek::Current: win32_seek_type = FILE_CURRENT; break;
+	case NativeSeek::End: win32_seek_type = FILE_END; break;
+	default: assertm(false, "Invalid seek type"); return NativeSeekFailed;
 	}
 
 	// Microsoft in their infinite knowledge decided to split the offset
@@ -200,8 +199,8 @@ int64_t seek_native_file(const NativeFileHandle handle,
 	// HighPart is both an input and output value
 	li.LowPart = SetFilePointer(handle, li.LowPart, &li.HighPart, win32_seek_type);
 
-	// If we have a large offset, INVALID_SET_FILE_POINTER is also valid as the low word
-	// So we must also check GetLastError() to know if we failed
+	// If we have a large offset, INVALID_SET_FILE_POINTER is also valid as
+	// the low word So we must also check GetLastError() to know if we failed
 	if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
 		return NativeSeekFailed;
 	}
@@ -244,7 +243,6 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 	ret.date = DOS_PackDate(system_time.wYear,
 	                        system_time.wMonth,
 	                        system_time.wDay);
-
 
 	return ret;
 }
