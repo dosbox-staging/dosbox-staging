@@ -669,19 +669,21 @@ static void MPU401_Event(io_val_t)
 		for (uint8_t i = 0; i < 8; ++i) {
 			if (mpu.state.amask & (1 << i)) {
 				auto &counter = mpu.playbuf[i].counter;
-				switch (counter) {
-				case 0: counter = 0xff; break;
-				case 1: UpdateTrack(i); break;
-				default: --counter; break;
+				if (counter) {
+					--counter;
+				}
+				if (!counter) {
+					UpdateTrack(i);
 				}
 			}
 		}
 		if (mpu.state.conductor) {
 			auto &counter = mpu.condbuf.counter;
-			switch (counter) {
-			case 0: counter = 0xff; break;
-			case 1: UpdateConductor(); break;
-			default: --counter; break;
+			if (counter) {
+				--counter;
+			}
+			if (!counter) {
+				UpdateConductor();
 			}
 		}
 	}
