@@ -876,11 +876,6 @@ void SVGA_Setup_S3Trio()
 		description += " compatible";
 		break;
 
-	case VesaModes::Halfline:
-		replace_mode_120h_with_halfline();
-		description += " halfline";
-		break;
-
 	case VesaModes::All: break;
 	}
 

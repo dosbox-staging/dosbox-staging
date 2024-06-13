@@ -274,10 +274,6 @@ enum class VesaModes {
 	// excluded as they cause timing problems in Build Engine games.
 	Compatible,
 
-	// Same as `Compatible`, but the 120h VESA mode is replaced with a special
-	// halfline mode used by Extreme Assault.
-	Halfline,
-
 	// Enables all S3 VESA modes, including extra DOSBox-specific VESA modes.
 	// The 320x200 high colour modes available in this mode are often required
 	// by late '90s demoscene productions.

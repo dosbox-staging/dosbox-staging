@@ -573,8 +573,6 @@ static void DOSBOX_RealInit(Section* sec)
 	const std::string pref = section->Get_string("vesa_modes");
 	if (pref == "compatible") {
 		int10.vesa_modes = VesaModes::Compatible;
-	} else if (pref == "halfline") {
-		int10.vesa_modes = VesaModes::Halfline;
 	} else {
 		int10.vesa_modes = VesaModes::All;
 	}
@@ -733,7 +731,7 @@ void DOSBOX_Init()
 	        "      basis.");
 
 	pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
-	pstring->Set_values({"compatible", "all", "halfline"});
+	pstring->Set_values({"compatible", "all"});
 	pstring->Set_help(
 	        "Controls which VESA video modes are available:\n"
 	        "  compatible:  Only the most compatible VESA modes for the configured video\n"
@@ -743,9 +741,6 @@ void DOSBOX_Init()
 	        "               properly supported until the late '90s. The 256-colour linear\n"
 	        "               framebuffer 320x240, 400x300, and 512x384 modes are also\n"
 	        "               excluded as they cause timing problems in Build Engine games.\n"
-	        "  halfline:    Same as 'compatible', but the 120h VESA mode is replaced with\n"
-	        "               a special halfline mode used by Extreme Assault. Use only if\n"
-	        "               needed.\n"
 	        "  all:         All modes are available, including extra DOSBox-specific VESA\n"
 	        "               modes. Use 8 MB of video memory for the best results. Some\n"
 	        "               games misbehave in the presence of certain VESA modes; try\n"
