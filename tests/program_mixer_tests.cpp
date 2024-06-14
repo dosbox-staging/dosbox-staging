@@ -41,10 +41,7 @@ static void assert_success(const std::vector<std::string>& args,
 	                                  ChannelInfos(channel_infos_map),
 	                                  AllChannelNames);
 
-	if (auto error = std::get_if<Error>(&result); error) {
-		printf("*** TEST FAILED: ");
-		printf("%s", error->message.c_str());
-		printf("\n");
+	if (auto error_type = std::get_if<ErrorType>(&result); error_type) {
 		FAIL();
 	} else {
 		auto actual = std::get<std::queue<MixerCommand::Command>>(result);
@@ -60,11 +57,9 @@ static void assert_failure(const std::vector<std::string>& args,
 	                                  ChannelInfos(channel_infos_map),
 	                                  AllChannelNames);
 
-	if (auto error = std::get_if<Error>(&result); error) {
-		LOG_WARNING("%s", error->message.c_str());
-		EXPECT_EQ(error->type, expected_error_type);
+	if (auto error_type = std::get_if<ErrorType>(&result); error_type) {
+		EXPECT_EQ(*error_type, expected_error_type);
 	} else {
-		printf("*** TEST FAILED: No error reported");
 		FAIL();
 	}
 }
