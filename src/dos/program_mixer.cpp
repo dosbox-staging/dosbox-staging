@@ -12,6 +12,7 @@
 #include "checks.h"
 #include "math_utils.h"
 #include "midi.h"
+#include "notifications.h"
 #include "program_more_output.h"
 #include "string_utils.h"
 
@@ -163,12 +164,6 @@ static bool is_master_channel(const std::string& channel_name)
 	return channel_name == ChannelName::Master;
 }
 
-static Error error(const ErrorType type, const std::string& message)
-{
-	const Error error = {type, message};
-	return error;
-}
-
 constexpr auto DecibelVolumeCommandPrefix = 'D';
 
 static bool is_volume_command(const std::string& s)
@@ -185,14 +180,22 @@ static bool is_volume_command(const std::string& s)
 	return is_percent_volume_command() || is_decibel_volume_command();
 }
 
-static std::variant<Error, Command> parse_volume_command(const std::string& s,
-                                                         const std::string& channel_name)
+template <typename... Args>
+void notify_warning(const std::string& message_name, const Args&... args) noexcept
+{
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "MIXER",
+	                      message_name,
+	                      args...);
+}
+
+static std::variant<ErrorType, Command> parse_volume_command(const std::string& s,
+                                                             const std::string& channel_name)
 {
 	if (is_global_channel(channel_name)) {
-		const auto message = format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
-		                                s.c_str());
+		notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND", s.c_str());
 
-		return error(ErrorType::InvalidGlobalCommand, message);
+		return ErrorType::InvalidGlobalCommand;
 	}
 
 	constexpr auto MinDb = -96.00f;
@@ -258,11 +261,11 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 			const SetVolume cmd = {AudioFrame(*v, *v)};
 			return cmd;
 		} else {
-			const Error error = {ErrorType::InvalidVolumeCommand,
-			                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
-			                                channel_name.c_str(),
-			                                s.c_str())};
-			return error;
+			notify_warning("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND",
+			               channel_name.c_str(),
+			               s.c_str());
+
+			return ErrorType::InvalidVolumeCommand;
 		}
 
 	} else if (parts.size() == 2) {
@@ -273,18 +276,18 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 			const SetVolume cmd = {AudioFrame(*l, *r)};
 			return cmd;
 		} else {
-			const Error error = {ErrorType::InvalidVolumeCommand,
-			                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
-			                                channel_name.c_str(),
-			                                s.c_str())};
-			return error;
+			notify_warning("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND",
+			               channel_name.c_str(),
+			               s.c_str());
+
+			return ErrorType::InvalidVolumeCommand;
 		}
 	} else { // more than 2 parts
-		const Error error = {ErrorType::InvalidVolumeCommand,
-		                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
-		                                channel_name.c_str(),
-		                                s.c_str())};
-		return error;
+		notify_warning("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND",
+		               channel_name.c_str(),
+		               s.c_str());
+
+		return ErrorType::InvalidVolumeCommand;
 	}
 }
 
@@ -312,16 +315,16 @@ static bool is_command_with_prefix(const std::string& s, const char prefix)
 	}
 }
 
-static Error make_invalid_master_channel_command_error(const std::string& command)
+static ErrorType make_invalid_master_channel_command_error(const std::string& command)
 {
-	const auto message = format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-	                                ChannelName::Master,
-	                                command.c_str());
+	notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+	               ChannelName::Master,
+	               command.c_str());
 
-	return error(ErrorType::InvalidMasterChannelCommand, message);
+	return ErrorType::InvalidMasterChannelCommand;
 }
 
-static std::variant<Error, Command> parse_crossfeed_command(
+static std::variant<ErrorType, Command> parse_crossfeed_command(
         const std::string& s, const std::string& channel_name,
         const ChannelInfos& channel_infos)
 {
@@ -330,12 +333,11 @@ static std::variant<Error, Command> parse_crossfeed_command(
 	const auto is_channel_mono = !channel_infos.HasFeature(channel_name,
 	                                                       ChannelFeature::Stereo);
 	if (is_channel_mono) {
-		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-		        channel_name.c_str(),
-		        s.c_str());
+		notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+		               channel_name.c_str(),
+		               s.c_str());
 
-		return error(ErrorType::InvalidChannelCommand, message);
+		return ErrorType::InvalidChannelCommand;
 	}
 
 	if (is_master_channel(channel_name)) {
@@ -343,15 +345,14 @@ static std::variant<Error, Command> parse_crossfeed_command(
 	}
 
 	if (s.size() == 1) {
-		const auto msg_id =
-		        (is_global_channel(channel_name)
-		                 ? "SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH"
-		                 : "SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH");
+		if (is_global_channel(channel_name)) {
+			notify_warning("SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH");
+		} else {
+			notify_warning("SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH",
+			               channel_name.c_str());
+		}
 
-		const auto message = format_str(MSG_Get(msg_id),
-		                                channel_name.c_str());
-
-		return error(ErrorType::MissingCrossfeedStrength, message);
+		return ErrorType::MissingCrossfeedStrength;
 	}
 
 	if (const auto strength = parse_percentage(s.substr(1)); strength) {
@@ -359,24 +360,23 @@ static std::variant<Error, Command> parse_crossfeed_command(
 		return cmd;
 	} else {
 		if (is_global_channel(channel_name)) {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH"),
-			        s.c_str());
-			return error(ErrorType::InvalidGlobalCrossfeedStrength,
-			             message);
+			notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH",
+			               s.c_str());
+
+			return ErrorType::InvalidGlobalCrossfeedStrength;
 		} else {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH"),
-			        channel_name.c_str(),
-			        s.c_str());
-			return error(ErrorType::InvalidCrossfeedStrength, message);
+			notify_warning("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH",
+			               channel_name.c_str(),
+			               s.c_str());
+
+			return ErrorType::InvalidCrossfeedStrength;
 		}
 	}
 }
 
-static std::variant<Error, Command> parse_reverb_command(const std::string& s,
-                                                         const std::string& channel_name,
-                                                         const ChannelInfos& channel_infos)
+static std::variant<ErrorType, Command> parse_reverb_command(
+        const std::string& s, const std::string& channel_name,
+        const ChannelInfos& channel_infos)
 {
 	assert(s.size() >= 1);
 
@@ -385,23 +385,22 @@ static std::variant<Error, Command> parse_reverb_command(const std::string& s,
 	}
 
 	if (!channel_infos.HasFeature(channel_name, ChannelFeature::ReverbSend)) {
-		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-		        channel_name.c_str(),
-		        s.c_str());
+		notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+		               channel_name.c_str(),
+		               s.c_str());
 
-		return error(ErrorType::InvalidChannelCommand, message);
+		return ErrorType::InvalidChannelCommand;
 	}
 
 	if (s.size() == 1) {
-		const auto msg_id = (is_global_channel(channel_name)
-		                             ? "SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL"
-		                             : "SHELL_CMD_MIXER_MISSING_REVERB_LEVEL");
+		if (is_global_channel(channel_name)) {
+			notify_warning("SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL");
+		} else {
+			notify_warning("SHELL_CMD_MIXER_MISSING_REVERB_LEVEL",
+			               channel_name.c_str());
+		}
 
-		const auto message = format_str(MSG_Get(msg_id),
-		                                channel_name.c_str());
-
-		return error(ErrorType::MissingReverbLevel, message);
+		return ErrorType::MissingReverbLevel;
 	}
 
 	if (const auto level = parse_percentage(s.substr(1)); level) {
@@ -409,25 +408,23 @@ static std::variant<Error, Command> parse_reverb_command(const std::string& s,
 		return cmd;
 	} else {
 		if (is_global_channel(channel_name)) {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL"),
-			        s.c_str());
+			notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL",
+			               s.c_str());
 
-			return error(ErrorType::InvalidGlobalReverbLevel, message);
+			return ErrorType::InvalidGlobalReverbLevel;
 		} else {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL"),
-			        channel_name.c_str(),
-			        s.c_str());
+			notify_warning("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL",
+			               channel_name.c_str(),
+			               s.c_str());
 
-			return error(ErrorType::InvalidReverbLevel, message);
+			return ErrorType::InvalidReverbLevel;
 		}
 	}
 }
 
-static std::variant<Error, Command> parse_chorus_command(const std::string& s,
-                                                         const std::string& channel_name,
-                                                         const ChannelInfos& channel_infos)
+static std::variant<ErrorType, Command> parse_chorus_command(
+        const std::string& s, const std::string& channel_name,
+        const ChannelInfos& channel_infos)
 {
 	assert(s.size() >= 1);
 
@@ -436,23 +433,22 @@ static std::variant<Error, Command> parse_chorus_command(const std::string& s,
 	}
 
 	if (!channel_infos.HasFeature(channel_name, ChannelFeature::ChorusSend)) {
-		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-		        channel_name.c_str(),
-		        s.c_str());
+		notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+		               channel_name.c_str(),
+		               s.c_str());
 
-		return error(ErrorType::InvalidChannelCommand, message);
+		return ErrorType::InvalidChannelCommand;
 	}
 
 	if (s.size() == 1) {
-		const auto msg_id = (is_global_channel(channel_name)
-		                             ? "SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL"
-		                             : "SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL");
+		if (is_global_channel(channel_name)) {
+			notify_warning("SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL");
+		} else {
+			notify_warning("SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL",
+			               channel_name.c_str());
+		}
 
-		const auto message = format_str(MSG_Get(msg_id),
-		                                channel_name.c_str());
-
-		return error(ErrorType::MissingChorusLevel, message);
+		return ErrorType::MissingChorusLevel;
 	}
 
 	if (const auto level = parse_percentage(s.substr(1)); level) {
@@ -460,23 +456,21 @@ static std::variant<Error, Command> parse_chorus_command(const std::string& s,
 		return cmd;
 	} else {
 		if (is_global_channel(channel_name)) {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL"),
-			        s.c_str());
+			notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL",
+			               s.c_str());
 
-			return error(ErrorType::InvalidGlobalChorusLevel, message);
+			return ErrorType::InvalidGlobalChorusLevel;
 		} else {
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL"),
-			        channel_name.c_str(),
-			        s.c_str());
+			notify_warning("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL",
+			               channel_name.c_str(),
+			               s.c_str());
 
-			return error(ErrorType::InvalidChorusLevel, message);
+			return ErrorType::InvalidChorusLevel;
 		}
 	}
 }
 
-std::variant<Error, std::queue<Command>> ParseCommands(
+std::variant<ErrorType, std::queue<Command>> ParseCommands(
         const std::vector<std::string>& args, const ChannelInfos& channel_infos,
         const std::vector<std::string>& all_channel_names)
 {
@@ -519,12 +513,10 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 		if (!channel_infos.HasChannel(arg) && is_valid_channel_name(arg)) {
 			// Argument is a valid channel name, but the channel is
 			// inactive.
+			notify_warning("SHELL_CMD_MIXER_INACTIVE_CHANNEL",
+			               arg.c_str());
 
-			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INACTIVE_CHANNEL"),
-			        arg.c_str());
-
-			return error(ErrorType::InactiveChannel, message);
+			return ErrorType::InactiveChannel;
 
 		} else if (const auto command = parse_select_channel_command(arg);
 		           command) {
@@ -534,12 +526,11 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 
 			if (!is_global_channel(curr_channel_name) &&
 			    curr_channel_command_count == 0) {
-				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
-				        curr_channel_name.c_str());
 
-				return error(ErrorType::MissingChannelCommand,
-				             message);
+				notify_warning("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND",
+				               curr_channel_name.c_str());
+
+				return ErrorType::MissingChannelCommand;
 			}
 
 			curr_channel_name = command->channel_name;
@@ -555,31 +546,28 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 				commands.emplace(*cmd);
 				++curr_channel_command_count;
 			} else {
-				return std::get<Error>(result);
+				return std::get<ErrorType>(result);
 			}
 
 		} else if (const auto mode = parse_stereo_mode(arg); mode) {
 			// Set stereo mode command
 
 			if (is_global_channel(curr_channel_name)) {
-				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
-				        arg.c_str());
+				notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND",
+				               arg.c_str());
 
-				return error(ErrorType::InvalidGlobalCommand, message);
+				return ErrorType::InvalidGlobalCommand;
 			}
 
 			const auto is_channel_mono = !channel_infos.HasFeature(
 			        curr_channel_name, ChannelFeature::Stereo);
 
 			if (is_master_channel(curr_channel_name) || is_channel_mono) {
-				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-				        curr_channel_name.c_str(),
-				        arg.c_str());
+				notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+				               curr_channel_name.c_str(),
+				               arg.c_str());
 
-				return error(ErrorType::InvalidChannelCommand,
-				             message);
+				return ErrorType::InvalidChannelCommand;
 			}
 
 			const SetStereoMode cmd = {*mode};
@@ -597,7 +585,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 				commands.emplace(*cmd);
 				++curr_channel_command_count;
 			} else {
-				return std::get<Error>(result);
+				return std::get<ErrorType>(result);
 			}
 
 		} else if (is_command_with_prefix(arg, ReverbCommandPrefix)) {
@@ -611,7 +599,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 				commands.emplace(*cmd);
 				++curr_channel_command_count;
 			} else {
-				return std::get<Error>(result);
+				return std::get<ErrorType>(result);
 			}
 
 		} else if (is_command_with_prefix(arg, ChorusCommandPrefix)) {
@@ -625,40 +613,37 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 				commands.emplace(*cmd);
 				++curr_channel_command_count;
 			} else {
-				return std::get<Error>(result);
+				return std::get<ErrorType>(result);
 			}
 
 		} else {
 			// Unknown command
 
 			if (is_global_channel(curr_channel_name)) {
-				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
-				        arg.c_str());
+				notify_warning("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND",
+				               arg.c_str());
 
-				return error(ErrorType::InvalidGlobalCommand, message);
+				return ErrorType::InvalidGlobalCommand;
 			} else {
-				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
-				        curr_channel_name.c_str(),
-				        arg.c_str());
-
 				const auto error_type =
 				        (is_master_channel(curr_channel_name)
 				                 ? ErrorType::InvalidMasterChannelCommand
 				                 : ErrorType::InvalidChannelCommand);
 
-				return error(error_type, message);
+				notify_warning("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
+				               curr_channel_name.c_str(),
+				               arg.c_str());
+
+				return error_type;
 			}
 		}
 	}
 
 	if (curr_channel_command_count == 0) {
-		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
-		        curr_channel_name.c_str());
+		notify_warning("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND",
+		               curr_channel_name.c_str());
 
-		return error(ErrorType::MissingChannelCommand, message);
+		return ErrorType::MissingChannelCommand;
 	}
 
 	return commands;
@@ -751,22 +736,6 @@ void MIXER::Run()
 		if (show_status) {
 			ShowMixerStatus();
 		}
-
-	} else {
-		// Error (no mixer command was executed)
-		if (show_status) {
-			ShowMixerStatus();
-			WriteOut("\n");
-		}
-		auto error = std::get<MixerCommand::Error>(result);
-		const auto error_message = error.message.c_str();
-		WriteOut("%s\n", error_message);
-
-		// To give people a hint if their [autoexec] contains invalid
-		// MIXER commands.
-		LOG_WARNING(
-		        "MIXER: Incorrect MIXER command invocation; "
-		        "run MIXER /? for help");
 	}
 }
 
@@ -821,55 +790,61 @@ void MIXER::AddMessages()
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND",
 	        "Invalid volume for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset] (run MIXER /? for help)");
+	        "[color=white]%s[reset]");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH",
 	        "Invalid crossfeed strength for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL",
 	        "Invalid chorus level for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL",
 	        "Invalid reverb level for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH",
 	        "Missing crossfeed strength after [color=white]x[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel;\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL",
 	        "Missing chorus level after [color=white]c[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel;\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_REVERB_LEVEL",
 	        "Missing reverb level after [color=white]r[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel;\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH",
-	        "Invalid global crossfeed strength [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "Invalid global crossfeed strength [color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL",
-	        "Invalid global chorus level [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "Invalid global chorus level [color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL",
-	        "Invalid global reverb level [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "Invalid global reverb level [color=white]%s[reset];\n"
+	        "must be a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH",
-	        "Missing global crossfeed strength after [color=white]x[reset] "
-	        "(must be between 0 and 100)");
+	        "Missing global crossfeed strength after [color=white]x[reset];\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL",
-	        "Missing global chorus level after [color=white]c[reset] "
-	        "(must be between 0 and 100)");
+	        "Missing global chorus level after [color=white]c[reset];\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL",
-	        "Missing global reverb level after [color=white]r[reset] "
-	        "(must be between 0 and 100)");
+	        "Missing global reverb level after [color=white]r[reset];\n"
+	        "must provide a number between 0 and 100");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND",
 	        "Missing command for the [color=light-cyan]%s[reset] channel");
