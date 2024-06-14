@@ -642,33 +642,45 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 	default: assertm(false, "Invalid seek type"); return false;
 	}
 
-	// The inbound position is actually an int32_t being passed through a
-	// uint32_t* pointer (pos_addr), so reinterpret the underlying memory as
-	// such to prevent rollover into the unsigned range.
-	const auto requested_pos = *reinterpret_cast<int32_t*>(pos_addr);
+	// Blackthorne requires this logic as it passes a very large value for SEEK_SET
+	int64_t requested_pos = 0;
+	if (type == DOS_SEEK_SET) {
+		// If SEEK_SET, the value must always be interprted as a 32-bit unsigned value
+		// Per MS-DOS Encyclopedia Page 1312:
+
+		// The value in CX:DX is an offset specifying how far the file pointer is to be moved.
+		// With method code OOH, the value in CX:DX is always interpreted as a positive 32-bit
+		// integer, meaning the file pointer is always set relative to the beginning of the file.
+		requested_pos = *pos_addr;
+	} else {
+		// With method codes OIH and 02H, the value in CX:DX can be either a positive or negative
+		// 32-bit integer. Thus, method 1 can move the file pointer either forward or backward
+		// from its current position; method 2can move the file pointer either forward or
+		// backward from the end ofthe file.
+		requested_pos = *reinterpret_cast<int32_t*>(pos_addr);
+	}
 
 	auto returned_pos = seek_native_file(file_handle, requested_pos, seek_type);
 
-	// TODO: Test Black Throne and see if this hack is still needed
-	// We're now using native file I/O which may have changed behavior
-	// Should we just be throwing a DOS error code here?
 	if (returned_pos == NativeSeekFailed) {
-		// Failed to seek, but try again this time seeking to
-		// the end of file, which satisfies Black Thorne.
-		returned_pos = seek_native_file(file_handle, 0, NativeSeek::End);
-		if (returned_pos == NativeSeekFailed) {
-			// Unlikely to fail but this matches behavior of the old
-			// code using fseek()
-			returned_pos = 0;
-		}
+		// MS-DOS does not throw an error if we would seek before the beginning of the file
+		// Per MS-DOS Encyclopedia Page 1313:
+
+		// Depending on the offset specified in CX:DX, methods 1 and 2 may move the file
+		// pointer to a position before the start of the file. Function 42H does not return an error
+		// code if this happens, but later attempts to read from or write to the file will produce
+		// unexpected errors.
+
+		// Modern OSs do not allow this and I don't know how to emulate "unexpected errors"
+		// Just set the position to 0 and never throw a DOS error
+		seek_native_file(file_handle, 0, NativeSeek::Set);
+		returned_pos = 0;
+		LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
 	}
 
-	// The inbound position is actually an int32_t being passed through a
-	// uint32_t* pointer (pos_addr), so before we save the seeked position
-	// back into it we first ensure the current long stream_pos (which is a
-	// signed 64-bit on some platforms + OSes) can fit within the int32_t
-	// range before assigning it.
-	*reinterpret_cast<int32_t*>(pos_addr) = check_cast<int32_t>(returned_pos);
+	// The returned value is always positive.
+	// It can exceed 32-bit signed max (ex. Blackthorne)
+	*pos_addr = check_cast<uint32_t>(returned_pos);
 
 	return true;
 }
