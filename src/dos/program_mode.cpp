@@ -100,70 +100,71 @@ static void set_8x8_font()
 	CALLBACK_RunRealInt(0x10);
 }
 
-void MODE::HandleSetDisplayMode(const std::string& _mode)
+void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 {
-	auto mode = _mode;
+	auto mode_str = _mode_str;
 
 	// These formats are all valid:
 	//   80X25
 	//   80x25
 	//   80,25
-	lowcase(mode);
-	mode = replace(mode, ',', 'x');
+	lowcase(mode_str);
+	mode_str = replace(mode_str, ',', 'x');
 
-	if (!is_valid_video_mode(mode)) {
-		WriteOut(MSG_Get("PROGRAM_MODE_INVALID_DISPLAY_MODE"), mode.c_str());
+	if (!is_valid_video_mode(mode_str)) {
+		WriteOut(MSG_Get("PROGRAM_MODE_INVALID_DISPLAY_MODE"),
+		         mode_str.c_str());
 		return;
 	}
 
 	switch (machine) {
 	case MCH_HERC:
-		if (mode == "80x25") {
+		if (mode_str == "80x25") {
 			INT10_SetVideoMode(0x07);
 		} else {
 			WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
-					 mode.c_str());
+			         mode_str.c_str());
 		}
 		break;
 
 	case MCH_CGA:
 	case MCH_TANDY:
 	case MCH_PCJR:
-		if (mode == "40x25") {
+		if (mode_str == "40x25") {
 			INT10_SetVideoMode(0x01);
 
-		} else if (mode == "80x25") {
+		} else if (mode_str == "80x25") {
 			INT10_SetVideoMode(0x03);
 
 		} else {
 			WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
-			         mode.c_str());
+			         mode_str.c_str());
 		}
 		break;
 
 	case MCH_EGA:
-		if (mode == "40x25") {
+		if (mode_str == "40x25") {
 			INT10_SetVideoMode(0x01);
 
-		} else if (mode == "80x25") {
+		} else if (mode_str == "80x25") {
 			INT10_SetVideoMode(0x03);
 
-		} else if (mode == "80x43") {
+		} else if (mode_str == "80x43") {
 			INT10_SetVideoMode(0x03);
 			set_8x8_font();
 
 		} else {
 			WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
-			         mode.c_str());
+			         mode_str.c_str());
 		}
 		break;
 
 	case MCH_VGA:
 		if (svgaCard == SVGA_S3Trio) {
-			if (const auto it = video_mode_map_svga_s3.find(mode);
+			if (const auto it = video_mode_map_svga_s3.find(mode_str);
 			    it != video_mode_map_svga_s3.end()) {
 
-				const auto mode = it->second;
+				const auto& mode = it->second;
 
 				if (mode < MinVesaBiosModeNumber) {
 					INT10_SetVideoMode(mode);
@@ -172,17 +173,19 @@ void MODE::HandleSetDisplayMode(const std::string& _mode)
 				}
 			} else {
 				WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
-				         mode.c_str());
+				         mode_str.c_str());
 			}
 
 		} else {
 			// SVGA non-S3
-			if (const auto it = video_mode_map_svga_other.find(mode);
+			if (const auto it = video_mode_map_svga_other.find(mode_str);
 			    it != video_mode_map_svga_other.end()) {
-				INT10_SetVideoMode(it->second);
+
+				const auto& mode = it->second;
+				INT10_SetVideoMode(mode);
 			} else {
 				WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
-				         mode.c_str());
+				         mode_str.c_str());
 			}
 		}
 		break;
@@ -244,7 +247,7 @@ void MODE::Run()
 		const auto command = args[0];
 
 		if (is_set_display_mode_command(command)) {
-			const auto mode = command;
+			const auto& mode = command;
 			HandleSetDisplayMode(mode);
 		} else {
 			WriteOut(MSG_Get("PROGRAM_MODE_INVALID_COMMAND"));
