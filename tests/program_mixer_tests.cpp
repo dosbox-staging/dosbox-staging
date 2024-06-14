@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2025-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,9 +58,8 @@ static void assert_success(const std::vector<std::string>& args,
 	                                  ChannelInfos(channel_infos_map),
 	                                  AllChannelNames);
 
-	if (auto error = std::get_if<Error>(&result); error) {
+	if (auto error_type = std::get_if<ErrorType>(&result); error_type) {
 		printf("*** TEST FAILED: ");
-		printf(error->message.c_str());
 		printf("\n");
 		FAIL();
 	} else {
@@ -77,9 +76,8 @@ static void assert_failure(const std::vector<std::string>& args,
 	                                  ChannelInfos(channel_infos_map),
 	                                  AllChannelNames);
 
-	if (auto error = std::get_if<Error>(&result); error) {
-		LOG_WARNING(error->message.c_str());
-		EXPECT_EQ(error->type, expected_error_type);
+	if (auto error_type = std::get_if<ErrorType>(&result); error_type) {
+		EXPECT_EQ(error_type, expected_error_type);
 	} else {
 		printf("*** TEST FAILED: No error reported");
 		FAIL();

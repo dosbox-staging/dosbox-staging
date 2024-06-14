@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -112,11 +112,6 @@ enum class ErrorType {
 	InvalidVolumeCommand,
 };
 
-struct Error {
-	MixerCommand::ErrorType type = {};
-	std::string message          = {};
-};
-
 struct Executor {
 	void operator()(const SelectChannel cmd);
 	void operator()(const SetVolume cmd);
@@ -135,7 +130,7 @@ private:
 	std::shared_ptr<MixerChannel> channel = {};
 };
 
-std::variant<Error, std::queue<Command>> ParseCommands(
+std::variant<ErrorType, std::queue<Command>> ParseCommands(
         const std::vector<std::string>& args, const ChannelInfos& channel_infos,
         const std::vector<std::string>& all_channel_names);
 
