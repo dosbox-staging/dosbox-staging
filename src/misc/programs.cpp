@@ -1108,7 +1108,7 @@ void PROGRAMS_Init(Section* sec)
 	        "%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
-	        "[color=brown]This property cannot be changed at runtime.[reset]\n");
+	        "[color=yellow]This setting cannot be changed at runtime.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
@@ -1127,7 +1127,7 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
 
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for property '%s'.\n");
+	        "'%s' is not a valid value for setting '%s'.\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
@@ -1146,7 +1146,7 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
-	        "Property '%s' is not changeable at runtime.\n");
+	        "Setting '%s' is not changeable at runtime.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
