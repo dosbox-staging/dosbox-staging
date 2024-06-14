@@ -30,9 +30,12 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "ansi_code_markup.h"
+#include "console.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "notifications.h"
 #include "string_utils.h"
 #include "support.h"
 #include "version.h"
@@ -233,10 +236,12 @@ bool Property::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -244,13 +249,16 @@ bool Property::IsValidValue(const Value& in)
 bool Property::IsValueDeprecated(const Value& val) const
 {
 	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
+
 	if (is_deprecated) {
-		LOG_WARNING("CONFIG: Setting '%s = %s' is deprecated, "
-		            "falling back to the alternate: '%s = %s'",
-		            propname.c_str(),
-		            val.ToString().c_str(),
-		            propname.c_str(),
-		            GetAlternateForDeprecatedValue(val).ToString().c_str());
+		NOTIFY_DisplayWarning(
+		        Notification::Source::Console,
+		        "CONFIG",
+		        "PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+		        propname.c_str(),
+		        val.ToString().c_str(),
+		        propname.c_str(),
+		        GetAlternateForDeprecatedValue(val).ToString().c_str());
 	}
 	return is_deprecated;
 }
@@ -338,7 +346,11 @@ std::string Property::GetHelp() const
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
+
 		return "No help available for '" + propname + "'\n";
 	}
 	return result;
@@ -380,7 +392,10 @@ std::string Property::GetHelpForHost() const
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
 	}
 	return result;
 }
@@ -424,13 +439,15 @@ bool Prop_int::ValidateValue(const Value& in)
 		va = mi;
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
-	            "Value outside of the valid range %s-%s, using '%d'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            min_value.ToString().c_str(),
-	            max_value.ToString().c_str(),
-	            va);
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      va);
+
 	value = va;
 	return true;
 }
@@ -453,14 +470,14 @@ bool Prop_int::IsValidValue(const Value& in)
 		return true;
 	}
 
-	LOG_WARNING(
-	        "CONFIG: Invalid '%s' setting: '%s'. "
-	        "Value outside of the valid range %s-%s, using '%s'",
-	        propname.c_str(),
-	        in.ToString().c_str(),
-	        min_value.ToString().c_str(),
-	        max_value.ToString().c_str(),
-	        default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -526,10 +543,12 @@ bool Prop_string::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -568,10 +587,12 @@ bool Prop_bool::SetValue(const std::string& input)
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
-		LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-		            propname.c_str(),
-		            input.c_str(),
-		            default_value.ToString().c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      propname.c_str(),
+		                      input.c_str(),
+		                      default_value.ToString().c_str());
 	}
 	return is_valid;
 }
@@ -1046,9 +1067,16 @@ bool Section_prop::HandleInputline(const std::string& line)
 		}
 
 		if (p->IsDeprecated()) {
-			LOG_WARNING("CONFIG: Deprecated option '%s'\n\n%s\n",
-			            name.c_str(),
-			            p->GetHelpForHost().c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "CONFIG",
+			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
+			                      name.c_str());
+
+			LOG_WARNING("CONFIG: %s",
+			            strip_ansi_markup(p->GetHelpForHost()).c_str());
+
+			CONSOLE_Write("%s\n\n",
+			              convert_ansi_markup(p->GetHelp()).c_str());
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
@@ -1058,7 +1086,10 @@ bool Section_prop::HandleInputline(const std::string& line)
 		return p->SetValue(val);
 	}
 
-	LOG_WARNING("CONFIG: Invalid option '%s'", name.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_PROPERTY_ERROR",
+	                      name.c_str());
 	return false;
 }
 
@@ -1752,8 +1783,12 @@ Verbosity Config::GetStartupVerbosity() const
 		             : Verbosity::High;
 	}
 
-	LOG_WARNING("SETUP: Invalid 'startup_verbosity' setting: '%s', using 'high'",
-	            user_choice.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "SETUP",
+	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "
+	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
+	                      user_choice.c_str());
+
 	return Verbosity::High;
 }
 
