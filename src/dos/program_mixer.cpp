@@ -28,6 +28,7 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
+#include "notifications.h"
 #include "midi.h"
 #include "notifications.h"
 #include "program_more_output.h"
@@ -941,4 +942,6 @@ void MIXER::ShowMixerStatus()
 		             reverb,
 		             chorus);
 	}
+
+	WriteOut("\n");
 }
