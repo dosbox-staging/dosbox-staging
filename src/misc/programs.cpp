@@ -548,6 +548,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				// Print 'changability'
 				if (p->GetChange() ==
 				    Property::Changeable::OnlyAtStart) {
+					output.AddString("\n");
 					output.AddString(MSG_Get(
 					        "PROGRAM_CONFIG_HLP_NOCHANGE"));
 
