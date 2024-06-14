@@ -1683,10 +1683,15 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_LIN32:
 	case M_VGA:
 		// 256 color mode
-		gfx_data[0x5]|=0x40;
+		gfx_data[0x5] |= 0x40;
 
-		// graphics mode at 0xa000-affff
-		gfx_data[0x6]|=0x05;
+		if (VESA_IsVesaMode(mode)) {
+			// graphics mode at A0000-BFFFF (128 KB page)
+			gfx_data[0x6] |= 0x01;
+		} else {
+			// graphics mode at A0000-AFFFF (64 KB page)
+			gfx_data[0x6] |= 0x05;
+		}
 		break;
 
 	case M_LIN4:
@@ -1695,14 +1700,15 @@ bool INT10_SetVideoMode(uint16_t mode)
 			// only planes 0 and 2 are used
 			gfx_data[0x7] = 0x05;
 		}
-		// graphics mode at 0xa000-affff
+		// graphics mode at A0000-AFFFF
 		gfx_data[0x6] |= 0x05;
 		break;
 
 	case M_CGA4:
 		// CGA mode
 		gfx_data[0x5]|=0x20;
-		// graphics mode at at 0xb800=0xbfff
+
+		// graphics mode at B800-BFFF
 		gfx_data[0x6]|=0x0f;
 		if (machine == MCH_EGA) {
 			gfx_data[0x5] |= 0x10;
@@ -1711,10 +1717,10 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	case M_CGA2:
 		if (machine == MCH_EGA) {
-			// graphics mode at at 0xb800=0xbfff
+			// graphics mode at B800-BFFF
 			gfx_data[0x6] |= 0x0d;
 		} else {
-			// graphics mode at at 0xb800=0xbfff
+			// graphics mode at B800-BFFF
 			gfx_data[0x6] |= 0x0f;
 		}
 		break;
