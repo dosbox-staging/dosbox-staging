@@ -26,6 +26,7 @@
 #include "math_utils.h"
 #include "mem.h"
 #include "midi.h"
+#include "notifications.h"
 #include "pic.h"
 #include "ring_buffer.h"
 #include "rwqueue.h"
@@ -383,10 +384,6 @@ static CrossfeedPreset crossfeed_pref_to_preset(const std::string& pref)
 		return CrossfeedPreset::Strong;
 	}
 
-	// the conf system programmatically guarantees only the above prefs are
-	// used
-	LOG_WARNING("MIXER: Invalid 'crossfeed' setting: '%s', using 'off'",
-	            pref.c_str());
 	return CrossfeedPreset::None;
 }
 
@@ -477,8 +474,16 @@ static ReverbPreset reverb_pref_to_preset(const std::string& pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Invalid 'reverb' setting: '%s', using 'off'",
-	            pref.c_str());
+	constexpr auto SettingName  = "reverb";
+	constexpr auto DefaultValue = "off";
+
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "MIXER",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      SettingName,
+	                      pref.c_str(),
+	                      DefaultValue);
+
 	return ReverbPreset::None;
 }
 
@@ -563,8 +568,16 @@ static ChorusPreset chorus_pref_to_preset(const std::string& pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Invalid 'chorus' setting: '%s', using ' off'",
-	            pref.c_str());
+	constexpr auto SettingName  = "chorus";
+	constexpr auto DefaultValue = "off";
+
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "MIXER",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      SettingName,
+	                      pref.c_str(),
+	                      DefaultValue);
+
 	return ChorusPreset::None;
 }
 
@@ -744,17 +757,22 @@ MixerChannelPtr MIXER_FindChannel(const char* name)
 	if (it == mixer.channels.end()) {
 		// Deprecated alias SPKR to PCSPEAKER
 		if (std::string_view(name) == "SPKR") {
-			LOG_WARNING(
-			        "MIXER: 'SPKR' is deprecated due to inconsistent "
-			        "naming, please use 'PCSPEAKER' instead");
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MIXER",
+			                      "MIXER_CHANNEL_DEPRECATED",
+			                      "SPKR",
+			                      ChannelName::PcSpeaker);
+
 			it = mixer.channels.find(ChannelName::PcSpeaker);
 
 			// Deprecated alias FM to OPL
 		} else if (std::string_view(name) == "FM") {
-			LOG_WARNING(
-			        "MIXER: 'FM' is deprecated due to inconsistent "
-			        "naming, please use '%s' instead",
-			        ChannelName::Opl);
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MIXER",
+			                      "MIXER_CHANNEL_DEPRECATED",
+			                      "FM",
+			                      ChannelName::Opl);
+
 			it = mixer.channels.find(ChannelName::Opl);
 		}
 	}
@@ -1308,7 +1326,8 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	}
 }
 
-void MixerChannel::ConfigureNoiseGate(const float threshold_db, const float attack_time_ms,
+void MixerChannel::ConfigureNoiseGate(const float threshold_db,
+                                      const float attack_time_ms,
                                       const float release_time_ms)
 {
 	assert(attack_time_ms > 0.0f);
@@ -1457,11 +1476,10 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	const auto dual_filter   = (parts.size() == 6);
 
 	if (!(single_filter || dual_filter)) {
-		LOG_WARNING(
-		        "%s: Invalid custom filter definition: '%s'. Must be "
-		        "specified in \"lpf|hpf ORDER CUTOFF_FREQUENCY\" format",
-		        name.c_str(),
-		        filter_prefs.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      name,
+		                      "MIXER_INVALID_CUSTOM_FILTER",
+		                      filter_prefs.c_str());
 		return false;
 	}
 
@@ -1474,25 +1492,25 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		int order;
 		if (!sscanf(order_pref.c_str(), "%d", &order) || order < 1 ||
 		    order > MaxFilterOrder) {
-			LOG_WARNING(
-			        "%s: Invalid custom %s filter order: '%s'. "
-			        "Must be an integer between 1 and %d.",
-			        name.c_str(),
-			        filter_name,
-			        order_pref.c_str(),
-			        MaxFilterOrder);
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      name,
+			                      "MIXER_INVALID_CUSTOM_FILTER_ORDER",
+			                      filter_name,
+			                      order_pref.c_str(),
+			                      MaxFilterOrder);
 			return false;
 		}
 
 		int cutoff_freq_hz;
 		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
 		    cutoff_freq_hz <= 0) {
-			LOG_WARNING(
-			        "%s: Invalid custom %s filter cutoff frequency: '%s'. "
-			        "Must be a positive number.",
-			        name.c_str(),
-			        filter_name,
-			        cutoff_freq_pref.c_str());
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      name,
+			                      "MIXER_INVALID_CUSTOM_FILTER_CUTOFF",
+			                      filter_name,
+			                      cutoff_freq_pref.c_str());
 			return false;
 		}
 
@@ -1505,9 +1523,10 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			SetHighPassFilter(FilterState::On);
 
 		} else {
-			LOG_WARNING("%s: Invalid custom filter type: '%s'. Must be either 'hpf' or 'lpf'.",
-			            name.c_str(),
-			            type_pref.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      name,
+			                      "MIXER_INVALID_CUSTOM_FILTER_TYPE",
+			                      type_pref.c_str());
 			return false;
 		}
 		return true;
@@ -1533,11 +1552,10 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		const auto filter2_cutoff_freq_hz = parts[i++];
 
 		if (filter1_type == filter2_type) {
-			LOG_WARNING(
-			        "%s: Invalid custom filter definition: '%s'. "
-			        "The two filters must be of different types.",
-			        name.c_str(),
-			        filter_prefs.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      name,
+			                      "MIXER_INVALID_CUSTOM_FILTER_DUPLICATE",
+			                      filter_prefs.c_str());
 			return false;
 		}
 
@@ -1971,6 +1989,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 		        wait_ms,
 		        fade_ms);
 	};
+
 	// Disable fade-out (default)
 	if (has_false(prefs)) {
 		wants_fadeout = false;
@@ -2006,17 +2025,14 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 		}
 	}
 	// Otherwise inform the user and disable the fade
-	LOG_WARNING(
-	        "%s: Invalid custom fade-out definition: '%s'. Must be "
-	        "specified in \"WAIT FADE\" format where WAIT is between "
-	        "%d and %d (in milliseconds) and FADE is between %d and "
-	        "%d (in milliseconds); using 'off'.",
-	        channel.GetName().c_str(),
-	        prefs.c_str(),
-	        MinWaitMs,
-	        MaxWaitMs,
-	        MinFadeMs,
-	        MaxFadeMs);
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      channel.GetName(),
+	                      "MIXER_INVALID_CUSTOM_FADEOUT",
+	                      prefs.c_str(),
+	                      MinWaitMs,
+	                      MaxWaitMs,
+	                      MinFadeMs,
+	                      MaxFadeMs);
 
 	wants_fadeout = false;
 	return false;
@@ -2242,7 +2258,8 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// Runs in-place over newly added frames.
 	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
 		if (do_noise_gate) {
-			audio_frames[i] = noise_gate.processor.Process(audio_frames[i]);
+			audio_frames[i] = noise_gate.processor.Process(
+			        audio_frames[i]);
 		}
 
 		if (filters.highpass.state == FilterState::On) {
@@ -3192,6 +3209,40 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
+static void register_mixer_text_messages()
+{
+	MSG_Add("MIXER_CHANNEL_DEPRECATED",
+	        "Channel name [color=light-cyan]%s[reset] is deprecated, "
+	        "use [color=light-cyan]%s[reset] instead");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FILTER",
+	        "Invalid custom filter definition: [color=white]'%s'[reset].\n"
+	        "Must be specified in [color=light-cyan]"
+	        "'lfp|hpf ORDER CUTOFF_FREQUENCY'[reset] format.");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_ORDER",
+	        "Invalid %s filter order: [color=white]'%s'[reset]. "
+	        "Must be an integer between 1 and %d.");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_CUTOFF",
+	        "Invalid %s filter cutoff frequency: "
+	        "[color=white]'%s'[reset]. Must be a positive number.");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_TYPE",
+	        "Invalid filter type: [color=white]'%s'[reset]. "
+	        "Must be either 'hpf' or 'lpf'.");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FILTER_DUPLICATE",
+	        "Invalid custom filter definition: [color=white]'%s'[reset].\n"
+	        "The two filters must be of different types.");
+
+	MSG_Add("MIXER_INVALID_CUSTOM_FADEOUT",
+	        "Invalid custom fade-out definition: [color=white]'%s'[reset].\n"
+	        "Must be specified in [color=light-cyan]'WAIT FADE'[reset] format where [color=light-cyan]WAIT[reset] is between %d and %d\n"
+	        "(in milliseconds) and [color=light-cyan]FADE[reset] is between %d and %d (in milliseconds);\n"
+	        "using [color=white]'off'[reset].");
+}
+
 void MIXER_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
@@ -3203,4 +3254,6 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 	                                          ChangeableAtRuntime);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
+
+	register_mixer_text_messages();
 }
