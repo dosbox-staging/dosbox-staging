@@ -65,10 +65,9 @@ to learn more about it, here are a few links:
 
 For example `CONFIG_FULLSCREEN`.
 
-Do not exceed 79 characters on a line, or commands such as `config -h fullscreen`
+Do not exceed 80 characters on a line, or commands such as `config -h fullscreen`
 won't be able to display the help properly, and might wrap the text or display blank
-lines. The limit might be increased to 80 characters in the future, but
-the implementation is not there yet.
+lines.
 
 ### Command or program help
 
