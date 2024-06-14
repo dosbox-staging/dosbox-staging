@@ -28,8 +28,8 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
-#include "notifications.h"
 #include "midi.h"
+#include "notifications.h"
 #include "program_more_output.h"
 #include "string_utils.h"
 
@@ -207,8 +207,9 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
                                                          const std::string& channel_name)
 {
 	if (is_global_channel(channel_name)) {
-		const auto message = format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
-		                                s.c_str());
+		const auto message = format_str(
+		        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
+		        s.c_str());
 
 		return error(ErrorType::InvalidGlobalCommand, message);
 	}
@@ -277,7 +278,7 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 			return cmd;
 		} else {
 			const Error error = {ErrorType::InvalidVolumeCommand,
-			                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
+			                     format_str(MSG_GetRaw("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
 			                                channel_name.c_str(),
 			                                s.c_str())};
 			return error;
@@ -292,14 +293,14 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 			return cmd;
 		} else {
 			const Error error = {ErrorType::InvalidVolumeCommand,
-			                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
+			                     format_str(MSG_GetRaw("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
 			                                channel_name.c_str(),
 			                                s.c_str())};
 			return error;
 		}
 	} else { // more than 2 parts
 		const Error error = {ErrorType::InvalidVolumeCommand,
-		                     format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
+		                     format_str(MSG_GetRaw("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND"),
 		                                channel_name.c_str(),
 		                                s.c_str())};
 		return error;
@@ -332,7 +333,7 @@ static bool is_command_with_prefix(const std::string& s, const char prefix)
 
 static Error make_invalid_master_channel_command_error(const std::string& command)
 {
-	const auto message = format_str(MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+	const auto message = format_str(MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 	                                ChannelName::Master,
 	                                command.c_str());
 
@@ -349,7 +350,7 @@ static std::variant<Error, Command> parse_crossfeed_command(
 	                                                       ChannelFeature::Stereo);
 	if (is_channel_mono) {
 		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+		        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 		        channel_name.c_str(),
 		        s.c_str());
 
@@ -366,7 +367,7 @@ static std::variant<Error, Command> parse_crossfeed_command(
 		                 ? "SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH"
 		                 : "SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH");
 
-		const auto message = format_str(MSG_Get(msg_id),
+		const auto message = format_str(MSG_GetRaw(msg_id),
 		                                channel_name.c_str());
 
 		return error(ErrorType::MissingCrossfeedStrength, message);
@@ -378,13 +379,13 @@ static std::variant<Error, Command> parse_crossfeed_command(
 	} else {
 		if (is_global_channel(channel_name)) {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH"),
 			        s.c_str());
 			return error(ErrorType::InvalidGlobalCrossfeedStrength,
 			             message);
 		} else {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH"),
 			        channel_name.c_str(),
 			        s.c_str());
 			return error(ErrorType::InvalidCrossfeedStrength, message);
@@ -404,7 +405,7 @@ static std::variant<Error, Command> parse_reverb_command(const std::string& s,
 
 	if (!channel_infos.HasFeature(channel_name, ChannelFeature::ReverbSend)) {
 		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+		        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 		        channel_name.c_str(),
 		        s.c_str());
 
@@ -416,7 +417,7 @@ static std::variant<Error, Command> parse_reverb_command(const std::string& s,
 		                             ? "SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL"
 		                             : "SHELL_CMD_MIXER_MISSING_REVERB_LEVEL");
 
-		const auto message = format_str(MSG_Get(msg_id),
+		const auto message = format_str(MSG_GetRaw(msg_id),
 		                                channel_name.c_str());
 
 		return error(ErrorType::MissingReverbLevel, message);
@@ -428,13 +429,13 @@ static std::variant<Error, Command> parse_reverb_command(const std::string& s,
 	} else {
 		if (is_global_channel(channel_name)) {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL"),
 			        s.c_str());
 
 			return error(ErrorType::InvalidGlobalReverbLevel, message);
 		} else {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL"),
 			        channel_name.c_str(),
 			        s.c_str());
 
@@ -455,7 +456,7 @@ static std::variant<Error, Command> parse_chorus_command(const std::string& s,
 
 	if (!channel_infos.HasFeature(channel_name, ChannelFeature::ChorusSend)) {
 		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+		        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 		        channel_name.c_str(),
 		        s.c_str());
 
@@ -467,7 +468,7 @@ static std::variant<Error, Command> parse_chorus_command(const std::string& s,
 		                             ? "SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL"
 		                             : "SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL");
 
-		const auto message = format_str(MSG_Get(msg_id),
+		const auto message = format_str(MSG_GetRaw(msg_id),
 		                                channel_name.c_str());
 
 		return error(ErrorType::MissingChorusLevel, message);
@@ -479,13 +480,13 @@ static std::variant<Error, Command> parse_chorus_command(const std::string& s,
 	} else {
 		if (is_global_channel(channel_name)) {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL"),
 			        s.c_str());
 
 			return error(ErrorType::InvalidGlobalChorusLevel, message);
 		} else {
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL"),
 			        channel_name.c_str(),
 			        s.c_str());
 
@@ -539,7 +540,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 			// inactive.
 
 			const auto message = format_str(
-			        MSG_Get("SHELL_CMD_MIXER_INACTIVE_CHANNEL"),
+			        MSG_GetRaw("SHELL_CMD_MIXER_INACTIVE_CHANNEL"),
 			        arg.c_str());
 
 			return error(ErrorType::InactiveChannel, message);
@@ -553,7 +554,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 			if (!is_global_channel(curr_channel_name) &&
 			    curr_channel_command_count == 0) {
 				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
+				        MSG_GetRaw("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
 				        curr_channel_name.c_str());
 
 				return error(ErrorType::MissingChannelCommand,
@@ -581,7 +582,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 
 			if (is_global_channel(curr_channel_name)) {
 				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
+				        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
 				        arg.c_str());
 
 				return error(ErrorType::InvalidGlobalCommand, message);
@@ -592,7 +593,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 
 			if (is_master_channel(curr_channel_name) || is_channel_mono) {
 				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+				        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 				        curr_channel_name.c_str(),
 				        arg.c_str());
 
@@ -651,13 +652,13 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 
 			if (is_global_channel(curr_channel_name)) {
 				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
+				        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND"),
 				        arg.c_str());
 
 				return error(ErrorType::InvalidGlobalCommand, message);
 			} else {
 				const auto message = format_str(
-				        MSG_Get("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
+				        MSG_GetRaw("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND"),
 				        curr_channel_name.c_str(),
 				        arg.c_str());
 
@@ -673,7 +674,7 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 
 	if (curr_channel_command_count == 0) {
 		const auto message = format_str(
-		        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
+		        MSG_GetRaw("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
 		        curr_channel_name.c_str());
 
 		return error(ErrorType::MissingChannelCommand, message);
@@ -776,15 +777,12 @@ void MIXER::Run()
 		if (show_status) {
 			ShowMixerStatus();
 		}
-		auto error = std::get<MixerCommand::Error>(result);
-		const auto error_message = error.message.c_str();
-		WriteOut("%s\n", error_message);
 
-		// To give people a hint if their [autoexec] contains invalid
-		// MIXER commands.
-		LOG_WARNING(
-		        "MIXER: Incorrect MIXER command invocation; "
-		        "run MIXER /? for help");
+		auto error = std::get<MixerCommand::Error>(result);
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MIXER",
+		                      error.message);
 	}
 }
 
