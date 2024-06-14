@@ -890,13 +890,12 @@ void CONFIG::Run(void)
 				bool change_success = tsec->HandleInputline(
 				        line_utf8.c_str());
 
-				if (!change_success) {
-					trim(value);
-					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         pvars[1].c_str(),
-					         value.c_str());
-				}
-
+//				if (!change_success) {
+//					trim(value);
+//					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
+//					         pvars[1].c_str(),
+//					         value.c_str());
+//				}
 				tsec->ExecuteInit(false);
 			}
 			return;
