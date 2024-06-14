@@ -725,7 +725,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 		}
 
 		prevtype     = p->Get_type();
-		prevargument = in;
+		prevargument = std::move(in);
 	}
 
 	return is_valid;
@@ -1159,7 +1159,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 				// through printf-like functions (e.g.,
 				// WriteOut()). So we need to de-escape them before
 				// writing them into the config.
-				auto s = format_str(help.c_str());
+				auto s = format_str(help);
 
 				fprintf(outfile,
 				        "# %*s: %s",
