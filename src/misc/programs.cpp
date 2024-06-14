@@ -1057,16 +1057,16 @@ void PROGRAMS_AddMessages()
 	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
 	        "using [color=white]'%s'[reset]");
 
-	MSG_Add("PROGRAM_CONFIG_DEPRECATED_FALLBACK",
-	        "Setting [color=light-green]'%s = %s'[reset] is deprecated, "
-	        "falling back to the alternate: [color=light-green]'%s = %s'[reset]\n");
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE",
+	        "Deprecated [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]. "
-	        "Value is outside of the valid range of %s-%s, using [color=white]'%d'[reset]");
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]; "
+	        "must be between %s-%s, using [color=white]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_NO_HELP",
 	        "No help available for the setting [color=light-green]'%s'[reset].");
