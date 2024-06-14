@@ -28,6 +28,7 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
+#include "notifications.h"
 #include "midi.h"
 #include "program_more_output.h"
 #include "string_utils.h"
@@ -774,7 +775,6 @@ void MIXER::Run()
 		// Error (no mixer command was executed)
 		if (show_status) {
 			ShowMixerStatus();
-			WriteOut("\n");
 		}
 		auto error = std::get<MixerCommand::Error>(result);
 		const auto error_message = error.message.c_str();
@@ -978,4 +978,6 @@ void MIXER::ShowMixerStatus()
 		             reverb,
 		             chorus);
 	}
+
+	WriteOut("\n");
 }
