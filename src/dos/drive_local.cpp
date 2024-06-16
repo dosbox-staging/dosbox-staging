@@ -120,32 +120,6 @@ void localDrive::MaybeLogFilesystemProtection(const std::string& filename)
 	}
 }
 
-// Search the Files[] inventory for an open file matching the requested
-// local drive and file name. Returns nullptr if not found.
-DOS_File *FindOpenFile(const DOS_Drive *drive, const char *name)
-{
-	if (!drive || !name)
-		return nullptr;
-
-	uint8_t drive_num = DOS_DRIVES; // default out range
-	// Look for a matching drive mount
-	for (uint8_t i = 0; i < DOS_DRIVES; ++i) {
-		if (Drives[i] && Drives[i] == drive) {
-			drive_num = i;
-			break;
-		}
-	}
-	if (drive_num == DOS_DRIVES) // still out of range, no matching mount
-		return nullptr;
-
-	// Look for a matching open filename on the same mount
-	for (auto *file : Files)
-		if (file && file->IsOpen() && file->GetDrive() == drive_num && file->IsName(name))
-			return file; // drive + file path is unique
-
-	return nullptr;
-}
-
 bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 {
 	bool write_access = false;
@@ -255,23 +229,6 @@ bool localDrive::FileUnlink(const char* name)
 		return true;
 	}
 
-	// Otherwise maybe the file's opened within our mount ...
-	DOS_File *open_file = FindOpenFile(this, name);
-	if (open_file) {
-		size_t max = DOS_FILES;
-		// then close and remove references (as many times as needed),
-		while (open_file->IsOpen() && --max) {
-			open_file->Close();
-			if (open_file->RemoveRef() <= 0) {
-				break;
-			}
-		}
-		// and try removing it again.
-		if (remove(fullname) == 0) {
-			dirCache.DeleteEntry(newname);
-			return true;
-		}
-	}
 	LOG_DEBUG("FS: Unable to remove file '%s'", fullname);
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;

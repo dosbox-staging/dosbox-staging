@@ -961,49 +961,6 @@ bool Overlay_Drive::FileUnlink(const char * name) {
 			return true;
 //			E_Exit("trying to remove existing non-overlay file %s",name);
 		}
-
-		//Do we have access?
-		FILE* file_writable = fopen(overlayname,"rb+");
-		if(!file_writable) {
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
-		fclose(file_writable);
-
-		//File exists and can technically be deleted, nevertheless it failed.
-		//This means that the file is probably open by some process.
-		//See if We have it open.
-		bool found_file = false;
-		for (uint8_t i = 0; i < DOS_FILES; ++i) {
-			if(Files[i] && Files[i]->IsName(name)) {
-				uint8_t max = DOS_FILES;
-				while(Files[i]->IsOpen() && max--) {
-					Files[i]->Close();
-					if (Files[i]->RemoveRef()<=0) break;
-				}
-				found_file=true;
-			}
-		}
-		if(!found_file) {
-			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
-		}
-		std::error_code ec = {};
-		if (std_fs::remove(overlayname, ec)) {
-			// Overlay file removed, mark basefile as deleted if it
-			// exists:
-			if (localDrive::FileExists(name))
-				add_deleted_file(name, true);
-			remove_DOSname_from_cache(name); // Should be an else ?
-			                                 // although better safe
-			                                 // than sorry.
-			// Handle this better
-			dirCache.DeleteEntry(basename);
-			update_cache(false);
-			//Check if it exists in the base dir as well
-			
-			return true;
-		}
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	} else { //Removed from overlay.
