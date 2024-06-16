@@ -57,6 +57,55 @@ static const char* to_string(const OplMode opl_mode)
 	// clang-format on
 }
 
+// Initialize the OPL chip's 4-op and 2-op FM synthesis tone generators per the
+// Adlib v1.51 driver's values. Games and audio players typically overwrite the
+// card with their own settings however we know the following eight games by
+// Silmarils rely on the card being initialized by the Adlib driver:
+//
+// - Boston Bomb Club (1991),
+// - Bunny Bricks (1993),
+// - Crystals of Arborea (1990),
+// - Ishar 1 (1992),
+// - Ishar 2 (1993),
+// - Metal Mutant (1991),
+// - Storm Master (1992), and
+// - Transantartica (1993).
+
+static constexpr void initialize_opl_tone_generators(opl3_chip& chip)
+{
+	// The first 9 operators are used for 4-op FM synthesis.
+	for (auto four_op_generator : {0, 1, 2, 6, 7, 8, 12, 13, 14}) {
+		auto& slot    = chip.slot[four_op_generator];
+		slot.eg_rout  = 511;
+		slot.eg_out   = 571;
+		slot.eg_gen   = 3;
+		slot.reg_mult = 1;
+		slot.reg_ksl  = 1;
+		slot.reg_tl   = 15;
+		slot.reg_ar   = 15;
+		slot.reg_dr   = 1;
+		slot.reg_sl   = 5;
+		slot.reg_rr   = 3;
+		// all other non-pointer slot members are zero
+	}
+
+	// The remaining 9 operators are used for 2-op FM synthesis (or as
+	// modulators for the 4-op channels).
+	for (auto two_op_generator : {3, 4, 5, 9, 10, 11, 15, 16, 17}) {
+		auto& slot    = chip.slot[two_op_generator];
+		slot.eg_rout  = 511;
+		slot.eg_out   = 511;
+		slot.eg_gen   = 3;
+		slot.reg_ksr  = 1;
+		slot.reg_mult = 1;
+		slot.reg_ar   = 15;
+		slot.reg_dr   = 2;
+		slot.reg_sl   = 7;
+		slot.reg_rr   = 4;
+		// all other non-pointer slot members are zero
+	}
+}
+
 Timer::Timer(const int micros)
         : clock_interval(micros * 0.001) // interval in milliseconds
 {
@@ -226,6 +275,8 @@ void Opl::Init()
 		ESFM_init(&esfm.chip);
 	} else {
 		OPL3_Reset(&opl.chip, OplSampleRateHz);
+
+		initialize_opl_tone_generators(opl.chip);
 	}
 
 	ms_per_frame = MillisInSecond / OplSampleRateHz;
