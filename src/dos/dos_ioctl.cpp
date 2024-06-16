@@ -73,7 +73,10 @@ bool DOS_IOCTL(void) {
 			return false;
 		} else {
 			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
-				reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(true);
+				const auto device_ptr = dynamic_cast<DOS_Device*>(
+				        Files[handle].get());
+				assert(device_ptr);
+				reg_al = device_ptr->GetStatus(true);
 			} else {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
@@ -85,8 +88,11 @@ bool DOS_IOCTL(void) {
 			/* is character device with IOCTL support */
 			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
-			if (((DOS_Device*)(Files[handle]))->ReadFromControlChannel(bufptr,reg_cx,&retcode)) {
-				reg_ax=retcode;
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			if (device_ptr->ReadFromControlChannel(bufptr, reg_cx, &retcode)) {
+				reg_ax = retcode;
 				return true;
 			}
 		}
@@ -97,8 +103,11 @@ bool DOS_IOCTL(void) {
 			/* is character device with IOCTL support */
 			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
-			if (((DOS_Device*)(Files[handle]))->WriteToControlChannel(bufptr,reg_cx,&retcode)) {
-				reg_ax=retcode;
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			if (device_ptr->WriteToControlChannel(bufptr, reg_cx, &retcode)) {
+				reg_ax = retcode;
 				return true;
 			}
 		}
@@ -123,7 +132,10 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x07:		/* Get Output Status */
 		if (Files[handle]->GetInformation() & EXT_DEVICE_BIT) {
-			reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(false);
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			reg_al = device_ptr->GetStatus(false);
 			return true;
 		}
 		LOG(LOG_IOCTL, LOG_NORMAL)("07:Fakes output status is ready for handle %u", handle);

@@ -88,11 +88,11 @@ public:
 	           uint8_t _sectors_cluster, uint16_t _total_clusters,
 	           uint16_t _free_clusters, uint8_t _mediaid,
 	           bool _readonly, bool _always_open_ro_files = false);
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	FILE* GetHostFilePtr(const char* const name, const char* const type);
 	std::string MapDosToHostFilename(const char* const dos_name);
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -202,9 +202,9 @@ public:
 	         bool roflag);
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -277,9 +277,9 @@ public:
 	           uint16_t _bytes_sector, uint8_t _sectors_cluster,
 	           uint16_t _total_clusters, uint16_t _free_clusters,
 	           uint8_t _mediaid, int& error);
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -378,9 +378,9 @@ public:
 	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid,
 	         int& error);
 	~isoDrive() override;
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -450,9 +450,9 @@ using vfile_block_t = std::shared_ptr<VFILE_Block>;
 class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	bool FileUnlink(const char* name) override;
 	bool RemoveDir(const char* dir) override;
 	bool MakeDir(const char* dir) override;
@@ -495,9 +495,9 @@ public:
 	              uint8_t _mediaid,
 	              uint8_t &error);
 
-	bool FileOpen(DOS_File** file, const char* name, uint8_t flags) override;
-	bool FileCreate(DOS_File** file, const char* name,
-	                FatAttributeFlags attributes) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
 	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
 	bool FileUnlink(const char* name) override;

@@ -62,10 +62,6 @@ bool logoverlay = false;
 
 //TODO recheck directories under linux with the filename_cache (as one adds the dos name (and runs cross_filename on the other))
 
-
-//TODO Check: Maybe handle file redirection in ccc (opening the new file), (call update datetime host there ?)
-
-
 /* For rename/delete(unlink)/makedir/removedir we need to rebuild the cache. (shouldn't be needed, 
  * but cacheout/delete entry currently throw away the cached folder and rebuild it on read. 
  * so we have to ensure the rebuilding is controlled through the overlay.
@@ -216,7 +212,17 @@ public:
 			LOG_MSG("constructing OverlayFile: %s", name);
 	}
 
-	bool Write(uint8_t* data, uint16_t* size) override {
+	OverlayFile(localFile* file)
+	        : localFile(file->GetName(), file->GetPath(), file->file_handle,
+	                    file->GetBaseDir(), file->IsOnReadOnlyMedium()),
+	          overlay_active(false)
+	{
+		flags  = file->flags;
+		refCtr = file->refCtr;
+	}
+
+	bool Write(uint8_t* data, uint16_t* size) override
+	{
 		uint8_t f = flags & 0xf;
 		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
 			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
@@ -347,21 +353,6 @@ bool OverlayFile::create_copy()
 	return true;
 }
 
-static OverlayFile* ccc(DOS_File* file) {
-	localFile* l = dynamic_cast<localFile*>(file);
-	if (!l) E_Exit("overlay input file is not a localFile");
-	//Create an overlayFile
-	OverlayFile* ret = new OverlayFile(l->GetName(),
-	                                   l->GetPath(),
-	                                   l->file_handle,
-	                                   l->GetBaseDir(),
-	                                   l->IsOnReadOnlyMedium());
-	ret->flags = l->flags;
-	ret->refCtr = l->refCtr;
-	delete l;
-	return ret;
-}
-
 Overlay_Drive::Overlay_Drive(const char *startdir,
                              const char *overlay,
                              uint16_t _bytes_sector,
@@ -469,7 +460,7 @@ void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname )
 	}
 }
 
-bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
+std::unique_ptr<DOS_File> Overlay_Drive::FileOpen(const char* name, uint8_t flags)
 {
 	bool write_access = false;
 	switch (flags & 0xf) {
@@ -478,7 +469,7 @@ bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
 	case OPEN_READ_NO_MOD: write_access = false; break;
 	case OPEN_WRITE:
 	case OPEN_READWRITE: write_access = true; break;
-	default: DOS_SetError(DOSERR_ACCESS_CODE_INVALID); return false;
+	default: DOS_SetError(DOSERR_ACCESS_CODE_INVALID); return nullptr;
 	}
 
 	//Todo check name first against local tree
@@ -490,59 +481,70 @@ bool Overlay_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
 	CROSS_FILENAME(newname);
 
 	NativeFileHandle file_handle = open_native_file(newname, write_access);
-	bool fileopened = false;
 	if (file_handle != InvalidNativeFileHandle) {
-		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
-		*file = new localFile(name, newname, file_handle, overlaydir, IsReadOnly());
+		if (logoverlay) {
+			LOG_MSG("overlay file opened %s", newname);
+		}
 
-		(*file)->flags = flags;
-		fileopened = true;
+		auto file = std::make_unique<OverlayFile>(
+		        name, newname, file_handle, overlaydir, IsReadOnly());
+		file->flags          = flags;
+		file->overlay_active = true;
+
+		return file;
 	} else {
 		; //TODO error handling!!!! (maybe check if it exists and read only (should not happen with overlays)
 	}
-	bool overlayed = fileopened;
 
 	//File not present in overlay, try normal drive
 	//TODO take care of file being marked deleted.
 
-	if (!fileopened && !is_deleted_file(name)) fileopened = localDrive::FileOpen(file,name, OPEN_READ);
-
-
-	if (fileopened) {
-		if (logoverlay) LOG_MSG("file opened %s",name);
-		//Convert file to OverlayFile
-		OverlayFile* f = ccc(*file);
-		f->flags = flags; //ccc copies the flags of the localfile, which were not correct in this case
-		f->overlay_active = overlayed; //No need to switch if already in overlayed.
-		*file = f;
+	if (is_deleted_file(name)) {
+		return nullptr;
 	}
-	return fileopened;
+
+	auto file       = localDrive::FileOpen(name, OPEN_READ);
+	auto local_file = dynamic_cast<localFile*>(file.get());
+	if (!local_file) {
+		return nullptr;
+	}
+
+	if (logoverlay) {
+		LOG_MSG("file opened %s", name);
+	}
+	// Convert file to OverlayFile
+	auto overlay_file   = std::make_unique<OverlayFile>(local_file);
+	overlay_file->flags = flags;
+	overlay_file->overlay_active = false;
+
+	return overlay_file;
 }
 
-bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
-                               FatAttributeFlags attributes)
+std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
+                                                    FatAttributeFlags attributes)
 {
 	// TODO Check if it exists in the dirCache ? // fix addentry ?  or just
 	// double check (ld and overlay) AddEntry looks sound to me..
 
 	//check if leading part of filename is a deleted directory
-	if (check_if_leading_is_deleted(name)) return false;
+	if (check_if_leading_is_deleted(name)) {
+		return nullptr;
+	}
 
 	auto [file_handle, path] = create_file_in_overlay(name, attributes);
 	if (file_handle == InvalidNativeFileHandle) {
 		if (logoverlay) {
 			LOG_MSG("File creation in overlay system failed %s", name);
 		}
-		return false;
+		return nullptr;
 	}
-	*file = new localFile(name, path, file_handle, overlaydir, IsReadOnly());
 
-	(*file)->flags = OPEN_READWRITE;
-	OverlayFile* of = ccc(*file);
-	of->overlay_active = true;
-	of->flags = OPEN_READWRITE;
-	*file = of;
-	//create fake name for the drive cache
+	auto file = std::make_unique<OverlayFile>(
+	        name, path, file_handle, overlaydir, IsReadOnly());
+	file->overlay_active = true;
+	file->flags          = OPEN_READWRITE;
+
+	// create fake name for the drive cache
 	char fakename[CROSS_LEN];
 	safe_strcpy(fakename, overlaydir);
 	safe_strcat(fakename, name);
@@ -550,14 +552,16 @@ bool Overlay_Drive::FileCreate(DOS_File** file, const char* name,
 	dirCache.AddEntry(fakename,true); //add it.
 	add_DOSname_to_cache(name);
 	remove_deleted_file(name,true);
-	return true;
+	return file;
 }
+
 void Overlay_Drive::add_DOSname_to_cache(const char* name) {
 	for (std::vector<std::string>::const_iterator itc = DOSnames_cache.begin(); itc != DOSnames_cache.end(); ++itc){
 		if (name == (*itc)) return;
 	}
 	DOSnames_cache.push_back(name);
 }
+
 void Overlay_Drive::remove_DOSname_from_cache(const char* name) {
 	for (std::vector<std::string>::iterator it = DOSnames_cache.begin(); it != DOSnames_cache.end(); ++it) {
 		if (name == (*it)) { DOSnames_cache.erase(it); return;}

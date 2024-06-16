@@ -424,28 +424,29 @@ Virtual_Drive::Virtual_Drive() : search_file()
 		parent_dir = std::make_shared<VFILE_Block>();
 }
 
-bool Virtual_Drive::FileOpen(DOS_File** file, const char* name, uint8_t flags) {
+std::unique_ptr<DOS_File> Virtual_Drive::FileOpen(const char* name, uint8_t flags)
+{
 	assert(name);
 	if (*name == 0) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 	/* Scan through the internal list of files */
 	auto vfile = find_vfile_by_name(name);
 	if (vfile) {
 		/* We have a match */
-		*file          = new Virtual_File(vfile->data);
-		(*file)->flags = flags;
-		return true;
+		auto file   = std::make_unique<Virtual_File>(vfile->data);
+		file->flags = flags;
+		return file;
 	}
-	return false;
+	return nullptr;
 }
 
-bool Virtual_Drive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
-                               FatAttributeFlags /*attributes*/)
+std::unique_ptr<DOS_File> Virtual_Drive::FileCreate(const char* /*name*/,
+                                                    FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
-	return false;
+	return nullptr;
 }
 
 bool Virtual_Drive::FileUnlink(const char * /*name*/) {

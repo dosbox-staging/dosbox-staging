@@ -1055,11 +1055,12 @@ uint8_t fatDrive::GetMediaByte(void) {
 }
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length
-bool fatDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags attributes)
+std::unique_ptr<DOS_File> fatDrive::FileCreate(const char* name,
+                                               FatAttributeFlags attributes)
 {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
@@ -1075,7 +1076,7 @@ bool fatDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags a
 		const FatAttributeFlags entry_attributes = fileEntry.attrib;
 		if (entry_attributes.read_only) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
+			return nullptr;
 		}
 
 		/* Truncate file */
@@ -1090,11 +1091,15 @@ bool fatDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags a
 		directoryChange(dirClust, &fileEntry, subEntry);
 	} else {
 		/* Can we even get the name of the file itself? */
-		if(!getEntryName(name, &dirName[0])) return false;
+		if (!getEntryName(name, &dirName[0])) {
+			return nullptr;
+		}
 		convToDirFile(&dirName[0], &pathName[0]);
 
 		/* Can we find the base directory? */
-		if(!getDirClustNum(name, &dirClust, true)) return false;
+		if (!getDirClustNum(name, &dirClust, true)) {
+			return nullptr;
+		}
 		fileEntry = {};
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
 		fileEntry.attrib  = attributes._data;
@@ -1103,25 +1108,31 @@ bool fatDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags a
 		addDirectoryEntry(dirClust, fileEntry);
 
 		/* Check if file exists now */
-		if(!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) return false;
+		if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
+			return nullptr;
+		}
 	}
 
+	// These must be extracted to temporaries or GCC throws a compile error
+	// It doesn't like something about the combination of the packed attribute
+	// and how make_unique uses references as arguments
+	const auto first_cluster = fileEntry.loFirstClust;
+	const auto entry_size = fileEntry.entrysize;
+
 	/* Empty file created, now lets open it */
-	auto fat_file        = new fatFile(name,
-                                    fileEntry.loFirstClust,
-                                    fileEntry.entrysize,
-                                    this,
-                                    IsReadOnly());
+	auto fat_file        = std::make_unique<fatFile>(name,
+                                                  first_cluster,
+                                                  entry_size,
+                                                  this,
+                                                  IsReadOnly());
 	fat_file->flags      = OPEN_READWRITE;
 	fat_file->dirCluster = dirClust;
 	fat_file->dirIndex   = subEntry;
 	fat_file->time       = fileEntry.modTime;
 	fat_file->date       = fileEntry.modDate;
 
-	*file = fat_file;
-
 	dos.errorcode=save_errorcode;
-	return true;
+	return fat_file;
 }
 
 bool fatDrive::FileExists(const char *name) {
@@ -1133,12 +1144,13 @@ bool fatDrive::FileExists(const char *name) {
 	return found;
 }
 
-bool fatDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
+std::unique_ptr<DOS_File> fatDrive::FileOpen(const char* name, uint8_t flags)
+{
 	direntry fileEntry;
 	uint32_t dirClust, subEntry;
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
-		return false;
+		return nullptr;
 	}
 
 	const FatAttributeFlags entry_attributes = fileEntry.attrib;
@@ -1146,14 +1158,20 @@ bool fatDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
 	bool open_for_readonly                   = ((flags & 0xf) == OPEN_READ);
 	if (is_readonly && !open_for_readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 
-	auto fat_file = new fatFile(name,
-	                            fileEntry.loFirstClust,
-	                            fileEntry.entrysize,
-	                            this,
-	                            IsReadOnly());
+	// These must be extracted to temporaries or GCC throws a compile error
+	// It doesn't like something about the combination of the packed attribute
+	// and how make_unique uses references as arguments
+	const auto first_cluster = fileEntry.loFirstClust;
+	const auto entry_size = fileEntry.entrysize;
+
+	auto fat_file = std::make_unique<fatFile>(name,
+	                                          first_cluster,
+	                                          entry_size,
+	                                          this,
+	                                          IsReadOnly());
 
 	fat_file->flags      = flags;
 	fat_file->dirCluster = dirClust;
@@ -1161,8 +1179,7 @@ bool fatDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
 	fat_file->time       = fileEntry.modTime;
 	fat_file->date       = fileEntry.modDate;
 
-	*file = fat_file;
-	return true;
+	return fat_file;
 }
 
 bool fatDrive::FileUnlink(const char * name) {
