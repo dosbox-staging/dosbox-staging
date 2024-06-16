@@ -1422,15 +1422,6 @@ bool DOS_FCBOpen(uint16_t seg, uint16_t offset)
 	if (!DOS_MakeName(shortname, fullname, &drive))
 		return false;
 
-	/* Check, if file is already opened */
-	for (uint8_t i = 0; i < DOS_FILES; ++i) {
-		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
-			Files[i]->AddRef();
-			fcb.FileOpen(i);
-			return true;
-		}
-	}
-
 	if (!DOS_OpenFile(shortname,OPEN_READWRITE,&handle,true)) return false;
 	fcb.FileOpen((uint8_t)handle);
 	return true;
