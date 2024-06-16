@@ -58,14 +58,15 @@ bool localDrive::FileIsReadOnly(const char* name)
 	return false;
 }
 
-bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags attributes)
+std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
+                                                 FatAttributeFlags attributes)
 {
 	assert(!IsReadOnly());
 
 	// Don't allow overwriting read-only files.
 	if (FileIsReadOnly(name)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 
 	char newname[CROSS_LEN];
@@ -87,7 +88,7 @@ bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags
 	if (file_handle == InvalidNativeFileHandle) {
 		LOG_MSG("Warning: file creation failed: %s", expanded_name);
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 
 	if (!file_exists) {
@@ -95,11 +96,12 @@ bool localDrive::FileCreate(DOS_File** file, const char* name, FatAttributeFlags
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, expanded_name, file_handle, basedir, IsReadOnly());
+	auto file = std::make_unique<localFile>(
+	        name, expanded_name, file_handle, basedir, IsReadOnly());
 
-	(*file)->flags = OPEN_READWRITE;
+	file->flags = OPEN_READWRITE;
 
-	return true;
+	return file;
 }
 
 // Inform the user that the file is being protected against modification.
@@ -120,7 +122,7 @@ void localDrive::MaybeLogFilesystemProtection(const std::string& filename)
 	}
 }
 
-bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
+std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 {
 	bool write_access = false;
 	switch (flags & 0xf) {
@@ -135,7 +137,7 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 			break;
 		default:
 			DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
-			return false;
+		        return nullptr;
 	}
 
 	const std::string host_filename = MapDosToHostFilename(name);
@@ -151,7 +153,7 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 		} else {
 			MaybeLogFilesystemProtection(host_filename);
 			DOS_SetError(DOSERR_ACCESS_DENIED);
-			return false;
+			return nullptr;
 		}
 	}
 
@@ -172,17 +174,19 @@ bool localDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags)
 
 	if (file_handle == InvalidNativeFileHandle) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false;
+		return nullptr;
 	}
 
 	if (fallback_to_readonly) {
 		MaybeLogFilesystemProtection(host_filename);
 	}
 
-	*file = new localFile(name, host_filename, file_handle, basedir, IsReadOnly());
-	(*file)->flags = flags;  // for the inheritance flag and maybe check for others.
+	auto file = std::make_unique<localFile>(
+	        name, host_filename, file_handle, basedir, IsReadOnly());
+	file->flags = flags; // for the inheritance flag and maybe check for
+	                     // others.
 
-	return true;
+	return file;
 }
 
 FILE* localDrive::GetHostFilePtr(const char* const name, const char* const type)
@@ -774,23 +778,22 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 }
 
-bool cdromDrive::FileOpen(DOS_File** file, const char* name, uint8_t flags)
+std::unique_ptr<DOS_File> cdromDrive::FileOpen(const char* name, uint8_t flags)
 {
 	if ((flags & 0xf) == OPEN_READWRITE) {
 		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
 	} else if ((flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
-	bool success = localDrive::FileOpen(file, name, flags);
-	return success;
+	return localDrive::FileOpen(name, flags);
 }
 
-bool cdromDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
-                            FatAttributeFlags /*attributes*/)
+std::unique_ptr<DOS_File> cdromDrive::FileCreate(const char* /*name*/,
+                                                 FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
-	return false;
+	return nullptr;
 }
 
 bool cdromDrive::FileUnlink(const char* /*name*/)

@@ -44,7 +44,7 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
-DOS_File* Files[DOS_FILES] = {};
+std::unique_ptr<DOS_File> Files[DOS_FILES] = {};
 
 // Merely pointers. The actual filesystem and raw image objects are managed by
 // the drive manager class.
@@ -737,8 +737,7 @@ bool DOS_CloseFile(uint16_t entry, bool fcb, uint8_t * refcnt) {
 
 	Bits refs=Files[handle]->RemoveRef();
 	if (refs<=0) {
-		delete Files[handle];
-		Files[handle]=nullptr;
+		Files[handle].reset();
 		refs=0;
 	}
 	if (refcnt!=nullptr) *refcnt=static_cast<uint8_t>(refs+1);
@@ -805,8 +804,8 @@ bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	bool foundit = Drives.at(drive)->FileCreate(&Files[handle], fullname, attributes);
-	if (foundit) { 
+	Files[handle] = Drives.at(drive)->FileCreate(fullname, attributes);
+	if (Files[handle]) {
 		Files[handle]->SetDrive(drive);
 		Files[handle]->AddRef();
 		if (!fcb) psp.SetFileHandle(*entry,handle);
@@ -863,9 +862,8 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 		DOS_SetError(DOSERR_TOO_MANY_OPEN_FILES);
 		return false;
 	}
-	bool exists=false;
 	if (device) {
-		Files[handle]=new DOS_Device(*Devices[devnum]);
+		Files[handle] = std::make_unique<DOS_Device>(*Devices[devnum]);
 	} else {
 		if (file_is_locked(fullname, drive, flags)) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -873,14 +871,15 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 		}
 		const auto old_errorcode = dos.errorcode;
 		dos.errorcode = 0;
-		exists = Drives.at(drive)->FileOpen(&Files[handle], fullname, flags);
-		if (exists)
+		Files[handle] = Drives.at(drive)->FileOpen(fullname, flags);
+		if (Files[handle]) {
 			Files[handle]->SetDrive(drive);
+		}
 		if (dos.errorcode == DOSERR_ACCESS_CODE_INVALID)
 			return false;
 		dos.errorcode = old_errorcode;
 	}
-	if (exists || device ) { 
+	if (Files[handle]) {
 		Files[handle]->AddRef();
 		if (!fcb) psp.SetFileHandle(*entry,handle);
 		return true;

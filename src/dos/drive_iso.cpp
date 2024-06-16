@@ -211,32 +211,35 @@ void isoDrive::Activate(void) {
 	UpdateMscdex(driveLetter, fileName, subUnit);
 }
 
-bool isoDrive::FileOpen(DOS_File **file, const char *name, uint8_t flags) {
+std::unique_ptr<DOS_File> isoDrive::FileOpen(const char* name, uint8_t flags)
+{
 	if ((flags & 0x0f) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 
 	isoDirEntry de;
-	bool success = lookup(&de, name) && !IS_DIR(FLAGS1);
-
-	if (success) {
-		FileStat_Block file_stat;
-		file_stat.size = DATA_LENGTH(de);
-		file_stat.attr = FatAttributeFlags::ReadOnly;
-		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
-		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
-		(*file)->flags = flags;
+	if (!lookup(&de, name) && !IS_DIR(FLAGS1)) {
+		return nullptr;
 	}
-	return success;
+
+	FileStat_Block file_stat;
+	file_stat.size = DATA_LENGTH(de);
+	file_stat.attr = FatAttributeFlags::ReadOnly;
+	file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
+	file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
+	auto file      = std::make_unique<isoFile>(
+                this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
+	file->flags = flags;
+
+	return file;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, const char* /*name*/,
-                          FatAttributeFlags /*attributes*/)
+std::unique_ptr<DOS_File> isoDrive::FileCreate(const char* /*name*/,
+                                               FatAttributeFlags /*attributes*/)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
-	return false;
+	return nullptr;
 }
 
 bool isoDrive::FileUnlink(const char* /*name*/) {

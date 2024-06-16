@@ -343,10 +343,11 @@ public:
 	DOS_Drive();
 	virtual ~DOS_Drive() = default;
 
-	virtual bool FileOpen(DOS_File** file, const char* name, uint8_t flags) = 0;
-	virtual bool FileCreate(DOS_File** file, const char* name,
-	                        FatAttributeFlags attributes) = 0;
-	virtual bool FileUnlink(const char* _name)=0;
+	virtual std::unique_ptr<DOS_File> FileOpen(const char* name,
+	                                           uint8_t flags) = 0;
+	virtual std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                             FatAttributeFlags attributes) = 0;
+	virtual bool FileUnlink(const char* _name) = 0;
 	virtual bool RemoveDir(const char * _dir)=0;
 	virtual bool MakeDir(const char * _dir)=0;
 	virtual bool TestDir(const char * _dir)=0;
