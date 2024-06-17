@@ -95,11 +95,6 @@ device_COM::device_COM(class CSerial* sc) {
 	SetName(serial_comname[sclass->port_index]);
 }
 
-device_COM::~device_COM() {
-}
-
-
-
 // COM1 - COM4 objects
 CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
 
