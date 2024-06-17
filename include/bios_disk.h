@@ -58,7 +58,7 @@ public:
 	imageDisk(const imageDisk&) = delete; // prevent copy
 	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
 
-	virtual ~imageDisk()
+	~imageDisk()
 	{
 		if (diskimg != nullptr)
 			fclose(diskimg);
