@@ -314,9 +314,6 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 			if (new_disk && new_disk->GetType() == DosDriveType::Fat) {
 				const auto fat_drive = dynamic_cast<fatDrive*>(new_disk);
 				imageDiskList[drive] = fat_drive->loadedDisk.get();
-			} else {
-				imageDiskList[drive] = dynamic_cast<imageDisk*>(
-				        new_disk);
 			}
 			if ((drive == 2 || drive == 3) && imageDiskList[drive] && imageDiskList[drive]->hardDrive) {
 				updateDPT();
