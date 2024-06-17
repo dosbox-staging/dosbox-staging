@@ -1864,7 +1864,6 @@ void DOS_Shell::CMD_SUBST (char * args) {
  * E.g. make basedir member dos_drive instead of localdrive
  */
 	HELP("SUBST");
-	localDrive* ldp=nullptr;
 	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
 	try {
@@ -1910,7 +1909,8 @@ void DOS_Shell::CMD_SUBST (char * args) {
 			throw 0;
 		}
 
-		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
 		if (!ldp) {
 			throw 0;
 		}

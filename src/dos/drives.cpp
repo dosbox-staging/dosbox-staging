@@ -197,37 +197,26 @@ void DOS_Drive::SetDir(const char *path)
 // static members variables
 DriveManager::drive_infos_t DriveManager::drive_infos = {};
 
-DOS_Drive* DriveManager::RegisterFilesystemImage(const int drive,
-                                                 std::unique_ptr<DOS_Drive>&& image)
+void DriveManager::RegisterFilesystemImage(const int drive,
+                                           std::shared_ptr<DOS_Drive> image)
 {
 	auto& disks = drive_infos.at(drive).disks;
 	disks.clear();
-	return disks.emplace_back(std::move(image)).get();
+	disks.push_back(image);
 }
 
-std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(const int drive,
-                                                             filesystem_images_t& images)
+void DriveManager::AppendFilesystemImages(const int drive,
+                                          const filesystem_images_t& images)
 {
-	std::vector<DOS_Drive*> pointers = {};
-
 	auto& disks = drive_infos.at(drive).disks;
-
-	// Move all the source images into the drive's disk vector, and add the
-	// resulting pointers back to our return vector.
-	for (auto& image : images) {
-		pointers.emplace_back(disks.emplace_back(std::move(image)).get());
-	}
-
-	images.clear();
-	return pointers;
+	disks.insert(std::end(disks), std::begin(images), std::end(images));
 }
 
 void DriveManager::InitializeDrive(int drive) {
 	auto& drive_info = drive_infos.at(drive);
 	if (!drive_info.disks.empty()) {
 		drive_info.current_disk = 0;
-		const auto disk_pointer =
-		        drive_info.disks[drive_info.current_disk].get();
+		const auto disk_pointer = drive_info.disks[drive_info.current_disk];
 		Drives.at(drive) = disk_pointer;
 		if (disk_pointer && drive_info.disks.size() > 1) {
 			disk_pointer->Activate();
@@ -257,13 +246,14 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 			IDE_CDROM_Detach_Ret(index, slave, drive);
 		}
 
-		const auto old_disk     = drive_info.disks[current_disk].get();
+		const auto old_disk     = drive_info.disks[current_disk];
 		current_disk            = (current_disk + 1) % num_disks;
-		const auto new_disk     = drive_info.disks[current_disk].get();
+		const auto new_disk     = drive_info.disks[current_disk];
 		drive_info.current_disk = current_disk;
 		if (drive < MAX_DISK_IMAGES && imageDiskList.at(drive)) {
 			if (new_disk && new_disk->GetType() == DosDriveType::Fat) {
-				const auto fat_drive = dynamic_cast<fatDrive*>(new_disk);
+				const auto fat_drive = std::dynamic_pointer_cast<fatDrive>(
+				        new_disk);
 				imageDiskList[drive] = fat_drive->loadedDisk;
 			}
 			if ((drive == 2 || drive == 3) && imageDiskList[drive] && imageDiskList[drive]->hardDrive) {

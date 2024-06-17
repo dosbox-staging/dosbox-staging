@@ -40,18 +40,18 @@ class imageDisk; // forward declare
 
 class DriveManager {
 public:
-	using filesystem_images_t = std::vector<std::unique_ptr<DOS_Drive>>;
+	using filesystem_images_t = std::vector<std::shared_ptr<DOS_Drive>>;
 	struct DriveInfo {
 		filesystem_images_t disks = {};
 		uint16_t current_disk     = 0;
 	};
 	using drive_infos_t = std::array<DriveInfo, DOS_DRIVES>;
 
-	static std::vector<DOS_Drive*> AppendFilesystemImages(
-	        const int drive, filesystem_images_t& filesystem_images);
+	static void AppendFilesystemImages(const int drive,
+	                                   const filesystem_images_t& filesystem_images);
 
-	static DOS_Drive* RegisterFilesystemImage(
-	        const int drive, std::unique_ptr<DOS_Drive>&& filesystem_image);
+	static void RegisterFilesystemImage(const int drive,
+	                                    std::shared_ptr<DOS_Drive> filesystem_image);
 
 	static void InitializeDrive(int drive);
 	static int UnmountDrive(int drive);

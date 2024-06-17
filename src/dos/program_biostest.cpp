@@ -39,13 +39,12 @@ void BIOSTEST::Run(void) {
 
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
-	localDrive *ldp = nullptr;
 	if (!DOS_MakeName((char *)temp_line.c_str(), fullname, &drive))
 		return;
 
 	try {
 		// try to read ROM file into buffer
-		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(Drives.at(drive));
 		if (!ldp)
 			return;
 

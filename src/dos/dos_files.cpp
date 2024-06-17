@@ -46,9 +46,7 @@
 
 std::unique_ptr<DOS_File> Files[DOS_FILES] = {};
 
-// Merely pointers. The actual filesystem and raw image objects are managed by
-// the drive manager class.
-std::array<DOS_Drive*, DOS_DRIVES> Drives = {};
+std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives = {};
 
 enum class FileSharingMode
 {
@@ -447,7 +445,7 @@ bool DOS_MakeDir(const char* const dir)
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 
-	DOS_Drive* drive_ptr = Drives.at(drive);
+	const auto drive_ptr = Drives.at(drive);
 
 	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -475,7 +473,7 @@ bool DOS_RemoveDir(const char* const dir)
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 
-	DOS_Drive* drive_ptr = Drives.at(drive);
+	const auto drive_ptr = Drives.at(drive);
 
 	/* Check if exists */
 	if (!drive_ptr->TestDir(fulldir)) {
@@ -540,7 +538,7 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 		return false;
 	}
 
-	DOS_Drive* new_ptr = Drives.at(drivenew);
+	const auto new_ptr = Drives.at(drivenew);
 
 	/*Test if target exists => no access */
 	FatAttributeFlags attr = {};
@@ -549,7 +547,7 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 		return false;
 	}
 
-	DOS_Drive* old_ptr = Drives.at(driveold);
+	const auto old_ptr = Drives.at(driveold);
 
 	/* Source must exist */
 	if (!old_ptr->GetFileAttr(fullold, &attr)) {
@@ -1000,7 +998,7 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
 
-	DOS_Drive* drive_ptr = Drives.at(drive);
+	const auto drive_ptr = Drives.at(drive);
 
 	if (drive_ptr->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -1800,8 +1798,9 @@ void DOS_SetupFiles()
 
 	const auto z_drive_index = drive_index('Z');
 
-	Drives.at(z_drive_index) = DriveManager::RegisterFilesystemImage(
-	        z_drive_index, std::make_unique<Virtual_Drive>());
+	const auto z_drive_ptr = std::make_shared<Virtual_Drive>();
+	DriveManager::RegisterFilesystemImage(z_drive_index, z_drive_ptr);
+	Drives.at(z_drive_index) = z_drive_ptr;
 }
 
 bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
