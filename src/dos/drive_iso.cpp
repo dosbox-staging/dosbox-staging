@@ -65,7 +65,6 @@ isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, ui
 	time = stat->time;
 	date = stat->date;
 	attr = static_cast<uint8_t>(stat->attr);
-	open = true;
 }
 
 bool isoFile::Read(uint8_t *data, uint16_t *size) {
@@ -136,7 +135,6 @@ bool isoFile::Seek(uint32_t *pos, uint32_t type) {
 }
 
 bool isoFile::Close() {
-	if (refCtr == 1) open = false;
 	return true;
 }
 

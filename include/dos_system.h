@@ -128,7 +128,6 @@ public:
 	virtual uint16_t	GetInformation(void)=0;
 	virtual bool IsOnReadOnlyMedium() const = 0;
 
-	virtual bool IsOpen() { return open; }
 	virtual void AddRef() { refCtr++; }
 	virtual Bits RemoveRef() { return --refCtr; }
 	virtual bool UpdateDateTimeFromHost() { return true; }
@@ -140,7 +139,6 @@ public:
 	uint16_t date    = 0;
 	FatAttributeFlags attr = {};
 	Bits refCtr      = 0;
-	bool open        = false;
 	std::string name = {};
 	bool newtime     = false;
 	std::vector<FileRegionLock> region_locks = {};
@@ -157,14 +155,13 @@ public:
 		: DOS_File(orig),
 		  devnum(orig.devnum)
 	{
-		open = true;
+
 	}
 
 	DOS_Device &operator=(const DOS_Device &orig)
 	{
 		DOS_File::operator=(orig);
 		devnum = orig.devnum;
-		open = true;
 		return *this;
 	}
 

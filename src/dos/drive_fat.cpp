@@ -94,7 +94,6 @@ fatFile::fatFile(const char* /*name*/, uint32_t startCluster, uint32_t fileLen,
           read_only_medium(_read_only_medium)
 {
 	uint32_t seekto = 0;
-	open = true;
 	if(filelength > 0) {
 		Seek(&seekto, DOS_SEEK_SET);
 	}

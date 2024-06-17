@@ -643,7 +643,7 @@ bool DOS_ReadFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -675,7 +675,7 @@ bool DOS_WriteFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -711,7 +711,7 @@ bool DOS_SeekFile(uint16_t entry,uint32_t * pos,uint32_t type,bool fcb) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -728,9 +728,7 @@ bool DOS_CloseFile(uint16_t entry, bool fcb, uint8_t * refcnt) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (Files[handle]->IsOpen()) {
-		Files[handle]->Close();
-	}
+	Files[handle]->Close();
 
 	DOS_PSP psp(dos.psp());
 	if (!fcb) psp.SetFileHandle(entry,0xff);
@@ -750,7 +748,7 @@ bool DOS_FlushFile(uint16_t entry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -1084,7 +1082,7 @@ bool DOS_DuplicateEntry(uint16_t entry,uint16_t * newentry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -1109,7 +1107,7 @@ bool DOS_ForceDuplicateEntry(uint16_t entry,uint16_t newentry) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[orig] || !Files[orig]->IsOpen()) {
+	if (!Files[orig]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
@@ -1690,7 +1688,7 @@ bool DOS_FCBRenameFile(uint16_t seg, uint16_t offset)
 
 	DOS_PSP psp(dos.psp());
 	for (uint8_t i = 0; i < DOS_FILES; ++i) {
-		if (Files[i] && Files[i]->IsOpen() && Files[i]->IsName(fullname)) {
+		if (Files[i] && Files[i]->IsName(fullname)) {
 			uint16_t handle = psp.FindEntryByHandle(i);
 			//(more than once maybe)
 			if (handle == 0xFF) {
@@ -1757,7 +1755,7 @@ bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle] || !Files[handle]->IsOpen()) {
+	if (!Files[handle]) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
