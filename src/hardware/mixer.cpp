@@ -2878,57 +2878,60 @@ static void init_master_highpass_filter()
 
 void MIXER_Init(Section* sec)
 {
-	MIXER_CloseAudioDevice();
+	Section_prop* secprop = static_cast<Section_prop*>(sec);
+	assert(secprop);
 
-	sec->AddDestroyFunction(&stop_mixer);
+	if (mixer.state == MixerState::Uninitialized) {
+		// Initialize the 8-bit to 16-bit lookup table
+		fill_8to16_lut();
 
-	Section_prop* section = static_cast<Section_prop*>(sec);
-	assert(section);
+		const auto mixer_state = secprop->Get_bool("nosound")
+		                               ? MixerState::NoSound
+		                               : MixerState::On;
 
-	const auto configured_state = section->Get_bool("nosound")
-	                                    ? MixerState::NoSound
-	                                    : MixerState::On;
-
-	if (configured_state == MixerState::NoSound) {
-		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
-		set_mixer_state(MixerState::NoSound);
-
-	} else {
-		if (init_sdl_sound(section->Get_int("rate"),
-		                   section->Get_int("blocksize"),
-		                   section->Get_bool("negotiate"))) {
-
-			set_mixer_state(MixerState::On);
-		} else {
+		auto set_no_sound = [&] {
+			LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 			set_mixer_state(MixerState::NoSound);
+		};
+
+		mixer.sample_rate_hz = secprop->Get_int("rate");
+		mixer.blocksize      = secprop->Get_int("blocksize");
+
+		if (mixer_state == MixerState::NoSound) {
+			set_no_sound();
+
+		} else {
+			if (init_sdl_sound(secprop->Get_int("rate"),
+							   secprop->Get_int("blocksize"),
+							   secprop->Get_bool("negotiate"))) {
+
+				set_mixer_state(MixerState::On);
+
+			} else {
+				set_no_sound();
+			}
 		}
+
+		const auto requested_prebuffer_ms = secprop->Get_int("prebuffer");
+		mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
+
+		const auto prebuffer_frames = (mixer.sample_rate_hz *
+		                               mixer.prebuffer_ms) /
+		                              1000;
+		mixer.pos = 0;
+		mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
+		mixer.frame_counter     = 0;
+		mixer.frames_done       = 0;
+		mixer.frames_needed     = mixer.min_frames_needed + 1;
+		mixer.min_frames_needed = 0;
+		mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
+
+		sec->AddDestroyFunction(&stop_mixer);
 	}
-
-	mixer.frame_counter   = 0;
-	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-
-	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
-
-	mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
-
-	const auto prebuffer_frames = (mixer.sample_rate_hz * mixer.prebuffer_ms) /
-	                              1000;
-
-	mixer.pos               = 0;
-	mixer.frames_done       = 0;
-	mixer.frames_needed     = mixer.min_frames_needed + 1;
-	mixer.min_frames_needed = 0;
-	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
-
-	// Initialize the 8-bit to 16-bit lookup table
-	fill_8to16_lut();
-
-	init_master_highpass_filter();
-	init_compressor(section->Get_bool("compressor"));
 
 	// Initialise crossfeed
 	const auto new_crossfeed_preset = crossfeed_pref_to_preset(
-	        section->Get_string("crossfeed"));
+	        secprop->Get_string("crossfeed"));
 
 	if (mixer.crossfeed.preset != new_crossfeed_preset) {
 		MIXER_SetCrossfeedPreset(new_crossfeed_preset);
@@ -2936,7 +2939,7 @@ void MIXER_Init(Section* sec)
 
 	// Initialise reverb
 	const auto new_reverb_preset = reverb_pref_to_preset(
-	        section->Get_string("reverb"));
+	        secprop->Get_string("reverb"));
 
 	if (mixer.reverb.preset != new_reverb_preset) {
 		MIXER_SetReverbPreset(new_reverb_preset);
@@ -2944,11 +2947,16 @@ void MIXER_Init(Section* sec)
 
 	// Initialise chorus
 	const auto new_chorus_preset = chorus_pref_to_preset(
-	        section->Get_string("chorus"));
+	        secprop->Get_string("chorus"));
 
 	if (mixer.chorus.preset != new_chorus_preset) {
 		MIXER_SetChorusPreset(new_chorus_preset);
 	}
+
+	init_master_highpass_filter();
+
+	// Initialise master compressor
+	init_compressor(secprop->Get_bool("compressor"));
 }
 
 void MIXER_Mute()
