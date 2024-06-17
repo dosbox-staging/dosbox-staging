@@ -60,8 +60,8 @@ static bool swapping_requested;
 void BIOS_SetEquipment(uint16_t equipment);
 
 /* 2 floppys and 2 harddrives, max */
-std::array<imageDisk*, MAX_DISK_IMAGES> imageDiskList = {};
-std::array<imageDisk*, MAX_SWAPPABLE_DISKS> diskSwap  = {};
+std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
+std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
 
 unsigned int swapPosition;
 
@@ -598,14 +598,10 @@ void BIOS_SetupDisks(void) {
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
 
 	// Clean any the numbered images
-	for (auto &image_ptr : imageDiskList) {
-		DriveManager::CloseNumberedImage(image_ptr);
-		image_ptr = nullptr;
-	}
+	imageDiskList.fill(nullptr);
 
 	// Clear any raw disk images
 	diskSwap.fill(nullptr);
-	DriveManager::CloseRawFddImages();
 
 	diskparm0 = CALLBACK_Allocate();
 	diskparm1 = CALLBACK_Allocate();

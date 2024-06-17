@@ -489,8 +489,7 @@ void IMGMOUNT::Run(void)
 		const auto is_floppy = (drive == 'A' || drive == 'B') && !has_hdd;
 		const auto is_hdd = (drive == 'C' || drive == 'D') && has_hdd;
 		if (is_floppy || is_hdd) {
-			imageDiskList.at(
-			        drive_index(drive)) = fat_image->loadedDisk.get();
+			imageDiskList.at(drive_index(drive)) = fat_image->loadedDisk;
 			updateDPT();
 		}
 	} else if (fstype == "iso") {
@@ -586,8 +585,8 @@ void IMGMOUNT::Run(void)
 
 		const auto drive_index = drive - '0';
 
-		imageDiskList.at(drive_index) = DriveManager::RegisterNumberedImage(
-		        new_disk, temp_line, imagesize, is_hdd);
+		imageDiskList.at(drive_index) = std::make_shared<imageDisk>(
+		        new_disk, temp_line.c_str(), imagesize, is_hdd);
 
 		if (is_hdd) {
 			imageDiskList.at(drive_index)

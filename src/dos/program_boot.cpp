@@ -250,8 +250,8 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != nullptr) {
-				diskSwap[i] = DriveManager::RegisterRawFloppyImage(
-				        usefile, temp_line, floppysize);
+				diskSwap[i] = std::make_shared<imageDisk>(
+				        usefile, temp_line.c_str(), floppysize, false);
 				if (usefile_1 == nullptr) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;
@@ -341,7 +341,6 @@ void BOOT::Run(void)
 						        "PROGRAM_BOOT_CART_NO_CMDS"));
 					}
 					diskSwap.fill(nullptr);
-					DriveManager::CloseRawFddImages();
 
 					return;
 				} else {
@@ -374,7 +373,6 @@ void BOOT::Run(void)
 							        "PROGRAM_BOOT_CART_NO_CMDS"));
 						}
 						diskSwap.fill(nullptr);
-						DriveManager::CloseRawFddImages();
 						return;
 					}
 				}
@@ -465,7 +463,6 @@ void BOOT::Run(void)
 
 			// Close cardridges
 			diskSwap.fill(nullptr);
-			DriveManager::CloseRawFddImages();
 
 			NotifyBooting();
 

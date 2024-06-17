@@ -169,7 +169,7 @@ public:
 	std::string id_model = "DOSBox IDE disk";
 	uint8_t bios_disk_index;
 
-	imageDisk* getBIOSdisk();
+	std::shared_ptr<imageDisk> getBIOSdisk();
 
 	void update_from_biosdisk();
 	/* read from 1F0h data port from IDE device */
@@ -2134,7 +2134,7 @@ IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
 IDEATADevice::~IDEATADevice()
 {}
 
-imageDisk* IDEATADevice::getBIOSdisk()
+std::shared_ptr<imageDisk> IDEATADevice::getBIOSdisk()
 {
 	if (bios_disk_index >= (2 + MAX_HDD_IMAGES))
 		return nullptr;
@@ -2945,7 +2945,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		IDEATADevice *ata = (IDEATADevice *)dev;
 		uint32_t sectorn = 0; /* TBD: expand to uint64_t when adding LBA48 emulation */
 		uint32_t sectcount;
-		imageDisk* disk = nullptr;
+		std::shared_ptr<imageDisk> disk = nullptr;
 		//      int i;
 
 		switch (dev->command) {
