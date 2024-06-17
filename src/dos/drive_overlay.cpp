@@ -319,7 +319,8 @@ bool OverlayFile::create_copy()
 	NativeFileHandle newhandle = InvalidNativeFileHandle;
 	uint8_t drive_set = GetDrive();
 	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
-		const auto od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
+		const auto od = std::dynamic_pointer_cast<Overlay_Drive>(
+		        Drives[drive_set]);
 		if (od) {
 			FatAttributeFlags attributes = {};
 			local_drive_get_attributes(GetPath(), attributes);

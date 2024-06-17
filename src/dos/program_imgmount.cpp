@@ -324,7 +324,7 @@ void IMGMOUNT::Run(void)
 					return;
 				}
 
-				const auto ldp = dynamic_cast<localDrive*>(
+				const auto ldp = std::dynamic_pointer_cast<localDrive>(
 				        Drives.at(dummy));
 				if (ldp == nullptr) {
 					WriteOut(MSG_Get(
@@ -435,14 +435,14 @@ void IMGMOUNT::Run(void)
 		DriveManager::filesystem_images_t fat_images = {};
 
 		for (const auto& fat_path : paths) {
-			auto fat_image = std::make_unique<fatDrive>(fat_path.c_str(),
+			auto fat_image = std::make_shared<fatDrive>(fat_path.c_str(),
 			                                            sizes[0],
 			                                            sizes[1],
 			                                            sizes[2],
 			                                            sizes[3],
 			                                            roflag);
 			if (fat_image->created_successfully) {
-				fat_images.emplace_back(std::move(fat_image));
+				fat_images.push_back(fat_image);
 			} else {
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 				return;
@@ -454,8 +454,7 @@ void IMGMOUNT::Run(void)
 		}
 
 		// Update DriveManager
-		const auto fat_pointers = DriveManager::AppendFilesystemImages(
-		        drive_index(drive), fat_images);
+		DriveManager::AppendFilesystemImages(drive_index(drive), fat_images);
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table
@@ -466,8 +465,8 @@ void IMGMOUNT::Run(void)
 		RealPt save_dta = dos.dta();
 		dos.dta(dos.tables.tempdta);
 
-		for (auto it = fat_pointers.begin(); it != fat_pointers.end(); ++it) {
-			const bool should_notify = std::next(it) == fat_pointers.end();
+		for (auto it = fat_images.begin(); it != fat_images.end(); ++it) {
+			const bool should_notify = std::next(it) == fat_images.end();
 			DriveManager::CycleDisks(drive_index(drive), should_notify);
 			char root[7] = {drive, ':', '\\', '*', '.', '*', 0};
 
@@ -481,7 +480,8 @@ void IMGMOUNT::Run(void)
 
 		write_out_mount_status(MSG_Get("MOUNT_TYPE_FAT"), paths, drive);
 
-		const auto fat_image = dynamic_cast<fatDrive*>(fat_pointers.front());
+		const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
+		        fat_images.front());
 		assert(fat_image);
 		const auto has_hdd = fat_image->loadedDisk &&
 		                     fat_image->loadedDisk->hardDrive;
@@ -503,10 +503,8 @@ void IMGMOUNT::Run(void)
 		for (const auto& iso_path : paths) {
 			int error = -1;
 
-			auto iso_image = std::make_unique<isoDrive>(
-			        drive, iso_path.c_str(), mediaid, error);
-
-			iso_images.emplace_back(std::move(iso_image));
+			iso_images.push_back(std::make_shared<isoDrive>(
+			        drive, iso_path.c_str(), mediaid, error));
 			switch (error) {
 			case 0: break;
 			case 1:
@@ -536,8 +534,7 @@ void IMGMOUNT::Run(void)
 			}
 		}
 		// Update DriveManager
-		(void)DriveManager::AppendFilesystemImages(drive_index(drive),
-		                                           iso_images);
+		DriveManager::AppendFilesystemImages(drive_index(drive), iso_images);
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table

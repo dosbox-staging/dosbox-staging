@@ -1331,7 +1331,7 @@ static Bitu DOS_27Handler(void) {
 
 static uint16_t DOS_SectorAccess(const bool read)
 {
-	const auto drive = dynamic_cast<fatDrive*>(Drives.at(reg_al));
+	const auto drive = std::dynamic_pointer_cast<fatDrive>(Drives.at(reg_al));
 	assert(drive);
 
 	auto bufferSeg = SegValue(ds);

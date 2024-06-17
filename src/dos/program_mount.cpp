@@ -87,8 +87,7 @@ void MOUNT::ShowUsage()
 }
 
 void MOUNT::Run(void) {
-	std::unique_ptr<DOS_Drive> newdrive = {};
-	DOS_Drive* drive_pointer            = nullptr;
+	std::shared_ptr<DOS_Drive> newdrive = {};
 	char drive                          = '\0';
 	std::string label                   = {};
 	std::string umount                  = {};
@@ -285,15 +284,14 @@ void MOUNT::Run(void) {
 			}
 
 			int error = 0;
-			newdrive  = std::make_unique<cdromDrive>(
-			        drive,
-			        temp_line.c_str(),
-			        sizes[0],
-			        int8_tize,
-			        sizes[2],
-			        0,
-			        mediaid,
-			        error);
+			newdrive  = std::make_shared<cdromDrive>(drive,
+			                                         temp_line.c_str(),
+			                                         sizes[0],
+			                                         int8_tize,
+			                                         sizes[2],
+			                                         0,
+			                                         mediaid,
+			                                         error);
 			// Check Mscdex, if it worked out...
 			switch (error) {
 				case 0  :	WriteOut(MSG_Get("MSCDEX_SUCCESS"));				break;
@@ -317,15 +315,17 @@ void MOUNT::Run(void) {
 			if (temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
 			if (type == "overlay") {
-				const auto ldp = dynamic_cast<localDrive*>(Drives[drive_index(drive)]);
-				const auto cdp = dynamic_cast<cdromDrive*>(Drives[drive_index(drive)]);
+				const auto ldp = std::dynamic_pointer_cast<localDrive>(
+				        Drives[drive_index(drive)]);
+				const auto cdp = std::dynamic_pointer_cast<cdromDrive>(
+				        Drives[drive_index(drive)]);
 				if (!ldp || cdp) {
 					WriteOut(MSG_Get("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"));
 					return;
 				}
 				std::string base = ldp->GetBasedir();
 				uint8_t o_error = 0;
-				newdrive = std::make_unique<Overlay_Drive>(
+				newdrive = std::make_shared<Overlay_Drive>(
 				        base.c_str(),
 				        temp_line.c_str(),
 				        sizes[0],
@@ -350,7 +350,7 @@ void MOUNT::Run(void) {
 				}
 				Drives.at(drive_index(drive)) = nullptr;
 			} else {
-				newdrive = std::make_unique<localDrive>(
+				newdrive = std::make_shared<localDrive>(
 				        temp_line.c_str(),
 				        sizes[0],
 				        int8_tize,
@@ -367,16 +367,15 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	drive_pointer = DriveManager::RegisterFilesystemImage(drive_index(drive),
-	                                                      std::move(newdrive));
-	Drives.at(drive_index(drive)) = drive_pointer;
+	DriveManager::RegisterFilesystemImage(drive_index(drive), newdrive);
+	Drives.at(drive_index(drive)) = newdrive;
 
 	/* Set the correct media byte in the table */
 	mem_writeb(RealToPhysical(dos.tables.mediaid) + (drive_index(drive)) * 9,
-	           drive_pointer->GetMediaByte());
+	           newdrive->GetMediaByte());
 	if (type != "overlay") {
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
-		         drive_pointer->GetInfoString().c_str(),
+		         newdrive->GetInfoString().c_str(),
 		         drive);
 		if (readonly) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
@@ -388,17 +387,17 @@ void MOUNT::Run(void) {
 	}
 	/* check if volume label is given and don't allow it to updated in the future */
 	if (cmd->FindString("-label", label, true)) {
-		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
+		newdrive->dirCache.SetLabel(label.c_str(), iscdrom, false);
 	}
 	/* For hard drives set the label to DRIVELETTER_Drive.
 	 * For floppy drives set the label to DRIVELETTER_Floppy.
 	 * This way every drive except cdroms should get a label.*/
 	else if (type == "dir" || type == "overlay") {
 		label = drive; label += "_DRIVE";
-		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
+		newdrive->dirCache.SetLabel(label.c_str(), iscdrom, false);
 	} else if (type == "floppy") {
 		label = drive; label += "_FLOPPY";
-		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, true);
+		newdrive->dirCache.SetLabel(label.c_str(), iscdrom, true);
 	}
 	if (type == "floppy") incrementFDD();
 	return;

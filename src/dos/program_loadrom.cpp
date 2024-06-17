@@ -50,7 +50,8 @@ void LOADROM::Run(void)
 
 	try {
 		/* try to read ROM file into buffer */
-		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
 		if (!ldp) {
 			return;
 		}
