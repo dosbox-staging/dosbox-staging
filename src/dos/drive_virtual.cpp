@@ -328,7 +328,7 @@ public:
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation() override;
 	bool IsOnReadOnlyMedium() const override;
 
@@ -401,9 +401,8 @@ bool Virtual_File::Seek(uint32_t* new_pos, uint32_t type)
 	return true;
 }
 
-bool Virtual_File::Close()
+void Virtual_File::Close()
 {
-	return true;
 }
 
 uint16_t Virtual_File::GetInformation() {

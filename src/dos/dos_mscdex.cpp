@@ -1361,9 +1361,8 @@ public:
 	{
 		return false;
 	}
-	bool Close() override
+	void Close() override
 	{
-		return false;
 	}
 	uint16_t GetInformation(void) override
 	{

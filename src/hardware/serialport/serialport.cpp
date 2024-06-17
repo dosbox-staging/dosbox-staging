@@ -81,8 +81,7 @@ bool device_COM::Seek(uint32_t *pos, uint32_t type)
 	return true;
 }
 
-bool device_COM::Close() {
-	return false;
+void device_COM::Close() {
 }
 
 uint16_t device_COM::GetInformation()

@@ -39,7 +39,7 @@ public:
 	bool Read(uint8_t *data, uint16_t *size) override;
 	bool Write(uint8_t *data, uint16_t *size) override;
 	bool Seek(uint32_t *pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool IsOnReadOnlyMedium() const override;
 
@@ -134,8 +134,7 @@ bool isoFile::Seek(uint32_t *pos, uint32_t type) {
 	return true;
 }
 
-bool isoFile::Close() {
-	return true;
+void isoFile::Close() {
 }
 
 uint16_t isoFile::GetInformation(void) {
