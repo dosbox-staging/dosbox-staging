@@ -180,8 +180,8 @@ struct MixerSettings {
 
 	float frame_counter = 0;
 
-	// Sample rate negotiated with SDL (technically, this is rate of sample
-	// *frames* per second).
+	// Sample rate negotiated with SDL (technically, this is the rate of
+	// sample *frames* per second).
 	std::atomic<int> sample_rate_hz = 0;
 
 	// Matches SDL AudioSpec.samples type
@@ -2767,77 +2767,79 @@ void MIXER_CloseAudioDevice()
 	mixer.state = MixerState::Uninitialized;
 }
 
-static bool init_sdl_sound(Section_prop* section)
+// Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
+static bool init_sdl_sound(const int requested_sample_rate_hz,
+                           const int requested_blocksize_in_frames,
+                           const bool allow_negotiate)
 {
-	const auto negotiate = section->Get_bool("negotiate");
+	SDL_AudioSpec desired  = {};
+	SDL_AudioSpec obtained = {};
 
-	// Start the mixer using SDL sound
-	SDL_AudioSpec spec;
-	SDL_AudioSpec obtained;
+	constexpr auto NumStereoChannels = 2;
 
-	spec.freq     = static_cast<int>(mixer.sample_rate_hz);
-	spec.format   = AUDIO_S16SYS;
-	spec.channels = 2;
-	spec.callback = mixer_callback;
-	spec.userdata = nullptr;
-	spec.samples  = check_cast<uint16_t>(mixer.blocksize);
+	desired.channels = NumStereoChannels;
+	desired.format   = AUDIO_S16SYS;
+	desired.freq     = requested_sample_rate_hz;
+	desired.samples  = check_cast<uint16_t>(requested_blocksize_in_frames);
 
-	int sdl_allow_flags = 0;
+	desired.callback = mixer_callback;
+	desired.userdata = nullptr;
 
-	if (negotiate) {
-		// We allow chunk size changes (if supported), but don't allow
-		// frequency changes because we've only seen them go beyond
-		// SDL's desired 48 Khz limit
-#if defined(SDL_AUDIO_ALLOW_SAMPLES_CHANGE)
+	int sdl_allow_flags = SDL_AUDIO_ALLOW_FREQUENCY_CHANGE;
+
+	if (allow_negotiate) {
+		// Allow negotiating the audio buffer size, hopefully to obtain
+		// a block size that achieves stutter-free playback at a low
+		// latency.
 		sdl_allow_flags |= SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
-#endif
 	}
 
 	constexpr auto SdlError = 0;
 	if ((mixer.sdldevice = SDL_OpenAudioDevice(
-	             nullptr, 0, &spec, &obtained, sdl_allow_flags)) == SdlError) {
+	             nullptr, 0, &desired, &obtained, sdl_allow_flags)) == SdlError) {
+
 		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output disabled",
 		            SDL_GetError());
 
+		set_section_property_value("mixer", "nosound", "off");
 		return false;
 	}
 
-	// Does SDL want something other than stereo output?
-	if (obtained.channels != spec.channels) {
-		E_Exit("SDL gave us %d-channel output but we require %d channels",
-		       obtained.channels,
-		       spec.channels);
-	}
+	// Opening SDL audio device succeeded
+	const auto obtained_sample_rate_hz = obtained.freq;
+	const auto obtained_blocksize      = obtained.samples;
 
-	// Does SDL want a different playback rate?
-	if (obtained.freq != mixer.sample_rate_hz) {
-		LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
-		            mixer.sample_rate_hz.load(),
-		            obtained.freq);
+	mixer.sample_rate_hz = obtained_sample_rate_hz;
+	mixer.blocksize      = obtained_blocksize;
 
-		mixer.sample_rate_hz = obtained.freq;
+	assert(obtained.channels == NumStereoChannels);
+	assert(obtained.format == desired.format);
+
+	// Did SDL negotiate a different playback rate?
+	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
+		LOG_WARNING("MIXER: SDL negotiated the requested sample rate of %d to %d Hz",
+		            requested_sample_rate_hz,
+		            obtained_sample_rate_hz);
+
 		set_section_property_value("mixer",
 		                           "rate",
 		                           format_str("%d",
 		                                      mixer.sample_rate_hz.load()));
 	}
 
-	// Does SDL want a different blocksize?
-	const auto obtained_blocksize = obtained.samples;
+	// Did SDL negotiate a different blocksize?
+	if (obtained_blocksize != requested_blocksize_in_frames) {
+		LOG_MSG("MIXER: SDL negotiated the requested blocksize of "
+		        "%d to %d frames",
+		        requested_blocksize_in_frames,
+		        obtained_blocksize);
 
-	if (obtained_blocksize != mixer.blocksize) {
-		LOG_WARNING("MIXER: SDL changed the requested blocksize of %d to %d frames",
-		            mixer.blocksize,
-		            obtained_blocksize);
-
-		mixer.blocksize = obtained_blocksize;
 		set_section_property_value("mixer",
 		                           "blocksize",
 		                           format_str("%d", mixer.blocksize));
 	}
 
-	LOG_MSG("MIXER: Negotiated %d-channel %d Hz audio of %d-frame blocks",
-	        obtained.channels,
+	LOG_MSG("MIXER: Initialised stereo %d Hz audio with %d sample frame buffer",
 	        mixer.sample_rate_hz.load(),
 	        mixer.blocksize);
 
@@ -2883,9 +2885,6 @@ void MIXER_Init(Section* sec)
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
-	mixer.sample_rate_hz = section->Get_int("rate");
-	mixer.blocksize      = section->Get_int("blocksize");
-
 	const auto configured_state = section->Get_bool("nosound")
 	                                    ? MixerState::NoSound
 	                                    : MixerState::On;
@@ -2895,7 +2894,10 @@ void MIXER_Init(Section* sec)
 		set_mixer_state(MixerState::NoSound);
 
 	} else {
-		if (init_sdl_sound(section)) {
+		if (init_sdl_sound(section->Get_int("rate"),
+		                   section->Get_int("blocksize"),
+		                   section->Get_bool("negotiate"))) {
+
 			set_mixer_state(MixerState::On);
 		} else {
 			set_mixer_state(MixerState::NoSound);
@@ -2924,21 +2926,26 @@ void MIXER_Init(Section* sec)
 	init_master_highpass_filter();
 	init_compressor(section->Get_bool("compressor"));
 
-	// Initialise send effects
+	// Initialise crossfeed
 	const auto new_crossfeed_preset = crossfeed_pref_to_preset(
 	        section->Get_string("crossfeed"));
+
 	if (mixer.crossfeed.preset != new_crossfeed_preset) {
 		MIXER_SetCrossfeedPreset(new_crossfeed_preset);
 	}
 
+	// Initialise reverb
 	const auto new_reverb_preset = reverb_pref_to_preset(
 	        section->Get_string("reverb"));
+
 	if (mixer.reverb.preset != new_reverb_preset) {
 		MIXER_SetReverbPreset(new_reverb_preset);
 	}
 
+	// Initialise chorus
 	const auto new_chorus_preset = chorus_pref_to_preset(
 	        section->Get_string("chorus"));
+
 	if (mixer.chorus.preset != new_chorus_preset) {
 		MIXER_SetChorusPreset(new_chorus_preset);
 	}
@@ -3037,14 +3044,15 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	int_prop = sec_prop.Add_int("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
 	int_prop->Set_help(
-	        "How many milliseconds of sound to render on top of the blocksize\n"
-	        "(%s by default). Larger values might help with sound stuttering but the sound\n"
-	        "will also be more lagged.");
+	        "How many milliseconds of sound to render in advance on top of 'blocksize'\n"
+	        "(%s by default). Larger values might help with sound stuttering but will\n"
+	        "introduce more latency.");
 
 	bool_prop = sec_prop.Add_bool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
 	bool_prop->Set_help(
-	        "Let the system audio driver negotiate possibly better sample rate and blocksize\n"
-	        "settings (%s by default).");
+	        "Negotiate a possibly better 'blocksize' setting (%s by default).\n"
+	        "Enable it if you're not getting audio or the sound is stuttering with manually\n"
+	        "set 'blocksize' settings.");
 
 	constexpr auto DefaultOn = true;
 	bool_prop = sec_prop.Add_bool("compressor", WhenIdle, DefaultOn);
