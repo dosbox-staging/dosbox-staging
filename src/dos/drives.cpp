@@ -197,8 +197,6 @@ void DOS_Drive::SetDir(const char *path)
 // static members variables
 uint8_t DriveManager::currentDrive                       = 0;
 DriveManager::drive_infos_t DriveManager::drive_infos    = {};
-DriveManager::raw_images_t DriveManager::indexed_images  = {};
-DriveManager::raw_images_t DriveManager::raw_floppy_images  = {};
 
 DOS_Drive* DriveManager::RegisterFilesystemImage(const int drive,
                                                  std::unique_ptr<DOS_Drive>&& image)
@@ -223,51 +221,6 @@ std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(const int drive,
 
 	images.clear();
 	return pointers;
-}
-
-imageDisk* DriveManager::RegisterNumberedImage(FILE* img_file,
-                                               const std::string& img_name,
-                                               const uint32_t img_size_kb,
-                                               const bool is_hdd)
-{
-	auto image = std::make_unique<imageDisk>(img_file,
-	                                         img_name.c_str(),
-	                                         img_size_kb,
-	                                         is_hdd);
-
-	return indexed_images.emplace_back(std::move(image)).get();
-}
-
-void DriveManager::CloseNumberedImage(const imageDisk* image_ptr)
-{
-	auto matcher = [image_ptr](const std::unique_ptr<imageDisk>& image) {
-		return image.get() == image_ptr;
-	};
-
-	const auto matching_images = std::remove_if(indexed_images.begin(),
-	                                            indexed_images.end(),
-	                                            matcher);
-
-	indexed_images.erase(matching_images, indexed_images.end());
-}
-
-imageDisk* DriveManager::RegisterRawFloppyImage(FILE* img_file,
-                                                const std::string& img_name,
-                                                const uint32_t img_size_kb)
-{
-	constexpr bool is_hdd = false;
-
-	auto image = std::make_unique<imageDisk>(img_file,
-	                                         img_name.c_str(),
-	                                         img_size_kb,
-	                                         is_hdd);
-
-	return raw_floppy_images.emplace_back(std::move(image)).get();
-}
-
-void DriveManager::CloseRawFddImages()
-{
-	raw_floppy_images.clear();
 }
 
 void DriveManager::InitializeDrive(int drive) {
@@ -313,7 +266,7 @@ void DriveManager::CycleDisks(int requested_drive, bool notify)
 		if (drive < MAX_DISK_IMAGES && imageDiskList.at(drive)) {
 			if (new_disk && new_disk->GetType() == DosDriveType::Fat) {
 				const auto fat_drive = dynamic_cast<fatDrive*>(new_disk);
-				imageDiskList[drive] = fat_drive->loadedDisk.get();
+				imageDiskList[drive] = fat_drive->loadedDisk;
 			}
 			if ((drive == 2 || drive == 3) && imageDiskList[drive] && imageDiskList[drive]->hardDrive) {
 				updateDPT();

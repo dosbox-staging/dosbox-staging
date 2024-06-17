@@ -63,7 +63,6 @@ const char *UnmountHelper(char umount)
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
 		imageDiskList[i_drive] = nullptr;
-		DriveManager::CloseNumberedImage(imageDiskList[i_drive]);
 	}
 
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
