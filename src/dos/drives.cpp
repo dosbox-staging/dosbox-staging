@@ -195,8 +195,7 @@ void DOS_Drive::SetDir(const char *path)
 }
 
 // static members variables
-uint8_t DriveManager::currentDrive                       = 0;
-DriveManager::drive_infos_t DriveManager::drive_infos    = {};
+DriveManager::drive_infos_t DriveManager::drive_infos = {};
 
 DOS_Drive* DriveManager::RegisterFilesystemImage(const int drive,
                                                  std::unique_ptr<DOS_Drive>&& image)
@@ -224,13 +223,12 @@ std::vector<DOS_Drive*> DriveManager::AppendFilesystemImages(const int drive,
 }
 
 void DriveManager::InitializeDrive(int drive) {
-	currentDrive    = check_cast<uint8_t>(drive);
-	auto& drive_info = drive_infos.at(currentDrive);
+	auto& drive_info = drive_infos.at(drive);
 	if (!drive_info.disks.empty()) {
 		drive_info.current_disk = 0;
 		const auto disk_pointer =
 		        drive_info.disks[drive_info.current_disk].get();
-		Drives.at(currentDrive) = disk_pointer;
+		Drives.at(drive) = disk_pointer;
 		if (disk_pointer && drive_info.disks.size() > 1) {
 			disk_pointer->Activate();
 		}
@@ -339,7 +337,6 @@ char *DriveManager::GetDrivePosition(int drive)
 
 void DriveManager::Init(Section* /* sec */) {
 	// setup drive_infos structure
-	currentDrive = 0;
 	for(int i = 0; i < DOS_DRIVES; i++) {
 		drive_infos.at(i).current_disk = 0;
 	}

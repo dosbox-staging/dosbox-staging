@@ -64,7 +64,6 @@ public:
 
 private:
 	static drive_infos_t drive_infos;
-	static uint8_t currentDrive;
 };
 
 class localDrive : public DOS_Drive {
