@@ -865,9 +865,7 @@ void MixerChannel::Enable(const bool should_enable)
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
 
-		if (do_lerp_upsample || do_zoh_upsample || do_resample) {
-			ClearResampler();
-		}
+		ClearResampler();
 	}
 
 	is_enabled = should_enable;
@@ -1002,10 +1000,16 @@ void MixerChannel::ConfigureResampler()
 	}
 }
 
-// Clear the resampler and prime its input queue with zeros
+// Clear the resampler and prime its input queue with zeroes
 void MixerChannel::ClearResampler()
 {
-	auto init_resampler = [&] {
+	if (do_lerp_upsample) {
+		InitLerpUpsamplerState();
+	}
+	if (do_zoh_upsample) {
+		InitZohUpsamplerState();
+	}
+	if (do_resample) {
 		assert(speex_resampler.state);
 		speex_resampler_reset_mem(speex_resampler.state);
 		speex_resampler_skip_zeros(speex_resampler.state);
@@ -1015,32 +1019,6 @@ void MixerChannel::ClearResampler()
 		          name.c_str(),
 		          speex_resampler_get_input_latency(speex_resampler.state));
 #endif
-	};
-
-	switch (resample_method) {
-	case ResampleMethod::LerpUpsampleOrResample:
-		if (do_lerp_upsample) {
-			InitLerpUpsamplerState();
-		}
-		if (do_resample) {
-			init_resampler();
-		}
-		break;
-
-	case ResampleMethod::ZeroOrderHoldAndResample:
-		if (do_zoh_upsample) {
-			InitZohUpsamplerState();
-		}
-		if (do_resample) {
-			init_resampler();
-		}
-		break;
-
-	case ResampleMethod::Resample:
-		if (do_resample) {
-			init_resampler();
-		}
-		break;
 	}
 }
 
