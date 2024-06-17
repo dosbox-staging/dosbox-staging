@@ -655,25 +655,20 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 	return true;
 }
 
-bool localFile::Close()
+void localFile::Close()
 {
 	assert(file_handle != InvalidNativeFileHandle);
-	bool result = true;
 
 	// only close if one reference left
 	if (refCtr == 1) {
 		if (set_archive_on_close) {
 			assert(!IsOnReadOnlyMedium());
 			FatAttributeFlags attributes = {};
-			if (DOSERR_NONE !=
-			    local_drive_get_attributes(path, attributes)) {
-				result = false;
-			} else if (!attributes.archive) {
+			if (DOSERR_NONE ==
+			    local_drive_get_attributes(path, attributes)
+				&& !attributes.archive) {
 				attributes.archive = true;
-				if (DOSERR_NONE !=
-				    local_drive_set_attributes(path, attributes)) {
-					result = false;
-				}
+				local_drive_set_attributes(path, attributes);
 			}
 			set_archive_on_close = false;
 		}
@@ -707,12 +702,8 @@ bool localFile::Close()
 
 		// FIXME: utime is deprecated, need a modern cross-platform
 		// implementation.
-		if (utime(fullname, &ftim)) {
-			result = false;
-		}
+		utime(fullname, &ftim);
 	}
-
-	return result;
 }
 
 uint16_t localFile::GetInformation(void)

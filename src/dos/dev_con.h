@@ -34,7 +34,7 @@ public:
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool ReadFromControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
 	                            uint16_t* /*retcode*/) override
@@ -416,8 +416,7 @@ bool device_CON::Seek(uint32_t * pos,uint32_t /*type*/) {
 	return true;
 }
 
-bool device_CON::Close() {
-	return true;
+void device_CON::Close() {
 }
 
 uint16_t device_CON::GetInformation(void) {

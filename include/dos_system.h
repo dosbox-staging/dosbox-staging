@@ -124,7 +124,7 @@ public:
 	virtual bool	Read(uint8_t * data,uint16_t * size)=0;
 	virtual bool	Write(uint8_t * data,uint16_t * size)=0;
 	virtual bool	Seek(uint32_t * pos,uint32_t type)=0;
-	virtual bool	Close()=0;
+	virtual void	Close()=0;
 	virtual uint16_t	GetInformation(void)=0;
 	virtual bool IsOnReadOnlyMedium() const = 0;
 
@@ -168,7 +168,7 @@ public:
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool IsOnReadOnlyMedium() const override { return false; }
 	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
@@ -195,7 +195,7 @@ public:
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation() override;
 	bool UpdateDateTimeFromHost() override;
 	bool IsOnReadOnlyMedium() const override { return read_only_medium; }

@@ -47,7 +47,7 @@ public:
 	bool Read(uint8_t * data,uint16_t * size) override;
 	bool Write(uint8_t * data,uint16_t * size) override;
 	bool Seek(uint32_t * pos,uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
 	bool UpdateDateTimeFromHost(void) override;
 	bool IsOnReadOnlyMedium() const override;
@@ -285,7 +285,7 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 	return true;
 }
 
-bool fatFile::Close()
+void fatFile::Close()
 {
 	if ((flags & 0xf) != OPEN_READ && !myDrive->IsReadOnly()) {
 		if (newtime || set_archive_on_close) {
@@ -310,8 +310,6 @@ bool fatFile::Close()
 	}
 
 	set_archive_on_close = false;
-
-	return true;
 }
 
 bool fatFile::IsOnReadOnlyMedium() const
