@@ -343,7 +343,6 @@ Virtual_File::Virtual_File(const vfile_data_t& in_data)
 {
 	date = default_date;
 	time = default_time;
-	open = true;
 }
 
 bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)

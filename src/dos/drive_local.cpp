@@ -536,6 +536,7 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 
 bool localFile::Read(uint8_t *data, uint16_t *size)
 {
+	assert(file_handle != InvalidNativeFileHandle);
 	// check if the file is opened in write-only mode
 	if ((this->flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -561,6 +562,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 bool localFile::Write(uint8_t *data, uint16_t *size)
 {
+	assert(file_handle != InvalidNativeFileHandle);
 	uint8_t lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -595,6 +597,8 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 
 bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
+	assert(file_handle != InvalidNativeFileHandle);
+
 	// Tested this interrupt on MS-DOS 6.22
 	// The values for SEEK_CUR and SEEK_END can be negative
 	// But some games/programs depend on the wrapping behavior of a 32-bit integer
@@ -653,6 +657,7 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 
 bool localFile::Close()
 {
+	assert(file_handle != InvalidNativeFileHandle);
 	bool result = true;
 
 	// only close if one reference left
@@ -673,11 +678,8 @@ bool localFile::Close()
 			set_archive_on_close = false;
 		}
 
-		if (file_handle != InvalidNativeFileHandle) {
-			close_native_file(file_handle);
-		}
+		close_native_file(file_handle);
 		file_handle = InvalidNativeFileHandle;
-		open = false;
 	};
 
 	if (newtime) {
@@ -726,7 +728,6 @@ localFile::localFile(const char* _name, const std_fs::path& path,
           basedir(_basedir),
           read_only_medium(_read_only_medium)
 {
-	open = true;
 	localFile::UpdateDateTimeFromHost();
 	attr = FatAttributeFlags::Archive;
 
@@ -735,10 +736,7 @@ localFile::localFile(const char* _name, const std_fs::path& path,
 
 bool localFile::UpdateDateTimeFromHost()
 {
-	if (!open) {
-		return false;
-	}
-
+	assert(file_handle != InvalidNativeFileHandle);
 	const auto dos_time = get_dos_file_time(file_handle);
 
 	time = dos_time.time;
