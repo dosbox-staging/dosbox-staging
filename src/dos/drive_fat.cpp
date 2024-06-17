@@ -821,7 +821,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	is_hdd   = (filesize > 2880);
 
 	/* Load disk image */
-	loadedDisk.reset(new imageDisk(diskfile, sysFilename, filesize, is_hdd));
+	loadedDisk = std::make_shared<imageDisk>(diskfile, sysFilename, filesize, is_hdd);
 
 	if(is_hdd) {
 		/* Set user specified harddrive parameters */
