@@ -3009,11 +3009,10 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	constexpr bool DefaultAllowNegotiate = true;
 #endif
 
-	constexpr auto Always      = Property::Changeable::Always;
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto bool_prop = sec_prop.Add_bool("nosound", Always, false);
+	auto bool_prop = sec_prop.Add_bool("nosound", OnlyAtStart, false);
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable silent mode (disabled by default).\n"
