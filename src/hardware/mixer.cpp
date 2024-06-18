@@ -2685,21 +2685,16 @@ static void stop_mixer([[maybe_unused]] Section* sec) {}
 	return "unknown!";
 }
 
-static void set_mixer_state(const MixerState requested)
+static void set_mixer_state(const MixerState new_state)
 {
-	// The mixer starts uninitialized but should never be programmatically
-	// asked to become uninitialized
-	assert(requested != MixerState::Uninitialized);
+	// Only Muted <-> On state transitions are allowed
+	assert(new_state == MixerState::Muted || new_state == MixerState::On);
 
-	// When sdl_device is zero then the SDL audio device doesn't exist, which
-	// is a valid configuration. In these cases the only logical end-state
-	// is NoSound. So switch the request and let the rest of the function
-	// handle it.
-	auto new_state = requested;
-
-	if (mixer.sdl_device == 0) {
-		new_state = MixerState::NoSound;
-	}
+#ifdef DEBUG_MIXER
+	LOG_MSG("MIXER: Changing mixer state from %s to '%s'",
+	        to_string(mixer.state),
+	        to_string(new_state));
+#endif
 
 	if (mixer.state == new_state) {
 		// Nothing to do.
@@ -2708,31 +2703,18 @@ static void set_mixer_state(const MixerState requested)
 		        to_string(mixer.state));
 #endif
 
-	} else if (mixer.state == MixerState::On && new_state != MixerState::On) {
+	} else if (new_state == MixerState::Muted) {
 		TIMER_DelTickHandler(handle_mix_samples);
 		TIMER_AddTickHandler(handle_mix_no_sound);
-#ifdef DEBUG_MIXER
-		LOG_MSG("MIXER: Changed mixer state from on to '%s'",
-		        to_string(new_state));
-#endif
 
-	} else if (mixer.state != MixerState::On && new_state == MixerState::On) {
+	} else if (new_state == MixerState::On) {
 		TIMER_DelTickHandler(handle_mix_no_sound);
 		TIMER_AddTickHandler(handle_mix_samples);
-#ifdef DEBUG_MIXER
-		LOG_MSG("MIXER: Changed mixer state from '%s' to on",
-		        to_string(mixer.state));
-#endif
 
 	} else {
-		// Nothing to do.
-#ifdef DEBUG_MIXER
-		LOG_MSG("MIXER: Skipping unnecessary mixer state change change "
-		        "from '%s' to '%s'",
-		        to_string(mixer.state),
-		        to_string(new_state));
-#endif
+		assertm(false, "Invalid mixer state transition");
 	}
+
 	mixer.state = new_state;
 
 	// Finally, we start the audio device either paused or unpaused:
@@ -2740,6 +2722,7 @@ static void set_mixer_state(const MixerState requested)
 		const auto pause = (mixer.state != MixerState::On);
 		SDL_PauseAudioDevice(mixer.sdl_device, pause);
 	}
+
 	//
 	// When unpaused, the device pulls frames queued by the
 	// handle_mix_samples() function, which it fetches from each channel's
@@ -2818,6 +2801,12 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	}
 
 	// Opening SDL audio device succeeded
+	//
+	// An opened audio device starts out paused, and should be enabled for
+	// playing by calling `SDL_PauseAudioDevice()` when you are ready for your
+	// audio callback function to be called. We do that in
+	// `set_mixer_state()`.
+	//
 	const auto obtained_sample_rate_hz = obtained.freq;
 	const auto obtained_blocksize      = obtained.samples;
 
@@ -2902,8 +2891,22 @@ void MIXER_Init(Section* sec)
 		                               : MixerState::On;
 
 		auto set_no_sound = [&] {
+			assert(mixer.sdl_device == 0);
+
 			LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
-			set_mixer_state(MixerState::NoSound);
+
+			mixer.state = MixerState::NoSound;
+
+			// This ensures we internally generate the audio
+			// stream, so it can be captured, and the
+			// "rendered frames" counters keep progressing.
+			//
+			// Without this, certain programs that rely on
+			// these counters for timing purposes would be
+			// stalled (typically trackers, e.g., Fast
+			// Tracker II, PT4DOS, etc.)
+			//
+			TIMER_AddTickHandler(handle_mix_no_sound);
 		};
 
 		mixer.sample_rate_hz = secprop->Get_int("rate");
@@ -2917,8 +2920,9 @@ void MIXER_Init(Section* sec)
 							   secprop->Get_int("blocksize"),
 							   secprop->Get_bool("negotiate"))) {
 
+				// This also unpauses the audio device which is
+				// opened in paused mode by SDL.
 				set_mixer_state(MixerState::On);
-
 			} else {
 				set_no_sound();
 			}
@@ -3009,14 +3013,17 @@ static void handle_toggle_mute(const bool was_pressed)
 	case MixerState::NoSound:
 		LOG_WARNING("MIXER: Mute requested, but sound is disabled ('nosound' mode)");
 		break;
+
 	case MixerState::Muted:
 		MIXER_Unmute();
 		mixer.is_manually_muted = false;
 		break;
+
 	case MixerState::On:
 		MIXER_Mute();
 		mixer.is_manually_muted = true;
 		break;
+
 	default: break;
 	};
 }
@@ -3043,7 +3050,8 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable silent mode (disabled by default).\n"
-	        "Sound is still fully emulated in silent mode, but DOSBox outputs silence.");
+	        "Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.\n"
+	        "Capturing the emulated audio output to a WAV file works in silent mode.");
 
 	auto int_prop = sec_prop.Add_int("rate", OnlyAtStart, DefaultSampleRateHz);
 	assert(int_prop);
