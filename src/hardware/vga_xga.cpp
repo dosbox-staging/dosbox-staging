@@ -1355,7 +1355,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 	case 0x8108: // DWORD drawing control: destination Y and axial step
 		// constant (low word), destination X and axial step
 		// constant (high word) (see PORT 8AE8h,PORT 8EE8h)
-		xga.desty = val & 0x3FFF;
+		xga.desty = val & 0x3fff;
 		if (width == io_width_t::dword)
 			xga.destx = (val >> 16) & 0x3fff;
 		break;
@@ -1364,7 +1364,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		// DWORD drawing control: destination Y and axial step
 		// constant (low word), destination X and axial step
 		// constant (high word) (see PORT 8AEAh,PORT 8EEAh)
-		xga.desty2 = static_cast<uint16_t>(val & 0x3FFF);
+		xga.desty2 = static_cast<uint16_t>(val & 0x3fff);
 		if (width == io_width_t::dword) {
 			xga.destx2 = static_cast<uint16_t>((val >> 16) & 0x3fff);
 		}
@@ -1373,7 +1373,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		xga.destx2 = static_cast<uint16_t>(val & 0x3fff);
 		break;
 	case 0x8110: // WORD error term (see PORT 92E8h)
-		xga.ErrTerm = val & 0x3FFF;
+		xga.ErrTerm = val & 0x3fff;
 		break;
 
 	case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
@@ -1390,7 +1390,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		break;
 	case 0x8134: // packed MMIO: DWORD	background mix (low word) and
 		// foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
-		xga.backmix = val & 0xFFFF;
+		xga.backmix = val & 0xffff;
 		if (width == io_width_t::dword)
 			xga.foremix = (val >> 16);
 		break;
@@ -1412,7 +1412,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 
 	case 0x8140: // DWORD data manipulation control (low word) and
 		// miscellaneous 2 (high word) (see PORT BEE8h,#P1047)
-		xga.pix_cntl = val & 0xFFFF;
+		xga.pix_cntl = val & 0xffff;
 		if (width == io_width_t::dword)
 			xga.control2 = (val >> 16) & 0x0fff;
 		break;
@@ -1429,7 +1429,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 			xga.MAPcount = (val >> 16) & 0x0fff;
 		break;
 	case 0x814a: xga.MAPcount = val & 0x0fff; break;
-	case 0x92e8: xga.ErrTerm = val & 0x3FFF; break;
+	case 0x92e8: xga.ErrTerm = val & 0x3fff; break;
 	case 0x96e8: xga.MAPcount = val & 0x0fff; break;
 	case 0x9ae8:
 	case 0x8118: // Trio64V+ packed MMIO
@@ -1536,8 +1536,8 @@ void VGA_SetupXGA(void) {
 
 	xga.scissors.y1 = 0;
 	xga.scissors.x1 = 0;
-	xga.scissors.y2 = 0xFFF;
-	xga.scissors.x2 = 0xFFF;
+	xga.scissors.y2 = 0xfff;
+	xga.scissors.x2 = 0xfff;
 
 	IO_RegisterWriteHandler(0x42e8, &XGA_Write, io_width_t::dword);
 	IO_RegisterReadHandler(0x42e8, &XGA_Read, io_width_t::dword);
