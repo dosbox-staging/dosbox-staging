@@ -32,7 +32,7 @@
 
 class isoFile final : public DOS_File {
 public:
-	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, uint32_t offset);
+	isoFile(std::shared_ptr<isoDrive> drive, const char *name, FileStat_Block *stat, uint32_t offset);
 	isoFile(const isoFile &) = delete;            // prevent copying
 	isoFile &operator=(const isoFile &) = delete; // prevent assignment
 
@@ -44,7 +44,7 @@ public:
 	bool IsOnReadOnlyMedium() const override;
 
 private:
-	isoDrive *drive = nullptr;
+	std::shared_ptr<isoDrive> drive = nullptr;
 	int cachedSector = -1;
 	uint32_t fileBegin = 0;
 	uint32_t filePos = 0;
@@ -52,7 +52,7 @@ private:
 	uint8_t buffer[ISO_FRAMESIZE] = {{}};
 };
 
-isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, uint32_t offset)
+isoFile::isoFile(std::shared_ptr<isoDrive> iso_drive, const char *name, FileStat_Block *stat, uint32_t offset)
         : drive(iso_drive),
           fileBegin(offset),
           filePos(offset),
@@ -226,7 +226,7 @@ std::unique_ptr<DOS_File> isoDrive::FileOpen(const char* name, uint8_t flags)
 	file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 	file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 	auto file      = std::make_unique<isoFile>(
-                this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
+                shared_from_this(), name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
 	file->flags = flags;
 
 	return file;

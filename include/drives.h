@@ -366,7 +366,8 @@ struct isoDirEntry {
 #define IS_HIDDEN(fileFlags)	(!!(fileFlags & ISO_HIDDEN))
 #define ISO_MAX_HASH_TABLE_SIZE 	100
 
-class isoDrive final : public DOS_Drive {
+// Must be constructed with a shared_ptr or it will throw an exception on internal call to shared_from_this()
+class isoDrive final : public DOS_Drive, public std::enable_shared_from_this<isoDrive> {
 public:
 	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid,
 	         int& error);
