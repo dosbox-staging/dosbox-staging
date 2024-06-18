@@ -892,12 +892,14 @@ void XGA_BlitRect(Bitu val) {
 					break;
 				case 0x02: /* Src is pixel data from PIX_TRANS register */
 					LOG_MSG("XGA: DrawPattern: Wants data from PIX_TRANS register");
+					srcval = 0;
 					break;
 				case 0x03: /* Src is bitmap data */
 					srcval = srcdata;
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					srcval = 0;
 					break;
 			}
 			// For more information, see the "S3 Vision864 Graphics
