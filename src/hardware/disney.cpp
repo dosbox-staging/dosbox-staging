@@ -56,8 +56,8 @@ void Disney::ConfigureFilters(const FilterState state)
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Pull audio frames from the Disney DAC at 7 kHz
-	channel->SetSampleRate(dss_7khz_rate_hz);
-	ms_per_frame = MillisInSecond / dss_7khz_rate_hz;
+	channel->SetSampleRate(DisneySampleRateHz);
+	ms_per_frame = MillisInSecond / DisneySampleRateHz;
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth
@@ -90,7 +90,7 @@ AudioFrame Disney::Render()
 
 bool Disney::IsFifoFull() const
 {
-	return fifo.size() >= max_fifo_size;
+	return fifo.size() >= MaxFifoSize;
 }
 
 void Disney::WriteData(const io_port_t, const io_val_t data, const io_width_t)

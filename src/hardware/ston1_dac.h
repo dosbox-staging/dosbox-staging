@@ -31,7 +31,7 @@
 class StereoOn1 final : public LptDac {
 public:
 	StereoOn1()
-	        : LptDac(ChannelName::StereoOn1Dac, ston1_max_30_khz,
+	        : LptDac(ChannelName::StereoOn1Dac, SampleRateHz,
 	                 {ChannelFeature::Stereo})
 	{}
 
@@ -45,7 +45,7 @@ protected:
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 
 private:
-	static constexpr uint16_t ston1_max_30_khz = 30000u;
+	static constexpr auto SampleRateHz = 30000;
 
 	uint8_t stereo_data[2] = {data_reg, data_reg};
 };
