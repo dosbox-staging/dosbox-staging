@@ -898,9 +898,6 @@ void XGA_BlitRect(Bitu val) {
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
 					break;
 			}
-
-			bool doit = true;
-
 			// For more information, see the "S3 Vision864 Graphics
 			// Accelerator" datasheet
 			//
@@ -912,21 +909,19 @@ void XGA_BlitRect(Bitu val) {
 			// Register (COLOR_CMP)" which this code holds as
 			// xga.color_compare.
 
-			if (xga.control1 & 0x100) {
-				// COLOR_CMP enabled. control corresponds to XGA
-				// register BEE8h.
+			// Always update if we're not comparing (COLOR_CMP is
+			// bit 8). Otherwise, either update if the SRC_NE bit is
+			// set with a matching colour or vice-versa (SRC_NE not
+			// set with non-matching colour).
 
-				// control1 bit 7 is SRC_NE. If clear, don't
-				// update if source value == COLOR_CMP. If set,
-				// don't update if source value != COLOR_CMP
-				doit = !!(((srcval == colorcmpdata) ? 0 : 1) ^
-				          ((xga.control1 >> 7u) & 1u));
-			}
+			using namespace bit::literals;
 
-			if (doit) {
-				Bitu destval = GetMixResult(mixmode, srcval, dstdata);
-				//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
+			if (bit::cleared(xga.control1, b8) ||
+			    bit::is(xga.control1, b7) == (srcval == colorcmpdata)) {
 
+				const auto destval = GetMixResult(mixmode, srcval, dstdata);
+
+				// LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
 				XGA_DrawPoint((Bitu)tarx, (Bitu)tary, destval);
 			}
 
