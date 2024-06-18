@@ -41,7 +41,7 @@ static constexpr uint16_t BytePerSector = 512;
 
 class fatFile final : public DOS_File {
 public:
-	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, fatDrive *useDrive, bool _read_only_medium);
+	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, std::shared_ptr<fatDrive> useDrive, bool _read_only_medium);
 	fatFile(const fatFile&) = delete; // prevent copy
 	fatFile& operator=(const fatFile&) = delete; // prevent assignment
 	bool Read(uint8_t * data,uint16_t * size) override;
@@ -52,7 +52,7 @@ public:
 	bool UpdateDateTimeFromHost(void) override;
 	bool IsOnReadOnlyMedium() const override;
 public:
-	fatDrive* myDrive                   = nullptr;
+	std::shared_ptr<fatDrive> myDrive   = nullptr;
 	uint32_t firstCluster               = 0;
 	uint32_t seekpos                    = 0;
 	uint32_t filelength                 = 0;
@@ -87,7 +87,7 @@ static void convToDirFile(char *filename, char *filearray) {
 }
 
 fatFile::fatFile(const char* /*name*/, uint32_t startCluster, uint32_t fileLen,
-                 fatDrive* useDrive, bool _read_only_medium)
+                 std::shared_ptr<fatDrive> useDrive, bool _read_only_medium)
         : myDrive(useDrive),
           firstCluster(startCluster),
           filelength(fileLen),
@@ -801,7 +801,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	uint32_t filesize;
 	bool is_hdd;
 	struct partTable mbrData;
-	
+
 	if(imgDTASeg == 0) {
 		imgDTASeg = DOS_GetMemory(dta_pages());
 		imgDTAPtr = RealMake(imgDTASeg, 0);
@@ -1120,7 +1120,7 @@ std::unique_ptr<DOS_File> fatDrive::FileCreate(const char* name,
 	auto fat_file        = std::make_unique<fatFile>(name,
                                                   first_cluster,
                                                   entry_size,
-                                                  this,
+                                                  shared_from_this(),
                                                   IsReadOnly());
 	fat_file->flags      = OPEN_READWRITE;
 	fat_file->dirCluster = dirClust;
@@ -1167,7 +1167,7 @@ std::unique_ptr<DOS_File> fatDrive::FileOpen(const char* name, uint8_t flags)
 	auto fat_file = std::make_unique<fatFile>(name,
 	                                          first_cluster,
 	                                          entry_size,
-	                                          this,
+	                                          shared_from_this(),
 	                                          IsReadOnly());
 
 	fat_file->flags      = flags;
