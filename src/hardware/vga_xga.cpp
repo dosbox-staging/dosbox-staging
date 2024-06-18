@@ -187,17 +187,14 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 
 }
 
-Bitu XGA_PointMask() {
-	switch(XGA_COLOR_MODE) {
-		case M_LIN8:
-			return 0xFFul;
-		case M_LIN15:
-		case M_LIN16:
-			return 0xFFFFul;
-		case M_LIN32:
-			return 0xFFFFFFFFul;
-		default:
-			break;
+static uint32_t get_point_mask()
+{
+	switch (XGA_COLOR_MODE) {
+	case M_LIN8: return UINT8_MAX;
+	case M_LIN15:
+	case M_LIN16: return UINT16_MAX;
+	case M_LIN32: return UINT32_MAX;
+	default: break;
 	}
 	return 0;
 }
@@ -840,7 +837,7 @@ void XGA_BlitRect(Bitu val) {
 	if(((val >> 5) & 0x01) != 0) dx = 1;
 	if(((val >> 7) & 0x01) != 0) dy = 1;
 
-	colorcmpdata = xga.color_compare & XGA_PointMask();
+	colorcmpdata = xga.color_compare & get_point_mask();
 
 	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
 	uint32_t mixmode = 0x67; /* Source is bitmap data, mix mode is src */
@@ -904,15 +901,26 @@ void XGA_BlitRect(Bitu val) {
 
 			bool doit = true;
 
-			/* For more information, see the "S3 Vision864 Graphics Accelerator" datasheet
-			 * [http://hackipedia.org/browse.cgi/Computer/Platform/PC%2c%20IBM%20compatible/Video/VGA/SVGA/S3%20Graphics%2c%20Ltd/S3%20Vision864%20Graphics%20Accelerator%20(1994-10).pdf]
-			 * Page 203 for "Multifunction Control Miscellaneous Register (MULT_MISC)" which this code holds as xga.control1, and
-			 * Page 198 for "Color Compare Register (COLOR_CMP)" which this code holds as xga.color_compare. */
-			if (xga.control1 & 0x100) { /* COLOR_CMP enabled. control1 corresponds to XGA register BEE8h */
-				/* control1 bit 7 is SRC_NE.
-				 * If clear, don't update if source value == COLOR_CMP.
-				 * If set, don't update if source value != COLOR_CMP */
-				doit = !!(((srcval == colorcmpdata)?0:1)^((xga.control1>>7u)&1u));
+			// For more information, see the "S3 Vision864 Graphics
+			// Accelerator" datasheet
+			//
+			// [http://hackipedia.org/browse.cgi/Computer/Platform/PC%2c%20IBM%20compatible/Video/VGA/SVGA/S3%20Graphics%2c%20Ltd/S3%20Vision864%20Graphics%20Accelerator%20(1994-10).pdf]
+			//
+			// Page 203 for "Multifunction Control Miscellaneous
+			// Register (MULT_MISC)" which this code holds as
+			// xga.control1, and Page 198 for "Color Compare
+			// Register (COLOR_CMP)" which this code holds as
+			// xga.color_compare.
+
+			if (xga.control1 & 0x100) {
+				// COLOR_CMP enabled. control corresponds to XGA
+				// register BEE8h.
+
+				// control1 bit 7 is SRC_NE. If clear, don't
+				// update if source value == COLOR_CMP. If set,
+				// don't update if source value != COLOR_CMP
+				doit = !!(((srcval == colorcmpdata) ? 0 : 1) ^
+				          ((xga.control1 >> 7u) & 1u));
 			}
 
 			if (doit) {
