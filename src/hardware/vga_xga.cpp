@@ -1298,13 +1298,13 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 	case 0x8104:
 		// Drawing control: row (low word), column (high word)
 		// "CUR_X2" and "CUR_Y2" (see PORT 82EAh,PORT 86EAh)
-		xga.cury2 = (uint16_t)(val & 0x0fff);
+		xga.cury2 = static_cast<uint16_t>(val & 0x0fff);
 		if (width == io_width_t::dword) {
-			xga.curx2 = (uint16_t)((val >> 16) & 0x0fff);
+			xga.curx2 = static_cast<uint16_t>((val >> 16) & 0x0fff);
 		}
 		break;
 	case 0x8106:
-		xga.curx2 = (uint16_t)(val & 0x0fff);
+		xga.curx2 = static_cast<uint16_t>(val & 0x0fff);
 		break;
 	case 0x8108: // DWORD drawing control: destination Y and axial step
 		// constant (low word), destination X and axial step
@@ -1318,13 +1318,13 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		// DWORD drawing control: destination Y and axial step
 		// constant (low word), destination X and axial step
 		// constant (high word) (see PORT 8AEAh,PORT 8EEAh)
-		xga.desty2 = (uint16_t)(val & 0x3FFF);
+		xga.desty2 = static_cast<uint16_t>(val & 0x3FFF);
 		if (width == io_width_t::dword) {
-			xga.destx2 = (uint16_t)((val >> 16) & 0x3fff);
+			xga.destx2 = static_cast<uint16_t>((val >> 16) & 0x3fff);
 		}
 		break;
 	case 0x810e:
-		xga.destx2 = (uint16_t)(val & 0x3fff);
+		xga.destx2 = static_cast<uint16_t>(val & 0x3fff);
 		break;
 	case 0x8110: // WORD error term (see PORT 92E8h)
 		xga.ErrTerm = val & 0x3FFF;
