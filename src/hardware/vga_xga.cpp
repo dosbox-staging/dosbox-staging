@@ -355,15 +355,16 @@ static void XGA_DrawLineVector(const uint32_t val, const bool skip_last_pixel)
 						srcval = xga.forecolor;
 						break;
 					case 0x02: /* Src is pixel data from PIX_TRANS register */
-						//srcval = tmpval;
 						//LOG_MSG("XGA: DrawRect: Wants data from PIX_TRANS register");
+						srcval = 0;
 						break;
 					case 0x03: /* Src is bitmap data */
 						LOG_MSG("XGA: DrawRect: Wants data from srcdata");
-						//srcval = srcdata;
+						srcval = 0;
 						break;
 					default:
 						LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
+						srcval = 0;
 						break;
 				}
 				dstdata = XGA_GetPoint(xat, yat);
