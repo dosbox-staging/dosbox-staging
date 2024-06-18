@@ -41,8 +41,8 @@ void StereoOn1::ConfigureFilters(const FilterState state)
 {
 	assert(channel);
 	if (state == FilterState::On) {
-		constexpr uint8_t lp_order       = 2;
-		const uint16_t lp_cutoff_freq_hz = 9000;
+		constexpr auto lp_order      = 2;
+		const auto lp_cutoff_freq_hz = 9000;
 		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetLowPassFilter(state);

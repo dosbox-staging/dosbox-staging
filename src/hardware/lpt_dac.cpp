@@ -31,7 +31,7 @@
 #include "disney.h"
 #include "ston1_dac.h"
 
-LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
+LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
                std::set<ChannelFeature> extra_features)
         : dac_name(name)
 {
@@ -97,7 +97,7 @@ void LptDac::RenderUpToNow()
 	}
 }
 
-void LptDac::AudioCallback(const uint16_t requested_frames)
+void LptDac::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 

@@ -34,7 +34,7 @@
 // Provides mandatory scafolding for derived LPT DAC devices
 class LptDac {
 public:
-	LptDac(const std::string_view name, const uint16_t channel_rate_hz,
+	LptDac(const std::string_view name, const int channel_rate_hz,
 	       std::set<ChannelFeature> extra_features = {});
 
 	virtual ~LptDac();
@@ -57,7 +57,7 @@ protected:
 	// Base LPT DAC functionality
 	virtual AudioFrame Render() = 0;
 	void RenderUpToNow();
-	void AudioCallback(const uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	std::queue<AudioFrame> render_queue = {};
 
 	MixerChannelPtr channel = {};
