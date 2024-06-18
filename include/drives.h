@@ -29,6 +29,13 @@
 #include "dos_inc.h"
 #include "dos_system.h"
 
+// GCC throws a warning about non-virtual destructor for std::enable_shared_from_this
+// This is normally a helpful warning. Ex: If DOS_Drive had a non-virtual destructor, it would be a problem.
+// In this case, it is safe so hide the warning for this file.
+// It gets restored at the end.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+
 void Set_Label(const char* const input, char* const output, bool cdrom);
 std::string To_Label(const char* name);
 std::string generate_8x3(const char *lfn, const unsigned int num, const bool start = false);
@@ -179,7 +186,9 @@ struct partTable {
 #endif
 //Forward
 class imageDisk;
-class fatDrive final : public DOS_Drive {
+
+// Must be constructed with a shared_ptr or it will throw an exception on internal call to shared_from_this()
+class fatDrive final : public DOS_Drive, public std::enable_shared_from_this<fatDrive> {
 public:
 	fatDrive(const char* sysFilename, uint32_t bytesector,
 	         uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
@@ -531,5 +540,7 @@ private:
 	std::vector<std::string> DOSdirs_cache; //Can not blindly change its type. it is important that subdirs come after the parent directory.
 	const std::string special_prefix;
 };
+
+#pragma GCC diagnostic pop
 
 #endif
