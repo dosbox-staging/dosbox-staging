@@ -386,8 +386,12 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 	case 0x2e:	/* New Chip ID  (low byte of PCI device ID) */
 		return 0x11;	// Trio64
 	case 0x2f:	/* Revision */
-		return 0x00;	// Trio64 (exact value?)
-//		return 0x44;	// Trio64 V+
+		// The documention leaves this unspecified and says "This will
+		// change with each stepping". Therefore we max this out under
+		// the assumption that newer steppings fix(ed) issues in prior
+		// steppings, and we want to avoid drivers witholding features
+		// based on stepping bugs.
+		return 0xff;
 	case 0x30:	/* CR30 Chip ID/REV register */
 		return 0xe1;	// Trio+ dual byte
 	case 0x31:	/* CR31 Memory Configuration */
