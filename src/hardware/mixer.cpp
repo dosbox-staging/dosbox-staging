@@ -188,7 +188,7 @@ struct MixerSettings {
 	int blocksize    = 0;
 	int prebuffer_ms = 25;
 
-	SDL_AudioDeviceID sdldevice = 0;
+	SDL_AudioDeviceID sdl_device = 0;
 
 	MixerState state = MixerState::Uninitialized;
 
@@ -265,12 +265,16 @@ int MIXER_GetSampleRate()
 
 void MIXER_LockAudioDevice()
 {
-	SDL_LockAudioDevice(mixer.sdldevice);
+	if (mixer.sdl_device > 0) {
+		SDL_LockAudioDevice(mixer.sdl_device);
+	}
 }
 
 void MIXER_UnlockAudioDevice()
 {
-	SDL_UnlockAudioDevice(mixer.sdldevice);
+	if (mixer.sdl_device > 0) {
+		SDL_UnlockAudioDevice(mixer.sdl_device);
+	}
 }
 
 MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
@@ -2687,13 +2691,13 @@ static void set_mixer_state(const MixerState requested)
 	// asked to become uninitialized
 	assert(requested != MixerState::Uninitialized);
 
-	// When sdldevice is zero then the SDL audio device doesn't exist, which
+	// When sdl_device is zero then the SDL audio device doesn't exist, which
 	// is a valid configuration. In these cases the only logical end-state
 	// is NoSound. So switch the request and let the rest of the function
 	// handle it.
 	auto new_state = requested;
 
-	if (mixer.sdldevice == 0) {
+	if (mixer.sdl_device == 0) {
 		new_state = MixerState::NoSound;
 	}
 
@@ -2732,8 +2736,9 @@ static void set_mixer_state(const MixerState requested)
 	mixer.state = new_state;
 
 	// Finally, we start the audio device either paused or unpaused:
-	if (mixer.sdldevice) {
-		SDL_PauseAudioDevice(mixer.sdldevice, mixer.state != MixerState::On);
+	if (mixer.sdl_device > 0) {
+		const auto pause = (mixer.state != MixerState::On);
+		SDL_PauseAudioDevice(mixer.sdl_device, pause);
 	}
 	//
 	// When unpaused, the device pulls frames queued by the
@@ -2760,9 +2765,9 @@ void MIXER_CloseAudioDevice()
 
 	MIXER_UnlockAudioDevice();
 
-	if (mixer.sdldevice) {
-		SDL_CloseAudioDevice(mixer.sdldevice);
-		mixer.sdldevice = 0;
+	if (mixer.sdl_device > 0) {
+		SDL_CloseAudioDevice(mixer.sdl_device);
+		mixer.sdl_device = 0;
 	}
 	mixer.state = MixerState::Uninitialized;
 }
@@ -2794,11 +2799,18 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		sdl_allow_flags |= SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 	}
 
+	// Open the audio device
 	constexpr auto SdlError = 0;
-	if ((mixer.sdldevice = SDL_OpenAudioDevice(
-	             nullptr, 0, &desired, &obtained, sdl_allow_flags)) == SdlError) {
 
-		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output disabled",
+	// Null requests the most reasonable default device
+	constexpr auto DeviceName = nullptr;
+	// Non-zero is the device is to be opened for recording as well
+	constexpr auto IsCapture = 0;
+
+	if ((mixer.sdl_device = SDL_OpenAudioDevice(
+	             DeviceName, IsCapture, &desired, &obtained, sdl_allow_flags)) ==
+	    SdlError) {
+		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		            SDL_GetError());
 
 		set_section_property_value("mixer", "nosound", "off");
