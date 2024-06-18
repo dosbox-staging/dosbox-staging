@@ -382,6 +382,7 @@ struct VgaS3 {
 	uint8_t reg_52 = 0;
 	uint8_t reg_55 = 0;
 	uint8_t reg_58 = 0;
+	uint8_t reg_63 = 0;
 	uint8_t reg_6b = 0; // LFB BIOS scratchpad
 
 	uint8_t ex_hor_overflow = 0;

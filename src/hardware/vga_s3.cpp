@@ -335,6 +335,9 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 				(3d4h index 18h). Bit 8 is in 3d4h index 7 bit 4 and bit 9 in 3d4h
 				index 9 bit 6.
 		*/
+	case 0x63: // Extended Control Register CR63
+		vga.s3.reg_63 = val;
+		break;
 	case 0x67:	/* Extended Miscellaneous Control 2 */
 		/*
 			0	VCLK PHS. VCLK Phase With Respect to DCLK. If clear VLKC is inverted
@@ -452,6 +455,8 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 		return (vga.s3.la_window >> 8);
 	case 0x5a:	/* Linear Address Window Position Low */
 		return (vga.s3.la_window & 0xff);
+	case 0x63: // Extended Control Register CR63
+		return vga.s3.reg_63;
 	case 0x5D:	/* Extended Horizontal Overflow */
 		return vga.s3.ex_hor_overflow;
 	case 0x5e:	/* Extended Vertical Overflow */
