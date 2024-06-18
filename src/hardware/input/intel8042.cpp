@@ -1019,7 +1019,10 @@ static uint8_t read_data_port(io_port_t, io_width_t) // port 0x60
 	is_data_from_aux = false;
 	is_data_from_kbd = false;
 
-	maybe_transfer_buffer();
+	// Enforce the simulated data transfer delay, as some software
+	// (Tyrian 2000 setup) reads the port without waiting for the
+	// interrupt.
+	restart_delay_timer(PortDelayMs);
 
 	return ret_val;
 }
