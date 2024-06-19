@@ -114,7 +114,7 @@ private:
 	void DmaCallback(const DmaChannel* chan, DMAEvent event);
 	uint8_t ReadFromPort(io_port_t port, io_width_t);
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t);
-	void AudioCallback(uint16_t requested);
+	void AudioCallback(const int requested);
 	TandyDAC() = delete;
 
 	DMA dma = {};
@@ -142,7 +142,7 @@ private:
 	TandyPSG(const TandyPSG &) = delete;
 	TandyPSG &operator=(const TandyPSG &) = delete;
 
-	void AudioCallback(uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	bool MaybeRenderFrame(float &frame);
 	void RenderUpToNow();
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
@@ -212,8 +212,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 
 	// Set up zero-order-hold resampler to emulate the "crunchiness" of
 	// early DACs
-	channel->SetZeroOrderHoldUpsamplerTargetRate(
-	        check_cast<uint16_t>(sample_rate_hz));
+	channel->SetZeroOrderHoldUpsamplerTargetRate(sample_rate_hz);
 
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
@@ -320,8 +319,7 @@ void TandyDAC::ChangeMode()
 			// Fill using the prior sample rate
 			channel->FillUp();
 
-			channel->SetSampleRate(
-			        check_cast<uint16_t>(new_sample_rate_hz));
+			channel->SetSampleRate(new_sample_rate_hz);
 
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
 
@@ -419,7 +417,7 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 	//         regs.mode, regs.control, regs.clock_divider, regs.amplitude);
 }
 
-void TandyDAC::AudioCallback(uint16_t requested)
+void TandyDAC::AudioCallback(const int requested)
 {
 	if (!channel || !dma.channel) {
 		LOG_DEBUG("TANDY: Skipping update until the DAC is initialized");
@@ -429,21 +427,27 @@ void TandyDAC::AudioCallback(uint16_t requested)
 	                         !dma.is_done;
 
 	const auto buf = dma.fifo.data();
-	const auto buf_size = check_cast<uint16_t>(dma.fifo.size());
-	while (requested) {
-		const auto bytes_to_read = std::min(requested, buf_size);
+	const auto buf_size = check_cast<int>(dma.fifo.size());
+	auto bytes_remaining = requested;
 
-		auto actual = should_read ? dma.channel->Read(bytes_to_read, buf)
-		                          : 0u;
+	while (bytes_remaining) {
+		const auto bytes_to_read = std::min(bytes_remaining, buf_size);
 
-		// If we came up short, move back one to terminate the tail in silence
-		if (actual && actual < bytes_to_read)
+		auto actual = should_read
+		                    ? check_cast<int>(
+		                              dma.channel->Read(bytes_to_read, buf))
+		                    : 0;
+
+		// If we came up short, move back one to terminate the tail in
+		// silence
+		if (actual && actual < bytes_to_read) {
 			actual--;
-		memset(buf + actual, 128u, bytes_to_read - actual);
+		}
+		memset(buf + actual, 128, bytes_to_read - actual);
 
 		// Always write the requested quantity regardless of read status
 		channel->AddSamples_m8(bytes_to_read, buf);
-		requested -= bytes_to_read;
+		bytes_remaining -= bytes_to_read;
 	}
 }
 
@@ -588,7 +592,7 @@ void TandyPSG::WriteToPort(io_port_t, io_val_t value, io_width_t)
 	device->write(data);
 }
 
-void TandyPSG::AudioCallback(const uint16_t requested_frames)
+void TandyPSG::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 
