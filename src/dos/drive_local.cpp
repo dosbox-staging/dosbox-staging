@@ -634,48 +634,53 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 
 bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
-	NativeSeek seek_type;
+	// Tested this interrupt on MS-DOS 6.22
+	// The values for SEEK_CUR and SEEK_END can be negative
+	// But some games/programs depend on the wrapping behavior of a 32-bit integer
+	// Example: WinG installer for Windows 3.1
+	// Wrapping a 32-bit signed is technically undefined in C
+	// So just leave it unsigned and the math works out to be the same
+	uint32_t seek_to = 0;
 	switch (type) {
-	case DOS_SEEK_SET: seek_type = NativeSeek::Set; break;
-	case DOS_SEEK_CUR: seek_type = NativeSeek::Current; break;
-	case DOS_SEEK_END: seek_type = NativeSeek::End; break;
-	default: assertm(false, "Invalid seek type"); return false;
+		case DOS_SEEK_SET: {
+			seek_to = *pos_addr;
+			break;
+		}
+		case DOS_SEEK_CUR: {
+			const auto current_pos = get_native_file_position(file_handle);
+			if (current_pos == NativeSeekFailed) {
+				LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+				DOS_SetError(DOSERR_ACCESS_DENIED);
+				return false;
+			}
+			seek_to = check_cast<uint32_t>(current_pos) + *pos_addr;
+			break;
+		}
+		case DOS_SEEK_END: {
+			const auto end_pos = seek_native_file(file_handle, 0, NativeSeek::End);
+			if (end_pos == NativeSeekFailed) {
+				LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+				DOS_SetError(DOSERR_ACCESS_DENIED);
+				return false;
+			}
+			seek_to = check_cast<uint32_t>(end_pos) + *pos_addr;
+			break;
+		}
+		default: {
+			// DOS_SeekFile() should have already thrown this error
+			assertm(false, "Invalid seek type");
+			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			return false;
+		}
 	}
 
-	// Blackthorne requires this logic as it passes a very large value for SEEK_SET
-	int64_t requested_pos = 0;
-	if (type == DOS_SEEK_SET) {
-		// If SEEK_SET, the value must always be interprted as a 32-bit unsigned value
-		// Per MS-DOS Encyclopedia Page 1312:
-
-		// The value in CX:DX is an offset specifying how far the file pointer is to be moved.
-		// With method code OOH, the value in CX:DX is always interpreted as a positive 32-bit
-		// integer, meaning the file pointer is always set relative to the beginning of the file.
-		requested_pos = *pos_addr;
-	} else {
-		// With method codes OIH and 02H, the value in CX:DX can be either a positive or negative
-		// 32-bit integer. Thus, method 1 can move the file pointer either forward or backward
-		// from its current position; method 2can move the file pointer either forward or
-		// backward from the end ofthe file.
-		requested_pos = *reinterpret_cast<int32_t*>(pos_addr);
-	}
-
-	auto returned_pos = seek_native_file(file_handle, requested_pos, seek_type);
+	// Always use NativeSeek::Set set since we calculate the absolute value above
+	auto returned_pos = seek_native_file(file_handle, seek_to, NativeSeek::Set);
 
 	if (returned_pos == NativeSeekFailed) {
-		// MS-DOS does not throw an error if we would seek before the beginning of the file
-		// Per MS-DOS Encyclopedia Page 1313:
-
-		// Depending on the offset specified in CX:DX, methods 1 and 2 may move the file
-		// pointer to a position before the start of the file. Function 42H does not return an error
-		// code if this happens, but later attempts to read from or write to the file will produce
-		// unexpected errors.
-
-		// Modern OSs do not allow this and I don't know how to emulate "unexpected errors"
-		// Just set the position to 0 and never throw a DOS error
-		seek_native_file(file_handle, 0, NativeSeek::Set);
-		returned_pos = 0;
 		LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
 	}
 
 	// The returned value is always positive.
