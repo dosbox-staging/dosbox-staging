@@ -58,6 +58,7 @@ private:
 	uint8_t CalcStatus() const;
 	void Reset(bool should_clear_adder);
 	void Update(uint16_t samples);
+
 	uint8_t ReadPresencePort02F(io_port_t port, io_width_t);
 	uint8_t ReadCmdResultPort200(io_port_t port, io_width_t);
 	uint8_t ReadStatusPort202(io_port_t port, io_width_t);
@@ -70,25 +71,37 @@ private:
 	void WriteFifoLevelPort204(io_port_t port, io_val_t value, io_width_t);
 
 	// Constants
-	static constexpr auto clock_rate_hz = 1000000;
-	static constexpr auto fifo_size = 2048;
-	static constexpr auto fifo_size_mask = fifo_size - 1;
+	static constexpr auto clock_rate_hz         = 1000000;
+	static constexpr auto fifo_size             = 2048;
+	static constexpr auto fifo_size_mask        = fifo_size - 1;
 	static constexpr auto fifo_nearly_empty_val = 128;
-	static constexpr auto frac_shift = 12;            // Fixed precision
+
+	// Fixed precision
+	static constexpr auto frac_shift = 12;
+
 	static constexpr auto fifo_status_ready_flag = 0x10;
-	static constexpr auto fifo_full_flag = 0x08;
-	static constexpr auto fifo_empty_flag = 0x04;
-	static constexpr auto fifo_nearly_empty_flag = 0x02; // >= 1792 bytes free
-	static constexpr auto fifo_irq_flag = 0x01; // IRQ triggered by DAC
-	static constexpr auto fifo_midline = ceil_udivide(static_cast<uint8_t>(UINT8_MAX), 2u);
-	static constexpr auto irq_number = 7;
-	static constexpr auto bytes_pending_limit =  fifo_size << frac_shift;
+	static constexpr auto fifo_full_flag         = 0x08;
+	static constexpr auto fifo_empty_flag        = 0x04;
+
+	// >= 1792 bytes free
+	static constexpr auto fifo_nearly_empty_flag = 0x02;
+
+	// IRQ triggered by DAC
+	static constexpr auto fifo_irq_flag = 0x01;
+
+	static constexpr auto fifo_midline =
+	        ceil_udivide(static_cast<uint8_t>(UINT8_MAX), 2u);
+	static constexpr auto irq_number          = 7;
+	static constexpr auto bytes_pending_limit = fifo_size << frac_shift;
 
 	// Managed objects
 	MixerChannelPtr channel = nullptr;
-	IO_ReadHandleObject read_handlers[5] = {};
+
+	IO_ReadHandleObject read_handlers[5]   = {};
 	IO_WriteHandleObject write_handlers[4] = {};
+
 	Ps1Registers regs = {};
+
 	uint8_t fifo[fifo_size] = {};
 
 	// Counters
@@ -103,7 +116,7 @@ private:
 
 	// States
 	bool is_new_transfer = true;
-	bool is_playing = false;
+	bool is_playing      = false;
 	bool can_trigger_irq = false;
 };
 
@@ -112,13 +125,16 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	if (filter_enabled) {
 		constexpr auto HpfOrder        = 3;
 		constexpr auto HpfCutoffFreqHz = 160;
+
 		channel->ConfigureHighPassFilter(HpfOrder, HpfCutoffFreqHz);
 		channel->SetHighPassFilter(FilterState::On);
 
 		constexpr auto LpfOrder        = 1;
 		constexpr auto LpfCutoffFreqHz = 2100;
+
 		channel->ConfigureLowPassFilter(LpfOrder, LpfCutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -160,38 +176,67 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	}
 
 	// Register DAC per-port read handlers
-	read_handlers[0].Install(0x02F, std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2), io_width_t::byte);
-	read_handlers[1].Install(0x200, std::bind(&Ps1Dac::ReadCmdResultPort200, this, _1, _2), io_width_t::byte);
-	read_handlers[2].Install(0x202, std::bind(&Ps1Dac::ReadStatusPort202, this, _1, _2), io_width_t::byte);
-	read_handlers[3].Install(0x203, std::bind(&Ps1Dac::ReadTimingPort203, this, _1, _2), io_width_t::byte);
-	read_handlers[4].Install(0x204, // to 0x207
-	                         std::bind(&Ps1Dac::ReadJoystickPorts204To207, this, _1, _2), io_width_t::byte, 3);
+	read_handlers[0].Install(0x02F,
+	                         std::bind(&Ps1Dac::ReadPresencePort02F, this, _1, _2),
+	                         io_width_t::byte);
+
+	read_handlers[1].Install(0x200,
+	                         std::bind(&Ps1Dac::ReadCmdResultPort200, this, _1, _2),
+	                         io_width_t::byte);
+
+	read_handlers[2].Install(0x202,
+	                         std::bind(&Ps1Dac::ReadStatusPort202, this, _1, _2),
+	                         io_width_t::byte);
+
+	read_handlers[3].Install(0x203,
+	                         std::bind(&Ps1Dac::ReadTimingPort203, this, _1, _2),
+	                         io_width_t::byte);
+
+	read_handlers[4].Install(
+	        0x204,
+	        std::bind(&Ps1Dac::ReadJoystickPorts204To207, this, _1, _2),
+	        io_width_t::byte,
+	        3);
 
 	// Register DAC per-port write handlers
-	write_handlers[0].Install(0x200, std::bind(&Ps1Dac::WriteDataPort200, this, _1, _2, _3), io_width_t::byte);
-	write_handlers[1].Install(0x202, std::bind(&Ps1Dac::WriteControlPort202, this, _1, _2, _3), io_width_t::byte);
-	write_handlers[2].Install(0x203, std::bind(&Ps1Dac::WriteTimingPort203, this, _1, _2, _3), io_width_t::byte);
-	write_handlers[3].Install(0x204, std::bind(&Ps1Dac::WriteFifoLevelPort204, this, _1, _2, _3),
+	write_handlers[0].Install(0x200,
+	                          std::bind(&Ps1Dac::WriteDataPort200, this, _1, _2, _3),
 	                          io_width_t::byte);
+
+	write_handlers[1].Install(0x202,
+	                          std::bind(&Ps1Dac::WriteControlPort202, this, _1, _2, _3),
+	                          io_width_t::byte);
+
+	write_handlers[2].Install(0x203,
+	                          std::bind(&Ps1Dac::WriteTimingPort203, this, _1, _2, _3),
+	                          io_width_t::byte);
+
+	write_handlers[3].Install(
+	        0x204,
+	        std::bind(&Ps1Dac::WriteFifoLevelPort204, this, _1, _2, _3),
+	        io_width_t::byte);
 
 	// Operate at native sampling rates
 	sample_rate_hz = channel->GetSampleRate();
-	last_write = 0;
+	last_write     = 0;
 	Reset(true);
 }
 
 uint8_t Ps1Dac::CalcStatus() const
 {
 	uint8_t status = regs.status & fifo_irq_flag;
-	if (!bytes_pending)
+	if (!bytes_pending) {
 		status |= fifo_empty_flag;
+	}
 
 	if (bytes_pending < (fifo_nearly_empty_val << frac_shift) &&
-	    (regs.command & 3) == 3)
+	    (regs.command & 3) == 3) {
 		status |= fifo_nearly_empty_flag;
+	}
 
-	if (bytes_pending > ((fifo_size - 1) << frac_shift))
+	if (bytes_pending > ((fifo_size - 1) << frac_shift)) {
 		status |= fifo_full_flag;
+	}
 
 	return status;
 }
@@ -200,18 +245,19 @@ void Ps1Dac::Reset(bool should_clear_adder)
 {
 	PIC_DeActivateIRQ(irq_number);
 	memset(fifo, fifo_midline, fifo_size);
-	read_index = 0;
-	write_index = 0;
+	read_index      = 0;
+	write_index     = 0;
 	read_index_high = 0;
 
-	 // Be careful with this, 5 second timeout and Space Quest 4
-	if (should_clear_adder)
+	// Be careful with this, 5 second timeout and Space Quest 4
+	if (should_clear_adder) {
 		adder = 0;
+	}
 
-	bytes_pending = 0;
-	regs.status = CalcStatus();
+	bytes_pending   = 0;
+	regs.status     = CalcStatus();
 	can_trigger_irq = false;
-	is_playing = true;
+	is_playing      = true;
 	is_new_transfer = true;
 }
 
@@ -244,9 +290,10 @@ void Ps1Dac::WriteControlPort202(io_port_t, io_val_t value, io_width_t)
 	channel->WakeUp();
 
 	const auto data = check_cast<uint8_t>(value);
-	regs.command = data;
-	if (data & 3)
+	regs.command    = data;
+	if (data & 3) {
 		can_trigger_irq = true;
+	}
 }
 
 void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
@@ -257,9 +304,11 @@ void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 	// Clock divisor (maybe trigger first IRQ here).
 	regs.divisor = data;
 
-	if (data < 45) // common in Infocom games
+	if (data < 45) {    // common in Infocom games
 		data = 125; // fallback to a default 8 KHz data rate
+	}
 	const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
+
 	adder = (data_rate_hz << frac_shift) / sample_rate_hz;
 
 	regs.status = CalcStatus();
@@ -277,8 +326,9 @@ void Ps1Dac::WriteFifoLevelPort204(io_port_t, io_val_t value, io_width_t)
 
 	const auto data = check_cast<uint8_t>(value);
 	regs.fifo_level = data;
-	if (!data)
+	if (!data) {
 		Reset(true);
+	}
 	// When the Microphone is used (PS1MIC01), it writes 0x08 to this during
 	// playback presumably beacuse the card is constantly filling the
 	// analog-to-digital buffer.
@@ -315,17 +365,17 @@ uint8_t Ps1Dac::ReadJoystickPorts204To207(io_port_t, io_width_t)
 
 void Ps1Dac::Update(uint16_t samples)
 {
-	uint8_t *buffer = MixTemp;
+	uint8_t* buffer = MixTemp;
 
 	int32_t pending = 0;
-	uint32_t add = 0;
-	uint32_t pos = read_index_high;
-	uint16_t count = samples;
+	uint32_t add    = 0;
+	uint32_t pos    = read_index_high;
+	uint16_t count  = samples;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
-		pending = static_cast<int32_t>(bytes_pending);
-		add = adder;
+		pending     = static_cast<int32_t>(bytes_pending);
+		add         = adder;
 		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
 			// More bytes needed.
 			regs.status |= fifo_irq_flag;
@@ -353,9 +403,10 @@ void Ps1Dac::Update(uint16_t samples)
 	}
 	// Update positions and see if we can clear the fifo_full_flag
 	read_index_high = pos;
-	read_index = static_cast<uint16_t>(pos >> frac_shift);
-	if (pending < 0)
+	read_index      = static_cast<uint16_t>(pos >> frac_shift);
+	if (pending < 0) {
 		pending = 0;
+	}
 	bytes_pending = static_cast<uint32_t>(pending);
 
 	channel->AddSamples_m8(samples, MixTemp);
@@ -369,10 +420,12 @@ Ps1Dac::~Ps1Dac()
 	}
 
 	// Stop the game from accessing the IO ports
-	for (auto &handler : read_handlers)
+	for (auto& handler : read_handlers) {
 		handler.Uninstall();
-	for (auto &handler : write_handlers)
+	}
+	for (auto& handler : write_handlers) {
 		handler.Uninstall();
+	}
 
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
