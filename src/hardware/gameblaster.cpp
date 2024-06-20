@@ -85,7 +85,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
-	                           UseMixerRate,
+	                           render_rate_hz,
 	                           ChannelName::Cms,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,
@@ -119,18 +119,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 		enable_filter();
 	}
 
-	// Calculate rates and ratio based on the mixer's rate
-	const auto sample_rate_hz = channel->GetSampleRate();
-
-	// Set up the resampler to convert from the render rate to the mixer's
-	// frame rate
-	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
-	for (auto& r : resamplers) {
-		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-		                                              sample_rate_hz,
-		                                              max_rate_hz));
-	}
-
 	LOG_MSG("CMS: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
 	        base_port,
 	        chip_clock / 1e6);
@@ -138,22 +126,22 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	assert(channel);
 	assert(devices[0]);
 	assert(devices[1]);
-	assert(resamplers[0]);
-	assert(resamplers[1]);
 
 	is_open = true;
 }
 
-bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
+AudioFrame GameBlaster::RenderFrame()
 {
-	// Static containers set up once and reused
-	static std::array<int16_t, 2> buf = {}; // left and right
-	static int16_t *p_buf[]           = {&buf[0], &buf[1]};
+	// left and right
+	static std::array<int16_t, 2> buf = {};
+
 	static device_sound_interface::sound_stream stream;
+
+	int16_t *p_buf[] = {&buf[0], &buf[1]};
 
 	// Accumulate the samples from both SAA-1099 devices
 	devices[0]->sound_stream_update(stream, nullptr, p_buf, 1);
-	int left_accum = buf[0];
+	int left_accum  = buf[0];
 	int right_accum = buf[1];
 
 	devices[1]->sound_stream_update(stream, nullptr, p_buf, 1);
@@ -163,18 +151,7 @@ bool GameBlaster::MaybeRenderFrame(AudioFrame &frame)
 	// Increment our time datum up to which the device has rendered
 	last_rendered_ms += ms_per_render;
 
-	// Resample the limited frame
-	const auto l_ready = resamplers[0]->input(left_accum);
-	const auto r_ready = resamplers[1]->input(right_accum);
-	assert(l_ready == r_ready);
-	const auto frame_is_ready = l_ready && r_ready;
-
-	// Get the frame from the resampler
-	if (frame_is_ready) {
-		frame.left  = static_cast<float>(resamplers[0]->output());
-		frame.right = static_cast<float>(resamplers[1]->output());
-	}
-	return frame_is_ready;
+	return {static_cast<float>(left_accum), static_cast<float>(right_accum)};
 }
 
 void GameBlaster::RenderUpToNow()
@@ -190,8 +167,7 @@ void GameBlaster::RenderUpToNow()
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_render;
-		if (AudioFrame f = {}; MaybeRenderFrame(f))
-			fifo.emplace(f);
+		fifo.emplace(RenderFrame());
 	}
 }
 
@@ -236,9 +212,8 @@ void GameBlaster::AudioCallback(const uint16_t requested_frames)
 	}
 	// If the queue's run dry, render the remainder and sync-up our time datum
 	while (frames_remaining) {
-		if (AudioFrame f = {}; MaybeRenderFrame(f)) {
-			channel->AddSamples_sfloat(1, &f[0]);
-		}
+		auto frame = RenderFrame();
+		channel->AddSamples_sfloat(1, &frame[0]);
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
@@ -289,11 +264,9 @@ void GameBlaster::Close()
 	MIXER_DeregisterChannel(channel);
 	channel.reset();
 
-	// Remove the SAA-1099 devices and resamplers
+	// Remove the SAA-1099 devices
 	devices[0].reset();
 	devices[1].reset();
-	resamplers[0].reset();
-	resamplers[1].reset();
 
 	is_open = false;
 }
