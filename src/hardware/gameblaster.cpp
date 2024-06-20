@@ -22,8 +22,11 @@
 #include "gameblaster.h"
 
 #include "channel_names.h"
+#include "checks.h"
 #include "pic.h"
 #include "setup.h"
+
+CHECK_NARROWING();
 
 // The Game Blaster is nothing else than a rebranding of Creative's first PC
 // sound card, the Creative Music System (C/MS).
