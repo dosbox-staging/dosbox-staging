@@ -1048,12 +1048,13 @@ void MixerChannel::Mix(const int frames_requested)
 
 	frames_needed = frames_requested;
 
-	auto freq_add = static_cast<float>(sample_rate_hz) /
-	                static_cast<float>(mixer.sample_rate_hz);
+	auto stretch_factor = static_cast<float>(sample_rate_hz) /
+	                      static_cast<float>(mixer.sample_rate_hz);
 
 	while (frames_needed > frames_done) {
 		auto frames_remaining = iceil(
-		        static_cast<float>(frames_needed - frames_done) + freq_add);
+		        static_cast<float>(frames_needed - frames_done) *
+		        stretch_factor);
 
 		// Avoid underflow
 		if (frames_remaining <= 0) {
