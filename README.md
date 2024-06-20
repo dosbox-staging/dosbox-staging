@@ -108,7 +108,7 @@ Install build dependencies appropriate for your OS:
 sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
                  SDL2-devel SDL2_net-devel opusfile-devel \
                  fluidsynth-devel iir1-devel mt32emu-devel libslirp-devel \
-                 speexdsp-devel libXi-devel
+                 speexdsp-devel libXi-devel zlib-ng-devel
 ```
 
 ``` shell
