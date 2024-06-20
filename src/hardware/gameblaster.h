@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "audio_frame.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "mixer.h"
@@ -36,8 +37,6 @@
 
 #include "mame/emu.h"
 #include "mame/saa1099.h"
-
-#include "residfp/resample/TwoPassSincResampler.h"
 
 class GameBlaster {
 public:
@@ -49,7 +48,7 @@ public:
 
 private:
 	// Audio rendering
-	bool MaybeRenderFrame(AudioFrame &frame);
+	AudioFrame RenderFrame();
 	std::vector<int16_t> GetFrame();
 	void AudioCallback(const uint16_t requested_frames);
 	void RenderUpToNow();
@@ -75,8 +74,7 @@ private:
 	IO_WriteHandleObject write_handler_for_detection = {};
 	IO_ReadHandleObject read_handler_for_detection   = {};
 
-	std::unique_ptr<saa1099_device> devices[2]                   = {};
-	std::unique_ptr<reSIDfp::TwoPassSincResampler> resamplers[2] = {};
+	std::unique_ptr<saa1099_device> devices[2] = {};
 
 	std::queue<AudioFrame> fifo = {};
 
