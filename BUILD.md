@@ -287,7 +287,7 @@ Build and generate report:
 
 ``` shell
 meson setup -Dbuildtype=debug build/debug
-meson compile -C build/debug scan-build
+ninja -C build/debug scan-build
 ```
 
 ### Make a sanitizer build
