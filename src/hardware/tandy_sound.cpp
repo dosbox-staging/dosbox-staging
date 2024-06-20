@@ -61,8 +61,8 @@
 #include "mame/sn76496.h"
 
 // Constants used by the DAC and PSG
-constexpr uint16_t card_base_offset = 288;
-constexpr auto tandy_psg_clock_hz   = 14318180 / 4;
+constexpr uint16_t CardBaseOffset = 288;
+constexpr auto TandyPsgClockHz    = 14318180 / 4;
 
 enum class ConfigProfile {
 	TandySystem,
@@ -75,13 +75,13 @@ static void shutdown_dac(Section*);
 
 class TandyDAC {
 public:
-	struct IOConfig {
+	struct IoConfig {
 		uint16_t base = 0;
 		uint8_t irq   = 0;
 		uint8_t dma   = 0;
 	};
 
-	struct DMA {
+	struct Dma {
 		std::array<uint8_t, 128> fifo = {};
 		DmaChannel* channel           = nullptr;
 		bool is_done                  = false;
@@ -96,7 +96,7 @@ public:
 	};
 
 	// There's only one Tandy sound's IO configuration, so make it permanent
-	static constexpr IOConfig io = {0xc4, 7, 1};
+	static constexpr IoConfig io = {0xc4, 7, 1};
 
 	TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice);
 	~TandyDAC();
@@ -117,7 +117,7 @@ private:
 
 	TandyDAC() = delete;
 
-	DMA dma = {};
+	Dma dma = {};
 
 	// Managed objects
 	MixerChannelPtr channel = nullptr;
@@ -155,10 +155,10 @@ private:
 	std::queue<float> fifo                      = {};
 
 	// Static rate-related configuration
-	static constexpr auto render_divisor = 16;
-	static constexpr auto render_rate_hz = ceil_sdivide(tandy_psg_clock_hz,
-	                                                    render_divisor);
-	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
+	static constexpr auto RenderDivisor = 16;
+	static constexpr auto RenderRateHz  = ceil_sdivide(TandyPsgClockHz,
+                                                          RenderDivisor);
+	static constexpr auto MsPerRender   = MillisInSecond / RenderRateHz;
 
 	// Runtime states
 	device_sound_interface* dsi = nullptr;
@@ -173,17 +173,18 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	// unfiltered output, and it's a lot more pleasant to listen to,
 	// especially in headphones.
 	if (filter_enabled) {
-		constexpr auto hp_order          = 3;
-		constexpr auto hp_cutoff_freq_hz = 120;
+		constexpr auto HpOrder        = 3;
+		constexpr auto HpCutoffFreqHz = 120;
 
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
+		channel->ConfigureHighPassFilter(HpOrder, HpCutoffFreqHz);
 		channel->SetHighPassFilter(FilterState::On);
 
-		constexpr auto lp_order          = 2;
-		constexpr auto lp_cutoff_freq_hz = 4800;
+		constexpr auto LpOrder        = 2;
+		constexpr auto LpCutoffFreqHz = 4800;
 
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
+		channel->ConfigureLowPassFilter(LpOrder, LpCutoffFreqHz);
 		channel->SetLowPassFilter(FilterState::On);
+
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -242,7 +243,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	write_handlers[0].Install(io.base, writer, io_width_t::byte, 4);
 
 	if (config_profile == ConfigProfile::SoundCardOnly) {
-		write_handlers[1].Install(io.base + card_base_offset,
+		write_handlers[1].Install(io.base + CardBaseOffset,
 		                          writer,
 		                          io_width_t::byte,
 		                          4);
@@ -317,7 +318,7 @@ void TandyDAC::ChangeMode()
 			return;
 		}
 
-		if (const auto new_sample_rate_hz = tandy_psg_clock_hz / regs.clock_divider;
+		if (const auto new_sample_rate_hz = TandyPsgClockHz / regs.clock_divider;
 		    new_sample_rate_hz < DacMaxSampleRateHz) {
 			assert(channel);
 
@@ -476,25 +477,25 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	// Instantiate the MAME PSG device
-	constexpr auto rounded_psg_clock = render_rate_hz * render_divisor;
+	constexpr auto RoundedPsgClock = RenderRateHz * RenderDivisor;
 
 	if (config_profile == ConfigProfile::PCjrSystem) {
 		device = std::make_unique<sn76496_device>("SN76489",
 		                                          nullptr,
-		                                          rounded_psg_clock);
+		                                          RoundedPsgClock);
 	} else {
 		device = std::make_unique<ncr8496_device>("NCR 8496",
 		                                          nullptr,
-		                                          rounded_psg_clock);
+		                                          RoundedPsgClock);
 	}
 	// Register the write ports
-	constexpr io_port_t base_addr = 0xc0;
+	constexpr io_port_t BaseAddress = 0xc0;
 	const auto writer = std::bind(&TandyPSG::WriteToPort, this, _1, _2, _3);
 
-	write_handlers[0].Install(base_addr, writer, io_width_t::byte, 2);
+	write_handlers[0].Install(BaseAddress, writer, io_width_t::byte, 2);
 
 	if (config_profile == ConfigProfile::SoundCardOnly && is_dac_enabled) {
-		write_handlers[1].Install(base_addr + card_base_offset,
+		write_handlers[1].Install(BaseAddress + CardBaseOffset,
 		                          writer,
 		                          io_width_t::byte,
 		                          2);
@@ -504,7 +505,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           render_rate_hz,
+	                           RenderRateHz,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::FadeOut,
@@ -539,7 +540,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	const auto base_device = static_cast<device_t*>(device.get());
 	base_device->device_start();
 
-	device->convert_samplerate(render_rate_hz);
+	device->convert_samplerate(RenderRateHz);
 
 	LOG_MSG("TANDY: Initialised audio card with a TI %s PSG",
 	        base_device->shortName);
@@ -589,7 +590,7 @@ void TandyPSG::RenderUpToNow()
 	}
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
-		last_rendered_ms += ms_per_render;
+		last_rendered_ms += MsPerRender;
 		fifo.emplace(RenderSample());
 	}
 }
@@ -708,6 +709,6 @@ void TANDYSOUND_Init(Section* section)
 	                                       prop->Get_string("tandy_fadeout"),
 	                                       prop->Get_string("tandy_filter"));
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&TANDYSOUND_ShutDown, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+	section->AddDestroyFunction(&TANDYSOUND_ShutDown, ChangeableAtRuntime);
 }
