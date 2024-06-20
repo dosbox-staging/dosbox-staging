@@ -47,6 +47,7 @@
 #include <string_view>
 
 #include "bios.h"
+#include "checks.h"
 #include "channel_names.h"
 #include "dma.h"
 #include "hardware.h"
@@ -59,6 +60,8 @@
 
 #include "mame/emu.h"
 #include "mame/sn76496.h"
+
+CHECK_NARROWING();
 
 // Constants used by the DAC and PSG
 constexpr uint16_t CardBaseOffset = 288;
@@ -360,7 +363,9 @@ uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 #endif
 	switch (port) {
 	case 0xc4:
-		return (regs.mode & 0x77) | (regs.irq_activated ? 0x08 : 0x00);
+		return check_cast<uint8_t>((regs.mode & 0x77) |
+		                           (regs.irq_activated ? 0x08 : 0x00));
+
 	case 0xc6: return static_cast<uint8_t>(regs.clock_divider & 0xff);
 	case 0xc7:
 		return static_cast<uint8_t>(((regs.clock_divider >> 8) & 0xf) |
@@ -400,7 +405,9 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		break;
 
 	case 0xc6:
-		regs.clock_divider = (regs.clock_divider & 0xf00) | data;
+		regs.clock_divider = check_cast<uint16_t>(
+		        (regs.clock_divider & 0xf00) | data);
+
 		switch (regs.mode & 3) {
 		case 0: // joystick mode
 			break;
