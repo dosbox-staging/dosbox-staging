@@ -40,32 +40,37 @@
 
 class GameBlaster {
 public:
-	void Open(const int port_choice, const std::string &card_choice,
-	          const std::string &filter_choice);
+	void Open(const int port_choice, const std::string& card_choice,
+	          const std::string& filter_choice);
 
 	void Close();
-	~GameBlaster() { Close(); }
+
+	~GameBlaster()
+	{
+		Close();
+	}
 
 private:
 	// Audio rendering
 	AudioFrame RenderFrame();
-	std::vector<int16_t> GetFrame();
-	void AudioCallback(const uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	void RenderUpToNow();
 
 	// IO callbacks to the left SAA1099 device
 	void WriteDataToLeftDevice(io_port_t port, io_val_t value, io_width_t width);
-	void WriteControlToLeftDevice(io_port_t port, io_val_t value, io_width_t width);
+	void WriteControlToLeftDevice(io_port_t port, io_val_t value,
+	                              io_width_t width);
 
 	// IO callbacks to the right SAA1099 device
 	void WriteDataToRightDevice(io_port_t port, io_val_t value, io_width_t width);
-	void WriteControlToRightDevice(io_port_t port, io_val_t value, io_width_t width);
+	void WriteControlToRightDevice(io_port_t port, io_val_t value,
+	                               io_width_t width);
 
 	// IO callbacks to the Game Blaster detection chip
 	void WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t width);
 	uint8_t ReadFromDetectionPort(io_port_t port, io_width_t width) const;
 
-	const char *CardName() const;
+	const char* CardName() const;
 
 	// Managed objects
 	MixerChannelPtr channel = nullptr;
@@ -79,11 +84,10 @@ private:
 	std::queue<AudioFrame> fifo = {};
 
 	// Static rate-related configuration
-	static constexpr auto chip_clock     = 14318180 / 2;
-	static constexpr auto render_divisor = 32;
-	static constexpr auto render_rate_hz = ceil_sdivide(chip_clock,
-	                                                    render_divisor);
-	static constexpr auto ms_per_render  = MillisInSecond / render_rate_hz;
+	static constexpr auto ChipClockHz   = 14318180 / 2;
+	static constexpr auto RenderDivisor = 32;
+	static constexpr auto RenderRateHz = ceil_sdivide(ChipClockHz, RenderDivisor);
+	static constexpr auto MsPerRender = MillisInSecond / RenderRateHz;
 
 	// Runtime states
 	double last_rendered_ms        = 0;
