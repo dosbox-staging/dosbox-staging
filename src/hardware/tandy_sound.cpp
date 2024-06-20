@@ -62,8 +62,6 @@
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
-#include "residfp/resample/TwoPassSincResampler.h"
-
 // Constants used by the DAC and PSG
 constexpr uint16_t card_base_offset = 288;
 constexpr auto tandy_psg_clock_hz   = 14318180 / 4;
@@ -143,7 +141,7 @@ private:
 	TandyPSG &operator=(const TandyPSG &) = delete;
 
 	void AudioCallback(const int requested_frames);
-	bool MaybeRenderFrame(float &frame);
+	float RenderSample();
 	void RenderUpToNow();
 	void WriteToPort(io_port_t, io_val_t value, io_width_t);
 
@@ -151,7 +149,6 @@ private:
 	MixerChannelPtr channel                                  = nullptr;
 	IO_WriteHandleObject write_handlers[2]                   = {};
 	std::unique_ptr<sn76496_base_device> device              = {};
-	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
 	std::queue<float> fifo                                   = {};
 
 	// Static rate-related configuration
@@ -481,7 +478,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           UseMixerRate,
+	                           render_rate_hz,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::FadeOut,
@@ -510,15 +507,6 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 		set_section_property_value("speaker", "tandy_filter", "on");
 	}
 
-	// Set up the resampler
-	const auto sample_rate_hz = channel->GetSampleRate();
-
-	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
-
-	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-	                                                      sample_rate_hz,
-	                                                      max_rate_hz));
-
 	// Configure and start the MAME device
 	dsi = static_cast<device_sound_interface *>(device.get());
 	const auto base_device = static_cast<device_t *>(device.get());
@@ -546,24 +534,19 @@ TandyPSG::~TandyPSG()
 	MIXER_DeregisterChannel(channel);
 }
 
-bool TandyPSG::MaybeRenderFrame(float& frame)
+float TandyPSG::RenderSample()
 {
 	assert(dsi);
-	assert(resampler);
 
-	// Request a frame from the audio device
-	static int16_t sample;
-	static int16_t *buf[] = {&sample, nullptr};
 	static device_sound_interface::sound_stream ss;
+
+	// Request a mono frame from the audio device
+	int16_t sample;
+	int16_t *buf[] = {&sample, nullptr};
+
 	dsi->sound_stream_update(ss, nullptr, buf, 1);
 
-	const auto frame_is_ready = resampler->input(sample);
-
-	// Get the frame
-	if (frame_is_ready)
-		frame = static_cast<float>(resampler->output());
-
-	return frame_is_ready;
+	return static_cast<float>(sample);
 }
 
 void TandyPSG::RenderUpToNow()
@@ -579,8 +562,7 @@ void TandyPSG::RenderUpToNow()
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_render;
-		if (float frame = 0.0f; MaybeRenderFrame(frame))
-			fifo.emplace(frame);
+		fifo.emplace(RenderSample());
 	}
 }
 
@@ -609,9 +591,8 @@ void TandyPSG::AudioCallback(const int requested_frames)
 	}
 	// If the queue's run dry, render the remainder and sync-up our time datum
 	while (frames_remaining) {
-		if (float frame = 0.0f; MaybeRenderFrame(frame)) {
-			channel->AddSamples_mfloat(1, &frame);
-		}
+		float sample = RenderSample();
+		channel->AddSamples_mfloat(1, &sample);
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
