@@ -40,8 +40,6 @@
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
-#include "residfp/resample/TwoPassSincResampler.h"
-
 struct Ps1Registers {
 	uint8_t status = 0;     // Read via port 0x202 control status
 	uint8_t command = 0;    // Written via port 0x202 for control, read via 0x200 for DAC
@@ -444,17 +442,16 @@ private:
 	Ps1Synth &operator=(const Ps1Synth &) = delete;
 
 	void AudioCallback(uint16_t requested_frames);
-	bool MaybeRenderFrame(float &frame);
+	float RenderSample();
 	void RenderUpToNow();
 
 	void WriteSoundGeneratorPort205(io_port_t port, io_val_t, io_width_t);
 
 	// Managed objects
-	MixerChannelPtr channel = nullptr;
+	MixerChannelPtr channel            = nullptr;
 	IO_WriteHandleObject write_handler = {};
+	std::queue<float> fifo             = {};
 	sn76496_device device;
-	std::unique_ptr<reSIDfp::TwoPassSincResampler> resampler = {};
-	std::queue<float> fifo                                   = {};
 
 	// Static rate-related configuration
 	static constexpr auto ps1_psg_clock_hz = 4000000;
@@ -476,7 +473,7 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           UseMixerRate,
+	                           render_rate_hz,
 	                           ChannelName::Ps1AudioCardPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
@@ -502,13 +499,6 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 		set_section_property_value("speaker", "ps1audio_filter", "on");
 	}
 
-	// Setup the resampler
-	const auto channel_rate_hz = channel->GetSampleRate();
-	const auto max_rate_hz = std::max(channel_rate_hz * 0.9 / 2, 8000.0);
-	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-	                                                      channel_rate_hz,
-	                                                      max_rate_hz));
-
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 
@@ -517,24 +507,19 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	device.convert_samplerate(render_rate_hz);
 }
 
-bool Ps1Synth::MaybeRenderFrame(float &frame)
+float Ps1Synth::RenderSample()
 {
 	assert(dsi);
-	assert(resampler);
 
-	// Request a frame from the audio device
-	static int16_t sample;
-	static int16_t *buf[] = {&sample, nullptr};
 	static device_sound_interface::sound_stream ss;
+
+	// Request a mono sample from the audio device
+	int16_t sample;
+	int16_t *buf[] = {&sample, nullptr};
+
 	dsi->sound_stream_update(ss, nullptr, buf, 1);
 
-	const auto frame_is_ready = resampler->input(sample);
-
-	// Get the frame
-	if (frame_is_ready)
-		frame = static_cast<float>(resampler->output());
-
-	return frame_is_ready;
+	return static_cast<float>(sample);
 }
 
 void Ps1Synth::RenderUpToNow()
@@ -549,8 +534,7 @@ void Ps1Synth::RenderUpToNow()
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_render;
-		if (float frame = 0.0f; MaybeRenderFrame(frame))
-			fifo.emplace(frame);
+		fifo.emplace(RenderSample());
 	}
 }
 
@@ -579,9 +563,8 @@ void Ps1Synth::AudioCallback(const uint16_t requested_frames)
 	}
 	// If the queue's run dry, render the remainder and sync-up our time datum
 	while (frames_remaining) {
-		if (float frame = 0.0f; MaybeRenderFrame(frame)) {
-			channel->AddSamples_mfloat(1, &frame);
-		}
+		float sample = RenderSample();
+		channel->AddSamples_mfloat(1, &sample);
 		--frames_remaining;
 	}
 	last_rendered_ms = PIC_FullIndex();
@@ -602,7 +585,7 @@ Ps1Synth::~Ps1Synth()
 	MIXER_DeregisterChannel(channel);
 }
 
-static std::unique_ptr<Ps1Dac> ps1_dac = {};
+static std::unique_ptr<Ps1Dac> ps1_dac     = {};
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
 static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
