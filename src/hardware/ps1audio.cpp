@@ -42,7 +42,7 @@
 
 struct Ps1Registers {
 	// Read via port 0x202 control status
-	uint8_t status  = 0;
+	uint8_t status = 0;
 
 	// Written via port 0x202 for control, read via 0x200 for DAC
 	uint8_t command = 0;
@@ -76,28 +76,30 @@ private:
 	void WriteFifoLevelPort204(io_port_t port, io_val_t value, io_width_t);
 
 	// Constants
-	static constexpr auto clock_rate_hz         = 1000000;
-	static constexpr auto fifo_size             = 2048;
-	static constexpr auto fifo_size_mask        = fifo_size - 1;
-	static constexpr auto fifo_nearly_empty_val = 128;
+	static constexpr auto ClockRateHz        = 1000000;
+	static constexpr auto FifoSize           = 2048;
+	static constexpr auto FifoMaskSize       = FifoSize - 1;
+	static constexpr auto FifoNearlyEmptyVal = 128;
 
 	// Fixed precision
-	static constexpr auto frac_shift = 12;
+	static constexpr auto FracShift = 12;
 
-	static constexpr auto fifo_status_ready_flag = 0x10;
-	static constexpr auto fifo_full_flag         = 0x08;
-	static constexpr auto fifo_empty_flag        = 0x04;
+	static constexpr auto FifoStatusReadyFlag = 0x10;
+	static constexpr auto FifoFullFlag        = 0x08;
 
+	static constexpr auto FifoEmptyFlag = 0x04;
 	// >= 1792 bytes free
-	static constexpr auto fifo_nearly_empty_flag = 0x02;
+	static constexpr auto FifoNearlyEmptyFlag = 0x02;
 
 	// IRQ triggered by DAC
-	static constexpr auto fifo_irq_flag = 0x01;
+	static constexpr auto FifoIrqFlag = 0x01;
 
-	static constexpr auto fifo_midline =
-	        ceil_udivide(static_cast<uint8_t>(UINT8_MAX), 2u);
-	static constexpr auto irq_number          = 7;
-	static constexpr auto bytes_pending_limit = fifo_size << frac_shift;
+	static constexpr auto FifoMidline = ceil_udivide(static_cast<uint8_t>(UINT8_MAX),
+	                                                 2u);
+
+	static constexpr auto IrqNumber = 7;
+
+	static constexpr auto BytesPendingLimit = FifoSize << FracShift;
 
 	// Managed objects
 	MixerChannelPtr channel = nullptr;
@@ -107,7 +109,7 @@ private:
 
 	Ps1Registers regs = {};
 
-	uint8_t fifo[fifo_size] = {};
+	uint8_t fifo[FifoSize] = {};
 
 	// Counters
 	size_t last_write        = 0;
@@ -229,18 +231,18 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 
 uint8_t Ps1Dac::CalcStatus() const
 {
-	uint8_t status = regs.status & fifo_irq_flag;
+	uint8_t status = regs.status & FifoIrqFlag;
 	if (!bytes_pending) {
-		status |= fifo_empty_flag;
+		status |= FifoEmptyFlag;
 	}
 
-	if (bytes_pending < (fifo_nearly_empty_val << frac_shift) &&
+	if (bytes_pending < (FifoNearlyEmptyVal << FracShift) &&
 	    (regs.command & 3) == 3) {
-		status |= fifo_nearly_empty_flag;
+		status |= FifoNearlyEmptyFlag;
 	}
 
-	if (bytes_pending > ((fifo_size - 1) << frac_shift)) {
-		status |= fifo_full_flag;
+	if (bytes_pending > ((FifoSize - 1) << FracShift)) {
+		status |= FifoFullFlag;
 	}
 
 	return status;
@@ -248,8 +250,8 @@ uint8_t Ps1Dac::CalcStatus() const
 
 void Ps1Dac::Reset(bool should_clear_adder)
 {
-	PIC_DeActivateIRQ(irq_number);
-	memset(fifo, fifo_midline, fifo_size);
+	PIC_DeActivateIRQ(IrqNumber);
+	memset(fifo, FifoMidline, FifoSize);
 	read_index      = 0;
 	write_index     = 0;
 	read_index_high = 0;
@@ -274,18 +276,18 @@ void Ps1Dac::WriteDataPort200(io_port_t, io_val_t value, io_width_t)
 	if (is_new_transfer) {
 		is_new_transfer = false;
 		if (data) {
-			signal_bias = static_cast<int8_t>(data - fifo_midline);
+			signal_bias = static_cast<int8_t>(data - FifoMidline);
 		}
 	}
 	regs.status = CalcStatus();
-	if (!(regs.status & fifo_full_flag)) {
+	if (!(regs.status & FifoFullFlag)) {
 		const auto corrected_data = data - signal_bias;
 		fifo[write_index++] = static_cast<uint8_t>(corrected_data);
-		write_index &= fifo_size_mask;
-		bytes_pending += (1 << frac_shift);
+		write_index &= FifoMaskSize;
+		bytes_pending += (1 << FracShift);
 
-		if (bytes_pending > bytes_pending_limit) {
-			bytes_pending = bytes_pending_limit;
+		if (bytes_pending > BytesPendingLimit) {
+			bytes_pending = BytesPendingLimit;
 		}
 	}
 }
@@ -312,16 +314,16 @@ void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 	if (data < 45) {    // common in Infocom games
 		data = 125; // fallback to a default 8 KHz data rate
 	}
-	const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
+	const auto data_rate_hz = static_cast<uint32_t>(ClockRateHz / data);
 
-	adder = (data_rate_hz << frac_shift) / sample_rate_hz;
+	adder = (data_rate_hz << FracShift) / sample_rate_hz;
 
 	regs.status = CalcStatus();
-	if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
+	if ((regs.status & FifoNearlyEmptyFlag) && (can_trigger_irq)) {
 		// Generate request for stuff.
-		regs.status |= fifo_irq_flag;
+		regs.status |= FifoIrqFlag;
 		can_trigger_irq = false;
-		PIC_ActivateIRQ(irq_number);
+		PIC_ActivateIRQ(IrqNumber);
 	}
 }
 
@@ -346,7 +348,7 @@ uint8_t Ps1Dac::ReadPresencePort02F(io_port_t, io_width_t)
 
 uint8_t Ps1Dac::ReadCmdResultPort200(io_port_t, io_width_t)
 {
-	regs.status &= ~fifo_status_ready_flag;
+	regs.status &= check_cast<uint8_t>(~FifoStatusReadyFlag);
 	return regs.command;
 }
 
@@ -381,11 +383,11 @@ void Ps1Dac::Update(uint16_t samples)
 		regs.status = CalcStatus();
 		pending     = static_cast<int32_t>(bytes_pending);
 		add         = adder;
-		if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
+		if ((regs.status & FifoNearlyEmptyFlag) && (can_trigger_irq)) {
 			// More bytes needed.
-			regs.status |= fifo_irq_flag;
+			regs.status |= FifoIrqFlag;
 			can_trigger_irq = false;
-			PIC_ActivateIRQ(irq_number);
+			PIC_ActivateIRQ(IrqNumber);
 		}
 	}
 
@@ -394,21 +396,21 @@ void Ps1Dac::Update(uint16_t samples)
 		if (pending <= 0) {
 			pending = 0;
 			while (count--) {
-				*(buffer++) = fifo_midline;
+				*(buffer++) = FifoMidline;
 			}
 			break;
 		} else {
-			out = fifo[pos >> frac_shift];
+			out = fifo[pos >> FracShift];
 			pos += add;
-			pos &= (fifo_size << frac_shift) - 1;
+			pos &= (FifoSize << FracShift) - 1;
 			pending -= static_cast<int32_t>(add);
 		}
 		*(buffer++) = out;
 		count--;
 	}
-	// Update positions and see if we can clear the fifo_full_flag
+	// Update positions and see if we can clear the FifoFullFlag
 	read_index_high = pos;
-	read_index      = static_cast<uint16_t>(pos >> frac_shift);
+	read_index      = static_cast<uint16_t>(pos >> FracShift);
 	if (pending < 0) {
 		pending = 0;
 	}
@@ -461,11 +463,11 @@ private:
 	sn76496_device device;
 
 	// Static rate-related configuration
-	static constexpr auto ps1_psg_clock_hz = 4'000'000;
-	static constexpr auto render_divisor   = 16;
-	static constexpr auto render_rate_hz   = ceil_sdivide(ps1_psg_clock_hz,
-                                                            render_divisor);
-	static constexpr auto ms_per_render = MillisInSecond / render_rate_hz;
+	static constexpr auto Ps1PsgClockHz = 4'000'000;
+	static constexpr auto RenderDivisor = 16;
+	static constexpr auto RenderRateHz  = ceil_sdivide(Ps1PsgClockHz,
+                                                          RenderDivisor);
+	static constexpr auto MsPerRender   = MillisInSecond / RenderRateHz;
 
 	// Runtime states
 	device_sound_interface* dsi = static_cast<sn76496_base_device*>(&device);
@@ -473,14 +475,14 @@ private:
 };
 
 Ps1Synth::Ps1Synth(const std::string& filter_choice)
-        : device(nullptr, nullptr, ps1_psg_clock_hz)
+        : device(nullptr, nullptr, Ps1PsgClockHz)
 {
 	using namespace std::placeholders;
 
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,
-	                           render_rate_hz,
+	                           RenderRateHz,
 	                           ChannelName::Ps1AudioCardPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
@@ -511,7 +513,7 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t&>(device).device_start();
-	device.convert_samplerate(render_rate_hz);
+	device.convert_samplerate(RenderRateHz);
 }
 
 float Ps1Synth::RenderSample()
@@ -540,7 +542,7 @@ void Ps1Synth::RenderUpToNow()
 	}
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
-		last_rendered_ms += ms_per_render;
+		last_rendered_ms += MsPerRender;
 		fifo.emplace(RenderSample());
 	}
 }
@@ -625,6 +627,6 @@ void PS1AUDIO_Init(Section* section)
 
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PS1AUDIO_ShutDown, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+	section->AddDestroyFunction(&PS1AUDIO_ShutDown, ChangeableAtRuntime);
 }
