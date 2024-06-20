@@ -742,7 +742,7 @@ static void execute_command(const Command command)
 		buffer_add(0);
 		break;
 	case Command::ReadFwRevision: // 0xa1
-		// Reads the keybaord copntroller firmware
+		// Reads the keyboard controller firmware
 		// revision, always one byte
 		flush_buffer();
 		buffer_add(FirmwareRevision);
@@ -837,7 +837,7 @@ static void execute_command(const Command command)
 		buffer_add(get_input_port());
 		break;
 	case Command::ReadControllerMode: // 0xca
-		// Reads keybaord controller mode
+		// Reads keyboard controller mode
 		// 0x00: ISA (AT)
 		// 0x01: PS/2 (MCA)
 		flush_buffer();
