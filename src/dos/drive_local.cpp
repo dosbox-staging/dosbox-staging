@@ -719,21 +719,15 @@ localFile::localFile(const char* _name, const std_fs::path& path,
           basedir(_basedir),
           read_only_medium(_read_only_medium)
 {
-	localFile::UpdateDateTimeFromHost();
-	attr = FatAttributeFlags::Archive;
-
-	SetName(_name);
-}
-
-bool localFile::UpdateDateTimeFromHost()
-{
 	assert(file_handle != InvalidNativeFileHandle);
-	const auto dos_time = get_dos_file_time(file_handle);
 
+	const auto dos_time = get_dos_file_time(file_handle);
 	time = dos_time.time;
 	date = dos_time.date;
 
-	return true;
+	attr = FatAttributeFlags::Archive;
+
+	SetName(_name);
 }
 
 // ********************************************
