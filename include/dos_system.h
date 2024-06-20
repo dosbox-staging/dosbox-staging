@@ -130,7 +130,6 @@ public:
 
 	virtual void AddRef() { refCtr++; }
 	virtual Bits RemoveRef() { return --refCtr; }
-	virtual bool UpdateDateTimeFromHost() { return true; }
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
@@ -197,7 +196,6 @@ public:
 	bool Seek(uint32_t* pos, uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation() override;
-	bool UpdateDateTimeFromHost() override;
 	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
 	const char* GetBaseDir() const
 	{

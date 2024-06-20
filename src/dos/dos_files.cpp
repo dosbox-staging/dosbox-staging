@@ -1757,10 +1757,6 @@ bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
-	if (!Files[handle]->UpdateDateTimeFromHost()) {
-		DOS_SetError(DOSERR_INVALID_HANDLE);
-		return false; 
-	}
 	*otime = Files[handle]->time;
 	*odate = Files[handle]->date;
 	return true;

@@ -49,7 +49,6 @@ public:
 	bool Seek(uint32_t * pos,uint32_t type) override;
 	void Close() override;
 	uint16_t GetInformation(void) override;
-	bool UpdateDateTimeFromHost(void) override;
 	bool IsOnReadOnlyMedium() const override;
 public:
 	std::shared_ptr<fatDrive> myDrive   = nullptr;
@@ -319,10 +318,6 @@ bool fatFile::IsOnReadOnlyMedium() const
 
 uint16_t fatFile::GetInformation(void) {
 	return 0;
-}
-
-bool fatFile::UpdateDateTimeFromHost(void) {
-	return true;
 }
 
 uint32_t fatDrive::getClustFirstSect(uint32_t clustNum) {
