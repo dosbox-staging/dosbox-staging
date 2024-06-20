@@ -41,10 +41,17 @@
 #include "mame/sn76496.h"
 
 struct Ps1Registers {
-	uint8_t status = 0;     // Read via port 0x202 control status
-	uint8_t command = 0;    // Written via port 0x202 for control, read via 0x200 for DAC
-	uint8_t divisor = 0;    // Read via port 0x203 for FIFO timing
-	uint8_t fifo_level = 0; // Written via port 0x204 when FIFO is almost empty
+	// Read via port 0x202 control status
+	uint8_t status  = 0;
+
+	// Written via port 0x202 for control, read via 0x200 for DAC
+	uint8_t command = 0;
+
+	// Read via port 0x203 for FIFO timing
+	uint8_t divisor = 0;
+
+	// Written via port 0x204 when FIFO is almost empty
+	uint8_t fifo_level = 0;
 };
 
 class Ps1Dac {
@@ -437,9 +444,9 @@ public:
 
 private:
 	// Block alternate construction routes
-	Ps1Synth()                            = delete;
-	Ps1Synth(const Ps1Synth &)            = delete;
-	Ps1Synth &operator=(const Ps1Synth &) = delete;
+	Ps1Synth()                           = delete;
+	Ps1Synth(const Ps1Synth&)            = delete;
+	Ps1Synth& operator=(const Ps1Synth&) = delete;
 
 	void AudioCallback(uint16_t requested_frames);
 	float RenderSample();
@@ -454,15 +461,15 @@ private:
 	sn76496_device device;
 
 	// Static rate-related configuration
-	static constexpr auto ps1_psg_clock_hz = 4000000;
+	static constexpr auto ps1_psg_clock_hz = 4'000'000;
 	static constexpr auto render_divisor   = 16;
 	static constexpr auto render_rate_hz   = ceil_sdivide(ps1_psg_clock_hz,
                                                             render_divisor);
-	static constexpr auto ms_per_render    = MillisInSecond / render_rate_hz;
+	static constexpr auto ms_per_render = MillisInSecond / render_rate_hz;
 
 	// Runtime states
-	device_sound_interface *dsi = static_cast<sn76496_base_device *>(&device);
-	double last_rendered_ms     = 0.0;
+	device_sound_interface* dsi = static_cast<sn76496_base_device*>(&device);
+	double last_rendered_ms = 0.0;
 };
 
 Ps1Synth::Ps1Synth(const std::string& filter_choice)
@@ -503,7 +510,7 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
 
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
-	static_cast<device_t &>(device).device_start();
+	static_cast<device_t&>(device).device_start();
 	device.convert_samplerate(render_rate_hz);
 }
 
@@ -515,7 +522,7 @@ float Ps1Synth::RenderSample()
 
 	// Request a mono sample from the audio device
 	int16_t sample;
-	int16_t *buf[] = {&sample, nullptr};
+	int16_t* buf[] = {&sample, nullptr};
 
 	dsi->sound_stream_update(ss, nullptr, buf, 1);
 
@@ -588,7 +595,7 @@ Ps1Synth::~Ps1Synth()
 static std::unique_ptr<Ps1Dac> ps1_dac     = {};
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
-static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
+static void PS1AUDIO_ShutDown([[maybe_unused]] Section* sec)
 {
 	LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.reset();
@@ -599,22 +606,22 @@ bool PS1AUDIO_IsEnabled()
 {
 	const auto section = control->GetSection("speaker");
 	assert(section);
-	const auto properties = static_cast<Section_prop *>(section);
+	const auto properties = static_cast<Section_prop*>(section);
 	return properties->Get_bool("ps1audio");
 }
 
-void PS1AUDIO_Init(Section *section)
+void PS1AUDIO_Init(Section* section)
 {
 	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	const auto prop = static_cast<Section_prop*>(section);
 
-	if (!PS1AUDIO_IsEnabled())
+	if (!PS1AUDIO_IsEnabled()) {
 		return;
+	}
 
 	ps1_dac = std::make_unique<Ps1Dac>(prop->Get_string("ps1audio_dac_filter"));
 
-	ps1_synth = std::make_unique<Ps1Synth>(
-	        prop->Get_string("ps1audio_filter"));
+	ps1_synth = std::make_unique<Ps1Synth>(prop->Get_string("ps1audio_filter"));
 
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
 
