@@ -15,7 +15,11 @@
     "sdl2-net",
     "speexdsp",
     "tracy",
-    "zlib-ng"
+    "zlib-ng",
+    {
+      "name": "pkgconf",
+      "host": true
+    }
   ],
-  "builtin-baseline": "01f602195983451bc83e72f4214af2cbc495aa94"
+  "builtin-baseline": "0f6d4051514549541e61b186c4543341fd6ca8dd"
 }
