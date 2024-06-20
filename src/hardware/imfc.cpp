@@ -1762,7 +1762,7 @@ public:
 	InputOutputPin(const InputOutputPin& other)            = delete;
 	InputOutputPin& operator=(const InputOutputPin& other) = delete;
 
-	explicit InputOutputPin<DataType>(const std::string& name)
+	explicit InputOutputPin(const std::string& name)
 	        : InputPin<DataType>(name),
 	          m_dataContainer(nullptr)
 	{}
