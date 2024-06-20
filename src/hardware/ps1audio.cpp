@@ -28,6 +28,7 @@
 #include <queue>
 
 #include "channel_names.h"
+#include "checks.h"
 #include "control.h"
 #include "dma.h"
 #include "inout.h"
@@ -39,6 +40,8 @@
 
 #include "mame/emu.h"
 #include "mame/sn76496.h"
+
+CHECK_NARROWING();
 
 struct Ps1Registers {
 	// Read via port 0x202 control status
