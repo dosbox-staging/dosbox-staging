@@ -27,8 +27,8 @@
 
 // The Game Blaster is nothing else than a rebranding of Creative's first PC
 // sound card, the Creative Music System (C/MS).
-void GameBlaster::Open(const int port_choice, const std::string &card_choice,
-                       const std::string &filter_choice)
+void GameBlaster::Open(const int port_choice, const std::string& card_choice,
+                       const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -39,16 +39,22 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	// Ports are filtered and corrected by the conf system, so we simply
 	// assert here
-	const std::vector<io_port_t> valid_gb_ports = {0x210, 0x220, 0x230, 0x240, 0x250, 0x260};
-	const std::vector<io_port_t> valid_cms_ports = {0x220, 0x240, 0x260, 0x280, 0x2a0, 0x2c0, 0x2e0, 0x300};
+	const std::vector<io_port_t> valid_gb_ports = {
+	        0x210, 0x220, 0x230, 0x240, 0x250, 0x260};
+
+	const std::vector<io_port_t> valid_cms_ports = {
+	        0x220, 0x240, 0x260, 0x280, 0x2a0, 0x2c0, 0x2e0, 0x300};
+
 	const auto valid_ports = is_standalone_gameblaster ? valid_gb_ports
 	                                                   : valid_cms_ports;
+
 	base_port = check_cast<io_port_t>(port_choice);
+
 	assert(contains(valid_ports, base_port));
 
 	// Create the two SAA1099 devices
-	for (auto &d : devices) {
-		d = std::make_unique<saa1099_device>("", nullptr, chip_clock, render_divisor);
+	for (auto& d : devices) {
+		d = std::make_unique<saa1099_device>("", nullptr, ChipClockHz, RenderDivisor);
 		d->device_start();
 	}
 
@@ -56,10 +62,17 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// compatibility, and the Sound Blaster 2.0 had sockets for them as
 	// optional add-ons. Therefore, we always set up these handlers, even if
 	// the card type isn't a Game Blaster.
-	const auto data_to_left = std::bind(&GameBlaster::WriteDataToLeftDevice, this, _1, _2, _3);
-	const auto control_to_left = std::bind(&GameBlaster::WriteControlToLeftDevice, this, _1, _2, _3);
-	const auto data_to_right = std::bind(&GameBlaster::WriteDataToRightDevice, this, _1, _2, _3);
-	const auto control_to_right = std::bind(&GameBlaster::WriteControlToRightDevice, this, _1, _2, _3);
+	const auto data_to_left =
+	        std::bind(&GameBlaster::WriteDataToLeftDevice, this, _1, _2, _3);
+
+	const auto control_to_left = std::bind(
+	        &GameBlaster::WriteControlToLeftDevice, this, _1, _2, _3);
+
+	const auto data_to_right =
+	        std::bind(&GameBlaster::WriteDataToRightDevice, this, _1, _2, _3);
+
+	const auto control_to_right = std::bind(
+	        &GameBlaster::WriteControlToRightDevice, this, _1, _2, _3);
 
 	write_handlers[0].Install(base_port, data_to_left, io_width_t::byte);
 	write_handlers[1].Install(base_port + 1, control_to_left, io_width_t::byte);
@@ -71,10 +84,17 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// set up those handlers for this chip only if the card type is a Game
 	// Blaster:
 	if (is_standalone_gameblaster) {
-		const auto read_from_detection_port = std::bind(&GameBlaster::ReadFromDetectionPort, this, _1, _2);
-		const auto write_to_detection_port = std::bind(&GameBlaster::WriteToDetectionPort, this, _1, _2, _3);
+		const auto read_from_detection_port = std::bind(
+		        &GameBlaster::ReadFromDetectionPort, this, _1, _2);
 
-		read_handler_for_detection.Install(base_port, read_from_detection_port, io_width_t::byte, 16);
+		const auto write_to_detection_port = std::bind(
+		        &GameBlaster::WriteToDetectionPort, this, _1, _2, _3);
+
+		read_handler_for_detection.Install(base_port,
+		                                   read_from_detection_port,
+		                                   io_width_t::byte,
+		                                   16);
+
 		write_handler_for_detection.Install(base_port + 4,
 		                                    write_to_detection_port,
 		                                    io_width_t::byte,
@@ -85,7 +105,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	const auto audio_callback = std::bind(&GameBlaster::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(audio_callback,
-	                           render_rate_hz,
+	                           RenderRateHz,
 	                           ChannelName::Cms,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,
@@ -121,7 +141,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	LOG_MSG("CMS: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
 	        base_port,
-	        chip_clock / 1e6);
+	        ChipClockHz / 1e6);
 
 	assert(channel);
 	assert(devices[0]);
@@ -137,7 +157,7 @@ AudioFrame GameBlaster::RenderFrame()
 
 	static device_sound_interface::sound_stream stream;
 
-	int16_t *p_buf[] = {&buf[0], &buf[1]};
+	int16_t* p_buf[] = {&buf[0], &buf[1]};
 
 	// Accumulate the samples from both SAA-1099 devices
 	devices[0]->sound_stream_update(stream, nullptr, p_buf, 1);
@@ -149,7 +169,7 @@ AudioFrame GameBlaster::RenderFrame()
 	right_accum += buf[1];
 
 	// Increment our time datum up to which the device has rendered
-	last_rendered_ms += ms_per_render;
+	last_rendered_ms += MsPerRender;
 
 	return {static_cast<float>(left_accum), static_cast<float>(right_accum)};
 }
@@ -166,7 +186,7 @@ void GameBlaster::RenderUpToNow()
 	}
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
-		last_rendered_ms += ms_per_render;
+		last_rendered_ms += MsPerRender;
 		fifo.emplace(RenderFrame());
 	}
 }
@@ -195,12 +215,15 @@ void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_
 	devices[1]->control_w(0, 0, check_cast<uint8_t>(value));
 }
 
-void GameBlaster::AudioCallback(const uint16_t requested_frames)
+void GameBlaster::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 
-	//if (fifo.size())
-	//	LOG_MSG("CMS: Queued %2lu cycle-accurate frames", fifo.size());
+#if 0
+	if (fifo.size()) {
+		LOG_MSG("CMS: Queued %2lu cycle-accurate frames", fifo.size());
+	}
+#endif
 
 	auto frames_remaining = requested_frames;
 
@@ -231,33 +254,32 @@ uint8_t GameBlaster::ReadFromDetectionPort(io_port_t port, io_width_t) const
 {
 	uint8_t retval = 0xff;
 	switch (port - base_port) {
-	case 0x4:
-		retval = 0x7f;
-		break;
+	case 0x4: retval = 0x7f; break;
 	case 0xa:
-	case 0xb:
-		retval = cms_detect_register;
-		break;
+	case 0xb: retval = cms_detect_register; break;
 	}
 	return retval;
 }
 
 void GameBlaster::Close()
 {
-	if (!is_open)
+	if (!is_open) {
 		return;
+	}
 
 	LOG_INFO("CMS: Shutting down");
 
 	// Drop access to the IO ports
-	for (auto &w : write_handlers)
+	for (auto& w : write_handlers) {
 		w.Uninstall();
+	}
 	write_handler_for_detection.Uninstall();
 	read_handler_for_detection.Uninstall();
 
 	// Stop playback
-	if (channel)
+	if (channel) {
 		channel->Enable(false);
+	}
 
 	// Deregister the mixer channel and remove it
 	assert(channel);
@@ -287,6 +309,6 @@ void CMS_Init(Section* conf)
 	                 section->Get_string("sbtype"),
 	                 section->Get_string("cms_filter"));
 
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&CMS_ShutDown, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+	section->AddDestroyFunction(&CMS_ShutDown, ChangeableAtRuntime);
 }
