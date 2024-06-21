@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "flags.h"
 #include "lazyflags.h"
 
 /* Jumps */
@@ -641,9 +642,8 @@
 	if (quo>0xff) EXCEPTION(0);								\
 	reg_ah=rem;												\
 	reg_al=quo8;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo8); \
 }
-
 
 #define DIVW(op1,load,save)									\
 {															\
@@ -656,7 +656,7 @@
 	if (quo!=(uint32_t)quo16) EXCEPTION(0);					\
 	reg_dx=rem;												\
 	reg_ax=quo16;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo16); \
 }
 
 #define DIVD(op1,load,save)									\
@@ -670,7 +670,7 @@
 	if (quo!=(uint64_t)quo32) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo32); \
 }
 
 
@@ -684,7 +684,7 @@
 	if (quo!=(int16_t)quo8s) EXCEPTION(0);					\
 	reg_ah=rem;												\
 	reg_al=quo8s;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo8s); \
 }
 
 #define IDIVW(op1, load, save) \
@@ -700,7 +700,7 @@
 			EXCEPTION(0); \
 		reg_ax = quo16s; \
 		reg_dx = static_cast<int16_t>(rem); \
-		SETFLAGBIT(OF, false); \
+		set_cpu_test_flags_for_division(quo16s); \
 	}
 
 #define IDIVD(op1,load,save)								\
@@ -714,9 +714,8 @@
 	if (quo!=(int64_t)quo32s) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32s;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo32s); \
 }
-
 #define IMULB(op1,load,save)								\
 {															\
 	reg_ax=((int8_t)reg_al) * ((int8_t)(load(op1)));			\
