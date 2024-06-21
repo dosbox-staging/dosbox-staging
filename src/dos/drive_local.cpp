@@ -23,6 +23,7 @@
 // #define DEBUG 1
 
 #include "drives.h"
+#include "drive_local.h"
 
 #include <cerrno>
 #include <climits>
