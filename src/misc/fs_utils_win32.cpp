@@ -235,4 +235,12 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 	return ret;
 }
 
+void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time)
+{
+	FILETIME last_write_time = {};
+	if (DosDateTimeToFileTime(date, time, &last_write_time)) {
+		SetFileTime(handle, nullptr, nullptr, &last_write_time);
+	}
+}
+
 #endif

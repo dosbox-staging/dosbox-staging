@@ -196,6 +196,21 @@ constexpr uint16_t DOS_PackDate(const struct tm &datetime) noexcept
 	                    static_cast<uint16_t>(datetime.tm_mday));
 }
 
+constexpr struct tm DOS_UnpackDateTime(const uint16_t date, const uint16_t time)
+{
+	struct tm ret = {};
+	ret.tm_sec = (time & 0x1f) * 2;
+	ret.tm_min = (time >> 5) & 0x3f;
+	ret.tm_hour = (time >> 11) & 0x1f;
+	ret.tm_mday = date & 0x1f;
+	ret.tm_mon = ((date >> 5) & 0x0f) - 1;
+	ret.tm_year = (date >> 9) + 1980 - 1900;
+	// have the C run-time library code compute whether standard
+	// time or daylight saving time is in effect.
+	ret.tm_isdst = -1;
+	return ret;
+}
+
 /* Routines for Drive Class */
 bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb = false);
 bool DOS_OpenFileExtended(const char* name, uint16_t flags,

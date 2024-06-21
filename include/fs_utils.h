@@ -224,5 +224,6 @@ void close_native_file(const NativeFileHandle handle);
 bool truncate_native_file(const NativeFileHandle handle);
 
 DosDateTime get_dos_file_time(const NativeFileHandle handle);
+void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time);
 
 #endif

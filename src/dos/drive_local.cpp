@@ -33,12 +33,6 @@
 #include <limits>
 #include <sys/types.h>
 
-#ifdef _MSC_VER
-#include <sys/utime.h>
-#else
-#include <utime.h>
-#endif
-
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
@@ -673,36 +667,18 @@ void localFile::Close()
 			set_archive_on_close = false;
 		}
 
+		// Not sure if setting extended attributes modifies the time.
+		// Do it here to be safe even though it means typing this block twice.
+		if (newtime) {
+			assert(!IsOnReadOnlyMedium());
+			set_dos_file_time(file_handle, date, time);
+		}
+
 		close_native_file(file_handle);
 		file_handle = InvalidNativeFileHandle;
-	};
-
-	if (newtime) {
+	} else if (newtime) {
 		assert(!IsOnReadOnlyMedium());
-		// backport from DOS_PackDate() and DOS_PackTime()
-		struct tm tim = {};
-		tim.tm_sec = (time & 0x1f) * 2;
-		tim.tm_min = (time >> 5) & 0x3f;
-		tim.tm_hour = (time >> 11) & 0x1f;
-		tim.tm_mday = date & 0x1f;
-		tim.tm_mon = ((date >> 5) & 0x0f) - 1;
-		tim.tm_year = (date >> 9) + 1980 - 1900;
-		//  have the C run-time library code compute whether standard
-		//  time or daylight saving time is in effect.
-		tim.tm_isdst = -1;
-		// serialize time
-		mktime(&tim);
-
-		utimbuf ftim;
-		ftim.actime = ftim.modtime = mktime(&tim);
-
-		char fullname[CROSS_LEN];
-		safe_sprintf(fullname, "%s%s", basedir, name.c_str());
-		CROSS_FILENAME(fullname);
-
-		// FIXME: utime is deprecated, need a modern cross-platform
-		// implementation.
-		utime(fullname, &ftim);
+		set_dos_file_time(file_handle, date, time);
 	}
 }
 
