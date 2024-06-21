@@ -3064,10 +3064,12 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "sample rates to 48000 Hz anyway.");
 
 	int_prop = sec_prop.Add_int("blocksize", OnlyAtStart, DefaultBlocksize);
-	int_prop->Set_values({"128", "256", "512", "1024", "2048", "4096", "8192"});
+	int_prop->SetMinMax(64, 8192);
 	int_prop->Set_help(
-	        "Mixer block size in sample frames (%s by default). Larger values might help\n"
-	        "with sound stuttering but the sound will also be more lagged.");
+	        "Block size of the host audio device in sample frames (%s by default).\n"
+	        "Valid range is 64 to 8192. Should be set to power-of-two values (e.g., 256,\n"
+	        "512, 1024, etc.) Larger values might help with sound stuttering but will\n"
+	        "introduce more latency. Also see 'negotiate'.");
 
 	int_prop = sec_prop.Add_int("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
@@ -3079,8 +3081,8 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	bool_prop = sec_prop.Add_bool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
 	bool_prop->Set_help(
 	        "Negotiate a possibly better 'blocksize' setting (%s by default).\n"
-	        "Enable it if you're not getting audio or the sound is stuttering with manually\n"
-	        "set 'blocksize' settings.");
+	        "Enable it if you're not getting audio or the sound is stuttering with your\n"
+	        "'blocksize' setting. Disable it to force the manually set 'blocksize' value.");
 
 	constexpr auto DefaultOn = true;
 	bool_prop = sec_prop.Add_bool("compressor", WhenIdle, DefaultOn);
