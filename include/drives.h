@@ -22,8 +22,9 @@
 #include "dosbox.h"
 
 #include <memory>
-#include <unordered_set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "dos_inc.h"
@@ -73,7 +74,9 @@ private:
 	static drive_infos_t drive_infos;
 };
 
-class localDrive : public DOS_Drive {
+// Must be constructed with a shared_ptr as it uses weak_from_this()
+class localDrive : public DOS_Drive,
+                   public std::enable_shared_from_this<localDrive> {
 public:
 	localDrive(const char* startdir, uint16_t _bytes_sector,
 	           uint8_t _sectors_cluster, uint16_t _total_clusters,
@@ -106,6 +109,8 @@ public:
 	{
 		return basedir;
 	}
+
+	std::unordered_map<std::string, DosDateTime> timestamp_cache = {};
 
 protected:
 	char basedir[CROSS_LEN] = "";
@@ -478,6 +483,8 @@ private:
 	bool vfile_name_exists(const std::string& name) const;
 };
 
+// Must be constructed with a shared_ptr as it uses weak_from_this()
+// std::enable_shared_from_this inherited from localDrive
 class Overlay_Drive final : public localDrive {
 public:
 	Overlay_Drive(const char *startdir,

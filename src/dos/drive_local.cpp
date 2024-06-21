@@ -90,11 +90,26 @@ std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
 		dirCache.AddEntry(newname, true);
 	}
 
-	// Make the 16 bit device information
-	auto file = std::make_unique<localFile>(
-	        name, expanded_name, file_handle, basedir, IsReadOnly());
+	DosDateTime dos_time = {};
+	dos_time.date        = DOS_GetBiosDatePacked();
+	dos_time.time        = DOS_GetBiosTimePacked();
 
-	file->flags = OPEN_READWRITE;
+	// The timestamp cache is for emulating DOS behavior, not performance.
+	// On some hosts, the timestamp will be updated with current host time
+	// on write. DOS instead writes the timestamp on close. It also uses
+	// internal BIOS time which can differ from host time. Ex. The "date"
+	// command can set it to any arbitary date.
+	timestamp_cache[expanded_name] = dos_time;
+
+	// Make the 16 bit device information
+	auto file = std::make_unique<localFile>(name,
+	                                        expanded_name,
+	                                        file_handle,
+	                                        basedir,
+	                                        IsReadOnly(),
+	                                        weak_from_this(),
+	                                        dos_time,
+	                                        OPEN_READWRITE);
 
 	return file;
 }
@@ -176,10 +191,28 @@ std::unique_ptr<DOS_File> localDrive::FileOpen(const char* name, uint8_t flags)
 		MaybeLogFilesystemProtection(host_filename);
 	}
 
-	auto file = std::make_unique<localFile>(
-	        name, host_filename, file_handle, basedir, IsReadOnly());
-	file->flags = flags; // for the inheritance flag and maybe check for
-	                     // others.
+	DosDateTime dos_time   = {};
+	const auto cache_entry = timestamp_cache.find(host_filename);
+	if (cache_entry == timestamp_cache.end()) {
+		// The first time a file gets opened, read the timestamp from
+		// the host and add it to the cache. This gets "locked in" until
+		// the file is closed. This handles the case where a single file
+		// gets opened with multiple handles. The 2nd handle should not
+		// see updated timestamps from writes to the 1st handle.
+		dos_time                       = get_dos_file_time(file_handle);
+		timestamp_cache[host_filename] = dos_time;
+	} else {
+		dos_time = cache_entry->second;
+	}
+
+	auto file = std::make_unique<localFile>(name,
+	                                        host_filename,
+	                                        file_handle,
+	                                        basedir,
+	                                        IsReadOnly(),
+	                                        weak_from_this(),
+	                                        dos_time,
+	                                        flags);
 
 	return file;
 }
@@ -224,6 +257,7 @@ bool localDrive::FileUnlink(const char* name)
 
 	// Can we remove the file without issue?
 	if (remove(fullname) == 0) {
+		timestamp_cache.erase(fullname);
 		dirCache.DeleteEntry(newname);
 		return true;
 	}
@@ -466,6 +500,7 @@ bool localDrive::Rename(const char* oldname, const char* newname)
 	CROSS_FILENAME(newnew);
 	int temp = rename(old_host_filename.c_str(), dirCache.GetExpandNameAndNormaliseCase(newnew));
 	if (temp == 0) {
+		timestamp_cache.erase(old_host_filename);
 		dirCache.CacheOut(newnew);
 	}
 	return temp == 0;
@@ -653,13 +688,36 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 void localFile::MaybeFlushTime()
 {
 	assert(file_handle != InvalidNativeFileHandle);
+	DosDateTime dos_time = {};
 
-	if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
-		assert(!IsOnReadOnlyMedium());
-		set_dos_file_time(file_handle, date, time);
-	} else if (flush_time_on_close == FlushTimeOnClose::CurrentTime) {
-		assert(!IsOnReadOnlyMedium());
-		set_dos_file_time(file_handle, DOS_GetBiosDatePacked(), DOS_GetBiosTimePacked());
+	switch (flush_time_on_close) {
+	case FlushTimeOnClose::NoUpdate: return;
+	case FlushTimeOnClose::ManuallySet:
+		dos_time.date = date;
+		dos_time.time = time;
+		break;
+	case FlushTimeOnClose::CurrentTime:
+		dos_time.date = DOS_GetBiosDatePacked();
+		dos_time.time = DOS_GetBiosTimePacked();
+		break;
+	}
+
+	assert(!IsOnReadOnlyMedium());
+	set_dos_file_time(file_handle, dos_time.date, dos_time.time);
+
+	// Using a weak_ptr here as we don't need to extend localDrive's
+	// lifetime. All we're doing is updating the cache which has no effect
+	// if there are no other references to the drive.
+	const auto drive_ptr = local_drive.lock();
+	if (drive_ptr) {
+		auto& cache = drive_ptr->timestamp_cache;
+		auto entry  = cache.find(path.string());
+		if (entry != cache.end()) {
+			// Only update the cache if it already contains
+			// the entry. This handles an edge case where
+			// the file has been unlinked while it is open.
+			entry->second = dos_time;
+		}
 	}
 }
 
@@ -699,17 +757,20 @@ uint16_t localFile::GetInformation(void)
 
 localFile::localFile(const char* _name, const std_fs::path& path,
                      const NativeFileHandle handle, const char* _basedir,
-                     const bool _read_only_medium)
-        : file_handle(handle),
+                     const bool _read_only_medium,
+                     const std::weak_ptr<localDrive> drive,
+                     const DosDateTime dos_time, const uint8_t _flags)
+        : local_drive(drive),
+          file_handle(handle),
           path(path),
           basedir(_basedir),
           read_only_medium(_read_only_medium)
 {
 	assert(file_handle != InvalidNativeFileHandle);
 
-	const auto dos_time = get_dos_file_time(file_handle);
 	time = dos_time.time;
 	date = dos_time.date;
+	flags = _flags;
 
 	attr = FatAttributeFlags::Archive;
 

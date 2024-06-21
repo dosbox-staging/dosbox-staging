@@ -205,8 +205,11 @@ class OverlayFile final : public localFile {
 public:
 	OverlayFile(const char* name, const std_fs::path& path,
 	            NativeFileHandle handle, const char* basedir,
-	            const bool _read_only_medium)
-	        : localFile(name, path, handle, basedir, _read_only_medium),
+	            const bool _read_only_medium,
+	            const std::weak_ptr<localDrive> drive,
+	            const DosDateTime dos_time, const uint8_t _flags)
+	        : localFile(name, path, handle, basedir, _read_only_medium,
+	                    drive, dos_time, _flags),
 	          overlay_active(false)
 	{
 		if (logoverlay)
@@ -215,10 +218,11 @@ public:
 
 	OverlayFile(localFile* file)
 	        : localFile(file->GetName(), file->GetPath(), file->file_handle,
-	                    file->GetBaseDir(), file->IsOnReadOnlyMedium()),
+	                    file->GetBaseDir(), file->IsOnReadOnlyMedium(),
+	                    file->local_drive,
+	                    {.date = file->date, .time = file->time}, file->flags),
 	          overlay_active(false)
 	{
-		flags  = file->flags;
 		refCtr = file->refCtr;
 	}
 
@@ -488,9 +492,23 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileOpen(const char* name, uint8_t flag
 			LOG_MSG("overlay file opened %s", newname);
 		}
 
-		auto file = std::make_unique<OverlayFile>(
-		        name, newname, file_handle, overlaydir, IsReadOnly());
-		file->flags          = flags;
+		DosDateTime dos_time   = {};
+		const auto cache_entry = timestamp_cache.find(newname);
+		if (cache_entry == timestamp_cache.end()) {
+			dos_time = get_dos_file_time(file_handle);
+			timestamp_cache[newname] = dos_time;
+		} else {
+			dos_time = cache_entry->second;
+		}
+
+		auto file            = std::make_unique<OverlayFile>(name,
+                                                          newname,
+                                                          file_handle,
+                                                          overlaydir,
+                                                          IsReadOnly(),
+                                                          weak_from_this(),
+                                                          dos_time,
+                                                          flags);
 		file->overlay_active = true;
 
 		return file;
@@ -541,10 +559,20 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 		return nullptr;
 	}
 
-	auto file = std::make_unique<OverlayFile>(
-	        name, path, file_handle, overlaydir, IsReadOnly());
+	DosDateTime dos_time           = {};
+	dos_time.date                  = DOS_GetBiosDatePacked();
+	dos_time.time                  = DOS_GetBiosTimePacked();
+	timestamp_cache[path.string()] = dos_time;
+
+	auto file            = std::make_unique<OverlayFile>(name,
+                                                  path,
+                                                  file_handle,
+                                                  overlaydir,
+                                                  IsReadOnly(),
+                                                  weak_from_this(),
+                                                  dos_time,
+                                                  OPEN_READWRITE);
 	file->overlay_active = true;
-	file->flags          = OPEN_READWRITE;
 
 	// create fake name for the drive cache
 	char fakename[CROSS_LEN];
@@ -964,6 +992,7 @@ bool Overlay_Drive::FileUnlink(const char * name) {
 			//File does exist in normal drive.
 			//Maybe do something with the drive_cache.
 			add_deleted_file(name,true);
+			timestamp_cache.erase(overlayname);
 			return true;
 //			E_Exit("trying to remove existing non-overlay file %s",name);
 		}
@@ -979,6 +1008,7 @@ bool Overlay_Drive::FileUnlink(const char * name) {
 		dirCache.DeleteEntry(basename);
 
 		update_cache(false);
+		timestamp_cache.erase(basename);
 		if (logoverlay) {
 			LOG_MSG("OPTIMISE: unlink took %" PRId64, GetTicksSince(a));
 		}
@@ -1231,6 +1261,10 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 
 		result = !ec; // success if no error-code
 
+		if (result == true) {
+			timestamp_cache.erase(overlaynameold);
+		}
+
 		// Overlay file renamed: mark the old base file as deleted.
 		if (result == true && localDrive::FileExists(oldname)) {
 			add_deleted_file(oldname, true);
@@ -1259,6 +1293,7 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 		//File copied.
 		//Mark old file as deleted
 		add_deleted_file(oldname,true);
+		timestamp_cache.erase(newold);
 		result = true; //success
 		if (logoverlay) {
 			LOG_MSG("OPTIMISE: update rename with copy took %" PRId64,
