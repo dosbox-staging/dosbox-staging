@@ -497,6 +497,98 @@ bool Grapheme::operator<(const Grapheme& other) const
 }
 
 // ***************************************************************************
+// Helpers for control codes handing
+// ***************************************************************************
+
+// Constants to detect whether DOS character is a control code
+constexpr uint8_t control_code_delete    = 0x7f;
+constexpr uint8_t control_code_threshold = 0x20;
+
+// Unicode code points for screen codes from 0x00 to 0x1f
+// see: https://en.wikipedia.org/wiki/Code_page_437
+constexpr std::array<uint16_t, 0x20> screen_codes_wide = {
+        // clang-format off
+        0x0020, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, // 00-07
+        0x25d8, 0x25cb, 0x25d9, 0x2642, 0x2640, 0x266a, 0x266b, 0x263c, // 08-13
+        0x25ba, 0x25c4, 0x2195, 0x203c, 0x00b6, 0x00a7, 0x25ac, 0x21a8, // 10-17
+        0x2191, 0x2193, 0x2192, 0x2190, 0x221f, 0x2194, 0x25b2, 0x25bc  // 18-1f
+        // clang-format on
+};
+
+constexpr uint16_t screen_code_7f_wide = 0x2302; // 'del' character
+
+static bool is_control_code(const uint16_t value)
+{
+	return (value < control_code_threshold) || (value == control_code_delete);
+}
+
+static std::optional<uint16_t> screen_code_to_wide(const uint8_t byte,
+                                                   const DosStringConvertMode convert_mode)
+{
+	if (convert_mode == DosStringConvertMode::WithControlCodes ||
+	    convert_mode == DosStringConvertMode::NoSpecialCharacters) {
+		return {};
+	}
+
+	assert(convert_mode == DosStringConvertMode::ScreenCodesOnly);
+
+	if (byte == control_code_delete) {
+		return screen_code_7f_wide;
+	} else if (byte < control_code_threshold) {
+		return screen_codes_wide[byte];
+	}
+
+	return {};
+}
+
+static std::optional<uint8_t> grapheme_to_control_code(const Grapheme& grapheme,
+                                                       const DosStringConvertMode convert_mode)
+{
+	if (convert_mode == DosStringConvertMode::ScreenCodesOnly ||
+	    convert_mode == DosStringConvertMode::NoSpecialCharacters) {
+		return {};
+	}
+
+	assert(convert_mode == DosStringConvertMode::WithControlCodes);
+
+	if (grapheme.HasMark()) {
+		return {};
+	}
+
+	const auto code_point = grapheme.GetCodePoint();
+	if (!is_control_code(code_point)) {
+		return {};
+	}
+
+	return check_cast<uint8_t>(code_point);
+}
+
+static std::optional<uint8_t> grapheme_to_screen_code(const Grapheme& grapheme,
+                                                      const DosStringConvertMode convert_mode)
+{
+	if (convert_mode == DosStringConvertMode::WithControlCodes ||
+	    convert_mode == DosStringConvertMode::NoSpecialCharacters) {
+		return {};
+	}
+
+	assert(convert_mode == DosStringConvertMode::ScreenCodesOnly);
+
+	if (grapheme.HasMark()) {
+		return {};
+	}
+
+	constexpr auto begin = screen_codes_wide.begin();
+	constexpr auto end   = screen_codes_wide.end();
+
+	const auto iter = std::find(begin, end, grapheme.GetCodePoint());
+	if (iter == end) {
+		return {};
+	}
+
+	return check_cast<uint8_t>(std::distance(begin, iter));
+}
+
+// ***************************************************************************
 // Conversion routines
 // ***************************************************************************
 
@@ -661,6 +753,7 @@ static void warn_code_page(const uint16_t code_page)
 }
 
 static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_out,
+                        const DosStringConvertMode convert_mode,
                         const UnicodeFallback fallback, const uint16_t code_page)
 {
 	bool status = true;
@@ -691,7 +784,7 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 	}
 
 	// Handle code points which are 7-bit ASCII characters
-	auto push_7bit = [&str_out](const Grapheme& grapheme) {
+	auto push_7bit = [&str_out, &convert_mode](const Grapheme& grapheme) {
 		if (grapheme.HasMark()) {
 			return false; // not a 7-bit ASCII character
 		}
@@ -701,8 +794,19 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 			return false; // not a 7-bit ASCII character
 		}
 
-		str_out.push_back(static_cast<char>(code_point));
-		return true;
+		if (!is_control_code(code_point)) {
+			str_out.push_back(static_cast<char>(code_point));
+			return true;
+		}
+
+		const auto control_code = grapheme_to_control_code(grapheme,
+		                                                   convert_mode);
+		if (control_code) {
+			str_out.push_back(static_cast<char>(*control_code));
+			return true;
+		}
+
+		return false;
 	};
 
 	// Handle box drawing characters, if needed use specialized fallback
@@ -733,18 +837,29 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 	};
 
 	// Handle code points belonging to selected code page
-	auto push_code_page = [&str_out](const map_grapheme_to_dos_t* mapping,
-	                                 const Grapheme& grapheme) {
+	auto push_code_page = [&str_out, &convert_mode](const map_grapheme_to_dos_t* mapping,
+	                                                const Grapheme& grapheme) {
 		if (!mapping) {
 			return false;
 		}
+
+		// Check if code page has a characters matching the grapheme
 		const auto it = mapping->find(grapheme);
-		if (it == mapping->end()) {
-			return false;
+		if (it != mapping->end()) {
+			str_out.push_back(static_cast<char>(it->second));
+			return true;
 		}
 
-		str_out.push_back(static_cast<char>(it->second));
-		return true;
+		// Check if the grapheme represent a screen characters which has
+		// the same code as an ASCII control character
+		const auto screen_code = grapheme_to_screen_code(grapheme,
+		                                                 convert_mode);
+		if (screen_code) {
+			str_out.push_back(static_cast<char>(*screen_code));
+			return true;
+		}
+
+		return false;
 	};
 
 	// Handle code points which can only be mapped to ASCII
@@ -843,31 +958,17 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 	return status;
 }
 
-static void dos_to_wide(const std::string& str_in,
-                        std::vector<uint16_t>& str_out, const uint16_t code_page)
+static void dos_to_wide(const std::string& str_in, std::vector<uint16_t>& str_out,
+                        const DosStringConvertMode convert_mode,
+                        const uint16_t code_page)
 {
-	// Unicode code points for screen codes from 0x00 to 0x1f
-	// see: https://en.wikipedia.org/wiki/Code_page_437
-	constexpr uint16_t codes[0x20] = {
-	        0x0020, 0x263a, 0x263b, 0x2665, // 00-03
-	        0x2666, 0x2663, 0x2660, 0x2022, // 04-07
-	        0x25d8, 0x25cb, 0x25d9, 0x2642, // 08-0b
-	        0x2640, 0x266a, 0x266b, 0x263c, // 0c-0f
-	        0x25ba, 0x25c4, 0x2195, 0x203c, // 10-13
-	        0x00b6, 0x00a7, 0x25ac, 0x21a8, // 14-17
-	        0x2191, 0x2193, 0x2192, 0x2190, // 18-1b
-	        0x221f, 0x2194, 0x25b2, 0x25bc, // 1c-1f
-	};
-
-	constexpr uint16_t codepoint_7f = 0x2302;
-
 	str_out.clear();
 	str_out.reserve(str_in.size());
 
 	for (const auto character : str_in) {
 		const auto byte = static_cast<uint8_t>(character);
 		if (byte >= decode_threshold_non_ascii) {
-			// Character above 0x07f - take from code page mapping
+			// Take from code page mapping
 			auto& mappings = per_code_page_mappings[code_page];
 
 			if ((per_code_page_mappings.count(code_page) == 0) ||
@@ -876,15 +977,15 @@ static void dos_to_wide(const std::string& str_in,
 			} else {
 				mappings.grapheme_to_dos[byte].PushInto(str_out);
 			}
-
-		} else {
-			if (byte == 0x7f) {
-				str_out.push_back(codepoint_7f);
-			} else if (byte >= 0x20) {
-				str_out.push_back(byte);
+		} else if (is_control_code(byte)) {
+			const auto wide = screen_code_to_wide(byte, convert_mode);
+			if (wide) {
+				str_out.push_back(*wide);
 			} else {
-				str_out.push_back(codes[byte]);
+				str_out.push_back(unknown_character);
 			}
+		} else {
+			str_out.push_back(byte);
 		}
 	}
 }
@@ -2005,6 +2106,7 @@ uint16_t get_utf8_code_page()
 }
 
 static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
+                               const DosStringConvertMode convert_mode,
                                const UnicodeFallback fallback,
                                const uint16_t code_page)
 {
@@ -2013,45 +2115,52 @@ static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
 	std::vector<uint16_t> tmp = {};
 
 	const bool status1 = utf8_to_wide(in_str, tmp);
-	const bool status2 = wide_to_dos(tmp, out_str, fallback, code_page);
+	const bool status2 = wide_to_dos(tmp, out_str, convert_mode, fallback, code_page);
 
 	return status1 && status2;
 }
 
 bool utf8_to_dos(const std::string& in_str, std::string& out_str,
+                 const DosStringConvertMode convert_mode,
                  const UnicodeFallback fallback)
 {
-	return utf8_to_dos_common(in_str, out_str, fallback, get_utf8_code_page());
+	return utf8_to_dos_common(
+	        in_str, out_str, convert_mode, fallback, get_utf8_code_page());
 }
 
 bool utf8_to_dos(const std::string& in_str, std::string& out_str,
-                 const UnicodeFallback fallback,
-                 const uint16_t code_page)
+                 const DosStringConvertMode convert_mode,
+                 const UnicodeFallback fallback, const uint16_t code_page)
 {
-	return utf8_to_dos_common(in_str, out_str, fallback,
-			          get_custom_code_page(code_page));
+	return utf8_to_dos_common(in_str,
+	                          out_str,
+	                          convert_mode,
+	                          fallback,
+	                          get_custom_code_page(code_page));
 }
 
 static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
+                               const DosStringConvertMode convert_mode,
                                const uint16_t code_page)
 {
 	load_config_if_needed();
 
 	std::vector<uint16_t> tmp = {};
 
-	dos_to_wide(in_str, tmp, code_page);
+	dos_to_wide(in_str, tmp, convert_mode, code_page);
 	wide_to_utf8(tmp, out_str);
 }
 
-void dos_to_utf8(const std::string& in_str, std::string& out_str)
+void dos_to_utf8(const std::string& in_str, std::string& out_str,
+                 const DosStringConvertMode convert_mode)
 {
-	dos_to_utf8_common(in_str, out_str, get_utf8_code_page());
+	dos_to_utf8_common(in_str, out_str, convert_mode, get_utf8_code_page());
 }
 
 void dos_to_utf8(const std::string& in_str, std::string& out_str,
-                 const uint16_t code_page)
+                 const DosStringConvertMode convert_mode, const uint16_t code_page)
 {
-	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
+	dos_to_utf8_common(in_str, out_str, convert_mode, get_custom_code_page(code_page));
 }
 
 static void lowercase_dos_common(std::string& in_str, const uint16_t code_page)

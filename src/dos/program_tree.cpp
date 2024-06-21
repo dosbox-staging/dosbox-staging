@@ -180,12 +180,19 @@ void TREE::PreRender()
 {
 	bool use_ascii_fallback = false;
 
+	auto to_dos = [](const std::string& in_str, std::string& out_str) {
+		return utf8_to_dos(in_str,
+		                   out_str,
+		                   DosStringConvertMode::NoSpecialCharacters,
+		                   UnicodeFallback::Null);
+	};
+
 	if (!has_option_ascii) {
 		// If current code page misses one or more characters used to
 		// draw the tree, use standard 7-bit ASCII characters
 
 		std::string tmp_str;
-		utf8_to_dos("─├│└", tmp_str, UnicodeFallback::Null);
+		to_dos("─├│└", tmp_str);
 		if (tmp_str.find('\0') != std::string::npos) {
 			use_ascii_fallback = true;
 		}
@@ -196,9 +203,9 @@ void TREE::PreRender()
 		str_last   = "\\---";
 		str_indent = "|   ";
 	} else {
-		utf8_to_dos("├───", str_child, UnicodeFallback::Null);
-		utf8_to_dos("└───", str_last, UnicodeFallback::Null);
-		utf8_to_dos("│   ", str_indent, UnicodeFallback::Null);
+		to_dos("├───", str_child);
+		to_dos("└───", str_last);
+		to_dos("│   ", str_indent);
 	}
 }
 

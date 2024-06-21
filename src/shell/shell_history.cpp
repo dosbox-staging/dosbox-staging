@@ -38,7 +38,10 @@ void ShellHistory::Append(std::string command, uint16_t code_page)
 {
 	auto to_utf8_str = [code_page](const std::string& dos_str) {
 		std::string utf8_str = {};
-		dos_to_utf8(dos_str, utf8_str, code_page);
+		dos_to_utf8(dos_str,
+		            utf8_str,
+		            DosStringConvertMode::ScreenCodesOnly,
+		            code_page);
 		return utf8_str;
 	};
 
@@ -56,7 +59,11 @@ std::vector<std::string> ShellHistory::GetCommands(uint16_t code_page) const
 {
 	auto to_dos_str = [code_page](const std::string& utf8_str) {
 		std::string dos_str = {};
-		utf8_to_dos(utf8_str, dos_str, UnicodeFallback::Simple, code_page);
+		utf8_to_dos(utf8_str,
+		            dos_str,
+		            DosStringConvertMode::ScreenCodesOnly,
+		            UnicodeFallback::Simple,
+		            code_page);
 		return dos_str;
 	};
 

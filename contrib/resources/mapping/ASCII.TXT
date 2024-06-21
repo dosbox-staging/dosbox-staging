@@ -1704,6 +1704,7 @@
 0x2033 "   #DOUBLE PRIME
 0x2039 <   #SINGLE LEFT-POINTING ANGLE QUOTATION MARK
 0x203a >   #SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
+0x203c !   #DOUBLE EXCLAMATION MARK
 
 # ****************************************************************************
 # 0x2070 - 0x209f     Superscripts and Subscripts
@@ -1749,7 +1750,6 @@
 0x20bf B   #BITCOIN SIGN
 0x20c0 c   #SOM SIGN
 
-
 # ****************************************************************************
 # 0x2100 - 0x214f     Letterlike Symbols
 # ****************************************************************************
@@ -1765,6 +1765,18 @@
 0x2139 i   #INFORMATION SOURCE
 
 # ****************************************************************************
+# 0x2190 - 0x21ff     Arrows
+# ****************************************************************************
+
+0x2190 NNN #LEFTWARDS ARROW
+0x2191 NNN #UPWARDS ARROW
+0x2192 NNN #RIGHTWARDS ARROW
+0x2193 NNN #DOWNWARDS ARROW
+0x2194 NNN #LEFT RIGHT ARROW
+0x2195 NNN #UP DOWN ARROW
+0x21a8 NNN #UP DOWN ARROW WITH BASE
+
+# ****************************************************************************
 # 0x2200 - 0x22ff     Mathematical Operators
 # ****************************************************************************
 
@@ -1775,6 +1787,7 @@
 0x021d y   #LATIN SMALL LETTER YOGH
 0x221a NNN #SQUARE ROOT
 0x221e NNN #INFINITY
+0x221f NNN #RIGHT ANGLE
 0x2229 NNN #INTERSECTION
 0x2248 NNN #ALMOST EQUAL TO
 0x2261 =   #IDENTICAL TO
@@ -1856,6 +1869,30 @@
 # ****************************************************************************
 
 0x25a0 NNN #BLACK SQUARE
+0x25ac NNN #BLACK RECTANGLE
+0x25b2 NNN #BLACK UP-POINTING TRIANGLE
+0x25ba NNN #BLACK RIGHT-POINTING POINTER
+0x25bc NNN #BLACK DOWN-POINTING TRIANGLE
+0x25c4 NNN #BLACK LEFT-POINTING POINTER
+0x25cb NNN #WHITE CIRCLE
+0x25d8 NNN #INVERSE BULLET
+0x25d9 NNN #INVERSE WHITE CIRCLE
+
+# ****************************************************************************
+# 0x2600 - 0x26ff     Miscellaneous Symbols
+# ****************************************************************************
+
+0x263a NNN #WHITE SMILING FACE
+0x263b NNN #BLACK SMILING FACE
+0x263c NNN #WHITE SUN WITH RAYS
+0x2640 NNN #FEMALE SIGN
+0x2642 NNN #MALE SIGN
+0x2660 NNN #BLACK SPADE SUIT
+0x2663 NNN #BLACK CLUB SUIT
+0x2665 NNN #BLACK HEART SUIT
+0x2666 NNN #BLACK DIAMOND SUIT
+0x266a NNN #EIGHTH NOTE
+0x266b NNN #BEAMED EIGHTH NOTES
 
 # ****************************************************************************
 # 0x2c60 - 0x2c7f     Latin Extended-C (full coverage)

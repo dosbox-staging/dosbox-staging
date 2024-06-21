@@ -441,8 +441,12 @@ void GFX_NotifyProgramName(const std::string& segment_name,
 	trim(segment_name_dos);
 
 	// Store new names as UTF-8, refresh titlebar
-	dos_to_utf8(segment_name_dos, state.segment_name);
-	dos_to_utf8(canonical_name, state.canonical_name);
+	dos_to_utf8(segment_name_dos,
+	            state.segment_name,
+	            DosStringConvertMode::ScreenCodesOnly);
+	dos_to_utf8(canonical_name,
+	            state.canonical_name,
+	            DosStringConvertMode::ScreenCodesOnly);
 	GFX_RefreshTitle();
 }
 
