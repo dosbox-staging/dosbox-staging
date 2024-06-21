@@ -17,6 +17,7 @@
  */
 
 #include "drives.h"
+#include "drive_local.h"
 
 #include <algorithm>
 #include <cerrno>

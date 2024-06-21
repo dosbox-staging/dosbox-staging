@@ -190,38 +190,6 @@ private:
 	Bitu devnum;
 };
 
-class localFile : public DOS_File {
-public:
-	localFile(const char* name, const std_fs::path& path,
-	          const NativeFileHandle handle, const char* basedir,
-	          bool _read_only_medium);
-	localFile(const localFile&)            = delete; // prevent copying
-	localFile& operator=(const localFile&) = delete; // prevent assignment
-	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, uint32_t type) override;
-	void Close() override;
-	uint16_t GetInformation() override;
-	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
-	const char* GetBaseDir() const
-	{
-		return basedir;
-	}
-	std_fs::path GetPath() const
-	{
-		return path;
-	}
-	NativeFileHandle file_handle = InvalidNativeFileHandle;
-
-private:
-	void MaybeFlushTime();
-	const std_fs::path path = {};
-	const char* basedir     = nullptr;
-
-	const bool read_only_medium = false;
-	bool set_archive_on_close   = false;
-};
-
 /* The following variable can be lowered to free up some memory.
  * The negative side effect: The stored searches will be turned over faster.
  * Should not have impact on systems with few directory entries. */
