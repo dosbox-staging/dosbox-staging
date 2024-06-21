@@ -2620,7 +2620,10 @@ static void refresh_currency_format(const LocaleInfoEntry &source)
 
 		// Check if the currency can be converted to current code page
 
-		if (!utf8_to_dos(candidate_utf8, candidate, UnicodeFallback::Null)) {
+		if (!utf8_to_dos(candidate_utf8,
+		                 candidate,
+		                 DosStringConvertMode::NoSpecialCharacters,
+		                 UnicodeFallback::Null)) {
 			continue;
 		}
 		if (candidate.length() > MaxCurrencySymbolLength) {

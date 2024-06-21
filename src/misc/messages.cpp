@@ -62,6 +62,7 @@ private:
 		if (output_msg_by_codepage[cp].empty()) {
 			if (!utf8_to_dos(msg,
 			                 output_msg_by_codepage[cp],
+			                 DosStringConvertMode::WithControlCodes,
 			                 UnicodeFallback::Box,
 			                 cp)) {
 				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
@@ -97,6 +98,7 @@ public:
 		if (rendered_msg_by_codepage[cp].empty()) {
 			if (!utf8_to_dos(rendered_msg,
 			                 rendered_msg_by_codepage[cp],
+			                 DosStringConvertMode::WithControlCodes,
 			                 UnicodeFallback::Box,
 			                 cp)) {
 				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
