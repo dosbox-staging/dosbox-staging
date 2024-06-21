@@ -21,12 +21,14 @@
 #define DOSBOX_DRIVE_LOCAL_H
 
 #include "dos_system.h"
+#include "drives.h"
 
 class localFile : public DOS_File {
 public:
 	localFile(const char* name, const std_fs::path& path,
 	          const NativeFileHandle handle, const char* basedir,
-	          bool _read_only_medium);
+	          const bool _read_only_medium, const std::weak_ptr<localDrive> drive,
+	          const DosDateTime dos_time, const uint8_t _flags);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
 	bool Read(uint8_t* data, uint16_t* size) override;
@@ -43,6 +45,7 @@ public:
 	{
 		return path;
 	}
+	const std::weak_ptr<localDrive> local_drive = {};
 	NativeFileHandle file_handle = InvalidNativeFileHandle;
 
 private:
