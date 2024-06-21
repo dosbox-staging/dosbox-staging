@@ -696,6 +696,15 @@ bool DOS_WriteFile(uint16_t entry,uint8_t * data,uint16_t * amount,bool fcb) {
 
 	bool ret=Files[handle]->Write(data,&towrite);
 	*amount=towrite;
+	if (ret) {
+		// When a write happens, mark that the time should be flushed on close.
+		// The updated time value is not the time of the write but the time of the close.
+		// Writes also do not update the local date/time fields.
+		// Local date/time fields (as returned by a call to DOS_GetFileDate())
+		// are set on file open and only get changed by a call to DOS_SetFileDate()
+		// This matches the behavior as tested on MS-DOS 6.22
+		Files[handle]->flush_time_on_close = FlushTimeOnClose::CurrentTime;
+	}
 	return ret;
 }
 
@@ -1757,6 +1766,10 @@ bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate)
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};
+	// Only return local date/time fields.
+	// MS-DOS does not read from disk on this call.
+	// These are updated by calls to DOS_SetFile()
+	// But are not updated by file writes.
 	*otime = Files[handle]->time;
 	*odate = Files[handle]->date;
 	return true;
@@ -1777,9 +1790,11 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate)
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
+	// Local date/time fields get modified here.
+	// They do not get flushed to the disk until the file is closed.
 	Files[handle]->time = ntime;
 	Files[handle]->date = ndate;
-	Files[handle]->newtime = true;
+	Files[handle]->flush_time_on_close = FlushTimeOnClose::ManuallySet;
 	return true;
 }
 

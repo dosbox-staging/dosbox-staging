@@ -369,7 +369,7 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	date=orig.date;
 	attr=orig.attr;
 	refCtr=orig.refCtr;
-	newtime = orig.newtime;
+	flush_time_on_close = orig.flush_time_on_close;
 	hdrive=orig.hdrive;
 	name = orig.name;
 	return *this;

@@ -104,6 +104,12 @@ struct FileRegionLock {
 	uint32_t len = 0;
 };
 
+enum class FlushTimeOnClose {
+	NoUpdate,
+	ManuallySet,
+	CurrentTime,
+};
+
 class DOS_File {
 public:
 	DOS_File() = default;
@@ -139,7 +145,7 @@ public:
 	FatAttributeFlags attr = {};
 	Bits refCtr      = 0;
 	std::string name = {};
-	bool newtime     = false;
+	FlushTimeOnClose flush_time_on_close = FlushTimeOnClose::NoUpdate;
 	std::vector<FileRegionLock> region_locks = {};
 	/* Some Device Specific Stuff */
 private:
@@ -208,6 +214,7 @@ public:
 	NativeFileHandle file_handle = InvalidNativeFileHandle;
 
 private:
+	void MaybeFlushTime();
 	const std_fs::path path = {};
 	const char* basedir     = nullptr;
 
