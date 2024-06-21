@@ -457,4 +457,29 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 	return ret;
 }
 
+void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time)
+{
+	auto datetime = DOS_UnpackDateTime(date, time);
+
+	const auto unix_seconds = mktime(&datetime);
+	if (unix_seconds == -1) {
+		return;
+	}
+
+	struct timespec unix_times[2] = {};
+
+	// Last access time
+	// We don't really care about this but apparently it must be updated as well
+	unix_times[0].tv_sec = unix_seconds;
+	unix_times[0].tv_nsec = 0;
+
+	// Last modification time
+	unix_times[1].tv_sec = unix_seconds;
+	unix_times[1].tv_nsec = 0;
+
+	// I like hating on Win32 API but at least they have better function names...
+	// F U too Mr. Timens
+	futimens(handle, unix_times);
+}
+
 #endif
