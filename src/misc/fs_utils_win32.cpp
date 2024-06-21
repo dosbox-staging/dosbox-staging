@@ -231,19 +231,7 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 		return ret;
 	}
 
-	SYSTEMTIME system_time = {};
-	if (!FileTimeToSystemTime(&last_write_time, &system_time)) {
-		return ret;
-	}
-
-	ret.time = DOS_PackTime(system_time.wHour,
-	                        system_time.wMinute,
-	                        system_time.wSecond);
-
-	ret.date = DOS_PackDate(system_time.wYear,
-	                        system_time.wMonth,
-	                        system_time.wDay);
-
+	FileTimeToDosDateTime(&last_write_time, &ret.date, &ret.time);
 	return ret;
 }
 
