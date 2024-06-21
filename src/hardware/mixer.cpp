@@ -1237,7 +1237,7 @@ static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_
 		return cutoff_freq_hz;
 	} else {
 		LOG_DEBUG(
-		        "%s: Filter cutoff frequency %d Hz is not below half of the "
+		        "%s: Filter cutoff frequency %d Hz is above half the "
 		        "sample rate, clamping to %d Hz",
 		        channel_name.c_str(),
 		        cutoff_freq_hz,
