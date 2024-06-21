@@ -31,6 +31,7 @@ public:
 	          const DosDateTime dos_time, const uint8_t _flags);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
+	~localFile() override;
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;

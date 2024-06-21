@@ -224,6 +224,10 @@ public:
 	          overlay_active(false)
 	{
 		refCtr = file->refCtr;
+
+		// We are taking ownership of the file handle.
+		// Set this to invalid so localFile's destructor won't close it.
+		file->file_handle = InvalidNativeFileHandle;
 	}
 
 	bool Write(uint8_t* data, uint16_t* size) override
