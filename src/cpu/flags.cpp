@@ -1046,6 +1046,22 @@ void FillFlagsNoCFOF(void) {
 	}
 	lflags.type=t_UNKNOWN;
 }
+   
+// Set CPU test flags for all IDIV and DIV quotients
+template <typename T>
+void set_cpu_test_flags_for_division(const T quotient) noexcept
+{
+	SETFLAGBIT(OF, false);
+}
+
+// Explicit instantiations
+template void set_cpu_test_flags_for_division<uint8_t>(const uint8_t) noexcept;
+template void set_cpu_test_flags_for_division<uint16_t>(const uint16_t) noexcept;
+template void set_cpu_test_flags_for_division<uint32_t>(const uint32_t) noexcept;
+
+template void set_cpu_test_flags_for_division<int8_t>(const int8_t) noexcept;
+template void set_cpu_test_flags_for_division<int16_t>(const int16_t) noexcept;
+template void set_cpu_test_flags_for_division<int32_t>(const int32_t) noexcept;
 
 void DestroyConditionFlags(void) {
 	lflags.type=t_UNKNOWN;
