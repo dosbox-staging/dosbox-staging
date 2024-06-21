@@ -777,6 +777,20 @@ localFile::localFile(const char* _name, const std_fs::path& path,
 	SetName(_name);
 }
 
+localFile::~localFile()
+{
+	// Make sure we close the host file handle and flush the timestamps.
+	// This can happen if the user closes Dosbox while a game is running.
+	// It can also happen if a game leaks file handles. Ex: Crystal Caves
+	if (file_handle != InvalidNativeFileHandle) {
+		// Release all references so the close function will close the host file
+		refCtr = 1;
+
+		// Make sure to avoid virtual dispatch inside a destructor
+		localFile::Close();
+	}
+}
+
 // ********************************************
 // CDROM DRIVE
 // ********************************************
