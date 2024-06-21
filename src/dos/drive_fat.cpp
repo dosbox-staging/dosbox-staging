@@ -242,6 +242,9 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 
 finalizeWrite:
 	myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
+	// TODO: On MS-DOS 6.22 timestamps only get flushed to disk on file close.
+	// The time value should also be the time of close, not of write.
+	// This is unlikely to cause huge problems and I don't feel confident in changing this code right now.
 	tmpentry.modTime = DOS_GetBiosTimePacked();
 	tmpentry.modDate = DOS_GetBiosDatePacked();
 	tmpentry.entrysize = filelength;
@@ -287,10 +290,10 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 void fatFile::Close()
 {
 	if ((flags & 0xf) != OPEN_READ && !myDrive->IsReadOnly()) {
-		if (newtime || set_archive_on_close) {
+		if (flush_time_on_close == FlushTimeOnClose::ManuallySet || set_archive_on_close) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
-			if (newtime) {
+			if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
 				tmpentry.modTime = time;
 				tmpentry.modDate = date;
 			}

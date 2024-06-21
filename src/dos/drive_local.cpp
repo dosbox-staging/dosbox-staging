@@ -649,6 +649,19 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 	return true;
 }
 
+void localFile::MaybeFlushTime()
+{
+	assert(file_handle != InvalidNativeFileHandle);
+
+	if (flush_time_on_close == FlushTimeOnClose::ManuallySet) {
+		assert(!IsOnReadOnlyMedium());
+		set_dos_file_time(file_handle, date, time);
+	} else if (flush_time_on_close == FlushTimeOnClose::CurrentTime) {
+		assert(!IsOnReadOnlyMedium());
+		set_dos_file_time(file_handle, DOS_GetBiosDatePacked(), DOS_GetBiosTimePacked());
+	}
+}
+
 void localFile::Close()
 {
 	assert(file_handle != InvalidNativeFileHandle);
@@ -669,16 +682,12 @@ void localFile::Close()
 
 		// Not sure if setting extended attributes modifies the time.
 		// Do it here to be safe even though it means typing this block twice.
-		if (newtime) {
-			assert(!IsOnReadOnlyMedium());
-			set_dos_file_time(file_handle, date, time);
-		}
+		MaybeFlushTime();
 
 		close_native_file(file_handle);
 		file_handle = InvalidNativeFileHandle;
-	} else if (newtime) {
-		assert(!IsOnReadOnlyMedium());
-		set_dos_file_time(file_handle, date, time);
+	} else {
+		MaybeFlushTime();
 	}
 }
 
