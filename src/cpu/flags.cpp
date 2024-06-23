@@ -1051,7 +1051,13 @@ void FillFlagsNoCFOF(void) {
 template <typename T>
 void set_cpu_test_flags_for_division(const T quotient) noexcept
 {
-	SETFLAGBIT(OF, false);
+
+	// Create a new test flags object with the flags we'll be settings
+	CpuTestFlags div_test_flags(FLAG_OF);
+
+	div_test_flags.has_overflow = false;
+
+	cpu_regs.ApplyTestFlags(div_test_flags);
 }
 
 // Explicit instantiations (replaces 18 instances)
