@@ -6,6 +6,13 @@ Before getting started, you should know that OpenBSD isn't fully supported or
 used by the current maintainers. It's been lightly tested on a big-endian
 PowerPC system.
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ## Pre-requisites
 
 ### Expand the systems' memory limits

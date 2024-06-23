@@ -31,6 +31,13 @@ CCACHE_COMPRESSLEVEL=6
 CCACHE_SLOPPINESS="pch_defines,time_macros"
 ```
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ## OS-specific instructions
 
 Instructions in this article assume you're using Linux or BSD but will work
