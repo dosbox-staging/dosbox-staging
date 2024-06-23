@@ -1051,6 +1051,8 @@ void FillFlagsNoCFOF(void) {
 template <typename T>
 void set_cpu_test_flags_for_division(const T quotient) noexcept
 {
+	// Set the instruction type to division
+	lflags.type = t_DIV;
 
 	// Create a new test flags object with the flags we'll be settings
 	CpuTestFlags div_test_flags(FLAG_OF);
