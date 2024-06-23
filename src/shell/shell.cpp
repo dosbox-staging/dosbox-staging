@@ -663,8 +663,6 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_CMD_SET_NOT_SET", "Environment variable '%s' not defined.\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE", "Not enough environment space left.\n");
-	MSG_Add("SHELL_CMD_SET_OPTION_P_UNSUPPORTED",
-	        "Option /P is not supported; please use the CHOICE command.\n");
 
 	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME", "IF EXIST: Missing filename.\n");
 	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER", "IF ERRORLEVEL: Missing number.\n");
