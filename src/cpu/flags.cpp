@@ -1054,7 +1054,7 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	SETFLAGBIT(OF, false);
 }
 
-// Explicit instantiations
+// Explicit instantiations (replaces 12 instances)
 template void set_cpu_test_flags_for_division<uint8_t>(const uint8_t) noexcept;
 template void set_cpu_test_flags_for_division<uint16_t>(const uint16_t) noexcept;
 template void set_cpu_test_flags_for_division<uint32_t>(const uint32_t) noexcept;
