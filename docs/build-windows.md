@@ -8,6 +8,13 @@ Windows builds can be created using:
 - The Clang or GCC compilers using the Meson buildsystem running within the
   MSYS2 environment to provide dependencies.
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ## Build using Visual Studio
 
 1. Install Visual Studio Community 2022: <https://visualstudio.microsoft.com/vs/community/>.

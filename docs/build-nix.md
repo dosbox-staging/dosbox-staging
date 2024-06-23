@@ -4,6 +4,13 @@ Compiling code on Nix requires slightly different inputs from other linux distro
 since the appropriate environment variables for pkg-config are only avaliable
 under the `nix-shell` command.
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ## Installing the dependencies under Nix
 
 Nix has a unique toolset where you are not required to install the dependencies

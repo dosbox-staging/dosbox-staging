@@ -2,6 +2,13 @@
 
 Haiku builds can be created with Clang or GCC using the Meson buildsystem.
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ## Build instructions
 
 Install dependencies:

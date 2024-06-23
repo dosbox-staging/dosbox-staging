@@ -99,6 +99,13 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 Read [BUILD.md] for the comprehensive compilation guide.
 
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
+
 ### Linux, macOS
 
 Install build dependencies appropriate for your OS:
