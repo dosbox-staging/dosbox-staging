@@ -1466,9 +1466,13 @@ void DOS_Shell::CMD_SET(char * args) {
 	}
 	//There are args:
 	char * pcheck = args;
-	while ( *pcheck && (*pcheck == ' ' || *pcheck == '\t')) pcheck++;
+
+	while (*pcheck && (*pcheck == ' ' || *pcheck == '\t')) {
+		pcheck++;
+	}
 	if (*pcheck && strlen(pcheck) > 3 && (strncasecmp(pcheck, "/p ", 3) == 0)) {
-		E_Exit("Set /P is not supported. Use Choice!");
+		WriteOut(MSG_Get("SHELL_CMD_SET_OPTION_P_UNSUPPORTED"));
+		return;
 	}
 
 	char* p = strpbrk(args, "=");
