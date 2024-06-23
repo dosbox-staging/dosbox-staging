@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../flags.h"
 #include "include/math_utils.h"
 
 static uint8_t DRC_CALL_CONV dynrec_add_byte(uint8_t op1,uint8_t op2) DRC_FC;
@@ -1480,6 +1481,7 @@ static bool DRC_CALL_CONV dynrec_div_byte(uint8_t op) {
 	if (quo>0xff) return CPU_PrepareException(0,0);
 	reg_ah=rem;
 	reg_al=quo8;
+	set_cpu_test_flags_for_division(quo8);
 	return false;
 }
 
@@ -1493,6 +1495,7 @@ static bool DRC_CALL_CONV dynrec_idiv_byte(uint8_t op) {
 	if (quo!=(int16_t)quo8s) return CPU_PrepareException(0,0);
 	reg_ah=rem;
 	reg_al=quo8s;
+	set_cpu_test_flags_for_division(quo8s);
 	return false;
 }
 
@@ -1507,6 +1510,7 @@ static bool DRC_CALL_CONV dynrec_div_word(uint16_t op) {
 	if (quo!=(uint32_t)quo16) return CPU_PrepareException(0,0);
 	reg_dx=rem;
 	reg_ax=quo16;
+	set_cpu_test_flags_for_division(quo16);
 	return false;
 }
 
@@ -1521,6 +1525,7 @@ static bool DRC_CALL_CONV dynrec_idiv_word(uint16_t op) {
 	if (quo!=(int32_t)quo16s) return CPU_PrepareException(0,0);
 	reg_dx=rem;
 	reg_ax=quo16s;
+	set_cpu_test_flags_for_division(quo16s);
 	return false;
 }
 
@@ -1535,6 +1540,7 @@ static bool DRC_CALL_CONV dynrec_div_dword(uint32_t op) {
 	if (quo!=(uint64_t)quo32) return CPU_PrepareException(0,0);
 	reg_edx=rem;
 	reg_eax=quo32;
+	set_cpu_test_flags_for_division(quo32);
 	return false;
 }
 
@@ -1549,6 +1555,7 @@ static bool DRC_CALL_CONV dynrec_idiv_dword(uint32_t op) {
 	if (quo!=(int64_t)quo32s) return CPU_PrepareException(0,0);
 	reg_edx=rem;
 	reg_eax=quo32s;
+	set_cpu_test_flags_for_division(quo32s);
 	return false;
 }
 
