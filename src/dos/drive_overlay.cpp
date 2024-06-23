@@ -1260,21 +1260,21 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 
 	//No need to check if the original is marked as deleted, as GetFileAttr would fail if it did.
 
-	bool result = false;
+	bool success = false;
 
 	// check if overlaynameold exists and if so rename it to overlaynamenew
 	std::error_code ec = {};
 	if (std_fs::exists(overlaynameold, ec)) {
 		std_fs::rename(overlaynameold, overlaynamenew, ec);
 
-		result = !ec; // success if no error-code
+		success = !ec; // success if no error-code
 
-		if (result == true) {
+		if (success) {
 			timestamp_cache.erase(overlaynameold);
 		}
 
 		// Overlay file renamed: mark the old base file as deleted.
-		if (result == true && localDrive::FileExists(oldname)) {
+		if (success && localDrive::FileExists(oldname)) {
 			add_deleted_file(oldname, true);
 		}
 	} else {
@@ -1302,13 +1302,13 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 		//Mark old file as deleted
 		add_deleted_file(oldname,true);
 		timestamp_cache.erase(newold);
-		result = true; //success
+		success = true;
 		if (logoverlay) {
 			LOG_MSG("OPTIMISE: update rename with copy took %" PRId64,
 			        GetTicksSince(aa));
 		}
 	}
-	if (result) {
+	if (success) {
 		//handle the drive_cache (a bit better)
 		//Ensure that the file is not marked as deleted anymore.
 		if (is_deleted_file(newname)) remove_deleted_file(newname,true);
@@ -1318,7 +1318,7 @@ bool Overlay_Drive::Rename(const char * oldname, const char * newname) {
 			LOG_MSG("OPTIMISE: rename took %" PRId64, GetTicksSince(a));
 		}
 	}
-	return result;
+	return success;
 
 }
 #endif
