@@ -493,7 +493,7 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileOpen(const char* name, uint8_t flag
 	NativeFileHandle file_handle = open_native_file(newname, write_access);
 	if (file_handle != InvalidNativeFileHandle) {
 		if (logoverlay) {
-			LOG_MSG("overlay file opened %s", newname);
+			LOG_MSG("FS: Overlay file '%s' opened.", newname);
 		}
 
 		DosDateTime dos_time   = {};
@@ -534,7 +534,7 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileOpen(const char* name, uint8_t flag
 	}
 
 	if (logoverlay) {
-		LOG_MSG("file opened %s", name);
+		LOG_MSG("FS: File '%s' opened.", name);
 	}
 	// Convert file to OverlayFile
 	auto overlay_file   = std::make_unique<OverlayFile>(local_file);
