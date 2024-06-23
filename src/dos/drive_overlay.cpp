@@ -505,14 +505,15 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileOpen(const char* name, uint8_t flag
 			dos_time = cache_entry->second;
 		}
 
-		auto file            = std::make_unique<OverlayFile>(name,
-                                                          newname,
-                                                          file_handle,
-                                                          overlaydir,
-                                                          IsReadOnly(),
-                                                          weak_from_this(),
-                                                          dos_time,
-                                                          flags);
+		auto file = std::make_unique<OverlayFile>(name,
+		                                          newname,
+		                                          file_handle,
+		                                          overlaydir,
+		                                          IsReadOnly(),
+		                                          weak_from_this(),
+		                                          dos_time,
+		                                          flags);
+
 		file->overlay_active = true;
 
 		return file;
@@ -568,14 +569,15 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 	dos_time.time                  = DOS_GetBiosTimePacked();
 	timestamp_cache[path.string()] = dos_time;
 
-	auto file            = std::make_unique<OverlayFile>(name,
-                                                  path,
-                                                  file_handle,
-                                                  overlaydir,
-                                                  IsReadOnly(),
-                                                  weak_from_this(),
-                                                  dos_time,
-                                                  OPEN_READWRITE);
+	auto file = std::make_unique<OverlayFile>(name,
+	                                          path,
+	                                          file_handle,
+	                                          overlaydir,
+	                                          IsReadOnly(),
+	                                          weak_from_this(),
+	                                          dos_time,
+	                                          OPEN_READWRITE);
+
 	file->overlay_active = true;
 
 	// create fake name for the drive cache
