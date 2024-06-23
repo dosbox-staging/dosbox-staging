@@ -564,9 +564,11 @@ std::unique_ptr<DOS_File> Overlay_Drive::FileCreate(const char* name,
 		return nullptr;
 	}
 
-	DosDateTime dos_time           = {};
-	dos_time.date                  = DOS_GetBiosDatePacked();
-	dos_time.time                  = DOS_GetBiosTimePacked();
+	const DosDateTime dos_time = {
+		.date = DOS_GetBiosDatePacked(),
+		.time = DOS_GetBiosTimePacked()
+	};
+
 	timestamp_cache[path.string()] = dos_time;
 
 	auto file = std::make_unique<OverlayFile>(name,

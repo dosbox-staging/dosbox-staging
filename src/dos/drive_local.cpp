@@ -90,9 +90,10 @@ std::unique_ptr<DOS_File> localDrive::FileCreate(const char* name,
 		dirCache.AddEntry(newname, true);
 	}
 
-	DosDateTime dos_time = {};
-	dos_time.date        = DOS_GetBiosDatePacked();
-	dos_time.time        = DOS_GetBiosTimePacked();
+	const DosDateTime dos_time = {
+		.date = DOS_GetBiosDatePacked(),
+		.time = DOS_GetBiosTimePacked()
+	};
 
 	// The timestamp cache is for emulating DOS behavior, not performance.
 	// On some hosts, the timestamp will be updated with current host time
