@@ -1046,7 +1046,13 @@ void FillFlagsNoCFOF(void) {
 	}
 	lflags.type=t_UNKNOWN;
 }
-   
+
+template <typename T>
+constexpr bool is_negative(const T value)
+{
+	return std::is_signed_v<T> && value < 0;
+}
+
 // Set CPU test flags for all IDIV and DIV quotients
 template <typename T>
 void set_cpu_test_flags_for_division(const T quotient) noexcept
@@ -1055,7 +1061,7 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	lflags.type = t_DIV;
 
 	// Create a new test flags object with the flags we'll be settings
-	CpuTestFlags div_test_flags(FLAG_CF | FLAG_OF);
+	CpuTestFlags div_test_flags(FLAG_CF | FLAG_OF | FLAG_SF);
 
 	// After performing IDIV, Intel's micro-operation clears the carry and
 	// overflow flags. Curiously, the 8086 documentation declares that the
@@ -1066,8 +1072,9 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	//
 	//_https://www.righto.com/2023/04/reverse-engineering-8086-divide-microcode.html
 	//
-	div_test_flags.has_carry    = false;
-	div_test_flags.has_overflow = false;
+	div_test_flags.has_carry        = false;
+	div_test_flags.has_overflow     = false;
+	div_test_flags.is_sign_negative = is_negative(quotient);
 
 	cpu_regs.ApplyTestFlags(div_test_flags);
 }
