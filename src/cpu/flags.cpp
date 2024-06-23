@@ -1047,6 +1047,15 @@ void FillFlagsNoCFOF(void) {
 	lflags.type=t_UNKNOWN;
 }
 
+// Helper function to assess a value for the parity flag, which indicates
+// whether the modulo 2 sum of the low-order eight bits of the result is even
+// (PF=O) or odd (PF=1).
+template <typename T>
+constexpr bool lower_8_has_odd_parity(const T value)
+{
+	return parity_lookup[value & 0xff] != 0;
+}
+
 template <typename T>
 constexpr bool is_negative(const T value)
 {
@@ -1061,7 +1070,7 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	lflags.type = t_DIV;
 
 	// Create a new test flags object with the flags we'll be settings
-	CpuTestFlags div_test_flags(FLAG_CF | FLAG_OF | FLAG_SF | FLAG_ZF);
+	CpuTestFlags div_test_flags(FLAG_CF | FLAG_OF | FLAG_PF | FLAG_SF | FLAG_ZF);
 
 	// After performing IDIV, Intel's micro-operation clears the carry and
 	// overflow flags. Curiously, the 8086 documentation declares that the
@@ -1074,6 +1083,7 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	//
 	div_test_flags.has_carry        = false;
 	div_test_flags.has_overflow     = false;
+	div_test_flags.has_odd_parity   = lower_8_has_odd_parity(quotient);
 	div_test_flags.is_sign_negative = is_negative(quotient);
 	div_test_flags.is_zero          = (quotient == 0);
 
