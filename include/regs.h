@@ -23,6 +23,8 @@
 #include "mem.h"
 #endif
 
+#include <cassert>
+
 // x86 CPU FLAGS register bit positions
 // - Intel iAXP 286 Programmer's Reference Manual
 // - Intel 64 and IA-32 Architectures Software Developer's Manual. Vol.1
@@ -133,11 +135,76 @@ constexpr auto BL_INDEX = 0;
 
 #endif
 
+// The CpuTestFlags struct allows CPU test flags to be applied en masse. First
+// construct it with the set of flags you will be adjusting followed by
+// assigning the actual flag state to the verbosely-named members. For example:
+//
+// CpuTestFlags my_flags(FLAG_CF | FLAG_OF);
+//   my_flags.has_carry = (did the operation need to carry results?);
+//   my_flags.has_overflow = (did the operation overflow?);
+//
+// Then apply the flags to the CPU registers:
+//   cpu_regs.ApplyTestFlags(my_flags);
+//
+struct CpuTestFlags {
+	constexpr CpuTestFlags() = delete;
+	constexpr CpuTestFlags(const uint32_t clear_mask);
+	constexpr uint32_t GetClearMask() const;
+	constexpr uint32_t GetSetMask() const;
+
+	bool has_carry        = false;
+	bool has_odd_parity   = false;
+	bool has_auxiliary    = false;
+	bool is_zero          = false;
+	bool is_sign_negative = false;
+	bool has_overflow     = false;
+
+private:
+	const uint32_t clear_mask = 0;
+};
+
+constexpr CpuTestFlags::CpuTestFlags(const uint32_t _clear_mask)
+        : clear_mask(_clear_mask)
+{
+	assert((clear_mask & ~FMASK_TEST) == 0 &&
+	       "Attempting to clear more than the test flags");
+}
+
+constexpr uint32_t CpuTestFlags::GetClearMask() const
+{
+	return clear_mask;
+}
+
+constexpr uint32_t CpuTestFlags::GetSetMask() const
+{
+	// clang-format off
+	const uint32_t set_mask = 
+		(has_carry        ? FLAG_CF : 0) |
+		(has_odd_parity   ? FLAG_PF : 0) |
+		(has_auxiliary    ? FLAG_AF : 0) |
+		(is_zero          ? FLAG_ZF : 0) |
+		(is_sign_negative ? FLAG_SF : 0) |
+		(has_overflow     ? FLAG_OF : 0);
+	// clang-format on
+
+	assert((set_mask & ~clear_mask) == 0 &&
+	       "Attempting to set flags that aren't cleared");
+	return set_mask;
+}
+
 struct CPU_Regs {
 	GenReg32 regs[8] = {};
-	GenReg32 ip = {};
-	uint32_t flags = 0;
+	GenReg32 ip      = {};
+	uint32_t flags   = 0;
+	constexpr void ApplyTestFlags(const CpuTestFlags& requested_flags);
 };
+
+constexpr void CPU_Regs::ApplyTestFlags(const CpuTestFlags& requested_flags)
+{
+	// First clear then set the requested flags
+	flags &= ~requested_flags.GetClearMask();
+	flags |= requested_flags.GetSetMask();
+}
 
 extern Segments Segs;
 extern CPU_Regs cpu_regs;
