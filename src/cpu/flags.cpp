@@ -1055,8 +1055,18 @@ void set_cpu_test_flags_for_division(const T quotient) noexcept
 	lflags.type = t_DIV;
 
 	// Create a new test flags object with the flags we'll be settings
-	CpuTestFlags div_test_flags(FLAG_OF);
+	CpuTestFlags div_test_flags(FLAG_CF | FLAG_OF);
 
+	// After performing IDIV, Intel's micro-operation clears the carry and
+	// overflow flags. Curiously, the 8086 documentation declares that the
+	// status flags are undefined following IDIV, but the microcode
+	// explicitly clears the carry and overflow flags. Signed DIV re-uses
+	// the above IDIV routine, so this is true for both signed and unsigned
+	// division.
+	//
+	//_https://www.righto.com/2023/04/reverse-engineering-8086-divide-microcode.html
+	//
+	div_test_flags.has_carry    = false;
 	div_test_flags.has_overflow = false;
 
 	cpu_regs.ApplyTestFlags(div_test_flags);
