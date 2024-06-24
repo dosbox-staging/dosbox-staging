@@ -1731,6 +1731,9 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 	auto pos             = 0;
 	AudioFrame out_frame = {};
 
+	// We set size to zero which will not change the data in the container
+	// at all. Then we overwrite the data below with `emplace_back()` which
+	// will set the correct length.
 	out.resize(0);
 
 	while (pos < num_frames) {
@@ -2000,6 +2003,10 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 
 		auto in_pos = mixer.temp_buf.cbegin();
 		auto& out   = mixer.out_buf;
+
+		// We set size to zero which will not change the data in the
+		// container at all. Then we overwrite the data below with
+		// `emplace_back()` which will set the correct length.
 		out.resize(0);
 
 		while (in_pos != mixer.temp_buf.cend()) {
