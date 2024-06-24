@@ -647,8 +647,8 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel_to_remove)
 
 	MIXER_LockAudioDevice();
 
-	auto it = mixer.channels.begin();
-	while (it != mixer.channels.end()) {
+	auto it = mixer.channels.cbegin();
+	while (it != mixer.channels.cend()) {
 		const auto [name, channel] = *it;
 
 		if (channel.get() == channel_to_remove.get()) {
@@ -1998,11 +1998,11 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	if (do_lerp_upsample) {
 		auto& s = lerp_upsampler;
 
-		auto in_pos = mixer.temp_buf.begin();
+		auto in_pos = mixer.temp_buf.cbegin();
 		auto& out   = mixer.out_buf;
 		out.resize(0);
 
-		while (in_pos != mixer.temp_buf.end()) {
+		while (in_pos != mixer.temp_buf.cend()) {
 			AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
 
 			assert(s.pos >= 0.0f && s.pos <= 1.0f);
@@ -2074,9 +2074,9 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
 	auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
 
-	auto out_buf_pos = mixer.out_buf.begin();
+	auto out_buf_pos = mixer.out_buf.cbegin();
 
-	while (out_buf_pos != mixer.out_buf.end()) {
+	while (out_buf_pos != mixer.out_buf.cend()) {
 		AudioFrame frame = {*out_buf_pos++, *out_buf_pos++};
 
 		if (filters.highpass.state == FilterState::On) {
