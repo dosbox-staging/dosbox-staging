@@ -834,32 +834,32 @@ std::unique_ptr<DOS_File> cdromDrive::FileOpen(const char* name, uint8_t flags)
 	return localDrive::FileOpen(name, flags);
 }
 
-std::unique_ptr<DOS_File> cdromDrive::FileCreate(const char* /*name*/,
-                                                 FatAttributeFlags /*attributes*/)
+std::unique_ptr<DOS_File> cdromDrive::FileCreate([[maybe_unused]]const char* name,
+                                                 [[maybe_unused]]FatAttributeFlags attributes)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return nullptr;
 }
 
-bool cdromDrive::FileUnlink(const char* /*name*/)
+bool cdromDrive::FileUnlink([[maybe_unused]]const char* name)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::RemoveDir(const char* /*dir*/)
+bool cdromDrive::RemoveDir([[maybe_unused]]const char* dir)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::MakeDir(const char* /*dir*/)
+bool cdromDrive::MakeDir([[maybe_unused]]const char* dir)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::Rename(const char* /*oldname*/, const char* /*newname*/)
+bool cdromDrive::Rename([[maybe_unused]]const char* oldname, [[maybe_unused]]const char* newname)
 {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
@@ -876,7 +876,7 @@ bool cdromDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
 	return result;
 }
 
-bool cdromDrive::FindFirst(const char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
+bool cdromDrive::FindFirst(const char* _dir, DOS_DTA& dta, [[maybe_unused]]bool fcb_findfirst)
 {
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
