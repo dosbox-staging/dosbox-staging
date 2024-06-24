@@ -70,6 +70,7 @@ public:
 		return data_.size();
 	}
 
+	// TODO Add const_iterator support, then start using it in `mixer.cpp`
 	class RingBufferIterator {
 		RingBuffer* array;
 		size_t index;
