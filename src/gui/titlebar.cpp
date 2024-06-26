@@ -27,8 +27,8 @@
 #include "mapper.h"
 #include "sdlmain.h"
 #include "setup.h"
-#include "string_utils.h"
 #include "support.h"
+#include "unicode.h"
 #include "video.h"
 
 #include <SDL.h>
@@ -430,6 +430,8 @@ void GFX_NotifyAudioMutedStatus(const bool is_muted)
 void GFX_NotifyProgramName(const std::string& segment_name,
                            const std::string& canonical_name)
 {
+	constexpr auto ConvertMode = DosStringConvertMode::ScreenCodesOnly;
+
 	std::string segment_name_dos = segment_name;
 
 	// Segment name might contain just about any character - adapt it
@@ -441,12 +443,8 @@ void GFX_NotifyProgramName(const std::string& segment_name,
 	trim(segment_name_dos);
 
 	// Store new names as UTF-8, refresh titlebar
-	dos_to_utf8(segment_name_dos,
-	            state.segment_name,
-	            DosStringConvertMode::ScreenCodesOnly);
-	dos_to_utf8(canonical_name,
-	            state.canonical_name,
-	            DosStringConvertMode::ScreenCodesOnly);
+	state.segment_name   = dos_to_utf8(segment_name_dos, ConvertMode);
+	state.canonical_name = dos_to_utf8(canonical_name, ConvertMode);
 	GFX_RefreshTitle();
 }
 

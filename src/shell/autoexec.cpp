@@ -27,6 +27,7 @@
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
+#include "unicode.h"
 
 #include <algorithm>
 #include <iostream>
@@ -214,12 +215,10 @@ static void create_autoexec_bat_dos(const std::string& input_utf8,
                                     const uint16_t code_page)
 {
 	// Convert UTF-8 AUTOEXEC.BAT to DOS code page
-	std::string autoexec_bat_dos = {};
-	utf8_to_dos(input_utf8,
-	            autoexec_bat_dos,
-	            DosStringConvertMode::WithControlCodes,
-	            UnicodeFallback::Box,
-	            code_page);
+	const auto autoexec_bat_dos = utf8_to_dos(input_utf8,
+	                                          DosStringConvertMode::WithControlCodes,
+	                                          UnicodeFallback::Box,
+	                                          code_page);
 
 	// Convert the result to a binary format
 	auto autoexec_bat_bin = std::vector<uint8_t>(autoexec_bat_dos.begin(),
