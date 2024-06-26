@@ -38,8 +38,8 @@
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"
-#include "string_utils.h"
 #include "support.h"
+#include "unicode.h"
 
 callback_number_t call_program = 0;
 
@@ -741,10 +741,8 @@ void CONFIG::Run(void)
 				return;
 			}
 			for (const auto& pvar : pvars) {
-				std::string line_utf8 = {};
-				dos_to_utf8(pvar,
-				            line_utf8,
-				            DosStringConvertMode::WithControlCodes);
+				const auto line_utf8 = dos_to_utf8(pvar,
+				                                   DosStringConvertMode::WithControlCodes);
 				sec->HandleInputline(line_utf8);
 			}
 			break;
@@ -759,11 +757,9 @@ void CONFIG::Run(void)
 				return;
 			}
 
-			std::string line_dos = {};
-			utf8_to_dos(sec->data,
-			            line_dos,
-			            DosStringConvertMode::WithControlCodes,
-			            UnicodeFallback::Box);
+			const auto line_dos = utf8_to_dos(sec->data,
+			                                  DosStringConvertMode::WithControlCodes,
+			                                  UnicodeFallback::Box);
 
 			MoreOutputStrings output(*this);
 			output.AddString("\n%s\n\n", line_dos.c_str());
@@ -825,12 +821,9 @@ void CONFIG::Run(void)
 						if (p == nullptr) {
 							break;
 						}
-						std::string val_utf8 = p->GetValue().ToString();
-						std::string val_dos = {};
-						utf8_to_dos(val_utf8,
-						            val_dos,
-						            DosStringConvertMode::NoSpecialCharacters,
-						            UnicodeFallback::Simple);
+						const auto val_dos = utf8_to_dos(p->GetValue().ToString(),
+						                                 DosStringConvertMode::NoSpecialCharacters,
+						                                 UnicodeFallback::Simple);
 						WriteOut("%s=%s\n",
 						         p->propname.c_str(),
 						         val_dos.c_str());
@@ -846,12 +839,9 @@ void CONFIG::Run(void)
 						return;
 					}
 					// it's a property name
-					std::string val_utf8 = sec->GetPropValue(pvars[0].c_str());
-					std::string val_dos = {};
-					utf8_to_dos(val_utf8,
-					            val_dos,
-					            DosStringConvertMode::NoSpecialCharacters,
-					            UnicodeFallback::Simple);
+					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0].c_str()),
+					                                 DosStringConvertMode::NoSpecialCharacters,
+					                                 UnicodeFallback::Simple);
 					WriteOut("%s", val_dos.c_str());
 					DOS_PSP(psp->GetParent())
 					        .SetEnvironmentValue("CONFIG",
@@ -877,11 +867,9 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				std::string val_dos = {};
-				utf8_to_dos(val_utf8,
-				            val_dos,
-				            DosStringConvertMode::NoSpecialCharacters,
-				            UnicodeFallback::Simple);
+				const auto val_dos = utf8_to_dos(val_utf8,
+				                                 DosStringConvertMode::NoSpecialCharacters,
+				                                 UnicodeFallback::Simple);
 				WriteOut("%s\n", val_dos.c_str());
 				DOS_PSP(psp->GetParent())
 				        .SetEnvironmentValue("CONFIG", val_dos.c_str());
@@ -954,10 +942,8 @@ void CONFIG::Run(void)
 
 				tsec->ExecuteDestroy(false);
 
-				std::string line_utf8 = {};
-				dos_to_utf8(inputline,
-				            line_utf8,
-				            DosStringConvertMode::NoSpecialCharacters);
+				const auto line_utf8 = dos_to_utf8(inputline,
+					                           DosStringConvertMode::NoSpecialCharacters);
 
 				bool change_success = tsec->HandleInputline(
 				        line_utf8.c_str());
