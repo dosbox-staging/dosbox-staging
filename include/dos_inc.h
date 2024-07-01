@@ -118,7 +118,7 @@ constexpr int FakeSftEntries = 16;
 
 /* internal Dos Tables */
 
-extern std::unique_ptr<DOS_File> Files[DOS_FILES];
+extern std::array<std::unique_ptr<DOS_File>, DOS_FILES> Files;
 extern std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives;
 extern DOS_Device * Devices[DOS_DEVICES];
 
