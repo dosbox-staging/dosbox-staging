@@ -44,7 +44,7 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
-std::unique_ptr<DOS_File> Files[DOS_FILES] = {};
+std::array<std::unique_ptr<DOS_File>, DOS_FILES> Files = {};
 
 std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives = {};
 
