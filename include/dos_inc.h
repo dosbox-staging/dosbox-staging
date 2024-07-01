@@ -250,6 +250,7 @@ bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
 uint8_t DOS_FindDevice(const char* name);
 void DOS_SetupDevices();
+void DOS_ClearDrivesAndFiles();
 void DOS_ShutDownDevices();
 
 /* Execute and new process creation */
