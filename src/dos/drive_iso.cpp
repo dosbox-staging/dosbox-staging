@@ -216,7 +216,7 @@ std::unique_ptr<DOS_File> isoDrive::FileOpen(const char* name, uint8_t flags)
 	}
 
 	isoDirEntry de;
-	if (!lookup(&de, name) && !IS_DIR(FLAGS1)) {
+	if (!(lookup(&de, name) && !IS_DIR(FLAGS1))) {
 		return nullptr;
 	}
 
