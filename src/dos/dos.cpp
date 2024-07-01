@@ -1534,10 +1534,17 @@ public:
 			dos.version.minor = new_version.minor;
 		}
 	}
-	~DOS(){
-		// Clear the driver pointers. The actual objects are managed by
-		// the drive manager class.
-		Drives.fill(nullptr);
+
+	// Shutdown the DOS OS constructs leaving only the BIOS and hardware
+	// layers.
+	~DOS()
+	{
+		// Clear the drive pointers and file objects. The actual drive
+		// objects are managed by the drive manager class. The 'Files'
+		// destructors depend on the DOS API (file flush, close, and
+		// date and time lookup), so it's import to shut these down when
+		// DOS is still available.
+		DOS_ClearDrivesAndFiles();
 
 		// de-init devices, this allows DOSBox to cleanly re-initialize
 		// without throwing an inevitable `DOS: Too many devices added`

@@ -1800,12 +1800,7 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate)
 
 void DOS_SetupFiles()
 {
-	/* Setup the File Handles */
-	for (uint8_t i = 0; i < DOS_FILES; ++i)
-		Files[i] = nullptr;
-	/* Setup the Virtual Disk System */
-	for (uint8_t i = 0; i < DOS_DRIVES; ++i)
-		Drives[i] = nullptr;
+	DOS_ClearDrivesAndFiles();
 
 	const auto z_drive_index = drive_index('Z');
 
@@ -1855,4 +1850,17 @@ bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len
 	}
 	DOS_SetError(DOSERR_LOCK_VIOLATION);
 	return false;
+}
+
+void DOS_ClearDrivesAndFiles()
+{
+	// Clear all the DOS files. This calls the files' derived destructors,
+	// which might be LocalFiles, OverlayFile, etc.
+	for (auto& f : Files) {
+		f = nullptr;
+	}
+
+	// Clear the shared drive pointers. The actual objects are managed by
+	// the drive manager class.
+	Drives.fill(nullptr);
 }
