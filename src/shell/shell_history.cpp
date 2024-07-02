@@ -25,6 +25,7 @@
 #include "dosbox.h"
 #include "fs_utils.h"
 #include "string_utils.h"
+#include "unicode.h"
 
 CHECK_NARROWING();
 
@@ -37,12 +38,9 @@ static bool command_is_exit(std::string_view command);
 void ShellHistory::Append(std::string command, uint16_t code_page)
 {
 	auto to_utf8_str = [code_page](const std::string& dos_str) {
-		std::string utf8_str = {};
-		dos_to_utf8(dos_str,
-		            utf8_str,
-		            DosStringConvertMode::ScreenCodesOnly,
-		            code_page);
-		return utf8_str;
+		return dos_to_utf8(dos_str,
+		                   DosStringConvertMode::ScreenCodesOnly,
+		                   code_page);
 	};
 
 	trim(command);
@@ -58,13 +56,10 @@ void ShellHistory::Append(std::string command, uint16_t code_page)
 std::vector<std::string> ShellHistory::GetCommands(uint16_t code_page) const
 {
 	auto to_dos_str = [code_page](const std::string& utf8_str) {
-		std::string dos_str = {};
-		utf8_to_dos(utf8_str,
-		            dos_str,
-		            DosStringConvertMode::ScreenCodesOnly,
-		            UnicodeFallback::Simple,
-		            code_page);
-		return dos_str;
+		return utf8_to_dos(utf8_str,
+		                   DosStringConvertMode::ScreenCodesOnly,
+		                   UnicodeFallback::Simple,
+		                   code_page);
 	};
 
 	std::vector<std::string> dos_encoded_commands{};

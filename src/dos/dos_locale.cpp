@@ -35,6 +35,7 @@
 #include "dos_keyboard_layout.h"
 #include "logging.h"
 #include "string_utils.h"
+#include "unicode.h"
 
 CHECK_NARROWING();
 
@@ -2616,34 +2617,21 @@ static void refresh_currency_format(const LocaleInfoEntry &source)
 
 	bool found = false;
 	for (const auto& candidate_utf8 : source.currency_symbols_utf8) {
-		std::string candidate = {};
 
 		// Check if the currency can be converted to current code page
+		const auto candidate = utf8_to_dos(candidate_utf8,
+		                                   DosStringConvertMode::NoSpecialCharacters,
+		                                   UnicodeFallback::EmptyString);
 
-		if (!utf8_to_dos(candidate_utf8,
-		                 candidate,
-		                 DosStringConvertMode::NoSpecialCharacters,
-		                 UnicodeFallback::Null)) {
-			continue;
-		}
-		if (candidate.length() > MaxCurrencySymbolLength) {
+		if (candidate.empty() || candidate.length() > MaxCurrencySymbolLength) {
 			continue;
 		}
 
 		found = true;
-		for (const auto character : candidate) {
-			if (character == 0) {
-				found = false;
-				break;
-			}
-		}
-
-		if (found) {
-			memcpy(&destination[InfoOffsetCurrencySymbol],
-			       candidate.c_str(),
-			       candidate.length());
-			break;
-		}
+		memcpy(&destination[InfoOffsetCurrencySymbol],
+		       candidate.c_str(),
+		       candidate.length());
+		break;
 	}
 
 	size_t offset = InfoOffsetCurrencyFormat;

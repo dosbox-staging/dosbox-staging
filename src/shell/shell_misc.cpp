@@ -28,7 +28,7 @@
 #include "file_reader.h"
 #include "keyboard.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "unicode.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
 static void run_binary_executable(std::string_view fullname, std::string_view args);

@@ -1092,6 +1092,9 @@
     <ClInclude Include="..\include\types.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\unicode.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\version.h">
       <Filter>include</Filter>
     </ClInclude>

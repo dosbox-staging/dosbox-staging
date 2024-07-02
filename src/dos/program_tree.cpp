@@ -25,7 +25,7 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "unicode.h"
 
 #include "../ints/int10.h"
 
@@ -180,22 +180,16 @@ void TREE::PreRender()
 {
 	bool use_ascii_fallback = false;
 
-	auto to_dos = [](const std::string& in_str, std::string& out_str) {
+	auto to_dos = [](const std::string& in_str) {
 		return utf8_to_dos(in_str,
-		                   out_str,
 		                   DosStringConvertMode::NoSpecialCharacters,
-		                   UnicodeFallback::Null);
+		                   UnicodeFallback::EmptyString);
 	};
 
 	if (!has_option_ascii) {
 		// If current code page misses one or more characters used to
 		// draw the tree, use standard 7-bit ASCII characters
-
-		std::string tmp_str;
-		to_dos("─├│└", tmp_str);
-		if (tmp_str.find('\0') != std::string::npos) {
-			use_ascii_fallback = true;
-		}
+		use_ascii_fallback = to_dos("─├│└").empty();
 	}
 
 	if (has_option_ascii || use_ascii_fallback) {
@@ -203,9 +197,13 @@ void TREE::PreRender()
 		str_last   = "\\---";
 		str_indent = "|   ";
 	} else {
-		to_dos("├───", str_child);
-		to_dos("└───", str_last);
-		to_dos("│   ", str_indent);
+		str_child  = to_dos("├───");
+		str_last   = to_dos("└───");
+		str_indent = to_dos("│   ");
+
+		assert(!str_child.empty());
+		assert(!str_last.empty());
+		assert(!str_indent.empty());
 	}
 }
 

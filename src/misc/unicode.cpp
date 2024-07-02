@@ -29,7 +29,7 @@
 
 #include "checks.h"
 #include "dos_inc.h"
-#include "string_utils.h"
+#include "unicode.h"
 
 CHECK_NARROWING();
 
@@ -196,6 +196,8 @@ const alias_groups_t box_alias_groups = {
 // Unicode engine
 // ***************************************************************************
 
+using wide_string = std::vector<uint16_t>;
+
 // Class representing a grapheme - one main code point + optionally a number
 // os code points represening combining marks
 class Grapheme final {
@@ -207,7 +209,7 @@ public:
 	[[nodiscard]] bool IsValid() const;
 	[[nodiscard]] bool HasMark() const;
 	[[nodiscard]] uint16_t GetCodePoint() const;
-	void PushInto(std::vector<uint16_t>& str_out) const;
+	void PushInto(wide_string& str_out) const;
 
 	void Invalidate();
 	void AddMark(const uint16_t code_point);
@@ -222,8 +224,8 @@ private:
 	// Unicode code point
 	uint16_t code_point = static_cast<uint16_t>(' ');
 	// Combining marks
-	std::vector<uint16_t> marks        = {};
-	std::vector<uint16_t> marks_sorted = {};
+	wide_string marks        = {};
+	wide_string marks_sorted = {};
 
 	bool is_empty = true;
 	bool is_valid = true;
@@ -380,7 +382,7 @@ uint16_t Grapheme::GetCodePoint() const
 	return code_point;
 }
 
-void Grapheme::PushInto(std::vector<uint16_t>& str_out) const
+void Grapheme::PushInto(wide_string& str_out) const
 {
 	if (is_empty || !is_valid) {
 		return;
@@ -594,7 +596,7 @@ static std::optional<uint8_t> grapheme_to_screen_code(const Grapheme& grapheme,
 // Conversion routines
 // ***************************************************************************
 
-static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_out)
+static wide_string utf8_to_wide(const std::string& str)
 {
 	// Convert UTF-8 string to a sequence of decoded integers
 
@@ -603,23 +605,32 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 	// https://www.codeproject.com/Articles/38242/Reading-UTF-8-with-C-streams
 	// - https://en.wikipedia.org/wiki/UTF-8#Encoding
 
-	bool status = true;
+	bool already_warned = false;
+	auto warn_decode_problem = [&already_warned](const size_t position) {
+		if (already_warned) {
+			return;
 
-	str_out.clear();
-	str_out.reserve(str_in.size());
+		}
+		LOG_WARNING("UNICODE: Problem decoding UTF8 string, position %u",
+		            static_cast<unsigned int>(position));
+		already_warned = true;
+	};
 
-	for (size_t i = 0; i < str_in.size(); ++i) {
-		const size_t remaining = str_in.size() - i - 1;
-		const uint8_t byte_1   = static_cast<uint8_t>(str_in[i]);
+	wide_string str_out = {};
+	str_out.reserve(str.size());
+
+	for (size_t i = 0; i < str.size(); ++i) {
+		const size_t remaining = str.size() - i - 1;
+		const uint8_t byte_1   = static_cast<uint8_t>(str[i]);
 		const uint8_t byte_2   = (remaining >= 1)
-		                               ? static_cast<uint8_t>(str_in[i + 1]) : 0;
+		                               ? static_cast<uint8_t>(str[i + 1]) : 0;
 		const uint8_t byte_3   = (remaining >= 2)
-		                               ? static_cast<uint8_t>(str_in[i + 2]) : 0;
+		                               ? static_cast<uint8_t>(str[i + 2]) : 0;
 
 		auto advance = [&](const size_t bytes) {
 			auto counter = std::min(remaining, bytes);
 			while (counter--) {
-				const auto byte_next = static_cast<uint8_t>(str_in[i + 1]);
+				const auto byte_next = static_cast<uint8_t>(str[i + 1]);
 				if (byte_next < DecodeThresholdNonAscii ||
 				    byte_next >= DecodeThreshold2Bytes) {
 					break;
@@ -627,7 +638,8 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 				++i;
 			}
 
-			status = false; // advancing without decoding
+			// advance without decoding
+			warn_decode_problem(i);
 		};
 
 		// Retrieve code point
@@ -659,7 +671,8 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 				code_point = code_point + byte_2 -
 				             DecodeThresholdNonAscii;
 			} else {
-				status = false; // code point encoding too short
+				// code point encoding too short
+				warn_decode_problem(i);
 			}
 			// Decode 3rd byte
 			code_point = code_point << 6;
@@ -671,7 +684,8 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 				code_point = code_point + byte_3 -
 				             DecodeThresholdNonAscii;
 			} else {
-				status = false; // code point encoding too short
+				// code point encoding too short
+				warn_decode_problem(i);
 			}
 		} else if (byte_1 >= DecodeThreshold2Bytes) {
 			// 2-byte code point - decode 1st byte
@@ -685,32 +699,33 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 				code_point = code_point + byte_2 -
 				             DecodeThresholdNonAscii;
 			} else {
-				status = false; // code point encoding too short
+				// code point encoding too short
+				warn_decode_problem(i);
 			}
 		} else if (byte_1 < DecodeThresholdNonAscii) {
 			// 1-byte code point, ASCII compatible
 			code_point = byte_1;
 		} else {
-			status = false; // not UTF8 encoding
+			warn_decode_problem(i); // not UTF8 encoding
 		}
 
 		str_out.push_back(static_cast<uint16_t>(code_point));
 	}
 
-	return status;
+	return str_out;
 }
 
-static void wide_to_utf8(const std::vector<uint16_t>& str_in, std::string& str_out)
+static std::string wide_to_utf8(const wide_string& str)
 {
-	str_out.clear();
-	str_out.reserve(str_in.size() * 2);
+	std::string str_out = {};
+	str_out.reserve(str.size() * 2);
 
 	auto push = [&](const int value) {
 		const auto byte = static_cast<uint8_t>(value);
 		str_out.push_back(static_cast<char>(byte));
 	};
 
-	for (const auto code_point : str_in) {
+	for (const auto code_point : str) {
 		if (code_point < EncodeThreshold2Bytes) {
 			// Encode using 1 byte
 			push(code_point);
@@ -732,6 +747,7 @@ static void wide_to_utf8(const std::vector<uint16_t>& str_in, std::string& str_o
 	}
 
 	str_out.shrink_to_fit();
+	return str_out;
 }
 
 static void warn_code_point(const uint16_t code_point)
@@ -754,13 +770,13 @@ static void warn_code_page(const uint16_t code_page)
 	LOG_WARNING("UNICODE: Requested unknown code page %d", code_page);
 }
 
-static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_out,
-                        const DosStringConvertMode convert_mode,
-                        const UnicodeFallback fallback, const uint16_t code_page)
+static std::string wide_to_dos(const wide_string& str,
+                               const DosStringConvertMode convert_mode,
+                               const UnicodeFallback fallback,
+                               const uint16_t code_page)
 {
-	bool status = true;
-	str_out.clear();
-	str_out.reserve(str_in.size());
+	std::string str_out = {};
+	str_out.reserve(str.size());
 
 	const map_grapheme_to_dos_t* mapping_normalized = nullptr;
 	const map_grapheme_to_dos_t* mapping_decomposed = nullptr;
@@ -882,19 +898,19 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 
 	// Handle unknown code points
 	auto push_unknown = [&](const uint16_t code_point) {
-		if (fallback == UnicodeFallback::Null) {
-			str_out.push_back(0);
-		} else {
-			str_out.push_back(static_cast<char>(UnknownCharacter));
-			warn_code_point(code_point);
+		if (fallback == UnicodeFallback::EmptyString) {
+			return false;
 		}
-		status = false;
+
+		str_out.push_back(static_cast<char>(UnknownCharacter));
+		warn_code_point(code_point);
+		return true;
 	};
 
 	// Helper for handling normalized graphemes
 	auto push_normalized = [&](const Grapheme& grapheme) {
 		switch (fallback) {
-		case UnicodeFallback::Null:
+		case UnicodeFallback::EmptyString:
 			return push_7bit(grapheme) ||
 			       push_code_page(mapping_normalized, grapheme);
 		case UnicodeFallback::Simple:
@@ -920,7 +936,7 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 		decomposed.Decompose();
 
 		switch (fallback) {
-		case UnicodeFallback::Null:
+		case UnicodeFallback::EmptyString:
 			return push_code_page(mapping_decomposed, decomposed);
 		case UnicodeFallback::Simple:
 		case UnicodeFallback::Box:
@@ -930,11 +946,11 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 		}
 	};
 
-	for (size_t i = 0; i < str_in.size(); ++i) {
-		Grapheme grapheme(str_in[i]);
-		while (i + 1 < str_in.size() && is_combining_mark(str_in[i + 1])) {
+	for (size_t i = 0; i < str.size(); ++i) {
+		Grapheme grapheme(str[i]);
+		while (i + 1 < str.size() && is_combining_mark(str[i + 1])) {
 			++i;
-			grapheme.AddMark(str_in[i]);
+			grapheme.AddMark(str[i]);
 		}
 
 		// Try to push matching character
@@ -953,21 +969,23 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 		}
 
 		// We are unable to match this grapheme at all
-		push_unknown(original_code_point);
+		if (!push_unknown(original_code_point)) {
+			return {};
+		}
 	}
 
 	str_out.shrink_to_fit();
-	return status;
+	return str_out;
 }
 
-static void dos_to_wide(const std::string& str_in, std::vector<uint16_t>& str_out,
-                        const DosStringConvertMode convert_mode,
-                        const uint16_t code_page)
+static wide_string dos_to_wide(const std::string& str,
+                               const DosStringConvertMode convert_mode,
+                               const uint16_t code_page)
 {
-	str_out.clear();
-	str_out.reserve(str_in.size());
+	wide_string str_out = {};
+	str_out.reserve(str.size());
 
-	for (const auto character : str_in) {
+	for (const auto character : str) {
 		const auto byte = static_cast<uint8_t>(character);
 		if (byte >= DecodeThresholdNonAscii) {
 			// Take from code page mapping
@@ -990,6 +1008,8 @@ static void dos_to_wide(const std::string& str_in, std::vector<uint16_t>& str_ou
 			str_out.push_back(byte);
 		}
 	}
+
+	return str_out;
 }
 
 // ***************************************************************************
@@ -2107,108 +2127,113 @@ uint16_t get_utf8_code_page()
 	return 0;
 }
 
-static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
-                               const DosStringConvertMode convert_mode,
-                               const UnicodeFallback fallback,
-                               const uint16_t code_page)
+static std::string utf8_to_dos_common(const std::string& str,
+                                      const DosStringConvertMode convert_mode,
+                                      const UnicodeFallback fallback,
+                                      const uint16_t code_page)
 {
 	load_config_if_needed();
 
-	std::vector<uint16_t> tmp = {};
-
-	const bool status1 = utf8_to_wide(in_str, tmp);
-	const bool status2 = wide_to_dos(tmp, out_str, convert_mode, fallback, code_page);
-
-	return status1 && status2;
+	const auto tmp = utf8_to_wide(str);
+	return wide_to_dos(tmp, convert_mode, fallback, code_page);
 }
 
-bool utf8_to_dos(const std::string& in_str, std::string& out_str,
-                 const DosStringConvertMode convert_mode,
-                 const UnicodeFallback fallback)
+std::string utf8_to_dos(const std::string& str,
+                        const DosStringConvertMode convert_mode,
+                        const UnicodeFallback fallback)
 {
-	return utf8_to_dos_common(
-	        in_str, out_str, convert_mode, fallback, get_utf8_code_page());
+	return utf8_to_dos_common(str,
+	                          convert_mode,
+	                          fallback,
+	                          get_utf8_code_page());
 }
 
-bool utf8_to_dos(const std::string& in_str, std::string& out_str,
-                 const DosStringConvertMode convert_mode,
-                 const UnicodeFallback fallback, const uint16_t code_page)
+std::string utf8_to_dos(const std::string& str,
+                        const DosStringConvertMode convert_mode,
+                        const UnicodeFallback fallback,
+                        const uint16_t code_page)
 {
-	return utf8_to_dos_common(in_str,
-	                          out_str,
+	return utf8_to_dos_common(str,
 	                          convert_mode,
 	                          fallback,
 	                          get_custom_code_page(code_page));
 }
 
-static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
-                               const DosStringConvertMode convert_mode,
-                               const uint16_t code_page)
+static std::string dos_to_utf8_common(const std::string& str,
+                                      const DosStringConvertMode convert_mode,
+                                      const uint16_t code_page)
 {
 	load_config_if_needed();
 
-	std::vector<uint16_t> tmp = {};
-
-	dos_to_wide(in_str, tmp, convert_mode, code_page);
-	wide_to_utf8(tmp, out_str);
+	const auto tmp = dos_to_wide(str, convert_mode, code_page);
+	return wide_to_utf8(tmp);
 }
 
-void dos_to_utf8(const std::string& in_str, std::string& out_str,
-                 const DosStringConvertMode convert_mode)
+std::string dos_to_utf8(const std::string& str,
+                        const DosStringConvertMode convert_mode)
 {
-	dos_to_utf8_common(in_str, out_str, convert_mode, get_utf8_code_page());
+	return dos_to_utf8_common(str, convert_mode, get_utf8_code_page());
 }
 
-void dos_to_utf8(const std::string& in_str, std::string& out_str,
-                 const DosStringConvertMode convert_mode, const uint16_t code_page)
+std::string dos_to_utf8(const std::string& str,
+                        const DosStringConvertMode convert_mode,
+                        const uint16_t code_page)
 {
-	dos_to_utf8_common(in_str, out_str, convert_mode, get_custom_code_page(code_page));
+	return dos_to_utf8_common(str, convert_mode, get_custom_code_page(code_page));
 }
 
-static void lowercase_dos_common(std::string& in_str, const uint16_t code_page)
+static std::string lowercase_dos_common(const std::string& str,
+                                        const uint16_t code_page)
 {
 	load_config_if_needed();
 
 	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].lowercase;
-
 	assert(mapping.size() == UINT8_MAX);
-	for (auto& entry : in_str) {
+
+	std::string str_out = str;
+	for (auto& entry : str_out) {
 		const auto idx = static_cast<uint8_t>(entry);
 		entry = static_cast<char>(mapping[idx]);
 	}
+
+	return str_out;
 }
 
-void lowercase_dos(std::string & in_str)
+std::string lowercase_dos(const std::string& str)
 {
-	lowercase_dos_common(in_str, get_utf8_code_page());
+	return lowercase_dos_common(str, get_utf8_code_page());
 }
 
-void lowercase_dos(std::string & in_str, const uint16_t code_page)
+std::string lowercase_dos(const std::string& str, const uint16_t code_page)
 {
-	lowercase_dos_common(in_str, get_custom_code_page(code_page));
+	return lowercase_dos_common(str, get_custom_code_page(code_page));
 }
 
-static void uppercase_dos_common(std::string & in_str, const uint16_t code_page)
+static std::string uppercase_dos_common(const std::string& str,
+                                        const uint16_t code_page)
 {
 	load_config_if_needed();
 
 	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].uppercase;
-
 	assert(mapping.size() == UINT8_MAX);
-	for (auto& entry : in_str) {
+
+	std::string str_out = str;
+	for (auto& entry : str_out) {
 		const auto idx = static_cast<uint8_t>(entry);
 		entry          = static_cast<char>(mapping[idx]);
 	}
+
+	return str_out;
 }
 
-void uppercase_dos(std::string & in_str)
+std::string uppercase_dos(const std::string& str)
 {
-	uppercase_dos_common(in_str, get_utf8_code_page());
+	return uppercase_dos_common(str, get_utf8_code_page());
 }
 
-void uppercase_dos(std::string & in_str, const uint16_t code_page)
+std::string uppercase_dos(const std::string& str, const uint16_t code_page)
 {
-	uppercase_dos_common(in_str, get_custom_code_page(code_page));
+	return uppercase_dos_common(str, get_custom_code_page(code_page));
 }

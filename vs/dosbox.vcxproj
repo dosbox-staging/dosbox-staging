@@ -821,6 +821,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\timer.h" />
     <ClInclude Include="..\include\tracy.h" />
     <ClInclude Include="..\include\types.h" />
+    <ClInclude Include="..\include\unicode.h" />
     <ClInclude Include="..\include\version.h" />
     <ClInclude Include="..\include\vga.h" />
     <ClInclude Include="..\include\video.h" />

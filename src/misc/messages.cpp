@@ -40,6 +40,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "unicode.h"
 
 #define LINE_IN_MAXLEN 2048
 
@@ -54,20 +55,21 @@ private:
 
 	std::map<uint16_t, std::string> rendered_msg_by_codepage = {};
 
-	const char *CachedRenderString(const std::string &msg,
-	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
+	static std::string to_dos(const std::string& in_str, const uint16_t code_page)
+	{
+		return utf8_to_dos(in_str,
+		                   DosStringConvertMode::WithControlCodes,
+		                   UnicodeFallback::Box,
+		                   code_page);
+	}
+
+	const char* CachedRenderString(const std::string& msg,
+	                               std::map<uint16_t, std::string>& output_msg_by_codepage)
 	{
 		assert(msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (output_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(msg,
-			                 output_msg_by_codepage[cp],
-			                 DosStringConvertMode::WithControlCodes,
-			                 UnicodeFallback::Box,
-			                 cp)) {
-				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
-				            msg.c_str());
-			}
+			output_msg_by_codepage[cp] = to_dos(msg, cp);
 			assert(output_msg_by_codepage[cp].length());
 		}
 
@@ -96,14 +98,7 @@ public:
 		assert(rendered_msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (rendered_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(rendered_msg,
-			                 rendered_msg_by_codepage[cp],
-			                 DosStringConvertMode::WithControlCodes,
-			                 UnicodeFallback::Box,
-			                 cp)) {
-				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
-				            rendered_msg.c_str());
-			}
+			rendered_msg_by_codepage[cp] = to_dos(rendered_msg, cp);
 			assert(rendered_msg_by_codepage[cp].length());
 		}
 
