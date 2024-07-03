@@ -80,3 +80,8 @@ tools/superanalyze_mpeg_ps
 tools/superanalyze_mpeg_ps.exe
 tools/unlock_the_magic_mpeg_ps
 tools/unlock_the_magic_mpeg_ps.exe
+
+# Debian build artifacts
+obj-*.-linux-gnu
+debian
+
