@@ -73,7 +73,7 @@ constexpr io_val_t blocked_read(const io_port_t, const io_width_t)
 // type-sized IO handler API
 uint8_t read_byte_from_port(const io_port_t port)
 {
-	const auto [it, was_blocked] = io_read_byte_handler.emplace(port, blocked_read);
+	const auto [it, was_blocked] = io_read_byte_handler.try_emplace(port, blocked_read);
 	if (was_blocked)
 		LOG(LOG_IO, LOG_WARN)("Unhandled read from port %04Xh; blocking", port);
 	return it->second(port, io_width_t::byte) & 0xff;
@@ -109,7 +109,7 @@ constexpr void blocked_write(const io_port_t, const io_val_t, const io_width_t)
 
 void write_byte_to_port(const io_port_t port, const uint8_t val)
 {
-	const auto [it, was_blocked] = io_write_byte_handler.emplace(port, blocked_write);
+	const auto [it, was_blocked] = io_write_byte_handler.try_emplace(port, blocked_write);
 	if (was_blocked)
 		LOG(LOG_IO, LOG_WARN)("Unhandled write of value 0x%02x"
 		                      " (%u) to port %04Xh; blocking",
