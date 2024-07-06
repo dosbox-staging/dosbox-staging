@@ -212,6 +212,9 @@
 #define HAVE_SYS_TYPES_H 1
 #mesondefine HAVE_SYS_XATTR_H
 
+// Check for C++ headers
+#mesondefine HAVE_MEMORY_RESOURCE
+
 /* Hardware-related defines
  */
 
