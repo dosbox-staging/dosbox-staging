@@ -167,9 +167,10 @@ public:
 			--index;
 			index &= IndexMask;
 #else
-			--index;
-			if (index == array->size()) {
-				index = 0;
+			if (index == 0) {
+				index = array->size() - 1;
+			} else {
+				--index;
 			}
 #endif
 		}
