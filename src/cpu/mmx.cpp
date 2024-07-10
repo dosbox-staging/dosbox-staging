@@ -107,9 +107,6 @@ MMX_reg* lookupRMregMM[256] = {
 
 void setFPUTagEmpty()
 {
-	FPU_SetCW(0x37F);
-	fpu.sw      = 0;
-	TOP         = FPU_GET_TOP();
 	fpu.tags[0] = TAG_Empty;
 	fpu.tags[1] = TAG_Empty;
 	fpu.tags[2] = TAG_Empty;
