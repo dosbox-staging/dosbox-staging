@@ -211,7 +211,7 @@ struct SbInfo {
 
 		bool stereo_enabled = false;
 
-		bool filter_enabled    = false;
+		bool filter_enabled    = true;
 		bool filter_configured = false;
 		bool filter_always_on  = false;
 
