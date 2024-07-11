@@ -255,6 +255,24 @@ Concrete example:
 ./build/debug/tests/bitops --gtest_filter=bitops.nominal_byte
 ```
 
+### Bisecting and building old versions
+
+To automate and ensure successful builds when bisecting or building old
+versions, run `meson setup --wipe` on your build area before every build.
+
+This updates the build area with critical metadata to match that of the
+checked out sources, such as the C++ language standard.
+
+An alias like the following can be used on macOS, Linux, and Windows MSYS
+environments to build versions 0.77 and newer:
+
+`alias build_staging='meson setup --wipe build && ninja -C build'`
+
+Prior to version 0.77 the Autotools build system was used. A build script
+available in these old versions can be used (choose one for your compiler):
+
+`./scripts/build.sh -c clang -t release` or `./scripts/build.sh -c gcc -t release`
+
 ### Build test coverage report
 
 Prerequisite: Install Clang's `lcov` package and/or the GCC-equivalent `gcovr` package.
