@@ -29,6 +29,7 @@
 #include "autoexec.h"
 #include "bios.h"
 #include "bit_view.h"
+#include "bitops.h"
 #include "channel_names.h"
 #include "control.h"
 #include "dma.h"
@@ -2279,6 +2280,8 @@ static uint8_t read_ess_volume(const uint8_t v[2])
 
 static void ctmixer_write(const uint8_t val)
 {
+	using namespace bit::literals;
+
 	switch (sb.mixer.index) {
 	case 0x00: // Reset
 		ctmixer_reset();
@@ -2327,10 +2330,13 @@ static void ctmixer_write(const uint8_t val)
 
 	case 0x0e: {
 		// Output/Stereo Select
-		sb.mixer.stereo_enabled = (val & 0x02) > 0;
+		sb.mixer.stereo_enabled = bit::is(val, b1);
 
 		const auto last_filter_enabled = sb.mixer.filter_enabled;
-		sb.mixer.filter_enabled        = (val & 0x20) > 0;
+
+		// This is not a mistake; clearing bit 5 enables the filter as per
+		// the official Creative documentation.
+		sb.mixer.filter_enabled = bit::cleared(val, b5);
 
 		if (sb.type == SbType::SBPro2) {
 			// Toggling the filter programmatically is only possible
@@ -2582,7 +2588,7 @@ static uint8_t ctmixer_read()
 
 	case 0x0e: // Output/Stereo Select
 		return 0x11 | (sb.mixer.stereo_enabled ? 0x02 : 0x00) |
-		       (sb.mixer.filter_enabled ? 0x20 : 0x00);
+		       (sb.mixer.filter_enabled ? 0x00 : 0x20);
 
 	case 0x26: // FM Volume (SB Pro)
 		return read_sb_pro_volume(sb.mixer.fm);
