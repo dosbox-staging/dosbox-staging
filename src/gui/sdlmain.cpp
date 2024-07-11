@@ -911,29 +911,24 @@ static DosBox::Rect get_canvas_size_in_pixels(
 	return r;
 }
 
-static void maybe_log_display_properties(const int render_width_px,
-                                         const int render_height_px,
-                                         const std::optional<VideoMode>& maybe_video_mode,
-                                         const RenderingBackend rendering_backend)
+static void maybe_log_display_properties()
 {
-	assert(render_width_px > 0 && render_height_px > 0);
+	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
-	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 	const auto draw_size_px = calc_draw_rect_in_pixels(canvas_size_px);
 
 	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
-	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
+	const auto scale_x = static_cast<double>(draw_size_px.w) / sdl.draw.render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / sdl.draw.render_height_px;
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
 	const auto refresh_rate = VGA_GetPreferredRate();
 
-	if (maybe_video_mode) {
-		const auto video_mode          = *maybe_video_mode;
-		const auto video_mode_desc     = to_string(video_mode);
-		const auto& pixel_aspect_ratio = video_mode.pixel_aspect_ratio;
+	if (sdl.maybe_video_mode) {
+		const auto video_mode = *sdl.maybe_video_mode;
 
 		static VideoMode last_video_mode      = {};
 		static double last_refresh_rate       = 0.0;
@@ -954,21 +949,24 @@ static void maybe_log_display_properties(const int render_width_px,
 					return "throttled VFR";
 				case FrameMode::Unset:
 					return "Unset frame mode";
-				default: assertm(false, "Invalid FrameMode");
+				default:
+					assertm(false, "Invalid FrameMode");
 					return "";
 				}
 			}();
 
+			const auto& par = video_mode.pixel_aspect_ratio;
+
 			LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
 			        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
-			        video_mode_desc.c_str(),
+			        to_string(video_mode).c_str(),
 			        refresh_rate,
 			        frame_mode,
 			        iroundf(draw_size_px.w),
 			        iroundf(draw_size_px.h),
-			        pixel_aspect_ratio.Inverse().ToDouble(),
-			        static_cast<int32_t>(pixel_aspect_ratio.Num()),
-			        static_cast<int32_t>(pixel_aspect_ratio.Denom()));
+			        par.Inverse().ToDouble(),
+			        static_cast<int32_t>(par.Num()),
+			        static_cast<int32_t>(par.Denom()));
 
 			last_video_mode   = video_mode;
 			last_refresh_rate = refresh_rate;
@@ -1626,6 +1624,8 @@ static void enter_fullscreen(const int width, const int height)
 
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
 
+		maybe_log_display_properties();
+
 	} else {
 		SDL_DisplayMode display_mode;
 		SDL_GetWindowDisplayMode(sdl.window, &display_mode);
@@ -1667,6 +1667,8 @@ static void exit_fullscreen()
 			                      sdl.desktop.fullscreen.prev_window.y_pos);
 
 			sdl.desktop.fullscreen.is_forced_borderless_fullscreen = false;
+
+			maybe_log_display_properties();
 
 		} else {
 			// Let SDL restore the previous window size
@@ -2536,10 +2538,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	update_vsync_mode();
 
 	if (sdl.draw.has_changed) {
-		maybe_log_display_properties(sdl.draw.render_width_px,
-		                             sdl.draw.render_height_px,
-		                             sdl.maybe_video_mode,
-		                             sdl.rendering_backend);
+		maybe_log_display_properties();
 	}
 
 #if C_OPENGL
@@ -3933,10 +3932,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
 		// the window, but maybe_log_display_properties() will only output
 		// a log entry if the image dimensions have actually changed.
-		maybe_log_display_properties(sdl.draw.render_width_px,
-		                             sdl.draw.render_height_px,
-		                             sdl.maybe_video_mode,
-		                             sdl.rendering_backend);
+		maybe_log_display_properties();
 		return true;
 	}
 
