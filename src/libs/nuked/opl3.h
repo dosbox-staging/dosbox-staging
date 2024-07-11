@@ -83,7 +83,7 @@ struct _opl3_slot {
 };
 
 struct _opl3_channel {
-    opl3_slot *slots[2];
+    opl3_slot *slotz[2];/*Don't use "slots" keyword to avoid conflict with Qt applications*/
     opl3_channel *pair;
     opl3_chip *chip;
     int16_t *out[4];
@@ -119,6 +119,7 @@ struct _opl3_chip {
     uint8_t eg_timerrem;
     uint8_t eg_state;
     uint8_t eg_add;
+    uint8_t eg_timer_lo;
     uint8_t newm;
     uint8_t nts;
     uint8_t rhy;
