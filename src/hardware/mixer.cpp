@@ -2532,6 +2532,16 @@ static void handle_mix_no_sound()
 	MIXER_UnlockAudioDevice();
 }
 
+// We use floats in the range of 16 bit integers everywhere.
+// SDL expects floats to be normalized from 1.0 to -1.0
+// It might be better for us to use normalized floats elsewhere in the future.
+// For now, that probably breaks some assumptions elsewhere in the mixer.
+// So just normalize as a final step before sending the data to SDL.
+static float normalize_sample(float sample)
+{
+	return sample / 32768.0f;
+}
+
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    Uint8* stream, int bytes_requested)
 {
@@ -2540,8 +2550,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	ZoneScoped;
 	memset(stream, 0, static_cast<size_t>(bytes_requested));
 
-	constexpr auto BytesPer16BitSample = 2;
-	constexpr auto BytesPerSampleFrame = BytesPer16BitSample * 2; // stereo
+	constexpr auto BytesPer32BitSample = 4;
+	constexpr auto BytesPerSampleFrame = BytesPer32BitSample * 2; // stereo
 
 	const auto frames_requested = bytes_requested / BytesPerSampleFrame;
 
@@ -2620,7 +2630,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	const auto frames_needed = mixer.frames_needed - reduce_frames;
 	mixer.frames_needed      = frames_needed;
 
-	auto output = reinterpret_cast<int16_t*>(stream);
+	auto output = reinterpret_cast<float*>(stream);
 
 	if (frames_requested != reduce_frames) {
 		// We're doing a very crude sample-skipping style audio
@@ -2638,8 +2648,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 			const auto frame = *(work_pos + static_cast<int>(index));
 
-			*output++ = clamp_to_int16(frame.left);
-			*output++ = clamp_to_int16(frame.right);
+			*output++ = normalize_sample(frame.left);
+			*output++ = normalize_sample(frame.right);
 		}
 	} else {
 		auto num_frames = reduce_frames;
@@ -2648,8 +2658,8 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		while (num_frames--) {
 			const auto frame = *work_pos++;
 
-			*output++ = clamp_to_int16(frame.left);
-			*output++ = clamp_to_int16(frame.right);
+			*output++ = normalize_sample(frame.left);
+			*output++ = normalize_sample(frame.right);
 		}
 	}
 
@@ -2773,7 +2783,7 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	constexpr auto NumStereoChannels = 2;
 
 	desired.channels = NumStereoChannels;
-	desired.format   = AUDIO_S16SYS;
+	desired.format   = AUDIO_F32SYS;
 	desired.freq     = requested_sample_rate_hz;
 	desired.samples  = check_cast<uint16_t>(requested_blocksize_in_frames);
 
