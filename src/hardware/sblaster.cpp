@@ -2332,15 +2332,15 @@ static void ctmixer_write(const uint8_t val)
 		// Output/Stereo Select
 		sb.mixer.stereo_enabled = bit::is(val, b1);
 
-		const auto last_filter_enabled = sb.mixer.filter_enabled;
-
-		// This is not a mistake; clearing bit 5 enables the filter as per
-		// the official Creative documentation.
-		sb.mixer.filter_enabled = bit::cleared(val, b5);
-
 		if (sb.type == SbType::SBPro2) {
 			// Toggling the filter programmatically is only possible
 			// on the Sound Blaster Pro 2.
+
+			const auto last_filter_enabled = sb.mixer.filter_enabled;
+
+			// This is not a mistake; clearing bit 5 enables the
+			// filter as per the official Creative documentation.
+			sb.mixer.filter_enabled = bit::cleared(val, b5);
 
 			if (sb.mixer.filter_configured &&
 			    sb.mixer.filter_enabled != last_filter_enabled) {
