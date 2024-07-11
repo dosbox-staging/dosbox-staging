@@ -25,15 +25,15 @@ usage() {
 
 install_icons() {
     cp -r icons $DEST_PATH
-    cp desktop/dosbox-staging.desktop $DEST_PATH/applications
+    cp desktop/org.dosbox-staging.DOSBoxStaging.desktop $DEST_PATH/applications/org.dosbox-staging.DOSBoxStaging.desktop
 
     ## Replace executable location in the .desktop file
-    sed -i 's\Exec=dosbox\Exec='$(realpath dosbox)'\g' $DEST_PATH/applications/dosbox-staging.desktop
+    sed -i 's\Exec=dosbox\Exec='$(realpath dosbox)'\g' $DEST_PATH/applications/org.dosbox-staging.DOSBoxStaging.desktop
 }
 
 remove_icons() {
     find $DEST_PATH/icons -name dosbox-staging* -delete
-    rm $DEST_PATH/applications/dosbox-staging.desktop
+    rm $DEST_PATH/applications/org.dosbox-staging.DOSBoxStaging.desktop
 }
 
 for arg in $@

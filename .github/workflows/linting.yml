@@ -44,4 +44,4 @@ jobs:
         run:  sudo apt-get install appstream-util
 
       - name: Verify metainfo.xml
-        run:  appstream-util validate-relax --nonet contrib/linux/dosbox-staging.metainfo.xml
+        run:  appstream-util validate-relax --nonet contrib/linux/org.dosbox-staging.DOSBoxStaging.metainfo.xml

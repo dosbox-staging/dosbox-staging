@@ -35,7 +35,7 @@ find_c_cpp_files | filter_new_files | xargs sed -i "$code_sed_script"
 
 # Metadata files and dates visible to end users
 sed -i "$code_sed_script" src/gui/gui_msg.h
-sed -i "$code_sed_script" contrib/linux/dosbox-staging.metainfo.xml
+sed -i "$code_sed_script" contrib/linux/org.dosbox-staging.DOSBoxStaging.metainfo.xml
 sed -i "s|Copyright [0-9]\+ $team|Copyright $year $team|" contrib/macos/Info.plist.template
 sed -i "s|\xa9 [0-9]\+ $team|\xa9 $year $team|" src/winres.rc
 
