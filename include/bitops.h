@@ -255,7 +255,7 @@ constexpr bool any(const T reg, const unsigned int bits)
 	return reg & static_cast<T>(bits);
 }
 
-// Check if the indicated bits is cleisd (not set)
+// Check if the indicated bits is cleared (not set)
 template <typename T>
 constexpr bool cleared(const T reg, const unsigned int bits)
 {
