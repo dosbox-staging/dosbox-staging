@@ -78,6 +78,8 @@ void Innovation::Open(const std::string_view model_choice,
 
 	ms_per_clock = MillisInSecond / chip_clock;
 
+	MIXER_LockMixerThread();
+
 	// Setup the mixer and get it's sampling rate
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
@@ -145,6 +147,8 @@ void Innovation::Open(const std::string_view model_choice,
 		        filter_strength);
 
 	is_open = true;
+
+	MIXER_UnlockMixerThread();
 }
 
 void Innovation::Close()
@@ -153,6 +157,8 @@ void Innovation::Close()
 		return;
 
 	LOG_MSG("INNOVATION: Shutting down");
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (channel)
@@ -171,16 +177,21 @@ void Innovation::Close()
 	channel.reset();
 	service.reset();
 	is_open = false;
+
+	MIXER_UnlockMixerThread();
 }
 
 uint8_t Innovation::ReadFromPort(io_port_t port, io_width_t)
 {
+	std::lock_guard lock(mutex);
 	const auto sid_port = static_cast<io_port_t>(port - base_port);
 	return service->read(sid_port);
 }
 
 void Innovation::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(mutex);
+
 	RenderUpToNow();
 
 	const auto data = check_cast<uint8_t>(value);
@@ -224,6 +235,8 @@ bool Innovation::MaybeRenderFrame(float &frame)
 void Innovation::AudioCallback(const int requested_frames)
 {
 	assert(channel);
+
+	std::lock_guard lock(mutex);
 
 	//if (fifo.size())
 	//	LOG_MSG("INNOVATION: Queued %2lu cycle-accurate frames", fifo.size());

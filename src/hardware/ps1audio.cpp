@@ -36,99 +36,14 @@
 #include "mem.h"
 #include "mixer.h"
 #include "pic.h"
+#include "ps1audio.h"
 #include "setup.h"
+#include "timer.h"
 
 #include "mame/emu.h"
 #include "mame/sn76496.h"
 
 CHECK_NARROWING();
-
-struct Ps1Registers {
-	// Read via port 0x202 control status
-	uint8_t status = 0;
-
-	// Written via port 0x202 for control, read via 0x200 for DAC
-	uint8_t command = 0;
-
-	// Read via port 0x203 for FIFO timing
-	uint8_t divisor = 0;
-
-	// Written via port 0x204 when FIFO is almost empty
-	uint8_t fifo_level = 0;
-};
-
-class Ps1Dac {
-public:
-	Ps1Dac(const std::string& filter_choice);
-	~Ps1Dac();
-
-private:
-	uint8_t CalcStatus() const;
-	void Reset(bool should_clear_adder);
-	void Update(const int samples);
-
-	uint8_t ReadPresencePort02F(io_port_t port, io_width_t);
-	uint8_t ReadCmdResultPort200(io_port_t port, io_width_t);
-	uint8_t ReadStatusPort202(io_port_t port, io_width_t);
-	uint8_t ReadTimingPort203(io_port_t port, io_width_t);
-	uint8_t ReadJoystickPorts204To207(io_port_t port, io_width_t);
-
-	void WriteDataPort200(io_port_t port, io_val_t value, io_width_t);
-	void WriteControlPort202(io_port_t port, io_val_t value, io_width_t);
-	void WriteTimingPort203(io_port_t port, io_val_t value, io_width_t);
-	void WriteFifoLevelPort204(io_port_t port, io_val_t value, io_width_t);
-
-	// Constants
-	static constexpr auto ClockRateHz        = 1000000;
-	static constexpr auto FifoSize           = 2048;
-	static constexpr auto FifoMaskSize       = FifoSize - 1;
-	static constexpr auto FifoNearlyEmptyVal = 128;
-
-	// Fixed precision
-	static constexpr auto FracShift = 12;
-
-	static constexpr auto FifoStatusReadyFlag = 0x10;
-	static constexpr auto FifoFullFlag        = 0x08;
-
-	static constexpr auto FifoEmptyFlag = 0x04;
-	// >= 1792 bytes free
-	static constexpr auto FifoNearlyEmptyFlag = 0x02;
-
-	// IRQ triggered by DAC
-	static constexpr auto FifoIrqFlag = 0x01;
-
-	static constexpr auto FifoMidline = ceil_udivide(static_cast<uint8_t>(UINT8_MAX),
-	                                                 2u);
-
-	static constexpr auto IrqNumber = 7;
-
-	static constexpr auto BytesPendingLimit = FifoSize << FracShift;
-
-	// Managed objects
-	MixerChannelPtr channel = nullptr;
-
-	IO_ReadHandleObject read_handlers[5]   = {};
-	IO_WriteHandleObject write_handlers[4] = {};
-
-	Ps1Registers regs = {};
-
-	uint8_t fifo[FifoSize] = {};
-
-	// Counters
-	size_t last_write        = 0;
-	uint32_t adder           = 0;
-	uint32_t bytes_pending   = 0;
-	uint32_t read_index_high = 0;
-	uint32_t sample_rate_hz  = 0;
-	uint16_t read_index      = 0;
-	uint16_t write_index     = 0;
-	int8_t signal_bias       = 0;
-
-	// States
-	bool is_new_transfer = true;
-	bool is_playing      = false;
-	bool can_trigger_irq = false;
-};
 
 static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
@@ -151,11 +66,28 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	}
 }
 
+static void PS1AUDIO_PicCallback()
+{
+	if (!ps1_dac || !ps1_dac->channel->is_enabled) {
+		return;
+	}
+
+	ps1_dac->frame_counter += ps1_dac->channel->GetFramesPerTick();
+	const auto requested_frames = ifloor(ps1_dac->frame_counter);
+	ps1_dac->frame_counter -= static_cast<float>(requested_frames);
+	ps1_dac->PicCallback(requested_frames);
+}
+
 Ps1Dac::Ps1Dac(const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
-	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
+	MIXER_LockMixerThread();
+
+	constexpr bool Stereo = false;
+	constexpr bool SignedData = false;
+	constexpr bool NativeOrder = true;
+	const auto callback = std::bind(MIXER_PullFromQueueCallback<Ps1Dac, uint8_t, Stereo, SignedData, NativeOrder>, _1, this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
@@ -230,6 +162,13 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	sample_rate_hz = channel->GetSampleRate();
 	last_write     = 0;
 	Reset(true);
+
+	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+	// This provides a good size to avoid over-runs and stalls.
+	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
+	TIMER_AddTickHandler(PS1AUDIO_PicCallback);
+
+	MIXER_UnlockMixerThread();
 }
 
 uint8_t Ps1Dac::CalcStatus() const
@@ -373,14 +312,14 @@ uint8_t Ps1Dac::ReadJoystickPorts204To207(io_port_t, io_width_t)
 	return 0;
 }
 
-void Ps1Dac::Update(const int samples)
+void Ps1Dac::PicCallback(const int frames_requested)
 {
-	uint8_t* buffer = MixTemp;
+	assert(frames_requested > 0);
 
 	int32_t pending = 0;
 	uint32_t add    = 0;
 	uint32_t pos    = read_index_high;
-	int count       = samples;
+	auto count      = frames_requested;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
@@ -399,7 +338,8 @@ void Ps1Dac::Update(const int samples)
 		if (pending <= 0) {
 			pending = 0;
 			while (count--) {
-				*(buffer++) = FifoMidline;
+				auto midline = FifoMidline;
+				output_queue.NonblockingEnqueue(std::move(midline));
 			}
 			break;
 		} else {
@@ -408,7 +348,7 @@ void Ps1Dac::Update(const int samples)
 			pos &= (FifoSize << FracShift) - 1;
 			pending -= static_cast<int32_t>(add);
 		}
-		*(buffer++) = out;
+		output_queue.NonblockingEnqueue(std::move(out));
 		count--;
 	}
 	// Update positions and see if we can clear the FifoFullFlag
@@ -418,12 +358,12 @@ void Ps1Dac::Update(const int samples)
 		pending = 0;
 	}
 	bytes_pending = static_cast<uint32_t>(pending);
-
-	channel->AddSamples_m8(samples, MixTemp);
 }
 
 Ps1Dac::~Ps1Dac()
 {
+	MIXER_LockMixerThread();
+
 	// Stop playback
 	if (channel) {
 		channel->Enable(false);
@@ -440,6 +380,10 @@ Ps1Dac::~Ps1Dac()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
+
+	TIMER_DelTickHandler(PS1AUDIO_PicCallback);
+
+	MIXER_UnlockMixerThread();
 }
 
 class Ps1Synth {
@@ -463,6 +407,7 @@ private:
 	MixerChannelPtr channel            = nullptr;
 	IO_WriteHandleObject write_handler = {};
 	std::queue<float> fifo             = {};
+	std::mutex mutex                   = {};
 	sn76496_device device;
 
 	// Static rate-related configuration
@@ -481,6 +426,8 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
         : device(nullptr, nullptr, Ps1PsgClockHz)
 {
 	using namespace std::placeholders;
+
+	MIXER_LockMixerThread();
 
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
@@ -517,6 +464,8 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t&>(device).device_start();
 	device.convert_samplerate(RenderRateHz);
+
+	MIXER_UnlockMixerThread();
 }
 
 float Ps1Synth::RenderSample()
@@ -552,6 +501,8 @@ void Ps1Synth::RenderUpToNow()
 
 void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(mutex);
+
 	RenderUpToNow();
 
 	const auto data = check_cast<uint8_t>(value);
@@ -561,6 +512,8 @@ void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 void Ps1Synth::AudioCallback(const int requested_frames)
 {
 	assert(channel);
+
+	std::lock_guard lock(mutex);
 
 	// if (fifo.size())
 	//	LOG_MSG("PS1: Queued %2lu cycle-accurate frames", fifo.size());
@@ -584,6 +537,8 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 
 Ps1Synth::~Ps1Synth()
 {
+	MIXER_LockMixerThread();
+
 	// Stop playback
 	if (channel) {
 		channel->Enable(false);
@@ -595,9 +550,11 @@ Ps1Synth::~Ps1Synth()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
+
+	MIXER_UnlockMixerThread();
 }
 
-static std::unique_ptr<Ps1Dac> ps1_dac     = {};
+std::unique_ptr<Ps1Dac> ps1_dac            = {};
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
 static void PS1AUDIO_ShutDown([[maybe_unused]] Section* sec)

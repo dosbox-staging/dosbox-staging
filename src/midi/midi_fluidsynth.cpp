@@ -490,6 +490,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 		        reverb_level);
 	}
 
+	MIXER_LockMixerThread();
+
 	// Setup the mixer callback
 	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
 	                                      this,
@@ -564,6 +566,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 	// Start playback
 	is_open = true;
+	MIXER_UnlockMixerThread();
 	return true;
 }
 
@@ -579,6 +582,8 @@ void MidiHandlerFluidsynth::Close()
 	}
 
 	LOG_MSG("FSYNTH: Shutting down");
+
+	MIXER_LockMixerThread();
 
 	if (had_underruns) {
 		LOG_WARNING("FSYNTH: Fix underruns by lowering CPU load, increasing "
@@ -614,6 +619,7 @@ void MidiHandlerFluidsynth::Close()
 	ms_per_audio_frame = 0.0;
 
 	is_open = false;
+	MIXER_UnlockMixerThread();
 }
 
 int MidiHandlerFluidsynth::GetNumPendingAudioFrames()

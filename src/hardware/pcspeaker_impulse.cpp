@@ -435,21 +435,23 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 }
 #endif
 
-void PcSpeakerImpulse::ChannelCallback(int requested_frames)
+void PcSpeakerImpulse::PicCallback(const int requested_frames)
 {
 	ForwardPIT(1.0f);
 	pit.last_index = 0;
+	int remaining_frames = requested_frames;
 
 	static float accumulator = 0;
-	while (requested_frames > 0 && waveform_deque.size()) {
+	while (remaining_frames > 0 && waveform_deque.size()) {
 		// Pop the first sample off the waveform
 		accumulator += waveform_deque.front();
 		waveform_deque.pop_front();
 		waveform_deque.push_back(0.0f);
 
-		// Pass the sample to the mixer and decrement the requested frames
-		channel->AddSamples_mfloat(1, &accumulator);
-		--requested_frames;
+		// std::move only used here because it won't compile without
+		// This is just a float so it's safe to use afterwards
+		output_queue.NonblockingEnqueue(std::move(accumulator));
+		--remaining_frames;
 
 		// Keep a tally of sequential silence so we can sleep the channel
 		tally_of_silence = fabsf(accumulator) > 1.0f
@@ -462,13 +464,13 @@ void PcSpeakerImpulse::ChannelCallback(int requested_frames)
 	}
 
 	// Write silence if the waveform deque ran out
-	if (requested_frames)
+	if (remaining_frames)
 		pit.prev_amplitude = neutral_amplitude;
 
-	while (requested_frames) {
-		channel->AddSamples_m16(1, &neutral_amplitude);
+	while (remaining_frames) {
+		output_queue.NonblockingEnqueue(neutral_amplitude);
 		++tally_of_silence;
-		--requested_frames;
+		--remaining_frames;
 	}
 }
 
@@ -530,9 +532,12 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	waveform_deque.resize(waveform_size, 0.0f);
 
 	// Register the sound channel
-	const auto callback = std::bind(&PcSpeakerImpulse::ChannelCallback,
-	                                this,
-	                                std::placeholders::_1);
+	constexpr bool Stereo = false;
+	constexpr bool SignedData = true;
+	constexpr bool NativeOrder = true;
+	const auto callback = std::bind(MIXER_PullFromQueueCallback<PcSpeakerImpulse, float, Stereo, SignedData, NativeOrder>,
+	                                std::placeholders::_1,
+	                                this);
 
 	channel = MIXER_AddChannel(callback,
 	                           sample_rate_hz,

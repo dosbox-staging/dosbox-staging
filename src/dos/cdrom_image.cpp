@@ -488,6 +488,7 @@ CDROM_Interface_Image::CDROM_Interface_Image()
 {
 	if (refCount == 0) {
 		if (!player.channel) {
+			MIXER_LockMixerThread();
 			const auto mixer_callback = std::bind(&CDROM_Interface_Image::CDAudioCallBack,
 			                                      this, std::placeholders::_1);
 
@@ -498,6 +499,7 @@ CDROM_Interface_Image::CDROM_Interface_Image()
 			                                   ChannelFeature::DigitalAudio});
 
 			player.channel->Enable(false); // only enabled during playback periods
+			MIXER_UnlockMixerThread();
 		}
 #ifdef DEBUG
 		LOG_MSG("CDROM: Initialised the %s audio channel", ChannelName::CdAudio);
@@ -508,6 +510,7 @@ CDROM_Interface_Image::CDROM_Interface_Image()
 
 CDROM_Interface_Image::~CDROM_Interface_Image()
 {
+	MIXER_LockMixerThread();
 	refCount--;
 
 	// Stop playback before wiping out the CD Player
@@ -523,6 +526,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	if (player.cd == this) {
 		player.cd = nullptr;
 	}
+	MIXER_UnlockMixerThread();
 }
 
 bool CDROM_Interface_Image::SetDevice(const char* path)
