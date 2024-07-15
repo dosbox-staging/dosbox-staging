@@ -59,6 +59,7 @@ private:
 	IO_WriteHandleObject write_handler    = {};
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};
+	std::mutex mutex                      = {};
 
 	// Initial configuration
 	double chip_clock            = 0.0;

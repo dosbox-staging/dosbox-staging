@@ -172,6 +172,7 @@ void CDROM_Interface_Physical::InitAudio()
 		return;
 	}
 
+	MIXER_LockMixerThread();
 	auto callback = std::bind(&CDROM_Interface_Physical::CdAudioCallback,
 	                          this,
 	                          std::placeholders::_1);
@@ -182,6 +183,7 @@ void CDROM_Interface_Physical::InitAudio()
 	                                  ChannelFeature::DigitalAudio});
 
 	thread = std::thread(&CDROM_Interface_Physical::CdReaderLoop, this);
+	MIXER_UnlockMixerThread();
 }
 
 void CDROM_Interface_Physical::CdAudioCallback(const int requested_frames)

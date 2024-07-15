@@ -25,6 +25,7 @@
 #include <array>
 #include <cmath>
 #include <limits>
+#include <mutex>
 
 #include "checks.h"
 
@@ -339,16 +340,16 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 	(void)channel->WakeUp();
 }
 
-void PcSpeakerDiscrete::ChannelCallback(const int frames)
+void PcSpeakerDiscrete::PicCallback(const int requested_frames)
 {
 	std::vector<float> output = {};
-	output.reserve(frames);
+	output.reserve(requested_frames);
 
 	ForwardPIT(1);
 	last_index       = 0.0f;
 	auto sample_base = 0.0f;
 
-	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / static_cast<float>(frames);
+	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / static_cast<float>(requested_frames);
 	// The addition of epsilon ensures that queued entries
 	// having time indexes at the end of the tick cycle (ie: .index == ~1.0)
 	// will still be accepted in the comparison below:
@@ -367,7 +368,7 @@ void PcSpeakerDiscrete::ChannelCallback(const int frames)
 	// Therefore, it's better to err on the side of accepting and processing
 	// entries versus queuing, to keep the queue under control.
 
-	for (auto i = 0; i < frames; ++i) {
+	for (auto i = 0; i < requested_frames; ++i) {
 		auto index = sample_base;
 		sample_base += period_per_frame_ms;
 		const auto end = sample_base;
@@ -423,7 +424,7 @@ void PcSpeakerDiscrete::ChannelCallback(const int frames)
 		output.push_back(value / period_per_frame_ms);
 	}
 
-	channel->AddSamples_mfloat(check_cast<int>(output.size()), output.data());
+	output_queue.NonblockingBulkEnqueue(output, output.size());
 }
 
 void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
@@ -461,9 +462,12 @@ bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string& filter_cho
 PcSpeakerDiscrete::PcSpeakerDiscrete()
 {
 	// Register the sound channel
-	const auto callback = std::bind(&PcSpeakerDiscrete::ChannelCallback,
-	                                this,
-	                                std::placeholders::_1);
+	constexpr bool Stereo = false;
+	constexpr bool SignedData = true;
+	constexpr bool NativeOrder = true;
+	const auto callback = std::bind(MIXER_PullFromQueueCallback<PcSpeakerDiscrete, float, Stereo, SignedData, NativeOrder>,
+	                                std::placeholders::_1,
+	                                this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
