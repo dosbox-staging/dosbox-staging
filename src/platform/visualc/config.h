@@ -27,24 +27,32 @@
 /* Enable some heavy debugging options */
 #define C_HEAVY_DEBUG 0
 
-/* The type of cpu this host has */
-#ifdef _M_X64
-#define C_TARGETCPU X86_64
-#else // _M_IX86
-#define C_TARGETCPU X86
-#endif
-//#define C_TARGETCPU X86_64
+/* The type of cpu this host has, if it should use the
+ * x86 dynamic cpu core or the non-x86 recompiling cpu core,
+ * and if it should use the x86 assembly fpu core.
+ * Note that the x86 assembly fpu core requires the Clang toolchain for x64.
+ */
 
-/* Define to 1 to use x86 dynamic cpu core */
-#define C_DYNAMIC_X86 1
+#if defined(_M_X64)
+#  define C_TARGETCPU X86_64
+#  define C_DYNAMIC_X86 1
+#  define C_FPU_X86 1
+#  define C_DYNREC 0
+#elif defined(_M_IX86)
+#  define C_TARGETCPU X86
+#  define C_DYNAMIC_X86 1
+#  define C_FPU_X86 1
+#  define C_DYNREC 0
+#elif defined(_M_ARM64)
+#  define C_TARGETCPU ARMV8LE
+#  define C_DYNAMIC_X86 0
+#  define C_FPU_X86 0
+#  define C_DYNREC 1
+#endif
 
 /* Define to 1 if the target platform needs per-page dynamic core write or
  * execute (W^X) tagging */
 #define C_PER_PAGE_W_OR_X 1
-
-/* Define to 1 to use recompiling cpu core. Can not be used together with the
- * dynamic-x86 core */
-#define C_DYNREC 0
 
 /* Enable memory function inlining in */
 #define C_CORE_INLINE 1
@@ -57,9 +65,6 @@
 
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
-
-/* Define to 1 to use x86 assembly fpu core. Requires Clang toolchain for x64 */
-#define C_FPU_X86 1
 
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
