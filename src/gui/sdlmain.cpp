@@ -381,50 +381,50 @@ static double get_host_refresh_rate()
 	};
 
 	// To be populated in the switch
-	auto rate = 0.0; // refresh rate as a floating point number
-	const char* rate_description = ""; // description of the refresh rate
+	auto refresh_rate            = 0.0;
+	const char* rate_description = "";
 
 	switch (sdl.desktop.host_rate_mode) {
 	case HostRateMode::Auto:
 		if (const auto sdl_rate = get_sdl_rate();
 		    sdl.desktop.fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
-			rate             = get_vrr_rate(sdl_rate);
+			refresh_rate     = get_vrr_rate(sdl_rate);
 			rate_description = "VRR-adjusted (auto)";
 		} else {
-			rate             = get_sdi_rate(sdl_rate);
+			refresh_rate     = get_sdi_rate(sdl_rate);
 			rate_description = "standard SDI (auto)";
 		}
 		break;
 
 	case HostRateMode::Sdi:
-		rate             = get_sdi_rate(get_sdl_rate());
+		refresh_rate     = get_sdi_rate(get_sdl_rate());
 		rate_description = "standard SDI";
 		break;
 
 	case HostRateMode::Vrr:
-		rate             = get_vrr_rate(get_sdl_rate());
+		refresh_rate     = get_vrr_rate(get_sdl_rate());
 		rate_description = "VRR-adjusted";
 		break;
 
 	case HostRateMode::Custom:
 		assert(sdl.desktop.preferred_host_rate >= RefreshRateMin);
-		rate             = sdl.desktop.preferred_host_rate;
+		refresh_rate     = sdl.desktop.preferred_host_rate;
 		rate_description = "custom";
 		break;
 	}
-	assert(rate >= RefreshRateMin);
+	assert(refresh_rate >= RefreshRateMin);
 
 	// Log if changed
 	static auto last_int_rate = 0;
-	const auto int_rate       = ifloor(rate);
+	const auto int_rate       = ifloor(refresh_rate);
 
 	if (last_int_rate != int_rate) {
 		last_int_rate = int_rate;
 		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
 		        rate_description,
-		        rate);
+		        refresh_rate);
 	}
-	return rate;
+	return refresh_rate;
 }
 
 static Section_prop* get_sdl_section()
@@ -1731,7 +1731,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			E_Exit("SDL: Failed to create window");
 		}
 
-		/* Use renderer's default format */
+		// Use renderer's default format
 		SDL_RendererInfo rinfo;
 		SDL_GetRendererInfo(sdl.renderer, &rinfo);
 		const auto texture_format = rinfo.texture_formats[0];
