@@ -141,7 +141,7 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncState {
+enum class VsyncMode {
 	Unset    = -2,
 	Adaptive = -1,
 	Off      = 0,
@@ -149,17 +149,17 @@ enum class VsyncState {
 	Yield    = 2,
 };
 
-// The vsync settings consists of three parts:
-//  - What the user asked for.
-//  - What the measured state is after setting the requested vsync state.
-//    The video driver may honor the requested vsync state, ignore it, change
-//    it, or be outright buggy.
-//  - The benchmarked rate is the actual frame rate after setting the requested
-//    stated, and is used to determined the measured state.
-//
 struct VsyncSettings {
-	VsyncState requested = VsyncState::Unset;
-	VsyncState measured  = VsyncState::Unset;
+	// The vsync mode the user asked for.
+	VsyncMode requested = VsyncMode::Unset;
+
+	// What the auto-determined state is after setting the requested vsync state.
+	// The video driver may honor the requested vsync mode, ignore it, change
+	// it, or be outright buggy.
+	VsyncMode auto_determined  = VsyncMode::Unset;
+
+	// The actual frame rate after setting the requested vsync mode; it's used
+	// to select the auto-determined vsync mode.
 	int benchmarked_rate = 0;
 };
 
