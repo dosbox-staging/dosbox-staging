@@ -4544,8 +4544,6 @@ static int edit_primary_config()
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
-void MIXER_CloseAudioDevice();
-
 void restart_dosbox(std::vector<std::string> &parameters) {
 #ifdef WIN32
 	std::string command_line = {};

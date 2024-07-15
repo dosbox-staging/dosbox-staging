@@ -296,6 +296,7 @@ private:
 	write_io_array_t write_handlers         = {};
 	std::vector<Voice> voices               = {};
 	std::vector<AudioFrame> rendered_frames = {};
+	std::mutex mutex                        = {};
 
 	const address_array_t dma_addresses = {
 	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}
@@ -627,6 +628,8 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
           irq1(irq_pref),
           irq2(irq_pref)
 {
+	MIXER_LockMixerThread();
+
 	// port operations are "zero-based" from the datum to the user's port
 	constexpr io_port_t port_datum = 0x200;
 	port_base                      = port_pref - port_datum;
@@ -682,6 +685,8 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	SetupEnvironment(port_pref, ultradir);
 
 	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d", port_pref, irq1, dma1);
+
+	MIXER_UnlockMixerThread();
 }
 
 void Gus::ActivateVoices(uint8_t requested_voices)
@@ -732,6 +737,8 @@ const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 
 void Gus::RenderUpToNow()
 {
+	std::lock_guard lock(mutex);
+
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
@@ -760,6 +767,8 @@ void Gus::RenderUpToNow()
 void Gus::AudioCallback(const int num_requested_frames)
 {
 	assert(audio_channel);
+
+	std::lock_guard lock(mutex);
 
 #if 0
 	if (fifo.size())
@@ -1654,6 +1663,9 @@ void Gus::WriteToRegister()
 Gus::~Gus()
 {
 	LOG_MSG("GUS: Shutting down");
+
+	MIXER_LockMixerThread();
+
 	StopAndReset();
 
 	// Prevent discovery of the GUS via the environment
@@ -1676,6 +1688,8 @@ Gus::~Gus()
 	if (dma_channel) {
 		dma_channel->Reset();
 	}
+
+	MIXER_UnlockMixerThread();
 }
 
 void GUS_MirrorAdLibCommandPortWrite([[maybe_unused]] const io_port_t port,

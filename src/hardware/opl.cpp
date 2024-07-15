@@ -443,6 +443,7 @@ void Opl::RenderUpToNow()
 
 void Opl::AudioCallback(const int requested_frames)
 {
+	std::lock_guard lock(mutex);
 	assert(channel);
 #if 0
 	if (fifo.size()) {
@@ -578,6 +579,7 @@ uint8_t Opl::AdlibGoldControlRead()
 
 void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
 {
+	std::lock_guard lock(mutex);
 	RenderUpToNow();
 
 	const auto val = check_cast<uint8_t>(value);
@@ -820,6 +822,9 @@ static void OPL_SaveRawEvent(const bool pressed)
 Opl::Opl(Section* configuration, const OplMode _opl_mode)
 {
 	assert(_opl_mode != OplMode::None);
+
+	MIXER_LockMixerThread();
+
 	opl.mode = _opl_mode;
 
 	Section_prop* section = static_cast<Section_prop*>(configuration);
@@ -901,11 +906,15 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	        to_string(opl.mode),
 	        base,
 	        Port::AdLib::Command);
+
+	MIXER_UnlockMixerThread();
 }
 
 Opl::~Opl()
 {
 	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl.mode));
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (channel) {
@@ -923,6 +932,8 @@ Opl::~Opl()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
+
+	MIXER_UnlockMixerThread();
 }
 
 static void init_opl_dosbox_settings(Section_prop& secprop)

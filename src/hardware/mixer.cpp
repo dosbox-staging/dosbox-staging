@@ -32,20 +32,27 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "audio_vector.h"
 #include "../capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
 #include "control.h"
 #include "cross.h"
 #include "hardware.h"
+#include "lpt_dac.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"
 #include "midi.h"
+#include "pcspeaker.h"
 #include "pic.h"
+#include "ps1audio.h"
+#include "reelmagic/player.h"
 #include "ring_buffer.h"
+#include "rwqueue.h"
 #include "setup.h"
 #include "string_utils.h"
+#include "tandy_sound.h"
 #include "timer.h"
 #include "tracy.h"
 #include "video.h"
@@ -157,12 +164,10 @@ struct ChorusSettings {
 };
 
 struct MixerSettings {
-	RingBuffer<AudioFrame, MixerBufferByteSize> work       = {};
-	RingBuffer<AudioFrame, MixerBufferByteSize> aux_reverb = {};
-	RingBuffer<AudioFrame, MixerBufferByteSize> aux_chorus = {};
+	RWQueue<AudioFrame> final_output{1};
+	RWQueue<int16_t> capture_queue{1};
 
-	std::vector<float> temp_buf = {};
-	std::vector<float> out_buf  = {};
+	std::thread thread = {};
 
 	AudioFrame master_volume = {1.0f, 1.0f};
 
@@ -170,15 +175,7 @@ struct MixerSettings {
 
 	std::map<std::string, MixerChannelSettings> channel_settings_cache = {};
 
-	// Counters accessed by multiple threads
-	std::atomic<int> pos               = 0;
-	std::atomic<int> frames_done       = 0;
-	std::atomic<int> frames_needed     = 0;
-	std::atomic<int> min_frames_needed = 0;
-	std::atomic<int> max_frames_needed = 0;
-	std::atomic<float> frames_per_tick = 0;
-
-	float frame_counter = 0;
+	std::atomic<bool> thread_should_quit = false;
 
 	// Sample rate negotiated with SDL (technically, this is the rate of
 	// sample *frames* per second).
@@ -190,7 +187,7 @@ struct MixerSettings {
 
 	SDL_AudioDeviceID sdl_device = 0;
 
-	MixerState state = MixerState::Uninitialized;
+	std::atomic<MixerState> state = MixerState::Uninitialized;
 
 	HighpassFilter highpass_filter = {};
 	Compressor compressor          = {};
@@ -206,12 +203,15 @@ struct MixerSettings {
 	bool do_chorus        = false;
 
 	bool is_manually_muted = false;
+
+	bool fast_forward_mode = false;
+
+	std::recursive_mutex mutex = {};
 };
 
 static struct MixerSettings mixer = {};
 
-// TODO This is hacky and should be removed. Only the PS1 Audio uses it.
-alignas(sizeof(float)) uint8_t MixTemp[MixerBufferByteSize] = {};
+extern RWQueue<std::unique_ptr<AudioVector>> soundblaster_mixer_queue;
 
 [[maybe_unused]] static const char* to_string(const ResampleMethod m)
 {
@@ -263,29 +263,64 @@ int MIXER_GetSampleRate()
 	return sample_rate_hz;
 }
 
-void MIXER_LockAudioDevice()
+bool MIXER_FastForwardModeEnabled()
 {
-	if (mixer.sdl_device > 0) {
-		SDL_LockAudioDevice(mixer.sdl_device);
-	}
+	return mixer.fast_forward_mode;
 }
 
-void MIXER_UnlockAudioDevice()
+// The queues listed here are for audio devices that run on the main thread
+// The mixer thread can be waiting on the main thread to produce audio in these queues
+// We need to stop them before aquiring a mutex lock to avoid a deadlock
+// These are called infrequently when global mixer state is changed (mostly on device init/destroy and in the MIXER command line program)
+// Individual channels also have a mutex which can be safely aquired without stopping these queues
+void MIXER_LockMixerThread()
 {
-	if (mixer.sdl_device > 0) {
-		SDL_UnlockAudioDevice(mixer.sdl_device);
+	if (pc_speaker) {
+		pc_speaker->output_queue.Stop();
 	}
+	if (tandy_dac) {
+		tandy_dac->output_queue.Stop();
+	}
+	if (ps1_dac) {
+		ps1_dac->output_queue.Stop();
+	}
+	if (lpt_dac) {
+		lpt_dac->output_queue.Stop();
+	}
+	soundblaster_mixer_queue.Stop();
+	reel_magic_audio.output_queue.Stop();
+	mixer.mutex.lock();
+}
+
+void MIXER_UnlockMixerThread()
+{
+	if (pc_speaker) {
+		pc_speaker->output_queue.Start();
+	}
+	if (tandy_dac) {
+		tandy_dac->output_queue.Start();
+	}
+	if (ps1_dac) {
+		ps1_dac->output_queue.Start();
+	}
+	if (lpt_dac) {
+		lpt_dac->output_queue.Start();
+	}
+	soundblaster_mixer_queue.Start();
+	reel_magic_audio.output_queue.Start();
+	mixer.mutex.unlock();
 }
 
 MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
                            const std::set<ChannelFeature>& _features)
-        : name(_name),
+        : sleeper(*this),
+          name(_name),
           envelope(_name),
           handler(_handler),
-          features(_features),
-          sleeper(*this),
-          do_sleep(HasFeature(ChannelFeature::Sleep))
-{}
+          features(_features)
+{
+	do_sleep = HasFeature(ChannelFeature::Sleep);
+}
 
 bool MixerChannel::HasFeature(const ChannelFeature feature) const
 {
@@ -391,6 +426,8 @@ CrossfeedPreset MIXER_GetCrossfeedPreset()
 
 void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset)
 {
+	MIXER_LockMixerThread();
+
 	auto& c = mixer.crossfeed; // short-hand reference
 
 	// Unchanged?
@@ -424,6 +461,8 @@ void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset)
 	} else {
 		LOG_MSG("MIXER: Crossfeed disabled");
 	}
+
+	MIXER_UnlockMixerThread();
 }
 
 static ReverbPreset reverb_pref_to_preset(const std::string& pref)
@@ -481,6 +520,8 @@ ReverbPreset MIXER_GetReverbPreset()
 
 void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 {
+	MIXER_LockMixerThread();
+
 	auto& r = mixer.reverb; // short-hand reference
 
 	r.preset = new_preset;
@@ -522,6 +563,8 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 	} else {
 		LOG_MSG("MIXER: Reverb disabled");
 	}
+
+	MIXER_UnlockMixerThread();
 }
 
 static ChorusPreset chorus_pref_to_preset(const std::string& pref)
@@ -571,6 +614,8 @@ ChorusPreset MIXER_GetChorusPreset()
 
 void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 {
+	MIXER_LockMixerThread();
+
 	auto& c = mixer.chorus; // short-hand reference
 
 	// Unchanged?
@@ -611,12 +656,16 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	} else {
 		LOG_MSG("MIXER: Chorus disabled");
 	}
+
+	MIXER_UnlockMixerThread();
 }
 
 static void init_compressor(const bool compressor_enabled)
 {
+	MIXER_LockMixerThread();
 	mixer.do_compressor = compressor_enabled;
 	if (!mixer.do_compressor) {
+		MIXER_UnlockMixerThread();
 		LOG_MSG("MIXER: Master compressor disabled");
 		return;
 	}
@@ -636,6 +685,7 @@ static void init_compressor(const bool compressor_enabled)
 	                           release_time_ms,
 	                           rms_window_ms);
 
+	MIXER_UnlockMixerThread();
 	LOG_MSG("MIXER: Master compressor enabled");
 }
 
@@ -645,7 +695,7 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel_to_remove)
 		return;
 	}
 
-	MIXER_LockAudioDevice();
+	MIXER_LockMixerThread();
 
 	auto it = mixer.channels.cbegin();
 	while (it != mixer.channels.cend()) {
@@ -664,7 +714,7 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel_to_remove)
 		++it;
 	}
 
-	MIXER_UnlockAudioDevice();
+	MIXER_UnlockMixerThread();
 }
 
 MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
@@ -708,17 +758,15 @@ MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
 		set_global_chorus(chan);
 	}
 
-	MIXER_LockAudioDevice();
+	MIXER_LockMixerThread();
 	mixer.channels[name] = chan; // replace the old, if it exists
-	MIXER_UnlockAudioDevice();
+	MIXER_UnlockMixerThread();
 
 	return chan;
 }
 
 MixerChannelPtr MIXER_FindChannel(const char* name)
 {
-	MIXER_LockAudioDevice();
-
 	auto it = mixer.channels.find(name);
 
 	if (it == mixer.channels.end()) {
@@ -740,8 +788,6 @@ MixerChannelPtr MIXER_FindChannel(const char* name)
 	}
 
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
-
-	MIXER_UnlockAudioDevice();
 
 	return chan;
 }
@@ -847,24 +893,17 @@ void MixerChannel::Enable(const bool should_enable)
 	}
 
 	// Lock the channel before changing states
-	MIXER_LockAudioDevice();
+	std::lock_guard lock(mutex);
 
-	// Prepare the channel to accept samples
-	if (should_enable) {
-		freq_counter = 0;
-		// Don't start with a deficit
-		if (frames_done < mixer.frames_done) {
-			frames_done = mixer.frames_done.load();
-		}
-
-		// Prepare the channel to go dormant
-	} else {
+	// Prepare the channel to go dormant
+	if (!should_enable) {
 		// Clear the current counters and sample values to
 		// start clean if/when this channel is re-enabled.
 		// Samples can be buffered into disable channels, so
 		// we don't perform this zero'ing in the enable phase.
-		frames_done   = 0;
+
 		frames_needed = 0;
+		audio_frames.clear();
 
 		prev_frame = {0.0f, 0.0f};
 		next_frame = {0.0f, 0.0f};
@@ -873,8 +912,6 @@ void MixerChannel::Enable(const bool should_enable)
 	}
 
 	is_enabled = should_enable;
-
-	MIXER_UnlockAudioDevice();
 }
 
 // Depending on the resampling method and the channel, mixer and ZoH upsampler
@@ -920,7 +957,9 @@ void MixerChannel::ConfigureResampler()
 	LOG_TRACE("%s: Configuring resampler", name.c_str());
 #endif
 
-	const auto channel_rate_hz = sample_rate_hz;
+	std::lock_guard lock(mutex);
+
+	const auto channel_rate_hz = sample_rate_hz.load();
 	const auto mixer_rate_hz   = mixer.sample_rate_hz.load();
 
 	do_lerp_upsample = false;
@@ -1050,6 +1089,8 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 	          target_rate_hz);
 #endif
 
+	std::lock_guard lock(mutex);
+
 	sample_rate_hz = target_rate_hz;
 
 	envelope.Update(sample_rate_hz,
@@ -1068,6 +1109,23 @@ const std::string& MixerChannel::GetName() const
 int MixerChannel::GetSampleRate() const
 {
 	return sample_rate_hz;
+}
+
+static float get_mixer_frames_per_tick()
+{
+	return static_cast<float>(mixer.sample_rate_hz) / 1000.0f;
+}
+
+float MixerChannel::GetFramesPerTick() const
+{
+	const float stretch_factor = static_cast<float>(sample_rate_hz) / static_cast<float>(mixer.sample_rate_hz);
+	return get_mixer_frames_per_tick() * stretch_factor;
+}
+
+float MixerChannel::GetFramesPerBlock() const
+{
+	const float stretch_factor = static_cast<float>(sample_rate_hz) / static_cast<float>(mixer.sample_rate_hz);
+	return static_cast<float>(mixer.blocksize) * stretch_factor;
 }
 
 void MixerChannel::SetPeakAmplitude(const int peak)
@@ -1089,36 +1147,35 @@ void MixerChannel::Mix(const int frames_requested)
 
 	frames_needed = frames_requested;
 
-	auto stretch_factor = static_cast<float>(sample_rate_hz) /
-	                      static_cast<float>(mixer.sample_rate_hz);
+	while (frames_needed > audio_frames.size()) {
+		std::unique_lock lock(mutex);
 
-	while (frames_needed > frames_done) {
+		auto stretch_factor = static_cast<float>(sample_rate_hz) /
+						static_cast<float>(mixer.sample_rate_hz);
+
 		auto frames_remaining = iceil(
-		        static_cast<float>(frames_needed - frames_done) *
+		        static_cast<float>(frames_needed - audio_frames.size()) *
 		        stretch_factor);
 
 		// Avoid underflow
 		if (frames_remaining <= 0) {
 			break;
 		}
-		// Avoid overflow
-		frames_remaining = std::min(frames_remaining, MixerBufferByteSize);
 
+		lock.unlock();
 		handler(frames_remaining);
-	}
-
-	if (do_sleep) {
-		sleeper.MaybeSleep();
 	}
 }
 
 void MixerChannel::AddSilence()
 {
-	MIXER_LockAudioDevice();
+	std::lock_guard lock(mutex);
 
-	if (frames_done < frames_needed) {
+	if (audio_frames.size() < frames_needed) {
 		if (prev_frame.left == 0.0f && prev_frame.right == 0.0f) {
-			frames_done = frames_needed;
+			while (audio_frames.size() < frames_needed) {
+				audio_frames.push_back({0.0f, 0.0f});
+			}
 
 			// Make sure the next samples are zero when they get
 			// switched to prev
@@ -1130,9 +1187,7 @@ void MixerChannel::AddSilence()
 			const auto mapped_output_left  = output_map.left;
 			const auto mapped_output_right = output_map.right;
 
-			auto work_pos = mixer.work.begin() + mixer.pos + frames_done;
-
-			while (frames_done < frames_needed) {
+			while (audio_frames.size() < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
 				// Maybe the fade factor f depends on the sample
 				// rate.
@@ -1157,17 +1212,13 @@ void MixerChannel::AddSilence()
 				out_frame[mapped_output_left]  = frame_with_gain.left;
 				out_frame[mapped_output_right] = frame_with_gain.right;
 
-				*work_pos++ += out_frame;
-
+				audio_frames.push_back(out_frame);
 				prev_frame = next_frame;
-				++frames_done;
 			}
 		}
 	}
 
 	last_samples_were_silence = true;
-
-	MIXER_UnlockAudioDevice();
 }
 
 static void log_filter_settings(const std::string& channel_name,
@@ -1188,6 +1239,7 @@ static void log_filter_settings(const std::string& channel_name,
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
+	std::lock_guard lock(mutex);
 	filters.highpass.state = state;
 
 	if (filters.highpass.state == FilterState::On) {
@@ -1203,6 +1255,7 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
+	std::lock_guard lock(mutex);
 	filters.lowpass.state = state;
 
 	if (filters.lowpass.state == FilterState::On) {
@@ -1252,6 +1305,8 @@ void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_fr
 	assert(order > 0);
 	assert(_cutoff_freq_hz > 0);
 
+	std::lock_guard lock(mutex);
+
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
 	assert(order > 0 && order <= MaxFilterOrder);
@@ -1267,6 +1322,8 @@ void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_fre
 {
 	assert(order > 0);
 	assert(_cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1393,6 +1450,8 @@ void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz)
 {
 	assert(target_rate_hz > 0);
 
+	std::lock_guard lock(mutex);
+
 	// TODO make sure that the ZOH target frequency cannot be set after the
 	// filter has been configured
 	zoh_upsampler.target_rate_hz = target_rate_hz;
@@ -1435,6 +1494,8 @@ void MixerChannel::SetResampleMethod(const ResampleMethod method)
 	LOG_ERR("%s: Set resample method to %s", name.c_str(), to_string(method));
 #endif
 
+	std::lock_guard lock(mutex);
+
 	resample_method = method;
 
 	ConfigureResampler();
@@ -1442,6 +1503,8 @@ void MixerChannel::SetResampleMethod(const ResampleMethod method)
 
 void MixerChannel::SetCrossfeedStrength(const float strength)
 {
+	std::lock_guard lock(mutex);
+
 	assert(strength >= 0.0f);
 	assert(strength <= 1.0f);
 
@@ -1478,6 +1541,8 @@ float MixerChannel::GetCrossfeedStrength() const
 
 void MixerChannel::SetReverbLevel(const float level)
 {
+	std::lock_guard lock(mutex);
+
 	constexpr auto LevelMin    = 0.0f;
 	constexpr auto LevelMax    = 1.0f;
 	constexpr auto LevelMinDb = -40.0f;
@@ -1716,9 +1781,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 // Converts sample stream to floats, performs output channel mappings, removes
 // clicks, and optionally performs zero-order-hold-upsampling.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
-                                                     const int num_frames,
-                                                     std::vector<float>& out)
+std::vector<AudioFrame> MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
+                                                     const int num_frames)
 {
 	assert(num_frames >= 0);
 
@@ -1729,12 +1793,8 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 	const auto mapped_channel_right = channel_map.right;
 
 	auto pos             = 0;
-	AudioFrame out_frame = {};
 
-	// We set size to zero which will not change the data in the container
-	// at all. Then we overwrite the data below with `emplace_back()` which
-	// will set the correct length.
-	out.resize(0);
+	std::vector<AudioFrame> out = {};
 
 	while (pos < num_frames) {
 		prev_frame = next_frame;
@@ -1766,12 +1826,11 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 		// prevent severe clicks and pops. Becomes a no-op when done.
 		envelope.Process(stereo, frame_with_gain);
 
-		out_frame = {};
+		AudioFrame out_frame = {};
 		out_frame[mapped_output_left]  += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
-		out.emplace_back(out_frame.left);
-		out.emplace_back(out_frame.right);
+		out.push_back(out_frame);
 
 		if (do_zoh_upsample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
@@ -1783,6 +1842,8 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 			++pos;
 		}
 	}
+
+	return out;
 }
 
 static spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
@@ -1814,6 +1875,7 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 // Returns true if configuration succeeded and false otherwise
 bool MixerChannel::ConfigureFadeOut(const std::string& prefs)
 {
+	std::lock_guard lock(mutex);
 	return sleeper.ConfigureFadeOut(prefs);
 }
 
@@ -1969,13 +2031,20 @@ bool MixerChannel::Sleeper::WakeUp()
 bool MixerChannel::WakeUp()
 {
 	assert(do_sleep);
+	std::lock_guard lock(mutex);
 	return sleeper.WakeUp();
 }
 
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(const int num_frames, const Type* data)
 {
-	assert(num_frames > 0);
+	assert(num_frames >= 0);
+
+	if (num_frames <= 0) {
+		return;
+	}
+
+	std::lock_guard lock(mutex);
 
 	last_samples_were_stereo = stereo;
 
@@ -1991,38 +2060,30 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// ConvertSamplesAndMaybeZohUpsample to reduce the number of temporary
 	// buffers and to simplify the code.
 	//
-	auto& convert_dest_buf = (do_lerp_upsample || do_resample)
-	                               ? mixer.temp_buf
-	                               : mixer.out_buf;
+	const auto convert_buffer = ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
+	        data, num_frames);
 
-	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
-	        data, num_frames, convert_dest_buf);
+	std::vector<AudioFrame> output_buffer = {};
 
 	if (do_lerp_upsample) {
+		assert(!do_resample);
+
 		auto& s = lerp_upsampler;
 
-		auto in_pos = mixer.temp_buf.cbegin();
-		auto& out   = mixer.out_buf;
-
-		// We set size to zero which will not change the data in the
-		// container at all. Then we overwrite the data below with
-		// `emplace_back()` which will set the correct length.
-		out.resize(0);
-
-		while (in_pos != mixer.temp_buf.cend()) {
-			AudioFrame curr_frame = {*in_pos, *(in_pos + 1)};
+		for (size_t i = 0; i < convert_buffer.size();) {
+			const auto curr_frame = convert_buffer[i];
 
 			assert(s.pos >= 0.0f && s.pos <= 1.0f);
-			const auto out_left = lerp(s.last_frame.left,
+			AudioFrame lerped_frame = {};
+			lerped_frame.left = lerp(s.last_frame.left,
 			                           curr_frame.left,
 			                           s.pos);
 
-			const auto out_right = lerp(s.last_frame.right,
+			lerped_frame.right = lerp(s.last_frame.right,
 			                            curr_frame.right,
 			                            s.pos);
 
-			out.emplace_back(out_left);
-			out.emplace_back(out_right);
+			output_buffer.push_back(lerped_frame);
 
 			s.pos += s.step;
 #if 0
@@ -2044,48 +2105,43 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 				s.last_frame = curr_frame;
 
 				// Move to the next input frame
-				in_pos += 2;
+				i += 1;
 			}
 		}
 	}
 
 	if (do_resample) {
-		auto in_frames = check_cast<spx_uint32_t>(
-		        mixer.temp_buf.size() / 2);
+		assert(!do_lerp_upsample);
+
+		auto in_frames = check_cast<spx_uint32_t>(convert_buffer.size());
 
 		auto out_frames = check_cast<spx_uint32_t>(
 		        estimate_max_out_frames(speex_resampler.state, in_frames));
 
 
-		mixer.out_buf.resize(out_frames * 2);
+		output_buffer.resize(out_frames);
+
+		// These are vectors of AudioFrame which is just 2 packed floats
+		const auto input_ptr = reinterpret_cast<const float*>(convert_buffer.data());
+		auto output_ptr = reinterpret_cast<float*>(output_buffer.data());
 
 		speex_resampler_process_interleaved_float(speex_resampler.state,
-		                                          mixer.temp_buf.data(),
+		                                          input_ptr,
 		                                          &in_frames,
-		                                          mixer.out_buf.data(),
+		                                          output_ptr,
 		                                          &out_frames);
 
 		// 'out_frames' now contains the actual number of
 		// resampled frames, so ensure the number of output frames
 		// is within the logical size.
-		assert(out_frames <= mixer.out_buf.size() / 2);
-		mixer.out_buf.resize(out_frames * 2); // only shrinks
+		assert(out_frames <= output_buffer.size());
+		output_buffer.resize(out_frames); // only shrinks
 	}
-
-	MIXER_LockAudioDevice();
 
 	// Optionally filter, apply crossfeed, then mix the results to the
 	// master output
-	const auto pos_offset = mixer.pos + frames_done;
-	auto work_pos         = mixer.work.begin() + pos_offset;
-	auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
-	auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
-
-	auto out_buf_pos = mixer.out_buf.cbegin();
-
-	while (out_buf_pos != mixer.out_buf.cend()) {
-		AudioFrame frame = {*out_buf_pos++, *out_buf_pos++};
-
+	const auto &out = (do_lerp_upsample || do_resample) ? output_buffer : convert_buffer;
+	for (auto frame : out) {
 		if (filters.highpass.state == FilterState::On) {
 			frame = {filters.highpass.hpf[0].filter(frame.left),
 			         filters.highpass.hpf[1].filter(frame.right)};
@@ -2098,39 +2154,9 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		if (do_crossfeed) {
 			frame = ApplyCrossfeed(frame);
 		}
-		if (do_reverb_send) {
-			// Accumulate reverb sends from the individual channels
-			// in the reverb aux buffer. Once we've done this for
-			// all our channels, we can feed the accumulated inputs
-			// through the reverb only once. The reverb is
-			// configured for 100% wet output.
-			//
-			// Our reverb algorithm is a linear process, so applying
-			// the reverb effect individually to N channels would
-			// yield bit-identical results, but it would be N-times
-			// more expensive.
-			*aux_reverb_pos++ += (frame * reverb.send_gain);
-		}
-		if (do_chorus_send) {
-			// Similarly to reverb processing, we accumulate chorus
-			// sends from the individual channels in the chorus aux
-			// buffer. The chorus configured for 100% wet output.
-			*aux_chorus_pos++ += (frame * chorus.send_gain);
-		}
 
-		if (do_sleep) {
-			frame = sleeper.MaybeFadeOrListen(frame);
-		}
-
-		// Mix samples to the master output
-		*work_pos++ += frame;
+		audio_frames.push_back(frame);
 	}
-
-	const auto out_frames = check_cast<int>(mixer.out_buf.size() / 2);
-
-	frames_done += out_frames;
-
-	MIXER_UnlockAudioDevice();
 }
 
 // TODO Move this into the Sound Blaster code.
@@ -2141,22 +2167,18 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 {
 	assert(len >= 0);
 
-	MIXER_LockAudioDevice();
+	std::lock_guard lock(mutex);
 
-	if (frames_done >= frames_needed) {
-		LOG_MSG("Can't add, buffer full");
-		MIXER_UnlockAudioDevice();
-		return;
-	}
-
-	// Stretch mono input stream into this many output frames
-	auto frames_remaining = frames_needed - frames_done;
+	// Stretch mono input stream into a tick's worth of frames
+	static float frame_counter = 0.0f;
+	frame_counter += get_mixer_frames_per_tick();
+	int frames_remaining = ifloor(frame_counter);
+	frame_counter -= static_cast<float>(frames_remaining);
+	assert(frames_remaining >= 0);
 
 	// Used for time-stretching the audio
 	float pos = 0;
 	float step = static_cast<float>(len) / static_cast<float>(frames_remaining);
-
-	auto work_pos = mixer.work.begin() + mixer.pos + frames_done;
 
 	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
@@ -2178,15 +2200,11 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 
 		auto frame_with_gain = AudioFrame{out_sample} * combined_volume_gain;
 
-		if (do_sleep) {
-			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
-		}
-
 		AudioFrame out_frame           = {};
 		out_frame[mapped_output_left]  = frame_with_gain.left;
 		out_frame[mapped_output_right] = frame_with_gain.right;
 
-		*work_pos++ += out_frame;
+		audio_frames.push_back(out_frame);
 
 		// Advance input position
 		pos += step;
@@ -2196,10 +2214,6 @@ void MixerChannel::AddStretched(const int len, int16_t* data)
 			++data;
 		}
 	}
-
-	frames_done = frames_needed;
-
-	MIXER_UnlockAudioDevice();
 }
 
 void MixerChannel::AddSamples_m8(const int num_frames, const uint8_t* data)
@@ -2272,27 +2286,6 @@ void MixerChannel::AddSamples_s16u_nonnative(const int num_frames, const uint16_
 	AddSamples<uint16_t, true, false, false>(num_frames, data);
 }
 
-void MixerChannel::FillUp()
-{
-	if (!is_enabled || frames_done < mixer.frames_done) {
-		return;
-	}
-	const auto index = PIC_TickIndex();
-
-	auto frames_remaining = static_cast<int>(index * mixer.frames_needed);
-	while (frames_remaining > 0) {
-		const auto frames_to_mix = std::clamp(
-		        frames_remaining, 0, static_cast<int>(MixerBufferByteSize));
-
-		MIXER_LockAudioDevice();
-		Mix(frames_to_mix);
-		MIXER_UnlockAudioDevice();
-		// Let SDL fetch frames after each chunk
-
-		frames_remaining = -frames_to_mix;
-	}
-}
-
 std::string MixerChannel::DescribeLineout() const
 {
 	if (!HasFeature(ChannelFeature::Stereo)) {
@@ -2351,187 +2344,6 @@ MixerChannel::~MixerChannel()
 	}
 }
 
-static constexpr float calc_frames_per_tick(const int freq_hz)
-{
-	assert(freq_hz > 0);
-
-	constexpr auto MillisecondsPerTick = 1000;
-	return static_cast<float>(freq_hz) / MillisecondsPerTick;
-}
-
-// Mix a certain amount of new sample frames
-static void mix_samples(const int frames_requested)
-{
-	assert(frames_requested >= 0);
-
-	constexpr auto CaptureBufFrames = 1024;
-
-	const auto frames_added = std::min(frames_requested - mixer.frames_done,
-	                                   CaptureBufFrames);
-
-	const auto pos_offset     = mixer.pos + mixer.frames_done;
-	const auto start_work_pos = mixer.work.begin() + pos_offset;
-
-	// Render all channels and accumulate results in the master mixbuffer
-	for (const auto& [_, channel] : mixer.channels) {
-		channel->Mix(frames_requested);
-	}
-
-	if (mixer.do_reverb) {
-		// Use the contents of the reverb aux buffer as the reverb's
-		// input, then mix its output to the master mix buffer.
-		auto work_pos       = start_work_pos;
-		auto aux_reverb_pos = mixer.aux_reverb.begin() + pos_offset;
-		auto num_frames     = frames_added;
-
-		while (num_frames--) {
-			auto in_frame = *aux_reverb_pos++;
-
-			// High-pass filter the reverb input
-			auto& hpf = mixer.reverb.highpass_filter;
-
-			in_frame = {hpf[0].filter(in_frame.left),
-			            hpf[1].filter(in_frame.right)};
-
-			// MVerb operates on two non-interleaved sample streams
-			float* in_buf[2] = {&in_frame.left, &in_frame.right};
-
-			AudioFrame out_frame = {};
-			float* out_buf[2] = {&out_frame.left, &out_frame.right};
-
-			constexpr auto NumFrames = 1;
-			mixer.reverb.mverb.process(in_buf, out_buf, NumFrames);
-
-			*work_pos++ += out_frame;
-		}
-	}
-
-	if (mixer.do_chorus) {
-		// Apply chorus effect to the chorus aux buffer, then mix the
-		// results to the master output
-		auto work_pos       = start_work_pos;
-		auto aux_chorus_pos = mixer.aux_chorus.begin() + pos_offset;
-		auto num_frames     = frames_added;
-
-		while (num_frames--) {
-			auto frame = *aux_chorus_pos++;
-			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
-
-			*work_pos++ += frame;
-		}
-	}
-
-	// Apply high-pass filter to the master output
-	{
-		auto work_pos   = start_work_pos;
-		auto num_frames = frames_added;
-
-		while (num_frames--) {
-			auto& hpf = mixer.highpass_filter;
-
-			const auto frame = *work_pos;
-			*work_pos++      = {hpf[0].filter(frame.left),
-			                    hpf[1].filter(frame.right)};
-		}
-	}
-
-	if (mixer.do_compressor) {
-		// Apply compressor to the master output as the very last step
-		auto work_pos   = start_work_pos;
-		auto num_frames = frames_added;
-
-		while (num_frames--) {
-			const auto frame = *work_pos;
-			*work_pos++      = mixer.compressor.Process(frame);
-		}
-	}
-
-	// Capture audio output if requested
-	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
-		int16_t out[CaptureBufFrames][2] = {};
-
-		auto work_pos   = start_work_pos;
-
-		for (auto i = 0; i < frames_added; ++i) {
-			const auto in_frame = *work_pos++;
-
-			const auto left = static_cast<uint16_t>(
-			        clamp_to_int16(static_cast<int>(in_frame.left)));
-
-			const auto right = static_cast<uint16_t>(
-			        clamp_to_int16(static_cast<int>(in_frame.right)));
-
-			out[i][0] = static_cast<int16_t>(host_to_le16(left));
-			out[i][1] = static_cast<int16_t>(host_to_le16(right));
-		}
-
-		CAPTURE_AddAudioData(mixer.sample_rate_hz,
-		                     frames_added,
-		                     reinterpret_cast<int16_t*>(out));
-	}
-
-	// Reset the frames_per_tick
-	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-	mixer.frames_done     = frames_requested;
-}
-
-static void handle_mix_samples()
-{
-	MIXER_LockAudioDevice();
-
-	mix_samples(mixer.frames_needed);
-
-	mixer.frame_counter += mixer.frames_per_tick;
-	mixer.frames_needed += ifloor(mixer.frame_counter);
-
-	mixer.frame_counter -= floor(mixer.frame_counter);
-
-	MIXER_UnlockAudioDevice();
-}
-
-static void reduce_channels_done_counts(const int at_most)
-{
-	assert(at_most >= 0);
-
-	for (const auto& [_, channel] : mixer.channels) {
-		channel->frames_done -= std::min(channel->frames_done.load(), at_most);
-	}
-}
-
-static void handle_mix_no_sound()
-{
-	MIXER_LockAudioDevice();
-
-	mix_samples(mixer.frames_needed);
-
-	// Clear piece we've just generated
-	auto work_pos   = mixer.work.begin() + mixer.pos;
-	auto num_frames = mixer.frames_needed.load();
-
-	mixer.pos += num_frames;
-
-	const auto work_size = check_cast<int>(mixer.work.size());
-	if (mixer.pos >= work_size) {
-		mixer.pos -= work_size;
-	}
-
-	constexpr AudioFrame Silence = {0.0f};
-	while (num_frames--) {
-		*work_pos++ = Silence;
-	}
-
-	reduce_channels_done_counts(mixer.frames_needed);
-
-	// Set values for next tick
-	mixer.frame_counter += mixer.frames_per_tick;
-	mixer.frames_needed = ifloor(mixer.frame_counter);
-
-	mixer.frame_counter -= floor(mixer.frame_counter);
-	mixer.frames_done = 0;
-
-	MIXER_UnlockAudioDevice();
-}
-
 // We use floats in the range of 16 bit integers everywhere.
 // SDL expects floats to be normalized from 1.0 to -1.0
 // It might be better for us to use normalized floats elsewhere in the future.
@@ -2540,6 +2352,155 @@ static void handle_mix_no_sound()
 static float normalize_sample(float sample)
 {
 	return sample / 32768.0f;
+}
+
+// Mix a certain amount of new sample frames
+std::vector<AudioFrame> mix_samples(const int frames_requested)
+{
+	assert(frames_requested >= 0);
+
+	std::vector<AudioFrame> output_buffer(frames_requested);
+	std::vector<AudioFrame> reverb_buffer(frames_requested);
+	std::vector<AudioFrame> chorus_buffer(frames_requested);
+
+	// Render all channels and accumulate results in the master mixbuffer
+	for (const auto& [_, channel] : mixer.channels) {
+		channel->Mix(frames_requested);
+		std::lock_guard lock(channel->mutex);
+		const size_t num_frames = std::min(output_buffer.size(), channel->audio_frames.size());
+		for (size_t i = 0; i < num_frames; ++i) {
+			if (channel->do_sleep) {
+				output_buffer[i] += channel->sleeper.MaybeFadeOrListen(channel->audio_frames[i]);
+			} else {
+				output_buffer[i] += channel->audio_frames[i];
+			}
+
+			if (mixer.do_reverb && channel->do_reverb_send) {
+				reverb_buffer[i] += channel->audio_frames[i] * channel->reverb.send_gain;
+			}
+
+			if (mixer.do_chorus && channel->do_chorus_send) {
+				chorus_buffer[i] += channel->audio_frames[i] * channel->chorus.send_gain;
+			}
+		}
+		channel->audio_frames.erase(channel->audio_frames.begin(), channel->audio_frames.begin() + num_frames);
+		if (channel->do_sleep) {
+			channel->sleeper.MaybeSleep();
+		}
+	}
+
+	if (mixer.do_reverb) {
+		for (size_t i = 0; i < reverb_buffer.size(); ++i) {
+			// High-pass filter the reverb input
+			auto& hpf = mixer.reverb.highpass_filter;
+
+			// MVerb operates on two non-interleaved sample streams
+			AudioFrame in_frame = reverb_buffer[i];
+			in_frame.left = hpf[0].filter(in_frame.left);
+			in_frame.right = hpf[1].filter(in_frame.right);
+
+			float* in_buf[2] = {&in_frame.left, &in_frame.right};
+
+			AudioFrame out_frame = {};
+			float* out_buf[2] = {&out_frame.left, &out_frame.right};
+
+			constexpr auto NumFrames = 1;
+			mixer.reverb.mverb.process(in_buf, out_buf, NumFrames);
+
+			output_buffer[i] += out_frame;
+		}
+	}
+
+	if (mixer.do_chorus) {
+		// Apply chorus effect to the chorus aux buffer, then mix the
+		// results to the master output
+		for (size_t i = 0; i < chorus_buffer.size(); ++i) {
+			auto frame = chorus_buffer[i];
+			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
+			output_buffer[i] += frame;
+		}
+	}
+
+	// Apply high-pass filter to the master output
+	for (auto& frame : output_buffer) {
+		auto& hpf = mixer.highpass_filter;
+		frame = {
+			hpf[0].filter(frame.left),
+			hpf[1].filter(frame.right)
+		};
+	}
+
+	if (mixer.do_compressor) {
+		// Apply compressor to the master output as the very last step
+		for (auto& frame: output_buffer) {
+			frame = mixer.compressor.Process(frame);
+		}
+	}
+
+	// Capture audio output if requested
+	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
+		std::vector<int16_t> capture_buffer = {};
+		capture_buffer.reserve(output_buffer.size() * 2);
+
+		for (const auto frame : output_buffer) {
+			const auto left = static_cast<uint16_t>(
+			        clamp_to_int16(static_cast<int>(frame.left)));
+
+			const auto right = static_cast<uint16_t>(
+			        clamp_to_int16(static_cast<int>(frame.right)));
+
+			capture_buffer.push_back(static_cast<int16_t>(host_to_le16(left)));
+			capture_buffer.push_back(static_cast<int16_t>(host_to_le16(right)));
+		}
+
+		if (mixer.capture_queue.Size() + capture_buffer.size() > mixer.capture_queue.MaxCapacity()) {
+			// We're producing more audio than the capture is consuming.
+			// This usually happens when the main thread is being slowed down by video encoding.
+			// Ex: Slow host CPU or using zlib rather than zlib_ng
+			// Not ideal as this results in an audible "skip forward"
+			// Without this, it's a complete stuttery mess though so it's the lesser of two evils
+			mixer.capture_queue.Clear();
+		}
+		mixer.capture_queue.NonblockingBulkEnqueue(capture_buffer, capture_buffer.size());
+	}
+
+	// Normalize the final output before sending to SDL
+	for (auto& frame: output_buffer) {
+		frame.left = normalize_sample(frame.left);
+		frame.right = normalize_sample(frame.right);
+	}
+
+	return output_buffer;
+}
+
+// Run in the main thread by a PIC Callback
+static void capture_callback()
+{
+	if (!(CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo())) {
+		return;
+	}
+
+	static float frame_counter = 0.0f;
+	frame_counter += get_mixer_frames_per_tick();
+	const int num_frames = ifloor(frame_counter);
+	frame_counter -= static_cast<float>(num_frames);
+	assert(num_frames > 0);
+
+	const int num_samples = num_frames * 2;
+
+	// We can't block waiting on the mixer thread
+	// Some mixer channels block waiting on the main thread and this would deadlock
+	std::vector<int16_t> frames = {};
+	const int samples_available = check_cast<int>(mixer.capture_queue.Size());
+	const int samples_requested = std::min(num_samples, samples_available);
+	if (samples_requested > 0) {
+		mixer.capture_queue.BulkDequeue(frames, std::min(num_samples, samples_available));
+	}
+
+	// Fill with silence if needed
+	frames.resize(num_samples);
+
+	CAPTURE_AddAudioData(mixer.sample_rate_hz, num_frames, frames.data());
 }
 
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
@@ -2555,141 +2516,94 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	const auto frames_requested = bytes_requested / BytesPerSampleFrame;
 
-	auto reduce_frames = 0;
-
-	// Used for time-stretching the audio in the buffer overrun scenario.
-	float index     = 0;
-	float index_add = 0;
-
-	if (mixer.frames_done < frames_requested) {
-		// Buffer underrun
-#if 0
-		LOG_WARNING("MIXER: Full underrun requested %d, have %d, min %d",
-		            frames_requested,
-		            mixer.frames_done.load(),
-		            mixer.min_frames_needed.load());
-#endif
-
-		reduce_frames = mixer.frames_done;
-
-	} else if (mixer.frames_done < mixer.max_frames_needed) {
-		auto frames_remaining = mixer.frames_done - frames_requested;
-
-		if (frames_remaining < mixer.min_frames_needed) {
-			frames_remaining = (mixer.min_frames_needed - frames_remaining);
-
-			frames_remaining = 1 + (2 * frames_remaining) /
-			                               mixer.min_frames_needed;
-#if 0
-			LOG_WARNING("MIXER: Needed underrun requested %d, have %d, min %d, remaining %d",
-			            frames_requested,
-			            mixer.frames_done.load(),
-			            mixer.min_frames_needed.load(),
-			            frames_remaining);
-#endif
-			reduce_frames = frames_requested - frames_remaining;
-
-		} else {
-			reduce_frames = frames_requested;
-#if 0
-			LOG_MSG("MIXER: Regular run requested %d, have %d, min %d, remaining %d",
-			        frames_requested,
-			        mixer.frames_done.load(),
-			        mixer.min_frames_needed.load(),
-			        frames_remaining);
-#endif
-		}
-
-	} else {
-		// Buffer overrun -- this usually happens in fast-forward mode.
-#if 0
-		LOG_WARNING("MIXER: Overflow run requested %d, have %d, min % d ",
-		            frames_requested,
-		            mixer.frames_done.load(),
-		            mixer.min_frames_needed.load());
-#endif
-		if (mixer.frames_done > MixerBufferByteSize) {
-			index_add = static_cast<float>(
-			        MixerBufferByteSize - 2 * mixer.min_frames_needed);
-		} else {
-			index_add = static_cast<float>(
-			        mixer.frames_done - 2 * mixer.min_frames_needed);
-		}
-
-		index_add = index_add / static_cast<float>(frames_requested);
-		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
-	}
-
-	reduce_channels_done_counts(reduce_frames);
-
-	// Reset mixer.frames_per_tick
-	mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-
-	mixer.frames_done -= reduce_frames;
-
-	const auto frames_needed = mixer.frames_needed - reduce_frames;
-	mixer.frames_needed      = frames_needed;
-
-	auto output = reinterpret_cast<float*>(stream);
-
-	if (frames_requested != reduce_frames) {
-		// We're doing a very crude sample-skipping style audio
-		// stretching here. However, it's worth keeping it as this path
-		// is almost exclusively used in the fast-forward mode to
-		// achieves that cool "tape speed-up" effect.
-		//
-		// Without this effect, the audio becomes a crackling mess when
-		// fast-forwarding.
-		auto num_frames = std::min(reduce_frames, frames_requested);
-		auto work_pos   = mixer.work.begin() + mixer.pos.load();
-
-		while (num_frames--) {
-			index += index_add;
-
-			const auto frame = *(work_pos + static_cast<int>(index));
-
-			*output++ = normalize_sample(frame.left);
-			*output++ = normalize_sample(frame.right);
-		}
-	} else {
-		auto num_frames = reduce_frames;
-		auto work_pos   = mixer.work.begin() + mixer.pos.load();
-
-		while (num_frames--) {
-			const auto frame = *work_pos++;
-
-			*output++ = normalize_sample(frame.left);
-			*output++ = normalize_sample(frame.right);
-		}
-	}
-
-	// Clear the used buffers
-	{
-		auto num_frames = reduce_frames;
-
-		const auto pos_offset = mixer.pos.load();
-		auto work_pos         = mixer.work.begin() + pos_offset;
-		auto aux_reverb_pos   = mixer.aux_reverb.begin() + pos_offset;
-		auto aux_chorus_pos   = mixer.aux_chorus.begin() + pos_offset;
-
-		while (num_frames--) {
-			constexpr AudioFrame Silence = {0.0f};
-
-			*work_pos++       = Silence;
-			*aux_reverb_pos++ = Silence;
-			*aux_chorus_pos++ = Silence;
-		}
-	}
-
-	mixer.pos += reduce_frames;
-
-	const auto work_size = check_cast<int>(mixer.work.size());
-	if (mixer.pos >= work_size) {
-		mixer.pos -= work_size;
+	// Mac OSX has been observed to be problematic if we ever block inside SDL's callback
+	// This ensures that we do not block waiting for more audio
+	// In the queue has run dry, we write what we have available and the rest of the request is silence
+	const auto num_frames = std::min(check_cast<int>(mixer.final_output.Size()), frames_requested);
+	if (num_frames > 0) {
+		std::vector<AudioFrame> audio_frames = {};
+		mixer.final_output.BulkDequeue(audio_frames, num_frames);
+		memcpy(stream, audio_frames.data(), audio_frames.size() * sizeof(AudioFrame));
 	}
 }
 
-static void stop_mixer([[maybe_unused]] Section* sec) {}
+static void mixer_thread_loop()
+{
+	double last_mixed = 0.0;
+	while (!mixer.thread_should_quit) {
+		std::unique_lock lock(mixer.mutex);
+		assert(mixer.state != MixerState::Uninitialized);
+
+		// This code is mostly for the fast-forward button (hold Alt + F12)
+		const double now = PIC_FullIndex();
+		const double actual_time = now - last_mixed;
+		const double expected_time = (static_cast<double>(mixer.blocksize) / static_cast<double>(mixer.sample_rate_hz)) * 1000.0;
+		last_mixed = now;
+
+		// "Underflow" is not a concern since moving to a threaded mixer
+		// If the CPU is running slower than real-time, the audio drivers will naturally slow down the audio
+		// Therefore, we can always request at least a blocksize worth of audio
+		int frames_requested = mixer.blocksize;
+
+		// Be careful is adjusting this value as the actual time will have some fluctuations in a normal run
+		// False postivies will result in an audible "skip"
+		mixer.fast_forward_mode = actual_time > expected_time * 2.0;
+
+		if (mixer.fast_forward_mode) {
+			// The emulation is running faster than real-time
+			// Normally only trigged by the fast-forward button (ALT + F12)
+			// We need to consume more frams to "catch up"
+			frames_requested = ifloor(actual_time * get_mixer_frames_per_tick());
+			assert(frames_requested > mixer.blocksize);
+		}
+
+		auto mixed_audio = mix_samples(frames_requested);
+		assert(mixed_audio.size() == check_cast<size_t>(frames_requested));
+
+		lock.unlock();
+
+		if (mixer.state == MixerState::NoSound) {
+			// SDL callback is not running. Mixed sound gets discarded.
+			// Sleep for the expected duration to simulate the time it would have taken to playback the audio.
+			constexpr double NanosecondsPerMillisecond = 1000000.0;
+			const uint64_t nap_time = static_cast<uint64_t>(expected_time * NanosecondsPerMillisecond);
+			std::this_thread::sleep_for(std::chrono::nanoseconds(nap_time));
+			continue;
+		} else if (mixer.state == MixerState::Muted) {
+			// SDL callback remains active. Enqueue silence.
+			std::vector<AudioFrame> silence(mixer.blocksize);
+			mixer.final_output.BulkEnqueue(silence, silence.size());
+			continue;
+		}
+
+		std::vector<AudioFrame> fast_forward_buffer = {};
+		auto& to_mix = mixer.fast_forward_mode ? fast_forward_buffer : mixed_audio;
+
+		if (mixer.fast_forward_mode) {
+			// This is "chipmunk mode" meant for fast-forward
+			// It's basic sample skipping to compress a large amount of audio into a single blocksize
+			assert(frames_requested > mixer.blocksize);
+
+			fast_forward_buffer.resize(mixer.blocksize);
+			const float index_add = static_cast<float>(frames_requested) / static_cast<float>(mixer.blocksize);
+			float float_index = 0.0f;
+
+			for (size_t dst_index = 0; dst_index < fast_forward_buffer.size(); ++dst_index) {
+				const size_t src_index = std::min(check_cast<size_t>(iroundf(float_index)), mixed_audio.size() - 1);
+				fast_forward_buffer[dst_index] = mixed_audio[src_index];
+				float_index += index_add;
+			}
+		}
+
+		assert(to_mix.size() == static_cast<size_t>(mixer.blocksize));
+		mixer.final_output.BulkEnqueue(to_mix, to_mix.size());
+	}
+}
+
+static void stop_mixer([[maybe_unused]] Section* sec)
+{
+	MIXER_CloseAudioDevice();
+}
 
 [[maybe_unused]] static const char* to_string(const MixerState s)
 {
@@ -2713,57 +2627,38 @@ static void set_mixer_state(const MixerState new_state)
 	        to_string(new_state));
 #endif
 
-	if (mixer.state == new_state) {
-		// Nothing to do.
-#ifdef DEBUG_MIXER
-		LOG_MSG("MIXER: Already in '%s' state, skipping",
-		        to_string(mixer.state));
-#endif
+	if (mixer.state == MixerState::Uninitialized) {
+		mixer.final_output.Start();
+		if (mixer.sdl_device > 0) {
+			// SDL starts out paused so unpause it when we first set the mixer state.
+			// We always keep SDL running in the future.
+			// When the mixer becomes muted, we just write silence.
+			constexpr int Unpause = 0;
+			SDL_PauseAudioDevice(mixer.sdl_device, Unpause);
+		}
+	}
 
-	} else if (new_state == MixerState::Muted) {
-		TIMER_DelTickHandler(handle_mix_samples);
-		TIMER_AddTickHandler(handle_mix_no_sound);
-
-	} else if (new_state == MixerState::On) {
-		TIMER_DelTickHandler(handle_mix_no_sound);
-		TIMER_AddTickHandler(handle_mix_samples);
-
-	} else {
-		assertm(false, "Invalid mixer state transition");
+	if (new_state == MixerState::Muted) {
+		// Clear out any audio in the queue to avoid a stutter on un-mute
+		mixer.final_output.Clear();
 	}
 
 	mixer.state = new_state;
-
-	// Finally, we start the audio device either paused or unpaused:
-	if (mixer.sdl_device > 0) {
-		const auto pause = (mixer.state != MixerState::On);
-		SDL_PauseAudioDevice(mixer.sdl_device, pause);
-	}
-
-	//
-	// When unpaused, the device pulls frames queued by the
-	// handle_mix_samples() function, which it fetches from each channel's
-	// callback (every millisecond tick), and mixes into a stereo frame
-	// buffer.
-	//
-	// When paused, the audio device stops reading frames from our buffer,
-	// so it's imporant that the we no longer queue them, which is why we
-	// use handle_mix_no_sound() (to throw away frames instead of queuing).
 }
 
 void MIXER_CloseAudioDevice()
 {
-	// Stop either mixing method
-	TIMER_DelTickHandler(handle_mix_samples);
-	TIMER_DelTickHandler(handle_mix_no_sound);
+	TIMER_DelTickHandler(capture_callback);
 
-	MIXER_LockAudioDevice();
+	if (mixer.thread.joinable()) {
+		mixer.thread_should_quit = true;
+		mixer.final_output.Stop();
+		mixer.thread.join();
+	}
 
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->Enable(false);
 	}
-
-	MIXER_UnlockAudioDevice();
 
 	if (mixer.sdl_device > 0) {
 		SDL_CloseAudioDevice(mixer.sdl_device);
@@ -2888,16 +2783,20 @@ static void init_master_highpass_filter()
 	// high-pass filtering only once at the very end of the processing
 	// chain, instead of doing it on every single mixer channel.
 	//
+	MIXER_LockMixerThread();
 	constexpr auto HighpassCutoffFreqHz = 20.0;
 	for (auto& f : mixer.highpass_filter) {
 		f.setup(mixer.sample_rate_hz, HighpassCutoffFreqHz);
 	}
+	MIXER_UnlockMixerThread();
 }
 
 void MIXER_Init(Section* sec)
 {
 	Section_prop* secprop = static_cast<Section_prop*>(sec);
 	assert(secprop);
+
+	MIXER_LockMixerThread();
 
 	if (mixer.state == MixerState::Uninitialized) {
 		// Initialize the 8-bit to 16-bit lookup table
@@ -2913,17 +2812,6 @@ void MIXER_Init(Section* sec)
 			LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 
 			mixer.state = MixerState::NoSound;
-
-			// This ensures we internally generate the audio
-			// stream, so it can be captured, and the
-			// "rendered frames" counters keep progressing.
-			//
-			// Without this, certain programs that rely on
-			// these counters for timing purposes would be
-			// stalled (typically trackers, e.g., Fast
-			// Tracker II, PT4DOS, etc.)
-			//
-			TIMER_AddTickHandler(handle_mix_no_sound);
 		};
 
 		mixer.sample_rate_hz = secprop->Get_int("rate");
@@ -2951,15 +2839,18 @@ void MIXER_Init(Section* sec)
 		const auto prebuffer_frames = (mixer.sample_rate_hz *
 		                               mixer.prebuffer_ms) /
 		                              1000;
-		mixer.pos = 0;
-		mixer.frames_per_tick = calc_frames_per_tick(mixer.sample_rate_hz);
-		mixer.frame_counter     = 0;
-		mixer.frames_done       = 0;
-		mixer.frames_needed     = mixer.min_frames_needed + 1;
-		mixer.min_frames_needed = 0;
-		mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
 
 		sec->AddDestroyFunction(&stop_mixer);
+
+		mixer.final_output.Resize(mixer.blocksize + prebuffer_frames);
+
+		// One second of audio
+		mixer.capture_queue.Resize(mixer.sample_rate_hz * 2);
+
+		mixer.thread = std::thread(mixer_thread_loop);
+		set_thread_name(mixer.thread, "dosbox:mixer");
+
+		TIMER_AddTickHandler(capture_callback);
 	}
 
 	// Initialise crossfeed
@@ -2990,6 +2881,8 @@ void MIXER_Init(Section* sec)
 
 	// Initialise master compressor
 	init_compressor(secprop->Get_bool("compressor"));
+
+	MIXER_UnlockMixerThread();
 }
 
 void MIXER_Mute()

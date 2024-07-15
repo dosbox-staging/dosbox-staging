@@ -826,6 +826,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 		return false;
 	}
 
+	MIXER_LockMixerThread();
+
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
@@ -900,6 +902,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:mt32");
 
 	is_open = true;
+	MIXER_UnlockMixerThread();
 	return true;
 }
 
@@ -921,6 +924,8 @@ void MidiHandler_mt32::Close()
 		            "or increasing your conf's prebuffer");
 		had_underruns = false;
 	}
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (channel) {
@@ -955,6 +960,7 @@ void MidiHandler_mt32::Close()
 	ms_per_audio_frame = 0.0;
 
 	is_open = false;
+	MIXER_UnlockMixerThread();
 }
 
 int MidiHandler_mt32::GetNumPendingAudioFrames()
