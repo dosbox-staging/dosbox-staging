@@ -338,9 +338,12 @@ static double get_host_refresh_rate()
 {
 	auto get_sdl_rate = []() {
 		SDL_DisplayMode mode = {};
-		auto &sdl_rate = mode.refresh_rate;
+
+		auto& sdl_rate = mode.refresh_rate;
+
 		assert(sdl.window);
 		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+
 		if (display_in_use < 0) {
 			LOG_ERR("SDL: Could not get the current window index: %s",
 			        SDL_GetError());
@@ -356,6 +359,7 @@ static double get_host_refresh_rate()
 			            sdl_rate);
 			return RefreshRateHostDefault;
 		}
+
 		assert(sdl_rate >= RefreshRateMin);
 		return sdl_rate;
 	};
@@ -366,40 +370,45 @@ static double get_host_refresh_rate()
 	};
 
 	auto get_sdi_rate = [](const int sdl_rate) {
-		const auto is_odd = sdl_rate % 2 != 0;
-		const auto not_div_by_5 = sdl_rate % 5 != 0;
+		const auto is_odd           = sdl_rate % 2 != 0;
+		const auto not_div_by_5     = sdl_rate % 5 != 0;
 		const auto next_is_div_by_3 = (sdl_rate + 1) % 3 == 0;
+
 		const bool should_adjust = is_odd && not_div_by_5 && next_is_div_by_3;
 		constexpr auto sdi_factor = 1.0 - 1.0 / 1000.0;
+
 		return should_adjust ? (sdl_rate + 1) * sdi_factor : sdl_rate;
 	};
 
 	// To be populated in the switch
-	auto rate = 0.0;                   // refresh rate as a floating point number
-	const char *rate_description = ""; // description of the refresh rate
+	auto rate = 0.0; // refresh rate as a floating point number
+	const char* rate_description = ""; // description of the refresh rate
 
 	switch (sdl.desktop.host_rate_mode) {
 	case HostRateMode::Auto:
 		if (const auto sdl_rate = get_sdl_rate();
 		    sdl.desktop.fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
-			rate = get_vrr_rate(sdl_rate);
+			rate             = get_vrr_rate(sdl_rate);
 			rate_description = "VRR-adjusted (auto)";
 		} else {
-			rate = get_sdi_rate(sdl_rate);
+			rate             = get_sdi_rate(sdl_rate);
 			rate_description = "standard SDI (auto)";
 		}
 		break;
+
 	case HostRateMode::Sdi:
-		rate = get_sdi_rate(get_sdl_rate());
+		rate             = get_sdi_rate(get_sdl_rate());
 		rate_description = "standard SDI";
 		break;
+
 	case HostRateMode::Vrr:
-		rate = get_vrr_rate(get_sdl_rate());
+		rate             = get_vrr_rate(get_sdl_rate());
 		rate_description = "VRR-adjusted";
 		break;
+
 	case HostRateMode::Custom:
 		assert(sdl.desktop.preferred_host_rate >= RefreshRateMin);
-		rate = sdl.desktop.preferred_host_rate;
+		rate             = sdl.desktop.preferred_host_rate;
 		rate_description = "custom";
 		break;
 	}
@@ -407,11 +416,13 @@ static double get_host_refresh_rate()
 
 	// Log if changed
 	static auto last_int_rate = 0;
-	const auto int_rate = ifloor(rate);
+	const auto int_rate       = ifloor(rate);
+
 	if (last_int_rate != int_rate) {
 		last_int_rate = int_rate;
 		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
-		        rate_description, rate);
+		        rate_description,
+		        rate);
 	}
 	return rate;
 }
@@ -435,20 +446,26 @@ static void initialize_vsync_settings()
 	sdl.vsync = {};
 
 	const auto section = get_sdl_section();
-	const std::string user_pref = (section ? section->Get_string("vsync") : "auto");
+
+	const std::string user_pref = (section ? section->Get_string("vsync")
+	                                       : "auto");
 
 	if (has_true(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncState::On;
 		sdl.vsync.when_fullscreen.requested = VsyncState::On;
+
 	} else if (user_pref == "adaptive") {
 		sdl.vsync.when_windowed.requested   = VsyncState::Adaptive;
 		sdl.vsync.when_fullscreen.requested = VsyncState::Adaptive;
+
 	} else if (has_false(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncState::Off;
 		sdl.vsync.when_fullscreen.requested = VsyncState::Off;
+
 	} else if (user_pref == "yield") {
 		sdl.vsync.when_windowed.requested   = VsyncState::Yield;
 		sdl.vsync.when_fullscreen.requested = VsyncState::Yield;
+
 	} else {
 		assert(user_pref == "auto");
 
@@ -462,7 +479,8 @@ static void initialize_vsync_settings()
 
 		// In fullscreen-mode, the above still applies however we add
 		// handling for VRR displays that perform frame interpolation.
-		// as tehy need vsync enabled to lock onto the content:
+		// as they need vsync enabled to lock onto the content.
+		//
 		const bool prefers_vsync_when_fullscreen =
 		        (get_host_refresh_rate() >= InterpolatingVrrMinRateHz);
 
@@ -476,7 +494,7 @@ static void initialize_vsync_settings()
 		//
 		sdl.vsync.when_windowed.measured   = VsyncState::On;
 		sdl.vsync.when_fullscreen.measured = VsyncState::On;
-		//
+
 		// A 60 Hz display can only show 60 complete frames per second.
 		// To achieve a higher frame rate, the host must drop or tear
 		// frames. This creates two layers of tearing when combined with
