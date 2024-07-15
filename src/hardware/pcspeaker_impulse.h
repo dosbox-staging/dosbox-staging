@@ -40,11 +40,11 @@ public:
 	void SetCounter(const int cntr, const PitMode pit_mode) final;
 	void SetPITControl(const PitMode pit_mode) final;
 	void SetType(const PpiPortB& port_b) final;
+	void PicCallback(const int requested_frames) final;
 
 private:
 	void AddImpulse(float index, const int16_t amplitude);
 	void AddPITOutput(const float index);
-	void ChannelCallback(int requested_frames);
 	void ForwardPIT(const float new_index);
 	float CalcImpulse(const double t) const;
 	void InitializeImpulseLUT();
@@ -113,8 +113,6 @@ private:
 	std::deque<float> waveform_deque = {};
 
 	std::array<float, sinc_filter_width> impulse_lut = {};
-
-	MixerChannelPtr channel = nullptr;
 
 	PpiPortB prev_port_b = {};
 

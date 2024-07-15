@@ -83,6 +83,8 @@ private:
 
 	std::queue<AudioFrame> fifo = {};
 
+	std::mutex mutex = {};
+
 	// Static rate-related configuration
 	static constexpr auto ChipClockHz   = 14318180 / 2;
 	static constexpr auto RenderDivisor = 32;

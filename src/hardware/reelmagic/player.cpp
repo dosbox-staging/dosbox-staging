@@ -35,7 +35,10 @@
 #include "dos_system.h"
 #include "logging.h"
 #include "mixer.h"
+#include "player.h"
+#include "rwqueue.h"
 #include "setup.h"
+#include "timer.h"
 
 // bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION
@@ -736,8 +739,8 @@ void ReelMagic_DeleteAllPlayers()
 //
 // audio stuff begins here...
 //
-MixerChannelPtr mixer_channel = nullptr;
 static AudioFifo* active_fifo = nullptr;
+ReelMagicAudio reel_magic_audio = {};
 
 static void ActivatePlayerAudioFifo(AudioFifo& audio_fifo)
 {
@@ -745,9 +748,10 @@ static void ActivatePlayerAudioFifo(AudioFifo& audio_fifo)
 		return;
 	}
 	active_fifo = &audio_fifo;
-	assert(mixer_channel);
-	mixer_channel->SetSampleRate(active_fifo->GetSampleRate());
-	mixer_channel->Enable(true);
+	assert(reel_magic_audio.channel);
+	reel_magic_audio.channel->SetSampleRate(active_fifo->GetSampleRate());
+	reel_magic_audio.output_queue.Start();
+	reel_magic_audio.channel->Enable(true);
 }
 
 static void DeactivatePlayerAudioFifo(AudioFifo& audio_fifo)
@@ -756,38 +760,58 @@ static void DeactivatePlayerAudioFifo(AudioFifo& audio_fifo)
 		return;
 	}
 	active_fifo = nullptr;
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
+	if (reel_magic_audio.channel) {
+		reel_magic_audio.channel->Enable(false);
+		reel_magic_audio.output_queue.Stop();
 	}
 }
 
-static void RMMixerChannelCallback(int frames_remaining)
+static void ReelMagic_PicCallback()
 {
-	assert(active_fifo);
-	assert(mixer_channel);
-	assert(frames_remaining > 0);
+	if (!active_fifo || !reel_magic_audio.channel || !reel_magic_audio.channel->is_enabled) {
+		return;
+	}
+
+	static float frame_counter = 0.0f;
+	frame_counter += reel_magic_audio.channel->GetFramesPerTick();
+	auto frames_remaining = ifloor(frame_counter);
+	frame_counter -= static_cast<float>(frames_remaining);
 
 	while (frames_remaining > 0) {
 		if (const auto frame = active_fifo->PopFrame(); frame) {
-			mixer_channel->AddSamples_sfloat(1, frame);
+			reel_magic_audio.output_queue.NonblockingEnqueue(AudioFrame{frame[0], frame[1]});
 			--frames_remaining;
 		} else {
-			mixer_channel->AddSilence();
-			frames_remaining = 0;
+			break;
 		}
+	}
+
+	for (int i = 0; i < frames_remaining; ++i) {
+		reel_magic_audio.output_queue.NonblockingEnqueue(AudioFrame{});
 	}
 }
 
 void ReelMagic_EnableAudioChannel(const bool should_enable)
 {
+	MIXER_LockMixerThread();
+
 	if (should_enable == false) {
 		// Deregister the mixer channel and remove it
-		MIXER_DeregisterChannel(mixer_channel);
-		mixer_channel.reset();
+		TIMER_DelTickHandler(ReelMagic_PicCallback);
+		MIXER_DeregisterChannel(reel_magic_audio.channel);
+		reel_magic_audio.channel.reset();
+		MIXER_UnlockMixerThread();
 		return;
 	}
 
-	mixer_channel = MIXER_AddChannel(&RMMixerChannelCallback,
+	constexpr bool Stereo = true;
+	constexpr bool SignedData = true;
+	constexpr bool NativeOrder = true;
+	const auto audio_callback = std::bind(MIXER_PullFromQueueCallback<ReelMagicAudio, AudioFrame, Stereo, SignedData, NativeOrder>,
+	                                std::placeholders::_1,
+	                                &reel_magic_audio);
+
+	reel_magic_audio.channel = MIXER_AddChannel(audio_callback,
 	                                 UseMixerRate,
 	                                 ChannelName::ReelMagic,
 	                                 {// ChannelFeature::Sleep,
@@ -795,13 +819,21 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	                                  // ChannelFeature::ReverbSend,
 	                                  // ChannelFeature::ChorusSend,
 	                                  ChannelFeature::DigitalAudio});
-	assert(mixer_channel);
+	assert(reel_magic_audio.channel);
 
 	// The decoded MP2 frame contains samples ranging from [-1.0f, +1.0f],
 	// so to hit 0 dB 16-bit signed, we need to multiply up from unity to
 	// the maximum magnitude (32k).
 	constexpr float mpeg1_db0_volume_scalar = {Max16BitSampleValue};
-	mixer_channel->Set0dbScalar(mpeg1_db0_volume_scalar);
+	reel_magic_audio.channel->Set0dbScalar(mpeg1_db0_volume_scalar);
+
+	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+	// This provides a good size to avoid over-runs and stalls.
+	reel_magic_audio.output_queue.Resize(iceil(reel_magic_audio.channel->GetFramesPerBlock() * 2.0f));
+
+	TIMER_AddTickHandler(ReelMagic_PicCallback);
+
+	MIXER_UnlockMixerThread();
 }
 
 static void set_magic_key(const std::string& key_choice)

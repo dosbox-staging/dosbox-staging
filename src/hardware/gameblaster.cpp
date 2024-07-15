@@ -35,6 +35,8 @@ void GameBlaster::Open(const int port_choice, const std::string& card_choice,
 {
 	using namespace std::placeholders;
 
+	MIXER_LockMixerThread();
+
 	Close();
 	assert(!is_open);
 
@@ -151,6 +153,8 @@ void GameBlaster::Open(const int port_choice, const std::string& card_choice,
 	assert(devices[1]);
 
 	is_open = true;
+
+	MIXER_UnlockMixerThread();
 }
 
 AudioFrame GameBlaster::RenderFrame()
@@ -179,6 +183,8 @@ AudioFrame GameBlaster::RenderFrame()
 
 void GameBlaster::RenderUpToNow()
 {
+	std::lock_guard lock(mutex);
+
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
@@ -221,6 +227,8 @@ void GameBlaster::WriteControlToRightDevice(io_port_t, io_val_t value, io_width_
 void GameBlaster::AudioCallback(const int requested_frames)
 {
 	assert(channel);
+
+	std::lock_guard lock(mutex);
 
 #if 0
 	if (fifo.size()) {
@@ -272,6 +280,8 @@ void GameBlaster::Close()
 
 	LOG_INFO("CMS: Shutting down");
 
+	MIXER_LockMixerThread();
+
 	// Drop access to the IO ports
 	for (auto& w : write_handlers) {
 		w.Uninstall();
@@ -294,6 +304,8 @@ void GameBlaster::Close()
 	devices[1].reset();
 
 	is_open = false;
+
+	MIXER_UnlockMixerThread();
 }
 
 GameBlaster gameblaster;

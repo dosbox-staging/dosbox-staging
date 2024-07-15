@@ -26,6 +26,7 @@ libmisc_stubs_sources = libmisc_nomsg_sources + ['messages_stubs.cpp']
 libmisc_dependencies = [
     corefoundation_dep,
     ghc_dep,
+    libiir_dep,
     libloguru_dep,
     libslirp_dep,
     libwhereami_dep,

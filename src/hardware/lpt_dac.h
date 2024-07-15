@@ -30,6 +30,7 @@
 #include "inout.h"
 #include "lpt.h"
 #include "mixer.h"
+#include "rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices
 class LptDac {
@@ -44,6 +45,7 @@ public:
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
 
 	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
+	void PicCallback(const int requested_frames);
 
 	LptDac() = delete;
 
@@ -53,14 +55,14 @@ public:
 	// prevent assignment
 	LptDac& operator=(const LptDac&) = delete;
 
+	RWQueue<AudioFrame> output_queue{1};
+	MixerChannelPtr channel = {};
+	float frame_counter = 0.0f;
+
 protected:
 	// Base LPT DAC functionality
 	virtual AudioFrame Render() = 0;
 	void RenderUpToNow();
-	void AudioCallback(const int requested_frames);
-	std::queue<AudioFrame> render_queue = {};
-
-	MixerChannelPtr channel = {};
 
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
@@ -80,6 +82,11 @@ protected:
 
 	LptStatusRegister status_reg   = {};
 	LptControlRegister control_reg = {};
+
+private:
+	int frames_rendered_this_tick = 0;
 };
+
+extern std::unique_ptr<LptDac> lpt_dac;
 
 #endif

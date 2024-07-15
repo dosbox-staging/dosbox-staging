@@ -29,6 +29,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <utility>
@@ -38,6 +39,7 @@
 #include "audio_frame.h"
 #include "control.h"
 #include "envelope.h"
+#include "math_utils.h"
 
 #include <Iir.h>
 
@@ -51,9 +53,6 @@ enum class MixerState { Uninitialized, NoSound, On, Muted };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
 static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
-
-// TODO This is hacky and should be removed. Only the PS1 Audio uses it.
-extern uint8_t MixTemp[MixerBufferByteSize];
 
 // TODO This seems like is a general-purpose lookup, consider moving it
 extern int16_t lut_u8to16[UINT8_MAX + 1];
@@ -180,6 +179,8 @@ public:
 	std::set<ChannelFeature> GetFeatures() const;
 	const std::string& GetName() const;
 	int GetSampleRate() const;
+	float GetFramesPerTick() const;
+	float GetFramesPerBlock() const;
 
 	void Set0dbScalar(const float f);
 	void UpdateCombinedVolume();
@@ -259,16 +260,58 @@ public:
 
 	void AddStretched(const int num_frames, int16_t* data);
 
-	void FillUp();
 	void Enable(const bool should_enable);
 
 	// Pass-through to the sleeper
 	bool WakeUp();
 
-	// Timing on how many sample frames have been done by the mixer
-	std::atomic<int> frames_done = 0;
+	std::vector<AudioFrame> audio_frames = {};
+	std::recursive_mutex mutex = {};
 
-	bool is_enabled = false;
+	std::atomic<bool> is_enabled = false;
+
+	struct {
+		float level     = 0.0f;
+		float send_gain = 0.0f;
+	} reverb            = {};
+	bool do_reverb_send = false;
+
+
+	struct {
+		float level     = 0.0f;
+		float send_gain = 0.0f;
+	} chorus            = {};
+	bool do_chorus_send = false;
+
+	class Sleeper {
+	public:
+		Sleeper() = delete;
+		Sleeper(MixerChannel& c, const int sleep_after_ms = DefaultWaitMs);
+		bool ConfigureFadeOut(const std::string& prefs);
+		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
+		void MaybeSleep();
+		bool WakeUp();
+
+	private:
+		void DecrementFadeLevel(const int awake_for_ms);
+
+		MixerChannel& channel;
+
+		// The wait before fading or sleeping is bound between:
+		static constexpr auto MinWaitMs     = 100;
+		static constexpr auto DefaultWaitMs = 500;
+		static constexpr auto MaxWaitMs     = 5000;
+
+		int64_t woken_at_ms            = {};
+		float fadeout_level            = {};
+		float fadeout_decrement_per_ms = {};
+		int fadeout_or_sleep_after_ms  = {};
+
+		bool wants_fadeout = false;
+		bool had_signal    = false;
+	};
+	Sleeper sleeper;
+	bool do_sleep = false;
 
 private:
 	// prevent default construction, copying, and assignment
@@ -279,8 +322,7 @@ private:
 	AudioFrame ConvertNextFrame(const Type* data, const int pos);
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	void ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames,
-	                                       std::vector<float>& out);
+	std::vector<AudioFrame> ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames);
 
 	void ConfigureResampler();
 	void ClearResampler();
@@ -295,17 +337,14 @@ private:
 
 	std::set<ChannelFeature> features = {};
 
-	// When this flows over a new sample needs to be read from the device
-	int freq_counter = 0u;
-
 	// Timing on how many samples were needed by the mixer
-	int frames_needed = 0;
+	size_t frames_needed = 0;
 
 	// Previous and next sample fames
 	AudioFrame prev_frame = {};
 	AudioFrame next_frame = {};
 
-	int sample_rate_hz = 0;
+	std::atomic<int> sample_rate_hz = 0;
 
 	// Volume gains
 	// ~~~~~!~~~~~~
@@ -398,48 +437,6 @@ private:
 		float pan_right = 0.0f;
 	} crossfeed       = {};
 	bool do_crossfeed = false;
-
-	struct {
-		float level     = 0.0f;
-		float send_gain = 0.0f;
-	} reverb            = {};
-	bool do_reverb_send = false;
-
-	struct {
-		float level     = 0.0f;
-		float send_gain = 0.0f;
-	} chorus            = {};
-	bool do_chorus_send = false;
-
-	class Sleeper {
-	public:
-		Sleeper() = delete;
-		Sleeper(MixerChannel& c, const int sleep_after_ms = DefaultWaitMs);
-		bool ConfigureFadeOut(const std::string& prefs);
-		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
-		void MaybeSleep();
-		bool WakeUp();
-
-	private:
-		void DecrementFadeLevel(const int awake_for_ms);
-
-		MixerChannel& channel;
-
-		// The wait before fading or sleeping is bound between:
-		static constexpr auto MinWaitMs     = 100;
-		static constexpr auto DefaultWaitMs = 500;
-		static constexpr auto MaxWaitMs     = 5000;
-
-		int64_t woken_at_ms            = {};
-		float fadeout_level            = {};
-		float fadeout_decrement_per_ms = {};
-		int fadeout_or_sleep_after_ms  = {};
-
-		bool wants_fadeout = false;
-		bool had_signal    = false;
-	};
-	Sleeper sleeper;
-	const bool do_sleep = false;
 };
 
 using MixerChannelPtr = std::shared_ptr<MixerChannel>;
@@ -457,6 +454,7 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel);
 void MIXER_AddConfigSection(const ConfigPtr& conf);
 int MIXER_GetSampleRate();
 int MIXER_GetPreBufferMs();
+bool MIXER_FastForwardModeEnabled();
 
 const AudioFrame MIXER_GetMasterVolume();
 void MIXER_SetMasterVolume(const AudioFrame volume);
@@ -464,8 +462,9 @@ void MIXER_SetMasterVolume(const AudioFrame volume);
 void MIXER_Mute();
 void MIXER_Unmute();
 
-void MIXER_LockAudioDevice();
-void MIXER_UnlockAudioDevice();
+void MIXER_LockMixerThread();
+void MIXER_UnlockMixerThread();
+void MIXER_CloseAudioDevice();
 
 // Return true if the mixer was explicitly muted by the user (as opposed to
 // auto-muted when `mute_when_inactive` is enabled)
@@ -479,5 +478,69 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset);
 
 ChorusPreset MIXER_GetChorusPreset();
 void MIXER_SetChorusPreset(const ChorusPreset new_preset);
+
+// Generic callback used for audio devices which generate audio on the main thread
+// These devices produce audio on the main thread and consume on the mixer thread
+// This callback is the consumer part
+template <class DeviceType, class AudioType, bool stereo, bool signeddata, bool nativeorder>
+inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* device)
+{
+	// Currently only handles mono sound (output_queue is a primitive type and frames == samples)
+	// Special case for AudioType == AudioFrame (stereo floating-point sound)
+	static_assert((!stereo) || std::is_same<AudioType, AudioFrame>::value);
+
+	// AudioFrame type is always stereo
+	static_assert(stereo || (!std::is_same<AudioType, AudioFrame>::value));
+
+	size_t clamped_frames = check_cast<size_t>(frames_requested);
+	if (MIXER_FastForwardModeEnabled()) {
+		// Special case, normally only hit when using the fast-forward hotkey (Alt + F12)
+		// We need a very large buffer to compensate or it results in static
+
+		// Mostly arbitrary but it works well in testing.
+		// The queue just needs to be large enough to hold the large frame requests we get in fast-forward mode.
+		// This value can be tweaked without much consequence if it ever becomes problematic.
+		constexpr float MaxExpectedFastForwardFactor = 100.0f;
+		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * MaxExpectedFastForwardFactor));
+
+		// We must not block in fast-forward mode or the timings used by the mixer get confused
+		// Clamp and fill with silence if needed
+		clamped_frames = std::min(clamped_frames, device->output_queue.Size());
+	} else {
+		// Normal case, resize the queue to ensure we don't have high latency
+		// Resize is a fast operation, only setting a variable for max capacity
+		// It does not drop frames or append zeros to the end of the underlying data structure
+
+		// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+		// This provides a good size to avoid over-runs and stalls.
+		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * 2.0f));
+	}
+	int frames_recieved = 0;
+	if (clamped_frames > 0) {
+		std::vector<AudioType> to_mix = {};
+		device->output_queue.BulkDequeue(to_mix, clamped_frames);
+		frames_recieved = check_cast<int>(to_mix.size());
+		if (frames_recieved > 0) {
+			// One of the GCC CI builds throws a duplicated branch warning
+			// Clang apparently doesn't have this warning because it throws an "unknown warning" warning in the pragma
+			#ifndef __clang__
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wduplicated-branches"
+			#endif
+			if (std::is_same<AudioType, AudioFrame>::value) {
+				// AudioFrame has the same memory layout as 2x floats
+				device->channel->template AddSamples<float, stereo, signeddata, nativeorder>(frames_recieved, reinterpret_cast<float*>(to_mix.data()));
+			} else {
+				device->channel->template AddSamples<AudioType, stereo, signeddata, nativeorder>(frames_recieved, to_mix.data());
+			}
+			#ifndef __clang__
+			#pragma GCC diagnostic pop
+			#endif
+		}
+	}
+	if (frames_requested > frames_recieved) {
+		device->channel->AddSilence();
+	}
+}
 
 #endif
