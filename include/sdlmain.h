@@ -141,13 +141,7 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncMode {
-	Unset    = -2,
-	Adaptive = -1,
-	Off      = 0,
-	On       = 1,
-	Yield    = 2,
-};
+enum class VsyncMode { Unset, Off, On, Adaptive, Yield };
 
 struct VsyncSettings {
 	// The vsync mode the user asked for.
