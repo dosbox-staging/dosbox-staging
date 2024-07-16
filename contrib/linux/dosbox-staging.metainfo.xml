@@ -41,7 +41,7 @@
     <category>Emulator</category>
   </categories>
   <releases>
-    <release version="0.81.2" date="2024-07-21"/>
+	  <!-- add on the day of release    <release version="0.81.2" date="2024-07-21"/> -->
     <release version="0.81.1" date="2024-05-12"/>
     <release version="0.81.0" date="2024-02-14"/>
     <release version="0.80.1" date="2023-01-06"/>
