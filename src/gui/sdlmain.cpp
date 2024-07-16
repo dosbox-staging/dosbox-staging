@@ -365,11 +365,12 @@ static double get_host_refresh_rate()
 	};
 
 	auto get_vrr_rate = [](const int sdl_rate) {
-		constexpr auto vrr_backoff_hz = 3;
-		return sdl_rate - vrr_backoff_hz;
+		constexpr auto VrrBackoffHz = 3;
+		return sdl_rate - VrrBackoffHz;
 	};
 
 	auto get_sdi_rate = [](const int sdl_rate) {
+		// TODO needs explanation - what are we even calculating here?
 		const auto is_odd           = sdl_rate % 2 != 0;
 		const auto not_div_by_5     = sdl_rate % 5 != 0;
 		const auto next_is_div_by_3 = (sdl_rate + 1) % 3 == 0;
@@ -437,18 +438,15 @@ static Section_prop* get_sdl_section()
 	return sdl_section;
 }
 
-// Reset and populate the vsync settings from the user's conf setting. This is
-// called on-demand after startup and on output-mode changes (ie: switching from
-// an SDL-based drawing context to an OpenGL-based context).
+// Reset and populate the vsync settings from the config. This is
+// called on-demand after startup and on output mode changes (e.g., switching
+// from the 'texture' backend to 'opengl').
 //
 static void initialize_vsync_settings()
 {
 	sdl.vsync = {};
 
-	const auto section = get_sdl_section();
-
-	const std::string user_pref = (section ? section->Get_string("vsync")
-	                                       : "auto");
+	const std::string user_pref = get_sdl_section()->Get_string("vsync");
 
 	if (has_true(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncMode::On;
@@ -469,16 +467,16 @@ static void initialize_vsync_settings()
 	} else {
 		assert(user_pref == "auto");
 
-		// In 'vsync = auto' windowed-mode, we try to disable vsync for
-		// our Window because enabling vsync both at the program and
-		// compositor levels (which might be enforced) may add latency
-		// (i.e,: extra time blocked inside rendering or presentation
-		// calls), which stalls DOSBox.
+		// With 'vsync = auto' in windowed mode, we try to disable vsync
+		// because the OS-level compositor usually enforces it anyway,
+		// so we get no tearing. Enabling vsync on our side would usually
+		// have either no effect, or it would add extra latency
+		// without any benefits in the worst case.
 		//
 		sdl.vsync.when_windowed.requested = VsyncMode::Off;
 
-		// In fullscreen-mode, the above still applies however we add
-		// handling for VRR displays that perform frame interpolation.
+		// In fullscreen mode, the above still applies, however, we add
+		// handling for VRR displays that perform frame interpolation,
 		// as they need vsync enabled to lock onto the content.
 		//
 		const bool prefers_vsync_when_fullscreen =
@@ -500,8 +498,8 @@ static void initialize_vsync_settings()
 		// frames. This creates two layers of tearing when combined with
 		// DOS's (potentially) torn frames, which is common in games
 		// that don't use vblank. In "auto" mode, we aim for the best
-		// user experience, and dual-tearing isn't it. However, users
-		// can always set 'vsync = off'.
+		// user experience with no extra host-level tearing. However,
+		// users can always set 'vsync = off'.
 		//
 		// There is no downside to making this assumption when the host
 		// display is faster than the DOS rate because all frames will
@@ -718,6 +716,7 @@ static DosBox::Rect get_canvas_size_in_pixels(
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
+//
 static void log_display_properties(const int render_width_px,
                                    const int render_height_px,
                                    const std::optional<VideoMode>& maybe_video_mode,
@@ -791,6 +790,7 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 // A safer way to call SDL_SetWindowSize because it ensures the event-callback
 // is disabled during the resize event. This prevents the event callback from
 // firing before the window is resized in which case an endless loop can occur
+//
 static void safe_set_window_size(const int w, const int h)
 {
 	decltype(sdl.draw.callback) saved_callback = nullptr;
@@ -817,6 +817,7 @@ static VsyncSettings& get_vsync_settings()
 // Benchmarks are run in each vsync'd mode as part of the vsync detection
 // process. This routine returns the vsync mode's current benchmark rate
 // if available.
+//
 static std::optional<int> get_benchmarked_vsync_rate()
 {
 	const auto bench_rate = get_vsync_settings().benchmarked_rate;
@@ -831,13 +832,15 @@ static std::optional<int> get_benchmarked_vsync_rate()
 static void save_rate_to_frame_period(const double rate_hz)
 {
 	assert(rate_hz > 0);
-	// backoff by one-onethousandth to avoid hitting the vsync edge
-	sdl.frame.period_ms = 1'001.0 / rate_hz;
+
+	// Back off by one-onethousandth to avoid hitting the vsync edge
+	sdl.frame.period_ms  = 1'001.0 / rate_hz;
 	const auto period_us = sdl.frame.period_ms * 1'000;
-	sdl.frame.period_us = ifloor(period_us);
+	sdl.frame.period_us  = ifloor(period_us);
+
 	// Permit the frame period to be off by up to 90% before "out of sync"
 	sdl.frame.period_us_early = ifloor(55 * period_us / 100);
-	sdl.frame.period_us_late = ifloor(145 * period_us / 100);
+	sdl.frame.period_us_late  = ifloor(145 * period_us / 100);
 }
 
 static std::unique_ptr<Pacer> render_pacer = {};
@@ -855,7 +858,7 @@ static int benchmark_presentation_rate()
 	const auto bench_frames  = ten_percent_of_fps;
 
 	// Disable the pacer because we need every frame presented and measured
-	// so we can hit the vsync wall (if it exists).
+	// so we can hit the vsync limit (if it exists).
 	render_pacer->SetTimeout(0);
 
 	// Warm-up round
@@ -869,7 +872,9 @@ static int benchmark_presentation_rate()
 		sdl.frame.update(nullptr);
 		sdl.frame.present();
 	}
-	const auto elapsed_us = std::max(static_cast<int64_t>(1L), GetTicksUsSince(start_us));
+	const auto elapsed_us = std::max(static_cast<int64_t>(1L),
+	                                 GetTicksUsSince(start_us));
+
 	return iround(static_cast<int>((bench_frames * 1'000'000) / elapsed_us));
 }
 
@@ -898,26 +903,32 @@ static int nearest_common_rate(const double rate)
 static VsyncMode measure_vsynced_rate(int& bench_rate)
 {
 	bench_rate = benchmark_presentation_rate();
+
 	const auto host_rate = get_host_refresh_rate();
 
-	// Notify the user if the machine is prensetation-starved.
+	// Notify the user if the machine is presentation-starved.
 	if (bench_rate < host_rate * 0.8) {
-		LOG_WARNING("SDL: We can only render %d FPS, which is well below"
-		            " the host's reported refresh rate of %2.5g Hz.",
-		            bench_rate,
-		            host_rate);
 		LOG_WARNING(
-		        "SDL: You will experience rendering lag and stuttering."
-		        " Consider updating your video drivers and try disabling"
-		        " vsync in your host and drivers, set [sdl] vsync = false");
+		        "SDL: We can only render %d FPS, which is well below "
+		        "the host's reported refresh rate of %2.5g Hz.",
+		        bench_rate,
+		        host_rate);
+
+		LOG_WARNING(
+		        "SDL: You will experience rendering lag and stuttering. "
+		        "Consider updating your video drivers and try disabling "
+		        "any frame limiters and vsync in your driver settings, "
+				"or try setting 'vsync = off'");
 	}
 
-	if (bench_rate < host_rate * 1.5)
+	// TODO what are these magic multipliers?
+	if (bench_rate < host_rate * 1.5) {
 		return VsyncMode::On;
-	else if (bench_rate < host_rate * 2.5)
+	} else if (bench_rate < host_rate * 2.5) {
 		return VsyncMode::Adaptive;
-	else
+	} else {
 		return VsyncMode::Off;
+	}
 }
 
 static void set_vsync(const VsyncMode mode)
@@ -928,24 +939,28 @@ static void set_vsync(const VsyncMode mode)
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		assert(sdl.opengl.context);
-		const auto interval = static_cast<int>(mode);
+
+		const auto swap_interval = static_cast<int>(mode);
+
 		// -1=adaptive, 0=off, 1=on
-		assert(interval >= -1 && interval <= 1);
-		if (SDL_GL_SetSwapInterval(interval) == 0) {
+		assert(swap_interval >= -1 && swap_interval <= 1);
+		if (SDL_GL_SetSwapInterval(swap_interval) == 0) {
 			return;
 		}
 
-		// the requested interval is not supported
-		LOG_WARNING("OPENGL: Failed setting the vsync mode to %s (%d): %s",
-		            to_string(mode),
-		            interval,
-		            SDL_GetError());
+		// The requested swap_interval is not supported
+		LOG_WARNING(
+		        "OPENGL: Failed setting the vsync mode to '%s' "
+		        "(swap interval: %d): %s",
+		        to_string(mode),
+		        swap_interval,
+		        SDL_GetError());
 
 		// Per SDL's recommendation: If an application requests adaptive
 		// vsync and the system does not support it, this function will
 		// fail and return -1. In such a case, you should probably retry
-		// the call with 1 for the interval.
-		if (interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
+		// the call with 1 for the swap_interval.
+		if (swap_interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
 			LOG_WARNING(
 			        "OPENGL: Tried enabling non-adaptive vsync, "
 			        "but it still failed: %s",
@@ -965,7 +980,7 @@ static void set_vsync(const VsyncMode mode)
 	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE) {
 		return;
 	}
-	LOG_WARNING("SDL: Failed setting vsync mode to to %s (%s): %s",
+	LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
 	            to_string(mode),
 	            hint_str,
 	            SDL_GetError());
@@ -975,7 +990,7 @@ static void update_vsync_mode()
 {
 	// Host OSes usually have different vsync constraints in windowed and
 	// fullscreen mode.
-	auto& vsync_pref = get_vsync_settings();
+	auto vsync_pref = get_vsync_settings();
 
 	// Short-hand aliases
 	auto& requested       = vsync_pref.requested;
@@ -1029,9 +1044,9 @@ static void maybe_present_throttled(const bool frame_is_new)
 
 static void maybe_present_synced(const bool present_if_last_skipped)
 {
-	// state tracking across runs
+	// State tracking across runs
 	static bool last_frame_presented = false;
-	static int64_t last_sync_time = 0;
+	static int64_t last_sync_time    = 0;
 
 	const auto now = GetTicksUs();
 
@@ -1059,8 +1074,8 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 	const auto dos_rate = VGA_GetPreferredRate();
 
 	// Calculate the maximum number of duplicate frames before presenting.
-	constexpr uint16_t min_rate = 10;
-	sdl.frame.max_dupe_frames   = static_cast<float>(dos_rate) / min_rate;
+	constexpr uint16_t MinRateHz = 10;
+	sdl.frame.max_dupe_frames   = static_cast<float>(dos_rate) / MinRateHz;
 
 	// Consider any vsync mode that isn't explicitly 'Off' as having some
 	// level of vsync enforcement as 'On'.
@@ -1080,8 +1095,8 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		// the requested rates, we use the frame pacer to inform the
 		// user when the host is hitting the vsync limit.
 		render_pacer->SetTimeout(vsync_is_on ? sdl.vsync.skip_us : 0);
-	}
-	else {
+
+	} else {
 		// Automatic CFR or VFR modes
 		const auto has_bench_rate = get_benchmarked_vsync_rate();
 
@@ -1107,6 +1122,9 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		         display_might_be_interpolating);
 
 #if 0
+		// TODO some of these log statements seem to be wrong and
+		// not reflect actual reality, we'll need to revisit them
+	
 		LOG_MSG("SDL: Auto presentation mode conditions:");
 		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
 		if (has_bench_rate) {
@@ -2193,8 +2211,23 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		if (last_vsync_mode != vsync_mode) {
 			last_vsync_mode = vsync_mode;
 
-			const auto vsync_mode_str = to_string(vsync_mode);
-			LOG_INFO("OPENGL: VSync mode: %s", vsync_mode_str);
+			switch (vsync_mode) {
+			case VsyncMode::Unset: break;
+
+			case VsyncMode::Adaptive:
+				LOG_INFO("OPENGL: Enabled adaptive vsync");
+				break;
+
+			case VsyncMode::Off:
+				LOG_INFO("OPENGL: Disabled vsync");
+				break;
+
+			case VsyncMode::On:
+				LOG_INFO("OPENGL: Enabled non-adaptive vsync");
+				break;
+
+			default: assertm(false, "Invalid VsyncMode");
+			}
 		}
 	}
 #endif
