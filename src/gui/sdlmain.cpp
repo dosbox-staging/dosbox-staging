@@ -940,10 +940,15 @@ static void set_vsync(const VsyncMode mode)
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		assert(sdl.opengl.context);
 
-		const auto swap_interval = static_cast<int>(mode);
+		const auto swap_interval = [&] {
+			switch (mode) {
+			case VsyncMode::Adaptive: return -1;
+			case VsyncMode::Off: return 0;
+			case VsyncMode::On: return 1;
+			default: assertm(false, "Invalid VsyncMode"); return 0;
+			}
+		}();
 
-		// -1=adaptive, 0=off, 1=on
-		assert(swap_interval >= -1 && swap_interval <= 1);
 		if (SDL_GL_SetSwapInterval(swap_interval) == 0) {
 			return;
 		}
