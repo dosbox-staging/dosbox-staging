@@ -23,7 +23,7 @@ core_selection = [
     [ ['aarch64'],                ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1,         1 ], # ARMv8+ (64-bit)
     [ ['arm'],                    ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1,         1 ], # ARMv7+
     [ ['armv6'],                  ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0,         0 ], # ARMv6 or older
-    [ ['ppc64',   'powerpc64'],   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors
+    [ ['ppc64',   'powerpc64'],   ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1,         1 ], # 64 bit PPC processors
     [ ['ppc64le', 'powerpc64le'], ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors (little-endian)
     [ ['ppc',     'powerpc'],     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1,         0 ], # 32 bit PPC processors (big-endian)
     [ ['mips'],                   ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  0,         0 ], # 32 bit MIPS processor
