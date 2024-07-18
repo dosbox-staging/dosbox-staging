@@ -11,10 +11,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
+[Download DOSBox Staging 0.81.2 (tar.xz)][0_81_2]
 <br>
 <small>
-sha256: 5aee92774569cf1e39ade3fccff03994<wbr>464d17b396b0ae98360af61e9d37cba7
+sha256: TODO<wbr>TODO
 </small>
 
 </section>
@@ -27,7 +27,7 @@ manually (see instructions below).
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
-Check out the [0.81.1 release notes](release-notes/0.81.1.md) to learn
+Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn
 about the changes and improvements introduced in this release.
 
 
@@ -149,6 +149,13 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
+
+- [DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
+  <br>
+  <small>
+  sha256: 5aee92774569cf1e39ade3fccff03994<wbr>464d17b396b0ae98360af61e9d37cba7
+  </small>
+
 - [DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
   <br>
   <small>
@@ -227,6 +234,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_81_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.2/dosbox-staging-linux-v0.81.2.tar.xz
 [0_81_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-linux-v0.81.1.tar.xz
 [0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-linux-v0.81.0.tar.xz
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
