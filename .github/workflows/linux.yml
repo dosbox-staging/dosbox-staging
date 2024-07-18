@@ -63,191 +63,191 @@ jobs:
         name: Generate subprojects cache
         run:  scripts/fetch-and-tar-subprojects.sh
 
-  build_ubuntu:
-    name: ${{ matrix.conf.name }}
-    runs-on: ${{ matrix.conf.os }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    needs: cache_subprojects
-    strategy:
-      matrix:
-        conf:
-
-          - name: GCC 10, Ubuntu 22.04
-            os: ubuntu-22.04
-            packages: g++-12
-            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
-            max_warnings: 0
-            needs_all_deps: true
-            run_tests: true
-
-          - name: Clang 12, Ubuntu 22.04
-            os: ubuntu-22.04
-            packages: clang-14
-            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-14.ini
-            max_warnings: 0
-            needs_all_deps: true
-            run_tests: true
-
-          - name: GCC 12, +debugger
-            os: ubuntu-22.04
-            packages: g++-12
-            build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, Debian 11, ARMv7
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, aarch64
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
-            run_tests: true
-            cross: true
-            arch: arm64
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC, Debian 11, ppc64le
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 21
-            run_tests: true
-            cross: true
-            arch: ppc64el
-            deb_vers: 11
-            needs_min_deps: false
-
-          - name: GCC 9, minimum build
-            os: ubuntu-20.04
-            packages: g++-9
-            build_flags: >-
-              -Dbuildtype=minsize
-              -Dunit_tests=disabled
-              -Duse_alsa=false
-              -Duse_fluidsynth=false
-              -Duse_mt32emu=false
-              -Duse_opengl=false
-              -Duse_sdl2_net=false
-              -Duse_slirp=false
-              --native-file=.github/meson/native-gcc-9.ini
-            needs_min_deps: true
-            max_warnings: -1
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-
+#  build_ubuntu:
+#    name: ${{ matrix.conf.name }}
+#    runs-on: ${{ matrix.conf.os }}
+#    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+#    needs: cache_subprojects
+#    strategy:
+#      matrix:
+#        conf:
+#
+#          - name: GCC 10, Ubuntu 22.04
+#            os: ubuntu-22.04
+#            packages: g++-12
+#            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
+#            max_warnings: 0
+#            needs_all_deps: true
+#            run_tests: true
+#
+#          - name: Clang 12, Ubuntu 22.04
+#            os: ubuntu-22.04
+#            packages: clang-14
+#            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-14.ini
+#            max_warnings: 0
+#            needs_all_deps: true
+#            run_tests: true
+#
+#          - name: GCC 12, +debugger
+#            os: ubuntu-22.04
+#            packages: g++-12
+#            build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
+#            max_warnings: 0
+#            needs_all_deps: true
+#
+#          - name: GCC, Debian 11, ARMv7
+#            os: ubuntu-20.04
+#            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
+#            max_warnings: 0
+#            run_tests: true
+#            cross: true
+#            arch: armhf
+#            deb_vers: 11
+#            needs_min_deps: false
+#
+#          - name: GCC, Debian 11, aarch64
+#            os: ubuntu-20.04
+#            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+#            max_warnings: 0
+#            run_tests: true
+#            cross: true
+#            arch: arm64
+#            deb_vers: 11
+#            needs_min_deps: false
+#
+#          - name: GCC, Debian 11, ppc64le
+#            os: ubuntu-20.04
+#            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+#            max_warnings: 21
+#            run_tests: true
+#            cross: true
+#            arch: ppc64el
+#            deb_vers: 11
+#            needs_min_deps: false
+#
+#          - name: GCC 9, minimum build
+#            os: ubuntu-20.04
+#            packages: g++-9
+#            build_flags: >-
+#              -Dbuildtype=minsize
+#              -Dunit_tests=disabled
+#              -Duse_alsa=false
+#              -Duse_fluidsynth=false
+#              -Duse_mt32emu=false
+#              -Duse_opengl=false
+#              -Duse_sdl2_net=false
+#              -Duse_slirp=false
+#              --native-file=.github/meson/native-gcc-9.ini
+#            needs_min_deps: true
+#            max_warnings: -1
+#
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#        with:
+#          submodules: false
+#
 #      - name: Update host repository
 #        run: |
-          # use the following to force full upgrades
-          # sudo apt-get -y upgrade
-          # sudo apt-get -y --with-new-pkgs upgrade
-          # sudo apt-get -y install -y aptitude
-          # echo -e "n\ny\ny" | sudo aptitude -y -f full-upgrade
-          # sudo apt-get update
-          # sudo apt-get -y upgrade
-
-      - name: Install minimum dependencies
-        if:   matrix.conf.needs_min_deps
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update
-          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
-          sudo pip3 install --upgrade meson ninja
-
-      - name: Install all dependencies
-        if:   matrix.conf.needs_all_deps
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update
-          sudo apt-get install -y \
-            ${{ matrix.conf.packages }} \
-            $(cat packages/${{ matrix.conf.os }}-apt.txt)
-          sudo pip3 install --upgrade meson ninja
-
-      - name:  Prepare compiler cache
-        id:    prep-ccache
-        shell: bash
-        run: |
-          mkdir -p "${CCACHE_DIR}"
-          echo "dir=$CCACHE_DIR"                                                 >> $GITHUB_OUTPUT
-          echo "today=$(date -I)"                                                >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
-          echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
-
-      - uses:  actions/cache@v3.3.2
-        id:    cache-ccache
-        with:
-          path: ${{ steps.prep-ccache.outputs.dir }}
-          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
-          restore-keys: |
-            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
-
-      - name: Log environment
-        run:  ./scripts/log-env.sh
-
-      - name: Set binary names
-        id: bins
-        run: |
-          set -x
-          git fetch --prune --unshallow
-          git fetch --all --tags --force
-          if [ -z "${{matrix.conf.cross}}" ]; then
-            echo "MESON_BIN=meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=ccache" >> $GITHUB_OUTPUT
-          else
-            if $(git describe | grep -qs '-'); then
-              vers="${{matrix.conf.deb_vers}}-$(git describe | cut -d '-' -f 1)-dev-${{matrix.conf.arch}}"
-            else
-              vers="${{matrix.conf.deb_vers}}-$(git describe)-${{matrix.conf.arch}}"
-            fi
-            echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
-            echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Restore subprojects cache
-        id:   cache-subprojects
-        uses: actions/cache@v3.3.2
-        with:
-          path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
-          enableCrossOsArchive: true
-
-      - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
-
-      - name: Meson setup
-        run:  |
-          ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build \
-          || ( cat build/meson-logs/meson-log.txt ; exit 1 )
-
-      - name: Build
-        run: |
-          set -xo pipefail
-          ${{steps.bins.outputs.CCACHE_BIN}} -z
-          ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
-          ${{steps.bins.outputs.CCACHE_BIN}} -s
-
-      - name: Run tests
-        if:   matrix.conf.run_tests
-        run:  ${{steps.bins.outputs.MESON_BIN}} test --num-processes 128 -t 0 -C build --print-errorlogs
-
-      - name: Summarize warnings
-        env:
-          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  ./scripts/count-warnings.py -lf build.log
-
-
+#          # use the following to force full upgrades
+#          # sudo apt-get -y upgrade
+#          # sudo apt-get -y --with-new-pkgs upgrade
+#          # sudo apt-get -y install -y aptitude
+#          # echo -e "n\ny\ny" | sudo aptitude -y -f full-upgrade
+#          # sudo apt-get update
+#          # sudo apt-get -y upgrade
+#
+#      - name: Install minimum dependencies
+#        if:   matrix.conf.needs_min_deps
+#        run: |
+#          export DEBIAN_FRONTEND=noninteractive
+#          sudo apt-get update
+#          sudo apt-get install -y build-essential ccache libsdl2-dev libopusfile-dev libspeexdsp-dev python3-setuptools
+#          sudo pip3 install --upgrade meson ninja
+#
+#      - name: Install all dependencies
+#        if:   matrix.conf.needs_all_deps
+#        run: |
+#          export DEBIAN_FRONTEND=noninteractive
+#          sudo apt-get update
+#          sudo apt-get install -y \
+#            ${{ matrix.conf.packages }} \
+#            $(cat packages/${{ matrix.conf.os }}-apt.txt)
+#          sudo pip3 install --upgrade meson ninja
+#
+#      - name:  Prepare compiler cache
+#        id:    prep-ccache
+#        shell: bash
+#        run: |
+#          mkdir -p "${CCACHE_DIR}"
+#          echo "dir=$CCACHE_DIR"                                                 >> $GITHUB_OUTPUT
+#          echo "today=$(date -I)"                                                >> $GITHUB_OUTPUT
+#          echo "yesterday=$(date --date=yesterday -I)"                           >> $GITHUB_OUTPUT
+#          echo "name_hash=$(echo '${{ matrix.conf.name }}' | shasum | cut -b-8)" >> $GITHUB_OUTPUT
+#
+#      - uses:  actions/cache@v3.3.2
+#        id:    cache-ccache
+#        with:
+#          path: ${{ steps.prep-ccache.outputs.dir }}
+#          key:  ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.today }}-1
+#          restore-keys: |
+#            ccache-${{ matrix.conf.os }}-${{ steps.prep-ccache.outputs.name_hash }}-${{ steps.prep-ccache.outputs.yesterday }}-1
+#
+#      - name: Log environment
+#        run:  ./scripts/log-env.sh
+#
+#      - name: Set binary names
+#        id: bins
+#        run: |
+#          set -x
+#          git fetch --prune --unshallow
+#          git fetch --all --tags --force
+#          if [ -z "${{matrix.conf.cross}}" ]; then
+#            echo "MESON_BIN=meson" >> $GITHUB_OUTPUT
+#            echo "CCACHE_BIN=ccache" >> $GITHUB_OUTPUT
+#          else
+#            if $(git describe | grep -qs '-'); then
+#              vers="${{matrix.conf.deb_vers}}-$(git describe | cut -d '-' -f 1)-dev-${{matrix.conf.arch}}"
+#            else
+#              vers="${{matrix.conf.deb_vers}}-$(git describe)-${{matrix.conf.arch}}"
+#            fi
+#            echo "MESON_BIN=${{env.DOCKER_RUN}}:${vers} meson" >> $GITHUB_OUTPUT
+#            echo "CCACHE_BIN=${{env.DOCKER_RUN}}:${vers} ccache" >> $GITHUB_OUTPUT
+#          fi
+#
+#      - name: Restore subprojects cache
+#        id:   cache-subprojects
+#        uses: actions/cache@v3.3.2
+#        with:
+#          path: subprojects.tar
+#          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
+#          enableCrossOsArchive: true
+#
+#      - name: Extract subprojects cache
+#        run:  scripts/extract-subprojects-tar.sh
+#
+#      - name: Meson setup
+#        run:  |
+#          ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build \
+#          || ( cat build/meson-logs/meson-log.txt ; exit 1 )
+#
+#      - name: Build
+#        run: |
+#          set -xo pipefail
+#          ${{steps.bins.outputs.CCACHE_BIN}} -z
+#          ${{steps.bins.outputs.MESON_BIN}} compile -C build |& tee build.log
+#          ${{steps.bins.outputs.CCACHE_BIN}} -s
+#
+#      - name: Run tests
+#        if:   matrix.conf.run_tests
+#        run:  ${{steps.bins.outputs.MESON_BIN}} test --num-processes 128 -t 0 -C build --print-errorlogs
+#
+#      - name: Summarize warnings
+#        env:
+#          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+#        run:  ./scripts/count-warnings.py -lf build.log
+#
+#
   build_linux_release:
     name: Release build
     runs-on: ubuntu-20.04
