@@ -103,11 +103,21 @@ install_doc()
     else
         package_information="a development branch"
     fi
+
     if [ -n "$package_information" ]; then
-        sed -i -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        if [ "$(uname)" = "Darwin" ]; then
+            sed -i '' -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        else
+            sed -i -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        fi
     fi
+
     if [ -n "$git_repo" ]; then
-        sed -i -e "s|%GITHUB_REPO%|$git_repo|"  "$readme_tmpl"
+        if [ "$(uname)" = "Darwin" ]; then
+            sed -i '' -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
+        else
+            sed -i -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
+        fi
     fi
 }
 
@@ -138,6 +148,8 @@ pkg_linux()
     install -DT "${build_dir}/dosbox" "${pkg_dir}/dosbox"
 
     install -DT contrib/linux/dosbox-staging.desktop "${pkg_dir}/desktop/dosbox-staging.desktop"
+    install -DT contrib/linux/install-icons.sh "${pkg_dir}/install-icons.sh"
+
     DESTDIR="$(realpath "$pkg_dir")" make -C contrib/icons/ install datadir=
 }
 
@@ -157,16 +169,13 @@ pkg_macos()
     mkdir dosbox-universal
     lipo dosbox-x86_64/dosbox dosbox-arm64/dosbox -create -output dosbox-universal/dosbox
 
-    # Generate icon
-    make -C contrib/icons/ dosbox-staging.icns
-
     install -d   "${macos_content_dir}/MacOS/"
-    install      dosbox-universal/dosbox           "${macos_content_dir}/MacOS/"
-    install_file contrib/macos/Info.plist.template "${macos_content_dir}/Info.plist"
-    install_file contrib/macos/PkgInfo             "${macos_content_dir}/PkgInfo"
-    install_file contrib/icons/dosbox-staging.icns "${macos_content_dir}/Resources/"
+    install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
+    install_file contrib/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
+    install_file contrib/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
+    install_file contrib/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
-    sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
+    sed -i '' -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
 
 	# Install start commands
 	start_command="Start DOSBox Staging.command"

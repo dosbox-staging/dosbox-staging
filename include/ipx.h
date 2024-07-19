@@ -26,7 +26,7 @@
 #define LOG_IPX LOG_MSG
 #else
 #if defined (_MSC_VER)
-#define LOG_IPX
+#define LOG_IPX(...) (void)sizeof(__VA_ARGS__)
 #else
 #define LOG_IPX(...)
 #endif

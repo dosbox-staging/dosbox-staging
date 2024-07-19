@@ -38,15 +38,25 @@ public:
 	ImageDecoder()  = default;
 	~ImageDecoder() = default;
 
-	// Set `row_skip_count` to 1 to de-double-scan an image with "baked in"
-	// double-scanning.
-	void Init(const RenderedImage& image, const uint8_t row_skip_count);
+	// Set `row_skip_count` to 1 reconstruct the raw image when the input
+	// has "baked-in" double scanning.
+	//
+	// Set `pixel_skip_count` to 1 reconstruct the raw image when the input
+	// has "baked-in" pixel doubling.
+	//
+	void Init(const RenderedImage& image, const uint8_t row_skip_count,
+	          const uint8_t pixel_skip_count);
 
 	inline uint8_t GetNextIndexed8Pixel()
 	{
 		assert(image.is_paletted());
 		assert(pos - curr_row_start < image.pitch);
-		return *pos++;
+
+		const auto pal_index = *pos;
+
+		IncrementPos();
+
+		return pal_index;
 	}
 
 	inline Rgb888 GetNextPixelAsRgb888()
@@ -70,20 +80,23 @@ public:
 private:
 	RenderedImage image = {};
 
-	uint8_t row_skip_count = 0;
+	uint8_t row_skip_count   = 0;
+	uint8_t pixel_skip_count = 0;
 
 	const uint8_t* curr_row_start = nullptr;
 	const uint8_t* pos            = nullptr;
 
 	inline void IncrementPos()
 	{
-		switch (image.params.pixel_format) {
-		case PixelFormat::Indexed8: ++pos; break;
-		case PixelFormat::RGB555_Packed16:
-		case PixelFormat::RGB565_Packed16: pos += 2; break;
-		case PixelFormat::BGR24_ByteArray: pos += 3; break;
-		case PixelFormat::XRGB8888_Packed32: pos += 4; break;
-		default: assertm(false, "Invalid pixel_format value");
+		for (auto i = 0; i <= pixel_skip_count; ++i) {
+			switch (image.params.pixel_format) {
+			case PixelFormat::Indexed8: ++pos; break;
+			case PixelFormat::RGB555_Packed16:
+			case PixelFormat::RGB565_Packed16: pos += 2; break;
+			case PixelFormat::BGR24_ByteArray: pos += 3; break;
+			case PixelFormat::BGRX32_ByteArray: pos += 4; break;
+			default: assertm(false, "Invalid PixelFormat value");
+			}
 		}
 	}
 
@@ -106,16 +119,19 @@ private:
 
 		switch (image.params.pixel_format) {
 		case PixelFormat::RGB555_Packed16: {
-			const auto p = read_unaligned_uint16(pos);
+			const auto p = host_readw(pos);
+
 			pixel = Rgb555(p).ToRgb888();
 		} break;
 
 		case PixelFormat::RGB565_Packed16: {
-			const auto p = read_unaligned_uint16(pos);
+			const auto p = host_readw(pos);
+
 			pixel = Rgb565(p).ToRgb888();
 		} break;
 
-		case PixelFormat::BGR24_ByteArray: {
+		case PixelFormat::BGR24_ByteArray:
+		case PixelFormat::BGRX32_ByteArray: {
 			const auto b = *(pos + 0);
 			const auto g = *(pos + 1);
 			const auto r = *(pos + 2);
@@ -123,16 +139,7 @@ private:
 			pixel = {r, g, b};
 		} break;
 
-		case PixelFormat::XRGB8888_Packed32: {
-			const auto p = read_unaligned_uint32(pos);
-			const uint8_t r = (p >> 16) & 0XFF;
-			const uint8_t g = (p >> 8) & 0xFF;
-			const uint8_t b = p & 0xFF;
-
-			pixel = {r, g, b};
-		} break;
-
-		default: assertm(false, "Invalid pixel_format value");
+		default: assertm(false, "Invalid PixelFormat value");
 		}
 
 		IncrementPos();

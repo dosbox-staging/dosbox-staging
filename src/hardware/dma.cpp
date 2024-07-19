@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 #include <memory>
 
 #include "dma.h"
@@ -486,7 +486,7 @@ void DmaChannel::EvictReserver()
 	reservation_owner    = {};
 }
 
-void DmaChannel::ReserveFor(const std::string_view new_owner,
+void DmaChannel::ReserveFor(const std::string& new_owner,
                             const DMA_ReservationCallback new_cb)
 {
 	assert(new_cb);
@@ -494,8 +494,8 @@ void DmaChannel::ReserveFor(const std::string_view new_owner,
 
 	if (HasReservation()) {
 		LOG_MSG("DMA: %s is replacing %s on %d-bit DMA channel %u",
-		        new_owner.data(),
-		        reservation_owner.data(),
+		        new_owner.c_str(),
+		        reservation_owner.c_str(),
 		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();
@@ -532,7 +532,7 @@ DmaChannel::~DmaChannel()
 {
 	if (HasReservation()) {
 		LOG_MSG("DMA: Shutting down %s on %d-bit DMA channel %d",
-		        reservation_owner.data(),
+		        reservation_owner.c_str(),
 		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();

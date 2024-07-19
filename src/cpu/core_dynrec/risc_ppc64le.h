@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -564,10 +564,11 @@ static void inline gen_load_param_imm(Bitu imm, Bitu param)
 }
 
 // load an address as param'th function parameter
-// 32-bit
+// can be 64-bit, especially in PIE code
 static void inline gen_load_param_addr(Bitu addr, Bitu param)
 {
-	gen_load_param_imm(addr, param);
+	// "gen_mov_qword_to_reg"
+	gen_mov_qword_to_reg_imm(RegParams[param],(uint64_t)addr);
 }
 
 // load a host-register as param'th function parameter

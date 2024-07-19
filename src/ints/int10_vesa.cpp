@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,8 +19,8 @@
 
 #include "int10.h"
 
-#include <string.h>
-#include <stddef.h>
+#include <cstddef>
+#include <cstring>
 
 #include "callback.h"
 #include "dos_inc.h"
@@ -30,6 +30,7 @@
 #include "pci_bus.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "version.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01
@@ -48,7 +49,7 @@ static struct {
 static const std::string string_oem         = "S3 Incorporated. Trio64";
 static const std::string string_vendorname  = DOSBOX_TEAM;
 static const std::string string_productname = DOSBOX_NAME;
-static const std::string string_productrev  = VERSION;
+static const std::string string_productrev  = DOSBOX_VERSION;
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -226,8 +227,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	if (mblock.mode >= vesa_2_0_modes_start && int10.vesa_oldvbe)
 		return VESA_FAIL;
 
-	// assume mode is OK until proven otherwise
-	bool ok_per_mode_pref = true;
 	switch (mblock.type) {
 	case M_LIN4:
 		modePageSize = mblock.sheight * mblock.swidth/8;
@@ -237,21 +236,34 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		minfo.MemoryModel = 3u; // ega planar mode
 		modeAttributes = 0x1b; // Color, graphics, no linear buffer
 		break;
-	case M_LIN8:
-		modePageSize = mblock.sheight * mblock.swidth;
-		minfo.BytesPerScanLine = host_to_le16(mblock.swidth);
-		minfo.NumberOfPlanes = 0x1;
-		minfo.BitsPerPixel = 8u;
-		minfo.MemoryModel = 4u; // packed pixel
-		modeAttributes = 0x1b; // Color, graphics
 
-		if (int10.vesa_mode_preference == VesaModePref::Compatible) {
-			ok_per_mode_pref = can_triple_buffer_8bit(mblock) &&
-			                   !on_build_engine_denylist(mblock);
+	case M_LIN8: {
+		modePageSize           = mblock.sheight * mblock.swidth;
+		minfo.BytesPerScanLine = host_to_le16(mblock.swidth);
+		minfo.NumberOfPlanes   = 0x1;
+		minfo.BitsPerPixel     = 8u;
+
+		// Packed pixels
+		minfo.MemoryModel = 4u;
+
+		// Color, graphics
+		modeAttributes = 0x1b;
+
+		bool mode_allowed = [&] {
+			if (int10.vesa_modes == VesaModes::Compatible) {
+				return can_triple_buffer_8bit(mblock) &&
+				       !on_build_engine_denylist(mblock);
+			} else {
+				return true;
+			}
+		}();
+
+		if (!int10.vesa_nolfb && mode_allowed) {
+			// Enable linear framebuffer
+			modeAttributes |= 0x80;
 		}
-		if (!int10.vesa_nolfb && ok_per_mode_pref)
-			modeAttributes |= 0x80; // linear framebuffer
-		break;
+	} break;
+
 	case M_LIN15:
 		modePageSize = mblock.sheight * mblock.swidth*2;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);

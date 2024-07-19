@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 	void NotifyBooting() override;
 
@@ -177,7 +177,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 	void NotifyBooting() override;
 
@@ -205,7 +205,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 
 	void UpdateRate() override;
@@ -497,17 +497,18 @@ void MouseInterface::ConfigSetSensitivityY(const int16_t value)
 
 void MouseInterface::ConfigResetSensitivity()
 {
-	ConfigSetSensitivity(mouse_config.sensitivity_x, mouse_config.sensitivity_y);
+	ConfigSetSensitivity(mouse_predefined.sensitivity_user_default,
+	                     mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigResetSensitivityX()
 {
-	ConfigSetSensitivityX(mouse_config.sensitivity_x);
+	ConfigSetSensitivityX(mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigResetSensitivityY()
 {
-	ConfigSetSensitivityY(mouse_config.sensitivity_y);
+	ConfigSetSensitivityY(mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigSetMinRate(const uint16_t value_hz)
@@ -564,29 +565,21 @@ void MouseInterface::UpdateRate()
 	rate_hz = MOUSE_ClampRateHz(std::max(interface_rate_hz, min_rate_hz));
 }
 
-void MouseInterface::UpdateButtons(const uint8_t idx, const bool pressed)
+void MouseInterface::UpdateButtons(const MouseButtonId button_id, const bool pressed)
 {
 	old_buttons_12  = buttons_12;
 	old_buttons_345 = buttons_345;
 
-	switch (idx) {
-	case 0: // left button
-		buttons_12.left = pressed ? 1 : 0;
-		break;
-	case 1: // right button
-		buttons_12.right = pressed ? 1 : 0;
-		break;
-	case 2: // middle button
-		buttons_345.middle = pressed ? 1 : 0;
-		break;
-	case 3: // extra button #1
-		buttons_345.extra_1 = pressed ? 1 : 0;
-		break;
-	case 4: // extra button #2
-		buttons_345.extra_2 = pressed ? 1 : 0;
-		break;
-	default: // button not supported
-		return;
+	// clang-format off
+	switch (button_id) {
+	case MouseButtonId::Left:   buttons_12.left     = pressed; break;
+	case MouseButtonId::Right:  buttons_12.right    = pressed; break;
+	case MouseButtonId::Middle: buttons_345.middle  = pressed; break;
+	case MouseButtonId::Extra1: buttons_345.extra_1 = pressed; break;
+	case MouseButtonId::Extra2: buttons_345.extra_2 = pressed; break;
+	case MouseButtonId::None: // button not supported
+	// clang-format on
+	default: return;
 	}
 }
 
@@ -604,7 +597,7 @@ bool MouseInterface::ChangedButtonsJoined() const
 
 bool MouseInterface::ChangedButtonsSquished() const
 {
-	if (GCC_LIKELY(old_buttons_12._data != buttons_12._data)) {
+	if (old_buttons_12._data != buttons_12._data) {
 		return true;
 	}
 
@@ -660,10 +653,10 @@ void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
 	                     y_abs);
 }
 
-void InterfaceDos::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfaceDos::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
-	UpdateButtons(idx, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
+	UpdateButtons(button_id, pressed);
+	if (!ChangedButtonsSquished()) {
 		return;
 	}
 
@@ -729,10 +722,10 @@ void InterfacePS2::NotifyMoved(const float x_rel, const float y_rel,
 	MOUSEPS2_NotifyMoved(x_rel * sensitivity_coeff_x, y_rel * sensitivity_coeff_y);
 }
 
-void InterfacePS2::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfacePS2::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
-	UpdateButtons(idx, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsJoined())) {
+	UpdateButtons(button_id, pressed);
+	if (!ChangedButtonsJoined()) {
 		return;
 	}
 
@@ -792,16 +785,16 @@ void InterfaceCOM::NotifyMoved(const float x_rel, const float y_rel,
 	                      y_rel * sensitivity_coeff_y);
 }
 
-void InterfaceCOM::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfaceCOM::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
 	assert(listener);
 
-	UpdateButtons(idx, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
+	UpdateButtons(button_id, pressed);
+	if (!ChangedButtonsSquished()) {
 		return;
 	}
 
-	listener->NotifyButton(GetButtonsSquished()._data, idx);
+	listener->NotifyButton(GetButtonsSquished()._data, button_id);
 }
 
 void InterfaceCOM::NotifyWheel(const int16_t w_rel)

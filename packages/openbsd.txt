@@ -17,7 +17,6 @@ pcre
 pkg-config
 readline
 sdl2
-sdl2-image
 sdl2-net
 speexdsp
 nano

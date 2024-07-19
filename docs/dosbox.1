@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Sep 2, 2023"
+.TH DOSBOX 1 "Dec 4, 2023"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -19,7 +19,7 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 .BI "[\-\-socket " <num> ]
 .BI "[\-c " <command> ]
 .B [\-\-exit]
-.B [FILE]
+.B [PATH]
 .LP
 .B dosbox \-\-help
 .LP
@@ -39,21 +39,26 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 .LP
 .B dosbox \-\-working-dir <path>
 .LP
+.B dosbox \-\-list\-countries
+.LP
 .B dosbox \-\-list\-glshaders
 .LP
 .B dosbox \-\-erasemapper
-.LP
-.B dosbox \-\-opencaptures
 
 .SH DESCRIPTION
 
 This manual page briefly documents
 .BR "DOSBox Staging" ", a modern continuation of DOSBox".
 .LP
-.RB "The optional " FILE " argument should be a DOS executable or a"
-directory. If it is a DOS executable (.COM, .EXE, or .BAT file extension),
-the program will run automatically. If it is a directory, a DOS session will
-run with the directory mounted as the C drive.
+.RB "If " PATH " is a directory, it's mounted as C:.
+.br
+.RB "If " PATH " is a bootable disk image (.IMA/.IMG), it's booted.
+.br
+.RB "If " PATH " is a CD-ROM disc image (.CUE/.ISO), it's mounted as D:.
+.br
+.RB "If " PATH " is a DOS executable (.BAT/.COM/.EXE), it's parent path
+is mounted as C: and the executable is run. When the executable exits,
+DOSBox Staging quits.
 .LP
 .RI "For an introduction, type " INTRO 
 .RB "inside " "DOSBox Staging" .
@@ -64,35 +69,37 @@ run with the directory mounted as the C drive.
 
 Legacy single dash abbrevations still work for backwards compatibility.
 .LP
---conf <configfile>      Start with the options specified in <configfile>.
-                         Multiple configfiles can be specified.
+--conf <config_file>     Start with the options specified in <config_file>.
+                         Multiple configuration files can be specified.
                          Example: --conf conf1.conf --conf conf2.conf
 
---printconf              Print the location of the default configuration file.
-                         If it does not exist, create it.
+--printconf              Print the location of the primary configuration file.
 
---editconf               Open the default configuration file in a text editor.
+--editconf               Open the primary configuration file in a text editor.
 
---eraseconf              Delete the default configuration file.
+--eraseconf              Delete the primary configuration file.
 
---noprimaryconf          Don't read settings from the default configuration file
-                         located in your user folder.
+--noprimaryconf          Don't load or create the primary configuration file.
 
---nolocalconf            Don't read settings from "dosbox.conf" if present in
-                         the current working directory.
+--nolocalconf            Don't load the local 'dosbox.conf' configuration file
+                         if present in the current working directory.
 
---set <property>=<value> Set a configuration property.
-                         Example: --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
+--set <setting>=<value>  Set a configuration setting. Multiple configuration
+                         settings can be specified. Example:
+                         --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
 
 --working-dir <path>     Set working directory to <path>. DOSBox will act as if
                          started from this directory.
 
---list-glshaders         List available GLSL shaders and their directories.
-                         Results are useable in the "glshader = " config setting.
+--list-countries         List all supported countries with their numeric codes.
+                         Codes are to be used in the 'country' config setting.
+
+--list-glshaders         List all available OpenGL shaders and their paths.
+                         Shaders are to be used in the 'glshader' config setting.
 
 --fullscreen             Start in fullscreen mode.
 
---lang <langfile>        Start with the language specified in <langfile>.
+--lang <lang_file>       Start with the language specified in <lang_file>.
 
 --machine <type>         Emulate a specific type of machine. The machine type has
                          influence on both the emulated video and sound cards.
@@ -100,27 +107,21 @@ Legacy single dash abbrevations still work for backwards compatibility.
                          pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,
                          svga_paradise, vesa_nolfb, vesa_oldvbe.
 
--c <command>             Run the specified DOS command before running FILE.
+-c <command>             Run the specified DOS command before handling the PATH.
                          Multiple commands can be specified.
 
---noautoexec             Don't execute any [autoexec] actions.
+--noautoexec             Don't run DOS commands from any [autoexec] sections.
 
---exit                   Exit after the DOS program specified by FILE has ended.
-                         If no FILE has been specified, execute [autoexcec] and
-                         terminate.
+--exit                   Exit after running '-c <command>'s and [autoexec] sections.
 
 --startmapper            Run the mapper GUI.
 
 --erasemapper            Delete the default mapper file.
 
---securemode             Enable secure mode. The [config] and [autoexec] sections
-                         of the loaded configuration file will be skipped,
-                         and commands such as MOUNT and IMGMOUNT are disabled.
+--securemode             Enable secure mode by disabling the MOUNT and IMGMOUNT
+                         commands.
 
 --socket <num>           Run nullmodem on the specified socket number.
-
---opencaptures           Call program with as first parameter the location of the
-                         captures folder.
 
 --help                   Print help message and exit.
 
@@ -217,7 +218,7 @@ These are the default keybindings. They can be changed in the keymapper. More bi
 Saved/recorded files can be found in current_directory/capture
 (can be changed in the configfile).
 .RB "The directory has to exist prior to starting " dosbox " else nothing"
-gets saved/recorded !
+gets saved/recorded!
 .PP
 .RB "Once you increase your " dosbox " cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
@@ -244,7 +245,7 @@ You'll find long and detailed manual in README file in /usr/share/doc/dosbox-sta
 
 .SH AUTHOR
 
-.RI "DOSBox Staging project is maintained by the DOSBox Staging Team (" https://dosbox-staging.github.io/ ")
+.RI "DOSBox Staging project is maintained by the DOSBox Staging Team (" https://www.dosbox-staging.org/ ")
 
 This manual page was written by Peter Veenstra <H.P.Veenstra@student.rug.nl> and James Oakley <jfunk@funktronics.ca>,
 for the Debian system (but may be used by others), updated by Patryk Obara <dreamer.tan@gmail.com> and Antti Peltola <antti.peltola@kolumbus.fi> for DOSBox Staging

@@ -27,6 +27,7 @@
 
 #include "bit_view.h"
 #include "cross.h"
+#include "fs_utils.h"
 #include "mem.h"
 #include "support.h"
 
@@ -45,18 +46,18 @@ constexpr auto CurrentDirectory = ".";
 constexpr auto ParentDirectory  = "..";
 constexpr auto DosSeparator     = '\\';
 
-// obsolete - TODO: remove
-enum FatAttributeFlagsValues : uint8_t { // 7-bit
-	DOS_ATTR_READ_ONLY = 0b000'0001,
-	DOS_ATTR_HIDDEN    = 0b000'0010,
-	DOS_ATTR_SYSTEM    = 0b000'0100,
-	DOS_ATTR_VOLUME    = 0b000'1000,
-	DOS_ATTR_DIRECTORY = 0b001'0000,
-	DOS_ATTR_ARCHIVE   = 0b010'0000,
-	DOS_ATTR_DEVICE    = 0b100'0000,
-};
-
 union FatAttributeFlags {
+	enum : uint8_t {
+		ReadOnly  = bit::literals::b0,
+		Hidden    = bit::literals::b1,
+		System    = bit::literals::b2,
+		Volume    = bit::literals::b3,
+		Directory = bit::literals::b4,
+		Archive   = bit::literals::b5,
+		Device    = bit::literals::b6,
+		NotVolume = bit::mask_flip_all(Volume),
+	};
+
 	uint8_t _data = 0;
 
 	bit_view<0, 1> read_only;
@@ -71,10 +72,16 @@ union FatAttributeFlags {
 	FatAttributeFlags() : _data(0) {}
 	FatAttributeFlags(const uint8_t data) : _data(data) {}
 	FatAttributeFlags(const FatAttributeFlags& other) : _data(other._data) {}
+
 	FatAttributeFlags& operator=(const FatAttributeFlags& other)
 	{
 		_data = other._data;
 		return *this;
+	}
+
+	bool operator==(const FatAttributeFlags& other) const
+	{
+		return _data == other._data;
 	}
 };
 
@@ -86,6 +93,22 @@ struct FileStat_Block {
 };
 
 class DOS_DTA;
+
+struct DosFilename {
+	std::string name = {};
+	std::string ext  = {};
+};
+
+struct FileRegionLock {
+	uint32_t pos = 0;
+	uint32_t len = 0;
+};
+
+enum class FlushTimeOnClose {
+	NoUpdate,
+	ManuallySet,
+	CurrentTime,
+};
 
 class DOS_File {
 public:
@@ -107,25 +130,23 @@ public:
 	virtual bool	Read(uint8_t * data,uint16_t * size)=0;
 	virtual bool	Write(uint8_t * data,uint16_t * size)=0;
 	virtual bool	Seek(uint32_t * pos,uint32_t type)=0;
-	virtual bool	Close()=0;
+	virtual void	Close()=0;
 	virtual uint16_t	GetInformation(void)=0;
+	virtual bool IsOnReadOnlyMedium() const = 0;
 
-	virtual bool IsOpen() { return open; }
 	virtual void AddRef() { refCtr++; }
 	virtual Bits RemoveRef() { return --refCtr; }
-	virtual bool UpdateDateTimeFromHost() { return true; }
-	virtual void SetFlagReadOnlyMedium() {}
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
-	uint32_t flags   = 0;
+	uint8_t flags    = 0;
 	uint16_t time    = 0;
 	uint16_t date    = 0;
-	uint16_t attr    = 0;
+	FatAttributeFlags attr = {};
 	Bits refCtr      = 0;
-	bool open        = false;
 	std::string name = {};
-	bool newtime     = false;
+	FlushTimeOnClose flush_time_on_close = FlushTimeOnClose::NoUpdate;
+	std::vector<FileRegionLock> region_locks = {};
 	/* Some Device Specific Stuff */
 private:
 	uint8_t hdrive = 0xff;
@@ -139,22 +160,22 @@ public:
 		: DOS_File(orig),
 		  devnum(orig.devnum)
 	{
-		open = true;
+
 	}
 
 	DOS_Device &operator=(const DOS_Device &orig)
 	{
 		DOS_File::operator=(orig);
 		devnum = orig.devnum;
-		open = true;
 		return *this;
 	}
 
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override { return false; }
 	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
 	                                    uint16_t* retcode);
 	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
@@ -167,48 +188,6 @@ public:
 
 private:
 	Bitu devnum;
-};
-
-class localFile : public DOS_File {
-public:
-	localFile(const char* name, const std_fs::path& path, FILE* handle,
-	          const char* basedir);
-	localFile(const localFile&)            = delete; // prevent copying
-	localFile& operator=(const localFile&) = delete; // prevent assignment
-	bool Read(uint8_t* data, uint16_t* size) override;
-	bool Write(uint8_t* data, uint16_t* size) override;
-	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
-	uint16_t GetInformation() override;
-	bool UpdateDateTimeFromHost() override;
-	void Flush();
-	void SetFlagReadOnlyMedium() override
-	{
-		read_only_medium = true;
-	}
-	const char* GetBaseDir() const
-	{
-		return basedir;
-	}
-	std_fs::path GetPath() const
-	{
-		return path;
-	}
-	FILE* fhandle = nullptr; // todo handle this properly
-private:
-	const std_fs::path path = {};
-	const char* basedir     = nullptr;
-	long stream_pos         = 0;
-
-	bool ftell_and_check();
-	void fseek_and_check(int whence);
-	bool fseek_to_and_check(long pos, int whence);
-
-	bool read_only_medium     = false;
-	bool set_archive_on_close = false;
-
-	enum class LastAction : uint8_t { None, Read, Write };
-	LastAction last_action = LastAction::None;
 };
 
 /* The following variable can be lowered to free up some memory.
@@ -232,9 +211,9 @@ public:
 	bool  OpenDir              (const char* path, uint16_t& id);
 	bool  ReadDir              (uint16_t id, char* &result);
 
-	void  ExpandName           (char* path);
-	char* GetExpandName        (const char* path);
-	bool  GetShortName         (const char* fullname, char* shortname);
+	void ExpandNameAndNormaliseCase(char* path);
+	char* GetExpandNameAndNormaliseCase(const char* path);
+	bool GetShortName(const char* fullname, char* shortname);
 
 	bool  FindFirst            (char* path, uint16_t& id);
 	bool  FindNext             (uint16_t id, char* &result);
@@ -334,26 +313,31 @@ public:
 	DOS_Drive();
 	virtual ~DOS_Drive() = default;
 
-	virtual bool FileOpen(DOS_File * * file,char * name,uint32_t flags)=0;
-	virtual bool FileCreate(DOS_File * * file,char * name,uint16_t attributes)=0;
-	virtual bool FileUnlink(char * _name)=0;
-	virtual bool RemoveDir(char * _dir)=0;
-	virtual bool MakeDir(char * _dir)=0;
-	virtual bool TestDir(char * _dir)=0;
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
-	virtual bool FindNext(DOS_DTA & dta)=0;
-	virtual bool GetFileAttr(char * name, uint16_t * attr) = 0;
-	virtual bool SetFileAttr(const char * name, const uint16_t attr) = 0;
-	virtual bool Rename(char * oldname,char * newname)=0;
-	virtual bool AllocationInfo(uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters,uint16_t * _free_clusters)=0;
-	virtual bool FileExists(const char* name)=0;
-	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
-	virtual uint8_t GetMediaByte(void)=0;
-	virtual void SetDir(const char *path);
+	virtual std::unique_ptr<DOS_File> FileOpen(const char* name,
+	                                           uint8_t flags) = 0;
+	virtual std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                             FatAttributeFlags attributes) = 0;
+	virtual bool FileUnlink(const char* name)                           = 0;
+	virtual bool RemoveDir(const char* dir)                             = 0;
+	virtual bool MakeDir(const char* dir)                               = 0;
+	virtual bool TestDir(const char* dir)                               = 0;
+	virtual bool FindFirst(const char* dir, DOS_DTA& dta,
+	                       bool fcb_findfirst = false)                  = 0;
+	virtual bool FindNext(DOS_DTA& dta)                                 = 0;
+	virtual bool GetFileAttr(const char* name, FatAttributeFlags* attr) = 0;
+	virtual bool SetFileAttr(const char* name, const FatAttributeFlags attr) = 0;
+	virtual bool Rename(const char* oldname, const char* newname) = 0;
+	virtual bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
+	                            uint16_t* _total_clusters,
+	                            uint16_t* _free_clusters) = 0;
+	virtual bool FileExists(const char* name)                     = 0;
+	virtual uint8_t GetMediaByte(void)                            = 0;
+	virtual void SetDir(const char* path);
 	virtual void EmptyCache() { dirCache.EmptyCache(); }
-	virtual bool isRemote(void)=0;
-	virtual bool isRemovable(void)=0;
-	virtual Bits UnMount(void)=0;
+	virtual bool IsReadOnly() const = 0;
+	virtual bool IsRemote(void)     = 0;
+	virtual bool IsRemovable(void)  = 0;
+	virtual Bits UnMount(void)      = 0;
 
 	DosDriveType GetType() const
 	{
@@ -423,7 +407,7 @@ void DOS_DelDevice(DOS_Device * dev);
 RealPt DOS_GetNextDevice(const RealPt rp);
 RealPt DOS_GetLastDevice();
 void DOS_AppendDevice(const uint16_t segment, const uint16_t offset = 0);
-bool DOS_IsLastDevice(const RealPt rp);
+bool DOS_IsEndPointer(const RealPt rp);
 bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name);
 bool DOS_DeviceHasAttributes(const RealPt rp, const uint16_t attributes);
 uint16_t DOS_GetDeviceStrategy(const RealPt rp);

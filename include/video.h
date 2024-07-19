@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,8 +25,49 @@
 #include <string>
 
 #include "fraction.h"
+#include "rect.h"
 #include "setup.h"
 #include "types.h"
+
+// Pixels and logical units
+// ========================
+//
+// As high-DPI displays are becoming increasingly the norm, understanding the
+// difference between screen dimensions expressed as *logical units* versus
+// *pixels* is essential. We fully support high-DPI in DOSBox Staging, so a
+// good grasp of this topic essential when dealing with anything rendering
+// related.
+// 
+// The idea behind logical units is that a rectangle of say 200x300 *logical
+// units* in size should have the same physical dimensions when measured with
+// a ruler on a 1080p, a 4k, and an 8k screen (assuming that the physical
+// dimensions of the three screens are the same). When mapping these 200x300
+// logic units actual physical pixels the monitor is capable of displaying,
+// we'll get 200x300, 400x600, and 800x1200 pixel dimensions on 1080p, 4k, and
+// 8k screens, respectively. The *logical size* of the rectangle hasn't
+// changed, only its *resolution* expressed in raw native pixels has.
+//
+// OSes and frameworks like SDL usually report windowing system related
+// coordinates and dimensions in logical units (e.g., window sizes, total
+// desktop size, mouse position, etc.). But OpenGL only deals with pixels,
+// never logical units, and in the core emulation layers we're only dealing
+// with "raw emulated pixels" too. Consequently, in `sdlmain.cpp` we'll always
+// be dealing with a mixture of logical units and pixels, so it's essential to
+// make the distinction between them clear:
+//
+// - In `sdlmain.cpp`, we postfix every variable that holds a pixel dimension
+//   with `_px` (e.g., `render_size_px`, `width_px`). Logical units get no
+//   postfix (e.g., `window_size`, `mouse_pos`).
+//
+// - Functions and methods that return pixel dimensions are postfixed with
+//   `_in_pixels` and `InPixels`, respectively (e.g., `GFX_GetViewportSizeInPixels()`).
+//
+// - We're always dealing with pixels in the core emulation layers (e.g., VGA
+//   code), so pixel postfixes are not necessary there in general. The exception
+//   is when a core layer interfaces with the top host-side rendering layers,
+//   e.g., by calling `GFX_*` methods that interact with SDL -- the use of pixel
+//   postfixes is highly recommended in such cases to remove ambiguity.
+//
 
 #define REDUCE_JOYSTICK_POLLING
 
@@ -46,6 +87,21 @@ enum class IntegerScalingMode {
 	Auto,
 	Horizontal,
 	Vertical,
+};
+
+enum class AspectRatioCorrectionMode {
+	// Calculate the pixel aspect ratio from the display timings on VGA, and
+	// from heuristics & hardcoded values on all other adapters.
+	Auto,
+
+	// Always force square pixels (1:1 pixel aspect ratio).
+	SquarePixels,
+
+	// Use a 4:3 display aspect ratio viewport as the starting point, then
+	// apply user-defined horizontal and vertical scale factors to it. Stretch
+	// all video modes into the resulting viewport and derive the pixel aspect
+	// ratios from that.
+	Stretch
 };
 
 // Graphics standards ordered by time of introduction (and roughly by
@@ -111,15 +167,16 @@ struct VideoMode {
 	// EGA modes and most sub-400-line (S)VGA & VESA modes)
 	bool is_double_scanned_mode = false;
 
-	// True for all (S)VGA and VESA modes, and for 200-line EGA modes on VGA
-	// that reprogram the default canonical 16-colour CGA palette BIOS to
-	// custom 18-bit VGA colours.
+	// True for all (S)VGA and VESA modes, and for EGA modes on emulated VGA
+	// adapters that reprogram the default canonical 16-colour CGA palette
+	// to custom 18-bit VGA DAC colours.
 	//
 	// Useful for differentiating "true EGA" modes used for backwards
 	// compatibility on VGA (i.e., to run EGA games) from "repurposed" EGA
-	// modes (typical for demos and ports of Amiga action/platformer games;
-	// many of these use the planar 320x200 16-colour EGA mode to achieve
-	// faster smooth-scrolling, but with custom 18-bit VGA colours).
+	// modes (typical used in demos and ports of Amiga action/platformer
+	// games; many of these use the planar 320x200 16-colour EGA mode to
+	// achieve faster smooth-scrolling, but with custom 18-bit VGA DAC
+	// colours).
 	bool has_vga_colors = false;
 
 	constexpr bool operator==(const VideoMode& that) const
@@ -142,7 +199,6 @@ struct VideoMode {
 };
 
 std::string to_string(const VideoMode& video_mode);
-
 
 enum class PixelFormat : uint8_t {
 	// Up to 256 colours, paletted;
@@ -176,9 +232,9 @@ enum class PixelFormat : uint8_t {
 	RGB565_Packed16 = 16,
 
 	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
-	// stored as packed 24-bit data
+	// stored as a sequence of three packed uint8_t values in BGR byte
+	// order, also known as memory order. This format is endian-agnostic.
 	//
-	// Stored as array of uint8_t in BGR memory order (endian agnostic)
 	// Example:
 	// uint8_t *pixels = image.image_data;
 	// pixels[0] = blue; pixels[1] = green; pixels[2] = red;
@@ -187,18 +243,18 @@ enum class PixelFormat : uint8_t {
 	// FFmpeg Equivalent: AV_PIX_FMT_BGR24
 	BGR24_ByteArray = 24,
 
-	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	// stored as packed uint32 data with highest 8 bits unused
+	// Same as BGR24_ByteArray but padded to 32-bits. 16.7M true colour,
+	// 8 bits per red/blue/green/empty component; stored as a sequence of
+	// four packed uint8_t values in BGRX byte order, also known as
+	// memory order. This format is endian-agnostic.
 	//
-	// Stored as array of uint32_t in host native endianess.
-	// Each uint32_t is layed out as follows:
-	// (msb)8X 8R 8G 8B(lsb)
 	// Example:
-	// uint32_t pixel = (unused << 24) | (red << 16) | (green << 8) | (blue << 0)
+	// uint8_t *pixels = image.image_data;
+	// pixels[0] = blue; pixels[1] = green; pixels[2] = red; pixels[3] = empty;
 	//
-	// SDL Equivalent: SDL_PIXELFORMAT_XRGB8888
-	// FFmpeg Equivalent: AV_PIX_FMT_0RGB32
-	XRGB8888_Packed32 = 32
+	// SDL has has no equivalent.
+	// FFmpeg Equivalent: BGRX32_ByteArray
+	BGRX32_ByteArray = 32,
 };
 
 const char* to_string(const PixelFormat pf);
@@ -237,7 +293,27 @@ struct ImageInfo {
 
 	// If true, we're dealing with a double-scanned VGA mode that was
 	// force-rendered as single-scanned.
-	bool force_single_scan = false;
+	//
+	// We need to store this flag so we can include it in the video mode
+	// equality criteria. E.g., the render dimensions of the double-scanned
+	// 320x200 VGA mode (mode 13h) and 320x400 (non-VESA Mode X variant) are
+	// both 320x400, so they would be considered equal if this flag was not
+	// included. This would throw off the adaptive shader switching logic when
+	// such video mode transitions happen.
+	bool forced_single_scan = false;
+
+	// If true, we're dealing with "baked-in" double scanning, i.e., when
+	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA modes
+	// and for EGA modes on VGA. Every other double-scanned mode on VGA (all
+	// CGA modes and all double-scanned VESA modes) are "fake-double scanned"
+	// (doubled post-render by setting `double_height` to true).
+	bool rendered_double_scan = false;
+
+	// If true, the image has been rendered doubled horizontally. This is only
+	// used to "normalise" the 160x200 16-colour Tandy and PCjr modes to
+	// 320-pixel-wide rendered output (it simplifies rendering the host video
+	// output downstream, but slightly complicates raw captures).
+	bool rendered_pixel_doubling = false;
 
 	// Pixel aspect ratio to be applied to the final image, *after*
 	// optional width and height doubling, so it appears as intended.
@@ -264,7 +340,7 @@ struct ImageInfo {
 		return (width == that.width && height == that.height &&
 		        double_width == that.double_width &&
 		        double_height == that.double_height &&
-		        force_single_scan == that.force_single_scan &&
+		        forced_single_scan == that.forced_single_scan &&
 		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
 		        pixel_format == that.pixel_format &&
 		        video_mode == that.video_mode);
@@ -307,12 +383,12 @@ void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_sour
 void GFX_SetIntegerScalingMode(const IntegerScalingMode mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();
 
-InterpolationMode GFX_GetInterpolationMode();
+InterpolationMode GFX_GetTextureInterpolationMode();
 
 struct VideoMode;
 class Fraction;
 
-uint8_t GFX_SetSize(const int width, const int height,
+uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback);
 
@@ -326,16 +402,25 @@ void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
 
+void GFX_RefreshTitle();
+void GFX_RefreshAnimatedTitle();
+void GFX_NotifyBooting();
+void GFX_NotifyAudioCaptureStatus(const bool is_capturing);
+void GFX_NotifyVideoCaptureStatus(const bool is_capturing);
+void GFX_NotifyAudioMutedStatus(const bool is_muted);
+void GFX_NotifyProgramName(const std::string& segment_name,
+                           const std::string& canonical_name);
+void GFX_NotifyCyclesChanged();
+
 enum class MouseHint {
-    None,                    // no hint to display
-    NoMouse,                 // no mouse mode
-    CapturedHotkey,          // mouse captured, use hotkey to release
-    CapturedHotkeyMiddle,    // mouse captured, use hotkey or middle-click to release
-    ReleasedHotkey,          // mouse released, use hotkey to capture
-    ReleasedHotkeyMiddle,    // mouse released, use hotkey or middle-click to capture
-    ReleasedHotkeyAnyButton, // mouse released, use hotkey or any click to capture
-    SeamlessHotkey,          // seamless mouse, use hotkey to capture
-    SeamlessHotkeyMiddle,    // seamless mouse, use hotkey or middle-click to capture
+	None,                    // no hint to display
+	CapturedHotkey,          // captured, hotkey to release
+	CapturedHotkeyMiddle,    // captured, hotkey or middle-click release
+	ReleasedHotkey,          // released, hotkey to capture
+	ReleasedHotkeyMiddle,    // released, hotkey or middle-click to capture
+	ReleasedHotkeyAnyButton, // released, hotkey or any click to capture
+	SeamlessHotkey,          // seamless, hotkey to capture
+	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
 };
 
 void GFX_CenterMouse();
@@ -351,13 +436,15 @@ bool GFX_HaveDesktopEnvironment();
 void MAPPER_UpdateJoysticks(void);
 #endif
 
-struct SDL_Rect;
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                      const DosBox::Rect& render_size_px,
+                                      const Fraction& render_pixel_aspect_ratio);
 
-SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
-                          const int draw_width, const int draw_height,
-                          const Fraction& render_pixel_aspect_ratio);
+DosBox::Rect GFX_GetCanvasSizeInPixels();
+DosBox::Rect GFX_GetViewportSizeInPixels();
+DosBox::Rect GFX_GetDesktopSize();
 
-SDL_Rect GFX_GetCanvasSize();
+float GFX_GetDpiScaleFactor();
 
 RenderingBackend GFX_GetRenderingBackend();
 

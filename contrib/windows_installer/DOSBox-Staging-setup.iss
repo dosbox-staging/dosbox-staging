@@ -2,7 +2,7 @@
 #define DOSBoxAppDirName "DOSBox Staging"
 #define DOSBoxAppVersion "DOSBOX-STAGING-VERSION"
 #define DOSBoxAppInternal "dosbox-staging"
-#define DOSBoxAppURL "https://dosbox-staging.github.io/"
+#define DOSBoxAppURL "https://www.dosbox-staging.org/"
 #define DOSBoxAppExeName "dosbox.exe"
 #define DOSBoxAppExeDebuggerName "dosbox_with_debugger.exe"
 #define DOSBoxAppExeMSVCName "dosbox_msvc.exe"
@@ -71,9 +71,6 @@ Name: "contextmenu"; Description: "Add ""Run/Open with {#DOSBoxAppName}"" contex
 Name: "defaultmsvc"; Description: "Run MSVC release binary (instead of MSYS2 binary) as the default binary"; Flags: unchecked
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
-[Run]
-Filename: "{app}\{#DOSBoxAppExeName}"; Parameters: "-c ""config -wc"" -noconsole"; Description: "{cm:LaunchProgram,{#StringChange(DOSBoxAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
 [Files]
 Source: "program\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#DOSBoxAppExeName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: not defaultmsvc
@@ -84,11 +81,11 @@ Source: "{#DOSBoxAppExeConsoleName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppEx
 Source: "{#DOSBoxAppInternal}.ico"; DestDir: "{app}"; DestName: "{#DOSBoxAppInternal}.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Parameters: "-noconsole"
+Name: "{group}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"
 Name: "{group}\{#DOSBoxAppName} with console"; Filename: "{app}\{#DOSBoxAppExeConsoleName}"; IconFilename: "{app}\{#DOSBoxAppInternal}.ico"
 Name: "{group}\{#DOSBoxAppName} with debugger"; Filename: "{app}\{#DOSBoxAppExeDebuggerName}"
 Name: "{group}\Visit {#DOSBoxAppName} website"; Filename: "{#DOSBoxAppURL}"
-Name: "{autodesktop}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Parameters: "-noconsole"; Tasks: desktopicon
+Name: "{autodesktop}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKA; Subkey: "Software\{#DOSBoxAppInternal}"; Flags: uninsdeletekeyifempty

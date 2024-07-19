@@ -363,7 +363,12 @@ static Bitu IRQ1_Handler(void) {
 				/* normal pause key, enter loop */
 				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
 				IO_Write(0x20,0x20);
-				while (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) CALLBACK_Idle();	// pause loop
+				// Interrupts screen output by BIOS until another key is pressed
+				// This is seemingly accurate behavior as tested in 86box
+				// https://en.wikipedia.org/wiki/Break_key
+				while (!shutdown_requested && (mem_readb(BIOS_KEYBOARD_FLAGS2) & 8)) {
+					CALLBACK_Idle();
+				}
 				reg_ip+=5;	// skip out 20,20
 				return CBRET_NONE;
 			}
@@ -654,49 +659,11 @@ void BIOS_SetupKeyboard(void) {
 	call_irq1=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,RealToPhysical(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
 	RealSetVec(0x09,BIOS_DEFAULT_IRQ1_LOCATION);
-	// pseudocode for CB_IRQ1:
-	//	push ax
-	//	in al, 0x60
-	//	mov ah, 0x4f
-	//	stc
-	//	int 15
-	//	jc skip
-	//	callback IRQ1_Handler
-	//	label skip:
-	//	cli
-	//	mov al, 0x20
-	//	out 0x20, al
-	//	pop ax
-	//	iret
-	//	cli
-	//	mov al, 0x20
-	//	out 0x20, al
-	//	push bp
-	//	int 0x05
-	//	pop bp
-	//	pop ax
-	//	iret
 
 	if (machine==MCH_PCJR) {
 		call_irq6=CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq6,nullptr,CB_IRQ6_PCJR,"PCJr kb irq");
 		RealSetVec(0x0e,CALLBACK_RealPointer(call_irq6));
-		// pseudocode for CB_IRQ6_PCJR:
-		//	push ax
-		//	in al, 0x60
-		//	cmp al, 0xe0
-		//	je skip
-		//	push ds
-		//	push 0x40
-		//	pop ds
-		//	int 0x09
-		//	pop ds
-		//	label skip:
-		//	cli
-		//	mov al, 0x20
-		//	out 0x20, al
-		//	pop ax
-		//	iret
 	}
 }
 

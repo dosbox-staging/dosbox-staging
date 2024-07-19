@@ -18,18 +18,15 @@
 
 #include "shell.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "logging.h"
 #include "string_utils.h"
 
-// Permitted ASCII control characters in batch files
-constexpr char Esc           = 27;
-constexpr char UnitSeparator = 31;
-
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_reader,
+BatchFile::BatchFile(const Environment& host, std::unique_ptr<LineReader> input_reader,
                      const std::string_view entered_name,
                      const std::string_view cmd_line, const bool echo_on)
         : shell(host),
@@ -40,61 +37,60 @@ BatchFile::BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_re
 
 bool BatchFile::ReadLine(char* lineout)
 {
-	std::string line = {};
-	while (line.empty()) {
-		line = GetLine();
-
-		if (line.empty()) {
-			return false;
-		}
-
+	auto is_comment_or_label = [](const std::string& line) {
 		const auto colon_index = line.find_first_of(':');
 		if (colon_index != std::string::npos &&
 		    colon_index == line.find_first_not_of("=\t ")) {
-			// Line is a comment or label, so ignore it
-			line.clear();
+			return true;
 		}
+		return false;
+	};
 
-		trim(line);
+	auto line = GetLine();
+	while (line && (line->empty() || is_comment_or_label(*line))) {
+		line = GetLine();
 	}
 
-	line = ExpandedBatchLine(line);
-	strncpy(lineout, line.c_str(), CMD_MAXLINE);
+	if (!line) {
+		return false;
+	}
+
+	*line = ExpandedBatchLine(*line);
+	strncpy(lineout, line->c_str(), CMD_MAXLINE);
 	lineout[CMD_MAXLINE - 1] = '\0';
 	return true;
 }
 
-std::string BatchFile::GetLine()
+std::optional<std::string> BatchFile::GetLine()
 {
-	char data        = 0;
-	std::string line = {};
-
-	while (data != '\n') {
-		const auto result = reader->Read();
-
-		// EOF
-		if (!result) {
-			break;
-		}
-
-		data = *result;
+	auto invalid_character = [](char c) {
+		const auto data = static_cast<uint8_t>(c);
 
 		/* Inclusion criteria:
 		 *  - backspace for alien odyssey
 		 *  - tab for batch files
 		 *  - escape for ANSI
 		 */
+		constexpr uint8_t Esc           = 27;
+		constexpr uint8_t UnitSeparator = 31;
 		if (data <= UnitSeparator && data != '\t' && data != '\b' &&
 		    data != Esc && data != '\n' && data != '\r') {
 			LOG_DEBUG("Encountered non-standard character: Dec %03u and Hex %#04x",
 			          data,
 			          data);
-		} else {
-			line += data;
+			return true;
 		}
-	}
+		return false;
+	};
 
-	return line;
+	auto line = reader->Read();
+	if (!line) {
+		return {};
+	}
+	line->erase(std::remove_if(line->begin(), line->end(), invalid_character),
+	            line->end());
+	trim(*line);
+	return *line;
 }
 
 std::string BatchFile::ExpandedBatchLine(std::string_view line) const
@@ -122,14 +118,10 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 			if (closing_percent == std::string::npos) {
 				break;
 			}
-			std::string env_key(line.substr(0, closing_percent));
 
-			// Get the key's corresponding value from the environment
-			if (std::string env_val = {};
-			    shell.GetEnvStr(env_key.c_str(), env_val)) {
-				// append just the trailing value portion
-				expanded += env_val.substr(env_key.length() +
-				                           sizeof('='));
+			if (const auto env_val = shell.GetEnvironmentValue(
+			            line.substr(0, closing_percent))) {
+				expanded += *env_val;
 			}
 			line = line.substr(closing_percent);
 		}
@@ -143,12 +135,10 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 
 bool BatchFile::Goto(const std::string_view label)
 {
-	std::string line = " ";
 	reader->Reset();
 
-	while (!line.empty()) {
-		line = GetLine();
-		if (found_label(line, label)) {
+	while (auto line = GetLine()) {
+		if (found_label(*line, label)) {
 			return true;
 		}
 	}

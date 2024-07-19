@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +28,8 @@
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
+
+#include "mmx.h"
 
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
@@ -62,6 +65,7 @@ union FPU_Reg {
 struct FPU_P_Reg {
 	uint32_t m1 = 0;
 	uint32_t m2 = 0;
+
 	uint16_t m3 = 0;
 
 	uint16_t d1 = 0;
@@ -83,14 +87,19 @@ enum FPU_Round : uint8_t {
 };
 
 struct FPU_rec {
-	FPU_Reg regs[9]      = {};
-	FPU_P_Reg p_regs[9]  = {};
-	FPU_Tag tags[9]      = {};
-	uint16_t cw          = 0;
-	uint16_t cw_mask_all = 0;
-	uint16_t sw          = 0;
-	uint32_t top         = 0;
-	FPU_Round round      = {};
+	FPU_Reg regs[9]         = {};
+#if !C_FPU_X86
+	int64_t regs_memcpy[9]  = {}; // for FILD/FIST 64-bit memcpy fix
+	bool use_regs_memcpy[9] = {};
+#endif
+	FPU_P_Reg p_regs[9]     = {};
+	MMX_reg mmx_regs[8]     = {};
+	FPU_Tag tags[9]         = {};
+	uint16_t cw             = 0;
+	uint16_t cw_mask_all    = 0;
+	uint16_t sw             = 0;
+	uint32_t top            = 0;
+	FPU_Round round         = {};
 };
 
 extern FPU_rec fpu;

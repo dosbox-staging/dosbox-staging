@@ -1,12 +1,15 @@
 project(
-    'dosbox-staging',
-    'c',
-    'cpp',
-    version: '0.81.0-alpha',
+    'dosbox-staging', 'c', 'cpp',
+
+    version: run_command(
+      meson.project_source_root() + '/scripts/get-version.sh',
+      'version', check: true,
+    ).stdout().strip(),
+
     license: 'GPL-2.0-or-later',
-    meson_version: '>= 0.57.0',
+    meson_version: '>= 0.59.0',
     default_options: [
-        'cpp_std=c++17',
+        'cpp_std=c++20',
         'buildtype=release',
         'b_ndebug=if-release',
         'b_staticpic=false',
@@ -25,6 +28,7 @@ project(
         'gtest:warning_level=0',
         'libjpeg-turbo:b_staticpic=true',
         'libpng:b_staticpic=true',
+        'zlib-ng:c_std=c11',
     ],
 )
 
@@ -39,14 +43,16 @@ doc_dir = data_dir / 'doc' / meson.project_name()
 install_man('docs/dosbox.1')
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
-install_data('LICENSE',
-             'licenses/BSD-2-Clause.txt',
-             'licenses/BSD-3-Clause.txt',
-             'licenses/GPL-2.0.txt',
-             'licenses/LGPL-2.1.txt',
-             'licenses/MIT.txt',
-             'licenses/Zlib.txt',
-             install_dir: licenses_dir)
+install_data(
+    'LICENSE',
+    'licenses/BSD-2-Clause.txt',
+    'licenses/BSD-3-Clause.txt',
+    'licenses/GPL-2.0.txt',
+    'licenses/LGPL-2.1.txt',
+    'licenses/MIT.txt',
+    'licenses/Zlib.txt',
+    install_dir: licenses_dir,
+)
 install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
@@ -95,7 +101,6 @@ foreach flag : [
     '-Wduplicated-branches',
     '-Weffc++',
     '-Wextra-semi',
-    '-Wfloat-conversion',
     '-Wlogical-op',
     '-Wlogical-not-parentheses',
     '-Wredundant-decls',
@@ -107,16 +112,14 @@ foreach flag : [
     '-Wzero-as-null-pointer-constant',
 ]
     if cxx.has_argument(flag)
-       warnings += flag
+        warnings += flag
     endif
 endforeach
 
 # Ignore some warnings enabled by default
-foreach flag : [
-    '-Wno-format-security'
-]
+foreach flag : ['-Wno-format-security']
     if cxx.has_argument(flag)
-       warnings += flag
+        warnings += flag
     endif
 endforeach
 
@@ -139,8 +142,32 @@ else
     )
 endif
 
-if get_option('buildtype') in ['release', 'minsize']
-    # For release and small build types, we're not anticipating
+# As of commit e73aaa57, overriding CXXFLAGS with -Os produces a binary that hangs
+# when using a relase build with GCC.
+#
+# CXXFLAGS="-Os" meson setup --buildtype=release --native-file=.github/meson/native-gcc.ini build
+#
+# This is most likely a GCC bug because the optimization level should not change
+# functionality. All other -O-levels work. Clang also handles this (replace
+# native-gcc.ini with native-clang.ini to test it).
+#
+if get_option('buildtype') == 'release' and cxx.get_id() == 'gcc'
+    cxxflags_env = run_command('sh', '-c', 'echo "$CXXFLAGS"', check: false)
+    if cxxflags_env.returncode() == 0 and cxxflags_env.stdout().contains('-Os')
+        error(
+            '\n\n',
+            'Overriding CXXFLAGS with the size-optimization flag, "-Os", when\n',
+            'performing a release build with GCC produces a binary that hangs.\n',
+            'Use the "minsize" buildtype instead.',
+        )
+    endif
+endif
+
+is_optimized_buildtype = (
+    get_option('buildtype') in ['release', 'minsize', 'debugoptimized']
+)
+if is_optimized_buildtype
+    # For optimized build types, we're not anticipating
     # needing debuggable floating point signals.
     # These safety measures are still enabled in debug builds,
     # so if an issue is reported where these happen help, then
@@ -153,9 +180,6 @@ if get_option('buildtype') in ['release', 'minsize']
         '-fno-math-errno',
         '-fno-signed-zeros',
         '-fno-trapping-math',
-        '-fassociative-math',
-        '-freciprocal-math',
-        '-ffinite-math-only',
         '-frename-registers',
         '-ffunction-sections',
         '-fdata-sections',
@@ -165,9 +189,7 @@ endif
 
 # Let sanitizer builds recover and continue
 if get_option('b_sanitize') != 'none'
-    extra_flags += [
-        '-fsanitize-recover=all'
-    ]
+    extra_flags += ['-fsanitize-recover=all']
 endif
 
 # Add Debug-specific flags here
@@ -184,6 +206,8 @@ if get_option('buildtype').startswith('debug')
             '-D_GLIBCXX_DEBUG_PEDANTIC=1',
             '-D_GLIBCXX_SANITIZE_VECTOR=1',
             '-D_LIBCPP_DEBUG=1',
+            '-D_LIBCPP_ENABLE_THREAD_SAFETY_ANNOTATIONS=1',
+            '-D_LIBCPP_ENABLE_HARDENED_MODE=1',
         ]
     endif
 endif
@@ -192,13 +216,17 @@ if get_option('asm')
     extra_flags += ['--save-temps', '/FAs']
 endif
 
+if get_option('time_trace')
+    extra_flags += ['-ftime-trace']
+endif
+
 # Don't flood us with hundreds of suggestions to use Microsoft-specific calls
 if host_machine.system() == 'windows'
     extra_flags += '-Wno-pedantic-ms-format'
 endif
 
 # Don't flood us with hundreds of suggestions to use snprintf on Apple + Clang
-if host_machine.system() == 'darwin' and  cxx.get_id() == 'clang'
+if host_machine.system() == 'darwin' and cxx.get_id() == 'clang'
     extra_flags += '-Wno-deprecated-declarations'
 endif
 
@@ -211,9 +239,9 @@ else
     extra_flags += [
         '-shared-libstdc++',
         '-shared-libgcc',
-        '-lstdc++_s',
         '-fPIC',
     ]
+    extra_link_flags += '-lstdc++_s'
 endif
 
 if get_option('narrowing_warnings')
@@ -237,30 +265,160 @@ if os_family_name == 'BSD'
     extra_link_flags += ['-Wl,-z,wxneeded']
 endif
 
-# Allow-list the flags against the compiler, and add them to the project
-foreach flag : extra_flags
-    if cc.has_argument(flag)
-        add_project_arguments(flag, language: 'c')
-    endif
-    if cxx.has_argument(flag)
-        add_project_arguments(flag, language: 'cpp')
-    endif
-endforeach
-foreach flag : extra_link_flags
-    if cxx.has_link_argument(flag)
-        add_project_link_arguments(flag, language: 'cpp')
-    endif
-endforeach
+# SIMD assessment for optimized builds with zlib-ng
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# If the user asked for 'native' SIMD flags then we check if
+# their compiler supports the native arch type. If it doesn't,
+# we try to enable NEON (on Arm) and SSE2 and/or SSSE3 (on x86).
+#
+# Currently zlib-ng is the driving force behind these checks as
+# it provides a meaningful speedup in video and frame capture.
+#
+# Note that these build flags needs to be defined before adding
+# subpackages because the flags are used when compiling them.
 
+simd_instruction_sets = []
+
+zlib_ng_options = get_option('use_zlib_ng')
+zlib_ng_wants_native = zlib_ng_options.contains('native')
+zlib_ng_is_native = zlib_ng_wants_native and cc.has_argument('-march=native')
+
+if is_optimized_buildtype and zlib_ng_is_native
+    extra_flags += '-march=native'
+    simd_instruction_sets += 'native'
+    message('Enabling native SIMD optimizations')
+endif
+
+# NEON on Aarch64
+# ~~~~~~~~~~~~~~~
+if target_machine.cpu_family() == 'aarch64'
+    # aarch64 always supports NEON:
+    # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
+    zlib_ng_options += 'neon'
+    simd_instruction_sets += 'NEON'
+    message('Using the ARM NEON instruction set')
+endif
+
+# NEON on Aarch32
+# ~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family() == 'arm'
+    and (zlib_ng_is_native
+    or zlib_ng_wants_native
+    or 'neon' in zlib_ng_options)
+)
+    neon_test_code = '''
+                #include <arm_neon.h>
+                int main() {
+                uint8x16_t a = vdupq_n_u8(0);
+                uint8x16_t b = vdupq_n_u8(0);
+                uint8x16_t result = vaddq_u8(a, b);
+                return 0;
+                }
+            '''
+    neon_cflag = '-mfpu=neon-vfpv4'
+    neon_test = cc.run(
+        neon_test_code,
+        args: neon_cflag,
+        name: 'ARM NEON instruction set test',
+    )
+    if (neon_test.compiled() and neon_test.returncode() == 0)
+        zlib_ng_options += 'neon'
+        extra_flags += neon_cflag
+        simd_instruction_sets += 'NEON'
+        message('Enabling the ARM NEON instruction set')
+    endif
+endif
+
+# SSE2 and SSSE3 on x86
+# ~~~~~~~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family().startswith('x86')
+    and (
+        zlib_ng_is_native
+        or zlib_ng_wants_native
+        or 'sse2' in zlib_ng_options
+        or 'ssse3' in zlib_ng_options
+    )
+)
+    sse2_test_code = '''
+                #include <emmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_add_epi32(a, b);
+                return 0;
+                }
+            '''
+    sse2_cflags = '-msse2'
+    sse2_test = cc.run(
+        sse2_test_code,
+        args: sse2_cflags,
+        name: 'SSE2 instruction set test',
+    )
+    if (sse2_test.compiled() and sse2_test.returncode() == 0)
+        zlib_ng_options += 'sse2'
+        extra_flags += sse2_cflags
+        simd_instruction_sets += 'SSE2'
+        message('Enabling the SSE2 instruction set')
+    endif
+
+    ssse3_test_code = '''
+                #include <tmmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_hadd_epi16(a, b);
+                return 0;
+                }
+            '''
+    ssse3_cflag = '-mssse3'
+    ssse3_test = cc.run(
+        ssse3_test_code,
+        args: ssse3_cflag,
+        name: 'SSSE3 instruction set test',
+    )
+    if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
+        zlib_ng_options += 'ssse3'
+        extra_flags += ssse3_cflag
+        simd_instruction_sets += 'SSSE3'
+        message('Enabling the SSSE3 instruction set')
+    endif
+endif
+
+if simd_instruction_sets.length() == 0
+    simd_instruction_sets = ['none']
+endif
+
+summary(
+    'SIMD instruction sets',
+    ', '.join(simd_instruction_sets),
+    section: 'Build Summary',
+)
+
+# Allow-list the flags against the compiler, and add them to the project
+cc_supported_arguments = cc.get_supported_arguments(extra_flags)
+add_project_arguments(cc_supported_arguments, language: 'c')
+
+cxx_supported_arguments = cxx.get_supported_arguments(extra_flags)
+add_project_arguments(cxx_supported_arguments, language: 'cpp')
+
+link_supported_arguments = cxx.get_supported_link_arguments(extra_link_flags)
+add_project_link_arguments(link_supported_arguments, language: 'cpp')
 
 # Gather data to populate config.h
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The actual config.h file will be generated after interpreting
 # all the build files in all the subdirs.
 #
+git_hash = run_command(
+  './scripts/get-version.sh', 'hash', check: true,
+).stdout().strip()
+
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 conf_data.set('project_name', meson.project_name())
+conf_data.set('git_hash', git_hash)
 conf_data.set_quoted(
     'CUSTOM_DATADIR',
     get_option('prefix') / get_option('datadir'),
@@ -276,9 +434,6 @@ conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
-
-# Default page size is 4K, but not on all platforms.
-pagesize = 4096
 
 if get_option('enable_debugger') != 'none'
     conf_data.set10('C_DEBUG', true)
@@ -304,6 +459,13 @@ endif
 
 if cc.has_function('__builtin___clear_cache')
     conf_data.set10('HAVE_BUILTIN_CLEAR_CACHE', true)
+endif
+
+if cxx.has_type(
+    'std::pmr::unsynchronized_pool_resource',
+    prefix: '#include <memory_resource>',
+)
+    conf_data.set10('HAVE_MEMORY_RESOURCE', true)
 endif
 
 if cc.has_function('mprotect', prefix: '#include <sys/mman.h>')
@@ -340,10 +502,6 @@ if cxx.has_function(
     conf_data.set10('HAVE_PTHREAD_SETNAME_NP', true)
 endif
 
-if cc.has_function('realpath', prefix: '#include <stdlib.h>')
-    conf_data.set10('HAVE_REALPATH', true)
-endif
-
 # strnlen was originally a Linux-only function
 if cc.has_function('strnlen', prefix: '#include <string.h>')
     conf_data.set10('HAVE_STRNLEN', true)
@@ -353,7 +511,13 @@ if cc.has_member('struct dirent', 'd_type', prefix: '#include <dirent.h>')
     conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
-foreach header : ['pwd.h', 'strings.h', 'netinet/in.h']
+foreach header : [
+    'libgen.h',
+    'pwd.h',
+    'strings.h',
+    'sys/xattr.h',
+    'netinet/in.h',
+]
     if cc.has_header(header)
         conf_data.set10('HAVE_' + header.underscorify().to_upper(), true)
     endif
@@ -384,24 +548,41 @@ if host_machine.endian() == 'big'
     conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
-# 64-bit Power ISA can run with either 4K or 64K page size.
-# (32-bit Power ISA and PowerPC are always 4K.)
-if host_machine.cpu_family() in ['ppc64', 'ppc64le', 'powerpc64le']
-    pagesize_cmd = run_command('getconf', 'PAGESIZE', check: true)
-    if pagesize_cmd.returncode() != 0
-        error('''error executing getconf: unable to determine host architecture page size for ppc64 dynamic core''')
-    else
+
+# Get host page size
+# ~~~~~~~~~~~~~~~~~~
+# When detecting the page size, we use Meson's configured
+# compiler to make a system call because Meson will build and run
+# it via the cross compiler (if one is in use), which is
+# particularly important we get the destiantion machine's page
+# size as opposed to the local build machine's page size.
+#
+pagesize = 4096
+pagesize_option = get_option('pagesize')
+if pagesize_option > 0
+    # User has provided the page size
+    pagesize = pagesize_option
+else
+    # Detect the page size using a syscall via the cross compiler
+    pagesize_api = os_family_name == 'WIN32' ? 'windows' : 'posix'
+    pagesize_src = files('contrib/pagesize' / pagesize_api + '_pagesize.c')
+    pagesize_cmd = cc.run(
+        pagesize_src,
+        name: 'Query host page size',
+    )
+    if pagesize_cmd.returncode() == 0
         pagesize = pagesize_cmd.stdout().strip().to_int()
-        if pagesize < 4096
-            # unexpected; did getconf return an empty or bogus string?
-            error('''need at least 4096-byte pages, getconf PAGESIZE returned '''+pagesize_cmd.stdout())
-        else
-            if pagesize != 4096
-                conf_data.set('PAGESIZE', pagesize)
-            endif
-        endif
+    else
+        error('''Unable to detect the host's page size''')
     endif
 endif
+conf_data.set('PAGESIZE', pagesize)
+summary(
+    'Host page size (bytes)',
+    pagesize.to_string(),
+    section: 'Build Summary',
+)
+
 
 set_prio_code = '''
 #include <sys/resource.h>
@@ -469,6 +650,8 @@ optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
 
 default_wrap_options = ['default_library=static', 'warning_level=0']
+wraps_forced = get_option('wrap_mode') == 'forcefallback'
+wraps_disabled = get_option('wrap_mode') in ['nodownload', 'nofallback']
 
 dl_dep = cc.find_library('dl', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
@@ -500,26 +683,204 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-png_dep = dependency(
-    'libpng',
-    version: ['>= 1.2', '< 2'],
-    static: ('png' in static_libs_list or prefers_static_libs),
-    include_type: 'system',
+if host_machine.system() == 'darwin' and not wraps_disabled
+    # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
+    sdl2_dep = subproject(
+        'sdl2',
+        default_options: default_wrap_options,
+    ).get_variable('sdl2_dep')
+else
+    sdl2_dep = dependency(
+        'sdl2',
+        version: ['>= 2.0.5', '< 3'],
+        static: ('sdl2' in static_libs_list),
+        fallback: [],
+        include_type: 'system',
+    )
+endif
+
+# zlib
+# ~~~~
+zlib_provider = 'none'
+zlib_ng_provider = 'none'
+
+zlib_dep = disabler()
+zlib_is_static = 'zlib' in static_libs_list or prefers_static_libs
+
+zlib_ng_is_allowed = 'false' not in zlib_ng_options
+if not zlib_ng_is_allowed
+    zlib_ng_provider = 'disabled'
+endif
+
+# Try using the system-provided zlib-ng library so long as the wrap isn't
+# forced. Using the system-provided library is a free upgrade for all the build
+# types, so we always prefer this first if the user allows it.
+#
+try_system_zlib_ng = (
+    zlib_ng_is_allowed
+    and not wraps_forced
+    and 'zlib-ng' not in get_option('force_fallback_for')
 )
 
-sdl2_dep = dependency(
-    'sdl2',
-    version: ['>= 2.0.5', '< 3'],
-    static: ('sdl2' in static_libs_list),
-    include_type: 'system',
+# The zlib-ng wrap, on the other hand, is a costly endeavour because it
+# single-handedly quadruples the 'meson setup' time for the entire project (6.1s
+# to 25.8s) due to the use of the much slower CMake build system, therefore we
+# only expend this effort (to optimize zlib) for commensurate optimized builds.
+# This nuance is also explained in meson_options.txt for packagers.
+#
+try_builtin_zlib_ng = (
+    zlib_ng_is_allowed
+    and (not wraps_disabled
+    or 'zlib-ng' in get_option('force_fallback_for'))
 )
 
-zlib_dep = dependency(
-    'zlib',
-    version: ['>= 1.2.11', '< 2'],
-    default_options: default_wrap_options,
-    static: ('zlib' in static_libs_list or prefers_static_libs),
-    include_type: 'system',
+system_zlib_ng_dep = disabler()
+if try_system_zlib_ng
+    system_zlib_ng_dep = dependency(
+        'zlib-ng',
+        required: false,
+        fallback: [],
+        static: zlib_is_static,
+        include_type: 'system',
+    )
+    if (system_zlib_ng_dep.found())
+        zlib_ng_provider = 'system library'
+        conf_data.set10('C_SYSTEM_ZLIB_NG', true)
+        try_builtin_zlib_ng = false
+    else
+        zlib_ng_provider = 'skipped (system library not found)'
+    endif
+endif
+
+# We only justify the extra time to setup zlib-ng (using CMake) if
+# the user wants an optimized build, so check if we can skip it:
+#
+if try_builtin_zlib_ng and not is_optimized_buildtype
+    zlib_ng_provider = 'skipped (non-optimized build)'
+    try_builtin_zlib_ng = false
+endif
+
+# Meson needs to be new enough to setup the zlib-ng CMake project, so
+# check if Meson is too old:
+#
+if try_builtin_zlib_ng and meson.version() < '1.3.0'
+    zlib_ng_provider = 'skipped (meson is < 1.3.0)'
+    try_builtin_zlib_ng = false
+endif
+
+# CMake needs to be available both on the host and in Meson as a module to
+# setup the zlib-ng CMake project, so check if we're missing either:
+#
+cmake_module = disabler()
+if try_builtin_zlib_ng
+    cmake_bin = find_program('cmake', required: false)
+    cmake_module = import('cmake', required: false)
+    if not cmake_bin.found()
+        zlib_ng_provider = 'skipped (CMake not found)'
+        try_builtin_zlib_ng = false
+
+    elif not cmake_module.found()
+        zlib_ng_provider = 'skipped (Meson\'s CMake module not found)'
+        try_builtin_zlib_ng = false
+    endif
+endif
+
+# If we passed all the above checks, everything is in place to use the wrap!
+if try_builtin_zlib_ng
+    cmake_options = cmake_module.subproject_options()
+
+    zlib_ng_defines = {
+        'ZLIB_COMPAT': true,
+        'WITH_OPTIM': true,
+        'ZLIB_BUILD_STATIC': true,
+        'PIC': get_option('b_staticpic'),
+        'BUILD_SHARED_LIBS': false,
+        'WITH_GTEST': false,
+        'ZLIB_ENABLE_TESTS': false,
+        'WITH_NATIVE_INSTRUCTIONS': zlib_ng_is_native,
+        'WITH_SANITIZER': get_option('b_sanitize'),
+        'CMAKE_C_FLAGS': ' '.join(cc_supported_arguments),
+    }
+
+    foreach instruction_set : [
+        'avx2',
+        'avx512',
+        'avx512vnni',
+        'sse2',
+        'ssse3',
+        'sse42',
+        'pclmulqdq',
+        'vpclmulqdq',
+        'acle',
+        'neon',
+        'armv6',
+        'altivec',
+        'power8',
+        'rvv',
+        'crc32_vx',
+        'dfltcc_deflate',
+        'dfltcc_inflate',
+    ]
+        cmake_define_key = 'WITH_' + instruction_set.to_upper()
+        cmake_define_value = (
+            zlib_ng_is_native
+            or zlib_ng_options.contains(instruction_set)
+        )
+        zlib_ng_defines += {cmake_define_key: cmake_define_value}
+    endforeach
+
+    cmake_options.add_cmake_defines(zlib_ng_defines)
+
+    zlib_ng_subproject = cmake_module.subproject(
+        'zlib-ng',
+        options: cmake_options,
+    )
+    zlib_ng_provider = 'built-in'
+
+    # We configure zlib-ng to be a drop in replacement for zlib, so we
+    # can directly assign the zlib_dep from the zlib-ng subproject:
+    #
+    zlib_dep = zlib_ng_subproject.get_variable('zlib_dep')
+    zlib_provider = 'built-in (zlib-ng)'
+endif
+
+# Otherwise use the system's zlib
+if not zlib_dep.found()
+    zlib_dep = dependency(
+        'zlib',
+        version: ['>= 1.2.11', '< 2'],
+        required: true,
+        fallback: [],
+        static: zlib_is_static,
+        include_type: 'system',
+    )
+    zlib_provider = 'system library'
+endif
+
+summary('zlib-ng provider', zlib_ng_provider)
+summary('zlib provider', zlib_provider)
+
+# PNG
+# ~~~
+png_has_internal_dep = zlib_dep.type_name() == 'internal'
+if png_has_internal_dep
+    png_dep = subproject(
+        'libpng',
+        default_options: default_wrap_options,
+    ).get_variable('png_dep')
+else
+    png_dep = dependency(
+        'libpng',
+        version: ['>= 1.2', '< 2'],
+        required: true,
+        fallback: [],
+        static: 'png' in static_libs_list or prefers_static_libs,
+        include_type: 'system',
+    )
+endif
+summary(
+    'PNG provider',
+    png_dep.type_name() == 'internal' ? 'built-in' : 'system library',
 )
 
 # SpeexDSP
@@ -579,13 +940,22 @@ have_fd_zero = (
 sdl2_net_dep = optional_dep
 sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
-    sdl2_net_dep = dependency(
-        'SDL2_net',
-        version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_net' in static_libs_list),
-        not_found_message: msg.format('use_sdl2_net'),
-        include_type: 'system',
-    )
+    if host_machine.system() == 'darwin' and not wraps_disabled
+        # use wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
+        sdl2_net_dep = subproject(
+            'sdl2_net',
+            default_options: default_wrap_options,
+        ).get_variable('sdl2_net_dep')
+    else
+        sdl2_net_dep = dependency(
+            'SDL2_net',
+            version: ['>= 2.0.0', '< 3'],
+            static: ('sdl2_net' in static_libs_list),
+            fallback: [],
+            not_found_message: msg.format('use_sdl2_net'),
+            include_type: 'system',
+        )
+    endif
     sdl2_net_summary_msg = sdl2_net_dep.found()
 
     if sdl2_net_dep.found() and not have_fd_zero
@@ -669,7 +1039,7 @@ tracy_dep = optional_dep
 if get_option('tracy')
     tracy_dep = dependency(
         'tracy',
-        # version: ['>= 0.9', '< 1'],
+        version: ['>= 0.10', '< 1'],
         default_options: default_wrap_options,
         static: ('tracy' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('tracy'),
@@ -800,22 +1170,11 @@ if host_machine.system() == 'darwin'
         warning('''Core Services disabled because Frameworks is missing''')
     endif
     summary('CoreServices support', coreservices_dep.found())
-
-    # Apple Silicon has 16k pages
-    pagesize_cmd = run_command('pagesize', check: true)
-    if pagesize_cmd.returncode() != 0
-        error('''error executing pagesize''')
-    else
-        pagesize = pagesize_cmd.stdout().strip().to_int()
-        if pagesize != 4096
-            conf_data.set('PAGESIZE', pagesize)
-        endif
-    endif
 endif
 
 # Determine if system is capable of using ManyMouse library
 conf_data.set10('C_MANYMOUSE', true)
-manymouse_summary_msg = 'Enabled'
+manymouse_summary_msg = 'True'
 
 # ManyMouse optionally supports the X Input 2.0 protocol (regardless of OS)
 xinput2_dep = optional_dep
@@ -870,14 +1229,10 @@ if host_machine.system() in ['windows', 'cygwin']
     summary('Windows Multimedia support', winmm_dep.found())
 endif
 
-# Display page size in use (and to alert the user this may be salient).
-summary('Host page size (bytes)', pagesize.to_string())
-
-
-# Setup include directories
+# Set up include directories
 incdir = [
     include_directories('include', '.'),
-    include_directories('src/libs', is_system: true)
+    include_directories('src/libs', is_system: true),
 ]
 
 
@@ -891,10 +1246,11 @@ subdir('src/libs/ghc')
 subdir('src/libs/loguru')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
+subdir('src/libs/ESFMu')
 subdir('src/libs/residfp')
-subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+
 if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')
 endif
@@ -915,7 +1271,6 @@ third_party_deps = [
     ghc_dep,
     libiir_dep,
     libloguru_dep,
-    libsdlcd_dep,
     tracy_dep,
     libwhereami_dep,
     libtalchorus_dep,
@@ -951,11 +1306,10 @@ configure_file(
 )
 
 
-# Setup the executable and libraries
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Set up the executable and libraries
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-version_file = vcs_tag(input: 'src/version.cpp.in', output: 'version.cpp')
-dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp', version_file]
+dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp']
 
 # Add Windows resources file if building on Windows
 if host_machine.system() == 'windows'
@@ -976,7 +1330,7 @@ executable(
 # create a library so we can test things inside DOSBOX dep path
 libdosbox = static_library(
     'dosbox',
-    ['src/dosbox.cpp', version_file],
+    ['src/dosbox.cpp'],
     include_directories: incdir,
     dependencies: internal_deps + third_party_deps,
 )
@@ -984,12 +1338,9 @@ libdosbox = static_library(
 dosbox_dep = declare_dependency(link_with: libdosbox)
 
 
-# Setup unit tests
-# ~~~~~~~~~~~~~~~~
-# Some tests use relative paths; in meson 0.56.0 this can be replaced
-# with meson.project_source_root().
+# Set up unit tests
+# ~~~~~~~~~~~~~~~~~
 #
 if wants_tests
-    project_source_root = meson.current_source_dir()
     subdir('tests')
 endif

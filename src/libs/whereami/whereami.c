@@ -12,6 +12,15 @@
 extern "C" {
 #endif
 
+#if defined(__linux__) || defined(__CYGWIN__)
+#undef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#elif defined(__APPLE__)
+#undef _DARWIN_C_SOURCE
+#define _DARWIN_C_SOURCE
+#define _DARWIN_BETTER_REALPATH
+#endif
+
 #if !defined(WAI_MALLOC) || !defined(WAI_FREE) || !defined(WAI_REALLOC)
 #include <stdlib.h>
 #endif
@@ -360,7 +369,6 @@ int WAI_PREFIX(getModulePath)(char* out, int capacity, int* dirname_length)
 
 #elif defined(__APPLE__)
 
-#define _DARWIN_BETTER_REALPATH
 #include <mach-o/dyld.h>
 #include <limits.h>
 #include <stdlib.h>

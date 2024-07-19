@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block header %}
+
+<div class="banner dev-site">
+  <p>🔥🔥🔥 You are viewing a development version of the website. Things will blow up. 🔥🔥🔥</p>
+<p>Regular users, please <a href="https://www.dosbox-staging.org/">follow the exit signs</a>.</p>
+
+</div>
+
+<script>
+	if (window.location.pathname.startsWith("/preview/")) {
+    document.getElementsByClassName("dev-site")[0].classList.add("show");
+	}
+</script>
+
+{% include "partials/header.html" %}
+{% endblock %}
+

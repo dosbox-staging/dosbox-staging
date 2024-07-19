@@ -472,15 +472,17 @@ static void dyn_pop_ev(void) {
 
 
 static void dyn_segprefix(uint8_t seg) {
-//	if (GCC_UNLIKELY(decode.seg_prefix_used)) IllegalOptionDynrec("dyn_segprefix");
+	//	if (decode.seg_prefix_used) IllegalOptionDynrec("dyn_segprefix");
 	decode.seg_prefix=seg;
 	decode.seg_prefix_used=true;
 }
 
  static void dyn_mov_seg_ev(void) {
 	dyn_get_modrm();
-	if (GCC_UNLIKELY(decode.modrm.reg==DRC_SEG_CS)) IllegalOptionDynrec("dyn_mov_seg_ev");
-	if (decode.modrm.mod<3) {
+	if (decode.modrm.reg == DRC_SEG_CS) {
+		IllegalOptionDynrec("dyn_mov_seg_ev");
+	}
+	if (decode.modrm.mod < 3) {
 		dyn_fill_ea(FC_ADDR);
 		dyn_read_word(FC_ADDR,FC_RETOP,false);
 	} else {

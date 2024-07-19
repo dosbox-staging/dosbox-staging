@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <chrono>
 #include <fstream>
 #include <map>
 #include <optional>
@@ -35,6 +34,7 @@
 #include "checks.h"
 #include "cross.h"
 #include "dosbox.h"
+#include "math_utils.h"
 #include "string_utils.h"
 #include "video.h"
 
@@ -61,7 +61,14 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 			mode = ShaderMode::AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
-			        "CRT shader");
+			        "CRT shader (normal variant)");
+		}
+	} else if (shader_name == AutoArcadeSharpShaderName) {
+		if (mode != ShaderMode::AutoArcadeSharp) {
+			mode = ShaderMode::AutoArcadeSharp;
+
+			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
+			        "CRT shader (sharp variant)");
 		}
 	} else {
 		mode = ShaderMode::Single;
@@ -72,9 +79,8 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 	MaybeAutoSwitchShader();
 }
 
-void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width,
-                                                  const uint16_t canvas_height,
-                                                  const VideoMode& video_mode)
+void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_size_px,
+                                                  const VideoMode& new_video_mode)
 {
 	// We need to calculate the scale factors for two eventualities: 1)
 	// potentially double-scanned, and 2) forced single-scanned output. Then
@@ -83,49 +89,48 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width,
 	//
 	// We need to derive the potentially double-scanned dimensions from the
 	// video mode, *not* the current render dimensions! That's because we
-	// might be in forced single-scanning and/or no pixel-doubling mode
+	// might be in forced single scanning and/or no pixel doubling mode
 	// already in the renderer, but that's actually irrelevant for the
 	// shader auto-switching algorithm. All in all, it's easiest to start
 	// from a fixed, unchanging starting point, which is the "nominal"
 	// dimensions of the current video made.
 
 	// 1) Calculate vertical scale factor for the standard output resolution
-	// (i.e., always double-scanning on VGA).
-	scale_y = [&] {
-		const auto draw_width = video_mode.width *
-		                        (video_mode.is_double_scanned_mode ? 2 : 1);
+	// (i.e., always double scanning on VGA).
+	//
+	pixels_per_scanline = [&] {
+		const auto double_scan = new_video_mode.is_double_scanned_mode ? 2 : 1;
 
-		const auto draw_height = video_mode.height *
-		                         (video_mode.is_double_scanned_mode ? 2 : 1);
+		const DosBox::Rect render_size_px = {new_video_mode.width * double_scan,
+		                                     new_video_mode.height *
+		                                             double_scan};
 
-		const auto viewport = GFX_CalcViewport(canvas_width,
-		                                       canvas_height,
-		                                       draw_width,
-		                                       draw_height,
-		                                       video_mode.pixel_aspect_ratio);
+		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		        new_canvas_size_px,
+		        render_size_px,
+		        new_video_mode.pixel_aspect_ratio);
 
-		return static_cast<double>(viewport.h) / draw_height;
+		return iroundf(draw_rect_px.h) / iroundf(render_size_px.h);
 	}();
 
-	// 2) Calculate vertical scale factor for forced single-scanning on VGA
+	// 2) Calculate vertical scale factor for forced single scanning on VGA
 	// for double-scanned modes.
-	if (video_mode.is_double_scanned_mode) {
-		const auto draw_width  = video_mode.width;
-		const auto draw_height = video_mode.height;
+	if (new_video_mode.is_double_scanned_mode) {
+		const DosBox::Rect render_size_px = {new_video_mode.width,
+		                                     new_video_mode.height};
 
-		const auto viewport = GFX_CalcViewport(canvas_width,
-		                                       canvas_height,
-		                                       draw_width,
-		                                       draw_height,
-		                                       video_mode.pixel_aspect_ratio);
+		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		        new_canvas_size_px,
+		        render_size_px,
+		        new_video_mode.pixel_aspect_ratio);
 
-		scale_y_force_single_scan = static_cast<double>(viewport.h) /
-		                            draw_height;
+		pixels_per_scanline_force_single_scan = iroundf(draw_rect_px.h) /
+		                                        iroundf(render_size_px.h);
 	} else {
-		scale_y_force_single_scan = scale_y;
+		pixels_per_scanline_force_single_scan = pixels_per_scanline;
 	}
 
-	this->video_mode = video_mode;
+	video_mode = new_video_mode;
 
 	MaybeAutoSwitchShader();
 }
@@ -192,23 +197,26 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;
 	inventory.emplace_back("");
-	inventory.emplace_back("List of available GLSL shaders");
-	inventory.emplace_back("------------------------------");
+	inventory.emplace_back(MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_1"));
+	inventory.emplace_back("");
 
-	const std::string dir_prefix  = "Path '";
 	const std::string file_prefix = "        ";
 
 	std::error_code ec = {};
-	for (auto& [dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
+	for (auto& [dir, shaders] : GetFilesInResource(GlShadersDir, ".glsl")) {
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
-		const auto dir_postfix     = dir_exists
-		                                   ? (dir_has_shaders ? "' has:"
-		                                                      : "' has no shaders")
-		                                   : "' does not exist";
 
-		inventory.emplace_back(dir_prefix + dir.string() + dir_postfix);
+		const char* pattern = nullptr;
+		if (!dir_exists) {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
+		} else if (!dir_has_shaders) {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
+		} else {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_LIST");
+		}
+		inventory.emplace_back(format_str(pattern, dir.u8string().c_str()));
 
 		while (shader != shaders.end()) {
 			shader->replace_extension("");
@@ -220,13 +228,23 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		}
 		inventory.emplace_back("");
 	}
-	inventory.emplace_back(
-	        "The above shaders can be used exactly as listed in the 'glshader'");
-	inventory.emplace_back(
-	        "conf setting, without the need for the resource path or .glsl extension.");
-	inventory.emplace_back("");
+	inventory.emplace_back(MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_2"));
 
 	return inventory;
+}
+
+void ShaderManager::AddMessages()
+{
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_1",
+	        "List of available GLSL shaders\n"
+	        "------------------------------");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_2",
+	        "The above shaders can be used exactly as listed in the 'glshader'\n"
+	        "config setting, without the need for the resource path or .glsl extension.");
+
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS", "Path '%s' does not exist.");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS", "Path '%s' has no shaders.");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST", "Path '%s' has:");
 }
 
 std::string ShaderManager::MapShaderName(const std::string& name) const
@@ -242,18 +260,20 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	}
 
 	// Map legacy shader names
+	// clang-format off
 	static const std::map<std::string, std::string> legacy_name_mappings = {
-	        {"advinterp2x", "scaler/advinterp2x"},
-	        {"advinterp3x", "scaler/advinterp3x"},
-	        {"advmame2x", "scaler/advmame2x"},
-	        {"advmame3x", "scaler/advmame3x"},
-	        {"default", "interpolation/sharp"},
-	        {"rgb2x", "scaler/rgb2x"},
-	        {"rgb3x", "scaler/rgb3x"},
-	        {"scan2x", "scaler/scan2x"},
-	        {"scan3x", "scaler/scan3x"},
-	        {"tv2x", "scaler/tv2x"},
-	        {"tv3x", "scaler/tv3x"}};
+		{"advinterp2x", "scaler/advinterp2x"},
+		{"advinterp3x", "scaler/advinterp3x"},
+		{"advmame2x",   "scaler/advmame2x"},
+		{"advmame3x",   "scaler/advmame3x"},
+		{"default",     "interpolation/sharp"},
+		{"rgb2x",       "scaler/rgb2x"},
+		{"rgb3x",       "scaler/rgb3x"},
+		{"scan2x",      "scaler/scan2x"},
+		{"scan3x",      "scaler/scan3x"},
+		{"tv2x",        "scaler/tv2x"},
+		{"tv3x",        "scaler/tv3x"}};
+	// clang-format on
 
 	std_fs::path shader_path = name;
 	std_fs::path ext         = shader_path.extension();
@@ -266,11 +286,12 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 		if (it != legacy_name_mappings.end()) {
 			const auto new_name = it->second;
 
-			LOG_WARNING("RENDER: Built-in shader '%s' has been renamed to '%s'; "
-			            "using '%s' instead.",
-			            old_name.c_str(),
-			            new_name.c_str(),
-			            new_name.c_str());
+			LOG_WARNING(
+			        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
+			        "using '%s' instead.",
+			        old_name.c_str(),
+			        new_name.c_str(),
+			        new_name.c_str());
 
 			return new_name;
 		}
@@ -295,14 +316,13 @@ bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string
 		return true;
 	};
 
-	constexpr auto glsl_ext      = ".glsl";
-	constexpr auto glshaders_dir = "glshaders";
+	constexpr auto glsl_ext = ".glsl";
 
 	// Start with the name as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_name),
 	                              std_fs::path(shader_name + glsl_ext),
-	                              GetResourcePath(glshaders_dir, shader_name),
-	                              GetResourcePath(glshaders_dir,
+	                              GetResourcePath(GlShadersDir, shader_name),
+	                              GetResourcePath(GlShadersDir,
 	                                              shader_name + glsl_ext)};
 
 	for (const auto& path : candidate_paths) {
@@ -386,10 +406,19 @@ void ShaderManager::MaybeAutoSwitchShader()
 			shader_changed = maybe_load_shader(FindShaderAutoArcade());
 			break;
 
+		case ShaderMode::AutoArcadeSharp:
+			shader_changed = maybe_load_shader(
+			        FindShaderAutoArcadeSharp());
+			break;
+
 		default: assertm(false, "Invalid ShaderMode value");
 		}
 
 		if (shader_changed) {
+			if (video_mode.has_vga_colors) {
+				LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
+				        "detected; auto-switching to VGA shader");
+			}
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());
 		}
@@ -410,16 +439,16 @@ std::string ShaderManager::GetCgaShader() const
 			return "crt/monochrome-hires";
 		}
 	}
-	if (scale_y_force_single_scan >= 8.0) {
+	if (pixels_per_scanline_force_single_scan >= 8) {
 		return "crt/cga-4k";
 	}
-	if (scale_y_force_single_scan >= 5.0) {
+	if (pixels_per_scanline_force_single_scan >= 5) {
 		return "crt/cga-1440p";
 	}
-	if (scale_y_force_single_scan >= 4.0) {
+	if (pixels_per_scanline_force_single_scan >= 4) {
 		return "crt/cga-1080p";
 	}
-	if (scale_y_force_single_scan >= 3.0) {
+	if (pixels_per_scanline_force_single_scan >= 3) {
 		return "crt/cga-720p";
 	}
 	return SharpShaderName;
@@ -427,13 +456,13 @@ std::string ShaderManager::GetCgaShader() const
 
 std::string ShaderManager::GetCompositeShader() const
 {
-	if (scale_y >= 8.0) {
+	if (pixels_per_scanline >= 8) {
 		return "crt/composite-4k";
 	}
-	if (scale_y >= 5.0) {
+	if (pixels_per_scanline >= 5) {
 		return "crt/composite-1440p";
 	}
-	if (scale_y >= 3.0) {
+	if (pixels_per_scanline >= 3) {
 		return "crt/composite-1080p";
 	}
 	return SharpShaderName;
@@ -441,16 +470,16 @@ std::string ShaderManager::GetCompositeShader() const
 
 std::string ShaderManager::GetEgaShader() const
 {
-	if (scale_y_force_single_scan >= 8.0) {
+	if (pixels_per_scanline_force_single_scan >= 8) {
 		return "crt/ega-4k";
 	}
-	if (scale_y_force_single_scan >= 5.0) {
+	if (pixels_per_scanline_force_single_scan >= 5) {
 		return "crt/ega-1440p";
 	}
-	if (scale_y_force_single_scan >= 4.0) {
+	if (pixels_per_scanline_force_single_scan >= 4) {
 		return "crt/ega-1080p";
 	}
-	if (scale_y_force_single_scan >= 3.0) {
+	if (pixels_per_scanline_force_single_scan >= 3) {
 		return "crt/ega-720p";
 	}
 	return SharpShaderName;
@@ -458,18 +487,18 @@ std::string ShaderManager::GetEgaShader() const
 
 std::string ShaderManager::GetVgaShader() const
 {
-	if (scale_y >= 4.0) {
+	if (pixels_per_scanline >= 4) {
 		return "crt/vga-4k";
 	}
-	if (scale_y >= 3.0) {
+	if (pixels_per_scanline >= 3) {
 		return "crt/vga-1440p";
 	}
-	if (scale_y >= 2.0) {
+	if (pixels_per_scanline >= 2) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
 		// displayed with 5x vertical scaling on 1080p screens in
-		// fullscreen with forced single-scanning and a "fake
-		// double-scanning" shader that gives the *impression* of
-		// double-scanning (clearly, our options at 1080p are limited as
+		// fullscreen with forced single scanning and a "fake
+		// double scanning" shader that gives the *impression* of
+		// double scanning (clearly, our options at 1080p are limited as
 		// we'd need 3 pixels per emulated scanline at the very minimum
 		// for a somewhat convincing scanline emulation).
 		//
@@ -477,10 +506,10 @@ std::string ShaderManager::GetVgaShader() const
 		// would be auto-scaled to 1067x800 in fullscreen, which is too
 		// small and would not please most users.
 		//
-		const auto max_fake_double_scan_video_mode_height = 1080 / 5;
+		constexpr auto MaxFakeDoubleScanVideoModeHeight = 1080 / 5;
 
 		if (video_mode.is_double_scanned_mode &&
-		    video_mode.height <= max_fake_double_scan_video_mode_height) {
+		    video_mode.height <= MaxFakeDoubleScanVideoModeHeight) {
 			return "crt/vga-1080p-fake-double-scan";
 		} else {
 			// This shader works correctly only with exact 2x
@@ -512,12 +541,12 @@ std::string ShaderManager::FindShaderAutoGraphicsStandard() const
 	case GraphicsStandard::Cga:
 	case GraphicsStandard::Pcjr: return GetCgaShader();
 
-	case GraphicsStandard::Tga:
-		return GetEgaShader();
+	case GraphicsStandard::Tga: return GetEgaShader();
 
 	case GraphicsStandard::Ega:
-		// Use VGA shaders for VGA games that use EGA modes with an 18-bit
-		// VGA palette (these games won't even work on an EGA card).
+		// Use VGA shaders for VGA games that use EGA modes with an
+		// 18-bit VGA palette (these games won't even work on an EGA
+		// card).
 		return video_mode.has_vga_colors ? GetVgaShader() : GetEgaShader();
 
 	case GraphicsStandard::Vga:
@@ -532,6 +561,13 @@ std::string ShaderManager::FindShaderAutoMachine() const
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
 		return GetCompositeShader();
+	}
+
+	// DOSBOX_RealInit may have not been run yet.
+	// If not, go ahead and set the globals from the config.
+	if (machine == MCH_INVALID) {
+		DOSBOX_SetMachineTypeFromConfig(
+		        static_cast<Section_prop*>(control->GetSection("dosbox")));
 	}
 
 	switch (machine) {
@@ -550,14 +586,28 @@ std::string ShaderManager::FindShaderAutoMachine() const
 
 std::string ShaderManager::FindShaderAutoArcade() const
 {
-	if (scale_y_force_single_scan >= 8.0) {
+	if (pixels_per_scanline_force_single_scan >= 8) {
 		return "crt/arcade-4k";
 	}
-	if (scale_y_force_single_scan >= 5.0) {
+	if (pixels_per_scanline_force_single_scan >= 5) {
 		return "crt/arcade-1440p";
 	}
-	if (scale_y_force_single_scan >= 3.0) {
+	if (pixels_per_scanline_force_single_scan >= 3) {
 		return "crt/arcade-1080p";
+	}
+	return SharpShaderName;
+}
+
+std::string ShaderManager::FindShaderAutoArcadeSharp() const
+{
+	if (pixels_per_scanline_force_single_scan >= 8) {
+		return "crt/arcade-sharp-4k";
+	}
+	if (pixels_per_scanline_force_single_scan >= 5) {
+		return "crt/arcade-sharp-1440p";
+	}
+	if (pixels_per_scanline_force_single_scan >= 3) {
+		return "crt/arcade-sharp-1080p";
 	}
 	return SharpShaderName;
 }

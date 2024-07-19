@@ -42,8 +42,9 @@ struct MousePredefined {
 	// Larger values = higher mouse acceleration
 	const float acceleration_vmm = 1.0f;
 
-	// Maximum allowed user sensitivity value
-	const int16_t sensitivity_user_max = 999;
+	// Default and maximum allowed user sensitivity value
+	const int16_t sensitivity_user_default = 100;
+	const int16_t sensitivity_user_max     = 999;
 
 	// IRQ used by PS/2 mouse - do not change unless you really know
 	// what you are doing!
@@ -78,8 +79,9 @@ struct MouseConfig {
 	MouseCapture capture = MouseCapture::OnStart;
 	bool middle_release  = true;
 
-	int16_t sensitivity_x    = 50; // default sensitivity values
-	int16_t sensitivity_y    = 50;
+	float sensitivity_coeff_x = 1.0f;
+	float sensitivity_coeff_y = 1.0f;
+
 	bool raw_input           = false; // true = relative input is raw data
 	bool multi_display_aware = false;
 
@@ -91,23 +93,14 @@ struct MouseConfig {
 	MouseModelCOM model_com = MouseModelCOM::Wheel;
 	bool model_com_auto_msm = true;
 
-#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
 	bool is_vmware_mouse_enabled     = false;
 	bool is_virtualbox_mouse_enabled = false;
-#else
-	bool is_vmware_mouse_enabled     = true;
-	bool is_virtualbox_mouse_enabled = false;
-#endif
 
 	// Helper functions for external modules
 
-	static const std::vector<uint16_t> &GetValidMinRateList();
-	static bool ParseCaptureType(const std::string_view capture_str,
-	                             MouseCapture& capture);
-	static bool ParseCOMModel(const std::string_view model_str,
+	static const std::vector<uint16_t>& GetValidMinRateList();
+	static bool ParseComModel(const std::string_view model_str,
 	                          MouseModelCOM& model, bool& auto_msm);
-	static bool ParsePS2Model(const std::string_view model_str,
-	                          MouseModelPS2& model);
 };
 
 extern MouseConfig mouse_config;

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,35 +31,36 @@
 #include "disney.h"
 #include "ston1_dac.h"
 
-LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
-               channel_features_t extra_features)
+LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
+               std::set<ChannelFeature> extra_features)
         : dac_name(name)
 {
-	assert(!dac_name.empty());
 	using namespace std::placeholders;
+
+	assert(!dac_name.empty());
 	const auto audio_callback = std::bind(&LptDac::AudioCallback, this, _1);
 
-	auto features = channel_features_t{ChannelFeature::Sleep,
-	                                   ChannelFeature::ReverbSend,
-	                                   ChannelFeature::ChorusSend,
-	                                   ChannelFeature::DigitalAudio};
+	std::set<ChannelFeature> features = {ChannelFeature::Sleep,
+	                                     ChannelFeature::ReverbSend,
+	                                     ChannelFeature::ChorusSend,
+	                                     ChannelFeature::DigitalAudio};
 
 	features.insert(extra_features.begin(), extra_features.end());
 
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
 	                           channel_rate_hz,
-	                           dac_name.data(),
+	                           dac_name.c_str(),
 	                           features);
 
-	ms_per_frame = millis_in_second / channel->GetSampleRate();
+	ms_per_frame = MillisInSecond / channel->GetSampleRate();
 
 	// Update our status to indicate we're ready
 	status_reg.error = false;
 	status_reg.busy  = false;
 }
 
-bool LptDac::TryParseAndSetCustomFilter(const std::string_view filter_choice)
+bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);
@@ -96,7 +97,7 @@ void LptDac::RenderUpToNow()
 	}
 }
 
-void LptDac::AudioCallback(const uint16_t requested_frames)
+void LptDac::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 
@@ -119,7 +120,7 @@ void LptDac::AudioCallback(const uint16_t requested_frames)
 
 LptDac::~LptDac()
 {
-	LOG_MSG("%s: Shutting down DAC", dac_name.data());
+	LOG_MSG("%s: Shutting down DAC", dac_name.c_str());
 
 	// Update our status to indicate we're no longer ready
 	status_reg.error = true;
@@ -144,7 +145,7 @@ void LPT_DAC_ShutDown([[maybe_unused]] Section *sec)
 	lpt_dac.reset();
 }
 
-void LPT_DAC_Init(Section *section)
+void LPT_DAC_Init(Section* section)
 {
 	assert(section);
 
@@ -153,43 +154,43 @@ void LPT_DAC_Init(Section *section)
 
 	// Get the user's LPT DAC choices
 	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	const auto prop = static_cast<Section_prop*>(section);
 
-	const std::string_view dac_choice = prop->Get_string("lpt_dac");
+	const std::string dac_choice = prop->Get_string("lpt_dac");
 
-	if (dac_choice == "disney")
+	if (dac_choice == "disney") {
 		lpt_dac = std::make_unique<Disney>();
-	else if (dac_choice == "covox")
+	} else if (dac_choice == "covox") {
 		lpt_dac = std::make_unique<Covox>();
-	else if (dac_choice == "ston1")
+	} else if (dac_choice == "ston1") {
 		lpt_dac = std::make_unique<StereoOn1>();
-	else {
+	} else {
 		// The remaining setting is to turn the LPT DAC off
 		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
 		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
-			            dac_choice.data());
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
+			            dac_choice.c_str());
 		}
 		return;
 	}
 
 	// Let the DAC apply its own filter type
-	const std::string_view filter_choice = prop->Get_string("lpt_dac_filter");
+	const std::string filter_choice = prop->Get_string("lpt_dac_filter");
 	assert(lpt_dac);
+
 	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
-		auto filter_state = FilterState::Off;
-		const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-		if (filter_choice_has_bool) {
-			filter_state = *filter_choice_has_bool ? FilterState::On
-			                                       : FilterState::Off;
+		if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+			lpt_dac->ConfigureFilters(*maybe_bool ? FilterState::On
+			                                      : FilterState::Off);
 		} else {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
-			            filter_choice.data());
-			assert(filter_state == FilterState::Off);
-		}
+			LOG_WARNING(
+			        "LPT_DAC: Invalid 'lpt_dac_filter' setting: '%s', "
+			        "using 'on'",
+			        filter_choice.c_str());
 
-		lpt_dac->ConfigureFilters(filter_state);
+			set_section_property_value("speaker", "lpt_dac_filter", "on");
+			lpt_dac->ConfigureFilters(FilterState::On);
+		}
 	}
 
 	lpt_dac->BindToPort(Lpt1Port);

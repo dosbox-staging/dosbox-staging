@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include <array>
 #include <cassert>
 
+#include "control.h"
 #include "setup.h"
 
 class Program;
@@ -142,7 +143,7 @@ constexpr uint8_t SystemReset   = 0xff;
 constexpr uint8_t SystemExclusive = 0xf0;
 } // namespace MidiStatus
 
-// Channel Mode Messages are Control Change Messages that use the the reserved
+// Channel Mode Messages are Control Change Messages that use the reserved
 // 120-127 controller number range to set the Channel Mode.
 namespace MidiChannelMode {
 
@@ -236,13 +237,13 @@ struct MidiWork {
 };
 
 #if C_FLUIDSYNTH
-void FLUID_AddConfigSection(const config_ptr_t& conf);
+void FLUID_AddConfigSection(const ConfigPtr& conf);
 #endif
 
 #if C_MT32EMU
-void MT32_AddConfigSection(const config_ptr_t& conf);
+void MT32_AddConfigSection(const ConfigPtr& conf);
 #endif
 
-void MIDI_AddConfigSection(const config_ptr_t& conf);
+void MIDI_AddConfigSection(const ConfigPtr& conf);
 
 #endif

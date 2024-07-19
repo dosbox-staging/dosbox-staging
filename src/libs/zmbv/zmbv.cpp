@@ -58,35 +58,41 @@ ZMBV_FORMAT BPPFormat(const int bpp)
 	}
 	return ZMBV_FORMAT::NONE;
 }
+
+uint8_t ZMBV_ToBytesPerPixel(const ZMBV_FORMAT format) {
+	switch (format) {
+	case ZMBV_FORMAT::BPP_8: return 1;
+
+	case ZMBV_FORMAT::BPP_15:
+	case ZMBV_FORMAT::BPP_16: return 2;
+
+	case ZMBV_FORMAT::BPP_24:
+	case ZMBV_FORMAT::BPP_32: return 4;
+
+	default: assertm(false, "ZMBV: Unhandled format size"); break;
+	}
+	return 0;
+}
+
 int VideoCodec::NeededSize(const int _width, const int _height, const ZMBV_FORMAT _format)
 {
-	int f;
-	switch (_format) {
-	case ZMBV_FORMAT::BPP_8: f = 1; break;
-	case ZMBV_FORMAT::BPP_15:
-	case ZMBV_FORMAT::BPP_16: f = 2; break;
-	case ZMBV_FORMAT::BPP_24:
-	case ZMBV_FORMAT::BPP_32: f = 4; break;
-	default: return -1;
-	}
+	int f = ZMBV_ToBytesPerPixel(_format);
+
 	f = f * _width * _height + 2 * (1 + (_width / 8)) * (1 + (_height / 8)) + 1024;
+
 	return f + f / 1000;
 }
 
 bool VideoCodec::SetupBuffers(const ZMBV_FORMAT _format, const int blockwidth, const int blockheight)
 {
-	palsize = 0;
-	switch (_format) {
-	case ZMBV_FORMAT::BPP_8:
-		pixelsize = 1;
-		palsize   = 256;
-		break;
-	case ZMBV_FORMAT::BPP_15: pixelsize = 2; break;
-	case ZMBV_FORMAT::BPP_16: pixelsize = 2; break;
-	case ZMBV_FORMAT::BPP_24:
-	case ZMBV_FORMAT::BPP_32: pixelsize = 4; break;
-	default: return false;
-	};
+	// Only BPP_8 is paletted
+	palsize = (_format == ZMBV_FORMAT::BPP_8 ? 256 : 0);
+
+	pixelsize = ZMBV_ToBytesPerPixel(_format);
+	if (pixelsize == 0) {
+		return false;
+	}
+
 	bufsize = static_cast<uint32_t>((height + 2 * MAX_VECTOR) * pitch * pixelsize + 2048);
 
 	assert(bufsize > 0);

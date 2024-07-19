@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,13 +63,16 @@ const char *UnmountHelper(char umount)
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
 		imageDiskList[i_drive] = nullptr;
-		DriveManager::CloseNumberedImage(imageDiskList[i_drive]);
 	}
 
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
 }
 
 void AddCommonMountMessages() {
+	if (MSG_Exists("MSCDEX_SUCCESS")) {
+		// Avoid adding the same messages twice.
+		return;
+	}
 	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
 	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n");
 	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED","MSCDEX: Failure: Not yet supported.\n");
@@ -88,6 +91,7 @@ void AddCommonMountMessages() {
 	MSG_Add("PROGRAM_MOUNT_STATUS_SLOT", "Swap slot");
 	MSG_Add("PROGRAM_MOUNT_STATUS_2", "%s mounted as %c drive\n");
 	MSG_Add("PROGRAM_MOUNT_STATUS_1", "The currently mounted drives are:\n");
+	MSG_Add("PROGRAM_MOUNT_READONLY", "Mounted read-only\n");
 }
 
 void AddMountTypeMessages() {

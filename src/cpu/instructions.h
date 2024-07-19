@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "flags.h"
 #include "lazyflags.h"
 
 /* Jumps */
@@ -641,9 +642,8 @@
 	if (quo>0xff) EXCEPTION(0);								\
 	reg_ah=rem;												\
 	reg_al=quo8;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo8); \
 }
-
 
 #define DIVW(op1,load,save)									\
 {															\
@@ -656,7 +656,7 @@
 	if (quo!=(uint32_t)quo16) EXCEPTION(0);					\
 	reg_dx=rem;												\
 	reg_ax=quo16;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo16); \
 }
 
 #define DIVD(op1,load,save)									\
@@ -670,7 +670,7 @@
 	if (quo!=(uint64_t)quo32) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo32); \
 }
 
 
@@ -684,7 +684,7 @@
 	if (quo!=(int16_t)quo8s) EXCEPTION(0);					\
 	reg_ah=rem;												\
 	reg_al=quo8s;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo8s); \
 }
 
 #define IDIVW(op1, load, save) \
@@ -700,7 +700,7 @@
 			EXCEPTION(0); \
 		reg_ax = quo16s; \
 		reg_dx = static_cast<int16_t>(rem); \
-		SETFLAGBIT(OF, false); \
+		set_cpu_test_flags_for_division(quo16s); \
 	}
 
 #define IDIVD(op1,load,save)								\
@@ -714,9 +714,8 @@
 	if (quo!=(int64_t)quo32s) EXCEPTION(0);					\
 	reg_edx=rem;											\
 	reg_eax=quo32s;											\
-	SETFLAGBIT(OF,false);									\
+	set_cpu_test_flags_for_division(quo32s); \
 }
-
 #define IMULB(op1,load,save)								\
 {															\
 	reg_ax=((int8_t)reg_al) * ((int8_t)(load(op1)));			\
@@ -787,18 +786,22 @@
 
 #define DIMULD(op1, op2, op3, load, save) \
 	{ \
-		const auto res = static_cast<int64_t>(op2) * \
-		                 static_cast<int64_t>(op3); \
-		save(op1, (int32_t)res); \
+		/* All DIMULD operands are signed 32-bit ints */ \
+		const auto op2_i32 = static_cast<int32_t>(op2); \
+		const auto op3_i32 = static_cast<int32_t>(op3); \
+\
+		/* Store the multiplication using 64 bits to detect overflow */ \
+		const auto result_i64 = static_cast<int64_t>(op2_i32) * op3_i32; \
+\
+		/* Save the result as a 32-bit and let it overflow */ \
+		const auto result_i32 = static_cast<int32_t>(result_i64); \
+		save(op1, result_i32); \
 		FillFlagsNoCFOF(); \
-		if ((res >= -((int64_t)(2147483647) + 1)) && \
-		    (res <= (int64_t)2147483647)) { \
-			SETFLAGBIT(CF, false); \
-			SETFLAGBIT(OF, false); \
-		} else { \
-			SETFLAGBIT(CF, true); \
-			SETFLAGBIT(OF, true); \
-		} \
+\
+		/* Set the carry and overflow flags accordingly */ \
+		const auto had_overflow = (result_i32 != result_i64); \
+		SETFLAGBIT(CF, had_overflow); \
+		SETFLAGBIT(OF, had_overflow); \
 	}
 
 #define GRP2B(blah)											\

@@ -11,7 +11,8 @@ munt-libmt32emu*
 packagecache
 pcre*
 proxy-libintl*
-SDL2_image-*
+SDL2-*
+SDL2_net-*
 speexdsp-*
 tracy-*
 zlib*

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,6 @@ std::string convert_ansi_markup(const char* str);
  * \param str 
  * \return std::string 
  */
-std::string convert_ansi_markup(std::string &str);
+std::string convert_ansi_markup(const std::string &str);
 
 #endif // DOSBOX_ANSI_CODE_MARKUP_H

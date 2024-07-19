@@ -37,12 +37,12 @@
 #elif defined HAVE_STDLIB_H && defined HAVE_SYS_TYPES_H && defined HAVE_SYS_SOCKET_H && defined HAVE_NETINET_IN_H
  #define NATIVESOCKETS
  #define SOCKET int
- #include <stdio.h> //darwin
- #include <stdlib.h> //darwin
- #include <sys/types.h>
- #include <sys/socket.h>
- #include <netinet/in.h>
- //socklen_t should be handled by configure
+#include <cstdio>  //darwin
+#include <cstdlib> //darwin
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+// socklen_t should be handled by configure
 #endif
 
 // Using a non-blocking connection routine really should

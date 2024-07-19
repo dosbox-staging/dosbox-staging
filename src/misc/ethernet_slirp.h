@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,15 @@
 #include <map>
 #include <deque>
 #include <vector>
+
+// Specific unreleased slirp to work with MSVC
+#if _MSC_VER >= 1920
+#include <slirp/libslirp.h>
+#define db_ssize_t slirp_ssize_t
+#else
 #include <libslirp.h>
+#define db_ssize_t ssize_t
+#endif
 
 #include "config.h"
 #include "ethernet.h"

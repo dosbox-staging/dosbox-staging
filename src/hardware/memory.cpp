@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 #include "mem.h"
 
-#include <string.h>
+#include <cstring>
 
 #include "inout.h"
 #include "paging.h"
@@ -496,6 +496,15 @@ uint32_t mem_unalignedreadd(PhysPt address) {
 	return ret;
 }
 
+uint64_t mem_unalignedreadq(PhysPt address)
+{
+	uint64_t ret = 0;
+	for (int i = 0; i < 8; ++i) {
+		ret |= static_cast<uint64_t>(mem_readb_inline(address + i))
+		    << (i * 8);
+	}
+	return ret;
+}
 
 void mem_unalignedwritew(PhysPt address,uint16_t val) {
 	mem_writeb_inline(address,(uint8_t)val);val>>=8;
@@ -509,6 +518,13 @@ void mem_unalignedwrited(PhysPt address,uint32_t val) {
 	mem_writeb_inline(address+3,(uint8_t)val);
 }
 
+void mem_unalignedwriteq(PhysPt address, uint64_t val)
+{
+	for (int i = 0; i < 8; ++i) {
+		mem_writeb_inline(address + i, static_cast<uint8_t>(val));
+		val >>= 8;
+	}
+}
 
 bool mem_unalignedreadw_checked(PhysPt address, uint16_t * val) {
 	uint8_t rval1;
@@ -543,8 +559,27 @@ bool mem_unalignedreadd_checked(PhysPt address, uint32_t * val) {
 	return false;
 }
 
-bool mem_unalignedwritew_checked(PhysPt address, uint16_t val) {
-	if (mem_writeb_checked(address+0, (uint8_t)(val & 0xff))) return true;
+bool mem_unalignedreadq_checked(PhysPt address, uint64_t* val)
+{
+	uint8_t rval[8];
+	for (int i = 0; i < 8; ++i) {
+		if (mem_readb_checked(address + i, &rval[i])) {
+			return true;
+		}
+	}
+
+	*val = 0;
+	for (int i = 0; i < 8; ++i) {
+		*val |= static_cast<uint64_t>(rval[i]) << (i * 8);
+	}
+	return false;
+}
+
+bool mem_unalignedwritew_checked(PhysPt address, uint16_t val)
+{
+	if (mem_writeb_checked(address + 0, (uint8_t)(val & 0xff))) {
+		return true;
+	}
 	val >>= 8;
 	if (mem_writeb_checked(address+1, (uint8_t)(val & 0xff))) return true;
 	return false;
@@ -561,19 +596,57 @@ bool mem_unalignedwrited_checked(PhysPt address, uint32_t val) {
 	return false;
 }
 
-uint8_t mem_readb(PhysPt address) {
-	return mem_readb_inline(address);
+bool mem_unalignedwriteq_checked(PhysPt address, uint64_t val)
+{
+	for (int i = 0; i < 8; ++i) {
+		if (mem_writeb_checked(address + i,
+		                       static_cast<uint8_t>(val & 0xff))) {
+			return true;
+		}
+		val >>= 8;
+	}
+	return false;
 }
 
-uint16_t mem_readw(PhysPt address) {
-	return mem_readw_inline(address);
+template <MemOpMode op_mode>
+uint8_t mem_readb(const PhysPt address)
+{
+	return mem_readb_inline<op_mode>(address);
 }
 
-uint32_t mem_readd(PhysPt address) {
-	return mem_readd_inline(address);
+template <MemOpMode op_mode>
+uint16_t mem_readw(const PhysPt address)
+{
+	return mem_readw_inline<op_mode>(address);
 }
 
-void mem_writeb(PhysPt address,uint8_t val) {
+template <MemOpMode op_mode>
+uint32_t mem_readd(const PhysPt address)
+{
+	return mem_readd_inline<op_mode>(address);
+}
+
+template <MemOpMode op_mode>
+uint64_t mem_readq(PhysPt address)
+{
+	return mem_readq_inline<op_mode>(address);
+}
+
+// Explicit instantiations for mem_readb, mem_readw, and mem_readd
+template uint8_t mem_readb<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint8_t mem_readb<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+template uint16_t mem_readw<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint16_t mem_readw<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+template uint32_t mem_readd<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint32_t mem_readd<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+template uint64_t mem_readq<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint64_t mem_readq<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+void mem_writeb(PhysPt address, uint8_t val)
+{
 	mem_writeb_inline(address,val);
 }
 
@@ -583,6 +656,11 @@ void mem_writew(PhysPt address,uint16_t val) {
 
 void mem_writed(PhysPt address,uint32_t val) {
 	mem_writed_inline(address,val);
+}
+
+void mem_writeq(PhysPt address, uint64_t val)
+{
+	mem_writeq_inline(address, val);
 }
 
 static void write_p92(io_port_t, io_val_t value, io_width_t)
@@ -654,7 +732,7 @@ public:
 		// Size the actual memory pages
 		memory.pages.resize(num_pages);
 
-		// The MemBase is address of the the first page's first byte
+		// The MemBase is address of the first page's first byte
 		MemBase = &(memory.pages[0].bytes[0]);
 
 		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MB) at address: %p",

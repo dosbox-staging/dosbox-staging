@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -46,17 +46,34 @@ size_t RWQueue<T>::Size()
 }
 
 template <typename T>
+void RWQueue<T>::Start()
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	is_running = true;
+}
+
+template <typename T>
 void RWQueue<T>::Stop()
 {
+	std::unique_lock<std::mutex> lock(mutex);
 	if (!is_running) {
 		return;
 	}
-	mutex.lock();
 	is_running = false;
-	mutex.unlock();
+	lock.unlock();
 
 	// notify the conditions
 	has_items.notify_all();
+	has_room.notify_all();
+}
+
+template <typename T>
+void RWQueue<T>::Clear()
+{
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		queue.clear();
+	}
 	has_room.notify_all();
 }
 

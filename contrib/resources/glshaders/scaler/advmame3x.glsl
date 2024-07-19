@@ -1,9 +1,12 @@
+#version 120
+
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2004-2020  The DOSBox Team
  *
- * Contributors:
+ *  Contributors:
  *   - 2004, Sjoerd van der Berg <harekiet@users.sourceforge.net>: authored
  *           https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk@1817
  *
@@ -27,6 +30,8 @@
 
 #pragma use_srgb_texture
 #pragma use_srgb_framebuffer
+#pragma force_single_scan
+#pragma force_no_pixel_doubling
 
 varying vec2 v_texCoord;
 uniform sampler2D rubyTexture;
@@ -82,9 +87,6 @@ vec3 getadvmame3xtexel(vec2 coord)
 void main()
 {
 	vec2 coord = v_texCoord;
-#if defined(OPENGLNB)
-	gl_FragColor = vec4(getadvmame3xtexel(coord), 1.0);
-#else
 	coord -= 0.5;
 	vec3 c0 = getadvmame3xtexel(coord);
 	vec3 c1 = getadvmame3xtexel(coord + vec2(1.0, 0.0));
@@ -93,6 +95,5 @@ void main()
 
 	coord = fract(max(coord, 0.0));
 	gl_FragColor = vec4(mix(mix(c0, c1, coord.x), mix(c2, c3, coord.x), coord.y), 1.0);
-#endif
 }
 #endif

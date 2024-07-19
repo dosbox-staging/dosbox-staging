@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,13 +23,14 @@
 #define DOSBOX_MAPPER_H
 
 #include "dosbox.h"
+#include "version.h"
 
 #include <string>
 #include <vector>
 
 #include <SDL.h>
 
-#define MAPPERFILE "mapper-sdl2-" VERSION ".map"
+#define MAPPERFILE "mapper-sdl2-" DOSBOX_VERSION ".map"
 
 constexpr uint32_t MMOD1 = 0x1;
 #define MMOD1_NAME "Ctrl"

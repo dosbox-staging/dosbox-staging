@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 
 #include <algorithm>
@@ -35,6 +34,11 @@
 #include "vga.h"
 
 void PCI_AddSVGAS3_Device();
+
+static bool SVGA_S3_HWCursorActive()
+{
+	return (vga.s3.hgc.curmode & 0x1) != 0;
+}
 
 void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
@@ -112,11 +116,15 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 			(3d4h index 13h). (801/5,928) Only active if 3d4h index 51h bits 4-5
 			are 0
 		*/
-	case 0x45:  /* Hardware cursor mode */
+	case 0x45: { /* Hardware cursor mode */
+		const bool was_active = SVGA_S3_HWCursorActive();
 		vga.s3.hgc.curmode = val;
-		// Activate hardware cursor code if needed
-		(void)VGA_ActivateHardwareCursor();
+		if (SVGA_S3_HWCursorActive() != was_active) {
+			// Activate hardware cursor code if needed
+			VGA_ActivateHardwareCursor();
+		}
 		break;
+	}
 	case 0x46:
 		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0x00ff) | (val << 8);
 		break;
@@ -327,6 +335,9 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 				(3d4h index 18h). Bit 8 is in 3d4h index 7 bit 4 and bit 9 in 3d4h
 				index 9 bit 6.
 		*/
+	case 0x63: // Extended Control Register CR63
+		vga.s3.reg_63 = val;
+		break;
 	case 0x67:	/* Extended Miscellaneous Control 2 */
 		/*
 			0	VCLK PHS. VCLK Phase With Respect to DCLK. If clear VLKC is inverted
@@ -378,8 +389,12 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 	case 0x2e:	/* New Chip ID  (low byte of PCI device ID) */
 		return 0x11;	// Trio64
 	case 0x2f:	/* Revision */
-		return 0x00;	// Trio64 (exact value?)
-//		return 0x44;	// Trio64 V+
+		// The documention leaves this unspecified and says "This will
+		// change with each stepping". Therefore we max this out under
+		// the assumption that newer steppings fix(ed) issues in prior
+		// steppings, and we want to avoid drivers witholding features
+		// based on stepping bugs.
+		return 0xff;
 	case 0x30:	/* CR30 Chip ID/REV register */
 		return 0xe1;	// Trio+ dual byte
 	case 0x31:	/* CR31 Memory Configuration */
@@ -440,6 +455,8 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 		return (vga.s3.la_window >> 8);
 	case 0x5a:	/* Linear Address Window Position Low */
 		return (vga.s3.la_window & 0xff);
+	case 0x63: // Extended Control Register CR63
+		return vga.s3.reg_63;
 	case 0x5D:	/* Extended Horizontal Overflow */
 		return vga.s3.ex_hor_overflow;
 	case 0x5e:	/* Extended Vertical Overflow */
@@ -635,41 +652,32 @@ uint32_t SVGA_S3_GetClock(void)
 	return clock;
 }
 
-bool SVGA_S3_HWCursorActive(void) {
-	return (vga.s3.hgc.curmode & 0x1) != 0;
-}
-
 bool SVGA_S3_AcceptsMode(Bitu mode) {
 	return VideoModeMemSize(mode) < vga.vmemsize;
 }
 
 void replace_mode_120h_with_halfline()
 {
-	// when C++20 is available, replace this with designated initializers
-	auto make_halfline_block = []() {
-		VideoModeBlock block = {};
+	constexpr VideoModeBlock halfline_block = {.mode     = 0x120,
+	                                           .type     = M_LIN16,
+	                                           .swidth   = 640,
+	                                           .sheight  = 400,
+	                                           .twidth   = 80,
+	                                           .theight  = 25,
+	                                           .cwidth   = 8,
+	                                           .cheight  = 16,
+	                                           .ptotal   = 1,
+	                                           .pstart   = 0xa0000,
+	                                           .plength  = 0x10000,
+	                                           .htotal   = 200,
+	                                           .vtotal   = 449,
+	                                           .hdispend = 160,
+	                                           .vdispend = 400,
+	                                           .special  = 0};
 
-		block.mode     = 0x120;
-		block.type     = M_LIN16;
-		block.swidth   = 640;
-		block.sheight  = 400;
-		block.twidth   = 80;
-		block.theight  = 25;
-		block.cwidth   = 8;
-		block.cheight  = 16;
-		block.ptotal   = 1;
-		block.pstart   = 0xA0000;
-		block.plength  = 0x10000;
-		block.htotal   = 200;
-		block.vtotal   = 449;
-		block.hdispend = 160;
-		block.vdispend = 400;
-		return block;
-	};
-	constexpr auto halfline_block = make_halfline_block();
-	constexpr auto halfline_mode  = halfline_block.mode;
+	constexpr auto halfline_mode = halfline_block.mode;
 
-	for (auto &block : ModeList_VGA) {
+	for (auto& block : ModeList_VGA) {
 		if (block.mode == halfline_mode) {
 			block = halfline_block;
 			break;
@@ -677,16 +685,17 @@ void replace_mode_120h_with_halfline()
 	}
 }
 
-void filter_s3_modes_to_oem_only()
+void filter_compatible_s3_vesa_modes()
 {
 	enum dram_size_t {
 		kb_512 = 1 << 0,
-		mb_1 = 1 << 1,
-		mb_2 = 1 << 2,
-		mb_4 = 1 << 3,
-		mb_8 = 1 << 4,
+		mb_1   = 1 << 1,
+		mb_2   = 1 << 2,
+		mb_4   = 1 << 3,
+		mb_8   = 1 << 4,
 	};
-	auto hash = [](uint16_t w, uint16_t h, int d) -> uint32_t {
+
+	auto hash = [](const uint16_t w, const uint16_t h, const int d) -> uint32_t {
 		return check_cast<uint32_t>((w + h) * d);
 	};
 
@@ -736,6 +745,7 @@ void filter_s3_modes_to_oem_only()
 	};
 
 	dram_size_t dram_size = mb_1;
+
 	switch (vga.vmemsize) {
 	case 512 * 1024: dram_size = kb_512; break;
 	case 1024 * 1024: dram_size = mb_1; break;
@@ -743,91 +753,149 @@ void filter_s3_modes_to_oem_only()
 	case 4096 * 1024: dram_size = mb_4; break;
 	case 8192 * 1024: dram_size = mb_8; break;
 	}
-	auto mode_not_allowed = [&](const VideoModeBlock &m) -> bool {
-		// Permit common VESA modes except 320x200 hi-color that were
-		// rarely properly supported until the late 90s.
-		constexpr auto s3_vesa_modes_start = 0x150;
-		if (m.mode < s3_vesa_modes_start)
-			return (m.mode == 0x10d || m.mode == 0x10e || m.mode == 0x10f);
 
-		// Allow all modes that aren't part of the VESA VGA set (CGA/EGA/Hercules/etc)
-		if (!VESA_IsVesaMode(m.mode)) {
-			return false;
+	auto mode_allowed = [&](const VideoModeBlock& m) {
+		// Allow all text modes
+		if (m.type == M_TEXT) {
+			return true;
 		}
 
+		// Allow all non-VESA modes (standard VGA modes, and CGA and EGA
+		// as emulated by VGA adapters)
+		if (!VESA_IsVesaMode(m.mode)) {
+			return true;
+		}
+
+		// Allow common standard VESA modes, except 320x200 hi-color
+		// modes that were rarely properly supported until the late 90s.
+		constexpr auto s3_vesa_modes_start = 0x150;
+
+		if (m.mode < s3_vesa_modes_start) {
+			constexpr auto _320x200_15bit = 0x10d;
+			constexpr auto _320x200_16bit = 0x10e;
+			constexpr auto _320x200_32bit = 0x10f;
+
+			return !(m.mode == _320x200_15bit || m.mode == _320x200_16bit ||
+			         m.mode == _320x200_32bit);
+		}
+
+		// Selectively allow S3-specific VESA modes.
+
 		// Does the S3 OEM list have this mode for the given DRAM size?
-		const auto it = oem_modes.find(hash(m.swidth, m.sheight, m.type));
-		const bool is_an_oem_mode = (it != oem_modes.end()) && (it->second & dram_size);
+		const auto it = oem_modes.find(
+		        hash(m.swidth, m.sheight, enum_val(m.type)));
 
-		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_vesa_mode=%d is_an_oem_mode=%d",
-		//         m.mode, m.swidth, m.sheight, m.type, VESA_IsVesaMode(m.mode), is_an_oem_mode);
-
-		return !is_an_oem_mode;
+		const bool is_oem_mode = (it != oem_modes.end()) &&
+		                         (it->second & dram_size);
+#if 0
+		auto mode_info = format_str("S3: mode %Xh: %4u x %4u - m.type: %3d",
+		                            m.mode,
+		                            m.swidth,
+		                            m.sheight,
+		                            m.type);
+		if (is_oem_mode) {
+			LOG_DEBUG(mode_info.c_str());
+		} else {
+			LOG_ERR(mode_info.c_str());
+		}
+#endif
+		return is_oem_mode;
 	};
+
+	auto mode_not_allowed = [&](const VideoModeBlock& m) {
+		return !mode_allowed(m);
+	};
+
 	// We don't need the return value
 	ModeList_VGA.erase(std::remove_if(ModeList_VGA.begin(),
-	                                  ModeList_VGA.end(), mode_not_allowed),
+	                                  ModeList_VGA.end(),
+	                                  mode_not_allowed),
 	                   ModeList_VGA.end());
+
+	CurMode = std::prev(ModeList_VGA.end());
 }
 
-void SVGA_Setup_S3Trio(void)
+void SVGA_Setup_S3Trio()
 {
 	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
-	svga.read_p3d5 = &SVGA_S3_ReadCRTC;
+	svga.read_p3d5  = &SVGA_S3_ReadCRTC;
 	svga.write_p3c5 = &SVGA_S3_WriteSEQ;
-	svga.read_p3c5 = &SVGA_S3_ReadSEQ;
-	svga.write_p3c0 = nullptr; /* no S3-specific functionality */
-	svga.read_p3c1 = nullptr; /* no S3-specific functionality */
+	svga.read_p3c5  = &SVGA_S3_ReadSEQ;
 
-	svga.set_video_mode = nullptr; /* implemented in core */
-	svga.determine_mode = nullptr; /* implemented in core */
-	svga.set_clock = nullptr; /* implemented in core */
-	svga.get_clock = &SVGA_S3_GetClock;
+	// No S3-specific functionality
+	svga.write_p3c0 = nullptr;
+
+	// No S3-specific functionality
+	svga.read_p3c1 = nullptr;
+
+	// Implemented in core
+	svga.set_video_mode = nullptr;
+
+	// Implemented in core
+	svga.determine_mode = nullptr;
+
+	// Implemented in core
+	svga.set_clock              = nullptr;
+	svga.get_clock              = &SVGA_S3_GetClock;
 	svga.hardware_cursor_active = &SVGA_S3_HWCursorActive;
-	svga.accepts_mode = &SVGA_S3_AcceptsMode;
+	svga.accepts_mode           = &SVGA_S3_AcceptsMode;
 
-	if (vga.vmemsize == 0)
+	if (vga.vmemsize == 0) {
 		vga.vmemsize = 4 * 1024 * 1024;
+	}
 
-
-	// Set CRTC 36 to specify amount of VRAM and PCI
+	// Set CRTC reg 36 to specify amount of VRAM and PCI
 	std::string ram_type = "EDO DRAM";
+
 	if (vga.vmemsize < 1024 * 1024) {
 		vga.vmemsize = 512 * 1024;
-		vga.s3.reg_36 = 0b1111'1010; // less than 1mb EDO RAM
+		// Less than 1 MB EDO RAM
+		vga.s3.reg_36 = 0b1111'1010;
+
 	} else if (vga.vmemsize < 2048 * 1024) {
 		vga.vmemsize = 1024 * 1024;
-		vga.s3.reg_36 = 0b1101'1010; // 1mb EDO RAM
+		// 1 MB EDO RAM
+		vga.s3.reg_36 = 0b1101'1010;
+
 	} else if (vga.vmemsize < 4096 * 1024) {
 		vga.vmemsize = 2048 * 1024;
-		vga.s3.reg_36 = 0b1001'1010; // 2mb EDO RAM
+		// 2 MB EDO RAM
+		vga.s3.reg_36 = 0b1001'1010;
+
 	} else if (vga.vmemsize < 8192 * 1024) {
 		vga.vmemsize = 4096 * 1024;
-		vga.s3.reg_36 = 0b0001'1110; // 4mb fast page mode RAM
-		ram_type = "FP DRAM";
+		// 4 MB fast page mode RAM
+		vga.s3.reg_36 = 0b0001'1110;
+		ram_type      = "FP DRAM";
+
 	} else {
 		vga.vmemsize = 8192 * 1024;
-		vga.s3.reg_36 = 0b0111'1110; // 8mb fast page mode RAM
-		ram_type = "FP DRAM";
+		// 8 MB fast page mode RAM
+		vga.s3.reg_36 = 0b0111'1110;
+		ram_type      = "FP DRAM";
 	}
 
 	std::string description = "S3 Trio64 ";
 
 	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
 
-	switch (int10.vesa_mode_preference) {
-	case VesaModePref::Compatible:
-		filter_s3_modes_to_oem_only();
+	switch (int10.vesa_modes) {
+	case VesaModes::Compatible:
+		filter_compatible_s3_vesa_modes();
 		description += " compatible";
 		break;
-	case VesaModePref::Halfline:
+
+	case VesaModes::Halfline:
 		replace_mode_120h_with_halfline();
 		description += " halfline";
 		break;
-	case VesaModePref::All: break;
+
+	case VesaModes::All: break;
 	}
-	if (int10.vesa_nolfb)
+
+	if (int10.vesa_nolfb) {
 		description += " without LFB";
+	}
 
 	const auto num_modes = ModeList_VGA.size();
 	VGA_LogInitialization(description.c_str(), ram_type.c_str(), num_modes);

@@ -1,26 +1,7 @@
-/* Project name, lower-case and without spaces */
-#define CANONICAL_PROJECT_NAME "dosbox-staging"
-
-// Emulator Semantic Version (MAJOR.MINOR.PATCH), incremented as follows:
-//  - MAJOR version when you make incompatible API changes
-//  - MINOR version when you add functionality in a backwards compatible manner
-//  - PATCH version when you make backwards compatible bug fixes
-// Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
-// Ref: https://semver.org/
-
-#define VERSION "0.81.0-alpha"
-
 /* This macro is going to be overriden via CI */
-#define DOSBOX_DETAILED_VERSION "git"
+#define BUILD_GIT_HASH "git"
 
 /* Strings to be returned by virtual drivers, etc. */
-
-// Name of the emulator
-#define DOSBOX_NAME "DOSBox Staging"
-// Development team name
-#define DOSBOX_TEAM "The " DOSBOX_NAME " Team"
-// Copyright string
-#define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
@@ -33,6 +14,15 @@
 
 /* Define to 1 to enable IPX networking support, requires SDL_net */
 #define C_IPX 1
+
+/* Define to 1 to enable NE2000 emulation */
+#define C_NE2000 1
+
+/* Define to 1 to enable slirp networking support, requires libslirp */
+#define C_SLIRP 1
+
+/* Define to 1 when zlib-ng support is provided by the system */
+#define C_SYSTEM_ZLIB_NG 1
 
 /* Enable some heavy debugging options */
 #define C_HEAVY_DEBUG 0
@@ -68,14 +58,8 @@
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
-/* Define to 1 to use a x86 assembly fpu core */
-#ifdef _M_X64
-//No support for inline asm with visual studio in x64 bit mode.
-//This means that non-dynamic cores can't use the better fpu emulation.
-#define C_FPU_X86 0
-#else // _M_IX86
+/* Define to 1 to use x86 assembly fpu core. Requires Clang toolchain for x64 */
 #define C_FPU_X86 1
-#endif
 
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
@@ -92,6 +76,9 @@
 
 // Modern MSVC provides POSIX-like routines, so prefer that over built-in
 #define HAVE_STRNLEN
+
+// Modern MSVC provides the C++17 <memory_resource> header
+#define HAVE_MEMORY_RESOURCE
 
 // MSVC issues pedantic warnings on POSIX functions; for portability we don't
 // want to deal with these warnings, as the only way to avoid them is using
@@ -113,7 +100,7 @@
 // https://github.com/dosbox-staging/dosbox-staging/issues/1314)
 //
 // Because the recommendations in these warnings will not be acted
-// upon given the planned direction of the the project, they
+// upon given the planned direction of the project, they
 // therefore provide no value and are being silenced.
 
 #ifndef _CRT_SECURE_NO_WARNINGS

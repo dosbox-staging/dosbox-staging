@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,12 +19,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 #include "inout.h"
 #include "pic.h"
 #include "vga.h"
-#include <math.h>
+#include <cmath>
 
 void vga_write_p3d4(io_port_t port, io_val_t value, io_width_t);
 uint8_t vga_read_p3d4(io_port_t port, io_width_t);

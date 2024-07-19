@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -126,37 +126,6 @@ TEST(NaturalCompare, AtEndNum)
 	EXPECT_TRUE(natural_compare("Ab999", "aB1000"));
 }
 
-
-TEST(StartsWith, Prefix)
-{
-	EXPECT_TRUE(starts_with("abcd", "ab"));
-	EXPECT_TRUE(starts_with(std::string{"abcd"}, "ab"));
-}
-
-TEST(StartsWith, NotPrefix)
-{
-	EXPECT_FALSE(starts_with("abcd", "xy"));
-	EXPECT_FALSE(starts_with(std::string{"abcd"}, "xy"));
-}
-
-TEST(StartsWith, TooLongPrefix)
-{
-	EXPECT_FALSE(starts_with("ab", "abcd"));
-	EXPECT_FALSE(starts_with(std::string{"ab"}, "abcd"));
-}
-
-TEST(StartsWith, EmptyPrefix)
-{
-	EXPECT_TRUE(starts_with("abcd", ""));
-	EXPECT_TRUE(starts_with(std::string{"abcd"}, ""));
-}
-
-TEST(StartsWith, EmptyString)
-{
-	EXPECT_FALSE(starts_with("", "ab"));
-	EXPECT_FALSE(starts_with(std::string{""}, "ab"));
-}
-
 TEST(SafeSprintF, PreventOverflow)
 {
 	char buf[3];
@@ -244,57 +213,57 @@ TEST(SafeStrlen, FixedSize)
 	EXPECT_EQ(N - 1, safe_strlen(buffer));
 }
 
-TEST(Split_delit, NoBoundingDelims)
+TEST(Split_delim, NoBoundingDelims)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
-	EXPECT_EQ(split("a:/b:/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split("a /b /c/d /e/f/", ' '), expected);
-	EXPECT_EQ(split("abc", 'x'), std::vector<std::string>{"abc"});
+	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties("abc", 'x'), std::vector<std::string>{"abc"});
 }
 
 TEST(Split_delim, DelimAtStartNotEnd)
 {
 	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/"});
-	EXPECT_EQ(split(":a:/b:/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split(" a /b /c/d /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/", ' '), expected);
 }
 
 TEST(Split_delim, DelimAtEndNotStart)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/", ""});
-	EXPECT_EQ(split("a:/b:/c/d:/e/f/:", ':'), expected);
-	EXPECT_EQ(split("a /b /c/d /e/f/ ", ' '), expected);
+	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/:", ':'), expected);
+	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/ ", ' '), expected);
 }
 
 TEST(Split_delim, DelimsAtBoth)
 {
 	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/", ""});
-	EXPECT_EQ(split(":a:/b:/c/d:/e/f/:", ':'), expected);
-	EXPECT_EQ(split(" a /b /c/d /e/f/ ", ' '), expected);
+	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/:", ':'), expected);
+	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/ ", ' '), expected);
 }
 
 TEST(Split_delim, MultiInternalDelims)
 {
 	const std::vector<std::string> expected(
 	        {"a", "/b", "", "/c/d", "", "", "/e/f/"});
-	EXPECT_EQ(split("a:/b::/c/d:::/e/f/", ':'), expected);
-	EXPECT_EQ(split("a /b  /c/d   /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties("a:/b::/c/d:::/e/f/", ':'), expected);
+	EXPECT_EQ(split_with_empties("a /b  /c/d   /e/f/", ' '), expected);
 }
 
 TEST(Split_delim, MultiBoundingDelims)
 {
 	const std::vector<std::string> expected(
 	        {"", "", "a", "/b", "/c/d", "/e/f/", "", "", ""});
-	EXPECT_EQ(split("::a:/b:/c/d:/e/f/:::", ':'), expected);
-	EXPECT_EQ(split("  a /b /c/d /e/f/   ", ' '), expected);
+	EXPECT_EQ(split_with_empties("::a:/b:/c/d:/e/f/:::", ':'), expected);
+	EXPECT_EQ(split_with_empties("  a /b /c/d /e/f/   ", ' '), expected);
 }
 
 TEST(Split_delim, MixedDelims)
 {
 	const std::vector<std::string> expected(
 	        {"", "", "a", "/b", "", "/c/d", "/e/f/"});
-	EXPECT_EQ(split("::a:/b::/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split("  a /b  /c/d /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties("::a:/b::/c/d:/e/f/", ':'), expected);
+	EXPECT_EQ(split_with_empties("  a /b  /c/d /e/f/", ' '), expected);
 }
 
 TEST(Split_delim, Empty)
@@ -303,12 +272,12 @@ TEST(Split_delim, Empty)
 	const std::vector<std::string> two({"", ""});
 	const std::vector<std::string> three({"", "", ""});
 
-	EXPECT_EQ(split("", ':'), empty);
-	EXPECT_EQ(split(":", ':'), two);
-	EXPECT_EQ(split("::", ':'), three);
-	EXPECT_EQ(split("", ' '), empty);
-	EXPECT_EQ(split(" ", ' '), two);
-	EXPECT_EQ(split("  ", ' '), three);
+	EXPECT_EQ(split_with_empties("", ':'), empty);
+	EXPECT_EQ(split_with_empties(":", ':'), two);
+	EXPECT_EQ(split_with_empties("::", ':'), three);
+	EXPECT_EQ(split_with_empties("", ' '), empty);
+	EXPECT_EQ(split_with_empties(" ", ' '), two);
+	EXPECT_EQ(split_with_empties("  ", ' '), three);
 }
  
 TEST(Split, NoBoundingWhitespace)
@@ -363,87 +332,191 @@ TEST(Split, Empty)
 	EXPECT_EQ(split("   "), empty);
 }
 
-TEST(ParseValue, Valid)
+TEST(ParseFloat, Valid)
 {
 	// negatives
-	EXPECT_EQ(*parse_value("-10000", -11000, 0), -10000.0f);
-	EXPECT_EQ(*parse_value("-0.1", -1, 0), -0.1f);
-	EXPECT_EQ(*parse_value("-0.0001", -1, 0), -0.0001f);
-	EXPECT_EQ(*parse_value("-0.0", -1, 1), -0.0f);
-	EXPECT_EQ(*parse_value("0", -1, 1), 0.0f);
+	EXPECT_EQ(*parse_float("-10000"), -10000.0f);
+	EXPECT_EQ(*parse_float("-0.1"), -0.1f);
+	EXPECT_EQ(*parse_float("-0.0001"), -0.0001f);
+	EXPECT_EQ(*parse_float("-0.0"), 0.0f);
+	EXPECT_EQ(*parse_float("-0"), 0.0f);
 
 	// positives
-	EXPECT_EQ(*parse_value("0.0", -1, 1), 0.0f);
-	EXPECT_EQ(*parse_value("0.0001", -1, 1), 0.0001f);
-	EXPECT_EQ(*parse_value("0.1", -1, 1), 0.1f);
-	EXPECT_EQ(*parse_value("10000", 0, 11000), 10000.0f);
+	EXPECT_EQ(*parse_float("10000"), 10000.0f);
+	EXPECT_EQ(*parse_float("0.1"), 0.1f);
+	EXPECT_EQ(*parse_float("0.0001"), 0.0001f);
+	EXPECT_EQ(*parse_float("0.0"), 0.0f);
+	EXPECT_EQ(*parse_float("0"), 0.0f);
 }
 
-TEST(ParsePercentage, Valid)
-{
-	EXPECT_EQ(*parse_percentage("-100"), 0.0f);
-	EXPECT_EQ(*parse_percentage("0"), 0.0f);
-	EXPECT_EQ(*parse_percentage("1"), 1.0f);
-	EXPECT_EQ(*parse_percentage("50"), 50.0f);
-	EXPECT_EQ(*parse_percentage("100"), 100.0f);
-	EXPECT_EQ(*parse_percentage("1000"), 100.0f);
-}
-
-TEST(ParseBoth, Invalid)
+TEST(ParseFloat, Invalid)
 {
 	std::optional<float> empty = {};
-	EXPECT_EQ(parse_value("sfafsd", 0, 1), empty);
-	EXPECT_EQ(parse_value("", 0, 1), empty);
-	EXPECT_EQ(parse_percentage("dfsfsdf"), empty);
-	EXPECT_EQ(parse_percentage(""), empty);
+	EXPECT_EQ(parse_float("100a"), empty);
+	EXPECT_EQ(parse_float("sfafsd"), empty);
+	EXPECT_EQ(parse_float(""), empty);
+	EXPECT_EQ(parse_float(" "), empty);
 }
 
-TEST(ParsePrefixedValue, Valid)
+TEST(ParseInt, Valid)
 {
 	// negatives
-	EXPECT_EQ(*parse_prefixed_value('a', "a-10000", -10000, 0), -10000.0f);
-	EXPECT_EQ(*parse_prefixed_value('b', "b-0.1", -1, 1), -0.1f);
-	EXPECT_EQ(*parse_prefixed_value('c', "c-0.0001", -1, 1), -0.0001f);
-	EXPECT_EQ(*parse_prefixed_value('d', "d-0.0", -1, 1), -0.0f);
-	EXPECT_EQ(*parse_prefixed_value('e', "e0", 0, 1), 0.0f);
+	EXPECT_EQ(*parse_float("-10000"), -10000);
+	EXPECT_EQ(*parse_float("-0"), 0);
+	EXPECT_EQ(*parse_float("-1"), -1);
 
 	// positives
-	EXPECT_EQ(*parse_prefixed_value('f', "f0.0", 0, 1), 0.0f);
-	EXPECT_EQ(*parse_prefixed_value('g', "g0.0001", 0, 1), 0.0001f);
-	EXPECT_EQ(*parse_prefixed_value('h', "h0.1", 0, 1), 0.1f);
-	EXPECT_EQ(*parse_prefixed_value('i', "i10000", 0, 11000), 10000.0f);
+	EXPECT_EQ(*parse_int("10000"), 10000);
+	EXPECT_EQ(*parse_int("0"), 0);
+	EXPECT_EQ(*parse_int("1"), 1);
 }
 
-TEST(ParsePrefixedPercentage, Valid)
+TEST(ParseInt, Invalid)
 {
-	EXPECT_EQ(*parse_prefixed_percentage('u', "u-100"), 0.0f);
-	EXPECT_EQ(*parse_prefixed_percentage('v', "v0"), 0.0f);
-	EXPECT_EQ(*parse_prefixed_percentage('w', "w1"), 1.0f);
-	EXPECT_EQ(*parse_prefixed_percentage('x', "x50"), 50.0f);
-	EXPECT_EQ(*parse_prefixed_percentage('y', "y100"), 100.0f);
-	EXPECT_EQ(*parse_prefixed_percentage('z', "z1000"), 100.0f);
+	std::optional<int> empty = {};
+	EXPECT_EQ(parse_int("100a"), empty);
+	EXPECT_EQ(parse_int("sfafsd"), empty);
+	EXPECT_EQ(parse_int(""), empty);
+	EXPECT_EQ(parse_int(" "), empty);
 }
 
-TEST(ParsePrefixedBoth, Invalid)
+TEST(ParsePercentageWithOptionalPercentSign, Valid)
+{
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("1%"), 1.0f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("1"), 1.0f);
+
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("100%"), 100.0f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("100"), 100.0f);
+
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("150%"), 150.0f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("150"), 150.0f);
+
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-5%"), -5.0f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-5"), -5.0f);
+
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("0%"), 0.0f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("0"), 0.0f);
+
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-110.5%"), -110.5f);
+	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-110.5"), -110.5f);
+}
+
+TEST(ParsePercentageWithPercentSign, Valid)
+{
+	EXPECT_EQ(*parse_percentage_with_percent_sign("1%"), 1.0f);
+	EXPECT_EQ(*parse_percentage_with_percent_sign("100%"), 100.0f);
+	EXPECT_EQ(*parse_percentage_with_percent_sign("150%"), 150.0f);
+	EXPECT_EQ(*parse_percentage_with_percent_sign("-5%"), -5.0f);
+	EXPECT_EQ(*parse_percentage_with_percent_sign("0%"), 0.0f);
+	EXPECT_EQ(*parse_percentage_with_percent_sign("-110.5%"), -110.5f);
+}
+
+TEST(ParsePercentageWithPercentSign, Invalid)
 {
 	std::optional<float> empty = {};
-	EXPECT_EQ(parse_prefixed_value('a', "b-10000", 0, 1), empty);
-	EXPECT_EQ(parse_prefixed_percentage('z', "y1000"), empty);
-	EXPECT_EQ(parse_prefixed_value('a', "-10000", 0, 1), empty);
-	EXPECT_EQ(parse_prefixed_percentage('z', "1000"), empty);
-	EXPECT_EQ(parse_prefixed_value('a', "", 0, 1), empty);
-	EXPECT_EQ(parse_prefixed_percentage('z', ""), empty);
-	EXPECT_EQ(parse_prefixed_value(' ', "----", 0, 1), empty);
-	EXPECT_EQ(parse_prefixed_percentage(' ', ""), empty);
+
+	EXPECT_EQ(parse_percentage_with_percent_sign("100"), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign("0"), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign("-1"), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign("100a"), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign("sfafsd"), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign(""), empty);
+	EXPECT_EQ(parse_percentage_with_percent_sign(" "), empty);
+}
+
+TEST(ParsePercentageWithOptionalPercentSign, Invalid)
+{
+	std::optional<float> empty = {};
+
+	EXPECT_EQ(parse_percentage_with_optional_percent_sign("100a"), empty);
+	EXPECT_EQ(parse_percentage_with_optional_percent_sign("sfafsd"), empty);
+	EXPECT_EQ(parse_percentage_with_optional_percent_sign(""), empty);
+	EXPECT_EQ(parse_percentage_with_optional_percent_sign(" "), empty);
 }
 
 TEST(FormatString, Valid)
 {
-	EXPECT_EQ(format_string(""), "");
- 	EXPECT_EQ(format_string("abcd"), "abcd");
-	EXPECT_EQ(format_string("%d", 42), "42");
-	EXPECT_EQ(format_string("%d\0", 42), "42\0");
-	EXPECT_EQ(format_string("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
+	EXPECT_EQ(format_str(""), "");
+ 	EXPECT_EQ(format_str("abcd"), "abcd");
+	EXPECT_EQ(format_str("%d", 42), "42");
+	EXPECT_EQ(format_str("%d\0", 42), "42\0");
+	EXPECT_EQ(format_str("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
+}
+
+TEST(IsHexDigits, Valid)
+{
+	EXPECT_TRUE(is_hex_digits("0123456789ABCDEF"));
+	EXPECT_TRUE(is_hex_digits("0123456789abcdef"));
+	EXPECT_TRUE(is_hex_digits(""));
+}
+
+TEST(IsHexDigits, Invalid)
+{
+	EXPECT_FALSE(is_hex_digits("0123456789ABCDEFG"));
+	EXPECT_FALSE(is_hex_digits("0123456789abcdefg"));
+}
+
+TEST(IsDigits, Valid)
+{
+	EXPECT_TRUE(is_digits("0123456789"));
+	EXPECT_TRUE(is_digits(""));
+}
+
+TEST(IsDigits, Invalid)
+{
+	EXPECT_FALSE(is_digits("01234567890ABCDEFG"));
+	EXPECT_FALSE(is_digits("01234567890abcdefg"));
+}
+
+TEST(LTrim, Valid) 
+{
+	auto perform_ltrim = [](const std::string& input) {
+		std::string output = input;
+		ltrim(output);
+		return output;
+	};
+	EXPECT_EQ(perform_ltrim("  ABC"), "ABC");
+	EXPECT_EQ(perform_ltrim("ABC"), "ABC");
+	EXPECT_EQ(perform_ltrim("ABC   "), "ABC   ");
+}
+
+TEST(Upcase, Valid) {
+	auto perform_upcase = [](const std::string& input) {
+		std::string output = input;
+		upcase(output);
+		return output;
+	};
+	EXPECT_EQ(perform_upcase("abc"), "ABC");
+	EXPECT_EQ(perform_upcase("ABC"), "ABC");
+	EXPECT_EQ(perform_upcase("aBc"), "ABC");
+}
+
+TEST(Lowcase, Valid)
+{
+	auto perform_lowcase = [](const std::string& input) {
+		std::string output = input;
+		lowcase(output);
+		return output;
+	};
+	EXPECT_EQ(perform_lowcase("abc"), "abc");
+	EXPECT_EQ(perform_lowcase("ABC"), "abc");
+	EXPECT_EQ(perform_lowcase("aBc"), "abc");
+}
+
+TEST(Replace, Valid)
+{
+	EXPECT_EQ(replace("abc", 'c', 'D'), "abD");
+	EXPECT_EQ(replace("abc", 'd', 'D'), "abc");
+	EXPECT_EQ(replace("", 'd', 'D'), "");
+}
+
+TEST(ReplaceAll, Valid)
+{
+	const auto s1 = "%% foo%%bar quz%baz%";
+	EXPECT_EQ(replace_all(s1, "%%", "%"), "% foo%bar quz%baz%");
+
+	const auto s2 = "\nthe quick brown fox jumps\nover the\nlazy dog";
+	EXPECT_EQ(replace_all(s2, "the", "a"), "\na quick brown fox jumps\nover a\nlazy dog");
 }
 
 } // namespace

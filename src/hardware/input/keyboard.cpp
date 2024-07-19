@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2022  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,6 @@
 #include "support.h"
 #include "timer.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // Emulates the PS/2 keybaord, as seen by the Intel 8042 microcontroller.
@@ -65,7 +63,7 @@ enum CodeSet : uint8_t {
 	CodeSet3 = 0x03,
 };
 
-enum class Command : uint8_t { // PS/2 keyboard port commands
+enum class KbdCommand : uint8_t { // PS/2 keyboard port commands
 	None                 = 0x00,
 	SetLeds              = 0xed,
 	Echo                 = 0xee,
@@ -122,7 +120,7 @@ static bool is_scanning = true;
 static uint8_t code_set = CodeSet1;
 
 // Command currently being executed, waiting for parameter
-static Command current_command = Command::None;
+static KbdCommand current_command = KbdCommand::None;
 
 // If enabled, all keyboard events are dropped until secure mode is enabled
 static bool should_wait_for_secure_mode = false;
@@ -140,7 +138,7 @@ static void warn_resend()
 	}
 }
 
-static void warn_unknown_command(const Command command)
+static void warn_unknown_command(const KbdCommand command)
 {
 	static bool already_warned[max_num_scancodes];
 	const uint8_t code = static_cast<uint8_t>(command);
@@ -420,7 +418,7 @@ static void keyboard_reset(const bool is_startup = false)
 	maybe_notify_led_state();
 }
 
-static void execute_command(const Command command)
+static void execute_command(const KbdCommand command)
 {
 	// LOG_INFO("KEYBOARD: Command 0x%02x", static_cast<int>(command));
 
@@ -428,15 +426,15 @@ static void execute_command(const Command command)
 	//
 	// Commands requiring a parameter
 	//
-	case Command::SetLeds:          // 0xed
-	case Command::SetTypeRate:      // 0xf3
+	case KbdCommand::SetLeds:          // 0xed
+	case KbdCommand::SetTypeRate:      // 0xf3
 		I8042_AddKbdByte(0xfa); // acknowledge
 		current_command = command;
 		break;
-	case Command::CodeSet:          // 0xf0
-	case Command::Set3KeyTypematic: // 0xfb
-	case Command::Set3KeyMakeBreak: // 0xfc
-	case Command::Set3KeyMakeOnly:  // 0xfd
+	case KbdCommand::CodeSet:          // 0xf0
+	case KbdCommand::Set3KeyTypematic: // 0xfb
+	case KbdCommand::Set3KeyMakeBreak: // 0xfc
+	case KbdCommand::Set3KeyMakeOnly:  // 0xfd
 		I8042_AddKbdByte(0xfa); // acknowledge
 		clear_buffer();
 		current_command = command;
@@ -444,11 +442,11 @@ static void execute_command(const Command command)
 	//
 	// No-parameter commands
 	//
-	case Command::Echo: // 0xee
+	case KbdCommand::Echo: // 0xee
 		// Diagnostic echo, responds without acknowledge
 		I8042_AddKbdByte(0xee);
 		break;
-	case Command::Identify: // 0xf2
+	case KbdCommand::Identify: // 0xf2
 		// Returns keyboard ID
 		// - 0xab, 0x83: typical for multifunction PS/2 keyboards
 		// - 0xab, 0x84: many short, space saver keyboards
@@ -457,27 +455,27 @@ static void execute_command(const Command command)
 		I8042_AddKbdByte(0xab);
 		I8042_AddKbdByte(0x83);
 		break;
-	case Command::ClearEnable: // 0xf4
+	case KbdCommand::ClearEnable: // 0xf4
 		// Clear internal buffer, enable scanning
 		I8042_AddKbdByte(0xfa); // acknowledge
 		clear_buffer();
 		is_scanning = true;
 		break;
-	case Command::DefaultDisable: // 0xf5
+	case KbdCommand::DefaultDisable: // 0xf5
 		// Restore defaults, disable scanning
 		I8042_AddKbdByte(0xfa); // acknowledge
 		clear_buffer();
 		set_defaults();
 		is_scanning = false;
 		break;
-	case Command::ResetEnable: // 0xf6
+	case KbdCommand::ResetEnable: // 0xf6
 		// Restore defaults, enable scanning
 		I8042_AddKbdByte(0xfa); // acknowledge
 		clear_buffer();
 		set_defaults();
 		is_scanning = true;
 		break;
-	case Command::Set3AllTypematic: // 0xf7
+	case KbdCommand::Set3AllTypematic: // 0xf7
 		// Set scanning type for all the keys,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -488,7 +486,7 @@ static void execute_command(const Command command)
 			entry.is_enabled_break     = false;
 		}
 		break;
-	case Command::Set3AllMakeBreak: // 0xf8
+	case KbdCommand::Set3AllMakeBreak: // 0xf8
 		// Set scanning type for all the keys,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -499,7 +497,7 @@ static void execute_command(const Command command)
 			entry.is_enabled_break     = true;
 		}
 		break;
-	case Command::Set3AllMakeOnly: // 0xf9
+	case KbdCommand::Set3AllMakeOnly: // 0xf9
 		// Set scanning type for all the keys,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -510,7 +508,7 @@ static void execute_command(const Command command)
 			entry.is_enabled_break     = false;
 		}
 		break;
-	case Command::Set3AllTypeMakeBreak: // 0xfa
+	case KbdCommand::Set3AllTypeMakeBreak: // 0xfa
 		// Set scanning type for all the keys,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -521,13 +519,16 @@ static void execute_command(const Command command)
 			entry.is_enabled_break     = true;
 		}
 		break;
-	case Command::Resend: // 0xfe
+	case KbdCommand::Resend: // 0xfe
 		// Resend byte, should normally be used on transmission
 		// errors - not implemented, as the emulation can
 		// also send whole multi-byte scancode at once
 		warn_resend();
+		// We have to respond, or else the 'In Extremis' game intro
+		// (sends 0xfe and 0xaa commands) hangs with a black screen
+		I8042_AddKbdByte(0xfa); // acknowledge
 		break;
-	case Command::Reset: // 0xff
+	case KbdCommand::Reset: // 0xff
 		// Full keyboard reset and self test
 		// 0xaa: passed; 0xfc/0xfd: failed
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -544,19 +545,19 @@ static void execute_command(const Command command)
 	}
 }
 
-static void execute_command(const Command command, const uint8_t param)
+static void execute_command(const KbdCommand command, const uint8_t param)
 {
 	// LOG_INFO("KEYBOARD: Command 0x%02x, parameter 0x%02x",
 	//          static_cast<int>(command), param);
 
 	switch (command) {
-	case Command::SetLeds: // 0xed
+	case KbdCommand::SetLeds: // 0xed
 		// Set keyboard LEDs according to bitfielld
 		I8042_AddKbdByte(0xfa); // acknowledge
 		led_state = param;
 		maybe_notify_led_state();
 		break;
-	case Command::CodeSet: // 0xf0
+	case KbdCommand::CodeSet: // 0xf0
 		// Query or change the scancode set
 		if (param != 0) {
 			// Query current scancode set
@@ -579,12 +580,12 @@ static void execute_command(const Command command, const uint8_t param)
 			}
 		}
 		break;
-	case Command::SetTypeRate: // 0xf3
+	case KbdCommand::SetTypeRate: // 0xf3
 		// Sets typematic rate/delay
 		I8042_AddKbdByte(0xfa); // acknowledge
 		set_type_rate(param);
 		break;
-	case Command::Set3KeyTypematic: // 0xfb
+	case KbdCommand::Set3KeyTypematic: // 0xfb
 		// Set scanning type for the given key,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -593,7 +594,7 @@ static void execute_command(const Command command, const uint8_t param)
 		set3_code_info[param].is_enabled_make      = false;
 		set3_code_info[param].is_enabled_break     = false;
 		break;
-	case Command::Set3KeyMakeBreak: // 0xfc
+	case KbdCommand::Set3KeyMakeBreak: // 0xfc
 		// Set scanning type for the given key,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -602,7 +603,7 @@ static void execute_command(const Command command, const uint8_t param)
 		set3_code_info[param].is_enabled_make      = true;
 		set3_code_info[param].is_enabled_break     = true;
 		break;
-	case Command::Set3KeyMakeOnly: // 0xfd
+	case KbdCommand::Set3KeyMakeOnly: // 0xfd
 		// Set scanning type for the given key,
 		// relevant for scancode set 3 only
 		I8042_AddKbdByte(0xfa); // acknowledge
@@ -631,24 +632,26 @@ void KEYBOARD_WaitForSecureMode()
 
 void KEYBOARD_PortWrite(const uint8_t byte)
 {
+	using namespace bit::literals;
+
 	// Highest bit set usuaally means a command
 	const bool is_command = bit::is(byte, b7) &&
-	                        current_command != Command::Set3KeyTypematic &&
-	                        current_command != Command::Set3KeyMakeBreak &&
-	                        current_command != Command::Set3KeyMakeOnly;
+	                        current_command != KbdCommand::Set3KeyTypematic &&
+	                        current_command != KbdCommand::Set3KeyMakeBreak &&
+	                        current_command != KbdCommand::Set3KeyMakeOnly;
 
 	if (is_command) {
 		// Terminate previous command
-		current_command = Command::None;
+		current_command = KbdCommand::None;
 	}
 
 	const auto command = current_command;
-	if (command != Command::None) {
+	if (command != KbdCommand::None) {
 		// Continue execution of previous command
-		current_command = Command::None;
+		current_command = KbdCommand::None;
 		execute_command(command, byte);
 	} else if (is_command) {
-		execute_command(static_cast<Command>(byte));
+		execute_command(static_cast<KbdCommand>(byte));
 	}
 }
 

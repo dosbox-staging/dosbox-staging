@@ -32,18 +32,19 @@
 
 class isoFile final : public DOS_File {
 public:
-	isoFile(isoDrive *drive, const char *name, FileStat_Block *stat, uint32_t offset);
+	isoFile(std::shared_ptr<isoDrive> drive, const char *name, FileStat_Block *stat, uint32_t offset);
 	isoFile(const isoFile &) = delete;            // prevent copying
 	isoFile &operator=(const isoFile &) = delete; // prevent assignment
 
 	bool Read(uint8_t *data, uint16_t *size) override;
 	bool Write(uint8_t *data, uint16_t *size) override;
 	bool Seek(uint32_t *pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation(void) override;
+	bool IsOnReadOnlyMedium() const override;
 
 private:
-	isoDrive *drive = nullptr;
+	std::shared_ptr<isoDrive> drive = nullptr;
 	int cachedSector = -1;
 	uint32_t fileBegin = 0;
 	uint32_t filePos = 0;
@@ -51,7 +52,7 @@ private:
 	uint8_t buffer[ISO_FRAMESIZE] = {{}};
 };
 
-isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, uint32_t offset)
+isoFile::isoFile(std::shared_ptr<isoDrive> iso_drive, const char *name, FileStat_Block *stat, uint32_t offset)
         : drive(iso_drive),
           fileBegin(offset),
           filePos(offset),
@@ -63,8 +64,7 @@ isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, ui
 	assert(stat);
 	time = stat->time;
 	date = stat->date;
-	attr = stat->attr;
-	open = true;
+	attr = static_cast<uint8_t>(stat->attr);
 }
 
 bool isoFile::Read(uint8_t *data, uint16_t *size) {
@@ -134,13 +134,16 @@ bool isoFile::Seek(uint32_t *pos, uint32_t type) {
 	return true;
 }
 
-bool isoFile::Close() {
-	if (refCtr == 1) open = false;
-	return true;
+void isoFile::Close() {
 }
 
 uint16_t isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
+}
+
+bool isoFile::IsOnReadOnlyMedium() const
+{
+	return true;
 }
 
 isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int &error)
@@ -171,7 +174,7 @@ isoDrive::isoDrive(char driveLetter, const char *fileName, uint8_t mediaid, int 
 			if (!MSCDEX_GetVolumeName(subUnit, buffer)) strcpy(buffer, "");
 			Set_Label(buffer,discLabel,true);
 
-		} else if (CDROM_Interface_Image::images[subUnit]->HasDataTrack() == false) { //Audio only cdrom
+		} else if (CDROM::cdroms[subUnit]->HasDataTrack() == false) { // Audio only cdrom
 			safe_strcpy(info, fileName);
 			this->driveLetter = driveLetter;
 			this->mediaid = mediaid;
@@ -188,16 +191,13 @@ int isoDrive::UpdateMscdex(char drive_letter, const char *path, uint8_t &sub_uni
 {
 	if (MSCDEX_HasDrive(drive_letter)) {
 		sub_unit = MSCDEX_GetSubUnit(drive_letter);
-		CDROM_Interface_Image *oldCdrom = CDROM_Interface_Image::images[sub_unit];
-		CDROM_Interface *cdrom = new CDROM_Interface_Image(sub_unit);
+		std::unique_ptr<CDROM_Interface> cdrom = std::make_unique<CDROM_Interface_Image>();
 		char pathCopy[CROSS_LEN];
 		safe_strcpy(pathCopy, path);
-		if (!cdrom->SetDevice(pathCopy, 0)) {
-			CDROM_Interface_Image::images[sub_unit] = oldCdrom;
-			delete cdrom;
+		if (!cdrom->SetDevice(pathCopy)) {
 			return 3;
 		}
-		MSCDEX_ReplaceDrive(cdrom, sub_unit);
+		MSCDEX_ReplaceDrive(std::move(cdrom), sub_unit);
 		return 0;
 	} else {
 		return MSCDEX_AddDrive(drive_letter, path, sub_unit);
@@ -208,53 +208,59 @@ void isoDrive::Activate(void) {
 	UpdateMscdex(driveLetter, fileName, subUnit);
 }
 
-bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
+std::unique_ptr<DOS_File> isoDrive::FileOpen(const char* name, uint8_t flags)
+{
 	if ((flags & 0x0f) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-		return false;
+		return nullptr;
 	}
 
 	isoDirEntry de;
-	bool success = lookup(&de, name) && !IS_DIR(FLAGS1);
-
-	if (success) {
-		FileStat_Block file_stat;
-		file_stat.size = DATA_LENGTH(de);
-		file_stat.attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
-		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
-		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
-		(*file)->flags = flags;
+	if (!(lookup(&de, name) && !IS_DIR(FLAGS1))) {
+		return nullptr;
 	}
-	return success;
+
+	FileStat_Block file_stat;
+	file_stat.size = DATA_LENGTH(de);
+	file_stat.attr = FatAttributeFlags::ReadOnly;
+	file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
+	file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
+	auto file      = std::make_unique<isoFile>(
+                shared_from_this(), name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
+	file->flags = flags;
+
+	return file;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/, uint16_t /*attributes*/) {
+std::unique_ptr<DOS_File> isoDrive::FileCreate(const char* /*name*/,
+                                               FatAttributeFlags /*attributes*/)
+{
+	DOS_SetError(DOSERR_ACCESS_DENIED);
+	return nullptr;
+}
+
+bool isoDrive::FileUnlink(const char* /*name*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::FileUnlink(char* /*name*/) {
+bool isoDrive::RemoveDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::RemoveDir(char* /*dir*/) {
+bool isoDrive::MakeDir(const char* /*dir*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::MakeDir(char* /*dir*/) {
-	DOS_SetError(DOSERR_ACCESS_DENIED);
-	return false;
-}
-
-bool isoDrive::TestDir(char *dir) {
+bool isoDrive::TestDir(const char *dir) {
 	isoDirEntry de;
 	return (lookup(&de, dir) && IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
+bool isoDrive::FindFirst(const char* dir, DOS_DTA& dta, bool fcb_findfirst)
+{
 	isoDirEntry de;
 	if (!lookup(&de, dir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -267,17 +273,18 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	dirIterators[dirIterator].root = isRoot;
 	dta.SetDirID((uint16_t)dirIterator);
 
-	uint8_t attr;
+	FatAttributeFlags attr = {};
 	char pattern[ISO_MAXPATHNAME];
 	dta.GetSearchParams(attr, pattern);
 
-	if (attr == DOS_ATTR_VOLUME) {
-		dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+	if (attr == FatAttributeFlags::Volume) {
+		dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
 		return true;
-	} else if ((attr & DOS_ATTR_VOLUME) && isRoot && !fcb_findfirst) {
+	} else if (attr.volume && isRoot && !fcb_findfirst) {
 		if (WildFileCmp(discLabel,pattern)) {
-			// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir and if it matches the searchstring
-			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+			// Get Volume Label and only in basedir and if it
+			// matches the searchstring
+			dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	}
@@ -285,25 +292,31 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	return FindNext(dta);
 }
 
-bool isoDrive::FindNext(DOS_DTA &dta) {
-	uint8_t attr;
+bool isoDrive::FindNext(DOS_DTA& dta)
+{
+	FatAttributeFlags attr = {};
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 
 	int dirIterator = dta.GetDirID();
 	bool isRoot = dirIterators[dirIterator].root;
 
+	FatAttributeFlags attr_mask = {};
+	attr_mask.directory         = true;
+	attr_mask.hidden            = true;
+	attr_mask.system            = true;
+
 	isoDirEntry de;
 	while (GetNextDirEntry(dirIterator, &de)) {
-		uint8_t findAttr = 0;
-		if (IS_DIR(FLAGS1)) findAttr |= DOS_ATTR_DIRECTORY;
-		else findAttr |= DOS_ATTR_ARCHIVE;
-		if (IS_HIDDEN(FLAGS1)) findAttr |= DOS_ATTR_HIDDEN;
+		FatAttributeFlags findAttr = {};
+		findAttr.directory         = IS_DIR(FLAGS1);
+		findAttr.hidden            = IS_HIDDEN(FLAGS1);
 
-		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
-			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
-
-			/* file is okay, setup everything to be copied in DTA Block */
+		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0] == '.') &&
+		    WildFileCmp((char*)de.ident, pattern) &&
+		    !(~(attr._data) & findAttr._data & attr_mask._data)) {
+			/* file is okay, setup everything to be copied in DTA
+			 * Block */
 			char findName[DOS_NAMELENGTH_ASCII];
 			findName[0] = 0;
 			if(strlen((char*)de.ident) < DOS_NAMELENGTH_ASCII) {
@@ -313,6 +326,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 			uint32_t findSize = DATA_LENGTH(de);
 			uint16_t findDate = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 			uint16_t findTime = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
+			findAttr.read_only = true;
 			dta.SetResult(findName, findSize, findDate, findTime, findAttr);
 			return true;
 		}
@@ -324,24 +338,31 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 	return false;
 }
 
-bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
+bool isoDrive::Rename(const char* /*oldname*/, const char* /*newname*/) {
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char *name, uint16_t *attr) {
-	*attr = 0;
+bool isoDrive::GetFileAttr(const char* name, FatAttributeFlags* attr)
+{
+	*attr = {};
 	isoDirEntry de;
 	bool success = lookup(&de, name);
 	if (success) {
-		*attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
-		if (IS_HIDDEN(FLAGS1)) *attr |= DOS_ATTR_HIDDEN;
-		if (IS_DIR(FLAGS1)) *attr |= DOS_ATTR_DIRECTORY;
+		attr->read_only = true;
+		if (IS_HIDDEN(FLAGS1)) {
+			attr->hidden = true;
+		}
+		if (IS_DIR(FLAGS1)) {
+			attr->directory = true;
+		}
 	}
 	return success;
 }
 
-bool isoDrive::SetFileAttr(const char * name, [[maybe_unused]] const uint16_t attr) {
+bool isoDrive::SetFileAttr(const char* name,
+                           [[maybe_unused]] const FatAttributeFlags attr)
+{
 	isoDirEntry de;
 	if (lookup(&de, name))
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -363,30 +384,15 @@ bool isoDrive::FileExists(const char *name) {
 	return (lookup(&de, name) && !IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
-	isoDirEntry de;
-	bool success = lookup(&de, name);
-
-	if (success) {
-		stat_block->date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
-		stat_block->time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-		stat_block->size = DATA_LENGTH(de);
-		stat_block->attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
-		if (IS_DIR(FLAGS1)) stat_block->attr |= DOS_ATTR_DIRECTORY;
-	}
-
-	return success;
-}
-
 uint8_t isoDrive::GetMediaByte(void) {
 	return mediaid;
 }
 
-bool isoDrive::isRemote(void) {
+bool isoDrive::IsRemote(void) {
 	return true;
 }
 
-bool isoDrive::isRemovable(void) {
+bool isoDrive::IsRemovable(void) {
 	return true;
 }
 
@@ -469,7 +475,7 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 
 	// check if the entry is valid and contains the correct sector
 	if (!he.valid || he.sector != sector) {
-		if (!CDROM_Interface_Image::images[subUnit]->ReadSector(he.data, false, sector)) {
+		if (!CDROM::cdroms[subUnit]->ReadSector(he.data, false, sector)) {
 			return false;
 		}
 		he.valid = true;
@@ -480,8 +486,8 @@ bool isoDrive::ReadCachedSector(uint8_t** buffer, const uint32_t sector) {
 	return true;
 }
 
-inline bool isoDrive :: readSector(uint8_t *buffer, uint32_t sector) {
-	return CDROM_Interface_Image::images[subUnit]->ReadSector(buffer, false, sector);
+inline bool isoDrive::readSector(uint8_t *buffer, uint32_t sector) {
+	return CDROM::cdroms[subUnit]->ReadSector(buffer, false, sector);
 }
 
 int isoDrive :: readDirEntry(isoDirEntry *de, uint8_t *data) {

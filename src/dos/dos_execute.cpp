@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,20 +19,20 @@
 
 #include "dosbox.h"
 
-#include <string.h>
-#include <ctype.h>
+#include <cctype>
+#include <cstring>
 
 #include "callback.h"
 #include "cpu.h"
 #include "debug.h"
 #include "dos_inc.h"
 #include "mem.h"
+#include "paging.h"
 #include "program_setver.h"
 #include "programs.h"
 #include "regs.h"
 #include "string_utils.h"
-
-const char * RunningProgram="DOSBOX";
+#include "video.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)
@@ -60,92 +60,133 @@ struct EXE_Header {
 #define MAGIC1 0x5a4d
 #define MAGIC2 0x4d5a
 #define MAXENV 32768u
-#define ENV_KEEPFREE 83				 /* keep unallocated by environment variables */
+#define ENV_KEEPFREE 83 /* keep unallocated by environment variables */
 #define LOADNGO 0
 #define LOAD    1
 #define OVERLAY 3
 
+// ***************************************************************************
+// Titlebar program name/path support
+// ***************************************************************************
 
-extern void GFX_RefreshTitle();
-extern void GFX_SetTitle(const int32_t cycles, const bool paused = false);
+// Map PSP segement to canonical path+name+extension. Only used if memory paging
+// is not enabled; otherwise PSP segment is not suitable to identify concrete
+// running DOS program.
+static std::map<uint16_t, std::string> psp_to_canonical_map = {};
 
-void DOS_UpdatePSPName(void) {
-	DOS_MCB mcb(dos.psp()-1);
-	static char name[9];
-	mcb.GetFileName(name);
-	name[8] = 0;
-	if (!strlen(name)) strcpy(name,"DOSBOX");
-	for(Bitu i = 0;i < 8;i++) { //Don't put garbage in the title bar. Mac OS X doesn't like it
-		if (name[i] == 0) break;
-		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
+void DOS_UpdateCurrentProgramName()
+{
+	if (DOS_IsGuestOsBooted()) {
+		return;
 	}
-	RunningProgram = name;
-	GFX_RefreshTitle();
+
+	const auto psp_segment = dos.psp();
+
+	// Retrieve segment name
+	char segment_name[9];
+	DOS_MCB mcb(psp_segment - 1);
+	mcb.GetFileName(segment_name);
+	segment_name[8] = 0;
+
+	// Retrieve canonical program name, if possible
+	std::string canonical_name = {};
+	if (!PAGING_Enabled()) {
+		if (psp_to_canonical_map.count(psp_segment)) {
+			canonical_name = psp_to_canonical_map.at(psp_segment);
+		}
+	}
+
+	GFX_NotifyProgramName(segment_name, canonical_name);
 }
 
-void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
+static void add_canonical_name(const uint16_t pspseg, const std::string& canonical_name)
+{
+	if (!PAGING_Enabled() && !DOS_IsGuestOsBooted()) {
+		psp_to_canonical_map[pspseg] = canonical_name;
+	}
+}
 
-	dos.return_code=exitcode;
-	dos.return_mode=(tsr)?(uint8_t)RETURN_TSR:(uint8_t)RETURN_EXIT;
-	
-	DOS_PSP curpsp(pspseg);
-	if (pspseg==curpsp.GetParent()) return;
-	/* Free Files owned by process */
-	if (!tsr) curpsp.CloseFiles();
-	
-	/* Get the termination address */
+static void erase_canonical_name(const uint16_t pspseg)
+{
+	if (!PAGING_Enabled() && !DOS_IsGuestOsBooted()) {
+		psp_to_canonical_map.erase(pspseg);
+	}
+}
+
+void DOS_ClearLaunchedProgramNames()
+{
+	// GFX is notified separately, no need to update it
+	psp_to_canonical_map.clear();
+}
+
+// ***************************************************************************
+// Program execute/terminate support
+// ***************************************************************************
+
+void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
+                   const uint8_t exit_code)
+{
+	erase_canonical_name(psp_seg);
+
+	dos.return_code = exit_code;
+	dos.return_mode = (is_terminate_and_stay_resident)
+	                        ? DosReturnMode::TerminateAndStayResident
+	                        : DosReturnMode::Exit;
+
+	DOS_PSP curpsp(psp_seg);
+	if (psp_seg == curpsp.GetParent()) {
+		return;
+	}
+
+	// Free files owned by process
+	if (!is_terminate_and_stay_resident) {
+		curpsp.CloseFiles();
+	}
+
+	// Get the termination address
 	RealPt old22 = curpsp.GetInt22();
-	/* Restore vector 22,23,24 */
+
+	// Restore vector 22,23,24
 	curpsp.RestoreVectors();
-	/* Set the parent PSP */
+
+	// Set the parent PSP
 	dos.psp(curpsp.GetParent());
 	DOS_PSP parentpsp(curpsp.GetParent());
 
-	/* Restore the SS:SP to the previous one */
-	SegSet16(ss,RealSegment(parentpsp.GetStack()));
-	reg_sp = RealOffset(parentpsp.GetStack());		
-	/* Restore registers */
-	reg_ax = real_readw(SegValue(ss),reg_sp+ 0);
-	reg_bx = real_readw(SegValue(ss),reg_sp+ 2);
-	reg_cx = real_readw(SegValue(ss),reg_sp+ 4);
-	reg_dx = real_readw(SegValue(ss),reg_sp+ 6);
-	reg_si = real_readw(SegValue(ss),reg_sp+ 8);
-	reg_di = real_readw(SegValue(ss),reg_sp+10);
-	reg_bp = real_readw(SegValue(ss),reg_sp+12);
-	SegSet16(ds,real_readw(SegValue(ss),reg_sp+14));
-	SegSet16(es,real_readw(SegValue(ss),reg_sp+16));
-	reg_sp+=18;
-	/* Set the CS:IP stored in int 0x22 back on the stack */
-	real_writew(SegValue(ss),reg_sp+0,RealOffset(old22));
-	real_writew(SegValue(ss),reg_sp+2,RealSegment(old22));
-	/* set IOPL=3 (Strike Commander), nested task set,
-	   interrupts enabled, test flags cleared */
-	real_writew(SegValue(ss),reg_sp+4,0x7202);
+	// Restore the SS:SP to the previous one
+	SegSet16(ss, RealSegment(parentpsp.GetStack()));
+	reg_sp = RealOffset(parentpsp.GetStack());
+
+	// Restore registers
+	reg_ax = real_readw(SegValue(ss), reg_sp + 0);
+	reg_bx = real_readw(SegValue(ss), reg_sp + 2);
+	reg_cx = real_readw(SegValue(ss), reg_sp + 4);
+	reg_dx = real_readw(SegValue(ss), reg_sp + 6);
+	reg_si = real_readw(SegValue(ss), reg_sp + 8);
+	reg_di = real_readw(SegValue(ss), reg_sp + 10);
+	reg_bp = real_readw(SegValue(ss), reg_sp + 12);
+
+	SegSet16(ds, real_readw(SegValue(ss), reg_sp + 14));
+	SegSet16(es, real_readw(SegValue(ss), reg_sp + 16));
+
+	reg_sp += 18;
+
+	// Set the CS:IP stored in int 0x22 back on the stack
+	real_writew(SegValue(ss), reg_sp + 0, RealOffset(old22));
+	real_writew(SegValue(ss), reg_sp + 2, RealSegment(old22));
+
+	// Set IOPL=3 (Strike Commander), nested task set interrupts enabled,
+	// test flags cleared
+	real_writew(SegValue(ss), reg_sp + 4, 0x7202);
+
 	// Free memory owned by process
-	if (!tsr) DOS_FreeProcessMemory(pspseg);
-	DOS_UpdatePSPName();
-
-	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
-
-	CPU_AutoDetermineMode>>=CPU_AUTODETERMINE_SHIFT;
-	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
-		CPU_CycleAutoAdjust=false;
-		CPU_CycleLeft=0;
-		CPU_Cycles=0;
-		CPU_CycleMax=CPU_OldCycleMax;
-		GFX_SetTitle(CPU_OldCycleMax);
-	} else {
-		GFX_RefreshTitle();
+	if (!is_terminate_and_stay_resident) {
+		DOS_FreeProcessMemory(psp_seg);
 	}
-#if (C_DYNAMIC_X86) || (C_DYNREC)
-	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-		cpudecoder=&CPU_Core_Normal_Run;
-		CPU_CycleLeft=0;
-		CPU_Cycles=0;
-	}
-#endif
 
-	return;
+	DOS_UpdateCurrentProgramName();
+
+	CPU_RestoreRealModeCyclesConfig();
 }
 
 static bool MakeEnv(char * name,uint16_t * segment) {
@@ -438,8 +479,16 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		newpsp.SetFCB2(block.exec.fcb2);
 		/* Save the SS:SP on the PSP of new program */
 		newpsp.SetStack(RealMakeSeg(ss,reg_sp));
-		/* If needed, override reported DOS version */
-		SETVER::OverrideVersion(name, newpsp);
+
+		char canonical_name[DOS_PATHLENGTH];
+		if (!DOS_Canonicalize(name, canonical_name)) {
+			assert(false);
+		} else {
+			// If needed, override reported DOS version
+			SETVER::OverrideVersion(canonical_name, newpsp);
+			// Store canonical name for display/debug purposes
+			add_canonical_name(dos.psp(), canonical_name);
+		}
 
 		/* Setup bx, contains a 0xff in bl and bh if the drive in the fcb is not valid */
 		DOS_FCB fcb1(RealSegment(block.exec.fcb1),RealOffset(block.exec.fcb1));
@@ -466,7 +515,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		memset(&stripname[index],0,8-index);
 		DOS_MCB pspmcb(dos.psp()-1);
 		pspmcb.SetFileName(stripname);
-		DOS_UpdatePSPName();
+		DOS_UpdateCurrentProgramName();
 	}
 
 	if (flags==LOAD) {

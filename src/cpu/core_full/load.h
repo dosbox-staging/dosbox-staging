@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -46,34 +46,43 @@ l_MODRMswitch:
 			inst_op1_d=Fetchb();
 			break;
 		case M_Ebx:
-			if (inst.rm<0xc0) inst_op1_ds=(int8_t)LoadMb(inst.rm_eaa);
-			else inst_op1_ds=(int8_t)reg_8(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_ds= static_cast<int8_t>(LoadMb(inst.rm_eaa));
+			else {
+				inst_op1_ds = static_cast<int8_t>(reg_8(
+						static_cast<uint8_t>(inst.rm_eai)));
+			}
 			break;
 		case M_EbIb:
 			inst_op2_d=Fetchb();
 			[[fallthrough]];
 		case M_Eb:
 			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
-			else inst_op1_d=reg_8(inst.rm_eai);
+			else {
+				inst_op1_d = reg_8(static_cast<uint8_t>(inst.rm_eai));
+			}
 			break;
 		case M_EbGb:
 			if (inst.rm<0xc0) inst_op1_d=LoadMb(inst.rm_eaa);
-			else inst_op1_d=reg_8(inst.rm_eai);
-			inst_op2_d=reg_8(inst.rm_index);
+			else {
+				inst_op1_d = reg_8(static_cast<uint8_t>(inst.rm_eai));
+			}
+			inst_op2_d = reg_8(static_cast<uint8_t>(inst.rm_index));
 			break;
 		case M_GbEb:
 			if (inst.rm<0xc0) inst_op2_d=LoadMb(inst.rm_eaa);
-			else inst_op2_d=reg_8(inst.rm_eai);
+			else {
+				inst_op2_d = reg_8(static_cast<uint8_t>(inst.rm_eai));
+			}
 			[[fallthrough]];
 		case M_Gb:
-			inst_op1_d=reg_8(inst.rm_index);;
+			inst_op1_d = reg_8(static_cast<uint8_t>(inst.rm_index));;
 			break;
 /* Word */
 		case M_Iw:
 			inst_op1_d=Fetchw();
 			break;
 		case M_EwxGwx:
-			inst_op2_ds=(int16_t)reg_16(inst.rm_index);
+			inst_op2_ds = static_cast<int16_t>(reg_16(static_cast<uint8_t>(inst.rm_index)));
 			goto l_M_Ewx;
 		case M_EwxIbx:
 			inst_op2_ds=Fetchbs();
@@ -83,8 +92,11 @@ l_MODRMswitch:
 			[[fallthrough]];
 		case M_Ewx:
 l_M_Ewx:
-			if (inst.rm<0xc0) inst_op1_ds=(int16_t)LoadMw(inst.rm_eaa);
-			else inst_op1_ds=(int16_t)reg_16(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_ds = static_cast<int16_t>(LoadMw(inst.rm_eaa));
+			else {
+				inst_op1_ds = static_cast<int16_t>(reg_16(
+						static_cast<uint8_t>(inst.rm_eai)));
+			}
 			break;
 		case M_EwIb:
 			inst_op2_d=Fetchb();
@@ -102,35 +114,42 @@ l_M_Ewx:
 			inst_imm_d=Fetchb();
 			goto l_M_EwGw;
 		case M_EwGwt:
-			inst_op2_d=reg_16(inst.rm_index);
+			inst_op2_d=reg_16(static_cast<uint8_t>(inst.rm_index));
 			inst.rm_eaa+=((int16_t)inst_op2_d >> 4) * 2;
 			goto l_M_Ew;
 		case M_EwGw:
 l_M_EwGw:
-			inst_op2_d=reg_16(inst.rm_index);
+			inst_op2_d=reg_16(static_cast<uint8_t>(inst.rm_index));
 			[[fallthrough]];
 		case M_Ew:
 l_M_Ew:
 			if (inst.rm<0xc0) inst_op1_d=LoadMw(inst.rm_eaa);
-			else inst_op1_d=reg_16(inst.rm_eai);
+			else {
+				inst_op1_d = reg_16(static_cast<uint8_t>(inst.rm_eai));
+			}
 			break;
 		case M_GwEw:
 			if (inst.rm<0xc0) inst_op2_d=LoadMw(inst.rm_eaa);
-			else inst_op2_d=reg_16(inst.rm_eai);
+			else {
+				inst_op2_d = reg_16(static_cast<uint8_t>(inst.rm_eai));
+			}
 			[[fallthrough]];
 		case M_Gw:
-			inst_op1_d=reg_16(inst.rm_index);;
+			inst_op1_d=reg_16(static_cast<uint8_t>(inst.rm_index));;
 			break;
 /* DWord */
 		case M_Id:
 			inst_op1_d=Fetchd();
 			break;
 		case M_EdxGdx:
-			inst_op2_ds=(int32_t)reg_32(inst.rm_index);
+			inst_op2_ds = static_cast<int32_t>(reg_32(static_cast<uint8_t>(inst.rm_index)));
 			[[fallthrough]];
 		case M_Edx:
-			if (inst.rm<0xc0) inst_op1_d=(int32_t)LoadMd(inst.rm_eaa);
-			else inst_op1_d=(int32_t)reg_32(inst.rm_eai);
+			if (inst.rm<0xc0) inst_op1_d=static_cast<int32_t>(LoadMd(inst.rm_eaa));
+			else {
+				inst_op1_d = static_cast<int32_t>(reg_32(
+					static_cast<uint8_t>(inst.rm_eai)));
+			}
 			break;
 		case M_EdIb:
 			inst_op2_d=Fetchb();
@@ -145,7 +164,7 @@ l_M_Ew:
 			inst_imm_d=reg_cl;
 			goto l_M_EdGd;
 		case M_EdGdt:
-			inst_op2_d=reg_32(inst.rm_index);
+			inst_op2_d = reg_32(static_cast<uint8_t>(inst.rm_index));
 			inst.rm_eaa+=((int32_t)inst_op2_d >> 5) * 4;
 			goto l_M_Ed;
 		case M_EdGdIb:
@@ -153,19 +172,23 @@ l_M_Ew:
 			goto l_M_EdGd;
 		case M_EdGd:
 l_M_EdGd:
-			inst_op2_d=reg_32(inst.rm_index);
+			inst_op2_d = reg_32(static_cast<uint8_t>(inst.rm_index));
 			[[fallthrough]];
 		case M_Ed:
 l_M_Ed:
 			if (inst.rm<0xc0) inst_op1_d=LoadMd(inst.rm_eaa);
-			else inst_op1_d=reg_32(inst.rm_eai);
+			else {
+				inst_op1_d = reg_32(static_cast<uint8_t>(inst.rm_eai));
+			}
 			break;
 		case M_GdEd:
 			if (inst.rm<0xc0) inst_op2_d=LoadMd(inst.rm_eaa);
-			else inst_op2_d=reg_32(inst.rm_eai);
+			else {
+				inst_op2_d = reg_32(static_cast<uint8_t>(inst.rm_eai));
+			}
 			[[fallthrough]];
 		case M_Gd:
-			inst_op1_d=reg_32(inst.rm_index);
+			inst_op1_d = reg_32(static_cast<uint8_t>(inst.rm_index));
 			break;
 /* Others */
 		case M_SEG:
@@ -261,19 +284,19 @@ l_M_Ed:
 		inst_op2_d=Fetchb();
 		[[fallthrough]];
 	case L_REGb:
-		inst_op1_d=reg_8(inst.code.extra);
+		inst_op1_d = reg_8(inst.code.extra);
 		break;
 	case L_REGwIw:
 		inst_op2_d=Fetchw();
 		[[fallthrough]];
 	case L_REGw:
-		inst_op1_d=reg_16(inst.code.extra);
+		inst_op1_d = reg_16(inst.code.extra);
 		break;
 	case L_REGdId:
 		inst_op2_d=Fetchd();
 		[[fallthrough]];
 	case L_REGd:
-		inst_op1_d=reg_32(inst.code.extra);
+		inst_op1_d = reg_32(inst.code.extra);
 		break;
 	case L_SEG:
 		inst_op1_d=SegValue((SegNames)inst.code.extra);
@@ -519,15 +542,12 @@ l_M_Ed:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	case D_RDTSC: {
-		if (CPU_ArchitectureType<ArchitectureType::PentiumSlow)
-			goto illegalopcode;
-	        int64_t tsc = (int64_t)(PIC_FullIndex() *
-	                              static_cast<double>(
-	                                      CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
-	        reg_edx = (uint32_t)(tsc >> 32);
-		reg_eax = (uint32_t)(tsc & 0xffffffff);
-		break;
-	}
+	        if (CPU_ArchitectureType < ArchitectureType::Pentium) {
+		        goto illegalopcode;
+	        }
+	        CPU_ReadTSC();
+	        break;
+        }
 	default:
 		LOG(LOG_CPU, LOG_ERROR)("LOAD:Unhandled code %d opcode %X", inst.code.load, static_cast<uint32_t>(inst.entry));
 		goto illegalopcode;

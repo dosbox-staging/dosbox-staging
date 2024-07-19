@@ -13,7 +13,7 @@
 
 #include <windows.h>
 #include <vfw.h>
-#include <zlib.h>
+
 #include "zmbv.h"
 #pragma hdrstop
 

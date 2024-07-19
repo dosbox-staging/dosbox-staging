@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@
  * object. The user data is provided inside the 'opaque' pointer.
  */
 
-ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
+db_ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 {
 	// sentinels
 	if (!len)
@@ -197,7 +197,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	inet_pton(AF_INET6, "fec0::3", &config.vnameserver6);
 
 	/* DHCPv4, BOOTP, TFTP */
-	config.vhostname = CANONICAL_PROJECT_NAME;
+	config.vhostname = DOSBOX_PROJECT_NAME;
 	config.vdnssearch = nullptr;
 	config.vdomainname = nullptr;
 	config.tftp_server_name = nullptr;
@@ -250,12 +250,12 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 	inet_pton(AF_INET, "0.0.0.0", &bind_addr);
 
 	// Split the rules first by spaces
-	for (auto &forward_rule : split(port_forward_rules, ' ')) {
+	for (auto &forward_rule : split_with_empties(port_forward_rules, ' ')) {
 		if (forward_rule.empty())
 			continue;
 
 		// Split the rule into host:guest portions
-		auto forward_rule_parts = split(forward_rule, ':');
+		auto forward_rule_parts = split_with_empties(forward_rule, ':');
 		// if only one is provided, then the guest port is the same
 		if (forward_rule_parts.size() == 1)
 			forward_rule_parts.push_back(forward_rule_parts[0]);
@@ -272,7 +272,7 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 
 		// Process the host and guest portions separately
 		for (const auto &port_range_part : forward_rule_parts) {
-			auto port_range = split(port_range_part, '-');
+			auto port_range = split_with_empties(port_range_part, '-');
 
 			// If only one value is provided, then the start and end are the same
 			if (port_range.size() == 1 && !port_range[0].empty())

@@ -3,7 +3,15 @@ name: PVS-Studio analysis
 # If the CI job fails with 404-not-found, then PVS studio has updated the release.
 # Get the new DEB version from: https://pvs-studio.com/en/pvs-studio/download-all/
 
-on: push
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,9 +20,9 @@ concurrency:
 jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
-      debfile: pvs-studio-7.25.72091.324-amd64.deb
+      debfile: pvs-studio-7.29.79138.387-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,7 +36,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v3.3.2
+      - uses: actions/cache@v4.0.1
         id: cache-pvs
         with:
           path: pvs-package
@@ -41,17 +49,17 @@ jobs:
       - name: Install dependencies
         run: |
           set -xeu
-          sudo apt-get install -y strace $(cat packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install -y strace $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
           sudo dpkg -i "pvs-package/pvs.deb"
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
       - name: Cache subprojects
         id:   cache-subprojects
-        uses: actions/cache@v3.3.2
+        uses: actions/cache@v4.0.1
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
@@ -64,7 +72,7 @@ jobs:
       - name: Build
         run: |
           set -xeu
-          meson setup -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
+          meson setup -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-15.ini build
           pvs-studio-analyzer trace -- meson compile -C build
 
       - name: Analyze
@@ -74,7 +82,7 @@ jobs:
           general_criteria="GA:1,2;64:1;OP:1,2,3;CS:1"
           stamp="$(date +'%Y-%m-%d_T%H%M')-${GITHUB_SHA:0:8}"
           reportdir="pvs-report/pvs-report-${stamp}"
-          disable_warnings="V002,V801,V802,V826,V1042,V1071,V2008"
+          disable_warnings="V002,V801,V802,V813,V826,V1042,V1071,V2008,V2010"
 
           mkdir -p "${reportdir}"
 
@@ -104,14 +112,15 @@ jobs:
           rm -rf "${reportdir}/pvs-report.fullhtml"
 
       - name: Upload report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: pvs-analysis-report
           path: pvs-report
+          overwrite: true
 
       - name: Summarize report
         env:
-          MAX_BUGS: 167
+          MAX_BUGS: 90
         run: |
           echo "Full report is included in build Artifacts"
           echo

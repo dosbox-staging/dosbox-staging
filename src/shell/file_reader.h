@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,33 +26,24 @@
 
 #include "shell.h"
 
-class FileReader final : public ByteReader {
-private:
-	// Exists to effectively make the FileReader constructor private
-	// It still needs to be public for internal use with std::make_unique
-	struct PrivateOnly {
-		explicit PrivateOnly() = default;
-	};
-
+class FileReader final : public LineReader {
 public:
-	[[nodiscard]] static std::optional<std::unique_ptr<FileReader>> GetFileReader(
-	        std::string_view file);
+	static std::unique_ptr<FileReader> GetFileReader(const std::string& file);
 
 	void Reset() final;
-	[[nodiscard]] std::optional<char> Read() final;
-
-	FileReader(std::string_view filename, PrivateOnly key);
-	~FileReader() final;
+	std::optional<std::string> Read() final;
 
 	FileReader(const FileReader&)            = delete;
 	FileReader& operator=(const FileReader&) = delete;
-	FileReader(FileReader&&)                 = delete;
-	FileReader& operator=(FileReader&&)      = delete;
+	FileReader(FileReader&&)                 = default;
+	FileReader& operator=(FileReader&&)      = default;
+	~FileReader() final                      = default;
 
 private:
-	std::string filename = {};
-	uint16_t handle      = 0;
-	bool valid;
+	explicit FileReader(std::string filename);
+
+	std::string filename;
+	uint32_t cursor;
 };
 
 #endif

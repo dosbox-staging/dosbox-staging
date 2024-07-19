@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,9 +44,7 @@ void MOUSECTL::Run()
 
 bool MOUSECTL::ParseAndRun()
 {
-	// Put all the parameters into vector
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	auto params = cmd->GetArguments();
 
 	// Extract the list of interfaces from the vector
 	list_ids.clear();
@@ -327,6 +325,21 @@ void MOUSECTL::FinalizeMapping()
 	WriteOut("\n\n");
 }
 
+bool MOUSECTL::CheckMappingPossible()
+{
+	if (MouseControlAPI::IsNoMouseMode()) {
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+		return false;
+	}
+
+	if (MouseControlAPI::IsMappingBlockedByDriver()) {
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER"));
+		return false;
+	}
+
+	return true;
+}
+
 bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)
 {
 	std::regex regex;
@@ -335,8 +348,7 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pa
 		return false;
 	}
 
-	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+	if (!CheckMappingPossible()) {
 		return false;
 	}
 
@@ -354,8 +366,7 @@ bool MOUSECTL::CmdMap()
 {
 	assert(!list_ids.empty());
 
-	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+	if (!CheckMappingPossible()) {
 		return false;
 	}
 
@@ -377,7 +388,7 @@ bool MOUSECTL::CmdMap()
 	WriteOut("\n\n");
 
 	for (const auto &interface_id : list_ids) {
-		WriteOut(convert_ansi_markup("[color=cyan]%-4s[reset]   ?").c_str(),
+		WriteOut(convert_ansi_markup("[color=light-cyan]%-4s[reset]   ?").c_str(),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str());
 
 		uint8_t device_idx = 0;
@@ -516,30 +527,32 @@ bool MOUSECTL::CmdMinRate()
 void MOUSECTL::AddMessages()
 {
 	MSG_Add("PROGRAM_MOUSECTL_HELP_LONG",
-	        "Manages physical and logical mice.\n"
+	        "Manage physical and logical mice.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]mousectl[reset] [-all]\n"
-	        "  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAME[reset]\n"
-	        "  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map\n"
-	        "  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset\n"
-	        "  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]\n"
-	        "  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y\n"
-	        "  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]\n"
+	        "  [color=light-green]mousectl[reset] [-all]\n"
+	        "  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=light-cyan]NAME[reset]\n"
+	        "  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map\n"
+	        "  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset\n"
+	        "  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]\n"
+	        "  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y\n"
+	        "  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]INTERFACE[reset]      one of [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]\n"
-	        "  -map -unmap    maps/unmaps physical mouse, honors DOS wildcards in [color=cyan]NAME[reset]\n"
-	        "  -s -sx -sy     sets sensitivity / for x axis / for y axis, from -999 to +999\n"
-	        "  -r             sets minimum mouse sampling rate\n"
-	        "  -on -off       enables or disables mouse on the given interface\n"
-	        "  -reset         restores all mouse settings from the configuration file\n"
+	        "Parameters:\n"
+	        "  [color=white]INTERFACE[reset]    one of [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]\n"
+	        "  -map -unmap  map/unmap physical mouse, honoring DOS wildcards in [color=light-cyan]NAME[reset]\n"
+	        "  -s -sx -sy   set sensitivity / for x axis / for y axis, from -999 to +999\n"
+	        "  -r           set minimum mouse sampling rate\n"
+	        "  -on -off     enable or disables mouse on the given interface\n"
+	        "  -reset       restore default mouse settings\n"
 	        "\n"
 	        "Notes:\n"
-	        "  If sensitivity or rate is omitted, it is reset to default value.\n"
+	        "  - If sensitivity or rate is omitted, it is reset to default value.\n"
+	        "  - Mouse sensitivity set in the configuration file acts as global scale factor,\n"
+	        "    per-interface sensitivity set by this commands works on top of that.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
+	        "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
 
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_PATTERN",
 	        "Incorrect syntax, only ASCII characters allowed in pattern.\n");
@@ -552,6 +565,8 @@ void MOUSECTL::AddMessages()
 
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
 	        "Mapping not available in no-mouse mode.\n");
+	MSG_Add("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER",
+	        "Mapping not possible with current guest mouse driver.\n");
 	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
 	        "No mouse interfaces available.\n");
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
@@ -564,22 +579,22 @@ void MOUSECTL::AddMessages()
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER1",
 	        "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT1",
-	        "[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s");
+	        "[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER2",
 	        "[color=white]Interface     Mouse Name[reset]");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2",
-	        "[color=cyan]%-4s[reset]          %s");
+	        "[color=light-cyan]%-4s[reset]          %s");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED", "not mapped    %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_HOST", "uses system pointer");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED", "mapped physical mouse");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED",
-	        "[color=red]mapped mouse disconnected[reset]");
+	        "[color=light-red]mapped mouse disconnected[reset]");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED", "disabled");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM",
-	        "Sampling rates for mice on [color=cyan]COM[reset] interfaces are estimations only.");
+	        "Sampling rates for mice on [color=light-cyan]COM[reset] interfaces are estimations only.");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN",
 	        "Sampling rates with minimum value set are marked with '*'.");
 

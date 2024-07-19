@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 #ifdef WIN32
 #include <process.h>
 #include <signal.h>
+#include <windows.h>
 #endif
 
 #include <SDL.h>
@@ -48,6 +49,7 @@
 #endif
 
 #include "../capture/capture.h"
+#include "../dos/dos_locale.h"
 #include "../ints/int10.h"
 #include "control.h"
 #include "cpu.h"
@@ -63,11 +65,13 @@
 #include "mouse.h"
 #include "pacer.h"
 #include "pic.h"
+#include "rect.h"
 #include "render.h"
 #include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
+#include "titlebar.h"
 #include "tracy.h"
 #include "vga.h"
 #include "video.h"
@@ -84,37 +88,12 @@
 #define APIENTRYP APIENTRY *
 #endif
 
-#ifndef GL_ARB_pixel_buffer_object
-#define GL_ARB_pixel_buffer_object 1
-#define GL_PIXEL_PACK_BUFFER_ARB           0x88EB
-#define GL_PIXEL_UNPACK_BUFFER_ARB         0x88EC
-#define GL_PIXEL_PACK_BUFFER_BINDING_ARB   0x88ED
-#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
-#endif
-
-#ifndef GL_ARB_vertex_buffer_object
-#define GL_ARB_vertex_buffer_object 1
-typedef void (APIENTRYP PFNGLGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRYP PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint buffer);
-typedef void (APIENTRYP PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRYP PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
-typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
-#endif
-
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = nullptr;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = nullptr;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = nullptr;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = nullptr;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = nullptr;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = nullptr;
-
 /* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these typedefs.
  * If they're already defined they should match these definitions, so no conflicts.
  */
 typedef void (APIENTRYP PFNGLATTACHSHADERPROC) (GLuint program, GLuint shader);
 typedef void (APIENTRYP PFNGLCOMPILESHADERPROC) (GLuint shader);
-typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) (void);
+typedef GLuint (APIENTRYP PFNGLCREATEPROGRAMPROC) ();
 typedef GLuint (APIENTRYP PFNGLCREATESHADERPROC) (GLenum type);
 typedef void (APIENTRYP PFNGLDELETEPROGRAMPROC) (GLuint program);
 typedef void (APIENTRYP PFNGLDELETESHADERPROC) (GLuint shader);
@@ -212,34 +191,40 @@ SDL_Block sdl;
 [[maybe_unused]] constexpr uint32_t AMASK = 0xff000000;
 #endif
 
-// Size and ratio constants
-// ------------------------
-static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
+static SDL_Point FallbackWindowSize = {640, 480};
 
 static bool first_window = true;
 
-static SDL_Point restrict_to_viewport_resolution(int width, int height);
-static SDL_Rect calc_viewport(const int width, const int height);
+static DosBox::Rect to_rect(const SDL_Rect r)
+{
+	return {r.x, r.y, r.w, r.h};
+}
 
-static void CleanupSDLResources();
-static void HandleVideoResize(int width, int height);
+static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
+{
+	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
+}
+
+static void clean_up_sdl_resources();
+static void handle_video_resize(int width, int height);
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
 static bool present_frame_texture();
 #if C_OPENGL
-static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines);
-static void update_frame_gl_fb(const uint16_t *changedLines);
+static void update_frame_gl(const uint16_t *changedLines);
 static bool present_frame_gl();
+static const char* safe_gl_get_string(const GLenum requested_name,
+                                      const char* default_result);
 #endif
 
-static const char* vsync_state_as_string(const VsyncState state)
+static const char* to_string(const VsyncMode mode)
 {
-	switch (state) {
-	case VsyncState::Unset: return "unset";
-	case VsyncState::Adaptive: return "adaptive";
-	case VsyncState::Off: return "off";
-	case VsyncState::On: return "on";
-	default: return "unknown";
+	switch (mode) {
+	case VsyncMode::Unset: return "unset";
+	case VsyncMode::Adaptive: return "adaptive";
+	case VsyncMode::Off: return "off";
+	case VsyncMode::On: return "on";
+	default: assertm(false, "Invalid VsyncMode"); return "";
 	}
 }
 
@@ -247,7 +232,7 @@ static const char* vsync_state_as_string(const VsyncState state)
 extern SDL_Window *pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
-static bool isDebuggerEvent(const SDL_Event &event)
+static bool is_debugger_event(const SDL_Event &event)
 {
 	switch (event.type) {
 	case SDL_KEYDOWN:
@@ -265,7 +250,7 @@ static bool isDebuggerEvent(const SDL_Event &event)
 	return false;
 }
 
-SDL_Window *GFX_GetSDLWindow(void)
+SDL_Window *GFX_GetSDLWindow()
 {
 	return sdl.window;
 }
@@ -278,13 +263,16 @@ constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
 
 
 #ifdef DB_OPENGL_ERROR
-void OPENGL_ERROR(const char* message) {
+void OPENGL_ERROR(const char* message)
+{
 	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) return;
-	LOG_ERR("errors from %s",message);
+	if (r == GL_NO_ERROR) {
+		return;
+	}
+	LOG_ERR("OPENGL: Errors from %s", message);
 	do {
-		LOG_ERR("%X",r);
-	} while ( (r=glGetError()) != GL_NO_ERROR);
+		LOG_ERR("OPENGL: %X", r);
+	} while ((r = glGetError()) != GL_NO_ERROR);
 }
 #else
 void OPENGL_ERROR(const char*) {
@@ -293,63 +281,18 @@ void OPENGL_ERROR(const char*) {
 #endif
 #endif
 
-extern "C" void SDL_CDROMQuit(void);
 static void QuitSDL()
 {
 	if (sdl.initialized) {
-		SDL_CDROMQuit();
 #if !C_DEBUG
 		SDL_Quit();
 #endif
 	}
 }
 
-extern const char* RunningProgram;
-extern bool CPU_CycleAutoAdjust;
-//Globals for keyboard initialisation
-bool startup_state_numlock=false;
-bool startup_state_capslock=false;
-
-void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
-{
-	char title_buf[200] = {0};
-
-#if !defined(NDEBUG)
-	#define APP_NAME_STR "DOSBox Staging (debug build)"
-#else
-	#define APP_NAME_STR "DOSBox Staging"
-#endif
-
-	auto &num_cycles      = sdl.title_bar.num_cycles;
-	auto &cycles_ms_str   = sdl.title_bar.cycles_ms_str;
-	auto &hint_mouse_str  = sdl.title_bar.hint_mouse_str;
-	auto &hint_paused_str = sdl.title_bar.hint_paused_str;
-
-	if (new_num_cycles != -1)
-		num_cycles = new_num_cycles;
-
-	if (cycles_ms_str.empty()) {
-		cycles_ms_str   = MSG_GetRaw("TITLEBAR_CYCLES_MS");
-		hint_paused_str = std::string(" ") + MSG_GetRaw("TITLEBAR_HINT_PAUSED");
-	}
-
-	if (CPU_CycleAutoAdjust)
-		safe_sprintf(title_buf, "%8s - max %d%% - " APP_NAME_STR "%s",
-		             RunningProgram, num_cycles,
-		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
-	else
-		safe_sprintf(title_buf, "%8s - %d %s - " APP_NAME_STR "%s",
-		             RunningProgram, num_cycles, cycles_ms_str.c_str(),
-		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
-
-	SDL_SetWindowTitle(sdl.window, title_buf);
-}
-
-void GFX_RefreshTitle()
-{
-	constexpr int8_t refresh_cycle_count = -1;
-	GFX_SetTitle(refresh_cycle_count);
-}
+// Globals for keyboard initialisation
+static bool startup_state_numlock  = false;
+static bool startup_state_capslock = false;
 
 // Detects if we're running within a desktop environment (or window manager).
 bool GFX_HaveDesktopEnvironment()
@@ -369,14 +312,22 @@ bool GFX_HaveDesktopEnvironment()
 	// https://specifications.freedesktop.org/desktop-entry-spec/desktop-entry-spec-latest.html#recognized-keys
 	// https://askubuntu.com/questions/72549/how-to-determine-which-window-manager-and-desktop-environment-is-running
 	// https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
-	//
-	constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
-	                                "XDG_SESSION_DESKTOP",
-	                                "DESKTOP_SESSION",
-	                                "GDMSESSION"};
 
-	return std::any_of(std::begin(vars), std::end(vars), std::getenv);
+	static bool already_checked          = false;
+	static bool have_desktop_environment = false;
+	if (!already_checked) {
+		constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
+		                                "XDG_SESSION_DESKTOP",
+		                                "DESKTOP_SESSION",
+		                                "GDMSESSION"};
 
+		have_desktop_environment = std::any_of(std::begin(vars),
+		                                       std::end(vars),
+		                                       std::getenv);
+		already_checked = true;
+	}
+
+	return have_desktop_environment;
 #else
 	// Assume we have a desktop environment on all other systems
 	return true;
@@ -387,9 +338,12 @@ static double get_host_refresh_rate()
 {
 	auto get_sdl_rate = []() {
 		SDL_DisplayMode mode = {};
-		auto &sdl_rate = mode.refresh_rate;
+
+		auto& sdl_rate = mode.refresh_rate;
+
 		assert(sdl.window);
 		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+
 		if (display_in_use < 0) {
 			LOG_ERR("SDL: Could not get the current window index: %s",
 			        SDL_GetError());
@@ -405,160 +359,153 @@ static double get_host_refresh_rate()
 			            sdl_rate);
 			return RefreshRateHostDefault;
 		}
+
 		assert(sdl_rate >= RefreshRateMin);
 		return sdl_rate;
 	};
 
 	auto get_vrr_rate = [](const int sdl_rate) {
-		constexpr auto vrr_backoff_hz = 3;
-		return sdl_rate - vrr_backoff_hz;
+		constexpr auto VrrBackoffHz = 3;
+		return sdl_rate - VrrBackoffHz;
 	};
 
 	auto get_sdi_rate = [](const int sdl_rate) {
-		const auto is_odd = sdl_rate % 2 != 0;
-		const auto not_div_by_5 = sdl_rate % 5 != 0;
+		// TODO needs explanation - what are we even calculating here?
+		const auto is_odd           = sdl_rate % 2 != 0;
+		const auto not_div_by_5     = sdl_rate % 5 != 0;
 		const auto next_is_div_by_3 = (sdl_rate + 1) % 3 == 0;
+
 		const bool should_adjust = is_odd && not_div_by_5 && next_is_div_by_3;
 		constexpr auto sdi_factor = 1.0 - 1.0 / 1000.0;
+
 		return should_adjust ? (sdl_rate + 1) * sdi_factor : sdl_rate;
 	};
 
 	// To be populated in the switch
-	auto rate = 0.0;                   // refresh rate as a floating point number
-	const char *rate_description = ""; // description of the refresh rate
+	auto refresh_rate            = 0.0;
+	const char* rate_description = "";
 
 	switch (sdl.desktop.host_rate_mode) {
 	case HostRateMode::Auto:
 		if (const auto sdl_rate = get_sdl_rate();
 		    sdl.desktop.fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
-			rate = get_vrr_rate(sdl_rate);
+			refresh_rate     = get_vrr_rate(sdl_rate);
 			rate_description = "VRR-adjusted (auto)";
 		} else {
-			rate = get_sdi_rate(sdl_rate);
+			refresh_rate     = get_sdi_rate(sdl_rate);
 			rate_description = "standard SDI (auto)";
 		}
 		break;
+
 	case HostRateMode::Sdi:
-		rate = get_sdi_rate(get_sdl_rate());
+		refresh_rate     = get_sdi_rate(get_sdl_rate());
 		rate_description = "standard SDI";
 		break;
+
 	case HostRateMode::Vrr:
-		rate = get_vrr_rate(get_sdl_rate());
+		refresh_rate     = get_vrr_rate(get_sdl_rate());
 		rate_description = "VRR-adjusted";
 		break;
+
 	case HostRateMode::Custom:
 		assert(sdl.desktop.preferred_host_rate >= RefreshRateMin);
-		rate = sdl.desktop.preferred_host_rate;
+		refresh_rate     = sdl.desktop.preferred_host_rate;
 		rate_description = "custom";
 		break;
 	}
-	assert(rate >= RefreshRateMin);
+	assert(refresh_rate >= RefreshRateMin);
 
 	// Log if changed
 	static auto last_int_rate = 0;
-	const auto int_rate = ifloor(rate);
+	const auto int_rate       = ifloor(refresh_rate);
+
 	if (last_int_rate != int_rate) {
 		last_int_rate = int_rate;
 		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
-		        rate_description, rate);
+		        rate_description,
+		        refresh_rate);
 	}
-	return rate;
+	return refresh_rate;
 }
 
-// Reset and populate the vsync settings from the user's conf setting. This is
-// called on-demand after startup and on output-mode changes (ie: switching from
-// an SDL-based drawing context to an OpenGL-based context).
+static Section_prop* get_sdl_section()
+{
+	assert(control);
+
+	auto sdl_section = static_cast<Section_prop*>(control->GetSection("sdl"));
+	assert(sdl_section);
+
+	return sdl_section;
+}
+
+// Reset and populate the vsync settings from the config. This is
+// called on-demand after startup and on output mode changes (e.g., switching
+// from the 'texture' backend to 'opengl').
 //
 static void initialize_vsync_settings()
 {
 	sdl.vsync = {};
 
-	const auto section = dynamic_cast<Section_prop*>(control->GetSection("sdl"));
-	const std::string user_pref = (section ? section->Get_string("vsync") : "auto");
+	const std::string user_pref = get_sdl_section()->Get_string("vsync");
 
 	if (has_true(user_pref)) {
-		sdl.vsync.when_windowed.requested   = VsyncState::On;
-		sdl.vsync.when_fullscreen.requested = VsyncState::On;
+		sdl.vsync.when_windowed.requested   = VsyncMode::On;
+		sdl.vsync.when_fullscreen.requested = VsyncMode::On;
+
+	} else if (user_pref == "adaptive") {
+		sdl.vsync.when_windowed.requested   = VsyncMode::Adaptive;
+		sdl.vsync.when_fullscreen.requested = VsyncMode::Adaptive;
+
 	} else if (has_false(user_pref)) {
-		sdl.vsync.when_windowed.requested   = VsyncState::Off;
-		sdl.vsync.when_fullscreen.requested = VsyncState::Off;
+		sdl.vsync.when_windowed.requested   = VsyncMode::Off;
+		sdl.vsync.when_fullscreen.requested = VsyncMode::Off;
+
 	} else if (user_pref == "yield") {
-		sdl.vsync.when_windowed.requested   = VsyncState::Yield;
-		sdl.vsync.when_fullscreen.requested = VsyncState::Yield;
+		sdl.vsync.when_windowed.requested   = VsyncMode::Yield;
+		sdl.vsync.when_fullscreen.requested = VsyncMode::Yield;
+
 	} else {
 		assert(user_pref == "auto");
 
-		// In 'vsync = auto' windowed-mode, we try to disable vsync for
-		// our Window because enabling vsync both at the program and
-		// compositor levels (which might be enforced) may add latency
-		// (i.e,: extra time blocked inside rendering or presentation
-		// calls), which stalls DOSBox.
+		// With 'vsync = auto' in windowed mode, we try to disable vsync
+		// because the OS-level compositor usually enforces it anyway,
+		// so we get no tearing. Enabling vsync on our side would usually
+		// have either no effect, or it would add extra latency
+		// without any benefits in the worst case.
 		//
-		sdl.vsync.when_windowed.requested = VsyncState::Off;
+		sdl.vsync.when_windowed.requested = VsyncMode::Off;
 
-		// In fullscreen-mode, the above still applies however we add
-		// handling for VRR displays that perform frame interpolation.
-		// as tehy need vsync enabled to lock onto the content:
+		// In fullscreen mode, the above still applies, however, we add
+		// handling for VRR displays that perform frame interpolation,
+		// as they need vsync enabled to lock onto the content.
+		//
 		const bool prefers_vsync_when_fullscreen =
 		        (get_host_refresh_rate() >= InterpolatingVrrMinRateHz);
 
 		sdl.vsync.when_fullscreen.requested = prefers_vsync_when_fullscreen
-		                                            ? VsyncState::On
-		                                            : VsyncState::Off;
+		                                            ? VsyncMode::On
+		                                            : VsyncMode::Off;
 
 		// In 'vsync = auto', we also /assume/ vsync is enabled
 		// (regardless how the above requests actually played out) by
-		// overriding the measured state, as follows:
+		// overriding the auto-determined mode as follows:
 		//
-		sdl.vsync.when_windowed.measured   = VsyncState::On;
-		sdl.vsync.when_fullscreen.measured = VsyncState::On;
-		//
+		sdl.vsync.when_windowed.auto_determined   = VsyncMode::On;
+		sdl.vsync.when_fullscreen.auto_determined = VsyncMode::On;
+
 		// A 60 Hz display can only show 60 complete frames per second.
 		// To achieve a higher frame rate, the host must drop or tear
 		// frames. This creates two layers of tearing when combined with
 		// DOS's (potentially) torn frames, which is common in games
 		// that don't use vblank. In "auto" mode, we aim for the best
-		// user experience, and dual-tearing isn't it. However, users
-		// can always set 'vsync = off'.
+		// user experience with no extra host-level tearing. However,
+		// users can always set 'vsync = off'.
 		//
 		// There is no downside to making this assumption when the host
 		// display is faster than the DOS rate because all frames will
 		// be presented.
 	}
 }
-
-/* On macOS, as we use a nicer external icon packaged in App bundle.
- *
- * Visual Studio bundles .ico file specified in winres.rc into the
- * dosbox.exe file.
- *
- * Other OSes will either use svg icon bundled in the native package, or
- * the window uploaded via SDL_SetWindowIcon below.
- */
-#if defined(MACOSX) || defined(_MSC_VER)
-static void SetIcon() {}
-#else
-
-#include "icon.c"
-
-static void SetIcon()
-{
-	constexpr int src_w = icon_data.width;
-	constexpr int src_h = icon_data.height;
-	constexpr int src_bpp = icon_data.bytes_per_pixel;
-	static_assert(src_bpp == 4, "Source image expected in RGBA format.");
-	std::array<uint8_t, (src_w * src_h * src_bpp)> icon;
-	ICON_DATA_RUN_LENGTH_DECODE(icon.data(), icon_data.rle_pixel_data,
-	                            src_w * src_h, src_bpp);
-	SDL_Surface *s = SDL_CreateRGBSurfaceFrom(icon.data(), src_w, src_h,
-	                                          src_bpp * 8, src_w * src_bpp,
-	                                          RMASK, GMASK, BMASK, AMASK);
-	assert(s);
-	SDL_SetWindowIcon(sdl.window, s);
-	SDL_FreeSurface(s);
-}
-
-#endif
 
 void GFX_RequestExit(const bool pressed)
 {
@@ -568,23 +515,36 @@ void GFX_RequestExit(const bool pressed)
 	}
 }
 
-[[maybe_unused]] static void PauseDOSBox(bool pressed)
+#if defined(MACOSX)
+static bool is_command_pressed(const SDL_Event event)
 {
-	if (!pressed)
+	return (event.key.keysym.mod == KMOD_RGUI ||
+	        event.key.keysym.mod == KMOD_LGUI);
+}
+#endif
+
+[[maybe_unused]] static void pause_emulation(bool pressed)
+{
+	if (!pressed) {
 		return;
+	}
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
+	sdl.is_paused = true;
 	GFX_RefreshTitle();
-	bool paused = true;
-	Delay(500);
+
 	SDL_Event event;
+
 	while (SDL_PollEvent(&event)) {
 		// flush event queue.
 	}
-	/* NOTE: This is one of the few places where we use SDL key codes
-	with SDL 2.0, rather than scan codes. Is that the correct behavior? */
-	while (paused && !shutdown_requested) {
-		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+
+	// NOTE: This is one of the few places where we use SDL key codes with
+	// SDL 2.0, rather than scan codes. Is that the correct behavior?
+	while (sdl.is_paused && !shutdown_requested) {
+		// since we're not polling, CPU usage drops to 0.
+		SDL_WaitEvent(&event);
+
 		switch (event.type) {
 		case SDL_QUIT: GFX_RequestExit(true); break;
 
@@ -594,24 +554,38 @@ void GFX_RequestExit(const bool pressed)
 				GFX_ResetScreen();
 			}
 			break;
-		case SDL_KEYDOWN: // Must use Pause/Break Key to resume.
+
+		case SDL_KEYDOWN:
+#if defined(MACOSX)
+			// Pause/unpause is hardcoded to Command+P on macOS
+			if (is_command_pressed(event) &&
+			    event.key.keysym.sym == SDLK_p) {
+#else
+			// Pause/unpause is hardcoded to Alt+Pause on Window &
+			// Linux
 			if (event.key.keysym.sym == SDLK_PAUSE) {
+#endif
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
-					//Not perfect if the pressed alt key is switched, but then we have to
-					//insert the keys into the mapper or create/rewrite the event and push it.
-					//Which is tricky due to possible use of scancodes.
+					// Not perfect if the pressed Alt key is
+					// switched, but then we have to insert
+					// the keys into the mapper or
+					// create/rewrite the event and push it.
+					// Which is tricky due to possible use
+					// of scancodes.
 				}
-				paused = false;
+				sdl.is_paused = false;
 				GFX_RefreshTitle();
 				break;
 			}
-#if defined (MACOSX)
-			if (event.key.keysym.sym == SDLK_q &&
-			   (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
-				/* On macs, all aps exit when pressing cmd-q */
+
+#if defined(MACOSX)
+			if (is_command_pressed(event) &&
+			    event.key.keysym.sym == SDLK_q) {
+				// On macOS, Command+Q is the default key to close an
+				// application
 				GFX_RequestExit(true);
 				break;
 			}
@@ -633,13 +607,16 @@ void GFX_DisengageRendering()
 	sdl.frame.present = present_frame_noop;
 }
 
-/* Reset the screen with current values in the sdl structure */
-void GFX_ResetScreen(void) {
+void GFX_ResetScreen()
+{
 	GFX_Stop();
-	if (sdl.draw.callback)
-		(sdl.draw.callback)( GFX_CallBackReset );
+	if (sdl.draw.callback) {
+		(sdl.draw.callback)(GFX_CallBackReset);
+	}
 	GFX_Start();
-	CPU_Reset_AutoAdjust();
+	CPU_ResetAutoAdjust();
+
+	VGA_SetupDrawing(0);
 }
 
 void GFX_ForceFullscreenExit()
@@ -666,7 +643,7 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 		return 0;
 	}
 
-	if (starts_with(sdl.render_driver, "opengl")) {
+	if (sdl.render_driver.starts_with("opengl")) {
 		return SDL_WINDOW_OPENGL;
 	}
 
@@ -685,45 +662,77 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
 			break;
 	}
-	default_driver_is_opengl = starts_with(info.name, "opengl");
+	default_driver_is_opengl = std::string_view(info.name).starts_with("opengl");
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect get_canvas_size(const RenderingBackend rendering_backend);
+static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
+{
+	const DosBox::Rect render_size_px = {sdl.draw.render_width_px,
+	                                     sdl.draw.render_height_px};
+
+	const auto r = GFX_CalcDrawRectInPixels(canvas_size_px,
+	                                        render_size_px,
+	                                        sdl.draw.render_pixel_aspect_ratio);
+
+	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
+}
+
+// Returns the actual output size in pixels.
+// Needed for DPI-scaled windows, when logical window and actual output sizes
+// might not match.
+static DosBox::Rect get_canvas_size_in_pixels(
+        [[maybe_unused]] const RenderingBackend rendering_backend)
+{
+	SDL_Rect canvas_size_px = {};
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+	SDL_GetWindowSizeInPixels(sdl.window, &canvas_size_px.w, &canvas_size_px.h);
+#else
+	switch (rendering_backend) {
+	case RenderingBackend::Texture:
+		if (SDL_GetRendererOutputSize(sdl.renderer,
+		                              &canvas_size_px.w,
+		                              &canvas_size_px.h) != 0) {
+			LOG_ERR("SDL: Failed to retrieve output size: %s",
+			        SDL_GetError());
+		}
+		break;
+#if C_OPENGL
+	case RenderingBackend::OpenGl:
+		SDL_GL_GetDrawableSize(sdl.window,
+		                       &canvas_size_px.w,
+		                       &canvas_size_px.h);
+		break;
+#endif
+	default:
+		SDL_GetWindowSize(sdl.window, &canvas_size_px.w, &canvas_size_px.h);
+	}
+#endif
+	const auto r = to_rect(canvas_size_px);
+	assert(r.HasPositiveSize());
+	return r;
+}
 
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(const int width, const int height,
-                                   const VideoMode& video_mode,
-                                   const std::optional<SDL_Rect>& viewport_size_override,
+//
+static void log_display_properties(const int render_width_px,
+                                   const int render_height_px,
+                                   const std::optional<VideoMode>& maybe_video_mode,
                                    const RenderingBackend rendering_backend)
 {
-	// Get the viewport dimensions, with consideration for possible override
-	// values
-	auto get_viewport_size = [&]() -> std::pair<int, int> {
-		if (viewport_size_override) {
-			const auto vp = calc_viewport(viewport_size_override->w,
-			                              viewport_size_override->h);
-			return {vp.w, vp.h};
-		}
-		const auto canvas   = get_canvas_size(rendering_backend);
-		const auto viewport = calc_viewport(canvas.w, canvas.h);
-		return {viewport.w, viewport.h};
-	};
+	assert(render_width_px > 0 && render_height_px > 0);
 
-	const auto [viewport_w, viewport_h] = get_viewport_size();
+	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto draw_size_px = calc_draw_rect_in_pixels(canvas_size_px);
 
-	// Check expectations
-	assert(width > 0 && height > 0);
-	assert(viewport_w > 0 && viewport_h > 0);
+	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(viewport_w) / width;
-	const auto scale_y = static_cast<double>(viewport_h) / height;
+	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
-
-	const auto video_mode_desc = to_string(video_mode);
 
 	const char* frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -736,22 +745,31 @@ static void log_display_properties(const int width, const int height,
 
 	const auto refresh_rate = VGA_GetPreferredRate();
 
-	LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
-	        "scaled to %dx%d with 1:%1.6g (%d:%d) pixel aspect ratio",
-	        video_mode_desc.c_str(),
-	        refresh_rate,
-	        frame_mode,
-	        viewport_w,
-	        viewport_h,
-	        video_mode.pixel_aspect_ratio.Inverse().ToDouble(),
-	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Num()),
-	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Denom()));
+	if (maybe_video_mode) {
+		const auto video_mode_desc = to_string(*maybe_video_mode);
+		const auto& pixel_aspect_ratio = maybe_video_mode->pixel_aspect_ratio;
+
+		LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
+		        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
+		        video_mode_desc.c_str(),
+		        refresh_rate,
+		        frame_mode,
+		        iroundf(draw_size_px.w),
+		        iroundf(draw_size_px.h),
+		        pixel_aspect_ratio.Inverse().ToDouble(),
+		        static_cast<int32_t>(pixel_aspect_ratio.Num()),
+		        static_cast<int32_t>(pixel_aspect_ratio.Denom()));
+	} else {
+		LOG_MSG("SDL: Window size initialized to %dx%d pixels",
+		        iroundf(draw_size_px.w),
+		        iroundf(draw_size_px.h));
+	}
 
 #if 0
-	LOG_MSG("DISPLAY: render width: %d, render height: %d, "
+	LOG_MSG("DISPLAY: render_width_px: %d, render_height_px: %d, "
 	        "render pixel aspect ratio: 1:%1.3g",
-	        width,
-	        height,
+	        render_width_px,
+	        render_height_px,
 	        one_per_render_pixel_aspect);
 #endif
 }
@@ -772,6 +790,7 @@ static SDL_Point get_initial_window_position_or_default(int default_val)
 // A safer way to call SDL_SetWindowSize because it ensures the event-callback
 // is disabled during the resize event. This prevents the event callback from
 // firing before the window is resized in which case an endless loop can occur
+//
 static void safe_set_window_size(const int w, const int h)
 {
 	decltype(sdl.draw.callback) saved_callback = nullptr;
@@ -787,8 +806,8 @@ static void safe_set_window_size(const int w, const int h)
 
 static VsyncSettings& get_vsync_settings()
 {
-	if (sdl.vsync.when_fullscreen.requested == VsyncState::Unset ||
-	    sdl.vsync.when_windowed.requested == VsyncState::Unset) {
+	if (sdl.vsync.when_fullscreen.requested == VsyncMode::Unset ||
+	    sdl.vsync.when_windowed.requested == VsyncMode::Unset) {
 		initialize_vsync_settings();
 	}
 	return sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
@@ -798,38 +817,30 @@ static VsyncSettings& get_vsync_settings()
 // Benchmarks are run in each vsync'd mode as part of the vsync detection
 // process. This routine returns the vsync mode's current benchmark rate
 // if available.
+//
 static std::optional<int> get_benchmarked_vsync_rate()
 {
 	const auto bench_rate = get_vsync_settings().benchmarked_rate;
-	return (bench_rate != 0 ? std::optional<int>(bench_rate) : std::nullopt);
-}
 
-static void set_vfr_dupe_countdown_from_rate(const double dos_rate_hz)
-{
-	constexpr auto max_dupe_rate_hz = 10.0;
-
-	assert(dos_rate_hz >= max_dupe_rate_hz);
-	assert(dos_rate_hz <= RefreshRateMax);
-	const auto dos_to_dupe_frames = iround(dos_rate_hz / max_dupe_rate_hz);
-
-	sdl.frame.vfr_dupe_countdown = check_cast<int8_t>(dos_to_dupe_frames);
-
-#if 0
-	LOG_MSG("SDL: Setting VFR duplicate countdown to %d "
-	        "from a DOS rate of %.1f Hz ", dos_to_dupe_frames, dos_rate_hz);
-#endif
+	if (bench_rate != 0)
+		return bench_rate;
+	else {
+		return {};
+	}
 }
 
 static void save_rate_to_frame_period(const double rate_hz)
 {
 	assert(rate_hz > 0);
-	// backoff by one-onethousandth to avoid hitting the vsync edge
-	sdl.frame.period_ms = 1'001.0 / rate_hz;
+
+	// Back off by one-onethousandth to avoid hitting the vsync edge
+	sdl.frame.period_ms  = 1'001.0 / rate_hz;
 	const auto period_us = sdl.frame.period_ms * 1'000;
-	sdl.frame.period_us = ifloor(period_us);
+	sdl.frame.period_us  = ifloor(period_us);
+
 	// Permit the frame period to be off by up to 90% before "out of sync"
 	sdl.frame.period_us_early = ifloor(55 * period_us / 100);
-	sdl.frame.period_us_late = ifloor(145 * period_us / 100);
+	sdl.frame.period_us_late  = ifloor(145 * period_us / 100);
 }
 
 static std::unique_ptr<Pacer> render_pacer = {};
@@ -847,10 +858,10 @@ static int benchmark_presentation_rate()
 	const auto bench_frames  = ten_percent_of_fps;
 
 	// Disable the pacer because we need every frame presented and measured
-	// so we can hit the vsync wall (if it exists).
+	// so we can hit the vsync limit (if it exists).
 	render_pacer->SetTimeout(0);
 
-	// Warmup round
+	// Warm-up round
 	for (auto i = 0; i < warmup_frames; ++i) {
 		sdl.frame.update(nullptr);
 		sdl.frame.present();
@@ -861,7 +872,9 @@ static int benchmark_presentation_rate()
 		sdl.frame.update(nullptr);
 		sdl.frame.present();
 	}
-	const auto elapsed_us = std::max(static_cast<int64_t>(1L), GetTicksUsSince(start_us));
+	const auto elapsed_us = std::max(static_cast<int64_t>(1L),
+	                                 GetTicksUsSince(start_us));
+
 	return iround(static_cast<int>((bench_frames * 1'000'000) / elapsed_us));
 }
 
@@ -887,56 +900,76 @@ static int nearest_common_rate(const double rate)
 	return nearest_rate;
 }
 
-static VsyncState measure_vsync_state(int& bench_rate)
+static VsyncMode measure_vsynced_rate(int& bench_rate)
 {
 	bench_rate = benchmark_presentation_rate();
+
 	const auto host_rate = get_host_refresh_rate();
 
-	// Notify the user if the machine is prensetation-starved.
+	// Notify the user if the machine is presentation-starved.
 	if (bench_rate < host_rate * 0.8) {
-		LOG_WARNING("SDL: We can only render %d FPS, which is well below"
-		            " the host's reported refresh rate of %2.5g Hz.",
-		            bench_rate,
-		            host_rate);
 		LOG_WARNING(
-		        "SDL: You will experience rendering lag and stuttering."
-		        " Consider updating your video drivers and try disabling"
-		        " vsync in your host and drivers, set [sdl] vsync = false");
+		        "SDL: We can only render %d FPS, which is well below "
+		        "the host's reported refresh rate of %2.5g Hz.",
+		        bench_rate,
+		        host_rate);
+
+		LOG_WARNING(
+		        "SDL: You will experience rendering lag and stuttering. "
+		        "Consider updating your video drivers and try disabling "
+		        "any frame limiters and vsync in your driver settings, "
+				"or try setting 'vsync = off'");
 	}
 
-	if (bench_rate < host_rate * 1.5)
-		return VsyncState::On;
-	else if (bench_rate < host_rate * 2.5)
-		return VsyncState::Adaptive;
-	else
-		return VsyncState::Off;
+	// TODO what are these magic multipliers?
+	if (bench_rate < host_rate * 1.5) {
+		return VsyncMode::On;
+	} else if (bench_rate < host_rate * 2.5) {
+		return VsyncMode::Adaptive;
+	} else {
+		return VsyncMode::Off;
+	}
 }
 
-static void set_vsync(const VsyncState state)
+static void set_vsync(const VsyncMode mode)
 {
-	if (state == VsyncState::Yield) {
+	if (mode == VsyncMode::Yield) {
 		return;
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		assert(sdl.opengl.context);
-		const auto interval = static_cast<int>(state);
-		// -1=adaptive, 0=off, 1=on
-		assert(interval >= -1 && interval <= 1);
-		if (SDL_GL_SetSwapInterval(interval) == 0)
-			return;
 
-		// the requested interval is not supported
-		LOG_WARNING("SDL: Failed setting the OpenGL vsync state to %s (%d): %s",
-		            vsync_state_as_string(state), interval, SDL_GetError());
+		const auto swap_interval = [&] {
+			switch (mode) {
+			case VsyncMode::Adaptive: return -1;
+			case VsyncMode::Off: return 0;
+			case VsyncMode::On: return 1;
+			default: assertm(false, "Invalid VsyncMode"); return 0;
+			}
+		}();
+
+		if (SDL_GL_SetSwapInterval(swap_interval) == 0) {
+			return;
+		}
+
+		// The requested swap_interval is not supported
+		LOG_WARNING(
+		        "OPENGL: Failed setting the vsync mode to '%s' "
+		        "(swap interval: %d): %s",
+		        to_string(mode),
+		        swap_interval,
+		        SDL_GetError());
 
 		// Per SDL's recommendation: If an application requests adaptive
 		// vsync and the system does not support it, this function will
 		// fail and return -1. In such a case, you should probably retry
-		// the call with 1 for the interval.
-		if (interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
-			LOG_WARNING("SDL: Tried enabling non-adaptive OpenGL vsync, but it still failed: %s",
-			            SDL_GetError());
+		// the call with 1 for the swap_interval.
+		if (swap_interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
+			LOG_WARNING(
+			        "OPENGL: Tried enabling non-adaptive vsync, "
+			        "but it still failed: %s",
+			        SDL_GetError());
 		}
 		return;
 	}
@@ -945,31 +978,35 @@ static void set_vsync(const VsyncState state)
 	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
 	// set to "1", "0", adapative is currently not supported, so we
 	// also treat it as "1"
-	const auto hint_str = (state == VsyncState::On ||
-							state == VsyncState::Adaptive)
-									? "1"
-									: "0";
-	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE)
+	const auto hint_str = (mode == VsyncMode::On || mode == VsyncMode::Adaptive)
+	                            ? "1"
+	                            : "0";
+
+	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE) {
 		return;
-	LOG_WARNING("SDL: Failed setting SDL's vsync state to to %s (%s): %s",
-				vsync_state_as_string(state), hint_str, SDL_GetError());
+	}
+	LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
+	            to_string(mode),
+	            hint_str,
+	            SDL_GetError());
 }
 
-static void update_vsync_state()
+static void update_vsync_mode()
 {
-	// Hosts can have different vsync constraints between window modes
-	auto& vsync_pref = get_vsync_settings();
+	// Host OSes usually have different vsync constraints in windowed and
+	// fullscreen mode.
+	auto vsync_pref = get_vsync_settings();
 
 	// Short-hand aliases
-	auto &requested = vsync_pref.requested;
-	auto& measured  = vsync_pref.measured;
+	auto& requested       = vsync_pref.requested;
+	auto& auto_determined = vsync_pref.auto_determined;
 
-	assert(requested != VsyncState::Unset);
+	assert(requested != VsyncMode::Unset);
 
-	// Do we still need to measure the vsync state?
-	if (measured == VsyncState::Unset) {
+	// Do we still need to measure the vsync'ed frame rate?
+	if (auto_determined == VsyncMode::Unset) {
 		set_vsync(requested);
-		measured = measure_vsync_state(vsync_pref.benchmarked_rate);
+		auto_determined = measure_vsynced_rate(vsync_pref.benchmarked_rate);
 	}
 }
 
@@ -1012,9 +1049,9 @@ static void maybe_present_throttled(const bool frame_is_new)
 
 static void maybe_present_synced(const bool present_if_last_skipped)
 {
-	// state tracking across runs
+	// State tracking across runs
 	static bool last_frame_presented = false;
-	static int64_t last_sync_time = 0;
+	static int64_t last_sync_time    = 0;
 
 	const auto now = GetTicksUs();
 
@@ -1033,22 +1070,22 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 
 static void setup_presentation_mode(FrameMode &previous_mode)
 {
-	// Always get the reported refresh rate and hint the VGA side with it.
-	// This ensures the VGA side always has the host's rate to prior to its
-	// next mode change.
+	// Always get the reported refresh rate and hint the emulated VGA side
+	// with it. This ensures the VGA side always has the host's rate
+	// prior to the next mode change.
+	// TODO but why is this important? needs explanation.
 	const auto host_rate = get_host_refresh_rate();
 	VGA_SetHostRate(host_rate);
 	const auto dos_rate = VGA_GetPreferredRate();
 
-	// Update the VFR duplicate countdown based on the DOS rate to produce a
-	// fixed lower-bound dupe refresh rate.
-	set_vfr_dupe_countdown_from_rate(dos_rate);
+	// Calculate the maximum number of duplicate frames before presenting.
+	constexpr uint16_t MinRateHz = 10;
+	sdl.frame.max_dupe_frames   = static_cast<float>(dos_rate) / MinRateHz;
 
-	// Consider any vsync state that isn't explicitly off as having some
-	// level of vsync enforcement as "on"
-	const auto vsync_is_on = (get_vsync_settings().requested != VsyncState::Off);
+	// Consider any vsync mode that isn't explicitly 'Off' as having some
+	// level of vsync enforcement as 'On'.
+	const auto vsync_is_on = (get_vsync_settings().requested != VsyncMode::Off);
 
-	// to be set below
 	auto mode = FrameMode::Unset;
 
 	// Manual CFR or VFR modes
@@ -1059,13 +1096,13 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		// Frames will be presented at the DOS rate.
 		save_rate_to_frame_period(dos_rate);
 
-		// Because we don't have proof that the host system actually
-		// supports the requested rates, we use the frame pacer to
-		// inform the user when the host is hitting the vsync wall.
+		// Because we don't have proof that the host actually supports
+		// the requested rates, we use the frame pacer to inform the
+		// user when the host is hitting the vsync limit.
 		render_pacer->SetTimeout(vsync_is_on ? sdl.vsync.skip_us : 0);
-	}
-	// Automatic CFR or VFR modes
-	else {
+
+	} else {
+		// Automatic CFR or VFR modes
 		const auto has_bench_rate = get_benchmarked_vsync_rate();
 
 		auto get_supported_rate = [=]() -> double {
@@ -1089,7 +1126,10 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		        (sdl.desktop.fullscreen && vsync_is_on &&
 		         display_might_be_interpolating);
 
-#if 0	
+#if 0
+		// TODO some of these log statements seem to be wrong and
+		// not reflect actual reality, we'll need to revisit them
+	
 		LOG_MSG("SDL: Auto presentation mode conditions:");
 		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
 		if (has_bench_rate) {
@@ -1116,22 +1156,23 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 			mode = FrameMode::ThrottledVfr;
 			save_rate_to_frame_period(nearest_common_rate(supported_rate));
 		}
-		// In auto-mode, the presentation rate doesn't exceed supported
-		// rate so we disable the pacer.
+
+		// In auto-mode, the presentation rate doesn't exceed the
+		// supported rate, so we disable the pacer.
 		render_pacer->SetTimeout(0);
 	}
 
-	// If the mode is unchanged, do nothing
+	// If the mode is unchanged, do nothing.
 	assert(mode != FrameMode::Unset);
-	if (previous_mode == mode)
+	if (previous_mode == mode) {
 		return;
+	}
 	previous_mode = mode;
 }
 
-static void NewMouseScreenParams()
+static void notify_new_mouse_screen_params()
 {
-	if (sdl.clip.w <= 0 || sdl.clip.h <= 0 ||
-	    sdl.clip.x < 0  || sdl.clip.y < 0) {
+	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
@@ -1139,16 +1180,10 @@ static void NewMouseScreenParams()
 
 	MouseScreenParams params = {};
 
-	// When DPI scaling is enabled, mouse coordinates are reported on
-	// "client points" grid, not physical pixels.
-	auto adapt = [](const int value) {
-		return lround(value / sdl.desktop.dpi_scale);
-	};
-
-	params.clip_x = check_cast<uint32_t>(adapt(sdl.clip.x));
-	params.clip_y = check_cast<uint32_t>(adapt(sdl.clip.y));
-	params.res_x  = check_cast<uint32_t>(adapt(sdl.clip.w));
-	params.res_y  = check_cast<uint32_t>(adapt(sdl.clip.h));
+	// It is important to scale not just the size of the rectangle but also
+	// its starting point by the inverse of the DPI scale factor.
+	params.draw_rect =
+	        to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.desktop.dpi_scale);
 
 	int abs_x = 0;
 	int abs_y = 0;
@@ -1163,23 +1198,30 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
+static bool is_aspect_ratio_correction_enabled()
+{
+	return (RENDER_GetAspectRatioCorrectionMode() ==
+	        AspectRatioCorrectionMode::Auto);
+}
+
 static void update_fallback_dimensions(const double dpi_scale)
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
 	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
-	const auto fallback_height =
-	        (RENDER_IsAspectRatioCorrectionEnabled() ? 480 : 400) / dpi_scale;
+	const auto fallback_height = (is_aspect_ratio_correction_enabled() ? 480
+	                                                                   : 400) /
+	                             dpi_scale;
 
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
 
-	FALLBACK_WINDOW_DIMENSIONS = {iround(fallback_width),
-	                              iround(fallback_height)};
+	FallbackWindowSize = {iround(fallback_width), iround(fallback_height)};
 
+	// TODO pixels or logical unit?
 	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
-	//          FALLBACK_WINDOW_DIMENSIONS.x,
-	//          FALLBACK_WINDOW_DIMENSIONS.y);
+	//          FallbackWindowSize.x,
+	//          FallbackWindowSize.y);
 
 	// Keep the SDL minimum allowed window size in lock-step with the
 	// fallback dimensions. If these aren't linked, the window can obscure
@@ -1190,8 +1232,10 @@ static void update_fallback_dimensions(const double dpi_scale)
 		//             " but the SDL window is not available yet");
 	}
 	SDL_SetWindowMinimumSize(sdl.window,
-	                         FALLBACK_WINDOW_DIMENSIONS.x,
-	                         FALLBACK_WINDOW_DIMENSIONS.y);
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
+	// TODO pixels or logical unit?
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
@@ -1212,11 +1256,10 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
 	}
 
-	const auto canvas = get_canvas_size(rendering_backend);
-	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
+	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = width_in_physical_pixels / width_in_logical_units;
+	const auto new_dpi_scale = canvas_size_px.w / width_in_logical_units;
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -1239,7 +1282,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
 
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
@@ -1249,6 +1292,40 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
+		}
+
+		// We need a context to query the vendor string.
+		const auto temp_window = SDL_CreateWindow(
+		        "", 0, 0, 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+		if (temp_window == nullptr) {
+			LOG_ERR("SDL: Failed to create temporary window: %s",
+			        SDL_GetError());
+			return nullptr;
+		}
+		const auto temp_context = SDL_GL_CreateContext(temp_window);
+		if (temp_context == nullptr) {
+			LOG_ERR("OPENGL: Failed to create temporary context: %s",
+			        SDL_GetError());
+			return nullptr;
+		}
+
+		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
+		                                                 "unknown vendor");
+
+		SDL_GL_DeleteContext(temp_context);
+		SDL_DestroyWindow(temp_window);
+#if WIN32
+		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
+#else
+		constexpr auto is_vendors_srgb_unreliable = false;
+#endif
+		if (is_vendors_srgb_unreliable) {
+			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer"
+			            " because %s's driver is unreliable",
+			            gl_vendor.c_str());
+		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
+			        SDL_GetError());
 		}
 #endif
 		if (!sdl.desktop.window.show_decorations) {
@@ -1295,20 +1372,21 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			assert(sdl.opengl.context == nullptr);
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == nullptr) {
-				LOG_ERR("SDL: OPENGL: Can't create OpenGL context: %s",
+				LOG_ERR("OPENGL: Can't create context: %s",
 				        SDL_GetError());
 				return nullptr;
 			}
 			if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
-				LOG_ERR("SDL: OPENGL: Can't make OpenGL context current: %s",
+				LOG_ERR("OPENGL: Can't make context current: %s",
 				        SDL_GetError());
 				return nullptr;
 			}
 		}
 #endif
 		check_and_handle_dpi_change(sdl.window, rendering_backend);
-
 		GFX_RefreshTitle();
+
+		SDL_RaiseWindow(sdl.window);
 
 		if (!fullscreen) {
 			goto finish;
@@ -1325,13 +1403,17 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		displayMode.w = width;
 		displayMode.h = height;
 
+		// TODO pixels or logical unit?
 		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
-			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz", displayMode.w, displayMode.h, displayMode.refresh_rate);
+			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
+			            displayMode.w,
+			            displayMode.h,
+			            displayMode.refresh_rate);
 		}
 		SDL_SetWindowFullscreen(sdl.window,
 		                        sdl.desktop.full.display_res
-		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
-		                                : SDL_WINDOW_FULLSCREEN);
+		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
+		                                : enum_val(SDL_WINDOW_FULLSCREEN));
 	} else {
 		// we're switching down from fullscreen, so let SDL use the
 		// previously-set window size
@@ -1365,38 +1447,9 @@ SDL_Window* GFX_GetWindow()
 	return sdl.window;
 }
 
-// Returns the actual output size in pixels, when possible.
-// Needed for DPI-scaled windows, when logical window and actual output sizes
-// might not match.
-static SDL_Rect get_canvas_size([[maybe_unused]] const RenderingBackend rendering_backend)
+DosBox::Rect GFX_GetCanvasSizeInPixels()
 {
-	SDL_Rect canvas = {};
-#if SDL_VERSION_ATLEAST(2, 26, 0)
-	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
-#else
-	switch (rendering_backend) {
-	case RenderingBackend::Texture:
-		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) !=
-		    0) {
-			LOG_ERR("SDL: Failed to retrieve output size: %s",
-			        SDL_GetError());
-		}
-		break;
-#if C_OPENGL
-	case RenderingBackend::OpenGl:
-		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
-		break;
-#endif
-	default: SDL_GetWindowSize(sdl.window, &canvas.w, &canvas.h);
-	}
-#endif
-	assert(canvas.w > 0 && canvas.h > 0);
-	return canvas;
-}
-
-SDL_Rect GFX_GetCanvasSize()
-{
-	return get_canvas_size(sdl.rendering_backend);
+	return get_canvas_size_in_pixels(sdl.rendering_backend);
 }
 
 RenderingBackend GFX_GetRenderingBackend()
@@ -1404,16 +1457,49 @@ RenderingBackend GFX_GetRenderingBackend()
 	return sdl.rendering_backend;
 }
 
-static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
+static SDL_Rect get_desktop_size()
 {
-	return sdl.use_viewport_limits
-	             ? SDL_Point{std::min(iround(sdl.viewport_resolution.x *
-	                                         sdl.desktop.dpi_scale),
-	                                  w),
-	                         std::min(iround(sdl.viewport_resolution.y *
-	                                         sdl.desktop.dpi_scale),
-	                                  h)}
-	             : SDL_Point{w, h};
+	SDL_Rect desktop = {};
+	assert(sdl.display_number >= 0);
+
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+
+	// Deduct the border decorations from the desktop size
+	int top    = 0;
+	int left   = 0;
+	int bottom = 0;
+	int right  = 0;
+
+	SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
+	                         &top,
+	                         &left,
+	                         &bottom,
+	                         &right);
+
+	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
+	desktop.w -= (left + right);
+	desktop.h -= (top + bottom);
+
+	assert(desktop.w >= FallbackWindowSize.x);
+	assert(desktop.h >= FallbackWindowSize.y);
+	return desktop;
+}
+
+DosBox::Rect GFX_GetDesktopSize()
+{
+	return to_rect(get_desktop_size());
+}
+
+DosBox::Rect GFX_GetViewportSizeInPixels()
+{
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+
+	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
+}
+
+float GFX_GetDpiScaleFactor()
+{
+	return sdl.desktop.dpi_scale;
 }
 
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
@@ -1448,8 +1534,8 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 	        sdl.draw.render_pixel_aspect_ratio);
 
 	if (window_width == 0 && window_height == 0) {
-		window_width  = iround(sdl.draw.width * draw_scale_x);
-		window_height = iround(sdl.draw.height * draw_scale_y);
+		window_width  = iround(sdl.draw.render_width_px * draw_scale_x);
+		window_height = iround(sdl.draw.render_height_px * draw_scale_y);
 	}
 
 	sdl.window = SetWindowMode(rendering_backend,
@@ -1479,7 +1565,7 @@ static const char *safe_gl_get_string(const GLenum requested_name,
 static GLuint BuildShader(GLenum type, const std::string& source)
 {
 	GLuint shader = 0;
-	GLint compiled = 0;
+	GLint is_shader_compiled = 0;
 
 	assert(source.length());
 	const char *shaderSrc = source.c_str();
@@ -1497,8 +1583,6 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	}
 
 	top += (type==GL_VERTEX_SHADER) ? "#define VERTEX 1\n":"#define FRAGMENT 1\n";
-	if (!sdl.opengl.bilinear)
-		top += "#define OPENGLNB 1\n";
 
 	src_strings[0] = top.c_str();
 	src_strings[1] = shaderSrc;
@@ -1514,23 +1598,31 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	glCompileShader(shader);
 
 	// Check the compile status
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
-	if (!compiled) {
-		GLint info_len = 0;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+	GLint info_len = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
 
-		if (info_len > 1) {
-			std::vector<GLchar> info_log(info_len);
-			glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
-			LOG_ERR("Error compiling shader: %s", info_log.data());
+	// The info log might contain warnings and info messages even if the
+	// compilation was successful, so we'll always log it if it's non-empty.
+	if (info_len > 1) {
+		std::vector<GLchar> info_log(info_len);
+		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
+
+		if (is_shader_compiled) {
+			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
+		} else {
+			LOG_ERR("OPENGL: Error compiling shader: %s",
+			        info_log.data());
 		}
+	}
 
+	if (is_shader_compiled) {
+		return shader;
+	} else {
 		glDeleteShader(shader);
 		return 0;
 	}
-
-	return shader;
 }
 
 static bool LoadGLShaders(const std::string& source, GLuint *vertex,
@@ -1569,22 +1661,22 @@ static bool is_using_kmsdrm_driver()
 	return driver_str == "kmsdrm";
 }
 
-static void check_kmsdrm_setting()
+static int check_kmsdrm_setting()
 {
 	// Simple pre-check to see if we're using kmsdrm
 	if (!is_using_kmsdrm_driver())
-		return;
+		return 0;
 
 	// Do we have read access to the event subsystem
 	if (auto f = fopen("/dev/input/event0", "r"); f) {
 		fclose(f);
-		return;
+		return 0;
 	}
 
 	// We're using KMSDRM, but we don't have read access to the event subsystem
 	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
 	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
-	exit(1);
+	return 1;
 }
 
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
@@ -1605,13 +1697,14 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	                          std::max(requested_size.y, requested_min_size.y)};
 	if (current_size != bounded_size) {
 		safe_set_window_size(bounded_size.x, bounded_size.y);
+		// TODO pixels or logical unit?
 		// LOG_MSG("SDL: Initialized the window size to %dx%d",
 		//         bounded_size.x,
 		//         bounded_size.y);
 	}
 }
 
-uint8_t GFX_SetSize(const int width, const int height,
+uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback)
 {
@@ -1626,27 +1719,28 @@ uint8_t GFX_SetSize(const int width, const int height,
 	const bool double_width  = flags & GFX_DBL_W;
 	const bool double_height = flags & GFX_DBL_H;
 
-	sdl.draw.has_changed = (sdl.video_mode != video_mode ||
-	                        sdl.draw.width != width || sdl.draw.height != height ||
+	sdl.draw.has_changed = (sdl.maybe_video_mode != video_mode ||
+	                        sdl.draw.render_width_px != render_width_px ||
+	                        sdl.draw.render_height_px != render_height_px ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
-	                        sdl.draw.render_pixel_aspect_ratio != render_pixel_aspect_ratio);
+	                        sdl.draw.render_pixel_aspect_ratio !=
+	                                render_pixel_aspect_ratio);
 
-	sdl.draw.width                     = width;
-	sdl.draw.height                    = height;
+	sdl.draw.render_width_px           = render_width_px;
+	sdl.draw.render_height_px          = render_height_px;
 	sdl.draw.width_was_doubled         = double_width;
 	sdl.draw.height_was_doubled        = double_height;
 	sdl.draw.render_pixel_aspect_ratio = render_pixel_aspect_ratio;
 
-	sdl.video_mode = video_mode;
+	sdl.maybe_video_mode = video_mode;
 
 	sdl.draw.callback = callback;
 
-	// If we're changing the SDL output type (ie: going from 'output =
-	// texture' to 'output = OpenGL'), then re-initialize our vsync settings
-	// because how the OS's compositor (if one exists) handles (or doesn't
-	// handle) this new type may be different, and thus warrants new
-	// measurements.
+	// If we're changing the SDL output type (i.e., going from 'output =
+	// texture' to 'output = opengl'), then re-initialise our vsync settings.
+	// The host OS might handles this backend differently, therefore we
+	// need a new measurement.
 	if (sdl.want_rendering_backend  != sdl.rendering_backend) {
 		initialize_vsync_settings();
 	}
@@ -1657,10 +1751,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		if (!SetupWindowScaled(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("Creating window failed");
+			E_Exit("SDL: Failed to create window");
 		}
 
-		/* Use renderer's default format */
+		// Use renderer's default format
 		SDL_RendererInfo rinfo;
 		SDL_GetRendererInfo(sdl.renderer, &rinfo);
 		const auto texture_format = rinfo.texture_formats[0];
@@ -1668,8 +1762,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
 		                                        texture_format,
 		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        width,
-		                                        height);
+		                                        render_width_px,
+		                                        render_height_px);
 
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
@@ -1685,7 +1779,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 		assert(texture_input_surface == nullptr); // ensure we don't leak
 		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, width, height, 32, texture_format);
+		        0, render_width_px, render_height_px, 32, texture_format);
 		if (!texture_input_surface) {
 			E_Exit("SDL: Error while preparing texture input");
 		}
@@ -1722,45 +1816,46 @@ uint8_t GFX_SetSize(const int width, const int height,
 		// texture-based window because SDL invalidates the prior bounds
 		// in the above changes.
 		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
+		                         FallbackWindowSize.x,
+		                         FallbackWindowSize.y);
 
 		// One-time intialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           FallbackWindowSize,
 			                           {sdl.desktop.window.width,
 			                            sdl.desktop.window.height});
+
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
-		const auto canvas = get_canvas_size(sdl.want_rendering_backend);
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.want_rendering_backend);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip) != 0)
+		sdl.draw_rect_px = to_sdl_rect(
+		        calc_draw_rect_in_pixels(canvas_size_px));
+
+		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
+		}
 
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
 
 		break; // RenderingBackend::Texture
 	}
-#if C_OPENGL
 	case RenderingBackend::OpenGl: {
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
-		} else {
-			free(sdl.opengl.framebuf);
-		}
-		sdl.opengl.framebuf=nullptr;
-		if (!(flags & GFX_CAN_32))
+#if C_OPENGL
+		free(sdl.opengl.framebuf);
+		sdl.opengl.framebuf = nullptr;
+		if (!(flags & GFX_CAN_32)) {
 			goto fallback_texture;
+		}
 
-		int texsize_w, texsize_h;
+		int texsize_w_px, texsize_h_px;
 
 		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
 		                              sdl.opengl.shader_info.settings.use_npot_texture;
@@ -1773,51 +1868,36 @@ uint8_t GFX_SetSize(const int width, const int height,
 #endif
 
 		if (use_npot_texture) {
-			texsize_w = width;
-			texsize_h = height;
+			texsize_w_px = render_width_px;
+			texsize_h_px = render_height_px;
 		} else {
-			texsize_w = 2 << int_log2(width);
-			texsize_h = 2 << int_log2(height);
+			texsize_w_px = 2 << int_log2(render_width_px);
+			texsize_h_px = 2 << int_log2(render_height_px);
 		}
 
-		if (texsize_w > sdl.opengl.max_texsize ||
-		    texsize_h > sdl.opengl.max_texsize) {
-			LOG_WARNING("SDL:OPENGL: No support for texture size of %dx%d, falling back to texture",
-			            texsize_w,
-			            texsize_h);
+		if (texsize_w_px > sdl.opengl.max_texsize ||
+		    texsize_h_px > sdl.opengl.max_texsize) {
+			LOG_WARNING("OPENGL: No support for texture size of %dx%d pixels, "
+			            "falling back to texture",
+			            texsize_w_px,
+			            texsize_h_px);
 			goto fallback_texture;
-		}
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
-		                                                 "unknown vendor");
-#	if WIN32
-		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
-#	else
-		constexpr auto is_vendors_srgb_unreliable = false;
-#	endif
-		if (is_vendors_srgb_unreliable) {
-			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
-			            " because %s's driver is unreliable",
-			            gl_vendor.data());
-		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
-			        SDL_GetError());
 		}
 
 		// Re-apply the minimum bounds prior to clipping the OpenGL
 		// window because SDL invalidates the prior bounds in the above
 		// window changes.
 		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
+		                         FallbackWindowSize.x,
+		                         FallbackWindowSize.y);
 
 		SetupWindowScaled(RenderingBackend::OpenGl);
 
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
-		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
+		if (!sdl.window ||
+		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
+			LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
 			goto fallback_texture;
 		}
 
@@ -1845,7 +1925,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 					if (!LoadGLShaders(sdl.opengl.shader_source,
 					                   &vertexShader,
 					                   &fragmentShader)) {
-						LOG_ERR("SDL:OPENGL: Failed to compile shader!");
+						LOG_ERR("OPENGL: Failed to compile shader");
 						goto fallback_texture;
 					}
 
@@ -1853,29 +1933,52 @@ uint8_t GFX_SetSize(const int width, const int height,
 					if (!sdl.opengl.program_object) {
 						glDeleteShader(vertexShader);
 						glDeleteShader(fragmentShader);
-						LOG_WARNING("SDL:OPENGL: Can't create program object, falling back to texture");
+
+						LOG_WARNING("OPENGL: Can't create program object, "
+						            "falling back to texture");
 						goto fallback_texture;
 					}
 					glAttachShader(sdl.opengl.program_object, vertexShader);
 					glAttachShader(sdl.opengl.program_object, fragmentShader);
+
 					// Link the program
 					glLinkProgram(sdl.opengl.program_object);
+
 					// Even if we *are* successful, we may delete the shader objects
 					glDeleteShader(vertexShader);
 					glDeleteShader(fragmentShader);
 
 					// Check the link status
-					GLint isProgramLinked;
-					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
-					if (!isProgramLinked) {
-						GLint info_len = 0;
-						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &info_len);
+					GLint is_program_linked = 0;
+					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &is_program_linked);
 
-						if (info_len > 1) {
-							std::vector<GLchar> info_log(info_len);
-							glGetProgramInfoLog(sdl.opengl.program_object, info_len, nullptr, info_log.data());
-							LOG_ERR("SDL:OPENGL: Error link program:\n %s", info_log.data());
+					// The info log might contain warnings and info messages
+					// even if the linking was successful, so we'll always log
+					// it if it's non-empty.
+					GLint info_len = 0;
+
+					glGetProgramiv(sdl.opengl.program_object,
+					               GL_INFO_LOG_LENGTH,
+					               &info_len);
+
+					if (info_len > 1) {
+						std::vector<GLchar> info_log(info_len);
+
+						glGetProgramInfoLog(sdl.opengl.program_object,
+						                    info_len,
+						                    nullptr,
+						                    info_log.data());
+
+						if (is_program_linked) {
+							LOG_WARNING("OPENGL: Program info log:\n %s",
+							            info_log.data());
+						} else {
+							LOG_ERR("OPENGL: Error linking program:\n %s",
+							        info_log.data());
 						}
+					}
+
+					if (!is_program_linked) {
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
 						goto fallback_texture;
@@ -1909,35 +2012,37 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 
 		/* Create the texture and display list */
-		const auto framebuffer_bytes = static_cast<size_t>(width) *
-		                               height * MAX_BYTES_PER_PIXEL;
-		if (sdl.opengl.pixel_buffer_object) {
-			glGenBuffersARB(1, &sdl.opengl.buffer);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, nullptr, GL_STREAM_DRAW_ARB);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		} else {
-			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		}
-		sdl.opengl.pitch = width * 4;
+		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
+		                               render_height_px * MAX_BYTES_PER_PIXEL;
+		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
+		sdl.opengl.pitch = render_width_px * 4;
 
-		// One-time intialize the window size
+		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           FallbackWindowSize,
 			                           {sdl.desktop.window.width,
 			                            sdl.desktop.window.height});
+
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
 
-		const auto canvas = get_canvas_size(sdl.want_rendering_backend);
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.want_rendering_backend);
+
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas.w - sdl.clip.w) / 2,
-		//         (canvas.h - sdl.clip.h) / 2,
+		//         (canvas_size_px.w - sdl.clip.w) / 2,
+		//         (canvas_size_px.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+	
+		sdl.draw_rect_px = to_sdl_rect(
+		        calc_draw_rect_in_pixels(canvas_size_px));
+
+		glViewport(sdl.draw_rect_px.x,
+		           sdl.draw_rect_px.y,
+		           sdl.draw_rect_px.w,
+		           sdl.draw_rect_px.h);
 
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
@@ -1952,19 +2057,26 @@ uint8_t GFX_SetSize(const int width, const int height,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
-		                              ? GL_NEAREST
-		                              : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-
-		const auto texture_area_bytes = static_cast<size_t>(texsize_w) *
-		                                texsize_h * MAX_BYTES_PER_PIXEL;
+		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
+		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
 		uint8_t *emptytex = new uint8_t[texture_area_bytes];
 		assert(emptytex);
 
 		memset(emptytex, 0, texture_area_bytes);
+
+		int is_double_buffering_enabled = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
+		                        &is_double_buffering_enabled)) {
+			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
+			            SDL_GetError());
+		} else {
+			if (!is_double_buffering_enabled) {
+				LOG_WARNING("OPENGL: Double buffering not enabled");
+			}
+		}
 
 		int is_framebuffer_srgb_capable = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
@@ -1998,8 +2110,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		glTexImage2D(GL_TEXTURE_2D,
 		             0,
 		             texformat,
-		             texsize_w,
-		             texsize_h,
+		             texsize_w_px,
+		             texsize_h_px,
 		             0,
 		             GL_BGRA_EXT,
 		             GL_UNSIGNED_BYTE,
@@ -2029,16 +2141,21 @@ uint8_t GFX_SetSize(const int width, const int height,
 		if (sdl.opengl.program_object) {
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size,
-			            (GLfloat)texsize_w, (GLfloat)texsize_h);
+			            (GLfloat)texsize_w_px, (GLfloat)texsize_h_px);
+
 			glUniform2f(sdl.opengl.ruby.input_size,
-			            (GLfloat)width,
-			            (GLfloat)height);
-			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
+			            (GLfloat)render_width_px,
+			            (GLfloat)render_height_px);
+
+			glUniform2f(sdl.opengl.ruby.output_size,
+			            (GLfloat)sdl.draw_rect_px.w,
+			            (GLfloat)sdl.draw_rect_px.h);
+
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
-			GLfloat tex_width = ((GLfloat)width / (GLfloat)texsize_w);
-			GLfloat tex_height = ((GLfloat)height / (GLfloat)texsize_h);
+			GLfloat tex_width = ((GLfloat)render_width_px / (GLfloat)texsize_w_px);
+			GLfloat tex_height = ((GLfloat)render_height_px / (GLfloat)texsize_h_px);
 
 			glShadeModel(GL_FLAT);
 			glMatrixMode(GL_MODELVIEW);
@@ -2064,30 +2181,61 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		OPENGL_ERROR("End of setsize");
 
-		retFlags = GFX_CAN_32;
-		if (sdl.opengl.pixel_buffer_object) {
-			sdl.frame.update = update_frame_gl_pbo;
-		} else {
-			sdl.frame.update = update_frame_gl_fb;
-			retFlags |= GFX_CAN_RANDOM;
-		}
-		// Both update mechanisms use the same presentation call
+		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
+		sdl.frame.update  = update_frame_gl;
 		sdl.frame.present = present_frame_gl;
+#else
+		// Should never occur, but fallback to texture in release builds
+		assertm(false, "OpenGL is not supported by this executable");
+		LOG_ERR("SDL: OpenGL is not supported by this executable, "
+		        "falling back to texture output");
+		goto fallback_texture;
+
+#endif // C_OPENGL
 		break; // RenderingBackend::OpenGl
 	}
-#endif // C_OPENGL
 	}
 	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
-	update_vsync_state();
+	notify_new_mouse_screen_params();
+	update_vsync_mode();
 
 	if (sdl.draw.has_changed) {
-		log_display_properties(sdl.draw.width,
-		                       sdl.draw.height,
-		                       sdl.video_mode,
-		                       {},
+		log_display_properties(sdl.draw.render_width_px,
+		                       sdl.draw.render_height_px,
+		                       sdl.maybe_video_mode,
 		                       sdl.rendering_backend);
 	}
+
+#if C_OPENGL
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+		static auto last_vsync_mode = VsyncMode::Unset;
+
+		const auto vsync_mode = static_cast<VsyncMode>(
+		        SDL_GL_GetSwapInterval());
+
+		if (last_vsync_mode != vsync_mode) {
+			last_vsync_mode = vsync_mode;
+
+			switch (vsync_mode) {
+			case VsyncMode::Unset: break;
+
+			case VsyncMode::Adaptive:
+				LOG_INFO("OPENGL: Enabled adaptive vsync");
+				break;
+
+			case VsyncMode::Off:
+				LOG_INFO("OPENGL: Disabled vsync");
+				break;
+
+			case VsyncMode::On:
+				LOG_INFO("OPENGL: Enabled non-adaptive vsync");
+				break;
+
+			default: assertm(false, "Invalid VsyncMode");
+			}
+		}
+	}
+#endif
 
 	if (retFlags) {
 		GFX_Start();
@@ -2112,57 +2260,6 @@ void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
 #endif
 }
 
-void GFX_SetMouseHint(const MouseHint hint_id)
-{
-	static const std::string prexix = " - ";
-
-	auto create_hint_str = [](const char *requested_name) {
-		char hint_buffer[200] = {0};
-
-		safe_sprintf(hint_buffer,
-		             MSG_GetRaw(requested_name),
-		             PRIMARY_MOD_NAME);
-		return prexix + hint_buffer;
-	};
-
-	auto &hint_str = sdl.title_bar.hint_mouse_str;
-	switch (hint_id) {
-	case MouseHint::None:
-		hint_str.clear();
-		break;
-	case MouseHint::NoMouse:
-		hint_str = prexix + MSG_GetRaw("TITLEBAR_HINT_NOMOUSE");
-		break;
-	case MouseHint::CapturedHotkey:
-		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY");
-		break;
-	case MouseHint::CapturedHotkeyMiddle:
-		hint_str = create_hint_str("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE");
-		break;
-	case MouseHint::ReleasedHotkey:
-		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY");
-		break;
-	case MouseHint::ReleasedHotkeyMiddle:
-		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE");
-		break;
-	case MouseHint::ReleasedHotkeyAnyButton:
-		hint_str = create_hint_str("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON");
-		break;
-	case MouseHint::SeamlessHotkey:
-		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY");
-		break;
-	case MouseHint::SeamlessHotkeyMiddle:
-		hint_str = create_hint_str("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE");
-		break;
-	default:
-		assert(false);
-		hint_str.clear();
-		break;
-	}
-
-	GFX_RefreshTitle();
-}
-
 void GFX_CenterMouse()
 {
 	assert(sdl.window);
@@ -2170,11 +2267,17 @@ void GFX_CenterMouse()
 	int width  = 0;
 	int height = 0;
 
-#if defined(WIN32) && !SDL_VERSION_ATLEAST(2, 28, 1)
-	const auto window_canvas_size = get_canvas_size(sdl.rendering_backend);
+#if defined(WIN32)
+	if (is_runtime_sdl_version_at_least({2, 28, 1})) {
+		SDL_GetWindowSize(sdl.window, &width, &height);
 
-	width  = window_canvas_size.w;
-	height = window_canvas_size.h;
+	} else {
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.rendering_backend);
+
+		width  = iroundf(canvas_size_px.w);
+		height = iroundf(canvas_size_px.h);
+	}
 #else
 	SDL_GetWindowSize(sdl.window, &width, &height);
 #endif
@@ -2187,7 +2290,7 @@ void GFX_SetMouseRawInput(const bool requested_raw_input)
 	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
 	                            requested_raw_input ? "0" : "1",
 	                            SDL_HINT_OVERRIDE) != SDL_TRUE)
-		LOG_WARNING("SDL: Mouse raw input %s failed",
+		LOG_WARNING("SDL: Failed to %s raw mouse input",
 		            requested_raw_input ? "enable" : "disable");
 }
 
@@ -2210,11 +2313,8 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 		       requested_visible ? "visible" : "invisible");
 }
 
-static void FocusInput()
+static void focus_input()
 {
-	// Ensure auto-cycles are enabled
-	CPU_Disable_SkipAutoAdjust();
-
 #if defined(WIN32)
 	sdl.focus_ticks = GetTicks();
 #endif
@@ -2259,9 +2359,10 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = true;
 
 	// Record the window's current canvas size if we're departing window-mode
-	auto &window_canvas_size = sdl.desktop.window.canvas_size;
-	if (!sdl.desktop.fullscreen)
-		window_canvas_size = get_canvas_size(sdl.rendering_backend);
+	if (!sdl.desktop.fullscreen) {
+		sdl.desktop.window.canvas_size = to_sdl_rect(
+		        get_canvas_size_in_pixels(sdl.rendering_backend));
+	}
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
@@ -2272,35 +2373,23 @@ void GFX_SwitchFullScreen()
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
 	GFX_ResetScreen();
-	FocusInput();
+	focus_input();
 	setup_presentation_mode(sdl.frame.mode);
-
-	// After switching modes, get the current canvas size, which might be
-	// the windowed size or full screen size.
-	auto canvas_size = sdl.desktop.fullscreen
-	                         ? get_canvas_size(sdl.rendering_backend)
-	                         : window_canvas_size;
-
-	log_display_properties(sdl.draw.width,
-	                       sdl.draw.height,
-	                       sdl.video_mode,
-	                       canvas_size,
-	                       sdl.rendering_backend);
 
 	sdl.desktop.switching_fullscreen = false;
 }
 
-static void SwitchFullScreen(bool pressed)
+static void switch_fullscreen(bool pressed)
 {
-	if (pressed)
+	if (pressed) {
 		GFX_SwitchFullScreen();
+	}
 }
 
 // This function returns write'able buffer for user to draw upon. Successful
 // return depends on properly initialized SDL_Block structure (which generally
 // can be achieved via GFX_SetSize call), and specifically - properly
-// initialized output-specific bits (sdl.texture, sdl.opengl.framebuf, or
-// sdl.openg.pixel_buffer_object fields).
+// initialized output-specific bits (sdl.texture or sdl.opengl.framebuf fields).
 //
 // If everything is prepared correctly, this function returns true, assigns
 // 'pixels' output parameter to to a buffer (with format specified via earlier
@@ -2319,29 +2408,32 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		pitch = sdl.texture.input_surface->pitch;
 		sdl.updating = true;
 		return true;
-#if C_OPENGL
 	case RenderingBackend::OpenGl:
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			pixels = static_cast<uint8_t *>(glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY));
-		} else {
-			pixels = static_cast<uint8_t *>(sdl.opengl.framebuf);
-		}
+#if C_OPENGL
+		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		OPENGL_ERROR("end of start update");
-		if (pixels == nullptr)
+		if (pixels == nullptr) {
 			return false;
+		}
 		static_assert(std::is_same<decltype(pitch), decltype((sdl.opengl.pitch))>::value,
 		              "Our internal pitch types should be the same.");
-		pitch = sdl.opengl.pitch;
+		pitch        = sdl.opengl.pitch;
 		sdl.updating = true;
 		return true;
-#endif
+#else
+		// Should never occur
+		E_Exit("SDL: OpenGL is not supported by this executable");
+#endif // C_OPENGL
 	}
 	return false;
 }
 
-void GFX_EndUpdate(const uint16_t *changedLines)
+void GFX_EndUpdate(const uint16_t* changedLines)
 {
+	static int64_t cumulative_time_rendered_us = 0;
+
+	const auto start_us = GetTicksUs();
+
 	sdl.frame.update(changedLines);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
@@ -2352,25 +2444,54 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		// capture modes.
 		sdl.frame.present();
 	} else {
-		const auto frame_is_new = sdl.updating;
+		// Helper lambda indicating whether the frame should be presented.
+		// Returns true if the frame has been updated or if the limit of
+		// sequentially skipped duplicate frames has been reached.
+		auto vfr_should_present = []() {
+			static uint16_t dupe_tally = 0;
+			if (sdl.updating || ++dupe_tally > sdl.frame.max_dupe_frames) {
+				dupe_tally = 0;
+				return true;
+			}
+			return false;
+		};
 
 		switch (sdl.frame.mode) {
 		case FrameMode::Cfr:
-			maybe_present_synced(frame_is_new);
+			maybe_present_synced(sdl.updating);
 			break;
 		case FrameMode::Vfr:
-			if (frame_is_new) {
+			if (vfr_should_present()) {
 				sdl.frame.present();
 			}
 			break;
 		case FrameMode::ThrottledVfr:
-			maybe_present_throttled(frame_is_new);
+			maybe_present_throttled(vfr_should_present());
 			break;
 		case FrameMode::Unset:
 			break;
 		}
 	}
+
+	const auto elapsed_us = GetTicksUsSince(start_us);
+	cumulative_time_rendered_us += elapsed_us;
+
+	// Update "ticks done" with the rendering time
+	constexpr auto MicrosInMillisecond = 1000;
+
+	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
+		// 1 tick == 1 millisecond
+		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
+		                                       MicrosInMillisecond;
+
+		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
+
+		// Keep the fractional microseconds part
+		cumulative_time_rendered_us %= MicrosInMillisecond;
+	}
+
 	sdl.updating = false;
+
 	FrameMark;
 }
 
@@ -2386,16 +2507,41 @@ static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
 
 static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
+	// This should be impossible, but maybe the user is hitting the screen
+	// capture hotkey on startup even before DOS comes alive.
+	if (!sdl.maybe_video_mode) {
+		LOG_WARNING("SDL: The DOS video mode needs to be set "
+		            "before we can get the rendered image");
+		return {};
+	}
+
 	RenderedImage image = {};
 
+	// The draw rect can extends beyond the bounds of the window or the screen
+	// in fullscreen when we're "zooming into" the DOS content in `relative`
+	// viewport mode. But rendered captures should always capture what we see
+	// on the screen, so only the visible part of the enlarged image.
+	// Therefore, we need to clip the draw rect to the bounds of the canvas
+	// (the total visible area of the window or screen), and only capture the
+	// resulting output rectangle.
+	
+	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	canvas_rect_px.x = 0.0f;
+	canvas_rect_px.y = 0.0f;
+
+	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
+	        to_rect(sdl.draw_rect_px));
+
 	auto allocate_image = [&]() {
-		image.params.width              = sdl.clip.w;
-		image.params.height             = sdl.clip.h;
+		image.params.width              = iroundf(output_rect_px.w);
+		image.params.height             = iroundf(output_rect_px.h);
 		image.params.double_width       = false;
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
 		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
-		image.params.video_mode         = sdl.video_mode;
+
+		assert(sdl.maybe_video_mode);
+		image.params.video_mode = *sdl.maybe_video_mode;
 
 		image.is_flipped_vertically = false;
 
@@ -2423,8 +2569,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		allocate_image();
 
-		glReadPixels(sdl.clip.x,
-		             sdl.clip.y,
+		glReadPixels(iroundf(output_rect_px.x),
+		             iroundf(output_rect_px.y),
 		             image.params.width,
 		             image.params.height,
 		             GL_BGR,
@@ -2462,13 +2608,17 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	//
 	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
 	//
+	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
+
 	if (SDL_RenderReadPixels(renderer,
-	                         &sdl.clip,
+	                         &read_rect_px,
 	                         SDL_PIXELFORMAT_BGR24,
 	                         image.image_data,
 	                         image.pitch) != 0) {
+
 		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 		            SDL_GetError());
+
 		delete[] image.image_data;
 		return {};
 	}
@@ -2499,39 +2649,26 @@ static bool present_frame_texture()
 	return is_presenting;
 }
 
-// OpenGL PBO-based update, frame-based update, and presentation
+// OpenGL frame-based update and presentation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #if C_OPENGL
-static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines)
-{
-	if (sdl.updating) {
-		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
-		                sdl.draw.height, GL_BGRA_EXT,
-		                GL_UNSIGNED_INT_8_8_8_8_REV, nullptr);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-	} else {
-		sdl.opengl.actual_frame_count++;
-	}
-}
-
-static void update_frame_gl_fb(const uint16_t *changedLines)
+static void update_frame_gl(const uint16_t* changedLines)
 {
 	if (changedLines) {
 		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
 		const auto pitch = sdl.opengl.pitch;
 		int y = 0;
 		size_t index = 0;
-		while (y < sdl.draw.height) {
+		while (y < sdl.draw.render_height_px) {
 			if (!(index & 1)) {
 				y += changedLines[index];
 			} else {
 				const uint8_t *pixels = framebuf + y * pitch;
-				const int height = changedLines[index];
+				const int height_px = changedLines[index];
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-				                sdl.draw.width, height, GL_BGRA_EXT,
+				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
 				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-				y += height;
+				y += height_px;
 			}
 			index++;
 		}
@@ -2577,10 +2714,8 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 	case RenderingBackend::Texture:
 		assert(sdl.texture.pixelFormat);
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
-#if C_OPENGL
 	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
-#endif
 	}
 	return 0;
 }
@@ -2619,7 +2754,7 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 	}
 }
 
-static void CleanupSDLResources()
+static void clean_up_sdl_resources()
 {
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
@@ -2638,15 +2773,15 @@ static void CleanupSDLResources()
 static void GUI_ShutDown(Section *)
 {
 	GFX_Stop();
+
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackStop );
-	if (sdl.desktop.fullscreen)
-		GFX_SwitchFullScreen();
 
 	GFX_SetMouseCapture(false);
 	GFX_SetMouseVisibility(true);
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
+
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
 		sdl.renderer = nullptr;
@@ -2661,7 +2796,7 @@ static void GUI_ShutDown(Section *)
 	remove_window();
 }
 
-static void SetPriority(PRIORITY_LEVELS level)
+static void set_priority(PRIORITY_LEVELS level)
 {
 	// Just let the OS scheduler manage priority
 	if (level == PRIORITY_LEVEL_AUTO)
@@ -2717,22 +2852,28 @@ static void SetPriority(PRIORITY_LEVELS level)
 	}
 }
 
-static SDL_Window *SetDefaultWindowMode()
+static SDL_Window* set_default_window_mode()
 {
-	if (sdl.window)
+	if (sdl.window) {
 		return sdl.window;
+	}
 
-	sdl.draw.width = FALLBACK_WINDOW_DIMENSIONS.x;
-	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
+	// TODO: this cannot be correct; at least it would need conversion to
+	// pixels, and we can't correlate render and window dimensions like this
+	sdl.draw.render_width_px  = FallbackWindowSize.x;
+	sdl.draw.render_height_px = FallbackWindowSize.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
+
 		return SetWindowMode(sdl.want_rendering_backend,
 		                     sdl.desktop.full.width,
 		                     sdl.desktop.full.height,
 		                     sdl.desktop.fullscreen);
 	}
+
 	sdl.desktop.lazy_init_window_size = false;
+
 	return SetWindowMode(sdl.want_rendering_backend,
 	                     sdl.desktop.window.width,
 	                     sdl.desktop.window.height,
@@ -2766,34 +2907,13 @@ static SDL_Point refine_window_size(const SDL_Point size,
 		const int y = ceil_sdivide(size.x * image_aspect.y, image_aspect.x);
 		return {size.x, y};
 	}
-	return FALLBACK_WINDOW_DIMENSIONS;
-}
 
-static SDL_Rect get_desktop_resolution()
-{
-	SDL_Rect desktop;
-	assert(sdl.display_number >= 0);
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
-
-	// Deduct the border decorations from the desktop size
-	int top = 0;
-	int left = 0;
-	int bottom = 0;
-	int right = 0;
-	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
-	                               &top, &left, &bottom, &right);
-	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
-	desktop.w -= (left + right);
-	desktop.h -= (top + bottom);
-
-	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
-	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
-	return desktop;
+	return FallbackWindowSize;
 }
 
 static void maybe_limit_requested_resolution(int &w, int &h, const char *size_description)
 {
-	const auto desktop = get_desktop_resolution();
+	const auto desktop = get_desktop_size();
 	if (w <= desktop.w && h <= desktop.h)
 		return;
 
@@ -2806,13 +2926,22 @@ static void maybe_limit_requested_resolution(int &w, int &h, const char *size_de
 		w = desktop.w;
 		h = desktop.h;
 		was_limited = true;
-		LOG_WARNING("DISPLAY: Limitting %s resolution to '%dx%d' to avoid kmsdrm issues",
-		            size_description, w, h);
+		LOG_WARNING("DISPLAY: Limiting '%s' resolution to %dx%d to avoid kmsdrm issues",
+		            size_description,
+		            w,
+		            h);
 	}
 
 	if (!was_limited)
-		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding the %dx%d display",
-		         size_description, w, h, desktop.w, desktop.h);
+		// TODO shouldn't we log the display resolution in physical pixels
+		// instead?
+		LOG_INFO("DISPLAY: Accepted '%s' resolution %dx%d despite exceeding "
+		         "the %dx%d display",
+		         size_description,
+		         w,
+		         h,
+		         desktop.w,
+		         desktop.h);
 }
 
 static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
@@ -2821,19 +2950,19 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 	int h = 0;
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
-	const bool is_valid = (w >= FALLBACK_WINDOW_DIMENSIONS.x &&
-	                       h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	const bool is_valid = (w >= FallbackWindowSize.x &&
+	                       h >= FallbackWindowSize.y);
 
 	if (was_parsed && is_valid) {
 		maybe_limit_requested_resolution(w, h, "window");
 		return {w, h};
 	}
 
-	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
-	            pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
-	            FALLBACK_WINDOW_DIMENSIONS.y);
+	LOG_WARNING("DISPLAY: Invalid 'windowresolution' setting: '%s', "
+	            "using 'default'",
+	            pref.c_str());
 
-	return FALLBACK_WINDOW_DIMENSIONS;
+	return FallbackWindowSize;
 }
 
 static SDL_Point window_bounds_from_label(const std::string& pref,
@@ -2844,18 +2973,18 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 	constexpr int LargePercent  = 90;
 
 	const int percent = [&] {
-		if (starts_with(pref, "s")) {
+		if (pref.starts_with('s')) {
 			return SmallPercent;
-		} else if (starts_with(pref, "m") || pref == "default" ||
+		} else if (pref.starts_with('m') || pref == "default" ||
 		           pref.empty()) {
 			return MediumPercent;
-		} else if (starts_with(pref, "l")) {
+		} else if (pref.starts_with('l')) {
 			return LargePercent;
 		} else if (pref == "desktop") {
 			return 100;
 		} else {
-			LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, "
-			            "using 'default' instead",
+			LOG_WARNING("DISPLAY: Invalid 'windowresolution' setting: '%s', "
+			            "using 'default'",
 			            pref.c_str());
 			return MediumPercent;
 		}
@@ -2869,90 +2998,41 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 
 static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 {
-	const auto w = std::max(size.x, FALLBACK_WINDOW_DIMENSIONS.x);
-	const auto h = std::max(size.y, FALLBACK_WINDOW_DIMENSIONS.y);
+	const auto w = std::max(size.x, FallbackWindowSize.x);
+	const auto h = std::max(size.y, FallbackWindowSize.y);
 	return {w, h};
 }
 
-// Takes in:
-//  - The 'viewport_resolution' config value: 'fit', 'WxH', 'N[.M]%', or an invalid setting.
-//
-// Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_viewport_limits', true if the viewport_resolution feature is enabled.
-//  - 'sdl.desktop.viewport_resolution', with the refined size.
-
-static void setup_viewport_resolution_from_conf(const std::string &viewport_resolution_val)
-{
-	sdl.use_viewport_limits = false;
-	sdl.viewport_resolution = {-1, -1};
-
-	constexpr auto default_val = "fit";
-	if (viewport_resolution_val == default_val)
-		return;
-
-	int w = 0;
-	int h = 0;
-	float p = 0.0f;
-	const auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
-	                        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
-
-	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH"
-		            " or N%% format, using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(), default_val);
-		return;
-	}
-
-	const auto desktop = get_desktop_resolution();
-	const bool is_out_of_bounds = (w <= 0 || w > desktop.w || h <= 0 ||
-	                               h > desktop.h) &&
-	                              (p <= 0.0f || p > 100.0f);
-	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution of '%s' is outside"
-		            " the desktop '%dx%d' bounds or the 1-100%% range, "
-		            " using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(), desktop.w,
-		            desktop.h, default_val);
-		return;
-	}
-
-	sdl.use_viewport_limits = true;
-	if (p > 0.0f) {
-		sdl.viewport_resolution.x = iround(desktop.w * static_cast<double>(p) / 100.0);
-		sdl.viewport_resolution.y = iround(desktop.h * static_cast<double>(p) / 100.0);
-		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
-		        static_cast<double>(p), sdl.viewport_resolution.x, sdl.viewport_resolution.y);
-
-	} else {
-		sdl.viewport_resolution = {w, h};
-		LOG_MSG("DISPLAY: Limiting viewport resolution to %dx%d",
-		        sdl.viewport_resolution.x, sdl.viewport_resolution.y);
-	}
-}
-
-static void setup_initial_window_position_from_conf(const std::string &window_position_val)
+static void setup_initial_window_position_from_conf(const std::string& window_position_val)
 {
 	sdl.desktop.window.initial_x_pos = -1;
 	sdl.desktop.window.initial_y_pos = -1;
 
-	if (window_position_val == "auto")
+	if (window_position_val == "auto") {
 		return;
+	}
 
 	int x, y;
-	const auto was_parsed = sscanf(window_position_val.c_str(), "%d,%d", &x, &y) == 2;
+	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
+	                         2);
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format, using 'auto' instead",
+		LOG_WARNING("DISPLAY: Invalid 'window_position' setting: '%s'. "
+		            "Must be in X,Y format, using 'auto'.",
 		            window_position_val.c_str());
 		return;
 	}
 
-	const auto desktop = get_desktop_resolution();
+	const auto desktop = get_desktop_size();
+
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside the bounds of the desktop '%dx%d', "
-		            "using 'auto' instead",
-		            x, y, desktop.w, desktop.h);
+		LOG_WARNING("DISPLAY: Invalid 'window_position' setting: '%s'. "
+		            "Requested position is outside the bounds of the %dx%d "
+		            "desktop, using 'auto'.",
+		            window_position_val.c_str(),
+		            desktop.w,
+		            desktop.h);
 		return;
 	}
 
@@ -2982,11 +3062,10 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction is requested.
 //
-// Except for SURFACE rendering, this function returns a refined size and
-// additionally populates the following struct members:
+// This function returns a refined size and additionally populates the
+// following struct members:
 //
 //  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
 //     not take into account scaling or aspect correction.
@@ -2994,19 +3073,18 @@ static void save_window_size(const int w, const int h)
 //  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 //
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
-                                         const InterpolationMode interpolation_mode,
                                          const bool wants_aspect_ratio_correction)
 {
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
 	const std::string pref = windowresolution_val;
-	SDL_Point coarse_size  = FALLBACK_WINDOW_DIMENSIONS;
+	SDL_Point coarse_size  = FallbackWindowSize;
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(pref);
 	} else {
-		const auto desktop = get_desktop_resolution();
+		const auto desktop = get_desktop_size();
 
 		coarse_size = window_bounds_from_label(pref, desktop);
 	}
@@ -3025,148 +3103,84 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
 
-	auto describe_interpolation_mode = [interpolation_mode]() -> const char* {
-		switch (interpolation_mode) {
-		case InterpolationMode::Bilinear: return "bilinear";
-		case InterpolationMode::NearestNeighbour:
-			return "nearest-neighbour";
-		}
-		return "unknown";
-	};
-
 	// Let the user know the resulting window properties
-	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
+	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
 	        refined_size.x,
 	        refined_size.y,
-	        describe_interpolation_mode(),
 	        sdl.display_number);
 }
 
-SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
-                          const int draw_width, const int draw_height,
-                          const Fraction& render_pixel_aspect_ratio)
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                      const DosBox::Rect& render_size_px,
+                                      const Fraction& render_pixel_aspect_ratio)
 {
-	assert(draw_width > 0);
-	assert(draw_height > 0);
+	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
 
-	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-	        render_pixel_aspect_ratio);
+	const auto draw_size_fit_px =
+	        render_size_px.Copy()
+	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
+	                .ScaleSizeToFit(viewport_px);
 
-	assert(draw_scale_x > 0.0);
-	assert(draw_scale_y > 0.0);
-	assert(std::isfinite(draw_scale_x));
-	assert(std::isfinite(draw_scale_y));
-
-	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
-	                                                             canvas_height);
-
-	const auto bounds_w = restricted_dims.x;
-	const auto bounds_h = restricted_dims.y;
-
-	// It is important to calculate the image aspect ratio like this because
-	// the aspect ratio of the *image* itself it not always 4:3, in which
-	// case it would appear letter and/or pillarboxed on a real 4:3 display
-	// aspect ratio CRT monitor.
-	const auto image_aspect_ratio = (draw_width * draw_scale_x) /
-	                                (draw_height * draw_scale_y);
-
-	auto calculate_bounded_dims = [&]() -> std::pair<int, int> {
-		// Calculate the viewport contingent on the aspect ratio of the
-		// viewport bounds versus display mode.
-		const auto bounds_aspect = static_cast<double>(bounds_w) / bounds_h;
-
-		if (bounds_aspect > image_aspect_ratio) {
-			const auto w = iround(bounds_h * image_aspect_ratio);
-			const auto h = bounds_h;
-			return {w, h};
-		} else {
-			const auto w = bounds_w;
-			const auto h = iround(bounds_w / image_aspect_ratio);
-			return {w, h};
-		}
-	};
-
-	auto calculate_vertical_integer_scaling_dims = [&]() -> std::pair<int, int> {
-		auto integer_scale_factor = std::min(
-		        bounds_h / draw_height,
-		        ifloor(bounds_w / (draw_height * image_aspect_ratio)));
-
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
+		                            iroundf(render_size_px.w);
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
-			return calculate_bounded_dims();
+			return draw_size_fit_px;
 		} else {
-			const auto w = iround(draw_height * integer_scale_factor *
-			                      image_aspect_ratio);
-			const auto h = draw_height * integer_scale_factor;
+			const auto vert_scale =
+			        render_pixel_aspect_ratio.Inverse().ToFloat();
 
-			return {w, h};
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleHeight(vert_scale);
 		}
 	};
 
-	int view_w = 0;
-	int view_h = 0;
+	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
+		                            iroundf(render_size_px.h);
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return draw_size_fit_px;
+		} else {
+			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
 
-	switch (sdl.integer_scaling_mode) {
-	case IntegerScalingMode::Off: {
-		std::tie(view_w, view_h) = calculate_bounded_dims();
-		break;
-	}
-	case IntegerScalingMode::Auto:
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleWidth(horiz_scale);
+		}
+	};
+
+	auto draw_size_px = [&] {
+		switch (sdl.integer_scaling_mode) {
+		case IntegerScalingMode::Off: return draw_size_fit_px;
+
+		case IntegerScalingMode::Auto:
 #if C_OPENGL
-		if (sdl.rendering_backend == RenderingBackend::OpenGl &&
-		    sdl.opengl.shader_info.is_adaptive) {
-			std::tie(view_w,
-			         view_h) = calculate_vertical_integer_scaling_dims();
-		} else {
-			std::tie(view_w, view_h) = calculate_bounded_dims();
-		}
+			if (sdl.rendering_backend == RenderingBackend::OpenGl &&
+			    sdl.opengl.shader_info.is_adaptive) {
+				return calc_vert_integer_scaling_dims_in_pixels();
+			} else {
+				return draw_size_fit_px;
+			}
 #else
-		std::tie(view_w, view_h) = calculate_bounded_dims();
+			return draw_size_fit_px;
 #endif
-		break;
 
-	case IntegerScalingMode::Horizontal: {
-		// Calculate scaling multiplier that will allow to fit the whole
-		// image into the window or viewport bounds.
-		const auto pixel_aspect = round(draw_height * draw_scale_y) /
-		                          draw_height;
-		auto integer_scale_factor =
-		        std::min(bounds_w / draw_width,
-		                 ifloor(bounds_h / (draw_height * pixel_aspect)));
+		case IntegerScalingMode::Horizontal:
+			return calc_horiz_integer_scaling_dims_in_pixels();
 
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			std::tie(view_w, view_h) = calculate_bounded_dims();
-		} else {
-			// Calculate the final viewport.
-			view_w = draw_width * integer_scale_factor;
-			view_h = iround(draw_height * integer_scale_factor *
-			                pixel_aspect);
+		case IntegerScalingMode::Vertical:
+			return calc_vert_integer_scaling_dims_in_pixels();
+
+		default:
+			assertm(false, "Invalid IntegerScalingMode value");
+			return DosBox::Rect{};
 		}
-		break;
-	}
-	case IntegerScalingMode::Vertical:
-		std::tie(view_w, view_h) = calculate_vertical_integer_scaling_dims();
-		break;
+	}();
 
-	default: assertm(false, "Invalid IntegerScalingMode value");
-	}
-
-	// Calculate centered viewport position.
-	const int view_x = (canvas_width - view_w) / 2;
-	const int view_y = (canvas_height - view_h) / 2;
-
-	return {view_x, view_y, view_w, view_h};
-}
-
-static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
-{
-	return GFX_CalcViewport(canvas_width,
-	                        canvas_height,
-	                        sdl.draw.width,
-	                        sdl.draw.height,
-	                        sdl.draw.render_pixel_aspect_ratio);
+	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
 }
 
 IntegerScalingMode GFX_GetIntegerScalingMode()
@@ -3179,14 +3193,13 @@ void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
 	sdl.integer_scaling_mode = mode;
 }
 
-InterpolationMode GFX_GetInterpolationMode()
+InterpolationMode GFX_GetTextureInterpolationMode()
 {
-	return sdl.interpolation_mode;
+	return sdl.texture.interpolation_mode;
 }
 
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
-	// Apply the user's mouse settings
 	const auto section = static_cast<const Section_prop *>(sec);
 	std::string output = section->Get_string("output");
 
@@ -3194,32 +3207,24 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	// it's the job of everything after this to re-engage it.
 
 	if (output == "texture") {
-		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::Bilinear;
+		sdl.want_rendering_backend     = RenderingBackend::Texture;
+		sdl.texture.interpolation_mode = InterpolationMode::Bilinear;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	} else if (output == "texturenb") {
 		sdl.want_rendering_backend = RenderingBackend::Texture;
-		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-		// Currently the default, but... oh well
+		sdl.texture.interpolation_mode = InterpolationMode::NearestNeighbour;
+
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
-	} else if (starts_with(output, "opengl")) {
-		if (output == "opengl") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::Bilinear;
-			sdl.opengl.bilinear    = true;
-
-		} else if (output == "openglnb") {
-			sdl.want_rendering_backend = RenderingBackend::OpenGl;
-			sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
-			sdl.opengl.bilinear = false;
-		}
+	} else if (output == "opengl") {
+		sdl.want_rendering_backend = RenderingBackend::OpenGl;
 #endif
 
 	} else {
-		LOG_WARNING("SDL: Unsupported output device %s, switching back to texture",
+		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
@@ -3235,7 +3240,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	if (sdl.render_driver != "auto") {
 		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
 		                sdl.render_driver.c_str()) == SDL_FALSE) {
-			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; falling back to automatic selection",
+			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; "
+			            "falling back to automatic selection",
 			            sdl.render_driver.c_str());
 		}
 	}
@@ -3245,24 +3251,24 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
 
-	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
-
-	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
-	                             sdl.interpolation_mode,
+	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
 	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL is requested */
-		if (!SetDefaultWindowMode()) {
-			LOG_WARNING("Could not create OpenGL window, switching back to texture");
+		if (!set_default_window_mode()) {
+			LOG_WARNING("OPENGL: Could not create OpenGL window, "
+			            "using 'texture' output mode");
 			sdl.want_rendering_backend = RenderingBackend::Texture;
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == nullptr) {
-				LOG_WARNING("Could not create OpenGL context, switching back to texture");
+				LOG_WARNING("OPENGL: Could not create context, "
+				            "using 'texture' output mode");
 				sdl.want_rendering_backend = RenderingBackend::Texture;
 			}
 		}
+
 		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
@@ -3314,38 +3320,14 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         glUniform2f && glUniform1i && glUseProgram &&
 			         glVertexAttribPointer);
 
-			sdl.opengl.buffer = 0;
 			sdl.opengl.framebuf = nullptr;
 			sdl.opengl.texture = 0;
 			sdl.opengl.displaylist = 0;
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress(
-			        "glGenBuffersARB");
-			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glBindBufferARB");
-			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
-			        SDL_GL_GetProcAddress("glDeleteBuffersARB");
-			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress(
-			        "glBufferDataARB");
-			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glMapBufferARB");
-			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glUnmapBufferARB");
-			const bool have_arb_buffers = glGenBuffersARB &&
-			                              glBindBufferARB &&
-			                              glDeleteBuffersARB &&
-			                              glBufferDataARB &&
-			                              glMapBufferARB &&
-			                              glUnmapBufferARB;
-
 			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
 			                                                  "0.0.0");
 			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.pixel_buffer_object =
-			        have_arb_buffers &&
-			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
 
 			sdl.opengl.npot_textures_supported =
 			        gl_version_major >= 2 ||
@@ -3365,31 +3347,29 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
 			                            "unknown"));
 
-			LOG_INFO("OPENGL: Pixel buffer object %s",
-			         sdl.opengl.pixel_buffer_object ? "available"
-			                                        : "missing");
 			LOG_INFO("OPENGL: NPOT textures %s",
 			         npot_support_msg.c_str());
 		}
 	} /* OPENGL is requested end */
 #endif    // OPENGL
 
-	if (!SetDefaultWindowMode())
-		E_Exit("Could not initialize video: %s", SDL_GetError());
+	if (!set_default_window_mode()) {
+		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
+	}
 
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
+	GFX_RefreshTitle();
 
 	RENDER_Reinit();
 }
 
 // extern void UI_Run(bool);
-void Restart(bool pressed);
 
-static void ApplyActiveSettings()
+static void apply_active_settings()
 {
-	SetPriority(sdl.priority.active);
+	set_priority(sdl.priority.active);
 	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
@@ -3399,7 +3379,7 @@ static void ApplyActiveSettings()
 
 static void ApplyInactiveSettings()
 {
-	SetPriority(sdl.priority.inactive);
+	set_priority(sdl.priority.inactive);
 	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive) {
@@ -3407,24 +3387,31 @@ static void ApplyInactiveSettings()
 	}
 }
 
-static void SetPriorityLevels(const std::string& active_pref,
-                              const std::string& inactive_pref)
+static void set_priority_levels(const std::string& active_pref,
+                                const std::string& inactive_pref)
 {
 	auto to_level = [](const std::string& pref) {
-		if (pref == "auto")
+		if (pref == "auto") {
 			return PRIORITY_LEVEL_AUTO;
-		if (pref == "lowest")
+		}
+		if (pref == "lowest") {
 			return PRIORITY_LEVEL_LOWEST;
-		if (pref == "lower")
+		}
+		if (pref == "lower") {
 			return PRIORITY_LEVEL_LOWER;
-		if (pref == "normal")
+		}
+		if (pref == "normal") {
 			return PRIORITY_LEVEL_NORMAL;
-		if (pref == "higher")
+		}
+		if (pref == "higher") {
 			return PRIORITY_LEVEL_HIGHER;
-		if (pref == "highest")
+		}
+		if (pref == "highest") {
 			return PRIORITY_LEVEL_HIGHEST;
+		}
+		LOG_WARNING("SDL: Invalid 'priority' setting: '%s', using 'auto'",
+		            pref.c_str());
 
-		LOG_WARNING("Invalid priority level: %s, using 'auto'", pref.data());
 		return PRIORITY_LEVEL_AUTO;
 	};
 
@@ -3432,45 +3419,51 @@ static void SetPriorityLevels(const std::string& active_pref,
 	sdl.priority.inactive = to_level(inactive_pref);
 }
 
-static void GUI_StartUp(Section *sec)
+static void restart_hotkey_handler([[maybe_unused]] bool pressed)
+{
+	restart_dosbox();
+}
+
+static void read_gui_config(Section* sec)
 {
 	sec->AddDestroyFunction(&GUI_ShutDown);
-	Section_prop *section = static_cast<Section_prop *>(sec);
+	Section_prop* section = static_cast<Section_prop*>(sec);
 
-	sdl.active = false;
+	sdl.active          = false;
 	sdl.updating        = false;
 	sdl.resizing_window = false;
-	sdl.wait_on_error = section->Get_bool("waitonerror");
+	sdl.wait_on_error   = section->Get_bool("waitonerror");
 
 	sdl.desktop.fullscreen = control->arguments.fullscreen ||
 	                         section->Get_bool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
-	SetPriorityLevels(priority_conf->Get_string("active"),
-	                  priority_conf->Get_string("inactive"));
+	set_priority_levels(priority_conf->Get_string("active"),
+	                    priority_conf->Get_string("inactive"));
 
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
 
 	sdl.mute_when_inactive = section->Get_bool("mute_when_inactive") ||
 	                         sdl.pause_when_inactive;
 
-	ApplyActiveSettings(); // Assume focus on startup
-	sdl.desktop.full.fixed=false;
-	const char* fullresolution=section->Get_string("fullresolution");
+	// Assume focus on startup
+	apply_active_settings();
+
+	std::string fullresolution = section->Get_string("fullresolution");
+
+	sdl.desktop.full.fixed  = false;
 	sdl.desktop.full.width  = 0;
 	sdl.desktop.full.height = 0;
-	if(fullresolution && *fullresolution) {
-		char res[100];
-		safe_strcpy(res, fullresolution);
-		fullresolution = lowcase (res);//so x and X are allowed
-		if (strcmp(fullresolution,"original")) {
+
+	if(!fullresolution.empty()) {
+		lowcase(fullresolution); //so x and X are allowed
+		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
-			if (strcmp(fullresolution,"desktop")) { // desktop uses 0x0, below sets a custom WxH
-				char* height = const_cast<char*>(strchr(fullresolution,'x'));
-				if (height && * height) {
-					*height = 0;
-					sdl.desktop.full.height = atoi(height + 1);
-					sdl.desktop.full.width  = atoi(res);
+			if (fullresolution != "desktop") { // desktop uses 0x0, below sets a custom WxH
+				std::vector<std::string> dimensions = split_with_empties(fullresolution, 'x');
+				if (dimensions.size() == 2) {
+					sdl.desktop.full.width = parse_int(dimensions[0]).value_or(0);
+					sdl.desktop.full.height = parse_int(dimensions[1]).value_or(0);
 					maybe_limit_requested_resolution(
 					        sdl.desktop.full.width,
 					        sdl.desktop.full.height,
@@ -3493,7 +3486,7 @@ static void GUI_StartUp(Section *sec)
 			sdl.desktop.host_rate_mode      = HostRateMode::Custom;
 			sdl.desktop.preferred_host_rate = rate;
 		} else {
-			LOG_WARNING("SDL: Invalid 'host_rate' value: '%s', using 'auto'",
+			LOG_WARNING("SDL: Invalid 'host_rate' setting: '%s', using 'auto'",
 			            host_rate_pref.c_str());
 			sdl.desktop.host_rate_mode = HostRateMode::Auto;
 		}
@@ -3523,7 +3516,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.frame.desired_mode = FrameMode::Vfr;
 	else {
 		sdl.frame.desired_mode = FrameMode::Unset;
-		LOG_WARNING("SDL: Invalid 'presentation_mode' value: '%s'",
+		LOG_WARNING("SDL: Invalid 'presentation_mode' setting: '%s', using 'auto'",
 		            presentation_mode_pref.c_str());
 	}
 
@@ -3532,17 +3525,14 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
-
-	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
-	SetIcon();
+	set_output(section, is_aspect_ratio_correction_enabled());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
 	                  "shutdown", "Shutdown");
 
-	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
+	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(restart_hotkey_handler, SDL_SCANCODE_HOME, PRIMARY_MOD | MMOD2, "restart", "Restart");
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
 	                  SDL_SCANCODE_F10,
 	                  PRIMARY_MOD,
@@ -3551,8 +3541,13 @@ static void GUI_StartUp(Section *sec)
 
 #if C_DEBUG
 /* Pause binds with activate-debugger */
+#elif defined(MACOSX)
+	// Pause/unpause is hardcoded to Command+P on macOS
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD,
+	                  "pause", "Pause Emu.");
 #else
-	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_PAUSE, MMOD2,
+	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2,
 	                  "pause", "Pause Emu.");
 #endif
 	/* Get Keyboard state of numlock and capslock */
@@ -3568,7 +3563,25 @@ static void GUI_StartUp(Section *sec)
 	MOUSE_NotifyReadyGFX();
 }
 
-static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
+static void read_config(Section* sec)
+{
+	assert(sec);
+	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	assert(conf);
+	if (!conf) {
+		return;
+	}
+
+	static bool first_time = true;
+	if (first_time) {
+		read_gui_config(sec);
+		first_time = false;
+	}
+
+	TITLEBAR_ReadConfig(*conf);
+}
+
+static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
 	                 static_cast<float>(motion->yrel),
@@ -3576,24 +3589,26 @@ static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 	                 check_cast<int32_t>(motion->y));
 }
 
-static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
+static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
 {
     const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y;
 	MOUSE_EventWheel(check_cast<int16_t>(tmp));
 }
 
-static void HandleMouseButton(SDL_MouseButtonEvent * button)
+static void handle_mouse_button(SDL_MouseButtonEvent* button)
 {
 	auto notify_button = [](const uint8_t button, const bool pressed) {
+		// clang-format off
 		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventButton(0, pressed); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(1, pressed); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(2, pressed); break;
-		case SDL_BUTTON_X1:     MOUSE_EventButton(3, pressed); break;
-		case SDL_BUTTON_X2:     MOUSE_EventButton(4, pressed); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventButton(MouseButtonId::Left,   pressed); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(MouseButtonId::Right,  pressed); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(MouseButtonId::Middle, pressed); break;
+		case SDL_BUTTON_X1:     MOUSE_EventButton(MouseButtonId::Extra1, pressed); break;
+		case SDL_BUTTON_X2:     MOUSE_EventButton(MouseButtonId::Extra2, pressed); break;
 		}
+		// clang-format on
 	};
-
+	assert(button);
 	notify_button(button->button, button->state == SDL_PRESSED);
 }
 
@@ -3614,7 +3629,7 @@ void GFX_RegenerateWindow(Section *sec) {
 		return;
 	}
 	remove_window();
-	set_output(sec, RENDER_IsAspectRatioCorrectionEnabled());
+	set_output(sec, is_aspect_ratio_correction_enabled());
 	GFX_ResetScreen();
 }
 
@@ -3625,7 +3640,7 @@ void GFX_RegenerateWindow(Section *sec) {
 #define DB_POLLSKIP 1
 #endif
 
-static void HandleVideoResize(int width, int height)
+static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
@@ -3633,21 +3648,27 @@ static void HandleVideoResize(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
+		sdl.desktop.full.width  = width;
 		sdl.desktop.full.height = height;
 	}
 
-	const auto canvas = get_canvas_size(sdl.rendering_backend);
-	sdl.clip          = calc_viewport(canvas.w, canvas.h);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
+
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+		SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		glViewport(sdl.draw_rect_px.x,
+		           sdl.draw_rect_px.y,
+		           sdl.draw_rect_px.w,
+		           sdl.draw_rect_px.h);
+
 		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip.w,
-		            (GLfloat)sdl.clip.h);
+		            (GLfloat)sdl.draw_rect_px.w,
+		            (GLfloat)sdl.draw_rect_px.h);
 	}
 #endif // C_OPENGL
 
@@ -3659,7 +3680,7 @@ static void HandleVideoResize(int width, int height)
 	}
 
 	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
+	notify_new_mouse_screen_params();
 }
 
 /* TODO: Properly set window parameters and remove this routine.
@@ -3672,7 +3693,8 @@ static void HandleVideoResize(int width, int height)
  * users (e.g. placing window partially off-screen, or using fullscreen
  * resolution for window size).
  */
-static void FinalizeWindowState()
+
+static void finalise_window_state()
 {
 	assert(sdl.window);
 
@@ -3704,18 +3726,48 @@ static void FinalizeWindowState()
 	GFX_ResetScreen();
 }
 
-static void maybe_auto_switch_shader()
+static bool maybe_auto_switch_shader()
 {
-#if C_OPENGL
+	// The shaders need the OpenGL backend
 	if (sdl.rendering_backend != RenderingBackend::OpenGl) {
-		return;
+		return false;
 	}
 
-	const auto canvas = get_canvas_size(sdl.rendering_backend);
+	// The shaders need a canvas size as their target resolution
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	if (canvas_size_px.IsEmpty()) {
+		return false;
+	}
+
+	// The shaders need the DOS mode to be set as their source resolution
+	if (!sdl.maybe_video_mode) {
+		return false;
+	}
 
 	constexpr auto reinit_render = true;
-	RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
-#endif
+	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
+	                                    *sdl.maybe_video_mode,
+	                                    reinit_render);
+}
+
+static bool is_user_event(const SDL_Event& event)
+{
+	const auto start_id = sdl.start_event_id;
+	const auto end_id   = start_id + enum_val(SDL_DosBoxEvents::NumEvents);
+
+	return (event.common.type >= start_id && event.common.type < end_id);
+}
+
+static void handle_user_event(const SDL_Event& event)
+{
+	const auto id = event.common.type - sdl.start_event_id;
+	switch (static_cast<SDL_DosBoxEvents>(id)) {
+	case SDL_DosBoxEvents::RefreshAnimatedTitle:
+		GFX_RefreshAnimatedTitle();
+		break;
+	default:
+		assert(false);
+	}
 }
 
 bool GFX_Events()
@@ -3745,11 +3797,15 @@ bool GFX_Events()
 #endif
 	while (SDL_PollEvent(&event)) {
 #if C_DEBUG
-		if (isDebuggerEvent(event)) {
+		if (is_debugger_event(event)) {
 			pdc_event_queue.push(event);
 			continue;
 		}
 #endif
+		if (is_user_event(event)) {
+			handle_user_event(event);
+			continue;
+		}
 		switch (event.type) {
 		case SDL_DISPLAYEVENT:
 			switch (event.display.event) {
@@ -3757,7 +3813,7 @@ bool GFX_Events()
 			// Events added in SDL 2.0.14
 			case SDL_DISPLAYEVENT_CONNECTED:
 			case SDL_DISPLAYEVENT_DISCONNECTED:
-				NewMouseScreenParams();
+				notify_new_mouse_screen_params();
 				break;
 #endif
 			default:
@@ -3777,20 +3833,22 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 #endif
-				FocusInput();
+				focus_input();
 				continue;
 
-			case SDL_WINDOWEVENT_RESIZED:
-				// LOG_DEBUG("SDL: Window has been resized to %dx%d",
-				//               event.window.data1,
-				//               event.window.data2);
-				//
+			case SDL_WINDOWEVENT_RESIZED: {
+				// TODO pixels or logical unit?
+				// LOG_DEBUG("SDL: Window has been resized to
+				// %dx%d",
+				//           event.window.data1,
+				//           event.window.data2);
+
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -3798,10 +3856,32 @@ bool GFX_Events()
 				// already been established:
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
-				continue;
+
+				// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
+				// resizing the window, so we're only logging the display
+				// settings if there is a change since the last window resized
+				// event.
+				static int prev_width  = 0;
+				static int prev_height = 0;
+
+				const auto new_width  = event.window.data1;
+				const auto new_height = event.window.data2;
+
+				if (prev_width != new_width ||
+				    prev_height != new_height) {
+					log_display_properties(
+					        sdl.draw.render_width_px,
+					        sdl.draw.render_height_px,
+					        sdl.maybe_video_mode,
+					        sdl.rendering_backend);
+				}
+
+				prev_width  = new_width;
+				prev_height = new_height;
+			}	continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				ApplyActiveSettings();
+				apply_active_settings();
 				[[fallthrough]];
 			case SDL_WINDOWEVENT_EXPOSED:
 				// LOG_DEBUG("SDL: Window has been exposed "
@@ -3822,7 +3902,7 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
-				FocusInput();
+				focus_input();
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -3835,7 +3915,6 @@ bool GFX_Events()
 #endif
 				ApplyInactiveSettings();
 				GFX_LosingFocus();
-				CPU_Enable_SkipAutoAdjust();
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
@@ -3861,10 +3940,10 @@ bool GFX_Events()
 				//               event.window.data1,
 				//               event.window.data2);
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 				continue;
 #endif
@@ -3885,37 +3964,46 @@ bool GFX_Events()
 
 				sdl.display_number = event.window.data1;
 
-				const auto canvas = get_canvas_size(sdl.rendering_backend);
-				sdl.clip = calc_viewport(canvas.w, canvas.h);
+				const auto canvas_size_px = get_canvas_size_in_pixels(
+				        sdl.rendering_backend);
+
+				sdl.draw_rect_px = to_sdl_rect(
+				        calc_draw_rect_in_pixels(canvas_size_px));
+
 				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.clip);
+					                      &sdl.draw_rect_px);
 				}
 #	if C_OPENGL
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 
 				maybe_auto_switch_shader();
 #	endif
-				NewMouseScreenParams();
+				notify_new_mouse_screen_params();
 				continue;
 			}
 #endif
 
-			case SDL_WINDOWEVENT_SIZE_CHANGED:
+			case SDL_WINDOWEVENT_SIZE_CHANGED: {
 				// LOG_DEBUG("SDL: The window size has changed");
 
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				HandleVideoResize(event.window.data1, event.window.data2);
-				FinalizeWindowState();
+				const auto new_width  = event.window.data1;
+				const auto new_height = event.window.data2;
+				handle_video_resize(new_width, new_height);
+
+				finalise_window_state();
+
 				maybe_auto_switch_shader();
 				continue;
+			}
 
 			case SDL_WINDOWEVENT_MINIMIZED:
 				// LOG_DEBUG("SDL: Window has been minimized");
@@ -3934,8 +4022,8 @@ bool GFX_Events()
 				break;
 
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				FocusInput();
-				ApplyActiveSettings();
+				focus_input();
+				apply_active_settings();
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
@@ -3956,18 +4044,17 @@ bool GFX_Events()
 					 * Instead of waiting for the user to hit Alt+Break, we wait for the window to
 					 * regain window or input focus.
 					 */
-					bool paused = true;
 					ApplyInactiveSettings();
 					SDL_Event ev;
 
-					GFX_RefreshTitle();
 					KEYBOARD_ClrBuffer();
 //					Delay(500);
 //					while (SDL_PollEvent(&ev)) {
 						// flush event queue.
 //					}
 
-					while (paused) {
+					bool paused = true;
+					while (paused && !shutdown_requested) {
 						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
 						SDL_WaitEvent(&ev);
 
@@ -3979,12 +4066,12 @@ bool GFX_Events()
 							if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (ev.window.event == SDL_WINDOWEVENT_MINIMIZED) || (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
 								// We've got focus back, so unpause and break out of the loop
 								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
+									sdl.is_paused = false;
 									GFX_RefreshTitle();
 									if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
 										paused = false;
-										ApplyActiveSettings();
+										apply_active_settings();
 									}
-									CPU_Disable_SkipAutoAdjust();
 								}
 
 								/* Now poke a "release ALT" command into the keyboard buffer
@@ -4005,10 +4092,10 @@ bool GFX_Events()
 			}
 			break; // end of SDL_WINDOWEVENT
 
-		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
-		case SDL_MOUSEWHEEL: HandleMouseWheel(&event.wheel); break;
+		case SDL_MOUSEMOTION: handle_mouse_motion(&event.motion); break;
+		case SDL_MOUSEWHEEL: handle_mouse_wheel(&event.wheel); break;
 		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP: HandleMouseButton(&event.button); break;
+		case SDL_MOUSEBUTTONUP: handle_mouse_button(&event.button); break;
 
 		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
@@ -4033,9 +4120,9 @@ bool GFX_Events()
 #if defined (MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			/* On macs CMD-Q is the default key to close an application */
-			if (event.key.keysym.sym == SDLK_q &&
-			    (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
+			// On macOS, Command+Q is the default key to close an
+			// application
+			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_q) {
 				GFX_RequestExit(true);
 				break;
 			}
@@ -4048,7 +4135,7 @@ bool GFX_Events()
 }
 
 #if defined (WIN32)
-static BOOL WINAPI ConsoleEventHandler(DWORD event) {
+static BOOL WINAPI console_event_handler(DWORD event) {
 	switch (event) {
 	case CTRL_SHUTDOWN_EVENT:
 	case CTRL_LOGOFF_EVENT:
@@ -4067,6 +4154,7 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
+
 void GFX_ShowMsg(const char* format, ...)
 {
 	char buf[512];
@@ -4080,7 +4168,7 @@ void GFX_ShowMsg(const char* format, ...)
 	if (!no_stdout) puts(buf); //Else buf is parsed again. (puts adds end of line)
 }
 
-static std::vector<std::string> Get_SDL_TextureRenderers()
+static std::vector<std::string> get_sdl_texture_renderers()
 {
 	const int n = SDL_GetNumRenderDrivers();
 	std::vector<std::string> drivers;
@@ -4096,104 +4184,221 @@ static std::vector<std::string> Get_SDL_TextureRenderers()
 	return drivers;
 }
 
-static void messages_add_sdl()
+static void messages_add_command_line()
 {
-	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
-	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
-	MSG_Add("TITLEBAR_HINT_NOMOUSE", "no-mouse mode");
-	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY",
-	        "mouse captured, %s+F10 to release");
-	MSG_Add("TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE",
-	        "mouse captured, %s+F10 or middle-click to release");
-	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY",
-	        "to capture the mouse press %s+F10");
-	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE",
-	        "to capture the mouse press %s+F10 or middle-click");
-	MSG_Add("TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON",
-	        "to capture the mouse press %s+F10 or click any button");
-	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY",
-	        "seamless mouse, %s+F10 to capture");
-	MSG_Add("TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE",
-	        "seamless mouse, %s+F10 or middle-click to capture");
+	MSG_Add("DOSBOX_HELP",
+	        "Usage: %s [OPTION]... [PATH]\n"
+	        "\n"
+	        "PATH                       If PATH is a directory, it's mounted as C:.\n"
+	        "                           If PATH is a bootable disk image (IMA/IMG), it's booted.\n"
+	        "                           If PATH is a CD-ROM image (CUE/ISO), it's mounted as D:.\n"
+	        "                           If PATH is a DOS executable (BAT/COM/EXE), it's parent\n"
+	        "                           path is mounted as C: and the executable is run. When\n"
+	        "                           the executable exits, DOSBox Staging quits.\n"
+	        "\n"
+	        "List of available options:\n"
+	        "\n"
+	        "  --conf <config_file>     Start with the options specified in <config_file>.\n"
+	        "                           Multiple configuration files can be specified.\n"
+	        "                           Example: --conf conf1.conf --conf conf2.conf\n"
+	        "\n"
+	        "  --printconf              Print the location of the primary configuration file.\n"
+	        "\n"
+	        "  --editconf               Open the primary configuration file in a text editor.\n"
+	        "\n"
+	        "  --eraseconf              Delete the primary configuration file.\n"
+	        "\n"
+	        "  --noprimaryconf          Don't load or create the primary configuration file.\n"
+	        "\n"
+	        "  --nolocalconf            Don't load the local 'dosbox.conf' configuration file\n"
+	        "                           if present in the current working directory.\n"
+	        "\n"
+	        "  --set <setting>=<value>  Set a configuration setting. Multiple configuration\n"
+	        "                           settings can be specified. Example:\n"
+	        "                           --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2\n"
+	        "\n"
+	        "  --working-dir <path>     Set working directory to <path>. DOSBox will act as if\n"
+	        "                           started from this directory.\n"
+	        "\n"
+	        "  --list-countries         List all supported countries with their numeric codes.\n"
+	        "                           Codes are to be used in the 'country' config setting.\n"
+	        "\n"
+	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
+	        "                           Shaders are to be used in the 'glshader' config setting.\n"
+	        "\n"
+	        "  --fullscreen             Start in fullscreen mode.\n"
+	        "\n"
+	        "  --lang <lang_file>       Start with the language specified in <lang_file>.\n"
+	        "\n"
+	        "  --machine <type>         Emulate a specific type of machine. The machine type has\n"
+	        "                           influence on both the emulated video and sound cards.\n"
+	        "                           Valid choices are: hercules, cga, cga_mono, tandy,\n"
+	        "                           pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,\n"
+	        "                           svga_paradise, vesa_nolfb, vesa_oldvbe.\n"
+	        "\n"
+	        "  -c <command>             Run the specified DOS command before handling the PATH.\n"
+	        "                           Multiple commands can be specified.\n"
+	        "\n"
+	        "  --noautoexec             Don't run DOS commands from any [autoexec] sections.\n"
+	        "\n"
+	        "  --exit                   Exit after running '-c <command>'s and [autoexec] sections.\n"
+	        "\n"
+	        "  --startmapper            Run the mapper GUI.\n"
+	        "\n"
+	        "  --erasemapper            Delete the default mapper file.\n"
+	        "\n"
+	        "  --securemode             Enable secure mode by disabling the MOUNT and IMGMOUNT\n"
+	        "                           commands.\n"
+	        "\n"
+	        "  --socket <num>           Run nullmodem on the specified socket number.\n"
+	        "\n"
+	        "  -h, -?, --help           Print help message and exit.\n"
+	        "\n"
+	        "  -V, --version            Print version information and exit.\n");
 }
 
-void config_add_sdl() {
-	Section_prop *sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
+static void messages_add_sdl()
+{
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+	        "There is no property '%s' in section [%s]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
+	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
+
+	TITLEBAR_AddMessages();
+}
+
+static void config_add_sdl()
+{
+	constexpr bool changeable_at_runtime = true;
+
+	Section_prop* sdl_sec = control->AddSection_prop("sdl",
+	                                                 &read_config,
+	                                                 changeable_at_runtime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
-	Prop_bool *Pbool; // use pbool for new properties
-	Prop_bool *pbool;
-	Prop_string *Pstring; // use pstring for new properties
-	Prop_string *pstring;
-	Prop_int *Pint; // use pint for new properties
-	Prop_int *pint;
-	PropMultiVal* Pmulti;
-	Section_prop* psection;
 
-	constexpr auto always = Property::Changeable::Always;
+	constexpr auto always     = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
-	constexpr auto on_start = Property::Changeable::OnlyAtStart;
+	constexpr auto on_start   = Property::Changeable::OnlyAtStart;
 
-	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	Pbool->Set_help("Start directly in fullscreen (disabled by default).\n"
-	                "Run INTRO and see Special Keys for window control hotkeys.");
+#if C_OPENGL
+	const std::string default_output = "opengl";
+#else
+	const std::string default_output = "texture";
+#endif
+	auto pstring = sdl_sec->Add_string("output", always, default_output.c_str());
 
-	pint = sdl_sec->Add_int("display", on_start, 0);
-	pint->Set_help("Number of display to use; values depend on OS and user "
-	               "settings (0 by default).");
+	pstring->SetOptionHelp(
+	        "opengl_default",
+	        "Rendering backend to use for graphics output ('opengl' by default).\n"
+	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
+	        "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
+	        "non-existent OpenGL drivers (this is extremely rare).");
 
-	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
-	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
-	                  "or a fixed size, e.g. 1024x768 ('desktop' by default).");
+	pstring->SetOptionHelp("texture_default",
+	                       "Rendering backend to use for graphics output ('texture' by default).");
+
+	pstring->SetOptionHelp("opengl",
+	                       "  opengl:     OpenGL backend with shader support (default).");
+	pstring->SetOptionHelp("texture",
+	                       "  texture:    SDL's texture backend with bilinear interpolation.");
+	pstring->SetOptionHelp("texturenb",
+	                       "  texturenb:  SDL's texture backend with nearest-neighbour interpolation\n"
+	                       "              (no bilinear).");
+#if C_OPENGL
+	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglnb", "opengl");
+#else
+	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
+#endif
+	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
+	pstring->Set_values({
+#if C_OPENGL
+		"opengl",
+#endif
+		        "texture", "texturenb",
+	});
+	pstring->SetEnabledOptions({
+#if C_OPENGL
+		"opengl_default", "opengl",
+#else
+		"texture_default",
+#endif
+		        "texture", "texturenb",
+	});
+
+	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
+	pstring->Set_help(
+	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
+	        "Use 'texture_renderer = auto' for an automatic choice.");
+	pstring->Set_values(get_sdl_texture_renderers());
+
+	auto pint = sdl_sec->Add_int("display", on_start, 0);
+	pint->Set_help(
+	        "Number of display to use; values depend on OS and user "
+	        "settings (0 by default).");
+
+	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
+	pbool->Set_help(
+	        "Start directly in fullscreen (disabled by default).\n"
+	        "Run INTRO and see Special Keys for window control hotkeys.");
+
+	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
+	pstring->Set_help(
+	        "What resolution to use for fullscreen: 'original', 'desktop'\n"
+	        "or a fixed size, e.g. 1024x768 ('desktop' by default).");
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
-	        "Set window size when running in windowed mode:\n"
-	        "  default:   Select the best option based on your environment and\n"
-	        "             other settings.\n"
+	        "Set intial window size for windowed mode. You can still resize the window\n"
+	        "after startup.\n"
+	        "  default:   Select the best option based on your environment and other\n"
+	        "             settings (such as whether aspect ratio correction is enabled).\n"
 	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
-	        "  <custom>:  Scale the window to the given dimensions in WxH format.\n"
-	        "             For example: 1024x768.");
-
-	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
-	pstring->Set_help(
-	        "Set the viewport size (drawable area) within the window/screen:\n"
-	        "  fit:       Fit the viewport to the available window/screen (default).\n"
-	        "  <custom>:  Limit the viewport within to a custom resolution or percentage of\n"
-	        "             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%");
+	        "  WxH:       Specify window size in WxH format in logical units\n"
+	        "             (e.g., 1024x768).");
 
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
-	        "Set initial window position when running in windowed mode:\n"
+	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
-	        "  <custom>:  Set window position in X,Y format. For example: 250,100\n"
+	        "  X,Y:       Set window position in X,Y format (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
-	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	Pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
+	pbool = sdl_sec->Add_bool("window_decorations", always, true);
+	pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
 
-	Pint = sdl_sec->Add_int("transparency", always, 0);
-	Pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
-	               "From 0 (no transparency) to 90 (high transparency).");
+	TITLEBAR_AddConfig(*sdl_sec);
 
-	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
-	pstring->Set_help("This setting has been renamed to viewport_resolution.");
+	pint = sdl_sec->Add_int("transparency", always, 0);
+	pint->Set_help(
+	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
+	        "From 0 (no transparency) to 90 (high transparency).");
+
+	pstring = sdl_sec->Add_string("max_resolution", deprecated, "");
+	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
+
+	pstring = sdl_sec->Add_string("viewport_resolution", deprecated, "");
+	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
 	        "Set the host's refresh rate:\n"
-	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh\n"
-	        "             display (default).\n"
+	        "  auto:      Use SDI rates, or VRR rates when in fullscreen on a high-refresh\n"
+	        "             rate display (default).\n"
 	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
 	        "             adjustment.\n"
 	        "  vrr:       Deduct 3 Hz from the reported rate (best practice for VRR\n"
 	        "             displays).\n"
-	        "  <custom>:  Specify a custom rate as an integer or decimal Hz value\n"
-	        "             (23.000 is the allowed minimum).");
+	        "  N:         Specify custom refresh rate in Hz (decimal values are allowed;\n"
+	        "             23.000 is the allowed minimum).");
 
-	const char* vsync_prefs[] = {"auto", "on", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
-
 	pstring->Set_help(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  auto:      Limit vsync to beneficial cases, such as when using an\n"
@@ -4201,18 +4406,23 @@ void config_add_sdl() {
 	        "  on:        Enable vsync. This can prevent tearing in some games but will\n"
 	        "             impact performance or drop frames when the DOS rate exceeds the\n"
 	        "             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).\n"
+	        "  adaptive:  Enables vsync when the frame rate is higher than the host rate,\n"
+	        "             but disables it when the frame rate drops below the host rate.\n"
+	        "             This is a reasonable alternative on macOS instead of 'on'.\n"
+	        "             Note: only valid in OpenGL output modes; otherwise treated as\n"
+	        "             'on'.\n"
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
-	pstring->Set_values(vsync_prefs);
+	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
-	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
-	               "next frame. For example, a value of 7000 is roughly half the frame time\n"
-	               "at 70 Hz. 0 disables this and will always render (default).");
+	pint->Set_help(
+	        "Number of microseconds to allow rendering to block before skipping the\n"
+	        "next frame. For example, a value of 7000 is roughly half the frame time\n"
+	        "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
-	const char *presentation_modes[] = {"auto", "cfr", "vfr", nullptr};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
@@ -4220,71 +4430,32 @@ void config_add_sdl() {
 	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
-	pstring->Set_values(presentation_modes);
+	pstring->Set_values({"auto", "cfr", "vfr"});
 
-	const char* outputs[] =
-	{ "texture",
-	  "texturenb",
-#if C_OPENGL
-	  "opengl",
-	  "openglnb",
-#endif
-	  nullptr };
+	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
+	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
 
-#if C_OPENGL
-	Pstring = sdl_sec->Add_string("output", always, "opengl");
-	Pstring->Set_help(
-	        "Video system to use for output ('opengl' by default).\n"
-	        "'texture' and 'opengl' use bilinear interpolation, 'texturenb' and\n"
-	        "'openglnb' use nearest-neighbour (no-bilinear). Some shaders require\n"
-	        "bilinear interpolation, making that the safest choice.");
-	Pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
-	Pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
-#else
-	Pstring = sdl_sec->Add_string("output", always, "texture");
-	Pstring->Set_help("Video system to use for output ('texture' by default).");
-	Pstring->SetDeprecatedWithAlternateValue("surface", "texture");
-#endif
-	Pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
-	Pstring->Set_values(outputs);
-
-	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
-	                  "Use 'texture_renderer = auto' for an automatic choice.");
-	pstring->Set_values(Get_SDL_TextureRenderers());
-
-	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section.");
-
-	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section.");
+	pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
+	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_sensitivity'.");
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
-	pbool->Set_help("Moved to [mouse] section.");
+	pbool->Set_help("Moved to [mouse] section and renamed to 'mouse_raw_input'.");
 
-	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	Pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
+	pbool = sdl_sec->Add_bool("waitonerror", always, true);
+	pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
 
-	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
-	Pmulti->SetValue("auto auto");
-	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
-	                 "('auto auto' by default)\n"
-	                 "'auto' lets the host operating system manage the priority.");
+	pmulti = sdl_sec->AddMultiVal("priority", always, " ");
+	pmulti->SetValue("auto auto");
+	pmulti->Set_help(
+	        "Priority levels to apply when active and inactive, respectively.\n"
+	        "('auto auto' by default)\n"
+	        "'auto' lets the host operating system manage the priority.");
 
-	const char *priority_level_choices[] = {
-	        "auto",
-	        "lowest",
-	        "lower",
-	        "normal",
-	        "higher",
-	        "highest",
-	        nullptr,
-	};
-	psection = Pmulti->GetSection();
-	psection->Add_string("active", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
-	psection->Add_string("inactive", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
+	auto psection = pmulti->GetSection();
+	psection->Add_string("active", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	psection->Add_string("inactive", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
 	pbool->Set_help("Mute the sound when the window is inactive (disabled by default).");
@@ -4294,37 +4465,32 @@ void config_add_sdl() {
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(
-	        "File used to load/save the key/event mappings.\n"
-	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
-	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
-	        "Note: The --resetmapper command line flag only deletes the default mapperfile.");
+	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
+	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
+	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
+	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
+	        "      file.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
-	const char *ssopts[] = {"auto", "allow", "block", nullptr};
-	pstring->Set_values(ssopts);
+	pstring->Set_values({"auto", "allow", "block"});
 }
 
-static int LaunchEditor()
+static int edit_primary_config()
 {
-	std::string path, file;
-	Cross::CreatePlatformConfigDir(path);
-	Cross::GetPlatformConfigName(file);
-	path += file;
+	const auto path = GetPrimaryConfigPath();
 
-	FILE *f = fopen(path.c_str(), "r");
-	if (!f && !control->PrintConfig(path)) {
-		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+	if (!path_exists(path)) {
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
 		return 1;
 	}
-	if (f)
-		fclose(f);
 
-	auto replace_with_process = [path](const std::string &prog) {
-		execlp(prog.c_str(), prog.c_str(), path.c_str(), (char *)nullptr);
+	auto replace_with_process = [&](const std::string& prog) {
+		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
 	};
 
 	// Loop until one succeeds
@@ -4335,9 +4501,10 @@ static int LaunchEditor()
 		}
 	}
 
-	const char *env_editor = getenv("EDITOR");
-	if (env_editor)
+	const char* env_editor = getenv("EDITOR");
+	if (env_editor) {
 		replace_with_process(env_editor);
+	}
 
 	replace_with_process("nano");
 	replace_with_process("vim");
@@ -4345,9 +4512,9 @@ static int LaunchEditor()
 	replace_with_process("notepad++.exe");
 	replace_with_process("notepad.exe");
 
-	fprintf(stderr, "Can't find any text editors.\n"
-	                "You can set the EDITOR env variable to your preferred "
-	                "text editor.\n");
+	LOG_ERR("Can't find any text editors; please set the EDITOR env variable "
+	        "to your preferred text editor.\n");
+
 	return 1;
 }
 
@@ -4355,9 +4522,20 @@ static int LaunchEditor()
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
-void MIXER_CloseAudioDevice(void);
+void MIXER_CloseAudioDevice();
 
-void restart_program(std::vector<std::string> & parameters) {
+void restart_dosbox(std::vector<std::string> &parameters) {
+#ifdef WIN32
+	std::string command_line = {};
+	bool first = true;
+	for (const auto &arg : parameters) {
+		if (!first) {
+			command_line.push_back(' ');
+		}
+		command_line.append(arg);
+		first = false;
+	}
+#else
 	char** newargs = new char* [parameters.size() + 1];
 	// parameter 0 is the executable path
 	// contents of the vector follow
@@ -4366,167 +4544,195 @@ void restart_program(std::vector<std::string> & parameters) {
 		newargs[i] = parameters[i].data();
 	}
 	newargs[parameters.size()] = nullptr;
+#endif // WIN32
+
 	MIXER_CloseAudioDevice();
 	Delay(50);
 	QuitSDL();
+
 #if C_DEBUG
 	// shutdown curses
 	DEBUG_ShutDown(nullptr);
-#endif
+#endif // C_DEBUG
 
-	if(execvp(newargs[0], newargs) == -1) {
 #ifdef WIN32
-		if(newargs[0][0] == '\"') {
-			//everything specifies quotes around it if it contains a space, however my system disagrees
-			std::string edit = parameters[0];
-			edit.erase(0,1);edit.erase(edit.length() - 1,1);
-			//However keep the first argument of the passed argv (newargs) with quotes, as else repeated restarts go wrong.
-			if(execvp(edit.c_str(), newargs) == -1) E_Exit("Restarting failed");
-		}
-#endif
+	// nullptr to parse from command line
+	const LPCSTR application_name = nullptr;
+
+	// nullptr for default
+	const LPSECURITY_ATTRIBUTES process_attributes = nullptr;
+
+	// nullptr for default
+	const LPSECURITY_ATTRIBUTES thread_attributes = nullptr;
+
+	const BOOL inherit_handles = FALSE;
+
+	// CREATE_NEW_CONSOLE fixes a bug where the parent process exiting kills the child process.
+	// This can manifest when you use the "restart" hotkey action to restart DOSBox.
+	// https://github.com/dosbox-staging/dosbox-staging/issues/3346
+	const DWORD creation_flags = CREATE_NEW_CONSOLE;
+
+	// nullptr to use parent's environment
+	const LPVOID environment_variables = nullptr;
+
+	// nullptr to use parent's current directory
+	const LPCSTR current_directory = nullptr;
+
+	// Input structure with a bunch of stuff we probably don't care about.
+	// Zero it out to use defaults save for the size field.
+	STARTUPINFO startup_info = {};
+	startup_info.cb = sizeof(startup_info);
+
+	// Output structure we also don't care about.
+	PROCESS_INFORMATION process_information = {};
+
+	if (!CreateProcess(
+			application_name,
+			const_cast<char *>(command_line.c_str()),
+			process_attributes,
+			thread_attributes,
+			inherit_handles,
+			creation_flags,
+			environment_variables,
+			current_directory,
+			&startup_info,
+			&process_information)) {
+		E_Exit("Restarting failed");
+	}
+	ExitProcess(ERROR_SUCCESS);
+#else
+	if (execvp(newargs[0], newargs) == -1) {
 		E_Exit("Restarting failed");
 	}
 	delete [] newargs;
-}
-void Restart(bool pressed) { // mapper handler
-	(void) pressed; // deliberately unused but required for API compliance
-	restart_program(control->startup_params);
+#endif // WIN32
 }
 
-// TODO do we even need this at all?
-static void launchcaptures(const std::string& edit)
-{
-	std::string path,file;
-	Section* t = control->GetSection("capture");
-	if(t) file = t->GetPropValue("capture_dir");
-	if(!t || file == NO_SUCH_PROPERTY) {
-		printf("Config system messed up.\n");
-		exit(1);
-	}
-	Cross::CreatePlatformConfigDir(path);
-	path += file;
-
-	if (create_dir(path, 0700, OK_IF_EXISTS) != 0) {
-		fprintf(stderr, "Can't access capture dir '%s': %s\n",
-		        path.c_str(), safe_strerror(errno).c_str());
-		exit(1);
-	}
-
-	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) nullptr);
-	//if you get here the launching failed!
-	fprintf(stderr, "can't find filemanager %s\n", edit.c_str());
-	exit(1);
-}
-
-static void ListGlShaders()
+static void list_glshaders()
 {
 #if C_OPENGL
-	for (const auto &line : RENDER_GenerateShaderInventoryMessage())
-		printf("%s\n", line.c_str());
+	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
+		printf_utf8("%s\n", line.c_str());
+	}
 #else
-	LOG_ERR("OpenGL is not supported by this executable "
-	        "and is missing the functionality to list shaders");
+	fprintf(stderr,
+	        "OpenGL is not supported by this executable "
+	        "and is missing the functionality to list shaders.");
 #endif
 }
 
-static int PrintConfigLocation()
+static void list_countries()
 {
-	std::string file;
-	Cross::GetPlatformConfigName(file);
-	const auto path = (get_platform_config_dir() / file).string();
+	const auto message_utf8 = DOS_GenerateListCountriesMessage();
+	printf_utf8("%s\n", message_utf8.c_str());
+}
 
-	FILE *f = fopen(path.c_str(), "r");
-	if (!f && !control->PrintConfig(path)) {
-		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+static int print_primary_config_location()
+{
+	const auto path = GetPrimaryConfigPath();
+
+	if (!path_exists(path)) {
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
 		return 1;
 	}
-	if (f)
-		fclose(f);
-	printf("%s\n", path.c_str());
+
+	printf("%s\n", path.string().c_str());
 	return 0;
 }
 
-static void eraseconfigfile() {
-	FILE* f = fopen("dosbox.conf","r");
-	if(f) {
-		fclose(f);
-		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
-	}
-	std::string file;
-	Cross::GetPlatformConfigName(file);
-	const auto path = (get_platform_config_dir() / file).string();
-	f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
-	fclose(f);
-	unlink(path.c_str());
-	exit(0);
-}
+static int erase_primary_config_file()
+{
+	const auto path = GetPrimaryConfigPath();
 
-static void erasemapperfile() {
-	FILE* g = fopen("dosbox.conf","r");
-	if(g) {
-		fclose(g);
-		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
-		             "Please reset configuration as well and delete the dosbox.conf.\n");
+	if (!path_exists(path)) {
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
 	}
 
-	const auto path = (get_platform_config_dir() / MAPPERFILE).string();
-	FILE* f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
-	fclose(f);
-	unlink(path.c_str());
-	exit(0);
+	constexpr auto success = 0;
+	if (unlink(path.string().c_str()) != success) {
+		fprintf(stderr,
+		        "Cannot delete primary config '%s'",
+		        path.string().c_str());
+		return 1;
+	}
+
+	printf("Primary config '%s' deleted.\n", path.string().c_str());
+	return 0;
 }
 
-void OverrideWMClass()
+static int erase_mapper_file()
+{
+	const auto path = GetConfigDir() / MAPPERFILE;
+
+	if (!path_exists(path)) {
+		printf("Default mapper file does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
+	}
+
+	if (path_exists("dosbox.conf")) {
+		printf("Local 'dosbox.conf' exists in current working directory; "
+		       "mappings will not be reset if the local config specifies "
+		       "a custom mapper file.\n");
+	}
+
+	constexpr auto success = 0;
+	if (unlink(path.string().c_str()) != success) {
+		fprintf(stderr,
+		        "Cannot delete mapper file '%s'",
+		        path.string().c_str());
+		return 1;
+	}
+	printf("Mapper file '%s' deleted.\n", path.string().c_str());
+	return 0;
+}
+
+static void override_wm_class()
 {
 #if !defined(WIN32)
 	constexpr int overwrite = 0; // don't overwrite
-	setenv("SDL_VIDEO_X11_WMCLASS", CANONICAL_PROJECT_NAME, overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_PROJECT_NAME, overwrite);
 #endif
 }
 
-extern "C" int SDL_CDROMInit(void);
-int sdl_main(int argc, char *argv[])
+int sdl_main(int argc, char* argv[])
 {
-	CommandLine com_line(argc, argv);
-	control = std::make_unique<Config>(&com_line);
+	CommandLine command_line(argc, argv);
+	control = std::make_unique<Config>(&command_line);
+
 	const auto arguments = &control->arguments;
 
-	if (arguments->version) {
-		printf(version_msg, CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
-		return 0;
-	}
+	// Set up logging after command line was parsed and trivial arguments have
+	// been handled
+	loguru::g_preamble_date    = true;
+	loguru::g_preamble_time    = true;
+	loguru::g_preamble_uptime  = false;
+	loguru::g_preamble_thread  = false;
+	loguru::g_preamble_file    = false;
+	loguru::g_preamble_verbose = false;
+	loguru::g_preamble_pipe    = true;
 
-	if (arguments->help) {
-		printf(help_msg); // -V618
-		return 0;
-	}
-
-	// Setup logging after commandline is parsed and trivial arguments handled
-	loguru::g_preamble_date    = true; // The date field
-	loguru::g_preamble_time    = true; // The time of the current day
-	loguru::g_preamble_uptime  = false; // The time since init call
-	loguru::g_preamble_thread  = false; // The logging thread
-	loguru::g_preamble_file    = false; // The file from which the log originates from
-	loguru::g_preamble_verbose = false; // The verbosity field
-	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message
-
-	if (arguments->printconf || arguments->editconf ||
-	    arguments->eraseconf || arguments->list_glshaders ||
-	    arguments->erasemapper || !arguments->opencaptures.empty()) {
+	if (arguments->version || arguments->help || arguments->printconf ||
+	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
+	    arguments->list_glshaders || arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
 
 	loguru::init(argc, argv);
 
-	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
+	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
-	LOG_MSG("LOG: Loguru version %d.%d.%d initialised", LOGURU_VERSION_MAJOR,
-	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
+	LOG_MSG("LOG: Loguru version %d.%d.%d initialised",
+	        LOGURU_VERSION_MAJOR,
+	        LOGURU_VERSION_MINOR,
+	        LOGURU_VERSION_PATCH);
 
-	int rcode = 0; // assume good until proven otherwise
+	int return_code = 0;
+
 	try {
 		if (!arguments->working_dir.empty()) {
 			std::error_code ec;
@@ -4537,38 +4743,107 @@ int sdl_main(int argc, char *argv[])
 			}
 		}
 
-		OverrideWMClass(); // Before SDL2 video subsystem is initialised
+		// Before SDL2 video subsystem is initialised
+		override_wm_class();
 
-		CROSS_DetermineConfigPaths();
+		// Create or determine the location of the config directory
+		// (e.g., in portable mode, the config directory is the
+		// executable dir).
+		//
+		// TODO Consider forcing portable mode in secure mode (this
+		// could be accomplished by passing a flag to InitConfigDir);.
+		//
+		InitConfigDir();
 
-		/* Init the configuration system and add default values */
+		// Register sdlmain's messages, conf sections, and essential
+		// DOS messages, needed by some command line switches
+		messages_add_command_line();
+		DOS_Locale_AddMessages();
+		RENDER_AddMessages();
 		messages_add_sdl();
 		config_add_sdl();
+
+		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
 
-		if (arguments->editconf) {
-			const int err = LaunchEditor();
-			return err;
+		// Before loading any configs, write the default primary config if it
+		// doesn't exist when:
+		// - secure mode is NOT enabled with the '--securemode' option,
+		// - AND we're not in portable mode (portable mode is enabled when
+		//   'dosbox-staging.conf' exists in the executable directory)
+		// - AND the primary config is NOT disabled with the
+		//   '--noprimaryconf' option.
+		if (!arguments->securemode && !arguments->noprimaryconf) {
+			const auto primary_config_path = GetPrimaryConfigPath();
+
+			if (!config_file_is_valid(primary_config_path)) {
+				// No config is loaded at this point, so we're
+				// writing the default settings to the primary
+				// config.
+				if (control->WriteConfig(primary_config_path)) {
+					LOG_MSG("CONFIG: Created primary config file '%s'",
+					        primary_config_path.string().c_str());
+				} else {
+					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
+					            primary_config_path.string().c_str());
+				}
+			}
 		}
 
-		if (!arguments->opencaptures.empty()) {
-			launchcaptures(arguments->opencaptures);
+		// After DOSBOX_Init() is done, all the conf sections have been
+		// registered, so we're ready to parse the conf files.
+		//
+		control->ParseConfigFiles(GetConfigDir());
+
+		// Handle command line options that don't start the emulator but only
+		// perform some actions and print the results to the console.
+		if (arguments->version) {
+			printf(version_msg,
+			       DOSBOX_PROJECT_NAME,
+			       DOSBOX_GetDetailedVersion());
+			return 0;
+		}
+		if (arguments->help) {
+			assert(argv && argv[0]);
+			const auto program_name = argv[0];
+			const auto help_utf8 = format_str(MSG_GetRaw("DOSBOX_HELP"),
+			                                  program_name);
+			printf_utf8("%s", help_utf8.c_str());
+			return 0;
+		}
+		if (arguments->editconf) {
+			return edit_primary_config();
 		}
 		if (arguments->eraseconf) {
-			eraseconfigfile();
+			return erase_primary_config_file();
 		}
 		if (arguments->erasemapper) {
-			erasemapperfile();
+			return erase_mapper_file();
+		}
+		if (arguments->printconf) {
+			return print_primary_config_location();
+		}
+		if (arguments->list_countries) {
+			list_countries();
+			return 0;
+		}
+		if (arguments->list_glshaders) {
+			list_glshaders();
+			return 0;
 		}
 
-		/* Can't disable the console with debugger enabled */
+		// Can't disable the console with debugger enabled
 #if defined(WIN32) && !(C_DEBUG)
 		if (arguments->noconsole) {
 			FreeConsole();
-			/* Redirect standard input and standard output */
-			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
-				no_stdout = true; // No stdout so don't write messages
+			// Redirect standard input and standard output
+			//
+			if (freopen(STDOUT_FILE, "w", stdout) == NULL) {
+				// No stdout so don't write messages
+				no_stdout = true;
+			}
 			freopen(STDERR_FILE, "w", stderr);
+
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // Line buffered
 			setvbuf(stderr, NULL, _IONBF, BUFSIZ); // No buffering
 		} else {
@@ -4576,154 +4851,187 @@ int sdl_main(int argc, char *argv[])
 				fclose(stdin);
 				fclose(stdout);
 				fclose(stderr);
-				freopen("CONIN$","r",stdin);
-				freopen("CONOUT$","w",stdout);
-				freopen("CONOUT$","w",stderr);
+				freopen("CONIN$", "r", stdin);
+				freopen("CONOUT$", "w", stdout);
+				freopen("CONOUT$", "w", stderr);
 			}
 			SetConsoleTitle("DOSBox Status Window");
 		}
-#endif  //defined(WIN32) && !(C_DEBUG)
+#endif // defined(WIN32) && !(C_DEBUG)
 
-		if (arguments->printconf) {
-			const int err = PrintConfigLocation();
+#if defined(WIN32)
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
+
+#if SDL_VERSION_ATLEAST(2, 24, 0)
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") ==
+		    SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set DPI awareness flag");
+		}
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set DPI scaling flag");
+		}
+#endif
+#endif // WIN32
+		// Seamless mouse integration feels more 'seamless' if mouse
+		// clicks on out-of-focus window are passed to the guest
+		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+
+		if (const auto err = check_kmsdrm_setting(); err != 0) {
 			return err;
 		}
 
-		if (arguments->list_glshaders) {
-			ListGlShaders();
-			return 0;
+		// Timer is needed for title bar animations
+		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
+		}
+		sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
+		if (sdl.start_event_id == UINT32_MAX) {
+			E_Exit("SDL: Failed to alocate event IDs");
 		}
 
-#if defined(WIN32)
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
+		sdl.initialized = true;
 
-#if SDL_VERSION_ATLEAST(2, 24, 0)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI awareness flag");
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI scaling flag");
-#endif
-#endif
+		// Once initialised, ensure we clean up SDL for all exit conditions
+		atexit(QuitSDL);
 
-	check_kmsdrm_setting();
+		SDL_version sdl_version = {};
+		SDL_GetVersion(&sdl_version);
 
-	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
-		E_Exit("Can't init SDL %s", SDL_GetError());
-	if (SDL_CDROMInit() < 0)
-		LOG_WARNING("Failed to init CD-ROM support");
+		LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
+		        sdl_version.major,
+		        sdl_version.minor,
+		        sdl_version.patch,
+		        SDL_GetCurrentVideoDriver(),
+		        SDL_GetCurrentAudioDriver());
 
-	sdl.initialized = true;
-	// Once initialised, ensure we clean up SDL for all exit conditions
-	atexit(QuitSDL);
+		for (auto line : arguments->set) {
+			trim(line);
 
-	SDL_version sdl_version;
-	SDL_GetVersion(&sdl_version);
-	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
-		sdl_version.major, sdl_version.minor, sdl_version.patch,
-		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
+			if (line.empty() || line[0] == '%' || line[0] == '\0' ||
+			    line[0] == '#' || line[0] == '\n') {
+				continue;
+			}
 
-	const auto config_path = get_platform_config_dir();
-	SETUP_ParseConfigFiles(config_path);
+			std::vector<std::string> pvars(1, std::move(line));
 
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-		"There is no property '%s' in section [%s]\n");
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		"Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
-		"[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+			const char* result = control->SetProp(pvars);
 
-	for (auto line : arguments->set) {
-		trim(line);
-		if (line.empty()
-		    || line[0] == '%' || line[0] == '\0'
-		    || line[0] == '#' || line[0] == '\n')
-			continue;
-		std::vector<std::string> pvars(1, std::move(line));
-		const char *result = SetProp(pvars);
-		if (strlen(result))
-			LOG_WARNING("%s", result);
-		else {
-			Section *tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
-			// Due to parsing there can be a = at the start of value.
-			while (value.size() &&
-			       (value.at(0) == ' ' || value.at(0) == '='))
-				value.erase(0, 1);
-			for (Bitu i = 3; i < pvars.size(); i++)
-				value += (std::string(" ") + pvars[i]);
-			std::string inputline = pvars[1] + "=" + value;
-			bool change_success = tsec->HandleInputline(
-				inputline.c_str());
-			if (!change_success && !value.empty())
-				LOG_WARNING("Cannot set \"%s\"\n",
-					    inputline.c_str());
+			if (strlen(result)) {
+				LOG_WARNING("CONFIG: %s", result);
+			} else {
+				Section* tsec = control->GetSection(pvars[0]);
+				std::string value(pvars[2]);
+
+				// Due to parsing, there can be a '=' at the
+				// start of the value.
+				while (value.size() && (value.at(0) == ' ' ||
+				                        value.at(0) == '=')) {
+					value.erase(0, 1);
+				}
+
+				for (Bitu i = 3; i < pvars.size(); i++) {
+					value += (std::string(" ") + pvars[i]);
+				}
+
+				std::string inputline = pvars[1] + "=" + value;
+
+				bool change_success = tsec->HandleInputline(
+				        inputline.c_str());
+
+				if (!change_success && !value.empty()) {
+					LOG_WARNING("CONFIG: Cannot set '%s'",
+					            inputline.c_str());
+				}
+			}
 		}
-	}
 
 #if C_OPENGL
-	const auto glshaders_dir = config_path / "glshaders";
-	if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    glshaders_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_OPENGL
+		const auto glshaders_dir = GetConfigDir() / GlShadersDir;
+
+		if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
+			            glshaders_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
+
 #if C_FLUIDSYNTH
-	const auto soundfonts_dir = config_path / "soundfonts";
-	if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    soundfonts_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_FLUIDSYNTH
+		const auto soundfonts_dir = GetConfigDir() / DefaultSoundfontsDir;
+
+		if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
+			            soundfonts_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
+
 #if C_MT32EMU
-	const auto mt32_rom_dir = config_path / "mt32-roms";
-	if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    mt32_rom_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_MT32EMU
+		const auto mt32_rom_dir = GetConfigDir() / DefaultMt32RomsDir;
+
+		if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
+			            mt32_rom_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
 
 		control->ParseEnv();
-//		UI_Init();
-//		if (control->cmdline->FindExist("-startui")) UI_Run(false);
-		/* Init all the sections */
+		//		UI_Init();
+		//		if (control->cmdline->FindExist("-startui"))
+		// UI_Run(false);
+
+		// Init all the sections
 		control->Init();
-		/* Some extra SDL Functions */
-		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
+
+		// Some extra SDL Functions
+		Section_prop* sdl_sec = get_sdl_section();
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
+
 		if (arguments->startmapper) {
-		MAPPER_DisplayUI();
+			MAPPER_DisplayUI();
 		}
 
-		control->StartUp(); // Run the machine until shutdown
-		control.reset();  // Shutdown and release
+		// Run the machine until shutdown
+		control->StartUp();
+
+		// Shutdown and release
+		control.reset();
+
 	} catch (char* error) {
-		rcode = 1;
-		GFX_ShowMsg("Exit to error: %s",error);
+		return_code = 1;
+
+		GFX_ShowMsg("Exit to error: %s", error);
+
 		fflush(nullptr);
-		if(sdl.wait_on_error) {
-			//TODO Maybe look for some way to show message in linux?
+
+		if (sdl.wait_on_error) {
+			// TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
 			GFX_ShowMsg("Press enter to continue");
+
 			fflush(nullptr);
 			fgetc(stdin);
+
 #elif defined(WIN32)
 			Sleep(5000);
 #endif
 		}
 	} catch (const std::exception& e) {
-		// catch all exceptions that derive from the standard library
+		// Catch all exceptions that derive from the standard library
 		LOG_ERR("EXCEPTION: Standard library exception: %s", e.what());
-		rcode = 1;
+		return_code = 1;
 	} catch (...) {
-		// just exit
-		rcode = 1;
+		// Just exit
+		return_code = 1;
 	}
 
-#if defined (WIN32)
-	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
+#if defined(WIN32)
+	// Might not be needed if the shutdown function switches to windowed
+	// mode, but it doesn't hurt
+	sticky_keys(true);
 #endif
 
 	// We already do this at exit, but do cleanup earlier in case of normal
@@ -4731,6 +5039,6 @@ int sdl_main(int argc, char *argv[])
 	// cleanup order. Happens with SDL_VIDEODRIVER=wayland as of SDL 2.0.12.
 	QuitSDL();
 
-	return rcode;
+	return return_code;
 }
 

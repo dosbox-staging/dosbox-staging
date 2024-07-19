@@ -6,7 +6,7 @@ Install dependencies listed in [README.md](README.md).  Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
 up builds. The minimum set of dependencies is:
 
-- C/C++ compiler with support for C++17
+- C/C++ compiler with support for C++20
 - SDL >= 2.0.5
 - Opusfile
 - Meson >= 0.56, or Visual Studio Community Edition 2022
@@ -30,6 +30,13 @@ CCACHE_COMPRESS=true
 CCACHE_COMPRESSLEVEL=6
 CCACHE_SLOPPINESS="pch_defines,time_macros"
 ```
+
+> **Note**
+>
+> CMake support is currently an experimental internal-only, work-in-progress
+> feature; it's not ready for public consumption yet. Please ignore the
+> `CMakeLists.txt` files in the source tree.
+
 
 ## OS-specific instructions
 
@@ -174,7 +181,11 @@ when the option supports multiple values.
    with `meson subprojects update --reset name-of-subpackage`. For example,
    to reset FluidSynth: `meson subprojects update --reset fluidsynth`.
 
-5. If that doesn't help, try resetting your build area with:
+5. If Meson hangs due to low memory availability, make sure to pass
+   `-j1` to the `meson compile` command to limit parallel jobs. This is
+   useful when compiling on Raspberry Pi like system with only 1GB of memory.
+
+6. If that doesn't help, try resetting your build area with:
 
     ``` shell
     git checkout -f main
@@ -244,6 +255,24 @@ Concrete example:
 ./build/debug/tests/bitops --gtest_filter=bitops.nominal_byte
 ```
 
+### Bisecting and building old versions
+
+To automate and ensure successful builds when bisecting or building old
+versions, run `meson setup --wipe` on your build area before every build.
+
+This updates the build area with critical metadata to match that of the
+checked out sources, such as the C++ language standard.
+
+An alias like the following can be used on macOS, Linux, and Windows MSYS
+environments to build versions 0.77 and newer:
+
+`alias build_staging='meson setup --wipe build && ninja -C build'`
+
+Prior to version 0.77 the Autotools build system was used. A build script
+available in these old versions can be used (choose one for your compiler):
+
+`./scripts/build.sh -c clang -t release` or `./scripts/build.sh -c gcc -t release`
+
 ### Build test coverage report
 
 Prerequisite: Install Clang's `lcov` package and/or the GCC-equivalent `gcovr` package.
@@ -283,7 +312,7 @@ Build and generate report:
 
 ``` shell
 meson setup -Dbuildtype=debug build/debug
-meson compile -C build/debug scan-build
+ninja -C build/debug scan-build
 ```
 
 ### Make a sanitizer build

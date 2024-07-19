@@ -171,10 +171,10 @@ constexpr uint8_t envelope[8][64] = {
 
 #define FILL_ARRAY( _FILL_ ) memset( _FILL_, 0, sizeof( _FILL_ ) )
 
-saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner,
+saa1099_device::saa1099_device(const char *tag, device_t *owner,
                                const uint32_t clock, const int rate_divisor)
-        : device_t(mconfig, SAA1099, tag, owner, clock),
-          device_sound_interface(mconfig, *this),
+        : device_t(tag, owner, clock),
+          device_sound_interface(),
           m_stream(nullptr),
           m_noise_freqs{2 * clock / 256.0, 2 * clock / 512.0, 2 * clock / 1024.0},
 

@@ -106,18 +106,16 @@ constexpr auto localtime_r = ::localtime_r;
 
 } // namespace cross
 
-void CROSS_DetermineConfigPaths();
+// Create or determine the location of the config directory (e.g., in portable
+// mode, the config directory is the executable dir). Must be called before
+// calling GetConfigDir().
+void InitConfigDir();
 
-std_fs::path get_platform_config_dir();
+std_fs::path GetConfigDir();
+std::string GetPrimaryConfigName();
+std_fs::path GetPrimaryConfigPath();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
-
-class Cross {
-public:
-	static void GetPlatformConfigName(std::string& in);
-	static void CreatePlatformConfigDir(std::string& in);
-	static bool IsPathAbsolute(const std::string& in);
-};
 
 #if defined (WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -148,7 +146,6 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
 void close_directory(dir_information* dirp);
 
-FILE *fopen_wrap(const char *path, const char *mode);
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
 bool wild_match(const char *haystack, const char *needle);
@@ -160,5 +157,28 @@ bool get_expanded_files(const std::string &path,
                         bool skip_native_path = false) noexcept;
 
 std::string get_language_from_os();
+
+// A printf variant outputting UTF-8 strings
+template <typename... Arguments>
+void printf_utf8(const char* format, Arguments... arguments)
+{
+#ifdef WIN32
+	constexpr uint16_t CodePageUtf8 = 65001;
+
+	const auto old_code_page = GetConsoleOutputCP();
+	SetConsoleOutputCP(CodePageUtf8);
+	try {
+		printf(format, arguments...);
+	} catch (...) {
+		SetConsoleOutputCP(old_code_page);
+		throw;
+	}
+
+	SetConsoleOutputCP(old_code_page);
+#else
+	// Assume any OS without special support uses UTF-8 as console encoding
+	printf(format, arguments...);
+#endif
+}
 
 #endif

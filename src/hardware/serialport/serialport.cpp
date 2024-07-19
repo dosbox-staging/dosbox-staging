@@ -20,9 +20,9 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdarg>
-#include <ctype.h>
-#include <string.h>
+#include <cstring>
 #include <tuple>
 
 #include "../../capture/capture.h"
@@ -81,8 +81,7 @@ bool device_COM::Seek(uint32_t *pos, uint32_t type)
 	return true;
 }
 
-bool device_COM::Close() {
-	return false;
+void device_COM::Close() {
 }
 
 uint16_t device_COM::GetInformation()
@@ -94,11 +93,6 @@ device_COM::device_COM(class CSerial* sc) {
 	sclass = sc;
 	SetName(serial_comname[sclass->port_index]);
 }
-
-device_COM::~device_COM() {
-}
-
-
 
 // COM1 - COM4 objects
 CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
@@ -1018,10 +1012,9 @@ static constexpr std::tuple<uint8_t, uint8_t> baud_to_regs(uint32_t baud_rate)
 	// Cap the lower-bound to 300 baud. Although the first 1950s modem
 	// offered 110 baud, by the time DOS was available 8-bit ISA modems
 	// offered at least 300 and even 1200 baud.
-	baud_rate = std::max(300u, baud_rate);
+	baud_rate = std::max(SerialMinBaudRate, baud_rate);
 
-	constexpr auto max_baud = 115200u;
-	const auto delay_ratio = static_cast<uint16_t>(max_baud / baud_rate);
+	const auto delay_ratio = static_cast<uint16_t>(SerialMaxBaudRate / baud_rate);
 
 	const uint8_t transmit_reg = delay_ratio & 0xff;  // bottom byte
 	const uint8_t interrupt_reg = delay_ratio >> 8;   // top byte
@@ -1287,6 +1280,14 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	log_ser(dbg_aux, "Putchar 0x%x", data);
 #endif
 	return true;
+}
+
+uint32_t CSerial::GetPortBaudRate() const {
+	if (baud_divider == 0) {
+		return SerialMaxBaudRate;
+	}
+
+	return SerialMaxBaudRate / baud_divider;
 }
 
 class SERIALPORTS final : public Module_base {

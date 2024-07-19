@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,111 +22,178 @@
 #include "mem.h"
 #include "inout.h"
 
-static uint8_t static_functionality[0x10]=
+// clang-format off
+static const std::vector<uint8_t> static_functionality = {
+    /* 0 */ 0xff,  // All modes supported #1
+    /* 1 */ 0xff,  // All modes supported #2
+    /* 2 */ 0x0f,  // All modes supported #3
+    /* 3 */ 0x00, 0x00, 0x00, 0x00,  // reserved
+    /* 7 */ 0x07,  // 200, 350, 400 scan lines
+    /* 8 */ 0x04,  // total number of character blocks available in text modes
+    /* 9 */ 0x02,  // maximum number of active character blocks in text modes
+    /* a */ 0xff,  // Misc Flags Everthing supported
+    /* b */ 0x0e,  // Support for Display combination, intensity/blinking and video state saving/restoring
+    /* c */ 0x00,  // reserved
+    /* d */ 0x00,  // reserved
+    /* e */ 0x00,  // Change to add new functions
+    /* f */ 0x00   // reserved
+};
+
+static const std::vector<uint16_t> map_offset = {
+	0x0000, 0x4000, 0x8000, 0xc000,
+	0x2000, 0x6000, 0xa000, 0xe000
+};
+// clang-format on
+
+void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
+                    const int offset, const int map, const int height)
 {
- /* 0 */ 0xff,  // All modes supported #1
- /* 1 */ 0xff,  // All modes supported #2
- /* 2 */ 0x0f,  // All modes supported #3
- /* 3 */ 0x00, 0x00, 0x00, 0x00,  // reserved
- /* 7 */ 0x07,  // 200, 350, 400 scan lines
- /* 8 */ 0x04,  // total number of character blocks available in text modes
- /* 9 */ 0x02,  // maximum number of active character blocks in text modes
- /* a */ 0xff,  // Misc Flags Everthing supported 
- /* b */ 0x0e,  // Support for Display combination, intensity/blinking and video state saving/restoring
- /* c */ 0x00,  // reserved
- /* d */ 0x00,  // reserved
- /* e */ 0x00,  // Change to add new functions
- /* f */ 0x00   // reserved
-};
+	PhysPt ftwhere = PhysicalMake(0xa000,
+	                              map_offset[map & 0x7] +
+	                                      (uint16_t)(offset * 32));
 
-static uint16_t map_offset[8]={
-	0x0000,0x4000,0x8000,0xc000,
-	0x2000,0x6000,0xa000,0xe000
-};
+	uint16_t base = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
 
-void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
-	PhysPt ftwhere=PhysicalMake(0xa000,map_offset[map & 0x7]+(uint16_t)(offset*32));
-	uint16_t base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
-	bool mono=(base==VGAREG_MDA_CRTC_ADDRESS);
+	bool mono = (base == VGAREG_MDA_CRTC_ADDRESS);
 
-	//Put video adapter in planar mode
-	IO_Write(0x3c4,0x02);IO_Write(0x3c5,0x04); // select plane 2 for writing
-	IO_Write(0x3c4,0x04);IO_Write(0x3c5,0x07); // odd/even off in SEQ
-	IO_Write(0x3ce,0x04);IO_Write(0x3cf,0x02); // select plane 2 for reading
-	IO_Write(0x3ce,0x05);IO_Write(0x3cf,0x00); // write mode 0, odd/even off in GFX
-	IO_Write(0x3ce,0x06);IO_Write(0x3cf,0x04); // CPU memory window A0000-AFFFF
+	// Put video adapter in planar mode
 
-	//Load character patterns
-	for (Bitu i=0;i<count;i++) {
-		MEM_BlockCopy(ftwhere+i*32,font,height);
-		font+=height;
+	// select plane 2 for writing
+	IO_Write(0x3c4, 0x02);
+	IO_Write(0x3c5, 0x04);
+
+	// odd/even off in SEQ
+	IO_Write(0x3c4, 0x04);
+	IO_Write(0x3c5, 0x07);
+
+	// select plane 2 for reading
+	IO_Write(0x3ce, 0x04);
+	IO_Write(0x3cf, 0x02);
+
+	// write mode 0, odd/even off in GFX
+	IO_Write(0x3ce, 0x05);
+	IO_Write(0x3cf, 0x00);
+
+	// CPU memory window A0000-AFFFF
+	IO_Write(0x3ce, 0x06);
+	IO_Write(0x3cf, 0x04);
+
+	// Load character patterns
+	auto font = _font;
+
+	for (auto i = 0; i < count; i++) {
+		MEM_BlockCopy(ftwhere + i * 32, font, height);
+		font += height;
 	}
-	//Load alternate character patterns
-	if (map & 0x80) {
-		while (Bitu chr=(Bitu)mem_readb(font++)) {
-			MEM_BlockCopy(ftwhere+chr*32,font,height);
-			font+=height;
+
+	// Load alternate 9x14 or 9x16 character patterns on VGA based on
+	// state of the clocking mode register
+	if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
+		while (auto chr = mem_readb(font++)) {
+			MEM_BlockCopy(ftwhere + chr * 32, font, height);
+			font += height;
 		}
 	}
 
-	//Return to normal text mode
-	IO_Write(0x3c4,0x02);IO_Write(0x3c5,0x03); // select planes 0&1 for writing
-	IO_Write(0x3c4,0x04);IO_Write(0x3c5,0x03); // odd/even on in SEQ
-	IO_Write(0x3ce,0x04);IO_Write(0x3cf,0x00); // select plane 0 for reading
-	IO_Write(0x3ce,0x05);IO_Write(0x3cf,0x10); // write mode 0, odd/even on in GFX
-	IO_Write(0x3ce,0x06);IO_Write(0x3cf,mono?0x0a:0x0e); // Bx000-BxFFF, odd/even on
+	// Return to normal text mode
 
-	/* Reload tables and registers with new values based on this height */
+	// select planes 0&1 for writing
+	IO_Write(0x3c4, 0x02);
+	IO_Write(0x3c5, 0x03);
+
+	// odd/even on in SEQ
+	IO_Write(0x3c4, 0x04);
+	IO_Write(0x3c5, 0x03);
+
+	// select plane 0 for reading
+	IO_Write(0x3ce, 0x04);
+	IO_Write(0x3cf, 0x00);
+
+	// write mode 0, odd/even on in GFX
+	IO_Write(0x3ce, 0x05);
+	IO_Write(0x3cf, 0x10);
+
+	// Bx000-BxFFF, odd/even on
+	IO_Write(0x3ce, 0x06);
+	IO_Write(0x3cf, mono ? 0x0a : 0x0e);
+
+	// Reload tables and registers with new values based on this height
 	if (reload) {
-		//Max scanline 
-		IO_Write(base,0x9);
-		IO_Write(base+1,(IO_Read(base+1) & 0xe0)|(height-1));
-		//Vertical display end
-		Bitu rows=CurMode->sheight/height;
-		Bitu vdend=rows*height*((CurMode->sheight==200)?2:1)-1;
-		IO_Write(base,0x12);
-		IO_Write(base+1,(uint8_t)vdend);
-		//Underline location
-		if (CurMode->mode==7) {
-			IO_Write(base,0x14);
-			IO_Write(base+1,(IO_Read(base+1) & ~0x1f)|(height-1));
+		// Max scanline
+		IO_Write(base, 0x9);
+		IO_Write(base + 1, (IO_Read(base + 1) & 0xe0) | (height - 1));
+
+		// Vertical display end
+		auto rows = CurMode->sheight / height;
+		auto vdend = rows * height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
+		IO_Write(base, 0x12);
+		IO_Write(base + 1, (uint8_t)vdend);
+
+		// Underline location
+		if (CurMode->mode == 7) {
+			IO_Write(base, 0x14);
+			IO_Write(base + 1,
+			         (IO_Read(base + 1) & ~0x1f) | (height - 1));
 		}
-		//Rows setting in bios segment
-		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,rows-1);
-		real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(uint8_t)height);
-		//Page size
-		Bitu bios_pagesize=rows*real_readb(BIOSMEM_SEG,BIOSMEM_NB_COLS)*2;
-		bios_pagesize+=0x100; // bios adds extra on reload
-		real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,bios_pagesize);
-		//Cursor shape
-		if (height>=14) height--; // move up one line on 14+ line fonts
-		INT10_SetCursorShape(height-2,height-1);
+
+		// Rows setting in bios segment
+		real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, rows - 1);
+		real_writeb(BIOSMEM_SEG, BIOSMEM_CHAR_HEIGHT, (uint8_t)height);
+
+		// Page size
+		Bitu bios_pagesize = rows *
+		                     real_readb(BIOSMEM_SEG, BIOSMEM_NB_COLS) * 2;
+
+		// BIOS adds extra on reload
+		bios_pagesize += 0x100;
+		real_writew(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE, bios_pagesize);
+
+		// Move up one line on 14+ line fonts
+		auto cursor_height = height >= 14 ? (height - 1) : height;
+
+		INT10_SetCursorShape(cursor_height - 2, cursor_height - 1);
 	}
 }
 
-void INT10_ReloadFont(void) {
-	Bitu map=0;
-	switch(CurMode->cheight) {
+void INT10_ReloadFont()
+{
+	constexpr auto Reload   = false;
+	constexpr auto NumChars = 256;
+	constexpr auto Offset   = 0;
+	constexpr auto Map      = 0;
+
+	switch (CurMode->cheight) {
 	case 8:
-		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),false,256,0,map,8);
+
+		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               CurMode->cheight);
 		break;
+
 	case 14:
-		if (IS_VGA_ARCH && CurMode->mode == 7 &&
-		    !vga.seq.clocking_mode.is_eight_dot_mode) {
-			map = 0x80;
-		}
-		INT10_LoadFont(RealToPhysical(int10.rom.font_14), false, 256, 0, map, 14);
+		INT10_LoadFont(RealToPhysical(int10.rom.font_14),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               CurMode->cheight);
 		break;
+
 	case 16:
 	default:
-		if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
-			map = 0x80;
-		}
-		INT10_LoadFont(RealToPhysical(int10.rom.font_16), false, 256, 0, map, 16);
+		constexpr auto Height = 16;
+		INT10_LoadFont(RealToPhysical(int10.rom.font_16),
+		               Reload,
+		               NumChars,
+		               Offset,
+		               Map,
+		               Height);
 		break;
 	}
 }
-
 
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */

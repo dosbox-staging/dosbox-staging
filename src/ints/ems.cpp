@@ -124,9 +124,8 @@ public:
 	{
 		return false;
 	}
-	bool Close() override
+	void Close() override
 	{
-		return false;
 	}
 	uint16_t GetInformation(void) override
 	{
@@ -1372,7 +1371,7 @@ static Bitu INT4B_Handler() {
 
 Bitu GetEMSType(Section_prop * section) {
 	Bitu rtype = 0;
-	const std::string_view ems_pref = section->Get_string("ems");
+	const std::string ems_pref = section->Get_string("ems");
 
 	const auto ems_pref_has_bool = parse_bool_setting(ems_pref);
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,6 @@
 #include "regs.h"
 
 #include "../../ints/int10.h"
-
-using namespace bit::literals;
 
 CHECK_NARROWING();
 
@@ -960,7 +958,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	case 0x09: // 320x200, 16 colors    (PCjr)
 	case 0x0a: // 640x200, 4 colors     (PCjr)
 	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
-		// Note: Setting true horixontal resolution for <640 modes
+		// Note: Setting true horizontal resolution for <640 modes
 		// can break some games, like 'Life & Death' - be careful here!
 		state.maxpos_x = 639;
 		state.maxpos_y = 199;
@@ -1340,6 +1338,8 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 
 static Bitu int33_handler()
 {
+	using namespace bit::literals;
+
 	switch (reg_ax) {
 	case 0x00: // MS MOUSE - reset driver and read status
 		reset_hardware();
@@ -1871,27 +1871,26 @@ static void prepare_driver_info()
 
 	const std::string str_copyright = DOSBOX_COPYRIGHT;
 
-	auto read_low_nibble_str = [&](const uint8_t byte) {
-		return std::to_string(static_cast<int>(read_low_nibble(byte)));
+	auto low_nibble_str = [&](const uint8_t byte) {
+		return std::to_string(low_nibble(byte));
 	};
-	auto read_high_nibble_str = [&](const uint8_t byte) {
-		return std::to_string(static_cast<int>(read_high_nibble(byte)));
+	auto high_nibble_str = [&](const uint8_t byte) {
+		return std::to_string(high_nibble(byte));
 	};
 
-	static_assert(read_low_nibble(driver_version_minor) <= 9);
-	static_assert(read_low_nibble(driver_version_major) <= 9);
-	static_assert(read_high_nibble(driver_version_minor) <= 9);
-	static_assert(read_high_nibble(driver_version_major) <= 9);
+	static_assert(low_nibble(driver_version_minor) <= 9);
+	static_assert(low_nibble(driver_version_major) <= 9);
+	static_assert(high_nibble(driver_version_minor) <= 9);
+	static_assert(high_nibble(driver_version_major) <= 9);
 
 	std::string str_version = "version ";
-	if (read_high_nibble(driver_version_major) > 0) {
-		str_version = str_version + read_high_nibble_str(driver_version_major);
+	if (high_nibble(driver_version_major) > 0) {
+		str_version = str_version + high_nibble_str(driver_version_major);
 	}
 
-	str_version = str_version +
-	              read_low_nibble_str(driver_version_major) + std::string(".") +
-	              read_high_nibble_str(driver_version_minor) +
-	              read_low_nibble_str(driver_version_minor);
+	str_version = str_version + low_nibble_str(driver_version_major) +
+	              std::string(".") + high_nibble_str(driver_version_minor) +
+	              low_nibble_str(driver_version_minor);
 
 	const size_t length_bytes = (str_version.length() + 1) +
 	                            (str_copyright.length() + 1);

@@ -1,4 +1,4 @@
-name: Update release notes
+name: Update release notes draft
 
 on:
   push:
@@ -6,11 +6,33 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  RELEASE_START_TIME:  2024-02-14T14:27:46Z
+  DRAFT_RELEASE_TAG:   0.82.0-alpha
+  GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   update_release_notes:
     runs-on: ubuntu-latest
     if: github.repository == 'dosbox-staging/dosbox-staging'
     steps:
-      - uses: release-drafter/release-drafter@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Query pull requests
+        run: |
+          ./scripts/release-notes-drafter.py query \
+              -p pull-requests.csv -s $RELEASE_START_TIME
+
+      - name: Generate release notes draft
+        run: |
+          ./scripts/release-notes-drafter.py process \
+              -i pull-requests.csv -m release-notes.md
+
+      - name: Update release notes draft
+        run: |
+          ./scripts/release-notes-drafter.py publish \
+              -n release-notes.md -t $DRAFT_RELEASE_TAG
+

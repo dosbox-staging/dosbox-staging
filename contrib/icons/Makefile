@@ -1,154 +1,127 @@
-.PHONY: help clean favicons
+.PHONY: help png windows macos linux clean
+
+PNG_DIR = png
+
+WINDOWS_DIR = windows
+
+MACOS_DIR = macos
+MACOS_ICON_1024 = $(MACOS_DIR)/dosbox-staging-1024.png
+MACOS_ICONSET_DIR = $(MACOS_DIR)/dosbox-staging.iconset
 
 help:
-	@echo "Re-generate icons in platform specific formats or install pre-rendered png icons"
+	@echo "Re-generate icons in platform specific formats, or install icons on Linux."
 	@echo ""
-	@echo "Usage:"
-	@echo "  make install             # install icons to \$${DESTDIR}/usr/local/share/icons/..."
-	@echo "  make install prefix=/usr # install icons to \$${DESTDIR}/usr/share/icons/..."
-	@echo "  make install datadir=foo # install icons to \$${DESTDIR}foo/icons/..."
+	@echo "Available targets:"
+	@echo "  png     - re-generate small PNG icons from the SVG sources"
+	@echo "  windows - re-generate Windows .ico file from the PNG icons"
+	@echo "  macos   - re-generate macOS .icns file from the macOS source PNG"
+	@echo "  all     - re-generate all (in above the listed order)"
 	@echo ""
-	@echo "Other available targets:"
-	@echo "  hicolor             - generate freedesktop.org icon directory structure"
-	@echo "  dosbox-staging.ico  - Windows format"
-	@echo "  dosbox-staging.icns - macOS format"
-	@echo "  icon_<size>.png     - render icon in specific size, e.g. icon_24.png"
-	@echo "  clean               - clean intermediate files"
+	@echo "To install the icons on Linux:"
+	@echo "  make install              # install icons to \$${DESTDIR}/usr/local/share/icons/..."
+	@echo "  make install prefix=/usr  # install icons to \$${DESTDIR}/usr/share/icons/..."
+	@echo "  make install datadir=foo  # install icons to \$${DESTDIR}foo/icons/..."
+
+all: png windows macos
 
 ##
-#  Create an icon using Windows .ico format.
+#  Re-generate small PNG icons from the SVG sources.
+#  These are used on Linux as fallback bitmap icons and to build the Windows
+#  .ico file.
 #
-#  Windows users are expected to create icons using GUI applications, and
-#  there's no good Windows-native command line program for this usecase.
+#  Needs rsvg-convert from the librsvg package.
 #
-#  This target is using icotool (package icoutils) to create an .ico file.
-#  Uses librsvg for rendering vectors (package available in most repos).
-#
-dosbox-staging.ico: \
-		icon_256.png \
-		icon_48.png \
-		icon_32.png \
-		icon_24.png \
-		icon_16.png
-	icotool -c $^ -o $@
+png:
+	rsvg-convert -h  16 svg/dosbox-staging-16.svg > $(PNG_DIR)/icon_16.png
+	rsvg-convert -h  24 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_24.png
+	rsvg-convert -h  32 svg/dosbox-staging-32.svg > $(PNG_DIR)/icon_32.png
+
+	# Some desktop environments expect a 22x22 icon (e.g., KDE Plasma).
+	# Rendering this from the SVG optimised for 24x24px looks good enough.
+	rsvg-convert -h  22 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_22.png
+
+	rsvg-convert -h   48 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_48.png
+	rsvg-convert -h   96 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_96.png
+	rsvg-convert -h  128 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_128.png
+	rsvg-convert -h  256 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_256.png
+	rsvg-convert -h  512 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_512.png
+	rsvg-convert -h 1024 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_1024.png
 
 ##
-# Favicons for a web page. Usage:
+#  Re-generate Window .ico file from the PNG icons.
 #
-# <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-# <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-# <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+#  Needs icotool from the icoutils packags (there's no good Windows native
+#  CLI tool for this).
 #
-favicons: \
-		favicon-16x16.png \
-		favicon-32x32.png \
-		favicon-96x96.png
+windows:
+	icotool -c $(PNG_DIR)/icon_256.png \
+	           $(PNG_DIR)/icon_48.png \
+	           $(PNG_DIR)/icon_32.png \
+	           $(PNG_DIR)/icon_24.png \
+	           $(PNG_DIR)/icon_16.png \
+	        -o $(WINDOWS_DIR)/dosbox-staging.ico
 
 ##
-#  Create an icon using macOS .icns format.
+#  Re-generate macOS .icns file from the 1024x1024 macOS source PNG.
 #
-#  iconutil is avaliable on macOS out of the box.
-#  Uses librsvg for rendering vectors (package available via brew).
+#  Needs sips & iconutil (available on macOS out-of-the-box).
 #
-dosbox-staging.icns: dosbox-staging.iconset
-	iconutil -c icns dosbox-staging.iconset
+macos:
+	mkdir -p $(MACOS_ICONSET_DIR)
 
-dosbox-staging.iconset: \
-		icon_1024.png \
-		icon_512.png \
-		icon_256.png \
-		icon_128.png \
-		icon_64.png \
-		icon_32.png \
-		icon_16.png
-	mkdir -p "$@"
-	cp icon_16.png   $@/icon_16x16.png
-	cp icon_32.png   $@/icon_16x16@2x.png
-	cp icon_32.png   $@/icon_32x32.png
-	cp icon_64.png   $@/icon_32x32@2x.png
-	cp icon_128.png  $@/icon_128x128.png
-	cp icon_256.png  $@/icon_128x128@2x.png
-	cp icon_256.png  $@/icon_256x256.png
-	cp icon_512.png  $@/icon_256x256@2x.png
-	cp icon_512.png  $@/icon_512x512.png
-	cp icon_1024.png $@/icon_512x512@2x.png
+	sips -z  16  16 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_16x16.png"
+	sips -z  32  32 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_16x16@2x.png"
+	sips -z  32  32 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_32x32.png"
+	sips -z  64  64 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_32x32@2x.png"
+	sips -z 128 128 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_128x128.png"
+	sips -z 256 256 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_128x128@2x.png"
+	sips -z 256 256 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_256x256.png"
+	sips -z 512 512 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_256x256@2x.png"
+	sips -z 512 512 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_512x512.png"
+
+	cp $(MACOS_ICON_1024) $(MACOS_ICONSET_DIR)/icon_512x512@2x.png
+	cp $(MACOS_ICON_1024) $(MACOS_ICONSET_DIR)/icon_1024x1024.png
+
+	iconutil -c icns $(MACOS_ICONSET_DIR)
 
 ##
-# Freedesktop icons (for Linux or other OSes) often are placed in 'hicolor'
-# directory in /usr/share/icons/ or /usr/local/share/icons/.
+#  Install icons on Linux.
+##
+#  Freedesktop icons (for Linux or other OSes) often are placed in 'hicolor'
+#  directory in /usr/share/icons/ or /usr/local/share/icons/.
 #
-# Users can override them by placing icons in ~/.local/share/icons/
+#  Users can override them by placing icons in ~/.local/share/icons/
 #
-# This is not strictly necessary (just placing scalable icon is enough,
-# but some there are some corner cases where small raster icon looks better).
+#  This is not strictly necessary (just placing scalable icon is enough, but
+#  some there are some corner cases where small PNG bitmap icons look better).
 #
-hicolor: \
-		dosbox-staging.svg \
-		icon_32.png \
-		icon_24.png \
-		icon_22.png \
-		icon_16.png
-	install -DT -m 644 $<          $@/scalable/apps/dosbox-staging.svg
-	install -DT -m 644 icon_32.png $@/32x32/apps/dosbox-staging.png
-	install -DT -m 644 icon_24.png $@/24x24/apps/dosbox-staging.png
-	install -DT -m 644 icon_22.png $@/22x22/apps/dosbox-staging.png
-	install -DT -m 644 icon_16.png $@/16x16/apps/dosbox-staging.png
-
-icon_16.png: small-svg/dosbox-staging-16.svg
-	rsvg-convert -h 16 $< > $@
-
-icon_24.png: small-svg/dosbox-staging-24.svg
-	rsvg-convert -h 24 $< > $@
-
-# Some desktop environments expect 22x22 icon (e.g. KDE Plasma).
-# Rendering 24px source to 22px looks good enough.
-icon_22.png: small-svg/dosbox-staging-24.svg
-	rsvg-convert -h 22 $< > $@
-
-icon_32.png: small-svg/dosbox-staging-32.svg
-	rsvg-convert -h 32 $< > $@
-
-icon_48.png: dosbox-staging.svg
-	rsvg-convert -h 48 $< > $@
-
-icon_64.png: dosbox-staging.svg
-	rsvg-convert -h 64 $< > $@
-
-icon_96.png: dosbox-staging.svg
-	rsvg-convert -h 96 $< > $@
-
-icon_128.png: dosbox-staging.svg
-	rsvg-convert -h 128 $< > $@
-
-icon_256.png: dosbox-staging.svg
-	rsvg-convert -h 256 $< > $@
-
-icon_512.png: dosbox-staging.svg
-	rsvg-convert -h 512 $< > $@
-
-icon_1024.png: dosbox-staging.svg
-	rsvg-convert -h 1024 $< > $@
-
-favicon-16x16.png: icon_16.png
-	cp $< $@
-
-favicon-32x32.png: icon_32.png
-	cp $< $@
-
-favicon-96x96.png: icon_96.png
-	cp $< $@
-
 prefix = /usr/local
 datadir = $(prefix)/share
 install:
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps" small-png/16x16/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps" small-png/22x22/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps" small-png/24x24/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps" small-png/32x32/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps" dosbox-staging.svg
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/48x48/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/96x96/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/128x128/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/256x256/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/512x512/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/1024x1024/apps/"
+	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps"
+
+	install -p -m 0644 $(PNG_DIR)/icon_16.png "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_22.png "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_24.png "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_32.png "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_48.png "$(DESTDIR)$(datadir)/icons/hicolor/48x48/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_96.png "$(DESTDIR)$(datadir)/icons/hicolor/96x96/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_128.png "$(DESTDIR)$(datadir)/icons/hicolor/128x128/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_256.png "$(DESTDIR)$(datadir)/icons/hicolor/256x256/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_512.png "$(DESTDIR)$(datadir)/icons/hicolor/512x512/apps/dosbox-staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_1024.png "$(DESTDIR)$(datadir)/icons/hicolor/1024x1024/apps/dosbox-staging.png"
+	install -p -m 0644 svg/dosbox-staging.svg "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/dosbox-staging.svg"
 
 clean:
-	rm -rf dosbox-staging.iconset
-	rm -rf hicolor
-	rm -f icon_*.png
-	rm -f favicon*
+	rm -rf $(MACOS_ICONSET_DIR)
+

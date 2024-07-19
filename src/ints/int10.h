@@ -23,19 +23,35 @@
 
 #include <vector>
 
+#include "bit_view.h"
 #include "mem.h"
 #include "vga.h"
 
 // forward declarations
 class Rgb666;
 
+namespace BiosDataArea {
+
+// The BIOS Data Area is located at segment 40h.
+// Ref:
+//   http://www.techhelpmanual.com/93-rom_bios_variables.html
+//   https://www.ecsdump.net/?page_id=691
+constexpr uint16_t Segment = 0x40;
+
+// Bit flags containing to the status of the VGA (VGA only)
+// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
+constexpr uint16_t VgaFlagsRecOffset = 0x89;
+
+} // namespace BiosDataArea
+
+// TODO Remove once the migration to BiosDataArea::Segment is complete
 #define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
 #define BIOSMEM_CURRENT_MODE  0x49
-#define BIOSMEM_NB_COLS       0x4A
-#define BIOSMEM_PAGE_SIZE     0x4C
-#define BIOSMEM_CURRENT_START 0x4E
+#define BIOSMEM_NB_COLS       0x4a
+#define BIOSMEM_PAGE_SIZE     0x4c
+#define BIOSMEM_CURRENT_START 0x4e
 #define BIOSMEM_CURSOR_POS    0x50
 #define BIOSMEM_CURSOR_TYPE   0x60
 #define BIOSMEM_CURRENT_PAGE  0x62
@@ -43,22 +59,72 @@ class Rgb666;
 #define BIOSMEM_CURRENT_MSR   0x65
 #define BIOSMEM_CURRENT_PAL   0x66
 #define BIOSMEM_NB_ROWS       0x84
+
+// The word starting at this address contains the height of the character
+// matrix in scan lines.
 #define BIOSMEM_CHAR_HEIGHT   0x85
+
+// Both bytes contain bit flags about to the status of the EGA and VGA.
+// http://www.techhelpmanual.com/72-egamiscinforec.html
 #define BIOSMEM_VIDEO_CTL     0x87
 #define BIOSMEM_SWITCHES      0x88
-#define BIOSMEM_MODESET_CTL   0x89
-#define BIOSMEM_DCC_INDEX     0x8A
-#define BIOSMEM_CRTCPU_PAGE   0x8A
-#define BIOSMEM_VS_POINTER    0xA8
+
+// Current display combo (VGA only)
+//
+// One field of the VgaSavePtr2Rec points to a VgaDccRec.  This structure is
+// initialized by the VGA video system BIOS to point to a table in ROM.
+// Information in this structure identifies valid combinations of video
+// subsystems which are supported by your VGA BIOS.
+//
+// Ref: http://www.techhelpmanual.com/81-vgadccrec.html
+#define BIOSMEM_DCC_INDEX     0x8a
+
+#define BIOSMEM_CRTCPU_PAGE   0x8a
+
+// The 4-byte pointer at 0040:00a8 has been named SAVE_PTR by an imaginative
+// programmer. It points to a table of EGA/VGA data block pointers. You can
+// change this address to point to a different data area in which you define
+// your own fonts and other options.
+// Ref: http://www.techhelpmanual.com/74-egasaveptrrec.html
+#define BIOSMEM_VS_POINTER    0xa8
+
+constexpr uint16_t MaxEgaBiosModeNumber = 0x10;
 
 constexpr uint16_t MinVesaBiosModeNumber = 0x100;
 constexpr uint16_t MaxVesaBiosModeNumber = 0x7ff;
 
-/*
- *
- * VGA registers
- *
- */
+// Ref: http://www.techhelpmanual.com/73-vgaflagsrec.html
+union BiosVgaFlagsRec {
+	uint8_t data = 0;
+
+	bit_view<0, 1> is_vga_active;
+	bit_view<1, 1> is_grayscale_summing_enabled;
+
+	// 0 - colour monitor, 1 - monochrome monitor
+	bit_view<2, 1> is_monochrome_monitor;
+
+	// 0 - keep same colours, 1 - load default palette
+	bit_view<3, 1> load_default_palette;
+
+	// bit1  bit0  value
+	//  0     0      0    350-line mode
+	//  0     1      1    400-line mode
+	//  1     0      2    200-line mode
+	//  1     1      3    reserved
+	bit_view<4, 1> text_mode_scan_lines_bit0;
+	bit_view<7, 1> text_mode_scan_lines_bit1;
+
+	bit_view<6, 1> is_dcc_switching_enabled;
+
+	uint8_t text_mode_scan_lines() const
+	{
+		return text_mode_scan_lines_bit0 | (text_mode_scan_lines_bit1 << 1);
+	}
+};
+
+// VGA registers
+// TODO convert these to namespaced constants
+//
 #define VGAREG_ACTL_ADDRESS            0x3c0
 #define VGAREG_ACTL_WRITE_DATA         0x3c0
 #define VGAREG_ACTL_READ_DATA          0x3c1
@@ -143,20 +209,47 @@ extern palette_t palette;
 
 struct VideoModeBlock {
 	// BIOS video mode number
-	uint16_t mode;
+	uint16_t mode = 0;
 
-	VGAModes type;
+	// Video mode type primarily based on the memory organisation of the
+	// mode (see vga.h)
+	VGAModes type = {};
 
-	uint16_t swidth, sheight;
-	uint8_t twidth, theight;
-	uint8_t cwidth, cheight;
-	uint8_t ptotal;
-	uint32_t pstart;
-	uint32_t plength;
+	// Screen width & height in pixels
+	uint16_t swidth  = 0;
+	uint16_t sheight = 0;
 
-	uint16_t htotal, vtotal;
-	uint16_t hdispend, vdispend;
-	uint16_t special;
+	// Text mode width & height in number of characters
+	uint8_t twidth  = 0;
+	uint8_t theight = 0;
+
+	// Character matrix width & height in pixels
+	uint8_t cwidth  = 0;
+	uint8_t cheight = 0;
+
+	// Total number of video pages
+	uint8_t ptotal = 0;
+
+	// Start address of the first page in the video memory
+	uint32_t pstart = 0;
+
+	// Length of a single page in bytes
+	uint32_t plength = 0;
+
+	// Horizontal total (in number of clock pulses?)
+	uint16_t htotal = 0;
+
+	// Vertical total in lines
+	uint16_t vtotal = 0;
+
+	// Horizontal display end (number of clock pulses?)
+	uint16_t hdispend = 0;
+
+	// Vertical display end (line number)
+	uint16_t vdispend = 0;
+
+	// Special flags
+	uint16_t special = 0;
 };
 
 extern std::vector<VideoModeBlock> ModeList_VGA;
@@ -171,14 +264,28 @@ using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
 // M_CGA4 into M_TANDY4 or M_CGA4_COMPOSITE, etc.)
 extern video_mode_block_iterator_t CurMode;
 
-enum class VesaModePref {
-	Compatible,  // Prunes the available S3 modes to maximize DOS game compatibility
-	Halfline, // Replaces mode 120h with the halfline mode used by Extreme Assault
-	All, // Enables all S3 864 and Trio VESA modes (but some games might not handle them properly)
+enum class VesaModes {
+	// Only the most compatible S3 VESA modes for the configured video
+	// memory size.
+	//
+	// 320x200 high colour modes are excluded as they were not
+	// properly supported until the late '90s. The 256-colour linear
+	// framebuffer 320x240, 400x300, and 512x384 modes are also
+	// excluded as they cause timing problems in Build Engine games.
+	Compatible,
+
+	// Same as `Compatible`, but the 120h VESA mode is replaced with a special
+	// halfline mode used by Extreme Assault.
+	Halfline,
+
+	// Enables all S3 VESA modes, including extra DOSBox-specific VESA modes.
+	// The 320x200 high colour modes available in this mode are often required
+	// by late '90s demoscene productions.
+	All
 };
 
 struct Int10Data {
-	struct Int10DataRom{
+	struct Int10DataRom {
 		RealPt font_8_first;
 		RealPt font_8_second;
 		RealPt font_14;
@@ -201,10 +308,12 @@ struct Int10Data {
 		uint16_t pmode_interface_palette;
 		uint16_t used;
 	} rom = {};
+
 	uint16_t vesa_setmode = 0;
 
-	VesaModePref vesa_mode_preference = VesaModePref::Compatible;
-	bool vesa_nolfb = false;
+	VesaModes vesa_modes = VesaModes::Compatible;
+
+	bool vesa_nolfb  = false;
 	bool vesa_oldvbe = false;
 };
 
@@ -226,6 +335,7 @@ void INT10_SetupPalette();
 
 bool INT10_SetVideoMode(uint16_t mode);
 void INT10_SetCurMode(void);
+bool INT10_VideoModeChangeInProgress();
 
 bool INT10_IsTextMode(const VideoModeBlock& mode_block);
 
@@ -236,22 +346,42 @@ void INT10_DisplayCombinationCode(uint16_t * dcc,bool set);
 void INT10_GetFuncStateInformation(PhysPt save);
 
 void INT10_SetCursorShape(uint8_t first,uint8_t last);
-void INT10_SetCursorPos(uint8_t row,uint8_t col,uint8_t page);
-void INT10_TeletypeOutput(uint8_t chr,uint8_t attr);
-void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr);
-void INT10_ReadCharAttr(uint16_t * result,uint8_t page);
-void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr);
-void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt string,uint16_t count,uint8_t page);
 
-/* Graphics Stuff */
+void INT10_SetCursorPos(uint8_t row,uint8_t col,uint8_t page);
+void INT10_SetCursorPosViaInterrupt(const uint8_t row, const uint8_t col,
+                                    const uint8_t page);
+
+void INT10_TeletypeOutput(const uint8_t char_value, const uint8_t attribute);
+void INT10_TeletypeOutputViaInterrupt(const uint8_t char_value,
+                                      const uint8_t attribute);
+
+void INT10_TeletypeOutputAttr(const uint8_t char_value, const uint8_t attribute,
+                              const bool use_attribute);
+void INT10_TeletypeOutputAttrViaInterrupt(const uint8_t char_value,
+                                          const uint8_t attribute,
+                                          const bool use_attribute);
+
+void INT10_ReadCharAttr(uint16_t* result, uint8_t page);
+
+void INT10_WriteChar(const uint8_t char_value, const uint8_t attribute,
+                     uint8_t page, uint16_t count, bool use_attribute);
+void INT10_WriteCharViaInterrupt(const uint8_t char_value, const uint8_t attribute,
+                                 uint8_t page, uint16_t count, bool use_attribute);
+
+void INT10_WriteString(uint8_t row, uint8_t col, uint8_t flag, uint8_t attr,
+                       PhysPt string, uint16_t count, uint8_t page);
+
+// Graphics functions
 void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color);
 void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color);
 
-/* Font Stuff */
-void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height);
-void INT10_ReloadFont(void);
+// Font funtions
+void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
+                    const int offset, const int map, const int height);
 
-/* Palette Group */
+void INT10_ReloadFont();
+
+// Palette functions
 void INT10_SetBackgroundBorder(uint8_t val);
 void INT10_SetColorSelect(uint8_t val);
 void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val);
@@ -272,7 +402,7 @@ void INT10_GetPelMask(uint8_t & mask);
 void INT10_PerformGrayScaleSumming(uint16_t start_reg,uint16_t count);
 
 
-/* Vesa Group */
+// VESA functions
 uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset);
 bool VESA_IsVesaMode(const uint16_t bios_mode_number);
 uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off);
@@ -308,5 +438,6 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer);
 /* Video Parameter Tables */
 uint16_t INT10_SetupVideoParameterTable(PhysPt basepos);
 void INT10_SetupBasicVideoParameterTable(void);
+
 
 #endif

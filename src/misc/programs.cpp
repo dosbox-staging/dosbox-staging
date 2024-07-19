@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,8 +38,8 @@
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"
-#include "string_utils.h"
 #include "support.h"
+#include "unicode.h"
 
 callback_number_t call_program = 0;
 
@@ -65,20 +65,25 @@ static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
 static uint8_t last_written_character = '\n';
-constexpr int WriteOutBufSize         = 2048;
+constexpr int WriteOutBufSize         = 16384;
 
 static void write_to_stdout(std::string_view output)
 {
 	dos.internal_output = true;
+
 	for (const auto& chr : output) {
 		uint8_t out;
 		uint16_t bytes_to_write = 1;
+
 		if (chr == '\n' && last_written_character != '\r') {
 			out = '\r';
 			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
 		}
-		out                    = static_cast<uint8_t>(chr);
+
+		out = static_cast<uint8_t>(chr);
+
 		last_written_character = out;
+
 		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
 	}
 	dos.internal_output = false;
@@ -89,10 +94,12 @@ static void truncated_chars_message(int size)
 	if (size > WriteOutBufSize) {
 		constexpr int MessageSize = 128;
 		char message[MessageSize];
+
 		snprintf(message,
 		         MessageSize,
 		         "\n\nERROR: OUTPUT TOO LONG: %d CHARS TRUNCATED",
 		         size - WriteOutBufSize);
+
 		write_to_stdout(message);
 	}
 }
@@ -129,7 +136,7 @@ void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 
 static Bitu PROGRAMS_Handler(void)
 {
-	/* This sets up everything for a program start up call */
+	// This sets up everything for a program start up call
 	Bitu size = sizeof(uint8_t);
 	uint8_t index;
 
@@ -137,40 +144,53 @@ static Bitu PROGRAMS_Handler(void)
 	constexpr auto exec_block_size = exe_block.size();
 	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
 
-	/* Read the index from program code in memory */
+	// Read the index from program code in memory
 	PhysPt reader = PhysicalMake(dos.psp(),
-		256 + static_cast<uint16_t>(exec_block_size));
+	                             256 + static_cast<uint16_t>(exec_block_size));
+
 	HostPt writer = (HostPt)&index;
+
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
 	}
+
 	const PROGRAMS_Creator& creator = internal_progs.at(index);
-	const auto new_program          = creator();
+
+	const auto new_program = creator();
+
 	new_program->Run();
+
 	return CBRET_NONE;
 }
 
-/* Main functions used in all program */
+// Main functions used in all program
 
 Program::Program()
 {
-	/* Find the command line and setup the PSP */
+	// Find the command line and setup the PSP
 	psp = new DOS_PSP(dos.psp());
-	/* Scan environment for filename */
+
+	// Scan environment for filename
 	PhysPt envscan = PhysicalMake(psp->GetEnvironment(), 0);
 	while (mem_readb(envscan)) {
 		envscan += mem_strlen(envscan) + 1;
 	}
+
 	envscan += 3;
 	CommandTail tail;
+
 	MEM_BlockRead(PhysicalMake(dos.psp(), 128), &tail, 128);
+
 	if (tail.count < 127) {
 		tail.buffer[tail.count] = 0;
 	} else {
 		tail.buffer[126] = 0;
 	}
+
 	char filename[256 + 1];
+
 	MEM_StrCopy(envscan, filename, 256);
+
 	cmd = new CommandLine(filename, tail.buffer);
 }
 
@@ -178,16 +198,14 @@ extern std::string full_arguments;
 
 void Program::ChangeToLongCmd()
 {
-	/*
-	 * Get arguments directly from the shell instead of the psp.
-	 * this is done in securemode: (as then the arguments to mount and
-	 * friends can only be given on the shell ( so no int 21 4b) Securemode
-	 * part is disabled as each of the internal command has already protection
-	 * for it. (and it breaks games like cdman) it is also done for long
-	 * arguments to as it is convient (as the total commandline can be
-	 * longer then 127 characters. imgmount with lot's of parameters Length
-	 * of arguments can be ~120. but switch when above 100 to be sure
-	 */
+	// Get arguments directly from the shell instead of the psp.
+	// this is done in securemode: (as then the arguments to mount and
+	// friends can only be given on the shell ( so no int 21 4b) Securemode
+	// part is disabled as each of the internal command has already
+	// protection for it. (and it breaks games like cdman) it is also done
+	// for long arguments to as it is convient (as the total commandline can
+	// be longer then 127 characters. imgmount with lot's of parameters
+	// Length of arguments can be ~120. but switch when above 100 to be sure
 
 	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),
@@ -195,19 +213,24 @@ void Program::ChangeToLongCmd()
 		delete cmd;
 		cmd = temp;
 	}
-	full_arguments.assign(""); // Clear so it gets even more save
+
+	// Clear so it gets even more save
+	full_arguments.assign(""); 
 }
 
 bool Program::SuppressWriteOut(const char* format)
 {
 	// Have we encountered an executable thus far?
 	static bool encountered_executable = false;
+
 	if (encountered_executable) {
 		return false;
 	}
+
 	if (control->GetStartupVerbosity() >= Verbosity::Low) {
 		return false;
 	}
+
 	if (!control->cmdline->HasExecutableName()) {
 		return false;
 	}
@@ -270,11 +293,11 @@ void Program::InjectMissingNewline()
 		return;
 	}
 
-	uint16_t n          = 2;
-	uint8_t dos_nl[]    = "\r\n";
+	uint16_t n       = 2;
+	uint8_t dos_nl[] = "\r\n";
+
 	dos.internal_output = true;
 	DOS_WriteFile(STDOUT, dos_nl, &n);
-	dos.internal_output    = false;
 	last_written_character = '\n';
 }
 
@@ -292,7 +315,6 @@ void Program::AddToHelpList()
 }
 
 bool MSG_Write(const char*);
-void restart_program(std::vector<std::string>& parameters);
 
 class CONFIG final : public Program {
 public:
@@ -306,18 +328,21 @@ public:
 	void Run(void) override;
 
 private:
-	void restart(const char* useconfig);
+	void DisplayHelp();
+
+	void HandleHelpCommand(const std::vector<std::string>& pvars);
 
 	void WriteConfig(const std::string& name)
 	{
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
-		if (!control->PrintConfig(name)) {
+
+		if (!control->WriteConfig(name)) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"), name.c_str());
 		}
 		return;
 	}
 
-	bool securemode_check()
+	bool CheckSecureMode()
 	{
 		if (control->SecureMode()) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_DISALLOW"));
@@ -327,15 +352,227 @@ private:
 	}
 };
 
+void CONFIG::DisplayHelp() {
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
+	output.Display();
+}
+
+void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
+{
+	auto pvars = pvars_in;
+
+	switch (pvars.size()) {
+	case 0: DisplayHelp(); return;
+
+	case 1: {
+		if (!strcasecmp("sections", pvars[0].c_str())) {
+			// List the sections
+			MoreOutputStrings output(*this);
+			output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
+
+			for (const Section* sec : *control) {
+				if (sec->IsActive()) {
+					output.AddString("  - %s\n", sec->GetName());
+				}
+			}
+			output.AddString("\n");
+			output.Display();
+			return;
+		}
+
+		// If it's a section, leave it as single param
+		Section* sec = control->GetSection(pvars[0]);
+		if (!sec || !sec->IsActive()) {
+			// Could be a property
+			sec = control->GetSectionFromProperty(pvars[0].c_str());
+			if (!sec || !sec->IsActive()) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+				         pvars[0].c_str());
+				return;
+			}
+			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+		}
+		break;
+	}
+
+	case 2: {
+		Section* sec = control->GetSection(pvars[0]);
+		if (sec && !sec->IsActive()) {
+			sec = nullptr;
+		}
+
+		Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+
+		if (!sec || !sec->IsActive()) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			         pvars[0].c_str());
+			return;
+
+		} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
+			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			         pvars[1].c_str());
+			return;
+		}
+		break;
+	}
+
+	default: DisplayHelp(); return;
+	}
+
+	// If we have a single value in pvars, it's a section.
+	// If we have two values, that's a section and a property.
+	Section* sec = control->GetSection(pvars[0]);
+
+	if (sec == nullptr || !sec->IsActive()) {
+		WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+		return;
+	}
+
+	Section_prop* psec = dynamic_cast<Section_prop*>(sec);
+
+	// Special [autoexec] section handling (if has no properties like all
+	// the other sections).
+	if (psec == nullptr) {
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
+		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
+		output.AddString("\n");
+		output.Display();
+		return;
+	}
+
+	if (pvars.size() == 1) {
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),
+		                 pvars[0].c_str());
+
+		auto i = 0;
+		while (true) {
+			// List the properties
+			Property* p = psec->Get_prop(i++);
+			if (p == nullptr) {
+				break;
+			}
+			if (p->IsDeprecated()) {
+				continue;
+			}
+			output.AddString("  - %s\n", p->propname.c_str());
+		}
+		output.AddString("\n");
+		output.Display();
+
+	} else {
+		// pvars has more than 1 element
+		MoreOutputStrings output(*this);
+
+		// Find the property by its name
+		auto i = 0;
+
+		while (true) {
+			Property* p = psec->Get_prop(i++);
+			if (p == nullptr) {
+				break;
+			}
+
+			if (!strcasecmp(p->propname.c_str(), pvars[1].c_str())) {
+				// Found it; make the list of possible values
+				std::string possible_values;
+				std::vector<Value> pv = p->GetValues();
+
+				if (p->Get_type() == Value::V_BOOL) {
+					// Possible values for boolean are true
+					// & false
+					possible_values += "true, false";
+
+				} else if (p->Get_type() == Value::V_INT) {
+					// Print min & max for integer values if
+					// used
+					Prop_int* pint = dynamic_cast<Prop_int*>(p);
+					assert(pint);
+
+					if (pint->GetMin() != pint->GetMax()) {
+						std::ostringstream oss;
+						oss << pint->GetMin();
+						oss << "..";
+						oss << pint->GetMax();
+						possible_values += oss.str();
+					}
+				}
+
+				for (size_t k = 0; k < pv.size(); ++k) {
+					if (pv[k].ToString() == "%u") {
+						possible_values += MSG_Get(
+						        "PROGRAM_CONFIG_HLP_POSINT");
+					} else {
+						possible_values += pv[k].ToString();
+					}
+					if ((k + 1) < pv.size()) {
+						possible_values += ", ";
+					}
+				}
+
+				output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
+				                 p->propname.c_str(),
+				                 sec->GetName());
+
+				if (p->IsDeprecated()) {
+					output.AddString(MSG_Get(
+					        "PROGRAM_CONFIG_DEPRECATED"));
+					output.AddString("\n");
+				}
+
+				output.AddString(p->GetHelp().c_str());
+				output.AddString("\n\n");
+
+				auto write_last_newline = false;
+
+				if (!p->IsDeprecated()) {
+					if (!possible_values.empty()) {
+						output.AddString(
+						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
+						        possible_values.c_str());
+					}
+
+					output.AddString(
+					        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
+					        p->GetDefaultValue().ToString().c_str());
+
+					output.AddString(
+					        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
+					        p->GetValue().ToString().c_str());
+
+					write_last_newline = true;
+				}
+
+				// Print 'changability'
+				if (p->GetChange() ==
+				    Property::Changeable::OnlyAtStart) {
+					output.AddString("\n");
+					output.AddString(MSG_Get(
+					        "PROGRAM_CONFIG_HLP_NOCHANGE"));
+
+					write_last_newline = true;
+				}
+
+				if (write_last_newline) {
+					output.AddString("\n");
+				}
+			}
+		}
+
+		output.Display();
+	}
+}
+
 void CONFIG::Run(void)
 {
 	static const char* const params[] = {
-	        "-r",        "-wcd",       "-wc",          "-writeconf",
-	        "-l",        "-rmconf",    "-h",           "-help",
-	        "-?",        "-axclear",   "-axadd",       "-axtype",
-	        "-avistart", "-avistop",   "-startmapper", "-get",
-	        "-set",      "-writelang", "-wl",          "-securemode",
-	        ""};
+	        "-r",      "-wcd",       "-wc",      "-writeconf",   "-l",
+	        "-h",      "-help",      "-?",       "-axclear",     "-axadd",
+	        "-axtype", "-avistart",  "-avistop", "-startmapper", "-get",
+	        "-set",    "-writelang", "-wl",      "-securemode",  ""};
+
 	enum prs {
 		P_NOMATCH,
 		P_NOPARAMS, // fixed return values for GetParameterFromList
@@ -344,7 +581,6 @@ void CONFIG::Run(void)
 		P_WRITECONF,
 		P_WRITECONF2,
 		P_LISTCONF,
-		P_KILLCONF,
 		P_HELP,
 		P_HELP2,
 		P_HELP3,
@@ -361,24 +597,21 @@ void CONFIG::Run(void)
 		P_SECURE
 	} presult = P_NOMATCH;
 
-	auto display_help = [this]() {
-		MoreOutputStrings output(*this);
-		output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
-		output.Display();
-	};
-
 	bool first = true;
-	std::vector<std::string> pvars;
+
+	std::vector<std::string> pvars = {};
+
 	// Loop through the passed parameters
 	while (presult != P_NOPARAMS) {
 		presult = (enum prs)cmd->GetParameterFromList(params, pvars);
+
 		switch (presult) {
 		case P_RESTART:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() == 0) {
-				restart_program(control->startup_params);
+				restart_dosbox();
 			} else {
 				std::vector<std::string> restart_params;
 				restart_params.push_back(
@@ -386,64 +619,71 @@ void CONFIG::Run(void)
 				for (size_t i = 0; i < pvars.size(); i++) {
 					restart_params.push_back(pvars[i]);
 				}
-				// the rest on the commandline, too
-				cmd->FillVector(restart_params);
-				restart_program(restart_params);
+				const auto remaining_args = cmd->GetArguments();
+				restart_params.insert(restart_params.end(),
+				                      remaining_args.begin(),
+				                      remaining_args.end());
+
+				restart_dosbox(restart_params);
 			}
 			return;
 
 		case P_LISTCONF: {
-			Bitu size = control->configfiles.size();
-			const std_fs::path config_path = get_platform_config_dir();
+			auto size = control->configfiles.size();
+			const std_fs::path config_path = GetConfigDir();
+
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
-			         VERSION,
+			         DOSBOX_GetVersion(),
 			         config_path.c_str());
+
 			if (size == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
+
 			} else {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRIMARY_CONF"),
 				         control->configfiles.front().c_str());
+
 				if (size > 1) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_CONFIG_ADDITIONAL_CONF"));
-					for (Bitu i = 1; i < size; i++) {
+
+					for (size_t i = 1; i < size; ++i) {
 						WriteOut("%s\n",
 						         control->configfiles[i].c_str());
 					}
 				}
 			}
+
 			if (control->startup_params.size() > 0) {
 				std::string test;
-				for (size_t k = 0;
-				     k < control->startup_params.size();
-				     k++) {
+				for (size_t k = 0; k < control->startup_params.size();
+				     ++k) {
 					test += control->startup_params[k] + " ";
 				}
+
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PRINT_STARTUP"),
 				         test.c_str());
 			}
+
+			WriteOut("\n");
 			break;
 		}
+
 		case P_WRITECONF_DEFAULT: {
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() > 0) {
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			std::string name;
-			Cross::GetPlatformConfigName(name);
-
-			// write file to the default config directory
-			const auto config_path = get_platform_config_dir() / name;
-			name = config_path.string();
-			WriteConfig(name);
+			WriteConfig(GetPrimaryConfigPath().string());
 			break;
 		}
+
 		case P_WRITECONF:
 		case P_WRITECONF2:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			if (pvars.size() > 1) {
@@ -455,7 +695,8 @@ void CONFIG::Run(void)
 				// write config to startup directory
 				WriteConfig(pvars[0]);
 			} else {
-				// -wc without parameter: write dosbox.conf to startup directory
+				// -wc without parameter: write dosbox.conf to
+				// startup directory
 				if (control->configfiles.size()) {
 					WriteConfig("dosbox.conf");
 				} else {
@@ -470,163 +711,13 @@ void CONFIG::Run(void)
 			}
 			[[fallthrough]];
 
-		case P_NOMATCH: display_help(); return;
+		case P_NOMATCH: DisplayHelp(); return;
 
 		case P_HELP:
 		case P_HELP2:
-		case P_HELP3: {
-			switch (pvars.size()) {
-			case 0: display_help(); return;
-			case 1: {
-				if (!strcasecmp("sections", pvars[0].c_str())) {
-					// list the sections
-					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
-					for (const Section* sec : *control) {
-						WriteOut("  - %s\n", sec->GetName());
-					}
-					return;
-				}
-				// if it's a section, leave it as one-param
-				Section* sec = control->GetSection(pvars[0]);
-				if (!sec) {
-					// could be a property
-					sec = control->GetSectionFromProperty(
-					        pvars[0].c_str());
-					if (!sec) {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-						         pvars[0].c_str());
-						return;
-					}
-					pvars.insert(pvars.begin(),
-					             std::string(sec->GetName()));
-				}
-				break;
-			}
-			case 2: {
-				// sanity check
-				Section* sec  = control->GetSection(pvars[0]);
-				Section* sec2 = control->GetSectionFromProperty(
-				        pvars[1].c_str());
-				if (!sec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-					         pvars[0].c_str());
-				} else if (!sec2 || sec != sec2) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-					         pvars[1].c_str());
-				}
-				break;
-			}
-			default: display_help(); return;
-			}
-			// if we have one value in pvars, it's a section
-			// two values are section + property
-			Section* sec = control->GetSection(pvars[0]);
-			if (sec == nullptr) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
-				         pvars[0].c_str());
-				return;
-			}
-			Section_prop* psec = dynamic_cast<Section_prop*>(sec);
-			if (psec == nullptr) {
-				// failed; maybe it's the autoexec section?
-				Section_line* pline = dynamic_cast<Section_line*>(sec);
-				if (pline == nullptr) {
-					E_Exit("Section dynamic cast failed.");
-				}
+		case P_HELP3:
+			HandleHelpCommand(pvars); return;
 
-				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_LINEHLP"),
-				         pline->GetName(),
-				         // this is 'unclean' but the autoexec
-				         // section has no help associated
-				         MSG_Get("AUTOEXEC_CONFIGFILE_HELP"),
-				         pline->data.c_str());
-				return;
-			}
-			if (pvars.size() == 1) {
-				size_t i = 0;
-				WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTHLP"),
-				         pvars[0].c_str());
-				while (true) {
-					// list the properties
-					Property* p = psec->Get_prop(i++);
-					if (p == nullptr) {
-						break;
-					}
-					WriteOut("  - %s\n", p->propname.c_str());
-				}
-			} else {
-				// find the property by it's name
-				size_t i = 0;
-				while (true) {
-					Property* p = psec->Get_prop(i++);
-					if (p == nullptr) {
-						break;
-					}
-					if (!strcasecmp(p->propname.c_str(),
-					                pvars[1].c_str())) {
-						// found it; make the list of
-						// possible values
-						std::string propvalues;
-						std::vector<Value> pv = p->GetValues();
-
-						if (p->Get_type() == Value::V_BOOL) {
-							// possible values for
-							// boolean are true, false
-							propvalues += "true, false";
-						} else if (p->Get_type() ==
-						           Value::V_INT) {
-							// print min, max for
-							// integer values if used
-							Prop_int* pint =
-							        dynamic_cast<Prop_int*>(
-							                p);
-							if (pint == nullptr) {
-								E_Exit("Int property dynamic cast failed.");
-							}
-							if (pint->GetMin() !=
-							    pint->GetMax()) {
-								std::ostringstream oss;
-								oss << pint->GetMin();
-								oss << "..";
-								oss << pint->GetMax();
-								propvalues += oss.str();
-							}
-						}
-						for (Bitu k = 0; k < pv.size(); k++) {
-							if (pv[k].ToString() == "%u") {
-								propvalues += MSG_Get(
-								        "PROGRAM_CONFIG_HLP_POSINT");
-							} else {
-								propvalues += pv[k].ToString();
-							}
-							if ((k + 1) < pv.size()) {
-								propvalues += ", ";
-							}
-						}
-
-						WriteOut(
-						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
-						        p->propname.c_str(),
-						        sec->GetName(),
-						        p->GetHelp(),
-						        propvalues.c_str(),
-						        p->GetDefaultValue()
-						                .ToString()
-						                .c_str(),
-						        p->GetValue().ToString().c_str());
-						// print 'changability'
-						if (p->GetChange() ==
-						    Property::Changeable::OnlyAtStart) {
-							WriteOut(MSG_Get(
-							        "PROGRAM_CONFIG_HLP_NOCHANGE"));
-						}
-						return;
-					}
-				}
-				break;
-			}
-			return;
-		}
 		case P_AUTOEXEC_CLEAR: {
 			Section_line* sec = dynamic_cast<Section_line*>(
 			        control->GetSection(std::string("autoexec")));
@@ -637,6 +728,7 @@ void CONFIG::Run(void)
 			sec->data.clear();
 			break;
 		}
+
 		case P_AUTOEXEC_ADD: {
 			if (pvars.size() == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
@@ -649,32 +741,41 @@ void CONFIG::Run(void)
 				return;
 			}
 			for (const auto& pvar : pvars) {
-				std::string line_utf8 = {};
-				dos_to_utf8(pvar, line_utf8);
+				const auto line_utf8 = dos_to_utf8(pvar,
+				                                   DosStringConvertMode::WithControlCodes);
 				sec->HandleInputline(line_utf8);
 			}
 			break;
 		}
+
 		case P_AUTOEXEC_TYPE: {
 			Section_line* sec = dynamic_cast<Section_line*>(
 			        control->GetSection(std::string("autoexec")));
+
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			std::string line_dos = {};
-			utf8_to_dos(sec->data, line_dos, UnicodeFallback::Box);
-			WriteOut("\n%s", line_dos.c_str());
+
+			const auto line_dos = utf8_to_dos(sec->data,
+			                                  DosStringConvertMode::WithControlCodes,
+			                                  UnicodeFallback::Box);
+
+			MoreOutputStrings output(*this);
+			output.AddString("\n%s\n\n", line_dos.c_str());
+			output.Display();
 			break;
 		}
+
 		case P_REC_AVI_START: CAPTURE_StartVideoCapture(); break;
 		case P_REC_AVI_STOP: CAPTURE_StopVideoCapture(); break;
 		case P_START_MAPPER:
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
 			MAPPER_Run(false);
 			break;
+
 		case P_GETPROP: {
 			// "section property"
 			// "property"
@@ -684,13 +785,16 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
 				return;
 			}
+
 			std::string::size_type spcpos = pvars[0].find_first_of(' ');
+
 			// split on the ' '
 			if (spcpos != std::string::npos) {
 				pvars.insert(pvars.begin() + 1,
 				             pvars[0].substr(spcpos + 1));
 				pvars[0].erase(spcpos);
 			}
+
 			switch (pvars.size()) {
 			case 1: {
 				// property/section only
@@ -698,16 +802,15 @@ void CONFIG::Run(void)
 				Section* sec = control->GetSection(pvars[0]);
 				if (sec) {
 					// list properties in section
-					Bitu i = 0;
+					auto i = 0;
 					Section_prop* psec =
 					        dynamic_cast<Section_prop*>(sec);
+
 					if (psec == nullptr) {
 						// autoexec section
 						Section_line* pline =
 						        dynamic_cast<Section_line*>(sec);
-						if (pline == nullptr) {
-							E_Exit("Section dynamic cast failed.");
-						}
+						assert(pline);
 
 						WriteOut("%s", pline->data.c_str());
 						break;
@@ -718,11 +821,14 @@ void CONFIG::Run(void)
 						if (p == nullptr) {
 							break;
 						}
-						WriteOut(
-						        "%s=%s\n",
-						        p->propname.c_str(),
-						        p->GetValue().ToString().c_str());
+						const auto val_dos = utf8_to_dos(p->GetValue().ToString(),
+						                                 DosStringConvertMode::NoSpecialCharacters,
+						                                 UnicodeFallback::Simple);
+						WriteOut("%s=%s\n",
+						         p->propname.c_str(),
+						         val_dos.c_str());
 					}
+
 				} else {
 					// no: maybe it's a property?
 					sec = control->GetSectionFromProperty(
@@ -733,13 +839,17 @@ void CONFIG::Run(void)
 						return;
 					}
 					// it's a property name
-					std::string val = sec->GetPropValue(
-					        pvars[0].c_str());
-					WriteOut("%s", val.c_str());
-					first_shell->SetEnv("CONFIG", val.c_str());
+					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0].c_str()),
+					                                 DosStringConvertMode::NoSpecialCharacters,
+					                                 UnicodeFallback::Simple);
+					WriteOut("%s", val_dos.c_str());
+					DOS_PSP(psp->GetParent())
+					        .SetEnvironmentValue("CONFIG",
+					                             val_dos.c_str());
 				}
 				break;
 			}
+
 			case 2: {
 				// section + property
 				const char* sec_name  = pvars[0].c_str();
@@ -750,15 +860,19 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				const std::string val = sec->GetPropValue(prop_name);
-				if (val == NO_SUCH_PROPERTY) {
+				const std::string val_utf8 = sec->GetPropValue(prop_name);
+				if (val_utf8 == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
 					         prop_name,
 					         sec_name);
 					return;
 				}
-				WriteOut("%s\n", val.c_str());
-				first_shell->SetEnv("CONFIG", val.c_str());
+				const auto val_dos = utf8_to_dos(val_utf8,
+				                                 DosStringConvertMode::NoSpecialCharacters,
+				                                 UnicodeFallback::Simple);
+				WriteOut("%s\n", val_dos.c_str());
+				DOS_PSP(psp->GetParent())
+				        .SetEnvironmentValue("CONFIG", val_dos.c_str());
 				break;
 			}
 			default:
@@ -767,6 +881,7 @@ void CONFIG::Run(void)
 			}
 			return;
 		}
+
 		case P_SETPROP: {
 			if (pvars.size() == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
@@ -778,54 +893,86 @@ void CONFIG::Run(void)
 			if (cmd->GetStringRemain(rest)) {
 				pvars.push_back(rest);
 			}
-			const char* result = SetProp(pvars);
+
+			const char* result = control->SetProp(pvars);
+
 			if (strlen(result)) {
 				WriteOut(result);
+
 			} else {
-				Section* tsec = control->GetSection(pvars[0]);
+				auto* tsec = dynamic_cast<Section_prop *>(control->GetSection(pvars[0]));
+				if (!tsec) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+					return;
+				}
+
+				const auto* property = tsec->Get_prop(pvars[1]);
+
+				if (!property) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
+					return;
+				}
+
+				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+					return;
+				}
+
 				// Input has been parsed (pvar[0]=section,
 				// [1]=property, [2]=value) now execute
 				std::string value(pvars[2]);
+
 				// Due to parsing there can be a = at the start
 				// of value.
 				while (value.size() && (value.at(0) == ' ' ||
 				                        value.at(0) == '=')) {
 					value.erase(0, 1);
 				}
-				for (Bitu i = 3; i < pvars.size(); i++) {
+
+				for (size_t i = 3; i < pvars.size(); ++i) {
 					value += (std::string(" ") + pvars[i]);
 				}
+
 				if (value.empty()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 					return;
 				}
+
 				std::string inputline = pvars[1] + "=" + value;
+
 				tsec->ExecuteDestroy(false);
+
+				const auto line_utf8 = dos_to_utf8(inputline,
+					                           DosStringConvertMode::NoSpecialCharacters);
+
 				bool change_success = tsec->HandleInputline(
-				        inputline.c_str());
+				        line_utf8.c_str());
 
 				if (!change_success) {
-					auto val = value;
-					trim(val);
+					trim(value);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         val.c_str(),
+					         value.c_str(),
 					         pvars[1].c_str());
 				}
+
 				tsec->ExecuteInit(false);
 			}
 			return;
 		}
+
 		case P_WRITELANG:
 		case P_WRITELANG2:
 			// In secure mode don't allow a new languagefile to be
 			// created Who knows which kind of file we would overwrite.
-			if (securemode_check()) {
+			if (CheckSecureMode()) {
 				return;
 			}
+
 			if (pvars.size() < 1) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
+
 			if (!MSG_Write(pvars[0].c_str())) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),
 				         pvars[0].c_str());
@@ -839,8 +986,9 @@ void CONFIG::Run(void)
 			WriteOut(MSG_Get("PROGRAM_CONFIG_SECURE_ON"));
 			return;
 
-		default: E_Exit("bug"); break;
+		default: assert(false); break;
 		}
+
 		first = false;
 	}
 }
@@ -879,83 +1027,98 @@ void PROGRAMS_Init(Section* sec)
 
 	// Help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
-	        "Performs configuration management and other miscellaneous actions.\n"
+	        "Perform configuration management and other miscellaneous actions.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]config[reset] [color=white]COMMAND[reset] [color=cyan][PARAMETERS][reset]\n"
+	        "  [color=light-green]config[reset] [color=white]COMMAND[reset] [color=light-cyan][PARAMETERS][reset]\n"
 	        "\n"
 	        "Where [color=white]COMMAND[reset] is one of:\n"
 	        "  -writeconf\n"
-	        "  -wc               Writes the config to `dosbox.conf` in the current working\n"
-	        "                    directory.\n"
+	        "  -wc               write the current configuration to the local `dosbox.conf`\n"
+	        "                    config file in the current working directory\n"
 	        "\n"
 	        "  -writeconf [color=white]PATH[reset]\n"
-	        "  -wc [color=white]PATH          [reset]If [color=white]PATH[reset] is a filename, writes the config to that name\n"
-	        "                    in the current working directory, otherwise to the\n"
-	        "                    specified absolute or relative path.\n"
+	        "  -wc [color=white]PATH          [reset]if [color=white]PATH[reset] is a filename, write the current configuration to\n"
+	        "                    that file in the current working directory, otherwise to the\n"
+	        "                    specified absolute or relative path\n"
 	        "\n"
-	        "  -wcd              Writes the config to the global `dosbox-staging.conf`\n"
-	        "                    file in the configuration directory.\n"
+	        "  -wcd              write the current configuration to the primary (default)\n"
+	        "                    `dosbox-staging.conf` config file in the configuration\n"
+	        "                    directory\n"
 	        "\n"
 	        "  -writelang [color=white]FILENAME[reset]\n"
-	        "  -wl [color=white]FILENAME      [reset]Writes the current language strings to [color=white]FILENAME [reset]in the\n"
-	        "                    current working directory.\n"
+	        "  -wl [color=white]FILENAME      [reset]write the current language strings to [color=white]FILENAME [reset]in the\n"
+	        "                    current working directory\n"
 	        "\n"
-	        "  -r [color=cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]\n"
-	        "                    Restarts DOSBox with the optionally supplied config\n"
-	        "                    properties.\n"
+	        "  -r [color=light-cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]\n"
+	        "                    restart DOSBox with the optionally supplied config\n"
+	        "                    properties\n"
 	        "\n"
-	        "  -l                Shows the currently loaded config files and command line\n"
-	        "                    arguments provided at startup.\n"
+	        "  -l                show the currently loaded config files and command line\n"
+	        "                    arguments provided at startup\n"
 	        "\n"
 	        "  -help [color=white]SECTION[reset]\n"
 	        "  -h    [color=white]SECTION[reset]\n"
-	        "  -?    [color=white]SECTION     [reset]Lists the names of all properties in a config section.\n"
+	        "  -?    [color=white]SECTION     [reset]list the names of all properties in a config section\n"
 	        "\n"
-	        "  -help [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "  -h    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "  -?    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "                    Shows the description and the current value of a config\n"
-	        "                    property.\n"
+	        "  -help [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -h    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "                    show the description and the current value of a config\n"
+	        "                    property\n"
+			"\n"
+	        "  -help sections\n"
+	        "  -h    sections\n"
+	        "  -?    sections    [reset]list the names of all config sections\n"
 	        "\n"
-	        "  -axclear          Clears the [autoexec] section.\n"
-	        "  -axadd [color=white]LINE[reset]       Appends a line to the end of the [autoexec] section.\n"
-	        "  -axtype           Shows the contents of the [autoexec] section.\n"
-	        "  -securemode       Switches to secure mode.\n"
-	        "  -avistart         Starts AVI recording.\n"
-	        "  -avistop          Stops AVI recording.\n"
-	        "  -startmapper      Starts the keymapper.\n"
+	        "  -axclear          clear the [autoexec] section\n"
+	        "  -axadd [color=white]LINE[reset]       append a line to the end of the [autoexec] section\n"
+	        "  -axtype           show the contents of the [autoexec] section\n"
+	        "  -securemode       switch to secure mode\n"
+	        "  -avistart         start AVI recording\n"
+	        "  -avistop          stop AVI recording\n"
+	        "  -startmapper      start the keymapper\n"
 	        "\n"
-	        "  -get [color=white]SECTION      [reset]Shows all properties and their values in a config section.\n"
-	        "  -get [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "                    Shows the value of a single config property.\n"
+	        "  -get [color=white]SECTION      [reset]show all properties and their values in a config section\n"
+	        "  -get [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "                    show the value of a single config property\n"
 	        "\n"
-	        "  -set [color=cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
-	        "                    Sets the value of a config property.");
+	        "  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
+	        "                    set the value of a config property"
+	        "\n\n"
+	        "  -securemode       enable secure mode");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
-	        "[color=white]Purpose of property [color=green]'%s'[color=white] "
-			"(contained in section [color=cyan][%s][color=white]):[reset]\n\n%s\n\n"
-	        "[color=white]Possible values:[reset]  %s\n"
-	        "[color=white]Default value:[reset]    %s\n"
+	        "[color=white]Description of the [color=light-green]'%s'[color=white] "
+	        "setting in the [color=light-cyan][%s][color=white] section:[reset]\n\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES",
+	        "[color=white]Possible values:[reset]  %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE",
+	        "[color=white]Default value:[reset]    %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE",
 	        "[color=white]Current value:[reset]    %s\n");
 
-	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
-	        "[color=white]Purpose of section [%s]:[reset]\n"
-			"%s\n[color=white]Current value:[reset]\n%s\n");
+	MSG_Add("PROGRAM_CONFIG_HLP_AUTOEXEC",
+	        "[color=white]Description of the "
+	        "[color=light-cyan][autoexec][color=white] section:[reset]\n\n"
+	        "%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
-	        "This property cannot be changed at runtime.\n");
+	        "[color=yellow]This setting cannot be changed at runtime.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
-	        "[color=white]Section [color=cyan][%s] [color=white]contains the following properties:[reset]\n");
+	        "[color=white]List of settings in the "
+	        "[color=light-cyan][%s][color=white] section:[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
-	        "[color=white]DOSBox configuration contains the following sections:[reset]\n");
+	        "[color=white]List of configuration sections:[reset]\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Switched to secure mode.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Secure mode enabled.\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
@@ -963,11 +1126,11 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
 
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for property '%s'.\n");
+	        "'%s' is not a valid value for setting '%s'.\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
-	        "Usage: [color=green]config[reset] -get "
-	        "[color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
+	        "Usage: [color=light-green]config[reset] -get "
+	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
 	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");
@@ -980,4 +1143,11 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n");
 
 	MSG_Add("CONJUNCTION_AND", "and");
+
+	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	        "Setting '%s' is not changeable at runtime.\n");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
+	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
+	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
 }

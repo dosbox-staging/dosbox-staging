@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,8 +18,6 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-
 
 #include "dosbox.h"
 
@@ -370,7 +368,7 @@ void FinishSetMode_ET4K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 
 	// Select SVGA clock to get close to 60Hz (not particularly clean implementation)
 	if (modeData->modeNo > 0x13) {
-		Bits target = static_cast<Bits>(modeData->vtotal * 8 * modeData->htotal * 60);
+		Bits target = modeData->vtotal * 8 * modeData->htotal * 60;
 		Bitu best = 1;
 		int dist = 100000000;
 		for (Bitu i = 0; i < 16; i++) {
@@ -738,7 +736,7 @@ void FinishSetMode_ET3K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 
 	// Select SVGA clock to get close to 60Hz (not particularly clean implementation)
 	if (modeData->modeNo > 0x13) {
-		Bits target = static_cast<Bits>(modeData->vtotal * 8 * modeData->htotal * 60);
+		Bits target = modeData->vtotal * 8 * modeData->htotal * 60;
 		Bitu best = 1;
 		int dist = 100000000;
 		for (Bitu i = 0; i < 8; i++) {

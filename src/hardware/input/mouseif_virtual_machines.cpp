@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -74,6 +74,29 @@ constexpr float acceleration_multiplier = 0.02f;
 static MouseSpeedCalculator speed_xy(acceleration_multiplier *mouse_predefined.acceleration_vmm);
 
 // ***************************************************************************
+// Internal helper routines
+// ***************************************************************************
+
+static void maybe_check_remove_mappings()
+{
+	if (!mouse_shared.vmm_wants_pointer) {
+		return;
+	}
+
+	bool needs_warning = false;
+	for (const auto& interface : mouse_interfaces) {
+		if (interface->IsMapped()) {
+			needs_warning = true;
+			interface->ConfigUnMap();
+		}
+	}
+
+	if (needs_warning) {
+		LOG_WARNING("MOUSE (VMM): Mappings removed due to incompatible VirtualBox driver");
+	}
+}
+
+// ***************************************************************************
 // Requests from Virtual Machine Manager guest side drivers
 // ***************************************************************************
 
@@ -96,21 +119,21 @@ bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol)
 
 void MOUSEVMM_Activate(const MouseVmmProtocol protocol)
 {
-	bool is_activating    = false;
-	const bool was_active = mouse_shared.active_vmm;
+	bool is_activating = false;
 
 	if (protocol == MouseVmmProtocol::VirtualBox && !virtualbox.is_active) {
 		virtualbox.is_active = true;
 		is_activating        = true;
 		LOG_MSG("MOUSE (PS/2): VirtualBox protocol enabled");
 		mouse_shared.vmm_wants_pointer = virtualbox.wants_pointer;
+		maybe_check_remove_mappings();
 	} else if (protocol == MouseVmmProtocol::VmWare && !vmware.is_active) {
 		vmware.is_active = true;
 		is_activating    = true;
 		LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
 	}
 
-	if (is_activating && !was_active) {
+	if (is_activating) {
 		mouse_shared.active_vmm = true;
 		MOUSEPS2_UpdateButtonSquish();
 		MOUSE_UpdateGFX();
@@ -181,6 +204,7 @@ void MOUSEVMM_SetPointerVisible_VirtualBox(const bool is_visible)
 		virtualbox.wants_pointer = is_visible;
 		if (virtualbox.is_active) {
 			mouse_shared.vmm_wants_pointer = is_visible;
+			maybe_check_remove_mappings();
 			MOUSE_UpdateGFX();
 		}
 	}
@@ -268,7 +292,7 @@ void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 
 	// Filter out unneeded events (like sub-pixel mouse movements,
 	// which won't change guest side mouse state)
-	if (GCC_UNLIKELY(old_scaled_x == scaled_x && old_scaled_y == scaled_y)) {
+	if (old_scaled_x == scaled_x && old_scaled_y == scaled_y) {
 		return;
 	}
 
@@ -290,7 +314,7 @@ void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 	vmware.buttons.right  = static_cast<bool>(buttons_12S.right);
 	vmware.buttons.middle = static_cast<bool>(buttons_12S.middle);
 
-	if (GCC_UNLIKELY(old_buttons._data == vmware.buttons._data)) {
+	if (old_buttons._data == vmware.buttons._data) {
 		return;
 	}
 
@@ -308,7 +332,7 @@ void MOUSEVMM_NotifyWheel(const int16_t w_rel)
 	const auto new_counter_w = vmware.counter_w + w_rel;
 	vmware.counter_w = clamp_to_int8(static_cast<int32_t>(new_counter_w));
 
-	if (GCC_UNLIKELY(old_counter_w == vmware.counter_w)) {
+	if (old_counter_w == vmware.counter_w) {
 		return;
 	}
 

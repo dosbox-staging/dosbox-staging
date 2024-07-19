@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -83,7 +83,7 @@ public:
 	// Reserves the channel for the owner. If a subsequent reservation is
 	// made then the previously held reservation callback is run to
 	// cleanup/remove that reserver (see the EvictReserver call below).
-	void ReserveFor(const std::string_view new_owner,
+	void ReserveFor(const std::string& new_owner,
 	                const DMA_ReservationCallback new_cb);
 
 private:
@@ -93,7 +93,7 @@ private:
 	                   uint8_t* const buffer);
 
 	DMA_ReservationCallback reservation_callback = {};
-	std::string_view reservation_owner           = {};
+	std::string reservation_owner                = {};
 };
 
 class DmaController {

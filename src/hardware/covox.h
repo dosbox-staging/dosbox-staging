@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,13 +21,14 @@
 
 #include "dosbox.h"
 
+#include "channel_names.h"
 #include "inout.h"
 #include "lpt_dac.h"
 #include "mixer.h"
 
 class Covox final : public LptDac {
 public:
-	Covox() : LptDac("COVOX", use_mixer_rate) {}
+	Covox() : LptDac(ChannelName::CovoxDac, UseMixerRate) {}
 	void BindToPort(const io_port_t lpt_port) final;
 	void ConfigureFilters(const FilterState state) final;
 

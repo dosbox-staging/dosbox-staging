@@ -1,98 +1,107 @@
 #
-# Fully supported code pages (92 code pages):
+# Note: when adding new code pages, avoid conflicts with currently supported
+# Microsoft code pages, the list can be found here:
+# - https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 #
-# 113   - Yugoslavian, Latin
-# 437   - United States
-# 667   - Polish, Mazovia encoding
-# 668   - Polish, 852 compatible
-# 737   - Greek-2
-# 770   - Baltic
-# 771   - Lithuanian and Russian, Cyrillic, KBL encoding
-# 772   - duplicate of 1119
-# 773   - Latin-7 (Baltic, old standard)
-# 774   - duplicate of 1118
-# 775   - Latin-7 (Baltic)
-# 777   - Lithuanian, Accented (old)
-# 778   - Lithuanian, Accented
-# 790   - duplicate of 667
-# 808   - Russian, Cyrillic, with EUR
-# 848   - Ukrainian, Cyrillic, with EUR
-# 849   - Belarusian, Cyrillic, with EUR
-# 850   - Latin-1 (Western European)
-# 851   - Greek, old encoding
-# 852   - Latin-2 (Central European), with EUR
-# 853   - Latin-3 (Turkish, Maltese, and Esperanto)
-# 855   - South Slavic, Cyrillic
-# 856   - Hebrew-2, with EUR
-# 857   - Latin-5, with EUR
-# 858   - Latin-1 (Western European), with EUR
-# 859   - Latin-9 (Western European), with EUR
-# 860   - Portuguese
-# 861   - Icelandic
-# 862   - Hebrew-2
-# 863   - Canadian French
-# 865   - Nordic
-# 866   - Russian, Cyrillic
-# 867   - Czech and Slovak, Kamenicky encoding
-# 869   - Greek, with EUR
-# 872   - South Slavic, Cyrillic, with EUR
-# 895   - duplicate of 867
-# 899   - Armenian, ArmSCII-8A encoding
-# 991   - Polish, Mazovia encoding, with PLN (*)
-# 1116  - Estonian
-# 1117  - Latvian
-# 1118  - Lithuanian, LST 1283 encoding
-# 1119  - Lithuanian and Russian, Cyrillic, LST 1284 encoding
-# 1125  - Ukrainian, Cyrillic
-# 1131  - Belarusian, Cyrillic
-# 3012  - Latvian and Russian, Cyrillic, RusLat encoding
-# 3021  - Bulgarian, Cyrillic, MIK encoding
-# 3845  - Hungarian, CWI-2 encoding
-# 3846  - Turkish
-# 3848  - Brazilian, ABICOMP encoding
-# 30000 - Saami                                    (NOTE: this is neither Windows 1270 code page, nor ISO-IR-197 encoding)
-# 30001 - Celtic, with EUR
-# 30002 - Tajik, Cyrillic, with EUR
-# 30003 - Latin American, with EUR
-# 30004 - Greenlandic, with EUR
-# 30005 - Nigerian, with EUR
-# 30006 - Vietnamese Latin
-# 30007 - Latin, with EUR (**)
-# 30008 - Abkhaz and Ossetian, Cyrillic, with EUR
-# 30009 - Romani, with EUR
-# 30010 - Gagauz and Moldovan, Cyrillic, with EUR
-# 30011 - Russian Southern (Kalmyk, Karachay-Balkar, Ossetian, North Caucasian), Cyrillic, with EUR
-# 30012 - Siberian (Altai, Buryat, Khakas, Tuvan, Yakut, Tungusic, Paleo-Siberian), Cyrillic, with EUR
-# 30013 - Turkic (Bashkir, Chuvash, Tatar), Cyrillic, with EUR
-# 30014 - Finno-ugric (Mari, Udmurt), Cyrillic, with EUR
-# 30015 - Khanty, Cyrillic, with EUR
-# 30016 - Mansi, Cyrillic, with EUR
-# 30017 - Russian Northwestern (Cyrillic Nenets, Latin Karelian, Latin Veps), with EUR
-# 30018 - Russian Cyrillic and Latin Tatar, with EUR
-# 30019 - Russian Cyrillic and Latin Chechen, with EUR (*)
-# 30020 - Low Saxon and Frisian, with EUR
-# 30021 - Oceania, with EUR
-# 30022 - Canadian First Nations, with EUR
-# 30023 - Southern Africa, with EUR
-# 30024 - Northern and Eastern Africa, with EUR
-# 30025 - Western Africa, with EUR (*)
-# 30026 - Central Africa, with EUR
-# 30027 - Beninese, with EUR
-# 30028 - Nigerien, with EUR
-# 30029 - Mexican, with EUR
-# 30030 - Mexican-2, with EUR
-# 30031 - Latin-4 (Northern European), with EUR    (NOTE: this is not an ISO 8859-4 encoding)
-# 30032 - Latin-6, with EUR                        (NOTE: it seems there is no keyboard layout for this one)
-# 30033 - Crimean Tatar, with UAH
-# 30034 - Cherokee
-# 30039 - Ukrainian, Cyrillic, with UAH
-# 30040 - Russian, Cyrillic, with UAH
-# 58152 - Kazakh, Cyrillic, with EUR               (NOTE: this is neither Windows 1251 code page, nor KZ-1048 encoding)
-# 58210 - Azeri and Russian, Cyrillic
-# 58335 - Kashubian and Polish, Mazovia based, with PLN (*)
-# 59234 - Tatar, Cyrillic
-# 62306 - Uzbek, Cyrillic
-# 60853 - Georgian, with capital letters
+#
+# ID    - description                                            [ID usage originator]
+#
+#
+# Fully supported code pages (93 code pages):
+#
+# 113   - Yugoslavian, Latin                                     [AST Premium Exec DOS]
+# 437   - United States                                          [IBM, Microsoft]
+# 667   - Polish, Mazovia encoding                               [PhysTechSoft]
+# 668   - Polish, 852 compatible                                 [PhysTechSoft]
+# 737   - Greek-2                                                [IBM, Microsoft]
+# 770   - Baltic                                                 [Lika tool]
+# 771   - Lithuanian and Russian, Cyrillic, KBL encoding         [Lika tool]
+# 772   - duplicate of 1119                                      [Lika tool]
+# 773   - Latin-7 (Baltic, old standard)                         [Lika tool]
+# 774   - duplicate of 1118                                      [Lika tool]
+# 775   - Latin-7 (Baltic)                                       [Lika tool, IBM, Microsoft]
+# 777   - Lithuanian, Accented (old)                             [Lika tool]
+# 778   - Lithuanian, Accented, LST 1590-2 encoding              [Lika tool]
+# 790   - duplicate of 667                                       [???]
+# 808   - Russian, Cyrillic, with EUR                            [IBM]
+# 848   - Ukrainian, Cyrillic, with EUR                          [IBM]
+# 849   - Belarusian, Cyrillic, with EUR                         [IBM]
+# 850   - Latin-1 (Western European)                             [IBM, Microsoft]
+# 851   - Greek, old encoding                                    [IBM, Microsoft]
+# 852   - Latin-2 (Central European), with EUR                   [IBM, Microsoft; FreeDOS adds EUR sign]
+# 853   - Latin-3 (Turkish, Maltese, and Esperanto)              [IBM, Microsoft; FreeDOS adds more characters]
+# 855   - South Slavic, Cyrillic                                 [IBM, Microsoft]
+# 856   - Hebrew-2, with EUR                                     [IBM, Microsoft; FreeDOS adds EUR sign]
+# 857   - Latin-5 (Turkish), with EUR                            [IBM, Microsoft; FreeDOS adds EUR sign]
+# 858   - Latin-1 (Western European), with EUR                   [IBM, Microsoft]
+# 859   - Latin-9 (Western European), with EUR                   [IBM, Microsoft]
+# 860   - Portuguese                                             [IBM, Microsoft]
+# 861   - Icelandic                                              [IBM, Microsoft]
+# 862   - Hebrew-2                                               [IBM, Microsoft]
+# 863   - Canadian French                                        [IBM, Microsoft]
+# 864   - Arabic                                                 [IBM, Microsoft; IBM and FreeDOS add more characters]
+# 865   - Nordic                                                 [IBM, Microsoft]
+# 866   - Russian, Cyrillic                                      [IBM, Microsoft]
+# 867   - Czech and Slovak, Kamenicky encoding                   [NEC printers]
+# 869   - Greek, with EUR                                        [IBM, Microsoft; FreeDOS adds EUR sign]
+# 872   - South Slavic, Cyrillic, with EUR                       [IBM; FreeDOS adds EUR sign]
+# 895   - duplicate of 867                                       [IBM]
+# 899   - Armenian, ArmSCII-8A encoding                          [???; FreeDOS adds one character]
+# 991   - Polish, Mazovia encoding, with PLN (*)                 [NEC printers; FreeDOS adds PLN sign]
+# 1116  - Estonian                                               [IBM]
+# 1117  - Latvian                                                [IBM]
+# 1118  - Lithuanian, LST 1283 encoding                          [IBM]
+# 1119  - Lithuanian and Russian, Cyrillic, LST 1284 encoding    [IBM]
+# 1125  - Ukrainian, Cyrillic                                    [IBM]
+# 1131  - Belarusian, Cyrillic                                   [IBM]
+# 3012  - Latvian and Russian, Cyrillic, RusLat encoding         [Star printers]
+# 3021  - Bulgarian, Cyrillic, MIK encoding                      [Star printers]
+# 3845  - Hungarian, CWI-2 encoding                              [Star printers]
+# 3846  - Turkish                                                [Star printers]
+# 3848  - Brazilian, ABICOMP encoding                            [Star printers]
+# 30000 - Saami                                                  [FreeDOS]
+# 30001 - Celtic, with EUR                                       [FreeDOS]
+# 30002 - Tajik, Cyrillic, with EUR                              [FreeDOS]
+# 30003 - Latin American, with EUR                               [FreeDOS]
+# 30004 - Greenlandic, with EUR                                  [FreeDOS]
+# 30005 - Nigerian, with EUR                                     [FreeDOS]
+# 30006 - Vietnamese Latin                                       [FreeDOS]
+# 30007 - Latin, with EUR (**)                                   [FreeDOS]
+# 30008 - Abkhaz and Ossetian, Cyrillic, with EUR                [FreeDOS]
+# 30009 - Romani, with EUR                                       [FreeDOS]
+# 30010 - Gagauz and Moldovan, Cyrillic, with EUR                [FreeDOS]
+# 30011 - Russian Southern, Cyrillic, with EUR                   [FreeDOS]
+# 30012 - Siberian, Cyrillic, with EUR                           [FreeDOS]
+# 30013 - Turkic, Cyrillic, with EUR                             [FreeDOS]
+# 30014 - Finno-ugric (Mari, Udmurt), Cyrillic, with EUR         [FreeDOS]
+# 30015 - Khanty, Cyrillic, with EUR                             [FreeDOS]
+# 30016 - Mansi, Cyrillic, with EUR                              [FreeDOS]
+# 30017 - Russian Northwestern, with EUR                         [FreeDOS]
+# 30018 - Russian Cyrillic and Latin Tatar, with EUR             [FreeDOS]
+# 30019 - Russian Cyrillic and Latin Chechen, with EUR (*)       [FreeDOS]
+# 30020 - Low Saxon and Frisian, with EUR                        [FreeDOS]
+# 30021 - Oceania, with EUR                                      [FreeDOS]
+# 30022 - Canadian First Nations, with EUR                       [FreeDOS]
+# 30023 - Southern Africa, with EUR                              [FreeDOS]
+# 30024 - Northern and Eastern Africa, with EUR                  [FreeDOS]
+# 30025 - Western Africa, with EUR (*)                           [FreeDOS]
+# 30026 - Central Africa, with EUR                               [FreeDOS]
+# 30027 - Beninese, with EUR                                     [FreeDOS]
+# 30028 - Nigerien, with EUR                                     [FreeDOS]
+# 30029 - Mexican, with EUR                                      [FreeDOS]
+# 30030 - Mexican-2, with EUR                                    [FreeDOS]
+# 30031 - Latin-4 (Northern European), with EUR                  [FreeDOS]
+# 30032 - Latin-6, with EUR                                      [FreeDOS]
+# 30033 - Crimean Tatar, with UAH                                [FreeDOS]
+# 30034 - Cherokee                                               [FreeDOS]
+# 30039 - Ukrainian, Cyrillic, with UAH                          [FreeDOS]
+# 30040 - Russian, Cyrillic, with UAH                            [FreeDOS]
+# 58152 - Kazakh, Cyrillic, with EUR                             [FreeDOS]
+# 58210 - Azeri and Russian, Cyrillic                            [FreeDOS]
+# 58335 - Kashubian and Polish, Mazovia based, with PLN (*)      [FreeDOS]
+# 59234 - Tatar, Cyrillic                                        [FreeDOS]
+# 62306 - Uzbek, Cyrillic                                        [FreeDOS]
+# 60853 - Georgian, with capital letters                         [FreeDOS]
 #
 # (*) The following symbols had to be worked around as they are missing in Unicode standard:
 # - 30025      : LATIN CAPITAL LETTER D WITH HOOK AND TAIL (only the SMALL one is available)
@@ -103,36 +112,73 @@
 # cannot be decomposed without creating ambiguity, see DECOMPOSITION.TXT
 #
 #
-# Code pages supported by UTF-8 engine, despite not present in bundled CPX files (15 code pages):
+# Code pages supported by UTF-8 engine, despite not present in bundled CPX files (54 code pages):
 #
-# 708   - Arabic
-# 720   - Arabic (Egypt, Iraq, Jordan, Saudi Arabia, Syria)
-# 776   - Lithuanian
-# 874   - Thai, with EUR
-# 1169  - Cyrillic (Azerbaijani, Bashkir, Kazakh, Kyrgyz, Mongolian, Tajik, Tatar, Uzbek)
-# 1250  - Central and Eastern European, with EUR
-# 1251  - Cyrillic, with EUR
-# 1252  - Western European, with EUR
-# 1253  - Greek, with EUR
-# 1254  - Turkish and Western European, with EUR
-# 1255  - Hebrew, with EUR
-# 1256  - Arabic, Persian, Urdu, and partially French, with EUR
-# 1257  - Baltic, with EUR
-# 1258  - Vietnamese, with EUR
-# 1270  - Saami and Finnish Kalo, with EUR
+# 708   - Arabic, ASMO 708 encoding                              [IBM, Microsoft]
+# 720   - Arabic, Transparent ASMO encoding                      [IBM, Microsoft]
+# 776   - Lithuanian                                             [Lika tool]
+# 813   - Greek, old ISO 8859-7 variant                          [IBM]
+# 819   - duplicate of 28591                                     [IBM]
+# 874   - Thai, with EUR                                         [Microsoft]
+# 878   - duplicate of 20866                                     [IBM]
+# 913   - duplicate of 28593                                     [IBM]
+# 914   - duplicate of 28594                                     [IBM]
+# 916   - duplicate of 28598                                     [IBM]
+# 919   - duplicate of 28600                                     [IBM]
+# 920   - duplicate of 28599                                     [IBM]
+# 921   - duplicate of 28603                                     [IBM]
+# 1089  - duplicate of 28596                                     [IBM]
+# 1111  - duplicate of 28592                                     [IBM]
+# 1124  - Ukrainian, Cyrillic, ISO 8859-5 based                  [IBM]
+# 1161  - Thai, with EUR, ISO 8859-11 based                      [IBM]
+# 1162  - duplicate of 874                                       [IBM]
+# 1167  - Cyrillic, KOI8-RU encoding                             [IBM]
+# 1168  - duplicate of 21866                                     [IBM]
+# 1169  - Cyrillic                                               [IBM]
+# 1250  - Central and Eastern European, with EUR                 [Microsoft]
+# 1251  - Cyrillic, with EUR                                     [Microsoft]
+# 1252  - Western European, with EUR                             [Microsoft]
+# 1253  - Greek, with EUR                                        [Microsoft]
+# 1254  - Turkish and Western European, with EUR                 [Microsoft]
+# 1255  - Hebrew, with EUR                                       [Microsoft]
+# 1256  - Arabic, Persian, Urdu, and partially French, with EUR  [Microsoft]
+# 1257  - Baltic, with EUR                                       [Microsoft]
+# 1258  - Vietnamese, with EUR                                   [Microsoft]
+# 1270  - Saami and Finnish Kalo, with EUR                       [Microsoft]
+# 3843  - Polish, Mazovia encoding                               [Star printers]
+# 3847  - Brazilian, ABNT/BRASCII encoding, ISO 8859-1 based     [Star printers]
+# 4909  - Greek, old ISO 8859-7 variant                          [IBM]
+# 5012  - duplicate of 28598                                     [IBM]
+# 9005  - duplicate of 28597                                     [IBM]
+# 9066  - Thai, ISO 8859-11 based                                [IBM]
+# 20866 - Russian, Cyrillic, KOI8-R encoding                     [Microsoft]
+# 21866 - Ukrainian, Cyrillic, KOI8-U encoding                   [Microsoft]
+# 28591 - Western European, ISO 8859-1 encoding                  [Microsoft]
+# 28592 - Central and Eastern European, ISO 8859-2 encoding      [Microsoft]
+# 28593 - South European, ISO 8859-3 encoding                    [Microsoft]
+# 28594 - Baltic, ISO 8859-4 encoding                            [Microsoft]
+# 28595 - Cyrillic, ISO 8859-5 encoding                          [Microsoft]
+# 28596 - Arabic, ISO 8859-6 encoding                            [Microsoft]
+# 28597 - Greek, ISO 8859-7 encoding                             [Microsoft]
+# 28598 - Hebrew, ISO 8859-8 encoding                            [Microsoft]
+# 28599 - Turkish, ISO 8859-9 encoding                           [Microsoft]
+# 28600 - Nordic, ISO 8859-10 encoding                           [Microsoft]
+# 28601 - Thai, ISO 8859-11 encoding                             [Microsoft]
+# 28603 - Baltic, ISO 8859-13 encoding                           [Microsoft]
+# 28604 - Celtic, ISO 8859-14 encoding                           [Microsoft]
+# 28605 - Western European, with EUR, ISO 8859-15 encoding       [Microsoft]
+# 28606 - South-Eastern European, with EUR, ISO 8859-16 encoding [Microsoft]
 #
 #
-# Code pages mostly supported (2 code pages), but with unidentified characters still left (TODO):
+# Code pages mostly supported (1 code page), but with unidentified characters still left (TODO):
 #
-# 864   - Arabic
-#       - 1 character still unidentified (FreeDOS specific code page extension)
-# 59829 - Georgian
+# 59829 - Georgian                                               [FreeDOS]
 #       - 1 character still unidentified
 #
 #
 # Code pages with limited support (1 code page):
 #
-# 60258 - Russian Cyrillic and Latin Azeri
+# 60258 - Russian Cyrillic and Latin Azeri                       [FreeDOS]
 #       - dotted capital I not handled due to engine limitation
 
 # ****************************************************************************
@@ -638,14 +684,30 @@ ALIAS 0x03ce 0x014c #GREEK SMALL LETTER OMEGA WITH TONOS                  -> LAT
 # List of duplicated code pages
 # ****************************************************************************
 
-# FreeDOS CPX files contain several duplicated code pages. List them here in
-# pairs; whenever the first code page is encountered, it the engine will use
-# the second one from the pair.
+# FreeDOS CPX files contain several duplicated code pages, also IBM often did
+# assign different code page than Microsoft for the same encoding.
+# List them here in pairs; whenever the first code page is encountered,
+# the engine will use the second one from the pair.
 
-CODEPAGE 790 DUPLICATES 667  # Polish, Mazovia encoding
-CODEPAGE 895 DUPLICATES 867  # Czech and Slovak, Kamenicky encoding
-CODEPAGE 774 DUPLICATES 1118 # Lithuanian, LST 1283 encoding
-CODEPAGE 772 DUPLICATES 1119 # Russian and Lithuanian, Cyrillic, LST 1284 encoding
+CODEPAGE 772  DUPLICATES 1119  # Russian and Lithuanian, Cyrillic, LST 1284 encoding
+CODEPAGE 774  DUPLICATES 1118  # Lithuanian, LST 1283 encoding
+CODEPAGE 790  DUPLICATES 667   # Polish, Mazovia encoding
+CODEPAGE 819  DUPLICATES 28591 # Western European, ISO 8859-1 encoding
+CODEPAGE 878  DUPLICATES 20866 # Russian, Cyrillic, KOI8-R encoding
+CODEPAGE 895  DUPLICATES 867   # Czech and Slovak, Kamenicky encoding
+CODEPAGE 913  DUPLICATES 28593 # South European, ISO 8859-3 encoding
+CODEPAGE 914  DUPLICATES 28594 # Baltic, ISO 8859-4 encoding
+CODEPAGE 916  DUPLICATES 28598 # Hebrew, ISO 8859-8 encoding
+CODEPAGE 919  DUPLICATES 28600 # Nordic, ISO 8859-10 encoding
+CODEPAGE 920  DUPLICATES 28599 # Turkish, ISO 8859-9 encoding
+CODEPAGE 921  DUPLICATES 28603 # Baltic, ISO 8859-13 encoding
+CODEPAGE 1089 DUPLICATES 28596 # Arabic, ISO 8859-6 encoding
+CODEPAGE 1111 DUPLICATES 28592 # Central and Eastern European, ISO 8859-2 encoding
+CODEPAGE 1162 DUPLICATES 874   # Thai, with EUR
+CODEPAGE 1168 DUPLICATES 21866 # Ukrainian, Cyrillic, KOI8-U encoding
+CODEPAGE 3843 DUPLICATES 667   # Polish, Mazovia encoding
+CODEPAGE 5012 DUPLICATES 28598 # Hebrew, ISO 8859-8 encoding
+CODEPAGE 9005 DUPLICATES 28597 # Greek, ISO 8859-7 encoding
 
 # ****************************************************************************
 # Receipts how to construct code page mappings
@@ -727,7 +789,7 @@ CODEPAGE 668 # Polish, 852 compatible
 0xe4 0x0144        #LATIN SMALL LETTER N WITH ACUTE
 EXTENDS CODEPAGE 437
 
-CODEPAGE 708 # Arabic
+CODEPAGE 708 # Arabic, ASMO 708 encoding
 # reference: https://en.wikipedia.org/wiki/Code_page_708
 EXTENDS FILE mapping-wikipedia.org CP_708.TXT
 
@@ -814,7 +876,7 @@ EXTENDS FILE mapping-wikipedia.org CP_776.TXT
 CODEPAGE 777 # Lithuanian, Accented (old)
 EXTENDS FILE mapping-wikipedia.org CP_777.TXT
 
-CODEPAGE 778 # Lithuanian, Accented
+CODEPAGE 778 # Lithuanian, Accented, LST 1590-2 encoding
 # NOTE: FreeDOS definitions differ a little from official ones
 0xfe 0x25a0        #BLACK SQUARE
 EXTENDS FILE mapping-wikipedia.org CP_778.TXT
@@ -823,6 +885,13 @@ CODEPAGE 808 # Russian, Cyrillic, with EUR
 # reference: https://en.wikipedia.org/wiki/Code_page_866
 0xfd 0x20ac        #EURO SIGN
 EXTENDS CODEPAGE 866
+
+CODEPAGE 813 # Greek, old ISO 8859-7 variant
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-7
+0xa4               #UNDEFINED
+0xa5               #UNDEFINED
+0xaa               #UNDEFINED
+EXTENDS FILE mapping-wikipedia.org CP_28597.TXT
 
 CODEPAGE 848 # Ukrainian, Cyrillic, with EUR
 # reference: https://en.wikipedia.org/wiki/Code_page_866
@@ -863,7 +932,7 @@ CODEPAGE 856 # Hebrew-2, with EUR
 0xad 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_856.TXT
 
-CODEPAGE 857 # Latin-5, with EUR
+CODEPAGE 857 # Latin-5 (Turkish), with EUR
 # FreeDOS specific code page extensions
 0xd5 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_857.TXT
@@ -898,10 +967,10 @@ CODEPAGE 863 # Canadian French
 EXTENDS FILE mapping-unicode.org CP_863.TXT
 
 CODEPAGE 864 # Arabic
-# FreeDOS specific specific code page extensions
+# FreeDOS and IBM specific code page extensions
 0x9b 0xfef9        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW ISOLATED FORM
 0x9c 0xfefa        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW FINAL FORM
-# 0x9f TODO: unidentified character - FreeDOS specific
+0x9f 0xfe73        #ARABIC TAIL FRAGMENT
 0xa6 0xfe87        #ARABIC LETTER ALEF WITH HAMZA BELOW ISOLATED FORM
 0xa7 0xfe88        #ARABIC LETTER ALEF WITH HAMZA BELOW FINAL FORM
 EXTENDS FILE mapping-unicode.org CP_864.TXT
@@ -916,6 +985,8 @@ EXTENDS FILE mapping-unicode.org CP_866.TXT
 
 CODEPAGE 867 # Czech and Slovak, Kamenicky encoding
 # reference: https://en.wikipedia.org/wiki/Kamenick%C3%BD_encoding
+# TODO: this number conflicts with IBM Hebrew code page, see
+#       https://en.wikipedia.org/wiki/Code_page_867
 0x80 0x010c        #LATIN CAPITAL LETTER C WITH CARON
 0x83 0x010f        #LATIN SMALL LETTER D WITH CARON
 0x85 0x010e        #LATIN CAPITAL LETTER D WITH CARON
@@ -960,13 +1031,15 @@ CODEPAGE 872 # South Slavic, Cyrillic, with EUR
 0xcf 0x20ac        #EURO SIGN
 EXTENDS CODEPAGE 855
 
+CODEPAGE 874 # Thai, with EUR
+EXTENDS FILE mapping-unicode.org CP_874.TXT
+
 CODEPAGE 899 # Armenian, ArmSCII-8A encoding
+# TODO: this code page conflicts with math symbols code page, see:
+#       https://en.wikipedia.org/wiki/Code_page_899
 # FreeDOS specific code page extensions
 0xff 0x055b        #ARMENIAN EMPHASIS MARK
 EXTENDS FILE mapping-wikipedia.org CP_899.TXT
-
-CODEPAGE 874 # Thai, with EUR
-EXTENDS FILE mapping-unicode.org CP_874.TXT
 
 CODEPAGE 991 # Polish, Mazovia encoding, with PLN
 0x9b 0xfffd        #replacement for PLN SYMBOL, symbol not available in Unicode
@@ -1041,6 +1114,12 @@ CODEPAGE 1119 # Lithuanian and Russian, Cyrillic, LST 1284 encoding
 0xfd 0x00b2        #SUPERSCRIPT TWO
 EXTENDS CODEPAGE 866
 
+CODEPAGE 1124 # Ukrainian, Cyrillic, ISO 8859-5 based
+# reference: https://en.wikipedia.org/wiki/Code_page_1124
+0xa3 0x0490        #CYRILLIC CAPITAL LETTER GHE WITH UPTURN
+0xf3 0x0491        #CYRILLIC SMALL LETTER GHE WITH UPTURN
+EXTENDS CODEPAGE 28595
+
 CODEPAGE 1125 # Ukrainian, Cyrillic
 # reference: https://en.wikipedia.org/wiki/Code_page_866
 0xf2 0x0490        #CYRILLIC CAPITAL LETTER GHE WITH UPTURN
@@ -1064,6 +1143,34 @@ CODEPAGE 1131 # Belarusian, Cyrillic
 0xfd 0x0491        #CYRILLIC SMALL LETTER GHE WITH UPTURN
 0xfe 0x2219        #BULLET OPERATOR
 EXTENDS CODEPAGE 866
+
+CODEPAGE 1161 # Thai, with EUR, ISO 8859-11 based
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-11
+0xde 0x20ac        #EURO SIGN
+EXTENDS CODEPAGE 9066
+
+CODEPAGE 1167 # Cyrillic (Russian, Ukrainian, Belarusian, Bulgarian), KOI8-RU encoding 
+# reference: https://en.wikipedia.org/wiki/KOI8-RU
+0x93 0x201c        #LEFT DOUBLE QUOTATION MARK
+0x96 0x201d        #RIGHT DOUBLE QUOTATION MARK
+0x97 0x2014        #EM DASH
+0x98 0x2116        #NUMERO SIGN
+0x99 0x2122        #TRADE MARK SIGN
+0x9b 0x00bb        #RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+0x9c 0x00ae        #REGISTERED SIGN
+0x9d 0x00ab        #LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+0x9f 0x00a4        #CURRENCY SIGN
+0xa4 0x0454        #CYRILLIC SMALL LETTER UKRAINIAN IE
+0xa6 0x0456        #CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
+0xa7 0x0457        #CYRILLIC SMALL LETTER YI
+0xad 0x0491        #CYRILLIC SMALL LETTER GHE WITH UPTURN
+0xae 0x045e        #CYRILLIC SMALL LETTER SHORT U
+0xb4 0x0404        #CYRILLIC CAPITAL LETTER UKRAINIAN I
+0xb6 0x0406        #CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I
+0xb7 0x0407        #CYRILLIC CAPITAL LETTER YI
+0xbd 0x0490        #CYRILLIC CAPITAL LETTER GHE WITH UPTURN
+0xbe 0x040e        #CYRILLIC CAPITAL LETTER SHORT U
+EXTENDS CODEPAGE 20866
 
 CODEPAGE 1169 # Cyrillic (Azerbaijani, Bashkir, Kazakh, Kyrgyz, Mongolian, Tajik, Tatar, Uzbek)
 # reference: https://en.wikipedia.org/wiki/Code_page_1169
@@ -1152,10 +1259,127 @@ CODEPAGE 3846 # Turkish
 0xa7 0x011f        #LATIN SMALL LETTER G WITH BREVE
 EXTENDS CODEPAGE 437
 
+CODEPAGE 3847 # Brazilian, ABNT/BRASCII encoding, ISO 8859-1 based
+# reference: https://en.wikipedia.org/wiki/BraSCII
+#            https://pt.wikipedia.org/wiki/BRASCII
+0xd7 0x0152        #LATIN CAPITAL LIGATURE OE
+0xf7 0x0153        #LATIN SMALL LIGATURE OE
+EXTENDS CODEPAGE 28591
+
 CODEPAGE 3848 # Brazilian, ABICOMP encoding
 EXTENDS FILE mapping-wikipedia.org CP_3848.TXT
 
-CODEPAGE 30000 # Saami
+CODEPAGE 4909 # Greek, old ISO 8859-7 variant [IBM]
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-7
+0xa5               #UNDEFINED
+0xaa               #UNDEFINED
+EXTENDS FILE mapping-wikipedia.org CP_28597.TXT
+
+CODEPAGE 9066 # Thai, ISO 8859-11 based
+# IBM also uses number 874 for this, but this conflicts with Microsoft code page 874
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-11
+0xa0 0x0e48        #THAI CHARACTER MAI EK
+0xdb 0x0e49        #THAI CHARACTER MAI THO
+0xdc 0x0e4a        #THAI CHARACTER MAI TRI
+0xdd 0x0e4b        #THAI CHARACTER MAI CHATTAWA
+0xde 0x0e4c        #THAI CHARACTER THANTHAKHAT
+0xfc 0x00a2        #CENT SIGN
+0xfd 0x00ac        #NOT SIGN
+0xfe 0x00a6        #BROKEN VERTICAL BAR
+0xff 0x00a0        #NO-BREAK SPACE
+EXTENDS CODEPAGE 28601
+
+CODEPAGE 20866 #  Russian, Cyrillic, KOI8-R encoding  
+EXTENDS FILE mapping-wikipedia.org CP_20866.TXT
+
+CODEPAGE 21866 # Ukrainian, Cyrillic, KOI8-U encoding   
+# reference: https://en.wikipedia.org/wiki/KOI8-U
+#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+0xa4 0x0454        #CYRILLIC SMALL LETTER UKRAINIAN IE
+0xa6 0x0456        #CYRILLIC SMALL LETTER BYELORUSSIAN-UKRAINIAN I
+0xa7 0x0457        #CYRILLIC SMALL LETTER YI
+0xad 0x0491        #CYRILLIC SMALL LETTER GHE WITH UPTURN
+0xb4 0x0404        #CYRILLIC CAPITAL LETTER UKRAINIAN IE
+0xb6 0x0406        #CYRILLIC CAPITAL LETTER BYELORUSSIAN-UKRAINIAN I
+0xb7 0x0407        #CYRILLIC CAPITAL LETTER YI
+0xbd 0x0490        #CYRILLIC CAPITAL LETTER GHE WITH UPTURN
+EXTENDS CODEPAGE 20866
+
+CODEPAGE 28591 # Western European, ISO 8859-1 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28591.TXT
+
+CODEPAGE 28592 # Central and Eastern European, ISO 8859-2 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28592.TXT
+
+CODEPAGE 28593 # South European, ISO 8859-3 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28593.TXT
+
+CODEPAGE 28594 # Baltic, ISO 8859-4 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28594.TXT
+
+CODEPAGE 28595 # Cyrillic (Russian, Bulgarian, Belarusian, Macedonian, Serbian, partially Ukrainian), ISO 8859-5 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28595.TXT
+
+CODEPAGE 28596 # Arabic, ISO 8859-6 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28596.TXT
+
+CODEPAGE 28597 # Arabic, ISO 8859-7 encoding
+# TODO: Star printers are using code page id 928
+EXTENDS FILE mapping-wikipedia.org CP_28597.TXT
+
+CODEPAGE 28598 # Hebrew, ISO 8859-8 encoding
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-8
+#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+# TODO: consider supporting Israeli Standard SI1311:2002 extended codepage:
+# 0xd9 0x20ac #EURO SIGN
+# 0xda 0x20aa #NEW SHEQEL SIGN
+# 0xdb 0x202d #LEFT-TO-RIGHT OVERRIDE
+# 0xdc 0x202e #RIGHT-TO-LEFT OVERRIDE
+# 0xdd 0x202c #POP DIRECTIONAL FORMATTING
+# 0xfb 0x202a #LEFT-TO-RIGHT EMBEDDING
+# 0xfc 0x202b #RIGHT-TO-LEFT EMBEDDING
+EXTENDS FILE mapping-wikipedia.org CP_28598.TXT
+
+CODEPAGE 28599 # Turkish, ISO 8859-9 encoding
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-9
+#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+0xd0 0x011e        #LATIN CAPITAL LETTER G WITH BREVE
+0xdd 0x0130        #LATIN CAPITAL LETTER I WITH DOT ABOVE
+0xde 0x015e        #LATIN CAPITAL LETTER S WITH CEDILLA
+0xf0 0x011f        #LATIN SMALL LETTER G WITH BREVE
+0xfd 0x0131        #LATIN SMALL LETTER DOTLESS I
+0xfe 0x015f        #LATIN SMALL LETTER S WITH CEDILLA
+EXTENDS CODEPAGE 28591
+
+CODEPAGE 28600 # Nordic, ISO 8859-10 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28600.TXT
+
+CODEPAGE 28601 # Thai, ISO 8859-11 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28601.TXT
+
+CODEPAGE 28603 # Baltic, ISO 8859-13 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28603.TXT
+
+CODEPAGE 28604 # Celtic (Irish, Manx, Scottish, Gaelic, Welsh, Cornish, Breton), ISO 8859-14 encoding  
+EXTENDS FILE mapping-wikipedia.org CP_28604.TXT
+
+CODEPAGE 28605 # Western European, with EUR, ISO 8859-15 encoding  
+# reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-15
+#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+0xa4 0x20ac        #EURO SIGN
+0xa6 0x0160        #LATIN CAPITAL LETTER S WITH CARON
+0xa8 0x0161        #LATIN SMALL LETTER S WITH CARON
+0xb4 0x017d        #LATIN CAPITAL LETTER Z WITH CARON
+0xb8 0x017e        #LATIN SMALL LETTER Z WITH CARON
+0xbc 0x0152        #LATIN CAPITAL LIGATURE OE
+0xbd 0x0153        #LATIN SMALL LIGATURE OE
+0xbe 0x0178        #LATIN CAPITAL LETTER Y WITH DIAERESIS
+EXTENDS CODEPAGE 28591
+
+CODEPAGE 28606 # South-Eastern European, ISO 8859-16 encoding
+EXTENDS FILE mapping-wikipedia.org CP_28606.TXT
+
+CODEPAGE 30000 # Saami [FreeDOS]
 EXTENDS FILE mapping-freedos.org CP_30000.TXT
 
 CODEPAGE 30001 # Celtic, with EUR

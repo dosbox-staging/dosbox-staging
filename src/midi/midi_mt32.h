@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,22 +41,24 @@
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
+// forward declaration
 class LASynthModel;
-using model_and_dir_t = std::pair<const LASynthModel*, std_fs::path>;
+
+using ModelAndDir = std::pair<const LASynthModel*, std_fs::path>;
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
               "libmt32emu >= 2.5.0 required (using " MT32EMU_VERSION ")");
 
+using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
+
 class MidiHandler_mt32 final : public MidiHandler {
 public:
-	using service_t = std::unique_ptr<MT32Emu::Service>;
-
 	MidiHandler_mt32() = default;
 	~MidiHandler_mt32() override;
 	void Close() override;
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "mt32";
 	}
@@ -66,14 +68,14 @@ public:
 		return MidiDeviceType::BuiltIn;
 	}
 
-	MIDI_RC ListAll(Program *caller) override;
-	bool Open(const char *conf) override;
+	MIDI_RC ListAll(Program* caller) override;
+	bool Open(const char* conf) override;
 	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t *sysex, size_t len) override;
+	void PlaySysex(uint8_t* sysex, size_t len) override;
 	void PrintStats();
 
 private:
-	service_t GetService();
+	Mt32ServicePtr GetService();
 	void MixerCallBack(uint16_t len);
 	void ProcessWorkFromFifo();
 
@@ -82,18 +84,19 @@ private:
 	void Render();
 
 	// Managed objects
-	mixer_channel_t channel = nullptr;
+	MixerChannelPtr channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};
 
 	std::mutex service_mutex = {};
-	service_t service = {};
-	std::thread renderer = {};
-	std::optional<model_and_dir_t> model_and_dir = {};
+	Mt32ServicePtr service   = {};
+	std::thread renderer     = {};
+
+	std::optional<ModelAndDir> model_and_dir = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.
-	double last_rendered_ms = 0.0;
+	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;

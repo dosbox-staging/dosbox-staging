@@ -23,13 +23,12 @@
 
 #if C_FPU
 
-#include <math.h>
-#include <float.h>
-#include "cross.h"
-#include "mem.h"
-#include "fpu.h"
 #include "cpu.h"
-
+#include "cross.h"
+#include "fpu.h"
+#include "mem.h"
+#include <cfloat>
+#include <cmath>
 
 static void FPU_FDECSTP(){
 	TOP = (TOP - 1) & 7;

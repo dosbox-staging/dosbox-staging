@@ -1,17 +1,449 @@
+:DOSBOX_HELP
+Składnia: %s [OPCJE]... [ŚCIEŻKA]
+
+ŚCIEŻKA                        Jeśli ŚCIEŻKA jest katalogiem, zostanie zamontowany jako dysk C:.
+                               Jeśli ŚCIEŻKA to obraz dysku (IMA/IMG), zostanie zabootowany.
+                               Jeśli ŚCIEŻKA to obraz CDROM (CUE/ISO), zostanie zamontowany jako dysk D:.
+                               Jeśli ŚCIEŻKA to plik wykonywalny DOS (BAT/COM/EXE), jego katalog
+                               zostanie zamontowany jako dysk C:, a plik zostanie uruchomiony. Gdy
+                               wykonywanie pliku dobiegnie końca, DOSBox Staging zakończy pracę.
+
+Lista dostępnych opcji:
+
+  --conf <plik_konfiguracyjny> Uruchom z ustawieniami z podanego pliku konfiguracyjnego.
+                               Można podać wiele plików konfiguracyjnych. Przykład:
+                               --conf conf1.conf --conf conf2.conf
+
+  --printconf                  Wyświetl lokację głównego pliku konfiguracyjnego.
+
+  --editconf                   Otwórz główny plik konfiguracyjny w edytorze tekstu.
+
+  --eraseconf                  Usuń główny plik konfiguracyjny.
+
+  --noprimaryconf              Nie ładuj i nie twórz głównego pliku konfiguracyjnego.
+
+  --nolocalconf                Nie ładuj lokalnego pliku konfiguracyjnego 'dosbox.conf', jeśli jest
+                               obecny w aktualnym katalogu
+
+  --set <parametr>=<wartość>   Ustaw parametr konfiguracyjny. Można podać wiele ustawień. Przykład:
+                               --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
+
+  --working-dir <ścieżka>      Traktuj <ścieżka> jako katalog roboczy. DOSBox będzie działał tak, jakby
+                               został uruchomiony z tego katalogu.
+
+  --list-countries             Wyświetl obsługiwane kraje wraz z ich kodami, do ustawienia 'country'.
+
+  --list-glshaders             Wyświetl dostępne shadery wraz ze ścieżkami, do ustawienia 'glshader'.
+
+  --fullscreen                 Uruchom na pełnym ekranie.
+
+  --lang <plik_języka>         Uruchom z językiem komunikatów z pliku <plik_języka>.
+
+  --machine <typ>              Emuluj dany typ maszyny. Ma on wpływ na emulowane karty graficzne i
+                               dźwiękowe. Dostępne type: hercules, cga, cga_mono, tandy, pcjr, ega,
+                               svga_s3 (domyślny), svga_et3000, svga_et4000, svga_paradise, vesa_nolfb,
+                               vesa_oldvbe.
+
+  -c <polecenie>               Wykonaj podane polecenie przed uwzględnieniem parametru ŚCIEŻKA.
+                               Można podać wiele poleceń.
+
+  --noautoexec                 Nie wykonuj poleceń z sekcji [autoexec].
+
+  --exit                       Zakończ pracę po wykonaniu poleceń z parametrów '-c <polecenie>' oraz
+                               sekcji [autoexec].
+
+  --startmapper                Uruchom narzędzie mapowania klawiszy.
+
+  --erasemapper                Usuń plik z mapowaniem klawiszy.
+
+  --securemode                 Włącz tryb bezpieczny poprzez zablokowanie poleceń MOUNT oraz IMGMOUNT.
+
+  --socket <numer>             Symuluj kabel nullmodem na podanym numerze gniazda.
+
+  -h, -?, --help               Wyświetl pomoc i zakończ pracę.
+
+  -V, --version                Wyświetl wersję programu i zakończ pracę.
+
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Kody krajów; zazwyczaj takie same, jak telefoniczny numer kierunkowy
+--------------------------------------------------------------------
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+Powyższych kodów numerycznych należy użyć w ustawieniu 'country'
+w pliku konfiguracyjnym.
+.
+:COUNTRY_NAME_XXA
+Międzynarodowy (angielski)
+.
+:COUNTRY_NAME_USA
+Stany Zjednoczone
+.
+:COUNTRY_NAME_CAN_FR
+Kanada (francuski)
+.
+:COUNTRY_NAME_XLA
+Ameryka Łacińska
+.
+:COUNTRY_NAME_CAN_EN
+Kanada (angielski)
+.
+:COUNTRY_NAME_RUS
+Rosja
+.
+:COUNTRY_NAME_EGY
+Egipt
+.
+:COUNTRY_NAME_ZAF
+Afryka Południowa
+.
+:COUNTRY_NAME_GRC
+Grecja
+.
+:COUNTRY_NAME_NLD
+Holandia
+.
+:COUNTRY_NAME_BEL
+Belgia
+.
+:COUNTRY_NAME_FRA
+Francja
+.
+:COUNTRY_NAME_ESP
+Hiszpania
+.
+:COUNTRY_NAME_HUN
+Węgry
+.
+:COUNTRY_NAME_YUG
+Jugosławia
+.
+:COUNTRY_NAME_ITA
+Włochy
+.
+:COUNTRY_NAME_ROU
+Rumunia
+.
+:COUNTRY_NAME_CHE
+Szwajcaria
+.
+:COUNTRY_NAME_CZE
+Czechy
+.
+:COUNTRY_NAME_AUT
+Austria
+.
+:COUNTRY_NAME_GBR
+Wielka Brytania
+.
+:COUNTRY_NAME_DNK
+Dania
+.
+:COUNTRY_NAME_SWE
+Szwecja
+.
+:COUNTRY_NAME_NOR
+Norwegia
+.
+:COUNTRY_NAME_POL
+Polska
+.
+:COUNTRY_NAME_DEU
+Niemcy
+.
+:COUNTRY_NAME_MEX
+Meksyk
+.
+:COUNTRY_NAME_ARG
+Argentyna
+.
+:COUNTRY_NAME_BRA
+Brazylia
+.
+:COUNTRY_NAME_CHL
+Chile
+.
+:COUNTRY_NAME_COL
+Kolumbia
+.
+:COUNTRY_NAME_VEN
+Wenezuela
+.
+:COUNTRY_NAME_MYS
+Malezja
+.
+:COUNTRY_NAME_AUS
+Australia
+.
+:COUNTRY_NAME_IDN
+Indonezja
+.
+:COUNTRY_NAME_PHL
+Filipiny
+.
+:COUNTRY_NAME_NZL
+Nowa Zelandia
+.
+:COUNTRY_NAME_SGP
+Singapur
+.
+:COUNTRY_NAME_THA
+Tajlandia
+.
+:COUNTRY_NAME_KAZ
+Kazachstan
+.
+:COUNTRY_NAME_JPN
+Japonia
+.
+:COUNTRY_NAME_KOR
+Korea Południowa
+.
+:COUNTRY_NAME_VNM
+Wietnam
+.
+:COUNTRY_NAME_CHN
+Chiny
+.
+:COUNTRY_NAME_TUR
+Turcja
+.
+:COUNTRY_NAME_IND
+Indie
+.
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Azja (angielski)
+.
+:COUNTRY_NAME_MAR
+Maroko
+.
+:COUNTRY_NAME_DZA
+Algieria
+.
+:COUNTRY_NAME_TUN
+Tunezja
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Wyspy Owcze
+.
+:COUNTRY_NAME_PRT
+Portugalia
+.
+:COUNTRY_NAME_LUX
+Luksemburg
+.
+:COUNTRY_NAME_IRL
+Irlandia
+.
+:COUNTRY_NAME_ISL
+Islandia
+.
+:COUNTRY_NAME_ALB
+Albania
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finlandia
+.
+:COUNTRY_NAME_BGR
+Bułgaria
+.
+:COUNTRY_NAME_LTU
+Litwa
+.
+:COUNTRY_NAME_LVA
+Łotwa
+.
+:COUNTRY_NAME_EST
+Estonia
+.
+:COUNTRY_NAME_ARM
+Armenia
+.
+:COUNTRY_NAME_BLR
+Białoruś
+.
+:COUNTRY_NAME_UKR
+Ukraina
+.
+:COUNTRY_NAME_SRB
+Serbia
+.
+:COUNTRY_NAME_MNE
+Czarnogóra
+.
+:COUNTRY_NAME_HRV
+Chorwacja
+.
+:COUNTRY_NAME_SVN
+Słowenia
+.
+:COUNTRY_NAME_BIH_LAT
+Bośnia i Hercegowina (łaciński)
+.
+:COUNTRY_NAME_BIH_CYR
+Bośnia i Hercegowina (cyrylica)
+.
+:COUNTRY_NAME_MKD
+Macedonia Północna
+.
+:COUNTRY_NAME_SVK
+Słowacja
+.
+:COUNTRY_NAME_GTM
+Gwatemala
+.
+:COUNTRY_NAME_SLV
+Salwador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nikaragua
+.
+:COUNTRY_NAME_CRI
+Kostaryka
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Boliwia
+.
+:COUNTRY_NAME_ECU
+Ekwador
+.
+:COUNTRY_NAME_PRY
+Paragwaj
+.
+:COUNTRY_NAME_URY
+Urugwaj
+.
+:COUNTRY_NAME_XME
+Azja Zachodnia (arabski)
+.
+:COUNTRY_NAME_HKG
+Hongkong
+.
+:COUNTRY_NAME_TWN
+Tajwan
+.
+:COUNTRY_NAME_LBN
+Liban
+.
+:COUNTRY_NAME_JOR
+Jordania
+.
+:COUNTRY_NAME_SYR
+Syria
+.
+:COUNTRY_NAME_KWT
+Kuwejt
+.
+:COUNTRY_NAME_SAU
+Arabia Saudyjska
+.
+:COUNTRY_NAME_YEM
+Jemen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Zjednoczone Emiraty Arabskie
+.
+:COUNTRY_NAME_ISR
+Izrael
+.
+:COUNTRY_NAME_BHR
+Bahrajn
+.
+:COUNTRY_NAME_QAT
+Katar
+.
+:COUNTRY_NAME_MNG
+Mongolia
+.
+:COUNTRY_NAME_TJK
+Tadżykistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Azerbejdżan
+.
+:COUNTRY_NAME_GEO
+Gruzja
+.
+:COUNTRY_NAME_KGZ
+Kirgistan
+.
+:COUNTRY_NAME_UZB
+Uzbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Lista dostępnych shaderów GLSL
+------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Powyższych shaderów należy użyć w ustawieniu 'glshader' w pliku konfiguracyjnym,
+w dokładnie takiej postaci, w jakiej zostały wypisane. Nie ma potrzeby dodawania
+ścieżki lub rozszerzenia .glsl.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Ścieżka '%s' nie istnieje.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Ścieżka '%s' nie zawiera shaderów.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Ścieżka '%s' zawiera:
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Brak sekcji lub parametru: '%s'
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Brak parametru '%s' w sekcji [%s]
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
+
+.
 :TITLEBAR_CYCLES_MS
 cykli/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUZA)
+:TITLEBAR_MUTED
+WYCISZONE
 .
-:TITLEBAR_HINT_NOMOUSE
-tryb bez użycia myszy
+:TITLEBAR_PAUSED
+PAUZA
+.
+:TITLEBAR_HINT_CAPTURED
+mysz przejęta
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-mysz przejęta, %s+F10 aby zwolnić
+mysz przejęta, wciśnij %s+F10 aby zwolnić
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mysz przejęta, %s+F10 lub środkowy przycisk aby zwolnić
+mysz przejęta, wciśnij %s+F10 lub środkowy przycisk aby zwolnić
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
 aby przejąć mysz wciśnij %s+F10
@@ -23,10 +455,10 @@ aby przejąć mysz wciśnij %s+F10 lub środkowy przycisk
 aby przejąć mysz wciśnij %s+F10 lub dowolny przycisk
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY
-płynna integracja myszy, wciśnij %s+F10 aby przejąć
+zintegrowana mysz, wciśnij %s+F10 aby przejąć
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-płynna integracja myszy, wciśnij %s+F10 lub środkowy przycisk aby przejąć
+zintegrowana mysz, wciśnij %s+F10 lub środkowy przycisk aby przejąć
 .
 :CONFIG_FULLSCREEN
 Uruchom na pełnym ekranie (domyślnie wyłączone).
@@ -41,25 +473,18 @@ Rozdzielczość pełnego ekranu: 'original', 'desktop' (domyślne) lub konkretna
 rozdzielczość, np. 1024x768.
 .
 :CONFIG_WINDOWRESOLUTION
-Rozmiar okna w trybie okienkowym:
+Rozmiar okna w trybie okienkowym. Można go zmienić po starcie.
   default:   Wybiera najlepszy na podstawie ustawień systemu.
   small, medium lub large (albo s, m, l):
              Rozmiar względem pulpitu (mały, średni, duży).
-  <custom>:  Skalowanie okna do danej rozdzielczości podanej jako XxY.
-             Przykład: 1024x768.
-.
-:CONFIG_VIEWPORT_RESOLUTION
-Rozmiar obszaru wyświetlania w oknie lub na pełnym ekranie:
-  fit:       Dopasowanie do rozmiaru okna/ekranu (domyślne).
-  <custom>:  Ograniczenie obszaru wyświetlania do podanej rozdzielczości lub
-             procentu rozmiaru pulpitu. W formacie XxY, N%, N.M%.
-             Przykłady: 960x720 lub 50%
+  <custom>:  Skalowanie okna do danej rozdzielczości podanej jako XxY
+             (np. 1024x768).
 .
 :CONFIG_WINDOW_POSITION
 Początkowe współrzędne okna w trybie okienkowym:
-  auto:      Pozwala zdecydować systemowi gospodarza (domyślne).
-  <custom>:  Pozycja w formacie X,Y. Przykład: '250,100'.
-             '0,0' oznacza lewy górny róg ekranu.
+  auto:  Pozwala zdecydować systemowi gospodarza (domyślne).
+  X,Y:   Pozycja w formacie X,Y (np. 250,100), gdzie 0,0 oznacza
+         lewy górny róg ekranu.
 .
 :CONFIG_WINDOW_DECORATIONS
 Czy wyświetlać dekoracje okna w trybie okienkowym (domyślnie włączone).
@@ -68,18 +493,21 @@ Czy wyświetlać dekoracje okna w trybie okienkowym (domyślnie włączone).
 Przezroczystość obrazu. Od 0 (brak, domyślne) do 90 (znaczna przezroczystość).
 .
 :CONFIG_MAX_RESOLUTION
-Nazwa parametru zmieniona na 'viewport_resolution'.
+Przeniesione do sekcji [render], nazwa zmieniona na 'viewport'.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Przeniesione do sekcji [render], nazwa zmieniona na 'viewport'.
 .
 :CONFIG_HOST_RATE
 Częstotliwość odświeżania obrazu w systemie gospodarza:
-  auto:      Używa 'sdi'; 'vrr' tylko na pełnym ekranie, na monitorze
-             o wysokiej częstotliwości odświeżania (domyślne).
-  sdi:       Używa częstotliwości SDI (Serial Device Interface), bez
-             żadnego korygowania wartości.
-  vrr:       Odejmuje 3 Hz od raportowanej wartości (dobra strategia dla
-             monitorów o zmiennej częstotliwości odświeżania).
-  <custom>:  Używa podanej wartości, całkowitej lub dziesiętnej, wartość
-             musi być co najmniej 23.000.
+  auto:  Używa SDI; VRR tylko na pełnym ekranie, na monitorze o wysokiej
+         częstotliwości odświeżania (domyślne).
+  sdi:   Używa częstotliwości SDI (Serial Device Interface), bez żadnego
+         dodatkowego korygowania wartości.
+  vrr:   Odejmuje 3 Hz od raportowanej wartości (dobra strategia dla monitorów
+         o zmiennej częstotliwości odświeżania).
+  N:     Używa podanej wartości, całkowitej lub dziesiętnej, wartość musi być
+         nie mniejsza niż 23.000.
 .
 :CONFIG_VSYNC
 Tryb synchronizacji pionowej obrazu (vsync):
@@ -91,6 +519,12 @@ Tryb synchronizacji pionowej obrazu (vsync):
              jeśli częstotliwość odświeżania w DOSie przekroczy częstotliwość
              odświeżania w systemie gospodarza (np. 70 Hz w DOSie, a 60 Hz
              w systemie).
+  adaptive:  Włącza synchronizację jeśli częstotliwość odświeżania jest
+             większa od częstotliwości odświeżania monitora, ale wyłącza jeśli
+             jest poniżej tej wartości. W systemie macOS Jest to dobra
+             alternatywa dla 'on'
+             Działa tylko w trybach wyświetlania OpenGL, w innym wypadku
+             działa jak 'on'.
   off:       Próbuje wyłączyć synchronizację pionową, co przyspieszy
              wyświetlanie poszczególnych ramek obrazu, ale może spowodować
              smużenie w niektórych grach.
@@ -109,25 +543,36 @@ Tryb wyświetlania ramek obrazu:
   vfr:   Wyświetlanie zmienionych ramek obrazu, ze zmienną częstotliwością.
 Domyślnie 'auto'.
 .
-:CONFIG_OUTPUT
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Wybór wyjścia obrazu (domyślnie 'opengl').
-Ustawienia 'texture' oraz 'opengl' używają interpolacji bilinearnej, podczas
-gdy 'texturenb' oraz 'openglnb' rysują najbliższy sąsiedni piksel.
-Niektóre shadery wymagają interpolacji bilinearnej, przez co jest to
-najbezpieczniejszy wybór.
+Tylko 'opengl' obsługuje shadery. 'texture' jest zalecane jedynie jedynie
+w rzadkich sytuacjach braku lub nieprawidłowo działającego sterownika OpenGL.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Wybór wyjścia obrazu (domyślnie 'texture').
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Używa sterownika OpenGL.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Używa tekstury biblioteki SDL z interpolacją bilinearną.
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Używa tekstury biblioteki SDL, zawsze rysuje najbliższy sąsiedni
+              piksel (bez interpolacji).
 .
 :CONFIG_TEXTURE_RENDERER
 Wybór renderera dla 'output = texture'.
 Wartość 'auto' (domyślnie) wybiera automatycznie.
 .
 :CONFIG_CAPTURE_MOUSE
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
 Czeka przed zamknięciem konsoli po wystąpieniu błędu (domyślnie włączone).
@@ -143,7 +588,8 @@ Wycisza dźwięk, kiedy okno emulatora traci fokus (domyślnie wyłączone).
 Zatrzymanie emulacji, kiedy okno emulatora traci fokus  (domyślnie wyłączone).
 .
 :CONFIG_MAPPERFILE
-Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń.
+Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń (domyślnie
+'mapper-sdl2-XYZ.map', gdzie XYZ to aktualna wersja emulatora).
 Pre-konfigurowane pliki są dostępne w katalogu 'resources/mapperfiles'. Można
 je załadować podając nazwę, np.: 'mapperfile = xbox/xenon2.map'
 Uwaga: Opcja wiersza poleceń '-resetmapper' tylko usuwa domyślny plik.
@@ -155,8 +601,52 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
   block:  Nie zezwala systemowi gospodarza na jego włączenie.
 Domyślnie 'auto'.
 .
+:CONFIG_WINDOW_TITLEBAR
+Rozdzielona spacjami lista wartości, które zostaną wyświetlone na pasku
+tytułowym okna (domyślnie 'program=name dosbox=auto cycles=on mouse=full').
+Jeśli wartość danego parametru nie jest podana, użyta zostanie jego wartość
+domyślna. Możliwe ustawienia:
+  animation=<wartość>:  Ustawienie 'on' (domyślne) włącza animację znacznika
+                        nagrywania. Ustawienie 'off' wyłącza animacje;
+                        przydatne jeśli używana czcionka ekranowa powoduje
+                        powstawanie dziwnych efektów.
+  program=<wartość>:    Wyświetla nazwę aktualnie uruchomionego programu.
+                        <wartość> to jedno z ustawień:
+                          none/off:  Nie wyświetla nazwy programu.
+                          name:      Nazwa wraz z rozszerzeniem (domyślne).
+                          path:      Nazwa, rozszerzenie, ścieżka bezwzględna.
+                          segment:   Nazwa segmentu pamięci.
+                          'Nazwa':   Nazwa podana przez użytkownika, dozwolone
+                                     są również formy "Nazwa", (Nazwa),
+                                     <Nazwa>, lub [Nazwa].
+                        Uwaga: W niektórych przypadkach (np. jeśli uruchomiono
+                        Windows 3.1x w trybie rozszerzonym) rozpoznanie pełnej
+                        nazwy programu lub ścieżki może być niemożliwe;
+                        w takim przypadku używana jest wartość 'segment'.
+  dosbox=<wartość>:     Wyświetla 'DOSBox Staging' na pasku tytułowym.
+                        <wartość> to jedno z ustawień:
+                          always:   Zawsze wyświetla 'DOSBox Staging'.
+                          auto:     Wyświetla tylko jeśli żaden program
+                                    nie jest uruchomiony lub jeśli
+                                    'program=none' (domyślne).
+  version=<wartość>:    Wyświetla wersję DOSBoksa.
+                        <wartość> to jedno z ustawień:
+                          none/off:  Nie wyświetla wersji (domyślne).
+                          simple:    Wyświetla uproszczoną informację.
+                          detailed:  Wyświetla wersję oraz również hasz Git,
+                                     jeśli jest znany.
+  cycles=<wartość>:     Jeśli 'on' (domyślne), wyświetla ustawienie 'cycles'.
+                        Ustawienie 'off' wyłącza wyświetlanie liczby cykli.
+  mouse=<wartość>:      Poziom szczegółowości informacji o myszy:
+                          none/off:  Nie wyświetla żadnych informacji.
+                          short:     Wyświetla tylko informację, że kursor
+                                     myszy został przejęty.
+                          full:      Wyświetla szczegółowe informacje jak
+                                     przejąć lub zwolnić kursor myszy
+                                     (domyślne).
+.
 :CONFIG_LANGUAGE
-Język interfejsu: de, en, es, fr, it, nl, pl lub ru
+Język interfejsu: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', lub 'ru'
 (domyślnie nieustawiony - wybiera język angielski).
 Uwagi:
   - Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'.
@@ -210,11 +700,26 @@ Ustawienie 'auto' (domyślne) wybiera typową dla danej karty graficznej.
 Dozwolone wartości dla poszczególnych kart graficznych opisane przy opcji
 'machine'.
 .
+:CONFIG_VMEM_DELAY
+Emulacja opóźnienia dostępu do pamięci graficznej (domyślnie wyłączone).
+  off:      Wyłącza emulację opóźnienia (domyślne). Ustawienie odpowiednie
+            dla większości gier, nie powoduje utraty wydajności.
+  on:       Włącza emulację opóźnienia (3000 ns). Może zredukować lub
+            całkowicie zlikwidować migotanie obrazu w grach dla kart Hercules,
+            CGA, EGA, lub wczesnych gier dla kart VGA.
+  <value>:  Włącza emulację opóźnienia, o długości podanej w nanosekundach,
+            dozwolone wartości to od 0 do 20000 ns; najbardziej użyteczne
+            wartości to od 500 do 5000 ns.
+Uwaga: Ustawienie powoduje utratę wydajności emulacji, należy używać wyłącznie
+       dla wymagających go gier.
+.
 :CONFIG_DOS_RATE
 Częstotliwość odświeżania emulowanego obrazu:
-  default:  Określone przez tryb graficzny (zalecane, domyślne).
+  default:  Określona przez tryb graficzny (domyślne).
   host:     Taka, jak w systemie gospodarza (patrz parametr 'host_rate').
-  <value>:  Dokładna wartość, pomiędzy 24.000 oraz 1000.000 (Hz).
+  <value>:  Dokładna wartość, pomiędzy 24.000 oraz 1000.000 Hz.
+Uwaga: Zalecane jest ustawienie domyślne, innych wartości należy zawsze używać
+       tylko dla konkretnej gry.
 .
 :CONFIG_VESA_MODES
 Dostępne tryby graficzne VESA 1.2 oraz 2.0:
@@ -230,6 +735,11 @@ Domyślnie 'compatible'.
 .
 :CONFIG_VGA_8DOT_FONT
 Zawsze używa czcionki 8 pikseli dla obrazu VGA (domyślnie wyłączone).
+.
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Dokładna emulacja karty VGA linia po linii (domyślnie wyłączone).
+Potrzebna do działania kilku gier, które bez tego ustawienia zawieszą się
+przy starcie (np., Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 .
 :CONFIG_SPEED_MODS
 Zezwala na zachowania emulatora, które poprawiają wydajność (domyślnie
@@ -267,7 +777,7 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora (domyślnie 'auto'):
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Wiele gier otwiera swoje pliki z uprawnieniami do zapisu; nawet te, których
 nigdy nie modyfikuje. To ustawienie pozwala zabezpieczyć te pliki przed
-zapisem, wciąż pozwalając tym grom na ich otwieranie.
+zapisem, wciąż pozwalając tym grom na ich otwieranie (domyślne).
 Drugie zastosowanie: jeśli używasz systemu plików z funkcją copy-on-write,
 lub sieciowego systemu plików, to ustawienie pozwala pominąć operację zapisu.
 .
@@ -277,15 +787,29 @@ zamiast 'config -set sbtype sb16' wystarczy wykonać 'sbtype sb16', a zamiast
 'config -get sbtype' wystarczy wykonać polecenie 'sbtype'.
 .
 :CONFIG_FRAMESKIP
-Użyj ustawienia 'host_rate' z sekcji [sdl].
+Użyj ustawienia 'host_rate'.
 .
 :CONFIG_ASPECT
-Koryguje proporcje obrazu dla współczesnych płaskich monitorów o kwadratowych
-pikselach, żeby obraz wyglądał tak jak na monitorze CRT o proporcjach 4:3, dla
-których napisano znaczącą większość gier DOSowych (domyślnie włączone).
-Dotyczy tylko trybów graficznych z prostokątnymi pikselami (np. 320x200,
-640x400); nie ma wpływu na tryby graficzne z kwadratowymi pikselami
-(np. 640x480, 800x600).
+Korekcja proporcji obrazu (domyślnie 'auto'):
+  auto, on:            Koryguje proporcje obrazu dla współczesnych płaskich
+                       monitorów o kwadratowych pikselach, żeby obraz wyglądał
+                       tak jak na monitorze CRT o proporcjach 4:3, dla których
+                       napisano znaczącą większość gier DOSowych. Dotyczy
+                       tylko trybów graficznych z prostokątnymi pikselami
+                       (np. 320x200, 640x400); nie ma wpływu na tryby
+                       graficzne z kwadratowymi pikselami (np. 640x480,
+                       800x600).
+  square-pixels, off:  Nie koryguj proporcji, wszystkie tryby graficzne są
+                       wyświetlane kwadratowymi pikselami. Większość gier
+                       pracujących w rozdzielczości 320x200 będzie wyglądała
+                       nienaturalnie, ale niektóre (np. porty gier z Amigi)
+                       wymagają tego ustawienia aby wyglądać zgodnie z
+                       intencjami artystów.
+  stretch:             Rozciąga obraz do obszaru wyświetlania. Razem z
+                       ustawieniem 'viewport' pozwala na wymuszenie dowolnych
+                       proporcji obrazu (np. rozciągnięcie gry do proporcji
+                       16:9) i symulowanie ustawień rozciągnięcia obrazu
+                       znanych z monitorów kineskopowych (CRT).
 .
 :CONFIG_INTEGER_SCALING
 Ogranicza współczynnik poziomego lub pionowego skalowania obrazu do wartości
@@ -301,6 +825,30 @@ obrazu jest mniejsza od wielkości obszaru wyświetlania (jak dla 'off').
   horizontal:  Ogranicza skalowanie obrazu w poziomie do wartości całkowitych.
   off:         Brak ograniczeń we współczynniku skalowania obrazu, obraz
                wypełnia cały obszar wyświetlania.
+.
+:CONFIG_VIEWPORT
+Rozmiar obszaru wyświetlania (maksymalny obszar rysowania):
+  fit:             Dopasowuje obszar wyświetlania do rozmiaru okna lub ekranu
+                   (domyślne). Może utworzyć czarne pasy wokół obszaru
+                   wyświetlania (wypełnienie), jeśli włączone jest
+                   'integer_scaling'.
+  WxH:             Ustawia stały obszar określony w formacie WxH w jednostkach
+                   logicznych (np., 960x720). Rozmiar nie może być większy od
+                   pulpitu. Jeśli zostanie podany większy, niż rozmiar okna,
+                   zostanie przeskalowany żeby się zmieścił.
+  N%:              Podobnie jak 'WxH', ale określa rozmiar jako procent
+                   rozmiaru pulpitu.
+  relative H% V%:  Ustawia obszar wyświetlania o proporcjach 4:3, dopasowany
+                   do rozmiaru okna/ekranu, następnie skaluje poziomo/pionowo
+                   według parametrów H i V (dozwolony zakres od 20% do 300%).
+                   Powstały w ten sposób obszar wyświetlania może rozciągać
+                   się poza okno/ekran, pozwala to na powiększenie części
+                   obrazu, zwłaszcza w połączeniu z ustawieniem 'aspect'.
+Uwagi:
+  - Użycie 'relative' w połączeniu z 'integer_scaling' może prowadzić do
+    zaskakujących (ale poprawnych) rezultatów.
+  - Można uzywać skrótów klawiszowych 'Stretch Axis', 'Inc Stretch', oraz
+    'Dec Stretch' aby dostosować ustawienia 'relative' w czasie rzeczywistym.
 .
 :CONFIG_MONOCHROME_PALETTE
 Barwa obrazu monochromatycznego (domyślnie 'amber'). Działa tylko z systemami
@@ -340,34 +888,41 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 :CONFIG_SCALER
 Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
   - Zamiast normal2x/3x, użyj ustawień 'windowresolution' oraz
-    'viewport_resolution', rozważ użycie 'integer_scaling'.
+    'viewport', rozważ użycie 'integer_scaling'.
   - W innym przypadku spróbuj użyj opcji 'glshader'.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Wybór shadera w trybach OpenGL. Lista dostępnych shaderów adaptacyjnych,
 symulujących obraz monitora kineskopowego (CRT):
-  crt-auto:          Shader symulujący obraz monitora z okresu wypuszczenia
-                     danej gry (domyślnie). Odpowiedni shader jest wybierany
-                     bazując na trybie graficznym i rozdzielczości, bez
-                     uwzględniania opcji 'machine' - zatem nawet podczas
-                     emulowania systemu z kartą VGA, w przypadku uruchomienia
-                     gry korzystającej z trybu EGA wyświetlone zostaną wyraźne
-                     linie skanowania charakterystyczne dla monitora EGA.
-  crt-auto-machine:  Podobne do 'crt-auto', ale wybiera monitor na podstawie
-                     opcji 'machine', np. gry korzystające z trybu CGA lub EGA
-                     zostaną wyświetlone jak na monitorze VGA.
-  crt-auto-arcade:   Symuluje monitor maszyny arcade lub domowy monitor,
-                     typowo mniej ostry od monitora PC, z grubymi liniami
-                     skanowania w trybach graficznych niższej rozdzielczości.
-                     Może być użyteczne np. dla gier przeniesionych do systemu
-                     DOS z komputerów typu Amiga.
+  crt-auto:               Shader symulujący obraz monitora z okresu wydania
+                          danej gry (domyślnie). Odpowiedni shader jest
+                          wybierany bazując na trybie graficznym
+                          i rozdzielczości, bez uwzględniania opcji
+                          'machine' - zatem nawet podczas emulowania systemu
+                          z kartą VGA, w przypadku uruchomienia gry
+                          korzystającej z trybu EGA wyświetlone zostaną
+                          wyraźne linie skanowania charakterystyczne
+                          dla monitora EGA.
+  crt-auto-machine:       Podobne do 'crt-auto', ale wybiera monitor
+                          na podstawie opcji 'machine', np. gry korzystające
+                          z trybu CGA lub EGA zostaną wyświetlone
+                          jak na monitorze VGA.
+  crt-auto-arcade:        Symuluje monitor maszyny arcade lub domowy monitor,
+                          typowo mniej ostry od monitora PC, z grubymi liniami
+                          skanowania w trybach graficznych niższej
+                          rozdzielczości. Może być użyteczne np. dla gier
+                          przeniesionych do systemu DOS z komputerów Amiga.
+  crt-auto-arcade-sharp:  Ostrzejszy wariant shadera arcade, dla lubiących
+                          grube linie skanowania, ale zachowuje ostrość typową
+                          dla monitorów PC.
 Oprócz tego dostępne są opcje 'sharp' oraz 'none' , albo ścieżka względna lub
 bezwzględna do pliku z shaderem GLSL, albo jeden z shaderów z listy
 wyświetlanej opcją wiersza poleceń '--list-glshaders'.
 Rozszerzenie '.glsl' można w każdym przypadku pominąć.
 .
 :CONFIG_COMPOSITE
-Włącza trybu sygnału kompozytowego (domyślnie 'auto').
+Włącza trybu sygnału kompozytowego (tylko dla maszyn 'cga', 'pcjr', oraz
+'tandy', domyślnie 'auto'); 'auto' pozwala zdecydować oprogramowaniu.
 Porada: Dopasuj ustawienia poniżej przy pomocy skrótów klawiszowych, następnie
         odczytaj ustawienia z konsoli tekstowej i wpisz je do pliku
         konfiguracyjnego.
@@ -377,20 +932,20 @@ Epoka sygnału kompozytowego. Wartość 'auto' (domyślne) wybiera 'new' dla PCj
 a 'old' dla maszyn CGA oraz Tandy.
 .
 :CONFIG_HUE
-Odcień. Pozwala na wyregulowanie obrazu tak, żeby np. niebo było niebieskie.
+Odcień (domyślnie 0).
+Pozwala na wyregulowanie kolorów tak, żeby np. niebo było niebieskie.
 .
 :CONFIG_SATURATION
-Nasycenie kolorów, od wyblakłych po żywe.
+Nasycenie kolorów, od wyblakłych po żywe (domyślnie 100).
 .
 :CONFIG_CONTRAST
-Kontrast pomiędzy jasnym a ciemnym obszarem obrazu.
+Kontrast pomiędzy jasnym a ciemnym obszarem obrazu (domyślnie 100).
 .
 :CONFIG_BRIGHTNESS
-Jasność obrazu, od ciemnej do jasnej.
+Jasność obrazu, od ciemnej do jasnej (domyślnie 0).
 .
 :CONFIG_CONVERGENCE
-Zbieżność subpikseli, od obrazu rozmytego po ostry (tylko dla maszyn 'cga'
-oraz 'tandy').
+Zbieżność subpikseli, od obrazu rozmytego po ostry (domyślnie 0).
 .
 :CONFIG_CORE
 Sposób emulacji procesora. Wartość 'auto' (domyślne) przełącza na 'dynamic'
@@ -398,7 +953,8 @@ Sposób emulacji procesora. Wartość 'auto' (domyślne) przełącza na 'dynamic
 .
 :CONFIG_CPUTYPE
 Typ emulowanego procesora. Wartość 'auto' (domyślne) wybiera ten model, który
-da się emulować najszybciej.
+da się emulować najszybciej. Wariant emulujący kolejka prefetch wymaga
+ustawienia 'core' na wartość 'normal'.
 .
 :CONFIG_CYCLES
 Ilość instrukcji, którą DOSBox będzie próbował emulować każdej milisekundy.
@@ -419,16 +975,24 @@ Ilość cykli na milisekundę, która zostanie odjęta po naciśnięciu skrótu
 klawiszowego. Ustawienie mniejsze niż 100 jest traktowane jak wartość w
 procentach (domyślnie 20).
 .
-:CONFIG_VOODOO_MEMSIZE
-Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Vodooo (domyślnie 12).
+:CONFIG_VOODOO
+Włącza emulację karty 3dfx Voodoo (domyślnie włączone).
 .
-:CONFIG_VOODOO_PERF
-Optymalizacje wydajności emulowania karty 3dfx Voodoo:
-   0:  Bez optymalizacji.
-   1:  Renderowanie wielowątkowe (domyślne).
-   2:  Wyłączenie filtrowania bilinearnego.
-   3:  Obydwie optymalizacje (zarówno z punktu 1, jak i 2).
-Uwaga: Emulacja jest wyłącznie programowa, nie używa OpenGL.
+:CONFIG_VOODOO_MEMSIZE
+Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Voodooo, 4 lub 12 MB.
+Pamięć jest dzielona na Frame Buffer Interface (FBI) oraz Texture Mapping Unit
+(TMU) w następujący sposób:
+   4: 2 MB dla FBI, jeden TMU z 2 MB pamięci (domyślne)
+  12: 4 MB dla FBI, dwa TMUs, każdy z 4 MB pamięci.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Używa wielowątkowości aby polepszyć wydajność emulacji 3dfx Voodoo
+(domyślnie włączone).
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Używa filtrowania bilinearnego żeby zasymulować efekt wygładzania tekstur
+(domyślnie wyłączone). Zalecane jedynie dla szybkich komputerów,
+na wolniejszych maszynach może doprowadzić do spadku ilości ramek na sekundę.
 .
 :CONFIG_CAPTURE_DIR
 Katalog do zapisywania przechwyconego dźwięku, muzyki w formacie MIDI, zrzutów
@@ -481,13 +1045,13 @@ Uwaga: Wyłącz, jeśli niepoprawnie wykrywa więcej niż jeden monitor, gdy w
        amplituner przez HDMI, a używasz go tylko do dźwięku.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Domyślna czułość myszy (domyślnie 100,100). 100 to wartość bazowa, 150 to 150%
-czułości, itd. Wartości ujemne odwracają kierunki ruchu, 0 wyłącza ruch
-kursora całkowicie.
-Opcjonalna druga wartość określa oddzielnie czułość pionową.
-Ustawienie może być zmienione w trakcie pracy (również dla każdego interfejsu
-myszy osobno) przy pomocy narzędzia MOUSECTL.COM, dostępnego na dysku Z.
-Przykład: 100,-50.
+Globalna czułość myszy, odpowiednio dla osi poziomej i pionowej, w procentach
+(domyślnie 100). Wartości można oddzielać spacją, przecinkiem, lub średnikiem
+(np. 100,150). Wartości negatywne odwracają kierunki ruchu, o wyłącza ruch
+w danej osi.
+Podanie tylko jednej wartości ustawia taką samą czułość w obydwu osiach,
+Czułość może być zmieniona dla każdego interfejsu myszy osobno przy pomocy
+wewnętrznego narzędzia MOUSECTL.COM, dostępnego na dysku Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Pomija ustawienia systemu operacyjnego gospodarza dotyczących czułości oraz
@@ -535,6 +1099,17 @@ Domyślny model myszy podłączonej do portu COM (serial):
 Domyślnie 'wheel+msm'.
 Uwaga: Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
+:CONFIG_VMWARE_MOUSE
+Interfejs myszy VMware (domyślnie włączone).
+W pełni kompatybilny jedynie z nioficjalnym, eksperymentalnym sterownikiem
+dla Windows 3.1x.
+Uwaga: Wymaga włączonej emulacji myszy PS/2.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+Interfejs myszy VirtualBox (domyślnie włączone).
+W pełni kompatybilny jedynie z nieoficjalnym sterownikiem dla Windows 3.1x.
+Uwaga: Wymaga włączonej emulacji myszy PS/2.
+.
 :CONFIG_NOSOUND
 Włącza tryb cichy (domyślnie wyłączony).
 Dźwięk jest emulowany, ale całkowicie wyciszony.
@@ -543,16 +1118,17 @@ Dźwięk jest emulowany, ale całkowicie wyciszony.
 Częstotliwość próbkowania miksera dźwięku (domyślnie 48000).
 .
 :CONFIG_BLOCKSIZE
-Rozmiar bloku miksera. Większe wartości mogą pomóc na problem przycinania
-dźwięku, ale zwiększają opóźnienie (lag).
+Rozmiar bloku miksera w ramkach (domyślnie 512). Większe wartości mogą pomóc
+zredukować przycinanie dźwięku, ale zwiększają opóźnienie (lag).
 .
 :CONFIG_PREBUFFER
-Ile milisekund dźwięku wyrenderować ponad 'blocksize'. Większe wartości mogą
-pomóc na problem przycinania dźwięku, ale zwiększają opóźnienie (lag).
+Ile milisekund dźwięku renderować ponad 'blocksize' (domyślnie 20). Większe
+wartości mogą pomóc redukować przycinanie dźwięku, ale zwiększają opóźnienie
+dźwięku (lag).
 .
 :CONFIG_NEGOTIATE
-Negocjacja potencjalnie lepszych ustawień częstotliwości i rozmiaru bloku
-ze sterownikiem dźwięku.
+Czy próbować wynegocjować ze sterownikiem dźwięku potencjalnie lepsze
+ustawienia częstotliwości i rozmiaru bloku (domyślnie włączone).
 .
 :CONFIG_COMPRESSOR
 Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
@@ -562,10 +1138,12 @@ Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
 :CONFIG_CROSSFEED
 Włącza (globalnie) efekt przenikania kanałów stereo, przydatne jeśli używasz
 słuchawek:
-  off:         Bez efektu (domyślne).
-  on:          Włącza przenikania na poziomie 40.
-  <strength>:  Ustawienie siły efektu od 0 (wyłączone) do 100 (dźwięk mono).
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+  off:     Bez efektu (domyślne).
+  on:      Włącza przenikanie (normalne ustawienia).
+  light:   Słaby efekt (siła 15).
+  normal:  Normalny efekt (siła 40).
+  strong:  Silny efekt (siła 65).
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_REVERB
 Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
@@ -581,7 +1159,7 @@ Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
            kanałów dla muzyki i efektów dźwiękowych.
   huge:    Mocniejszy wariant dużej hali, odpowiedni do gier z atmosferyczną
            ścieżką dźwiękową.
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_CHORUS
 Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
@@ -591,31 +1169,64 @@ Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
            ilością białego szumu.
   normal:  Normalny efekt, odpowiedni dla wielu różnych gier.
   strong:  Silny efekt.
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_MIDIDEVICE
-Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
-  oss          Interfejs OSS (dla systemu Linux).
-  alsa         Interfejs ALSA (dla systemu Linux).
-  fluidsynth:  Wbudowany syntetyzer, patrz sekcja [fluidsynth].
-  mt32:        Emulacja syntetyzatora Roland MT-32, patrz sekcja [mt32].
-  auto:        Pierwszy działający zewnętrzny syntetyzator; może to być
-               synteza programowa lub fizyczne urządzenie.
+Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401
+(domyślnie 'auto'). Jedno z:
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
+  coremidi:    Urządzenie MIDI skonfigurowane w ustawieniach macOS.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Sytetyzer MIDI wbudowany w macOS.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Sytetyzer MIDI Win32.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
+  oss:         Interfejs MIDI Linux OSS.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
+  alsa:        Interfejs MIDI Linux ALSA.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:  Wbudowany syntetyzer MIDI FluidSynth, używający plików
+               SoundFont, patrz sekcja [fluidsynth].
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:        Wbudowany syntetyzer MIDI Roland MT-32, patrz sekcja [mt32].
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
+  auto:        Albo jeden z wbudowanych syntetyzerów MIDI (jeśli `midiconfig`
+               jest ustawione na 'fluidsynth' lub 'mt32'), albo zewnętrzny
+               syntetyzer (każde inne ustawienie 'midiconfig') - może to być
+               zarówno syntetyzer programowy, jak i urządzenie sprzętowe.
+               Domyślne.
+.
+:CONFIGITEM_MIDIDEVICE_NONE
   none:        Wyłącz wyjście MIDI.
-Domyślnie 'auto'.
 .
 :CONFIG_MIDICONFIG
 Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
 syntetyzatora - można je sprawdzić poleceniem DOSu 'MIXER /LISTMIDI'.
 Uwagi:
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
-    (mididevice = fluidsynth lub mt32).
-  - Dla systemu Linux i podsystemu dźwiękowego ALSA, wyświetl listę portów
-    MIDI poleceniem 'aconnect -l' i wpisz wybrany, np. 'midiconfig=14:0' dla
-    klienta numer 14 i portu 0.
+    ('fluidsynth' lub 'mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Dla 'coreaudio', you can specify a SoundFont here.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
+  - Dla 'alsa'', wyświetl listę portów MIDI poleceniem 'aconnect -l' i wpisz
+    wybrany, np. 'midiconfig = 14:0' dla klienta numer 14 i portu 0.
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Fizyczny Roland MT-32 w płytą główną w wersji 0 może potrzebować
     opóźnienia, inaczej przepełni się jego wewnętrzny bufor. W takim wypadku
-    dodaj parametr 'delaysysex', np.: 'midiconfig=2 delaysysex'.
+    dodaj parametr 'delaysysex', np.: 'midiconfig = 2 delaysysex'.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401 (domyślnie 'intelligent').
@@ -643,11 +1254,11 @@ Efekt chorus: auto' (domyślne), 'on', 'off' lub ustawienia użytkownika.
 Ustawienia użytkownika wymagają podania wszystkich 5 parametrów,
 oddzielonych spacjami, zachowując kolejność. Są to:
 voice-count level speed depth modulation-wave, gdzie:
-  voice-count:      wartość całkowita od 0 do 99.
-  level:            wartość dziesiętna, od 0.0 do 10.0.
-  speed:            wartość dziesiętna, od 0.1 do 5.0, wartość w Hz.
-  depth:            wartość dziesiętna, od 0.0 do 21.0.
-  modulation-wave:  'sine' lub 'triangle'.
+  voice-count:      wartość całkowita od 0 do 99
+  level:            wartość dziesiętna, od 0.0 do 10.0
+  speed:            wartość dziesiętna, od 0.1 do 5.0, wartość w Hz
+  depth:            wartość dziesiętna, od 0.0 do 21.0
+  modulation-wave:  'sine' lub 'triangle'
   Przykład: chorus = 3 1.2 0.3 8.0 sine
 Uwaga: Można wyłączyć efekt 'chorus' z syntetyzatora FluidSynth i
        w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
@@ -675,19 +1286,26 @@ Filtrowanie dźwięku syntetyzera FluidSynth:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_MODEL
-Model emulowanego syntetyzatora MIDI:
-  auto:  pierwszy model z dostępnymi ROMami, w kolejności jak poniżej.
-  cm32l, mt32:         pierwszy model danego typu.
-  mt32_old, mt32_new:  wersje (odpowiednio) 1.07 oraz 2.04.
+Model emulowanego syntetyzatora MIDI Roland MT-32/CM-32ML.
+Musisz mieć pliki ROM dla odpowiedniego modelu (patrz 'romdir').
+Jeśli nie podasz wersji syntetyzatora, emulowany będzie model wybrany w
+kolejności poniżej.
+  auto:       Wybiera pierwszy dostępny model (domyślne).
+  cm32l:      Wybiera pierwszy dostępny model CM-32L model.
+  mt32_old:   Wybiera pierwszy dostępny model "starego" MT-32 (v1.0x).
+  mt32_new:   Wybiera pierwszy dostępny model "nowego" MT-32 (v2.0x).
+  mt32:       Wybiera pierwszy dostępny mode MT-32.
+  <version>:  Używa podanego modelu i wersji (np., 'mt32_204').
 .
 :CONFIG_ROMDIR
-Katalog zawierający ROMy syntetyzatora MT32. Ścieżka może być względna lub
-bezwzględna. Pusta wartość spowoduje sprawdzenie podkatalogu 'mt32-roms' z
-katalogu z konfiguracją i innych typowych lokacji w danym systemie.
-Obrazy ROMów mogą zawierać:
-  - MT32_CONTROL.ROM oraz MT32_PCM.ROM, dla modelu 'mt32'.
-  - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
-  - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
+Katalog zawierający ROMy syntetyzatora Roland MT32/CM-32ML (domyślnie
+nieustawiony). Ścieżka może być względna lub bezwzględna. Pusta wartość
+spowoduje sprawdzenie podkatalogu 'mt32-roms' z katalogu z konfiguracją
+i innych typowych lokacji w danym systemie.
+Uwagi:
+  - Nazwy plików nie mają znaczenia, ROMy są identyfikowane po sumach
+    kontrolnych.
+  - Obsługiwane są zarówno obrazy ROM z przeplotem, jak i bez.
 .
 :CONFIG_MT32_FILTER
 Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
@@ -695,7 +1313,7 @@ Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :MT32_NO_SUPPORTED_MODELS
-Żaden obsługiwany model nie jest obecny.
+Żaden obsługiwany model nie jest obecny
 .
 :MT32_ROM_NOT_LOADED
 ROM nie został załadowany
@@ -706,15 +1324,35 @@ ROM nie został załadowany
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
 +
 .
+:MT32_ROMS_LABEL
+ROMy MT-32    
+.
+:CM32L_ROMS_LABEL
+ROMy CM-32L   
+.
 :MT32_ACTIVE_ROM_LABEL
-Aktywny ROM  : 
+Aktywny ROM   
 .
 :MT32_SOURCE_DIR_LABEL
-Załadowano z : 
+Załadowany z  
 .
 :CONFIG_SBTYPE
 Model karty muzycznej Sound Blaster (domyślnie 'sb').
-Wartość 'gb' oznacza kartę Game Blaster.
+  gb:        Game Blaster          - CMS
+  sb1:       Sound Blaster 1.0     - OPL2, CMS
+  sb2:       Sound Blaster 2.0     - OPL2
+  sbpro1:    Sound Blaster Pro     - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2   - OPL3
+  sb16:      Sound Blaster 16      - OPL3 (domyślne)
+  ess:       ESS ES1688 AudioDrive - ESFM
+  none/off:  Wyłącza emulację karty Sound Blaster.
+Uwagi:
+  - Creative Music System został później przemianowany na Game Blaster;
+    są to te same karty.
+  - Ustawienie 'ess' umożliwia rozszerzoną syntezę FM w grach obsługujących
+    moduł ESFM. DAC nie jest emulowany, ale karta jest kompatybilna z
+    Sound Blaster Pro - skonfiguruj grę, żeby używała tej karty dla efektów
+    dźwiękowych.
 .
 :CONFIG_SBBASE
 Adres bazowy (I/O) karty muzycznej Sound Blaster (domyślnie 220).
@@ -739,11 +1377,48 @@ jeśli zauważysz ucięty początek dźwięku.
 .
 :CONFIG_OPLRATE
 Częstotliwość dźwięku syntetyzowanego OPL jest obecnie taka sama, jak
-częstotliwość miksowania, dzięki czemu nie jest potrzebny resampling.
+częstotliwość miksowania.
+.
+:CONFIG_CMS
+Emulacja układu CMS (domyślnie 'auto').
+  off:   Wyłącza emulację CMS (chyba, że karta Game Blaster jest emulowana).
+  on:    Włącza emulację CMS na kartach Sound Blaster 1 i 2.
+  auto:  Włącza emulację CMS na kartach Sound Blaster 1 oraz Game Blaster.
 .
 :CONFIG_OPLMODE
-Typ emulowanego układu OPL. 'auto' (domyślne) wybiera typ w zależności od
-'sbtype'. Wszystkie z wyjątkiem 'cms' są kompatybilne z kartami AdLib.
+Typ emulowanego układu OPL (domyślnie 'auto').
+  auto:      Wybiera typ odpowiedni dla 'sbtype'.
+  opl2:      Yamaha OPL2 (YM3812, mono).
+  dualopl2:  Dual OPL2 (dwa układy OPL2 w konfiguracji stereo).
+  opl3:      Yamaha OPL3 (YMF262, stereo).
+  opl3gold:  OPL3 wraz z modułem AdLib Gold Surround.
+             Razem z 'sbtype = sb16' emuluje kartę AdLib Gold 1000.
+  esfm:      ESS ESFM (rozszerzona synteza FM kompatybilna z Yamaha OPL3).
+  none/off:  Wyłącz emulację układu OPL.
+Uwagi:
+  - 'sbtype = none' wraz z 'oplmode = opl2' emuluje oryginalną kartę AdLib.
+  - Ustawienie 'oplmode = esfm' nie wystarczy, żeby uzyskać rozszerzoną
+    syntezę FM w grach; należy ustawić również 'sbtype = ess'. Można natomiast
+    za pomocą 'oplmode = esfm' uzyskać nieco odmienny dźwięk układu OPL.
+.
+:CONFIG_OPL_FADEOUT
+Wycisz dźwięk układu OPL po ostatnim zapisie do portu IO:
+  off:       Niewyciszony dźwięk będzie słyszalny bez końca (domyślne).
+  on:        Zaczekaj 0.5s, wyciszaj dźwięk przez kolejne 0.5s.
+  <custom>:  Ustawienie użytkownika w formacie:
+               WAIT FADE
+             gdzie WAIT oznacza czas nieaktywności IO, po którym zacznie się
+             wyciszanie, od 100 do 5000 milisekund; a FADE to długość okresu
+             wyciszania, od 10 do 3000 milisekund. Przykłady:
+                300 200 (czekaj 300ms, po czym wyciszaj przez 200ms)
+                1000 3000 (czekaj 1s, po czym wyciszaj przez 3s)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Usuwa bias DC z wyjścia układu OPL. Należy używać jedynie jako ostatniej deski
+ratunku w przypadku trzasków podczas odgrywania dźwięku PCM na układzie OPL
+kart SoundBlaster lub Adlib w grach Golden Eagle (1991), Wizardry 6 (1990),
+oraz Wizardry 7 (1992). W przypadku znalezienia innych tego typu gier, prosimy
+o wystawienie nam (po angielsku) 'issue' w serwisie GitHub.
 .
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obsługiwana.
@@ -819,8 +1494,8 @@ Numer przerwania (IRQ) karty muzycznej IBM Music Feature Card (domyślnie 3).
 .
 :CONFIG_IMFC_FILTER
 Filtrowanie dźwięku karty IBM Music Feature Card:
-  on:        Filtrowanie włączone.
-  off:       Filtrowanie wyłączone (domyślne).
+  on:        Filtrowanie włączone (domyślne).
+  off:       Filtrowanie wyłączone.
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
@@ -883,6 +1558,12 @@ Emulacja urządzenia dźwiękowego Tandy/PCjr 3 Voice:
          konfliktów z innymi urządzeniami wykorzystujący kanał DMA numer 1.
   off:   Wyłącza urządzenie dźwiękowe Tandy/PCjr.
 .
+:CONFIG_TANDY_FADEOUT
+Wycisz dźwięk układu dźwiękowego Tandy po ostatnim zapisie do portu IO:
+  off:       Niewyciszony dźwięk będzie słyszalny bez końca (domyślne).
+  on:        Zaczekaj 0.5s, wyciszaj dźwięk przez kolejne 0.5s.
+  <custom>:  Ustawienie użytkownika; patrz 'opl_fadeout'.
+.
 :CONFIG_TANDY_FILTER
 Filtrowanie dźwięku syntetyzowanego urządzenia Tandy:
   on:   Włączone (domyślne).
@@ -909,7 +1590,7 @@ Filtrowanie dźwięku urządzenia LPT DAC:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_DISNEY
-Żeby włączyć Disney Sound Source użyj 'lpt_dac=disney'.
+Żeby włączyć Disney Sound Source użyj 'lpt_dac = disney'.
 .
 :CONFIG_PS1AUDIO
 Włącza emulację urządzenia dźwiękowego IBM PS/1 (domyślnie wyłączone).
@@ -948,6 +1629,7 @@ Wymusza odpowiednią ilości ramek na sekundę podczas odtwarzania.
 :CONFIG_JOYSTICKTYPE
 Typ joysticka:
   auto     : Wykryj i użyj automatycznie (domyślne).
+             Emulacja zostanie wyłączona jeśli joystick nie zostanie wykryty.
   2axis    : Obsługa do dwóch joysticków, każdy z nich 2-osiowy.
   4axis    : Tylko pierwszy joystick, 4-osiowy.
   4axis_2  : Tylko drugi joystick, 4-osiowy.
@@ -958,7 +1640,7 @@ Typ joysticka:
 Pamiętaj o zresetowaniu mapowania jeśli zapisałeś je wcześniej do pliku.
 .
 :CONFIG_TIMED
-Interwały czasowe (domyślnie wyłączone).
+Interwały czasowe (domyślnie włączone).
 Poeksperymentuj z tą opcją, jeśli joystick wykazuje drift.
 .
 :CONFIG_AUTOFIRE
@@ -1000,7 +1682,7 @@ Użyj kalibracji osi X ustawianej skrótami klawiszowymi (domyślnie 'auto').
 Użyj kalibracji osi Y ustawianej skrótami klawiszowymi (domyślnie 'auto').
 .
 :CONFIG_SERIAL1
-Wybór urządzenia podłączonego do portu COM (domyślnie 'dummy').
+Wybór urządzenia podłączonego do portu COM1 (domyślnie 'dummy').
 Jedno z: disabled, dummy, mouse, modem, nullmodem, direct.
 Można podać dodatkowe parametry w formie parametr:wartość, muszą być
 wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
@@ -1011,7 +1693,7 @@ wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
       realport (wymagany), rxdelay (opcjonalny).
       Przykład: realport:COM1 realport:ttyS0.
   - Dla urządzenia 'modem':
-      listenport, sock, baudrate (wszystkie opcjonalne).
+      listenport, sock, bps (wszystkie opcjonalne).
   - Dla urządzenia 'nullmodem':
       server, rxdelay, txdelay, telnet, usedtr, transparent, port,
       inhsocket, sock (wszystkie opcjonalne).
@@ -1020,13 +1702,13 @@ SOCK określa protokół uzywany przez obydwie strony połączenia, 0 dla TCP,
 Przykład: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'dummy').
 .
 :CONFIG_SERIAL3
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'disabled').
 .
 :CONFIG_SERIAL4
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'disabled').
 .
 :CONFIG_PHONEBOOKFILE
 Plik z informacją o mapowaniu wirtualnych numerów telefonicznych na adresy
@@ -1048,15 +1730,23 @@ Wersja systemu DOS raportowana oprogramowanie (domyślnie 5.0). Format to
 'major.minor', pojedyncza liczba będzie traktowana jako główny numer wersji.
 Typowe wartości to: 3.3, 5.0, 6.22, oraz 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Wybiera epokę ustawień regionalnych (domyślnie 'modern'). Ustawienie
+'historic' (jeśli dostępne) naśladuje rzeczywiste systemy DOS podczas
+wyświetlania dat, czasu, liczb, itd. Ustawienie 'modern' używa stylu typowego
+dla współczesnych systemów.
+.
 :CONFIG_COUNTRY
-Kod kraju DOS (tożsamy z telefonicznym kodem kraju), np. '48' dla Polski.
+Kod kraju DOS (domyślnie 'auto').
 Zostanie użyty do określenia formatu daty, czasu, liczb dziesiętnych, itp.
-Wartość domyślna 0 spowoduje ustawienie kraju odpowiadającemu wybranemu
-układowi klawiatury.
+Listę obsługiwanych kodów krajów można wyświetlić używając opcji wiersza
+poleceń '--list-countries'. Ustawienie 'auto' wybiera kraj odpowiadający
+wybranemu układowi klawiatury.
 .
 :CONFIG_KEYBOARDLAYOUT
-Kod języka klawiatury (domyślnie 'auto') - np. 'pl' (polski układ
-programisty), 'pl214' (polski układ maszynistki).
+Kod języka klawiatury (domyślnie 'auto') - np. 'us' (układ amerykański), 'pl'
+(polski układ programisty), 'pl214' (polski układ maszynistki). Akceptowane
+są takie same wartości, jakich używa system FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Rozwija zmienne środowiskowe, np. %PATH%, w wierszu poleceń.
@@ -1065,17 +1755,25 @@ Obsługiwane przez COMMAND.COM z systemów MS-DOS 7/8 oraz FreeDOS.
 .
 :CONFIG_SHELL_HISTORY_FILE
 Nazwa pliku przechowującego historię wiersza poleceń pomiędzy sesjami
-(domyślnie 'shell_history.txt').
+(domyślnie 'shell_history.txt'). Wartość pusta wyłącza przechowywanie
+historii.
 .
 :CONFIG_SETVER_TABLE_FILE
 Plik z tabelą programów i przypisanych do nich wersji systemu DOS, w formacie
 wartości rozdzielonych tabulatorami, używany przez polecenie SETVER.EXE do
 trwałego zapamiętania ustawień (domyślnie wartość pusta).
 .
-:CONFIG_IPX
-Włącza emulację protokołu IPX po UDP/IP (domyślnie włączone).
+:CONFIG_PCJR_MEMORY_CONFIG
+Pamięć komputera PCjr (domyślnie 'expanded').
+  expanded:  640 KB pamięci, aplikacje rezydują powyżej 128 KB.
+             Kompatybilne z większością gier.
+  standard:  128 KB pamięci, aplikacje rezydują poniżej 96 KB.
+             Wymagane dla kilu starszych gier (np., Jumpman, Troll).
 .
-:CONFIG_NE2000
+:CONFIGITEM_IPX
+Włącza emulację protokołu IPX po UDP/IP (domyślnie wyłączone).
+.
+:CONFIGITEM_NE2000_SLIRP
 Włącza emulację karty sieciowej Novell NE2000 podłączonej do wirtualnej
 sieci 'libslirp' z parametrami jak poniżej:
   10.0.2.0       : Adres wirtualnej sieci LAN.
@@ -1090,20 +1788,20 @@ Uwagi:
     przekierowanie portów z systemu gospodarza do DOSa, oraz z routera
     do gospodarza.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Adres bazowy (I/O) karty sieciowej NE2000 (domyślnie 300).
 Uwaga: Adresy 220 oraz 240 mogą być niedostępne, gdyż są domyślnie przypisane
        do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 Numer przerwania (IRQ) karty sieciowej NE2000 (domyślnie 3).
 Uwaga: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
        do portu COM2 i karty muzycznej Gravis UltraSound.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 Adres MAC karty sieciowej NE2000 (domyślnie 'AC:DE:48:88:99:AA').
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Przekierowuje jeden lub więcej portów UDP z systemu gospodarza do DOSu
 Format:
   port1  port2  port3 ... (np., 21 80 443)
@@ -1122,7 +1820,7 @@ Uwagi:
   - W razie konfliktu portów gospodarza, tylko pierwszy zostanie ustawiony.
   - W razie konfliktu portów gościa, tylko ostatni zostanie ustawiony.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Przekierowuje jeden lub więcej portów UDP z systemu gospodarza do DOSu.
 Format jest taki sam jak dla portów TCP.
 .
@@ -1142,18 +1840,6 @@ Możliwe wartości
 :CONFIG_DEPRECATED_VALUES
 Przestarzałe wartości
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Brak sekcji lub parametru: '%s'
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Brak parametru '%s' w sekcji [%s]
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Składnia: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
-
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie został załadowany żaden plik konfiguracyjny
 
@@ -1166,7 +1852,7 @@ Nie został załadowany żaden plik konfiguracyjny
 :PROGRAM_CONFIG_ADDITIONAL_CONF
 
 [color=white]Dodatkowe pliki konfiguracyjne:[reset]
-  
+
 .
 :PROGRAM_CONFIG_CONFDIR
 [color=white]Katalog z konfiguracją programu DOSBox Staging %s:[reset]
@@ -1184,70 +1870,79 @@ Zapisywanie konfiguracji do pliku '%s'
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Zmienia parametry konfiguracyjne.
+Zarządzaj konfiguracją.
 
 Składnia:
-  [color=green]config[reset] [color=white]POLECENIE[reset] [color=cyan][PARAMETRY][reset]
+  [color=light-green]config[reset] [color=white]POLECENIE[reset] [color=light-cyan][PARAMETRY][reset]
 
 Gdzie [color=white]POLECENIE[reset] jest jednym z:
   -writeconf
-  -wc               Zapisz ustawienia do pliku `dosbox.conf` w aktualnym
-                    katalogu.
+  -wc               zapisz ustawienia do pliku `dosbox.conf` w aktualnym
+                    katalogu
 
   -writeconf [color=white]ŚCIEŻKA[reset]
-  -wc [color=white]ŚCIEŻKA       [reset]Jeśli [color=white]ŚCIEŻKA[reset] jest plikiem, zapisz ustawienia do pliku o tej
+  -wc [color=white]ŚCIEŻKA       [reset]jeśli [color=white]ŚCIEŻKA[reset] jest plikiem, zapisz ustawienia do pliku o tej
                     nazwie w aktualnym katalogu, w przeciwnym wypadku do pliku w
-                    podanej ścieżce, względnej lub bezwzględnej.
+                    podanej ścieżce, względnej lub bezwzględnej
 
-  -wcd              Zapisz ustawienia do globalnego pliku `dosbox-staging.conf`
-                    w katalogu z konfiguracją.
+  -wcd              zapisz ustawienia do globalnego pliku `dosbox-staging.conf`
+                    w katalogu z konfiguracją
 
   -writelang [color=white]PLIK[reset]
-  -wl [color=white]PLIK[reset]          Zapisz teksty aktualnego języka do  [color=white]PLIK[reset]u w aktualnym
-                    katalogu.
+  -wl [color=white]PLIK[reset]          zapisz teksty aktualnego języka do  [color=white]PLIK[reset]u w aktualnym
+                    katalogu
 
-  -r [color=cyan][PARAMETR1=WARTOŚĆ1 [PARAMETR2=WARTOŚĆ2 ...]][reset]
-                    Restart, opcjonalnie z podanymi argumentami.
+  -r [color=light-cyan][PARAMETR1=WARTOŚĆ1 [PARAMETR2=WARTOŚĆ2 ...]][reset]
+                    restart, opcjonalnie z podanymi argumentami
 
-  -l                Wyświetl używane pliki konfiguracyjne i argumenty
-                    wiersza poleceń.
+  -l                wyświetl używane pliki konfiguracyjne i argumenty
+                    wiersza poleceń
 
   -help [color=white]SEKCJA[reset]
   -h    [color=white]SEKCJA[reset]
-  -?    [color=white]SEKCJA[reset]      Wyświetl parametry z podanej sekcji.
+  -?    [color=white]SEKCJA[reset]      wyświetl parametry z podanej sekcji
 
-  -help [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
-  -h    [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
-  -?    [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
-                    Wyświetl opis i wartość parametru.
+  -help [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+  -h    [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+  -?    [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+                    wyświetl opis i wartość parametru
 
-  -axclear          Wyczyść sekcję [autoexec].
-  -axadd [color=white]LINIA[reset]      Dodaj linię do sekcji [autoexec].
-  -axtype           Wyświetl zawartość sekcji [autoexec].
-  -securemode       Przełącz w tryb bezpieczny.
-  -avistart         Rozpocznij nagrywanie do pliku AVI.
-  -avistop          Zakończ nagrywanie do pliku AVI.
-  -startmapper      Uruchom narzędzie do mapowania klawiszy.
+  -axclear          wyczyść sekcję [autoexec]
+  -axadd [color=white]LINIA[reset]      dodaj linię do sekcji [autoexec]
+  -axtype           wyświetl zawartość sekcji [autoexec]
+  -securemode       przełącz w tryb bezpieczny
+  -avistart         rozpocznij nagrywanie do pliku AVI
+  -avistop          zakończ nagrywanie do pliku AVI
+  -startmapper      uruchom narzędzie do mapowania klawiszy
 
-  -get [color=white]SEKCJA[reset]       Wyświetl wszystkie parametry i ich wartości z danej sekcji.
-  -get [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
-                    Wyświetl wartość pojedynczego parametru konfiguracji.
+  -get [color=white]SEKCJA[reset]       wyświetl wszystkie parametry i ich wartości z danej sekcji
+  -get [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+                    wyświetl wartość pojedynczego parametru konfiguracji
 
-  -set [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset][=][color=white]VALUE[reset]
-                    Ustaw wartość parametru konfiguracji.
+  -set [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset][=][color=white]VALUE[reset]
+                    ustaw wartość parametru konfiguracji
 
+  -securemode       włącza tryb bezpieczny
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Informacja o parametrze [color=green]'%s'[color=white] (zawartym w sekcji [color=cyan][%s][color=white]):[reset]
-%s
+[color=white]Informacja o parametrze [color=light-green]'%s'[color=white] zawartym w sekcji [color=light-cyan][%s][color=white]:[reset]
 
-[color=white]Możliwe wartości:[reset] %s
-[color=white]Domyślna wartość:[reset] %s
-[color=white]Aktualna wartość:[reset] %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
+[color=white]Możliwe wartości:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
+[color=white]Domyślna wartość:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
+[color=white]Aktualna wartość:[reset]  %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Informacja o sekcji [%s]:[reset]
+[color=white]Informacja o sekcji [color=light-cyan][%s][color=white]:[reset]
 %s
 [color=white]Aktualna wartość:[reset]
 %s
@@ -1261,7 +1956,7 @@ Ten parametr nie może być zmieniony w trakcie pracy.
 dodatnia liczba całkowita
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]Sekcja [color=cyan][%s] [color=white]zawiera następujące parametry:[reset]
+[color=white]Sekcja [color=light-cyan][%s][color=white] zawiera następujące parametry:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
@@ -1269,7 +1964,7 @@ dodatnia liczba całkowita
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Przełączono w tryb bezpieczny.
+Tryb bezpieczny włączony.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
@@ -1285,7 +1980,7 @@ Sekcja [%s] nie istnieje.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Składnia: [color=green]config[reset] -get [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+Składnia: [color=light-green]config[reset] -get [color=light-cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
@@ -1310,17 +2005,17 @@ Nie znaleziono pliku wykonywalnego: '%s'
 i
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
-enumeracja nieobsługiwana
+Wykrywanie nieobsługiwane
 .
 :MIDI_DEVICE_NOT_CONFIGURED
-urządzenie nie zostało skonfigurowane
+Urządzenie nie zostało skonfigurowane
 .
 :PROGRAM_FMPDRV_HELP_LONG
-Ładuje lub usuwa wbudowany sterownik karty ReelMagic.
+Ładuj lub usuń wbudowany sterownik karty ReelMagic.
 
 Składnia:
-  [color=green]fmpdrv[reset]    (ładuje sterownik)
-  [color=green]fmpdrv[reset] /u (usuwa sterownik z pamięci)
+  [color=light-green]fmpdrv[reset]    (ładuj sterownik)
+  [color=light-green]fmpdrv[reset] /u (usuń sterownik z pamięci)
 
 Uwagi:
   Ustawienie "reelmagic = on" ładuje sterownik podczas startu i uniemożliwia
@@ -1332,27 +2027,27 @@ ReelMagic Full Motion Player (wbudowany sterownik) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Sterownik załadowany na przerwaniu %xh[reset]
+[reset][color=brown]Sterownik załadowany na przerwaniu %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Sterownik został już załadowany na przerwaniu %xh[reset]
+[reset][color=brown]Sterownik został już załadowany na przerwaniu %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Sterownik nie załadowany: brak wolnych przerwań![reset]
+[reset][color=light-red]Sterownik nie załadowany: brak wolnych przerwań![reset]
 
 .
 :PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Sterownik usunięty[reset]
+[reset][color=brown]Sterownik usunięty[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Sterownik nie został załadowany[reset]
+[reset][color=brown]Sterownik nie został załadowany[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Sterownik nie został usunięty: skonfigurowany jako rezydentny[reset]
+[reset][color=brown]Sterownik nie został usunięty: skonfigurowany jako rezydentny[reset]
 
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
@@ -1374,57 +2069,57 @@ Wewnętrzny dysk wirtualny
 nieznany typ
 .
 :WIKI_ADD_UTILITIES_ARTICLE
-https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+https://github.com/dosbox-staging/dosbox-staging/wiki/Adding-Utilities
 .
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :PROGRAM_AUTOTYPE_HELP_LONG
-Symuluje naciśnięcia klawiszy dla uruchomionego programu.
+Symuluj naciśnięcia klawiszy dla uruchomionego programu.
 
 Składnia:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] [-w [color=white]CZAS[reset]] [-p [color=white]TEMPO[reset]] [color=cyan]KLAWISZE[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] [-w [color=white]CZAS[reset]] [-p [color=white]TEMPO[reset]] [color=light-cyan]KLAWISZE[reset]
 
 Gdzie:
-  [color=white]CZAS[reset]      początkowe oczekiwanie, w sekundach (maksymalnie 30).
-  [color=white]TEMPO[reset]     oczekiwanie przed każdym klawiszem, w sekundach (maksymalnie 10).
-  [color=cyan]KLAWISZE[reset]  jeden lub więcej klawiszy oddzielonych spacjami.
+  [color=white]CZAS[reset]      początkowe oczekiwanie, w sekundach (maksymalnie 30)
+  [color=white]TEMPO[reset]     oczekiwanie przed każdym klawiszem, w sekundach (maksymalnie 10)
+  [color=light-cyan]KLAWISZE[reset]  jeden lub więcej klawiszy oddzielonych spacjami
 
 Uwagi:
-  Symulowanie naciśnięć klawiszy [color=cyan]KLAWISZE[reset] rozpoczyna się po [color=white]CZAS[reset] sekundach,
+  Symulowanie naciśnięć klawiszy [color=light-cyan]KLAWISZE[reset] rozpoczyna się po [color=white]CZAS[reset] sekundach,
   co [color=white]TEMPO[reset] sekund każde. Dodatkowe [color=white]TEMPO[reset] sekund opóźnienia może zostać dodane
-  przy użyciu przecinka ('[color=cyan],[reset]'). Domyślne wartości [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
+  przy użyciu przecinka ('[color=light-cyan],[reset]'). Domyślne wartości [color=white]CZAS[reset] i [color=white]TEMPO[reset] to 2 i 0.5
   sekundy, odpowiednio. Listę dostępnych klawiszy można wyświetlić używając
   argumentu -list.
 
 Przykłady:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
-  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
-  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]
+  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]
+  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter[reset]
 
 .
 :PROGRAM_BOOT_HELP_LONG
-Bootuje system z obrazu dyskietki lub zamontowanego dysku.
+Bootuj system z obrazu dyskietki lub zamontowanego dysku.
 
 Składnia:
-  [color=green]boot[reset] [color=white]DYSK[reset]:
-  [color=green]boot[reset] -l [color=white]DYSK[reset]
-  [color=green]boot[reset] [color=cyan]OBRAZ[reset] [[color=cyan]OBRAZ[reset] ...]
+  [color=light-green]boot[reset] [color=white]DYSK[reset]:
+  [color=light-green]boot[reset] -l [color=white]DYSK[reset]
+  [color=light-green]boot[reset] [color=light-cyan]OBRAZ[reset] [[color=light-cyan]OBRAZ[reset] ...]
 
 Gdzie:
   [color=white]DYSK[reset]   litera dysku, [color=white]A:[reset], [color=white]C:[reset] lub [color=white]D:[reset].
-  [color=cyan]OBRAZ[reset]  obraz dyskietki.
+  [color=light-cyan]OBRAZ[reset]  obraz dyskietki.
 
 Uwagi:
-  [color=white]DYSK[reset] musi zostać wcześniej zamontowany poleceniem [color=green]imgmount[reset].
+  [color=white]DYSK[reset] musi zostać wcześniej zamontowany poleceniem [color=light-green]imgmount[reset].
   Dysk lub obrazy muszą być bootowalne. Jeśli podano więcej obrazów, można
   się pomiędzy nimi przełączać skrótem klawiszowym.
 
 Przykłady:
-  [color=green]boot[reset] [color=white]c:[reset]
-  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+  [color=light-green]boot[reset] [color=white]c:[reset]
+  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 .
 :PROGRAM_BOOT_NOT_EXIST
 Błąd: Obraz dysku lub dyskietki nie istnieje.
@@ -1441,19 +2136,20 @@ Obraz dysku jest tylko do odczytu! To może powodować problemy.
 :PROGRAM_BOOT_PRINT_ERROR
 To polecenie bootuje system operacyjny z obrazu dyskietki lub dysku twardego.
 
-Można podać kilka obrazów dyskietek, przełączanych za pomocą %s+F4. Opcją -l
+Można podać kilka obrazów dyskietek, przełączanych za pomocą [color=yellow]%s+F4[reset]. Opcją -l
 można podać dysk, z którego ma zostać uruchomiony system, domyślny to A.
 Jedyne dozwolone litery dysków to A, C, oraz D. Aby wystartować system z
 obrazu dysku twardego (C lub D) musi on być wcześniej zamontowany poleceniem
-[color=blue]imgmount[reset].
+[color=light-blue]imgmount[reset].
 
-Polecenie [color=blue]boot /?[reset] wyświetla pełen tekst pomocy.
+Polecenie [color=light-blue]boot /?[reset] wyświetla pełen tekst pomocy.
 .
 :PROGRAM_BOOT_UNABLE
-Nie można wystartować systemu z dysku %c
+Nie można wystartować systemu z dysku %c.
+
 .
 :PROGRAM_BOOT_IMAGE_OPEN
-Otwieranie pliku obrazu: '%s'
+Otwieranie pliku obrazu: '%s'.
 
 .
 :PROGRAM_BOOT_IMAGE_MOUNTED
@@ -1462,6 +2158,7 @@ Obraz dyskietki już zamontowany.
 .
 :PROGRAM_BOOT_IMAGE_NOT_OPEN
 Nie można otworzyć '%s'.
+
 .
 :PROGRAM_BOOT_BOOT
 Startowanie systemu z dysku %c...
@@ -1469,12 +2166,15 @@ Startowanie systemu z dysku %c...
 .
 :PROGRAM_BOOT_CART_WO_PCJR
 Znaleziono kartridż PCjr, ale maszyna nie jest typu PCjr.
+
 .
 :PROGRAM_BOOT_CART_LIST_CMDS
 Dostępne komendy kartridży PCjr: %s
+
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Nie znaleziono komend kartridża PCjr.
+
 .
 :MSCDEX_SUCCESS
 MSCDEX zainstalowany.
@@ -1540,30 +2240,49 @@ Lista zamontowanych dysków:
 
 .
 :PROGRAM_IMGMOUNT_HELP_LONG
-Montuje obraz dyskietki, płyty CD lub dysku pod wybraną literę.
+Montuj obraz dyskietki, płyty CD lub dysku pod wybraną literę.
 
 Składnia:
-  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]CD-LISTA[reset] [-fs iso] [-ide] -t cdrom|iso
-  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]PLIKOBRAZ[reset] [[color=cyan]PLIKOBRAZ[reset] [..]] [-fs fat] -t hdd|floppy -ro
-  [color=green]imgmount[reset] [color=white]DYSK[reset] [color=cyan]BOOTOBRAZ[reset] [-fs fat|none] -t hdd -size [color=white]GEOMETRIA[reset] -ro
-  [color=green]imgmount[reset] -u [color=white]DYSK[reset]  (odmontowuje obraz)
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]CD-LISTA[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]PLIKOBRAZ[reset] [[color=light-cyan]PLIKOBRAZ[reset] [..]] [-fs fat] -t hdd|floppy -ro
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]BOOTOBRAZ[reset] [-fs fat|none] -t hdd -size [color=white]GEOMETRIA[reset] -ro
+  [color=light-green]imgmount[reset] -u [color=white]DYSK[reset]  (odmontowuje obraz)
 
 Gdzie:
-  [color=white]DYSK[reset]      litera dysku, pod którą obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
-  [color=cyan]CD-LISTA[reset]  plik ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [color=cyan]PLIKOBRAZ[reset] obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
-  [color=cyan]BOOTOBRAZ[reset] obraz w formacie zdefiniowanym opcją -size [color=white]GEOMETRIA[reset]:
-            bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
+  [color=white]DYSK[reset]       litera dysku, pod którą obraz zostanie zamontowany: [color=white]A[reset], [color=white]C[reset], [color=white]D[reset], ...
+  [color=light-cyan]CD-LISTA[reset]   plik ISO, CUE+BIN, CUE+ISO lub CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=light-cyan]PLIKOBRAZ[reset]  obraz dysku twardego lub dyskietki w formacie FAT16 lub FAT12
+  [color=light-cyan]BOOTOBRAZ[reset]  obraz w formacie zdefiniowanym opcją -size [color=white]GEOMETRIA[reset]:
+             bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
 
 Uwagi:
-  - %s+F4 przechodzi do następnego dysku z listy [color=cyan]CD-LISTA[reset] lub [color=cyan]BOOTOBRAZ[reset].
+  - Mozna używać znaków wieloznaczności do zamontowania kilku obrazów:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] przechodzi do następnego dysku z listy [color=light-cyan]CD-LISTA[reset] lub [color=light-cyan]BOOTOBRAZ[reset].
   - Flaga -ro montuje dysk tylko do odczytu (read-only).
   - Flaga -ide włącza emulację kontrolera IDE z zamontowanym obrazem CD.
 
 Przykłady:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
-  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Gry\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/UŻYTKOWNIK/Gry/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/UŻYTKOWNIK/gry/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
 Podaj literę dysku, pod którą zamontowany będzie obraz.
@@ -1574,11 +2293,12 @@ Podaj numer dysku (0 - 3), gdzie zamontowany będzie obraz (0=fda, 1=fdb, 2=hda,
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Dla obrazów [color=light-yellow]CD-ROM[reset]:           [color=blue]IMGMOUNT dysk plikobraz -t iso[reset]
+Dla obrazów płyt CD-ROM:
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]PLIKOBRAZ[reset] -t iso
+Dla obrazów dysków twardych należy podać geometrię w formacie:
+  bajtów-na-sektor,sektorów-na-głowicę,ilość-głowic,ilość-cylindrów
+  [color=light-green]imgmount[reset] [color=white]DYSK[reset] [color=light-cyan]PLIKOBRAZ[reset] -size bps,spc,hpc,cyl
 
-Dla obrazów [color=light-yellow]dysków twardych[reset]:  Geometria w formacie
-bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
-[color=blue]IMGMOUNT dysk plikobraz -size bps,spc,hpc,cyl[reset]
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
 Żaden obraz nie został zamontowany.
@@ -1615,7 +2335,7 @@ Nie znaleziono pliku obrazu.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Aby zamontować katalog użyj polecenia '[color=blue]mount[reset], a nie [color=blue]imgmount[reset].
+Aby zamontować katalog użyj polecenia '[color=light-green]mount[reset], a nie [color=light-green]imgmount[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1631,11 +2351,7 @@ Dysk %d jest zamontowany jako '%s'.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
-Obraz musi znajdować się na dysku widocznym dla systemu gospodarza.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Używanie wielu plików jest obsługiwane tylko dla obrazów cue/iso.
+Obraz musi znajdować się na dysku widocznym w systemie gospodarza.
 
 .
 :PROGRAM_INTRO_HELP
@@ -1644,11 +2360,11 @@ Krótki, pełnoekranowy samouczek.
 .
 :PROGRAM_INTRO_HELP_LONG
 Składnia:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]STRONA[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]STRONA[reset]
 
 Gdzie:
-  [color=white]STRONA[reset]  strona do wyświetlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset].
+  [color=white]STRONA[reset]  strona do wyświetlenia, np. [color=white]cdrom[reset], [color=white]mount[reset] lub [color=white]special[reset]
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla jedną stronę na raz; naciśnij dowolny
@@ -1656,25 +2372,25 @@ Uwagi:
   Podanie nazwy strony wyświetla tylko żądaną stronę.
 
 Przykłady:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]cdrom[reset]
 .
 :PROGRAM_INTRO
-[erases=entire][color=green]Witaj w DOSBox Staging[reset], emulatorze x86 z dźwiękiem i grafiką.
+[erases=entire][color=light-green]Witaj w DOSBox Staging[reset], emulatorze x86 z dźwiękiem i grafiką.
 DOSBox tworzy dla Ciebie powłokę, która wygląda jak stary, poczciwy DOS.
 
-Informacje o montowaniu dysków, wpisz:      [color=blue]intro mount[reset]
-Informacje o wsparciu dla CD-ROM, wpisz:    [color=blue]intro cdrom[reset]
-Informacje o skrótach klawiszowych, wpisz:  [color=blue]intro special[reset]
+Informacje o montowaniu dysków, wpisz:      [color=light-blue]intro mount[reset]
+Informacje o wsparciu dla CD-ROM, wpisz:    [color=light-blue]intro cdrom[reset]
+Informacje o skrótach klawiszowych, wpisz:  [color=light-blue]intro special[reset]
 
 Więcej informacji o DOSBox Staging znajdziesz (po angielsku) na wiki:
-[color=blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
+[color=light-blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[color=red]DOSBox zatrzyma/wyłączy się bez ostrzeżenia jeśli wystąpi poważny błąd![reset]
+[color=light-red]DOSBox zatrzyma/wyłączy się bez ostrzeżenia jeśli wystąpi poważny błąd![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[erases=entire][color=green]Kilka poleceń na początek[reset]
+[erases=entire][color=light-green]Kilka poleceń na początek[reset]
 Zanim uzyskasz dostęp do plików na Twoim dysku,
 musisz zamontować zawierający je katalog.
 
@@ -1682,85 +2398,66 @@ musisz zamontować zawierający je katalog.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c:\dosgames\[color=white] stworzy dysk C z zawartością z katalogu c:\dosgames. ║
+║ [color=light-green]mount c c:\dosgames\[color=white] stworzy dysk C z zawartością z katalogu c:\dosgames. ║
 ║                                                                           ║
-║ [color=green]c:\dosgames\[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.       ║
+║ [color=light-green]c:\dosgames\[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.       ║
 ╚═══════════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c ~/dosgames[color=white] stworzy dysk C z zawartością z katalogu ~/dosgames. ║
+║ [color=light-green]mount c ~/dosgames[color=white] stworzy dysk C z zawartością z katalogu ~/dosgames. ║
 ║                                                                        ║
-║ [color=green]~/dosgames[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.      ║
+║ [color=light-green]~/dosgames[color=white] to tylko przykład. Zastąp go swoim własnym katalogiem.      ║
 ╚════════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Po pomyślnym zamontowaniu katalogu, wpisz [color=blue]c:[reset] aby przejść na Twój świeżo
-utworzony dysk. Wpisz [color=blue]dir[reset], żeby obejrzeć jego zawartość. Polecenie [color=blue]cd[reset]
+Po pomyślnym zamontowaniu katalogu, wpisz [color=light-blue]c:[reset] aby przejść na Twój świeżo
+utworzony dysk. Wpisz [color=light-blue]dir[reset], żeby obejrzeć jego zawartość. Polecenie [color=light-blue]cd[reset]
 pozwoli Ci przejść do wybranego katalogu (rozpoznasz je po oznaczeniu
 [color=yellow]<DIR>[reset] w wyświetlonej zawartości).
-Możesz uruchamiać programy o rozszerzeniach [color=light-red].exe[reset], [color=light-red].bat[reset] oraz [color=light-red].com[reset], wpisując
+Możesz uruchamiać programy o rozszerzeniach [color=red].exe[reset], [color=red].bat[reset] oraz [color=red].com[reset], wpisując
 ich nazwy w wierszu poleceń.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[erases=entire][color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
-DOSBox emuluje napędy CD-ROM na dwóch poziomach.
-
-Poziom [color=light-yellow]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
-i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
-[color=blue]mount D C:\katalog -t cdrom[reset]
+[erases=entire][color=light-green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
+Polecenie [color=light-blue]mount[reset] działa ze wszystkimi normalnymi katalogami. Instaluje ono
+program MSCDEX i oznacza pliki jako tylko-do-odczytu.
+To wystarcza do większości gier:
+[color=light-blue]mount D C:\katalog -t cdrom[reset]
 Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
-[color=blue]mount D C:\katalog -t cdrom -label ETYKIETA[reset]
+[color=light-blue]mount D C:\katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [color=light-yellow]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
-Działa tylko z rzeczywistymi napędami CD-ROM:
-[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
-Zastąp [color=light-red]D:\[reset] przez lokację Twojego napędu CD-ROM.
-Zastąp [color=yellow]0[reset] w parametrze [color=blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[color=blue]mount -listcd[reset]
-
-Dodatkowo, poleceniem [color=blue]imgmount[reset] możesz użyć montować obrazy w formatach ISO
-oraz CUE/BIN:
-[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
-[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
+Ponadto poleceniem [color=light-blue]imgmount[reset] można zamontować obraz ISO lub CUE/BIN:
+[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[erases=entire][color=green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
-DOSBox emuluje napędy CD-ROM na dwóch poziomach.
-
-Poziom [color=light-yellow]podstawowy[reset] używa zwykłych katalogów; instaluje sterownik MSCDEX
-i oznacza ich zawartość jako tylko do odczytu. To wystarcza do większości gier:
-[color=blue]mount D ~/katalog -t cdrom[reset]
+[erases=entire][color=light-green]Używanie rzeczywistych/wirtualnych dysków CD-ROM[reset]
+Polecenie [color=light-blue]mount[reset] działa ze wszystkimi normalnymi katalogami. Instaluje ono
+program MSCDEX i oznacza pliki jako tylko-do-odczytu.
+To wystarcza do większości gier:
+[color=light-blue]mount D ~/katalog -t cdrom[reset]
 Jeśli to nie zadziała, podaj dodatkowo etykietę symulowanego dysku CD-ROM:
-[color=blue]mount D ~/katalog -t cdrom -label ETYKIETA[reset]
+[color=light-blue]mount D ~/katalog -t cdrom -label ETYKIETA[reset]
 
-Poziom [color=light-yellow]rozszerzony[reset] to bardziej niskopoziomowa obsługa.
-Działa tylko z rzeczywistymi napędami CD-ROM:
-[color=blue]mount d[reset] [color=light-red]~/przykład[color=blue] -t cdrom -usecd [color=yellow]0[reset]
-
-Zastąp [color=light-red]~/przykład[reset] przez lokację Twojego napędu CD-ROM.
-Zastąp [color=yellow]0[reset] w parametrze [color=blue]-usecd [color=yellow]0[reset] przez numer Twojego napędu CD-ROM, wyświetlanego przez polecenie:
-[color=blue]mount -listcd[reset]
-
-Dodatkowo, poleceniem [color=blue]imgmount[reset] możesz montować obrazy płyt w formatach ISO
-oraz CUE/BIN:
-[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
-[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
+Ponadto poleceniem [color=light-blue]imgmount[reset] można zamontować obraz ISO lub CUE/BIN:
+[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[erases=entire][color=green]Skróty klawiszowe[reset]
-To są domyślne skróty klawiszowe. Można je zmienić za pomocą [color=light-yellow]mapera klawiatury[reset].
+[erases=entire][color=light-green]Skróty klawiszowe[reset]
+To są domyślne skróty klawiszowe. Można je zmienić za pomocą [color=brown]mapera klawiatury[reset].
 
 [color=yellow]%s+Enter[reset]  Przełącz pomiędzy pełnym ekranem a trybem okienkowym.
 [color=yellow]%s+Pause[reset]  Pauza lub wznowienie działania emulatora.
-[color=yellow]%s+F1[reset]   %s Uruchom [color=light-yellow]mapera klawiatury[reset].
+[color=yellow]%s+F1[reset]   %s Uruchom [color=brown]mapera klawiatury[reset].
 [color=yellow]%s+F4[reset]   %s Podmień zamontowany obraz na kolejny, sprawdź zmiany
            na zamontowanych dyskach.
 [color=yellow]%s+F5[reset]     Zrzut ekranu (wyrenderowany obraz).
@@ -1784,29 +2481,29 @@ Strona kodowa %i dla układu klawiatury '%s' została załadowana.
 
 .
 :PROGRAM_KEYB_HELP_LONG
-Konfiguruje klawiaturę i czcionkę ekranową dla danego języka.
+Konfiguruj klawiaturę i czcionkę ekranową dla danego języka.
 
 Składnia:
-  [color=green]keyb[reset] [color=cyan][KLAWIATURA][reset]
-  [color=green]keyb[reset] [color=cyan]KLAWIATURA[reset] [color=white]KODOWANIE[reset] [PLIK]
+  [color=light-green]keyb[reset] [color=light-cyan][KLAWIATURA][reset]
+  [color=light-green]keyb[reset] [color=light-cyan]KLAWIATURA[reset] [color=white]KODOWANIE[reset] [PLIK]
 
 Gdzie:
-  [color=cyan]KLAWIATURA[reset]  układ klawiatury, np. [color=cyan]pl[reset] (programisty) lub [color=cyan]pl214[reset] (maszynistki).
+  [color=light-cyan]KLAWIATURA[reset]  układ klawiatury, np. [color=light-cyan]pl[reset] (programisty) lub [color=light-cyan]pl214[reset] (maszynistki)
   [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje więcej
               znaków graficznych niż 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (język
               kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
-              z symbolem euro), [color=white]852[reset] (Europa Środkowo-Wschodnia) lub [color=white]437[reset] (USA).
-  PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej.
+              z symbolem euro), [color=white]852[reset] (Europa Środkowo-Wschodnia) lub [color=white]437[reset] (USA)
+  PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej
 
 Uwagi:
   Uruchomienie bez argumentów pokazuje aktualny układ klawiatury i stronę
-  kodową. [color=cyan]KLAWIATURA[reset] może być także zmieniona w pliku konfiguracyjnym
-  w sekcji [dos], parametrem 'keyboardlayout = [color=cyan]KLAWIATURA[reset]'.
+  kodową. [color=light-cyan]KLAWIATURA[reset] może być także zmieniona w pliku konfiguracyjnym
+  w sekcji [dos], parametrem 'keyboardlayout = [color=light-cyan]KLAWIATURA[reset]'.
 
 Przykłady:
-  [color=green]KEYB[reset] [color=cyan]us[reset]
-  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
-  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
+  [color=light-green]KEYB[reset] [color=light-cyan]us[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 .
 :PROGRAM_KEYB_NOERROR
 Układ klawiatury '%s' dla strony kodowej %i został załadowany.
@@ -1814,7 +2511,6 @@ Układ klawiatury '%s' dla strony kodowej %i został załadowany.
 .
 :PROGRAM_KEYB_FILENOTFOUND
 Nie znaleziono pliku układu klawiatury '%s'.
-
 
 .
 :PROGRAM_KEYB_INVALIDFILE
@@ -1828,35 +2524,38 @@ Brak układu klawiatury w '%s' dla strony kodowej %i.
 :PROGRAM_KEYB_INVCPFILE
 Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury '%s'.
 
-
 .
 :PROGRAM_LOADFIX_HELP_LONG
-Ładuje program w określone miejsce pamięci i uruchamia go.
+Załaduj program w określone miejsce pamięci i uruchom go.
 
 Składnia:
-  [color=green]loadfix[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
-  [color=green]loadfix[reset] [/d] (lub [/f])
+  [color=light-green]loadfix[reset] [color=white][-ROZMIAR][reset] [color=light-cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=light-green]loadfix[reset] [/d] (lub [/f])
 
 Gdzie:
-  [color=cyan]PROGRAM[reset]  program lub gra do załadowania, opcjonalnie z argumentami.
+  [color=light-cyan]PROGRAM[reset]      program lub gra do załadowania, opcjonalnie z argumentami
+  [color=white]ROZMIAR[reset]      rozmiar w kilobajtach pamięci do zaalokowania
+  /d (lub /f)  zwalnia uprzednio zarezerwowaną pamięć
 
 Uwagi:
-  Typowy przykład użycia to uruchomienie gry lub programu, który normalnie
-  zgłasza błąd '[color=white]Packed File Corrupt[reset]' lub '[color=white]Not enough memory[reset]', jak
-  niektóre gry z lat 1980-tych (California Games II, itd.).
+  Typowy przykład użycia to uruchomienie gry, jak California Games II lub
+  Wing Commander 2, która normalnie zgłasza błąd '[color=white]Packed File Corrupt[reset]'
+  lub '[color=white]Not enough memory[reset]'.
   Uruchomienie bez argumentów tylko alokuje pamięć na grę; pamięć można później
   zwolnić przełącznikiem /d lub /f.
 
 Przykłady:
-  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
-  [color=green]loadfix[reset] /d
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
+  [color=light-green]loadfix[reset] /d
 .
 :PROGRAM_LOADFIX_ALLOC
-%d kB zaalokowane.
+%d KB zaalokowane.
 
 .
 :PROGRAM_LOADFIX_DEALLOC
-%d kB zwolnione.
+%d KB zwolnione.
 
 .
 :PROGRAM_LOADFIX_DEALLOCALL
@@ -1868,19 +2567,19 @@ Błąd alokacji pamięci.
 
 .
 :PROGRAM_LOADROM_HELP_LONG
-Ładuje obraz ROM języka IBM BASIC lub BIOSu karty graficznej.
+Załaduj obraz ROM języka IBM BASIC lub BIOSu karty graficznej.
 
 Składnia:
-  [color=green]loadrom [color=cyan]OBRAZ[reset]
+  [color=light-green]loadrom [color=light-cyan]OBRAZ[reset]
 
 Gdzie:
-  [color=cyan]OBRAZ[reset]  obraz ROMu do załadowania.
+  [color=light-cyan]OBRAZ[reset]  obraz ROMu do załadowania
 
 Uwagi:
    Po załadowaniu obrazu ROMu języka IBM BASIC, można uruchomić interpreter.
 
 Przykłady:
-  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
+  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
 Podaj obraz ROMu do załadowania.
@@ -1906,11 +2605,36 @@ Nie można rozpoznać ROMu.
 Załadowano BASIC ROM.
 
 .
-:PROGRAM_MEM_HELP_LONG
-Wyświetla informację o użyciu pamięci.
+:PROGRAM_LS_HELP_LONG
+Wyświetl zawartość katalogu w formie szerokiej listy.
 
 Składnia:
-  [color=green]mem[reset]
+  [color=light-green]ls[reset] [[color=light-cyan]WZORZEC[reset] [[color=light-cyan]WZORZEC[reset], ...]] [[color=light-cyan]ŚCIEŻKA[reset] [[color=light-cyan]ŚCIEŻKA[reset], ...]] [/a]
+
+Gdzie:
+  [color=light-cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
+           którymi są asterisk ('*') i znak zapytania ('?')
+  [color=light-cyan]ŚCIEŻKA[reset]  dokładna ścieżka na zamontowanym dysku
+  /a       wyświetl wszystkie pliki i katalogi, również ukryte i systemowe
+
+Uwagi:
+  Polecenie wyświetla katalogi kolorem [color=light-blue]niebieskim[reset], pliki wykonywalne
+  (*.com, *.exe, *.bat) kolorem [color=light-green]zielonym[reset], a pozostałe aktualnym kolorem.
+
+Przykłady:
+  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
+
+.
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Nieobsługiwany wzorzec maski - '%s'
+
+.
+:PROGRAM_MEM_HELP_LONG
+Wyświetl informację o użyciu pamięci.
+
+Składnia:
+  [color=light-green]mem[reset]
 
 Gdzie:
   To polecenie nie obsługuje żadnych argumentów.
@@ -1920,44 +2644,44 @@ Uwagi:
   konwencjonalną, UMB (górną), XMS (rozszerzoną) i EMS (stronicowaną).
 
 Przykłady:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 .
 :PROGRAM_MEM_CONVEN
 %10d kB wolnej pamięci konwencjonalnej
 
 .
 :PROGRAM_MEM_EXTEND
-%10d kB wolnej pamięci XMS (rozszerzonej)
+%10d KB wolnej pamięci XMS (rozszerzonej)
 
 .
 :PROGRAM_MEM_EXPAND
-%10d kB wolnej pamięci EMS (stronicowanej)
+%10d KB wolnej pamięci EMS (stronicowanej)
 
 .
 :PROGRAM_MEM_UPPER
-%10d kB wolnej pamięci UMB (górnej) w %d blokach (największy %d kB)
+%10d KB wolnej pamięci UMB (górnej) w %d blokach (największy %d KB)
 
 .
 :PROGRAM_MORE_HELP_LONG
-Wyświetla plik tekstowy lub rezultat polecenia jeden ekran na raz.
+Wyświetl plik tekstowy lub rezultat polecenia, jeden ekran na raz.
 
 Składnia:
-  [color=cyan]POLECENIE[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]PLIK[reset]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]WZORZEC[reset] [[color=cyan]WZORZEC[reset] ...]
+  [color=light-cyan]POLECENIE[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]PLIK[reset]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]WZORZEC[reset] [[color=light-cyan]WZORZEC[reset] ...]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset] plecenie, którego rezultat ma być wyświetlony.
-  [color=cyan]PLIK[reset]      dokładna nazwa pliku do wyświetlenia, opcjonalnie ze ścieżką.
-  [color=cyan]WZORZEC[reset]   ścieżka do pojedynczego pliku, lub ścieżka z symbolami
+  [color=light-cyan]POLECENIE[reset] plecenie, którego rezultat ma być wyświetlony
+  [color=light-cyan]PLIK[reset]      dokładna nazwa pliku do wyświetlenia, opcjonalnie ze ścieżką
+  [color=light-cyan]WZORZEC[reset]   ścieżka do pojedynczego pliku, lub ścieżka z symbolami
             wieloznaczności (maskami), którymi są asterisk ('*') i znak
-            zapytania ('?').
-  /c        czyść ekran przed każdym plikiem.
-  /e        tryb rozszerzony, więcej skrótów klawiszowych.
-  /p        interpretuj znak NewPage/FormFeed.
-  /s        łącz wiele pustych linii w jedną.
-  /t[color=white]n[reset]       rozmiar tabulatora, 1-9, domyślnie 8.
-  +[color=white]nnn[reset]      ile linii pominąć na początku pierwszego pliku.
+            zapytania ('?')
+  /c        wyczyść ekran przed każdym plikiem
+  /e        tryb rozszerzony, więcej skrótów klawiszowych
+  /p        interpretuj znak NewPage/FormFeed
+  /s        łącz wiele pustych linii w jedną
+  /t[color=white]n[reset]       rozmiar tabulatora, 1-9, domyślnie 8
+  +[color=white]nnn[reset]      ile linii pominąć na początku pierwszego pliku
 
 Uwagi:
   Używać tylko do plików tekstowych, nie należy używać do plików binarnych.
@@ -1967,7 +2691,7 @@ Uwagi:
   [color=yellow]N[reset] lub [color=yellow]F[reset]        przejdź do kolejnego pliku.
   [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] przerwij polecenie.
   Ponadto można użyć [color=yellow]Ctrl+C[reset] do przerwania polecenia czytającego z klawiatury,
-  na przykład jeśli [color=green]more[reset] zostało wywołane bez argumentów.
+  na przykład jeśli [color=light-green]more[reset] zostało wywołane bez argumentów.
   Następujące klawisze są dostępne wyłącznie w trybie rozszerzonym:
   [color=yellow]P[reset] [color=white]nnn[reset]          wyświetl następne [color=white]nnn[reset] linii.
   [color=yellow]S[reset] [color=white]nnn[reset]          pomiń kolejne [color=white]nnn[reset] linii.
@@ -1975,63 +2699,68 @@ Uwagi:
   Opcja /p wyłącza niektóre niekompatybilne klawisze.
 
 Przykłady:
-  [color=cyan]dir /on[reset] | [color=green]more[reset]               ; posortowany katalog, po jednym ekranie
-  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\CZYTAJTO.TXT[reset]   ; wyświetla plik, tabulator to 4 znaki
+  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]               ; posortowany katalog, po jednym ekranie
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\CZYTAJTO.TXT[reset]   ; wyświetla plik, tabulator to 4 znaki
 .
 :PROGRAM_MORE_NO_FILE
 Nie znaleziono żadnego pliku.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- koniec ---[reset]
+[reset][color=brown]--- koniec ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
-[reset][color=light-yellow]--- plik %s ---[reset]
+[reset][color=brown]--- plik %s ---[reset]
 .
 :PROGRAM_MORE_NEW_DEVICE
-[reset][color=light-yellow]--- urządzenie %s ---[reset]
+[reset][color=brown]--- urządzenie %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
+[reset][color=brown]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_PERCENT
-[reset][color=light-yellow]--- (%d%%) wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
+[reset][color=brown]--- (%d%%) wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej, N kolejny plik ---[reset]
+[reset][color=brown]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej, N pokazuje kolejny plik ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=brown]--- więcej ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=brown]--- (%d%%) więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
-[reset][color=light-yellow]--- linia %u ---[reset]
+[reset][color=brown]--- linia %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
-[reset][color=red]--- nie można otworzyć %s ---[reset]
+[reset][color=light-red]--- nie można otworzyć %s ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
-[reset][color=light-yellow](przerwano)[reset]
+[reset][color=brown](przerwano)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](kolejny plik)[reset]
+[reset][color=brown](kolejny plik)[reset]
 .
 :PROGRAM_MORE_SKIPPED
-[reset][color=light-yellow](pominięta zawartość)[reset]
+[reset][color=brown](pominięta zawartość)[reset]
 .
 :PROGRAM_MORE_HOW_MANY_LINES
-[reset][color=light-yellow]ile linii?[reset]
+[reset][color=brown]ile linii?[reset]
 .
 :PROGRAM_MOUNT_HELP
-Montuje fizyczny katalog lub dysk.
+Montuj fizyczny katalog lub dysk.
 
 .
 :PROGRAM_MOUNT_HELP_LONG
-Montuje katalog z systemu gospodarza pod literę dysku.
+Montuj katalog z systemu gospodarza pod literę dysku.
 
 Składnia:
-  [color=green]mount[reset] [color=white]DYSK[reset] [color=cyan]KATALOG[reset] [-t TYP] [-usecd #] [-freesize ROZMIAR] [-label ETYKIETA]
-  [color=green]mount[reset] -listcd / -cd  (wyświetla wykryte napędy CD-ROM i ich numery)
-  [color=green]mount[reset] -u [color=white]DYSK[reset]        (odmontowuje dysk)
+  [color=light-green]mount[reset] [color=white]DYSK[reset] [color=light-cyan]KATALOG[reset] [-t TYP] [-freesize ROZMIAR] [-label ETYKIETA]
+  [color=light-green]mount[reset] -u [color=white]DYSK[reset]        (odmontowuje dysk)
 
 Gdzie:
   [color=white]DYSK[reset]      litera, pod którą katalog zostanie zamontowany: A, C, D, ...
-  [color=cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
+  [color=light-cyan]KATALOG[reset]   katalog systemu gospodarza do zamontowania
   TYP       typ katalogu do zamontowania: dir, floppy, cdrom lub overlay
   ROZMIAR   ile wolnego miejsca raportować programom (kilobajty dla dyskietek,
             megabajty dla pozostałych dysków)
@@ -2039,15 +2768,28 @@ Gdzie:
 
 Uwagi:
   Parametr '-t overlay' przekierowuje operacje zapisu do innego katalogu.
-  Parametr '-usecd ID' daje dostęp do fizycznego napędu CD-ROM, jest to
-  potrzebne do obsługi ścieżek dźwiękowych (tylko w systemach Windows oraz
-  Linux). Listę fizycznych napędów można wyświetlić poleceniem 'mount -cd'.
   Dodatkowe opcje są opisane (po angielsku) w podręczniku (README, chapter 4).
 
 Przykłady:
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Gra CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/grydos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/UŻYTKOWNIK/Gra CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]zapisane_stany_gier[reset] -t overlay
+
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
 Znalezione napędy CD-ROM: %d
@@ -2086,11 +2828,11 @@ Dyski wirtualne nie mogą zostać odmontowane.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=red]Montowanie dysku C:\ nie jest zalecane. Proszę następnym razem zamontować (pod)katalog.[reset]
+[color=light-red]Montowanie dysku C:\ nie jest zalecane. Proszę następnym razem zamontować (pod)katalog.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[color=red]Montowanie katalogu / nie jest zalecane. Proszę następnym razem zamontować (pod)katalog.[reset]
+[color=light-red]Montowanie katalogu / nie jest zalecane. Proszę następnym razem zamontować (pod)katalog.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -2122,35 +2864,33 @@ Błąd montowania nakładki ('overlay').
 Nakładka ('overlay') '%s' zamontowana na dysku %c.
 
 .
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Nie można przenieść dysku Z. Dysk %c jest już zamontowany.
-
-.
 :PROGRAM_MOUSECTL_HELP_LONG
-Zarządza myszami fizycznymi i logicznymi.
+Zarządzaj myszami, fizycznymi i logicznymi.
 
 Składnia:
-  [color=green]mousectl[reset] [-all]
-  [color=green]mousectl[reset] [color=white]INTERFEJS[reset] -map [color=cyan]NAZWA[reset]
-  [color=green]mousectl[reset] [color=white]INTERFEJS[reset] [[color=white]INTERFEJS[reset] ...] -map
-  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -unmap | -on | -off | -reset
-  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s | -sx | -sy [czułość]
-  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s czułość_x czułość_y
-  [color=green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -r [min_częstotliwość]
+  [color=light-green]mousectl[reset] [-all]
+  [color=light-green]mousectl[reset] [color=white]INTERFEJS[reset] -map [color=light-cyan]NAZWA[reset]
+  [color=light-green]mousectl[reset] [color=white]INTERFEJS[reset] [[color=white]INTERFEJS[reset] ...] -map
+  [color=light-green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -unmap | -on | -off | -reset
+  [color=light-green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s | -sx | -sy [czułość]
+  [color=light-green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -s czułość_x czułość_y
+  [color=light-green]mousectl[reset] [[color=white]INTERFEJS[reset] ...] -r [min_częstotliwość]
 
 Gdzie:
-  [color=white]INTERFEJS[reset]      jeden z: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
-  -map -unmap    mapowanie/odmapowanie myszy, w [color=cyan]NAME[reset] można używać '*' lub '?'.
-  -s -sx -sy     czułość myszy / dla osi x / dla osi y, od -999 do +999.
-  -r             wymuszona minimalna częstotliwość próbkowania.
-  -on -off       włącz/wyłącz myszy na danym interfejsie.
-  -reset         przywróć ustawienia domyślne.
+  [color=white]INTERFEJS[reset]      jeden z: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap    mapowanie/odmapowanie myszy, w [color=light-cyan]NAME[reset] można używać '*' lub '?'
+  -s -sx -sy     czułość myszy / dla osi x / dla osi y, od -999 do +999
+  -r             wymuszona minimalna częstotliwość próbkowania
+  -on -off       włącz/wyłącz myszy na danym interfejsie
+  -reset         przywróć ustawienia domyślne
 
 Uwagi:
   Pominięcie wartości czułości lub częstotliwości przywraca wartość domyślną.
+  Czułość ustawiona w pliku konfiguracyjnym działa jak wartość globalna,
+  ustawienia dla poszczególnych interfejsów działają na jej bazie.
 
 Przykłady:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
+  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Nieprawidłowa składnia, w nazwie dozwolone są tylko znaki ASCII.
@@ -2173,6 +2913,10 @@ Nieprawidłowa składnia, częstotliwość próbkowania musi być jedną z:
 Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
 
 .
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Mapowanie niedostępne przy obecnym sterowniku myszy w systemie gościa.
+
+.
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Żaden interfejs myszy nie jest dostępny.
 
@@ -2193,13 +2937,13 @@ Nie znaleziono żadnej fizycznej myszy o pasującej nazwie.
 [color=white]Interfejs        Czułość      Próbkowanie (Hz)   Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s          %s
+[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s          %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interfejs       Nazwa myszy[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2
-[color=cyan]%-4s[reset]            %s
+[color=light-cyan]%-4s[reset]            %s
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 bez mapowania   %s
@@ -2211,13 +2955,13 @@ używa wskaźnika systemowego
 mysz fizyczna
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
-[color=red]mysz odłączona[reset]
+[color=light-red]mysz odłączona[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 wyłączona
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Częstotliwości próbkowania myszy na interfejsach [color=cyan]COM[reset] to wyłącznie estymacje.
+Częstotliwości próbkowania myszy na interfejsach [color=light-cyan]COM[reset] to wyłącznie estymacje.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Częstotliwości próbkowania w wymuszoną minimalną wartością są oznaczone '*'.
@@ -2235,14 +2979,14 @@ Jeśli jakakolwiek fizyczna mysz jest zmapowana, płynna integracja kursora
 myszy jest zawsze wyłączona. Zmapowane myszy zawsze działają w trybie 'raw'.
 .
 :PROGRAM_RESCAN_HELP_LONG
-Sprawdza zmiany na zamontowanych dyskach.
+Sprawdź zmiany na zamontowanych dyskach.
 
 Składnia:
-  [color=green]rescan[reset] [color=cyan]DYSK[reset]
-  [color=green]rescan[reset] [/a]
+  [color=light-green]rescan[reset] [color=light-cyan]DYSK[reset]
+  [color=light-green]rescan[reset] [/a]
 
 Gdzie:
-  [color=cyan]DYSK[reset]  dysk do sprawdzenia pod kątem zmian.
+  [color=light-cyan]DYSK[reset]  dysk do sprawdzenia pod kątem zmian
 
 Uwagi:
   Zmiany dokonane w systemie gospodarza zostaną uwzględnione wewnątrz DOSu.
@@ -2250,38 +2994,42 @@ Uwagi:
   Przełącznik /a powoduje sprawdzenie wszystkich dysków.
 
 Przykłady:
-  [color=green]rescan[reset] [color=cyan]c:[reset]
-  [color=green]rescan[reset] /a
+  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
+  [color=light-green]rescan[reset] /a
 .
 :PROGRAM_RESCAN_SUCCESS
 Sprawdzono zmiany na dysku.
 
 .
 :SHELL_CMD_MIXER_HELP_LONG
-Zarządza ustawieniami miksera dźwięku.
+Zarządzaj ustawieniami miksera dźwięku.
 
 Składnia:
-  [color=green]mixer[reset] [color=cyan][KANAŁ][reset] [color=white]POLECENIE[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]  (wyświetla dostępne urządzenia MIDI)
+  [color=light-green]mixer[reset] [color=light-cyan][KANAŁ][reset] [color=white]POLECENIA[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
 
 Gdzie:
-  [color=cyan]KANAŁ[reset]      to nazwa kanału, którego dotyczyć będą zmiany.
-  [color=white]POLECENIE[reset]  jest jednym z poniższych:
-    Głośność:     od [color=white]0[reset] do [color=white]100[reset] lub w decybelach poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset])
-                  [color=white]L:P[reset] osobne ustawienia Lewej/Prawej strony (np. [color=white]10:20[reset])
-    Wyjście:      [color=white]stereo[reset], [color=white]reverse[reset] (zamienione kanały stereo)
-    Przenikanie:  od [color=white]x0[reset] do [color=white]x100[reset]
-    Efekt 'reverb' / 'chorus':  od [color=white]r0[reset] do [color=white]r100[reset] / od [color=white]c0[reset] do [color=white]c100[reset]
+  [color=light-cyan]KANAŁ[reset]      to nazwa kanału, którego dotyczyć będą zmiany
+  [color=white]POLECENIA[reset]  to jedno lub więcej z poniższych:
+    głośność:       wartość w procentach od [color=white]0[reset] do [color=white]9999[reset], lub w decybelach
+                    poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset]); użyj [color=white]L:P[reset] aby ustawić oddzielnie
+                    głośność lewego i prawego kanału stereo (np. [color=white]10:20[reset], [color=white]150:d6[reset])
+    tryb stereo:    [color=white]stereo[reset], lub [color=white]reverse[reset] (zamiana kanałów stereo)
+    przenikanie:    wartość od [color=white]x0[reset] do [color=white]x100[reset] (tylko dla kanałów stereo)
+    efekt 'reverb': wartość od [color=white]r0[reset] do [color=white]r100[reset]
+    efekt 'chorus': wartość od [color=white]c0[reset] do [color=white]c100[reset]
 
 Uwagi:
   Uruchomienie bez argumentów wyświetli aktualne ustawienia.
-  Jednym poleceniem można zmienić ustawienia kilku kanałów; ustawienia
-  przenikania lub efektu 'reverb' można zmienić globalnie pomijając kanał.
-  Przełącznik /noshow pozwala zmienić ustawienia bez ich wyświetlenia.
+  Wykonaj [color=light-green]mixer[reset] /listmidi aby wyświetlić dostępne urządzenia MIDI.
+  Jednym poleceniem można zmienić ustawienia jednego lub kilku kanałów.
+  Jeśli żaden kanał nie zostanie podany, ustawienia przenikania oraz efektów
+  'reverb' i 'chorus' zostaną zastosowane globalnie.
+  Opcja /noshow wprowadza ustawienia bez wyświetlenia nowych wartości.
 
 Przykłady:
-  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
@@ -2301,31 +3049,91 @@ Reverse
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Kanał [color=light-cyan]%s[reset] nieaktywny
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Nieprawidłowe globalne polecenie: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Nieprawidłowa głośność kanału [color=light-cyan]%s[reset]: [color=white]%s[reset] (MIXER /? wyświetli pomoc)
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Brakujące polecenie dla kanału [color=light-cyan]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Nieprawidłowe polecenie dla kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+.
 :PROGRAM_SERIAL_HELP_LONG
-Zarządza portami szeregowymi.
+Zarządzaj portami szeregowymi.
 
 Składnia:
-  [color=green]serial[reset] [color=white][PORT#][reset]  (wyświetla ustawienia portów lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
-  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]URZĄDZENIE[reset] [ustawienia]  (podłącz urządzenie do portu)
+  [color=light-green]serial[reset] [color=white][PORT#][reset]  (wyświetla ustawienia portów lub tylko podanego - [color=white]1[reset], [color=white]2[reset], [color=white]3[reset], [color=white]4[reset])
+  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]URZĄDZENIE[reset] [ustawienia]  (podłącz urządzenie do portu)
 
 Gdzie:
-  [color=cyan]URZĄDZENIE[reset]  Jedno z: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset] lub [color=cyan]DISABLED[reset]
+  [color=light-cyan]URZĄDZENIE[reset]  jedno z: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset] lub [color=light-cyan]DISABLED[reset]
 
   Dodatkowe opcje dla poszczególnych urządzeń:
-  [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
-  [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+  [color=light-cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  [color=light-cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                PORT, INHSOCKET, SOCK
-  [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+  [color=light-cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
                2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
-  [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
-  [color=cyan]DUMMY[reset]      : IRQ
+  [color=light-cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
+  [color=light-cyan]DUMMY[reset]      : IRQ
 
 Przykłady:
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                  : Słuchaj na TCP:1250 - serwer
-  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250  : Podłącz do TCP:1250 - klient
-  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1         : Słuchaj na UDP:5000 - serwer
-  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0              : Użyj fizycznego portu (Linux)
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                       : Mysz typu Mouse Systems
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                  : Słuchaj na TCP:1250 - serwer
+  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250  : Podłącz do TCP:1250 - klient
+  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1         : Słuchaj na UDP:5000 - serwer
+  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0              : Użyj fizycznego portu (Linux)
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                       : Mysz typu Mouse Systems
 .
 :PROGRAM_SERIAL_SHOW_PORT
 COM%d: %s %s
@@ -2344,37 +3152,37 @@ Typ musi być jednym z:
 
 .
 :PROGRAM_SETVER_HELP_LONG
-Wyświetla lub ustawia wersję DOS raportowaną programom.
+Wyświetl lub ustaw wersję DOS raportowaną uruchomionym programom.
 
 Składnia:
-  [color=green]setver[reset] \[/b] [/p]
-  [color=green]setver[reset] [color=cyan]PLIK[reset] [color=cyan]WERSJA[reset] [/q]
-  [color=green]setver[reset] [color=cyan]PLIK[reset] /d [/q]
-  [color=green]setver[reset] [color=cyan]WERSJA[reset] /g [/q]
-  [color=green]setver[reset] /d /g [/q]
-  [color=green]setver[reset] /d /all [/q]
+  [color=light-green]setver[reset] \[/b] [/p]
+  [color=light-green]setver[reset] [color=light-cyan]PLIK[reset] [color=light-cyan]WERSJA[reset] [/q]
+  [color=light-green]setver[reset] [color=light-cyan]PLIK[reset] /d [/q]
+  [color=light-green]setver[reset] [color=light-cyan]WERSJA[reset] /g [/q]
+  [color=light-green]setver[reset] /d /g [/q]
+  [color=light-green]setver[reset] /d /all [/q]
 
 Gdzie:
-  [color=cyan]PLIK[reset]     nazwa pliku programu (opcjonalnie ze ścieżką), do którego
-           odnosi się ustawienie.
-  [color=cyan]WERSJA[reset]   wersja systemu DOS w formacie [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] lub [color=white]n[reset]
-  /g       ustawienie globalne, odnoszące się do wszystkich programów.
-  /d       usuwa wpis z tabeli wersji.
-  /all     razem z /d czyści całą tabelę wersji.
-  /b       wyświetla tabelę wersji w formie pliku wsadowego.
-  /p       wyświetla tabelę wersji po jednej stronie.
-  /q       nie wyświetla potwierdzenia.
-  /delete oraz /quiet oznaczają to samo, co /d oraz /q, odpowiednio.
+  [color=light-cyan]PLIK[reset]     nazwa pliku programu (opcjonalnie ze ścieżką), do którego
+           odnosi się ustawienie
+  [color=light-cyan]WERSJA[reset]   wersja systemu DOS w formacie [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] lub [color=white]n[reset]
+  /g       ustawienie globalne, odnoszące się do wszystkich programów
+  /d       usuń wpis z tabeli wersji
+  /all     razem z /d czyści całą tabelę wersji
+  /b       wyświetl tabelę wersji w formie pliku wsadowego
+  /p       wyświetl tabelę wersji po jednej stronie
+  /q       nie wyświetlaj potwierdzenia
+  /delete oraz /quiet oznaczają to samo, co /d oraz /q, odpowiednio
 
 Uwagi:
   Aby zapamiętać ustawienia na stałe, podaj nazwę pliku do przechowywania
   tabeli wersji w sekcji [dos] pliku konfiguracyjnego - dodaj wpis
-  'setver_table_file = [color=cyan]PLIK_Z_TABELĄ_WERSJI[reset]'.
+  'setver_table_file = [color=light-cyan]PLIK_Z_TABELĄ_WERSJI[reset]'.
 
 Przykłady:
-  [color=green]setver[reset] /b              ; wyświetla ustawienia w formie pliku wsadowego
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; raportuje wersję 6.22 dla każdego pliku RETRO.COM
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; zaprzestaje raportowania w/w wersji DOS
+  [color=light-green]setver[reset] /b              ; wyświetla ustawienia w formie pliku wsadowego
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; raportuje wersję 6.22 dla każdego pliku RETRO.COM
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; zaprzestaje raportowania w/w wersji DOS
 
 .
 :PROGRAM_SETVER_WRONG_TABLE
@@ -2414,46 +3222,38 @@ reguły dla pasujących nazw plików
 reguły dla pasujących nazw plików ze ścieżkami
 .
 :PROGRAM_TREE_HELP_LONG
-Wyświetla drzewo katalogów w formie graficznej.
+Wyświetl drzewo katalogów w formie graficznej.
 
 Składnia:
-  [color=green]tree[reset] [color=cyan][KATALOG][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]PORZĄDEK[reset]]
+  [color=light-green]tree[reset] [color=light-cyan][KATALOG][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]PORZĄDEK[reset]]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]    nazwa katalogu do wyświetlenia.
+  [color=light-cyan]KATALOG[reset]    nazwa katalogu do wyświetlenia
   [color=white]PORZĄDEK[reset]   porządek wyświetlania, jeden z:
                  [color=white]n[reset] (według nazwy, alfabetycznie),
                  [color=white]s[reset] (według rozmiaru, od najmniejszego),
                  [color=white]e[reset] (według rozszerzenia, alfabetycznie),
                  [color=white]d[reset] (według daty/czasu, od najstarszego),
-             z opcjonalnym prefiksem [color=white]-[reset] odwracającym porządek.
-  /a         użyj tylko 7-bitowych znaków ASCII.
-  /b         pomiń informacje z nagłówka/stopi.
-  /f         wyświetl również pliki.
-  /p         wyświetlaj po jednym ekranie, dopasuj do jego szerokości.
-  /da        wyświetl atrybuty.
-  /df        wyświetl rozmiary plików.
-  /dh        wyświetl również pliki/katalogi ukryte oraz systemowe.
-  /o[color=white]PORZĄDEK[reset] posortuj listę (patrz powyżej).
+             z opcjonalnym prefiksem [color=white]-[reset] odwracającym porządek
+  /a         użyj tylko 7-bitowych znaków ASCII
+  /b         pomiń informacje z nagłówka/stopi
+  /f         wyświetl również pliki
+  /p         wyświetlaj po jednym ekranie, dopasuj do jego szerokości
+  /da        wyświetl atrybuty
+  /df        wyświetl rozmiary plików
+  /dh        wyświetl również pliki/katalogi ukryte oraz systemowe
+  /o[color=white]PORZĄDEK[reset] posortuj listę (patrz powyżej)
 
 Uwagi:
-  Jeśli [color=cyan]KATALOG[reset] zostanie pominięty, użyty zostanie aktualny.
+  Jeśli [color=light-cyan]KATALOG[reset] zostanie pominięty, użyty zostanie aktualny.
 
 Przykłady:
-  [color=green]tree[reset]          ; wyświetl drzewo rozpoczynając od obecnego katalogu
-  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; wyświetl zawartość dysku C:, wraz z plikami
+  [color=light-green]tree[reset]          ; wyświetl drzewo rozpoczynając od obecnego katalogu
+  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; wyświetl zawartość dysku C:, wraz z plikami
 
 .
 :PROGRAM_TREE_DIRECTORY
  Drzewo katalogów dla dysku %s
-.
-:PROGRAM_TREE_NO_SUBDIRS
-Brak podkatalogów do wyświetlenia.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-Brak plików lub podkatalogów do wyświetlenia.
-
 .
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Zbyt wiele plików lub podkatalogów.
@@ -2521,6 +3321,14 @@ Plik '%s' już istnieje.
 Nie odnaleziono katalogu - '%s'.
 
 .
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Brak podkatalogów do wyświetlenia.
+
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Brak plików lub podkatalogów do wyświetlenia.
+
+.
 :SHELL_READ_ERROR
 Błąd podczas odczytu pliku - '%s'.
 
@@ -2535,25 +3343,25 @@ Krótka lista najczęściej używanych komend:
 
 .
 :SHELL_CMD_COMMAND_HELP_LONG
-Uruchamia interpreter wiersza poleceń.
+Uruchom interpreter wiersza poleceń.
 
 Składnia:
-  [color=green]command[reset]
-  [color=green]command[reset] /c (lub /init) [color=cyan]POLECENIE[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c (lub /init) [color=light-cyan]POLECENIE[reset]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset]  polecenie, program lub gra do uruchomienia.
+  [color=light-cyan]POLECENIE[reset]  polecenie, program lub gra do uruchomienia
 
 Uwagi:
   DOSBox Staging automatycznie uruchamia interpreter wiersza poleceń z opcją
   /init podczas startu, pokazując baner powitalny.
-  Poleceniem [color=green]command[reset] można uruchomić nową instancję.
-  Opcja /c wykonuje podane [color=cyan]POLECENIE[reset], po czym kończy pracę wiersza poleceń.
+  Poleceniem [color=light-green]command[reset] można uruchomić nową instancję.
+  Opcja /c wykonuje podane [color=light-cyan]POLECENIE[reset], po czym kończy pracę wiersza poleceń.
 
 Przykłady:
-  [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
-  [color=green]command[reset] /init [color=cyan]dir[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hello world![reset]
+  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]
 .
 :SHELL_CMD_ECHO_ON
 Echo jest włączone.
@@ -2581,7 +3389,7 @@ Wciąż jesteś na dysku Z:, wpisz [color=yellow]C:[reset] aby przejść na zamo
 
 .
 :SHELL_CMD_DATE_HELP
-Wyświetla lub zmiana datę systemową.
+Wyświetl lub zmień aktualną datę.
 
 .
 :SHELL_CMD_DATE_ERROR
@@ -2600,12 +3408,12 @@ Wpisz [color=yellow]date %s[reset] aby zmienić datę.
 .
 :SHELL_CMD_DATE_HELP_LONG
 Składnia:
-  [color=green]date[reset] [/t]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]DATA[reset]
+  [color=light-green]date[reset] [/t]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]DATA[reset]
 
 Gdzie:
-  [color=cyan]DATA[reset]  data do ustawienia, w formacie [color=cyan]%s[reset].
+  [color=light-cyan]DATA[reset]  data do ustawienia, w formacie [color=light-cyan]%s[reset]
 
 Uwagi:
   Uruchomienie bez argumentów pokazuje aktualną datę, w krótkim formacie
@@ -2613,12 +3421,12 @@ Uwagi:
   Przełącznik /h synchronizuje datę z systemem gospodarza.
 
 Przykłady:
-  [color=green]date[reset]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]%s[reset]
+  [color=light-green]date[reset]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]%s[reset]
 .
 :SHELL_CMD_TIME_HELP
-Wyświetla lub zmienia godzinę systemową.
+Wyświetl lub zmień aktualną godzinę.
 
 .
 :SHELL_CMD_TIME_ERROR
@@ -2634,12 +3442,12 @@ Wpisz [color=yellow]time %s[reset] aby zmienić godzinę.
 .
 :SHELL_CMD_TIME_HELP_LONG
 Składnia:
-  [color=green]time[reset] [/t]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]GODZINA[reset]
+  [color=light-green]time[reset] [/t]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]GODZINA[reset]
 
 Gdzie:
-  [color=cyan]GODZINA[reset]  nowy czas do ustawienia, w formacie [color=cyan]%s[reset].
+  [color=light-cyan]GODZINA[reset]  nowy czas do ustawienia, w formacie [color=light-cyan]%s[reset]
 
 Uwagi:
   Uruchomienie bez argumentów pokazuje aktualną godzinę, w krótkim formacie
@@ -2647,9 +3455,9 @@ Uwagi:
   Przełącznik /h synchronizuje godzinę z systemem gospodarza.
 
 Przykłady:
-  [color=green]time[reset]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]%s[reset]
+  [color=light-green]time[reset]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]%s[reset]
 .
 :SHELL_CMD_MKDIR_ERROR
 Nie można utworzyć katalogu '%s'.
@@ -2730,12 +3538,12 @@ Błędne polecenie lub nazwa pliku: '%s'
 Naciśnij dowolny klawisz, aby kontynuować...
 .
 :SHELL_CMD_PAUSE_HELP
-Oczekuje na naciśnięcie klawisza aby kontynuować.
+Oczekuj na naciśnięcie klawisza.
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
 Składnia:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 Gdzie:
   To polecenie nie obsługuje żadnych argumentów.
@@ -2746,7 +3554,7 @@ Uwagi:
   aby kontynuować.
 
 Przykłady:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 .
 :SHELL_CMD_COPY_FAILURE
 Nie można skopiować '%s'.
@@ -2766,243 +3574,243 @@ Polecenia można użyć jedynie na lokalnych dyskach.
 .
 :SHELL_STARTUP_BEGIN
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
-║ [color=green]Witaj w DOSBox Staging %-43s[color=white] ║
+║ [color=light-green]Witaj w DOSBox Staging %-43s[color=white] ║
 ║                                                                    ║
-║ Krótki wstęp dla nowych użytkowników, wpisz: [color=light-yellow]INTRO[color=white]                 ║
-║ Aby zobaczyć listę wspieranych komend, wpisz: [color=light-yellow]HELP[color=white]                 ║
+║ Krótki wstęp dla nowych użytkowników, wpisz: [color=brown]INTRO[color=white]                 ║
+║ Aby zobaczyć listę wspieranych komend, wpisz: [color=brown]HELP[color=white]                 ║
 ║                                                                    ║
-║ Aby dostosować prędkość emulatora, użyj [color=red]%s+F11[color=white] i [color=red]%s+F12[color=white].%s%s       ║
-║ Aby zmienić skróty klawiszowe, wciśnij [color=red]%s+F1[color=white].%s                    ║
-║ Więcej (po angielsku) w pliku [color=cyan]README[color=white] w katalogu emulatora.         ║
+║ Aby dostosować prędkość emulatora, użyj [color=light-red]%s+F11[color=white] i [color=light-red]%s+F12[color=white].%s%s       ║
+║ Aby zmienić skróty klawiszowe, wciśnij [color=light-red]%s+F1[color=white].%s                    ║
+║ Więcej (po angielsku) w pliku [color=light-cyan]README[color=white] w katalogu emulatora.         ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb obrazu kompozytowego CGA.                      ║
-║ Wciśnij [color=red]F12[color=white], aby włączyć lub wyłączyć tryb kompozytowy obrazu.     ║
-║ [color=red]%s+F11[color=white] zmienia barwę; [color=red]%s+%s+F11[color=white] zmienia model CGA.%s             ║
+║ Wciśnij [color=light-red]F12[color=white], aby włączyć lub wyłączyć tryb kompozytowy obrazu.     ║
+║ [color=light-red]%s+F11[color=white] zmienia barwę; [color=light-red]%s+%s+F11[color=white] zmienia model CGA.%s             ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Wciśnij [color=red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
-║ pomarańczowy, zielony. [color=red]%s+F11[color=white] zmienia kontrast/jasność.           ║
+║ Wciśnij [color=light-red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
+║ pomarańczowy, zielony. [color=light-red]%s+F11[color=white] zmienia kontrast/jasność.           ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_HERC
-║ Wciśnij [color=red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
+║ Wciśnij [color=light-red]F11[color=white], aby zmienić kolor ekranu mono: jasny biały, biały,    ║
 ║ pomarańczowy, zielony.                                             ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Aby włączyć debuger, wciśnij [color=red]%s+Pause[color=white] lub uruchom DOSBoksa z       ║
-║ parametrem [color=light-yellow]DEBUG[color=white].                                                  ║
+║ Aby włączyć debuger, wciśnij [color=light-red]%s+Pause[color=white] lub uruchom DOSBoksa z       ║
+║ parametrem [color=brown]DEBUG[color=white].                                                  ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_END
-║ [color=light-yellow]https://dosbox-staging.github.io[color=white]                                   ║
+║ [color=brown]https://www.dosbox-staging.org[color=white]                                     ║
 ╚════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[reset]
+[color=light-green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
-Wyświetla lub zmiana aktualny katalog.
+Wyświetl lub zmień aktualny katalog.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Składnia:
-  [color=green]cd[reset] [color=cyan]KATALOG[reset]
-  [color=green]chdir[reset] [color=cyan]KATALOG[reset]
+  [color=light-green]cd[reset] [color=light-cyan]KATALOG[reset]
+  [color=light-green]chdir[reset] [color=light-cyan]KATALOG[reset]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]  nazwa katalogu, do którego należy przejść.
+  [color=light-cyan]KATALOG[reset]  nazwa katalogu, do którego należy przejść
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla aktualny katalog.
   Polecenie zmienia jedynie katalog, nie aktualny dysk.
 
 Przykłady:
-  [color=green]cd[reset]
-  [color=green]cd[reset] [color=cyan]mydir[reset]
+  [color=light-green]cd[reset]
+  [color=light-green]cd[reset] [color=light-cyan]mydir[reset]
 .
 :SHELL_CMD_CLS_HELP
-Czyści zawartość ekranu.
+Wyczyść zawartość ekranu.
 
 .
 :SHELL_CMD_CLS_HELP_LONG
 Składnia:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 Gdzie:
   To polecenie nie obsługuje żadnych argumentów.
 
 Uwagi:
-  Polecenie [color=green]cls[reset] kasuje cały tekst na ekranie, z wyjątkiem znaku zachęty
+  Polecenie [color=light-green]cls[reset] kasuje cały tekst na ekranie, z wyjątkiem znaku zachęty
   (np. [color=white]Z:\>[reset] lub [color=white]C:\GAMES>[reset]) w lewym górnym rogu ekranu.
 
 Przykłady:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 .
 :SHELL_CMD_DIR_HELP
-Wyświetla listę plików i podkatalogów.
+Wyświetl listę plików i podkatalogów.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
 Składnia:
-  [color=green]dir[reset] [color=cyan][WZORZEC][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]PORZĄDEK[reset]]
+  [color=light-green]dir[reset] [color=light-cyan][WZORZEC][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]PORZĄDEK[reset]]
 
 Gdzie:
-  [color=cyan]WZORZEC[reset]       dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
-                którymi są asterisk ('*') i znak zapytania ('?'). Można podać
-                ścieżkę, aby wyświetlić zawartość podanego katalogu.
+  [color=light-cyan]WZORZEC[reset]       dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
+                którymi są asterisk ('*') i znak zapytania ('?'); można podać
+                ścieżkę, aby wyświetlić zawartość podanego katalogu
   [color=white]PORZĄDEK[reset]      porządek sortowania [color=white]n[reset] (po nazwie, alfabetycznie),
                 [color=white]s[reset] (od najmniejszego), [color=white]e[reset] (po rozszerzeniu, alfabetycznie),
-                [color=white]d[reset] (od najstarszego), opcjonalny prefiks [color=white]-[reset] odwraca porządek.
-  /w            wyświetl 5 plików/katalogów w jednym wierszu.
-  /b            wyświetl tylko nazwy.
-  /p            pauza po każdorazowym zapełnieniu ekranu.
-  /ad lub /a-d  wyświetl tylko katalogi lub pliki (odpowiednio).
+                [color=white]d[reset] (od najstarszego), opcjonalny prefiks [color=white]-[reset] odwraca porządek
+  /w            wyświetl 5 plików/katalogów w jednym wierszu
+  /b            wyświetl tylko nazwy
+  /p            pauza po każdorazowym zapełnieniu ekranu
+  /ad lub /a-d  wyświetl tylko katalogi lub pliki (odpowiednio)
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla wszystkie pliki i podkatalogi w
-  aktualnym katalogu, tak samo jak [color=green]dir[reset] [color=cyan]*.*[reset].
+  aktualnym katalogu, tak samo jak [color=light-green]dir[reset] [color=light-cyan]*.*[reset].
 
 Przykłady:
-  [color=green]dir[reset] [color=cyan]games.*[reset] /p
-  [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
+  [color=light-green]dir[reset] [color=light-cyan]games.*[reset] /p
+  [color=light-green]dir[reset] [color=light-cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 .
 :SHELL_CMD_ECHO_HELP
-Wyświetla wiadomości lub włącza/wyłącza tryb powtarzania.
+Wyświetl tekst lub włącz/wyłącz tryb powtarzania.
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
 Składnia:
-  [color=green]echo[reset] [color=cyan][on|off][reset]
-  [color=green]echo[reset] [color=cyan][WIADOMOŚĆ][reset]
+  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
+  [color=light-green]echo[reset] [color=light-cyan][WIADOMOŚĆ][reset]
 
 Gdzie:
-  [color=cyan]on|off[reset]     Włącz/Wyłącz wyświetlanie wykonywanych poleceń (tryb powtarzania).
-  [color=cyan]WIADOMOŚĆ[reset]  Wiadomość do wyświetlenia.
+  [color=light-cyan]on|off[reset]     włącz/wyłącz wyświetlanie wykonywanych poleceń (tryb powtarzania)
+  [color=light-cyan]WIADOMOŚĆ[reset]  tekst do wyświetlenia
 
 Uwagi:
   Uruchomienie bez argumentów pokazuje, czy tryb powtarzania jest włączony.
   Polecenie jest przydatne do debugowania plików wsadowych.
 
 Przykłady:
-  [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Witaj, świecie![reset]
+  [color=light-green]echo[reset] [color=light-cyan]off[reset]
+  [color=light-green]echo[reset] [color=light-cyan]Witaj, świecie![reset]
 .
 :SHELL_CMD_EXIT_HELP
-Kończy pracę wiersza poleceń.
+Zakończ pracę wiersza poleceń.
 
 .
 :SHELL_CMD_EXIT_HELP_LONG
 Składnia:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 Gdzie:
   To polecenie nie obsługuje żadnych argumentów.
 
 Uwagi:
-  Jeśli wiersz poleceń został wywołany przez program, polecenie [color=green]exit[reset] powróci
+  Jeśli wiersz poleceń został wywołany przez program, polecenie [color=light-green]exit[reset] powróci
   do tego programu.
   Jeśli żaden program nie jest uruchomiony, polecenie zakończy działanie
   emulatora DOSBox.
 
 Przykłady:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 .
 :SHELL_CMD_EXIT_TOO_SOON
 Próba zbyt wczesnego wykonania polecenia 'exit'.
 
 .
 :SHELL_CMD_HELP_HELP
-Wyświetla pomoc dotyczącą poszczególnych poleceń.
+Wyświetl pomoc dotyczącą poszczególnych poleceń.
 
 .
 :SHELL_CMD_HELP_HELP_LONG
 Składnia:
-  [color=green]help[reset]
-  [color=green]help[reset] /a[ll]
-  [color=green]help[reset] [color=cyan]POLECENIE[reset]
+  [color=light-green]help[reset]
+  [color=light-green]help[reset] /a[ll]
+  [color=light-green]help[reset] [color=light-cyan]POLECENIE[reset]
 
 Gdzie:
-  [color=cyan]POLECENIE[reset]  nazwa wewnętrznego polecenie DOS, np. [color=cyan]dir[reset].
+  [color=light-cyan]POLECENIE[reset]  nazwa wewnętrznego polecenie DOS, np. [color=light-cyan]dir[reset]
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla listę poleceń DOS (z parametrem /a
   lub /all - pełną listę).
-  Zamiast [color=green]help[reset] [color=cyan]POLECENIE[reset], możesz uzyskać pomoc wpisując [color=cyan]POLECENIE[reset] /?.
+  Zamiast [color=light-green]help[reset] [color=light-cyan]POLECENIE[reset], możesz uzyskać pomoc wpisując [color=light-cyan]POLECENIE[reset] /?.
 
 Przykłady:
-  [color=green]help[reset] [color=cyan]dir[reset]
-  [color=green]help[reset] /all
+  [color=light-green]help[reset] [color=light-cyan]dir[reset]
+  [color=light-green]help[reset] /all
 .
 :SHELL_CMD_MKDIR_HELP
-Tworzy nowy katalog.
+Utwórz nowy katalog.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Składnia:
-  [color=green]md[reset] [color=cyan]KATALOG[reset]
-  [color=green]mkdir[reset] [color=cyan]KATALOG[reset]
+  [color=light-green]md[reset] [color=light-cyan]KATALOG[reset]
+  [color=light-green]mkdir[reset] [color=light-cyan]KATALOG[reset]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]  nazwa katalogu do utworzenia.
+  [color=light-cyan]KATALOG[reset]  nazwa katalogu do utworzenia
 
 Uwagi:
   Należy podać dokładną nazwę, katalog nie może już istnieć.
   Można podać ścieżkę, gdzie katalog ma zostać utworzony.
 
 Przykłady:
-  [color=green]md[reset] [color=cyan]newdir[reset]
-  [color=green]md[reset] [color=cyan]c:\games\dir[reset]
+  [color=light-green]md[reset] [color=light-cyan]newdir[reset]
+  [color=light-green]md[reset] [color=light-cyan]c:\games\dir[reset]
 .
 :SHELL_CMD_RMDIR_HELP
-Usuwa katalog.
+Usuń katalog.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Składnia:
-  [color=green]rd[reset] [color=cyan]KATALOG[reset]
-  [color=green]rmdir[reset] [color=cyan]KATALOG[reset]
+  [color=light-green]rd[reset] [color=light-cyan]KATALOG[reset]
+  [color=light-green]rmdir[reset] [color=light-cyan]KATALOG[reset]
 
 Gdzie:
-  [color=cyan]KATALOG[reset]  nazwa katalogu do usunięcia.
+  [color=light-cyan]KATALOG[reset]  nazwa katalogu do usunięcia
 
 Uwagi:
   Katalog musi być pusty, nie zawierać plików ani podkatalogów.
 
 Przykłady:
-  [color=green]rd[reset] [color=cyan]emptydir[reset]
+  [color=light-green]rd[reset] [color=light-cyan]emptydir[reset]
 .
 :SHELL_CMD_SET_HELP
-Wyświetla lub zmienia zawartość zmiennych środowiskowych.
+Wyświetl lub zmień zawartość zmiennych środowiskowych.
 
 .
 :SHELL_CMD_SET_HELP_LONG
 Składnia:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]ZMIENNA[reset]=[color=cyan][ZAWARTOŚĆ][reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]ZMIENNA[reset]=[color=light-cyan][ZAWARTOŚĆ][reset]
 
 Gdzie:
-  [color=white]ZMIENNA[reset]    nazwa zmiennej środowiskowej.
-  [color=cyan]ZAWARTOŚĆ[reset]  tekst (łańcuch znaków) do przypisania do zmiennej.
+  [color=white]ZMIENNA[reset]    nazwa zmiennej środowiskowej
+  [color=light-cyan]ZAWARTOŚĆ[reset]  tekst (łańcuch znaków) do przypisania do zmiennej
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla wszystkie zmienne środowiskowe.
   Przypisanie pustej zawartości usuwa zmienną środowiskową.
 
 Przykłady:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]
 .
 :SHELL_CMD_IF_HELP
 Warunkowe wykonanie polecenia w pliku wsadowym.
@@ -3010,81 +3818,81 @@ Warunkowe wykonanie polecenia w pliku wsadowym.
 .
 :SHELL_CMD_IF_HELP_LONG
 Składnia:
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMER[reset] POLECENIE
-  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] POLECENIE
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] POLECENIE
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMER[reset] POLECENIE
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] POLECENIE
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FILE[reset] POLECENIE
 
 Gdzie:
-  [color=white]NUMER[reset]       porównanie dodatniej liczby całkowitej ze zwracaną wartością.
-  [color=white]STR1==STR2[reset]  porównanie dwóch łańcuchów, wielkość liter ma znaczenie.
-  [color=white]FILE[reset]        sprawdzenie, czy plik istnieje.
-  POLECENIE   polecenie DOS'a lub program do uruchomienia wraz z argumentami.
+  [color=white]NUMER[reset]       porównanie dodatniej liczby całkowitej ze zwracaną wartością
+  [color=white]STR1==STR2[reset]  porównanie dwóch łańcuchów, wielkość liter ma znaczenie
+  [color=white]FILE[reset]        sprawdzenie, czy plik istnieje
+  POLECENIE   polecenie DOS'a lub program do uruchomienia wraz z argumentami
 
 Uwagi:
   POLECENIE zostaje wykonane, jeśli podany warunek zostanie spełniony.
-  Podanie [color=magenta]not[reset] wykonuje polecenie jeśli warunek NIE BĘDZIE spełniony.
-  Warunek [color=cyan]errorlevel[reset] pozwala sprawdzić, czy program wykonał się poprawnie.
+  Podanie [color=light-magenta]not[reset] wykonuje polecenie jeśli warunek NIE BĘDZIE spełniony.
+  Warunek [color=light-cyan]errorlevel[reset] pozwala sprawdzić, czy program wykonał się poprawnie.
   Jeśli [color=white]STR1[reset] lub [color=white]STR2[reset] może być pusty, wpisz go w cudzysłowie (").
 
 Przykłady:
-  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Witaj, świecie!
-  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
+  [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=light-green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Witaj, świecie!
+  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit
 .
 :SHELL_CMD_GOTO_HELP
-Skok do etykiety w pliku wsadowym.
+Skocz do etykiety w pliku wsadowym.
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
 Składnia:
-  [color=green]goto[reset] [color=cyan]ETYKIETA[reset]
+  [color=light-green]goto[reset] [color=light-cyan]ETYKIETA[reset]
 
 Gdzie:
-  [color=cyan]ETYKIETA[reset]  łańcuch tekstowy użyty w pliku wsadowym jako etykieta.
+  [color=light-cyan]ETYKIETA[reset]  łańcuch tekstowy użyty w pliku wsadowym jako etykieta
 
 Uwagi:
-  Etykieta musi być jednolinijkowa i zaczynać się dwukropkiem (:).
+  Etykieta musi być jedno-linijkowa i zaczynać się dwukropkiem (:).
   Etykieta musi być unikalna w danym pliku wsadowym.
 
 Przykłady:
-  [color=green]goto[reset] [color=cyan]koniec[reset]
+  [color=light-green]goto[reset] [color=light-cyan]koniec[reset]
 .
 :SHELL_CMD_SHIFT_HELP
-Przesuwa argumenty wiersza poleceń w pliku wsadowym.
+Przesuń argumenty wiersza poleceń w pliku wsadowym.
 
 .
 :SHELL_CMD_SHIFT_HELP_LONG
 Składnia:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 Gdzie:
   To polecenie nie obsługuje żadnych argumentów.
 
 Uwagi:
   Pozwala plikom wsadowym na akceptowanie więcej niż 9 argumentów.
-  Wykonanie [color=green]shift[reset] przesuwa zmienne z argumentami %%1 na %%0, %%2 na %%1, itd.
+  Wykonanie [color=light-green]shift[reset] przesuwa zmienne z argumentami %%1 na %%0, %%2 na %%1, itd.
 
 Przykłady:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 .
 :SHELL_CMD_TYPE_HELP
-Wyświetla zawartości pliku tekstowego.
+Wyświetl zawartości pliku tekstowego.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
 Składnia:
-  [color=green]type[reset] [color=cyan]PLIK[reset]
+  [color=light-green]type[reset] [color=light-cyan]PLIK[reset]
 
 Gdzie:
-  [color=cyan]PLIK[reset]  nazwa pliku tekstowego do wyświetlenia.
+  [color=light-cyan]PLIK[reset]  nazwa pliku tekstowego do wyświetlenia
 
 Uwagi:
   Należy podać dokładną nazwę pliku, opcjonalnie ze ścieżką.
   Polecenie służy tylko do podglądu plików tekstowych, nie plików binarnych.
 
 Przykłady:
-  [color=green]type[reset] [color=cyan]text.txt[reset]
-  [color=green]type[reset] [color=cyan]c:\dos\readme.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]text.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]c:\dos\readme.txt[reset]
 .
 :SHELL_CMD_REM_HELP
 Komentarz w pliku wsadowym.
@@ -3092,141 +3900,141 @@ Komentarz w pliku wsadowym.
 .
 :SHELL_CMD_REM_HELP_LONG
 Składnia:
-  [color=green]rem[reset] [color=cyan]KOMENTARZ[reset]
+  [color=light-green]rem[reset] [color=light-cyan]KOMENTARZ[reset]
 
 Gdzie:
-  [color=cyan]KOMENTARZ[reset]  jest dowolnym komentarzem.
+  [color=light-cyan]KOMENTARZ[reset]  jest dowolnym komentarzem
 
 Uwagi:
   Komentarze sprawiają, że pliki wsadowe są łatwiejsze do zrozumienia.
   Można użyć do tymczasowego wyłączenia wykonania jakiegoś polecenia.
 
 Przykłady:
-  [color=green]rem[reset] [color=cyan]To jest mój testowy plik wsadowy.[reset]
+  [color=light-green]rem[reset] [color=light-cyan]To jest mój testowy plik wsadowy.[reset]
 .
 :SHELL_CMD_NO_WILD
 To jest prosta wersja polecenia, symbole wieloznaczne (maski) nie są dozwolone!
 
 .
 :SHELL_CMD_RENAME_HELP
-Zmienia nazwę jednego lub większej ilości plików.
+Zmień nazwę jednego lub większej ilości plików.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Składnia:
-  [color=green]ren[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
-  [color=green]rename[reset] [color=white]STARA[reset] [color=cyan]NOWA[reset]
+  [color=light-green]ren[reset] [color=white]STARA[reset] [color=light-cyan]NOWA[reset]
+  [color=light-green]rename[reset] [color=white]STARA[reset] [color=light-cyan]NOWA[reset]
 
 Gdzie:
-  [color=white]STARA[reset]  nazwa pliku, którego nazwę należy zmienić.
-  [color=cyan]NOWA[reset]   docelowa nazwa pliku.
+  [color=white]STARA[reset]  nazwa pliku, którego nazwę należy zmienić
+  [color=light-cyan]NOWA[reset]   docelowa nazwa pliku
 
 Uwagi:
   Należy podać dokładną nazwę pliku, opcjonalnie ze ścieżką.
   Docelowa nazwa pliku musi być dokładna i musi być podana bez ścieżki.
 
 Przykłady:
-  [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]
-  [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
+  [color=light-green]ren[reset] [color=white]oldname[reset] [color=light-cyan]newname[reset]
+  [color=light-green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=light-cyan]f.txt[reset]
 .
 :SHELL_CMD_DELETE_HELP
-Usuwa jeden lub więcej plików.
+Usuń jeden lub więcej plików.
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Składnia:
-  [color=green]del[reset] [color=cyan]WZORZEC[reset]
-  [color=green]erase[reset] [color=cyan]WZORZEC[reset]
+  [color=light-green]del[reset] [color=light-cyan]WZORZEC[reset]
+  [color=light-green]erase[reset] [color=light-cyan]WZORZEC[reset]
 
 Gdzie:
-  [color=cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
+  [color=light-cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
            którymi są asterisk ('*' - reprezentuje dowolną liczbę znaków)
            oraz znak zapytania ('?' - reprezentuje jeden znak)
 
-[color=red]Ostrzeżenie:[reset] 
-  Bądź bardzo ostrożny używając symboli wieloznaczności, zwłaszcza [color=cyan]*.*[reset],
+[color=light-red]Ostrzeżenie:[reset]
+  Bądź bardzo ostrożny używając symboli wieloznaczności, zwłaszcza [color=light-cyan]*.*[reset],
   ponieważ usunięte zostaną wszystkie pliki pasujące do wzorca!
 
 Przykłady:
-  [color=green]del[reset] [color=cyan]test.bat[reset]
-  [color=green]del[reset] [color=cyan]c*.*[reset]
-  [color=green]del[reset] [color=cyan]a?b.c*[reset]
+  [color=light-green]del[reset] [color=light-cyan]test.bat[reset]
+  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]
+  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]
 .
 :SHELL_CMD_COPY_HELP
-Kopiuje jeden lub więcej plików.
+Skopiuj jeden lub więcej plików.
 
 .
 :SHELL_CMD_COPY_HELP_LONG
 Składnia:
-  [color=green]copy[reset] [color=white]ŹRÓDŁO[reset] [color=cyan][PRZEZNACZENIE][reset]
-  [color=green]copy[reset] [color=white]ŹRÓDŁO1+ŹRÓDŁO2[+...][reset] [color=cyan][PRZEZNACZENIE][reset]
+  [color=light-green]copy[reset] [color=white]ŹRÓDŁO[reset] [color=light-cyan][PRZEZNACZENIE][reset]
+  [color=light-green]copy[reset] [color=white]ŹRÓDŁO1+ŹRÓDŁO2[+...][reset] [color=light-cyan][PRZEZNACZENIE][reset]
 
 Gdzie:
   [color=white]ŹRÓDŁO[reset]         dokładna nazwa lub nazwa z symbolami wieloznaczności
-                 (maskami), którymi są asterisk ('*') i znak zapytania ('?').
-  [color=cyan]PRZEZNACZENIE[reset]  dokładna nazwa pliku lub katalogu.
+                 (maskami), którymi są asterisk ('*') i znak zapytania ('?')
+  [color=light-cyan]PRZEZNACZENIE[reset]  dokładna nazwa pliku lub katalogu
 
 Uwagi:
   Operator [color=white]+[reset] pozwala złączyć ze sobą kilka plików.
   Jeśli przeznaczenie nie zostanie podane, zostanie użyty aktualny katalog.
 
 Przykłady:
-  [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]
-  [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
-  [color=green]copy[reset] [color=white]..\c*.*[reset]
+  [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]
+  [color=light-green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=light-cyan]file3.txt[reset]
+  [color=light-green]copy[reset] [color=white]..\c*.*[reset]
 .
 :SHELL_CMD_CALL_HELP
-Uruchamia pliku wsadowy z innego pliku wsadowego.
+Uruchom pliku wsadowy z innego pliku wsadowego.
 
 .
 :SHELL_CMD_CALL_HELP_LONG
 Składnia:
-  [color=green]call[reset] [color=white]SKRYPT[reset] [color=cyan][ARGUMENTY][reset]
+  [color=light-green]call[reset] [color=white]SKRYPT[reset] [color=light-cyan][ARGUMENTY][reset]
 
 Gdzie:
-  [color=white]SKRYPT[reset]     plik wsadowy do uruchomienia.
-  [color=cyan]ARGUMENTY[reset]  opcjonalne argumenty do przekazania.
+  [color=white]SKRYPT[reset]     plik wsadowy do uruchomienia
+  [color=light-cyan]ARGUMENTY[reset]  opcjonalne argumenty do przekazania
 
 Uwagi:
   Po zakończeniu uruchomionego pliku wsadowego, dalsza część obecnego pliku
   wsadowego będzie wykonana.
 
 Przykłady:
-  [color=green]call[reset] [color=white]mybatch.bat[reset]
-  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Witaj, świecie![reset]
+  [color=light-green]call[reset] [color=white]mybatch.bat[reset]
+  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Witaj, świecie![reset]
 .
 :SHELL_CMD_SUBST_HELP
-Przypisuje ścieżkę do litery dysku.
+Przypisz ścieżkę do litery dysku.
 
 .
 :SHELL_CMD_SUBST_HELP_LONG
 Składnia:
-  [color=green]subst[reset] [color=white]DYSK[reset] [color=cyan]ŚCIEŻKA[reset]
-  [color=green]subst[reset] [color=white]DYSK[reset] /d
+  [color=light-green]subst[reset] [color=white]DYSK[reset] [color=light-cyan]ŚCIEŻKA[reset]
+  [color=light-green]subst[reset] [color=white]DYSK[reset] /d
 
 Gdzie:
-  [color=white]DYSK[reset]     litera dysku, do którego ma zostać przypisana ścieżka.
-  [color=cyan]ŚCIEŻKA[reset]  ścieżka na zamontowanym dysku.
+  [color=white]DYSK[reset]     litera dysku, do którego ma zostać przypisana ścieżka
+  [color=light-cyan]ŚCIEŻKA[reset]  ścieżka na zamontowanym dysku
 
 Uwagi:
-  Ścieżka musi znajdować się na dysku zamontowanym poleceniem [color=green]mount[reset].
+  Ścieżka musi znajdować się na dysku zamontowanym poleceniem [color=light-green]mount[reset].
   Przełącznik /d usuwa przypisanie.
 
 Przykłady:
-  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\games[reset]
-  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
+  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\games[reset]
+  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
 .
 :SHELL_CMD_LOADHIGH_HELP
-Ładuje program do pamięci UMB (górnej).
+Załaduj program do pamięci UMB (górnej).
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
 Składnia:
-  [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
-  [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=light-green]lh[reset] [color=light-cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
 
 Gdzie:
-  [color=cyan]PROGRAM[reset]  program rezydentny, opcjonalnie z argumentami.
+  [color=light-cyan]PROGRAM[reset]  program rezydentny, opcjonalnie z argumentami
 
 Uwagi:
   Pozwala zaoszczędzić pamięć konwencjonalną, ładując program rezydentny (TSR)
@@ -3238,41 +4046,15 @@ Uwagi:
   tym poleceniem.
 
 Przykłady:
-  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
-.
-:SHELL_CMD_LS_HELP
-Wyświetla zawartość katalogu w formie szerokiej listy.
-
-.
-:SHELL_CMD_LS_HELP_LONG
-Składnia:
-  [color=green]ls[reset] [color=cyan]WZORZEC[reset]
-  [color=green]ls[reset] [color=cyan]ŚCIEŻKA[reset]
-
-Gdzie:
-  [color=cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
-           którymi są asterisk ('*') i znak zapytania ('?').
-  [color=cyan]ŚCIEŻKA[reset]  dokładna ścieżka na zamontowanym dysku.
-
-Uwagi:
-  Polecenie wyświetla katalogi kolorem [color=blue]niebieskim[reset], pliki wykonywalne
-  (*.com, *.exe, *.bat) kolorem [color=green]zielonym[reset], a pozostałe aktualnym kolorem.
-
-Przykłady:
-  [color=green]ls[reset] [color=cyan]file.txt[reset]
-  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
-.
-:SHELL_CMD_LS_PATH_ERR
-Brak dostępu do '%s'.
-
+  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]
 .
 :SHELL_CMD_ATTRIB_HELP
-Wyświetla lub zmienia atrybuty pliku.
+Wyświetl lub zmień atrybuty pliku.
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Składnia:
-  [color=green]attrib[reset] [color=white][ATRYBUTY][reset] [color=cyan]WZORZEC[reset]
+  [color=light-green]attrib[reset] [color=white][ATRYBUTY][reset] [color=light-cyan]WZORZEC[reset]
 
 Gdzie:
   [color=white][ATRYBUTY][reset] atrybuty do nadania, jeden lub więcej z:
@@ -3280,16 +4062,16 @@ Gdzie:
                [color=white]+A[reset], [color=white]-A[reset] - zarchiwizowany
                [color=white]+S[reset], [color=white]-S[reset] - systemowy
                [color=white]+H[reset], [color=white]-H[reset] - ukryty
-  [color=cyan]WZORZEC[reset]   dokładna nazwa pliku lub nazwa z symbolami wieloznaczności
-            (maskami), którymi są asterisk ('*') i znak zapytania ('?').
+  [color=light-cyan]WZORZEC[reset]   dokładna nazwa pliku lub nazwa z symbolami wieloznaczności
+            (maskami), którymi są asterisk ('*') i znak zapytania ('?')
 
 Uwagi:
   Uruchomienie bez argumentów wyświetla atrybuty pliku/katalogu.
   Można podać więcej atrybutów, oddzielonych spacjami.
 
 Przykłady:
-    [color=green]attrib[reset] [color=cyan]file.txt[reset]
-    [color=green]attrib[reset] [color=white]+R -A[reset] [color=cyan]*.txt[reset]
+    [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]
+    [color=light-green]attrib[reset] [color=white]+R -A[reset] [color=light-cyan]*.txt[reset]
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
 Nie można odczytać atrybutów: '%s'.
@@ -3300,35 +4082,35 @@ Nie można ustawić atrybutów: '%s'.
 
 .
 :SHELL_CMD_CHOICE_HELP
-Oczekuje na naciśnięcie klawisza, ustawia ERRORLEVEL odpowiednio.
+Czekaj na naciśnięcie klawisza, ustaw ERRORLEVEL odpowiednio.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
 Składnia:
-  [color=green]choice[reset] [color=cyan][TEKST][reset]
-  [color=green]choice[reset] /c[:][color=white]WYBÓR[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEKST][reset]
+  [color=light-green]choice[reset] [color=light-cyan][TEKST][reset]
+  [color=light-green]choice[reset] /c[:][color=white]WYBÓR[reset] /n /s /t[:][color=white]c[reset],[color=light-magenta]nn[reset] [color=light-cyan][TEKST][reset]
 
 Gdzie:
-  [color=cyan]TEKST[reset]       tekst do wyświetlenia jako zachęta, może być pusty.
-  /c[:][color=white]WYBÓR[reset]  dozwolone klawisze, domyślne to [color=white]yn[reset].
-  /n          nie wyświetlaj dozwolonych klawiszy.
-  /s          włącza sprawdzanie wielkości liter.
-  /t[:][color=white]c[reset],[color=magenta]nn[reset]   domyślny wybór po upływie [color=magenta]nn[reset] sekund to [color=white]c[reset].
+  [color=light-cyan]TEKST[reset]       tekst do wyświetlenia jako zachęta, może być pusty
+  /c[:][color=white]WYBÓR[reset]  dozwolone klawisze, domyślne to [color=white]yn[reset]
+  /n          nie wyświetlaj dozwolonych klawiszy
+  /s          włącza sprawdzanie wielkości liter
+  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]   domyślny wybór po upływie [color=light-magenta]nn[reset] sekund to [color=white]c[reset]
 
 Uwagi:
   Ustawia wartość ERRORLEVEL w zależności od naciśniętego klawisza podanego
   w opcji /c, począwszy od 1. Numer naciśniętego klawisza można sprawdzić przy
-  pomocy polecenia [color=green]if[reset].
+  pomocy polecenia [color=light-green]if[reset].
   Przełącznik /n powoduje wyświetlenie tylko tekstu, bez możliwych wyborów,
   jak domyślnego [color=white][Y,N]?[reset]).
 
 Przykłady:
-  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Kontynuować?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Wybierz a, b lub c[reset]
+  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Kontynuować?[reset]
+  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Wybierz a, b lub c[reset]
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Niepowodzenie[reset]: strumień wejściowy zakończony bez prawidłowego wyboru.
+[color=light-red]Niepowodzenie[reset]: strumień wejściowy zakończony bez prawidłowego wyboru.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
@@ -3337,43 +4119,43 @@ Przykłady:
 
 .
 :SHELL_CMD_PATH_HELP
-Wyświetla lub zmiana ścieżkę wyszukiwania plików.
+Wyświetl lub zmień ścieżkę wyszukiwania plików.
 
 .
 :SHELL_CMD_PATH_HELP_LONG
 Składnia:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan][[dysk:]ścieżka[;...][reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan][[DYSK:]ŚCIEŻKA[;...][reset]
 
 Gdzie:
-  [color=cyan][[dysk:]ścieżka[;...][reset]  ścieżki zawierające dysk oraz katalog.
+  [color=light-cyan][[DYSK:]ŚCIEŻKA[;...][reset]  ścieżki zawierające dysk oraz katalog
 
 Uwagi:
   Można podać więcej niż jedną ścieżkę, muszą być oddzielone średnikiem (;).
   Podanie jedynie średnika czyści całą ścieżkę wyszukiwania.
-  Ścieżkę wyszukiwania można też ustawić poleceniem [color=green]set[reset]
-  (np. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\;C:\DOS;C:\WINDOWS[reset]).
+  Ścieżkę wyszukiwania można też ustawić poleceniem [color=light-green]set[reset]
+  (np. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\;C:\DOS;C:\WINDOWS[reset]).
 
 Przykłady:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 .
 :SHELL_CMD_VER_HELP
-Wyświetla wersję systemu DOS.
+Wyświetl wersję systemu DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
 Składnia:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 
 Uwagi:
   Raportowaną wersję DOSu można ustawić w pliku konfiguracyjnym, w sekcji
-  [dos], wpisując 'ver = [color=cyan]WERSJA[reset]'.
-  Wersję systemu DOS raportowaną programom można zmienić poleceniem [color=green]setver[reset].
-  Składnia '[color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]' jest przestarzała.
+  [dos], wpisując 'ver = [color=light-cyan]WERSJA[reset]'.
+  Wersję systemu DOS raportowaną programom można zmienić poleceniem [color=light-green]setver[reset].
+  Składnia '[color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]WERSJA[reset]' jest przestarzała.
 
 Przykłady:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 .
 :SHELL_CMD_VER_VER
 DOSBox Staging, wersja %s
@@ -3385,22 +4167,22 @@ Podana wersja DOSa jest nieprawidłowa.
 
 .
 :SHELL_CMD_VOL_HELP
-Wyświetla etykietę i numer seryjny dysku, jeśli istnieją.
+Wyświetl etykietę i numer seryjny dysku, jeśli istnieją.
 
 .
 :SHELL_CMD_VOL_HELP_LONG
 Składnia:
-  [color=green]vol[reset] [color=cyan][DYSK:][reset]
+  [color=light-green]vol[reset] [color=light-cyan][DYSK:][reset]
 
 Gdzie:
-  [color=cyan]DYSK:[reset] jest literą dysku z dwukropkiem.
+  [color=light-cyan]DYSK:[reset] jest literą dysku z dwukropkiem
 
 Uwagi:
-  Uruchomienie [color=green]vol[reset] bez parametrów wyświetli informacje o aktualnym dysku.
+  Uruchomienie [color=light-green]vol[reset] bez parametrów wyświetli informacje o aktualnym dysku.
 
 Przykłady:
-  [color=green]vol[reset]
-  [color=green]vol[reset] [color=cyan]c:[reset]
+  [color=light-green]vol[reset]
+  [color=light-green]vol[reset] [color=light-cyan]c:[reset]
 
 .
 :SHELL_CMD_VOL_OUTPUT
@@ -3411,33 +4193,61 @@ Przykłady:
 
 .
 :SHELL_CMD_MOVE_HELP
-Przenosi pliki, zmienia nazwy plików i katalogów.
+Przenieś pliki, zmień nazwy plików i katalogów.
 
 .
 :SHELL_CMD_MOVE_HELP_LONG
 Składnia:
-  [color=green]move[reset] [color=white]PLIK1[,PLIK2,...][reset] [color=cyan]PRZEZNACZENIE[reset]
-  [color=green]move[reset] [color=white]KATALOG1[reset] [color=cyan]KATALOG2[reset]
+  [color=light-green]move[reset] [color=white]PLIK1[,PLIK2,...][reset] [color=light-cyan]PRZEZNACZENIE[reset]
+  [color=light-green]move[reset] [color=white]KATALOG1[reset] [color=light-cyan]KATALOG2[reset]
 
 Gdzie:
   [color=white]PLIK[reset]           dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
-                 którymi są asterisk ('*') i znak zapytania ('?'). Można podać
-                 wiele nazw plików, rozdzielonych przecinkami.
-  [color=white]KATALOG[reset]        dokładna nazwa katalogu, bez symboli wieloznaczności.
-  [color=cyan]PRZEZNACZENIE[reset]  dokładna nazwa pliku lub katalogu, bez symboli wieloznaczności.
+                 którymi są asterisk ('*') i znak zapytania ('?'); można podać
+                 wiele nazw plików, rozdzielonych przecinkami
+  [color=white]KATALOG[reset]        dokładna nazwa katalogu, bez symboli wieloznaczności
+  [color=light-cyan]PRZEZNACZENIE[reset]  dokładna nazwa pliku lub katalogu, bez symboli wieloznaczności
 
 Uwagi:
-  Jeśli podano więcej niż jeden plik źródłowy, [color=cyan]PRZEZNACZENIE[reset] musi być
+  Jeśli podano więcej niż jeden plik źródłowy, [color=light-cyan]PRZEZNACZENIE[reset] musi być
   katalogiem. Jeśli nie istnieje, zostanie utworzony.
-  Jeśli podano pojedynczy plik, nadpisze on [color=cyan]PRZEZNACZENIE[reset].
+  Jeśli podano pojedynczy plik, nadpisze on [color=light-cyan]PRZEZNACZENIE[reset].
 
 Przykłady:
-  [color=green]move[reset] [color=white]stary.bat[reset] [color=cyan]nowy.bat[reset]
-  [color=green]move[reset] [color=white]plik1.txt,plik2.txt[reset] [color=cyan]moj_kat[reset]
+  [color=light-green]move[reset] [color=white]stary.bat[reset] [color=light-cyan]nowy.bat[reset]
+  [color=light-green]move[reset] [color=white]plik1.txt,plik2.txt[reset] [color=light-cyan]moj_kat[reset]
 
 .
 :SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
 Nie można przenieść wielu plików do jednego.
+
+.
+:SHELL_CMD_FOR_HELP
+Wykonaj polecenie dla każdego z podanych łańcuchów.
+
+.
+:SHELL_CMD_FOR_HELP_LONG
+Składnia:
+  [color=light-green]for[reset] [color=white]%ZMIENNA[reset] [color=light-cyan]in[reset] [color=white](ŁAŃCUCHY)[reset] [color=light-cyan]do[reset] [color=white]POLECENIE[reset]
+
+Gdzie:
+  [color=white]%ZMIENNA[reset]    pojedynczy znak będący nazwą zmiennej, poprzedzony '%'
+  [color=light-cyan]in[reset]          słowo kluczowe, wielkość liter nie ma znaczenia
+  [color=white](ŁAŃCUCHY)[reset]  łańcuchy, które zostaną podstawione pod [color=white]%ZMIENNĄ[reset] w [color=white]POLECENIU[reset]
+  [color=light-cyan]do[reset]          słowo kluczowe, wielkość liter nie ma znaczenia
+  [color=white]POLECENIE[reset]   polecenie, które zostanie wykonane dla każdego z łańcuchów
+
+Uwagi:
+  W plikach wsadowych [color=white]%ZMIENNA[reset] musi zostać zapisana jako [color=white]%%ZMIENNA[reset] (musi być
+  poprzedzona dwoma znakami procentu).
+  [color=white](ŁAŃCUCHY)[reset] można rozdzielić dowolnym separatorem.
+  [color=white](ŁAŃCUCHY)[reset] zawierające symbole wieloznaczności (* lub ?) zostaną zastąpione
+  pasującymi nazwami plików z aktualnego katalogu.
+  Użycie kolejnego [color=light-green]for[reset] jako [color=white]POLECENIA[reset] jest niedozwolone.
+
+Przykłady:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](RAZ DWA)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX

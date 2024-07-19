@@ -1,0 +1,13 @@
+add_subdirectory(decoders)
+add_subdirectory(ESFMu)
+add_subdirectory(loguru)
+add_subdirectory(nuked)
+add_subdirectory(PDCurses)
+add_subdirectory(residfp)
+add_subdirectory(simde)
+add_subdirectory(tal-chorus)
+add_subdirectory(whereami)
+add_subdirectory(YM7128B_emu)
+add_subdirectory(zmbv)
+
+include_directories(.)

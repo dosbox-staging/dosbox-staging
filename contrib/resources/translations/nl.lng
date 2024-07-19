@@ -1,11 +1,454 @@
+:DOSBOX_HELP
+Gebruik: %s [OPTIE]... [PAD]
+
+PAD                        Als PAD een map is, wordt deze aangekoppeld als C:.
+                           Als PAD een bootable disk image (IMA/IMG) is, wordt
+                           deze opgestart.
+                           Als PAD een CDROM-bestand (CUE/ISO) is, wordt deze
+                           aangekoppeld als D:.
+                           Als PAD een DOS executable is (BAT/COM/EXE), dan
+                           wordt het parent pad aangekoppeld als C: en wordt
+                           het bestand uitgevoerd. Wanneer het bestand wordt
+                           afgesloten, stopt DOSBox Staging.
+
+Lijst van beschikbare opties:
+
+  --conf <config_bestand>  Start met de opties die zijn opgegeven in
+                           <config_bestand>. Er kunnen meerdere
+                           configuratiebestanden worden opgegeven.
+                           Voorbeeld: --conf conf1.conf --conf conf2.conf
+
+  --printconf              Geeft de locatie van het primaire
+                           configuratiebestand weer.
+
+  --editconf               Open het primaire configuratiebestand in een
+                           teksteditor.
+
+  --eraseconf              Verwijder het primaire configuratiebestand.
+
+  --noprimaryconf          Het primaire configuratiebestand niet laden of
+                           aanmaken.
+
+  --nolocalconf            Laadt het lokale 'dosbox.conf' configuratiebestand
+                           niet indien aanwezig in de huidige werkmap.
+
+  --set <instelling>=<waarde> Stel een configuratie-instelling in. Meerdere
+                           configuratie instellingen kunnen worden opgegeven.
+                           Voorbeeld:
+                           --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
+
+  --working-dir <pad>      Stel de werkdirectory in op <pad>. DOSBox gedraagt
+                           zich alsof gestart vanuit deze directory.
+
+  --list-countries         Vermeld alle ondersteunde landen met hun numerieke codes.
+                           Codes moeten worden gebruikt in de configuratie-instelling 'country'.
+
+  --list-glshaders         Toont alle beschikbare OpenGL shaders en hun paden.
+                           Resultaten zijn bruikbaar in de 'glshader = '
+                           configuratie-instelling.
+
+  --fullscreen             Start in volledig scherm modus.
+
+  --lang <taal_bestand>    Start met de taal die is opgegeven in <taal_bestand>.
+
+  --machine <type>         Emuleer een specifiek type machine. Het machinetype
+                           heeft invloed op zowel de geëmuleerde video- als
+                           geluidskaarten.
+                           Geldige keuzes zijn: hercules, cga, cga_mono, tandy,
+                           pcjr, ega, svga_s3 (standaard), svga_et3000,
+                           svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe.
+
+  -c <commando>            Voer het opgegeven DOS-commando uit voordat het PAD
+                           wordt bewerkt.
+                           Er kunnen meerdere commando's worden opgegeven.
+
+  --noautoexec             Geen DOS commando's uitvoeren vanuit [autoexec]
+                           secties.
+
+  --exit                   Afsluiten na het uitvoeren van '-c <commando>'s en
+                           [autoexec] secties.
+
+  --startmapper            Start de mapper GUI.
+
+  --erasemapper            Het standaard mapper-bestand verwijderen.
+
+  --securemode             Zet de veilige modus aan door de commando's MOUNT en
+                           IMGMOUNT uit te schakelen.
+
+  --socket <nummer>        Nullmodem uitvoeren op het opgegeven socketnummer.
+
+  -h, -?, --help           Helpbericht afdrukken en afsluiten.
+
+  -V, --version            Informatie over versie afdrukken en afsluiten.
+
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Lijst met landcodes (merendeels hetzelfde als telefooncodes)
+------------------------------------------------------------
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+De bovenstaande numerieke landcodes kunnen gebruikt worden
+met de configuratie-instelling 'country'.
+.
+:COUNTRY_NAME_XXA
+Internationaal (Engels)
+.
+:COUNTRY_NAME_USA
+Verenigde Staten
+.
+:COUNTRY_NAME_CAN_FR
+Canada (Frans)
+.
+:COUNTRY_NAME_XLA
+Latijns Amerika
+.
+:COUNTRY_NAME_CAN_EN
+Canada (Engels)
+.
+:COUNTRY_NAME_RUS
+Rusland
+.
+:COUNTRY_NAME_EGY
+Egypte
+.
+:COUNTRY_NAME_ZAF
+Zuid-Afrika
+.
+:COUNTRY_NAME_GRC
+Griekenland
+.
+:COUNTRY_NAME_NLD
+Nederland
+.
+:COUNTRY_NAME_BEL
+België
+.
+:COUNTRY_NAME_FRA
+Frankrijk
+.
+:COUNTRY_NAME_ESP
+Spanje
+.
+:COUNTRY_NAME_HUN
+Hongarije
+.
+:COUNTRY_NAME_YUG
+Joegoslavië
+.
+:COUNTRY_NAME_ITA
+Italië
+.
+:COUNTRY_NAME_ROU
+Roemenië
+.
+:COUNTRY_NAME_CHE
+Zwitserland
+.
+:COUNTRY_NAME_CZE
+Tsjechië
+.
+:COUNTRY_NAME_AUT
+Oostenrijk
+.
+:COUNTRY_NAME_GBR
+Verenigd Koninkrijk
+.
+:COUNTRY_NAME_DNK
+Denemarken
+.
+:COUNTRY_NAME_SWE
+Zweden
+.
+:COUNTRY_NAME_NOR
+Noorwegen
+.
+:COUNTRY_NAME_POL
+Polen
+.
+:COUNTRY_NAME_DEU
+Duitsland
+.
+:COUNTRY_NAME_MEX
+Mexico
+.
+:COUNTRY_NAME_ARG
+Argentinië
+.
+:COUNTRY_NAME_BRA
+Brazilië
+.
+:COUNTRY_NAME_CHL
+Chili
+.
+:COUNTRY_NAME_COL
+Colombia
+.
+:COUNTRY_NAME_VEN
+Venezuela
+.
+:COUNTRY_NAME_MYS
+Maleisië
+.
+:COUNTRY_NAME_AUS
+Australië
+.
+:COUNTRY_NAME_IDN
+Indonesië
+.
+:COUNTRY_NAME_PHL
+Filippijnen
+.
+:COUNTRY_NAME_NZL
+Nieuw-Zeeland
+.
+:COUNTRY_NAME_SGP
+Singapore
+.
+:COUNTRY_NAME_THA
+Thailand
+.
+:COUNTRY_NAME_KAZ
+Kazachstan
+.
+:COUNTRY_NAME_JPN
+Japan
+.
+:COUNTRY_NAME_KOR
+Zuid-Korea
+.
+:COUNTRY_NAME_VNM
+Vietnam
+.
+:COUNTRY_NAME_CHN
+China
+.
+:COUNTRY_NAME_TUR
+Turkije
+.
+:COUNTRY_NAME_IND
+Indië
+.
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Azië (Engels)
+.
+:COUNTRY_NAME_MAR
+Marokko
+.
+:COUNTRY_NAME_DZA
+Algerije
+.
+:COUNTRY_NAME_TUN
+Tunesië
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Faeröer eilanden
+.
+:COUNTRY_NAME_PRT
+Portugal
+.
+:COUNTRY_NAME_LUX
+Luxemburg
+.
+:COUNTRY_NAME_IRL
+Ierland
+.
+:COUNTRY_NAME_ISL
+IJsland
+.
+:COUNTRY_NAME_ALB
+Albanië
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finland
+.
+:COUNTRY_NAME_BGR
+Bulgarije
+.
+:COUNTRY_NAME_LTU
+Litouwen
+.
+:COUNTRY_NAME_LVA
+Letland
+.
+:COUNTRY_NAME_EST
+Estland
+.
+:COUNTRY_NAME_ARM
+Armenië
+.
+:COUNTRY_NAME_BLR
+Wit-Rusland
+.
+:COUNTRY_NAME_UKR
+Oekraïne
+.
+:COUNTRY_NAME_SRB
+Servië
+.
+:COUNTRY_NAME_MNE
+Montenegro
+.
+:COUNTRY_NAME_HRV
+Kroatië
+.
+:COUNTRY_NAME_SVN
+Slovenië
+.
+:COUNTRY_NAME_BIH_LAT
+Bosnië en Herzegovina (Latijn)
+.
+:COUNTRY_NAME_BIH_CYR
+Bosnië en Herzegovina (Cyrillisch)
+.
+:COUNTRY_NAME_MKD
+Noord-Macedonië
+.
+:COUNTRY_NAME_SVK
+Slowakije
+.
+:COUNTRY_NAME_GTM
+Guatemala
+.
+:COUNTRY_NAME_SLV
+El Salvador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nicaragua
+.
+:COUNTRY_NAME_CRI
+Costa Rica
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Bolivia
+.
+:COUNTRY_NAME_ECU
+Ecuador
+.
+:COUNTRY_NAME_PRY
+Paraguay
+.
+:COUNTRY_NAME_URY
+Uruguay
+.
+:COUNTRY_NAME_XME
+Arabisch (Midden-Oosten)
+.
+:COUNTRY_NAME_HKG
+Hongkong
+.
+:COUNTRY_NAME_TWN
+Taiwan
+.
+:COUNTRY_NAME_LBN
+Libanon
+.
+:COUNTRY_NAME_JOR
+Jordanië
+.
+:COUNTRY_NAME_SYR
+Syrië
+.
+:COUNTRY_NAME_KWT
+Koeweit
+.
+:COUNTRY_NAME_SAU
+Saoedi-Arabië
+.
+:COUNTRY_NAME_YEM
+Jemen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Verenigde Arabische Emiraten
+.
+:COUNTRY_NAME_ISR
+Israël
+.
+:COUNTRY_NAME_BHR
+Bahrain
+.
+:COUNTRY_NAME_QAT
+Katar
+.
+:COUNTRY_NAME_MNG
+Mongolië
+.
+:COUNTRY_NAME_TJK
+Tadzjikistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Azerbeidzjan
+.
+:COUNTRY_NAME_GEO
+Georgië
+.
+:COUNTRY_NAME_KGZ
+Kirgizië
+.
+:COUNTRY_NAME_UZB
+Oezbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Lijst met beschikbare GLSL-shaders
+----------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Bovenstaande shaders kunnen precies worden gebruikt zoals vermeld in de
+'glshader' config-instelling, zonder dat het bronpad of de .glsl-extensie
+nodig is.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Pad '%s' bestaat niet
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Pad '%s' heeft geen shaders
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Pad '%s' heeft:
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Geen dergelijke sectie of eigenschap: %s
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Er is geen eigenschap '%s' in sectie [%s]
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Gebruik: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
+
+.
 :TITLEBAR_CYCLES_MS
 cycli/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUZE)
-.
-:TITLEBAR_HINT_NOMOUSE
-geen-muis-modus
+:TITLEBAR_PAUSED
+PAUZE
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 muis gevangen, %s+F10 om los te laten
@@ -26,15 +469,14 @@ om de muis te vangen, druk op %s+F10 of klik op een muisknop
 naadloze muis, %s+F10 om te vangen
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-naadloze muis, %s+F10 of middenklik om te langen
+naadloze muis, %s+F10 of middenklik om te vangen
 .
 :CONFIG_FULLSCREEN
 DOSBox rechtstreeks op volledig scherm starten (standaard uit).
 Voer INTRO uit en zie Speciale toetsen voor sneltoetsen voor vensterbediening.
 .
 :CONFIG_DISPLAY
-Te gebruiken beeldschermnummer; waarde is afhankelijk van OS en instellingen
-(standaard 0).
+Beeldschermnummer; waarde is afhankelijk van OS en instellingen (standaard 0).
 .
 :CONFIG_FULLRESOLUTION
 Welke resolutie te gebruiken voor volledig scherm: 'original', 'desktop'
@@ -49,12 +491,6 @@ Stelt de venster grootte in om te gebruiken:
   <op-maat>:  Schaal het venster naar de opgegeven afmetingen in
               BxH-formaat. Bijvoorbeeld: 1024x768.
 .
-:CONFIG_VIEWPORT_RESOLUTION
-Stel de viewport-grootte (tekengebied) in het venster/scherm in:
-  fit:       Pas de viewport aan op het beschikbare venster/scherm (standaard).
-  <op-maat>: beperk de viewport tot een aangepaste resolutie of percentage van
-             het bureaublad. Gespecificeerd in BxH, N%, N.M%.
-             Voorbeelden: 960x720 of 50%
 .
 :CONFIG_WINDOW_POSITION
 Stel de initiële vensterpositie in bij gebruik in de venstermodus:
@@ -70,7 +506,10 @@ Stel de transparantie van het DOSBox Staging-scherm in (standaard 0).
 Van 0 (geen transparantie) tot 90 (hoge transparantie).
 .
 :CONFIG_MAX_RESOLUTION
-Deze instelling is hernoemd naar viewport_resolution.
+Verplaatst naar de [render] sectie en hernoemd naar 'viewport'.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Verplaatst naar de [render] sectie en hernoemd naar 'viewport'.
 .
 :CONFIG_HOST_RATE
 Stel de verversingssnelheid van de host in:
@@ -84,9 +523,21 @@ Stel de verversingssnelheid van de host in:
              groter dan 23.000.
 .
 :CONFIG_VSYNC
-Synchroniseer met de vernieuwingsfrequentie van het scherm, indien ondersteund.
-Dit kan flikkeren en scheuren verminderen, maar kan ook de prestaties
-beïnvloeden (standaard aan).
+Stel de verticale synchronisatie (vsync) van het hostvideostuurprogramma in:
+  auto:      Beperk vsync tot gunstige gevallen, zoals bij gebruik van een
+             interpolerende VRR-weergave op volledig scherm (standaard).
+  on:        vsync inschakelen. Dit kan scheuren in sommige games voorkomen,
+             maar heeft invloed op de prestaties of laat frames wegvallen
+             wanneer de DOS-snelheid de hostsnelheid overschrijdt (bijvoorbeeld
+             70 Hz DOS-snelheid versus 60 Hz hostsnelheid).
+  adaptive:  Schakelt vsync in wanneer de framesnelheid hoger is dan de
+             hostsnelheid, maar schakelt deze uit wanneer de framesnelheid
+             onder de hostsnelheid daalt. Dit is een redelijk alternatief op
+             macOS in plaats van 'aan'.Let op: alleen geldig in OpenGL-
+             uitvoermodi; anders behandeld als 'aan'.
+  off:       Probeer vsync uit te schakelen om een snellere framepresentatie
+             mogelijk te maken, met het risico op scheuren in sommige games.
+  yield:     laat het videostuurprogramma van de host de vsync regelen.
 .
 :CONFIG_VSYNC_SKIP
 Aantal microseconden dat de weergave kan worden geblokkeerd voordat het
@@ -102,29 +553,31 @@ Selecteer optioneel de framepresentatiemodus:
          framesnelheid.
 .
 :CONFIG_OUTPUT
-Welk videosysteem moet worden gebruikt voor uitvoer (standaard 'opengl').
+Videosysteem om te gebruiken voor uitvoer (standaard 'opengl').
+'texture' en 'opengl' gebruiken bilineaire interpolatie, 'texturenb' en
+'openglnb' gebruiken dichtstbijzijnde buur (niet-bilineair). Sommige shaders
+vereisen bilineaire interpolatie, waardoor dit de veiligste keuze is.
 .
 :CONFIG_TEXTURE_RENDERER
 Kies een rendererstuurprogramma wanneer u een textuuruitvoermodus gebruikt.
 Gebruik `texture_renderer=auto` (standaard) voor een automatische keuze.
 .
 :CONFIG_CAPTURE_MOUSE
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
-Wacht voordat de console sluit als dosbox een fout heeft (standaard aan).
+Houd de console open als er een fout is opgetreden (standaard aan).
 .
 :CONFIG_PRIORITY
-Prioriteitsniveaus die moeten worden toegepast wanneer respectievelijk actief
-en inactief. De tweede waarde is voor wanneer DOSBox geen focus heeft.
-   auto:  Laat het hostbesturingssysteem de prioriteit beheren.
-Standaard is: 'auto auto'
+Respectieve prioriteitsniveaus om toe te passen bij actief en inactief.
+(standaard: 'auto auto')
+'auto' laat het hostbesturingssysteem de prioriteit beheren.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
 Demp het geluid wanneer het venster inactief is (standaard uit).
@@ -133,8 +586,9 @@ Demp het geluid wanneer het venster inactief is (standaard uit).
 Pauzeer emulatie wanneer het venster inactief is (standaard uit).
 .
 :CONFIG_MAPPERFILE
-Bestand om toets-/gebeurtenistoewijzingen te laden/op te slaan.
-Voorgeconfigureerde toewijzingen staan in de 'resources/mapperfiles' map.
+Pad naar het mapper-bestand (standaard 'mapper-sdl2-XYZ.map', waarbij XYZ de
+huidige versie is). Voorgeconfigureerde toewijzingen staan in 
+'resources/mapperfiles'.
 Ze kunnen op naam worden geladen, bijvoorbeeld: mapperfile = xbox/xenon2.map
 Opmerking: de -resetmapper optie verwijdert alleen het standaard mapperbestand.
 .
@@ -144,15 +598,16 @@ te overschrijven die gewoonlijk de OS-screensaver blokkeert terwijl de
 emulator actief is (standaard 'auto').
 .
 :CONFIG_LANGUAGE
-Selecteer een te gebruiken taal: de, en, es, fr, it, nl, pl, and ru
-(standaard niet gezet).
-Opmerkingen: Dit overschrijft de 'LANG'-omgevingsvariabele, indien ingesteld.
-             De map 'resources/translations' gebundeld met het uitvoerbare
-             bestand bevat deze bestanden. Bewaar het naast het uitvoerbare
-             bestand om deze functie te ondersteunen.
+Selecteer een taal: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', of 'ru'
+(standaard niet gezet; dit is standaard Engels).
+Opmerkingen:
+  - Deze instelling overschrijft de 'LANG'-omgevingsvariabele, indien gezet.
+  - De map 'resources/translations' gebundeld met het uitvoerbare bestand
+    bevat deze bestanden. Bewaar het naast het uitvoerbare bestand om deze
+    functie te ondersteunen.
 .
 :CONFIG_MACHINE
-Het type machine dat DOSBox zal emuleren.
+Zet de video kaart of machine type om te emuleren.
   hercules:       Hercules Grafische Kaart (HGC) (zie 'monochrome_palette').
   cga_mono:       CGA-adapter aangesloten op een monochrome monitor (zie
                   'monochrome_palette').
@@ -252,12 +707,12 @@ Bepaalt hoe verbose de opstart is voordat het programma wordt weergegeven:
                       anders 'high'
 .
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
-Veel spelen openen al hun bestanden met beschrijfbare rechten; zelfs bestanden
-die ze nooit wijzigen. Met deze instelling kunt U die bestanden tegen schrijven
-beveiligen terwijl het spel ze nog steeds kan lezen. Een tweede use-case: als u
-een copy-on-write of netwerkgebaseerd bestandssysteem gebruikt, vermijdt deze
-instelling het activeren van schrijfbewerkingen voor deze tegen schrijven
-beveiligde bestanden.
+Veel spelen openen al hun bestanden met schrijfrechten; zelfs bestanden die
+ze nooit wijzigen. Met deze instelling kunt U die bestanden tegen schrijven
+beveiligen terwijl het spel ze nog steeds kan lezen (standaard aan). Een
+tweede use-case: als u een copy-on-write of netwerkgebaseerd bestandssysteem
+gebruikt, vermijdt deze instelling het activeren van schrijfbewerkingen voor
+deze tegen schrijven beveiligde bestanden.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
 Laat snelkoppelingen toe voor direct configuratiebeheer (standaard aan),
@@ -269,12 +724,31 @@ voldoende om de opdracht 'sbtype' uit te voeren .
 Overweeg om framesnelheden te beperken met de instelling '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
-Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
-die overeenkomt met die van de originele standaarddefinitiemonitoren waarvoor
-de meeste DOS-spelen zijn ontworpen.
-Deze instelling is alleen van invloed op videomodi die niet-vierkante pixels
-gebruiken, zoals 320x200 of 640x400; waar als vierkante-pixelmodi, zoals
-640x480 en 800x600, worden weergegeven zoals ze zijn.
+Set the aspect ratio correction mode (enabled by default):
+  auto, on:            Pas beeldverhoudingscorrectie toe voor moderne LCD
+                       beeldschermen met vierkante pixels, zodat DOS-videomodi
+                       met niet-vierkante pixels verschijnen zoals ze zouden
+                       verschijnen op een CRT-monitor met een beeldverhouding
+                       van 4:3 waarvoor de meeste DOS-spellen zijn ontworpen.
+                       Deze instelling heeft alleen invloed op videomodi die
+                       niet-vierkante pixels gebruiken, zoals 320x200 of
+                       640x400;.
+                       vierkante-pixelmodi (bijv. 320x240, 640x480 en 800x600)
+                       worden weergegeven zoals ze zijn.
+  square-pixels, off:  Pas geen beeldverhoudingcorrectie toe; alle DOS-
+                       videomodi worden weergegeven met vierkante pixels. De
+                       meeste 320x200-spellen zullen er platgedrukt uitzien,
+                       maar een minderheid van de titels (bijvoorbeeld DOS-
+                       poorten van PAL Amiga-spellen) heeft vierkante pixels
+                       nodig om te verschijnen zoals de artiesten het bedoeld
+                       hebben.
+  stretch:             Bereken de beeldverhouding op basis van de afmetingen
+                       van het venster. Gecombineerd met 'viewport' is deze
+                       modus handig om willekeurige beeldverhoudingen te
+                       forceren (bijvoorbeeld het uitrekken van DOS-games naar
+                       volledig scherm op 16:9-schermen) en om de horizontale
+                       en verticale uitrekbedieningen van CRT-monitoren te
+                       emuleren.
 .
 :CONFIG_INTEGER_SCALING
 Beperk de horizontale of verticale schaalfactor tot gehele waarden.
@@ -294,6 +768,36 @@ Mogelijke waarden:
   off:         Er wordt geen beperking voor het schalen van gehele getallen
                toegepast; de afbeelding vult de viewport volgens de
                'aspect'-instelling.
+:CONFIG_VIEWPORT
+Stel de viewportgrootte in (maximaal tekenbaar gebied). De video-uitvoer
+bevindt zich altijd binnen de viewport, waarbij rekening wordt gehouden met de
+geconfigureerde beeldverhouding (zie 'aspect'). Mogelijke waarden:
+  fit:             Pas de viewport in het beschikbare venster/scherm
+                   (standaard). Er kan sprake zijn van opvulling (zwarte
+                   gebieden) rond de afbeelding wanneer 'integer_scaling' is
+                   ingeschakeld.
+  BxH:             Stel een vaste viewportgrootte in BxH-formaat in in logische
+                   eenheden (bijvoorbeeld 960x720). De opgegeven grootte mag
+                   niet groter zijn dan de desktop. Als het groter is dan de
+                   desktopgrootte, wordt het geschaald zodat het binnen het
+                   venster past.
+  N%:              Vergelijkbaar met 'BxH', maar de grootte wordt
+                   gespecificeerd als een percentage van de desktopgrootte.
+  relative H% V%:  De viewport is ingesteld op een rechthoek met een beeld-
+                   verhouding van 4:3 die in het beschikbare venster/scherm
+                   past, en wordt vervolgens geschaald met de horizontale en
+                   verticale schaalfactoren H en V (geldig bereik is van 20%
+                   tot 300%). Het resulterende zichtvenster mag zich buiten
+                   het venster/scherm uitstrekken. Handig om willekeurige
+                   weergaveverhoudingen te forceren met 'aspect = stretch' en
+                   om in te zoomen op het beeld. Dit emuleert effectief de
+                   horizontale en verticale rekbedieningen van CRT-monitoren.
+
+Opmerkingen:
+ - Het gebruik van de 'relative' modus met 'integer_scaling' ingeschakeld kan
+   tot verrassende (maar correcte) resultaten leiden.
+ - U kunt de sneltoetsacties 'Stretch Axis', 'Inc Stretch' en 'Dec Stretch'
+   gebruiken om de stretch in realtime in de 'relatieve' modus in te stellen.
 .
 :CONFIG_MONOCHROME_PALETTE
 Selecteer standaardpalet voor monochrome weergave (standaard 'amber').
@@ -336,42 +840,49 @@ respectievelijk.
 .
 :CONFIG_SCALER
 Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
-  - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste
-    'windowresolution' in.
+  - Als u de normale 2x/3x scalers heeft gebruikt, stel dan de gewenste
+    'windowresolutie' of 'viewport_resolutie' in, of overweeg het gebruik van
+    'integer_scaling'.
   - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
 Stel een adaptieve CRT-monitoremulatie-shader of een gewone GLSL-shader in in
 OpenGL-uitvoermodi.
 Adaptieve CRT-shaderopties:
-  crt-auto:          Een CRT-shader die prioriteit geeft aan de intentie van de
-                     ontwikkelaar en hoe mensen de game hebben ervaren op het
-                     moment van uitgave (standaard). De juiste shader-variant
-                     wordt automatisch geselecteerd op basis van de grafische
-                     standaard van de huidige videomodus en de viewport-
-                     resolutie, ongeacht de 'machine'-instelling. Dit betekent
-                     dat u zelfs op een geëmuleerde VGA-kaart authentieke,
-                     enkelgescande EGA-monitoremulatie krijgt met zichtbare
-                     "dikke scanlijnen" in EGA-games.
-  crt-auto-machine:  Vergelijkbaar met 'crt-auto', maar hierbij wordt een vaste
-                     CRT-monitor gekozen die geschikt is voor de videoadapter
-                     die is geconfigureerd via de 'machine'-instelling. CGA- en
-                     EGA-games worden bijvoorbeeld dubbel gescand weergegeven
-                     op een geëmuleerde VGA-adapter.
-  crt-auto-arcade:   Emulatie van een arcade- of homecomputermonitor die minder
-                     scherp is dan een typische pc-monitor met dikke scanlijnen
-                     in lage resolutiemodi. Deze fantasieoptie bestaat in het
-                     echte leven niet, maar kan erg leuk zijn, vooral met
-                     DOS-poorten van Amiga-spellen.
+  crt-auto:               Een CRT-shader die prioriteit geeft aan de intentie
+                          van de ontwikkelaar en hoe mensen de game hebben
+                          ervaren op het moment van uitgave (standaard). De
+                          juiste shader-variant wordt automatisch geselecteerd
+                          op basis van de grafische standaard van de huidige
+                          videomodus en de viewport-resolutie, ongeacht de
+                          'machine'-instelling. Dit betekent dat u zelfs op een
+                          geëmuleerde VGA-kaart authentieke, enkelgescande EGA-
+                          monitoremulatie krijgt met zichtbare "dikke
+                          scanlijnen" in EGA-games.
+  crt-auto-machine:       Vergelijkbaar met 'crt-auto', maar hierbij wordt een
+                          vaste CRT-monitor gekozen die geschikt is voor de
+                          videoadapter die is geconfigureerd via de 'machine'-
+                          instelling. CGA- en EGA-games worden bijvoorbeeld
+                          dubbel gescand weergegeven op een geëmuleerde
+                          VGA-adapter.
+  crt-auto-arcade:        Emulatie van een arcade- of thuiscomputermonitor die
+                          minder scherp is dan een typische pc-monitor met
+                          dikke scanlijnen in lage resolutiemodi. Deze
+                          fantasieoptie bestaat in het echte leven niet, maar
+                          kan erg leuk zijn, vooral met DOS-poorten van Amiga-
+                          spellen.
+  crt-auto-arcade-sharp:  Een scherpere variant van de arcade shader voor wie
+                          van dikke scanlijnen houdt maar de horizontale
+                          scherpte van een typische pc-monitor wil behouden.
 Andere opties zijn onder meer 'sharp', 'none', een shader die wordt vermeld met
 het opdrachtregelargument --list-glshaders, of een absoluut of relatief pad
 naar een bestand. In alle gevallen kunt u de bestandsextensie '.glsl' van de
 shader weglaten.
 .
 :CONFIG_COMPOSITE
-Schakel de composietmodus in bij het starten. (standaard 'auto').
-'auto' laat het programma beslissen.
-Opmerking: verfijn de onderstaande instellingen (dwz: tint) met behulp van de
+Activeer de composietmodus bij het starten. (enkel voor 'cga', 'pcjr', en
+'tandy' machine types; standaard 'auto'). 'auto' laat het programma beslissen.
+Opmerking: verfijn de onderstaande instellingen (dwz: 'hue') met behulp van de
            samengestelde sneltoetsen.
            Lees dan de nieuwe instellingen van u console en voer ze hier in.
 .
@@ -380,19 +891,20 @@ Tijdperk van composiettechnologie (standaard 'auto').
 Bij 'auto' gebruikt PCjr 'new' en CGA/Tandy 'old'.
 .
 :CONFIG_HUE
-Uiterlijk van RGB-palet. Pas bijvoorbeeld aan totdat de lucht blauw is.
+Uiterlijk van RGB-palet (standaard 0).
+Pas bij bijvoorbeeld de waarde aan totdat de lucht blauw is.
 .
 :CONFIG_SATURATION
-Intensiteit van kleuren, van vervaagd tot levendig.
+Intensiteit van kleuren, van vervaagd tot levendig (standaard 100).
 .
 :CONFIG_CONTRAST
-Verhouding tussen het donkere en lichte gebied.
+Verhouding tussen het donkere en lichte gebied (standaard 100).
 .
 :CONFIG_BRIGHTNESS
-Helderheid van het beeld, van donker naar licht.
+Helderheid van het beeld, van donker naar licht (standaard 0).
 .
 :CONFIG_CONVERGENCE
-Convergentie van subpixelelementen, van wazig tot scherp (alleen CGA en Tandy).
+Convergentie van subpixelelementen, van wazig tot scherp (standaard 0).
 .
 :CONFIG_CORE
 CPU Core gebruikt in emulatie (standaard 'auto'). 'auto' zal, indien
@@ -400,6 +912,8 @@ beschikbaar en van toepassing, overschakelen naar `dynamic`.
 .
 :CONFIG_CPUTYPE
 CPU-type gebruikt in emulatie (standaard 'auto'). `auto` is de snelste keuze.
+De "prefetch" variant emuleert ook de "prefetch queue" en heeft de 'normal' core
+nodig.
 .
 :CONFIG_CYCLES
 Aantal instructies DOSBox probeert elke milliseconde te emuleren.
@@ -418,17 +932,24 @@ Aantal cycli toegevoegd of afgetrokken met sneltoetsen voor snelheidsregeling
 :CONFIG_CYCLEDOWN
 Als u deze lager instelt dan 100, is dit een percentage (standaard 20).
 .
-:CONFIG_VOODOO_MEMSIZE
-Geheugengrootte (in MB) van de 3dfx Vodooo-kaart (standaard 12 MB).
+:CONFIG_VOODOO
+Schakel 3dfx Voodoo-emulatie in (standaard aan).
 .
-:CONFIG_VOODOO_PERF
-Optimalisaties om te gebruiken bij het emuleren van de 3dfx Voodoo-kaart:
-   0: Geen optimalisaties.
-   1: Multi-threading (standaard).
-   2: Bilineaire filtering uitschakelen.
-   3: Alle optimalisaties (zowel 1 als 2).
-Opmerking: Voodo-emulatie is softwaregebaseerd en maakt geen gebruik van
-      OpenGL-oproepen op hostniveau.
+:CONFIG_VOODOO_MEMSIZE
+Stel de hoeveelheid videogeheugen in voor 3dfx Voodoo-graphics, 4 of 12 MB.
+Het geheugen wordt als volgt gebruikt door de Frame Buffer Interface (FBI)
+en Texture Mapping Unit (TMU):
+   4: 2 MB voor de FBI en één TMU met 2 MB (standaard)
+  12: 4 MB voor de FBI en twee TMU's van elk 4 MB.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Gebruik threads om de prestaties van 3dfx Voodoo te verbeteren (standaard aan).
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Gebruik bilineaire filtering om het textuurverzachtende effect van 3dfx Voodoo
+te emuleren. Alleen aanbevolen als U een snelle CPU van desktopklasse heeft,
+omdat dit de framesnelheden op langzamere systemen kan beïnvloeden
+(standaard uit).
 .
 :CONFIG_CAPTURE_DIR
 Directory waar de verschillende opnames worden opgeslagen, zoals audio-,
@@ -483,11 +1004,13 @@ Opmerkingen: u moet dit uitzetten als het ten onrechte meerdere beeldschermen
              alleen naar audio te luisteren.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Muisgevoeligheid voor de horizontale en verticale assen, als percentage
-(standaard 100,100). Negatieve waarden keren de as om, nul schakelt deze uit.
-Bij slechts één waarde, wordt de gevoeligheid voor beide assen ingesteld.
-De instelling kan tijdens runtime worden aangepast (ook per muisinterface) met
-behulp van de interne MOUSECTL.COM-tool, beschikbaar op schijf Z.
+Globale muisgevoeligheid voor de horizontale en verticale assen, als percentage
+(standaard 100). Waarden kunnen worden gescheiden door spaties, komma's of
+puntkomma's (d.w.z. 100,150). Negatieve waarden keren de as om, nul schakelt
+deze uit.
+Als u slechts één waarde opgeeft, wordt de gevoeligheid voor beide assen
+ingesteld. De gevoeligheid kan per muisinterface verder worden verfijnd met
+behulp van de interne MOUSECTL.COM-tool die beschikbaar is op de Z-schijf.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Schakel dit in om de instellingen voor muisversnelling en gevoeligheid van uw
@@ -532,6 +1055,16 @@ COM (seriële) poort standaard muismodel:
   wheel+msm:    Automatische keuze tussen wiel en msm (standaard).
 Opmerkingen: Activeer COM-poort muis in de [serial] sectie.
 .
+:CONFIG_VMWARE_MOUSE
+VMware-muisinterface (standaard ingeschakeld).
+Alleen volledig compatibel met experimentele Windows 3.1x-drivers van derden.
+Opmerking: vereist dat de PS/2-muis is ingeschakeld.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+VirtualBox-muisinterface (standaard ingeschakeld).
+Alleen volledig compatibel met het Windows 3.1x-stuurprogramma van derden.
+Opmerking: vereist dat de PS/2-muis is ingeschakeld.
+.
 :CONFIG_NOSOUND
 Schakel de stille modus in (standaard uitgeschakeld).
 Geluid wordt echter nog steeds geëmuleerd, maar DOSBox maakt geen geluid.
@@ -540,13 +1073,13 @@ Geluid wordt echter nog steeds geëmuleerd, maar DOSBox maakt geen geluid.
 Samplesnelheid van de mixer (48000 standaard).
 .
 :CONFIG_BLOCKSIZE
-Grootte mixerblok; grotere waarden kunnen helpen bij haperend geluid, maar het
-geluid zal ook meer vertraagd zijn.
+Grootte mixerblok in sample frames (standaard 512). Grotere waarden kunnen
+helpen bij haperend geluid, maar het geluid zal ook meer vertraagd zijn.
 .
 :CONFIG_PREBUFFER
-Hoeveel milliseconden geluid om bovenop de blokgrootte te renderen; grotere
-waarden kunnen helpen bij haperend geluid, maar het geluid zal ook meer
-vertraagd zijn.
+Hoeveel milliseconden geluid om bovenop de blokgrootte te renderen
+(standaard 20). Grotere waarden kunnen helpen bij haperend geluid, maar het
+geluid zal ook meer vertraagd zijn.
 .
 :CONFIG_NEGOTIATE
 Laat het audiostuurprogramma van de host onderhandelen over (mogelijk) betere
@@ -561,11 +1094,11 @@ clipping van de audio-uitvoer te voorkomen:
 :CONFIG_CROSSFEED
 Stel crossfeed globaal in op alle stereokanalen voor luisteren met een
 hoofdtelefoon:
-  off:       Geen crossfeed (standaard).
-  on:        Schakel crossfeed in (sterkte 40).
-  <sterkte>: Stel de crossfeed-sterkte in van 0 tot 100, waarbij 0 betekent
-             geen crossfeed (uit) en 100 volledige crossfeed (waarbij
-             stereo-inhoud effectief wordt omgezet in mono).
+  off:     Geen crossfeed (standaard).
+  on:      Schakel crossfeed in (normale preset).
+  light:   lichte crossfeed (sterkte 15)
+  normal:  normale crossfeed (sterkte 40)
+  strong:  sterke crossfeed (sterkte 65)
 Opmerking: U kunt crossfeed per kanaal instellen via mixercommando's.
 .
 :CONFIG_REVERB
@@ -688,22 +1221,27 @@ Filter voor de FluidSynth-audio-uitgang:
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_MODEL
-MT-32 model om te gebruiken.
-  auto:  kies het eerste beschikbare model, in de aangegeven volgorde.
-  mt32:  kies het eerste beschikbare MT-32-model, in de aangegeven volgorde.
-  cm32l: kies het eerste beschikbare CM-32L-model, in de aangegeven volgorde.
-  mt32_old: alias voor MT-32 v1.07.
-  mt32_new: alias voor MT-32 v2.04.
+Het Roland MT-32/CM-32ML-model dat u kunt gebruiken.
+De ROM-bestanden voor het geselecteerde model moeten beschikbaar zijn
+(zie 'romdir').
+De opzoekvolgorde voor modellen die geen versie in hun naam specificeren,
+wordt uitgevoerd in de aangegeven volgorde.
+  auto:       Kies het eerste beschikbare model (standaard).
+  cm32l:      Kies het eerste beschikbare CM-32L-model.
+  mt32_old:   Kies het eerste beschikbare "oude" MT-32-model (v1.0x).
+  mt32_new:   Kies het eerste beschikbare "nieuwe" MT-32-model (v2.0x).
+  mt32:       Kies het eerste beschikbare MT-32-model.
+  <versie>:   Gebruik de exact opgegeven modelversie (bijv. 'mt32_204').
 .
 :CONFIG_ROMDIR
-De map met ROM's voor een of meer modellen.
-De map kan absoluut of relatief zijn, of laat het leeg om de
-'mt32-roms'-map in uw DOSBox-configuratiemap te gebruiken.
-Andere veelvoorkomende systeemlocaties worden ook gecontroleerd.
-ROM bestanden in deze map kunnen een van de volgende bevatten:
-  - MT32_CONTROL.ROM en MT32_PCM.ROM, voor het 'mt32' model.
-  - CM32L_CONTROL.ROM en CM32L_PCM.ROM, voor het 'cm32l' model.
-  - Uitgepakte MAME MT-32 en CM-32L ROM's, voor de versiemodellen.
+De map met de Roland MT-32/CM-32ML ROM's (standaard niet ingesteld).
+De map kan absoluut of relatief zijn, of laat deze leeg om de map 'mt32-roms'
+in uw DOSBox-configuratiemap te gebruiken. Andere veel voorkomende
+systeemlocaties worden ook gecontroleerd.
+Opmerkingen:
+  - De bestandsnamen van de ROM-bestanden doen er niet toe; de ROMS worden
+    geïdentificeerd door hun controlesommen.
+  - Zowel interleaved als niet-interlaved ROM-bestanden worden ondersteund.
 .
 :CONFIG_MT32_FILTER
 Filter voor de Roland MT-32/CM-32L audio-uitgang:
@@ -722,11 +1260,17 @@ Geen ROM is momenteel geladen
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
 j
 .
+:MT32_ROMS_LABEL
+MT-32  ROMs  
+.
+:CM32L_ROMS_LABEL
+CM-32L ROMs  
+.
 :MT32_ACTIVE_ROM_LABEL
-Actieve ROM : 
+Actieve ROM    
 .
 :MT32_SOURCE_DIR_LABEL
-Geladen van : 
+Geladen van    
 .
 :CONFIG_SBTYPE
 Type Sound Blaster om te emuleren (standaard 'sb16').
@@ -745,7 +1289,7 @@ Het DMA-nummer van de Sound Blaster (standaard 1).
 Het hoge DMA-nummer van de Sound Blaster (standaard 5).
 .
 :CONFIG_SBMIXER
-Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen (standaard ingeschakeld)
+Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen (standaard aan)
 .
 :CONFIG_SBWARMUP
 Stil initiële DMA-audio nadat de kaart is ingeschakeld, in milliseconden.
@@ -760,6 +1304,31 @@ hersamplen te voorkomen.
 Type OPL-emulatie (standaard 'auto').
 Op 'auto' wordt de modus bepaald door 'sbtype'.
 Alle OPL-modi zijn AdLib-compatibel, behalve 'cms'.
+.
+:CONFIG_OPL_FADEOUT
+Fade de OPL-synthuitvoer uit nadat naar de laatste IO-poort is geschreven:
+  off:       Vervaag niet; de resterende uitvoer wordt voor altijd afgespeeld
+             (standaard).
+  on:        Wacht 0,5 seconde voordat u over een periode van 0,5 seconde
+             uitfadt.
+  <op-maat>: Een aangepaste fade-outdefinitie in de volgende indeling:
+               WACHT FADE
+             Waar WAIT is hoe lang nadat de laatste schrijffading van de IO-
+             poort begint, variërend tussen 100 en 5000 milliseconden; en FADE
+             is de fade-outperiode, variërend tussen 10 en 3000 milliseconden.
+             Voorbeelden:
+                300 200 (Wacht 300 ms voordat het uitfaden over een periode
+                        van 200 ms)
+                1000 3000 (Wacht 1 seconde voordat het uitfaden over een
+                          periode van 3 seconden)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Verwijder de DC-bias van de OPL uitvoer. Dit mag alleen als laatste redmiddel
+worden gebruikt om ploppen en tikken op te lossen in games die PCM-audio
+afspelen met behulp van de OPL-synthesizer op een Sound Blaster- of
+AdLib-kaart, zoals in: Golden Eagle (1991), Wizardry 6 (1990) en
+Wizardry 7 (1992). Als u andere getroffen spellen vindt, open dan een Bug
+Report.
 .
 :CONFIG_OPLEMU
 Alleen 'nuked' OPL-emulatie wordt nog ondersteund.
@@ -836,8 +1405,8 @@ Het IRQ-nummer van de IBM Music Feature Card (standaard 3).
 .
 :CONFIG_IMFC_FILTER
 Filter voor de uitvoer van de IBM Music Feature Card:
-  on:          filter de uitvoer.
-  off:         de uitvoer niet filteren (standaard).
+  on:          filter de uitvoer (standaard).
+  off:         de uitvoer niet filteren.
   <aangepast>: aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_SIDMODEL
@@ -851,7 +1420,7 @@ Model van chip om te emuleren voor de Innovation SSI-2001-kaart:
 .
 :CONFIG_SIDCLOCK
 De SID-chip klokfrequentie, die op reproductiekaarten kan worden gekozen.
-  default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart.
+  default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart (standaard).
   c64ntsc: gebruikt 1.023 MHz, zoals NTSC Commodore PC's en de DuoSID.
   c64pal:  gebruikt 0.985 MHz, zoals PAL Commodore PCs en de DuoSID.
   hardsid: gebruikt 1.000 MHz, zoals beschikbaar op de DuoSID.
@@ -902,6 +1471,13 @@ Stel de Tandy/PCjr 3 Voice-geluidemulatie in:
          de kaart in zonder DAC om conflicten met andere kaarten die DMA 1
          gebruiken te voorkomen.
   off:   Tandy/PCjr-geluid uitschakelen.
+.
+:CONFIG_TANDY_FADEOUT
+Fade de Tandy-synthuitvoer uit nadat de laatste IO-poort heeft geschreven:
+  off:       Niet faden; de resterende uitvoer zal blijven afgespeeld
+             (standaard).
+  on:        Wacht 0,5 sec. voordat het faden over een periode van 0,5 sec.
+  <op-maat>: Aangepaste fade-outdefinitie; zie 'opl_fadeout' voor details.
 .
 :CONFIG_TANDY_FILTER
 Filter voor de Tandy synth-uitgang:
@@ -1024,7 +1600,7 @@ Pas de kalibratieparameters van de Y-as toe via de sneltoetsen
 (standaard 'auto').
 .
 :CONFIG_SERIAL1
-Stel het type apparaat in dat is aangesloten op de com-poort.
+Stel het type apparaat in dat is aangesloten op de COM1 poort.
 Opties: disabled, dummy, mouse, modem, nullmodem, direct (standaard 'dummy').
 Aanvullende parameters moeten op dezelfde regel staan in de vorm van
 parameter:waarde. Parameter voor alle typen is irq (optioneel).
@@ -1039,13 +1615,13 @@ verbinding moet worden gebruikt. 0 voor TCP en 1 voor ENet betrouwbaar UDP.
 Bijvoorbeeld: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Zie 'serial1'
+Zie 'serial1' (standaard 'dummy')
 .
 :CONFIG_SERIAL3
-Zie 'serial1'
+Zie 'serial1' (standaard 'disabled')
 .
 :CONFIG_SERIAL4
-Zie 'serial1'
+Zie 'serial1' (standaard 'disabled')
 .
 :CONFIG_PHONEBOOKFILE
 Bestand dat wordt gebruikt om valse telefoonnummers aan adressen toe te wijzen
@@ -1068,18 +1644,28 @@ Stel DOS-versie in (standaard 5.0). Specificeer als hoofdversie.minor formaat.
 Een enkel nummer wordt behandeld als de hoofdversie.
 Gebruikelijke instellingen zijn 3.3, 5.0, 6.22 en 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Stel het locale-tijdperk in (standaard 'modern'). Historische instellingen
+(indien beschikbaar voor het betreffende land) proberen oud DOS-gedrag na te
+bootsen bij het weergeven van informatie zoals datums, tijd of cijfers,
+moderne instellingen volgen hedendaagse praktijken voor gebruikerservaring die
+consistenter zijn met typische hostsystemen.
+.
 :CONFIG_COUNTRY
-Stel de DOS-landcode in (standaard 0). Dit heeft invloed op landspecifieke
-informatie, zoals datum, tijd en decimale notaties.
-Indien ingesteld op 0, wordt de landcode gebruikt die overeenkomt met de
-geselecteerde toetsenbordindeling.
+Stel de DOS-landcode in (standaard 'auto'). Dit heeft invloed op landspecifieke
+informatie, zoals datum, tijd en decimale notaties. De lijst met ondersteunde
+landcodes kan worden weergegeven met de '--list-countries'
+opdrachtregelargument. Indien ingesteld op 'auto', wordt de landcode gebruikt
+die overeenkomt met de geselecteerde toetsenbordindeling.
 .
 :CONFIG_KEYBOARDLAYOUT
-Taalcode van de toetsenbordindeling, of 'auto' (standaard 'auto').
+Taalcode van de toetsenbordindeling (standaard 'auto'), of bijvoorbeeld 'en' voor
+de US English indeling. Andere mogelijke waarden zijn dezelfde zoals die ook door
+FreeDOS geaccepteerd worden.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Schakel uitbreidende omgevingsvariabelen zoals %PATH% in in de
-DOS-opdrachtshell (standaard uitgeschakeld).
+Schakel het uitbreiden van omgevingsvariabelen zoals %PATH% in de DOS-
+opdrachtshell in (standaard 'auto', ingeschakeld als DOS-versie >= 7.0).
 FreeDOS en MS-DOS 7/8 COMMAND.COM ondersteunen dit gedrag.
 .
 :CONFIG_SHELL_HISTORY_FILE
@@ -1092,7 +1678,7 @@ tabs gescheiden indeling, gebruikt door SETVER.EXE als permanente opslag
 (standaard leeg).
 .
 :CONFIG_IPX
-Schakel IPX over UDP/IP-emulatie in (standaard aan).
+Schakel IPX over UDP/IP-emulatie in (standaard uit).
 .
 :CONFIG_NE2000
 Activeer emulatie van een Novell NE2000-netwerkkaart op een softwaregebaseerd
@@ -1159,18 +1745,6 @@ Mogelijke waarden
 :CONFIG_DEPRECATED_VALUES
 Verouderde waarden
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Geen dergelijke sectie of eigenschap: %s
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Er is geen eigenschap "%s" in sectie "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Correcte syntaxis: [color=green]config [/reset]-set [color=cyan][SECTIE][/reset] [color=white]EIGENSCHAP[/reset][=][color=white]WAARDE[/reset]
-
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Geen configuratiebestand geladen!
 
@@ -1204,7 +1778,7 @@ Configuratiebestand '%s' schrijven
 Voert configuratiebeheer en andere diverse acties uit.
 
 Gebruik:
-  [color=green]config[reset] [color=white]COMMANDO[reset] [color=cyan][PARAMETERS][reset]
+  [color=light-green]config[reset] [color=white]COMMANDO[reset] [color=light-cyan][PARAMETERS][reset]
 
 Waar [color=white]COMMANDO[reset] een van de volgende is:
   -writeconf
@@ -1223,25 +1797,21 @@ Waar [color=white]COMMANDO[reset] een van de volgende is:
   -wl [color=white]BESTAND       [reset]Schrijft de huidige taalstrings naar [color=white]BESTAND [reset]in de huidige
                     werkmap.
 
-  -r [color=cyan][EIGENSCHAP1=WAARDE1 [EIGENSCHAP2=WAARDE2 ...]][reset]
+  -r [color=light-cyan][EIGENSCHAP1=WAARDE1 [EIGENSCHAP2=WAARDE2 ...]][reset]
                     Herstart DOSBox met de optioneel geleverde configuratie
                     eigenschappen.
 
   -l                Toont de momenteel geladen configuratiebestanden en
                     argumenten die bij het opstarten zijn opgegeven.
 
-  -help sections
-  -h    sections
-  -?    sections    Toont de namen van alle configuratiesecties.
-
   -help [color=white]SECTIE[reset]
   -h    [color=white]SECTIE[reset]
   -?    [color=white]SECTIE      [reset]Toont de namen van alle eigenschappen in een
                     configuratiesectie.
 
-  -help [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
-  -h    [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
-  -?    [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -help [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -h    [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -?    [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
                     Toont de beschrijving en de huidige waarde van een
                     configuratie-eigenschap.
 
@@ -1255,18 +1825,28 @@ Waar [color=white]COMMANDO[reset] een van de volgende is:
 
   -get [color=white]SECTIE       [reset]Toont alle eigenschappen en hun waarden in een
                     configuratiesectie.
-  -get [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -get [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
                     Toont de waarde van een enkele configuratie-eigenschap.
 
-  -set [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
+  -set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
                     Stelt de waarde in van een configuratie-eigenschap.
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Doel van eigenschap [color=green]'%s'[color=white] (opgenomen in sectie [color=cyan][%s][color=white])[reset]:
+[color=white]Doel van eigenschap [color=light-green]'%s'[color=white] (opgenomen in sectie [color=light-cyan][%s][color=white]):[reset]
+
 %s
 
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
 [color=white]Mogelijke waarden:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
 [color=white]Standaard waarde:[reset]   %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
 [color=white]Huidige waarde:[reset]     %s
 
 .
@@ -1285,12 +1865,11 @@ Deze eigenschap kan tijdens runtime niet worden gewijzigd.
 positief geheel getal
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]Sectie [color=cyan][%s] [color=white]bevat de volgende eigenschappen:[reset]
+[color=white]Sectie [color=light-cyan][%s] [color=white]bevat de volgende eigenschappen:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
 [color=white]DOSBox-configuratie bevat de volgende secties:[reset]
-
 
 .
 :PROGRAM_CONFIG_SECURE_ON
@@ -1310,7 +1889,7 @@ Sectie [%s] bestaat niet.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Gebruik: [color=green]config[reset] -get [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+Gebruik: [color=light-green]config[reset] -get [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
@@ -1324,11 +1903,12 @@ Ontbrekende parameter.
 
 .
 :PROGRAM_PATH_TOO_LONG
-Het pad "%s" overschrijdt de DOS maximale lengte van %d karakters
+Het pad '%s' overschrijdt de DOS maximale lengte van %d karakters
 
 .
 :PROGRAM_EXECUTABLE_MISSING
 Uitvoerbaar bestand niet gevonden: '%s'
+
 .
 :CONJUNCTION_AND
 en
@@ -1346,10 +1926,10 @@ Lokale map
 CD-ROM station
 .
 :MOUNT_TYPE_FAT
-FAT image
+FAT bestand
 .
 :MOUNT_TYPE_ISO
-ISO image
+ISO bestand
 .
 :MOUNT_TYPE_VIRTUAL
 Interne virtuele schijf
@@ -1367,48 +1947,48 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 Voert gescripte toetsenbordinvoer uit in een draaiend DOS-spel.
 
 Gebruik:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] [-w [color=white]WACHT[reset]] [-p [color=white]TEMPO[reset]] [color=cyan]TOETSEN[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] [-w [color=white]WACHT[reset]] [-p [color=white]TEMPO[reset]] [color=light-cyan]TOETSEN[reset]
 
 Waar:
   [color=white]WACHT[reset]   aantal seconden om te wachten  voordat het typen begint (max. 30).
   [color=white]TEMPO[reset]   is het aantal seconden voor elke toetsaanslag (max. 10).
-  [color=cyan]TOETSEN[reset] is een of meer door spaties gescheiden toetsen.
+  [color=light-cyan]TOETSEN[reset] is een of meer door spaties gescheiden toetsen.
 
 Opmerkingen:
-  De [color=cyan]TOETSEN[reset] worden automatisch getypt in DOS-spellen nadat ze zijn gestart.
-  Het automatisch typen begint na [color=cyan]WACHT[reset] seconden en elke knop wordt na [color=white]TEMPO[reset]
-  seconden uitgevoerd. Het [color=cyan],[reset] teken voegt een extra [color=white]TEMPO[reset] vertraging in.
+  De [color=light-cyan]TOETSEN[reset] worden automatisch getypt in DOS-spellen nadat ze zijn gestart.
+  Het automatisch typen begint na [color=light-cyan]WACHT[reset] seconden en elke knop wordt na [color=white]TEMPO[reset]
+  seconden uitgevoerd. Het [color=light-cyan],[reset] teken voegt een extra [color=white]TEMPO[reset] vertraging in.
   [color=white]WACHT[reset] en [color=white]TEMPO[reset] zijn standaard ingesteld op respectievelijk 2 en 0.5 seconden.
   Een lijst met alle geldige toetsnamen kan worden verkregen met de optie -list
 
 Voorbeelden:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
-  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
-  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]
+  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]
+  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter
 [reset]
 .
 :PROGRAM_BOOT_HELP_LONG
 Start DOSBox Staging op vanaf een DOS-schijf of schijfimage.
 
 Usage:
-  [color=green]boot[reset] [color=white]SCHIJF[reset]
-  [color=green]boot[reset] [color=cyan]IMAGEBESTAND[reset]
+  [color=light-green]boot[reset] [color=white]SCHIJF[reset]
+  [color=light-green]boot[reset] [color=light-cyan]IMAGEBESTAND[reset]
 
 Where:
   [color=white]SCHIJF[reset] is een schijf om van op te starten, moet [color=white]A:[reset], [color=white]C:[reset], of [color=white]D:[reset] zijn.
-  [color=cyan]IMAGEBESTAND[reset] is een of meer floppy-images, gescheiden door spaties.
+  [color=light-cyan]IMAGEBESTAND[reset] is een of meer floppy-images, gescheiden door spaties.
 
 Opmerkingen:
   Er moet eerder een DOS-stationsletter zijn aangekoppeld met de opdracht
-  [color=green]imgmount[reset]. Het DOS-station of de schijfimage moet opstartbaar zijn en
+  [color=light-green]imgmount[reset]. Het DOS-station of de schijfimage moet opstartbaar zijn en
   DOS-systeembestanden bevatten. Als er meer dan één schijfkopie is opgegeven,
   kunt u deze verwisselen met een sneltoets.
 
 Voorbeelden:
-  [color=green]boot[reset] [color=white]c:[reset]
-  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+  [color=light-green]boot[reset] [color=white]c:[reset]
+  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -1432,9 +2012,9 @@ schijf om vanaf op te starten. Als er geen schijfletter is opgegeven, wordt
 dit standaard ingesteld op opstarten vanaf de A-schijf.
 De enige opstartbare schijfletters zijn A, C en D. Voor het opstarten vanaf
 een harde schijf (C of D), zal de image al moeten zijn aangekoppeld met het
-[color=blue]IMGMOUNT[reset]-commando.
+[color=light-blue]IMGMOUNT[reset]-commando.
 
-Typ [color=blue]BOOT /?[reset] voor de syntaxis van deze opdracht.
+Typ [color=light-blue]BOOT /?[reset] voor de syntaxis van deze opdracht.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1463,46 +2043,6 @@ Beschikbare opdrachten voor PCjr-cartridges: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Geen PCjr-cartridge opdrachten gevonden
-.
-:PROGRAM_FMPDRV_HELP_LONG
-Laad of ontlaad de ingebouwde ReelMagic Full Motion Player-driver.
-
-Gebruik:
-  [color=green]fmpdrv[reset]    (laad de driver)
-  [color=green]fmpdrv[reset] /u (ontlaad de driver)
-
-Opmerkingen:
-  De configuratie-instelling "reelmagic = on" laadt de driver bij het
-  opstarten en voorkomt dat deze wordt ontladen.
-
-.
-:PROGRAM_FMPDRV_TITLE
-ReelMagic Full Motion Player-stuurprogramma (ingebouwd) %hhu.%hhu
-
-.
-:PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Geladen op interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Reeds geladen op interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Niet geladen: Geen vrije interrupten![reset]
-
-.
-:PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Stuurprogramma ontladen[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Stuurprogramma was niet geladen[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]
-
 .
 :MSCDEX_SUCCESS
 MSCDEX geïnstalleerd.
@@ -1571,27 +2111,28 @@ De momenteel gekoppelde schijven zijn:
 Koppel een cd-rom, diskette of schijfkopie aan een stationsletter.
 
 Gebruik:
-  [color=green]imgmount[reset] [color=white]SCHIJF[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
-  [color=green]imgmount[reset] [color=white]SCHIJF[reset] [color=cyan]IMAGEBESTAND[reset] [IMAGEBESTAND2 [..]] [-fs fat] -t hdd|floppy -ro
-  [color=green]imgmount[reset] [color=white]SCHIJF[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
-  [color=green]imgmount[reset] -u [color=white]SCHIJF[reset]  (Ontkoppel de [color=white]SCHIJF[reset] image)
+  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]IMAGEBESTAND[reset] [IMAGEBESTAND2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=light-green]imgmount[reset] [color=white]SCHIJF[reset] [color=light-cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
+  [color=light-green]imgmount[reset] -u [color=white]SCHIJF[reset]  (Ontkoppel de [color=white]SCHIJF[reset] image)
 
 Waar:
   [color=white]SCHIJF[reset]       is de schijfletter waar de image gekoppeld wordt: a, c, d, ...
-  [color=cyan]CDROM-SET[reset]    is een ISO, CUE+BIN, CUE+ISO, of CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [color=cyan]IMAGEBESTAND[reset] is een harde schijf of diskette image in FAT16 of FAT12 formaat
-  [color=cyan]BOOTIMAGE[reset]    is een opstartbare schijfimage met opgegeven -size GEOMETRIE:
+  [color=light-cyan]CDROM-SET[reset]    is een ISO, CUE+BIN, CUE+ISO, of CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=light-cyan]IMAGEBESTAND[reset] is een harde schijf of diskette image in FAT16 of FAT12 formaat
+  [color=light-cyan]BOOTIMAGE[reset]    is een opstartbare schijfimage met opgegeven -size GEOMETRIE:
                bytes-per-sector,sectoren-per-kop,koppen,cilinders
 Opmerkingen:
-  - %s+F4 verwisselt de volgende [color=cyan]CDROM-SET[reset] of [color=cyan]BOOTIMAGE[reset], indien aanwezig.
+  - %s+F4 verwisselt de volgende [color=light-cyan]CDROM-SET[reset] of [color=light-cyan]BOOTIMAGE[reset], indien aanwezig.
   - De vlag -ro koppelt de schijfkopie in alleen-lezen modus.
   - De vlag -ide emuleert een IDE-controller, handig voor op cd's gebaseerde
     spelen die een echte DOS-omgeving nodig hebben.
+
 Voorbeelden:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
-  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -1603,11 +2144,11 @@ Geef stationsnummer (0 of 3) op voor koppeling (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Voor [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT schijfletter locatie-van-image -t iso[reset]
+Voor [color=brown]CD-ROM[reset] images:   [color=light-blue]IMGMOUNT schijfletter locatie-van-image -t iso[reset]
 
-Voor [color=light-yellow]hardeschijf[reset] images: Moet geometrie specificeren voor harde schijven:
+Voor [color=brown]hardeschijf[reset] images: Moet geometrie specificeren voor harde schijven:
 bytes_per_sector, sectoren_per_cylinder, koppen_per_cylinder, cylinder_aantal.
-[color=blue]IMGMOUNT schijfletter locatie-van-image -size bps,spc,hpc,cyl[reset]
+[color=light-blue]IMGMOUNT schijfletter locatie-van-image -size bps,spc,hpc,cyl[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -1645,7 +2186,7 @@ Imagebestand niet gevonden.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Gebruik de [color=blue]MOUNT[reset]-opdracht, niet de [color=blue]IMGMOUNT[reset]-opdracht om mappen te koppelen.
+Gebruik de [color=light-blue]MOUNT[reset]-opdracht, niet de [color=light-blue]IMGMOUNT[reset]-opdracht om mappen te koppelen.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1674,37 +2215,37 @@ Geeft een inleiding op het volledige scherm van DOSBox Staging weer.
 .
 :PROGRAM_INTRO_HELP_LONG
 Gebruik:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]PAGINA[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]PAGINA[reset]
 
 Waar:
   [color=white]PAGINA[reset] is de paginanaam om weer te geven, inclusief [color=white]cdrom[reset], [color=white]mount[reset] en [color=white]special[reset].
 
 Opmerkingen:
-  [color=green]intro[reset] zonder argument toont alle informatiepaginas opvolgend; druk op een
+  [color=light-green]intro[reset] zonder argument toont alle informatiepaginas opvolgend; druk op een
   willekeurige toets om naar de volgende pagina te gaan. Als er een paginanaam
   is opgegeven, wordt de opgegeven pagina direct weergegeven.
 
 Voorbeelden:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]cdrom[reset]
 
 .
 :PROGRAM_INTRO
-[erases=entire][color=green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
+[erases=entire][color=light-green]Welkom bij DOSBox Staging[reset], een x86 emulator met geluid en graphics.
 DOSBox maakt een shell voor u die eruitziet als een oude gewone DOS.
 
-Voor informatie over basis koppelen typ [color=blue]intro mount[reset]
-Voor informatie over CD-ROM ondersteuning typ [color=blue]1mintro cdrom[reset]
-Voor informatie over speciale toetsen typ [color=blue]intro special[reset]
+Voor informatie over basis koppelen typ [color=light-blue]intro mount[reset]
+Voor informatie over CD-ROM ondersteuning typ [color=light-blue]1mintro cdrom[reset]
+Voor informatie over speciale toetsen typ [color=light-blue]intro special[reset]
 Voor meer informatie, bezoek de DOSBox Staging wiki:
-[color=blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
+[color=light-blue]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[color=red]DOSBox zal stoppen/afsluiten zonder waarschuwing als er een fout is opgetreden![reset]
+[color=light-red]DOSBox zal stoppen/afsluiten zonder waarschuwing als er een fout is opgetreden![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[erases=entire][color=green]Hier zijn enkele commando's om u op weg te helpen:[reset]
+[erases=entire][color=light-green]Hier zijn enkele commando's om u op weg te helpen:[reset]
 Voordat u de bestanden op uw eigen bestandssysteem kunt gebruiken, moet u de
 map met de bestanden aankoppelen.
 
@@ -1712,80 +2253,80 @@ map met de bestanden aankoppelen.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c:\dosgames\ [color=white]koppelt een C-schijf met c:\dosgames als inhoud.   ║
+║ [color=light-green]mount c c:\dosgames\ [color=white]koppelt een C-schijf met c:\dosgames als inhoud.   ║
 ║                                                                         ║
-║ [color=green]c:\dosgames\ [color=white]is een voorbeeld. Vervang met uw eigen spellenmap.         ║
+║ [color=light-green]c:\dosgames\ [color=white]is een voorbeeld. Vervang met uw eigen spellenmap.         ║
 ╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c ~/dosgames[color=white] koppelt een C-schijf met ~/dosgames als inhoud.   ║
+║ [color=light-green]mount c ~/dosgames[color=white] koppelt een C-schijf met ~/dosgames als inhoud.   ║
 ║                                                                      ║
-║ [color=green]~/dosgames[color=white] is een voorbeeld. Vervang met uw eigen spellenmap.        ║
+║ [color=light-green]~/dosgames[color=white] is een voorbeeld. Vervang met uw eigen spellenmap.        ║
 ╚══════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Na een successvolle koppeling, kunt u [color=blue]c:[reset] typen om naar de nieuw gekoppelde
-C-drive te gaan. Typ daar [color=blue]dir[reset] om de inhoud te tonen. [color=blue]cd[reset] staat toe om een map
+Na een successvolle koppeling, kunt u [color=light-blue]c:[reset] typen om naar de nieuw gekoppelde
+C-drive te gaan. Typ daar [color=light-blue]dir[reset] om de inhoud te tonen. [color=light-blue]cd[reset] staat toe om een map
 in te gaan (herkenbaar door de [color=yellow][][reset] in de map lijst).
-Programmas/bestanden met extensie [color=light-red].exe .bat[reset] and [color=light-red].com[reset]. kunnen worden uitgevoerd.
+Programmas/bestanden met extensie [color=red].exe .bat[reset] and [color=red].com[reset]. kunnen worden uitgevoerd.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[erases=entire][color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
+[erases=entire][color=light-green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
-Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
+Het [color=brown]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
 bestanden markeren als alleen-lezen. Dit is normaal voldoende:
-[color=blue]mount D C:\example -t cdrom[reset]
+[color=light-blue]mount D C:\example -t cdrom[reset]
 Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:
-[color=blue]mount D C:\example -t cdrom -label CDLABEL[reset]
+[color=light-blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-Het [color=light-yellow]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
+Het [color=brown]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
 Het werkt daarom enkel op echte cd-rom-stations:
-[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
-Vervang [color=light-red]D:\ [reset]met de lokatie van uw cd-rom-station.
-Vervang de [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
-[color=blue]mount -listcd[reset]
+[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
+Vervang [color=red]D:\ [reset]met de lokatie van uw cd-rom-station.
+Vervang de [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
+[color=light-blue]mount -listcd[reset]
 
 Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
-[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
-[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[erases=entire][color=green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
+[erases=entire][color=light-green]Hoe een echte/virtuele CD-ROM Drive in DOSBox te koppelen:[reset]
 DOSBox biedt cd-rom-emulatie op twee niveaus.
 
-Het [color=light-yellow]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
+Het [color=brown]basis[reset] niveau werkt op alle normale mappen, dit zal MSCDEX installeren en
 bestanden markeren als alleen-lezen. Dit is normaal voldoende:
-[color=blue]mount D ~/example -t cdrom[reset]
+[color=light-blue]mount D ~/example -t cdrom[reset]
 Als het niet werkt, moet misschien het label van de CD-ROM worden opgeven:
-[color=blue]mount D ~/example -t cdrom -label CDLABEL[reset]
+[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-Het [color=light-yellow]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
+Het [color=brown]volgende[reset] niveau voegt ondersteuning op laag niveau toe.
 Het werkt daarom enkel op echte cd-rom-stations:
-[color=blue]mount d[reset] [color=light-red]~/example[color=blue] -t cdrom -usecd [color=yellow]0[reset]
+[color=light-blue]mount d[reset] [color=red]~/example[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
 
-Vervang [color=light-red]~/example [reset]met de lokatie van uw cd-rom-station.
-Vervang de [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
-[color=blue]mount -listcd[reset]
+Vervang [color=red]~/example [reset]met de lokatie van uw cd-rom-station.
+Vervang de [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] met het nummer aangegeven voor uw CD-ROM als u typt:
+[color=light-blue]mount -listcd[reset]
 
 Bovendien kunt u imgmount gebruiken om iso- of cue/bin-images te koppelen:
-[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
-[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[erases=entire][color=green]Speciale toetsen:[reset]
+[erases=entire][color=light-green]Speciale toetsen:[reset]
 Dit zijn de standaard sneltoetsen.
-Ze kunnen worden gewijzigd in de [color=light-yellow]toetsenmapper[reset].
+Ze kunnen worden gewijzigd in de [color=brown]toetsenmapper[reset].
 
 [color=yellow]%s+Enter[reset]  Schakel tussen volledig scherm en venstermodus.
 [color=yellow]%s+Pause[reset]  Emulator pauzeren/opheffen.
-[color=yellow]%s+F1[reset]   %s Start de [color=light-yellow]toetsenmapper[reset].
+[color=yellow]%s+F1[reset]   %s Start de [color=brown]toetsenmapper[reset].
 [color=yellow]%s+F4[reset]   %s Verwissel gemonteerde schijfkopie, scan op wijzigingen.
 [color=yellow]%s+F5[reset]     Sla een weergegeven schermafbeelding op.
 [color=yellow]%s+F5[reset]   %s Sla een vooraf-weergegeven schermafbeelding op.
@@ -1811,27 +2352,27 @@ Codetabel %i is geladen voor lay-out %s
 Configureert een toetsenbord voor een specifieke taal.
 
 Gebruik:
-  [color=green]keyb[reset] [color=cyan][TAALCODE][reset]
-  [color=green]keyb[reset] [color=cyan]TAALCODE[reset] [color=white]CODETABEL[reset] [CODETABELBESTAND]
+  [color=light-green]keyb[reset] [color=light-cyan][TAALCODE][reset]
+  [color=light-green]keyb[reset] [color=light-cyan]TAALCODE[reset] [color=white]CODETABEL[reset] [CODETABELBESTAND]
 
 Waar:
-  [color=cyan]TAALCODE[reset]         is een taalcode of toetsenbordindeling-ID.
+  [color=light-cyan]TAALCODE[reset]         is een taalcode of toetsenbordindeling-ID.
   [color=white]CODETABEL[reset]        is een codetabelnummer, zoals [color=white]437[reset] of [color=white]850[reset].
   CODETABELBESTAND is een bestand met informatie voor een codetabel.
 
 Opmerkingen:
-  [color=green]keyb[reset] zonder argument toont de momenteel geladen toetsenboardindeling en
-  codetabel. Het zal veranderen naar [color=cyan]TAALCODE[reset] indien opgegeven, optioneel met
+  [color=light-green]keyb[reset] zonder argument toont de momenteel geladen toetsenboardindeling en
+  codetabel. Het zal veranderen naar [color=light-cyan]TAALCODE[reset] indien opgegeven, optioneel met
   [color=white]CODETABEL[reset] en een extra CODETABELBESTAND om een specifieke codetabelnummer en
   codetabelbestand te laden, indien opgegeven. Dit is handig als u een niet-VS
-  toetsenbord gebruikt. De [color=cyan]TAALCODE[reset] kan ook in het configuratiebestand onder
-  de sectie [dos] met behulp van de "keyboardlayout = [color=cyan]TAALCODE[reset]" instelling.
+  toetsenbord gebruikt. De [color=light-cyan]TAALCODE[reset] kan ook in het configuratiebestand onder
+  de sectie [dos] met behulp van de "keyboardlayout = [color=light-cyan]TAALCODE[reset]" instelling.
 
 Voorbeelden:
-  [color=green]KEYB[reset]
-  [color=green]KEYB[reset] [color=cyan]uk[reset]
-  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
-  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
+  [color=light-green]KEYB[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 
 .
 :PROGRAM_KEYB_NOERROR
@@ -1858,23 +2399,28 @@ Geen of ongeldig codetabelbestand voor lay-out %s
 Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
-  [color=green]loadfix[reset] [color=cyan]SPEL[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadfix[reset] [/d] (of [/f])[reset]
+  [color=light-green]loadfix[reset] [color=white][-SIZE][reset] [color=light-cyan]SPEL[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadfix[reset] [/d] (of [/f])[reset]
 
 Waar:
-  [color=cyan]SPEL[reset] is een spel of programma om te laden, optioneel met parameters.
+  [color=light-cyan]SPEL[reset]        is een spel of programma om te laden, optioneel met parameters.
+  [color=white]-SIZE[reset]       SIZE geeft het aantal kilobytes geheugen aan dat gealloceerd moet
+              worden.
+  /d (of /f)  Geeft eerder gealloceerd geheugen weer vrij.
 
 Opmerkingen:
   De meest voorkomende gevallen van gebruik van dit commando is het repareren
-  van DOS-spellen of programma's die ofwel de "[color=white]Packed File Corrupt[reset]" of "[color=white]Not
-  enough memory"[reset] foutmelding tonen (bijv. van sommige spellen uit de jaren 80,
-  zoals California Games II) wanneer ze worden uitgevoerd. Als u [color=green]loadfix[reset]
-  uitvoert zonder een argument, wijst u eenvoudigweg geheugen toe zodat uw spel
-  kan worden uitgevoerd; het geheugen vrijmaken kan met de optie /d of /f.
+  van DOS-spellen of programma's zoals California Games II en Wing Commander 2
+  die een foutmelding zoals "[color=white]Packed File Corrupt[reset]" of "[color=white]Not enough memory[reset]" tonen.
+  Als u [color=light-green]loadfix[reset] uitvoert zonder argument, wijst u eenvoudigweg geheugen toe
+  zodat uw spel kan worden uitgevoerd; het geheugen vrijmaken kan met de optie
+  /d of /f.
 
 Voorbeelden:
-  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]argumenten[reset]
-  [color=green]loadfix[reset] /d
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
+  [color=light-green]loadfix[reset] /d
 
 .
 :PROGRAM_LOADFIX_ALLOC
@@ -1897,17 +2443,17 @@ Geheugentoewijzingsfout.
 Laadt een video-BIOS of IBM BASIC ROM-image.
 
 Gebruik:
-  [color=green]loadrom [color=cyan]IMAGEBESTAND[reset]
+  [color=light-green]loadrom [color=light-cyan]IMAGEBESTAND[reset]
 
 Waar:
-  [color=cyan]IMAGEBESTAND[reset] is een video-BIOS of IBM BASIC ROM-image.
+  [color=light-cyan]IMAGEBESTAND[reset] is een video-BIOS of IBM BASIC ROM-image.
 
 Opmerkingen:
    Nadat u met de opdracht een IBM BASIC ROM-image hebt geladen, kan het
    originele IBM BASIC-interpreterprogramma uitgevoerd worden.
 
 Voorbeelden:
-  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
+  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]
 
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
@@ -1934,11 +2480,36 @@ ROM-bestand niet herkend.
 BASIC-ROM geladen.
 
 .
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Niet afgehandeld wildcardpatroon - '%s'
+
+.
+:PROGRAMMA_LS_HELP_LANG
+Geeft map-inhoud weer in de brede lijstindeling.
+
+Gebruik:
+  [color=light-green]ls[reset] [[color=light-cyan]PATROON[reset] [[color=light-cyan]PATROON[reset], ...]] [[color=light-cyan]PAD[reset] [[color=light-cyan]PAD[reset], ...]] [/a]
+
+Waar:
+  [color=light-cyan]PATROON[reset] kan een exacte bestandsnaam zijn of een niet-exacte bestandsnaam met
+          jokertekens, de asterisk (*) en het vraagteken (?).
+  [color=light-cyan]PAD[reset] is een exact pad in een aangekoppelde DOS-schijf om de inhoud te tonen.
+  /a geeft alle bestanden en mappen weer, inclusief verborgen en systeem.
+
+Opmerkingen:
+  Het commando geeft mappen weer in [color=light-blue]blauw[reset], uitvoerbare DOS-programma's
+   (*.com, *.exe, *.bat) in [color=light-green]groen[reset], en andere bestanden in de normale kleur.
+
+Voorbeelden:
+  [color=light-green]ls[reset] [color=light-cyan]bestand.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
+
+.
 :PROGRAM_MEM_HELP_LONG
 Geeft de DOS-geheugeninformatie weer.
 
 Gebruik:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 Waar:
   Deze opdracht heeft geen parameters.
@@ -1948,7 +2519,7 @@ Opmerkingen:
   UMB (bovenste) geheugen, XMS (extended) geheugen en EMS (expanded) geheugen.
 
 Voorbeelden:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 .
 :PROGRAM_MEM_CONVEN
@@ -1967,25 +2538,132 @@ Voorbeelden:
 %10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)
 
 .
+:SHELL_CMD_MIXER_HELP_LONG
+Toont of wijzigt de instellingen van de geluidsmixer.
+
+Gebruik:
+  [color=light-green]mixer[reset] [color=light-cyan][KANAAL][reset] [color=white]COMMANDO[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
+
+Waar:
+  [color=light-cyan]KANAAL[reset]   is het geluidskanaal om te wijzigen.
+  [color=white]COMMANDO[reset] is een of meer van de volgende opdrachten:
+    Volume:      [color=white]0[reset] tot [color=white]999[reset], of decibelwaarde voorafgegaan
+                 door [color=white]d[reset] (bijv. [color=white]d-7.5[reset]).
+                 Gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
+    Stereo mode: [color=white]stereo[reset] of [color=white]reverse[reset] (enkel voor stereo kanalen)
+    Crossfeed:   [color=white]x0[reset] tot [color=white]x100[reset]
+    Reverb:      [color=white]r0[reset] tot [color=white]r100[reset]
+    Chorus:      [color=white]c0[reset] tot [color=white]c100[reset]
+
+Opmerkingen:
+  - [color=light-green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
+  - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
+  - Als er geen kanaal is opgegeven, kunt u crossfeed, reverb of chorus globaal
+    voor alle kanalen instellen.
+  - Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
+  - De optie /noshow past de wijzigingen toe zonder mixer weergave.
+
+Voorbeelden:
+  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Kanaal       Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+uit
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Omgekeerd
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
+.
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Kanaal [color=light-cyan]%s[reset] is niet actief
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Ongeldig globaal commando: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Ongeldig volume voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset] (voer MIXER /? uit voor hulp)
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Ongeldige crossfeed sterkte voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Ongeldig chorus niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Ongeldig reverb niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Ontbrekende crossfeed-sterkte na [color=white]X[reset] voor het [color=light-cyan]%s[reset]-kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Ontbrekend chorusniveau na [color=white]C[reset] voor het [color=light-cyan]%s[reset]-kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Ontbrekend reverb niveau na [color=white]R[reset] voor het [color=light-cyan]%s[reset] kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Ongeldige globale crossfeed sterkte [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Ongeldig globaal chorus niveau [color=white]%s[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Ongeldig global reverb level [color=white]%s[reset] (moet tussen 0 en 100 zijn)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Ontbrekende globale crossfeed sterkte na [color=white]X[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Ontbrekend globaal chorusniveau na [color=white]C[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Ontbrekend globaal reverb niveau na [color=white]R[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Ontbrekend commando voor het [color=light-cyan]%s[reset]-kanaal
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Ongeldige opdracht voor het [color=light-cyan]%s[reset]-kanaal: [color=white]%s[reset]
+.
 :PROGRAM_MORE_HELP_LONG
 Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
 
 Gebruik:
-  [color=cyan]COMMANDO[reset] | [color=green]more[reset] [/c] [/e] [/p] [reset]/s [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]BESTAND[reset]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATROON[reset] [[color=cyan]PATROON[reset] ...]
+  [color=light-cyan]COMMANDO[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [reset]/s [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]BESTAND[reset]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]PATROON[reset] [[color=light-cyan]PATROON[reset] ...]
 
 Waar:
-  [color=cyan]COMMANDO[reset] is de opdracht om de uitvoer van weer te geven.
-  [color=cyan]BESTAND[reset]  exacte naam van het bestand om weer te geven, eventueel met een pad.
-  [color=cyan]PATROON[reset]  is ofwel een pad naar een enkel bestand of een pad met
+  [color=light-cyan]COMMANDO[reset] is de opdracht om de uitvoer van weer te geven.
+  [color=light-cyan]BESTAND[reset]  exacte naam van het bestand om weer te geven, eventueel met een pad.
+  [color=light-cyan]PATROON[reset]  is ofwel een pad naar een enkel bestand of een pad met
            jokertekens, dit zijn de asterisk (*) en het vraagteken (?).
   /c      wist het scherm voor elk bestand.
   /e      uitgebreide modus, met meer sneltoetsen beschikbaar.
   /p      breidt het nieuwe pagina-/formulierfeed-teken uit.
   /s      drukt meerdere lege regels samen tot één.
   /t[color=white]n[reset]     is de tabgrootte, 1-9, standaard is 8.
-  +[color=white]nnn[reset]   slaat de eerste [kleur=white]nnn[reset] regels van het eerste bestand over.
+  +[color=white]nnn[reset]   slaat de eerste [color=white]nnn[reset] regels van het eerste bestand over.
 
 Opmerkingen:
   Deze opdracht is alleen voor tekstbestanden, niet voor binaire bestanden.
@@ -1995,7 +2673,7 @@ Opmerkingen:
   [color=yellow]N[reset] of [color=yellow]F[reset]         ga naar het volgend bestand.
   [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] om de opdracht te beëindigen.
   [color=yellow]Ctrl+C[reset] kan worden gebruikt om het lezen van gegevens van de toetsenbordinvoer
-  te beëindigen, zoals wanneer [color=green]more[reset] wordt uitgevoerd zonder enige argumenten.
+  te beëindigen, zoals wanneer [color=light-green]more[reset] wordt uitgevoerd zonder enige argumenten.
   De volgende sneltoetsen zijn alleen beschikbaar in de uitgebreide modus:
   [color=yellow]P[reset] [color=white]nnn[reset]          toon de volgende [color=white]nnn[reset] regels en vraag opnieuw.
   [color=yellow]S[reset] [color=white]nnn[reset]          sla de volgende [color=white]nnn[reset] regels over.
@@ -2003,48 +2681,54 @@ Opmerkingen:
   Optie /p schakelt bepaalde incompatibele sneltoetsen uit.
 
 Voorbeelden:
-  [color=cyan]dir /on[reset] | [color=green]more[reset]            ; geeft de gesorteerde map één scherm tegelijk weer
-  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  ; toont de inhoud van het bestand met tabgrootte 4
+  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]            ; geeft de gesorteerde map één scherm tegelijk weer
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]  ; toont de inhoud van het bestand met tabgrootte 4
 
 .
 :PROGRAM_MORE_NO_FILE
 Geen invoerbestand gevonden.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- einde van invoer ---[reset]
+[reset][color=brown]--- einde van invoer ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
-[reset][color=light-yellow]--- bestand %s ---[reset]
+[reset][color=brown]--- bestand %s ---[reset]
 .
 :PROGRAM_MORE_NEW_DEVICE
-[reset][color=light-yellow]--- apparaat %s ---[reset]
+[reset][color=brown]--- apparaat %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- druk op SPATIE of ENTER voor meer ---[reset]
+[reset][color=brown]--- druk op SPATIE of ENTER voor meer ---[reset]
 .
 :PROGRAM_MORE_PROMPT_PERCENT
-[reset][color=light-yellow]--- (%d%%) druk op SPATIE of ENTER voor meer ---[reset]
+[reset][color=brown]--- (%d%%) druk op SPATIE of ENTER voor meer ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+[reset][color=brown]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=brown]--- meer ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=brown]--- (%d%%) meer ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
-[reset][color=light-yellow]--- regel %u ---[reset]
+[reset][color=brown]--- regel %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
-[reset][color=red]--- kon %s niet openen ---[reset]
+[reset][color=light-red]--- kon %s niet openen ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
-[reset][color=light-yellow](beëindigd)[reset]
+[reset][color=brown](beëindigd)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](volgend bestand)[reset]
+[reset][color=brown](volgend bestand)[reset]
 .
 :PROGRAM_MORE_SKIPPED
-[reset][color=light-yellow](overgeslagen inhoud)[reset]
+[reset][color=brown](overgeslagen inhoud)[reset]
 .
 :PROGRAM_MORE_HOW_MANY_LINES
-[reset][color=light-yellow]hoeveel regels?[reset]
+[reset][color=brown]hoeveel regels?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Wijst fysieke mappen of stations toe aan een virtuele stationsletter
@@ -2054,13 +2738,13 @@ Wijst fysieke mappen of stations toe aan een virtuele stationsletter
 Koppel een map van het host-besturingssysteem aan een stationsletter.
 
 Gebruik:
-  [color=green]mount[reset] [color=white]SCHIJF[reset] [color=cyan]MAP[reset] [-t TYPE] [-usecd #] [-freesize GROOTTE] [-label LABEL]
-  [color=green]mount[reset] -listcd / -cd (toont alle gedetecteerde cd-rom-stations en hun nummers)
-  [color=green]mount[reset] -u [color=white]SCHIJF[reset]  (ontkoppelt de map van de SCHIJF)
+  [color=light-green]mount[reset] [color=white]SCHIJF[reset] [color=light-cyan]MAP[reset] [-t TYPE] [-usecd #] [-freesize GROOTTE] [-label LABEL]
+  [color=light-green]mount[reset] -listcd / -cd (toont alle gedetecteerde cd-rom-stations en hun nummers)
+  [color=light-green]mount[reset] -u [color=white]SCHIJF[reset]  (ontkoppelt de map van de SCHIJF)
 
 Waar:
   [color=white]SCHIJF[reset]   de stationsletter waar de map wordt aangekoppeld: A, C, D, ...
-  [color=cyan]MAP[reset]      is de map op het host-besturingssysteem dat moet worden gekoppeld
+  [color=light-cyan]MAP[reset]      is de map op het host-besturingssysteem dat moet worden gekoppeld
   TYPE     type van de te koppelen map: dir, floppy, cdrom of overlay
   GROOTTE  vrije ruimte voor de virtuele schijf (KB voor diskettes, MB anders)
   LABEL    schijflabelnaam die moet worden gebruikt
@@ -2073,9 +2757,9 @@ Opmerkingen:
   - Extra opties zijn beschreven in de handleiding (README-bestand, hfst. 4).
 
 Voorbeelden:
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosspelen[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/GEBRUIKERSNAAM/Spel CD"[reset] -t cdrom
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]mijn_savegame-bestanden[reset] -t overlay
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosspelen[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/GEBRUIKERSNAAM/Spel CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mijn_savegame-bestanden[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -2115,11 +2799,11 @@ Virtuele schijven kunnen niet worden losgekoppeld.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=red]Koppelen van c:\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
+[color=light-red]Koppelen van c:\ is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[color=red]Koppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
+[color=light-red]Koppelen van / is NIET aanbevolen. Koppel de volgende keer een (sub)map.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -2159,27 +2843,31 @@ Kan station Z niet verplaatsen. Station %c is al aangekoppeld.
 Beheert fysieke en logische muizen.
 
 Gebruik:
-  [color=green]mousectl[reset] [-all]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAAM[reset]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [gevoeligheid]
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s x_gevoeligheid y_gevoeligheid
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_snelheid]
+  [color=light-green]mousectl[reset] [-all]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=light-cyan]NAAM[reset]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [gevoeligheid]
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s x_gevoeligheid y_gevoeligheid
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_snelheid]
 
 Waar:
   [color=white]INTERFACE[reset]      een van [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
-  -map -unmap    koppel/ontkoppel fysieke muis, eert DOS-jokertekens in [color=cyan]NAAM[reset]
+  -map -unmap    koppel/ontkoppel fysieke muis, eert DOS-jokertekens in [color=light-cyan]NAAM[reset]
   -s -sx -sy     stelt gevoeligheid in / x-as / y-as, van -999 tot +999
   -r             stelt minimum muis frequentie in
   -on -off       schakelt de muis in of uit op de gegeven interface
   -reset         herstelt alle muisinstellingen uit het configuratiebestand
 
 Opmerkingen:
-  - standaardwaarde wordt gebruikt, als gevoeligheid of snelheid is weggelaten
+  - Als de gevoeligheid of snelheid wordt weggelaten, wordt deze teruggezet
+    naar de standaardwaarde.
+  - De muisgevoeligheid die in het configuratiebestand is ingesteld, fungeert
+    als globale schaalfactor. De gevoeligheid per interface, ingesteld door
+    deze opdrachten, werkt daarbovenop.
 
 Voorbeelden:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
+  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Verkeerde syntaxis, alleen ASCII-tekens toegestaan in patroon.
@@ -2199,7 +2887,11 @@ Verkeerde syntaxis, bemonsteringsfrequentie moet een van zijn:
 
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
-Mapping niet beschikbaar in NoMouse-modus.
+Mapping niet beschikbaar in geen-muis-modus.
+
+.
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Mapping is niet mogelijk met het huidige gastmuisstuurprogramma.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -2222,13 +2914,13 @@ Geen beschikbare muis die overeenkomt met het patroon gevonden.
 [color=white]Interface      Gevoeligheid     Rate (Hz)     Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interface     Muis Naam[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2
-[color=cyan]%-4s[reset]          %s
+[color=light-cyan]%-4s[reset]          %s
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 niet gekoppeld    %s
@@ -2240,13 +2932,13 @@ gebruikt systeemaanwijzer
 gekoppelde fysieke muis
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
-[color=red]gekoppelde muis losgekoppeld[reset]
+[color=light-red]gekoppelde muis losgekoppeld[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 uitgeschakeld
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Bemonsteringsfrequenties voor muizen op [color=cyan]COM[reset]-interfaces zijn enkel schattingen.
+Bemonsteringsfrequenties voor muizen op [color=light-cyan]COM[reset]-interfaces zijn enkel schattingen.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Bemonsteringsfrequenties gemarkeerd met '*' zijn minimumwaardes.
@@ -2267,95 +2959,51 @@ is en toegewezen muizen ontvangen altijd onbewerkte invoergebeurtenissen.
 Scant op wijzigingen op gekoppelde DOS-schijven.
 
 Gebruik:
-  [color=green]rescan[reset] [color=cyan]SCHIJF[reset]
-  [color=green]rescan[reset] [/a]
+  [color=light-green]rescan[reset] [color=light-cyan]SCHIJF[reset]
+  [color=light-green]rescan[reset] [/a]
 
 Waar:
-  [color=cyan]SCHIJF[reset] is de schijf om te scannen op veranderingen.
+  [color=light-cyan]SCHIJF[reset] is de schijf om te scannen op veranderingen.
 
 Opmerkingen:
-  - [color=green]rescan[reset] uitvoeren zonder argumented zal enkel de huidige drive scannen.
+  - [color=light-green]rescan[reset] uitvoeren zonder argumented zal enkel de huidige drive scannen.
   - Wijzigingen die op de host zijn gemaakt, worden vervolgens weergegeven.
   - Scannen op wijzigingen op alle gekoppelde schijven kan met de optie /a.
 
 Voorbeelden:
-  [color=green]rescan[reset] [color=cyan]c:[reset]
-  [color=green]rescan[reset] /a
+  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
+  [color=light-green]rescan[reset] /a
 
 .
 :PROGRAM_RESCAN_SUCCESS
 Schijf opnieuw gescand.
 
 .
-:SHELL_CMD_MIXER_HELP_LONG
-Toont of wijzigt de instellingen van de geluidsmixer.
-
-Gebruik:
-  [color=green]mixer[reset] [color=cyan][KANAAL][reset] [color=white]COMMANDO[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]
-
-Waar:
-  [color=cyan]KANAAL[reset]   is het geluidskanaal om te wijzigen.
-  [color=white]COMMANDO[reset] is een of meer van de volgende opdrachten:
-    Volume:    [color=white]0[reset] tot [color=white]100[reset], of decibelwaarde voorafgegaan door [color=white]d[reset] (bijv. [color=white]d-7.5[reset])
-               gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
-    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
-    Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
-Opmerkingen:
-  - [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
-  - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
-  - Als er geen kanaal is opgegeven, kunt u crossfeed, reverb of chorus globaal
-    voor alle kanalen instellen.
-  - Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
-  - De optie /noshow past de wijzigingen toe zonder mixer weergave.
-
-Voorbeelden:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
-.
-:SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
-.
-:SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanaal       Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
-.
-:SHELL_CMD_MIXER_CHANNEL_OFF
-uit
-.
-:SHELL_CMD_MIXER_CHANNEL_STEREO
-Stereo
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Omgekeerd
-.
-:SHELL_CMD_MIXER_CHANNEL_MONO
-Mono
-.
 :PROGRAM_SERIAL_HELP_LONG
 Beheert de seriële poorten.
 
 Gebruik:
-  [color=green]serial[reset] [color=white][POORT#][reset]              Toon alle of aangegeven ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], of [color=white]4[reset]) poorten.
-  [color=green]serial[reset] [color=white]POORT#[reset] [color=cyan]DEVICE[reset] [instelling]  Sluit opgegeven device aan op de poort.
+  [color=light-green]serial[reset] [color=white][POORT#][reset]              Toon alle of aangegeven ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], of [color=white]4[reset]) poorten.
+  [color=light-green]serial[reset] [color=white]POORT#[reset] [color=light-cyan]DEVICE[reset] [instelling]  Sluit opgegeven device aan op de poort.
 
 Waar:
-  [color=cyan]DEVICE[reset]  Een van: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], of [color=cyan]DISABLED[reset]
+  [color=light-cyan]DEVICE[reset]  Een van: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], of [color=light-cyan]DISABLED[reset]
 
-  Optionele instellingen voor elk [color=cyan]DEVICE[reset]:
-  Voor [color=cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK
-  Voor [color=cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+  Optionele instellingen voor elk [color=light-cyan]DEVICE[reset]:
+  Voor [color=light-cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK
+  Voor [color=light-cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                    PORT, INHSOCKET, SOCK
-  Voor [color=cyan]MOUSE[reset]     : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+  Voor [color=light-cyan]MOUSE[reset]     : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
                    2BTN+MSM, 3BTN+MSM, of WHEEL+MSM)
-  Voor [color=cyan]DIRECT[reset]    : IRQ, REALPORT (vereist), RXDELAY
-  Voor [color=cyan]DUMMY[reset]     : IRQ
+  Voor [color=light-cyan]DIRECT[reset]    : IRQ, REALPORT (vereist), RXDELAY
+  Voor [color=light-cyan]DUMMY[reset]     : IRQ
 
 Voorbeelden:
- [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Luister op TCP:1250 als server
- [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect aan TCP:1250 als client
- [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Luister op UDP:5000 als server
- [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Gebruik een echte port op Linux
- [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
+ [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Luister op TCP:1250 als server
+ [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect aan TCP:1250 als client
+ [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Luister op UDP:5000 als server
+ [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Gebruik een echte port op Linux
+ [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2378,16 +3026,16 @@ Type moet een van de volgende zijn:
 Bekijk of stel de DOS-versie in die wordt gerapporteerd aan toepassingen.
 
 Gebruik:
-  [color=green]setver[reset] \[/b] [/p]
-  [color=green]setver[reset] [color=cyan]BESTAND[reset] [color=cyan]VERSIE[reset] [/q]
-  [color=green]setver[reset] [color=cyan]BESTAND[reset] /d [/q]
-  [color=green]setver[reset] [color=cyan]VERSIE[reset] /g [/q]
-  [color=green]setver[reset] /d /g [/q]
-  [color=green]setver[reset] /d /all [/q]
+  [color=light-green]setver[reset] \[/b] [/p]
+  [color=light-green]setver[reset] [color=light-cyan]BESTAND[reset] [color=light-cyan]VERSIE[reset] [/q]
+  [color=light-green]setver[reset] [color=light-cyan]BESTAND[reset] /d [/q]
+  [color=light-green]setver[reset] [color=light-cyan]VERSIE[reset] /g [/q]
+  [color=light-green]setver[reset] /d /g [/q]
+  [color=light-green]setver[reset] /d /all [/q]
 
 Waar:
-  [color=cyan]BESTAND[reset]  bestand (met optioneel pad) om de installingen op toe te passen.
-  [color=cyan]VERSION[reset]  DOS versiw, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] of [color=white]n[reset] formaat.
+  [color=light-cyan]BESTAND[reset]  bestand (met optioneel pad) om de installingen op toe te passen.
+  [color=light-cyan]VERSION[reset]  DOS versiw, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] of [color=white]n[reset] formaat.
   /g       globale instelling, toegepast op alle uitvoerbare bestanden.
   /d       verwijder uit versietabel.
   /all     tezamen met /d wordt de hele versietabel gewist.
@@ -2398,12 +3046,12 @@ Waar:
 
 Opmerkingen:
   Voor een persistente versietabel opslag gebruik in het configuratiebestand
-  onder de [dos]-sectie, de instelling 'setver_table_file = [color=cyan]STORAGE[reset]'.
+  onder de [dos]-sectie, de instelling 'setver_table_file = [color=light-cyan]STORAGE[reset]'.
 
 Voorbeelden:
-  [color=green]setver[reset] /b              ; toon instellingen as een batchbestand
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; rapporteert DOS-versie 6.22 voor elk RETRO.COM-bestand
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; stop met het overschrijven van de gemelde DOS versie
+  [color=light-green]setver[reset] /b              ; toon instellingen as een batchbestand
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; rapporteert DOS-versie 6.22 voor elk RETRO.COM-bestand
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; stop met het overschrijven van de gemelde DOS versie
 
 .
 :PROGRAM_SETVER_WRONG_TABLE
@@ -2446,10 +3094,10 @@ regels voor matchen op bestandsnaam met pad
 Toont de directorystructuur in een grafische vorm.
 
 Gebruik:
-  [color=green]tree[reset] [color=cyan][MAP][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]VOLGORDE[reset]]
+  [color=light-green]tree[reset] [color=light-cyan][MAP][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]VOLGORDE[reset]]
 
 Waar:
-  [color=cyan]MAP[reset]         is de naam van de map om te tonen.
+  [color=light-cyan]MAP[reset]         is de naam van de map om te tonen.
   [color=white]VOLGORDE[reset]    is de lijst volgorde, een van:
                 [color=white]n[reset] (op naam, alfabetisch),
                 [color=white]s[reset] (op groote, kleinste eerst),
@@ -2466,26 +3114,58 @@ Waar:
   /o[color=white]VOLGOORDE[reset] rangschikt de lijst (zie hierboven)
 
 Notities:
-  Als [color=cyan]MAP[reset] wordt weggelaten, wordt de huidige map gebruikt.
+  Als [color=light-cyan]MAP[reset] wordt weggelaten, wordt de huidige map gebruikt.
 
 Voorbeelden:
-  [color=green]tree[reset]          ; geeft de mapstructuur weer vanaf de huidige map
-  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; geeft C: drive-inhoud recursief weer, met bestanden
+  [color=light-green]tree[reset]          ; geeft de mapstructuur weer vanaf de huidige map
+  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; geeft C: drive-inhoud recursief weer, met bestanden
 
 .
 :PROGRAM_TREE_DIRECTORY
  Directorystructuur voor volume %s
 .
-:PROGRAM_TREE_NO_SUBDIRS
-Geen submappen om weer te geven.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-Geen bestanden of submappen om weer te geven.
-
-.
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Te veel bestanden of submappen.
+
+.
+:PROGRAM_FMPDRV_HELP_LONG
+Laad of ontlaad de ingebouwde ReelMagic Full Motion Player-driver.
+
+Gebruik:
+  [color=light-green]fmpdrv[reset]    (laad de driver)
+  [color=light-green]fmpdrv[reset] /u (ontlaad de driver)
+
+Opmerkingen:
+  De configuratie-instelling "reelmagic = on" laadt de driver bij het
+  opstarten en voorkomt dat deze wordt ontladen.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player-stuurprogramma (ingebouwd) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=brown]Geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=brown]Reeds geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=light-red]Niet geladen: Geen vrije interrupten![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=brown]Stuurprogramma ontladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=brown]Stuurprogramma was niet geladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=brown]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]
 
 .
 :AUTOEXEC_BAT_GENERATED
@@ -2550,6 +3230,14 @@ Bestand '%s' bestaat al.
 Map niet gevonden - '%s'
 
 .
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Geen submappen om weer te geven.
+
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Geen bestanden of submappen om weer te geven.
+
+.
 :SHELL_READ_ERROR
 Fout met lezen bestand - '%s'
 
@@ -2566,23 +3254,23 @@ Een korte lijst van de meest gebruikte commando's:
 :SHELL_CMD_COMMAND_HELP_LONG
 Start de DOSBox Staging-opdrachtshell.
 Gebruik:
-  [color=green]command[reset]
-  [color=green]command[reset] /c (of /init) [color=cyan]COMMANDO[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c (of /init) [color=light-cyan]COMMANDO[reset]
 
 Waar:
-  [color=cyan]COMMANDO[reset] is een DOS commando, spel of programma om te draaien.
+  [color=light-cyan]COMMANDO[reset] is een DOS commando, spel of programma om te draaien.
 
 Opmerkingen:
   Dit commando wordt automatisch uitgevoerd als DOSBox Staging start met de
   /init optie, welke de welkomst banner toont.
-  Een nieuwe instantie kan worden geladen door [color=green]command[reset] uit te voeren.
-  Door de /c optie toe te voegen samen met [color=cyan]COMMANDO[reset] kan het de opdracht
+  Een nieuwe instantie kan worden geladen door [color=light-green]command[reset] uit te voeren.
+  Door de /c optie toe te voegen samen met [color=light-cyan]COMMANDO[reset] kan het de opdracht
   uitvoeren (optioneel met parameters) en vervolgens automatisch afsluiten.
 
 Voorbeelden:
-  [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hallo wereld![reset]
-  [color=green]command[reset] /init [color=cyan]dir[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hallo wereld![reset]
+  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]
 
 .
 :SHELL_CMD_ECHO_ON
@@ -2598,16 +3286,16 @@ Kan niet wijzigen naar: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: Om naar een andere schijf te gaan typ [color=light-red]%c:[reset]
+Hint: Om naar een andere schijf te gaan, typ [color=yellow]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Mapnaam is langer dan 8 tekens en/of bevat spaties.
-Probeer [color=light-red]cd %s[reset]
+Probeer [color=yellow]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [color=light-red]C:[reset].
+U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [color=yellow]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -2625,27 +3313,27 @@ De opgegeven datum is niet correct.
 Huidige datum: 
 .
 :SHELL_CMD_DATE_SETHLP
-Typ 'datum %s' om te wijzigen.
+Typ [color=yellow]datum %s[reset] om te wijzigen.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
 Gebruik:
-  [color=green]date[reset] [/t]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]DATUM[reset]
+  [color=light-green]date[reset] [/t]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]DATUM[reset]
 
 Waar:
-  [color=cyan]DATUM[reset] is de nieuwe datum om in te stellen, in het formaat [color=cyan]%s[reset].
+  [color=light-cyan]DATUM[reset] is de nieuwe datum om in te stellen, in het formaat [color=light-cyan]%s[reset].
 
 Opmerkingen:
-  Het uitvoeren van [color=green]date[reset] zonder een argument toont de huidige datum, of alleen
+  Het uitvoeren van [color=light-green]date[reset] zonder een argument toont de huidige datum, of alleen
   de datum met de /t optie. U kunt een datumsynchronisatie met het hostsysteem
   forceren met de /h optie, of handmatig een nieuwe datum opgeven.
 
 Voorbeelden:
-  [color=green]date[reset]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]%s[reset]
+  [color=light-green]date[reset]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_TIME_HELP
@@ -2660,27 +3348,27 @@ De opgegeven tijd is niet correct.
 Huidige tijd: 
 .
 :SHELL_CMD_TIME_SETHLP
-Typ 'tijd %s' om te wijzigen.
+Typ [color=yellow]time %s[reset] om te tijd te wijzigen.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
 Gebruik:
-  [color=green]time[reset] [/t]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]TIJD[reset]
+  [color=light-green]time[reset] [/t]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]TIJD[reset]
 
 Waar:
-  [color=cyan]TIJD[reset] is de nieuwe tijd om in te stellen, in the formaat [color=cyan]%s[reset].
+  [color=light-cyan]TIJD[reset] is de nieuwe tijd om in te stellen, in the formaat [color=light-cyan]%s[reset].
 
 Opmerkingen:
-  Het uitvoeren van [color=green]time[reset] zonder een argument toon de huidige tijd, of alleen
+  Het uitvoeren van [color=light-green]time[reset] zonder een argument toon de huidige tijd, of alleen
   de tijd met de /t optie. U kunt een tijdsynchronisatie met het hostsysteem
   forceren met de /h optie, of handmatig een nieuwe tijd opgeven.
 
 Voorbeelden:
-  [color=green]time[reset]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]%s[reset]
+  [color=light-green]time[reset]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -2767,7 +3455,7 @@ Wacht op een toetsaanslag om door te gaan.
 .
 :SHELL_CMD_PAUSE_HELP_LONG
 Gebruik:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 Waar:
   Deze opdracht heeft geen parameters.
@@ -2779,7 +3467,7 @@ Opmerkingen:
   bepaalde bedieningstoetsen) om door te gaan.
 
 Voorbeelden:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -2800,47 +3488,47 @@ al in gebruik. Het is alleen mogelijk om SUBST te gebruiken op lokale schijven
 .
 :SHELL_STARTUP_BEGIN
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
-║ [color=green]Welkom bij DOSBox Staging %-40s[color=white] ║
+║ [color=light-green]Welkom bij DOSBox Staging %-40s[color=white] ║
 ║                                                                    ║
 ║ Voor een korte introductie voor nieuwe gebruikers typ: [color=yellow]INTRO[color=white]       ║
 ║ Typ voor ondersteunde shell-opdrachten: [color=yellow]HELP[color=white]                       ║
 ║                                                                    ║
-║ Geëmuleerde CPU-snelheid aanpassen met [color=red]%s+F11[color=white] en [color=red]%s+F12[color=white].%s%s       ║
-║ Om de toetsenmapper te activeren, druk op [color=red]%s+F1[color=white].%s                 ║
-║ Voor meer informatie lees het [color=cyan]README[color=white] bestand in de DOSBox map.     ║
+║ Geëmuleerde CPU-snelheid aanpassen met [color=light-red]%s+F11[color=white] en [color=light-red]%s+F12[color=white].%s%s       ║
+║ Om de toetsenmapper te activeren, druk op [color=light-red]%s+F1[color=white].%s                 ║
+║ Voor meer informatie lees het [color=light-cyan]README[color=white] bestand in de DOSBox map.     ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox ondersteunt composiet CGA-modus.                            ║
-║ Kies composietuitgang AAN, UIT or AUTO (standaard) met [color=red]F12[color=white]         ║
-║ [color=red]F10[color=white] kiest de CGA instelling en [color=red](%s+)F11[color=white] wijzigt deze.             ║
+║ Kies composietuitgang AAN, UIT or AUTO (standaard) met [color=light-red]F12[color=white]         ║
+║ [color=light-red]F10[color=white] kiest de CGA instelling en [color=light-red](%s+)F11[color=white] wijzigt deze.             ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     ║
-║ en [color=red]%s+F11[color=white] om de instellingen voor contrast/helderheid te wijzigen.║
+║ Kies met [color=light-red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     ║
+║ en [color=light-red]%s+F11[color=white] om de instellingen voor contrast/helderheid te wijzigen.║
 
 .
 :SHELL_STARTUP_HERC
-║ Kies met [color=red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     ║
+║ Kies met [color=light-red]F11[color=white] tussen groen, oranje, witte en papierwitte modus,     ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Druk op [color=red]%s+Pause[color=white] voor de debugger of start de exe met [color=yellow]DEBUG[color=white].      ║
+║ Druk op [color=light-red]%s+Pause[color=white] voor de debugger of start de exe met [color=yellow]DEBUG[color=white].      ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_END
-║ [color=yellow]https://dosbox-staging.github.io[color=white]                                   ║
+║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║
 ╚════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[reset]
+[color=light-green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -2849,19 +3537,19 @@ Toont of wijzigt de huidige map.
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Gebruik:
-  [color=green]cd[reset] [color=cyan]MAP[reset]
-  [color=green]chdir[reset] [color=cyan]MAP[reset]
+  [color=light-green]cd[reset] [color=light-cyan]MAP[reset]
+  [color=light-green]chdir[reset] [color=light-cyan]MAP[reset]
 
 Waar:
-  [color=cyan]MAP[reset] is de naam van de map waarnaar moet worden gewijzigd.
+  [color=light-cyan]MAP[reset] is de naam van de map waarnaar moet worden gewijzigd.
 
 Opmerkingen
-  [color=green]cd[reset] zonder argument toont de huidige map.
-  Met [color=cyan]MAP[reset] verandert alleen de map, niet de huidige schijf.
+  [color=light-green]cd[reset] zonder argument toont de huidige map.
+  Met [color=light-cyan]MAP[reset] verandert alleen de map, niet de huidige schijf.
 
 Voorbeelden:
-  [color=green]cd[reset]
-  [color=green]cd[reset] [color=cyan]mijnmap[reset]
+  [color=light-green]cd[reset]
+  [color=light-green]cd[reset] [color=light-cyan]mijnmap[reset]
 
 .
 :SHELL_CMD_CLS_HELP
@@ -2870,17 +3558,17 @@ Wist het DOS-scherm.
 .
 :SHELL_CMD_CLS_HELP_LONG
 Gebruik:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 Waar:
   Deze opdracht heeft geen parameters.
 
 Notes:
-  Door [color=green]cls[reset] uit te voeren, worden alle teksten op het DOS-scherm gewist, behalve
+  Door [color=light-green]cls[reset] uit te voeren, worden alle teksten op het DOS-scherm gewist, behalve
   de opdrachtprompt (bijv. [color=white]Z:\>[reset] of [color=white]C:\GAMES>[reset ]).
 
 Voorbeelden:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 .
 :SHELL_CMD_DIR_HELP
@@ -2889,10 +3577,10 @@ Toont een lijst met bestanden en submappen in een map.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Gebruik:
-  [color=green]dir[reset] [color=cyan][PATROON][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
+  [color=light-green]dir[reset] [color=light-cyan][PATROON][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
 
 Waar:
-  [color=cyan]PATROON[reset]    is ofwel een exacte bestandsnaam of een onnauwkeurige
+  [color=light-cyan]PATROON[reset]    is ofwel een exacte bestandsnaam of een onnauwkeurige
              bestandsnaam met jokertekens, dit zijn de asterisk (*) en het
              vraagteken (?). In het patroon kan ook een pad worden opgegeven.
   [color=white]VOLGORDE[reset]   lijstvolgorde, opties [color=white]n[reset] (op naam, alfabetisch), [color=white]s[reset] (op grootte,
@@ -2903,13 +3591,13 @@ Waar:
   /ad        toont alle mappen;               /a-d    toont alle bestanden.
 
 Opmerkingen:
-  Als u [color=green]dir[reset] uitvoert zonder een argument, worden alle bestanden en submappen
-  in de huidige map weergegeven, wat hetzelfde is als [color=green]dir[reset] [color=cyan]*.*[reset].
+  Als u [color=light-green]dir[reset] uitvoert zonder een argument, worden alle bestanden en submappen
+  in de huidige map weergegeven, wat hetzelfde is als [color=light-green]dir[reset] [color=light-cyan]*.*[reset].
 
 Voorbeelden:
-  [color=green]dir[reset] [color=cyan][reset]
-  [color=green]dir[reset] [color=cyan]spelen.*[reset] /p
-  [color=green]dir[reset] [color=cyan]c:\spelen\*.exe[reset] /b /o[color=white]-d[reset]
+  [color=light-green]dir[reset] [color=light-cyan][reset]
+  [color=light-green]dir[reset] [color=light-cyan]spelen.*[reset] /p
+  [color=light-green]dir[reset] [color=light-cyan]c:\spelen\*.exe[reset] /b /o[color=white]-d[reset]
 
 .
 :SHELL_CMD_ECHO_HELP
@@ -2918,20 +3606,20 @@ Toont berichten en schakelt commando-echo in/uit.
 .
 :SHELL_CMD_ECHO_HELP_LONG
 Gebruik:
-  [color=green]echo[reset] [color=cyan][on|off][reset]
-  [color=green]echo[reset] [color=cyan][BERICHT][reset]
+  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
+  [color=light-green]echo[reset] [color=light-cyan][BERICHT][reset]
 
 Waar:
-  [color=cyan]on|off[reset]  Schakelt de echo van opdrachten in/uit.
-  [color=cyan]BERICHT[reset] Het te tonen bericht.
+  [color=light-cyan]on|off[reset]  Schakelt de echo van opdrachten in/uit.
+  [color=light-cyan]BERICHT[reset] Het te tonen bericht.
 
 Opmerkingen:
-  - [color=green]echo[reset] zonder argument toont de huidige aan of uit status.
+  - [color=light-green]echo[reset] zonder argument toont de huidige aan of uit status.
   - Echo is vooral handig bij het schrijven of debuggen van batchbestanden.
 
 Voorbeelden:
-  [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Hallo wereld![reset]
+  [color=light-green]echo[reset] [color=light-cyan]off[reset]
+  [color=light-green]echo[reset] [color=light-cyan]Hallo wereld![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -2940,18 +3628,18 @@ Verlaat de DOS-shell.
 .
 :SHELL_CMD_EXIT_HELP_LONG
 Gebruik:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 Waar:
   Deze opdracht heeft geen parameters.
 
 Opmerkingen:
-  Als u een DOS-shell vanuit een programma start, keert het uitvoeren van [color=green]exit[reset]
+  Als u een DOS-shell vanuit een programma start, keert het uitvoeren van [color=light-green]exit[reset]
   terug naar het programma.
   Als er geen DOS-programma actief is, wordt DOSBox Staging afgesloten.
 
 Voorbeelden:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
@@ -2964,21 +3652,21 @@ Toont help-informatie voor DOS-commando's.
 .
 :SHELL_CMD_HELP_HELP_LONG
 Gebruik:
-  [color=green]help[reset]
-  [color=green]help[reset] /a[ll]
-  [color=green]help[reset] [color=cyan]COMMANDO[reset]
+  [color=light-green]help[reset]
+  [color=light-green]help[reset] /a[ll]
+  [color=light-green]help[reset] [color=light-cyan]COMMANDO[reset]
 
 Waar:
-  [color=cyan]COMMANDO[reset] is de naam van een intern DOS commando, zoals [color=cyan]dir[reset].
+  [color=light-cyan]COMMANDO[reset] is de naam van een intern DOS commando, zoals [color=light-cyan]dir[reset].
 
 Opmerkingen:
-  - [color=green]help[reset] zonder argument toont een DOS commando lijst.
+  - [color=light-green]help[reset] zonder argument toont een DOS commando lijst.
   - Een volledige lijst van interne commando's is beschikbaar via /a of /all
-  - ipv [color=green]help[reset] [color=cyan]COMMANDO[reset], kunt u ook [color=cyan]COMMANDO[reset] /? gebruiken.
+  - ipv [color=light-green]help[reset] [color=light-cyan]COMMANDO[reset], kunt u ook [color=light-cyan]COMMANDO[reset] /? gebruiken.
 
 Voorbeelden:
-  [color=green]help[reset] [color=cyan]dir[reset]
-  [color=green]help[reset] /all
+  [color=light-green]help[reset] [color=light-cyan]dir[reset]
+  [color=light-green]help[reset] /all
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -2987,19 +3675,19 @@ Maakt een map aan.
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Gebruik:
-  [color=green]md[reset] [color=cyan]MAP[reset]
-  [color=green]mkdir[reset] [color=cyan]MAP[reset]
+  [color=light-green]md[reset] [color=light-cyan]MAP[reset]
+  [color=light-green]mkdir[reset] [color=light-cyan]MAP[reset]
 
 Waar:
-  [color=cyan]MAP[reset] is de naam van de map die moet worden gemaakt.
+  [color=light-cyan]MAP[reset] is de naam van de map die moet worden gemaakt.
 
 Opmerkingen:
   - De map moet een exacte naam zijn en nog niet bestaan.
   - U kunt een pad opgeven waar de map wordt gemaakt.
 
 Voorbeelden:
-  [color=green]md[reset] [color=cyan]newdir[reset]
-  [color=green]md[reset] [color=cyan]c:\spelen\map[reset]
+  [color=light-green]md[reset] [color=light-cyan]newdir[reset]
+  [color=light-green]md[reset] [color=light-cyan]c:\spelen\map[reset]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -3008,17 +3696,17 @@ Verwijdert een map.
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Gebruik:
-  [color=green]rd[reset] [color=cyan]MAP[reset]
-  [color=green]rmdir[reset] [color=cyan]MAP[reset]
+  [color=light-green]rd[reset] [color=light-cyan]MAP[reset]
+  [color=light-green]rmdir[reset] [color=light-cyan]MAP[reset]
 
 Waar:
-  [color=cyan]MAP[reset] is de naam van de te verwijderen map.
+  [color=light-cyan]MAP[reset] is de naam van de te verwijderen map.
 
 Opmerkingen:
   De map moet leeg zijn, zonder bestanden of submappen.
 
 Voorbeeld:
-  [color=green]rd[reset] [color=cyan]legemap[reset]
+  [color=light-green]rd[reset] [color=light-cyan]legemap[reset]
 
 .
 :SHELL_CMD_SET_HELP
@@ -3027,20 +3715,20 @@ Toont of wijzigt omgevingsvariabelen.
 .
 :SHELL_CMD_SET_HELP_LONG
 Gebruik:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]VARIABELE[reset]=[color=cyan][STRING][reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]VARIABELE[reset]=[color=light-cyan][STRING][reset]
 
 Waar:
   [color=white]VARIABELE[reset] De naam van de omgevingsvariabele.
-  [color=cyan]STRING[reset]    Een reeks tekens om aan de variabele toe te wijzen.
+  [color=light-cyan]STRING[reset]    Een reeks tekens om aan de variabele toe te wijzen.
 
 Opmerkingen:
   - Een lege string aan een variabele toewijzen, verwijderd de variabele.
   - De opdracht zonder parameter geeft de huidige omgevingsvariabelen weer.
 
 Voorbeelden:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]naam[reset]=[color=cyan]waarde[reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]naam[reset]=[color=light-cyan]waarde[reset]
 
 .
 :SHELL_CMD_IF_HELP
@@ -3049,9 +3737,9 @@ Voert voorwaardelijke verwerking uit in batchprogramma's.
 .
 :SHELL_CMD_IF_HELP_LONG
 Gebruik:
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMMER[reset] COMMANDO
-  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] COMMANDO
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]BESTAND[reset] COMMANDO
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMMER[reset] COMMANDO
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] COMMANDO
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]BESTAND[reset] COMMANDO
 
 Waar:
   [color=white]NUMMER[reset]     positief geheel getal kleiner of gelijk aan de gewenste waarde.
@@ -3061,14 +3749,14 @@ Waar:
 
 Opmerkingen:
   Het COMMANDO wordt uitgevoerd als aan een van de drie voorwaarden is voldaan.
-  [color=magenta]not[reset] zorgt ervoor dat de opdracht alleen uitgevoerd wordt indien "false".
-  [color=cyan]errorlevel[reset] is handig om te controleren of een programma correct liep.
+  [color=light-magenta]not[reset] zorgt ervoor dat de opdracht alleen uitgevoerd wordt indien "false".
+  [color=light-cyan]errorlevel[reset] is handig om te controleren of een programma correct liep.
   Als [color=white]STR1[reset] of [color=white]STR2[reset] leeg mag zijn, zet deze dan tussen aanhalingstekens (").
 
 Voorbeelden:
-  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%mijnvar%%"=="mijnstring"[reset] echo Hallo wereld!
-  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]bestand.txt[reset] exit
+  [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=light-green]if[reset] [color=white]"%%mijnvar%%"=="mijnstring"[reset] echo Hallo wereld!
+  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]bestand.txt[reset] exit
 
 .
 :SHELL_CMD_GOTO_HELP
@@ -3077,17 +3765,17 @@ Springt naar een gelabelde regel in een batchprogramma.
 .
 :SHELL_CMD_GOTO_HELP_LONG
 Gebruik:
-  [color=green]goto[reset] [color=cyan]LABEL[reset]
+  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]
 
 Waar:
-  [color=cyan]LABEL[reset] is een tekenreeks die in het batchprogramma als label wordt gebruikt.
+  [color=light-cyan]LABEL[reset] is een tekenreeks die in het batchprogramma als label wordt gebruikt.
 
 Opmerkingen:
   Een label staat alleen op een regel, beginnend met een dubbele punt (:).
   Het label moet uniek zijn en kan overal in het batchprogramma staan.
 
 Voorbeelden:
-  [color=green]goto[reset] [color=cyan]mylabel[reset]
+  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]
 
 .
 :SHELL_CMD_SHIFT_HELP
@@ -3096,18 +3784,18 @@ Links-verschuift opdrachtregelparameters in een batchprogramma.
 .
 :SHELL_CMD_SHIFT_HELP_LONG
 Gebruik:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 Waar:
   Deze opdracht heeft geen parameters.
 
 Opmerkingen:
   Hierdoor kan een DOS-batchprogramma meer dan 9 parameters accepteren.
-  Door [color=green]shift[reset] links-verschuift in een batchprogramma variabele %%1 naar %%0,
+  Door [color=light-green]shift[reset] links-verschuift in een batchprogramma variabele %%1 naar %%0,
   %%2 naar %%1, enz.
 
 Voorbeelden:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -3116,10 +3804,10 @@ Geef de inhoud van een tekstbestand weer.
 .
 :SHELL_CMD_TYPE_HELP_LONG
 Gebruik:
-  [color=green]type[reset] [color=cyan]BESTAND[reset]
+  [color=light-green]type[reset] [color=light-cyan]BESTAND[reset]
 
 Waar:
-  [color=cyan]BESTAND[reset] is de naam van het weer te geven bestand.
+  [color=light-cyan]BESTAND[reset] is de naam van het weer te geven bestand.
 
 Opmerkingen:
   Het bestand moet een exacte bestandsnaam zijn, eventueel met een pad.
@@ -3127,8 +3815,8 @@ Opmerkingen:
   binaire bestanden.
 
 Voorbeelden:
-  [color=green]type[reset] [color=cyan]tekst.txt[reset]
-  [color=green]type[reset] [color=cyan]c:\dos\leesmij.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]tekst.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]c:\dos\leesmij.txt[reset]
 
 .
 :SHELL_CMD_REM_HELP
@@ -3137,10 +3825,10 @@ Voegt opmerkingen toe in een batchprogramma.
 .
 :SHELL_CMD_REM_HELP_LONG
 Gebruik:
-  [color=green]rem[reset] [color=cyan]OPMERKING[reset]
+  [color=light-green]rem[reset] [color=light-cyan]OPMERKING[reset]
 
 Waar:
-  [color=cyan]OPMERKING[reset] is elke opmerking die u wilt toevoegen.
+  [color=light-cyan]OPMERKING[reset] is elke opmerking die u wilt toevoegen.
 
 Opmerkingen:
   Door opmerkingen aan een batchprogramma toe te voegen, kan het gemakkelijker
@@ -3148,7 +3836,7 @@ Opmerkingen:
   commando's uitcommentariëren.
 
 Voorbeelden:
-  [color=green]rem[reset] [color=cyan]Dit is mijn testbatchprogramma.[reset]
+  [color=light-green]rem[reset] [color=light-cyan]Dit is mijn testbatchprogramma.[reset]
 
 .
 :SHELL_CMD_NO_WILD
@@ -3161,20 +3849,20 @@ Hernoemt een of meer bestanden.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Gebruik:
-  [color=green]ren[reset] [color=white]BRON[reset] [color=cyan]BESTEMMING[reset]
-  [color=green]rename[reset] [color=white]BRON[reset] [color=cyan]BESTEMMING[reset]
+  [color=light-green]ren[reset] [color=white]BRON[reset] [color=light-cyan]BESTEMMING[reset]
+  [color=light-green]rename[reset] [color=white]BRON[reset] [color=light-cyan]BESTEMMING[reset]
 
 Waar:
   [color=white]BRON[reset]      is de naam van het te hernoemen bestand
-  [color=cyan]BESTEMMING[reset] is de nieuwe naam voor het hernoemde bestand.
+  [color=light-cyan]BESTEMMING[reset] is de nieuwe naam voor het hernoemde bestand.
 
 Opmerkingen:
   - Het bronbestand moet een exacte bestandsnaam zijn, eventueel met een pad.
   - Het doelbestand moet een exacte bestandsnaam zijn zonder pad.
 
 Voorbeelden:
-  [color=green]ren[reset] [color=white]oudenaam[reset] [color=cyan]nieuwe[reset]
-  [color=green]ren[reset] [color=white]c:\dos\bestand.txt[reset] [color=cyan]b.txt[reset]
+  [color=light-green]ren[reset] [color=white]oudenaam[reset] [color=light-cyan]nieuwe[reset]
+  [color=light-green]ren[reset] [color=white]c:\dos\bestand.txt[reset] [color=light-cyan]b.txt[reset]
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -3183,23 +3871,23 @@ Verwijdert een of meer bestanden.
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Gebruik:
-  [color=green]del[reset] [color=cyan]PATROON[reset]
-  [color=green]erase[reset] [color=cyan]PATROON[reset]
+  [color=light-green]del[reset] [color=light-cyan]PATROON[reset]
+  [color=light-green]erase[reset] [color=light-cyan]PATROON[reset]
 
 Waar:
-  [color=cyan]PATROON[reset] kan een exacte bestandsnaam zijn (zoals [color=cyan]file.txt[reset]) of een
+  [color=light-cyan]PATROON[reset] kan een exacte bestandsnaam zijn (zoals [color=light-cyan]file.txt[reset]) of een
     onnauwkeurige bestandsnaam met een of meer jokertekens, de asterisk (*) die
     een reeks van een of meer tekens vertegenwoordigt, en de vraagteken (?)
-    voor een enkel teken, zoals [color=cyan]*.bat[reset] en [color=cyan]c?.txt[reset].
+    voor een enkel teken, zoals [color=light-cyan]*.bat[reset] en [color=light-cyan]c?.txt[reset].
 
 Waarschuwing:
-  Wees voorzichtig bij het gebruik van een patroon met jokertekens, vooral [color=cyan]*.*[reset],
+  Wees voorzichtig bij het gebruik van een patroon met jokertekens, vooral [color=light-cyan]*.*[reset],
   aangezien alle bestanden die overeenkomen met het patroon worden verwijderd.
 
 Voorbeelden:
-  [color=green]del[reset] [color=cyan]test.bat[reset]
-  [color=green]del[reset] [color=cyan]c*.*[reset]
-  [color=green]del[reset] [color=cyan]a?b.c*[reset]
+  [color=light-green]del[reset] [color=light-cyan]test.bat[reset]
+  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]
+  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]
 
 .
 :SHELL_CMD_COPY_HELP
@@ -3208,13 +3896,13 @@ Kopieert een of meer bestanden.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Gebruik:
-  [color=green]copy[reset] [color=white]BRON[reset] [color=cyan][BESTEMMING][reset]
-  [color=green]copy[reset] [color=white]BRON1+BRON2[+...][reset] [color=cyan][BESTEMMING][reset]
+  [color=light-green]copy[reset] [color=white]BRON[reset] [color=light-cyan][BESTEMMING][reset]
+  [color=light-green]copy[reset] [color=white]BRON1+BRON2[+...][reset] [color=light-cyan][BESTEMMING][reset]
 
 Waar:
   [color=white]BRON[reset] Kan een exacte bestandsnaam zijn of een onnauwkeurige bestandsnaam
        met jokertekens, dit zijn de asterisk (*) en het vraagteken (?).
-  [color=cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
+  [color=light-cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
 
 Opmerkingen:
   De operator [color=white]+[reset] combineert meerdere bronbestanden tot één enkel bestand.
@@ -3222,9 +3910,9 @@ Opmerkingen:
   pad gekopieerd.
 
 Voorbeelden:
-  [color=green]copy[reset] [color=white]bron.bat[reset] [color=cyan]nieuw.bat[reset]
-  [color=green]copy[reset] [color=white]bestand1.txt+bestand2.txt[reset] [color=cyan]bestand3.txt[reset]
-  [color=green]copy[reset] [color=white]..\c*.*[reset]
+  [color=light-green]copy[reset] [color=white]bron.bat[reset] [color=light-cyan]nieuw.bat[reset]
+  [color=light-green]copy[reset] [color=white]bestand1.txt+bestand2.txt[reset] [color=light-cyan]bestand3.txt[reset]
+  [color=light-green]copy[reset] [color=white]..\c*.*[reset]
 
 .
 :SHELL_CMD_CALL_HELP
@@ -3233,11 +3921,11 @@ Start een batchprogramma vanuit een ander batchprogramma.
 .
 :SHELL_CMD_CALL_HELP_LONG
 Gebruik:
-  [color=green]call[reset] [color=white]BATCH[reset] [color=cyan][PARAMETERS][reset]
+  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETERS][reset]
 
 Waar:
   [color=white]BATCH[reset]      is een batchprogramma om te starten.
-  [color=cyan]PARAMETERS[reset] optionele parameters voor het batchprogramma.
+  [color=light-cyan]PARAMETERS[reset] optionele parameters voor het batchprogramma.
 
 Opmerkingen:
   Na het oproepen van een ander batchprogramma, zal het oorspronkelijke
@@ -3245,8 +3933,8 @@ Opmerkingen:
   is beëindigd.
 
 Voorbeelden:
-  [color=green]call[reset] [color=white]mijnbatch.bat[reset]
-  [color=green]call[reset] [color=white]bestand.bat[reset] [color=cyan]Hallo wereld![reset]
+  [color=light-green]call[reset] [color=white]mijnbatch.bat[reset]
+  [color=light-green]call[reset] [color=white]bestand.bat[reset] [color=light-cyan]Hallo wereld![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
@@ -3255,21 +3943,21 @@ Wijs een interne map toe aan een schijf.
 .
 :SHELL_CMD_SUBST_HELP_LONG
 Gebruik:
-  [color=green]subst[reset] [color=white]SCHIJF[reset] [color=cyan]PAD[reset]
-  [color=green]subst[reset] [color=white]SCHIJF[reset] /d
+  [color=light-green]subst[reset] [color=white]SCHIJF[reset] [color=light-cyan]PAD[reset]
+  [color=light-green]subst[reset] [color=white]SCHIJF[reset] /d
 
 WAAR:
   [color=white]SCHIJF[reset] is een schijf waaraan u een pad wilt toewijzen.
-  [color=cyan]PAD[reset]  is een gekoppeld DOS-pad waaraan u wilt toewijzen.
+  [color=light-cyan]PAD[reset]  is een gekoppeld DOS-pad waaraan u wilt toewijzen.
 
 Opmerkingen:
-  Het pad moet zich op een schijf bevinden die is aangekoppeld met de [color=green]mount[reset]
+  Het pad moet zich op een schijf bevinden die is aangekoppeld met de [color=light-green]mount[reset]
   opdracht.
   U kunt een toegewezen schijf verwijderen met de optie /d.
 
 Voorbeelden:
-  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\spelen[reset]
-  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
+  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\spelen[reset]
+  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP
@@ -3278,11 +3966,11 @@ Laadt een DOS-programma in het bovenste geheugen.
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
 Gebruik:
-  [color=green]lh[reset] [color=cyan]PROGRAMMA[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadhigh[reset] [color=cyan]PROGRAMMA[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]lh[reset] [color=light-cyan]PROGRAMMA[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAMMA[reset] [color=white][PARAMETERS][reset]
 
 Waar:
-  [color=cyan]PROGRAMMA[reset] is een DOS TSR-programma dat moet worden geladen, optioneel met
+  [color=light-cyan]PROGRAMMA[reset] is een DOS TSR-programma dat moet worden geladen, optioneel met
             parameters.
 
 Opmerkingen:
@@ -3294,35 +3982,7 @@ Opmerkingen:
   bovenste geheugen worden geladen.
 
 Voorbeelden:
-  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]argument[reset]
-
-.
-:SHELL_CMD_LS_HELP
-Geeft map-inhoud weer in de brede lijstindeling.
-
-.
-:SHELL_CMD_LS_HELP_LONG
-Gebruik:
-  [color=green]ls[reset] [color=cyan]PATROON[reset]
-  [color=green]ls[reset] [color=cyan]PAD[reset]
-
-Waar:
-  [color=cyan]PATROON[reset] kan een exacte bestandsnaam zijn of een onnauwkeurige bestandsnaam
-          met jokertekens, de asterisk (*) en het vraagteken (?).
-  [color=cyan]PATH[reset]    is een exact pad in een aangekoppelde DOS-schijf om de inhoud weer
-          te geven.
-
-Opmerkingen:
-  Het commando zal mappen weergeven in [color=blue]blauw[reset], uitvoerbare DOS-programma's
-  (*.com, *.exe, *.bat) in [color=green]groen[reset] en andere bestanden in de normale kleur.
-
-Voorbeelden:
-  [color=green]ls[reset] [color=cyan]bestand.txt[reset]
-  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
-
-.
-:SHELL_CMD_LS_PATH_ERR
-ls: kan '%s' niet openen: geen dergelijk bestand of map
+  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]argument[reset]
 
 .
 :SHELL_CMD_ATTRIB_HELP
@@ -3331,22 +3991,22 @@ Toont of wijzigt bestandskenmerken.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Gebruik:
-  [color=green]attrib[reset] [color=white][ATTRIBUTEN][reset] [color=cyan]PATROON[reset] [/S]
+  [color=light-green]attrib[reset] [color=white][ATTRIBUTEN][reset] [color=light-cyan]PATROON[reset] [/S]
 
 Waar:
   [color=white][ATTRIBUTEN][reset] zijn attributen om toe te passen, waaronder een of meer van de
                volgende: [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
                Waar: R = Alleen-lezen, A = Archief, S = Systeem, H = Verborgen
-  [color=cyan]PATROON[reset]      kan een exacte bestandsnaam zijn of een onnauwkeurige
+  [color=light-cyan]PATROON[reset]      kan een exacte bestandsnaam zijn of een onnauwkeurige
                bestandsnaam met jokertekens (de asterisk (*) en het vraagteken
-               (?)), of een exacte naam van een map.
+               (?), of een exacte naam van een map.
 Opmerkingen:
   Meerdere attributen worden opgegeven, gescheiden door spaties.
   Indien niet opgegeven, toont de opdracht de huidige bestands-/mapkenmerken.
 
 Voorbeelden:
-  [color=green]attrib[reset] [color=cyan]bestand.txt[reset]
-  [color=green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=cyan]*.txt[reset]
+  [color=light-green]attrib[reset] [color=light-cyan]bestand.txt[reset]
+  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
@@ -3363,31 +4023,31 @@ Wacht op een toetsaanslag en zet een ERRORLEVEL-waarde.
 .
 :SHELL_CMD_CHOICE_HELP_LONG
 Gebruik:
-  [color=green]choice[reset] [color=cyan][TEKST][reset]
-  [color=green]choice[reset] /c[:][color=white]KEUZES[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEKST][reset]
+  [color=light-green]choice[reset] [color=light-cyan][TEKST][reset]
+  [color=light-green]choice[reset] /c[:][color=white]KEUZES[reset] /n /s /t[:][color=white]c[reset],[color=light-magenta]nn[reset] [color=light-cyan][TEKST][reset]
 
 Waar:
-  [color=cyan]TEKST[reset]       optionele tekst die als prompt moet worden weergegeven.
+  [color=light-cyan]TEKST[reset]       optionele tekst die als prompt moet worden weergegeven.
   /c[:][color=white]KEUZES[reset] Specificeert toegestane toetsen, standaard: [color=white]yn[reset].
   /n          Geef de keuzes aan het einde van de prompt niet weer.
   /s          Maakt het selecteren van hoofdlettergevoelige keuzes mogelijk.
-  /t[:][color=white]c[reset],[color=magenta]nn[reset]   Standaard keuze op [color=white]c[reset] na [color=magenta]nn[reset] seconden.
+  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]   Standaard keuze op [color=white]c[reset] na [color=light-magenta]nn[reset] seconden.
 
 Opmerkingen:
   Deze opdracht stelt een ERRORLEVEL-waarde in die begint bij 1 volgens de
   toegestane toetsen die zijn opgegeven in de optie /c, en de gebruikersinvoer
-  kan dan worden gecontroleerd met de opdracht [color=green]if[reset]. Met de optie /n wordt
+  kan dan worden gecontroleerd met de opdracht [color=light-green]if[reset]. Met de optie /n wordt
   uiteindelijk alleen de opgegeven tekst weergegeven, maar niet de
   daadwerkelijke keuzes (zoals de standaard [color=white][Y,N]?[reset]).
 
 Voorbeelden:
-  [color=green]choice[reset] /t:[color=white]j[reset],[color=magenta]2[reset] [color=cyan]Doorgaan?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Typ de letter a, b, of c[reset]
+  [color=light-green]choice[reset] /t:[color=white]j[reset],[color=light-magenta]2[reset] [color=light-cyan]Doorgaan?[reset]
+  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Typ de letter a, b, of c[reset]
 
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Keuze mislukt[reset]: invoerstroom beëindigd zonder geldige keuze.
+[color=light-red]Keuze mislukt[reset]: invoerstroom beëindigd zonder geldige keuze.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
@@ -3401,20 +4061,20 @@ Toont of stelt een zoekpad in voor uitvoerbare bestanden.
 .
 :SHELL_CMD_PATH_HELP_LONG
 Gebruik:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan][[schijf:]pad[;...][reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan][[schijf:]pad[;...][reset]
 
 Waar:
-  [color=cyan][[schijf:]pad[;...][reset] is een pad dat een schijf en een map bevat.
+  [color=light-cyan][[schijf:]pad[;...][reset] is een pad dat een schijf en een map bevat.
   Meerdere paden kunnen worden opgegeven, gescheiden door een puntkomma (;).
 
 Opmerkingen:
   Parameter met nkel een puntkomma (;) wist alle zoekpadinstellingen.
-  Het pad kan ook worden ingesteld met de opdracht [color=green]set[reset], b.v. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\ [reset]
+  Het pad kan ook worden ingesteld met de opdracht [color=light-green]set[reset], b.v. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\ [reset]
 
 Voorbeelden:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 
 .
 :SHELL_CMD_VER_HELP
@@ -3423,17 +4083,17 @@ Bekijk de DOS-versie.
 .
 :SHELL_CMD_VER_HELP_LONG
 Gebruik:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 
 Opmerkingen:
   De DOS-versie kan worden ingesteld in het configuratiebestand onder de [dos]
-  sectie met de instelling 'ver = [color=cyan]VERSION[reset]'.
+  sectie met de instelling 'ver = [color=light-cyan]VERSION[reset]'.
   De DOS-versie die aan applicaties wordt gerapporteerd, kan worden gewijzigd
-  met de opdracht [color=green]setver[reset].
-  De oude syntax '[color=green]ver[reset] [color=white]set[reset] [color=cyaan]VERSION[reset]' om de DOS-versie te wijzigen, is verouderd.
+  met de opdracht [color=light-green]setver[reset].
+  De oude syntax '[color=light-green]ver[reset] [color=white]set[reset] [color=cyaan]VERSION[reset]' om de DOS-versie te wijzigen, is verouderd.
 
 Voorbeelden:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 
 .
 :SHELL_CMD_VER_VER
@@ -3451,17 +4111,17 @@ Geeft het schijfvolume en het serienummer weer, indien aanwezig.
 .
 :SHELL_CMD_VOL_HELP_LONG
 Gebruik:
-  [color=green]vol[reset] [color=cyan][SCHIJF:][reset]
+  [color=light-green]vol[reset] [color=light-cyan][SCHIJF:][reset]
 
 Waar:
-  [color=cyan]SCHIJF[reset] is een stationsletter gevolgd door een dubbele punt.
+  [color=light-cyan]SCHIJF[reset] is een stationsletter gevolgd door een dubbele punt.
 
 Opmerkingen:
-  [color=green]vol[reset] zonder argument, gebruikt de huidige schijf.
+  [color=light-green]vol[reset] zonder argument, gebruikt de huidige schijf.
 
 Voorbeelden:
-  [color=green]vol[reset]
-  [color=green]vol[reset] [color=cyan]c:[reset]
+  [color=light-green]vol[reset]
+  [color=light-green]vol[reset] [color=light-cyan]c:[reset]
 
 .
 :SHELL_CMD_VOL_OUTPUT
@@ -3477,8 +4137,8 @@ Verplaatst bestanden en hernoemt bestanden en mappen.
 .
 :SHELL_CMD_MOVE_HELP_LONG
 Gebruik:
-  [color=green]move[reset] [color=white]BESTAND1[,BESTAND2,...][reset] [color=cyan]BESTEMMING[reset]
-  [color=green]move[reset] [color=white]MAP1[reset] [color=cyan]MAP2[reset]
+  [color=light-green]move[reset] [color=white]BESTAND1[,BESTAND2,...][reset] [color=light-cyan]BESTEMMING[reset]
+  [color=light-green]move[reset] [color=white]MAP1[reset] [color=light-cyan]MAP2[reset]
 
 Waar:
   [color=white]BESTAND[reset]    Kan een exacte bestandsnaam zijn of een onnauwkeurige bestandsnaam
@@ -3486,7 +4146,7 @@ Waar:
              Meerdere, door komma's gescheiden bestandsnamen kunnen worden
              opgegeven.
   [color=white]MAP[reset]        Een exacte mapnaam, zonder jokertekens.
-  [color=cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
+  [color=light-cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
 
 Opmerkingen:
   Als er meerdere bronbestanden zijn opgegeven, moet de bestemming een map
@@ -3495,12 +4155,41 @@ Opmerkingen:
   Als een enkel bronbestand is opgegeven, wordt de bestemming overschreven.
 
 Voorbeelden:
-  [color=green]move[reset] [color=white]bron.bat[reset] [color=cyan]nieuw.bat[reset]
-  [color=green]move[reset] [color=white]bestand1.txt,bestand2.txt[reset] [color=cyan]mijnmap[reset]
+  [color=light-green]move[reset] [color=white]bron.bat[reset] [color=light-cyan]nieuw.bat[reset]
+  [color=light-green]move[reset] [color=white]bestand1.txt,bestand2.txt[reset] [color=light-cyan]mijnmap[reset]
 
 .
 :SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
 Kan niet meerdere bestanden naar één bestand verplaatsen.
+
+.
+:SHELL_CMD_FOR_HELP
+Voert een opgegeven opdracht uit voor elke string in een set.
+
+.
+:SHELL_CMD_FOR_HELP_LONG
+Gebruik:
+  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMANDO[reset]
+
+Waar:
+  [color=white]%VAR[reset]    Een enkel teken dat een variabele vertegenwoordigt, voorafgegaan door een '%'.
+  [color=light-cyan]in[reset]      Een hoofdletterongevoelig trefwoord.
+  [color=white](SET)[reset]   De set strings die [color=white]%VAR[reset] instanties in [color=white]COMMANDO[reset] moeten vervangen.
+  [color=light-cyan]do[reset]      Een hoofdletterongevoelig trefwoord.
+  [color=white]COMMAND[reset] Het commando dat moet worden herhaald voor elke string in [color=white](SET)[reset].
+
+Opmerkingen:
+  - In batchbestanden moet [color=white]%VAR[reset] worden geschreven als [color=white]%%VAR[reset]
+    (twee procenttekens).
+  - Strings in [color=white](SET)[reset] mogen worden gescheiden door elk geldig
+    DOS-scheidingsteken.
+  - Elke string in [color=white](SET)[reset] die jokertekens (* of ?) bevat, wordt uitgebreid naar
+    de set overeenkomende bestanden in de huidige map.
+  - Het gebruik van een ander [color=light-green]for[reset] commando als [color=white]COMMANDO[reset] is niet toegestaan.
+
+Voorbeelden:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](EEN TWEE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX

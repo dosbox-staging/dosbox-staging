@@ -22,12 +22,20 @@
 #include "dosbox.h"
 
 #include <memory>
-#include <unordered_set>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "dos_inc.h"
 #include "dos_system.h"
+
+// GCC throws a warning about non-virtual destructor for std::enable_shared_from_this
+// This is normally a helpful warning. Ex: If DOS_Drive had a non-virtual destructor, it would be a problem.
+// In this case, it is safe so hide the warning for this file.
+// It gets restored at the end.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
 
 void Set_Label(const char* const input, char* const output, bool cdrom);
 std::string To_Label(const char* name);
@@ -40,31 +48,18 @@ class imageDisk; // forward declare
 
 class DriveManager {
 public:
-	using filesystem_images_t = std::vector<std::unique_ptr<DOS_Drive>>;
-	using raw_images_t        = std::vector<std::unique_ptr<imageDisk>>;
+	using filesystem_images_t = std::vector<std::shared_ptr<DOS_Drive>>;
 	struct DriveInfo {
 		filesystem_images_t disks = {};
 		uint16_t current_disk     = 0;
 	};
 	using drive_infos_t = std::array<DriveInfo, DOS_DRIVES>;
 
-	static std::vector<DOS_Drive*> AppendFilesystemImages(
-	        const int drive, filesystem_images_t& filesystem_images);
+	static void AppendFilesystemImages(const int drive,
+	                                   const filesystem_images_t& filesystem_images);
 
-	static DOS_Drive* RegisterFilesystemImage(
-	        const int drive, std::unique_ptr<DOS_Drive>&& filesystem_image);
-
-	static imageDisk* RegisterNumberedImage(FILE* img_file,
-	                                        const std::string& img_name,
-	                                        const uint32_t img_size_kb,
-	                                        const bool is_hdd);
-
-	static void CloseNumberedImage(const imageDisk* image_ptr);
-
-	static imageDisk* RegisterRawFloppyImage(FILE* img_file,
-	                                         const std::string& img_name,
-	                                         const uint32_t img_size_kb);
-	static void CloseRawFddImages();
+	static void RegisterFilesystemImage(const int drive,
+	                                    std::shared_ptr<DOS_Drive> filesystem_image);
 
 	static void InitializeDrive(int drive);
 	static int UnmountDrive(int drive);
@@ -74,46 +69,48 @@ public:
 	static void CycleAllDisks(void);
 	static char *GetDrivePosition(int drive);
 	static void Init(Section* sec);
-	
+
 private:
 	static drive_infos_t drive_infos;
-	static raw_images_t indexed_images;
-	static raw_images_t raw_floppy_images;
-	static uint8_t currentDrive;
 };
 
-class localDrive : public DOS_Drive {
+// Must be constructed with a shared_ptr as it uses weak_from_this()
+class localDrive : public DOS_Drive,
+                   public std::enable_shared_from_this<localDrive> {
 public:
 	localDrive(const char* startdir, uint16_t _bytes_sector,
 	           uint8_t _sectors_cluster, uint16_t _total_clusters,
 	           uint16_t _free_clusters, uint8_t _mediaid,
-	           bool _always_open_ro_files = false);
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
-	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
-	bool FileUnlink(char* name) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
-	bool TestDir(char* dir) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
+	           bool _readonly, bool _always_open_ro_files = false);
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	FILE* GetHostFilePtr(const char* const name, const char* const type);
+	std::string MapDosToHostFilename(const char* const dos_name);
+	bool FileUnlink(const char* name) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
+	bool TestDir(const char* dir) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
-	bool Rename(char* oldname, char* newname) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
+	bool Rename(const char* oldname, const char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
-	bool isRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsReadOnly() const override { return readonly; }
+	bool IsRemote(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	const char* GetBasedir() const
 	{
 		return basedir;
 	}
+
+	std::unordered_map<std::string, DosDateTime> timestamp_cache = {};
 
 protected:
 	char basedir[CROSS_LEN] = "";
@@ -122,8 +119,10 @@ protected:
 	} srchInfo[MAX_OPENDIRS];
 
 private:
-	bool IsFirstEncounter(const std::string& filename);
-	bool always_open_ro_files;
+	void MaybeLogFilesystemProtection(const std::string& filename);
+	bool FileIsReadOnly(const char* name);
+	const bool readonly;
+	const bool always_open_ro_files;
 	std::unordered_set<std::string> write_protected_files;
 	struct {
 		uint16_t bytes_sector;
@@ -192,32 +191,35 @@ struct partTable {
 #endif
 //Forward
 class imageDisk;
-class fatDrive final : public DOS_Drive {
+
+// Must be constructed with a shared_ptr or it will throw an exception on internal call to shared_from_this()
+class fatDrive final : public DOS_Drive, public std::enable_shared_from_this<fatDrive> {
 public:
 	fatDrive(const char* sysFilename, uint32_t bytesector,
 	         uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
-	         uint32_t startSector, bool roflag);
+	         bool roflag);
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
-	bool FileUnlink(char* name) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
-	bool TestDir(char* dir) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	bool FileUnlink(const char* name) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
+	bool TestDir(const char* dir) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
-	bool Rename(char* oldname, char* newname) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
+	bool Rename(const char* oldname, const char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
-	bool isRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsReadOnly() const override { return readonly; }
+	bool IsRemote(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	void EmptyCache(void) override {}
 
@@ -235,7 +237,6 @@ public:
 	uint32_t getFirstFreeClust(void);
 	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
-	bool isReadOnly() const { return readonly; }
 	std::shared_ptr<imageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
@@ -245,13 +246,13 @@ private:
 	void setClusterValue(uint32_t clustNum, uint32_t clustValue);
 	uint32_t getClustFirstSect(uint32_t clustNum);
 	bool FindNextInternal(uint32_t dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
-	bool getDirClustNum(char * dir, uint32_t * clustNum, bool parDir);
+	bool getDirClustNum(const char * dir, uint32_t * clustNum, bool parDir);
 	bool getFileDirEntry(const char* const filename, direntry* useEntry,
 	                     uint32_t* dirClust, uint32_t* subEntry,
 	                     const bool dir_ok = false);
 	bool addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry);
 	void zeroOutCluster(uint32_t clustNumber);
-	bool getEntryName(char *fullname, char *entname);
+	bool getEntryName(const char *fullname, char *entname);
 	
 	bootstrap bootbuffer;
 	bool absolute;
@@ -274,17 +275,18 @@ public:
 	           uint16_t _bytes_sector, uint8_t _sectors_cluster,
 	           uint16_t _total_clusters, uint16_t _free_clusters,
 	           uint8_t _mediaid, int& error);
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
-	bool FileUnlink(char* name) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
-	bool Rename(char* oldname, char* newname) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	bool FileUnlink(const char* name) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
+	bool Rename(const char* oldname, const char* newname) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	void SetDir(const char* path) override;
-	bool isRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsRemote(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 
 private:
@@ -364,36 +366,38 @@ struct isoDirEntry {
 #define ISO_MAX_FILENAME_LENGTH 37
 #define ISO_MAXPATHNAME		256
 #define ISO_FIRST_VD		16
-#define IS_ASSOC(fileFlags)	(fileFlags & ISO_ASSOCIATED)
-#define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
-#define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
+#define IS_ASSOC(fileFlags)	(!!(fileFlags & ISO_ASSOCIATED))
+#define IS_DIR(fileFlags)	(!!(fileFlags & ISO_DIRECTORY))
+#define IS_HIDDEN(fileFlags)	(!!(fileFlags & ISO_HIDDEN))
 #define ISO_MAX_HASH_TABLE_SIZE 	100
 
-class isoDrive final : public DOS_Drive {
+// Must be constructed with a shared_ptr or it will throw an exception on internal call to shared_from_this()
+class isoDrive final : public DOS_Drive, public std::enable_shared_from_this<isoDrive> {
 public:
 	isoDrive(char driveLetter, const char* device_name, uint8_t mediaid,
 	         int& error);
 	~isoDrive() override;
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
-	bool FileUnlink(char* name) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
-	bool TestDir(char* dir) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	bool FileUnlink(const char* name) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
+	bool TestDir(const char* dir) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
-	bool Rename(char* oldname, char* newname) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
+	bool Rename(const char* oldname, const char* newname) override;
 	bool AllocationInfo(uint16_t* bytes_sector, uint8_t* sectors_cluster,
 	                    uint16_t* total_clusters,
 	                    uint16_t* free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte(void) override;
 	void EmptyCache(void) override {}
-	bool isRemote(void) override;
-	bool isRemovable(void) override;
+	bool IsReadOnly() const override { return true; }
+	bool IsRemote(void) override;
+	bool IsRemovable(void) override;
 	Bits UnMount(void) override;
 	bool readSector(uint8_t* buffer, uint32_t sector);
 	const char* GetLabel() override
@@ -445,26 +449,27 @@ using vfile_block_t = std::shared_ptr<VFILE_Block>;
 class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
-	bool FileUnlink(char* name) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
-	bool TestDir(char* dir) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	bool FileUnlink(const char* name) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
+	bool TestDir(const char* dir) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
-	bool Rename(char* oldname, char* newname) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
+	bool Rename(const char* oldname, const char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
 	                    uint16_t* _free_clusters) override;
 	bool FileExists(const char* name) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	uint8_t GetMediaByte() override;
 	void EmptyCache() override;
-	bool isRemote() override;
-	bool isRemovable() override;
+	bool IsReadOnly() const override { return true; }
+	bool IsRemote() override;
+	bool IsRemovable() override;
 	Bits UnMount() override;
 	const char* GetLabel() override;
 
@@ -478,6 +483,8 @@ private:
 	bool vfile_name_exists(const std::string& name) const;
 };
 
+// Must be constructed with a shared_ptr as it uses weak_from_this()
+// std::enable_shared_from_this inherited from localDrive
 class Overlay_Drive final : public localDrive {
 public:
 	Overlay_Drive(const char *startdir,
@@ -489,25 +496,25 @@ public:
 	              uint8_t _mediaid,
 	              uint8_t &error);
 
-	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t /*attributes*/) override;
-	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
+	std::unique_ptr<DOS_File> FileOpen(const char* name, uint8_t flags) override;
+	std::unique_ptr<DOS_File> FileCreate(const char* name,
+	                                     FatAttributeFlags attributes) override;
+	bool FindFirst(const char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool FileUnlink(char* name) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool FileUnlink(const char* name) override;
+	bool GetFileAttr(const char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool FileExists(const char* name) override;
-	bool Rename(char* oldname, char* newname) override;
-	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
+	bool Rename(const char* oldname, const char* newname) override;
 	void EmptyCache(void) override;
 
-	std::pair<FILE*, std_fs::path> create_file_in_overlay(const char* dos_filename,
-	                                                      const char* mode);
+	std::pair<NativeFileHandle, std_fs::path> create_file_in_overlay(
+	        const char* dos_filename, const FatAttributeFlags attributes);
 
 	Bits UnMount(void) override;
-	bool TestDir(char* dir) override;
-	bool RemoveDir(char* dir) override;
-	bool MakeDir(char* dir) override;
+	bool TestDir(const char* dir) override;
+	bool RemoveDir(const char* dir) override;
+	bool MakeDir(const char* dir) override;
 
 private:
 	char overlaydir[CROSS_LEN];
@@ -541,5 +548,7 @@ private:
 	std::vector<std::string> DOSdirs_cache; //Can not blindly change its type. it is important that subdirs come after the parent directory.
 	const std::string special_prefix;
 };
+
+#pragma GCC diagnostic pop
 
 #endif

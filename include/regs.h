@@ -23,26 +23,69 @@
 #include "mem.h"
 #endif
 
-#define FLAG_CF		0x00000001
-#define FLAG_PF		0x00000004
-#define FLAG_AF		0x00000010
-#define FLAG_ZF		0x00000040
-#define FLAG_SF		0x00000080
-#define FLAG_OF		0x00000800
+#include <cassert>
 
-#define FLAG_TF		0x00000100
-#define FLAG_IF		0x00000200
-#define FLAG_DF		0x00000400
+// x86 CPU FLAGS register bit positions
+// - Intel iAXP 286 Programmer's Reference Manual
+// - Intel 64 and IA-32 Architectures Software Developer's Manual. Vol.1
 
-#define FLAG_IOPL	0x00003000
-#define FLAG_NT		0x00004000
-#define FLAG_VM		0x00020000
-#define FLAG_AC		0x00040000
-#define FLAG_ID		0x00200000
+// Carry Flag (bit 0), 1 indicates an arithmetic carry or borrow has been
+// generated out of the most significant arithmetic logic unit (ALU) bit
+// position.
+constexpr uint32_t FLAG_CF = 1 << 0;
 
-#define FMASK_TEST		(FLAG_CF | FLAG_PF | FLAG_AF | FLAG_ZF | FLAG_SF | FLAG_OF)
-#define FMASK_NORMAL	(FMASK_TEST | FLAG_DF | FLAG_TF | FLAG_IF )	
-#define FMASK_ALL		(FMASK_NORMAL | FLAG_IOPL | FLAG_NT)
+// Parity Flag (bit 2) indicates whether the modulo 2 sum of the low-order eight
+// bits of the result is even (PF=O) or odd (PF=1).
+constexpr uint32_t FLAG_PF = 1 << 2;
+
+// Auxiliary Carry Flag (bit 4), 1 indicates a carry from the lower nibble or a
+// for the lower nibble in BCD (Binary-coded Decimal) operations.
+constexpr uint32_t FLAG_AF = 1 << 4;
+
+// Zero Flag (bit 6), 1 indicates the result is zero.
+constexpr uint32_t FLAG_ZF = 1 << 6;
+
+// Sign Flag (bit 7), 1 indicates the result is negative.
+constexpr uint32_t FLAG_SF = 1 << 7;
+
+// Overflow Flag (bit 11), 1 indicates that the operation has overflowed; the
+// complete result was too large to be stored in the resulting register.
+constexpr uint32_t FLAG_OF = 1 << 11;
+
+// Trap flag (bit 8) 1 indicates that the processor is in single-step mode
+// (debugging).
+constexpr uint32_t FLAG_TF = 1 << 8;
+
+// I/O level flag (bit 9), 1 indicates that interrupts are enabled.
+constexpr uint32_t FLAG_IF = 1 << 9;
+
+// direction flag (bit 10), 1 indicates the direction is down. The meaning of
+// 'down' is in context to the instruction.
+constexpr uint32_t FLAG_DF = 1 << 10;
+
+// I/O privilege level flags (bits 12 and 13). 286+ only. This is all ones on
+// 8086 and 186.
+constexpr uint32_t FLAG_IOPL = (1 << 12) | (1 << 13);
+
+// Nested task flag (bit 14), 286+ only. This is always 1 on 8086 and 186.
+constexpr uint32_t FLAG_NT = 1 << 14;
+
+// Virtual 8086 mode flag (bit 17), 386+ only.
+constexpr uint32_t FLAG_VM = 1 << 17;
+
+// Alignment Check (bit 18), 486+-only.
+constexpr uint32_t FLAG_AC = 1 << 18;
+
+// CPUID instruction availability (bit 21), Pentium+-only.
+constexpr uint32_t FLAG_ID = 1 << 21;
+
+// Flag groups:
+constexpr uint32_t FMASK_TEST = FLAG_CF | FLAG_PF | FLAG_AF | FLAG_ZF |
+                                FLAG_SF | FLAG_OF;
+
+constexpr uint32_t FMASK_NORMAL = FMASK_TEST | FLAG_DF | FLAG_TF | FLAG_IF;
+
+constexpr uint32_t FMASK_ALL = FMASK_NORMAL | FLAG_IOPL | FLAG_NT;
 
 #define SETFLAGBIT(TYPE,TEST) if (TEST) reg_flags|=FLAG_ ## TYPE; else reg_flags&=~FLAG_ ## TYPE
 
@@ -92,11 +135,76 @@ constexpr auto BL_INDEX = 0;
 
 #endif
 
+// The CpuTestFlags struct allows CPU test flags to be applied en masse. First
+// construct it with the set of flags you will be adjusting followed by
+// assigning the actual flag state to the verbosely-named members. For example:
+//
+// CpuTestFlags my_flags(FLAG_CF | FLAG_OF);
+//   my_flags.has_carry = (did the operation need to carry results?);
+//   my_flags.has_overflow = (did the operation overflow?);
+//
+// Then apply the flags to the CPU registers:
+//   cpu_regs.ApplyTestFlags(my_flags);
+//
+struct CpuTestFlags {
+	constexpr CpuTestFlags() = delete;
+	constexpr CpuTestFlags(const uint32_t clear_mask);
+	constexpr uint32_t GetClearMask() const;
+	constexpr uint32_t GetSetMask() const;
+
+	bool has_carry        = false;
+	bool has_odd_parity   = false;
+	bool has_auxiliary    = false;
+	bool is_zero          = false;
+	bool is_sign_negative = false;
+	bool has_overflow     = false;
+
+private:
+	const uint32_t clear_mask = 0;
+};
+
+constexpr CpuTestFlags::CpuTestFlags(const uint32_t _clear_mask)
+        : clear_mask(_clear_mask)
+{
+	assert((clear_mask & ~FMASK_TEST) == 0 &&
+	       "Attempting to clear more than the test flags");
+}
+
+constexpr uint32_t CpuTestFlags::GetClearMask() const
+{
+	return clear_mask;
+}
+
+constexpr uint32_t CpuTestFlags::GetSetMask() const
+{
+	// clang-format off
+	const uint32_t set_mask = 
+		(has_carry        ? FLAG_CF : 0) |
+		(has_odd_parity   ? FLAG_PF : 0) |
+		(has_auxiliary    ? FLAG_AF : 0) |
+		(is_zero          ? FLAG_ZF : 0) |
+		(is_sign_negative ? FLAG_SF : 0) |
+		(has_overflow     ? FLAG_OF : 0);
+	// clang-format on
+
+	assert((set_mask & ~clear_mask) == 0 &&
+	       "Attempting to set flags that aren't cleared");
+	return set_mask;
+}
+
 struct CPU_Regs {
 	GenReg32 regs[8] = {};
-	GenReg32 ip = {};
-	uint32_t flags = 0;
+	GenReg32 ip      = {};
+	uint32_t flags   = 0;
+	constexpr void ApplyTestFlags(const CpuTestFlags& requested_flags);
 };
+
+constexpr void CPU_Regs::ApplyTestFlags(const CpuTestFlags& requested_flags)
+{
+	// First clear then set the requested flags
+	flags &= ~requested_flags.GetClearMask();
+	flags |= requested_flags.GetSetMask();
+}
 
 extern Segments Segs;
 extern CPU_Regs cpu_regs;

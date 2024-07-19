@@ -36,7 +36,7 @@
 #if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #include <sys/mman.h>
 
-#include <limits.h>
+#include <climits>
 
 #endif // HAVE_MPROTECT
 
@@ -330,7 +330,7 @@ restart_core:
 #endif
 #endif
 	CodePageHandler * chandler=nullptr;
-	if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
+	if (MakeCodePage(ip_point, chandler)) {
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 		goto restart_core;
 	}

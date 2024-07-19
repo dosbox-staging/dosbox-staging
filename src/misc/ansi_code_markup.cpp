@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -138,26 +138,33 @@ private:
 	        {"reset", {Group::Misc, Type::Reset}},
 	};
 
+	// clang-format off
 	static inline const std::unordered_map<std::string, ColorDetail> color_values = {
-	        {"black", {Color::Black, false}},
-	        {"red", {Color::Red, false}},
-	        {"green", {Color::Green, false}},
-	        {"yellow", {Color::Yellow, false}},
-	        {"blue", {Color::Blue, false}},
-	        {"magenta", {Color::Magenta, false}},
-	        {"cyan", {Color::Cyan, false}},
-	        {"white", {Color::White, false}},
-	        {"default", {Color::Default, false}},
-	        {"light-black", {Color::Black, true}},
-	        {"light-red", {Color::Red, true}},
-	        {"light-green", {Color::Green, true}},
-	        {"light-yellow", {Color::Yellow, true}},
-	        {"light-blue", {Color::Blue, true}},
-	        {"light-magenta", {Color::Magenta, true}},
-	        {"light-cyan", {Color::Cyan, true}},
-	        {"light-white", {Color::White, true}},
+	        // Default colours
+	        {"default",       {Color::Default, false}},
 	        {"light-default", {Color::Default, true}},
+
+	        // Low intensity CGA colours
+	        {"black",         {Color::Black,   false}},
+	        {"blue",          {Color::Blue,    false}},
+	        {"green",         {Color::Green,   false}},
+	        {"cyan",          {Color::Cyan,    false}},
+	        {"red",           {Color::Red,     false}},
+	        {"magenta",       {Color::Magenta, false}},
+	        {"brown",         {Color::Yellow,  false}},
+	        {"light-gray",    {Color::White,   false}},
+
+	        // High intensity CGA colours
+	        {"dark-gray",     {Color::Black,   true}},
+	        {"light-blue",    {Color::Blue,    true}},
+	        {"light-green",   {Color::Green,   true}},
+	        {"light-cyan",    {Color::Cyan,    true}},
+	        {"light-red",     {Color::Red,     true}},
+	        {"light-magenta", {Color::Magenta, true}},
+	        {"yellow",        {Color::Yellow,  true}},
+	        {"white",         {Color::White,   true}},
 	};
+	// clang-format on
 
 	static inline const std::unordered_map<std::string, EraseExtents> eraser_extents = {
 	        {"end", EraseExtents::End},
@@ -222,7 +229,7 @@ int Tag::ansi_num() const
  * The following is an example with group numbers:
  *               _____2_____
  *               |		   |
- * This color is [color=red] red
+ * This color is [color=light-red] red
  *                |_4_| |6|
  *                |_5_|
  *
@@ -281,7 +288,7 @@ static const char *get_ansi_code(const Tag &tag)
 		// the equivalent foreground color.
 		ansi_num = ansi_num + (type == Tag::Type::BGColor ? 10 : 0);
 		safe_sprintf(ansi_code, "\033[%d%sm", ansi_num,
-		             (tag.color_is_light() ? "" : ";1"));
+		             (tag.color_is_light() ? ";1" : ""));
 		break;
 
 	case Tag::Group::Erasers:
@@ -292,8 +299,7 @@ static const char *get_ansi_code(const Tag &tag)
 	case Tag::Group::Styles:
 		// "closing" tags have ascii codes +20
 		if (tag.closed()) {
-			ansi_num += 20 + (type == Tag::Type::Bold ? 1 : 0); // [/b] is the same as
-			                                                    // [/dim]
+			ansi_num += 20 + (type == Tag::Type::Bold ? 1 : 0);
 		}
 		safe_sprintf(ansi_code, "\033[%dm", ansi_num);
 		break;
@@ -303,7 +309,7 @@ static const char *get_ansi_code(const Tag &tag)
 	return ansi_code;
 }
 
-std::string convert_ansi_markup(std::string &str)
+std::string convert_ansi_markup(const std::string &str)
 {
 	return convert_ansi_markup(str.c_str());
 }

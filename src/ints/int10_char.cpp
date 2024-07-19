@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,10 +22,11 @@
 #include "int10.h"
 
 #include "bios.h"
-#include "mem.h"
-#include "inout.h"
-#include "pic.h"
 #include "callback.h"
+#include "inout.h"
+#include "mem.h"
+#include "pic.h"
+#include "regs.h"
 
 static void CGA2_CopyRow(uint8_t cleft,uint8_t cright,uint8_t rold,uint8_t rnew,PhysPt base) {
 	BIOS_CHEIGHT;
@@ -218,8 +219,8 @@ void INT10_ScrollWindow(uint8_t rul,uint8_t cul,uint8_t rlr,uint8_t clr,int8_t n
 	PhysPt base=CurMode->pstart;
 	if (page==0xff) base+=real_readw(BIOSMEM_SEG,BIOSMEM_CURRENT_START);
 	else base+=page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
-	
-	if (GCC_UNLIKELY(machine==MCH_PCJR)) {
+
+	if (machine == MCH_PCJR) {
 		if (real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE) >= 9) {
 			// PCJr cannot handle these modes at 0xb800
 			// See INT10_PutPixel M_TANDY16
@@ -413,6 +414,29 @@ void INT10_SetCursorPos(uint8_t row,uint8_t col,uint8_t page) {
 	}
 }
 
+void INT10_SetCursorPosViaInterrupt(const uint8_t row, const uint8_t col,
+                                    const uint8_t page)
+{
+	constexpr uint8_t position_cmd = 0x2;
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+	const auto old_dx = reg_dx;
+
+	// Set the cursor position
+	reg_ah = position_cmd;
+	reg_bh = page;
+	reg_dh = row;
+	reg_dl = col;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
+	reg_dx = old_dx;
+}
+
 void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 	/* Externally used by the mouse routine */
 	RealPt fontdata;
@@ -548,9 +572,9 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 	}
 	fontdata=RealMake(RealSegment(fontdata),RealOffset(fontdata)+chr*cheight);
 
-	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
+	if (!useattr) { // Set attribute(color) to a sensible value
 		static bool warned_use = false;
-		if(GCC_UNLIKELY(!warned_use)){ 
+		if (!warned_use) {
 			LOG(LOG_INT10,LOG_ERROR)("writechar used without attribute in non-textmode %c %X",chr,chr);
 			warned_use = true;
 		}
@@ -612,7 +636,48 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 	}
 }
 
-void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr)
+static void write_char_via_interrupt(const uint8_t cur_col, const uint8_t cur_row,
+                                     const uint8_t page, const uint8_t char_value,
+                                     const uint8_t attribute, const bool use_attribute)
+{
+	constexpr uint8_t write_char_cmd        = 0x1;
+	constexpr uint8_t with_attribute_cmd    = 0x9;
+	constexpr uint8_t without_attribute_cmd = 0x0A;
+
+	// Position the cursor
+	INT10_SetCursorPosViaInterrupt(cur_row, cur_col, page);
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+	const auto old_cx = reg_cx;
+
+	// Write the character
+	reg_ah = use_attribute ? with_attribute_cmd : without_attribute_cmd;
+	reg_al = char_value;
+	reg_bl = attribute;
+	reg_bh = page;
+	reg_cx = write_char_cmd;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
+	reg_cx = old_cx;
+}
+
+// A template parameter to indicate if a function's actions should be
+// called immediately (the default) or if they should be made via the interrupt
+// handler and run just like any other DOS program.
+//
+enum class CallPlacement {
+	Immediate,
+	Interrupt,
+};
+
+template <CallPlacement call_placement = CallPlacement::Immediate>
+void write_char(const uint8_t chr, const uint8_t attr, uint8_t page,
+                uint16_t count, bool showattr)
 {
 	uint8_t pospage=page;
 	if (CurMode->type!=M_TEXT) {
@@ -641,6 +706,8 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 			case MCH_HERC:
 			case MCH_TANDY:
 				break;
+
+			default: assertm(false, "Invalid MachineType value");
 		}
 	}
 
@@ -648,7 +715,11 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 	uint8_t cur_col=CURSOR_POS_COL(pospage);
 	BIOS_NCOLS;
 	while (count>0) {
-		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
+		if constexpr (call_placement == CallPlacement::Immediate) {
+			WriteChar(cur_col, cur_row, page, chr, attr, showattr);
+		} else {
+			write_char_via_interrupt(cur_col, cur_row, page, chr, attr, showattr);
+		}
 		count--;
 		cur_col++;
 		if(cur_col==ncols) {
@@ -663,10 +734,26 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 	}
 }
 
-static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8_t page) {
-	BIOS_NCOLS;BIOS_NROWS;
-	uint8_t cur_row=CURSOR_POS_ROW(page);
-	uint8_t cur_col=CURSOR_POS_COL(page);
+void INT10_WriteChar(const uint8_t char_value, const uint8_t attribute,
+                     uint8_t page, uint16_t count, bool use_attribute)
+{
+	write_char<CallPlacement::Immediate>(char_value, attribute, page, count, use_attribute);
+}
+
+void INT10_WriteCharViaInterrupt(const uint8_t char_value, const uint8_t attribute,
+                                 uint8_t page, uint16_t count, bool use_attribute)
+{
+	write_char<CallPlacement::Interrupt>(char_value, attribute, page, count, use_attribute);
+}
+
+template <CallPlacement call_placement = CallPlacement::Immediate>
+static void teletype_output_attr(const uint8_t chr, const uint8_t attr,
+                                 const bool useattr, const uint8_t page)
+{
+	BIOS_NCOLS;
+	BIOS_NROWS;
+	uint8_t cur_row = CURSOR_POS_ROW(page);
+	uint8_t cur_col = CURSOR_POS_COL(page);
 	switch (chr) {
 	case 7: /* Beep */
 		// Prepare PIT counter 2 for ~900 Hz square wave
@@ -695,7 +782,11 @@ static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8
 		break;
 	default:
 		/* Draw the actual Character */
-		WriteChar(cur_col,cur_row,page,chr,attr,useattr);
+		if constexpr (call_placement == CallPlacement::Immediate) {
+			WriteChar(cur_col, cur_row, page, chr, attr, useattr);
+		} else {
+			write_char_via_interrupt(cur_col, cur_row, page, chr, attr, useattr);
+		}
 		cur_col++;
 	}
 	if(cur_col==ncols) {
@@ -715,15 +806,57 @@ static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8
 		cur_row--;
 	}
 	// Set the cursor for the page
-	INT10_SetCursorPos(cur_row,cur_col,page);
+	if constexpr (call_placement == CallPlacement::Immediate) {
+		INT10_SetCursorPos(cur_row, cur_col, page);
+	} else {
+		INT10_SetCursorPosViaInterrupt(cur_row, cur_col, page);
+	}
 }
 
-void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr) {
-	INT10_TeletypeOutputAttr(chr,attr,useattr,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE));
+void INT10_TeletypeOutputAttr(const uint8_t char_value, const uint8_t attribute,
+                              const bool use_attribute)
+{
+	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+
+	teletype_output_attr<CallPlacement::Immediate>(char_value,
+	                                               attribute,
+	                                               use_attribute,
+	                                               page);
+}
+
+void INT10_TeletypeOutputAttrViaInterrupt(const uint8_t char_value,
+                                          const uint8_t attribute,
+                                          const bool use_attribute)
+{
+	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+
+	teletype_output_attr<CallPlacement::Interrupt>(char_value,
+	                                               attribute,
+	                                               use_attribute,
+	                                               page);
 }
 
 void INT10_TeletypeOutput(uint8_t chr,uint8_t attr) {
 	INT10_TeletypeOutputAttr(chr,attr,CurMode->type!=M_TEXT);
+}
+
+void INT10_TeletypeOutputViaInterrupt(const uint8_t char_value, const uint8_t attribute)
+{
+	constexpr uint8_t teletype_cmd = 0xE;
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+
+	// Teletype the output
+	reg_ah = teletype_cmd;
+	reg_al = char_value;
+	reg_bl = attribute;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
 }
 
 void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt string,uint16_t count,uint8_t page) {
@@ -743,7 +876,8 @@ void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt 
 			attr=mem_readb(string);
 			string++;
 		};
-		INT10_TeletypeOutputAttr(chr,attr,true,page);
+		constexpr auto use_attribute = true;
+		teletype_output_attr(chr, attr, use_attribute, page);
 		count--;
 	}
 	if (!(flag&1)) {

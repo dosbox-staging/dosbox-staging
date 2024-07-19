@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,16 +36,6 @@ CHECK_NARROWING();
 // Drivers:
 // - https://git.javispedro.com/cgit/vbados.git
 // - https://git.javispedro.com/cgit/vbmouse.git
-
-// ----- IMPORTANT NOTE -----
-// This currently works with DOS VirtualBox driver (from VBADOS), but not with
-// Windows 3.1x VBMOUSE driver for VirtualBox. With the Windows 3.1x driver
-// the pointer we are getting in 'port_write_virtualbox' is wrong; mosy likely
-// we need to implement the VDS (Virtual DMA Services), as described in Q93469.
-// You can read the article for example here:
-// - https://jeffpar.github.io/kbarchive/kb/093/Q93469/
-// Thus for now the mouse support is disabled. It can be enabled in 'mouse.h' by
-// defining EXPERIMENTAL_VIRTUALBOX_MOUSE.
 
 // Static check if port number is valid
 static_assert((port_num_virtualbox & 0xfffc) == port_num_virtualbox);
@@ -136,12 +126,17 @@ static struct {
 // Request Header constants and structures
 // ***************************************************************************
 
-enum class RequestType : uint32_t {
+enum class VBoxRequestType : uint32_t {
 	InvalidRequest  = 0,
 	GetMouseStatus  = 1,
 	SetMouseStatus  = 2,
 	SetPointerShape = 3,
 	ReportGuestInfo = 50,
+};
+
+enum class VBoxReturnCode : uint32_t {
+	ErrorNotImplemented = (UINT32_MAX + 1) - 12,
+	ErrorNotSupported   = (UINT32_MAX + 1) - 37,
 };
 
 constexpr uint32_t ver_1_01 = (1 << 16) + 1;
@@ -155,10 +150,10 @@ struct RequestHeader {
 	bool IsValid() const;
 	bool CheckStructSize(const uint32_t needed_sise) const;
 
-	uint32_t struct_size     = 0;
-	uint32_t struct_version  = 0;
-	RequestType request_type = RequestType::InvalidRequest;
-	PhysPt return_code_pt    = 0;
+	uint32_t struct_size    = 0;
+	uint32_t struct_version = 0;
+	VBoxRequestType request_type = VBoxRequestType::InvalidRequest;
+	PhysPt return_code_pt   = 0;
 
 	// These values are not used by DOSBox:
 	// - uint32_t reserved
@@ -172,9 +167,9 @@ bool RequestHeader::IsValid() const
 
 RequestHeader::RequestHeader(const PhysPt pointer)
 {
-	struct_size    = mem_readd(pointer);
-	struct_version = mem_readd(pointer + 4);
-	request_type   = static_cast<RequestType>(mem_readd(pointer + 8));
+	struct_size    = phys_readd(pointer);
+	struct_version = phys_readd(pointer + 4);
+	request_type   = static_cast<VBoxRequestType>(phys_readd(pointer + 8));
 	return_code_pt = pointer + 12;
 }
 
@@ -208,7 +203,7 @@ struct VirtualBox_GuestInfo_1_01 {
 	VirtualBox_GuestInfo_1_01() = delete;
 	VirtualBox_GuestInfo_1_01(const PhysPt pointer)
 	{
-		interface_version = mem_readd(pointer);
+		interface_version = phys_readd(pointer);
 	}
 
 	static uint32_t GetSize()
@@ -226,9 +221,9 @@ struct VirtualBox_MouseStatus_1_01 {
 	VirtualBox_MouseStatus_1_01() = delete;
 	VirtualBox_MouseStatus_1_01(const PhysPt pointer)
 	{
-		features._data = mem_readd(pointer);
-		pointer_x_pos  = static_cast<int32_t>(mem_readd(pointer + 4));
-		pointer_y_pos  = static_cast<int32_t>(mem_readd(pointer + 8));
+		features._data = phys_readd(pointer);
+		pointer_x_pos  = static_cast<int32_t>(phys_readd(pointer + 4));
+		pointer_y_pos  = static_cast<int32_t>(phys_readd(pointer + 8));
 	}
 
 	static uint32_t GetSize()
@@ -251,11 +246,11 @@ struct VirtualBox_MousePointer_1_01 {
 	VirtualBox_MousePointer_1_01() = delete;
 	VirtualBox_MousePointer_1_01(const PhysPt pointer)
 	{
-		flags._data   = mem_readd(pointer);
-		x_hot_spot    = mem_readd(pointer + 4);
-		y_hot_spot    = mem_readd(pointer + 8);
-		poiner_width  = mem_readd(pointer + 12);
-		poiner_height = mem_readd(pointer + 16);
+		flags._data   = phys_readd(pointer);
+		x_hot_spot    = phys_readd(pointer + 4);
+		y_hot_spot    = phys_readd(pointer + 8);
+		poiner_width  = phys_readd(pointer + 12);
+		poiner_height = phys_readd(pointer + 16);
 	}
 
 	static uint32_t GetSize()
@@ -268,9 +263,9 @@ struct VirtualBox_MousePointer_1_01 {
 // Helper code to print out warnings
 // ***************************************************************************
 
-static void warn_unsupported_request(const RequestType request_type)
+static void warn_unsupported_request(const VBoxRequestType request_type)
 {
-	static std::set<RequestType> already_warned = {};
+	static std::set<VBoxRequestType> already_warned = {};
 	if (already_warned.find(request_type) != already_warned.end()) {
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d",
 		            enum_val(request_type));
@@ -280,14 +275,14 @@ static void warn_unsupported_request(const RequestType request_type)
 
 static void warn_unsupported_struct_version(const RequestHeader& header)
 {
-	static std::map<RequestType, std::set<uint32_t>> already_warned = {};
+	static std::map<VBoxRequestType, std::set<uint32_t>> already_warned = {};
 	auto& already_warned_set = already_warned[header.request_type];
 	if (already_warned_set.find(header.struct_version) !=
 	    already_warned_set.end()) {
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d structure v%d.%02d",
 		            enum_val(header.request_type),
 		            header.struct_version >> 16,
-		            header.struct_version && 0xffff);
+		            header.struct_version & 0xffff);
 		already_warned_set.insert(header.struct_version);
 	}
 }
@@ -343,7 +338,12 @@ static void client_disconnect()
 
 static void report_success(PhysPt return_code_pt)
 {
-	mem_writed(return_code_pt, 0);
+	phys_writed(return_code_pt, 0);
+}
+
+static void report_failure(PhysPt return_code_pt, const VBoxReturnCode fail_code)
+{
+	phys_writed(return_code_pt, static_cast<uint32_t>(fail_code));
 }
 
 template <typename T>
@@ -352,10 +352,26 @@ static bool check_size(const RequestHeader& header)
 	return header.CheckStructSize(T::GetSize());
 }
 
+static void handle_error_unsupported_request(const RequestHeader& header)
+{
+	report_failure(header.return_code_pt,
+	               VBoxReturnCode::ErrorNotImplemented);
+	warn_unsupported_request(header.request_type);
+}
+
+static void handle_error_unsupported_struct_version(const RequestHeader& header)
+{
+	report_failure(header.return_code_pt,
+	               VBoxReturnCode::ErrorNotSupported);
+	warn_unsupported_struct_version(header);
+}
+
 static void handle_get_mouse_status(const RequestHeader& header,
                                     const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+			       VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -367,14 +383,14 @@ static void handle_get_mouse_status(const RequestHeader& header,
 
 		MouseVirtualBoxPointerStatus status = {};
 		MOUSEVMM_GetPointerStatus(status);
-		mem_writed(struct_pointer, state.mouse_features._data);
-		mem_writed(struct_pointer + 4, status.absolute_x);
-		mem_writed(struct_pointer + 8, status.absolute_y);
+		phys_writed(struct_pointer, state.mouse_features._data);
+		phys_writed(struct_pointer + 4, status.absolute_x);
+		phys_writed(struct_pointer + 8, status.absolute_y);
 
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -382,6 +398,8 @@ static void handle_set_mouse_status(const RequestHeader& header,
                                     const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+			       VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -414,7 +432,7 @@ static void handle_set_mouse_status(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -422,6 +440,8 @@ static void handle_set_pointer_shape(const RequestHeader& header,
                                      const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+		               VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -449,7 +469,7 @@ static void handle_set_pointer_shape(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -467,7 +487,7 @@ static void handle_report_guest_info(const RequestHeader& header,
 		if (payload.interface_version != ver_1_04) {
 			LOG_WARNING("VIRTUALBOX: unimplemented protocol v%d.%02d",
 			            payload.interface_version >> 16,
-			            payload.interface_version && 0xffff);
+			            payload.interface_version & 0xffff);
 			client_disconnect();
 			break;
 		}
@@ -476,7 +496,7 @@ static void handle_report_guest_info(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -495,7 +515,7 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	RequestHeader header(header_pointer);
 
 	if (!state.is_client_connected &&
-	    header.request_type != RequestType::ReportGuestInfo) {
+	    header.request_type != VBoxRequestType::ReportGuestInfo) {
 		return; // not a proper VirtualBox client
 	}
 
@@ -505,19 +525,19 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	}
 
 	switch (header.request_type) {
-	case RequestType::GetMouseStatus:
+	case VBoxRequestType::GetMouseStatus:
 		handle_get_mouse_status(header, struct_pointer);
 		break;
-	case RequestType::SetMouseStatus:
+	case VBoxRequestType::SetMouseStatus:
 		handle_set_mouse_status(header, struct_pointer);
 		break;
-	case RequestType::SetPointerShape:
+	case VBoxRequestType::SetPointerShape:
 		handle_set_pointer_shape(header, struct_pointer);
 		break;
-	case RequestType::ReportGuestInfo:
+	case VBoxRequestType::ReportGuestInfo:
 		handle_report_guest_info(header, struct_pointer);
 		break;
-	default: warn_unsupported_request(header.request_type); break;
+	default: handle_error_unsupported_request(header); break;
 	}
 }
 

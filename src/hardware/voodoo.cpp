@@ -5,7 +5,7 @@
  */
 
 /*
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -103,7 +103,7 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "render.h"
-#include "semaphore.h"
+#include "semaphore_internal.h"
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
@@ -248,7 +248,7 @@ struct poly_vertex
  *************************************/
 
 /* enumeration specifying which model of Voodoo we are emulating */
-enum
+enum VoodooModel
 {
 	VOODOO_1,
 	VOODOO_1_DTMU,
@@ -879,10 +879,11 @@ struct raster_info
 };
 #endif
 
-struct draw_state
-{
+constexpr auto VoodooDefaultRefreshRateHz = 60.0;
+
+struct draw_state {
 	double frame_start           = 0.0;
-	double vfreq                 = 0.0;
+	double frame_period_ms       = 1000.0 / VoodooDefaultRefreshRateHz;
 	bool override_on             = false;
 	bool screen_update_requested = false;
 	bool screen_update_pending   = false;
@@ -1066,8 +1067,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	}
 
 	/* if the resulting value is 0, the reciprocal is infinite */
-	if (GCC_UNLIKELY(temp == 0))
-	{
+	if (temp == 0) {
 		*log_2 = 1000 << LOG_OUTPUT_PREC;
 		return neg ? 0x80000000 : 0x7fffffff;
 	}
@@ -3003,33 +3003,9 @@ iterated W    = 18.32 [48 bits]
 **************************************************************************/
 
 static voodoo_state* v = nullptr;
-static uint8_t vtype   = VOODOO_1;
-
-enum class PerformanceFlags : uint8_t {
-	None                = 0,
-	MultiThreading      = 1 << 0,
-	NoBilinearFiltering = 1 << 1,
-	All                 = (MultiThreading | NoBilinearFiltering),
-};
-
-static const char* describe_performance_flags(const PerformanceFlags flags)
-{
-	// Note: the descriptions are meant to be used as a status postfix
-	switch (flags) {
-	case PerformanceFlags::None:
-		return " and no optimizations";
-	case PerformanceFlags::MultiThreading:
-		return " and multi-threading";
-	case PerformanceFlags::NoBilinearFiltering:
-		return " and no bilinear filtering";
-	case PerformanceFlags::All:
-		return ", multi-threading, and no biliear filtering";
-	}
-	assert(false);
-	return "unknown performance flag";
-}
-
-static PerformanceFlags vperf = {};
+static auto vtype = VOODOO_1;
+static auto voodoo_multithreading     = true;
+static auto voodoo_bilinear_filtering = false;
 
 #define LOG_VOODOO LOG_PCI
 enum {
@@ -6777,6 +6753,8 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
  *************************************/
 static uint32_t register_r(const uint32_t offset)
 {
+	using namespace bit::literals;
+
 	const auto regnum = static_cast<uint8_t>((offset) & 0xff);
 
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
@@ -6809,7 +6787,6 @@ static uint32_t register_r(const uint32_t offset)
 				// bit 7 is FBI graphics engine busy
 				// bit 8 is TREX busy
 				// bit 9 is overall busy
-				using namespace bit::literals;
 				result |= (b7 | b8 | b9);
 			}
 
@@ -7111,7 +7088,7 @@ static void voodoo_init() {
 	}
 	// Sanity-check sizes
 	assert(fbmemsize > 0);
-	assert(tmumem0 > 0 && tmumem1 > 0);
+	assert(tmumem0 > 0);
 
 	if (tmumem1 != 0) {
 		v->tmu_config |= 0xc0;	// two TMUs
@@ -7224,7 +7201,7 @@ static void voodoo_update_dimensions(void) {
 static void Voodoo_VerticalTimer(uint32_t /*val*/)
 {
 	v->draw.frame_start = PIC_FullIndex();
-	PIC_AddEvent(Voodoo_VerticalTimer, v->draw.vfreq);
+	PIC_AddEvent(Voodoo_VerticalTimer, v->draw.frame_period_ms);
 
 	if (v->fbi.vblank_flush_pending) {
 		voodoo_vblank_flush();
@@ -7270,16 +7247,16 @@ static void Voodoo_VerticalTimer(uint32_t /*val*/)
 static bool Voodoo_GetRetrace() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
-	const auto vfreq         = v->draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = v->draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return false;
 	}
 	if (v->clock_enabled && v->output_on) {
-		if ((time_in_frame / vfreq) > 0.95) {
+		if ((time_in_frame / frame_period_ms) > 0.95) {
 			return true;
 		}
 	} else if (v->output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		if (rtime > 0.95) {
 			return true;
@@ -7291,15 +7268,15 @@ static bool Voodoo_GetRetrace() {
 static double Voodoo_GetVRetracePosition() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
-	const auto vfreq         = v->draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = v->draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return 0.0;
 	}
 	if (v->clock_enabled && v->output_on) {
-		return time_in_frame/vfreq;
+		return time_in_frame / frame_period_ms;
 	}
 	if (v->output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		return rtime;
 	}
@@ -7310,7 +7287,7 @@ static double Voodoo_GetHRetracePosition() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
 
-	const auto hfreq = v->draw.vfreq * 100;
+	const auto hfreq = v->draw.frame_period_ms * 100;
 
 	if (hfreq <= 0) {
 		return 0.0;
@@ -7336,6 +7313,7 @@ static void Voodoo_UpdateScreen()
 		PIC_RemoveEvents(Voodoo_VerticalTimer);
 		voodoo_leave();
 
+		// Let the underlying VGA card resume rendering
 		VGA_SetOverride(false);
 		v->draw.override_on=false;
 	}
@@ -7343,11 +7321,20 @@ static void Voodoo_UpdateScreen()
 	if ((v->clock_enabled && v->output_on) && !v->draw.override_on) {
 		// switching on
 		PIC_RemoveEvents(Voodoo_VerticalTimer); // shouldn't be needed
-		
-		// TODO proper implementation of refresh rates and timings
-		v->draw.vfreq = 1000.0 / 60.0;
-		VGA_SetOverride(true);
-		v->draw.override_on=true;
+
+		// Indicate to the underlying VGA card that it should stop
+		// rendering. This is equivalent to when the Voodoo card
+		// switched from passive pass-thru mode to active output mode.
+		//
+		VGA_SetOverride(true, VoodooDefaultRefreshRateHz);
+
+		v->draw.frame_period_ms = 1000.0 / VGA_GetPreferredRate();
+		//
+		// The user's 'dos_rate' preference controls the preferred rate.
+		// When set to 'auto', we'll get back the Voodoo default rate.
+		// Otherwise we'll get the user's custom rate.
+
+		v->draw.override_on = true;
 
 		voodoo_activate();
 
@@ -7357,34 +7344,39 @@ static void Voodoo_UpdateScreen()
 		} else
 #endif
 		{
-			const auto width  = v->fbi.width;
-			const auto height = v->fbi.height;
+			ImageInfo image_info = {};
 
-			constexpr auto double_width  = false;
-			constexpr auto double_height = false;
+			const auto width  = check_cast<uint16_t>(v->fbi.width);
+			const auto height = check_cast<uint16_t>(v->fbi.height);
 
-			constexpr Fraction render_pixel_aspect_ratio = {1};
+			image_info.width                = width;
+			image_info.height               = height;
+			image_info.double_width         = false;
+			image_info.double_height        = false;
+			image_info.forced_single_scan   = false;
+			image_info.rendered_double_scan = false;
+			image_info.pixel_aspect_ratio   = {1};
+			image_info.pixel_format = PixelFormat::RGB565_Packed16;
 
-			VideoMode video_mode        = {};
-			video_mode.bios_mode_number = 0;
-			video_mode.width  = check_cast<uint16_t>(width);
-			video_mode.height = check_cast<uint16_t>(height);
-			video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio;
-			video_mode.graphics_standard  = GraphicsStandard::Svga;
-			video_mode.color_depth        = ColorDepth::HighColor16Bit;
+			VideoMode video_mode = {};
+
+			video_mode.bios_mode_number   = 0;
 			video_mode.is_custom_mode     = false;
 			video_mode.is_graphics_mode   = true;
+			video_mode.width              = width;
+			video_mode.height             = height;
+			video_mode.pixel_aspect_ratio = {1};
+			video_mode.graphics_standard  = GraphicsStandard::Svga;
+			video_mode.color_depth = ColorDepth::HighColor16Bit;
+			video_mode.is_double_scanned_mode = false;
+			video_mode.has_vga_colors         = false;
 
-			const auto frames_per_second  = 1000.0f / v->draw.vfreq;
+			image_info.video_mode = video_mode;
 
-			RENDER_SetSize(width,
-			               height,
-			               double_width,
-			               double_height,
-			               render_pixel_aspect_ratio,
-			               PixelFormat::RGB565_Packed16,
-			               frames_per_second,
-			               video_mode);
+			const auto frames_per_second = static_cast<float>(
+			        1000.0 / v->draw.frame_period_ms);
+
+			RENDER_SetSize(image_info, frames_per_second);
 		}
 
 		Voodoo_VerticalTimer(0);
@@ -7737,26 +7729,13 @@ static void Voodoo_Startup() {
 	voodoo_init();
 
 	v->draw = {};
-	v->draw.vfreq = 1000.0 / 60.0;
 
-	v->tworker.use_threads = (vperf == PerformanceFlags::MultiThreading ||
-	                          vperf == PerformanceFlags::All);
-
-	v->tworker.disable_bilinear_filter = (vperf == PerformanceFlags::NoBilinearFiltering ||
-	                                      vperf == PerformanceFlags::All);
+	v->tworker.use_threads = voodoo_multithreading;
+	v->tworker.disable_bilinear_filter = (voodoo_bilinear_filtering == false);
 
 	// Switch the pagehandler now that v has been allocated and is in use
 	voodoo_pagehandler = &voodoo_real_pagehandler;
 	PAGING_InitTLB();
-
-	// Log the startup
-	const auto ram_size_mb = (vtype == VOODOO_1_DTMU ? 12 : 4);
-
-	const auto performance_msg = describe_performance_flags(vperf);
-
-	LOG_MSG("VOODOO: Initialized with %d MB of RAM%s",
-	        ram_size_mb,
-	        performance_msg);
 }
 
 PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
@@ -7771,17 +7750,17 @@ void VOODOO_Init(Section* sec)
 {
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
-	// Only activate on SVGA machines
-	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
+	// Only activate on SVGA machines and when requested
+	if (machine != MCH_VGA || svgaCard == SVGA_None || !section ||
+	    !section->Get_bool("voodoo")) {
 		return;
 	}
+	//
+	const std::string memsize_pref = section->Get_string("voodoo_memsize");
+	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
-	switch (section->Get_string("voodoo_memsize")[0])
-	{
-	case '1': vtype = VOODOO_1_DTMU; break; // 12 MB
-	case '4': vtype = VOODOO_1; break;      // 4 MB
-	default: return;                        // disabled
-	}
+	voodoo_multithreading = section->Get_bool("voodoo_multithreading");
+	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
 
 	sec->AddDestroyFunction(&VOODOO_Destroy,false);
 
@@ -7791,7 +7770,11 @@ void VOODOO_Init(Section* sec)
 	voodoo_current_lfb = PciVoodooLfbBase;
 	voodoo_pagehandler = &voodoo_init_pagehandler;
 
-	vperf = static_cast<PerformanceFlags>(section->Get_int("voodoo_perf"));
-
 	PCI_AddDevice(new PCI_SSTDevice());
+
+	// Log the startup
+	LOG_MSG("VOODOO: Initialized with %s MB of RAM, %smultithreading, and %sbilinear filtering",
+	        memsize_pref.c_str(),
+	        (voodoo_multithreading ? "" : "no "),
+	        (voodoo_bilinear_filtering ? "" : "no "));
 }

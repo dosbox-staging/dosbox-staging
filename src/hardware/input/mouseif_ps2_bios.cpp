@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,6 @@
 #include "regs.h"
 
 #include "../../ints/int10.h"
-
-using namespace bit::literals;
 
 CHECK_NARROWING();
 
@@ -76,7 +74,7 @@ static const std::vector<uint8_t> list_resolutions = {
 
 // clang-format on
 
-enum class Command : uint8_t { // PS/2 AUX (mouse) port commands
+enum class AuxCommand : uint8_t { // PS/2 AUX (mouse) port commands
 	None          = 0x00,
 	SetScaling11  = 0xe6,
 	SetScaling21  = 0xe7,
@@ -101,7 +99,7 @@ static uint8_t delay_ms = 5;
 // true = delay timer is in progress
 static bool delay_running = false;
 // true = delay timer expired, event can be sent immediately
-static bool delay_finished = true;
+static bool delay_expired = true;
 
 static MouseButtonsAll buttons;     // currently visible button state
 static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
@@ -133,13 +131,13 @@ static bool mode_remote  = false; // true = remote mode, false = stream mode
 static bool mode_wrap    = false; // true = wrap mode
 
 // Command currently being executed, waiting for parameter
-static Command current_command = Command::None;
+static AuxCommand current_command = AuxCommand::None;
 
 // ***************************************************************************
 // Helper routines to log various warnings
 // ***************************************************************************
 
-static void warn_unknown_command(const Command command)
+static void warn_unknown_command(const AuxCommand command)
 {
 	static bool already_warned[UINT8_MAX + 1];
 	const uint8_t code = static_cast<uint8_t>(command);
@@ -261,6 +259,8 @@ static void reset_counters()
 
 static void build_protocol_frame(const bool is_polling = false)
 {
+	using namespace bit::literals;
+
 	union {
 		uint8_t _data = 0x08;
 
@@ -327,6 +327,7 @@ static void build_protocol_frame(const bool is_polling = false)
 	} else if (protocol == MouseModelPS2::Explorer) {
 		frame.resize(4);
 		frame[3] = get_reset_wheel_4bit();
+
 		if (buttons.extra_1) {
 			bit::set(frame[3], b4);
 		}
@@ -343,8 +344,8 @@ static void maybe_transfer_frame(); // forward declaration
 
 static void delay_handler(uint32_t /*val*/)
 {
-	delay_running  = false;
-	delay_finished = true;
+	delay_running = false;
+	delay_expired = true;
 
 	maybe_transfer_frame();
 }
@@ -355,8 +356,8 @@ static void maybe_start_delay_timer(const uint8_t timer_delay_ms)
 		return;
 	}
 	PIC_AddEvent(delay_handler, timer_delay_ms);
-	delay_running  = true;
-	delay_finished = false;
+	delay_running = true;
+	delay_expired = false;
 }
 
 static bool should_report()
@@ -366,7 +367,7 @@ static bool should_report()
 
 static void maybe_transfer_frame()
 {
-	if (!delay_finished) {
+	if (!delay_expired) {
 		maybe_start_delay_timer(delay_ms);
 		return;
 	}
@@ -536,13 +537,15 @@ static void cmd_reset(bool is_startup = false)
 	set_protocol(MouseModelPS2::Standard);
 	frame.clear();
 
-	if (!is_startup) {
+	if (is_startup) {
+		PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false);
+	} else {
 		I8042_AddAuxByte(0xaa); // self-test passed
 		cmd_get_dev_id();
 	}
 }
 
-static void execute_command(const Command command)
+static void execute_command(const AuxCommand command)
 {
 	// LOG_INFO("MOUSEPS2: Command 0x%02x", static_cast<int>(command));
 
@@ -552,62 +555,62 @@ static void execute_command(const Command command)
 	//
 	// Commands requiring a parameter
 	//
-	case Command::SetResolution: // 0xe8
-	case Command::SetSampleRate: // 0xf3
+	case AuxCommand::SetResolution: // 0xe8
+	case AuxCommand::SetSampleRate: // 0xf3
 		current_command = command;
 		break;
 	//
 	// No-parameter commands
 	//
-	case Command::SetScaling11: // 0xe6
+	case AuxCommand::SetScaling11: // 0xe6
 		// Set mouse movement scaling 1:1
 		cmd_set_scaling_21(false);
 		break;
-	case Command::SetScaling21: // 0xe7
+	case AuxCommand::SetScaling21: // 0xe7
 		// Set mouse movement scaling 2:1
 		cmd_set_scaling_21(true);
 		break;
-	case Command::GetStatus: // 0xe9
+	case AuxCommand::GetStatus: // 0xe9
 		// Send a 3-byte status packet
 		cmd_get_status();
 		break;
-	case Command::SetStreamMode: // 0xea
+	case AuxCommand::SetStreamMode: // 0xea
 		// Set stream (non-remote) mode, reset movement counters
 		cmd_set_mode_remote(false);
 		break;
-	case Command::PollFrame: // 0xeb
+	case AuxCommand::PollFrame: // 0xeb
 		// Set mouse data packet, reset movement counters afterwards
 		cmd_poll_frame();
 		break;
-	case Command::ResetWrapMode: // 0xec
+	case AuxCommand::ResetWrapMode: // 0xec
 		// Reset wrap mode, reset movement counters
 		cmd_set_mode_wrap(false);
 		break;
-	case Command::SetWrapMode: // 0xee
+	case AuxCommand::SetWrapMode: // 0xee
 		// Set wrap mode, reset movement counters
 		cmd_set_mode_wrap(true);
 		break;
-	case Command::SetRemoteMode: // 0xf0
+	case AuxCommand::SetRemoteMode: // 0xf0
 		// Set remote (non-stream) mode, reset movement counters
 		cmd_set_mode_remote(true);
 		break;
-	case Command::GetDevId: // 0xf2
+	case AuxCommand::GetDevId: // 0xf2
 		// Send current protocol ID, reset movement counters
 		cmd_get_dev_id();
 		break;
-	case Command::EnableDev: // 0xf4
+	case AuxCommand::EnableDev: // 0xf4
 		// Enable reporting in stream mode, reset movement counters
 		cmd_set_reporting(true);
 		break;
-	case Command::DisableDev: // 0xf5
+	case AuxCommand::DisableDev: // 0xf5
 		// Disable reporting in stream mode, reset movement counters
 		cmd_set_reporting(false);
 		break;
-	case Command::SetDefaults: // 0xf6
+	case AuxCommand::SetDefaults: // 0xf6
 		// Load defaults, reset movement counters, enter stream mode
 		cmd_set_defaults();
 		break;
-	case Command::ResetDev: // 0xff
+	case AuxCommand::ResetDev: // 0xff
 		// Enter reset mode
 		cmd_reset();
 		break;
@@ -615,7 +618,7 @@ static void execute_command(const Command command)
 	}
 }
 
-static void execute_command(const Command command, const uint8_t param)
+static void execute_command(const AuxCommand command, const uint8_t param)
 {
 	// LOG_INFO("MOUSEPS2: Command 0x%02x, parameter 0x%02x",
 	//          static_cast<int>(command), param);
@@ -623,11 +626,11 @@ static void execute_command(const Command command, const uint8_t param)
 	I8042_AddAuxByte(0xfa); // acknowledge
 
 	switch (command) {
-	case Command::SetResolution: // 0xe8
+	case AuxCommand::SetResolution: // 0xe8
 		// Set mouse resolution, reset movement counters
 		cmd_set_resolution(param);
 		break;
-	case Command::SetSampleRate: // 0xf3
+	case AuxCommand::SetSampleRate: // 0xf3
 		// Set mouse resolution, reset movement counters
 		// Magic sequences change mouse protocol
 		cmd_set_sample_rate(param);
@@ -646,19 +649,19 @@ bool MOUSEPS2_PortWrite(const uint8_t byte)
 		return false; // no mouse emulated
 	}
 
-	if (byte != static_cast<uint8_t>(Command::ResetDev) && mode_wrap &&
-	    byte != static_cast<uint8_t>(Command::ResetWrapMode)) {
+	if (byte != static_cast<uint8_t>(AuxCommand::ResetDev) && mode_wrap &&
+	    byte != static_cast<uint8_t>(AuxCommand::ResetWrapMode)) {
 		I8042_AddAuxByte(byte); // wrap mode, just send bytes back
 		return true;
 	}
 
 	const auto command = current_command;
-	if (command != Command::None) {
+	if (command != AuxCommand::None) {
 		// Continue execution of previous command
-		current_command = Command::None;
+		current_command = AuxCommand::None;
 		execute_command(command, byte);
 	} else {
-		execute_command(static_cast<Command>(byte));
+		execute_command(static_cast<AuxCommand>(byte));
 	}
 
 	return true;
@@ -750,13 +753,13 @@ static RealPt ps2_callback   = 0;
 
 std::vector<uint8_t> bios_buffer = {};
 
-static bool bios_delay_running  = false;
-static bool bios_delay_finished = true;
+static bool bios_delay_running = false;
+static bool bios_delay_expired = true;
 
 static void bios_delay_handler(uint32_t /*val*/)
 {
-	bios_delay_running  = false;
-	bios_delay_finished = true;
+	bios_delay_running = false;
+	bios_delay_expired = true;
 
 	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
 }
@@ -770,15 +773,15 @@ static void bios_maybe_start_delay_timer()
 	}
 
 	PIC_AddEvent(bios_delay_handler, timer_delay_ms);
-	bios_delay_running  = true;
-	bios_delay_finished = false;
+	bios_delay_running = true;
+	bios_delay_expired = false;
 }
 
 static void bios_cancel_delay_timer()
 {
 	PIC_RemoveEvents(bios_delay_handler);
-	bios_delay_running  = false;
-	bios_delay_finished = true;
+	bios_delay_running = false;
+	bios_delay_expired = true;
 }
 
 static bool bios_enable()
@@ -803,6 +806,8 @@ static bool bios_disable()
 
 static bool bios_is_aux_byte_waiting()
 {
+	using namespace bit::literals;
+
 	const auto byte = IO_ReadB(0x64);
 	return bit::is(byte, b0) && bit::is(byte, b5);
 }

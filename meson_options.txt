@@ -64,7 +64,68 @@ option(
     type: 'combo',
     choices: ['auto', 'true', 'false'],
     value: 'auto',
-    description: 'Let ManyMouse use the X Input 2.0 protocol.'
+    description: 'Let ManyMouse use the X Input 2.0 protocol.',
+)
+
+# The meson.build either uses zlib-ng if its found as a system library or
+# compiles it as a built-in (provided CMake is available and Meson is at
+# least version 1.3.0), in that order.
+#
+# The built-in will use native SIMD instructions by default, however if you're
+# targeting a range of hardware then set this to the most conservative set of
+# SIMD instructions for your needs. For example, if you want to be sure your
+# binary runs on Intel's Core 2 Duo, set: meson setup -Duse_zlib_ng=sse2,ssse3
+#
+# To disable zlib-ng use -Duse_zlib_ng=false
+# To only use the built-in: --wrap-mode=forcefallback or --force-fallback-for=zlib-ng
+#
+option(
+    'use_zlib_ng',
+    type: 'array',
+    choices: [
+        # Disable zlib-ng; use good old zlib.
+        'false',
+        
+        # Native (default) enables those instruction sets supported
+        # by Meson's build-target machine, which is often the local
+        # system (unless you're cross-compiling).
+        # Only guaranteed when the built-in is used.
+        'native',
+
+        # Enable x86 and x86-64 instruction sets.
+        # Only guaranteed when the built-in is used.
+        'avx2',
+        'avx512',
+        'avx512vnni',
+        'sse2',
+        'ssse3',
+        'sse42',
+        'pclmulqdq',
+        'vpclmulqdq',
+
+        # Enable Arm instruction sets.
+        # Only guaranteed when the built-in is used.
+        'acle',
+        'neon',
+        'armv6',
+
+        # Enable POWER and PowerPC instruction sets.
+        # Only guaranteed when the built-in is used.
+        'altivec',
+        'power8',
+
+        # Enable the RISC-V "V" (vector) instruction set.
+        # Only guaranteed when the built-in is used.
+        'rvv',
+
+        # Enable the IBM Z instruction sets.
+        # Only guaranteed when the built-in is used.
+        'crc32_vx',
+        'dfltcc_deflate',
+        'dfltcc_inflate',
+    ],
+    value: ['native'],
+    description: 'Enable zlib-ng with SIMD optimizations',
 )
 
 option(
@@ -81,6 +142,13 @@ option(
     choices: ['auto', 'dyn-x86', 'dynrec', 'none'],
     value: 'auto',
     description: 'Select the dynamic core implementation.',
+)
+
+option(
+    'pagesize',
+    type: 'integer',
+    value: 0,
+    description: 'Set host memory pagesize in bytes (skip detection)',
 )
 
 # Per-page write-or-execute (W^X) permissions
@@ -118,7 +186,7 @@ option(
     'per_page_w_or_x',
     type: 'feature',
     value: 'auto',
-    description: 'Flag dynamic core memory write-or-execute (W^X) per-page.'
+    description: 'Flag dynamic core memory write-or-execute (W^X) per-page.',
 )
 
 # Use this option for selectively switching dependencies to look for static
@@ -177,4 +245,11 @@ option(
     type: 'boolean',
     value: false,
     description: 'Save intermediate assembly output',
+)
+
+option(
+    'time_trace',
+    type: 'boolean',
+    value: false,
+    description: 'Time build events, for use with the Clang Build Analyzer tool',
 )

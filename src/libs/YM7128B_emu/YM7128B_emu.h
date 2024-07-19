@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2020, Andrea Zoppi
+Copyright (c) 2020-2023, Andrea Zoppi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef _YM7128B_EMU_H_
 #define _YM7128B_EMU_H_
 
+#include <assert.h>
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -54,7 +55,7 @@ extern "C" {
 
 // ============================================================================
 
-#define YM7128B_VERSION "0.1.1"
+#define YM7128B_VERSION "0.1.2"
 
 char const* YM7128B_GetVersion(void);
 
@@ -134,6 +135,9 @@ enum YM7128B_DatasheetSpecs {
 
     //! Output sample rate
     YM7128B_Output_Rate       = YM7128B_Input_Rate * YM7128B_Oversampling,
+
+    //! Minimum register address
+    YM7128B_Address_Min       = 0,
 
     //! Maximum register address
     YM7128B_Address_Max       = YM7128B_Reg_Count - 1,
@@ -453,6 +457,8 @@ void YM7128B_OversamplerFixed_Clear(
     YM7128B_Fixed input
 )
 {
+    assert(self);
+
     for (YM7128B_Oversampler_Index index = 0; index < YM7128B_Oversampler_Length; ++index) {
         self->buffer_[index] = input;
     }
@@ -463,6 +469,8 @@ void YM7128B_OversamplerFixed_Clear(
 YM7128B_INLINE
 void YM7128B_OversamplerFixed_Reset(YM7128B_OversamplerFixed* self)
 {
+    assert(self);
+
     YM7128B_OversamplerFixed_Clear(self, 0);
 }
 
@@ -490,6 +498,8 @@ void YM7128B_OversamplerFloat_Clear(
     YM7128B_Float input
 )
 {
+    assert(self);
+
     for (YM7128B_Oversampler_Index index = 0; index < YM7128B_Oversampler_Length; ++index) {
         self->buffer_[index] = input;
     }

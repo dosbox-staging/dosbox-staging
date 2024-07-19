@@ -30,15 +30,22 @@
 
 CHECK_NARROWING();
 
-// to avoid circular dependency
-uint8_t get_double_scan_row_skip_count(const RenderedImage&);
-
 void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
 
-	auto row_skip_count = get_double_scan_row_skip_count(image);
-	input_decoder.Init(image, row_skip_count);
+	// To reconstruct the raw image, we must skip every second row when
+	// dealing with "baked-in" double scanning. "De-double-scanning" VGA
+	// images has the beneficial side effect that we can use finer vertical
+	// integer scaling steps, so it's worthwhile doing it.
+	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
+
+	// "Baked-in" pixel doubling is only used for the 160x200 16-colour
+	// Tandy/PCjr modes. We wouldn't gain anything by reconstructing the raw
+	// 160-pixel-wide image when upscaling, so we'll just leave it be.
+	const uint8_t pixel_skip_count = 0;
+
+	input_decoder.Init(image, row_skip_count, pixel_skip_count);
 
 	UpdateOutputParamsUpscale();
 
@@ -61,7 +68,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 {
 	constexpr auto target_output_height = 1200;
 
-	auto video_mode = input.params.video_mode;
+	const auto& video_mode = input.params.video_mode;
 
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
@@ -97,7 +104,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		if (is_integer(output.horiz_scale)) {
 			// Ensure the upscaled image is at least 1000px high for
 			// 1:1 pixel aspect ratio images.
-			if (output.height < 1000) {
+
+			constexpr auto MinUpscaledHeight = 1000;
+
+			if (output.height < MinUpscaledHeight) {
 				++output.vert_scale;
 			} else {
 				break;
@@ -106,7 +116,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 			// Ensure fractional horizontal scale factors are
 			// above 2.0, otherwise we'd get bad looking horizontal
 			// blur.
-			if (output.horiz_scale < 2.0f) {
+
+			constexpr auto MinHorizScaleFactor = 2.0f;
+
+			if (output.horiz_scale < MinHorizScaleFactor) {
 				++output.vert_scale;
 			} else {
 				break;

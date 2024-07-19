@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -45,6 +45,7 @@ struct CommandLineArguments {
 	bool noprimaryconf;
 	bool nolocalconf;
 	bool fullscreen;
+	bool list_countries;
 	bool list_glshaders;
 	bool version;
 	bool help;
@@ -55,7 +56,6 @@ struct CommandLineArguments {
 	bool exit;
 	bool securemode;
 	bool noautoexec;
-	std::string opencaptures;
 	std::string working_dir;
 	std::string lang;
 	std::string machine;
@@ -67,71 +67,101 @@ struct CommandLineArguments {
 
 class Config {
 public:
-	CommandLine * cmdline = nullptr;
+	CommandLine* cmdline = nullptr;
+
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist = {};
+	std::deque<Section*> sectionlist          = {};
 	Section_line overwritten_autoexec_section = {};
-	std::string overwritten_autoexec_conf = {};
+	std::string overwritten_autoexec_conf     = {};
+
 	void (*_start_function)(void) = nullptr;
-	bool secure_mode = false; // Sandbox mode
+
+	bool secure_mode = false;
+
 	void ParseArguments();
 
 public:
-	std::vector<std::string> startup_params = {};
-	std::vector<std::string> configfiles = {};
+	std::vector<std::string> startup_params        = {};
+	std::vector<std::string> configfiles           = {};
 	std::vector<std_fs::path> configFilesCanonical = {};
 
-	Config(CommandLine *cmd)
+	Config(CommandLine* cmd)
 	        : cmdline(cmd),
 	          overwritten_autoexec_section("overwritten-autoexec")
 	{
 		assert(cmdline);
-		startup_params.push_back(cmdline->GetFileName());
-		cmdline->FillVector(startup_params);
+		startup_params = cmdline->GetArguments();
+		startup_params.insert(startup_params.begin(),
+		                      cmdline->GetFileName());
+
 		ParseArguments();
 	}
 
 	Config() = default;
-	Config(Config &&source) noexcept;            // move constructor
-	Config(const Config &) = delete;             // block construct-by-value
-	Config &operator=(Config &&source) noexcept; // move assignment
-	Config &operator=(const Config &) = delete;  // block assign-by-value
+	Config(Config&& source) noexcept;            // move constructor
+	Config(const Config&) = delete;              // block construct-by-value
+	Config& operator=(Config&& source) noexcept; // move assignment
+	Config& operator=(const Config&) = delete;   // block assign-by-value
 
 	~Config();
 
-	Section_prop *AddEarlySectionProp(const char *name,
-	                                  SectionFunction func,
+	Section_prop* AddEarlySectionProp(const char* name, SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 
-	Section_line *AddSection_line(const char *section_name, SectionFunction func);
+	Section_line* AddSection_line(const char* section_name, SectionFunction func);
 
-	Section_prop *AddSection_prop(const char *section_name,
-	                              SectionFunction func,
+	Section_prop* AddInactiveSectionProp(const char* section_name);
+	Section_prop* AddSection_prop(const char* section_name, SectionFunction func,
 	                              bool changeable_at_runtime = false);
 
-	auto begin() { return sectionlist.begin(); }
-	auto end() { return sectionlist.end(); }
+	auto begin()
+	{
+		return sectionlist.begin();
+	}
+	auto end()
+	{
+		return sectionlist.end();
+	}
 
-	Section *GetSection(const std::string &section_name) const;
-	Section *GetSectionFromProperty(const char *prop) const;
+	Section* GetSection(const std::string_view section_name) const;
+	Section* GetSectionFromProperty(const char* prop) const;
 
-	void OverwriteAutoexec(const std::string &conf, const std::string &line);
-	const Section_line &GetOverwrittenAutoexecSection() const;
-	const std::string &GetOverwrittenAutoexecConf() const;
+	void OverwriteAutoexec(const std::string& conf, const std::string& line);
+	const Section_line& GetOverwrittenAutoexecSection() const;
+	const std::string& GetOverwrittenAutoexecConf() const;
 
 	void SetStartUp(void (*_function)(void));
 	void Init() const;
 	void ShutDown();
 	void StartUp();
-	bool PrintConfig(const std::string &filename) const;
+
+	bool WriteConfig(const std_fs::path& path) const;
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
+
 	void ParseEnv();
-	bool SecureMode() const { return secure_mode; }
-	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
+	void ParseConfigFiles(const std_fs::path& config_path);
+	const std::string& GetLanguage();
+	const char* SetProp(std::vector<std::string>& pvars);
+
+	bool SecureMode() const
+	{
+		return secure_mode;
+	}
+
+	void SwitchToSecureMode()
+	{
+		secure_mode = true;
+	}
+
 	Verbosity GetStartupVerbosity() const;
 };
+
+using ConfigPtr = std::unique_ptr<Config>;
+extern ConfigPtr control;
+
+void restart_dosbox(std::vector<std::string> &parameters = control->startup_params);
 
 #endif

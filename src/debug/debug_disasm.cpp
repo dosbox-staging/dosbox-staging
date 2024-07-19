@@ -64,11 +64,11 @@ Any comments/updates/bug reports to:
 */
 #include "dosbox.h"
 #if C_DEBUG
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
 #include "mem.h"
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 typedef uint8_t  UINT8;
 typedef uint16_t UINT16;
@@ -468,8 +468,9 @@ static char *addr_to_hex(UINT32 addr, int splitup) {
 static PhysPt getbyte_mac;
 static PhysPt startPtr;
 
-static UINT8 getbyte(void) {
-	return mem_readb(getbyte_mac++);
+static UINT8 getbyte()
+{
+	return mem_readb<MemOpMode::SkipBreakpoints>(getbyte_mac++);
 }
 
 /*

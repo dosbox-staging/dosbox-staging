@@ -18,7 +18,9 @@
 
 #include "dosbox.h"
 
+#include "control.h"
 #include "dos_inc.h"
+#include "dos_memory.h"
 #include "mem.h"
 #include "support.h"
 
@@ -310,7 +312,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	uint16_t total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
-		if (GCC_UNLIKELY(*blocks==total)) {
+		if (*blocks == total) {
 			/* Nothing to do */
 			return true;
 		}
@@ -468,6 +470,12 @@ bool DOS_LinkUMBsToMemChain(uint16_t linkstate) {
 	return true;
 }
 
+static constexpr uint16_t kilobytes_to_segment(size_t address_kb)
+{
+	constexpr auto bytes_per_segment = 16;
+	constexpr auto bytes_per_kilobyte = 1024;
+	return (address_kb * bytes_per_kilobyte) / bytes_per_segment;
+}
 
 void DOS_SetupMemory(void) {
 	/* Let dos claim a few bios interrupts. Makes DOSBox more compatible with 
@@ -480,7 +488,7 @@ void DOS_SetupMemory(void) {
 	RealSetVec(0x02,RealMake(ihseg,ihofs));		//BioMenace (segment<0x8000)
 	RealSetVec(0x03,RealMake(ihseg,ihofs));		//Alien Incident (offset!=0)
 	RealSetVec(0x04,RealMake(ihseg,ihofs));		//Shadow President (lower byte of segment!=0)
-	RealSetVec(0x0f,RealMake(ihseg,ihofs));		//Always a tricky one (soundblaster irq)
+	RealSetVec(0x0f,RealMake(ihseg,ihofs));		//Always a tricky one (Sound Blaster irq)
 
 	// Create a dummy device MCB with PSPSeg=0x0008
 	DOS_MCB mcb_devicedummy((uint16_t)DOS_MEM_START);
@@ -504,33 +512,65 @@ void DOS_SetupMemory(void) {
 	mcb_sizes+=17;
 	tempmcb2.SetType(middle_mcb_type);
 
-	DOS_MCB mcb((uint16_t)DOS_MEM_START+mcb_sizes);
-	mcb.SetPSPSeg(MCB_FREE);						//Free
-	mcb.SetType(ending_mcb_type); // Last Block
 	if (machine==MCH_TANDY) {
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
-		mcb.SetSize(0x9BFF - DOS_MEM_START - mcb_sizes);
+		DOS_MCB free_block((uint16_t)DOS_MEM_START+mcb_sizes);
+		free_block.SetPSPSeg(MCB_FREE);
+		free_block.SetType(ending_mcb_type);
+		free_block.SetSize(0x9BFF - DOS_MEM_START - mcb_sizes);
 	} else if (machine==MCH_PCJR) {
-		/* memory from 128k to 640k is available */
-		mcb_devicedummy.SetPt((uint16_t)0x2000);
-		mcb_devicedummy.SetPSPSeg(MCB_FREE);
-		mcb_devicedummy.SetSize(umb_start_seg - 0x2000);
-		mcb_devicedummy.SetType(ending_mcb_type);
+		const auto pcjr_start = DOS_MEM_START + mcb_sizes;
+		constexpr auto mcb_entry_size = 1;
 
-		/* exclude PCJr graphics region */
-		mcb_devicedummy.SetPt((uint16_t)0x17ff);
-		mcb_devicedummy.SetPSPSeg(MCB_DOS);
-		mcb_devicedummy.SetSize(0x800);
-		mcb_devicedummy.SetType(middle_mcb_type);
+		// PCjr video memory uses 32KB shared RAM
+		constexpr auto video_memory_start =
+			kilobytes_to_segment(PcjrStandardMemorySizeKb - PcjrVideoMemorySizeKb);
 
-		/* memory below 96k */
-		mcb.SetSize(0x1800 - DOS_MEM_START - (2+mcb_sizes));
-		mcb.SetType(middle_mcb_type);
+		const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
+		assert(section);
+		const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+		if (pcjr_memory_config == "expanded") {
+			// With expanded memory, reserve the lower memory up to video memory.
+			// This makes application memory contiguous in order to prevent crashes.
+			// This is needed to prevent Sierra AGI games from crashing.
+			// Further details:
+			// https://www.atarimagazines.com/compute/issue58/pcjr_memory.html
+
+			// Space Quest version 1.0x is a special case.
+			// It requires an additional 16 KB above the 32KB video memory to be reserved.
+			constexpr auto application_segment =
+				video_memory_start + kilobytes_to_segment(PcjrVideoMemorySizeKb + 16);
+
+			// The size from the MCB entry itself must be subtracted from the total size.
+			const auto reserved_size = application_segment - pcjr_start - mcb_entry_size;
+			constexpr auto application_size = umb_start_seg - application_segment - mcb_entry_size;
+
+			DOS_MCB reserved(pcjr_start);
+			reserved.SetPSPSeg(MCB_DOS);
+			reserved.SetSize(reserved_size);
+			reserved.SetType(middle_mcb_type);
+
+			DOS_MCB free_block(application_segment);
+			free_block.SetPSPSeg(MCB_FREE);
+			free_block.SetSize(application_size);
+			free_block.SetType(ending_mcb_type);
+		} else {
+			// No expanded memory means the lower 96KB is usable for applications
+			assert(pcjr_memory_config == "standard");
+
+			DOS_MCB free_block(pcjr_start);
+			free_block.SetPSPSeg(MCB_FREE);
+			free_block.SetSize(video_memory_start - pcjr_start - mcb_entry_size);
+			free_block.SetType(ending_mcb_type);
+		}
 	} else {
 		/* complete memory up to 640k available */
 		/* last paragraph used to add UMB chain to low-memory MCB chain */
-		mcb.SetSize(0x9FFE - DOS_MEM_START - mcb_sizes);
+		DOS_MCB free_block((uint16_t)DOS_MEM_START+mcb_sizes);
+		free_block.SetPSPSeg(MCB_FREE);
+		free_block.SetType(ending_mcb_type);
+		free_block.SetSize(0x9FFE - DOS_MEM_START - mcb_sizes);
 	}
 
 	dos.firstMCB=DOS_MEM_START;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 #include "dos_system.h"
 
-#include <string.h>
+#include <cstring>
 
 #include "dosbox.h"
 #include "callback.h"
@@ -53,7 +53,7 @@ public:
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation() override;
 	bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
 	                            uint16_t* retcode) override;
@@ -161,9 +161,8 @@ bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 	return true;
 }
 
-bool DOS_ExtDevice::Close()
+void DOS_ExtDevice::Close()
 {
-	return true;
 }
 
 bool DOS_ExtDevice::Seek([[maybe_unused]] uint32_t *pos, [[maybe_unused]] uint32_t type)
@@ -238,7 +237,7 @@ RealPt DOS_CheckExtDevice(const std::string_view name, const bool skip_existing_
 	// start walking the device chain of real pointers
 	auto rp = dos_infoblock.GetDeviceChain();
 
-	while (!DOS_IsLastDevice(rp)) {
+	while (!DOS_IsEndPointer(rp)) {
 		if (!is_a_driver(rp) || !DOS_DeviceHasName(rp, name)) {
 			rp = DOS_GetNextDevice(rp);
 			continue;
@@ -290,9 +289,8 @@ public:
 		LOG(LOG_IOCTL, LOG_NORMAL)("%s:SEEK", GetName());
 		return true;
 	}
-	bool Close() override
+	void Close() override
 	{
-		return true;
 	}
 	uint16_t GetInformation() override
 	{
@@ -339,8 +337,8 @@ bool DOS_Device::Seek(uint32_t * pos,uint32_t type) {
 	return Devices[devnum]->Seek(pos,type);
 }
 
-bool DOS_Device::Close() {
-	return Devices[devnum]->Close();
+void DOS_Device::Close() {
+	Devices[devnum]->Close();
 }
 
 uint16_t DOS_Device::GetInformation() { 
@@ -371,8 +369,7 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	date=orig.date;
 	attr=orig.attr;
 	refCtr=orig.refCtr;
-	open=orig.open;
-	newtime = orig.newtime;
+	flush_time_on_close = orig.flush_time_on_close;
 	hdrive=orig.hdrive;
 	name = orig.name;
 	return *this;
@@ -389,8 +386,9 @@ uint8_t DOS_FindDevice(const char* name)
 	if(name_part) {
 		*name_part++ = 0;
 		// Check validity of leading directory.
-		//  if(!Drives.at(drive)->TestDir(fullname))
-		//      return DOS_DEVICES; //can be invalid
+		if(!Drives.at(drive)->TestDir(fullname)) {
+			return DOS_DEVICES;
+		}
 	} else
 		name_part = fullname;
 
@@ -471,7 +469,7 @@ void DOS_DelDevice(DOS_Device * dev) {
 // interrupt  08h     Word      Device interrupt routine offset.
 // name       0Ah     8 Bytes   Device name padded with spaces.
 //
-// Ref: https://www.infradeaorg/devload/DOSTables.html, Appendix 2
+// Ref: https://www.infradead.org/devload/DOSTables.html, Appendix 2
 //
 namespace DeviceDriverInfo {
 constexpr uint8_t next_rpt_offset = 0x00;   // DWORD, points to next driver in
@@ -486,8 +484,8 @@ constexpr uint8_t name_offset = 0x0a;       // 8 bytes, device name padded with
 constexpr size_t name_length = 8;
 } // namespace DeviceDriverInfo
 
-// Indicates if the device at the given real pointer is the last in DOS's chain
-bool DOS_IsLastDevice(const RealPt rp)
+// Special pointer value indicating the end of the DOS device linked list
+bool DOS_IsEndPointer(const RealPt rp)
 {
 	constexpr uint16_t last_offset_marker = 0xffff;
 	return RealOffset(rp) == last_offset_marker;
@@ -503,12 +501,15 @@ RealPt DOS_GetNextDevice(const RealPt rp)
 // Get the tail real pointer from the DOS device driver linked list
 RealPt DOS_GetLastDevice()
 {
-	auto rp = dos_infoblock.GetDeviceChain();
+	RealPt current = dos_infoblock.GetDeviceChain();
+	RealPt next = current;
 
-	while (!DOS_IsLastDevice(rp)) {
-		rp = DOS_GetNextDevice(rp);
+	while (!DOS_IsEndPointer(next)) {
+		current = next;
+		next = DOS_GetNextDevice(current);
 	}
-	return rp;
+
+	return current;
 }
 
 // Append the device at the given address to the end of the DOS device linked list
@@ -544,21 +545,20 @@ bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name)
 	const auto segment    = RealSegment(rp);
 	const auto offset     = RealOffset(rp) + DeviceDriverInfo::name_offset;
 
-	const auto search_len = std::min(req_name.length(),
-	                                 DeviceDriverInfo::name_length);
+	std::string device_name = {};
+	for (size_t i = 0; i < DeviceDriverInfo::name_length; ++i) {
+		const char c = static_cast<char>(real_readb(segment, check_cast<uint16_t>(offset + i)));
 
-	for (uint8_t i = 0; i < search_len; ++i) {
-		// source and requested characters
-		const auto s = real_readb(segment, check_cast<uint16_t>(offset + i));
-		const auto r = req_name[i];
-		if (r == '\0') {
+		// Device name should be padded with spaces if it is less than name length (8 characters)
+		// Also stop reading upon encountering a null termination or control codes to be safe
+		if (c <= 0x20) {
 			break;
 		}
-		if (r != static_cast<char>(s)) {
-			return false;
-		}
+
+		device_name.push_back(c);
 	}
-	return true;
+
+	return device_name == req_name;
 }
 
 void DOS_SetupDevices() {

@@ -35,9 +35,10 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Tracy|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -47,7 +48,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -61,13 +62,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>ClangCL</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -148,6 +149,7 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgAutoLink>false</VcpkgAutoLink>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -162,19 +164,17 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <FloatingPointExceptions>true</FloatingPointExceptions>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
+      <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;fluidsynth.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -206,20 +206,17 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
-      <FloatingPointExceptions>true</FloatingPointExceptions>
       <MinimalRebuild>false</MinimalRebuild>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;fluidsynth.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -256,18 +253,14 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile />
@@ -312,14 +305,12 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
@@ -370,18 +361,14 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;fluidsynth.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>
@@ -427,14 +414,12 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
@@ -467,6 +452,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\dosbox.cpp" />
+    <ClCompile Include="..\src\dos\cdrom_win32.cpp" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addch.c" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addchstr.c" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addstr.c" />
@@ -533,6 +519,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\cpu\core_simple.cpp" />
     <ClCompile Include="..\src\cpu\cpu.cpp" />
     <ClCompile Include="..\src\cpu\flags.cpp" />
+    <ClCompile Include="..\src\cpu\mmx.cpp" />
     <ClCompile Include="..\src\cpu\modrm.cpp" />
     <ClCompile Include="..\src\cpu\paging.cpp" />
     <ClCompile Include="..\src\debug\debug.cpp" />
@@ -547,6 +534,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\dos_files.cpp" />
     <ClCompile Include="..\src\dos\dos_ioctl.cpp" />
     <ClCompile Include="..\src\dos\dos_keyboard_layout.cpp" />
+    <ClCompile Include="..\src\dos\dos_locale.cpp" />
     <ClCompile Include="..\src\dos\dos_memory.cpp" />
     <ClCompile Include="..\src\dos\dos_misc.cpp" />
     <ClCompile Include="..\src\dos\dos_mscdex.cpp" />
@@ -573,6 +561,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\program_ls.cpp" />
     <ClCompile Include="..\src\dos\program_mem.cpp" />
     <ClCompile Include="..\src\dos\program_mixer.cpp" />
+    <ClCompile Include="..\src\dos\program_mode.cpp" />
     <ClCompile Include="..\src\dos\program_more.cpp" />
     <ClCompile Include="..\src\dos\program_more_output.cpp" />
     <ClCompile Include="..\src\dos\program_mount_common.cpp" />
@@ -591,6 +580,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\gui\sdlmain.cpp" />
     <ClCompile Include="..\src\gui\sdl_mapper.cpp" />
     <ClCompile Include="..\src\gui\shader_manager.cpp" />
+    <ClCompile Include="..\src\gui\titlebar.cpp" />
     <ClCompile Include="..\src\hardware\adlib_gold.cpp" />
     <ClCompile Include="..\src\hardware\cmos.cpp" />
     <ClCompile Include="..\src\hardware\compressor.cpp" />
@@ -628,6 +618,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\hardware\mpu401.cpp" />
     <ClCompile Include="..\src\hardware\ne2000.cpp" />
     <ClCompile Include="..\src\hardware\opl.cpp" />
+    <ClCompile Include="..\src\hardware\opl_capture.cpp" />
     <ClCompile Include="..\src\hardware\pci_bus.cpp" />
     <ClCompile Include="..\src\hardware\pcspeaker.cpp" />
     <ClCompile Include="..\src\hardware\pcspeaker_discrete.cpp" />
@@ -689,6 +680,8 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\libs\decoders\SDL_sound.c" />
     <ClCompile Include="..\src\libs\decoders\vorbis.c" />
     <ClCompile Include="..\src\libs\decoders\wav.c" />
+    <ClCompile Include="..\src\libs\ESFMu\esfm.c" />
+    <ClCompile Include="..\src\libs\ESFMu\esfm_registers.c" />
     <ClCompile Include="..\src\libs\manymouse\linux_evdev.c" />
     <ClCompile Include="..\src\libs\manymouse\macosx_hidmanager.c" />
     <ClCompile Include="..\src\libs\manymouse\macosx_hidutilities.c" />
@@ -740,16 +733,14 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />
     <ClCompile Include="..\src\shell\shell_cmds.cpp" />
+    <ClCompile Include="..\src\shell\shell_history.cpp" />
     <ClCompile Include="..\src\shell\shell_misc.cpp" />
     <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp" />
     <ClCompile Include="..\src\libs\loguru\loguru.cpp" />
-    <ClCompile Include="..\src\libs\sdlcd\SDL_cdrom.c" />
-    <ClCompile Include="..\src\libs\sdlcd\win32\SDL_syscdrom.c" />
     <ClCompile Include="..\src\libs\whereami\whereami.c" />
     <ClCompile Include="..\src\libs\zmbv\drvproc.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv.cpp" />
     <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp" />
-    <ClCompile Include="..\src\platform\visualc\version.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc" />
@@ -758,57 +749,83 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\ansi_code_markup.h" />
     <ClInclude Include="..\include\audio_frame.h" />
     <ClInclude Include="..\include\autoexec.h" />
+    <ClInclude Include="..\include\bgrx8888.h" />
     <ClInclude Include="..\include\bios.h" />
     <ClInclude Include="..\include\bios_disk.h" />
+    <ClInclude Include="..\include\bit_view.h" />
     <ClInclude Include="..\include\bitops.h" />
     <ClInclude Include="..\include\byteorder.h" />
     <ClInclude Include="..\include\callback.h" />
+    <ClInclude Include="..\include\channel_names.h" />
+    <ClInclude Include="..\include\checks.h" />
     <ClInclude Include="..\include\compiler.h" />
     <ClInclude Include="..\include\control.h" />
     <ClInclude Include="..\include\cpu.h" />
     <ClInclude Include="..\include\cross.h" />
     <ClInclude Include="..\include\debug.h" />
     <ClInclude Include="..\include\dma.h" />
-    <ClInclude Include="..\include\dosbox.h" />
     <ClInclude Include="..\include\dos_inc.h" />
+    <ClInclude Include="..\include\dos_memory.h" />
     <ClInclude Include="..\include\dos_system.h" />
+    <ClInclude Include="..\include\dosbox.h" />
     <ClInclude Include="..\include\drives.h" />
     <ClInclude Include="..\include\envelope.h" />
+    <ClInclude Include="..\include\ethernet.h" />
     <ClInclude Include="..\include\fpu.h" />
+    <ClInclude Include="..\include\fraction.h" />
     <ClInclude Include="..\include\fs_utils.h" />
     <ClInclude Include="..\include\hardware.h" />
     <ClInclude Include="..\include\help_util.h" />
+    <ClInclude Include="..\include\ide.h" />
     <ClInclude Include="..\include\inout.h" />
+    <ClInclude Include="..\include\ipx.h" />
+    <ClInclude Include="..\include\ipxserver.h" />
     <ClInclude Include="..\include\joystick.h" />
     <ClInclude Include="..\include\keyboard.h" />
     <ClInclude Include="..\include\logging.h" />
+    <ClInclude Include="..\include\lpt.h" />
+    <ClInclude Include="..\include\mapper.h" />
+    <ClInclude Include="..\include\math_utils.h" />
     <ClInclude Include="..\include\mem.h" />
     <ClInclude Include="..\include\mem_host.h" />
     <ClInclude Include="..\include\mem_unaligned.h" />
     <ClInclude Include="..\include\midi.h" />
     <ClInclude Include="..\include\mixer.h" />
+    <ClInclude Include="..\include\mmx.h" />
     <ClInclude Include="..\include\mouse.h" />
+    <ClInclude Include="..\include\mpu401.h" />
     <ClInclude Include="..\include\ne2000.h" />
+    <ClInclude Include="..\include\pacer.h" />
     <ClInclude Include="..\include\paging.h" />
     <ClInclude Include="..\include\pci_bus.h" />
     <ClInclude Include="..\include\pic.h" />
     <ClInclude Include="..\include\programs.h" />
+    <ClInclude Include="..\include\rect.h" />
     <ClInclude Include="..\include\reelmagic.h" />
     <ClInclude Include="..\include\regs.h" />
     <ClInclude Include="..\include\render.h" />
     <ClInclude Include="..\include\rgb.h" />
     <ClInclude Include="..\include\rgb555.h" />
     <ClInclude Include="..\include\rgb565.h" />
+    <ClInclude Include="..\include\rgb666.h" />
     <ClInclude Include="..\include\rgb888.h" />
     <ClInclude Include="..\include\rwqueue.h" />
+    <ClInclude Include="..\include\sdlmain.h" />
+    <ClInclude Include="..\include\semaphore_internal.h" />
     <ClInclude Include="..\include\serialport.h" />
     <ClInclude Include="..\include\setup.h" />
     <ClInclude Include="..\include\shell.h" />
+    <ClInclude Include="..\include\std_filesystem.h" />
     <ClInclude Include="..\include\string_utils.h" />
     <ClInclude Include="..\include\support.h" />
     <ClInclude Include="..\include\timer.h" />
+    <ClInclude Include="..\include\tracy.h" />
+    <ClInclude Include="..\include\types.h" />
+    <ClInclude Include="..\include\unicode.h" />
+    <ClInclude Include="..\include\version.h" />
     <ClInclude Include="..\include\vga.h" />
     <ClInclude Include="..\include\video.h" />
+
     <ClInclude Include="..\src\capture\capture.h" />
     <ClInclude Include="..\src\capture\capture_audio.h" />
     <ClInclude Include="..\src\capture\capture_midi.h" />
@@ -855,6 +872,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\debug\debug_inc.h" />
     <ClInclude Include="..\src\dos\cdrom.h" />
     <ClInclude Include="..\src\dos\dev_con.h" />
+    <ClInclude Include="..\src\dos\dos_locale.h" />
     <ClInclude Include="..\src\dos\dos_mscdex.h" />
     <ClInclude Include="..\src\dos\program_autotype.h" />
     <ClInclude Include="..\src\dos\program_ls.h" />
@@ -865,6 +883,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\gui\render_scalers.h" />
     <ClInclude Include="..\src\gui\render_templates.h" />
     <ClInclude Include="..\src\gui\shader_manager.h" />
+    <ClInclude Include="..\src\gui\titlebar.h" />
     <ClInclude Include="..\src\hardware\adlib_gold.h" />
     <ClInclude Include="..\src\hardware\compressor.h" />
     <ClInclude Include="..\src\hardware\covox.h" />
@@ -873,6 +892,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\hardware\innovation.h" />
     <ClInclude Include="..\src\hardware\lpt_dac.h" />
     <ClInclude Include="..\src\hardware\opl.h" />
+    <ClInclude Include="..\src\hardware\opl_capture.h" />
     <ClInclude Include="..\src\hardware\pcspeaker.h" />
     <ClInclude Include="..\src\hardware\pcspeaker_discrete.h" />
     <ClInclude Include="..\src\hardware\pcspeaker_impulse.h" />
@@ -906,7 +926,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\decoders\xxhash.h" />
-    <ClInclude Include="..\src\libs\fontstash\fontstash.h" />
+    <ClInclude Include="..\src\libs\ESFMu\esfm.h" />
     <ClInclude Include="..\src\libs\manymouse\manymouse.h" />
     <ClInclude Include="..\src\libs\mverb\MVerb.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />

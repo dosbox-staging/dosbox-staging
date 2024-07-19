@@ -20,12 +20,11 @@
 #include "dosbox.h"
 #if C_FPU
 
-#include <math.h>
-#include <float.h>
-#include "cross.h"
-#include "mem.h"
-#include "fpu.h"
 #include "cpu.h"
+#include "cross.h"
+#include "fpu.h"
+#include "mem.h"
+#include <cmath>
 
 FPU_rec fpu = {};
 
@@ -503,7 +502,10 @@ void FPU_ESC5_Normal(Bitu rm) {
 	Bitu sub=(rm & 7);
 	switch(group){
 	case 0x00: /* FFREE STi */
-		fpu.tags[STV(sub)]=TAG_Empty;
+		fpu.tags[STV(sub)] = TAG_Empty;
+#if !C_FPU_X86
+		fpu.use_regs_memcpy[STV(sub)] = false;
+#endif
 		break;
 	case 0x01: /* FXCH STi*/
 		FPU_FXCH(TOP,STV(sub));
@@ -621,7 +623,10 @@ void FPU_ESC7_Normal(Bitu rm) {
 	Bitu sub=(rm & 7);
 	switch (group){
 	case 0x00: /* FFREEP STi*/
-		fpu.tags[STV(sub)]=TAG_Empty;
+		fpu.tags[STV(sub)] = TAG_Empty;
+#if !C_FPU_X86
+		fpu.use_regs_memcpy[STV(sub)] = false;
+#endif
 		FPU_FPOP();
 		break;
 	case 0x01: /* FXCH STi*/
@@ -651,6 +656,9 @@ void FPU_ESC7_Normal(Bitu rm) {
 
 
 void FPU_Init(Section*) {
+#if !C_FPU_X86
+	LOG_WARNING("FPU: Using reduced-precision floating-point emulation");
+#endif
 	FPU_FINIT();
 }
 

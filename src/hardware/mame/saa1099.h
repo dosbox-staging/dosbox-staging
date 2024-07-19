@@ -29,7 +29,7 @@
 
 class saa1099_device final : public device_t, public device_sound_interface {
 public:
-	saa1099_device(const machine_config &mconfig, const char *tag, device_t *owner,
+	saa1099_device(const char *tag, device_t *owner,
 	               const uint32_t clock, const int rate_divisor);
 
 	saa1099_device(const saa1099_device &) = delete; // prevent copying
@@ -94,7 +94,5 @@ private:
 	double m_sample_rate;
 	int m_chip_clock;
 };
-
-DECLARE_DEVICE_TYPE(SAA1099, saa1099_device)
 
 #endif // MAME_SOUND_SAA1099_H

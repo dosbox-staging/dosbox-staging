@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 
 #include "dosbox.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "callback.h"
 #include "drives.h"
@@ -44,18 +44,19 @@ void LOADROM::Run(void)
 	}
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
-	if (!DOS_MakeName((char*)temp_line.c_str(), fullname, &drive)) {
+	if (!DOS_MakeName(temp_line.c_str(), fullname, &drive)) {
 		return;
 	}
 
 	try {
 		/* try to read ROM file into buffer */
-		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
 		if (!ldp) {
 			return;
 		}
 
-		FILE* tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		FILE* tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			WriteOut(MSG_Get("PROGRAM_LOADROM_CANT_OPEN"));
 			return;
@@ -113,20 +114,20 @@ void LOADROM::Run(void)
 void LOADROM::AddMessages()
 {
 	MSG_Add("PROGRAM_LOADROM_HELP_LONG",
-	        "Loads a ROM image of the video BIOS or IBM BASIC.\n"
+	        "Load a ROM image of the video BIOS or IBM BASIC.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]loadrom [color=cyan]IMAGEFILE[reset]\n"
+	        "  [color=light-green]loadrom [color=light-cyan]IMAGEFILE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  video BIOS or IBM BASIC ROM image\n"
 	        "\n"
 	        "Notes:\n"
-	        "   After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
-	        "   you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
+	        "  After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
+	        "  you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]\n");
+	        "  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]\n");
 	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE", "Must specify ROM file to load.\n");
 	MSG_Add("PROGRAM_LOADROM_CANT_OPEN", "ROM file not accessible.\n");
 	MSG_Add("PROGRAM_LOADROM_TOO_LARGE", "ROM file too large.\n");

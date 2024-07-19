@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -102,17 +102,14 @@ static void SetActiveEvent(CEvent * event);
 static void SetActiveBind(CBind * _bind);
 extern uint8_t int10_font_14[256 * 14];
 
-static std::vector<CEvent *> events;
-static std::vector<CButton *> buttons;
+static std::vector<std::unique_ptr<CEvent>> events;
+static std::vector<std::unique_ptr<CButton>> buttons;
 static std::vector<CBindGroup *> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
 static std::list<CBind *> all_binds;
 
 typedef std::list<CBind *> CBindList;
-typedef std::list<CEvent *>::iterator CEventList_it;
 typedef std::list<CBind *>::iterator CBindList_it;
-typedef std::vector<CButton *>::iterator CButton_it;
-typedef std::vector<CEvent *>::iterator CEventVector_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
 
 static CBindList holdlist;
@@ -122,7 +119,7 @@ public:
 	CEvent(const char *ev_entry) : bindlist{}
 	{
 		safe_strcpy(entry, ev_entry);
-		events.push_back(this);
+		events.emplace_back(this);
 	}
 
 	virtual ~CEvent() = default;
@@ -596,10 +593,9 @@ static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
 
 class CStickBindGroup : public CBindGroup {
 public:
-	CStickBindGroup(int _stick, uint8_t _emustick, bool _dummy = false)
+	CStickBindGroup(int _stick_index, uint8_t _emustick, bool _dummy = false)
 	        : CBindGroup(),
-	          stick(_stick),       // the number of the physical device (SDL
-	                               // numbering)
+	          stick_index(_stick_index), // the number of the device in the system
 	          emustick(_emustick), // the number of the emulated device
 	          is_dummy(_dummy)
 	{
@@ -619,7 +615,21 @@ public:
 		emulated_hats=0;
 		JOYSTICK_Enable(emustick,true);
 
-		sdl_joystick=SDL_JoystickOpen(_stick);
+		// From the SDL doco
+		// (https://wiki.libsdl.org/SDL2/SDL_JoystickOpen):
+
+		// The device_index argument refers to the N'th joystick presently
+		// recognized by SDL on the system. It is NOT the same as the
+		// instance ID used to identify the joystick in future events.
+
+		// Also see: https://wiki.libsdl.org/SDL2/SDL_JoystickInstanceID
+
+		// We refer to the device index as `stick_index`, and to the
+		// instance ID as `stick_id`.
+
+		sdl_joystick = SDL_JoystickOpen(stick_index);
+		stick_id = SDL_JoystickInstanceID(sdl_joystick);
+
 		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==nullptr) {
 			button_wrap=emulated_buttons;
@@ -648,7 +658,7 @@ public:
 			button_wrap = MAXBUTTON;
 
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
-		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
+		        SDL_JoystickNameForIndex(stick_index), axes, buttons, hats);
 	}
 
 	~CStickBindGroup() override
@@ -699,7 +709,7 @@ public:
 			const int axis_id = event->jaxis.axis;
 			const auto axis_position = event->jaxis.value;
 
-			if (event->jaxis.which != stick)
+			if (event->jaxis.which != stick_id)
 				return nullptr;
 #if defined(REDUCE_JOYSTICK_POLLING)
 			if (axis_id >= axes)
@@ -714,7 +724,7 @@ public:
 			return CreateAxisBind(axis_id, toggled);
 
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
-			if (event->jbutton.which != stick)
+			if (event->jbutton.which != stick_id)
 				return nullptr;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
@@ -722,8 +732,8 @@ public:
 			return CreateButtonBind(event->jbutton.button);
 #endif
 		} else if (event->type==SDL_JOYHATMOTION) {
-			if (event->jhat.which!=stick) return nullptr;
-			if (event->jhat.value==0) return nullptr;
+			if (event->jhat.which != stick_id) return nullptr;
+			if (event->jhat.value == 0) return nullptr;
 			if (event->jhat.value>(SDL_HAT_UP|SDL_HAT_RIGHT|SDL_HAT_DOWN|SDL_HAT_LEFT)) return nullptr;
 			return CreateHatBind(event->jhat.hat, event->jhat.value);
 		} else return nullptr;
@@ -736,7 +746,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
+				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
 						JOYSTICK_Move_X(emustick, jaxis->value);
 					else if (jaxis->axis == 1)
@@ -749,7 +759,7 @@ public:
 				bool state;
 				state = jbutton->type == SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button(emustick, but, state);
 				}
 				break;
@@ -780,7 +790,9 @@ public:
 	}
 
 	void ActivateJoystickBoundEvents() {
-		if (GCC_UNLIKELY(sdl_joystick==nullptr)) return;
+		if (sdl_joystick == nullptr) {
+			return;
+		}
 
 		bool button_pressed[MAXBUTTON];
 		std::fill_n(button_pressed, MAXBUTTON, false);
@@ -904,7 +916,7 @@ private:
 	const char * BindStart() override
 	{
 		if (sdl_joystick)
-			return SDL_JoystickNameForIndex(stick);
+			return SDL_JoystickNameForIndex(stick_index);
 		else
 			return "[missing joystick]";
 	}
@@ -922,7 +934,10 @@ protected:
 	uint8_t emulated_buttons = 0;
 	int hats = 0;
 	int emulated_hats = 0;
-	int stick;
+    // Instance ID of the joystick as it appears in SDL events
+	int stick_id{-1};
+	// Index of the joystick in the system
+	int stick_index{-1};
 	uint8_t emustick;
 	SDL_Joystick *sdl_joystick = nullptr;
 	char configname[10];
@@ -954,7 +969,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
+				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
@@ -967,7 +982,7 @@ public:
 				bool state;
 				state = jbutton->type == SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
@@ -1019,7 +1034,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
+				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
 						JOYSTICK_Move_X(0, jaxis->value);
 					else if (jaxis->axis == 1)
@@ -1030,7 +1045,7 @@ public:
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if (jhat->which == stick)
+				if (jhat->which == stick_id)
 					DecodeHatPosition(jhat->value);
 				break;
 			case SDL_JOYBUTTONDOWN:
@@ -1039,7 +1054,7 @@ public:
 			bool state;
 			state=jbutton->type==SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
@@ -1150,7 +1165,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
+				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
@@ -1159,7 +1174,7 @@ public:
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if (jhat->which == stick && jhat->hat < 2) {
+				if (jhat->which == stick_id && jhat->hat < 2) {
 					if (jhat->value == SDL_HAT_CENTERED)
 						button_state &= ~hat_magic[jhat->hat][0];
 					if (jhat->value & SDL_HAT_UP)
@@ -1175,13 +1190,13 @@ public:
 			case SDL_JOYBUTTONDOWN:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick)
+				if (jbutton->which == stick_id)
 					button_state|=button_magic[but];
 				break;
 			case SDL_JOYBUTTONUP:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick)
+				if (jbutton->which == stick_id)
 					button_state&=~button_magic[but];
 				break;
 		}
@@ -1266,7 +1281,7 @@ public:
 	Typer(const Typer &) = delete;            // prevent copy
 	Typer &operator=(const Typer &) = delete; // prevent assignment
 	~Typer() { Stop(); }
-	void Start(std::vector<CEvent *> *ext_events,
+	void Start(std::vector<std::unique_ptr<CEvent>> *ext_events,
 	           std::vector<std::string> &ext_sequence,
 	           const uint32_t wait_ms,
 	           const uint32_t pace_ms)
@@ -1307,7 +1322,7 @@ private:
 		static CEvent *lshift_event = nullptr;
 		for (auto &event : *m_events) {
 			if (std::string("key_lshift") == event->GetName()) {
-				lshift_event = event;
+				lshift_event = event.get();
 				break;
 			}
 		}
@@ -1374,7 +1389,7 @@ private:
 
 	std::thread m_instance = {};
 	std::vector<std::string> m_sequence = {};
-	std::vector<CEvent *> *m_events = nullptr;
+	std::vector<std::unique_ptr<CEvent>>* m_events = nullptr;
 	uint32_t m_wait_ms = 0;
 	uint32_t m_pace_ms = 0;
 	std::atomic_bool m_stop_requested{false};
@@ -1445,7 +1460,7 @@ public:
 	          color(color_white),
 	          enabled(true)
 	{
-		buttons.push_back(this);
+		buttons.emplace_back(this);
 	}
 
 	virtual ~CButton() = default;
@@ -1705,6 +1720,24 @@ public:
 	KBD_KEYS key;
 };
 
+class CMouseButtonEvent final : public CTriggeredEvent {
+public:
+	CMouseButtonEvent() = delete;
+
+	CMouseButtonEvent(const char* const entry, const MouseButtonId id)
+	        : CTriggeredEvent(entry),
+	          button_id(id)
+	{}
+
+	void Active(const bool pressed) override
+	{
+		MOUSE_EventButton(button_id, pressed);
+	}
+
+private:
+	const MouseButtonId button_id = MouseButtonId::None;
+};
+
 class CJAxisEvent final : public CContinuousEvent {
 public:
 	CJAxisEvent(const char* const entry, Bitu s, Bitu a, bool p,
@@ -1858,10 +1891,10 @@ static void change_action_text(const char* text, const Rgb888& col)
 static std::string humanize_key_name(const CBindList &binds, const std::string &fallback)
 {
 	auto trim_prefix = [](const std::string& bind_name) {
-		if (starts_with(bind_name, "Left ")) {
+		if (bind_name.starts_with("Left ")) {
 			return bind_name.substr(sizeof("Left"));
 		}
-		if (starts_with(bind_name, "Right ")) {
+		if (bind_name.starts_with("Right ")) {
 			return bind_name.substr(sizeof("Right"));
 		}
 		return bind_name;
@@ -1890,6 +1923,8 @@ static std::string humanize_key_name(const CBindList &binds, const std::string &
 
 static void update_active_bind_ui()
 {
+	using namespace std::string_literals;
+
 	if (mapper.abind == nullptr) {
 		bind_but.bind_title->Enable(false);
 		bind_but.del->Enable(false);
@@ -1922,8 +1957,6 @@ static void update_active_bind_ui()
 	// Correlate mod event bindlists to button labels and prepare
 	// human-readable mod key names.
 	for (auto &event : events) {
-		using namespace std::string_literals;
-
 		assert(event);
 		const auto bindlist = event->bindlist;
 
@@ -2002,8 +2035,8 @@ static void DrawButtons() {
 	                       color_black.blue,
 	                       SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(mapper.renderer);
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-		(*but_it)->Draw();
+	for (const auto& button : buttons) {
+		button->Draw();
 	}
 	SDL_RenderPresent(mapper.renderer);
 }
@@ -2017,6 +2050,17 @@ static CKeyEvent* AddKeyButtonEvent(int32_t x, int32_t y, int32_t dx,
 	safe_strcat(buf, entry);
 	CKeyEvent * event=new CKeyEvent(buf,key);
 	new CEventButton(x,y,dx,dy,title,event);
+	return event;
+}
+
+static CMouseButtonEvent* AddMouseButtonEvent(const int32_t x, const int32_t y,
+                                              const int32_t dx, const int32_t dy,
+                                              const char* const title,
+                                              const char* const entry,
+                                              const MouseButtonId button_id)
+{
+	auto event = new CMouseButtonEvent(entry, button_id);
+	new CEventButton(x, y, dx, dy, title, event);
 	return event;
 }
 
@@ -2246,8 +2290,39 @@ static void CreateLayout() {
 #undef XO
 #undef YO
 
-#define XO 10
+#define XO 5
 #define YO 8
+	/* Mouse Buttons */
+	new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Mouse");
+
+	AddMouseButtonEvent(pos_x(XO + 0),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "L",
+	                    "mouse_left",
+	                    MouseButtonId::Left);
+
+	AddMouseButtonEvent(pos_x(XO + 1),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "M",
+	                    "mouse_middle",
+	                    MouseButtonId::Middle);
+
+	AddMouseButtonEvent(pos_x(XO + 2),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "R",
+	                    "mouse_right",
+	                    MouseButtonId::Right);
+#undef XO
+#undef YO
+
+#define XO 10
+#define YO 7
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
 	AddJButtonButton(pos_x(XO), pos_y(YO), button_width, button_height, "1", 0, 0);
@@ -2358,14 +2433,15 @@ static void CreateLayout() {
 	AddModButton(pos_x(4), pos_y(14), 50, 20, "Mod3", 3);
 
 	/* Create Handler buttons */
-	int32_t xpos = 3;
-	int32_t ypos = 11;
+	int32_t xpos = 0;
+	int32_t ypos = 10;
+	constexpr auto bw = button_width + 5;
 	for (const auto &handler_event : handlergroup) {
-		new CEventButton(pos_x(xpos * 3), pos_y(ypos), button_width * 3, button_height,
+		new CEventButton(200 + xpos * 3 * bw, pos_y(ypos), bw * 3, button_height,
 		                 handler_event->button_name.c_str(), handler_event);
 		xpos++;
-		if (xpos>6) {
-			xpos = 3;
+		if (xpos>3) {
+			xpos = 0;
 			ypos++;
 		}
 	}
@@ -2399,9 +2475,9 @@ static void CreateStringBind(char * line) {
 	line=trim(line);
 	char * eventname=strip_word(line);
 	CEvent * event = nullptr;
-	for (CEventVector_it ev_it = events.begin(); ev_it != events.end(); ++ev_it) {
-		if (!strcasecmp((*ev_it)->GetName(),eventname)) {
-			event=*ev_it;
+	for (const auto& evt : events) {
+		if (!strcasecmp(evt->GetName(), eventname)) {
+			event = evt.get();
 			goto foundevent;
 		}
 	}
@@ -2549,7 +2625,7 @@ static void ClearAllBinds() {
 	// wait for the auto-typer to complete because it might be accessing events
 	mapper.typist.Wait();
 
-	for (CEvent *event : events) {
+	for (const auto& event : events) {
 		event->ClearBinds();
 	}
 }
@@ -2643,8 +2719,7 @@ static void MAPPER_SaveBinds() {
 		return;
 	}
 	char buf[128];
-	for (CEventVector_it event_it = events.begin(); event_it != events.end(); ++event_it) {
-		CEvent * event=*(event_it);
+	for (const auto& event : events) {
 		fprintf(savefile,"%s ",event->GetName());
 		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
 			CBind * bind=*(bind_it);
@@ -2660,11 +2735,12 @@ static void MAPPER_SaveBinds() {
 }
 
 static bool load_binds_from_file(const std::string_view mapperfile_path,
-                                 const std::string_view mapperfile_name)
+                                 const std::string& mapperfile_name)
 {
 	// If the filename is empty the user wants defaults
-	if (mapperfile_name == "")
+	if (mapperfile_name.empty()) {
 		return false;
+	}
 
 	auto try_loading = [](const std_fs::path &mapper_path) -> bool {
 		constexpr auto optional = ResourceImportance::Optional;
@@ -2691,8 +2767,8 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 	// Only report load failures for customized mapperfiles because by
 	// default, the mapperfile is not provided
 	if (!was_loaded && mapperfile_name != MAPPERFILE)
-		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly and from resources",
-		            mapperfile_name.data());
+		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly or from resources",
+		            mapperfile_name.c_str());
 
 	return was_loaded;
 }
@@ -2732,11 +2808,12 @@ void BIND_MappingEvents() {
 				lastHoveredButton = nullptr;
 			}
 			/* Check which button are we currently pointing at */
-			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
-					(*but_it)->SetColor(color_red);
+			for (const auto& button : buttons) {
+				if (dynamic_cast<CClickableTextButton*>(button.get()) &&
+				    button->OnTop(event.button.x, event.button.y)) {
+					button->SetColor(color_red);
 					mapper.redraw     = true;
-					lastHoveredButton = *but_it;
+					lastHoveredButton = button.get();
 					break;
 				}
 			}
@@ -2750,9 +2827,10 @@ void BIND_MappingEvents() {
 				lastHoveredButton = nullptr;
 			}
 			/* Check the press */
-			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
-					(*but_it)->Click();
+			for (const auto& button : buttons) {
+				if (dynamic_cast<CClickableTextButton*>(button.get()) &&
+				    button->OnTop(event.button.x, event.button.y)) {
+					button->Click();
 					break;
 				}
 			}
@@ -2811,18 +2889,23 @@ static void QueryJoysticks()
 
 	// The user doesn't want to use joysticks at all (not even for mapping)
 	if (joytype == JOY_DISABLED) {
-		LOG_INFO("MAPPER: joystick subsystem disabled");
+		LOG_INFO("MAPPER: Joystick subsystem disabled");
 		return;
 	}
 
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
+	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
+
 	// Record how many joysticks are present and set our desired minimum axis
 	const auto num_joysticks = SDL_NumJoysticks();
 	if (num_joysticks < 0) {
 		LOG_WARNING("MAPPER: SDL_NumJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
+		if (wants_auto_config) {
+			joytype = JOY_NONE_FOUND;
+		}
 		return;
 	}
 
@@ -2831,10 +2914,12 @@ static void QueryJoysticks()
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 	if (num_joysticks == 0) {
 		LOG_MSG("MAPPER: No joysticks found");
+		if (wants_auto_config) {
+			joytype = JOY_NONE_FOUND;
+		}
 		return;
 	}
 
-	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
 	if (!wants_auto_config)
 		return;
 
@@ -2963,9 +3048,10 @@ void MAPPER_UpdateJoysticks() {
 #endif
 
 void MAPPER_LosingFocus() {
-	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
-		if(*evit != caps_lock_event && *evit != num_lock_event)
-			(*evit)->DeActivateAll();
+	for (const auto& event : events) {
+		if (event.get() != caps_lock_event && event.get() != num_lock_event) {
+			event->DeActivateAll();
+		}
 	}
 }
 
@@ -3129,16 +3215,12 @@ static void MAPPER_Destroy(Section *sec) {
 	mapper.typist.Stop();
 
 	// Release all the accumulated allocations by the mapper
-	for (auto &ptr : events)
-		delete ptr;
 	events.clear();
 
 	for (auto & ptr : all_binds)
 		delete ptr;
 	all_binds.clear();
 
-	for (auto & ptr : buttons)
-		delete ptr;
 	buttons.clear();
 
 	for (auto & ptr : keybindgroups)
@@ -3164,16 +3246,38 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys(Section *sec)
+static bool should_skip_unchanged_titlebar(const Section_prop* section)
 {
+	// Filter out unneeded calls - do not execute MAPPER_BindKeys if only
+	// window titlebar setting has changed, to avoid flicker
+
+	const std::string curr_titlebar = section->Get_string("window_titlebar");
+
+	static std::optional<std::string> prev_titlebar = {};
+	if (prev_titlebar && curr_titlebar != *prev_titlebar) {
+		prev_titlebar = curr_titlebar;
+		return true;
+	}
+
+	prev_titlebar = curr_titlebar;
+	return false;
+}
+
+void MAPPER_BindKeys(Section* sec)
+{
+	const auto section = static_cast<const Section_prop*>(sec);
+	if (should_skip_unchanged_titlebar(section)) {
+		return;
+	}
+
+	// Get the mapper file set by the user
+	const auto mapperfile_value = section->Get_string("mapperfile");
+	const auto property         = section->Get_path("mapperfile");
+
 	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
 
-	// Get the mapper file set by the user
-	const auto section = static_cast<const Section_prop *>(sec);
-	const auto mapperfile_value = section->Get_string("mapperfile");
-	const auto property = section->Get_path("mapperfile");
-	assert(property && !property->realpath.empty());
+	assert(property);
 	mapper.filename = property->realpath.string();
 
 	QueryJoysticks();
@@ -3189,8 +3293,9 @@ void MAPPER_BindKeys(Section *sec)
 	if (!load_binds_from_file(mapper.filename, mapperfile_value))
 		CreateDefaultBinds();
 
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it)
-		(*but_it)->BindColor();
+	for (const auto& button : buttons) {
+		button->BindColor();
+	}
 
 	if (SDL_GetModState()&KMOD_CAPS)
 		MAPPER_TriggerEvent(caps_lock_event, false);

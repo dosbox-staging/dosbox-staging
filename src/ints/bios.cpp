@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,11 +19,15 @@
 
 #include "bios.h"
 
+#include "bitops.h"
 #include "callback.h"
+#include "control.h"
 #include "cpu.h"
 #include "dosbox.h"
+#include "dos_memory.h"
 #include "hardware.h"
 #include "inout.h"
+#include "int10.h"
 #include "joystick.h"
 #include "math_utils.h"
 #include "mem.h"
@@ -32,7 +36,12 @@
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"
-#include <time.h>
+
+#include <ctime>
+#include <memory>
+
+// Constants
+constexpr uint32_t BiosMachineSignatureAddress = 0xfffff;
 
 #if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
 // time.h is already included
@@ -78,24 +87,26 @@ static Bitu INT70_Handler(void) {
 	return 0;
 }
 
-CALLBACK_HandlerObject* tandy_DAC_callback[2];
+std::unique_ptr<CALLBACK_HandlerObject> tandy_dac_callback[2] = {};
+
 static struct {
-	uint16_t port;
-	uint8_t irq;
-	uint8_t dma;
-} tandy_sb;
+	uint16_t port = 0;
+	uint8_t irq   = 0;
+	uint8_t dma   = 0;
+} tandy_sb = {};
+
 static struct {
-	uint16_t port;
-	uint8_t irq;
-	uint8_t dma;
-} tandy_dac;
+	uint16_t port = 0;
+	uint8_t irq   = 0;
+	uint8_t dma   = 0;
+} tandy_dac = {};
 
 static bool Tandy_InitializeSB() {
 	/* see if soundblaster module available and at what port/IRQ/DMA */
 	uint16_t sbport;
 	uint8_t sbirq;
 	uint8_t sbdma;
-	if (SB_Get_Address(sbport, sbirq, sbdma)) {
+	if (SB_GetAddress(sbport, sbirq, sbdma)) {
 		tandy_sb.port = sbport;
 		tandy_sb.irq = sbirq;
 		tandy_sb.dma = sbdma;
@@ -110,7 +121,7 @@ static bool Tandy_InitializeSB() {
 static bool Tandy_InitializeTS() {
 	/* see if Tandy DAC module available and at what port/IRQ/DMA */
 	Bitu tsport, tsirq, tsdma;
-	if (TS_Get_Address(tsport, tsirq, tsdma)) {
+	if (TANDYSOUND_GetAddress(tsport, tsirq, tsdma)) {
 		tandy_dac.port=(uint16_t)(tsport&0xffff);
 		tandy_dac.irq =(uint8_t)(tsirq&0xff);
 		tandy_dac.dma =(uint8_t)(tsdma&0xff);
@@ -157,9 +168,10 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 
 	/* revector IRQ-handler if necessary */
 	RealPt current_irq=RealGetVec(tandy_irq_vector);
-	if (current_irq!=tandy_DAC_callback[0]->Get_RealPointer()) {
+	if (current_irq != tandy_dac_callback[0]->Get_RealPointer()) {
 		real_writed(0x40,0xd6,current_irq);
-		RealSetVec(tandy_irq_vector,tandy_DAC_callback[0]->Get_RealPointer());
+		RealSetVec(tandy_irq_vector,
+		           tandy_dac_callback[0]->Get_RealPointer());
 	}
 
 	uint8_t tandy_dma = 1;
@@ -271,8 +283,8 @@ static Bitu IRQ_TandyDAC(void) {
 		}
 
 		/* issue BIOS tandy sound device busy callout */
-		SegSet16(cs, RealSegment(tandy_DAC_callback[1]->Get_RealPointer()));
-		reg_ip = RealOffset(tandy_DAC_callback[1]->Get_RealPointer());
+		SegSet16(cs, RealSegment(tandy_dac_callback[1]->Get_RealPointer()));
+		reg_ip = RealOffset(tandy_dac_callback[1]->Get_RealPointer());
 	}
 	return CBRET_NONE;
 }
@@ -542,7 +554,8 @@ static Bitu INT14_Handler(void) {
 		default: assert(false); return CBRET_NONE;
 		}
 
-		const auto baudresult = static_cast<uint16_t>(115200 / baudrate);
+		const auto baudresult = static_cast<uint16_t>(
+		        SerialMaxBaudRate / baudrate);
 
 		IO_WriteB(port+3, 0x80);	// enable divider access
 		IO_WriteB(port, (uint8_t)baudresult&0xff);
@@ -999,23 +1012,71 @@ static Bitu Default_IRQ_Handler()
 	return CBRET_NONE;
 }
 
-static Bitu Reboot_Handler(void) {
-	// switch to text mode, notify user (let's hope INT10 still works)
-	reg_ax = 0;
-	CALLBACK_RunRealInt(0x10);
-	reg_ah = 0xe;
-	reg_bx = 0;
+static Bitu reboot_handler()
+{
+	LOG_MSG("BIOS: Reboot requested");
 
-	constexpr char text[] = "\n\n   Reboot requested, quitting now.";
-	for (const auto c : text) {
-		reg_al = static_cast<uint8_t>(c);
-		CALLBACK_RunRealInt(0x10);
+	// Line number for text display
+	constexpr uint8_t text_row = 2;
+
+	// Switch to text mode
+	reg_ah = 0x00;
+	reg_al = 0x02; // 80x25
+	CALLBACK_RunRealInt(0x10);
+	const auto screen_width = INT10_GetTextColumns();
+
+	// Disable the blinking cursor
+	reg_ah = 0x01;
+	reg_ch = bit::literals::b5; // bit 5 = disable cursor
+	reg_cl = 0;
+	CALLBACK_RunRealInt(0x10);
+
+	// Prepare the text to display
+	std::vector<std::string> conunter_text = {};
+	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_1"));
+	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_2"));
+	conunter_text.push_back(MSG_Get("BIOS_REBOOTING_3"));
+	size_t max_length = 0;
+	for (auto& entry : conunter_text) {
+		max_length = std::max(max_length, entry.length());
 	}
-	LOG_MSG(text);
-	const auto start = PIC_FullIndex();
-	while ((PIC_FullIndex() - start) < 3000.0)
-		CALLBACK_Idle();
-	throw 1;
+	for (auto& entry : conunter_text) {
+		entry.resize(max_length, ' ');
+	}
+	// We want the text mostly centered, but we don't want to change the
+	// start column if the plural grammar form is longer/shorter than
+	// the singular one
+	const uint8_t start_column = (screen_width - max_length) / 2;
+
+	// Display the text/counter
+	while (!conunter_text.empty()) {
+
+		// Set cursor position to center the text output
+		reg_ah = 0x02;
+		reg_dh = text_row;
+		reg_dl = start_column;
+		reg_bh = 0; // page
+		CALLBACK_RunRealInt(0x10);
+
+		// Display the counter text, remove it from the list
+		reg_ah = 0x0e;
+		reg_bl = 0x00; // page
+		for (const auto c : conunter_text.back()) {
+			reg_al = static_cast<uint8_t>(c);
+			CALLBACK_RunRealInt(0x10);
+		}
+		conunter_text.pop_back();
+
+		// Wait one second
+		constexpr auto delay_ms = 1000.0;
+		const auto start = PIC_FullIndex();
+		while ((PIC_FullIndex() - start) < delay_ms) {
+			CALLBACK_Idle();
+		}
+	}
+
+	// Restart
+	restart_dosbox();
 	return CBRET_NONE;
 }
 
@@ -1031,16 +1092,150 @@ void BIOS_ZeroExtendedSize(bool in) {
 	if(other_memsystems < 0) other_memsystems=0;
 }
 
+static void shutdown_tandy_sb_dac_callbacks()
+{
+	// Abort DAC playing when via the Sound Blaster's DAC
+	if (tandy_sb.port) {
+		IO_Write(tandy_sb.port + 0xc, 0xd3);
+		IO_Write(tandy_sb.port + 0xc, 0xd0);
+	}
+	real_writeb(0x40, 0xd4, 0x00);
+	if (tandy_dac_callback[0]) {
+		LOG_MSG("BIOS: Shutting down Tandy DAC interrupt callbacks");
+		uint32_t orig_vector = real_readd(0x40, 0xd6);
+		if (orig_vector == tandy_dac_callback[0]->Get_RealPointer()) {
+			// Set IRQ vector to old value
+			uint8_t tandy_irq = 7;
+			if (tandy_sb.port) {
+				tandy_irq = tandy_sb.irq;
+			} else if (tandy_dac.port) {
+				tandy_irq = tandy_dac.irq;
+			}
+			uint8_t tandy_irq_vector = tandy_irq;
+			if (tandy_irq_vector < 8) {
+				tandy_irq_vector += 8;
+			} else {
+				tandy_irq_vector += (0x70 - 8);
+			}
+
+			RealSetVec(tandy_irq_vector, real_readd(0x40, 0xd6));
+			real_writed(0x40, 0xd6, 0x00000000);
+		}
+		tandy_dac_callback[0] = {};
+		tandy_dac_callback[1] = {};
+	}
+	tandy_sb.port  = 0;
+	tandy_dac.port = 0;
+}
+
+// The Tandy Sound card requests DAC support which the following configures via
+// BIOS-based interrupt callbacks using either a Sound Blaster or the 'actual'
+// Tandy DAC module, respectively. If neither are present then the BIOS
+// callbacks aren't setup.
+//
+// The BIOS callbacks are shutdown when the backing device is shutdown to avoid
+// advertizing the DAC's presence when none exists.
+//
+// Returns true if a DAC was actually setup.
+//
+bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac)
+{
+	// Holds the Tandy Sound card's request based on the presence of the
+	// optional 'maybe_request_dac' argument. This allows other modules
+	// (like the Sound Blaster) to run this function without any arguments
+	// to re-assess if BIOS callback can potentially be setup.
+	//
+	static bool dac_requested = false;
+
+	if (maybe_request_dac) {
+		dac_requested = *maybe_request_dac;
+	}
+
+	// The BIOS DAC handling depends on the BIOS IRQ vectors being setup, so
+	// we only proceed once those are in place. We use the presence of the
+	// machine signature (either Tandy or PC) to indicate this.
+	//
+	if (mem_readb(BiosMachineSignatureAddress) == 0) {
+		return false;
+	}
+
+	shutdown_tandy_sb_dac_callbacks();
+
+	if (dac_requested) {
+		// Tandy DAC sound requested, see if soundblaster device is available
+		Bitu tandy_dac_type = 0;
+		if (Tandy_InitializeSB()) {
+			tandy_dac_type = 1;
+		} else if (Tandy_InitializeTS()) {
+			tandy_dac_type = 2;
+		}
+		if (tandy_dac_type) {
+			real_writew(0x40, 0xd0, 0x0000);
+			real_writew(0x40, 0xd2, 0x0000);
+			real_writeb(0x40, 0xd4, 0xff); // Tandy DAC init value
+			real_writed(0x40, 0xd6, 0x00000000);
+			// Install the DAC callback handler
+			tandy_dac_callback[0] = std::make_unique<CALLBACK_HandlerObject>(
+			        CALLBACK_HandlerObject());
+			tandy_dac_callback[1] = std::make_unique<CALLBACK_HandlerObject>(
+			        CALLBACK_HandlerObject());
+			tandy_dac_callback[0]->Install(&IRQ_TandyDAC,
+			                               CB_IRET,
+			                               "Tandy DAC IRQ");
+			tandy_dac_callback[1]->Install(nullptr,
+			                               CB_TDE_IRET,
+			                               "Tandy DAC end transfer");
+			// pseudocode for CB_TDE_IRET:
+			//	push ax
+			//	mov ax, 0x91fb
+			//	int 15
+			//	cli
+			//	mov al, 0x20
+			//	out 0x20, al
+			//	pop ax
+			//	iret
+
+			uint8_t tandy_irq = 7;
+			if (tandy_dac_type == 1) {
+				LOG_MSG("BIOS: Tandy DAC interrupt linked to Sound Blaster on IRQ %u",
+				        tandy_sb.irq);
+				tandy_irq = tandy_sb.irq;
+			} else if (tandy_dac_type == 2) {
+				LOG_MSG("BIOS: Tandy DAC interrupt linked to Tandy Sound on IRQ %u",
+				        tandy_dac.irq);
+				tandy_irq = tandy_dac.irq;
+			}
+			uint8_t tandy_irq_vector = tandy_irq;
+			if (tandy_irq_vector < 8) {
+				tandy_irq_vector += 8;
+			} else {
+				tandy_irq_vector += (0x70 - 8);
+			}
+
+			RealPt current_irq = RealGetVec(tandy_irq_vector);
+			real_writed(0x40, 0xd6, current_irq);
+			for (auto i = 0; i < 0x10; i++) {
+				phys_writeb(PhysicalMake(0xf000, 0xa084 + i), 0x80);
+			}
+			return true;
+		}
+	}
+	// Indicate that the Tandy DAC callbacks are unavailable
+	real_writeb(0x40, 0xd4, 0x00);
+	return false;
+}
+
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
 class BIOS final : public Module_base{
 private:
 	CALLBACK_HandlerObject callback[11];
+	void AddMessages();
 public:
-	BIOS(Section* configuration):Module_base(configuration){
-		/* tandy DAC can be requested in tandy_sound.cpp by initializing this field */
-		bool use_tandyDAC=(real_readb(0x40,0xd4)==0xff);
+	BIOS(Section* configuration) : Module_base(configuration)
+	{
+		AddMessages();
 
 		/* Clear the Bios Data Area (0x400-0x5ff, 0x600- is accounted to DOS) */
 		for (uint16_t i=0;i<0x200;i++) real_writeb(0x40,i,0);
@@ -1071,14 +1266,27 @@ public:
 		/* INT 12 Memory Size default at 640 kb */
 		callback[2].Install(&INT12_Handler,CB_IRET,"Int 12 Memory");
 		callback[2].Set_RealVec(0x12);
-		if (IS_TANDY_ARCH) {
+		if (machine == MCH_TANDY) {
 			/* reduce reported memory size for the Tandy (32k graphics memory
 			   at the end of the conventional 640k) */
-			if (machine==MCH_TANDY) mem_writew(BIOS_MEMORY_SIZE,624);
-			else mem_writew(BIOS_MEMORY_SIZE,640);
-			mem_writew(BIOS_TRUE_MEMORY_SIZE,640);
-		} else mem_writew(BIOS_MEMORY_SIZE,640);
-		
+			mem_writew(BIOS_MEMORY_SIZE, 624);
+			mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
+		} else if (machine == MCH_PCJR) {
+			const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
+			assert(section);
+			const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+			if (pcjr_memory_config == "expanded") {
+				mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
+				mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
+			} else {
+				assert(pcjr_memory_config == "standard");
+				mem_writew(BIOS_MEMORY_SIZE, PcjrStandardMemorySizeKb - PcjrVideoMemorySizeKb);
+				mem_writew(BIOS_TRUE_MEMORY_SIZE, PcjrStandardMemorySizeKb);
+			}
+		} else {
+			mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
+		}
+
 		/* INT 13 Bios Disk Support */
 		BIOS_SetupDisks();
 
@@ -1116,7 +1324,7 @@ public:
 		/* Reboot */
 		// This handler is an exit for more than only reboots, since we
 		// don't handle these cases
-		callback[10].Install(&Reboot_Handler,CB_IRET,"reboot");
+		callback[10].Install(&reboot_handler,CB_IRET,"reboot");
 		
 		// INT 18h: Enter BASIC
 		// Non-IBM BIOS would display "NO ROM BASIC" here
@@ -1180,59 +1388,18 @@ public:
 		i = 0;
 		for (const auto c : "01/01/92")
 			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
-		
+
 		// write machine signature
-		constexpr uint32_t machine_signature_location = 0xfffff;
 		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
-		phys_writeb(machine_signature_location, machine_signature);
+		phys_writeb(BiosMachineSignatureAddress, machine_signature);
 
-		tandy_sb.port=0;
-		tandy_dac.port=0;
-		if (use_tandyDAC) {
-			/* tandy DAC sound requested, see if soundblaster device is available */
-			Bitu tandy_dac_type = 0;
-			if (Tandy_InitializeSB()) {
-				tandy_dac_type = 1;
-			} else if (Tandy_InitializeTS()) {
-				tandy_dac_type = 2;
-			}
-			if (tandy_dac_type) {
-				real_writew(0x40,0xd0,0x0000);
-				real_writew(0x40,0xd2,0x0000);
-				real_writeb(0x40,0xd4,0xff);	/* tandy DAC init value */
-				real_writed(0x40,0xd6,0x00000000);
-				/* install the DAC callback handler */
-				tandy_DAC_callback[0]=new CALLBACK_HandlerObject();
-				tandy_DAC_callback[1]=new CALLBACK_HandlerObject();
-				tandy_DAC_callback[0]->Install(&IRQ_TandyDAC,CB_IRET,"Tandy DAC IRQ");
-				tandy_DAC_callback[1]->Install(nullptr,CB_TDE_IRET,"Tandy DAC end transfer");
-				// pseudocode for CB_TDE_IRET:
-				//	push ax
-				//	mov ax, 0x91fb
-				//	int 15
-				//	cli
-				//	mov al, 0x20
-				//	out 0x20, al
-				//	pop ax
-				//	iret
+		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks can also be
+		// re-configured when the Tandy Sound card is initialized
+		// followed by state changes in either backing DAC modules
+		// (pre-SB16 Sound Blaster or the Tandy DAC).
+		//
+		BIOS_ConfigureTandyDacCallbacks();
 
-				uint8_t tandy_irq = 7;
-				if (tandy_dac_type==1) tandy_irq = tandy_sb.irq;
-				else if (tandy_dac_type==2) tandy_irq = tandy_dac.irq;
-				uint8_t tandy_irq_vector = tandy_irq;
-				if (tandy_irq_vector<8) tandy_irq_vector += 8;
-				else tandy_irq_vector += (0x70-8);
-
-				RealPt current_irq=RealGetVec(tandy_irq_vector);
-				real_writed(0x40,0xd6,current_irq);
-				for (i = 0; i < 0x10; i++)
-					phys_writeb(PhysicalMake(0xf000, 0xa084 + i),
-					            0x80);
-			} else real_writeb(0x40,0xd4,0x00);
-		}
-	
-		/* Setup some stuff in 0x40 bios segment */
-		
 		// port timeouts
 		// always 1 second even if the port does not exist
 		mem_writeb(BIOS_LPT1_TIMEOUT,1);
@@ -1328,33 +1495,18 @@ public:
 		BIOS_HostTimeSync();
 	}
 	~BIOS(){
-		/* abort DAC playing */
-		if (tandy_sb.port) {
-			IO_Write(tandy_sb.port+0xc,0xd3);
-			IO_Write(tandy_sb.port+0xc,0xd0);
-		}
-		real_writeb(0x40,0xd4,0x00);
-		if (tandy_DAC_callback[0]) {
-			uint32_t orig_vector=real_readd(0x40,0xd6);
-			if (orig_vector==tandy_DAC_callback[0]->Get_RealPointer()) {
-				/* set IRQ vector to old value */
-				uint8_t tandy_irq = 7;
-				if (tandy_sb.port) tandy_irq = tandy_sb.irq;
-				else if (tandy_dac.port) tandy_irq = tandy_dac.irq;
-				uint8_t tandy_irq_vector = tandy_irq;
-				if (tandy_irq_vector<8) tandy_irq_vector += 8;
-				else tandy_irq_vector += (0x70-8);
-
-				RealSetVec(tandy_irq_vector,real_readd(0x40,0xd6));
-				real_writed(0x40,0xd6,0x00000000);
-			}
-			delete tandy_DAC_callback[0];
-			delete tandy_DAC_callback[1];
-			tandy_DAC_callback[0]=nullptr;
-			tandy_DAC_callback[1]=nullptr;
-		}
+		shutdown_tandy_sb_dac_callbacks();
 	}
 };
+
+void BIOS::AddMessages()
+{
+	// Some languages have more than one plural form, see:
+	// https://en.wikipedia.org/wiki/Grammatical_number
+	MSG_Add("BIOS_REBOOTING_3", "Rebooting in 3 seconds...");
+	MSG_Add("BIOS_REBOOTING_2", "Rebooting in 2 seconds...");
+	MSG_Add("BIOS_REBOOTING_1", "Rebooting in 1 second...");
+}
 
 // set com port data in bios data area
 // parameter: array of 4 com port base addresses, 0 = none
@@ -1388,6 +1540,6 @@ void BIOS_Init(Section* sec)
 
 	test = new BIOS(sec);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto changeable_at_runtime = false;
 	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
 }

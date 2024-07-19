@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -69,13 +69,13 @@ public:
 	// Returns true if the model has a matches that provided "mt32" or "cm32l".
 	bool Matches(const std::string &model_name) const;
 
-	using service_t = std::unique_ptr<MT32Emu::Service>;
-	bool InDir(const service_t& service, const std_fs::path& dir) const;
-	bool Load(const service_t& service, const std_fs::path& dir) const;
+	using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
+	bool InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const;
+	bool Load(const Mt32ServicePtr& service, const std_fs::path& dir) const;
 
 private:
 	size_t SetVersion();
-	static std::optional<std_fs::path> find_rom(const service_t& service,
+	static std::optional<std_fs::path> find_rom(const Mt32ServicePtr& service,
 	                                            const std_fs::path& dir,
 	                                            const Rom* rom);
 

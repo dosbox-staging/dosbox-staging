@@ -24,7 +24,7 @@
 // clang-format off
 // 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
-#include <stdio.h>
+#include <cstdio>
 // clang-format on
 
 #include "string_utils.h"
@@ -264,8 +264,8 @@ bool SERIAL_setCommParameters(COMPORT port,
 
 #include "logging.h"
 
-#include <string.h> // safe_strlen
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring> // safe_strlen
 
 #include <termios.h>
 #include <unistd.h>
@@ -274,9 +274,9 @@ bool SERIAL_setCommParameters(COMPORT port,
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
-#include <errno.h>
+#include <cerrno>
+#include <cstdio> // sprinf
 #include <fcntl.h>
-#include <stdio.h> // sprinf
 
 struct _COMPORT {
 	int porthandle;

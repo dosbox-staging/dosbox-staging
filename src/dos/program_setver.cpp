@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -85,8 +85,7 @@ void SETVER::Run()
 		return;
 	}
 
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	auto params = cmd->GetArguments();
 
 	// Handle first parameter being a path to SETVER.EXE database
 	const bool is_database_candidate = !params.empty() &&
@@ -184,9 +183,11 @@ void SETVER::Run()
 
 	// Handle per-file version set
 	if (has_arg_batch || has_arg_paged) {
-		WriteOut(MSG_Get("SHELL_WRONG_SYNTAX"));
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	} else if (params.size() > 2) {
 		WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
+	} else if (params.size() < 2) {
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	} else {
 		CommandSet(params[0], params[1], has_arg_quiet);
 	}
@@ -209,7 +210,7 @@ bool SETVER::ParseVersion(const std::string& version_str, FakeVersion& version)
 	const auto& major_str = match[1].str();
 	const auto& minor_str = match[3].str();
 
-	const auto major = to_int(major_str);
+	const auto major = parse_int(major_str);
 	if (!major) {
 		// It would be enough to assert, but PVS-Studio was unhappy
 		assert(false);
@@ -222,7 +223,7 @@ bool SETVER::ParseVersion(const std::string& version_str, FakeVersion& version)
 		return true;
 	}
 
-	const auto minor = to_int(minor_str);
+	const auto minor = parse_int(minor_str);
 	if (!minor) {
 		// It would be enough to assert, but PVS-Studio was unhappy
 		assert(false);
@@ -493,25 +494,14 @@ bool SETVER::IsTableEmpty()
 	       setver_table.by_file_path.empty();
 }
 
-void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
+void SETVER::OverrideVersion(const std::string& canonical_name, DOS_PSP& psp)
 {
-	assert(name);
-
 	// Check for global version override
 
 	if (setver_table.is_global_version_set) {
 		const auto& version = setver_table.version_global;
 		psp.SetVersion(version.major, version.minor);
 	}
-
-	// Get canonical file name
-
-	char buffer[DOS_PATHLENGTH];
-	if (!DOS_Canonicalize(name, buffer)) {
-		assert(false);
-		return;
-	}
-	std::string name_str = buffer;
 
 	// Check for version override - first by name with path
 
@@ -526,7 +516,7 @@ void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
 		return true;
 	};
 
-	if (try_override(name_str, setver_table.by_file_path)) {
+	if (try_override(canonical_name, setver_table.by_file_path)) {
 		return;
 	}
 
@@ -536,13 +526,13 @@ void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
 		return;
 	}
 
-	const auto position = name_str.rfind('\\');
-	if (position + 1 >= name_str.size()) {
+	const auto position = canonical_name.rfind('\\');
+	if (position + 1 >= canonical_name.size()) {
 		assert(false);
 		return;
 	}
-	name_str = name_str.substr(position + 1);
-	try_override(name_str, setver_table.by_file_name);
+
+	try_override(canonical_name.substr(position + 1), setver_table.by_file_name);
 }
 
 std_fs::path SETVER::GetTableFilePath()
@@ -633,7 +623,7 @@ void SETVER::LoadTableFromFile()
 	std::string line = {};
 	while (std::getline(file, line)) {
 		// Parse line
-		auto tokens = split(line, '\t');
+		auto tokens = split_with_empties(line, '\t');
 		// Skip empty lines
 		if (tokens.empty()) {
 			continue;
@@ -712,35 +702,35 @@ void SETVER::SaveTableToFile()
 void SETVER::AddMessages()
 {
 	MSG_Add("PROGRAM_SETVER_HELP_LONG",
-	        "Displays or sets the DOS version reported to applications.\n"
+	        "Display or set the DOS version reported to applications.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]setver[reset] \\[/b] [/p]\n"
-	        "  [color=green]setver[reset] [color=cyan]FILE[reset] [color=cyan]VERSION[reset] [/q]\n"
-	        "  [color=green]setver[reset] [color=cyan]FILE[reset] /d [/q]\n"
-	        "  [color=green]setver[reset] [color=cyan]VERSION[reset] /g [/q]\n"
-	        "  [color=green]setver[reset] /d /g [/q]\n"
-	        "  [color=green]setver[reset] /d /all [/q]\n"
+	        "  [color=light-green]setver[reset] \\[/b] [/p]\n"
+	        "  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] [color=light-cyan]VERSION[reset] [/q]\n"
+	        "  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] /d [/q]\n"
+	        "  [color=light-green]setver[reset] [color=light-cyan]VERSION[reset] /g [/q]\n"
+	        "  [color=light-green]setver[reset] /d /g [/q]\n"
+	        "  [color=light-green]setver[reset] /d /all [/q]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]FILE[reset]     is a file (optionally with path) to apply the settings to.\n"
-	        "  [color=cyan]VERSION[reset]  is a DOS version, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] or [color=white]n[reset] format.\n"
-	        "  /g       global setting, applied to all executables.\n"
-	        "  /d       delete entry from version table.\n"
-	        "  /all     together with /d clears the whole version table.\n"
-	        "  /b       display the list in a batch file format.\n"
-	        "  /p       display one page a time.\n"
-	        "  /q       quiet, skip confirmation messages.\n"
-	        "  /delete and /quiet have same meaning as /d and /q, respectively.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]FILE[reset]     file (optionally with path) to apply the settings to\n"
+	        "  [color=light-cyan]VERSION[reset]  DOS version, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] or [color=white]n[reset] format\n"
+	        "  /g       global setting, applied to all executables\n"
+	        "  /d       delete entry from version table\n"
+	        "  /all     together with /d clears the whole version table\n"
+	        "  /b       display the list in a batch file format\n"
+	        "  /p       display one page a time\n"
+	        "  /q       quiet, skip confirmation messages\n"
+	        "  /delete and /quiet have same meaning as /d and /q, respectively\n"
 	        "\n"
 	        "Notes:\n"
 	        "  For persistent version table, specify storage in the configuration file under\n"
-	        "  the [dos] section, using the 'setver_table_file = [color=cyan]STORAGE[reset]' setting.\n"
+	        "  the [dos] section, using the 'setver_table_file = [color=light-cyan]STORAGE[reset]' setting.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]setver[reset] /b              ; displays settings as a batch file\n"
-	        "  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file\n"
-	        "  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported\n");
+	        "  [color=light-green]setver[reset] /b              ; displays settings as a batch file\n"
+	        "  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file\n"
+	        "  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported\n");
 
 	MSG_Add("PROGRAM_SETVER_WRONG_TABLE",
 	        "Only version table in Z:\\ directory is supported.");

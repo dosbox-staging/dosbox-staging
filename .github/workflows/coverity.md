@@ -1,7 +1,7 @@
 # Steps to Refresh the Coverity Software
 
 1. Every 6 months check <https://scan.coverity.com/download> for
-   a package newer than 2022.09
+   a package newer than 2023.06
 
 2. Download it, extract it, and remove unnecessary content:
 
@@ -17,7 +17,7 @@
 3. Compress and Checksum the archive:
 
    ``` shell
-   tar -cv cov-analysis-linux64-YYYY-MM | zstd -19 > coverity.tar.zst
+   tar -cv cov-analysis-linux64-YYYY-MM | zstd --long --ultra -22 > coverity.tar.zst
    sha256sum coverity.tar.zst
    ```
 

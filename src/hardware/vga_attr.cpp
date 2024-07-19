@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -147,7 +147,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		case 0x0f:
 			// Index into the 256 color DAC table.
 			// May be modified by 3C0h index 10h and 14h.
-			if (vga.attr.disabled & 0x1) {
+			if (vga.attr.disabled) {
 				const auto index = vga.attr.index;
 				VGA_ATTR_SetPalette(index, PaletteRegister{val});
 			}

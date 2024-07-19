@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,11 +23,12 @@
 
 #include <cassert>
 
+#include "channel_names.h"
 #include "checks.h"
 
 CHECK_NARROWING();
 
-Disney::Disney() : LptDac("DISNEY", use_mixer_rate)
+Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, UseMixerRate)
 {
 	// Prime the FIFO with a single silent sample
 	fifo.emplace(data_reg);
@@ -48,13 +51,13 @@ void Disney::ConfigureFilters(const FilterState state)
 	assert(channel);
 
 	// Run the ZoH up-sampler at the higher mixer rate
-	const auto mixer_rate_hz = check_cast<uint16_t>(channel->GetSampleRate());
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(mixer_rate_hz);
+	const auto mixer_rate_hz = channel->GetSampleRate();
+	channel->SetZeroOrderHoldUpsamplerTargetRate(mixer_rate_hz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Pull audio frames from the Disney DAC at 7 kHz
-	channel->SetSampleRate(dss_7khz_rate);
-	ms_per_frame = millis_in_second / dss_7khz_rate;
+	channel->SetSampleRate(DisneySampleRateHz);
+	ms_per_frame = MillisInSecond / DisneySampleRateHz;
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth
@@ -62,13 +65,13 @@ void Disney::ConfigureFilters(const FilterState state)
 		// against LGR Oddware's recordings of an authentic Disney Sound
 		// Source in ref: https://youtu.be/A1YThKmV2dk?t=1126
 
-		constexpr auto hp_order       = 2;
-		constexpr auto hp_cutoff_freq = 100;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+		constexpr auto hp_order          = 2;
+		constexpr auto hp_cutoff_freq_hz = 100;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 
-		constexpr auto lp_order       = 2;
-		constexpr auto lp_cutoff_freq = 2000;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_order          = 2;
+		constexpr auto lp_cutoff_freq_hz = 2000;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetHighPassFilter(state);
 	channel->SetLowPassFilter(state);
@@ -87,7 +90,7 @@ AudioFrame Disney::Render()
 
 bool Disney::IsFifoFull() const
 {
-	return fifo.size() >= max_fifo_size;
+	return fifo.size() >= MaxFifoSize;
 }
 
 void Disney::WriteData(const io_port_t, const io_val_t data, const io_width_t)

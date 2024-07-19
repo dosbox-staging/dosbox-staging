@@ -109,7 +109,7 @@ static struct DynDecode {
 
 	// modrm state of the current instruction (if used)
 	struct {
-//		Bitu val;
+		uint_fast8_t val;
 		uint_fast8_t mod;
 		uint_fast8_t rm;
 		uint_fast8_t reg;
@@ -121,7 +121,9 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	uint8_t rdval;
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
+	if (mem_readb_checked(lin_addr, &rdval)) {
+		return true;
+	}
 
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
@@ -196,7 +198,7 @@ static void decode_advancepage(void) {
 	// Advance to the next page
 	decode.active_block->page.end=4095;
 	// trigger possible page fault here
-	decode.page.first++;
+	++decode.page.first;
 	Bitu faddr=decode.page.first << 12;
 	mem_readb(faddr);
 	MakeCodePage(faddr,decode.page.code);
@@ -213,19 +215,19 @@ static void decode_advancepage(void) {
 
 // fetch the next byte of the instruction stream
 static uint8_t decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+	if (decode.page.index >= 4096) {
 		decode_advancepage();
 	}
 	decode.page.wmap[decode.page.index]+=0x01;
-	decode.page.index++;
-	decode.code+=1;
+	++decode.page.index;
+	++decode.code;
 	return mem_readb(decode.code-1);
 }
 // fetch the next word of the instruction stream
 static uint16_t decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		uint16_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+	if (decode.page.index >= 4095) {
+		uint16_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
 	add_to_unaligned_uint16(&decode.page.wmap[decode.page.index], 0x0101);
@@ -234,10 +236,10 @@ static uint16_t decode_fetchw(void) {
 }
 // fetch the next dword of the instruction stream
 static uint32_t decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		uint32_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
+	if (decode.page.index >= 4093) {
+		uint32_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
 		val|=decode_fetchb() << 24;
 		return val;
         /* Advance to the next page */
@@ -247,38 +249,10 @@ static uint32_t decode_fetchd(void) {
 	return mem_readd(decode.code-4);
 }
 
-#define START_WMMEM 64
-
-// adjust writemap mask to care for map holes due to special
-// codefetch functions
-static void inline decode_increase_wmapmask(Bitu size) {
-	size_t mapidx        = 0;
-	CacheBlock* activecb = decode.active_block;
-	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->GrowWriteMask(START_WMMEM);
-		activecb->cache.maskstart = decode.page.index;
-	} else {
-		mapidx = decode.page.index - activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			size_t new_mask_len = activecb->cache.masklen * 4;
-			if (new_mask_len < mapidx + size) {
-				new_mask_len = ((mapidx + size) & ~3) * 2;
-			}
-			activecb->GrowWriteMask(new_mask_len);
-		}
-	}
-	// update mask entries
-	switch (size) {
-	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
-	}
-}
-
 // fetch a byte, val points to the code location if possible,
 // otherwise val contains the current value read from the position
 static bool decode_fetchb_imm(Bitu & val) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+	if (decode.page.index >= 4096) {
 		decode_advancepage();
 	}
 	// see if position is directly accessible
@@ -292,9 +266,9 @@ static bool decode_fetchb_imm(Bitu & val) {
 		HostPt tlb_addr=get_tlb_read(decode.code);
 		if (tlb_addr) {
 			val=(Bitu)(tlb_addr+decode.code);
-			decode_increase_wmapmask(1);
-			decode.code++;
-			decode.page.index++;
+			decode.active_block->cache.AddByteToWriteMaskAt(decode.page.index);
+			++decode.code;
+			++decode.page.index;
 			return true;
 		}
 	}
@@ -319,9 +293,9 @@ static bool decode_fetchw_imm(Bitu & val) {
 			// see if position is directly accessible
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(2);
-				decode.code+=2;
-				decode.page.index+=2;
+				decode.active_block->cache.AddWordToWriteMaskAt(decode.page.index);
+				decode.code += 2;
+				decode.page.index += 2;
 				return true;
 			}
 		}
@@ -349,9 +323,9 @@ static bool decode_fetchd_imm(Bitu & val) {
 			// see if position is directly accessible
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(4);
-				decode.code+=4;
-				decode.page.index+=4;
+				decode.active_block->cache.AddDwordToWriteMaskAt(decode.page.index);
+				decode.code += 4;
+				decode.page.index += 4;
 				return true;
 			}
 		}
@@ -362,13 +336,13 @@ static bool decode_fetchd_imm(Bitu & val) {
 }
 
 // modrm decoding helper
-static void inline dyn_get_modrm(void) {
-	const auto val=decode_fetchb();
-	decode.modrm.mod=(val >> 6) & 3;
-	decode.modrm.reg=(val >> 3) & 7;
-	decode.modrm.rm=(val & 7);
+static inline void dyn_get_modrm()
+{
+	decode.modrm.val = decode_fetchb();
+	decode.modrm.mod = (decode.modrm.val >> 6) & 3;
+	decode.modrm.reg = (decode.modrm.val >> 3) & 7;
+	decode.modrm.rm  = (decode.modrm.val & 7);
 }
-
 
 #ifdef DRC_USE_SEGS_ADDR
 
@@ -456,7 +430,9 @@ static void inline dyn_get_modrm(void) {
 
 // adjust CPU_Cycles value
 static void dyn_reduce_cycles(void) {
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	gen_sub_direct_word(&CPU_Cycles,decode.cycles,true);
 }
 
@@ -665,13 +641,15 @@ static void dyn_closeblock(void) {
 // add a check that can branch to the exception handling
 static void dyn_check_exception(HostReg reg) {
 	save_info_dynrec[used_save_info_dynrec].branch_pos=gen_create_branch_long_nonzero(reg,false);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info_dynrec[used_save_info_dynrec].cycles=decode.cycles;
 	// in case of an exception eip will point to the start of the current instruction
 	save_info_dynrec[used_save_info_dynrec].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info_dynrec[used_save_info_dynrec].eip_change&=0xffff;
 	save_info_dynrec[used_save_info_dynrec].type=db_exception;
-	used_save_info_dynrec++;
+	++used_save_info_dynrec;
 }
 
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
@@ -1218,7 +1196,7 @@ static void InvalidateFlagsPartially(void* current_simple_function,Bitu flags_ty
 	mf_functions[mf_functions_num].pos=cache.pos;
 	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
 	mf_functions[mf_functions_num].ftype=flags_type;
-	mf_functions_num++;
+	++mf_functions_num;
 #endif
 }
 
@@ -1230,7 +1208,7 @@ static void InvalidateFlagsPartially(void* current_simple_function,const uint8_t
 	mf_functions[mf_functions_num].pos=cpos;
 	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
 	mf_functions[mf_functions_num].ftype=flags_type;
-	mf_functions_num++;
+	++mf_functions_num;
 #endif
 }
 

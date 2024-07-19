@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -193,11 +193,12 @@ void ECBClass::getFragDesc(uint16_t descNum, fragmentDescriptor *fragDesc) {
 	fragDesc->size = real_readw(RealSegment(ECBAddr), memoff);
 }
 
-RealPt ECBClass::getESRAddr(void) {
-	return RealMake(real_readw(RealSegment(ECBAddr),
-		RealOffset(ECBAddr)+6),
-		real_readw(RealSegment(ECBAddr),
-		RealOffset(ECBAddr)+4));
+RealPt ECBClass::getESRAddr()
+{
+	const auto segment = RealSegment(ECBAddr);
+	const auto offset  = RealOffset(ECBAddr);
+	return RealMake(real_readw(segment, offset + 6),
+	                real_readw(segment, offset + 4));
 }
 
 void ECBClass::NotifyESR(void) {
@@ -1052,7 +1053,7 @@ public:
 					CALLBACK_Idle();
 					if(pingCheck(&pingHead)) {
 						WriteOut(
-						        "Response from %d.%d.%d.%d, port %d time=ms\n",
+						        "Response from %d.%d.%d.%d, port %d time=%lldms\n",
 						        CONVIP(pingHead.src.addr.byIP.host),
 						        SDLNet_Read16(&pingHead.src.addr.byIP.port),
 						        GetTicksSince(ticks));

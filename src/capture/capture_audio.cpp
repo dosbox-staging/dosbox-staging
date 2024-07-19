@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 
 #include "mem.h"
 #include "setup.h"
+#include "video.h"
 
 static constexpr auto SampleFrameSize   = 4;
 static constexpr auto NumFramesInBuffer = 16 * 1024;
@@ -36,8 +37,8 @@ static struct {
 
 	uint16_t buf[NumFramesInBuffer][NumChannels] = {};
 
-	uint32_t sample_rate        = 0;
-	uint32_t buf_frames_used    = 0;
+	uint32_t sample_rate_hz  = 0;
+	uint32_t buf_frames_used = 0;
 	
 	// TODO A 16-bit / 44.1kHz WAV file is limited to a bit less than 4GB
 	// worth of sample data because the chunk sizes are stored as 32-bit
@@ -72,28 +73,30 @@ static uint8_t wav_header[] = {
 };
 // clang-format on
 
-static void create_wave_file(const uint32_t sample_rate)
+static void create_wave_file(const uint32_t sample_rate_hz)
 {
 	wave.handle = CAPTURE_CreateFile(CaptureType::Audio);
 	if (!wave.handle) {
 		return;
 	}
 
-	wave.sample_rate        = sample_rate;
+	wave.sample_rate_hz     = sample_rate_hz;
 	wave.buf_frames_used    = 0;
 	wave.data_bytes_written = 0;
 
 	fwrite(wav_header, 1, sizeof(wav_header), wave.handle);
 }
 
-void capture_audio_add_data(const uint32_t sample_rate,
+void capture_audio_add_data(const uint32_t sample_rate_hz,
                             const uint32_t num_sample_frames,
                             const int16_t* sample_frames)
 {
 	if (!wave.handle) {
-		create_wave_file(sample_rate);
+		GFX_NotifyAudioCaptureStatus(true);
+		create_wave_file(sample_rate_hz);
 	}
 	if (!wave.handle) {
+		GFX_NotifyAudioCaptureStatus(false);
 		return;
 	}
 
@@ -147,10 +150,11 @@ void capture_audio_finalise()
 	host_writed(&wav_header[riff_chunk_size_offset], riff_chunk_size);
 
 	constexpr auto sample_rate_offset = 0x18;
-	host_writed(&wav_header[sample_rate_offset], wave.sample_rate);
+	host_writed(&wav_header[sample_rate_offset], wave.sample_rate_hz);
 
 	constexpr auto byte_rate_offset = 0x1c;
-	host_writed(&wav_header[byte_rate_offset], wave.sample_rate * SampleFrameSize);
+	host_writed(&wav_header[byte_rate_offset],
+	            wave.sample_rate_hz * SampleFrameSize);
 
 	constexpr auto data_chunk_size_offset = 0x28;
 	host_writed(&wav_header[data_chunk_size_offset], wave.data_bytes_written);
@@ -160,5 +164,6 @@ void capture_audio_finalise()
 	fclose(wave.handle);
 
 	wave = {};
-}
 
+	GFX_NotifyAudioCaptureStatus(false);
+}

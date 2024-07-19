@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,18 +26,15 @@
 #include <string>
 #include <vector>
 
-// In many cases the VirtualBox mouse protocol does not work correctly yet, thus
-// it is disabled for now - if you want to enable it, read the  'IMPORTANT NOTE'
-// in 'virtualbox.cpp' and uncomment line below:
-
-// #define EXPERIMENTAL_VIRTUALBOX_MOUSE
+#include "control.h"
+#include "rect.h"
 
 // ***************************************************************************
 // Initialization, configuration
 // ***************************************************************************
 
 void MOUSE_Init(Section *);
-void MOUSE_AddConfigSection(const config_ptr_t &);
+void MOUSE_AddConfigSection(const ConfigPtr &);
 
 // ***************************************************************************
 // Data types
@@ -65,6 +62,21 @@ enum class MouseMapStatus : uint8_t {
 	Disabled
 };
 
+// Each mouse button has a corresponding fixed identifying value, similar to
+// keyboard scan codes.
+enum class MouseButtonId : uint8_t {
+	Left   = 0,
+	Right  = 1,
+	Middle = 2,
+	Extra1 = 3,
+	Extra2 = 4,
+
+	// Aliases
+	First = Left,
+	Last  = Extra2,
+	None  = UINT8_MAX,
+};
+
 // ***************************************************************************
 // Notifications from external subsystems - all should go via these methods
 // ***************************************************************************
@@ -74,8 +86,8 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
                       const MouseInterfaceId device_id);
 
-void MOUSE_EventButton(const uint8_t idx, const bool pressed);
-void MOUSE_EventButton(const uint8_t idx, const bool pressed,
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed);
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
                        const MouseInterfaceId device_id);
 
 void MOUSE_EventWheel(const int16_t w_rel);
@@ -100,18 +112,20 @@ void MOUSE_NotifyWindowActive(const bool is_active);
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
 struct MouseScreenParams {
-	// size of the black bars around screen area
-	uint32_t clip_x = 0;
-	uint32_t clip_y = 0;
-	// size of drawing area (in hot OS pixels)
-	uint32_t res_x = 0;
-	uint32_t res_y = 0;
-	// new absolute mouse cursor position
+	// The draw rectangle in logical units. Note the (x1,y1) upper-left
+	// coordinates can be negative if we're "zooming into" the DOS content
+	// (e.g., in 'relative' viewport mode), in which case the draw rect
+	// extends beyond the dimensions of the screen/window.
+	DosBox::Rect draw_rect = {};
+
+	// New absolute mouse cursor position in logical units
 	int32_t x_abs = 0;
 	int32_t y_abs = 0;
-	// whether the new mode is fullscreen or windowed
+
+	// Whether the new mode is fullscreen or windowed
 	bool is_fullscreen = false;
-	// whether more than one display was detected
+
+	// Whether more than one display was detected
 	bool is_multi_display = false;
 };
 
@@ -238,6 +252,8 @@ public:
 	const std::vector<MousePhysicalInfoEntry> &GetInfoPhysical();
 
 	static bool IsNoMouseMode();
+	static bool IsMappingBlockedByDriver();
+	
 	static bool CheckInterfaces(const ListIDs &list_ids);
 	static bool PatternToRegex(const std::string &pattern, std::regex &regex);
 

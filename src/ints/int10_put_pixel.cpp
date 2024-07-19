@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -198,7 +198,7 @@ void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color) {
 			break;
 		}
 	default:
-		if(GCC_UNLIKELY(!putpixelwarned)) {
+		if (!putpixelwarned) {
 			putpixelwarned = true;		
 			LOG(LOG_INT10,LOG_ERROR)("PutPixel unhandled mode type %d",CurMode->type);
 		}

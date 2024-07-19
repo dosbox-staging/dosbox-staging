@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -132,6 +132,8 @@ void capture_midi_finalise()
 	if (fseek(midi.handle, midi_header_size_offset, SEEK_SET) != 0) {
 		LOG_WARNING("CAPTURE: Failed to seek in captured MIDI file '%s'",
 		            safe_strerror(errno).c_str());
+		fclose(midi.handle);
+		midi = {};
 		return;
 	}
 

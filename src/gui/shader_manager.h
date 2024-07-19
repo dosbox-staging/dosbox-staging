@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,17 +24,20 @@
 #include <string>
 #include <vector>
 
+#include "rect.h"
 #include "vga.h"
 
 // forward references
 class Fraction;
 
-constexpr auto FallbackShaderName = "none";
+constexpr auto NoneShaderName     = "none";
+constexpr auto FallbackShaderName = NoneShaderName;
 constexpr auto SharpShaderName    = "interpolation/sharp";
 
 constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
 constexpr auto AutoMachineShaderName          = "crt-auto-machine";
 constexpr auto AutoArcadeShaderName           = "crt-auto-arcade";
+constexpr auto AutoArcadeSharpShaderName      = "crt-auto-arcade-sharp";
 
 enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
@@ -58,6 +61,13 @@ enum class ShaderMode {
 	// "how people experienced the game at the time of release", and
 	// prioritising the most probable developer intent.)
 	//
+	// For CGA and EGA modes that reprogram the 18-bit DAC palette on VGA
+	// adapters, a double-scanned VGA shader is selected. This is authentic as
+	// these games require a VGA adapter, therefore they were designed with
+	// double scanning in mind. In other words, no one could have experienced
+	// them on single scanning CGA and EGA monitors without special hardware
+	// hacks.
+	//
 	AutoGraphicsStandard,
 
 	// Machine-based adaptive CRT shader mode.
@@ -77,8 +87,8 @@ enum class ShaderMode {
 	// 15 kHz arcade / home computer monitor adaptive CRT shader mode.
 	// Enabled via the 'crt-machine-arcade' magic 'glshader' setting.
 	//
-	// This basically forces single-scanning of all double-scanned VGA modes
-	// and no pixel-doubling in all modes to achieve a somewhat less sharp
+	// This basically forces single scanning of all double-scanned VGA modes
+	// and no pixel doubling in all modes to achieve a somewhat less sharp
 	// look with more blending and "rounder" pixels than what you'd get on a
 	// typical sharp EGA/VGA PC monitor.
 	//
@@ -86,7 +96,11 @@ enum class ShaderMode {
 	// plus it allows you to play DOS ports of Amiga games or other 16-bit
 	// home computers with a single-scanned 15 kHz monitor look.
 	//
-	AutoArcade
+	AutoArcade,
+
+	// A sharper variant of the arcade shader. It's the exact same shader but
+	// with pixel doubling enabled.
+	AutoArcadeSharp
 };
 
 struct ShaderSettings {
@@ -128,13 +142,13 @@ public:
 	// Generate a human-readable shader inventory message (one list element
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
+	static void AddMessages();
 
 	std::string MapShaderName(const std::string& name) const;
 
 	void NotifyGlshaderSettingChanged(const std::string& shader_name);
 
-	void NotifyRenderParametersChanged(const uint16_t canvas_width,
-	                                   const uint16_t canvas_height,
+	void NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
 	                                   const VideoMode& video_mode);
 
 	const ShaderInfo& GetCurrentShaderInfo() const;
@@ -159,6 +173,7 @@ private:
 	std::string FindShaderAutoGraphicsStandard() const;
 	std::string FindShaderAutoMachine() const;
 	std::string FindShaderAutoArcade() const;
+	std::string FindShaderAutoArcadeSharp() const;
 
 	std::string GetHerculesShader() const;
 	std::string GetCgaShader() const;
@@ -175,9 +190,10 @@ private:
 
 	std::string shader_name_from_config = {};
 
-	double scale_y                   = 1.0;
-	double scale_y_force_single_scan = 1.0;
-	VideoMode video_mode             = {};
+	int pixels_per_scanline                   = 1;
+	int pixels_per_scanline_force_single_scan = 1;
+
+	VideoMode video_mode = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H

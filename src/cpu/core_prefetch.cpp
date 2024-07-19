@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,18 +17,23 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cstdio>
 
-#include <stdio.h>
+// Needed for std::isnan in simde
+#include <cmath>
 
-#include "dosbox.h"
-#include "mem.h"
-#include "cpu.h"
-#include "lazyflags.h"
-#include "inout.h"
 #include "callback.h"
-#include "pic.h"
+#include "cpu.h"
+#include "dosbox.h"
 #include "fpu.h"
+#include "inout.h"
+#include "lazyflags.h"
+#include "mem.h"
+#include "mmx.h"
 #include "paging.h"
+#include "pic.h"
+
+#include "simde/x86/mmx.h"
 
 #if C_DEBUG
 #include "debug.h"
@@ -37,17 +43,21 @@
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
+#define LoadMq(off) mem_readq(off)
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
+#define SaveMq(off,val) mem_writeq(off,val) 
 #else 
 #include "paging.h"
 #define LoadMb(off) mem_readb_inline(off)
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
+#define LoadMq(off) mem_readq_inline(off)
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
+#define SaveMq(off,val) mem_writeq_inline(off,val)
 #endif
 
 extern Bitu cycle_count;
@@ -103,8 +113,8 @@ static struct {
 } core;
 
 #define GETIP		(core.cseip-SegBase(cs))
-#define SAVEIP		reg_eip=GETIP;
-#define LOADIP		core.cseip=(SegBase(cs)+reg_eip);
+#define SAVEIP          reg_eip = static_cast<uint32_t>(GETIP);
+#define LOADIP          core.cseip = static_cast<PhysPt>((SegBase(cs) + reg_eip));
 
 #define SegBase(c)	SegPhys(c)
 #define BaseDS		core.base_ds

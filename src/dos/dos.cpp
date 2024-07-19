@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 
 #include "bios.h"
 #include "callback.h"
+#include "dos_locale.h"
 #include "drives.h"
 #include "mem.h"
 #include "program_mount_common.h"
@@ -45,138 +46,26 @@ DOS_InfoBlock dos_infoblock;
 uint16_t countryNo = 0;
 unsigned int result_errorcode = 0;
 
+static bool is_guest_booted = false;
+
+extern void DOS_ClearLaunchedProgramNames();
+
+void DOS_NotifyBooting()
+{
+	is_guest_booted = true;
+	DOS_ClearLaunchedProgramNames();
+}
+
+bool DOS_IsGuestOsBooted()
+{
+	return is_guest_booted;
+}
+
 #define DOS_COPYBUFSIZE 0x10000
 uint8_t dos_copybuf[DOS_COPYBUFSIZE];
 
 void DOS_SetError(uint16_t code) {
 	dos.errorcode=code;
-}
-
-typedef struct CountryInfo {
-	Country country_number;
-	uint8_t date_format;
-	uint8_t date_separator;
-	uint8_t time_format;
-	uint8_t time_separator;
-	uint8_t thousands_separator;
-	uint8_t decimal_separator;
-} CountryInfo;
-
-static const CountryInfo& LookupCountryInfo(const uint16_t country_number) {
-
-	static constexpr uint8_t DATE_MDY   = 0;
-	static constexpr uint8_t DATE_DMY   = 1;
-	static constexpr uint8_t DATE_YMD   = 2;
-
-	static constexpr uint8_t TIME_12H   = 0;
-	static constexpr uint8_t TIME_24H   = 1;
-
-	static constexpr uint8_t SEP_SPACE  = 0x20; // ( )
-	static constexpr uint8_t SEP_APOST  = 0x27; // (')
-	static constexpr uint8_t SEP_COMMA  = 0x2c; // (,)
-	static constexpr uint8_t SEP_DASH   = 0x2d; // (-)
-	static constexpr uint8_t SEP_PERIOD = 0x2e; // (.)
-	static constexpr uint8_t SEP_SLASH  = 0x2f; // (/)
-	static constexpr uint8_t SEP_COLON  = 0x3a; // (:)
-
-	// Values here reflect the current KDE/Linux system settings - they will probably not produce 100% same
-	// result as old MS-DOS systems, but should at least provide reasonably consistent user experience with
-	// certain host operating systems.
-	static constexpr CountryInfo COUNTRY_INFO[]= {
-		//                        | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
-	//	{ Country::None           , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_PERIOD }, // C
-		{ Country::United_States  , DATE_MDY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_US
-		{ Country::Candian_French , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_CA
-		{ Country::Latin_America  , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // es_419
-		{ Country::Russia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ru_RU
-		{ Country::Greece         , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // el_GR
-		{ Country::Netherlands    , DATE_DMY , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // nl_NL
-		{ Country::Belgium        , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_BE
-		{ Country::France         , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_FR
-		{ Country::Spain          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // es_ES
-		{ Country::Hungary        , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // hu_HU
-		{ Country::Yugoslavia     , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_RS/sr_ME/hr_HR/sk_SK/bs_BA/mk_MK
-		{ Country::Italy          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // it_IT
-		{ Country::Romania        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // ro_RO
-		{ Country::Switzerland    , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_APOST  , SEP_PERIOD }, // ??_CH
-		{ Country::Czech_Slovak   , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // cs_CZ
-		{ Country::Austria        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // de_AT
-		{ Country::United_Kingdom , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_GB
-		{ Country::Denmark        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // da_DK
-		{ Country::Sweden         , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sv_SE
-		{ Country::Norway         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // nn_NO
-		{ Country::Poland         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // pl_PL
-		{ Country::Germany        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // de_DE
-		{ Country::Argentina      , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // es_AR
-		{ Country::Brazil         , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // pt_BR
-		//                        | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
-		{ Country::Malaysia       , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ms_MY
-		{ Country::Australia      , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_AU
-		{ Country::Philippines    , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // fil_PH
-		{ Country::Singapore      , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ms_SG
-		{ Country::Kazakhstan     , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // kk_KZ
-		{ Country::Japan          , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ja_JP
-		{ Country::South_Korea    , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // ko_KR
-		{ Country::Vietnam        , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // vi_VN
-		{ Country::China          , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // zh_CN
-		{ Country::Turkey         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // tr_TR
-		{ Country::India          , DATE_DMY , SEP_SLASH  , TIME_12H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // hi_IN
-		{ Country::Niger          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_NE
-		{ Country::Benin          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fr_BJ
-		{ Country::Nigeria        , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // en_NG
-		{ Country::Faeroe_Islands , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // fo_FO
-		{ Country::Portugal       , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // pt_PT
-		{ Country::Iceland        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // is_IS
-		{ Country::Albania        , DATE_DMY , SEP_PERIOD , TIME_12H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sq_AL
-		{ Country::Malta          , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // mt_MT
-		{ Country::Finland        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // fi_FI
-		{ Country::Bulgaria       , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // bg_BG
-		{ Country::Lithuania      , DATE_YMD , SEP_DASH   , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // lt_LT
-		{ Country::Latvia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // lv_LV
-		{ Country::Estonia        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // et_EE
-		{ Country::Armenia        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // hy_AM
-		//                        | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
-		{ Country::Belarus        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // be_BY
-		{ Country::Ukraine        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // uk_UA
-		{ Country::Serbia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_RS
-		{ Country::Montenegro     , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // sr_ME
-		{ Country::Croatia        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // hr_HR
-		{ Country::Slovenia       , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // sk_SK
-		{ Country::Bosnia         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // bs_BA
-		{ Country::Macedonia      , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // mk_MK
-		{ Country::Taiwan         , DATE_YMD , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // zh_TW
-		{ Country::Arabic         , DATE_DMY , SEP_PERIOD , TIME_12H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // ar_??
-		{ Country::Israel         , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // he_IL
-		{ Country::Mongolia       , DATE_YMD , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_COMMA  , SEP_PERIOD }, // mn_MN
-		{ Country::Tadjikistan    , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // tg_TJ
-		{ Country::Turkmenistan   , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // tk_TM
-		{ Country::Azerbaijan     , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_PERIOD , SEP_COMMA  }, // az_AZ
-		{ Country::Georgia        , DATE_DMY , SEP_PERIOD , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ka_GE
-		{ Country::Kyrgyzstan     , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // ky_KG
-		{ Country::Uzbekistan     , DATE_DMY , SEP_SLASH  , TIME_24H , SEP_COLON  , SEP_SPACE  , SEP_COMMA  }, // uz_UZ
-		//                        | Date fmt | Date separ | Time fmt | Time separ | 1000 separ | Dec separ  |
-	};
-
-	for (const auto& country : COUNTRY_INFO) {
-		if (static_cast<uint16_t>(country.country_number) == country_number)
-			return country;
-	}
-	return COUNTRY_INFO[0];
-}
-
-void DOS_SetCountry(uint16_t country_number)
-{
-	if (dos.tables.country == nullptr)
-		return;
-
-	const auto country_info = LookupCountryInfo(country_number);
-
-	dos.tables.country[DOS_DATE_FORMAT_OFS]         = country_info.date_format;
-	dos.tables.country[DOS_DATE_SEPARATOR_OFS]      = country_info.date_separator;
-	dos.tables.country[DOS_TIME_FORMAT_OFS]         = country_info.time_format;
-	dos.tables.country[DOS_TIME_SEPARATOR_OFS]      = country_info.time_separator;
-	dos.tables.country[DOS_THOUSANDS_SEPARATOR_OFS] = country_info.thousands_separator;
-	dos.tables.country[DOS_DECIMAL_SEPARATOR_OFS]   = country_info.decimal_separator;
 }
 
 uint16_t DOS_GetBiosTimePacked()
@@ -688,7 +577,7 @@ static Bitu DOS_21Handler(void) {
 			uint8_t drive=reg_dl;
 			if (!drive || reg_ah==0x1f) drive = DOS_GetDefaultDrive();
 			else drive--;
-			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->isRemovable()) {
+			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->IsRemovable()) {
 				reg_al = 0x00;
 				SegSet16(ds,dos.tables.dpb);
 				reg_bx = drive*9;
@@ -780,16 +669,26 @@ static Bitu DOS_21Handler(void) {
 		};
 		LOG(LOG_MISC,LOG_ERROR)("DOS:0x37:Call for not supported switchchar");
 		break;
-	case 0x38:                 /* Set Country Code */
-		if (reg_al == 0) { /* Get country specific information */
+	case 0x38:
+		if (reg_dx == 0xffff) { /* Set Country Code */
+			// TODO: For unknown reason on modern DOSes (checked
+			// MS-DOS 6.22, PC DOS 2000 and DR DOS 7.03) this only
+			// works when setting the country to the one currently
+			// set - unknown, why
+			countryNo = (reg_al == 0xff) ? reg_bx : reg_al;
+			if (DOS_SetCountry(countryNo)) {
+				reg_ax = 0;
+				CALLBACK_SCF(false);
+			} else {
+				reg_ax = 0x02; // invalid country
+				CALLBACK_SCF(true);
+			}
+		} else { /* Get country specific information */
 			PhysPt dest = SegPhys(ds) + reg_dx;
 			MEM_BlockWrite(dest, dos.tables.country, 0x18);
-			reg_ax = reg_bx = 0x01;
-			CALLBACK_SCF(false);
-		} else { /* Set country code */
-			countryNo = reg_al == 0xff ? reg_bx : reg_al;
-			DOS_SetCountry(countryNo);
-			reg_ax = 0;
+			reg_bx = DOS_GetCountry();
+			reg_ah = 0;
+			reg_al = reg_bl;
 			CALLBACK_SCF(false);
 		}
 		break;
@@ -826,7 +725,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		if (DOS_CreateFile(name1,reg_cx,&reg_ax)) {
+		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -908,19 +807,19 @@ static Bitu DOS_21Handler(void) {
 		switch (reg_al) {
 		case 0x00:				/* Get */
 			{
-				uint16_t attr_val=reg_cx;
-				if (DOS_GetFileAttr(name1,&attr_val)) {
-					reg_cx=attr_val;
-					reg_ax=attr_val; /* Undocumented */   
-					CALLBACK_SCF(false);
-				} else {
-					CALLBACK_SCF(true);
+			        FatAttributeFlags attr_val = reg_cl;
+			        if (DOS_GetFileAttr(name1, &attr_val)) {
+				        reg_cx = attr_val._data;
+				        reg_ax = attr_val._data; // Undocumented
+				        CALLBACK_SCF(false);
+			        } else {
+				        CALLBACK_SCF(true);
 					reg_ax=dos.errorcode;
-				}
-				break;
+			        }
+			        break;
 			};
 		case 0x01:				/* Set */
-			if (DOS_SetFileAttr(name1,reg_cx)) {
+			if (DOS_SetFileAttr(name1, reg_cl)) {
 				reg_ax=0x202;	/* ax destroyed */
 				CALLBACK_SCF(false);
 			} else {
@@ -1021,14 +920,17 @@ static Bitu DOS_21Handler(void) {
 		if (result_errorcode)
 			dos.return_code = result_errorcode;
 		break;
-	case 0x4d:					/* Get Return code */
-		reg_al=dos.return_code;/* Officially read from SDA and clear when read */
-		reg_ah=dos.return_mode;
+
+	case 0x4d: // Get return code
+		// Officially read from SDA and clear when read
+		reg_al = dos.return_code;
+		reg_ah = enum_val(dos.return_mode);
 		CALLBACK_SCF(false);
 		break;
+
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		if (DOS_FindFirst(name1,reg_cx)) {
+		if (DOS_FindFirst(name1, reg_cl)) {
 			CALLBACK_SCF(false);	
 			reg_ax=0;			/* Undocumented */
 		} else {
@@ -1052,7 +954,7 @@ static Bitu DOS_21Handler(void) {
 	// case 0x51: Get current PSP, co-located with case 0x62
 	case 0x52: {				/* Get list of lists */
 		uint8_t count=2; // floppy drives always counted
-		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->isRemovable()) count++;
+		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->IsRemovable()) count++;
 		dos_infoblock.SetBlockDevices(count);
 		RealPt addr=dos_infoblock.GetPointer();
 		SegSet16(es,RealSegment(addr));
@@ -1160,14 +1062,11 @@ static Bitu DOS_21Handler(void) {
 		{
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			uint16_t handle;
-			if (DOS_OpenFile(name1,0,&handle)) {
-				DOS_CloseFile(handle);
+			if (DOS_FileExists(name1)) {
 				DOS_SetError(DOSERR_FILE_ALREADY_EXISTS);
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
-				break;
-			}
-			if (DOS_CreateFile(name1,reg_cx,&handle)) {
+			} else if (DOS_CreateFile(name1, reg_cl, &handle)) {
 				reg_ax=handle;
 				CALLBACK_SCF(false);
 			} else {
@@ -1177,10 +1076,27 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x5c:			/* FLOCK File region locking */
-		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
-		reg_ax = dos.errorcode;
-		CALLBACK_SCF(true);
-		break;
+		{
+			const uint16_t entry = reg_bx;
+			const uint32_t pos = (static_cast<uint32_t>(reg_cx) << 16) | static_cast<uint32_t>(reg_dx);
+			const uint32_t len = (static_cast<uint32_t>(reg_si) << 16) | static_cast<uint32_t>(reg_di);
+			bool success = false;
+			if (reg_al == 0) {
+				success = DOS_LockFile(entry, pos, len);
+			} else if (reg_al == 1) {
+				success = DOS_UnlockFile(entry, pos, len);
+			} else {
+				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+			}
+			if (success) {
+				reg_ax = 0;
+				CALLBACK_SCF(false);
+			} else {
+				reg_ax = dos.errorcode;
+				CALLBACK_SCF(true);
+			}
+			break;
+		}
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
@@ -1367,7 +1283,8 @@ static Bitu DOS_21Handler(void) {
 		} 
 	case 0x6c:					/* Extended Open/Create */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
-		if (DOS_OpenFileExtended(name1,reg_bx,reg_cx,reg_dx,&reg_ax,&reg_cx)) {
+		if (DOS_OpenFileExtended(name1, reg_bx, reg_cl, reg_dx,
+		                         &reg_ax, &reg_cx)) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -1414,7 +1331,7 @@ static Bitu DOS_27Handler(void) {
 
 static uint16_t DOS_SectorAccess(const bool read)
 {
-	const auto drive = dynamic_cast<fatDrive*>(Drives.at(reg_al));
+	const auto drive = std::dynamic_pointer_cast<fatDrive>(Drives.at(reg_al));
 	assert(drive);
 
 	auto bufferSeg = SegValue(ds);
@@ -1452,7 +1369,7 @@ static uint16_t DOS_SectorAccess(const bool read)
 
 static Bitu DOS_25Handler(void)
 {
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
@@ -1474,7 +1391,7 @@ static Bitu DOS_25Handler(void)
 }
 static Bitu DOS_26Handler(void) {
 	LOG(LOG_DOSMISC, LOG_NORMAL)("int 26 called: hope for the best!");
-	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->isRemovable()) {	
+	if (reg_al >= DOS_DRIVES || !Drives[reg_al] || Drives[reg_al]->IsRemovable()) {	
 		reg_ax = 0x8002;
 		SETFLAGBIT(CF,true);
 	} else if (Drives[reg_al]->GetType() == DosDriveType::Fat) {
@@ -1609,23 +1526,32 @@ public:
 		dos.internal_output=false;
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
-		char *args = const_cast<char *>(section->Get_string("ver"));
-		const char* word = strip_word(args);
-		const auto new_version = DOS_ParseVersion(word, args);
+		std::string args = section->Get_string("ver");
+		std::string word = strip_word(args);
+		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
 		if (new_version.major || new_version.minor) {
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
 		}
 	}
-	~DOS(){
-		// Clear the driver pointers. The actual objects are managed by
-		// the drive manager class.
-		Drives.fill(nullptr);
+
+	// Shutdown the DOS OS constructs leaving only the BIOS and hardware
+	// layers.
+	~DOS()
+	{
+		// Clear the drive pointers and file objects. The actual drive
+		// objects are managed by the drive manager class. The 'Files'
+		// destructors depend on the DOS API (file flush, close, and
+		// date and time lookup), so it's import to shut these down when
+		// DOS is still available.
+		DOS_ClearDrivesAndFiles();
 
 		// de-init devices, this allows DOSBox to cleanly re-initialize
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception
 		DOS_ShutDownDevices();
+
+		DOS_FreeTableMemory();
 	}
 };
 

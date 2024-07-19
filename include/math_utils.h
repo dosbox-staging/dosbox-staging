@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -102,6 +102,36 @@ inline int ifloor(const float x)
 	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
 	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
 	return static_cast<int>(floorf(x));
+}
+
+inline int iceil(double x)
+{
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(ceil(x));
+}
+
+inline int iceil(const float x)
+{
+	assert(std::isfinite(x));
+	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
+	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
+	return static_cast<int>(ceilf(x));
+}
+
+// Determine if two numbers are equal "enough" based on an epsilon value.
+// Uses a dynamic adjustment based on the magnitude of the numbers.
+// Based on ideas from Bruce Dawson's blog post:
+// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+inline bool are_almost_equal_relative(
+        const double a, const double b,
+        const double epsilon = std::numeric_limits<double>::epsilon())
+{
+	const auto diff    = std::fabs(a - b);
+	const auto largest = std::max(std::fabs(a), std::fabs(b));
+
+	return diff <= largest * epsilon;
 }
 
 // Left-shifts a signed value by a given amount, with overflow detection
@@ -222,14 +252,24 @@ constexpr uint32_t clamp_to_uint32(const T val)
 	return static_cast<uint32_t>(std::clamp(val, min_val, max_val));
 }
 
-constexpr uint8_t read_low_nibble(const uint8_t byte)
+constexpr uint8_t low_nibble(const uint8_t byte)
 {
-	return static_cast<uint8_t>(byte & 0x0f);
+	return byte & 0x0f;
 }
 
-constexpr uint8_t read_high_nibble(const uint8_t byte)
+constexpr uint8_t high_nibble(const uint8_t byte)
 {
-	return static_cast<uint8_t>(byte >> 4);
+	return (byte & 0xf0) >> 4;
+}
+
+constexpr uint8_t low_byte(const uint16_t word)
+{
+	return static_cast<uint8_t>(word & 0xff);
+}
+
+constexpr uint8_t high_byte(const uint16_t word)
+{
+	return static_cast<uint8_t>((word & 0xff00) >> 8);
 }
 
 inline float decibel_to_gain(const float decibel)
@@ -274,6 +314,21 @@ constexpr T remap(const T in_min, const T in_max, const T out_min,
 {
 	const auto t = invlerp(in_min, in_max, v);
 	return lerp(out_min, out_max, t);
+}
+
+inline std::vector<uint8_t> ascii_to_bcd(const std::string& string)
+{
+	std::vector<uint8_t> bcd = {};
+	const size_t iterations = string.size() / 2;
+	for (size_t i = 0; i < iterations; ++i) {
+		const uint8_t high_nibble = string[i * 2] - '0';
+		const uint8_t low_nibble = string[(i * 2) + 1] - '0';
+		bcd.push_back((high_nibble << 4) | (low_nibble & 0xF));
+	}
+	if (string.size() % 2) {
+		bcd.push_back(static_cast<uint8_t>(string.back()) << 4);
+	}
+	return bcd;
 }
 
 // Explicit instantiations for lerp, invlerp, and remap

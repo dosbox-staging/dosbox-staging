@@ -17,32 +17,32 @@
  */
 
 {
-	EAPoint si_base,di_base;
-	Bitu	si_index,di_index;
-	Bitu	add_mask;
-	Bitu count, count_left = 0;
-	Bits	add_index;
-	
-	if (inst.prefix & PREFIX_SEG) si_base=inst.seg.base;
-	else si_base=SegBase(ds);
-	di_base=SegBase(es);
-	if (inst.prefix & PREFIX_ADDR) {
-		add_mask=0xFFFFFFFF;
-		si_index=reg_esi;
-		di_index=reg_edi;
-		count=reg_ecx;
-	} else {
-		add_mask=0xFFFF;
-		si_index=reg_si;
-		di_index=reg_di;
-		count=reg_cx;
-	}
+	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
+	                                                : SegBase(ds);
+	const auto di_base = SegBase(es);
+
+	const auto is_32bit_addr = (inst.prefix & PREFIX_ADDR) != 0;
+
+	const uint32_t add_mask = is_32bit_addr ? 0xFFFFFFFF : 0xFFFF;
+	uint32_t si_index       = is_32bit_addr ? reg_esi : reg_si;
+	uint32_t di_index       = is_32bit_addr ? reg_edi : reg_di;
+
+	// Count has to be large enough to both hold an unsigned 32-bit
+	// value and also be used as a signed counter. To test the
+	// maximum, press enter during Frontier First Encounter's intro
+	// sequence on an arm64 or PPC platform, in which case all bits
+	// of ECX will be set.
+	//
+	int64_t count = is_32bit_addr ? reg_ecx : reg_cx;
+
+	int32_t count_left = 0;
+
 	if (!(inst.prefix & PREFIX_REP)) {
 		count=1;
 	} else {
 		/* Calculate amount of ops to do before cycles run out */
 		CPU_Cycles++;
-		if ((count>(Bitu)CPU_Cycles) && (inst.code.op<R_SCASB)) {
+		if ((count > CPU_Cycles) && (inst.code.op < R_SCASB)) {
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;
 			CPU_Cycles=0;
@@ -53,7 +53,7 @@
 			count_left=0;
 		}
 	}
-	add_index=cpu.direction;
+	auto add_index = cpu.direction;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
 		for (;count>0;count--) {

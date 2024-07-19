@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,19 +21,20 @@
 
 #include "program_boot.h"
 
+#include <cstdio>
 #include <limits>
-#include <stdio.h>
 
 #include "bios_disk.h"
 #include "callback.h"
 #include "control.h"
-#include "cross.h"
 #include "dma.h"
 #include "drives.h"
+#include "fs_utils.h"
 #include "mapper.h"
 #include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "video.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
                               uint32_t* bsize, uint8_t* error)
@@ -50,11 +51,13 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		return nullptr;
 
 	try {
-		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
-		if (!ldp)
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(
+		        Drives.at(drive));
+		if (!ldp) {
 			return nullptr;
+		}
 
-		tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			if (!tryload)
 				*error = 1;
@@ -62,17 +65,20 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		}
 
 		// get file size
-		fseek(tmpfile, 0L, SEEK_END);
+		if (!check_fseek("BOOT", "image", filename, tmpfile, 0L, SEEK_END)) {
+			return nullptr;
+		}
+
 		*ksize = (ftell(tmpfile) / 1024);
 		*bsize = ftell(tmpfile);
 		fclose(tmpfile);
 
-		tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
+		tmpfile = ldp->GetHostFilePtr(fullname, "rb+");
 		if (tmpfile == nullptr) {
 			//				if (!tryload) *error=2;
 			//				return NULL;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+			tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 			if (tmpfile == nullptr) {
 				if (!tryload)
 					*error = 1;
@@ -95,15 +101,20 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 		return tmpfile;
 	// File not found on mounted filesystem. Try regular filesystem
 	const auto filename_s = resolve_home(filename).string();
-	tmpfile = fopen_wrap(filename_s.c_str(), "rb+");
+	tmpfile = fopen(filename_s.c_str(), "rb+");
+
+	auto fseek_in_tmpfile = make_check_fseek_func("BOOT", "image", filename);
+
 	if (!tmpfile) {
-		if ((tmpfile = fopen_wrap(filename_s.c_str(), "rb"))) {
+		if ((tmpfile = fopen(filename_s.c_str(), "rb"))) {
 			// File exists; So can't be opened in correct mode =>
 			// error 2
 			//				fclose(tmpfile);
 			//				if (tryload) error = 2;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			fseek(tmpfile, 0L, SEEK_END);
+			if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+				return nullptr;
+			}
 			*ksize = (ftell(tmpfile) / 1024);
 			*bsize = ftell(tmpfile);
 			return tmpfile;
@@ -116,7 +127,9 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
 		return nullptr;
 	}
-	fseek(tmpfile, 0L, SEEK_END);
+	if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+		return nullptr;
+	}
 	*ksize = (ftell(tmpfile) / 1024);
 	*bsize = ftell(tmpfile);
 	return tmpfile;
@@ -239,8 +252,8 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != nullptr) {
-				diskSwap[i] = DriveManager::RegisterRawFloppyImage(
-				        usefile, temp_line, floppysize);
+				diskSwap[i] = std::make_shared<imageDisk>(
+				        usefile, temp_line.c_str(), floppysize, false);
 				if (usefile_1 == nullptr) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;
@@ -274,6 +287,10 @@ void BOOT::Run(void)
 		} else {
 			uint8_t rombuf[65536];
 			Bits cfound_at = -1;
+
+			auto fseek_in_usefile = make_check_fseek_func(
+			        "BOOT", "cartridge", temp_line.c_str());
+
 			if (!cart_cmd.empty()) {
 				if (!usefile_1) {
 					WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_NOT_OPEN"), temp_line.c_str());
@@ -281,9 +298,7 @@ void BOOT::Run(void)
 				}
 				/* read cartridge data into buffer */
 				constexpr auto seek_pos = 0x200;
-				if (fseek(usefile_1, seek_pos, SEEK_SET) != 0) {
-					LOG_ERR("BOOT: Failed seeking to %d in cartridge data file '%s': %s",
-					        seek_pos, temp_line.c_str(), strerror(errno));
+				if (!fseek_in_usefile(usefile_1, seek_pos, SEEK_SET)) {
 					return;
 				}
 				const auto rom_bytes_expected = rombytesize_1 - 0x200;
@@ -328,7 +343,6 @@ void BOOT::Run(void)
 						        "PROGRAM_BOOT_CART_NO_CMDS"));
 					}
 					diskSwap.fill(nullptr);
-					DriveManager::CloseRawFddImages();
 
 					return;
 				} else {
@@ -361,7 +375,6 @@ void BOOT::Run(void)
 							        "PROGRAM_BOOT_CART_NO_CMDS"));
 						}
 						diskSwap.fill(nullptr);
-						DriveManager::CloseRawFddImages();
 						return;
 					}
 				}
@@ -374,9 +387,14 @@ void BOOT::Run(void)
 				return;
 
 			uint32_t sz1, sz2;
-			FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
+			constexpr auto rom_filename = "system.rom";
+			FILE* tfile = getFSFile(rom_filename, &sz1, &sz2, true);
 			if (tfile != nullptr) {
-				fseek(tfile, 0x3000L, SEEK_SET);
+				auto fseek_in_rom = make_check_fseek_func(
+				        "BOOT", "system ROM", rom_filename);
+				if (!fseek_in_rom(tfile, 0x3000L, SEEK_SET)) {
+					return;
+				}
 				uint32_t drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
 				if (drd == 0xb000) {
 					for (i = 0; i < 0xb000; i++)
@@ -386,7 +404,9 @@ void BOOT::Run(void)
 			}
 
 			if (usefile_2 != nullptr) {
-				fseek(usefile_2, 0x0L, SEEK_SET);
+				if (!fseek_in_usefile(usefile_2, 0x0L, SEEK_SET)) {
+					return;
+				}
 				if (fread(rombuf, 1, 0x200, usefile_2) < 0x200) {
 					LOG_MSG("Failed to read sufficient ROM data");
 					fclose(usefile_2);
@@ -396,9 +416,11 @@ void BOOT::Run(void)
 				PhysPt romseg_pt = host_readw(&rombuf[0x1ce]) << 4;
 
 				/* read cartridge data into buffer */
-				fseek(usefile_2, 0x200L, SEEK_SET);
-				if (fread(rombuf, 1, rombytesize_2 - 0x200,
-				          usefile_2) < rombytesize_2 - 0x200) {
+				if (!fseek_in_usefile(usefile_2, 0x200L, SEEK_SET)) {
+					return;
+				}
+				if (fread(rombuf, 1, rombytesize_2 - 0x200, usefile_2) <
+				    rombytesize_2 - 0x200) {
 					LOG_MSG("Failed to read sufficient ROM data");
 					fclose(usefile_2);
 					return;
@@ -413,7 +435,9 @@ void BOOT::Run(void)
 					phys_writeb(romseg_pt + i, rombuf[i]);
 			}
 
-			fseek(usefile_1, 0x0L, SEEK_SET);
+			if (!fseek_in_usefile(usefile_1, 0x0L, SEEK_SET)) {
+				return;
+			}
 			if (fread(rombuf, 1, 0x200, usefile_1) < 0x200) {
 				LOG_MSG("Failed to read sufficient cartridge data");
 				fclose(usefile_1);
@@ -423,7 +447,9 @@ void BOOT::Run(void)
 			uint16_t romseg = host_readw(&rombuf[0x1ce]);
 
 			/* read cartridge data into buffer */
-			fseek(usefile_1, 0x200L, SEEK_SET);
+			if (!fseek_in_usefile(usefile_1, 0x200L, SEEK_SET)) {
+				return;
+			}
 			if (fread(rombuf, 1, rombytesize_1 - 0x200, usefile_1) <
 			    rombytesize_1 - 0x200) {
 				LOG_MSG("Failed to read sufficient cartridge data");
@@ -439,7 +465,6 @@ void BOOT::Run(void)
 
 			// Close cardridges
 			diskSwap.fill(nullptr);
-			DriveManager::CloseRawFddImages();
 
 			NotifyBooting();
 
@@ -504,6 +529,8 @@ void VIRTUALBOX_NotifyBooting();
 
 void BOOT::NotifyBooting()
 {
+	DOS_NotifyBooting();
+	GFX_NotifyBooting();
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
 }
@@ -511,42 +538,41 @@ void BOOT::NotifyBooting()
 void BOOT::AddMessages()
 {
 	MSG_Add("PROGRAM_BOOT_HELP_LONG",
-	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
+	        "Boot DOSBox Staging from a DOS drive or disk image.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]boot[reset] [color=white]DRIVE[reset]\n"
-	        "  [color=green]boot[reset] [color=cyan]IMAGEFILE[reset]\n"
+	        "  [color=light-green]boot[reset] [color=white]DRIVE[reset]\n"
+	        "  [color=light-green]boot[reset] [color=light-cyan]IMAGEFILE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].\n"
-	        "  [color=cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.\n"
+	        "Parameters:\n"
+	        "  [color=white]DRIVE[reset]      drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset]\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  one or more floppy images, separated by spaces\n"
 	        "\n"
 	        "Notes:\n"
-	        "  A DOS drive letter must have been mounted previously with [color=green]imgmount[reset] command.\n"
+	        "  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.\n"
 	        "  The DOS drive or disk image must be bootable, containing DOS system files.\n"
 	        "  If more than one disk images are specified, you can swap them with a hotkey.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]boot[reset] [color=white]c:[reset]\n"
-	        "  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]\n");
-	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
-	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
+	        "  [color=light-green]boot[reset] [color=white]c:[reset]\n"
+	        "  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]\n");
+	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist. Failing.\n");
+	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file. Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
 	        "This command boots DOSBox Staging from either a floppy or hard disk image.\n\n"
-	        "For this command, one can specify a succession of floppy disks swappable\n"
-	        "by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
-	        "no drive letter is specified, this defaults to booting from the A drive.\n"
-	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
-	        "drive (C or D), the image should have already been mounted using the\n"
-	        "[color=blue]IMGMOUNT[reset] command.\n\n"
-	        "Type [color=blue]BOOT /?[reset] for the syntax of this command.\n");
-	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
+	        "For this command, one can specify a succession of floppy disks swappable by\n"
+	        "pressing [color=yellow]%s+F4[reset], and -l specifies the mounted drive to boot from. If no drive\n"
+	        "letter is specified, this defaults to booting from the A drive. The only\n"
+	        "bootable drive letters are A, C, and D. For booting from a hard drive (C or D),\n"
+	        "the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.\n\n"
+	        "Type [color=light-blue]BOOT /?[reset] for the syntax of this command.\n");
+	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c.\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_MOUNTED","Floppy image(s) already mounted.\n");
-	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
+	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s\n");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
-	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
-	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
-	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
+	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr.\n");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s\n");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found.\n");
 }

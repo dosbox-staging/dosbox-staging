@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,6 +68,21 @@ char drive_letter(uint8_t index)
 {
 	assert(index <= 26);
 	return 'A' + index;
+}
+
+char get_drive_letter_from_path(const char* path)
+{
+	if (strlen(path) < 2) {
+		return 0;
+	}
+	if (path[1] != ':') {
+		return 0;
+	}
+	const char drive_letter = toupper(path[0]);
+	if (drive_letter >= 'A' && drive_letter <= 'Z') {
+		return drive_letter;
+	}
+	return 0;
 }
 
 std::string get_basename(const std::string &filename)
@@ -303,14 +318,14 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 
 	// Third priority is a potentially customized --datadir specified at
 	// compile time.
-	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
+	add_if_exists(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME);
 
 	// Fourth priority is the user and system XDG data specification
 #if !defined(WIN32) && !defined(MACOSX)
-	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
+	add_if_exists(get_xdg_data_home() / DOSBOX_PROJECT_NAME);
 
 	for (const auto& data_dir : get_xdg_data_dirs()) {
-		add_if_exists(data_dir / CANONICAL_PROJECT_NAME);
+		add_if_exists(data_dir / DOSBOX_PROJECT_NAME);
 	}
 #endif
 
@@ -320,10 +335,10 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	// portability of the install tree (do not replace this with --prefix,
 	// which would destroy this portable aspect).
 	//
-	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
+	add_if_exists(GetExecutablePath() / "../share" / DOSBOX_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
-	add_if_exists(get_platform_config_dir());
+	add_if_exists(GetConfigDir());
 
 	return paths;
 }
@@ -419,22 +434,23 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 }
 
 // Get resource lines from a text file
-std::vector<std::string> GetResourceLines(const std_fs::path &name,
+std::vector<std::string> GetResourceLines(const std_fs::path& name,
                                           const ResourceImportance importance)
 {
-	auto lines = get_lines(name);
-	if (lines)
-		return std::move(*lines);
-
+	const auto resource_path = GetResourcePath(name);
+	if (auto maybe_lines = get_lines(resource_path); maybe_lines) {
+		return std::move(*maybe_lines);
+	}
 	// the resource didn't exist but it's optional
-	if (importance == ResourceImportance::Optional)
+	if (importance == ResourceImportance::Optional) {
 		return {};
+	}
 
 	// the resource didn't exist and it was mandatory, so verbosely quit
 	assert(importance == ResourceImportance::Mandatory);
 	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 	        name.string().c_str());
-	for (const auto &path : GetResourceParentPaths()) {
+	for (const auto& path : GetResourceParentPaths()) {
 		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
 	E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
@@ -524,13 +540,14 @@ bool is_readonly(const std_fs::path &p)
 
 bool make_writable(const std_fs::path &p)
 {
+	using namespace std_fs;
+
 	// Check
 	if (is_writable(p))
 		return true;
 
 	// Apply
 	std::error_code ec;
-	using namespace std_fs;
 	permissions(p, perms::owner_write, perm_options::add, ec);
 
 	// Result and verification
@@ -545,12 +562,13 @@ bool make_writable(const std_fs::path &p)
 
 bool make_readonly(const std_fs::path &p)
 {
+	using namespace std_fs;
+
 	// Check
 	if (is_readonly(p))
 		return true;
 
 	// Apply
-	using namespace std_fs;
 	constexpr auto write_perms = (perms::owner_write |
 	                              perms::group_write |
 	                              perms::others_write);

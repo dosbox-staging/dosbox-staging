@@ -76,7 +76,10 @@ void LOADFIX::Run(void)
 			}
 			// Use shell to start program
 			DOS_Shell shell;
+			// If it's a batch file, this call places it into an internal data structure.
 			shell.ExecuteProgram(filename, args);
+			// Actually run the batch file. This is a no-op if it's an executable.
+			shell.RunBatchFile();
 			DOS_FreeMemory(segment);
 			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
 		}
@@ -87,25 +90,30 @@ void LOADFIX::Run(void)
 
 void LOADFIX::AddMessages() {
 	MSG_Add("PROGRAM_LOADFIX_HELP_LONG",
-	        "Loads a program in the specific memory region and then runs it.\n"
+	        "Load a program in the specific memory region and then run it.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]loadfix[reset] [color=cyan]GAME[reset] [color=white][PARAMETERS][reset]\n"
-	        "  [color=green]loadfix[reset] [/d] (or [/f])[reset]\n"
+	        "  [color=light-green]loadfix[reset] [color=white][-SIZE][reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]\n"
+	        "  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]GAME[reset]        game or program to load, optionally with parameters\n"
+	        "  [color=white]-SIZE[reset]       SIZE indicates the number of kilobytes to be allocated\n"
+	        "  /d (or /f)  Frees the previously allocated memory.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  The most common use cases of this command are to fix DOS games or programs\n"
-	        "  which show either the \"[color=white]Packed File Corrupt[reset]\" or \"[color=white]Not enough memory\"[reset] (e.g.,\n"
-	        "  from some 1980's games such as California Games II) error message when run.\n"
-	        "  Running [color=green]loadfix[reset] without an argument simply allocates memory for your game\n"
-	        "  to run; you can free the memory with either /d or /f option when it finishes.\n"
+	        "  - The most common use case of this command is to fix games such as\n"
+	        "    California Games II and Wing Commander 2 that show [color=white]\"Packed File Corrupt\"[reset]\n"
+	        "    or [color=white]\"Not enough memory\"[reset] error messages.\n"
+	        "  - Running [color=light-green]loadfix[reset] without an argument simply allocates memory for your game\n"
+	        "    to run; you can free the memory with either /d or /f option when it\n"
+	        "    finishes.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]\n"
-	        "  [color=green]loadfix[reset] /d\n");
+	        "  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]\n"
+	        "  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]\n"
+	        "  [color=light-green]loadfix[reset] [color=white]-128[reset]\n"
+	        "  [color=light-green]loadfix[reset] /d\n");
 	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,9 +25,10 @@
 #include "dos_inc.h"
 #include "math_utils.h"
 #include "pic.h"
-#include "string_utils.h"
+#include "unicode.h"
 
 #include <algorithm>
+#include <initializer_list>
 
 CHECK_NARROWING();
 
@@ -173,11 +174,12 @@ void ManyMouseGlue::Rescan()
 	ClearPhysicalMice();
 
 	for (uint8_t idx = 0; idx < num_mice; idx++) {
-		const auto name_utf8 = ManyMouse_DeviceName(idx);
-		std::string name;
 		// We want the mouse name to be the same regardless of the code
 		// page set - so use 7-bit ASCII characters only
-		utf8_to_dos(name_utf8, name, UnicodeFallback::Simple, 0);
+		auto name = utf8_to_dos(ManyMouse_DeviceName(idx),
+		                        DosStringConvertMode::NoSpecialCharacters,
+		                        UnicodeFallback::Simple,
+		                        0);
 
 		// Replace non-breaking space with a regular space
 		const char character_nbsp  = 0x7f;
@@ -368,11 +370,13 @@ bool ManyMouseGlue::IsMappingInEffect() const
 
 void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical_only)
 {
-	if (GCC_UNLIKELY(event.device >= mouse_info.physical.size()))
+	if (event.device >= mouse_info.physical.size()) {
 		return; // device ID out of supported range
-	if (GCC_UNLIKELY(mouse_config.capture == MouseCapture::NoMouse &&
-	                 event.type != MANYMOUSE_EVENT_DISCONNECT))
+	}
+	if (mouse_config.capture == MouseCapture::NoMouse &&
+	    event.type != MANYMOUSE_EVENT_DISCONNECT) {
 		return; // mouse control disabled in GUI
+	}
 
 	const auto device_idx = static_cast<uint8_t>(event.device);
 	const auto interface_id = physical_devices[device_idx].GetMappedInterfaceId();
@@ -408,14 +412,15 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 		// LOG_INFO("MANYMOUSE #%u BUTTON %u %s", event.device,
 		// event.item, event.value ? "press" : "release");
 		if (no_interface || (critical_only && !event.value) ||
-		    (event.item >= max_buttons))
+		    (event.item > static_cast<uint8_t>(manymouse_max_button_id))) {
 			// TODO: Consider supporting extra mouse buttons
 			// in the future. On Linux event items 3-7 are for
 			// scroll wheel(s), 8 is for SDL button X1, 9 is
 			// for X2, etc. - but I don't know yet if this
 			// is consistent across various platforms
 			break;
-		MOUSE_EventButton(static_cast<uint8_t>(event.item),
+		}
+		MOUSE_EventButton(static_cast<MouseButtonId>(event.item),
 		                  event.value,
 		                  interface_id);
 		break;
@@ -431,8 +436,12 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 	case MANYMOUSE_EVENT_DISCONNECT:
 		// LOG_INFO("MANYMOUSE #%u DISCONNECT", event.device);
 		physical_devices[event.device].disconnected = true;
-		for (uint8_t button = 0; button < max_buttons; button++)
-			MOUSE_EventButton(button, false, interface_id);
+
+		for (const auto button_id : {MouseButtonId::Left,
+		                             MouseButtonId::Right,
+		                             MouseButtonId::Middle}) {
+			MOUSE_EventButton(button_id, false, interface_id);
+		}
 		MOUSE_NotifyDisconnect(interface_id);
 		break;
 

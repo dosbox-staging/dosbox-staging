@@ -31,7 +31,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel);
 	void NotifyButton(const uint8_t new_buttons,
-	                  const uint8_t idx); // changed button, staring from 0
+	                  const MouseButtonId id); // changed button
 	void NotifyWheel(const int16_t w_rel);
 
 	void BoostRate(const uint16_t rate_hz); // 0 = standard rate

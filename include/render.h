@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,11 +24,44 @@
 
 #include <cstring>
 #include <deque>
+#include <optional>
 #include <string>
 
 #include "../src/gui/render_scalers.h"
 #include "fraction.h"
+#include "rect.h"
 #include "vga.h"
+
+enum class ViewportMode { Fit, Relative };
+
+struct ViewportSettings {
+	ViewportMode mode = {};
+
+	// Either parameter can be set in Fit mode (but not both at the
+	// same time), or none
+	struct {
+		std::optional<DosBox::Rect> limit_size = {};
+		std::optional<float> desktop_scale     = {};
+	} fit = {};
+
+	struct {
+		float height_scale = 1.0f;
+		float width_scale  = 1.0f;
+	} relative = {};
+
+	constexpr bool operator==(const ViewportSettings& that) const
+	{
+		return (mode == that.mode && fit.limit_size == that.fit.limit_size &&
+		        fit.desktop_scale == that.fit.desktop_scale &&
+		        relative.height_scale == that.relative.height_scale &&
+		        relative.width_scale == that.relative.width_scale);
+	}
+
+	constexpr bool operator!=(const ViewportSettings& that) const
+	{
+		return !operator==(that);
+	}
+};
 
 struct RenderPal_t {
 	struct {
@@ -155,29 +191,28 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_Init(Section*);
 void RENDER_Reinit();
 
-void RENDER_AddConfigSection(const config_ptr_t& conf);
+void RENDER_AddConfigSection(const ConfigPtr& conf);
 
-bool RENDER_IsAspectRatioCorrectionEnabled();
-const std::string RENDER_GetCgaColorsSetting();
+AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
+
+DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px);
+
+std::string RENDER_GetCgaColorsSetting();
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage();
+void RENDER_AddMessages();
 
-void RENDER_SetSize(const uint16_t width, const uint16_t height,
-                    const bool double_width, const bool double_height,
-                    const Fraction& render_pixel_aspect_ratio,
-                    const PixelFormat pixel_format,
-                    const double frames_per_second, const VideoMode& video_mode);
+void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second);
 
-bool RENDER_StartUpdate(void);
+bool RENDER_StartUpdate();
 void RENDER_EndUpdate(bool abort);
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
-bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
-                                  [[maybe_unused]] const uint16_t canvas_height,
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render);
 

@@ -32,6 +32,32 @@
 
 #include "std_filesystem.h"
 
+#if defined(WIN32)
+	#include <windows.h>
+
+	using NativeFileHandle = HANDLE;
+	// Cannot be constexpr due to Win32 macro
+	#define InvalidNativeFileHandle INVALID_HANDLE_VALUE
+
+#else // Linux, macOS
+	using NativeFileHandle = int;
+	constexpr NativeFileHandle InvalidNativeFileHandle = -1;
+#endif
+
+constexpr int64_t NativeSeekFailed = -1;
+
+struct NativeIoResult {
+	int64_t num_bytes = 0;
+	bool error        = false;
+};
+
+enum class NativeSeek { Set, Current, End };
+
+struct DosDateTime {
+	uint16_t date = 0;
+	uint16_t time = 0;
+};
+
 // return the lines from the given text file or an empty optional
 std::optional<std::vector<std::string>> get_lines(const std_fs::path &text_file);
 
@@ -89,6 +115,39 @@ constexpr uint32_t OK_IF_EXISTS = 0x1;
 
 int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags = 0x0) noexcept;
 
+// Behaves like fseek, but logs an error stating the module, byte offset, file
+// description, filename, and strerror on failure. Returns true on success and
+// false on failure. On failure, it closes the file as it's no longer in a good
+// state.
+//
+bool check_fseek(const char* module_name, const char* file_description,
+                 const char* filename, FILE*& stream, const long long offset,
+                 const int whence);
+
+// Returns a 'check_fseek' function object that behaves like the above. This can
+// be used when lots of sequential seeks are needed.
+//
+inline auto make_check_fseek_func(const std::string& module_name,
+                                  const std::string& file_description,
+                                  const std_fs::path& filepath)
+{
+	// Use the lambda copy-operator to keep copies of the arguments inside
+	// the lambda, as these arguments would normally go out of scope with
+	// respect to the lifetime of the lamda.
+	//
+	auto check_fseek_lambda = [=](FILE*& stream,
+	                              const long long offset,
+	                              const int whence) -> bool {
+		return check_fseek(module_name.c_str(),
+		                   file_description.c_str(),
+		                   filepath.string().c_str(),
+		                   stream,
+		                   offset,
+		                   whence);
+	};
+	return check_fseek_lambda;
+}
+
 // Convert a filesystem time to a raw time_t value
 std::time_t to_time_t(const std_fs::file_time_type &fs_time);
 
@@ -135,12 +194,36 @@ std::deque<std_fs::path> get_xdg_data_dirs() noexcept;
 
 union FatAttributeFlags; // forward declaration
 
-FILE* local_drive_create_file(const std_fs::path& path,
-                              const FatAttributeFlags attributes);
 uint16_t local_drive_create_dir(const std_fs::path& path);
 uint16_t local_drive_get_attributes(const std_fs::path& path,
                                     FatAttributeFlags& attributes);
 uint16_t local_drive_set_attributes(const std_fs::path& path,
                                     const FatAttributeFlags attributes);
+
+// Native file I/O wrappers.
+// Currently only used by local drive and overlay drive but suitable for use
+// elsewhere.
+NativeFileHandle open_native_file(const std_fs::path& path, const bool write_access);
+NativeFileHandle create_native_file(const std_fs::path& path,
+                                    const std::optional<FatAttributeFlags> attributes);
+
+NativeIoResult read_native_file(const NativeFileHandle handle, uint8_t* buffer,
+                                const int64_t num_bytes_requested);
+NativeIoResult write_native_file(const NativeFileHandle handle, const uint8_t* buffer,
+                                 const int64_t num_bytes_requested);
+
+int64_t seek_native_file(const NativeFileHandle handle, const int64_t offset,
+                         const NativeSeek type);
+
+// Returns offset from beginning of file
+int64_t get_native_file_position(const NativeFileHandle handle);
+
+void close_native_file(const NativeFileHandle handle);
+
+// Sets the file size to be equal to the current file position
+bool truncate_native_file(const NativeFileHandle handle);
+
+DosDateTime get_dos_file_time(const NativeFileHandle handle);
+void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time);
 
 #endif

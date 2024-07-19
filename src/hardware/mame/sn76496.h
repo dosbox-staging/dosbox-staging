@@ -5,18 +5,6 @@
 #ifndef MAME_SOUND_SN76496_H
 #define MAME_SOUND_SN76496_H
 
-DECLARE_DEVICE_TYPE(SN76496,  sn76496_device)
-DECLARE_DEVICE_TYPE(U8106,    u8106_device)
-DECLARE_DEVICE_TYPE(Y2404,    y2404_device)
-DECLARE_DEVICE_TYPE(SN76489,  sn76489_device)
-DECLARE_DEVICE_TYPE(SN76489A, sn76489a_device)
-DECLARE_DEVICE_TYPE(SN76494,  sn76494_device)
-DECLARE_DEVICE_TYPE(SN94624,  sn94624_device)
-DECLARE_DEVICE_TYPE(NCR8496,  ncr8496_device)
-DECLARE_DEVICE_TYPE(PSSJ3,    pssj3_device)
-DECLARE_DEVICE_TYPE(GAMEGEAR, gamegear_device)
-DECLARE_DEVICE_TYPE(SEGAPSG,  segapsg_device)
-
 #if 0
 
 
@@ -40,8 +28,6 @@ public:
 	void convert_samplerate(int32_t target_rate);
 protected:
 	sn76496_base_device(
-			const machine_config &mconfig,
-			device_type type,
 			const char *tag,
 			int feedbackmask,
 			int noisetap1,
@@ -104,35 +90,35 @@ private:
 class sn76496_device final : public sn76496_base_device
 {
 public:
-	sn76496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sn76496_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // U8106 not verified yet. todo: verify; (a custom marked sn76489? only used on mr. do and maybe other universal games)
 class u8106_device final : public sn76496_base_device
 {
 public:
-	u8106_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	u8106_device( const char *tag, device_t *owner, uint32_t clock);
 };
 
 // Y2404 not verified yet. todo: verify; (don't be fooled by the Y, it's a TI chip, not Yamaha)
 class y2404_device final : public sn76496_base_device
 {
 public:
-	y2404_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	y2404_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // NCR8496 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
 class sn76489_device final : public sn76496_base_device
 {
 public:
-	sn76489_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sn76489_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // PSSJ-3 whitenoise verified, phase verified; verified by ValleyBell & NewRisingSun
 class pssj3_device final : public sn76496_base_device
 {
 public:
-	pssj3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	pssj3_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 
@@ -140,42 +126,42 @@ public:
 class sn76489a_device final : public sn76496_base_device
 {
 public:
-	sn76489a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sn76489a_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // SN76494 not verified, (according to datasheet: same as sn76489a but without the /8 divider)
 class sn76494_device final : public sn76496_base_device
 {
 public:
-	sn76494_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sn76494_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // SN94624 whitenoise verified, phase verified, period verified; verified by PlgDavid
 class sn94624_device final : public sn76496_base_device
 {
 public:
-	sn94624_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	sn94624_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // NCR8496 not verified; info from smspower wiki and vgmpf wiki
 class ncr8496_device final : public sn76496_base_device
 {
 public:
-	ncr8496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	ncr8496_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // Verified by Justin Kerk
 class gamegear_device final : public sn76496_base_device
 {
 public:
-	gamegear_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	gamegear_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 // todo: verify; from smspower wiki, assumed to have same invert as gamegear
 class segapsg_device final : public sn76496_base_device
 {
 public:
-	segapsg_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock);
+	segapsg_device(const char *tag, device_t *owner, uint32_t clock);
 };
 
 #endif // MAME_SOUND_SN76496_H

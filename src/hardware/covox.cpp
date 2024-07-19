@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,9 +38,10 @@ void Covox::ConfigureFilters(const FilterState state)
 {
 	assert(channel);
 	if (state == FilterState::On) {
-		constexpr uint8_t lp_order = 2;
-		const uint16_t lp_cutoff_freq = 9000;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_order          = 2;
+		constexpr auto lp_cutoff_freq_hz = 9000;
+
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetLowPassFilter(state);
 }

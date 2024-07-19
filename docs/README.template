@@ -5,10 +5,10 @@ This package contains %PACKAGE_INFORMATION% of the DOSBox Staging project.
 DOSBox Staging is meant as a (mostly) drop-in replacement for older DOSBox versions -- your existing configurations will continue to work, but you will have access to many advanced features.
 
 To learn more, check out the Getting Started guide on our website:
-https://dosbox-staging.github.io/getting-started/introduction/
+https://www.dosbox-staging.org/getting-started/introduction/
 
 Our project website:
-https://dosbox-staging.github.io/
+https://www.dosbox-staging.org/
 
 You can report bugs and ask questions in our GitHub repository:
 https://github.com/%GITHUB_REPO%

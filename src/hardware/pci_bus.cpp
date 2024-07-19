@@ -19,6 +19,9 @@
 
 #include "pci_bus.h"
 
+#include <array>
+#include <memory>
+
 #include "callback.h"
 #include "debug.h"
 #include "dosbox.h"
@@ -32,7 +35,7 @@ static uint32_t pci_caddress=0;			// current PCI addressing
 static Bitu pci_devices_installed=0;	// number of registered PCI devices
 
 static uint8_t pci_cfg_data[PCI_MAX_PCIDEVICES][PCI_MAX_PCIFUNCTIONS][256];		// PCI configuration data
-static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
+static std::array<std::unique_ptr<PCI_Device>, PCI_MAX_PCIDEVICES> pci_devices;
 
 
 // PCI address
@@ -87,7 +90,7 @@ static void write_pci(const io_port_t port, const io_val_t value, const io_width
 		LOG(LOG_PCI,LOG_NORMAL)("PCI: Write to device %x register %x (function %x) (:=%x)",devnum,regnum,fctnum,val);
 
 		if (devnum>=pci_devices_installed) return;
-		PCI_Device *selected_device = pci_devices[devnum];
+		PCI_Device *selected_device = pci_devices[devnum].get();
 		if (selected_device == nullptr)
 			return;
 		if (fctnum > selected_device->NumSubdevices())
@@ -163,7 +166,7 @@ static uint8_t read_pci(const io_port_t port, [[maybe_unused]] io_width_t width)
 		LOG(LOG_PCI,LOG_NORMAL)("PCI: Read from device %x register %x (function %x); addr %x",
 			devnum,regnum,fctnum,pci_caddress);
 
-		PCI_Device *selected_device = pci_devices[devnum];
+		PCI_Device *selected_device = pci_devices[devnum].get();
 
 		if (selected_device == nullptr)
 			return 0xff;
@@ -317,7 +320,7 @@ public:
 		if (device->InitializeRegisters(pci_cfg_data[slot][subfunction])) {
 			device->SetPCIId(slot, subfunction);
 			if (pci_devices[slot]==nullptr) {
-				pci_devices[slot]=device;
+				pci_devices[slot]=std::unique_ptr<PCI_Device>(device);
 				pci_devices_installed++;
 			} else {
 				pci_devices[slot]->AddSubdevice(device);
@@ -367,8 +370,7 @@ public:
 				}
 
 				if ((pci_devices[dct]->VendorID()==vendor_id) && (pci_devices[dct]->DeviceID()==device_id)) {
-					delete pci_devices[dct];
-					pci_devices[dct]=nullptr;
+					pci_devices[dct].reset();
 				}
 			}
 		}

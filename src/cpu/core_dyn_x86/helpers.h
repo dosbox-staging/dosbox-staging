@@ -16,6 +16,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../flags.h"
+
 static bool dyn_helper_divb(uint8_t val) {
 	if (!val) return CPU_PrepareException(0,0);
 	Bitu quo=reg_ax / val;
@@ -24,6 +26,7 @@ static bool dyn_helper_divb(uint8_t val) {
 	if (quo>0xff) return CPU_PrepareException(0,0);
 	reg_ah=rem;
 	reg_al=quo8;
+	set_cpu_test_flags_for_division(quo8);
 	return false;
 }
 
@@ -35,6 +38,7 @@ static bool dyn_helper_idivb(int8_t val) {
 	if (quo!=(int16_t)quo8s) return CPU_PrepareException(0,0);
 	reg_ah=rem;
 	reg_al=quo8s;
+	set_cpu_test_flags_for_division(quo8s);
 	return false;
 }
 
@@ -47,6 +51,7 @@ static bool dyn_helper_divw(uint16_t val) {
 	if (quo!=(uint32_t)quo16) return CPU_PrepareException(0,0);
 	reg_dx=rem;
 	reg_ax=quo16;
+	set_cpu_test_flags_for_division(quo16);
 	return false;
 }
 
@@ -59,6 +64,7 @@ static bool dyn_helper_idivw(int16_t val) {
 	if (quo!=(int32_t)quo16s) return CPU_PrepareException(0,0);
 	reg_dx=rem;
 	reg_ax=quo16s;
+	set_cpu_test_flags_for_division(quo16s);
 	return false;
 }
 
@@ -71,6 +77,7 @@ static bool dyn_helper_divd(uint32_t val) {
 	if (quo!=(uint64_t)quo32) return CPU_PrepareException(0,0);
 	reg_edx=rem;
 	reg_eax=quo32;
+	set_cpu_test_flags_for_division(quo32);
 	return false;
 }
 
@@ -83,5 +90,6 @@ static bool dyn_helper_idivd(int32_t val) {
 	if (quo!=(int64_t)quo32s) return CPU_PrepareException(0,0);
 	reg_edx=rem;
 	reg_eax=quo32s;
+	set_cpu_test_flags_for_division(quo32s);
 	return false;
 }

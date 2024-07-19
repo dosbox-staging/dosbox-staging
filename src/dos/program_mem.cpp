@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -111,12 +111,12 @@ void MEM::Run(void)
 void MEM::AddMessages()
 {
 	MSG_Add("PROGRAM_MEM_HELP_LONG",
-	        "Displays the DOS memory information.\n"
+	        "Display the DOS memory information.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]mem[reset]\n"
+	        "  [color=light-green]mem[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
@@ -124,10 +124,10 @@ void MEM::AddMessages()
 	        "  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]mem[reset]\n");
-	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
-	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
-	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
+	        "  [color=light-green]mem[reset]\n");
+	MSG_Add("PROGRAM_MEM_CONVEN", "%10d KB free conventional memory\n");
+	MSG_Add("PROGRAM_MEM_EXTEND", "%10d KB free extended memory\n");
+	MSG_Add("PROGRAM_MEM_EXPAND", "%10d KB free expanded memory\n");
 	MSG_Add("PROGRAM_MEM_UPPER",
-	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
+	        "%10d KB free upper memory in %d blocks (largest UMB %d KB)\n");
 }

@@ -21,11 +21,11 @@
 
 #if C_DEBUG
 #include "control.h"
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <curses.h>
-#include <string.h>
 
 #include "cross.h"
 #include "string_utils.h"
@@ -44,11 +44,10 @@ struct _LogGroup {
 };
 #include <list>
 #include <string>
-using namespace std;
 
 #define MAX_LOG_BUFFER 500
-static list<string> logBuff = {};
-static list<string>::iterator logBuffPos = logBuff.end();
+static std::list<std::string> logBuff    = {};
+static std::list<std::string>::iterator logBuffPos = logBuff.end();
 
 static _LogGroup loggrp[LOG_MAX]={{"",true},{nullptr,false}};
 static FILE *debuglog = nullptr;
@@ -102,7 +101,7 @@ void DEBUG_RefreshPage(int scroll) {
 	else if (scroll == 1 && logBuffPos != logBuff.end())
 		++logBuffPos;
 
-	list<string>::iterator i = logBuffPos;
+	std::list<std::string>::iterator i = logBuffPos;
 	int maxy, maxx; getmaxyx(dbg.win_out,maxy,maxx);
 	int rem_lines = maxy;
 	if(rem_lines == -1) return;
@@ -111,8 +110,11 @@ void DEBUG_RefreshPage(int scroll) {
 
 	while (rem_lines > 0 && i!=logBuff.begin()) {
 		--i;
-		for (string::size_type posf=0, posl; (posl=(*i).find('\n',posf)) != string::npos ;posf=posl+1)
-			rem_lines -= (int) ((posl-posf) / maxx) + 1; // len=(posl+1)-posf-1
+		for (std::string::size_type posf = 0, posl;
+		     (posl = (*i).find('\n', posf)) != std::string::npos;
+		     posf = posl + 1) {
+			rem_lines -= (int)((posl - posf) / maxx) + 1; // len=(posl+1)-posf-1
+		}
 		/* Const cast is needed for pdcurses which has no const char in mvwprintw (bug maybe) */
 		mvwprintw(dbg.win_out,rem_lines-1, 0, const_cast<char*>((*i).c_str()));
 	}
@@ -225,8 +227,8 @@ static void LOG_Destroy(Section*) {
 
 static void LOG_Init(Section * sec) {
 	Section_prop * sect = static_cast<Section_prop *>(sec);
-	const char * blah = sect->Get_string("logfile");
-	if(blah && blah[0] && (debuglog = fopen(blah,"wt+"))){
+	std::string blah = sect->Get_string("logfile");
+	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
 		;
 	} else {
 		debuglog = nullptr;
@@ -275,17 +277,21 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
-	Pstring->Set_help("File where the log messages will be saved to");
+	Section_prop* sect   = control->AddSection_prop("log", LOG_Init);
+	Prop_string* pstring = sect->Add_string("logfile",
+	                                        Property::Changeable::Always,
+	                                        "");
+	pstring->Set_help("Path of the log file.");
 	char buf[64];
-	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) {
+	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
-		Pbool->Set_help("Enable/disable logging of this type.");
+		Prop_bool* pbool = sect->Add_bool(buf,
+		                                  Property::Changeable::Always,
+		                                  true);
+		pbool->Set_help("Enable/disable logging of this type.");
 	}
-//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
+	//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
 
 

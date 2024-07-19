@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,11 +55,11 @@ namespace {
 
 class DOS_FilesTest : public DOSBoxTestFixture {};
 
-void assert_DTAExtendName(const std::string_view input_fullname,
+void assert_DTAExtendName(const std::string& input_fullname,
                           const std::string_view expected_name,
                           const std::string_view expected_ext)
 {
-	const auto [output_name, output_ext] = DTAExtendName(input_fullname.data());
+	const auto [output_name, output_ext] = DTAExtendName(input_fullname.c_str());
 
 	// mutates input up to dot
 	EXPECT_EQ(output_name, expected_name);
@@ -283,16 +283,16 @@ TEST_F(DOS_FilesTest, DOS_FindFirst_Ending_Slash)
 {
 	// `dos` comes from dos_inc.h
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", DOS_ATTR_VOLUME, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", FatAttributeFlags::Volume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\", DOS_ATTR_VOLUME, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\", FatAttributeFlags::Volume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	// volume names alone don't trigger the failure
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("Z:\\", DOS_ATTR_VOLUME, false));
+	EXPECT_TRUE(DOS_FindFirst("Z:\\", FatAttributeFlags::Volume, false));
 	EXPECT_NE(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	// volume attr NOT required
@@ -311,14 +311,14 @@ TEST_F(DOS_FilesTest, DOS_FindFirst_Rejects_Invalid_Names)
 TEST_F(DOS_FilesTest, DOS_FindFirst_FindVolume)
 {
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("Z", DOS_ATTR_VOLUME, false));
+	EXPECT_TRUE(DOS_FindFirst("Z", FatAttributeFlags::Volume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
 }
 
 TEST_F(DOS_FilesTest, DOS_FindFirst_FindDevice)
 {
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("COM1", DOS_ATTR_DEVICE, false));
+	EXPECT_TRUE(DOS_FindFirst("COM1", FatAttributeFlags::Device, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
 }
 

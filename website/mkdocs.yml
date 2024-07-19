@@ -1,6 +1,6 @@
 # Project information
 site_name: DOSBox Staging
-site_url: https://https://dosbox-staging.github.io/
+site_url: https://www.dosbox-staging.org/
 site_author: DOSBox Staging Authors
 site_description: >-
   DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
@@ -42,8 +42,8 @@ markdown_extensions:
       user: dosbox-staging
       repo: dosbox-staging
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji 
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.keys
@@ -64,37 +64,77 @@ plugins:
       slide_effect: 'none'
       skip_classes:
         - skip-lightbox
+  - redirects:
+        redirect_maps:
+          # Convenience redirects for top level sections (so for example
+          # `/releases/` takes you to `releases/windows/` instead of a 404).
+          #
+          'releases/index.md':        'releases/windows.md'
+          'getting-started/index.md': 'getting-started/introduction.md'
+
+          # Redirect RC release notes to the final notes
+          'releases/release-notes/0.81.0-rc.md': 'releases/release-notes/0.81.0.md'
+
+          # Redirects for the old "downloads" pages
+          'downloads/windows.md': 'releases/windows.md'
+          'downloads/macos.md':   'releases/macos.md'
+          'downloads/linux.md':   'releases/linux.md'
+
+          'downloads/development-builds.md': 'releases/development-builds.md'
+
+          'downloads/release-notes/0.80.1.md': 'releases/release-notes/0.80.1.md'
+          'downloads/release-notes/0.80.0.md': 'releases/release-notes/0.80.0.md'
+          'downloads/release-notes/0.79.1.md': 'releases/release-notes/0.79.1.md'
+          'downloads/release-notes/0.79.0.md': 'releases/release-notes/0.79.0.md'
+          'downloads/release-notes/0.78.1.md': 'releases/release-notes/0.78.1.md'
+          'downloads/release-notes/0.78.0.md': 'releases/release-notes/0.78.0.md'
+          'downloads/release-notes/0.77.1.md': 'releases/release-notes/0.77.1.md'
+          'downloads/release-notes/0.77.0.md': 'releases/release-notes/0.77.0.md'
+          'downloads/release-notes/0.76.0.md': 'releases/release-notes/0.76.0.md'
+          'downloads/release-notes/0.75.2.md': 'releases/release-notes/0.75.2.md'
+          'downloads/release-notes/0.75.1.md': 'releases/release-notes/0.75.1.md'
+          'downloads/release-notes/0.75.0.md': 'releases/release-notes/0.75.0.md'
+          'downloads/release-notes/0.75.0-rc1.md': 'releases/release-notes/0.75.0-rc1.md'
+
 
 # Page tree
 nav:
-  - Downloads:
-    - Windows: downloads/windows.md
-    - macOS: downloads/macos.md
-    - Linux: downloads/linux.md
-    - downloads/development-builds.md
+  - Releases:
+    - releases/index.md   # dummy page for redirecting
+
+    - Windows: releases/windows.md
+    - macOS: releases/macos.md
+    - Linux: releases/linux.md
 
     - Release notes:
-      - 0.80.1: downloads/release-notes/0.80.1.md
-      - 0.80.0: downloads/release-notes/0.80.0.md
-      - 0.79.1: downloads/release-notes/0.79.1.md
-      - 0.79.0: downloads/release-notes/0.79.0.md
-      - 0.78.1: downloads/release-notes/0.78.1.md
-      - 0.78.0: downloads/release-notes/0.78.0.md
-      - 0.77.1: downloads/release-notes/0.77.1.md
-      - 0.77.0: downloads/release-notes/0.77.0.md
-      - 0.76.0: downloads/release-notes/0.76.0.md
-      - 0.75.2: downloads/release-notes/0.75.2.md
-      - 0.75.1: downloads/release-notes/0.75.1.md
-      - 0.75.0: downloads/release-notes/0.75.0.md
-      - 0.75.0-RC1: downloads/release-notes/0.75.0-rc1.md
+      - 0.81.1: releases/release-notes/0.81.1.md
+      - 0.81.0: releases/release-notes/0.81.0.md
+      - 0.80.1: releases/release-notes/0.80.1.md
+      - 0.80.0: releases/release-notes/0.80.0.md
+      - 0.79.1: releases/release-notes/0.79.1.md
+      - 0.79.0: releases/release-notes/0.79.0.md
+      - 0.78.1: releases/release-notes/0.78.1.md
+      - 0.78.0: releases/release-notes/0.78.0.md
+      - 0.77.1: releases/release-notes/0.77.1.md
+      - 0.77.0: releases/release-notes/0.77.0.md
+      - 0.76.0: releases/release-notes/0.76.0.md
+      - 0.75.2: releases/release-notes/0.75.2.md
+      - 0.75.1: releases/release-notes/0.75.1.md
+      - 0.75.0: releases/release-notes/0.75.0.md
+      - 0.75.0-RC1: releases/release-notes/0.75.0-rc1.md
+
+    - releases/development-builds.md
 
   - Getting started:
+      - getting-started/index.md   # dummy page for redirecting
+
       - getting-started/introduction.md
-      - getting-started/prince-of-persia.md
+      - getting-started/setting-up-prince-of-persia.md
       - getting-started/enhancing-prince-of-persia.md
       - getting-started/passport-to-adventure.md
       - getting-started/beneath-a-steel-sky.md
-      - getting-started/dark-forces.md
+      - getting-started/star-wars-dark-forces.md
+      - getting-started/advanced-graphics-options.md
       - getting-started/next-steps.md
 
   - Get involved:
@@ -105,4 +145,8 @@ nav:
       - about/index.md
 
   - Wiki: https://github.com/dosbox-staging/dosbox-staging/wiki
+
+not_in_nav: |
+  # To silence the warning about the custom `index.md` front page
+  /index.md
 

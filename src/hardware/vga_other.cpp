@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,12 +38,10 @@
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb888.h"
+#include "string_utils.h"
 #include "vga.h"
 
 // CHECK_NARROWING();
-
-using namespace bit;
-using namespace bit::literals;
 
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
@@ -92,8 +90,13 @@ static void write_crtc_data_other(io_port_t, io_val_t value, io_width_t)
 		vga.other.vadjust = val;
 		break;
 	case 0x06:		//Vertical rows
-		if (vga.other.vdend ^ val) VGA_StartResize();
-		vga.other.vdend = val;
+		// Impossible Mission II sets this to zero briefly
+		// This leads to a divide by zero crash if VGA resize code is run
+		if (val > 0 && val != vga.other.vdend) {
+			vga.other.vdend = val;
+			// The default half-frame period delay leads to flickering in the level start zoom effect of Impossible Mission II on Tandy
+			VGA_StartResizeAfter(50);
+		}
 		break;
 	case 0x07:		//Vertical sync position
 		vga.other.vsyncp = val;
@@ -486,7 +489,7 @@ static void update_cga16_color_pcjr()
 
 			auto to_linear_rgb = [=](const float v) -> uint8_t {
 				// Only operate on reasonably positive v-values
-				if (!isnormal(v) || v <= 0.0f)
+				if (!std::isnormal(v) || v <= 0.0f)
 					return 0;
 				// switch to linear RGB space and scale to the 8-bit range
 				constexpr int max_8bit = UINT8_MAX;
@@ -833,6 +836,8 @@ static void toggle_cga_composite_mode(bool pressed)
 }
 
 static void tandy_update_palette() {
+	using namespace bit::literals;
+
 	// TODO mask off bits if needed
 	if (machine == MCH_TANDY) {
 		switch (vga.mode) {
@@ -848,15 +853,15 @@ static void tandy_update_palette() {
 			} else {
 				uint8_t color_set = 0;
 				uint8_t r_mask = 0xf;
-				if (is(vga.tandy.color_select, b4)) {
-					set(color_set, b3); // intensity
+				if (bit::is(vga.tandy.color_select, b4)) {
+					bit::set(color_set, b3); // intensity
 				}
-				if (is(vga.tandy.color_select, b5)) {
-					set(color_set, b0); // Cyan Mag. White
+				if (bit::is(vga.tandy.color_select, b5)) {
+					bit::set(color_set, b0); // Cyan Mag. White
 				}
 				if (vga.tandy.mode.is_black_and_white_mode) { // Cyan Red White
-					set(color_set, b0);
-					clear(r_mask, b0);
+					bit::set(color_set, b0);
+					bit::clear(r_mask, b0);
 				}
 				VGA_SetCGA4Table(
 					vga.attr.palette[vga.tandy.color_select&0xf],
@@ -969,10 +974,12 @@ static void PCJr_FindMode()
 }
 
 static void TandyCheckLineMask(void ) {
+	using namespace bit::literals;
+
 	if ( vga.tandy.extended_ram & 1 ) {
 		vga.tandy.line_mask = 0;
 	} else if (vga.tandy.mode.is_graphics_enabled) {
-		set(vga.tandy.line_mask, b0);
+		bit::set(vga.tandy.line_mask, b0);
 	}
 	if ( vga.tandy.line_mask ) {
 		vga.tandy.line_shift = 13;
@@ -985,6 +992,8 @@ static void TandyCheckLineMask(void ) {
 
 static void write_tandy_reg(uint8_t val)
 {
+	using namespace bit::literals;
+
 	// only receives 8-bit data per its IO port registration
 	switch (vga.tandy.reg_index) {
 	case 0x0:
@@ -992,12 +1001,13 @@ static void write_tandy_reg(uint8_t val)
 			vga.tandy.mode.data = val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
-			if (is(val, b3))
-				clear(vga.attr.disabled, b0);
-			else
-				set(vga.attr.disabled, b0);
+			if (bit::is(val, b3)) {
+				bit::clear(vga.attr.disabled, b0);
+			} else {
+				bit::set(vga.attr.disabled, b0);
+			}
 		} else {
-			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
+			LOG(LOG_VGAMISC, LOG_NORMAL)("Unhandled Write %2X to tandy reg %X", val, vga.tandy.reg_index);
 		}
 		break;
 	case 0x1:	/* Palette mask */
@@ -1031,17 +1041,20 @@ static void write_tandy_reg(uint8_t val)
 
 static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	auto val = check_cast<uint8_t>(value);
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
-		clear(val, b7 | b6); // only bits 0-5 are used
+		bit::clear(val, b7 | b6); // only bits 0-5 are used
 		if (vga.tandy.mode.data ^ val) {
 			vga.tandy.mode.data = val;
-			if (is(val, b3))
-				clear(vga.attr.disabled, b0);
-			else
-				set(vga.attr.disabled, b0);
+			if (bit::is(val, b3)) {
+				bit::clear(vga.attr.disabled, b0);
+			} else {
+				bit::set(vga.attr.disabled, b0);
+			}
 			TandyCheckLineMask();
 			VGA_SetBlinking(val & 0x20);
 			TANDY_FindMode();
@@ -1084,6 +1097,8 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 
 static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	// only receives 8-bit data per its IO port registration
 	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
@@ -1092,10 +1107,11 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 			write_tandy_reg(val);
 		else {
 			vga.tandy.reg_index = val;
-			if (is(vga.tandy.reg_index, b4))
-				set(vga.attr.disabled, b1);
-			else
-				clear(vga.attr.disabled, b1);
+			if (bit::is(vga.tandy.reg_index, b4)) {
+				bit::set(vga.attr.disabled, b1);
+			} else {
+				bit::clear(vga.attr.disabled, b1);
+			}
 		}
 		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
 		break;
@@ -1140,21 +1156,21 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-void VGA_SetMonochromePalette(const enum MonochromePalette palette)
+void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
 	if (machine == MCH_HERC) {
-		hercules_palette = palette;
+		hercules_palette = _palette;
 		VGA_SetHerculesPalette();
 
 	} else if (machine == MCH_CGA && mono_cga) {
-		mono_cga_palette = palette;
+		mono_cga_palette = _palette;
 		VGA_SetMonochromeCgaPalette();
 	}
 }
 
-static MonochromePalette cycle_forward(const MonochromePalette palette)
+static MonochromePalette cycle_forward(const MonochromePalette _palette)
 {
-	auto value = (enum_val(palette) + 1) % NumMonochromePalettes;
+	auto value = (enum_val(_palette) + 1) % NumMonochromePalettes;
 	return static_cast<MonochromePalette>(value);
 }
 
@@ -1227,38 +1243,40 @@ void VGA_SetHerculesPalette()
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
 	case 0x3b8: {
-		// the protected bits can always be cleared but only be set if the
-		// protection bits are set
-		if (is(vga.herc.mode_control, b1)) {
+		// the protected bits can always be cleared but only be set if
+		// the protection bits are set
+		if (bit::is(vga.herc.mode_control, b1)) {
 			// already set
-			if (cleared(val, b1)) {
-				clear(vga.herc.mode_control, b1);
+			if (bit::cleared(val, b1)) {
+				bit::clear(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_TEXT);
 			}
 		} else {
 			// not set, can only set if protection bit is set
-			if (is(val, b1) && is(vga.herc.enable_bits, b0)) {
-				set(vga.herc.mode_control, b1);
+			if (bit::is(val, b1) && bit::is(vga.herc.enable_bits, b0)) {
+				bit::set(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_GFX);
 			}
 		}
-		if (is(vga.herc.mode_control, b7)) {
-			if (cleared(val, b7)) {
-				clear(vga.herc.mode_control, b7);
+		if (bit::is(vga.herc.mode_control, b7)) {
+			if (bit::cleared(val, b7)) {
+				bit::clear(vga.herc.mode_control, b7);
 				vga.tandy.draw_base = &vga.mem.linear[0];
 			}
 		} else {
-			if (is(val, b7) && is(vga.herc.enable_bits, b1)) {
-				set(vga.herc.mode_control, b7);
+			if (bit::is(val, b7) && bit::is(vga.herc.enable_bits, b1)) {
+				bit::set(vga.herc.mode_control, b7);
 				vga.tandy.draw_base = &vga.mem.linear[32 * 1024];
 			}
 		}
-		vga.draw.blinking = is(val, b5);
-		retain(vga.herc.mode_control, b7 | b1);
-		set(vga.herc.mode_control, mask_off(val, b7 | b1));
+		vga.draw.blinking = bit::is(val, b5);
+		bit::retain(vga.herc.mode_control, b7 | b1);
+		bit::set(vga.herc.mode_control, bit::mask_off(val, b7 | b1));
 		break;
 	}
 	case 0x3bf:
@@ -1421,7 +1439,7 @@ static void composite_init(Section *sec)
 	assert(sec);
 	const auto conf = static_cast<Section_prop *>(sec);
 	assert(conf);
-	const std::string_view state = conf->Get_string("composite");
+	const std::string state = conf->Get_string("composite");
 
 	if (state == "auto") {
 		cga_comp = COMPOSITE_STATE::AUTO;
@@ -1431,13 +1449,13 @@ static void composite_init(Section *sec)
 			cga_comp = *state_has_bool ? COMPOSITE_STATE::ON
 			                           : COMPOSITE_STATE::OFF;
 		} else {
-			LOG_WARNING("COMPOSITE: Invalid 'composite' value: '%s', using 'off'",
-			            state.data());
+			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
+			            state.c_str());
 			cga_comp = COMPOSITE_STATE::OFF;
 		}
 	}
 
-	const auto era_choice = std::string(conf->Get_string("era"));
+	const std::string era_choice = conf->Get_string("era");
 	is_composite_new_era = era_choice == "new" ||
 	                       (machine == MCH_PCJR && era_choice == "auto");
 
@@ -1455,44 +1473,48 @@ static void composite_init(Section *sec)
 	}
 }
 
-static void composite_settings(Section_prop &secprop)
+static void composite_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char* states[] = {"auto", "on", "off", nullptr};
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
-	str_prop->Set_values(states);
+	str_prop->Set_values({"auto", "on", "off"});
 	str_prop->Set_help(
-	        "Enable composite mode on start ('auto' by default).\n"
-	        "'auto' lets the program decide.\n"
-	        "Note: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
-	        "      then read the new settings from your console and enter them here.");
+	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
+	        "types; 'auto' by default). 'auto' lets the program decide.\n"
+	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
+	        "      then copy the new settings from the logs into your config.");
 
-	const char* eras[] = {"auto", "old", "new", nullptr};
 	str_prop           = secprop.Add_string("era", when_idle, "auto");
-	str_prop->Set_values(eras);
+	str_prop->Set_values({"auto", "old", "new"});
 	str_prop->Set_help("Era of composite technology ('auto' by default).\n"
 	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 
 	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->Set_help("Appearance of RGB palette. For example, adjust until the sky is blue.");
+	int_prop->Set_help(format_str("Hue of the RGB palette (%d by default).\n"
+	                                 "For example, adjust until the sky is blue.",
+	                                 hue.get_default()));
 
 	int_prop = secprop.Add_int("saturation", when_idle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
-	int_prop->Set_help("Intensity of colors, from washed out to vivid.");
+	int_prop->Set_help(format_str("Intensity of colors, from washed out to vivid (%d by default).",
+	                                 saturation.get_default()));
 
 	int_prop = secprop.Add_int("contrast", when_idle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
-	int_prop->Set_help("Ratio between the dark and light area.");
+	int_prop->Set_help(format_str("Ratio between the dark and light area (%d by default).",
+	                                 contrast.get_default()));
 
 	int_prop = secprop.Add_int("brightness", when_idle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
-	int_prop->Set_help("Luminosity of the image, from dark to light.");
+	int_prop->Set_help(format_str("Luminosity of the image, from dark to light (%d by default).",
+	                                 brightness.get_default()));
 
 	int_prop = secprop.Add_int("convergence", when_idle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
-	int_prop->Set_help("Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).");
+	int_prop->Set_help(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
+	                                 convergence.get_default()));
 }
 
 static void turn_crt_knob(bool pressed, const int amount)

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,9 @@
 #include "dosbox.h"
 
 #include <cassert>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 
 #include "bitops.h"
 #include "callback.h"
@@ -54,13 +54,17 @@ struct XGAStatus {
 	uint32_t forecolor;
 	uint32_t backcolor;
 
+	uint32_t color_compare;
+
 	Bitu curcommand;
 
 	uint16_t foremix;
 	uint16_t backmix;
 
 	uint16_t curx, cury;
+	uint16_t curx2, cury2;
 	uint16_t destx, desty;
+	uint16_t destx2, desty2;
 
 	uint16_t ErrTerm;
 	uint16_t MIPcount;
@@ -157,25 +161,44 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	   during windows dragging. */
 	switch(XGA_COLOR_MODE) {
 		case M_LIN8:
-			if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
-			vga.mem.linear[memaddr] = c;
-			break;
-		case M_LIN15:
-			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0x7fff);
-			break;
-		case M_LIN16:
-			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0xffff);
-			break;
-		case M_LIN32:
-			if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
-			((uint32_t*)(vga.mem.linear))[memaddr] = c;
-			break;
-		default:
-			break;
+		        if (memaddr >= vga.vmemsize) {
+			        break;
+		        }
+		        vga.mem.linear[memaddr] = c;
+		        break;
+	        case M_LIN15:
+		        if (memaddr * 2 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0x7fff);
+		        break;
+	        case M_LIN16:
+		        if (memaddr * 2 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0xffff);
+		        break;
+	        case M_LIN32:
+		        if (memaddr * 4 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint32_t*)(vga.mem.linear))[memaddr] = c;
+		        break;
+	        default: break;
 	}
 
+}
+
+static uint32_t get_point_mask()
+{
+	switch (XGA_COLOR_MODE) {
+	case M_LIN8: return UINT8_MAX;
+	case M_LIN15:
+	case M_LIN16: return UINT16_MAX;
+	case M_LIN32: return UINT32_MAX;
+	default: break;
+	}
+	return 0;
 }
 
 Bitu XGA_GetPoint(Bitu x, Bitu y) {
@@ -183,14 +206,20 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
-		if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
+		if (memaddr >= vga.vmemsize) {
+			break;
+		}
 		return vga.mem.linear[memaddr];
 	case M_LIN15:
 	case M_LIN16:
-		if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
+		if (memaddr * 2 >= vga.vmemsize) {
+			break;
+		}
 		return ((uint16_t*)(vga.mem.linear))[memaddr];
 	case M_LIN32:
-		if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
+		if (memaddr * 4 >= vga.vmemsize) {
+			break;
+		}
 		return ((uint32_t*)(vga.mem.linear))[memaddr];
 	default:
 		break;
@@ -326,15 +355,16 @@ static void XGA_DrawLineVector(const uint32_t val, const bool skip_last_pixel)
 						srcval = xga.forecolor;
 						break;
 					case 0x02: /* Src is pixel data from PIX_TRANS register */
-						//srcval = tmpval;
 						//LOG_MSG("XGA: DrawRect: Wants data from PIX_TRANS register");
+						srcval = 0;
 						break;
 					case 0x03: /* Src is bitmap data */
 						LOG_MSG("XGA: DrawRect: Wants data from srcdata");
-						//srcval = srcdata;
+						srcval = 0;
 						break;
 					default:
 						LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
+						srcval = 0;
 						break;
 				}
 				dstdata = XGA_GetPoint(xat, yat);
@@ -535,15 +565,16 @@ static void XGA_DrawRectangle(const uint32_t val, const bool skip_last_pixel)
 							srcval = xga.forecolor;
 							break;
 						case 0x02: /* Src is pixel data from PIX_TRANS register */
-							//srcval = tmpval;
 							LOG_MSG("XGA: DrawRect: Wants data from PIX_TRANS register");
+							srcval = 0;
 							break;
 						case 0x03: /* Src is bitmap data */
 							LOG_MSG("XGA: DrawRect: Wants data from srcdata");
-							//srcval = srcdata;
+							srcval = 0;
 							break;
 						default:
 							LOG_MSG("XGA: DrawRect: Shouldn't be able to get here!");
+							srcval = 0;
 							break;
 					}
 					dstdata = XGA_GetPoint(srcx, srcy);
@@ -624,12 +655,15 @@ static void DrawWaitSub(uint32_t mixmode, Bitu srcval)
 
 void XGA_DrawWait(uint32_t val, io_width_t width)
 {
-	if (!xga.waitcmd.wait)
+	if (!xga.waitcmd.wait) {
 		return;
+	}
+
 	uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
+
 	Bitu srcval;
 	Bitu chunksize = 0;
-	Bitu chunks = 0;
+	Bitu chunks    = 0;
 
 	const uint8_t len = (width == io_width_t::dword  ? 4
 	                     : width == io_width_t::word ? 2
@@ -752,9 +786,9 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 					                     1) + chunksize * k;
 					const auto mask = static_cast<uint64_t>(1) << lshift;
 
-					const uint32_t mixmode = (val & mask)
-					                                 ? xga.foremix
-					                                 : xga.backmix;
+					mixmode = (val & mask) ? xga.foremix
+					                       : xga.backmix;
+
 					switch ((mixmode >> 5) & 0x03) {
 					case 0x00: // Src is background color
 						srcval = xga.backcolor;
@@ -798,6 +832,7 @@ void XGA_BlitRect(Bitu val) {
 	uint32_t xat, yat;
 	Bitu srcdata;
 	Bitu dstdata;
+	Bitu colorcmpdata;
 	Bits srcx, srcy, tarx, tary, dx, dy;
 
 	dx = -1;
@@ -805,6 +840,8 @@ void XGA_BlitRect(Bitu val) {
 
 	if(((val >> 5) & 0x01) != 0) dx = 1;
 	if(((val >> 7) & 0x01) != 0) dy = 1;
+
+	colorcmpdata = xga.color_compare & get_point_mask();
 
 	Bitu mixselect = (xga.pix_cntl >> 6) & 0x3;
 	uint32_t mixmode = 0x67; /* Source is bitmap data, mix mode is src */
@@ -857,19 +894,42 @@ void XGA_BlitRect(Bitu val) {
 					break;
 				case 0x02: /* Src is pixel data from PIX_TRANS register */
 					LOG_MSG("XGA: DrawPattern: Wants data from PIX_TRANS register");
+					srcval = 0;
 					break;
 				case 0x03: /* Src is bitmap data */
 					srcval = srcdata;
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					srcval = 0;
 					break;
 			}
+			// For more information, see the "S3 Vision864 Graphics
+			// Accelerator" datasheet
+			//
+			// [http://hackipedia.org/browse.cgi/Computer/Platform/PC%2c%20IBM%20compatible/Video/VGA/SVGA/S3%20Graphics%2c%20Ltd/S3%20Vision864%20Graphics%20Accelerator%20(1994-10).pdf]
+			//
+			// Page 203 for "Multifunction Control Miscellaneous
+			// Register (MULT_MISC)" which this code holds as
+			// xga.control1, and Page 198 for "Color Compare
+			// Register (COLOR_CMP)" which this code holds as
+			// xga.color_compare.
 
-			const Bitu destval = GetMixResult(mixmode, srcval, dstdata);
-			//LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
+			// Always update if we're not comparing (COLOR_CMP is
+			// bit 8). Otherwise, either update if the SRC_NE bit is
+			// set with a matching colour or vice-versa (SRC_NE not
+			// set with non-matching colour).
 
-			XGA_DrawPoint(tarx, tary, destval);
+			using namespace bit::literals;
+
+			if (bit::cleared(xga.control1, b8) ||
+			    bit::is(xga.control1, b7) == (srcval == colorcmpdata)) {
+
+				const auto destval = GetMixResult(mixmode, srcval, dstdata);
+
+				// LOG_MSG("XGA: DrawPattern: Mixmode: %x Mixselect: %x", mixmode, mixselect);
+				XGA_DrawPoint((Bitu)tarx, (Bitu)tary, destval);
+			}
 
 			srcx += dx;
 			tarx += dx;
@@ -921,12 +981,52 @@ void XGA_DrawPattern(Bitu val) {
 			srcdata = XGA_GetPoint(srcx + (tarx & 0x7), srcy + (tary & 0x7));
 			//LOG_MSG("patternpoint (%3d/%3d)v%x",srcx + (tarx & 0x7), srcy + (tary & 0x7),srcdata);
 			dstdata = XGA_GetPoint(tarx, tary);
-			
 
-			if(mixselect == 0x3) {
-				// TODO lots of guessing here but best results this way
-				if(srcdata) mixmode = xga.foremix;
-				else mixmode = xga.backmix;
+			if (mixselect == 0x3) {
+
+				// S3 Trio32/Trio64 Integrated Graphics
+				// Accelerators, section 13.2 Bitmap Access
+				// Through The Graphics Engine.
+				// [https://jon.nerdgrounds.com/jmcs/docs/browse/Computer/Platform/PC%2c%20IBM%20compatible/Video/VGA/SVGA/S3%20Graphics%2c%20Ltd/S3%20Trio32%e2%88%95Trio64%20Integrated%20Graphics%20Accelerators%20%281995%2d03%29%2epdf]
+
+				// "If bits 7-6 are set to 11b, the current
+				// display bit map is selected as the mask bit
+				// source. The Read Mask" "register (AAE8H) is
+				// set up to indicate the active planes. When
+				// all bits of the read-enabled planes for a"
+				// "pixel are a 1, the mask bit 'ONE' is
+				// generated. If anyone of the read-enabled
+				// planes is a 0, then a mask" "bit 'ZERO' is
+				// generated. If the mask bit is 'ONE', the
+				// Foreground Mix register is used. If the mask
+				// bit is" "'ZERO', the Background Mix register
+				// is used." Notice that when an application in
+				// Windows 3.1 draws a black rectangle, I see
+				// foreground=0 background=ff and in this loop,
+				// srcdata=ff and readmask=ff. While the
+				// original DOSBox SVN "guess" code here would
+				// misattribute that to the background color
+				// (and erroneously draw a white rectangle),
+				// what should actually happen is that we use
+				// the foreground color because
+				// (srcdata&readmask)==readmask (all bits 1).
+
+				// This fixes visual bugs when running
+				// Windows 3.1 and Microsoft Creative Writer,
+				// and navigating to the basement and clicking
+				// around in the dark to reveal funny random
+				// things, leaves white rectangles on the screen
+				// where the image was when you released the
+				// mouse. Creative Writer clears the image by
+				// drawing a BLACK rectangle, while the DOSBox
+				// SVN "guess" mistakenly chose the background
+				// color and therefore a WHITE rectangle.
+
+				if ((srcdata & xga.readmask) == xga.readmask) {
+					mixmode = xga.foremix;
+				} else {
+					mixmode = xga.backmix;
+				}
 			}
 
 			Bitu srcval = 0;
@@ -939,12 +1039,14 @@ void XGA_DrawPattern(Bitu val) {
 					break;
 				case 0x02: /* Src is pixel data from PIX_TRANS register */
 					LOG_MSG("XGA: DrawPattern: Wants data from PIX_TRANS register");
+					srcval = 0;
 					break;
 				case 0x03: /* Src is bitmap data */
 					srcval = srcdata;
 					break;
 				default:
 					LOG_MSG("XGA: DrawPattern: Shouldn't be able to get here!");
+					srcval = 0;
 					break;
 			}
 
@@ -1034,16 +1136,143 @@ static void XGA_DrawCmd(const uint32_t val)
 			
 			}
 			break;
-		case 6: /* BitBLT */
+	        case 3: // Polygon fill
 #if XGA_SHOW_COMMAND_TRACE == 1
-			LOG_MSG("XGA: Blit Rect");
+		        LOG_MSG("XGA: Polygon fill (Trio64)");
 #endif
-			XGA_BlitRect(val);
-			break;
-		case 7: /* Pattern fill */
+				// From the datasheet
+				// [http://hackipedia.org/browse.cgi/Computer/Platform/PC%2c%20IBM%20compatible/Video/VGA/SVGA/S3%20Graphics%2c%20Ltd/S3%20Trio32%e2%88%95Trio64%20Integrated%20Graphics%20Accelerators%20%281995%2d03%29%2epdf]
+				// Section 13.3.3.12 Polygon Fill Solid (Trio64 only)
+				// The idea is that there are two current/dest X/Y pairs
+				// and this command is used to draw the polygon top to
+				// bottom as a series of trapezoids, sending new x/y
+				// coordinates for each left or right edge as the
+				// polygon continues. The acceleration function is
+				// described as rendering to the minimum of the two Y
+				// coordinates, and stopping. One side or the other is
+				// updated, and the command starts the new edge and
+				// continues the other edge.
+
+				// The card requires that the first and last segments
+				// have equal Y values, though not X values in order to
+				// allow polygons with flat top and/or bottom.
+
+				// That would imply that there's some persistent error
+				// term here, and it would also imply that the card
+				// updates current Y position to the minimum of either
+				// side so the new coordinates continue properly.
+
+				// NTS: The Windows 3.1 Trio64 driver likes to send this
+				// command every single time it updates any coordinate,
+				// contrary to the Trio64 datasheet that suggests setting
+				// cur/dest X/Y and cur2/dest2 X/Y THEN sending this
+				// command, then setting either dest X/Y and sending the
+				// command until the polygon has been rasterized. We can
+				// weed those out here by ignoring any command where the
+				// cur/dest Y coordinates would result in no movement.
+
+				// The Windows 3.1 driver also seems to use cur/dest X/Y
+				// for the RIGHT side, and cur2/dest2 X/Y for the LEFT
+				// side, which is completely opposite from the example
+				// given in the datasheet. This also implies that
+				// whatever order the vertices end up, they draw a span
+				// when rasterizing, and the sides can cross one another
+				// if necessary.
+
+				// NTS: You can test this code by bringing up
+				// Paintbrush, and drawing with the brush tool. Despite
+				// drawing a rectangle, the S3 Trio64 driver uses the
+				// Polygon fill command to draw it. More testing is
+				// possible in Microsoft Word 2.0 using the
+				// shapes/graphics editor, adding solid rectangles or
+				// rounded rectangles (but not circles).
+				/*
+				//  Vertex at (*)
+				//
+				//                        *             *     *
+				//                        +             +-----+
+				//                       / \           /       \
+				//                      /   \         /         \
+				//                     /_____\ *     /___________\ *
+				//                    /      /      /            |
+				//                 * /______/    * /_____________|
+				//                   \     /       \             |
+				//                    \   /         \            |
+				//                     \ /           \           |
+				//                      +             \__________|
+				//                      *             *          *
+				//
+				//  Windows 3.1 driver behavior suggests this is also
+				//  possible?
+				//
+				//                    *
+				//                   / \
+				//                  /   \
+				//                 /     \
+				//              * /_______\
+				//                \________\ *
+				//                 \       /
+				//                  \     /
+				//                   \   /
+				//                    \ /
+				//                     X      <- crossover point
+				//                    / \
+				//                   /   \
+				//                * /_____\
+				//                  \      \
+				//                   \______\
+				//                   *       *
+				*/
+
+		        if (xga.cury < xga.desty && xga.cury2 < xga.desty2) {
 #if XGA_SHOW_COMMAND_TRACE == 1
-			LOG_MSG("XGA: Pattern fill: src(%3d/%3d), dest(%3d/%3d), fill(%3d/%3d)",
-				xga.curx,xga.cury,xga.destx,xga.desty,xga.MAPcount,xga.MIPcount);
+			        LOG_MSG("XGA: Polygon fill: leftside=(%d,%d)-(%d,%d) rightside=(%d,%d)-(%d,%d)",
+			                xga.curx,
+			                xga.cury,
+			                xga.destx,
+			                xga.desty,
+			                xga.curx2,
+			                xga.cury2,
+			                xga.destx2,
+			                xga.desty2);
+#endif
+
+			        // Not quite accurate, good enough for now.
+			        xga.curx  = xga.destx;
+			        xga.cury  = xga.desty;
+			        xga.curx2 = xga.destx2;
+			        xga.cury2 = xga.desty2;
+		        } else {
+#if XGA_SHOW_COMMAND_TRACE == 1
+			        LOG_MSG("XGA: Polygon fill (nothing done)");
+#endif
+			        // Windows 3.1 Trio64 driver behavior suggests
+			        // that if Y doesn't move, the X coordinate may
+			        // change if cur Y == dest Y, else the result
+			        // when actual rendering doesn't make sense.
+			        if (xga.cury == xga.desty) {
+				        xga.curx = xga.destx;
+			        }
+			        if (xga.cury2 == xga.desty2) {
+				        xga.curx2 = xga.destx2;
+			        }
+		        }
+		        break;
+	        case 6: // BitBLT
+#if XGA_SHOW_COMMAND_TRACE == 1
+		        LOG_MSG("XGA: Blit Rect");
+#endif
+		        XGA_BlitRect(val);
+		        break;
+	        case 7: // Pattern fill
+#if XGA_SHOW_COMMAND_TRACE == 1
+		        LOG_MSG("XGA: Pattern fill: src(%3d/%3d), dest(%3d/%3d), fill(%3d/%3d)",
+		                xga.curx,
+		                xga.cury,
+		                xga.destx,
+		                xga.desty,
+		                xga.MAPcount,
+		                xga.MIPcount);
 #endif
 			XGA_DrawPattern(val);
 			break;
@@ -1112,17 +1341,39 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 			xga.curx = (val >> 16) & 0x0fff;
 		break;
 	case 0x8102: xga.curx = val & 0x0fff; break;
-
+	case 0x8104:
+		// Drawing control: row (low word), column (high word)
+		// "CUR_X2" and "CUR_Y2" (see PORT 82EAh,PORT 86EAh)
+		xga.cury2 = static_cast<uint16_t>(val & 0x0fff);
+		if (width == io_width_t::dword) {
+			xga.curx2 = static_cast<uint16_t>((val >> 16) & 0x0fff);
+		}
+		break;
+	case 0x8106:
+		xga.curx2 = static_cast<uint16_t>(val & 0x0fff);
+		break;
 	case 0x8108: // DWORD drawing control: destination Y and axial step
 		// constant (low word), destination X and axial step
 		// constant (high word) (see PORT 8AE8h,PORT 8EE8h)
-		xga.desty = val & 0x3FFF;
+		xga.desty = val & 0x3fff;
 		if (width == io_width_t::dword)
 			xga.destx = (val >> 16) & 0x3fff;
 		break;
 	case 0x810a: xga.destx = val & 0x3fff; break;
+	case 0x810c:
+		// DWORD drawing control: destination Y and axial step
+		// constant (low word), destination X and axial step
+		// constant (high word) (see PORT 8AEAh,PORT 8EEAh)
+		xga.desty2 = static_cast<uint16_t>(val & 0x3fff);
+		if (width == io_width_t::dword) {
+			xga.destx2 = static_cast<uint16_t>((val >> 16) & 0x3fff);
+		}
+		break;
+	case 0x810e:
+		xga.destx2 = static_cast<uint16_t>(val & 0x3fff);
+		break;
 	case 0x8110: // WORD error term (see PORT 92E8h)
-		xga.ErrTerm = val & 0x3FFF;
+		xga.ErrTerm = val & 0x3fff;
 		break;
 
 	case 0x8120: // packed MMIO: DWORD background color (see PORT A2E8h)
@@ -1139,7 +1390,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		break;
 	case 0x8134: // packed MMIO: DWORD	background mix (low word) and
 		// foreground mix (high word)	(see PORT B6E8h,PORT BAE8h)
-		xga.backmix = val & 0xFFFF;
+		xga.backmix = val & 0xffff;
 		if (width == io_width_t::dword)
 			xga.foremix = (val >> 16);
 		break;
@@ -1161,7 +1412,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 
 	case 0x8140: // DWORD data manipulation control (low word) and
 		// miscellaneous 2 (high word) (see PORT BEE8h,#P1047)
-		xga.pix_cntl = val & 0xFFFF;
+		xga.pix_cntl = val & 0xffff;
 		if (width == io_width_t::dword)
 			xga.control2 = (val >> 16) & 0x0fff;
 		break;
@@ -1178,7 +1429,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 			xga.MAPcount = (val >> 16) & 0x0fff;
 		break;
 	case 0x814a: xga.MAPcount = val & 0x0fff; break;
-	case 0x92e8: xga.ErrTerm = val & 0x3FFF; break;
+	case 0x92e8: xga.ErrTerm = val & 0x3fff; break;
 	case 0x96e8: xga.MAPcount = val & 0x0fff; break;
 	case 0x9ae8:
 	case 0x8118: // Trio64V+ packed MMIO
@@ -1192,7 +1443,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 	case 0x86e8: xga.curx = val & 0x0fff; break;
 	case 0x8ae8: xga.desty = val & 0x3fff; break;
 	case 0x8ee8: xga.destx = val & 0x3fff; break;
-	case 0xb2e8: LOG_MSG("COLOR_CMP not implemented"); break;
+	case 0xb2e8: XGA_SetDualReg(xga.color_compare, val); break;
 	case 0xb6e8: xga.backmix = val; break;
 	case 0xbae8: xga.foremix = val; break;
 	case 0xbee8: XGA_Write_Multifunc(val); break;
@@ -1204,7 +1455,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		if (width == io_width_t::byte)
 			vga_write_p3d4(0, val, io_width_t::byte);
 		else if (width == io_width_t::word) {
-			LOG_WARNING("XGA 16-bit write to vga_write_p3d4, vga_write_p3d5");
+			LOG_WARNING("XGA: 16-bit write to vga_write_p3d4, vga_write_p3d5");
 			vga_write_p3d4(0, val & 0xff, io_width_t::byte);
 			vga_write_p3d5(0, val >> 8, io_width_t::byte);
 		} else
@@ -1241,8 +1492,9 @@ uint32_t XGA_Read(io_port_t port, io_width_t width)
 		break;
 	case 0x83da: {
 		Bits delaycyc = CPU_CycleMax / 5000;
-		if (GCC_UNLIKELY(CPU_Cycles < 3 * delaycyc))
+		if (CPU_Cycles < 3 * delaycyc) {
 			delaycyc = 0;
+		}
 		CPU_Cycles -= delaycyc;
 		CPU_IODelayRemoved += delaycyc;
 		return vga_read_p3da(0, io_width_t::byte);
@@ -1265,6 +1517,7 @@ uint32_t XGA_Read(io_port_t port, io_width_t width)
 		else
 			return 0x0;
 	case 0xbee8: return XGA_Read_Multifunc();
+	case 0xb2e8: return XGA_GetDualReg(xga.color_compare); break;
 	case 0xa2e8: return XGA_GetDualReg(xga.backcolor); break;
 	case 0xa6e8: return XGA_GetDualReg(xga.forecolor); break;
 	case 0xaae8: return XGA_GetDualReg(xga.writemask); break;
@@ -1283,8 +1536,8 @@ void VGA_SetupXGA(void) {
 
 	xga.scissors.y1 = 0;
 	xga.scissors.x1 = 0;
-	xga.scissors.y2 = 0xFFF;
-	xga.scissors.x2 = 0xFFF;
+	xga.scissors.y2 = 0xfff;
+	xga.scissors.x2 = 0xfff;
 
 	IO_RegisterWriteHandler(0x42e8, &XGA_Write, io_width_t::dword);
 	IO_RegisterReadHandler(0x42e8, &XGA_Read, io_width_t::dword);

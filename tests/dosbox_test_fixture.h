@@ -1,3 +1,23 @@
+/*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #ifndef DOSBOX_TEST_FIXTURE_H
 #define DOSBOX_TEST_FIXTURE_H
 
@@ -26,9 +46,9 @@ public:
 		// Create DOSBox Staging's config directory, which is a
 		// pre-requisite that's asserted during the Init process.
 		//
-		CROSS_DetermineConfigPaths();
-		const auto config_path = get_platform_config_dir();
-		SETUP_ParseConfigFiles(config_path);
+		InitConfigDir();
+		const auto config_path = GetConfigDir();
+		control->ParseConfigFiles(config_path);
 
 		Section *_sec;
 		// This will register all the init functions, but won't run them
@@ -52,7 +72,7 @@ private:
 	char const *arg_c_str;
 	const char *argv[1];
 	CommandLine com_line;
-	config_ptr_t config;
+	ConfigPtr config;
 	// Only init these sections for our tests
 	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
 	                                  "midi",   "sblaster", "speaker",

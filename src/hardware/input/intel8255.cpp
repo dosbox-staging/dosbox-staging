@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2022  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,8 +27,6 @@
 #include "inout.h"
 #include "mixer.h"
 #include "timer.h"
-
-using namespace bit::literals;
 
 CHECK_NARROWING();
 
@@ -137,6 +135,8 @@ static uint8_t read_p61(io_port_t, io_width_t)
 
 static uint8_t read_p62(io_port_t, io_width_t)
 {
+	using namespace bit::literals;
+
 	auto ret = bit::all<uint8_t>();
 
 	if (!TIMER_GetOutput2()) {

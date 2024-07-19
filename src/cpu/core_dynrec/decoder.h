@@ -21,6 +21,7 @@
 #include "decoder_opcodes.h"
 
 #include "dyn_fpu.h"
+#include "dyn_mmx.h"
 
 /*
 	The function CreateCacheBlock translates the instruction stream
@@ -62,6 +63,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 	used_save_info_dynrec++;
 
 	decode.cycles=0;
+	uint_fast8_t opcode;
 	while (max_opcodes--) {
 		// Init prefixes
 		decode.big_addr=cpu.code.big;
@@ -71,20 +73,23 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 		decode.rep=REP_NONE;
 		decode.cycles++;
 		decode.op_start=decode.code;
-restart_prefix:
-		Bitu opcode;
+	restart_prefix:
 		if (!decode.page.invmap) opcode=decode_fetchb();
 		else {
 			// some entries in the invalidation map, see if the next
 			// instruction is known to be modified a lot
 			if (decode.page.index<4096) {
-				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) goto illegalopcode;
-				opcode=decode_fetchb();
+				if (decode.page.invmap[decode.page.index] >= 4) {
+					goto illegalopcode;
+				}
+				opcode = decode_fetchb();
 			} else {
 				// switch to the next page
 				opcode=decode_fetchb();
-				if (GCC_UNLIKELY(decode.page.invmap && 
-					(decode.page.invmap[decode.page.index-1]>=4))) goto illegalopcode;
+				if (decode.page.invmap &&
+				    (decode.page.invmap[decode.page.index - 1] >= 4)) {
+					goto illegalopcode;
+				}
 			}
 		}
 		switch (opcode) {
@@ -175,7 +180,7 @@ restart_prefix:
 		// dual opcodes
 		case 0x0f:
 		{
-			Bitu dual_code=decode_fetchb();
+			uint_fast8_t dual_code = decode_fetchb();
 			switch (dual_code) {
 				case 0x00:
 					if ((reg_flags & FLAG_VM) || (!cpu.pmode)) goto illegalopcode;
@@ -227,15 +232,19 @@ restart_prefix:
 				// lfs
 				case 0xb4:
 					dyn_get_modrm();
-					if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
-					dyn_load_seg_off_ea(DRC_SEG_FS);
-					break;
+				        if (decode.modrm.mod == 3) {
+					        goto illegalopcode;
+				        }
+				        dyn_load_seg_off_ea(DRC_SEG_FS);
+				        break;
 				// lgs
-				case 0xb5:
+			        case 0xb5:
 					dyn_get_modrm();
-					if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
-					dyn_load_seg_off_ea(DRC_SEG_GS);
-					break;
+				        if (decode.modrm.mod == 3) {
+					        goto illegalopcode;
+				        }
+				        dyn_load_seg_off_ea(DRC_SEG_GS);
+				        break;
 
 				// zero-extending moves
 				case 0xb6:dyn_movx_ev_gb(false);break;
@@ -245,11 +254,376 @@ restart_prefix:
 				case 0xbe:dyn_movx_ev_gb(true);break;
 				case 0xbf:dyn_movx_ev_gw(true);break;
 
-				default:
+				// MMX instructions
+			        case 0x6e:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_movd_pqed();
+				        break;
+			        case 0x7e:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_movd_edpq();
+				        break;
+			        case 0x6f:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_movq_pqqq();
+				        break;
+			        case 0x7f:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_movq_qqpq();
+				        break;
+			        case 0x64:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpgtb();
+				        break;
+			        case 0x65:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpgtw();
+				        break;
+			        case 0x66:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpgtd();
+				        break;
+			        case 0x74:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpeqb();
+				        break;
+			        case 0x75:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpeqw();
+				        break;
+			        case 0x76:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pcmpeqd();
+				        break;
+			        case 0xF5:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pmaddwd();
+				        break;
+			        case 0x63:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_packsswb();
+				        break;
+			        case 0x6B:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_packssdw();
+				        break;
+			        case 0x67:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_packuswb();
+				        break;
+			        case 0x60:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpcklbw();
+				        break;
+			        case 0x68:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpckhbw();
+				        break;
+			        case 0x61:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpcklwd();
+				        break;
+			        case 0x69:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpckhwd();
+				        break;
+			        case 0x62:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpckldq();
+				        break;
+			        case 0x6A:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_punpckhdq();
+				        break;
+			        case 0x71:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psllw_psrlw_psraw();
+				        break;
+			        case 0x72:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pslld_psrld_psrad();
+				        break;
+			        case 0x73:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psllq_psrlq();
+				        break;
+			        case 0xF8:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubb();
+				        break;
+			        case 0xF9:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubw();
+				        break;
+			        case 0xE8:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubsb();
+				        break;
+			        case 0xE9:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubsw();
+				        break;
+			        case 0xE5:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pmulhw();
+				        break;
+			        case 0xD5:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pmullw();
+				        break;
+			        case 0xD8:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubusb();
+				        break;
+			        case 0xD9:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubusw();
+				        break;
+			        case 0xFA:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psubd();
+				        break;
+			        case 0xFC:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddb();
+				        break;
+			        case 0xFD:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddw();
+				        break;
+			        case 0xFE:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddd();
+				        break;
+			        case 0xEC:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddsb();
+				        break;
+			        case 0xED:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddsw();
+				        break;
+			        case 0xDC:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddusb();
+				        break;
+			        case 0xDD:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_paddusw();
+				        break;
+			        case 0xEB:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_por();
+				        break;
+			        case 0xEF:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pxor();
+				        break;
+			        case 0xDB:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pand();
+				        break;
+			        case 0xDF:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pandn();
+				        break;
+			        case 0xD1:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psrlw();
+				        break;
+			        case 0xD2:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psrld();
+				        break;
+			        case 0xD3:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psrlq();
+				        break;
+			        case 0xF1:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psllw();
+				        break;
+			        case 0xF2:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_pslld();
+				        break;
+			        case 0xF3:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psllq();
+				        break;
+			        case 0xE1:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psraw();
+				        break;
+			        case 0xE2:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_psrad();
+				        break;
+			        case 0x77:
+				        if (CPU_ArchitectureType <
+				            ArchitectureType::PentiumMmx) {
+					        goto illegalopcode;
+				        }
+				        dyn_mmx_emms();
+				        break;
+			        default:
 #if DYN_LOG
 //					LOG_MSG("Unhandled dual opcode 0F%02X",dual_code);
 #endif
-					goto illegalopcode;
+				goto illegalopcode;
 			}
 			break;
 		}
@@ -334,7 +708,9 @@ restart_prefix:
 		// load effective address
 		case 0x8d:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_lea();
 			break;
 
@@ -434,14 +810,19 @@ restart_prefix:
 		// les
 		case 0xc4:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_load_seg_off_ea(DRC_SEG_ES);
 			break;
 		// lds
 		case 0xc5:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
-			dyn_load_seg_off_ea(DRC_SEG_DS);break;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
+			dyn_load_seg_off_ea(DRC_SEG_DS);
+			break;
 
 		// 'mov []/reg8/16/32,imm8/16/32'
 		case 0xc6:dyn_dop_ebib_mov();break;

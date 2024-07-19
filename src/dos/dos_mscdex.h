@@ -25,7 +25,7 @@
 int   MSCDEX_AddDrive(char driveLetter, const char *physicalPath, uint8_t &subUnit);
 int   MSCDEX_RemoveDrive(char driveLetter);
 bool  MSCDEX_HasDrive(char driveLetter);
-void  MSCDEX_ReplaceDrive(CDROM_Interface *cdrom, uint8_t subUnit);
+void  MSCDEX_ReplaceDrive(std::unique_ptr<CDROM_Interface> cdrom, uint8_t subUnit);
 uint8_t MSCDEX_GetSubUnit(char driveLetter);
 bool  MSCDEX_GetVolumeName(uint8_t subUnit, char *name);
 bool  MSCDEX_HasMediaChanged(uint8_t subUnit);

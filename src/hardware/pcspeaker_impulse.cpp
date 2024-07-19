@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2011-2011  ripa, from vogons.org
  *  Copyright (C) 2002-2019  The DOSBox Team
  *
@@ -290,7 +290,7 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 
 	default:
 #ifdef SPKR_DEBUGGING
-		LOG_WARNING("Unhandled speaker PIT mode: %s at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
+		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: '%s' at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
 #endif
 		return;
 	}
@@ -380,7 +380,7 @@ static double sinc(const double t)
 float PcSpeakerImpulse::CalcImpulse(const double t) const
 {
 	// raised-cosine-windowed sinc function
-	const double fs = sample_rate;
+	const double fs = sample_rate_hz;
 	const auto fc   = fs / (2 + static_cast<double>(cutoff_margin));
 	const auto q    = static_cast<double>(sinc_filter_quality);
 	if ((0 < t) && (t * fs < q)) {
@@ -415,7 +415,7 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 		phase = sinc_oversampling_factor - phase;
 	}
 
-	for (uint16_t i = 0; i < sinc_filter_quality; ++i) {
+	for (auto i = 0; i < sinc_filter_quality; ++i) {
 		const auto wave_i    = check_cast<uint16_t>(offset + i);
 		const auto impulse_i = check_cast<uint16_t>(
 		        phase + i * sinc_oversampling_factor);
@@ -425,16 +425,17 @@ void PcSpeakerImpulse::AddImpulse(float index, const int16_t amplitude)
 
 #else
 	// Mathematically intensive reference implementation
-	const auto portion_of_ms = static_cast <double>(index) / millis_in_second;
+	const auto portion_of_ms = static_cast <double>(index) / MillisInSecond;
 	for (size_t i = 0; i < waveform_deque.size(); ++i) {
-		const auto impulse_time = static_cast<double>(i) / sample_rate - portion_of_ms;
+		const auto impulse_time = static_cast<double>(i) / sample_rate_hz -
+		                          portion_of_ms;
 
 		waveform_deque[i] += amplitude * CalcImpulse(impulse_time);
 	}
 }
 #endif
 
-void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
+void PcSpeakerImpulse::ChannelCallback(int requested_frames)
 {
 	ForwardPIT(1.0f);
 	pit.last_index = 0;
@@ -474,9 +475,11 @@ void PcSpeakerImpulse::ChannelCallback(uint16_t requested_frames)
 void PcSpeakerImpulse::InitializeImpulseLUT()
 {
 	assert(impulse_lut.size() == sinc_filter_width);
-	for (auto i = 0u; i < sinc_filter_width; ++i)
-		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate) *
+
+	for (auto i = 0u; i < sinc_filter_width; ++i) {
+		impulse_lut[i] = CalcImpulse(i / (static_cast<double>(sample_rate_hz) *
 		                                  sinc_oversampling_factor));
+	}
 }
 
 void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
@@ -490,14 +493,14 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 		// reflects people's actual experience of the PC speaker
 		// sound than the raw unfiltered output, and it's a lot
 		// more pleasant to listen to, especially in headphones.
-		constexpr auto hp_order       = 3;
-		constexpr auto hp_cutoff_freq = 120;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+		constexpr auto hp_order          = 3;
+		constexpr auto hp_cutoff_freq_hz = 120;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 		channel->SetHighPassFilter(FilterState::On);
 
-		constexpr auto lp_order       = 3;
-		constexpr auto lp_cutoff_freq = 4300;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_order          = 3;
+		constexpr auto lp_cutoff_freq_hz = 4300;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 		channel->SetLowPassFilter(FilterState::On);
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
@@ -505,7 +508,7 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 	}
 }
 
-bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string_view filter_choice)
+bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string& filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);
@@ -516,8 +519,8 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	// The implementation is tuned to working with sample rates that are
 	// multiples of 8000, such as 8 Khz, 16 Khz, or 32 Khz. Anything besides
 	// these will produce unwanted artifacts.
-	static_assert(sample_rate >= 8000, "Sample rate must be at least 8 kHz");
-	static_assert(sample_rate % 1000 == 0,
+	static_assert(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
+	static_assert(sample_rate_hz % 1000 == 0,
 	              "Sample rate must be a multiple of 1000");
 
 	InitializeImpulseLUT();
@@ -527,10 +530,12 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	waveform_deque.resize(waveform_size, 0.0f);
 
 	// Register the sound channel
-	const auto callback = std::bind(&PcSpeakerImpulse::ChannelCallback, this, std::placeholders::_1);
+	const auto callback = std::bind(&PcSpeakerImpulse::ChannelCallback,
+	                                this,
+	                                std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
-	                           sample_rate,
+	                           sample_rate_hz,
 	                           device_name,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
@@ -540,7 +545,7 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 
 	LOG_MSG("%s: Initialised %s model", device_name, model_name);
 
-	channel->SetPeakAmplitude(static_cast<uint32_t>(positive_amplitude));
+	channel->SetPeakAmplitude(positive_amplitude);
 }
 
 PcSpeakerImpulse::~PcSpeakerImpulse()

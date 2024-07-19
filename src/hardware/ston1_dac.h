@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,13 +23,18 @@
 
 #include "dosbox.h"
 
+#include "channel_names.h"
 #include "inout.h"
 #include "lpt_dac.h"
 #include "mixer.h"
 
 class StereoOn1 final : public LptDac {
 public:
-	StereoOn1() : LptDac("STON1", ston1_max_30_khz, {ChannelFeature::Stereo}){}
+	StereoOn1()
+	        : LptDac(ChannelName::StereoOn1Dac, SampleRateHz,
+	                 {ChannelFeature::Stereo})
+	{}
+
 	void BindToPort(const io_port_t lpt_port) final;
 	void ConfigureFilters(const FilterState state) final;
 
@@ -38,7 +45,7 @@ protected:
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 
 private:
-	static constexpr uint16_t ston1_max_30_khz = 30000u;
+	static constexpr auto SampleRateHz = 30000;
 
 	uint8_t stereo_data[2] = {data_reg, data_reg};
 };

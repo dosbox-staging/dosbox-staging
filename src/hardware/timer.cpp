@@ -185,7 +185,7 @@ static void PIT0_Event(uint32_t /*val*/)
 	if (channel_0.mode != PitMode::InterruptOnTerminalCount) {
 		channel_0.start += channel_0.delay;
 
-		if (GCC_UNLIKELY(channel_0.update_count)) {
+		if (channel_0.update_count) {
 			update_channel_delay(channel_0);
 			channel_0.update_count = false;
 		}
@@ -276,7 +276,7 @@ static void counter_latch(PIT_Block &channel)
 		channel.read_latch = check_cast<uint16_t>(wrapped);
 	};
 
-	if (GCC_UNLIKELY(channel.mode_changed)) {
+	if (channel.mode_changed) {
 		// if (channel.mode== PitMode::SquareWave) ticks_since_then /=
 		// 2; //
 		// TODO figure this out on real hardware
@@ -422,7 +422,7 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 	const uint16_t channel_num = check_cast<uint8_t>(port - 0x40);
 	auto &channel = pit.at(channel_num);
 	uint8_t ret = 0;
-	if (GCC_UNLIKELY(channel.counterstatus_set)) {
+	if (channel.counterstatus_set) {
 		channel.counterstatus_set = false;
 		latched_timerstatus_locked = false;
 		ret = latched_timerstatus;

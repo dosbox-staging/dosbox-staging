@@ -21,9 +21,9 @@
 
 #include "dosbox.h"
 
-#include <memory>
-#include <stdio.h>
+#include <cstdio>
 #include <array>
+#include <memory>
 
 #include "bios.h"
 #include "dos_inc.h"
@@ -58,7 +58,7 @@ public:
 	imageDisk(const imageDisk&) = delete; // prevent copy
 	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
 
-	virtual ~imageDisk()
+	~imageDisk()
 	{
 		if (diskimg != nullptr)
 			fclose(diskimg);
@@ -84,10 +84,8 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-// Merely pointers. The actual raw image objects are managed by the drive
-// manager class.
-extern std::array<imageDisk*, MAX_DISK_IMAGES> imageDiskList;
-extern std::array<imageDisk*, MAX_SWAPPABLE_DISKS> diskSwap;
+extern std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
+extern std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 
 extern uint16_t imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */

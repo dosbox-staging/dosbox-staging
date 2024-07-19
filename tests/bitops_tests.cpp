@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,10 +24,10 @@
 
 namespace {
 
-using namespace bit::literals;
-
 TEST(bitops, enum_vals)
 {
+	using namespace bit::literals;
+
 	// check against bit-shifts
 	EXPECT_FALSE(b0 == 0 << 0);
 	EXPECT_TRUE(b0 == 1 << 0); // this is why
@@ -71,6 +71,8 @@ TEST(bitops, enum_vals)
 
 TEST(bitops, nominal_byte)
 {
+	using namespace bit::literals;
+
 	const auto even_bits = (b0 | b2 | b4 | b6);
 	const auto odd_bits = (b1 | b3 | b5 | b7);
 
@@ -140,6 +142,8 @@ TEST(bitops, nominal_byte)
 
 TEST(bitops, nominal_word)
 {
+	using namespace bit::literals;
+
 	const auto even_bits = (b8 | b10 | b12 | b14);
 	const auto odd_bits = (b9 | b11 | b13 | b15);
 
@@ -190,6 +194,8 @@ TEST(bitops, nominal_word)
 
 TEST(bitops, nominal_dword)
 {
+	using namespace bit::literals;
+
 	constexpr uint32_t even_bits = {b16 | b18 | b20 | b22 | b24 | b26 | b28 | b30};
 	constexpr uint32_t odd_bits = {b17 | b19 | b21 | b23 | b25 | b27 | b29 | b31};
 
@@ -240,6 +246,8 @@ TEST(bitops, nominal_dword)
 
 TEST(bitops, bits_too_wide_for_byte)
 {
+	using namespace bit::literals;
+
 	uint8_t reg = 0;
 	bit::set(reg, b7);
 	EXPECT_TRUE(bit::is(reg, b7));
@@ -258,6 +266,8 @@ TEST(bitops, bits_too_wide_for_byte)
 
 TEST(bitops, bits_too_wide_for_word)
 {
+	using namespace bit::literals;
+
 	uint16_t reg = 0;
 	bit::set(reg, b8);
 	EXPECT_TRUE(bit::is(reg, b8));
@@ -276,6 +286,8 @@ TEST(bitops, bits_too_wide_for_word)
 
 TEST(bitops, bits_not_too_wide_for_dword)
 {
+	using namespace bit::literals;
+
 	uint32_t reg = 0;
 	bit::set(reg, b8);
 	bit::set(reg, b24);
@@ -296,6 +308,8 @@ TEST(bitops, bits_not_too_wide_for_dword)
 // Retain operations
 TEST(bitops, retain)
 {
+	using namespace bit::literals;
+
 	// Retain a positive bit, with surrounding other bits
 	uint8_t reg = (b0 | b1 | b2);
 	bit::retain(reg, b1);
@@ -310,17 +324,17 @@ TEST(bitops, retain)
 // Masking operations
 TEST(bitops, masking)
 {
-	using namespace bit;
+	using namespace bit::literals;
 
 	// Prepopulated register with bit 4 cleared:
 	constexpr uint8_t reg = (b0 | b1 | b2 | b3 /*| b4*/ | b5 | b6 | b7);
 
-	EXPECT_TRUE(is(mask_on(reg, b4), b4));
-	EXPECT_TRUE(cleared(mask_off(reg, b4), b4));
-	EXPECT_TRUE(any(mask_to(reg, b4, true), b4));
-	EXPECT_TRUE(cleared(mask_to(reg, b4, false), b4));
-	EXPECT_TRUE(any(mask_flip(reg, b4), b4));
-	EXPECT_TRUE(is(mask_flip_all(reg), b4));
+	EXPECT_TRUE(bit::is(bit::mask_on(reg, b4), b4));
+	EXPECT_TRUE(bit::cleared(bit::mask_off(reg, b4), b4));
+	EXPECT_TRUE(bit::any(bit::mask_to(reg, b4, true), b4));
+	EXPECT_TRUE(bit::cleared(bit::mask_to(reg, b4, false), b4));
+	EXPECT_TRUE(bit::any(bit::mask_flip(reg, b4), b4));
+	EXPECT_TRUE(bit::is(bit::mask_flip_all(reg), b4));
 }
 
 } // namespace

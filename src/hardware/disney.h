@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,8 +45,8 @@ private:
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 
 	// The DSS is an LPT DAC with a 16-level FIFO running at 7kHz
-	static constexpr auto dss_7khz_rate = 7000;
-	static constexpr uint8_t max_fifo_size = 16;
+	static constexpr auto DisneySampleRateHz = 7000;
+	static constexpr auto MaxFifoSize        = 16;
 
 	// Managed objects
 	std::queue<uint8_t> fifo = {};

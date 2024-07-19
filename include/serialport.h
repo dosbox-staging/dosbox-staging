@@ -49,6 +49,9 @@
 #include "hardware.h"
 #endif
 
+constexpr uint32_t SerialMinBaudRate = 300u;
+constexpr uint32_t SerialMaxBaudRate = 115200u;
+
 // Serial port interface
 #define SERIAL_IO_HANDLERS 8
 #define SERIAL_MAX_FIFO_SIZE 256
@@ -291,6 +294,8 @@ public:
 	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
 	uint8_t GetPortNumber() const { return port_index + 1; }
 
+	uint32_t GetPortBaudRate() const;
+
 	// What type of port is this?
 	SERIAL_PORT_TYPE serialType = SERIAL_PORT_TYPE::DISABLED;
 
@@ -488,11 +493,10 @@ public:
 	// Creates a COM device that communicates with the num-th parallel port,
 	// i.e. is LPTnum
 	device_COM(class CSerial* sc);
-	~device_COM() override;
 	bool Read(uint8_t* data, uint16_t* size) override;
 	bool Write(uint8_t* data, uint16_t* size) override;
 	bool Seek(uint32_t* pos, uint32_t type) override;
-	bool Close() override;
+	void Close() override;
 	uint16_t GetInformation() override;
 
 private:

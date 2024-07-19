@@ -25,6 +25,19 @@
 
 #include <memory>
 
+// Project name, lower-case and without spaces
+#define DOSBOX_PROJECT_NAME "dosbox-staging"
+
+// Name of the emulator
+#define DOSBOX_NAME "DOSBox Staging"
+
+// Development team name
+#define DOSBOX_TEAM "The " DOSBOX_NAME " Team"
+
+// Copyright string
+#define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
+
+
 int sdl_main(int argc, char *argv[]);
 
 // The shutdown_requested bool is a conditional break in the parse-loop and
@@ -37,15 +50,20 @@ extern bool shutdown_requested;
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
 void MSG_Add(const char*,const char*); // add messages (in UTF-8) to the language file
-const char* MSG_Get(char const *);     // get messages (adapted to current code page) from the language file
-const char* MSG_GetRaw(char const *);  // get messages (in UTF-8, without ANSI preprocessing) from the language file
+const char* MSG_Get(const char*); // get messages (adapted to current code page)
+                                  // from the language file
+const char* MSG_GetRaw(const char*); // get messages (in UTF-8, without ANSI
+                                     // preprocessing) from the language file
 bool MSG_Exists(const char*);
 
 class Section;
+class Section_prop;
 
 typedef Bitu (LoopHandler)(void);
 
-const char *DOSBOX_GetDetailedVersion() noexcept;
+const char* DOSBOX_GetVersion() noexcept;
+const char* DOSBOX_GetDetailedVersion() noexcept;
+
 double DOSBOX_GetUptime();
 
 void DOSBOX_RunMachine();
@@ -54,9 +72,11 @@ void DOSBOX_SetNormalLoop();
 
 void DOSBOX_Init(void);
 
-class Config;
-using config_ptr_t = std::unique_ptr<Config>;
-extern config_ptr_t control;
+void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
+
+int64_t DOSBOX_GetTicksDone();
+void DOSBOX_SetTicksDone(const int64_t ticks_done);
+void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
 
 enum SVGACards {
 	SVGA_None,
@@ -72,12 +92,13 @@ extern bool mono_cga;
 enum MachineType {
 	// In rough age-order: Hercules is the oldest and VGA is the newest
 	// (Tandy started out as a clone of the PCjr, so PCjr came first)
-	MCH_HERC  = 1 << 0,
-	MCH_CGA   = 1 << 1,
-	MCH_TANDY = 1 << 2,
-	MCH_PCJR  = 1 << 3,
-	MCH_EGA   = 1 << 4,
-	MCH_VGA   = 1 << 5,
+	MCH_INVALID = 0,
+	MCH_HERC    = 1 << 0,
+	MCH_CGA     = 1 << 1,
+	MCH_TANDY   = 1 << 2,
+	MCH_PCJR    = 1 << 3,
+	MCH_EGA     = 1 << 4,
+	MCH_VGA     = 1 << 5,
 };
 
 extern MachineType machine;
@@ -92,5 +113,9 @@ inline bool is_machine(const int type) {
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"
 #endif // the logging system.
+
+constexpr auto DefaultMt32RomsDir   = "mt32-roms";
+constexpr auto DefaultSoundfontsDir = "soundfonts";
+constexpr auto GlShadersDir         = "glshaders";
 
 #endif /* DOSBOX_DOSBOX_H */

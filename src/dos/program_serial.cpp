@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -176,7 +176,8 @@ void SERIAL::Run()
 		}
 		if (serialports[port_index] != nullptr) {
 			serialports[port_index]->serialType = desired_type;
-			serialports[port_index]->commandLineString = commandLineString;
+			serialports[port_index]->commandLineString = std::move(
+			        commandLineString);
 		}
 		delete commandLine;
 		showPort(port_index);
@@ -191,30 +192,30 @@ void SERIAL::Run()
 
 void SERIAL::AddMessages() {
 	MSG_Add("PROGRAM_SERIAL_HELP_LONG",
-	        "Manages the serial ports.\n"
+	        "Manage the serial ports.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.\n"
-	        "  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]DEVICE[reset] [settings]   Attach specified device to the given port.\n"
+	        "  [color=light-green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.\n"
+	        "  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]DEVICE[reset] [settings]   Attach specified device to the given port.\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]DEVICE[reset]   One of: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], or [color=cyan]DISABLED[reset]\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DEVICE[reset]  one of: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], or [color=light-cyan]DISABLED[reset]\n"
 	        "\n"
-	        "  Optional settings for each [color=cyan]DEVICE[reset]:\n"
-	        "  For [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK\n"
-	        "  For [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,\n"
-	        "                   PORT, INHSOCKET, SOCK\n"
-	        "  For [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,\n"
-	        "                   2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)\n"
-	        "  For [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY\n"
-	        "  For [color=cyan]DUMMY[reset]      : IRQ\n"
+	        "  Optional settings for each [color=light-cyan]DEVICE[reset]:\n"
+	        "  For [color=light-cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK\n"
+	        "  For [color=light-cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,\n"
+	        "                  PORT, INHSOCKET, SOCK\n"
+	        "  For [color=light-cyan]MOUSE[reset]     : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,\n"
+	        "                  2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)\n"
+	        "  For [color=light-cyan]DIRECT[reset]    : IRQ, REALPORT (required), RXDELAY\n"
+	        "  For [color=light-cyan]DUMMY[reset]     : IRQ\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server\n"
-	        "  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
-	        "  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
-	        "  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux\n"
-	        "  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse\n");
+	        "  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server\n"
+	        "  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
+	        "  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
+	        "  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux\n"
+	        "  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse\n");
 	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
 	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
 	        "Must specify a numeric port value between 1 and %d, inclusive.\n");

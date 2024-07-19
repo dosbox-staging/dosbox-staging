@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "unicode.h"
 
 #include "../ints/int10.h"
 
@@ -108,8 +108,7 @@ void TREE::Run()
 	}
 
 	// Check if directory is provided
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	const auto params = cmd->GetArguments();
 	if (params.size() > 1) {
 		WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 		return;
@@ -141,8 +140,8 @@ void TREE::Run()
 	}
 
 	// Check if directory exists
-	uint16_t attr = 0;
-	if (!DOS_GetFileAttr(path.c_str(), &attr) || !(attr & DOS_ATTR_DIRECTORY)) {
+	FatAttributeFlags attr = {};
+	if (!DOS_GetFileAttr(path.c_str(), &attr) || !attr.directory) {
 		WriteOut(MSG_Get("SHELL_DIRECTORY_NOT_FOUND"), path.c_str());
 		return;
 	}
@@ -181,15 +180,16 @@ void TREE::PreRender()
 {
 	bool use_ascii_fallback = false;
 
+	auto to_dos = [](const std::string& in_str) {
+		return utf8_to_dos(in_str,
+		                   DosStringConvertMode::NoSpecialCharacters,
+		                   UnicodeFallback::EmptyString);
+	};
+
 	if (!has_option_ascii) {
 		// If current code page misses one or more characters used to
 		// draw the tree, use standard 7-bit ASCII characters
-
-		std::string tmp_str;
-		utf8_to_dos("─├│└", tmp_str, UnicodeFallback::Null);
-		if (tmp_str.find('\0') != std::string::npos) {
-			use_ascii_fallback = true;
-		}
+		use_ascii_fallback = to_dos("─├│└").empty();
 	}
 
 	if (has_option_ascii || use_ascii_fallback) {
@@ -197,9 +197,13 @@ void TREE::PreRender()
 		str_last   = "\\---";
 		str_indent = "|   ";
 	} else {
-		utf8_to_dos("├───", str_child, UnicodeFallback::Null);
-		utf8_to_dos("└───", str_last, UnicodeFallback::Null);
-		utf8_to_dos("│   ", str_indent, UnicodeFallback::Null);
+		str_child  = to_dos("├───");
+		str_last   = to_dos("└───");
+		str_indent = to_dos("│   ");
+
+		assert(!str_child.empty());
+		assert(!str_last.empty());
+		assert(!str_indent.empty());
 	}
 }
 
@@ -287,10 +291,11 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	dos.dta(dos.tables.tempdta);
 
 	const auto pattern = path + "*.*";
-	FatAttributeFlags flags;
-	flags.system        = true;
-	flags.hidden        = true;
-	flags.directory     = true;
+	FatAttributeFlags flags = {};
+	flags.system    = true;
+	flags.hidden    = true;
+	flags.directory = true;
+
 	bool has_next_entry = DOS_FindFirst(pattern.c_str(), flags._data);
 	size_t space_needed = 7; // length of indentation + ellipsis
 
@@ -396,8 +401,8 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	if (is_first_entry && !depth) {
 		output.AddString("\n");
 		output.AddString(MSG_Get(has_option_files
-		                                 ? "PROGRAM_TREE_NO_FILES_SUBDIRS"
-		                                 : "PROGRAM_TREE_NO_SUBDIRS"));
+		                                 ? "SHELL_NO_FILES_SUBDIRS_TO_DISPLAY"
+		                                 : "SHELL_NO_SUBDIRS_TO_DISPLAY"));
 	} else if (has_option_files) {
 		// If listing files, separate directories with empty lines
 		display_empty();
@@ -409,40 +414,37 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 void TREE::AddMessages()
 {
 	MSG_Add("PROGRAM_TREE_HELP_LONG",
-	        "Displays directory tree in a graphical form.\n"
+	        "Display directory tree in a graphical form.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \\[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]\n"
+	        "  [color=light-green]tree[reset] [color=light-cyan][DIRECTORY][reset] [/a] \\[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=cyan]DIRECTORY[reset] is the name of the directory to display.\n"
-	        "  [color=white]ORDER[reset]     is a listing order, one of:\n"
-	        "                [color=white]n[reset] (by name, alphabetic),\n"
-	        "                [color=white]s[reset] (by size, smallest first),\n"
-	        "                [color=white]e[reset] (by extension, alphabetic),\n"
-	        "                [color=white]d[reset] (by date/time, oldest first),\n"
-	        "            with an optional [color=white]-[reset] prefix to reverse order.\n"
-	        "  /a        uses only 7-bit ASCII characters.\n"
-	        "  /b        brief display, omits header and footer information.\n"
-	        "  /f        also display files.\n"
-	        "  /p        display one page a time, shorten output to fit width width.\n"
-	        "  /da       display attributes.\n"
-	        "  /df       display size for files.\n"
-	        "  /dh       also display hidden and system files/directories.\n"
-	        "  /o[color=white]ORDER[reset]   orders the list (see above)\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DIRECTORY[reset]  name of the directory to display\n"
+	        "  [color=white]ORDER[reset]      listing order, one of:\n"
+	        "                 [color=white]n[reset] (by name, alphabetic),\n"
+	        "                 [color=white]s[reset] (by size, smallest first),\n"
+	        "                 [color=white]e[reset] (by extension, alphabetic),\n"
+	        "                 [color=white]d[reset] (by date/time, oldest first),\n"
+	        "             with an optional [color=white]-[reset] prefix to reverse order\n"
+	        "  /a         use only 7-bit ASCII characters\n"
+	        "  /b         brief display, omit header and footer information\n"
+	        "  /f         also display files\n"
+	        "  /p         display one page a time, shorten output to fit screen width\n"
+	        "  /da        display attributes\n"
+	        "  /df        display size for files\n"
+	        "  /dh        also display hidden and system files/directories\n"
+	        "  /o[color=white]ORDER[reset]    order the list (see above)\n"
 	        "\n"
 	        "Notes:\n"
-	        "  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.\n"
+	        "  If [color=light-cyan]DIRECTORY[reset] is omitted, the current directory is used.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]tree[reset]          ; displays directory tree starting from current directory\n"
-	        "  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n");
+	        "  [color=light-green]tree[reset]          ; displays directory tree starting from current directory\n"
+	        "  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n");
 
 	MSG_Add("PROGRAM_TREE_DIRECTORY", " Directory tree for volume %s");
 
-	MSG_Add("PROGRAM_TREE_NO_SUBDIRS", "No subdirectories to display.\n");
-	MSG_Add("PROGRAM_TREE_NO_FILES_SUBDIRS",
-	        "No files or subdirectories to display.\n");
 	MSG_Add("PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS",
 	        "Too many files or subdirectories.\n");
 }

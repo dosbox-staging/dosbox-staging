@@ -23,8 +23,7 @@
 // #define WEAK_EXCEPTIONS
 
 
-#if defined (_MSC_VER)
-
+#if defined(_MSC_VER) && defined(_M_IX86) && !defined(__clang__)
 #ifdef WEAK_EXCEPTIONS
 #define clx
 #else
@@ -503,7 +502,9 @@
 #else
 
 // !defined _MSC_VER
-
+#if defined(_MSC_VER) && !defined(__clang__)
+#error "Requires Clang under Visual Studio"
+#endif
 #ifdef WEAK_EXCEPTIONS
 #define clx
 #else
@@ -962,7 +963,7 @@ static void FPU_FNOP(void){
 static void FPU_PREP_PUSH(void){
 	TOP = (TOP - 1) &7;
 #if DB_FPU_STACK_CHECK_PUSH > DB_FPU_STACK_CHECK_NONE
-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
+	if (fpu.tags[TOP] != TAG_Empty) {
 #if DB_FPU_STACK_CHECK_PUSH == DB_FPU_STACK_CHECK_EXIT
 		E_Exit("FPU stack overflow");
 #else
@@ -983,7 +984,7 @@ static void FPU_PREP_PUSH(void){
 
 static void FPU_FPOP(void){
 #if DB_FPU_STACK_CHECK_POP > DB_FPU_STACK_CHECK_NONE
-	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) {
+	if (fpu.tags[TOP] == TAG_Empty) {
 #if DB_FPU_STACK_CHECK_POP == DB_FPU_STACK_CHECK_EXIT
 		E_Exit("FPU stack underflow");
 #else

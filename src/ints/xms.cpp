@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -32,9 +32,9 @@
 #include "setup.h"
 #include "support.h"
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 
 CHECK_NARROWING();
 
@@ -99,12 +99,12 @@ struct XMS_MemMove {
 	union {
 		RealPt realpt;
 		uint32_t offset;
-	} src;
+	} src = {};
 	uint16_t dest_handle = 0;
 	union {
 		RealPt realpt;
 		uint32_t offset;
-	} dest;
+	} dest = {};
 
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER

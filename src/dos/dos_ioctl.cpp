@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,13 +17,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include "dosbox.h"
 #include "callback.h"
+#include "dos_inc.h"
+#include "dosbox.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_inc.h"
+#include <cstring>
 
 bool DOS_IOCTL(void) {
 //	LOG(LOG_IOCTL,LOG_WARN)("%X %X %X %X",reg_ax,reg_bx,reg_cx,reg_dx);
@@ -74,7 +73,10 @@ bool DOS_IOCTL(void) {
 			return false;
 		} else {
 			if (Files[handle]->GetInformation() & 0x8000) {	//Check for device
-				reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(true);
+				const auto device_ptr = dynamic_cast<DOS_Device*>(
+				        Files[handle].get());
+				assert(device_ptr);
+				reg_al = device_ptr->GetStatus(true);
 			} else {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
@@ -86,8 +88,11 @@ bool DOS_IOCTL(void) {
 			/* is character device with IOCTL support */
 			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
-			if (((DOS_Device*)(Files[handle]))->ReadFromControlChannel(bufptr,reg_cx,&retcode)) {
-				reg_ax=retcode;
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			if (device_ptr->ReadFromControlChannel(bufptr, reg_cx, &retcode)) {
+				reg_ax = retcode;
 				return true;
 			}
 		}
@@ -98,8 +103,11 @@ bool DOS_IOCTL(void) {
 			/* is character device with IOCTL support */
 			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
-			if (((DOS_Device*)(Files[handle]))->WriteToControlChannel(bufptr,reg_cx,&retcode)) {
-				reg_ax=retcode;
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			if (device_ptr->WriteToControlChannel(bufptr, reg_cx, &retcode)) {
+				reg_ax = retcode;
 				return true;
 			}
 		}
@@ -124,7 +132,10 @@ bool DOS_IOCTL(void) {
 		return true;
 	case 0x07:		/* Get Output Status */
 		if (Files[handle]->GetInformation() & EXT_DEVICE_BIT) {
-			reg_al = reinterpret_cast<DOS_Device *>(Files[handle])->GetStatus(false);
+			const auto device_ptr = dynamic_cast<DOS_Device*>(
+			        Files[handle].get());
+			assert(device_ptr);
+			reg_al = device_ptr->GetStatus(false);
 			return true;
 		}
 		LOG(LOG_IOCTL, LOG_NORMAL)("07:Fakes output status is ready for handle %u", handle);
@@ -133,14 +144,14 @@ bool DOS_IOCTL(void) {
 	case 0x08:		/* Check if block device removable */
 		/* cdrom drives and drive a&b are removable */
 		if (drive < 2) reg_ax=0;
-		else if (!Drives[drive]->isRemovable()) reg_ax=1;
+		else if (!Drives[drive]->IsRemovable()) reg_ax=1;
 		else {
 			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 			return false;
 		}
 		return true;
 	case 0x09:		/* Check if block device remote */
-		if ((drive >= 2) && Drives[drive]->isRemote()) {
+		if ((drive >= 2) && Drives[drive]->IsRemote()) {
 			reg_dx=0x1000;	// device is remote
 			// undocumented bits always clear
 		} else {
@@ -162,7 +173,7 @@ bool DOS_IOCTL(void) {
 				DOS_SetError(DOSERR_ACCESS_DENIED);
 				return false;
 			}
-			if (reg_ch != 0x08 || Drives[drive]->isRemovable()) {
+			if (reg_ch != 0x08 || Drives[drive]->IsRemovable()) {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 				return false;
 			}
@@ -216,7 +227,7 @@ bool DOS_IOCTL(void) {
 		if (drive < 2) {
 			if (Drives[drive]) reg_al=drive+1;
 			else reg_al=1;
-		} else if (Drives[drive]->isRemovable()) {
+		} else if (Drives[drive]->IsRemovable()) {
 			DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 			return false;
 		} else reg_al=0;	/* Only 1 logical drive assigned */

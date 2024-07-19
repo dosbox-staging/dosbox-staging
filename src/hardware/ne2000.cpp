@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: LGPL-2.1-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2008-2010  Ralf Grillenberger <h-a-l-9000@users.sourceforge.net>
  *  Copyright (C) 2004-2008  Dean Beeler <canadacow@users.sourceforge.net>
  *  Copyright (C) 2001-2004  Peter Grehan <grehan@iprg.nokia.com>
@@ -376,7 +376,7 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
     // have been initialised.
     //
     if (!s.remote_bytes) {
-	    LOG_WARNING("Empty ASIC read from port=0x%02x of length %u and %u remote_bytes",
+	    LOG_WARNING("NE2000: Empty ASIC read from port=0x%02x of length %u and %u remote_bytes",
 			offset, enum_val(io_len), s.remote_bytes);
 	    break;
     }
@@ -1310,7 +1310,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
 
   // Setup packet header
-  pkthdr[0] = 0;	// rx status - old behavior
+  // pkthdr[0] = 0;	// rx status - old behavior
   pkthdr[0] = 1;        // Probably better to set it all the time
                         // rather than set it to 0, which is clearly wrong.
   if (pktbuf[0] & 0x01) {
@@ -1336,7 +1336,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256u -
 				 BX_NE2K_MEMSTART];
     memcpy(startptr, (const void *)(pktbuf + endbytes - 4u),
-	   (size_t)(io_len - endbytes + 8u));
+	   io_len - endbytes + 8u);
     BX_NE2K_THIS s.curr_page = nextpage;
   }
 
@@ -1482,10 +1482,10 @@ public:
         LOG_MSG("NE2000: Initialised on port %xh and IRQ %u", base, irq);
 
 		// mac address
-		const char* macstring=section->Get_string("macaddr");
+		std::string macstring = section->Get_string("macaddr");
 		unsigned int macint[6];
 		uint8_t mac[6];
-		if(sscanf(macstring,"%02x:%02x:%02x:%02x:%02x:%02x",
+		if(sscanf(macstring.c_str(),"%02x:%02x:%02x:%02x:%02x:%02x",
 			&macint[0],&macint[1],&macint[2],&macint[3],&macint[4],&macint[5]) != 6) {
 			mac[0]=0xac;mac[1]=0xde;mac[2]=0x48;
 			mac[3]=0x88;mac[4]=0xbb;mac[5]=0xaa;

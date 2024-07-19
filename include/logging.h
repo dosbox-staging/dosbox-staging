@@ -94,6 +94,7 @@ void GFX_ShowMsg(const char* format, ...)
 // LOG_DEBUG exists only for messages useful during development, and not to
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
 #define LOG_DEBUG(...)
+#define LOG_TRACE(...)
 #else
 
 template <typename... Args>

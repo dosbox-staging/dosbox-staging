@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <optional>
+
 #define BIOS_BASE_ADDRESS_COM1          0x400
 #define BIOS_BASE_ADDRESS_COM2          0x402
 #define BIOS_BASE_ADDRESS_COM3          0x404
@@ -137,5 +139,7 @@ bool BIOS_AddKeyToBuffer(uint16_t code);
 void INT10_ReloadRomFonts();
 
 void BIOS_SetComPorts (uint16_t baseaddr[]);
+
+bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac = {});
 
 #endif

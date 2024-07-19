@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,15 +18,21 @@
  */
 #include "dosbox.h"
 
+// Needed for std::isnan in simde
+#include <cmath>
+
 #include "callback.h"
 #include "cpu.h"
 #include "fpu.h"
 #include "inout.h"
 #include "lazyflags.h"
 #include "mem.h"
+#include "mmx.h"
 #include "paging.h"
 #include "pic.h"
 #include "tracy.h"
+
+#include "simde/x86/mmx.h"
 
 #if C_DEBUG
 #include "debug.h"
@@ -35,10 +42,12 @@
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
+#define LoadMq(off) mem_readq(off)
 
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
+#define SaveMq(off,val) mem_writeq(off,val)
 
 extern Bitu cycle_count;
 

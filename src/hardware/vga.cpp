@@ -148,10 +148,10 @@ std::string to_string(const VideoMode& video_mode)
 
 	const auto mode_number = (video_mode.is_custom_mode
 	                                  ? ""
-	                                  : format_string(" %02Xh",
+	                                  : format_str(" %02Xh",
 	                                                  video_mode.bios_mode_number));
 
-	return format_string("%s %dx%d %s %s%s",
+	return format_str("%s %dx%d %s %s%s",
 	                     to_string(video_mode.graphics_standard),
 	                     video_mode.width,
 	                     video_mode.height,
@@ -253,7 +253,7 @@ void VGA_SetRatePreference(const std::string &pref)
 
 	} else {
 		vga.draw.dos_rate_mode = VgaRateMode::Default;
-		LOG_WARNING("VIDEO: Unknown frame rate setting: %s, using default",
+		LOG_WARNING("VIDEO: Unknown frame rate setting: '%s', using 'default'",
 		            pref.c_str());
 	}
 }
@@ -262,7 +262,9 @@ double VGA_GetPreferredRate()
 {
 	switch (vga.draw.dos_rate_mode) {
 	case VgaRateMode::Default:
-		return vga.draw.dos_refresh_hz;
+		// If another device is overriding our VGA card, then use its rate
+		return vga.draw.vga_override ? vga.draw.override_refresh_hz
+		                             : vga.draw.dos_refresh_hz;
 	case VgaRateMode::Host:
 		assert(vga.draw.host_refresh_hz > RefreshRateMin);
 		return vga.draw.host_refresh_hz;
@@ -363,34 +365,29 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	}	
 }
 
-void VGA_ForceSquarePixels(const bool enable)
-{
-	vga.draw.force_square_pixels = enable;
-}
-
-void VGA_EnableVgaDoubleScanning(const bool enable)
+void VGA_AllowVgaScanDoubling(const bool allow)
 {
 	if (machine != MCH_VGA) {
 		return;
 	}
-	if (enable && !vga.draw.double_scanning_enabled) {
-		LOG_MSG("VGA: Double-scanning VGA video modes enabled");
+	if (allow && !vga.draw.scan_doubling_allowed) {
+		LOG_MSG("VGA: Double scanning VGA video modes enabled");
 	}
-	if (!enable && vga.draw.double_scanning_enabled) {
-		LOG_MSG("VGA: Forcing single-scanning of double-scanned VGA video modes");
+	if (!allow && vga.draw.scan_doubling_allowed) {
+		LOG_MSG("VGA: Forcing single scanning of double-scanned VGA video modes");
 	}
-	vga.draw.double_scanning_enabled = enable;
+	vga.draw.scan_doubling_allowed = allow;
 }
 
-void VGA_EnablePixelDoubling(const bool enable)
+void VGA_AllowPixelDoubling(const bool allow)
 {
-	if (enable && !vga.draw.pixel_doubling_enabled) {
-		LOG_MSG("VGA: Pixel-doubling enabled");
+	if (allow && !vga.draw.pixel_doubling_allowed) {
+		LOG_MSG("VGA: Pixel doubling enabled");
 	}
-	if (!enable && vga.draw.pixel_doubling_enabled) {
-		LOG_MSG("VGA: Forcing no pixel-doubling");
+	if (!allow && vga.draw.pixel_doubling_allowed) {
+		LOG_MSG("VGA: Forcing no pixel doubling");
 	}
-	vga.draw.pixel_doubling_enabled = enable;
+	vga.draw.pixel_doubling_allowed = allow;
 }
 
 void VGA_Init(Section* sec)
@@ -483,7 +480,20 @@ void SVGA_Setup_Driver(void) {
 	}
 }
 
-const VideoMode& VGA_GetCurrentVideoMode() {
-	return vga.draw.render.video_mode;
+const VideoMode& VGA_GetCurrentVideoMode()
+{
+	// This function is only 100% safe to call from *outside* of the VGA
+	// code! Outside of the VGA and video BIOS related code, this function
+	// is safe to call and should always return the current video mode.
+	//
+	// Care must be taken when using this function from within the VGA and
+	// video BIOS related code. Depending on how and where you use it, it
+	// *might* return the *previous* video mode in some circumstances if you
+	// end up calling in the middle of a mode change! In such scenarios, you
+	// might want to prefer reading `CurMode` directly which is more likely
+	// to contain the current mode, or the mode that's currently being set
+	// up.
+	//
+	return vga.draw.image_info.video_mode;
 }
 

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,8 +23,8 @@
 
 #if C_DEBUG
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include <string>
 
@@ -39,17 +39,16 @@ void BIOSTEST::Run(void) {
 
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
-	localDrive *ldp = nullptr;
 	if (!DOS_MakeName((char *)temp_line.c_str(), fullname, &drive))
 		return;
 
 	try {
 		// try to read ROM file into buffer
-		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		const auto ldp = std::dynamic_pointer_cast<localDrive>(Drives.at(drive));
 		if (!ldp)
 			return;
 
-		FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
+		FILE *tmpfile = ldp->GetHostFilePtr(fullname, "rb");
 		if (tmpfile == nullptr) {
 			WriteOut("Can't open a file");
 			return;

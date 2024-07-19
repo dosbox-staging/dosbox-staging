@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2018-2021  kcgen <kcgen@users.noreply.github.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
@@ -148,12 +148,12 @@ int Sound_Quit(void)
 
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
-    while (((volatile Sound_Sample *) sample_list) != NULL)
+    SDL_LockMutex(samplelist_mutex);
+    while (sample_list != NULL)
     {
-        Sound_Sample *sample = sample_list;
-        Sound_FreeSample(sample); /* Updates sample_list. */
-        sample = NULL;
+        Sound_FreeSample(sample_list); /* Updates sample_list. */
     }
+    SDL_UnlockMutex(samplelist_mutex);
 
     initialized = 0;
 
@@ -570,6 +570,11 @@ void Sound_FreeSample(Sound_Sample *sample)
     /* update the sample_list... */
     if (internal->prev != NULL)
     {
+        // We're not removing from the head.
+        // Assert that we're not touching sample_list (which should be the head of the linked list).
+        // This assert fixes a Coverity warning.
+        assert(sample_list != sample);
+
         Sound_SampleInternal *prevInternal;
         prevInternal = (Sound_SampleInternal *) internal->prev->opaque;
         prevInternal->next = internal->next;

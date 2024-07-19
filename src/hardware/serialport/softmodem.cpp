@@ -20,18 +20,19 @@
 
 #if C_MODEM
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <utility>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 #include "string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
 #include "math_utils.h"
 #include "misc_util.h"
+#include "version.h"
 
 class PhonebookEntry {
 public:
@@ -153,19 +154,14 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	}
 
 	// Get the connect speed to report
-	constexpr auto min_baudrate = 300u;
-	constexpr auto max_baudrate = 57600u;
-	if (getUintFromString("baudrate:", val, cmd)) {
-		val = clamp(val, min_baudrate, max_baudrate);
+	uint32_t requested_bps = 0;
+	if (getUintFromString("bps:", val, cmd)) {
+		requested_bps = val;
 	} else {
-		val = max_baudrate;
+		requested_bps = 57600;
 	}
 
-	assert(val >= min_baudrate && val <= max_baudrate);
-	safe_sprintf(connect_string, "CONNECT %d", val);
-
-	LOG_MSG("SERIAL: Port %" PRIu8 " will report baud rate %d",
-			GetPortNumber(), val);
+	SetModemSpeed(requested_bps);
 
 	InstallationSuccessful=true;
 }
@@ -228,7 +224,7 @@ void CSerialModem::handleUpperEvent(uint16_t type)
 void CSerialModem::SendLine(const char *line) {
 	rqueue->addb(reg[MREG_CR_CHAR]);
 	rqueue->addb(reg[MREG_LF_CHAR]);
-	rqueue->adds((uint8_t *)line, strlen(line));
+	rqueue->adds((const uint8_t *)line, strlen(line));
 	rqueue->addb(reg[MREG_CR_CHAR]);
 	rqueue->addb(reg[MREG_LF_CHAR]);
 }
@@ -353,6 +349,25 @@ char CSerialModem::GetChar(char * & scan) const {
 	char ch = *scan;
 	scan++;
 	return ch;
+}
+
+void CSerialModem::SetModemSpeed(const uint32_t cfg_val) {
+	modem_bps_config = cfg_val;
+	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed "
+	        "of up to %d bits per second",
+	        GetPortNumber(),
+	        modem_bps_config);
+	UpdateConnectString();
+}
+
+void CSerialModem::UpdateConnectString() {
+	const uint32_t connect_val = clamp(modem_bps_config,
+	                                   SerialMinBaudRate,
+	                                   GetPortBaudRate());
+
+	assert(connect_val >= SerialMinBaudRate &&
+	       connect_val <= SerialMaxBaudRate);
+	safe_sprintf(connect_string, "CONNECT %d", connect_val);
 }
 
 void CSerialModem::Reset(){
@@ -516,6 +531,13 @@ void CSerialModem::DoCommand()
 				}
 				break;
 			}
+			// Set reported connection speed.
+			if (is_next_token("BPS", scanbuf)) {
+				scanbuf += 3;
+				const auto requested_bps = ScanNumber(scanbuf);
+				SetModemSpeed(requested_bps);
+				break;
+			}
 			// If the command wasn't recognized then stop parsing
 			SendRes(ResERROR);
 			return;
@@ -588,8 +610,12 @@ void CSerialModem::DoCommand()
 		}
 		case 'I': // Some strings about firmware
 			switch (ScanNumber(scanbuf)) {
-			case 3: SendLine("DOSBox Emulated Modem Firmware V1.00"); break;
-			case 4: SendLine("Modem compiled for DOSBox version " VERSION); break;
+			case 3:
+				SendLine("DOSBox Staging Emulated Modem Firmware V1.00");
+				break;
+			case 4:
+				SendLine("Modem compiled for DOSBox version " DOSBOX_VERSION);
+				break;
 			}
 			break;
 		case 'E': // Echo on/off
@@ -1090,6 +1116,7 @@ void CSerialModem::transmitByte(uint8_t val, bool first)
 void CSerialModem::updatePortConfig(uint16_t, uint8_t lcr)
 {
 	(void)lcr; // deliberately unused but needed for API compliance
+	UpdateConnectString();
 }
 
 void CSerialModem::updateMSR() {

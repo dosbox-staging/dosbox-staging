@@ -22,10 +22,11 @@
 #include "capture.h"
 
 #include <cassert>
+#include <cmath>
 
+#include "math_utils.h"
 #include "mem.h"
 #include "render.h"
-#include "rgb888.h"
 #include "support.h"
 
 #include "zmbv/zmbv.h"
@@ -61,6 +62,41 @@ static struct {
 		uint32_t bytes_written   = 0;
 	} audio = {};
 } video = {};
+
+static ZMBV_FORMAT to_zmbv_format(const PixelFormat format)
+{
+	switch (format) {
+	case PixelFormat::Indexed8: return ZMBV_FORMAT::BPP_8;
+	case PixelFormat::RGB555_Packed16: return ZMBV_FORMAT::BPP_15;
+	case PixelFormat::RGB565_Packed16: return ZMBV_FORMAT::BPP_16;
+
+	// ZMBV internally maps from 24-bit to 32-bit (let ZMBV manage itself).
+	case PixelFormat::BGR24_ByteArray: return ZMBV_FORMAT::BPP_24;
+
+	case PixelFormat::BGRX32_ByteArray: return ZMBV_FORMAT::BPP_32;
+	default: assertm(false, "Invalid pixel_format value"); break;
+	}
+	return ZMBV_FORMAT::NONE;
+}
+
+// Returns number of bytes needed to represent the given PixelFormat
+static uint8_t to_bytes_per_pixel(const PixelFormat format)
+{
+	// PixelFormat's underly value is colour depth in number of bits
+	const float num_bits = static_cast<uint8_t>(format);
+
+	// Use float-ceil to handle non-power-of-two bit quantities
+	constexpr uint8_t bits_per_byte = 8;
+	const auto num_bytes = iround(ceilf(num_bits / bits_per_byte));
+
+	assert(num_bytes >= 1 && num_bytes <= 4);
+	return static_cast<uint8_t>(num_bytes);
+}
+
+static uint8_t to_bytes_per_pixel(const ZMBV_FORMAT format)
+{
+	return ZMBV_ToBytesPerPixel(format);
+}
 
 static void add_avi_chunk(const char* tag, const uint32_t size,
                           const void* data, const uint32_t flags)
@@ -319,44 +355,120 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
+// Performs some transforms on the passed down rendered image to make sure
+// we're capturing the raw output, then passes the result in the same
+// byte-order to the encoder. Endianness varies per pixel format (see
+// PixelFormat in video.h for details); the ZMBV encoder handles all that
+// detail.
+//
+// We always write non-double-scanned and non-pixel-doubled frames in raw
+// video capture mode :
+//
+// Double scanning and pixel doubling can be either "baked-in" or performed in
+// post-processing. Ignoring the `double_height` and `double_width` flags
+// takes care of the post-processing variety, but for the "baked-in" variants
+// we need to skip every second row or pixel.
+//
+// So, for example, the 320x200 13h VGA mode is always written as 320x200 in
+// raw capture mode regardless of the state of the width & height doubling
+// flags, and irrespective of whether the passed down image is 320x200 or
+// 320x400 with "baked-in" double scanning.
+//
+// Composite modes are special because they're rendered at 2x the width of the
+// video mode to allow enough vertical resolution to represent composite
+// artifacts (so 320x200 is rendered as 640x200, and 640x200 as 1280x200).
+// These are written as-is, otherwise we'd be losing information.
+//
+static void compress_raw_frame(const RenderedImage& image)
+{
+	const auto& src = image.params;
+	auto src_row    = image.image_data;
+
+	// To reconstruct the raw image, we must skip every second row
+	// when dealing with "baked-in" double scanning.
+	const auto raw_height = (src.height / (src.rendered_double_scan ? 2 : 1));
+	const auto src_pitch = (image.pitch * (src.rendered_double_scan ? 2 : 1));
+
+	// To reconstruct the raw image, we must skip every second pixel
+	// when dealing with "baked-in" pixel doubling.
+	const auto raw_width = (src.width / (src.rendered_pixel_doubling ? 2 : 1));
+
+	const auto pixel_skip_count = (src.rendered_pixel_doubling ? 1 : 0);
+
+	auto compress_row = [&](const uint8_t* row_buffer) {
+		video.codec->CompressLines(1, &row_buffer);
+	};
+
+	const auto src_bpp = to_bytes_per_pixel(src.pixel_format);
+	const auto dest_bpp = to_bytes_per_pixel(to_zmbv_format(src.pixel_format));
+
+	// Maybe compress the source rows straight away without copying. Note
+	// that this is a shortcut scenario; hard-code it to false to exercise
+	// the rote version below.
+
+	const auto can_use_src_directly = (src_bpp == dest_bpp &&
+	                                   pixel_skip_count == 0);
+	if (can_use_src_directly) {
+		for (auto i = 0; i < raw_height; ++i, src_row += src_pitch) {
+			compress_row(src_row);
+		}
+		return;
+	}
+
+	// Otherwise we need to arrange the source bytes before compressing
+	assert(!can_use_src_directly);
+
+	// Grow the target row buffer if needed
+	const auto dest_row_bytes = check_cast<uint16_t>(src.width * dest_bpp);
+	static std::vector<uint8_t> dest_row = {};
+	if (dest_row.size() < dest_row_bytes) {
+		dest_row.resize(dest_row_bytes, 0);
+	}
+
+	const auto src_advance = src_bpp * (pixel_skip_count + 1);
+
+	for (auto i = 0; i < raw_height; ++i, src_row += src_pitch) {
+		auto src_pixel  = src_row;
+		auto dest_pixel = dest_row.data();
+
+		for (auto j = 0; j < raw_width; ++j, src_pixel += src_advance) {
+			std::memcpy(dest_pixel, src_pixel, src_bpp);
+			dest_pixel += dest_bpp;
+		}
+		compress_row(dest_row.data());
+	}
+}
+
 void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);
 
-	const auto video_width = src.double_width ? src.width * 2 : src.width;
-	const auto video_height = src.double_height ? src.height * 2 : src.height;
+	// To reconstruct the raw image, we must skip every second row when
+	// dealing with "baked-in" double scanning.
+	const auto raw_width = check_cast<uint16_t>(
+	        src.width / (src.rendered_pixel_doubling ? 2 : 1));
+
+	// To reconstruct the raw image, we must skip every second pixel
+	// when dealing with "baked-in" pixel doubling.
+	const auto raw_height = check_cast<uint16_t>(
+	        src.height / (src.rendered_double_scan ? 2 : 1));
 
 	// Disable capturing if any of the test fails
-	if (video.handle && (video.width != video_width || video.height != video_height ||
+	if (video.handle && (video.width != raw_width || video.height != raw_height ||
 	                     video.pixel_format != src.pixel_format ||
 	                     video.frames_per_second != frames_per_second)) {
 		capture_video_finalise();
 	}
 
-	ZMBV_FORMAT format;
-
-	switch (src.pixel_format) {
-	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
-	case PixelFormat::RGB555_Packed16: format = ZMBV_FORMAT::BPP_15; break;
-	case PixelFormat::RGB565_Packed16: format = ZMBV_FORMAT::BPP_16; break;
-
-	// ZMBV is "the DOSBox capture format" supported by external
-	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
-	// didn't have 24-bit color, the format itself doesn't support
-	// it. I this case we tell ZMBV the data is 32-bit and let the
-	// rgb24's int() cast operator up-convert.
-	case PixelFormat::BGR24_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
-	case PixelFormat::XRGB8888_Packed32: format = ZMBV_FORMAT::BPP_32; break;
-	default: assertm(false, "Invalid pixel_format value"); return;
-	}
+	const auto zmbv_format = to_zmbv_format(src.pixel_format);
 
 	if (!video.handle) {
-		create_avi_file(video_width,
-		                video_height,
+		create_avi_file(raw_width,
+		                raw_height,
 		                src.pixel_format,
 		                frames_per_second,
-		                format);
+		                zmbv_format);
 	}
 	if (!video.handle) {
 		return;
@@ -365,87 +477,14 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	const auto codec_flags = (video.frames % 300 == 0) ? 1 : 0;
 
 	if (!video.codec->PrepareCompressFrame(codec_flags,
-	                                       format,
+	                                       zmbv_format,
 	                                       image.palette_data,
 	                                       video.buf.data(),
 	                                       video.buf_size)) {
 		return;
 	}
 
-	alignas(uint32_t) uint8_t row_buffer[SCALER_MAXWIDTH * 4];
-
-	auto src_row = image.image_data;
-
-	for (auto i = 0; i < src.height; ++i) {
-		const uint8_t* row_pointer = row_buffer;
-
-		// TODO This all assumes little-endian byte order; should be
-		// made endianness-aware like capture_image.cpp
-		if (src.double_width) {
-			switch (src.pixel_format) {
-			case PixelFormat::Indexed8:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel      = src_row[x];
-					row_buffer[x * 2 + 0] = pixel;
-					row_buffer[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::RGB555_Packed16:
-			case PixelFormat::RGB565_Packed16:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = ((uint16_t*)src_row)[x];
-
-					((uint16_t*)row_buffer)[x * 2 + 0] = pixel;
-					((uint16_t*)row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::BGR24_ByteArray:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = reinterpret_cast<const Rgb888*>(
-					        src_row)[x];
-
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x * 2 + 0] = pixel;
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::XRGB8888_Packed32:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = ((uint32_t*)src_row)[x];
-
-					((uint32_t*)row_buffer)[x * 2 + 0] = pixel;
-					((uint32_t*)row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-			}
-			row_pointer = row_buffer;
-
-		} else {
-			if (src.pixel_format == PixelFormat::BGR24_ByteArray) {
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = reinterpret_cast<const Rgb888*>(
-					        src_row)[x];
-
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x] = pixel;
-				}
-				row_pointer = row_buffer;
-			} else {
-				row_pointer = src_row;
-			}
-		}
-
-		auto lines_to_write = src.double_height ? 2 : 1;
-		while (lines_to_write--) {
-			video.codec->CompressLines(1, &row_pointer);
-		}
-
-		src_row += image.pitch;
-	}
+	compress_raw_frame(image);
 
 	const auto written = video.codec->FinishCompressFrame();
 	if (written < 0) {

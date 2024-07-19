@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "std_filesystem.h"
 
 #include "checks.h"
+#include "setup.h"
 #include "string_utils.h"
 
 CHECK_NARROWING();
@@ -43,27 +44,37 @@ ImageCapturer::ImageCapturer(const std::string& grouped_mode_prefs)
 
 void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 {
+	constexpr const char* DefaultSetting = "upscaled";
+
 	auto set_defaults = [&] {
 		grouped_mode.wants_raw      = false;
 		grouped_mode.wants_upscaled = true;
 		grouped_mode.wants_rendered = false;
+
+		set_section_property_value("capture",
+		                           "default_image_capture_formats",
+		                           DefaultSetting);
 	};
 
 	grouped_mode.wants_raw      = false;
 	grouped_mode.wants_upscaled = false;
 	grouped_mode.wants_rendered = false;
 
-	const auto formats = split(prefs, ' ');
+	const auto formats = split_with_empties(prefs, ' ');
 	if (formats.size() == 0) {
-		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified; "
-		            "defaulting to 'upscaled'");
+		LOG_WARNING(
+		        "CAPTURE: 'default_image_capture_formats' not specified, "
+		        "using '%s'",
+		        DefaultSetting);
 		set_defaults();
 		return;
 	}
 	if (formats.size() > 3) {
-		LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
-		            "Must not contain more than 3 formats; defaulting to 'upscaled'.",
-		            prefs.c_str());
+		LOG_WARNING(
+		        "CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
+		        "Must not contain more than 3 formats, using '%s'.",
+		        prefs.c_str(),
+		        DefaultSetting);
 		set_defaults();
 		return;
 	}
@@ -76,11 +87,12 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 		} else if (format == "rendered") {
 			grouped_mode.wants_rendered = true;
 		} else {
-			LOG_WARNING("CAPTURE: Invalid image capture format specified for "
-			            "'default_image_capture_formats': '%s'. "
-			            "Valid formats are 'raw', 'upscaled', and 'rendered'; "
-			            "defaulting to 'upscaled'.",
-			            format.c_str());
+			LOG_WARNING(
+			        "CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
+			        "Valid formats are 'raw', 'upscaled', and 'rendered'; "
+			        "using '%s'.",
+			        format.c_str(),
+			        DefaultSetting);
 			set_defaults();
 			return;
 		}
@@ -230,33 +242,4 @@ void ImageCapturer::RequestGroupedCapture()
 		return;
 	}
 	state.grouped = CaptureState::Pending;
-}
-
-uint8_t get_double_scan_row_skip_count(const RenderedImage& image)
-{
-	// Double-scanning can be either:
-	//
-	// 1) "baked" into the image; `image.image_data` contains twice as many
-	// rows (e.g. `video_mode.height` is 200 and `image.height` 400),
-	//
-	// 2) or it can be "faked" with `image.double_height` set to true, in
-	// which case `video_mode.height` equals `image.height` (e.g. both are
-	// 200) and the height-doubling happens as a post-processing step on
-	// `image.image_data` just before the final output.
-	//
-	// For case 2, there's nothing to do; the image data itself is not
-	// double-scanned. For case 1, we need to reconstruct the raw,
-	// non-double-scanned image to serve as the basis for our further output
-	// and scaling operations, so we must skip every second row if we're
-	// dealing with "baked in" double-scanning.
-	//
-	// This function returns `0` for case 1 images (faked double-scan), and
-	// `1` for case 2 images (baked-in double-scan).
-	//
-	const auto& src = image.params;
-
-	assert(src.height >= src.video_mode.height);
-	assert(src.height % src.video_mode.height == 0);
-
-	return check_cast<uint8_t>(src.height / src.video_mode.height - 1);
 }

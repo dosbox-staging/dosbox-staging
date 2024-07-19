@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -78,7 +79,13 @@ union bootSector {
 
 
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
-enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
+
+enum class DosReturnMode : uint8_t {
+	Exit                     = 0,
+	CtrlC                    = 1,
+	Abort                    = 2,
+	TerminateAndStayResident = 3
+};
 
 #define DOS_FILES   255
 #define DOS_DRIVES  26
@@ -98,10 +105,21 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
 
+constexpr int SftHeaderSize = 6;
+constexpr int SftEntrySize = 59;
+
+constexpr uint32_t SftEndPointer = 0xffffffff;
+constexpr uint16_t SftNextTableOffset = 0x0;
+constexpr uint16_t SftNumberOfFilesOffset = 0x04;
+
+// Fake SFT table for use by DOS_MultiplexFunctions() ax = 0x1216
+extern RealPt fake_sft_table;
+constexpr int FakeSftEntries = 16;
+
 /* internal Dos Tables */
 
-extern DOS_File * Files[DOS_FILES];
-extern std::array<DOS_Drive*, DOS_DRIVES> Drives;
+extern std::array<std::unique_ptr<DOS_File>, DOS_FILES> Files;
+extern std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives;
 extern DOS_Device * Devices[DOS_DEVICES];
 
 extern uint8_t dos_copybuf[0x10000];
@@ -109,12 +127,16 @@ extern uint8_t dos_copybuf[0x10000];
 
 void DOS_SetError(uint16_t code);
 
-/* File Handling Routines */
+// Guest OS booting routines
+
+void DOS_NotifyBooting();
+bool DOS_IsGuestOsBooted();
+
+// File handling routines
 
 enum { STDIN=0,STDOUT=1,STDERR=2,STDAUX=3,STDPRN=4};
 enum { HAND_NONE=0,HAND_FILE,HAND_DEVICE};
 
-/* Routines for File Class */
 void DOS_SetupFiles (void);
 bool DOS_ReadFile(uint16_t handle,uint8_t * data,uint16_t * amount, bool fcb = false);
 bool DOS_WriteFile(uint16_t handle,uint8_t * data,uint16_t * amount,bool fcb = false);
@@ -130,6 +152,7 @@ uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();
 
 // Date and Time Conversion
+
 constexpr uint16_t DOS_PackTime(const uint16_t hour,
                                 const uint16_t min,
                                 const uint16_t sec) noexcept
@@ -173,18 +196,38 @@ constexpr uint16_t DOS_PackDate(const struct tm &datetime) noexcept
 	                    static_cast<uint16_t>(datetime.tm_mday));
 }
 
+constexpr struct tm DOS_UnpackDateTime(const uint16_t date, const uint16_t time)
+{
+	struct tm ret = {};
+	ret.tm_sec = (time & 0x1f) * 2;
+	ret.tm_min = (time >> 5) & 0x3f;
+	ret.tm_hour = (time >> 11) & 0x1f;
+	ret.tm_mday = date & 0x1f;
+	ret.tm_mon = ((date >> 5) & 0x0f) - 1;
+	ret.tm_year = (date >> 9) + 1980 - 1900;
+	// have the C run-time library code compute whether standard
+	// time or daylight saving time is in effect.
+	ret.tm_isdst = -1;
+	return ret;
+}
+
 /* Routines for Drive Class */
 bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb = false);
-bool DOS_OpenFileExtended(const char* name, uint16_t flags, uint16_t createAttr,
-                          uint16_t action, uint16_t* entry, uint16_t* status);
-bool DOS_CreateFile(const char* name, uint16_t attribute, uint16_t* entry,
-                    bool fcb = false);
+bool DOS_OpenFileExtended(const char* name, uint16_t flags,
+                          FatAttributeFlags createAttr, uint16_t action,
+                          uint16_t* entry, uint16_t* status);
+bool DOS_CreateFile(const char* name, FatAttributeFlags attribute,
+                    uint16_t* entry, bool fcb = false);
 bool DOS_UnlinkFile(const char* const name);
-bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst = false);
+bool DOS_FindFirst(const char* search, FatAttributeFlags attr,
+                   bool fcb_findfirst = false);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(const char* const name, char* const big);
-bool DOS_CreateTempFile(char * const name,uint16_t * entry);
+bool DOS_Canonicalize(const char* const name, char* const canonicalized);
+std::string DOS_Canonicalize(const char* const name);
+bool DOS_CreateTempFile(char* const name, uint16_t* entry);
 bool DOS_FileExists(const char* const name);
+bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
+bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
 
 /* Helper Functions */
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive);
@@ -199,21 +242,24 @@ bool DOS_MakeDir(const char* const dir);
 bool DOS_RemoveDir(const char* const dir);
 bool DOS_Rename(const char* const oldname, const char* const newname);
 bool DOS_GetFreeDiskSpace(uint8_t drive,uint16_t * bytes,uint8_t * sectors,uint16_t * clusters,uint16_t * free);
-bool DOS_GetFileAttr(const char* const name, uint16_t* attr);
-bool DOS_SetFileAttr(const char* const name, uint16_t attr);
+bool DOS_GetFileAttr(const char* const name, FatAttributeFlags* attr);
+bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr);
 
 /* IOCTL Stuff */
 bool DOS_IOCTL(void);
 bool DOS_GetSTDINStatus();
 uint8_t DOS_FindDevice(const char* name);
 void DOS_SetupDevices();
+void DOS_ClearDrivesAndFiles();
 void DOS_ShutDownDevices();
 
 /* Execute and new process creation */
 bool DOS_NewPSP(uint16_t pspseg,uint16_t size);
 bool DOS_ChildPSP(uint16_t pspseg,uint16_t size);
 bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
-void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode);
+
+void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
+                   const uint8_t exit_code);
 
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
@@ -222,6 +268,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks);
 bool DOS_FreeMemory(uint16_t segment);
 void DOS_FreeProcessMemory(uint16_t pspseg);
 uint16_t DOS_GetMemory(uint16_t pages);
+void DOS_FreeTableMemory();
 bool DOS_SetMemAllocStrategy(uint16_t strat);
 void DOS_SetMcbFaultStrategy(const char *mcb_fault_strategy_pref);
 uint16_t DOS_GetMemAllocStrategy(void);
@@ -298,6 +345,7 @@ static inline uint16_t long2para(uint32_t size) {
 #define DOSERR_REMOVE_CURRENT_DIRECTORY 16
 #define DOSERR_NOT_SAME_DEVICE 17
 #define DOSERR_NO_MORE_FILES 18
+#define DOSERR_LOCK_VIOLATION 33
 #define DOSERR_FILE_ALREADY_EXISTS 80
 
 /* Wait/check user input */
@@ -351,15 +399,32 @@ public:
 	MemStruct(uint16_t seg, uint16_t off) : pt(PhysicalMake(seg, off)) {}
 	MemStruct(RealPt addr) : pt(RealToPhysical(addr)) {}
 
-	void SetPt(uint16_t seg) { pt = PhysicalMake(seg, 0); }
+	void SetPt(uint16_t seg)
+	{
+		pt = PhysicalMake(seg, 0);
+	}
 
 protected:
-	PhysPt pt = 0;
+	PhysPt pt    = 0;
+	~MemStruct() = default;
+};
+
+class Environment {
+public:
+	virtual std::optional<std::string> GetEnvironmentValue(std::string_view entry) const = 0;
+
+	virtual ~Environment() = default;
+
+protected:
+	Environment()                              = default;
+	Environment(const Environment&)            = default;
+	Environment& operator=(const Environment&) = default;
+	Environment(Environment&&)                 = default;
+	Environment& operator=(Environment&&)      = default;
 };
 
 /* Program Segment Prefix */
-
-class DOS_PSP final : public MemStruct {
+class DOS_PSP final : public MemStruct, public Environment {
 public:
 	DOS_PSP(uint16_t segment) : seg(segment) { SetPt(seg); }
 
@@ -413,6 +478,11 @@ public:
 	void SetFCB1(RealPt src);
 	void SetFCB2(RealPt src);
 	void SetCommandTail(RealPt src);
+
+	std::optional<std::string> GetEnvironmentValue(std::string_view variable) const override;
+	std::vector<std::string> GetAllRawEnvironmentStrings() const;
+	bool SetEnvironmentValue(std::string_view variable,
+	                         std::string_view new_string);
 
 private:
 	#ifdef _MSC_VER
@@ -583,13 +653,34 @@ public:
  * Some documents refer to it also as Data Transfer Address or Disk Transfer Area.
  */
 
+#ifdef _MSC_VER
+#pragma pack(1)
+#endif
+struct sDTA {
+	uint8_t sdrive;						/* The Drive the search is taking place */
+	uint8_t sname[8];						/* The Search pattern for the filename */
+	uint8_t sext[3];						/* The Search pattern for the extension */
+	uint8_t sattr;						/* The Attributes that need to be found */
+	uint16_t dirID;						/* custom: dir-search ID for multiple searches at the same time */
+	uint16_t dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
+	uint8_t fill[4];
+	uint8_t attr;
+	uint16_t time;
+	uint16_t date;
+	uint32_t size;
+	char name[DOS_NAMELENGTH_ASCII];
+} GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
+#pragma pack()
+#endif
+
 class DOS_DTA final : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) : MemStruct(addr) {}
 
-	void SetupSearch(uint8_t drive, uint8_t attr, char *pattern);
+	void SetupSearch(uint8_t drive, FatAttributeFlags attr, char* pattern);
 	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
-	void GetSearchParams(uint8_t &attr, char *pattern) const;
+	void GetSearchParams(FatAttributeFlags& attr, char* pattern) const;
 
 	struct Result {
 		std::string name = {};
@@ -617,42 +708,27 @@ public:
 		{
 			return attr.directory && (name == "." || name == "..");
 		}
+
+		bool IsDevice() const
+		{
+			return attr.device;
+		}
+
+		bool IsReadOnly() const
+		{
+			return attr.read_only;
+		}
 	};
 
 	void SetResult(const char* name, uint32_t size, uint16_t date,
-	               uint16_t time, uint8_t attr);
+	               uint16_t time, FatAttributeFlags attr);
 	void GetResult(Result& result) const;
-	// obsolete - TODO: remove
-	void GetResult(char* name, uint32_t& size, uint16_t& date,
-	               uint16_t& time, uint8_t& attr) const;
 
 	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
 	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
 
 	void SetDirIDCluster(uint16_t cl) { SSET_WORD(sDTA, dirCluster, cl); }
 	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
-
-private:
-	#ifdef _MSC_VER
-	#pragma pack(1)
-	#endif
-	struct sDTA {
-		uint8_t sdrive;						/* The Drive the search is taking place */
-		uint8_t sname[8];						/* The Search pattern for the filename */
-		uint8_t sext[3];						/* The Search pattern for the extension */
-		uint8_t sattr;						/* The Attributes that need to be found */
-		uint16_t dirID;						/* custom: dir-search ID for multiple searches at the same time */
-		uint16_t dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
-		uint8_t fill[4];
-		uint8_t attr;
-		uint16_t time;
-		uint16_t date;
-		uint32_t size;
-		char name[DOS_NAMELENGTH_ASCII];
-	} GCC_ATTRIBUTE(packed);
-	#ifdef _MSC_VER
-	#pragma pack()
-	#endif
 };
 
 enum class ResultGrouping {
@@ -701,10 +777,11 @@ public:
 	void SetRandom(uint32_t random) { SSET_DWORD(sFCB, rndm, random); }
 	uint32_t GetRandom() const { return SGET_DWORD(sFCB, rndm); }
 
-	void SetAttr(uint8_t attr);
-	void GetAttr(uint8_t &attr) const;
+	void SetAttr(FatAttributeFlags attr);
+	void GetAttr(FatAttributeFlags& attr) const;
 
-	void SetResult(uint32_t size,uint16_t date,uint16_t time,uint8_t attr);
+	void SetResult(uint32_t size, uint16_t date, uint16_t time,
+	               FatAttributeFlags attr);
 
 	uint8_t GetDrive() const;
 
@@ -824,125 +901,104 @@ private:
 extern DOS_InfoBlock dos_infoblock;
 
 struct DOS_Block {
-	DOS_Date date;
-	DOS_Version version;
-	uint16_t firstMCB;
-	uint16_t errorcode;
+	DOS_Date date       = {};
+	DOS_Version version = {};
+	uint16_t firstMCB   = {};
+	uint16_t errorcode  = {};
 
-	uint16_t psp() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP(); }
-	void psp(uint16_t seg) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg); }
+	uint16_t psp()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetPSP();
+	}
 
-	uint16_t env;
-	RealPt cpmentry;
+	void psp(uint16_t seg)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetPSP(seg);
+	}
 
-	RealPt dta() { return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA(); }
-	void dta(RealPt dtap) { DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap); }
+	uint16_t env    = {};
+	RealPt cpmentry = {};
 
-	uint8_t return_code,return_mode;
+	RealPt dta()
+	{
+		return DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).GetDTA();
+	}
+	void dta(RealPt dtap)
+	{
+		DOS_SDA(DOS_SDA_SEG, DOS_SDA_OFS).SetDTA(dtap);
+	}
 
-	uint8_t current_drive;
-	bool verify;
-	bool breakcheck;
-	bool echo;          // if set to true dev_con::read will echo input 
-	bool direct_output;
-	bool internal_output;
-	struct  {
-		RealPt mediaid;
-		RealPt tempdta;
-		RealPt tempdta_fcbdelete;
-		RealPt dbcs;
-		RealPt filenamechar;
-		RealPt collatingseq;
-		RealPt upcase;
-		uint8_t* country;//Will be copied to dos memory. resides in real mem
-		uint16_t dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
-	} tables;
-	uint16_t loaded_codepage;
-	uint16_t dcp;
+	uint8_t return_code       = {};
+	DosReturnMode return_mode = {};
+
+	uint8_t current_drive = {};
+	bool verify           = {};
+	bool breakcheck       = {};
+
+	// if set to true dev_con::read will echo input
+	bool echo = {};
+
+	bool direct_output   = {};
+	bool internal_output = {};
+
+	struct {
+		RealPt mediaid           = {};
+		RealPt tempdta           = {};
+		RealPt tempdta_fcbdelete = {};
+		RealPt dbcs              = {};
+		RealPt filenamechar      = {};
+		RealPt collatingseq      = {};
+		RealPt upcase            = {};
+
+		// Will be copied to dos memory. resides in real mem
+		uint8_t* country = {};
+
+		// Fake Disk parameter system using only the first entry so the
+		// drive letter matches
+		uint16_t dpb = {};
+	} tables = {};
+
+	uint16_t loaded_codepage = {};
+	uint16_t dcp = {};
 };
 
 extern DOS_Block dos;
 
 static inline uint8_t RealHandle(uint16_t handle) {
-	DOS_PSP psp(dos.psp());	
+	DOS_PSP psp(dos.psp());
 	return psp.GetFileHandle(handle);
 }
 
-#define DOS_DATE_FORMAT_OFS         0
-#define DOS_DATE_SEPARATOR_OFS      11
-#define DOS_TIME_FORMAT_OFS         17
-#define DOS_TIME_SEPARATOR_OFS      13
-#define DOS_THOUSANDS_SEPARATOR_OFS 7
-#define DOS_DECIMAL_SEPARATOR_OFS   9
+/* Locale information */
 
-enum class Country : uint16_t {
-	United_States  = 1,
-	Candian_French = 2,
-	Latin_America  = 3,
-	Russia         = 7,
-	Greece         = 30,
-	Netherlands    = 31,
-	Belgium        = 32,
-	France         = 33,
-	Spain          = 34,
-	Hungary        = 36,
-	Yugoslavia     = 38,
-	Italy          = 39,
-	Romania        = 40,
-	Switzerland    = 41,
-	Czech_Slovak   = 42,
-	Austria        = 43,
-	United_Kingdom = 44,
-	Denmark        = 45,
-	Sweden         = 46,
-	Norway         = 47,
-	Poland         = 48,
-	Germany        = 49,
-	Argentina      = 54,
-	Brazil         = 55,
-	Malaysia       = 60,
-	Australia      = 61,
-	Philippines    = 63,
-	Singapore      = 65,
-	Kazakhstan     = 77,
-	Japan          = 81,
-	South_Korea    = 82,
-	Vietnam        = 84,
-	China          = 86,
-	Turkey         = 90,
-	India          = 91,
-	Niger          = 227,
-	Benin          = 229,
-	Nigeria        = 234,
-	Faeroe_Islands = 298,
-	Portugal       = 351,
-	Iceland        = 354,
-	Albania        = 355,
-	Malta          = 356,
-	Finland        = 358,
-	Bulgaria       = 359,
-	Lithuania      = 370,
-	Latvia         = 371,
-	Estonia        = 372,
-	Armenia        = 374,
-	Belarus        = 375,
-	Ukraine        = 380,
-	Serbia         = 381,
-	Montenegro     = 382,
-	Croatia        = 384,
-	Slovenia       = 386,
-	Bosnia         = 387,
-	Macedonia      = 389,
-	Taiwan         = 886,
-	Arabic         = 785,
-	Israel         = 972,
-	Mongolia       = 976,
-	Tadjikistan    = 992,
-	Turkmenistan   = 993,
-	Azerbaijan     = 994,
-	Georgia        = 995,
-	Kyrgyzstan     = 996,
-	Uzbekistan     = 998,
+enum class DosDateFormat : uint8_t {
+	MonthDayYear = 0,
+	DayMonthYear = 1,
+	YearMonthDay = 2,
 };
+
+enum class DosTimeFormat : uint8_t {
+	Time12H = 0, // AM/PM
+	Time24H = 1,
+};
+
+enum class DosCurrencyFormat : uint8_t {
+	SymbolAmount      = 0,
+	AmountSymbol      = 1,
+	SymbolSpaceAmount = 2,
+	AmountSpaceSymbol = 3,
+
+	// Some sources claim that bit 2 set means currency symbol should
+	// replace decimal point; so far it is unknown which (if any)
+	// COUNTRY.SYS uses this bit, most likely no DOS software uses it.
+};
+
+DosDateFormat DOS_GetLocaleDateFormat();
+DosTimeFormat DOS_GetLocaleTimeFormat();
+char DOS_GetLocaleDateSeparator();
+char DOS_GetLocaleTimeSeparator();
+char DOS_GetLocaleThousandsSeparator();
+char DOS_GetLocaleDecimalSeparator();
+char DOS_GetLocaleListSeparator();
 
 #endif

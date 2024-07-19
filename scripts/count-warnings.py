@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# coding=utf-8
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
@@ -23,23 +24,41 @@ human-readable output in standard log.
 """
 
 import argparse
+import enum
 import os
 import re
 import sys
 
 # For recognizing warnings in GCC format in stderr:
 #
-GCC_WARN_PATTERN = re.compile(r"([^:]+):(\d+):\d+: warning: .* \[-W(.+?)\](.*)")
-#                                ~~~~~   ~~~  ~~~           ~~      ~~~    ~~
-#                                ↑       ↑    ↑             ↑       ↑      ↑
-#                                file    line column  message    type  extra
+GCC_WARN_PATTERN = re.compile(
+    r"([^:]+):(\d+):\d+: warning: .* \[-W(.+?)\](.*)")
+#      ~~~~~   ~~~  ~~~           ~~      ~~~    ~~
+#      ↑       ↑    ↑             ↑       ↑      ↑
+#      file    line column  message    type  extra
 
 # For recognizing warnings in MSVC format:
 #
-MSVC_WARN_PATTERN = re.compile(r".+>([^\(]+)\((\d+),\d+\): warning ([^:]+): .*")
-#                                ~~  ~~~~~~    ~~~  ~~~             ~~~~~   ~~
-#                                ↑   ↑         ↑    ↑               ↑        ↑
-#                          project   file      line column       code  message
+MSVC_WARN_PATTERN = re.compile(
+    r".+>([^\(]+)\((\d+),\d+\): warning ([^:]+): .*")
+#     ~~  ~~~~~~    ~~~  ~~~             ~~~~~   ~~
+#     ↑   ↑         ↑    ↑               ↑        ↑
+# project file      line column       code  message
+
+# For recognizing warnings in Visual Studio Clang format:
+#
+MSCLANG_WARN_PATTERN = re.compile(
+    r">[^>]*?([^:]+)\((\d+),\d+\): warning : .+? \[-W(.+?)\](.*)")
+#             ~~~~~    ~~~  ~~~              ~~~      ~~~    ~~
+#             ↑        ↑     ↑               ↑        ↑      ↑
+#             file     line column          message  type   extra
+
+
+class MessageFormat(enum.Enum):
+    GCC_FORMAT = 1
+    CLANG_FORMAT = 2
+    MSVC_FORMAT = 3
+
 
 # For removing color when GCC is invoked with -fdiagnostics-color=always
 #
@@ -79,11 +98,17 @@ def remove_colors(line):
     return re.sub(ANSI_COLOR_PATTERN, "", line)
 
 
-def count_warning(gcc_format, line_no, line, warnings):
+def count_warning(message_format, line_no, line, warnings):
     line = remove_colors(line)
 
-    pattern = GCC_WARN_PATTERN if gcc_format else MSVC_WARN_PATTERN
-    match = pattern.match(line)
+    if message_format == MessageFormat.MSVC_FORMAT:
+        pattern = MSVC_WARN_PATTERN
+    elif message_format == MessageFormat.CLANG_FORMAT:
+        pattern = MSCLANG_WARN_PATTERN
+    else:
+        pattern = GCC_WARN_PATTERN
+
+    match = pattern.search(line)
     if not match:
         return 0
 
@@ -168,8 +193,14 @@ def parse_args():
         "-l", "--list", action="store_true", help="Display sorted list of all warnings."
     )
 
-    parser.add_argument(
+    format_group = parser.add_mutually_exclusive_group()
+
+    format_group.add_argument(
         "--msvc", action="store_true", help="Look for warnings using MSVC format."
+    )
+
+    format_group.add_argument(
+        "--msclang", action="store_true", help="Look for warnings using Visual Studio Clang format."
     )
 
     return parser.parse_args()
@@ -180,10 +211,16 @@ def main():
     total = 0
     warnings = warning_summaries()
     args = parse_args()
-    use_gcc_format = not args.msvc
+    if args.msvc:
+        message_format = MessageFormat.MSVC_FORMAT
+    elif args.msclang:
+        message_format = MessageFormat.CLANG_FORMAT
+    else:
+        message_format = MessageFormat.GCC_FORMAT
+
     line_no = 1
     for line in get_input_lines(args.logfile):
-        total += count_warning(use_gcc_format, line_no, line, warnings)
+        total += count_warning(message_format, line_no, line, warnings)
         line_no += 1
     if args.list:
         warnings.list_all()

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "video.h"
 
 #include <cmath>
 
@@ -52,33 +53,6 @@ constexpr auto model_com_2button_msm_str  = "2button+msm";
 constexpr auto model_com_3button_msm_str  = "3button+msm";
 constexpr auto model_com_wheel_msm_str    = "wheel+msm";
 
-static const char *list_capture_types[] = {
-	capture_type_seamless_str,
-	capture_type_onclick_str,
-	capture_type_onstart_str,
-	capture_type_nomouse_str,
-	nullptr
-};
-
-static const char* list_models_ps2[] = {
-	model_ps2_standard_str,
-        model_ps2_intellimouse_str,
-        model_ps2_explorer_str,
-        model_ps2_nomouse_str,
-        nullptr
-};
-
-static const char *list_models_com[] = {
-	model_com_2button_str,
-	model_com_3button_str,
-	model_com_wheel_str,
-	model_com_msm_str,
-	model_com_2button_msm_str,
-	model_com_3button_msm_str,
-	model_com_wheel_msm_str,
-	nullptr
-};
-
 static const std::vector<uint16_t> list_rates = {
         // Commented out values are probably not interesting
         // for the end user as "boosted" sampling rate
@@ -104,78 +78,175 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-bool MouseConfig::ParseCaptureType(const std::string_view capture_str,
-                                   MouseCapture& capture)
+const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
-	if (capture_str == capture_type_seamless_str)
-		capture = MouseCapture::Seamless;
-	else if (capture_str == capture_type_onclick_str)
-		capture = MouseCapture::OnClick;
-	else if (capture_str == capture_type_onstart_str)
-		capture = MouseCapture::OnStart;
-	else if (capture_str == capture_type_nomouse_str)
-		capture = MouseCapture::NoMouse;
-	else
-		return false;
-	return true;
+	return list_rates;
 }
 
-bool MouseConfig::ParseCOMModel(const std::string_view model_str,
+bool MouseConfig::ParseComModel(const std::string_view model_str,
                                 MouseModelCOM& model, bool& auto_msm)
 {
 	if (model_str == model_com_2button_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_3button_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_wheel_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_msm_str) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_2button_msm_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
-		return true;
 	} else if (model_str == model_com_3button_msm_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
-		return true;
 	} else if (model_str == model_com_wheel_msm_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
-		return true;
-	}
-
-	return false;
-}
-
-bool MouseConfig::ParsePS2Model(const std::string_view model_str, MouseModelPS2& model)
-{
-	if (model_str == model_ps2_standard_str) {
-		model = MouseModelPS2::Standard;
-	} else if (model_str == model_ps2_intellimouse_str) {
-		model = MouseModelPS2::IntelliMouse;
-	} else if (model_str == model_ps2_explorer_str) {
-		model = MouseModelPS2::Explorer;
-	} else if (auto as_bool = parse_bool_setting(model_str);
-	           as_bool && *as_bool == false) {
-		model = MouseModelPS2::NoMouse;
 	} else {
 		return false;
 	}
+
 	return true;
 }
 
-const std::vector<uint16_t> &MouseConfig::GetValidMinRateList()
+static void SetCaptureType(const std::string_view capture_str)
 {
-	return list_rates;
+	if (capture_str == capture_type_seamless_str) {
+		mouse_config.capture = MouseCapture::Seamless;
+	} else if (capture_str == capture_type_onclick_str) {
+		mouse_config.capture = MouseCapture::OnClick;
+	} else if (capture_str == capture_type_onstart_str) {
+		mouse_config.capture = MouseCapture::OnStart;
+	} else if (capture_str == capture_type_nomouse_str) {
+		mouse_config.capture = MouseCapture::NoMouse;
+	} else {
+		assert(false);
+	}
+}
+
+static void SetPs2Model(const std::string_view model_str)
+{
+	if (model_str == model_ps2_standard_str) {
+		mouse_config.model_ps2 = MouseModelPS2::Standard;
+	} else if (model_str == model_ps2_intellimouse_str) {
+		mouse_config.model_ps2 = MouseModelPS2::IntelliMouse;
+	} else if (model_str == model_ps2_explorer_str) {
+		mouse_config.model_ps2 = MouseModelPS2::Explorer;
+	} else if (model_str == model_ps2_nomouse_str) {
+		mouse_config.model_ps2 = MouseModelPS2::NoMouse;
+	} else {
+		assert(false);
+	}
+}
+
+static void SetComModel(const std::string_view model_str)
+{
+	[[maybe_unused]] const auto result = MouseConfig::ParseComModel(
+	        model_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
+	assert(result);
+}
+
+static void SetSensitivity(const std::string_view sensitivity_str)
+{
+	// Coefficient to convert percentage in integer to float
+	constexpr float coeff = 0.01f;
+
+	// Default sensitivity value
+	const auto& user_default = mouse_predefined.sensitivity_user_default;
+	const auto default_value = coeff * user_default;
+
+	auto set_mouse_sensitivity_setting = [](const int value) {
+		set_section_property_value("mouse",
+		                           "mouse_sensitivity",
+		                           format_str("%d", value));
+	};
+	auto set_mouse_sensitivity_settings = [](const int val_x, const int val_y) {
+		set_section_property_value("mouse",
+		                           "mouse_sensitivity",
+		                           format_str("%d %d", val_x, val_y));
+	};
+
+	// Split input string into values
+	auto values_str = split(sensitivity_str, " \t,;");
+	if (values_str.size() > 2) {
+		LOG_WARNING("MOUSE: Too many values in 'mouse_sensitivity', using '%d'",
+		            user_default);
+		mouse_config.sensitivity_coeff_x = default_value;
+		mouse_config.sensitivity_coeff_y = default_value;
+
+		set_mouse_sensitivity_setting(user_default);
+		return;
+	}
+
+	// If no values given, use defaults
+	if (values_str.empty()) {
+		mouse_config.sensitivity_coeff_x = default_value;
+		mouse_config.sensitivity_coeff_y = default_value;
+
+		set_mouse_sensitivity_setting(user_default);
+		return;
+	}
+
+	// Convert values to integers
+	std::vector<int> values_int = {};
+
+	bool out_of_range   = false;
+	const int value_min = -mouse_predefined.sensitivity_user_max;
+	const int value_max = mouse_predefined.sensitivity_user_max;
+
+	for (auto& value_str : values_str) {
+		// Remove trailing '%' signs, if present
+		if (value_str.ends_with('%')) {
+			value_str.pop_back();
+		}
+
+		const auto value = parse_int(value_str);
+		if (!value) {
+			LOG_WARNING("MOUSE: Invalid 'mouse_sensitivity' setting: '%s', using '%d'",
+			            value_str.c_str(),
+			            user_default);
+			mouse_config.sensitivity_coeff_x = default_value;
+			mouse_config.sensitivity_coeff_y = default_value;
+
+			set_mouse_sensitivity_setting(user_default);
+			return;
+		}
+
+		const auto value_clamped = clamp(*value, value_min, value_max);
+		if (value_clamped != *value) {
+			out_of_range = true;
+		}
+		values_int.push_back(value_clamped);
+	}
+
+	if (out_of_range) {
+		LOG_WARNING("MOUSE: 'mouse_sensitivity' adjusted to range %+d - %+d",
+		            value_min,
+		            value_max);
+	}
+
+	// Set the actual values
+	assert(values_int.size() == 1 || values_int.size() == 2);
+	const auto value_float_0         = static_cast<float>(values_int[0]);
+	mouse_config.sensitivity_coeff_x = coeff * value_float_0;
+
+	if (values_int.size() == 2) {
+		const auto value_float_1 = static_cast<float>(values_int[1]);
+		mouse_config.sensitivity_coeff_y = coeff * value_float_1;
+
+		set_mouse_sensitivity_settings(values_int[0], values_int[1]);
+	} else {
+		mouse_config.sensitivity_coeff_y = mouse_config.sensitivity_coeff_x;
+
+		set_mouse_sensitivity_setting(values_int[0]);
+	}
+
+	return;
 }
 
 static void config_read(Section *section)
@@ -188,8 +259,8 @@ static void config_read(Section *section)
 
 	// Settings changeable during runtime
 
-	std::string prop_str = conf->Get_string("mouse_capture");
-	MouseConfig::ParseCaptureType(prop_str, mouse_config.capture);
+	SetCaptureType(conf->Get_string("mouse_capture"));
+	SetSensitivity(conf->Get_string("mouse_sensitivity"));
 
 	mouse_config.multi_display_aware =
 		conf->Get_bool("mouse_multi_display_aware");
@@ -203,7 +274,7 @@ static void config_read(Section *section)
 	if (mouse_shared.ready_config) {
 
 		if (mouse_config.capture == MouseCapture::NoMouse) {
-			// If NoMouse got configured in runtime,
+			// If NoMouse got configured at runtime,
 			// immediately clear all the mapping
 			MouseControlAPI mouse_config_api;
 			mouse_config_api.UnMap(MouseControlAPI::ListIDs());
@@ -213,38 +284,35 @@ static void config_read(Section *section)
 		return;
 	}
 
-	// Default mouse sensitivity
-
-	PropMultiVal *prop_multi = conf->GetMultiVal("mouse_sensitivity");
-	mouse_config.sensitivity_x = static_cast<int16_t>(
-	        prop_multi->GetSection()->Get_int("xsens"));
-	mouse_config.sensitivity_y = static_cast<int16_t>(
-	        prop_multi->GetSection()->Get_int("ysens"));
-
 	// DOS driver configuration
 
 	mouse_config.dos_driver = conf->Get_bool("dos_mouse_driver");
 
 	// PS/2 AUX port mouse configuration
 
-	prop_str = conf->Get_string("ps2_mouse_model");
-	MouseConfig::ParsePS2Model(prop_str, mouse_config.model_ps2);
+	SetPs2Model(conf->Get_string("ps2_mouse_model"));
 
 	// COM port mouse configuration
 
-	prop_str = conf->Get_string("com_mouse_model");
-	MouseConfig::ParseCOMModel(prop_str,
-	                           mouse_config.model_com,
-	                           mouse_config.model_com_auto_msm);
+	SetComModel(conf->Get_string("com_mouse_model"));
 
 	// VMM PCI interfaces
-
-#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
 
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
 
-#endif
+	if (!GFX_HaveDesktopEnvironment() &&
+	    mouse_config.is_virtualbox_mouse_enabled) {
+	    	// VirtualBox guest side driver is able to request us to re-use
+	    	// host side cursor (at least the 3rd party DOS driver does so)
+	    	// and we have no way to refuse, there seems to be no easy way
+	    	// to handle the situation gracefully in a no-desktop
+	    	// environment unless we want to display our own mouse cursor.
+	    	// Therefore, it is best to block the VirtualBox mouse API - it
+	    	// wasn't designed for such a use case.
+		LOG_WARNING("MOUSE: VirtualBox interface cannot work in a no-desktop environment");
+		mouse_config.is_virtualbox_mouse_enabled = false;
+	}
 
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
@@ -256,20 +324,21 @@ static void config_init(Section_prop &secprop)
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	Prop_bool    *prop_bool  = nullptr;
-	Prop_int     *prop_int   = nullptr;
-	Prop_string  *prop_str   = nullptr;
-	PropMultiVal *prop_multi = nullptr;
+	Prop_bool* prop_bool  = nullptr;
+	Prop_string* prop_str = nullptr;
 
 	// General configuration
 
 	prop_str = secprop.Add_string("mouse_capture", always,
 	                              capture_type_onclick_str);
 	assert(prop_str);
-	prop_str->Set_values(list_capture_types);
+	prop_str->Set_values({capture_type_seamless_str,
+	                      capture_type_onclick_str,
+	                      capture_type_onstart_str,
+	                      capture_type_nomouse_str});
 	prop_str->Set_help(
 	        "Set the mouse capture behaviour:\n"
-	        "  onclick:   Capture the mouse when clicking any mouse button in the window \n"
+	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
 	        "             (default).\n"
 	        "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
 	        "             on some host operating systems.\n"
@@ -281,38 +350,31 @@ static void config_init(Section_prop &secprop)
 	        "For touch-screen control, use 'seamless'.");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
-	prop_bool->Set_help("If enabled, middle-click will release the captured mouse, and also capture\n"
-	                    "when seamless (enabled by default).");
+	prop_bool->Set_help("Release the captured mouse by middle-clicking, and also capture it in\n"
+	                    "seamless mode (enabled by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
-	prop_bool->Set_help("Allows mouse seamless behavior and mouse pointer release to work in fullscreen\n"
-	                    "mode for systems with more than one display. (enabled by default).\n"
+	prop_bool->Set_help("Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
+	                    "mode on systems with more than one display (enabled by default).\n"
 	                    "Note: You should disable this if it incorrectly detects multiple displays\n"
 	                    "      when only one should actually be used. This might happen if you are\n"
 	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
 	                    "      audio-only listening.");
 
-	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
-	prop_multi->Set_help(
-	        "Mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
-	        "(100,100 by default). Negative values invert the axis, zero disables it.\n"
+	prop_str = secprop.Add_string("mouse_sensitivity", always, "100");
+	prop_str->Set_help(
+	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
+	        "(100 by default). Values can be separated by spaces, commas, or semicolons\n"
+	        "(i.e. 100,150). Negative values invert the axis, zero disables it.\n"
 	        "Providing only one value sets sensitivity for both axes.\n"
-	        "The setting can be adjusted in runtime (also per mouse interface) using\n"
-	        "internal MOUSECTL.COM tool, available on drive Z.");
-	prop_multi->SetValue("100");
-
-	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
-	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
-	                    mouse_predefined.sensitivity_user_max);
-	prop_int = prop_multi->GetSection()->Add_int("ysens", only_at_start, 100);
-	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
-	                    mouse_predefined.sensitivity_user_max);
+	        "Sensitivity can be further fine-tuned per mouse interface using the internal\n"
+	        "MOUSECTL.COM tool available on the Z drive.");
 
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(
 	        "Enable to bypass your operating system's mouse acceleration and sensitivity\n"
 	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
-	        "captured in window mode.");
+	        "captured in windowed mode.");
 
 	// DOS driver configuration
 
@@ -344,20 +406,28 @@ static void config_init(Section_prop &secprop)
 	                              only_at_start,
 	                              model_ps2_explorer_str);
 	assert(prop_str);
-	prop_str->Set_values(list_models_ps2);
+	prop_str->Set_values({model_ps2_standard_str,
+	                      model_ps2_intellimouse_str,
+	                      model_ps2_explorer_str,
+	                      model_ps2_nomouse_str});
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
 	        "  standard:      3 buttons, standard PS/2 mouse.\n"
 	        "  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
-	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
-	        "  none:          no PS/2 mouse emulated.\n"
-	        "Default: explorer");
+	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer (default).\n"
+	        "  none:          no PS/2 mouse emulated.");
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,
 	                              model_com_wheel_msm_str);
 	assert(prop_str);
-	prop_str->Set_values(list_models_com);
+	prop_str->Set_values({model_com_2button_str,
+	                      model_com_3button_str,
+	                      model_com_wheel_str,
+	                      model_com_msm_str,
+	                      model_com_2button_msm_str,
+	                      model_com_3button_msm_str,
+	                      model_com_wheel_msm_str});
 	prop_str->Set_help(
 	        "COM (serial) port default mouse model:\n"
 	        "  2button:      2 buttons, Microsoft mouse.\n"
@@ -374,19 +444,17 @@ static void config_init(Section_prop &secprop)
 
 	// VMM interfaces
 
-#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
-
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
 	prop_bool->Set_help("VMware mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.\n");
+	                    "Fully compatible only with experimental 3rd party Windows 3.1x driver.\n"
+	                    "Note: Requires PS/2 mouse to be enabled.");
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
 	prop_bool->Set_help("VirtualBox mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.\n");
-
-#endif
+	                    "Fully compatible only with 3rd party Windows 3.1x driver.\n"
+	                    "Note: Requires PS/2 mouse to be enabled.");
 }
 
-void MOUSE_AddConfigSection(const config_ptr_t& conf)
+void MOUSE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 

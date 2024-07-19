@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ public:
 
 	virtual ~MidiHandler() = default;
 
-	virtual std::string_view GetName() const = 0;
+	virtual std::string GetName() const = 0;
 
 	virtual MidiDeviceType GetDeviceType() const
 	{

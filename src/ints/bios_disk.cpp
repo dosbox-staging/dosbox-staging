@@ -40,7 +40,9 @@ diskGeo DiskGeometryList[] = {
 	{ 720,  9, 2, 80, 3},	// DS/DD 3.5"
 	{1200, 15, 2, 80, 2},	// DS/HD 5.25"
 	{1440, 18, 2, 80, 4},	// DS/HD 3.5"
+	{1520, 19, 2, 80, 2},	// DS/HD 5.25" (XDF)
 	{1680, 21, 2, 80, 4},	// DS/HD 3.5"  (DMF)
+	{1840, 23, 2, 80, 4},	// DS/HD 3.5"  (XDF)
 	{2880, 36, 2, 80, 6},	// DS/ED 3.5"
 	{0, 0, 0, 0, 0}
 };
@@ -58,8 +60,8 @@ static bool swapping_requested;
 void BIOS_SetEquipment(uint16_t equipment);
 
 /* 2 floppys and 2 harddrives, max */
-std::array<imageDisk*, MAX_DISK_IMAGES> imageDiskList = {};
-std::array<imageDisk*, MAX_SWAPPABLE_DISKS> diskSwap  = {};
+std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
+std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
 
 unsigned int swapPosition;
 
@@ -381,7 +383,7 @@ static Bitu INT13_DiskHandler(void) {
 			return CBRET_NONE;
 		}
 		if (drivenum >= MAX_DISK_IMAGES || !imageDiskList[drivenum]) {
-			if (drivenum >= DOS_DRIVES || !Drives[drivenum] || Drives[drivenum]->isRemovable()) {
+			if (drivenum >= DOS_DRIVES || !Drives[drivenum] || Drives[drivenum]->IsRemovable()) {
 				reg_ah = 0x01;
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
@@ -596,14 +598,10 @@ void BIOS_SetupDisks(void) {
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
 
 	// Clean any the numbered images
-	for (auto &image_ptr : imageDiskList) {
-		DriveManager::CloseNumberedImage(image_ptr);
-		image_ptr = nullptr;
-	}
+	imageDiskList.fill(nullptr);
 
 	// Clear any raw disk images
 	diskSwap.fill(nullptr);
-	DriveManager::CloseRawFddImages();
 
 	diskparm0 = CALLBACK_Allocate();
 	diskparm1 = CALLBACK_Allocate();

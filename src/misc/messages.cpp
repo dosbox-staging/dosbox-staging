@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,6 +40,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "unicode.h"
 
 #define LINE_IN_MAXLEN 2048
 
@@ -54,19 +55,21 @@ private:
 
 	std::map<uint16_t, std::string> rendered_msg_by_codepage = {};
 
-	const char *CachedRenderString(const std::string &msg,
-	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
+	static std::string to_dos(const std::string& in_str, const uint16_t code_page)
+	{
+		return utf8_to_dos(in_str,
+		                   DosStringConvertMode::WithControlCodes,
+		                   UnicodeFallback::Box,
+		                   code_page);
+	}
+
+	const char* CachedRenderString(const std::string& msg,
+	                               std::map<uint16_t, std::string>& output_msg_by_codepage)
 	{
 		assert(msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (output_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(msg,
-			                 output_msg_by_codepage[cp],
-			                 UnicodeFallback::Box,
-			                 cp)) {
-				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
-				            msg.c_str());
-			}
+			output_msg_by_codepage[cp] = to_dos(msg, cp);
 			assert(output_msg_by_codepage[cp].length());
 		}
 
@@ -95,13 +98,7 @@ public:
 		assert(rendered_msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (rendered_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(rendered_msg,
-			                 rendered_msg_by_codepage[cp],
-			                 UnicodeFallback::Box,
-			                 cp)) {
-				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
-				            rendered_msg.c_str());
-			}
+			rendered_msg_by_codepage[cp] = to_dos(rendered_msg, cp);
 			assert(rendered_msg_by_codepage[cp].length());
 		}
 
@@ -122,11 +119,20 @@ static std::unordered_map<std::string, Message> messages;
 static std::deque<std::string> messages_order;
 
 // Add the message if it doesn't exist yet
-void MSG_Add(const char *name, const char *markup_msg)
+void MSG_Add(const char* name, const char* markup_msg)
 {
-	const auto &pair = messages.try_emplace(name, markup_msg);
-	if (pair.second) // if the insertion was successful
+	const auto pair = messages.try_emplace(name, markup_msg);
+	if (pair.second) { // if the insertion was successful
 		messages_order.emplace_back(name);
+	} else if ((control->GetLanguage() == "en" || control->GetLanguage().empty()) &&
+	           strcmp(pair.first->second.GetRaw(), markup_msg) != 0) {
+		// Detect duplicates in the English language
+		LOG_WARNING("LANG: Duplicate text added for message '%s'. Second instance is ignored.",
+		            name);
+	} else {
+		// Duplicate ID definitions most likely occured by adding the help in the code
+		// after it was added by a help-file.
+	}
 }
 
 // Replace existing or add if it doesn't exist
@@ -231,7 +237,7 @@ bool MSG_Write(const char * location) {
 		return false;
 
 	for (const auto &name : messages_order)
-		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetRaw());
+		fprintf(out, ":%s\n%s\n.\n", name.c_str(), messages.at(name).GetRaw());
 
 	fclose(out);
 	return true;
@@ -253,16 +259,16 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 	static const std_fs::path subdir   = "translations";
 	static const std::string extension = ".lng";
 
-	const auto lang = SETUP_GetLanguage();
+	const auto lang = control->GetLanguage();
 
 	// If the language is english, then use the internal message
-	if (lang.empty() || starts_with(lang, "en")) {
+	if (lang.empty() || lang.starts_with("en")) {
 		LOG_MSG("LANG: Using internal English language messages");
 		return;
 	}
 
 	bool result = false;
-	if (ends_with(lang, ".lng"))
+	if (lang.ends_with(".lng"))
 		result = load_message_file(GetResourcePath(subdir, lang));
 	else
 		// If a short-hand name was provided then add the file extension

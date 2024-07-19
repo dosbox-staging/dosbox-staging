@@ -433,19 +433,24 @@
 			if (rm >= 0xc0 ) {GetEArb;*earb=*rmrb;}
 			else {
 				if (cpu.pmode) {
-					if (GCC_UNLIKELY((rm==0x05) && (!cpu.code.big))) {
-						Descriptor desc;
-						cpu.gdt.GetDescriptor(SegValue(core.base_val_ds),desc);
-						if ((desc.Type()==DESC_CODE_R_NC_A) || (desc.Type()==DESC_CODE_R_NC_NA)) {
-							CPU_Exception(EXCEPTION_GP,SegValue(core.base_val_ds) & 0xfffc);
-							continue;
-						}
-					}
-				}
-				GetEAa;SaveMb(eaa,*rmrb);
-			}
-			break;
-		}
+			                if ((rm == 0x05) && (!cpu.code.big)) {
+				                Descriptor desc;
+				                cpu.gdt.GetDescriptor(SegValue(core.base_val_ds),
+				                                      desc);
+				                if ((desc.Type() == DESC_CODE_R_NC_A) ||
+				                    (desc.Type() == DESC_CODE_R_NC_NA)) {
+					                CPU_Exception(EXCEPTION_GP,
+					                              SegValue(core.base_val_ds) &
+					                                      0xfffc);
+					                continue;
+				                }
+			                }
+		                }
+		                GetEAa;
+		                SaveMb(eaa, *rmrb);
+	                }
+	                break;
+                }
 	CASE_W(0x89)												/* MOV Ew,Gw */
 		{	
 			GetRMrw;
@@ -872,29 +877,29 @@
 		JumpCond16_b(!(reg_ecx & AddrMaskTable[core.prefixes& PREFIX_ADDR]));
 		break;
 	CASE_B(0xe4)												/* IN AL,Ib */
-		{	
-			Bitu port=Fetchb();
+		{
+			const auto port = Fetchb();
 			if (CPU_IO_Exception(port,1)) RUNEXCEPTION();
 			reg_al=IO_ReadB(port);
 			break;
 		}
 	CASE_W(0xe5)												/* IN AX,Ib */
-		{	
-			Bitu port=Fetchb();
+		{
+			const auto port = Fetchb();
 			if (CPU_IO_Exception(port,2)) RUNEXCEPTION();
 			reg_ax=IO_ReadW(port);
 			break;
 		}
 	CASE_B(0xe6)												/* OUT Ib,AL */
 		{
-			Bitu port=Fetchb();
+			const auto port = Fetchb();
 			if (CPU_IO_Exception(port,1)) RUNEXCEPTION();
 			IO_WriteB(port,reg_al);
 			break;
 		}		
 	CASE_W(0xe7)												/* OUT Ib,AX */
 		{
-			Bitu port=Fetchb();
+			const auto port = Fetchb();
 			if (CPU_IO_Exception(port,2)) RUNEXCEPTION();
 			IO_WriteW(port,reg_ax);
 			break;

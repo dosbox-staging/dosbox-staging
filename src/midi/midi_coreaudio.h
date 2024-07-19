@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -32,8 +32,8 @@
 // A macro to simplify error handling a bit.
 #define RequireNoErr(error)                                         \
 do {                                                                \
-	err = error;                                                    \
-	if (err != noErr)                                               \
+	status = error;                                                 \
+	if (status != noErr)                                            \
 		goto bail;                                                  \
 } while (false)
 
@@ -76,7 +76,7 @@ public:
 	          soundfont(nullptr)
 	{}
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "coreaudio";
 	}
@@ -88,7 +88,7 @@ public:
 
 	bool Open(const char *conf) override
 	{
-		OSStatus err = 0;
+		OSStatus status = 0;
 
 		if (m_auGraph)
 			return false;

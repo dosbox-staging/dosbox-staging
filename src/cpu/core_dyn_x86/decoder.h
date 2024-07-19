@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #include "inout.h"
 
 #define X86_INLINED_MEMACCESS
+#define X86_DYNREC_MMX_ENABLED
 
 enum REP_Type {
 	REP_NONE=0,REP_NZ,REP_Z
@@ -58,8 +59,9 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
 	const auto lin_addr_as_physpt = check_cast<PhysPt>(lin_addr);
-	if (GCC_UNLIKELY(mem_readb_checked(lin_addr_as_physpt, &rdval)))
+	if (mem_readb_checked(lin_addr_as_physpt, &rdval)) {
 		return true;
+	}
 	PageHandler *handler = get_tlb_readhandler(lin_addr_as_physpt);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
@@ -126,11 +128,11 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 }
 
 static uint8_t decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
-        /* Advance to the next page */
-		decode.active_block->page.end=4095;
+	if (decode.page.index >= 4096) {
+		/* Advance to the next page */
+		decode.active_block->page.end = 4095;
 		/* trigger possible page fault here */
-		decode.page.first++;
+		++decode.page.first;
 		Bitu fetchaddr=decode.page.first << 12;
 		mem_readb(fetchaddr);
 		MakeCodePage(fetchaddr,decode.page.code);
@@ -145,14 +147,14 @@ static uint8_t decode_fetchb(void) {
 		decode.page.index=0;
 	}
 	decode.page.wmap[decode.page.index]+=0x01;
-	decode.page.index++;
-	decode.code+=1;
+	++decode.page.index;
+	++decode.code;
 	return mem_readb(decode.code-1);
 }
 static uint16_t decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		uint16_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+	if (decode.page.index >= 4095) {
+		uint16_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
 	add_to_unaligned_uint16(&decode.page.wmap[decode.page.index], 0x0101);
@@ -160,10 +162,10 @@ static uint16_t decode_fetchw(void) {
 	return mem_readw(decode.code-2);
 }
 static uint32_t decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		uint32_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
+	if (decode.page.index >= 4093) {
+		uint32_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
 		val|=decode_fetchb() << 24;
 		return val;
         /* Advance to the next page */
@@ -171,32 +173,6 @@ static uint32_t decode_fetchd(void) {
 	add_to_unaligned_uint32(&decode.page.wmap[decode.page.index], 0x01010101);
 	decode.code+=4;decode.page.index+=4;
 	return mem_readd(decode.code-4);
-}
-
-#define START_WMMEM 64
-
-static inline void decode_increase_wmapmask(Bitu size) {
-	size_t mapidx        = 0;
-	CacheBlock* activecb = decode.active_block;
-	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->GrowWriteMask(START_WMMEM);
-		activecb->cache.maskstart = decode.page.index;
-	} else {
-		mapidx = decode.page.index - activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			size_t new_mask_len = activecb->cache.masklen * 4;
-			if (new_mask_len < mapidx + size) {
-				new_mask_len = ((mapidx + size) & ~3) * 2;
-			}
-			activecb->GrowWriteMask(check_cast<uint16_t>(new_mask_len));
-		}
-	}
-	// update mask entries
-	switch (size) {
-	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
-	}
 }
 
 static bool decode_fetchb_imm(Bitu & val) {
@@ -209,9 +185,9 @@ static bool decode_fetchb_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(1);
-				decode.code++;
-				decode.page.index++;
+				decode.active_block->cache.AddByteToWriteMaskAt(decode.page.index);
+				++decode.code;
+				++decode.page.index;
 				return true;
 			}
 		}
@@ -231,9 +207,9 @@ static bool decode_fetchw_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(2);
-				decode.code+=2;
-				decode.page.index+=2;
+				decode.active_block->cache.AddWordToWriteMaskAt(decode.page.index);
+				decode.code += 2;
+				decode.page.index += 2;
 				return true;
 			}
 		}
@@ -255,9 +231,9 @@ static bool decode_fetchd_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(4);
-				decode.code+=4;
-				decode.page.index+=4;
+				decode.active_block->cache.AddDwordToWriteMaskAt(decode.page.index);
+				decode.code += 4;
+				decode.page.index += 4;
 				return true;
 			}
 		}
@@ -269,7 +245,9 @@ static bool decode_fetchd_imm(Bitu & val) {
 
 static void dyn_reduce_cycles(void) {
 	gen_protectflags();
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	gen_dop_word_imm(DOP_SUB,true,DREG(CYCLES),decode.cycles);
 }
 
@@ -354,24 +332,28 @@ static void dyn_check_bool_exception(DynReg * check) {
 	gen_dop_byte(DOP_TEST,check,0,check,0);
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_check_bool_exception_al(void) {
 	cache_addw(0xC084);     // test al,al
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 #include "pic.h"
@@ -382,12 +364,14 @@ static void dyn_check_irqrequest(void) {
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	gen_releasereg(DREG(TMPB));
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.code-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=normal;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_fill_blocks(void) {
@@ -498,14 +482,15 @@ static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
 static void dyn_check_bool_exception_ne(void) {
 	save_info[used_save_info].branch_pos = gen_create_branch_long(BR_Z);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles)
-		decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles = decode.cycles;
 	save_info[used_save_info].eip_change = decode.op_start - decode.code_start;
 	if (!cpu.code.big)
 		save_info[used_save_info].eip_change &= 0xffff;
 	save_info[used_save_info].type = db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
@@ -702,10 +687,14 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	gen_fill_branch(je_loc);
 
 	cache_addb(0x52);	// push edx
-	if (GCC_UNLIKELY(high)) cache_addw(0xe086+((genreg->index+(genreg->index<<3))<<8));
-	cache_addb(0x50+genreg->index);
-	cache_addb(0x50);	// push eax
-	if (GCC_UNLIKELY(high)) cache_addw(0xe086+((genreg->index+(genreg->index<<3))<<8));
+	if (high) {
+		cache_addw(0xe086 + ((genreg->index + (genreg->index << 3)) << 8));
+	}
+	cache_addb(0x50 + genreg->index);
+	cache_addb(0x50); // push eax
+	if (high) {
+		cache_addw(0xe086 + ((genreg->index + (genreg->index << 3)) << 8));
+	}
 	cache_addb(0xe8);
 	cache_addd(((uint32_t)&mem_writeb_checked) - (uint32_t)cache.pos-4);
 	cache_addw(0xc483);		// add esp,8
@@ -1068,9 +1057,15 @@ static void dyn_pop(DynReg * dynreg,bool checked=true) {
 		gen_mov_host(&core_dyn.readdata,dynreg,decode.big_op?4:2);
 	} else {
 		if (decode.big_op) {
-			gen_call_function((void *)&mem_readd,"%Rd%Drd",dynreg,DREG(STACK));
+			gen_call_function((void*)&mem_readd<MemOpMode::WithBreakpoints>,
+			                  "%Rd%Drd",
+			                  dynreg,
+			                  DREG(STACK));
 		} else {
-			gen_call_function((void *)&mem_readw,"%Rw%Drd",dynreg,DREG(STACK));
+			gen_call_function((void*)&mem_readw<MemOpMode::WithBreakpoints>,
+			                  "%Rw%Drd",
+			                  dynreg,
+			                  DREG(STACK));
 		}
 	}
 	if (dynreg!=DREG(ESP)) {
@@ -1746,6 +1741,10 @@ static void dyn_grp3_eb(void) {
 		if (decode.modrm.mod==3)
 			gen_dop_byte(DOP_MOV,DREG(TMPB),0,&DynRegs[decode.modrm.rm&3],decode.modrm.rm&4);
 		gen_releasereg(DREG(EAX));
+
+		// The division helpers update the CPU test flags
+		set_skipflags(false);
+
 		gen_call_function((decode.modrm.reg==6) ? (void *)&dyn_helper_divb : (void *)&dyn_helper_idivb,
 			"%Rd%Drd",DREG(TMPB),DREG(TMPB));
 		dyn_check_bool_exception(DREG(TMPB));
@@ -1786,6 +1785,10 @@ static void dyn_grp3_ev(void) {
 		if (decode.modrm.mod==3)
 			gen_dop_word(DOP_MOV,decode.big_op,DREG(TMPW),&DynRegs[decode.modrm.rm]);
 		gen_releasereg(DREG(EAX));gen_releasereg(DREG(EDX));
+
+		// The division helpers update the CPU test flags
+		set_skipflags(false);
+
 		void * func=(decode.modrm.reg==6) ?
 			(decode.big_op ? (void *)&dyn_helper_divd : (void *)&dyn_helper_divw) :
 			(decode.big_op ? (void *)&dyn_helper_idivd : (void *)&dyn_helper_idivw);
@@ -1816,7 +1819,7 @@ static void dyn_load_seg(SegNames seg,DynReg * src) {
 	gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPB),seg,src);
 	dyn_check_bool_exception(DREG(TMPB));
 	gen_releasereg(DREG(TMPB));
-	gen_releasereg(&DynRegs[G_ES+seg]);
+	gen_releasereg(&DynRegs[static_cast<int>(G_ES)+seg]);
 }
 
 static void dyn_load_seg_off_ea(SegNames seg) {
@@ -1836,8 +1839,10 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 static void dyn_mov_seg_ev(void) {
 	dyn_get_modrm();
 	SegNames seg=(SegNames)decode.modrm.reg;
-	if (GCC_UNLIKELY(seg==cs)) IllegalOption("dyn_mov_seg_ev");
-	if (decode.modrm.mod<3) {
+	if (seg == cs) {
+		IllegalOption("dyn_mov_seg_ev");
+	}
+	if (decode.modrm.mod < 3) {
 		dyn_fill_ea();
 		dyn_read_word(DREG(EA),DREG(EA),false);
 		dyn_load_seg(seg,DREG(EA));
@@ -1858,7 +1863,7 @@ static void dyn_pop_seg(SegNames seg) {
 	gen_call_function((void *)&CPU_PopSeg,"%Rd%Id%Id",DREG(TMPB),seg,decode.big_op);
 	dyn_check_bool_exception(DREG(TMPB));
 	gen_releasereg(DREG(TMPB));
-	gen_releasereg(&DynRegs[G_ES+seg]);
+	gen_releasereg(&DynRegs[static_cast<int>(G_ES)+seg]);
 	gen_releasereg(DREG(ESP));
 }
 
@@ -1897,8 +1902,8 @@ static void dyn_leave(void) {
 }
 
 static void dyn_segprefix(SegNames seg) {
-//	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
-	decode.segprefix=&DynRegs[G_ES+seg];
+	//	if ((Bitu)(decode.segprefix)) IllegalOption("dyn_segprefix");
+	decode.segprefix=&DynRegs[static_cast<int>(G_ES)+seg];
 }
 
 static void dyn_closeblock(void) {
@@ -2194,10 +2199,18 @@ static void dyn_larlsl(bool islar) {
 	dyn_savestate(&save_info[used_save_info].state);	\
 	save_info[used_save_info].return_pos=cache.pos;		\
 	save_info[used_save_info].type=fpu_restore;			\
-	used_save_info++;									\
+	++used_save_info;									\
 }
 #endif
 #include "dyn_fpu.h"
+
+#ifdef X86_DYNREC_MMX_ENABLED
+#include "dyn_mmx.h"
+#define dyn_mmx_check() \
+	if ((dyn_dh_fpu.dh_fpu_enabled) && (!fpu_used)) { \
+		dh_fpu_startup(); \
+	}
+#endif
 
 static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bitu max_opcodes) {
 	Bits i;
@@ -2229,7 +2242,7 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 	gen_dop_word(DOP_TEST,true,DREG(CYCLES),DREG(CYCLES));
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_LE);
 	save_info[used_save_info].type=cycle_check;
-	used_save_info++;
+	++used_save_info;
 	gen_releasereg(DREG(CYCLES));
 	decode.cycles=0;
 #ifdef X86_DYNFPU_DH_ENABLED
@@ -2241,19 +2254,23 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 		decode.big_op=cpu.code.big;
 		decode.segprefix=nullptr;
 		decode.rep=REP_NONE;
-		decode.cycles++;
+		++decode.cycles;
 		decode.op_start=decode.code;
 restart_prefix:
 		Bitu opcode;
 		if (!decode.page.invmap) opcode=decode_fetchb();
 		else {
 			if (decode.page.index<4096) {
-				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) goto illegalopcode;
-				opcode=decode_fetchb();
+				if (decode.page.invmap[decode.page.index] >= 4) {
+					goto illegalopcode;
+				}
+				opcode = decode_fetchb();
 			} else {
 				opcode=decode_fetchb();
-				if (GCC_UNLIKELY(decode.page.invmap && 
-					(decode.page.invmap[decode.page.index-1]>=4))) goto illegalopcode;
+				if (decode.page.invmap &&
+				    (decode.page.invmap[decode.page.index - 1] >= 4)) {
+					goto illegalopcode;
+				}
 			}
 		}
 		switch (opcode) {
@@ -2309,12 +2326,16 @@ restart_prefix:
 			/* LFS,LGS */
 			case 0xb4:
 				dyn_get_modrm();
-				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				if (decode.modrm.mod == 3) {
+					goto illegalopcode;
+				}
 				dyn_load_seg_off_ea(fs);
 				break;
 			case 0xb5:
 				dyn_get_modrm();
-				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				if (decode.modrm.mod == 3) {
+					goto illegalopcode;
+				}
 				dyn_load_seg_off_ea(gs);
 				break;
 			/* MOVZX Gv,Eb/Ew */
@@ -2323,6 +2344,83 @@ restart_prefix:
 			/* MOVSX Gv,Eb/Ew */
 			case 0xbe:dyn_mov_ev_gb(true);break;
 			case 0xbf:dyn_mov_ev_gw(true);break;
+
+#if defined(X86_DYNREC_MMX_ENABLED) && defined(X86_DYNFPU_DH_ENABLED)
+			/* OP mm, mm/m64 */
+			/* pack/unpacks, compares */
+			case 0x60:case 0x61:case 0x62:case 0x63:case 0x64:case 0x65:
+			case 0x66:case 0x67:case 0x68:case 0x69:case 0x6a:case 0x6b:
+			case 0x74:case 0x75:case 0x76:
+			/* mm-directed shifts, add/sub, bitwise, multiplies */
+			case 0xd1:case 0xd2:case 0xd3:case 0xd4:case 0xd5:case 0xd8:
+			case 0xd9:case 0xdb:case 0xdc:case 0xdd:case 0xdf:case 0xe1:
+			case 0xe2:case 0xe5:case 0xe8:case 0xe9:case 0xeb:case 0xec:
+			case 0xed:case 0xef:case 0xf1:case 0xf2:case 0xf3:case 0xf5:
+			case 0xf8:case 0xf9:case 0xfa:case 0xfc:case 0xfd:
+			case 0xfe:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_op(dual_code);
+				break;
+			/* SHIFT mm, imm8*/
+			case 0x71:case 0x72:
+			case 0x73:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_shift_imm8((uint8_t)dual_code);
+				break;
+			/* MOVD mm, r/m32 */
+			case 0x6e:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_movd_pqed();
+				break;
+			/* MOVQ mm, mm/m64 */
+			case 0x6f:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_movq_pqqq();
+				break;
+			/* MOVD r/m32, mm */
+			case 0x7e:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_movd_edpq();
+				break;
+			/* MOVQ mm/m64, mm */
+			case 0x7f:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_movq_qqpq();
+				break;
+			/* EMMS */
+			case 0x77:
+				if (CPU_ArchitectureType <
+				    ArchitectureType::PentiumMmx) {
+					goto illegalopcode;
+				}
+				dyn_mmx_check();
+				dyn_mmx_emms();
+				break;
+#endif
 
 			default:
 #if DYN_LOG
@@ -2461,7 +2559,9 @@ restart_prefix:
 		/* LEA Gv */
 		case 0x8d:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			if (decode.big_op) {
 				dyn_fill_ea(false,&DynRegs[decode.modrm.reg]);
 			} else {
@@ -2574,13 +2674,17 @@ restart_prefix:
 		//LES
 		case 0xc4:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_load_seg_off_ea(es);
 			break;
 		//LDS
 		case 0xc5:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_load_seg_off_ea(ds);
 			break;
 		// MOV Eb/Ev,Ib/Iv
