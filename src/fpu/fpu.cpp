@@ -36,7 +36,7 @@ void FPU_FLDCW(PhysPt addr){
 uint16_t FPU_GetTag()
 {
 	uint16_t tag = 0;
-	for (Bitu i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		tag |= ((fpu.tags[i] & 3) << (2 * i));
 	}
 	return tag;
@@ -78,7 +78,7 @@ void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
 			*/
 
 static void EATREE(Bitu _rm){
-	Bitu group=(_rm >> 3) & 7;
+	const uint8_t group=(_rm >> 3) & 7;
 	switch(group){
 		case 0x00:	/* FADD */
 			FPU_FADD_EA(TOP);
@@ -117,8 +117,8 @@ void FPU_ESC0_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC0_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+	const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch (group){
 	case 0x00:		/* FADD ST,STi */
 		FPU_FADD(TOP,STV(sub));
@@ -152,8 +152,8 @@ void FPU_ESC0_Normal(Bitu rm) {
 
 void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 // floats
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00: /* FLD float*/
 		FPU_PREP_PUSH();
@@ -188,8 +188,8 @@ void FPU_ESC1_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC1_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch (group){
 	case 0x00: /* FLD STi */
 		{
@@ -336,8 +336,8 @@ void FPU_ESC2_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC2_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x05:
 		switch(sub){
@@ -359,8 +359,8 @@ void FPU_ESC2_Normal(Bitu rm) {
 
 
 void FPU_ESC3_EA(Bitu rm,PhysPt addr) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00:	/* FILD */
 		FPU_PREP_PUSH();
@@ -391,8 +391,8 @@ void FPU_ESC3_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC3_Normal(Bitu rm) {
-	const auto group = static_cast<unsigned>((rm >> 3) & 7);
-	const auto sub = static_cast<unsigned>(rm & 7);
+    const uint8_t group = (rm >> 3) & 7;
+    const uint8_t sub = (rm & 7);
 	switch (group) {
 	case 0x04:
 		switch (sub) {
@@ -429,8 +429,8 @@ void FPU_ESC4_EA(Bitu rm,PhysPt addr) {
 
 void FPU_ESC4_Normal(Bitu rm) {
 	/* LOOKS LIKE number 6 without popping */
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00:	/* FADD STi,ST*/
 		FPU_FADD(STV(sub),TOP);
@@ -463,8 +463,8 @@ void FPU_ESC4_Normal(Bitu rm) {
 }
 
 void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00:  /* FLD double real*/
 		FPU_PREP_PUSH();
@@ -498,8 +498,8 @@ void FPU_ESC5_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC5_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00: /* FFREE STi */
 		fpu.tags[STV(sub)] = TAG_Empty;
@@ -539,8 +539,8 @@ void FPU_ESC6_EA(Bitu rm,PhysPt addr) {
 void FPU_ESC6_Normal(Bitu rm) {
 	/* all P variants working only on registers */
 	/* get top before switch and pop afterwards */
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00:	/*FADDP STi,ST*/
 		FPU_FADD(STV(sub),TOP);
@@ -579,8 +579,8 @@ void FPU_ESC6_Normal(Bitu rm) {
 
 
 void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch(group){
 	case 0x00:  /* FILD int16_t */
 		FPU_PREP_PUSH();
@@ -619,8 +619,8 @@ void FPU_ESC7_EA(Bitu rm,PhysPt addr) {
 }
 
 void FPU_ESC7_Normal(Bitu rm) {
-	Bitu group=(rm >> 3) & 7;
-	Bitu sub=(rm & 7);
+    const uint8_t group=(rm >> 3) & 7;
+    const uint8_t sub=(rm & 7);
 	switch (group){
 	case 0x00: /* FFREEP STi*/
 		fpu.tags[STV(sub)] = TAG_Empty;
