@@ -374,7 +374,7 @@ static void FPU_FADD(Bitu op1, Bitu op2){
 }
 
 static void FPU_FSIN(void){
-	fpu.regs[TOP].d = sin(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = std::sin(fpu.regs[TOP].d);
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
@@ -382,33 +382,33 @@ static void FPU_FSIN(void){
 
 static void FPU_FSINCOS(void){
 	Real64 temp = fpu.regs[TOP].d;
-	fpu.regs[TOP].d = sin(temp);
-	FPU_PUSH(cos(temp));
+	fpu.regs[TOP].d = std::sin(temp);
+	FPU_PUSH(std::cos(temp));
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 
 static void FPU_FCOS(void){
-	fpu.regs[TOP].d = cos(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = std::cos(fpu.regs[TOP].d);
 	FPU_SET_C2(0);
 	//flags and such :)
 	return;
 }
 
 static void FPU_FSQRT(void){
-	fpu.regs[TOP].d = sqrt(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = std::sqrt(fpu.regs[TOP].d);
 	//flags and such :)
 	return;
 }
 static void FPU_FPATAN(void){
-	fpu.regs[STV(1)].d = atan2(fpu.regs[STV(1)].d,fpu.regs[TOP].d);
+	fpu.regs[STV(1)].d = std::atan2(fpu.regs[STV(1)].d, fpu.regs[TOP].d);
 	FPU_FPOP();
 	//flags and such :)
 	return;
 }
 static void FPU_FPTAN(void){
-	fpu.regs[TOP].d = tan(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = std::tan(fpu.regs[TOP].d);
 	FPU_PUSH(1.0);
 	FPU_SET_C2(0);
 	//flags and such :)
@@ -551,24 +551,24 @@ static void FPU_FXAM(void){
 
 
 static void FPU_F2XM1(void){
-	fpu.regs[TOP].d = pow(2.0,fpu.regs[TOP].d) - 1;
+	fpu.regs[TOP].d = std::pow(2.0, fpu.regs[TOP].d) - 1.0;
 	return;
 }
 
 static void FPU_FYL2X(void){
-	fpu.regs[STV(1)].d*=log(fpu.regs[TOP].d)/log(static_cast<Real64>(2.0));
+	fpu.regs[STV(1)].d *= std::log2(fpu.regs[TOP].d);
 	FPU_FPOP();
 	return;
 }
 
 static void FPU_FYL2XP1(void){
-	fpu.regs[STV(1)].d*=log(fpu.regs[TOP].d+1.0)/log(static_cast<Real64>(2.0));
+	fpu.regs[STV(1)].d *= std::log2(fpu.regs[TOP].d + 1.0);
 	FPU_FPOP();
 	return;
 }
 
 static void FPU_FSCALE(void){
-	fpu.regs[TOP].d *= pow(2.0,static_cast<Real64>(static_cast<int64_t>(fpu.regs[STV(1)].d)));
+	fpu.regs[TOP].d *= std::pow(2.0, std::trunc(fpu.regs[STV(1)].d));
 	//FPU_SET_C1(0);
 	return; //2^x where x is chopped.
 }
@@ -596,7 +596,7 @@ static void FPU_FLDENV(PhysPt addr){
 		tag    = mem_readw(addr+4);
 	} else { 
 		cw     = mem_readd(addr+0);
-		fpu.sw = (uint16_t)mem_readd(addr+4);
+		fpu.sw = static_cast<uint16_t>(mem_readd(addr+4));
 		tagbig = mem_readd(addr+8);
 		tag    = static_cast<uint16_t>(tagbig);
 	}
@@ -607,8 +607,8 @@ static void FPU_FLDENV(PhysPt addr){
 
 static void FPU_FSAVE(PhysPt addr){
 	FPU_FSTENV(addr);
-	Bitu start = (cpu.code.big?28:14);
-	for(Bitu i = 0;i < 8;i++){
+    PhysPt start = (cpu.code.big?28:14);
+	for(int i = 0;i < 8;i++){
 		FPU_ST80(addr+start,STV(i));
 		start += 10;
 	}
@@ -617,8 +617,8 @@ static void FPU_FSAVE(PhysPt addr){
 
 static void FPU_FRSTOR(PhysPt addr){
 	FPU_FLDENV(addr);
-	Bitu start = (cpu.code.big?28:14);
-	for(Bitu i = 0;i < 8;i++){
+	PhysPt start = (cpu.code.big?28:14);
+	for(int i = 0;i < 8;i++){
 		fpu.regs[STV(i)].d = FPU_FLD80(addr+start);
 		start += 10;
 	}
@@ -632,17 +632,17 @@ static void FPU_FXTRACT(void) {
 	FPU_Reg test = fpu.regs[TOP];
 	int64_t exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
 	int64_t exp80final = (exp80>>52) - BIAS64;
-	Real64 mant = test.d / (pow(2.0,static_cast<Real64>(exp80final)));
+	Real64 mant = test.d / (std::pow(2.0, static_cast<Real64>(exp80final)));
 	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
 	FPU_PUSH(mant);
 }
 
 static void FPU_FCHS(void){
-	fpu.regs[TOP].d = -1.0*(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = -(fpu.regs[TOP].d);
 }
 
 static void FPU_FABS(void){
-	fpu.regs[TOP].d = fabs(fpu.regs[TOP].d);
+	fpu.regs[TOP].d = std::fabs(fpu.regs[TOP].d);
 }
 
 static void FPU_FTST(void){
