@@ -114,26 +114,26 @@ static void FPU_FPOP(void){
 
 static double FROUND(double in)
 {
+	const auto prec_mode = fpu.cw & PrecisionModeMask;
+
+	// If the fpu is in single precision mode, cast to a float first
+	// to correct any double values that aren't valid single precision
+	// values.
+	if (prec_mode == SinglePrecisionMode) {
+		in = static_cast<float>(in);
+	}
+
 	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
-	case ROUND_Chop: 
-	{
-		switch (fpu.cw & PrecisionModeMask) {
-		// This case properly handles "in" values beyond the precision
-		// of a float, e.g. 5.99999999367, by correctly rounding to 6.0
-		// via the cast, then performing the truncation, instead of
-		// returning 5.0. Quake, for example, does many calculations in
-		// single precision mode.
-		case SinglePrecisionMode:
-			return std::trunc(static_cast<float>(in));
+	case ROUND_Chop: {
 		// This is a fix for rounding to a close integer in extended
 		// precision mode, e.g. 7.999999999999994; an example can be
 		// seen in the Quake options screen size slider. In this case,
 		// what is almost certainly wanted is 8.0, so return the closer
 		// integer instead of chopping to the lower value.
-		case ExtendedPrecisionMode: {
+		if (prec_mode == ExtendedPrecisionMode) {
 			if (const auto lower = std::floor(in);
 			    are_almost_equal_relative(in, lower)) {
 				return lower;
@@ -141,8 +141,6 @@ static double FROUND(double in)
 			           are_almost_equal_relative(upper, in)) {
 				return upper;
 			}
-		}
-		default: break;
 		}
 		return std::trunc(in);
 	}
