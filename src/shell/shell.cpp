@@ -23,8 +23,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <list>
 #include <memory>
+#include <regex>
 
 #include "../dos/program_more_output.h"
 #include "../dos/program_setver.h"
@@ -70,67 +70,129 @@ DOS_Shell::DOS_Shell()
 	}
 }
 
-void DOS_Shell::GetRedirection(char *line,
-                               std::string &in_file,
-                               std::string &out_file,
-                               std::string &pipe_file,
-                               bool *append)
+// This function gets redirection targets from the given shell command line and
+// returns the results as a struct. The results include the redirection targets
+// as well as the processed command line with the targets stripped off.
+//
+// Note that real MS-DOS is quite nuanced in its whitespace handling:
+// - 'echo 1>out.txt' produces a 3-byte file: '1CRLF'
+// - 'echo 1 > out.txt' produces a 4-byte file: '1 CRLF'
+// - 'echo 1 >out.txt ' produces a 5-byte file: '1  CRLF'
+// This behavior is replicated here; see the shell_redirection_tests for more
+// examples.
+//
+std::optional<DOS_Shell::RedirectionResults> DOS_Shell::GetRedirection(
+        const std::string_view line)
 {
-	char *line_read = line;
-	char *line_write = line;
-	char character = 0;
-	bool quote = false;
-	size_t found = 0;
-	size_t temp_len = 0;
-	std::string redir = "";
-	std::string find_chars = "";
-	std::string *output;
-	*append = false;
-	while ((character = *line_read++)) {
-		if (quote && character != '"') { /* don't parse redirection
-			                            within quotes. Not perfect
-			                            yet. Escaped quotes will
-			                            mess the count up */
-			*line_write++ = character;
-			continue;
-		}
-		if (character == '"') {
-			quote = !quote;
-		} else if (character == '>' || character == '<' || character == '|') {
-			// Overwrite with >, and append with >>
-			if (character == '>' && (*append = (*line_read == '>')))
-				line_read++;
-			// Get the current content of the redirection
-			redir = line_read = ltrim(line_read);
-			// Try to find the characters for string split
-			find_chars = character == '|'
-			                     ? ""
-			                     : (character != '<' ? " |<" : " |>");
-			found = redir.find_first_of(find_chars);
-			// Get the length of the substring before the
-			// characters, or the entire string if not found
-			if (found == std::string::npos) {
-				temp_len = redir.size();
-			} else {
-				temp_len = found;
-			}
+	// Returned results and quick-access references to members.
+	RedirectionResults results = {};
+	auto& [processed_line, in_file, out_file, pipe_target, is_appending] = results;
 
-			// Ignore trailing ':' character
-			if (temp_len > 0 && redir[temp_len - 1] == ':') {
-				--temp_len;
-			}
+	// The regex splits the line into quoted and redirection groups
+	static const std::regex re(R"(("[^"]*"\s*)|([<>|]|>>|<<)\s*([^<>| ]+)(\s*))",
+	                           std::regex::optimize);
+	//
+	//    ("[^"]*"\s*)  # Group 1: double-quoted text
+	//    |             # -or-
+	//    (             # Group 2: the redirection tokens, either
+	//        [<>|]     # Single character tokens
+	//        |         # -or-
+	//        >>|<<     # Double character tokens
+	//    )
+	//    \s*           # Whitespace after the redirection token
+	//    ([^<>| ]+)    # Group 3: target file or program name
+	//    (\s*)         # Group 4: the target's tail whitespace
+	//
+	// Named match indexes:
+	enum { Quoted = 1, Token = 2, Target = 3, Tail = 4 };
 
-			// Assign substring content of length to output parameters
-			output = (character == '>'
-			                  ? &out_file
-			                  : (character == '<' ? &in_file : &pipe_file));
-			*output = redir.substr(0, temp_len);
-			line_read += temp_len;
-			continue;
+	// Match iterator (shorthand to avoid visual overload below)
+	auto m = std::cregex_iterator(line.data(), line.data() + line.size(), re);
+	auto m_end = std::cregex_iterator();
+
+	// Tracks the end of the pre-matched portion in the line. This is
+	// stepped forward as we iterate through the matches.
+	size_t pre_match_end = 0;
+
+	while (m != m_end) {
+
+		// Pre-match
+		// ~~~~~~~~~
+		// This is the text that's neither quoted nor a redirection.
+		const auto pre_match_len = m->position() - pre_match_end;
+		const auto pre_match_line = line.substr(pre_match_end, pre_match_len);
+
+		// The pre-matched content shouldn't contain any redirection
+		// tokens. If it does, it would generate a syntax error under
+		// real MS-DOS, so we do the same and bail-out with an empty
+		// std::optional.
+		if (pre_match_line.find_first_of("<>|") != std::string_view::npos) {
+			return {};
 		}
-		*line_write++ = character;
+		// The content is acceptable, so append it and update the end
+		// marker.
+		processed_line.append(pre_match_line);
+		pre_match_end = m->position() + m->length();
+
+		// Group 1 (Quoted)
+		// ~~~~~~~~~~~~~~~~
+		// Append quoted blocks of text as-is to the processed line
+		// without processing.
+		if ((*m)[Quoted].matched) {
+			processed_line.append((*m)[Quoted].str());
+		}
+
+		// Group 2, 3, and 4 (Redirection)
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		if ((*m)[Token].matched) {
+			const auto token           = (*m)[Token].str();
+			const auto tail_whitespace = (*m)[Tail].str();
+
+			// Real MS-DOS lets redirection targets be punctuated
+			// with an optional colon. We allow the same and strip
+			// it off if because the actual target doesn't end in it.
+			std::string target = (*m)[Target].str();
+			assert(!target.empty());
+			if (target.back() == ':') {
+				target.pop_back();
+			}
+			// Process the redirection based on token character
+			switch (token[0]) {
+			case '<':
+				in_file      = target;
+				is_appending = (token == "<<");
+				break;
+			case '>':
+				// When multiple outputs are specified without
+				// whitespace such as "echo 1>out1:>out2:",
+				// real MS-DOS replaces the first
+				// output with a space in the command,
+				// effectively becoming 'echo 1 >out2'
+				if (!out_file.empty() && !processed_line.empty() &&
+				    processed_line.back() != ' ') {
+					processed_line.append(" ");
+				}
+				out_file     = target;
+				is_appending = (token == ">>");
+
+				// Real MS-DOS appends the target's tail
+				// whitespace to the command. For example:
+				// 'echo 1>out:  ' becomes 'echo 1  >out'.
+				//             ^^-----------------^^
+				// So we do the same here (see unit tests for
+				// more).
+				processed_line.append(tail_whitespace);
+				break;
+			case '|': pipe_target = target; break;
+			default: assertm(false, "SHELL: Unhandled redirection");
+			}
+		}
+		++m;
 	}
-	*line_write = 0;
+	// Finally append any trailing non-matched text
+	processed_line.append(line.substr(pre_match_end));
+
+	return results;
 }
 
 static uint16_t get_output_redirection(const char *out_file,
@@ -224,18 +286,21 @@ void DOS_Shell::ParseLine(char *line)
 	constexpr bool fcb = true;
 
 	/* Do redirection and pipe checks */
-	std::string in_file = "";
-	std::string out_file = "";
-	std::string pipe_file = "";
-
-	bool append = false;
 	const auto old_stdin  = psp->GetFileHandle(STDIN);
 	const auto old_stdout = psp->GetFileHandle(STDOUT);
 
 	auto input_redirection = InvalidFileHandle;
 	auto output_redirection = InvalidFileHandle;
 
-	GetRedirection(line, in_file, out_file, pipe_file, &append);
+	const auto redirection_results = GetRedirection(line);
+	if (!redirection_results) {
+		SyntaxError();
+		return;
+	}
+
+	const auto& [processed_line, in_file, out_file, pipe_file, append] = *redirection_results;
+	std::strcpy(line, processed_line.c_str());
+
 	if (in_file.length()) {
 		if (DOS_OpenFile(in_file.c_str(), OPEN_READ, &input_redirection, fcb)) {
 			LOG_MSG("SHELL: Redirect input from %s", in_file.c_str());

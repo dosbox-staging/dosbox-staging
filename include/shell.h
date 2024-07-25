@@ -131,11 +131,19 @@ public:
 
 	/* A load of subfunctions */
 	void ParseLine(char* line);
-	void GetRedirection(char* s, std::string& ifn, std::string& ofn,
-	                    std::string& pipe, bool* append);
 	void InputCommand(char* line);
 	void ShowPrompt();
 	void DoCommand(char* cmd);
+
+	// Returned by the GetRedirection(...) member function
+	struct RedirectionResults {
+		std::string processed_line = {};
+		std::string in_file        = {};
+		std::string out_file       = {};
+		std::string pipe_target    = {};
+		bool is_appending          = false;
+	};
+	static std::optional<RedirectionResults> GetRedirection(const std::string_view line);
 
 	// Execute external shell command / program / configuration change
 	// 'virtual' needed for unit tests
