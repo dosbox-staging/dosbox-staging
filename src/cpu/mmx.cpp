@@ -116,4 +116,10 @@ void setFPUTagEmpty()
 	fpu.tags[6] = TAG_Empty;
 	fpu.tags[7] = TAG_Empty;
 	fpu.tags[8] = TAG_Valid; // is only used by us
+
+#if !C_FPU_X86
+	for (auto& reg_memcpy : fpu.regs_memcpy) {
+		reg_memcpy.reset();
+	}
+#endif
 }

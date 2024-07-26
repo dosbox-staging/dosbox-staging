@@ -20,9 +20,11 @@
 #ifndef DOSBOX_FPU_H
 #define DOSBOX_FPU_H
 
+#include <optional>
+
 #ifndef DOSBOX_DOSBOX_H
-//So the right config.h gets included for C_DEBUG
-#include "dosbox.h"
+	// So the right config.h gets included for C_DEBUG
+	#include "dosbox.h"
 #endif
 
 #ifndef DOSBOX_MEM_H
@@ -89,8 +91,8 @@ enum FPU_Round : uint8_t {
 struct FPU_rec {
 	FPU_Reg regs[9]         = {};
 #if !C_FPU_X86
-	int64_t regs_memcpy[9]  = {}; // for FILD/FIST 64-bit memcpy fix
-	bool use_regs_memcpy[9] = {};
+    // for FILD/FIST 64-bit memcpy fix
+	std::optional<int64_t> regs_memcpy[9] = {};
 #endif
 	FPU_P_Reg p_regs[9]     = {};
 	MMX_reg mmx_regs[8]     = {};
