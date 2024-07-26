@@ -42,8 +42,8 @@ static void FPU_FINIT(void) {
 	fpu.tags[7] = TAG_Empty;
 	fpu.tags[8] = TAG_Valid; // is only used by us
 
-	for (auto& use_regs_memcpy : fpu.use_regs_memcpy) {
-		use_regs_memcpy = false;
+	for (auto& reg_memcpy : fpu.regs_memcpy) {
+		reg_memcpy.reset();
 	}
 }
 
@@ -75,7 +75,7 @@ static void FPU_PREP_PUSH(void){
 	}
 #endif
 	fpu.tags[TOP] = TAG_Valid;
-	fpu.use_regs_memcpy[TOP] = false;
+	fpu.regs_memcpy[TOP].reset();
 }
 
 static void FPU_PUSH(double in){
@@ -105,7 +105,7 @@ static void FPU_FPOP(void){
 	}
 #endif
 	fpu.tags[TOP]=TAG_Empty;
-	fpu.use_regs_memcpy[TOP] = false;
+	fpu.regs_memcpy[TOP].reset();
 	//maybe set zero in it as well
 	TOP = ((TOP+1)&7);
 //	LOG(LOG_FPU,LOG_ERROR)("popped from %d  %g off the stack",top,fpu.regs[top].d);
@@ -243,12 +243,12 @@ static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
 	// Motor Mash, and demos like Sunflower and Multikolor.
 
 	// If the value won't fit in the 53-bit mantissa of a double, save the
-	// value into the regs_memcpy register and set the corresponding bool in
-	// use_regs_memcpy to indicate that the integer value should be read out
-	// by the FPU_FST_I64 function instead.
+	// value into the regs_memcpy register to indicate that the integer
+	// value should be read out by the FPU_FST_I64 function instead.
 	if (temp_reg.ll > int53_max || temp_reg.ll < int53_min) {
-		fpu.regs_memcpy[store_to]     = temp_reg.ll;
-		fpu.use_regs_memcpy[store_to] = true;
+		fpu.regs_memcpy[store_to] = temp_reg.ll;
+	} else {
+		fpu.regs_memcpy[store_to].reset();
 	}
 }
 
@@ -321,8 +321,8 @@ static void FPU_FST_I64(PhysPt addr)
 	FPU_Reg temp_reg;
 	// If the value was loaded with the FILD/FIST 64-bit memcpy trick,
 	// read the 64-bit integer value instead.
-	if (fpu.use_regs_memcpy[TOP]) {
-		temp_reg.ll = fpu.regs_memcpy[TOP];
+	if (fpu.regs_memcpy[TOP].has_value()) {
+		temp_reg.ll = fpu.regs_memcpy[TOP].value();
 	} else {
 		double val  = FROUND(fpu.regs[TOP].d);
 		temp_reg.ll = (val <= static_cast<double>(INT64_MAX) &&
@@ -444,22 +444,18 @@ static void FPU_FSUBR(Bitu st, Bitu other){
 
 static void FPU_FXCH(Bitu st, Bitu other){
 	const auto tag             = fpu.tags[other];
-	const auto use_reg_memcpy  = fpu.use_regs_memcpy[other];
 	const auto reg             = fpu.regs[other];
 	const auto reg_memcpy      = fpu.regs_memcpy[other];
 	fpu.tags[other]            = fpu.tags[st];
-	fpu.use_regs_memcpy[other] = fpu.use_regs_memcpy[st];
 	fpu.regs[other]            = fpu.regs[st];
 	fpu.regs_memcpy[other]     = fpu.regs_memcpy[st];
 	fpu.tags[st]               = tag;
-	fpu.use_regs_memcpy[st]    = use_reg_memcpy;
 	fpu.regs[st]               = reg;
 	fpu.regs_memcpy[st]        = reg_memcpy;
 }
 
 static void FPU_FST(Bitu st, Bitu other){
 	fpu.tags[other]            = fpu.tags[st];
-	fpu.use_regs_memcpy[other] = fpu.use_regs_memcpy[st];
 	fpu.regs[other]            = fpu.regs[st];
 	fpu.regs_memcpy[other]     = fpu.regs_memcpy[st];
 }
@@ -594,7 +590,7 @@ static void FPU_FLDENV(PhysPt addr){
 		tag    = mem_readw(addr+4);
 	} else { 
 		cw     = mem_readd(addr+0);
-		fpu.sw = static_cast<uint16_t>(mem_readd(addr+4));
+		fpu.sw = static_cast<uint16_t>(mem_readd(addr + 4));
 		tagbig = mem_readd(addr+8);
 		tag    = static_cast<uint16_t>(tagbig);
 	}
@@ -605,9 +601,9 @@ static void FPU_FLDENV(PhysPt addr){
 
 static void FPU_FSAVE(PhysPt addr){
 	FPU_FSTENV(addr);
-    PhysPt start = (cpu.code.big?28:14);
-	for(int i = 0;i < 8;i++){
-		FPU_ST80(addr+start,STV(i));
+	PhysPt start = (cpu.code.big ? 28 : 14);
+	for (int i = 0; i < 8; i++) {
+		FPU_ST80(addr + start, STV(i));
 		start += 10;
 	}
 	FPU_FINIT();
@@ -615,9 +611,9 @@ static void FPU_FSAVE(PhysPt addr){
 
 static void FPU_FRSTOR(PhysPt addr){
 	FPU_FLDENV(addr);
-	PhysPt start = (cpu.code.big?28:14);
-	for(int i = 0;i < 8;i++){
-		fpu.regs[STV(i)].d = FPU_FLD80(addr+start);
+	PhysPt start = (cpu.code.big ? 28 : 14);
+	for (int i = 0; i < 8; i++) {
+		fpu.regs[STV(i)].d = FPU_FLD80(addr + start);
 		start += 10;
 	}
 }
@@ -684,7 +680,7 @@ static void FPU_FLDZ(void){
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = 0.0;
 	fpu.tags[TOP] = TAG_Zero;
-	fpu.use_regs_memcpy[TOP] = false;
+	fpu.regs_memcpy[TOP].reset();
 }
 
 

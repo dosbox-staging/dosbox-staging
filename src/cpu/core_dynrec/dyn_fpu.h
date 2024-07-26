@@ -41,16 +41,15 @@ static void FPU_FNSTCW(PhysPt addr){
 static void FPU_FFREE(Bitu st) {
 	fpu.tags[st] = TAG_Empty;
 #if !C_FPU_X86
-	fpu.use_regs_memcpy[st] = false;
-#endif
+	fpu.regs_memcpy[st].reset();
+	#endif
 }
 
-#if C_FPU_X86
-#include "../../fpu/fpu_instructions_x86.h"
-#else
-#include "../../fpu/fpu_instructions.h"
-#endif
-
+	#if C_FPU_X86
+		#include "../../fpu/fpu_instructions_x86.h"
+	#else
+		#include "../../fpu/fpu_instructions.h"
+	#endif
 
 static inline void dyn_fpu_top() {
 	gen_mov_word_to_reg(FC_OP2,(void*)(&TOP),true);
