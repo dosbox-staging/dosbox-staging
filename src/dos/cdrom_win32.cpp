@@ -356,7 +356,11 @@ bool CDROM_Interface_Win32::HasDataTrack() const
 std::vector<int16_t> CDROM_Interface_Win32::ReadAudio(const uint32_t sector,
                                                       const uint32_t frames_requested)
 {
-	constexpr uint32_t MaximumFramesPerCall = 55;
+	// According to testing done so far:
+	// - 55 is the maximum for SerialATA drives
+	// - 27 is the maximum for USB drives
+	// Higher values makes the IOCTL_CDROM_RAW_READ fail.
+	constexpr uint32_t MaximumFramesPerCall = 27;
 	const uint32_t num_frames = std::min(frames_requested, MaximumFramesPerCall);
 
 	std::vector<int16_t> audio_frames(num_frames * SAMPLES_PER_REDBOOK_FRAME);
