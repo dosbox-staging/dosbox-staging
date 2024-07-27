@@ -7439,17 +7439,28 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		return static_cast<uint16_t>(val >> 16);
 	}
 
-	void writew(PhysPt addr, uint16_t val) override
+	void writew(PhysPt addr, const uint16_t val) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 
-		// Is the address word-aligned?
-		if ((addr & 0b11) == 0) {
-			voodoo_w(addr, val, 0x0000ffff);
-		}
-		// The address must be byte-aligned
+		// When writing 16-bit words bit 0 of the address must be
+		// cleared, indicating the address is neither 8-bit nor 24-bit
+		// aligned.
+
 		assert((addr & 0b1) == 0);
-			voodoo_w(addr, static_cast<uint32_t>(val << 16), 0xffff0000);
+
+		// With bit 0 is cleared, bit 1's state (set or cleared)
+		// determines if the address is 16-bit or 32-bit aligned,
+		// respectively. 16-bit alignment requires the value be written
+		// in the next word where as 32-bit alignment allows the value
+		// to be written without shifting. The shift is either 0 or 16.
+
+		const auto shift = (addr & 0b10) << 3;
+
+		const auto shifted_val = static_cast<uint32_t>(val) << shift;
+		const auto shifted_mask = static_cast<uint32_t>(0xffff) << shift;
+
+		voodoo_w(addr, shifted_val, shifted_mask);
 	}
 
 	uint32_t readd(PhysPt addr) override
