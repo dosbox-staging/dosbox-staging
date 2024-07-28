@@ -2210,8 +2210,20 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		static auto last_vsync_mode = VsyncMode::Unset;
 
-		const auto vsync_mode = static_cast<VsyncMode>(
-		        SDL_GL_GetSwapInterval());
+		auto vsync_mode = VsyncMode::Unset;
+		switch (SDL_GL_GetSwapInterval()) {
+		case -1:
+			vsync_mode = VsyncMode::Adaptive;
+			break;
+		case 0:
+			vsync_mode = VsyncMode::Off;
+			break;
+		case 1:
+			vsync_mode = VsyncMode::On;
+			break;
+		default:
+			assertm(false, "SDL_GL_GetSwapInterval() returned invalid result");
+		}
 
 		if (last_vsync_mode != vsync_mode) {
 			last_vsync_mode = vsync_mode;
