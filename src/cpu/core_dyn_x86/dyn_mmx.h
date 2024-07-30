@@ -19,26 +19,39 @@
 
 #include "mmx.h"
 
+extern uint32_t* lookupRMEAregd[256];
+
+#define LoadMd(off)      mem_readd_inline(off)
+#define LoadMq(off)      mem_readq_inline(off)
+#define SaveMd(off, val) mem_writed_inline(off, val)
+#define SaveMq(off, val) mem_writeq_inline(off, val)
+
+#define CASE_0F_MMX(opcode) case (opcode):
+#define GetRM
+#define GetEAa
+#define Fetchb() imm
+#define GetEArd  uint32_t* eard = lookupRMEAregd[rm];
+
 static MMX_reg mmxtmp{};
 
 static void MMX_LOAD_32(PhysPt addr)
 {
-	mmxtmp.ud.d0 = mem_readd(addr);
+	mmxtmp.ud.d0 = LoadMd(addr);
 }
 
 static void MMX_STORE_32(PhysPt addr)
 {
-	mem_writed(addr, mmxtmp.ud.d0);
+	SaveMd(addr, mmxtmp.ud.d0);
 }
 
 static void MMX_LOAD_64(PhysPt addr)
 {
-	mmxtmp.q = mem_readq(addr);
+	mmxtmp.q = LoadMq(addr);
 }
 
 static void MMX_STORE_64(PhysPt addr)
 {
-	mem_writeq(addr, mmxtmp.q);
+	SaveMq(addr, mmxtmp.q);
 }
 
 // add simple instruction (that operates only with mm regs)
@@ -66,19 +79,6 @@ static void dyn_mmx_mem(Bitu op, Bitu reg = decode.modrm.reg, void* mem = &mmxtm
 	opcode((int)reg).setabsaddr(mem).Emit16((uint16_t)(0x0F | (op << 8)));
 #endif
 }
-
-extern uint32_t* lookupRMEAregd[256];
-
-#define LoadMd(off) mem_readd_inline(off)
-#define LoadMq(off) mem_readq_inline(off)
-#define SaveMd(off,val)	mem_writed_inline(off,val)
-#define SaveMq(off,val) mem_writeq_inline(off,val)
-
-#define CASE_0F_MMX(opcode) case(opcode):
-#define GetRM
-#define GetEAa
-#define Fetchb() imm
-#define GetEArd	uint32_t * eard=lookupRMEAregd[rm];
 
 static void dyn_mmx_op(Bitu op)
 {
