@@ -55,13 +55,13 @@ CPUBlock cpu      = {};
 Segments Segs     = {};
 
 // Current cycles values
-int CPU_Cycles    = 0;
-int CPU_CycleLeft = CpuCyclesRealModeDefault;
+std::atomic<int> CPU_Cycles    = 0;
+std::atomic<int> CPU_CycleLeft = CpuCyclesRealModeDefault;
 
 // Cycles settings for both "legacy" and "modern" modes
-int CPU_CycleMax      = CpuCyclesRealModeDefault;
-int CPU_CyclePercUsed = 100;
-int CPU_CycleLimit    = -1;
+std::atomic<int> CPU_CycleMax = CpuCyclesRealModeDefault;
+int CPU_CyclePercUsed         = 100;
+int CPU_CycleLimit            = -1;
 
 static int old_cycle_max       = CpuCyclesRealModeDefault;
 static bool legacy_cycles_mode = false;
@@ -2416,7 +2416,7 @@ static void cpu_increase_cycles_legacy()
 		CPU_Cycles    = 0;
 
 		if (!maybe_display_switch_to_dynamic_core_warning(CPU_CycleMax)) {
-			LOG_MSG("CPU: Fixed %d cycles", CPU_CycleMax);
+			LOG_MSG("CPU: Fixed %d cycles", CPU_CycleMax.load());
 		}
 	}
 }
@@ -2538,7 +2538,7 @@ static void cpu_decrease_cycles_legacy()
 		CPU_CycleLeft = 0;
 		CPU_Cycles    = 0;
 
-		LOG_MSG("CPU: Fixed %d cycles.", CPU_CycleMax);
+		LOG_MSG("CPU: Fixed %d cycles.", CPU_CycleMax.load());
 	}
 }
 
@@ -2614,7 +2614,7 @@ std::string CPU_GetCyclesConfigAsString()
 				s += format_str("max %d%%", CPU_CyclePercUsed);
 			}
 		} else {
-			s += format_str("%d", CPU_CycleMax);
+			s += format_str("%d", CPU_CycleMax.load());
 		}
 		return s += CyclesPerMs;
 
@@ -2916,8 +2916,9 @@ public:
 	void ConfigureCyclesLegacy(Section_prop* secprop)
 	{
 		// Sets the value if the string in within the min and max values
-		auto set_if_in_range = [](const std::string& str,
-		                          int& value,
+		// Output value is either int or std::atomic<int>
+		auto set_if_in_range = []<typename T>(const std::string& str,
+		                          T& value,
 		                          const int min_value = 1,
 		                          const int max_value = 0) {
 			std::istringstream stream(str);
