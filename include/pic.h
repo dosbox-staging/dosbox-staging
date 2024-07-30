@@ -19,14 +19,12 @@
 #ifndef DOSBOX_PIC_H
 #define DOSBOX_PIC_H
 
+#include <atomic>
 #include <cassert>
 #include <cmath>
 #include <cstdint>
 
-/* CPU Cycle Timing */
-extern int32_t CPU_Cycles;
-extern int32_t CPU_CycleLeft;
-extern int32_t CPU_CycleMax;
+#include "cpu.h"
 
 typedef void(PIC_EOIHandler)();
 typedef void (*PIC_EventHandler)(uint32_t val);
@@ -35,7 +33,7 @@ extern uint32_t PIC_IRQCheck;
 
 // Elapsed milliseconds since starting DOSBox
 // Holds ~4.2 B milliseconds or ~48 days before rolling over
-extern uint32_t PIC_Ticks;
+extern std::atomic<uint32_t> PIC_Ticks;
 
 // The number of cycles not done yet (ND)
 static inline int32_t PIC_TickIndexND()
