@@ -35,12 +35,12 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: MS Clang/LLVM 64-bit
+          - name: MS Clang/LLVM (x64)
             arch: x64
             max_warnings: 30
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
@@ -89,11 +89,12 @@ jobs:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run: python scripts\count-warnings.py -f --msclang vs\build.log
 
+
   build_windows_vs_release:
     name: Release ${{ matrix.debugger && 'w/ debugger' || '' }} (${{ matrix.arch }})
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     outputs:
-      dosbox_version: ${{ steps.set_dosbox_vers.outputs.dosbox_vers }}
+      dosbox_version: ${{ steps.set_vars.outputs.dosbox_version }}
 
     runs-on: windows-2022
     strategy:
@@ -102,7 +103,7 @@ jobs:
         debugger: [false, true]
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
@@ -133,17 +134,23 @@ jobs:
         shell: pwsh
         run:   .\scripts\log-env.ps1
 
-      - name:  Set version
-        id:    set_dosbox_vers
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          echo "build_dir=vs/${{ matrix.arch }}/Release" >> $GITHUB_OUTPUT
+
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
+          echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name:  Set the Git hash in config.h
         shell: bash
         run: |
           set -x
           GIT_HASH=$(./scripts/get-version.sh hash)
           sed -i "s|BUILD_GIT_HASH \"git\"|BUILD_GIT_HASH \"$GIT_HASH\"|" src/platform/visualc/config.h
-
-          VERSION=$(./scripts/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "dosbox_vers=${VERSION}" >> $GITHUB_OUTPUT
 
       - name:  Enable the debugger in config.h
         if: ${{ matrix.debugger }}
@@ -159,19 +166,15 @@ jobs:
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.arch }}
 
-      - name:  Set packaging names
-        id:    set_pkg_dir
-        shell: bash
-        run: |
-          echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${{ env.VERSION }}" >> $GITHUB_OUTPUT
-
       - name: Package standard build
         if: ${{ !matrix.debugger }}
         shell: bash
         run: |
+          set -x
           # Construct VC_REDIST_DIR
           readonly VC_REDIST_BASE="C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC"
           readonly VC_REDIST_CRT_VERSION="Microsoft.VC143.CRT"
+
           for ENTRY in "$VC_REDIST_BASE"/*
           do
               ENTRY=$ENTRY/${{ matrix.arch }}/$VC_REDIST_CRT_VERSION
@@ -188,46 +191,112 @@ jobs:
           # Package
           ./scripts/create-package.sh \
             -p msvc \
-            vs/${{ matrix.arch }}/Release \
-            "${{ steps.set_pkg_dir.outputs.pkg_dir }}"
-
-      - name:  Package the debugger
-        if:    ${{ matrix.debugger }}
-        shell: bash
-        run: |
-          set -x
-          mkdir -p ${{ steps.set_pkg_dir.outputs.pkg_dir }}
-          # Move the debugger build into the release area
-          readonly RELEASE_DIR=${{ matrix.arch }}/Release
-          ls "vs/$RELEASE_DIR"
-          cp vs/$RELEASE_DIR/dosbox.exe   ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
+            ${{ steps.set_vars.outputs.build_dir }} \
+            ${{ steps.set_vars.outputs.pkg_dir }}
 
       - name: Upload package
         if:   ${{ !matrix.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-without-debugger
-          path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-without-debugger
+          path: ${{ steps.set_vars.outputs.pkg_dir }}
           overwrite: true
+
+
+      - name:  Package the debugger build
+        if:    ${{ matrix.debugger }}
+        shell: bash
+        run: |
+          set -x
+          mkdir -p ${{ steps.set_vars.outputs.pkg_dir }}
+          # Move the debugger build into the release area
+          ls ${{ steps.set_vars.outputs.build_dir }}
+          cp ${{ steps.set_vars.outputs.build_dir }}/dosbox.exe ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
       - name: Upload debugger artifact
         if:   ${{ matrix.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-with-debugger
-          path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-with-debugger
+          path: ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
           overwrite: true
 
-  merge:
-    runs-on: ubuntu-latest
+
+  merge_artifacts:
+    name: Merge release & debugger artifacts (${{ matrix.arch }} )
     needs: build_windows_vs_release
+    outputs:
+      dosbox_version: ${{ needs.build_windows_vs_release.outputs.dosbox_version }}
+
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         arch: [x64, ARM64]
     steps:
-      - name: Merge ${{ matrix.arch }} artifacts
+      - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v4
         with:
           name:    dosbox-staging-windows-${{ matrix.arch }}-${{ needs.build_windows_vs_release.outputs.dosbox_version }}
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
           delete-merged: 'true'
+
+
+  build_installer:
+    name: Build installer (${{ matrix.arch }} )
+    needs: merge_artifacts
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        # We only provide x64 installers as ARM64 support is experimental
+        arch: [x64]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Prepare Windows installer
+        shell: bash
+        run: |
+          set -x
+          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          PACKAGE_INFO="release ${VERSION}"
+
+          mkdir -p out/program
+
+          sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
+          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" contrib/windows_installer/DOSBox-Staging-setup.iss
+
+          cp contrib/windows_installer/*                   out
+          cp contrib/icons/windows/dosbox-staging.ico      out
+          cp contrib/icons/windows/dosbox-staging.bmp      out
+          cp contrib/icons/windows/dosbox-staging-side.bmp out
+
+          mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
+          mv out/program/dosbox*.exe                       out
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          cd out
+          C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
+          dir
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-setup
+          path: ${{ github.workspace }}\out\${{ steps.set_vars.outputs.pkg_dir }}-setup.exe
+          overwrite: true
