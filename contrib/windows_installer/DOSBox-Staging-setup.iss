@@ -5,8 +5,6 @@
 #define DOSBoxAppURL "https://www.dosbox-staging.org/"
 #define DOSBoxAppExeName "dosbox.exe"
 #define DOSBoxAppExeDebuggerName "dosbox_with_debugger.exe"
-#define DOSBoxAppExeMSVCName "dosbox_msvc.exe"
-#define DOSBoxAppExeMSVCDebuggerName "dosbox_msvc_with_debugger.exe"
 #define DOSBoxAppExeConsoleName "dosbox_with_console.bat"
 #define DOSBoxAppBuildDate GetDateTimeString('yyyymmdd_hhnnss', '', '')
 
@@ -25,7 +23,7 @@ DisableWelcomePage=no
 DisableProgramGroupPage=yes
 InfoBeforeFile=setup_preamble.txt
 OutputDir=.\
-OutputBaseFilename={#DOSBoxAppInternal}-{#DOSBoxAppVersion}-setup
+OutputBaseFilename={#DOSBoxAppInternal}-windows-x64-{#DOSBoxAppVersion}-setup
 SetupIconFile={#DOSBoxAppInternal}.ico
 Compression=lzma
 SolidCompression=yes
@@ -68,15 +66,12 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Tasks]
 Name: "contextmenu"; Description: "Add ""Run/Open with {#DOSBoxAppName}"" context menu for Windows Explorer"
-Name: "defaultmsvc"; Description: "Run MSVC release binary (instead of MSYS2 binary) as the default binary"; Flags: unchecked
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "program\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#DOSBoxAppExeName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: not defaultmsvc
-Source: "{#DOSBoxAppExeDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion; Tasks: not defaultmsvc
-Source: "{#DOSBoxAppExeMSVCName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: defaultmsvc
-Source: "{#DOSBoxAppExeMSVCDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion; Tasks: defaultmsvc
+Source: "{#DOSBoxAppExeName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion
+Source: "{#DOSBoxAppExeDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion
 Source: "{#DOSBoxAppExeConsoleName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeConsoleName}"; Flags: ignoreversion
 Source: "{#DOSBoxAppInternal}.ico"; DestDir: "{app}"; DestName: "{#DOSBoxAppInternal}.ico"; Flags: ignoreversion
 
