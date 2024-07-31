@@ -309,10 +309,10 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 static std::optional<StereoLine> parse_stereo_mode(const std::string& s)
 {
 	if (s == "STEREO") {
-		return Stereo;
+		return StereoMap;
 	}
 	if (s == "REVERSE") {
-		return Reverse;
+		return ReverseMap;
 	}
 	return {};
 }

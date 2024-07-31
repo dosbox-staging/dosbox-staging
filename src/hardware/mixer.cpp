@@ -701,7 +701,7 @@ MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
 
 		// We're only dealing with stereo channels internally, so we
 		// need to set the "stereo" line-out even for mono content.
-		chan->SetChannelMap(Stereo);
+		chan->SetChannelMap(StereoMap);
 
 		set_global_crossfeed(chan);
 		set_global_reverb(chan);
@@ -2298,10 +2298,10 @@ std::string MixerChannel::DescribeLineout() const
 	if (!HasFeature(ChannelFeature::Stereo)) {
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 	}
-	if (output_map == Stereo) {
+	if (output_map == StereoMap) {
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO");
 	}
-	if (output_map == Reverse) {
+	if (output_map == ReverseMap) {
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_REVERSE");
 	}
 

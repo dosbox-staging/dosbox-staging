@@ -110,8 +110,8 @@ struct StereoLine {
 	bool operator==(const StereoLine other) const;
 };
 
-static constexpr StereoLine Stereo  = {Left, Right};
-static constexpr StereoLine Reverse = {Right, Left};
+static constexpr StereoLine StereoMap  = {Left, Right};
+static constexpr StereoLine ReverseMap = {Right, Left};
 
 enum class ChannelFeature {
 	ChorusSend,
@@ -345,11 +345,11 @@ private:
 
 	// User-configurable that defines how the channel's Stereo line maps
 	// into the mixer.
-	StereoLine output_map = Stereo;
+	StereoLine output_map = StereoMap;
 
 	// DOS application-configurable that maps the channels own "left" or
 	// "right" as themselves or vice-versa.
-	StereoLine channel_map = Stereo;
+	StereoLine channel_map = StereoMap;
 
 	bool last_samples_were_stereo  = false;
 	bool last_samples_were_silence = true;
