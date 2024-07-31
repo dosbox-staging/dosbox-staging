@@ -1781,10 +1781,11 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 // Converts sample stream to floats, performs output channel mappings, removes
 // clicks, and optionally performs zero-order-hold-upsampling.
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
-std::vector<AudioFrame> MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
+void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
                                                      const int num_frames)
 {
 	assert(num_frames >= 0);
+	convert_buffer.clear();
 
 	const auto mapped_output_left  = output_map.left;
 	const auto mapped_output_right = output_map.right;
@@ -1793,8 +1794,6 @@ std::vector<AudioFrame> MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Ty
 	const auto mapped_channel_right = channel_map.right;
 
 	auto pos             = 0;
-
-	std::vector<AudioFrame> out = {};
 
 	while (pos < num_frames) {
 		prev_frame = next_frame;
@@ -1830,7 +1829,7 @@ std::vector<AudioFrame> MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Ty
 		out_frame[mapped_output_left]  += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
-		out.push_back(out_frame);
+		convert_buffer.push_back(out_frame);
 
 		if (do_zoh_upsample) {
 			zoh_upsampler.pos += zoh_upsampler.step;
@@ -1842,8 +1841,6 @@ std::vector<AudioFrame> MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Ty
 			++pos;
 		}
 	}
-
-	return out;
 }
 
 static spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
@@ -2060,8 +2057,7 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// ConvertSamplesAndMaybeZohUpsample to reduce the number of temporary
 	// buffers and to simplify the code.
 	//
-	const auto convert_buffer = ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
-	        data, num_frames);
+	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(data, num_frames);
 
 	std::vector<AudioFrame> output_buffer = {};
 

@@ -322,7 +322,7 @@ private:
 	AudioFrame ConvertNextFrame(const Type* data, const int pos);
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
-	std::vector<AudioFrame> ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames);
+	void ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames);
 
 	void ConfigureResampler();
 	void ClearResampler();
@@ -334,6 +334,8 @@ private:
 	std::string name = {};
 	Envelope envelope;
 	MIXER_Handler handler = nullptr;
+
+	std::vector<AudioFrame> convert_buffer = {};
 
 	std::set<ChannelFeature> features = {};
 
