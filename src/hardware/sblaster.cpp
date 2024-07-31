@@ -2877,6 +2877,12 @@ static void generate_frames(const int frames_requested)
 	case DspMode::None:
 	case DspMode::DmaPause:
 	case DspMode::DmaMasked:
+	if (!soundblaster_mixer_queue.IsRunning()) {
+		// We've been playing silence and are continuing to play silence
+		// Nothing to do except increment this variable so we don't loop forever
+		frames_added_this_tick += frames_requested;
+		break;
+	}
 	// Enqueue a tick's worth of silenced frames
 	// Some games (Tyrian for example) will switch to DmaMasked briefly (less than 5 ticks usually)
 	// We can't use AddSilence on the mixer thread as that asks for a blocksize of audio (usually over 10ms)
@@ -2887,10 +2893,11 @@ static void generate_frames(const int frames_requested)
 
 	++ticks_of_silence;
 	if (ticks_of_silence > 5000) {
-		// Most games using DMA will run it constantly in that mode
-		// If we've hit 5 seconds of silence, we're probably not playing a DMA mode game
+		// We've been playing silence for 5 seconds
+		// Some games only play DMA sound in certain segments or for small durations
+		// Either we're not in a DMA game at all or its been quiet for a while
 		// Stop the mixer channel for performance reasons as this channel blocks waiting for the main thread to provide more audio
-		// We want this to be a conservative value as disabling the channel clears any pending audio
+		// 5 seconds is safe to avoid stuttering. Be careful if modifying this value as we're about to clear pending audio.
 
 		// This is different from the "sb.speaker_enable = false" state
 		// If the speaker is off, this function never gets called
