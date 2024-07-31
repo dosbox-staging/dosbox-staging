@@ -298,7 +298,7 @@ TEST(ProgramMixer, Channel_SetVolumeChannelNameStartsWithLetterD)
 TEST(ProgramMixer, Channel_SetStereoModeStereo)
 {
 	auto expected = select_sb_channel();
-	expected.emplace(SetStereoMode{Stereo});
+	expected.emplace(SetStereoMode{StereoMap});
 
 	assert_success({"sb", "stereo"}, expected);
 }
@@ -306,7 +306,7 @@ TEST(ProgramMixer, Channel_SetStereoModeStereo)
 TEST(ProgramMixer, Channel_SetStereoModeReverse)
 {
 	auto expected = select_sb_channel();
-	expected.emplace(SetStereoMode{Reverse});
+	expected.emplace(SetStereoMode{ReverseMap});
 
 	assert_success({"sb", "reverse"}, expected);
 }
@@ -393,7 +393,7 @@ TEST(ProgramMixer, AllCommands)
 	expected.emplace(SelectChannel{"SB"});
 	expected.emplace(SetChorusLevel{0.09f});
 	expected.emplace(SetReverbLevel{0.20f});
-	expected.emplace(SetStereoMode{Reverse});
+	expected.emplace(SetStereoMode{ReverseMap});
 	expected.emplace(SetCrossfeedStrength{0.10f});
 	expected.emplace(SetVolume{AudioFrame(0.20f, 0.20f)});
 
