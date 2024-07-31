@@ -171,6 +171,15 @@ struct MixerSettings {
 
 	AudioFrame master_volume = {1.0f, 1.0f};
 
+	// Output by mix_samples, to be enqueud into the final_output queue
+	std::vector<AudioFrame> output_buffer = {};
+
+	// Temporary mixing buffers
+	std::vector<AudioFrame> reverb_buffer       = {};
+	std::vector<AudioFrame> chorus_buffer       = {};
+	std::vector<int16_t> capture_buffer         = {};
+	std::vector<AudioFrame> fast_forward_buffer = {};
+
 	std::map<std::string, MixerChannelPtr> channels = {};
 
 	std::map<std::string, MixerChannelSettings> channel_settings_cache = {};
@@ -2356,32 +2365,35 @@ static float normalize_sample(float sample)
 }
 
 // Mix a certain amount of new sample frames
-std::vector<AudioFrame> mix_samples(const int frames_requested)
+static void mix_samples(const int frames_requested)
 {
 	assert(frames_requested >= 0);
 
-	std::vector<AudioFrame> output_buffer(frames_requested);
-	std::vector<AudioFrame> reverb_buffer(frames_requested);
-	std::vector<AudioFrame> chorus_buffer(frames_requested);
+	mixer.output_buffer.clear();
+	mixer.output_buffer.resize(frames_requested);
+	mixer.reverb_buffer.clear();
+	mixer.reverb_buffer.resize(frames_requested);
+	mixer.chorus_buffer.clear();
+	mixer.chorus_buffer.resize(frames_requested);
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->Mix(frames_requested);
 		std::lock_guard lock(channel->mutex);
-		const size_t num_frames = std::min(output_buffer.size(), channel->audio_frames.size());
+		const size_t num_frames = std::min(mixer.output_buffer.size(), channel->audio_frames.size());
 		for (size_t i = 0; i < num_frames; ++i) {
 			if (channel->do_sleep) {
-				output_buffer[i] += channel->sleeper.MaybeFadeOrListen(channel->audio_frames[i]);
+				mixer.output_buffer[i] += channel->sleeper.MaybeFadeOrListen(channel->audio_frames[i]);
 			} else {
-				output_buffer[i] += channel->audio_frames[i];
+				mixer.output_buffer[i] += channel->audio_frames[i];
 			}
 
 			if (mixer.do_reverb && channel->do_reverb_send) {
-				reverb_buffer[i] += channel->audio_frames[i] * channel->reverb.send_gain;
+				mixer.reverb_buffer[i] += channel->audio_frames[i] * channel->reverb.send_gain;
 			}
 
 			if (mixer.do_chorus && channel->do_chorus_send) {
-				chorus_buffer[i] += channel->audio_frames[i] * channel->chorus.send_gain;
+				mixer.chorus_buffer[i] += channel->audio_frames[i] * channel->chorus.send_gain;
 			}
 		}
 		channel->audio_frames.erase(channel->audio_frames.begin(), channel->audio_frames.begin() + num_frames);
@@ -2391,12 +2403,12 @@ std::vector<AudioFrame> mix_samples(const int frames_requested)
 	}
 
 	if (mixer.do_reverb) {
-		for (size_t i = 0; i < reverb_buffer.size(); ++i) {
+		for (size_t i = 0; i < mixer.reverb_buffer.size(); ++i) {
 			// High-pass filter the reverb input
 			auto& hpf = mixer.reverb.highpass_filter;
 
 			// MVerb operates on two non-interleaved sample streams
-			AudioFrame in_frame = reverb_buffer[i];
+			AudioFrame in_frame = mixer.reverb_buffer[i];
 			in_frame.left = hpf[0].filter(in_frame.left);
 			in_frame.right = hpf[1].filter(in_frame.right);
 
@@ -2408,22 +2420,22 @@ std::vector<AudioFrame> mix_samples(const int frames_requested)
 			constexpr auto NumFrames = 1;
 			mixer.reverb.mverb.process(in_buf, out_buf, NumFrames);
 
-			output_buffer[i] += out_frame;
+			mixer.output_buffer[i] += out_frame;
 		}
 	}
 
 	if (mixer.do_chorus) {
 		// Apply chorus effect to the chorus aux buffer, then mix the
 		// results to the master output
-		for (size_t i = 0; i < chorus_buffer.size(); ++i) {
-			auto frame = chorus_buffer[i];
+		for (size_t i = 0; i < mixer.chorus_buffer.size(); ++i) {
+			auto frame = mixer.chorus_buffer[i];
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
-			output_buffer[i] += frame;
+			mixer.output_buffer[i] += frame;
 		}
 	}
 
 	// Apply high-pass filter to the master output
-	for (auto& frame : output_buffer) {
+	for (auto& frame : mixer.output_buffer) {
 		auto& hpf = mixer.highpass_filter;
 		frame = {
 			hpf[0].filter(frame.left),
@@ -2433,28 +2445,28 @@ std::vector<AudioFrame> mix_samples(const int frames_requested)
 
 	if (mixer.do_compressor) {
 		// Apply compressor to the master output as the very last step
-		for (auto& frame: output_buffer) {
+		for (auto& frame: mixer.output_buffer) {
 			frame = mixer.compressor.Process(frame);
 		}
 	}
 
 	// Capture audio output if requested
 	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
-		std::vector<int16_t> capture_buffer = {};
-		capture_buffer.reserve(output_buffer.size() * 2);
+		mixer.capture_buffer.clear();
+		mixer.capture_buffer.reserve(mixer.output_buffer.size() * 2);
 
-		for (const auto frame : output_buffer) {
+		for (const auto frame : mixer.output_buffer) {
 			const auto left = static_cast<uint16_t>(
 			        clamp_to_int16(static_cast<int>(frame.left)));
 
 			const auto right = static_cast<uint16_t>(
 			        clamp_to_int16(static_cast<int>(frame.right)));
 
-			capture_buffer.push_back(static_cast<int16_t>(host_to_le16(left)));
-			capture_buffer.push_back(static_cast<int16_t>(host_to_le16(right)));
+			mixer.capture_buffer.push_back(static_cast<int16_t>(host_to_le16(left)));
+			mixer.capture_buffer.push_back(static_cast<int16_t>(host_to_le16(right)));
 		}
 
-		if (mixer.capture_queue.Size() + capture_buffer.size() > mixer.capture_queue.MaxCapacity()) {
+		if (mixer.capture_queue.Size() + mixer.capture_buffer.size() > mixer.capture_queue.MaxCapacity()) {
 			// We're producing more audio than the capture is consuming.
 			// This usually happens when the main thread is being slowed down by video encoding.
 			// Ex: Slow host CPU or using zlib rather than zlib_ng
@@ -2462,16 +2474,14 @@ std::vector<AudioFrame> mix_samples(const int frames_requested)
 			// Without this, it's a complete stuttery mess though so it's the lesser of two evils
 			mixer.capture_queue.Clear();
 		}
-		mixer.capture_queue.NonblockingBulkEnqueue(capture_buffer, capture_buffer.size());
+		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer, mixer.capture_buffer.size());
 	}
 
 	// Normalize the final output before sending to SDL
-	for (auto& frame: output_buffer) {
+	for (auto& frame: mixer.output_buffer) {
 		frame.left = normalize_sample(frame.left);
 		frame.right = normalize_sample(frame.right);
 	}
-
-	return output_buffer;
 }
 
 // Run in the main thread by a PIC Callback
@@ -2558,8 +2568,8 @@ static void mixer_thread_loop()
 			assert(frames_requested > mixer.blocksize);
 		}
 
-		auto mixed_audio = mix_samples(frames_requested);
-		assert(mixed_audio.size() == check_cast<size_t>(frames_requested));
+		mix_samples(frames_requested);
+		assert(mixer.output_buffer.size() == check_cast<size_t>(frames_requested));
 
 		lock.unlock();
 
@@ -2577,21 +2587,21 @@ static void mixer_thread_loop()
 			continue;
 		}
 
-		std::vector<AudioFrame> fast_forward_buffer = {};
-		auto& to_mix = mixer.fast_forward_mode ? fast_forward_buffer : mixed_audio;
+		auto& to_mix = mixer.fast_forward_mode ? mixer.fast_forward_buffer : mixer.output_buffer;
 
 		if (mixer.fast_forward_mode) {
 			// This is "chipmunk mode" meant for fast-forward
 			// It's basic sample skipping to compress a large amount of audio into a single blocksize
 			assert(frames_requested > mixer.blocksize);
 
-			fast_forward_buffer.resize(mixer.blocksize);
+			mixer.fast_forward_buffer.clear();
+			mixer.fast_forward_buffer.reserve(mixer.blocksize);
 			const float index_add = static_cast<float>(frames_requested) / static_cast<float>(mixer.blocksize);
 			float float_index = 0.0f;
 
-			for (size_t dst_index = 0; dst_index < fast_forward_buffer.size(); ++dst_index) {
-				const size_t src_index = std::min(check_cast<size_t>(iroundf(float_index)), mixed_audio.size() - 1);
-				fast_forward_buffer[dst_index] = mixed_audio[src_index];
+			for (int i = 0; i < mixer.blocksize; ++i) {
+				const size_t src_index = std::min(check_cast<size_t>(iroundf(float_index)), mixer.output_buffer.size() - 1);
+				mixer.fast_forward_buffer.push_back(mixer.output_buffer[src_index]);
 				float_index += index_add;
 			}
 		}
