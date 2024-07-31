@@ -2057,9 +2057,16 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// ConvertSamplesAndMaybeZohUpsample to reduce the number of temporary
 	// buffers and to simplify the code.
 	//
+
+	// Assert that we're not attempting to do both LERP and Speex resample
+	// We can do one or neither
+	assert((do_lerp_upsample && !do_resample) || (!do_lerp_upsample && do_resample) || (!do_lerp_upsample && !do_resample));
+
 	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(data, num_frames);
 
-	std::vector<AudioFrame> output_buffer = {};
+	// Starting index this function will start writing to
+	// The audio_frames vector can contain previously converted/resampled audio
+	const size_t audio_frames_starting_size = audio_frames.size();
 
 	if (do_lerp_upsample) {
 		assert(!do_resample);
@@ -2079,7 +2086,7 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 			                            curr_frame.right,
 			                            s.pos);
 
-			output_buffer.push_back(lerped_frame);
+			audio_frames.push_back(lerped_frame);
 
 			s.pos += s.step;
 #if 0
@@ -2104,22 +2111,21 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 				i += 1;
 			}
 		}
-	}
-
-	if (do_resample) {
-		assert(!do_lerp_upsample);
-
+	} else if (do_resample) {
 		auto in_frames = check_cast<spx_uint32_t>(convert_buffer.size());
 
 		auto out_frames = check_cast<spx_uint32_t>(
 		        estimate_max_out_frames(speex_resampler.state, in_frames));
 
+		// Store this as a temporary variable
+		// out_frames gets modified by Speex to reflect the actual frames it wrote
+		const auto estimated_frames = out_frames;
 
-		output_buffer.resize(out_frames);
+		audio_frames.resize(audio_frames_starting_size + estimated_frames);
 
 		// These are vectors of AudioFrame which is just 2 packed floats
 		const auto input_ptr = reinterpret_cast<const float*>(convert_buffer.data());
-		auto output_ptr = reinterpret_cast<float*>(output_buffer.data());
+		auto output_ptr = reinterpret_cast<float*>(audio_frames.data() + audio_frames_starting_size);
 
 		speex_resampler_process_interleaved_float(speex_resampler.state,
 		                                          input_ptr,
@@ -2130,28 +2136,27 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		// 'out_frames' now contains the actual number of
 		// resampled frames, so ensure the number of output frames
 		// is within the logical size.
-		assert(out_frames <= output_buffer.size());
-		output_buffer.resize(out_frames); // only shrinks
+		assert(out_frames <= estimated_frames);
+		audio_frames.resize(audio_frames_starting_size + out_frames); // only shrinks
+	} else {
+		audio_frames.insert(audio_frames.end(), convert_buffer.begin(), convert_buffer.end());
 	}
 
-	// Optionally filter, apply crossfeed, then mix the results to the
-	// master output
-	const auto &out = (do_lerp_upsample || do_resample) ? output_buffer : convert_buffer;
-	for (auto frame : out) {
+	// Optionally filter, apply crossfeed
+	// Runs in-place over newly added frames
+	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
 		if (filters.highpass.state == FilterState::On) {
-			frame = {filters.highpass.hpf[0].filter(frame.left),
-			         filters.highpass.hpf[1].filter(frame.right)};
+			audio_frames[i] = {filters.highpass.hpf[0].filter(audio_frames[i].left),
+			                   filters.highpass.hpf[1].filter(audio_frames[i].right)};
 		}
 		if (filters.lowpass.state == FilterState::On) {
-			frame = {filters.lowpass.lpf[0].filter(frame.left),
-			         filters.lowpass.lpf[1].filter(frame.right)};
+			audio_frames[i] = {filters.lowpass.lpf[0].filter(audio_frames[i].left),
+			                   filters.lowpass.lpf[1].filter(audio_frames[i].right)};
 		}
 
 		if (do_crossfeed) {
-			frame = ApplyCrossfeed(frame);
+			audio_frames[i] = ApplyCrossfeed(audio_frames[i]);
 		}
-
-		audio_frames.push_back(frame);
 	}
 }
 
