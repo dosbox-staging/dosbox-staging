@@ -260,6 +260,9 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 
 	} else if (name == "bilinear" || name == "none") {
 		return BilinearShaderName;
+
+	} else if (name == "nearest") {
+		return "interpolation/nearest";
 	}
 
 	// Map legacy shader names
