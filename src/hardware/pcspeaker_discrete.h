@@ -54,7 +54,7 @@ private:
 	static constexpr auto model_name  = "discrete";
 
 	// The discrete PWM scalar was manually adjusted to roughly match
-	// voltage levels recorded from a hardware PC Speaker
+	// voltage levels recorded from a hardware PC speaker
 	// Ref:https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
 	static constexpr float pwm_scalar = 0.75f;
 	static constexpr float sqw_scalar = pwm_scalar / 2.0f;
