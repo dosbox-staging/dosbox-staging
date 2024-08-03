@@ -55,7 +55,7 @@ void PCSPEAKER_Init(Section *section)
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
 
 	} else {
-		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
+		LOG_ERR("PCSPEAKER: Invalid PC speaker model: %s",
 		        model_choice.c_str());
 		return;
 	}
