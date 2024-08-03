@@ -19,7 +19,7 @@ png_files = {
 foreach name, size : png_files
     install_data(
         'png' / name,
-        rename: 'dosbox-staging.png',
+        rename: 'org.dosbox-staging.dosbox-staging.png',
         install_dir: icons_hicolor / size / 'apps',
     )
 endforeach
@@ -28,5 +28,6 @@ endforeach
 #
 install_data(
     'svg' / 'dosbox-staging.svg',
+    rename: 'org.dosbox-staging.dosbox-staging.svg',
     install_dir: icons_hicolor / 'scalable' / 'apps',
 )

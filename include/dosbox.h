@@ -37,6 +37,11 @@
 // Copyright string
 #define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
+// Fully qualified application ID for the emulator; see
+// https://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-names
+// for more details
+#define DOSBOX_APP_ID "org.dosbox-staging.dosbox-staging"
+
 
 int sdl_main(int argc, char *argv[]);
 

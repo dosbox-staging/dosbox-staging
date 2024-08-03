@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
-# Copyright (C) 2023-2023  The DOSBox Staging Team
+# Copyright (C) 2023-2024  The DOSBox Staging Team
 #
 # Installs icon files and desktop shortcut.
 
@@ -11,6 +11,7 @@ set -e
 DEST_PATH="$HOME/.local/share"
 REMOVE=false
 USAGE=false
+DESKTOP_FILE="org.dosbox-staging.dosbox-staging.desktop"
 
 strstr() {
     [ "${1#*$2*}" = "$1" ] && return 1
@@ -25,14 +26,16 @@ usage() {
 
 install_icons() {
     cp -r icons $DEST_PATH
-    cp desktop/dosbox-staging.desktop $DEST_PATH/applications
+    cp desktop/$DESKTOP_FILE $DEST_PATH/applications/$DESKTOP_FILE
 
     ## Replace executable location in the .desktop file
-    sed -i 's\Exec=dosbox\Exec='$(realpath dosbox)'\g' $DEST_PATH/applications/dosbox-staging.desktop
+    sed -i 's\Exec=dosbox\Exec='$(realpath dosbox)'\g' $DEST_PATH/applications/$DESKTOP_FILE
 }
 
 remove_icons() {
-    find $DEST_PATH/icons -name dosbox-staging* -delete
+    find $DEST_PATH/icons -name *dosbox-staging* -delete
+    rm $DEST_PATH/applications/$DESKTOP_FILE
+    ## Also remove legacy files, if present
     rm $DEST_PATH/applications/dosbox-staging.desktop
 }
 
