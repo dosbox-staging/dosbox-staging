@@ -899,7 +899,7 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	pstring->Set_help(
-	        "Filter for the PC Speaker output:\n"
+	        "Filter for the PC speaker output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
