@@ -886,7 +886,7 @@ void DOSBOX_Init()
 	                                   &PCSPEAKER_Init,
 	                                   changeable_at_runtime);
 
-	pstring = secprop->Add_string("pcspeaker", when_idle, "discrete");
+	pstring = secprop->Add_string("pcspeaker", when_idle, "impulse");
 	pstring->Set_help(
 	        "PC speaker emulation model:\n"
 	        "  discrete:  Waveform is created using discrete steps (default).\n"
