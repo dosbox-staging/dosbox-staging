@@ -253,13 +253,13 @@ void MODE::Run()
 			const auto& mode = command;
 			HandleSetDisplayMode(mode);
 		} else {
-			WriteOut(MSG_Get("PROGRAM_MODE_INVALID_COMMAND"));
+			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 		}
 
 	} else if (cmd->GetCount() >= 2) {
 		// To allow 'MODE CON: RATE=32 DELAY=1' too with minimal effort
 		if (!HandleSetTypematicRate()) {
-			WriteOut(MSG_Get("PROGRAM_MODE_INVALID_COMMAND"));
+			WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 		}
 	}
 }
@@ -292,8 +292,6 @@ void MODE::AddMessages()
 	        "  [color=light-green]mode[reset] [color=white]132x50\n"
 	        "  [color=light-green]mode[reset] [color=white]80x43[reset]\n"
 	        "  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]");
-
-	MSG_Add("PROGRAM_MODE_INVALID_COMMAND", "Invalid mode command.");
 
 	MSG_Add("PROGRAM_MODE_INVALID_DISPLAY_MODE",
 	        "Invalid display mode: [color=white]%s[reset]");
