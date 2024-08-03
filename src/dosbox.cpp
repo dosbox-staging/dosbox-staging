@@ -889,13 +889,13 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("pcspeaker", when_idle, "impulse");
 	pstring->Set_help(
 	        "PC speaker emulation model:\n"
-	        "  discrete:  Waveform is created using discrete steps (default).\n"
-	        "             Works well for games that use RealSound-type effects.\n"
-	        "  impulse:   Waveform is created using sinc impulses.\n"
-	        "             Recommended for square-wave games, like Commander Keen.\n"
-	        "             While improving accuracy, it is more CPU intensive.\n"
-	        "  none/off:  Don't use the PC Speaker.");
-	pstring->Set_values({"discrete", "impulse", "none", "off"});
+	        "  impulse:   A very faithful emulation of the PC speaker's output (default).\n"
+	        "             Works with most games, but may result in garbled sound or silence\n"
+	        "             in a small number of programs.\n"
+	        "  discrete:  Legacy simplified PC speaker emulation; only use this on specific\n"
+	        "             titles that give you problems with the 'impulse' model.\n"
+	        "  none/off:  Don't emulate the PC speaker.");
+	pstring->Set_values({"impulse", "discrete", "none", "off"});
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	pstring->Set_help(
