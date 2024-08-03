@@ -569,14 +569,8 @@ static void setup_scan_and_pixel_doubling()
 
 	case RenderingBackend::OpenGl: {
 		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
-		const auto none_shader_active = (shader_info.name == NoneShaderName);
-		const auto double_scan_enabled = none_shader_active;
-
-		force_vga_single_scan = (shader_info.settings.force_single_scan ||
-		                         double_scan_enabled);
-
-		force_no_pixel_doubling = (shader_info.settings.force_no_pixel_doubling ||
-		                           double_scan_enabled);
+		force_vga_single_scan = shader_info.settings.force_single_scan;
+		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
 	} break;
 
 	default: assertm(false, "Invalid RenderindBackend value");

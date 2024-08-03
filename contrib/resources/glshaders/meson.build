@@ -4,7 +4,3 @@ resource_dirs = [
     'misc',
     'scaler'
 ]
-
-resource_files = [
-  'none.glsl'
-]
