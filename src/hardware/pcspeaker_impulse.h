@@ -56,7 +56,7 @@ private:
 	// Amplitude constants
 
 	// The impulse PWM scalar was manually adjusted to roughly match voltage
-	// levels recorded from a hardware PC Speaker
+	// levels recorded from a hardware PC speaker
 	// Ref:https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
 	static constexpr float pwm_scalar = 0.5f;
 

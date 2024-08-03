@@ -24,7 +24,7 @@
 #include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
 
-// The PC Speaker managed pointer
+// The PC speaker managed pointer
 std::unique_ptr<PcSpeaker> pc_speaker = {};
 
 void PCSPEAKER_ShutDown([[maybe_unused]] Section *sec)
@@ -40,7 +40,7 @@ void PCSPEAKER_Init(Section *section)
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
 
-	// Get the user's PC Speaker model choice
+	// Get the user's PC speaker model choice
 	const std::string model_choice = prop->Get_string("pcspeaker");
 
 	const auto model_choice_has_bool = parse_bool_setting(model_choice);
@@ -83,7 +83,7 @@ void PCSPEAKER_Init(Section *section)
 	section->AddDestroyFunction(&PCSPEAKER_ShutDown, changeable_at_runtime);
 }
 
-// PC Speaker external API, used by the PIT timer and keyboard
+// PC speaker external API, used by the PIT timer and keyboard
 void PCSPEAKER_SetCounter(const int counter, const PitMode pit_mode)
 {
 	if (pc_speaker)

@@ -89,7 +89,7 @@ union PpiPortB {
 
 const char *pit_mode_to_string(const PitMode mode);
 
-/* PC Speakers functions, tightly related to the timer functions */
+// PC speaker functions, tightly related to the timer functions
 void PCSPEAKER_SetCounter(const int count, const PitMode pit_mode);
 void PCSPEAKER_SetType(const PpiPortB &port_b);
 void PCSPEAKER_SetPITControl(const PitMode pit_mode);
