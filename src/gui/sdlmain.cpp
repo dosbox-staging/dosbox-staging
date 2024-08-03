@@ -4712,11 +4712,16 @@ static int erase_mapper_file()
 	return 0;
 }
 
-static void override_wm_class()
+static void set_wm_class()
 {
-#if !defined(WIN32)
+#if (SDL_VERSION_ATLEAST(3, 0, 0))
+	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
+#else
+#if !defined(WIN32) && !defined(MACOSX)
 	constexpr int overwrite = 0; // don't overwrite
-	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_PROJECT_NAME, overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
+	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
+#endif
 #endif
 }
 
@@ -4765,8 +4770,8 @@ int sdl_main(int argc, char* argv[])
 			}
 		}
 
-		// Before SDL2 video subsystem is initialised
-		override_wm_class();
+		// Before SDL2/SDL3 video subsystem is initialised
+		set_wm_class();
 
 		// Create or determine the location of the config directory
 		// (e.g., in portable mode, the config directory is the
