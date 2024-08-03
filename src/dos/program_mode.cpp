@@ -242,7 +242,10 @@ void MODE::Run()
 		return isdigit(command[0]) && command.size() >= MinLength;
 	};
 
-	if (cmd->GetCount() == 1) {
+	if (cmd->GetCount() == 0) {
+		WriteOut(MSG_Get("SHELL_MISSING_PARAMETER"));
+
+	} else if (cmd->GetCount() == 1) {
 		const auto args    = cmd->GetArguments();
 		const auto command = args[0];
 
