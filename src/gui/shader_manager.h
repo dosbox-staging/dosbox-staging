@@ -30,9 +30,9 @@
 // forward references
 class Fraction;
 
-constexpr auto NoneShaderName     = "none";
-constexpr auto FallbackShaderName = NoneShaderName;
+constexpr auto BilinearShaderName = "interpolation/bilinear";
 constexpr auto SharpShaderName    = "interpolation/sharp";
+constexpr auto FallbackShaderName = BilinearShaderName;
 
 constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
 constexpr auto AutoMachineShaderName          = "crt-auto-machine";

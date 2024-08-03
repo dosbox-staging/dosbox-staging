@@ -257,6 +257,9 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	// Map shader aliases
 	if (name == "sharp") {
 		return SharpShaderName;
+
+	} else if (name == "bilinear" || name == "none") {
+		return BilinearShaderName;
 	}
 
 	// Map legacy shader names
