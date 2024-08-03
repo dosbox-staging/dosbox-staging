@@ -361,6 +361,9 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 
 			} else if (pragma == "force_no_pixel_doubling") {
 				settings.force_no_pixel_doubling = true;
+
+			} else if (pragma == "use_nearest_texture_filter") {
+				settings.texture_filter_mode = TextureFilterMode::Nearest;
 			}
 			++next;
 		}
