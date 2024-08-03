@@ -2057,8 +2057,18 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		const auto filter_mode = [&] {
+			switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
+			case TextureFilterMode::Nearest: return GL_NEAREST;
+			case TextureFilterMode::Linear: return GL_LINEAR;
+			default:
+				assertm(false, "Invalid TextureFilterMode");
+				return 0;
+			}
+		}();
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
 
 		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
 		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
