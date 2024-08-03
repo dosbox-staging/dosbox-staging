@@ -293,14 +293,14 @@ void MODE::AddMessages()
 	        "  [color=light-green]mode[reset] [color=white]80x43[reset]\n"
 	        "  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]");
 
-	MSG_Add("PROGRAM_MODE_INVALID_COMMAND", "Invalid mode command");
+	MSG_Add("PROGRAM_MODE_INVALID_COMMAND", "Invalid mode command.");
 
 	MSG_Add("PROGRAM_MODE_INVALID_DISPLAY_MODE",
-	        "Invalid display mode [color=white]%s[reset]");
+	        "Invalid display mode: [color=white]%s[reset]");
 
 	MSG_Add("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE",
-	        "Display mode [color=white]%s[reset] is not supported on this graphics adapter");
+	        "Display mode [color=white]%s[reset] is not supported on this graphics adapter.");
 
 	MSG_Add("PROGRAM_MODE_INVALID_TYPEMATIC_RATE",
-	        "Invalid typematic rate setting");
+	        "Invalid typematic rate setting.");
 }
