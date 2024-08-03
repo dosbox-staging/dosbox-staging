@@ -4,7 +4,8 @@ set -e
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2022  Sherman Perry and the DOSBox Staging Team
+# Copyright (C) 2020-2024  The DOSBox Staging Team
+# Copyright (C) 2020-2022  Sherman Perry
 
 usage()
 {
@@ -147,7 +148,8 @@ pkg_linux()
     ldd "${build_dir}/dosbox" || true
     install -DT "${build_dir}/dosbox" "${pkg_dir}/dosbox"
 
-    install -DT contrib/linux/dosbox-staging.desktop "${pkg_dir}/desktop/dosbox-staging.desktop"
+    install -DT contrib/linux/org.dosbox-staging.dosbox-staging.desktop "${pkg_dir}/desktop/org.dosbox-staging.dosbox-staging.desktop"
+
     install -DT contrib/linux/install-icons.sh "${pkg_dir}/install-icons.sh"
 
     DESTDIR="$(realpath "$pkg_dir")" make -C contrib/icons/ install datadir=
