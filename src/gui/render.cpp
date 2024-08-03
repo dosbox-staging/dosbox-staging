@@ -1037,9 +1037,21 @@ static void init_render_settings(Section_prop& secprop)
 	        "  crt-auto-arcade-sharp:  A sharper variant of the arcade shader for those who\n"
 	        "                          like the thick scanlines but want to retain the\n"
 	        "                          horizontal sharpness of a typical PC monitor.\n"
-	        "Other options include 'sharp', 'none', a shader listed using the\n"
-	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
-	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
+	        "\n"
+	        "Other shader options include (non-exhaustive list):\n"
+	        "  sharp:                  Upscale the image treating the pixels as rectangles.\n"
+	        "                          Results in a sharp image with minimum blur.\n"
+	        "  bilinear:               Upscale the image using bilinear interpolation\n"
+	        "                          (results in a blurry image).\n"
+	        "  nearest:                Upscale the image using nearest-neighbour\n"
+	        "                          interpolation (also known as \"no bilinear\"). Results\n"
+	        "                          in the sharpest possible image at the expense of\n"
+	        "                          uneven pixels (this is less of an issue on high\n"
+	        "                          resolution screens).\n"
+	        "\n"
+	        "Start DOSBox Staging with the '--list-glshaders' command line option to see the\n"
+	        "full list of available shaders. You can also use an absolute or relative path to\n"
+	        "a file. In all cases, you may omit the shader's '.glsl' file extension.");
 	string_prop->SetEnabledOptions({
 #if C_OPENGL
 		"glshader",
