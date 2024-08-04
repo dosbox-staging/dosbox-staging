@@ -2582,8 +2582,9 @@ static void mixer_thread_loop()
 			continue;
 		} else if (mixer.state == MixerState::Muted) {
 			// SDL callback remains active. Enqueue silence.
-			std::vector<AudioFrame> silence(mixer.blocksize);
-			mixer.final_output.BulkEnqueue(silence, silence.size());
+			mixer.output_buffer.clear();
+			mixer.output_buffer.resize(mixer.blocksize);
+			mixer.final_output.BulkEnqueue(mixer.output_buffer, mixer.output_buffer.size());
 			continue;
 		}
 
