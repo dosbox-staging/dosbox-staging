@@ -42,7 +42,7 @@ public:
 	void SetType(const PpiPortB& b) final;
 
 private:
-	void ChannelCallback(const uint16_t len);
+	void ChannelCallback(const int frames);
 	void AddDelayEntry(const float index, float vol);
 	void ForwardPIT(const float newindex);
 	bool IsWaveSquare() const;

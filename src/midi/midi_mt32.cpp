@@ -999,7 +999,7 @@ void MidiHandler_mt32::PlaySysex(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
+void MidiHandler_mt32::MixerCallBack(const int requested_audio_frames)
 {
 	assert(channel);
 
@@ -1021,7 +1021,7 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 	                                                       requested_audio_frames);
 
 	if (has_dequeued) {
-		assert(audio_frames.size() == requested_audio_frames);
+		assert(check_cast<int>(audio_frames.size()) == requested_audio_frames);
 		channel->AddSamples_sfloat(requested_audio_frames,
 		                           &audio_frames[0][0]);
 

@@ -2894,9 +2894,9 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 	return (sbaddr != 0 && sbirq != 0 && sbdma != 0);
 }
 
-static void sblaster_callback(const uint32_t length)
+static void sblaster_callback(const int length)
 {
-	auto len = length;
+	uint32_t len = check_cast<uint32_t>(length);
 
 	switch (sb.mode) {
 	case DspMode::None:

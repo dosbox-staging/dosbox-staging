@@ -363,7 +363,7 @@ private:
 	                 const uint16_t sectorSize,
 	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
-	void CDAudioCallBack(uint16_t desired_frames);
+	void CDAudioCallBack(const int desired_track_frames);
 
 	// Private functions for cue sheet processing
 	bool  LoadCueSheet(const char *cuefile);
@@ -398,7 +398,7 @@ protected:
 
 private:
 	virtual std::vector<int16_t> ReadAudio(const uint32_t sector, const uint32_t frames_requested) = 0;
-	void CdAudioCallback(const uint16_t requested_frames);
+	void CdAudioCallback(const int requested_frames);
 	void CdReaderLoop();
 
 	MixerChannelPtr mixer_channel  = {};

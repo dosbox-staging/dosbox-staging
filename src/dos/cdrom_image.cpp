@@ -997,7 +997,7 @@ bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned lon
 	return success;
 }
 
-void CDROM_Interface_Image::CDAudioCallBack(uint16_t desired_track_frames)
+void CDROM_Interface_Image::CDAudioCallBack(const int desired_track_frames)
 {
 	/**
 	 *  This callback runs in SDL's mixer thread, so there's a risk

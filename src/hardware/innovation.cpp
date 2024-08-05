@@ -221,7 +221,7 @@ bool Innovation::MaybeRenderFrame(float &frame)
 	return frame_is_ready;
 }
 
-void Innovation::AudioCallback(const uint16_t requested_frames)
+void Innovation::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 

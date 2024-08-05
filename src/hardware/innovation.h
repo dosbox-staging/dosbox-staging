@@ -47,7 +47,7 @@ public:
 
 private:
 	bool MaybeRenderFrame(float &frame);
-	void AudioCallback(const uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	uint8_t ReadFromPort(io_port_t port, io_width_t width);
 	void RenderUpToNow();
 	int16_t TallySilence(const int16_t sample);

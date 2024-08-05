@@ -59,7 +59,7 @@ public:
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysexMessage(const std::vector<uint8_t>& msg);
-	void MixerCallBack(uint16_t requested_audio_frames);
+	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	uint16_t GetNumPendingAudioFrames();
