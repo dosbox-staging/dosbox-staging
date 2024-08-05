@@ -539,6 +539,11 @@ static bool is_command_pressed(const SDL_Event event)
 		// flush event queue.
 	}
 
+	// Prevent the mixer from running while in our pause loop
+	// Muting is not ideal for some sound devices such as GUS that loop samples
+	// This also saves CPU time by not rendering samples we're not going to play anyway
+	MIXER_LockMixerThread();
+
 	// NOTE: This is one of the few places where we use SDL key codes with
 	// SDL 2.0, rather than scan codes. Is that the correct behavior?
 	while (sdl.is_paused && !shutdown_requested) {
@@ -592,6 +597,7 @@ static bool is_command_pressed(const SDL_Event event)
 #endif
 		}
 	}
+	MIXER_UnlockMixerThread();
 }
 
 uint8_t GFX_GetBestMode(const uint8_t flags)
@@ -3465,8 +3471,7 @@ static void read_gui_config(Section* sec)
 
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
 
-	sdl.mute_when_inactive = section->Get_bool("mute_when_inactive") ||
-	                         sdl.pause_when_inactive;
+	sdl.mute_when_inactive = (!sdl.pause_when_inactive) && section->Get_bool("mute_when_inactive");
 
 	// Assume focus on startup
 	apply_active_settings();
@@ -4076,6 +4081,12 @@ bool GFX_Events()
 //					}
 
 					bool paused = true;
+
+					// Prevent the mixer from running while in our pause loop
+					// Muting is not ideal for some sound devices such as GUS that loop samples
+					// This also saves CPU time by not rendering samples we're not going to play anyway
+					MIXER_LockMixerThread();
+
 					while (paused && !shutdown_requested) {
 						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
 						SDL_WaitEvent(&ev);
@@ -4110,6 +4121,7 @@ bool GFX_Events()
 							break;
 						}
 					}
+					MIXER_UnlockMixerThread();
 				}
 			}
 			break; // end of SDL_WINDOWEVENT
