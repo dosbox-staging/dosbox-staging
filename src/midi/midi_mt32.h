@@ -76,7 +76,7 @@ public:
 
 private:
 	Mt32ServicePtr GetService();
-	void MixerCallBack(uint16_t len);
+	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	uint16_t GetNumPendingAudioFrames();

@@ -254,7 +254,7 @@ private:
 	Gus& operator=(const Gus&) = delete; // prevent assignment
 
 	void ActivateVoices(uint8_t requested_voices);
-	void AudioCallback(uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	void CheckIrq();
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
@@ -757,7 +757,7 @@ void Gus::RenderUpToNow()
 	}
 }
 
-void Gus::AudioCallback(const uint16_t num_requested_frames)
+void Gus::AudioCallback(const int num_requested_frames)
 {
 	assert(audio_channel);
 

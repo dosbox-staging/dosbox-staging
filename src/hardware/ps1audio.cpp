@@ -65,7 +65,7 @@ public:
 private:
 	uint8_t CalcStatus() const;
 	void Reset(bool should_clear_adder);
-	void Update(uint16_t samples);
+	void Update(const int samples);
 
 	uint8_t ReadPresencePort02F(io_port_t port, io_width_t);
 	uint8_t ReadCmdResultPort200(io_port_t port, io_width_t);
@@ -373,14 +373,14 @@ uint8_t Ps1Dac::ReadJoystickPorts204To207(io_port_t, io_width_t)
 	return 0;
 }
 
-void Ps1Dac::Update(uint16_t samples)
+void Ps1Dac::Update(const int samples)
 {
 	uint8_t* buffer = MixTemp;
 
 	int32_t pending = 0;
 	uint32_t add    = 0;
 	uint32_t pos    = read_index_high;
-	uint16_t count  = samples;
+	int count       = samples;
 
 	if (is_playing) {
 		regs.status = CalcStatus();
@@ -394,7 +394,7 @@ void Ps1Dac::Update(uint16_t samples)
 		}
 	}
 
-	while (count) {
+	while (count > 0) {
 		uint8_t out = 0;
 		if (pending <= 0) {
 			pending = 0;
@@ -453,7 +453,7 @@ private:
 	Ps1Synth(const Ps1Synth&)            = delete;
 	Ps1Synth& operator=(const Ps1Synth&) = delete;
 
-	void AudioCallback(uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	float RenderSample();
 	void RenderUpToNow();
 
@@ -558,7 +558,7 @@ void Ps1Synth::WriteSoundGeneratorPort205(io_port_t, io_val_t value, io_width_t)
 	device.write(data);
 }
 
-void Ps1Synth::AudioCallback(const uint16_t requested_frames)
+void Ps1Synth::AudioCallback(const int requested_frames)
 {
 	assert(channel);
 
