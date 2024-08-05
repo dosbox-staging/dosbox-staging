@@ -616,7 +616,7 @@ void MidiHandlerFluidsynth::Close()
 	is_open = false;
 }
 
-uint16_t MidiHandlerFluidsynth::GetNumPendingAudioFrames()
+int MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -637,7 +637,7 @@ uint16_t MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
 	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
 
-	return check_cast<uint16_t>(num_audio_frames);
+	return num_audio_frames;
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
@@ -770,12 +770,12 @@ void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
 	}
 }
 
-void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const uint16_t num_audio_frames)
+void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
 
 	// Maybe expand the vector
-	if (audio_frames.size() < num_audio_frames) {
+	if (check_cast<int>(audio_frames.size()) < num_audio_frames) {
 		audio_frames.resize(num_audio_frames);
 	}
 

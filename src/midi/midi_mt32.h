@@ -79,8 +79,8 @@ private:
 	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
-	uint16_t GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const uint16_t num_frames = 1);
+	int GetNumPendingAudioFrames();
+	void RenderAudioFramesToFifo(const int num_frames = 1);
 	void Render();
 
 	// Managed objects
