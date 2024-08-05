@@ -341,8 +341,8 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 
 void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 {
-	constexpr uint16_t render_frames = 64;
-	float buf[render_frames];
+	std::vector<float> output = {};
+	output.reserve(frames);
 
 	ForwardPIT(1);
 	last_index       = 0.0f;
@@ -367,68 +367,63 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	// Therefore, it's better to err on the side of accepting and processing
 	// entries versus queuing, to keep the queue under control.
 
-	auto remaining = frames;
-	while (remaining > 0) {
-		const auto todo = std::min(remaining, render_frames);
-		for (auto i = 0; i < todo; ++i) {
-			auto index = sample_base;
-			sample_base += period_per_frame_ms;
-			const auto end = sample_base;
+	for (auto i = 0; i < frames; ++i) {
+		auto index = sample_base;
+		sample_base += period_per_frame_ms;
+		const auto end = sample_base;
 
-			auto value = 0.0f;
+		auto value = 0.0f;
 
-			while (index < end) {
-				// Check if there is an upcoming event
-				const auto has_entries = !entries.empty();
-				const auto first_index = has_entries ? entries.front().index : 0.0f;
+		while (index < end) {
+			// Check if there is an upcoming event
+			const auto has_entries = !entries.empty();
+			const auto first_index = has_entries ? entries.front().index : 0.0f;
 
-				if (has_entries && first_index <= index) {
-					volwant = entries.front().vol;
-					entries.pop();
-					continue;
-				}
-				const auto vol_end = (has_entries && first_index < end) ? first_index : end;
-				const auto vol_len = vol_end - index;
-				// Check if we have to slide the volume
-				const auto vol_diff = volwant - volcur;
-				if (vol_diff == 0) {
-					value += volcur * vol_len;
-					index += vol_len;
+			if (has_entries && first_index <= index) {
+				volwant = entries.front().vol;
+				entries.pop();
+				continue;
+			}
+			const auto vol_end = (has_entries && first_index < end) ? first_index : end;
+			const auto vol_len = vol_end - index;
+			// Check if we have to slide the volume
+			const auto vol_diff = volwant - volcur;
+			if (vol_diff == 0) {
+				value += volcur * vol_len;
+				index += vol_len;
+			} else {
+				// Check how long it will take to goto
+				// new level
+				// TODO: describe the basis for these
+				// magic numbers and their effects
+				constexpr float spkr_speed = amp_positive * 2.0f / 0.070f;
+				const auto vol_time = fabsf(vol_diff) / spkr_speed;
+				if (vol_time <= vol_len) {
+					// Volume reaches endpoint in
+					// this block, calc until that
+					// point
+					value += vol_time * volcur;
+					value += vol_time * vol_diff / 2;
+					index += vol_time;
+					volcur = volwant;
 				} else {
-					// Check how long it will take to goto
-					// new level
-					// TODO: describe the basis for these
-					// magic numbers and their effects
-					constexpr float spkr_speed = amp_positive * 2.0f / 0.070f;
-					const auto vol_time = fabsf(vol_diff) / spkr_speed;
-					if (vol_time <= vol_len) {
-						// Volume reaches endpoint in
-						// this block, calc until that
-						// point
-						value += vol_time * volcur;
-						value += vol_time * vol_diff / 2;
-						index += vol_time;
-						volcur = volwant;
-					} else {
-						// Volume still not reached in
-						// this block
-						value += volcur * vol_len;
+					// Volume still not reached in
+					// this block
+					value += volcur * vol_len;
 
-						const auto vol_cur_delta = spkr_speed * vol_len;
-						volcur += std::copysign(vol_cur_delta, vol_diff);
+					const auto vol_cur_delta = spkr_speed * vol_len;
+					volcur += std::copysign(vol_cur_delta, vol_diff);
 
-						const auto value_delta = vol_cur_delta * vol_len / 2.0f;
-						value += std::copysign(value_delta, vol_diff);
-						index += vol_len;
-					}
+					const auto value_delta = vol_cur_delta * vol_len / 2.0f;
+					value += std::copysign(value_delta, vol_diff);
+					index += vol_len;
 				}
 			}
-			buf[i]   = value / period_per_frame_ms;
 		}
-		channel->AddSamples_mfloat(todo, buf);
-
-		remaining = check_cast<uint16_t>(remaining - todo);
+		output.push_back(value / period_per_frame_ms);
 	}
+
+	channel->AddSamples_mfloat(check_cast<int>(output.size()), output.data());
 }
 
 void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
