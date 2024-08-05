@@ -339,7 +339,7 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 	(void)channel->WakeUp();
 }
 
-void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
+void PcSpeakerDiscrete::ChannelCallback(const int frames)
 {
 	std::vector<float> output = {};
 	output.reserve(frames);
@@ -348,7 +348,7 @@ void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
 	last_index       = 0.0f;
 	auto sample_base = 0.0f;
 
-	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / frames;
+	const auto period_per_frame_ms = FLT_EPSILON + 1.0f / static_cast<float>(frames);
 	// The addition of epsilon ensures that queued entries
 	// having time indexes at the end of the tick cycle (ie: .index == ~1.0)
 	// will still be accepted in the comparison below:
