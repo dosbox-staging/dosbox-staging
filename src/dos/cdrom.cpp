@@ -184,7 +184,7 @@ void CDROM_Interface_Physical::InitAudio()
 	thread = std::thread(&CDROM_Interface_Physical::CdReaderLoop, this);
 }
 
-void CDROM_Interface_Physical::CdAudioCallback(const uint16_t requested_frames)
+void CDROM_Interface_Physical::CdAudioCallback(const int requested_frames)
 {
 	assert(requested_frames > 0);
 

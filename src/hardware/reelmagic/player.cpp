@@ -761,7 +761,7 @@ static void DeactivatePlayerAudioFifo(AudioFifo& audio_fifo)
 	}
 }
 
-static void RMMixerChannelCallback(uint16_t frames_remaining)
+static void RMMixerChannelCallback(int frames_remaining)
 {
 	assert(active_fifo);
 	assert(mixer_channel);
