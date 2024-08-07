@@ -1740,10 +1740,11 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable Gravis UltraSound emulation (disabled by default).\n"
-	        "The default settings of base address 240, IRQ 5, and DMA 3 have been chosen\n"
-	        "so the GUS can coexist with a Sound Blaster card. This works fine for the\n"
-	        "majority of programs, but some games and demos expect the GUS factory\n"
-	        "defaults of base address 220, IRQ 11, and DMA 1.");
+	        "The default settings of base address 240, IRQ 5, and DMA 3 have been chosen so\n"
+	        "the GUS can coexist with a Sound Blaster card. This works fine for the majority\n"
+	        "of programs, but some games and demos expect the GUS factory defaults of base\n"
+	        "address 220, IRQ 11, and DMA 1. The default IRQ 11 is also problematic with\n"
+	        "specific versions of the DOS4GW extender that cannot handle IRQs above 7.");
 
 	auto* hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
@@ -1772,7 +1773,7 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
-	        "In this directory there should be a 'MIDI' directory that contains the patch\n"
+	        "In this directory, there should be a 'MIDI' directory that contains the patch\n"
 	        "files for GUS playback.");
 }
 
