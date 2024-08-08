@@ -172,7 +172,6 @@ jobs:
             ${{ matrix.runner.build_flags }} \
             -Ddefault_library=static \
             -Dwrap_mode=forcefallback \
-            -Dtry_static_libs=sdl2,sdl2_net \
             -Duse_zlib_ng=sse2,ssse3,neon \
             build
           meson compile -C build
