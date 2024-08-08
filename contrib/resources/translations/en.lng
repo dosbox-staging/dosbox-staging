@@ -2277,7 +2277,7 @@ Image file not found.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=green-blue]IMGMOUNT[reset] command.
+To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=light-green]IMGMOUNT[reset] command.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED

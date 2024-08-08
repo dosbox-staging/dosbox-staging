@@ -2362,7 +2362,7 @@ Arquivo de imagem não encontrado.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Para montar pastas, use o comando [color=light-green]MOUNT[reset], não o comando [color=green-blue]IMGMOUNT[reset].
+Para montar pastas, use o comando [color=light-green]MOUNT[reset], não o comando [color=light-green]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
