@@ -84,6 +84,7 @@
 #endif
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
