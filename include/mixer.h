@@ -497,7 +497,6 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 	// AudioFrame type is always stereo
 	static_assert(stereo || (!std::is_same<AudioType, AudioFrame>::value));
 
-	size_t clamped_frames = check_cast<size_t>(frames_requested);
 	if (MIXER_FastForwardModeEnabled()) {
 		// Special case, normally only hit when using the fast-forward hotkey (Alt + F12)
 		// We need a very large buffer to compensate or it results in static
@@ -507,10 +506,6 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 		// This value can be tweaked without much consequence if it ever becomes problematic.
 		constexpr float MaxExpectedFastForwardFactor = 100.0f;
 		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * MaxExpectedFastForwardFactor));
-
-		// We must not block in fast-forward mode or the timings used by the mixer get confused
-		// Clamp and fill with silence if needed
-		clamped_frames = std::min(clamped_frames, device->output_queue.Size());
 	} else {
 		// Normal case, resize the queue to ensure we don't have high latency
 		// Resize is a fast operation, only setting a variable for max capacity
@@ -521,9 +516,9 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * 2.0f));
 	}
 	int frames_recieved = 0;
-	if (clamped_frames > 0) {
+	if (frames_requested > 0) {
 		std::vector<AudioType> to_mix = {};
-		device->output_queue.BulkDequeue(to_mix, clamped_frames);
+		device->output_queue.BulkDequeue(to_mix, frames_requested);
 		frames_recieved = check_cast<int>(to_mix.size());
 		if (frames_recieved > 0) {
 			// One of the GCC CI builds throws a duplicated branch warning
