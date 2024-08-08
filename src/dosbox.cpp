@@ -457,6 +457,7 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	if (pressed) {
 		LOG_MSG("Fast Forward ON");
 		ticks.locked = true;
+		MIXER_EnableFastForwardMode();
 
 		if (CPU_CycleAutoAdjust) {
 			autoadjust = true;
@@ -467,6 +468,7 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	} else {
 		LOG_MSG("Fast Forward OFF");
 		ticks.locked = false;
+		MIXER_DisableFastForwardMode();
 
 		if (autoadjust) {
 			autoadjust = false;
