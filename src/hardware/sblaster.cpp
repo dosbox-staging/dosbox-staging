@@ -2854,11 +2854,6 @@ static void sblaster_mixer_callback([[maybe_unused]]const int requested_frames)
 	// We can ignore requested frames as this function gets called in a loop until it gets what it needs
 	// Overflow is not a concern as extra frames will remain in the channel's buffer and get mixed on the next callback
 
-	// We must not block in fast-forward mode or the timings used by the mixer get confused
-	if (MIXER_FastForwardModeEnabled() && soundblaster_mixer_queue.IsEmpty()) {
-		sb.chan->AddSilence();
-		return;
-	}
 	const auto frames = soundblaster_mixer_queue.Dequeue();
 	if (!frames) {
 		// Queue must be stopped, otherwise Dequeue() will block until some frames are available
