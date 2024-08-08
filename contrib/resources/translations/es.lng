@@ -2490,7 +2490,7 @@ Archivo de imagen no encontrado.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Para montar directorios, use el comando [color=light-green]MOUNT[reset], no [color=green-blue]IMGMOUNT[reset].
+Para montar directorios, use el comando [color=light-green]MOUNT[reset], no [color=light-green]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED

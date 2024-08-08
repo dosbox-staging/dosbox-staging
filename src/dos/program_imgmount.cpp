@@ -683,7 +683,7 @@ void IMGMOUNT::AddMessages()
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND", "Image file not found.\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_MOUNT",
-	        "To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=green-blue]IMGMOUNT[reset] command.\n");
+	        "To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=light-green]IMGMOUNT[reset] command.\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED",
 	        "Drive already mounted at that letter.\n");
