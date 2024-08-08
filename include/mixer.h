@@ -456,6 +456,9 @@ void MIXER_DeregisterChannel(MixerChannelPtr& channel);
 void MIXER_AddConfigSection(const ConfigPtr& conf);
 int MIXER_GetSampleRate();
 int MIXER_GetPreBufferMs();
+
+void MIXER_EnableFastForwardMode();
+void MIXER_DisableFastForwardMode();
 bool MIXER_FastForwardModeEnabled();
 
 const AudioFrame MIXER_GetMasterVolume();

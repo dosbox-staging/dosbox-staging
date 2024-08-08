@@ -213,7 +213,7 @@ struct MixerSettings {
 
 	bool is_manually_muted = false;
 
-	bool fast_forward_mode = false;
+	std::atomic<bool> fast_forward_mode = false;
 
 	std::recursive_mutex mutex = {};
 };
@@ -270,6 +270,16 @@ int MIXER_GetSampleRate()
 	const auto sample_rate_hz = mixer.sample_rate_hz.load();
 	assert(sample_rate_hz > 0);
 	return sample_rate_hz;
+}
+
+void MIXER_EnableFastForwardMode()
+{
+	mixer.fast_forward_mode = true;
+}
+
+void MIXER_DisableFastForwardMode()
+{
+	mixer.fast_forward_mode = false;
 }
 
 bool MIXER_FastForwardModeEnabled()
@@ -2556,16 +2566,11 @@ static void mixer_thread_loop()
 		// Therefore, we can always request at least a blocksize worth of audio
 		int frames_requested = mixer.blocksize;
 
-		// Be careful is adjusting this value as the actual time will have some fluctuations in a normal run
-		// False postivies will result in an audible "skip"
-		mixer.fast_forward_mode = actual_time > expected_time * 2.0;
-
 		if (mixer.fast_forward_mode) {
-			// The emulation is running faster than real-time
-			// Normally only trigged by the fast-forward button (ALT + F12)
-			// We need to consume more frams to "catch up"
-			frames_requested = ifloor(actual_time * get_mixer_frames_per_tick());
-			assert(frames_requested > mixer.blocksize);
+			// Flag is set only by the fast-forward hotkey handler
+			// Usually this means the emulation core is running much faster than real-time
+			// We must consume more audio to "catch up" but always request at least a blocksize
+			frames_requested = std::max(mixer.blocksize, ifloor(actual_time * get_mixer_frames_per_tick()));
 		}
 
 		mix_samples(frames_requested);
@@ -2588,9 +2593,12 @@ static void mixer_thread_loop()
 			continue;
 		}
 
-		auto& to_mix = mixer.fast_forward_mode ? mixer.fast_forward_buffer : mixer.output_buffer;
+		// Only true if we were in fast-forward mode at the time we calculated frames_requested
+		// That variable could have changed by now but we need to always squash down to a blocksize of audio
+		const bool audio_needs_squashing = frames_requested > mixer.blocksize;
+		auto& to_mix = audio_needs_squashing ? mixer.fast_forward_buffer : mixer.output_buffer;
 
-		if (mixer.fast_forward_mode) {
+		if (audio_needs_squashing) {
 			// This is "chipmunk mode" meant for fast-forward
 			// It's basic sample skipping to compress a large amount of audio into a single blocksize
 			assert(frames_requested > mixer.blocksize);
