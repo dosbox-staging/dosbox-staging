@@ -6,7 +6,7 @@ on:
       source_branch:
         description: 'Branch to deploy the website from (last release/* branch for current version)'
         required: true
-        default: 'release/0.81.x'
+        default: 'release/0.82.x'
         type: string
 
       destination_prefix:
