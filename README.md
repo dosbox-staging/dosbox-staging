@@ -77,8 +77,8 @@ DOSBox Staging has the following library dependencies:
 | [libpng](http://www.libpng.org/pub/png/libpng.html)                | libpng        | PNG-encoding of screen captures                         | Optional    | yes          | yes     | very common         |
 | [Munt](https://github.com/munt/munt)                               | libmt32emu    | Roland MT-32 and CM-32L playback                        | Optional    | yes          | yes     | rare                |
 | [Opus File](https://opus-codec.org/)                               | opusfile      | CDDA playback for Opus-encoded track files              | Mandatory   | **no** 🔴    | yes     | common              |
-| [SDL 2.0](https://github.com/libsdl-org/SDL)                       | sdl2          | OS-agnostic API for video, audio, and eventing          | Mandatory   | **no** 🔴    | yes     | common              |
-| [SDL_net 2.0](https://github.com/libsdl-org/SDL_net)               | sdl2-net      | Network API for emulated serial and IPX                 | Optional    | **no** 🔴    | yes     | common              |
+| [SDL 2.0](https://github.com/libsdl-org/SDL)                       | sdl2          | OS-agnostic API for video, audio, and eventing          | Mandatory   | yes          | yes     | common              |
+| [SDL_net 2.0](https://github.com/libsdl-org/SDL_net)               | sdl2-net      | Network API for emulated serial and IPX                 | Optional    | yes          | yes     | common              |
 | [slirp](https://gitlab.freedesktop.org/slirp)                      | libslirp      | Unprivileged virtual TCP/IP stack for Ethernet          | Optional    | yes          | yes     | less common         |
 | [SpeexDSP](https://github.com/xiph/speexdsp)                       | speexdsp      | Audio resampling                                        | Mandatory   | yes          | yes     | common              |
 | [Tracy Profiler](https://github.com/wolfpld/tracy)                 | tracy         | Event profile (development)                             | Optional    | yes          | yes     | rare                |
