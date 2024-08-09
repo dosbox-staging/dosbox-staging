@@ -16,18 +16,25 @@ project(
         'b_pie=false',
         'warning_level=3',
         'glib:b_staticpic=true',
+        'glib:bsymbolic_functions=false',
         'glib:glib_assert=false',
         'glib:glib_checks=false',
         'glib:glib_debug=disabled',
+        'glib:dtrace=false',
+        'glib:force_posix_threads=false',
         'glib:libmount=disabled',
         'glib:libelf=disabled',
         'glib:nls=disabled',
+        'glib:selinux=disabled',
+        'glib:systemtap=false',
+        'glib:sysprof=disabled',
         'glib:tests=false',
         'glib:warning_level=0',
         'glib:xattr=false',
         'gtest:warning_level=0',
         'libjpeg-turbo:b_staticpic=true',
         'libpng:b_staticpic=true',
+        'pcre2:grep=false',
         'zlib-ng:c_std=c11',
     ],
 )
@@ -683,21 +690,35 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-if host_machine.system() == 'darwin' and not wraps_disabled
-    # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
-    sdl2_dep = subproject(
-        'sdl2',
-        default_options: default_wrap_options,
-    ).get_variable('sdl2_dep')
-else
-    sdl2_dep = dependency(
-        'sdl2',
-        version: ['>= 2.0.5', '< 3'],
-        static: ('sdl2' in static_libs_list),
-        fallback: [],
-        include_type: 'system',
-    )
-endif
+sdl2_dep = dependency(
+    'sdl2',
+    version: ['>= 2.0.5', '< 3'],
+    static: ('sdl2' in static_libs_list or prefers_static_libs),
+    default_options: default_wrap_options
+    + [
+        'assertions=' + (is_optimized_buildtype ? 'disabled' : 'enabled'),
+        'prefer_dlopen=true',
+        'test=' + wants_tests.to_string(),
+        'use_audio=enabled',
+        'use_events=enabled',
+        'use_joystick=enabled',
+        'use_loadso=enabled',
+        'use_timers=enabled',
+        'use_video=enabled',
+
+        'use_dummies=false',
+        'system_iconv=disabled',
+        'use_atomic=disabled',
+        'use_file=disabled',
+        'use_filesystem=disabled',
+        'use_hidapi=disabled',
+        'use_haptic=disabled',
+        'use_locale=disabled',
+        'use_sensor=disabled',
+        'use_power=disabled',
+    ],
+    include_type: 'system',
+)
 
 # zlib
 # ~~~~
@@ -940,22 +961,14 @@ have_fd_zero = (
 sdl2_net_dep = optional_dep
 sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
-    if host_machine.system() == 'darwin' and not wraps_disabled
-        # use wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
-        sdl2_net_dep = subproject(
-            'sdl2_net',
-            default_options: default_wrap_options,
-        ).get_variable('sdl2_net_dep')
-    else
-        sdl2_net_dep = dependency(
-            'SDL2_net',
-            version: ['>= 2.0.0', '< 3'],
-            static: ('sdl2_net' in static_libs_list),
-            fallback: [],
-            not_found_message: msg.format('use_sdl2_net'),
-            include_type: 'system',
-        )
-    endif
+    sdl2_net_dep = dependency(
+        'SDL2_net',
+        version: ['>= 2.0.0', '< 3'],
+        static: ('sdl2_net' in static_libs_list or prefers_static_libs),
+        default_options: default_wrap_options,
+        not_found_message: msg.format('use_sdl2_net'),
+        include_type: 'system',
+    )
     sdl2_net_summary_msg = sdl2_net_dep.found()
 
     if sdl2_net_dep.found() and not have_fd_zero
