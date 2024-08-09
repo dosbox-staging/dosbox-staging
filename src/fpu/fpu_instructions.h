@@ -231,8 +231,10 @@ static void FPU_FLD_I32(PhysPt addr,Bitu store_to) {
 }
 
 static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
-	constexpr int64_t int53_min = -(1LL << 53);
-	constexpr int64_t int53_max = (1LL << 53) - 1;
+	// The range of integers that can fit in the mantissa of a double.
+	// https://en.wikipedia.org/wiki/Double-precision_floating-point_format
+	constexpr int64_t MantissaMin = -(1LL << 53);
+	constexpr int64_t MantissaMax = (1LL << 53);
 
 	FPU_Reg temp_reg;
 	temp_reg.ll = mem_readq(addr);
@@ -242,10 +244,10 @@ static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
 	// use FILD/FIST as a fast 64-bit integer memcpy, such as Carmageddon,
 	// Motor Mash, and demos like Sunflower and Multikolor.
 
-	// If the value won't fit in the 53-bit mantissa of a double, save the
+	// If the value won't fit in the mantissa of a double, save the
 	// value into the regs_memcpy register to indicate that the integer
 	// value should be read out by the FPU_FST_I64 function instead.
-	if (temp_reg.ll > int53_max || temp_reg.ll < int53_min) {
+	if (temp_reg.ll > MantissaMax || temp_reg.ll < MantissaMin) {
 		fpu.regs_memcpy[store_to] = temp_reg.ll;
 	} else {
 		fpu.regs_memcpy[store_to].reset();
