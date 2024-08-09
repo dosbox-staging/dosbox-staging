@@ -31,6 +31,27 @@ Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn
 about the changes and improvements introduced in this release.
 
 
+### 0.82.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    **0.82.0-RC1**
+
+    - [Download DOSBox Staging 0.82.0-RC1 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-linux-v0.82.0-rc1.tar.xz)
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
+
 ### Install dependencies on Fedora
 
     sudo dnf install SDL2 SDL2_net opusfile

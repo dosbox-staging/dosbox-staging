@@ -60,6 +60,34 @@ for further details.
 [win-build]: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2
 
 
+## 0.82.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    **0.82.0-RC1**
+
+    - [Download DOSBox Staging 0.82.0-RC1 64-bit (Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-v0.82.0-rc1-setup.exe)
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    - [Download DOSBox Staging 0.82.0-RC1 64-bit (zip)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-v0.82.0-rc1.zip)
+      <br>
+      <small>
+      sha256: TODO<wbr>TODO
+      </small>
+
+    Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
+
+
 ## Hardware requirements
 
 An x86 processor with SSSE3 (Supplemental Streaming SIMD Extensions 3) is
