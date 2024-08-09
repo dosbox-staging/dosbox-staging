@@ -54,13 +54,18 @@ enum class ArchitectureType {
 	Mixed           = 0xff,
 };
 
+// PIC_FullIndex() is used by the mixer thread for determining timing
+// Variables used in this calculation must be atomic or Clang's thread sanitizer complains
+// This includes CPU_Cycles, CPU_CycleLeft, and CPU_CycleMax
+// The rest can be left as normal variables
+
 // Current cycles values
-extern int CPU_Cycles;
-extern int CPU_CycleLeft;
+extern std::atomic<int> CPU_Cycles;
+extern std::atomic<int> CPU_CycleLeft;
 
 // Cycles settings for both "legacy" and "modern" modes
 extern bool CPU_CycleAutoAdjust;
-extern int CPU_CycleMax;
+extern std::atomic<int> CPU_CycleMax;
 extern int CPU_CyclePercUsed;
 extern int CPU_CycleLimit;
 

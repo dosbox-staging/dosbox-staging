@@ -86,7 +86,7 @@ void CDROM_Interface::LagDriveResponse() const
 
 	// Handle tick-rollover
 	static decltype(PIC_Ticks) prev_ticks = 0;
-	prev_ticks = std::min(PIC_Ticks, prev_ticks);
+	prev_ticks = std::min(PIC_Ticks.load(), prev_ticks.load());
 
 	// Ensure results a monotonically increasing
 	auto since_last_response_ms = [=]() { return PIC_Ticks - prev_ticks; };
@@ -95,7 +95,7 @@ void CDROM_Interface::LagDriveResponse() const
 		CALLBACK_Idle();
 	}
 
-	prev_ticks = PIC_Ticks;
+	prev_ticks = PIC_Ticks.load();
 }
 
 void CDROM_Interface_Physical::CdReaderLoop()
@@ -172,6 +172,7 @@ void CDROM_Interface_Physical::InitAudio()
 		return;
 	}
 
+	MIXER_LockMixerThread();
 	auto callback = std::bind(&CDROM_Interface_Physical::CdAudioCallback,
 	                          this,
 	                          std::placeholders::_1);
@@ -182,9 +183,10 @@ void CDROM_Interface_Physical::InitAudio()
 	                                  ChannelFeature::DigitalAudio});
 
 	thread = std::thread(&CDROM_Interface_Physical::CdReaderLoop, this);
+	MIXER_UnlockMixerThread();
 }
 
-void CDROM_Interface_Physical::CdAudioCallback(const uint16_t requested_frames)
+void CDROM_Interface_Physical::CdAudioCallback(const int requested_frames)
 {
 	assert(requested_frames > 0);
 

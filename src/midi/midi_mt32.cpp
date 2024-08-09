@@ -826,6 +826,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 		return false;
 	}
 
+	MIXER_LockMixerThread();
+
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
@@ -900,6 +902,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:mt32");
 
 	is_open = true;
+	MIXER_UnlockMixerThread();
 	return true;
 }
 
@@ -921,6 +924,8 @@ void MidiHandler_mt32::Close()
 		            "or increasing your conf's prebuffer");
 		had_underruns = false;
 	}
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (channel) {
@@ -955,9 +960,10 @@ void MidiHandler_mt32::Close()
 	ms_per_audio_frame = 0.0;
 
 	is_open = false;
+	MIXER_UnlockMixerThread();
 }
 
-uint16_t MidiHandler_mt32::GetNumPendingAudioFrames()
+int MidiHandler_mt32::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -976,7 +982,7 @@ uint16_t MidiHandler_mt32::GetNumPendingAudioFrames()
 
 	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
 	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
-	return check_cast<uint16_t>(num_audio_frames);
+	return num_audio_frames;
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
@@ -999,7 +1005,7 @@ void MidiHandler_mt32::PlaySysex(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
+void MidiHandler_mt32::MixerCallBack(const int requested_audio_frames)
 {
 	assert(channel);
 
@@ -1021,7 +1027,7 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 	                                                       requested_audio_frames);
 
 	if (has_dequeued) {
-		assert(audio_frames.size() == requested_audio_frames);
+		assert(check_cast<int>(audio_frames.size()) == requested_audio_frames);
 		channel->AddSamples_sfloat(requested_audio_frames,
 		                           &audio_frames[0][0]);
 
@@ -1032,12 +1038,12 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 	}
 }
 
-void MidiHandler_mt32::RenderAudioFramesToFifo(const uint16_t num_frames)
+void MidiHandler_mt32::RenderAudioFramesToFifo(const int num_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
 
 	// Maybe expand the vector
-	if (audio_frames.size() < num_frames) {
+	if (check_cast<int>(audio_frames.size()) < num_frames) {
 		audio_frames.resize(num_frames);
 	}
 

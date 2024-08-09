@@ -309,10 +309,10 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 static std::optional<StereoLine> parse_stereo_mode(const std::string& s)
 {
 	if (s == "STEREO") {
-		return Stereo;
+		return StereoMap;
 	}
 	if (s == "REVERSE") {
-		return Reverse;
+		return ReverseMap;
 	}
 	return {};
 }
@@ -757,8 +757,6 @@ void MIXER::Run()
 
 	const auto args = cmd->GetArguments();
 
-	MIXER_LockAudioDevice();
-
 	auto result = MixerCommand::ParseCommands(args,
 	                                          create_channel_infos(),
 	                                          AllChannelNames);
@@ -788,8 +786,6 @@ void MIXER::Run()
 		LOG_WARNING("MIXER: Incorrect MIXER command invocation; "
 		            "run MIXER /? for help");
 	}
-
-	MIXER_UnlockAudioDevice();
 }
 
 void MIXER::AddMessages()
@@ -929,8 +925,6 @@ void MIXER::ShowMixerStatus()
 	const auto off_value      = MSG_Get("SHELL_CMD_MIXER_CHANNEL_OFF");
 	constexpr auto none_value = "-";
 
-	MIXER_LockAudioDevice();
-
 	constexpr auto master_channel_string = "[color=light-cyan]MASTER[reset]";
 
 	show_channel(convert_ansi_markup(master_channel_string),
@@ -984,6 +978,4 @@ void MIXER::ShowMixerStatus()
 		             reverb,
 		             chorus);
 	}
-
-	MIXER_UnlockAudioDevice();
 }

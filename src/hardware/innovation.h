@@ -47,7 +47,7 @@ public:
 
 private:
 	bool MaybeRenderFrame(float &frame);
-	void AudioCallback(const uint16_t requested_frames);
+	void AudioCallback(const int requested_frames);
 	uint8_t ReadFromPort(io_port_t port, io_width_t width);
 	void RenderUpToNow();
 	int16_t TallySilence(const int16_t sample);
@@ -59,6 +59,7 @@ private:
 	IO_WriteHandleObject write_handler    = {};
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};
+	std::mutex mutex                      = {};
 
 	// Initial configuration
 	double chip_clock            = 0.0;

@@ -119,6 +119,7 @@ private:
 	IO_WriteHandleObject WriteHandler[3];
 
 	std::queue<AudioFrame> fifo = {};
+	std::mutex mutex = {};
 
 	OplChip chip[2]  = {};
 

@@ -211,7 +211,7 @@ void MIDI_Unmute();
 
 struct MidiWork {
 	std::vector<uint8_t> message      = {};
-	uint16_t num_pending_audio_frames = 0;
+	int num_pending_audio_frames      = 0;
 	MessageType message_type          = {};
 
 	// Default value constructor
@@ -221,7 +221,7 @@ struct MidiWork {
 
 	// Construct from movable values
 	MidiWork(std::vector<uint8_t>&& _message,
-	         const uint16_t _num_audio_frames_pending,
+	         const int _num_audio_frames_pending,
 	         const MessageType _message_type)
 	        : message(std::move(_message)),
 	          num_pending_audio_frames(_num_audio_frames_pending),

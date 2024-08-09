@@ -3134,7 +3134,7 @@ public:
 	void device_clock_changed();
 
 	// sound stream update overrides
-	void sound_stream_update(const uint16_t requested_frames);
+	void sound_stream_update(const int requested_frames);
 
 private:
 	AudioFrame RenderFrame();
@@ -5006,7 +5006,7 @@ void ym2151_device::RenderUpToNow()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void ym2151_device::sound_stream_update(const uint16_t requested_frames)
+void ym2151_device::sound_stream_update(const int requested_frames)
 {
 	assert(audio_channel);
 
@@ -13216,7 +13216,7 @@ public:
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
 
-	void mixerCallback(const uint16_t requested_frames)
+	void mixerCallback(const int requested_frames)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_ya2151.sound_stream_update(requested_frames);
@@ -13352,13 +13352,14 @@ static void Intel8253_TimerEvent(const uint32_t val)
 	imfc->onTimerEvent(val);
 }
 
-static void IMFC_Mixer_Callback(const uint16_t requested_frames)
+static void IMFC_Mixer_Callback(const int requested_frames)
 {
 	imfc->mixerCallback(requested_frames);
 }
 
 void imfc_destroy(Section* /*sec*/)
 {
+	MIXER_LockMixerThread();
 	imfc = {};
 
 #if IMFC_VERBOSE_LOGGING
@@ -13366,6 +13367,7 @@ void imfc_destroy(Section* /*sec*/)
 	SDL_DestroyMutex(m_loggerMutex);
 	m_loggerMutex = nullptr;
 #endif
+	MIXER_UnlockMixerThread();
 }
 
 static void imfc_init(Section* sec)
@@ -13375,6 +13377,8 @@ static void imfc_init(Section* sec)
 	if (!conf || !conf->Get_bool("imfc")) {
 		return;
 	}
+
+	MIXER_LockMixerThread();
 
 #if IMFC_VERBOSE_LOGGING
 	m_loggerMutex = SDL_CreateMutex();
@@ -13438,6 +13442,8 @@ static void imfc_init(Section* sec)
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+
+	MIXER_UnlockMixerThread();
 }
 
 void init_imfc_dosbox_settings(Section_prop& secprop)

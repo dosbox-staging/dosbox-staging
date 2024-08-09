@@ -40,9 +40,9 @@ public:
 	void SetCounter(const int cntr, const PitMode m) final;
 	void SetPITControl(const PitMode) final {}
 	void SetType(const PpiPortB& b) final;
+	void PicCallback(const int requested_frames) final;
 
 private:
-	void ChannelCallback(const uint16_t len);
 	void AddDelayEntry(const float index, float vol);
 	void ForwardPIT(const float newindex);
 	bool IsWaveSquare() const;
@@ -70,8 +70,6 @@ private:
 	};
 
 	std::queue<DelayEntry> entries = {};
-
-	MixerChannelPtr channel = nullptr;
 
 	PpiPortB port_b      = {};
 	PpiPortB prev_port_b = {};

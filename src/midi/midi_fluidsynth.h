@@ -59,11 +59,11 @@ public:
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysexMessage(const std::vector<uint8_t>& msg);
-	void MixerCallBack(uint16_t requested_audio_frames);
+	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
-	uint16_t GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const uint16_t num_audio_frames = 1);
+	int GetNumPendingAudioFrames();
+	void RenderAudioFramesToFifo(const int num_audio_frames = 1);
 	void Render();
 
 	using FluidSynthSettingsPtr =
