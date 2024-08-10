@@ -621,7 +621,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 				        break;
 			        default:
 #if DYN_LOG
-//					LOG_MSG("Unhandled dual opcode 0F%02X",dual_code);
+//					LOG_MSG("Unhandled dual opcode 0F%02" PRIXPTR, dual_code);
 #endif
 				goto illegalopcode;
 			}
@@ -973,7 +973,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 
 		default:
 #if DYN_LOG
-//			LOG_MSG("Dynrec unhandled opcode %X",opcode);
+//			LOG_MSG("Dynrec unhandled opcode %" PRIXPTR, opcode);
 #endif
 			goto illegalopcode;
 		}
