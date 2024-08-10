@@ -485,26 +485,16 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 
 	r.preset = new_preset;
 
-	// Pre-computed (negative) decibel scalars
-	constexpr auto __5_2dB = 0.87f;
-	constexpr auto __6_0dB = 0.85f;
-	constexpr auto _12_0dB = 0.70f;
-	constexpr auto _18_4dB = 0.54f;
-	constexpr auto _24_0dB = 0.40f;
-	constexpr auto _36_8dB = 0.08f;
-	constexpr auto _37_2dB = 0.07f;
-	constexpr auto _38_0dB = 0.05f;
-
 	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
-	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
+	switch (r.preset) { //             PREDLY EARLY  SIZE   DENSITY BW_FREQ DECAY  DAMP_LV SYN_LV DIG_LV HIPASS_HZ
+	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f,  0.50f,  0.00f, 1.00f,  0.87f, 0.87f, 200.0f, rate_hz); break;
+	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f,  0.50f,  0.50f, 0.70f,  0.40f, 0.08f, 200.0f, rate_hz); break;
+	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f,  0.95f,  0.42f, 0.21f,  0.54f, 0.07f, 170.0f, rate_hz); break;
+	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f,  0.95f,  0.52f, 0.21f,  0.70f, 0.05f, 140.0f, rate_hz); break;
+	case ReverbPreset::Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f,  0.95f,  0.52f, 0.21f,  0.85f, 0.05f, 140.0f, rate_hz); break;
 	case ReverbPreset::None:   break;
-	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f, 0.50f, 0.00f, 1.00f, __5_2dB, __5_2dB, 200.0f, rate_hz); break;
-	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f, 0.50f, 0.50f, 0.70f, _24_0dB, _36_8dB, 200.0f, rate_hz); break;
-	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f, 0.95f, 0.42f, 0.21f, _18_4dB, _37_2dB, 170.0f, rate_hz); break;
-	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, _12_0dB, _38_0dB, 140.0f, rate_hz); break;
-	case ReverbPreset::Huge:   r.Setup(0.00f, 0.75f, 0.75f, 0.50f, 0.95f, 0.52f, 0.21f, __6_0dB, _38_0dB, 140.0f, rate_hz); break;
 	}
 	// clang-format on
 
@@ -581,19 +571,14 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	assert(c.preset != new_preset);
 	c.preset = new_preset;
 
-	// Pre-computed (negative) decibel scalars
-	constexpr auto __6dB = 0.75f;
-	constexpr auto _11dB = 0.54f;
-	constexpr auto _16dB = 0.33f;
-
 	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
-	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
+	switch (c.preset) { //             SYN_LV  DIG_LV
+	case ChorusPreset::Light:  c.Setup(0.33f,  0.00f, rate_hz); break;
+	case ChorusPreset::Normal: c.Setup(0.54f,  0.00f, rate_hz); break;
+	case ChorusPreset::Strong: c.Setup(0.75f,  0.00f, rate_hz); break;
 	case ChorusPreset::None:   break;
-	case ChorusPreset::Light:  c.Setup(_16dB, 0.00f, rate_hz); break;
-	case ChorusPreset::Normal: c.Setup(_11dB, 0.00f, rate_hz); break;
-	case ChorusPreset::Strong: c.Setup(__6dB, 0.00f, rate_hz); break;
 	}
 	// clang-format on
 
