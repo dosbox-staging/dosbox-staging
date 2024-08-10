@@ -489,7 +489,7 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 
 	// clang-format off
 	switch (r.preset) { //             PREDLY EARLY  SIZE   DENSITY BW_FREQ DECAY  DAMP_LV SYN_LV DIG_LV HIPASS_HZ
-	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f,  0.50f,  0.00f, 1.00f,  0.87f, 0.87f, 200.0f, rate_hz); break;
+	case ReverbPreset::Tiny:   r.Setup(0.00f, 1.00f, 0.05f, 0.50f,  0.50f,  0.00f, 1.00f,  0.65f, 0.65f, 200.0f, rate_hz); break;
 	case ReverbPreset::Small:  r.Setup(0.00f, 1.00f, 0.17f, 0.42f,  0.50f,  0.50f, 0.70f,  0.40f, 0.08f, 200.0f, rate_hz); break;
 	case ReverbPreset::Medium: r.Setup(0.00f, 0.75f, 0.50f, 0.50f,  0.95f,  0.42f, 0.21f,  0.54f, 0.07f, 170.0f, rate_hz); break;
 	case ReverbPreset::Large:  r.Setup(0.00f, 0.75f, 0.75f, 0.50f,  0.95f,  0.52f, 0.21f,  0.70f, 0.05f, 140.0f, rate_hz); break;
