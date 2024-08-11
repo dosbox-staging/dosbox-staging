@@ -780,14 +780,14 @@ Controlla quali modalità video VESA sono disponibili:
               anche le modalità video framebuffer lineari a 256 colori e
               risoluzione 320x240, 400x300 e 512x384 in quanto causano problemi
               di temporizzazione nei giochi che usano Build Engine.
-  halfline:   Come 'compatibile', ma la modalità VESA 120h è sostituita da una
+  halfline:   Come 'compatible', ma la modalità VESA 120h è sostituita da una
               speciale modalità a mezza linea utilizzata da Extreme Assault.
-              Usale solo se necessario.
+              Usare solo se necessario.
   all:        Tutte le modalità sono disponibili, incluse modalità
               VESA specifiche di DOSBox. Utilizzare 8 MB di memoria video per
-              ottenere i migliori risultati. Alcuni giochi potrebbero
+              ottenere risultati ottimali. Alcuni giochi potrebbero
               presentare problemi di visualizzazione in presenza di alcune
-              modalità VESA; provare la modalità 'compatibile' qualora dovesse
+              modalità VESA; provare la modalità 'compatible' qualora dovesse
               succedere. Le modalità high color 320x200 che sono rese
               disponibili da questa impostazione sono spesso richieste da
               alcune produzioni demoscene della fine degli anni 90.
@@ -946,7 +946,7 @@ Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
 .
 :CONFIG_CGA_COLORS
 Imposta l'interpretazione dei colori CGA RGBI (predefinito 'default').
-Interessa tutti i tipi di macchine in grado di visualizzare CGA o grafica
+Interessa tutti i tipi di macchine in grado di visualizzare grafica CGA o
 migliore. Preimpostazioni integrate:
   default:      Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy <bl>:   Emulazione di un monitor Tandy con livello del marrone
@@ -1089,7 +1089,7 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
             che eseguono in modalità reale; potrebbe risultare in una
             compatibilità migliore con i giochi più vecchi. Diventa
             automaticamente 'normal' se si entra in modalità protetta.
-  dynamic:  Le istruzioni del programma DOSO sono tradotte in istruzioni della
+  dynamic:  Le istruzioni del programma DOS sono tradotte in istruzioni della
             CPU host in blocco, ed eseguite direttamente. Ciò pone un carico
             sulla CPU host da 3 a 5 volte minore rispetto al core 'normal', ma
             la temporizzazione é meno accurata. Il core 'dynamic' è una
@@ -1102,7 +1102,7 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione (predefinito 'auto').
 È consigliabile cambiare questa impostazione solamente nel caso in cui il
-programma non funziona correttamente in modalità 'auto'.
+programma non funzioni correttamente in modalità 'auto'.
   auto:          La modalità più veloce e compatibile (predefinito). Dal
                  punto di vista tecnico, equivale alla modalità '386_fast' con
                  il CPUID di un 486, il comportamento di un 486 per quanto
@@ -1356,7 +1356,7 @@ valido va da 8000 a 96000 Hz. La maggior parte dei dispositivi audio non
 professionali utilizza una frequenza di campionamento nativa di 48000 Hz. È
 consigliabile lasciare questa impostazione così come è, a meno che non si abbia
 una buona ragione per cambiarla. È molto probabile che il sistema operativo
-ricampioni le frequenze di campionamento non standard a 48000 Hz in ogni caso.
+ricampioni in ogni caso a 48000 Hz le frequenze di campionamento non standard.
 .
 :CONFIG_BLOCKSIZE
 Dimensione dei blocchi del mixer misurato in campioni (predefinito %s). Il
@@ -1848,8 +1848,8 @@ Filtro per l'uscita audio della scheda Innovation:
 Modello di emulazione dell'altoparlante interno del PC (PC speaker):
   impulse:   Emulazione molto fedele all'output dell'altoparlante interno
              (predefinito). Funziona con la maggior parte dei giochi, ma può
-             risultare in suoni confusi o totale silenzio in un piccolo
-             numero di programmi.
+             risultare in suoni confusi o totale silenzio per alcuni
+             programmi.
   discrete:  Modalità di emulazione legacy semplificata dell'altoparlante
              interno; utilizzare solo per quei titoli che riportano problemi
              con il modello 'impulse'.
@@ -2304,7 +2304,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-[color=yellow]Questa proprietà non può essere modificata mentre l'emulatore è in esecuzione.[reset]
+[color=yellow]Impossibile modificare questa impostazione mentre l'emulatore è in esecuzione.[reset]
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
@@ -3138,7 +3138,8 @@ Comando mancante per il canale [color=light-cyan]%s[reset]
 Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
 :PROGRAM_MODE_HELP_LONG
-Imposta la modalità di visualizzazione o la frequenza e ritardo di ripetizione della tastiera.
+Imposta la modalità di visualizzazione o la frequenza e il ritardo di
+ripetizione della tastiera.
 
 Utilizzo:
   [color=light-green]mode[reset] [color=white]COLONNExRIGHE[reset]
@@ -3171,7 +3172,7 @@ Modalità di visualizzazione non valida: [color=white]%s[reset]
 La modalità di visualizzazione [color=white]%s[reset] non è supportata su questa scheda video.
 .
 :PROGRAM_MODE_INVALID_TYPEMATIC_RATE
-Impostazioni di frequenza o ritardo di ripetizione della tastiera non valide.
+Impostazioni di frequenza e ritardo di ripetizione della tastiera non valide.
 .
 :PROGRAM_MORE_HELP_LONG
 Visualizza l'output una schermata alla volta.
