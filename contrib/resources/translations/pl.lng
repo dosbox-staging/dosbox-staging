@@ -825,10 +825,20 @@ symulujących obraz monitora kineskopowego (CRT):
   crt-auto-arcade-sharp:  Ostrzejszy wariant shadera arcade, dla lubiących
                           grube linie skanowania, ale zachowuje ostrość typową
                           dla monitorów PC.
-Oprócz tego dostępne są opcje 'sharp' oraz 'none' , albo ścieżka względna lub
-bezwzględna do pliku z shaderem GLSL, albo jeden z shaderów z listy
-wyświetlanej opcją wiersza poleceń '--list-glshaders'.
-Rozszerzenie '.glsl' można w każdym przypadku pominąć.
+
+Inne możliwe opcje (nie jest to wyczerpująca lista):
+  sharp:                  Powiększa obraz traktując piksele jak prostokąty.
+                          Daje ostry obraz z minimalnym rozmyciem.
+  bilinear:               Powiększa obraz używając interpolacji bilinearnej.
+                          Daje rozmyty obraz.
+  nearest:                Powiększa obraz metodą najbliższego sąsiedztwa.
+                          Daje najostrzejszy możliwy obraz za cenę nierównych
+                          pikseli (ta wada jest mniej widoczna na monitorach
+                          o wysokiej rozdzielczości).
+
+Aby dostać pełną listę dostępnych wartości, uruchom emulator z opcją wiersza
+poleceń '--list-glshaders'. Możesz również podać ścieżkę względną lub
+bezwzględną do pliku z shaderem, rozszerzenie pliku '.glsl' możesz pominąć.
 .
 :CONFIG_ASPECT
 Korekcja proporcji obrazu (domyślnie 'auto'):
@@ -1255,7 +1265,8 @@ Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
   off:     Bez efektu (domyślne).
   on:      Efekt włączony, ustawienie 'medium'.
   tiny:    Odpowiada zintegrowanemu głośnikowi w niewielkim pokoju, ustawienie
-           dla urządzeń typu PC Speaker, Tandy, PS/1, czy LPT DAC.
+           dla urządzeń typu wewnętrzny głośnik (PC Speaker), Tandy, PS/1,
+           czy LPT DAC.
   small:   Subtelne wrażenie przestrzeni, odpowiednie do gier używających
            pojedynczego kanału dźwięku syntetyzowanego (zazwyczaj OPL) zarówno
            do muzyki, jak i efektów dźwiękowych.
@@ -1577,7 +1588,8 @@ Włącza emulację karty muzycznej Gravis UltraSound (domyślnie wyłączone).
 Domyślne ustawienia (adres 240, IRQ 5, DMA 3) zostały dobrane tak, żeby GUS
 mógł koegzystować z kartą SoundBlaster. Działają z większością oprogramowania,
 ale niektóre dema mogą wymagać fabrycznych wartości domyślnych - adresu 220,
-IRQ 11, DMA 1.
+IRQ 11, DMA 1. Fabryczna wartość IRQ 11 może nie działać w niektórymi wersjami
+ekstendera DOS4GW, które nie potrafią obsługiwać przerwań powyżej 7.
 .
 :CONFIG_GUSBASE
 Adres bazowy (I/O) karty muzycznej Gravis UltraSound (domyślnie 240).
@@ -1645,16 +1657,15 @@ Filtrowanie dźwięku karty Innovation SSI-2001:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_PCSPEAKER
-Sposób emulacji urządzenia dźwiękowego PC Speaker:
-  discrete: Za pomocą kroków discrete steps (domyślne). Działa dobrze z grami
-            generującymi efekty typu RealSound.
-  impulse:  Za pomocą funkcji interpolującej. Zalecany do gier generujących
-            falę prostokątna, np. serii Commander Keen.
-            Dokładniejsze, ale zużywa więcej mocy procesora.
+Sposób emulacji wewnętrznego głośnika (PC Speaker):
+  impulse:  Bardzo wierna emulacja (domyślne). Działa z większością gier,
+            ale może nie działać poprawnie z niektórymi tytułami.
+  discrete: Starszy sposób emulacji; używaj tylko, jeśli 'impulse' powoduje
+            problemy.
   none/off: Wyłącz emulację.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filtrowanie dźwięku urządzenia PC Speaker:
+Filtrowanie dźwięku wewnętrznego głośnika (PC Speaker):
   on:        Włączone (domyślne).
   off:       Filtrowanie wyłączone.
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
@@ -3274,17 +3285,14 @@ Przykłady:
   [color=light-green]mode[reset] [color=white]80x43[reset]
   [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
 .
-:PROGRAM_MODE_INVALID_COMMAND
-Nieprawidłowe polecenie
-.
 :PROGRAM_MODE_INVALID_DISPLAY_MODE
-Nieprawidłowy tryb [color=white]%s[reset]
+Nieprawidłowy tryb wyświetlania: [color=white]%s[reset]
 .
 :PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
-Tryb [color=white]%s[reset] nie jest obsługiwany przez obecną kartę graficzną
+Tryb [color=white]%s[reset] nie jest obsługiwany przez obecną kartę graficzną.
 .
 :PROGRAM_MODE_INVALID_TYPEMATIC_RATE
-Nieprawidłowe ustawienie szybkości klawiatury
+Nieprawidłowe ustawienie szybkości klawiatury.
 .
 :PROGRAM_SERIAL_HELP_LONG
 Zarządzaj portami szeregowymi.
