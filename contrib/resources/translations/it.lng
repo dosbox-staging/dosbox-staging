@@ -740,7 +740,7 @@ Gestisce i blocchi della catena di memoria software corrotti:
 Memoria video in MB (1-8) o KB (da 256 a 8192).
 'auto' utilizza il valore predefinito in base alla scheda video selezionata
 (predefinito 'auto'). Fare riferimento all'impostazione 'machine' per l'elenco
-delle opzioni valide per ogni scheda.
+delle opzioni valide e dei valori di default per ogni scheda.
 .
 :CONFIG_VMEM_DELAY
 Configura l'emulazione del ritardo di accesso alla memoria video (predefinito
@@ -770,16 +770,27 @@ Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 è possibile provare a regolarla in base al gioco.
 .
 :CONFIG_VESA_MODES
-Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
-  compatible: Selezione su misura che massimizza la compatibilità con i giochi.
-              È consigliato insieme a 4 o 8 MB di memoria video (predefinito).
-  halfline:   Supporta la modalità VESA 2.0 a mezza linea a bassa risoluzione
-              utilizzata da Extreme Assault. Utilizzare solo se necessario,
-              in quanto non è compatibile con le schede grafiche S3.
-  all:        Offre tutte le modalità per una data dimensione della memoria
-              video, tuttavia alcuni giochi potrebbero non utilizzarle
-              correttamente (sfarfallio) o potrebbe essere necessaria più
-              memoria di sistema.
+Controlla quali modalità video VESA sono disponibili:
+  compatible: Solo le modalità video VESA con maggiore compatibilità per la 
+              dimensione della memoria video configurata (predefinito).
+              Utilizzare 4 o 8 MB di memoria video ('vmemsize') per avere
+              la migliore compatibilità possibile con i giochi. Le modalità 
+              high color a risoluzione 320x200 sono escluse in quanto il loro
+              supporto fu parziale fino alla fine degli anni 90. Sono escluse
+              anche le modalità video framebuffer lineari a 256 colori e 
+              risoluzione 320x240, 400x300 e 512x384 in quanto causano problemi
+              di temporizzazione nei giochi che usano Build Engine.
+  halfline:   Come 'compatibile', ma la modalità VESA 120h è sostituita da una
+              speciale modalità a mezza linea utilizzata da Extreme Assault.
+              Usale solo se necessario.
+  all:        Tutte le modalità sono disponibili, incluse modalità
+              VESA specifiche di DOSBox. Utilizzare 8 MB di memoria video per
+              ottenere i migliori risultati. Alcuni giochi potrebbero 
+              presentare problemi di visualizzazione in presenza di alcune 
+              modalità VESA; provare la modalità 'compatibile' qualora dovesse 
+              succedere. Le modalità high color 320x200 che sono rese 
+              disponibili da questa impostazione sono spesso richieste da 
+              alcune produzioni demoscene della fine degli anni 90.
 .
 :CONFIG_VGA_8DOT_FONT
 Utilizza caratteri larghi 8 pixel nelle schede grafiche VGA
@@ -848,7 +859,7 @@ Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione 'host_rate'.
 .
 :CONFIG_ASPECT
-Imposta la modalità di correzione delle proporzioni (predefinito abilitato):
+Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
   auto, on:           Applica la correzione delle proporzioni per i moderni
                       schermi piatti a pixel quadrati, in modo tale che le
                       modalità video DOS con pixel non quadrati appaiano come
@@ -876,12 +887,12 @@ Imposta la modalità di correzione delle proporzioni (predefinito abilitato):
 .
 :CONFIG_INTEGER_SCALING
 Vincola il fattore di scala orizzontale o verticale al valore intero più grande
-in modo che l'immagine possa adattarsi all'area di visualizzazione.
-Sarà mantenuto sempre il rapporto d'aspetto specificato in base alle
-impostazioni 'aspect' e 'viewport', il che può comportare un fattore di scala
-non intero nell'altra dimensione. Se l'immagine è più grande dell'area di
-visualizzazione, il ridimensionamento dei numeri interi viene disabilitato
-automaticamente (equivalente ad 'off'). Valori possibili:
+in modo che l'immagine possa adattarsi all'area di visualizzazione
+(predefinito 'auto'). Sarà mantenuto sempre il rapporto d'aspetto specificato 
+in base alle impostazioni 'aspect' e 'viewport', il che può comportare un 
+fattore di scala non intero nell'altra dimensione. Se l'immagine è più grande 
+dell'area di visualizzazione, il ridimensionamento dei numeri interi viene 
+disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
   auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
               CRT adattivi (vedi impostazione 'glshader'), altrimenti 'off'
               (predefinito).
@@ -893,10 +904,10 @@ automaticamente (equivalente ad 'off'). Valori possibili:
               l'area di visualizzazione mantenendo le proporzioni specificate.
 .
 :CONFIG_VIEWPORT
-Imposta le dimensioni dell'area di visualizzazione (l'area massima disegnabile)
+Imposta le dimensioni dell'area di visualizzazione (predefinito 'fit').
 L'immagine è sempre contenuta all'interno dell'area di visualizzazione, tenendo
-conto delle proporzioni specificate (vedi impostazione 'aspect').
-Valori possibili:
+conto delle proporzioni specificate (vedi impostazione 'aspect'). Valori 
+possibili:
   fit:            Adatta l'area di visualizzazione alla finestra/schermo
                   disponibile (predefinito). Con l'impostazione
                   'integer_scaling' abilitata, potrebbero essere visualizzate
@@ -907,13 +918,13 @@ Valori possibili:
                   non deve essere maggiore della risoluzione del desktop.
                   Se più grande della finestra, l'immagine viene ridimensionata
                   per adattarsi alla finestra.
-  N%:             Simile a 'LxA' ma la dimensione è specificata come
+  N%%:             Simile a 'LxA' ma la dimensione è specificata come
                   percentuale della risoluzione del desktop.
-  relative O% V%: L'area di visualizzazione è impostata su un rettangolo con
+  relative O%% V%%: L'area di visualizzazione è impostata su un rettangolo con
                   rapporto d'aspetto 4:3, adattato alla finestra/schermo
                   disponibile, e quindi ridimensionato in base ai fattori di
                   scala orizzontale e verticale O e V (l'intervallo valido va
-                  dal 20% al 300%). L'area di visualizzazione risultante può
+                  dal 20%% al 300%%). L'area di visualizzazione risultante può
                   estendersi oltre la finestra/schermo. Questo è utile per
                   forzare determinati rapporti d'aspetto con 'aspect = stretch'
                   o per ingrandire l'immagine. Ciò emula efficacemente i
@@ -934,9 +945,9 @@ Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
       scelta rapida.
 .
 :CONFIG_CGA_COLORS
-Imposta l'interpretazione dei colori CGA RGBI. Interessa tutti i tipi di
-macchine in grado di visualizzare CGA o grafica migliore.
-Preimpostazioni integrate:
+Imposta l'interpretazione dei colori CGA RGBI (predefinito 'default'). 
+Interessa tutti i tipi di macchine in grado di visualizzare CGA o grafica 
+migliore. Preimpostazioni integrate:
   default:      Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy <bl>:   Emulazione di un monitor Tandy con livello del marrone
                 regolabile. Il livello del marrone può essere fornito come
@@ -956,7 +967,7 @@ Preimpostazioni integrate:
   scumm-amiga:  Tavolozza utilizzata dalle conversioni Amiga dei giochi
                 EGA LucasArts.
   colodore:     Colori ispirati al Commodore 64 basati su tavolozza Colodore.
-  colodore-sat: Tavolozza Colodore con saturazione aumentata del 20%.
+  colodore-sat: Tavolozza Colodore con saturazione aumentata del 20%%.
   dga16:        Versione moderna della tavolozza CGA, con contrasto ridotto.
 È possibile impostare colori personalizzati specificando 16 valori separati
 da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
@@ -982,8 +993,8 @@ hardware:
 :CONFIGITEM_GLSHADER
 Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
 schermo a tubo catodico visualizza le immagini, o un normale shader GLSL nelle
-modalità di uscita OpenGL.
-Opzioni shader CRT adattivo:
+modalità di uscita OpenGL (predefinito 'crt-auto'). Opzioni shader CRT 
+adattivo:
   crt-auto:              Shader CRT che dà priorità all'intento dello
                          sviluppatore e al modo in cui le persone hanno
                          sperimentato il gioco al momento del rilascio
@@ -1013,10 +1024,25 @@ Opzioni shader CRT adattivo:
                          amano le linee di scansione spesse ma allo stesso
                          tempo vogliono mantenere la nitidezza orizzonatale di
                          un tipico monitor per PC.
-Altre opzioni includono 'sharp', 'none', uno shader elencato utilizzando
-l'argomento della riga di comando '--list-glshaders', o un percorso relativo o
-assoluto che fa riferimento ad un file. In tutti i casi, l'estensione '.glsl'
-dello shader può essere omessa.
+
+Altre opzioni dello shader comprendono (lista non esaustiva):
+  sharp:                 Effettua l'upscale dell'immagine trattando i pixel
+                         come se fossero rettangolari. L'immagine risultante
+                         sarà molto nitida con sfocature minime.
+  bilinear:              Effettua l'upscale dell'immagine utilizzando
+                         l'interpolazione bilineare (l'immagine risultante
+                         sarà sfocata).
+  nearest:               Effettua l'upscale dell'immagine utilizzando
+                         l'interpolazione nearest-neighbour (conosciuta anche
+                         come "non bilineare"). L'immagine risultante è la più
+                         nitida possibile, al costo di avere qualche pixel
+                         irregolare (meno visibile su schermi ad alta
+                         risoluzione).
+
+Avviare DOSBox Staging con l'argomento della riga di comando '--list-glshaders'
+per avere la lista completa di tutti gli shader disponibili. È inoltre 
+possibile utilizzare un percorso assoluto o relativo che fa riferimento ad un 
+file. In ogni caso, l'estensione '.glsl' dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
 Abilita la modalità composita all'avvio (predefinito 'auto').
@@ -1047,23 +1073,68 @@ Convergenza degli elementi del subpixel, da sfocati a nitidi (predefinito 0).
 .
 :CONFIG_CORE
 Core della CPU usato nell'emulazione (predefinito 'auto').
-'auto' passerà a 'dynamic' se disponibile e appropriato.
+  auto:     Usa il core 'normal' per i programmi che operano in modalità reale
+            e il core 'dynamic' per quelli che operano in modalità protetta.
+            La maggior parte dei programmi funzioneranno correttamente con
+            questa impostazione.
+  normal:   Il programma DOS è interpretato istruzione per istruzione. Questo
+            fa sì che la temporizzazione sia più accurata, ma pone un carico
+            sulla CPU host da 3 a 5 volte maggiore rispetto a 'dynamic'. Per
+            questa ragione, è consigliabile utilizzare questa impostazione 
+            solo per programmi che eseguono in modalità reale che non hanno
+            bisogno di una CPU veloce, o che sono sensibili alla 
+            temporizzazione. Questa impostazione è inoltre necessaria per
+            programmi che modificano il proprio codice.
+  simple:   Come il core 'normal', ma ottimizzata per i vecchi programmi
+            che eseguono in modalità reale; potrebbe risultare in una
+            compatibilità migliore con i giochi più vecchi. Diventa
+            automaticamente 'normal' se si entra in modalità protetta.
+  dynamic:  Le istruzioni del programma DOSO sono tradotte in istruzioni della
+            CPU host in blocco, ed eseguite direttamente. Ciò pone un carico
+            sulla CPU host da 3 a 5 volte minore rispetto al core 'normal', ma
+            la temporizzazione é meno accurata. Il core 'dynamic' è una
+            necessità per i giochi esigenti in termini di CPU (e.g. giochi
+            SVGA in 3D). Programmi che modificano il proprio codice potrebbero
+            non funzionare correttamente o andare in crash con questa 
+            impostazione; utilizzare il core 'normal' per questa tipologia di
+            programma.
 .
 :CONFIG_CPUTYPE
-Tipo di CPU usata nell'emulazione (predefinito 'auto'). 'auto' è la scelta
-più veloce. La variante prefetch emula la coda di prefetch e richiede il core
-'normal'.
+Tipo di CPU usata nell'emulazione (predefinito 'auto'). 
+È consigliabile cambiare questa impostazione solamente nel caso in cui il
+programma non funziona correttamente in modalità 'auto'.
+  auto:          La modalità più veloce e compatibile (predefinito). Dal 
+                 punto di vista tecnico, equivale alla modalità '386_fast' con
+                 il CPUID di un 486, il comportamento di un 486 per quanto
+                 riguarda i registri CR, e le istruzioni extra di un 486.
+  386:           Utilizza il CPUID di un 386 ed effettua i calcoli di livello
+                 di accesso alla pagina come un 386.
+  386_fast:      Come '386' ma i controlli di accesso alla pagina sono meno
+                 rigidi, risultando in un'esecuzione molto più veloce.
+  386_prefetch:  Come '386_fast', ma emula accuratamente la coda di prefetch
+                 della CPU. Funziona solamente con 'core = normal'. Questa
+                 impostazione è necessaria per quei programmi che modificano
+                 il proprio codice o che impiegano tecniche anti-debugging.
+                 Alcuni giochi che richiedono l'opzione '386_prefetch' sono
+                 Contra, FIFA International Soccer (1994), Terminator 1 e
+                 X-Men: Madness in The Murderworld.
+  486:           Utilizza il CPUID di un 486, il comportamento di un 486 per
+                 i registri CR, e le istruzioni extra di un 486. Effettua 
+                 inoltre i calcoli di livello di accesso alla pagina come un 
+                 486 o superiore.
+  pentium:       Come '486', ma con il CPUID di un processore Pentium, il
+                 comportamento di un Pentium per i registri CR e il supporto
+                 all'istruzione RDTSC. Impostazione consigliata per i giochi
+                 per Windows 3.x (e.g. Betrayal in Antara).
+  pentium_mmx:   Come 'pentium' ma include inoltre il set di istruzioni MMX. 
+                 Pochissimi giochi utilizzano le istruzioni MMX; questa
+                 impostazione è fondamentalmente utile solo per le produzioni
+                 demoscene.
 .
 :CONFIG_CYCLES
-Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
-(predefinito 'auto'). Un valore troppo alto può causare perdite nell'audio
-e ritardi.
-  auto:           Prova a indovinare le necessità del gioco.
-                  Di solito funziona, ma può fallire con alcuni giochi.
-  fixed <numero>: Imposta un numero fisso di cicli. Se 'auto' non funziona, si
-                  consiglia di provare questa impostazione (es. 'fixed 4000').
-  max:            Allocherà tanti cicli quanti il tuo computer è in grado di
-                  gestire.
+L'impostazione 'cycles' è deprecata ma ancora accettata; si consiglia di usare
+le impostazioni 'cpu_cycles', 'cpu_cycles_protected' e 'cpu_throttle' al suo
+posto, in quanto il supporto a 'cycles' potrebbe essere rimosso in futuro.
 .
 :CONFIG_CPU_CYCLES
 Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è
@@ -1276,25 +1347,34 @@ Nota: Richiede che il mouse PS/2 sia abilitato.
 :CONFIG_NOSOUND
 Abilita la modalità silenziosa (predefinito disabilitato).
 In questa modalità, il suono è ancora completamente emulato ma non viene
-riprodotto da DOSBox.
+riprodotto da DOSBox. La cattura dell'output audio emulato in un file WAV
+funziona anche in modalità silenziosa.
 .
 :CONFIG_RATE
-Frequenza di campionamento del mixer in Hz (predefinito 48000).
+Frequenza di campionamento del mixer in Hz (predefinito %s). Il range di valori
+valido va da 8000 a 96000 Hz. La maggior parte dei dispositivi audio non
+professionali utilizza una frequenza di campionamento nativa di 48000 Hz. È
+consigliabile lasciare questa impostazione così come è, a meno che non si abbia
+una buona ragione per cambiarla. È molto probabile che il sistema operativo 
+ricampioni le frequenze di campionamento non standard a 48000 Hz in ogni caso.
 .
 :CONFIG_BLOCKSIZE
-Dimensione dei blocchi del mixer misurato in campioni (predefinito 1024).
-Valori più grandi potrebbero ridurre l'audio a singhiozzo, ma anche introdurre
-ritardi nel suono.
+Dimensione dei blocchi del mixer misurato in campioni (predefinito %s). Il
+range di valori valido va da 64 a 8192. Impostare sempre a valori che sono 
+potenze di due (e.g. 256, 512, 1024, etc). Valori più grandi potrebbero ridurre 
+il singhiozzare dell'audio, ma anche introdurre latenza nella riproduzione. Vedi 
+anche l'opzione 'negotiate'.
 .
 :CONFIG_PREBUFFER
-Millisecondi di suono da elaborare in aggiunta alla dimensione dei blocchi
-(predefinito 25). Valori più grandi potrebbero ridurre l'audio a singhiozzo,
-ma anche introdurre ritardi nel suono.
+Millisecondi di suono da elaborare in anticipo in aggiunta alla dimensione dei 
+blocchi (predefinito %s). Valori più grandi potrebbero ridurre il singhiozzare 
+dell'audio, ma anche introdurre latenza nella riproduzione. 
 .
 :CONFIG_NEGOTIATE
-Consenti al driver audio di sistema di negoziare, possibilmente, le migliori
-impostazioni di frequenza di campionamento e dimensione dei blocchi
-(predefinito disabilitato).
+Determina automaticamente il valore migliore di 'blocksize' (predefinito %s).
+Abilitare se non viene riprodotto alcun suono, o se l'audio singhiozza quando
+è impostato un valore esplicito di 'blocksize'. Disabilitare per impostare
+manualmente il valore di 'blocksize'.
 .
 :CONFIG_COMPRESSOR
 Abilita il compressore di livellamento automatico sul canale master per evitare
@@ -1320,7 +1400,7 @@ spazializzazione del suono:
   on:        Abilita riverbero (preimpostazione 'medium').
   tiny:      Simula il suono di un piccolo altoparlante integrato;
              specificamente progettato per sistemi audio di piccole dimensioni
-             (Altoparlante Interno, Tandy, PS/1 Audio, e dispositivi DAC LPT).
+             (Altoparlante interno, Tandy, PS/1 Audio, e dispositivi DAC LPT).
   small:     Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
              che usano un singolo canale del sintetizzatore (tipicamente OPL)
              sia per la musica che per gli effetti sonori.
@@ -1432,7 +1512,7 @@ all'interno della cartella 'soundfonts' situata nella directory di
 configurazione di DOSBox.
 Un valore percentuale opzionale dopo il nome ridimensionerà il volume del
 SoundFont. Questo è utile per normalizzare il volume di diversi SoundFont.
-Es. 'il_mio_soundfont.sf2 50' attenuerà il volume del 50%.
+Es. 'il_mio_soundfont.sf2 50' attenuerà il volume del 50%%.
 Il valore percentuale può variare da 1 a 800.
 .
 :CONFIG_FSYNTH_CHORUS
@@ -1688,7 +1768,9 @@ Le impostazioni predefinite di indirizzo porta I/O 240, IRQ 5 e DMA 3 sono
 state scelte in modo tale che la scheda GUS possa coesistere con una scheda
 Sound Blaster. Funziona bene per la maggior parte dei programmi, ma alcuni
 giochi e demo si aspettano le impostazioni predefinite di fabbrica della scheda
-GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1.
+GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1. Il valore 11 dell'IRQ di
+default pùo anche creare problemi con specifiche versioni dell'extender DOS4GW
+che non riesce a gestire IRQ al di sopra del 7.
 .
 :CONFIG_GUSBASE
 Indirizzo porta I/O della scheda Gravis Ultrasound (predefinito 240).
@@ -1763,18 +1845,18 @@ Filtro per l'uscita audio della scheda Innovation:
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_PCSPEAKER
-Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
-  discrete:  La forma d'onda viene creata utilizzando passaggi discreti
-             (predefinito). Funziona bene per i giochi che utilizzano effetti
-             di tipo RealSound.
-  impulse:   La forma d'onda viene creata utilizzando gli impulsi sinc.
-             Consigliato per i giochi che utilizzano forme d'onda quadra, come
-             Commander Keen. Pur migliorando la precisione, richiede più
-             potenza di calcolo da parte della CPU.
-  none/off:  Disabilita l'altoparlante interno del PC.
+Modello di emulazione dell'altoparlante interno del PC (PC speaker):
+  impulse:   Emulazione molto fedele all'output dell'altoparlante interno
+             (predefinito). Funziona con la maggior parte dei giochi, ma può
+             risultare in suoni confusi o totale silenzio in un piccolo
+             numero di programmi.
+  discrete:  Modalità di emulazione legacy semplificata dell'altoparlante
+             interno; utilizzare solo per quei titoli che riportano problemi
+             con il modello 'impulse'.
+  none/off:  Disabilita l'emulazione dell'altoparlante interno del PC.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
+Filtro per l'uscita audio dell'altoparlante interno del PC (PC speaker):
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
@@ -2013,7 +2095,7 @@ per la disposizione italiana. Altri valori possibili sono gli stessi accettati
 da FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Abilita l'espansione delle variabili di ambiente come %PATH% nell'interprete
+Abilita l'espansione delle variabili di ambiente come %%PATH%% nell'interprete
 dei comandi DOS (predefinito 'auto', viene abilitato se la versione DOS >= 7.0)
 Il programma COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
@@ -2090,9 +2172,9 @@ Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
 Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Le righe in questa sezione verranno eseguite ad ogni avvio.
-Puoi inserire i tuoi comandi MOUNT qui.
-
+Ogni riga in questa sezione viene eseguita ad ogni avvio come un comando DOS.
+Importante: La sezione [autoexec] deve necessariamente essere l'ultima sezione 
+del file di configurazione!
 .
 :CONFIGFILE_INTRO
 # Questo è il file di configurazione di dosbox-staging (%s).
@@ -2215,15 +2297,14 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 [color=white]Valore corrente:[reset]    %s
 
 .
-:PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Descrizione della sezione [color=light-cyan][%s][color=white]:[reset]
-%s
-[color=white]Valore corrente:[reset]
+:PROGRAM_CONFIG_HLP_AUTOEXEC
+[color=white]Descrizione della sezione [color=light-cyan][autoexec][color=white]:[reset]
+
 %s
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-Questa proprietà non può essere modificata mentre l'emulatore è in esecuzione.
+[color=yellow]Questa proprietà non può essere modificata mentre l'emulatore è in esecuzione.[reset]
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
@@ -2250,7 +2331,7 @@ La sezione [%s] non esiste.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-'%s' non è un valore valido per la proprietà '%s'.
+'%s' non è un valore valido per l'impostazione '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -2279,7 +2360,7 @@ File eseguibile non trovato: '%s'
 e
 .
 :PROGRAM_CONFIG_NOT_CHANGEABLE
-La proprietà '%s' non è modificabile durante l'esecuzione.
+L'impostazione '%s' non è modificabile durante l'esecuzione.
 .
 :PROGRAM_CONFIG_DEPRECATED
 [color=light-red]Questa impostazione è deprecata, ed è supportata solo per
@@ -3056,6 +3137,42 @@ Comando mancante per il canale [color=light-cyan]%s[reset]
 :SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
 Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
+:PROGRAM_MODE_HELP_LONG
+Imposta la modalità di visualizzazione o la frequenza e ritardo di ripetizione della tastiera.
+
+Utilizzo:
+  [color=light-green]mode[reset] [color=white]COLONNExRIGHE[reset]
+  [color=light-green]mode[reset] [color=white]COLONNE,RIGHE[reset]
+  [color=light-green]mode[reset] rate=[color=white]FREQ[reset] delay=[color=white]RITARDO[reset]
+
+Parametri:
+  [color=white]COLONNE[reset]   numero di caratteri (colonne) per riga (40, 80, or 132)
+  [color=white]RIGHE[reset]     numero di righe sullo schermo (25, 28, 30, 34, 43, 50, o 60)
+  [color=white]FREQ[reset]      freq. ripetizione caratteri, da [color=white]1[reset] (lento) a [color=white]32[reset] (veloce)
+  [color=white]RITARDO[reset]   rit. ripetizione caratteri, da [color=white]1[reset] (minore) a [color=white]4[reset] (maggiore)
+
+Note:
+  - Combinazioni valide di [color=white]COLONNExRIGHE[reset] per ogni tipo di scheda video:
+      Hercules           80x25
+      CGA, PCjr, Tandy   40x25, 80x25
+      EGA                40x25, 80x25, 80x43
+      SVGA (non S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
+      SVGA (S3)          40x25, tutte le modalità a 80 e 132 colonne
+
+Esempi:
+  [color=light-green]mode[reset] [color=white]132x50
+  [color=light-green]mode[reset] [color=white]80x43[reset]
+  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
+.
+:PROGRAM_MODE_INVALID_DISPLAY_MODE
+Modalità di visualizzazione non valida: [color=white]%s[reset]
+.
+:PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
+La modalità di visualizzazione [color=white]%s[reset] non è supportata su questa scheda video.
+.
+:PROGRAM_MODE_INVALID_TYPEMATIC_RATE
+Impostazioni di frequenza o ritardo di ripetizione della tastiera non valide.
+.
 :PROGRAM_MORE_HELP_LONG
 Visualizza l'output una schermata alla volta.
 
@@ -3150,7 +3267,7 @@ Mappa cartelle fisiche o unità su una lettera di unità virtuale.
 Monta una directory del sistema su una lettera di unità virtuale.
 
 Utilizzo:
-  [color=light-green]mount[reset] [color=white]UNITÀ[reset] [color=light-cyan]DIRECTORY[reset] [-t TIPO] [-freesize DIM] [-label ETICHETTA]
+  [color=light-green]mount[reset] [color=white]UNITÀ[reset] [color=light-cyan]DIRECTORY[reset] [-t TIPO] [-ro] [-freesize DIM] [-label ETICHETTA]
   [color=light-green]mount[reset] -u [color=white]UNITÀ[reset]  (smonta la directory dell'UNITÀ)
 
 Parametri:
@@ -3826,6 +3943,10 @@ Variabile di ambiente '%s' non definita.
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
 Spazio di ambiente insufficiente.
+
+.
+:SHELL_CMD_SET_OPTION_P_UNSUPPORTED
+L'opzione /P non è supportata; utilizzare il comando CHOICE.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
