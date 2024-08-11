@@ -771,13 +771,13 @@ Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 .
 :CONFIG_VESA_MODES
 Controlla quali modalità video VESA sono disponibili:
-  compatible: Solo le modalità video VESA con maggiore compatibilità per la 
+  compatible: Solo le modalità video VESA con maggiore compatibilità per la
               dimensione della memoria video configurata (predefinito).
               Utilizzare 4 o 8 MB di memoria video ('vmemsize') per avere
-              la migliore compatibilità possibile con i giochi. Le modalità 
+              la migliore compatibilità possibile con i giochi. Le modalità
               high color a risoluzione 320x200 sono escluse in quanto il loro
               supporto fu parziale fino alla fine degli anni 90. Sono escluse
-              anche le modalità video framebuffer lineari a 256 colori e 
+              anche le modalità video framebuffer lineari a 256 colori e
               risoluzione 320x240, 400x300 e 512x384 in quanto causano problemi
               di temporizzazione nei giochi che usano Build Engine.
   halfline:   Come 'compatibile', ma la modalità VESA 120h è sostituita da una
@@ -785,11 +785,11 @@ Controlla quali modalità video VESA sono disponibili:
               Usale solo se necessario.
   all:        Tutte le modalità sono disponibili, incluse modalità
               VESA specifiche di DOSBox. Utilizzare 8 MB di memoria video per
-              ottenere i migliori risultati. Alcuni giochi potrebbero 
-              presentare problemi di visualizzazione in presenza di alcune 
-              modalità VESA; provare la modalità 'compatibile' qualora dovesse 
-              succedere. Le modalità high color 320x200 che sono rese 
-              disponibili da questa impostazione sono spesso richieste da 
+              ottenere i migliori risultati. Alcuni giochi potrebbero
+              presentare problemi di visualizzazione in presenza di alcune
+              modalità VESA; provare la modalità 'compatibile' qualora dovesse
+              succedere. Le modalità high color 320x200 che sono rese
+              disponibili da questa impostazione sono spesso richieste da
               alcune produzioni demoscene della fine degli anni 90.
 .
 :CONFIG_VGA_8DOT_FONT
@@ -888,10 +888,10 @@ Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
 :CONFIG_INTEGER_SCALING
 Vincola il fattore di scala orizzontale o verticale al valore intero più grande
 in modo che l'immagine possa adattarsi all'area di visualizzazione
-(predefinito 'auto'). Sarà mantenuto sempre il rapporto d'aspetto specificato 
-in base alle impostazioni 'aspect' e 'viewport', il che può comportare un 
-fattore di scala non intero nell'altra dimensione. Se l'immagine è più grande 
-dell'area di visualizzazione, il ridimensionamento dei numeri interi viene 
+(predefinito 'auto'). Sarà mantenuto sempre il rapporto d'aspetto specificato
+in base alle impostazioni 'aspect' e 'viewport', il che può comportare un
+fattore di scala non intero nell'altra dimensione. Se l'immagine è più grande
+dell'area di visualizzazione, il ridimensionamento dei numeri interi viene
 disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
   auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
               CRT adattivi (vedi impostazione 'glshader'), altrimenti 'off'
@@ -906,7 +906,7 @@ disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
 :CONFIG_VIEWPORT
 Imposta le dimensioni dell'area di visualizzazione (predefinito 'fit').
 L'immagine è sempre contenuta all'interno dell'area di visualizzazione, tenendo
-conto delle proporzioni specificate (vedi impostazione 'aspect'). Valori 
+conto delle proporzioni specificate (vedi impostazione 'aspect'). Valori
 possibili:
   fit:            Adatta l'area di visualizzazione alla finestra/schermo
                   disponibile (predefinito). Con l'impostazione
@@ -945,8 +945,8 @@ Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
       scelta rapida.
 .
 :CONFIG_CGA_COLORS
-Imposta l'interpretazione dei colori CGA RGBI (predefinito 'default'). 
-Interessa tutti i tipi di macchine in grado di visualizzare CGA o grafica 
+Imposta l'interpretazione dei colori CGA RGBI (predefinito 'default').
+Interessa tutti i tipi di macchine in grado di visualizzare CGA o grafica
 migliore. Preimpostazioni integrate:
   default:      Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy <bl>:   Emulazione di un monitor Tandy con livello del marrone
@@ -993,7 +993,7 @@ hardware:
 :CONFIGITEM_GLSHADER
 Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
 schermo a tubo catodico visualizza le immagini, o un normale shader GLSL nelle
-modalità di uscita OpenGL (predefinito 'crt-auto'). Opzioni shader CRT 
+modalità di uscita OpenGL (predefinito 'crt-auto'). Opzioni shader CRT
 adattivo:
   crt-auto:              Shader CRT che dà priorità all'intento dello
                          sviluppatore e al modo in cui le persone hanno
@@ -1040,8 +1040,8 @@ Altre opzioni dello shader comprendono (lista non esaustiva):
                          risoluzione).
 
 Avviare DOSBox Staging con l'argomento della riga di comando '--list-glshaders'
-per avere la lista completa di tutti gli shader disponibili. È inoltre 
-possibile utilizzare un percorso assoluto o relativo che fa riferimento ad un 
+per avere la lista completa di tutti gli shader disponibili. È inoltre
+possibile utilizzare un percorso assoluto o relativo che fa riferimento ad un
 file. In ogni caso, l'estensione '.glsl' dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
@@ -1080,9 +1080,9 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
   normal:   Il programma DOS è interpretato istruzione per istruzione. Questo
             fa sì che la temporizzazione sia più accurata, ma pone un carico
             sulla CPU host da 3 a 5 volte maggiore rispetto a 'dynamic'. Per
-            questa ragione, è consigliabile utilizzare questa impostazione 
+            questa ragione, è consigliabile utilizzare questa impostazione
             solo per programmi che eseguono in modalità reale che non hanno
-            bisogno di una CPU veloce, o che sono sensibili alla 
+            bisogno di una CPU veloce, o che sono sensibili alla
             temporizzazione. Questa impostazione è inoltre necessaria per
             programmi che modificano il proprio codice.
   simple:   Come il core 'normal', ma ottimizzata per i vecchi programmi
@@ -1095,15 +1095,15 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
             la temporizzazione é meno accurata. Il core 'dynamic' è una
             necessità per i giochi esigenti in termini di CPU (e.g. giochi
             SVGA in 3D). Programmi che modificano il proprio codice potrebbero
-            non funzionare correttamente o andare in crash con questa 
+            non funzionare correttamente o andare in crash con questa
             impostazione; utilizzare il core 'normal' per questa tipologia di
             programma.
 .
 :CONFIG_CPUTYPE
-Tipo di CPU usata nell'emulazione (predefinito 'auto'). 
+Tipo di CPU usata nell'emulazione (predefinito 'auto').
 È consigliabile cambiare questa impostazione solamente nel caso in cui il
 programma non funziona correttamente in modalità 'auto'.
-  auto:          La modalità più veloce e compatibile (predefinito). Dal 
+  auto:          La modalità più veloce e compatibile (predefinito). Dal
                  punto di vista tecnico, equivale alla modalità '386_fast' con
                  il CPUID di un 486, il comportamento di un 486 per quanto
                  riguarda i registri CR, e le istruzioni extra di un 486.
@@ -1119,14 +1119,14 @@ programma non funziona correttamente in modalità 'auto'.
                  Contra, FIFA International Soccer (1994), Terminator 1 e
                  X-Men: Madness in The Murderworld.
   486:           Utilizza il CPUID di un 486, il comportamento di un 486 per
-                 i registri CR, e le istruzioni extra di un 486. Effettua 
-                 inoltre i calcoli di livello di accesso alla pagina come un 
+                 i registri CR, e le istruzioni extra di un 486. Effettua
+                 inoltre i calcoli di livello di accesso alla pagina come un
                  486 o superiore.
   pentium:       Come '486', ma con il CPUID di un processore Pentium, il
                  comportamento di un Pentium per i registri CR e il supporto
                  all'istruzione RDTSC. Impostazione consigliata per i giochi
                  per Windows 3.x (e.g. Betrayal in Antara).
-  pentium_mmx:   Come 'pentium' ma include inoltre il set di istruzioni MMX. 
+  pentium_mmx:   Come 'pentium' ma include inoltre il set di istruzioni MMX.
                  Pochissimi giochi utilizzano le istruzioni MMX; questa
                  impostazione è fondamentalmente utile solo per le produzioni
                  demoscene.
@@ -1355,20 +1355,20 @@ Frequenza di campionamento del mixer in Hz (predefinito %s). Il range di valori
 valido va da 8000 a 96000 Hz. La maggior parte dei dispositivi audio non
 professionali utilizza una frequenza di campionamento nativa di 48000 Hz. È
 consigliabile lasciare questa impostazione così come è, a meno che non si abbia
-una buona ragione per cambiarla. È molto probabile che il sistema operativo 
+una buona ragione per cambiarla. È molto probabile che il sistema operativo
 ricampioni le frequenze di campionamento non standard a 48000 Hz in ogni caso.
 .
 :CONFIG_BLOCKSIZE
 Dimensione dei blocchi del mixer misurato in campioni (predefinito %s). Il
-range di valori valido va da 64 a 8192. Impostare sempre a valori che sono 
-potenze di due (e.g. 256, 512, 1024, etc). Valori più grandi potrebbero ridurre 
-il singhiozzare dell'audio, ma anche introdurre latenza nella riproduzione. Vedi 
+range di valori valido va da 64 a 8192. Impostare sempre a valori che sono
+potenze di due (e.g. 256, 512, 1024, etc). Valori più grandi potrebbero ridurre
+il singhiozzare dell'audio, ma anche introdurre latenza nella riproduzione. Vedi
 anche l'opzione 'negotiate'.
 .
 :CONFIG_PREBUFFER
-Millisecondi di suono da elaborare in anticipo in aggiunta alla dimensione dei 
-blocchi (predefinito %s). Valori più grandi potrebbero ridurre il singhiozzare 
-dell'audio, ma anche introdurre latenza nella riproduzione. 
+Millisecondi di suono da elaborare in anticipo in aggiunta alla dimensione dei
+blocchi (predefinito %s). Valori più grandi potrebbero ridurre il singhiozzare
+dell'audio, ma anche introdurre latenza nella riproduzione.
 .
 :CONFIG_NEGOTIATE
 Determina automaticamente il valore migliore di 'blocksize' (predefinito %s).
@@ -2173,7 +2173,7 @@ Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Ogni riga in questa sezione viene eseguita ad ogni avvio come un comando DOS.
-Importante: La sezione [autoexec] deve necessariamente essere l'ultima sezione 
+Importante: La sezione [autoexec] deve necessariamente essere l'ultima sezione
 del file di configurazione!
 .
 :CONFIGFILE_INTRO
