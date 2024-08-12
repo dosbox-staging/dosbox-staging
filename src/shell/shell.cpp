@@ -204,7 +204,6 @@ static uint16_t get_output_redirection(const char *out_file,
 	constexpr bool fcb = true;
 	FatAttributeFlags fattr = {};
 	uint16_t file_handle = InvalidFileHandle;
-	uint32_t bigdummy = 0;
 	bool success = true;
 	/* Create if not exist. Open if exist. Both in read/write mode */
 	if (!pipe_file && append) {
@@ -212,7 +211,8 @@ static uint16_t get_output_redirection(const char *out_file,
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			success = false;
 		} else if ((success = DOS_OpenFile(out_file, OPEN_READWRITE, &file_handle, fcb))) {
-			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END, fcb);
+			uint32_t seek_pos = 0;
+			DOS_SeekFile(file_handle, &seek_pos, DOS_SEEK_END, fcb);
 		} else {
 			// Create if not exists.
 			success = DOS_CreateFile(out_file,
