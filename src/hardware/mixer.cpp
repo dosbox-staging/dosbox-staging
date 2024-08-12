@@ -2516,7 +2516,9 @@ static void capture_callback()
 
 	// We can't block waiting on the mixer thread
 	// Some mixer channels block waiting on the main thread and this would deadlock
-	std::vector<int16_t> frames = {};
+	static std::vector<int16_t> frames = {};
+	frames.clear();
+
 	const int samples_available = check_cast<int>(mixer.capture_queue.Size());
 	const int samples_requested = std::min(num_samples, samples_available);
 	if (samples_requested > 0) {
