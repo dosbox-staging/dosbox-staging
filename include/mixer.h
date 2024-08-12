@@ -241,6 +241,8 @@ public:
 	void SetChorusLevel(const float level);
 	float GetChorusLevel() const;
 
+	void AddAudioFrames(const std::vector<AudioFrame>& frames);
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(const int num_frames, const Type* data);
 
