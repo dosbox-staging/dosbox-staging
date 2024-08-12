@@ -56,6 +56,7 @@ static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
 
 // TODO This seems like is a general-purpose lookup, consider moving it
 extern int16_t lut_u8to16[UINT8_MAX + 1];
+static constexpr int16_t* lut_s8to16 = lut_u8to16 + 128;
 
 constexpr auto Max16BitSampleValue = INT16_MAX;
 constexpr auto Min16BitSampleValue = INT16_MIN;
