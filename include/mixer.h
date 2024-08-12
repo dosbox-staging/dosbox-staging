@@ -495,10 +495,12 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 {
 	// Currently only handles mono sound (output_queue is a primitive type and frames == samples)
 	// Special case for AudioType == AudioFrame (stereo floating-point sound)
-	static_assert((!stereo) || std::is_same<AudioType, AudioFrame>::value);
+	static_assert((!stereo) || std::is_same_v<AudioType, AudioFrame>);
 
 	// AudioFrame type is always stereo
-	static_assert(stereo || (!std::is_same<AudioType, AudioFrame>::value));
+	static_assert(stereo || (!std::is_same_v<AudioType, AudioFrame>));
+
+	assert(device && device->channel);
 
 	if (MIXER_FastForwardModeEnabled()) {
 		// Special case, normally only hit when using the fast-forward hotkey (Alt + F12)
@@ -518,30 +520,21 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 		// This provides a good size to avoid over-runs and stalls.
 		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * 2.0f));
 	}
-	int frames_recieved = 0;
-	if (frames_requested > 0) {
-		std::vector<AudioType> to_mix = {};
-		device->output_queue.BulkDequeue(to_mix, frames_requested);
-		frames_recieved = check_cast<int>(to_mix.size());
-		if (frames_recieved > 0) {
-			// One of the GCC CI builds throws a duplicated branch warning
-			// Clang apparently doesn't have this warning because it throws an "unknown warning" warning in the pragma
-			#ifndef __clang__
-			#pragma GCC diagnostic push
-			#pragma GCC diagnostic ignored "-Wduplicated-branches"
-			#endif
-			if (std::is_same<AudioType, AudioFrame>::value) {
-				// AudioFrame has the same memory layout as 2x floats
-				device->channel->template AddSamples<float, stereo, signeddata, nativeorder>(frames_recieved, reinterpret_cast<float*>(to_mix.data()));
-			} else {
-				device->channel->template AddSamples<AudioType, stereo, signeddata, nativeorder>(frames_recieved, to_mix.data());
-			}
-			#ifndef __clang__
-			#pragma GCC diagnostic pop
-			#endif
+	static std::vector<AudioType> to_mix = {};
+
+	const auto frames_received = check_cast<int>(
+	        device->output_queue.BulkDequeue(to_mix, frames_requested));
+
+	if (frames_received > 0) {
+		if constexpr (std::is_same_v<AudioType, AudioFrame>) {
+			device->channel->AddAudioFrames(to_mix);
+		} else {
+			device->channel->template AddSamples<AudioType, stereo, signeddata, nativeorder>(
+			        frames_received, to_mix.data());
 		}
 	}
-	if (frames_requested > frames_recieved) {
+	// Fill any shortfall with silence
+	if (frames_received < frames_requested) {
 		device->channel->AddSilence();
 	}
 }
