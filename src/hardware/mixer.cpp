@@ -2297,6 +2297,20 @@ void MixerChannel::AddSamples_s16u_nonnative(const int num_frames, const uint16_
 	AddSamples<uint16_t, true, false, false>(num_frames, data);
 }
 
+void MixerChannel::AddAudioFrames(const std::vector<AudioFrame>& frames)
+{
+	constexpr bool IsStereo = true;
+	constexpr bool IsSigned = true;
+	constexpr bool IsNative = true;
+
+	if (!frames.empty()) {
+		const auto num_frames = static_cast<int>(frames.size());
+		const auto frame_ptr  = &frames.front()[0];
+
+		AddSamples<float, IsStereo, IsSigned, IsNative>(num_frames, frame_ptr);
+	}
+}
+
 std::string MixerChannel::DescribeLineout() const
 {
 	if (!HasFeature(ChannelFeature::Stereo)) {
