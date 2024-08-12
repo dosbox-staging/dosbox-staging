@@ -81,8 +81,9 @@ void RWQueue<T>::Clear()
 }
 
 template <typename T>
-size_t RWQueue<T>::MaxCapacity() const
+size_t RWQueue<T>::MaxCapacity()
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	return capacity;
 }
 
@@ -102,8 +103,9 @@ bool RWQueue<T>::IsEmpty()
 }
 
 template <typename T>
-bool RWQueue<T>::IsRunning() const
+bool RWQueue<T>::IsRunning()
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	return is_running;
 }
 
@@ -118,13 +120,15 @@ bool RWQueue<T>::Enqueue(T&& item)
 	// add it, and notify the next waiting thread that we've got an item
 	if (is_running) {
 		queue.emplace(queue.end(), std::move(item));
+
+		lock.unlock();
+		has_items.notify_one();
+
+		return true;
 	}
 	// If we stopped while enqueing, then anything that was enqueued prior
 	// to being stopped is safely in the queue.
-
-	lock.unlock();
-	has_items.notify_one();
-	return is_running;
+	return false;
 }
 
 template <typename T>
@@ -149,7 +153,13 @@ bool RWQueue<T>::NonblockingEnqueue(T&& item)
 // room for just one item to avoid spinning with a zero count (which burns CPU).
 
 template <typename T>
-bool RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_requested)
+size_t RWQueue<T>::BulkEnqueue(std::vector<T>& from_source)
+{
+	return BulkEnqueue(from_source, from_source.size());
+}
+
+template <typename T>
+size_t RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_requested)
 {
 	constexpr size_t min_items = 1;
 	assert(num_requested >= min_items);
@@ -180,25 +190,35 @@ bool RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_reque
 			queue.insert(queue.end(),
 			             std::move_iterator(source_start),
 			             std::move_iterator(source_end));
+
+			// notify the first waiting thread that we have an item
+			lock.unlock();
+			has_items.notify_one();
+
 			source_start = source_end;
 			num_remaining -= num_items;
 		} else {
 			// If we stopped while bulk enqueing, then stop here.
 			// Anything that was enqueued prior to being stopped is
 			// safely in the queue.
-			num_remaining = 0;
+			break;
 		}
-
-		// notify the next waiting thread that we have an item
-		lock.unlock();
-		has_items.notify_one();
 	}
 	from_source.clear();
-	return is_running;
+
+	assert(num_remaining <= num_requested);
+	return (num_requested - num_remaining);
 }
 
 template <typename T>
-size_t RWQueue<T>::NonblockingBulkEnqueue(std::vector<T>& from_source, const size_t num_requested)
+size_t RWQueue<T>::NonblockingBulkEnqueue(std::vector<T>& from_source)
+{
+	return NonblockingBulkEnqueue(from_source, from_source.size());
+}
+
+template <typename T>
+size_t RWQueue<T>::NonblockingBulkEnqueue(std::vector<T>& from_source,
+                                          const size_t num_requested)
 {
 	assert(num_requested > 0);
 	assert(num_requested <= from_source.size());
@@ -244,24 +264,34 @@ std::optional<T> RWQueue<T>::Dequeue()
 }
 
 template <typename T>
-bool RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_requested)
+size_t RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_requested)
 {
-	constexpr size_t min_items = 1;
-	assert(num_requested >= min_items);
-
-	if (into_target.size() != num_requested) {
+	if (into_target.size() < num_requested) {
 		into_target.resize(num_requested);
 	}
 
-	auto target_start  = into_target.begin();
+	const auto num_dequeued = BulkDequeue(into_target.data(), num_requested);
+
+	// cap off the target vector to match the number that were dequeued
+	into_target.resize(num_dequeued);
+
+	return num_dequeued;
+}
+
+template <typename T>
+size_t RWQueue<T>::BulkDequeue(T* const into_target, const size_t num_requested)
+{
+	assert(into_target);
+	auto target_start  = into_target;
 	auto num_remaining = num_requested;
 
 	while (num_remaining > 0) {
 		std::unique_lock<std::mutex> lock(mutex);
 
-		const auto num_items = std::max(min_items,
-		                                std::min(num_remaining,
-		                                         queue.size()));
+		constexpr size_t MinItems = 1;
+		const auto num_items      = std::max(MinItems,
+                                                std::min(num_remaining,
+                                                         queue.size()));
 
 		// wait until we're stopped or the queue has enough items
 		has_items.wait(lock, [&] {
@@ -277,22 +307,19 @@ bool RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_reque
 			std::move(queue.begin(), queue_end, target_start);
 			queue.erase(queue.begin(), queue_end);
 
+			// notify the first waiting thread that the queue has room
+			lock.unlock();
+			has_room.notify_one();
+
 			target_start += static_cast<difference_t>(num_items);
 			num_remaining -= num_items;
-
 		} else {
-			// If we stopped while dequeing, cap off the target
-			// vector based on the subset that were dequeued.
-			assert(num_remaining <= num_requested);
-			into_target.resize(num_requested - num_remaining);
-			num_remaining = 0;
+			// The queue was stopped mid-dequeue!
+			break;
 		}
-
-		// notify the first waiting thread that the queue now has room
-		lock.unlock();
-		has_room.notify_one();
 	}
-	return !into_target.empty();
+	assert(num_remaining <= num_requested);
+	return (num_requested - num_remaining);
 }
 
 // Explicit template instantiations

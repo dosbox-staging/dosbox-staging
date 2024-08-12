@@ -2477,7 +2477,7 @@ static void mix_samples(const int frames_requested)
 			// Without this, it's a complete stuttery mess though so it's the lesser of two evils
 			mixer.capture_queue.Clear();
 		}
-		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer, mixer.capture_buffer.size());
+		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer);
 	}
 
 	// Normalize the final output before sending to SDL
@@ -2582,7 +2582,7 @@ static void mixer_thread_loop()
 			// SDL callback remains active. Enqueue silence.
 			mixer.output_buffer.clear();
 			mixer.output_buffer.resize(mixer.blocksize);
-			mixer.final_output.BulkEnqueue(mixer.output_buffer, mixer.output_buffer.size());
+			mixer.final_output.BulkEnqueue(mixer.output_buffer);
 			continue;
 		}
 
@@ -2609,7 +2609,7 @@ static void mixer_thread_loop()
 		}
 
 		assert(to_mix.size() == static_cast<size_t>(mixer.blocksize));
-		mixer.final_output.BulkEnqueue(to_mix, to_mix.size());
+		mixer.final_output.BulkEnqueue(to_mix);
 	}
 }
 
