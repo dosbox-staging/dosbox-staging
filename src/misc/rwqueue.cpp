@@ -26,6 +26,9 @@
 
 template <typename T>
 RWQueue<T>::RWQueue(size_t queue_capacity)
+#ifdef HAVE_MEMORY_RESOURCE
+        : queue(&pool)
+#endif
 {
 	Resize(queue_capacity);
 }
