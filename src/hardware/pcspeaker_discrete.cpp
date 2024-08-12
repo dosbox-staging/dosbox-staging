@@ -424,7 +424,7 @@ void PcSpeakerDiscrete::PicCallback(const int requested_frames)
 		output.push_back(value / period_per_frame_ms);
 	}
 
-	output_queue.NonblockingBulkEnqueue(output, output.size());
+	output_queue.NonblockingBulkEnqueue(output);
 }
 
 void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
