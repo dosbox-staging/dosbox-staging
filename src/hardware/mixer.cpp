@@ -2535,22 +2535,25 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	assert(bytes_requested >= 0);
 
 	ZoneScoped;
-	memset(stream, 0, static_cast<size_t>(bytes_requested));
 
-	constexpr auto BytesPer32BitSample = 4;
-	constexpr auto BytesPerSampleFrame = BytesPer32BitSample * 2; // stereo
+	constexpr int BytesPerAudioFrame = sizeof(AudioFrame);
 
-	const auto frames_requested = bytes_requested / BytesPerSampleFrame;
-
+	const auto frames_requested = check_cast<size_t>(bytes_requested /
+	                                                 BytesPerAudioFrame);
 	// Mac OSX has been observed to be problematic if we ever block inside SDL's callback
 	// This ensures that we do not block waiting for more audio
 	// In the queue has run dry, we write what we have available and the rest of the request is silence
-	const auto num_frames = std::min(check_cast<int>(mixer.final_output.Size()), frames_requested);
-	if (num_frames > 0) {
-		std::vector<AudioFrame> audio_frames = {};
-		mixer.final_output.BulkDequeue(audio_frames, num_frames);
-		memcpy(stream, audio_frames.data(), audio_frames.size() * sizeof(AudioFrame));
-	}
+	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
+	                                        frames_requested);
+
+	const auto frame_stream = reinterpret_cast<AudioFrame*>(stream);
+
+	const auto frames_received = mixer.final_output.BulkDequeue(frame_stream,
+	                                                            frames_to_dequeue);
+	// Satisfy any shortfall with silence
+	std::fill(frame_stream + frames_received,
+	          frame_stream + frames_requested,
+	          AudioFrame{});
 }
 
 static void mixer_thread_loop()
