@@ -1144,7 +1144,7 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 
 void MixerChannel::Mix(const int frames_requested)
 {
-	assert(frames_requested >= 0);
+	assert(frames_requested > 0);
 
 	if (!is_enabled) {
 		return;
@@ -1654,7 +1654,7 @@ static constexpr void fill_8to16_lut()
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 {
-	assert(pos >= 0);
+	assert(pos > 0);
 
 	AudioFrame frame = {};
 
@@ -1787,7 +1787,7 @@ template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
                                                      const int num_frames)
 {
-	assert(num_frames >= 0);
+	assert(num_frames > 0);
 	convert_buffer.clear();
 
 	const auto mapped_output_left  = output_map.left;
@@ -2038,7 +2038,7 @@ bool MixerChannel::WakeUp()
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 void MixerChannel::AddSamples(const int num_frames, const Type* data)
 {
-	assert(num_frames >= 0);
+	assert(num_frames > 0);
 
 	if (num_frames <= 0) {
 		return;
@@ -2375,7 +2375,7 @@ static float normalize_sample(float sample)
 // Mix a certain amount of new sample frames
 static void mix_samples(const int frames_requested)
 {
-	assert(frames_requested >= 0);
+	assert(frames_requested > 0);
 
 	mixer.output_buffer.clear();
 	mixer.output_buffer.resize(frames_requested);
@@ -2527,7 +2527,7 @@ static void capture_callback()
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    Uint8* stream, int bytes_requested)
 {
-	assert(bytes_requested >= 0);
+	assert(bytes_requested > 0);
 
 	ZoneScoped;
 
