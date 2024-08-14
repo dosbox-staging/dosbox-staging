@@ -336,7 +336,7 @@ size_t RWQueue<T>::BulkDequeue(T* const into_target, const size_t num_requested)
 template class RWQueue<int>;
 template class RWQueue<std::vector<int16_t>>;
 
-// FluidSynth, MT-32, LPT DAC
+// Threaded audio devices
 #include "audio_frame.h"
 template class RWQueue<AudioFrame>;
 
@@ -351,10 +351,6 @@ template class RWQueue<float>;
 
 // Tandy
 template class RWQueue<uint8_t>;
-
-// SoundBlaster
-#include "audio_vector.h"
-template class RWQueue<std::unique_ptr<AudioVector>>;
 
 // Audio capture
 template class RWQueue<int16_t>;
