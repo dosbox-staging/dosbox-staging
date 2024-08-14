@@ -26,21 +26,18 @@
 #include <string>
 #include <tuple>
 
-#include "audio_vector.h"
 #include "autoexec.h"
 #include "bios.h"
 #include "bit_view.h"
 #include "bitops.h"
 #include "channel_names.h"
 #include "control.h"
-#include "dma.h"
 #include "hardware.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "midi.h"
-#include "mixer.h"
 #include "pic.h"
-#include "rwqueue.h"
+#include "sblaster.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
@@ -61,7 +58,6 @@ constexpr uint8_t DspNoCommand = 0;
 
 constexpr uint16_t DmaBufSize = 1024;
 constexpr uint8_t DspBufSize  = 64;
-constexpr uint16_t DspDacSize = 512;
 
 constexpr uint8_t SbShift      = 14;
 constexpr uint16_t SbShiftMask = ((1 << SbShift) - 1);
@@ -124,6 +120,22 @@ enum class DmaMode {
 };
 
 enum class EssType { None, Es1688 };
+
+enum class FrameType { Mono, Stereo };
+
+class Dac {
+public:
+	int MeasureHighwaterRateHz();
+	AudioFrame RenderFrame();
+
+private:
+	double last_write_ms   = {};
+	int rate_change_tally  = {};
+	int high_water_rate_hz = MinPlaybackRateHz;
+};
+
+// TODO: Combine the SBLASTER class, 'sb' global struct, and all the static
+// functions into a single unified class with member data and member functions.
 
 struct SbInfo {
 	uint32_t freq_hz = 0;
@@ -196,17 +208,7 @@ struct SbInfo {
 		int hot_warmup_ms       = 0;
 		int warmup_remaining_ms = 0;
 	} dsp = {};
-
-	struct {
-		int16_t data[DspDacSize + 1] = {};
-
-		// Number of entries in the DAC
-		uint16_t used = 0;
-
-		// Index of current entry
-		int16_t last = 0;
-	} dac = {};
-
+	Dac dac = {};
 	struct {
 		uint8_t index = 0;
 
@@ -259,11 +261,13 @@ struct SbInfo {
 		int value      = 0;
 		uint32_t count = 0;
 	} e2 = {};
-
-	MixerChannelPtr chan = nullptr;
 };
 
 static SbInfo sb = {};
+
+std::unique_ptr<SBLASTER> sblaster = {};
+
+static void sblaster_pic_callback([[maybe_unused]] const uint32_t = 0);
 
 // clang-format off
 
@@ -325,9 +329,6 @@ static int e2_incr_table[4][9] = {
         {-0x01,  0x02,  0x04, -0x08,  0x10, -0x20, -0x40,  0x80, -151},
         { 0x01, -0x02,  0x04, -0x08, -0x10,  0x20, -0x40,  0x80,   90}
 };
-
-static int frames_added_this_tick = 0;
-RWQueue<std::unique_ptr<AudioVector>> soundblaster_mixer_queue{128};
 
 static const char* sb_log_prefix()
 {
@@ -886,22 +887,53 @@ static std::array<uint8_t, 2> decode_adpcm_4bit(const uint8_t data)
 	        decode_adpcm_portion(data & 0xf, AdjustMap, ScaleMap, LastIndex)};
 }
 
+// Returns a vector of AudioFrames from the source samples. If the Sound Blaster
+// is still warming up then the frames will be silent.
 template <typename T>
-static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
+static std::vector<AudioFrame>& maybe_silence(const T* samples,
+                                              const uint32_t num_samples,
+                                              const FrameType frame_type)
 {
-	if (sb.dsp.warmup_remaining_ms <= 0) {
-		return buffer;
+	assert(samples && num_samples > 0);
+
+	static std::vector<AudioFrame> frames = {};
+
+	const auto is_mono = (frame_type == FrameType::Mono);
+
+	const size_t num_frames = num_samples / (is_mono ? 1 : 2);
+
+	if (sb.dsp.warmup_remaining_ms > 0) {
+		frames.resize(num_frames);
+		--sb.dsp.warmup_remaining_ms;
+		return frames;
 	}
 
-	static std::vector<T> quiet_buffer = {};
-	constexpr auto Silent = Mixer_GetSilentDOSSample<T>();
+	auto to_float = [](const T sample) -> float {
+		if constexpr (std::is_same_v<T, uint8_t>) {
+			return lut_u8to16[sample];
+		} else if constexpr (std::is_same_v<T, int8_t>) {
+			return lut_s8to16[sample];
+		} else if constexpr (std::is_same_v<T, uint16_t>) {
+			constexpr auto SilentSample = Mixer_GetSilentDOSSample<T>();
+			return static_cast<int16_t>(le16_to_host(sample) - SilentSample);
+		} else if constexpr (std::is_same_v<T, int16_t>) {
+			return static_cast<int16_t>(le16_to_host(static_cast<uint16_t>(sample)));
+		} else {
+			assertm(false, "Conversion is for 8 & 16-bit ints only!");
+			return 0.0f;
+		}
+	};
 
-	if (quiet_buffer.size() < num_samples) {
-		quiet_buffer.resize(num_samples, Silent);
+	auto sample_ptr       = samples;
+	auto remaining_frames = num_frames;
+
+	while (remaining_frames--) {
+		const float left  = to_float(*sample_ptr++);
+		const float right = is_mono ? left : to_float(*sample_ptr++);
+		frames.emplace_back(left, right);
 	}
-
-	--sb.dsp.warmup_remaining_ms;
-	return quiet_buffer.data();
+	// The receiver manages the vector by moving items out
+	return frames;
 }
 
 static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t i = 0)
@@ -921,10 +953,14 @@ static uint32_t read_dma_16bit(const uint32_t bytes_to_read, const uint32_t i = 
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static void enqueue_frames(std::unique_ptr<AudioVector> frames)
+// This keeps track of the balance of queued frames. It's a balance because
+// it's decremented through the passage of time (every per-frame tick).
+size_t queued_frames_balance = 0;
+
+void enqueue_frames(std::vector<AudioFrame>& frames)
 {
-	frames_added_this_tick += frames->num_frames;
-	soundblaster_mixer_queue.NonblockingEnqueue(std::move(frames));
+	assert(sblaster);
+	queued_frames_balance += sblaster->output_queue.NonblockingBulkEnqueue(frames);
 }
 
 static void play_dma_transfer(const uint32_t bytes_requested)
@@ -977,8 +1013,9 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			constexpr auto NumDecoded = check_cast<uint8_t>(
 			        decoded.size());
 
-			enqueue_frames(std::make_unique<AudioVectorM8>(
-				NumDecoded, maybe_silence(NumDecoded, decoded.data())));
+			enqueue_frames(maybe_silence(decoded.data(),
+			                             NumDecoded,
+			                             FrameType::Mono));
 			num_samples += NumDecoded;
 			i++;
 		}
@@ -1016,11 +1053,15 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			if (frames) {
 				if (sb.dma.sign) {
 					const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-					enqueue_frames(std::make_unique<AudioVectorS8S>(
-						frames, maybe_silence(samples, signed_buf)));
+					enqueue_frames(
+					        maybe_silence(signed_buf,
+					                      samples,
+					                      FrameType::Stereo));
 				} else {
-					enqueue_frames(std::make_unique<AudioVectorS8>(
-						frames, maybe_silence(samples, sb.dma.buf.b8)));
+					enqueue_frames(
+					        maybe_silence(sb.dma.buf.b8,
+					                      samples,
+					                      FrameType::Stereo));
 				}
 			}
 			// Otherwise there's an unhandled dangling sample from
@@ -1035,16 +1076,18 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		} else { // Mono
 			bytes_read = read_dma_8bit(bytes_to_read);
 			samples    = bytes_read;
-			frames     = check_cast<uint16_t>(samples / channels);
-			assert(channels == 1 && frames == samples); // sanity-check
-			                                            // mono
+			// mono sanity-check
+			assert(channels == 1);
+
 			if (sb.dma.sign) {
 				const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-				enqueue_frames(std::make_unique<AudioVectorM8S>(
-					frames, maybe_silence(samples, signed_buf)));
+				enqueue_frames(maybe_silence(signed_buf,
+				                             samples,
+				                             FrameType::Mono));
 			} else {
-				enqueue_frames(std::make_unique<AudioVectorM8>(
-					frames, maybe_silence(samples, sb.dma.buf.b8)));
+				enqueue_frames(maybe_silence(sb.dma.buf.b8,
+				                             samples,
+				                             FrameType::Mono));
 			}
 		}
 		break;
@@ -1063,12 +1106,16 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			// Only add whole frames when in stereo DMA mode
 			if (frames) {
 				if (sb.dma.sign) {
-					enqueue_frames(std::make_unique<AudioVectorS16>(
-						frames, maybe_silence(samples, sb.dma.buf.b16)));
+					enqueue_frames(
+					        maybe_silence(sb.dma.buf.b16,
+					                      samples,
+					                      FrameType::Stereo));
 				} else {
 					const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-					enqueue_frames(std::make_unique<AudioVectorS16U>(
-						frames, maybe_silence(samples, unsigned_buf)));
+					enqueue_frames(
+					        maybe_silence(unsigned_buf,
+					                      samples,
+					                      FrameType::Stereo));
 				}
 			}
 			if (samples & 1) {
@@ -1083,16 +1130,18 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		} else { // 16-bit mono
 			bytes_read = read_dma_16bit(bytes_to_read);
 			samples    = bytes_read / dma16_to_sample_divisor;
-			frames     = check_cast<uint16_t>(samples / channels);
-			assert(channels == 1 && frames == samples); // sanity-check
-			                                            // mono
+			// mono sanity-check
+			assert(channels == 1);
+
 			if (sb.dma.sign) {
-				enqueue_frames(std::make_unique<AudioVectorM16>(
-					frames, maybe_silence(samples, sb.dma.buf.b16)));
+				enqueue_frames(maybe_silence(sb.dma.buf.b16,
+				                             samples,
+				                             FrameType::Mono));
 			} else {
 				const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-				enqueue_frames(std::make_unique<AudioVectorM16U>(
-					frames, maybe_silence(samples, unsigned_buf)));
+				enqueue_frames(maybe_silence(unsigned_buf,
+				                             samples,
+				                             FrameType::Mono));
 			}
 		}
 		break;
@@ -1225,21 +1274,56 @@ static void flush_remainig_dma_transfer()
 	}
 }
 
-static void set_channel_rate_hz(const int requested_rate_hz)
+void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 {
 	const auto rate_hz = std::clamp(MinPlaybackRateHz,
 	                                requested_rate_hz,
 	                                NativeDacRateHz);
 
-	assert(sb.chan);
-	if (sb.chan->GetSampleRate() != rate_hz) {
-		sb.chan->SetSampleRate(rate_hz);
+	assert(channel);
+
+	if (channel->GetSampleRate() != rate_hz) {
+		channel->SetSampleRate(rate_hz);
 	}
+}
+
+AudioFrame Dac::RenderFrame()
+{
+	return lut_u8to16[sb.dsp.in.data[0]];
+}
+
+int Dac::MeasureHighwaterRateHz()
+{
+	const auto curr_write_ms = PIC_FullIndex();
+
+	const auto elapsed_ms = curr_write_ms - last_write_ms;
+
+	const auto rate_hz = elapsed_ms > 0 ? MillisInSecond / elapsed_ms : 0.0;
+
+	rate_change_tally = rate_hz > high_water_rate_hz ? rate_change_tally + 1 : 0;
+
+	constexpr auto RateChangeThreshold = 3;
+	if (rate_change_tally > RateChangeThreshold) {
+		rate_change_tally  = 0;
+		high_water_rate_hz = iceil(rate_hz);
+		// LOG_MSG("%s: DAC running at %d Hz", sb_log_prefix(), high_water_rate_hz);
+	}
+
+	last_write_ms = curr_write_ms;
+
+	return high_water_rate_hz;
 }
 
 static void dsp_change_mode(const DspMode mode)
 {
 	if (sb.mode != mode) {
+		switch (mode) {
+		case DspMode::Dac: sb.dac = {}; break;
+		case DspMode::None:
+		case DspMode::Dma:
+		case DspMode::DmaPause:
+		case DspMode::DmaMasked: break;
+		};
 		sb.mode = mode;
 	}
 }
@@ -1309,7 +1393,9 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
 	}
 	sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 	sb.dma.min  = (sb.dma.rate * 3) / 1000;
-	set_channel_rate_hz(freq_hz);
+
+	assert(sblaster);
+	sblaster->SetChannelRateHz(freq_hz);
 
 	PIC_RemoveEvents(ProcessDMATransfer);
 	// Set to be masked, the dma call can change this again.
@@ -1436,17 +1522,18 @@ static void dsp_reset()
 	}
 
 	sb.adpcm         = {};
+	sb.dac           = {};
 	sb.freq_hz       = DefaultPlaybackRateHz;
 	sb.time_constant = 45;
-	sb.dac.used      = 0;
-	sb.dac.last      = 0;
 	sb.e2.value      = 0xaa;
 	sb.e2.count      = 0;
 
 	sb.irq.pending_8bit  = false;
 	sb.irq.pending_16bit = false;
 
-	set_channel_rate_hz(DefaultPlaybackRateHz);
+	if (sblaster) {
+		sblaster->SetChannelRateHz(DefaultPlaybackRateHz);
+	}
 
 	init_speaker_state();
 
@@ -1503,8 +1590,9 @@ static void dsp_adc_callback(const DmaChannel* /*chan*/, const DMAEvent event)
 
 static void dsp_change_rate(const uint32_t freq_hz)
 {
+	assert(sblaster);
 	if (sb.freq_hz != freq_hz && sb.dma.mode != DmaMode::None) {
-		set_channel_rate_hz(freq_hz / (sb.mixer.stereo_enabled ? 2 : 1));
+		sblaster->SetChannelRateHz(freq_hz / (sb.mixer.stereo_enabled ? 2 : 1));
 		sb.dma.rate = (freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 	}
@@ -1654,11 +1742,7 @@ static void dsp_do_command()
 
 	case 0x10: // Direct DAC
 		dsp_change_mode(DspMode::Dac);
-		if (sb.dac.used < DspDacSize) {
-			const auto mono_sample = lut_u8to16[sb.dsp.in.data[0]];
-			sb.dac.data[sb.dac.used++] = mono_sample;
-			sb.dac.data[sb.dac.used++] = mono_sample;
-		}
+		sblaster->SetChannelRateHz(sb.dac.MeasureHighwaterRateHz());
 		break;
 
 	case 0x24: // Singe Cycle 8-Bit DMA ADC
@@ -2180,14 +2264,15 @@ static uint8_t read_sb_pro_volume(const uint8_t* src)
 
 static void dsp_change_stereo(const bool stereo)
 {
+	assert(sblaster);
 	if (!sb.dma.stereo && stereo) {
-		set_channel_rate_hz(sb.freq_hz / 2);
+		sblaster->SetChannelRateHz(sb.freq_hz / 2);
 		sb.dma.mul *= 2;
 		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 
 	} else if (sb.dma.stereo && !stereo) {
-		set_channel_rate_hz(sb.freq_hz);
+		sblaster->SetChannelRateHz(sb.freq_hz);
 		sb.dma.mul /= 2;
 		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
@@ -2314,7 +2399,9 @@ static void ctmixer_write(const uint8_t val)
 					                  ? "Enabling"
 					                  : "Disabling");
 
-					sb.chan->SetLowPassFilter(
+					assert(sblaster && sblaster->channel);
+
+					sblaster->channel->SetLowPassFilter(
 					        sb.mixer.filter_enabled
 					                ? FilterState::On
 					                : FilterState::Off);
@@ -2816,8 +2903,52 @@ static uint8_t read_sb(const io_port_t port, const io_width_t)
 	return 0xff;
 }
 
+static void generate_frame();
+
+static void sblaster_pic_callback([[maybe_unused]] const uint32_t)
+{
+	assert(sblaster);
+	if (!sblaster->channel->is_enabled) {
+		return;
+	}
+
+	// Generate a new frame if we no longer have a balance.
+	if (!queued_frames_balance) {
+		generate_frame();
+	}
+
+	// This callback is fired at a rate of once every channel frame, so we
+	// decrement the positive balance because we've consumed one frame
+	// simply through the passage of time.
+	if (queued_frames_balance) {
+		--queued_frames_balance;
+	}
+
+	PIC_AddEvent(sblaster_pic_callback, sblaster->channel->GetMsPerFrame());
+}
+
+static void maybe_wakeup_and_start_callbacks()
+{
+	assert(sblaster);
+
+	// Channel was already awake.
+	if (!sblaster->channel->WakeUp()) {
+		return;
+	}
+
+	// If we were just awoken then we've had some extended silence. In that
+	// case, reset the DAC and take fresh new measurements.
+	if (sb.mode == DspMode::Dac) {
+		sb.dac = {};
+	}
+
+	PIC_AddEvent(sblaster_pic_callback, sblaster->channel->GetMsPerFrame());
+}
+
 static void write_sb(const io_port_t port, const io_val_t value, const io_width_t)
 {
+	maybe_wakeup_and_start_callbacks();
+
 	const auto val = check_cast<uint8_t>(value);
 
 	switch (port - sb.hw.base) {
@@ -2850,123 +2981,42 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 	return (sbaddr != 0 && sbirq != 0 && sbdma != 0);
 }
 
-static void sblaster_mixer_callback([[maybe_unused]]const int requested_frames)
+static void generate_frame()
 {
-	// We can ignore requested frames as this function gets called in a loop until it gets what it needs
-	// Overflow is not a concern as extra frames will remain in the channel's buffer and get mixed on the next callback
-
-	const auto frames = soundblaster_mixer_queue.Dequeue();
-	if (!frames) {
-		// Queue must be stopped, otherwise Dequeue() will block until some frames are available
-		sb.chan->AddSilence();
-		return;
-	}
-	// Weird double de-referencing syntax as the object type is std::optional<std::unique_ptr<AudioVector>>
-	(*frames)->AddSamples(sb.chan.get());
-}
-
-static void generate_frames(const int frames_requested)
-{
-	static int ticks_of_silence = 0;
+	assert(sblaster && sblaster->output_queue.IsRunning());
 
 	switch (sb.mode) {
 	case DspMode::None:
 	case DspMode::DmaPause:
 	case DspMode::DmaMasked:
-	if (!soundblaster_mixer_queue.IsRunning()) {
-		// We've been playing silence and are continuing to play silence
-		// Nothing to do except increment this variable so we don't loop forever
-		frames_added_this_tick += frames_requested;
+		// Enqueue an empty frame
+		queued_frames_balance += sblaster->output_queue.NonblockingEnqueue({});
 		break;
-	}
-	// Enqueue a tick's worth of silenced frames
-	// Some games (Tyrian for example) will switch to DmaMasked briefly (less than 5 ticks usually)
-	// We can't use AddSilence on the mixer thread as that asks for a blocksize of audio (usually over 10ms)
-	enqueue_frames(std::make_unique<AudioVectorM8S>(
-		frames_requested,
-		std::vector<int8_t>(frames_requested).data()
-	));
-
-	++ticks_of_silence;
-	if (ticks_of_silence > 5000) {
-		// We've been playing silence for 5 seconds
-		// Some games only play DMA sound in certain segments or for small durations
-		// Either we're not in a DMA game at all or its been quiet for a while
-		// Stop the mixer channel for performance reasons as this channel blocks waiting for the main thread to provide more audio
-		// 5 seconds is safe to avoid stuttering. Be careful if modifying this value as we're about to clear pending audio.
-
-		// This is different from the "sb.speaker_enable = false" state
-		// If the speaker is off, this function never gets called
-		// This is speaker on but playing silence
-		soundblaster_mixer_queue.Stop();
-		soundblaster_mixer_queue.Clear();
-		sb.chan->Enable(false);
-	}
-	break;
 
 	case DspMode::Dac:
-	// No-op if channel is already running
-	soundblaster_mixer_queue.Start();
-	sb.chan->Enable(true);
-	ticks_of_silence = 0;
+		queued_frames_balance += sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+		break;
 
-	if (sb.dac.used > 0) {
-		enqueue_frames(std::make_unique<AudioVectorStretched>(sb.dac.used, sb.dac.data));
-		// Reverse the addition done by enqueue_frames()
-		// This works everywhere but here because of stretched frames
-		frames_added_this_tick -= sb.dac.used;
-		frames_added_this_tick += frames_requested;
-		sb.dac.used = 0;
-	} else {
-		sb.mode = DspMode::None;
-	}
-	break;
+	case DspMode::Dma: {
+		// DMA processing can go for some time without having to send IO
+		// calls to the card; so we keep it awake when DMA is still
+		// running.
+		maybe_wakeup_and_start_callbacks();
 
-	case DspMode::Dma:
-	{
-		// No-op if channel is already running
-		soundblaster_mixer_queue.Start();
-		sb.chan->Enable(true);
-		ticks_of_silence = 0;
+		constexpr auto OneFrame = 1;
 
-		auto len = check_cast<uint32_t>(frames_requested);
-		len *= sb.dma.mul;
-		if (len & SbShiftMask) {
-			len += 1 << SbShift;
+		auto num_dma_bytes = sb.dma.mul * OneFrame;
+		if (num_dma_bytes & SbShiftMask) {
+			num_dma_bytes += 1 << SbShift;
 		}
-
-		len >>= SbShift;
-		if (len > sb.dma.left) {
-			len = sb.dma.left;
+		num_dma_bytes >>= SbShift;
+		if (num_dma_bytes > sb.dma.left) {
+			num_dma_bytes = sb.dma.left;
 		}
-
-		ProcessDMATransfer(len);
+		ProcessDMATransfer(num_dma_bytes);
 		break;
 	}
 	}
-}
-
-static void sblaster_pic_callback()
-{
-	if (!sb.speaker_enabled) {
-		// These are all no-ops if we're already stopped
-		soundblaster_mixer_queue.Stop();
-		soundblaster_mixer_queue.Clear();
-		sb.chan->Enable(false);
-		return;
-	}
-
-	static float frame_counter = 0.0f;
-
-	frame_counter += sb.chan->GetFramesPerTick();
-	const int total_frames = ifloor(frame_counter);
-	frame_counter -= static_cast<float>(total_frames);
-
-	while (frames_added_this_tick < total_frames) {
-		generate_frames(total_frames - frames_added_this_tick);
-	}
-
-	frames_added_this_tick -= total_frames;
 }
 
 static SbType determine_sb_type(const std::string& pref)
@@ -3117,308 +3167,282 @@ static bool is_cms_enabled(const SbType sbtype)
 
 void shutdown_sblaster(Section*);
 
-class SBLASTER final {
-private:
-	// Data
-	IO_ReadHandleObject read_handlers[0x10]   = {};
-	IO_WriteHandleObject write_handlers[0x10] = {};
+void SBLASTER::SetupEnvironment()
+{
+	// Ensure our port and addresses will fit in our format widths.
+	// The config selection controls their actual values, so this is
+	// a maximum-limit.
+	assert(sb.hw.base < 0xfff);
+	assert(sb.hw.irq <= 12);
+	assert(sb.hw.dma8 < 10);
 
-	static constexpr auto BlasterEnvVar = "BLASTER";
+	char blaster_env_val[] = "AHHH II DD HH TT";
 
-	OplMode oplmode = OplMode::None;
-	bool cms        = false;
+	if (sb.type == SbType::SB16) {
+		assert(sb.hw.dma16 < 10);
+		safe_sprintf(blaster_env_val,
+		             "A%x I%u D%u H%u T%d",
+		             sb.hw.base,
+		             sb.hw.irq,
+		             sb.hw.dma8,
+		             sb.hw.dma16,
+		             static_cast<int>(sb.type));
+	} else {
+		safe_sprintf(blaster_env_val,
+		             "A%x I%u D%u T%d",
+		             sb.hw.base,
+		             sb.hw.irq,
+		             sb.hw.dma8,
+		             static_cast<int>(sb.type));
+	}
 
-	void SetupEnvironment()
-	{
-		// Ensure our port and addresses will fit in our format widths.
-		// The config selection controls their actual values, so this is
-		// a maximum-limit.
-		assert(sb.hw.base < 0xfff);
-		assert(sb.hw.irq <= 12);
-		assert(sb.hw.dma8 < 10);
+	// Update AUTOEXEC.BAT line
+	LOG_MSG("%s: Setting '%s' environment variable to '%s'",
+	        sb_log_prefix(),
+	        BlasterEnvVar,
+	        blaster_env_val);
 
-		char blaster_env_val[] = "AHHH II DD HH TT";
+	AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
+}
 
-		if (sb.type == SbType::SB16) {
-			assert(sb.hw.dma16 < 10);
-			safe_sprintf(blaster_env_val,
-			             "A%x I%u D%u H%u T%d",
-			             sb.hw.base,
-			             sb.hw.irq,
-			             sb.hw.dma8,
-			             sb.hw.dma16,
-			             static_cast<int>(sb.type));
-		} else {
-			safe_sprintf(blaster_env_val,
-			             "A%x I%u D%u T%d",
-			             sb.hw.base,
-			             sb.hw.irq,
-			             sb.hw.dma8,
-			             static_cast<int>(sb.type));
+void SBLASTER::ClearEnvironment()
+{
+	AUTOEXEC_SetVariable(BlasterEnvVar, "");
+}
+
+SBLASTER::SBLASTER(Section* conf)
+{
+	assert(conf);
+
+	Section_prop* section = static_cast<Section_prop*>(conf);
+
+	sb.hw.base = section->Get_hex("sbbase");
+	sb.hw.irq  = static_cast<uint8_t>(section->Get_int("irq"));
+
+	sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
+
+	// Magic 32 divisor was probably the result of experimentation
+	sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
+
+	sb.mixer.enabled        = section->Get_bool("sbmixer");
+	sb.mixer.stereo_enabled = false;
+
+	const auto sbtype_pref = section->Get_string("sbtype");
+
+	sb.type     = determine_sb_type(sbtype_pref);
+	sb.ess_type = determine_ess_type(sbtype_pref);
+
+	switch (sb.ess_type) {
+	case EssType::None: break;
+	case EssType::Es1688:
+		sb.mixer.ess_id_str[0] = 0x16;
+		sb.mixer.ess_id_str[1] = 0x88;
+		sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
+		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
+	}
+
+	oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type, sb.ess_type);
+
+	// Init OPL
+	switch (oplmode) {
+	case OplMode::None:
+		write_handlers[0].Install(Port::AdLib::Command,
+		                          GUS_MirrorAdLibCommandPortWrite,
+		                          io_width_t::byte);
+		break;
+
+	case OplMode::Opl2:
+	case OplMode::DualOpl2:
+	case OplMode::Opl3:
+	case OplMode::Opl3Gold:
+	case OplMode::Esfm: {
+		OPL_Init(section, oplmode);
+		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
+		assert(opl_channel);
+
+		const std::string opl_filter_str = section->Get_string("opl_filter");
+		configure_opl_filter(opl_channel, opl_filter_str, sb.type);
+	} break;
+	}
+
+	cms = is_cms_enabled(sb.type);
+	if (cms) {
+		CMS_Init(section);
+	}
+
+	// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
+	const auto has_dac = (sb.type != SbType::None &&
+	                      sb.type != SbType::GameBlaster);
+
+	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma")) : 0;
+
+	// Configure the BIOS DAC callbacks as soon as the card's access
+	// ports ( port, IRQ, and potential 8-bit DMA address) are
+	// defined.
+	//
+	if (BIOS_ConfigureTandyDacCallbacks()) {
+		// Disable the hot warmup when the SB is being used as
+		// the Tandy's DAC because the BIOS toggles the SB's
+		// speaker on and off rapidly per-audio-sequence,
+		// resulting in "edge-to-edge" samples.
+		//
+		sb.dsp.hot_warmup_ms = 0;
+	}
+
+	if (!has_dac) {
+		return;
+	}
+
+	// The code below here sets up the DAC and DMA channels on all
+	// "sbtype = sb*" Sound Blaster type cards.
+	//
+	auto dma_channel = DMA_GetChannel(sb.hw.dma8);
+	assert(dma_channel);
+	dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
+
+	// Only Sound Blaster 16 uses a 16-bit DMA channel.
+	if (sb.type == SbType::SB16) {
+		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+
+		// Reserve the second DMA channel only if it's unique.
+		if (sb.hw.dma16 != sb.hw.dma8) {
+			dma_channel = DMA_GetChannel(sb.hw.dma16);
+			assert(dma_channel);
+			dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
 		}
+	}
 
-		// Update AUTOEXEC.BAT line
-		LOG_MSG("%s: Setting '%s' environment variable to '%s'",
+	std::set channel_features = {ChannelFeature::Sleep,
+	                             ChannelFeature::ReverbSend,
+	                             ChannelFeature::ChorusSend,
+	                             ChannelFeature::DigitalAudio};
+
+	if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2 ||
+	    sb.type == SbType::SB16) {
+		channel_features.insert(ChannelFeature::Stereo);
+	}
+
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
+	constexpr bool NativeOrder = true;
+
+	const auto callback = std::bind(
+	        MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
+
+	channel = MIXER_AddChannel(callback,
+	                           DefaultPlaybackRateHz,
+	                           ChannelName::SoundBlasterDac,
+	                           channel_features);
+
+	const std::string sb_filter_prefs = section->Get_string("sb_filter");
+
+	const auto sb_filter_always_on = section->Get_bool("sb_filter_always_on");
+
+	configure_sb_filter(channel, sb_filter_prefs, sb_filter_always_on, sb.type);
+
+	sb.dsp.state       = DspState::Normal;
+	sb.dsp.out.lastval = 0xaa;
+
+	for (uint8_t i = 4; i <= 0xf; ++i) {
+		if (i == 8 || i == 9) {
+			continue;
+		}
+		// Disable mixer ports for lower soundblaster
+		if ((sb.type == SbType::SB1 || sb.type == SbType::SB2) &&
+		    (i == 4 || i == 5)) {
+			continue;
+		}
+		read_handlers[i].Install(sb.hw.base + i, read_sb, io_width_t::byte);
+
+		write_handlers[i].Install(sb.hw.base + i, write_sb, io_width_t::byte);
+	}
+	for (uint16_t i = 0; i < 256; ++i) {
+		asp_regs[i] = 0;
+	}
+	asp_regs[5] = 0x01;
+	asp_regs[9] = 0xf8;
+
+	dsp_reset();
+
+	ctmixer_reset();
+
+	ProcessDMATransfer = &play_dma_transfer;
+
+	SetupEnvironment();
+
+	// Sound Blaster MIDI interface
+	if (!MIDI_Available()) {
+		sb.midi_enabled = false;
+	} else {
+		sb.midi_enabled = true;
+	}
+
+	if (sb.type == SbType::SB16) {
+		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
 		        sb_log_prefix(),
-		        BlasterEnvVar,
-		        blaster_env_val);
-
-		AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
+		        sb.hw.base,
+		        sb.hw.irq,
+		        sb.hw.dma8,
+		        sb.hw.dma16);
+	} else {
+		LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
+		        sb_log_prefix(),
+		        sb.hw.base,
+		        sb.hw.irq,
+		        sb.hw.dma8);
 	}
 
-	void ClearEnvironment()
-	{
-		AUTOEXEC_SetVariable(BlasterEnvVar, "");
+	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+	// This provides a good size to avoid over-runs and stalls.
+	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
+}
+
+SBLASTER::~SBLASTER()
+{
+	// Prevent discovery of the Sound Blaster via the environment
+	ClearEnvironment();
+
+	// Shutdown any FM Synth devices
+	if (oplmode != OplMode::None) {
+		OPL_ShutDown();
+	}
+	if (cms) {
+		CMS_ShutDown();
+	}
+	if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
+		return;
 	}
 
-public:
-	SBLASTER(Section* conf)
-	{
-		assert(conf);
+	LOG_MSG("%s: Shutting down", sb_log_prefix());
 
-		MIXER_LockMixerThread();
+	// Stop playback
+	if (channel) {
+		channel->Enable(false);
+	}
+	// Stop the game from accessing the IO ports
+	for (auto& rh : read_handlers) {
+		rh.Uninstall();
+	}
+	for (auto& wh : write_handlers) {
+		wh.Uninstall();
+	}
+	dsp_reset(); // Stop everything
+	sb.dsp.reset_tally = 0;
 
-		Section_prop* section = static_cast<Section_prop*>(conf);
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 
-		sb.hw.base = section->Get_hex("sbbase");
-		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
-
-		sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
-
-		// Magic 32 divisor was probably the result of experimentation
-		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
-
-		sb.mixer.enabled = section->Get_bool("sbmixer");
-		sb.mixer.stereo_enabled = false;
-
-		const auto sbtype_pref = section->Get_string("sbtype");
-
-		sb.type     = determine_sb_type(sbtype_pref);
-		sb.ess_type = determine_ess_type(sbtype_pref);
-
-		switch (sb.ess_type) {
-		case EssType::None: break;
-		case EssType::Es1688:
-			sb.mixer.ess_id_str[0] = 0x16;
-			sb.mixer.ess_id_str[1] = 0x88;
-			sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
-			sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
-		}
-
-		oplmode = determine_oplmode(section->Get_string("oplmode"),
-		                            sb.type,
-		                            sb.ess_type);
-
-		// Init OPL
-		switch (oplmode) {
-		case OplMode::None:
-			write_handlers[0].Install(Port::AdLib::Command,
-			                          GUS_MirrorAdLibCommandPortWrite,
-			                          io_width_t::byte);
-			break;
-
-		case OplMode::Opl2:
-		case OplMode::DualOpl2:
-		case OplMode::Opl3:
-		case OplMode::Opl3Gold:
-		case OplMode::Esfm: {
-			OPL_Init(section, oplmode);
-			auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
-			assert(opl_channel);
-
-			const std::string opl_filter_str = section->Get_string(
-			        "opl_filter");
-			configure_opl_filter(opl_channel, opl_filter_str, sb.type);
-		} break;
-		}
-
-		cms = is_cms_enabled(sb.type);
-		if (cms) {
-			CMS_Init(section);
-		}
-
-		// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
-		const auto has_dac = (sb.type != SbType::None &&
-		                      sb.type != SbType::GameBlaster);
-
-		sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma"))
-		                     : 0;
-
-		// Configure the BIOS DAC callbacks as soon as the card's access
-		// ports ( port, IRQ, and potential 8-bit DMA address) are
-		// defined.
-		//
-		if (BIOS_ConfigureTandyDacCallbacks()) {
-			// Disable the hot warmup when the SB is being used as
-			// the Tandy's DAC because the BIOS toggles the SB's
-			// speaker on and off rapidly per-audio-sequence,
-			// resulting in "edge-to-edge" samples.
-			//
-			sb.dsp.hot_warmup_ms = 0;
-		}
-
-		if (!has_dac) {
-			MIXER_UnlockMixerThread();
-			return;
-		}
-
-		// The code below here sets up the DAC and DMA channels on all
-		// "sbtype = sb*" Sound Blaster type cards.
-		//
-		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
-		assert(dma_channel);
-		dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
-
-		// Only Sound Blaster 16 uses a 16-bit DMA channel.
-		if (sb.type == SbType::SB16) {
-			sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
-
-			// Reserve the second DMA channel only if it's unique.
-			if (sb.hw.dma16 != sb.hw.dma8) {
-				dma_channel = DMA_GetChannel(sb.hw.dma16);
-				assert(dma_channel);
-				dma_channel->ReserveFor(sb_log_prefix(),
-				                        shutdown_sblaster);
-			}
-		}
-
-		std::set channel_features = {ChannelFeature::ReverbSend,
-		                             ChannelFeature::ChorusSend,
-		                             ChannelFeature::DigitalAudio};
-
-		if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2 ||
-		    sb.type == SbType::SB16) {
-			channel_features.insert(ChannelFeature::Stereo);
-		}
-
-		sb.chan = MIXER_AddChannel(sblaster_mixer_callback,
-		                           DefaultPlaybackRateHz,
-		                           ChannelName::SoundBlasterDac,
-		                           channel_features);
-
-		const std::string sb_filter_prefs = section->Get_string("sb_filter");
-
-		const auto sb_filter_always_on = section->Get_bool(
-		        "sb_filter_always_on");
-
-		configure_sb_filter(sb.chan,
-		                    sb_filter_prefs,
-		                    sb_filter_always_on,
-		                    sb.type);
-
-		sb.dsp.state       = DspState::Normal;
-		sb.dsp.out.lastval = 0xaa;
-		sb.dma.chan        = nullptr;
-
-		for (uint8_t i = 4; i <= 0xf; ++i) {
-			if (i == 8 || i == 9) {
-				continue;
-			}
-			// Disable mixer ports for lower soundblaster
-			if ((sb.type == SbType::SB1 || sb.type == SbType::SB2) &&
-			    (i == 4 || i == 5)) {
-				continue;
-			}
-			read_handlers[i].Install(sb.hw.base + i,
-			                         read_sb,
-			                         io_width_t::byte);
-
-			write_handlers[i].Install(sb.hw.base + i,
-			                          write_sb,
-			                          io_width_t::byte);
-		}
-		for (uint16_t i = 0; i < 256; ++i) {
-			asp_regs[i] = 0;
-		}
-		asp_regs[5] = 0x01;
-		asp_regs[9] = 0xf8;
-
-		dsp_reset();
-
-		ctmixer_reset();
-
-		ProcessDMATransfer = &play_dma_transfer;
-
-		SetupEnvironment();
-
-		// Sound Blaster MIDI interface
-		if (!MIDI_Available()) {
-			sb.midi_enabled = false;
-		} else {
-			sb.midi_enabled = true;
-		}
-
-		if (sb.type == SbType::SB16) {
-			LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
-			        sb_log_prefix(),
-			        sb.hw.base,
-			        sb.hw.irq,
-			        sb.hw.dma8,
-			        sb.hw.dma16);
-		} else {
-			LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
-			        sb_log_prefix(),
-			        sb.hw.base,
-			        sb.hw.irq,
-			        sb.hw.dma8);
-		}
-		TIMER_AddTickHandler(sblaster_pic_callback);
-		MIXER_UnlockMixerThread();
+	// Reset the DMA channels as the mixer is no longer reading samples
+	DMA_ResetChannel(sb.hw.dma8);
+	if (sb.type == SbType::SB16) {
+		DMA_ResetChannel(sb.hw.dma16);
 	}
 
-	~SBLASTER()
-	{
-		MIXER_LockMixerThread();
-		TIMER_DelTickHandler(sblaster_pic_callback);
-
-		// Prevent discovery of the Sound Blaster via the environment
-		ClearEnvironment();
-
-		// Shutdown any FM Synth devices
-		if (oplmode != OplMode::None) {
-			OPL_ShutDown();
-		}
-		if (cms) {
-			CMS_ShutDown();
-		}
-		if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
-			MIXER_UnlockMixerThread();
-			return;
-		}
-
-		LOG_MSG("%s: Shutting down", sb_log_prefix());
-
-		// Stop playback
-		if (sb.chan) {
-			soundblaster_mixer_queue.Stop();
-			sb.chan->Enable(false);
-		}
-		// Stop the game from accessing the IO ports
-		for (auto& rh : read_handlers) {
-			rh.Uninstall();
-		}
-		for (auto& wh : write_handlers) {
-			wh.Uninstall();
-		}
-		dsp_reset(); // Stop everything
-		sb.dsp.reset_tally = 0;
-
-		// Deregister the mixer channel and remove it
-		assert(sb.chan);
-		MIXER_DeregisterChannel(sb.chan);
-		sb.chan.reset();
-
-		// Reset the DMA channels as the mixer is no longer reading samples
-		DMA_ResetChannel(sb.hw.dma8);
-		if (sb.type == SbType::SB16) {
-			DMA_ResetChannel(sb.hw.dma16);
-		}
-
-		sb = {};
-		MIXER_UnlockMixerThread();
-	}
-
-}; // End of SBLASTER class
+	sb = {};
+}
 
 void init_sblaster_dosbox_settings(Section_prop& secprop)
 {
@@ -3506,20 +3530,23 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
 
-static std::unique_ptr<SBLASTER> sblaster = {};
-
 void init_sblaster(Section* sec)
 {
 	assert(sec);
 
+	MIXER_LockMixerThread();
 	sblaster = std::make_unique<SBLASTER>(sec);
+	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
 	sec->AddDestroyFunction(&shutdown_sblaster, ChangeableAtRuntime);
 }
 
 void shutdown_sblaster(Section* /*sec*/) {
-	sblaster = {};
+
+	MIXER_LockMixerThread();
+	sblaster.reset();
+	MIXER_UnlockMixerThread();
 }
 
 void SB_AddConfigSection(const ConfigPtr& conf)
