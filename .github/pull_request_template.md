@@ -11,6 +11,15 @@ _Feel free to include additional details, but please respect the reviewer's time
 _Related issues can be listed here (remove the section if not applicable.)_
 
 
+# Release notes
+
+_If this is a user-facing change that should be mentioned in the release notes, please provide a draft of the notes here._
+
+_It doesn't have to be perfect; the person writing the release notes will expand this if needed._
+
+_(Remove the section if no notes are needed.)_
+
+
 # Manual testing
 
 _Please describe the tests that you ran to verify your changes._
@@ -36,6 +45,7 @@ I have:
 - [ ] [checked](https://github.com/dosbox-staging/dosbox-staging/blob/main/scripts/compile_commits.sh) that all my commits can be built.
 - [ ] confirmed that my code does not cause performance regressions (e.g., by running the Quake benchmark).
 - [ ] added unit tests where applicable to prove the correctness of my code and to avoid future regressions.
+- [ ] provided the release notes draft (for significant user-facing changes).
 - [ ] made corresponding changes to the documentation or the website according to the [documentation guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/main/DOCUMENTATION.md).
 - [ ] [locally verified](https://github.com/dosbox-staging/dosbox-staging/blob/main/DOCUMENTATION.md#previewing-documentation-changes-locally) my website or documentation changes.
 
