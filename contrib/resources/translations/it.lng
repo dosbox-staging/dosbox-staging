@@ -740,7 +740,7 @@ Gestisce i blocchi della catena di memoria software corrotti:
 Memoria video in MB (1-8) o KB (da 256 a 8192).
 'auto' utilizza il valore predefinito in base alla scheda video selezionata
 (predefinito 'auto'). Fare riferimento all'impostazione 'machine' per l'elenco
-delle opzioni valide e dei valori di default per ogni scheda.
+delle opzioni valide e dei valori predefiniti per ogni scheda.
 .
 :CONFIG_VMEM_DELAY
 Configura l'emulazione del ritardo di accesso alla memoria video (predefinito
@@ -776,21 +776,21 @@ Controlla quali modalità video VESA sono disponibili:
               Utilizzare 4 o 8 MB di memoria video ('vmemsize') per avere
               la migliore compatibilità possibile con i giochi. Le modalità
               high color a risoluzione 320x200 sono escluse in quanto il loro
-              supporto fu parziale fino alla fine degli anni 90. Sono escluse
+              supporto fu parziale fino alla fine degli anni '90. Sono escluse
               anche le modalità video framebuffer lineari a 256 colori e
               risoluzione 320x240, 400x300 e 512x384 in quanto causano problemi
               di temporizzazione nei giochi che usano Build Engine.
-  halfline:   Come 'compatible', ma la modalità VESA 120h è sostituita da una
-              speciale modalità a mezza linea utilizzata da Extreme Assault.
-              Usare solo se necessario.
-  all:        Tutte le modalità sono disponibili, incluse modalità
+  halfline:   Equivalente a 'compatible', ma la modalità VESA 120h è sostituita
+              da una speciale modalità a mezza linea utilizzata da Extreme
+              Assault. Usare solo se necessario.
+  all:        Tutte le modalità sono disponibili, incluse le modalità
               VESA specifiche di DOSBox. Utilizzare 8 MB di memoria video per
               ottenere risultati ottimali. Alcuni giochi potrebbero
               presentare problemi di visualizzazione in presenza di alcune
-              modalità VESA; provare la modalità 'compatible' qualora dovesse
-              succedere. Le modalità high color 320x200 che sono rese
+              modalità VESA; qualora dovesse succedere, provare la modalità
+              'compatible'. Le modalità high color 320x200 che sono rese
               disponibili da questa impostazione sono spesso richieste da
-              alcune produzioni demoscene della fine degli anni 90.
+              alcune produzioni demoscene della fine degli anni '90.
 .
 :CONFIG_VGA_8DOT_FONT
 Utilizza caratteri larghi 8 pixel nelle schede grafiche VGA
@@ -1026,17 +1026,17 @@ adattivo:
                          un tipico monitor per PC.
 
 Altre opzioni dello shader comprendono (lista non esaustiva):
-  sharp:                 Effettua l'upscale dell'immagine trattando i pixel
-                         come se fossero rettangolari. L'immagine risultante
-                         sarà molto nitida con sfocature minime.
-  bilinear:              Effettua l'upscale dell'immagine utilizzando
-                         l'interpolazione bilineare (l'immagine risultante
-                         sarà sfocata).
-  nearest:               Effettua l'upscale dell'immagine utilizzando
-                         l'interpolazione nearest-neighbour (conosciuta anche
-                         come "non bilineare"). L'immagine risultante è la più
-                         nitida possibile, al costo di avere qualche pixel
-                         irregolare (meno visibile su schermi ad alta
+  sharp:                 Ridimensiona l'immagine trattando i pixel come
+                         rettangoli. L'immagine risultante sarà molto nitida
+                         con sfocature minime.
+  bilinear:              Ridimensiona l'immagine utilizzando il
+                         metodo di ricampionamento bilineare (l'immagine
+                         risultante sarà sfocata).
+  nearest:               Ridimensiona l'immagine utilizzando il metodo di
+                         ricampionamento nearest-neighbour (conosciuto anche
+                         come "non bilineare"). Il risultato sarà un'immagine
+                         il più nitida possibile, a scapito di eventuali pixel
+                         irregolari (meno visibile su schermi ad alta
                          risoluzione).
 
 Avviare DOSBox Staging con l'argomento della riga di comando '--list-glshaders'
@@ -1077,27 +1077,27 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
             e il core 'dynamic' per quelli che operano in modalità protetta.
             La maggior parte dei programmi funzioneranno correttamente con
             questa impostazione.
-  normal:   Il programma DOS è interpretato istruzione per istruzione. Questo
-            fa sì che la temporizzazione sia più accurata, ma pone un carico
-            sulla CPU host da 3 a 5 volte maggiore rispetto a 'dynamic'. Per
-            questa ragione, è consigliabile utilizzare questa impostazione
-            solo per programmi che eseguono in modalità reale che non hanno
-            bisogno di una CPU veloce, o che sono sensibili alla
+  normal:   Il programma DOS viene interpretato istruzione per istruzione.
+            Questo fa sì che la temporizzazione sia più accurata, ma pone un
+            carico sulla CPU di sistema da 3 a 5 volte maggiore rispetto a
+            'dynamic'. Pertanto, è consigliabile utilizzare questa impostazione
+            solo per i programmi eseguiti in modalità reale che non hanno
+            bisogno di una CPU (emulata) veloce, o che sono sensibili alla
             temporizzazione. Questa impostazione è inoltre necessaria per
             programmi che modificano il proprio codice.
-  simple:   Come il core 'normal', ma ottimizzata per i vecchi programmi
-            che eseguono in modalità reale; potrebbe risultare in una
-            compatibilità migliore con i giochi più vecchi. Diventa
-            automaticamente 'normal' se si entra in modalità protetta.
+  simple:   Simile al core 'normal', ma ottimizzata per i vecchi programmi
+            eseguiti in modalità reale; potrebbe risultare in una compatibilità
+            migliore con i giochi più vecchi. Passa automaticamente al core
+            'normal' con i programmi in modalità protetta.
   dynamic:  Le istruzioni del programma DOS sono tradotte in istruzioni della
-            CPU host in blocco, ed eseguite direttamente. Ciò pone un carico
-            sulla CPU host da 3 a 5 volte minore rispetto al core 'normal', ma
-            la temporizzazione é meno accurata. Il core 'dynamic' è una
-            necessità per i giochi esigenti in termini di CPU (e.g. giochi
-            SVGA in 3D). Programmi che modificano il proprio codice potrebbero
-            non funzionare correttamente o andare in crash con questa
-            impostazione; utilizzare il core 'normal' per questa tipologia di
-            programma.
+            CPU di sistema in blocco e quindi eseguite direttamente. Ciò pone
+            un carico sulla CPU di sistema da 3 a 5 volte minore rispetto al
+            core 'normal', ma la temporizzazione potrebbe essere meno accurata.
+            Il core 'dynamic' è una necessità per i giochi esigenti in termini
+            di CPU (e.g. giochi 3D SVGA). Programmi che modificano il
+            proprio codice potrebbero non funzionare correttamente o andare in
+            crash con questa impostazione; in tal caso utilizzare il core
+            'normal'.
 .
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione (predefinito 'auto').
@@ -1109,32 +1109,33 @@ programma non funzioni correttamente in modalità 'auto'.
                  riguarda i registri CR, e le istruzioni extra di un 486.
   386:           Utilizza il CPUID di un 386 ed effettua i calcoli di livello
                  di accesso alla pagina come un 386.
-  386_fast:      Come '386' ma i controlli di accesso alla pagina sono meno
-                 rigidi, risultando in un'esecuzione molto più veloce.
-  386_prefetch:  Come '386_fast', ma emula accuratamente la coda di prefetch
-                 della CPU. Funziona solamente con 'core = normal'. Questa
-                 impostazione è necessaria per quei programmi che modificano
-                 il proprio codice o che impiegano tecniche anti-debugging.
-                 Alcuni giochi che richiedono l'opzione '386_prefetch' sono
-                 Contra, FIFA International Soccer (1994), Terminator 1 e
-                 X-Men: Madness in The Murderworld.
+  386_fast:      Equivalente a '386' ma i controlli di accesso alla pagina
+                 sono meno rigidi, risultando in un'esecuzione molto più
+                 veloce.
+  386_prefetch:  Equivalente a '386_fast', ma emula accuratamente la coda di
+                 prefetch della CPU. Funziona solamente con 'core = normal'.
+                 Questa impostazione è necessaria per quei programmi che
+                 modificano il proprio codice o che impiegano tecniche
+                 anti-debugging. Alcuni giochi che richiedono l'opzione
+                 '386_prefetch' sono Contra, FIFA International Soccer (1994),
+                 Terminator 1 e X-Men: Madness in The Murderworld.
   486:           Utilizza il CPUID di un 486, il comportamento di un 486 per
                  i registri CR, e le istruzioni extra di un 486. Effettua
                  inoltre i calcoli di livello di accesso alla pagina come un
                  486 o superiore.
-  pentium:       Come '486', ma con il CPUID di un processore Pentium, il
-                 comportamento di un Pentium per i registri CR e il supporto
+  pentium:       Equivalente a '486', ma con il CPUID di un processore Pentium,
+                 il comportamento di un Pentium per i registri CR e il supporto
                  all'istruzione RDTSC. Impostazione consigliata per i giochi
-                 per Windows 3.x (e.g. Betrayal in Antara).
-  pentium_mmx:   Come 'pentium' ma include inoltre il set di istruzioni MMX.
-                 Pochissimi giochi utilizzano le istruzioni MMX; questa
-                 impostazione è fondamentalmente utile solo per le produzioni
+                 Windows 3.x (e.g. Betrayal in Antara).
+  pentium_mmx:   Equivalente a 'pentium' ma include inoltre il set di istruzioni
+                 MMX. Pochissimi giochi utilizzano le istruzioni MMX; questa
+                 impostazione è per lo più utile solo per le produzioni
                  demoscene.
 .
 :CONFIG_CYCLES
-L'impostazione 'cycles' è deprecata ma ancora accettata; si consiglia di usare
-le impostazioni 'cpu_cycles', 'cpu_cycles_protected' e 'cpu_throttle' al suo
-posto, in quanto il supporto a 'cycles' potrebbe essere rimosso in futuro.
+L'impostazione 'cycles' è deprecata ma ancora consentita; si consiglia invece
+di utilizzare le impostazioni 'cpu_cycles', 'cpu_cycles_protected' e
+'cpu_throttle' poiché il supporto a 'cycles' verrà rimosso in futuro.
 .
 :CONFIG_CPU_CYCLES
 Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è
@@ -1144,9 +1145,9 @@ Speed of the emulated CPU ('3000' by default). If 'cpu_cycles_protected' is on
   <number>:  Emula un numero fisso di cicli per millisecondo (circa
              corrispondente ai MIPS). L'intervallo di valori valido va da 50
              a 2000000.
-  max:       Emula quanti pìu cicli la macchina host è in grado di sostenere in
-             un singolo core. Il numero di cicli per millisecondo può variare;
-             ciò può creare problemi in alcuni programmi DOS.
+  max:       Emula quanti pìu cicli la macchina di sistema è in grado di
+             sostenere in un singolo core. Il numero di cicli per millisecondo
+             può variare; ciò può creare problemi in alcuni programmi DOS.
 Note:
   - Impostare la velocità della CPU a 'max' o valori alti può causare
     rallentamenti e interruzioni dell'audio.
@@ -1346,35 +1347,35 @@ Nota: Richiede che il mouse PS/2 sia abilitato.
 .
 :CONFIG_NOSOUND
 Abilita la modalità silenziosa (predefinito disabilitato).
-In questa modalità, il suono è ancora completamente emulato ma non viene
-riprodotto da DOSBox. La cattura dell'output audio emulato in un file WAV
-funziona anche in modalità silenziosa.
+In questa modalità, l'emulazione audio è comunque abilitata, ma DOSBox non
+riprodurrà alcun suono. In modalità silenziosa, l'acquisizione dell'uscita
+audio emulata in un file WAV funzionerà ugualmente.
 .
 :CONFIG_RATE
-Frequenza di campionamento del mixer in Hz (predefinito %s). Il range di valori
-valido va da 8000 a 96000 Hz. La maggior parte dei dispositivi audio non
+Frequenza di campionamento del mixer in Hz (predefinito %s). L'intervallo di
+valori valido va da 8000 a 96000 Hz. La maggior parte dei dispositivi audio non
 professionali utilizza una frequenza di campionamento nativa di 48000 Hz. È
 consigliabile lasciare questa impostazione così come è, a meno che non si abbia
 una buona ragione per cambiarla. È molto probabile che il sistema operativo
-ricampioni in ogni caso a 48000 Hz le frequenze di campionamento non standard.
+ricampioni in ogni caso a 48000 Hz le frequenze di campionamento atipiche.
 .
 :CONFIG_BLOCKSIZE
-Dimensione dei blocchi del mixer misurato in campioni (predefinito %s). Il
-range di valori valido va da 64 a 8192. Impostare sempre a valori che sono
-potenze di due (e.g. 256, 512, 1024, etc). Valori più grandi potrebbero ridurre
-il singhiozzare dell'audio, ma anche introdurre latenza nella riproduzione. Vedi
-anche l'opzione 'negotiate'.
+Dimensione dei blocchi del mixer misurato in campioni (predefinito %s).
+L'intervallo di valori valido va da 64 a 8192. Dovrebbero essere inseriti valori
+che sono potenze di due (e.g. 256, 512, 1024, etc). Valori più grandi potrebbero
+ridurre l'audio a singhiozzo, ma anche introdurre latenza nella riproduzione.
+Vedere anche l'opzione 'negotiate'.
 .
 :CONFIG_PREBUFFER
 Millisecondi di suono da elaborare in anticipo in aggiunta alla dimensione dei
-blocchi (predefinito %s). Valori più grandi potrebbero ridurre il singhiozzare
-dell'audio, ma anche introdurre latenza nella riproduzione.
+blocchi (predefinito %s). Valori più grandi potrebbero ridurre l'audio a
+singhiozzo, ma anche introdurre latenza nella riproduzione.
 .
 :CONFIG_NEGOTIATE
 Determina automaticamente il valore migliore di 'blocksize' (predefinito %s).
-Abilitare se non viene riprodotto alcun suono, o se l'audio singhiozza quando
-è impostato un valore esplicito di 'blocksize'. Disabilitare per impostare
-manualmente il valore di 'blocksize'.
+Abilitare se non viene riprodotto alcun suono, o se l'audio va a singhiozzo
+quando è impostato un valore esplicito di 'blocksize'. Disabilitalo per forzare
+l'utilizzo del valore 'blocksize' impostato manualmente.
 .
 :CONFIG_COMPRESSOR
 Abilita il compressore di livellamento automatico sul canale master per evitare
@@ -1768,9 +1769,9 @@ Le impostazioni predefinite di indirizzo porta I/O 240, IRQ 5 e DMA 3 sono
 state scelte in modo tale che la scheda GUS possa coesistere con una scheda
 Sound Blaster. Funziona bene per la maggior parte dei programmi, ma alcuni
 giochi e demo si aspettano le impostazioni predefinite di fabbrica della scheda
-GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1. Il valore 11 dell'IRQ di
-default pùo anche creare problemi con specifiche versioni dell'extender DOS4GW
-che non riesce a gestire IRQ al di sopra del 7.
+GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1. Da notare inoltre che il
+valore predefinito dell'IRQ 11 pùo essere problematico con specifiche versioni
+dell'extender DOS4GW che non riescono a gestire IRQ superiori al 7.
 .
 :CONFIG_GUSBASE
 Indirizzo porta I/O della scheda Gravis Ultrasound (predefinito 240).
@@ -1846,13 +1847,13 @@ Filtro per l'uscita audio della scheda Innovation:
 .
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC speaker):
-  impulse:   Emulazione molto fedele all'output dell'altoparlante interno
-             (predefinito). Funziona con la maggior parte dei giochi, ma può
-             risultare in suoni confusi o totale silenzio per alcuni
-             programmi.
-  discrete:  Modalità di emulazione legacy semplificata dell'altoparlante
-             interno; utilizzare solo per quei titoli che riportano problemi
-             con il modello 'impulse'.
+  impulse:   Emulazione molto fedele all'usicta audio dell'altoparlante interno
+             (predefinito). Funziona con la maggior parte dei giochi, ma
+             potrebbe causare suoni distorti o totale silenzio in un numero
+             limitato di programmi.
+  discrete:  Emulazione semplificata dell'altoparlante interno del PC;
+             utilizzare solo per quei titoli che riportano problemi con il
+             modello 'impulse'.
   none/off:  Disabilita l'emulazione dell'altoparlante interno del PC.
 .
 :CONFIG_PCSPEAKER_FILTER
@@ -2172,7 +2173,7 @@ Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
 Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Ogni riga in questa sezione viene eseguita ad ogni avvio come un comando DOS.
+Ogni riga in questa sezione viene eseguita all'avvio come comando DOS.
 Importante: La sezione [autoexec] deve necessariamente essere l'ultima sezione
 del file di configurazione!
 .
@@ -3138,8 +3139,7 @@ Comando mancante per il canale [color=light-cyan]%s[reset]
 Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
 :PROGRAM_MODE_HELP_LONG
-Imposta la modalità di visualizzazione o la frequenza e il ritardo di
-ripetizione della tastiera.
+Imposta la modalità di visualizzazione o la frequenza tipomatica della tastiera.
 
 Utilizzo:
   [color=light-green]mode[reset] [color=white]COLONNExRIGHE[reset]
@@ -3169,7 +3169,7 @@ Esempi:
 Modalità di visualizzazione non valida: [color=white]%s[reset]
 .
 :PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
-La modalità di visualizzazione [color=white]%s[reset] non è supportata su questa scheda video.
+Modalità di visualizzazione [color=white]%s[reset] non supportata su questa scheda video.
 .
 :PROGRAM_MODE_INVALID_TYPEMATIC_RATE
 Impostazioni di frequenza e ritardo di ripetizione della tastiera non valide.
@@ -3947,7 +3947,7 @@ Spazio di ambiente insufficiente.
 
 .
 :SHELL_CMD_SET_OPTION_P_UNSUPPORTED
-L'opzione /P non è supportata; utilizzare il comando CHOICE.
+Il parametro /P non è supportato; utilizzare il comando CHOICE.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
