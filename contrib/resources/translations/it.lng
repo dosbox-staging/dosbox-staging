@@ -1028,7 +1028,7 @@ adattivo:
 Altre opzioni dello shader comprendono (lista non esaustiva):
   sharp:                 Ridimensiona l'immagine trattando i pixel come
                          rettangoli. L'immagine risultante sarà molto nitida
-                         con sfocature minime.
+                         con sfocatura minime.
   bilinear:              Ridimensiona l'immagine utilizzando il
                          metodo di ricampionamento bilineare (l'immagine
                          risultante sarà sfocata).
@@ -1090,7 +1090,7 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
             migliore con i giochi più vecchi. Passa automaticamente al core
             'normal' con i programmi in modalità protetta.
   dynamic:  Le istruzioni del programma DOS sono tradotte in istruzioni della
-            CPU di sistema in blocco e quindi eseguite direttamente. Ciò pone
+            CPU di sistema in blocchi e quindi eseguite direttamente. Ciò pone
             un carico sulla CPU di sistema da 3 a 5 volte minore rispetto al
             core 'normal', ma la temporizzazione potrebbe essere meno accurata.
             Il core 'dynamic' è una necessità per i giochi esigenti in termini
@@ -1145,9 +1145,9 @@ Speed of the emulated CPU ('3000' by default). If 'cpu_cycles_protected' is on
   <number>:  Emula un numero fisso di cicli per millisecondo (circa
              corrispondente ai MIPS). L'intervallo di valori valido va da 50
              a 2000000.
-  max:       Emula quanti pìu cicli la macchina di sistema è in grado di
-             sostenere in un singolo core. Il numero di cicli per millisecondo
-             può variare; ciò può creare problemi in alcuni programmi DOS.
+  max:       Emula quanti pìu cicli la CPU di sistema è in grado di sostenere
+             in un singolo core. Il numero di cicli per millisecondo può
+             variare; ciò può creare problemi in alcuni programmi DOS.
 Note:
   - Impostare la velocità della CPU a 'max' o valori alti può causare
     rallentamenti e interruzioni dell'audio.
@@ -1847,9 +1847,9 @@ Filtro per l'uscita audio della scheda Innovation:
 .
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC speaker):
-  impulse:   Emulazione molto fedele all'usicta audio dell'altoparlante interno
-             (predefinito). Funziona con la maggior parte dei giochi, ma
-             potrebbe causare suoni distorti o totale silenzio in un numero
+  impulse:   Emulazione molto fedele dell'usicta audio dell'altoparlante
+             interno (predefinito). Funziona con la maggior parte dei giochi,
+             ma potrebbe causare suoni distorti o totale silenzio in un numero
              limitato di programmi.
   discrete:  Emulazione semplificata dell'altoparlante interno del PC;
              utilizzare solo per quei titoli che riportano problemi con il
@@ -3139,7 +3139,7 @@ Comando mancante per il canale [color=light-cyan]%s[reset]
 Comando non valido per il canale [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
 :PROGRAM_MODE_HELP_LONG
-Imposta la modalità di visualizzazione o la frequenza tipomatica della tastiera.
+Imposta la modalità di visualizzazione o la frequenza tipomatica.
 
 Utilizzo:
   [color=light-green]mode[reset] [color=white]COLONNExRIGHE[reset]
