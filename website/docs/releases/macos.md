@@ -23,6 +23,9 @@ Intel and Apple silicon Macs.
 Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn about
 the changes and improvements introduced by this release.
 
+If you're new to DOSBox Staging, we highly recommend following the
+[Getting started guide](../getting-started/index.md).
+
 
 ## 0.82.0 release candidate
 
@@ -35,7 +38,7 @@ the changes and improvements introduced by this release.
 
     **0.82.0-RC1**
 
-    - [Download DOSBox Staging 0.82.0-RC1 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-macOS-v0.82.0-rc1.dmg)
+    - [Download DOSBox Staging 0.82.0-RC1 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-macOS-universal-v0.82.0-rc1.dmg)
       <br>
       <small>
       sha256: TODO<wbr>TODO
@@ -43,6 +46,12 @@ the changes and improvements introduced by this release.
 
     Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
     about the changes and improvements introduced in this release.
+
+
+## Hardware requirements
+
+The latest release is compatible with macOS 10.15 (Catalina) or newer and
+supports both 64-bit Intel and Apple silicon Macs.
 
 
 ## Homebrew
@@ -69,11 +78,6 @@ best-effort basis (as the team runs supported configurations and may not be able
 to reproduce some issues).
 
 
-## Hardware requirements
-
-The latest release is compatible with macOS 10.15 (Catalina) or newer and
-supports both 64-bit Intel and Apple silicon Macs.
-
 ## Development snapshot builds
 
 You can always see what's cooking on the main branch! :sunglasses: :beer:
@@ -96,8 +100,6 @@ DOSBox Staging for the first time:
   ![Gatekeeper window](images/gatekeeper.png){width=400}
 </figure>
 
-
-### Explanation
 
 Apple's Gatekeeper feature only permits the running of notarized software, one
 aspect of which involves developers making yearly payments to Apple.
