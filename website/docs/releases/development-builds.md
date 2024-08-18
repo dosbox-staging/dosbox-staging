@@ -150,9 +150,9 @@ function set_ci_status(workflow_file, os_name, description) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  set_ci_status("linux.yml",        "linux",   "Linux")
-  set_ci_status("macos.yml",        "macos",   "macOS ¹")
-  set_ci_status("windows-msvc.yml", "windows", "Windows ²")
+  set_ci_status("linux.yml",        "linux",   "Linux ¹")
+  set_ci_status("macos.yml",        "macos",   "macOS ²")
+  set_ci_status("windows-msvc.yml", "windows", "Windows ³")
 })
 
 </script>
@@ -165,8 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
     to the [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md)
     download pages.
 
-    Build artifacts are hosted on GitHub; you need to be logged in to download
-    them.
+    Build artifacts are hosted on GitHub; you need to be logged in to GitHub
+    to download them.
 
 
 <div class="compact">
@@ -212,9 +212,14 @@ document.addEventListener("DOMContentLoaded", () => {
 </table>
 </div>
 
-¹ macOS builds include Intel, Apple silicon, and universal binaries.
 
-² Windows build is a 64-bit portable ZIP package.
+¹ We provide a statically linked x86_64 Linux package (only depends
+on C/C++, ALSA, and OpenGL system libraries).
+
+² macOS builds include Intel, Apple silicon, and universal binary package.
+
+³ Windows builds include x86_64 installer and portable ZIP packages, and the
+experimental ARM64 portable ZIP package.
 
 
 ## Installation notes
