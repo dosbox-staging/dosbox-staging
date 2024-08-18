@@ -9,14 +9,14 @@ hide:
 
 <section class="release-downloads" markdown>
 
-- [Download DOSBox Staging 0.81.2 (Installer)][0_81_2_INSTALLER]
+- [Download DOSBox Staging 0.81.2 (x86_64, Installer)][0_81_2_INSTALLER]
   <br>
   <small>
   sha256: 7c23512666f694420e5e2612742de5fb<wbr>64b32d336e54359b65fd21e7107ef51c
 
   </small>
 
-- [Download DOSBox Staging 0.81.2 (Portable ZIP)][0_81_2_ZIP]
+- [Download DOSBox Staging 0.81.2 (x86_64, Portable ZIP)][0_81_2_ZIP]
   <br>
   <small>
   sha256: d7ec6054ae58d287c3ad5fbf4c3df732<wbr>ea3fd75ae828c8f4481fcf7c6203d168
@@ -29,35 +29,14 @@ DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
 Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn about
 the changes and improvements introduced in this release.
 
+If you're new to DOSBox Staging, we highly recommend following the
+[Getting started guide](../getting-started/index.md).
+
 !!! important
 
     If Windows Security prevents you from running DOSBox Staging via **Windows
     Defender SmartScreen** (the built-in Windows antivirus), please follow
     [these instructions](#windows-defender).
-
-### Legacy Windows support
-
-### Windows 7
-
-The official distribution packages only support Windows 7 up to version
-0.80.1.
-
-For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
-in the [installer][0_80_1_x64_INSTALLER] and is also available as a [portable
-ZIP package][0_80_1_x64_ZIP].
-
-For 32-bit Windows 7, use the 32-bit MSVC build [portable ZIP package][0_80_1_x32_ZIP]
-
-### Windows Vista
-
-The official distribution packages only support Windows Vista up to version
-0.78.1.
-
-More recent releases can be built from the source by excluding FluidSynth and
-Slirp support. Please see the [Windows MSYS2 build instructions][win-build]
-for further details.
-
-[win-build]: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2
 
 
 ## 0.82.0 release candidate
@@ -71,13 +50,13 @@ for further details.
 
     **0.82.0-RC1**
 
-    - [Download DOSBox Staging 0.82.0-RC1 64-bit (Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-v0.82.0-rc1-setup.exe)
+    - [Download DOSBox Staging 0.82.0-RC1 (x86_64, Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-x64-v0.82.0-rc1-setup.exe)
       <br>
       <small>
       sha256: TODO<wbr>TODO
       </small>
 
-    - [Download DOSBox Staging 0.82.0-RC1 64-bit (zip)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-v0.82.0-rc1.zip)
+    - [Download DOSBox Staging 0.82.0-RC1 (x86_64, Portable ZIP)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-x64-v0.82.0-rc1.zip)
       <br>
       <small>
       sha256: TODO<wbr>TODO
@@ -87,11 +66,44 @@ for further details.
     about the changes and improvements introduced in this release.
 
 
-
 ## Hardware requirements
 
 An x86 processor with SSSE3 (Supplemental Streaming SIMD Extensions 3) is
 required.
+
+
+## Legacy Windows support
+
+If you're still on a legacy Windows version, you can use the following older
+releases. Note these earlier version come with _zero official support_; the
+core team won't be able to help you if you run into issues. Our recommendation
+will always be to upgrade your Windows and use the latest stable version.
+
+
+### Windows 8/10 32-bit
+
+The official distribution packages only support 32-bit Windows 8 or 10 up to
+version 0.80.1:
+
+- For 32-bit Windows 8 or 10, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
+
+- For 64-bit Windows 8 or 10, use the [current stable version](#current-stable-version).
+
+
+### Windows 7
+
+The official distribution packages only support Windows 7 up to version
+0.80.1:
+
+- For 64-bit Windows 7, use the [0.80.1 installer][0_80_1_x64_INSTALLER] and
+  select the MSVC build, or the [0.81.1 portable ZIP package][0_80_1_x64_ZIP].
+
+- For 32-bit Windows 7, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
+
+### Windows Vista
+
+The official distribution packages only support Windows Vista up to version
+0.78.1.
 
 
 ## Development snapshot builds
@@ -100,6 +112,15 @@ You can always see what's cooking on the main branch! :sunglasses: :beer:
 
 These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
+
+
+## Experimental Windows ARM64 builds
+
+We started providing experimental Windows ARM64 packages for devices such as
+the Snapdragon X Elite. Note we don't provide any official support for these
+builds yet.
+
+The ARM64 packages can be downloaded from our [development builds](development-builds.md) page.
 
 
 ## Windows Defender
