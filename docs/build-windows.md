@@ -5,8 +5,10 @@ Windows builds can be created using:
 - Visual Studio 2022 IDE suite with Clang/LLVM compiler, and vcpkg to provide
   dependencies. This is the fully-supported toolchain used to create release
   builds.
-- The Clang or GCC compilers using the Meson buildsystem running within the
-  MSYS2 environment to provide dependencies.
+
+- The Clang or GCC compilers using the Meson build system running within the
+  MSYS2 environment to provide dependencies (deprecated, support will be probably
+  removed in the future).
 
 > **Note**
 >
@@ -19,6 +21,7 @@ Windows builds can be created using:
 
 1. Install Visual Studio Community 2022: <https://visualstudio.microsoft.com/vs/community/>.
     - Select "C++ Clang tools for Windows" in the Visual Studio installer
+
 2. Install/configure vcpkg.
     - Recent versions of Visual Studio already include it[^1], but it needs to
       be initialized. Open a Visual Studio Developer Command Prompt and run the
@@ -44,7 +47,12 @@ you build a binary optimized for gaming.
 2. Select a **Release** build type in Visual Studio, and run the build.
 
 
-## Build using MSYS2
+## Build using MSYS2 (deprecated)
+
+> **Note**
+>
+> MSYS2 builds are not actively maintained or tested by the development 
+> team. We will probably remove this section in the future.
 
 1. Install MSYS2: <https://www.msys2.org/wiki/MSYS2-installation/>
 
