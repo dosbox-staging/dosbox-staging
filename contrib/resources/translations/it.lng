@@ -1478,9 +1478,10 @@ Note:
   - Quando si utilizza 'coreaudio', è qui possibile specificare un SoundFont.
 .
 :CONFIGITEM_MIDICONFIG_ALSA
-  - Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
-    visualizzare l'elenco di tutte le porte MIDI aperte e selezionarne una
-    (es. 'midiconfig = 14:0' per usare il sequenziatore client 14, porta 0).
+  - Quando si utilizza ALSA, eseguire il comando 'aconnect -l' sul terminale
+    Linux per visualizzare l'elenco di tutte le porte MIDI aperte e
+    selezionarne una (es. 'midiconfig = 14:0' per usare il sequenziatore
+    client 14, porta 0).
 .
 :CONFIGITEM_MIDICONFIG_MT32
   - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
@@ -3147,10 +3148,8 @@ Utilizzo:
 Parametri:
   [color=white]COLONNE[reset]   numero di caratteri (colonne) per ogni riga (40, 80 o 132)
   [color=white]RIGHE[reset]     numero di righe sullo schermo (25, 28, 30, 34, 43, 50 o 60)
-  [color=white]FREQUENZA[reset] frequenza di ripetizione dei caratteri, da [color=white]1[reset] a [color=white]32[reset] (1 = più lento,
-            32 = più veloce)
-  [color=white]RITARDO[reset]   ritardo della ripetizione dei caratteri, da [color=white]1[reset] a [color=white]4[reset] (1 = minore,
-            4 = maggiore)
+  [color=white]FREQUENZA[reset] frequenza di ripetizione caratteri, da [color=white]1[reset] (lento) a [color=white]32[reset] (veloce)
+  [color=white]RITARDO[reset]   ritardo di ripetizione caratteri, da [color=white]1[reset] (minore) a [color=white]4[reset] (maggiore)
 
 Note:
   - Combinazioni [color=white]COLONNExRIGHE[reset] valide per ogni tipo di scheda video:
