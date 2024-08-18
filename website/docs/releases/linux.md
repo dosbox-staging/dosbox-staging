@@ -20,9 +20,8 @@ sha256: c47f1767ae1371666f40e3a4e13272da<wbr>5c5a98c9c6f355b4fb82bac0d3911a68
 </section>
 
 
-Our pre-compiled builds run on most Linux distributions (x86\_64 only for
-now). They depend on a few packages, though, which you might need to install
-manually (see instructions below).
+Our pre-compiled builds run on most desktop Linux distributions (x86\_64 only for
+now). They only depend on the C/C++ libraries, ALSA, and OpenGL.
 
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
@@ -50,21 +49,6 @@ about the changes and improvements introduced in this release.
 
     Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
     about the changes and improvements introduced in this release.
-
-
-### Install dependencies on Fedora
-
-    sudo dnf install SDL2 SDL2_net opusfile
-
-### Install dependencies on Ubuntu and Debian
-
-Ubuntu 18.04 or newer, and Debian 9 or newer is required.
-
-    sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
-
-### Install dependencies on Arch and Manjaro
-
-    sudo pacman -S sdl2 sdl2_net opusfile
 
 
 ## External repository packages
