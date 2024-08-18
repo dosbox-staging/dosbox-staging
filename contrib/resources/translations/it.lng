@@ -891,7 +891,7 @@ Opzioni shader CRT adattivo:
                          amano le linee di scansione spesse ma allo stesso
                          tempo vogliono mantenere la nitidezza orizzonatale di
                          un tipico monitor per PC.
-                         
+
 Possono essere utilizzati anche i seguenti shader (elenco non esaustivo):
   sharp:                 Ridimensiona l'immagine trattando i pixel come
                          rettangoli. Il risultato sarà un'immagine nitida con
@@ -976,9 +976,9 @@ di quest'area, tenendo conto delle proporzioni specificate (vedi impostazione
                     rapporto d'aspetto 4:3, adattato alla finestra/schermo
                     disponibile, e quindi ridimensionato in base ai fattori di
                     scala orizzontale e verticale O e V (l'intervallo valido va
-                    dal 20%% al 300%%). L'area di visualizzazione risultante
-                    può estendersi oltre la finestra/schermo. Questo è utile
-                    per forzare determinati rapporti d'aspetto con
+                    dal 20%% al 300%%). L'area di visualizzazione risultante può
+                    estendersi oltre la finestra/schermo. Questo è utile per
+                    forzare determinati rapporti d'aspetto con
                     'aspect = stretch' o per ingrandire l'immagine. Ciò emula
                     efficacemente i controlli per la dimensione orizzontale e
                     verticale dell'immagine dei monitor CRT.
@@ -1150,7 +1150,7 @@ Note:
   - Per un risultato ottimale, imposta il numero più basso possibile di cicli
     sufficienti ad eseguire il gioco ad una velocità accettabile.
   - Questa tabella mostra i valori di cicli approssimativi per i modelli di CPU
-    più comuni. DOSBox non esegue un'emulazione accurata della CPU al ciclo:
+    più comuni. DOSBox non esegue un'emulazione della CPU accurata al ciclo:
     questi valori sono solo punti di partenza, da regolare poi con precisione
     in base al gioco da eseguire.
       8088 (4.77 MHz)     300
@@ -1175,14 +1175,13 @@ Velocità della CPU emulata solo per i programmi in modalità protetta
   max:       Emula quanti pìu cicli la CPU di sistema è in grado di sostenere
              in un singolo core. Il numero di cicli per millisecondo può
              variare; ciò potrebbe causare problemi in alcuni programmi DOS.
-Nota: Fare riferimento all'impostazione 'cpu_cycles' per ulteriori informazioni
+Nota: Fare riferimento all'impostazione 'cpu_cycles' per ulteriori informazioni.
 .
 :CONFIG_CPU_THROTTLE
 Riduce dinamicamente il numero di cicli della CPU emulati se la CPU di sistema
-non è in grado di gestirli (predefinito disabilitato).
-Ha effetto solo se i cicli sono impostati ad un valore fisso. Se abilitato, il
-numero di cicli per millisecondo può variare; ciò potrebbe causare problemi in
-alcuni programmi DOS.
+non è in grado di gestirli (predefinito disabilitato). Ha effetto solo se i
+cicli sono impostati ad un valore fisso. Se abilitato, il numero di cicli per
+millisecondo può variare; ciò potrebbe causare problemi in alcuni programmi DOS.
 .
 :CONFIG_CYCLEUP
 Numero di cicli da aggiungere con l'apposito tasto di scelta rapida
@@ -1351,8 +1350,8 @@ audio emulata in un file WAV funzionerà ugualmente.
 .
 :CONFIG_RATE
 Frequenza di campionamento del mixer audio di DOSBox, in Hz (predefinito %s).
-L'intervallo di valori valido va da 8000 a 96000 Hz. La maggior parte dei
-dispositivi audio di consumo utilizza una frequenza di campionamento nativa
+L'intervallo di valori valido é compreso tra 8000 e 96000 Hz. La maggior parte
+dei dispositivi audio di consumo utilizza una frequenza di campionamento nativa
 di 48000 Hz. È consigliabile non modificare questo valore, a meno che non si
 abbia una buona ragione per farlo. È molto probabile che il sistema operativo
 ricampioni in ogni caso a 48000 Hz le frequenze di campionamento atipiche.
@@ -1362,7 +1361,8 @@ Dimensione dei blocchi del dispositivo audio di sistema, misurato in campioni
 (predefinito %s). L'intervallo di valori valido è compreso tra 64 a 8192.
 Dovrebbero essere inseriti valori alla potenza di due (es. 256, 512, 1024,
 ecc). Valori più grandi potrebbero ridurre l'audio a singhiozzo, ma anche
-introdurre latenza nella riproduzione. Osservare inoltre l'opzione 'negotiate'.
+introdurre latenza nella riproduzione. Consultare inoltre l'opzione
+'negotiate'.
 .
 :CONFIG_PREBUFFER
 Millisecondi di suono da elaborare in anticipo in aggiunta alla dimensione dei
@@ -1371,7 +1371,7 @@ singhiozzo, ma anche introdurre latenza nella riproduzione.
 .
 :CONFIG_NEGOTIATE
 Determina automaticamente il valore migliore di 'blocksize' (predefinito %s).
-Abilitalo se non viene riprodotto alcun suono, o se l'audio va a singhiozzo
+Abilitare se non viene riprodotto alcun suono, o se l'audio va a singhiozzo
 quando è impostato un valore esplicito di 'blocksize'. Disabilitalo per forzare
 l'utilizzo del valore 'blocksize' impostato manualmente.
 .
@@ -1645,7 +1645,7 @@ Permette al mixer della scheda Sound Blaster di modificare i livelli di volume
 Le schede Sound Blaster Pro 1 e successive consentono ai programmi di impostare
 il volume dell'uscita audio digitale (DAC), del sintetizzatore FM, e del CD
 Audio. Questi corrispondono rispettivamente ai canali del mixer di DOSBox SB,
-OPL, e CDAUDIO.	 
+OPL, e CDAUDIO.
   on:        Il livello di volume finale dei canali sopra indicati, è una
              combinazione del volume impostato dal programma e del volume
              impostato nel mixer di DOSBox.
@@ -1748,7 +1748,7 @@ Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_CMS
-Abilita l'emulazione CMS (predefinito 'auto').             
+Abilita l'emulazione CMS (predefinito 'auto').
   off:   Disabilita l'emulazione CMS (tranne quando è selezionato Game Blaster)
   on:    Abilita l'emulazione CMS su Sound Blaster 1 e 2.
   auto:  Abilita automaticamente l'emulazione CMS su Sound Blaster 1 e
