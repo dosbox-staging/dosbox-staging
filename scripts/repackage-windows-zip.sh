@@ -11,12 +11,12 @@
 set -e
 
 if [ $# -ne 1 ]; then
-	echo "Usage: repackage-windows-zip.sh MSYS2_ZIP_NAME"
+	echo "Usage: repackage-windows-zip.sh CI_ZIP_NAME"
 	exit 1
 fi
 
 IN_ZIP=$1
-IN_ZIP_PREFIX=dosbox-staging-windows-msys2-x86_64-
+IN_ZIP_PREFIX=dosbox-staging-windows-x64-
 
 if [[ $IN_ZIP != $IN_ZIP_PREFIX* ]]; then
 	echo "Input filename must start with '$IN_ZIP_PREFIX'"
