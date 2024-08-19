@@ -41,7 +41,6 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 - Deliver a consistent **cross-platform experience**.
 - Leverage **upstream** and **community developments** in DOSBox.
 - Encourage **new contributors** by removing barriers to entry.
-- Fix, clean up, and integrate notable **community-developed patches**.
 - Prioritise **code quality** to minimise technical
   debt and ease maintenance. This generally means following the
   [Staging Coding Style Guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#coding-style)
@@ -51,7 +50,7 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 ## Non-goals
 
 - **Support old, end-of-life operating systems** (e.g., Windows 7 or older, OS/2,
-  or Mac OS X 10.5 or older) and limited CPU/memory hardware, which are
+  Mac OS X 10.5 or older) and limited CPU/memory hardware, which are
   constraints the original [DOSBox](https://www.dosbox.com/) continues to
   support.
 
@@ -64,7 +63,6 @@ The key features for developers are summarised [here](https://github.com/dosbox-
   [VirtualBox](https://www.virtualbox.org/) and the
   [DOSBox-X](https://www.dosbox-x.com/) and
   [DOSBox Pure](https://github.com/schellingb/dosbox-pure) forks.
-  This may change if the DOSBox Staging community wants it.
 
 - **Pursue hardware accuracy above all else.** If you’re after a more faithful
   emulation of an entire PC, look into
