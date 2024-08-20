@@ -45,7 +45,7 @@ If you're new to DOSBox Staging, we highly recommend following the
     - [Download DOSBox Staging 0.82.0-RC1 (x86_x64)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-linux-x86_64-v0.82.0-rc1.tar.xz)
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: 0e62472dd28a6c613ec60a6bf34493d3<wbr>3638d475796baf39b2f62946e548be87
       </small>
 
     Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn

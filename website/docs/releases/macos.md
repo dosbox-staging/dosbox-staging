@@ -41,7 +41,7 @@ If you're new to DOSBox Staging, we highly recommend following the
     - [Download DOSBox Staging 0.82.0-RC1 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-macOS-universal-v0.82.0-rc1.dmg)
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: 10fcca738862b7165c347185d2513005<wbr>a41147b364dd60af5d79d1193bc29234
       </small>
 
     Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn

@@ -53,13 +53,13 @@ If you're new to DOSBox Staging, we highly recommend following the
     - [Download DOSBox Staging 0.82.0-RC1 (x86_64, Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-x64-v0.82.0-rc1-setup.exe)
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: 6a29f4ecb307abbb6b67d4c1fa2f34a1<wbr>1a016afe025d16b3b153ba99d3ff20c9
       </small>
 
     - [Download DOSBox Staging 0.82.0-RC1 (x86_64, Portable ZIP)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-windows-x64-v0.82.0-rc1.zip)
       <br>
       <small>
-      sha256: TODO<wbr>TODO
+      sha256: e58ee94c5845641b7d67ad11e7aaf2f6<wbr>16cedb0adc947f98380150cddd6935f8
       </small>
 
     Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
