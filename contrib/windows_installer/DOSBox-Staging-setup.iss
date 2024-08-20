@@ -91,6 +91,7 @@ Root: HKA; Subkey: "Software\{#DOSBoxAppInternal}"; ValueType: string; ValueName
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: ""; ValueData: "Open with {#DOSBoxAppName}"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"",0"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"" --working-dir ""%v"""; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: "Position"; ValueData: "Top"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
 Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}\command"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
@@ -99,6 +100,7 @@ Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}\comman
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: ""; ValueData: "Open with {#DOSBoxAppName}"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"",0"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInternal}\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"" --working-dir ""%v"""; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: "Position"; ValueData: "Top"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInternal}"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
 Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInternal}\command"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
@@ -107,6 +109,7 @@ Root: HKA; Subkey: "Software\Classes\Directory\Background\shell\{#DOSBoxAppInter
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open with {#DOSBoxAppName}"; ValueType: none; ValueName: ""; ValueData: ""; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletevalue
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open with {#DOSBoxAppName}"; ValueType: string; ValueName: "Icon"; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"",0"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open with {#DOSBoxAppName}\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#DOSBoxAppExeConsoleName}"" -conf ""%1"""; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Directory\shell\{#DOSBoxAppInternal}"; ValueType: string; ValueName: "Position"; ValueData: "Top"; Check: WizardIsTaskSelected('contextmenu'); Flags: uninsdeletekey
 
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open with {#DOSBoxAppName}"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
 Root: HKA; Subkey: "Software\Classes\SystemFileAssociations\.conf\shell\Open with {#DOSBoxAppName}\command"; ValueType: none; Check: not WizardIsTaskSelected('contextmenu'); Flags: deletekey
