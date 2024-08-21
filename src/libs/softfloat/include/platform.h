@@ -46,8 +46,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INLINE extern inline
 #endif
 
+#define THREAD_LOCAL _Thread_local
+
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
 #define SOFTFLOAT_BUILTIN_CLZ 1
+#define SOFTFLOAT_FAST_INT64 1
 #include "opts-GCC.h"
 

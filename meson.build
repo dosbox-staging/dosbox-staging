@@ -1263,6 +1263,7 @@ subdir('src/libs/ESFMu')
 subdir('src/libs/residfp')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+subdir('src/libs/softfloat')
 
 if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')

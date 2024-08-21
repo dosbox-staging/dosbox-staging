@@ -22,6 +22,9 @@
 
 #include "math_utils.h"
 
+#include "softfloat/include/platform.h"
+#include "softfloat/include/softfloat.h"
+
 static constexpr uint16_t PrecisionModeMask = 0x0300;
 
 static constexpr uint16_t SinglePrecisionMode   = 0x0000;
@@ -148,60 +151,41 @@ static double FROUND(double in)
 	}
 }
 
-#define BIAS80 16383
-#define BIAS64 1023
-
-static Real64 FPU_FLD80(PhysPt addr) {
-	struct {
-		int16_t begin = 0;
-		FPU_Reg eind  = {};
-	} test = {};
-
-	test.eind.ll = mem_readq(addr);
-	test.begin = mem_readw(addr+8);
-   
-	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
-	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
-
-	int64_t mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
-	int64_t sign = (test.begin&0x8000)?1:0;
-	FPU_Reg result;
-	result.ll = (sign <<63)|(exp64final << 52)| mant64;
-
-	if (test.eind.l.lower == 0 && test.eind.l.upper == INT32_MIN &&
-	    (test.begin & INT16_MAX) == INT16_MAX) {
-		//Detect INF and -INF (score 3.11 when drawing a slur.)
-		result.d = sign?-HUGE_VAL:HUGE_VAL;
+static inline void setSoftFloatRoundingMode(FPU_Round fpuRound)
+{
+	switch (fpuRound) {
+	case ROUND_Nearest:
+		softfloat_roundingMode = softfloat_round_near_even;
+		break;
+	case ROUND_Down: softfloat_roundingMode = softfloat_round_min; break;
+	case ROUND_Up: softfloat_roundingMode = softfloat_round_max; break;
+	case ROUND_Chop: softfloat_roundingMode = softfloat_round_minMag; break;
+	default: LOG_WARNING("Invalid rounding mode"); break;
 	}
-	return result.d;
-
-	//mant64= test.mant80/2***64    * 2 **53 
 }
 
-static void FPU_ST80(PhysPt addr,Bitu reg) {
-	struct {
-		int16_t begin = 0;
-		FPU_Reg eind  = {};
-	} test = {};
+static Real64 FPU_FLD80(PhysPt addr)
+{
+	extFloat80_t test = {};
 
-	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
-	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final  = (exp80 >> 52);
-	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
-	int64_t mant80final = (mant80 << 11);
-	if(fpu.regs[reg].d != 0){ //Zero is a special case
-		// Elvira wants the 8 and tcalc doesn't
-		mant80final |= LONGTYPE(0x8000000000000000);
-		//Ca-cyber doesn't like this when result is zero.
-		exp80final += (BIAS80 - BIAS64);
-	}
-	test.begin = (static_cast<int16_t>(sign80)<<15)| static_cast<int16_t>(exp80final);
-	test.eind.ll = mant80final;
-	mem_writeq(addr, test.eind.ll);
-	mem_writew(addr+8,test.begin);
+	test.signif  = mem_readq(addr);
+	test.signExp = mem_readw(addr + 8);
+
+	setSoftFloatRoundingMode(fpu.round);
+
+	const auto res = extF80_to_f64(test);
+	return res;
 }
 
+static void FPU_ST80(PhysPt addr, Bitu reg)
+{
+	setSoftFloatRoundingMode(fpu.round);
+
+	const auto test = f64_to_extF80(fpu.regs[reg].d);
+
+	mem_writeq(addr, test.signif);
+	mem_writew(addr + 8, test.signExp);
+}
 
 static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
 	union {
@@ -624,13 +608,13 @@ static void FPU_FXTRACT(void) {
 	// function stores real bias in st and 
 	// pushes the significant number onto the stack
 	// if double ever uses a different base please correct this function
+	const auto test = fpu.regs[TOP];
+	const auto exp80 = std::logb(test.d);
+	fpu.regs[TOP].d = exp80;
 
-	FPU_Reg test = fpu.regs[TOP];
-	int64_t exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52) - BIAS64;
-	Real64 mant = test.d / (std::pow(2.0, static_cast<Real64>(exp80final)));
-	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
-	FPU_PUSH(mant);
+	const auto mant80_denom = std::pow(2.0, exp80);
+	const auto mant80 = test.d / mant80_denom;
+	FPU_PUSH(mant80);
 }
 
 static void FPU_FCHS(void){

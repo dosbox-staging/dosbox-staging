@@ -295,10 +295,9 @@ all_sources = common_sources + specialized_sources + other_sources
 
 # Compiler options and include directories
 softfloat_opts = [
-  '-DSOFTFLOAT_ROUND_ODD',
-  '-DINLINE_LEVEL=5',
+  '-DSOFTFLOAT_FAST_INT64',
   '-DSOFTFLOAT_FAST_DIV32TO16',
-  '-DSOFTFLOAT_FAST_DIV64TO32',
+  '-DSOFTFLOAT_FAST_DIV64TO32'
 ]
 
 c_includes = include_directories('.',
@@ -308,7 +307,6 @@ c_includes = include_directories('.',
 
 c_args = [
   '-Werror=implicit-function-declaration',
-  '-DSOFTFLOAT_FAST_INT64',
 ] + softfloat_opts
 
 # Create the static library
