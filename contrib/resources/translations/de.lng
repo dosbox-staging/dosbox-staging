@@ -444,8 +444,14 @@ Verwendung: [color=light-green]config [reset]-set [color=light-cyan][ABSCHNITT][
 :TITLEBAR_CYCLES_MS
 Zyklen/ms
 .
+:TITLEBAR_MUTED
+STUMMGESCHALTET
+.
 :TITLEBAR_PAUSED
-PAUSIERT
+(PAUSIERT)
+.
+:TITLEBAR_HINT_CAPTURED
+Maus umgeschaltet
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 Maus umgeschaltet, %s+F10 zum Freigeben
@@ -524,7 +530,7 @@ Lege die Bildwiederholrate des Hosts fest:
 :CONFIG_VSYNC
 Legt den vertikalen Synchronisationsmodus (vsync) des Host-Grafikkartentreibers
 fest:
-  auto:      Beschränkt vsync auf vorteilhafte Fälle, z. B. bei Verwendung einer
+  auto:      Beschränkt vsync auf vorteilhafte Fälle, z.B. bei Verwendung einer
              interpolierenden VRR-Anzeige im Vollbildmodus (Standard).
   ein:       Aktiviert vsync. Dies kann Tearing in einigen Spielen verhindern,
              wird aber die Leistung beeinträchtigen oder Bilder überspringen,
@@ -556,11 +562,27 @@ Wähle den Frame-Präsentationsmodus aus:
   cfr:   Stelle DOS-Frames immer mit einer konstanten Bildrate dar.
   vfr:   Stelle geänderte DOS-Frames immer mit einer variablen Bildrate dar.
 .
-:CONFIG_OUTPUT
-Für die Ausgabe zu verwendendes Videosystem (standardmäßig 'opengl').
-'texture' und 'opengl' verwenden bilineare Interpolation, 'texturenb' und
-'openglnb' verwenden 'nearest-neighbour' (nicht bilinear). Einige Shader
-erfordern bilineare Interpolation, so dass 'opengl' die beste Wahl ist.
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
+Das für die Ausgabe zu verwendende Videosystem (standardmäßig 'opengl').
+Einige Shader erfordern bilineare Interpolation, was diese Option zur
+zuverlässigsten Wahl macht.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Das für die Ausgabe zu verwendende Videosystem (standardmäßig 'texture').
+Einige Shader erfordern bilineare Interpolation, was diese Option zur
+zuverlässigsten Wahl macht.
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Verwendet bilineare Interpolation.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Verwendet bilineare Interpolation.
+.
+:CONFIGITEM_OUTPUT_OPENGLNB
+  openglnb:   Verwendet nearest-neighbour Interpolation (nicht bilinear).
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Verwendet nearest-neighbour Interpolation (nicht bilinear).
 .
 :CONFIG_TEXTURE_RENDERER
 Zu verwendender Renderer-Treiber, wenn du einen Textur-Ausgabemodus verwendest
@@ -605,8 +627,50 @@ Verwende 'allow' oder 'block' um die SDL_VIDEO_ALLOW_SCREENSAVER
 Umgebungsvariable zu überschreiben die normalerweise den Betriebssystem-
 Bildschirmschoner blockiert während DOSBox läuft (Standardmäßig 'auto').
 .
+:CONFIG_WINDOW_TITLEBAR
+Durch Leerzeichen getrennte Liste von Informationen, die in der Titelleiste des
+Fensters angezeigt werden sollen ('program=name dosbox=auto cycles=on
+mouse=full' als Standard).
+Wenn ein Parameter nicht angegeben ist, wird sein Standardwert verwendet.
+Mögliche Informationen, die angezeigt werden können, sind:
+  animation=<value>:  Wenn diese Option auf 'on' gesetzt ist (Standard), wird
+                      die Audio-/Video Aufnahmemarkierung animiert. Auf 'off'
+                      gesetzt, wird die Animation deaktiviert; dies ist
+                      nützlich, wenn Ihre Schriftart Probleme macht.
+  program=<value>:    Zeigt den Namen des laufenden Programms an.
+                      <Wert> kann einer der folgenden Werte sein:
+                          none/off:  Den Programmnamen nicht anzeigen.
+                          name:      Programmname, Erweiterung (Standard).
+                          path:      Name, Erweiterung und vollständiger Pfad.
+                          segment:   Programmspeichersegment anzeigen.
+                          'Titel':   Benutzerdefinierter Name.
+                      Hinweis: Bei manchen Programmen (wie Windows 3.1x im
+                      erweiterten Modus) ist es unmöglich, den vollständigen
+                      Programmnamen oder Pfad zu erkennen; in solchen Fällen
+                      wird stattdessen 'segment' verwendet.
+  dosbox=<value>:     Anzeige von 'DOSBox Staging' in der Titelleiste.
+                      <Wert> kann einer der folgenden Werte sein:
+                        always:   Zeigt immer 'DOSBox Staging' an.
+                        auto:     Wird nur angezeigt, wenn kein Programm läuft
+                                  oder 'program=none' gesetzt ist
+                                  (Voreinstellung).
+  version=<value>:    Anzeige der DOSBox-Versionsinformationen.
+                      <Wert> kann einer der folgenden Werte sein:
+                         none/off:  DOSBox-Version nicht anzeigen (Standard).
+                         simple:    Einfache Versionsinformationen.
+                         detailed:  Git-Hash einbeziehen, falls verfügbar.
+  cycles=<value>:     Bei der Einstellung 'on' (Standard) wird die emulierte
+                      CPU Geschwindigkeit angezeigt. Setze die Einstellung auf
+                      'off', um die Anzeige zu deaktivieren.
+  mouse=<value>:      Stufe der Mausumschaltungs-Hinweise:
+                        none/off:  Keine Maus-Hinweise anzeigen.
+                        short:     Nur anzeigen, wenn die Maus umgeschaltet
+                                   wird.
+                        full:      Zeigt ausführliche Informationen an, wie man
+                                   wie man die Maus umschaltet (Standard).
+.
 :CONFIG_LANGUAGE
-Wähle eine Sprache aus: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' oder 'ru'
+Wähle eine Sprache aus: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'ru'
 (Standardmäßig nicht voreingestellt; dies entspricht Englisch)
 Anmerkungen:
   - Diese Einstellung hat Vorrang vor der Umgebungsvariable 'LANG', falls
@@ -670,15 +734,28 @@ Videospeicher in MB (1-8) oder KB (256 bis 8192). 'auto' verwendet den
 Standardwert für den verwendeten Videoadapter (Standardwert 'auto'). Siehe den 
 Parameter 'machine' für die Liste der gültigen Optionen je Adapter.
 .
+:CONFIG_VMEM_DELAY
+Emulation des Zugriffszeit auf den Videospeicher (standardmäßig 'off').
+  off:    Deaktiviert Emulation der Videospeicherzugriffszeit (Voreinstellung).
+          Dies ist für die meisten Spiele zu bevorzugen, um Verlangsamungen zu
+          vermeiden.
+  on:     Aktiviert Emulation der Zugriffszeit des Videospeichers (3000 ns).
+          Dies kann helfen, Flimmern in Hercules-, CGA-, EGA- und frühen VGA-
+          Spielen zu reduzieren oder zu eliminieren.
+  <Wert>: Legt die Zugriffszeit in Nanosekunden fest. Der gültige Bereich ist
+          0 bis 20000 ns; 500 bis 5000 ns ist der nützlichste Bereich.
+Hinweis:  Stellen diesen Wert nur bei Bedarf pro Spiel ein, da er den gesamten
+          Emulator verlangsamt.
+.
 :CONFIG_DOS_RATE
-Passe die Bildrate des emulierten Videomodus in Hz an:
+Passe die Bildrate des emulierten Videomodus an.
   default:  Der DOS-Videomodus bestimmt die Rate (empfohlen; Standard).
   host:     Passe die DOS-Rate an die Host-Rate an (siehe Einstellung
             'host_rate').
-  <value>:  Setzt die Rate auf einen exakten Wert, zwischen 24.000 und
+  <Wert>:   Setzt die Rate auf einen exakten Wert, zwischen 24.000 und
             1000.000 (Hz).
-Wir empfehlen die 'Standard'-Rate; andernfalls kannst du sie für jedes Spiel
-einzeln testen und einstellen.
+Hinweis:    Wir empfehlen die 'Standard'-Rate; andernfalls kannst du sie für
+            jedes Spiel einzeln testen und einstellen.
 .
 :CONFIG_VESA_MODES
 Steuert die Auswahl der angebotenen VESA 1.2 und 2.0 Modi:
@@ -758,7 +835,7 @@ von 'sbtype sb16', und anstelle von 'config -get sbtype' kannst du einfach
 begrenzen willst.
 .
 :CONFIG_ASPECT
-Legt den Modus der Seitenverhältniskorrektur fest (standardmäßig aktiviert):
+Modus für die Korrektur des Seitenverhältnisses (standardmäßig Auto):
   auto, on:            Umrechnung des Seitenverhältnisses für moderne
                        Flachbildschirme mit quadratischen Pixeln, damit DOS-
                        Auflösungen mit nicht-quadratischen Pixeln wie auf einem
@@ -788,9 +865,9 @@ Legt den Modus der Seitenverhältniskorrektur fest (standardmäßig aktiviert):
 Beschränkt den horizontalen oder vertikalen Skalierungsfaktor auf den größten
 ganzzahligen Werte, damit das dargestellte Bild in das Fenster passt.
 Das korrekte Seitenverhältnis wird immer gemäß der 'aspect' und 'viewport'-
-Einstellung beibehalten, was zu einem nicht-ganzzahligen Skalierungsfaktor in der anderen
-Richtung führen kann. Wenn das Bild größer als das Ansichtsfenster ist, wird
-die ganzzahlige Skalierung automatisch deaktiviert (wie bei 'off').
+Einstellung beibehalten, was zu einem nicht-ganzzahligen Skalierungsfaktor in
+der anderen Richtung führen kann. Wenn das Bild größer als das Ansichtsfenster
+ist, wird die ganzzahlige Skalierung automatisch deaktiviert (wie bei 'off').
 Mögliche Werte:
   auto:        'vertical' wird nur für adaptive CRT-Shader automatisch
                aktiviert (siehe 'glshader'), sonst 'aus' (Standard).
@@ -823,7 +900,7 @@ Mögliche Werte:
   relative H% V%:  Das Ansichtsfenster wird auf ein Rechteck im Seiten-
                    verhältnis 4:3 eingestellt, das in das verfügbare Fenster/
                    Bildschirm passt, dann wird es mit den horizontalen und
-                   vertikalen Skalierungsfaktoren (der gültige Bereich reicht von
+                   vertikalen Skalierungsfaktoren (gültiger Bereich von
                    20% bis 300%) skaliert. Das resultierende Ansichtsfenster
                    darf sich über das Fenster/den Bildschirm hinaus erstrecken.
                    Nützlich, um beliebige Seitenverhältnisse mit
@@ -891,7 +968,7 @@ nicht mehr unterstützt:
  - Wenn du einen 'advanced' Skalierer benutzt hast, solltest du stattdessen
    eine der 'glshader'-Optionen in Betracht ziehen.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Setzen eines adaptiven CRT-Monitor-Emulations-Shaders oder eines regulären
 GLSL-Shaders im OpenGL Ausgabe-Modus.
 Optionen für adaptive CRT-Shader:
@@ -950,12 +1027,14 @@ Helligkeit des Bildes, von dunkel bis hell (standardmäßig 0).
 Konvergenz der Subpixel-Elemente, von unscharf bis scharf (standardmäßig 0).
 .
 :CONFIG_CORE
-CPU-Kern, der für die Emulation verwendet wird (Standardmäßig 'auto').
+CPU-Typ, der für die Emulation verwendet wird (Standardmäßig 'auto').
 'auto' schaltet auf dynamisch, wenn verfügbar und sinnvoll.
 .
 :CONFIG_CPUTYPE
 CPU Typ, der in der Emulation verwendet wird (Standardmäßig 'auto').
 'auto' ist die schnellste Wahl.
+Die Prefetch-Variante emuliert die Prefetch-Warteschlange und benötigt den
+CPU-Kern 'normal'.
 .
 :CONFIG_CYCLES
 Anzahl der Instruktionen, die DOSBox pro Millisekunde versucht zu emulieren
@@ -1031,7 +1110,7 @@ Wählt eine Methode zum Umschalten der Maus:
              um (Standard).
   onstart:   Schalte die Maus sofort beim Start um. Funktioniert auf manchen
              Betriebsystemen evtl. nicht richtig.
-  seamless:  Die Maus übergangslos bewegen lassen; umschalten nur mit Mittelklick
+  seamless:  Maus übergangslos bewegen; umschalten nur mit Mittelklick
              oder Hotkey. 'seamless' funktioniert nicht mit allen Spielen
              korrekt. Windows 3.1x kann mit einem eigenen Maustreiber
              kompatibel gemacht werden.
@@ -1074,7 +1153,7 @@ Anmerkungen:
     automatisch deaktiviert.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Aktualisiert die Bewegungszähler der Maus sofort, ohne auf eine Unterbrechung zu
+Aktualisiert die Bewegungszähler der Maus sofort, ohne auf Interrupt zu
 warten (Standardmäßig deaktiviert). Kann das Gameplay verbessern, vor allem in
 schnellen Spielen (Arcade, FPS, etc.) - denn bei einigen Programmen wird die
 Abtastrate der Maus auf 1000 Hz erhöht, ohne den Interrupt-Overhead zu erhöhen.
@@ -1110,7 +1189,8 @@ Anmerkungen: Im Abschnitt [serial], werden die Mäuse am COM-Port
 .
 :CONFIG_VMWARE_MOUSE
 VMware-Mausschnittstelle (standardmäßig aktiviert).
-Vollständig kompatibel nur mit experimentellen Windows 3.1x-Treibern von Drittanbietern.
+Vollständig kompatibel nur mit experimentellen Windows 3.1x-Treibern von
+Drittanbietern.
 Hinweis: Erfordert die Aktivierung der PS/2-Maus.
 .
 :CONFIG_VIRTUALBOX_MOUSE
@@ -1122,20 +1202,20 @@ Hinweis: Erfordert die Aktivierung der PS/2-Maus.
 Aktiviere die Stummschaltung, der Ton wird aber trotzdem emuliert.
 .
 :CONFIG_RATE
-Mixer-Samplerate (standardmäßig 48000).
+Mixer-Samplerate (standardmäßig %s).
 .
 :CONFIG_BLOCKSIZE
-Mixer-Blockgröße in Samples (standardmäßig 512). Größere Blöcke können
+Mixer-Blockgröße in Samples (standardmäßig %s). Größere Blöcke können
 stotternde Audioausgabe verhindern, aber der Ton wird auch mehr verzögert.
 .
 :CONFIG_PREBUFFER
 Wie viele Millisekunden Daten zusätzlich zur Blockgröße vorgehalten werden
-sollen. Größere Werte können stotternde Audioausgabe verhindern, aber der Ton
-wird auch mehr verzögert.
+sollen (standardmäßig %s). Größere Werte können stotternde Audioausgabe
+verhindern, aber der Ton wird auch mehr verzögert.
 .
 :CONFIG_NEGOTIATE
 Lass den System-Audiotreiber die besten Einstellungen für Rate und Blockgröße
-aushandeln (standardmäßig aktiviert).
+aushandeln (standardmäßig %s).
 .
 :CONFIG_COMPRESSOR
 Aktiviere den Auto-Leveling Kompressor auf dem Masterkanal,
@@ -1157,8 +1237,8 @@ Hinweis: Du kannst Crossfeed für jede Quelle über Mixer-Befehle einstellen.
 Aktiviert einen Nachhall, um der Audioausgabe mehr Räumlichkeit zu verleihen:
   off:     Kein Reverb (Standard).
   on:      Aktiviert Reverb (mittlere Voreinstellung).
-  tiny:    Simuliert den Klang eines kleinen integrierten Lautsprechers in einem
-           Raum; speziell für Audiosysteme mit kleinen Lautsprechern entwickelt
+  tiny:    Simuliert den Klang eines kleinen integrierten Lautsprechers;
+           speziell für Audiosysteme mit kleinen Lautsprechern entwickelt
            (PC Speaker, Tandy, PS/1 Audio, und LPT Digital-Analog-Wandler).
   small:   Verleiht ein subtiles Gefühl von Raum; gut für Spiele, die einen
            einzigen Synth-Kanal (normalerweise OPL) für Musik und Soundeffekte
@@ -1169,7 +1249,7 @@ Aktiviert einen Nachhall, um der Audioausgabe mehr Räumlichkeit zu verleihen:
            getrennte Kanäle für Musik und digitales Audio verwenden.
   huge:    Eine stärkere Variante der Voreinstellung 'Große Saal'; funktioniert
            sehr gut in einigen Spielen mit stimmungsvollen Soundtracks.
-Hinweis: Du kannst den Reverb-Pegel für jeden Kanal über Mixer-Befehle anpassen.
+Hinweis: Der Reverb-Pegel für jeden Kanal über Mixer-Befehle angepasst werden.
 .
 :CONFIG_CHORUS
 Aktiviert den Chorus, um dem Klang mehr Räumlichkeit zu verleihen:
@@ -1186,16 +1266,39 @@ Hinweis: Du kannst die Chorus-Pegel der einzelnen Quellen über Mixer-
 :CONFIG_MIDIDEVICE
 Legt fest, wohin die MIDI-Daten von der emulierten MPU-401 MIDI-Schnittstelle
 gesendet werden (standardmäßig 'auto').
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
   coremidi:    Das Gerät, das in den macOS Audio-MIDI-Einstellungen
                konfiguriert wurde.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
   coreaudio:   Verwendet den in macOS integrierten MIDI-Synthesizer.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Verwende die Win32-MIDI-Wiedergabeschnittstelle.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
+  oss:         Verwende die Linux OSS MIDI-Wiedergabeschnittstelle.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
+  alsa:        Verwende die Linux ALSA MIDI-Wiedergabeschnittstelle.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  Verwendet den eingebauten FluidSynth MIDI-Synthesizer. Siehe
                Abschnitt [fluidsynth] für Konfigurationsdetails.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
   mt32:        Verwendet den eingebauten Roland MT-32 Synthesizer.
                Siehe den Abschnitt [mt32] für Konfigurationsdetails.
-  auto         Verwendet den ersten funktionierenden externen MIDI-Player.
-               Dies kann ein Software-Synthesizer oder ein physisches Gerät
-               sein (Standard).
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
+  auto         Entweder einer der eingebauten MIDI-Synthesizer (wenn
+               `midiconfig` auf 'fluidsynth' oder 'mt32' gesetzt ist) oder ein
+               MIDI-Gerät außerhalb von DOSBox (jeder andere 'midiconfig'-
+               Wert). Dies kann ein Software-Synthesizer oder ein
+               physikalisches Gerät sein. Dies ist das Standardverhalten.
+.
+:CONFIGITEM_MIDIDEVICE_NONE
   none:        Deaktiviert die MIDI-Ausgabe.
 .
 :CONFIG_MIDICONFIG
@@ -1204,9 +1307,21 @@ Konfigurationsoptionen für das ausgewählte MIDI-Interface
 MIDI-Synthesizers, den du benutzen möchtest (finde die ID/den Namen mit dem DOS
 Befehl 'MIXER /LISTMIDI').
 Hinweise:
+
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Diese Option hat keinen Effekt, wenn du die eingebauten Synthesizer benutzt
     ('mididevice = fluidsynth' oder 'mididevice = mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
   - Wenn 'coreaudio' verwendet wird, kann hier ein SoundFont angegeben werden.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
+  - Wenn Du ALSA benutzt, benutze den Linux-Befehl 'aconnect -l', um alle
+    offenen MIDI-Ports aufzulisten und einen auszuwählen
+    (z.B. 'midiconfig = 14:0' für Sequenzer-Client 14, Port 0).
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Wenn du einen realen Roland MT-32 mit Revision 0 PCB verwendest,
     kann es sein, dass die Hardware eine Verzögerung benötigt, um den
     Puffer nicht überläuft. In diesem Fall musst du 'delaysysex' hinzufügen.
@@ -1229,8 +1344,8 @@ Anwendungen oder beim Debuggen von MIDI-Problemen.
 .
 :CONFIG_SOUNDFONT
 Pfad zu einer SoundFont-Datei im .sf2-Format (Standard 'default.sf2').
-Du kannst einen absoluten oder relativen Pfad verwenden, oder den Namen einer .sf2-Datei in
-dem Verzeichnis 'soundfonts' in deinem DOSBox-Konfigurations-
+Du kannst einen absoluten oder relativen Pfad verwenden, oder den Namen einer
+.sf2-Datei in dem Verzeichnis 'soundfonts' in deinem DOSBox-Konfigurations-
 Verzeichnis.
 Ein optionaler Prozentwert nach dem Namen skaliert die Lautstärke des Sound-
 Fonts. Dies ist nützlich, um die Lautstärke von verschiedenen SoundFonts zu
@@ -1269,8 +1384,8 @@ Wenn du benutzerdefinierte Werte verwendest:
 Hinweis: Du kannst den FluidSynth-Reverb deaktivieren und stattdessen den
          Mixer-Reverb auf dem FluidSynth-Kanal aktivieren, oder
          beide Reverb-Effekte gleichzeitig aktivieren. Ob dies
-         gut klingt hängt vom SoundFont und den verwendeten Reverb-Einstellungen,
-         die verwendet werden, ab.
+         gut klingt hängt vom SoundFont und den verwendeten Reverb-
+         Einstellungen, die verwendet werden, ab.
 .
 :CONFIG_FSYNTH_FILTER
 Filter für das FluidSynth-Ausgangssignal:
@@ -1331,8 +1446,18 @@ Aktives ROM
 Geladen von   
 .
 :CONFIG_SBTYPE
-Typ des Sound Blasters, der emuliert werden soll (Standard 'sb16').
-'gb' ist Game Blaster.
+Sound Blaster-Modell, das emuliert werden soll (standardmäßig 'sb16');
+die Modelle, die mit 'oplmode' und 'cms' auf 'auto' automatisch ausgewählt
+werden, sind ebenfalls aufgeführt.
+  gb:        Game Blaster - CMS
+  sb1:       Sound Blaster 1.0 - OPL2, CMS
+  sb2:       Sound Blaster 2.0 - OPL2
+  sbpro1:    Sound Blaster Pro - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2 - OPL3
+  sb16:      Sound Blaster 16 - OPL3 (Standard)
+  none/off:  Deaktiviert die Sound Blaster-Emulation.
+Hinweis: Creative Music System wurde später in Game Blaster umbenannt;
+         es handelt sich um die gleiche Karte.
 .
 :CONFIG_SBBASE
 Die IO-Adresse des Sound Blasters (Standard '220').
@@ -1360,9 +1485,22 @@ beim Beginn der Wiedergabe Audio fehlt.
 Die OPL Signale werden nun mit der Sampelrate des Mixers erzeugt, um Resampling
 zu vermeiden.
 .
+:CONFIG_CMS Einschalten der CMS-Emulation ('auto' als Standard).
+  off:   CMS-Emulation deaktivieren (außer wenn Game Blaster ausgewählt ist).
+  on:    Aktiviert die CMS-Emulation für Sound Blaster 1 und 2.
+  auto:  Automatische Aktivierung von CMS für Sound Blaster 1 und Game Blaster.
+.
 :CONFIG_OPLMODE
-Typ der OPL-Emulation (Standard 'auto'). Bei 'auto' wird der Modus durch
-'sbtype' bestimmt. Alle OPL-Modi sind AdLib-kompatibel, ausser 'cms'.
+OPL-Modell welches emuliert werden soll ('auto' als Standard).
+  auto:      Verwendung des durch 'sbtype' bestimmten Modells.
+  opl2:      OPL2 (mono). dualopl2:  Dual OPL2 (Stereo).
+  opl3:      OPL3 (Stereo).
+  opl3gold:  OPL3 (Stereo) und das optionale AdLib Gold Surround Modul.
+             Benutze diese Option mit 'sbtype = sb16', um die AdLib Gold 1000
+             Karte zu emulieren.
+  none/off:  Deaktiviert die OPL-Emulation.
+Hinweis: 'sbtype = none' und 'oplmode = opl2' emuliert die original
+         AdLib-Karte.
 .
 :CONFIG_OPL_FADEOUT
 Blendet den OPL-Synth-Ausgang nach dem letzten IO-Port-Zugriff aus:
@@ -1370,7 +1508,7 @@ Blendet den OPL-Synth-Ausgang nach dem letzten IO-Port-Zugriff aus:
              abgespielt (Standard).
   an:        0,5s warten, bevor die Ausgabe über einen Zeitraum von 0,5s
              ausgeblendet wird.
-  <custom>:  Eine benutzerdefinierte Ausblendungsdefinition im folgenden Format:
+  <custom>:  Benutzerdefinierte Ausblendungsdefinition im folgenden Format:
                WAIT FADE
              Wobei WAIT angibt, wie lange nach dem letzten IO-Port-Zugriff die
              Ausblendung beginnt, zwischen 100 und 5000 Millisekunden; und FADE
@@ -1380,6 +1518,13 @@ Blendet den OPL-Synth-Ausgang nach dem letzten IO-Port-Zugriff aus:
                         von 200 ms warten)
                 1000 3000 (1s warten, bevor über einen Zeitraum von 3s
                 ausgeblendet wird)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Entfernt den Gleichspannungsanteil vom OPL-Ausgang. Dies sollte nur als letzter
+Ausweg verwendet werden, um Knackser in Spielen zu beheben, die PCM-Audio mit
+dem OPL-Synthesizer auf einer Sound Blaster- oder AdLib-Karte abspielen, wie
+zum Beispiel in: Golden Eagle (1991), Wizardry 6 (1990), und Wizardry 7 (1992).
+Bitte eröffne ein GitHub Ticket, wenn Du andere betroffene Spiele findest.
 .
 :CONFIG_OPLEMU
 Es wird nur noch die 'nuked' OPL-Emulation unterstützt.
@@ -1654,7 +1799,7 @@ Einstellungen bereits ausprobiert wurden.
       - runter und hoch verkleinern bzw. vergrößern den Skalar der y-Achse.
   - Alt+Pfeiltasten passt die Offset-Position der Achse an:
       - links und rechts verschiebt die x-Achse in die angegebene Richtung.
-      - runter und hoch verschiebt den Y-Achsen-Versatz in die angegebene Richtung.
+      - runter und hoch verschiebt den Y-Achsen-Versatz in diese Richtung.
   - Setze die X- und Y-Kalibrierung mit Strg+Entf bzw. Strg+Home zurück.
 Jeder Tastendruck meldet X- oder Y-Kalibrierungswerte, die du dann unten
 einstellen kannst. Wenn du Parameter gefunden hast, die funktionieren, beende
@@ -1760,10 +1905,10 @@ expanded:  640 KB Gesamtspeicher mit Anwendungen, die über 128 KB liegen.
 standard:  128 KB Gesamtspeicher mit Anwendungen, die unter 96 KB liegen.
            Erforderlich für einige ältere Spiele (z. B. Jumpman, Troll).
 .
-:CONFIG_IPX
-Aktiviert IPX über UDP/IP Emulation (standarmäßig aktiviert).
+:CONFIGITEM_IPX
+Aktiviert IPX über UDP/IP Emulation (standarmäßig deaktiviert).
 .
-:CONFIG_NE2000
+:CONFIGITEM_NE2000_SLIRP
 Aktiviere die Emulation einer Novell NE2000-Netzwerkkarte in einem software-
 basierten Netzwerk (mit libslirp) mit den folgenden Eigenschaften
 (standardmäßig aktiviert):
@@ -1777,20 +1922,20 @@ Hinweis: Unter DOS wird für die Einrichtung ein NE2000-Paket-Treiber,
          und von deinem Router zu deinem Host, wenn du als Server
          für Multiplayer-Spiele fungierst.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Die Basisadresse der NE2000-Karte (Standard '300').
 Hinweis: Die Adressen 220 und 240 sind möglicherweise nicht verfügbar, da sie
          Sound Blaster und Gravis UltraSound standardmäßig zugewiesen sind.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 Der Interrupt, der von der NE2000-Karte verwendet wird (Standard '3').
 Hinweis: Die IRQs 3 und 5 sind möglicherweise nicht verfügbar, da sie
          'serial2' und dem Gravis UltraSound standardmäßig zugewiesen sind.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 Die MAC-Adresse der NE2000-Karte (Standard 'AC:DE:48:88:99:AA').
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Leitet einen oder mehrere TCP-Ports vom Host an den DOS-Gast weiter
 (standardmäßig nicht gesetzt).
 Das Format ist:
@@ -1812,7 +1957,7 @@ Anmerkungen:
     eingerichtet.
   - Bei widersprüchlichen Gast-Ports hat die letztere Regel Vorrang.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Leitet einen oder mehrere UDP-Ports vom Host an den DOS-Gast weiter
 (standardmäßig nicht gesetzt). Das Format ist dasselbe wie bei der
 Weiterleitung von TCP-Ports.
@@ -2004,6 +2149,9 @@ Ausführbare Datei nicht gefunden: '%s'
 :CONJUNCTION_AND
 und
 .
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+Eigenschaft '%s' ist zur Laufzeit nicht änderbar.
+.
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Auflistung nicht unterstützt
 .
@@ -2098,7 +2246,7 @@ Image-Datei ist schreibgeschützt! Dies könnte Probleme verursachen.
 Dieser Befehl bootet DOSBox von einem Disketten- oder Festplattenimage.
 
 Für diesen Befehl kann man eine Reihe von Disketten angeben, die man durch
-Drücken von %s+F4 wechseln kann, -l gibt das eingebundene Laufwerk an,
+Drücken von [color=yellow]%s+F4[reset] wechseln kann, -l gibt das eingebundene Laufwerk an,
 von dem gebootet werden soll. Wenn kein Laufwerksbuchstabe angegeben wird,
 wird von Laufwerk A: gebootet. Die einzigen bootfähigen Laufwerks-
 buchstaben sind A, C und D. Zum Booten von einer Festplatte Laufwerk (C oder D)
@@ -2215,15 +2363,34 @@ Wobei:
   [color=light-cyan]IMAGE-DATEI[reset] FAT16- oder FAT12 Festplatten- oder Disketten-Image
   [color=light-cyan]BOOT-IMAGE[reset]  bootfähiges Disk-Image mit der angegebenen -size GEOMETRIE:
               Bytes pro Sektor, Sektoren pro Kopf, Köpfe, Zylinder
+              
 Anmerkungen:
-  - %s+F4 wechselt & mountet die nächste(n) [color=light-cyan]CD-ROM(S)[reset] oder [color=light-cyan]BOOT-IMAGE[reset].
+  - Du kannst Platzhalter verwenden, um mehrere Images zu mounten, z.B.:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] wechselt & mountet die nächste(n) [color=light-cyan]CD-ROM(S)[reset] oder [color=light-cyan]BOOT-IMAGE[reset].
   - Mit dem Flag -ro wird das Disk-Image schreibgeschützt gemountet.
   - Der Parameter -ide emuliert eine IDE CD-Laufwerk, nützlich für CD-basierte
     Programme, die ein echtes DOS über ein Boot-Image benötigen.
+
 Beispiele:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Benutzer/NAME/games/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Spiele\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/BENUTZERNAME/Spiele/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/BENUTZERNAME/Spiele/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -2238,15 +2405,16 @@ unter der das Image eingebunden werden soll (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Für [color=brown]CD-ROM[reset]-Images:   [color=light-blue]IMGMOUNT Laufwerksbuchstabe Speicherort des Images -t iso[reset]
+Für CD-ROM-Images:
+[color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]IMAGEDATEI[reset] -t iso
 
-Für [color=brown]Festplattenabbilder[reset]: Bei Festplatten muss die Laufwerksgeometrie angegeben werden:
-Bytes-pro-Sektor, Sektoren-pro-Kopf, Köpfe, Zylinder
-[color=light-blue]IMGMOUNT Laufwerksbuchstabe Speicherort des Images -size bps,spc,hpc,cyl[reset]
+Bei Festplatten-Images muss die Laufwerksgeometrie angegeben werden:
+  Bytes-pro-Sektor, Sektoren-pro-Kopf, Köpfe, Zylinder
+  [color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]IMAGEDATEI[reset] -size bps,spc,hpc,cyl
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-Kein Laufwerk vorhanden
+Kein Laufwerk vorhanden.
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
@@ -2280,7 +2448,7 @@ Image-Datei nicht gefunden.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Um Verzeichnisse einzubinden, verwende den Befehl [color=light-blue]MOUNT[reset], nicht den Befehl [color=light-blue]IMGMOUNT[reset].
+Um Verzeichnisse einzubinden, verwende den Befehl [color=light-green]MOUNT[reset], nicht den Befehl [color=light-green]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -2292,15 +2460,11 @@ Kann das Laufwerk nicht aus der Datei erstellen.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Laufwerk Nummer %d eingebunden als %s
+Laufwerk Nummer %d eingebunden als %s.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
 Das Image muss auf einem Host- oder lokalen Laufwerk liegen.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Die Verwendung mehrerer Dateien wird nur für CUE/ISO-Images unterstützt.
 
 .
 :PROGRAM_INTRO_HELP
@@ -2514,7 +2678,7 @@ Wobei:
 Anmerkungen:
   - Der häufigste Anwendungsfall dieses Befehls ist die Verbesserung von
     Spielen wie California Games II und Wing Commander 2, die [color=white]
-    "Packed File Corrupt"[reset] oder [color=white]"Not enough memory"[reset] Fehlermeldungen anzeigen.
+    'Packed File Corrupt'[reset] oder [color=white]'Not enough memory'[reset] Fehlermeldungen anzeigen.
 
   - Wenn du [color=light-green]loadfix[reset] ohne ein
     Argument ausführst, wird deinem Programm lediglich Speicher zugewiesen. Du
@@ -2865,6 +3029,21 @@ Anmerkungen:
   - Weitere Optionen sind im Handbuch beschrieben (README Datei, Kapitel 4).
 
 Beispiele:
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\spiele[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meine_savegames[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/spiele[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/Volumes/Spiele CD'[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meine_savegames[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/spiele[reset]
   [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/Volumes/Spiele CD'[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meine_savegames[reset] -t overlay
@@ -2942,10 +3121,6 @@ Etwas ist schief gelaufen.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Overlay %s auf Laufwerk %c eingebunden.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Kann Laufwerk Z nicht verschieben. Laufwerk %c ist bereits eingebunden.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
