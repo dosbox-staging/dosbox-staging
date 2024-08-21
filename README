@@ -1686,9 +1686,10 @@ Audio performance (speed up)
 
 General tips:
 
-  On Linux, check if your distribution supports the "gamemode" package.  Launch
-  with "gamemoderun dosbox", which is good for any game or program needed
-  low-latency CPU scheduling.
+  On Linux, check if your distribution supports the "gamemode" package,
+  which is good for any game or program needing low-latency CPU scheduling.
+  DOSBox automatically registers itself as a client, there is no need to use
+  the "gamemoderun" command.
 
   Try to close every program but DOSBox to reserve as many resources as possible
   for DOSBox.

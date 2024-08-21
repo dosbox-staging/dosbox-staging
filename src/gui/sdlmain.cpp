@@ -43,6 +43,13 @@
 #include <windows.h>
 #endif
 
+#ifdef __linux__
+	#pragma clang diagnostic push
+	#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+	#include "../libs/gamemode/gamemode_client.h"
+	#pragma clang diagnostic pop
+#endif
+
 #include <SDL.h>
 #if C_OPENGL
 #include <SDL_opengl.h>
@@ -283,6 +290,10 @@ void OPENGL_ERROR(const char*) {
 
 static void QuitSDL()
 {
+#ifdef CLIENT_GAMEMODE_H
+	gamemode_request_end();
+#endif
+
 	if (sdl.initialized) {
 #if !C_DEBUG
 		SDL_Quit();
@@ -4508,8 +4519,10 @@ static void config_add_sdl()
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
-	        "variable which usually blocks the OS screensaver while the emulator is\n"
-	        "running ('auto' by default).");
+	        "variable which usually blocks the OS screensaver while the emulator is running\n"
+	        "('auto' by default).\n"
+	        "Note: On Linux the screensaver might also get blocked by the GameMode daemon;\n"
+	        "in such case it will stay blocked regardless of this setting.\n");
 	pstring->Set_values({"auto", "allow", "block"});
 }
 
@@ -4940,6 +4953,12 @@ int sdl_main(int argc, char* argv[])
 		        sdl_version.patch,
 		        SDL_GetCurrentVideoDriver(),
 		        SDL_GetCurrentAudioDriver());
+
+#ifdef CLIENT_GAMEMODE_H
+		if (gamemode_request_start() == 0) {
+			LOG_MSG("GAMEMODE: Client registered successfully");
+		}
+#endif
 
 		for (auto line : arguments->set) {
 			trim(line);
