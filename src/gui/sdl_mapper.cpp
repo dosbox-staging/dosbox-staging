@@ -659,6 +659,10 @@ public:
 
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick_index), axes, buttons, hats);
+
+		// Trigger buttons that are actually analogue axis need special handling
+		// This function detects such triggers and sets the is_trigger variable for them
+		DetectTriggerButtons();
 	}
 
 	~CStickBindGroup() override
@@ -718,9 +722,9 @@ public:
 			if (abs(axis_position) < 25000)
 				return nullptr;
 
-			// Axis IDs 2 and 5 are triggers on six-axis controllers
-			const bool is_trigger = (axis_id == 2 || axis_id == 5) && axes == 6;
-			const bool toggled = axis_position > 0 || is_trigger;
+			// Trigger buttons must be special cased as they have a resting position of close to -32000
+			// We only want the mapped button to be pressed while the trigger is in the positve range (more than half-way pressed)
+			const bool toggled = axis_position > 0 || is_trigger[axis_id];
 			return CreateAxisBind(axis_id, toggled);
 
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
@@ -920,6 +924,49 @@ private:
 		else
 			return "[missing joystick]";
 	}
+
+	void SetTriggerButtonFor(const char* button_name, const char* sdl_mapping)
+	{
+		// Part of the string we care about is in the format of:
+		// "button_name" + ':' + single character button type (a for axis, b for button, h for hat) + axis number
+
+		const char* substring = strstr(sdl_mapping, button_name);
+		if (!substring) {
+			return;
+		}
+		substring += strlen(button_name);
+		if (*substring != 'a') {
+			// Not an axis so no need to do anything
+			return;
+		}
+		++substring;
+		if (!isdigit(*substring)) {
+			// Safety check, this means the string is an invalid format
+			return;
+		}
+		int axis_number = 0;
+		while (isdigit(*substring)) {
+			axis_number *= 10;
+			axis_number += *substring - '0';
+			++substring;
+		}
+		if (axis_number >= 0 && axis_number < MAXAXIS) {
+			is_trigger[axis_number] = true;
+		}
+	}
+
+	void DetectTriggerButtons()
+	{
+		char* sdl_mapping = SDL_GameControllerMappingForDeviceIndex(stick_index);
+		if (!sdl_mapping) {
+			return;
+		}
+		SetTriggerButtonFor("lefttrigger:", sdl_mapping);
+		SetTriggerButtonFor("righttrigger:", sdl_mapping);
+		SDL_free(sdl_mapping);
+	}
+
+	bool is_trigger[MAXAXIS] = {};
 
 protected:
 	CBindList *pos_axis_lists = nullptr;
