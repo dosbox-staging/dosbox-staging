@@ -430,6 +430,9 @@ Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/r
 :TITLEBAR_CYCLES_MS
 cykli/ms
 .
+:TITLEBAR_CYCLES_THROTTLED
+ograniczone
+.
 :TITLEBAR_MUTED
 WYCISZONE
 .
@@ -1064,7 +1067,7 @@ Szybkość emulowanego procesora dla programów działających w trybie chronion
 Uwaga: Więcej informacji znajdziesz w opisie 'cpu_cycles'.
 .
 :CONFIG_CPU_THROTTLE
-Dynamicznie zmniejsza ilość emulowanych cykli procesora, jeśli system
+Dynamicznie ogranicza ilość emulowanych cykli procesora, jeśli system
 gospodarza nie jest w stanie emulować zadanej liczby (domyślnie wyłączone).
 Działa jedynie w przypadku ustawienia stałej liczby cykli. Po włączeniu
 ilość cykli na milisekundę będzie się zmieniać, może to powodować problemy
