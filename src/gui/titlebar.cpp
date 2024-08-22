@@ -771,6 +771,7 @@ void TITLEBAR_AddConfig(Section_prop& secprop)
 void TITLEBAR_AddMessages()
 {
 	MSG_Add("TITLEBAR_CYCLES_MS", "cycles/ms");
+	MSG_Add("TITLEBAR_CYCLES_THROTTLED", "throttled");
 	MSG_Add("TITLEBAR_MUTED", "MUTED");
 	MSG_Add("TITLEBAR_PAUSED", "PAUSED");
 

@@ -2600,8 +2600,6 @@ void CPU_ResetAutoAdjust()
 
 std::string CPU_GetCyclesConfigAsString()
 {
-	static const auto CyclesPerMs = " cycles/ms";
-
 	if (legacy_cycles_mode) {
 		std::string s = {};
 
@@ -2616,7 +2614,9 @@ std::string CPU_GetCyclesConfigAsString()
 		} else {
 			s += format_str("%d", CPU_CycleMax.load());
 		}
-		return s += CyclesPerMs;
+
+		s += " ";
+		return s += MSG_GetRaw("TITLEBAR_CYCLES_MS");
 
 	} else {
 		// Modern mode
@@ -2647,10 +2647,13 @@ std::string CPU_GetCyclesConfigAsString()
 			format_cycles(conf.real_mode);
 		}
 
-		s += CyclesPerMs;
+		s += " ";
+		s += MSG_GetRaw("TITLEBAR_CYCLES_MS");
 
 		if (modern_cycles_config.throttle && !max_mode) {
-			s += " (throttled)";
+			s += " (";
+			s += MSG_GetRaw("TITLEBAR_CYCLES_THROTTLED");
+			s += ")";
 		}
 		return s;
 	}
