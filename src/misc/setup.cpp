@@ -1036,8 +1036,9 @@ bool Section_prop::HandleInputline(const std::string& line)
 		}
 
 		if (p->IsDeprecated()) {
-			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
-			LOG_WARNING("CONFIG: %s", p->GetHelp().c_str());
+			LOG_WARNING("CONFIG: Deprecated option '%s'\n\n%s\n",
+			            name.c_str(),
+			            p->GetHelpUtf8().c_str());
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
