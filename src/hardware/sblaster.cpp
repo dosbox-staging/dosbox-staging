@@ -72,6 +72,24 @@ constexpr uint8_t MinAdaptiveStepSize = 0; // max is 32767
 // and resets on startup, resulting a rapid susccession of resets.
 constexpr uint8_t DspInitialResetLimit = 4;
 
+// The official guide states the following:
+// "Valid output rates range from 5000 to 45 000 Hz, inclusive."
+//
+// However, this statement is wrong as in actual reality the maximum
+// achievable sample rate is the native SB DAC rate of 45454 Hz, and
+// many programs use this highest rate. Limiting the max rate to 45000
+// Hz would result in a slightly out-of-tune, detuned pitch in such
+// programs.
+//
+// More details:
+// https://www.vogons.org/viewtopic.php?p=621717#p621717
+//
+// Ref:
+//   Sound Blaster Series Hardware Programming Guide,
+//   41h Set digitized sound output sampling rate, DSP Commands 6-15
+//   https://pdos.csail.mit.edu/6.828/2018/readings/hardware/SoundBlaster.pdf
+//
+constexpr auto MinPlaybackRateHz         = 5000;
 constexpr auto NativeDacRateHz           = 45454;
 constexpr uint16_t DefaultPlaybackRateHz = 22050;
 
@@ -1209,26 +1227,9 @@ static void flush_remainig_dma_transfer()
 
 static void set_channel_rate_hz(const int requested_rate_hz)
 {
-	// The official guide states the following:
-	// "Valid output rates range from 5000 to 45 000 Hz, inclusive."
-	//
-	// However, this statement is wrong as in actual reality the maximum
-	// achievable sample rate is the native SB DAC rate of 45454 Hz, and
-	// many programs use this highest rate. Limiting the max rate to 45000
-	// Hz would result in a slightly out-of-tune, detuned pitch in such
-	// programs.
-	//
-	// More details:
-	// https://www.vogons.org/viewtopic.php?p=621717#p621717
-	//
-	// Ref:
-	//   Sound Blaster Series Hardware Programming Guide,
-	//   41h Set digitized sound output sampling rate, DSP Commands 6-15
-	//   https://pdos.csail.mit.edu/6.828/2018/readings/hardware/SoundBlaster.pdf
-	//
-	constexpr int MinRateHz = 5000;
-
-	const auto rate_hz = std::clamp(requested_rate_hz, MinRateHz, NativeDacRateHz);
+	const auto rate_hz = std::clamp(MinPlaybackRateHz,
+	                                requested_rate_hz,
+	                                NativeDacRateHz);
 
 	assert(sb.chan);
 	if (sb.chan->GetSampleRate() != rate_hz) {
