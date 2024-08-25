@@ -157,22 +157,26 @@ static inline void FPU_SET_TOP(const uint32_t val)
 void FPU_SetPRegsFrom(const uint8_t dyn_regs[8][10]);
 void FPU_GetPRegsTo(uint8_t dyn_regs[8][10]);
 
-static inline void FPU_SET_C0(Bitu C){
+static inline void FPU_SET_C0(const bool C)
+{
 	fpu.sw &= ~0x0100;
 	if(C) fpu.sw |=  0x0100;
 }
 
-static inline void FPU_SET_C1(Bitu C){
+static inline void FPU_SET_C1(const bool C)
+{
 	fpu.sw &= ~0x0200;
 	if(C) fpu.sw |=  0x0200;
 }
 
-static inline void FPU_SET_C2(Bitu C){
+static inline void FPU_SET_C2(const bool C)
+{
 	fpu.sw &= ~0x0400;
 	if(C) fpu.sw |=  0x0400;
 }
 
-static inline void FPU_SET_C3(Bitu C){
+static inline void FPU_SET_C3(const bool C)
+{
 	fpu.sw &= ~0x4000;
 	if(C) fpu.sw |= 0x4000;
 }
