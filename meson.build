@@ -54,6 +54,7 @@ install_data(
     'LICENSE',
     'licenses/BSD-2-Clause.txt',
     'licenses/BSD-3-Clause.txt',
+    'licenses/DEBUG.COM.txt',
     'licenses/GPL-2.0.txt',
     'licenses/LGPL-2.1.txt',
     'licenses/MIT.txt',
