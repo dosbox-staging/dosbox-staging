@@ -622,7 +622,9 @@ static void FPU_FPREM1(void){
 
 static void FPU_FXAM(void)
 {
-	FPU_SET_C1(std::signbit(fpu.regs[TOP].d));
+	const auto st0 = fpu.regs[TOP].d;
+
+	FPU_SET_C1(std::signbit(st0));
 
 	if (fpu.tags[TOP] == TAG_Empty) {
 		FPU_SET_C3(true);
@@ -631,15 +633,43 @@ static void FPU_FXAM(void)
 		return;
 	}
 
-	if (fpu.regs[TOP].d == 0.0) // zero or normalized number.
-	{
-		FPU_SET_C3(true);
-		FPU_SET_C2(false);
-		FPU_SET_C0(false);
-	} else {
+	switch (std::fpclassify(st0)) {
+	case FP_NORMAL:
 		FPU_SET_C3(false);
 		FPU_SET_C2(true);
 		FPU_SET_C0(false);
+		break;
+
+	case FP_ZERO:
+		FPU_SET_C3(true);
+		FPU_SET_C2(false);
+		FPU_SET_C0(false);
+		break;
+
+	case FP_NAN:
+		FPU_SET_C3(false);
+		FPU_SET_C2(false);
+		FPU_SET_C0(true);
+		break;
+
+	case FP_INFINITE:
+		FPU_SET_C3(false);
+		FPU_SET_C2(true);
+		FPU_SET_C0(true);
+		break;
+
+	case FP_SUBNORMAL:
+		FPU_SET_C3(true);
+		FPU_SET_C2(true);
+		FPU_SET_C0(false);
+		break;
+
+	// Unsupported
+	default:
+		FPU_SET_C3(false);
+		FPU_SET_C2(false);
+		FPU_SET_C0(false);
+		break;
 	}
 }
 
