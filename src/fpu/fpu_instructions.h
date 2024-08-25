@@ -160,55 +160,94 @@ static double FROUND(double in)
 #define BIAS80 16383
 #define BIAS64 1023
 
-static Real64 FPU_FLD80(PhysPt addr) {
+static Real64 FPU_FLD80(PhysPt addr)
+{
+	const auto raw_mantissa = mem_readq(addr);
+	const auto raw_exponent = mem_readw(addr + 8);
+
+	// Handle special cases explicitly
+	if (raw_exponent == 0x7FFF || raw_exponent == 0xFFFF) {
+		if (raw_mantissa == 0x8000000000000000ULL) {
+			// Infinity
+			return (raw_exponent == 0xFFFF)
+			             ? -std::numeric_limits<double>::infinity()
+			             : std::numeric_limits<double>::infinity();
+		} else if (raw_mantissa & 0xC000000000000000ULL) {
+			// NaN
+			return std::numeric_limits<double>::quiet_NaN();
+		}
+	}
+
+	if ((raw_exponent & 0x7FFF) == 0 && raw_mantissa == 0) {
+		// Zero
+		return (raw_exponent & 0x8000) ? -0.0 : 0.0;
+	}
+
 	struct {
 		int16_t begin = 0;
-		FPU_Reg eind  = {};
+		int64_t eind  = 0;
 	} test = {};
 
-	test.eind.ll = mem_readq(addr);
-	test.begin = mem_readw(addr+8);
-   
-	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
-	int64_t blah = ((exp64 >0)?exp64:-exp64)&0x3ff;
-	int64_t exp64final = ((exp64 >0)?blah:-blah) +BIAS64;
+	test.eind               = static_cast<int64_t>(raw_mantissa);
+	test.begin              = static_cast<int16_t>(raw_exponent);
 
-	int64_t mant64 = (test.eind.ll >> 11) & LONGTYPE(0xfffffffffffff);
-	int64_t sign = (test.begin&0x8000)?1:0;
-	FPU_Reg result;
-	result.ll = (sign <<63)|(exp64final << 52)| mant64;
+	int64_t exp64      = (((test.begin & 0x7fff) - BIAS80));
+	int64_t exp64_tmp  = ((exp64 > 0) ? exp64 : -exp64) & 0x3ff;
+	int64_t exp64final = ((exp64 > 0) ? exp64_tmp : -exp64_tmp) + BIAS64;
 
-	if (test.eind.l.lower == 0 && test.eind.l.upper == INT32_MIN &&
-	    (test.begin & INT16_MAX) == INT16_MAX) {
-		//Detect INF and -INF (score 3.11 when drawing a slur.)
-		result.d = sign?-HUGE_VAL:HUGE_VAL;
-	}
-	return result.d;
+	int64_t mant64 = (test.eind >> 11) & LONGTYPE(0xfffffffffffff);
+	int64_t sign   = (test.begin & 0x8000) ? 1 : 0;
 
-	//mant64= test.mant80/2***64    * 2 **53 
+	const int64_t result_ll = (sign << 63) | (exp64final << 52) | mant64;
+	double result;
+	memcpy(&result, &result_ll, sizeof(result_ll));
+
+	return result;
 }
 
-static void FPU_ST80(PhysPt addr,Bitu reg) {
+static void FPU_ST80(PhysPt addr, Bitu reg)
+{
+	// Handle special cases explicitly
+	if (std::isnan(fpu.regs[reg].d)) {
+		mem_writeq(addr, 0xC000000000000000ULL);
+		mem_writew(addr + 8, 0x7FFF);
+		return;
+	}
+
+	if (std::isinf(fpu.regs[reg].d)) {
+		mem_writeq(addr, 0x8000000000000000ULL);
+		mem_writew(addr + 8, fpu.regs[reg].d > 0 ? 0x7FFF : 0xFFFF);
+		return;
+	}
+
+	if (fpu.regs[reg].d == 0.0) {
+		mem_writeq(addr, 0);
+		mem_writew(addr + 8, std::signbit(fpu.regs[reg].d) ? 0x8000 : 0);
+		return;
+	}
+
 	struct {
 		int16_t begin = 0;
-		FPU_Reg eind  = {};
+		int64_t eind  = 0;
 	} test = {};
 
 	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
 	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
 	int64_t exp80final  = (exp80 >> 52);
-	int64_t mant80 = fpu.regs[reg].ll&LONGTYPE(0x000fffffffffffff);
+	int64_t mant80      = fpu.regs[reg].ll & LONGTYPE(0x000fffffffffffff);
 	int64_t mant80final = (mant80 << 11);
-	if(fpu.regs[reg].d != 0){ //Zero is a special case
-		// Elvira wants the 8 and tcalc doesn't
-		mant80final |= LONGTYPE(0x8000000000000000);
-		//Ca-cyber doesn't like this when result is zero.
-		exp80final += (BIAS80 - BIAS64);
-	}
-	test.begin = (static_cast<int16_t>(sign80)<<15)| static_cast<int16_t>(exp80final);
-	test.eind.ll = mant80final;
-	mem_writeq(addr, test.eind.ll);
-	mem_writew(addr+8,test.begin);
+
+	// Elvira wants the 8 and tcalc doesn't
+	mant80final |= LONGTYPE(0x8000000000000000);
+	// Ca-cyber doesn't like this when result is zero.
+	exp80final += (BIAS80 - BIAS64);
+
+	test.begin = (static_cast<int16_t>(sign80) << 15) |
+	             static_cast<int16_t>(exp80final);
+	test.eind = mant80final;
+
+	mem_writeq(addr, static_cast<uint64_t>(test.eind));
+	mem_writew(addr + 8, static_cast<uint64_t>(test.begin));
 }
 
 static void FPU_FLD_F32(PhysPt addr, Bitu store_to)
