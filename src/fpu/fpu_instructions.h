@@ -367,7 +367,7 @@ static void FPU_FST_I64(PhysPt addr)
 static void FPU_FBST(PhysPt addr)
 {
 	FPU_Reg val = fpu.regs[TOP];
-	if (val.ll & LONGTYPE(0x8000000000000000)) { // MSB = sign
+	if (std::signbit(val.d)) {
 		mem_writeb(addr + 9, 0x80);
 		val.d = -val.d;
 	} else {
@@ -583,12 +583,7 @@ static void FPU_FPREM1(void){
 
 static void FPU_FXAM(void)
 {
-	if (fpu.regs[TOP].ll & LONGTYPE(0x8000000000000000)) // sign
-	{
-		FPU_SET_C1(true);
-	} else {
-		FPU_SET_C1(false);
-	}
+	FPU_SET_C1(std::signbit(fpu.regs[TOP].d));
 
 	if (fpu.tags[TOP] == TAG_Empty) {
 		FPU_SET_C3(true);
