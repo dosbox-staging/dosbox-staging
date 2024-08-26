@@ -762,17 +762,19 @@ static void FPU_FRSTOR(PhysPt addr)
 	}
 }
 
-static void FPU_FXTRACT(void) {
-	// function stores real bias in st and 
-	// pushes the significant number onto the stack
-	// if double ever uses a different base please correct this function
+static void FPU_FXTRACT(void)
+{
+	const auto st0 = fpu.regs[TOP].d;
 
-	FPU_Reg test = fpu.regs[TOP];
-	int64_t exp80 =  test.ll&LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final = (exp80>>52) - BIAS64;
-	Real64 mant = test.d / (std::pow(2.0, static_cast<Real64>(exp80final)));
-	fpu.regs[TOP].d = static_cast<Real64>(exp80final);
-	FPU_PUSH(mant);
+	int exponent;
+	auto mantissa = std::frexp(st0, &exponent);
+
+	// Adjust the mantissa and exponent to match FXTRACT normalization
+	mantissa *= 2.0;
+	exponent -= 1;
+
+	fpu.regs[TOP].d = static_cast<double>(exponent);
+	FPU_PUSH(mantissa);
 }
 
 static void FPU_FCHS(void)
