@@ -1620,20 +1620,12 @@ static Bitu int33_handler()
 		state.hidden    = 1;
 		// According to Ralf Brown Interrupt List it returns 0x20 if
 		// success,  but CuteMouse source code claims the code for
-		// success is 0x1f. Both agree that 0xffff means failure.
+		// success if 0x1f. Both agree that 0xffff means failure.
 		// Since reg_ax is 0x1f here, no need to change anything.
-		// [FeralChild64] My results:
-		// - MS driver 6.24 always returns 0xffff
-		// - MS driver 8.20 returns 0xffff if 'state.enabled == false'
-		// - 3rd party drivers I tested (A4Tech 8.04a, Genius 9.20,
-		//   Mouse Systems 8.00, DR-DOS driver 1.1) never return anything
 		break;
 	case 0x20: // MS MOUSE v6.0+ - enable mouse driver
 		state.enabled = true;
 		state.hidden  = state.oldhidden;
-		// At least Descent II with Voodoo patch expects this. Checked
-		// that MS driver alters AX this way starting from version 7.
-		reg_ax = 0xffff;
 		break;
 	case 0x22: // MS MOUSE v6.0+ - set language for messages
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
