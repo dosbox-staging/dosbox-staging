@@ -1142,7 +1142,8 @@ float MixerChannel::GetFramesPerBlock() const
 
 double MixerChannel::GetMsPerFrame() const
 {
-	// Note: the double return value is used for PIC timing (which uses doubles)
+	// Note: the double return value is used for PIC timing (which uses
+	// doubles)
 
 	return MillisInSecond / sample_rate_hz;
 }
@@ -1990,10 +1991,13 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 		return frame * fadeout_level;
 	}
 	if (!had_signal) {
-		// Otherwise, we simply passively listen for signal
-		constexpr auto SilenceThreshold = 1.0f;
-		had_signal = fabsf(frame.left)  > SilenceThreshold ||
-		             fabsf(frame.right) > SilenceThreshold;
+		// Otherwise, we inspect the running signal for changes
+		constexpr auto ChangeThreshold = 1.0f;
+
+		had_signal = fabsf(frame.left - last_frame.left) > ChangeThreshold ||
+		             fabsf(frame.right - last_frame.right) > ChangeThreshold;
+
+		last_frame = frame;
 	}
 	return frame;
 }
@@ -2019,8 +2023,10 @@ void MixerChannel::Sleeper::MaybeSleep()
 		WakeUp();
 		return;
 	}
-	channel.Enable(false);
-	// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
+	if (channel.is_enabled) {
+		channel.Enable(false);
+		// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
+	}
 }
 
 // Returns true when actually awoken otherwise false if already awake.
