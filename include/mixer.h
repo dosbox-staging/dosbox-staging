@@ -306,6 +306,7 @@ public:
 		static constexpr auto DefaultWaitMs = 500;
 		static constexpr auto MaxWaitMs     = 5000;
 
+		AudioFrame last_frame          = {};
 		int64_t woken_at_ms            = {};
 		float fadeout_level            = {};
 		float fadeout_decrement_per_ms = {};
