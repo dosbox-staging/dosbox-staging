@@ -1140,6 +1140,13 @@ float MixerChannel::GetFramesPerBlock() const
 	return static_cast<float>(mixer.blocksize) * stretch_factor;
 }
 
+double MixerChannel::GetMsPerFrame() const
+{
+	// Note: the double return value is used for PIC timing (which uses doubles)
+
+	return MillisInSecond / sample_rate_hz;
+}
+
 void MixerChannel::SetPeakAmplitude(const int peak)
 {
 	peak_amplitude = peak;
