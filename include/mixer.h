@@ -182,6 +182,7 @@ public:
 	int GetSampleRate() const;
 	float GetFramesPerTick() const;
 	float GetFramesPerBlock() const;
+	double GetMillisPerFrame() const;
 
 	void Set0dbScalar(const float f);
 	void UpdateCombinedVolume();
