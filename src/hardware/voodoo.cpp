@@ -111,6 +111,8 @@
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H
 
+// #define DEBUG_VOODOO 1
+
 /***************************************************************************
     TYPE DEFINITIONS
 ***************************************************************************/
@@ -156,6 +158,20 @@ using rgb15_t = uint16_t;
 /***************************************************************************
     inline FUNCTIONS
 ***************************************************************************/
+
+// Debug log wrapper that only logs if 'DEBUG_VOODOO' is defined above)
+template <typename... Args>
+constexpr void maybe_log_debug([[maybe_unused]] const char* format,
+                               [[maybe_unused]] Args... args)
+{
+	#ifdef DEBUG_VOODOO
+
+	const auto prefixed_format = std::string("VOODOO: ") + format;
+	LOG_DEBUG(prefixed_format.c_str(), std::forward<Args>(args)...);
+
+	#endif
+	// Otherwise this is a no-op
+}
 
 /*-------------------------------------------------
     pal5bit - convert a 5-bit value to 8 bits
@@ -3475,10 +3491,15 @@ static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
 	vs->raster_hash[hash] = info;
 
 	if (LOG_RASTERIZERS)
-		LOG_MSG("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
-				info->callback,
-				info->eff_color_path, info->eff_alpha_mode, info->eff_fog_mode, info->eff_fbz_mode,
-				info->eff_tex_mode_0, info->eff_tex_mode_1, hash);
+		maybe_log_debug("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
+		                info->callback,
+		                info->eff_color_path,
+		                info->eff_alpha_mode,
+		                info->eff_fog_mode,
+		                info->eff_fbz_mode,
+		                info->eff_tex_mode_0,
+		                info->eff_tex_mode_1,
+		                hash);
 
 	return info;
 }
@@ -6345,14 +6366,14 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				APPLY_ALPHATEST(v, stats, v->reg[alphaMode].u, color.rgb.a);
 
 				/*
-				if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp mselect %8x",FBZCP_CC_MSELECT(v->reg[fbzColorPath].u));
-				if (FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u) > 1) LOG_MSG("lfbw fpp mselect alpha %8x",FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u));
+				if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp mselect %8x",FBZCP_CC_MSELECT(v->reg[fbzColorPath].u));
+				if (FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u) > 1) maybe_log_debug("lfbw fpp mselect alpha %8x",FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u));
 
 				if (FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u) != 0) {
-					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp rblend %8x",FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u));
+					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp rblend %8x",FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u));
 				}
 				if (FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u) != 0) {
-					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp rblend alpha %8x",FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u));
+					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp rblend alpha %8x",FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u));
 				}
 				*/
 
@@ -6374,7 +6395,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				}
 				else
 				{
-					LOG_MSG("lfbw fpp FBZCP_CC_LOCALSELECT_OVERRIDE set!");
+					maybe_log_debug("lfbw fpp FBZCP_CC_LOCALSELECT_OVERRIDE set!");
 					/*
 					if (!(texel.rgb.a & 0x80))					// iterated RGB
 						c_local.u = iterargb.u;
@@ -6450,25 +6471,25 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 						blendr = c_local.rgb.r;
 						blendg = c_local.rgb.g;
 						blendb = c_local.rgb.b;
-						//LOG_MSG("blend RGB c_local");
+						// maybe_log_debug("blend RGB c_local");
 						break;
 					case 2:		/* a_other */
 						//blendr = blendg = blendb = c_other.rgb.a;
-						LOG_MSG("blend RGB a_other");
+						maybe_log_debug("blend RGB a_other");
 						break;
 					case 3:		/* a_local */
 						blendr = blendg = blendb = c_local.rgb.a;
-						LOG_MSG("blend RGB a_local");
+						maybe_log_debug("blend RGB a_local");
 						break;
 					case 4:		/* texture alpha */
 						//blendr = blendg = blendb = texel.rgb.a;
-						LOG_MSG("blend RGB texture alpha");
+						maybe_log_debug("blend RGB texture alpha");
 						break;
 					case 5:		/* texture RGB (Voodoo 2 only) */
 						//blendr = texel.rgb.r;
 						//blendg = texel.rgb.g;
 						//blendb = texel.rgb.b;
-						LOG_MSG("blend RGB texture RGB");
+						maybe_log_debug("blend RGB texture RGB");
 						break;
 				}
 
@@ -6481,19 +6502,19 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 						break;
 					case 1:		/* a_local */
 						blenda = c_local.rgb.a;
-						//LOG_MSG("blend alpha a_local");
+						// maybe_log_debug("blend alpha a_local");
 						break;
 					case 2:		/* a_other */
 						//blenda = c_other.rgb.a;
-						LOG_MSG("blend alpha a_other");
+						maybe_log_debug("blend alpha a_other");
 						break;
 					case 3:		/* a_local */
 						blenda = c_local.rgb.a;
-						LOG_MSG("blend alpha a_local");
+						maybe_log_debug("blend alpha a_local");
 						break;
 					case 4:		/* texture alpha */
 						//blenda = texel.rgb.a;
-						LOG_MSG("blend alpha texture alpha");
+						maybe_log_debug("blend alpha texture alpha");
 						break;
 				}
 
@@ -7416,13 +7437,13 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 
 	uint8_t readb([[maybe_unused]] PhysPt addr) override
 	{
-		// LOG_MSG("VOODOO: readb at %x", addr);
+		// maybe_log_debug("readb at %x", addr);
 		return 0xff;
 	}
 
 	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
-		// LOG_MSG("VOODOO: writeb at %x", addr);
+		// maybe_log_debug("writeb at %x", addr);
 	}
 
 	uint16_t readw(PhysPt addr) override
@@ -7576,10 +7597,10 @@ struct PCI_SSTDevice : public PCI_Device {
 
 	Bits ParseReadRegister(uint8_t regnum) override
 	{
-		//LOG_MSG("SST ParseReadRegister %x",regnum);
+		// maybe_log_debug("SST ParseReadRegister %x",regnum);
 		switch (regnum) {
 			case 0x4c:case 0x4d:case 0x4e:case 0x4f:
-				LOG_MSG("SST ParseReadRegister STATUS %x",regnum);
+				maybe_log_debug("SST ParseReadRegister STATUS %x",regnum);
 				break;
 			case 0x54:case 0x55:case 0x56:case 0x57:
 				if (vtype == VOODOO_2) {
@@ -7628,7 +7649,7 @@ struct PCI_SSTDevice : public PCI_Device {
 
 	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) override
 	{
-		//LOG_MSG("SST ParseWriteRegister %x:=%x",regnum,value);
+		// maybe_log_debug("SST ParseWriteRegister %x:=%x",regnum,value);
 		if ((regnum >= 0x14) && (regnum < 0x28)) {
 			return -1; // base addresses are read-only
 		}
