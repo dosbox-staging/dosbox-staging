@@ -181,19 +181,18 @@ int VideoCodec::PossibleBlock(const int vx, const int vy, const FrameBlock & blo
 template <class P>
 int VideoCodec::CompareBlock(const int vx, const int vy, const FrameBlock & block)
 {
-	int ret = 0;
+	int diff_count = 0;
 	P *pold = reinterpret_cast<P *>(oldframe) + block.start + (vy * pitch) + vx;
 	P *pnew = reinterpret_cast<P *>(newframe) + block.start;
-	;
+
 	for (auto y = 0; y < block.dy; y++) {
 		for (auto x = 0; x < block.dx; x++) {
-			const auto test = 0 - ((pold[x] - pnew[x]) & 0x00ffffff);
-			ret -= check_cast<int>(test >> 31);
+			diff_count += ((pold[x] ^ pnew[x]) & 0x00ffffff) != 0;
 		}
 		pold += pitch;
 		pnew += pitch;
 	}
-	return ret;
+	return diff_count;
 }
 
 template <class P>
