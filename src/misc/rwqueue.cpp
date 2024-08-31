@@ -181,9 +181,7 @@ size_t RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_req
 		const auto free_capacity = static_cast<size_t>(capacity -
 		                                               queue.size());
 
-		const auto num_items = std::max(min_items,
-		                                std::min(num_remaining,
-		                                         free_capacity));
+		const auto num_items = std::clamp(free_capacity, min_items, num_remaining);
 
 		// wait until we're stopped or the queue has enough room for the
 		// items
@@ -296,9 +294,8 @@ size_t RWQueue<T>::BulkDequeue(T* const into_target, const size_t num_requested)
 		std::unique_lock<std::mutex> lock(mutex);
 
 		constexpr size_t MinItems = 1;
-		const auto num_items      = std::max(MinItems,
-                                                std::min(num_remaining,
-                                                         queue.size()));
+
+		const auto num_items = std::clamp(queue.size(), MinItems, num_remaining);
 
 		// wait until we're stopped or the queue has enough items
 		has_items.wait(lock, [&] {
