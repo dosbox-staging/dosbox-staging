@@ -73,7 +73,11 @@ public:
 	RWQueue(size_t queue_capacity);
 	void Resize(size_t queue_capacity);
 
+	// non-blocking call
 	bool IsEmpty();
+
+	// non-blocking call
+	bool IsFull();
 
 	// non-blocking call
 	bool IsRunning();
