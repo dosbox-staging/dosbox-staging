@@ -76,6 +76,30 @@
 #include "vga.h"
 #include "video.h"
 
+static void switch_console_to_utf8()
+{
+#if WIN32
+	constexpr uint16_t CodePageUtf8 = 65001;
+	if (!sdl.original_code_page) {
+		sdl.original_code_page = GetConsoleOutputCP();
+		// Don't do anything if we couldn't get the original code page
+		if (sdl.original_code_page) {
+			SetConsoleOutputCP(CodePageUtf8);
+		}
+	}
+#endif
+}
+
+static void restore_console_encoding()
+{
+#if WIN32
+	if (sdl.original_code_page) {
+		SetConsoleOutputCP(sdl.original_code_page);
+		sdl.original_code_page = 0;
+	}
+#endif
+}
+
 #if C_OPENGL
 //Define to report opengl errors
 //#define DB_OPENGL_ERROR
@@ -288,6 +312,7 @@ static void QuitSDL()
 		SDL_Quit();
 #endif
 	}
+	restore_console_encoding();
 }
 
 // Globals for keyboard initialisation
@@ -4644,7 +4669,7 @@ static void list_glshaders()
 {
 #if C_OPENGL
 	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
-		printf_utf8("%s\n", line.c_str());
+		printf("%s\n", line.c_str());
 	}
 #else
 	fprintf(stderr,
@@ -4656,7 +4681,7 @@ static void list_glshaders()
 static void list_countries()
 {
 	const auto message_utf8 = DOS_GenerateListCountriesMessage();
-	printf_utf8("%s\n", message_utf8.c_str());
+	printf("%s\n", message_utf8.c_str());
 }
 
 static int print_primary_config_location()
@@ -4737,6 +4762,11 @@ static void set_wm_class()
 
 int sdl_main(int argc, char* argv[])
 {
+	// Ensure we perform SDL cleanup and restore console settings
+	atexit(QuitSDL);
+
+	switch_console_to_utf8();
+
 	CommandLine command_line(argc, argv);
 	control = std::make_unique<Config>(&command_line);
 
@@ -4843,9 +4873,9 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->help) {
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
-			const auto help_utf8 = format_str(MSG_GetRaw("DOSBOX_HELP"),
-			                                  program_name);
-			printf_utf8("%s", help_utf8.c_str());
+			const auto help = format_str(MSG_GetRaw("DOSBOX_HELP"),
+			                             program_name);
+			printf("%s", help.c_str());
 			return 0;
 		}
 		if (arguments->editconf) {
@@ -4927,9 +4957,6 @@ int sdl_main(int argc, char* argv[])
 		}
 
 		sdl.initialized = true;
-
-		// Once initialised, ensure we clean up SDL for all exit conditions
-		atexit(QuitSDL);
 
 		SDL_version sdl_version = {};
 		SDL_GetVersion(&sdl_version);
