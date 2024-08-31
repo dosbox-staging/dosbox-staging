@@ -180,6 +180,10 @@ struct SDL_Block {
 
 	uint32_t start_event_id = UINT32_MAX;
 
+#ifdef WIN32
+	uint16_t original_code_page = 0;
+#endif
+
 	bool is_paused = false;
 
 	RenderingBackend rendering_backend      = RenderingBackend::Texture;
