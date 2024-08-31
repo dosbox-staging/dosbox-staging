@@ -103,6 +103,13 @@ bool RWQueue<T>::IsEmpty()
 }
 
 template <typename T>
+bool RWQueue<T>::IsFull()
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	return (queue.size() >= capacity);
+}
+
+template <typename T>
 bool RWQueue<T>::IsRunning()
 {
 	std::lock_guard<std::mutex> lock(mutex);
