@@ -852,17 +852,20 @@ static void FPU_FXTRACT(void)
 static void FPU_FCHS(void)
 {
 	fpu.regs[TOP].d = -(fpu.regs[TOP].d);
+	FPU_SET_C1(false);
 }
 
 static void FPU_FABS(void)
 {
 	fpu.regs[TOP].d = std::fabs(fpu.regs[TOP].d);
+	FPU_SET_C1(false);
 }
 
 static void FPU_FTST(void)
 {
 	fpu.regs[8].d = 0.0;
 	FPU_FCOM(TOP, 8);
+	FPU_SET_C1(false);
 }
 
 static void FPU_FLD1(void)
