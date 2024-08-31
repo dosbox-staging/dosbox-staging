@@ -22,11 +22,40 @@
 
 #include "math_utils.h"
 
+// Exceptions
+static constexpr uint16_t InvalidOperationExceptionMask    = 0x0001;
+static constexpr uint16_t DenormalizedOperandExceptionMask = 0x0002;
+static constexpr uint16_t ZeroDivideExceptionMask          = 0x0004;
+static constexpr uint16_t OverflowExceptionMask            = 0x0008;
+static constexpr uint16_t UnderflowExceptionMask           = 0x0010;
+static constexpr uint16_t PrecisionExceptionMask           = 0x0020;
+
+// Precision Mode
 static constexpr uint16_t PrecisionModeMask = 0x0300;
 
 static constexpr uint16_t SinglePrecisionMode   = 0x0000;
 static constexpr uint16_t DoublePrecisionMode   = 0x0200;
 static constexpr uint16_t ExtendedPrecisionMode = 0x0300;
+
+static bool check_and_maybe_set_exception(const bool set_ex, const uint16_t ex_mask)
+{
+	const bool masked = (fpu.cw & ex_mask);
+
+	if (masked) {
+		if (set_ex) {
+			fpu.sw |= ex_mask;
+		}
+	}
+
+	return masked;
+}
+
+// Used to test for negative values except -0.0,
+// which is valid for e.g. FSQRT.
+static constexpr bool is_mostly_negative(const double val)
+{
+	return (std::signbit(val) && val != -0.0);
+}
 
 static void FPU_FINIT(void)
 {
@@ -472,10 +501,14 @@ static void FPU_FCOS(void)
 
 static void FPU_FSQRT(void)
 {
-	fpu.regs[TOP].d = std::sqrt(fpu.regs[TOP].d);
+	auto& st0 = fpu.regs[TOP].d;
+	check_and_maybe_set_exception(is_mostly_negative(st0),
+	                              InvalidOperationExceptionMask);
+
+	st0 = std::sqrt(st0);
 	// flags and such :)
-	return;
 }
+
 static void FPU_FPATAN(void)
 {
 	fpu.regs[STV(1)].d = std::atan2(fpu.regs[STV(1)].d, fpu.regs[TOP].d);
@@ -491,18 +524,62 @@ static void FPU_FPTAN(void)
 	// flags and such :)
 	return;
 }
+
 static void FPU_FDIV(Bitu st, Bitu other)
 {
-	fpu.regs[st].d = fpu.regs[st].d / fpu.regs[other].d;
+	auto& st0 = fpu.regs[st].d;
+	auto& sti = fpu.regs[other].d;
+
+	const bool zero_denom = sti == 0.0;
+	const bool inf_denom  = std::isinf(sti);
+
+	const bool zero_num = st0 == 0.0;
+	const bool inf_num  = std::isinf(st0);
+
+	const bool invalid_op = (zero_denom && zero_num) || (inf_denom && inf_num);
+
+	const auto zero_div_masked =
+	        check_and_maybe_set_exception(zero_denom, ZeroDivideExceptionMask);
+	check_and_maybe_set_exception(invalid_op, InvalidOperationExceptionMask);
+
+	// From the Intel manual: "If an unmasked divide-by-zero exception (#Z)
+	// is generated, no result is stored; if the exception is masked, an ∞
+	// of the appropriate sign is stored in the destination operand."
+	if (zero_denom && !zero_div_masked) {
+		return;
+	}
+
+	st0 = st0 / sti;
 	// flags and such :)
-	return;
 }
 
 static void FPU_FDIVR(Bitu st, Bitu other)
 {
-	fpu.regs[st].d = fpu.regs[other].d / fpu.regs[st].d;
+	auto& st0 = fpu.regs[st].d;
+	auto& sti = fpu.regs[other].d;
+
+	const bool zero_denom = st0 == 0.0;
+	const bool inf_denom  = std::isinf(st0);
+
+	const bool zero_num = sti == 0.0;
+	const bool inf_num  = std::isinf(sti);
+
+	const bool invalid_op = (zero_denom && zero_num) || (inf_denom && inf_num);
+
+	const auto zero_div_masked =
+	        check_and_maybe_set_exception(zero_denom, ZeroDivideExceptionMask);
+	check_and_maybe_set_exception(invalid_op, InvalidOperationExceptionMask);
+
+	// From the Intel manual: "If an unmasked divide-by-zero exception (#Z)
+	// is generated, no result is stored; if the exception is masked, an ∞
+	// of the appropriate sign is stored in the destination operand."
+	if (zero_denom && !zero_div_masked) {
+		return;
+	}
+
+	st0 = sti / st0;
+
 	// flags and such :)
-	return;
 }
 
 static void FPU_FMUL(Bitu st, Bitu other)
@@ -581,12 +658,9 @@ static void FPU_FUCOM(Bitu st, Bitu other)
 static void FPU_FRNDINT(void)
 {
 	const auto rounded = FROUND(fpu.regs[TOP].d);
-	if (fpu.cw & 0x20) { // As we don't generate exceptions; only do it when
-		             // masked
-		if (rounded != fpu.regs[TOP].d) {
-			fpu.sw |= 0x20; // Set Precision Exception
-		}
-	}
+	check_and_maybe_set_exception((rounded != fpu.regs[TOP].d),
+	                              PrecisionExceptionMask);
+
 	fpu.regs[TOP].d = rounded;
 }
 
