@@ -2965,7 +2965,7 @@ static void sblaster_pic_callback()
 		generate_frames(total_frames - frames_added_this_tick);
 	}
 
-	frames_added_this_tick = 0;
+	frames_added_this_tick -= total_frames;
 }
 
 static SbType determine_sb_type(const std::string& pref)
