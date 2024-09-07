@@ -737,8 +737,6 @@ const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 
 void Gus::RenderUpToNow()
 {
-	std::lock_guard lock(mutex);
-
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
@@ -1175,6 +1173,7 @@ void Gus::PrintStats()
 
 uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
+	std::lock_guard lock(mutex);
 	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
 	case 0x206: return irq_status;
@@ -1399,6 +1398,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 
 void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
+	std::lock_guard lock(mutex);
 	RenderUpToNow();
 
 	const auto val = check_cast<uint16_t>(value);
