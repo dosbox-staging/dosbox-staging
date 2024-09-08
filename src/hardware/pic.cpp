@@ -208,6 +208,7 @@ static struct {
 
 static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
@@ -264,6 +265,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 
 static void write_data(io_port_t port, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	switch (pic->icw_index) {
@@ -307,6 +309,7 @@ static void write_data(io_port_t port, io_val_t value, io_width_t)
 
 static uint8_t read_command(io_port_t port, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 	if (pic->request_issr) {
 		return pic->isr;
@@ -317,6 +320,7 @@ static uint8_t read_command(io_port_t port, io_width_t)
 
 static uint8_t read_data(io_port_t port, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	return pic->imr;
 }
