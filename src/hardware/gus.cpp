@@ -1129,6 +1129,7 @@ void Gus::MirrorAdLibCommandRegister(const uint8_t reg_value)
 
 void Gus::PrintStats()
 {
+	std::lock_guard lock(mutex);
 	// Aggregate stats from all voices
 	uint32_t combined_8bit_ms  = 0;
 	uint32_t combined_16bit_ms = 0;
