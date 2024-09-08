@@ -567,7 +567,7 @@ bool PIC_RunQueue(void) {
 		}
 	} else CPU_Cycles = CPU_CycleLeft.load();
 	CPU_CycleLeft-=CPU_Cycles;
-	if (PIC_IRQCheck) PIC_runIRQs();
+	PIC_runIRQs();
 	return true;
 }
 
