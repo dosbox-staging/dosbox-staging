@@ -818,6 +818,7 @@ void Gus::CheckIrq()
 
 bool Gus::CheckTimer(const size_t t)
 {
+	std::lock_guard lock(mutex);
 	auto& timer = t == 0 ? timer_one : timer_two;
 	if (!timer.is_masked) {
 		timer.has_expired = true;
