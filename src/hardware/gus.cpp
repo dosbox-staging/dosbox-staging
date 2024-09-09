@@ -891,6 +891,7 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 
 bool Gus::PerformDmaTransfer()
 {
+	std::lock_guard lock(mutex);
 	if (dma_channel->is_masked || !(dma_ctrl & 0x01)) {
 		return false;
 	}
