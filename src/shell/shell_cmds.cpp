@@ -180,7 +180,7 @@ void DOS_Shell::DoCommand(char* line)
 	char* cmd_write = cmd_buffer;
 
 	auto is_cli_delimiter = [](const char c) {
-		constexpr std::array<char, 6> Delimiters = {'\0', ' ', '/', '\t', '='};
+		constexpr std::array<char, 7> Delimiters = {'\0', ' ', '/', '\t', '=', '"'};
 		// Note: ':' is also a delimiter, but handling it here breaks
 		//       drive switching as that is handled at a later stage.
 		return contains(Delimiters, c);
