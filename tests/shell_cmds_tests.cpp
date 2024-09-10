@@ -100,6 +100,7 @@ TEST_F(DOS_Shell_CMDSTest, DoCommand_Separating_Chars)
 	        '/',
 	        '\t',
 	        '=',
+	        '"',
 	};
 	for (auto end_chr : end_chars) {
 		MockDOS_Shell shell;
@@ -153,6 +154,17 @@ TEST_F(DOS_Shell_CMDSTest, DoCommand_Nospace_Slash_Handling)
 {
 	assert_DoCommand("CD\\DIRECTORY", "CD", "\\DIRECTORY");
 	assert_DoCommand("CD\\", "CD", "\\");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Nospace_Echo_DoubleQuotes)
+{
+	assert_DoCommand("ECHO\"", "ECHO", "\"");
+	assert_DoCommand("ECHO\"\"", "ECHO", "\"\"");
+}
+
+TEST_F(DOS_Shell_CMDSTest, DoCommand_Nospace_If_DoubleQuotes)
+{
+	assert_DoCommand("IF\"1\"==\"1\"", "IF", "\"1\"==\"1\"");
 }
 
 TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_off_on)
