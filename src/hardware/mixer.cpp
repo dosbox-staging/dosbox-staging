@@ -815,6 +815,7 @@ void MixerChannel::Set0dbScalar(const float scalar)
 
 void MixerChannel::UpdateCombinedVolume()
 {
+	std::lock_guard lock(mutex);
 	// TODO Now that we use floats, we should apply the master volume at the
 	// very end as it has no risk of overloading the 16-bit range
 	combined_volume_gain = user_volume_gain * app_volume_gain *
