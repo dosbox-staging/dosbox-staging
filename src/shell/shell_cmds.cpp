@@ -172,11 +172,12 @@ bool DOS_Shell::ExecuteShellCommand(const char* const name, char* arguments)
 	return true;
 }
 
-void DOS_Shell::DoCommand(char * line) {
-/* First split the line into command and arguments */
-	line=trim(line);
+void DOS_Shell::DoCommand(char* line)
+{
+	// First split the line into command and arguments
+	line = trim(line);
 	char cmd_buffer[CMD_MAXLINE];
-	char * cmd_write=cmd_buffer;
+	char* cmd_write = cmd_buffer;
 
 	auto is_cli_delimiter = [](const char c) {
 		constexpr std::array<char, 6> Delimiters = {'\0', ' ', '/', '\t', '='};
@@ -187,15 +188,19 @@ void DOS_Shell::DoCommand(char * line) {
 
 	// Scan forward until we hit the first delimiter
 	while (!is_cli_delimiter(line[0])) {
-		if ((*line == '.') ||(*line == '\\')) {  //allow stuff like cd.. and dir.exe cd\kees
-			*cmd_write=0;
+		// Handle squashed . and \ syntax like real MS-DOS:
+		//   C:\> cd\keen
+		//   C:\KEEN> cd..
+		//   C:\> dir.exe
+		if ((*line == '.') || (*line == '\\')) {
+			*cmd_write = 0;
 			if (ExecuteShellCommand(cmd_buffer, line)) {
 				return;
 			}
 		}
-		*cmd_write++=*line++;
+		*cmd_write++ = *line++;
 	}
-	*cmd_write=0;
+	*cmd_write = 0;
 	if (is_empty(cmd_buffer)) {
 		return;
 	}
