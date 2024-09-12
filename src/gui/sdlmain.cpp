@@ -4941,6 +4941,17 @@ int sdl_main(int argc, char* argv[])
 		        SDL_GetCurrentVideoDriver(),
 		        SDL_GetCurrentAudioDriver());
 
+#if defined SDL_HINT_APP_NAME
+		// For KDE 6 volume applet and PipeWire audio driver; further
+		// SetHint calls have no effect in the GUI, only the first
+		// advertised name is used
+		SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
+#endif
+#if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
+		// Useful for 'pw-top' and possibly other PipeWire CLI tools
+		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
+#endif
+
 		for (auto line : arguments->set) {
 			trim(line);
 
