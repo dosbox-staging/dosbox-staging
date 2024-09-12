@@ -31,10 +31,14 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "mapper.h"
+#include "mouse.h"
 #include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
 #include "video.h"
+
+#include "../hardware/virtualbox.h"
+#include "../hardware/vmware.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
                               uint32_t* bsize, uint8_t* error)
@@ -524,15 +528,13 @@ void BOOT::Run(void)
 	}
 }
 
-void MOUSE_NotifyBooting();
-void VIRTUALBOX_NotifyBooting();
-
 void BOOT::NotifyBooting()
 {
 	DOS_NotifyBooting();
 	GFX_NotifyBooting();
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
+	VMWARE_NotifyBooting();
 }
 
 void BOOT::AddMessages()
