@@ -1966,7 +1966,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
-void MAPPER_AutoTypeStopImmediately();
+void MAPPER_StopAutoTyping();
 void DOS_21Handler();
 
 void DOS_Shell::CMD_CHOICE(char * args){
@@ -2064,7 +2064,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		if (always_capitalize)
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
-			MAPPER_AutoTypeStopImmediately();
+			MAPPER_StopAutoTyping();
 		if (shutdown_requested)
 			break;
 		if (choice == ctrl_c)
