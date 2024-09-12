@@ -18,6 +18,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "virtualbox.h"
+
 #include "checks.h"
 #include "dosbox.h"
 #include "inout.h"
@@ -606,13 +608,17 @@ Bits PCI_VirtualBoxDevice::ParseWriteRegister([[maybe_unused]] uint8_t regnum,
 }
 
 // ***************************************************************************
-// Lifecycle
+// External notifications
 // ***************************************************************************
 
 void VIRTUALBOX_NotifyBooting()
 {
 	client_disconnect();
 }
+
+// ***************************************************************************
+// Lifecycle
+// ***************************************************************************
 
 void VIRTUALBOX_Destroy(Section*)
 {
