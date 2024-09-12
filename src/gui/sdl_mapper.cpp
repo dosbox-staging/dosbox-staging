@@ -204,6 +204,26 @@ public:
 	virtual void RepostActivity() {}
 };
 
+enum TypeAction : bool { Press, Release };
+
+// A helper function that either presses or releases the named button.
+static void type_button(const std::string& button, const TypeAction action)
+{
+	const auto button_name = "key_" + button;
+
+	// Find the button's event in the mapper's global events vector
+	auto it = std::find_if(events.begin(), events.end(), [&](const auto& event) {
+		return event->GetName() == button_name;
+	});
+	if (it != events.end()) {
+		(*it)->Active(action == TypeAction::Press);
+	} else {
+		LOG_ERR("MAPPER: Couldn't find a button named '%s' to %s",
+		        button.c_str(),
+		        action == TypeAction::Press ? "press" : "release");
+	}
+}
+
 class CBind {
 public:
 	CBind(CBindList *binds)
