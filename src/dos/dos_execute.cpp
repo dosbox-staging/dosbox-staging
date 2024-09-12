@@ -34,6 +34,8 @@
 #include "string_utils.h"
 #include "video.h"
 
+#include "../hardware/vmware.h"
+
 #ifdef _MSC_VER
 #pragma pack(1)
 #endif
@@ -97,6 +99,7 @@ void DOS_UpdateCurrentProgramName()
 	}
 
 	GFX_NotifyProgramName(segment_name, canonical_name);
+	VMWARE_NotifyProgramName(segment_name);
 }
 
 static void add_canonical_name(const uint16_t pspseg, const std::string& canonical_name)
