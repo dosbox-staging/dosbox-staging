@@ -1,9 +1,9 @@
 name: Debian package build
 
 on:
-  pull_request:
-    branches: [ main ]
-    types: [ closed ]
+  push:
+    branches:
+      - main
     paths-ignore:
       - '.clang-format'
       - '.mdl-styles'
