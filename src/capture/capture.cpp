@@ -47,9 +47,9 @@ static struct {
 	bool path_initialised = false;
 
 	struct {
-		CaptureState audio = {};
-		CaptureState midi  = {};
-		CaptureState video = {};
+		std::atomic<CaptureState> audio = {};
+		std::atomic<CaptureState> midi  = {};
+		std::atomic<CaptureState> video = {};
 	} state = {};
 
 	struct {
@@ -61,6 +61,16 @@ static struct {
 		int32_t image              = 1;
 		int32_t serial_log         = 1;
 	} next_index = {};
+
+	void reset()
+	{
+		path.clear();
+		path_initialised = false;
+		state.audio = CaptureState::Off;
+		state.midi = CaptureState::Off;
+		state.video = CaptureState::Off;
+		next_index = {};
+	}
 } capture = {};
 
 static std::unique_ptr<ImageCapturer> image_capturer = {};
@@ -577,7 +587,7 @@ static void capture_destroy(Section* /*sec*/)
 		capture.state.video = CaptureState::Off;
 	}
 
-	capture = {};
+	capture.reset();
 }
 
 static void capture_init(Section* sec)
