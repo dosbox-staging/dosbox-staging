@@ -709,7 +709,7 @@ sdl2_dep = dependency(
 
         'use_dummies=false',
         'system_iconv=disabled',
-        'use_atomic=disabled',
+        'use_atomic=enabled',
         'use_file=disabled',
         'use_filesystem=disabled',
         'use_hidapi=disabled',
