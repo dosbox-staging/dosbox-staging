@@ -25,13 +25,13 @@
 #include "cpu.h"
 #include "dosbox.h"
 #include "mapper.h"
+#include "pic.h"
 #include "sdlmain.h"
 #include "setup.h"
 #include "support.h"
 #include "unicode.h"
 #include "video.h"
 
-#include <SDL.h>
 #include <map>
 #include <vector>
 
@@ -91,7 +91,7 @@ static struct {
 
 	std::string title_no_tags = {};
 
-	SDL_TimerID timer_id           = {};
+	bool is_animating              = false;
 	bool animation_phase_alternate = false;
 } state = {};
 
@@ -132,37 +132,31 @@ constexpr uint32_t FrameTimeMs = 750;
 
 static bool is_animation_running()
 {
-	return state.timer_id != 0;
+	return state.is_animating;
 }
 
-static uint32_t animation_tick(uint32_t /* interval */, void* /* name */)
+static void animation_tick(uint32_t)
 {
-	SDL_Event event = {};
-	event.user.type = enum_val(SDL_DosBoxEvents::RefreshAnimatedTitle);
-	event.user.type += sdl.start_event_id;
-
-	// We are outside of the main thread; we can't update the window title
-	// here, SDL does not like it - we have to go through the event queue
-	SDL_PushEvent(&event);
-	return FrameTimeMs;
+	if (is_animation_running()) {
+		GFX_RefreshAnimatedTitle();
+		PIC_AddEvent(animation_tick, FrameTimeMs);
+	}
 }
 
 static void maybe_start_animation()
 {
 	if (!is_animation_running()) {
+		state.is_animating              = true;
 		state.animation_phase_alternate = false;
-		state.timer_id = SDL_AddTimer(FrameTimeMs / 2, animation_tick, nullptr);
-		if (state.timer_id == 0) {
-			LOG_ERR("SDL: Could not start timer: %s", SDL_GetError());
-		}
+		PIC_AddEvent(animation_tick, FrameTimeMs / 2);
 	}
 }
 
 static void maybe_stop_animation()
 {
 	if (is_animation_running()) {
-		SDL_RemoveTimer(state.timer_id);
-		state.timer_id = 0;
+		state.is_animating = false;
+		PIC_RemoveEvents(animation_tick);
 	}
 }
 

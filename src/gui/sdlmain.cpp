@@ -3777,26 +3777,6 @@ static bool maybe_auto_switch_shader()
 	                                    reinit_render);
 }
 
-static bool is_user_event(const SDL_Event& event)
-{
-	const auto start_id = sdl.start_event_id;
-	const auto end_id   = start_id + enum_val(SDL_DosBoxEvents::NumEvents);
-
-	return (event.common.type >= start_id && event.common.type < end_id);
-}
-
-static void handle_user_event(const SDL_Event& event)
-{
-	const auto id = event.common.type - sdl.start_event_id;
-	switch (static_cast<SDL_DosBoxEvents>(id)) {
-	case SDL_DosBoxEvents::RefreshAnimatedTitle:
-		GFX_RefreshAnimatedTitle();
-		break;
-	default:
-		assert(false);
-	}
-}
-
 bool GFX_Events()
 {
 #if defined(MACOSX)
@@ -3829,10 +3809,6 @@ bool GFX_Events()
 			continue;
 		}
 #endif
-		if (is_user_event(event)) {
-			handle_user_event(event);
-			continue;
-		}
 		switch (event.type) {
 		case SDL_DISPLAYEVENT:
 			switch (event.display.event) {
@@ -4917,13 +4893,8 @@ int sdl_main(int argc, char* argv[])
 			return err;
 		}
 
-		// Timer is needed for title bar animations
-		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) {
 			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
-		}
-		sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
-		if (sdl.start_event_id == UINT32_MAX) {
-			E_Exit("SDL: Failed to alocate event IDs");
 		}
 
 		sdl.initialized = true;

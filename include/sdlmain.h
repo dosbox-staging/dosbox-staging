@@ -166,11 +166,6 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
-enum class SDL_DosBoxEvents : uint8_t {
-	RefreshAnimatedTitle,
-	NumEvents // dummy, keep last, do not use
-};
-
 struct SDL_Block {
 	bool initialized     = false;
 	bool active          = false; // If this isn't set don't draw
