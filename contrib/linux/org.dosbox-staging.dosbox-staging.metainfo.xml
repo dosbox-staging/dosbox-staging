@@ -67,7 +67,7 @@
     <control>console</control>
     <control>gamepad</control>
   </recommends>
-  <launchable type="desktop-id">org.dosbox-staging.DOSBoxStaging.desktop</launchable>
+  <launchable type="desktop-id">org.dosbox-staging.dosbox-staging.desktop</launchable>
   <developer_name>The DOSBox Staging Team</developer_name>
   <update_contact>john@johnnovak.net</update_contact>
   <url type="homepage">https://www.dosbox-staging.org/</url>
