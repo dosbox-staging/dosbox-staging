@@ -834,8 +834,19 @@ void DOSBOX_Init()
 	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
-	pbool = secprop->Add_bool("voodoo_multithreading", only_at_start, true);
-	pbool->Set_help("Use threads to improve 3dfx Voodoo performance (enabled by default).");
+	// Deprecate the boolean Voodoo multithreading setting
+	pbool = secprop->Add_bool("voodoo_multithreading", deprecated, false);
+	pbool->Set_help("Use 'voodoo_threads = auto / <value>'.");
+
+	pstring = secprop->Add_string("voodoo_threads", only_at_start, "auto");
+	pstring->Set_help(
+	        "Use threads to improved 3dfx Voodoo performance:\n"
+	        "  auto:     Use up to 7 threads based on available CPU cores (default).\n"
+	        "            This is in addition to the permanent main thread.\n"
+	        "  <value>:  Set a specific number of additional threads, for example: 12\n"
+	        "Note: Tests show that frame rates increase up to 7 threads after which\n"
+	        "      they level off or decrease, in general.\n"
+	        "      Threads are only created and active when 3dfx Voodoo is in use.");
 
 	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
 	pbool->Set_help(
