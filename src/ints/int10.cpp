@@ -234,7 +234,7 @@ static Bitu INT10_Handler(void) {
 			const auto reload      = (reg_al == 0x10);
 			const auto num_chars   = reg_cx;
 			const auto first_char  = reg_dx;
-			const auto font_block  = reg_bl & 0x7f;
+			const auto font_block  = reg_bl;
 			const auto char_height = reg_bh;
 
 			INT10_LoadFont(font_data,
@@ -253,7 +253,7 @@ static Bitu INT10_Handler(void) {
 			const auto reload         = (reg_al == 0x11);
 			constexpr auto NumChars   = 256;
 			constexpr auto FirstChar  = 0;
-			const auto font_block     = reg_bl & 0x7f;
+			const auto font_block     = reg_bl;
 			constexpr auto CharHeight = 14;
 
 			INT10_LoadFont(font_data,
@@ -272,7 +272,7 @@ static Bitu INT10_Handler(void) {
 			const auto reload         = (reg_al == 0x12);
 			constexpr auto NumChars   = 256;
 			constexpr auto FirstChar  = 0;
-			const auto font_block     = reg_bl & 0x7f;
+			const auto font_block     = reg_bl;
 			constexpr auto CharHeight = 8;
 
 			INT10_LoadFont(font_data,
@@ -301,7 +301,7 @@ static Bitu INT10_Handler(void) {
 			const auto reload         = (reg_al == 0x14);
 			constexpr auto NumChars   = 256;
 			constexpr auto FirstChar  = 0;
-			const auto font_block     = reg_bl & 0x7f;
+			const auto font_block     = reg_bl;
 			constexpr auto CharHeight = 16;
 
 			INT10_LoadFont(font_data,
