@@ -836,17 +836,15 @@ void DOSBOX_Init()
 
 	// Deprecate the boolean Voodoo multithreading setting
 	pbool = secprop->Add_bool("voodoo_multithreading", deprecated, false);
-	pbool->Set_help("Use 'voodoo_threads = auto / <value>'.");
+	pbool->Set_help("Renamed to 'voodoo_threads'");
 
 	pstring = secprop->Add_string("voodoo_threads", only_at_start, "auto");
 	pstring->Set_help(
-	        "Use threads to improved 3dfx Voodoo performance:\n"
-	        "  auto:     Use up to 7 threads based on available CPU cores (default).\n"
-	        "            This is in addition to the permanent main thread.\n"
-	        "  <value>:  Set a specific number of additional threads, for example: 12\n"
-	        "Note: Tests show that frame rates increase up to 7 threads after which\n"
-	        "      they level off or decrease, in general.\n"
-	        "      Threads are only created and active when 3dfx Voodoo is in use.");
+	        "Use threads to improve 3dfx Voodoo performance:\n"
+	        "  auto:     Use up to 8 threads based on available CPU cores (default).\n"
+	        "  <value>:  Set a specific number of threads between 1 and 16.\n"
+	        "Note: Tests show that frame rates increase up to 8 threads after which\n"
+	        "      they level off or decrease, in general.");
 
 	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
 	pbool->Set_help(
