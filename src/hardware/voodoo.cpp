@@ -7054,52 +7054,49 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 	return 0xffffffff;
 }
 
-// Get the number of additional threads to use for Voodoo work based on the
-// user's conf setting. By default we use up to 7 threads however the user can
-// customize this.
+// Get the number of total threads to use for Voodoo work based on the user's
+// conf setting. By default we use up to 8 threads (which includes the main
+// thread) however the user can customize this.
 
-static int get_num_threads()
+static int get_num_total_threads()
 {
-	auto get_auto_threads = []() {
-		// Sweet spot found to be seven threads based on benchmarks:
-		// https://github.com/schellingb/dosbox-pure/issues/300#issuecomment-2144050898
-		constexpr auto MinThreads = 0;
-		constexpr auto MaxThreads = 7;
-		return std::clamp(SDL_GetCPUCount() - 1, MinThreads, MaxThreads);
-	};
+	constexpr auto MinThreads     = 1;
+	constexpr auto MaxAutoThreads = 8;
+	constexpr auto MaxThreads     = 16;
 
-	auto parse_positive_base10_int = [](const std::string& str) {
-		constexpr auto Base10 = 10;
-		const auto maybe_int  = parse_int(str, Base10);
-		return (maybe_int && *maybe_int >= 0) ? maybe_int : std::nullopt;
-	};
+	constexpr auto SectionName = "voodoo";
+	constexpr auto SettingName = "voodoo_threads";
+	constexpr auto AutoSetting = "auto";
 
-	// Get the user's "[voodoo] voodoo_threads" setting
-	constexpr auto DefaultSetting = "auto";
-	const auto sec = dynamic_cast<Section_prop*>(control->GetSection("voodoo"));
-	const auto user_setting = sec ? sec->Get_string("voodoo_threads")
-	                              : DefaultSetting;
+	const auto sec = dynamic_cast<Section_prop*>(control->GetSection(SectionName));
+	const auto user_setting = sec ? sec->Get_string(SettingName) : AutoSetting;
 
-	// Did the user provide the default or a standardized positive setting?
-	if (user_setting == DefaultSetting || has_true(user_setting)) {
-		return get_auto_threads();
+	if (const auto maybe_int = parse_int(user_setting)) {
+		const auto valid_int = std::clamp(*maybe_int, MinThreads, MaxThreads);
+
+		// Use a property to test and warn if the value's outside the range
+		constexpr auto always_changeable = Property::Changeable::Always;
+		auto range_property = Prop_int(SettingName, always_changeable, valid_int);
+		range_property.SetMinMax(MinThreads, MaxThreads);
+
+		if (!range_property.IsValidValue(*maybe_int)) {
+			set_section_property_value(SectionName,
+			                           SettingName,
+			                           std::to_string(valid_int));
+		}
+		return valid_int;
 	}
-	// Did the user provide a custom value?
-	if (const auto maybe_int = parse_positive_base10_int(user_setting)) {
-		return *maybe_int;
-	}
-	// Did the user provide a standardized negative setting?
-	if (has_false(user_setting)) {
-		return 0;
-	}
-	// The user provided an invalid setting.
-	LOG_WARNING("VOODOO: Invalid 'voodoo_threads' setting: '%s', using '%s'",
-	            user_setting.c_str(),
-	            DefaultSetting);
 
-	set_section_property_value("voodoo", "voodoo_threads", DefaultSetting);
+	if (user_setting != AutoSetting) {
+		LOG_WARNING("VOODOO: Invalid '%s' setting: '%s', using '%s'",
+		            SettingName,
+		            user_setting.c_str(),
+		            AutoSetting);
 
-	return get_auto_threads();
+		set_section_property_value(SectionName, SettingName, AutoSetting);
+	}
+
+	return std::clamp(SDL_GetCPUCount(), MinThreads, MaxAutoThreads);
 }
 
 /***************************************************************************
@@ -7112,9 +7109,10 @@ static int get_num_threads()
 static void voodoo_init() {
 	assert(!v);
 
-	const auto num_threads = get_num_threads();
+	// Deduct 1 because the main thread is always present
+	const auto num_additional_threads = get_num_total_threads() - 1;
 
-	v = new voodoo_state(num_threads);
+	v = new voodoo_state(num_additional_threads);
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	v->ogl = (emulation_type == VOODOO_EMU_TYPE_ACCELERATED);
@@ -7913,7 +7911,7 @@ void VOODOO_Init(Section* sec)
 	PCI_AddDevice(new PCI_SSTDevice());
 
 	// Log the startup
-	const auto num_threads = get_num_threads();
+	const auto num_threads = get_num_total_threads();
 
 	LOG_MSG("VOODOO: Initialized with %s MB of RAM, %d %s, and %sbilinear filtering",
 	        memsize_pref.c_str(),
