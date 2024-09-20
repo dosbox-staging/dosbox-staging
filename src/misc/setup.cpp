@@ -453,13 +453,14 @@ bool Prop_int::IsValidValue(const Value& in)
 		return true;
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
-	            "Value outside of the valid %s-%s range, using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            min_value.ToString().c_str(),
-	            max_value.ToString().c_str(),
-	            default_value.ToString().c_str());
+	LOG_WARNING(
+	        "CONFIG: Invalid '%s' setting: '%s'. "
+	        "Value outside of the valid range %s-%s, using '%s'",
+	        propname.c_str(),
+	        in.ToString().c_str(),
+	        min_value.ToString().c_str(),
+	        max_value.ToString().c_str(),
+	        default_value.ToString().c_str());
 
 	return false;
 }
