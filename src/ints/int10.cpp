@@ -230,50 +230,57 @@ static Bitu INT10_Handler(void) {
 		case 0x00: [[fallthrough]];
 		// Load and activate user font
 		case 0x10: {
-			const auto font_data = SegPhys(es) + reg_bp;
-			const auto reload    = (reg_al == 0x10);
-			const auto count     = reg_cx;
-			const auto offset    = reg_dx;
-			const auto map       = reg_bl & 0x7f;
-			const auto height    = reg_bh;
+			const auto font_data   = SegPhys(es) + reg_bp;
+			const auto reload      = (reg_al == 0x10);
+			const auto num_chars   = reg_cx;
+			const auto first_char  = reg_dx;
+			const auto font_block  = reg_bl & 0x7f;
+			const auto char_height = reg_bh;
 
-			INT10_LoadFont(font_data, reload, count, offset, map, height);
+			INT10_LoadFont(font_data,
+			               reload,
+			               num_chars,
+			               first_char,
+			               font_block,
+			               char_height);
 		} break;
 
 		// Load ROM 8x14 font
 		case 0x01: [[fallthrough]];
 		// Load and activate ROM 8x14 font
 		case 0x11: {
-			const auto reload     = (reg_al == 0x11);
-			constexpr auto Count  = 256;
-			constexpr auto Offset = 0;
-			const auto map        = reg_bl & 0x7f;
-			constexpr auto Height = 14;
+			const auto font_data = RealToPhysical(int10.rom.font_14);
+			const auto reload         = (reg_al == 0x11);
+			constexpr auto NumChars   = 256;
+			constexpr auto FirstChar  = 0;
+			const auto font_block     = reg_bl & 0x7f;
+			constexpr auto CharHeight = 14;
 
-			INT10_LoadFont(RealToPhysical(int10.rom.font_14),
+			INT10_LoadFont(font_data,
 			               reload,
-			               Count,
-			               Offset,
-			               map,
-			               Height);
+			               NumChars,
+			               FirstChar,
+			               font_block,
+			               CharHeight);
 		} break;
 
 		// Load ROM 8x8 font
 		case 0x02: [[fallthrough]];
 		// Load and activate ROM 8x8 font
 		case 0x12: {
-			const auto reload     = (reg_al == 0x12);
-			constexpr auto Count  = 256;
-			constexpr auto Offset = 0;
-			const auto map        = reg_bl & 0x7f;
-			constexpr auto Height = 8;
+			const auto font_data = RealToPhysical(int10.rom.font_8_first);
+			const auto reload         = (reg_al == 0x12);
+			constexpr auto NumChars   = 256;
+			constexpr auto FirstChar  = 0;
+			const auto font_block     = reg_bl & 0x7f;
+			constexpr auto CharHeight = 8;
 
-			INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
+			INT10_LoadFont(font_data,
 			               reload,
-			               Count,
-			               Offset,
-			               map,
-			               Height);
+			               NumChars,
+			               FirstChar,
+			               font_block,
+			               CharHeight);
 		} break;
 
 		// Set Block Specifier
@@ -290,18 +297,19 @@ static Bitu INT10_Handler(void) {
 				break;
 			}
 
-			const auto reload     = (reg_al == 0x14);
-			constexpr auto Count  = 256;
-			constexpr auto Offset = 0;
-			const auto map        = reg_bl & 0x7f;
-			constexpr auto Height = 16;
+			const auto font_data = RealToPhysical(int10.rom.font_16);
+			const auto reload         = (reg_al == 0x14);
+			constexpr auto NumChars   = 256;
+			constexpr auto FirstChar  = 0;
+			const auto font_block     = reg_bl & 0x7f;
+			constexpr auto CharHeight = 16;
 
-			INT10_LoadFont(RealToPhysical(int10.rom.font_16),
+			INT10_LoadFont(font_data,
 			               reload,
-			               Count,
-			               Offset,
-			               map,
-			               Height);
+			               NumChars,
+			               FirstChar,
+			               font_block,
+			               CharHeight);
 		} break;
 
 		// Graphics mode calls
