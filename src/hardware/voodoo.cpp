@@ -111,6 +111,8 @@
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H
 
+// #define DEBUG_VOODOO 1
+
 /***************************************************************************
     TYPE DEFINITIONS
 ***************************************************************************/
@@ -156,6 +158,20 @@ using rgb15_t = uint16_t;
 /***************************************************************************
     inline FUNCTIONS
 ***************************************************************************/
+
+// Debug log wrapper that only logs if 'DEBUG_VOODOO' is defined above)
+template <typename... Args>
+constexpr void maybe_log_debug([[maybe_unused]] const char* format,
+                               [[maybe_unused]] Args... args)
+{
+	#ifdef DEBUG_VOODOO
+
+	const auto prefixed_format = std::string("VOODOO: ") + format;
+	LOG_DEBUG(prefixed_format.c_str(), std::forward<Args>(args)...);
+
+	#endif
+	// Otherwise this is a no-op
+}
 
 /*-------------------------------------------------
     pal5bit - convert a 5-bit value to 8 bits
@@ -254,8 +270,6 @@ enum VoodooModel
 	VOODOO_1_DTMU,
 	VOODOO_2,
 };
-
-enum { TRIANGLE_THREADS = 3, TRIANGLE_WORKERS = TRIANGLE_THREADS + 1 };
 
 /* maximum number of TMUs */
 #define MAX_TMU					2
@@ -684,14 +698,16 @@ using rgb_union = voodoo_reg;
 
 /* note that this structure is an even 64 bytes long */
 struct stats_block {
-	int32_t pixels_in;          // pixels in statistic
-	int32_t pixels_out;         // pixels out statistic
-	int32_t chroma_fail;        // chroma test fail statistic
-	int32_t zfunc_fail;         // z function test fail statistic
-	int32_t afunc_fail;         // alpha function test fail statistic
+	int32_t pixels_in   = 0;
+	int32_t pixels_out  = 0;
+	int32_t chroma_fail = 0;
+	int32_t zfunc_fail  = 0;
+	int32_t afunc_fail  = 0;
 	// int32_t clip_fail;       // clipping fail statistic
 	// int32_t stipple_count;   // stipple statistic
-	int32_t filler[64 / 4 - 5]; // pad this structure to 64 bytes
+
+	// pad this structure to 64 bytes
+	int32_t filler[64 / 4 - 5] = {};
 };
 static_assert(sizeof(stats_block) == 64);
 
@@ -891,19 +907,75 @@ struct draw_state {
 
 struct triangle_worker
 {
-	std::atomic_bool threads_active;
-	bool use_threads, disable_bilinear_filter;
-	uint16_t *drawbuf;
-	poly_vertex v1, v2, v3;
-	int32_t v1y, v3y, totalpix;
-	std::array<std::thread, TRIANGLE_THREADS> threads;
-	std::array<Semaphore, TRIANGLE_THREADS> sembegin;
-	Semaphore semdone;
-	int done_count;
+	triangle_worker(const int num_threads_)
+	        : num_threads(num_threads_),
+	          num_workers(num_threads + 1),
+	          threads(num_threads),
+	          sembegin(num_threads)
+	{
+		assert(num_threads > 0);
+		assert(num_workers > num_threads);
+		assert(!threads.empty());
+		assert(!sembegin.empty());
+	}
+
+	triangle_worker()                                  = delete;
+	triangle_worker(const triangle_worker&)            = delete;
+	triangle_worker& operator=(const triangle_worker&) = delete;
+
+	void NotifySemaphores()
+	{
+		std::for_each(sembegin.begin(), sembegin.end(), [](auto& sem) {
+			sem.notify();
+		});
+	}
+
+	void WaitForSemaphores()
+	{
+		std::for_each(sembegin.begin(), sembegin.end(), [&](auto&) {
+			semdone.wait();
+		});
+	}
+
+	const int num_threads = 0;
+	const int num_workers = 0;
+
+	bool disable_bilinear_filter = {};
+
+	std::atomic_bool threads_active = {};
+
+	uint16_t* drawbuf = {};
+
+	poly_vertex v1 = {};
+	poly_vertex v2 = {};
+	poly_vertex v3 = {};
+
+	int32_t v1y      = 0;
+	int32_t v3y      = 0;
+	int32_t totalpix = 0;
+
+	std::vector<std::thread> threads = {};
+	std::vector<Semaphore> sembegin  = {};
+
+	Semaphore semdone = {};
+
+	int done_count = 0;
 };
 
 struct voodoo_state
 {
+	voodoo_state(const int num_threads)
+	        : tworker(num_threads),
+	          thread_stats(tworker.num_workers)
+	{
+		assert(num_threads > 0);
+		assert(!thread_stats.empty());
+	}
+
+	voodoo_state()                               = delete;
+	voodoo_state(const voodoo_state&)            = delete;
+	voodoo_state& operator=(const voodoo_state&) = delete;
+
 	uint8_t chipmask = {}; /* mask for which chips are available */
 
 	voodoo_reg reg[0x400]    = {}; /* raw registers */
@@ -925,9 +997,6 @@ struct voodoo_state
 	                                                    rasterizers */
 #endif
 
-	stats_block thread_stats[TRIANGLE_WORKERS] = {}; /* per-thread
-	                                                    statistics */
-
 	bool send_config   = {};
 	bool clock_enabled = {};
 	bool output_on     = {};
@@ -941,8 +1010,9 @@ struct voodoo_state
 	const char *const *	regnames;				/* register names array */
 #endif
 
-	draw_state draw         = {};
-	triangle_worker tworker = {};
+	draw_state draw = {};
+	triangle_worker tworker;
+	std::vector<stats_block> thread_stats = {};
 };
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -3004,7 +3074,7 @@ iterated W    = 18.32 [48 bits]
 
 static voodoo_state* v = nullptr;
 static auto vtype = VOODOO_1;
-static auto voodoo_multithreading     = true;
+
 static auto voodoo_bilinear_filtering = false;
 
 #define LOG_VOODOO LOG_PCI
@@ -3475,10 +3545,15 @@ static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
 	vs->raster_hash[hash] = info;
 
 	if (LOG_RASTERIZERS)
-		LOG_MSG("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
-				info->callback,
-				info->eff_color_path, info->eff_alpha_mode, info->eff_fog_mode, info->eff_fbz_mode,
-				info->eff_tex_mode_0, info->eff_tex_mode_1, hash);
+		maybe_log_debug("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
+		                info->callback,
+		                info->eff_color_path,
+		                info->eff_alpha_mode,
+		                info->eff_fog_mode,
+		                info->eff_fbz_mode,
+		                info->eff_tex_mode_0,
+		                info->eff_tex_mode_1,
+		                hash);
 
 	return info;
 }
@@ -3674,7 +3749,8 @@ static void init_fbi(fbi_state* f, int fbmem)
 
 	f->sverts = 0;
 
-	memset(&f->lfb_stats, 0, sizeof(f->lfb_stats));
+	f->lfb_stats = {};
+
 	memset(&f->fogblend, 0, sizeof(f->fogblend));
 	memset(&f->fogdelta, 0, sizeof(f->fogdelta));
 }
@@ -4287,7 +4363,7 @@ static void update_statistics(voodoo_state *vs, bool accumulate)
 			accumulate_statistics(vs, &thread_stat);
 		}
 	}
-	memset(vs->thread_stats, 0, sizeof(vs->thread_stats));
+	std::fill(vs->thread_stats.begin(), vs->thread_stats.end(), stats_block());
 
 	/* accumulate/reset statistics from the LFB */
 	auto& fbi = vs->fbi;
@@ -4295,14 +4371,15 @@ static void update_statistics(voodoo_state *vs, bool accumulate)
 	if (accumulate) {
 		accumulate_statistics(vs, &fbi.lfb_stats);
 	}
-	memset(&fbi.lfb_stats, 0, sizeof(fbi.lfb_stats));
+	fbi.lfb_stats = {};
 }
 
 /***************************************************************************
     COMMAND HANDLERS
 ***************************************************************************/
 
-static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, int32_t worktend)
+static void triangle_worker_work(const triangle_worker& tworker,
+                                 const int32_t work_start, const int32_t work_end)
 {
 	/* determine the number of TMUs involved */
 	uint32_t tmus     = 0;
@@ -4338,8 +4415,16 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 
 	stats_block my_stats = {};
 
-	const int32_t from = tworker.totalpix * worktstart / TRIANGLE_WORKERS;
-	const int32_t to   = tworker.totalpix * worktend / TRIANGLE_WORKERS;
+	// The number of workers represents the total work, while the start and
+	// end represent a fraction (up to 100%) of the total total.
+	assert(work_end > 0 && tworker.num_workers >= work_end);
+
+	// The following suppresses div-by-0 false positive reported in Clang
+	// analysis. This is confirmed fixed in Clang v18.
+	const auto num_workers = tworker.num_workers ? tworker.num_workers : 1;
+
+	const int32_t from = tworker.totalpix * work_start / num_workers;
+	const int32_t to   = tworker.totalpix * work_end / num_workers;
 
 	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0;
 	     curscan != scanend && lastsum < to;
@@ -4382,7 +4467,7 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 
 		raster_generic(v, tmus, texmode0, texmode1, tworker.drawbuf, curscan, &extent, my_stats);
 	}
-	sum_statistics(&v->thread_stats[worktstart], &my_stats);
+	sum_statistics(&v->thread_stats[work_start], &my_stats);
 }
 
 static int triangle_worker_thread_func(int32_t p)
@@ -4404,13 +4489,10 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 		return;
 	}
 	tworker.threads_active = false;
-	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		tworker.sembegin[i].notify();
-	}
 
-	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		tworker.semdone.wait();
-	}
+	tworker.NotifySemaphores();
+
+	tworker.WaitForSemaphores();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4421,11 +4503,10 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 
 static void triangle_worker_run(triangle_worker& tworker)
 {
-	if (!tworker.use_threads)
-	{
+	if (!tworker.num_threads) {
 		// do not use threaded calculation
 		tworker.totalpix = 0xFFFFFFF;
-		triangle_worker_work(tworker, 0, TRIANGLE_WORKERS);
+		triangle_worker_work(tworker, 0, tworker.num_workers);
 		return;
 	}
 
@@ -4464,7 +4545,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 	// Don't wake up threads for just a few pixels
 	if (tworker.totalpix <= 200)
 	{
-		triangle_worker_work(tworker, 0, TRIANGLE_WORKERS);
+		triangle_worker_work(tworker, 0, tworker.num_workers);
 		return;
 	}
 
@@ -4480,13 +4561,11 @@ static void triangle_worker_run(triangle_worker& tworker)
 			++worker_id;
 		}
 	}
-	for (auto& begin_semaphore : tworker.sembegin) {
-		begin_semaphore.notify();
-	}
-	triangle_worker_work(tworker, TRIANGLE_THREADS, TRIANGLE_WORKERS);
-	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		tworker.semdone.wait();
-	}
+	tworker.NotifySemaphores();
+
+	triangle_worker_work(tworker, tworker.num_threads, tworker.num_workers);
+
+	tworker.WaitForSemaphores();
 }
 
 /*-------------------------------------------------
@@ -6345,14 +6424,14 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				APPLY_ALPHATEST(v, stats, v->reg[alphaMode].u, color.rgb.a);
 
 				/*
-				if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp mselect %8x",FBZCP_CC_MSELECT(v->reg[fbzColorPath].u));
-				if (FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u) > 1) LOG_MSG("lfbw fpp mselect alpha %8x",FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u));
+				if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp mselect %8x",FBZCP_CC_MSELECT(v->reg[fbzColorPath].u));
+				if (FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u) > 1) maybe_log_debug("lfbw fpp mselect alpha %8x",FBZCP_CCA_MSELECT(v->reg[fbzColorPath].u));
 
 				if (FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u) != 0) {
-					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp rblend %8x",FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u));
+					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp rblend %8x",FBZCP_CC_REVERSE_BLEND(v->reg[fbzColorPath].u));
 				}
 				if (FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u) != 0) {
-					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) LOG_MSG("lfbw fpp rblend alpha %8x",FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u));
+					if (FBZCP_CC_MSELECT(v->reg[fbzColorPath].u) != 0) maybe_log_debug("lfbw fpp rblend alpha %8x",FBZCP_CCA_REVERSE_BLEND(v->reg[fbzColorPath].u));
 				}
 				*/
 
@@ -6374,7 +6453,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				}
 				else
 				{
-					LOG_MSG("lfbw fpp FBZCP_CC_LOCALSELECT_OVERRIDE set!");
+					maybe_log_debug("lfbw fpp FBZCP_CC_LOCALSELECT_OVERRIDE set!");
 					/*
 					if (!(texel.rgb.a & 0x80))					// iterated RGB
 						c_local.u = iterargb.u;
@@ -6450,25 +6529,25 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 						blendr = c_local.rgb.r;
 						blendg = c_local.rgb.g;
 						blendb = c_local.rgb.b;
-						//LOG_MSG("blend RGB c_local");
+						// maybe_log_debug("blend RGB c_local");
 						break;
 					case 2:		/* a_other */
 						//blendr = blendg = blendb = c_other.rgb.a;
-						LOG_MSG("blend RGB a_other");
+						maybe_log_debug("blend RGB a_other");
 						break;
 					case 3:		/* a_local */
 						blendr = blendg = blendb = c_local.rgb.a;
-						LOG_MSG("blend RGB a_local");
+						maybe_log_debug("blend RGB a_local");
 						break;
 					case 4:		/* texture alpha */
 						//blendr = blendg = blendb = texel.rgb.a;
-						LOG_MSG("blend RGB texture alpha");
+						maybe_log_debug("blend RGB texture alpha");
 						break;
 					case 5:		/* texture RGB (Voodoo 2 only) */
 						//blendr = texel.rgb.r;
 						//blendg = texel.rgb.g;
 						//blendb = texel.rgb.b;
-						LOG_MSG("blend RGB texture RGB");
+						maybe_log_debug("blend RGB texture RGB");
 						break;
 				}
 
@@ -6481,19 +6560,19 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 						break;
 					case 1:		/* a_local */
 						blenda = c_local.rgb.a;
-						//LOG_MSG("blend alpha a_local");
+						// maybe_log_debug("blend alpha a_local");
 						break;
 					case 2:		/* a_other */
 						//blenda = c_other.rgb.a;
-						LOG_MSG("blend alpha a_other");
+						maybe_log_debug("blend alpha a_other");
 						break;
 					case 3:		/* a_local */
 						blenda = c_local.rgb.a;
-						LOG_MSG("blend alpha a_local");
+						maybe_log_debug("blend alpha a_local");
 						break;
 					case 4:		/* texture alpha */
 						//blenda = texel.rgb.a;
-						LOG_MSG("blend alpha texture alpha");
+						maybe_log_debug("blend alpha texture alpha");
 						break;
 				}
 
@@ -6975,6 +7054,54 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 	return 0xffffffff;
 }
 
+// Get the number of additional threads to use for Voodoo work based on the
+// user's conf setting. By default we use up to 7 threads however the user can
+// customize this.
+
+static int get_num_threads()
+{
+	auto get_auto_threads = []() {
+		// Sweet spot found to be seven threads based on benchmarks:
+		// https://github.com/schellingb/dosbox-pure/issues/300#issuecomment-2144050898
+		constexpr auto MinThreads = 0;
+		constexpr auto MaxThreads = 7;
+		return std::clamp(SDL_GetCPUCount() - 1, MinThreads, MaxThreads);
+	};
+
+	auto parse_positive_base10_int = [](const std::string& str) {
+		constexpr auto Base10 = 10;
+		const auto maybe_int  = parse_int(str, Base10);
+		return (maybe_int && *maybe_int >= 0) ? maybe_int : std::nullopt;
+	};
+
+	// Get the user's "[voodoo] voodoo_threads" setting
+	constexpr auto DefaultSetting = "auto";
+	const auto sec = dynamic_cast<Section_prop*>(control->GetSection("voodoo"));
+	const auto user_setting = sec ? sec->Get_string("voodoo_threads")
+	                              : DefaultSetting;
+
+	// Did the user provide the default or a standardized positive setting?
+	if (user_setting == DefaultSetting || has_true(user_setting)) {
+		return get_auto_threads();
+	}
+	// Did the user provide a custom value?
+	if (const auto maybe_int = parse_positive_base10_int(user_setting)) {
+		return *maybe_int;
+	}
+	// Did the user provide a standardized negative setting?
+	if (has_false(user_setting)) {
+		return 0;
+	}
+	// The user provided an invalid setting.
+	LOG_WARNING("VOODOO: Invalid 'voodoo_threads' setting: '%s', using '%s'",
+	            user_setting.c_str(),
+	            DefaultSetting);
+
+	set_section_property_value("voodoo", "voodoo_threads", DefaultSetting);
+
+	return get_auto_threads();
+}
+
 /***************************************************************************
     DEVICE INTERFACE
 ***************************************************************************/
@@ -6984,7 +7111,11 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 -------------------------------------------------*/
 static void voodoo_init() {
 	assert(!v);
-	v = new voodoo_state;
+
+	const auto num_threads = get_num_threads();
+
+	v = new voodoo_state(num_threads);
+
 #ifdef C_ENABLE_VOODOO_OPENGL
 	v->ogl = (emulation_type == VOODOO_EMU_TYPE_ACCELERATED);
 #endif
@@ -7416,13 +7547,13 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 
 	uint8_t readb([[maybe_unused]] PhysPt addr) override
 	{
-		// LOG_MSG("VOODOO: readb at %x", addr);
+		// maybe_log_debug("readb at %x", addr);
 		return 0xff;
 	}
 
 	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
-		// LOG_MSG("VOODOO: writeb at %x", addr);
+		// maybe_log_debug("writeb at %x", addr);
 	}
 
 	uint16_t readw(PhysPt addr) override
@@ -7576,10 +7707,10 @@ struct PCI_SSTDevice : public PCI_Device {
 
 	Bits ParseReadRegister(uint8_t regnum) override
 	{
-		//LOG_MSG("SST ParseReadRegister %x",regnum);
+		// maybe_log_debug("SST ParseReadRegister %x",regnum);
 		switch (regnum) {
 			case 0x4c:case 0x4d:case 0x4e:case 0x4f:
-				LOG_MSG("SST ParseReadRegister STATUS %x",regnum);
+				maybe_log_debug("SST ParseReadRegister STATUS %x",regnum);
 				break;
 			case 0x54:case 0x55:case 0x56:case 0x57:
 				if (vtype == VOODOO_2) {
@@ -7628,7 +7759,7 @@ struct PCI_SSTDevice : public PCI_Device {
 
 	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) override
 	{
-		//LOG_MSG("SST ParseWriteRegister %x:=%x",regnum,value);
+		// maybe_log_debug("SST ParseWriteRegister %x:=%x",regnum,value);
 		if ((regnum >= 0x14) && (regnum < 0x28)) {
 			return -1; // base addresses are read-only
 		}
@@ -7741,7 +7872,6 @@ static void Voodoo_Startup() {
 
 	v->draw = {};
 
-	v->tworker.use_threads = voodoo_multithreading;
 	v->tworker.disable_bilinear_filter = (voodoo_bilinear_filtering == false);
 
 	// Switch the pagehandler now that v has been allocated and is in use
@@ -7770,7 +7900,6 @@ void VOODOO_Init(Section* sec)
 	const std::string memsize_pref = section->Get_string("voodoo_memsize");
 	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
-	voodoo_multithreading = section->Get_bool("voodoo_multithreading");
 	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
 
 	sec->AddDestroyFunction(&VOODOO_Destroy,false);
@@ -7784,8 +7913,11 @@ void VOODOO_Init(Section* sec)
 	PCI_AddDevice(new PCI_SSTDevice());
 
 	// Log the startup
-	LOG_MSG("VOODOO: Initialized with %s MB of RAM, %smultithreading, and %sbilinear filtering",
+	const auto num_threads = get_num_threads();
+
+	LOG_MSG("VOODOO: Initialized with %s MB of RAM, %d %s, and %sbilinear filtering",
 	        memsize_pref.c_str(),
-	        (voodoo_multithreading ? "" : "no "),
+	        num_threads,
+	        num_threads == 1 ? "thread" : "threads",
 	        (voodoo_bilinear_filtering ? "" : "no "));
 }

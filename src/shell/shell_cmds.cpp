@@ -172,27 +172,35 @@ bool DOS_Shell::ExecuteShellCommand(const char* const name, char* arguments)
 	return true;
 }
 
-void DOS_Shell::DoCommand(char * line) {
-/* First split the line into command and arguments */
-	line=trim(line);
+void DOS_Shell::DoCommand(char* line)
+{
+	// First split the line into command and arguments
+	line = trim(line);
 	char cmd_buffer[CMD_MAXLINE];
-	char * cmd_write=cmd_buffer;
+	char* cmd_write = cmd_buffer;
 
-	while (*line) {
-		if (*line == 32) break;
-		if (*line == '/') break;
-		if (*line == '\t') break;
-		if (*line == '=') break;
-//		if (*line == ':') break; //This breaks drive switching as that is handled at a later stage.
-		if ((*line == '.') ||(*line == '\\')) {  //allow stuff like cd.. and dir.exe cd\kees
-			*cmd_write=0;
+	auto is_cli_delimiter = [](const char c) {
+		constexpr std::array<char, 7> Delimiters = {'\0', ' ', '/', '\t', '=', '"'};
+		// Note: ':' is also a delimiter, but handling it here breaks
+		//       drive switching as that is handled at a later stage.
+		return contains(Delimiters, c);
+	};
+
+	// Scan forward until we hit the first delimiter
+	while (!is_cli_delimiter(line[0])) {
+		// Handle squashed . and \ syntax like real MS-DOS:
+		//   C:\> cd\keen
+		//   C:\KEEN> cd..
+		//   C:\> dir.exe
+		if ((*line == '.') || (*line == '\\')) {
+			*cmd_write = 0;
 			if (ExecuteShellCommand(cmd_buffer, line)) {
 				return;
 			}
 		}
-		*cmd_write++=*line++;
+		*cmd_write++ = *line++;
 	}
-	*cmd_write=0;
+	*cmd_write = 0;
 	if (is_empty(cmd_buffer)) {
 		return;
 	}
@@ -1958,7 +1966,7 @@ void DOS_Shell::CMD_LOADHIGH(char *args){
 void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms);
-void MAPPER_AutoTypeStopImmediately();
+void MAPPER_StopAutoTyping();
 void DOS_21Handler();
 
 void DOS_Shell::CMD_CHOICE(char * args){
@@ -2056,7 +2064,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		if (always_capitalize)
 			choice = static_cast<char>(toupper(choice));
 		if (using_auto_type)
-			MAPPER_AutoTypeStopImmediately();
+			MAPPER_StopAutoTyping();
 		if (shutdown_requested)
 			break;
 		if (choice == ctrl_c)

@@ -737,8 +737,6 @@ const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 
 void Gus::RenderUpToNow()
 {
-	std::lock_guard lock(mutex);
-
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
@@ -820,6 +818,7 @@ void Gus::CheckIrq()
 
 bool Gus::CheckTimer(const size_t t)
 {
+	std::lock_guard lock(mutex);
 	auto& timer = t == 0 ? timer_one : timer_two;
 	if (!timer.is_masked) {
 		timer.has_expired = true;
@@ -892,6 +891,7 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 
 bool Gus::PerformDmaTransfer()
 {
+	std::lock_guard lock(mutex);
 	if (dma_channel->is_masked || !(dma_ctrl & 0x01)) {
 		return false;
 	}
@@ -1130,6 +1130,7 @@ void Gus::MirrorAdLibCommandRegister(const uint8_t reg_value)
 
 void Gus::PrintStats()
 {
+	std::lock_guard lock(mutex);
 	// Aggregate stats from all voices
 	uint32_t combined_8bit_ms  = 0;
 	uint32_t combined_16bit_ms = 0;
@@ -1175,6 +1176,7 @@ void Gus::PrintStats()
 
 uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
+	std::lock_guard lock(mutex);
 	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
 	case 0x206: return irq_status;
@@ -1399,6 +1401,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 
 void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
+	std::lock_guard lock(mutex);
 	RenderUpToNow();
 
 	const auto val = check_cast<uint16_t>(value);

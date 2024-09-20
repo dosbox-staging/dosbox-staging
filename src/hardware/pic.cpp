@@ -24,6 +24,8 @@
 #include "timer.h"
 #include "setup.h"
 
+#include <mutex>
+
 // PIC Controllers
 // ~~~~~~~~~~~~~~~
 // The sources here identify the two Programmable Interrupt Controllers
@@ -131,6 +133,7 @@ struct PIC_Controller {
 	void start_irq(uint8_t val);
 };
 
+static std::mutex pic_mutex = {};
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
@@ -205,6 +208,7 @@ static struct {
 
 static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
@@ -261,6 +265,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 
 static void write_data(io_port_t port, io_val_t value, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	switch (pic->icw_index) {
@@ -304,6 +309,7 @@ static void write_data(io_port_t port, io_val_t value, io_width_t)
 
 static uint8_t read_command(io_port_t port, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 	if (pic->request_issr) {
 		return pic->isr;
@@ -314,6 +320,7 @@ static uint8_t read_command(io_port_t port, io_width_t)
 
 static uint8_t read_data(io_port_t port, io_width_t)
 {
+	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	return pic->imr;
 }
@@ -321,6 +328,7 @@ static uint8_t read_data(io_port_t port, io_width_t)
 // DOS managed up to 15 IRQs
 void PIC_ActivateIRQ(const uint8_t irq)
 {
+	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 
@@ -347,6 +355,7 @@ void PIC_ActivateIRQ(const uint8_t irq)
 // DOS managed up to 15 IRQs
 void PIC_DeActivateIRQ(const uint8_t irq)
 {
+	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
@@ -383,6 +392,7 @@ static void inline primary_startIRQ(uint8_t i)
 }
 
 void PIC_runIRQs(void) {
+	std::lock_guard lock(pic_mutex);
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) {
 		return;
@@ -567,7 +577,7 @@ bool PIC_RunQueue(void) {
 		}
 	} else CPU_Cycles = CPU_CycleLeft.load();
 	CPU_CycleLeft-=CPU_Cycles;
-	if (PIC_IRQCheck) PIC_runIRQs();
+	PIC_runIRQs();
 	return true;
 }
 

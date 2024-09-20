@@ -18,13 +18,18 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "vmware.h"
+
 #include "checks.h"
 #include "dosbox.h"
 #include "inout.h"
 #include "mouse.h"
 #include "regs.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
+
+#include <set>
 
 CHECK_NARROWING();
 
@@ -37,9 +42,18 @@ CHECK_NARROWING();
 static bool is_interface_enabled = false;
 static bool has_feature_mouse    = false;
 
+static std::string program_segment_name = {};
+
 // ***************************************************************************
 // Various common constants and type definitions
 // ***************************************************************************
+
+static std::set<std::string> SegmentBlackList = {
+	// JEMM memory manager assumes certain memory layout if it detects the
+	// VMware interface; this leads to incorrect JEMM behavior
+	"JEMM386",
+	"JEMMEX"
+};
 
 // Magic number for all VMware calls
 static constexpr uint32_t VMWARE_MAGIC = 0x564d5868u;
@@ -63,8 +77,13 @@ enum class VmWarePointer : uint32_t {
 
 static void command_get_version()
 {
-	reg_eax = 0; // protocol version
-	reg_ebx = VMWARE_MAGIC;
+	// This command is a common way to detect VMware - since we only provide
+	// a mouse support, hide the interface from software which is known to
+	// misbehave with our limited implementation
+	if (!SegmentBlackList.contains(program_segment_name)) {
+		reg_eax = 0; // protocol version
+		reg_ebx = VMWARE_MAGIC;
+	}
 }
 
 static void command_abs_pointer_data()
@@ -123,6 +142,21 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 	}
 
 	return reg_eax;
+}
+
+// ***************************************************************************
+// External notifications
+// ***************************************************************************
+
+void VMWARE_NotifyBooting()
+{
+	program_segment_name = {};
+}
+
+void VMWARE_NotifyProgramName(const std::string& segment_name)
+{
+	program_segment_name = segment_name;
+	upcase(program_segment_name);
 }
 
 // ***************************************************************************

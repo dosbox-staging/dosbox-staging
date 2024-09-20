@@ -1526,6 +1526,12 @@
     <ClInclude Include="..\src\hardware\lpt_dac.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\hardware\virtualbox.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\vmware.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\capture\image\image_saver.h">
       <Filter>src\capture\image</Filter>
     </ClInclude>
