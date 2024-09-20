@@ -45,12 +45,13 @@ static const std::vector<uint16_t> map_offset = {
 };
 // clang-format on
 
-void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
-                    const int offset, const int map, const int height)
+void INT10_LoadFont(const PhysPt _font_data, const bool reload,
+                    const int num_chars, const int first_char,
+                    const int font_block, const int char_height)
 {
 	PhysPt ftwhere = PhysicalMake(0xa000,
-	                              map_offset[map & 0x7] +
-	                                      (uint16_t)(offset * 32));
+	                              map_offset[font_block & 0x7] +
+	                                      (uint16_t)(first_char * 32));
 
 	uint16_t base = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
 
@@ -79,19 +80,19 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 	IO_Write(0x3cf, 0x04);
 
 	// Load character patterns
-	auto font = _font;
+	auto font_data = _font_data;
 
-	for (auto i = 0; i < count; i++) {
-		MEM_BlockCopy(ftwhere + i * 32, font, height);
-		font += height;
+	for (auto i = 0; i < num_chars; i++) {
+		MEM_BlockCopy(ftwhere + i * 32, font_data, char_height);
+		font_data += char_height;
 	}
 
 	// Load alternate 9x14 or 9x16 character patterns on VGA based on
 	// state of the clocking mode register
 	if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
-		while (auto chr = mem_readb(font++)) {
-			MEM_BlockCopy(ftwhere + chr * 32, font, height);
-			font += height;
+		while (auto chr = mem_readb(font_data++)) {
+			MEM_BlockCopy(ftwhere + chr * 32, font_data, char_height);
+			font_data += char_height;
 		}
 	}
 
@@ -121,11 +122,11 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 	if (reload) {
 		// Max scanline
 		IO_Write(base, 0x9);
-		IO_Write(base + 1, (IO_Read(base + 1) & 0xe0) | (height - 1));
+		IO_Write(base + 1, (IO_Read(base + 1) & 0xe0) | (char_height - 1));
 
 		// Vertical display end
-		auto rows = CurMode->sheight / height;
-		auto vdend = rows * height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
+		auto rows = CurMode->sheight / char_height;
+		auto vdend = rows * char_height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
 		IO_Write(base, 0x12);
 		IO_Write(base + 1, (uint8_t)vdend);
 
@@ -133,12 +134,12 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 		if (CurMode->mode == 7) {
 			IO_Write(base, 0x14);
 			IO_Write(base + 1,
-			         (IO_Read(base + 1) & ~0x1f) | (height - 1));
+			         (IO_Read(base + 1) & ~0x1f) | (char_height - 1));
 		}
 
 		// Rows setting in bios segment
 		real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, rows - 1);
-		real_writeb(BIOSMEM_SEG, BIOSMEM_CHAR_HEIGHT, (uint8_t)height);
+		real_writeb(BIOSMEM_SEG, BIOSMEM_CHAR_HEIGHT, (uint8_t)char_height);
 
 		// Page size
 		Bitu bios_pagesize = rows *
@@ -149,7 +150,7 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 		real_writew(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE, bios_pagesize);
 
 		// Move up one line on 14+ line fonts
-		auto cursor_height = height >= 14 ? (height - 1) : height;
+		auto cursor_height = char_height >= 14 ? (char_height - 1) : char_height;
 
 		INT10_SetCursorShape(cursor_height - 2, cursor_height - 1);
 	}
@@ -157,41 +158,33 @@ void INT10_LoadFont(const PhysPt _font, const bool reload, const int count,
 
 void INT10_ReloadFont()
 {
-	constexpr auto Reload   = false;
-	constexpr auto NumChars = 256;
-	constexpr auto Offset   = 0;
-	constexpr auto Map      = 0;
+	constexpr auto Reload    = false;
+	constexpr auto NumChars  = 256;
+	constexpr auto FirstChar = 0;
+	constexpr auto FontBlock = 0;
 
 	switch (CurMode->cheight) {
-	case 8:
+	case 8: {
+		const auto font_data = RealToPhysical(int10.rom.font_8_first);
+		constexpr auto CharHeight = 8;
 
-		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),
-		               Reload,
-		               NumChars,
-		               Offset,
-		               Map,
-		               CurMode->cheight);
-		break;
+		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+	} break;
 
-	case 14:
-		INT10_LoadFont(RealToPhysical(int10.rom.font_14),
-		               Reload,
-		               NumChars,
-		               Offset,
-		               Map,
-		               CurMode->cheight);
-		break;
+	case 14: {
+		const auto font_data      = RealToPhysical(int10.rom.font_14);
+		constexpr auto CharHeight = 14;
 
-	case 16:
+		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+	} break;
+
+	case 16: {
 	default:
-		constexpr auto Height = 16;
-		INT10_LoadFont(RealToPhysical(int10.rom.font_16),
-		               Reload,
-		               NumChars,
-		               Offset,
-		               Map,
-		               Height);
-		break;
+		const auto font_data      = RealToPhysical(int10.rom.font_16);
+		constexpr auto CharHeight = 16;
+
+		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+	} break;
 	}
 }
 
