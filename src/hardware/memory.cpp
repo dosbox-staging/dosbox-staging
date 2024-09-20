@@ -28,10 +28,12 @@
 #include "setup.h"
 #include "support.h"
 
-constexpr auto megabyte = 1024 * 1024;
+constexpr auto Megabyte = 1024 * 1024;
+
+constexpr auto PagesPerMegabyte = Megabyte / dos_pagesize;
 
 constexpr auto MinMegabytes = static_cast<uint16_t>(1);
-constexpr auto MaxMegabytes = static_cast<uint16_t>(PciMemoryBase / megabyte);
+constexpr auto MaxMegabytes = static_cast<uint16_t>(PciMemoryBase / Megabyte);
 
 constexpr auto SafeMegabytesDos   = 31;
 constexpr auto SafeMegabytesWin95 = 480;
@@ -158,8 +160,9 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 		return memory.lfb.handler;
 	}
 
-	constexpr uint32_t pages_in_16mb = {0x01000000u / dos_pagesize};
-	const auto last_page_in_first_16mb = memory.lfb.start_page + pages_in_16mb;
+	constexpr uint32_t PagesIn16Mb = 16 * PagesPerMegabyte;
+
+	const auto last_page_in_first_16mb = memory.lfb.start_page + PagesIn16Mb;
 	const auto sixteen_pages_beyond_first_16mb = last_page_in_first_16mb + 16u;
 
 	if (phys_page >= last_page_in_first_16mb &&
@@ -471,7 +474,7 @@ void MEM_A20_Enable(bool enabled) {
 	if (memory.a20.enabled == enabled) {
 		return;
 	}
-	constexpr uint32_t a20_base_page = megabyte / dos_pagesize;
+	constexpr uint32_t a20_base_page = Megabyte / dos_pagesize;
 
 	const uint32_t phys_base_page = enabled ? a20_base_page : 0;
 
@@ -727,7 +730,8 @@ public:
 		const auto section = static_cast<Section_prop*>(configuration);
 		const auto num_megabytes = section->Get_int("memsize");
 		check_num_megabytes(num_megabytes);
-		const auto num_pages = (num_megabytes * megabyte) / dos_pagesize;
+
+		const auto num_pages = num_megabytes * PagesPerMegabyte;
 
 		// Size the actual memory pages
 		memory.pages.resize(num_pages);
