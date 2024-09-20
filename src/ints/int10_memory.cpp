@@ -45,9 +45,9 @@ static const std::vector<uint16_t> map_offset = {
 };
 // clang-format on
 
-void INT10_LoadFont(const PhysPt _font_data, const bool reload,
-                    const int num_chars, const int first_char,
-                    const int _font_block, const int char_height)
+static void load_font(const PhysPt _font_data, const bool reload, const int num_chars,
+                      const int first_char, const int _font_block,
+                      const int char_height, const bool load_alternate_chars)
 {
 	constexpr auto BytesPerChar = 32;
 
@@ -93,13 +93,13 @@ void INT10_LoadFont(const PhysPt _font_data, const bool reload,
 		font_data += char_height;
 	}
 
-	// Load alternate 9x14 or 9x16 character patterns on VGA based on
-	// state of the clocking mode register
-	if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
+	// Load alternate 9x14 or 9x16 character patterns on VGA
+	if (load_alternate_chars) {
 		while (auto chr = mem_readb(font_data++)) {
 			MEM_BlockCopy(font_base_addr + chr * BytesPerChar,
 			              font_data,
 			              char_height);
+
 			font_data += char_height;
 		}
 	}
@@ -172,6 +172,14 @@ void INT10_LoadFont(const PhysPt _font_data, const bool reload,
 	}
 }
 
+void INT10_LoadFont(const PhysPt font_data, const bool reload,
+                    const int num_chars, const int first_char,
+                    const int font_block, const int char_height)
+{
+	constexpr auto LoadAlternateChars = false;
+	load_font(font_data, reload, num_chars, first_char, font_block, char_height, LoadAlternateChars);
+}
+
 void INT10_ReloadFont()
 {
 	constexpr auto Reload    = false;
@@ -179,27 +187,51 @@ void INT10_ReloadFont()
 	constexpr auto FirstChar = 0;
 	constexpr auto FontBlock = 0;
 
+	const auto is_vga_9dot_font = (IS_VGA_ARCH &&
+	                               !vga.seq.clocking_mode.is_eight_dot_mode);
+
 	switch (CurMode->cheight) {
 	case 8: {
 		const auto font_data = RealToPhysical(int10.rom.font_8_first);
-		constexpr auto CharHeight = 8;
+		constexpr auto CharHeight         = 8;
+		constexpr auto LoadAlternateChars = false;
 
-		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+		load_font(font_data,
+		          Reload,
+		          NumChars,
+		          FirstChar,
+		          FontBlock,
+		          CharHeight,
+		          LoadAlternateChars);
 	} break;
 
 	case 14: {
 		const auto font_data      = RealToPhysical(int10.rom.font_14);
 		constexpr auto CharHeight = 14;
+		const auto load_alternate_chars = is_vga_9dot_font;
 
-		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+		load_font(font_data,
+		          Reload,
+		          NumChars,
+		          FirstChar,
+		          FontBlock,
+		          CharHeight,
+		          load_alternate_chars);
 	} break;
 
 	case 16: {
 	default:
 		const auto font_data      = RealToPhysical(int10.rom.font_16);
 		constexpr auto CharHeight = 16;
+		const auto load_alternate_chars = is_vga_9dot_font;
 
-		INT10_LoadFont(font_data, Reload, NumChars, FirstChar, FontBlock, CharHeight);
+		load_font(font_data,
+		          Reload,
+		          NumChars,
+		          FirstChar,
+		          FontBlock,
+		          CharHeight,
+		          load_alternate_chars);
 	} break;
 	}
 }
