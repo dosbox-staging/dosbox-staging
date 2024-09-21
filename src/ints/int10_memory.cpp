@@ -27,16 +27,16 @@ static const std::vector<uint8_t> static_functionality = {
     /* 0 */ 0xff,  // All modes supported #1
     /* 1 */ 0xff,  // All modes supported #2
     /* 2 */ 0x0f,  // All modes supported #3
-    /* 3 */ 0x00, 0x00, 0x00, 0x00,  // reserved
+    /* 3 */ 0x00, 0x00, 0x00, 0x00,  // Reserved
     /* 7 */ 0x07,  // 200, 350, 400 scan lines
-    /* 8 */ 0x04,  // total number of character blocks available in text modes
-    /* 9 */ 0x02,  // maximum number of active character blocks in text modes
+    /* 8 */ 0x04,  // Total number of character blocks available in text modes
+    /* 9 */ 0x02,  // Maximum number of active character blocks in text modes
     /* a */ 0xff,  // Misc Flags Everthing supported
     /* b */ 0x0e,  // Support for Display combination, intensity/blinking and video state saving/restoring
-    /* c */ 0x00,  // reserved
-    /* d */ 0x00,  // reserved
+    /* c */ 0x00,  // Reserved
+    /* d */ 0x00,  // Reserved
     /* e */ 0x00,  // Change to add new functions
-    /* f */ 0x00   // reserved
+    /* f */ 0x00   // Reserved
 };
 
 static const std::vector<uint16_t> map_offset = {
@@ -47,15 +47,21 @@ static const std::vector<uint16_t> map_offset = {
 
 void INT10_LoadFont(const PhysPt _font_data, const bool reload,
                     const int num_chars, const int first_char,
-                    const int font_block, const int char_height)
+                    const int _font_block, const int char_height)
 {
-	PhysPt ftwhere = PhysicalMake(0xa000,
-	                              map_offset[font_block & 0x7] +
-	                                      (uint16_t)(first_char * 32));
+	constexpr auto BytesPerChar = 32;
 
-	uint16_t base = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
+	// Valid font block value range: EGA: 0-3; VGA: 0-7
+	//
+	// Source:
+	// http://www.techhelpmanual.com/157-int_10h_1110h__load_and_activate_user_defined_font.html
+	const auto font_block = (_font_block & 0x07);
 
-	bool mono = (base == VGAREG_MDA_CRTC_ADDRESS);
+	const PhysPt font_base_addr = PhysicalMake(
+	        0xa000,
+	        map_offset[font_block] + (uint16_t)(first_char * BytesPerChar));
+
+	const uint16_t crtc_base = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
 
 	// Put video adapter in planar mode
 
@@ -82,8 +88,8 @@ void INT10_LoadFont(const PhysPt _font_data, const bool reload,
 	// Load character patterns
 	auto font_data = _font_data;
 
-	for (auto i = 0; i < num_chars; i++) {
-		MEM_BlockCopy(ftwhere + i * 32, font_data, char_height);
+	for (auto chr = 0; chr < num_chars; ++chr) {
+		MEM_BlockCopy(font_base_addr + chr * BytesPerChar, font_data, char_height);
 		font_data += char_height;
 	}
 
@@ -91,7 +97,9 @@ void INT10_LoadFont(const PhysPt _font_data, const bool reload,
 	// state of the clocking mode register
 	if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
 		while (auto chr = mem_readb(font_data++)) {
-			MEM_BlockCopy(ftwhere + chr * 32, font_data, char_height);
+			MEM_BlockCopy(font_base_addr + chr * BytesPerChar,
+			              font_data,
+			              char_height);
 			font_data += char_height;
 		}
 	}
@@ -116,41 +124,49 @@ void INT10_LoadFont(const PhysPt _font_data, const bool reload,
 
 	// Bx000-BxFFF, odd/even on
 	IO_Write(0x3ce, 0x06);
-	IO_Write(0x3cf, mono ? 0x0a : 0x0e);
+
+	const bool monochrome = (crtc_base == VGAREG_MDA_CRTC_ADDRESS);
+	IO_Write(0x3cf, monochrome ? 0x0a : 0x0e);
 
 	// Reload tables and registers with new values based on this height
 	if (reload) {
 		// Max scanline
-		IO_Write(base, 0x9);
-		IO_Write(base + 1, (IO_Read(base + 1) & 0xe0) | (char_height - 1));
+		IO_Write(crtc_base, 0x9);
+		IO_Write(crtc_base + 1,
+		         (IO_Read(crtc_base + 1) & 0xe0) | (char_height - 1));
 
 		// Vertical display end
-		auto rows = CurMode->sheight / char_height;
-		auto vdend = rows * char_height * ((CurMode->sheight == 200) ? 2 : 1) - 1;
-		IO_Write(base, 0x12);
-		IO_Write(base + 1, (uint8_t)vdend);
+		const auto rows  = CurMode->sheight / char_height;
+		const auto vdend = rows * char_height *
+		                           ((CurMode->sheight == 200) ? 2 : 1) -
+		                   1;
+
+		IO_Write(crtc_base, 0x12);
+		IO_Write(crtc_base + 1, (uint8_t)vdend);
 
 		// Underline location
 		if (CurMode->mode == 7) {
-			IO_Write(base, 0x14);
-			IO_Write(base + 1,
-			         (IO_Read(base + 1) & ~0x1f) | (char_height - 1));
+			IO_Write(crtc_base, 0x14);
+			IO_Write(crtc_base + 1,
+			         (IO_Read(crtc_base + 1) & ~0x1f) |
+			                 (char_height - 1));
 		}
 
-		// Rows setting in bios segment
+		// Rows setting in BIOS segment
 		real_writeb(BIOSMEM_SEG, BIOSMEM_NB_ROWS, rows - 1);
 		real_writeb(BIOSMEM_SEG, BIOSMEM_CHAR_HEIGHT, (uint8_t)char_height);
 
 		// Page size
-		Bitu bios_pagesize = rows *
-		                     real_readb(BIOSMEM_SEG, BIOSMEM_NB_COLS) * 2;
+		const int bios_pagesize = rows *
+		                          real_readb(BIOSMEM_SEG, BIOSMEM_NB_COLS) *
+		                          2;
 
 		// BIOS adds extra on reload
-		bios_pagesize += 0x100;
-		real_writew(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE, bios_pagesize);
+		real_writew(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE, bios_pagesize + 0x100);
 
 		// Move up one line on 14+ line fonts
-		auto cursor_height = char_height >= 14 ? (char_height - 1) : char_height;
+		auto cursor_height = char_height >= 14 ? (char_height - 1)
+		                                       : char_height;
 
 		INT10_SetCursorShape(cursor_height - 2, cursor_height - 1);
 	}
