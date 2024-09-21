@@ -369,45 +369,58 @@ void INT10_SetupRomMemory(void) {
 	}
 }
 
-void INT10_ReloadRomFonts(void) {
+void INT10_ReloadRomFonts(void)
+{
 	// 16x8 font
-	PhysPt font16pt=RealToPhysical(int10.rom.font_16);
-	for (Bitu i=0;i<256*16;i++) {
-		phys_writeb(font16pt+i,int10_font_16[i]);
+	PhysPt font16pt = RealToPhysical(int10.rom.font_16);
+	for (Bitu i = 0; i < 256 * 16; i++) {
+		phys_writeb(font16pt + i, int10_font_16[i]);
 	}
-	phys_writeb(RealToPhysical(int10.rom.font_16_alternate),0x1d);
+	phys_writeb(RealToPhysical(int10.rom.font_16_alternate), 0x1d);
+
 	// 14x8 font
-	PhysPt font14pt=RealToPhysical(int10.rom.font_14);
-	for (Bitu i=0;i<256*14;i++) {
-		phys_writeb(font14pt+i,int10_font_14[i]);
+	PhysPt font14pt = RealToPhysical(int10.rom.font_14);
+	for (Bitu i = 0; i < 256 * 14; i++) {
+		phys_writeb(font14pt + i, int10_font_14[i]);
 	}
-	phys_writeb(RealToPhysical(int10.rom.font_14_alternate),0x1d);
+	phys_writeb(RealToPhysical(int10.rom.font_14_alternate), 0x1d);
+
 	// 8x8 fonts
-	PhysPt font8pt=RealToPhysical(int10.rom.font_8_first);
-	for (Bitu i=0;i<128*8;i++) {
-		phys_writeb(font8pt+i,int10_font_08[i]);
+	PhysPt font8pt = RealToPhysical(int10.rom.font_8_first);
+	for (Bitu i = 0; i < 128 * 8; i++) {
+		phys_writeb(font8pt + i, int10_font_08[i]);
 	}
-	font8pt=RealToPhysical(int10.rom.font_8_second);
-	for (Bitu i=0;i<128*8;i++) {
-		phys_writeb(font8pt+i,int10_font_08[i+128*8]);
+
+	font8pt = RealToPhysical(int10.rom.font_8_second);
+	for (Bitu i = 0; i < 128 * 8; i++) {
+		phys_writeb(font8pt + i, int10_font_08[i + 128 * 8]);
 	}
+
 	INT10_SetupRomMemoryChecksum();
 }
 
-void INT10_SetupRomMemoryChecksum(void) {
-	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
-		/* Sum of all bytes in rom module 256 should be 0 */
-		uint8_t sum = 0;
-		PhysPt rom_base = PhysicalMake(0xc000,0);
-		Bitu last_rombyte = 32*1024 - 1;		//32 KB romsize
-		for (Bitu i = 0;i < last_rombyte;i++)
-			sum += phys_readb(rom_base + i);	//OVERFLOW IS OKAY
-		sum = (uint8_t)((256 - (Bitu)sum)&0xff);
-		phys_writeb(rom_base + last_rombyte,sum);
+void INT10_SetupRomMemoryChecksum(void)
+{
+	// EGA/VGA. Just to be safe
+	if (IS_EGAVGA_ARCH) {
+		// Sum of all bytes in rom module 256 should be 0
+		uint8_t sum     = 0;
+		PhysPt rom_base = PhysicalMake(0xc000, 0);
+
+		// 32 KB romsize
+		Bitu last_rombyte = 32 * 1024 - 1;
+
+		for (Bitu i = 0; i < last_rombyte; i++) {
+			// Overflow is okay
+			sum += phys_readb(rom_base + i);
+		}
+		sum = (uint8_t)((256 - (Bitu)sum) & 0xff);
+
+		phys_writeb(rom_base + last_rombyte, sum);
 	}
 }
 
-
+// clang-format off
 uint8_t int10_font_08[256 * 8] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x7e, 0x81, 0xa5, 0x81, 0xbd, 0x99, 0x81, 0x7e,
@@ -1757,3 +1770,4 @@ uint8_t int10_font_16_alternate[19 * 17 + 1] = {
   0x66, 0xce, 0x96, 0x3e, 0x06, 0x06, 0x00, 0x00,
   0x00
 };
+// clang-format on
