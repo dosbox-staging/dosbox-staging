@@ -187,53 +187,20 @@ void INT10_ReloadFont()
 	constexpr auto FirstChar = 0;
 	constexpr auto FontBlock = 0;
 
+	const auto char_height = CurMode->cheight;
+
+	const auto font_data = RealToPhysical(
+		char_height == 8  ? int10.rom.font_8_first :
+		char_height == 14 ? int10.rom.font_14 :
+		                    int10.rom.font_16
+	);
+
 	const auto is_vga_9dot_font = (IS_VGA_ARCH &&
 	                               !vga.seq.clocking_mode.is_eight_dot_mode);
 
-	switch (CurMode->cheight) {
-	case 8: {
-		const auto font_data = RealToPhysical(int10.rom.font_8_first);
-		constexpr auto CharHeight         = 8;
-		constexpr auto LoadAlternateChars = false;
+	const auto load_alternate_chars = (is_vga_9dot_font && char_height != 8);
 
-		load_font(font_data,
-		          Reload,
-		          NumChars,
-		          FirstChar,
-		          FontBlock,
-		          CharHeight,
-		          LoadAlternateChars);
-	} break;
-
-	case 14: {
-		const auto font_data      = RealToPhysical(int10.rom.font_14);
-		constexpr auto CharHeight = 14;
-		const auto load_alternate_chars = is_vga_9dot_font;
-
-		load_font(font_data,
-		          Reload,
-		          NumChars,
-		          FirstChar,
-		          FontBlock,
-		          CharHeight,
-		          load_alternate_chars);
-	} break;
-
-	case 16: {
-	default:
-		const auto font_data      = RealToPhysical(int10.rom.font_16);
-		constexpr auto CharHeight = 16;
-		const auto load_alternate_chars = is_vga_9dot_font;
-
-		load_font(font_data,
-		          Reload,
-		          NumChars,
-		          FirstChar,
-		          FontBlock,
-		          CharHeight,
-		          load_alternate_chars);
-	} break;
-	}
+	load_font(font_data, Reload, NumChars, FirstChar, FontBlock, char_height, load_alternate_chars);
 }
 
 void INT10_SetupRomMemory(void) {
