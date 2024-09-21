@@ -484,7 +484,7 @@ Wybór wyjścia obrazu (domyślnie 'texture').
 .
 :CONFIG_TEXTURE_RENDERER
 Wybór renderera dla 'output = texture'.
-Wartość 'auto' (domyślnie) wybiera automatycznie.
+Wartość 'auto' (domyślne) wybiera automatycznie.
 .
 :CONFIG_DISPLAY
 Numer monitora do wyświetlania obrazu (domyślnie 0); wartości zależą od
@@ -808,7 +808,7 @@ Użyj ustawienia 'host_rate'.
 Wybór shadera w trybach OpenGL. Lista dostępnych shaderów adaptacyjnych,
 symulujących obraz monitora kineskopowego (CRT):
   crt-auto:               Shader symulujący obraz monitora z okresu wydania
-                          danej gry (domyślnie). Odpowiedni shader jest
+                          danej gry (domyślne). Odpowiedni shader jest
                           wybierany bazując na trybie graficznym
                           i rozdzielczości, bez uwzględniania opcji
                           'machine' - zatem nawet podczas emulowania systemu
@@ -1091,12 +1091,18 @@ Włącza emulację karty 3dfx Voodoo (domyślnie włączone).
 Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Voodooo, 4 lub 12 MB.
 Pamięć jest dzielona na Frame Buffer Interface (FBI) oraz Texture Mapping Unit
 (TMU) w następujący sposób:
-   4: 2 MB dla FBI, jeden TMU z 2 MB pamięci (domyślne)
+   4: 2 MB dla FBI, jeden TMU z 2 MB pamięci (domyślne).
   12: 4 MB dla FBI, dwa TMUs, każdy z 4 MB pamięci.
 .
 :CONFIG_VOODOO_MULTITHREADING
-Używa wielowątkowości aby polepszyć wydajność emulacji 3dfx Voodoo
-(domyślnie włączone).
+Nazwa zmieniona na 'voodoo_threads'.
+.
+:CONFIG_VOODOO_THREADS
+Używa wątków procesora do polepszenia wydajności karty 3dfx:
+  auto:       Używa do 8 wątków, zależnie od ilości rdzeni (domyślne).
+  <wartość>:  Używa określonej ilości wątków, od 1 do 16.
+Uwaga: Testy wykazują, że wydajność rośnie do 8 wątków, powyżej nie ma już
+       poprawy lub wydajność maleje.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Używa filtrowania bilinearnego żeby zasymulować efekt wygładzania tekstur
