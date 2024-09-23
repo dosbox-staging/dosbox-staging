@@ -18,7 +18,6 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
         ca-certificates \
         git \
         ninja-build \
-        python3-pip \
         pkg-config \
         build-essential \
         qemu-user-static \
@@ -38,9 +37,6 @@ RUN  mkdir -p $(dirname ${MESON_CROSS_FILE}) \
     && apt-get -y install --no-install-recommends \
         meson \
         crossbuild-essential-${DPKG_ARCH} \
-    && /usr/share/meson/debcrossgen --arch ${DPKG_ARCH} -o ${MESON_CROSS_FILE} \
-    && apt-get -y remove meson \
-    && apt-get -y autoremove \
     && rm -rf /var/lib/apt/lists/*
 
 # Install DOSBox Staging dependencies using the appropriate architecture
@@ -49,16 +45,13 @@ RUN apt-get update \
         $(sed 's/$/':${DPKG_ARCH}'/g' ${DOSBOX_APT_LIST}) \
     && rm -rf /var/lib/apt/lists/*
 
-# Use the PyPI version of Meson instead of the potentially way out of date Debian version
-RUN pip3 install meson
+# Generate meson cross file using env2mfile
+RUN meson env2mfile --cross --debarch=${DPKG_ARCH} -o ${MESON_CROSS_FILE}
 
 # Perform a couple of fixups
 RUN DPKG_TRIPLET=$(dpkg-architecture -A ${DPKG_ARCH} -q DEB_TARGET_MULTIARCH); \
     QEMU_TRIPLET=$(echo $DPKG_TRIPLET | sed s/powerpc/ppc/g); \
     # Fixup meson cross file for qemu-user-static
-    sed -i "2i exe_wrapper = '/usr/bin/qemu-${QEMU_TRIPLET%%-*}-static'" ${MESON_CROSS_FILE} \
-    # Fix opusfile pkgconfig
-    && sed 's@libdir=\${exec_prefix}/lib@libdir=\${prefix}/lib/'"${DPKG_TRIPLET}@g" \
-        /usr/lib/pkgconfig/opusfile.pc > /usr/lib/${DPKG_TRIPLET}/pkgconfig/opusfile.pc
+    sed -i "2i exe_wrapper = '/usr/bin/qemu-${QEMU_TRIPLET%%-*}-static'" ${MESON_CROSS_FILE}
 
 CMD [ "/bin/bash" ]
