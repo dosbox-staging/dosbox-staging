@@ -248,7 +248,7 @@ last `sky` command out for now by preceding it with a `#` character because we
 don't want to start the game just yet:
 
 ```ini
-[autexec]
+[autoexec]
 imgmount d cd/cdrom1.iso -t iso
 c:
 cd \sky
