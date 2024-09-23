@@ -1697,51 +1697,9 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-const std::string& Config::GetLanguage()
+const std::string& Config::GetArgumentLanguage()
 {
-	static bool lang_is_cached = false;
-	static std::string lang    = {};
-
-	if (lang_is_cached) {
-		return lang;
-	}
-
-	// Has the user provided a language on the command line?
-	lang = arguments.lang;
-
-	// Is a language provided in the conf file?
-	if (lang.empty()) {
-		const auto section = GetSection("dosbox");
-		assert(section);
-		lang = static_cast<const Section_prop*>(section)->Get_string("language");
-	}
-
-	// Check the LANG environment variable
-	if (lang.empty()) {
-		const char* envlang = getenv("LANG");
-		if (envlang) {
-			lang = envlang;
-			clear_language_if_default(lang);
-		}
-	}
-
-	// Query the OS using OS-specific calls
-	if (lang.empty()) {
-		lang = get_language_from_os();
-		clear_language_if_default(lang);
-	}
-
-	// Drop the dialect part of the language
-	// (e.g. "en_GB.UTF8" -> "en")
-	if (lang.size() > 2) {
-		lang = lang.substr(0, 2);
-	}
-
-	// Return it as lowercase
-	lowcase(lang);
-
-	lang_is_cached = true;
-	return lang;
+	return arguments.lang;
 }
 
 // forward declaration
@@ -1910,6 +1868,7 @@ void Config::ParseArguments()
 	arguments.nolocalconf = cmdline->FindRemoveBoolArgument("nolocalconf");
 	arguments.fullscreen  = cmdline->FindRemoveBoolArgument("fullscreen");
 	arguments.list_countries = cmdline->FindRemoveBoolArgument("list-countries");
+	arguments.list_layouts = cmdline->FindRemoveBoolArgument("list-layouts");
 	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");

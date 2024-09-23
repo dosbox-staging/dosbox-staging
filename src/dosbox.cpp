@@ -581,7 +581,7 @@ void DOSBOX_Init()
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
-	constexpr auto always        = Property::Changeable::Always;
+	// constexpr auto always     = Property::Changeable::Always;
 	constexpr auto deprecated    = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle     = Property::Changeable::WhenIdle;
@@ -591,15 +591,16 @@ void DOSBOX_Init()
 	/* Setup all the different modules making up DOSBox */
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_string("language", always, "");
+	pstring = secprop->Add_string("language", only_at_start, "");
 	pstring->Set_help(
-	        "Select a language to use: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',\n"
-	        "or 'ru' (unset by default; this defaults to English).\n"
+	        "Select the DOS messages language (unset by default; this results in 'auto'):\n"
+	        "  auto:     Tries to detect the language from the host OS (default).\n"
+	        "  <value>:  Loads a translation from the given file.\n"
 	        "Notes:\n"
-	        "  - This setting will override the 'LANG' environment variable, if set.\n"
-	        "  - The bundled 'resources/translations' directory with the executable holds\n"
-	        "    these files. Please keep it along-side the executable to support this\n"
-	        "    feature.");
+	        "  - Currently the following language files are available:\n"
+	        "    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' and 'ru'.\n"
+	        "  - The English is built-in, remaining ones are stored in the bundled\n"
+	        "    'resources/translations' directory.");
 
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values({"hercules",
@@ -1192,27 +1193,40 @@ void DOSBOX_Init()
 	// DOS locale settings
 
 	secprop->AddInitFunction(&DOS_Locale_Init, changeable_at_runtime);
+
 	pstring = secprop->Add_string("locale_period", when_idle, "modern");
 	pstring->Set_help(
-	        "Set locale epoch ('modern' by default). Historic settings (if available\n"
-	        "for the given country) try to mimic old DOS behaviour when displaying\n"
-	        "information such as dates, time, or numbers, modern ones follow current day\n"
-	        "practices for user experience more consistent with typical host systems.");
-	pstring->Set_values({"historic", "modern"});
+	        "Set locale epoch ('native' by default).\n"
+	        "  historic:  if data is available for the given country, tries to mimic old DOS\n"
+	        "             behavior when displaying time, dates, or numbers\n"
+	        "  modern:    follow current day practices for user experience more consistent\n"
+	        "             with typical host systems\n"
+	        "  native:    tries to re-use current host OS settings, regardless of the country\n"
+	        "             set; uses 'modern' data to fill-in the gaps, like when the DOS\n"
+	        "             locale system is too limited to follow the desktop settings");
+	pstring->Set_values({"historic", "modern", "native"});
 
 	pstring = secprop->Add_string("country", when_idle, "auto");
 	pstring->Set_help(
 	        "Set DOS country code ('auto' by default).\n"
 	        "This affects country-specific information such as date, time, and decimal\n"
-	        "formats. The list of supported country codes can be displayed using\n"
-	        "'--list-countries' command-line argument. If set to 'auto', the country code\n"
-	        "corresponding to the selected keyboard layout will be used.");
+	        "formats. If set to 'auto', it tries to set the country code reflecting\n"
+	        "the host OS settings.\n"
+	        "The list of country codes can be displayed using '--list-countries'\n"
+	        "command-line argument.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
-	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
+	pstring = secprop->Add_string("keyboardlayout", deprecated, "");
+	pstring->Set_help("Renamed to 'keyboard_layout'.");
+
+	pstring = secprop->Add_string("keyboard_layout", only_at_start, "");
 	pstring->Set_help(
-	        "Keyboard layout code ('auto' by default), i.e. 'us' for US English layout.\n"
-	        "Other possible values are the same as accepted by FreeDOS.");
+	        "Keyboard layout code (unset by default; this results in 'auto').\n"
+	        "The list of supported keyboard layout codes can be displayed using\n"
+	        "'--list-layouts' command-line argument, i. e. 'uk' is the British English\n"
+	        "layout. The layout can be followed by the code page number, i.e. 'uk 850'\n"
+	        "selects a Western-European screen font.\n"
+	        "After startup, use DOS command 'KEYB' to manipulate or get information about\n"
+	        "keyboard layout and code page - type 'HELP KEYB' for details.");
 
 	// COMMAND.COM settings
 
