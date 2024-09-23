@@ -96,7 +96,6 @@ unit_tests = [
     {'name': 'ring_buffer', 'deps': []},
     {'name': 'rgb', 'deps': []},
     {'name': 'rwqueue', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
-    {'name': 'semaphore_internal', 'deps': [dosbox_dep]},
     {'name': 'setup', 'deps': [dosbox_dep]},
     {'name': 'shell_cmds', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'shell_redirection', 'deps': [dosbox_dep], 'extra_cpp': []},

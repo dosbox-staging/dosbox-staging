@@ -103,7 +103,6 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "render.h"
-#include "semaphore_internal.h"
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
@@ -910,30 +909,14 @@ struct triangle_worker
 	triangle_worker(const int num_threads_)
 	        : num_threads(num_threads_),
 	          num_workers(num_threads + 1),
-	          threads(num_threads),
-	          sembegin(num_threads)
+	          threads(num_threads)
 	{
 		assert(num_workers > num_threads);
-		assert(!sembegin.empty());
 	}
 
 	triangle_worker()                                  = delete;
 	triangle_worker(const triangle_worker&)            = delete;
 	triangle_worker& operator=(const triangle_worker&) = delete;
-
-	void NotifySemaphores()
-	{
-		std::for_each(sembegin.begin(), sembegin.end(), [](auto& sem) {
-			sem.notify();
-		});
-	}
-
-	void WaitForSemaphores()
-	{
-		std::for_each(sembegin.begin(), sembegin.end(), [&](auto&) {
-			semdone.wait();
-		});
-	}
 
 	const int num_threads = 0;
 	const int num_workers = 0;
@@ -953,11 +936,11 @@ struct triangle_worker
 	int32_t totalpix = 0;
 
 	std::vector<std::thread> threads = {};
-	std::vector<Semaphore> sembegin  = {};
 
-	Semaphore semdone = {};
+	// Worker threads start working when this gets reset to 0
+	std::atomic<int> worker_index = INT_MAX;
 
-	int done_count = 0;
+	std::atomic<int> done_count = 0;
 };
 
 struct voodoo_state
@@ -4467,15 +4450,26 @@ static void triangle_worker_work(const triangle_worker& tworker,
 	sum_statistics(&v->thread_stats[work_start], &my_stats);
 }
 
-static int triangle_worker_thread_func(int32_t p)
+static void do_triangle_work(triangle_worker& tworker)
+{
+	int i;
+	while ((i = tworker.worker_index.load()) < tworker.num_workers) {
+		// compare_exchange_weak modifies work_start but only on failure (when another thread has modified the expected value)
+		auto work_start = i;
+		const auto work_end = i + 1;
+
+		if (tworker.worker_index.compare_exchange_weak(work_start, work_end)) {
+			triangle_worker_work(tworker, work_start, work_end);
+			++tworker.done_count;
+		}
+	}
+}
+
+static int triangle_worker_thread_func()
 {
 	triangle_worker& tworker = v->tworker;
-	for (const int32_t tnum = p; tworker.threads_active;) {
-		tworker.sembegin[tnum].wait();
-		if (tworker.threads_active) {
-			triangle_worker_work(tworker, tnum, tnum + 1);
-		}
-		tworker.semdone.notify();
+	while (tworker.threads_active) {
+		do_triangle_work(tworker);
 	}
 	return 0;
 }
@@ -4486,10 +4480,6 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 		return;
 	}
 	tworker.threads_active = false;
-
-	tworker.NotifySemaphores();
-
-	tworker.WaitForSemaphores();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4550,19 +4540,23 @@ static void triangle_worker_run(triangle_worker& tworker)
 	{
 		tworker.threads_active = true;
 
-		int worker_id = 0;
 		for (auto& triangle_worker : tworker.threads) {
-			triangle_worker = std::thread([worker_id] {
-				triangle_worker_thread_func(worker_id);
+			triangle_worker = std::thread([] {
+				triangle_worker_thread_func();
 			});
-			++worker_id;
 		}
 	}
-	tworker.NotifySemaphores();
 
-	triangle_worker_work(tworker, tworker.num_threads, tworker.num_workers);
+	tworker.done_count = 0;
 
-	tworker.WaitForSemaphores();
+	// Reseting this index triggers the worker threads to start working
+	tworker.worker_index = 0;
+
+	// Main thread also does the same work as the worker threads
+	do_triangle_work(tworker);
+
+	// Busy wait for all worker threads to finish
+	while (tworker.done_count < tworker.num_workers);
 }
 
 /*-------------------------------------------------
