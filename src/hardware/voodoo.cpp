@@ -7087,7 +7087,7 @@ static int get_num_total_threads()
 		set_section_property_value(SectionName, SettingName, AutoSetting);
 	}
 
-	return std::clamp(SDL_GetCPUCount(), MinThreads, MaxAutoThreads);
+	return std::clamp(get_num_physical_cpus(), MinThreads, MaxAutoThreads);
 }
 
 /***************************************************************************
