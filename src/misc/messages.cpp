@@ -25,8 +25,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <map>
+#include <vector>
 
 #include "std_filesystem.h"
 #include <string>
@@ -117,7 +117,7 @@ public:
 };
 
 static std::unordered_map<std::string, Message> messages = {};
-static std::deque<std::string> messages_order            = {};
+static std::vector<std::string> messages_order           = {};
 
 static bool message_file_loaded = false;
 

@@ -863,6 +863,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\misc\fs_utils.cpp" />
     <ClCompile Include="..\src\misc\fs_utils_win32.cpp" />
     <ClCompile Include="..\src\misc\help_util.cpp" />
+    <ClCompile Include="..\src\misc\host_locale.cpp" />
     <ClCompile Include="..\src\misc\host_locale_macos.cpp" />
     <ClCompile Include="..\src\misc\host_locale_posix.cpp" />
     <ClCompile Include="..\src\misc\host_locale_win32.cpp" />

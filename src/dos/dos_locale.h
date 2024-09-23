@@ -26,9 +26,10 @@
 #include "setup.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
-constexpr uint16_t DefaultCodePage437 = 437;
+constexpr uint16_t DefaultCodePage = 437;
 
 // ***************************************************************************
 // List of countries
@@ -397,8 +398,7 @@ struct LocaleInfoEntry {
 
 	LocaleSeparator thousands_separator = {};
 	LocaleSeparator decimal_separator   = {};
-
-	std::optional<LocaleSeparator> list_separator = {};
+	LocaleSeparator list_separator      = LocaleSeparator::Semicolon;
 };
 
 struct CountryInfoEntry {
@@ -415,41 +415,108 @@ struct CountryInfoEntry {
 	std::string GetMsgName() const;
 };
 
+enum class KeyboardScript {
+	// Latin scripts
+	LatinQwerty, /// always keep it the 1st one!
+	LatinQwertz,
+	LatinAzerty,
+	LatinAsertt,
+	LatinJcuken,
+	LatinUgjrmv,
+	LatinColemak,
+	LatinDvorak,
+	LatinNonStandard,
+	// Other scripts
+	Arabic,
+	Armenian,
+	Cherokee,
+	Cyrillic,
+	CyrillicPhonetic,
+	Georgian,
+	Greek,
+	Hebrew,
+	Thai,
+	// Markers for comparing
+	LastQwertyLikeScript = LatinAsertt,
+	LastLatinScript      = LatinNonStandard,
+};
+
+struct KeyboardLayoutInfoEntry {
+	std::vector<std::string> layout_codes = {};
+
+	// A long, user-friendly name, to be displayed in verbose output
+	std::string layout_name = {};
+
+	uint16_t default_code_page = {};
+
+	KeyboardScript primary_script                        = {};
+	std::map<uint16_t, KeyboardScript> secondary_scripts = {};
+	std::map<uint16_t, KeyboardScript> tertiary_scripts  = {};
+
+	std::string GetMsgName() const;
+};
+
+enum class CodePageWarning {
+	// Code page puts a 'dotted I' in place of the regular ASCII 'I'
+	DottedI, 
+};
+
 namespace LocaleData {
 
+extern const std::map<std::string, std::vector<uint16_t>> BundledCpiContent;
+extern const std::map<uint16_t, CodePageWarning>          CodePageWarnings;
+extern const std::vector<KeyboardLayoutInfoEntry>         KeyboardLayoutInfo;
 extern const std::map<uint16_t, DosCountry>               CodeToCountryCorrectionMap;
 extern const std::map<DosCountry, CountryInfoEntry>       CountryInfo;
 
 } // namespace LocaleData
 
-
-
+// Functions to generate command line help messages
 
 std::string DOS_GenerateListCountriesMessage();
+std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command = false);
+
+// Functions for the KEYB command - help output
+
+std::string DOS_GetKeyboardLayoutName(const std::string& layout);
+std::string DOS_GetKeyboardScriptName(const KeyboardScript script);
+std::string DOS_GetShortcutKeyboardScript1();
+std::string DOS_GetShortcutKeyboardScript2();
+std::string DOS_GetShortcutKeyboardScript3();
+std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript1(const std::string& layout);
+std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript2(const std::string& layout,
+                                                           const uint16_t code_page);
+std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& layout,
+                                                           const uint16_t code_page);
+
+std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page);
+
+// DOS API support
 
 bool DOS_SetCountry(const uint16_t country_id);
 uint16_t DOS_GetCountry();
-void DOS_RefreshCountryInfo(const bool keyboard_layout_changed = false);
 
-std::string DOS_GetBundledCodePageFileName(const uint16_t code_page);
+// Misc functions
 
-uint16_t DOS_GetCodePageFromCountry(const uint16_t country);
+std::string DOS_GetBundledCpiFileName(const uint16_t code_page);
+uint16_t DOS_GetBundledCodePage(const std::string& keyboard_layout);
 
-std::string DOS_CheckLanguageToLayoutException(const std::string& language_code);
-
-uint16_t DOS_GetDefaultCountry();
-
-bool DOS_GetCountryFromLayout(const std::string& layout, uint16_t& country);
-
-std::string DOS_GetLayoutFromHost();
+// Tries to find better code page than the given one. Currently only checks if
+// the country uses euro currency - if so, proposes euro variant of the original
+// code page, for example 858 instead of 850.
+std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
+                                                 const std::string& keyboard_layout);
+// Puts the country-related locale information into DOS memory;
+// should be called when code page changes
+void DOS_RepopulateCountryInfo();
 
 // Lifecycle
 
 void DOS_Locale_Init(Section* sec);
 
-// We need a separate function to support '--list-countries' command line switch
-// (and possibly others in the future) - it needs translated strings, but does
-// not initialize DOSBox fully.
+// Separate function to support '--list-countries' and '--list-layouts' command
+// line switches (and possibly others in the future) - they needs translated
+// strings, but do not initialize DOSBox fully.
 void DOS_Locale_AddMessages();
 
 #endif

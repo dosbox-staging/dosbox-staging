@@ -23,11 +23,50 @@
 
 #include "dosbox.h"
 
-enum KeyboardErrorCode : uint8_t;
+enum class KeyboardLayoutResult {
+	OK,
+	// Could not open the keyboard SYS file
+	LayoutFileNotFound,
+	// Wrong file format
+	InvalidLayoutFile,
+	// Could not open the CPI file
+	CpiFileNotFound,
+	// Wrong CPP file format
+	InvalidCpiFile,
+	// Unsupported CPI file format (DR-DOS)
+	UnsupportedCpiFileDrDos,
+	// Keyboard layout not known
+	LayoutNotKnown,
+	// Keyboard layout does not support code page
+	NoLayoutForCodePage,
+	// Code page not known
+	NoBundledCpiFileForCodePage,
+	// No code page in user-supplied CPI file
+	NoCodePageInCpiFile,
+	// Pre-EGA machines can't change the code page
+	IncompatibleMachine,
+};
 
-KeyboardErrorCode DOS_SwitchKeyboardLayout(const char *new_layout, int32_t &tried_cp);
-KeyboardErrorCode DOS_LoadKeyboardLayout(const char *layoutname, int32_t codepage, const char *codepagefile);
-KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char *language_pref);
-const char *DOS_GetLoadedLayout();
+enum class CodePageFontOrigin {
+	Unknown,
+	// From graphics adapter ROM
+	Rom,
+	// From one of the bundled CPI files
+	Bundled,
+	// From user provided CPI file
+	Custom,
+};
+
+// Tries to load a keyboard layout and a code page.
+// If 'code_page' is 0, tries to load the default one for the given layout.
+// If 'cpi_file' is empty, tries  to use one of the bundled ones.
+// Uses 'code_page' to return code page it tried to load.
+KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
+                                            uint16_t& code_page,
+                                            const std::string& cpi_file = {},
+                                            const bool prefer_rom_font = false);
+
+std::string DOS_GetLoadedLayout();
+CodePageFontOrigin DOS_GetCodePageFontOrigin();
 
 #endif

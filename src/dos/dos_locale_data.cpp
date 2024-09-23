@@ -43,6 +43,887 @@ std::string CountryInfoEntry::GetMsgName() const
 	return base_str + country_code;
 }
 
+std::string KeyboardLayoutInfoEntry::GetMsgName() const
+{
+	assert(!layout_codes.empty());
+	const std::string base_str = "KEYBOARD_LAYOUT_NAME_";
+	auto layout_code = layout_codes[0];
+	upcase(layout_code);
+	return base_str + layout_code;
+}
+
+// ***************************************************************************
+// Code page (screen font) information
+// ***************************************************************************
+
+// Reference:
+// - https://gitlab.com/FreeDOS/base/cpidos/-/blob/master/DOC/CPIDOS/CODEPAGE.TXT
+
+// clang-format off
+const std::map<std::string, std::vector<uint16_t>> LocaleData::BundledCpiContent = {
+	{ "EGA.CPI",     { 437, 850, 852, 853, 857, 858 } },
+	{ "EGA2.CPI",    { 775, 859, 1116, 1117, 1118, 1119 } },
+	{ "EGA3.CPI",    { 771, 772, 808, 855, 866, 872 } },
+	{ "EGA4.CPI",    { 848, 849, 1125, 1131, 3012, 30010 } },
+	{ "EGA5.CPI",    { 113, 737, 851, 852, 858, 869 } },
+	{ "EGA6.CPI",    { 899, 30008, 58210, 59829, 60258, 60853 } },
+	{ "EGA7.CPI",    { 30011, 30013, 30014, 30017, 30018, 30019 } },
+	{ "EGA8.CPI",    { 770, 773, 774, 775, 777, 778 } },
+	{ "EGA9.CPI",    { 858, 860, 861, 863, 865, 867 } },
+	{ "EGA10.CPI",   { 667, 668, 790, 852, 991, 3845 } },
+	{ "EGA11.CPI",   { 858, 30000, 30001, 30004, 30007, 30009 } },
+	{ "EGA12.CPI",   { 852, 858, 30003, 30029, 30030, 58335 } },
+	{ "EGA13.CPI",   { 852, 895, 30002, 58152, 59234, 62306 } },
+	{ "EGA14.CPI",   { 30006, 30012, 30015, 30016, 30020, 30021 } },
+	{ "EGA15.CPI",   { 30023, 30024, 30025, 30026, 30027, 30028 } },
+	{ "EGA16.CPI",   { 858, 3021, 30005, 30022, 30031, 30032 } },
+	{ "EGA17.CPI",   { 862, 864, 30034, 30033, 30039, 30040 } },
+	{ "EGA18.CPI",   { 856, 3846, 3848 } },
+};
+// clang-format on
+
+// clang-format off
+const std::map<uint16_t, CodePageWarning> LocaleData::CodePageWarnings = {
+        { 60258, CodePageWarning::DottedI },
+};
+// clang-format on
+
+// ***************************************************************************
+// Keyboard layout information
+// ***************************************************************************
+
+// References:
+// - https://gitlab.com/FreeDOS/base/keyb_lay/-/tree/master/DOC/KEYB/LAYOUTS
+
+// NOTE: Default code pages for certain international layouts are set to 30023
+// (Southern Africa) or 30026 (Central Africa) - these were selected based on
+// the percentage of the language users (as checked in April 2024), see:
+// - https://en.wikipedia.org/wiki/EF_English_Proficiency_Index
+// - https://en.wikipedia.org/wiki/Geographical_distribution_of_French_speakers
+// - https://en.wikipedia.org/wiki/List_of_countries_and_territories_where_Spanish_is_an_official_language
+// - https://en.wikipedia.org/wiki/Portuguese_language (language usage map)
+
+// clang-format off
+const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
+	// Layouts for English - 1.456 billion speakers worldwide
+	{
+		{ "us" }, "US (standard, QWERTY/national)",
+		437,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30034, KeyboardScript::Cherokee },
+		},
+	},
+	{
+		{ "ux" }, "US (international, QWERTY)",
+		850,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "co" }, "US (Colemak)",
+	 	437,
+	 	KeyboardScript::LatinColemak,
+	},
+	{
+		{ "dv" }, "US (Dvorak)",
+		437,
+		KeyboardScript::LatinDvorak,
+	},
+	{
+		{ "lh" }, "US (left-hand Dvorak)",
+		437,
+		KeyboardScript::LatinDvorak,
+	},
+	{
+		{ "rh" }, "US (right-hand Dvorak)",
+	 	437,
+	 	KeyboardScript::LatinDvorak,
+	},
+	{
+		{ "uk" }, "UK (standard, QWERTY)",
+		437,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "uk168" }, "UK (alternate, QWERTY)",
+		437,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "kx" }, "UK (international, QWERTY)",
+		30023,
+		KeyboardScript::LatinQwerty,
+	},
+	// Layouts for other languages, sorted by the main symbol
+	{
+		{ "ar462" }, "Arabic (AZERTY/Arabic)",
+		864,
+		KeyboardScript::LatinAzerty,
+		{
+			{ 864, KeyboardScript::Arabic },
+		},
+	},
+	{
+		{ "ar470" }, "Arabic (QWERTY/Arabic)",
+		864,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 864, KeyboardScript::Arabic },
+		},
+	},
+	{
+		{ "az" }, "Azeri (QWERTY/Cyrillic)",
+		58210, // 60258 replaces ASCII 'I' with other symbol, avoid it!
+		KeyboardScript::LatinQwerty,
+		{
+			{ 58210, KeyboardScript::Cyrillic },
+			{ 60258, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ba" }, "Bosnian (QWERTZ)",
+		852,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "be" }, "Belgian (AZERTY)",
+		850,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "bx" }, "Belgian (international, AZERTY)",
+		30026,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "bg" }, "Bulgarian (QWERTY/national)",
+		3021, // MIK encoding, approved by a native speaker
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,  KeyboardScript::Cyrillic },
+			{ 855,  KeyboardScript::Cyrillic },
+			{ 866,  KeyboardScript::Cyrillic },
+			{ 872,  KeyboardScript::Cyrillic },
+			{ 3021, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "bg103" }, "Bulgarian (QWERTY/phonetic)",
+		3021, // MIK encoding, approved by a native speaker
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,  KeyboardScript::CyrillicPhonetic },
+			{ 855,  KeyboardScript::CyrillicPhonetic },
+			{ 866,  KeyboardScript::CyrillicPhonetic },
+			{ 872,  KeyboardScript::CyrillicPhonetic },
+			{ 3021, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "bg241" }, "Bulgarian (JCUKEN/national)",
+		3021, // MIK encoding, approved by a native speaker
+		KeyboardScript::LatinJcuken,
+		{
+			{ 808,  KeyboardScript::Cyrillic },
+			{ 849,  KeyboardScript::Cyrillic },
+			{ 855,  KeyboardScript::Cyrillic },
+			{ 866,  KeyboardScript::Cyrillic },
+			{ 872,  KeyboardScript::Cyrillic },
+			{ 3021, KeyboardScript::Cyrillic },
+		},
+	}, 
+	{
+		{ "bn" }, "Beninese (AZERTY)",
+		30027,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "br" }, "Brazilian (ABNT layout, QWERTY)",
+		860,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "br274" }, "Brazilian (US layout, QWERTY)",
+		860,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "by", "bl" }, "Belarusian (QWERTY/national)",
+		1131,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 849,  KeyboardScript::Cyrillic },
+			{ 855,  KeyboardScript::Cyrillic },
+			{ 872,  KeyboardScript::Cyrillic },
+			{ 1131, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ce", }, "Chechen (standard, QWERTY/national)",
+		30019,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30011, KeyboardScript::Cyrillic },
+			{ 30019, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ce443", }, "Chechen (typewriter, QWERTY/national)",
+		30019,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30011, KeyboardScript::Cyrillic },
+			{ 30019, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "cf", "ca" }, "Canadian (standard, QWERTY)",
+		863,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "cf445" }, "Canadian (dual-layer, QWERTY)",
+		863,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "cg" }, "Montenegrin (QWERTZ)",
+		852,
+		KeyboardScript::LatinQwertz,
+	},
+	// Use Kamenický encoding for Slovakia instead of Microsoft code page,
+	// it is said to be much more popular.
+	{
+		{ "cz" }, "Czech (QWERTZ)",
+		867, // Kamenický encoding; no EUR variant, unfortunately
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "cz243" }, "Czech (standard, QWERTZ)",
+		867, // Kamenický encoding; no EUR variant, unfortunately
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "cz489" }, "Czech (programmers, QWERTY)",
+		867, // Kamenický encoding; no EUR variant, unfortunately
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "de", "gr" }, "German (standard, QWERTZ)",
+		850,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "gr453" }, "German (dual-layer, QWERTZ)",
+		850,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "dk" }, "Danish (QWERTY)",
+		865,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "ee", "et" }, "Estonian (QWERTY)",
+		1116, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "es", "sp" }, "Spanish (QWERTY)",
+		850,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "sx" }, "Spanish (international, QWERTY)",
+		30026,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "fi", "su" }, "Finnish (QWERTY/ASERTT)",
+		850,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30000, KeyboardScript::LatinAsertt },
+		},
+	},
+	{
+		{ "fo" }, "Faroese (QWERTY)",
+		861,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "fr" }, "French (standard, AZERTY)",
+		850,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "fx" }, "French (international, AZERTY)",
+		30026,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "gk", "el" }, "Greek (319, QWERTY/national)",
+		869, // chosen because it has EUR currency symbol;
+                     // TODO: native speaker feedback would be appreciated
+		KeyboardScript::LatinQwerty,
+		{
+			{ 737, KeyboardScript::Greek },
+			{ 851, KeyboardScript::Greek },
+			{ 869, KeyboardScript::Greek },
+		},
+	},
+	{
+		{ "gk220" }, "Greek (220, QWERTY/national)",
+		869, // chosen because it has EUR currency symbol;
+                     // TODO: native speaker feedback would be appreciated
+		KeyboardScript::LatinQwerty,
+		{
+			{ 737, KeyboardScript::Greek },
+			{ 851, KeyboardScript::Greek },
+			{ 869, KeyboardScript::Greek },
+		},
+	},
+	{
+		{ "gk459" }, "Greek (459, non-standard/national)",
+		869, // chosen because it has EUR currency symbol;
+                     // TODO: native speaker feedback would be appreciated
+		KeyboardScript::LatinNonStandard,
+		{
+			{ 737, KeyboardScript::Greek },
+			{ 851, KeyboardScript::Greek },
+			{ 869, KeyboardScript::Greek },
+		},
+	},
+	{
+		{ "hr" }, "Croatian (QWERTZ/national)",
+		852,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "hu" }, "Hungarian (101-key, QWERTY)",
+		3845, // CWI-2 encoding
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "hu208" }, "Hungarian (102-key, QWERTZ)",
+		3845, // CWI-2 encoding
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "hy" }, "Armenian (QWERTY/national)",
+		899,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 899, KeyboardScript::Armenian },
+		},
+	},
+	{
+		{ "il" }, "Hebrew (QWERTY/national)",
+		862,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 856, KeyboardScript::Hebrew },
+			{ 862, KeyboardScript::Hebrew },
+		},
+	},
+	{
+		{ "is" }, "Icelandic (101-key, QWERTY)",
+		861,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "is161" }, "Icelandic (102-key, QWERTY)",
+		861,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "it" }, "Italian (standard, QWERTY/national)",
+		850,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 869, KeyboardScript::Greek },
+		},
+	},
+	{
+		{ "it142" }, "Italian (142, QWERTY/national)",
+		850,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 869, KeyboardScript::Greek },
+		},
+	},
+	{
+		{ "ix" }, "Italian (international, QWERTY)",
+		30024,
+		KeyboardScript::LatinQwerty,
+	},
+	// Japan layout disabled due to missing DBCS code pages support.
+	// { { "jp" }, "Japanese", 932, ... },
+	{
+		{ "ka" }, "Georgian (QWERTY/national)",
+		59829,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30008, KeyboardScript::Cyrillic },
+			{ 59829, KeyboardScript::Georgian },
+			{ 60853, KeyboardScript::Georgian },
+		},
+	},
+	{
+		{ "kk" }, "Kazakh (QWERTY/national)",
+		58152,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 58152, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "kk476" }, "Kazakh (476, QWERTY/national)",
+		58152,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 58152, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ky" }, "Kyrgyz (QWERTY/national)",
+		58152,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 58152, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "la" }, "Latin American (QWERTY)",
+		850,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "lt" }, "Lithuanian (Baltic, QWERTY/phonetic)",
+		774, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+		{
+			{ 771, KeyboardScript::CyrillicPhonetic },
+			{ 772, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lt210" }, "Lithuanian (programmers, QWERTY/phonetic)",
+		774, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+		{
+			{ 771, KeyboardScript::CyrillicPhonetic },
+			{ 772, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lt211" }, "Lithuanian (AZERTY/phonetic)",
+		774, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinAzerty,
+		{
+			{ 771, KeyboardScript::CyrillicPhonetic },
+			{ 772, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lt221" }, "Lithuanian (LST 1582, AZERTY/phonetic)",
+		774, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinAzerty,
+		{
+			{ 771, KeyboardScript::CyrillicPhonetic },
+			{ 772, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lt456" }, "Lithuanian (QWERTY/AZERTY/phonetic)",
+		774, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+		{
+			{ 770 , KeyboardScript::LatinAzerty },
+			{ 771 , KeyboardScript::LatinAzerty },
+			{ 772 , KeyboardScript::LatinAzerty },
+			{ 773 , KeyboardScript::LatinAzerty },
+			{ 774 , KeyboardScript::LatinAzerty },
+			{ 775 , KeyboardScript::LatinAzerty },
+			{ 777 , KeyboardScript::LatinAzerty },
+			{ 778 , KeyboardScript::LatinAzerty },
+		},
+		{
+			{ 771, KeyboardScript::CyrillicPhonetic },
+			{ 772, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lv" }, "Latvian (standard, QWERTY/phonetic)",
+		1117, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+		{
+			{ 3012, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "lv455" }, "Latvian (QWERTY/UGJRMV/phonetic)",
+		1117, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+		{
+			{  770, KeyboardScript::LatinUgjrmv },
+			{  773, KeyboardScript::LatinUgjrmv },
+			{  775, KeyboardScript::LatinUgjrmv },
+			{ 1117, KeyboardScript::LatinUgjrmv },
+			{ 3012, KeyboardScript::LatinUgjrmv },
+		},
+		{
+			{ 3012, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "mk" }, "Macedonian (QWERTZ/national)",
+		855,
+		KeyboardScript::LatinQwertz,
+		{
+			{ 855, KeyboardScript::Cyrillic },
+			{ 872, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "mn", "mo" }, "Mongolian (QWERTY/national)",
+		58152,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 58152, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "mt", "ml" }, "Maltese (UK layout, QWERTY)",
+		853,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "mt103" }, "Maltese (US layout, QWERTY)",
+		853,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "ne" }, "Nigerien (AZERTY)",
+		30028,
+		KeyboardScript::LatinAzerty,
+	},
+	{
+		{ "ng" }, "Nigerian (QWERTY)",
+		30005,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "nl" }, "Dutch (QWERTY)",
+		850,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "no" }, "Norwegian (QWERTY/ASERTT)",
+		865,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30000, KeyboardScript::LatinAsertt },
+		},
+	},
+	{
+		{ "ph" }, "Filipino (QWERTY)",
+		850,
+		KeyboardScript::LatinQwerty,
+	},
+	// For Polish, use a stripped-down Microsoft code page 852 variant,
+	// which preserves much more table drawing characters.
+	{
+		{ "pl" }, "Polish (programmers, QWERTY/phonetic)",
+		668, // stripped-down 852, approved by a native speaker
+		KeyboardScript::LatinQwerty,
+		{
+			{ 848, KeyboardScript::CyrillicPhonetic },
+			{ 849, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "pl214" }, "Polish (typewriter, QWERTZ/phonetic)",
+		668, // stripped-down 852, approved by a native speaker
+		KeyboardScript::LatinQwertz,
+		{
+			{ 848, KeyboardScript::CyrillicPhonetic },
+			{ 849, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "po" }, "Portuguese (QWERTY)",
+		860, // No EUR currency variant, unfortunately
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "px" }, "Portuguese (international, QWERTY)",
+		30026,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "ro" }, "Romanian (standard, QWERTZ/phonetic)",
+		852,
+		KeyboardScript::LatinQwertz,
+		{
+			{ 848,   KeyboardScript::CyrillicPhonetic },
+			{ 30010, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "ro446" }, "Romanian (QWERTY/phonetic)",
+		852,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 848,   KeyboardScript::CyrillicPhonetic },
+			{ 30010, KeyboardScript::CyrillicPhonetic },
+		},
+	},
+	{
+		{ "ru" }, "Russian (standard, QWERTY/national)",
+		866,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808, KeyboardScript::Cyrillic },
+			{ 855, KeyboardScript::Cyrillic },
+			{ 866, KeyboardScript::Cyrillic },
+			{ 872, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ru443" }, "Russian (typewriter, QWERTY/national)",
+		866,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808, KeyboardScript::Cyrillic },
+			{ 855, KeyboardScript::Cyrillic },
+			{ 866, KeyboardScript::Cyrillic },
+			{ 872, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "rx" }, "Russian (extended standard, QWERTY/national)",
+		30011,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30011, KeyboardScript::Cyrillic },
+			{ 30012, KeyboardScript::Cyrillic },
+			{ 30013, KeyboardScript::Cyrillic },
+			{ 30014, KeyboardScript::Cyrillic },
+			{ 30015, KeyboardScript::Cyrillic },
+			{ 30016, KeyboardScript::Cyrillic },
+			{ 30017, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "rx443" }, "Russian (extended typewriter, QWERTY/national)",
+		30011,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30011, KeyboardScript::Cyrillic },
+			{ 30012, KeyboardScript::Cyrillic },
+			{ 30013, KeyboardScript::Cyrillic },
+			{ 30014, KeyboardScript::Cyrillic },
+			{ 30015, KeyboardScript::Cyrillic },
+			{ 30016, KeyboardScript::Cyrillic },
+			{ 30017, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "sd", "sg" }, "Swiss (German, QWERTZ)",
+		850,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "sf" }, "Swiss (French, QWERTZ)",
+		850,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "si" }, "Slovenian (QWERTZ)",
+		852,
+		KeyboardScript::LatinQwertz,
+	},
+	// Use Kamenický encoding for Slovakia instead of Microsoft code page,
+	// it is said to be much more popular.
+	{
+		{ "sk" }, "Slovak (QWERTZ)",
+		867, // Kamenický encoding; no EUR variant, unfortunately
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "sq" }, "Albanian (no deadkeys, QWERTY)",
+		852,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "sq448" }, "Albanian (deadkeys, QWERTZ)",
+		852,
+		KeyboardScript::LatinQwertz,
+	},
+	{
+		{ "sv" }, "Swedish (QWERTY/ASERTT)",
+		850,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30000, KeyboardScript::LatinAsertt },
+		},
+	},
+	{
+		{ "tj" }, "Tajik (QWERTY/national)",
+		30002,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30002, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "tm" }, "Turkmen (QWERTY/phonetic)",
+		59234,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 59234, KeyboardScript::CyrillicPhonetic },
+		},
+	}, 
+	{
+		{ "tr" }, "Turkish (QWERTY)",
+		857,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "tr440" }, "Turkish (non-standard)",
+		857,
+		KeyboardScript::LatinNonStandard,
+	}, 
+	{
+		{ "tt" }, "Tatar (standard, QWERTY/national)",
+		30018,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30013, KeyboardScript::Cyrillic },
+			{ 30018, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "tt443" }, "Tatar (typewriter, QWERTY/national)",
+		30018,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 30013, KeyboardScript::Cyrillic },
+			{ 30018, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ur", "ua" }, "Ukrainian (101-key, QWERTY/national)",
+		1125,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,   KeyboardScript::Cyrillic },
+			{ 848,   KeyboardScript::Cyrillic },
+			{ 857,   KeyboardScript::Cyrillic },
+			{ 866,   KeyboardScript::Cyrillic },
+			{ 1125,  KeyboardScript::Cyrillic },
+			{ 30039, KeyboardScript::Cyrillic },
+			{ 30040, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ur1996" }, "Ukrainian (101-key, 1996, QWERTY/national)",
+		1125,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,   KeyboardScript::Cyrillic },
+			{ 848,   KeyboardScript::Cyrillic },
+			{ 857,   KeyboardScript::Cyrillic },
+			{ 866,   KeyboardScript::Cyrillic },
+			{ 1125,  KeyboardScript::Cyrillic },
+			{ 30039, KeyboardScript::Cyrillic },
+			{ 30040, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ur2001" }, "Ukrainian (102-key, 2001, QWERTY/national)",
+		1125,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,   KeyboardScript::Cyrillic },
+			{ 848,   KeyboardScript::Cyrillic },
+			{ 857,   KeyboardScript::Cyrillic },
+			{ 866,   KeyboardScript::Cyrillic },
+			{ 1125,  KeyboardScript::Cyrillic },
+			{ 30039, KeyboardScript::Cyrillic },
+			{ 30040, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ur2007" }, "Ukrainian (102-key, 2007, QWERTY/national)",
+		1125,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,   KeyboardScript::Cyrillic },
+			{ 848,   KeyboardScript::Cyrillic },
+			{ 857,   KeyboardScript::Cyrillic },
+			{ 866,   KeyboardScript::Cyrillic },
+			{ 1125,  KeyboardScript::Cyrillic },
+			{ 30039, KeyboardScript::Cyrillic },
+			{ 30040, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "ur465" }, "Ukrainian (101-key, 465, QWERTY/national)",
+		1125,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 808,   KeyboardScript::Cyrillic },
+			{ 848,   KeyboardScript::Cyrillic },
+			{ 857,   KeyboardScript::Cyrillic },
+			{ 866,   KeyboardScript::Cyrillic },
+			{ 1125,  KeyboardScript::Cyrillic },
+			{ 30039, KeyboardScript::Cyrillic },
+			{ 30040, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "uz" }, "Uzbek (QWERTY/national)",
+		62306,
+		KeyboardScript::LatinQwerty,
+		{
+			{ 62306, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "vi" }, "Vietnamese (QWERTY)",
+		30006,
+		KeyboardScript::LatinQwerty,
+	},
+	{
+		{ "yc", "sr" }, "Serbian (deadkey, QWERTZ/national)",
+		855,
+		KeyboardScript::LatinQwertz,
+		{
+			{ 848, KeyboardScript::Cyrillic },
+			{ 855, KeyboardScript::Cyrillic },
+			{ 872, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "yc450" }, "Serbian (no deadkey, QWERTZ/national)",
+		855,
+		KeyboardScript::LatinQwertz,
+		{
+			{ 848, KeyboardScript::Cyrillic },
+			{ 855, KeyboardScript::Cyrillic },
+			{ 872, KeyboardScript::Cyrillic },
+		},
+	},
+	{
+		{ "yu" }, "Yugoslavian (QWERTZ)",
+		113,
+		KeyboardScript::LatinQwertz,
+	}
+};
+// clang-format on
+
 // ***************************************************************************
 // Country info - time/date format, currency, etc.
 // ***************************************************************************
@@ -656,7 +1537,7 @@ const std::map<DosCountry, CountryInfoEntry> LocaleData::CountryInfo = {
 			DosCurrencyFormat::SymbolAmount,
 			LocaleSeparator::Comma,         // thousands separator
 			LocaleSeparator::Period,        // decimal separator
-			LocaleSeparator::Semicolon          // list separator
+			LocaleSeparator::Semicolon      // list separator
 		} }
 	} } },
 	{ DosCountry::Emirates, { "United Arab Emirates", "ARE", {
