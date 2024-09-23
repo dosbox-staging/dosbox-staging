@@ -114,34 +114,34 @@ jobs:
             needs_min_deps: true
             max_warnings: -1
 
-          - name: GCC 11, Debian 11, ARMv7
+          - name: GCC 12, Debian 12, ARMv7
             os: ubuntu-22.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
             cross: true
             arch: armhf
-            deb_vers: 11
+            deb_vers: 12
             needs_min_deps: false
 
-          - name: GCC 11, Debian 11, aarch64
+          - name: GCC 12, Debian 12, aarch64
             os: ubuntu-22.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
             cross: true
             arch: arm64
-            deb_vers: 11
+            deb_vers: 12
             needs_min_deps: false
 
-          - name: GCC 11, Debian 11, ppc64le
+          - name: GCC 12, Debian 12, ppc64le
             os: ubuntu-22.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 21
             run_tests: true
             cross: true
             arch: ppc64el
-            deb_vers: 11
+            deb_vers: 12
             needs_min_deps: false
 
     steps:
@@ -180,7 +180,7 @@ jobs:
         if: matrix.conf.cross
         id: docker_tag
         run: |
-          tag_hash=$(./scripts/docker-cross-tag.sh hash-files ./packages/Dockerfile.debian ./packages/debian-11-docker-apt.txt)
+          tag_hash=$(./scripts/docker-cross-tag.sh hash-files ./packages/Dockerfile.debian ./packages/debian-${{matrix.conf.deb_vers}}-docker-apt.txt)
           tag="${{matrix.conf.deb_vers}}-${{matrix.conf.arch}}-${tag_hash}"
           echo "IMG_TAG=${tag}" >> $GITHUB_OUTPUT
           echo "IMG_TAG_EXISTS=$(./scripts/docker-cross-tag.sh tag-exists debian-cross $tag)" >> $GITHUB_OUTPUT
