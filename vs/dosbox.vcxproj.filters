@@ -105,6 +105,8 @@
     </ClCompile>
     <ClCompile Include="..\src\dos\dos_locale_data.cpp">
       <Filter>src\dos</Filter>
+    <ClCompile Include="..\src\dos\dos_memory.cpp">
+      <Filter>src\dos</Filter>
     </ClCompile>
     <ClCompile Include="..\src\dos\dos_misc.cpp">
       <Filter>src\dos</Filter>
@@ -590,6 +592,9 @@
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\help_util.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\host_locale.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\host_locale_macos.cpp">

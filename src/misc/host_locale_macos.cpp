@@ -30,6 +30,103 @@
 
 CHECK_NARROWING();
 
+// clang-format off
+
+/* TODO: We still need to find all the configured keyboard layouts and publish
+         them (after converting to DOS keyboard layouts) in 'GetHostLocale'.
+         It should be possible to fetch them using the CFPropertyList API,
+         from the ~/Library/Preferences/com.apple.HIToolbox.plis file.
+
+Based on the content from:
+- https://keyshorts.com/blogs/blog/37615873-how-to-identify-macbook-keyboard-localization
+here is the proposed list of host to guest keyboard layout (and sometimes
+concrete code page) translation table:
+
+        US English                 -> "us"
+        Cherokee                   -> "us", 30034
+        US English International   -> "ux"
+        Colemak                    -> "co"
+        Dvorak                     -> "dv"
+        UK (British) English       -> "uk"
+        Arabic                     -> "ar470"
+        Kurdish (Sorani)           -> "ar470"
+        Malay (Jawi)               -> "ar470"
+        Pashto                     -> "ar470"
+        Persian/Farsi              -> "ar470"
+        Uyghur                     -> "ar470"
+        Azeri/Azerbaijani          -> "az"
+        Bosnian                    -> "ba"
+        Belgian                    -> "be"
+        Bulgarian                  -> "bg"
+        Portuguese (Brazilian)     -> "br"
+        French (Canadian)          -> "cf"
+        Inuktitut                  -> "cf", 30022
+        Czech                      -> "cz"
+        German                     -> "de"
+        Danish                     -> "dk"
+        Estonian                   -> "ee"
+        Spanish                    -> "es"
+        Finnish                    -> "fi"
+        French                     -> "fr"
+        Greek                      -> "gk"
+        Greek (Polytonic)          -> "gk"
+        Croatian                   -> "hr"
+        Hungarian                  -> "hu208"
+        Armenian                   -> "hy"
+        Hebrew                     -> "il"
+        Icelandic                  -> "is161"
+        Italian                    -> "it142"
+        Georgian                   -> "ka"
+        Spanish (Latin America)    -> "la"
+        Lithuanian                 -> "lt"
+        Latvian                    -> "lv"
+        Macedonian                 -> "mk"
+        Maltese                    -> "mt"
+        Dutch                      -> "nl"
+        Norwegian                  -> "no"
+        Northern Sami              -> "no", 30000
+        Polish                     -> "pl214""
+        Polish Pro                 -> "pl"
+        Portuguese                 -> "po"
+        Romanian                   -> "ro446"
+        Russian                    -> "ru"
+        Russian (Phonetic)         -> "ru"
+        Swiss                      -> "sd"
+        Slovene/Slovenian          -> "si"
+        Slovak                     -> "sk"
+        Swedish                    -> "sv"
+        Turkish Q                  -> "tr"
+        Turkish F                  -> "tr440"
+        Ukrainian                  -> "ua"
+        Uzbek                      -> "uz"
+        Vietnamese                 -> "vi"
+        Serbian                    -> "yc"
+        Serbian (Latin)            -> "yc"
+        // For some keyboard families we don't have code pages, but in the
+        // corresponding states the QWERTY layout is typically used
+        Bengali                    -> "us"
+        Burmese                    -> "us"
+        Chinese                    -> "us"
+        Gujarati                   -> "us"
+        Hindi                      -> "us"
+        Japanese                   -> "us"
+        Kannada                    -> "us"
+        Khmer                      -> "us"
+        Korean                     -> "us"
+        Malayalam                  -> "us"
+        Nepali                     -> "us"
+        Odia/Oriya                 -> "us"
+        Punjabi (Gurmukhi)         -> "us"
+        Sinhala                    -> "us"
+        Tamil                      -> "us"
+        Telugu                     -> "us"
+        Thai                       -> "us"
+        Tibetan                    -> "us"
+        Urdu                       -> "us"
+*/
+
+// clang-format on
+
 static std::string get_locale(const CFLocaleKey key)
 {
 	std::string result = {};
@@ -57,6 +154,16 @@ static std::string get_locale(const CFLocaleKey key)
 	return result;
 }
 
+static std::optional<DosCountry> get_dos_country(std::string& log_info)
+{
+	const auto language = get_locale(kCFLocaleLanguageCode);
+	const auto country  = get_locale(kCFLocaleCountryCode);
+
+	log_info = language + "_" + country;
+
+	return IsoToDosCountry(language, country);
+}
+
 static std::string get_language_file(std::string& log_info)
 {
 	const auto language = get_locale(kCFLocaleLanguageCode);
@@ -70,6 +177,22 @@ static std::string get_language_file(std::string& log_info)
 	}
 
 	return language;
+}
+
+const HostLocale& GetHostLocale()
+{
+	static std::optional<HostLocale> locale = {};
+
+	if (!locale) {
+		locale = HostLocale();
+
+		locale->country = get_dos_country(locale->log_info.country);
+		// TODO: Fill in:
+		// - keyboard_layout_list
+		// - log_info.log_info
+	}
+
+	return *locale;
 }
 
 const HostLanguage& GetHostLanguage()

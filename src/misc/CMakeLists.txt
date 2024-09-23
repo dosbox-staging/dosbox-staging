@@ -7,6 +7,7 @@ add_library(libmisc STATIC
 		fs_utils_posix.cpp
 		fs_utils_win32.cpp
 		help_util.cpp
+		host_locale.cpp
 		host_locale_macos.cpp
 		host_locale_posix.cpp
 		host_locale_win32.cpp
