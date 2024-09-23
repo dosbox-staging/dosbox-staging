@@ -913,9 +913,7 @@ struct triangle_worker
 	          threads(num_threads),
 	          sembegin(num_threads)
 	{
-		assert(num_threads > 0);
 		assert(num_workers > num_threads);
-		assert(!threads.empty());
 		assert(!sembegin.empty());
 	}
 
@@ -968,7 +966,6 @@ struct voodoo_state
 	        : tworker(num_threads),
 	          thread_stats(tworker.num_workers)
 	{
-		assert(num_threads > 0);
 		assert(!thread_stats.empty());
 	}
 
