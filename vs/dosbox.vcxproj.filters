@@ -1538,9 +1538,6 @@
     <ClInclude Include="..\src\capture\image\image_scaler.h">
       <Filter>src\capture\image</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\semaphore_internal.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\hardware\ston1_dac.h">
       <Filter>src\hardware</Filter>
     </ClInclude>

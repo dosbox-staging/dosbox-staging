@@ -948,7 +948,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\rgb888.h" />
     <ClInclude Include="..\include\rwqueue.h" />
     <ClInclude Include="..\include\sdlmain.h" />
-    <ClInclude Include="..\include\semaphore_internal.h" />
     <ClInclude Include="..\include\serialport.h" />
     <ClInclude Include="..\include\setup.h" />
     <ClInclude Include="..\include\shell.h" />
