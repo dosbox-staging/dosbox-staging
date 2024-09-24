@@ -150,9 +150,9 @@ function set_ci_status(workflow_file, os_name, description) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  set_ci_status("windows-msvc.yml", "windows", "Windows ¹")
+  set_ci_status("macos.yml",        "macos",   "macOS ²")
   set_ci_status("linux.yml",        "linux",   "Linux")
-  set_ci_status("macos.yml",        "macos",   "macOS ¹")
-  set_ci_status("windows-msvc.yml", "windows", "Windows ²")
 })
 
 </script>
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     These are unstable development snapshots intended for testing and
     showcasing new features; if you want to download a stable build, head on
-    to the [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md)
+    to the [Windows](windows.md), [macOS](macos.md), or [Linux](linux.md)
     download pages.
 
     Build artifacts are hosted on GitHub; you need to be logged in to download
@@ -177,13 +177,13 @@ document.addEventListener("DOMContentLoaded", () => {
     <th style="width: 300px">Date</th>
   </tr>
   <tr>
-    <td id="linux-build-link">
+    <td id="windows-build-link">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
-    <td id="linux-build-version">
+    <td id="windows-build-version">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
-    <td id="linux-build-date">
+    <td id="windows-build-date">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
@@ -199,39 +199,42 @@ document.addEventListener("DOMContentLoaded", () => {
     </td>
   </tr>
   <tr>
-    <td id="windows-build-link">
+    <td id="linux-build-link">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
-    <td id="windows-build-version">
+    <td id="linux-build-version">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
-    <td id="windows-build-date">
+    <td id="linux-build-date">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
   </tr>
 </table>
 </div>
 
-¹ macOS builds include Intel, Apple silicon, and universal binaries.
+¹ Windows build is a 64-bit portable ZIP package.
 
-² Windows build is a 64-bit portable ZIP package.
+² macOS builds include Intel, Apple silicon, and universal binaries.
 
 
 ## Installation notes
 
-Testing new features might require a manual reset of the configuration
-file.  DOSBox Staging builds use a configuration file named
-`dosbox-staging.conf` located in:
+### Windows
 
-<div class="compact" markdown>
+Windows executables in snapshot packages are not signed, therefore Windows 10
+or later might prevent the program from starting.
 
-| <!-- --> | <!-- --> |
-|----------|----------|
-| Linux    | `~/.config/dosbox/` |
-| Windows  | `C:\Users\USERNAME>\AppData\Local\DOSBox\` |
-| macOS    | `~/Library/Preferences/DOSBox/` |
+See [this guide](windows.md#windows-defender) to learn how to
+deal with this.
 
-</div>
+
+### macOS
+
+macOS development builds are not notarized (but the public releases are);
+Apple Gatekeeper will try to prevent the program from running.
+
+See [this guide](macos.md#apple-gatekeeper) to learn how to deal with
+this.
 
 
 ### Linux
@@ -251,20 +254,54 @@ dependencies installed via your package manager.
 
     sudo pacman -S sdl2 sdl2_net opusfile
 
-### Windows
 
-Windows executables in snapshot packages are not signed, therefore Windows 10
-might prevent the program from starting.
+### Upgrading your primary configuration
 
-See [this guide](windows.md#microsoft-defender-smartscreen) to learn how to
-deal with this.
+Testing new features might require a manual reset of the configuration
+file.
 
+Since config settings might get renamed, altered, or deprecated between
+builds, it's best to let DOSBox Staging write the new default primary config
+on the first launch, then reapply your old settings manually.
 
-### macOS
+Start by backing up your existing primary config. This is where to find
+it on each platform:
 
-macOS development builds are not notarized (but the public releases are);
-Apple Gatekeeper will try to prevent the program from running.
+<div class="compact" markdown>
 
-See [this guide](macos.md#apple-gatekeeper) to learn how to deal with
-this.
+| <!-- --> | <!-- -->
+|----------|----------
+| **Windows**  | `C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox-staging.conf`
+| **macOS**    | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
+| **Linux**    | `~/.config/dosbox/dosbox-staging.conf`
+
+</div>
+
+You can also execute DOSBox Staging with the `--printconf` option to have the
+location of the primary config printed to your console.
+
+After backing up the existing primary config, simply start the new version---a
+new `dosbox-staging.conf` will be written containing the new defaults and
+updated setting descriptions.
+
+!!! note "Portable mode notes"
+
+    In portable mode, `dosbox-staging.conf` resides in the same folder as your
+    DOSBox Staging executable. The migration steps for portable mode users are
+    as follows:
+
+      - Unpack the new version into a _new_ folder (this is important).
+      - Create a new _empty_ `dosbox-staging.conf` file in the new folder to
+        enable portable mode.
+      - Launch the new version.
+
+    DOSBox Staging will write the new defaults to the empty
+    `dosbox-staging.conf` file. After this, you carry over your settings from
+    the old primary config manually.
+
+### After upgrading
+
+Look for deprecation warnings in the logs (in yellow or orange colours) and
+update your configs accordingly.
+
 
