@@ -78,6 +78,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <barrier>
 #include <cassert>
 #include <cmath>
 #include <condition_variable>
@@ -103,7 +104,6 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "render.h"
-#include "semaphore_internal.h"
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
@@ -911,31 +911,17 @@ struct triangle_worker
 	        : num_threads(num_threads_),
 	          num_workers(num_threads + 1),
 	          threads(num_threads),
-	          sembegin(num_threads)
+	          start_barrier(num_workers),
+	          end_barrier(num_workers)
 	{
 		assert(num_threads > 0);
 		assert(num_workers > num_threads);
 		assert(!threads.empty());
-		assert(!sembegin.empty());
 	}
 
 	triangle_worker()                                  = delete;
 	triangle_worker(const triangle_worker&)            = delete;
 	triangle_worker& operator=(const triangle_worker&) = delete;
-
-	void NotifySemaphores()
-	{
-		std::for_each(sembegin.begin(), sembegin.end(), [](auto& sem) {
-			sem.notify();
-		});
-	}
-
-	void WaitForSemaphores()
-	{
-		std::for_each(sembegin.begin(), sembegin.end(), [&](auto&) {
-			semdone.wait();
-		});
-	}
 
 	const int num_threads = 0;
 	const int num_workers = 0;
@@ -955,9 +941,8 @@ struct triangle_worker
 	int32_t totalpix = 0;
 
 	std::vector<std::thread> threads = {};
-	std::vector<Semaphore> sembegin  = {};
-
-	Semaphore semdone = {};
+	std::barrier<> start_barrier;
+	std::barrier<> end_barrier;
 
 	int done_count = 0;
 };
@@ -4474,11 +4459,11 @@ static int triangle_worker_thread_func(int32_t p)
 {
 	triangle_worker& tworker = v->tworker;
 	for (const int32_t tnum = p; tworker.threads_active;) {
-		tworker.sembegin[tnum].wait();
+		tworker.start_barrier.arrive_and_wait();
 		if (tworker.threads_active) {
 			triangle_worker_work(tworker, tnum, tnum + 1);
 		}
-		tworker.semdone.notify();
+		tworker.end_barrier.arrive_and_wait();
 	}
 	return 0;
 }
@@ -4490,9 +4475,8 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 	}
 	tworker.threads_active = false;
 
-	tworker.NotifySemaphores();
-
-	tworker.WaitForSemaphores();
+	tworker.start_barrier.arrive_and_wait();
+	tworker.end_barrier.arrive_and_wait();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4561,11 +4545,11 @@ static void triangle_worker_run(triangle_worker& tworker)
 			++worker_id;
 		}
 	}
-	tworker.NotifySemaphores();
+	tworker.start_barrier.arrive_and_wait();
 
 	triangle_worker_work(tworker, tworker.num_threads, tworker.num_workers);
 
-	tworker.WaitForSemaphores();
+	tworker.end_barrier.arrive_and_wait();
 }
 
 /*-------------------------------------------------
