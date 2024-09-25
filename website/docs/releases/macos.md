@@ -73,7 +73,8 @@ build.
 ### macOS Sequoia 15
 
 - Open the **DOSBox Staging** app, then click **Done** in the appearing dialog.
-- Follow [these instructions](https://support.apple.com/en-us/102445#openanyway).
+- Follow [these instructions](https://support.apple.com/en-us/102445#openanyway) to allow
+  launching DOSBox Staging in the **Privacy & Security** tab in **System Settings**.
 
 ### macOS Sonoma 14 or earlier
 
