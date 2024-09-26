@@ -68,12 +68,16 @@ constexpr uint8_t MAX_VOICES          = 32;
 constexpr uint8_t MIN_VOICES          = 14;
 constexpr uint8_t VOICE_DEFAULT_STATE = 3;
 
-// DMA and IRQ extents and quantities
-constexpr uint8_t MIN_DMA_ADDRESS        = 0;
-constexpr uint8_t MAX_DMA_ADDRESS        = 7;
-constexpr uint8_t MIN_IRQ_ADDRESS        = 0;
-constexpr uint8_t MAX_IRQ_ADDRESS        = 15;
-constexpr uint8_t DMA_IRQ_ADDRESSES      = 8; // number of IRQ and DMA channels
+// IRQ and DMA address lookup tables described in UltraSound Software
+// Development Kit (SDK), sections 2.14 and 2.15. These tables are used for
+// validation and are also read by the address selector IO call (0x20b). Their
+// starting zero values and subsequent order are important (don't truncate or
+// re-order their values)
+
+constexpr std::array<uint8_t, 8> IrqAddresses = {0, 2, 5, 3, 7, 11, 12, 15};
+
+constexpr std::array<uint8_t, 6> DmaAddresses = {0, 1, 3, 5, 6, 7};
+
 constexpr uint16_t DMA_TC_STATUS_BITMASK = 0b100000000; // Status in 9th bit
 
 // Pan position constants
@@ -117,7 +121,6 @@ struct VoiceCtrl {
 };
 
 // Collection types involving constant quantities
-using address_array_t     = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using ram_array_t         = std::vector<uint8_t>;
 using read_io_array_t     = std::array<IO_ReadHandleObject, READ_HANDLERS>;
@@ -297,13 +300,6 @@ private:
 	std::vector<Voice> voices               = {};
 	std::vector<AudioFrame> rendered_frames = {};
 	std::mutex mutex                        = {};
-
-	const address_array_t dma_addresses = {
-	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}
-        };
-	const address_array_t irq_addresses = {
-	        {MIN_IRQ_ADDRESS, 2, 5, 3, 7, 11, 12, MAX_IRQ_ADDRESS}
-        };
 
 	// Struct and pointer members
 	VoiceIrq voice_irq            = {};
@@ -621,12 +617,34 @@ void Voice::WriteWaveRate(uint16_t val) noexcept
 	wave_ctrl.inc  = ceil_udivide(val, 2u);
 }
 
+// We use IRQ2 in GUS's public API (conf, environment, and the IO port 2xB
+// address selector lookup tables) because that's what the documentation
+// describes and more critically, it's what games and applications expect and
+// use via the IO port.
+//
+// However we convert IRQ2 to IRQ9 internally because that's how real hardware
+// worked (IBM reserved IRQ2 for cascading to the second controller where it
+// becomes IRQ9), so we translate IRQ2 to 9 and vice-versa on this API
+// boundaries. This is also what DOSBox expects: it uses IRQ9 instead of IRQ2.
+
+constexpr uint8_t to_internal_irq(const uint8_t irq)
+{
+	assert(irq != 9);
+	return irq == 2 ? 9 : irq;
+}
+
+constexpr uint8_t to_external_irq(const uint8_t irq)
+{
+	assert(irq != 2);
+	return irq == 9 ? 2 : irq;
+}
+
 Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pref,
          const char* ultradir, const std::string& filter_prefs)
         : ram(RAM_SIZE),
           dma2(dma_pref),
-          irq1(irq_pref),
-          irq2(irq_pref)
+          irq1(to_internal_irq(irq_pref)),
+          irq2(to_internal_irq(irq_pref))
 {
 	MIXER_LockMixerThread();
 
@@ -684,7 +702,10 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	PopulatePanScalars();
 	SetupEnvironment(port_pref, ultradir);
 
-	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d", port_pref, irq1, dma1);
+	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d",
+	        port_pref,
+	        to_external_irq(irq1),
+	        dma1);
 
 	MIXER_UnlockMixerThread();
 }
@@ -995,12 +1016,16 @@ void Gus::SetupEnvironment(uint16_t port, const char* ultradir_env_val)
 	// The config selection controls their actual values, so this is a
 	// maximum-limit.
 	assert(port < 0xfff);
-	assert(dma1 < 10 && dma2 < 10);
-	assert(irq1 <= 12 && irq2 <= 12);
 
 	// ULTRASND variable
 	char ultrasnd_env_val[] = "HHH,D,D,II,II";
-	safe_sprintf(ultrasnd_env_val, "%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
+	safe_sprintf(ultrasnd_env_val,
+	             "%x,%u,%u,%u,%u",
+	             port,
+	             dma1,
+	             dma2,
+	             to_external_irq(irq1),
+	             to_external_irq(irq2));
 	LOG_MSG("GUS: Setting '%s' environment variable to '%s'",
 	        ultrasnd_env_name,
 	        ultrasnd_env_val);
@@ -1443,26 +1468,42 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		// TODO Check if 0x20a register is also available on the gus
 		// like on the interwave
 	case 0x20b:
-		if (!should_change_irq_dma) {
-			break;
-		}
-		should_change_irq_dma = false;
-		if (mix_ctrl & 0x40) {
-			// IRQ configuration, only use low bits for irq 1
-			const auto i        = val & 7;
-			const auto& address = irq_addresses.at(i);
-			if (address) {
-				irq1 = address;
-			}
+		if (should_change_irq_dma) {
+
+			//  The write to 2XB MUST occur as the NEXT IOW or else
+			//  the write to 2XB will be locked out and not occur.
+			//  This is to prevent an application that is probing
+			//  for cards from accidentally corrupting the latches.
+			//  UltraSound Software Development Kit (SDK),
+			//  Section 2.13.
+			//
+			should_change_irq_dma = false;
+
+			// The address selector is set in bits 2-0
+			const auto selector = static_cast<uint8_t>(val & 0b111);
+
+			// When Bit 6 (Control Register Select) is set to a 1,
+			// the next IO write to 2XB will be to the IRQ control
+			// latches. When this is set to a 0, the next IO write
+			// to 2XB will be to the DMA channel latches. UltraSound
+			// Software Development Kit (SDK), Section 2.13.
+			//
+			const auto is_irq_selected = bit::is(mix_ctrl,
+			                                     bit::literals::b6);
+			if (is_irq_selected) {
+
+				if (selector < IrqAddresses.size() &&
+				    IrqAddresses[selector]) {
+					irq1 = to_internal_irq(IrqAddresses[selector]);
 #if LOG_GUS
-			LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
+					LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
 #endif
-		} else {
-			// DMA configuration, only use low bits for dma 1
-			const uint8_t i    = val & 0x7;
-			const auto address = dma_addresses.at(i);
-			if (address) {
-				UpdateDmaAddress(address);
+				}
+			} else {
+				if (selector < DmaAddresses.size() &&
+				    DmaAddresses[selector]) {
+					UpdateDmaAddress(DmaAddresses[selector]);
+				}
 			}
 		}
 		break;
@@ -1730,13 +1771,13 @@ static void gus_init(Section* sec)
 	// Read the GUS config settings
 	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
 
-	const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")),
-	                       MIN_DMA_ADDRESS,
-	                       MAX_DMA_ADDRESS);
+	const auto dma = static_cast<uint8_t>(conf->Get_int("gusdma"));
+	// The conf system handles invalid settings, so just assert validity
+	assert(contains(DmaAddresses, dma));
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")),
-	                       MIN_IRQ_ADDRESS,
-	                       MAX_IRQ_ADDRESS);
+	auto irq = static_cast<uint8_t>(conf->Get_int("gusirq"));
+	// The conf system handles invalid settings, so just assert validity
+	assert(contains(IrqAddresses, irq));
 
 	const std::string ultradir = conf->Get_string("ultradir");
 
@@ -1771,12 +1812,12 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 
 	auto* int_prop = secprop.Add_int("gusirq", when_idle, 5);
 	assert(int_prop);
-	int_prop->Set_values({"3", "5", "7", "9", "10", "11", "12"});
+	int_prop->Set_values({"2", "3", "5", "7", "11", "12", "15"});
 	int_prop->Set_help("The IRQ number of the Gravis UltraSound (5 by default).");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
 	assert(int_prop);
-	int_prop->Set_values({"0", "1", "3", "5", "6", "7"});
+	int_prop->Set_values({"1", "3", "5", "6", "7"});
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
 
 	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "off");
