@@ -216,6 +216,34 @@ union ResetRegister {
 	bit_view<2, 1> are_irqs_enabled;
 };
 
+// Mix Control Register (2X0), section 2.13, page 28, of the UltraSound Software
+// Development Kit (SDK) Version 2.22
+union MixControlRegister {
+	// Default state: lines disabled, latches enabled
+	uint8_t data = 0b0000'1011;
+
+	bit_view<0, 1> line_in_disabled;
+	bit_view<1, 1> line_out_disabled;
+	bit_view<2, 1> microphone_enabled;
+	bit_view<3, 1> latches_enabled;
+	bit_view<4, 1> channel1_irq_combined_with_channel2;
+	bit_view<5, 1> midi_loopback_enabled;
+	bit_view<6, 1> irq_control_selected;
+	// bit 7 reserved
+};
+
+// IRQ and DMA Control Select Register (2XB), section 2.14-2.15, page 28-30, of
+// the UltraSound Software Development Kit (SDK) Version 2.22
+union AddressSelectRegister {
+	uint8_t data = 0;
+	bit_view<0, 3> channel1_selector;
+	bit_view<3, 3> channel2_selector;
+	// Note: If the channels are sharing, then channel 2's IRQ selector must
+	// be set to 0 and bit 6 must be enabled.
+	bit_view<6, 1> channel2_combined_with_channel1;
+	// bit 7 reserved
+};
+
 // The Gravis UltraSound GF1 DSP (classic)
 // This class:
 //   - Registers, receives, and responds to port address inputs, which are used
@@ -283,7 +311,8 @@ private:
 	void StopAndReset() noexcept;
 
 	void RenderUpToNow();
-	void UpdateDmaAddress(uint8_t new_address);
+	void UpdatePlaybackDmaAddress(const uint8_t new_address);
+	void UpdateRecordingDmaAddress(const uint8_t new_address);
 	void UpdateWaveMsw(int32_t& addr) const noexcept;
 	void UpdateWaveLsw(int32_t& addr) const noexcept;
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t width);
@@ -329,7 +358,6 @@ private:
 	uint8_t selected_register = 0;
 
 	// Control states
-	uint8_t mix_ctrl    = 0x0b; // latches enabled, LINEs disabled
 	uint8_t sample_ctrl = 0;
 	uint8_t timer_ctrl  = 0;
 
@@ -348,6 +376,7 @@ private:
 	uint8_t irq_status = 0;
 
 	ResetRegister reset_register = {};
+	MixControlRegister mix_control_register = {};
 
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
@@ -695,7 +724,8 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
 
-	UpdateDmaAddress(dma_pref);
+	UpdatePlaybackDmaAddress(dma_pref);
+	UpdateRecordingDmaAddress(dma_pref);
 
 	// Populate the volume, pan, and auto-exec arrays
 	PopulateVolScalars();
@@ -816,22 +846,21 @@ void Gus::CheckIrq()
 	const bool should_interrupt = irq_status &
 	                              (reset_register.are_irqs_enabled ? 0xff : 0x9f);
 
-	const bool lines_enabled = mix_ctrl & 0x08;
-
-	if (should_interrupt && lines_enabled) {
+	if (should_interrupt && mix_control_register.latches_enabled) {
 		PIC_ActivateIRQ(irq1);
 	} else if (irq_previously_interrupted) {
 		PIC_DeActivateIRQ(irq1);
 	}
 
 #if LOG_GUS
-	const auto state_str = should_interrupt && lines_enabled ? "activated"
-	                     : irq_previously_interrupted        ? "deactivated"
-	                                                         : "unchanged";
-	LOG_MSG("GUS: CheckIrq: IRQ %s (should_interrupt: %d, lines: %d)",
+	const auto state_str = (should_interrupt && mix_control_register.latches_enabled)
+	                             ? "activated"
+	                     : irq_previously_interrupted ? "deactivated"
+	                                                  : "unchanged";
+	LOG_MSG("GUS: CheckIrq: IRQ %s (should_interrupt: %d, latches: %d)",
 	        state_str,
 	        should_interrupt,
-	        lines_enabled);
+	        mix_control_register.latches_enabled);
 #endif
 
 	irq_previously_interrupted = should_interrupt;
@@ -1371,7 +1400,6 @@ void Gus::StopAndReset() noexcept
 	irq_previously_interrupted = false;
 
 	dma_ctrl    = 0;
-	mix_ctrl    = 0xb; // latches enabled, LINEs disabled
 	timer_ctrl  = 0;
 	sample_ctrl = 0;
 
@@ -1387,6 +1415,7 @@ void Gus::StopAndReset() noexcept
 	PIC_RemoveEvents(GUS_TimerEvent);
 
 	reset_register.data = {};
+	mix_control_register.data = {};
 }
 
 static void GUS_TimerEvent(uint32_t t)
@@ -1399,7 +1428,18 @@ static void GUS_TimerEvent(uint32_t t)
 
 static void gus_destroy(Section*);
 
-void Gus::UpdateDmaAddress(const uint8_t new_address)
+void Gus::UpdateRecordingDmaAddress(const uint8_t new_address)
+{
+	dma2 = new_address;
+
+	// TODO: Populate when we have audio input writing to a DMA channel
+
+#if LOG_GUS
+	LOG_MSG("GUS: Assigned recording DMA address to %u", dma2);
+#endif
+}
+
+void Gus::UpdatePlaybackDmaAddress(const uint8_t new_address)
 {
 	using namespace std::placeholders;
 
@@ -1420,7 +1460,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	dma_channel->ReserveFor(ChannelName::GravisUltrasound, gus_destroy);
 	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
-	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
+	LOG_MSG("GUS: Assigned playback DMA address to %u", dma1);
 #endif
 }
 
@@ -1434,7 +1474,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 	//	LOG_MSG("GUS: Write to port %x val %x", port, val);
 	switch (port - port_base) {
 	case 0x200:
-		mix_ctrl              = static_cast<uint8_t>(val);
+		mix_control_register.data = static_cast<uint8_t>(val);
 		should_change_irq_dma = true;
 		return;
 	case 0x208: adlib_command_reg = static_cast<uint8_t>(val); break;
@@ -1476,33 +1516,48 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			//  for cards from accidentally corrupting the latches.
 			//  UltraSound Software Development Kit (SDK),
 			//  Section 2.13.
-			//
 			should_change_irq_dma = false;
 
-			// The address selector is set in bits 2-0
-			const auto selector = static_cast<uint8_t>(val & 0b111);
+			const auto address_select = AddressSelectRegister{static_cast<uint8_t>(val)};
 
-			// When Bit 6 (Control Register Select) is set to a 1,
-			// the next IO write to 2XB will be to the IRQ control
-			// latches. When this is set to a 0, the next IO write
-			// to 2XB will be to the DMA channel latches. UltraSound
-			// Software Development Kit (SDK), Section 2.13.
-			//
-			const auto is_irq_selected = bit::is(mix_ctrl,
-			                                     bit::literals::b6);
-			if (is_irq_selected) {
+			const auto ch1_selector = address_select.channel1_selector;
 
-				if (selector < IrqAddresses.size() &&
-				    IrqAddresses[selector]) {
-					irq1 = to_internal_irq(IrqAddresses[selector]);
-#if LOG_GUS
-					LOG_MSG("GUS: Assigned IRQ1 to %d", irq1);
-#endif
+			const auto ch2_selector = address_select.channel2_selector;
+
+			if (mix_control_register.irq_control_selected) {
+
+				// Application is selecting IRQ addresses
+				if (ch1_selector && ch1_selector < IrqAddresses.size()) {
+					irq1 = to_internal_irq(IrqAddresses[ch1_selector]);
 				}
+
+				if (address_select.channel2_combined_with_channel1) {
+					// Channel 2 can be combined if it's selector is 0
+					if (ch2_selector == 0) {
+						irq2 = irq1;
+					}
+				} else if (ch2_selector && ch2_selector < IrqAddresses.size()) {
+					irq2 = to_internal_irq(IrqAddresses[ch2_selector]);
+				}
+#if LOG_GUS
+				LOG_MSG("GUS: Assigned GF1 IRQ to %d and MIDI IRQ to %d",
+				        irq1,
+				        irq2);
+#endif
 			} else {
-				if (selector < DmaAddresses.size() &&
-				    DmaAddresses[selector]) {
-					UpdateDmaAddress(DmaAddresses[selector]);
+
+				// Application is selecting DMA addresses
+				if (ch1_selector && ch1_selector < DmaAddresses.size()) {
+					UpdatePlaybackDmaAddress(DmaAddresses[ch1_selector]);
+				}
+
+				if (address_select.channel2_combined_with_channel1) {
+					// Channel 2 can be combined if it's selector is 0
+					if (ch2_selector == 0) {
+						UpdateRecordingDmaAddress(dma1);
+					}
+				} else if (ch2_selector && ch2_selector < DmaAddresses.size()) {
+					UpdateRecordingDmaAddress(DmaAddresses[ch2_selector]);
 				}
 			}
 		}
