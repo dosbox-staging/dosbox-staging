@@ -1861,7 +1861,7 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 
 	auto* hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
-	hex_prop->Set_values({"240", "220", "260", "280", "2a0", "2c0", "2e0", "300"});
+	hex_prop->Set_values({"210", "220", "230", "240", "250", "260"});
 	hex_prop->Set_help(
 	        "The IO base address of the Gravis UltraSound (240 by default).");
 
