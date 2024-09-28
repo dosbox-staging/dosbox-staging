@@ -9,10 +9,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.81.2 Universal Binary (dmg)][0_81_2]
+[Download DOSBox Staging 0.82.0 Universal Binary (dmg)][0_82_0]
 <br>
 <small>
-sha256: 718968485a0418ead3434285e3a6ab48<wbr>53914d29d38e14289711af1b2152368e
+sha256: TODO<wbr>TODO
 </small>
 
 </section>
@@ -20,32 +20,11 @@ sha256: 718968485a0418ead3434285e3a6ab48<wbr>53914d29d38e14289711af1b2152368e
 DOSBos Staging requires **macOS 10.15 (Catalina) or later**, and supports both
 Intel and Apple silicon Macs.
 
-Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn about
+Check out the [0.82.0 release notes](release-notes/0.82.0.md) to learn about
 the changes and improvements introduced by this release.
 
 If you're new to DOSBox Staging, we highly recommend following the
 [Getting started guide](../getting-started/index.md).
-
-
-## 0.82.0 release candidate
-
-!!! warning "Release candidate warning"
-
-    Release candidates are intended for experienced early adopters willing to
-    help us stabilise the next DOSBox Staging version for the final release.
-    Regular users should download the [current stable version](#current-stable-version)
-    instead.
-
-    **0.82.0-RC1**
-
-    - [Download DOSBox Staging 0.82.0-RC1 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-macOS-universal-v0.82.0-rc1.dmg)
-      <br>
-      <small>
-      sha256: 10fcca738862b7165c347185d2513005<wbr>a41147b364dd60af5d79d1193bc29234
-      </small>
-
-    Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
-    about the changes and improvements introduced in this release.
 
 
 ## Hardware requirements
@@ -127,6 +106,11 @@ article](https://support.apple.com/en-us/102445) for further info.
 
 ## Older releases
 
+- [Download DOSBox Staging 0.81.2 Universal Binary (dmg)][0_81_2] (macOS 10.15 or newer)
+  <br>
+  <small>
+  sha256: 718968485a0418ead3434285e3a6ab48<wbr>53914d29d38e14289711af1b2152368e
+  </small>
 
 - [DOSBox Staging 0.81.1 Universal Binary (dmg)][0_81_1] (macOS 10.15 or newer)
   <br>
@@ -230,6 +214,7 @@ article](https://support.apple.com/en-us/102445) for further info.
   sha256: 8a5c12d1b6567d6e981acd76e30dec41<wbr>a73a699963b714f4f1dcf0fc853fc9f6
   </small>
 
+[0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-macOS-v0.82.0.dmg
 [0_81_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.2/dosbox-staging-macOS-v0.81.2.dmg
 [0_81_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-macOS-v0.81.1.dmg
 [0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-macOS-v0.81.0.dmg

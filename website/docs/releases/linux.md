@@ -9,10 +9,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.81.2 (x86_64)][0_81_2]
+[Download DOSBox Staging 0.82.0 (x86_64)][0_82_0]
 <br>
 <small>
-sha256: c47f1767ae1371666f40e3a4e13272da<wbr>5c5a98c9c6f355b4fb82bac0d3911a68
+sha256: TODO<wbr>TODO
 </small>
 
 </section>
@@ -24,32 +24,11 @@ now). They only depend on the C/C++, ALSA, and OpenGL system libraries.
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
-Check out the [0.81.2 release notes](release-notes/0.81.2.md) to learn
+Check out the [0.82.0 release notes](release-notes/0.82.0.md) to learn
 about the changes and improvements introduced in this release.
 
 If you're new to DOSBox Staging, we highly recommend following the
 [Getting started guide](../getting-started/index.md).
-
-
-## 0.82.0 release candidate
-
-!!! warning "Release candidate warning"
-
-    Release candidates are intended for experienced early adopters willing to
-    help us stabilise the next DOSBox Staging version for the final release.
-    Regular users should download the [current stable version](#current-stable-version)
-    instead.
-
-    **0.82.0-RC1**
-
-    - [Download DOSBox Staging 0.82.0-RC1 (x86_x64)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0-rc1/dosbox-staging-linux-x86_64-v0.82.0-rc1.tar.xz)
-      <br>
-      <small>
-      sha256: 0e62472dd28a6c613ec60a6bf34493d3<wbr>3638d475796baf39b2f62946e548be87
-      </small>
-
-    Check out the [0.82.0-RC release notes](release-notes/0.82.0-rc.md) to learn
-    about the changes and improvements introduced in this release.
 
 
 ## Hardware requirements
@@ -158,6 +137,11 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
+- [Download DOSBox Staging 0.81.2 (x86_64)][0_81_2]
+  <br>
+  <small>
+  sha256: c47f1767ae1371666f40e3a4e13272da<wbr>5c5a98c9c6f355b4fb82bac0d3911a68
+  </small>
 
 - [DOSBox Staging 0.81.1 (tar.xz)][0_81_1]
   <br>
@@ -243,6 +227,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-linux-x86_64-v0.82.0.tar.xz
 [0_81_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.2/dosbox-staging-linux-v0.81.2.tar.xz
 [0_81_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.1/dosbox-staging-linux-v0.81.1.tar.xz
 [0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-linux-v0.81.0.tar.xz
