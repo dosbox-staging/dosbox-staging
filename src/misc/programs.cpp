@@ -314,8 +314,6 @@ void Program::AddToHelpList()
 	}
 }
 
-bool MSG_Write(const char*);
-
 class CONFIG final : public Program {
 public:
 	CONFIG()
@@ -973,7 +971,7 @@ void CONFIG::Run(void)
 				return;
 			}
 
-			if (!MSG_Write(pvars[0].c_str())) {
+			if (!MSG_WriteToFile(pvars[0])) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"),
 				         pvars[0].c_str());
 				return;

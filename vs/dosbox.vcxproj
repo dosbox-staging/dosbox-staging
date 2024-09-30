@@ -931,6 +931,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\mem.h" />
     <ClInclude Include="..\include\mem_host.h" />
     <ClInclude Include="..\include\mem_unaligned.h" />
+    <ClInclude Include="..\include\messages.h" />
     <ClInclude Include="..\include\midi.h" />
     <ClInclude Include="..\include\mixer.h" />
     <ClInclude Include="..\include\mmx.h" />

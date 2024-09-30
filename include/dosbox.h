@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,6 +24,7 @@
 
 #include "config.h"
 #include "compiler.h"
+#include "messages.h"
 #include "types.h"
 
 #include <memory>
@@ -53,13 +57,6 @@ extern bool shutdown_requested;
 // circumstances.
 [[noreturn]] void E_Exit(const char *message, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-
-void MSG_Add(const char*,const char*); // add messages (in UTF-8) to the language file
-const char* MSG_Get(const char*); // get messages (adapted to current code page)
-                                  // from the language file
-const char* MSG_GetRaw(const char*); // get messages (in UTF-8, without ANSI
-                                     // preprocessing) from the language file
-bool MSG_Exists(const char*);
 
 class Section;
 class Section_prop;

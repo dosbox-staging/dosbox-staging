@@ -117,6 +117,16 @@ void trim(std::string &str, const std::string_view trim_chars)
 	str.erase(0, empty_pfx);
 }
 
+void trim_rear(std::string &str, const std::string_view trim_chars)
+{
+	const auto empty_sfx = str.find_last_not_of(trim_chars);
+	if (empty_sfx == std::string::npos) {
+		str.clear(); // whole string is filled with trim_chars
+		return;
+	}
+	str.erase(empty_sfx + 1);
+}
+
 std::vector<std::string> split_with_empties(const std::string_view seq, const char delim)
 {
 	std::vector<std::string> words;
