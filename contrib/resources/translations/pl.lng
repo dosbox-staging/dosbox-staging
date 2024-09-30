@@ -3786,7 +3786,7 @@ Polecenia można użyć jedynie na lokalnych dyskach.
 :SHELL_STARTUP_CGA
 ║ DOSBox wspiera tryb obrazu kompozytowego CGA.                      ║
 ║ Wciśnij [color=light-red]F12[color=white], aby włączyć lub wyłączyć tryb kompozytowy obrazu.     ║
-║ [color=light-red]%s+F11[color=white] zmienia barwę; [color=light-red]%s+%s+F11[color=white] zmienia model CGA.%s             ║
+║ [color=light-red]F10[color=white] wybiera ustawienie do zmiany; [color=light-red](%s+)F11[color=white] zmienia je.            ║
 ║                                                                    ║
 
 .
