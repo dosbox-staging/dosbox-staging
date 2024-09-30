@@ -197,6 +197,11 @@ constexpr bool is_extended_printable_ascii(const char c)
 	return !is_control_ascii(c);
 }
 
+constexpr bool is_digit(const char c)
+{
+        return (c >= '0') && (c <= '9');
+}
+
 bool is_hex_digits(const std::string_view s) noexcept;
 
 bool is_digits(const std::string_view s) noexcept;
@@ -251,6 +256,7 @@ std::string strip_word(std::string& line);
 
 std::string replace(const std::string& str, char old_char, char new_char) noexcept;
 void trim(std::string& str, const std::string_view trim_chars = " \r\t\f\n");
+void trim_rear(std::string& str, const std::string_view trim_chars = " \r\t\f\n");
 void upcase(std::string& str);
 void lowcase(std::string& str);
 void strip_punctuation(std::string& str);

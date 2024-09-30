@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,24 +21,26 @@
 // Empty functions to suppress output in unit tests as well as a to eliminate
 // dependency-sprawl
 
-void MSG_Add(const char *, const char *) {}
+#include "messages.h"
 
-const char *MSG_Get(char const *)
+void MSG_Add(const std::string &, const std::string &) {}
+
+const char *MSG_Get(const std::string &)
 {
 	return "";
 }
 
-const char *MSG_GetRaw(char const *)
+const char *MSG_GetRaw(const std::string &)
 {
 	return "";
 }
 
-bool MSG_Exists(const char *)
+bool MSG_Exists(const std::string &)
 {
 	return true;
 }
 
-bool MSG_Write(const char *)
+bool MSG_WriteToFile(const std::string &)
 {
 	return true;
 }

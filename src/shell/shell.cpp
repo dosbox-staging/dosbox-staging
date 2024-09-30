@@ -1306,7 +1306,7 @@ void SHELL_Init() {
 	        "Cannot move multiple files to a single file.\n");
 	MSG_Add("SHELL_CMD_FOR_HELP",
 	        "Run a specified command for each string in a set.\n");
-	MSG_Add("SHELL_CMD_FOR_HELP_LONG",
+	MSG_Add("SHELL_CMD_FOR_HELP_LONG", MsgFlagNoFormatString,
 		"Usage:\n"
 		"  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
 		"\n"
