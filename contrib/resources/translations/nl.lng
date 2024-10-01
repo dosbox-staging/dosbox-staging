@@ -963,7 +963,7 @@ die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
                  AGI-interpreter.
   scumm-amiga:   Palet gebruikt door de Amiga-poorten van LucasArts EGA-spelen.
   colodore:      Commodore 64 geïnspireerde kleuren.
-  colodore-sat:  Colorore palet met 20% meer verzadiging.
+  colodore-sat:  Colorore palet met 20%% meer verzadiging.
   dga16:         Een moderne interpretatie van het klassieke CGA-palet met
                  teruggedraaid contrast.
 U kunt ook aangepaste kleuren instellen door 16 spaties of komma's gescheiden

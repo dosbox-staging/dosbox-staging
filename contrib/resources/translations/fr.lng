@@ -24,7 +24,7 @@ Défini la taille de la fenêtre pendant l'utilisation en mode fenêtré :
 Set the viewport size (drawable area) within the window/screen:
   fit:       Fit the viewport to the available window/screen (default).
   <custom>:  Limit the viewport within to a custom resolution or percentage of
-             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%
+             the desktop. Specified in WxH, N%%, N.M%%. Examples: 960x720 or 50%%
 .
 :CONFIG_WINDOW_POSITION
 Set initial window position when running in windowed mode:
@@ -222,7 +222,7 @@ displaying CGA or better graphics. Built-in presets:
   agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.
   scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
   colodore:      Commodore 64 inspired colors based on the Colodore palette.
-  colodore-sat:  Colodore palette with 20% more saturation.
+  colodore-sat:  Colodore palette with 20%% more saturation.
   dga16:         A modern take on the canonical CGA palette with dialed back contrast.
 You can also set custom colors by specifying 16 space or comma separated color values,
 either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
@@ -743,7 +743,7 @@ If set to 0, the country code corresponding to the
 selected keyboard layout will be used.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Enable expanding environment variables such as %PATH%
+Enable expanding environment variables such as %%PATH%%
 while in the DOS command shell. FreeDOS and MS-DOS 7/8
 COMMAND.COM supports this behavior.
 .
