@@ -1979,8 +1979,6 @@ Onde [color=white]COMANDO[reset] pode ser:
 :PROGRAM_CONFIG_HLP_PROPHLP
 [color=white]Propósito da propriedade [color=light-green]'%s'[color=white] (contida na seção [color=light-cyan][%s][color=white]):[reset]
 
-%s
-
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
