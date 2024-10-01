@@ -904,12 +904,12 @@ configurada (vea 'aspect'). Valores posibles:
                    especificado no debe ser más grande que el escritorio. Si es
                    más grande que la ventana, se escala para ajustarse dentro
                    de ella.
-  N%:              Similar a 'LxA', pero el tamaño se especifica como un
+  N%%:              Similar a 'LxA', pero el tamaño se especifica como un
                    porcentaje del tamaño del escritorio.
-  relative H% V%:  Establecer el viewport en un rectángulo con relación de
+  relative H%% V%%:  Establecer el viewport en un rectángulo con relación de
                    aspecto 4:3 ajustado en la ventana o pantalla disponible, y
                    luego se escala por el factor de escala horizontal H y
-                   vertical V (el rango válido es desde 20% hasta 300%). El
+                   vertical V (el rango válido es desde 20%% hasta 300%%). El
                    viewport resultante puede extenderse más allá de la ventana
                    o pantalla. Es útil para forzar relaciones de aspectos de
                    pantalla arbitrarias con 'aspect = stretch' y para hacer
@@ -953,7 +953,7 @@ de mostrar gráficos CGA o superiores. Configuraciones preestablecidas:
                  LucasArts.
   colodore:      Colores inspirados en Commodore 64 basados en la paleta
                  Colodore.
-  colodore-sat:  Paleta Colodore con 20% más saturación.
+  colodore-sat:  Paleta Colodore con 20%% más saturación.
   dga16:         Versión moderna de la paleta CGA canónica con contraste
                  reducido.
 También puede establecer colores personalizados especificando 16 valores de
@@ -1369,7 +1369,7 @@ Puede usar una ruta absoluta o relativa, o el nombre de un archivo .sf2 dentro
 del directorio 'soundfonts' en su directorio de configuración de DOSBox.
 Opcionalmente, un valor de porcentaje luego del nombre escalará el volumen de
 la fuente. Esto es útil para normalizar el volumen de fuentes diferentes.
-Por ejemplo, 'mi_soundfont.sf2 50' atenuará el volumen un 50%.
+Por ejemplo, 'mi_soundfont.sf2 50' atenuará el volumen un 50%%.
 El valor de porcentaje puede variar entre 1 y 800.
 .
 :CONFIG_FSYNTH_CHORUS
@@ -1921,7 +1921,7 @@ para la distribución en inglés norteamericano.
 Se aceptan los mismos valores que en FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Expandir variables de entorno tales como %PATH% en el intérprete de comandos de
+Expandir variables de entorno tales como %%PATH%% en el intérprete de comandos de
 DOS ('auto' por defecto, habilitado si la versión configurada de DOS es 7.0 o
 superior).
 COMMAND.COM de FreeDOS y MS-DOS 7/8 soportan este comportamiento.

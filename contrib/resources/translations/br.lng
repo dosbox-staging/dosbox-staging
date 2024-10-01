@@ -832,11 +832,11 @@ Valores possíveis:
                    (ex: 960x720). O tamanho especificado não deve ser maior
                    que a resolução da área de trabalho. Se for maior que a
                    janela, a imagem será redimensionada para se ajustar à janela.
-  N%:              Similar a 'LxA', mas o tamanho é especificado como
+  N%%:              Similar a 'LxA', mas o tamanho é especificado como
                    percentual da resolução da área de trabalho.
-  relative H% V%:  A área de exibição é definida como um retângulo com uma
+  relative H%% V%%:  A área de exibição é definida como um retângulo com uma
                    proporção de 4:3, adaptada à escala da janela/tela horizontal
-                   e verticalmente H e V (o intervalo válido é de 20% a 300%).
+                   e verticalmente H e V (o intervalo válido é de 20%% a 300%%).
                    A área de exibição resultante pode se estender além da
                    janela/tela. Isso é útil para forçar determinadas proporções
                    de tela com 'aspect = stretch' ou para ampliar a imagem.
@@ -877,7 +877,7 @@ capazes de exibir gráficos CGA ou superiores. Predefinições integradas:
                  AGI Sarien.
   scumm-amiga:   Paleta usada pelas portas Amiga dos jogos LucasArts EGA.
   colodore:      Cores inspiradas no Commodore 64 com base na paleta Colodore.
-  colodore-sat:  Paleta Colodore com 20% mais saturação.
+  colodore-sat:  Paleta Colodore com 20%% mais saturação.
   dga16:         Uma interpretação moderna da paleta CGA canônica com
                  contraste reduzido.
 Você também pode definir cores personalizadas especificando 16 valores de
@@ -1264,7 +1264,7 @@ Você pode usar um caminho absoluto ou relativo, ou o nome de um .sf2 dentro da
 pasta 'soundfonts' dentro da pasta de configuração do seu DOSBox.
 Um valor percentual opcional após o nome dimensionará o volume do SoundFont.
 Isso é útil para normalizar o volume de diferentes SoundFonts.
-Por exemplo, 'my_soundfont.sf2 50' irá atenuar o volume em 50%.
+Por exemplo, 'my_soundfont.sf2 50' irá atenuar o volume em 50%%.
 O valor percentual pode variar de 1 a 800.
 .
 :CONFIG_FSYNTH_CHORUS
@@ -1799,7 +1799,7 @@ Código do esquema de idioma do teclado ('auto' por padrão), ou seja, 'us' para
 esquema inglês americano. Outros valores possíveis são os mesmos aceitos pelo FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Ativa a expansão de variáveis de ambiente como %PATH% no interpretador de comandos
+Ativa a expansão de variáveis de ambiente como %%PATH%% no interpretador de comandos
 do DOS (ativado por padrão, habilitado se a versão do DOS >= 7.0).
 FreeDOS e MS-DOS 7/8 COMMAND.COM suportam esse comportamento.
 .

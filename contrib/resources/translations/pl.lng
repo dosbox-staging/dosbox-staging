@@ -930,7 +930,7 @@ zdolnych do wyświetlania obrazu CGA lub lepszego. Wbudowane ustawienia:
   scumm-amiga:   Paleta używana przez porty gier LucasArts EGA na
                  komputery Amiga.
   colodore:      Zainspirowane przez komputer Commodore 64 i paletę Colodore.
-  colodore-sat:  Paleta Colodore z nasyceniem większym o 20%.
+  colodore-sat:  Paleta Colodore z nasyceniem większym o 20%%.
   dga16:         Nowoczesne podejście do palety CGA, ze stonowanym kontrastem.
 Można również podać własny zestaw kolorów, jako 16 rozdzielonych spacjami
 lub przecinkami wartości, jako 3- lub 6-cyfrowe liczby szesnastkowe (np. #f00
