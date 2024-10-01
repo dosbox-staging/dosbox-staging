@@ -895,13 +895,13 @@ Mögliche Werte:
                    Größe darf nicht größer sein als der Desktop. Wenn sie
                    größer als die Fenstergröße ist, wird sie skaliert, um in
                    das Fenster zu passen.
-  N%:              Ähnlich wie 'WxH', aber die Größe wird als Prozentsatz
+  N%%:              Ähnlich wie 'WxH', aber die Größe wird als Prozentsatz
                    der Desktopgröße angegeben.
-  relative H% V%:  Das Ansichtsfenster wird auf ein Rechteck im Seiten-
+  relative H%% V%%:  Das Ansichtsfenster wird auf ein Rechteck im Seiten-
                    verhältnis 4:3 eingestellt, das in das verfügbare Fenster/
                    Bildschirm passt, dann wird es mit den horizontalen und
                    vertikalen Skalierungsfaktoren (gültiger Bereich von
-                   20% bis 300%) skaliert. Das resultierende Ansichtsfenster
+                   20%% bis 300%%) skaliert. Das resultierende Ansichtsfenster
                    darf sich über das Fenster/den Bildschirm hinaus erstrecken.
                    Nützlich, um beliebige Seitenverhältnisse mit
                    'aspect = stretch'zu erzwingen und in das Bild zu zoomen.
@@ -944,7 +944,7 @@ Integrierte Presets:
                  LucasArts verwendet wird.
   colodore:      Vom Commodore 64 inspirierte Farben, die auf der Colodore-
                  Palette basieren.
-  colodore-sat:  Colodore-Palette mit 20% mehr Sättigung.
+  colodore-sat:  Colodore-Palette mit 20%% mehr Sättigung.
   dga16:         Eine moderne Interpretation der klassischen CGA-Palette mit
                  reduziertem Kontrast.
 Du kannst auch benutzerdefinierte Farben einstellen, indem du 16 durch
@@ -1349,7 +1349,7 @@ Du kannst einen absoluten oder relativen Pfad verwenden, oder den Namen einer
 Verzeichnis.
 Ein optionaler Prozentwert nach dem Namen skaliert die Lautstärke des Sound-
 Fonts. Dies ist nützlich, um die Lautstärke von verschiedenen SoundFonts zu
-normalisieren. Z.B. 'my_soundfont.sf2 50' dämpft die Lautstärke um 50%.
+normalisieren. Z.B. 'my_soundfont.sf2 50' dämpft die Lautstärke um 50%%.
 Der Prozentwert kann von 1 bis 800 reichen.
 .
 :CONFIG_FSYNTH_CHORUS
@@ -1883,7 +1883,7 @@ Tastaturbelegungscode (standardmäßig 'auto'), z.B. 'us' für US-Englisch; ande
 mögliche Werte sind die gleichen, die auch von FreeDOS akzeptiert werden.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Aktiviere die Erweiterung von Umgebungsvariablen wie %PATH%
+Aktiviere die Erweiterung von Umgebungsvariablen wie %%PATH%%
 wenn du dich in der DOS-Befehlsshell befindest (standardmäßig 'auto',
 aktiviert, wenn DOS-Version >= 7.0).
 FreeDOS und MS-DOS 7/8 COMMAND.COM unterstützt dieses Verhalten.
