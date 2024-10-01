@@ -198,18 +198,6 @@ void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] cons
 #endif
 }
 
-// Search for the needle in the haystack, case insensitive.
-bool find_in_case_insensitive(const std::string &needle, const std::string &haystack)
-{
-	const auto it = std::search(haystack.begin(), haystack.end(),
-	                            needle.begin(), needle.end(),
-	                            [](char ch1, char ch2) {
-		                            return std::toupper(ch1) ==
-		                                   std::toupper(ch2);
-	                            });
-	return (it != haystack.end());
-}
-
 void FILE_closer::operator()(FILE *f) noexcept
 {
 	if (f) {
