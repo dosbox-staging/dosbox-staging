@@ -882,12 +882,8 @@ Utilisez -writelang ou -wl nom de fichier pour écrire les clefs de language cou
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Utilité de la propriété "%s" (contenue dans la section "%s") :
-%s
+Utilité de la propriété "%s" (contenue dans la section "%s"):
 
-Valeurs possible : %s
-Valeur par défaut : %s
-Valeur actuelle: %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
