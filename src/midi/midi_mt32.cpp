@@ -397,15 +397,15 @@ static void register_mt32_text_messages()
 {
 	MSG_Add("MT32_NO_SUPPORTED_MODELS", "No supported models present");
 
-	MSG_Add("MT32_ROM_NOT_LOADED", "No ROM is currently loaded");
+	MSG_Add("MT32_ROM_NOT_LOADED", "No model is currently active");
 
 	MSG_Add("MT32_INVENTORY_TABLE_MISSING_LETTER", "-");
 	MSG_Add("MT32_INVENTORY_TABLE_AVAILABLE_LETTER", "y");
 
-	MSG_Add("MT32_ROMS_LABEL", "MT-32  ROMs  ");
-	MSG_Add("CM32L_ROMS_LABEL", "CM-32L ROMs  ");
-	MSG_Add("MT32_ACTIVE_ROM_LABEL", "Active ROM    ");
-	MSG_Add("MT32_SOURCE_DIR_LABEL", "Loaded from   ");
+	MSG_Add("MT32_ROMS_LABEL", "MT-32  models   ");
+	MSG_Add("CM32L_ROMS_LABEL", "CM-32L models   ");
+	MSG_Add("MT32_ACTIVE_ROM_LABEL", "Active model  ");
+	MSG_Add("MT32_SOURCE_DIR_LABEL", "ROM path      ");
 }
 
 #if defined(WIN32)
