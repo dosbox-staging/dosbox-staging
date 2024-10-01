@@ -471,8 +471,7 @@ void DOS_Shell::Run()
 					         MMOD2_NAME);
 				else
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA"),
-					         MMOD2_NAME, MMOD1_NAME,
-					         MMOD2_NAME, PRIMARY_MOD_PAD);
+					         MMOD2_NAME);
 			}
 			if (machine == MCH_HERC)
 				WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
