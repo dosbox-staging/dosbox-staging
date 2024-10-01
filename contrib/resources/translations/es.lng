@@ -2106,8 +2106,6 @@ Donde [color=white]COMANDO[reset] puede ser:
 [color=white]Propósito de la propiedad [color=light-green]'%s'[color=white]
 (contenida en la sección [color=light-cyan][%s][color=white]):[reset]
 
-%s
-
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES

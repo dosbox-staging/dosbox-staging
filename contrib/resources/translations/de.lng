@@ -2069,8 +2069,6 @@ Wobei [color=white]BEFEHL[reset] einer der folgenden Werte ist:
 :PROGRAM_CONFIG_HLP_PROPHLP
 [color=white]Zweck der Eigenschaft [color=light-green]'%s'[color=white] (enthalten in Abschnitt [color=light-cyan][%s][color=white]):[reset]
 
-%s
-
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
