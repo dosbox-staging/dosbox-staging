@@ -890,7 +890,8 @@ Set the aspect ratio correction mode (enabled by default):
                        emuleren.
 .
 :CONFIG_INTEGER_SCALING
-Beperk de horizontale of verticale schaalfactor tot gehele waarden.
+Beperk de horizontale of verticale schaalfactor tot de grootste gehele waarde
+zodat de afbeelding nog past in de `viewport` (standaard 'auto').
 De juiste beeldverhouding wordt altijd behouden volgens de 'aspect'-instelling,
 wat kan resulteren in een niet-gehele schaalfactor in de andere richting. Als
 de afbeelding groter is dan de viewport, wordt de beperking voor het schalen
@@ -907,6 +908,7 @@ Mogelijke waarden:
   off:         Er wordt geen beperking voor het schalen van gehele getallen
                toegepast; de afbeelding vult de viewport volgens de
                'aspect'-instelling.
+.
 :CONFIG_VIEWPORT
 Stel de viewportgrootte in (maximaal tekenbaar gebied). De video-uitvoer
 bevindt zich altijd binnen de viewport, waarbij rekening wordt gehouden met de
@@ -920,13 +922,13 @@ geconfigureerde beeldverhouding (zie 'aspect'). Mogelijke waarden:
                    niet groter zijn dan de desktop. Als het groter is dan de
                    desktopgrootte, wordt het geschaald zodat het binnen het
                    venster past.
-  N%:              Vergelijkbaar met 'BxH', maar de grootte wordt
+  N%%:              Vergelijkbaar met 'BxH', maar de grootte wordt
                    gespecificeerd als een percentage van de desktopgrootte.
-  relative H% V%:  De viewport is ingesteld op een rechthoek met een beeld-
+  relative H%% V%%:  De viewport is ingesteld op een rechthoek met een beeld-
                    verhouding van 4:3 die in het beschikbare venster/scherm
                    past, en wordt vervolgens geschaald met de horizontale en
-                   verticale schaalfactoren H en V (geldig bereik is van 20%
-                   tot 300%). Het resulterende zichtvenster mag zich buiten
+                   verticale schaalfactoren H en V (geldig bereik is van 20%%
+                   tot 300%%). Het resulterende zichtvenster mag zich buiten
                    het venster/scherm uitstrekken. Handig om willekeurige
                    weergaveverhoudingen te forceren met 'aspect = stretch' en
                    om in te zoomen op het beeld. Dit emuleert effectief de
@@ -956,6 +958,7 @@ die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
   ibm5153 <c>:   Emulatie van de werkelijke kleuruitvoer van een IBM
                  5153-monitor met een unieke contrastregeling die alleen
                  niet-heldere kleuren dimt (0 tot 100; standaard 100).
+                 bijv. ibm5153 60
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
                  Paletten die worden gebruikt door de Amiga-poorten van Sierra
                  AGI-spelen (zie de handleiding voor meer details).
@@ -963,7 +966,7 @@ die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
                  AGI-interpreter.
   scumm-amiga:   Palet gebruikt door de Amiga-poorten van LucasArts EGA-spelen.
   colodore:      Commodore 64 geïnspireerde kleuren.
-  colodore-sat:  Colorore palet met 20% meer verzadiging.
+  colodore-sat:  Colorore palet met 20%% meer verzadiging.
   dga16:         Een moderne interpretatie van het klassieke CGA-palet met
                  teruggedraaid contrast.
 U kunt ook aangepaste kleuren instellen door 16 spaties of komma's gescheiden
@@ -972,10 +975,9 @@ kleurwaarden op te geven, ofwel als 3- of 6-cijferige hexadecimale codes
 (255, 0, 255) voor magenta). De 16 kleuren zijn als volgt geordend: zwart,
 blauw, groen, cyaan, rood, magenta, bruin, lichtgrijs, donkergrijs,
 lichtblauw, lichtgroen, lichtcyaan, lichtrood, lichtmagenta, geel, en wit.
-Hun standaardwaarden, hier weergegeven in zescijferige hexadecimale code-
-indeling, zijn: #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500
-#aaaaaa #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 en #ffffff,
-respectievelijk.
+Hun standaardwaarden, hier weergegeven in zescijferige hexadecimale code zijn:
+  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
 Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
@@ -1410,10 +1412,10 @@ het debuggen van MIDI-problemen.
 :CONFIG_SOUNDFONT
 Pad naar een SoundFont-bestand in .sf2-formaat. (standaard 'default.sf2').
 U kunt een absoluut of relatief pad gebruiken, of de naam van een .sf2 in de
-'soundfonts'-map in uw DOSBox-configuratiemap.
+'soundfonts'-map in de DOSBox-configuratiemap.
 Een optionele procentuele waarde achter de naam schaalt het volume van het
 SoundFont. Dit is handig voor het normaliseren van het volume van verschillende
-SoundFonts. Bijvoorbeeld 'my_soundfont.sf2 50' verzwakt het volume met 50%.
+SoundFonts. Bijvoorbeeld 'my_soundfont.sf2 50' verzwakt het volume met 50%%.
 De procentuele waarde kan variëren van 1 tot 800.
 .
 :CONFIG_FSYNTH_CHORUS
