@@ -283,9 +283,9 @@ Les cycles peuvent être définis de 3 façons :
   'auto'          essaye de deviner ce dont un jeu a besoin.
                   Cela fonctionne généralement, mais peut échouer avec certains jeux.
   '#nombre'       définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
-		          si 'auto' échoue. (Exemple : '4000')
+                  si 'auto' échoue. (Exemple : '4000')
   'max'           allouera autant de cycles que votre ordinateur est capable 
-		          de gérer.
+                  de gérer.
 
 .
 :CONFIG_CYCLEUP
