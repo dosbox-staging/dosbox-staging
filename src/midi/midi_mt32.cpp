@@ -278,7 +278,8 @@ const LASynthModel cm32ln_100_model = {"cm32ln_100",
 //
 // CM-32LN vibrato issue
 // - https://www.vogons.org/viewtopic.php?p=605136#p605136
-//
+
+// Listed in resolution priority order
 static const std::vector<const LASynthModel*> all_models = {
         &cm32l_102_model,
         &cm32l_100_model,
@@ -296,6 +297,7 @@ static const std::vector<const LASynthModel*> all_models = {
         &mt32_203_model,
 };
 
+// Listed in resolution priority order
 static const std::vector<const LASynthModel*> mt32_models = {
         &mt32_107_model,
         &mt32_106_model,
@@ -309,6 +311,7 @@ static const std::vector<const LASynthModel*> mt32_models = {
         &mt32_203_model,
 };
 
+// Listed in resolution priority order
 static const std::vector<const LASynthModel*> mt32_old_models = {
         &mt32_107_model,
         &mt32_106_model,
@@ -317,6 +320,7 @@ static const std::vector<const LASynthModel*> mt32_old_models = {
         &mt32_bluer_model,
 };
 
+// Listed in resolution priority order
 static const std::vector<const LASynthModel*> mt32_new_models = {
         &mt32_207_model,
         &mt32_206_model,
@@ -324,17 +328,20 @@ static const std::vector<const LASynthModel*> mt32_new_models = {
         &mt32_203_model,
 };
 
+// Listed in resolution priority order
 static const std::vector<const LASynthModel*> cm32l_models = {
         &cm32l_102_model,
         &cm32l_100_model,
         &cm32ln_100_model,
 };
 
-// Symbolic model names
-constexpr auto Mt32ModelName    = "mt32";
-constexpr auto Mt32OldModelName = "mt32_old";
-constexpr auto Mt32NewModelName = "mt32_new";
-constexpr auto Cm32lModelName   = "cm32l";
+// Symbolic model aliases
+namespace BestModelAlias {
+constexpr auto Mt32Any = "mt32";
+constexpr auto Mt32Old = "mt32_old";
+constexpr auto Mt32New = "mt32_new";
+constexpr auto Cm32l   = "cm32l";
+} // namespace BestModelAlias
 
 MidiHandler_mt32 mt32_instance;
 
@@ -343,21 +350,23 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
+
+	// Listed in resolution priority order
 	str_prop->Set_values({"auto",
-	                      Cm32lModelName,
+	                      BestModelAlias::Cm32l,
 	                      cm32l_102_model.GetName(),
 	                      cm32l_100_model.GetName(),
 	                      cm32ln_100_model.GetName(),
 
-	                      Mt32ModelName,
-	                      Mt32OldModelName,
+	                      BestModelAlias::Mt32Any,
+	                      BestModelAlias::Mt32Old,
 	                      mt32_107_model.GetName(),
 	                      mt32_106_model.GetName(),
 	                      mt32_105_model.GetName(),
 	                      mt32_104_model.GetName(),
 	                      mt32_bluer_model.GetName(),
 
-	                      Mt32NewModelName,
+	                      BestModelAlias::Mt32New,
 	                      mt32_207_model.GetName(),
 	                      mt32_206_model.GetName(),
 	                      mt32_204_model.GetName(),
@@ -365,13 +374,12 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	str_prop->Set_help(
 	        "The Roland MT-32/CM-32ML model to use.\n"
 	        "You must have the ROM files for the selected model available (see 'romdir').\n"
-			"The lookup order for models that don't specify a version in their name is\n"
-			"performed in order as listed.\n"
-	        "  auto:       Pick the first available model (default).\n"
-	        "  cm32l:      Pick the first available CM-32L model.\n"
-	        "  mt32_old:   Pick the first available \"old\" MT-32 model (v1.0x).\n"
-	        "  mt32_new:   Pick the first available \"new\" MT-32 model (v2.0x).\n"
-	        "  mt32:       Pick the first available MT-32 model.\n"
+	        "The lookup for the best models is performed in order as listed.\n"
+	        "  auto:       Pick the best available model (default).\n"
+	        "  cm32l:      Pick the best available CM-32L model.\n"
+	        "  mt32_old:   Pick the best available \"old\" MT-32 model (v1.0x).\n"
+	        "  mt32_new:   Pick the best available \"new\" MT-32 model (v2.0x).\n"
+	        "  mt32:       Pick the best available MT-32 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
@@ -519,16 +527,16 @@ static std::optional<ModelAndDir> load_model(const Mt32ServicePtr& service,
 		if (wanted_model_name == "auto") {
 			return {true, all_models};
 		}
-		if (wanted_model_name == Mt32ModelName) {
+		if (wanted_model_name == BestModelAlias::Mt32Any) {
 			return {true, mt32_models};
 		}
-		if (wanted_model_name == Mt32OldModelName) {
+		if (wanted_model_name == BestModelAlias::Mt32Old) {
 			return {true, mt32_old_models};
 		}
-		if (wanted_model_name == Mt32NewModelName) {
+		if (wanted_model_name == BestModelAlias::Mt32New) {
 			return {true, mt32_new_models};
 		}
-		if (wanted_model_name == Cm32lModelName) {
+		if (wanted_model_name == BestModelAlias::Cm32l) {
 			return {true, cm32l_models};
 		}
 
