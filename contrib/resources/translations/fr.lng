@@ -993,11 +993,11 @@ Les lecteurs virtuels ne peuvent pas être démontés.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[31;1mMonter c:\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[0m
+[color=light-red]Monter c:\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[31;1mMonter / n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[0m
+[color=light-red]Monter / n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -1108,65 +1108,65 @@ Cache de lecteur vidé.
 
 .
 :PROGRAM_INTRO
-[2J[32;1mBienvenue dans DOSBox Staging[0m, un émulateur x86 avec son et graphismes.
+[erases=entire][color=light-green]Bienvenue dans DOSBox Staging[reset], un émulateur x86 avec son et graphismes.
 DOSBox crée un shell pour vous qui ressemble au vieux DOS ordinaire.
 
-Pour des informations basqiues à propos du montage tapez [34;1mintro mount[0m
-Pour des informations sur le support des CD-ROM tapez [34;1mintro cdrom[0m
-Pour des informations sur les touches spéciales tapez [34;1mintro special[0m
-Pour accéder au wiki de DOSBox Staging, visitez :[34;1m
-https://github.com/dosbox-staging/dosbox-staging/wiki[0m
+Pour des informations basqiues à propos du montage tapez [color=light-blue]intro mount[reset]
+Pour des informations sur le support des CD-ROM tapez [color=light-blue]intro cdrom[reset]
+Pour des informations sur les touches spéciales tapez [color=light-blue]intro special[reset]
+Pour accéder au wiki de DOSBox Staging, visitez :[color=light-blue]
+https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[31;1mDOSBox s'arrêtera/quittera sans avertissement si une erreur survient ![0m
+[color=light-red]DOSBox s'arrêtera/quittera sans avertissement si une erreur survient ![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[2J[32;1mVoici quelques commandes pour commencer :[0m
+[erases=entire][color=light-green]Voici quelques commandes pour commencer :[reset]
 Avant de pouvoir utiliser les fichiers présents sur votre propre système de fichiers,
 vous devez monter les répertoires contenant les fichiers.
 
 
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
-[44;1m╔═════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c c:\dosgames\[37m créera un lecteur C avec c:\dosgames pour contenu. ║
+[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c c:\dosgames\[color=white] créera un lecteur C avec c:\dosgames pour contenu. ║
 ║                                                                         ║
-║ [32mc:\dosgames\[37m est un exemple. Remplacez-le par votre propre répertoire.  [37m║
-╚═════════════════════════════════════════════════════════════════════════╝[0m
+║ [color=green]c:\dosgames\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
+╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
-[44;1m╔═════════════════════════════════════════════════════════════════════════════╗
-║ [32mmount c ~/jeuxdos[37m créera un lecteur C avec ~/jeuxdos pour contenu.          ║
+[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════════╗
+║ [color=green]mount c ~/jeuxdos[color=white] créera un lecteur C avec ~/jeuxdos pour contenu.          ║
 ║                                                                             ║
-║ [32m~/dosgames[37m est un exemple. Remplacez-le par votre propre répertoire de jeux.[37m║
-╚═════════════════════════════════════════════════════════════════════════════╝[0m
+║ [color=green]~/dosgames[color=white] est un exemple. Remplacez-le par votre propre répertoire de jeux.[color=white]║
+╚═════════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Quand le montage est complété avec succès, tapez [34;1mc:[0m pour aller your freshly
-sur votre nouveau lecteur C monté. Taper [34;1mdir[0m à cet endroit montrera son contenu. [34;1mcd[0m vous permettra
-d'entrer dans un répertoire (reconnaissable par les [33;1m[][0m dans le listing du répertoire).
-Vous pouvez exécutez des programmes/fichiers finissant par [31m.exe .bat[0m et [31m.com[0m.
+Quand le montage est complété avec succès, tapez [color=light-blue]c:[reset] pour aller your freshly
+sur votre nouveau lecteur C monté. Taper [color=light-blue]dir[reset] à cet endroit montrera son contenu. [color=light-blue]cd[reset] vous permettra
+d'entrer dans un répertoire (reconnaissable par les [color=yellow][][reset] dans le listing du répertoire).
+Vous pouvez exécutez des programmes/fichiers finissant par [color=red].exe .bat[reset] et [color=red].com[reset].
 
 .
 :PROGRAM_INTRO_SPECIAL
-[2J[32;1mTouches spéciales :[0m
+[erases=entire][color=light-green]Touches spéciales :[reset]
 Voici les combinaisons des touches par défaut.
-Elles peuvent être changées dans le [33mkeymapper[0m.
+Elles peuvent être changées dans le [color=brown]keymapper[reset].
 
-[33;1m%s+Entrée[0m  : Bascule entre mode plein écran et mode fenêtré.
-[33;1m%s+Pause[0m   : Mettre en pause/relancer l'émulateur.
-[33;1m%s+F1[0m    %s : Démarrer le [33mkeymapper[0m.
-[33;1m%s+F4[0m    %s : Bascule entre les images disque montées, met à jour le cache des répertoires pour tous les lecteurs.
-[33;1m%s+F5[0m    %s : Sauvegarde une capture d'écran.
-[33;1m%s+F6[0m    %s : Démarrer/Arrêter l'enregistrement de la sortie son dans un fichier WAVE.
-[33;1m%s+F7[0m    %s : Démarrer/Arrêter l'enregistrement de la sortie vidéo dans un fichier ZMBV.
-[33;1m%s+F9[0m    %s : Terminer l'émulation.
-[33;1m%s+F10[0m   %s : Capturer/Libérer la souris.
-[33;1m%s+F11[0m   %s : Ralentir l'émulation.
-[33;1m%s+F12[0m   %s : Accélérer l'émulation.
-[33;1m%sF12[0m      : Débloquer la vitesse (bouton turbo/avance rapide).
+[color=yellow]%s+Entrée[reset]  : Bascule entre mode plein écran et mode fenêtré.
+[color=yellow]%s+Pause[reset]   : Mettre en pause/relancer l'émulateur.
+[color=yellow]%s+F1[reset]    %s : Démarrer le [color=brown]keymapper[reset].
+[color=yellow]%s+F4[reset]    %s : Bascule entre les images disque montées, met à jour le cache des répertoires pour tous les lecteurs.
+[color=yellow]%s+F5[reset]    %s : Sauvegarde une capture d'écran.
+[color=yellow]%s+F6[reset]    %s : Démarrer/Arrêter l'enregistrement de la sortie son dans un fichier WAVE.
+[color=yellow]%s+F7[reset]    %s : Démarrer/Arrêter l'enregistrement de la sortie vidéo dans un fichier ZMBV.
+[color=yellow]%s+F9[reset]    %s : Terminer l'émulation.
+[color=yellow]%s+F10[reset]   %s : Capturer/Libérer la souris.
+[color=yellow]%s+F11[reset]   %s : Ralentir l'émulation.
+[color=yellow]%s+F12[reset]   %s : Accélérer l'émulation.
+[color=yellow]%sF12[reset]      : Débloquer la vitesse (bouton turbo/avance rapide).
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -1189,11 +1189,11 @@ entre elles avec %s+F4, et -l spécifie le lecteur monté sur lequel démarrer.
 Sans lettre de lecteur spécifiée, le démarrage par défaut s'effectue sur A.
 Les seules lettres de lecteur démarrables sont A, C, et D. Pour démarrer à partir
 d'un disque dur (C ou D), l'image doit avoir au préalable été montée avec la commande
-[34;1mIMGMOUNT[0m.
+[color=light-blue]IMGMOUNT[reset].
 
 La syntaxe de cette commande est :
 
-[34;1mBOOT [diskimg1.img diskimg2.img] [-l lettre_de_lecteur][0m
+[color=light-blue]BOOT [diskimg1.img diskimg2.img] [-l lettre_de_lecteur][reset]
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1247,25 +1247,25 @@ ROM BASIC chargé.
 Monte une image CD-ROM, disquette, ou disque dur sur une lettre de lecteur.
 
 Usage :
-  [32;1mimgmount[0m [37;1mLECTEUR[0m [36;1mCDROM-SET[0m [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso 
-  [32;1mimgmount[0m [37;1mLECTEUR[0m [36;1mFICHIERIMAGE[0m [FICHIERIMAGE2 [..]] [-fs fat] -t hdd|floppy
-  [32;1mimgmount[0m [37;1mLECTEUR[0m [36;1mIMAGEDÉMARRAGE[0m [-fs fat|none] -t hdd -size GEOMETRIE
-  [32;1mimgmount[0m -u [37;1mLECTEUR[0m  (démonte l'image du LECTEUR)
+  [color=light-green]imgmount[reset] [color=white]LECTEUR[reset] [color=light-cyan]CDROM-SET[reset] [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso 
+  [color=light-green]imgmount[reset] [color=white]LECTEUR[reset] [color=light-cyan]FICHIERIMAGE[reset] [FICHIERIMAGE2 [..]] [-fs fat] -t hdd|floppy
+  [color=light-green]imgmount[reset] [color=white]LECTEUR[reset] [color=light-cyan]IMAGEDÉMARRAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE
+  [color=light-green]imgmount[reset] -u [color=white]LECTEUR[reset]  (démonte l'image du LECTEUR)
 
 Avec :
-  [37;1mLECTEUR[0m        est la lettre de lecteur où l'image sera montée : a, c, d, ...
-  [36;1mCDROM-SET[0m      est ISO, CUE+BIN, CUE+ISO, ou CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [36;1mFICHIERIMAGE[0m   est une image de disque dur ou disquette formaté FAT16/FAT12
-  [36;1mIMAGEDÉMARRAGE[0m est une image de démarrage de disque dur avec une taille
+  [color=white]LECTEUR[reset]        est la lettre de lecteur où l'image sera montée : a, c, d, ...
+  [color=light-cyan]CDROM-SET[reset]      est ISO, CUE+BIN, CUE+ISO, ou CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=light-cyan]FICHIERIMAGE[reset]   est une image de disque dur ou disquette formaté FAT16/FAT12
+  [color=light-cyan]IMAGEDÉMARRAGE[reset] est une image de démarrage de disque dur avec une taille
         -size GEOMETRIE : bytes-par-secteur,secteurs-par-tête,têtes,cylindres
 Notes :
   - %s+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant si spécifié.
 Exemples :
-  [32;1mimgmount[0m [37;1mD[0m [36;1m/home/USERNAME/jeux/doom.iso[0m -t cdrom
-  [32;1mimgmount[0m [37;1mD[0m [36;1mcd/quake1.cue[0m -t cdrom
-  [32;1mimgmount[0m [37;1mA[0m [36;1mdisquette1.img disquette2.img disquette3.img[0m -t floppy
-  [32;1mimgmount[0m [37;1mC[0m [36;1m~/dos/lecteur_c.img[0m -t hdd
-  [32;1mimgmount[0m [37;1mC[0m [36;1mdemarrage.img[0m -t hdd -fs none -size 512,63,32,1023
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/jeux/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquette1.img disquette2.img disquette3.img[reset] -t floppy
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]~/dos/lecteur_c.img[reset] -t hdd
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]demarrage.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
 :PROGRAM_MOUNT_HELP
@@ -1276,12 +1276,12 @@ relie les dossiers ou lecteurs physiques à une lettre de lecteur virtuel.
 Monte un répertoire de l'OS hôte sur une lettre de lecteur.
 
 Usage :
-  [32;1mmount[0m [37;1mLECTEUR[0m [36;1mRÉPERTOIRE[0m [-t TYPE] [-freesize TAILLE] [-label NOM_VOLUME]
-  [32;1mmount[0m -u [37;1mLECTEUR[0m  (démonte le répertoire du LECTEUR)
+  [color=light-green]mount[reset] [color=white]LECTEUR[reset] [color=light-cyan]RÉPERTOIRE[reset] [-t TYPE] [-freesize TAILLE] [-label NOM_VOLUME]
+  [color=light-green]mount[reset] -u [color=white]LECTEUR[reset]  (démonte le répertoire du LECTEUR)
 
 Avec :
-  [37;1mLECTEUR[0m    la lettre de lecteur où sera monté le répertoire : A, C, D, ...
-  [36;1mRÉPERTOIRE[0m est le répertoire de l'OS hôte qui sera monté
+  [color=white]LECTEUR[reset]    la lettre de lecteur où sera monté le répertoire : A, C, D, ...
+  [color=light-cyan]RÉPERTOIRE[reset] est le répertoire de l'OS hôte qui sera monté
   TYPE       type de répertoire à monter : 'dir', 'floppy', 'cdrom', 'overlay'
   TAILLE     espace libre sur le disque virtuel
              (KiB pour les disquettes, MiB sinon)
@@ -1293,9 +1293,9 @@ Notes :
   - Options disponibles dans le manuel (fichier README, chapitre 4).
 
 Exemples :
-  [32;1mmount[0m [37;1mC[0m [36;1m~/jeuxdos[0m
-  [32;1mmount[0m [37;1mD[0m [36;1m"/media/USERNAME/JEU CD"[0m -t cdrom
-  [32;1mmount[0m [37;1mC[0m [36;1mmes_fichiers_de_sauvegarde[0m -t overlay
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/JEU CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_de_sauvegarde[reset] -t overlay
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -1307,11 +1307,11 @@ Vous devez spécifier le numéro de lecteur (0 ou 3) sur lequel monter l'image (
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Pour les images [33mCD-ROM[0m :   [34;1mIMGMOUNT lettre-lecteur localisation-image -t iso[0m
+Pour les images [color=brown]CD-ROM[reset] :   [color=light-blue]IMGMOUNT lettre-lecteur localisation-image -t iso[reset]
 
-Pour les images de [33mdisque dur[0m : vous devez spécifier la géométrie du disque dur :
+Pour les images de [color=brown]disque dur[reset] : vous devez spécifier la géométrie du disque dur :
 bytes_par_secteur, secteurs_par_cylindre, têtes_par_cylindre, cylindres.
-[34;1mIMGMOUNT lettre-lecteur localisation-image -size bps,spc,tpc,cyl[0m
+[color=light-blue]IMGMOUNT lettre-lecteur localisation-image -size bps,spc,tpc,cyl[reset]
 
 .
 :PROGRAM_IMGMOUNT_INVALID_IMAGE
@@ -1341,7 +1341,7 @@ Fichier image non trouvé.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Pour monter des répertoires, utilisez la commande [34;1mMOUNT[0m, pas la commande [34;1mIMGMOUNT[0m.
+Pour monter des répertoires, utilisez la commande [color=light-blue]MOUNT[reset], pas la commande [color=light-blue]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1431,7 +1431,7 @@ Fichier '%s' déjà existant.
 
 .
 :SHELL_CMD_HELP
-Pour avoir une liste de toutes les commandes supportées, tapez [33;1mhelp /all[0m .
+Pour avoir une liste de toutes les commandes supportées, tapez [color=yellow]help /all[reset] .
 Liste rapide des commandes les plus utilisées :
 
 .
@@ -1448,16 +1448,16 @@ Impossible de CHanger vers : %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Astuce : pour changer de lecteur, tapez [31m%c:[0m
+Astuce : pour changer de lecteur, tapez [color=red]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Le nom de répertoire est plus long que 8 caractères et/ou contient des espaces.
-Essayez [31mcd %s[0m
+Essayez [color=red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Vous êtes encore sur le lecteur Z:, changez pour un lecteur monté avec [31mC:[0m.
+Vous êtes encore sur le lecteur Z:, changez pour un lecteur monté avec [color=red]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1558,7 +1558,7 @@ GOTO : Étiquette %s non trouvée.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Le lecteur %c n'existe pas !
-Vous devez le [31mmonter[0m auparavant. Tapez [1;33mintro[0m ou [1;33mintro mount[0m pour plus d'informations.
+Vous devez le [color=red]monter[reset] auparavant. Tapez [color=yellow]intro[reset] ou [color=yellow]intro mount[reset] pour plus d'informations.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -1589,49 +1589,49 @@ SUBST a échoué. Vous avez fait une erreur dans votre ligne de commande ou le l
 Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 .
 :SHELL_STARTUP_BEGIN
-[44;1m╔════════════════════════════════════════════════════════════════════════════╗
-║ [32mBienvenue dans DOSBox Staging %-44s[37m ║
+[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════════╗
+║ [color=green]Bienvenue dans DOSBox Staging %-44s[color=white] ║
 ║                                                                            ║
-║ Pour une courte introduction pour les nouveaux utilisateurs, tapez: [33mINTRO[37m  ║
-║ Pour la liste des commandes supportées par le shell, tapez : [1;33mHELP[37m          ║
+║ Pour une courte introduction pour les nouveaux utilisateurs, tapez: [color=brown]INTRO[color=white]  ║
+║ Pour la liste des commandes supportées par le shell, tapez : [color=yellow]HELP[color=white]          ║
 ║                                                                            ║
-║ Pour ajuster la vitesse du CPU émulé, essayez [31m%s+F11[37m et [31m%s+F12[37m.%s%s        ║
-║ Pour activer le keymapper [31m%s+F1[37m.%s                                         ║
-║ Pour plus d'informations, lisez le fichier [36mREADME[37m dans le répertoire de    ║
+║ Pour ajuster la vitesse du CPU émulé, essayez [color=red]%s+F11[color=white] et [color=red]%s+F12[color=white].%s%s        ║
+║ Pour activer le keymapper [color=red]%s+F1[color=white].%s                                         ║
+║ Pour plus d'informations, lisez le fichier [color=light-cyan]README[color=white] dans le répertoire de    ║
 ║ DOSBox.                                                                    ║
 ║                                                                            ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox supporte le mode composite CGA.                                     ║
-║ Utilisez [31mF12[37m pour régler la sortiecomposite sur ON, OFF, ou AUTO (défaut). ║
+║ Utilisez [color=red]F12[color=white] pour régler la sortiecomposite sur ON, OFF, ou AUTO (défaut). ║
 ║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.           ║
 ║                                                                            ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Utilisez [31mF11[37m pour passer au vert, ambre, blanc et blanc-papier,            ║
-║ et [31m%s+F11[37m pour changer le contraste/la luminosité.                        ║
+║ Utilisez [color=red]F11[color=white] pour passer au vert, ambre, blanc et blanc-papier,            ║
+║ et [color=red]%s+F11[color=white] pour changer le contraste/la luminosité.                        ║
 
 .
 :SHELL_STARTUP_HERC
-║ Utilisez [31mF11[37m pour passer au blanc, ambre, et vert monochrome.              ║
+║ Utilisez [color=red]F11[color=white] pour passer au blanc, ambre, et vert monochrome.              ║
 ║                                                                            ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Pressez [31m%sPause[37m pour démarrer le debugger ou lancez l'exécutable avec [33mDEBUG[37m. ║
+║ Pressez [color=red]%sPause[color=white] pour démarrer le debugger ou lancez l'exécutable avec [color=brown]DEBUG[color=white]. ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_END
-║ [33mhttps://www.dosbox-staging.org[37m                                             ║
-╚════════════════════════════════════════════════════════════════════════════╝[0m
+║ [color=brown]https://www.dosbox-staging.org[color=white]                                             ║
+╚════════════════════════════════════════════════════════════════════════════╝[reset]
 
 
 .
 :SHELL_STARTUP_SUB
-[32;1mdosbox-staging %s[0m
+[color=light-green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -1809,21 +1809,21 @@ Voir ou régler la version de DOS reportée.
 .
 :SHELL_CMD_VER_HELP_LONG
 Utilisation :
-  [32;1mver[0m
-  [32;1mver[0m [37;1mset[0m [36;1mVERSION[0m
+  [color=light-green]ver[reset]
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]VERSION[reset]
 
 Avec :
-  [36;1mVERSION[0m peut être un nombre entier, comme [36;1m5[0m, ou inclure une valeur décimale
-          à deux chiffres, comme : [36;1m6.22[0m, [36;1m7.01[0m, ou [36;1m7.10[0m. Les décimales peuvent
-          aussi être sépares par un espace, comme : [36;1m6 22[0m, [36;1m7 01[0m, ou [36;1m7 10[0m.
+  [color=light-cyan]VERSION[reset] peut être un nombre entier, comme [color=light-cyan]5[reset], ou inclure une valeur décimale
+          à deux chiffres, comme : [color=light-cyan]6.22[reset], [color=light-cyan]7.01[reset], ou [color=light-cyan]7.10[reset]. Les décimales peuvent
+          aussi être sépares par un espace, comme : [color=light-cyan]6 22[reset], [color=light-cyan]7 01[reset], ou [color=light-cyan]7 10[reset].
 
 Notes :
   La version de DOS peut aussi être réglée dans le fichier de configuration
-  sous la section [dos] en utilisant le paramètre "ver = [36;1mVERSION[0m".
+  sous la section [dos] en utilisant le paramètre "ver = [color=light-cyan]VERSION[reset]".
 
 Exemples :
-  [32;1mver[0m [37;1mset[0m [36;1m6.22[0m
-  [32;1mver[0m [37;1mset[0m [36;1m7 10[0m
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]6.22[reset]
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]7 10[reset]
 
 .
 :SHELL_CMD_VER_VER
@@ -1921,48 +1921,48 @@ No available IDE controllers. Drive will not have IDE emulation.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[34;1mmount D C:\example -t cdrom[0m
+[color=light-blue]mount D C:\example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[34;1mmount D C:\example -t cdrom -label CDLABEL[0m
+[color=light-blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-The [33mnext[0m level adds some low-level support.
+The [color=brown]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[34;1mmount d [0;31mD:\[34;1m -t cdrom -usecd [33m0[0m
-Replace [0;31mD:\[0m with the location of your CD-ROM.
-Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
-[34;1mmount -listcd[0m
+[color=light-blue]mount d [color=red]D:\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
+Replace [color=red]D:\[reset] with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=brown]0[reset] with the number reported for your CD-ROM if you type:
+[color=light-blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[34;1mimgmount D C:\cd.iso -t cdrom[0m
-[34;1mimgmount D C:\cd.cue -t cdrom[0m
+[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[2J[32;1mHow to mount a real/virtual CD-ROM Drive in DOSBox:[0m
+[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [33mbasic[0m level works on all normal directories, which installs MSCDEX
+The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[34;1mmount D ~/example -t cdrom[0m
+[color=light-blue]mount D ~/example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[34;1mmount D ~/example -t cdrom -label CDLABEL[0m
+[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-The [33mnext[0m level adds some low-level support.
+The [color=brown]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[34;1mmount d [0;31m~/example[34;1m -t cdrom -usecd [33m0[0m
+[color=light-blue]mount d [color=red]~/example[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
 
-Replace [0;31m~/example[0m with the location of your CD-ROM.
-Replace the [33;1m0[0m in [34;1m-usecd [33m0[0m with the number reported for your CD-ROM if you type:
-[34;1mmount -listcd[0m
+Replace [color=red]~/example[reset] with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=brown]0[reset] with the number reported for your CD-ROM if you type:
+[color=light-blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[34;1mimgmount D ~/cd.iso -t cdrom[0m
-[34;1mimgmount D ~/cd.cue -t cdrom[0m
+[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_KEYB_HELP_LONG
@@ -2468,13 +2468,13 @@ Examples:
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [32;1mattrib[0m [37;1m[ATTRIBUTES][0m [36;1mPATTERN[0m [/S]
+  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]
 
 Where:
-  [37;1mATTRIBUTES[0m are attributes to apply, including one or more of the following:
-             [37;1m+R[0m, [37;1m-R[0m, [37;1m+A[0m, [37;1m-A[0m, [37;1m+S[0m, [37;1m-S[0m, [37;1m+H[0m, [37;1m-H[0m
+  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
+             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
              Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [36;1mPATTERN[0m    can be either an exact filename or an inexact filename with
+  [color=light-cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
              wildcards, which are the asterisk (*) and the question mark (?),
              or an exact name of a directory.
 Notes:
@@ -2482,8 +2482,8 @@ Notes:
   If not specified, the command shows the current file/directory attributes.
 
 Examples:
-  [32;1mattrib[0m [36;1mfile.txt[0m
-  [32;1mattrib[0m [37;1m+R[0m [37;1m-A[0m [36;1m*.txt[0m
+  [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
