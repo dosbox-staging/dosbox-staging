@@ -631,22 +631,6 @@ Mt32ServicePtr MidiHandler_mt32::GetService()
 	return mt32_service;
 }
 
-// Calculates the maximum width available to print the rom directory, given
-// the terminal's width, indent size, and space needed for the model names:
-// [indent][max_dir_width][N columns + N delimeters]
-static size_t get_max_dir_width(const char* indent, const char* column_delim)
-{
-	const size_t column_delim_width = strlen(column_delim);
-
-	size_t header_width = strlen(indent);
-
-	const size_t term_width = INT10_GetTextColumns() - column_delim_width;
-	assert(term_width > header_width);
-
-	const auto max_dir_width = term_width - header_width;
-	return max_dir_width;
-}
-
 // Returns the set of models supported by all of the directories, and also
 // populates the provide map of the modules supported by each directory.
 
@@ -690,8 +674,6 @@ MIDI_RC MidiHandler_mt32::ListAll(Program* caller)
 	const std::vector<const LASynthModel*> cm32_model_list = {
 	        &cm32l_100_model, &cm32l_102_model, &cm32ln_100_model};
 
-	const size_t max_dir_width = get_max_dir_width(indent, column_delim);
-
 	// Get the set of directories and the models they support
 	DirsWithModels dirs_with_models;
 	const auto available_models = populate_available_models(GetService(),
@@ -725,8 +707,6 @@ MIDI_RC MidiHandler_mt32::ListAll(Program* caller)
 	};
 
 	// Print available MT-32 ROMs
-	const std::string dirs_padding(max_dir_width, ' ');
-
 	caller->WriteOut("%s%s", indent, MSG_Get("MT32_ROMS_LABEL"));
 
 	for (const auto& model : mt32_model_list) {
