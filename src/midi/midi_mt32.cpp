@@ -816,6 +816,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 
 	MIXER_LockMixerThread();
 
+	// Set up the mixer callback
 	const auto mixer_callback = std::bind(&MidiHandler_mt32::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
@@ -850,10 +851,10 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 		set_section_property_value("mt32", "mt32_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The Mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better to keep up (and prevent their audio frame
-	// FIFO from running dry).
+	// Double the baseline PCM prebuffer because MIDI is demanding and bursty.
+	// The mixer's default of ~20 ms becomes 40 ms here, which gives slower
+	// systems a better chance to keep up (and prevent their audio frame FIFO
+	// from running dry).
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO
@@ -865,21 +866,23 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 
 	// Size the in-bound work FIFO
 
-	// MIDI has a Baud rate of 31250; at optimum this is 31250 bits per
+	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
 	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
 	// MIDI message is three bytes, which gives a total of 30 bits per
 	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via > the MIDI protocol.
+	// messages per second can be obtained via the MIDI protocol.
 
 	// We have measured DOS games sending hundreds of MIDI messages within a
 	// short handful of millseconds, so a safe but very generous upper bound
-	// is used (Note: the actual memory used by the FIFO is incremental
-	// based on actual usage).
+	// is used.
+	//
+	// (Note: the actual memory used by the FIFO is incremental based on
+	// actual usage).
+	//
 	static constexpr uint16_t midi_spec_max_msg_rate_hz = 1042;
 	work_fifo.Resize(midi_spec_max_msg_rate_hz * 10);
 
-	// If we haven't failed yet, then we're ready to begin so move the local
-	// objects into the member variables.
+	// Move the local objects into the member variables
 	service       = std::move(mt32_service);
 	channel       = std::move(mixer_channel);
 	model_and_dir = std::move(loaded_model_and_dir);
@@ -889,6 +892,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:mt32");
 
+	// Start playback
 	is_open = true;
 	MIXER_UnlockMixerThread();
 	return true;
@@ -964,12 +968,14 @@ int MidiHandler_mt32::GetNumPendingAudioFrames()
 	if (last_rendered_ms >= now_ms) {
 		return 0;
 	}
+
 	// Return the number of audio frames needed to get current again
 	assert(ms_per_audio_frame > 0.0);
-	const auto elapsed_ms = now_ms - last_rendered_ms;
 
+	const auto elapsed_ms = now_ms - last_rendered_ms;
 	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
 	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
+
 	return num_audio_frames;
 }
 
