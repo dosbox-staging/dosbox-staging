@@ -857,6 +857,7 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 	}
 
 	if (work->message_type == MessageType::Channel) {
+		assert(work->message.size() <= MaxMidiMessageLen);
 		ApplyChannelMessage(work->message);
 	} else {
 		assert(work->message_type == MessageType::SysEx);
