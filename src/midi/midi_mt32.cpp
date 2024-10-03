@@ -47,6 +47,8 @@
 #include "string_utils.h"
 #include "support.h"
 
+//#define DEBUG_MT32
+
 // mt32emu Settings
 // ----------------
 
@@ -1057,14 +1059,15 @@ void MidiHandler_mt32::ProcessWorkFromFifo()
 		return;
 	}
 
-	/* // Comment-in to log inter-cycle rendering
-	if (work.num_pending_audio_frames > 0) {
-	        LOG_MSG("MT32: %2u audio frames prior to %s message, followed by"
-	                "%2lu more messages. Have %4lu audio frames queued",
-	                work.num_pending_audio_frames,
-	                work.message_type == MessageType::Channel ? "channel" :
-	                "sysex", work_fifo.Size(), audio_frame_fifo.Size());
-	}*/
+	#ifdef DEBUG_MT32
+	LOG_TRACE(
+			"MT32: %2u audio frames prior to %s message, followed by "
+			"%2lu more messages. Have %4lu audio frames queued",
+			work->num_pending_audio_frames,
+			work->message_type == MessageType::Channel ? "channel" : "sysex",
+			work_fifo.Size(),
+			audio_frame_fifo.Size());
+	#endif
 
 	if (work->num_pending_audio_frames > 0) {
 		RenderAudioFramesToFifo(work->num_pending_audio_frames);
