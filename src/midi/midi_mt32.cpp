@@ -1074,7 +1074,7 @@ void MidiHandler_mt32::ProcessWorkFromFifo()
 	const std::lock_guard<std::mutex> lock(service_mutex);
 
 	if (work->message_type == MessageType::Channel) {
-		assert(work->message.size() >= MaxMidiMessageLen);
+		assert(work->message.size() <= MaxMidiMessageLen);
 
 		const auto& data   = work->message.data();
 		const uint32_t msg = data[0] + (data[1] << 8) + (data[2] << 16);
