@@ -43,6 +43,8 @@
 #include "string_utils.h"
 #include "timer.h"
 
+// #define DEBUG_MIDI
+
 // clang-format off
 uint8_t MIDI_message_len_by_status[256] = {
   // Data bytes (dummy zero values)
@@ -69,9 +71,6 @@ uint8_t MIDI_message_len_by_status[256] = {
   0,2,3,2, 0,0,1,0, 1,0,1,1, 1,0,1,0   // 0xf0 -- System Exclusive
 };
 // clang-format on
-
-/* Include different midi drivers, lowest ones get checked first for default.
-   Each header provides an independent midi interface. */
 
 #include "midi_fluidsynth.h"
 #include "midi_mt32.h"
@@ -402,31 +401,42 @@ void MIDI_RawOutByte(uint8_t data)
 			if (midi.sysex.start_ms && (midi.sysex.pos >= 4) &&
 			    (midi.sysex.pos <= 9) && (midi.sysex.buf[1] == 0x41) &&
 			    (midi.sysex.buf[3] == 0x16)) {
-				LOG(LOG_ALL, LOG_ERROR)
-				("MIDI:Skipping invalid MT-32 SysEx midi message (too short to contain a checksum)");
+#ifdef DEBUG_MIDI
+				LOG_DEBUG(
+				        "MIDI: Skipping invalid MT-32 SysEx midi message "
+				        "(too short to contain a checksum)");
+#endif
 			} else {
-				//				LOG(LOG_ALL,LOG_NORMAL)("Play
-				// sysex; address:%02X %02X %02X, length:%4d,
-				// delay:%3d", midi.sysex.buf[5],
-				// midi.sysex.buf[6], midi.sysex.buf[7],
-				// midi.sysex.pos, midi.sysex.delay_ms);
+#ifdef DEBUG_MIDI
+				LOG_TRACE(
+				        "MIDI: Playing SysEx message, "
+				        "address: %02X %02X %02X, length: %4d, delay: %3d",
+				        midi.sysex.buf[5],
+				        midi.sysex.buf[6],
+				        midi.sysex.buf[7],
+				        midi.sysex.pos,
+				        midi.sysex.delay_ms);
+#endif
 				midi.handler->PlaySysex(midi.sysex.buf,
 				                        midi.sysex.pos);
+
 				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {
-						midi.sysex.delay_ms = 290; // All
-						                           // Parameters
-						                           // reset
+						// Reset All Parameters fix
+						midi.sysex.delay_ms = 290;
+
 					} else if (midi.sysex.buf[5] == 0x10 &&
 					           midi.sysex.buf[6] == 0x00 &&
 					           midi.sysex.buf[7] == 0x04) {
-						midi.sysex.delay_ms = 145; // Viking
-						                           // Child
+						// Viking Child fix
+						midi.sysex.delay_ms = 145;
+
 					} else if (midi.sysex.buf[5] == 0x10 &&
 					           midi.sysex.buf[6] == 0x00 &&
 					           midi.sysex.buf[7] == 0x01) {
-						midi.sysex.delay_ms = 30; // Dark
-						                          // Sun 1
+						// Dark Sun 1 fix
+						midi.sysex.delay_ms = 30;
+
 					} else {
 						midi.sysex.delay_ms = delay_in_ms(
 						        midi.sysex.pos);
@@ -434,9 +444,6 @@ void MIDI_RawOutByte(uint8_t data)
 					midi.sysex.start_ms = GetTicks();
 				}
 			}
-
-			LOG(LOG_ALL, LOG_NORMAL)
-			("Sysex message size %d", static_cast<int>(midi.sysex.pos));
 
 			if (CAPTURE_IsCapturingMidi()) {
 				constexpr auto is_sysex = true;
