@@ -122,7 +122,7 @@ public:
 		midiOutShortMsg(m_out, msg);
 	}
 
-	void PlaySysex(uint8_t *sysex, size_t len) override
+	void PlaySysEx(uint8_t *sysex, size_t len) override
 	{
 		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
 			LOG_WARNING("MIDI:WIN32: Can't send midi message");

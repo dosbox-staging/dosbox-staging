@@ -691,7 +691,7 @@ void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlaySysex(uint8_t* sysex, size_t len)
+void MidiHandlerFluidsynth::PlaySysEx(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
@@ -766,7 +766,7 @@ void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 }
 
 // Apply the sysex message to the service
-void MidiHandlerFluidsynth::ApplySysexMessage(const std::vector<uint8_t>& msg)
+void MidiHandlerFluidsynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 {
 	const char* data = reinterpret_cast<const char*>(msg.data());
 	const auto n     = static_cast<int>(msg.size());
@@ -856,7 +856,7 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 		ApplyChannelMessage(work->message);
 	} else {
 		assert(work->message_type == MessageType::SysEx);
-		ApplySysexMessage(work->message);
+		ApplySysExMessage(work->message);
 	}
 }
 
