@@ -996,7 +996,7 @@ void MidiHandler_mt32::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiHandler_mt32::PlaySysex(uint8_t* sysex, size_t len)
+void MidiHandler_mt32::PlaySysEx(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
