@@ -89,8 +89,8 @@ void MidiHandler_oss::PlayMsg(const MidiMessage& msg)
 
 void MidiHandler_oss::PlaySysex(uint8_t *sysex, size_t len)
 {
-	uint8_t buf[MIDI_SYSEX_SIZE * 4];
-	assert(len <= MIDI_SYSEX_SIZE);
+	uint8_t buf[MaxMidiSysexSize * 4];
+	assert(len <= MaxMidiSysexSize);
 	size_t pos = 0;
 	for (size_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
