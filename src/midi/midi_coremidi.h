@@ -154,10 +154,10 @@ public:
 		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	void PlaySysex(uint8_t *sysex, size_t len) override
+	void PlaySysEx(uint8_t *sysex, size_t len) override
 	{
 		// Acquire a MIDIPacketList
-		Byte packetBuf[MaxMidiSysexSize * 4];
+		Byte packetBuf[MaxMidiSysExSize * 4];
 		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
 		m_pCurPacket = MIDIPacketListInit(packetList);
 		

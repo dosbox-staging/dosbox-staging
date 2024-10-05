@@ -54,12 +54,12 @@ public:
 	bool Open(const char* conf) override;
 	void Close() override;
 	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t* sysex, size_t len) override;
-	MIDI_RC ListAll(Program* caller) override;
+	void PlaySysEx(uint8_t *sysex, size_t len) override;
+	MIDI_RC ListAll(Program *caller) override;
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
-	void ApplySysexMessage(const std::vector<uint8_t>& msg);
+	void ApplySysExMessage(const std::vector<uint8_t>& msg);
 	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
@@ -82,8 +82,8 @@ private:
 	std_fs::path current_sf2_path = {};
 
 	// Used to track the balance of time between the last mixer callback
-	// versus the current MIDI Sysex or Msg event.
-	double last_rendered_ms   = 0.0;
+	// versus the current MIDI SysEx or Msg event.
+	double last_rendered_ms = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;

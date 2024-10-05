@@ -37,7 +37,7 @@ class Program;
 // Using data bytes will result in a dummy zero lookup.
 extern uint8_t MIDI_message_len_by_status[256];
 
-constexpr auto MaxMidiSysexSize = 8192;
+constexpr auto MaxMidiSysExSize = 8192;
 
 constexpr uint8_t MaxMidiMessageLen = 3;
 

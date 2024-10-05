@@ -71,7 +71,7 @@ public:
 	MIDI_RC ListAll(Program* caller) override;
 	bool Open(const char* conf) override;
 	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t* sysex, size_t len) override;
+	void PlaySysEx(uint8_t* sysex, size_t len) override;
 	void PrintStats();
 
 private:
@@ -95,7 +95,7 @@ private:
 	std::optional<ModelAndDir> model_and_dir = {};
 
 	// Used to track the balance of time between the last mixer callback
-	// versus the current MIDI Sysex or Msg event.
+	// versus the current MIDI SysEx or Msg event.
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
