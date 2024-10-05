@@ -157,7 +157,7 @@ public:
 	void PlaySysex(uint8_t *sysex, size_t len) override
 	{
 		// Acquire a MIDIPacketList
-		Byte packetBuf[MIDI_SYSEX_SIZE * 4];
+		Byte packetBuf[MaxMidiSysexSize * 4];
 		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
 		m_pCurPacket = MIDIPacketListInit(packetList);
 		

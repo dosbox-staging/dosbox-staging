@@ -146,7 +146,7 @@ struct Midi {
 	MidiMessage realtime_message = {};
 
 	struct {
-		uint8_t buf[MIDI_SYSEX_SIZE] = {};
+		uint8_t buf[MaxMidiSysexSize] = {};
 
 		size_t pos       = 0;
 		int64_t delay_ms = 0;
@@ -392,7 +392,7 @@ void MIDI_RawOutByte(uint8_t data)
 
 	if (midi.status == MidiStatus::SystemExclusive) {
 		if (is_midi_data_byte(data)) {
-			if (midi.sysex.pos < (MIDI_SYSEX_SIZE - 1)) {
+			if (midi.sysex.pos < (MaxMidiSysexSize - 1)) {
 				midi.sysex.buf[midi.sysex.pos++] = data;
 			}
 			return;
