@@ -31,8 +31,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <functional>
 #include <fstream>
+#include <functional>
 #include <iterator>
 #include <map>
 #include <random>
@@ -50,8 +50,8 @@
 char int_to_char(int val)
 {
 	// To handle inbound values cast from unsigned chars, permit a slightly
-	// wider range to avoid triggering the assert when processing international
-	// ASCII values between 128 and 255.
+	// wider range to avoid triggering the assert when processing
+	// international ASCII values between 128 and 255.
 	assert(val >= CHAR_MIN && val <= UCHAR_MAX);
 	return static_cast<char>(val);
 }
@@ -85,33 +85,37 @@ char get_drive_letter_from_path(const char* path)
 	return 0;
 }
 
-std::string get_basename(const std::string &filename)
+std::string get_basename(const std::string& filename)
 {
 	// Guard against corner cases: '', '/', '\', 'a'
-	if (filename.length() <= 1)
+	if (filename.length() <= 1) {
 		return filename;
+	}
 
 	// Find the last slash, but if not is set to zero
 	size_t slash_pos = filename.find_last_of("/\\");
 
 	// If the slash is the last character
-	if (slash_pos == filename.length() - 1)
+	if (slash_pos == filename.length() - 1) {
 		slash_pos = 0;
+	}
 
 	// Otherwise if the slash is found mid-string
-	else if (slash_pos > 0)
+	else if (slash_pos > 0) {
 		slash_pos++;
+	}
 	return filename.substr(slash_pos);
 }
 
-
-bool is_executable_filename(const std::string &filename) noexcept
+bool is_executable_filename(const std::string& filename) noexcept
 {
 	const size_t n = filename.length();
-	if (n < 4)
+	if (n < 4) {
 		return false;
-	if (filename[n - 4] != '.')
+	}
+	if (filename[n - 4] != '.') {
 		return false;
+	}
 	std::string sfx = filename.substr(n - 3);
 	lowcase(sfx);
 	return (sfx == "exe" || sfx == "bat" || sfx == "com");
@@ -119,13 +123,14 @@ bool is_executable_filename(const std::string &filename) noexcept
 
 // Scans the provided command-line string for a '/'flag, removes it (if found),
 // and then returns a bool if it was indeed found and removed.
-bool ScanCMDBool(char *cmd, const char * flag)
+bool ScanCMDBool(char* cmd, const char* flag)
 {
-	if (cmd == nullptr)
+	if (cmd == nullptr) {
 		return false;
-	char *scan = cmd;
+	}
+	char* scan            = cmd;
 	const size_t flag_len = strlen(flag);
-	while ((scan = strchr(scan,'/'))) {
+	while ((scan = strchr(scan, '/'))) {
 		// Found a slash indicating the possible start of a flag.
 		// Now see if it's the flag we're looking for:
 		scan++;
@@ -135,26 +140,33 @@ bool ScanCMDBool(char *cmd, const char * flag)
 
 			// Found a match for the flag, now remove it
 			memmove(scan - 1, scan + flag_len, strlen(scan + flag_len) + 1);
-			trim(scan-1);
+			trim(scan - 1);
 			return true;
 		}
 	}
 	return false;
 }
 
-/* This scans the command line for a remaining switch and reports it else returns 0*/
-char * ScanCMDRemain(char * cmd) {
-	char * scan,*found;;
-	if ((scan=found=strchr(cmd,'/'))) {
-		while ( *scan && !isspace(*reinterpret_cast<unsigned char*>(scan)) ) scan++;
-		*scan=0;
+/* This scans the command line for a remaining switch and reports it else
+ * returns 0*/
+char* ScanCMDRemain(char* cmd)
+{
+	char *scan, *found;
+	;
+	if ((scan = found = strchr(cmd, '/'))) {
+		while (*scan && !isspace(*reinterpret_cast<unsigned char*>(scan))) {
+			scan++;
+		}
+		*scan = 0;
 		return found;
-	} else return nullptr;
+	} else {
+		return nullptr;
+	}
 }
 
 static char e_exit_buf[1024]; // greater scope as else it doesn't always gets
                               // thrown right
-void E_Exit(const char *format, ...)
+void E_Exit(const char* format, ...)
 {
 #if C_DEBUG && C_HEAVY_DEBUG
 	DEBUG_HeavyWriteLogInstruction();
@@ -166,13 +178,15 @@ void E_Exit(const char *format, ...)
 	ABORT_F("%s", e_exit_buf);
 }
 
-/* Overloaded function to handle different return types of POSIX and GNU
- * strerror_r variants */
-[[maybe_unused]] static const char *strerror_result(int retval, const char *err_str)
+// Overloaded function to handle different return types of POSIX and GNU
+// strerror_r variants
+[[maybe_unused]] static const char* strerror_result(int retval, const char* err_str)
 {
 	return retval == 0 ? err_str : nullptr;
 }
-[[maybe_unused]] static const char *strerror_result(const char *err_str, [[maybe_unused]] const char *buf)
+
+[[maybe_unused]] static const char* strerror_result(const char* err_str,
+                                                    [[maybe_unused]] const char* buf)
 {
 	return err_str;
 }
@@ -189,7 +203,8 @@ std::string safe_strerror(int err) noexcept
 #endif
 }
 
-void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] const char *name)
+void set_thread_name([[maybe_unused]] std::thread& thread,
+                     [[maybe_unused]] const char* name)
 {
 #if defined(HAVE_PTHREAD_SETNAME_NP) && defined(_GNU_SOURCE)
 	assert(strlen(name) < 16);
@@ -198,7 +213,7 @@ void set_thread_name([[maybe_unused]] std::thread& thread, [[maybe_unused]] cons
 #endif
 }
 
-void FILE_closer::operator()(FILE *f) noexcept
+void FILE_closer::operator()(FILE* f) noexcept
 {
 	if (f) {
 		fclose(f);
@@ -218,9 +233,9 @@ FILE* open_file(const char* filename, const char* mode)
 	return nullptr;
 }
 
-FILE_unique_ptr make_fopen(const char *fname, const char *mode)
+FILE_unique_ptr make_fopen(const char* fname, const char* mode)
 {
-	FILE *f = open_file(fname, mode);
+	FILE* f = open_file(fname, mode);
 	return f ? FILE_unique_ptr(f) : nullptr;
 }
 
@@ -261,7 +276,7 @@ int64_t stdio_num_sectors(FILE* f)
 	return stdio_size_with_divisor(f, 512L);
 }
 
-const std_fs::path &GetExecutablePath()
+const std_fs::path& GetExecutablePath()
 {
 	static std_fs::path exe_path;
 	if (exe_path.empty()) {
@@ -275,16 +290,18 @@ const std_fs::path &GetExecutablePath()
 	return exe_path;
 }
 
-static const std::deque<std_fs::path> &GetResourceParentPaths()
+static const std::deque<std_fs::path>& GetResourceParentPaths()
 {
 	static std::deque<std_fs::path> paths = {};
-	if (!paths.empty())
+	if (!paths.empty()) {
 		return paths;
+	}
 
-	auto add_if_exists = [&](const std_fs::path &p) {
+	auto add_if_exists = [&](const std_fs::path& p) {
 		std::error_code ec = {};
-		if (std_fs::is_directory(p, ec))
+		if (std_fs::is_directory(p, ec)) {
 			paths.emplace_back(p);
+		}
 	};
 
 	// First prioritize is local
@@ -333,10 +350,9 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 
 // Select either an integer or real-based uniform distribution
 template <typename T>
-	using uniform_distributor_t =
-	    typename std::conditional <std::is_integral<T>::value,
-	                    std::uniform_int_distribution<T>,
-	                    std::uniform_real_distribution<T>>::type;
+using uniform_distributor_t =
+        typename std::conditional<std::is_integral<T>::value, std::uniform_int_distribution<T>,
+                                  std::uniform_real_distribution<T>>::type;
 
 template <typename T>
 std::function<T()> CreateRandomizer(const T min_value, const T max_value)
@@ -351,20 +367,22 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 }
 // Explicit template instantiations
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t, const int16_t);
+template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t,
+                                                            const int16_t);
 template std::function<float()> CreateRandomizer<float>(const float, const float);
 
 // return the first existing resource
-std_fs::path GetResourcePath(const std_fs::path &name)
+std_fs::path GetResourcePath(const std_fs::path& name)
 {
 	std::error_code ec;
 
 	// handle an absolute path
-	if (std_fs::exists(name, ec))
+	if (std_fs::exists(name, ec)) {
 		return name;
+	}
 
 	// try the resource paths
-	for (const auto &parent : GetResourceParentPaths()) {
+	for (const auto& parent : GetResourceParentPaths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
 			return resource;
@@ -373,12 +391,12 @@ std_fs::path GetResourcePath(const std_fs::path &name)
 	return std_fs::path();
 }
 
-std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name)
+std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& name)
 {
 	return GetResourcePath(subdir / name);
 }
 
-static std::vector<std_fs::path> GetFilesInPath(const std_fs::path &dir,
+static std::vector<std_fs::path> GetFilesInPath(const std_fs::path& dir,
                                                 const std::string_view files_ext)
 {
 	using namespace std_fs;
@@ -386,8 +404,9 @@ static std::vector<std_fs::path> GetFilesInPath(const std_fs::path &dir,
 
 	// Check if the directory exists
 	std::error_code ec = {};
-	if (!std_fs::is_directory(dir, ec))
+	if (!std_fs::is_directory(dir, ec)) {
 		return files;
+	}
 
 	// Ensure the extension is valid
 	assert(files_ext.length() && files_ext[0] == '.');
@@ -395,29 +414,39 @@ static std::vector<std_fs::path> GetFilesInPath(const std_fs::path &dir,
 	// Keep recursing past permission issues and follow symlinks
 	constexpr auto idir_opts = directory_options::skip_permission_denied |
 	                           directory_options::follow_directory_symlink;
-	for (const auto &entry : recursive_directory_iterator(dir, idir_opts, ec)) {
-		if (ec)
-			break; // problem iterating, so skip the directory
 
-		if (!entry.is_regular_file(ec))
-			continue; // problem with entry, move onto the next one
+	for (const auto& entry : recursive_directory_iterator(dir, idir_opts, ec)) {
+		if (ec) {
+			// problem iterating, so skip the directory
+			break;
+		}
 
-		if (entry.path().extension() == files_ext)
+		if (!entry.is_regular_file(ec)) {
+			// problem with entry, move onto the next one
+			continue;
+		}
+
+		if (entry.path().extension() == files_ext) {
 			files.emplace_back(entry.path().lexically_relative(dir));
+		}
 	}
+
 	std::sort(files.begin(), files.end());
 	return files;
 }
 
 std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path &res_name, const std::string_view files_ext)
+        const std_fs::path& res_name, const std::string_view files_ext)
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
-	for (const auto &parent : GetResourceParentPaths()) {
-		auto res_path = parent / res_name;
+
+	for (const auto& parent : GetResourceParentPaths()) {
+		auto res_path  = parent / res_name;
 		auto res_files = GetFilesInPath(res_path, files_ext);
+
 		paths_and_files.emplace(std::move(res_path), std::move(res_files));
 	}
+
 	return paths_and_files;
 }
 
@@ -426,37 +455,43 @@ std::vector<std::string> GetResourceLines(const std_fs::path& name,
                                           const ResourceImportance importance)
 {
 	const auto resource_path = GetResourcePath(name);
+
 	if (auto maybe_lines = get_lines(resource_path); maybe_lines) {
 		return std::move(*maybe_lines);
 	}
-	// the resource didn't exist but it's optional
+
+	// The resource didn't exist but it's optional
 	if (importance == ResourceImportance::Optional) {
 		return {};
 	}
 
-	// the resource didn't exist and it was mandatory, so verbosely quit
+	// The resource didn't exist and it was mandatory, so verbosely quit
 	assert(importance == ResourceImportance::Mandatory);
+
 	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 	        name.string().c_str());
+
 	for (const auto& path : GetResourceParentPaths()) {
 		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
+
 	E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 }
 
 // Get resource lines from a text file
-std::vector<std::string> GetResourceLines(const std_fs::path &subdir,
-                                          const std_fs::path &name,
+std::vector<std::string> GetResourceLines(const std_fs::path& subdir,
+                                          const std_fs::path& name,
                                           const ResourceImportance importance)
 {
 	return GetResourceLines(subdir / name, importance);
 }
 
 // Load a resource blob (from a binary file)
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path& name,
                                       const ResourceImportance importance)
 {
 	const auto resource_path = GetResourcePath(name);
+
 	std::ifstream file(resource_path, std::ios::binary);
 
 	if (!file.is_open()) {
@@ -464,10 +499,15 @@ std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
 			return {};
 		}
 		assert(importance == ResourceImportance::Mandatory);
-		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:", name.string().c_str());
-		for (const auto &path : GetResourceParentPaths()) {
-			LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
+
+		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
+		        name.string().c_str());
+
+		for (const auto& path : GetResourceParentPaths()) {
+			LOG_WARNING("RESOURCE:  - '%s'",
+			            (path / name).string().c_str());
 		}
+
 		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 	}
 
@@ -480,116 +520,133 @@ std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
 }
 
 // Load a resource blob (from a binary file)
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path &subdir,
-                                      const std_fs::path &name,
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path& subdir,
+                                      const std_fs::path& name,
                                       const ResourceImportance importance)
 {
 	return LoadResourceBlob(subdir / name, importance);
 }
 
-bool path_exists(const std_fs::path &path)
+bool path_exists(const std_fs::path& path)
 {
 	std::error_code ec; // avoid exceptions
 	return std_fs::exists(path, ec);
 }
 
-bool is_writable(const std_fs::path &p)
+bool is_writable(const std_fs::path& p)
 {
 	using namespace std_fs;
 	std::error_code ec  = {}; // avoid exceptions
+							  //
 	const auto p_status = status(p, ec);
-	if (ec)
+	if (ec) {
 		return false;
+	}
 
 	const auto perms = p_status.permissions();
+
 	return ((perms & perms::owner_write) != perms::none ||
 	        (perms & perms::group_write) != perms::none ||
 	        (perms & perms::others_write) != perms::none);
 }
 
-bool is_readable(const std_fs::path &p)
+bool is_readable(const std_fs::path& p)
 {
 	using namespace std_fs;
 	std::error_code ec  = {}; // avoid exceptions
+							  //
 	const auto p_status = status(p, ec);
-	if (ec)
+	if (ec) {
 		return false;
+	}
 
 	const auto perms = p_status.permissions();
+
 	return ((perms & perms::owner_read) != perms::none ||
 	        (perms & perms::group_read) != perms::none ||
 	        (perms & perms::others_read) != perms::none);
 }
 
-bool is_readonly(const std_fs::path &p)
+bool is_readonly(const std_fs::path& p)
 {
 	return is_readable(p) && !is_writable(p);
 }
 
-bool make_writable(const std_fs::path &p)
+bool make_writable(const std_fs::path& p)
 {
 	using namespace std_fs;
 
 	// Check
-	if (is_writable(p))
+	if (is_writable(p)) {
 		return true;
+	}
 
 	// Apply
 	std::error_code ec;
 	permissions(p, perms::owner_write, perm_options::add, ec);
 
 	// Result and verification
-	if (ec)
+	if (ec) {
 		LOG_WARNING("FILESYSTEM: Failed to add write permissions for '%s': %s",
-		            p.string().c_str(), ec.message().c_str());
-	else
+		            p.string().c_str(),
+		            ec.message().c_str());
+	} else {
 		assert(is_writable(p));
+	}
 
 	return (!ec);
 }
 
-bool make_readonly(const std_fs::path &p)
+bool make_readonly(const std_fs::path& p)
 {
 	using namespace std_fs;
 
 	// Check
-	if (is_readonly(p))
+	if (is_readonly(p)) {
 		return true;
+	}
 
 	// Apply
-	constexpr auto write_perms = (perms::owner_write |
-	                              perms::group_write |
+	constexpr auto write_perms = (perms::owner_write | perms::group_write |
 	                              perms::others_write);
 	std::error_code ec;
 	permissions(p, write_perms, perm_options::remove, ec);
 
 	// Result and verification
-	if (ec)
+	if (ec) {
 		LOG_WARNING("FILESYSTEM: Failed to remove write permissions for '%s': %s",
-		            p.string().c_str(), ec.message().c_str());
-	else
+		            p.string().c_str(),
+		            ec.message().c_str());
+	} else {
 		assert(is_readonly(p));
+	}
 
 	return (!ec);
 }
 
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
 {
-	if (year < 1980 || month > 12 || month == 0 || day == 0)
+	if (year < 1980 || month > 12 || month == 0 || day == 0) {
 		return false;
+	}
 	// February has 29 days on leap-years and 28 days otherwise.
 	const bool is_leap_year = !(year % 4) && (!(year % 400) || (year % 100));
-	if (month == 2 && day > (uint32_t)(is_leap_year ? 29 : DOS_DATE_months[month]))
+
+	if (month == 2 &&
+	    day > (uint32_t)(is_leap_year ? 29 : DOS_DATE_months[month])) {
 		return false;
-	if (month != 2 && day > DOS_DATE_months[month])
+	}
+	if (month != 2 && day > DOS_DATE_months[month]) {
 		return false;
+	}
 	return true;
 }
 
 bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t second)
 {
-	if (hour > 23 || minute > 59 || second > 59)
+	if (hour > 23 || minute > 59 || second > 59) {
 		return false;
+	}
 	return true;
 }
 
@@ -608,7 +665,7 @@ std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
 
 	// Convert the number of elements into bytes, to be used by align
 	const auto req_bytes = req_elems * sizeof(T);
-	auto space_bytes = space_elems * sizeof(T); // adjusted by align
+	auto space_bytes     = space_elems * sizeof(T); // adjusted by align
 
 	// Align the pointer within our buffer
 	auto ptr = reinterpret_cast<void*>(buffer.get());
@@ -624,6 +681,7 @@ std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
 
 	return {std::move(buffer), obj_ptr};
 }
+
 // Explicit template instantiations
 template std::pair<std::unique_ptr<uint8_t[]>, uint8_t*>
 make_unique_aligned_array<uint8_t>(const size_t, const size_t, const uint8_t&);
