@@ -1036,6 +1036,7 @@ static void GUS_DMA_Event(uint32_t)
 
 void Gus::StartDmaTransfers()
 {
+	PIC_RemoveEvents(GUS_DMA_Event);
 	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
