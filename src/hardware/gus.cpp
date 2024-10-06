@@ -307,8 +307,7 @@ private:
 
 	const std::vector<AudioFrame>& RenderFrames(const int num_requested_frames);
 
-	void StartRunning() noexcept;
-	void StopAndReset() noexcept;
+	void Reset() noexcept;
 
 	void RenderUpToNow();
 	void UpdatePlaybackDmaAddress(const uint8_t new_address);
@@ -757,6 +756,14 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 
 		audio_channel->SetSampleRate(sample_rate_hz);
 	}
+
+	if (active_voices && prev_logged_voices != active_voices) {
+		LOG_MSG("GUS: Activated %u voices at %d Hz",
+		        active_voices,
+		        sample_rate_hz);
+
+		prev_logged_voices = active_voices;
+	}
 }
 
 const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
@@ -767,7 +774,7 @@ const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 		frame = {0.0f, 0.0f};
 	}
 
-	if (reset_register.is_dac_enabled) {
+	if (reset_register.is_running && reset_register.is_dac_enabled) {
 		auto voice            = voices.begin();
 		const auto last_voice = voice + active_voices;
 		while (voice < last_voice) {
@@ -1150,33 +1157,6 @@ void Gus::PopulatePanScalars() noexcept
 	}
 }
 
-void Gus::StartRunning() noexcept
-{
-	assert(reset_register.is_running);
-
-	// Initialize the voice states
-	for (auto& voice : voices) {
-		voice.ResetCtrls();
-	}
-
-	// Initialize the OPL emulator state
-	adlib_command_reg = ADLIB_CMD_DEFAULT;
-
-	voice_irq = VoiceIrq{};
-	timer_one = Timer{TIMER_1_DEFAULT_DELAY};
-	timer_two = Timer{TIMER_2_DEFAULT_DELAY};
-
-	if (active_voices > 0 && prev_logged_voices != active_voices) {
-		LOG_MSG("GUS: Activated %u voices at %d Hz",
-		        active_voices,
-		        sample_rate_hz);
-
-		prev_logged_voices = active_voices;
-	}
-
-	audio_channel->Enable(true);
-}
-
 void Gus::MirrorAdLibCommandRegister(const uint8_t reg_value)
 {
 	adlib_command_reg = reg_value;
@@ -1393,7 +1373,7 @@ void Gus::RegisterIoHandlers()
 	write_handlers.at(8).Install(0x20b + port_base, write_to, io_width_t::byte);
 }
 
-void Gus::StopAndReset() noexcept
+void Gus::Reset() noexcept
 {
 	// Halt playback before altering the DSP state
 	audio_channel->Enable(false);
@@ -1401,10 +1381,21 @@ void Gus::StopAndReset() noexcept
 	irq_status                 = 0;
 	irq_previously_interrupted = false;
 
+	// Reset the OPL emulator state
+	adlib_command_reg = ADLIB_CMD_DEFAULT;
+
 	dma_ctrl    = 0;
-	timer_ctrl  = 0;
 	sample_ctrl = 0;
 
+	timer_ctrl = 0;
+	timer_one  = Timer{TIMER_1_DEFAULT_DELAY};
+	timer_two  = Timer{TIMER_2_DEFAULT_DELAY};
+
+	// Reset the voice states
+	for (auto& voice : voices) {
+		voice.ResetCtrls();
+	}
+	voice_irq     = VoiceIrq{};
 	target_voice  = nullptr;
 	voice_index   = 0;
 	active_voices = 0;
@@ -1680,7 +1671,9 @@ void Gus::WriteToRegister()
 		return;
 	case 0x4c: // Reset register
 		reset_register.data = static_cast<uint8_t>(register_data >> 8);
-		reset_register.is_running ? StartRunning() : StopAndReset();
+		if (!reset_register.is_running) {
+			Reset();
+		}
 		return;
 	default:
 		break;
@@ -1767,7 +1760,7 @@ Gus::~Gus()
 
 	MIXER_LockMixerThread();
 
-	StopAndReset();
+	Reset();
 
 	// Prevent discovery of the GUS via the environment
 	ClearEnvironment();
