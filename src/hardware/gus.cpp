@@ -197,11 +197,8 @@ private:
 static void GUS_TimerEvent(uint32_t t);
 static void GUS_DMA_Event(uint32_t val);
 
-// Reset Register (4Ch)
-//
-// Described in section 2.6.1.9, page 16, of the UltraSound Software Development
-// Kit (SDK) Version 2.22
-
+// Reset Register (4Ch), section 2.6.1.9, page 16, of the UltraSound Software
+// Development Kit (SDK) Version 2.22
 union ResetRegister {
 	uint8_t data = 0;
 
