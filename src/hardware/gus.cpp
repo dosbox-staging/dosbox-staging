@@ -998,13 +998,16 @@ bool Gus::PerformDmaTransfer()
 			ram_pos += skip;
 		}
 	}
-	// Raise the TC irq if needed
-	if ((dma_ctrl & 0x20) != 0) {
+
+	if (dma_channel->has_reached_terminal_count) {
 		// We've hit the terminal count, so enable that bit
 		dma_ctrl |= DMA_TC_STATUS_BITMASK;
-		irq_status |= 0x80;
-		CheckIrq();
-		assert(dma_channel->has_reached_terminal_count);
+
+		// Raise the TC irq if needed
+		if ((dma_ctrl & 0x20) != 0) {
+			irq_status |= 0x80;
+			CheckIrq();
+		}
 		return false;
 	}
 	return true;
