@@ -78,8 +78,6 @@ constexpr std::array<uint8_t, 8> IrqAddresses = {0, 2, 5, 3, 7, 11, 12, 15};
 
 constexpr std::array<uint8_t, 6> DmaAddresses = {0, 1, 3, 5, 6, 7};
 
-constexpr uint16_t DMA_TC_STATUS_BITMASK = 0b100000000; // Status in 9th bit
-
 // Pan position constants
 constexpr uint8_t PAN_DEFAULT_POSITION = 7;
 constexpr uint8_t PAN_POSITIONS = 16; // 0: -45-deg, 7: centre, 15: +45-deg
@@ -119,6 +117,8 @@ struct VoiceCtrl {
 	uint16_t rate = 0;
 	uint8_t state = VOICE_DEFAULT_STATE;
 };
+
+enum class SampleSize { Bits8, Bits16 };
 
 // Collection types involving constant quantities
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
@@ -197,6 +197,30 @@ private:
 static void GUS_TimerEvent(uint32_t t);
 static void GUS_DMA_Event(uint32_t val);
 
+// DRAM DMA Control Register (41h), section 2.6.1.1, page 12, of the UltraSound
+// Software Development Kit (SDK) Version 2.22
+//
+union DmaControlRegister {
+	uint8_t data = 0;
+	bit_view<0, 1> is_enabled;
+	bit_view<1, 1> is_direction_gus_to_host;
+	bit_view<2, 1> is_channel_16bit;
+	bit_view<3, 2> rate_divisor;
+	bit_view<5, 1> wants_irq_on_terminal_count;
+
+	// Note that bit 6's function differs when written versus read. When
+	// written, bit 6 indicates that the DMA transfer's samples are 16-bit
+	// (or 8-bit, if cleared). However when read, bit 6 indicates if a
+	// terminal count IRQ is pending. There's no way for the application to
+	// read back the 16-bit sample indicator; it's a one-shot write into the
+	// GUS that sizes the DMA routine.
+	//
+	bit_view<6, 1> are_samples_16bit;
+	bit_view<6, 1> has_pending_terminal_count_irq;
+
+	bit_view<7, 1> are_samples_high_bit_inverted;
+};
+
 // Reset Register (4Ch), section 2.6.1.9, page 16, of the UltraSound Software
 // Development Kit (SDK) Version 2.22
 union ResetRegister {
@@ -274,7 +298,8 @@ public:
 	};
 	Timer timer_one = {TIMER_1_DEFAULT_DELAY};
 	Timer timer_two = {TIMER_2_DEFAULT_DELAY};
-	bool PerformDmaTransfer();
+
+	std::function<bool()> PerformDmaTransfer = {};
 
 private:
 	Gus()                      = delete;
@@ -289,7 +314,10 @@ private:
 	void UpdateDmaAddr(uint32_t offset) noexcept;
 	void DmaCallback(const DmaChannel* chan, DMAEvent event);
 	void StartDmaTransfers();
-	bool IsDmaPcm16Bit() noexcept;
+
+	template <SampleSize sample_size>
+	bool SizedDmaTransfer();
+
 	bool IsDmaXfer16Bit() noexcept;
 	uint16_t ReadFromRegister();
 
@@ -360,9 +388,7 @@ private:
 	// DMA states
 	uint16_t dma_addr       = 0;
 	uint8_t dma_addr_nibble = 0;
-	// dma_ctrl would normally be a uint8_t as real hardware uses 8 bits,
-	// but we store the DMA terminal count status in the 9th bit
-	uint16_t dma_ctrl = 0;
+
 	uint8_t dma1      = 0; // playback DMA
 	uint8_t dma2      = 0; // recording DMA
 
@@ -371,6 +397,7 @@ private:
 	uint8_t irq2       = 0; // MIDI IRQ
 	uint8_t irq_status = 0;
 
+	DmaControlRegister dma_control_register = {};
 	ResetRegister reset_register = {};
 	MixControlRegister mix_control_register = {};
 
@@ -943,10 +970,11 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 	dma_addr_nibble = check_cast<uint8_t>(adjusted & 0xf);
 }
 
-bool Gus::PerformDmaTransfer()
+template <SampleSize sample_size>
+bool Gus::SizedDmaTransfer()
 {
 	std::lock_guard lock(mutex);
-	if (dma_channel->is_masked || !(dma_ctrl & 0x01)) {
+	if (dma_channel->is_masked || !dma_control_register.is_enabled) {
 		return false;
 	}
 
@@ -967,10 +995,9 @@ bool Gus::PerformDmaTransfer()
 	assert(static_cast<size_t>(offset) + desired <= ram.size());
 
 	// Perform the DMA transfer
-	const bool is_reading = !(dma_ctrl & 0x2);
-	const auto transfered =
-	        (is_reading ? dma_channel->Read(desired, &ram.at(offset))
-	                    : dma_channel->Write(desired, &ram.at(offset)));
+	const auto transfered = dma_control_register.is_direction_gus_to_host
+	                              ? dma_channel->Write(desired, &ram.at(offset))
+	                              : dma_channel->Read(desired, &ram.at(offset));
 
 	// Did we get everything we asked for?
 	assert(transfered == desired);
@@ -982,12 +1009,15 @@ bool Gus::PerformDmaTransfer()
 	UpdateDmaAddr(check_cast<uint32_t>(offset + bytes_transfered));
 
 	// If requested, invert the loaded samples' most-significant bits
-	if (is_reading && dma_ctrl & 0x80) {
+	if (!dma_control_register.is_direction_gus_to_host &&
+	    dma_control_register.are_samples_high_bit_inverted) {
 		auto ram_pos           = ram.begin() + offset;
 		const auto ram_pos_end = ram_pos + bytes_transfered;
+
 		// adjust our start and skip size if handling 16-bit PCM samples
-		ram_pos += IsDmaPcm16Bit() ? 1 : 0;
-		const auto skip = IsDmaPcm16Bit() ? 2 : 1;
+		ram_pos += (sample_size == SampleSize::Bits16) ? 1 : 0;
+		const auto skip = (sample_size == SampleSize::Bits16) ? 2 : 1;
+
 		assert(ram_pos >= ram.begin() && ram_pos <= ram_pos_end &&
 		       ram_pos_end <= ram.end());
 		while (ram_pos < ram_pos_end) {
@@ -997,22 +1027,15 @@ bool Gus::PerformDmaTransfer()
 	}
 
 	if (dma_channel->has_reached_terminal_count) {
-		// We've hit the terminal count, so enable that bit
-		dma_ctrl |= DMA_TC_STATUS_BITMASK;
+		dma_control_register.has_pending_terminal_count_irq = true;
 
-		// Raise the TC irq if needed
-		if ((dma_ctrl & 0x20) != 0) {
+		if (dma_control_register.wants_irq_on_terminal_count) {
 			irq_status |= 0x80;
 			CheckIrq();
 		}
 		return false;
 	}
 	return true;
-}
-
-bool Gus::IsDmaPcm16Bit() noexcept
-{
-	return dma_ctrl & 0x40;
 }
 
 bool Gus::IsDmaXfer16Bit() noexcept
@@ -1024,7 +1047,7 @@ bool Gus::IsDmaXfer16Bit() noexcept
 	// 0x04   8/16   < 4     No      8-bit if using Low DMA
 	// 0x40  16/ 8   Any     No      Windows 3.1, Quake
 	// 0x44  16/16   >= 4    Yes     Windows 3.1, Quake
-	return (dma_ctrl & 0x4) && (dma1 >= 4);
+	return (dma_control_register.is_channel_16bit && dma1 >= 4);
 }
 
 static void GUS_DMA_Event(uint32_t)
@@ -1264,10 +1287,8 @@ uint16_t Gus::ReadFromRegister()
 	// Registers that read from the general DSP
 	switch (selected_register) {
 	case 0x41: // DMA control register - read acknowledges DMA IRQ
-		reg = dma_ctrl & 0xbf;
-		// get the status and store it in bit 6 of the register
-		reg |= (dma_ctrl & DMA_TC_STATUS_BITMASK) >> 2;
-		dma_ctrl &= ~DMA_TC_STATUS_BITMASK; // clear the status bit
+		reg = dma_control_register.data;
+		dma_control_register.has_pending_terminal_count_irq = false;
 		irq_status &= 0x7f;
 		CheckIrq();
 		return static_cast<uint16_t>(reg << 8);
@@ -1276,9 +1297,7 @@ uint16_t Gus::ReadFromRegister()
 	case 0x45: // Timer control register matches Adlib's behavior
 		return static_cast<uint16_t>(timer_ctrl << 8);
 	case 0x49: // DMA sample register
-		reg = dma_ctrl & 0xbf;
-		// get the status and store it in bit 6 of the register
-		reg |= (dma_ctrl & DMA_TC_STATUS_BITMASK) >> 2;
+		reg = dma_control_register.data;
 		return static_cast<uint16_t>(reg << 8);
 	case 0x4c: // Reset register
 		return static_cast<uint16_t>(reset_register.data << 8);
@@ -1385,7 +1404,8 @@ void Gus::Reset() noexcept
 	// Reset the OPL emulator state
 	adlib_command_reg = ADLIB_CMD_DEFAULT;
 
-	dma_ctrl    = 0;
+	dma_control_register.data = {};
+
 	sample_ctrl = 0;
 
 	timer_ctrl = 0;
@@ -1622,11 +1642,20 @@ void Gus::WriteToRegister()
 	case 0x10: // Undocumented register used in Fast Tracker 2
 		return;
 	case 0x41: // DMA control register
-		// Clear all bits except the status and then replace dma_ctrl's
-		// lower bits with reg's top 8 bits
-		dma_ctrl &= DMA_TC_STATUS_BITMASK;
-		dma_ctrl |= register_data >> 8;
-		if (dma_ctrl & 1) {
+		dma_control_register.data = static_cast<uint8_t>(register_data >> 8);
+
+		// This is the only place where the application tells the GUS if
+		// the incoming DMA samples are 16-bit or 8-bit. It's a one-shot
+		// write in bit 6 that can't be read back because this bit takes
+		// on a different meaning when reading the DMA control register.
+		//
+		PerformDmaTransfer = std::bind(
+		        dma_control_register.are_samples_16bit
+		                ? &Gus::SizedDmaTransfer<SampleSize::Bits16>
+		                : &Gus::SizedDmaTransfer<SampleSize::Bits8>,
+		        this);
+
+		if (dma_control_register.is_enabled) {
 			StartDmaTransfers();
 		}
 		return;
