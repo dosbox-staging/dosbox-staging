@@ -892,6 +892,15 @@
     <ClCompile Include="..\src\debug\debug_win32.cpp">
       <Filter>src\debug</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\audio\clap\event_list.cpp">
+      <Filter>src\audio\clap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\audio\clap\plugin.cpp">
+      <Filter>src\audio\clap</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\audio\clap\plugin_manager.cpp">
+      <Filter>src\audio\clap</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h">
@@ -1732,6 +1741,15 @@
     <ClInclude Include="..\src\dos\program_clip.h">
       <Filter>src\dos</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\audio\clap\event_list.h">
+      <Filter>src\audio\clap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\clap\plugin.h">
+      <Filter>src\audio\clap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\clap\plugin_manager.h">
+      <Filter>src\audio\clap</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
@@ -1872,6 +1890,12 @@
     </Filter>
     <Filter Include="src\libs\simde\x86">
       <UniqueIdentifier>{923d014d-da8a-4bdf-b1bd-91d465f24ffc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\audio">
+      <UniqueIdentifier>{78a5ab22-a863-44b3-877d-420ee2bb5a3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\audio\clap">
+      <UniqueIdentifier>{3d4410d3-5abe-4949-ba77-e1e8c5a4d4ce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
