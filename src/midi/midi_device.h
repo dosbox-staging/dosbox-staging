@@ -27,12 +27,16 @@
 #include <cstdint>
 
 namespace MidiDeviceName {
-constexpr auto Alsa       = "alsa";
-constexpr auto CoreAudio  = "coreaudio";
-constexpr auto CoreMidi   = "coremidi";
-constexpr auto FluidSynth = "fluidsynth";
-constexpr auto Mt32       = "mt32";
-constexpr auto Win32      = "win32";
+// Internal synths
+constexpr auto FluidSynth  = "fluidsynth";
+constexpr auto SoundCanvas = "soundcanvas";
+constexpr auto Mt32        = "mt32";
+
+// External devices
+constexpr auto Alsa      = "alsa";
+constexpr auto CoreAudio = "coreaudio";
+constexpr auto CoreMidi  = "coremidi";
+constexpr auto Win32     = "win32";
 } // namespace MidiDeviceName
 
 class MidiDevice {
