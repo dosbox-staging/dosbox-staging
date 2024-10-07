@@ -396,8 +396,9 @@ std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& nam
 	return GetResourcePath(subdir / name);
 }
 
-static std::vector<std_fs::path> GetFilesInPath(const std_fs::path& dir,
-                                                const std::string_view files_ext)
+static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
+                                                       const std::string_view files_ext,
+                                                       const bool only_regular_files)
 {
 	using namespace std_fs;
 	std::vector<std_fs::path> files = {};
@@ -421,8 +422,8 @@ static std::vector<std_fs::path> GetFilesInPath(const std_fs::path& dir,
 			break;
 		}
 
-		if (!entry.is_regular_file(ec)) {
-			// problem with entry, move onto the next one
+		if (only_regular_files && !entry.is_regular_file(ec)) {
+			// move onto the next entry
 			continue;
 		}
 
@@ -436,13 +437,16 @@ static std::vector<std_fs::path> GetFilesInPath(const std_fs::path& dir,
 }
 
 std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path& res_name, const std::string_view files_ext)
+        const std_fs::path& res_name, const std::string_view files_ext,
+        const bool only_regular_files = true)
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
 
 	for (const auto& parent : GetResourceParentPaths()) {
 		auto res_path  = parent / res_name;
-		auto res_files = GetFilesInPath(res_path, files_ext);
+		auto res_files = get_directory_entries(res_path,
+		                                       files_ext,
+		                                       only_regular_files);
 
 		paths_and_files.emplace(std::move(res_path), std::move(res_files));
 	}
@@ -529,15 +533,18 @@ std::vector<uint8_t> LoadResourceBlob(const std_fs::path& subdir,
 
 bool path_exists(const std_fs::path& path)
 {
-	std::error_code ec; // avoid exceptions
+	// avoid exceptions
+	std::error_code ec;
 	return std_fs::exists(path, ec);
 }
 
 bool is_writable(const std_fs::path& p)
 {
 	using namespace std_fs;
-	std::error_code ec  = {}; // avoid exceptions
-							  //
+
+	// avoid exceptions
+	std::error_code ec = {};
+	//
 	const auto p_status = status(p, ec);
 	if (ec) {
 		return false;
@@ -553,8 +560,10 @@ bool is_writable(const std_fs::path& p)
 bool is_readable(const std_fs::path& p)
 {
 	using namespace std_fs;
-	std::error_code ec  = {}; // avoid exceptions
-							  //
+
+	// avoid exceptions
+	std::error_code ec = {};
+
 	const auto p_status = status(p, ec);
 	if (ec) {
 		return false;
