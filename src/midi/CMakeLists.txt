@@ -7,6 +7,7 @@ add_library(libmidi STATIC
 		midi_lasynth_model.cpp
 		midi_mt32.cpp
 		midi_win32.cpp
+		midi_soundcanvas.cpp
 )
 
 find_package(MT32Emu CONFIG REQUIRED)
