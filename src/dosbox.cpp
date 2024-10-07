@@ -873,6 +873,8 @@ void DOSBOX_Init()
 	MT32_AddConfigSection(control);
 #endif
 
+	SOUNDCANVAS_AddConfigSection(control);
+
 #if C_DEBUG
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);
 #endif
