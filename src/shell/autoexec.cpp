@@ -525,7 +525,7 @@ void AutoExecModule::AddLine(const Placement placement, const std::string& line)
 void AutoExecModule::AutoMountDrive(const std::string& dir_letter)
 {
 	// Does drives/[x] exist?
-	const auto drive_path = GetResourcePath("drives", dir_letter);
+	const auto drive_path = get_resource_path("drives", dir_letter);
 	if (!path_exists(drive_path)) {
 		return;
 	}

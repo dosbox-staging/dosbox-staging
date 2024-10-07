@@ -70,7 +70,7 @@ inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
 }
 
 template <typename T>
-std::function<T()> CreateRandomizer(const T min_value, const T max_value);
+std::function<T()> create_randomizer(const T min_value, const T max_value);
 
 inline int iround(double x)
 {

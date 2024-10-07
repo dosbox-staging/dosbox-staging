@@ -2748,7 +2748,7 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 
 	auto try_loading = [](const std_fs::path &mapper_path) -> bool {
 		constexpr auto optional = ResourceImportance::Optional;
-		auto lines = GetResourceLines(mapper_path, optional);
+		auto lines = get_resource_lines(mapper_path, optional);
 		if (lines.empty())
 			return false;
 
