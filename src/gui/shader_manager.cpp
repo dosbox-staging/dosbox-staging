@@ -206,7 +206,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	constexpr auto OnlyRegularFiles = true;
 
 	for (auto& [dir, shaders] :
-	     get_resource_dir_entries(GlShadersDir, ".glsl", OnlyRegularFiles)) {
+	     GetFilesInResource(GlShadersDir, ".glsl", OnlyRegularFiles)) {
 
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
