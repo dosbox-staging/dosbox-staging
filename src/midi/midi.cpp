@@ -702,29 +702,36 @@ void MIDI_ListAll(Program* caller)
 	}
 }
 
-static void register_midi_text_messages()
+static MIDI* midi_instance;
+
+static void midi_destroy(Section* /*sec*/)
 {
 	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
 	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
+
+	if (midi_instance) {
+		delete midi_instance;
+	}
 }
 
-static MIDI* test;
-
-void MIDI_Destroy(Section* /*sec*/)
-{
-	delete test;
-}
-
-void MIDI_Init(Section* sec)
+static void midi_init(Section* sec)
 {
 	assert(sec);
 
-	test = new MIDI(sec);
+	midi_instance = new MIDI(sec);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MIDI_Destroy, changeable_at_runtime);
+	sec->AddDestroyFunction(&midi_destroy, changeable_at_runtime);
+}
 
-	register_midi_text_messages();
+void MIDI_Init()
+{
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	assert(sec);
+
+	midi_init(sec);
 }
 
 void init_midi_dosbox_settings(Section_prop& secprop)
@@ -846,20 +853,27 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "applications, or when debugging MIDI issues.");
 }
 
+static void register_midi_text_messages()
+{
+	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
+	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
+	MSG_Add("MIDI_DEVICE_NO_SUPPORTED_MODELS", "No supported models present");
+	MSG_Add("MIDI_DEVICE_NO_MODEL_ACTIVE", "No model is currently active");
+}
+
 void MIDI_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("midi",
-	                                          &MIDI_Init,
-	                                          changeable_at_runtime);
+	Section_prop* sec = conf->AddSection_prop("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
 
-	sec->AddInitFunction(&init_midi_state, changeable_at_runtime);
-	sec->AddInitFunction(&MPU401_Init, changeable_at_runtime);
+	sec->AddInitFunction(&init_midi_state, ChangeableAtRuntime);
+	sec->AddInitFunction(&MPU401_Init, ChangeableAtRuntime);
 
 	init_midi_dosbox_settings(*sec);
-}
 
+	register_midi_text_messages();
+}

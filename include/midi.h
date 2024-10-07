@@ -200,9 +200,10 @@ MessageType get_midi_message_type(const uint8_t status_byte);
 uint8_t get_midi_status(const uint8_t status_byte);
 uint8_t get_midi_channel(const uint8_t channel_status);
 
+void MIDI_Init();
+
 bool MIDI_Available();
 void MIDI_Reset();
-void MIDI_Init(Section* sec);
 void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
 
