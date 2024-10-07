@@ -204,7 +204,7 @@ void InitConfigDir()
 {
 	if (cached_config_dir.empty()) {
 		// Check if a portable layout exists
-		const auto portable_conf_path = GetExecutablePath() /
+		const auto portable_conf_path = get_executable_path() /
 		                                GetPrimaryConfigName();
 
 		std::error_code ec = {};

@@ -123,7 +123,7 @@ bool is_executable_filename(const std::string& filename) noexcept
 
 // Scans the provided command-line string for a '/'flag, removes it (if found),
 // and then returns a bool if it was indeed found and removed.
-bool ScanCMDBool(char* cmd, const char* flag)
+bool scan_and_remove_cmdline_switch(char* cmd, const char* flag)
 {
 	if (cmd == nullptr) {
 		return false;
@@ -147,9 +147,9 @@ bool ScanCMDBool(char* cmd, const char* flag)
 	return false;
 }
 
-/* This scans the command line for a remaining switch and reports it else
- * returns 0*/
-char* ScanCMDRemain(char* cmd)
+// Scans the command line for a remaining switch and reports it if found,
+// otherwise returns 0.
+char* scan_remaining_cmdline_switch(char* cmd)
 {
 	char *scan, *found;
 	;
@@ -276,7 +276,7 @@ int64_t stdio_num_sectors(FILE* f)
 	return stdio_size_with_divisor(f, 512L);
 }
 
-const std_fs::path& GetExecutablePath()
+const std_fs::path& get_executable_path()
 {
 	static std_fs::path exe_path;
 	if (exe_path.empty()) {
@@ -313,11 +313,11 @@ static const std::deque<std_fs::path>& GetResourceParentPaths()
 	// Second priority are resources packaged with the executable
 #if defined(MACOSX)
 	constexpr auto macos_resource_dir_name = "Resources";
-	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
-	add_if_exists(GetExecutablePath() / ".." / macos_resource_dir_name);
+	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
+	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
 #else
-	add_if_exists(GetExecutablePath() / resource_dir_name);
-	add_if_exists(GetExecutablePath() / ".." / resource_dir_name);
+	add_if_exists(get_executable_path() / resource_dir_name);
+	add_if_exists(get_executable_path() / ".." / resource_dir_name);
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
 
@@ -340,7 +340,7 @@ static const std::deque<std_fs::path>& GetResourceParentPaths()
 	// portability of the install tree (do not replace this with --prefix,
 	// which would destroy this portable aspect).
 	//
-	add_if_exists(GetExecutablePath() / "../share" / DOSBOX_PROJECT_NAME);
+	add_if_exists(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
 	add_if_exists(GetConfigDir());
@@ -355,7 +355,7 @@ using uniform_distributor_t =
                                   std::uniform_real_distribution<T>>::type;
 
 template <typename T>
-std::function<T()> CreateRandomizer(const T min_value, const T max_value)
+std::function<T()> create_randomizer(const T min_value, const T max_value)
 {
 	static std::random_device rd;        // one-time call to the host OS
 	static std::mt19937 generator(rd()); // seed the mersenne_twister once
@@ -367,12 +367,12 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value)
 }
 // Explicit template instantiations
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-template std::function<int16_t()> CreateRandomizer<int16_t>(const int16_t,
+template std::function<int16_t()> create_randomizer<int16_t>(const int16_t,
                                                             const int16_t);
-template std::function<float()> CreateRandomizer<float>(const float, const float);
+template std::function<float()> create_randomizer<float>(const float, const float);
 
 // return the first existing resource
-std_fs::path GetResourcePath(const std_fs::path& name)
+std_fs::path get_resource_path(const std_fs::path& name)
 {
 	std::error_code ec;
 
@@ -391,13 +391,13 @@ std_fs::path GetResourcePath(const std_fs::path& name)
 	return std_fs::path();
 }
 
-std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& name)
+std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name)
 {
-	return GetResourcePath(subdir / name);
+	return get_resource_path(subdir / name);
 }
 
 static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
-                                                       const std::string_view files_ext,
+                                                       const std::string_view extension,
                                                        const bool only_regular_files)
 {
 	using namespace std_fs;
@@ -410,7 +410,7 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	}
 
 	// Ensure the extension is valid
-	assert(files_ext.length() && files_ext[0] == '.');
+	assert(extension.length() && extension[0] == '.');
 
 	// Keep recursing past permission issues and follow symlinks
 	constexpr auto idir_opts = directory_options::skip_permission_denied |
@@ -427,7 +427,7 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 			continue;
 		}
 
-		if (entry.path().extension() == files_ext) {
+		if (entry.path().extension() == extension) {
 			files.emplace_back(entry.path().lexically_relative(dir));
 		}
 	}
@@ -436,16 +436,16 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	return files;
 }
 
-std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path& res_name, const std::string_view files_ext,
+std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
+        const std_fs::path& resource_dir, const std::string_view extension,
         const bool only_regular_files = true)
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
 
 	for (const auto& parent : GetResourceParentPaths()) {
-		auto res_path  = parent / res_name;
+		auto res_path  = parent / resource_dir;
 		auto res_files = get_directory_entries(res_path,
-		                                       files_ext,
+		                                       extension,
 		                                       only_regular_files);
 
 		paths_and_files.emplace(std::move(res_path), std::move(res_files));
@@ -455,10 +455,10 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 }
 
 // Get resource lines from a text file
-std::vector<std::string> GetResourceLines(const std_fs::path& name,
+std::vector<std::string> get_resource_lines(const std_fs::path& name,
                                           const ResourceImportance importance)
 {
-	const auto resource_path = GetResourcePath(name);
+	const auto resource_path = get_resource_path(name);
 
 	if (auto maybe_lines = get_lines(resource_path); maybe_lines) {
 		return std::move(*maybe_lines);
@@ -483,18 +483,18 @@ std::vector<std::string> GetResourceLines(const std_fs::path& name,
 }
 
 // Get resource lines from a text file
-std::vector<std::string> GetResourceLines(const std_fs::path& subdir,
+std::vector<std::string> get_resource_lines(const std_fs::path& subdir,
                                           const std_fs::path& name,
                                           const ResourceImportance importance)
 {
-	return GetResourceLines(subdir / name, importance);
+	return get_resource_lines(subdir / name, importance);
 }
 
 // Load a resource blob (from a binary file)
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path& name,
+std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
                                       const ResourceImportance importance)
 {
-	const auto resource_path = GetResourcePath(name);
+	const auto resource_path = get_resource_path(name);
 
 	std::ifstream file(resource_path, std::ios::binary);
 
@@ -524,11 +524,11 @@ std::vector<uint8_t> LoadResourceBlob(const std_fs::path& name,
 }
 
 // Load a resource blob (from a binary file)
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path& subdir,
+std::vector<uint8_t> load_resource_blob(const std_fs::path& subdir,
                                       const std_fs::path& name,
                                       const ResourceImportance importance)
 {
-	return LoadResourceBlob(subdir / name, importance);
+	return load_resource_blob(subdir / name, importance);
 }
 
 bool path_exists(const std_fs::path& path)

@@ -181,7 +181,7 @@ void test_randomizer(const T min_value, const T max_value)
 	bool found_near_max = false;
 
 	// Create a random value generator
-	const auto generate_random_value = CreateRandomizer<T>(min_value, max_value);
+	const auto generate_random_value = create_randomizer<T>(min_value, max_value);
 
 	constexpr auto max_iterations = 1000;
 
@@ -211,7 +211,7 @@ void test_randomizer(const T min_value, const T max_value)
 	ASSERT_TRUE(found_near_max);
 }
 
-TEST(CreateRandomizer, RangeOfLetters)
+TEST(create_randomizer, RangeOfLetters)
 {
 	// Ensure we're dealing with the standard ASCII character values
 	ASSERT_EQ('A', 65);
@@ -220,7 +220,7 @@ TEST(CreateRandomizer, RangeOfLetters)
 	test_randomizer<int16_t>('A', 'z');
 }
 
-TEST(CreateRandomizer, RangeOfFloats)
+TEST(create_randomizer, RangeOfFloats)
 {
 	// positive range
 	test_randomizer(1000.0f, 2000.0f);
