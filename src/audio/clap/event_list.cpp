@@ -54,7 +54,6 @@ EventList::EventList()
 
 	event_data.reserve(NumBytes);
 	event_offsets.reserve(NumEvents);
-
 	sysex_data.reserve(MaxMidiSysExBytes);
 
 	input_events  = {this, &size, &get};
