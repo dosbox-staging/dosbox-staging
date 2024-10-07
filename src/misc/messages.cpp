@@ -269,10 +269,10 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 
 	bool result = false;
 	if (lang.ends_with(".lng"))
-		result = load_message_file(GetResourcePath(subdir, lang));
+		result = load_message_file(get_resource_path(subdir, lang));
 	else
 		// If a short-hand name was provided then add the file extension
-		result = load_message_file(GetResourcePath(subdir, lang + extension));
+		result = load_message_file(get_resource_path(subdir, lang + extension));
 
 	if (result)
 		return;

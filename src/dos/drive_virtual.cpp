@@ -240,7 +240,7 @@ void VFILE_GetPathZDrive(std::string &path, const std::string &dirname)
 	struct stat cstat;
 	int result = stat(path.c_str(), &cstat);
 	if (result == -1 || !(cstat.st_mode & S_IFDIR)) {
-		path = GetExecutablePath().string();
+		path = get_executable_path().string();
 		if (path.length()) {
 			path += dirname;
 			result = stat(path.c_str(), &cstat);
@@ -304,7 +304,7 @@ void VFILE_RegisterZDrive(const std_fs::path &z_drive_path)
 			parent = dir_indicator;
 		}
 		// Load the file's data, if it's a file.
-		const auto blob = is_file ? LoadResourceBlob(it->path(), ResourceImportance::Optional)
+		const auto blob = is_file ? load_resource_blob(it->path(), ResourceImportance::Optional)
 		                          : std::vector<uint8_t>();
 
 		// Set global time values for the entry about to be registered

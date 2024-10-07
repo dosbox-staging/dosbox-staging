@@ -1991,7 +1991,7 @@ static bool construct_mapping(const uint16_t code_page)
 	if (!config_mapping.extends_file.empty()) {
 		map_dos_to_grapheme_t mapping_file;
 
-		if (!import_mapping_code_page(GetResourcePath(config_mapping.extends_dir),
+		if (!import_mapping_code_page(get_resource_path(config_mapping.extends_dir),
 		                              config_mapping.extends_file,
 		                              mapping_file)) {
 			return false;
@@ -2079,7 +2079,7 @@ static void load_config_if_needed()
 
 	static bool config_loaded = false;
 	if (!config_loaded) {
-		const auto path_root = GetResourcePath(dir_name_mapping);
+		const auto path_root = get_resource_path(dir_name_mapping);
 		import_decomposition(path_root);
 		import_mapping_ascii(path_root);
 		import_mapping_case(path_root);

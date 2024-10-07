@@ -159,7 +159,7 @@ constexpr cast_t check_cast(const check_t in)
 }
 
 template <typename T>
-std::function<T()> CreateRandomizer(const T min_value, const T max_value);
+std::function<T()> create_randomizer(const T min_value, const T max_value);
 
 // Include a message in assert, similar to static_assert:
 #define assertm(exp, msg) assert(((void)msg, exp))
@@ -193,8 +193,11 @@ constexpr size_t strnlen(const char* str, const size_t max_len)
 
 // Scans the provided command-line string for the '/'flag and removes it from
 // the string, returning if the flag was found and removed.
-bool ScanCMDBool(char* cmd, const char* flag);
-char* ScanCMDRemain(char* cmd);
+bool scan_and_remove_cmdline_switch(char* cmd, const char* flag);
+
+// Scans the command line for a remaining switch and reports it if found,
+// otherwise returns 0.
+char* scan_remaining_cmdline_switch(char* cmd);
 
 bool is_executable_filename(const std::string& filename) noexcept;
 
@@ -242,27 +245,29 @@ int64_t stdio_size_bytes(FILE* f);
 int64_t stdio_size_kb(FILE* f);
 int64_t stdio_num_sectors(FILE* f);
 
-const std_fs::path& GetExecutablePath();
-std_fs::path GetResourcePath(const std_fs::path& name);
-std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& name);
+const std_fs::path& get_executable_path();
+std_fs::path get_resource_path(const std_fs::path& name);
+std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
 
-std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path& res_name, const std::string_view files_ext,
+std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
+        const std_fs::path& resource_dir, const std::string_view extension,
         const bool only_regular_files);
 
 enum class ResourceImportance { Mandatory, Optional };
 
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path& subdir,
-                                      const std_fs::path& name,
-                                      const ResourceImportance importance);
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path& name,
-                                      const ResourceImportance importance);
+std::vector<uint8_t> load_resource_blob(const std_fs::path& subdir,
+                                        const std_fs::path& name,
+                                        const ResourceImportance importance);
 
-std::vector<std::string> GetResourceLines(const std_fs::path& subdir,
-                                          const std_fs::path& name,
-                                          const ResourceImportance importance);
-std::vector<std::string> GetResourceLines(const std_fs::path& name,
-                                          const ResourceImportance importance);
+std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
+                                        const ResourceImportance importance);
+
+std::vector<std::string> get_resource_lines(const std_fs::path& subdir,
+                                            const std_fs::path& name,
+                                            const ResourceImportance importance);
+
+std::vector<std::string> get_resource_lines(const std_fs::path& name,
+                                            const ResourceImportance importance);
 
 bool path_exists(const std_fs::path& path);
 

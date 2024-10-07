@@ -73,7 +73,7 @@ static FILE_unique_ptr open_layout_file(const char *name, const char *resource_d
 
 	// Finally try from a built-in resources
 	if (resource_dir)
-		if (const auto rp = GetResourcePath(resource_dir, name); !rp.empty())
+		if (const auto rp = get_resource_path(resource_dir, name); !rp.empty())
 			return make_fopen(rp.string().c_str(), file_perms);
 
 	return nullptr;

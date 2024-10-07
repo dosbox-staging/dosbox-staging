@@ -85,7 +85,7 @@ private:
   int i = {};
   float frac = {};
 
-  const std::function<float()> generate_random_fraction = CreateRandomizer<float>(-1.0f, 1.0f);
+  const std::function<float()> generate_random_fraction = create_randomizer<float>(-1.0f, 1.0f);
 };
 
 #endif	// #ifndef LFO_H

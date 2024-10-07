@@ -222,7 +222,7 @@ void DOS_Shell::DoCommand(char* line)
 }
 
 bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
-	if (!args || !ScanCMDBool(args, "?"))
+	if (!args || !scan_and_remove_cmdline_switch(args, "?"))
 		return false;
 
 	MoreOutputStrings output(*this);
@@ -290,7 +290,7 @@ void DOS_Shell::CMD_CLS(char *args)
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
 
-	char * rem=ScanCMDRemain(args);
+	char * rem=scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
@@ -400,7 +400,7 @@ void DOS_Shell::CMD_HELP(char * args){
 		// Print help for the provided command by
 		// calling it with the '/?' arg
 		(this->*(shell_cmd.handler))(help_arg);
-	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
+	} else if (scan_and_remove_cmdline_switch(args, "A") || scan_and_remove_cmdline_switch(args, "ALL")) {
 		// Print help for all the commands
 		MoreOutputStrings output(*this);
 		PrintHelpForCommands(output, HELP_Filter::All);
@@ -540,7 +540,7 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 void DOS_Shell::CMD_MKDIR(char * args) {
 	HELP("MKDIR");
 	StripSpaces(args);
-	char * rem=ScanCMDRemain(args);
+	char * rem=scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
@@ -553,7 +553,7 @@ void DOS_Shell::CMD_MKDIR(char * args) {
 void DOS_Shell::CMD_RMDIR(char * args) {
 	HELP("RMDIR");
 	StripSpaces(args);
-	char * rem=ScanCMDRemain(args);
+	char * rem=scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		return;
@@ -792,58 +792,58 @@ void DOS_Shell::CMD_DIR(char* args)
 		args=const_cast<char*>(line.c_str());
 	}
 
-	bool has_option_wide = ScanCMDBool(args, "W");
+	bool has_option_wide = scan_and_remove_cmdline_switch(args, "W");
 
-	(void)ScanCMDBool(args, "S");
+	(void)scan_and_remove_cmdline_switch(args, "S");
 
-	bool has_option_paging = ScanCMDBool(args, "P");
-	if (ScanCMDBool(args,"WP") || ScanCMDBool(args,"PW")) {
+	bool has_option_paging = scan_and_remove_cmdline_switch(args, "P");
+	if (scan_and_remove_cmdline_switch(args,"WP") || scan_and_remove_cmdline_switch(args,"PW")) {
 		has_option_paging = true;
 		has_option_wide   = true;
 	}
 
-	bool has_option_bare = ScanCMDBool(args, "B");
+	bool has_option_bare = scan_and_remove_cmdline_switch(args, "B");
 
-	bool has_option_all_dirs  = ScanCMDBool(args, "AD");
-	bool has_option_all_files = ScanCMDBool(args, "A-D");
+	bool has_option_all_dirs  = scan_and_remove_cmdline_switch(args, "AD");
+	bool has_option_all_files = scan_and_remove_cmdline_switch(args, "A-D");
 
 	// Sorting flags
 	bool option_reverse          = false;
 	ResultSorting option_sorting = ResultSorting::None;
-	if (ScanCMDBool(args, "ON")) {
+	if (scan_and_remove_cmdline_switch(args, "ON")) {
 		option_sorting = ResultSorting::ByName;
 		option_reverse = false;
 	}
-	if (ScanCMDBool(args, "O-N")) {
+	if (scan_and_remove_cmdline_switch(args, "O-N")) {
 		option_sorting = ResultSorting::ByName;
 		option_reverse = true;
 	}
-	if (ScanCMDBool(args, "OD")) {
+	if (scan_and_remove_cmdline_switch(args, "OD")) {
 		option_sorting = ResultSorting::ByDateTime;
 		option_reverse = false;
 	}
-	if (ScanCMDBool(args,"O-D")) {
+	if (scan_and_remove_cmdline_switch(args,"O-D")) {
 		option_sorting = ResultSorting::ByDateTime;
 		option_reverse = true;
 	}
-	if (ScanCMDBool(args, "OE")) {
+	if (scan_and_remove_cmdline_switch(args, "OE")) {
 		option_sorting = ResultSorting::ByExtension;
 		option_reverse = false;
 	}
-	if (ScanCMDBool(args,"O-E")) {
+	if (scan_and_remove_cmdline_switch(args,"O-E")) {
 		option_sorting = ResultSorting::ByExtension;
 		option_reverse = true;
 	}
-	if (ScanCMDBool(args, "OS")) {
+	if (scan_and_remove_cmdline_switch(args, "OS")) {
 		option_sorting = ResultSorting::BySize;
 		option_reverse = false;
 	}
-	if (ScanCMDBool(args,"O-S")) {
+	if (scan_and_remove_cmdline_switch(args,"O-S")) {
 		option_sorting = ResultSorting::BySize;
 		option_reverse = true;
 	}
 
-	const char* rem = ScanCMDRemain(args);
+	const char* rem = scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
 		return;
@@ -1054,15 +1054,15 @@ void DOS_Shell::CMD_COPY(char* args)
 	DOS_DTA::Result search_result = {};
 	std::vector<copysource> sources;
 	// ignore /b and /t switches: always copy binary
-	while (ScanCMDBool(args,"B")) ;
-	while (ScanCMDBool(args,"T")) ; //Shouldn't this be A ?
-	while (ScanCMDBool(args,"A")) ;
+	while (scan_and_remove_cmdline_switch(args,"B")) ;
+	while (scan_and_remove_cmdline_switch(args,"T")) ; //Shouldn't this be A ?
+	while (scan_and_remove_cmdline_switch(args,"A")) ;
 
-	(void)ScanCMDBool(args, "Y");
-	(void)ScanCMDBool(args, "-Y");
-	(void)ScanCMDBool(args, "V");
+	(void)scan_and_remove_cmdline_switch(args, "Y");
+	(void)scan_and_remove_cmdline_switch(args, "-Y");
+	(void)scan_and_remove_cmdline_switch(args, "V");
 
-	char* rem = ScanCMDRemain(args);
+	char* rem = scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		dos.dta(save_dta);
@@ -1405,8 +1405,8 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 	HELP("ATTRIB");
 	StripSpaces(args);
 
-	bool optS = ScanCMDBool(args, "S");
-	char *rem = ScanCMDRemain(args);
+	bool optS = scan_and_remove_cmdline_switch(args, "S");
+	char *rem = scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
 		return;
@@ -1719,7 +1719,7 @@ void DOS_Shell::CMD_DATE(char *args)
 		LOG_WARNING("SHELL: Incorrect date format");
 		return;
 	}
-	if (ScanCMDBool(args, "?")) {
+	if (scan_and_remove_cmdline_switch(args, "?")) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_DATE_HELP"));
 		output.AddString("\n");
@@ -1729,7 +1729,7 @@ void DOS_Shell::CMD_DATE(char *args)
 		output.Display();
 		return;
 	}
-	if (ScanCMDBool(args, "H")) {
+	if (scan_and_remove_cmdline_switch(args, "H")) {
 		// synchronize date with host
 		const time_t curtime = time(nullptr);
 		struct tm datetime;
@@ -1789,7 +1789,7 @@ void DOS_Shell::CMD_DATE(char *args)
 		for (uint32_t i = 0; i < length; i++)
 			day[i] = datestring[reg_al * length + 1 + i];
 	}
-	bool dateonly = ScanCMDBool(args, "T");
+	bool dateonly = scan_and_remove_cmdline_switch(args, "T");
 	if (!dateonly) {
 		WriteOut(MSG_Get("SHELL_CMD_DATE_NOW"));
 		WriteOut("%s ", day);
@@ -1806,7 +1806,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	const char time_separator = DOS_GetLocaleTimeSeparator();
 	sprintf(format, "hh%cmm%css", time_separator, time_separator);
 	sprintf(example, "13%c14%c15", time_separator, time_separator);
-	if (ScanCMDBool(args, "?")) {
+	if (scan_and_remove_cmdline_switch(args, "?")) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP"));
 		output.AddString("\n");
@@ -1814,7 +1814,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		output.Display();
 		return;
 	}
-	if (ScanCMDBool(args, "H")) {
+	if (scan_and_remove_cmdline_switch(args, "H")) {
 		// synchronize time with host
 		const time_t curtime = time(nullptr);
 		struct tm datetime;
@@ -1847,7 +1847,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 		}
 		return;
 	}
-	bool timeonly = ScanCMDBool(args, "T");
+	bool timeonly = scan_and_remove_cmdline_switch(args, "T");
 
 	reg_ah = 0x2c; // get system time
 	CALLBACK_RunRealInt(0x21);
@@ -1973,10 +1973,10 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	HELP("CHOICE");
 
 	// Parse "/n"; does the user want to show choices or not?
-	const bool should_show_choices = !ScanCMDBool(args, "N");
+	const bool should_show_choices = !scan_and_remove_cmdline_switch(args, "N");
 
 	// Parse "/s"; does the user want choices to be case-sensitive?
-	const bool always_capitalize = !ScanCMDBool(args, "S");
+	const bool always_capitalize = !scan_and_remove_cmdline_switch(args, "S");
 
 	// Prepare the command line for use with regular expressions
 	assert(args);
@@ -2317,10 +2317,10 @@ void DOS_Shell::CMD_MOVE(char* args)
 
 	// TODO: Add support for these flags along with the COPYCMD environment
 	// variable (overwrite prompts) Also currently ignored by CMD_COPY
-	(void)ScanCMDBool(args, "Y");
-	(void)ScanCMDBool(args, "-Y");
+	(void)scan_and_remove_cmdline_switch(args, "Y");
+	(void)scan_and_remove_cmdline_switch(args, "-Y");
 
-	char* rem = ScanCMDRemain(args);
+	char* rem = scan_remaining_cmdline_switch(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
 		return;
