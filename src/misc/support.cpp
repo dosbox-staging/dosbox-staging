@@ -395,9 +395,9 @@ std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& n
 	return get_resource_path(subdir / name);
 }
 
-static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
-                                                       const std::string_view extension,
-                                                       const bool only_regular_files)
+static std::vector<std_fs::path> get_directory_entries(
+        const std_fs::path& dir, const std::string_view files_ext,
+        const bool only_regular_files = true)
 {
 	using namespace std_fs;
 	std::vector<std_fs::path> files = {};
@@ -409,7 +409,7 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	}
 
 	// Ensure the extension is valid
-	assert(extension.length() && extension[0] == '.');
+	assert(files_ext.length() && files_ext[0] == '.');
 
 	// Keep recursing past permission issues and follow symlinks
 	constexpr auto idir_opts = directory_options::skip_permission_denied |
@@ -426,7 +426,7 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 			continue;
 		}
 
-		if (entry.path().extension() == extension) {
+		if (entry.path().extension() == files_ext) {
 			files.emplace_back(entry.path().lexically_relative(dir));
 		}
 	}
@@ -435,16 +435,16 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	return files;
 }
 
-std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
-        const std_fs::path& resource_dir, const std::string_view extension,
+std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
+        const std_fs::path& res_name, const std::string_view files_ext,
         const bool only_regular_files = true)
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
 
 	for (const auto& parent : GetResourceParentPaths()) {
-		auto res_path  = parent / resource_dir;
+		auto res_path  = parent / res_name;
 		auto res_files = get_directory_entries(res_path,
-		                                       extension,
+		                                       files_ext,
 		                                       only_regular_files);
 
 		paths_and_files.emplace(std::move(res_path), std::move(res_files));
