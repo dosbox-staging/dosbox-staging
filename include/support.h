@@ -247,7 +247,8 @@ std_fs::path GetResourcePath(const std_fs::path& name);
 std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& name);
 
 std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path& res_name, const std::string_view files_ext);
+        const std_fs::path& res_name, const std::string_view files_ext,
+        const bool only_regular_files);
 
 enum class ResourceImportance { Mandatory, Optional };
 
