@@ -25,8 +25,9 @@
 
 namespace ChannelName {
 
-// The CDAUDIO channel has numbered suffixes (ex. CDAUDIO_0, CDAUDIO_1) appened for physical CDROM devices.
-// This is to avoid conflicts with multiple drives and CDROM_Interface_Image (which does not have a suffix).
+// The CDAUDIO channel has numbered suffixes (ex. CDAUDIO_0, CDAUDIO_1) appened
+// for physical CDROM devices. This is to avoid conflicts with multiple drives
+// and CDROM_Interface_Image (which does not have a suffix).
 constexpr auto CdAudio              = "CDAUDIO";
 constexpr auto MaxCdAudioChannel    = 32;
 
@@ -45,6 +46,7 @@ constexpr auto Ps1AudioCardPsg      = "PS1";
 constexpr auto ReelMagic            = "REELMAGIC";
 constexpr auto RolandMt32           = "MT32";
 constexpr auto SoundBlasterDac      = "SB";
+constexpr auto SoundCanvas          = "SOUNDCANVAS";
 constexpr auto StereoOn1Dac         = "STON1";
 constexpr auto TandyDac             = "TANDYDAC";
 constexpr auto TandyPsg             = "TANDY";
@@ -79,6 +81,7 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::ReelMagic,
         ChannelName::RolandMt32,
         ChannelName::SoundBlasterDac,
+        ChannelName::SoundCanvas,
         ChannelName::StereoOn1Dac,
         ChannelName::TandyDac,
         ChannelName::TandyPsg,

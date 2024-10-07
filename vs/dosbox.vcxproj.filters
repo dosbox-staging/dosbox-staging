@@ -901,6 +901,9 @@
     <ClCompile Include="..\src\audio\clap\plugin_manager.cpp">
       <Filter>src\audio\clap</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\midi\midi_soundcanvas.cpp">
+      <Filter>src\midi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h">
@@ -1749,6 +1752,9 @@
     </ClInclude>
     <ClInclude Include="..\src\audio\clap\plugin_manager.h">
       <Filter>src\audio\clap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\midi\midi_soundcanvas.h">
+      <Filter>src\midi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
