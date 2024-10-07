@@ -5029,6 +5029,15 @@ int sdl_main(int argc, char* argv[])
 			}
 		}
 
+		// Plugins
+		const auto plugins_dir = GetConfigDir() / PluginsDir;
+
+		if (create_dir(plugins_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
+			            plugins_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+
 #if C_OPENGL
 		const auto glshaders_dir = GetConfigDir() / GlShadersDir;
 
