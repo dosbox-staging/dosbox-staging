@@ -689,9 +689,11 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 
 	str_prop->Set_help(
 	        "The Roland Sound Canvas model to use.\n"
-	        "You must have the ROM files for the selected model available for the Sound\n"
-	        "Canvas plugin. The lookup for the best models is performed in order as\n"
-	        " listed.\n"
+	        "One or more CLAP audio plugins that implement the supported Sound Canvas\n"
+	        "models must be present in the 'plugin' directory in your DOSBox configuration\n"
+	        "directory. DOSBox searches for the requested model by inspecting the plugin\n"
+	        "descriptions.\n"
+	        "The lookup for the best models is performed in order as listed:\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  sc55:       Pick the best available original SC-55 model.\n"
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
