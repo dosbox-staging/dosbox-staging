@@ -1345,16 +1345,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		SDL_GL_DeleteContext(temp_context);
 		SDL_DestroyWindow(temp_window);
-#if WIN32
-		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
-#else
-		constexpr auto is_vendors_srgb_unreliable = false;
-#endif
-		if (is_vendors_srgb_unreliable) {
-			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer"
-			            " because %s's driver is unreliable",
-			            gl_vendor.c_str());
-		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
 		}
