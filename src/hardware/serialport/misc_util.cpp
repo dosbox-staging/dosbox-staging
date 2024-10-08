@@ -102,11 +102,17 @@ bool NETClientSocket::SendByteBuffered(uint8_t val)
 	return SendArray(sendbuffer.data(), sendbuffer.size());
 }
 
-NETServerSocket::NETServerSocket()
-{}
+NETServerSocket::NETServerSocket() {}
 
-NETServerSocket::~NETServerSocket()
-{}
+NETServerSocket::~NETServerSocket() {}
+
+void NETServerSocket::Close()
+{
+	// Discard any queued incoming connections
+	while (auto accepted = Accept()) {
+		delete accepted;
+	}
+}
 
 NETServerSocket* NETServerSocket::NETServerFactory(const SocketType socketType,
                                                    const uint16_t port)
