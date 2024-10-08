@@ -22,47 +22,51 @@
 #ifndef DOSBOX_MIDI_ALSA_H
 #define DOSBOX_MIDI_ALSA_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_ALSA
 
-#include <alsa/asoundlib.h>
+	#include <alsa/asoundlib.h>
 
 struct alsa_address {
 	int client;
 	int port;
 };
 
-class MidiHandler_alsa final : public MidiHandler {
+class MidiDeviceAlsa final : public MidiDevice {
 private:
-	snd_seq_event_t ev = {};
-	snd_seq_t *seq_handle = nullptr;
+	snd_seq_event_t ev    = {};
+	snd_seq_t* seq_handle = nullptr;
 	alsa_address seq = {-1, -1}; // address of input port we're connected to
-	int output_port = 0;
+	int output_port  = 0;
 
 	void send_event(int do_flush);
 
 public:
-	MidiHandler_alsa() : MidiHandler() {}
+	MidiDeviceAlsa() : MidiDevice() {}
+	~MidiDeviceAlsa() override;
 
-	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
-	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
+	// prevent copying
+	MidiDeviceAlsa(const MidiDeviceAlsa&) = delete;
+	// prevent assignment
+	MidiDeviceAlsa& operator=(const MidiDeviceAlsa&) = delete;
 
 	std::string GetName() const override
 	{
 		return "alsa";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDevice::Type GetType() const override
 	{
-		return MidiDeviceType::External;
+		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char *conf) override;
-	void Close() override;
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysEx(uint8_t *sysex, size_t len) override;
-	MIDI_RC ListAll(Program *caller) override;
+	bool Initialise(const char* conf) override;
+
+	void SendMessage(const MidiMessage& msg) override;
+	void PlaySysex(uint8_t* sysex, size_t len) override;
+
+	ListDevicesResult ListDevices(Program* caller) override;
 };
 
 #endif // C_ALSA

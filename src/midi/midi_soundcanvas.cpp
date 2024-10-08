@@ -176,7 +176,7 @@ static const std::optional<Clap::PluginInfo> find_plugin_for_model(
 	return {};
 }
 
-PluginAndModel MidiHandler_SoundCanvas::TryLoadPlugin(const SoundCanvasModel model)
+PluginAndModel MidiDeviceSoundCanvas::TryLoadPlugin(const SoundCanvasModel model)
 {
 	auto& plugin_manager    = Clap::PluginManager::GetInstance();
 	const auto plugin_infos = plugin_manager.GetPluginInfos();
@@ -196,7 +196,7 @@ PluginAndModel MidiHandler_SoundCanvas::TryLoadPlugin(const SoundCanvasModel mod
 	return {};
 }
 
-PluginAndModel MidiHandler_SoundCanvas::LoadModel(const std::string& wanted_model_name)
+PluginAndModel MidiDeviceSoundCanvas::LoadModel(const std::string& wanted_model_name)
 {
 	// Determine the list of model candidates and the lookup method for
 	// the requested model name:
@@ -241,12 +241,52 @@ PluginAndModel MidiHandler_SoundCanvas::LoadModel(const std::string& wanted_mode
 	return {};
 }
 
-MidiHandler_SoundCanvas::~MidiHandler_SoundCanvas()
+MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 {
-	Close();
+	if (!is_open) {
+		return;
+	}
+
+	LOG_MSG("SOUNDCANVAS: Shutting down");
+
+	if (had_underruns) {
+		LOG_WARNING(
+		        "SOUNDCANVAS: Fix underruns by lowering CPU load "
+		        "or increasing your conf's prebuffer");
+		had_underruns = false;
+	}
+
+	MIXER_LockMixerThread();
+
+	// Stop playback
+	if (mixer_channel) {
+		mixer_channel->Enable(false);
+	}
+
+	// Stop queueing new MIDI work and audio frames
+	work_fifo.Stop();
+	audio_frame_fifo.Stop();
+
+	// Wait for the rendering thread to finish
+	if (renderer.joinable()) {
+		renderer.join();
+	}
+
+	// Deregister the mixer channel and remove it
+	assert(mixer_channel);
+	MIXER_DeregisterChannel(mixer_channel);
+	mixer_channel.reset();
+
+	last_rendered_ms   = 0.0;
+	ms_per_audio_frame = 0.0;
+
+	is_open      = false;
+	active_model = {};
+
+	MIXER_UnlockMixerThread();
 }
 
-MIDI_RC MidiHandler_SoundCanvas::ListAll(Program* caller)
+MidiDevice::ListDevicesResult MidiDeviceSoundCanvas::ListDevices(Program* caller)
 {
 	// Table layout constants
 	constexpr auto ColumnDelim = " ";
@@ -268,7 +308,7 @@ MIDI_RC MidiHandler_SoundCanvas::ListAll(Program* caller)
 		                 Indent,
 		                 MSG_Get("MIDI_DEVICE_NO_SUPPORTED_MODELS"));
 
-		return MIDI_RC::OK;
+		return ListDevicesResult::Ok;
 	}
 
 	const auto active_sc_model = [&]() -> std::optional<const ScModel*> {
@@ -340,13 +380,11 @@ MIDI_RC MidiHandler_SoundCanvas::ListAll(Program* caller)
 		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
 	}
 
-	return MIDI_RC::OK;
+	return ListDevicesResult::Ok;
 }
 
-bool MidiHandler_SoundCanvas::Open([[maybe_unused]] const char* conf)
+bool MidiDeviceSoundCanvas::Initialise([[maybe_unused]] const char* conf)
 {
-	Close();
-
 	const auto model_name = get_soundcanvas_section()->Get_string(
 	        "soundcanvas_model");
 
@@ -397,7 +435,7 @@ bool MidiHandler_SoundCanvas::Open([[maybe_unused]] const char* conf)
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiHandler_SoundCanvas::MixerCallback,
+	const auto mixer_callback = std::bind(&MidiDeviceSoundCanvas::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -468,7 +506,7 @@ bool MidiHandler_SoundCanvas::Open([[maybe_unused]] const char* conf)
 	clap.plugin->Activate(sample_rate_hz);
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiHandler_SoundCanvas::Render, this);
+	const auto render = std::bind(&MidiDeviceSoundCanvas::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:soundcanvas");
 
@@ -478,52 +516,7 @@ bool MidiHandler_SoundCanvas::Open([[maybe_unused]] const char* conf)
 	return true;
 }
 
-void MidiHandler_SoundCanvas::Close()
-{
-	if (!is_open) {
-		return;
-	}
-
-	LOG_MSG("SOUNDCANVAS: Shutting down");
-
-	if (had_underruns) {
-		LOG_WARNING(
-		        "SOUNDCANVAS: Fix underruns by lowering CPU load "
-		        "or increasing your conf's prebuffer");
-		had_underruns = false;
-	}
-
-	MIXER_LockMixerThread();
-
-	// Stop playback
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
-	}
-
-	// Deregister the mixer channel and remove it
-	assert(mixer_channel);
-	MIXER_DeregisterChannel(mixer_channel);
-	mixer_channel.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
-
-	is_open      = false;
-	active_model = {};
-
-	MIXER_UnlockMixerThread();
-}
-
-int MidiHandler_SoundCanvas::GetNumPendingAudioFrames()
+int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -548,7 +541,7 @@ int MidiHandler_SoundCanvas::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandler_SoundCanvas::PlayMsg(const MidiMessage& msg)
+void MidiDeviceSoundCanvas::SendMessage(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 
@@ -560,7 +553,7 @@ void MidiHandler_SoundCanvas::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiHandler_SoundCanvas::PlaySysEx(uint8_t* sysex, size_t len)
+void MidiDeviceSoundCanvas::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
@@ -569,7 +562,7 @@ void MidiHandler_SoundCanvas::PlaySysEx(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiHandler_SoundCanvas::MixerCallback(const int requested_audio_frames)
+void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 
@@ -601,7 +594,7 @@ void MidiHandler_SoundCanvas::MixerCallback(const int requested_audio_frames)
 	}
 }
 
-void MidiHandler_SoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
+void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	assert(num_audio_frames > 0);
 
@@ -626,7 +619,7 @@ void MidiHandler_SoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames
 
 // The next MIDI work task is processed, which includes rendering audio frames
 // prior to sending channel and sysex messages to the plugin
-void MidiHandler_SoundCanvas::ProcessWorkFromFifo()
+void MidiDeviceSoundCanvas::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
 	if (!work) {
@@ -660,7 +653,7 @@ void MidiHandler_SoundCanvas::ProcessWorkFromFifo()
 }
 
 // Keep the fifo populated with freshly rendered buffers
-void MidiHandler_SoundCanvas::Render()
+void MidiDeviceSoundCanvas::Render()
 {
 	while (work_fifo.IsRunning()) {
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()

@@ -22,19 +22,16 @@
 
 #if C_MT32EMU
 
-#include <cassert>
-#include <unordered_set>
+	#include <cassert>
+	#include <unordered_set>
 
-#include "fs_utils.h"
+	#include "fs_utils.h"
 
 // Construct a new model and ensure both PCM and control ROM(s) are provided
-LASynthModel::LASynthModel(const std::string &rom_name,
-                           const Rom *pcm_rom_full,
-                           const Rom *pcm_rom_l,
-                           const Rom *pcm_rom_h,
-                           const Rom *ctrl_rom_full,
-                           const Rom *ctrl_rom_1,
-                           const Rom *ctrl_rom_2)
+LaSynthModel::LaSynthModel(const std::string& rom_name, const Rom* pcm_rom_full,
+                           const Rom* pcm_rom_l, const Rom* pcm_rom_h,
+                           const Rom* ctrl_rom_full, const Rom* ctrl_rom_1,
+                           const Rom* ctrl_rom_2)
         : name(rom_name),
           version_pos(SetVersion()),
           pcm_full(pcm_rom_full),
@@ -50,7 +47,7 @@ LASynthModel::LASynthModel(const std::string &rom_name,
 	assert(ctrl_full || (ctrl_a && ctrl_b));
 }
 
-std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service,
+std::optional<std_fs::path> LaSynthModel::find_rom(const Mt32ServicePtr& service,
                                                    const std_fs::path& dir,
                                                    const Rom* rom)
 {
@@ -70,12 +67,13 @@ std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service
 			continue;
 		}
 		mt32emu_rom_info info;
-		if (service->identifyROMFile(&info,
-		                             filename.c_str(),
-		                             nullptr) != MT32EMU_RC_OK) {
-			// Only log unknwon files one time (if not already in the unknown_files set).
+		if (service->identifyROMFile(&info, filename.c_str(), nullptr) !=
+		    MT32EMU_RC_OK) {
+			// Only log unknwon files one time (if not already in
+			// the unknown_files set).
 			if (unknown_files.insert(filename).second) {
-				LOG_WARNING("MT32: Unknown file in ROM folder: %s", filename.c_str());
+				LOG_WARNING("MT32: Unknown file in ROM folder: %s",
+				            filename.c_str());
 			}
 			continue;
 		}
@@ -95,7 +93,7 @@ std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service
 }
 
 // Checks if its ROMs can be positively found in the provided directory
-bool LASynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const
+bool LaSynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const
 {
 	assert(service);
 
@@ -109,7 +107,7 @@ bool LASynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir)
 }
 
 // If present, loads either the full or partial ROMs from the provided directory
-bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) const
+bool LaSynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) const
 {
 	if (!service) {
 		return false;
@@ -144,25 +142,26 @@ bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) 
 
 	const bool loaded_pcm = load_rom(pcm_full, MT32EMU_RC_ADDED_PCM_ROM) ||
 	                        load_both(pcm_l, pcm_h, MT32EMU_RC_ADDED_PCM_ROM);
+
 	const bool loaded_ctrl = load_rom(ctrl_full, MT32EMU_RC_ADDED_CONTROL_ROM) ||
-	                         load_both(ctrl_a, ctrl_b,
-	                                   MT32EMU_RC_ADDED_CONTROL_ROM);
+	                         load_both(ctrl_a, ctrl_b, MT32EMU_RC_ADDED_CONTROL_ROM);
+
 	return loaded_pcm && loaded_ctrl;
 }
 
-const char *LASynthModel::GetVersion() const
+const char* LaSynthModel::GetVersion() const
 {
 	assert(version_pos != std::string::npos);
 	return name.c_str() + version_pos;
 }
 
-bool LASynthModel::Matches(const std::string &model_name) const
+bool LaSynthModel::Matches(const std::string& model_name) const
 {
 	assert(!model_name.empty());
 	return (name.rfind(model_name, 0) == 0);
 }
 
-size_t LASynthModel::SetVersion()
+size_t LaSynthModel::SetVersion()
 {
 	// Given the versioned name "mt32_106", version_pos would be 5
 	// Given the unversioned name "cm32l", version_pos would be 0

@@ -21,41 +21,52 @@
 #ifndef DOSBOX_MIDI_FLUIDSYNTH_H
 #define DOSBOX_MIDI_FLUIDSYNTH_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_FLUIDSYNTH
 
-#include <atomic>
-#include <fluidsynth.h>
-#include <memory>
-#include <thread>
-#include <vector>
+	#include <atomic>
+	#include <fluidsynth.h>
+	#include <memory>
+	#include <thread>
+	#include <vector>
 
-#include "mixer.h"
-#include "rwqueue.h"
-#include "std_filesystem.h"
+	#include "mixer.h"
+	#include "rwqueue.h"
+	#include "std_filesystem.h"
 
-class MidiHandlerFluidsynth final : public MidiHandler {
+class MidiDeviceFluidSynth final : public MidiDevice {
 public:
-	MidiHandlerFluidsynth() = default;
-	~MidiHandlerFluidsynth() override;
-	void PrintStats();
+	MidiDeviceFluidSynth() = default;
+	~MidiDeviceFluidSynth() override;
 
 	std::string GetName() const override
 	{
 		return "fluidsynth";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDevice::Type GetType() const override
 	{
-		return MidiDeviceType::Internal;
+		return MidiDevice::Type::Internal;
 	}
 
-	bool Open(const char *conf) override;
-	void Close() override;
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysEx(uint8_t *sysex, size_t len) override;
-	MIDI_RC ListAll(Program *caller) override;
+	bool Initialise(const char* conf) override;
+
+	void SendMessage(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
+	ListDevicesResult ListDevices(Program* caller) override;
+
+	void PrintStats();
+
+	// Get the value of the 'soundfont' config property from the last
+	// instantiation
+	static std::string GetLastSoundfontPref();
+
+	static bool IsOpen()
+	{
+		return MidiDeviceFluidSynth::is_open;
+	}
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
@@ -67,8 +78,11 @@ private:
 	void RenderAudioFramesToFifo(const int num_audio_frames = 1);
 	void Render();
 
+	static std::string last_soundfont_pref;
+
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
+
 	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 
 	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
@@ -83,11 +97,12 @@ private:
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI SysEx or Msg event.
-	double last_rendered_ms = 0.0;
+	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
+
+	static bool is_open;
 };
 
 #endif // C_FLUIDSYNTH

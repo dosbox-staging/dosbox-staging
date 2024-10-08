@@ -22,101 +22,34 @@
 #ifndef DOSBOX_MIDI_COREMIDI_H
 #define DOSBOX_MIDI_COREMIDI_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_COREMIDI
 
-#include <CoreMIDI/MIDIServices.h>
-#include <sstream>
-#include <string>
+	#include <CoreMIDI/MIDIServices.h>
+	#include <sstream>
+	#include <string>
 
-#include "programs.h"
-#include "string_utils.h"
+	#include "programs.h"
+	#include "string_utils.h"
 
-class MidiHandler_coremidi final : public MidiHandler {
+class MidiDeviceCoreMidi final : public MidiDevice {
 private:
 	MIDIPortRef m_port;
 	MIDIClientRef m_client;
 	MIDIEndpointRef m_endpoint;
-	MIDIPacket *m_pCurPacket;
+	MIDIPacket* m_pCurPacket;
 
 public:
-	MidiHandler_coremidi()
-	        : MidiHandler(),
+	MidiDeviceCoreMidi()
+	        : MidiDevice(),
 	          m_port(0),
 	          m_client(0),
 	          m_endpoint(0),
 	          m_pCurPacket(nullptr)
 	{}
 
-	std::string GetName() const override
-	{
-		return "coremidi";
-	}
-
-	MidiDeviceType GetDeviceType() const override
-	{
-		return MidiDeviceType::External;
-	}
-
-	bool Open(const char *conf) override
-	{
-		// Get the MIDIEndPoint
-		m_endpoint = 0;
-		Bitu numDests = MIDIGetNumberOfDestinations();
-		Bitu destId = numDests;
-		if(conf && *conf) {
-			std::string strconf(conf);
-			std::istringstream configmidi(strconf);
-			configmidi >> destId;
-			if (configmidi.fail() && numDests) {
-				lowcase(strconf);
-				for(Bitu i = 0; i<numDests; i++) {
-					MIDIEndpointRef dummy = MIDIGetDestination(i);
-					if (!dummy) continue;
-					CFStringRef midiname = nullptr;
-					if (MIDIObjectGetStringProperty(dummy,kMIDIPropertyDisplayName,&midiname) == noErr) {
-						const char* s = CFStringGetCStringPtr(midiname,kCFStringEncodingMacRoman);
-						if (s) {
-							std::string devname(s);
-							lowcase(devname);
-							if (devname.find(strconf) != std::string::npos) { 
-								destId = i;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		if (destId >= numDests) destId = 0;
-		if (destId < numDests)
-		{
-			m_endpoint = MIDIGetDestination(destId);
-		}
-
-		// Create a MIDI client and port
-		MIDIClientCreate(CFSTR("MyClient"), nullptr, nullptr, &m_client);
-
-		if (!m_client)
-		{
-			LOG_MSG("MIDI:COREMIDI: No client created.");
-			return false;
-		}
-
-		MIDIOutputPortCreate(m_client, CFSTR("MyOutPort"), &m_port);
-
-		if (!m_port)
-		{
-			LOG_MSG("MIDI:COREMIDI: No port created.");
-			return false;
-		}
-
-		
-		return true;
-	}
-
-	void Close() override
+	~MidiDeviceCoreMidi() override
 	{
 		if (m_port && m_client) {
 			Reset();
@@ -133,7 +66,89 @@ public:
 		//		MIDIEndpointDispose(m_endpoint);
 	}
 
-	void PlayMsg(const MidiMessage& msg) override
+	std::string GetName() const override
+	{
+		return "coremidi";
+	}
+
+	MidiDevice::Type GetType() const override
+	{
+		return MidiDevice::Type::External;
+	}
+
+	bool Initialise(const char* conf) override
+	{
+		// Get the MIDIEndPoint
+		m_endpoint    = 0;
+		Bitu numDests = MIDIGetNumberOfDestinations();
+		Bitu destId   = numDests;
+
+		if (conf && *conf) {
+			std::string strconf(conf);
+			std::istringstream configmidi(strconf);
+			configmidi >> destId;
+
+			if (configmidi.fail() && numDests) {
+				lowcase(strconf);
+
+				for (Bitu i = 0; i < numDests; i++) {
+					MIDIEndpointRef dummy = MIDIGetDestination(i);
+
+					if (!dummy) {
+						continue;
+					}
+
+					CFStringRef midiname = nullptr;
+
+					if (MIDIObjectGetStringProperty(
+					            dummy,
+					            kMIDIPropertyDisplayName,
+					            &midiname) == noErr) {
+
+						const char* s = CFStringGetCStringPtr(
+						        midiname,
+						        kCFStringEncodingMacRoman);
+
+						if (s) {
+							std::string devname(s);
+							lowcase(devname);
+
+							if (devname.find(strconf) !=
+							    std::string::npos) {
+								destId = i;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		if (destId >= numDests) {
+			destId = 0;
+		}
+		if (destId < numDests) {
+			m_endpoint = MIDIGetDestination(destId);
+		}
+
+		// Create a MIDI client and port
+		MIDIClientCreate(CFSTR("MyClient"), nullptr, nullptr, &m_client);
+
+		if (!m_client) {
+			LOG_MSG("MIDI:COREMIDI: No client created.");
+			return false;
+		}
+
+		MIDIOutputPortCreate(m_client, CFSTR("MyOutPort"), &m_port);
+
+		if (!m_port) {
+			LOG_MSG("MIDI:COREMIDI: No port created.");
+			return false;
+		}
+
+		return true;
+	}
+
+	void SendMessage(const MidiMessage& msg) override
 	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];
@@ -154,41 +169,57 @@ public:
 		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	void PlaySysEx(uint8_t *sysex, size_t len) override
+	void SendSysExMessage(uint8_t* sysex, size_t len) override
 	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[MaxMidiSysExSize * 4];
-		MIDIPacketList *packetList = (MIDIPacketList *)packetBuf;
+		MIDIPacketList* packetList = (MIDIPacketList*)packetBuf;
+
 		m_pCurPacket = MIDIPacketListInit(packetList);
-		
+
 		// Add msg to the MIDIPacketList
-		MIDIPacketListAdd(packetList, (ByteCount)sizeof(packetBuf), m_pCurPacket, (MIDITimeStamp)0, len, sysex);
-		
+		MIDIPacketListAdd(packetList,
+		                  (ByteCount)sizeof(packetBuf),
+		                  m_pCurPacket,
+		                  (MIDITimeStamp)0,
+		                  len,
+		                  sysex);
+
 		// Send the MIDIPacketList
-		MIDISend(m_port,m_endpoint,packetList);
+		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	MIDI_RC ListAll(Program *caller) override
+	ListDevicesResult ListDevices(Program* caller) override
 	{
 		Bitu numDests = MIDIGetNumberOfDestinations();
-		for(Bitu i = 0; i < numDests; i++){
+
+		for (Bitu i = 0; i < numDests; i++) {
 			MIDIEndpointRef dest = MIDIGetDestination(i);
-			if (!dest) continue;
+			if (!dest) {
+				continue;
+			}
+
 			CFStringRef midiname = nullptr;
-			if(MIDIObjectGetStringProperty(dest, kMIDIPropertyDisplayName, &midiname) == noErr) {
-				const char * s = CFStringGetCStringPtr(midiname, kCFStringEncodingMacRoman);
+
+			if (MIDIObjectGetStringProperty(dest,
+			                                kMIDIPropertyDisplayName,
+			                                &midiname) == noErr) {
+
+				const char* s = CFStringGetCStringPtr(
+				        midiname, kCFStringEncodingMacRoman);
+
 				if (s) {
 					caller->WriteOut("  %02d - %s\n", i, s);
 				}
 			}
-			//This is for EndPoints created by us.
-			//MIDIEndpointDispose(dest);
+			// This is for EndPoints created by us.
+			// MIDIEndpointDispose(dest);
 		}
-		return MIDI_RC::OK;
+		return ListDevicesResult::Ok;
 	}
 };
 
-MidiHandler_coremidi Midi_coremidi;
+MidiDeviceCoreMidi Midi_coremidi;
 
 #endif // C_COREMIDI
 

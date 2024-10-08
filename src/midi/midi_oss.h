@@ -22,39 +22,43 @@
 #ifndef DOSBOX_MIDI_OSS_H
 #define DOSBOX_MIDI_OSS_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
-class MidiHandler_oss final : public MidiHandler {
+class MidiDeviceOss final : public MidiDevice {
 private:
-	int device = 0;
+	int device         = 0;
 	uint8_t device_num = 0;
-	bool is_open = false;
+	bool is_open       = false;
 
 public:
-	MidiHandler_oss() : MidiHandler() {}
+	MidiDeviceOss() : MidiDevice() {}
+	~MidiDeviceOss() override;
 
-	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
-	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
-
-	~MidiHandler_oss() override;
+	// prevent copying
+	MidiDeviceOss(const MidiDeviceOss&) = delete;
+	// prevent assignment
+	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
 
 	std::string GetName() const override
 	{
 		return "oss";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDevice::Type GetType() const override
 	{
-		return MidiDeviceType::External;
+		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char *conf) override;
+	bool Initialise(const char* conf) override;
 
-	void Close() override;
+	void SendMessage(const MidiMessage& msg) override;
 
-	void PlayMsg(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
-	void PlaySysEx(uint8_t *sysex, size_t len) override;
+	ListDevicesResult ListDevices([[maybe_unused]] Program* caller) override
+	{
+		return ListDevicesResult::NotSupported;
+	}
 };
 
 #endif

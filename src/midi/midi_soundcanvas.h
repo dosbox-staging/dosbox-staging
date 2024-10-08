@@ -22,7 +22,7 @@
 #define DOSBOX_SOUNDCANVAS_H
 
 #include "midi.h"
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #include <memory>
 #include <optional>
@@ -50,33 +50,32 @@ struct PluginAndModel {
 	SoundCanvasModel model = {};
 };
 
-class MidiHandler_SoundCanvas final : public MidiHandler {
+class MidiDeviceSoundCanvas final : public MidiDevice {
 public:
-	MidiHandler_SoundCanvas() = default;
-	~MidiHandler_SoundCanvas() override;
+	MidiDeviceSoundCanvas() = default;
+	~MidiDeviceSoundCanvas() override;
 
 	// prevent copying
-	MidiHandler_SoundCanvas(const MidiHandler_SoundCanvas&) = delete;
+	MidiDeviceSoundCanvas(const MidiDeviceSoundCanvas&) = delete;
 	// prevent assignment
-	MidiHandler_SoundCanvas& operator=(const MidiHandler_SoundCanvas&) = delete;
+	MidiDeviceSoundCanvas& operator=(const MidiDeviceSoundCanvas&) = delete;
 
 	std::string GetName() const override
 	{
 		return "soundcanvas";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDevice::Type GetType() const override
 	{
-		return MidiDeviceType::Internal;
+		return MidiDevice::Type::Internal;
 	}
 
-	MIDI_RC ListAll(Program* caller) override;
+	ListDevicesResult ListDevices(Program* caller) override;
 
-	bool Open(const char* conf) override;
-	void Close() override;
+	bool Initialise(const char* conf) override;
 
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysEx(uint8_t* sysex, size_t len) override;
+	void SendMessage(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
 private:
 	std::optional<SoundCanvasModel> active_model = {};

@@ -33,30 +33,7 @@
 
 #define SEQ_MIDIPUTC 5
 
-MidiHandler_oss::~MidiHandler_oss()
-{
-	if (is_open)
-		close(device);
-}
-
-bool MidiHandler_oss::Open(const char *conf)
-{
-	Close();
-	char devname[512];
-	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
-	char *devfind = strrchr(devname, ',');
-	if (devfind) {
-		*devfind++ = '\0';
-		device_num = atoi(devfind);
-	} else {
-		device_num = 0;
-	}
-	device = open(devname, O_WRONLY, 0);
-	is_open = (device >= 0);
-	return is_open;
-}
-
-void MidiHandler_oss::Close()
+MidiDeviceOss::~MidiDeviceOss()
 {
 	if (!is_open) {
 		return;
@@ -68,29 +45,52 @@ void MidiHandler_oss::Close()
 	is_open = false;
 }
 
-void MidiHandler_oss::PlayMsg(const MidiMessage& msg)
+bool MidiDeviceOss::Initialise(const char* conf)
+{
+	char devname[512];
+	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
+
+	char* devfind = strrchr(devname, ',');
+	if (devfind) {
+		*devfind++ = '\0';
+		device_num = atoi(devfind);
+	} else {
+		device_num = 0;
+	}
+
+	device  = open(devname, O_WRONLY, 0);
+	is_open = (device >= 0);
+
+	return is_open;
+}
+
+void MidiDeviceOss::SendMessage(const MidiMessage& msg)
 {
 	const auto len = MIDI_message_len_by_status[msg.status()];
 
 	uint8_t buf[128];
 	assert(len * 4 <= sizeof(buf));
+
 	size_t pos = 0;
+
 	for (uint8_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
 		buf[pos++] = msg[i];
 		buf[pos++] = device_num;
 		buf[pos++] = 0;
 	}
+
 	const auto rcode = write(device, buf, pos);
 	if (!rcode) {
 		LOG_WARNING("MIDI:OSS: Failed to play message");
 	}
 }
 
-void MidiHandler_oss::PlaySysEx(uint8_t *sysex, size_t len)
+void MidiDeviceOss::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	uint8_t buf[MaxMidiSysExSize * 4];
 	assert(len <= MaxMidiSysExSize);
+
 	size_t pos = 0;
 	for (size_t i = 0; i < len; i++) {
 		buf[pos++] = SEQ_MIDIPUTC;
@@ -98,6 +98,7 @@ void MidiHandler_oss::PlaySysEx(uint8_t *sysex, size_t len)
 		buf[pos++] = device_num;
 		buf[pos++] = 0;
 	}
+
 	const auto rcode = write(device, buf, pos);
 	if (!rcode) {
 		LOG_WARNING("MIDI:OSS: Failed to write SysEx message");

@@ -22,29 +22,29 @@
 #define DOSBOX_MIDI_MT32_H
 
 #include "midi.h"
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_MT32EMU
 
-#include <atomic>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <string>
-#include <thread>
-#include <vector>
+	#include <atomic>
+	#include <memory>
+	#include <mutex>
+	#include <optional>
+	#include <string>
+	#include <thread>
+	#include <vector>
 
-#define MT32EMU_API_TYPE 3
-#include <mt32emu/mt32emu.h>
+	#define MT32EMU_API_TYPE 3
+	#include <mt32emu/mt32emu.h>
 
-#include "mixer.h"
-#include "rwqueue.h"
-#include "std_filesystem.h"
+	#include "mixer.h"
+	#include "rwqueue.h"
+	#include "std_filesystem.h"
 
 // forward declaration
-class LASynthModel;
+class LaSynthModel;
 
-using ModelAndDir = std::pair<const LASynthModel*, std_fs::path>;
+using ModelAndDir = std::pair<const LaSynthModel*, std_fs::path>;
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
@@ -52,27 +52,38 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
 
 using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
 
-class MidiHandler_mt32 final : public MidiHandler {
+class MidiDeviceMt32 final : public MidiDevice {
 public:
-	MidiHandler_mt32() = default;
-	~MidiHandler_mt32() override;
-	void Close() override;
+	MidiDeviceMt32() = default;
+	~MidiDeviceMt32() override;
 
 	std::string GetName() const override
 	{
 		return "mt32";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDevice::Type GetType() const override
 	{
-		return MidiDeviceType::Internal;
+		return MidiDevice::Type::Internal;
 	}
 
-	MIDI_RC ListAll(Program* caller) override;
-	bool Open(const char* conf) override;
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysEx(uint8_t* sysex, size_t len) override;
+	bool Initialise(const char* conf) override;
+
+	void SendMessage(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
+	ListDevicesResult ListDevices(Program* caller) override;
+
 	void PrintStats();
+
+	// Get the value of the 'model' config property from the last
+	// instantiation
+	static std::string GetLastModelPref();
+
+	static bool IsOpen()
+	{
+		return MidiDeviceMt32::is_open;
+	}
 
 private:
 	Mt32ServicePtr GetService();
@@ -82,6 +93,8 @@ private:
 	int GetNumPendingAudioFrames();
 	void RenderAudioFramesToFifo(const int num_frames = 1);
 	void Render();
+
+	static std::string last_model_pref;
 
 	// Managed objects
 	MixerChannelPtr channel = nullptr;
@@ -100,7 +113,8 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
+
+	static bool is_open;
 };
 
 #endif // C_MT32EMU
