@@ -205,6 +205,17 @@ bool ciequals(const char a, const char b)
 	return tolower(a) == tolower(b);
 }
 
+bool case_insensitive_equals(const std::string& a, const std::string& b)
+{
+	auto al = a;
+	lowcase(al);
+
+	auto bl = b;
+	lowcase(bl);
+
+	return al == bl;
+}
+
 bool natural_compare(const std::string& a_str, const std::string& b_str)
 {
 	auto parse_num = [](auto& it, const auto it_end) {
