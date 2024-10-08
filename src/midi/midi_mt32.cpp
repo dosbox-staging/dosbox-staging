@@ -389,7 +389,10 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  mt32_new:   Pick the best available \"new\" MT-32 model (v2.0x).\n"
 	        "  mt32:       Pick the best available MT-32 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').\n"
-	        "Note: Run `MIXER /LISTMIDI` to see the list of available models.");
+	        "Notes:\n"
+	        "  - Run `MIXER /LISTMIDI` to see the list of available models.\n"
+	        "  - This is *NOT* a General MIDI compatible MIDI device; only use it if the\n"
+	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
