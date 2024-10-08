@@ -116,6 +116,8 @@ public:
 	NETServerSocket(const NETServerSocket &) = delete; // prevent copying
 	NETServerSocket &operator=(const NETServerSocket &) = delete; // prevent assignment
 
+	virtual void Close();
+
 	static NETServerSocket* NETServerFactory(const SocketType socketType,
 	                                         const uint16_t port);
 

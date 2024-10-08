@@ -288,6 +288,13 @@ void CSerialModem::SendRes(const ResTypes response) {
 }
 
 bool CSerialModem::Dial(const char * host) {
+	// Close the server socket before dialing
+	waitingclientsocket.reset();
+	if (serversocket) {
+		serversocket->Close();
+		serversocket.reset();
+	}
+
 	char buf[128] = "";
 	safe_strcpy(buf, host);
 
@@ -401,18 +408,16 @@ void CSerialModem::EnterIdleState(){
 	ringing = false;
 	dtrofftimer = -1;
 	warmup_remain_ticks = 0;
-	clientsocket.reset();
-	waitingclientsocket.reset();
 
 	// get rid of everything
+	clientsocket.reset();
+	waitingclientsocket.reset();
 	if (serversocket) {
-		waitingclientsocket.reset(serversocket->Accept());
-		while (waitingclientsocket) {
-			waitingclientsocket.reset(serversocket->Accept());
-		}
-	}
-	if (listenport) {
+		serversocket->Close();
 		serversocket.reset();
+	}
+
+	if (listenport) {
 		serversocket.reset(NETServerSocket::NETServerFactory(socketType,
 		                                                     listenport));
 		if (!serversocket->isopen) {
@@ -426,7 +431,6 @@ void CSerialModem::EnterIdleState(){
 			        "%" PRIu16 " ...",
 			        GetPortNumber(), listenport);
 	}
-	waitingclientsocket.reset();
 
 	commandmode = true;
 	CSerial::setCD(false);
