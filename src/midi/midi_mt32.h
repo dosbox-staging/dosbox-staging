@@ -22,7 +22,7 @@
 #define DOSBOX_MIDI_MT32_H
 
 #include "midi.h"
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_MT32EMU
 

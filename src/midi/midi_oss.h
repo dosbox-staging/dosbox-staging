@@ -22,7 +22,7 @@
 #ifndef DOSBOX_MIDI_OSS_H
 #define DOSBOX_MIDI_OSS_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 class MidiDevice_oss final : public MidiDevice {
 private:
