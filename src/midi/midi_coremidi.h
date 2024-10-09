@@ -45,7 +45,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "coremidi";
+		return MidiDeviceName::CoreMidi;
 	}
 
 	Type GetType() const override
@@ -186,41 +186,14 @@ public:
 		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	MIDI_RC ListDevices(Program* caller) override
-	{
-		Bitu numDests = MIDIGetNumberOfDestinations();
-		for (Bitu i = 0; i < numDests; i++) {
-			MIDIEndpointRef dest = MIDIGetDestination(i);
-
-			if (!dest) {
-				continue;
-			}
-
-			CFStringRef midiname = nullptr;
-
-			if (MIDIObjectGetStringProperty(dest,
-			                                kMIDIPropertyDisplayName,
-			                                &midiname) == noErr) {
-
-				const char* s = CFStringGetCStringPtr(
-				        midiname, kCFStringEncodingMacRoman);
-
-				if (s) {
-					caller->WriteOut("  %02d - %s\n", i, s);
-				}
-			}
-			// This is for EndPoints created by us.
-			// MIDIEndpointDispose(dest);
-		}
-		return MIDI_RC::OK;
-	}
-
 private:
 	MIDIPortRef m_port         = {};
 	MIDIClientRef m_client     = {};
 	MIDIEndpointRef m_endpoint = {};
 	MIDIPacket* m_pCurPacket   = {};
 };
+
+void COREMIDI_ListDevices(MidiDeviceCoreMidi* device, Program* caller);
 
 #endif // C_COREMIDI
 

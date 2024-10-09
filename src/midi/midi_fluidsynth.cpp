@@ -876,6 +876,11 @@ void MidiDeviceFluidSynth::Render()
 	}
 }
 
+std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
+{
+	return current_sf2_path;
+}
+
 std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 {
 	assert(width > 0);
@@ -902,17 +907,22 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	return line;
 }
 
-MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
 	auto write_line = [&](const std_fs::path& sf2_path) {
 		const auto line = format_sf2_line(term_width - 2, sf2_path);
 
-		const auto path_matches = current_sf2_path &&
-		                          (*current_sf2_path == sf2_path);
+		const auto do_highlight = [&] {
+			if (device) {
+				const auto curr_sf2_path =
+				        device->GetCurrentSoundFontPath();
 
-		const bool do_highlight = is_open && path_matches;
+				return curr_sf2_path && curr_sf2_path == sf2_path;
+			}
+			return false;
+		}();
 
 		if (do_highlight) {
 			constexpr auto Green = "[color=light-green]";
@@ -966,12 +976,12 @@ MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
 		write_line(path);
 	}
 
-	return MIDI_RC::OK;
+	caller->WriteOut("\n");
 }
 
 static void fluid_init([[maybe_unused]] Section* sec) {}
 
-void FLUID_AddConfigSection(const ConfigPtr& conf)
+void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);

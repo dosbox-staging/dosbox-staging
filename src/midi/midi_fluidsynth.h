@@ -44,7 +44,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "fluidsynth";
+		return MidiDeviceName::FluidSynth;
 	}
 
 	Type GetType() const override
@@ -58,7 +58,7 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
-	MIDI_RC ListDevices(Program* caller) override;
+	std::optional<std_fs::path> GetCurrentSoundFontPath();
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
@@ -92,6 +92,8 @@ private:
 	bool had_underruns = false;
 	bool is_open       = false;
 };
+
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);
 
 #endif // C_FLUIDSYNTH
 

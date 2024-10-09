@@ -50,8 +50,6 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
               "libmt32emu >= 2.5.0 required (using " MT32EMU_VERSION ")");
 
-using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
-
 class MidiDeviceMt32 final : public MidiDevice {
 public:
 	MidiDeviceMt32() = default;
@@ -62,7 +60,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "mt32";
+		return MidiDeviceName::Mt32;
 	}
 
 	Type GetType() const override
@@ -75,10 +73,10 @@ public:
 
 	void PrintStats();
 
-	MIDI_RC ListDevices(Program* caller) override;
+	std::optional<ModelAndDir> GetModelAndDir();
+	mt32emu_rom_info GetRomInfo();
 
 private:
-	Mt32ServicePtr GetService();
 	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
@@ -91,9 +89,9 @@ private:
 	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};
 
-	std::mutex service_mutex = {};
-	Mt32ServicePtr service   = {};
-	std::thread renderer     = {};
+	std::mutex service_mutex                  = {};
+	std::unique_ptr<MT32Emu::Service> service = {};
+	std::thread renderer                      = {};
 
 	std::optional<ModelAndDir> model_and_dir = {};
 
@@ -105,6 +103,8 @@ private:
 	bool had_underruns = false;
 	bool is_open       = false;
 };
+
+void MT32_ListDevices(MidiDeviceMt32* device, Program* caller);
 
 #endif // C_MT32EMU
 
