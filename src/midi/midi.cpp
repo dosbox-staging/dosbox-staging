@@ -100,25 +100,25 @@ static void register_handlers()
 	deregister_handlers();
 
 #if C_FLUIDSYNTH
-	handlers.emplace_back(std::make_unique<MidiDeviceFluidsynth>());
+	handlers.emplace_back(std::make_unique<MidiDeviceFluidSynth>());
 #endif
 #if C_MT32EMU
-	handlers.emplace_back(std::make_unique<MidiDevice_mt32>());
+	handlers.emplace_back(std::make_unique<MidiDeviceMt32>());
 #endif
 #if C_COREMIDI
-	handlers.emplace_back(std::make_unique<MidiDevice_coremidi>());
+	handlers.emplace_back(std::make_unique<MidiDeviceCoreMidi>());
 #endif
 #if C_COREAUDIO
-	handlers.emplace_back(std::make_unique<MidiDevice_coreaudio>());
+	handlers.emplace_back(std::make_unique<MidiDeviceCoreAudio>());
 #endif
 #if defined(WIN32)
-	handlers.emplace_back(std::make_unique<MidiDevice_win32>());
+	handlers.emplace_back(std::make_unique<MidiDeviceWin32>());
 #endif
 #if C_ALSA
-	handlers.emplace_back(std::make_unique<MidiDevice_alsa>());
+	handlers.emplace_back(std::make_unique<MidiDeviceAlsa>());
 #endif
 #if !defined(WIN32) && !defined(MACOSX)
-	handlers.emplace_back(std::make_unique<MidiDevice_oss>());
+	handlers.emplace_back(std::make_unique<MidiDeviceOss>());
 #endif
 }
 

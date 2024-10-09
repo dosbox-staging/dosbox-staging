@@ -62,14 +62,14 @@ do {                                                                \
 #   endif
 #endif
 
-class MidiDevice_coreaudio final : public MidiDevice {
+class MidiDeviceCoreAudio final : public MidiDevice {
 private:
 	AUGraph m_auGraph;
 	AudioUnit m_synth;
 	const char *soundfont;
 
 public:
-	MidiDevice_coreaudio()
+	MidiDeviceCoreAudio()
 	        : MidiDevice(),
 	          m_auGraph(nullptr),
 	          m_synth(nullptr),
@@ -222,7 +222,7 @@ public:
 
 #undef RequireNoErr
 
-MidiDevice_coreaudio Midi_coreaudio;
+MidiDeviceCoreAudio Midi_coreaudio;
 
 #endif // C_COREAUDIO
 

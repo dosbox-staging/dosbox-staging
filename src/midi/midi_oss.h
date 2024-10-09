@@ -24,19 +24,19 @@
 
 #include "midi_device.h"
 
-class MidiDevice_oss final : public MidiDevice {
+class MidiDeviceOss final : public MidiDevice {
 private:
 	int device = 0;
 	uint8_t device_num = 0;
 	bool is_open = false;
 
 public:
-	MidiDevice_oss() : MidiDevice() {}
+	MidiDeviceOss() : MidiDevice() {}
 
-	MidiDevice_oss(const MidiDevice_oss &) = delete; // prevent copying
-	MidiDevice_oss &operator=(const MidiDevice_oss &) = delete; // prevent assignment
+	MidiDeviceOss(const MidiDeviceOss &) = delete; // prevent copying
+	MidiDeviceOss &operator=(const MidiDeviceOss &) = delete; // prevent assignment
 
-	~MidiDevice_oss() override;
+	~MidiDeviceOss() override;
 
 	std::string GetName() const override
 	{

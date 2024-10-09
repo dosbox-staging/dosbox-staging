@@ -33,13 +33,13 @@
 
 #define SEQ_MIDIPUTC 5
 
-MidiDevice_oss::~MidiDevice_oss()
+MidiDeviceOss::~MidiDeviceOss()
 {
 	if (is_open)
 		close(device);
 }
 
-bool MidiDevice_oss::Open(const char *conf)
+bool MidiDeviceOss::Open(const char *conf)
 {
 	Close();
 	char devname[512];
@@ -56,7 +56,7 @@ bool MidiDevice_oss::Open(const char *conf)
 	return is_open;
 }
 
-void MidiDevice_oss::Close()
+void MidiDeviceOss::Close()
 {
 	if (!is_open) {
 		return;
@@ -68,7 +68,7 @@ void MidiDevice_oss::Close()
 	is_open = false;
 }
 
-void MidiDevice_oss::PlayMsg(const MidiMessage& msg)
+void MidiDeviceOss::PlayMsg(const MidiMessage& msg)
 {
 	const auto len = MIDI_message_len_by_status[msg.status()];
 
@@ -87,7 +87,7 @@ void MidiDevice_oss::PlayMsg(const MidiMessage& msg)
 	}
 }
 
-void MidiDevice_oss::PlaySysEx(uint8_t *sysex, size_t len)
+void MidiDeviceOss::PlaySysEx(uint8_t *sysex, size_t len)
 {
 	uint8_t buf[MaxMidiSysExSize * 4];
 	assert(len <= MaxMidiSysExSize);
