@@ -52,10 +52,10 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
 
 using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
 
-class MidiHandler_mt32 final : public MidiHandler {
+class MidiDevice_mt32 final : public MidiDevice {
 public:
-	MidiHandler_mt32() = default;
-	~MidiHandler_mt32() override;
+	MidiDevice_mt32() = default;
+	~MidiDevice_mt32() override;
 	void Close() override;
 
 	std::string GetName() const override
