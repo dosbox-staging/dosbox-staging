@@ -119,7 +119,7 @@ static bool parse_addr(const std::string &in, int *client, int *port)
 	return true;
 }
 
-void MidiDeviceAlsa::PlaySysEx(uint8_t *sysex, size_t len)
+void MidiDeviceAlsa::SendSysExMessage(uint8_t *sysex, size_t len)
 {
 	snd_seq_ev_set_sysex(&ev, len, sysex);
 	send_event(1);

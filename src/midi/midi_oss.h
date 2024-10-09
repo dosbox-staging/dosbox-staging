@@ -54,7 +54,7 @@ public:
 
 	void SendMidiMessage(const MidiMessage& msg) override;
 
-	void PlaySysEx(uint8_t *sysex, size_t len) override;
+	void SendSysExMessage(uint8_t *sysex, size_t len) override;
 };
 
 #endif

@@ -63,7 +63,7 @@ public:
 	}
 
 	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) {}
-	virtual void PlaySysEx([[maybe_unused]] uint8_t* sysex,
+	virtual void SendSysExMessage([[maybe_unused]] uint8_t* sysex,
 	                       [[maybe_unused]] size_t len)
 	{}
 

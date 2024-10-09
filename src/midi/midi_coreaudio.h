@@ -214,7 +214,7 @@ public:
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
 	}
 
-	void PlaySysEx(uint8_t *sysex, size_t len) override
+	void SendSysExMessage(uint8_t *sysex, size_t len) override
 	{
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
