@@ -69,6 +69,7 @@ std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service
 		mt32emu_rom_info info;
 		if (service->identifyROMFile(&info, filename.c_str(), nullptr) !=
 		    MT32EMU_RC_OK) {
+
 			// Only log unknwon files one time (if not already in
 			// the unknown_files set).
 			if (unknown_files.insert(filename).second) {
@@ -100,9 +101,11 @@ bool LASynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir)
 	const bool have_pcm = find_rom(service, dir, pcm_full) ||
 	                      (find_rom(service, dir, pcm_l) &&
 	                       find_rom(service, dir, pcm_h));
+
 	const bool have_ctrl = find_rom(service, dir, ctrl_full) ||
 	                       (find_rom(service, dir, ctrl_a) &&
 	                        find_rom(service, dir, ctrl_b));
+
 	return have_pcm && have_ctrl;
 }
 
@@ -137,13 +140,16 @@ bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) 
 
 		const auto rcode = service->mergeAndAddROMFiles(
 		        rom_1_path->string().c_str(), rom_2_path->string().c_str());
+
 		return rcode == expected_code;
 	};
 
 	const bool loaded_pcm = load_rom(pcm_full, MT32EMU_RC_ADDED_PCM_ROM) ||
 	                        load_both(pcm_l, pcm_h, MT32EMU_RC_ADDED_PCM_ROM);
+
 	const bool loaded_ctrl = load_rom(ctrl_full, MT32EMU_RC_ADDED_CONTROL_ROM) ||
 	                         load_both(ctrl_a, ctrl_b, MT32EMU_RC_ADDED_CONTROL_ROM);
+
 	return loaded_pcm && loaded_ctrl;
 }
 

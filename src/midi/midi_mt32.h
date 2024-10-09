@@ -56,6 +56,8 @@ class MidiDeviceMt32 final : public MidiDevice {
 public:
 	MidiDeviceMt32() = default;
 	~MidiDeviceMt32() override;
+
+	bool Open(const char* conf) override;
 	void Close() override;
 
 	std::string GetName() const override
@@ -68,11 +70,12 @@ public:
 		return MidiDevice::Type::BuiltIn;
 	}
 
-	MIDI_RC ListAll(Program* caller) override;
-	bool Open(const char* conf) override;
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
 	void PrintStats();
+
+	MIDI_RC ListAll(Program* caller) override;
 
 private:
 	Mt32ServicePtr GetService();

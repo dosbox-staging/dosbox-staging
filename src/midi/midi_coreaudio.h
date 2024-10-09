@@ -64,11 +64,6 @@
 	#endif
 
 class MidiDeviceCoreAudio final : public MidiDevice {
-private:
-	AUGraph m_auGraph;
-	AudioUnit m_synth;
-	const char* soundfont;
-
 public:
 	MidiDeviceCoreAudio()
 	        : MidiDevice(),
@@ -113,6 +108,7 @@ public:
 		desc.componentManufacturer = kAudioUnitManufacturer_Apple;
 		desc.componentFlags        = 0;
 		desc.componentFlagsMask    = 0;
+
 	#if USE_DEPRECATED_COREAUDIO_API
 		RequireNoErr(AUGraphNewNode(m_auGraph, &desc, 0, NULL, &outputNode));
 	#else
@@ -123,6 +119,7 @@ public:
 		desc.componentType         = kAudioUnitType_MusicDevice;
 		desc.componentSubType      = kAudioUnitSubType_DLSSynth;
 		desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+
 	#if USE_DEPRECATED_COREAUDIO_API
 		RequireNoErr(AUGraphNewNode(m_auGraph, &desc, 0, NULL, &synthNode));
 	#else
@@ -149,6 +146,7 @@ public:
 		if (conf && conf[0]) {
 			soundfont = conf;
 			OSErr err = 0;
+
 	#if USE_DEPRECATED_COREAUDIO_API
 			FSRef soundfontRef;
 			err = FSPathMakeRef((const UInt8*)soundfont, &soundfontRef, NULL);
@@ -169,6 +167,7 @@ public:
 			        (const UInt8*)soundfont,
 			        strlen(soundfont),
 			        false);
+
 			if (url) {
 				err = AudioUnitSetProperty(m_synth,
 				                           kMusicDeviceProperty_SoundBankURL,
@@ -228,6 +227,12 @@ public:
 	{
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
+
+private:
+	AUGraph m_auGraph = {};
+	AudioUnit m_synth = {};
+
+	const char* soundfont = {};
 };
 
 	#undef RequireNoErr
