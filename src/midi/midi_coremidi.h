@@ -133,7 +133,7 @@ public:
 		//		MIDIEndpointDispose(m_endpoint);
 	}
 
-	void PlayMsg(const MidiMessage& msg) override
+	void SendMidiMessage(const MidiMessage& msg) override
 	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];

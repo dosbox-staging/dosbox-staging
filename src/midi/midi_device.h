@@ -62,7 +62,7 @@ public:
 		Reset();
 	}
 
-	virtual void PlayMsg([[maybe_unused]] const MidiMessage& msg) {}
+	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) {}
 	virtual void PlaySysEx([[maybe_unused]] uint8_t* sysex,
 	                       [[maybe_unused]] size_t len)
 	{}

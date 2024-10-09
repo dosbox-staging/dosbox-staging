@@ -112,7 +112,7 @@ public:
 		CloseHandle(m_event);
 	}
 
-	void PlayMsg(const MidiMessage& data) override
+	void SendMidiMessage(const MidiMessage& data) override
 	{
 		const auto status  = data[0];
 		const auto data1   = data[1];

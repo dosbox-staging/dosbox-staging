@@ -209,7 +209,7 @@ public:
 		}
 	}
 
-	void PlayMsg(const MidiMessage& msg) override
+	void SendMidiMessage(const MidiMessage& msg) override
 	{
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
 	}

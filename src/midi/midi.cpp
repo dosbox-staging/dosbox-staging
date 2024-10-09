@@ -317,7 +317,7 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 				                    note_off_msg_len,
 				                    msg.data.data());
 			}
-			midi.handler->PlayMsg(msg);
+			midi.handler->SendMidiMessage(msg);
 		}
 	}
 }
@@ -385,7 +385,7 @@ void MIDI_RawOutByte(uint8_t data)
 	const auto is_realtime_message = (data >= MidiStatus::TimingClock);
 	if (is_realtime_message) {
 		midi.realtime_message[0] = data;
-		midi.handler->PlayMsg(midi.realtime_message);
+		midi.handler->SendMidiMessage(midi.realtime_message);
 		return;
 	}
 
@@ -520,7 +520,7 @@ void MIDI_RawOutByte(uint8_t data)
 
 			// 5. Send the MIDI message to the device for playback
 			if (play_msg) {
-				midi.handler->PlayMsg(midi.message.msg);
+				midi.handler->SendMidiMessage(midi.message.msg);
 			}
 
 			midi.message.pos = 1; // Use Running Status
@@ -536,10 +536,10 @@ void MidiDevice::Reset()
 		msg[0] = MidiStatus::ControlChange | channel;
 
 		msg[1] = MidiChannelMode::AllNotesOff;
-		PlayMsg(msg);
+		SendMidiMessage(msg);
 
 		msg[1] = MidiChannelMode::ResetAllControllers;
-		PlayMsg(msg);
+		SendMidiMessage(msg);
 	}
 }
 
@@ -562,7 +562,7 @@ void MIDI_Mute()
 		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
 		     ++channel) {
 			msg[0] = MidiStatus::ControlChange | channel;
-			midi.handler->PlayMsg(msg);
+			midi.handler->SendMidiMessage(msg);
 		}
 	}
 
@@ -582,7 +582,7 @@ void MIDI_Unmute()
 		     ++channel) {
 			msg[0] = MidiStatus::ControlChange | channel;
 			msg[2] = midi_state.GetChannelVolume(channel);
-			midi.handler->PlayMsg(msg);
+			midi.handler->SendMidiMessage(msg);
 		}
 	}
 
