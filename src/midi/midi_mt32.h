@@ -70,7 +70,7 @@ public:
 
 	MIDI_RC ListAll(Program* caller) override;
 	bool Open(const char* conf) override;
-	void PlayMsg(const MidiMessage& msg) override;
+	void SendMidiMessage(const MidiMessage& msg) override;
 	void PlaySysEx(uint8_t* sysex, size_t len) override;
 	void PrintStats();
 

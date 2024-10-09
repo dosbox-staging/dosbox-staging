@@ -68,7 +68,7 @@ void MidiDeviceOss::Close()
 	is_open = false;
 }
 
-void MidiDeviceOss::PlayMsg(const MidiMessage& msg)
+void MidiDeviceOss::SendMidiMessage(const MidiMessage& msg)
 {
 	const auto len = MIDI_message_len_by_status[msg.status()];
 

@@ -682,7 +682,7 @@ int MidiDeviceFluidSynth::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiDeviceFluidSynth::PlayMsg(const MidiMessage& msg)
+void MidiDeviceFluidSynth::SendMidiMessage(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 
