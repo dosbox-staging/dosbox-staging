@@ -21,7 +21,7 @@
 #ifndef DOSBOX_MIDI_FLUIDSYNTH_H
 #define DOSBOX_MIDI_FLUIDSYNTH_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_FLUIDSYNTH
 

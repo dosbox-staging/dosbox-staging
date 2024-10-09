@@ -35,7 +35,7 @@
 #include "control.h"
 #include "cross.h"
 #include "mapper.h"
-#include "midi_handler.h"
+#include "midi_device.h"
 #include "mpu401.h"
 #include "pic.h"
 #include "programs.h"

@@ -22,7 +22,7 @@
 #ifndef DOSBOX_MIDI_COREAUDIO_H
 #define DOSBOX_MIDI_COREAUDIO_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_COREAUDIO
 

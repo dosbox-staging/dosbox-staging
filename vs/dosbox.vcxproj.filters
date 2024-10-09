@@ -1386,7 +1386,7 @@
     <ClInclude Include="..\src\midi\midi_mt32.h">
       <Filter>src\midi</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\midi\midi_handler.h">
+    <ClInclude Include="..\src\midi\midi_device.h">
       <Filter>src\midi</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\program_ls.h">

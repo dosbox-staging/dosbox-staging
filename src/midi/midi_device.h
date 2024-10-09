@@ -19,8 +19,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_MIDI_HANDLER_H
-#define DOSBOX_MIDI_HANDLER_H
+#ifndef DOSBOX_MIDI_DEVICE_H
+#define DOSBOX_MIDI_DEVICE_H
 
 #include "midi.h"
 
