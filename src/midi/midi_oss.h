@@ -24,19 +24,19 @@
 
 #include "midi_handler.h"
 
-class MidiHandler_oss final : public MidiHandler {
+class MidiDevice_oss final : public MidiDevice {
 private:
 	int device = 0;
 	uint8_t device_num = 0;
 	bool is_open = false;
 
 public:
-	MidiHandler_oss() : MidiHandler() {}
+	MidiDevice_oss() : MidiDevice() {}
 
-	MidiHandler_oss(const MidiHandler_oss &) = delete; // prevent copying
-	MidiHandler_oss &operator=(const MidiHandler_oss &) = delete; // prevent assignment
+	MidiDevice_oss(const MidiDevice_oss &) = delete; // prevent copying
+	MidiDevice_oss &operator=(const MidiDevice_oss &) = delete; // prevent assignment
 
-	~MidiHandler_oss() override;
+	~MidiDevice_oss() override;
 
 	std::string GetName() const override
 	{

@@ -36,10 +36,10 @@
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
-class MidiHandlerFluidsynth final : public MidiHandler {
+class MidiDeviceFluidsynth final : public MidiDevice {
 public:
-	MidiHandlerFluidsynth() = default;
-	~MidiHandlerFluidsynth() override;
+	MidiDeviceFluidsynth() = default;
+	~MidiDeviceFluidsynth() override;
 	void PrintStats();
 
 	std::string GetName() const override

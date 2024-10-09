@@ -33,7 +33,7 @@ struct alsa_address {
 	int port;
 };
 
-class MidiHandler_alsa final : public MidiHandler {
+class MidiDevice_alsa final : public MidiDevice {
 private:
 	snd_seq_event_t ev = {};
 	snd_seq_t *seq_handle = nullptr;
@@ -43,10 +43,10 @@ private:
 	void send_event(int do_flush);
 
 public:
-	MidiHandler_alsa() : MidiHandler() {}
+	MidiDevice_alsa() : MidiDevice() {}
 
-	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
-	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
+	MidiDevice_alsa(const MidiDevice_alsa &) = delete; // prevent copying
+	MidiDevice_alsa &operator=(const MidiDevice_alsa &) = delete; // prevent assignment
 
 	std::string GetName() const override
 	{
