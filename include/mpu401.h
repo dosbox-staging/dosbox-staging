@@ -21,10 +21,7 @@
 #ifndef DOSBOX_MPU401_H
 #define DOSBOX_MPU401_H
 
-class Section;
-
-void MPU401_Init(Section* sec);
-
-void MPU401_Destroy(Section* sec);
+void MPU401_Init();
+void MPU401_Destroy();
 
 #endif // DOSBOX_MPU401_H
