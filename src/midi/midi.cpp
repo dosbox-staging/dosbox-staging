@@ -161,7 +161,7 @@ struct Midi {
 static Midi midi                    = {};
 static bool raw_midi_output_enabled = {};
 
-constexpr auto max_channel_volume = 127;
+constexpr auto MaxChannelVolumen = 127;
 
 // Keep track of the state of the MIDI device (e.g. channel volumes and which
 // notes are currently active on each channel).
@@ -175,7 +175,7 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
-		channel_volume_tracker.fill(max_channel_volume);
+		channel_volume_tracker.fill(MaxChannelVolumen);
 	}
 
 	void UpdateState(const MidiMessage& msg)
@@ -213,7 +213,7 @@ public:
 	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
 	{
 		assert(channel <= NumMidiChannels);
-		assert(volume <= max_channel_volume);
+		assert(volume <= MaxChannelVolumen);
 
 		channel_volume_tracker[channel] = volume;
 	}
@@ -260,8 +260,8 @@ void init_midi_state(Section*)
  */
 static int delay_in_ms(size_t sysex_bytes_num)
 {
-	constexpr double midi_baud_rate = 3.125; // bytes per ms
-	const auto delay_ms = (sysex_bytes_num * 1.25) / midi_baud_rate;
+	constexpr double MidiBaudRate = 3.125; // bytes per ms
+	const auto delay_ms           = (sysex_bytes_num * 1.25) / MidiBaudRate;
 	return static_cast<int>(delay_ms) + 2;
 }
 
@@ -301,21 +301,21 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 {
 	assert(channel <= LastMidiChannel);
 
-	constexpr auto note_off_velocity = 64;
-	constexpr auto note_off_msg_len  = 3;
+	constexpr auto NoteOffVelocity = 64;
+	constexpr auto NoteOffMsgLen   = 3;
 
 	MidiMessage msg = {};
 	msg[0]          = MidiStatus::NoteOff | channel;
-	msg[2]          = note_off_velocity;
+	msg[2]          = NoteOffVelocity;
 
 	for (auto note = FirstMidiNote; note <= LastMidiNote; ++note) {
 		if (midi_state.IsNoteActive(channel, note)) {
 			msg[1] = note;
 
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = false;
-				CAPTURE_AddMidiData(is_sysex,
-				                    note_off_msg_len,
+				constexpr auto IsSysEx = false;
+				CAPTURE_AddMidiData(IsSysEx,
+				                    NoteOffMsgLen,
 				                    msg.data.data());
 			}
 			midi.handler->SendMidiMessage(msg);
@@ -447,8 +447,8 @@ void MIDI_RawOutByte(const uint8_t data)
 			}
 
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = true;
-				CAPTURE_AddMidiData(is_sysex,
+				constexpr auto IsSysEx = true;
+				CAPTURE_AddMidiData(IsSysEx,
 				                    midi.sysex.pos - 1,
 				                    &midi.sysex.buf[1]);
 			}
@@ -513,8 +513,8 @@ void MIDI_RawOutByte(const uint8_t data)
 			// 4. Always capture the original message if MIDI
 			// capture is enabled, regardless of the mute state.
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = false;
-				CAPTURE_AddMidiData(is_sysex,
+				constexpr auto IsSysEx = false;
+				CAPTURE_AddMidiData(IsSysEx,
 				                    midi.message.len,
 				                    midi.message.msg.data.data());
 			}
@@ -679,7 +679,7 @@ public:
 
 void MIDI_ListDevices(Program* caller)
 {
-	constexpr auto msg_indent = "  ";
+	constexpr auto MsgIndent = "  ";
 
 	for (const auto& handler : handlers) {
 		const auto device_name = convert_ansi_markup(
@@ -690,12 +690,12 @@ void MIDI_ListDevices(Program* caller)
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {
 			caller->WriteOut("%s%s\n",
-			                 msg_indent,
+			                 MsgIndent,
 			                 MSG_Get("MIDI_DEVICE_NOT_CONFIGURED"));
 		}
 		if (err == MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED) {
 			caller->WriteOut("%s%s\n",
-			                 msg_indent,
+			                 MsgIndent,
 			                 MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
 		}
 
@@ -730,9 +730,9 @@ void MIDI_Init()
 
 void init_midi_dosbox_settings(Section_prop& secprop)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = secprop.Add_string("mididevice", when_idle, "auto");
+	auto* str_prop = secprop.Add_string("mididevice", WhenIdle, "auto");
 	str_prop->Set_help(
 	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	        "('auto' by default):");
@@ -792,7 +792,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 		        "mt32", "none"
 	});
 
-	str_prop = secprop.Add_string("midiconfig", when_idle, "");
+	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
 	        "Configuration options for the selected MIDI interface (unset by default).\n"
 	        "This is usually the ID or name of the MIDI synthesizer you want\n"
@@ -830,11 +830,11 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 		        "mt32",
 	});
 
-	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
+	str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
 	str_prop->Set_values({"intelligent", "uart", "none"});
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
-	auto* bool_prop = secprop.Add_bool("raw_midi_output", when_idle, false);
+	auto* bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
 	bool_prop->Set_help(
 	        "Enable raw, unaltered MIDI output (disabled by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
