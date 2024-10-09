@@ -54,9 +54,9 @@ public:
 		return "coremidi";
 	}
 
-	MidiDeviceType GetType() const override
+	Type GetType() const override
 	{
-		return MidiDeviceType::External;
+		return MidiDevice::Type::External;
 	}
 
 	bool Open(const char *conf) override
