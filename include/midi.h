@@ -205,7 +205,7 @@ void MIDI_Init();
 bool MIDI_IsAvailable();
 void MIDI_Reset();
 void MIDI_ListDevices(Program* output_handler);
-void MIDI_RawOutByte(uint8_t data);
+void MIDI_RawOutByte(const uint8_t data);
 
 void MIDI_Mute();
 void MIDI_Unmute();
