@@ -154,7 +154,7 @@ public:
 		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	void PlaySysEx(uint8_t *sysex, size_t len) override
+	void SendSysExMessage(uint8_t *sysex, size_t len) override
 	{
 		// Acquire a MIDIPacketList
 		Byte packetBuf[MaxMidiSysExSize * 4];

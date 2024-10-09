@@ -87,7 +87,7 @@ void MidiDeviceOss::SendMidiMessage(const MidiMessage& msg)
 	}
 }
 
-void MidiDeviceOss::PlaySysEx(uint8_t *sysex, size_t len)
+void MidiDeviceOss::SendSysExMessage(uint8_t *sysex, size_t len)
 {
 	uint8_t buf[MaxMidiSysExSize * 4];
 	assert(len <= MaxMidiSysExSize);

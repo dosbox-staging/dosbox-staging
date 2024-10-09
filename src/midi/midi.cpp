@@ -417,7 +417,7 @@ void MIDI_RawOutByte(uint8_t data)
 				        midi.sysex.pos,
 				        midi.sysex.delay_ms);
 #endif
-				midi.handler->PlaySysEx(midi.sysex.buf,
+				midi.handler->SendSysExMessage(midi.sysex.buf,
 				                        midi.sysex.pos);
 
 				if (midi.sysex.start_ms) {
