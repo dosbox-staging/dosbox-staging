@@ -55,7 +55,7 @@ public:
 		return "win32";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDeviceType GetType() const override
 	{
 		return MidiDeviceType::External;
 	}

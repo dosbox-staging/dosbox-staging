@@ -44,7 +44,7 @@ public:
 
 	virtual std::string GetName() const = 0;
 
-	virtual MidiDeviceType GetDeviceType() const
+	virtual MidiDeviceType GetType() const
 	{
 		return MidiDeviceType::External;
 	}
