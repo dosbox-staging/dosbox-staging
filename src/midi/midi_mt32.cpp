@@ -22,32 +22,32 @@
 
 #if C_MT32EMU
 
-#include <cassert>
-#include <deque>
-#include <functional>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
+	#include <cassert>
+	#include <deque>
+	#include <functional>
+	#include <map>
+	#include <set>
+	#include <string>
+	#include <vector>
 
-#include <SDL_endian.h>
+	#include <SDL_endian.h>
 
-#include "../ints/int10.h"
-#include "ansi_code_markup.h"
-#include "channel_names.h"
-#include "control.h"
-#include "cross.h"
-#include "fs_utils.h"
-#include "math_utils.h"
-#include "midi.h"
-#include "midi_lasynth_model.h"
-#include "mixer.h"
-#include "mpu401.h"
-#include "pic.h"
-#include "string_utils.h"
-#include "support.h"
+	#include "../ints/int10.h"
+	#include "ansi_code_markup.h"
+	#include "channel_names.h"
+	#include "control.h"
+	#include "cross.h"
+	#include "fs_utils.h"
+	#include "math_utils.h"
+	#include "midi.h"
+	#include "midi_lasynth_model.h"
+	#include "mixer.h"
+	#include "mpu401.h"
+	#include "pic.h"
+	#include "string_utils.h"
+	#include "support.h"
 
-//#define DEBUG_MT32
+// #define DEBUG_MT32
 
 // mt32emu Settings
 // ----------------
@@ -418,7 +418,7 @@ static void register_mt32_text_messages()
 	MSG_Add("MT32_SOURCE_DIR_LABEL", "ROM path      ");
 }
 
-#if defined(WIN32)
+	#if defined(WIN32)
 
 static std::deque<std_fs::path> get_platform_rom_dirs()
 {
@@ -428,7 +428,7 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 	};
 }
 
-#elif defined(MACOSX)
+	#elif defined(MACOSX)
 
 static std::deque<std_fs::path> get_platform_rom_dirs()
 {
@@ -440,7 +440,7 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 	};
 }
 
-#else
+	#else
 
 static std::deque<std_fs::path> get_platform_rom_dirs()
 {
@@ -463,7 +463,7 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 	return dirs;
 }
 
-#endif
+	#endif
 
 static std::deque<std_fs::path> get_rom_dirs()
 {
@@ -552,7 +552,9 @@ static std::optional<ModelAndDir> load_model(const Mt32ServicePtr& service,
 		if (load_first_available || model->Matches(wanted_model_name)) {
 			for (const auto& dir : rom_dirs) {
 				if (model->Load(service, dir)) {
-					return {{model, simplify_path(dir)}};
+					return {
+					        {model, simplify_path(dir)}
+                                        };
 				}
 			}
 		}
@@ -573,14 +575,14 @@ static mt32emu_report_handler_i get_report_handler_interface()
 		                       [[maybe_unused]] const char* fmt,
 		                       [[maybe_unused]] va_list list)
 		{
-#if !defined(NDEBUG)
+	#if !defined(NDEBUG)
 			// Skip processing MT-32 debug output in release builds
 			// because it can be bursty
 			char msg[1024] = "MT32: ";
 			assert(fmt);
 			safe_strcat(msg, fmt);
 			LOG_DEBUG(msg, list);
-#endif
+	#endif
 		}
 
 		static void onErrorControlROM(void*)
@@ -853,10 +855,10 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 		set_section_property_value("mt32", "mt32_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and bursty.
-	// The mixer's default of ~20 ms becomes 40 ms here, which gives slower
-	// systems a better chance to keep up (and prevent their audio frame FIFO
-	// from running dry).
+	// Double the baseline PCM prebuffer because MIDI is demanding and
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up (and prevent their audio
+	// frame FIFO from running dry).
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO
@@ -914,8 +916,9 @@ void MidiDeviceMt32::Close()
 	LOG_MSG("MT32: Shutting down");
 
 	if (had_underruns) {
-		LOG_WARNING("MT32: Fix underruns by lowering CPU load "
-		            "or increasing your conf's prebuffer");
+		LOG_WARNING(
+		        "MT32: Fix underruns by lowering CPU load "
+		        "or increasing your conf's prebuffer");
 		had_underruns = false;
 	}
 
@@ -1061,12 +1064,12 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 
 	#ifdef DEBUG_MT32
 	LOG_TRACE(
-			"MT32: %2u audio frames prior to %s message, followed by "
-			"%2lu more messages. Have %4lu audio frames queued",
-			work->num_pending_audio_frames,
-			work->message_type == MessageType::Channel ? "channel" : "sysex",
-			work_fifo.Size(),
-			audio_frame_fifo.Size());
+	        "MT32: %2u audio frames prior to %s message, followed by "
+	        "%2lu more messages. Have %4lu audio frames queued",
+	        work->num_pending_audio_frames,
+	        work->message_type == MessageType::Channel ? "channel" : "sysex",
+	        work_fifo.Size(),
+	        audio_frame_fifo.Size());
 	#endif
 
 	if (work->num_pending_audio_frames > 0) {

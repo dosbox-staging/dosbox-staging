@@ -37,7 +37,7 @@ public:
 	enum class Type { BuiltIn, External };
 
 	MidiDevice() {}
-	MidiDevice(const MidiDevice&) = delete;            // prevent copying
+	MidiDevice(const MidiDevice&)            = delete; // prevent copying
 	MidiDevice& operator=(const MidiDevice&) = delete; // prevent assignment
 
 	virtual ~MidiDevice() = default;
@@ -64,7 +64,7 @@ public:
 
 	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) {}
 	virtual void SendSysExMessage([[maybe_unused]] uint8_t* sysex,
-	                       [[maybe_unused]] size_t len)
+	                              [[maybe_unused]] size_t len)
 	{}
 
 	virtual MIDI_RC ListAll(Program*)

@@ -26,20 +26,20 @@
 
 #if C_MT32EMU
 
-#include <atomic>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <string>
-#include <thread>
-#include <vector>
+	#include <atomic>
+	#include <memory>
+	#include <mutex>
+	#include <optional>
+	#include <string>
+	#include <thread>
+	#include <vector>
 
-#define MT32EMU_API_TYPE 3
-#include <mt32emu/mt32emu.h>
+	#define MT32EMU_API_TYPE 3
+	#include <mt32emu/mt32emu.h>
 
-#include "mixer.h"
-#include "rwqueue.h"
-#include "std_filesystem.h"
+	#include "mixer.h"
+	#include "rwqueue.h"
+	#include "std_filesystem.h"
 
 // forward declaration
 class LASynthModel;
