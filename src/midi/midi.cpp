@@ -677,7 +677,7 @@ public:
 	}
 };
 
-void MIDI_ListAll(Program* caller)
+void MIDI_ListDevices(Program* caller)
 {
 	constexpr auto msg_indent = "  ";
 
