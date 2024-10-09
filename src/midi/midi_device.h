@@ -32,10 +32,10 @@ enum class MIDI_RC : int {
 	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
 };
 
-enum class MidiDeviceType { BuiltIn, External };
-
 class MidiDevice {
 public:
+	enum class Type { BuiltIn, External };
+
 	MidiDevice() {}
 	MidiDevice(const MidiDevice&) = delete;            // prevent copying
 	MidiDevice& operator=(const MidiDevice&) = delete; // prevent assignment
@@ -44,9 +44,9 @@ public:
 
 	virtual std::string GetName() const = 0;
 
-	virtual MidiDeviceType GetType() const
+	virtual Type GetType() const
 	{
-		return MidiDeviceType::External;
+		return Type::External;
 	}
 
 	virtual bool Open([[maybe_unused]] const char* conf)

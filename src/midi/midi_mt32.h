@@ -63,9 +63,9 @@ public:
 		return "mt32";
 	}
 
-	MidiDeviceType GetType() const override
+	Type GetType() const override
 	{
-		return MidiDeviceType::BuiltIn;
+		return MidiDevice::Type::BuiltIn;
 	}
 
 	MIDI_RC ListAll(Program* caller) override;

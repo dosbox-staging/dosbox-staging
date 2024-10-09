@@ -293,7 +293,7 @@ uint8_t get_midi_channel(const uint8_t channel_status)
 
 static bool is_external_midi_device()
 {
-	return midi.handler->GetType() == MidiDeviceType::External;
+	return midi.handler->GetType() == MidiDevice::Type::External;
 }
 
 static void output_note_off_for_active_notes(const uint8_t channel)
