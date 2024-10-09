@@ -88,7 +88,7 @@ uint8_t MIDI_message_len_by_status[256] = {
 #include "midi_alsa.h"
 #endif
 
-static std::list<std::unique_ptr<MidiHandler>> handlers = {};
+static std::list<std::unique_ptr<MidiDevice>> handlers = {};
 
 static void deregister_handlers()
 {
@@ -100,29 +100,29 @@ static void register_handlers()
 	deregister_handlers();
 
 #if C_FLUIDSYNTH
-	handlers.emplace_back(std::make_unique<MidiHandlerFluidsynth>());
+	handlers.emplace_back(std::make_unique<MidiDeviceFluidsynth>());
 #endif
 #if C_MT32EMU
-	handlers.emplace_back(std::make_unique<MidiHandler_mt32>());
+	handlers.emplace_back(std::make_unique<MidiDevice_mt32>());
 #endif
 #if C_COREMIDI
-	handlers.emplace_back(std::make_unique<MidiHandler_coremidi>());
+	handlers.emplace_back(std::make_unique<MidiDevice_coremidi>());
 #endif
 #if C_COREAUDIO
-	handlers.emplace_back(std::make_unique<MidiHandler_coreaudio>());
+	handlers.emplace_back(std::make_unique<MidiDevice_coreaudio>());
 #endif
 #if defined(WIN32)
-	handlers.emplace_back(std::make_unique<MidiHandler_win32>());
+	handlers.emplace_back(std::make_unique<MidiDevice_win32>());
 #endif
 #if C_ALSA
-	handlers.emplace_back(std::make_unique<MidiHandler_alsa>());
+	handlers.emplace_back(std::make_unique<MidiDevice_alsa>());
 #endif
 #if !defined(WIN32) && !defined(MACOSX)
-	handlers.emplace_back(std::make_unique<MidiHandler_oss>());
+	handlers.emplace_back(std::make_unique<MidiDevice_oss>());
 #endif
 }
 
-MidiHandler* get_handler(const std::string_view name)
+MidiDevice* get_handler(const std::string_view name)
 {
 	for (const auto& handler : handlers) {
 		if (handler->GetName() == name) {
@@ -154,7 +154,7 @@ struct Midi {
 
 	bool is_available    = false;
 	bool is_muted        = false;
-	MidiHandler* handler = nullptr;
+	MidiDevice* handler = nullptr;
 };
 
 static Midi midi                    = {};
@@ -528,7 +528,7 @@ void MIDI_RawOutByte(uint8_t data)
 	}
 }
 
-void MidiHandler::Reset()
+void MidiDevice::Reset()
 {
 	MidiMessage msg = {};
 
@@ -626,7 +626,7 @@ public:
 		trim(midiconfig_prefs);
 		const char* midiconfig = midiconfig_prefs.c_str();
 
-		auto open_handler = [&](MidiHandler* handler) -> bool {
+		auto open_handler = [&](MidiDevice* handler) -> bool {
 			const auto opened = handler && handler->Open(midiconfig);
 			if (opened) {
 				midi.is_available = true;

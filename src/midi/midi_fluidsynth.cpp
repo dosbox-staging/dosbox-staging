@@ -42,7 +42,7 @@
 #include "string_utils.h"
 #include "support.h"
 
-MidiHandlerFluidsynth instance;
+MidiDeviceFluidsynth instance;
 
 constexpr auto SoundFontExtension = ".sf2";
 
@@ -258,7 +258,7 @@ static Section_prop* get_fluidsynth_section()
 	return sec;
 }
 
-bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
+bool MidiDeviceFluidsynth::Open([[maybe_unused]] const char* conf)
 {
 	Close();
 
@@ -522,7 +522,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceFluidsynth::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -593,7 +593,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	current_sf2_path = soundfont_path;
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
+	const auto render = std::bind(&MidiDeviceFluidsynth::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:fsynth");
 
@@ -603,12 +603,12 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	return true;
 }
 
-MidiHandlerFluidsynth::~MidiHandlerFluidsynth()
+MidiDeviceFluidsynth::~MidiDeviceFluidsynth()
 {
 	Close();
 }
 
-void MidiHandlerFluidsynth::Close()
+void MidiDeviceFluidsynth::Close()
 {
 	if (!is_open) {
 		return;
@@ -657,7 +657,7 @@ void MidiHandlerFluidsynth::Close()
 	MIXER_UnlockMixerThread();
 }
 
-int MidiHandlerFluidsynth::GetNumPendingAudioFrames()
+int MidiDeviceFluidsynth::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -682,7 +682,7 @@ int MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
+void MidiDeviceFluidsynth::PlayMsg(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 
@@ -694,14 +694,14 @@ void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlaySysEx(uint8_t* sysex, size_t len)
+void MidiDeviceFluidsynth::PlaySysEx(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
 	work_fifo.Enqueue(std::move(work));
 }
 
-void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
+void MidiDeviceFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 {
 	const auto status_byte = msg[0];
 	const auto status      = get_midi_status(status_byte);
@@ -769,7 +769,7 @@ void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 }
 
 // Apply the sysex message to the service
-void MidiHandlerFluidsynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
+void MidiDeviceFluidsynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 {
 	const char* data = reinterpret_cast<const char*>(msg.data());
 	const auto n     = static_cast<int>(msg.size());
@@ -779,7 +779,7 @@ void MidiHandlerFluidsynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceFluidsynth::MixerCallBack(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 
@@ -812,7 +812,7 @@ void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
 	}
 }
 
-void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
+void MidiDeviceFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
 
@@ -833,7 +833,7 @@ void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
 
-void MidiHandlerFluidsynth::ProcessWorkFromFifo()
+void MidiDeviceFluidsynth::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
 	if (!work) {
@@ -866,7 +866,7 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 }
 
 // Keep the fifo populated with freshly rendered buffers
-void MidiHandlerFluidsynth::Render()
+void MidiDeviceFluidsynth::Render()
 {
 	while (work_fifo.IsRunning()) {
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
@@ -900,7 +900,7 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	return line;
 }
 
-MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
+MIDI_RC MidiDeviceFluidsynth::ListAll(Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 

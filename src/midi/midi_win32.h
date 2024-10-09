@@ -38,17 +38,17 @@
 
 #include "programs.h"
 
-class MidiHandler_win32 final : public MidiHandler {
+class MidiDevice_win32 final : public MidiDevice {
 private:
 	HMIDIOUT m_out = nullptr;
 	MIDIHDR m_hdr = {};
 	HANDLE m_event = nullptr;
 	bool isOpen;
 public:
-	MidiHandler_win32() : MidiHandler(), isOpen(false) {}
+	MidiDevice_win32() : MidiDevice(), isOpen(false) {}
 	
-	MidiHandler_win32(const MidiHandler_win32&) = delete;
-	MidiHandler_win32& operator=(const MidiHandler_win32&) = delete;
+	MidiDevice_win32(const MidiDevice_win32&) = delete;
+	MidiDevice_win32& operator=(const MidiDevice_win32&) = delete;
 
 	std::string GetName() const override
 	{
@@ -157,6 +157,6 @@ public:
 	}
 };
 
-MidiHandler_win32 Midi_win32;
+MidiDevice_win32 Midi_win32;
 
 #endif

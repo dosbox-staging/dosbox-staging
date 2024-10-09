@@ -79,7 +79,7 @@ static bool port_is_writable(const unsigned int port_caps)
 	return (port_caps & mask) == mask;
 }
 
-void MidiHandler_alsa::send_event(int do_flush)
+void MidiDevice_alsa::send_event(int do_flush)
 {
 	snd_seq_ev_set_direct(&ev);
 	snd_seq_ev_set_source(&ev, output_port);
@@ -119,13 +119,13 @@ static bool parse_addr(const std::string &in, int *client, int *port)
 	return true;
 }
 
-void MidiHandler_alsa::PlaySysEx(uint8_t *sysex, size_t len)
+void MidiDevice_alsa::PlaySysEx(uint8_t *sysex, size_t len)
 {
 	snd_seq_ev_set_sysex(&ev, len, sysex);
 	send_event(1);
 }
 
-void MidiHandler_alsa::PlayMsg(const MidiMessage& msg)
+void MidiDevice_alsa::PlayMsg(const MidiMessage& msg)
 {
 	const auto status_byte = msg[0];
 
@@ -180,7 +180,7 @@ void MidiHandler_alsa::PlayMsg(const MidiMessage& msg)
 	}
 }
 
-void MidiHandler_alsa::Close()
+void MidiDevice_alsa::Close()
 {
 	if (seq_handle) {
 		Reset();
@@ -261,7 +261,7 @@ static alsa_address find_seq_input_port(const std::string &pattern)
 	return seq_addr;
 }
 
-bool MidiHandler_alsa::Open(const char *conf)
+bool MidiDevice_alsa::Open(const char *conf)
 {
 	assert(conf != nullptr);
 	seq = {-1, -1};
@@ -326,7 +326,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	return false;
 }
 
-MIDI_RC MidiHandler_alsa::ListAll(Program *caller)
+MIDI_RC MidiDevice_alsa::ListAll(Program *caller)
 {
 	auto print_port = [caller, this](auto *client_info, auto *port_info) {
 		const auto *addr = snd_seq_port_info_get_addr(port_info);

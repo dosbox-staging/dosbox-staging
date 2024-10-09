@@ -34,13 +34,13 @@ enum class MIDI_RC : int {
 
 enum class MidiDeviceType { BuiltIn, External };
 
-class MidiHandler {
+class MidiDevice {
 public:
-	MidiHandler() {}
-	MidiHandler(const MidiHandler&) = delete;            // prevent copying
-	MidiHandler& operator=(const MidiHandler&) = delete; // prevent assignment
+	MidiDevice() {}
+	MidiDevice(const MidiDevice&) = delete;            // prevent copying
+	MidiDevice& operator=(const MidiDevice&) = delete; // prevent assignment
 
-	virtual ~MidiHandler() = default;
+	virtual ~MidiDevice() = default;
 
 	virtual std::string GetName() const = 0;
 
@@ -73,8 +73,8 @@ public:
 	}
 };
 
-void MIDI_RegisterHandler(std::unique_ptr<MidiHandler> handler);
-MidiHandler* MIDI_GetHandler(const std::string_view name);
+void MIDI_RegisterHandler(std::unique_ptr<MidiDevice> handler);
+MidiDevice* MIDI_GetHandler(const std::string_view name);
 void MIDI_DeregisterHandler(const std::string_view name);
 
 #endif
