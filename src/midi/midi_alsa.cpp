@@ -83,7 +83,7 @@ static bool port_is_writable(const unsigned int port_caps)
 	return (port_caps & mask) == mask;
 }
 
-MidiDevice::~MidiDevice_Alsa()
+MidiDevice::~MidiDeviceAlsa()
 {
 	if (seq_handle) {
 		Reset();
@@ -166,26 +166,32 @@ void MidiDeviceAlsa::SendMessage(const MidiMessage& msg)
 		snd_seq_ev_set_noteoff(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::NoteOn:
 		snd_seq_ev_set_noteon(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::PolyKeyPressure:
 		snd_seq_ev_set_keypress(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::ControlChange:
 		snd_seq_ev_set_controller(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::ProgramChange:
 		snd_seq_ev_set_pgmchange(&ev, channel, msg[1]);
 		send_event(0);
 		break;
+
 	case MidiStatus::ChannelPressure:
 		snd_seq_ev_set_chanpress(&ev, channel, msg[1]);
 		send_event(0);
 		break;
+
 	case MidiStatus::PitchBend: {
 		long theBend = ((long)msg[1] + (long)(msg[2] << 7)) - 0x2000;
 		snd_seq_ev_set_pitchbend(&ev, channel, theBend);
@@ -283,7 +289,7 @@ static alsa_address find_seq_input_port(const std::string& pattern)
 	return seq_addr;
 }
 
-bool MidiDeviceAlsa::Open(const char* conf)
+MidiDeviceAlsa::MidiDeviceAlsa(const char* conf)
 {
 	assert(conf != nullptr);
 	seq = {-1, -1};
@@ -305,12 +311,12 @@ bool MidiDeviceAlsa::Open(const char* conf)
 
 	if (seq.client == -1) {
 		LOG_WARNING("MIDI:ALSA: No available MIDI devices found");
-		return false;
+		throw new std::runtime_error();
 	}
 
 	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_WARNING("MIDI:ALSA: Can't open sequencer");
-		return false;
+		throw new std::runtime_error();
 	}
 
 	snd_seq_set_client_name(seq_handle, "DOSBox Staging");
@@ -329,7 +335,7 @@ bool MidiDeviceAlsa::Open(const char* conf)
 	if (output_port < 0) {
 		snd_seq_close(seq_handle);
 		LOG_WARNING("MIDI:ALSA: Can't create ALSA port");
-		return false;
+		throw new std::runtime_error();
 	}
 
 	if (seq.client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
@@ -348,17 +354,19 @@ bool MidiDeviceAlsa::Open(const char* conf)
 			        snd_seq_client_info_get_name(info));
 
 			snd_seq_client_info_free(info);
-
-			return true;
 		}
-	}
+	} else {
+		snd_seq_close(seq_handle);
 
-	snd_seq_close(seq_handle);
-	LOG_WARNING("MIDI:ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
-	return false;
+		LOG_WARNING("MIDI:ALSA: Can't connect to MIDI port %d:%d",
+		            seq.client,
+		            seq.port);
+
+		throw new std::runtime_error();
+	}
 }
 
-MidiHandler::ListDevicesResult MidiDeviceAlsa::ListDevices(Program* caller) override;
+MidiHandler::ListDevicesResult MIDI_ALSA_ListDevices(Program* caller) override;
 {
 	auto print_port = [caller, this](auto* client_info, auto* port_info) {
 		const auto* addr = snd_seq_port_info_get_addr(port_info);

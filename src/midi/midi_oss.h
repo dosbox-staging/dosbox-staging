@@ -28,10 +28,9 @@ class MidiDeviceOss final : public MidiDevice {
 private:
 	int device         = 0;
 	uint8_t device_num = 0;
-	bool is_open       = false;
 
 public:
-	MidiDeviceOss() : MidiDevice() {}
+	MidiDeviceOss(const char* conf) override;
 	~MidiDeviceOss() override;
 
 	// prevent copying
@@ -39,17 +38,10 @@ public:
 	// prevent assignment
 	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
 
-	std::string GetName() const override
-	{
-		return "oss";
-	}
-
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::External;
 	}
-
-	bool Initialise(const char* conf) override;
 
 	void SendMessage(const MidiMessage& msg) override;
 

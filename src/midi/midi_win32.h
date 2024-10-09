@@ -40,39 +40,8 @@
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
-	MidiDeviceWin32() : MidiDevice(), is_open(false) {}
-
-	MidiDeviceWin32(const MidiDeviceWin32&)            = delete;
-	MidiDeviceWin32& operator=(const MidiDeviceWin32&) = delete;
-
-	MidiDeviceWin32::~MidiDeviceWin32() override
+	MidiDeviceWin32(const char* conf) override
 	{
-		if (!is_open) {
-			return;
-		}
-
-		Reset();
-
-		is_open = false;
-		midiOutClose(m_out);
-		CloseHandle(m_event);
-	}
-
-	std::string GetName() const override
-	{
-		return "win32";
-	}
-
-	MidiDeviceType GetDeviceType() const override
-	{
-		return MidiDeviceType::External;
-	}
-
-	bool Initialise(const char* conf) override
-	{
-		if (is_open) {
-			return false;
-		}
 		m_event      = CreateEvent(nullptr, true, true, nullptr);
 		MMRESULT res = MMSYSERR_NOERROR;
 
@@ -80,7 +49,7 @@ public:
 			std::string strconf(conf);
 			std::istringstream configmidi(strconf);
 
-			unsigned int total  = midiOutGetNumDevs();
+			const unsigned int total  = midiOutGetNumDevs();
 			unsigned int nummer = total;
 
 			configmidi >> nummer;
@@ -127,12 +96,24 @@ public:
 		}
 
 		if (res != MMSYSERR_NOERROR) {
-			return false;
+			throw new std::runtime_error();
 		}
+	}
 
-		is_open = true;
+	MidiDeviceWin32(const MidiDeviceWin32&)            = delete;
+	MidiDeviceWin32& operator=(const MidiDeviceWin32&) = delete;
 
-		return true;
+	MidiDeviceWin32::~MidiDeviceWin32() override
+	{
+		Reset();
+
+		midiOutClose(m_out);
+		CloseHandle(m_event);
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
 	}
 
 	void SendMessage(const MidiMessage& data) override
@@ -190,8 +171,6 @@ private:
 	HMIDIOUT m_out = nullptr;
 	MIDIHDR m_hdr  = {};
 	HANDLE m_event = nullptr;
-
-	bool is_open = false;
 };
 
 MidiDeviceWin32 Midi_win32;

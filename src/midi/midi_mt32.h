@@ -54,20 +54,13 @@ using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
 
 class MidiDeviceMt32 final : public MidiDevice {
 public:
-	MidiDeviceMt32() = default;
+	MidiDeviceMt32(const char* conf) override;
 	~MidiDeviceMt32() override;
-
-	std::string GetName() const override
-	{
-		return "mt32";
-	}
 
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::Internal;
 	}
-
-	bool Initialise(const char* conf) override;
 
 	void SendMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
@@ -79,11 +72,6 @@ public:
 	// Get the value of the 'model' config property from the last
 	// instantiation
 	static std::string GetLastModelPref();
-
-	static bool IsOpen()
-	{
-		return MidiDeviceMt32::is_open;
-	}
 
 private:
 	Mt32ServicePtr GetService();
@@ -113,8 +101,6 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-
-	static bool is_open;
 };
 
 #endif // C_MT32EMU

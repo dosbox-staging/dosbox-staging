@@ -51,8 +51,6 @@
 
 std::string MidiDeviceMt32::last_model_pref = {};
 
-bool MidiDeviceMt32::is_open = false;
-
 // mt32emu Settings
 // ----------------
 
@@ -790,7 +788,7 @@ std::string MidiDeviceMt32::GetLastModelPref()
 	return last_model_pref;
 }
 
-bool MidiDeviceMt32::Initialise([[maybe_unused]] const char* conf)
+MidiDeviceMt32::MidiDeviceMt32([[maybe_unused]] const char* conf)
 {
 	auto mt32_service     = GetService();
 	const auto model_pref = get_model_setting();
@@ -808,7 +806,7 @@ bool MidiDeviceMt32::Initialise([[maybe_unused]] const char* conf)
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
 			LOG_MSG("MT32:  %c- %s", div, dir.string().c_str());
 		}
-		return false;
+		throw new std::runtime_error();
 	}
 
 	mt32emu_rom_info rom_info;
@@ -834,7 +832,7 @@ bool MidiDeviceMt32::Initialise([[maybe_unused]] const char* conf)
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
 		LOG_WARNING("MT32: Error initialising emulation: %i", rc);
-		return false;
+		throw new std::runtime_error();
 	}
 
 	MIXER_LockMixerThread();
@@ -916,17 +914,11 @@ bool MidiDeviceMt32::Initialise([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:mt32");
 
 	// Start playback
-	MidiDeviceMt32::is_open = true;
 	MIXER_UnlockMixerThread();
-	return true;
 }
 
 MidiDeviceMt32::~MidiDeviceMt32()
 {
-	if (!MidiDeviceMt32::is_open) {
-		return;
-	}
-
 	LOG_MSG("MT32: Shutting down");
 
 	if (had_underruns) {
@@ -973,8 +965,6 @@ MidiDeviceMt32::~MidiDeviceMt32()
 	ms_per_audio_frame = 0.0;
 
 	MidiDeviceMt32::last_model_pref = "";
-
-	MidiDeviceMt32::is_open = false;
 
 	MIXER_UnlockMixerThread();
 }
@@ -1125,13 +1115,13 @@ void MidiDeviceMt32::Render()
 
 static void mt32_init([[maybe_unused]] Section* sec)
 {
-	if (MidiDeviceMt32::IsOpen()) {
+/*	if (MidiDeviceMt32::IsOpen()) {
 		const auto last_model = MidiDeviceMt32::GetLastModelPref();
 
 		if (!last_model.empty() && last_model != get_model_setting()) {
 			MIDI_Init();
 		}
-	}
+	} */
 }
 
 void MT32_AddConfigSection(const ConfigPtr& conf)

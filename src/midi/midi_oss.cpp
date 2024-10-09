@@ -33,19 +33,7 @@
 
 #define SEQ_MIDIPUTC 5
 
-MidiDeviceOss::~MidiDeviceOss()
-{
-	if (!is_open) {
-		return;
-	}
-
-	Reset();
-
-	close(device);
-	is_open = false;
-}
-
-bool MidiDeviceOss::Initialise(const char* conf)
+MidiDeviceOss::MidiDeviceOss(const char* conf)
 {
 	char devname[512];
 	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
@@ -60,8 +48,16 @@ bool MidiDeviceOss::Initialise(const char* conf)
 
 	device  = open(devname, O_WRONLY, 0);
 	is_open = (device >= 0);
+	if (!is_open) {
+		throw new std::runtime_error();
+	}
+}
 
-	return is_open;
+MidiDeviceOss::~MidiDeviceOss()
+{
+	Reset();
+
+	close(device);
 }
 
 void MidiDeviceOss::SendMessage(const MidiMessage& msg)

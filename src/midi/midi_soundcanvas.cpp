@@ -243,10 +243,6 @@ PluginAndModel MidiDeviceSoundCanvas::LoadModel(const std::string& wanted_model_
 
 MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 {
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("SOUNDCANVAS: Shutting down");
 
 	if (had_underruns) {
@@ -280,7 +276,6 @@ MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
 
-	is_open      = false;
 	active_model = {};
 
 	MIXER_UnlockMixerThread();
@@ -383,7 +378,7 @@ MidiDevice::ListDevicesResult MidiDeviceSoundCanvas::ListDevices(Program* caller
 	return ListDevicesResult::Ok;
 }
 
-bool MidiDeviceSoundCanvas::Initialise([[maybe_unused]] const char* conf)
+MidiDeviceSoundCanvas::MidiDeviceSoundCanvas([[maybe_unused]] const char* conf)
 {
 	const auto model_name = get_soundcanvas_section()->Get_string(
 	        "soundcanvas_model");
@@ -392,7 +387,7 @@ bool MidiDeviceSoundCanvas::Initialise([[maybe_unused]] const char* conf)
 	if (!plugin_wrapper.plugin) {
 		LOG_WARNING("SOUNDCANVAS: Failed to load '%s' Sound Canvas model",
 		            model_name.c_str());
-		return false;
+		throw std::runtime_error();
 	}
 
 	active_model = plugin_wrapper.model;
@@ -511,9 +506,7 @@ bool MidiDeviceSoundCanvas::Initialise([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:soundcanvas");
 
 	// Start playback
-	is_open = true;
 	MIXER_UnlockMixerThread();
-	return true;
 }
 
 int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()

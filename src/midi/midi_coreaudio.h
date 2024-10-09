@@ -70,34 +70,10 @@ private:
 	const char* soundfont;
 
 public:
-	MidiDeviceCoreAudio()
-	        : MidiDevice(),
-	          m_auGraph(nullptr),
-	          m_synth(nullptr),
-	          soundfont(nullptr)
-	{}
-
-	~MidiDeviceCoreAudio() override
-	{
-		if (m_auGraph) {
-			Reset();
-			AUGraphStop(m_auGraph);
-			DisposeAUGraph(m_auGraph);
-			m_auGraph = nullptr;
-		}
-	}
-
-	std::string GetName() const override
-	{
-		return "coreaudio";
-	}
-
-	MidiDevice::Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
-	bool Initialise(const char* conf) override
+	MidiDeviceCoreAudio() override : MidiDevice(),
+	                                 m_auGraph(nullptr),
+	                                 m_synth(nullptr),
+	                                 soundfont(nullptr)
 	{
 		OSStatus status = 0;
 
@@ -219,6 +195,21 @@ public:
 		return false;
 	}
 
+	~MidiDeviceCoreAudio() override
+	{
+		if (m_auGraph) {
+			Reset();
+			AUGraphStop(m_auGraph);
+			DisposeAUGraph(m_auGraph);
+			m_auGraph = nullptr;
+		}
+	}
+
+	MidiDevice::Type GetType() const override
+	{
+		return MidiDevice::Type::External;
+	}
+
 	void SendMessage(const MidiMessage& msg) override
 	{
 		MusicDeviceMIDIEvent(m_synth, msg[0], msg[1], msg[2], 0);
@@ -228,17 +219,10 @@ public:
 	{
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
-
-	ListDevicesResult ListDevices([[maybe_unused]] Program*) override
-	{
-		return ListDevicesResult::NotSupported;
-	}
 };
 
 	#undef RequireNoErr
 
-MidiDeviceCoreAudio Midi_coreaudio;
-
 #endif // C_COREAUDIO
 
-#endif
+#endif // DOSBOX_MIDI_COREAUDIO_H

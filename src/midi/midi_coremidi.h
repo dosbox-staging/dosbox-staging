@@ -34,12 +34,6 @@
 	#include "string_utils.h"
 
 class MidiDeviceCoreMidi final : public MidiDevice {
-private:
-	MIDIPortRef m_port;
-	MIDIClientRef m_client;
-	MIDIEndpointRef m_endpoint;
-	MIDIPacket* m_pCurPacket;
-
 public:
 	MidiDeviceCoreMidi()
 	        : MidiDevice(),
@@ -66,16 +60,12 @@ public:
 		//		MIDIEndpointDispose(m_endpoint);
 	}
 
-	std::string GetName() const override
-	{
-		return "coremidi";
-	}
-
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::External;
 	}
 
+	// TODO
 	bool Initialise(const char* conf) override
 	{
 		// Get the MIDIEndPoint
@@ -217,10 +207,14 @@ public:
 		}
 		return ListDevicesResult::Ok;
 	}
-};
 
-MidiDeviceCoreMidi Midi_coremidi;
+private:
+	MIDIPortRef m_port         = {};
+	MIDIClientRef m_client     = {};
+	MIDIEndpointRef m_endpoint = {};
+	MIDIPacket* m_pCurPacket   = {};
+};
 
 #endif // C_COREMIDI
 
-#endif
+#endif // DOSBOX_MIDI_COREMIDI_H

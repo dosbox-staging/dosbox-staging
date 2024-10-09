@@ -34,16 +34,8 @@ struct alsa_address {
 };
 
 class MidiDeviceAlsa final : public MidiDevice {
-private:
-	snd_seq_event_t ev    = {};
-	snd_seq_t* seq_handle = nullptr;
-	alsa_address seq = {-1, -1}; // address of input port we're connected to
-	int output_port  = 0;
-
-	void send_event(int do_flush);
-
 public:
-	MidiDeviceAlsa() : MidiDevice() {}
+	MidiDeviceAlsa() override;
 	~MidiDeviceAlsa() override;
 
 	// prevent copying
@@ -51,22 +43,23 @@ public:
 	// prevent assignment
 	MidiDeviceAlsa& operator=(const MidiDeviceAlsa&) = delete;
 
-	std::string GetName() const override
-	{
-		return "alsa";
-	}
-
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::External;
 	}
 
-	bool Initialise(const char* conf) override;
-
 	void SendMessage(const MidiMessage& msg) override;
 	void PlaySysex(uint8_t* sysex, size_t len) override;
 
 	ListDevicesResult ListDevices(Program* caller) override;
+
+private:
+	snd_seq_event_t ev    = {};
+	snd_seq_t* seq_handle = nullptr;
+	alsa_address seq = {-1, -1}; // address of input port we're connected to
+	int output_port  = 0;
+
+	void send_event(int do_flush);
 };
 
 #endif // C_ALSA

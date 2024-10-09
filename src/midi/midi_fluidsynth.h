@@ -37,36 +37,22 @@
 
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
-	MidiDeviceFluidSynth() = default;
+	MidiDeviceFluidSynth(const char* conf) override;
 	~MidiDeviceFluidSynth() override;
-
-	std::string GetName() const override
-	{
-		return "fluidsynth";
-	}
 
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::Internal;
 	}
 
-	bool Initialise(const char* conf) override;
-
 	void SendMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
-
-	ListDevicesResult ListDevices(Program* caller) override;
 
 	void PrintStats();
 
 	// Get the value of the 'soundfont' config property from the last
 	// instantiation
 	static std::string GetLastSoundfontPref();
-
-	static bool IsOpen()
-	{
-		return MidiDeviceFluidSynth::is_open;
-	}
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
@@ -101,8 +87,6 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-
-	static bool is_open;
 };
 
 #endif // C_FLUIDSYNTH

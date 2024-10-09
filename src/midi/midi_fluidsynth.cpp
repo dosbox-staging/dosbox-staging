@@ -44,8 +44,6 @@
 
 std::string MidiDeviceFluidSynth::last_soundfont_pref = {};
 
-bool MidiDeviceFluidSynth::is_open = false;
-
 constexpr auto SoundFontExtension = ".sf2";
 
 static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
@@ -258,13 +256,13 @@ std::string MidiDeviceFluidSynth::GetLastSoundfontPref()
 	return last_soundfont_pref;
 }
 
-bool MidiDeviceFluidSynth::Initialise([[maybe_unused]] const char* conf)
+MidiDeviceFluidSynth::MidiDeviceFluidSynth([[maybe_unused]] const char* conf)
 {
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
 	                                     delete_fluid_settings);
 	if (!fluid_settings) {
 		LOG_WARNING("FSYNTH: new_fluid_settings failed");
-		return false;
+		throw new std::runtime_error();
 	}
 
 	auto* section = get_fluidsynth_section();
@@ -284,7 +282,7 @@ bool MidiDeviceFluidSynth::Initialise([[maybe_unused]] const char* conf)
 	                          delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
-		return false;
+		throw new std::runtime_error();
 	}
 
 	// Load the requested SoundFont or quit if none provided
@@ -303,7 +301,7 @@ bool MidiDeviceFluidSynth::Initialise([[maybe_unused]] const char* conf)
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
 		            sf_filename.c_str());
-		return false;
+		throw new std::runtime_error();
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 800) {
@@ -598,17 +596,12 @@ bool MidiDeviceFluidSynth::Initialise([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:fsynth");
 
 	// Start playback
-	is_open = true;
 	MIXER_UnlockMixerThread();
 	return true;
 }
 
 MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("FSYNTH: Shutting down");
 
 	MIXER_LockMixerThread();
@@ -649,8 +642,6 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 	ms_per_audio_frame = 0.0;
 
 	MidiDeviceFluidSynth::last_soundfont_pref = "";
-
-	MidiDeviceFluidSynth::is_open = false;
 
 	MIXER_UnlockMixerThread();
 }
@@ -916,8 +907,7 @@ MidiDevice::ListDevicesResult MidiDeviceFluidSynth::ListDevices(Program* caller)
 
 		const auto line = format_sf2_line(term_width - 2, sf2_path);
 
-		const bool do_highlight = is_open &&
-		                          (case_insensitive_equals(current_sf2_path,
+		const bool do_highlight = (case_insensitive_equals(current_sf2_path,
 		                                                   sf2_path));
 
 		if (do_highlight) {
@@ -976,7 +966,7 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 {
 	LOG_TRACE("fluidsynth_init");
 
-	if (MidiDeviceFluidSynth::IsOpen()) {
+/*	if (MidiDeviceFluidSynth::IsOpen()) {
 		LOG_TRACE("  open");
 		const auto last_soundfont = MidiDeviceFluidSynth::GetLastSoundfontPref();
 
@@ -987,7 +977,7 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 		    case_insensitive_equals(last_soundfont, get_soundfont_setting())) {
 			MIDI_Init();
 		}
-	}
+	} */
 }
 
 void FLUID_AddConfigSection(const ConfigPtr& conf)

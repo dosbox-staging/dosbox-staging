@@ -47,12 +47,13 @@ enum class SoundCanvasModel {
 
 struct PluginAndModel {
 	std::unique_ptr<Clap::Plugin> plugin = nullptr;
+
 	SoundCanvasModel model = {};
 };
 
 class MidiDeviceSoundCanvas final : public MidiDevice {
 public:
-	MidiDeviceSoundCanvas() = default;
+	MidiDeviceSoundCanvas(const char* conf) override;
 	~MidiDeviceSoundCanvas() override;
 
 	// prevent copying
@@ -60,19 +61,12 @@ public:
 	// prevent assignment
 	MidiDeviceSoundCanvas& operator=(const MidiDeviceSoundCanvas&) = delete;
 
-	std::string GetName() const override
-	{
-		return "soundcanvas";
-	}
-
 	MidiDevice::Type GetType() const override
 	{
 		return MidiDevice::Type::Internal;
 	}
 
 	ListDevicesResult ListDevices(Program* caller) override;
-
-	bool Initialise(const char* conf) override;
 
 	void SendMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
@@ -108,7 +102,6 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
 };
 
 const clap_plugin_t* SOUNDCANVAS_LoadPlugin(const SoundCanvasModel model);
