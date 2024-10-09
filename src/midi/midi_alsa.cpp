@@ -36,25 +36,25 @@
 
 #define ADDR_DELIM ".:"
 
-using port_action_t = std::function<void(snd_seq_client_info_t *client_info,
-                                         snd_seq_port_info_t *port_info)>;
+using port_action_t = std::function<void(snd_seq_client_info_t* client_info,
+                                         snd_seq_port_info_t* port_info)>;
 
 static void for_each_alsa_seq_port(port_action_t action)
 {
 	// We can't reuse the sequencer from midi handler, as the function might
 	// be called before that sequencer is created.
-	snd_seq_t *seq = nullptr;
+	snd_seq_t* seq = nullptr;
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_WARNING("MIDI:ALSA: Can't open MIDI sequencer");
 		return;
 	}
 	assert(seq);
 
-	snd_seq_client_info_t *client_info = nullptr;
+	snd_seq_client_info_t* client_info = nullptr;
 	snd_seq_client_info_malloc(&client_info);
 	assert(client_info);
 
-	snd_seq_port_info_t *port_info = nullptr;
+	snd_seq_port_info_t* port_info = nullptr;
 	snd_seq_port_info_malloc(&port_info);
 	assert(port_info);
 
@@ -63,8 +63,9 @@ static void for_each_alsa_seq_port(port_action_t action)
 		const int client_id = snd_seq_client_info_get_client(client_info);
 		snd_seq_port_info_set_client(port_info, client_id);
 		snd_seq_port_info_set_port(port_info, -1);
-		while (snd_seq_query_next_port(seq, port_info) >= 0)
+		while (snd_seq_query_next_port(seq, port_info) >= 0) {
 			action(client_info, port_info);
+		}
 	}
 
 	snd_seq_port_info_free(port_info);
@@ -86,40 +87,46 @@ void MidiDeviceAlsa::send_event(int do_flush)
 	snd_seq_ev_set_dest(&ev, seq.client, seq.port);
 
 	snd_seq_event_output(seq_handle, &ev);
-	if (do_flush)
+	if (do_flush) {
 		snd_seq_drain_output(seq_handle);
+	}
 }
 
-static bool parse_addr(const std::string &in, int *client, int *port)
+static bool parse_addr(const std::string& in, int* client, int* port)
 {
-	if (in.empty())
+	if (in.empty()) {
 		return false;
+	}
 
 	if (in[0] == 's' || in[0] == 'S') {
 		*client = SND_SEQ_ADDRESS_SUBSCRIBERS;
-		*port = 0;
+		*port   = 0;
 		return true;
 	}
 
-	if (in.find_first_of(ADDR_DELIM) == std::string::npos)
+	if (in.find_first_of(ADDR_DELIM) == std::string::npos) {
 		return false;
+	}
 
 	std::istringstream inp(in);
 	int val1;
 	int val2;
 	char c;
-	if (!(inp >> val1))
+	if (!(inp >> val1)) {
 		return false;
-	if (!(inp >> c))
+	}
+	if (!(inp >> c)) {
 		return false;
-	if (!(inp >> val2))
+	}
+	if (!(inp >> val2)) {
 		return false;
+	}
 	*client = val1;
-	*port = val2;
+	*port   = val2;
 	return true;
 }
 
-void MidiDeviceAlsa::SendSysExMessage(uint8_t *sysex, size_t len)
+void MidiDeviceAlsa::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	snd_seq_ev_set_sysex(&ev, len, sysex);
 	send_event(1);
@@ -189,41 +196,45 @@ void MidiDeviceAlsa::Close()
 	seq = {-1, -1};
 }
 
-static bool port_name_matches(const std::string &pattern,
-                              snd_seq_client_info_t *client_info,
-                              snd_seq_port_info_t *port_info)
+static bool port_name_matches(const std::string& pattern,
+                              snd_seq_client_info_t* client_info,
+                              snd_seq_port_info_t* port_info)
 {
-	if (pattern.empty())
+	if (pattern.empty()) {
 		return true;
+	}
 
 	char port_name[80];
-	safe_sprintf(port_name, "%s - %s", snd_seq_client_info_get_name(client_info),
+	safe_sprintf(port_name,
+	             "%s - %s",
+	             snd_seq_client_info_get_name(client_info),
 	             snd_seq_port_info_get_name(port_info));
 
 	return (strcasestr(port_name, pattern.c_str()) != nullptr);
 }
 
-static alsa_address find_seq_input_port(const std::string &pattern)
+static alsa_address find_seq_input_port(const std::string& pattern)
 {
 	alsa_address seq_addr = {-1, -1};
 
 	// Modern sequencers like FluidSynth indicate that they
 	// are capable of generating sound.
 	//
-	auto find_synth_port = [&pattern, &seq_addr](auto *client_info,
-	                                             auto *port_info) {
-		const auto *addr = snd_seq_port_info_get_addr(port_info);
+	auto find_synth_port = [&pattern, &seq_addr](auto* client_info,
+	                                             auto* port_info) {
+		const auto* addr     = snd_seq_port_info_get_addr(port_info);
 		const auto port_type = snd_seq_port_info_get_type(port_info);
 		const bool match = port_name_matches(pattern, client_info, port_info);
 		if (match && (port_type & SND_SEQ_PORT_TYPE_SYNTHESIZER)) {
 			seq_addr.client = addr->client;
-			seq_addr.port = addr->port;
+			seq_addr.port   = addr->port;
 		}
 	};
 
 	for_each_alsa_seq_port(find_synth_port);
-	if (seq_addr.client != -1)
+	if (seq_addr.client != -1) {
 		return seq_addr;
+	}
 
 	// Older sequencers like TiMidity++ only indicate that
 	// subscribers can write to them, but so does MIDI-Through port
@@ -237,23 +248,23 @@ static alsa_address find_seq_input_port(const std::string &pattern)
 	// but only first two ones generate sound (even though all 4
 	// ones are marked as writable).
 	//
-	auto find_input_port = [&pattern, &seq_addr](auto *client_info,
-	                                             auto *port_info) {
-		const auto *addr = snd_seq_port_info_get_addr(port_info);
-		const auto caps = snd_seq_port_info_get_capability(port_info);
+	auto find_input_port = [&pattern, &seq_addr](auto* client_info,
+	                                             auto* port_info) {
+		const auto* addr = snd_seq_port_info_get_addr(port_info);
+		const auto caps  = snd_seq_port_info_get_capability(port_info);
 		const bool is_new_client = (addr->client != seq_addr.client);
 
 		bool is_candidate = false;
-		if (pattern.empty())
+		if (pattern.empty()) {
 			is_candidate = (snd_seq_client_info_get_type(client_info) ==
 			                SND_SEQ_USER_CLIENT);
-		else
-			is_candidate = port_name_matches(pattern, client_info,
-			                                 port_info);
+		} else {
+			is_candidate = port_name_matches(pattern, client_info, port_info);
+		}
 
 		if (is_new_client && is_candidate && port_is_writable(caps)) {
 			seq_addr.client = addr->client;
-			seq_addr.port = addr->port;
+			seq_addr.port   = addr->port;
 		}
 	};
 
@@ -261,7 +272,7 @@ static alsa_address find_seq_input_port(const std::string &pattern)
 	return seq_addr;
 }
 
-bool MidiDeviceAlsa::Open(const char *conf)
+bool MidiDeviceAlsa::Open(const char* conf)
 {
 	assert(conf != nullptr);
 	seq = {-1, -1};
@@ -294,12 +305,15 @@ bool MidiDeviceAlsa::Open(const char *conf)
 	snd_seq_set_client_name(seq_handle, "DOSBox Staging");
 
 	unsigned int caps = SND_SEQ_PORT_CAP_READ;
-	if (seq.client == SND_SEQ_ADDRESS_SUBSCRIBERS)
+	if (seq.client == SND_SEQ_ADDRESS_SUBSCRIBERS) {
 		caps = ~SND_SEQ_PORT_CAP_SUBS_READ;
+	}
 
-	output_port = snd_seq_create_simple_port(
-	        seq_handle, "Virtual MPU-401 output", caps,
-	        SND_SEQ_PORT_TYPE_MIDI_GENERIC | SND_SEQ_PORT_TYPE_APPLICATION);
+	output_port = snd_seq_create_simple_port(seq_handle,
+	                                         "Virtual MPU-401 output",
+	                                         caps,
+	                                         SND_SEQ_PORT_TYPE_MIDI_GENERIC |
+	                                                 SND_SEQ_PORT_TYPE_APPLICATION);
 
 	if (output_port < 0) {
 		snd_seq_close(seq_handle);
@@ -308,14 +322,16 @@ bool MidiDeviceAlsa::Open(const char *conf)
 	}
 
 	if (seq.client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
-		if (snd_seq_connect_to(seq_handle, output_port, seq.client,
-		                       seq.port) == 0) {
-			snd_seq_client_info_t *info = nullptr;
+		if (snd_seq_connect_to(seq_handle, output_port, seq.client, seq.port) ==
+		    0) {
+			snd_seq_client_info_t* info = nullptr;
 			snd_seq_client_info_malloc(&info);
 			assert(info);
 			snd_seq_get_any_client_info(seq_handle, seq.client, info);
-			LOG_MSG("MIDI:ALSA: Connected to MIDI port %d:%d - %s", seq.client,
-			        seq.port, snd_seq_client_info_get_name(info));
+			LOG_MSG("MIDI:ALSA: Connected to MIDI port %d:%d - %s",
+			        seq.client,
+			        seq.port,
+			        snd_seq_client_info_get_name(info));
 			snd_seq_client_info_free(info);
 			return true;
 		}
@@ -326,22 +342,23 @@ bool MidiDeviceAlsa::Open(const char *conf)
 	return false;
 }
 
-MIDI_RC MidiDeviceAlsa::ListAll(Program *caller)
+MIDI_RC MidiDeviceAlsa::ListAll(Program* caller)
 {
-	auto print_port = [caller, this](auto *client_info, auto *port_info) {
-		const auto *addr = snd_seq_port_info_get_addr(port_info);
+	auto print_port = [caller, this](auto* client_info, auto* port_info) {
+		const auto* addr        = snd_seq_port_info_get_addr(port_info);
 		const unsigned int type = snd_seq_port_info_get_type(port_info);
 		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
 
 		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
 			const bool selected = (addr->client == this->seq.client &&
 			                       addr->port == this->seq.port);
-			const char esc_color[] = "\033[32;1m";
+			const char esc_color[]   = "\033[32;1m";
 			const char esc_nocolor[] = "\033[0m";
 			caller->WriteOut("%c %s%3d:%d - %s - %s%s\n",
 			                 (selected ? '*' : ' '),
 			                 (selected ? esc_color : ""),
-			                 addr->client, addr->port,
+			                 addr->client,
+			                 addr->port,
 			                 snd_seq_client_info_get_name(client_info),
 			                 snd_seq_port_info_get_name(port_info),
 			                 (selected ? esc_nocolor : ""));

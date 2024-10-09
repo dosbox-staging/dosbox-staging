@@ -553,10 +553,10 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 		set_section_property_value("fluidsynth", "fsynth_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and bursty.
-	// The mixer's default of ~20 ms becomes 40 ms here, which gives slower
-	// systems a better chance to keep up (and prevent their audio frame FIFO
-	// from running dry).
+	// Double the baseline PCM prebuffer because MIDI is demanding and
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up (and prevent their audio
+	// frame FIFO from running dry).
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO

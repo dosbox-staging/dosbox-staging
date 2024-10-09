@@ -55,8 +55,8 @@ public:
 	bool Open(const char* conf) override;
 	void Close() override;
 	void SendMidiMessage(const MidiMessage& msg) override;
-	void SendSysExMessage(uint8_t *sysex, size_t len) override;
-	MIDI_RC ListAll(Program *caller) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+	MIDI_RC ListAll(Program* caller) override;
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
@@ -84,7 +84,7 @@ private:
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI SysEx or Msg event.
-	double last_rendered_ms = 0.0;
+	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
