@@ -33,7 +33,7 @@
 #include "programs.h"
 #include "string_utils.h"
 
-class MidiDevice_coremidi final : public MidiDevice {
+class MidiDeviceCoreMidi final : public MidiDevice {
 private:
 	MIDIPortRef m_port;
 	MIDIClientRef m_client;
@@ -41,7 +41,7 @@ private:
 	MIDIPacket *m_pCurPacket;
 
 public:
-	MidiDevice_coremidi()
+	MidiDeviceCoreMidi()
 	        : MidiDevice(),
 	          m_port(0),
 	          m_client(0),
@@ -188,7 +188,7 @@ public:
 	}
 };
 
-MidiDevice_coremidi Midi_coremidi;
+MidiDeviceCoreMidi Midi_coremidi;
 
 #endif // C_COREMIDI
 

@@ -345,7 +345,7 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
-MidiDevice_mt32 mt32_instance;
+MidiDeviceMt32 mt32_instance;
 
 static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
@@ -622,7 +622,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-Mt32ServicePtr MidiDevice_mt32::GetService()
+Mt32ServicePtr MidiDeviceMt32::GetService()
 {
 	const std::lock_guard<std::mutex> lock(service_mutex);
 	Mt32ServicePtr mt32_service = std::make_unique<MT32Emu::Service>();
@@ -657,7 +657,7 @@ static std::set<const LASynthModel*> populate_available_models(
 // across the first row and directories are printed down the left column.
 // Long directories are truncated and model versions are used to avoid text
 // wrapping.
-MIDI_RC MidiDevice_mt32::ListAll(Program* caller)
+MIDI_RC MidiDeviceMt32::ListAll(Program* caller)
 {
 	// Table layout constants
 	constexpr char column_delim[] = " ";
@@ -769,7 +769,7 @@ MIDI_RC MidiDevice_mt32::ListAll(Program* caller)
 	return MIDI_RC::OK;
 }
 
-bool MidiDevice_mt32::Open([[maybe_unused]] const char* conf)
+bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 {
 	Close();
 
@@ -819,7 +819,7 @@ bool MidiDevice_mt32::Open([[maybe_unused]] const char* conf)
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDevice_mt32::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceMt32::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -890,7 +890,7 @@ bool MidiDevice_mt32::Open([[maybe_unused]] const char* conf)
 	model_and_dir = std::move(loaded_model_and_dir);
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiDevice_mt32::Render, this);
+	const auto render = std::bind(&MidiDeviceMt32::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:mt32");
 
@@ -900,12 +900,12 @@ bool MidiDevice_mt32::Open([[maybe_unused]] const char* conf)
 	return true;
 }
 
-MidiDevice_mt32::~MidiDevice_mt32()
+MidiDeviceMt32::~MidiDeviceMt32()
 {
 	Close();
 }
 
-void MidiDevice_mt32::Close()
+void MidiDeviceMt32::Close()
 {
 	if (!is_open) {
 		return;
@@ -957,7 +957,7 @@ void MidiDevice_mt32::Close()
 	MIXER_UnlockMixerThread();
 }
 
-int MidiDevice_mt32::GetNumPendingAudioFrames()
+int MidiDeviceMt32::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -982,7 +982,7 @@ int MidiDevice_mt32::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiDevice_mt32::PlayMsg(const MidiMessage& msg)
+void MidiDeviceMt32::PlayMsg(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 	MidiWork work{std::move(message),
@@ -992,7 +992,7 @@ void MidiDevice_mt32::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiDevice_mt32::PlaySysEx(uint8_t* sysex, size_t len)
+void MidiDeviceMt32::PlaySysEx(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
@@ -1001,7 +1001,7 @@ void MidiDevice_mt32::PlaySysEx(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDevice_mt32::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceMt32::MixerCallBack(const int requested_audio_frames)
 {
 	assert(channel);
 
@@ -1034,7 +1034,7 @@ void MidiDevice_mt32::MixerCallBack(const int requested_audio_frames)
 	}
 }
 
-void MidiDevice_mt32::RenderAudioFramesToFifo(const int num_frames)
+void MidiDeviceMt32::RenderAudioFramesToFifo(const int num_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
 
@@ -1052,7 +1052,7 @@ void MidiDevice_mt32::RenderAudioFramesToFifo(const int num_frames)
 
 // The next MIDI work task is processed, which includes rendering audio frames
 // prior to applying channel and sysex messages to the service
-void MidiDevice_mt32::ProcessWorkFromFifo()
+void MidiDeviceMt32::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
 	if (!work) {
@@ -1092,7 +1092,7 @@ void MidiDevice_mt32::ProcessWorkFromFifo()
 }
 
 // Keep the fifo populated with freshly rendered buffers
-void MidiDevice_mt32::Render()
+void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
