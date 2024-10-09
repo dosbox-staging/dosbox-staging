@@ -50,6 +50,11 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
+	MIDI_RC ListAll(Program*) override
+	{
+		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
+	}
+
 private:
 	int device         = 0;
 	uint8_t device_num = 0;
