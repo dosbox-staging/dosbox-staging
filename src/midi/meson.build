@@ -1,10 +1,13 @@
 libmidi_sources = [
     'midi.cpp',
     'midi_alsa.cpp',
+    'midi_coreaudio.cpp',
+    'midi_coremidi.cpp',
     'midi_fluidsynth.cpp',
-    'midi_mt32.cpp',
     'midi_lasynth_model.cpp',
+    'midi_mt32.cpp',
     'midi_oss.cpp',
+    'midi_win32.cpp',
 ]
 
 libmidi = static_library(

@@ -50,9 +50,9 @@ LASynthModel::LASynthModel(const std::string& rom_name, const Rom* pcm_rom_full,
 
 // Scans the requested directory for the requested ROM.
 // Uses a static cache of directories and their ROMs to avoid repeat scans.
-std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service,
-                                                   const std_fs::path& dir,
-                                                   const Rom* rom)
+std::optional<std_fs::path> LASynthModel::FindRom(MT32Emu::Service& service,
+                                                  const std_fs::path& dir,
+                                                  const Rom* rom) const
 {
 	if (!rom) {
 		return std::nullopt;
@@ -94,9 +94,9 @@ std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service
 
 		// Is the file a valid MT32emu ROM?
 		mt32emu_rom_info info = {};
-		if (service->identifyROMFile(&info,
-		                             canonical_path.string().c_str(),
-		                             nullptr) != MT32EMU_RC_OK) {
+		if (service.identifyROMFile(&info,
+		                            canonical_path.string().c_str(),
+		                            nullptr) != MT32EMU_RC_OK) {
 
 			LOG_WARNING("MT32: Unknown file in ROM folder: %s",
 			            canonical_path.string().c_str());
@@ -114,51 +114,45 @@ std::optional<std_fs::path> LASynthModel::find_rom(const Mt32ServicePtr& service
 }
 
 // Checks if its ROMs can be positively found in the provided directory
-bool LASynthModel::InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const
+bool LASynthModel::InDir(MT32Emu::Service& service, const std_fs::path& dir) const
 {
-	assert(service);
+	const bool have_pcm = FindRom(service, dir, pcm_full) ||
+	                      (FindRom(service, dir, pcm_l) &&
+	                       FindRom(service, dir, pcm_h));
 
-	const bool have_pcm = find_rom(service, dir, pcm_full) ||
-	                      (find_rom(service, dir, pcm_l) &&
-	                       find_rom(service, dir, pcm_h));
-
-	const bool have_ctrl = find_rom(service, dir, ctrl_full) ||
-	                       (find_rom(service, dir, ctrl_a) &&
-	                        find_rom(service, dir, ctrl_b));
+	const bool have_ctrl = FindRom(service, dir, ctrl_full) ||
+	                       (FindRom(service, dir, ctrl_a) &&
+	                        FindRom(service, dir, ctrl_b));
 
 	return have_pcm && have_ctrl;
 }
 
 // If present, loads either the full or partial ROMs from the provided directory
-bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) const
+bool LASynthModel::Load(MT32Emu::Service& service, const std_fs::path& dir) const
 {
-	if (!service) {
-		return false;
-	}
-
-	auto load_rom = [&service, &dir](const Rom* rom_full,
-	                                 mt32emu_return_code expected_code) -> bool {
-		const auto rom_path = find_rom(service, dir, rom_full);
+	auto load_rom = [&](const Rom* rom_full,
+	                    mt32emu_return_code expected_code) -> bool {
+		const auto rom_path = FindRom(service, dir, rom_full);
 		if (!rom_path) {
 			return false;
 		}
-		const auto rcode = service->addROMFile(rom_path->string().c_str());
+		const auto rcode = service.addROMFile(rom_path->string().c_str());
 		return rcode == expected_code;
 	};
 
-	auto load_both = [&service, &dir](const Rom* rom_1,
-	                                  const Rom* rom_2,
-	                                  mt32emu_return_code expected_code) -> bool {
-		const auto rom_1_path = find_rom(service, dir, rom_1);
+	auto load_both = [&](const Rom* rom_1,
+	                     const Rom* rom_2,
+	                     mt32emu_return_code expected_code) -> bool {
+		const auto rom_1_path = FindRom(service, dir, rom_1);
 		if (!rom_1_path) {
 			return false;
 		}
-		const auto rom_2_path = find_rom(service, dir, rom_2);
+		const auto rom_2_path = FindRom(service, dir, rom_2);
 		if (!rom_2_path) {
 			return false;
 		}
 
-		const auto rcode = service->mergeAndAddROMFiles(
+		const auto rcode = service.mergeAndAddROMFiles(
 		        rom_1_path->string().c_str(), rom_2_path->string().c_str());
 
 		return rcode == expected_code;

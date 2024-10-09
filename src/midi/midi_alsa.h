@@ -44,7 +44,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "alsa";
+		return MidiDeviceName::Alsa;
 	}
 
 	Type GetType() const override
@@ -71,6 +71,8 @@ private:
 
 	void send_event(int do_flush);
 };
+
+void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller);
 
 #endif // C_ALSA
 

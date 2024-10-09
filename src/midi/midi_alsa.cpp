@@ -406,7 +406,7 @@ void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller)
 
 	for_each_alsa_seq_port(print_port);
 
-	return MIDI_RC::OK;
+	caller->WriteOut("\n");
 }
 
 #endif // C_ALSA

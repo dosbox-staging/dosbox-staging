@@ -353,8 +353,6 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
-MidiDeviceMt32 mt32_instance;
-
 static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
@@ -502,7 +500,7 @@ static std::string get_model_setting()
 	return section->Get_string("model");
 }
 
-static std::set<const LASynthModel*> find_models(const Mt32ServicePtr& service,
+static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
                                                  const std_fs::path& dir)
 {
 	std::set<const LASynthModel*> models = {};
@@ -514,7 +512,7 @@ static std::set<const LASynthModel*> find_models(const Mt32ServicePtr& service,
 	return models;
 }
 
-static std::optional<ModelAndDir> load_model(const Mt32ServicePtr& service,
+static std::optional<ModelAndDir> load_model(MT32Emu::Service& service,
                                              const std::string& wanted_model_name,
                                              const std::deque<std_fs::path>& rom_dirs)
 {
@@ -604,7 +602,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 		static void showLCDMessage(void*, const char* message)
 		{
-			LOG_MSG("MT32: LCD-Message: %s", message);
+			LOG_MSG("MT32: LCD message: %s", message);
 		}
 	};
 
@@ -631,15 +629,14 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-Mt32ServicePtr MidiDeviceMt32::GetService()
+static std::unique_ptr<MT32Emu::Service> create_mt32_service()
 {
-	const std::lock_guard<std::mutex> lock(service_mutex);
-	Mt32ServicePtr mt32_service = std::make_unique<MT32Emu::Service>();
+	auto service = std::make_unique<MT32Emu::Service>();
 	// Has libmt32emu already created a context?
-	if (!mt32_service->getContext()) {
-		mt32_service->createContext(get_report_handler_interface(), this);
+	if (!service->getContext()) {
+		service->createContext(get_report_handler_interface(), nullptr);
 	}
-	return mt32_service;
+	return service;
 }
 
 // Returns the set of models supported by all of the directories, and also
@@ -647,8 +644,8 @@ Mt32ServicePtr MidiDeviceMt32::GetService()
 
 using DirsWithModels = std::map<std_fs::path, std::set<const LASynthModel*>>;
 
-static std::set<const LASynthModel*> populate_available_models(
-        const Mt32ServicePtr& service, DirsWithModels& dirs_with_models)
+static std::set<const LASynthModel*> find_available_models(
+        MT32Emu::Service& service, DirsWithModels& dirs_with_models)
 {
 	std::set<const LASynthModel*> available_models;
 
@@ -662,132 +659,16 @@ static std::set<const LASynthModel*> populate_available_models(
 	return available_models;
 }
 
-// Prints a table of directories and supported models. Models are printed
-// across the first row and directories are printed down the left column.
-// Long directories are truncated and model versions are used to avoid text
-// wrapping.
-MIDI_RC MidiDeviceMt32::ListDevices(Program* caller)
-{
-	// Table layout constants
-	constexpr char column_delim[] = " ";
-	constexpr char indent[]       = "  ";
-
-	const std::vector<const LASynthModel*> mt32_model_list = {&mt32_104_model,
-	                                                          &mt32_105_model,
-	                                                          &mt32_106_model,
-	                                                          &mt32_107_model,
-	                                                          &mt32_bluer_model,
-	                                                          &mt32_203_model,
-	                                                          &mt32_204_model,
-	                                                          &mt32_206_model,
-	                                                          &mt32_207_model};
-
-	const std::vector<const LASynthModel*> cm32_model_list = {
-	        &cm32l_100_model, &cm32l_102_model, &cm32ln_100_model};
-
-	// Get the set of directories and the models they support
-	DirsWithModels dirs_with_models;
-	const auto available_models = populate_available_models(GetService(),
-	                                                        dirs_with_models);
-
-	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n", indent, MSG_Get("MT32_NO_SUPPORTED_MODELS"));
-		return MIDI_RC::OK;
-	}
-
-	auto highlight_model = [&](const LASynthModel* model,
-	                           const char* display_name) -> std::string {
-		constexpr auto darkgray = "[color=dark-gray]";
-		constexpr auto green    = "[color=light-green]";
-		constexpr auto reset    = "[reset]";
-
-		const bool is_missing = (available_models.find(model) ==
-		                         available_models.end());
-
-		const auto is_active = (model_and_dir &&
-		                        model_and_dir->first == model);
-
-		const auto color = (is_missing ? darkgray
-		                               : (is_active ? green : reset));
-
-		const auto active_prefix = (is_active ? "*" : " ");
-		const auto model_string  = format_str(
-                        "%s%s%s%s", color, active_prefix, display_name, reset);
-
-		return convert_ansi_markup(model_string.c_str());
-	};
-
-	// Print available MT-32 ROMs
-	caller->WriteOut("%s%s", indent, MSG_Get("MT32_ROMS_LABEL"));
-
-	for (const auto& model : mt32_model_list) {
-		const auto display_name = model->GetVersion();
-		caller->WriteOut("%s%s",
-		                 highlight_model(model, display_name).c_str(),
-		                 column_delim);
-	}
-	caller->WriteOut("\n");
-
-	// Print available CM-32L ROMs
-	caller->WriteOut("%s%s", indent, MSG_Get("CM32L_ROMS_LABEL"));
-
-	for (const auto& model : cm32_model_list) {
-		const auto display_name = (model->GetName() == cm32ln_100_model.GetName()
-		                                   ? model->GetName()
-		                                   : model->GetVersion());
-		caller->WriteOut("%s%s",
-		                 highlight_model(model, display_name).c_str(),
-		                 column_delim);
-	}
-	caller->WriteOut("\n");
-
-	caller->WriteOut("%s---\n", indent);
-
-	// Print info about the loaded ROM
-	if (model_and_dir && service) {
-		mt32emu_rom_info rom_info = {};
-		{
-			// Request exclusive access prior to getting ROM info
-			const std::lock_guard<std::mutex> lock(service_mutex);
-			service->getROMInfo(&rom_info);
-		}
-		caller->WriteOut("%s%s%s (%s)\n",
-		                 indent,
-		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
-		                 model_and_dir->first->GetName(),
-		                 rom_info.control_rom_description);
-
-		// Print the loaded ROM's directory
-		const std::string dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
-
-		const auto dir_max_length = INT10_GetTextColumns() -
-		                            (dir_label.length() +
-		                             std::string_view(indent).length());
-
-		const auto truncated_dir =
-		        model_and_dir->second.string().substr(0, dir_max_length);
-
-		caller->WriteOut("%s%s%s\n",
-		                 indent,
-		                 dir_label.c_str(),
-		                 truncated_dir.c_str());
-	} else {
-		caller->WriteOut("%s%s\n", indent, MSG_Get("MT32_ROM_NOT_LOADED"));
-	}
-
-	return MIDI_RC::OK;
-}
-
 bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 {
 	Close();
 
-	auto mt32_service     = GetService();
+	auto mt32_service     = create_mt32_service();
 	const auto model_name = get_model_setting();
 	const auto rom_dirs   = get_rom_dirs();
 
 	// Load the selected model and print info about it
-	auto loaded_model_and_dir = load_model(mt32_service, model_name, rom_dirs);
+	auto loaded_model_and_dir = load_model(*mt32_service, model_name, rom_dirs);
 	if (!loaded_model_and_dir) {
 		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		            model_name.c_str());
@@ -803,7 +684,7 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 	mt32_service->getROMInfo(&rom_info);
 
 	assert(loaded_model_and_dir.has_value());
-	LOG_MSG("MT32: Initialised %s from %s",
+	LOG_MSG("MT32: Initialised %s from '%s'",
 	        rom_info.control_rom_description,
 	        loaded_model_and_dir->second.string().c_str());
 
@@ -821,7 +702,7 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 
 	const auto rc = mt32_service->openSynth();
 	if (rc != MT32EMU_RC_OK) {
-		LOG_WARNING("MT32: Error initialising emulation: %i", rc);
+		LOG_WARNING("MT32: Error initialising emulation, error code: %i", rc);
 		return false;
 	}
 
@@ -1108,6 +989,133 @@ void MidiDeviceMt32::Render()
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
 		                    : ProcessWorkFromFifo();
 	}
+}
+
+std::optional<ModelAndDir> MidiDeviceMt32::GetModelAndDir()
+{
+	return model_and_dir;
+}
+
+mt32emu_rom_info MidiDeviceMt32::GetRomInfo()
+{
+	mt32emu_rom_info rom_info = {};
+	service->getROMInfo(&rom_info);
+	return rom_info;
+}
+
+// Prints a table of directories and supported models. Models are printed
+// across the first row and directories are printed down the left column.
+// Long directories are truncated and model versions are used to avoid text
+// wrapping.
+void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
+{
+	// Table layout constants
+	constexpr auto ColumnDelim = " ";
+	constexpr auto Indent      = "  ";
+
+	const std::vector<const LASynthModel*> mt32_model_list = {&mt32_104_model,
+	                                                          &mt32_105_model,
+	                                                          &mt32_106_model,
+	                                                          &mt32_107_model,
+	                                                          &mt32_bluer_model,
+	                                                          &mt32_203_model,
+	                                                          &mt32_204_model,
+	                                                          &mt32_206_model,
+	                                                          &mt32_207_model};
+
+	const std::vector<const LASynthModel*> cm32_model_list = {
+	        &cm32l_100_model, &cm32l_102_model, &cm32ln_100_model};
+
+	// Get the set of directories and the models they support
+	const auto service = create_mt32_service();
+
+	DirsWithModels dirs_with_models;
+	const auto available_models = find_available_models(*service,
+	                                                    dirs_with_models);
+
+	if (available_models.empty()) {
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_NO_SUPPORTED_MODELS"));
+		return;
+	}
+
+	const std::optional<ModelAndDir> model_and_dir = device ? device->GetModelAndDir()
+	                                                        : std::nullopt;
+
+	auto highlight_model = [&](const LASynthModel* model,
+	                           const char* display_name) -> std::string {
+		constexpr auto darkgray = "[color=dark-gray]";
+		constexpr auto green    = "[color=light-green]";
+		constexpr auto reset    = "[reset]";
+
+		const bool is_missing = (available_models.find(model) ==
+		                         available_models.end());
+
+		const auto is_active = (model_and_dir &&
+		                        model_and_dir->first == model);
+
+		const auto color = (is_missing ? darkgray
+		                               : (is_active ? green : reset));
+
+		const auto active_prefix = (is_active ? "*" : " ");
+		const auto model_string  = format_str(
+                        "%s%s%s%s", color, active_prefix, display_name, reset);
+
+		return convert_ansi_markup(model_string.c_str());
+	};
+
+	// Print available MT-32 ROMs
+	caller->WriteOut("%s%s", Indent, MSG_Get("MT32_ROMS_LABEL"));
+
+	for (const auto& model : mt32_model_list) {
+		const auto display_name = model->GetVersion();
+		caller->WriteOut("%s%s",
+		                 highlight_model(model, display_name).c_str(),
+		                 ColumnDelim);
+	}
+	caller->WriteOut("\n");
+
+	// Print available CM-32L ROMs
+	caller->WriteOut("%s%s", Indent, MSG_Get("CM32L_ROMS_LABEL"));
+
+	for (const auto& model : cm32_model_list) {
+		const auto display_name = (model->GetName() == cm32ln_100_model.GetName()
+		                                   ? model->GetName()
+		                                   : model->GetVersion());
+		caller->WriteOut("%s%s",
+		                 highlight_model(model, display_name).c_str(),
+		                 ColumnDelim);
+	}
+	caller->WriteOut("\n");
+
+	caller->WriteOut("%s---\n", Indent);
+
+	// Print info about the loaded ROM
+	if (model_and_dir) {
+		caller->WriteOut("%s%s%s (%s)\n",
+		                 Indent,
+		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
+		                 model_and_dir->first->GetName(),
+		                 device->GetRomInfo().control_rom_description);
+
+		// Print the loaded ROM's directory
+		const std::string dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
+
+		const auto dir_max_length = INT10_GetTextColumns() -
+		                            (dir_label.length() +
+		                             std::string_view(Indent).length());
+
+		const auto truncated_dir =
+		        model_and_dir->second.string().substr(0, dir_max_length);
+
+		caller->WriteOut("%s%s%s\n",
+		                 Indent,
+		                 dir_label.c_str(),
+		                 truncated_dir.c_str());
+	} else {
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_ROM_NOT_LOADED"));
+	}
+
+	caller->WriteOut("\n");
 }
 
 static void mt32_init([[maybe_unused]] Section* sec) {}

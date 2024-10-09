@@ -19,43 +19,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_MIDI_OSS_H
-#define DOSBOX_MIDI_OSS_H
+#include "midi_coreaudio.h"
 
-#include "midi_device.h"
+#if C_COREAUDIO
 
-class MidiDeviceOss final : public MidiDevice {
-public:
-	MidiDeviceOss() : MidiDevice() {}
-	~MidiDeviceOss() override;
+void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
+                           [[maybe_unused]] Program* caller)
+{
+	caller->WriteOut("  %s\n\n", MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
+}
 
-	// prevent copying
-	MidiDeviceOss(const MidiDeviceOss&) = delete;
-	// prevent assignment
-	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
-
-	bool Open(const char* conf) override;
-	void Close() override;
-
-	std::string GetName() const override
-	{
-		return MidiDeviceName::Oss;
-	}
-
-	Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
-	void SendMidiMessage(const MidiMessage& msg) override;
-	void SendSysExMessage(uint8_t* sysex, size_t len) override;
-
-private:
-	int device         = 0;
-	uint8_t device_num = 0;
-	bool is_open       = false;
-};
-
-void MIDI_OSS_ListDevices(MidiDeviceOss* device, Program* caller);
-
-#endif
+#endif // C_COREAUDIO

@@ -22,6 +22,8 @@
 #ifndef DOSBOX_MIDI_WIN32_H
 #define DOSBOX_MIDI_WIN32_H
 
+#ifdef WIN32
+
 #include "midi_device.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -51,7 +53,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "win32";
+		return MidiDeviceName::Win32;
 	}
 
 	Type GetType() const override
@@ -177,19 +179,6 @@ public:
 		}
 	}
 
-	MIDI_RC ListDevices(Program* caller) override
-	{
-		unsigned int total = midiOutGetNumDevs();
-
-		for (unsigned int i = 0; i < total; i++) {
-			MIDIOUTCAPS mididev;
-			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-
-			caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
-		}
-		return MIDI_RC::OK;
-	}
-
 private:
 	HMIDIOUT m_out = nullptr;
 	MIDIHDR m_hdr  = {};
@@ -197,5 +186,9 @@ private:
 
 	bool is_open = false;
 };
+
+void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller)
+
+#endif // WIN32
 
 #endif

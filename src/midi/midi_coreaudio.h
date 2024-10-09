@@ -74,7 +74,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "coreaudio";
+		return MidiDeviceName::CoreAudio;
 	}
 
 	Type GetType() const override
@@ -226,11 +226,6 @@ public:
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
 
-	MIDI_RC ListDevices(Program*) override
-	{
-		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
-	}
-
 private:
 	AUGraph m_auGraph = {};
 	AudioUnit m_synth = {};
@@ -239,6 +234,8 @@ private:
 };
 
 #undef RequireNoErr
+
+void COREAUDIO_ListDevices(MidiDeviceCoreAudio* device, Program* caller);
 
 #endif // C_COREAUDIO
 

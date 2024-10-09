@@ -118,7 +118,7 @@ static void register_handlers()
 #if C_ALSA
 	handlers.emplace_back(std::make_unique<MidiDeviceAlsa>());
 #endif
-#if !defined(WIN32) && !defined(MACOSX)
+#if defined(LINUX)
 	handlers.emplace_back(std::make_unique<MidiDeviceOss>());
 #endif
 }
@@ -644,8 +644,8 @@ public:
 			// Use the first working device
 			for (const auto& handler : handlers) {
 				// FluidSynth or MT-32 are opt-in only
-				if (!(handler->GetName() == "fluidsynth" ||
-				      handler->GetName() == "mt32")) {
+				if (!(handler->GetName() == MidiDeviceName::FluidSynth ||
+				      handler->GetName() == MidiDeviceName::Mt32)) {
 					if (open_handler(handler.get())) {
 						break;
 					}
@@ -679,28 +679,70 @@ public:
 
 void MIDI_ListDevices(Program* caller)
 {
-	constexpr auto MsgIndent = "  ";
+	auto write_device_name = [&](const std::string& device_name) {
+		const auto color = convert_ansi_markup("[color=white]%s:[reset]\n");
 
-	for (const auto& handler : handlers) {
-		const auto device_name = convert_ansi_markup(
-		        "[color=white]%s:[reset]\n");
+		caller->WriteOut(color.c_str(), device_name.c_str());
+	};
 
-		caller->WriteOut(device_name.c_str(), handler->GetName().c_str());
+	const std::string device_name = midi.handler ? midi.handler->GetName() : "";
+#if C_FLUIDSYNTH
+	write_device_name(MidiDeviceName::FluidSynth);
 
-		const auto err = handler->ListDevices(caller);
-		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {
-			caller->WriteOut("%s%s\n",
-			                 MsgIndent,
-			                 MSG_Get("MIDI_DEVICE_NOT_CONFIGURED"));
-		}
-		if (err == MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED) {
-			caller->WriteOut("%s%s\n",
-			                 MsgIndent,
-			                 MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
-		}
+	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
+	                           ? dynamic_cast<MidiDeviceFluidSynth*>(midi.handler)
+	                           : nullptr,
 
-		caller->WriteOut("\n"); // additional newline to separate devices
-	}
+	                   caller);
+#endif
+#if C_MT32EMU
+	write_device_name(MidiDeviceName::Mt32);
+
+	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
+	                         ? dynamic_cast<MidiDeviceMt32*>(midi.handler)
+	                         : nullptr,
+	                 caller);
+#endif
+#if C_COREMIDI
+	write_device_name(MidiDeviceName::CoreMidi);
+
+	COREMIDI_ListDevices((device_name == MidiDeviceName::CoreMidi)
+	                             ? dynamic_cast<MidiDeviceCoreMidi*>(midi.handler)
+	                             : nullptr,
+	                     caller);
+#endif
+#if C_COREAUDIO
+	write_device_name(MidiDeviceName::CoreAudio);
+
+	COREAUDIO_ListDevices((device_name == MidiDeviceName::CoreAudio)
+	                              ? dynamic_cast<MidiDeviceCoreAudio*>(midi.handler)
+	                              : nullptr,
+	                      caller);
+#endif
+#if defined(WIN32)
+	write_device_name(MidiDeviceName::Win32);
+
+	MIDI_WIN32_ListDevices((device_name == MidiDeviceName::Win32)
+	                               ? dynamic_cast<MidiDeviceWin32*>(midi.handler)
+	                               : nullptr,
+	                       caller);
+#endif
+#if C_ALSA
+	write_device_name(MidiDeviceName::Alsa);
+
+	ALSA_ListDevices((device_name == MidiDeviceName::Alsa)
+	                         ? dynamic_cast<MidiDeviceAlsa*>(midi.handler)
+	                         : nullptr,
+	                 caller);
+#endif
+#if defined(LINUX)
+	write_device_name(MidiDeviceName::Oss);
+
+	MIDI_OSS_ListDevices((device_name == MidiDeviceName::Oss)
+	                             ? dynamic_cast<MidiDeviceOss*>(midi.handler)
+	                             : nullptr,
+	                     caller);
+#endif
 }
 
 static std::unique_ptr<MIDI> midi_instance = nullptr;
@@ -737,29 +779,29 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	        "('auto' by default):");
 
-	str_prop->SetOptionHelp("coremidi",
+	str_prop->SetOptionHelp(MidiDeviceName::CoreMidi,
 	                        "  coremidi:    Any device that has been configured in the macOS\n"
 	                        "               Audio MIDI Setup.");
 
-	str_prop->SetOptionHelp("coreaudio",
+	str_prop->SetOptionHelp(MidiDeviceName::CoreAudio,
 	                        "  coreaudio:   Use the built-in macOS MIDI synthesiser.");
 
-	str_prop->SetOptionHelp("win32",
+	str_prop->SetOptionHelp(MidiDeviceName::Win32,
 	                        "  win32:       Use the Win32 MIDI playback interface.");
 
-	str_prop->SetOptionHelp("oss",
+	str_prop->SetOptionHelp(MidiDeviceName::Oss,
 	                        "  oss:         Use the Linux OSS MIDI playback interface.");
 
-	str_prop->SetOptionHelp("alsa",
+	str_prop->SetOptionHelp(MidiDeviceName::Alsa,
 	                        "  alsa:        Use the Linux ALSA MIDI playback interface.");
 
 	str_prop->SetOptionHelp(
-	        "fluidsynth",
+	        MidiDeviceName::FluidSynth,
 	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
 	        "               See the [fluidsynth] section for detailed configuration.");
 
 	str_prop->SetOptionHelp(
-	        "mt32",
+	        MidiDeviceName::Mt32,
 	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
 	        "               See the [mt32] section for detailed configuration.");
 	str_prop->SetOptionHelp(
@@ -773,23 +815,23 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 		"auto",
 #if defined(MACOSX)
 #if C_COREMIDI
-		        "coremidi",
+		        MidiDeviceName::CoreMidi,
 #endif
 #if C_COREAUDIO
-		        "coreaudio",
+		        MidiDeviceName::CoreAudio,
 #endif
 #elif defined(WIN32)
-		        "win32",
+		        MidiDeviceName::Win32,
 #else
-		        "oss",
+		        MidiDeviceName::Oss,
 #endif
 #if C_ALSA
-		        "alsa",
+		        MidiDeviceName::Alsa,
 #endif
 #if C_FLUIDSYNTH
-		        "fluidsynth",
+		        MidiDeviceName::FluidSynth,
 #endif
-		        "mt32", "none"
+		        MidiDeviceName::Mt32, "none"
 	});
 
 	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");

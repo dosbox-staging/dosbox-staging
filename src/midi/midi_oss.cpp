@@ -112,3 +112,10 @@ void MidiDeviceOss::SendSysExMessage(uint8_t* sysex, size_t len)
 		LOG_WARNING("MIDI:OSS: Failed to write SysEx message");
 	}
 }
+
+void MIDI_OSS_ListDevices([[maybe_unused]] MidiDeviceOss* device,
+                          [[maybe_unused]] Program* caller)
+{
+	caller->WriteOut("  %s\n\n", MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
+}
+
