@@ -370,7 +370,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 	}
 }
 
-void MIDI_RawOutByte(uint8_t data)
+void MIDI_RawOutByte(const uint8_t data)
 {
 	if (!midi.is_available) {
 		return;
