@@ -77,8 +77,4 @@ public:
 	}
 };
 
-void MIDI_RegisterHandler(std::unique_ptr<MidiDevice> handler);
-MidiDevice* MIDI_GetHandler(const std::string_view name);
-void MIDI_DeregisterHandler(const std::string_view name);
-
 #endif
