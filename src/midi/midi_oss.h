@@ -25,19 +25,17 @@
 #include "midi_device.h"
 
 class MidiDeviceOss final : public MidiDevice {
-private:
-	int device         = 0;
-	uint8_t device_num = 0;
-	bool is_open       = false;
-
 public:
 	MidiDeviceOss() : MidiDevice() {}
-
-	MidiDeviceOss(const MidiDeviceOss&) = delete; // prevent copying
-	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete; // prevent
-	                                                         // assignment
-
 	~MidiDeviceOss() override;
+
+	// prevent copying
+	MidiDeviceOss(const MidiDeviceOss&) = delete;
+	// prevent assignment
+	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
+
+	bool Open(const char* conf) override;
+	void Close() override;
 
 	std::string GetName() const override
 	{
@@ -49,13 +47,13 @@ public:
 		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char* conf) override;
-
-	void Close() override;
-
 	void SendMidiMessage(const MidiMessage& msg) override;
-
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
+private:
+	int device         = 0;
+	uint8_t device_num = 0;
+	bool is_open       = false;
 };
 
 #endif

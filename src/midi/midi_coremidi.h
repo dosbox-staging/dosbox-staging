@@ -34,12 +34,6 @@
 #include "string_utils.h"
 
 class MidiDeviceCoreMidi final : public MidiDevice {
-private:
-	MIDIPortRef m_port;
-	MIDIClientRef m_client;
-	MIDIEndpointRef m_endpoint;
-	MIDIPacket* m_pCurPacket;
-
 public:
 	MidiDeviceCoreMidi()
 	        : MidiDevice(),
@@ -62,31 +56,41 @@ public:
 	bool Open(const char* conf) override
 	{
 		// Get the MIDIEndPoint
-		m_endpoint    = 0;
+		m_endpoint = 0;
+
 		Bitu numDests = MIDIGetNumberOfDestinations();
 		Bitu destId   = numDests;
+
 		if (conf && *conf) {
 			std::string strconf(conf);
 			std::istringstream configmidi(strconf);
+
 			configmidi >> destId;
+
 			if (configmidi.fail() && numDests) {
 				lowcase(strconf);
+
 				for (Bitu i = 0; i < numDests; i++) {
 					MIDIEndpointRef dummy = MIDIGetDestination(i);
 					if (!dummy) {
 						continue;
 					}
+
 					CFStringRef midiname = nullptr;
+
 					if (MIDIObjectGetStringProperty(
 					            dummy,
 					            kMIDIPropertyDisplayName,
 					            &midiname) == noErr) {
+
 						const char* s = CFStringGetCStringPtr(
 						        midiname,
 						        kCFStringEncodingMacRoman);
+
 						if (s) {
 							std::string devname(s);
 							lowcase(devname);
+
 							if (devname.find(strconf) !=
 							    std::string::npos) {
 								destId = i;
@@ -97,6 +101,7 @@ public:
 				}
 			}
 		}
+
 		if (destId >= numDests) {
 			destId = 0;
 		}
@@ -144,7 +149,8 @@ public:
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];
 		MIDIPacketList* packetList = (MIDIPacketList*)packetBuf;
-		m_pCurPacket               = MIDIPacketListInit(packetList);
+
+		m_pCurPacket = MIDIPacketListInit(packetList);
 
 		const auto len = MIDI_message_len_by_status[msg.status()];
 
@@ -165,7 +171,8 @@ public:
 		// Acquire a MIDIPacketList
 		Byte packetBuf[MaxMidiSysExSize * 4];
 		MIDIPacketList* packetList = (MIDIPacketList*)packetBuf;
-		m_pCurPacket               = MIDIPacketListInit(packetList);
+
+		m_pCurPacket = MIDIPacketListInit(packetList);
 
 		// Add msg to the MIDIPacketList
 		MIDIPacketListAdd(packetList,
@@ -184,15 +191,20 @@ public:
 		Bitu numDests = MIDIGetNumberOfDestinations();
 		for (Bitu i = 0; i < numDests; i++) {
 			MIDIEndpointRef dest = MIDIGetDestination(i);
+
 			if (!dest) {
 				continue;
 			}
+
 			CFStringRef midiname = nullptr;
+
 			if (MIDIObjectGetStringProperty(dest,
 			                                kMIDIPropertyDisplayName,
 			                                &midiname) == noErr) {
+
 				const char* s = CFStringGetCStringPtr(
 				        midiname, kCFStringEncodingMacRoman);
+
 				if (s) {
 					caller->WriteOut("  %02d - %s\n", i, s);
 				}
@@ -202,6 +214,12 @@ public:
 		}
 		return MIDI_RC::OK;
 	}
+
+private:
+	MIDIPortRef m_port         = {};
+	MIDIClientRef m_client     = {};
+	MIDIEndpointRef m_endpoint = {};
+	MIDIPacket* m_pCurPacket   = {};
 };
 
 MidiDeviceCoreMidi Midi_coremidi;

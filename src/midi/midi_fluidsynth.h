@@ -54,8 +54,10 @@ public:
 
 	bool Open(const char* conf) override;
 	void Close() override;
+
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
 	MIDI_RC ListAll(Program* caller) override;
 
 private:

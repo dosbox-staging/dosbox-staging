@@ -28,26 +28,19 @@
 
 #include <alsa/asoundlib.h>
 
-struct alsa_address {
+struct AlsaAddress {
 	int client;
 	int port;
 };
 
 class MidiDeviceAlsa final : public MidiDevice {
-private:
-	snd_seq_event_t ev    = {};
-	snd_seq_t* seq_handle = nullptr;
-	alsa_address seq = {-1, -1}; // address of input port we're connected to
-	int output_port  = 0;
-
-	void send_event(int do_flush);
-
 public:
 	MidiDeviceAlsa() : MidiDevice() {}
 
-	MidiDeviceAlsa(const MidiDeviceAlsa&) = delete; // prevent copying
-	MidiDeviceAlsa& operator=(const MidiDeviceAlsa&) = delete; // prevent
-	                                                           // assignment
+	// prevent copying
+	MidiDeviceAlsa(const MidiDeviceAlsa&) = delete;
+	// prevent assignment
+	MidiDeviceAlsa& operator=(const MidiDeviceAlsa&) = delete;
 
 	std::string GetName() const override
 	{
@@ -61,9 +54,22 @@ public:
 
 	bool Open(const char* conf) override;
 	void Close() override;
+
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
 	MIDI_RC ListAll(Program* caller) override;
+
+private:
+	snd_seq_event_t ev    = {};
+	snd_seq_t* seq_handle = nullptr;
+
+	// address of input port we're connected to
+	AlsaAddress seq = {-1, -1};
+
+	int output_port = 0;
+
+	void send_event(int do_flush);
 };
 
 #endif // C_ALSA
