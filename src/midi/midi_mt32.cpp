@@ -666,7 +666,7 @@ static std::set<const LASynthModel*> populate_available_models(
 // across the first row and directories are printed down the left column.
 // Long directories are truncated and model versions are used to avoid text
 // wrapping.
-MIDI_RC MidiDeviceMt32::ListAll(Program* caller)
+MIDI_RC MidiDeviceMt32::ListDevices(Program* caller)
 {
 	// Table layout constants
 	constexpr char column_delim[] = " ";

@@ -75,7 +75,7 @@ public:
 
 	void PrintStats();
 
-	MIDI_RC ListAll(Program* caller) override;
+	MIDI_RC ListDevices(Program* caller) override;
 
 private:
 	Mt32ServicePtr GetService();

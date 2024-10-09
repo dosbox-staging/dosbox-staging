@@ -29,8 +29,8 @@
 #include <alsa/asoundlib.h>
 
 struct AlsaAddress {
-	int client;
-	int port;
+	int client = -1;
+	int port   = -1;
 };
 
 class MidiDeviceAlsa final : public MidiDevice {
@@ -58,7 +58,7 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
-	MIDI_RC ListAll(Program* caller) override;
+	AlsaAddress GetInputPortAddress();
 
 private:
 	snd_seq_event_t ev    = {};

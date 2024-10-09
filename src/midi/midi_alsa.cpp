@@ -208,7 +208,7 @@ void MidiDeviceAlsa::Close()
 		Reset();
 		snd_seq_close(seq_handle);
 	}
-	seq = {-1, -1};
+	seq = {};
 }
 
 static bool port_name_matches(const std::string& pattern,
@@ -230,7 +230,7 @@ static bool port_name_matches(const std::string& pattern,
 
 static AlsaAddress find_seq_input_port(const std::string& pattern)
 {
-	AlsaAddress seq_addr = {-1, -1};
+	AlsaAddress seq_addr = {};
 
 	// Modern sequencers like FluidSynth indicate that they
 	// are capable of generating sound.
@@ -293,8 +293,8 @@ static AlsaAddress find_seq_input_port(const std::string& pattern)
 
 bool MidiDeviceAlsa::Open(const char* conf)
 {
-	assert(conf != nullptr);
-	seq = {-1, -1};
+	assert(conf);
+	seq = {};
 
 	LOG_DEBUG("MIDI:ALSA: Attempting connection to: '%s'", conf);
 
@@ -366,17 +366,29 @@ bool MidiDeviceAlsa::Open(const char* conf)
 	return false;
 }
 
-MIDI_RC MidiDeviceAlsa::ListAll(Program* caller)
+AlsaAddress MidiDeviceAlsa::GetInputPortAddress()
 {
-	auto print_port = [caller, this](auto* client_info, auto* port_info) {
+	return seq;
+}
+
+void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller)
+{
+	const auto input_port = [&]() -> AlsaAddress {
+		if (device) {
+			return device->GetInputPortAddress();
+		}
+		return {};
+	}();
+
+	auto print_port = [&](auto* client_info, auto* port_info) {
 		const auto* addr = snd_seq_port_info_get_addr(port_info);
 
 		const unsigned int type = snd_seq_port_info_get_type(port_info);
 		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
 
 		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
-			const bool selected = (addr->client == this->seq.client &&
-			                       addr->port == this->seq.port);
+			const bool selected = (addr->client == input_port.client &&
+			                       addr->port == input_port.port);
 
 			const char esc_color[]   = "\033[32;1m";
 			const char esc_nocolor[] = "\033[0m";
