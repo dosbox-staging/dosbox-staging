@@ -36,45 +36,26 @@ class MidiDevice {
 public:
 	enum class Type { BuiltIn, External };
 
-	MidiDevice() {}
-
-	// prevent copying
-	MidiDevice(const MidiDevice&) = delete;
-	// prevent assignment
-	MidiDevice& operator=(const MidiDevice&) = delete;
-
-	virtual ~MidiDevice() = default;
+	virtual ~MidiDevice() {}
 
 	virtual std::string GetName() const = 0;
+	virtual Type GetType() const        = 0;
 
-	virtual Type GetType() const
-	{
-		return Type::External;
-	}
-
-	virtual bool Open([[maybe_unused]] const char* conf)
-	{
-		LOG_WARNING("MIDI: No working MIDI device found/selected.");
-		return true;
-	}
-
-	virtual void Reset();
+	virtual bool Open([[maybe_unused]] const char* conf) = 0;
 
 	virtual void Close()
 	{
 		Reset();
 	}
 
-	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) {}
+	virtual void Reset();
+
+	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) = 0;
 
 	virtual void SendSysExMessage([[maybe_unused]] uint8_t* sysex,
-	                              [[maybe_unused]] size_t len)
-	{}
+	                              [[maybe_unused]] size_t len) = 0;
 
-	virtual MIDI_RC ListAll(Program*)
-	{
-		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
-	}
+	virtual MIDI_RC ListAll(Program*) = 0;
 };
 
-#endif
+#endif // DOSBOX_MIDI_DEVICE_H
