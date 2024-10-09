@@ -235,8 +235,6 @@ private:
 
 #undef RequireNoErr
 
-MidiDeviceCoreAudio Midi_coreaudio;
-
 #endif // C_COREAUDIO
 
 #endif

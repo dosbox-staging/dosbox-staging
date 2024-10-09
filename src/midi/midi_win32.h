@@ -197,6 +197,4 @@ private:
 	bool is_open = false;
 };
 
-MidiDeviceWin32 Midi_win32;
-
 #endif

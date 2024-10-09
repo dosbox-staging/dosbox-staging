@@ -222,8 +222,6 @@ private:
 	MIDIPacket* m_pCurPacket   = {};
 };
 
-MidiDeviceCoreMidi Midi_coremidi;
-
 #endif // C_COREMIDI
 
 #endif
