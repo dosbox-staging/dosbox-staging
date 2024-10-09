@@ -852,6 +852,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\midi\midi_fluidsynth.cpp" />
     <ClCompile Include="..\src\midi\midi_lasynth_model.cpp" />
     <ClCompile Include="..\src\midi\midi_mt32.cpp" />
+    <ClCompile Include="..\src\midi\midi_win32.cpp" />
     <ClCompile Include="..\src\misc\ansi_code_markup.cpp" />
     <ClCompile Include="..\src\misc\cross.cpp" />
     <ClCompile Include="..\src\misc\ethernet.cpp" />

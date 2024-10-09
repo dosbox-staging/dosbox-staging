@@ -69,15 +69,13 @@ public:
 	// Returns true if the model has a matches that provided "mt32" or "cm32l".
 	bool Matches(const std::string& model_name) const;
 
-	using Mt32ServicePtr = std::unique_ptr<MT32Emu::Service>;
-	bool InDir(const Mt32ServicePtr& service, const std_fs::path& dir) const;
-	bool Load(const Mt32ServicePtr& service, const std_fs::path& dir) const;
+	bool InDir(MT32Emu::Service& service, const std_fs::path& dir) const;
+	bool Load(MT32Emu::Service& service, const std_fs::path& dir) const;
 
 private:
 	size_t SetVersion();
-	static std::optional<std_fs::path> find_rom(const Mt32ServicePtr& service,
-	                                            const std_fs::path& dir,
-	                                            const Rom* rom);
+	std::optional<std_fs::path> FindRom(MT32Emu::Service& service,
+	                                    const std_fs::path& dir, const Rom* rom) const;
 
 	const std::string name   = {};
 	const size_t version_pos = std::string::npos;

@@ -19,43 +19,33 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_MIDI_OSS_H
-#define DOSBOX_MIDI_OSS_H
+#include "midi_coremidi.h"
 
-#include "midi_device.h"
+void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* caller)
+{
+	Bitu numDests = MIDIGetNumberOfDestinations();
 
-class MidiDeviceOss final : public MidiDevice {
-public:
-	MidiDeviceOss() : MidiDevice() {}
-	~MidiDeviceOss() override;
+	for (Bitu i = 0; i < numDests; i++) {
+		MIDIEndpointRef dest = MIDIGetDestination(i);
+		if (!dest) {
+			continue;
+		}
 
-	// prevent copying
-	MidiDeviceOss(const MidiDeviceOss&) = delete;
-	// prevent assignment
-	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
+		CFStringRef midiname = nullptr;
 
-	bool Open(const char* conf) override;
-	void Close() override;
+		if (MIDIObjectGetStringProperty(dest,
+		                                kMIDIPropertyDisplayName,
+		                                &midiname) == noErr) {
 
-	std::string GetName() const override
-	{
-		return MidiDeviceName::Oss;
+			const char* s = CFStringGetCStringPtr(midiname,
+			                                      kCFStringEncodingMacRoman);
+			if (s) {
+				caller->WriteOut("  %02d - %s\n", i, s);
+			}
+		}
+		// This is for EndPoints created by us.
+		// MIDIEndpointDispose(dest);
 	}
 
-	Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
-	void SendMidiMessage(const MidiMessage& msg) override;
-	void SendSysExMessage(uint8_t* sysex, size_t len) override;
-
-private:
-	int device         = 0;
-	uint8_t device_num = 0;
-	bool is_open       = false;
-};
-
-void MIDI_OSS_ListDevices(MidiDeviceOss* device, Program* caller);
-
-#endif
+	caller->WriteOut("\n");
+}

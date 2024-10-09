@@ -22,22 +22,24 @@
 #ifndef DOSBOX_MIDI_WIN32_H
 #define DOSBOX_MIDI_WIN32_H
 
-#include "midi_device.h"
+#ifdef WIN32
 
-#ifndef WIN32_LEAN_AND_MEAN
-	#define WIN32_LEAN_AND_MEAN
-#endif
+	#include "midi_device.h"
 
-// clang-format off
+	#ifndef WIN32_LEAN_AND_MEAN
+		#define WIN32_LEAN_AND_MEAN
+	#endif
+
+	// clang-format off
 // 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
 #include <mmsystem.h>
-// clang-format on
+	// clang-format on
 
-#include <sstream>
-#include <string>
+	#include <sstream>
+	#include <string>
 
-#include "programs.h"
+	#include "programs.h"
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
@@ -50,7 +52,7 @@ public:
 
 	std::string GetName() const override
 	{
-		return "win32";
+		return MidiDeviceName::Win32;
 	}
 
 	Type GetType() const override
@@ -176,19 +178,6 @@ public:
 		}
 	}
 
-	MIDI_RC ListDevices(Program* caller) override
-	{
-		unsigned int total = midiOutGetNumDevs();
-
-		for (unsigned int i = 0; i < total; i++) {
-			MIDIOUTCAPS mididev;
-			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-
-			caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
-		}
-		return MIDI_RC::OK;
-	}
-
 private:
 	HMIDIOUT m_out = nullptr;
 	MIDIHDR m_hdr  = {};
@@ -196,5 +185,9 @@ private:
 
 	bool is_open = false;
 };
+
+void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller)
+
+#endif // WIN32
 
 #endif

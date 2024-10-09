@@ -366,7 +366,7 @@ bool MidiDeviceAlsa::Open(const char* conf)
 	return false;
 }
 
-MIDI_RC MidiDeviceAlsa::ListDevices(Program* caller)
+void ALSA_ListDevices([[maybe_unused]] MidiDeviceAlsa* device, Program* caller)
 {
 	auto print_port = [caller, this](auto* client_info, auto* port_info) {
 		const auto* addr = snd_seq_port_info_get_addr(port_info);
@@ -394,7 +394,7 @@ MIDI_RC MidiDeviceAlsa::ListDevices(Program* caller)
 
 	for_each_alsa_seq_port(print_port);
 
-	return MIDI_RC::OK;
+	caller->WriteOut("\n");
 }
 
 #endif // C_ALSA

@@ -863,6 +863,11 @@ void MidiDeviceFluidSynth::Render()
 	}
 }
 
+std_fs::path MidiDeviceFluidSynth::GetCurrentSoundFontPath()
+{
+	return current_sf2_path;
+}
+
 std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 {
 	assert(width > 0);
@@ -889,10 +894,8 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	return line;
 }
 
-MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
-	// Find SoundFont from user config. FluidSynth may not be open so it
-	// must be done here.
 	const auto sf_spec = parse_soundfont_pref(
 	        get_fluidsynth_section()->Get_string("soundfont"));
 
@@ -908,14 +911,16 @@ MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
 		const auto line = format_sf2_line(term_width - 2, sf2_path);
 
 	#ifdef LINUX
-		const auto path_matches = (current_sf2_path.string() ==
+		const auto do_highlight = device &&
+		                          (device->GetCurrentSoundFontPath().string() ==
 		                           sf2_path.string());
 	#else
-		const auto path_matches = case_insensitive_equals(
-		        current_sf2_path.string(), sf2_path.string());
+		const auto do_highlight =
+		        device &&
+		        case_insensitive_equals(
+		                device->GetCurrentSoundFontPath().string(),
+		                sf2_path.string());
 	#endif
-
-		const bool do_highlight = is_open && path_matches;
 
 		if (do_highlight) {
 			const auto output = format_str("%s* %s%s\n",
@@ -966,12 +971,12 @@ MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
 		write_line(path);
 	}
 
-	return MIDI_RC::OK;
+	caller->WriteOut("\n");
 }
 
 static void fluid_init([[maybe_unused]] Section* sec) {}
 
-void FLUID_AddConfigSection(const ConfigPtr& conf)
+void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);

@@ -553,6 +553,9 @@
     <ClCompile Include="..\src\midi\midi_mt32.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\midi\midi_win32.cpp">
+      <Filter>src\midi</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_choice.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

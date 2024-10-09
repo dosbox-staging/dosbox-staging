@@ -26,11 +26,15 @@
 
 #include <cstdint>
 
-enum class MIDI_RC : int {
-	OK                            = 0,
-	ERR_DEVICE_NOT_CONFIGURED     = -1,
-	ERR_DEVICE_LIST_NOT_SUPPORTED = -2,
-};
+namespace MidiDeviceName {
+constexpr auto Alsa       = "alsa";
+constexpr auto CoreAudio  = "coreaudio";
+constexpr auto CoreMidi   = "coremidi";
+constexpr auto FluidSynth = "fluidsynth";
+constexpr auto Mt32       = "mt32";
+constexpr auto Oss        = "oss";
+constexpr auto Win32      = "win32";
+} // namespace MidiDeviceName
 
 class MidiDevice {
 public:
@@ -54,8 +58,6 @@ public:
 
 	virtual void SendSysExMessage([[maybe_unused]] uint8_t* sysex,
 	                              [[maybe_unused]] size_t len) = 0;
-
-	virtual MIDI_RC ListDevices(Program*) = 0;
 };
 
 #endif // DOSBOX_MIDI_DEVICE_H
