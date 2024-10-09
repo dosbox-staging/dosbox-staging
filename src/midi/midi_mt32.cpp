@@ -47,7 +47,7 @@
 #include "string_utils.h"
 #include "support.h"
 
-//#define DEBUG_MT32
+// #define DEBUG_MT32
 
 // mt32emu Settings
 // ----------------
@@ -552,7 +552,9 @@ static std::optional<ModelAndDir> load_model(const Mt32ServicePtr& service,
 		if (load_first_available || model->Matches(wanted_model_name)) {
 			for (const auto& dir : rom_dirs) {
 				if (model->Load(service, dir)) {
-					return {{model, simplify_path(dir)}};
+					return {
+					        {model, simplify_path(dir)}
+                                        };
 				}
 			}
 		}
@@ -853,10 +855,10 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 		set_section_property_value("mt32", "mt32_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and bursty.
-	// The mixer's default of ~20 ms becomes 40 ms here, which gives slower
-	// systems a better chance to keep up (and prevent their audio frame FIFO
-	// from running dry).
+	// Double the baseline PCM prebuffer because MIDI is demanding and
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up (and prevent their audio
+	// frame FIFO from running dry).
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO
@@ -914,8 +916,9 @@ void MidiDeviceMt32::Close()
 	LOG_MSG("MT32: Shutting down");
 
 	if (had_underruns) {
-		LOG_WARNING("MT32: Fix underruns by lowering CPU load "
-		            "or increasing your conf's prebuffer");
+		LOG_WARNING(
+		        "MT32: Fix underruns by lowering CPU load "
+		        "or increasing your conf's prebuffer");
 		had_underruns = false;
 	}
 
@@ -1059,15 +1062,15 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 		return;
 	}
 
-	#ifdef DEBUG_MT32
+#ifdef DEBUG_MT32
 	LOG_TRACE(
-			"MT32: %2u audio frames prior to %s message, followed by "
-			"%2lu more messages. Have %4lu audio frames queued",
-			work->num_pending_audio_frames,
-			work->message_type == MessageType::Channel ? "channel" : "sysex",
-			work_fifo.Size(),
-			audio_frame_fifo.Size());
-	#endif
+	        "MT32: %2u audio frames prior to %s message, followed by "
+	        "%2lu more messages. Have %4lu audio frames queued",
+	        work->num_pending_audio_frames,
+	        work->message_type == MessageType::Channel ? "channel" : "sysex",
+	        work_fifo.Size(),
+	        audio_frame_fifo.Size());
+#endif
 
 	if (work->num_pending_audio_frames > 0) {
 		RenderAudioFramesToFifo(work->num_pending_audio_frames);

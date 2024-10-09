@@ -35,23 +35,24 @@
 
 MidiDeviceOss::~MidiDeviceOss()
 {
-	if (is_open)
+	if (is_open) {
 		close(device);
+	}
 }
 
-bool MidiDeviceOss::Open(const char *conf)
+bool MidiDeviceOss::Open(const char* conf)
 {
 	Close();
 	char devname[512];
 	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
-	char *devfind = strrchr(devname, ',');
+	char* devfind = strrchr(devname, ',');
 	if (devfind) {
 		*devfind++ = '\0';
 		device_num = atoi(devfind);
 	} else {
 		device_num = 0;
 	}
-	device = open(devname, O_WRONLY, 0);
+	device  = open(devname, O_WRONLY, 0);
 	is_open = (device >= 0);
 	return is_open;
 }
@@ -87,7 +88,7 @@ void MidiDeviceOss::SendMidiMessage(const MidiMessage& msg)
 	}
 }
 
-void MidiDeviceOss::SendSysExMessage(uint8_t *sysex, size_t len)
+void MidiDeviceOss::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	uint8_t buf[MaxMidiSysExSize * 4];
 	assert(len <= MaxMidiSysExSize);

@@ -152,8 +152,8 @@ struct Midi {
 		int64_t start_ms = 0;
 	} sysex = {};
 
-	bool is_available    = false;
-	bool is_muted        = false;
+	bool is_available   = false;
+	bool is_muted       = false;
 	MidiDevice* handler = nullptr;
 };
 
@@ -418,7 +418,7 @@ void MIDI_RawOutByte(uint8_t data)
 				        midi.sysex.delay_ms);
 #endif
 				midi.handler->SendSysExMessage(midi.sysex.buf,
-				                        midi.sysex.pos);
+				                               midi.sysex.pos);
 
 				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {

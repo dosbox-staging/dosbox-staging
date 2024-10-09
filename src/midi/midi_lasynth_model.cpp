@@ -29,13 +29,10 @@
 #include "fs_utils.h"
 
 // Construct a new model and ensure both PCM and control ROM(s) are provided
-LASynthModel::LASynthModel(const std::string &rom_name,
-                           const Rom *pcm_rom_full,
-                           const Rom *pcm_rom_l,
-                           const Rom *pcm_rom_h,
-                           const Rom *ctrl_rom_full,
-                           const Rom *ctrl_rom_1,
-                           const Rom *ctrl_rom_2)
+LASynthModel::LASynthModel(const std::string& rom_name, const Rom* pcm_rom_full,
+                           const Rom* pcm_rom_l, const Rom* pcm_rom_h,
+                           const Rom* ctrl_rom_full, const Rom* ctrl_rom_1,
+                           const Rom* ctrl_rom_2)
         : name(rom_name),
           version_pos(SetVersion()),
           pcm_full(pcm_rom_full),
@@ -167,18 +164,17 @@ bool LASynthModel::Load(const Mt32ServicePtr& service, const std_fs::path& dir) 
 	const bool loaded_pcm = load_rom(pcm_full, MT32EMU_RC_ADDED_PCM_ROM) ||
 	                        load_both(pcm_l, pcm_h, MT32EMU_RC_ADDED_PCM_ROM);
 	const bool loaded_ctrl = load_rom(ctrl_full, MT32EMU_RC_ADDED_CONTROL_ROM) ||
-	                         load_both(ctrl_a, ctrl_b,
-	                                   MT32EMU_RC_ADDED_CONTROL_ROM);
+	                         load_both(ctrl_a, ctrl_b, MT32EMU_RC_ADDED_CONTROL_ROM);
 	return loaded_pcm && loaded_ctrl;
 }
 
-const char *LASynthModel::GetVersion() const
+const char* LASynthModel::GetVersion() const
 {
 	assert(version_pos != std::string::npos);
 	return name.c_str() + version_pos;
 }
 
-bool LASynthModel::Matches(const std::string &model_name) const
+bool LASynthModel::Matches(const std::string& model_name) const
 {
 	assert(!model_name.empty());
 	return (name.rfind(model_name, 0) == 0);
