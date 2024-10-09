@@ -226,7 +226,7 @@ public:
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
 
-	MIDI_RC ListAll(Program*) override
+	MIDI_RC ListDevices(Program*) override
 	{
 		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
 	}

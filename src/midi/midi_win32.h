@@ -38,6 +38,7 @@
 #include <string>
 
 #include "programs.h"
+#include "string_utils.h"
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
@@ -176,7 +177,7 @@ public:
 		}
 	}
 
-	MIDI_RC ListAll(Program* caller) override
+	MIDI_RC ListDevices(Program* caller) override
 	{
 		unsigned int total = midiOutGetNumDevs();
 
