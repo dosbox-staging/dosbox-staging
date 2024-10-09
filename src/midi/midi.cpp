@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <list>
+#include <memory>
 #include <string>
 
 #include <SDL.h>
@@ -702,26 +703,19 @@ void MIDI_ListAll(Program* caller)
 	}
 }
 
-static MIDI* midi_instance;
-
-static void midi_destroy(Section* /*sec*/)
-{
-	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
-	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
-
-	if (midi_instance) {
-		delete midi_instance;
-	}
-}
+static std::unique_ptr<MIDI> midi_instance = nullptr;
 
 static void midi_init(Section* sec)
 {
 	assert(sec);
 
-	midi_instance = new MIDI(sec);
+	MPU401_Destroy();
+	MPU401_Init();
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&midi_destroy, changeable_at_runtime);
+	midi_instance.reset();
+	midi_instance = std::make_unique<MIDI>(sec);
+
+	midi_state.Reset();
 }
 
 void MIDI_Init()
@@ -869,9 +863,6 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	Section_prop* sec = conf->AddSection_prop("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
-
-	sec->AddInitFunction(&init_midi_state, ChangeableAtRuntime);
-	sec->AddInitFunction(&MPU401_Init, ChangeableAtRuntime);
 
 	init_midi_dosbox_settings(*sec);
 
