@@ -44,6 +44,7 @@ static void for_each_alsa_seq_port(port_action_t action)
 	// We can't reuse the sequencer from midi handler, as the function might
 	// be called before that sequencer is created.
 	snd_seq_t* seq = nullptr;
+
 	if (snd_seq_open(&seq, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
 		LOG_WARNING("MIDI:ALSA: Can't open MIDI sequencer");
 		return;
@@ -59,10 +60,13 @@ static void for_each_alsa_seq_port(port_action_t action)
 	assert(port_info);
 
 	snd_seq_client_info_set_client(client_info, -1);
+
 	while (snd_seq_query_next_client(seq, client_info) >= 0) {
 		const int client_id = snd_seq_client_info_get_client(client_info);
+
 		snd_seq_port_info_set_client(port_info, client_id);
 		snd_seq_port_info_set_port(port_info, -1);
+
 		while (snd_seq_query_next_port(seq, port_info) >= 0) {
 			action(client_info, port_info);
 		}
@@ -77,6 +81,7 @@ static bool port_is_writable(const unsigned int port_caps)
 {
 	constexpr unsigned int mask = SND_SEQ_PORT_CAP_WRITE |
 	                              SND_SEQ_PORT_CAP_SUBS_WRITE;
+
 	return (port_caps & mask) == mask;
 }
 
@@ -112,6 +117,7 @@ static bool parse_addr(const std::string& in, int* client, int* port)
 	int val1;
 	int val2;
 	char c;
+
 	if (!(inp >> val1)) {
 		return false;
 	}
@@ -121,8 +127,10 @@ static bool parse_addr(const std::string& in, int* client, int* port)
 	if (!(inp >> val2)) {
 		return false;
 	}
+
 	*client = val1;
 	*port   = val2;
+
 	return true;
 }
 
@@ -149,26 +157,32 @@ void MidiDeviceAlsa::SendMidiMessage(const MidiMessage& msg)
 		snd_seq_ev_set_noteoff(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::NoteOn:
 		snd_seq_ev_set_noteon(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::PolyKeyPressure:
 		snd_seq_ev_set_keypress(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::ControlChange:
 		snd_seq_ev_set_controller(&ev, channel, msg[1], msg[2]);
 		send_event(1);
 		break;
+
 	case MidiStatus::ProgramChange:
 		snd_seq_ev_set_pgmchange(&ev, channel, msg[1]);
 		send_event(0);
 		break;
+
 	case MidiStatus::ChannelPressure:
 		snd_seq_ev_set_chanpress(&ev, channel, msg[1]);
 		send_event(0);
 		break;
+
 	case MidiStatus::PitchBend: {
 		long theBend = ((long)msg[1] + (long)(msg[2] << 7)) - 0x2000;
 		snd_seq_ev_set_pitchbend(&ev, channel, theBend);
@@ -182,6 +196,7 @@ void MidiDeviceAlsa::SendMidiMessage(const MidiMessage& msg)
 		            status_byte,
 		            msg[1],
 		            msg[2]);
+
 		send_event(1);
 		break;
 	}
@@ -213,9 +228,9 @@ static bool port_name_matches(const std::string& pattern,
 	return (strcasestr(port_name, pattern.c_str()) != nullptr);
 }
 
-static alsa_address find_seq_input_port(const std::string& pattern)
+static AlsaAddress find_seq_input_port(const std::string& pattern)
 {
-	alsa_address seq_addr = {-1, -1};
+	AlsaAddress seq_addr = {-1, -1};
 
 	// Modern sequencers like FluidSynth indicate that they
 	// are capable of generating sound.
@@ -224,7 +239,9 @@ static alsa_address find_seq_input_port(const std::string& pattern)
 	                                             auto* port_info) {
 		const auto* addr     = snd_seq_port_info_get_addr(port_info);
 		const auto port_type = snd_seq_port_info_get_type(port_info);
+
 		const bool match = port_name_matches(pattern, client_info, port_info);
+
 		if (match && (port_type & SND_SEQ_PORT_TYPE_SYNTHESIZER)) {
 			seq_addr.client = addr->client;
 			seq_addr.port   = addr->port;
@@ -232,6 +249,7 @@ static alsa_address find_seq_input_port(const std::string& pattern)
 	};
 
 	for_each_alsa_seq_port(find_synth_port);
+
 	if (seq_addr.client != -1) {
 		return seq_addr;
 	}
@@ -252,6 +270,7 @@ static alsa_address find_seq_input_port(const std::string& pattern)
 	                                             auto* port_info) {
 		const auto* addr = snd_seq_port_info_get_addr(port_info);
 		const auto caps  = snd_seq_port_info_get_capability(port_info);
+
 		const bool is_new_client = (addr->client != seq_addr.client);
 
 		bool is_candidate = false;
@@ -324,20 +343,25 @@ bool MidiDeviceAlsa::Open(const char* conf)
 	if (seq.client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
 		if (snd_seq_connect_to(seq_handle, output_port, seq.client, seq.port) ==
 		    0) {
+
 			snd_seq_client_info_t* info = nullptr;
 			snd_seq_client_info_malloc(&info);
 			assert(info);
+
 			snd_seq_get_any_client_info(seq_handle, seq.client, info);
+
 			LOG_MSG("MIDI:ALSA: Connected to MIDI port %d:%d - %s",
 			        seq.client,
 			        seq.port,
 			        snd_seq_client_info_get_name(info));
+
 			snd_seq_client_info_free(info);
 			return true;
 		}
 	}
 
 	snd_seq_close(seq_handle);
+
 	LOG_WARNING("MIDI:ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
 	return false;
 }
@@ -345,15 +369,18 @@ bool MidiDeviceAlsa::Open(const char* conf)
 MIDI_RC MidiDeviceAlsa::ListAll(Program* caller)
 {
 	auto print_port = [caller, this](auto* client_info, auto* port_info) {
-		const auto* addr        = snd_seq_port_info_get_addr(port_info);
+		const auto* addr = snd_seq_port_info_get_addr(port_info);
+
 		const unsigned int type = snd_seq_port_info_get_type(port_info);
 		const unsigned int caps = snd_seq_port_info_get_capability(port_info);
 
 		if ((type & SND_SEQ_PORT_TYPE_SYNTHESIZER) || port_is_writable(caps)) {
 			const bool selected = (addr->client == this->seq.client &&
 			                       addr->port == this->seq.port);
+
 			const char esc_color[]   = "\033[32;1m";
 			const char esc_nocolor[] = "\033[0m";
+
 			caller->WriteOut("%c %s%3d:%d - %s - %s%s\n",
 			                 (selected ? '*' : ' '),
 			                 (selected ? esc_color : ""),
@@ -364,7 +391,9 @@ MIDI_RC MidiDeviceAlsa::ListAll(Program* caller)
 			                 (selected ? esc_nocolor : ""));
 		}
 	};
+
 	for_each_alsa_seq_port(print_port);
+
 	return MIDI_RC::OK;
 }
 

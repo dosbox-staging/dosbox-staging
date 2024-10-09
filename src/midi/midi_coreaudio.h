@@ -64,11 +64,6 @@
 #endif
 
 class MidiDeviceCoreAudio final : public MidiDevice {
-private:
-	AUGraph m_auGraph;
-	AudioUnit m_synth;
-	const char* soundfont;
-
 public:
 	MidiDeviceCoreAudio()
 	        : MidiDevice(),
@@ -114,6 +109,7 @@ public:
 		desc.componentFlags        = 0;
 		desc.componentFlagsMask    = 0;
 #if USE_DEPRECATED_COREAUDIO_API
+
 		RequireNoErr(AUGraphNewNode(m_auGraph, &desc, 0, NULL, &outputNode));
 #else
 		RequireNoErr(AUGraphAddNode(m_auGraph, &desc, &outputNode));
@@ -169,6 +165,7 @@ public:
 			        (const UInt8*)soundfont,
 			        strlen(soundfont),
 			        false);
+
 			if (url) {
 				err = AudioUnitSetProperty(m_synth,
 				                           kMusicDeviceProperty_SoundBankURL,
@@ -228,6 +225,12 @@ public:
 	{
 		MusicDeviceSysEx(m_synth, sysex, len);
 	}
+
+private:
+	AUGraph m_auGraph = {};
+	AudioUnit m_synth = {};
+
+	const char* soundfont = {};
 };
 
 #undef RequireNoErr

@@ -468,6 +468,7 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
 	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
 	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
+
 	fluid_synth_set_chorus_group_type(fluid_synth.get(),
 	                                  fx_group,
 	                                  static_cast<int>(chorus_mod_wave));
@@ -476,6 +477,7 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(),
 	                                      fx_group,
 	                                      reverb_room_size);
+
 	fluid_synth_set_reverb_group_damp(fluid_synth.get(), fx_group, reverb_damping);
 	fluid_synth_set_reverb_group_width(fluid_synth.get(), fx_group, reverb_width);
 	fluid_synth_set_reverb_group_level(fluid_synth.get(), fx_group, reverb_level);
