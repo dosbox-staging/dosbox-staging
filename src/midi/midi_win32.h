@@ -22,7 +22,7 @@
 #ifndef DOSBOX_MIDI_WIN32_H
 #define DOSBOX_MIDI_WIN32_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
