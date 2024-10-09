@@ -58,7 +58,7 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
-	MIDI_RC ListAll(Program* caller) override;
+	MIDI_RC ListDevices(Program* caller) override;
 
 private:
 	snd_seq_event_t ev    = {};

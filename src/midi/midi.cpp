@@ -687,7 +687,7 @@ void MIDI_ListDevices(Program* caller)
 
 		caller->WriteOut(device_name.c_str(), handler->GetName().c_str());
 
-		const auto err = handler->ListAll(caller);
+		const auto err = handler->ListDevices(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {
 			caller->WriteOut("%s%s\n",
 			                 MsgIndent,

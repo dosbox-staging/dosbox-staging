@@ -186,7 +186,7 @@ public:
 		MIDISend(m_port, m_endpoint, packetList);
 	}
 
-	MIDI_RC ListAll(Program* caller) override
+	MIDI_RC ListDevices(Program* caller) override
 	{
 		Bitu numDests = MIDIGetNumberOfDestinations();
 		for (Bitu i = 0; i < numDests; i++) {

@@ -889,7 +889,7 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	return line;
 }
 
-MIDI_RC MidiDeviceFluidSynth::ListAll(Program* caller)
+MIDI_RC MidiDeviceFluidSynth::ListDevices(Program* caller)
 {
 	// Find SoundFont from user config. FluidSynth may not be open so it
 	// must be done here.

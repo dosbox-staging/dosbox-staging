@@ -55,7 +55,7 @@ public:
 	virtual void SendSysExMessage([[maybe_unused]] uint8_t* sysex,
 	                              [[maybe_unused]] size_t len) = 0;
 
-	virtual MIDI_RC ListAll(Program*) = 0;
+	virtual MIDI_RC ListDevices(Program*) = 0;
 };
 
 #endif // DOSBOX_MIDI_DEVICE_H

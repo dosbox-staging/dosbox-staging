@@ -176,7 +176,7 @@ public:
 		}
 	}
 
-	MIDI_RC ListAll(Program* caller) override
+	MIDI_RC ListDevices(Program* caller) override
 	{
 		unsigned int total = midiOutGetNumDevs();
 
