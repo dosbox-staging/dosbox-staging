@@ -3341,7 +3341,7 @@ public:
 		SetupEnvironment();
 
 		// Sound Blaster MIDI interface
-		if (!MIDI_Available()) {
+		if (!MIDI_IsAvailable()) {
 			sb.midi_enabled = false;
 		} else {
 			sb.midi_enabled = true;

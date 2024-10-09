@@ -590,7 +590,7 @@ void MIDI_Unmute()
 	midi.is_muted = false;
 }
 
-bool MIDI_Available()
+bool MIDI_IsAvailable()
 {
 	return midi.is_available;
 }
