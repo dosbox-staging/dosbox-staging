@@ -63,7 +63,7 @@ public:
 		return "mt32";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDeviceType GetType() const override
 	{
 		return MidiDeviceType::BuiltIn;
 	}

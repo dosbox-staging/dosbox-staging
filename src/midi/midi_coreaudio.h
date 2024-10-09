@@ -81,7 +81,7 @@ public:
 		return "coreaudio";
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	MidiDeviceType GetType() const override
 	{
 		return MidiDeviceType::External;
 	}
