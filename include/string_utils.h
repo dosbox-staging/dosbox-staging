@@ -217,6 +217,8 @@ inline bool is_empty(const char* str) noexcept
 // case-insensitive comparisons
 bool ciequals(const char a, const char b);
 
+bool case_insensitive_equals(const std::string& a, const std::string& b);
+
 // case-insensitive comparison for combinations of
 // const char *, const std::string&, and const string_view
 template <typename T1, typename T2>
