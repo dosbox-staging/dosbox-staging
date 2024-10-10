@@ -310,7 +310,7 @@ bool CSerialModem::Dial(const char * host) {
 	clientsocket.reset(NETClientSocket::NETClientFactory(socketType,
 	                                                     destination, port));
 	if (!clientsocket->isopen) {
-		clientsocket.reset(nullptr);
+		clientsocket.reset();
 		LOG_MSG("SERIAL: Port %" PRIu8 " failed to connect.", GetPortNumber());
 		SendRes(ResNOCARRIER);
 		EnterIdleState();
@@ -378,7 +378,7 @@ void CSerialModem::Reset(){
 	plusinc = 0;
 	oldDTRstate = getDTR();
 	dtrmode = 2;
-	clientsocket.reset(nullptr);
+	clientsocket.reset();
 
 	memset(&reg,0,sizeof(reg));
 	reg[MREG_AUTOANSWER_COUNT] = 0;  // no autoanswer
@@ -401,8 +401,8 @@ void CSerialModem::EnterIdleState(){
 	ringing = false;
 	dtrofftimer = -1;
 	warmup_remain_ticks = 0;
-	clientsocket.reset(nullptr);
-	waitingclientsocket.reset(nullptr);
+	clientsocket.reset();
+	waitingclientsocket.reset();
 
 	// get rid of everything
 	if (serversocket) {
@@ -412,7 +412,7 @@ void CSerialModem::EnterIdleState(){
 		}
 	}
 	if (listenport) {
-		serversocket.reset(nullptr);
+		serversocket.reset();
 		serversocket.reset(NETServerSocket::NETServerFactory(socketType,
 		                                                     listenport));
 		if (!serversocket->isopen) {
@@ -420,13 +420,13 @@ void CSerialModem::EnterIdleState(){
 			        "%" PRIu16 ".",
 			        GetPortNumber(), listenport);
 
-			serversocket.reset(nullptr);
+			serversocket.reset();
 		} else
 			LOG_MSG("SERIAL: Port %" PRIu8 " modem listening on port "
 			        "%" PRIu16 " ...",
 			        GetPortNumber(), listenport);
 	}
-	waitingclientsocket.reset(nullptr);
+	waitingclientsocket.reset();
 
 	commandmode = true;
 	CSerial::setCD(false);
@@ -438,7 +438,7 @@ void CSerialModem::EnterIdleState(){
 
 void CSerialModem::EnterConnectedState() {
 	// we don't accept further calls
-	serversocket.reset(nullptr);
+	serversocket.reset();
 	SendRes(ResCONNECT);
 	commandmode = false;
 	telClient = {}; // reset values
