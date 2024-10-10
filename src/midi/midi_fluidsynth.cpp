@@ -241,7 +241,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	Close();
 
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
-	                                    delete_fluid_settings);
+	                                     delete_fluid_settings);
 	if (!fluid_settings) {
 		LOG_WARNING("FSYNTH: new_fluid_settings failed");
 		return false;
@@ -259,12 +259,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
-	fluid_settings_setnum(fluid_settings.get(),
-	                      "synth.sample-rate",
-	                      sample_rate_hz);
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
 
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
-	                         delete_fluid_synth);
+	                          delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
 		return false;
@@ -287,9 +285,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 800) {
-		LOG_WARNING("FSYNTH: Invalid volume scaling percentage: %d; "
-		            "must be between 1 and 800, defaulting to 100%%",
-		            scale_by_percent);
+		LOG_WARNING(
+		        "FSYNTH: Invalid volume scaling percentage: %d; "
+		        "must be between 1 and 800, defaulting to 100%%",
+		        scale_by_percent);
 		scale_by_percent = 100;
 	}
 	fluid_synth_set_gain(fluid_synth.get(),
@@ -321,13 +320,14 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 		// convert the string to a double
 		const auto val = atof(str_val.c_str());
 		if (val < min_val || val > max_val) {
-			LOG_WARNING("FSYNTH: Invalid %s setting (%s), needs to be between "
-			            "%.2f and %.2f: using default (%.2f)",
-			            name,
-			            str_val.c_str(),
-			            min_val,
-			            max_val,
-			            def_val);
+			LOG_WARNING(
+			        "FSYNTH: Invalid %s setting (%s), needs to be between "
+			        "%.2f and %.2f: using default (%.2f)",
+			        name,
+			        str_val.c_str(),
+			        min_val,
+			        max_val,
+			        def_val);
 			return def_val;
 		}
 		return val;
@@ -378,15 +378,17 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING("FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				            "needs to be 'sine' or 'triangle'",
-				            chorus[4].c_str());
+				LOG_WARNING(
+				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
+				        "needs to be 'sine' or 'triangle'",
+				        chorus[4].c_str());
 			}
 
 		} else {
-			LOG_WARNING("FSYNTH: Invalid number of custom chorus settings (%d), "
-			            "should be five",
-			            static_cast<int>(chorus.size()));
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom chorus settings (%d), "
+			        "should be five",
+			        static_cast<int>(chorus.size()));
 		}
 	}
 	// API accept an integer voice-count
@@ -426,9 +428,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 			reverb_level = validate_setting(
 			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING("FSYNTH: Invalid number of custom reverb settings (%d), "
-			            "should be four",
-			            static_cast<int>(reverb.size()));
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom reverb settings (%d), "
+			        "should be four",
+			        static_cast<int>(reverb.size()));
 		}
 	}
 
@@ -586,8 +589,9 @@ void MidiHandlerFluidsynth::Close()
 	MIXER_LockMixerThread();
 
 	if (had_underruns) {
-		LOG_WARNING("FSYNTH: Fix underruns by lowering CPU load, increasing "
-		            "your conf's prebuffer, or using a simpler SoundFont");
+		LOG_WARNING(
+		        "FSYNTH: Fix underruns by lowering CPU load, increasing "
+		        "your conf's prebuffer, or using a simpler SoundFont");
 		had_underruns = false;
 	}
 
@@ -884,9 +888,9 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 
 		if (do_highlight) {
 			const auto output = format_str("%s* %s%s\n",
-			                                  green,
-			                                  line.c_str(),
-			                                  reset);
+			                               green,
+			                               line.c_str(),
+			                               reset);
 
 			caller->WriteOut(convert_ansi_markup(output).c_str());
 		} else {
