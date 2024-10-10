@@ -28,11 +28,13 @@
 #include <atomic>
 #include <fluidsynth.h>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 
 #include "mixer.h"
 #include "rwqueue.h"
+#include "std_filesystem.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
 public:
@@ -78,7 +80,7 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
 
-	std::string selected_font = "";
+	std::optional<std_fs::path> current_sf2_path = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.
