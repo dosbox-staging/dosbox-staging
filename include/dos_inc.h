@@ -310,14 +310,6 @@ bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
 
 DOS_Version DOS_ParseVersion(const char *word, const char *args);
 
-enum KeyboardErrorCode : uint8_t {
-	KEYB_NOERROR = 0,
-	KEYB_FILENOTFOUND,
-	KEYB_INVALIDFILE,
-	KEYB_LAYOUTNOTFOUND,
-	KEYB_INVALIDCPFILE
-};
-
 static inline uint16_t long2para(uint32_t size) {
 	if (size>0xFFFF0) return 0xffff;
 	if (size&0xf) return (uint16_t)((size>>4)+1);
@@ -958,6 +950,7 @@ struct DOS_Block {
 		uint16_t dpb = {};
 	} tables = {};
 
+	uint16_t country_code    = {};
 	uint16_t loaded_codepage = {};
 	uint16_t dcp = {};
 };
