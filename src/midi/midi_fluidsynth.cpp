@@ -207,15 +207,17 @@ static std_fs::path find_sf_file(const std::string& name)
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
 			if (path_exists(sf)) {
-				// Parts of the path come from the `soundfont` setting, and
-				// `soundfont = FluidR3_GM.sf2` and `soundfont =
-				// fluidr3_gm.sf2` refer to the same file on case-preserving
-				// filesystems on Windows and macOS.
+				// Parts of the path come from the `soundfont`
+				// setting, and `soundfont = FluidR3_GM.sf2` and
+				// `soundfont = fluidr3_gm.sf2` refer to the
+				// same file on case-preserving filesystems on
+				// Windows and macOS.
 				//
-				// `std_fs::canonical` returns the absolute path and matches
-				// its casing to that of the actual physical file. This
-				// prevents certain subtle bugs downstream when we use this
-				// path in comparisons.
+				// `std_fs::canonical` returns the absolute path
+				// and matches its casing to that of the actual
+				// physical file. This prevents certain subtle
+				// bugs downstream when we use this path in
+				// comparisons.
 				//
 				return std_fs::canonical(sf).c_str();
 			}
