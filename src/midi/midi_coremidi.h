@@ -127,7 +127,7 @@ public:
 	~MidiDeviceCoreMidi() override
 	{
 		if (m_port && m_client) {
-			Reset();
+			MIDI_Reset(this);
 		}
 
 		// Dispose the port

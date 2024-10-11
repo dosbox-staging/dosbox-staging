@@ -214,7 +214,7 @@ public:
 	~MidiDeviceCoreAudio() override
 	{
 		if (m_auGraph) {
-			Reset();
+			MIDI_Reset(this);
 			AUGraphStop(m_auGraph);
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = nullptr;
