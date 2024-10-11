@@ -44,21 +44,6 @@
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
-	// prevent copying
-	MidiDeviceWin32(const MidiDeviceWin32&) = delete;
-	// prevent assigment
-	MidiDeviceWin32& operator=(const MidiDeviceWin32&) = delete;
-
-	std::string GetName() const override
-	{
-		return MidiDeviceName::Win32;
-	}
-
-	Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
 	MidiDeviceWin32(const char* conf)
 	{
 		m_event      = CreateEvent(nullptr, true, true, nullptr);
@@ -127,6 +112,21 @@ public:
 
 		midiOutClose(m_out);
 		CloseHandle(m_event);
+	}
+
+	// prevent copying
+	MidiDeviceWin32(const MidiDeviceWin32&) = delete;
+	// prevent assigment
+	MidiDeviceWin32& operator=(const MidiDeviceWin32&) = delete;
+
+	std::string GetName() const override
+	{
+		return MidiDeviceName::Win32;
+	}
+
+	Type GetType() const override
+	{
+		return MidiDevice::Type::External;
 	}
 
 	void SendMidiMessage(const MidiMessage& data) override

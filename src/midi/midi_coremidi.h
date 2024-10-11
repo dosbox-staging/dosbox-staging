@@ -35,16 +35,6 @@
 
 class MidiDeviceCoreMidi final : public MidiDevice {
 public:
-	std::string GetName() const override
-	{
-		return MidiDeviceName::CoreMidi;
-	}
-
-	Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
 	MidiDeviceCoreMidi(const char* conf)
 	        : MidiDevice(),
 	          m_port(0),
@@ -139,6 +129,16 @@ public:
 		// Dispose the endpoint
 		// Not, as it is for Endpoints created by us
 		//		MIDIEndpointDispose(m_endpoint);
+	}
+
+	std::string GetName() const override
+	{
+		return MidiDeviceName::CoreMidi;
+	}
+
+	Type GetType() const override
+	{
+		return MidiDevice::Type::External;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override

@@ -67,16 +67,6 @@
 
 class MidiDeviceCoreAudio final : public MidiDevice {
 public:
-	std::string GetName() const override
-	{
-		return MidiDeviceName::CoreAudio;
-	}
-
-	Type GetType() const override
-	{
-		return MidiDevice::Type::External;
-	}
-
 	MidiDeviceCoreAudio(const char* conf)
 	        : MidiDevice(),
 	          m_auGraph(nullptr),
@@ -219,6 +209,16 @@ public:
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = nullptr;
 		}
+	}
+
+	std::string GetName() const override
+	{
+		return MidiDeviceName::CoreAudio;
+	}
+
+	Type GetType() const override
+	{
+		return MidiDevice::Type::External;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override
