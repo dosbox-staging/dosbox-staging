@@ -44,7 +44,7 @@
 
 constexpr auto SoundFontExtension = ".sf2";
 
-static void init_fluid_dosbox_settings(Section_prop& secprop)
+static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
@@ -967,14 +967,34 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void fluid_init([[maybe_unused]] Section* sec) {}
+static void fluidsynth_init([[maybe_unused]] Section* sec)
+{
+	const auto device = MIDI_GetCurrentDevice();
+
+	if (device && device->GetName() == MidiDeviceName::FluidSynth) {
+		const auto fluid_device = dynamic_cast<MidiDeviceFluidSynth*>(device);
+
+		const auto soundfont_pref = get_fluidsynth_section()->Get_string(
+		        "soundfont");
+		const auto path = find_sf_file(soundfont_pref);
+
+		if (fluid_device->GetCurrentSoundFontPath() != path) {
+			MIDI_Init();
+		}
+	}
+}
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 {
+	constexpr auto ChangeableAtRuntime = true;
+
 	assert(conf);
-	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);
+	Section_prop* sec = conf->AddSection_prop("fluidsynth",
+	                                          &fluidsynth_init,
+	                                          ChangeableAtRuntime);
+
 	assert(sec);
-	init_fluid_dosbox_settings(*sec);
+	init_fluidsynth_dosbox_settings(*sec);
 }
 
 #endif // C_FLUIDSYNTH
