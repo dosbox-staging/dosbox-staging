@@ -659,10 +659,8 @@ static std::set<const LASynthModel*> find_available_models(
 	return available_models;
 }
 
-bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
+MidiDeviceMt32::MidiDeviceMt32()
 {
-	Close();
-
 	auto mt32_service     = create_mt32_service();
 	const auto model_name = get_model_setting();
 	const auto rom_dirs   = get_rom_dirs();
@@ -670,14 +668,15 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 	// Load the selected model and print info about it
 	auto loaded_model_and_dir = load_model(*mt32_service, model_name, rom_dirs);
 	if (!loaded_model_and_dir) {
-		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
-		            model_name.c_str());
+		const auto msg = format_str("MT32: Failed to find ROMs for model %s in:",
+		                            model_name.c_str());
+		LOG_WARNING("%s", msg.c_str());
 
 		for (const auto& dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
 			LOG_MSG("MT32:  %c- %s", div, dir.string().c_str());
 		}
-		return false;
+		throw std::runtime_error(msg);
 	}
 
 	mt32emu_rom_info rom_info;
@@ -701,9 +700,12 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 	mt32_service->setMIDIDelayMode(MidiDelayMode);
 
 	const auto rc = mt32_service->openSynth();
+
 	if (rc != MT32EMU_RC_OK) {
-		LOG_WARNING("MT32: Error initialising emulation, error code: %i", rc);
-		return false;
+		const auto msg = format_str("MT32: Error initialising emulation, error code: %i",
+		                            rc);
+		LOG_WARNING("%s", msg.c_str());
+		throw std::runtime_error(msg);
 	}
 
 	MIXER_LockMixerThread();
@@ -785,22 +787,11 @@ bool MidiDeviceMt32::Open([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:mt32");
 
 	// Start playback
-	is_open = true;
 	MIXER_UnlockMixerThread();
-	return true;
 }
 
 MidiDeviceMt32::~MidiDeviceMt32()
 {
-	Close();
-}
-
-void MidiDeviceMt32::Close()
-{
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("MT32: Shutting down");
 
 	if (had_underruns) {
@@ -844,7 +835,6 @@ void MidiDeviceMt32::Close()
 	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
 
-	is_open = false;
 	MIXER_UnlockMixerThread();
 }
 

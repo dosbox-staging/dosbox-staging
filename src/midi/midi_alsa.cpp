@@ -202,7 +202,7 @@ void MidiDeviceAlsa::SendMidiMessage(const MidiMessage& msg)
 	}
 }
 
-void MidiDeviceAlsa::Close()
+MidiDeviceAlsa::~MidiDeviceAlsa()
 {
 	if (seq_handle) {
 		Reset();
@@ -291,7 +291,7 @@ static AlsaAddress find_seq_input_port(const std::string& pattern)
 	return seq_addr;
 }
 
-bool MidiDeviceAlsa::Open(const char* conf)
+MidiDeviceAlsa::MidiDeviceAlsa(const char* conf)
 {
 	assert(conf);
 	seq = {};
@@ -312,13 +312,15 @@ bool MidiDeviceAlsa::Open(const char* conf)
 	}
 
 	if (seq.client == -1) {
-		LOG_WARNING("MIDI:ALSA: No available MIDI devices found");
-		return false;
+		const auto msg = "MIDI:ALSA: No available MIDI devices found";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	if (snd_seq_open(&seq_handle, "default", SND_SEQ_OPEN_OUTPUT, 0) != 0) {
-		LOG_WARNING("MIDI:ALSA: Can't open sequencer");
-		return false;
+		const auto msg = "MIDI:ALSA: Can't open sequencer";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	snd_seq_set_client_name(seq_handle, "DOSBox Staging");
@@ -336,8 +338,10 @@ bool MidiDeviceAlsa::Open(const char* conf)
 
 	if (output_port < 0) {
 		snd_seq_close(seq_handle);
-		LOG_WARNING("MIDI:ALSA: Can't create ALSA port");
-		return false;
+
+		const auto msg = "MIDI:ALSA: Can't create ALSA port";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	if (seq.client != SND_SEQ_ADDRESS_SUBSCRIBERS) {
@@ -356,14 +360,17 @@ bool MidiDeviceAlsa::Open(const char* conf)
 			        snd_seq_client_info_get_name(info));
 
 			snd_seq_client_info_free(info);
-			return true;
+			return;
 		}
 	}
 
 	snd_seq_close(seq_handle);
 
-	LOG_WARNING("MIDI:ALSA: Can't connect to MIDI port %d:%d", seq.client, seq.port);
-	return false;
+	const auto msg = format_str("MIDI:ALSA: Can't connect to MIDI port %d:%d",
+	                            seq.client,
+	                            seq.port);
+	LOG_WARNING("%s", msg.c_str());
+	throw std::runtime_error(msg);
 }
 
 AlsaAddress MidiDeviceAlsa::GetInputPortAddress()

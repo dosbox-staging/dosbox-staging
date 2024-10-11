@@ -26,16 +26,13 @@
 
 class MidiDeviceOss final : public MidiDevice {
 public:
-	MidiDeviceOss() : MidiDevice() {}
+	MidiDeviceOss(const char* conf);
 	~MidiDeviceOss() override;
 
 	// prevent copying
 	MidiDeviceOss(const MidiDeviceOss&) = delete;
 	// prevent assignment
 	MidiDeviceOss& operator=(const MidiDeviceOss&) = delete;
-
-	bool Open(const char* conf) override;
-	void Close() override;
 
 	std::string GetName() const override
 	{
@@ -53,7 +50,6 @@ public:
 private:
 	int device         = 0;
 	uint8_t device_num = 0;
-	bool is_open       = false;
 };
 
 void MIDI_OSS_ListDevices(MidiDeviceOss* device, Program* caller);

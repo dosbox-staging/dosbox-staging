@@ -44,8 +44,6 @@
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
-	MidiDeviceWin32() : MidiDevice(), is_open(false) {}
-
 	// prevent copying
 	MidiDeviceWin32(const MidiDeviceWin32&) = delete;
 	// prevent assigment
@@ -61,12 +59,8 @@ public:
 		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char* conf) override
+	MidiDeviceWin32(const char* conf)
 	{
-		if (is_open) {
-			return false;
-		}
-
 		m_event      = CreateEvent(nullptr, true, true, nullptr);
 		MMRESULT res = MMSYSERR_NOERROR;
 
@@ -121,22 +115,16 @@ public:
 		}
 
 		if (res != MMSYSERR_NOERROR) {
-			return false;
+			const auto msg = "MIDI:WIN32: Error opening device";
+			LOG_WARNING("%s", msg);
+			throw std::runtime_error(msg);
 		}
-
-		is_open = true;
-		return true;
 	}
 
-	void Close() override
+	~MidiDeviceWin32() override
 	{
-		if (!is_open) {
-			return;
-		}
-
 		Reset();
 
-		is_open = false;
 		midiOutClose(m_out);
 		CloseHandle(m_event);
 	}
@@ -183,11 +171,9 @@ private:
 	HMIDIOUT m_out = nullptr;
 	MIDIHDR m_hdr  = {};
 	HANDLE m_event = nullptr;
-
-	bool is_open = false;
 };
 
-void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller)
+void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller);
 
 #endif // WIN32
 

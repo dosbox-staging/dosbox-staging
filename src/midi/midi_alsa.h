@@ -35,7 +35,8 @@ struct AlsaAddress {
 
 class MidiDeviceAlsa final : public MidiDevice {
 public:
-	MidiDeviceAlsa() : MidiDevice() {}
+	MidiDeviceAlsa(const char* conf);
+	~MidiDeviceAlsa() override;
 
 	// prevent copying
 	MidiDeviceAlsa(const MidiDeviceAlsa&) = delete;
@@ -51,9 +52,6 @@ public:
 	{
 		return MidiDevice::Type::External;
 	}
-
-	bool Open(const char* conf) override;
-	void Close() override;
 
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;

@@ -24,6 +24,8 @@
 
 #include "midi_device.h"
 
+#include "string_utils.h"
+
 #if C_COREAUDIO
 
 #include <AudioToolbox/AUGraph.h>
@@ -65,13 +67,6 @@
 
 class MidiDeviceCoreAudio final : public MidiDevice {
 public:
-	MidiDeviceCoreAudio()
-	        : MidiDevice(),
-	          m_auGraph(nullptr),
-	          m_synth(nullptr),
-	          soundfont(nullptr)
-	{}
-
 	std::string GetName() const override
 	{
 		return MidiDeviceName::CoreAudio;
@@ -82,12 +77,18 @@ public:
 		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char* conf) override
+	MidiDeviceCoreAudio(const char* conf)
+	        : MidiDevice(),
+	          m_auGraph(nullptr),
+	          m_synth(nullptr),
+	          soundfont(nullptr)
 	{
 		OSStatus status = 0;
 
 		if (m_auGraph) {
-			return false;
+			const auto msg = "MIDI:COREAUDIO: Error opening device";
+			LOG_WARNING("%s", msg);
+			throw std::runtime_error(msg);
 		}
 
 		// Open the Music Device.
@@ -175,27 +176,29 @@ public:
 				                           sizeof(url));
 				CFRelease(url);
 			} else {
-				LOG_WARNING("MIDI: Failed to allocate CFURLRef from  %s",
+				LOG_WARNING("MIDI:COREAUDIO: Failed to allocate CFURLRef from  %s",
 				            soundfont);
 			}
 #endif
 			if (!err) {
-				LOG_MSG("MIDI: coreaudio: loaded soundfont: %s",
+				LOG_MSG("MIDI:COREAUDIO: Loaded SoundFont '%s'",
 				        soundfont);
 			} else {
-				LOG_WARNING("MIDI: Error loading CoreAudio SoundFont %s",
-				            soundfont);
-				// after trying and failing to load a soundfont
+				// After trying and failing to load a SoundFont,
 				// it's better to fail initializing the
-				// CoreAudio driver or it might crash
-				return false;
+				// CoreAudio driver or it might crash.
+				//
+				const auto msg = format_str("MIDI:COREAUDIO: Error loading CoreAudio SoundFont '%s'",
+				                            soundfont);
+				LOG_WARNING("%s", msg.c_str());
+				throw std::runtime_error(msg);
 			}
 		}
 
 		// Finally: Start the graph!
 		RequireNoErr(AUGraphStart(m_auGraph));
 
-		return true;
+		return;
 
 	bail:
 		if (m_auGraph) {
@@ -203,10 +206,12 @@ public:
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = nullptr;
 		}
-		return false;
+		const auto msg = "MIDI:COREAUDIO: Error opening device";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
-	void Close() override
+	~MidiDeviceCoreAudio() override
 	{
 		if (m_auGraph) {
 			Reset();
