@@ -991,6 +991,7 @@ void CSerialModem::Timer2()
 			EnterIdleState();
 		}
 	}
+
 	// Handle incoming to the serial port
 	if (!commandmode && clientsocket && rqueue->left()) {
 		size_t usesize = rqueue->left() >= 16 ? 16 : rqueue->left();
@@ -1008,8 +1009,30 @@ void CSerialModem::Timer2()
 		}
 	}
 
+	// Discard any incoming traffic while in command mode
+	if (commandmode && clientsocket) {
+		// Read buffer size doesn't really matter, we just need big
+		// enough buffer to discard data decently quickly
+		size_t usesize = 80;
+		if (!clientsocket->ReceiveArray(tmpbuf, usesize)) {
+			SendRes(ResNOCARRIER);
+			LOG_INFO("SERIAL: No carrier on receive");
+			EnterIdleState();
+		}
+	}
+
+	// Discard any incoming traffic from the waiting client
+	if (waitingclientsocket) {
+		// Read buffer size doesn't really matter, we just need big
+		// enough buffer to discard data decently quickly
+		size_t usesize = 80;
+		if (!waitingclientsocket->ReceiveArray(tmpbuf, usesize)) {
+			EnterIdleState();
+		}
+	}
+
 	// Tick down warmup timer
-	if (clientsocket && warmup_remain_ticks) {
+	if (connected && warmup_remain_ticks) {
 		// Drop all incoming and outgoing traffic for a short period after
 		// answering a call. This is to simulate real modem behavior where
 		// the first packet is usually bad (extra data in the buffer from
