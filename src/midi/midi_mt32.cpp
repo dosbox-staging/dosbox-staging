@@ -1108,12 +1108,34 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void mt32_init([[maybe_unused]] Section* sec) {}
+static void mt32_init([[maybe_unused]] Section* sec)
+{
+	const auto device = MIDI_GetCurrentDevice();
+
+	if (device && device->GetName() == MidiDeviceName::Mt32) {
+		const auto mt32_device = dynamic_cast<MidiDeviceMt32*>(device);
+
+		const auto model_and_dir = mt32_device->GetModelAndDir();
+		const auto curr_model    = model_and_dir
+		                                 ? model_and_dir->first->GetName()
+		                                 : "";
+
+		const auto new_model = get_model_setting();
+
+		if (curr_model != new_model) {
+			MIDI_Init();
+		}
+	}
+}
 
 void MT32_AddConfigSection(const ConfigPtr& conf)
 {
+	constexpr auto ChangeableAtRuntime = true;
+
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("mt32", &mt32_init);
+	Section_prop* sec_prop = conf->AddSection_prop("mt32",
+	                                               &mt32_init,
+	                                               ChangeableAtRuntime);
 
 	assert(sec_prop);
 	init_mt32_dosbox_settings(*sec_prop);
