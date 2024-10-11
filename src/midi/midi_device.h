@@ -52,5 +52,6 @@ public:
 };
 
 void MIDI_Reset(MidiDevice* device);
+MidiDevice* MIDI_GetCurrentDevice();
 
 #endif // DOSBOX_MIDI_DEVICE_H

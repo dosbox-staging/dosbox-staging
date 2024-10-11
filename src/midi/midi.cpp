@@ -557,6 +557,11 @@ void MIDI_RawOutByte(const uint8_t data)
 	}
 }
 
+MidiDevice* MIDI_GetCurrentDevice()
+{
+	return midi.device.get();
+}
+
 void MIDI_Reset(MidiDevice* device)
 {
 	MidiMessage msg = {};
