@@ -205,7 +205,7 @@ void MidiDeviceAlsa::SendMidiMessage(const MidiMessage& msg)
 MidiDeviceAlsa::~MidiDeviceAlsa()
 {
 	if (seq_handle) {
-		Reset();
+		MIDI_Reset(this);
 		snd_seq_close(seq_handle);
 	}
 	seq = {};

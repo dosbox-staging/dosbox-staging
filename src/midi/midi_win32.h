@@ -123,7 +123,7 @@ public:
 
 	~MidiDeviceWin32() override
 	{
-		Reset();
+		MIDI_Reset(this);
 
 		midiOutClose(m_out);
 		CloseHandle(m_event);

@@ -58,7 +58,7 @@ MidiDeviceOss::MidiDeviceOss(const char* conf)
 
 MidiDeviceOss::~MidiDeviceOss()
 {
-	Reset();
+	MIDI_Reset(this);
 	close(device);
 }
 

@@ -557,7 +557,7 @@ void MIDI_RawOutByte(const uint8_t data)
 	}
 }
 
-void MidiDevice::Reset()
+void MIDI_Reset(MidiDevice* device)
 {
 	MidiMessage msg = {};
 
@@ -565,17 +565,17 @@ void MidiDevice::Reset()
 		msg[0] = MidiStatus::ControlChange | channel;
 
 		msg[1] = MidiChannelMode::AllNotesOff;
-		SendMidiMessage(msg);
+		device->SendMidiMessage(msg);
 
 		msg[1] = MidiChannelMode::ResetAllControllers;
-		SendMidiMessage(msg);
+		device->SendMidiMessage(msg);
 	}
 }
 
 void MIDI_Reset()
 {
 	if (MIDI_IsAvailable()) {
-		midi.device->Reset();
+		MIDI_Reset(midi.device.get());
 	}
 }
 
