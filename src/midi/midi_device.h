@@ -46,12 +46,7 @@ public:
 	virtual Type GetType() const        = 0;
 
 	virtual bool Open([[maybe_unused]] const char* conf) = 0;
-
-	virtual void Close()
-	{
-		Reset();
-	}
-
+	virtual void Close() = 0;
 	virtual void Reset();
 
 	virtual void SendMidiMessage([[maybe_unused]] const MidiMessage& msg) = 0;
