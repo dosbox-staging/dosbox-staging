@@ -35,14 +35,6 @@
 
 class MidiDeviceCoreMidi final : public MidiDevice {
 public:
-	MidiDeviceCoreMidi()
-	        : MidiDevice(),
-	          m_port(0),
-	          m_client(0),
-	          m_endpoint(0),
-	          m_pCurPacket(nullptr)
-	{}
-
 	std::string GetName() const override
 	{
 		return MidiDeviceName::CoreMidi;
@@ -53,7 +45,12 @@ public:
 		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char* conf) override
+	MidiDeviceCoreMidi(const char* conf)
+	        : MidiDevice(),
+	          m_port(0),
+	          m_client(0),
+	          m_endpoint(0),
+	          m_pCurPacket(nullptr)
 	{
 		// Get the MIDIEndPoint
 		m_endpoint = 0;
@@ -113,21 +110,21 @@ public:
 		MIDIClientCreate(CFSTR("MyClient"), nullptr, nullptr, &m_client);
 
 		if (!m_client) {
-			LOG_MSG("MIDI:COREMIDI: No client created.");
-			return false;
+			const auto msg = "MIDI:COREMIDI: No client created";
+			LOG_WARNING("%s", msg);
+			throw std::runtime_error(msg);
 		}
 
 		MIDIOutputPortCreate(m_client, CFSTR("MyOutPort"), &m_port);
 
 		if (!m_port) {
-			LOG_MSG("MIDI:COREMIDI: No port created.");
-			return false;
+			const auto msg = "MIDI:COREMIDI: No port created";
+			LOG_WARNING("%s", msg);
+			throw std::runtime_error(msg);
 		}
-
-		return true;
 	}
 
-	void Close() override
+	~MidiDeviceCoreMidi() override
 	{
 		if (m_port && m_client) {
 			Reset();

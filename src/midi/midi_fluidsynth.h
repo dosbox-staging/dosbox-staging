@@ -38,8 +38,9 @@
 
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
-	MidiDeviceFluidSynth() = default;
+	MidiDeviceFluidSynth();
 	~MidiDeviceFluidSynth() override;
+
 	void PrintStats();
 
 	std::string GetName() const override
@@ -51,9 +52,6 @@ public:
 	{
 		return MidiDevice::Type::BuiltIn;
 	}
-
-	bool Open(const char* conf) override;
-	void Close() override;
 
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
@@ -90,7 +88,6 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
 };
 
 void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);

@@ -42,8 +42,6 @@
 #include "string_utils.h"
 #include "support.h"
 
-MidiDeviceFluidSynth instance;
-
 constexpr auto SoundFontExtension = ".sf2";
 
 static void init_fluid_dosbox_settings(Section_prop& secprop)
@@ -258,15 +256,14 @@ static Section_prop* get_fluidsynth_section()
 	return sec;
 }
 
-bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
+MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
-	Close();
-
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
 	                                     delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_WARNING("FSYNTH: new_fluid_settings failed");
-		return false;
+		const auto msg = "FSYNTH: new_fluid_settings failed";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	auto* section = get_fluidsynth_section();
@@ -285,8 +282,9 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                          delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
-		return false;
+		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer.";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	// Load the requested SoundFont or quit if none provided
@@ -303,9 +301,10 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		            sf_filename.c_str());
-		return false;
+		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
+		                            sf_filename.c_str());
+		LOG_WARNING("%s", msg.c_str());
+		throw std::runtime_error(msg);
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 800) {
@@ -600,22 +599,11 @@ bool MidiDeviceFluidSynth::Open([[maybe_unused]] const char* conf)
 	set_thread_name(renderer, "dosbox:fsynth");
 
 	// Start playback
-	is_open = true;
 	MIXER_UnlockMixerThread();
-	return true;
 }
 
 MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
-	Close();
-}
-
-void MidiDeviceFluidSynth::Close()
-{
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("FSYNTH: Shutting down");
 
 	MIXER_LockMixerThread();
@@ -655,7 +643,6 @@ void MidiDeviceFluidSynth::Close()
 	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
 
-	is_open = false;
 	MIXER_UnlockMixerThread();
 }
 

@@ -89,48 +89,76 @@ uint8_t MIDI_message_len_by_status[256] = {
 #include "midi_alsa.h"
 #endif
 
-static std::list<std::unique_ptr<MidiDevice>> handlers = {};
-
-static void deregister_handlers()
+static std::unique_ptr<MidiDevice> create_device(const std::string& name,
+                                                 const std::string& config)
 {
-	handlers.clear();
-}
+	using namespace MidiDeviceName;
 
-static void register_handlers()
-{
-	deregister_handlers();
-
+	// Internal MIDI synths
 #if C_FLUIDSYNTH
-	handlers.emplace_back(std::make_unique<MidiDeviceFluidSynth>());
+	if (name == FluidSynth) {
+		return std::make_unique<MidiDeviceFluidSynth>();
+	}
 #endif
 #if C_MT32EMU
-	handlers.emplace_back(std::make_unique<MidiDeviceMt32>());
+	if (name == Mt32) {
+		return std::make_unique<MidiDeviceMt32>();
+	}
 #endif
+
+	// External MIDI devices
 #if C_COREMIDI
-	handlers.emplace_back(std::make_unique<MidiDeviceCoreMidi>());
+	if (name == CoreMidi) {
+		return std::make_unique<MidiDeviceCoreMidi>(config.c_str());
+	}
 #endif
 #if C_COREAUDIO
-	handlers.emplace_back(std::make_unique<MidiDeviceCoreAudio>());
+	if (name == CoreAudio) {
+		return std::make_unique<MidiDeviceCoreAudio>(config.c_str());
+	}
 #endif
 #if defined(WIN32)
-	handlers.emplace_back(std::make_unique<MidiDeviceWin32>());
+	if (name == Win32) {
+		return std::make_unique<MidiDeviceWin32>(config.c_str());
+	}
 #endif
 #if C_ALSA
-	handlers.emplace_back(std::make_unique<MidiDeviceAlsa>());
+	if (name == Alsa) {
+		return std::make_unique<MidiDeviceAlsa>(config.c_str());
+	}
 #endif
 #if defined(LINUX)
-	handlers.emplace_back(std::make_unique<MidiDeviceOss>());
+	if (name == Oss) {
+		return std::make_unique<MidiDeviceOss>(config.c_str());
+	}
 #endif
+
+	// Device not found
+	return {};
 }
 
-MidiDevice* get_handler(const std::string_view name)
+static std::vector<const char*> auto_device_candidates = {MidiDeviceName::Alsa,
+                                                          MidiDeviceName::Oss,
+                                                          MidiDeviceName::CoreAudio,
+                                                          MidiDeviceName::CoreMidi,
+                                                          MidiDeviceName::Win32};
+
+static std::unique_ptr<MidiDevice> try_create_auto_device(const std::string& config)
 {
-	for (const auto& handler : handlers) {
-		if (handler->GetName() == name) {
-			return handler.get();
+	for (const auto device_name : auto_device_candidates) {
+		try {
+			if (auto device = create_device(device_name, config); device) {
+				return device;
+			}
+			// nullptr means the device is not supported on
+			// the current platform; try the next one
+
+		} catch (const std::runtime_error& ex) {
+			// error opening device; try the next one
+			continue;
 		}
 	}
-	return nullptr;
+	return {};
 }
 
 struct Midi {
@@ -153,15 +181,15 @@ struct Midi {
 		int64_t start_ms = 0;
 	} sysex = {};
 
-	bool is_available   = false;
-	bool is_muted       = false;
-	MidiDevice* handler = nullptr;
+	bool is_muted = false;
+
+	std::unique_ptr<MidiDevice> device = nullptr;
 };
 
 static Midi midi                    = {};
 static bool raw_midi_output_enabled = {};
 
-constexpr auto MaxChannelVolumen = 127;
+constexpr auto MaxChannelVolume = 127;
 
 // Keep track of the state of the MIDI device (e.g. channel volumes and which
 // notes are currently active on each channel).
@@ -175,7 +203,7 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
-		channel_volume_tracker.fill(MaxChannelVolumen);
+		channel_volume_tracker.fill(MaxChannelVolume);
 	}
 
 	void UpdateState(const MidiMessage& msg)
@@ -213,7 +241,7 @@ public:
 	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
 	{
 		assert(channel <= NumMidiChannels);
-		assert(volume <= MaxChannelVolumen);
+		assert(volume <= MaxChannelVolume);
 
 		channel_volume_tracker[channel] = volume;
 	}
@@ -294,7 +322,7 @@ uint8_t get_midi_channel(const uint8_t channel_status)
 
 static bool is_external_midi_device()
 {
-	return midi.handler->GetType() == MidiDevice::Type::External;
+	return midi.device->GetType() == MidiDevice::Type::External;
 }
 
 static void output_note_off_for_active_notes(const uint8_t channel)
@@ -318,7 +346,7 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 				                    NoteOffMsgLen,
 				                    msg.data.data());
 			}
-			midi.handler->SendMidiMessage(msg);
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 }
@@ -372,7 +400,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 
 void MIDI_RawOutByte(const uint8_t data)
 {
-	if (!midi.is_available) {
+	if (!MIDI_IsAvailable()) {
 		return;
 	}
 
@@ -386,7 +414,7 @@ void MIDI_RawOutByte(const uint8_t data)
 	const auto is_realtime_message = (data >= MidiStatus::TimingClock);
 	if (is_realtime_message) {
 		midi.realtime_message[0] = data;
-		midi.handler->SendMidiMessage(midi.realtime_message);
+		midi.device->SendMidiMessage(midi.realtime_message);
 		return;
 	}
 
@@ -418,8 +446,8 @@ void MIDI_RawOutByte(const uint8_t data)
 				        midi.sysex.pos,
 				        midi.sysex.delay_ms);
 #endif
-				midi.handler->SendSysExMessage(midi.sysex.buf,
-				                               midi.sysex.pos);
+				midi.device->SendSysExMessage(midi.sysex.buf,
+				                              midi.sysex.pos);
 
 				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {
@@ -521,7 +549,7 @@ void MIDI_RawOutByte(const uint8_t data)
 
 			// 5. Send the MIDI message to the device for playback
 			if (play_msg) {
-				midi.handler->SendMidiMessage(midi.message.msg);
+				midi.device->SendMidiMessage(midi.message.msg);
 			}
 
 			midi.message.pos = 1; // Use Running Status
@@ -546,14 +574,14 @@ void MidiDevice::Reset()
 
 void MIDI_Reset()
 {
-	if (midi.is_available) {
-		midi.handler->Reset();
+	if (MIDI_IsAvailable()) {
+		midi.device->Reset();
 	}
 }
 
 void MIDI_Mute()
 {
-	if (!midi.is_available || midi.is_muted) {
+	if (!MIDI_IsAvailable() || midi.is_muted) {
 		return;
 	}
 
@@ -562,8 +590,9 @@ void MIDI_Mute()
 
 		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
 		     ++channel) {
+
 			msg[0] = MidiStatus::ControlChange | channel;
-			midi.handler->SendMidiMessage(msg);
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 
@@ -572,7 +601,7 @@ void MIDI_Mute()
 
 void MIDI_Unmute()
 {
-	if (!midi.is_available || !midi.is_muted) {
+	if (!MIDI_IsAvailable() || !midi.is_muted) {
 		return;
 	}
 
@@ -581,9 +610,11 @@ void MIDI_Unmute()
 
 		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
 		     ++channel) {
+
 			msg[0] = MidiStatus::ControlChange | channel;
 			msg[2] = midi_state.GetChannelVolume(channel);
-			midi.handler->SendMidiMessage(msg);
+
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 
@@ -592,28 +623,42 @@ void MIDI_Unmute()
 
 bool MIDI_IsAvailable()
 {
-	return midi.is_available;
+	return (midi.device != nullptr);
+}
+
+static Section_prop* get_midi_section()
+{
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	assert(sec);
+
+	return sec;
+}
+
+static std::string get_mididevice_setting()
+{
+	return get_midi_section()->Get_string("mididevice");
 }
 
 // We'll adapt the RtMidi library, eventually, so hold off any substantial
 // rewrites on the MIDI stuff until then to unnecessary work.
 class MIDI final {
 public:
-	MIDI(Section* configuration)
+	MIDI()
 	{
-		Section_prop* section = static_cast<Section_prop*>(configuration);
+		const auto device_pref = get_mididevice_setting();
 
-		const std::string device_choice = section->Get_string("mididevice");
-
-		midi = Midi{};
+		midi = {};
 
 		// Has the user disable MIDI?
-		if (const auto device_has_bool = parse_bool_setting(device_choice);
+		if (const auto device_has_bool = parse_bool_setting(device_pref);
 		    device_has_bool && *device_has_bool == false) {
 			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
 			return;
 		}
 
+		const auto section      = get_midi_section();
 		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
@@ -625,55 +670,20 @@ public:
 		}
 
 		trim(midiconfig_prefs);
-		const char* midiconfig = midiconfig_prefs.c_str();
+		const auto midiconfig_pref = midiconfig_prefs.c_str();
 
-		auto open_handler = [&](MidiDevice* handler) -> bool {
-			const auto opened = handler && handler->Open(midiconfig);
-			if (opened) {
-				midi.is_available = true;
-				midi.handler      = handler;
-				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName().c_str());
-			}
-			return opened;
-		};
-
-		register_handlers();
-
-		if (device_choice == "auto") {
+		if (device_pref == "auto") {
 			// Use the first working device
-			for (const auto& handler : handlers) {
-				// FluidSynth or MT-32 are opt-in only
-				if (!(handler->GetName() == MidiDeviceName::FluidSynth ||
-				      handler->GetName() == MidiDeviceName::Mt32)) {
-					if (open_handler(handler.get())) {
-						break;
-					}
-				}
-			}
+			midi.device = try_create_auto_device(midiconfig_pref);
+
 		} else {
-			open_handler(get_handler(device_choice));
+			midi.device = create_device(device_pref, midiconfig_pref);
 		}
 
-		if (!midi.is_available) {
-			LOG_MSG("MIDI: Can't find device: '%s', MIDI is not available",
-			        device_choice.c_str());
+		if (midi.device) {
+			LOG_MSG("MIDI: Opened device '%s'",
+			        midi.device->GetName().c_str());
 		}
-	}
-
-	~MIDI()
-	{
-		if (!midi.is_available) {
-			assert(!midi.handler);
-			return;
-		}
-
-		assert(midi.handler);
-		midi.handler->Close();
-		midi.handler      = {};
-		midi.is_available = false;
-
-		deregister_handlers();
 	}
 };
 
@@ -685,12 +695,14 @@ void MIDI_ListDevices(Program* caller)
 		caller->WriteOut(color.c_str(), device_name.c_str());
 	};
 
-	const std::string device_name = midi.handler ? midi.handler->GetName() : "";
+	auto device_ptr = midi.device.get();
+
+	const std::string device_name = midi.device ? midi.device->GetName() : "";
 #if C_FLUIDSYNTH
 	write_device_name(MidiDeviceName::FluidSynth);
 
 	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
-	                           ? dynamic_cast<MidiDeviceFluidSynth*>(midi.handler)
+	                           ? dynamic_cast<MidiDeviceFluidSynth*>(device_ptr)
 	                           : nullptr,
 
 	                   caller);
@@ -699,7 +711,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::Mt32);
 
 	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
-	                         ? dynamic_cast<MidiDeviceMt32*>(midi.handler)
+	                         ? dynamic_cast<MidiDeviceMt32*>(device_ptr)
 	                         : nullptr,
 	                 caller);
 #endif
@@ -707,7 +719,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::CoreMidi);
 
 	COREMIDI_ListDevices((device_name == MidiDeviceName::CoreMidi)
-	                             ? dynamic_cast<MidiDeviceCoreMidi*>(midi.handler)
+	                             ? dynamic_cast<MidiDeviceCoreMidi*>(device_ptr)
 	                             : nullptr,
 	                     caller);
 #endif
@@ -715,7 +727,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::CoreAudio);
 
 	COREAUDIO_ListDevices((device_name == MidiDeviceName::CoreAudio)
-	                              ? dynamic_cast<MidiDeviceCoreAudio*>(midi.handler)
+	                              ? dynamic_cast<MidiDeviceCoreAudio*>(device_ptr)
 	                              : nullptr,
 	                      caller);
 #endif
@@ -723,7 +735,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::Win32);
 
 	MIDI_WIN32_ListDevices((device_name == MidiDeviceName::Win32)
-	                               ? dynamic_cast<MidiDeviceWin32*>(midi.handler)
+	                               ? dynamic_cast<MidiDeviceWin32*>(device_ptr)
 	                               : nullptr,
 	                       caller);
 #endif
@@ -731,7 +743,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::Alsa);
 
 	ALSA_ListDevices((device_name == MidiDeviceName::Alsa)
-	                         ? dynamic_cast<MidiDeviceAlsa*>(midi.handler)
+	                         ? dynamic_cast<MidiDeviceAlsa*>(device_ptr)
 	                         : nullptr,
 	                 caller);
 #endif
@@ -739,7 +751,7 @@ void MIDI_ListDevices(Program* caller)
 	write_device_name(MidiDeviceName::Oss);
 
 	MIDI_OSS_ListDevices((device_name == MidiDeviceName::Oss)
-	                             ? dynamic_cast<MidiDeviceOss*>(midi.handler)
+	                             ? dynamic_cast<MidiDeviceOss*>(device_ptr)
 	                             : nullptr,
 	                     caller);
 #endif
@@ -747,27 +759,53 @@ void MIDI_ListDevices(Program* caller)
 
 static std::unique_ptr<MIDI> midi_instance = nullptr;
 
-static void midi_init(Section* sec)
+static void midi_init([[maybe_unused]] Section* sec)
 {
-	assert(sec);
+	// Retry loop
+	for (;;) {
+		MPU401_Destroy();
+		MPU401_Init();
 
-	MPU401_Destroy();
-	MPU401_Init();
+		midi_instance.reset();
 
-	midi_instance.reset();
-	midi_instance = std::make_unique<MIDI>(sec);
+		try {
+			midi_instance = std::make_unique<MIDI>();
+			midi_state.Reset();
 
-	midi_state.Reset();
+			// A MIDI device has been successfully initialised
+			return;
+
+		} catch (const std::runtime_error& ex) {
+			const auto mididevice_pref = get_mididevice_setting();
+			if (mididevice_pref == "auto") {
+				LOG_WARNING(
+						"MIDI: Error opening device '%s'; "
+						"MIDI auto-discovery failed, "
+						"using 'mididevice = none' and disabling MIDI output",
+						mididevice_pref.c_str());
+
+				set_section_property_value("midi", "mididevice", "none");
+
+				// 'mididevice = auto' didn't work out; we disable the MIDI
+				// output and bail out.
+				return;
+
+			} else {
+				// If 'mididevice' was set to a concrete value and the
+				// device could not be initialiased, we'll try 'auto' as a
+				// fallback.
+				LOG_WARNING("MIDI: Error opening device '%s'; using 'auto'",
+							mididevice_pref.c_str());
+
+				set_section_property_value("midi", "mididevice", "auto");
+			}
+		}
+	}
 }
 
 void MIDI_Init()
 {
-	assert(control);
-
-	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
-	assert(sec);
-
-	midi_init(sec);
+	midi_init(get_midi_section());
 }
 
 void init_midi_dosbox_settings(Section_prop& secprop)

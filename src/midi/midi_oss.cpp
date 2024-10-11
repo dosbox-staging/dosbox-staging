@@ -33,17 +33,8 @@
 
 #define SEQ_MIDIPUTC 5
 
-MidiDeviceOss::~MidiDeviceOss()
+MidiDeviceOss::MidiDeviceOss(const char* conf)
 {
-	if (is_open) {
-		close(device);
-	}
-}
-
-bool MidiDeviceOss::Open(const char* conf)
-{
-	Close();
-
 	char devname[512];
 	safe_strcpy(devname, (is_empty(conf) ? "/dev/sequencer" : conf));
 	char* devfind = strrchr(devname, ',');
@@ -57,20 +48,18 @@ bool MidiDeviceOss::Open(const char* conf)
 
 	device = open(devname, O_WRONLY, 0);
 
-	is_open = (device >= 0);
-	return is_open;
+	const auto is_open = (device >= 0);
+	if (!is_open) {
+		const auto msg = "MIDI:OSS: Error opening device";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
+	}
 }
 
-void MidiDeviceOss::Close()
+MidiDeviceOss::~MidiDeviceOss()
 {
-	if (!is_open) {
-		return;
-	}
-
 	Reset();
-
 	close(device);
-	is_open = false;
 }
 
 void MidiDeviceOss::SendMidiMessage(const MidiMessage& msg)

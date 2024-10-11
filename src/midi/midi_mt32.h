@@ -52,11 +52,8 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
 
 class MidiDeviceMt32 final : public MidiDevice {
 public:
-	MidiDeviceMt32() = default;
+	MidiDeviceMt32();
 	~MidiDeviceMt32() override;
-
-	bool Open(const char* conf) override;
-	void Close() override;
 
 	std::string GetName() const override
 	{
@@ -101,7 +98,6 @@ private:
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
 };
 
 void MT32_ListDevices(MidiDeviceMt32* device, Program* caller);

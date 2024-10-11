@@ -137,7 +137,7 @@ bool LASynthModel::Load(MT32Emu::Service& service, const std_fs::path& dir) cons
 			return false;
 		}
 		const auto rcode = service.addROMFile(rom_path->string().c_str());
-		return rcode == expected_code;
+		return (rcode == expected_code);
 	};
 
 	auto load_both = [&](const Rom* rom_1,
@@ -155,7 +155,7 @@ bool LASynthModel::Load(MT32Emu::Service& service, const std_fs::path& dir) cons
 		const auto rcode = service.mergeAndAddROMFiles(
 		        rom_1_path->string().c_str(), rom_2_path->string().c_str());
 
-		return rcode == expected_code;
+		return (rcode == expected_code);
 	};
 
 	const bool loaded_pcm = load_rom(pcm_full, MT32EMU_RC_ADDED_PCM_ROM) ||
