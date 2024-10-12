@@ -32,7 +32,6 @@ constexpr auto CoreAudio  = "coreaudio";
 constexpr auto CoreMidi   = "coremidi";
 constexpr auto FluidSynth = "fluidsynth";
 constexpr auto Mt32       = "mt32";
-constexpr auto Oss        = "oss";
 constexpr auto Win32      = "win32";
 } // namespace MidiDeviceName
 

@@ -82,9 +82,8 @@ uint8_t MIDI_message_len_by_status[256] = {
 
 #elif defined(WIN32)
 #include "midi_win32.h"
-#else
-#include "midi_oss.h"
 #endif
+
 #if C_ALSA
 #include "midi_alsa.h"
 #endif
@@ -127,18 +126,12 @@ static std::unique_ptr<MidiDevice> create_device(const std::string& name,
 		return std::make_unique<MidiDeviceAlsa>(config.c_str());
 	}
 #endif
-#if defined(LINUX)
-	if (name == Oss) {
-		return std::make_unique<MidiDeviceOss>(config.c_str());
-	}
-#endif
 
 	// Device not found
 	return {};
 }
 
 static std::vector<const char*> auto_device_candidates = {MidiDeviceName::Alsa,
-                                                          MidiDeviceName::Oss,
                                                           MidiDeviceName::CoreAudio,
                                                           MidiDeviceName::CoreMidi,
                                                           MidiDeviceName::Win32};
@@ -694,13 +687,13 @@ public:
 
 void MIDI_ListDevices(Program* caller)
 {
-	auto write_device_name = [&](const std::string& device_name) {
+	[[maybe_unused]] auto write_device_name = [&](const std::string& device_name) {
 		const auto color = convert_ansi_markup("[color=white]%s:[reset]\n");
 
 		caller->WriteOut(color.c_str(), device_name.c_str());
 	};
 
-	auto device_ptr = midi.device.get();
+	[[maybe_unused]] auto device_ptr = midi.device.get();
 
 	const std::string device_name = midi.device ? midi.device->GetName() : "";
 #if C_FLUIDSYNTH
@@ -752,14 +745,6 @@ void MIDI_ListDevices(Program* caller)
 	                         : nullptr,
 	                 caller);
 #endif
-#if defined(LINUX)
-	write_device_name(MidiDeviceName::Oss);
-
-	MIDI_OSS_ListDevices((device_name == MidiDeviceName::Oss)
-	                             ? dynamic_cast<MidiDeviceOss*>(device_ptr)
-	                             : nullptr,
-	                     caller);
-#endif
 }
 
 static std::unique_ptr<MIDI> midi_instance = nullptr;
@@ -784,23 +769,23 @@ static void midi_init([[maybe_unused]] Section* sec)
 			const auto mididevice_pref = get_mididevice_setting();
 			if (mididevice_pref == "auto") {
 				LOG_WARNING(
-						"MIDI: Error opening device '%s'; "
-						"MIDI auto-discovery failed, "
-						"using 'mididevice = none' and disabling MIDI output",
-						mididevice_pref.c_str());
+				        "MIDI: Error opening device '%s'; "
+				        "MIDI auto-discovery failed, "
+				        "using 'mididevice = none' and disabling MIDI output",
+				        mididevice_pref.c_str());
 
 				set_section_property_value("midi", "mididevice", "none");
 
-				// 'mididevice = auto' didn't work out; we disable the MIDI
-				// output and bail out.
+				// 'mididevice = auto' didn't work out; we
+				// disable the MIDI output and bail out.
 				return;
 
 			} else {
-				// If 'mididevice' was set to a concrete value and the
-				// device could not be initialiased, we'll try 'auto' as a
-				// fallback.
+				// If 'mididevice' was set to a concrete value
+				// and the device could not be initialiased,
+				// we'll try 'auto' as a fallback.
 				LOG_WARNING("MIDI: Error opening device '%s'; using 'auto'",
-							mididevice_pref.c_str());
+				            mididevice_pref.c_str());
 
 				set_section_property_value("midi", "mididevice", "auto");
 			}
@@ -832,9 +817,6 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	str_prop->SetOptionHelp(MidiDeviceName::Win32,
 	                        "  win32:       Use the Win32 MIDI playback interface.");
 
-	str_prop->SetOptionHelp(MidiDeviceName::Oss,
-	                        "  oss:         Use the Linux OSS MIDI playback interface.");
-
 	str_prop->SetOptionHelp(MidiDeviceName::Alsa,
 	                        "  alsa:        Use the Linux ALSA MIDI playback interface.");
 
@@ -865,8 +847,6 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 #endif
 #elif defined(WIN32)
 		        MidiDeviceName::Win32,
-#else
-		        MidiDeviceName::Oss,
 #endif
 #if C_ALSA
 		        MidiDeviceName::Alsa,

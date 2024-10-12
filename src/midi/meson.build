@@ -6,7 +6,6 @@ libmidi_sources = [
     'midi_fluidsynth.cpp',
     'midi_lasynth_model.cpp',
     'midi_mt32.cpp',
-    'midi_oss.cpp',
     'midi_win32.cpp',
 ]
 
