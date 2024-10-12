@@ -26,7 +26,9 @@
 
 class MidiDeviceOss final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
 	MidiDeviceOss(const char* conf);
+
 	~MidiDeviceOss() override;
 
 	// prevent copying

@@ -44,6 +44,7 @@
 
 class MidiDeviceWin32 final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
 	MidiDeviceWin32(const char* conf)
 	{
 		m_event      = CreateEvent(nullptr, true, true, nullptr);

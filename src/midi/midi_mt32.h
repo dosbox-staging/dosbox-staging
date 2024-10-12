@@ -52,7 +52,10 @@ static_assert(MT32EMU_VERSION_MAJOR > 2 ||
 
 class MidiDeviceMt32 final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
+	// (e.g., the requested MT-32 ROM cannot be loaded).
 	MidiDeviceMt32();
+
 	~MidiDeviceMt32() override;
 
 	std::string GetName() const override

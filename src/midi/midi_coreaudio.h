@@ -67,6 +67,7 @@
 
 class MidiDeviceCoreAudio final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
 	MidiDeviceCoreAudio(const char* conf)
 	        : MidiDevice(),
 	          m_auGraph(nullptr),

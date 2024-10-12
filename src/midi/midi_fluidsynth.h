@@ -38,7 +38,10 @@
 
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
+	// (e.g., the requested SoundFont cannot be loaded).
 	MidiDeviceFluidSynth();
+
 	~MidiDeviceFluidSynth() override;
 
 	void PrintStats();

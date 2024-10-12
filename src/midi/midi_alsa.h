@@ -35,7 +35,9 @@ struct AlsaAddress {
 
 class MidiDeviceAlsa final : public MidiDevice {
 public:
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
 	MidiDeviceAlsa(const char* conf);
+
 	~MidiDeviceAlsa() override;
 
 	// prevent copying
