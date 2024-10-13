@@ -23,9 +23,9 @@ with their default values and a short description for each.
 
 For example, this is the start of the description of the `viewport` setting:
 
-    Set the viewport size (maximum drawable area). The video output is always
-    contained within the viewport while taking the configured aspect ratio into
-    account (see 'aspect'). Possible values:
+    Set the viewport size ('fit' by default). This is the maximum drawable area;
+    the video output is always contained within the viewport while taking the
+    configured aspect ratio into account (see 'aspect'). Possible values:
       fit:          Fit the viewport into the available window/screen (default).
                     There might be padding (black areas) around the image with
                     'integer_scaling' enabled.
@@ -33,6 +33,8 @@ For example, this is the start of the description of the `viewport` setting:
                     (e.g., 960x720). The specified size must not be larger than
                     the desktop. If it's larger than the window size, it's
                     scaled to fit within the window.
+      N%:           Similar to 'WxH' but the size is specified as a percentage
+                    of the desktop size.
       ...
 
 Here are the locations of `dosbox-staging.conf` on each platform:
@@ -59,27 +61,20 @@ If you know the exact name of a configuration setting, you can display its
 explanatory text using the built-in `config` command. The invocation is
 `config -h <setting_name>`. 
 
-However, if the description is longer than what can fit into a single screen,
-this is not too fruitful as the `config` command will effectively only display
-the last page. In such cases, we can "pipe" the output of the `config` command
-through the `more` command that will paginate the preceding command's output.
-For example, this is how to display the description of the `viewport` setting
-which is rather long:
-
-    config -h viewport | more
-
-The `|` is called the "pipe" character---how fitting! You can type it by
-pressing ++shift+backslash++, which is located above the ++enter++ key on the
-standard US keyboard.
-
-This is how the output of the command looks like:
+Let's see what `config -h viewport` gives us!
 
 ![Displaying the description of a config setting using the 'config' command](https://www.dosbox-staging.org/static/images/getting-started/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
 
-When piping the output through `more`, you can press ++space++ to go to the
-next page, ++enter++ to advance to the next line, or ++q++ to quit the viewer,
-as the bottom line indicates. The viewer will also automatically quit once
-we've reached the end of the output.
+That's a quite handy online help system, isn't it? As the bottom line
+indicates, you can press ++space++ to go to the next page, ++enter++ to
+advance to the next line, or ++q++ to quit the help viewer. The help viewer
+will also automatically quit once we've reached the end of the output.
+
+You can run `config -h <section_name>`, too, to get the names of all available
+settings in a given config section. For example, this is the result of `config
+-h render`:
+
+TODO screenshot
 
 It is highly recommended to look up the descriptions of the various settings
 as you encounter them in this guide. That's a good way to get gradually
@@ -150,9 +145,17 @@ But there's also a `README.TXT`, so let's check that one out first!
 
 We can try displaying its contents with the `type README.TXT` command
 (remember, use tab-completion), but we'll only see the end of the file that
-way because it's longer than a single page. Good thing we've just learned
-about the `more` command, so let's put it to good use by executing the
-following:
+way because it's longer than a single page. The `type` command prints out the
+entire contents of the file, which will cause the screen to scroll, so we'll
+effectively only see the last page. Yep, that's DOS for you!
+
+Fortunately, there is a way to fix this: we can "pipe" the output of the `type` command
+through the `more` command that will paginate the preceding command's output,
+just like the `config` command does. The `|` is called the "pipe" character---how fitting! You can
+type it by pressing ++shift+backslash++, which is located above the ++enter++
+key on the standard US keyboard.
+
+Okay, so let's try it! 
 
     type README.TXT | more
 
@@ -594,26 +597,27 @@ The below screenshots illustrate the difference between the "true EGA" and
 </div>
 
 
-!!! note "On recolouring the classics"
+!!! info "On recolouring the classics"
 
-    Some adventure games that originally supported EGA graphics only also got
-    later VGA remakes. While many of these VGA versions are competent, they
-    rarely reach the artistic genius of the EGA originals, plus often they
-    don't have the exact same gameplay either. This is especially true for the
-    three classic LucasArts games included in this demo collection. You can
-    check out the comparison and analysis of the EGA versus VGA versions of
-    **Indiana Jones and the Last Crusade** and **Loom**
+    Some adventure games that originally supported EGA graphics only got later
+    VGA remakes. While many of these VGA versions are competent, they rarely
+    reach the artistic genius of the EGA originals, plus often they don't have
+    the exact same gameplay either. This is especially true for the three
+    classic LucasArts games included in this demo collection. Check out the
+    comparison and analysis of the EGA versus VGA versions of **Indiana Jones
+    and the Last Crusade** and **Loom**
     [here](https://www.superrune.com/tutorials/lucasfilm_ega.php).
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
     Brian Moriatry, the creator of **Loom**, shares his opinion about the VGA
     remake of the game (he calls it "an abomination", so apparently he's quite
-    unimpressed...)
+    unimpressed...) Note that about one third of the original game's dialogue
+    had been cut from the VGA remake.
 
     In any case, the point here is it would be a mistake to outright dismiss
-    the original EGA experiences, thinking they are "inferior" somehow. Even
+    the original EGA games, thinking they are "inferior" somehow. Even
     if you might prefer the VGA remakes in the end, you should at least give
-    the EGA originals a chance.
+    the EGA versions a chance to experience the creators' original vision.
 
 
 ## Authentic image size
@@ -643,6 +647,8 @@ The rationale behind the "magic 89% value" is explained in detail in the last
 ## CPU sensitive games
 
 Certain older games, such as these three demos, are sensitive to CPU speed.
+
+
 This can manifest in different ways:
 
 - The game may run too fast or may generally act weird if the emulated CPU is
@@ -655,20 +661,20 @@ This game falls into the second category. Note we're talking about the speed
 of the *emulated CPU* here, not the speed of the physical CPU in your
 computer!
 
-DOSBox defaults to emulating 3000 CPU instructions, or *cycles*, per
+DOSBox defaults to emulating 3000 CPU instructions, or *CPU cycles*, per
 millisecond. For the more technically inclined among you, this corresponds to
 ~3 MIPS (Million Instructions Per Second). When running in windowed mode, the
 text in the title bar informs you about the current cycles value, e.g.:
 
 ```
-DOSBOX - 3000 cycles/ms
+DOSBox Staging - 3000 cycles/ms - to capture the mouse press...
 ```
 
 Let's see what happens if we double the emulated CPU speed!
 
 ```ini
 [cpu]
-cycles = 6000
+cpu_cycles = 6000
 ```
 
 Now we're greeted by an error when trying to start the game:
@@ -680,9 +686,18 @@ run-time error R6003
 C:\>
 ```
 
+These problems happen because the game's creators did not anticipate the
+massive advancements in consumer CPU technology that started at the beginning
+of the 1990s (CPU power roughly doubling every three years). This is not too
+surprising as this is a 1990 release. Later DOS games tended to be more
+resilient to wildly varying CPU speeds as more programmers became aware of the
+issue, but many games from the 1980s and the early 90s are affected.
+
 We will discuss the CPU speed settings in more detail
 [in the next chapter](beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed),
 but it was worth mentioning this interesting quirk here.
+
+
 
 
 ## Final configuration
