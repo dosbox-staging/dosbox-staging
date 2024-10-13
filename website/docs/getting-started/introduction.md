@@ -89,7 +89,7 @@ Accept the default installer options; this will give you a handy *Open with
 Notepad++* right-click context menu entry in Windows Explorer.
 
 <figure markdown>
-  ![Editing a DOSBox configuration file in Notepad++](https://archive.org/download/dosbox-staging-getting-started-guide-assets/notepad++.png){ loading=lazy }
+  ![Editing a DOSBox configuration file in Notepad++](https://www.dosbox-staging.org/static/images/getting-started/notepad++.png){ loading=lazy }
 </figure>
 
 
@@ -106,7 +106,7 @@ for macOS which is perfect for the job.
     the status bar).
 
 <figure markdown>
-  ![Editing a DOSBox configuration file in TextMate](https://archive.org/download/dosbox-staging-getting-started-guide-assets/textmate.png){ loading=lazy }
+  ![Editing a DOSBox configuration file in TextMate](https://www.dosbox-staging.org/static/images/getting-started/textmate.png){ loading=lazy }
 </figure>
 
 
