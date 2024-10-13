@@ -90,7 +90,7 @@ that was included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
 
-![Beneath a Steel Sky folder structure](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-tree.png){ .skip-lightbox style="width: 12.4rem; margin: 0.9rem max(calc((50% - 12.4rem/2) * 0.85), 0rem);" }
+![Beneath a Steel Sky folder structure](https://www.dosbox-staging.org/static/images/getting-started/bass-tree.png){ .skip-lightbox style="width: 12.4rem; margin: 0.9rem max(calc((50% - 12.4rem/2) * 0.85), 0rem);" }
 
 We need to mount the CD image to be able to use it. Our C drive is the hard
 drive, so we'll mount the CD-ROM image as the next letter D by convention.
@@ -189,7 +189,7 @@ any key or wait a few seconds to progress to the second screen where you'll need
 to select the installation path:
 
 <figure markdown>
-  ![Beneath a Steel Sky setup -- Installation path](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-setup1.png){ loading=lazy width=80% }
+  ![Beneath a Steel Sky setup -- Installation path](https://www.dosbox-staging.org/static/images/getting-started/bass-setup1.png){ loading=lazy width=80% }
 </figure>
 
 You can navigate the interface with the cursor keys, ++esc++, ++enter++, and
@@ -201,7 +201,7 @@ language of the in-game text (the voice-acting is English-only), and the sound
 settings:
 
 <figure markdown>
-  ![Beneath a Steel Sky setup -- Game settings](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-setup2.png){ loading=lazy width=80% }
+  ![Beneath a Steel Sky setup -- Game settings](https://www.dosbox-staging.org/static/images/getting-started/bass-setup2.png){ loading=lazy width=80% }
 </figure>
 
 English is fine, and the game has auto-detected our sound card correctly
@@ -212,7 +212,7 @@ Install* button, which will take us to the (guess what?) *Exit Install*
 dialog:
 
 <figure markdown>
-  ![Beneath a Steel Sky setup -- Finalising the setup](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-setup3.png){ loading=lazy width=80% }
+  ![Beneath a Steel Sky setup -- Finalising the setup](https://www.dosbox-staging.org/static/images/getting-started/bass-setup3.png){ loading=lazy width=80% }
 </figure>
 
 Here you need to press the *Save Setup* button to finalise the settings and
@@ -350,7 +350,7 @@ audio.
 Execute the `mixer` command at the DOS prompt to view the current state of the
 mixer:
 
-![DOSBox Staging mixer -- Displaying the current state](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-mixer1.png){ loading=lazy }
+![DOSBox Staging mixer -- Displaying the current state](https://www.dosbox-staging.org/static/images/getting-started/bass-mixer1.png){ loading=lazy }
 
 The first channel is the `MASTER` channel; this is the summed output of all
 other channels and it's always present. Below that is the `CDAUDIO` channel,
@@ -374,7 +374,7 @@ mixer sb 500
 By default, the command prints out the new state of the mixer after the
 adjustment:
 
-![DOSBox Staging mixer -- Adjusting channel volumes](https://archive.org/download/dosbox-staging-getting-started-guide-assets/bass-mixer2.png){ loading=lazy }
+![DOSBox Staging mixer -- Adjusting channel volumes](https://www.dosbox-staging.org/static/images/getting-started/bass-mixer2.png){ loading=lazy }
 
 You can combine multiple mixer commands in a single line, e.g., in the below
 example, we're setting the `OPL` channel's volume to 50%, and the `SB`

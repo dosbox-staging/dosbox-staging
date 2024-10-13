@@ -385,7 +385,7 @@ music:
 The final configuration should look like this:
 
 <figure markdown>
-  ![Star Wars: Dark Forces setup --- Advanced sound settings](https://archive.org/download/dosbox-staging-getting-started-guide-assets/dark-forces-midi.png){ loading=lazy width=80% }
+  ![Star Wars: Dark Forces setup --- Advanced sound settings](https://www.dosbox-staging.org/static/images/getting-started/dark-forces-midi.png){ loading=lazy width=80% }
 </figure>
 
 Press ++enter++ on the *Test Music* menu item and you should hear the start of
