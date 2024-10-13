@@ -74,7 +74,7 @@ standard US keyboard.
 
 This is how the output of the command looks like:
 
-![Displaying the description of a config setting using the 'config' command](https://archive.org/download/dosbox-staging-getting-started-guide-assets/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
+![Displaying the description of a config setting using the 'config' command](https://www.dosbox-staging.org/static/images/getting-started/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
 
 When piping the output through `more`, you can press ++space++ to go to the
 next page, ++enter++ to advance to the next line, or ++q++ to quit the viewer,
@@ -139,7 +139,7 @@ we'll create one subfolder within `DOS Games` for each game, then each game
 folder will contain its own local `dosbox.conf` configuration specific to that
 game, along with its own "emulated C drive" in the `drives/c` subfolder.
 
-![Passport to Adventure folder structure](https://archive.org/download/dosbox-staging-getting-started-guide-assets/passport-tree.png){ .skip-lightbox style="width: 13.25rem; margin: 0.9rem max(calc((50% - 13.25rem/2) * 0.85), 0rem);" }
+![Passport to Adventure folder structure](https://www.dosbox-staging.org/static/images/getting-started/passport-tree.png){ .skip-lightbox style="width: 13.25rem; margin: 0.9rem max(calc((50% - 13.25rem/2) * 0.85), 0rem);" }
 
 
 ## Examining text files
