@@ -846,18 +846,38 @@ public:
 	}
 };
 
-static std::unique_ptr<MPU401> mpu401 = {};
+static std::unique_ptr<MPU401> mpu401 = nullptr;
 
-void MPU401_Destroy(Section * /*sec*/)
+static Section_prop* get_midi_section()
+{
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	assert(sec);
+
+	return sec;
+}
+
+void mpu401_destroy([[maybe_unused]] Section* sec)
 {
 	mpu401 = {};
 }
-void MPU401_Init(Section* sec)
+
+void MPU401_Destroy()
 {
-	assert(sec);
+	mpu401_destroy(get_midi_section());
+}
 
-	mpu401 = std::make_unique<MPU401>(sec);
+void mpu401_init([[maybe_unused]] Section* sec)
+{
+	mpu401 = std::make_unique<MPU401>(get_midi_section());
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = true;
+
+	get_midi_section()->AddDestroyFunction(&mpu401_destroy, ChangeableAtRuntime);
+}
+
+void MPU401_Init()
+{
+	mpu401_init(get_midi_section());
 }

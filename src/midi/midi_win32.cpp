@@ -1,7 +1,8 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,10 +19,22 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_MPU401_H
-#define DOSBOX_MPU401_H
+#include "midi_win32.h"
 
-void MPU401_Init();
-void MPU401_Destroy();
+#ifdef WIN32
 
-#endif // DOSBOX_MPU401_H
+void MIDI_WIN32_ListDevices([[maybe_unused]] MidiDeviceWin32* device, Program* caller)
+{
+	unsigned int total = midiOutGetNumDevs();
+
+	for (unsigned int i = 0; i < total; i++) {
+		MIDIOUTCAPS mididev;
+		midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+
+		caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
+	}
+
+	caller->WriteOut("\n");
+}
+
+#endif // WIN32

@@ -37,7 +37,7 @@ class Program;
 // Using data bytes will result in a dummy zero lookup.
 extern uint8_t MIDI_message_len_by_status[256];
 
-constexpr auto MIDI_SYSEX_SIZE = 8192;
+constexpr auto MaxMidiSysExSize = 8192;
 
 constexpr uint8_t MaxMidiMessageLen = 3;
 
@@ -200,11 +200,12 @@ MessageType get_midi_message_type(const uint8_t status_byte);
 uint8_t get_midi_status(const uint8_t status_byte);
 uint8_t get_midi_channel(const uint8_t channel_status);
 
-bool MIDI_Available();
+void MIDI_Init();
+bool MIDI_IsAvailable();
 void MIDI_Reset();
-void MIDI_Init(Section* sec);
-void MIDI_ListAll(Program* output_handler);
-void MIDI_RawOutByte(uint8_t data);
+
+void MIDI_ListDevices(Program* output_handler);
+void MIDI_RawOutByte(const uint8_t data);
 
 void MIDI_Mute();
 void MIDI_Unmute();
@@ -237,7 +238,7 @@ struct MidiWork {
 };
 
 #if C_FLUIDSYNTH
-void FLUID_AddConfigSection(const ConfigPtr& conf);
+void FSYNTH_AddConfigSection(const ConfigPtr& conf);
 #endif
 
 #if C_MT32EMU

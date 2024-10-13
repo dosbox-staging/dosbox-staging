@@ -1718,7 +1718,7 @@ DOSBox crashes right after starting it:
   - use different values for the output= entry in your DOSBox
     configuration file
   - try to update your graphics card driver and DirectX
-  - (Linux) set the environment variable SDL_AUDIODRIVER to alsa or oss.
+  - (Linux) set the environment variable SDL_AUDIODRIVER to alsa.
 
 Running a certain game closes DOSBox, crashes with some message or hangs:
   - see if it works with a default DOSBox installation

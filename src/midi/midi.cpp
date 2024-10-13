@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <list>
+#include <memory>
 #include <string>
 
 #include <SDL.h>
@@ -35,13 +36,15 @@
 #include "control.h"
 #include "cross.h"
 #include "mapper.h"
-#include "midi_handler.h"
+#include "midi_device.h"
 #include "mpu401.h"
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
+
+// #define DEBUG_MIDI
 
 // clang-format off
 uint8_t MIDI_message_len_by_status[256] = {
@@ -70,9 +73,6 @@ uint8_t MIDI_message_len_by_status[256] = {
 };
 // clang-format on
 
-/* Include different midi drivers, lowest ones get checked first for default.
-   Each header provides an independent midi interface. */
-
 #include "midi_fluidsynth.h"
 #include "midi_mt32.h"
 
@@ -82,55 +82,76 @@ uint8_t MIDI_message_len_by_status[256] = {
 
 #elif defined(WIN32)
 #include "midi_win32.h"
-#else
-#include "midi_oss.h"
 #endif
+
 #if C_ALSA
 #include "midi_alsa.h"
 #endif
 
-static std::list<std::unique_ptr<MidiHandler>> handlers = {};
-
-static void deregister_handlers()
+static std::unique_ptr<MidiDevice> create_device(const std::string& name,
+                                                 const std::string& config)
 {
-	handlers.clear();
-}
+	using namespace MidiDeviceName;
 
-static void register_handlers()
-{
-	deregister_handlers();
-
+	// Internal MIDI synths
 #if C_FLUIDSYNTH
-	handlers.emplace_back(std::make_unique<MidiHandlerFluidsynth>());
+	if (name == FluidSynth) {
+		return std::make_unique<MidiDeviceFluidSynth>();
+	}
 #endif
 #if C_MT32EMU
-	handlers.emplace_back(std::make_unique<MidiHandler_mt32>());
+	if (name == Mt32) {
+		return std::make_unique<MidiDeviceMt32>();
+	}
 #endif
+
+	// External MIDI devices
 #if C_COREMIDI
-	handlers.emplace_back(std::make_unique<MidiHandler_coremidi>());
+	if (name == CoreMidi) {
+		return std::make_unique<MidiDeviceCoreMidi>(config.c_str());
+	}
 #endif
 #if C_COREAUDIO
-	handlers.emplace_back(std::make_unique<MidiHandler_coreaudio>());
+	if (name == CoreAudio) {
+		return std::make_unique<MidiDeviceCoreAudio>(config.c_str());
+	}
 #endif
 #if defined(WIN32)
-	handlers.emplace_back(std::make_unique<MidiHandler_win32>());
+	if (name == Win32) {
+		return std::make_unique<MidiDeviceWin32>(config.c_str());
+	}
 #endif
 #if C_ALSA
-	handlers.emplace_back(std::make_unique<MidiHandler_alsa>());
+	if (name == Alsa) {
+		return std::make_unique<MidiDeviceAlsa>(config.c_str());
+	}
 #endif
-#if !defined(WIN32) && !defined(MACOSX)
-	handlers.emplace_back(std::make_unique<MidiHandler_oss>());
-#endif
+
+	// Device not found
+	return {};
 }
 
-MidiHandler* get_handler(const std::string_view name)
+static std::vector<const char*> auto_device_candidates = {MidiDeviceName::Alsa,
+                                                          MidiDeviceName::CoreAudio,
+                                                          MidiDeviceName::CoreMidi,
+                                                          MidiDeviceName::Win32};
+
+static std::unique_ptr<MidiDevice> try_create_auto_device(const std::string& config)
 {
-	for (const auto& handler : handlers) {
-		if (handler->GetName() == name) {
-			return handler.get();
+	for (const auto device_name : auto_device_candidates) {
+		try {
+			if (auto device = create_device(device_name, config); device) {
+				return device;
+			}
+			// nullptr means the device is not supported on
+			// the current platform; try the next one
+
+		} catch (const std::runtime_error& ex) {
+			// error opening device; try the next one
+			continue;
 		}
 	}
-	return nullptr;
+	return {};
 }
 
 struct Midi {
@@ -146,22 +167,22 @@ struct Midi {
 	MidiMessage realtime_message = {};
 
 	struct {
-		uint8_t buf[MIDI_SYSEX_SIZE] = {};
+		uint8_t buf[MaxMidiSysExSize] = {};
 
 		size_t pos       = 0;
 		int64_t delay_ms = 0;
 		int64_t start_ms = 0;
 	} sysex = {};
 
-	bool is_available    = false;
-	bool is_muted        = false;
-	MidiHandler* handler = nullptr;
+	bool is_muted = false;
+
+	std::unique_ptr<MidiDevice> device = nullptr;
 };
 
 static Midi midi                    = {};
 static bool raw_midi_output_enabled = {};
 
-constexpr auto max_channel_volume = 127;
+constexpr auto MaxChannelVolume = 127;
 
 // Keep track of the state of the MIDI device (e.g. channel volumes and which
 // notes are currently active on each channel).
@@ -175,7 +196,7 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
-		channel_volume_tracker.fill(max_channel_volume);
+		channel_volume_tracker.fill(MaxChannelVolume);
 	}
 
 	void UpdateState(const MidiMessage& msg)
@@ -213,7 +234,7 @@ public:
 	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
 	{
 		assert(channel <= NumMidiChannels);
-		assert(volume <= max_channel_volume);
+		assert(volume <= MaxChannelVolume);
 
 		channel_volume_tracker[channel] = volume;
 	}
@@ -260,8 +281,8 @@ void init_midi_state(Section*)
  */
 static int delay_in_ms(size_t sysex_bytes_num)
 {
-	constexpr double midi_baud_rate = 3.125; // bytes per ms
-	const auto delay_ms = (sysex_bytes_num * 1.25) / midi_baud_rate;
+	constexpr double MidiBaudRate = 3.125; // bytes per ms
+	const auto delay_ms           = (sysex_bytes_num * 1.25) / MidiBaudRate;
 	return static_cast<int>(delay_ms) + 2;
 }
 
@@ -294,31 +315,31 @@ uint8_t get_midi_channel(const uint8_t channel_status)
 
 static bool is_external_midi_device()
 {
-	return midi.handler->GetDeviceType() == MidiDeviceType::External;
+	return midi.device->GetType() == MidiDevice::Type::External;
 }
 
 static void output_note_off_for_active_notes(const uint8_t channel)
 {
 	assert(channel <= LastMidiChannel);
 
-	constexpr auto note_off_velocity = 64;
-	constexpr auto note_off_msg_len  = 3;
+	constexpr auto NoteOffVelocity = 64;
+	constexpr auto NoteOffMsgLen   = 3;
 
 	MidiMessage msg = {};
 	msg[0]          = MidiStatus::NoteOff | channel;
-	msg[2]          = note_off_velocity;
+	msg[2]          = NoteOffVelocity;
 
 	for (auto note = FirstMidiNote; note <= LastMidiNote; ++note) {
 		if (midi_state.IsNoteActive(channel, note)) {
 			msg[1] = note;
 
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = false;
-				CAPTURE_AddMidiData(is_sysex,
-				                    note_off_msg_len,
+				constexpr auto IsSysEx = false;
+				CAPTURE_AddMidiData(IsSysEx,
+				                    NoteOffMsgLen,
 				                    msg.data.data());
 			}
-			midi.handler->PlayMsg(msg);
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 }
@@ -370,9 +391,9 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 	}
 }
 
-void MIDI_RawOutByte(uint8_t data)
+void MIDI_RawOutByte(const uint8_t data)
 {
-	if (!midi.is_available) {
+	if (!MIDI_IsAvailable()) {
 		return;
 	}
 
@@ -386,13 +407,13 @@ void MIDI_RawOutByte(uint8_t data)
 	const auto is_realtime_message = (data >= MidiStatus::TimingClock);
 	if (is_realtime_message) {
 		midi.realtime_message[0] = data;
-		midi.handler->PlayMsg(midi.realtime_message);
+		midi.device->SendMidiMessage(midi.realtime_message);
 		return;
 	}
 
 	if (midi.status == MidiStatus::SystemExclusive) {
 		if (is_midi_data_byte(data)) {
-			if (midi.sysex.pos < (MIDI_SYSEX_SIZE - 1)) {
+			if (midi.sysex.pos < (MaxMidiSysExSize - 1)) {
 				midi.sysex.buf[midi.sysex.pos++] = data;
 			}
 			return;
@@ -402,31 +423,42 @@ void MIDI_RawOutByte(uint8_t data)
 			if (midi.sysex.start_ms && (midi.sysex.pos >= 4) &&
 			    (midi.sysex.pos <= 9) && (midi.sysex.buf[1] == 0x41) &&
 			    (midi.sysex.buf[3] == 0x16)) {
-				LOG(LOG_ALL, LOG_ERROR)
-				("MIDI:Skipping invalid MT-32 SysEx midi message (too short to contain a checksum)");
+#ifdef DEBUG_MIDI
+				LOG_DEBUG(
+				        "MIDI: Skipping invalid MT-32 SysEx midi message "
+				        "(too short to contain a checksum)");
+#endif
 			} else {
-				//				LOG(LOG_ALL,LOG_NORMAL)("Play
-				// sysex; address:%02X %02X %02X, length:%4d,
-				// delay:%3d", midi.sysex.buf[5],
-				// midi.sysex.buf[6], midi.sysex.buf[7],
-				// midi.sysex.pos, midi.sysex.delay_ms);
-				midi.handler->PlaySysex(midi.sysex.buf,
-				                        midi.sysex.pos);
+#ifdef DEBUG_MIDI
+				LOG_TRACE(
+				        "MIDI: Playing SysEx message, "
+				        "address: %02X %02X %02X, length: %4d, delay: %3d",
+				        midi.sysex.buf[5],
+				        midi.sysex.buf[6],
+				        midi.sysex.buf[7],
+				        midi.sysex.pos,
+				        midi.sysex.delay_ms);
+#endif
+				midi.device->SendSysExMessage(midi.sysex.buf,
+				                              midi.sysex.pos);
+
 				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {
-						midi.sysex.delay_ms = 290; // All
-						                           // Parameters
-						                           // reset
+						// Reset All Parameters fix
+						midi.sysex.delay_ms = 290;
+
 					} else if (midi.sysex.buf[5] == 0x10 &&
 					           midi.sysex.buf[6] == 0x00 &&
 					           midi.sysex.buf[7] == 0x04) {
-						midi.sysex.delay_ms = 145; // Viking
-						                           // Child
+						// Viking Child fix
+						midi.sysex.delay_ms = 145;
+
 					} else if (midi.sysex.buf[5] == 0x10 &&
 					           midi.sysex.buf[6] == 0x00 &&
 					           midi.sysex.buf[7] == 0x01) {
-						midi.sysex.delay_ms = 30; // Dark
-						                          // Sun 1
+						// Dark Sun 1 fix
+						midi.sysex.delay_ms = 30;
+
 					} else {
 						midi.sysex.delay_ms = delay_in_ms(
 						        midi.sysex.pos);
@@ -435,12 +467,9 @@ void MIDI_RawOutByte(uint8_t data)
 				}
 			}
 
-			LOG(LOG_ALL, LOG_NORMAL)
-			("Sysex message size %d", static_cast<int>(midi.sysex.pos));
-
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = true;
-				CAPTURE_AddMidiData(is_sysex,
+				constexpr auto IsSysEx = true;
+				CAPTURE_AddMidiData(IsSysEx,
 				                    midi.sysex.pos - 1,
 				                    &midi.sysex.buf[1]);
 			}
@@ -505,15 +534,15 @@ void MIDI_RawOutByte(uint8_t data)
 			// 4. Always capture the original message if MIDI
 			// capture is enabled, regardless of the mute state.
 			if (CAPTURE_IsCapturingMidi()) {
-				constexpr auto is_sysex = false;
-				CAPTURE_AddMidiData(is_sysex,
+				constexpr auto IsSysEx = false;
+				CAPTURE_AddMidiData(IsSysEx,
 				                    midi.message.len,
 				                    midi.message.msg.data.data());
 			}
 
 			// 5. Send the MIDI message to the device for playback
 			if (play_msg) {
-				midi.handler->PlayMsg(midi.message.msg);
+				midi.device->SendMidiMessage(midi.message.msg);
 			}
 
 			midi.message.pos = 1; // Use Running Status
@@ -521,7 +550,12 @@ void MIDI_RawOutByte(uint8_t data)
 	}
 }
 
-void MidiHandler::Reset()
+MidiDevice* MIDI_GetCurrentDevice()
+{
+	return midi.device.get();
+}
+
+void MIDI_Reset(MidiDevice* device)
 {
 	MidiMessage msg = {};
 
@@ -529,23 +563,23 @@ void MidiHandler::Reset()
 		msg[0] = MidiStatus::ControlChange | channel;
 
 		msg[1] = MidiChannelMode::AllNotesOff;
-		PlayMsg(msg);
+		device->SendMidiMessage(msg);
 
 		msg[1] = MidiChannelMode::ResetAllControllers;
-		PlayMsg(msg);
+		device->SendMidiMessage(msg);
 	}
 }
 
 void MIDI_Reset()
 {
-	if (midi.is_available) {
-		midi.handler->Reset();
+	if (MIDI_IsAvailable()) {
+		MIDI_Reset(midi.device.get());
 	}
 }
 
 void MIDI_Mute()
 {
-	if (!midi.is_available || midi.is_muted) {
+	if (!MIDI_IsAvailable() || midi.is_muted) {
 		return;
 	}
 
@@ -554,8 +588,9 @@ void MIDI_Mute()
 
 		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
 		     ++channel) {
+
 			msg[0] = MidiStatus::ControlChange | channel;
-			midi.handler->PlayMsg(msg);
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 
@@ -564,7 +599,7 @@ void MIDI_Mute()
 
 void MIDI_Unmute()
 {
-	if (!midi.is_available || !midi.is_muted) {
+	if (!MIDI_IsAvailable() || !midi.is_muted) {
 		return;
 	}
 
@@ -573,39 +608,55 @@ void MIDI_Unmute()
 
 		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
 		     ++channel) {
+
 			msg[0] = MidiStatus::ControlChange | channel;
 			msg[2] = midi_state.GetChannelVolume(channel);
-			midi.handler->PlayMsg(msg);
+
+			midi.device->SendMidiMessage(msg);
 		}
 	}
 
 	midi.is_muted = false;
 }
 
-bool MIDI_Available()
+bool MIDI_IsAvailable()
 {
-	return midi.is_available;
+	return (midi.device != nullptr);
+}
+
+static Section_prop* get_midi_section()
+{
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	assert(sec);
+
+	return sec;
+}
+
+static std::string get_mididevice_setting()
+{
+	return get_midi_section()->Get_string("mididevice");
 }
 
 // We'll adapt the RtMidi library, eventually, so hold off any substantial
 // rewrites on the MIDI stuff until then to unnecessary work.
 class MIDI final {
 public:
-	MIDI(Section* configuration)
+	MIDI()
 	{
-		Section_prop* section = static_cast<Section_prop*>(configuration);
+		const auto device_pref = get_mididevice_setting();
 
-		const std::string device_choice = section->Get_string("mididevice");
-
-		midi = Midi{};
+		midi = {};
 
 		// Has the user disable MIDI?
-		if (const auto device_has_bool = parse_bool_setting(device_choice);
+		if (const auto device_has_bool = parse_bool_setting(device_pref);
 		    device_has_bool && *device_has_bool == false) {
 			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
 			return;
 		}
 
+		const auto section      = get_midi_section();
 		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
@@ -617,135 +668,165 @@ public:
 		}
 
 		trim(midiconfig_prefs);
-		const char* midiconfig = midiconfig_prefs.c_str();
+		const auto midiconfig_pref = midiconfig_prefs.c_str();
 
-		auto open_handler = [&](MidiHandler* handler) -> bool {
-			const auto opened = handler && handler->Open(midiconfig);
-			if (opened) {
-				midi.is_available = true;
-				midi.handler      = handler;
-				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName().c_str());
-			}
-			return opened;
-		};
-
-		register_handlers();
-
-		if (device_choice == "auto") {
+		if (device_pref == "auto") {
 			// Use the first working device
-			for (const auto& handler : handlers) {
-				// FluidSynth or MT-32 are opt-in only
-				if (!(handler->GetName() == "fluidsynth" ||
-				      handler->GetName() == "mt32")) {
-					if (open_handler(handler.get())) {
-						break;
-					}
-				}
-			}
+			midi.device = try_create_auto_device(midiconfig_pref);
+
 		} else {
-			open_handler(get_handler(device_choice));
+			midi.device = create_device(device_pref, midiconfig_pref);
 		}
 
-		if (!midi.is_available) {
-			LOG_MSG("MIDI: Can't find device: '%s', MIDI is not available",
-			        device_choice.c_str());
+		if (midi.device) {
+			LOG_MSG("MIDI: Opened device '%s'",
+			        midi.device->GetName().c_str());
 		}
-	}
-
-	~MIDI()
-	{
-		if (!midi.is_available) {
-			assert(!midi.handler);
-			return;
-		}
-
-		assert(midi.handler);
-		midi.handler->Close();
-		midi.handler      = {};
-		midi.is_available = false;
-
-		deregister_handlers();
 	}
 };
 
-void MIDI_ListAll(Program* caller)
+void MIDI_ListDevices(Program* caller)
 {
-	constexpr auto msg_indent = "  ";
+	[[maybe_unused]] auto write_device_name = [&](const std::string& device_name) {
+		const auto color = convert_ansi_markup("[color=white]%s:[reset]\n");
 
-	for (const auto& handler : handlers) {
-		const auto device_name = convert_ansi_markup(
-		        "[color=white]%s:[reset]\n");
+		caller->WriteOut(color.c_str(), device_name.c_str());
+	};
 
-		caller->WriteOut(device_name.c_str(), handler->GetName().c_str());
+	[[maybe_unused]] auto device_ptr = midi.device.get();
 
-		const auto err = handler->ListAll(caller);
-		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {
-			caller->WriteOut("%s%s\n",
-			                 msg_indent,
-			                 MSG_Get("MIDI_DEVICE_NOT_CONFIGURED"));
+	const std::string device_name = midi.device ? midi.device->GetName() : "";
+#if C_FLUIDSYNTH
+	write_device_name(MidiDeviceName::FluidSynth);
+
+	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
+	                           ? dynamic_cast<MidiDeviceFluidSynth*>(device_ptr)
+	                           : nullptr,
+
+	                   caller);
+#endif
+#if C_MT32EMU
+	write_device_name(MidiDeviceName::Mt32);
+
+	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
+	                         ? dynamic_cast<MidiDeviceMt32*>(device_ptr)
+	                         : nullptr,
+	                 caller);
+#endif
+#if C_COREMIDI
+	write_device_name(MidiDeviceName::CoreMidi);
+
+	COREMIDI_ListDevices((device_name == MidiDeviceName::CoreMidi)
+	                             ? dynamic_cast<MidiDeviceCoreMidi*>(device_ptr)
+	                             : nullptr,
+	                     caller);
+#endif
+#if C_COREAUDIO
+	write_device_name(MidiDeviceName::CoreAudio);
+
+	COREAUDIO_ListDevices((device_name == MidiDeviceName::CoreAudio)
+	                              ? dynamic_cast<MidiDeviceCoreAudio*>(device_ptr)
+	                              : nullptr,
+	                      caller);
+#endif
+#if defined(WIN32)
+	write_device_name(MidiDeviceName::Win32);
+
+	MIDI_WIN32_ListDevices((device_name == MidiDeviceName::Win32)
+	                               ? dynamic_cast<MidiDeviceWin32*>(device_ptr)
+	                               : nullptr,
+	                       caller);
+#endif
+#if C_ALSA
+	write_device_name(MidiDeviceName::Alsa);
+
+	ALSA_ListDevices((device_name == MidiDeviceName::Alsa)
+	                         ? dynamic_cast<MidiDeviceAlsa*>(device_ptr)
+	                         : nullptr,
+	                 caller);
+#endif
+}
+
+static std::unique_ptr<MIDI> midi_instance = nullptr;
+
+static void midi_init([[maybe_unused]] Section* sec)
+{
+	// Retry loop
+	for (;;) {
+		MPU401_Destroy();
+		MPU401_Init();
+
+		midi_instance.reset();
+
+		try {
+			midi_instance = std::make_unique<MIDI>();
+			midi_state.Reset();
+
+			// A MIDI device has been successfully initialised
+			return;
+
+		} catch (const std::runtime_error& ex) {
+			const auto mididevice_pref = get_mididevice_setting();
+			if (mididevice_pref == "auto") {
+				LOG_WARNING(
+				        "MIDI: Error opening device '%s'; "
+				        "MIDI auto-discovery failed, "
+				        "using 'mididevice = none' and disabling MIDI output",
+				        mididevice_pref.c_str());
+
+				set_section_property_value("midi", "mididevice", "none");
+
+				// 'mididevice = auto' didn't work out; we
+				// disable the MIDI output and bail out.
+				return;
+
+			} else {
+				// If 'mididevice' was set to a concrete value
+				// and the device could not be initialiased,
+				// we'll try 'auto' as a fallback.
+				LOG_WARNING("MIDI: Error opening device '%s'; using 'auto'",
+				            mididevice_pref.c_str());
+
+				set_section_property_value("midi", "mididevice", "auto");
+			}
 		}
-		if (err == MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED) {
-			caller->WriteOut("%s%s\n",
-			                 msg_indent,
-			                 MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
-		}
-
-		caller->WriteOut("\n"); // additional newline to separate devices
 	}
 }
 
-static void register_midi_text_messages()
+void MIDI_Init()
 {
-	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
-	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
-}
-
-static MIDI* test;
-
-void MIDI_Destroy(Section* /*sec*/)
-{
-	delete test;
-}
-
-void MIDI_Init(Section* sec)
-{
-	assert(sec);
-
-	test = new MIDI(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MIDI_Destroy, changeable_at_runtime);
-
-	register_midi_text_messages();
+	midi_init(get_midi_section());
 }
 
 void init_midi_dosbox_settings(Section_prop& secprop)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = secprop.Add_string("mididevice", when_idle, "auto");
-	str_prop->Set_help("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
-	                   "('auto' by default):");
-	str_prop->SetOptionHelp("coremidi",
+	auto* str_prop = secprop.Add_string("mididevice", WhenIdle, "auto");
+	str_prop->Set_help(
+	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
+	        "('auto' by default):");
+
+	str_prop->SetOptionHelp(MidiDeviceName::CoreMidi,
 	                        "  coremidi:    Any device that has been configured in the macOS\n"
 	                        "               Audio MIDI Setup.");
-	str_prop->SetOptionHelp("coreaudio",
+
+	str_prop->SetOptionHelp(MidiDeviceName::CoreAudio,
 	                        "  coreaudio:   Use the built-in macOS MIDI synthesiser.");
-	str_prop->SetOptionHelp("win32",
+
+	str_prop->SetOptionHelp(MidiDeviceName::Win32,
 	                        "  win32:       Use the Win32 MIDI playback interface.");
-	str_prop->SetOptionHelp(
-	        "oss",
-	                        "  oss:         Use the Linux OSS MIDI playback interface.");
-	str_prop->SetOptionHelp(
-	        "alsa",
+
+	str_prop->SetOptionHelp(MidiDeviceName::Alsa,
 	                        "  alsa:        Use the Linux ALSA MIDI playback interface.");
+
 	str_prop->SetOptionHelp(
-	        "fluidsynth",
+	        MidiDeviceName::FluidSynth,
 	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
 	        "               See the [fluidsynth] section for detailed configuration.");
+
 	str_prop->SetOptionHelp(
-	        "mt32",
+	        MidiDeviceName::Mt32,
 	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
 	        "               See the [mt32] section for detailed configuration.");
 	str_prop->SetOptionHelp(
@@ -758,65 +839,67 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_values({
 		"auto",
 #if defined(MACOSX)
-	#if C_COREMIDI
-		        "coremidi",
-	#endif
-	#if C_COREAUDIO
-		        "coreaudio",
-	#endif
+#if C_COREMIDI
+		        MidiDeviceName::CoreMidi,
+#endif
+#if C_COREAUDIO
+		        MidiDeviceName::CoreAudio,
+#endif
 #elif defined(WIN32)
-		        "win32",
-#else
-		        "oss",
+		        MidiDeviceName::Win32,
 #endif
 #if C_ALSA
-		        "alsa",
+		        MidiDeviceName::Alsa,
 #endif
 #if C_FLUIDSYNTH
-		        "fluidsynth",
+		        MidiDeviceName::FluidSynth,
 #endif
-		        "mt32",
-		        "none"
+		        MidiDeviceName::Mt32, "none"
 	});
 
-	str_prop = secprop.Add_string("midiconfig", when_idle, "");
+	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
 	        "Configuration options for the selected MIDI interface (unset by default).\n"
 	        "This is usually the ID or name of the MIDI synthesizer you want\n"
 	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
 	        "Notes:");
+
 	str_prop->SetOptionHelp("fluidsynth_or_mt32emu",
 	                        "  - This option has no effect when using the built-in synthesizers\n"
 	                        "    ('mididevice = fluidsynth' or 'mididevice = mt32').");
+
 	str_prop->SetOptionHelp("coreaudio",
 	                        "  - When using 'coreaudio', you can specify a SoundFont here.");
+
 	str_prop->SetOptionHelp("alsa",
 	                        "  - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
 	                        "    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
 	                        "    client 14, port 0).");
+
 	str_prop->SetOptionHelp(
 	        "mt32",
 	        "  - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware\n"
 	        "    may require a delay in order to prevent its buffer from overflowing.\n"
 	        "    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').");
+
 	str_prop->SetEnabledOptions({
 #if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
 		"fluidsynth_or_mt32emu",
 #endif
 #if C_COREAUDIO
-		"coreaudio",
+		        "coreaudio",
 #endif
 #if C_ALSA
-		"alsa",
+		        "alsa",
 #endif
-		"mt32",
+		        "mt32",
 	});
 
-	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
+	str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
 	str_prop->Set_values({"intelligent", "uart", "none"});
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
-	auto* bool_prop = secprop.Add_bool("raw_midi_output", when_idle, false);
+	auto* bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
 	bool_prop->Set_help(
 	        "Enable raw, unaltered MIDI output (disabled by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
@@ -829,20 +912,24 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "applications, or when debugging MIDI issues.");
 }
 
+static void register_midi_text_messages()
+{
+	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
+	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
+	MSG_Add("MIDI_DEVICE_NO_SUPPORTED_MODELS", "No supported models present");
+	MSG_Add("MIDI_DEVICE_NO_MODEL_ACTIVE", "No model is currently active");
+}
+
 void MIDI_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("midi",
-	                                          &MIDI_Init,
-	                                          changeable_at_runtime);
+	Section_prop* sec = conf->AddSection_prop("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
 
-	sec->AddInitFunction(&init_midi_state, changeable_at_runtime);
-	sec->AddInitFunction(&MPU401_Init, changeable_at_runtime);
-
 	init_midi_dosbox_settings(*sec);
-}
 
+	register_midi_text_messages();
+}

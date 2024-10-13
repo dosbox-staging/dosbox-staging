@@ -865,7 +865,7 @@ void DOSBOX_Init()
 	MIDI_AddConfigSection(control);
 
 #if C_FLUIDSYNTH
-	FLUID_AddConfigSection(control);
+	FSYNTH_AddConfigSection(control);
 #endif
 
 #if C_MT32EMU

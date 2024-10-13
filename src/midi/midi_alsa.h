@@ -22,48 +22,57 @@
 #ifndef DOSBOX_MIDI_ALSA_H
 #define DOSBOX_MIDI_ALSA_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_ALSA
 
 #include <alsa/asoundlib.h>
 
-struct alsa_address {
-	int client;
-	int port;
+struct AlsaAddress {
+	int client = -1;
+	int port   = -1;
 };
 
-class MidiHandler_alsa final : public MidiHandler {
-private:
-	snd_seq_event_t ev = {};
-	snd_seq_t *seq_handle = nullptr;
-	alsa_address seq = {-1, -1}; // address of input port we're connected to
-	int output_port = 0;
-
-	void send_event(int do_flush);
-
+class MidiDeviceAlsa final : public MidiDevice {
 public:
-	MidiHandler_alsa() : MidiHandler() {}
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
+	MidiDeviceAlsa(const char* conf);
 
-	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
-	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
+	~MidiDeviceAlsa() override;
+
+	// prevent copying
+	MidiDeviceAlsa(const MidiDeviceAlsa&) = delete;
+	// prevent assignment
+	MidiDeviceAlsa& operator=(const MidiDeviceAlsa&) = delete;
 
 	std::string GetName() const override
 	{
-		return "alsa";
+		return MidiDeviceName::Alsa;
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	Type GetType() const override
 	{
-		return MidiDeviceType::External;
+		return MidiDevice::Type::External;
 	}
 
-	bool Open(const char *conf) override;
-	void Close() override;
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t *sysex, size_t len) override;
-	MIDI_RC ListAll(Program *caller) override;
+	void SendMidiMessage(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
+	AlsaAddress GetInputPortAddress();
+
+private:
+	snd_seq_event_t ev    = {};
+	snd_seq_t* seq_handle = nullptr;
+
+	// address of input port we're connected to
+	AlsaAddress seq = {-1, -1};
+
+	int output_port = 0;
+
+	void send_event(int do_flush);
 };
+
+void ALSA_ListDevices(MidiDeviceAlsa* device, Program* caller);
 
 #endif // C_ALSA
 

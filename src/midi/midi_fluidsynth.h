@@ -21,7 +21,7 @@
 #ifndef DOSBOX_MIDI_FLUIDSYNTH_H
 #define DOSBOX_MIDI_FLUIDSYNTH_H
 
-#include "midi_handler.h"
+#include "midi_device.h"
 
 #if C_FLUIDSYNTH
 
@@ -36,31 +36,34 @@
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
-class MidiHandlerFluidsynth final : public MidiHandler {
+class MidiDeviceFluidSynth final : public MidiDevice {
 public:
-	MidiHandlerFluidsynth() = default;
-	~MidiHandlerFluidsynth() override;
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
+	// (e.g., the requested SoundFont cannot be loaded).
+	MidiDeviceFluidSynth();
+
+	~MidiDeviceFluidSynth() override;
+
 	void PrintStats();
 
 	std::string GetName() const override
 	{
-		return "fluidsynth";
+		return MidiDeviceName::FluidSynth;
 	}
 
-	MidiDeviceType GetDeviceType() const override
+	Type GetType() const override
 	{
-		return MidiDeviceType::BuiltIn;
+		return MidiDevice::Type::BuiltIn;
 	}
 
-	bool Open(const char* conf) override;
-	void Close() override;
-	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t* sysex, size_t len) override;
-	MIDI_RC ListAll(Program* caller) override;
+	void SendMidiMessage(const MidiMessage& msg) override;
+	void SendSysExMessage(uint8_t* sysex, size_t len) override;
+
+	std::optional<std_fs::path> GetCurrentSoundFontPath();
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
-	void ApplySysexMessage(const std::vector<uint8_t>& msg);
+	void ApplySysExMessage(const std::vector<uint8_t>& msg);
 	void MixerCallBack(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
@@ -83,13 +86,14 @@ private:
 	std::optional<std_fs::path> current_sf2_path = {};
 
 	// Used to track the balance of time between the last mixer callback
-	// versus the current MIDI Sysex or Msg event.
+	// versus the current MIDI SysEx or Msg event.
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
-	bool is_open       = false;
 };
+
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);
 
 #endif // C_FLUIDSYNTH
 

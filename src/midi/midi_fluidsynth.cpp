@@ -42,17 +42,15 @@
 #include "string_utils.h"
 #include "support.h"
 
-MidiHandlerFluidsynth instance;
-
 constexpr auto SoundFontExtension = ".sf2";
 
-static void init_fluid_dosbox_settings(Section_prop& secprop)
+static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	// Name 'default.sf2' picks the default SoundFont if it's installed
 	// in the OS. Usually it's Fluid_R3.
-	auto* str_prop = secprop.Add_string("soundfont", when_idle, "default.sf2");
+	auto* str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
 	str_prop->Set_help(
 	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
 	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
@@ -62,7 +60,7 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%%.\n"
 	        "The percentage value can range from 1 to 800.");
 
-	str_prop = secprop.Add_string("fsynth_chorus", when_idle, "auto");
+	str_prop = secprop.Add_string("fsynth_chorus", WhenIdle, "auto");
 	str_prop->Set_help(
 	        "Chorus effect: 'auto' (default), 'on', 'off', or custom values.\n"
 	        "When using custom values:\n"
@@ -79,7 +77,7 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
 	        "      chorus settings being used.");
 
-	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
+	str_prop = secprop.Add_string("fsynth_reverb", WhenIdle, "auto");
 	str_prop->Set_help(
 	        "Reverb effect: 'auto' (default), 'on', 'off', or custom values.\n"
 	        "When using custom values:\n"
@@ -95,7 +93,7 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
 	        "      reverb settings being used.");
 
-	str_prop = secprop.Add_string("fsynth_filter", when_idle, "off");
+	str_prop = secprop.Add_string("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the FluidSynth audio output:\n"
@@ -109,10 +107,10 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 // used.
 std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 {
-	constexpr auto default_percent = 100;
+	constexpr auto DefaultPercent = 100;
 
 	if (line.empty()) {
-		return {line, default_percent};
+		return {line, DefaultPercent};
 	}
 
 	// Look for a space in the last 5 characters of the string
@@ -121,7 +119,7 @@ std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 	auto last_space_pos = line.substr(from_pos).find_last_of(' ');
 
 	if (last_space_pos == std::string::npos) {
-		return {line, default_percent};
+		return {line, DefaultPercent};
 	}
 
 	// Ensure the position is relative to the start of the entire string
@@ -132,7 +130,7 @@ std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 	try {
 		percent = stoi(line.substr(last_space_pos + 1));
 	} catch (...) {
-		return {line, default_percent};
+		return {line, DefaultPercent};
 	}
 
 	// A number was provided, so split it from the line
@@ -207,15 +205,17 @@ static std_fs::path find_sf_file(const std::string& name)
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
 			if (path_exists(sf)) {
-				// Parts of the path come from the `soundfont` setting, and
-				// `soundfont = FluidR3_GM.sf2` and `soundfont =
-				// fluidr3_gm.sf2` refer to the same file on case-preserving
-				// filesystems on Windows and macOS.
+				// Parts of the path come from the `soundfont`
+				// setting, and `soundfont = FluidR3_GM.sf2` and
+				// `soundfont = fluidr3_gm.sf2` refer to the
+				// same file on case-preserving filesystems on
+				// Windows and macOS.
 				//
-				// `std_fs::canonical` returns the absolute path and matches
-				// its casing to that of the actual physical file. This
-				// prevents certain subtle bugs downstream when we use this
-				// path in comparisons.
+				// `std_fs::canonical` returns the absolute path
+				// and matches its casing to that of the actual
+				// physical file. This prevents certain subtle
+				// bugs downstream when we use this path in
+				// comparisons.
 				//
 				return std_fs::canonical(sf).c_str();
 			}
@@ -227,12 +227,12 @@ static std_fs::path find_sf_file(const std::string& name)
 static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 {
 	auto append_as_hex = [](const std::string& str, const uint8_t val) {
-		constexpr char hex_chars[] = "0123456789ABCDEF";
+		constexpr char HexChars[] = "0123456789ABCDEF";
 		std::string hex_str;
 
 		hex_str.reserve(2);
-		hex_str += hex_chars[val >> 4];
-		hex_str += hex_chars[val & 0x0F];
+		hex_str += HexChars[val >> 4];
+		hex_str += HexChars[val & 0x0F];
 
 		return str + (str.empty() ? "" : ", ") + hex_str;
 	};
@@ -256,15 +256,14 @@ static Section_prop* get_fluidsynth_section()
 	return sec;
 }
 
-bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
+MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
-	Close();
-
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
 	                                     delete_fluid_settings);
 	if (!fluid_settings) {
-		LOG_WARNING("FSYNTH: new_fluid_settings failed");
-		return false;
+		const auto msg = "FSYNTH: new_fluid_settings failed";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	auto* section = get_fluidsynth_section();
@@ -283,8 +282,9 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                          delete_fluid_synth);
 	if (!fluid_synth) {
-		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
-		return false;
+		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer.";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
 	}
 
 	// Load the requested SoundFont or quit if none provided
@@ -294,16 +294,17 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	const auto soundfont_path = find_sf_file(sf_filename);
 
 	if (!soundfont_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		constexpr auto reset_presets = true;
+		constexpr auto ResetPresets = true;
 		fluid_synth_sfload(fluid_synth.get(),
 		                   soundfont_path.string().c_str(),
-		                   reset_presets);
+		                   ResetPresets);
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		            sf_filename.c_str());
-		return false;
+		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
+		                            sf_filename.c_str());
+		LOG_WARNING("%s", msg.c_str());
+		throw std::runtime_error(msg);
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 800) {
@@ -326,10 +327,11 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 		        scale_by_percent);
 	}
 
-	constexpr int fx_group = -1; // applies setting to all groups
+	// applies setting to all groups
+	constexpr int FxGroup = -1;
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
-	fluid_synth_set_interp_method(fluid_synth.get(), fx_group, FLUID_INTERP_HIGHEST);
+	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
@@ -461,22 +463,24 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 // Current API calls as of 2.2
 #if FLUIDSYNTH_VERSION_MINOR >= 2
-	fluid_synth_chorus_on(fluid_synth.get(), fx_group, chorus_enabled);
-	fluid_synth_set_chorus_group_nr(fluid_synth.get(), fx_group, chorus_voice_count);
-	fluid_synth_set_chorus_group_level(fluid_synth.get(), fx_group, chorus_level);
-	fluid_synth_set_chorus_group_speed(fluid_synth.get(), fx_group, chorus_speed);
-	fluid_synth_set_chorus_group_depth(fluid_synth.get(), fx_group, chorus_depth);
+	fluid_synth_chorus_on(fluid_synth.get(), FxGroup, chorus_enabled);
+	fluid_synth_set_chorus_group_nr(fluid_synth.get(), FxGroup, chorus_voice_count);
+	fluid_synth_set_chorus_group_level(fluid_synth.get(), FxGroup, chorus_level);
+	fluid_synth_set_chorus_group_speed(fluid_synth.get(), FxGroup, chorus_speed);
+	fluid_synth_set_chorus_group_depth(fluid_synth.get(), FxGroup, chorus_depth);
+
 	fluid_synth_set_chorus_group_type(fluid_synth.get(),
-	                                  fx_group,
+	                                  FxGroup,
 	                                  static_cast<int>(chorus_mod_wave));
 
-	fluid_synth_reverb_on(fluid_synth.get(), fx_group, reverb_enabled);
+	fluid_synth_reverb_on(fluid_synth.get(), FxGroup, reverb_enabled);
 	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(),
-	                                      fx_group,
+	                                      FxGroup,
 	                                      reverb_room_size);
-	fluid_synth_set_reverb_group_damp(fluid_synth.get(), fx_group, reverb_damping);
-	fluid_synth_set_reverb_group_width(fluid_synth.get(), fx_group, reverb_width);
-	fluid_synth_set_reverb_group_level(fluid_synth.get(), fx_group, reverb_level);
+
+	fluid_synth_set_reverb_group_damp(fluid_synth.get(), FxGroup, reverb_damping);
+	fluid_synth_set_reverb_group_width(fluid_synth.get(), FxGroup, reverb_width);
+	fluid_synth_set_reverb_group_level(fluid_synth.get(), FxGroup, reverb_level);
 
 // deprecated API calls prior to 2.2
 #else
@@ -519,8 +523,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 	MIXER_LockMixerThread();
 
-	// Setup the mixer callback
-	const auto mixer_callback = std::bind(&MidiHandlerFluidsynth::MixerCallBack,
+	// Set up the mixer callback
+	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallBack,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -552,9 +556,9 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	}
 
 	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The Mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better to keep up (and prevent their audio frame
-	// FIFO from running dry).
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up (and prevent their audio
+	// frame FIFO from running dry).
 	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
 
 	// Size the out-bound audio frame FIFO
@@ -566,18 +570,21 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 	// Size the in-bound work FIFO
 
-	// MIDI has a Baud rate of 31250; at optimum this is 31250 bits per
+	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
 	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
 	// MIDI message is three bytes, which gives a total of 30 bits per
 	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via > the MIDI protocol.
+	// messages per second can be obtained via the MIDI protocol.
 
 	// We have measured DOS games sending hundreds of MIDI messages within a
 	// short handful of millseconds, so a safe but very generous upper bound
-	// is used (Note: the actual memory used by the FIFO is incremental
-	// based on actual usage).
-	static constexpr uint16_t midi_spec_max_msg_rate_hz = 1042;
-	work_fifo.Resize(midi_spec_max_msg_rate_hz * 10);
+	// is used.
+	//
+	// (Note: the actual memory used by the FIFO is incremental based on
+	// actual usage).
+	//
+	static constexpr uint16_t MidiSpecMaxMsgRateHz = 1042;
+	work_fifo.Resize(MidiSpecMaxMsgRateHz * 10);
 
 	// If we haven't failed yet, then we're ready to begin so move the local
 	// objects into the member variables.
@@ -588,27 +595,16 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	current_sf2_path = soundfont_path;
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
+	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:fsynth");
 
 	// Start playback
-	is_open = true;
 	MIXER_UnlockMixerThread();
-	return true;
 }
 
-MidiHandlerFluidsynth::~MidiHandlerFluidsynth()
+MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
-	Close();
-}
-
-void MidiHandlerFluidsynth::Close()
-{
-	if (!is_open) {
-		return;
-	}
-
 	LOG_MSG("FSYNTH: Shutting down");
 
 	MIXER_LockMixerThread();
@@ -650,11 +646,10 @@ void MidiHandlerFluidsynth::Close()
 	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
 
-	is_open = false;
 	MIXER_UnlockMixerThread();
 }
 
-int MidiHandlerFluidsynth::GetNumPendingAudioFrames()
+int MidiDeviceFluidSynth::GetNumPendingAudioFrames()
 {
 	const auto now_ms = PIC_FullIndex();
 
@@ -679,7 +674,7 @@ int MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 }
 
 // The request to play the channel message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
+void MidiDeviceFluidSynth::SendMidiMessage(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
 
@@ -691,14 +686,14 @@ void MidiHandlerFluidsynth::PlayMsg(const MidiMessage& msg)
 }
 
 // The request to play the sysex message is placed in the MIDI work FIFO
-void MidiHandlerFluidsynth::PlaySysex(uint8_t* sysex, size_t len)
+void MidiDeviceFluidSynth::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
 	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
 	work_fifo.Enqueue(std::move(work));
 }
 
-void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
+void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 {
 	const auto status_byte = msg[0];
 	const auto status      = get_midi_status(status_byte);
@@ -766,7 +761,7 @@ void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 }
 
 // Apply the sysex message to the service
-void MidiHandlerFluidsynth::ApplySysexMessage(const std::vector<uint8_t>& msg)
+void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 {
 	const char* data = reinterpret_cast<const char*>(msg.data());
 	const auto n     = static_cast<int>(msg.size());
@@ -776,15 +771,15 @@ void MidiHandlerFluidsynth::ApplySysexMessage(const std::vector<uint8_t>& msg)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceFluidSynth::MixerCallBack(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 
 	// Report buffer underruns
-	constexpr auto warning_percent = 5.0f;
+	constexpr auto WarningPercent = 5.0f;
 
 	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
-	    percent_full < warning_percent) {
+	    percent_full < WarningPercent) {
 		static auto iteration = 0;
 		if (iteration++ % 100 == 0) {
 			LOG_WARNING("FSYNTH: Audio buffer underrun");
@@ -801,6 +796,7 @@ void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
 		assert(check_cast<int>(audio_frames.size()) == requested_audio_frames);
 		mixer_channel->AddSamples_sfloat(requested_audio_frames,
 		                                 &audio_frames[0][0]);
+
 		last_rendered_ms = PIC_FullIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
@@ -808,7 +804,7 @@ void MidiHandlerFluidsynth::MixerCallBack(const int requested_audio_frames)
 	}
 }
 
-void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
+void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	static std::vector<AudioFrame> audio_frames = {};
 
@@ -829,7 +825,7 @@ void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const int num_audio_frames)
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
 
-void MidiHandlerFluidsynth::ProcessWorkFromFifo()
+void MidiDeviceFluidSynth::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
 	if (!work) {
@@ -853,20 +849,26 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 	}
 
 	if (work->message_type == MessageType::Channel) {
+		assert(work->message.size() <= MaxMidiMessageLen);
 		ApplyChannelMessage(work->message);
 	} else {
 		assert(work->message_type == MessageType::SysEx);
-		ApplySysexMessage(work->message);
+		ApplySysExMessage(work->message);
 	}
 }
 
 // Keep the fifo populated with freshly rendered buffers
-void MidiHandlerFluidsynth::Render()
+void MidiDeviceFluidSynth::Render()
 {
 	while (work_fifo.IsRunning()) {
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
 		                    : ProcessWorkFromFifo();
 	}
+}
+
+std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
+{
+	return current_sf2_path;
 }
 
 std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
@@ -895,17 +897,22 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	return line;
 }
 
-MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
+void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
 	auto write_line = [&](const std_fs::path& sf2_path) {
 		const auto line = format_sf2_line(term_width - 2, sf2_path);
 
-		const auto path_matches = current_sf2_path &&
-		                          (*current_sf2_path == sf2_path);
+		const auto do_highlight = [&] {
+			if (device) {
+				const auto curr_sf2_path =
+				        device->GetCurrentSoundFontPath();
 
-		const bool do_highlight = is_open && path_matches;
+				return curr_sf2_path && curr_sf2_path == sf2_path;
+			}
+			return false;
+		}();
 
 		if (do_highlight) {
 			constexpr auto Green = "[color=light-green]";
@@ -959,17 +966,37 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 		write_line(path);
 	}
 
-	return MIDI_RC::OK;
+	caller->WriteOut("\n");
 }
 
-static void fluid_init([[maybe_unused]] Section* sec) {}
-
-void FLUID_AddConfigSection(const ConfigPtr& conf)
+static void fluidsynth_init([[maybe_unused]] Section* sec)
 {
+	const auto device = MIDI_GetCurrentDevice();
+
+	if (device && device->GetName() == MidiDeviceName::FluidSynth) {
+		const auto fluid_device = dynamic_cast<MidiDeviceFluidSynth*>(device);
+
+		const auto soundfont_pref = get_fluidsynth_section()->Get_string(
+		        "soundfont");
+		const auto path = find_sf_file(soundfont_pref);
+
+		if (fluid_device->GetCurrentSoundFontPath() != path) {
+			MIDI_Init();
+		}
+	}
+}
+
+void FSYNTH_AddConfigSection(const ConfigPtr& conf)
+{
+	constexpr auto ChangeableAtRuntime = true;
+
 	assert(conf);
-	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);
+	Section_prop* sec = conf->AddSection_prop("fluidsynth",
+	                                          &fluidsynth_init,
+	                                          ChangeableAtRuntime);
+
 	assert(sec);
-	init_fluid_dosbox_settings(*sec);
+	init_fluidsynth_dosbox_settings(*sec);
 }
 
 #endif // C_FLUIDSYNTH

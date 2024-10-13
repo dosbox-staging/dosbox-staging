@@ -1,7 +1,8 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,10 +19,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_MPU401_H
-#define DOSBOX_MPU401_H
+#include "midi_coreaudio.h"
 
-void MPU401_Init();
-void MPU401_Destroy();
+#if C_COREAUDIO
 
-#endif // DOSBOX_MPU401_H
+void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
+                           [[maybe_unused]] Program* caller)
+{
+	caller->WriteOut("  %s\n\n", MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
+}
+
+#endif // C_COREAUDIO

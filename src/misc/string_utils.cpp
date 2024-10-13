@@ -391,3 +391,15 @@ std::string replace_all(const std::string& str, const std::string& from,
 	return new_str;
 }
 
+// Search for the needle in the haystack, case insensitive.
+bool find_in_case_insensitive(const std::string &needle, const std::string &haystack)
+{
+	const auto it = std::search(haystack.begin(), haystack.end(),
+	                            needle.begin(), needle.end(),
+	                            [](char ch1, char ch2) {
+		                            return std::toupper(ch1) ==
+		                                   std::toupper(ch2);
+	                            });
+	return (it != haystack.end());
+}
+

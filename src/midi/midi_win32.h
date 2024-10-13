@@ -22,63 +22,57 @@
 #ifndef DOSBOX_MIDI_WIN32_H
 #define DOSBOX_MIDI_WIN32_H
 
-#include "midi_handler.h"
+#ifdef WIN32
+
+#include "midi_device.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+
 // clang-format off
 // 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
 #include <mmsystem.h>
 // clang-format on
 
-#include <string>
 #include <sstream>
+#include <string>
 
 #include "programs.h"
+#include "string_utils.h"
 
-class MidiHandler_win32 final : public MidiHandler {
-private:
-	HMIDIOUT m_out = nullptr;
-	MIDIHDR m_hdr = {};
-	HANDLE m_event = nullptr;
-	bool isOpen;
+class MidiDeviceWin32 final : public MidiDevice {
 public:
-	MidiHandler_win32() : MidiHandler(), isOpen(false) {}
-	
-	MidiHandler_win32(const MidiHandler_win32&) = delete;
-	MidiHandler_win32& operator=(const MidiHandler_win32&) = delete;
-
-	std::string GetName() const override
+	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
+	MidiDeviceWin32(const char* conf)
 	{
-		return "win32";
-	}
-
-	MidiDeviceType GetDeviceType() const override
-	{
-		return MidiDeviceType::External;
-	}
-
-	bool Open(const char *conf) override
-	{
-		if (isOpen) return false;
-		m_event = CreateEvent (nullptr, true, true, nullptr);
+		m_event      = CreateEvent(nullptr, true, true, nullptr);
 		MMRESULT res = MMSYSERR_NOERROR;
-		if(conf && *conf) {
+
+		if (conf && *conf) {
 			std::string strconf(conf);
 			std::istringstream configmidi(strconf);
-			unsigned int total = midiOutGetNumDevs();
+
+			unsigned int total  = midiOutGetNumDevs();
 			unsigned int nummer = total;
+
 			configmidi >> nummer;
+
 			if (configmidi.fail() && total) {
 				lowcase(strconf);
-				for(unsigned int i = 0; i< total;i++) {
+
+				for (unsigned int i = 0; i < total; i++) {
 					MIDIOUTCAPS mididev;
-					midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+					midiOutGetDevCaps(i,
+					                  &mididev,
+					                  sizeof(MIDIOUTCAPS));
+
 					std::string devname(mididev.szPname);
 					lowcase(devname);
-					if (devname.find(strconf) != std::string::npos) {
+
+					if (devname.find(strconf) !=
+					    std::string::npos) {
 						nummer = i;
 						break;
 					}
@@ -88,31 +82,55 @@ public:
 			if (nummer < total) {
 				MIDIOUTCAPS mididev;
 				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
-				LOG_MSG("MIDI:WIN32: Selected output device %s",mididev.szPname);
-				res = midiOutOpen(&m_out, nummer, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
+
+				LOG_MSG("MIDI:WIN32: Selected output device %s",
+				        mididev.szPname);
+
+				res = midiOutOpen(&m_out,
+				                  nummer,
+				                  (DWORD_PTR)m_event,
+				                  0,
+				                  CALLBACK_EVENT);
 			}
 		} else {
-			res = midiOutOpen(&m_out, MIDI_MAPPER, (DWORD_PTR)m_event, 0, CALLBACK_EVENT);
+			res = midiOutOpen(&m_out,
+			                  MIDI_MAPPER,
+			                  (DWORD_PTR)m_event,
+			                  0,
+			                  CALLBACK_EVENT);
 		}
-		if (res != MMSYSERR_NOERROR) return false;
-		isOpen=true;
-		return true;
+
+		if (res != MMSYSERR_NOERROR) {
+			const auto msg = "MIDI:WIN32: Error opening device";
+			LOG_WARNING("%s", msg);
+			throw std::runtime_error(msg);
+		}
 	}
 
-	void Close() override
+	~MidiDeviceWin32() override
 	{
-		if (!isOpen) {
-			return;
-		}
+		MIDI_Reset(this);
 
-		Reset();
-
-		isOpen = false;
 		midiOutClose(m_out);
 		CloseHandle(m_event);
 	}
 
-	void PlayMsg(const MidiMessage& data) override
+	// prevent copying
+	MidiDeviceWin32(const MidiDeviceWin32&) = delete;
+	// prevent assigment
+	MidiDeviceWin32& operator=(const MidiDeviceWin32&) = delete;
+
+	std::string GetName() const override
+	{
+		return MidiDeviceName::Win32;
+	}
+
+	Type GetType() const override
+	{
+		return MidiDevice::Type::External;
+	}
+
+	void SendMidiMessage(const MidiMessage& data) override
 	{
 		const auto status  = data[0];
 		const auto data1   = data[1];
@@ -122,41 +140,42 @@ public:
 		midiOutShortMsg(m_out, msg);
 	}
 
-	void PlaySysex(uint8_t *sysex, size_t len) override
+	void SendSysExMessage(uint8_t* sysex, size_t len) override
 	{
-		if (WaitForSingleObject (m_event, 2000) == WAIT_TIMEOUT) {
+		if (WaitForSingleObject(m_event, 2000) == WAIT_TIMEOUT) {
 			LOG_WARNING("MIDI:WIN32: Can't send midi message");
 			return;
 		}
-		midiOutUnprepareHeader (m_out, &m_hdr, sizeof (m_hdr));
 
-		m_hdr.lpData = (char *) sysex;
-		m_hdr.dwBufferLength = len ;
-		m_hdr.dwBytesRecorded = len ;
-		m_hdr.dwUser = 0;
+		midiOutUnprepareHeader(m_out, &m_hdr, sizeof(m_hdr));
 
-		MMRESULT result = midiOutPrepareHeader (m_out, &m_hdr, sizeof (m_hdr));
-		if (result != MMSYSERR_NOERROR) return;
-		ResetEvent (m_event);
-		result = midiOutLongMsg (m_out,&m_hdr,sizeof(m_hdr));
+		m_hdr.lpData          = (char*)sysex;
+		m_hdr.dwBufferLength  = len;
+		m_hdr.dwBytesRecorded = len;
+		m_hdr.dwUser          = 0;
+
+		MMRESULT result = midiOutPrepareHeader(m_out, &m_hdr, sizeof(m_hdr));
 		if (result != MMSYSERR_NOERROR) {
-			SetEvent (m_event);
+			return;
+		}
+
+		ResetEvent(m_event);
+
+		result = midiOutLongMsg(m_out, &m_hdr, sizeof(m_hdr));
+		if (result != MMSYSERR_NOERROR) {
+			SetEvent(m_event);
 			return;
 		}
 	}
 
-	MIDI_RC ListAll(Program *caller) override
-	{
-		unsigned int total = midiOutGetNumDevs();
-		for(unsigned int i = 0;i < total;i++) {
-			MIDIOUTCAPS mididev;
-			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
-			caller->WriteOut("  %2d - \"%s\"\n", i, mididev.szPname);
-		}
-		return MIDI_RC::OK;
-	}
+private:
+	HMIDIOUT m_out = nullptr;
+	MIDIHDR m_hdr  = {};
+	HANDLE m_event = nullptr;
 };
 
-MidiHandler_win32 Midi_win32;
+void MIDI_WIN32_ListDevices(MidiDeviceWin32* device, Program* caller);
+
+#endif // WIN32
 
 #endif

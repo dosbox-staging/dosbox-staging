@@ -201,9 +201,13 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	inventory.emplace_back("");
 
 	const std::string file_prefix = "        ";
+	std::error_code ec            = {};
 
-	std::error_code ec = {};
-	for (auto& [dir, shaders] : GetFilesInResource(GlShadersDir, ".glsl")) {
+	constexpr auto OnlyRegularFiles = true;
+
+	for (auto& [dir, shaders] :
+	     get_resource_dir_entries(GlShadersDir, ".glsl", OnlyRegularFiles)) {
+
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
@@ -327,9 +331,9 @@ bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string
 	// Start with the name as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_name),
 	                              std_fs::path(shader_name + glsl_ext),
-	                              GetResourcePath(GlShadersDir, shader_name),
-	                              GetResourcePath(GlShadersDir,
-	                                              shader_name + glsl_ext)};
+	                              get_resource_path(GlShadersDir, shader_name),
+	                              get_resource_path(GlShadersDir,
+	                                                shader_name + glsl_ext)};
 
 	for (const auto& path : candidate_paths) {
 		if (std_fs::exists(path) &&
