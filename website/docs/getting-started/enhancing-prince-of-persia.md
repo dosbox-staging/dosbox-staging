@@ -373,7 +373,7 @@ drift. It's 10% by default, so let's increase it to 15% instead:
 deadzone = 15
 ```
 
-!!! warning  "The PC is not a console"
+!!! important  "The PC is not a console!"
 
     Note that Prince of Persia requires a lot of precise control, so playing it
     with the analog stick makes the game quite a bit harder and somewhat
@@ -387,7 +387,7 @@ deadzone = 15
     was often an afterthought in DOS games.
 
 
-!!! danger "Issues with multiple controllers"
+!!! warning "Issues with multiple controllers"
 
     You might get some weird behaviour or even crashes if you have multiple
     game controllers plugged in. If that's the case, please disconnect all
@@ -500,7 +500,7 @@ The behaviour of the log window is different on each platform:
 <h3>Windows</h3>
 
 The log window is opened by default when you start DOSBox Staging. You can
-hide the log window by passing the `-noconsole` argument to the DOSBox
+hide the log window by passing the `--noconsole` argument to the DOSBox
 Staging executable.
 
 <h3>macOS</h3>

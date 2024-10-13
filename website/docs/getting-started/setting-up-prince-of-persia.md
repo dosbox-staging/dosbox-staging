@@ -75,7 +75,7 @@ up with the following folder structure:
 ![Prince of Persia folder structure](https://www.dosbox-staging.org/static/images/getting-started/pop-tree1.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
 
 
-!!! note "Origins of the C drive"
+!!! info "Origins of the C drive"
 
     Have you ever wondered where the "C drive" in Windows got its name from?
     This is something Windows inherited from its MS-DOS heritage (which in
@@ -87,7 +87,7 @@ up with the following folder structure:
     stuck around for backwards-compatibility reasons.
 
 
-!!! important
+!!! important "Attention, Windows users!"
 
     If you're a Windows user, do not confuse your *real* C drive where your
     operating system and programs are stored with the "virtual DOS C drive" of
@@ -109,7 +109,7 @@ accomplished slightly differently on each platform:
 
     After installing DOSBox Staging, it's highly recommended to open it once
     using the Start Menu shortcut of the desktop icon [as described
-    here](../releases/windows.md#microsoft-defender-smartscreen), otherwise,
+    here](../releases/windows.md#windows-defender), otherwise,
     the below instructions might not work.
 
 If you have used the installer with the default options to set up DOSBox
@@ -201,7 +201,7 @@ always the `Z` drive. This is a special drive that's always available; DOSBox
 stores some of its commands on it—you don't need to worry about it now.
 
 After the semicolon is the path of the current folder or current *directory*
-in DOS terminology. This is currently the root directory of the `Z` drive as
+in DOS terminology. This is currently the *root directory* of the `Z` drive as
 indicated by the `\` (backslash) character. The `>` character just signifies
 the end of the prompt, and the blinking underscore (`_`) character after it
 is---guess what?---the cursor.
