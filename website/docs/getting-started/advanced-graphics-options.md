@@ -15,7 +15,7 @@ flat panel, you'll get black bars on the sides of the image. This is called
 _pillarboxing_.
 
 <figure markdown>
-  ![Displaying a 4:3 image on a 16:9 flat screen](https://archive.org/download/dosbox-staging-getting-started-guide-assets/monitor-aspect-ratios1.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
+  ![Displaying a 4:3 image on a 16:9 flat screen](https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios1.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
 
   <figcaption markdown>
   Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match
@@ -36,7 +36,7 @@ shown in the below image. If you do the maths, it turns out the pixels need to
 be exactly 20% taller than wide.
 
 <figure markdown>
-  ![Displaying a 4:3 image on a 16:9 flat screen](https://archive.org/download/dosbox-staging-getting-started-guide-assets/monitor-aspect-ratios2.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
+  ![Displaying a 4:3 image on a 16:9 flat screen](https://www.dosbox-staging.org/static/images/getting-started/monitor-aspect-ratios2.png){ .skip-lightbox style="width: 25rem; margin: 1.5rem 0;" }
 
   <figcaption markdown>
   Left: 320&times;200 pixel image with square pixels on a 4:3 monitor---there

@@ -72,7 +72,7 @@ lowercase `C` on Windows and macOS but it does in Linux).
 We'll then copy the files from the `pop1.zip` archive into `drives/c` to end
 up with the following folder structure:
 
-![Prince of Persia folder structure](https://archive.org/download/dosbox-staging-getting-started-guide-assets/pop-tree1.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
+![Prince of Persia folder structure](https://www.dosbox-staging.org/static/images/getting-started/pop-tree1.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
 
 
 !!! note "Origins of the C drive"
@@ -174,7 +174,7 @@ this case).
 You'll be greeted by the following window when starting DOSBox Staging:
 
 <figure markdown>
-  ![DOSBox start screen](https://archive.org/download/dosbox-staging-getting-started-guide-assets/dosbox-start.png){ loading=lazy }
+  ![DOSBox start screen](https://www.dosbox-staging.org/static/images/getting-started/dosbox-start.png){ loading=lazy }
 </figure>
 
 Let's ignore the polite welcome message for now and focus on the text below
@@ -508,7 +508,7 @@ Just to make everything absolutely clear, this is the folder structure we
 should have at this point (only the first four files are shown in `drives/c`
 to save space):
 
-![Prince of Persia folder structure showcasing the location of the 'dosbox.conf' file](https://archive.org/download/dosbox-staging-getting-started-guide-assets/pop-tree2.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
+![Prince of Persia folder structure showcasing the location of the 'dosbox.conf' file](https://www.dosbox-staging.org/static/images/getting-started/pop-tree2.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
 
 Starting up DOSBox Staging from the `Prince of Persia` folder should now launch the
 game right away without any manual intervention!
