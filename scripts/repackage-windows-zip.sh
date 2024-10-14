@@ -8,6 +8,7 @@
 #
 # Prerequisites: zip & unzip commands
 
+#set -x
 set -e
 
 if [ $# -ne 1 ]; then
@@ -16,21 +17,20 @@ if [ $# -ne 1 ]; then
 fi
 
 IN_ZIP=$1
-IN_ZIP_PREFIX=dosbox-staging-windows-x64-
 
 if [[ $IN_ZIP != $IN_ZIP_PREFIX* ]]; then
 	echo "Input filename must start with '$IN_ZIP_PREFIX'"
 	exit 1
 fi
 
-function strip {
-	local STRING=${1#$"$2"}
-	echo "${STRING%$"$2"}"
-}
+if [[ $IN_ZIP =~ ^dosbox-staging-windows-([^-]*)-(v?)([0-9.]*)- ]]; then
+    ARCH=${BASH_REMATCH[1]}
+    VERSION=${BASH_REMATCH[3]}
+fi
 
-VERSION=$(strip "$(strip "$IN_ZIP" $IN_ZIP_PREFIX)" ".zip")
-ROOT_DIR=dosbox-staging-$VERSION
-OUT_ZIP=dosbox-staging-windows-$VERSION.zip
+
+ROOT_DIR=dosbox-staging-v$VERSION
+OUT_ZIP=dosbox-staging-windows-$ARCH-v$VERSION.zip
 
 RMDIR_CMD="rm -rf $ROOT_DIR"
 MKDIR_CMD="mkdir $ROOT_DIR"
