@@ -26,13 +26,15 @@
 #if C_FLUIDSYNTH
 
 #include <atomic>
-#include <memory>
-#include <vector>
 #include <fluidsynth.h>
+#include <memory>
+#include <optional>
 #include <thread>
+#include <vector>
 
 #include "mixer.h"
 #include "rwqueue.h"
+#include "std_filesystem.h"
 
 class MidiHandlerFluidsynth final : public MidiHandler {
 public:
@@ -50,11 +52,11 @@ public:
 		return MidiDeviceType::BuiltIn;
 	}
 
-	bool Open(const char *conf) override;
+	bool Open(const char* conf) override;
 	void Close() override;
 	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t *sysex, size_t len) override;
-	MIDI_RC ListAll(Program *caller) override;
+	void PlaySysex(uint8_t* sysex, size_t len) override;
+	MIDI_RC ListAll(Program* caller) override;
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
@@ -78,11 +80,11 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
 
-	std::string selected_font = "";
+	std::optional<std_fs::path> current_sf2_path = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.
-	double last_rendered_ms = 0.0;
+	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
