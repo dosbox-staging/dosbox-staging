@@ -37,6 +37,7 @@
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "host_locale.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
@@ -115,8 +116,10 @@ public:
 	}
 };
 
-static std::unordered_map<std::string, Message> messages;
-static std::deque<std::string> messages_order;
+static std::unordered_map<std::string, Message> messages = {};
+static std::deque<std::string> messages_order            = {};
+
+static bool message_file_loaded = false;
 
 // Add the message if it doesn't exist yet
 void MSG_Add(const char* name, const char* markup_msg)
@@ -124,7 +127,7 @@ void MSG_Add(const char* name, const char* markup_msg)
 	const auto pair = messages.try_emplace(name, markup_msg);
 	if (pair.second) { // if the insertion was successful
 		messages_order.emplace_back(name);
-	} else if ((control->GetLanguage() == "en" || control->GetLanguage().empty()) &&
+	} else if (!message_file_loaded &&
 	           strcmp(pair.first->second.GetRaw(), markup_msg) != 0) {
 		// Detect duplicates in the English language
 		LOG_WARNING("LANG: Duplicate text added for message '%s'. Second instance is ignored.",
@@ -139,10 +142,11 @@ void MSG_Add(const char* name, const char* markup_msg)
 static void msg_replace(const char *name, const char *markup_msg)
 {
 	auto it = messages.find(name);
-	if (it == messages.end())
+	if (it == messages.end()) {
 		MSG_Add(name, markup_msg);
-	else
+	} else {
 		it->second.Set(markup_msg);
+	}
 }
 
 static bool load_message_file(const std_fs::path &filename)
@@ -151,15 +155,11 @@ static bool load_message_file(const std_fs::path &filename)
 		return false;
 
 	if (!path_exists(filename) || !is_readable(filename)) {
-		LOG_MSG("LANG: Language file %s not found, skipping",
-		        filename.string().c_str());
 		return false;
 	}
 
 	FILE *mfile = fopen(filename.string().c_str(), "rt");
 	if (!mfile) {
-		LOG_MSG("LANG: Failed opening language file: %s, skipping",
-		        filename.string().c_str());
 		return false;
 	}
 
@@ -201,7 +201,7 @@ static bool load_message_file(const std_fs::path &filename)
 		}
 	}
 	fclose(mfile);
-	LOG_MSG("LANG: Loaded language file: %s", filename.string().c_str());
+	message_file_loaded = true;
 	return true;
 }
 
@@ -251,33 +251,98 @@ bool MSG_Write(const char * location) {
 
 // 2. It also supports the more convenient syntax without needing to provide a
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
-//    platform's config path/translations/<lang>[.utf8].lng.
+//    platform's config path/translations/<lang>.lng.
 
 void MSG_Init([[maybe_unused]] Section_prop *section)
 {
-	// TODO: After migration to C++20 try to switch to constexpr
-	static const std_fs::path subdir   = "translations";
-	static const std::string extension = ".lng";
+	static const std_fs::path subdirectory = "translations";
+	static const std::string extension     = ".lng";
 
-	const auto lang = control->GetLanguage();
+	const auto& host_language = GetHostLanguage();
 
-	// If the language is english, then use the internal message
-	if (lang.empty() || lang.starts_with("en")) {
+	// Get the language file from command line
+	assert(control);
+	auto language_file = control->GetArgumentLanguage();
+
+	// If not available, get it from the config file
+	if (language_file.empty()) {
+		const auto section = control->GetSection("dosbox");
+		assert(section);
+		language_file = static_cast<const Section_prop*>(section)->Get_string(
+		        "language");
+	}
+
+	// If the language is English, use the internal messages
+	if (language_file == "en" || language_file == "en.lng") {
 		LOG_MSG("LANG: Using internal English language messages");
 		return;
 	}
 
-	bool result = false;
-	if (lang.ends_with(".lng"))
-		result = load_message_file(GetResourcePath(subdir, lang));
-	else
-		// If a short-hand name was provided then add the file extension
-		result = load_message_file(GetResourcePath(subdir, lang + extension));
+	std_fs::path file_path = {};
 
-	if (result)
+	// If concrete language file is provided, try to load it
+	if (!language_file.empty() && language_file != "auto") {
+		if (language_file.ends_with(extension)) {
+			file_path = GetResourcePath(subdirectory, language_file);
+		} else {
+			// If a short-hand name was provided,
+                        // add the file extension
+			file_path = GetResourcePath(subdirectory,
+			                            language_file + extension);
+		}
+
+		const auto result = load_message_file(file_path);
+		if (!result) {
+			LOG_MSG("LANG: Could not load language file '%s', "
+			        "using internal English language messages",
+			        language_file.c_str());
+		} else {
+			LOG_MSG("LANG: Loaded language file '%s'",
+			        file_path.string().c_str());
+		}
+
 		return;
+	}
 
-	// If we got here, then the language was not found
-	LOG_WARNING("LANG: The '%s' language resource file could not be loaded, using internal English messages",
-	            lang.c_str());
+	// If autodetection failed, use internal English messages
+	if (host_language.language_file.empty()) {
+		if (host_language.log_info.empty()) {
+			LOG_MSG("LANG: Could not detect host value, "
+			        "using internal English language messages");
+		} else {
+			LOG_MSG("LANG: Could not detected language file from host value '%s', "
+			        "using internal English language messages",
+			        host_language.log_info.c_str());
+		}
+		return;
+	}
+
+	// If language was detected, some extra information for log is expected
+	assert(!host_language.log_info.empty());
+
+	// If autodetected messages file is English, use internal messages
+	if (host_language.language_file == "en") {
+		LOG_MSG("LANG: Using internal English language messages "
+		        "(detected from '%s')",
+		        host_language.log_info.c_str());
+		return;
+	}
+
+	// Try to load autodetected language
+	const auto file_extension = host_language.language_file + extension;
+	file_path = GetResourcePath(subdirectory, file_extension);
+	const auto result = load_message_file(file_path);
+
+	if (result) {
+		LOG_MSG("LANG: Loaded language file '%s' "
+		        "(detected from '%s')",
+		        file_extension.c_str(),
+		        host_language.log_info.c_str());
+	} else {
+		LOG_MSG("LANG: Could not load language file '%s' "
+		        "(detected from '%s'), "
+		        "using internal English language messages",
+		        file_extension.c_str(),
+		        host_language.log_info.c_str());
+	}
 }

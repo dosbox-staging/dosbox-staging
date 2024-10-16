@@ -97,6 +97,13 @@ can describe the whole geographic region, like on real MS-DOS.
 After translating the country names, check them by running DOSBox with
 `--list-countries` command line argument.
 
+### Keyboard layout names
+
+For example `KEYBOARD_LAYOUT_NAME_US` or `KEYBOARD_LAYOUT_NAME_PL214`.
+
+After translating, check them by running DOSBox with `--list-layouts` command line
+argument, also check the `keyb /list` internal command output.
+
 # Scripts
 
 ## `normalize.sh` (Linux, macOS) or `normalize.bat` (Windows)
