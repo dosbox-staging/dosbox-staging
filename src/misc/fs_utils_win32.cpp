@@ -226,21 +226,34 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 	ret.time        = 1;
 	ret.date        = 1;
 
-	FILETIME last_write_time = {};
-	if (!GetFileTime(handle, nullptr, nullptr, &last_write_time)) {
+	FILETIME write_time = {};
+	if (!GetFileTime(handle, nullptr, nullptr, &write_time)) {
 		return ret;
 	}
 
-	FileTimeToDosDateTime(&last_write_time, &ret.date, &ret.time);
+	FILETIME local_write_time = {};
+	if (!FileTimeToLocalFileTime(&write_time, &local_write_time)) {
+		return ret;
+	}
+
+	FileTimeToDosDateTime(&local_write_time, &ret.date, &ret.time);
 	return ret;
 }
 
-void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const uint16_t time)
+void set_dos_file_time(const NativeFileHandle handle, const uint16_t date,
+                       const uint16_t time)
 {
-	FILETIME last_write_time = {};
-	if (DosDateTimeToFileTime(date, time, &last_write_time)) {
-		SetFileTime(handle, nullptr, nullptr, &last_write_time);
+	FILETIME local_write_time = {};
+	if (!DosDateTimeToFileTime(date, time, &local_write_time)) {
+		return;
 	}
+
+	FILETIME write_time = {};
+	if (!LocalFileTimeToFileTime(&local_write_time, &write_time)) {
+		return;
+	}
+
+	SetFileTime(handle, nullptr, nullptr, &write_time);
 }
 
 #endif
