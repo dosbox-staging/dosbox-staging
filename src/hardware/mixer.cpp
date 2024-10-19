@@ -38,6 +38,7 @@
 #include "checks.h"
 #include "control.h"
 #include "cross.h"
+#include "gus.h"
 #include "hardware.h"
 #include "lpt_dac.h"
 #include "mapper.h"
@@ -306,6 +307,9 @@ void MIXER_LockMixerThread()
 	if (lpt_dac) {
 		lpt_dac->output_queue.Stop();
 	}
+	if (gus) {
+		gus->output_queue.Stop();
+	}
 	soundblaster_mixer_queue.Stop();
 	reel_magic_audio.output_queue.Stop();
 	mixer.mutex.lock();
@@ -324,6 +328,9 @@ void MIXER_UnlockMixerThread()
 	}
 	if (lpt_dac) {
 		lpt_dac->output_queue.Start();
+	}
+	if (gus) {
+		gus->output_queue.Start();
 	}
 	soundblaster_mixer_queue.Start();
 	reel_magic_audio.output_queue.Start();
