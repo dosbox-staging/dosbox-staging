@@ -42,13 +42,14 @@
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
+#include "timer.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 
 static void GUS_TimerEvent(uint32_t t);
 static void GUS_DMA_Event(uint32_t val);
 
-static std::unique_ptr<Gus> gus = nullptr;
+std::unique_ptr<Gus> gus = nullptr;
 
 Voice::Voice(uint8_t num, VoiceIrq& irq) noexcept
         : vol_ctrl{irq.vol_state},
@@ -334,6 +335,18 @@ constexpr uint8_t to_external_irq(const uint8_t irq)
 	return irq == 9 ? 2 : irq;
 }
 
+static void GUS_PicCallback()
+{
+	if (!gus || !gus->channel->is_enabled) {
+		return;
+	}
+
+	gus->frame_counter += gus->channel->GetFramesPerTick();
+	const auto requested_frames = ifloor(gus->frame_counter);
+	gus->frame_counter -= static_cast<float>(requested_frames);
+	gus->PicCallback(requested_frames);
+}
+
 Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pref,
          const char* ultradir, const std::string& filter_prefs)
         : ram(RAM_SIZE),
@@ -355,12 +368,16 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	RegisterIoHandlers();
 
-	// Register the Audio and DMA channels
-	const auto mixer_callback = std::bind(&Gus::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	constexpr bool Stereo = true;
+	constexpr bool SignedData = true;
+	constexpr bool NativeOrder = true;
 
-	audio_channel = MIXER_AddChannel(mixer_callback,
+	// Register the Audio and DMA channels
+	const auto mixer_callback = std::bind(MIXER_PullFromQueueCallback<Gus, AudioFrame, Stereo, SignedData, NativeOrder>,
+	                                      std::placeholders::_1,
+	                                      this);
+
+	channel = MIXER_AddChannel(mixer_callback,
 	                                 UseMixerRate,
 	                                 ChannelName::GravisUltrasound,
 	                                 {ChannelFeature::Sleep,
@@ -369,26 +386,26 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	                                  ChannelFeature::ChorusSend,
 	                                  ChannelFeature::DigitalAudio});
 
-	assert(audio_channel);
+	assert(channel);
 
 	// GUS is prone to accumulating beyond the 16-bit range so we scale back
 	// by RMS.
 	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
-	audio_channel->Set0dbScalar(rms_squared);
+	channel->Set0dbScalar(rms_squared);
 
-	if (!audio_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
 			LOG_WARNING("GUS: Invalid 'gus_filter' setting: '%s', using 'off'",
 			            filter_prefs.c_str());
 		}
 
-		audio_channel->SetHighPassFilter(FilterState::Off);
-		audio_channel->SetLowPassFilter(FilterState::Off);
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
 
 		set_section_property_value("gus", "gus_filter", "off");
 	}
 
-	ms_per_render = MillisInSecond / audio_channel->GetSampleRate();
+	ms_per_render = MillisInSecond / channel->GetSampleRate();
 
 	UpdatePlaybackDmaAddress(dma_pref);
 	UpdateRecordingDmaAddress(dma_pref);
@@ -397,6 +414,9 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	PopulateVolScalars();
 	PopulatePanScalars();
 	SetupEnvironment(port_pref, ultradir);
+
+	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
+	TIMER_AddTickHandler(GUS_PicCallback);
 
 	LOG_MSG("GUS: Running on port %xh, IRQ %d, and DMA %d",
 	        port_pref,
@@ -421,7 +441,7 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 
 		ms_per_render = MillisInSecond / sample_rate_hz;
 
-		audio_channel->SetSampleRate(sample_rate_hz);
+		channel->SetSampleRate(sample_rate_hz);
 	}
 
 	if (active_voices && prev_logged_voices != active_voices) {
@@ -465,8 +485,8 @@ void Gus::RenderUpToNow()
 	const auto now = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
-	assert(audio_channel);
-	if (audio_channel->WakeUp()) {
+	assert(channel);
+	if (channel->WakeUp()) {
 		last_rendered_ms = now;
 		return;
 	}
@@ -487,11 +507,9 @@ void Gus::RenderUpToNow()
 	}
 }
 
-void Gus::AudioCallback(const int num_requested_frames)
+void Gus::PicCallback(const int num_requested_frames)
 {
-	assert(audio_channel);
-
-	std::lock_guard lock(mutex);
+	assert(channel);
 
 #if 0
 	if (fifo.size())
@@ -502,15 +520,15 @@ void Gus::AudioCallback(const int num_requested_frames)
 
 	// First, send any frames we've queued since the last callback
 	while (num_frames_remaining && fifo.size()) {
-		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		AudioFrame frame = fifo.front();
 		fifo.pop();
+		output_queue.NonblockingEnqueue(std::move(frame));
 		--num_frames_remaining;
 	}
 	// If the queue's run dry, render the remainder and sync-up our time datum
 	if (num_frames_remaining > 0) {
-		const auto frames = RenderFrames(num_frames_remaining);
-		audio_channel->AddSamples_sfloat(num_frames_remaining,
-		                                 &frames[0][0]);
+		auto frames = RenderFrames(num_frames_remaining);
+		output_queue.NonblockingBulkEnqueue(frames, num_frames_remaining);
 	}
 	last_rendered_ms = PIC_FullIndex();
 }
@@ -542,7 +560,6 @@ void Gus::CheckIrq()
 
 bool Gus::CheckTimer(const size_t t)
 {
-	std::lock_guard lock(mutex);
 	auto& timer = t == 0 ? timer_one : timer_two;
 	if (!timer.is_masked) {
 		timer.has_expired = true;
@@ -616,7 +633,6 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 template <SampleSize sample_size>
 bool Gus::SizedDmaTransfer()
 {
-	std::lock_guard lock(mutex);
 	if (dma_channel->is_masked || !dma_control_register.is_enabled) {
 		return false;
 	}
@@ -831,7 +847,6 @@ void Gus::MirrorAdLibCommandRegister(const uint8_t reg_value)
 
 void Gus::PrintStats()
 {
-	std::lock_guard lock(mutex);
 	// Aggregate stats from all voices
 	uint32_t combined_8bit_ms  = 0;
 	uint32_t combined_16bit_ms = 0;
@@ -877,7 +892,6 @@ void Gus::PrintStats()
 
 uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
-	std::lock_guard lock(mutex);
 	RenderUpToNow();
 
 	//	LOG_MSG("GUS: Read from port %x", port);
@@ -1039,7 +1053,7 @@ void Gus::RegisterIoHandlers()
 void Gus::Reset() noexcept
 {
 	// Halt playback before altering the DSP state
-	audio_channel->Enable(false);
+	channel->Enable(false);
 
 	irq_status                 = 0;
 	irq_previously_interrupted = false;
@@ -1123,7 +1137,6 @@ void Gus::UpdatePlaybackDmaAddress(const uint8_t new_address)
 
 void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 {
-	std::lock_guard lock(mutex);
 	RenderUpToNow();
 
 	const auto val = check_cast<uint16_t>(value);
@@ -1447,8 +1460,8 @@ Gus::~Gus()
 	}
 
 	// Deregister the mixer channel, after which it's cleaned up
-	assert(audio_channel);
-	MIXER_DeregisterChannel(audio_channel);
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
 
 	// Deregister the DMA source once the mixer channel is gone, which can
 	// pull samples from DMA.
