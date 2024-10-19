@@ -4,7 +4,7 @@ set(VCPKG_USE_HOST_TOOLS ON)
 
 project(dosbox-staging
 		LANGUAGES C CXX
-		VERSION 0.82.0
+		VERSION 0.83.0
 )
 
 set(CMAKE_CXX_STANDARD 20)

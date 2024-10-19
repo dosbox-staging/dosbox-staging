@@ -155,7 +155,7 @@ publish
     publish_args.add_argument(
         "-t",
         "--version_tag",
-        help="version tag of the release notes draft (e.g., v0.82.0-alpha)"
+        help="version tag of the release notes draft (e.g., v0.83.0-alpha)"
     )
 
 
