@@ -21,6 +21,7 @@
 
 #include "dma.h"
 #include "mixer.h"
+#include "rwqueue.h"
 
 #include <queue>
 
@@ -264,6 +265,7 @@ public:
 	bool CheckTimer(size_t t);
 	void MirrorAdLibCommandRegister(const uint8_t reg_value);
 	void PrintStats();
+	void PicCallback(const int requested_frames);
 
 	struct Timer {
 		double delay          = 0.0;
@@ -276,6 +278,10 @@ public:
 	Timer timer_one = {TIMER_1_DEFAULT_DELAY};
 	Timer timer_two = {TIMER_2_DEFAULT_DELAY};
 
+	float frame_counter     = 0.0f;
+	MixerChannelPtr channel = nullptr;
+	RWQueue<AudioFrame> output_queue {1};
+
 	std::function<bool()> PerformDmaTransfer = {};
 
 private:
@@ -284,7 +290,6 @@ private:
 	Gus& operator=(const Gus&) = delete; // prevent assignment
 
 	void ActivateVoices(uint8_t requested_voices);
-	void AudioCallback(const int requested_frames);
 	void CheckIrq();
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
@@ -335,7 +340,6 @@ private:
 	VoiceIrq voice_irq            = {};
 	Voice* target_voice           = nullptr;
 	DmaChannel* dma_channel       = nullptr;
-	MixerChannelPtr audio_channel = nullptr;
 
 	// Playback related
 	double last_rendered_ms = 0.0;
@@ -381,3 +385,5 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
+
+extern std::unique_ptr<Gus> gus;
