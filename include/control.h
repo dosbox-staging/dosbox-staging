@@ -46,6 +46,7 @@ struct CommandLineArguments {
 	bool nolocalconf;
 	bool fullscreen;
 	bool list_countries;
+	bool list_layouts;
 	bool list_glshaders;
 	bool version;
 	bool help;
@@ -143,8 +144,9 @@ public:
 
 	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
-	const std::string& GetLanguage();
 	const char* SetProp(std::vector<std::string>& pvars);
+
+	const std::string& GetArgumentLanguage();
 
 	bool SecureMode() const
 	{
