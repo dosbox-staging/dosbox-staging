@@ -11,3 +11,4 @@ libavutil-dev
 libswscale-dev
 libavformat-dev
 libswresample-dev
+libfluidsynth-dev
