@@ -106,7 +106,7 @@ AlignOperands:  AlignAfterOperator
 #   #endif
 #   #endif
 #
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: None
 
 # Always place function bodies on their own lines because
 # it makes a mess when some are on the same line and others are
