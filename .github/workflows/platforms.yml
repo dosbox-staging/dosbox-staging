@@ -54,7 +54,7 @@ jobs:
         with:
           submodules: false
 
-      - uses: uraimo/run-on-arch-action@master
+      - uses: uraimo/run-on-arch-action@v2.8.1
         name: Build artifact
         id: build
         with:
