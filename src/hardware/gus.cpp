@@ -1491,8 +1491,10 @@ static void gus_destroy([[maybe_unused]] Section* sec)
 	//       ULTRASND and ULTRADIR environment variables.
 
 	if (gus) {
+		MIXER_LockMixerThread();
 		gus->PrintStats();
 		gus.reset();
+		MIXER_UnlockMixerThread();
 	}
 }
 
