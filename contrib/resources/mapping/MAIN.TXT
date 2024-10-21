@@ -7,7 +7,7 @@
 # ID    - description                                            [ID usage originator]
 #
 #
-# Fully supported code pages (93 code pages):
+# Fully supported code pages (94 code pages):
 #
 # 113   - Yugoslavian, Latin                                     [AST Premium Exec DOS]
 # 437   - United States                                          [IBM, Microsoft]
@@ -98,6 +98,7 @@
 # 30040 - Russian, Cyrillic, with UAH                            [FreeDOS]
 # 58152 - Kazakh, Cyrillic, with EUR                             [FreeDOS]
 # 58210 - Azeri and Russian, Cyrillic                            [FreeDOS]
+# 59829 - Georgian                                               [FreeDOS]
 # 58335 - Kashubian and Polish, Mazovia based, with PLN (*)      [FreeDOS]
 # 59234 - Tatar, Cyrillic                                        [FreeDOS]
 # 62306 - Uzbek, Cyrillic                                        [FreeDOS]
@@ -168,12 +169,6 @@
 # 28604 - Celtic, ISO 8859-14 encoding                           [Microsoft]
 # 28605 - Western European, with EUR, ISO 8859-15 encoding       [Microsoft]
 # 28606 - South-Eastern European, with EUR, ISO 8859-16 encoding [Microsoft]
-#
-#
-# Code pages mostly supported (1 code page), but with unidentified characters still left (TODO):
-#
-# 59829 - Georgian                                               [FreeDOS]
-#       - 1 character still unidentified
 #
 #
 # Code pages with limited support (1 code page):
@@ -2592,6 +2587,7 @@ EXTENDS CODEPAGE 866
 CODEPAGE 59829 # Georgian
 # reference: https://en.wikipedia.org/wiki/Georgian_language
 #            https://en.wikipedia.org/wiki/Georgian_scripts
+#            https://en.m.wikibooks.org/wiki/Character_Encodings/Code_Tables/MS-DOS/Code_page_59829
 0x80 0x10d0        #GEORGIAN LETTER AN
 0x81 0x10d1        #GEORGIAN LETTER BAN
 0x82 0x10d2        #GEORGIAN LETTER GAN
@@ -2630,8 +2626,7 @@ CODEPAGE 59829 # Georgian
 0xa3 0x10f3        #GEORGIAN LETTER WE
 0xa4 0x10f4        #GEORGIAN LETTER HAR
 0xa5 0x10f5        #GEORGIAN LETTER HOE
-# TODO: next one is most likely SHIN with some accent
-# 0xa6
+0xa6 0x10e8 0x030c #GEORGIAN LETTER SHIN, COMBINING CARON
 EXTENDS CODEPAGE 437
 
 CODEPAGE 60258 # Russian Cyrillic and Latin Azeri
