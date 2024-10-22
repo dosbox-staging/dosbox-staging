@@ -95,8 +95,8 @@ After the setup has been completed, start the game by running `demo` again
 and then pressing the ++1++ key.
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-dark-forces/dark-forces-ingame.jpg" >
-    ![Star Wars: Dark Forces -- Opening scene](https://archive.org/download/dosbox-staging-v0.81.0-dark-forces/dark-forces-ingame-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/dark-forces-ingame.jpg" >
+    ![Star Wars: Dark Forces -- Opening scene](https://www.dosbox-staging.org/static/images/getting-started/dark-forces-ingame-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -570,12 +570,12 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 <div class="compact" markdown>
 | <!-- --> | <!-- -->
 | -------- | --------
-| **Roland SC-55 v1.21 (hardware)** | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-sc-55-v1.21.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| GeneralUser GS    | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| Creative 4GMGSMT  | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-creative-4gmgsmt.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| FluidR3_GM_GS     | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| FatBoy            | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-fatboy.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| Arachno           | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-arachno.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| **Roland SC-55 v1.21 (hardware)** | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-sc-55-v1.21.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| GeneralUser GS    | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| Creative 4GMGSMT  | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-creative-4gmgsmt.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| FluidR3_GM_GS     | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| FatBoy            | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fatboy.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| Arachno           | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-arachno.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 
 </div>
 

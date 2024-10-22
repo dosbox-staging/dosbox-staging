@@ -134,7 +134,7 @@ we'll create one subfolder within `DOS Games` for each game, then each game
 folder will contain its own local `dosbox.conf` configuration specific to that
 game, along with its own "emulated C drive" in the `drives/c` subfolder.
 
-![Passport to Adventure folder structure](https://www.dosbox-staging.org/static/images/getting-started/passport-tree.png){ .skip-lightbox style="width: 13.25rem; margin: 0.9rem max(calc((50% - 13.25rem/2) * 0.85), 0rem);" }
+![Passport to Adventure folder structure](images/passport-to-adventure-dirtree1.png){ .skip-lightbox style="width: 14.75rem; margin: 0.3rem max(calc((50% - 14.75rem/2) * 0.85), 0rem);" }
 
 
 ## Examining text files
@@ -213,8 +213,8 @@ options next!
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-title.png" >
-    ![Indiana Jones and the Last Crusade -- Title screen](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-title-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-title.png" >
+    ![Indiana Jones and the Last Crusade -- Title screen](https://www.dosbox-staging.org/static/images/getting-started/indy3-title-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -223,8 +223,8 @@ options next!
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-start.png" >
-    ![Indiana Jones and the Last Crusade -- Opening scene](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-start-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-start.png" >
+    ![Indiana Jones and the Last Crusade -- Opening scene](https://www.dosbox-staging.org/static/images/getting-started/indy3-start-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -527,8 +527,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-vga.png" >
-    ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-vga.png" >
+    ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -537,8 +537,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-ega.jpg" >
-    ![Indiana Jones and the Last Crusade -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega.jpg" >
+    ![Indiana Jones and the Last Crusade -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -551,8 +551,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-vga.jpg" >
-    ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-vga-small.jpeg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-vga.jpg" >
+    ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-vga-small.jpeg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -561,8 +561,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-ega.jpg" >
-    ![The Secret of Monkey Island -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega.jpg" >
+    ![The Secret of Monkey Island -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -575,8 +575,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-vga.jpg" >
-    ![Loom -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-vga.jpg" >
+    ![Loom -- EGA as displayed on VGA monitors](https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -585,8 +585,8 @@ The below screenshots illustrate the difference between the "true EGA" and
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-ega.jpg" >
-    ![Loom -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega.jpg" >
+    ![Loom -- "True EGA" emulation](https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>

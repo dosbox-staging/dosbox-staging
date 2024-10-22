@@ -72,7 +72,8 @@ lowercase `C` on Windows and macOS but it does in Linux).
 We'll then copy the files from the `pop1.zip` archive into `drives/c` to end
 up with the following folder structure:
 
-![Prince of Persia folder structure](https://www.dosbox-staging.org/static/images/getting-started/pop-tree1.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
+![Prince of Persia folder structure](images/prince-of-persia-dirtree1.png){ .skip-lightbox style="width: 16.5rem; margin: 0.3rem max(calc((50% - 16.5rem/2) * 0.85), 0rem);" }
+
 
 
 !!! info "Origins of the C drive"
@@ -339,8 +340,8 @@ backstory.
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-title.jpg" >
-    ![Prince of Persia -- Title screen](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-title-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-title.jpg" >
+    ![Prince of Persia -- Title screen](https://www.dosbox-staging.org/static/images/getting-started/pop-title-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -350,8 +351,8 @@ backstory.
 
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-intro.jpg" >
-    ![Prince of Persia -- Scene from the intro sequence](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-intro-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-intro.jpg" >
+    ![Prince of Persia -- Scene from the intro sequence](https://www.dosbox-staging.org/static/images/getting-started/pop-intro-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -380,8 +381,8 @@ should definitely help. The manual also contains helpful hints and a full list
 of available keyboard shortcuts.
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga.jpg" >
-    ![This is where the adventure starts!](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga-small.jpg){ loading=lazy width=88% .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
+    ![This is where the adventure starts!](https://www.dosbox-staging.org/static/images/getting-started/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -508,7 +509,7 @@ Just to make everything absolutely clear, this is the folder structure we
 should have at this point (only the first four files are shown in `drives/c`
 to save space):
 
-![Prince of Persia folder structure showcasing the location of the 'dosbox.conf' file](https://www.dosbox-staging.org/static/images/getting-started/pop-tree2.png){ .skip-lightbox style="width: 14.5rem; margin: 0.9rem max(calc((50% - 14.5rem/2) * 0.85), 0rem);" }
+![Prince of Persia folder structure showcasing the location of the 'dosbox.conf' file](images/prince-of-persia-dirtree2.png){ .skip-lightbox style="width: 16.5rem; margin: 0.3rem max(calc((50% - 16.5rem/2) * 0.85), 0rem);" }
 
 Starting up DOSBox Staging from the `Prince of Persia` folder should now launch the
 game right away without any manual intervention!

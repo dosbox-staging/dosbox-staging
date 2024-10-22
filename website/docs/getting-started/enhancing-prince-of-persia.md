@@ -80,8 +80,8 @@ magnification to avoid weird artifacts caused by the browser rescaling the
 image.
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga.jpg" >
-    ![Prince of Persia in VGA mode with the default settings](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
+    ![Prince of Persia in VGA mode with the default settings](https://www.dosbox-staging.org/static/images/getting-started/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -152,8 +152,8 @@ EGA monitors can display true 320&times;200 resolution with the well-known
 thick scanline look.
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-ega.jpg" >
-    ![Prince of Persia in EGA mode](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-ega-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-ega.jpg" >
+    ![Prince of Persia in EGA mode](https://www.dosbox-staging.org/static/images/getting-started/pop-ega-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -184,8 +184,8 @@ Ready? Behold the formidable 4-colour CGA graphics---and what 4 colours those
 are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-cga.jpg" >
-    ![Prince of Persia in CGA mode. Yeah, it's not pretty...](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-cga-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-cga.jpg" >
+    ![Prince of Persia in CGA mode. Yeah, it's not pretty...](https://www.dosbox-staging.org/static/images/getting-started/pop-cga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -217,8 +217,8 @@ Hercules card connected to a period-accurate monochrome monitor (but we'll
 examine some advanced techniques on [how to fix that](advanced-graphics-options.md#custom-aspect-ratios)).
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-amber.png" >
-    ![Prince of Persia in Hercules mode using the default 'amber' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-amber.png){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png" >
+    ![Prince of Persia in Hercules mode using the default 'amber' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-amber.png){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -242,8 +242,8 @@ key.
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-green.png" >
-    ![Hercules mode using the 'green' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-green.png){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-green.png" >
+    ![Hercules mode using the 'green' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-green.png){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -252,8 +252,8 @@ key.
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-white.png" >
-    ![Hercules mode using the 'white' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-white.png){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-white.png" >
+    ![Hercules mode using the 'white' palette](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-white.png){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -533,7 +533,7 @@ details about what DOSBox Staging is currently doing, what exact settings it
 uses, and so on. For example, this is the start of the logs when running the
 game on macOS:
 
-![Example DOSBox logs](https://archive.org/download/dosbox-staging-v0.82.0-logging/pop-logs1.png){ loading=lazy }
+![Example DOSBox logs](https://www.dosbox-staging.org/static/images/getting-started/pop-logs1.png){ loading=lazy }
 
 That's all good and well, but what's even better is if an invalid
 configuration setting has been detected, or something went wrong when running
@@ -565,7 +565,7 @@ glshader = xsharp
 
 As expected, we'll see some warnings and errors in the logs after a restart:
 
-![Example DOSBox logs showcasing warnings and errors](https://archive.org/download/dosbox-staging-v0.82.0-logging/pop-logs2.png){ loading=lazy }
+![Example DOSBox logs showcasing warnings and errors](https://www.dosbox-staging.org/static/images/getting-started/pop-logs2.png){ loading=lazy }
 
 Warnings are yellow, errors are red. Errors are generally reserved for more
 severe problems. In this example, we have the following:
