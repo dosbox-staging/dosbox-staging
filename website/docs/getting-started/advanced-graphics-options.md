@@ -308,8 +308,8 @@ viewport = relative 112% 173%
 ```
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-aspect-corrected.jpg" >
-    ![Prince of Persia in Hercules mode with custom stretch factors to make the image fill our 4:3 "emulated CRT screen"](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-aspect-corrected-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected.jpg" >
+    ![Prince of Persia in Hercules mode with custom stretch factors to make the image fill our 4:3 "emulated CRT screen"](https://www.dosbox-staging.org/static/images/getting-started/pop-hercules-aspect-corrected-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>

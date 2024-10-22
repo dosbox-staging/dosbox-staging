@@ -90,7 +90,7 @@ included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
 
-![Beneath a Steel Sky folder structure](https://www.dosbox-staging.org/static/images/getting-started/bass-tree.png){ .skip-lightbox style="width: 12.4rem; margin: 0.9rem max(calc((50% - 12.4rem/2) * 0.85), 0rem);" }
+![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 14rem; margin: 0.3rem max(calc((50% - 14rem/2) * 0.85), 0rem);" }
 
 We need to mount the CD image to be able to use it. Our C drive is the hard
 drive, so we'll mount the CD-ROM image as the following letter D by
@@ -705,7 +705,7 @@ MT-32 ROM versions that have been successfully detected. The green **`y`**
 character indicates the currently selected MT-32 version. You should get an
 output similar to this:
 
-![DOSBox Staging mixer -- Listing available MIDI devices](https://archive.org/download/dosbox-staging-v0.81.0-improved-mixer-command/mixer-listmidi.png){ loading=lazy }
+![DOSBox Staging mixer -- Listing available MIDI devices](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi.png){ loading=lazy }
 
 
 ### Selecting the MT-32 version
@@ -873,7 +873,7 @@ options](advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders)
 chapter at the end.
 
 <figure markdown>
-  ![Left: Screenshot from the intro with aspect ratio correction disabled (square pixels), Right: The original image from the comic book included with the game](https://archive.org/download/dosbox-staging-v0.82.0-beneath-a-steel-sky-aspect/bass-aspect.jpg){ loading=lazy width=90% }
+  ![Left: Screenshot from the intro with aspect ratio correction disabled (square pixels), Right: The original image from the comic book included with the game](https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg){ loading=lazy width=90% }
 
   <figcaption>
   Left: Screenshot from the intro with aspect ratio correction disabled (square pixels)<br>
@@ -895,8 +895,8 @@ viewport = 1280x800
 <div class="image-grid" markdown>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-ingame1.jpg" >
-    ![Beneath a Steel Sky with aspect ratio correction disabled](https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-ingame1-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1.jpg" >
+    ![Beneath a Steel Sky with aspect ratio correction disabled](https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -905,8 +905,8 @@ viewport = 1280x800
 </figure>
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-ingame2.jpg" >
-    ![Well, we won't escape this way...](https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-ingame2-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-ingame2.jpg" >
+    ![Well, we won't escape this way...](https://www.dosbox-staging.org/static/images/getting-started/bass-ingame2-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
@@ -1040,8 +1040,8 @@ Now you can play the game with Amiga-like graphics and MT-32 or OPL sound from
 a strange parallel universe! 😎
 
 <figure markdown>
-  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-amiga.jpg" >
-    ![Beneath a Steel Sky from a parallel universe running on an Amiga in 256-colour mode](https://archive.org/download/dosbox-staging-v0.81.0-bass/bass-amiga-small.jpg){ loading=lazy .skip-lightbox }
+  <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/bass-amiga.jpg" >
+    ![Beneath a Steel Sky from a parallel universe running on an Amiga in 256-colour mode](https://www.dosbox-staging.org/static/images/getting-started/bass-amiga-small.jpg){ loading=lazy .skip-lightbox }
   </a>
 
   <figcaption markdown>
