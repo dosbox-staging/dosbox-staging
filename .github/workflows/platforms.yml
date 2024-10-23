@@ -89,7 +89,7 @@ jobs:
                 apt-get -qq install git curl findutils procps tar zstd screenfetch \
                                     < /dev/null > /dev/null
                 apt-get -qq install cmake g++ build-essential ccache libasound2-dev libgtest-dev \
-                                    libopusfile-dev libsdl2-dev zlib1g-dev libspeexdsp-dev \
+                                    libopusfile-dev libsdl2-dev zlib1g-dev libspeexdsp-dev libpng-dev \
                                     < /dev/null > /dev/null
                 # Meson from Debian repository is too old for DOSBox Staging
                 apt-get -qq install python3-setuptools python3-pip \
