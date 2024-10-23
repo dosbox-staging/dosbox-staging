@@ -124,6 +124,8 @@ jobs:
 
             # Setup
             #  - use a minimal build because python fetching wraps segfaults under Docker
+            #  - zlib-ng fails to compile for ARM targets, work around by just disabling
+            #    it until a proper fix can be found
             meson setup \
                   -Duse_fluidsynth=false \
                   -Duse_sdl2_net=false \
@@ -131,6 +133,7 @@ jobs:
                   -Duse_mt32emu=false \
                   -Duse_slirp=false \
                   -Duse_alsa=false \
+                  -Duse_zlib_ng=false \
                   build
             # Build
             meson compile -C build
