@@ -15,14 +15,15 @@ Staging has full read and write access to it (don't put it in a system folder,
 e.g., `Program Files` on Windows). Each game will have its dedicated subfolder
 under `DOS Games`, so let's create our first one called `Prince of Persia`.
 
-Now download
-[pop1.zip](https://www.dosgamesarchive.com/file/prince-of-persia/pop1) from
-the [Prince of Persia demo
-page](https://www.dosgamesarchive.com/download/prince-of-persia) and extract
-its contents into `DOS Games/Prince of Persia` (or download it from [this
-mirror](https://files.dosbox-staging.org/Files/Games/Demos/Prince%20of%20Persia/pop1.zip)). The archive contains only two
-files: `pop1.txt` (a regular text file) and `pop1demo.exe` (an MS-DOS
-executable). Let's open `pop1.txt` in our text editor!
+Now download [pop1.zip][pop1] from the [Prince of Persia demo page][pop-demo]
+(or use [this mirror][pop1-mirror]) and extract its contents into `DOS
+Games/Prince of Persia` . The archive contains only two files: `pop1.txt` (a
+regular text file) and `pop1demo.exe` (an MS-DOS executable). Let's open
+`pop1.txt` in our text editor!
+
+[pop1]: https://www.dosgamesarchive.com/file/prince-of-persia/pop1
+[pop-demo]: https://www.dosgamesarchive.com/download/prince-of-persia
+[pop1-mirror]: https://files.dosbox-staging.org/Files/Games/Demos/Prince%20of%20Persia/pop1.zip
 
     It's like an Arabian Nights movie come to life... with you as the star!
     Leap into an exotic labyrinth of heart-stopping action, challenging mazes,
@@ -42,10 +43,10 @@ puzzles. Getting past these puzzles requires some logical thinking, a little
 bit of background knowledge, and an element of trial and error is occasionally
 involved as well. Well, the user manual often helps too if you happen to own
 the original or can procure a [scanned copy][pop-manual]
-([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Prince%20of%20Persia%20-%20User%20Manual.pdf))
-online (most often you can).
+([mirror][pop-manual-mirror]) online (most often you can).
 
 [pop-manual]: https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf
+[pop-manual-mirror]: https://files.dosbox-staging.org/Files/Games/Manuals/Prince%20of%20Persia%20-%20User%20Manual.pdf
 
 Luckily, this is an easy one: executable files (programs or scripts you can
 start) under MS-DOS have the `.EXE`, `.COM` or `.BAT` file extension. Looking
@@ -377,12 +378,9 @@ instead by pressing ++ctrl+k++!
 You can control the prince with the cursor keys. Hold down the ++shift++ key
 to walk carefully. It's not that hard to figure out the various movement
 combinations on your own, but reading the *Controlling Your Movements* section
-of the [user
-manual](https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf)
-should definitely help
-([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Prince%20of%20Persia%20-%20User%20Manual.pdf)).
-The manual also contains helpful hints and a full list of available keyboard
-shortcuts.
+of the [user manual][pop-manual] should definitely help
+([mirror][pop-manual-mirror]). The manual also contains helpful hints and a
+full list of available keyboard shortcuts.
 
 <figure markdown>
   <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >

@@ -469,9 +469,11 @@ these extra features, and while General MIDI compatible SoundFonts will work
 with them, it's recommended to use GS-compatible ones for the best
 results .
 
-One such SoundFont is [GeneralUser GS](https://schristiancollins.com/generaluser.php).
-Download the latest version, then copy the SoundFont file with the `.sf2`
-extension into its designated folder:
+One such SoundFont is [GeneralUser GS][generaluser-gs]. Download the latest
+version (v2.0.1 at the time of writing this), unzip the package, then copy the
+SoundFont file with the `.sf2` extension into its designated folder:
+
+[generaluser-gs]: https://schristiancollins.com/generaluser.php
 
 <div class="compact" markdown>
 
@@ -487,7 +489,8 @@ You can use the `mixer /listmidi` command to get the list of available
 SoundFonts. If you've copied the SF2 file into the correct folder, you
 should see the following:
 
-TODO screenshot
+![MIXER /LISTMIDI showing the list of available SoundFonts](https://www.dosbox-staging.org/static/images/getting-started/fluidsynth-listmidi.png){ loading=lazy }
+
 
 The next step is to configure FluidSynth to use this SoundFont. The name of
 the SoundFont might be slightly different if a new version has been released
@@ -501,7 +504,7 @@ from the name.
 mididevice = fluidsynth
 
 [fluidsynth]
-soundfont = GeneralUser GS v1.471
+soundfont = GeneralUser-GS
 ```
 
 The only thing left to do is to reconfigure the game to use General MIDI for
@@ -574,9 +577,9 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 | <!-- --> | <!-- -->
 | -------- | --------
 | **Roland SC-55 v1.21 (hardware)** | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-sc-55-v1.21.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| GeneralUser GS    | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| TODO GeneralUser GS    | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Creative 4GMGSMT  | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-creative-4gmgsmt.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| FluidR3_GM_GS     | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| TODO FluidR3_GM_GS     | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | FatBoy            | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fatboy.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Arachno           | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-arachno.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 
