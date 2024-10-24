@@ -2,7 +2,6 @@
 # but it was created based on the information found there
 
 # reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-7
-#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 
 
 # characters 0x00-0x7f as in code page 437
@@ -43,13 +42,13 @@
 0xa1	0x2018  #LEFT SINGLE QUOTATION MARK
 0xa2	0x2019  #RIGHT SINGLE QUOTATION MARK
 0xa3	0x00a3  #POUND SIGN
-0xa4	0x20ac  #EURO SIGN
-0xa5	0x20af  #DRACHMA SIGN
+0xa4		#UNDEFINED
+0xa5		#UNDEFINED
 0xa6	0x00a6  #BROKEN VERTICAL BAR
 0xa7	0x00a7  #SECTION SIGN
 0xa8	0x00a8  #DIAERESIS
 0xa9	0x00a9  #COPYRIGHT SIGN
-0xaa	0x037a  #GREEK YPOGEGRAMMENI
+0xaa		#UNDEFINED
 0xab	0x00ab  #LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
 0xac	0x00ac  #NOT SIGN
 0xad	0x00ad  #SOFT HYPHEN
