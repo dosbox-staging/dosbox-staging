@@ -484,6 +484,8 @@ struct KeyboardLayoutInfoEntry {
 };
 
 enum class CodePageWarning {
+	// Apple encoding, ASCII codes 0x00-0x20 are different
+	Apple, 
 	// Code page puts a 'dotted I' in place of the regular ASCII 'I'
 	DottedI, 
 };
