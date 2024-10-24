@@ -1,0 +1,26 @@
+CPI PACK - LIST OF CPI FILES AND THEIR CODEPAGES
+================================================
+
+
+
+EGAMAC.CPX
+----------
+
+  1275 - Apple Latin-1
+  1282 - Apple Central European (and Baltic)
+  1284 - Apple Croatian
+  1285 - Apple Romanian
+ 58619 - Apple Gaelic (Old Orthography)
+ 58630 - Apple Saami
+
+
+
+EGA2MAC.CPX
+-----------
+
+  1275 - Apple Latin-1
+  1280 - Apple Greek
+  1281 - Apple Latin-5 (Turkish)
+  1283 - Apple Cyrillic
+  1286 - Apple Icelandic
+ 58627 - Apple Cyrillic (Ukrainian)

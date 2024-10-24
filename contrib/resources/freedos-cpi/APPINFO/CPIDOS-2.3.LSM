@@ -1,0 +1,13 @@
+Begin3
+Title: CPIDOS - CPI (Code Page Information) Package with DOS codepages
+Version: 2.3
+Entered-date: 28-MAY-2009
+Description: Package of DISPLAY-type, UPX-compressed CPI files with DOS codepages.
+Keywords: display, codepage, code page, cp, dos codepage, dos cp, charset
+Author: hperon@terra.com.br (Henrique Peron)
+Maintained-by: hperon@terra.com.br (Henrique Peron)
+Primary-site: http://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/dos/cpi/
+Alternate-site:
+Platforms: DOS
+Copying-policy: GPL
+End
