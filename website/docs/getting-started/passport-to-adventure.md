@@ -2,16 +2,17 @@
 
 Okay, so what we'll set up next is not a single game, but a collection called
 **Passport to Adventure** which contains playable demos of three classic
-LucasArts point-and-click adventure games:
-[Indiana Jones and the Last Crusade](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/),
-[The Secret of Monkey Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/),
-and [Loom](https://www.mobygames.com/game/176/loom/). These were the
-blockbusters of the adventure gaming genre back in the day, and they still
-offer countless hours of fun if you like puzzle-solving and well-written,
-intriguing storylines.
+LucasArts point-and-click adventure games: [Indiana Jones and the Last
+Crusade][indy3-moby], [The Secret of Monkey Island][monkey1-moby], and
+[Loom][loom-moby]. These were the blockbusters of the adventure gaming genre
+back in the day, and they still offer countless hours of fun if you like
+puzzle-solving and well-written, intriguing storylines.
 
 But before we begin, let's discuss something fundamental to DOSBox Staging!
 
+[indy3-moby]: https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/
+[monkey1-moby]: https://www.mobygames.com/game/616/the-secret-of-monkey-island/
+[loom-moby]: https://www.mobygames.com/game/176/loom/
 
 ## Primary configuration
 
@@ -74,7 +75,8 @@ You can run `config -h <section_name>`, too, to get the names of all available
 settings in a given config section. For example, this is the result of `config
 -h render`:
 
-TODO screenshot
+![Output of the 'config -h render' command](https://www.dosbox-staging.org/static/images/getting-started/config-render.png){ loading=lazy }
+
 
 It is highly recommended to look up the descriptions of the various settings
 as you encounter them in this guide. That's a good way to get gradually
@@ -125,10 +127,13 @@ folder in `DOS Games` next to `Prince of Persia` and name it `Passport to
 Adventure`. Create the `drives` subfolder in it and the `c` subfolder in the
 `drives` folder.
 
-Download the [ZIP archive](https://archive.org/download/PassportToAdventure/PassportToAdventuredemo1990lucasartsadventureCompilation.zip)
-from the [Passport of Adventure](https://archive.org/details/PassportToAdventure) item at the
-Internet Archive (or from this [mirror](https://files.dosbox-staging.org/Files/Games/Demos/PassportToAdventure.zip)),
-then extract its contents into the `c` subfolder.
+Download the [ZIP archive][passport] from the [Passport of
+Adventure][passport-item] item at the Internet Archive (or from this
+[mirror][passport-mirror]), then extract its contents into the `c` subfolder.
+
+[passport]: https://archive.org/download/PassportToAdventure/PassportToAdventuredemo1990lucasartsadventureCompilation.zip
+[passport-item]: https://archive.org/details/PassportToAdventure
+[passport-mirror]: https://files.dosbox-staging.org/Files/Games/Demos/PassportToAdventure.zip
 
 Below is the folder structure you should end up with. As explained before,
 we'll create one subfolder within `DOS Games` for each game, then each game
@@ -405,10 +410,12 @@ Tandy Corporation was an IBM PC clone manufacturer in the 1980s; they produced
 the Tandy line of home computers that were mostly compatible with standard PCs
 but also offered improved sound and graphics capabilities. Developers had to
 specifically support the Tandy to take advantage of these features. There are
-relatively few such games, but they are worth seeking out as they provide
-a better experience, especially in the sound department. The
-[Games with enhanced Tandy & PCjr graphics and sound](https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-enhanced-Tandy-&-PCjr-graphics-and-sound)
-page on our wiki should help you find these pre-1990 Tandy specials.
+relatively few such games, but they are worth seeking out as they provide a
+better experience, especially in the sound department. The [Games with
+enhanced Tandy & PCjr graphics and sound][wiki-tandy] page on our wiki should
+help you find these pre-1990 Tandy specials.
+
+[wiki-tandy]: https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-enhanced-Tandy-&-PCjr-graphics-and-sound
 
 DOSBox can emulate a Tandy machine---we only need to instruct it to do so in
 our config:
