@@ -81,7 +81,6 @@ Liste der verfügbaren Optionen:
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
 Liste der Ländervorwahlen (meist identisch mit den Telefonvorwahlen)
------------------------------------------------------------
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
 Die oben genannten numerischen Ländercodes können genau so verwendet werden,

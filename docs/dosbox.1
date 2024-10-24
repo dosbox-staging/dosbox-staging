@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Dec 4, 2023"
+.TH DOSBOX 1 "Sep 29, 2024"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -40,6 +40,8 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 .B dosbox \-\-working-dir <path>
 .LP
 .B dosbox \-\-list\-countries
+.LP
+.B dosbox \-\-list\-layouts
 .LP
 .B dosbox \-\-list\-glshaders
 .LP
@@ -94,12 +96,16 @@ Legacy single dash abbrevations still work for backwards compatibility.
 --list-countries         List all supported countries with their numeric codes.
                          Codes are to be used in the 'country' config setting.
 
+--list-layouts           List all supported keyboard layouts with their codes.
+                         Codes are to be used in the 'keyboard_layout' config setting.
+
 --list-glshaders         List all available OpenGL shaders and their paths.
                          Shaders are to be used in the 'glshader' config setting.
 
 --fullscreen             Start in fullscreen mode.
 
---lang <lang_file>       Start with the language specified in <lang_file>.
+--lang <lang_file>       Start with the language specified in <lang_file>. If set to
+                         'auto', tries to detect the language from the host OS.
 
 --machine <type>         Emulate a specific type of machine. The machine type has
                          influence on both the emulated video and sound cards.
