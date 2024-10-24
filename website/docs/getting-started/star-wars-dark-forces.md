@@ -57,8 +57,10 @@ three ZIP archives,
 [dforces1.zip](https://archive.org/download/StarWarsDarkForces/dforces1.zip),
 [dforces2.zip](https://archive.org/download/StarWarsDarkForces/dforces2.zip),
 and [dforces3.zip](https://archive.org/download/StarWarsDarkForces/dforces3.zip);
-we'll need to copy their contents to our virtual C drive. Make sure to
-download the [manual](https://archive.org/details/dark-forces-manual) as well.
+we'll need to copy their contents to our virtual C drive
+([mirror](https://files.dosbox-staging.org/Files/Games/Demos/Star%20Wars%20-%20Dark%20Forces/)). Make sure to
+download the [manual](https://archive.org/details/dark-forces-manual) as well
+([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Dark%20Forces%20-%20User%20Manual.pdf)).
 
 There's a `README.TXT` included with the demo, it's recommended to read at
 least the installation and the keyboard shortcuts sections (use `more
@@ -548,8 +550,9 @@ to the OPL synth.
 
 Of course, you can always try other GM or GS compatible SoundFonts
 too---that's the beauty of General MIDI!
-[FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) and
+[FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) ([mirror](https://files.dosbox-staging.org/Files/SoundFonts/FluidR3_GM_GS.sf2)) and
 [Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
+([mirror](https://files.dosbox-staging.org/Files/SoundFonts/Creative%20Labs%204M%20GM_4gmgsmt.sf2))
 are good candidates as they sound fairly close to the SC-55 sound set. The
 [list of recommended SoundFonts](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#soundfonts)
 on our wiki should also give you some further pointers on which SoundFonts

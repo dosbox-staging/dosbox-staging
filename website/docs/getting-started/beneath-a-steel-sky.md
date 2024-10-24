@@ -74,7 +74,9 @@ subfolder within it. Download the [ISO CD-ROM
 image](https://archive.org/download/Beneath_a_Steel_Sky_1995_Virgin/Beneath%20a%20Steel%20Sky%20%281995%29%28Virgin%29.iso)
 from the [Beneath a Steel
 Sky](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin) item at the
-Internet Archive and put it into a `cd` subfolder inside your `Beneath a Steel
+Internet Archive (or from this
+[mirror](https://files.dosbox-staging.org/Files/Games/Demos/Beneath%20a%20Steel%20Sky.iso))
+and put it into a `cd` subfolder inside your `Beneath a Steel
 Sky` game folder. The name of the `cd` subfolder has no special significance;
 you could put the `.iso` image anywhere, but it's good to get into the habit
 of organising your game files systematically (e.g., you could create a
@@ -83,9 +85,11 @@ files). It's a good idea to rename `Beneath a Steel Sky (1995)(Virgin).iso` to
 `cdrom1.iso`; our game folder has the game's full name anyway.
 
 Speaking of manuals, make sure to get the scan of the [Security
-Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and
+Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/)
+([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Beneath%20A%20Steel%20Sky%20-%20Security%20Manual.pdf)) and
 the [comic
 book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
+([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Beneath%20A%20Steel%20Sky%20-%20User%20Manual.pdf))
 included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
@@ -681,7 +685,8 @@ excellent even by today's standards.
 DOSBox Staging can emulate all common variants of the MT-32 family, but it
 requires ROM dumps of the original hardware devices to do so. So first we need
 to download these ROMs [from
-here](https://archive.org/details/Roland-MT-32-ROMs) as a ZIP package, then
+here](https://archive.org/details/Roland-MT-32-ROMs) as a ZIP package
+([mirror](https://files.dosbox-staging.org/Files/ROMs/roland-mt-32-roms.zip)), then
 copy the contents of the archive into our designated MT&#8209;32 ROM folder:
 
 <div class="compact" markdown>
