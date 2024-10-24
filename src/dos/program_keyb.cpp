@@ -334,6 +334,9 @@ void KEYB::WriteOutSuccess()
 		                      dos.loaded_codepage);
 		message += "\n";
 		switch (*warn) {
+		case CodePageWarning::LowCodes:
+			message += MSG_Get("PROGRAM_KEYB_WARNING_LOW_CODES");
+			break;
 		case CodePageWarning::DottedI:
 			message += MSG_Get("PROGRAM_KEYB_WARNING_DOTTED_I");
 			break;
@@ -396,6 +399,9 @@ void KEYB::AddMessages()
 	        "It replaces the standard ASCII dotless letter 'I' with a national dotted\n"
 	        "variant and moves the original character elsewhere. There is no way to fully\n"
 	        "handle this without risking compatibility problems with existing software!");
+	MSG_Add("PROGRAM_KEYB_WARNING_LOW_CODES",
+	        "It does not contain the standard PC symbols 0-31, such code pages are currently\n"
+	        "not fully supported.");
 	// Error messages
 	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n");
 	MSG_Add("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND",
