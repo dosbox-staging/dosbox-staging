@@ -1,0 +1,8 @@
+HISTORY OF THE ISO CODEPAGE PACK
+================================
+
+Ver 1.00 - (02-Apr-2004)
+           Initial release.
+
+Ver 1.20 - (04-Aug-2004)
+           All CPI files compressed with the UPX program.

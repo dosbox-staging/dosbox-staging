@@ -56,8 +56,9 @@ The following 3rd party binaries are shipped with DOSBox Staging:
    - xcopy.exe: GPL-2.0, source code: https://github.com/FDOS/xcopy/
 
 - FreeDOS CPI files in contrib/resources/freedos-cpi are GPL-2.0 licensed;
-  these are hand-drawn bitmap fonts, so they don't have a source code;
-  original repository: https://gitlab.com/FreeDOS/base/cpidos
+  these are hand-drawn bitmap fonts, so they don't have a source code; original repositories:
+   - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
+   - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
 
 - FreeDOS keyboard layout files in contrib/resources/freedos-keyboard are GPL-2.0 licensed;
   source code: https://gitlab.com/FreeDOS/base/keyb_lay
