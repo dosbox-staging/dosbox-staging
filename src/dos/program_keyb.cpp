@@ -334,6 +334,9 @@ void KEYB::WriteOutSuccess()
 		                      dos.loaded_codepage);
 		message += "\n";
 		switch (*warn) {
+		case CodePageWarning::Apple:
+			message += MSG_Get("PROGRAM_KEYB_WARNING_APPLE");
+			break;
 		case CodePageWarning::DottedI:
 			message += MSG_Get("PROGRAM_KEYB_WARNING_DOTTED_I");
 			break;
@@ -392,6 +395,9 @@ void KEYB::AddMessages()
 	// Warnings
 	MSG_Add("PROGRAM_KEYB_WARNING_CODE_PAGE",
 	        "[color=light-red]Warning:[reset] It is recommended to avoid using code page %d!");
+	MSG_Add("PROGRAM_KEYB_WARNING_APPLE",
+	        "It does not contain the standard PC symbols 0-31, such code pages are currently\n"
+	        "not fully supported.");	
 	MSG_Add("PROGRAM_KEYB_WARNING_DOTTED_I",
 	        "It replaces the standard ASCII dotless letter 'I' with a national dotted\n"
 	        "variant and moves the original character elsewhere. There is no way to fully\n"
