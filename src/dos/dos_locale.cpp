@@ -1026,10 +1026,14 @@ std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
         // Suggest replacing certain code pages with EUR currency variants
         if (populated.is_using_euro_currency) {
                 switch (code_page) {
-                case 850: suggestions.push_back(858); break;
-                case 855: suggestions.push_back(872); break;
-                case 866: suggestions.push_back(808); break;
-                case 1125: suggestions.push_back(848); break;
+                case 819:  suggestions.push_back(61235); break;
+                case 850:  suggestions.push_back(858);   break;
+                case 855:  suggestions.push_back(872);   break;
+                case 866:  suggestions.push_back(808);   break;
+                case 914:  suggestions.push_back(58258); break;
+                case 921:  suggestions.push_back(901);   break;
+                case 922:  suggestions.push_back(902);   break;
+                case 1125: suggestions.push_back(848);   break;
                 default: break;
                 }
         }

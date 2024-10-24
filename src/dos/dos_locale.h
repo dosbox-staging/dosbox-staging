@@ -493,6 +493,8 @@ struct KeyboardLayoutInfoEntry {
 };
 
 enum class CodePageWarning {
+	// ASCII codes 0x00-0x20 are different than on regular DOS code pages
+	LowCodes, 
 	// Code page puts a 'dotted I' in place of the regular ASCII 'I'
 	DottedI, 
 };
