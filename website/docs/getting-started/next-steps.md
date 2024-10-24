@@ -33,7 +33,7 @@ about the history of PC gaming and PC hardware in general. Below is a
 selection of the very best learning resources to get you started!
 
 
-[RetroGrade - The ultimate guide to pre-millennial PC hardware](https://archive.org/details/RetroGrade-TheUltimateGuideToPreMillennialPCHardware)
+[RetroGrade - The ultimate guide to pre-millennial PC hardware](https://archive.org/details/RetroGrade-TheUltimateGuideToPreMillennialPCHardware) ([mirror](https://files.dosbox-staging.org/Files/Books/Custom%20PC%20-%20Retrograde.pdf))
 
 : An excellent collection of articles that takes you through the most
 important milestones of early PC hardware history, starting from its humble

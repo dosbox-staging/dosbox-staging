@@ -127,7 +127,8 @@ Adventure`. Create the `drives` subfolder in it and the `c` subfolder in the
 
 Download the [ZIP archive](https://archive.org/download/PassportToAdventure/PassportToAdventuredemo1990lucasartsadventureCompilation.zip)
 from the [Passport of Adventure](https://archive.org/details/PassportToAdventure) item at the
-Internet Archive, then extract its contents into the `c` subfolder.
+Internet Archive (or from this [mirror](https://files.dosbox-staging.org/Files/Games/Demos/PassportToAdventure.zip)),
+then extract its contents into the `c` subfolder.
 
 Below is the folder structure you should end up with. As explained before,
 we'll create one subfolder within `DOS Games` for each game, then each game
