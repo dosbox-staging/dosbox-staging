@@ -19,7 +19,8 @@ Now download
 [pop1.zip](https://www.dosgamesarchive.com/file/prince-of-persia/pop1) from
 the [Prince of Persia demo
 page](https://www.dosgamesarchive.com/download/prince-of-persia) and extract
-its contents into `DOS Games/Prince of Persia`. The archive contains only two
+its contents into `DOS Games/Prince of Persia` (or download it from [this
+mirror](https://files.dosbox-staging.org/Files/Games/Demos/Prince%20of%20Persia/pop1.zip)). The archive contains only two
 files: `pop1.txt` (a regular text file) and `pop1demo.exe` (an MS-DOS
 executable). Let's open `pop1.txt` in our text editor!
 
@@ -40,8 +41,9 @@ setting up old DOS games is not all that dissimilar to solving adventure game
 puzzles. Getting past these puzzles requires some logical thinking, a little
 bit of background knowledge, and an element of trial and error is occasionally
 involved as well. Well, the user manual often helps too if you happen to own
-the original or can procure a [scanned copy][pop-manual] online (most often
-you can).
+the original or can procure a [scanned copy][pop-manual]
+([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Prince%20of%20Persia%20-%20User%20Manual.pdf))
+online (most often you can).
 
 [pop-manual]: https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf
 
@@ -377,8 +379,10 @@ to walk carefully. It's not that hard to figure out the various movement
 combinations on your own, but reading the *Controlling Your Movements* section
 of the [user
 manual](https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf)
-should definitely help. The manual also contains helpful hints and a full list
-of available keyboard shortcuts.
+should definitely help
+([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Prince%20of%20Persia%20-%20User%20Manual.pdf)).
+The manual also contains helpful hints and a full list of available keyboard
+shortcuts.
 
 <figure markdown>
   <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
