@@ -1,0 +1,22 @@
+CPI PACK - LIST OF CPI FILES AND THEIR CODEPAGES
+================================================
+
+
+
+EGAKOI.CPX
+----------
+
+   878 - KOI8-R (Russian)
+ 58222 - KOI8-U (Russian and Ukrainian)
+ 59246 - KOI8-RU (Russian, Belarusian and Ukrainian)
+ 60270 - KOI8-F (Full Slavic)
+ 61294 - KOI8-CA (Full Slavic and non-slavic)
+ 62318 - KOI8-T (Russian and Tajik)
+
+
+
+EGA2KOI.CPX
+-----------
+
+   878 - KOI8-R (Russian)
+ 63342 - KOI8-C (Russian and Old Russian)

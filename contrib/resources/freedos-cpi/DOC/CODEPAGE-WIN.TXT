@@ -1,0 +1,46 @@
+CPI PACK - LIST OF CPI FILES AND THEIR CODEPAGES
+================================================
+
+
+
+EGAWIN.CPX
+----------
+
+  1252 - Windows Latin-1
+  1250 - Windows Latin-2
+  1257 - Windows Latin-7 (Baltic)
+  1270 - Windows Saami
+  1361 - Windows Latin-3
+ 58601 - Windows Accented Lithuanian
+
+
+
+EGA2WIN.CPX
+-----------
+
+  1252 - Windows Latin-1
+  1253 - Windows Greek
+  1254 - Windows Latin-5 (Turkish)
+ 58596 - Windows Georgian
+ 58598 - Windows Latin-5 (Azeri)
+ 65506 - Windows Armenian
+
+
+
+EGA3WIN.CPX
+-----------
+
+  1251 - Windows Cyrillic
+ 58595 - Windows Cyrillic (Kazakh)
+ 59619 - Windows Cyrillic (Central Asia)
+ 60643 - Windows Cyrillic (Northeastern Iranian languages)
+ 61667 - Windows Cyrillic (Eskimo-Aleut languages)
+ 62691 - Windows Cyrillic (Tungus-Manchu languages)
+
+
+
+EGA4WIN.CPX
+-----------
+
+  1252 - Windows Latin-1
+ 59620 - Windows Gaelic (Old Orthography)

@@ -1,0 +1,74 @@
+CPI PACK - LIST OF CPI FILES AND THEIR CODEPAGES
+================================================
+
+
+
+EGAISO.CPX
+----------
+
+   819 - ISO-8859-1, Latin-1
+ 61235 - ISO-8859-1, Latin-1 with Euro
+   912 - ISO-8859-2, Latin-2
+   913 - ISO-8859-3, Latin-3
+ 58163 - ISO-8859-14, Latin-8
+   923 - ISO-8859-15, Latin-9
+
+
+
+EGA2ISO.CPX
+-----------
+
+   819 - ISO-8859-1, Latin-1
+ 61235 - ISO-8859-1, Latin-1 with Euro
+   914 - ISO-8859-4, Latin-4
+ 58258 - ISO-8859-4, Latin-4 with Euro
+   921 - ISO-8859-13, Latin-7 (Baltic)
+   901 - ISO-8859-13, Latin-7 with Euro
+
+
+
+EGA3ISO.CPX
+-----------
+
+   819 - ISO-8859-1, Latin-1
+ 61235 - ISO-8859-1, Latin-1 with Euro
+   919 - ISO-8859-10, Latin-6
+   922 - ISO Estonian
+   902 - ISO Estonian with Euro
+ 63283 - ISO Lithuanian
+
+
+
+EGA4ISO.CPX
+-----------
+
+   819 - ISO-8859-1, Latin-1
+ 61235 - ISO-8859-1, Latin-1 with Euro
+ 65500 - ISO-8859-16, Latin-10
+ 59187 - ISO Saami (ISO-IR-197)
+ 60211 - ISO Saami with Finnish Romani (ISO-IR-209)
+ 65501 - ISO Canada (ISO-IR-123)
+
+
+
+EGA5ISO.CPX
+-----------
+
+   819 - ISO-8859-1, Latin-1
+ 61235 - ISO-8859-1, Latin-1 with Euro
+   920 - ISO-8859-9, Latin-5
+ 65504 - ISO Africa (ISO-IR-39)
+   813 - ISO-8859-7, Greek
+
+
+
+EGA6ISO.CPX
+-----------
+
+   915 - ISO-8859-5, Cyrillic
+  1124 - ISO Ukrainian
+ 58259 - ISO Cyrillic Volgaic (ISO-IR-201)
+ 59283 - ISO Cyrillic Uralic (ISO-IR-200)
+ 65502 - ISO Technical Set (ISO-IR-143)
+ 65503 - ISO Electrotechnical Set (ISO-IR-181)
+ 
