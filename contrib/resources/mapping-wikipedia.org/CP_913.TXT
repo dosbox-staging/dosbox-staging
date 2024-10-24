@@ -2,7 +2,6 @@
 # but it was created based on the information found there
 
 # reference: https://en.wikipedia.org/wiki/ISO/IEC_8859-3
-#            https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
 
 
 # characters 0x00-0x7f as in code page 437
