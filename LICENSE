@@ -59,6 +59,7 @@ The following 3rd party binaries are shipped with DOSBox Staging:
   these are hand-drawn bitmap fonts, so they don't have a source code; original repositories:
    - https://gitlab.com/FreeDOS/base/cpidos (the main code page pack)
    - https://github.com/FDOS/cpi (ISO/KOI/MAC/WIN code page packs)
+  The code page files were originally in the CPX format, they were decompressed into the CPI format.
 
 - FreeDOS keyboard layout files in contrib/resources/freedos-keyboard are GPL-2.0 licensed;
   source code: https://gitlab.com/FreeDOS/base/keyb_lay
