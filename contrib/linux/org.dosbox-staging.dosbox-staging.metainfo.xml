@@ -18,23 +18,19 @@
   <screenshots>
     <screenshot type="default">
       <caption>DOSBox Staging window (splash screen)</caption>
-      <image type="source" width="660" height="535">https://www.dosbox-staging.org/gnome-splash-screen.png</image>
+	  <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-splash-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>DOSBox Staging window</caption>
-      <image type="source" width="660" height="535">https://www.dosbox-staging.org/gnome-init-screen.png</image>
+	  <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-init-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>Heroes of Might and Magic 2 (1996), pixel-perfect</caption>
-      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/homm2-pp-2x2.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Wolfenstein 3D (1992), pixel-perfect</caption>
-      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/wolf3d-pp-4x5.png</image>
+	  <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/homm2-pp-2x2.png</image>
     </screenshot>
     <screenshot>
       <caption>Battle Chess (1988), sharp-bilinear scaling</caption>
-      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/bc.png</image>
+	  <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/battle-chess.png</image>
     </screenshot>
   </screenshots>
   <categories>
