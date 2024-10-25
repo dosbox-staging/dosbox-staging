@@ -83,12 +83,16 @@ jobs:
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
 
+      - name: Print VCPKG error log
+        if: failure()
+        shell: pwsh
+        run: Get-Content -Path vcpkg_installed/${{ matrix.conf.arch }}-windows/vcpkg/issue_body.md
+
       - name:  Summarize warnings
         shell: pwsh
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run: python scripts\count-warnings.py -f --msclang vs\build.log
-
 
   build_windows_vs_release:
     name: Release ${{ matrix.debugger && 'w/ debugger' || '' }} (${{ matrix.arch }})
@@ -165,6 +169,11 @@ jobs:
         run: |
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.arch }}
+
+      - name: Print VCPKG error log
+        if: failure()
+        shell: pwsh
+        run: Get-Content -Path vcpkg_installed/${{ matrix.conf.arch }}-windows/vcpkg/issue_body.md
 
       - name: Package standard build
         if: ${{ !matrix.debugger }}
