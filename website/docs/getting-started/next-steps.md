@@ -54,16 +54,16 @@ via your favourite search engine...
 
 : Written by The Great Hierophant, there's simply no better resource online
 that does such extremely thorough and comprehensive deep dives supplanted by
-original research on a number of interesting DOS gaming related topics.
+original research on a number of interesting DOS gaming-related topics.
 
 [PhilsComputerLab](https://www.youtube.com/channel/UCj9IJ2QvygoBJKSOnUgXIRA)
 
 : Phil's YouTube channel offers a dizzying amount of quality content on a
-variety of retro-PC related topics with a special focus on actual hardware.
+variety of retro-PC-related topics with a special focus on actual hardware.
 Checking out his [DOS tutorials](https://www.youtube.com/playlist?list=PL5T8bmLxd_T35FG1re1k7Butn7Ncnuv6Q)
 and [MIDI and wavetable](https://www.youtube.com/playlist?list=PL5T8bmLxd_T1F2g3aoYCu2brKtGTlbyY_)
 series is a good start, but you can pretty much pick any of his videos
-at random and I guarantee you'll learn something interesting. His aptly titled
+at random, and I guarantee you'll learn something interesting. His aptly titled
 *three-and-a-half-hour long (!)*
 [Roland MT-32, CM-32L, CM-64, CM-500 Ultimate Tutorial](https://www.youtube.com/watch?v=OLvsaJ4h-VY&list=PL5T8bmLxd_T1F2g3aoYCu2brKtGTlbyY_&index=6)
 is a work of art---probably there isn't anything more to say on the subject!
@@ -76,9 +76,9 @@ compatibility list on the old DOSBox website. Although some information there
 might be outdated (e.g., mentioning DOSBox issues that have long been fixed),
 some of the comments document important issues present in the original games.
 That's one very common trap to fall into, thinking that certain game bugs are
-caused by emulation and therefore must be fixable at the DOSBox level. Often
-they're bugs present in the original games, so you just need to live with them
-or work around them.
+caused by emulation and, therefore, must be fixable at the DOSBox level. Often
+these bugs are present in the original games, so you just need to live with
+them or work around them.
 
 
 [VOGONS](https://www.vogons.org/)

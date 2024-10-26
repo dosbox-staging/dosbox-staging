@@ -22,14 +22,14 @@ To get the most out of this guide, don't just *read* the instructions, but
 in previous ones, so *do not skip a chapter* just because you're not
 interested in a particular game! You don't have to play it if you don't want
 to; going through the setup procedure and learning how to troubleshoot various
-issues is what this is all about. All necessary files will be provided and no
+issues is what this is all about. All necessary files will be provided, and no
 familiarity with IBM PCs and the MS-DOS environment is required---everything
 you need to know will be explained as we go. The only assumption is that you
 can perform basic everyday computer tasks, such as copying files, unpacking
 ZIP archives, and editing text files.
 
 The guide has been written so that everyone can follow it with ease,
-regardless of their operating system of choice. For example. Windows users
+regardless of their operating system of choice. For example, Windows users
 probably know what the "C drive" is, and most Linux people are comfortable
 using the command line, but these things need to be explained to the Mac
 folks.
@@ -52,7 +52,7 @@ first, then proceed with the DOSBox Staging installation steps.
 
 Download the latest installer from our [Windows
 releases](../releases/windows.md) page, then proceed with the installation.
-Just accept the default options, don't change anything.
+Just accept the default options; don't change anything.
 
 Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../releases/windows.md#microsoft-defender-smartscreen).
 
@@ -74,10 +74,10 @@ the option that best suits your situation and needs.
 
 ## Other stuff we'll need
 
-As you follow along, you'll need to create and edit DOSBox configuration files
-which are plain text files. While Notepad on Windows or TextEdit on macOS
-could do the job, it's preferable to use a better text editor more suited to
-the task.
+As you follow along, you'll need to create and edit DOSBox configuration
+files, which are plain text files. While Notepad on Windows or TextEdit on
+macOS could do the job, it's preferable to use a better text editor that is
+more suited to the task.
 
 
 <h3>Windows</h3>
@@ -96,14 +96,14 @@ Notepad++* right-click context menu entry in Windows Explorer.
 <h3>macOS</h3>
 
 [TextMate](https://macromates.com/) is a free and open-source text editor
-for macOS which is perfect for the job.
+for macOS, which is perfect for the job.
 
 !!! tip
 
     When editing DOSBox configuration files in TextMate, it's best to set
-    syntax highlighting to the *Properties* file format as shown in the below
-    screenshot (it's the combo-box to the left of the *Tab Size* combo-box in
-    the status bar).
+    syntax highlighting to the *Properties* file format as shown in the
+    screenshot below (it's the combo-box to the left of the *Tab Size*
+    combo-box in the status bar).
 
 <figure markdown>
   ![Editing a DOSBox configuration file in TextMate](https://www.dosbox-staging.org/static/images/getting-started/textmate.png){ loading=lazy }
@@ -113,21 +113,21 @@ for macOS which is perfect for the job.
 <h3>Linux</h3>
 
 We're pretty sure Linux users don't need any help and have their favourite
-text editors at hand already. And, of course, everybody knows **vim** is the
+text editors at hand already. And, of course, everybody knows **Vim** is the
 best! :sunglasses:
 
 
 ## A note for existing DOSBox Staging users
 
 If you already have DOSBox Staging installed on your computer, or if you have
-used it in the past but have uninstalled it, most likely you have a primary
+used it in the past but have uninstalled it, most likely, you have a primary
 configuration file named `dosbox-staging.conf` somewhere on your drive (this
 is sometimes also referred to as the default or global configuration).
 
 The guide assumes the default settings of the latest stable release, so it's
 highly recommended to remove any existing primary configuration files first
 (but make sure to back them up). If the primary config file does not exist in
-an platform-specific location, DOSBox Staging will create it on the first
+a platform-specific location, DOSBox Staging will create it on the first
 launch. If it exists, it will be used, but the defaults of some settings might
 have changed between releases, or you might have tweaked some settings
 yourself. These differences may render the instructions in the guide invalid
