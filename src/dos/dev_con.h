@@ -21,6 +21,7 @@
 #include <cstring>
 
 #include "../ints/int10.h"
+#include "ascii.h"
 
 #define NUMBER_ANSI_DATA 10
 
@@ -89,26 +90,27 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 	}
 	while (*size > count) {
 		reg_ah = (IS_EGAVGA_ARCH) ? 0x10 : 0x0;
+
 		CALLBACK_RunRealInt(0x16);
 		switch (reg_al) {
-		case 13:
-			data[count++] = 0x0D;
+		case Ascii::CarriageReturn:
+			data[count++] = Ascii::CarriageReturn;
 
 			// It's only expanded if there's room for it
 			if (*size > count) {
-				data[count++] = 0x0A;
+				data[count++] = Ascii::LineFeed;
 			}
 			*size  = count;
 			reg_ax = oldax;
 			if (dos.echo) {
 				// Maybe don't do this (no need for it actually)
 				// (but it's compatible)
-				INT10_TeletypeOutputViaInterrupt(13, 7);
-				INT10_TeletypeOutputViaInterrupt(10, 7);
+				INT10_TeletypeOutputViaInterrupt(Ascii::CarriageReturn, 7);
+				INT10_TeletypeOutputViaInterrupt(Ascii::LineFeed, 7);
 			}
 			return true;
 			break;
-		case 8:
+		case Ascii::Backspace:
 			// One char at the time so give back that BS
 			if (*size == 1) {
 				data[count++] = reg_al;
@@ -117,14 +119,14 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 			// Remove data if it exists (extended keys don't go right)
 			else if (count) {
 				data[count--] = 0;
-				INT10_TeletypeOutputViaInterrupt(8, 7);
+				INT10_TeletypeOutputViaInterrupt(Ascii::Backspace, 7);
 				INT10_TeletypeOutputViaInterrupt(' ', 7);
 			} else {
 				// No data read yet so restart while loop
 				continue;
 			}
 			break;
-		case 0xe0:
+		case Ascii::Extended:
 			// Extended keys in the  int 16 0x10 case
 			if (!reg_ah) {
 				// Extended key if reg_ah isn't 0
@@ -138,7 +140,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 				}
 			}
 			break;
-		case 0:
+		case Ascii::Null:
 			// Extended keys in the int 16 0x0 case
 			data[count++] = reg_al;
 			if (*size > count) {
@@ -161,8 +163,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 
 bool device_CON::Write(uint8_t* data, uint16_t* size)
 {
-	constexpr uint8_t code_escape = 0x1b;
-	uint16_t count                = 0;
+	uint16_t count = 0;
 	Bitu i;
 	uint8_t col, row, page;
 	uint16_t ncols, nrows;
@@ -170,7 +171,7 @@ bool device_CON::Write(uint8_t* data, uint16_t* size)
 	INT10_SetCurMode();
 	while (*size > count) {
 		if (!ansi.esc) {
-			if (data[count] == code_escape) {
+			if (data[count] == Ascii::Escape) {
 				// Clear the datastructure
 				ClearAnsi();
 				// Start the sequence
