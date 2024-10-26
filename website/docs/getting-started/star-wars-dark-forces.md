@@ -28,7 +28,7 @@ What does this accomplish?
   commands in the `[autoexec]` section won't be printed as they are executed
   when you start DOSBox Staging. The `@` character at the start of the line
   ensures the `echo off` command itself is not printed either (you can prefix
-  any command with `@` and it won't be printed when executed).
+  any command with `@`, and it won't be printed when executed).
 
 - Then we set the master volume to 40% on the next line. The `/noshow`
   prevents the mixer from displaying its current state (this is "silent
@@ -52,7 +52,7 @@ What does this accomplish?
 ## Installing the game
 
 As per our usual routine, we'll create a new folder in `DOS Games` called
-`Dark Forces`, and the `drives/c` subfolder in it. The [game demo](https://archive.org/details/StarWarsDarkForces) comes in
+`Dark Forces` and the `drives/c` subfolder in it. The [game demo](https://archive.org/details/StarWarsDarkForces) comes in
 three ZIP archives,
 [dforces1.zip](https://archive.org/download/StarWarsDarkForces/dforces1.zip),
 [dforces2.zip](https://archive.org/download/StarWarsDarkForces/dforces2.zip),
@@ -62,7 +62,7 @@ we'll need to copy their contents to our virtual C drive
 download the [manual](https://archive.org/details/dark-forces-manual) as well
 ([mirror](https://files.dosbox-staging.org/Files/Games/Manuals/Dark%20Forces%20-%20User%20Manual.pdf)).
 
-There's a `README.TXT` included with the demo, it's recommended to read at
+There's a `README.TXT` included with the demo; it's recommended to read at
 least the installation and the keyboard shortcuts sections (use `more
 README.TXT`). The instructions tell us exactly what we need to do (this is why
 you should always check out the included text files):
@@ -127,7 +127,7 @@ exit
 
 The first `-w 0.5` argument of the `autotype` command specifies an initial
 half-second wait time before the "auto-typing" begins. This is followed by the
-`1` argument which will auto-type the ++1++ key.
+`1` argument, which will auto-type the ++1++ key.
 
 That's it! It's a simple but very useful feature. Run `autotype /?` to see the
 full list of available options and check out the list of [AUTOTYPE
@@ -194,7 +194,7 @@ by DOSBox Staging:
 !!! tip "Creating custom 60 and 70 Hz screen modes"
 
     "Custom resolution" is a bit of a misnomer because what we're after is
-    creating a new screen mode that uses your monitor's native resolution, but
+    creating a new screen mode that uses your monitor's native resolution but
     with a custom *refresh rate*.
 
     You can create such custom resolutions using the Nvidia Control Panel or
@@ -208,10 +208,10 @@ by DOSBox Staging:
     The drawback of this approach is that you need to set the appropriate
     custom resolution before starting DOSBox Staging, and if a game switches
     between different refresh rates, well, you're out of luck. These games
-    can only work 100% correctly either on a true VRR display or a real
-    old-school CRT monitor. However, most games only use a single fixed
-    refresh rate, which is usually the standard 70 Hz VGA rate, so this
-    technique still has a lot of practical utility.
+    can only work 100% correctly on a true VRR display or a real old-school
+    CRT monitor. However, most games only use a single fixed refresh rate,
+    which is usually the standard 70 Hz VGA rate, so this technique still has
+    a lot of practical utility.
 
 
 ## Vertical syncing
@@ -228,9 +228,9 @@ vsync'ed, otherwise we'd still get tearing in fast-paced games like
 Dark Forces.
 
 DOSBox Staging tries its best to automatically detect the conditions where
-enabling vertical syncing at DOSBox-level is beneficial. You will rarely need
-to override the out-of-the-box vsync setting to get the best experience on
-your setup.
+enabling vertical syncing at the DOSBox level is beneficial. You will rarely
+need to override the out-of-the-box vsync setting to get the best experience
+on your setup.
 
 !!! note
 
@@ -242,18 +242,18 @@ your setup.
     and auto-configures up the vsync and frame pacing settings accordingly.
 
 
-What complicates matters is that not all DOS game do vertical syncing. Games
-that don't would tear on real hardware too, and DOSBox can't do anything about
+What complicates matters is that not all DOS games do vertical syncing. Games
+that don't would tear on real hardware, too, and DOSBox can't do anything about
 that---it just accurately emulates how the game behaves. Without DOSBox-level
 vsync, you'd get _double tearing_ in such games! We can't "fix" that at the
 emulator level; that would require making changes to the games' code. Many
-pre-rendered cutscenes and FMV games tear really badly on real hardware too on
-CRTs---that's the "authentic DOS experience" for you! :sunglasses:
+pre-rendered cutscenes and FMV games tear really badly on real hardware, too,
+on CRTs---that's the "authentic DOS experience" for you! :sunglasses:
 
 But, as mentioned previously, the good news is that games that don't do vsync
 are usually slower-paced adventure, strategy, and role-playing titles that only
-do about 5-20 FPS anyway, and most of the screen is static. So a little bit of
-tearing is barely noticable in these games.
+do about 5-20 FPS anyway, and most of the screen is static. So, a little bit of
+tearing is barely noticeable in these games.
 
 !!! important "Two-stage vsync"
 
@@ -316,14 +316,14 @@ To recap, the following variations are possible when it comes to vsync:
     (e.g., in Nvidia Control Panel or similar). If you do that, it's almost
     certain you will get all sorts of weird behaviour in DOSBox Staging. It's
     highly recommended to leave the global vsync settings at their defaults
-    ("let the application decide"), and only tweak vsync on a per-application
+    ("let the application decide") and only tweak vsync on a per application
     basis.
 
     Various frame limiter utilities have similar effects---make sure they're
     not running when you use DOSBox Staging, or whitelist individual games to
     be frame limited instead of letting them throttle every program globally.
 
-    By the way, forcing vsync globally would wreak havock not just on DOSBox
+    By the way, forcing vsync globally would wreak havoc not just on DOSBox
     Staging, but pretty much every single home computer and console
     emulator---that's just how they work. In contrast to modern 3D games, they
     need full control over frame pacing and vsync without any external "help".
@@ -357,7 +357,7 @@ DOS/4GW Protected Mode Run-Time  Version 1.95
 Copyright (c) Rational Systems, Inc. 1990-1993
 ```
 
-As we've learnt, protected mode games default to 60&thinsp;000 cycles which
+As we've learnt, protected mode games default to 60&thinsp;000 cycles, which
 is roughly equal to the performance of a Pentium 90 MHz processor. As it turns
 out, the game runs perfectly with this setting and is able to achieve a stable
 70 FPS (if your computer is powerful enough). We could conclude that we
@@ -374,9 +374,9 @@ with a good cycles number is to start the game with a relatively low cycles
 setting, say 10&thinsp;000, then keep increasing it with the ++ctrl+f12++
 shortcut (++cmd+f12++ on the Mac) while playing to arrive at the lowest value
 that results in adequate performance. As a reminder, you can decrease the
-current cycles value too with the ++ctrl+f11++ (++cmd+f11++) shortcut.
+current cycles value, too, with the ++ctrl+f11++ (++cmd+f11++) shortcut.
 
-So let's add the following to our config:
+So, let's add the following to our config:
 
 ```ini
 [cpu]
@@ -397,9 +397,9 @@ starting point for now.
 !!! warning "Running out of steam"
 
     As you keep increasing the fixed cycles value, the audio will start
-    breaking up, and the motion will become very stuttery after a certain
+    breaking up, and the motion will become very stuttering after a certain
     point. This means you're trying to emulate a faster CPU than your computer
-    can handle. If you're on a less powerful machine, this unfortunately can
+    can handle. If you're on a less powerful machine, this, unfortunately can
     happen before reaching the minimum cycles value necessary for achieving
     a smooth and stable 70 FPS rate.
 
@@ -425,7 +425,7 @@ starting point for now.
     copying large files to USB storage, heavy network traffic, and even
     ordinary web browsers with many tabs open can chew up a significant chunk
     of your total CPU power or cause audio micro-stutters. Certain popular
-    chat programs can be very demanding on the CPU too, and, surprisingly,
+    chat programs can be very demanding on the CPU, too, and, surprisingly,
     even innocent-looking stuff such as automatic wallpaper switchers can have
     negative effects on the performance of DOSBox.
 
@@ -444,7 +444,7 @@ Blaster's OPL synthesiser is capable of. Dark Forces, however, was composed
 for a newer family of MIDI sound modules that support the so-called **General
 MIDI standard**.
 
-DOSBox Staging comes with an integrated General MIDI compliant synthesiser
+DOSBox Staging comes with an integrated General MIDI-compliant synthesiser
 called FluidSynth. Unlike the MT-32 emulation, FluidSynth does not attempt to
 mimic any specific hardware device but a generic MIDI sound module. This sound
 module doesn't have any built-in sounds---you need to load so-called
@@ -467,7 +467,7 @@ Standard** (also referred to as **Roland GS**, or just **GS**), which is
 basically General MIDI plus a few Roland-specific enhancements. Many games use
 these extra features, and while General MIDI compatible SoundFonts will work
 with them, it's recommended to use GS-compatible ones for the best
-results .
+results.
 
 One such SoundFont is [GeneralUser GS][generaluser-gs]. Download the latest
 version (v2.0.1 at the time of writing this), unzip the package, then copy the
@@ -536,7 +536,7 @@ the Imperial March playing with much more realistic instruments!
 !!! important "How to drive a manual"
 
     Note that if you try to use *Detect* in the *Music* section, the
-    auto-detection will fail and the *Music* option will revert to *None*.
+    auto-detection will fail, and the *Music* option will revert to *None*.
     This can happen with some setup utilities, therefore it's important to
     know that the port of the General MIDI device must be set to **330**,
     should the auto-detection fail. This is sometimes called the *MPU-401
@@ -551,7 +551,7 @@ It's worth watching the whole intro at this point to appreciate how much more
 realistic the General MIDI rendition of this orchestral piece sounds compared
 to the OPL synth.
 
-Of course, you can always try other GM or GS compatible SoundFonts
+Of course, you can always try other GM or GS-compatible SoundFonts
 too---that's the beauty of General MIDI!
 [FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) ([mirror](https://files.dosbox-staging.org/Files/SoundFonts/FluidR3_GM_GS.sf2)) and
 [Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
@@ -568,7 +568,7 @@ sounds on the original Roland SC-55 hardware versus a few different
 SoundFonts. As mentioned, GeneralUser GS and Creative 4GMGSMT are the closest
 in terms of overall balance and character, the rest are rather hit-and-miss.
 My advice: just pick one that gives you good overall results and stick with
-it. It's best to do this in your primary config, then you never need to think
+it. It's best to do this in your primary config; then, you never need to think
 about it again.
 
 Further comparison recordings can be found on [our wiki](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#comparison-recordings).
@@ -577,9 +577,9 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 | <!-- --> | <!-- -->
 | -------- | --------
 | **Roland SC-55 v1.21 (hardware)** | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-sc-55-v1.21.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| TODO GeneralUser GS    | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| GeneralUser GS    | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Creative 4GMGSMT  | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-creative-4gmgsmt.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| TODO FluidR3_GM_GS     | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| FluidR3_GM_GS     | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fluidr3-gm-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | FatBoy            | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-fatboy.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Arachno           | <audio controls src="https://www.dosbox-staging.org/static/audio/getting-started/dark-forces-intro-arachno.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 
@@ -609,19 +609,20 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     MIDI modules! Music composed for the MT-32 often sounds *utterly wrong* on a
     General MIDI device, and vice versa. Yes, they both have “MIDI” in their
     names, but that only refers to the MIDI communication protocol. The MT-32
-    range of devices are programmable synthesisers and most MT-32 supporting
+    range of devices are programmable synthesisers, and most MT-32 supporting
     games take advantage of that to create custom sounds. In contrast, General
     MIDI modules are generally weaker in the synthesis department but feature
     more realistic-sounding real-world instruments with a less malleable
     sound. The soundtrack of Dark Forces showcases this very well---you can’t
     get such realistic orchestral music out of an MT-32.
 
-    Whenever you configure a game for MIDI sound, you should consult the [List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
-    first. This contains the hard-earned
-    knowledge of many decades of research and tells you which MIDI module to
-    use for a particular game. The original game manuals very rarely give you
-    this info, and even if they do, the information is often wrong. So you
-    *absolutely* need this list to get the best MIDI music out of given game.
+    Whenever you configure a game for MIDI sound, you should consult the
+    [List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+    first. This contains the hard-earned knowledge of many decades of research
+    and tells you which MIDI module to use for a particular game. The original
+    game manuals very rarely give you this info, and even if they do, the
+    information is often wrong. So you *absolutely* need this list to get the
+    best MIDI music out of a game.
 
     Quite confusingly, there’s a large list of games that claim MT-32
     compatibility but only sound correct on a General MIDI module. Make sure
@@ -632,9 +633,9 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
 !!! info "A brief history of MIDI in DOS gaming"
 
-    The iconic **Roland MT-32** released in 1987 was the first sound module that
-    made realistic-sounding music in DOS games a possibility. In 1991, Roland
-    released its successor, the iconic **Roland Sound Canvas SC-55**.
+    The iconic **Roland MT-32** released, in 1987, was the first sound module
+    that made realistic-sounding music in DOS games a possibility. In 1991,
+    Roland released its successor, the iconic **Roland Sound Canvas SC-55**.
 
     The SC-55 shaped DOS gaming history in significant ways: it was the
     world’s first device to support the **General MIDI standard**. MIDI only
@@ -742,11 +743,11 @@ help.)
 ## Minimising audio glitches
 
 Even after setting the optimal cycles value for a game to limit the emulated
-CPU speed, you might still hear occasional audio glitches. Why this can happen
-depends on a lot of factors, but it mainly comes down to the particular
+CPU speed, you might still hear occasional audio glitches. This can happen
+depending on a lot of factors, but it mainly comes down to the particular
 hardware, driver, and operating system combination you're using.
 
-As a last resort, you can try setting larger audio buffers sizes; this usually
+As a last resort, you can try setting larger audio buffer sizes; this usually
 helps eliminate the occasional clicks and pops. The downside of this is that
 it will also increase audio latency, meaning that you'll hear the audio in
 response to some action with a longer delay (e.g., when shooting with a gun).

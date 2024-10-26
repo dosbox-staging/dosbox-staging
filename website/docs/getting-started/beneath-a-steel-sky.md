@@ -9,10 +9,10 @@ freeware in 2003 (see their accompanying notes [here](bass-readme.txt)).
 
 ## Launching games more easily
 
-Before we delve into the setup instructions, a few words about launching our
-growing collection of games more easily. Having to navigate to the game's
-folder whenever we want to launch it gets old really fast. Here's how we can
-skip this step:
+Before we delve into the setup instructions, here are a few words about
+launching our growing collection of games more easily. Having to navigate to
+the game's folder whenever we want to launch gets old really fast. Here's
+how we can skip this step:
 
 <h3>Windows</h3>
 
@@ -42,7 +42,7 @@ skip this step:
 <h3>macOS</h3>
 
 You can rename the *Start DOSBox Staging* icons in the individual game folders
-to the names of the games, then you can use Spotlight Search to start a game.
+to the names of the games; then, you can use Spotlight Search to start a game.
 
 For example, rename *Start DOSBox Staging* in the `Prince of Persia` folder to
 *Prince of Persia*. Start Spotlight Search by pressing ++cmd+space++, then
@@ -61,15 +61,15 @@ to your game directory):
 dosbox --working-dir "~/Documents/DOS Games/Prince of Persia"
 ```
 
-Then create an icon on your desktop that launches this script, or start it
+Then, create an icon on your desktop that launches this script, or start it
 however you like.
 
 
 ## Mounting a CD-ROM image
 
 We will set up the liberated "talkie" CD-ROM version of the game that
-has full voice-acting. You know the drill; create a new `Beneath a Steel Sky`
-subfolder inside your `DOS Games` folder, and then the usual `drives/c`
+has full voice-acting. You know the drill: create a new `Beneath a Steel Sky`
+subfolder inside your `DOS Games` folder and then the usual `drives/c`
 subfolder within it. Download the [ISO CD-ROM
 image](https://archive.org/download/Beneath_a_Steel_Sky_1995_Virgin/Beneath%20a%20Steel%20Sky%20%281995%29%28Virgin%29.iso)
 from the [Beneath a Steel
@@ -96,10 +96,10 @@ For the visually inclined, this is the structure we'll end up with:
 
 ![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 14rem; margin: 0.3rem max(calc((50% - 14rem/2) * 0.85), 0rem);" }
 
-We need to mount the CD image to be able to use it. Our C drive is the hard
-drive, so we'll mount the CD-ROM image as the following letter D by
-convention. This is equivalent to having a CD-ROM drive in our emulated
-computer assigned to the drive letter D and inserting the game CD into it.
+We need to mount the CD image to use it. Our C drive is the hard drive, so
+we'll mount the CD-ROM image using the following letter D by convention. This
+is equivalent to having a CD-ROM drive in our emulated computer assigned to
+the drive letter D and inserting the game CD into it.
 
 Mounting an image file, such as a floppy or CD-ROM image, is accomplished with
 the `imgmount` command. It is pretty simple to use: the first argument is the
@@ -268,11 +268,11 @@ cd \sky
 ## Changing the current directory
 
 So before we run the game, what is this `cd \sky` command? Does it have
-something to do with the `cd` subfolder where we put out CD-ROM image,
+something to do with the `cd` subfolder where we put our CD-ROM image,
 perhaps?
 
 No, that's just a coincidence. The `cd` command stands for Change Directory;
-you use it to change the current directory which is displayed as part of the
+you use it to change the current directory, which is displayed as part of the
 DOS prompt. So let's analyse what these lines we put into the `[autoexec]`
 section do:
 
@@ -354,7 +354,7 @@ adjusted independently.
 Okay, so DOSBox has an integrated audio mixer. All emulated sound cards have
 their own channels in the mixer, and certain "composite" audio devices may
 have multiple channels. The Sound Blaster is such a composite device; it
-has two mixer channels: one for the OPL synthesiser, and one for digital
+has two mixer channels: one for the OPL synthesiser and one for digital
 audio.
 
 Execute the `mixer` command at the DOS prompt to view the current state of the
@@ -363,7 +363,7 @@ mixer:
 ![DOSBox Staging mixer -- Displaying the current state](https://www.dosbox-staging.org/static/images/getting-started/bass-mixer1.png){ loading=lazy }
 
 The first channel is the `MASTER` channel; this is the summed output of all
-other channels and it's always present. Below that is the `CDAUDIO` channel,
+other channels, and it's always present. Below that is the `CDAUDIO` channel,
 the `OPL` and `PCSPEAKER` channels (you can guess these two, right?), and
 finally, the `SB` channel, which is for the digital audio output of the Sound
 Blaster.
@@ -373,7 +373,7 @@ channels appear in the mixer. The `CDAUDIO` channel is added automatically
 whenever we mount a CD-ROM image (as the CD image might contain audio tracks).
 
 To adjust the volume of any mixer channel, we use the `mixer` command and pass
-in the channel's name as the first argument, and the volume as the second,
+in the channel's name as the first argument and the volume as the second,
 expressed as a percentage value. So, to raise the volume of the `SB` channel
 to 500%, we need to execute the following:
 
@@ -443,7 +443,7 @@ sky
 ```
 
 It seems this simple change alone does the trick; now the speech can be heard
-clearly over the music and the overall volume level is good too! Of course,
+clearly over the music, and the overall volume level is good too! Of course,
 you can still fine-tune the individual channel volumes with the `mixer`
 command if you wish to do so.
 
@@ -454,8 +454,8 @@ Another option we can try is not letting the game mess around with the OPL and
 digital audio volumes. Starting from the Sound Blaster Pro 1, programs can
 alter the volume levels of the Sound Blaster card's internal mixer, but we can
 disallow that by turning off the `sbmixer` setting. Comment out the `sbtype`
-setting because we want to experiment with our default Sound Blaster 16 model,
-and leave the `mixer` command in the `[autoexec]` section commented out too,
+setting because we want to experiment with our default Sound Blaster 16 model
+and leave the `mixer` command in the `[autoexec]` section commented out, too,
 of course.
 
 ```ini
@@ -467,7 +467,7 @@ sbmixer = off
 Well, that's another way to fix the issue---the speech is now loud and
 clear!
 
-But, it's a bit too loud. While the balance between the music and speech was
+But it's a bit too loud. While the balance between the music and speech was
 just perfect on the Sound Blaster Pro 2, the speech is now overpowering the
 music. Compensating for that by lowering the `SB` channels volume in the mixer
 is certainly an option, but we can conclude the developers must have tuned the
@@ -501,7 +501,7 @@ It won't hurt too much, I promise!
 
 ### Real and protected mode
 
-DOS games can be divided into two categories: older games, and newer games
+DOS games can be divided into two categories: older games and newer games
 (who would've guessed?) Older games released before about 1993 use something
 called *real mode*, while newer games released from 1993 onwards use
 *protected mode*. The important distinction here is that most CPU-hungry games
@@ -683,8 +683,8 @@ while (they were priced accordingly, too), and many find they still sound
 excellent even by today's standards.
 
 DOSBox Staging can emulate all common variants of the MT-32 family, but it
-requires ROM dumps of the original hardware devices to do so. So first we need
-to download these ROMs [from
+requires ROM dumps of the original hardware devices to do so. So first, we
+need to download these ROMs [from
 here](https://archive.org/details/Roland-MT-32-ROMs) as a ZIP package
 ([mirror](https://files.dosbox-staging.org/Files/ROMs/roland-mt-32-roms.zip)), then
 copy the contents of the archive into our designated MT&#8209;32 ROM folder:
@@ -722,7 +722,7 @@ in practice, these two models will cover 99% of your gaming needs:
 
 `cm32l`
 : Unless a specific MT-32 model is requested, DOSBox Staging emulates the
-  Roland CM-32L by default which gives you the best overall compatibility.
+  Roland CM-32L by default, which gives you the best overall compatibility.
   This is a 2nd generation MT-32 with 32 additional sound effects that many
   games make good use of. Some studios, such as LucasArts, tended to favour
   the CM-32L, so their games sound a little bit better on this module.
@@ -771,10 +771,10 @@ manual!)
 
 Many games have a dedicated setup utility in the same directory where the main
 game executable resides. This is usually called `SETUP.EXE`, `SETSOUND.EXE`,
-`SOUND.EXE`, `SOUND.BAT`, or something similar. There is no standard, every
+`SOUND.EXE`, `SOUND.BAT`, or something similar. There is no standard; every
 game is different. You'll need to poke around a bit; a good starting point is
 to list all executables in the main game folder with the `dir *.exe`, `dir
-*.com`, and `dir *.bat` commands or the `ls` command, and attempt running the
+*.com`, and `dir *.bat` commands or the `ls` command and attempt running the
 most promising-looking ones. The manual might also offer some helpful
 pointers, and so can the odd text file (`.TXT` extension) in the installation
 directory or the root directory of the CD (if the game came on a CD-ROM).
@@ -791,7 +791,7 @@ adventure!)
 So let's do that. As we've already installed the game on our C drive, we'll
 need to press ++esc++ instead of ++enter++ in the first *Path Selection
 Window*. Not exactly intuitive, but whatever. Now we're in the *Setup Menu*
-screen where we can change the language and configure the sound options.
+screen, where we can change the language and configure the sound options.
 Select *Roland* sound, then press the *Exit Install* and *Save Setup* buttons
 to save your settings (don't even get me started...)
 
@@ -809,13 +809,13 @@ MT-32 wiki page:
 
 What this means for us ordinary mortals is that the original game can either
 use the MT-32 for MIDI music and sound effects, and you get *no* digital
-speech; or only the Sound Blaster for OPL music, digital sound effects, *and*
+speech, or only the Sound Blaster for OPL music, digital sound effects, *and*
 speech. MT-32 MIDI music and sound effects combined with digital
 speech via the Sound Blaster---the computer says no, buddy.
 
 The game has just taught us an important life lesson: you can't have
 everything, especially not in the world of older DOS games. You'll have to
-pick what you value most: better music and only subtitles, or full
+pick what you value most: better music and only subtitles or full
 voice-acting with a slightly worse soundtrack. I'm opting for the latter, and
 remember, we can always enhance the Sound Blaster / AdLib music by adding
 chorus and reverb. This will get us a little bit closer to the MT-32
@@ -829,7 +829,7 @@ chorus = strong
 
 ### Getting MT-32 music with speech (after all)
 
-Except some people go, "yeah, screw life lessons, I won't have it!" Believe it
+Except some people go, "Yeah, screw life lessons, I won't have it!" Believe it
 or not, some people are still creating patches for 30-year-old DOS games to
 improve them in various ways. One such distinguished gentleman found a way to get
 MT-32 music and Sound Blaster digital speech and sound effects playing at the
@@ -863,7 +863,7 @@ that the images in the intro sequence are scanned from the comics, and they
 appear vertically stretched on-screen. In fact, they appear _exactly 20%
 taller_ than they should (just trust me on that for a moment).
 
-So where's this magical 20% vertical stretch factor coming from? DOSBox
+So, where's this magical 20% vertical stretch factor coming from? DOSBox
 Staging enables aspect ratio correction by default to make 320&times;200
 graphics appear exactly as it would on a 4:3 aspect ratio VGA monitor, which
 requires pixels to be drawn 20% taller. This is the most sensible default as
@@ -926,12 +926,12 @@ Of course, this would've been a very misguided effort if it had only fixed the
 intro graphics but not the in-game visuals. Fortunately, it turns out both the
 intro and the in-game content had been drawn assuming square pixels. For
 example, note how the floppy icon looks like a tallish rectangle with aspect
-ratio correction enabled; that's wrong, floppies should appear as perfect
+ratio correction enabled; that's wrong; floppies should appear as perfect
 squares. Human figures and circular objects would also appear slightly
 elongated vertically with aspect ratio correction enabled. Ultimately, we know
 the game was developed by Revolution, a European studio, and they also
 released the game for PAL Amigas that have square pixels. We also know that
-Revolution was very fond of the Amiga, and thus can be considered an
+Revolution was very fond of the Amiga and thus can be considered an
 Amiga-first developer. For such games, disabling aspect ratio correction is
 almost always the correct answer.
 
@@ -945,7 +945,7 @@ So, the rules of thumb:
 
 - For games primarily developed for the Amiga or Atari ST by a North American
   studio for the NTSC standard. (Note that even if the work was *performed* by
-  a European studio, but it was *commissioned* by North Americans, that
+  a European studio but was *commissioned* by North Americans, that
   usually means the game was primarily intended for the NTSC-only North
   American market, so you need aspect ratio correction.)
 
@@ -964,27 +964,27 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
 !!! info "From squares to rectangles"
 
     For the vast majority of computer games from the 1980s and '90s featuring
-    2D graphics, the art was created *once* for the "leading platform" which
-    was then reused in the various other platform conversions. It was just not
+    2D graphics, the art was created *once* for the "leading platform" and
+    then reused in the various other platform conversions. It was just not
     economical to draw the graphics multiple times in different aspect ratios
     and resolutions, hence this was done extremely rarely.
 
     We've explained earlier that CRT monitors in the DOS era had a 4:3 aspect
     ratio, so in 320&times;200 mode the pixels had to be 20% taller for the
     image to completely fill the screen. DOSBox Staging does this aspect ratio
-    correction by default which results in games primarily developed for DOS
+    correction by default, which results in games primarily developed for DOS
     PCs assuming 1:1.2 pixel aspect ratio to look correct (as the artist
     intended). We'll get to the detailed mathematical derivation of the 1:1.2
     PAR in [the last chapter](advanced-graphics-options.md#aspect-ratios-square-pixels-black-borders).
 
     But what about games where the leading platform was the Amiga or the Atari
     ST, and the game was developed by a European studio? The analog TV
-    standard in Europe was PAL, therefore Amigas sold in Europe were PAL
+    standard in Europe was PAL. Therefore, Amigas sold in Europe were PAL
     machines that had square pixels in the 320&times;256 screen mode, the
     resolution most commonly used by PAL Amiga games. So what these European
     studios usually did was to draw the art assuming square pixels, but using
     only a 320&times;200 portion of the 320&times;256 total available area. On
-    PAL Amigas, the art appeared in the correct aspect ratio, but letterboxed;
+    PAL Amigas, the art appeared in the correct aspect ratio but letterboxed;
     on NTSC Amigas and DOS PCs that had the 320&times;200 low-res screen mode,
     the art filled the whole screen but appeared slightly stretched vertically
     (by 20%). No one seemed to complain about this, and they saved a lot of
@@ -992,7 +992,7 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
     compromise became a common practice.
 
     However, now you have the option to enjoy these games in their correct
-    aspect ratio, as per the artists' *original intention* by simply
+    aspect ratio, as per the artists' *original intention*, by simply
     disabling DOSBox Staging's default aspect ratio correction.
 
 
@@ -1000,9 +1000,10 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
 
     Even keener observers might notice the image from the intro on the left
     features a circle that only appears perfect with aspect ratio correction
-    *enabled*, in which case the image from the comics is stretched. But with
-    aspect ratio correction *disabled* (as shown above), the circle appears to
-    be a squashed oval, but the image from the comics looks perfect.
+    *enabled*, in which case the image from the comics is stretched. However,
+    with aspect ratio correction *disabled* (as shown above), the circle
+    appears to be a squashed oval, but the image from the comics looks
+    perfect.
 
     The explanation is simple: the person who drew the circle around the
     scanned image did it assuming 1:1.2 pixel aspect ratio, so it looked
@@ -1010,21 +1011,22 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
 
     That's a common theme: some games end up with assets added to them during
     the porting process, which can sometimes result in mixed aspect ratio
-    assets in a single game. Sometimes it's just impossible to make the game
+    assets in a single game. Sometimes, it's just impossible to make the game
     appear correctly using a single fixed pixel aspect ratio, especially if
     such mixed aspect ratio assets are being displayed on screen at the same
     time.
 
-    Generally, you cannot trust the circles. *Sometimes* they will appear
-    perfect when the correct aspect ratio is used, sometimes they won't. It's
+    Generally, you cannot trust the circles. *Sometimes*, they will appear
+    perfect when the correct aspect ratio is used; sometimes, they won't. It's
     much more reliable to judge aspect ratio correctness by looking at common
     objects, human bodies, and human faces.
 
 
 ## Arcade monitor emulation
 
-Now that we brought up the Amiga, it's worthwhile mentioning a special feature
-of the CRT emulation which is not quite authentic, but still a lot of fun!
+Now that we have brought up the Amiga, it's worthwhile mentioning a special
+feature of the CRT emulation, which is not quite authentic but still a lot of
+fun!
 
 Home computer and arcade monitors (also known as 15 kHz monitors), such as the
 Commodore monitors typically used with Amiga computers, were quite different
@@ -1115,5 +1117,5 @@ changes to the DOSBox config.
     The reverb presets add a tiny little bit of reverb to the digital audio
     (PCM) outputs, such as the `SB` channel, mostly just to help the PCM
     output blend better with the synthesiser's output (e.g., the `OPL`
-    channel) which features a prominent reverb.
+    channel), which features a prominent reverb.
 

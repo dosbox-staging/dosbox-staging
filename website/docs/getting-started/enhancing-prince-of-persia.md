@@ -30,7 +30,7 @@ exit
 
 Note we've also added the `exit` command to the end of the `[autoexec]`
 section; with this in place, DOSBox Staging will quit after we exit from the
-game by pressing ++ctrl+q++. Not strictly necessary, but a nice touch.
+game by pressing ++ctrl+q++. Not strictly necessary, but it's a nice touch.
 
 
 !!! important "Making configuration changes"
@@ -54,30 +54,30 @@ game by pressing ++ctrl+q++. Not strictly necessary, but a nice touch.
 DOSBox emulates an SVGA (Super VGA) display adapter by default; this gives you
 good compatibility with most DOS games. DOSBox can also emulate all common
 display adapters from the history of the PC compatibles: the Hercules, CGA,
-and EGA adapters among several others.
+and EGA adapters, among several others.
 
 Although the VGA standard was introduced in 1987, it took a good five years
 until it gained widespread adoption. Games had to support all commonly used
 graphical standards during this transitional period. Prince of Persia,
 released in 1990, is such a game; it not only supports all common display
 adapters, but it also correctly auto-detects them. This is in contrast with
-the majority of DOS games where you need to configure the graphics manually
-(we'll discuss how to do that too in later chapters).
+the majority of DOS games, where you need to configure the graphics manually
+(we'll discuss how to do that, too, in later chapters).
 
 
 ### VGA
 
-The art in Prince of Persia was created for VGA first, so quite naturally the
+The art in Prince of Persia was created for VGA first, so quite naturally, the
 game looks best on a VGA adapter. Most DOS games from the 1990s use the
 320&times;200 low-resolution VGA mode. This video mode allows up to 256
 colours to be displayed simultaneously on the screen from a total palette of
 16 million colours.
 
 This is how the start of the game looks with the [authentic CRT emulation
-feature](setting-up-prince-of-persia.md#authentic-crt-monitor-emulation) which is enabled by
-default. As mentioned previously, make sure to view all screenshots at 100%
-magnification to avoid weird artifacts caused by the browser rescaling the
-image.
+feature](setting-up-prince-of-persia.md#authentic-crt-monitor-emulation),
+which is enabled by default. As mentioned previously, make sure to view all
+screenshots at 100% magnification to avoid weird artifacts caused by the
+browser rescaling the image.
 
 <figure markdown>
   <a class="glightbox" href="https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg" >
@@ -93,12 +93,12 @@ But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
 
 VGA display adapters have a peculiarity in that they display not one but *two*
-scanlines per pixel in low-resolution video modes having less than about 350
-lines of vertical resolution. This means the 320&times;200 VGA mode is really
-640&times;400, just pixel and line-doubled. In fact, the vast majority of VGA
-monitors from the 1980s and '90s are incapable of displaying "true" 200-line
-graphics, so it's physically impossible to get the "thick scanline" arcade and
-home computer monitor look on a real VGA CRT.
+scanlines per pixel in low-resolution video modes, which have less than about
+350 lines of vertical resolution. This means the 320&times;200 VGA mode is
+really 640&times;400, just pixel and line-doubled. In fact, the vast majority
+of VGA monitors from the 1980s and '90s are incapable of displaying "true"
+200-line graphics, so it's physically impossible to get the "thick scanline"
+arcade and home computer monitor look on a real VGA CRT.
 
 Double-scanned VGA emulation looks stellar on a 4K monitor and even on 1440p,
 but on 1080p, there is simply not enough vertical resolution to accurately
@@ -132,7 +132,7 @@ look so it looks approximately similar to the real thing.
 
 ### EGA
 
-The next graphics adapter the game supports is the EGA adapter released in
+The next graphics adapter the game supports is the EGA adapter, released in
 1984. The EGA standard was quite popular until the early 1990s because VGA
 cards were initially prohibitively expensive for most hobbyists. The majority
 of games with EGA support use the 320&times;200 low-resolution EGA mode that
@@ -167,7 +167,7 @@ thick scanline look.
 
 The notorious CGA adapter, the first colour graphics adapter created for the
 original IBM PC in 1981, is a serious contender for the worst graphics
-standard ever invented. In its 320&times;200 low-resolution mode, only 4 colours
+standard ever invented. In its 320&times;200 low-resolution mode, only four colours
 can be displayed simultaneously on the screen chosen from a small number of fixed
 palettes. Frankly, all combinations look pretty horrifying...
 
@@ -180,7 +180,7 @@ forget to put on your safety goggles! :sunglasses:
 machine = cga
 ```
 
-Ready? Behold the formidable 4-colour CGA graphics---and what 4 colours those
+Ready? Behold the formidable 4-colour CGA graphics---and what four colours those
 are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
 <figure markdown>
@@ -227,7 +227,7 @@ examine some advanced techniques on [how to fix that](advanced-graphics-options.
 </figure>
 
 
-Monochrome monitors come in different colours and DOSBox Staging can emulate
+Monochrome monitors come in different colours, and DOSBox Staging can emulate
 all these variations via the `monochrome_palette` setting. The available
 options are `amber` (the default), `green`, `white`, and `paperwhite`.
 
@@ -267,17 +267,17 @@ key.
 !!! note "Only for masochists and archeologists!"
 
     The art in DOS games was usually created for the best graphics standard
-    the game supported, then variants for "lesser" standards
-    were derived from that. If you were an unlucky person still stuck with a
-    Hercules or CGA adapter in 1990, being able to play Prince of Persia with
-    *any* graphics surely beat no game at all!
+    the game supported, and then variants for "lesser" standards were derived
+    from that. If you were an unlucky person still stuck with a Hercules or
+    CGA adapter in 1990, being able to play Prince of Persia with *any*
+    graphics surely beat no game at all!
 
     Although we've shown how to emulate these earlier graphics standards for
     completeness' sake, there's generally little reason *not* to play a
     DOS game with the best graphics. The list of possible reasons includes a)
-    nostalgic feelings towards a particular display adapter; b) research
-    purposes; c) you like your games to look like the user interface of an
-    industrial CNC machine; d) a strong preference for pain. But hey, who are
+    nostalgic feelings towards a particular display adapter, b) research
+    purposes, c) you like your games to look like the user interface of an
+    industrial CNC machine, and d) a strong preference for pain. But hey, who are
     we to judge?
 
     In any case, preserving all relevant aspects of PC gaming history is
@@ -309,8 +309,8 @@ emulation.
 We've been discussing graphics at great length, but what about sound? Can't
 we do something cool to the sound as well?
 
-Yes, we can! DOSBox Staging has an exciting feature to add chorus and reverb
-effects to the output of any of the emulated sound devices.
+Yes, we can! DOSBox Staging has an exciting feature that adds chorus and
+reverb effects to the output of any of the emulated sound devices.
 
 Create a new `[mixer]` section in your config with the following content:
 
@@ -325,26 +325,26 @@ Now the intro music sounds a lot more spacious and pleasant to listen to,
 especially through headphones. There's even some reverb added to the in-game
 footsteps and sound effects, although to a much lesser extent.
 
-You might want to experiment with the `small` and `medium` reverb presets, and
-the `light` and `strong` chorus settings as well.
+You might want to experiment with the `small` and `medium` reverb presets, as
+well as the the `light` and `strong` chorus settings.
 
 !!! note "Purist alert!"
 
-    To calm the purists among you: adding reverb and chorus to the OPL
+    To calm the purists among you, adding reverb and chorus to the OPL
     synthesiser's output is something you can do on certain Sound Blaster
-    AWE32 and AWE64 models too with the standard drivers.
+    AWE32 and AWE64 models, too, with the standard drivers.
 
 
 ## Joystick support
 
 Okay, so if we want to play the game with the keyboard, we need to press
 ++ctrl+k++ to enter keyboard mode every single time we start the game. As
-mentioned, that's because by default DOSBox Staging either lets you use your
-gamepad as the joystick, or it emulates a PC joystick even if you don't have a
+mentioned, that's because by default, DOSBox Staging either lets you use your
+gamepad as the joystick or emulates a PC joystick even if you don't have a
 physical game controller plugged in. Either way, the game will always "see" a
 joystick at startup and will therefore auto-switch to joystick mode.
 
-From this follows that if we disable the joystick in the config, the game
+From this, it follows that if we disable the joystick in the config, the game
 will have no other choice than to default to keyboard mode:
 
 ```ini
@@ -378,7 +378,7 @@ deadzone = 15
     Note that Prince of Persia requires a lot of precise control, so playing it
     with the analog stick makes the game quite a bit harder and somewhat
     frustrating. This is a common theme with many DOS games; most of them were
-    really optimised for keyboard controls, or require you to use the keyboard
+    really optimised for keyboard controls or require you to use the keyboard
     anyway to perform some essential actions.
 
     While playing DOS games from the couch with a controller in your hand
@@ -506,7 +506,7 @@ Staging executable.
 <h3>macOS</h3>
 
 DOSBox Staging does not open the log window by default when started via its
-application icon, or with the *Start DOSBox Staging* icon you copied from the
+application icon or with the *Start DOSBox Staging* icon you copied from the
 `.dmg` installer archive earlier.
 
 To make the log window appear, you need to use another shortcut icon called
@@ -517,7 +517,7 @@ icon).
 !!! note
 
     Remember, for the first time you'll need to right-click or ++ctrl++-click
-    on this icon, select the topmost *Open* menu item, then press the
+    on this icon, select the topmost *Open* menu item, and then press the
     *Open* button in the appearing dialog. After the first start, you can simply
     double-click on it.
 
@@ -567,20 +567,20 @@ As expected, we'll see some warnings and errors in the logs after a restart:
 
 ![Example DOSBox logs showcasing warnings and errors](https://www.dosbox-staging.org/static/images/getting-started/pop-logs2.png){ loading=lazy }
 
-Warnings are yellow, errors are red. Errors are generally reserved for more
+Warnings are yellow; errors are red. Errors are generally reserved for more
 severe problems. In this example, we have the following:
 
 - The first warning tells us that `blah` is not a valid value for the
   `fullscreen` setting, so DOSBox Staging has reverted to its default value
   of `false`.
 
-- Then it reprimands us about `no_such_config_param` that we made up.
+- Then it reprimands us for the `no_such_config_param` that we made up.
 
 - The third warning complains about an invalid `machine` value being used
   (sorry to disappoint, but DOSBox Staging can't emulate the Master
   Control Program from Tron yet!)
 
-- Then we have an error because we're trying to use a non-existing shader.
+- Then, we have an error because we're trying to use a non-existing shader.
 
 - This is followed by yet another rather large warning block that very
   helpfully lists the names of all available shaders on our system. That's
@@ -595,7 +595,7 @@ doing.
 While you might prefer to hide the log window for aesthetic reasons, it's
 wiser to just let it be so you can take a peek at it if something goes
 sideways. Without having access to the logs, your chances of fixing problems
-are significantly reduced as basically you would be just stumbling in the
+are significantly reduced, as, basically, you would be just stumbling in the
 dark. You've been warned!
 
 ---
