@@ -6,7 +6,7 @@ Windows builds can be created using:
   dependencies. This is the fully-supported toolchain used to create release
   builds.
 - The Clang or GCC compilers using the Meson buildsystem running within the
-  MSYS2 environment to provide dependencies (not recommended).
+  MSYS2 environment to provide dependencies (legacy method, not recommended).
 
 > **Note**
 >
@@ -44,7 +44,7 @@ you build a binary optimized for gaming.
 2. Select a **Release** build type in Visual Studio, and run the build.
 
 
-## Build using MSYS2
+## Build using MSYS2 (legacy method)
 
 > **Note**
 >
