@@ -1,7 +1,7 @@
 # Passport to Adventure
 
-Okay, so what we'll set up next is not a single game, but a collection called
-**Passport to Adventure** which contains playable demos of three classic
+Okay, so what we'll set up next is not a single game but a collection called
+**Passport to Adventure**, which contains playable demos of three classic
 LucasArts point-and-click adventure games: [Indiana Jones and the Last
 Crusade][indy3-moby], [The Secret of Monkey Island][monkey1-moby], and
 [Loom][loom-moby]. These were the blockbusters of the adventure gaming genre
@@ -66,7 +66,7 @@ Let's see what `config -h viewport` gives us!
 
 ![Displaying the description of a config setting using the 'config' command](https://www.dosbox-staging.org/static/images/getting-started/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
 
-That's a quite handy online help system, isn't it? As the bottom line
+That's quite a handy online help system, isn't it? As the bottom line
 indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
 will also automatically quit once we've reached the end of the output.
@@ -78,19 +78,19 @@ settings in a given config section. For example, this is the result of `config
 ![Output of the 'config -h render' command](https://www.dosbox-staging.org/static/images/getting-started/config-render.png){ loading=lazy }
 
 
-It is highly recommended to look up the descriptions of the various settings
-as you encounter them in this guide. That's a good way to get gradually
-acquainted with the available options.
+It is highly recommended that you look up the descriptions of the various
+settings as you encounter them in this guide. That's a good way to get
+gradually acquainted with the available options.
 
 
 ## Layered configurations
 
 In our Prince of Persia example, we created a `dosbox.conf` configuration file
-in the game's folder, then we started DOSBox Staging from that folder. In such
-a scenario, DOSBox loads the _primary configuration_ first, then
-applies the _local_ `dosbox.conf` _configuration_ found in the folder it was started
-from (the game's folder). Because of this loading order, you can override
-any primary config setting in your local config.
+in the game's folder, and then we started DOSBox Staging from that folder. In
+such a scenario, DOSBox loads the _primary configuration_ first, then applies
+the _local_ `dosbox.conf` _configuration_ found in the folder from which it
+was started from (the game's folder). Because of this loading order, you can
+override any primary config setting in your local config.
 
 This *layered configuration* approach is very useful; you can apply broad,
 general settings in your primary configuration that will apply to all games,
@@ -110,7 +110,7 @@ game.
 
     It's best not to change the primary configuration while you're still a
     beginner. Even more experienced DOSBox users are generally better off
-    changing the primary configuration very sparingly as those settings will
+    changing the primary configuration very sparingly, as those settings will
     affect all games.
 
     A few things that you might want to consider setting globally in the
@@ -136,7 +136,7 @@ Adventure][passport-item] item at the Internet Archive (or from this
 [passport-mirror]: https://files.dosbox-staging.org/Files/Games/Demos/PassportToAdventure.zip
 
 Below is the folder structure you should end up with. As explained before,
-we'll create one subfolder within `DOS Games` for each game, then each game
+we'll create one subfolder within `DOS Games` for each game; then each game
 folder will contain its own local `dosbox.conf` configuration specific to that
 game, along with its own "emulated C drive" in the `drives/c` subfolder.
 
@@ -185,7 +185,7 @@ If you're playing the game in windowed mode, you'll need to click on the
 DOSBox Staging window first to "capture" the mouse so you can move the
 crosshair-shaped in-game cursor.
 
-To "release" the "captured" mouse cursor, middle-click on your mouse, or press
+To "release" the "captured" mouse cursor, middle-click on your mouse or press
 the ++ctrl+f10++ shortcut (++cmd+f10++ on macOS). The title bar of the DOSBox
 Staging window informs you about the current mouse capture state.
 
@@ -204,7 +204,7 @@ screen to read the general instructions, then start a game demo by clicking on
 one of the three game icons on the left. Pressing ++f1++ during the game
 displays further game-specific help; make sure you read them if you actually
 want to play these demos. They're worth playing even if you intend to play the
-full games later as the demos contain slightly different scenes, puzzles, and
+full games later, as the demos contain slightly different scenes, puzzles, and
 dialogues, plus some fun easter-eggs.
 
 For people who really don't like to read: ++f5++ brings up the save/load/quit
@@ -292,7 +292,7 @@ chorus = normal
 !!! note
 
     Prince of Persia can also auto-detect our Sound Blaster 16, but most games
-    are not this clever. As we'll see in our later game examples, usually we
+    are not this clever. As we'll see in our later game examples, usually, we
     need to manually configure the audio devices using the game's setup
     utility.
 
@@ -309,7 +309,7 @@ chorus = normal
 
     - **AdLib** was an early sound card predating Sound Blasters that featured
         the same OPL chip. Perfect AdLib compatibility was one of the Sound
-        Blasters' main selling points, therefore in games that support both
+        Blasters' main selling points; therefore, in games that support both
         AdLib and Sound Blaster for synthesised sound, both options will
         usually yield the exact same result.
 
@@ -324,7 +324,7 @@ chorus = normal
         synthesised approximations of the same instruments.
 
     All in all, the terms **OPL**, **AdLib**, and **FM** are used
-    interchangeably in practice, and usually they refer to the exact same
+    interchangeably in practice, and usually, they refer to the exact same
     thing.
 
 
@@ -428,8 +428,8 @@ machine = tandy
 Emulating the Tandy will cause the standard DOS font to be a bit different;
 this is normal, so don't be alarmed by it.
 
-After a restart, we're finally hearing different synthesised music which
-sounds definitely better than the PC speaker rendition, but not as good as the
+After a restart, we're finally hearing different synthesised music, which
+sounds definitely better than the PC speaker rendition but not as good as the
 OPL music. Interestingly, the Tandy music plays a little bit faster than the
 other sound options.
 
@@ -481,7 +481,7 @@ crossfeed = on
 ```
 
 Naturally, you can combine crossfeed with chorus and reverb. You can also set
-`crossfeed` to `light`, `normal`, or `strong` according to your preference, or
+`crossfeed` to `light`, `normal`, or `strong` according to your preference or
 specify a custom crossfeed amount as a percentage from 0% (no crossfeed) to
 100% (collapse the stereo image to mono):
 
@@ -499,7 +499,7 @@ LucasArts catalogue and this collection of game demos, feature EGA graphics.
 The most commonly used EGA screen mode in games is 320&times;200 with a fixed
 16-colour palette.
 
-EGA monitors had visible "fat" scanlines and the pixels were a bit round,
+EGA monitors had visible "fat" scanlines, and the pixels were a bit round,
 whereas later VGA monitors displayed EGA graphics without strong scanlines,
 and the pixels appeared as little sharp rectangles. It's as if EGA monitors
 had a "built-in filter" that smoothed the image somewhat while adding a subtle
@@ -524,9 +524,8 @@ to emulate a double-scanning VGA card in all screen modes with the
 glshader = crt-auto-machine
 ```
 
-Technically, this setting instructs DOSBox Staging to always emulate a CRT
-monitor appropriate for the configured `machine` type which is VGA by
-default.
+Technically, this setting instructs DOSBox Staging to emulate a CRT monitor
+appropriate for the configured `machine` type, which is VGA by default.
 
 The below screenshots illustrate the difference between the "true EGA" and
 "EGA as displayed on VGA" look:
@@ -618,12 +617,12 @@ The below screenshots illustrate the difference between the "true EGA" and
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
     Brian Moriatry, the creator of **Loom**, shares his opinion about the VGA
-    remake of the game (he calls it "an abomination", so apparently he's quite
-    unimpressed...) Note that about one third of the original game's dialogue
+    remake of the game (he calls it "an abomination", so apparently, he's quite
+    unimpressed...) Note that about one-third of the original game's dialogue
     had been cut from the VGA remake.
 
-    In any case, the point here is it would be a mistake to outright dismiss
-    the original EGA games, thinking they are "inferior" somehow. Even
+    In any case, the point here is it would be a mistake to dismiss
+    the original EGA games outright, thinking they are "inferior" somehow. Even
     if you might prefer the VGA remakes in the end, you should at least give
     the EGA versions a chance to experience the creators' original vision.
 
