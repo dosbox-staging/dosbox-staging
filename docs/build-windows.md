@@ -6,7 +6,7 @@ Windows builds can be created using:
   dependencies. This is the fully-supported toolchain used to create release
   builds.
 - The Clang or GCC compilers using the Meson buildsystem running within the
-  MSYS2 environment to provide dependencies.
+  MSYS2 environment to provide dependencies (not recommended).
 
 > **Note**
 >
@@ -45,6 +45,14 @@ you build a binary optimized for gaming.
 
 
 ## Build using MSYS2
+
+> **Note**
+>
+> The Visual Studio toolchain is recommended; that is what we use to build our
+> official releases. The MSYS2 workflow is not actively maintained and tested.
+> We're just keeping the MSYS2 instructions here in case we'll need them in the
+> future. Also, note that there are some functional differences in the MSYS2 build
+> (e.g., FPU precision and networking support).
 
 1. Install MSYS2: <https://www.msys2.org/wiki/MSYS2-installation/>
 
