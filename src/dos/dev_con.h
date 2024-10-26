@@ -96,9 +96,16 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 		case Ascii::CarriageReturn:
 			data[count++] = Ascii::CarriageReturn;
 
-			// It's only expanded if there's room for it
+			// DOS's console device expands CR's to CRLF's when
+			// reading from the STDIN handle (other operating
+			// systems don't). CRLF is sent regardless if the
+			// program reads multiple bytes at once or one byte at a
+			// time.
 			if (*size > count) {
 				data[count++] = Ascii::LineFeed;
+			} else {
+				assert(!readcache);
+				readcache = Ascii::LineFeed;
 			}
 			*size  = count;
 			reg_ax = oldax;
