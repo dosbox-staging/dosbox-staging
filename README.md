@@ -231,7 +231,7 @@ a significant length of time.
 [vcpkg]: https://github.com/microsoft/vcpkg
 
 
-### Windows (MSYS2), macOS (MacPorts), Haiku, Nix0S, others
+### Windows (MSYS2), macOS (MacPorts), Haiku, NixOS, others
 
 Instructions for other build systems and operating systems are documented
 in [BUILD.md].
