@@ -1,4 +1,4 @@
-# Building on Nix0S
+# Building on NixOS
 
 Compiling code on Nix requires slightly different inputs from other linux distros,
 since the appropriate environment variables for pkg-config are only avaliable
