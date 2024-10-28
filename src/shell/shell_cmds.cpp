@@ -460,9 +460,11 @@ void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
 
+	assert(control);
 	const bool wants_force_exit = control->arguments.exit;
-	const bool is_normal_launch = control->GetStartupVerbosity() !=
-	                              Verbosity::InstantLaunch;
+
+	assert(control->cmdline);
+	const auto is_instant_launch = control->cmdline->HasExecutableName();
 
 	// Check if this is an early-exit situation, in which case we avoid
 	// exiting because the user might have a configuration problem and we
@@ -472,7 +474,7 @@ void DOS_Shell::CMD_EXIT(char *args)
 
 	const auto not_early_exit = exiting_after_seconds > early_exit_seconds;
 
-	if (wants_force_exit || is_normal_launch || not_early_exit) {
+	if (wants_force_exit || is_instant_launch || not_early_exit) {
 		exit_cmd_called = true;
 		return;
 	}

@@ -34,10 +34,9 @@
 
 enum class Verbosity : int8_t {
 	//                Welcome | Early Stdout |
-	Quiet,         //   no    |    no        |
-	InstantLaunch, //   no    |    yes       |
-	Low,           //   no    |    yes       |
-	High,          //   yes   |    yes       |
+	Quiet, //   no    |    no        |
+	Low,   //   no    |    yes       |
+	High,  //   yes   |    yes       |
 };
 
 struct CommandLineArguments {

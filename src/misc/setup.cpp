@@ -1746,7 +1746,7 @@ Verbosity Config::GetStartupVerbosity() const
 	}
 	if (user_choice == "auto") {
 		return (cmdline->HasDirectory() || cmdline->HasExecutableName())
-		             ? Verbosity::InstantLaunch
+		             ? Verbosity::Low
 		             : Verbosity::High;
 	}
 
