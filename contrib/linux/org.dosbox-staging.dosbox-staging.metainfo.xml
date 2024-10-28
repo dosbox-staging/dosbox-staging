@@ -18,25 +18,26 @@
   <screenshots>
     <screenshot type="default">
       <caption>DOSBox Staging window (splash screen)</caption>
-	  <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-splash-screen.png</image>
+      <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-splash-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>DOSBox Staging window</caption>
-	  <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-init-screen.png</image>
+      <image type="source" width="660" height="535">https://www.dosbox-staging.org/static/images/gnome-init-screen.png</image>
     </screenshot>
     <screenshot>
       <caption>Heroes of Might and Magic 2 (1996), pixel-perfect</caption>
-	  <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/homm2-pp-2x2.png</image>
+      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/homm2-pp-2x2.png</image>
     </screenshot>
     <screenshot>
       <caption>Battle Chess (1988), sharp-bilinear scaling</caption>
-	  <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/battle-chess.png</image>
+      <image type="source" width="1920" height="1080">https://www.dosbox-staging.org/static/images/battle-chess.png</image>
     </screenshot>
   </screenshots>
   <categories>
     <category>Emulator</category>
   </categories>
   <releases>
+    <release version="0.82.0" date="2024-10-27"/>
     <release version="0.81.2" date="2024-07-21"/>
     <release version="0.81.1" date="2024-05-12"/>
     <release version="0.81.0" date="2024-02-14"/>
@@ -64,7 +65,7 @@
   </recommends>
   <launchable type="desktop-id">org.dosbox-staging.dosbox-staging.desktop</launchable>
   <developer_name>The DOSBox Staging Team</developer_name>
-  <update_contact>dreamer.tan@gmail.com</update_contact>
+  <update_contact>john@johnnovak.net</update_contact>
   <url type="homepage">https://www.dosbox-staging.org/</url>
   <url type="bugtracker">https://github.com/dosbox-staging/dosbox-staging/issues</url>
   <content_rating type="oars-1.0"/>
