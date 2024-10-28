@@ -42,12 +42,16 @@ jobs:
           - name: ARM64 (Ubuntu 22.04)
             arch: aarch64
             distro: ubuntu22.04
+          - name: riscv64 (Ubuntu 22.04)
+            arch: riscv64
+            distro: ubuntu22.04   
           - name: s390x (Debian "bookworm")
             arch: s390x
             distro: bookworm
           - name: ppc64le (Debian "bookworm")
             arch: ppc64le
             distro: bookworm
+            
 
     steps:
       - uses: actions/checkout@v4
