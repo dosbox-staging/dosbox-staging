@@ -228,6 +228,8 @@ bool DOS_CreateTempFile(char* const name, uint16_t* entry);
 bool DOS_FileExists(const char* const name);
 bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
 bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len);
+void DOS_InitFileLocking(Section* sec);
+bool DOS_IsFileLocking();
 
 /* Helper Functions */
 bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive);

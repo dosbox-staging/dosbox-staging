@@ -32,6 +32,7 @@
 #include "regs.h"
 #include "drives.h"
 #include "cross.h"
+#include "setup.h"
 #include "string_utils.h"
 #include "support.h"
 
@@ -47,6 +48,9 @@
 std::array<std::unique_ptr<DOS_File>, DOS_FILES> Files = {};
 
 std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives = {};
+
+// Set by "file_locking" config
+static bool emulate_file_locking = true;
 
 enum class FileSharingMode
 {
@@ -164,6 +168,10 @@ static bool file_modes_are_compatible(const FileOpenFlags& new_file, const FileO
 
 static bool file_is_locked(const char *file_name, const uint8_t drive, const uint8_t flags)
 {
+	if (!DOS_IsFileLocking()) {
+		return false;
+	}
+
 	const FileOpenFlags new_file = parse_file_flags(flags);
 
 	for (int i = 0; i < DOS_FILES; ++i) {
@@ -185,6 +193,10 @@ static bool regions_overlap(const uint32_t pos1, const uint32_t len1, const uint
 
 static bool region_is_locked(const int file_handle, const uint32_t pos, const uint32_t len)
 {
+	if (!DOS_IsFileLocking()) {
+		return false;
+	}
+
 	for (int i = 0; i < DOS_FILES; ++i) {
 		// Ignore locks held by the current file handle,
 		// Need to check other handles pointing to the same file.
@@ -1811,6 +1823,10 @@ void DOS_SetupFiles()
 
 bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
 {
+	if (!DOS_IsFileLocking()) {
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		return false;
+	}
 	const auto handle = RealHandle(entry);
 	if (handle >= DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -1833,6 +1849,10 @@ bool DOS_LockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
 
 bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len)
 {
+	if (!DOS_IsFileLocking()) {
+		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
+		return false;
+	}
 	const auto handle = RealHandle(entry);
 	if (handle >= DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -1863,4 +1883,16 @@ void DOS_ClearDrivesAndFiles()
 	// Clear the shared drive pointers. The actual objects are managed by
 	// the drive manager class.
 	Drives.fill(nullptr);
+}
+
+void DOS_InitFileLocking(Section* sec)
+{
+	assert(sec);
+	const Section_prop* section = static_cast<Section_prop*>(sec);
+	emulate_file_locking = section->Get_bool("file_locking");
+}
+
+bool DOS_IsFileLocking()
+{
+	return emulate_file_locking;
 }
