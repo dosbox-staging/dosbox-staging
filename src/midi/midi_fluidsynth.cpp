@@ -207,7 +207,17 @@ static std_fs::path find_sf_file(const std::string& name)
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
 			if (path_exists(sf)) {
-				return sf;
+				// Parts of the path come from the `soundfont` setting, and
+				// `soundfont = FluidR3_GM.sf2` and `soundfont =
+				// fluidr3_gm.sf2` refer to the same file on case-preserving
+				// filesystems on Windows and macOS.
+				//
+				// `std_fs::canonical` returns the absolute path and matches
+				// its casing to that of the actual physical file. This
+				// prevents certain subtle bugs downstream when we use this
+				// path in comparisons.
+				//
+				return std_fs::canonical(sf).c_str();
 			}
 		}
 	}
@@ -236,19 +246,28 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	            hex_values.c_str());
 }
 
+static Section_prop* get_fluidsynth_section()
+{
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
+	assert(sec);
+
+	return sec;
+}
+
 bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 {
 	Close();
 
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
-	                                    delete_fluid_settings);
+	                                     delete_fluid_settings);
 	if (!fluid_settings) {
 		LOG_WARNING("FSYNTH: new_fluid_settings failed");
 		return false;
 	}
 
-	auto* section = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
-	assert(section);
+	auto* section = get_fluidsynth_section();
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
@@ -259,12 +278,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
-	fluid_settings_setnum(fluid_settings.get(),
-	                      "synth.sample-rate",
-	                      sample_rate_hz);
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
 
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
-	                         delete_fluid_synth);
+	                          delete_fluid_synth);
 	if (!fluid_synth) {
 		LOG_WARNING("FSYNTH: Failed to create the FluidSynth synthesizer.");
 		return false;
@@ -274,12 +291,15 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	auto [sf_filename, scale_by_percent] = parse_soundfont_pref(
 	        section->Get_string("soundfont"));
 
-	const std::string soundfont = find_sf_file(sf_filename).string();
+	const auto soundfont_path = find_sf_file(sf_filename);
 
-	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	if (!soundfont_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto reset_presets = true;
-		fluid_synth_sfload(fluid_synth.get(), soundfont.c_str(), reset_presets);
+		fluid_synth_sfload(fluid_synth.get(),
+		                   soundfont_path.string().c_str(),
+		                   reset_presets);
 	}
+
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		LOG_WARNING("FSYNTH: FluidSynth failed to load '%s', check the path.",
 		            sf_filename.c_str());
@@ -287,9 +307,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	}
 
 	if (scale_by_percent < 1 || scale_by_percent > 800) {
-		LOG_WARNING("FSYNTH: Invalid volume scaling percentage: %d; "
-		            "must be between 1 and 800, defaulting to 100%%",
-		            scale_by_percent);
+		LOG_WARNING(
+		        "FSYNTH: Invalid volume scaling percentage: %d; "
+		        "must be between 1 and 800, defaulting to 100%%",
+		        scale_by_percent);
 		scale_by_percent = 100;
 	}
 	fluid_synth_set_gain(fluid_synth.get(),
@@ -297,10 +318,11 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 	// Let the user know that the SoundFont was loaded
 	if (scale_by_percent == 100) {
-		LOG_MSG("FSYNTH: Using SoundFont '%s'", soundfont.c_str());
+		LOG_MSG("FSYNTH: Using SoundFont '%s'",
+		        soundfont_path.string().c_str());
 	} else {
 		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
-		        soundfont.c_str(),
+		        soundfont_path.string().c_str(),
 		        scale_by_percent);
 	}
 
@@ -321,13 +343,14 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 		// convert the string to a double
 		const auto val = atof(str_val.c_str());
 		if (val < min_val || val > max_val) {
-			LOG_WARNING("FSYNTH: Invalid %s setting (%s), needs to be between "
-			            "%.2f and %.2f: using default (%.2f)",
-			            name,
-			            str_val.c_str(),
-			            min_val,
-			            max_val,
-			            def_val);
+			LOG_WARNING(
+			        "FSYNTH: Invalid %s setting (%s), needs to be between "
+			        "%.2f and %.2f: using default (%.2f)",
+			        name,
+			        str_val.c_str(),
+			        min_val,
+			        max_val,
+			        def_val);
 			return def_val;
 		}
 		return val;
@@ -338,13 +361,14 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
 
 	// Does the SoundFont have known-issues with chorus?
-	const auto is_problematic_font = find_in_case_insensitive("FluidR3",
-	                                                          soundfont) ||
-	                                 find_in_case_insensitive("zdoom", soundfont);
+	const auto is_problematic_font =
+	        find_in_case_insensitive("FluidR3", soundfont_path.string()) ||
+	        find_in_case_insensitive("zdoom", soundfont_path.string());
+
 	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
 		chorus_enabled = false;
-		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the %s soundfont",
-		         soundfont.c_str());
+		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
+		         soundfont_path.filename().string().c_str());
 	}
 
 	// default chorus settings
@@ -378,15 +402,17 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING("FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				            "needs to be 'sine' or 'triangle'",
-				            chorus[4].c_str());
+				LOG_WARNING(
+				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
+				        "needs to be 'sine' or 'triangle'",
+				        chorus[4].c_str());
 			}
 
 		} else {
-			LOG_WARNING("FSYNTH: Invalid number of custom chorus settings (%d), "
-			            "should be five",
-			            static_cast<int>(chorus.size()));
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom chorus settings (%d), "
+			        "should be five",
+			        static_cast<int>(chorus.size()));
 		}
 	}
 	// API accept an integer voice-count
@@ -426,9 +452,10 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 			reverb_level = validate_setting(
 			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING("FSYNTH: Invalid number of custom reverb settings (%d), "
-			            "should be four",
-			            static_cast<int>(reverb.size()));
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom reverb settings (%d), "
+			        "should be four",
+			        static_cast<int>(reverb.size()));
 		}
 	}
 
@@ -557,7 +584,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	settings      = std::move(fluid_settings);
 	synth         = std::move(fluid_synth);
 	mixer_channel = std::move(fluidsynth_channel);
-	selected_font = soundfont;
+
+	current_sf2_path = soundfont_path;
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
@@ -586,8 +614,9 @@ void MidiHandlerFluidsynth::Close()
 	MIXER_LockMixerThread();
 
 	if (had_underruns) {
-		LOG_WARNING("FSYNTH: Fix underruns by lowering CPU load, increasing "
-		            "your conf's prebuffer, or using a simpler SoundFont");
+		LOG_WARNING(
+		        "FSYNTH: Fix underruns by lowering CPU load, increasing "
+		        "your conf's prebuffer, or using a simpler SoundFont");
 		had_underruns = false;
 	}
 
@@ -608,7 +637,8 @@ void MidiHandlerFluidsynth::Close()
 	// Reset the members
 	synth.reset();
 	settings.reset();
-	selected_font.clear();
+
+	current_sf2_path = {};
 
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
@@ -865,28 +895,24 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 
 MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 {
-	// Find SoundFont from user config. FluidSynth may not be open so it
-	// must be done here.
-	auto* section = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
-	const auto sf_spec = parse_soundfont_pref(section->Get_string("soundfont"));
-	const std_fs::path found_soundfont = find_sf_file(
-	        std::get<std::string>(sf_spec));
-
 	const size_t term_width = INT10_GetTextColumns();
 
 	auto write_line = [&](const std_fs::path& sf2_path) {
-		constexpr auto green = "[color=light-green]";
-		constexpr auto reset = "[reset]";
-
 		const auto line = format_sf2_line(term_width - 2, sf2_path);
-		const bool do_highlight = is_open &&
-		                          (selected_font == sf2_path.string());
+
+		const auto path_matches = current_sf2_path &&
+		                          (*current_sf2_path == sf2_path);
+
+		const bool do_highlight = is_open && path_matches;
 
 		if (do_highlight) {
+			constexpr auto Green = "[color=light-green]";
+			constexpr auto Reset = "[reset]";
+
 			const auto output = format_str("%s* %s%s\n",
-			                                  green,
-			                                  line.c_str(),
-			                                  reset);
+			                               Green,
+			                               line.c_str(),
+			                               Reset);
 
 			caller->WriteOut(convert_ansi_markup(output).c_str());
 		} else {
@@ -897,9 +923,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 	// Print SoundFont found from user config.
 	std::error_code err = {};
 
-	if (std_fs::is_regular_file(found_soundfont, err)) {
-		write_line(found_soundfont);
-	}
+	std::vector<std_fs::path> sf2_files = {};
 
 	// Go through all SoundFont directories and list all .sf2 files.
 	for (const auto& dir_path : get_data_dirs()) {
@@ -916,11 +940,6 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 
 			const auto& sf2_path = entry.path();
 
-			if (sf2_path == found_soundfont) {
-				// Has already been printed.
-				continue;
-			}
-
 			// Is it an .sf2 file?
 			auto ext = sf2_path.extension().string();
 			lowcase(ext);
@@ -928,8 +947,14 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 				continue;
 			}
 
-			write_line(sf2_path);
+			sf2_files.emplace_back(sf2_path);
 		}
+	}
+
+	std::sort(sf2_files.begin(), sf2_files.end());
+
+	for (const auto& path : sf2_files) {
+		write_line(path);
 	}
 
 	return MIDI_RC::OK;
