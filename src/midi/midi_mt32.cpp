@@ -399,7 +399,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "Notes:\n"
 	        "  - The file names of the ROM files do not matter; the ROMS are identified\n"
 	        "    by their checksums.\n"
-	        "  - Both interleaved and non-interlaved ROM files are supported.");
+	        "  - Both interleaved and non-interleaved ROM files are supported.");
 
 	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
 	assert(str_prop);
