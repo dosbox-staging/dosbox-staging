@@ -35,10 +35,10 @@ jobs:
         include:
           - name: ARMv6 (Raspbian)
             arch: armv6
-            distro: bullseye
-          - name: ARMv7 (Debian “bullseye”)
+            distro: bookworm
+          - name: ARMv7 (Debian “bookworm”)
             arch: armv7
-            distro: bullseye
+            distro: bookworm
           - name: ARM64 (Ubuntu 22.04)
             arch: aarch64
             distro: ubuntu22.04
