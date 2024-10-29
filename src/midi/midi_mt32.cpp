@@ -353,32 +353,50 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
+const char* Mt32SectionName = "mt32";
+
+constexpr auto DefaultModelPref     = " ";
+constexpr auto DefaultMt32ModelPref = "mt32_model";
+
 static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
 
-	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	// Legacy `model` setting
+	auto* str_prop = sec_prop.Add_string("model", DeprecatedButAllowed, DefaultModelPref);
+
+	str_prop->Set_help(
+	        "The 'model' setting is deprecated but still accepted; please use the\n"
+	        "'mt32_model' setting instead as support will be removed in the future.");
+
+	const std::vector<std::string> valid_values = {"auto",
+	                                               BestModelAlias::Cm32l,
+	                                               cm32l_102_model.GetName(),
+	                                               cm32l_100_model.GetName(),
+	                                               cm32ln_100_model.GetName(),
+
+	                                               BestModelAlias::Mt32Any,
+	                                               BestModelAlias::Mt32Old,
+	                                               mt32_107_model.GetName(),
+	                                               mt32_106_model.GetName(),
+	                                               mt32_105_model.GetName(),
+	                                               mt32_104_model.GetName(),
+	                                               mt32_bluer_model.GetName(),
+
+	                                               BestModelAlias::Mt32New,
+	                                               mt32_207_model.GetName(),
+	                                               mt32_206_model.GetName(),
+	                                               mt32_204_model.GetName(),
+	                                               mt32_203_model.GetName()};
 
 	// Listed in resolution priority order
-	str_prop->Set_values({"auto",
-	                      BestModelAlias::Cm32l,
-	                      cm32l_102_model.GetName(),
-	                      cm32l_100_model.GetName(),
-	                      cm32ln_100_model.GetName(),
+	str_prop->Set_values(valid_values);
 
-	                      BestModelAlias::Mt32Any,
-	                      BestModelAlias::Mt32Old,
-	                      mt32_107_model.GetName(),
-	                      mt32_106_model.GetName(),
-	                      mt32_105_model.GetName(),
-	                      mt32_104_model.GetName(),
-	                      mt32_bluer_model.GetName(),
+	// `mt32_model` setting
+	str_prop = sec_prop.Add_string("mt32_model", when_idle, DefaultMt32ModelPref);
+	str_prop->Set_values(valid_values);
 
-	                      BestModelAlias::Mt32New,
-	                      mt32_207_model.GetName(),
-	                      mt32_206_model.GetName(),
-	                      mt32_204_model.GetName(),
-	                      mt32_203_model.GetName()});
 	str_prop->Set_help(
 	        "The Roland MT-32/CM-32ML model to use.\n"
 	        "You must have the ROM files for the selected model available (see 'romdir').\n"
@@ -470,16 +488,24 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 
 #endif
 
-static std::deque<std_fs::path> get_rom_dirs()
+static Section_prop* get_mt32_section()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	assert(control);
+
+	const auto section = static_cast<Section_prop*>(
+	        control->GetSection(Mt32SectionName));
 	assert(section);
 
+	return section;
+}
+
+static std::deque<std_fs::path> get_rom_dirs()
+{
 	// Get potential ROM directories from the environment and/or system
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = section->Get_string("romdir");
+	std::string selected_romdir = get_mt32_section()->Get_string("romdir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultMt32RomsDir;
@@ -495,9 +521,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::string get_model_setting()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
-	assert(section);
-	return section->Get_string("model");
+	return get_mt32_section()->Get_string("model");
 }
 
 static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
@@ -728,10 +752,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
-	assert(section);
-
-	const std::string filter_prefs = section->Get_string("mt32_filter");
+	const std::string filter_prefs = get_mt32_section()->Get_string("mt32_filter");
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
@@ -742,7 +763,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 		mixer_channel->SetHighPassFilter(FilterState::Off);
 		mixer_channel->SetLowPassFilter(FilterState::Off);
 
-		set_section_property_value("mt32", "mt32_filter", "off");
+		set_section_property_value(Mt32SectionName, "mt32_filter", "off");
 	}
 
 	// Double the baseline PCM prebuffer because MIDI is demanding and
@@ -1133,7 +1154,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("mt32",
+	Section_prop* sec_prop = conf->AddSection_prop(Mt32SectionName,
 	                                               &mt32_init,
 	                                               ChangeableAtRuntime);
 
