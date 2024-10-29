@@ -66,6 +66,9 @@ static Bitu INT2A_Handler(void) {
 static bool DOS_MultiplexFunctions(void) {
 	switch (reg_ax) {
 	case 0x1000:
+		if (!DOS_IsFileLocking()) {
+			return false;
+		}
 		// Report that SHARE.EXE is installed
 		reg_al = 0xff;
 		return true;
