@@ -360,7 +360,7 @@ constexpr auto DefaultMt32ModelPref = "mt32_model";
 
 static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
-	constexpr auto when_idle = Property::Changeable::WhenIdle;
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
 
 	// Legacy `model` setting
@@ -394,7 +394,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	str_prop->Set_values(valid_values);
 
 	// `mt32_model` setting
-	str_prop = sec_prop.Add_string("mt32_model", when_idle, DefaultMt32ModelPref);
+	str_prop = sec_prop.Add_string("mt32_model", WhenIdle, DefaultMt32ModelPref);
 	str_prop->Set_values(valid_values);
 
 	str_prop->Set_help(
@@ -408,7 +408,15 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  mt32:       Pick the best available MT-32 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').");
 
-	str_prop = sec_prop.Add_string("romdir", when_idle, "");
+	// Legacy `romdir` setting
+	str_prop = sec_prop.Add_string("romdir", DeprecatedButAllowed, " ");
+
+	str_prop->Set_help(
+	        "The 'romdir' setting is deprecated but still accepted; please use the\n"
+	        "'mt32_rom_dir' setting instead as support will be removed in the future.");
+
+	// `mt32_rom_dir` setting
+	str_prop = sec_prop.Add_string("mt32_rom_dir", WhenIdle, "");
 	str_prop->Set_help(
 	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
@@ -419,7 +427,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "    by their checksums.\n"
 	        "  - Both interleaved and non-interleaved ROM files are supported.");
 
-	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
+	str_prop = sec_prop.Add_string("mt32_filter", WhenIdle, "off");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the Roland MT-32/CM-32L audio output:\n"
@@ -521,7 +529,16 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::string get_model_setting()
 {
-	return get_mt32_section()->Get_string("model");
+	const auto section = get_mt32_section();
+
+	auto model_pref = section->Get_string("model");
+	trim(model_pref);
+
+	if (!model_pref.empty()) {
+		return model_pref;
+	}
+
+	return section->Get_string("mt32_model");
 }
 
 static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
