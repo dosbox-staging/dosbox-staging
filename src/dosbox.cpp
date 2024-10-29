@@ -1239,6 +1239,15 @@ void DOSBOX_Init()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
+	secprop->AddInitFunction(&DOS_InitFileLocking, changeable_at_runtime);
+	pbool = secprop->Add_bool("file_locking", when_idle, true);
+	pbool->Set_help(
+	        "Enable file locking (SHARE.EXE emulation; enabled by default).\n"
+	        "This is required for some Windows 3.1x applications to work properly.\n"
+	        "It generally does not cause problems for DOS games except in rare cases\n"
+	        "(e.g., Astral Blur demo). If you experience crashes related to file\n"
+	        "permissions, you can try disabling this.");
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
