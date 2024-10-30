@@ -21,6 +21,9 @@
 /* Define to 1 to enable slirp networking support, requires libslirp */
 #define C_SLIRP 1
 
+/* Define to 1 to enable dual-mouse gaming support using ManyMouse library */
+#define C_MANYMOUSE 1
+
 /* Define to 1 when zlib-ng support is provided by the system */
 #define C_SYSTEM_ZLIB_NG 1
 
