@@ -668,14 +668,13 @@ public:
 		}
 
 		trim(midiconfig_prefs);
-		const auto midiconfig_pref = midiconfig_prefs.c_str();
 
 		if (device_pref == "auto") {
 			// Use the first working device
-			midi.device = try_create_auto_device(midiconfig_pref);
+			midi.device = try_create_auto_device(midiconfig_prefs);
 
 		} else {
-			midi.device = create_device(device_pref, midiconfig_pref);
+			midi.device = create_device(device_pref, midiconfig_prefs);
 		}
 
 		if (midi.device) {
