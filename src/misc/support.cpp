@@ -152,7 +152,6 @@ bool scan_and_remove_cmdline_switch(char* cmd, const char* flag)
 char* scan_remaining_cmdline_switch(char* cmd)
 {
 	char *scan, *found;
-	;
 	if ((scan = found = strchr(cmd, '/'))) {
 		while (*scan && !isspace(*reinterpret_cast<unsigned char*>(scan))) {
 			scan++;
