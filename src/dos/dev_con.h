@@ -116,7 +116,6 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 				INT10_TeletypeOutputViaInterrupt(Ascii::LineFeed, 7);
 			}
 			return true;
-			break;
 		case Ascii::Backspace:
 			// One char at the time so give back that BS
 			if (*size == 1) {
