@@ -225,8 +225,15 @@ void ManyMouseGlue::Rescan()
 
 void ManyMouseGlue::RescanIfSafe()
 {
-	if (rescan_blocked_config)
+	if (rescan_blocked_config) {
 		return;
+	}
+
+#if defined(WIN32)
+	if (mouse_config.raw_input) {
+		return;
+	}
+#endif
 
 	ShutdownIfSafe();
 	InitIfNeeded();

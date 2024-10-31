@@ -253,9 +253,16 @@ public:
 
 	static bool IsNoMouseMode();
 	static bool IsMappingBlockedByDriver();
-	
-	static bool CheckInterfaces(const ListIDs &list_ids);
-	static bool PatternToRegex(const std::string &pattern, std::regex &regex);
+
+	using MappingSupport = enum {
+		Supported,            // fully supported
+		NotCompiledIn,        // ManyMouse not included in the build
+		NotAvailableRawInput, // user has to disable 'mouse_raw_input'
+	};
+	static MappingSupport IsMappingSupported();
+
+	static bool CheckInterfaces(const ListIDs& list_ids);
+	static bool PatternToRegex(const std::string& pattern, std::regex& regex);
 
 	// This one is ONLY for interactive mapping in MOUSECTL.COM!
 	bool MapInteractively(const MouseInterfaceId interface_id,
