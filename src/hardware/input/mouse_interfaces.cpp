@@ -682,7 +682,7 @@ void InterfaceDos::NotifyBooting()
 void InterfaceDos::UpdateInputType()
 {
 	const bool use_relative = IsMapped() || MOUSE_IsCaptured();
-	const bool is_input_raw = IsMapped() || mouse_config.raw_input;
+	const bool is_input_raw = IsMapped() || MOUSE_IsRawInput();
 
 	MOUSEDOS_NotifyInputType(use_relative, is_input_raw);
 }
@@ -749,7 +749,7 @@ void InterfacePS2::NotifyBooting()
 void InterfacePS2::UpdateInputType()
 {
 	const bool use_relative = IsMapped() || MOUSE_IsCaptured();
-	const bool is_input_raw = IsMapped() || mouse_config.raw_input;
+	const bool is_input_raw = IsMapped() || MOUSE_IsRawInput();
 
 	MOUSEVMM_NotifyInputType(use_relative, is_input_raw);
 }

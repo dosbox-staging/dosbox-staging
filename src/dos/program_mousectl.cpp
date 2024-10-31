@@ -48,31 +48,40 @@ bool MOUSECTL::ParseAndRun()
 
 	// Extract the list of interfaces from the vector
 	list_ids.clear();
-	if (!ParseInterfaces(params) || !CheckInterfaces())
+	if (!ParseInterfaces(params) || !CheckInterfaces()) {
 		return false;
+        }
 
 	auto param_equal = [&params](const size_t idx, const char *string) {
-		if (idx >= params.size())
+		if (idx >= params.size()) {
 			return false;
+                }
 		return iequals(params[idx], string);
 	};
 
 	// CmdShow
-	if (list_ids.size() == 0 && params.empty())
+	if (list_ids.size() == 0 && params.empty()) {
 		return CmdShow(false);
-	if (list_ids.size() == 0 && params.size() == 1)
-		if (param_equal(0, "-all"))
+        }
+	if (list_ids.size() == 0 && params.size() == 1) {
+		if (param_equal(0, "-all")) {
 			return CmdShow(true);
+                }
+        }
 
 	// CmdMap - by supplied host mouse name
-	if (list_ids.size() == 1 && params.size() == 2)
-		if (param_equal(0, "-map"))
+	if (list_ids.size() == 1 && params.size() == 2) {
+		if (param_equal(0, "-map")) {
 			return CmdMap(list_ids[0], params[1]);
+                }
+        }
 
 	// CmdMap - interactive
-	if (!list_ids.empty() && params.size() == 1)
-		if (param_equal(0, "-map"))
+	if (!list_ids.empty() && params.size() == 1) {
+		if (param_equal(0, "-map")) {
 			return CmdMap();
+                }
+        }
 
 	// CmdUnmap / CmdOnOff / CmdReset / CmdSensitivity / CmdMinRate
 	if (params.size() == 1) {
@@ -271,8 +280,14 @@ bool MOUSECTL::CmdShow(const bool show_all)
 		WriteOut("\n");
 	}
 
-	if (!show_all && !show_mapped)
+	if (!show_all && !show_mapped) {
 		return true;
+        }
+
+	if (!CheckMappingSupported()) {
+                WriteOut("\n");
+                return true;
+        }
 
 	const auto info_physical = mouse_config_api.GetInfoPhysical();
 	if (info_physical.empty()) {
@@ -281,8 +296,9 @@ bool MOUSECTL::CmdShow(const bool show_all)
 		return true;
 	}
 
-	if (hint)
+	if (hint) {
 		WriteOut("\n");
+        }
 	WriteOut(MSG_Get("PROGRAM_MOUSECTL_TABLE_HEADER2"));
 	WriteOut("\n");
 
@@ -305,6 +321,7 @@ bool MOUSECTL::CmdShow(const bool show_all)
 		return true;
 	}
 
+
 	// Display physical mice not mapped to any interface
 	for (const auto &entry : info_physical) {
 		if (entry.IsMapped() || entry.IsDeviceDisconnected())
@@ -323,6 +340,23 @@ void MOUSECTL::FinalizeMapping()
 	WriteOut("\n");
 	WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAP_HINT"));
 	WriteOut("\n\n");
+}
+
+bool MOUSECTL::CheckMappingSupported()
+{
+        switch (MouseControlAPI::IsMappingSupported()) {
+                case MouseControlAPI::MappingSupport::Supported:
+                        return true;
+                case MouseControlAPI::MappingSupport::NotCompiledIn:
+                        WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT"));
+                        return false;
+                case MouseControlAPI::MappingSupport::NotAvailableRawInput:
+                        WriteOut(MSG_Get("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT"));
+                        return false;
+                default:
+                        assert(false);
+                        return false;
+        }
 }
 
 bool MOUSECTL::CheckMappingPossible()
@@ -348,7 +382,7 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pa
 		return false;
 	}
 
-	if (!CheckMappingPossible()) {
+	if (!CheckMappingSupported() || !CheckMappingPossible()) {
 		return false;
 	}
 
@@ -366,7 +400,7 @@ bool MOUSECTL::CmdMap()
 {
 	assert(!list_ids.empty());
 
-	if (!CheckMappingPossible()) {
+	if (!CheckMappingSupported() || !CheckMappingPossible()) {
 		return false;
 	}
 
@@ -567,7 +601,13 @@ void MOUSECTL::AddMessages()
 	        "Mapping not available in no-mouse mode.\n");
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER",
 	        "Mapping not possible with current guest mouse driver.\n");
-	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
+
+	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT",
+	        "Individual physical mice not supported in this build.\n");
+	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT",
+	        "Individual physical mice not supported if 'mouse_raw_input' is enabled.\n");
+
+        MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
 	        "No mouse interfaces available.\n");
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
 	        "Mouse interface not available.\n");
