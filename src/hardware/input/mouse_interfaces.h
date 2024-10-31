@@ -33,6 +33,7 @@ void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id);
 
 void MOUSE_UpdateGFX();
 bool MOUSE_IsCaptured();
+bool MOUSE_IsRawInput();
 bool MOUSE_IsProbeForMappingAllowed();
 
 // ***************************************************************************

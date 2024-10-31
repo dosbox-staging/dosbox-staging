@@ -74,7 +74,7 @@ static struct {
 
 	bool is_captured  = false; // if GFX was requested to capture mouse
 	bool is_visible   = false; // if GFX was requested to make cursor visible
-	bool is_input_raw = false; // if GFX was requested to provide raw movements
+	bool is_raw_input = false; // if GFX was requested to provide raw movements
 	bool is_seamless  = false; // if seamless mouse integration is in effect
 
 	// If mouse events should be ignored, except button release
@@ -229,18 +229,18 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Store internally old settings, to avoid unnecessary GFX calls
 	const auto old_is_captured  = state.is_captured;
-	const auto old_is_input_raw = state.is_input_raw;
+	const auto old_is_raw_input = state.is_raw_input;
 	const auto old_hint_id      = state.hint_id;
 
 	// Raw input depends on the user configuration
-	state.is_input_raw = mouse_config.raw_input;
+	state.is_raw_input = mouse_config.raw_input;
 
 	if (state.gui_has_taken_over) {
 		state.is_captured = false;
 
 		// Override user configuration, for the GUI we want
 		// host OS mouse acceleration applied
-		state.is_input_raw = false;
+		state.is_raw_input = false;
 
 	} else if (is_config_no_mouse) { // NoMouse is configured
 
@@ -265,6 +265,19 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 		                    (!is_window_or_multi_display && !state.vmm_wants_pointer) ||
 		                    state.capture_was_requested;
 	}
+
+#if defined(WIN32)
+	// Disable raw mouse input if:
+	// - this is a Windows build, and
+	// - mapping is in effect
+	if (is_mapping) {
+		// It was discovered that ManyMouse library does not function
+		// properly in this case - it stops working as soon as the user
+		// switches DOSBox to windowed mode. Workaround: do not allow
+		// RAW mouse input in SDL API if mapping is in effect.
+		state.is_raw_input = false;
+	}
+#endif
 
 	// Drop mouse events (except for button release) if any of:
 	// - GUI has taken over the mouse
@@ -293,7 +306,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// - we have a desktop environment, and
 	// - we are in windowed or multi-display mode, and
 	// - virtual machine guest addons did not request us to show
-	//   the mous cursor, and
+	//   the mouse cursor, and
 	// - mouse is not captured, and
 	// - we are not in seamless mode, and
 	// - no GUI has taken over the mouse, and
@@ -377,8 +390,8 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	if (first_time || old_is_captured != state.is_captured) {
 		GFX_SetMouseCapture(state.is_captured);
 	}
-	if (first_time || old_is_input_raw != state.is_input_raw) {
-		GFX_SetMouseRawInput(state.is_input_raw);
+	if (first_time || old_is_raw_input != state.is_raw_input) {
+		GFX_SetMouseRawInput(state.is_raw_input);
 	}
 	if (first_time || old_hint_id != state.hint_id) {
 		GFX_SetMouseHint(state.hint_id);
@@ -413,6 +426,11 @@ void MOUSE_UpdateGFX()
 bool MOUSE_IsCaptured()
 {
 	return state.is_captured;
+}
+
+bool MOUSE_IsRawInput()
+{
+	return state.is_raw_input;
 }
 
 bool MOUSE_IsProbeForMappingAllowed()
@@ -756,7 +774,21 @@ bool MouseControlAPI::IsMappingBlockedByDriver()
 	return state.vmm_wants_pointer;
 }
 
-const std::vector<MouseInterfaceInfoEntry> &MouseControlAPI::GetInfoInterfaces() const
+MouseControlAPI::MappingSupport MouseControlAPI::IsMappingSupported()
+{
+#ifndef C_MANYMOUSE
+	return MappingSupport::NotCompiledIn;
+#else
+#if defined(WIN32)
+	if (mouse_config.raw_input) {
+		return MappingSupport::NotAvailableRawInput;
+	}
+#endif
+	return MappingSupport::Supported;
+#endif
+}
+
+const std::vector<MouseInterfaceInfoEntry>& MouseControlAPI::GetInfoInterfaces() const
 {
 	return mouse_info.interfaces;
 }
@@ -808,7 +840,8 @@ bool MouseControlAPI::PatternToRegex(const std::string &pattern, std::regex &reg
 bool MouseControlAPI::MapInteractively(const MouseInterfaceId interface_id,
                                        uint8_t &physical_device_idx)
 {
-	if (IsNoMouseMode() || IsMappingBlockedByDriver()) {
+	if (MappingSupport::Supported != IsMappingSupported() ||
+	    IsNoMouseMode() || IsMappingBlockedByDriver()) {
 		return false;
 	}
 
@@ -838,7 +871,8 @@ bool MouseControlAPI::MapInteractively(const MouseInterfaceId interface_id,
 bool MouseControlAPI::Map(const MouseInterfaceId interface_id,\
                           const uint8_t physical_device_idx)
 {
-	if (IsNoMouseMode() || IsMappingBlockedByDriver()) {
+	if (MappingSupport::Supported != IsMappingSupported() ||
+	    IsNoMouseMode() || IsMappingBlockedByDriver()) {
 		return false;
 	}
 
@@ -852,7 +886,8 @@ bool MouseControlAPI::Map(const MouseInterfaceId interface_id,\
 
 bool MouseControlAPI::Map(const MouseInterfaceId interface_id, const std::regex &regex)
 {
-	if (IsNoMouseMode() || IsMappingBlockedByDriver()) {
+	if (MappingSupport::Supported != IsMappingSupported() ||
+	    IsNoMouseMode() || IsMappingBlockedByDriver()) {
 		return false;
 	}
 
