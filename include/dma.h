@@ -76,6 +76,7 @@ public:
 	void ClearRequest();
 	size_t Read(size_t words, uint8_t* const dest_buffer);
 	size_t Write(size_t words, uint8_t* const src_buffer);
+	void LogDetails() const;
 
 	// Reset the channel back to defaults, without callbacks or reservations.
 	void Reset();
