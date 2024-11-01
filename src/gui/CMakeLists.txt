@@ -1,4 +1,5 @@
 add_library(libgui STATIC
+		clipboard.cpp
 		render.cpp
 		render_scalers.cpp
 		sdl_mapper.cpp

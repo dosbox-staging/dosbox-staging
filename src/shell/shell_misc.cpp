@@ -25,6 +25,7 @@
 
 #include "../ints/int10.h"
 #include "callback.h"
+#include "clipboard.h"
 #include "file_reader.h"
 #include "keyboard.h"
 #include "regs.h"
@@ -150,7 +151,9 @@ std::string DOS_Shell::ReadCommand()
 		}
 
 		constexpr decltype(data) ExtendedKey = 0x00;
-		constexpr decltype(data) Escape      = 0x1B;
+		constexpr decltype(data) ControlV    = 0x16;
+		constexpr decltype(data) Escape      = 0x1b;
+
 		switch (data) {
 		case ExtendedKey: {
 			DOS_ReadFile(input_handle, &data, &byte_count);
@@ -262,6 +265,44 @@ std::string DOS_Shell::ReadCommand()
 
 		case '\n': break;
 		case '\r': prompt.Newline(); return command;
+
+		case ControlV:
+			if (CLIPBOARD_HasText()) {
+				auto clipboard = CLIPBOARD_PasteText();
+				// Extract the first non-empty line
+				const auto lines = split(clipboard, "\n\r");
+				clipboard.clear();
+				for (const auto& line : lines) {
+					if (!line.empty()) {
+						clipboard = line;
+						break;
+					}
+				}
+				// Get the content up to the first control
+				// character
+				for (auto it = clipboard.begin();
+				     it != clipboard.end();
+				     ++it) {
+					if (is_extended_printable_ascii(*it)) {
+						continue;
+					}
+					const auto length = it - clipboard.begin();
+					clipboard = clipboard.substr(0, length);
+					break;
+				}
+				// Check if content is suitable for pasting
+				if (clipboard.empty()) {
+					break;
+				}
+				if (command.size() + clipboard.size() >
+				    CommandPrompt::MaxCommandSize()) {
+					break;
+				}
+				// Paste the clipboard content
+				command.insert(cursor_position, clipboard);
+				cursor_position += clipboard.size();
+			}
+			break;
 
 		case Escape:
 			command += "\\";

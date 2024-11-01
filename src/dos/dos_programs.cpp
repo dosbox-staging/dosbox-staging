@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@
 #include "program_autotype.h"
 #include "program_boot.h"
 #include "program_choice.h"
+#include "program_clip.h"
 #include "program_help.h"
 #include "program_imgmount.h"
 #include "program_intro.h"
@@ -80,6 +81,7 @@ void Add_VFiles(const bool add_autoexec)
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);
 	PROGRAMS_MakeFile("CHOICE.COM", ProgramCreate<CHOICE>);
+	PROGRAMS_MakeFile("CLIP.EXE", ProgramCreate<CLIP>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
