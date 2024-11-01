@@ -2240,3 +2240,11 @@ std::string uppercase_dos(const std::string& str, const uint16_t code_page)
 {
 	return uppercase_dos_common(str, get_custom_code_page(code_page));
 }
+
+bool is_code_page_equal(const uint16_t code_page1, const uint16_t code_page2)
+{
+	load_config_if_needed();
+
+	return deduplicate_code_page(code_page1) ==
+	       deduplicate_code_page(code_page2);
+}

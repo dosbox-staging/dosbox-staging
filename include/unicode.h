@@ -92,4 +92,7 @@ std::string lowercase_dos(const std::string& str, const uint16_t code_page);
 std::string uppercase_dos(const std::string& str);
 std::string uppercase_dos(const std::string& str, const uint16_t code_page);
 
+// Check if two code pages are the same
+bool is_code_page_equal(const uint16_t code_page1, const uint16_t code_page2);
+
 #endif

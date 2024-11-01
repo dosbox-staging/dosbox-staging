@@ -403,3 +403,63 @@ bool find_in_case_insensitive(const std::string &needle, const std::string &hays
 	return (it != haystack.end());
 }
 
+std::string host_eol()
+{
+#if defined(WIN32)
+	return "\r\n";
+#else
+	return "\n";
+#endif
+}
+
+std::string replace_eol(const std::string& str, const std::string& new_eol)
+{
+	std::string result = {};
+	result.reserve(str.size());
+
+	for (size_t index = 0; index < str.size(); ++index) {
+		const auto character = str[index];
+		if (character == '\r') {
+			result += new_eol;
+			if (index + 1 < str.size() && str[index + 1] == '\n') {
+				++index;
+			}
+		} else if (character == '\n') {
+			result += new_eol;
+			if (index + 1 < str.size() && str[index + 1] == '\r') {
+				++index;
+			}
+		} else {
+			result.push_back(character);
+		}
+	}
+
+	return result;
+}
+
+bool is_text_equal(const std::string& str_1, const std::string& str_2)
+{
+	size_t index_1 = 0;
+	size_t index_2 = 0;
+
+	auto get_character = [](const std::string& str, size_t& index) {
+		const char result = (str[index] == '\r') ? '\n' : str[index];
+		if ((index + 1 < str.size()) &&
+		    ((str[index] == '\r' && str[index + 1] == '\n') ||
+		     (str[index] == '\n' && str[index + 1] == '\r'))) {
+			// End of the line encoded as '\r\n' or '\n\r'
+			++index;
+		}
+
+		++index;
+		return result;
+	};
+
+	while ((index_1 < str_1.size()) && (index_2 < str_2.size())) {
+		if (get_character(str_1, index_1) != get_character(str_2, index_2)) {
+			return false;
+		}
+	}
+
+	return (index_1 == str_1.size()) && (index_2 == str_2.size());
+}

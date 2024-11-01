@@ -360,4 +360,13 @@ inline std::string safe_tostring(const char* str, const std::size_t maxlen) noex
 std::string replace_all(const std::string& str, const std::string& from,
                         const std::string& to);
 
+// Returns the host-specific end-of-line marking
+std::string host_eol();
+
+// Replaces end-of-line markings (any encoding) with the supplied one
+std::string replace_eol(const std::string& str, const std::string& new_eol);
+
+// Compares two pieces of text, insensitive to end-of-line encoding differences
+bool is_text_equal(const std::string& str_1, const std::string& str_2);
+
 #endif

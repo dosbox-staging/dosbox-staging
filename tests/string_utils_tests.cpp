@@ -519,4 +519,131 @@ TEST(ReplaceAll, Valid)
 	EXPECT_EQ(replace_all(s2, "the", "a"), "\na quick brown fox jumps\nover a\nlazy dog");
 }
 
+TEST(ReplaceEol, Valid)
+{
+	const auto s1 = "\n foo \n\r bar \r\n baz \r";
+
+	EXPECT_EQ(replace_eol(s1, "\n"), "\n foo \n bar \n baz \n");
+	EXPECT_EQ(replace_eol(s1, "\n\r"), "\n\r foo \n\r bar \n\r baz \n\r");
+	EXPECT_EQ(replace_eol(s1, "\r\n"), "\r\n foo \r\n bar \r\n baz \r\n");
+
+	const auto s2 = "Foo\n\nBar\r\r";
+
+	EXPECT_EQ(replace_eol(s2, "\n"), "Foo\n\nBar\n\n");
+	EXPECT_EQ(replace_eol(s2, "\n\r"), "Foo\n\r\n\rBar\n\r\n\r");
+	EXPECT_EQ(replace_eol(s2, "\r\n"), "Foo\r\n\r\nBar\r\n\r\n");
+}
+
+TEST(IsTextEqual, Valid)
+{
+	// Base text, different eol marks
+	const auto s1_posix =
+	        "Lorem ipsum dolor sit amet,\n"
+	        "consectetur adipiscing elit,\n"
+	        "sed do eiusmod tempor incididunt\n"
+	        "ut labore et dolore magna aliqua.\n";
+	const auto s1_win32 =
+	        "Lorem ipsum dolor sit amet,\r\n"
+	        "consectetur adipiscing elit,\r\n"
+	        "sed do eiusmod tempor incididunt\r\n"
+	        "ut labore et dolore magna aliqua.\r\n";
+	const auto s1_mixed =
+	        "Lorem ipsum dolor sit amet,\r\n"
+	        "consectetur adipiscing elit,\n"
+	        "sed do eiusmod tempor incididunt\n\r"
+	        "ut labore et dolore magna aliqua.\r";
+
+	// Similar to s1_*, but each line starts with uppercase
+	const auto s2_posix =
+	        "Lorem ipsum dolor sit amet,\n"
+	        "Consectetur adipiscing elit,\n"
+	        "Sed do eiusmod tempor incididunt\n"
+	        "Ut labore et dolore magna aliqua.\n";
+	const auto s2_win32 =
+	        "Lorem ipsum dolor sit amet,\r\n"
+	        "Consectetur adipiscing elit,\r\n"
+	        "Sed do eiusmod tempor incididunt\r\n"
+	        "Ut labore et dolore magna aliqua.\r\n";
+
+	// Similar to s1_*, but each end-of-line is doubled
+	const auto s3_posix =
+	        "Lorem ipsum dolor sit amet,\n\n"
+	        "consectetur adipiscing elit,\n\n"
+	        "sed do eiusmod tempor incididunt\n\n"
+	        "ut labore et dolore magna aliqua.\n\n";
+
+	const auto s3_win32 =
+	        "Lorem ipsum dolor sit amet,\r\n\r\n"
+	        "consectetur adipiscing elit,\r\n\r\n"
+	        "sed do eiusmod tempor incididunt\r\n\r\n"
+	        "ut labore et dolore magna aliqua.\r\n\r\n";
+
+	// Compare with same text
+	EXPECT_TRUE(is_text_equal(s1_posix, s1_posix));
+	EXPECT_TRUE(is_text_equal(s1_win32, s1_win32));
+	EXPECT_TRUE(is_text_equal(s1_mixed, s1_mixed));
+	EXPECT_TRUE(is_text_equal(s2_posix, s2_posix));
+	EXPECT_TRUE(is_text_equal(s2_win32, s2_win32));
+	EXPECT_TRUE(is_text_equal(s3_posix, s3_posix));
+	EXPECT_TRUE(is_text_equal(s3_win32, s3_win32));
+
+	// Compare s1_* with s1_*
+	EXPECT_TRUE(is_text_equal(s1_posix, s1_win32));
+	EXPECT_TRUE(is_text_equal(s1_win32, s1_posix));
+	EXPECT_TRUE(is_text_equal(s1_win32, s1_mixed));
+	EXPECT_TRUE(is_text_equal(s1_mixed, s1_win32));
+	EXPECT_TRUE(is_text_equal(s1_mixed, s1_posix));
+	EXPECT_TRUE(is_text_equal(s1_posix, s1_mixed));
+
+	// Compare s2_* with s2_*
+	EXPECT_TRUE(is_text_equal(s2_posix, s2_win32));
+	EXPECT_TRUE(is_text_equal(s2_win32, s2_posix));
+
+	// Compare s3_* with s3_*
+	EXPECT_TRUE(is_text_equal(s3_posix, s3_win32));
+	EXPECT_TRUE(is_text_equal(s3_win32, s3_posix));
+
+	// Compare s1_posix with s2_*
+	EXPECT_FALSE(is_text_equal(s1_posix, s2_posix));
+	EXPECT_FALSE(is_text_equal(s1_posix, s2_win32));
+	EXPECT_FALSE(is_text_equal(s1_posix, s3_posix));
+	EXPECT_FALSE(is_text_equal(s1_posix, s3_win32));
+
+	// Compare s2_* with s1_posix
+	EXPECT_FALSE(is_text_equal(s2_posix, s1_posix));
+	EXPECT_FALSE(is_text_equal(s2_win32, s1_posix));
+	EXPECT_FALSE(is_text_equal(s3_posix, s1_posix));
+	EXPECT_FALSE(is_text_equal(s3_win32, s1_posix));
+
+	// Compare s1_win32 with s2_*
+	EXPECT_FALSE(is_text_equal(s1_win32, s2_posix));
+	EXPECT_FALSE(is_text_equal(s1_win32, s2_win32));
+	EXPECT_FALSE(is_text_equal(s1_win32, s3_posix));
+	EXPECT_FALSE(is_text_equal(s1_win32, s3_win32));
+
+	// Compare s2_* with s1_win32
+	EXPECT_FALSE(is_text_equal(s2_posix, s1_win32));
+	EXPECT_FALSE(is_text_equal(s2_win32, s1_win32));
+	EXPECT_FALSE(is_text_equal(s3_posix, s1_win32));
+	EXPECT_FALSE(is_text_equal(s3_win32, s1_win32));
+
+	// Compare s1_mixed with s2_*
+	EXPECT_FALSE(is_text_equal(s1_mixed, s2_posix));
+	EXPECT_FALSE(is_text_equal(s1_mixed, s2_win32));
+	EXPECT_FALSE(is_text_equal(s1_mixed, s3_posix));
+	EXPECT_FALSE(is_text_equal(s1_mixed, s3_win32));
+
+	// Compare s2_* with s1_mixed
+	EXPECT_FALSE(is_text_equal(s2_posix, s1_mixed));
+	EXPECT_FALSE(is_text_equal(s2_win32, s1_mixed));
+	EXPECT_FALSE(is_text_equal(s3_posix, s1_mixed));
+	EXPECT_FALSE(is_text_equal(s3_win32, s1_mixed));
+
+	// Compare strings without newline characters
+	EXPECT_TRUE(is_text_equal("FooBar", "FooBar"));
+	EXPECT_FALSE(is_text_equal("FooBar", "BarFoo"));
+	EXPECT_FALSE(is_text_equal("FooBar", "FooBarBaz"));
+	EXPECT_FALSE(is_text_equal("FooBarBaz", "FooBar"));
+}
+
 } // namespace

@@ -139,6 +139,9 @@
     <ClCompile Include="..\src\fpu\fpu.cpp">
       <Filter>src\fpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\clipboard.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\gui\render.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
@@ -559,6 +562,9 @@
     <ClCompile Include="..\src\dos\program_choice.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_clip.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_help.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
@@ -907,6 +913,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\checks.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\clipboard.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\compiler.h">
