@@ -33,7 +33,7 @@ jobs:
       matrix:
         conf:
           - name: Clang
-            host: macos-12
+            host: macos-13
             arch: x86_64
             needs_deps: true
             run_tests: true
@@ -114,7 +114,7 @@ jobs:
     strategy:
       matrix:
         runner:
-          - host: macos-12
+          - host: macos-13
             arch: x86_64
             build_flags: -Db_lto=true
             brew_path: /usr/local/homebrew
