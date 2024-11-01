@@ -528,6 +528,23 @@ void DmaChannel::Reset()
 	reservation_owner    = {};
 }
 
+void DmaChannel::LogDetails() const
+{
+	LOG_DEBUG(
+	        "DMA[%u]: %s %d-bit DMA has base count:%4u, "
+	        "current count:%4u, is auto-init: %d, is masked: %d, "
+	        " has reached TC: %d, has raised IRQ request: %d",
+	        chan_num,
+	        reservation_owner.c_str(),
+	        is_16bit == 1 ? 16 : 8,
+	        base_count,
+	        curr_count,
+	        is_autoiniting,
+	        is_masked,
+	        has_reached_terminal_count,
+	        has_raised_request);
+}
+
 DmaChannel::~DmaChannel()
 {
 	if (HasReservation()) {
