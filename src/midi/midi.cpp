@@ -93,7 +93,7 @@ static std::unique_ptr<MidiDevice> create_device(const std::string& name,
 {
 	using namespace MidiDeviceName;
 
-	// Internal MIDI synths
+	// Built-in MIDI synths
 #if C_FLUIDSYNTH
 	if (name == FluidSynth) {
 		return std::make_unique<MidiDeviceFluidSynth>();
@@ -128,29 +128,6 @@ static std::unique_ptr<MidiDevice> create_device(const std::string& name,
 #endif
 
 	// Device not found
-	return {};
-}
-
-static std::vector<const char*> auto_device_candidates = {MidiDeviceName::Alsa,
-                                                          MidiDeviceName::CoreAudio,
-                                                          MidiDeviceName::CoreMidi,
-                                                          MidiDeviceName::Win32};
-
-static std::unique_ptr<MidiDevice> try_create_auto_device(const std::string& config)
-{
-	for (const auto device_name : auto_device_candidates) {
-		try {
-			if (auto device = create_device(device_name, config); device) {
-				return device;
-			}
-			// nullptr means the device is not supported on
-			// the current platform; try the next one
-
-		} catch (const std::runtime_error& ex) {
-			// error opening device; try the next one
-			continue;
-		}
-	}
 	return {};
 }
 
@@ -639,8 +616,11 @@ static std::string get_mididevice_setting()
 	return get_midi_section()->Get_string("mididevice");
 }
 
+static auto MidiDevicePortPref    = "port";
+static auto DefaultMidiDevicePref = MidiDevicePortPref;
+
 // We'll adapt the RtMidi library, eventually, so hold off any substantial
-// rewrites on the MIDI stuff until then to unnecessary work.
+// rewrites of the MIDI stuff until then to avoid unnecessary work.
 class MIDI final {
 public:
 	MIDI()
@@ -669,10 +649,21 @@ public:
 
 		trim(midiconfig_prefs);
 
-		if (device_pref == "auto") {
-			// Use the first working device
-			midi.device = try_create_auto_device(midiconfig_prefs);
-
+		if (device_pref == MidiDevicePortPref) {
+			// Use system-level MIDI interface of the host OS
+#if C_COREMIDI
+			// macOS
+			midi.device = create_device(MidiDeviceName::CoreMidi,
+			                            midiconfig_prefs);
+#elif defined(WIN32)
+			// Windows
+			midi.device = create_device(MidiDeviceName::Win32,
+			                            midiconfig_prefs);
+#elif C_ALSA
+			// Linux
+			midi.device = create_device(MidiDeviceName::Alsa,
+			                            midiconfig_prefs);
+#endif
 		} else {
 			midi.device = create_device(device_pref, midiconfig_prefs);
 		}
@@ -766,10 +757,9 @@ static void midi_init([[maybe_unused]] Section* sec)
 
 		} catch (const std::runtime_error& ex) {
 			const auto mididevice_pref = get_mididevice_setting();
-			if (mididevice_pref == "auto") {
+			if (mididevice_pref == MidiDevicePortPref) {
 				LOG_WARNING(
 				        "MIDI: Error opening device '%s'; "
-				        "MIDI auto-discovery failed, "
 				        "using 'mididevice = none' and disabling MIDI output",
 				        mididevice_pref.c_str());
 
@@ -782,11 +772,14 @@ static void midi_init([[maybe_unused]] Section* sec)
 			} else {
 				// If 'mididevice' was set to a concrete value
 				// and the device could not be initialiased,
-				// we'll try 'auto' as a fallback.
-				LOG_WARNING("MIDI: Error opening device '%s'; using 'auto'",
-				            mididevice_pref.c_str());
+				// we'll try 'port' as a fallback.
+				LOG_WARNING("MIDI: Error opening device '%s'; using '%s'",
+				            mididevice_pref.c_str(),
+				            DefaultMidiDevicePref);
 
-				set_section_property_value("midi", "mididevice", "auto");
+				set_section_property_value("midi",
+				                           "mididevice",
+				                           MidiDevicePortPref);
 			}
 		}
 	}
@@ -801,54 +794,36 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = secprop.Add_string("mididevice", WhenIdle, "auto");
+	auto* str_prop = secprop.Add_string("mididevice", WhenIdle, DefaultMidiDevicePref);
 	str_prop->Set_help(
-	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
-	        "('auto' by default):");
+	        format_str("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
+	                   "('%s' by default):",
+	                   DefaultMidiDevicePref));
 
-	str_prop->SetOptionHelp(MidiDeviceName::CoreMidi,
-	                        "  coremidi:    Any device that has been configured in the macOS\n"
-	                        "               Audio MIDI Setup.");
-
-	str_prop->SetOptionHelp(MidiDeviceName::CoreAudio,
-	                        "  coreaudio:   Use the built-in macOS MIDI synthesiser.");
-
-	str_prop->SetOptionHelp(MidiDeviceName::Win32,
-	                        "  win32:       Use the Win32 MIDI playback interface.");
-
-	str_prop->SetOptionHelp(MidiDeviceName::Alsa,
-	                        "  alsa:        Use the Linux ALSA MIDI playback interface.");
+	str_prop->SetOptionHelp(
+	        MidiDeviceName::CoreAudio,
+	        "  coreaudio:   The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
+	        "               be specified with the 'midiconfig' setting.");
 
 	str_prop->SetOptionHelp(
 	        MidiDeviceName::FluidSynth,
 	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
 	        "               See the [fluidsynth] section for detailed configuration.");
 
-	str_prop->SetOptionHelp(
-	        MidiDeviceName::Mt32,
-	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
-	        "               See the [mt32] section for detailed configuration.");
-	str_prop->SetOptionHelp(
-	        "auto",
-	        "  auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is\n"
-	        "               set to 'fluidsynth' or 'mt32'), or a MIDI device external to\n"
-	        "               DOSBox (any other 'midiconfig' value). This might be a software\n"
-	        "               synthesizer or physical device. This is the default behaviour.");
+	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
+	                        "  mt32:        The built-in Roland MT-32 synthesizer. See the [mt32] section\n"
+	                        "               for detailed configuration.");
+
+	str_prop->SetOptionHelp(DefaultMidiDevicePref,
+	                        "  port:        A MIDI port of the host operating system's MIDI interface\n"
+	                        "               (default). The MIDI port to use can be configured with the\n"
+	                        "               'midiconfig' setting.");
+
 	str_prop->SetOptionHelp("none", "  none:        Disable MIDI output.");
 	str_prop->Set_values({
-		"auto",
-#if defined(MACOSX)
-#if C_COREMIDI
-		        MidiDeviceName::CoreMidi,
-#endif
+		MidiDevicePortPref,
 #if C_COREAUDIO
 		        MidiDeviceName::CoreAudio,
-#endif
-#elif defined(WIN32)
-		        MidiDeviceName::Win32,
-#endif
-#if C_ALSA
-		        MidiDeviceName::Alsa,
 #endif
 #if C_FLUIDSYNTH
 		        MidiDeviceName::FluidSynth,
@@ -856,42 +831,58 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 		        MidiDeviceName::Mt32, "none"
 	});
 
+	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("alsa", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("auto", DefaultMidiDevicePref);
+
 	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
-	        "Configuration options for the selected MIDI interface (unset by default).\n"
-	        "This is usually the ID or name of the MIDI synthesizer you want\n"
-	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
+	        "Configuration options for the selected MIDI device (unset by default).\n"
 	        "Notes:");
 
 	str_prop->SetOptionHelp("fluidsynth_or_mt32emu",
-	                        "  - This option has no effect when using the built-in synthesizers\n"
+	                        "  - The setting has no effect when using the built-in synthesizers\n"
 	                        "    ('mididevice = fluidsynth' or 'mididevice = mt32').");
 
-	str_prop->SetOptionHelp("coreaudio",
-	                        "  - When using 'coreaudio', you can specify a SoundFont here.");
+	str_prop->SetOptionHelp(
+	        "coreaudio",
+	        "  - When using 'mididevice = coreaudio', this setting specifies the SoundFont\n"
+	        "    to use. You must use the absolute path of the SoundFont file.");
 
-	str_prop->SetOptionHelp("alsa",
-	                        "  - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
-	                        "    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
+	str_prop->SetOptionHelp("linux",
+	                        "  - When using 'mididevice = port', use the Linux command 'aconnect -l' to list\n"
+	                        "    all open MIDI ports and select one (e.g., 'midiconfig = 14:0' for sequencer\n"
 	                        "    client 14, port 0).");
 
 	str_prop->SetOptionHelp(
+	        "windows_or_macos",
+	        "  - When using 'mididevice = port', find the ID or name of the MIDI port you\n"
+	        "    want to use with the DOS command 'MIXER /LISTMIDI', then set either the ID\n"
+	        "    or a substring of the name (e.g., to use the port called \"loopMIDI Port A\"\n"
+	        "    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').");
+
+	str_prop->SetOptionHelp(
 	        "mt32",
-	        "  - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware\n"
-	        "    may require a delay in order to prevent its buffer from overflowing.\n"
-	        "    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').");
+	        "  - If you're using a physical rev.0 Roland MT-32, the hardware may require a\n"
+	        "    delay to prevent buffer overflows. You can enable this with 'delaysysex'\n"
+	        "    after the port ID or name (e.g., 'midiconfig = 2 delaysysex').");
 
 	str_prop->SetEnabledOptions({
-#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
-		"fluidsynth_or_mt32emu",
+#if (C_COREMIDI == 1 || defined(WIN32))
+		"windows_or_macos",
 #endif
 #if C_COREAUDIO
 		        "coreaudio",
 #endif
 #if C_ALSA
-		        "alsa",
+		        "linux",
 #endif
-		        "mt32",
+#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
+		        "fluidsynth_or_mt32emu",
+#endif
+		        "mt32"
 	});
 
 	str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
