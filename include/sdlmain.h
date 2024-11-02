@@ -21,7 +21,7 @@
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
 
-#include "SDL.h"
+#include <SDL3/SDL.h>
 
 #include <cstring>
 #include <optional>
@@ -29,7 +29,7 @@
 #include <string_view>
 
 #if C_OPENGL
-#include <SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 #endif
 
 #include "fraction.h"
@@ -303,7 +303,6 @@ struct SDL_Block {
 	struct {
 		SDL_Surface* input_surface   = nullptr;
 		SDL_Texture* texture         = nullptr;
-		SDL_PixelFormat* pixelFormat = nullptr;
 
 		InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
 	} texture = {};
@@ -332,24 +331,16 @@ struct SDL_Block {
 #endif
 
 	// State of Alt keys for certain special handlings
-	SDL_EventType laltstate = SDL_KEYUP;
-	SDL_EventType raltstate = SDL_KEYUP;
+	SDL_EventType laltstate = SDL_EVENT_KEY_UP;
+	SDL_EventType raltstate = SDL_EVENT_KEY_UP;
 };
 
 extern SDL_Block sdl;
 
-constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
+inline bool is_runtime_sdl_version_at_least(const int major, const int minor, const int patch)
 {
-	return (version.major << 16) + (version.minor << 8) + version.patch;
-}
-
-inline bool is_runtime_sdl_version_at_least(const SDL_version min_version)
-{
-	SDL_version version = {};
-	SDL_GetVersion(&version);
-	const auto curr_version = sdl_version_to_uint32(version);
-
-	return curr_version >= sdl_version_to_uint32(min_version);
+	const auto curr_version = SDL_GetVersion();
+	return curr_version >= SDL_VERSIONNUM(major, minor, patch);
 }
 
 #endif

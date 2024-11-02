@@ -16,7 +16,7 @@ libgui = static_library(
         libiir_dep,
         libloguru_dep,
         opengl_dep,
-        sdl2_dep,
+        sdl3_dep,
         tracy_dep,
     ],
     cpp_args: warnings,

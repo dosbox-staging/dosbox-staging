@@ -14,7 +14,7 @@ libmidi = static_library(
     libmidi_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
         fluid_dep,
         mt32emu_dep,
         alsa_dep,

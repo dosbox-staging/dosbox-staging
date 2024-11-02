@@ -34,7 +34,7 @@
 #error Do not include this header from your applications.
 #endif
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 /* SDL 1.2.4 defines this, but better safe than sorry. */
 #if (!defined(__inline__))
@@ -220,7 +220,7 @@ typedef struct __SOUND_SAMPLEINTERNAL__
 {
     Sound_Sample *next;
     Sound_Sample *prev;
-    SDL_RWops *rw;
+    SDL_IOStream *rw;
     const Sound_DecoderFunctions *funcs;
     void *buffer;
     Uint32 buffer_size;

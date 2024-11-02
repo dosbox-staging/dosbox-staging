@@ -53,7 +53,7 @@ libpdcurses = static_library(
     libpdcurses_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
     ],
 )
 

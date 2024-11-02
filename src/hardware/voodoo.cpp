@@ -85,8 +85,7 @@
 #include <cstring>
 #include <mutex>
 
-#include <SDL.h>
-#include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
+#include <SDL3/SDL.h>
 
 #if defined(__SSE2__)
 #include <emmintrin.h>

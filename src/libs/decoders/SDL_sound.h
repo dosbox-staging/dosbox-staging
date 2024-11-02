@@ -48,8 +48,7 @@
 #ifndef _INCLUDE_SDL_SOUND_H_
 #define _INCLUDE_SDL_SOUND_H_
 
-#include <SDL.h>
-#include <SDL_endian.h>
+#include <SDL3/SDL.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -427,7 +426,7 @@ SNDDECLSPEC void SDLCALL Sound_ClearError(void);
  * \sa Sound_Rewind
  * \sa Sound_FreeSample
  */
-SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_RWops *rw,
+SNDDECLSPEC Sound_Sample * SDLCALL Sound_NewSample(SDL_IOStream *rw,
                                                    const char *ext,
                                                    Sound_AudioInfo *desired);
 

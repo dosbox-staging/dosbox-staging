@@ -43,9 +43,9 @@
 #include <windows.h>
 #endif
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #if C_OPENGL
-#include <SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 #endif
 
 #include "../capture/capture.h"
@@ -362,23 +362,24 @@ bool GFX_HaveDesktopEnvironment()
 static double get_host_refresh_rate()
 {
 	auto get_sdl_rate = []() {
-		SDL_DisplayMode mode = {};
-
-		auto& sdl_rate = mode.refresh_rate;
-
 		assert(sdl.window);
-		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
+		const auto display_in_use = SDL_GetDisplayForWindow(sdl.window);
 
 		if (display_in_use < 0) {
 			LOG_ERR("SDL: Could not get the current window index: %s",
 			        SDL_GetError());
 			return RefreshRateHostDefault;
 		}
-		if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
+		const auto mode = SDL_GetCurrentDisplayMode(display_in_use);
+		if (!mode) {
 			LOG_ERR("SDL: Could not get the current display mode: %s",
 			        SDL_GetError());
 			return RefreshRateHostDefault;
 		}
+		// TODO: SDL 3 changed this to a float but all of our constansts are ints
+		// Should we be using float for refresh rate going forwards?
+		// Casting to int for now so it will compile
+		const auto sdl_rate = static_cast<int>(mode->refresh_rate);
 		if (sdl_rate < RefreshRateMin) {
 			LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
 			            sdl_rate);
@@ -576,16 +577,14 @@ static bool is_command_pressed(const SDL_Event event)
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
 
-		case SDL_WINDOWEVENT:
-			if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-				// We may need to re-create a texture and more
-				GFX_ResetScreen();
-			}
+		case SDL_EVENT_WINDOW_RESTORED:
+			// We may need to re-create a texture and more
+			GFX_ResetScreen();
 			break;
 
-		case SDL_KEYDOWN:
+		case SDL_EVENT_KEY_DOWN:
 #if defined(MACOSX)
 			// Pause/unpause is hardcoded to Command+P on macOS
 			if (is_command_pressed(event) &&
@@ -593,9 +592,9 @@ static bool is_command_pressed(const SDL_Event event)
 #else
 			// Pause/unpause is hardcoded to Alt+Pause on Window &
 			// Linux
-			if (event.key.keysym.sym == SDLK_PAUSE) {
+			if (event.key.key == SDLK_PAUSE) {
 #endif
-				const uint16_t outkeymod = event.key.keysym.mod;
+				const uint16_t outkeymod = event.key.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
@@ -687,13 +686,7 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 
 	// According to SDL2 documentation, the first driver
 	// in the list is the default one.
-	int i = 0;
-	SDL_RendererInfo info;
-	while (SDL_GetRenderDriverInfo(i++, &info) == 0) {
-		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
-			break;
-	}
-	default_driver_is_opengl = std::string_view(info.name).starts_with("opengl");
+	default_driver_is_opengl = std::string_view(SDL_GetRenderDriver(0)).starts_with("opengl");
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
@@ -1013,7 +1006,7 @@ static void set_vsync(const VsyncMode mode)
 	                            ? "1"
 	                            : "0";
 
-	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE) {
+	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str)) {
 		return;
 	}
 	LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
@@ -1201,6 +1194,18 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 	previous_mode = mode;
 }
 
+static int get_number_of_displays()
+{
+	int num_displays = 1;
+	const auto displays = SDL_GetDisplays(&num_displays);
+	if (displays) {
+		SDL_free(displays);
+	} else {
+		num_displays = 1;
+	}
+	return num_displays;
+}
+
 static void notify_new_mouse_screen_params()
 {
 	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0) {
@@ -1216,15 +1221,18 @@ static void notify_new_mouse_screen_params()
 	params.draw_rect =
 	        to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.desktop.dpi_scale);
 
-	int abs_x = 0;
-	int abs_y = 0;
+	// TODO: SDL 3 has changed this function to return floats for sub-pixel precision
+	// Maybe update the member variables to float and take advantage of this?
+	float abs_x = 0;
+	float abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-	params.x_abs = check_cast<int32_t>(abs_x);
-	params.y_abs = check_cast<int32_t>(abs_y);
+	params.x_abs = static_cast<int32_t>(abs_x);
+	params.y_abs = static_cast<int32_t>(abs_y);
 
 	params.is_fullscreen    = sdl.desktop.fullscreen;
-	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
+
+	params.is_multi_display = get_number_of_displays() > 1;
 
 	MOUSE_NewScreenParams(params);
 }
@@ -1319,7 +1327,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
-		flags |= SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+		flags |= SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_RESIZABLE;
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
@@ -1327,7 +1335,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		// We need a context to query the vendor string.
 		const auto temp_window = SDL_CreateWindow(
-		        "", 0, 0, 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+		        "", 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
 		if (temp_window == nullptr) {
 			LOG_ERR("SDL: Failed to create temporary window: %s",
 			        SDL_GetError());
@@ -1343,9 +1351,9 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
 		                                                 "unknown vendor");
 
-		SDL_GL_DeleteContext(temp_context);
+		SDL_GL_DestroyContext(temp_context);
 		SDL_DestroyWindow(temp_window);
-		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+		if (!SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
 		}
@@ -1360,7 +1368,16 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		const auto pos = get_initial_window_position_or_default(default_val);
 
 		assert(sdl.window == nullptr); // enusre we don't leak
-		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+
+		auto properties = SDL_CreateProperties();
+		SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_X_NUMBER, pos.x);
+		SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_Y_NUMBER, pos.y);
+		SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
+		SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
+		SDL_SetNumberProperty(properties, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
+		sdl.window = SDL_CreateWindowWithProperties(properties);
+		SDL_DestroyProperties(properties);
+
 		if (!sdl.window) {
 			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
@@ -1377,7 +1394,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			}
 
 			assert(sdl.renderer == nullptr);
-			sdl.renderer = SDL_CreateRenderer(sdl.window, -1, 0);
+			sdl.renderer = SDL_CreateRenderer(sdl.window, nullptr);
 			if (!sdl.renderer) {
 				LOG_ERR("SDL: Failed to create renderer: %s",
 				        SDL_GetError());
@@ -1387,7 +1404,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			if (sdl.opengl.context) {
-				SDL_GL_DeleteContext(sdl.opengl.context);
+				SDL_GL_DestroyContext(sdl.opengl.context);
 				sdl.opengl.context = nullptr;
 			}
 
@@ -1398,7 +1415,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 				        SDL_GetError());
 				return nullptr;
 			}
-			if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
+			if (!SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context)) {
 				LOG_ERR("OPENGL: Can't make context current: %s",
 				        SDL_GetError());
 				return nullptr;
@@ -1420,27 +1437,30 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 	 * although it has its own issues.
 	 */
 	if (fullscreen) {
-		SDL_DisplayMode displayMode;
-		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
-		displayMode.w = width;
-		displayMode.h = height;
+		if (sdl.desktop.full.display_res) {
+			// SDL 3 change: Setting this to nullptr means fullscreen desktop mode
+			SDL_SetWindowFullscreenMode(sdl.window, nullptr);
+		} else {
+			// Otherwise we're getting exclusive fullscreen mode
+			auto display_mode = *SDL_GetWindowFullscreenMode(sdl.window);
+			display_mode.w = width;
+			display_mode.h = height;
 
-		// TODO pixels or logical unit?
-		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
-			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
-			            displayMode.w,
-			            displayMode.h,
-			            displayMode.refresh_rate);
+			// TODO pixels or logical unit?
+			if (!SDL_SetWindowFullscreenMode(sdl.window, &display_mode)) {
+				LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %f Hz",
+							display_mode.w,
+							display_mode.h,
+							display_mode.refresh_rate);
+			}
 		}
-		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.full.display_res
-		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
-		                                : enum_val(SDL_WINDOW_FULLSCREEN));
+
+		SDL_SetWindowFullscreen(sdl.window, true);
 	} else {
 		// we're switching down from fullscreen, so let SDL use the
 		// previously-set window size
 		if (sdl.desktop.switching_fullscreen) {
-			SDL_SetWindowFullscreen(sdl.window, 0);
+			SDL_SetWindowFullscreen(sdl.window, false);
 		}
 	}
 
@@ -1482,7 +1502,8 @@ RenderingBackend GFX_GetRenderingBackend()
 static SDL_Rect get_desktop_size()
 {
 	SDL_Rect desktop = {};
-	assert(sdl.display_number >= 0);
+	// SDL_DisplayID of 0 is always invalid in SDL 3
+	assert(sdl.display_number > 0);
 
 	SDL_GetDisplayBounds(sdl.display_number, &desktop);
 
@@ -1776,13 +1797,22 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			E_Exit("SDL: Failed to create window");
 		}
 
-		// Use renderer's default format
-		SDL_RendererInfo rinfo;
-		SDL_GetRendererInfo(sdl.renderer, &rinfo);
-		const auto texture_format = rinfo.texture_formats[0];
+		// SDL 3 Migration: Previous code queried the renderer for supported formats and used the first format it returned.
+		// The ordering of formats changed in SDL 3 and this broke.
+		// In actuality, our internal renderer needs this specific format if using 32 bit.
+		// Previous code did not check pixel ordering, only bits per pixel.
+		// It supposedly had some support for 8, 15, and 16 bit textures.
+		// I can't think of any reason to actually use those formats host-side though.
+		// This should work on all systems as SDL will transparently convert it even if the renderer does not support this format natively.
+
+		// NOTE (endianess): SDL_PIXELFORMAT_BGRX32 is the "endian aware" macro.
+		// It compiles to SDL_PIXELFORMAT_XRGB8888 on little endian and SDL_PIXELFORMAT_BGRX8888 on big endian
+		// I believe this is the same as what the OpenGL code is doing.
+		// If I'm wrong and someone ever complains that big endian broke, change this to SDL_PIXELFORMAT_XRGB8888
+		constexpr auto TextureFormat = SDL_PIXELFORMAT_BGRX32;
 
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
-		                                        texture_format,
+		                                        TextureFormat,
 		                                        SDL_TEXTUREACCESS_STREAMING,
 		                                        render_width_px,
 		                                        render_height_px);
@@ -1796,41 +1826,34 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		// release the existing surface if needed
 		auto &texture_input_surface = sdl.texture.input_surface;
 		if (texture_input_surface) {
-			SDL_FreeSurface(texture_input_surface);
+			SDL_DestroySurface(texture_input_surface);
 			texture_input_surface = nullptr;
 		}
 		assert(texture_input_surface == nullptr); // ensure we don't leak
-		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, render_width_px, render_height_px, 32, texture_format);
+		texture_input_surface = SDL_CreateSurface(
+		        render_width_px, render_height_px, TextureFormat);
 		if (!texture_input_surface) {
 			E_Exit("SDL: Error while preparing texture input");
 		}
 
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-		uint32_t pixel_format;
 		assert(sdl.texture.texture);
-		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
-		switch (SDL_BITSPERPIXEL(pixel_format)) {
-			case 8:  retFlags = GFX_CAN_8;  break;
-			case 15: retFlags = GFX_CAN_15; break;
-			case 16: retFlags = GFX_CAN_16; break;
-			case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
-			case 32: retFlags = GFX_CAN_32; break;
-		        }
+		// SDL 3 Migration: The only checking the previous code did was for bits per pixel to set this flag.
+		// We're forcing a 32-bit format now.
+		retFlags = GFX_CAN_32;
 
 		// Log changes to the rendering driver
-		static std::string render_driver = {};
-		if (render_driver != rinfo.name) {
+		static std::string previous_driver_name = {};
+		const auto current_driver_name = SDL_GetRendererName(sdl.renderer);
+		if (previous_driver_name != current_driver_name) {
 			LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
-			        rinfo.name,
-			        SDL_BITSPERPIXEL(pixel_format));
-			render_driver = rinfo.name;
+			        current_driver_name,
+			        SDL_BITSPERPIXEL(TextureFormat));
+			previous_driver_name = current_driver_name;
 		}
 
-		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
+		if (strcmp(current_driver_name, SDL_SOFTWARE_RENDERER) == 0) {
 			retFlags |= GFX_CAN_RANDOM;
 		}
 
@@ -1860,7 +1883,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		sdl.draw_rect_px = to_sdl_rect(
 		        calc_draw_rect_in_pixels(canvas_size_px));
 
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
+		if (!SDL_SetRenderViewport(sdl.renderer, &sdl.draw_rect_px)) {
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 		}
 
@@ -2100,7 +2123,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		memset(emptytex, 0, texture_area_bytes);
 
 		int is_double_buffering_enabled = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
+		if (!SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
 		                        &is_double_buffering_enabled)) {
 			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
 			            SDL_GetError());
@@ -2111,7 +2134,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		}
 
 		int is_framebuffer_srgb_capable = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+		if (!SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
 		                        &is_framebuffer_srgb_capable)) {
 			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
 			            SDL_GetError());
@@ -2243,7 +2266,9 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		static auto last_vsync_mode = VsyncMode::Unset;
 
 		auto vsync_mode = VsyncMode::Unset;
-		switch (SDL_GL_GetSwapInterval()) {
+		int swap_interval = 0;
+		SDL_GL_GetSwapInterval(&swap_interval);
+		switch (swap_interval) {
 		case -1:
 			vsync_mode = VsyncMode::Adaptive;
 			break;
@@ -2312,7 +2337,7 @@ void GFX_CenterMouse()
 	int height = 0;
 
 #if defined(WIN32)
-	if (is_runtime_sdl_version_at_least({2, 28, 1})) {
+	if (is_runtime_sdl_version_at_least(2, 28, 1)) {
 		SDL_GetWindowSize(sdl.window, &width, &height);
 
 	} else {
@@ -2331,18 +2356,17 @@ void GFX_CenterMouse()
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
 {
-	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+	if (!SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
 	                            requested_raw_input ? "0" : "1",
-	                            SDL_HINT_OVERRIDE) != SDL_TRUE)
+	                            SDL_HINT_OVERRIDE))
 		LOG_WARNING("SDL: Failed to %s raw mouse input",
 		            requested_raw_input ? "enable" : "disable");
 }
 
 void GFX_SetMouseCapture(const bool requested_capture)
 {
-	const auto param = requested_capture ? SDL_TRUE : SDL_FALSE;
-	if (SDL_SetRelativeMouseMode(param) != 0) {
-		SDL_ShowCursor(SDL_ENABLE);
+	if (!SDL_SetWindowRelativeMouseMode(sdl.window, requested_capture)) {
+		SDL_ShowCursor();
 		E_Exit("SDL: Failed to %s relative-mode [SDL Bug]",
 		       requested_capture ? "put the mouse in" :
 		                           "take the mouse out of");
@@ -2351,10 +2375,16 @@ void GFX_SetMouseCapture(const bool requested_capture)
 
 void GFX_SetMouseVisibility(const bool requested_visible)
 {
-	const auto param = requested_visible ? SDL_ENABLE : SDL_DISABLE;
-	if (SDL_ShowCursor(param) < 0)
+	bool success = false;
+	if (requested_visible) {
+		success = SDL_ShowCursor();
+	} else {
+		success = SDL_HideCursor();
+	}
+	if (!success) {
 		E_Exit("SDL: Failed to make mouse cursor %s [SDL Bug]",
 		       requested_visible ? "visible" : "invisible");
+	}
 }
 
 static void focus_input()
@@ -2373,7 +2403,6 @@ static void focus_input()
 
 	// If not, raise-and-focus to prevent stranding the window
 	SDL_RaiseWindow(sdl.window);
-	SDL_SetWindowInputFocus(sdl.window);
 }
 
 #if defined (WIN32)
@@ -2654,12 +2683,13 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	//
 	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
 
-	if (SDL_RenderReadPixels(renderer,
-	                         &read_rect_px,
-	                         SDL_PIXELFORMAT_BGR24,
-	                         image.image_data,
-	                         image.pitch) != 0) {
-
+	const auto surface = SDL_RenderReadPixels(renderer, &read_rect_px);
+	if (surface) {
+		SDL_LockSurface(surface);
+		SDL_ConvertPixels(surface->w, surface->h, surface->format, surface->pixels, surface->pitch, SDL_PIXELFORMAT_BGR24, image.image_data, image.pitch);
+		SDL_UnlockSurface(surface);
+		SDL_DestroySurface(surface);
+	} else {
 		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 		            SDL_GetError());
 
@@ -2674,7 +2704,7 @@ static bool present_frame_texture()
 	const auto is_presenting = render_pacer->CanRun();
 	if (is_presenting) {
 		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
+		SDL_RenderTexture(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
 
 		if (CAPTURE_IsCapturingPostRenderImage()) {
 			// glReadPixels() implicitly blocks until all pipelined rendering
@@ -2756,8 +2786,8 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
 	switch (sdl.rendering_backend) {
 	case RenderingBackend::Texture:
-		assert(sdl.texture.pixelFormat);
-		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
+		assert(sdl.texture.input_surface);
+		return SDL_MapSurfaceRGB(sdl.texture.input_surface, red, green, blue);
 	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
 	}
@@ -2800,16 +2830,12 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void clean_up_sdl_resources()
 {
-	if (sdl.texture.pixelFormat) {
-		SDL_FreeFormat(sdl.texture.pixelFormat);
-		sdl.texture.pixelFormat = nullptr;
-	}
 	if (sdl.texture.texture) {
 		SDL_DestroyTexture(sdl.texture.texture);
 		sdl.texture.texture = nullptr;
 	}
 	if (sdl.texture.input_surface) {
-		SDL_FreeSurface(sdl.texture.input_surface);
+		SDL_DestroySurface(sdl.texture.input_surface);
 		sdl.texture.input_surface = nullptr;
 	}
 }
@@ -2832,7 +2858,7 @@ static void GUI_ShutDown(Section *)
 	}
 #if C_OPENGL
 	if (sdl.opengl.context) {
-		SDL_GL_DeleteContext(sdl.opengl.context);
+		SDL_GL_DestroyContext(sdl.opengl.context);
 		sdl.opengl.context = nullptr;
 	}
 #endif
@@ -3254,13 +3280,15 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		sdl.want_rendering_backend     = RenderingBackend::Texture;
 		sdl.texture.interpolation_mode = InterpolationMode::Bilinear;
 
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+		// TODO: These hints have been removed and replaced by SDL_SetTextureScaleMode()
+		// That function requires a texture and I don't know if we have it initalized at this point
+		//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	} else if (output == "texturenb") {
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 		sdl.texture.interpolation_mode = InterpolationMode::NearestNeighbour;
 
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+		//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
 	} else if (output == "opengl") {
@@ -3282,8 +3310,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 	if (sdl.render_driver != "auto") {
-		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
-		                sdl.render_driver.c_str()) == SDL_FALSE) {
+		if (!SDL_SetHint(SDL_HINT_RENDER_DRIVER,
+		                sdl.render_driver.c_str())) {
 			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; "
 			            "falling back to automatic selection",
 			            sdl.render_driver.c_str());
@@ -3468,6 +3496,38 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 	restart_dosbox();
 }
 
+static SDL_DisplayID validate_displayid_or_fallback(SDL_DisplayID requested_display)
+{
+	int num_displays = 0;
+	auto display_list = SDL_GetDisplays(&num_displays);
+
+	// We're likely to crash later if this fails and DIsplayID 1 is invalid but at least we logged the problem
+	if (!display_list) {
+		LOG_ERR("SDL_GetDisplays() failed. SDL Error: %s", SDL_GetError());
+		return 1;
+	}
+	if (num_displays == 0) {
+		LOG_ERR("SDL_GetDisplays() did not find any displays.");
+		SDL_free(display_list);
+		return 1;
+	}
+
+	// Fallback to the first DisplayID in the list if reqeusted DisplayID not found
+	SDL_DisplayID found_display = display_list[0];
+
+	for (int i = 0; i < num_displays; ++i) {
+		if (display_list[i] == requested_display) {
+			found_display = requested_display;
+			break;
+		}
+	}
+	if (found_display != requested_display) {
+		LOG_WARNING("Requested DisplayID %u not found. Using first DisplayID %u", requested_display, found_display);
+	}
+	SDL_free(display_list);
+	return found_display;
+}
+
 static void read_gui_config(Section* sec)
 {
 	sec->AddDestroyFunction(&GUI_ShutDown);
@@ -3541,13 +3601,9 @@ static void read_gui_config(Section* sec)
 	                                       sdl.vsync.skip_us,
 	                                       Pacer::LogLevel::TIMEOUTS);
 
-	const int display = section->Get_int("display");
-	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
-		sdl.display_number = display;
-	} else {
-		LOG_WARNING("SDL: Display number out of bounds, using display 0");
-		sdl.display_number = 0;
-	}
+	const int requested_display = section->Get_int("display");
+
+	sdl.display_number = validate_displayid_or_fallback(requested_display);
 
 	const std::string presentation_mode_pref = section->Get_string(
 	        "presentation_mode");
@@ -3599,8 +3655,8 @@ static void read_gui_config(Section* sec)
 	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
 	// numlock and capslock states on startup. Instead, these states must
 	// be toggled by the user /after/ starting DOSBox.
-	startup_state_numlock = keystate & KMOD_NUM;
-	startup_state_capslock = keystate & KMOD_CAPS;
+	startup_state_numlock = keystate & SDL_KMOD_NUM;
+	startup_state_capslock = keystate & SDL_KMOD_CAPS;
 
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
@@ -3626,16 +3682,19 @@ static void read_config(Section* sec)
 
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
+	// TODO: SDL 3 converted motion->x and motion->y from int to float
+	// Should we update thes functions to handle floats?
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
 	                 static_cast<float>(motion->yrel),
-	                 check_cast<int32_t>(motion->x),
-	                 check_cast<int32_t>(motion->y));
+	                 static_cast<int32_t>(motion->x),
+	                 static_cast<int32_t>(motion->y));
 }
 
 static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
 {
+	// TODO: SDL 3 also converted wheel to floats
     const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y;
-	MOUSE_EventWheel(check_cast<int16_t>(tmp));
+	MOUSE_EventWheel(static_cast<int16_t>(tmp));
 }
 
 static void handle_mouse_button(SDL_MouseButtonEvent* button)
@@ -3652,13 +3711,13 @@ static void handle_mouse_button(SDL_MouseButtonEvent* button)
 		// clang-format on
 	};
 	assert(button);
-	notify_button(button->button, button->state == SDL_PRESSED);
+	notify_button(button->button, button->down);
 }
 
 void GFX_LosingFocus()
 {
-	sdl.laltstate = SDL_KEYUP;
-	sdl.raltstate = SDL_KEYUP;
+	sdl.laltstate = SDL_EVENT_KEY_UP;
+	sdl.raltstate = SDL_EVENT_KEY_UP;
 	MAPPER_LosingFocus();
 }
 
@@ -3700,7 +3759,7 @@ static void handle_video_resize(int width, int height)
 	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
+		SDL_SetRenderViewport(sdl.renderer, &sdl.draw_rect_px);
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
@@ -3813,6 +3872,69 @@ static void handle_user_event(const SDL_Event& event)
 	}
 }
 
+// Extracted this mess from inside a double-nested switch statement to a seperate function as part of the SDL 3 migration
+
+// TODO: We have 2 fairly similar but different enough pause loops now.
+// Check if it's possible to merge this with the pause_emulation() function
+void pause_loop()
+{
+	/* Window has lost focus, pause the emulator.
+		* This is similar to what PauseDOSBox() does, but the exit criteria is different.
+		* Instead of waiting for the user to hit Alt+Break, we wait for the window to
+		* regain window or input focus.
+		*/
+	ApplyInactiveSettings();
+	SDL_Event ev;
+
+	KEYBOARD_ClrBuffer();
+	//Delay(500);
+	//	while (SDL_PollEvent(&ev)) {
+	// flush event queue.
+    //	}
+
+	bool paused = true;
+
+	// Prevent the mixer from running while in our pause loop
+	// Muting is not ideal for some sound devices such as GUS that loop samples
+	// This also saves CPU time by not rendering samples we're not going to play anyway
+	MIXER_LockMixerThread();
+
+	while (paused && !shutdown_requested) {
+		// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
+		SDL_WaitEvent(&ev);
+
+		if (ev.type == SDL_EVENT_QUIT) {
+			GFX_RequestExit(true);
+			break;
+		}
+
+		// wait until we get window focus back
+		if ((ev.type == SDL_EVENT_WINDOW_FOCUS_LOST) || (ev.type == SDL_EVENT_WINDOW_MINIMIZED) || (ev.type == SDL_EVENT_WINDOW_FOCUS_GAINED) || (ev.type == SDL_EVENT_WINDOW_RESTORED) || (ev.type == SDL_EVENT_WINDOW_EXPOSED)) {
+			// We've got focus back, so unpause and break out of the loop
+			if ((ev.type == SDL_EVENT_WINDOW_FOCUS_GAINED) || (ev.type == SDL_EVENT_WINDOW_RESTORED) || (ev.type == SDL_EVENT_WINDOW_EXPOSED)) {
+				sdl.is_paused = false;
+				GFX_RefreshTitle();
+				if (ev.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
+					paused = false;
+					apply_active_settings();
+				}
+			}
+
+			/* Now poke a "release ALT" command into the keyboard buffer
+				* we have to do this, otherwise ALT will 'stick' and cause
+				* problems with the app running in the DOSBox.
+				*/
+			KEYBOARD_AddKey(KBD_leftalt, false);
+			KEYBOARD_AddKey(KBD_rightalt, false);
+			if (ev.type == SDL_EVENT_WINDOW_RESTORED) {
+				// We may need to re-create a texture and more
+				GFX_ResetScreen();
+			}
+		}
+	}
+	MIXER_UnlockMixerThread();
+}
+
 bool GFX_Events()
 {
 #if defined(MACOSX)
@@ -3834,7 +3956,7 @@ bool GFX_Events()
 	auto current_check_joystick = GetTicks();
 	if (GetTicksDiff(current_check_joystick, last_check_joystick) > 20) {
 		last_check_joystick = current_check_joystick;
-		if (MAPPER_IsUsingJoysticks()) SDL_JoystickUpdate();
+		if (MAPPER_IsUsingJoysticks()) SDL_UpdateJoysticks();
 		MAPPER_UpdateJoysticks();
 	}
 #endif
@@ -3850,304 +3972,237 @@ bool GFX_Events()
 			continue;
 		}
 		switch (event.type) {
-		case SDL_DISPLAYEVENT:
-			switch (event.display.event) {
 #if (SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 14)
-			// Events added in SDL 2.0.14
-			case SDL_DISPLAYEVENT_CONNECTED:
-			case SDL_DISPLAYEVENT_DISCONNECTED:
-				notify_new_mouse_screen_params();
-				break;
-#endif
-			default:
-				break;
-			};
+		// Events added in SDL 2.0.14
+		case SDL_EVENT_DISPLAY_ADDED:
+		case SDL_EVENT_DISPLAY_REMOVED:
+			notify_new_mouse_screen_params();
 			break;
-		case SDL_WINDOWEVENT:
-			switch (event.window.event) {
-			case SDL_WINDOWEVENT_RESTORED:
-				// LOG_DEBUG("SDL: Window has been restored");
-				/* We may need to re-create a texture
-				 * and more on Android. Another case:
-				 * Update surface while using X11.
-				 */
-				GFX_ResetScreen();
-#if C_OPENGL && defined(MACOSX)
-				// LOG_DEBUG("SDL: Reset macOS's GL viewport
-				// after window-restore");
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
 #endif
-				focus_input();
-				continue;
 
-			case SDL_WINDOWEVENT_RESIZED: {
-				// TODO pixels or logical unit?
-				// LOG_DEBUG("SDL: Window has been resized to
-				// %dx%d",
-				//           event.window.data1,
-				//           event.window.data2);
+		case SDL_EVENT_WINDOW_RESTORED:
+			// LOG_DEBUG("SDL: Window has been restored");
+			/* We may need to re-create a texture
+				* and more on Android. Another case:
+				* Update surface while using X11.
+				*/
+			GFX_ResetScreen();
+#if C_OPENGL && defined(MACOSX)
+			// LOG_DEBUG("SDL: Reset macOS's GL viewport
+			// after window-restore");
+			if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+				glViewport(sdl.draw_rect_px.x,
+							sdl.draw_rect_px.y,
+							sdl.draw_rect_px.w,
+							sdl.draw_rect_px.h);
+			}
+#endif
+			focus_input();
+			continue;
 
-				// When going from an initial fullscreen to
-				// windowed state, this event will be called
-				// moments before SDL's windowed mode is
-				// engaged, so simply ensure the window size has
-				// already been established:
-				assert(sdl.desktop.window.width > 0 &&
-				       sdl.desktop.window.height > 0);
+		case SDL_EVENT_WINDOW_RESIZED: {
+			// TODO pixels or logical unit?
+			// LOG_DEBUG("SDL: Window has been resized to
+			// %dx%d",
+			//           event.window.data1,
+			//           event.window.data2);
 
-				// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
-				// resizing the window, so we're only logging the display
-				// settings if there is a change since the last window resized
-				// event.
-				static int prev_width  = 0;
-				static int prev_height = 0;
+			// When going from an initial fullscreen to
+			// windowed state, this event will be called
+			// moments before SDL's windowed mode is
+			// engaged, so simply ensure the window size has
+			// already been established:
+			assert(sdl.desktop.window.width > 0 &&
+					sdl.desktop.window.height > 0);
 
-				const auto new_width  = event.window.data1;
-				const auto new_height = event.window.data2;
+			// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
+			// resizing the window, so we're only logging the display
+			// settings if there is a change since the last window resized
+			// event.
+			static int prev_width  = 0;
+			static int prev_height = 0;
 
-				if (prev_width != new_width ||
-				    prev_height != new_height) {
-					log_display_properties(
-					        sdl.draw.render_width_px,
-					        sdl.draw.render_height_px,
-					        sdl.maybe_video_mode,
-					        sdl.rendering_backend);
-				}
+			const auto new_width  = event.window.data1;
+			const auto new_height = event.window.data2;
 
-				prev_width  = new_width;
-				prev_height = new_height;
-			}	continue;
+			if (prev_width != new_width ||
+				prev_height != new_height) {
+				log_display_properties(
+						sdl.draw.render_width_px,
+						sdl.draw.render_height_px,
+						sdl.maybe_video_mode,
+						sdl.rendering_backend);
+			}
 
-			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				apply_active_settings();
-				[[fallthrough]];
-			case SDL_WINDOWEVENT_EXPOSED:
-				// LOG_DEBUG("SDL: Window has been exposed "
-				//               "and should be redrawn");
+			prev_width  = new_width;
+			prev_height = new_height;
+		}	continue;
 
-				/* TODO: below is not consistently true :(
-				 * seems incorrect on KDE and sometimes on MATE
-				 *
-				 * Note that on Windows/Linux-X11/Wayland/macOS,
-				 * event is fired after toggling between full vs
-				 * windowed modes. However this is never fired
-				 * on the Raspberry Pi (when rendering to the
-				 * Framebuffer); therefore we rely on the
-				 * FOCUS_GAINED event to catch window startup
-				 * and size toggles.
-				 */
-				// LOG_DEBUG("SDL: Window has gained
-				// keyboard focus");
-				if (sdl.draw.callback)
-					sdl.draw.callback(GFX_CallBackRedraw);
-				focus_input();
-				continue;
+		case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			apply_active_settings();
+			[[fallthrough]];
+		case SDL_EVENT_WINDOW_EXPOSED:
+			// LOG_DEBUG("SDL: Window has been exposed "
+			//               "and should be redrawn");
 
-			case SDL_WINDOWEVENT_FOCUS_LOST:
-				// LOG_DEBUG("SDL: Window has lost keyboard focus");
+			/* TODO: below is not consistently true :(
+				* seems incorrect on KDE and sometimes on MATE
+				*
+				* Note that on Windows/Linux-X11/Wayland/macOS,
+				* event is fired after toggling between full vs
+				* windowed modes. However this is never fired
+				* on the Raspberry Pi (when rendering to the
+				* Framebuffer); therefore we rely on the
+				* FOCUS_GAINED event to catch window startup
+				* and size toggles.
+				*/
+			// LOG_DEBUG("SDL: Window has gained
+			// keyboard focus");
+			if (sdl.draw.callback)
+				sdl.draw.callback(GFX_CallBackRedraw);
+			focus_input();
+			continue;
+
+		case SDL_EVENT_WINDOW_FOCUS_LOST:
+			// LOG_DEBUG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
-				if (sdl.desktop.fullscreen) {
-					VGA_KillDrawing();
-					GFX_ForceFullscreenExit();
-				}
+			if (sdl.desktop.fullscreen) {
+				VGA_KillDrawing();
+				GFX_ForceFullscreenExit();
+			}
 #endif
-				ApplyInactiveSettings();
-				GFX_LosingFocus();
-				break;
+			ApplyInactiveSettings();
+			GFX_LosingFocus();
+			if (sdl.pause_when_inactive) {
+				pause_loop();
+			}
+			break;
 
-			case SDL_WINDOWEVENT_ENTER:
-				// LOG_DEBUG("SDL: Window has gained mouse focus");
-				continue;
+		case SDL_EVENT_WINDOW_MOUSE_ENTER:
+			// LOG_DEBUG("SDL: Window has gained mouse focus");
+			continue;
 
-			case SDL_WINDOWEVENT_LEAVE:
-				// LOG_DEBUG("SDL: Window has lost mouse focus");
-				continue;
+		case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+			// LOG_DEBUG("SDL: Window has lost mouse focus");
+			continue;
 
-			case SDL_WINDOWEVENT_SHOWN:
-				// LOG_DEBUG("SDL: Window has been shown");
-				maybe_auto_switch_shader();
-				continue;
+		case SDL_EVENT_WINDOW_SHOWN:
+			// LOG_DEBUG("SDL: Window has been shown");
+			maybe_auto_switch_shader();
+			continue;
 
-			case SDL_WINDOWEVENT_HIDDEN:
-				// LOG_DEBUG("SDL: Window has been hidden");
-				continue;
+		case SDL_EVENT_WINDOW_HIDDEN:
+			// LOG_DEBUG("SDL: Window has been hidden");
+			continue;
 
 #if C_OPENGL && defined(MACOSX)
-			case SDL_WINDOWEVENT_MOVED:
-				// LOG_DEBUG("SDL: Window has been moved to %d, %d",
-				//               event.window.data1,
-				//               event.window.data2);
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-				continue;
+		case SDL_WINDOWEVENT_MOVED:
+			// LOG_DEBUG("SDL: Window has been moved to %d, %d",
+			//               event.window.data1,
+			//               event.window.data2);
+			if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+				glViewport(sdl.draw_rect_px.x,
+							sdl.draw_rect_px.y,
+							sdl.draw_rect_px.w,
+							sdl.draw_rect_px.h);
+			}
+			continue;
 #endif
 
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-			case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
-				// New display might have a different resolution
-				// and DPI scaling set, so recalculate that and
-				// set viewport
-				check_and_handle_dpi_change(sdl.window,
-				                            sdl.rendering_backend);
+		case SDL_EVENT_WINDOW_DISPLAY_CHANGED: {
+			// New display might have a different resolution
+			// and DPI scaling set, so recalculate that and
+			// set viewport
+			check_and_handle_dpi_change(sdl.window,
+										sdl.rendering_backend);
 
-				SDL_Rect display_bounds = {};
-				SDL_GetDisplayBounds(event.window.data1,
-				                     &display_bounds);
-				sdl.desktop.full.width  = display_bounds.w;
-				sdl.desktop.full.height = display_bounds.h;
+			SDL_Rect display_bounds = {};
+			SDL_GetDisplayBounds(event.window.data1,
+									&display_bounds);
+			sdl.desktop.full.width  = display_bounds.w;
+			sdl.desktop.full.height = display_bounds.h;
 
-				sdl.display_number = event.window.data1;
+			sdl.display_number = event.window.data1;
 
-				const auto canvas_size_px = get_canvas_size_in_pixels(
-				        sdl.rendering_backend);
+			const auto canvas_size_px = get_canvas_size_in_pixels(
+					sdl.rendering_backend);
 
-				sdl.draw_rect_px = to_sdl_rect(
-				        calc_draw_rect_in_pixels(canvas_size_px));
+			sdl.draw_rect_px = to_sdl_rect(
+					calc_draw_rect_in_pixels(canvas_size_px));
 
-				if (sdl.rendering_backend == RenderingBackend::Texture) {
-					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.draw_rect_px);
-				}
-#	if C_OPENGL
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-
-				maybe_auto_switch_shader();
-#	endif
-				notify_new_mouse_screen_params();
-				continue;
+			if (sdl.rendering_backend == RenderingBackend::Texture) {
+				SDL_SetRenderViewport(sdl.renderer, &sdl.draw_rect_px);
 			}
+#	if C_OPENGL
+			if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+				glViewport(sdl.draw_rect_px.x,
+							sdl.draw_rect_px.y,
+							sdl.draw_rect_px.w,
+							sdl.draw_rect_px.h);
+			}
+
+			maybe_auto_switch_shader();
+#	endif
+			notify_new_mouse_screen_params();
+			continue;
+		}
 #endif
 
-			case SDL_WINDOWEVENT_SIZE_CHANGED: {
-				// LOG_DEBUG("SDL: The window size has changed");
+		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+			// LOG_DEBUG("SDL: The window size has changed");
 
-				// The window size has changed either as a
-				// result of an API call or through the system
-				// or user changing the window size.
-				const auto new_width  = event.window.data1;
-				const auto new_height = event.window.data2;
-				handle_video_resize(new_width, new_height);
+			// The window size has changed either as a
+			// result of an API call or through the system
+			// or user changing the window size.
+			const auto new_width  = event.window.data1;
+			const auto new_height = event.window.data2;
+			handle_video_resize(new_width, new_height);
 
-				finalise_window_state();
+			finalise_window_state();
 
-				maybe_auto_switch_shader();
-				continue;
-			}
+			maybe_auto_switch_shader();
+			continue;
+		}
 
-			case SDL_WINDOWEVENT_MINIMIZED:
-				// LOG_DEBUG("SDL: Window has been minimized");
-				ApplyInactiveSettings();
-				break;
-
-			case SDL_WINDOWEVENT_MAXIMIZED:
-				// LOG_DEBUG("SDL: Window has been maximized");
-				continue;
-
-			case SDL_WINDOWEVENT_CLOSE:
-				// LOG_DEBUG("SDL: The window manager "
-				//               "requests that the window be "
-				//               "closed");
-				GFX_RequestExit(true);
-				break;
-
-			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				focus_input();
-				apply_active_settings();
-				continue;
-
-			case SDL_WINDOWEVENT_HIT_TEST:
-				// LOG_DEBUG("SDL: Window had a hit test that "
-				//               "wasn't SDL_HITTEST_NORMAL");
-				continue;
-
-			default: break;
-			}
-
-			/* Non-focus priority is set to pause; check to see if we've lost window or input focus
-			 * i.e. has the window been minimised or made inactive?
-			 */
+		case SDL_EVENT_WINDOW_MINIMIZED:
+			// LOG_DEBUG("SDL: Window has been minimized");
+			ApplyInactiveSettings();
 			if (sdl.pause_when_inactive) {
-				if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
-					/* Window has lost focus, pause the emulator.
-					 * This is similar to what PauseDOSBox() does, but the exit criteria is different.
-					 * Instead of waiting for the user to hit Alt+Break, we wait for the window to
-					 * regain window or input focus.
-					 */
-					ApplyInactiveSettings();
-					SDL_Event ev;
-
-					KEYBOARD_ClrBuffer();
-//					Delay(500);
-//					while (SDL_PollEvent(&ev)) {
-						// flush event queue.
-//					}
-
-					bool paused = true;
-
-					// Prevent the mixer from running while in our pause loop
-					// Muting is not ideal for some sound devices such as GUS that loop samples
-					// This also saves CPU time by not rendering samples we're not going to play anyway
-					MIXER_LockMixerThread();
-
-					while (paused && !shutdown_requested) {
-						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
-						SDL_WaitEvent(&ev);
-
-						switch (ev.type) {
-						case SDL_QUIT:
-							GFX_RequestExit(true);
-							break;
-						case SDL_WINDOWEVENT:     // wait until we get window focus back
-							if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_LOST) || (ev.window.event == SDL_WINDOWEVENT_MINIMIZED) || (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
-								// We've got focus back, so unpause and break out of the loop
-								if ((ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) || (ev.window.event == SDL_WINDOWEVENT_RESTORED) || (ev.window.event == SDL_WINDOWEVENT_EXPOSED)) {
-									sdl.is_paused = false;
-									GFX_RefreshTitle();
-									if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-										paused = false;
-										apply_active_settings();
-									}
-								}
-
-								/* Now poke a "release ALT" command into the keyboard buffer
-								 * we have to do this, otherwise ALT will 'stick' and cause
-								 * problems with the app running in the DOSBox.
-								 */
-								KEYBOARD_AddKey(KBD_leftalt, false);
-								KEYBOARD_AddKey(KBD_rightalt, false);
-								if (ev.window.event == SDL_WINDOWEVENT_RESTORED) {
-									// We may need to re-create a texture and more
-									GFX_ResetScreen();
-								}
-							}
-							break;
-						}
-					}
-					MIXER_UnlockMixerThread();
-				}
+				pause_loop();
 			}
-			break; // end of SDL_WINDOWEVENT
+			break;
 
-		case SDL_MOUSEMOTION: handle_mouse_motion(&event.motion); break;
-		case SDL_MOUSEWHEEL: handle_mouse_wheel(&event.wheel); break;
-		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP: handle_mouse_button(&event.button); break;
+		case SDL_EVENT_WINDOW_MAXIMIZED:
+			// LOG_DEBUG("SDL: Window has been maximized");
+			continue;
 
-		case SDL_QUIT: GFX_RequestExit(true); break;
+		case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+			// LOG_DEBUG("SDL: The window manager "
+			//               "requests that the window be "
+			//               "closed");
+			GFX_RequestExit(true);
+			break;
+
+// TODO: SDL_WINDOWEVENT_TAKE_FOCUS was removed in SDL 3 with no documentation on replacement
+#if 0
+		case SDL_WINDOWEVENT_TAKE_FOCUS:
+			focus_input();
+			apply_active_settings();
+			continue;
+#endif
+
+		case SDL_EVENT_WINDOW_HIT_TEST:
+			// LOG_DEBUG("SDL: Window had a hit test that "
+			//               "wasn't SDL_HITTEST_NORMAL");
+			continue;
+
+		case SDL_EVENT_MOUSE_MOTION: handle_mouse_motion(&event.motion); break;
+		case SDL_EVENT_MOUSE_WHEEL: handle_mouse_wheel(&event.wheel); break;
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		case SDL_EVENT_MOUSE_BUTTON_UP: handle_mouse_button(&event.button); break;
+
+		case SDL_EVENT_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
@@ -4224,12 +4279,11 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	std::vector<std::string> drivers;
 	drivers.reserve(n + 1);
 	drivers.push_back("auto");
-	SDL_RendererInfo info;
 	for (int i = 0; i < n; i++) {
-		if (SDL_GetRenderDriverInfo(i, &info))
-			continue;
-		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
-			drivers.push_back(info.name);
+		const auto name = SDL_GetRenderDriver(i);
+		if (name) {
+			drivers.push_back(name);
+		}
 	}
 	return drivers;
 }
@@ -4387,10 +4441,14 @@ static void config_add_sdl()
 	        "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(get_sdl_texture_renderers());
 
-	auto pint = sdl_sec->Add_int("display", on_start, 0);
+	// SDL 3 has changed from using a display index to a DisplayID
+	// Previously, this was set to 0 index as default. In SDL 3, a DisplayID of 0 is always invalid.
+	// TODO: Research effects of this. I only have a single display for testing.
+	// I believe DisplayIDs are more "sticky" if a user connects or removes a display at runtime
+	auto pint = sdl_sec->Add_int("display", on_start, 1);
 	pint->Set_help(
 	        "Number of display to use; values depend on OS and user "
-	        "settings (0 by default).");
+	        "settings (1 by default).");
 
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	pbool->Set_help(
@@ -4939,7 +4997,7 @@ int sdl_main(int argc, char* argv[])
 		}
 
 		// Timer is needed for title bar animations
-		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+		if (!SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO)) {
 			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
 		}
 		sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
@@ -4949,13 +5007,12 @@ int sdl_main(int argc, char* argv[])
 
 		sdl.initialized = true;
 
-		SDL_version sdl_version = {};
-		SDL_GetVersion(&sdl_version);
+		const auto sdl_version = SDL_GetVersion();
 
 		LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
-		        sdl_version.major,
-		        sdl_version.minor,
-		        sdl_version.patch,
+		        SDL_VERSIONNUM_MAJOR(sdl_version),
+		        SDL_VERSIONNUM_MINOR(sdl_version),
+		        SDL_VERSIONNUM_MICRO(sdl_version),
 		        SDL_GetCurrentVideoDriver(),
 		        SDL_GetCurrentAudioDriver());
 

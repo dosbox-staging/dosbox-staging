@@ -13,7 +13,7 @@ libdecoders = static_library(
     libdecoders_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
         opus_dep,
         ghc_dep,
         libloguru_dep,

@@ -132,14 +132,14 @@ off_t get_file_size(const char* filename) {
 // 1. ID3 tag filler content, which might be boiler plate or all empty
 // 2. Trailing silence or similar zero-PCM content
 //
-uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
+uint64_t calculate_stream_hash(struct SDL_IOStream* const context) {
     // Save the current stream position, so we can restore it at the end of the function.
-    const auto original_pos = SDL_RWtell(context);
+    const auto original_pos = SDL_TellIO(context);
 
     // Seek to the end of the file so we can calculate the stream size.
-    SDL_RWseek(context, 0, RW_SEEK_END);
-    const auto end_pos = SDL_RWtell(context);
-    SDL_RWseek(context, original_pos, RW_SEEK_SET); // restore position
+    SDL_SeekIO(context, 0, SDL_IO_SEEK_END);
+    const auto end_pos = SDL_TellIO(context);
+    SDL_SeekIO(context, original_pos, SDL_IO_SEEK_SET); // restore position
 
     // Check if we can trust the end position as the stream size
     if (end_pos <= 0)
@@ -168,12 +168,12 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     // Seek prior to the last 32 KB (or less) in the file, which is what we'll hash
     const auto bytes_to_hash = std::min(static_cast<size_t>(32768u), stream_size);
     const auto pos_to_hash_from = static_cast<Sint64>(stream_size - bytes_to_hash);
-    SDL_RWseek(context, pos_to_hash_from, RW_SEEK_SET);
-    assert(SDL_RWtell(context) == pos_to_hash_from);
+    SDL_SeekIO(context, pos_to_hash_from, SDL_IO_SEEK_SET);
+    assert(SDL_TellIO(context) == pos_to_hash_from);
 
     // Feed the state with input data, any size, any number of times
     do {
-        current_bytes_read = SDL_RWread(context, buffer.data(), 1, buffer.size());
+        current_bytes_read = SDL_ReadIO(context, buffer.data(), buffer.size());
         total_bytes_read += current_bytes_read;
         hash_state = XXH64_update(state, buffer.data(), current_bytes_read);
     }
@@ -186,8 +186,8 @@ uint64_t calculate_stream_hash(struct SDL_RWops* const context) {
     XXH64_freeState(state);
 
     // restore the stream position and cleanup the hash
-    SDL_RWseek(context, original_pos, RW_SEEK_SET);
-    assert(SDL_RWtell(context) == original_pos);
+    SDL_SeekIO(context, original_pos, SDL_IO_SEEK_SET);
+    assert(SDL_TellIO(context) == original_pos);
 
     return hash;
 }
@@ -322,7 +322,7 @@ uint64_t load_existing_seek_points(const char* filename,
 // attempting to read it from the fast-seek file and (if it can't be read for any reason), it
 // calculates new data.  It makes use of the above two functions.
 //
-uint64_t populate_seek_points(struct SDL_RWops* const context,
+uint64_t populate_seek_points(struct SDL_IOStream* const context,
                               mp3_t* p_mp3,
                               const char* seektable_filename,
                               bool &result) {

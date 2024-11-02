@@ -793,7 +793,7 @@ int get_num_physical_cpus()
 
 #else
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 int get_num_physical_cpus()
 {

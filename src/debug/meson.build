@@ -9,7 +9,7 @@ libdebug = static_library(
     libdebug_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
         libpdcurses_dep,
         ghc_dep,
         libiir_dep,

@@ -29,7 +29,7 @@
 #include <optional>
 #include <sys/types.h>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <speex/speex_resampler.h>
 
 #include "audio_vector.h"
@@ -195,7 +195,7 @@ struct MixerSettings {
 	int blocksize    = 0;
 	int prebuffer_ms = 25;
 
-	SDL_AudioDeviceID sdl_device = 0;
+	SDL_AudioStream *sdl_audio_stream = nullptr;
 
 	std::atomic<MixerState> state = MixerState::Uninitialized;
 
@@ -2517,18 +2517,22 @@ static void capture_callback()
 	CAPTURE_AddAudioData(mixer.sample_rate_hz, num_frames, frames.data());
 }
 
-static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
-                                   Uint8* stream, int bytes_requested)
+// SDL 3 has changed this callback.
+// There is no more raw buffer to memcpy() into. Instead, we must call SDL_PutAudioStreamData()
+// additional_amount is the minimum it needs before audio starts glitching.
+// total_amount is total available space in the buffer (should always be greater than or equal to additional_amount)
+// We probably don't need to do anything with additional_amount and can just send everything we have capped at total_amount
+static void SDLCALL mixer_callback([[maybe_unused]] void *userdata, SDL_AudioStream *stream, [[maybe_unused]] int additional_amount, int total_amount)
 {
-	assert(bytes_requested >= 0);
+	assert(additional_amount >= 0);
+	assert(total_amount >= additional_amount);
 
 	ZoneScoped;
-	memset(stream, 0, static_cast<size_t>(bytes_requested));
 
 	constexpr auto BytesPer32BitSample = 4;
 	constexpr auto BytesPerSampleFrame = BytesPer32BitSample * 2; // stereo
 
-	const auto frames_requested = bytes_requested / BytesPerSampleFrame;
+	const auto frames_requested = total_amount / BytesPerSampleFrame;
 
 	// Mac OSX has been observed to be problematic if we ever block inside SDL's callback
 	// This ensures that we do not block waiting for more audio
@@ -2537,7 +2541,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	if (num_frames > 0) {
 		std::vector<AudioFrame> audio_frames = {};
 		mixer.final_output.BulkDequeue(audio_frames, num_frames);
-		memcpy(stream, audio_frames.data(), audio_frames.size() * sizeof(AudioFrame));
+		SDL_PutAudioStreamData(stream, audio_frames.data(), check_cast<int>(audio_frames.size() * sizeof(AudioFrame)));
 	}
 }
 
@@ -2642,12 +2646,11 @@ static void set_mixer_state(const MixerState new_state)
 
 	if (mixer.state == MixerState::Uninitialized) {
 		mixer.final_output.Start();
-		if (mixer.sdl_device > 0) {
+		if (mixer.sdl_audio_stream) {
 			// SDL starts out paused so unpause it when we first set the mixer state.
 			// We always keep SDL running in the future.
 			// When the mixer becomes muted, we just write silence.
-			constexpr int Unpause = 0;
-			SDL_PauseAudioDevice(mixer.sdl_device, Unpause);
+			SDL_ResumeAudioStreamDevice(mixer.sdl_audio_stream);
 		}
 	}
 
@@ -2673,9 +2676,9 @@ void MIXER_CloseAudioDevice()
 		channel->Enable(false);
 	}
 
-	if (mixer.sdl_device > 0) {
-		SDL_CloseAudioDevice(mixer.sdl_device);
-		mixer.sdl_device = 0;
+	if (mixer.sdl_audio_stream) {
+		SDL_DestroyAudioStream(mixer.sdl_audio_stream);
+		mixer.sdl_audio_stream = nullptr;
 	}
 	mixer.state = MixerState::Uninitialized;
 }
@@ -2686,13 +2689,16 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
                            const bool allow_negotiate)
 {
 	SDL_AudioSpec desired  = {};
-	SDL_AudioSpec obtained = {};
 
 	constexpr auto NumStereoChannels = 2;
 
 	desired.channels = NumStereoChannels;
-	desired.format   = AUDIO_F32SYS;
+	desired.format   = SDL_AUDIO_F32;
 	desired.freq     = requested_sample_rate_hz;
+
+	// TODO: Blocksize and SDL_ALLOW flags removed in SDL 3
+	// There may be an alternative if we really need control over this
+	#if 0
 	desired.samples  = check_cast<uint16_t>(requested_blocksize_in_frames);
 
 	desired.callback = mixer_callback;
@@ -2706,18 +2712,10 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		// latency.
 		sdl_allow_flags |= SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 	}
+	#endif
 
-	// Open the audio device
-	constexpr auto SdlError = 0;
-
-	// Null requests the most reasonable default device
-	constexpr auto DeviceName = nullptr;
-	// Non-zero is the device is to be opened for recording as well
-	constexpr auto IsCapture = 0;
-
-	if ((mixer.sdl_device = SDL_OpenAudioDevice(
-	             DeviceName, IsCapture, &desired, &obtained, sdl_allow_flags)) ==
-	    SdlError) {
+	if (!(mixer.sdl_audio_stream = SDL_OpenAudioDeviceStream(
+	             SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired, mixer_callback, nullptr))) {
 		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		            SDL_GetError());
 
@@ -2732,14 +2730,20 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// audio callback function to be called. We do that in
 	// `set_mixer_state()`.
 	//
+	SDL_AudioSpec obtained = {};
+	int obtained_blocksize = 0;
+	SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &obtained, &obtained_blocksize);
 	const auto obtained_sample_rate_hz = obtained.freq;
-	const auto obtained_blocksize      = obtained.samples;
 
 	mixer.sample_rate_hz = obtained_sample_rate_hz;
 	mixer.blocksize      = obtained_blocksize;
 
+// These asserts are no longer always true
+// The new callback will handle conversions for us
+#if 0
 	assert(obtained.channels == NumStereoChannels);
 	assert(obtained.format == desired.format);
+#endif
 
 	// Did SDL negotiate a different playback rate?
 	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
@@ -2820,7 +2824,7 @@ void MIXER_Init(Section* sec)
 		                               : MixerState::On;
 
 		auto set_no_sound = [&] {
-			assert(mixer.sdl_device == 0);
+			assert(mixer.sdl_audio_stream == nullptr);
 
 			LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 

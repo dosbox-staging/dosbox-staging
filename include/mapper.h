@@ -28,7 +28,7 @@
 #include <string>
 #include <vector>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #define MAPPERFILE "mapper-sdl2-" DOSBOX_VERSION ".map"
 

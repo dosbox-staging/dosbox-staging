@@ -433,8 +433,8 @@ conf_data.set_quoted(
 )
 
 conf_data.set10(os_family_name, true)
-conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
-conf_data.set10('C_IPX', get_option('use_sdl2_net'))
+conf_data.set10('C_MODEM', get_option('use_sdl3_net'))
+conf_data.set10('C_IPX', get_option('use_sdl3_net'))
 conf_data.set10('C_SLIRP', get_option('use_slirp'))
 conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
@@ -691,33 +691,9 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-sdl2_dep = dependency(
-    'sdl2',
-    version: ['>= 2.0.5', '< 3'],
-    static: ('sdl2' in static_libs_list or prefers_static_libs),
-    default_options: default_wrap_options
-    + [
-        'assertions=' + (is_optimized_buildtype ? 'disabled' : 'enabled'),
-        'prefer_dlopen=true',
-        'test=' + wants_tests.to_string(),
-        'use_audio=enabled',
-        'use_events=enabled',
-        'use_joystick=enabled',
-        'use_loadso=enabled',
-        'use_timers=enabled',
-        'use_video=enabled',
-
-        'use_dummies=false',
-        'system_iconv=disabled',
-        'use_atomic=enabled',
-        'use_file=disabled',
-        'use_filesystem=disabled',
-        'use_hidapi=disabled',
-        'use_haptic=disabled',
-        'use_locale=disabled',
-        'use_sensor=disabled',
-        'use_power=disabled',
-    ],
+sdl3_dep = dependency(
+    'SDL3',
+    static: ('sdl3' in static_libs_list or prefers_static_libs),
     include_type: 'system',
 )
 
@@ -959,26 +935,25 @@ have_fd_zero = (
 )
 
 # SDL Networking
-sdl2_net_dep = optional_dep
-sdl2_net_summary_msg = 'Disabled'
-if get_option('use_sdl2_net')
-    sdl2_net_dep = dependency(
-        'SDL2_net',
-        version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_net' in static_libs_list or prefers_static_libs),
+sdl3_net_dep = optional_dep
+sdl3_net_summary_msg = 'Disabled'
+if get_option('use_sdl3_net')
+    sdl3_net_dep = dependency(
+        'SDL3_net',
+        static: ('sdl3_net' in static_libs_list or prefers_static_libs),
         default_options: default_wrap_options,
-        not_found_message: msg.format('use_sdl2_net'),
+        not_found_message: msg.format('use_sdl3_net'),
         include_type: 'system',
     )
-    sdl2_net_summary_msg = sdl2_net_dep.found()
+    sdl3_net_summary_msg = sdl3_net_dep.found()
 
-    if sdl2_net_dep.found() and not have_fd_zero
-        sdl2_net_dep = optional_dep
-        sdl2_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
+    if sdl3_net_dep.found() and not have_fd_zero
+        sdl3_net_dep = optional_dep
+        sdl3_net_summary_msg = 'Disabled due to host missing file-descriptor routines'
     endif
 
 endif
-summary('SDL_net 2.0 support', sdl2_net_summary_msg)
+summary('SDL_net 3.0 support', sdl3_net_summary_msg)
 
 # slirp (depends on glib)
 libslirp_dep = optional_dep
@@ -1280,7 +1255,7 @@ subdir('src/libs/tal-chorus')
 third_party_deps = [
     atomic_dep,
     stdcppfs_dep,
-    sdl2_dep,
+    sdl3_dep,
     threads_dep,
     ghc_dep,
     libiir_dep,

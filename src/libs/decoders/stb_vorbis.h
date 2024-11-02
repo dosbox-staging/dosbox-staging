@@ -300,8 +300,8 @@ extern stb_vorbis * stb_vorbis_open_file_section(FILE *f, int close_handle_on_cl
 #endif
 
 #ifdef __SDL_SOUND_INTERNAL__
-extern stb_vorbis * stb_vorbis_open_rwops_section(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length);
-extern stb_vorbis * stb_vorbis_open_rwops(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc);
+extern stb_vorbis * stb_vorbis_open_rwops_section(SDL_IOStream *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length);
+extern stb_vorbis * stb_vorbis_open_rwops(SDL_IOStream *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc);
 #endif
 
 extern int stb_vorbis_seek_frame(stb_vorbis *f, unsigned int sample_number);
@@ -850,7 +850,7 @@ struct stb_vorbis
 #endif
 
    #ifdef __SDL_SOUND_INTERNAL__
-   SDL_RWops *rwops;
+   SDL_IOStream *rwops;
    uint32 rwops_start;
    int close_on_free;
    #endif
@@ -1411,7 +1411,7 @@ static uint8 get8(vorb *z)
    #ifdef __SDL_SOUND_INTERNAL__
    {
       uint8 c;
-      if (z->rwops == NULL || SDL_RWread(z->rwops, &c, 1, 1) != 1) {
+      if (z->rwops == NULL || SDL_ReadIO(z->rwops, &c, 1) != 1) {
           z->eof = TRUE;
           return 0;
       }
@@ -1450,7 +1450,7 @@ static int getn(vorb *z, uint8 *data, int n)
 
    #ifdef __SDL_SOUND_INTERNAL__
    {
-      if (SDL_RWread(z->rwops, data, n, 1) == 1) { return 1; }
+      if (SDL_ReadIO(z->rwops, data, n) == 1) { return 1; }
       z->eof = 1;
       return 0;
    }
@@ -1476,7 +1476,7 @@ static void skip(vorb *z, int n)
 
    #ifdef __SDL_SOUND_INTERNAL__
    {
-      SDL_RWseek(z->rwops, n, RW_SEEK_CUR);
+      SDL_SeekIO(z->rwops, n, SDL_IO_SEEK_CUR);
    }
    #endif
 
@@ -1513,10 +1513,10 @@ static int set_file_offset(stb_vorbis *f, unsigned int loc)
    } else {
       loc += f->rwops_start;
    }
-   if (SDL_RWseek(f->rwops, loc, RW_SEEK_SET) != -1)
+   if (SDL_SeekIO(f->rwops, loc, SDL_IO_SEEK_SET) != -1)
       return 1;
    f->eof = 1;
-   SDL_RWseek(f->rwops, f->rwops_start, RW_SEEK_END);
+   SDL_SeekIO(f->rwops, f->rwops_start, SDL_IO_SEEK_END);
    return 0;
    }
    #endif
@@ -4411,7 +4411,7 @@ static void vorbis_deinit(stb_vorbis *p)
       setup_temp_free(p, &p->temp_mults, 0);
    }
    #ifdef __SDL_SOUND_INTERNAL__
-   if (p->close_on_free) SDL_RWclose(p->rwops);
+   if (p->close_on_free) SDL_CloseIO(p->rwops);
    #endif
    #ifndef STB_VORBIS_NO_STDIO
    if (p->close_on_free) fclose(p->f);
@@ -4704,7 +4704,7 @@ unsigned int stb_vorbis_get_file_offset(stb_vorbis *f)
    if (f->push_mode) return 0;
    #endif
    #ifdef __SDL_SOUND_INTERNAL__
-   return (unsigned int) (SDL_RWtell(f->rwops) - f->rwops_start);
+   return (unsigned int) (SDL_TellIO(f->rwops) - f->rwops_start);
    #else
    if (USE_MEMORY(f)) return (unsigned int) (f->stream - f->stream_start);
    #endif
@@ -5262,12 +5262,12 @@ stb_vorbis * stb_vorbis_open_filename(const char *filename, int *error, const st
 #endif // STB_VORBIS_NO_STDIO
 
 #ifdef __SDL_SOUND_INTERNAL__
-stb_vorbis * stb_vorbis_open_rwops_section(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length)
+stb_vorbis * stb_vorbis_open_rwops_section(SDL_IOStream *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc, unsigned int length)
 {
    stb_vorbis *f, p;
    vorbis_init(&p, alloc);
    p.rwops = rwops;
-   p.rwops_start = (uint32) SDL_RWtell(rwops);
+   p.rwops_start = (uint32) SDL_TellIO(rwops);
    p.stream_len   = length;
    p.close_on_free = close_on_free;
    if (start_decoder(&p)) {
@@ -5283,10 +5283,10 @@ stb_vorbis * stb_vorbis_open_rwops_section(SDL_RWops *rwops, int close_on_free, 
    return NULL;
 }
 
-stb_vorbis * stb_vorbis_open_rwops(SDL_RWops *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc)
+stb_vorbis * stb_vorbis_open_rwops(SDL_IOStream *rwops, int close_on_free, int *error, const stb_vorbis_alloc *alloc)
 {
-   const unsigned int start = (unsigned int) SDL_RWtell(rwops);
-   const unsigned int len = (unsigned int) (SDL_RWsize(rwops) - start);
+   const unsigned int start = (unsigned int) SDL_TellIO(rwops);
+   const unsigned int len = (unsigned int) (SDL_GetIOSize(rwops) - start);
    return stb_vorbis_open_rwops_section(rwops, close_on_free, error, alloc, len);
 }
 #endif

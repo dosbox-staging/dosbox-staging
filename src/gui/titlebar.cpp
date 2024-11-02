@@ -31,7 +31,7 @@
 #include "unicode.h"
 #include "video.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <map>
 #include <vector>
 
@@ -135,7 +135,7 @@ static bool is_animation_running()
 	return state.timer_id != 0;
 }
 
-static uint32_t animation_tick(uint32_t /* interval */, void* /* name */)
+static uint32_t SDLCALL animation_tick([[maybe_unused]] void *userdata, [[maybe_unused]] SDL_TimerID timerID, [[maybe_unused]] Uint32 interval)
 {
 	SDL_Event event = {};
 	event.user.type = enum_val(SDL_DosBoxEvents::RefreshAnimatedTitle);
