@@ -526,12 +526,15 @@ static bool is_control_code(const uint16_t value)
 	return (value < ControlCodeThreshold) || (value == ControlCodeDelete);
 }
 
-static std::optional<uint16_t> screen_code_to_wide(const uint8_t byte,
-                                                   const DosStringConvertMode convert_mode)
+static std::optional<uint16_t> control_code_to_wide(const uint8_t byte,
+                                                    const DosStringConvertMode convert_mode)
 {
-	if (convert_mode == DosStringConvertMode::WithControlCodes ||
-	    convert_mode == DosStringConvertMode::NoSpecialCharacters) {
+
+	if (convert_mode == DosStringConvertMode::NoSpecialCharacters) {
 		return {};
+	}
+	if (convert_mode == DosStringConvertMode::WithControlCodes) {
+		return byte;
 	}
 
 	assert(convert_mode == DosStringConvertMode::ScreenCodesOnly);
@@ -998,7 +1001,7 @@ static wide_string dos_to_wide(const std::string& str,
 				mappings.grapheme_to_dos[byte].PushInto(str_out);
 			}
 		} else if (is_control_code(byte)) {
-			const auto wide = screen_code_to_wide(byte, convert_mode);
+			const auto wide = control_code_to_wide(byte, convert_mode);
 			if (wide) {
 				str_out.push_back(*wide);
 			} else {
