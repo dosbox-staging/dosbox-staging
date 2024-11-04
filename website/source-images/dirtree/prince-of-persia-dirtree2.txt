@@ -1,0 +1,10 @@
+DOS Games
+  Prince of Persia
+    drives
+      c
+        CDUNGEON.DAT
+        DIGISND1.DAT
+        DIGISND2.DAT
+        DIGISND3.DAT
+        ...
+    dosbox.conf
