@@ -1,12 +1,16 @@
+# Illustration source files
+
 This folder contains editable sources files for the illustrations in the
 guide.
 
-Do this if you want to change any of the illustrations:
+If you want to update any of the illustrations:
 
-- change the source file first
-- re-export/regenerate the PNG from it
-- check in the updated source file
-- check in the updated PNG file
+1. Change the source file first
+2. Re-export/regenerate the PNG from it
+3. Check in the updated source file
+4. Check in the updated PNG
+
+## Tools
 
 [Inkscape](https://inkscape.org/) is recommended for editing SVG files.
 
