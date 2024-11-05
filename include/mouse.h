@@ -84,7 +84,7 @@ enum class MouseButtonId : uint8_t {
 // ***************************************************************************
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
-                      const int32_t x_abs, const int32_t y_abs);
+                      const float x_abs, const float y_abs);
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
                       const MouseInterfaceId device_id);
 
@@ -121,8 +121,8 @@ struct MouseScreenParams {
 	DosBox::Rect draw_rect = {};
 
 	// New absolute mouse cursor position in logical units
-	int32_t x_abs = 0;
-	int32_t y_abs = 0;
+	float x_abs = 0;
+	float y_abs = 0;
 
 	// Whether the new mode is fullscreen or windowed
 	bool is_fullscreen = false;

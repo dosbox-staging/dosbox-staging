@@ -117,8 +117,8 @@ static struct {
 	// Mouse movement
 	float x_rel = 0.0f;
 	float y_rel = 0.0f;
-	uint32_t x_abs = 0;
-	uint32_t y_abs = 0;
+	float x_abs = 0.0f;
+	float y_abs = 0.0f;
 
 	// Wheel movement
 	float delta_wheel = 0.0f;
@@ -1110,18 +1110,16 @@ static void move_cursor_captured(const float x_rel, const float y_rel)
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
-                                 const uint32_t x_abs, const uint32_t y_abs)
+                                 const float x_abs, const float y_abs)
 {
 	// Update mickey counters
 	float dx = 0.0f;
 	float dy = 0.0f;
 	update_mickeys_on_move(dx, dy, x_rel, y_rel);
 
-	auto calculate = [](const uint32_t absolute,
-	                    const uint32_t resolution) {
+	auto calculate = [](const float absolute, const uint32_t resolution) {
 		assert(resolution > 1u);
-		return static_cast<float>(absolute) /
-		       static_cast<float>(resolution - 1);
+		return absolute / static_cast<float>(resolution - 1);
 	};
 
 	// Apply mouse movement to mimic host OS
@@ -1270,7 +1268,7 @@ static uint8_t update_wheel()
 }
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs)
+                          const float x_abs, const float y_abs)
 {
 	bool event_needed = false;
 
@@ -1283,8 +1281,17 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 		// Uses absolute mouse position (seamless mode), relative
 		// movements can wait to be reported - they are completely
 		// unreliable anyway
-		if (pending.x_abs != x_abs || pending.y_abs != y_abs)
+		constexpr float Epsilon = 0.5f;
+		if (std::lround(pending.x_abs / Epsilon) != std::lround(x_abs / Epsilon) ||
+		    std::lround(pending.y_abs / Epsilon) != std::lround(y_abs / Epsilon)) {
 			event_needed = true;
+		}
+		// TODO: Consider introducing some kind of sensitivity to avoid
+		// unnecessary events, for example calculated using
+		// 'state.maxpos_*' and 'mouse_shared.resolution_*' values.
+		// Problem: when the mouse is moved really fast and it leaves
+		// the window, the guest cursor is sometimes left like 30 pixels
+		// from the window's edge; we need a mitigation mechanism here
 	}
 
 	// Update values to be consumed when the event arrives

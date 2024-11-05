@@ -55,7 +55,7 @@ void MOUSEDOS_FinalizeInterrupt();
 // - understands up to 3 buttons
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs);
+                          const float x_abs, const float y_abs);
 void MOUSEDOS_NotifyButton(const MouseButtons12S buttons_12S);
 void MOUSEDOS_NotifyWheel(const float w_rel);
 
@@ -90,14 +90,14 @@ void MOUSEBIOS_FinalizeInterrupt();
 // ***************************************************************************
 
 void MOUSEVMM_NotifyInputType(const bool use_relative, const bool is_input_raw);
-void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs);
+void MOUSEVMM_NewScreenParams(const float x_abs, const float y_abs);
 void MOUSEVMM_Deactivate();
 
 // - needs absolute mouse position
 // - understands up to 3 buttons
 
 void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs);
+                          const float x_abs, const float y_abs);
 void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
 void MOUSEVMM_NotifyWheel(const float w_rel);
 
@@ -129,7 +129,7 @@ public:
 	static MouseInterface* GetSerial(const uint8_t port_id);
 
 	virtual void NotifyMoved(const float x_rel, const float y_rel,
-	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
+	                         const float x_abs, const float y_abs) = 0;
 	virtual void NotifyButton(const MouseButtonId id, const bool pressed) = 0;
 	virtual void NotifyWheel(const float w_rel) = 0;
 

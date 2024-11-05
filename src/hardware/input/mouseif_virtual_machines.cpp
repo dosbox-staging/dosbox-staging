@@ -244,7 +244,7 @@ void MOUSEVMM_NotifyInputType(const bool new_use_relative, const bool new_is_inp
 }
 
 void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs)
+                          const float x_abs, const float y_abs)
 {
 	if (!mouse_shared.active_vmm) {
 		return;
@@ -257,7 +257,7 @@ void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 
 	auto calculate = [](float& position,
 	                    const float relative,
-	                    const uint32_t absolute,
+	                    const float absolute,
 	                    const uint32_t resolution) {
 		assert(resolution > 1u);
 
@@ -276,7 +276,7 @@ void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 			}
 		} else {
 			// Cursor position controlled by the host OS
-			position = static_cast<float>(absolute);
+			position = absolute;
 		}
 
 		position = std::clamp(position, 0.0f, static_cast<float>(resolution));
@@ -346,7 +346,7 @@ void MOUSEVMM_NotifyWheel(const float w_rel)
 	MOUSEPS2_NotifyMovedDummy();
 }
 
-void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs)
+void MOUSEVMM_NewScreenParams(const float x_abs, const float y_abs)
 {
 	MOUSEVMM_NotifyMoved(0.0f, 0.0f, x_abs, y_abs);
 }
