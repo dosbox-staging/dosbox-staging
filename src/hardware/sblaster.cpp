@@ -729,11 +729,15 @@ static double last_dma_callback = 0.0;
 
 static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 {
-	if (chan != sb.dma.chan || event == DmaEvent::ReachedTerminalCount) {
-		return;
+	// The channel firing the callback passes itself in therefore the
+	// pointer should always be valid.
+	assert(chan);
 
-	} else if (event == DmaEvent::IsMasked) {
-		if (sb.mode == DspMode::Dma) {
+	switch (event) {
+	case DmaEvent::ReachedTerminalCount: break;
+
+	case DmaEvent::IsMasked:
+		if (sb.mode != DspMode::Dma) {
 			// Catch up to current time, but don't generate an IRQ!
 			// Fixes problems with later sci games.
 			const auto t = PIC_FullIndex() - last_dma_callback;
@@ -771,8 +775,9 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			LOG(LOG_SB, LOG_NORMAL)
 			("DMA masked,stopping output, left %d", chan->curr_count);
 		}
+		break;
 
-	} else if (event == DmaEvent::IsUnmasked) {
+	case DmaEvent::IsUnmasked:
 		if (sb.mode == DspMode::DmaMasked && sb.dma.mode != DmaMode::None) {
 			dsp_change_mode(DspMode::Dma);
 			// sb.mode=DspMode::Dma;
@@ -783,9 +788,9 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			 static_cast<int>(chan->is_autoiniting),
 			 chan->base_count);
 		}
-	} else {
-		E_Exit("Unknown sblaster dma event");
-	}
+		break;
+	default: assert(false); break;
+	};
 }
 
 static uint8_t decode_adpcm_portion(const int bit_portion,
