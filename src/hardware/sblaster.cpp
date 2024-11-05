@@ -727,12 +727,12 @@ static void dsp_flush_data()
 
 static double last_dma_callback = 0.0;
 
-static void dsp_dma_callback(const DmaChannel* chan, const DMAEvent event)
+static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 {
-	if (chan != sb.dma.chan || event == DMA_REACHED_TC) {
+	if (chan != sb.dma.chan || event == DmaEvent::ReachedTerminalCount) {
 		return;
 
-	} else if (event == DMA_MASKED) {
+	} else if (event == DmaEvent::IsMasked) {
 		if (sb.mode == DspMode::Dma) {
 			// Catch up to current time, but don't generate an IRQ!
 			// Fixes problems with later sci games.
@@ -772,7 +772,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DMAEvent event)
 			("DMA masked,stopping output, left %d", chan->curr_count);
 		}
 
-	} else if (event == DMA_UNMASKED) {
+	} else if (event == DmaEvent::IsUnmasked) {
 		if (sb.mode == DspMode::DmaMasked && sb.dma.mode != DmaMode::None) {
 			dsp_change_mode(DspMode::Dma);
 			// sb.mode=DspMode::Dma;
@@ -1473,9 +1473,9 @@ static void dsp_do_reset(const uint8_t val)
 	}
 }
 
-static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, const DMAEvent event)
+static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, const DmaEvent event)
 {
-	if (event == DMA_UNMASKED) {
+	if (event == DmaEvent::IsUnmasked) {
 		uint8_t val = (uint8_t)(sb.e2.value & 0xff);
 
 		DmaChannel* chan = DMA_GetChannel(sb.hw.dma8);
@@ -1485,9 +1485,9 @@ static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, const DMAEvent event
 	}
 }
 
-static void dsp_adc_callback(const DmaChannel* /*chan*/, const DMAEvent event)
+static void dsp_adc_callback(const DmaChannel* /*chan*/, const DmaEvent event)
 {
-	if (event != DMA_UNMASKED) {
+	if (event != DmaEvent::IsUnmasked) {
 		return;
 	}
 

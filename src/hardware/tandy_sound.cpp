@@ -235,10 +235,10 @@ TandyDAC::~TandyDAC()
 	MIXER_UnlockMixerThread();
 }
 
-void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DMAEvent event)
+void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DmaEvent event)
 {
 	// LOG_MSG("TANDYDAC: DMA event %d", event);
-	if (event != DMA_REACHED_TC) {
+	if (event != DmaEvent::ReachedTerminalCount) {
 		return;
 	}
 	dma.is_done = true;

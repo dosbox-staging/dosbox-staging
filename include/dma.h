@@ -28,19 +28,22 @@
 #include "inout.h"
 #include "support.h"
 
-enum class DMA_DIRECTION { READ, WRITE };
+enum class DmaDirection {
+	Read,
+	Write,
+};
 
-enum DMAEvent {
-	DMA_REACHED_TC,
-	DMA_MASKED,
-	DMA_UNMASKED,
+enum class DmaEvent {
+	ReachedTerminalCount,
+	IsMasked,
+	IsUnmasked,
 };
 
 class Section;
 using DMA_ReservationCallback = std::function<void(Section*)>;
 
 class DmaChannel;
-using DMA_Callback = std::function<void(const DmaChannel* chan, DMAEvent event)>;
+using DMA_Callback = std::function<void(const DmaChannel* chan, DmaEvent event)>;
 
 class DmaChannel {
 public:
@@ -67,7 +70,7 @@ public:
 	DmaChannel(uint8_t num, bool dma16);
 	~DmaChannel();
 
-	void DoCallback(DMAEvent event) const;
+	void DoCallback(DmaEvent event) const;
 	void SetMask(bool _mask);
 	void RegisterCallback(const DMA_Callback cb);
 	void ReachedTerminalCount();
@@ -90,7 +93,7 @@ public:
 private:
 	void EvictReserver();
 	bool HasReservation() const;
-	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words,
+	size_t ReadOrWrite(DmaDirection direction, size_t words,
 	                   uint8_t* const buffer);
 
 	DMA_ReservationCallback reservation_callback = {};

@@ -294,7 +294,7 @@ private:
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
-	void DmaCallback(const DmaChannel* chan, DMAEvent event);
+	void DmaCallback(const DmaChannel* chan, DmaEvent event);
 	void StartDmaTransfers();
 
 	template <SampleSize sample_size>
