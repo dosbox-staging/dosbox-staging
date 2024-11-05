@@ -153,7 +153,7 @@ public:
 	~InterfaceDos() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
@@ -178,7 +178,7 @@ public:
 	~InterfacePS2() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
@@ -206,7 +206,7 @@ public:
 	~InterfaceCOM() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const float w_rel) override;
 
@@ -647,7 +647,7 @@ void InterfaceDos::Init()
 }
 
 void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t x_abs, const uint32_t y_abs)
+                               const float x_abs, const float y_abs)
 {
 	MOUSEDOS_NotifyMoved(x_rel * sensitivity_coeff_x,
 	                     y_rel * sensitivity_coeff_y,
@@ -714,7 +714,7 @@ void InterfacePS2::Init()
 }
 
 void InterfacePS2::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t x_abs, const uint32_t y_abs)
+                               const float x_abs, const float y_abs)
 {
 	// VMM always first, as it might demand event from PS/2 emulation!
 	MOUSEVMM_NotifyMoved(x_rel * sensitivity_coeff_vmm_x,
@@ -779,7 +779,7 @@ InterfaceCOM::InterfaceCOM(const uint8_t port_id)
 {}
 
 void InterfaceCOM::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t, const uint32_t)
+                               const float, const float)
 {
 	assert(listener);
 
