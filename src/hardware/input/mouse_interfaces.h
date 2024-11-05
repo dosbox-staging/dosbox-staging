@@ -57,7 +57,7 @@ void MOUSEDOS_FinalizeInterrupt();
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs);
 void MOUSEDOS_NotifyButton(const MouseButtons12S buttons_12S);
-void MOUSEDOS_NotifyWheel(const int16_t w_rel);
+void MOUSEDOS_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // PS/2 mouse
@@ -75,7 +75,7 @@ void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel);
 void MOUSEPS2_NotifyMovedDummy(); // for virtual machine interfaces
 void MOUSEPS2_NotifyButton(const MouseButtons12S buttons_12S,
                            const MouseButtonsAll buttons_all);
-void MOUSEPS2_NotifyWheel(const int16_t w_rel);
+void MOUSEPS2_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
@@ -99,7 +99,7 @@ void MOUSEVMM_Deactivate();
 void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs);
 void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
-void MOUSEVMM_NotifyWheel(const int16_t w_rel);
+void MOUSEVMM_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // Serial mouse
@@ -131,7 +131,7 @@ public:
 	virtual void NotifyMoved(const float x_rel, const float y_rel,
 	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
 	virtual void NotifyButton(const MouseButtonId id, const bool pressed) = 0;
-	virtual void NotifyWheel(const int16_t w_rel) = 0;
+	virtual void NotifyWheel(const float w_rel) = 0;
 
 	void NotifyInterfaceRate(const uint16_t rate_hz);
 	virtual void NotifyBooting();

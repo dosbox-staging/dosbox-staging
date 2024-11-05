@@ -687,7 +687,7 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
 	}
 }
 
-void MOUSE_EventWheel(const int16_t w_rel)
+void MOUSE_EventWheel(const float w_rel)
 {
 	// Event from GFX
 
