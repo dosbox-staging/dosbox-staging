@@ -55,7 +55,7 @@ static void UpdateEMSMapping()
 
 // Generic function to read or write a block of data to or from memory.
 // Don't use this directly; call two helpers: DMA_BlockRead or DMA_BlockWrite
-static void perform_dma_io(const DMA_DIRECTION direction, const PhysPt spage,
+static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
                            PhysPt mem_address, void* const data_start,
                            const size_t num_words, const uint8_t is_dma16)
 {
@@ -93,14 +93,14 @@ static void perform_dma_io(const DMA_DIRECTION direction, const PhysPt spage,
 		const auto chunk_bytes = std::min(remaining_bytes, bytes_to_page_end);
 
 		// Copy the data from the page address into the data pointer
-		if (direction == DMA_DIRECTION::READ) {
+		if (direction == DmaDirection::Read) {
 			for (auto i = 0; i < chunk_bytes; ++i) {
 				data_pt[i] = phys_readb(chunk_start + i);
 			}
 		}
 
 		// Copy the data from the data pointer into the page address
-		else if (direction == DMA_DIRECTION::WRITE) {
+		else if (direction == DmaDirection::Write) {
 			for (auto i = 0; i < chunk_bytes; ++i) {
 				phys_writeb(chunk_start + i, data_pt[i]);
 			}
@@ -375,7 +375,7 @@ DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
 	assert(is_incremented);
 }
 
-void DmaChannel::DoCallback(const DMAEvent event) const
+void DmaChannel::DoCallback(const DmaEvent event) const
 {
 	if (callback) {
 		callback(this, event);
@@ -385,7 +385,7 @@ void DmaChannel::DoCallback(const DMAEvent event) const
 void DmaChannel::SetMask(const bool _mask)
 {
 	is_masked = _mask;
-	DoCallback(is_masked ? DMA_MASKED : DMA_UNMASKED);
+	DoCallback(is_masked ? DmaEvent::IsMasked : DmaEvent::IsUnmasked);
 }
 
 void DmaChannel::RegisterCallback(const DMA_Callback _cb)
@@ -402,7 +402,7 @@ void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 void DmaChannel::ReachedTerminalCount()
 {
 	has_reached_terminal_count = true;
-	DoCallback(DMA_REACHED_TC);
+	DoCallback(DmaEvent::ReachedTerminalCount);
 }
 
 void DmaChannel::SetPage(const uint8_t val)
@@ -423,16 +423,16 @@ void DmaChannel::ClearRequest()
 
 size_t DmaChannel::Read(const size_t words, uint8_t* const dest_buffer)
 {
-	return ReadOrWrite(DMA_DIRECTION::READ, words, dest_buffer);
+	return ReadOrWrite(DmaDirection::Read, words, dest_buffer);
 }
 
 size_t DmaChannel::Write(const size_t words, uint8_t* const src_buffer)
 {
-	return ReadOrWrite(DMA_DIRECTION::WRITE, words, src_buffer);
+	return ReadOrWrite(DmaDirection::Write, words, src_buffer);
 }
 
-size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction,
-                               const size_t words, uint8_t* const buffer)
+size_t DmaChannel::ReadOrWrite(const DmaDirection direction, const size_t words,
+                               uint8_t* const buffer)
 {
 	auto want     = check_cast<uint16_t>(words);
 	uint16_t done = 0;
@@ -465,7 +465,7 @@ again:
 			curr_count = 0xffff;
 			is_masked  = true;
 			UpdateEMSMapping();
-			DoCallback(DMA_MASKED);
+			DoCallback(DmaEvent::IsMasked);
 		}
 	}
 	return done;

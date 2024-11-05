@@ -722,9 +722,9 @@ void Gus::StartDmaTransfers()
 	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
-void Gus::DmaCallback(const DmaChannel*, DMAEvent event)
+void Gus::DmaCallback(const DmaChannel*, DmaEvent event)
 {
-	if (event == DMA_UNMASKED) {
+	if (event == DmaEvent::IsUnmasked) {
 		StartDmaTransfers();
 	}
 }
