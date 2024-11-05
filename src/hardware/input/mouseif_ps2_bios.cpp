@@ -107,9 +107,10 @@ static MouseButtonsAll buttons;     // currently visible button state
 static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
 static MouseButtons12S buttons_12S; // buttons with 3/4/5 quished together
 
-static float delta_x = 0.0f; // accumulated mouse movement since last reported
-static float delta_y = 0.0f;
-static int8_t counter_w = 0; // mouse wheel counter
+// Accumulated mouse movement, waiting to be reported
+static float delta_x     = 0.0f;
+static float delta_y     = 0.0f;
+static float delta_wheel = 0.0f;
 
 static MouseModelPS2 protocol = MouseModelPS2::Standard;
 static uint8_t unlock_idx_im = 0; // sequence index for unlocking extended protocol
@@ -204,26 +205,19 @@ static void set_protocol(const MouseModelPS2 new_protocol)
 
 static uint8_t get_reset_wheel_4bit()
 {
-	const int8_t tmp = std::clamp(counter_w,
-	                              static_cast<int8_t>(-0x08),
-	                              static_cast<int8_t>(0x07));
-
-	// reading always clears the counter
-	counter_w = 0;
+	auto d = MOUSE_ConsumeInt8(delta_wheel);
+	d = std::clamp(d, static_cast<int8_t>(-0x08), static_cast<int8_t>(0x07));
 
 	// 0x0f for -1, 0x0e for -2, etc.
-	return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x10 + tmp);
+	return static_cast<uint8_t>((d >= 0) ? d : 0x10 + d);
 }
 
 static uint8_t get_reset_wheel_8bit()
 {
-	const auto tmp = counter_w;
-
-	// reading always clears the counter
-	counter_w = 0;
+	const auto d = MOUSE_ConsumeInt8(delta_wheel);
 
 	// 0xff for -1, 0xfe for -2, etc.
-	return static_cast<uint8_t>((tmp >= 0) ? tmp : 0x100 + tmp);
+	return static_cast<uint8_t>((d >= 0) ? d : 0x100 + d);
 }
 
 static int16_t get_scaled_movement(const int16_t d, const bool is_polling)
@@ -254,9 +248,9 @@ static int16_t get_scaled_movement(const int16_t d, const bool is_polling)
 
 static void reset_counters()
 {
-	delta_x   = 0.0f;
-	delta_y   = 0.0f;
-	counter_w = 0;
+	delta_x     = 0.0f;
+	delta_y     = 0.0f;
+	delta_wheel = 0.0f;
 }
 
 static void build_protocol_frame(const bool is_polling = false)
@@ -279,11 +273,8 @@ static void build_protocol_frame(const bool is_polling = false)
 	mdat.right  = buttons.right;
 	mdat.middle = buttons.middle;
 
-	auto dx = static_cast<int16_t>(std::round(delta_x));
-	auto dy = static_cast<int16_t>(std::round(delta_y));
-
-	delta_x -= dx;
-	delta_y -= dy;
+	auto dx = MOUSE_ConsumeInt16(delta_x);
+	auto dy = MOUSE_ConsumeInt16(delta_y);
 
 	dx = get_scaled_movement(dx, is_polling);
 	dy = get_scaled_movement(static_cast<int16_t>(-dy), is_polling);
@@ -432,7 +423,8 @@ static void cmd_poll_frame()
 	build_protocol_frame(is_polling);
 	I8042_AddAuxFrame(frame);
 	frame.clear();
-	reset_counters();
+	// resetting counters not necessary; frame building process consumes
+	// all the data
 }
 
 static void cmd_set_resolution(const uint8_t new_counts_mm)
@@ -679,13 +671,10 @@ void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel)
 	delta_x = MOUSE_ClampRelativeMovement(delta_x + x_rel);
 	delta_y = MOUSE_ClampRelativeMovement(delta_y + y_rel);
 
-	// Threshold the accumulated movement needs to cross
-	// to be considered significant enough for new event
-	constexpr float threshold = 0.5f;
-
-	has_data_for_frame |= (std::fabs(delta_x) >= threshold) ||
-	                      (std::fabs(delta_y) >= threshold) ||
+	has_data_for_frame |= MOUSE_HasAccumulatedInt(delta_x) ||
+	                      MOUSE_HasAccumulatedInt(delta_y) ||
 	                      vmm_needs_dummy_event;
+
 	maybe_transfer_frame();
 	vmm_needs_dummy_event = false;
 }
@@ -712,17 +701,25 @@ void MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
 	vmm_needs_dummy_event = false;
 }
 
-void MOUSEPS2_NotifyWheel(const int16_t w_rel)
+void MOUSEPS2_NotifyWheel(const float w_rel)
 {
 	// Note: VMware mouse protocol can support wheel even if the emulated
-	// PS/2 mouse does not have it - this works at least with VBADOS v0.67
-	auto old_counter_w = counter_w;
+	// PS/2 mouse does not have it - this works at least with VBADOS v0.67.
+	// Thus, we can't skip the function entirely for basic PS/2 mouse.
+
+	constexpr bool skip_delta_update = true;
+
+	const auto old_counter = MOUSE_ConsumeInt8(delta_wheel, skip_delta_update);
+
 	if (protocol == MouseModelPS2::IntelliMouse ||
 	    protocol == MouseModelPS2::Explorer) {
-		counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
+		delta_wheel = MOUSE_ClampWheelMovement(delta_wheel + w_rel);
 	}
 
-	has_data_for_frame |= (old_counter_w != counter_w) || vmm_needs_dummy_event;
+	const auto new_counter = MOUSE_ConsumeInt8(delta_wheel, skip_delta_update);
+
+	has_data_for_frame |= (old_counter != new_counter);
+	has_data_for_frame |= vmm_needs_dummy_event;
 	maybe_transfer_frame();
 	vmm_needs_dummy_event = false;
 }

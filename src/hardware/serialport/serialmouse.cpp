@@ -84,8 +84,9 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 CSerialMouse::~CSerialMouse()
 {
 	auto interface = MouseInterface::GetSerial(port_id);
-	if (interface)
+	if (interface) {
 		interface->UnRegisterListener();
+	}
 
 	removeEvent(SERIAL_TX_EVENT); // clear events
 	SetModel(MouseModelCOM::NoMouse);
@@ -146,15 +147,17 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 		// 3 more bits per each byte: start, parity, stop
 
 		if (model == MouseModelCOM::Microsoft ||
-		    model == MouseModelCOM::Logitech || model == MouseModelCOM::Wheel)
+		    model == MouseModelCOM::Logitech ||
+		    model == MouseModelCOM::Wheel) {
 			// Microsoft-style protocol
 			// single movement needs exactly 3 bytes to be reported
 			return bauds / (static_cast<float>(port_byte_len + 3) * 3.0f);
-		else if (model == MouseModelCOM::MouseSystems)
+		} else if (model == MouseModelCOM::MouseSystems) {
 			// Mouse Systems protocol
 			// single movement needs per average 2.5 bytes to be
 			// reported
 			return bauds / (static_cast<float>(port_byte_len + 3) * 2.5f);
+		}
 
 		assert(false); // unimplemented
 		return static_cast<float>(rate_1200_baud);
@@ -219,9 +222,9 @@ void CSerialMouse::AbortPacket()
 
 void CSerialMouse::ClearCounters()
 {
-	counter_x = 0;
-	counter_y = 0;
-	counter_w = 0;
+	counter_x     = 0;
+	counter_y     = 0;
+	counter_wheel = 0;
 }
 
 void CSerialMouse::MouseReset()
@@ -239,26 +242,22 @@ void CSerialMouse::NotifyMoved(const float x_rel, const float y_rel)
 	delta_x = MOUSE_ClampRelativeMovement(delta_x + x_rel);
 	delta_y = MOUSE_ClampRelativeMovement(delta_y + y_rel);
 
-	const auto dx = static_cast<int16_t>(std::lround(delta_x));
-	const auto dy = static_cast<int16_t>(std::lround(delta_y));
-
-	if (dx == 0 && dy == 0)
+	if (!MOUSE_HasAccumulatedInt(delta_x) && !MOUSE_HasAccumulatedInt(delta_y)) {
 		return; // movement not significant enough
+	}
 
-	counter_x = clamp_to_int8(counter_x + dx);
-	counter_y = clamp_to_int8(counter_y + dy);
-
-	delta_x -= dx;
-	delta_y -= dy;
+	counter_x = clamp_to_int8(counter_x + MOUSE_ConsumeInt16(delta_x));
+	counter_y = clamp_to_int8(counter_y + MOUSE_ConsumeInt16(delta_y));
 
 	// Initiate data transfer and form the packet to transmit. If another
 	// packet is already transmitting now then wait for it to finish before
 	// transmitting ours, and let the mouse motion accumulate in the meantime
 
-	if (xmit_idx >= packet_len)
+	if (xmit_idx >= packet_len) {
 		StartPacketData();
-	else
+	} else {
 		got_another_move = true;
+	}
 }
 
 void CSerialMouse::NotifyButton(const uint8_t new_buttons, const MouseButtonId button_id)
@@ -278,17 +277,24 @@ void CSerialMouse::NotifyButton(const uint8_t new_buttons, const MouseButtonId b
 	}
 }
 
-void CSerialMouse::NotifyWheel(const int16_t w_rel)
+void CSerialMouse::NotifyWheel(const float w_rel)
 {
-	if (!has_wheel)
+	if (!has_wheel) {
 		return;
+	}
 
-	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + w_rel));
+	delta_wheel = MOUSE_ClampWheelMovement(delta_wheel + w_rel);
+	if (!MOUSE_HasAccumulatedInt(delta_wheel)) {
+		return; // movement not significant enough
+	}
 
-	if (xmit_idx >= packet_len)
+	counter_wheel = clamp_to_int8(counter_wheel + MOUSE_ConsumeInt16(delta_wheel));
+
+	if (xmit_idx >= packet_len) {
 		StartPacketData(true);
-	else
-		got_another_button = true;
+	} else {
+		got_another_move = true;
+	}
 }
 
 void CSerialMouse::StartPacketId() // send the mouse identifier
@@ -353,7 +359,7 @@ void CSerialMouse::StartPacketData(const bool extended)
 		packet[1] = static_cast<uint8_t>(0x00 | (dx & 0x3f));
 		packet[2] = static_cast<uint8_t>(0x00 | (dy & 0x3f));
 		if (extended) {
-			uint8_t dw = std::clamp(counter_w,
+			uint8_t dw = std::clamp(counter_wheel,
 			                        static_cast<int8_t>(-0x10),
 			                        static_cast<int8_t>(0x0f)) &
 			             0x0f;
@@ -373,16 +379,17 @@ void CSerialMouse::StartPacketData(const bool extended)
 		const auto bt = has_3rd_button ? ((~buttons) & 7)
 		                               : ((~buttons) & 3);
 
-		packet[0]       = static_cast<uint8_t>(0x80 | ((bt & 1) << 2) |
+		packet[0]  = static_cast<uint8_t>(0x80 | ((bt & 1) << 2) |
                                                  ((bt & 2) >> 1) | ((bt & 4) >> 1));
-		packet[1]       = ClampCounter(counter_x);
-		packet[2]       = ClampCounter(-counter_y);
-		packet_len      = 3;
+		packet[1]  = ClampCounter(counter_x);
+		packet[2]  = ClampCounter(-counter_y);
+		packet_len = 3;
+
 		need_xmit_part2 = true; // next part contains mouse movement
 		                        // since the start of the 1st part
-
-	} else
+	} else {
 		assert(false); // unimplemented
+	}
 
 	ClearCounters();
 
@@ -402,13 +409,14 @@ void CSerialMouse::StartPacketPart2()
 		// Byte 3:  X7 X6 X5 X4 X3 X2 X1 X0
 		// Byte 4:  Y7 Y6 Y5 Y4 Y3 Y2 Y1 Y0
 
-		packet[0] = ClampCounter(counter_x);
-		packet[1] = ClampCounter(-counter_y);
+		packet[0]  = ClampCounter(counter_x);
+		packet[1]  = ClampCounter(-counter_y);
+		packet_len = 2;
 
-		packet_len      = 2;
 		need_xmit_part2 = false;
-	} else
+	} else {
 		assert(false); // unimplemented
+	}
 
 	ClearCounters();
 
@@ -456,16 +464,18 @@ void CSerialMouse::handleUpperEvent(const uint16_t event_type)
 				StartPacketId();
 			} else if (xmit_idx < packet_len) {
 				CSerial::receiveByte(packet[xmit_idx++]);
-				if (xmit_idx >= packet_len && need_xmit_part2)
+				if (xmit_idx >= packet_len && need_xmit_part2) {
 					StartPacketPart2();
-				else if (xmit_idx >= packet_len &&
-				         (got_another_move || got_another_button))
+				} else if (xmit_idx >= packet_len &&
+				           (got_another_move || got_another_button)) {
 					StartPacketData();
-				else
+				} else {
 					SetEventRX();
+				}
 			}
-		} else
+		} else {
 			SetEventRX();
+		}
 	}
 }
 
@@ -514,28 +524,32 @@ void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 	// we allow this if autodetection is not enabled, otherwise it is
 	// impossible to guess which protocol the guest software expects
 
-	if (port_byte_len != 7 && !(!param_auto_msm && port_byte_len == 8))
+	if (port_byte_len != 7 && !(!param_auto_msm && port_byte_len == 8)) {
 		ok_microsoft = false;
-	if (port_byte_len != 8)
+	}
+	if (port_byte_len != 8) {
 		ok_mouse_systems = false;
+	}
 
 	// Set the mouse protocol
-	if (ok_microsoft)
+	if (ok_microsoft) {
 		SetModel(param_model);
-	else if (ok_mouse_systems)
+	} else if (ok_mouse_systems) {
 		SetModel(MouseModelCOM::MouseSystems);
-	else
+	} else {
 		SetModel(MouseModelCOM::NoMouse);
+	}
 }
 
 void CSerialMouse::updateMSR() {}
 
 void CSerialMouse::transmitByte(const uint8_t, const bool first)
 {
-	if (first)
+	if (first) {
 		SetEventTHR();
-	else
+	} else {
 		SetEventTX();
+	}
 }
 
 void CSerialMouse::setBreak(const bool) {}

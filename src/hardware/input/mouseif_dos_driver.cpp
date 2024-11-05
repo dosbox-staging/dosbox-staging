@@ -96,14 +96,17 @@ static MouseButtons12S pending_button_state = 0;
 // These values represent 'hardware' state, not driver state
 
 static MouseButtons12S buttons = 0;
-static float pos_x             = 0.0f;
-static float pos_y             = 0.0f;
-static int8_t counter_w        = 0; // wheel counter
+static float pos_x = 0.0f;
+static float pos_y = 0.0f;
+static int8_t counter_w = 0; // wheel counter
 
-static bool use_relative    = true; // true = ignore absolute mouse position, use relative
-static bool is_input_raw    = true; // true = no host mouse acceleration pre-applied
+// true = ignore absolute mouse position
+static bool use_relative = true;
+// true = no host mouse acceleration pre-applied
+static bool is_input_raw = true;
 
-static bool rate_is_set     = false; // true = rate was set by DOS application
+// true = rate was set by DOS application
+static bool rate_is_set     = false;
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
 
@@ -112,19 +115,19 @@ static uint16_t min_rate_hz = 0;
 
 static struct {
 	// Mouse movement
-	float x_rel    = 0.0f;
-	float y_rel    = 0.0f;
+	float x_rel = 0.0f;
+	float y_rel = 0.0f;
 	uint32_t x_abs = 0;
 	uint32_t y_abs = 0;
 
 	// Wheel movement
-	int16_t w_rel = 0;
+	float delta_wheel = 0.0f;
 
 	void Reset()
 	{
 		x_rel = 0.0f;
 		y_rel = 0.0f;
-		w_rel = 0;
+		delta_wheel = 0.0f;
 	}
 } pending;
 
@@ -670,11 +673,12 @@ static void update_driver_active()
 
 static uint8_t get_reset_wheel_8bit()
 {
-	if (!state.wheel_api)
+	if (!state.wheel_api) {
 		return 0;
+	}
 
 	const auto tmp = counter_w;
-	counter_w      = 0; // reading always clears the counter
+	counter_w = 0; // reading always clears the counter
 
 	// 0xff for -1, 0xfe for -2, etc.
 	return signed_to_reg8(tmp);
@@ -682,11 +686,12 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-	if (!state.wheel_api)
+	if (!state.wheel_api) {
 		return 0;
+	}
 
 	const int16_t tmp = counter_w;
-	counter_w         = 0; // reading always clears the counter
+	counter_w = 0; // reading always clears the counter
 
 	return signed_to_reg16(tmp);
 }
@@ -708,10 +713,11 @@ static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
 
 static void set_double_speed_threshold(const uint16_t threshold)
 {
-	if (threshold)
+	if (threshold) {
 		state.double_speed_threshold = threshold;
-	else
+	} else {
 		state.double_speed_threshold = 64; // default value
+	}
 }
 
 static void set_sensitivity(const uint16_t sensitivity_x,
@@ -1157,11 +1163,12 @@ static uint8_t move_cursor()
 		move_cursor_captured(MOUSE_ClampRelativeMovement(pending.x_rel),
 		                     MOUSE_ClampRelativeMovement(pending.y_rel));
 
-	} else
+	} else {
 		move_cursor_seamless(pending.x_rel,
 		                     pending.y_rel,
 		                     pending.x_abs,
 		                     pending.y_abs);
+	}
 
 	// Pending relative movement is now consumed
 	pending.x_rel = 0.0f;
@@ -1242,26 +1249,24 @@ static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 
 static uint8_t move_wheel()
 {
-	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
-
-	// Pending wheel scroll is now consumed
-	pending.w_rel = 0;
+	const auto consumed = MOUSE_ConsumeInt8(pending.delta_wheel);
+	counter_w           = clamp_to_int8(counter_w + consumed);
 
 	state.last_wheel_moved_x = get_pos_x();
 	state.last_wheel_moved_y = get_pos_y();
 
-	if (counter_w != 0)
+	if (counter_w != 0) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
-		return 0;
+	}
+	return 0;
 }
 
 static uint8_t update_wheel()
 {
-	if (mouse_config.dos_immediate)
+	if (mouse_config.dos_immediate) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
-		return move_wheel();
+	}
+	return move_wheel();
 }
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
@@ -1315,7 +1320,7 @@ void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 	maybe_trigger_event();
 }
 
-void MOUSEDOS_NotifyWheel(const int16_t w_rel)
+void MOUSEDOS_NotifyWheel(const float w_rel)
 {
 	if (!state.wheel_api) {
 		return;
@@ -1325,9 +1330,9 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 	// wheel counter in 16-bit format, scrolling hundreds of lines in one
 	// go would be insane - thus, limit the wheel counter to 8 bits and
 	// reuse the code written for other mouse modules
-	pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
+	pending.delta_wheel = MOUSE_ClampWheelMovement(pending.delta_wheel + w_rel);
 
-	bool event_needed = (pending.w_rel != 0);
+	bool event_needed = MOUSE_HasAccumulatedInt(pending.delta_wheel);
 	if (event_needed && mouse_config.dos_immediate) {
 		event_needed = (move_wheel() != 0);
 	}

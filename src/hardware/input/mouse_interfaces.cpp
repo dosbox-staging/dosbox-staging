@@ -155,7 +155,7 @@ public:
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
 
 	void UpdateInputType() override;
@@ -180,7 +180,7 @@ public:
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
 
 	void UpdateInputType() override;
@@ -208,7 +208,7 @@ public:
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 
 	void UpdateRate() override;
 
@@ -665,7 +665,7 @@ void InterfaceDos::NotifyButton(const MouseButtonId button_id, const bool presse
 	MOUSEDOS_NotifyButton(GetButtonsSquished());
 }
 
-void InterfaceDos::NotifyWheel(const int16_t w_rel)
+void InterfaceDos::NotifyWheel(const float w_rel)
 {
 	MOUSEDOS_NotifyWheel(w_rel);
 }
@@ -736,7 +736,7 @@ void InterfacePS2::NotifyButton(const MouseButtonId button_id, const bool presse
 	MOUSEPS2_NotifyButton(GetButtonsSquished(), GetButtonsJoined());
 }
 
-void InterfacePS2::NotifyWheel(const int16_t w_rel)
+void InterfacePS2::NotifyWheel(const float w_rel)
 {
 	// VMM always first, as it might demand event from PS/2 emulation!
 	MOUSEVMM_NotifyWheel(w_rel);
@@ -799,7 +799,7 @@ void InterfaceCOM::NotifyButton(const MouseButtonId button_id, const bool presse
 	listener->NotifyButton(GetButtonsSquished()._data, button_id);
 }
 
-void InterfaceCOM::NotifyWheel(const int16_t w_rel)
+void InterfaceCOM::NotifyWheel(const float w_rel)
 {
 	assert(listener);
 
