@@ -54,11 +54,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_help(
 	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
 	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
-	        "'soundfonts' directory within your DOSBox configuration directory.\n"
-	        "An optional percentage value after the name will scale the SoundFont's volume.\n"
-	        "This is useful for normalising the volume of different SoundFonts.\n"
-	        "E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%%.\n"
-	        "The percentage value can range from 1 to 800.");
+	        "'soundfonts' directory within your DOSBox configuration directory.");
 
 	str_prop = secprop.Add_string("fsynth_chorus", WhenIdle, "auto");
 	str_prop->Set_help(
@@ -99,46 +95,6 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "Filter for the FluidSynth audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
-}
-
-// Parses the 'soundfont' setting which has the 'FILENAME [SCALE]' format.
-// The function returns the filename and the optional scale percentage as a
-// tuple. If the scale percentage is not provided, a default value of 100 is
-// used.
-std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
-{
-	constexpr auto DefaultPercent = 100;
-
-	if (line.empty()) {
-		return {line, DefaultPercent};
-	}
-
-	// Look for a space in the last 5 characters of the string
-	const auto len      = line.length();
-	const auto from_pos = len < 5 ? 0 : len - 5;
-	auto last_space_pos = line.substr(from_pos).find_last_of(' ');
-
-	if (last_space_pos == std::string::npos) {
-		return {line, DefaultPercent};
-	}
-
-	// Ensure the position is relative to the start of the entire string
-	last_space_pos += from_pos;
-
-	// Is the stuff after the last space convertable to a number?
-	int percent = 0;
-	try {
-		percent = stoi(line.substr(last_space_pos + 1));
-	} catch (...) {
-		return {line, DefaultPercent};
-	}
-
-	// A number was provided, so split it from the line
-	std::string filename = line.substr(0, last_space_pos);
-	// Drop any extra whitespace prior to the number
-	trim(filename);
-
-	return {filename, percent};
 }
 
 #if defined(WIN32)
@@ -288,8 +244,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	auto [sf_filename, scale_by_percent] = parse_soundfont_pref(
-	        section->Get_string("soundfont"));
+	auto sf_filename = section->Get_string("soundfont");
 
 	const auto soundfont_path = find_sf_file(sf_filename);
 
@@ -307,24 +262,25 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	if (scale_by_percent < 1 || scale_by_percent > 800) {
+	auto sf_volume_percent = 100;
+	if (sf_volume_percent < 1 || sf_volume_percent > 800) {
 		LOG_WARNING(
 		        "FSYNTH: Invalid volume scaling percentage: %d; "
 		        "must be between 1 and 800, defaulting to 100%%",
-		        scale_by_percent);
-		scale_by_percent = 100;
+		        sf_volume_percent);
+		sf_volume_percent = 100;
 	}
 	fluid_synth_set_gain(fluid_synth.get(),
-	                     static_cast<float>(scale_by_percent) / 100.0f);
+	                     static_cast<float>(sf_volume_percent) / 100.0f);
 
 	// Let the user know that the SoundFont was loaded
-	if (scale_by_percent == 100) {
+	if (sf_volume_percent == 100) {
 		LOG_MSG("FSYNTH: Using SoundFont '%s'",
 		        soundfont_path.string().c_str());
 	} else {
 		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
 		        soundfont_path.string().c_str(),
-		        scale_by_percent);
+		        sf_volume_percent);
 	}
 
 	// applies setting to all groups
