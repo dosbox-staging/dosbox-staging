@@ -24,10 +24,10 @@
 
 #include <bitset>
 #include <cassert>
-#include <deque>
 #include <numeric>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "../ints/int10.h"
 #include "ansi_code_markup.h"
@@ -143,7 +143,7 @@ std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 
 #if defined(WIN32)
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -157,7 +157,7 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #elif defined(MACOSX)
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -167,7 +167,7 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #else
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_data_dirs()
 {
 	// First priority is user-specific data location
 	const auto xdg_data_home = get_xdg_data_home();
@@ -266,7 +266,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	auto* section = get_fluidsynth_section();
+	auto section = get_fluidsynth_section();
 
 	// Detailed explanation of all available FluidSynth settings:
 	// http://www.fluidsynth.org/api/fluidsettings.xml
@@ -388,13 +388,16 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 			                                        chorus_voice_count_f,
 			                                        0,
 			                                        99);
+
 			chorus_level = validate_setting("chorus level",
 			                                chorus[1],
 			                                chorus_level,
 			                                0.0,
 			                                10.0);
+
 			chorus_speed = validate_setting(
 			        "chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
+
 			chorus_depth = validate_setting("chorus depth",
 			                                chorus[3],
 			                                chorus_depth,
@@ -403,6 +406,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
+
 			} else if (chorus[4] != "sine") { // default is sine
 				LOG_WARNING(
 				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
@@ -889,9 +893,12 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	// The description was too long and got trimmed; place three dots in
 	// the end to make it clear to the user.
 	const std::string cutoff = "...";
+
 	assert(line.size() > cutoff.size());
+
 	const auto start = line.end() - static_cast<int>(cutoff.size());
 	line.replace(start, line.end(), cutoff);
+
 	return line;
 }
 
