@@ -50,11 +50,17 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 	// Name 'default.sf2' picks the default SoundFont if it's installed
 	// in the OS. Usually it's Fluid_R3.
-	auto* str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
+	auto str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
 	str_prop->Set_help(
 	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
 	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
 	        "'soundfonts' directory within your DOSBox configuration directory.");
+
+	str_prop = secprop.Add_string("soundfont_dir", WhenIdle, "");
+	str_prop->Set_help(
+	        "Extra user-defined SoundFont directory (unset by default).\n"
+	        "If this is set, SoundFonts are looked up in this directory first, then in the\n"
+	        "the standard system locations.");
 
 	constexpr auto DefaultVolume = 100;
 	constexpr auto MinVolume = 1;
@@ -113,7 +119,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 #if defined(WIN32)
 
-static std::vector<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -127,7 +133,7 @@ static std::vector<std_fs::path> get_data_dirs()
 
 #elif defined(MACOSX)
 
-static std::vector<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -137,12 +143,12 @@ static std::vector<std_fs::path> get_data_dirs()
 
 #else
 
-static std::vector<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	// First priority is user-specific data location
 	const auto xdg_data_home = get_xdg_data_home();
 
-	std::deque<std_fs::path> dirs = {
+	std::vector<std_fs::path> dirs = {
 	        xdg_data_home / "dosbox" / DefaultSoundfontsDir,
 	        xdg_data_home / DefaultSoundfontsDir,
 	        xdg_data_home / "sounds/sf2",
@@ -162,15 +168,40 @@ static std::vector<std_fs::path> get_data_dirs()
 
 #endif
 
-static std_fs::path find_sf_file(const std::string& name)
+static Section_prop* get_fluidsynth_section()
 {
-	const std_fs::path sf_path = resolve_home(name);
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
+	assert(sec);
+
+	return sec;
+}
+
+static std::vector<std_fs::path> get_data_dirs()
+{
+	auto dirs = get_platform_data_dirs();
+
+	auto sf_dir = get_fluidsynth_section()->Get_string("soundfont_dir");
+	if (!sf_dir.empty()) {
+		// The user-provided SoundFont dir might use a different casing
+		// of the actual path on Linux & Windows, so we need to
+		// normalise that to avoid some subtle bugs downstream (see
+		// `find_sf_file()` as well).
+		dirs.insert(dirs.begin(), std_fs::canonical(sf_dir));
+	}
+	return dirs;
+}
+
+static std_fs::path find_sf_file(const std::string& sf_name)
+{
+	const std_fs::path sf_path = resolve_home(sf_name);
 	if (path_exists(sf_path)) {
 		return sf_path;
 	}
 	for (const auto& dir : get_data_dirs()) {
 		for (const auto& sf :
-		     {dir / name, dir / (name + SoundFontExtension)}) {
+		     {dir / sf_name, dir / (sf_name + SoundFontExtension)}) {
 #if 0
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
@@ -216,16 +247,6 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	            hex_values.c_str());
 }
 
-static Section_prop* get_fluidsynth_section()
-{
-	assert(control);
-
-	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
-	assert(sec);
-
-	return sec;
-}
-
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
@@ -258,8 +279,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	auto sf_filename = section->Get_string("soundfont");
-	const auto sf_path = find_sf_file(sf_filename);
+	const auto sf_name = section->Get_string("soundfont");
+	const auto sf_path = find_sf_file(sf_name);
 
 	if (!sf_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto ResetPresets = true;
@@ -269,8 +290,10 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		                            sf_filename.c_str());
+		const auto msg = format_str(
+		        "FSYNTH: FluidSynth failed to load '%s', check the path.",
+		        sf_name.c_str());
+
 		LOG_WARNING("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
@@ -331,7 +354,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
 		chorus_enabled = false;
 		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
-		         sf_path.filename().string().c_str());
+		         section->Get_string("soundfont").c_str());
 	}
 
 	// default chorus settings
@@ -872,8 +895,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 		const auto do_highlight = [&] {
 			if (device) {
-				const auto curr_sf_path =
-				        device->GetCurrentSoundFontPath();
+				const auto curr_sf_path = device->GetCurrentSoundFontPath();
 
 				return curr_sf_path && curr_sf_path == sf_path;
 			}
@@ -931,7 +953,6 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	for (const auto& path : sf_files) {
 		write_line(path);
 	}
-
 	caller->WriteOut("\n");
 }
 
@@ -942,11 +963,10 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 	if (device && device->GetName() == MidiDeviceName::FluidSynth) {
 		const auto fluid_device = dynamic_cast<MidiDeviceFluidSynth*>(device);
 
-		const auto soundfont_pref = get_fluidsynth_section()->Get_string(
-		        "soundfont");
-		const auto path = find_sf_file(soundfont_pref);
+		const auto sf_name = get_fluidsynth_section()->Get_string("soundfont");
+		const auto sf_path = find_sf_file(sf_name);
 
-		if (fluid_device->GetCurrentSoundFontPath() != path) {
+		if (fluid_device->GetCurrentSoundFontPath() != sf_path) {
 			MIDI_Init();
 		}
 	}
