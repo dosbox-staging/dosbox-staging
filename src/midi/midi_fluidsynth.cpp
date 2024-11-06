@@ -56,6 +56,20 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
 	        "'soundfonts' directory within your DOSBox configuration directory.");
 
+	constexpr auto DefaultVolume = 100;
+	constexpr auto MinVolume = 1;
+	constexpr auto MaxVolume = 800;
+
+	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
+	int_prop->SetMinMax(MinVolume, MaxVolume);
+	int_prop->Set_help(
+	        format_str("Set the SoundFont's volume as a percentage (%d by default).\n"
+	                   "This is useful for normalising the volume of different SoundFonts.\n"
+	                   "The percentage value can range from %d to %d.",
+	                   DefaultVolume,
+	                   MinVolume,
+	                   MaxVolume));
+
 	str_prop = secprop.Add_string("fsynth_chorus", WhenIdle, "auto");
 	str_prop->Set_help(
 	        "Chorus effect: 'auto' (default), 'on', 'off', or custom values.\n"
@@ -262,14 +276,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	auto sf_volume_percent = 100;
-	if (sf_volume_percent < 1 || sf_volume_percent > 800) {
-		LOG_WARNING(
-		        "FSYNTH: Invalid volume scaling percentage: %d; "
-		        "must be between 1 and 800, defaulting to 100%%",
-		        sf_volume_percent);
-		sf_volume_percent = 100;
-	}
+	auto sf_volume_percent = section->Get_int("soundfont_volume");
 	fluid_synth_set_gain(fluid_synth.get(),
 	                     static_cast<float>(sf_volume_percent) / 100.0f);
 
