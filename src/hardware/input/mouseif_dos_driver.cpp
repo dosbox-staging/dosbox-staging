@@ -1163,7 +1163,7 @@ static uint8_t move_cursor()
 		                     pending.x_abs,
 		                     pending.y_abs);
 
-	// Pending relative movement is now consummed
+	// Pending relative movement is now consumed
 	pending.x_rel = 0.0f;
 	pending.y_rel = 0.0f;
 
@@ -1244,7 +1244,7 @@ static uint8_t move_wheel()
 {
 	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
 
-	// Pending wheel scroll is now consummed
+	// Pending wheel scroll is now consumed
 	pending.w_rel = 0;
 
 	state.last_wheel_moved_x = get_pos_x();
@@ -1273,7 +1273,7 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 		// Uses relative mouse movements - processing is too complicated
 		// to easily predict whether the event can be safely omitted
 		event_needed = true;
-		// TODO: this can be done, but requyires refactoring
+		// TODO: this can be done, but requires refactoring
 	} else {
 		// Uses absolute mouse position (seamless mode), relative
 		// movements can wait to be reported - they are completely
@@ -1282,7 +1282,7 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 			event_needed = true;
 	}
 
-	// Update values to be consummed when the event arrives
+	// Update values to be consumed when the event arrives
 	pending.x_rel = MOUSE_ClampRelativeMovement(pending.x_rel + x_rel);
 	pending.y_rel = MOUSE_ClampRelativeMovement(pending.y_rel + y_rel);
 	pending.x_abs = x_abs;
