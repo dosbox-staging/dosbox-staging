@@ -83,7 +83,7 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
 
-	std::optional<std_fs::path> current_sf2_path = {};
+	std::optional<std_fs::path> current_sf_path = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI SysEx or Msg event.
