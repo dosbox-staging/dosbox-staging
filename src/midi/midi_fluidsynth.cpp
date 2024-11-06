@@ -259,13 +259,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Load the requested SoundFont or quit if none provided
 	auto sf_filename = section->Get_string("soundfont");
+	const auto sf_path = find_sf_file(sf_filename);
 
-	const auto soundfont_path = find_sf_file(sf_filename);
-
-	if (!soundfont_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	if (!sf_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto ResetPresets = true;
 		fluid_synth_sfload(fluid_synth.get(),
-		                   soundfont_path.string().c_str(),
+		                   sf_path.string().c_str(),
 		                   ResetPresets);
 	}
 
@@ -282,11 +281,10 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Let the user know that the SoundFont was loaded
 	if (sf_volume_percent == 100) {
-		LOG_MSG("FSYNTH: Using SoundFont '%s'",
-		        soundfont_path.string().c_str());
+		LOG_MSG("FSYNTH: Using SoundFont '%s'", sf_path.string().c_str());
 	} else {
 		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
-		        soundfont_path.string().c_str(),
+		        sf_path.string().c_str(),
 		        sf_volume_percent);
 	}
 
@@ -327,13 +325,13 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Does the SoundFont have known-issues with chorus?
 	const auto is_problematic_font =
-	        find_in_case_insensitive("FluidR3", soundfont_path.string()) ||
-	        find_in_case_insensitive("zdoom", soundfont_path.string());
+	        find_in_case_insensitive("FluidR3", sf_path.string()) ||
+	        find_in_case_insensitive("zdoom", sf_path.string());
 
 	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
 		chorus_enabled = false;
 		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
-		         soundfont_path.filename().string().c_str());
+		         sf_path.filename().string().c_str());
 	}
 
 	// default chorus settings
@@ -559,7 +557,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth         = std::move(fluid_synth);
 	mixer_channel = std::move(fluidsynth_channel);
 
-	current_sf2_path = soundfont_path;
+	current_sf_path = sf_path;
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
@@ -601,7 +599,7 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 	synth.reset();
 	settings.reset();
 
-	current_sf2_path = {};
+	current_sf_path = {};
 
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
@@ -833,16 +831,16 @@ void MidiDeviceFluidSynth::Render()
 
 std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
 {
-	return current_sf2_path;
+	return current_sf_path;
 }
 
-std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
+std::string format_sf_line(size_t width, const std_fs::path& sf_path)
 {
 	assert(width > 0);
 	std::vector<char> line_buf(width);
 
-	const auto& name = sf2_path.filename().string();
-	const auto& path = simplify_path(sf2_path).string();
+	const auto& name = sf_path.filename().string();
+	const auto& path = simplify_path(sf_path).string();
 
 	snprintf(line_buf.data(), width, "%-16s - %s", name.c_str(), path.c_str());
 	std::string line = line_buf.data();
@@ -869,15 +867,15 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
-	auto write_line = [&](const std_fs::path& sf2_path) {
-		const auto line = format_sf2_line(term_width - 2, sf2_path);
+	auto write_line = [&](const std_fs::path& sf_path) {
+		const auto line = format_sf_line(term_width - 2, sf_path);
 
 		const auto do_highlight = [&] {
 			if (device) {
-				const auto curr_sf2_path =
+				const auto curr_sf_path =
 				        device->GetCurrentSoundFontPath();
 
-				return curr_sf2_path && curr_sf2_path == sf2_path;
+				return curr_sf_path && curr_sf_path == sf_path;
 			}
 			return false;
 		}();
@@ -900,7 +898,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	// Print SoundFont found from user config.
 	std::error_code err = {};
 
-	std::vector<std_fs::path> sf2_files = {};
+	std::vector<std_fs::path> sf_files = {};
 
 	// Go through all SoundFont directories and list all .sf2 files.
 	for (const auto& dir_path : get_data_dirs()) {
@@ -915,22 +913,22 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 				continue;
 			}
 
-			const auto& sf2_path = entry.path();
+			const auto& sf_path = entry.path();
 
 			// Is it an .sf2 file?
-			auto ext = sf2_path.extension().string();
+			auto ext = sf_path.extension().string();
 			lowcase(ext);
 			if (ext != SoundFontExtension) {
 				continue;
 			}
 
-			sf2_files.emplace_back(sf2_path);
+			sf_files.emplace_back(sf_path);
 		}
 	}
 
-	std::sort(sf2_files.begin(), sf2_files.end());
+	std::sort(sf_files.begin(), sf_files.end());
 
-	for (const auto& path : sf2_files) {
+	for (const auto& path : sf_files) {
 		write_line(path);
 	}
 
