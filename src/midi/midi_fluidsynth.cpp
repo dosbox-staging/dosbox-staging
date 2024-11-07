@@ -247,6 +247,223 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	            hex_values.c_str());
 }
 
+// Checks if the passed value is within valid range and returns the
+// default if it's not
+static float validate_setting(const char* name, const std::string& str_val,
+                              const double def_val, const double min_val,
+                              const double max_val)
+{
+	// Convert the string to a double
+	const auto val = atof(str_val.c_str());
+
+	if (val < min_val || val > max_val) {
+		LOG_WARNING(
+		        "FSYNTH: Invalid %s setting (%s), needs to be between "
+		        "%.2f and %.2f: using default (%.2f)",
+		        name,
+		        str_val.c_str(),
+		        min_val,
+		        max_val,
+		        def_val);
+		return def_val;
+	}
+	return val;
+}
+
+static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
+{
+	assert(synth);
+
+	const auto section = get_fluidsynth_section();
+
+	// Get the user's chorus settings
+	const auto chorus = split(section->Get_string("fsynth_chorus"));
+
+	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
+
+	// Does the SoundFont have known-issues with chorus?
+	const auto is_problematic_font =
+	        find_in_case_insensitive("FluidR3", sf_path.string()) ||
+	        find_in_case_insensitive("zdoom", sf_path.string());
+
+	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
+		chorus_enabled = false;
+		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
+		         section->Get_string("soundfont").c_str());
+	}
+
+	// Default chorus settings
+	auto chorus_voice_count_f = 3.0;
+	auto chorus_level         = 1.2;
+	auto chorus_speed         = 0.3;
+	auto chorus_depth         = 8.0;
+	auto chorus_mod_wave      = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
+
+	// Apply custom chorus settings if provided
+	if (chorus_enabled && chorus.size() > 1) {
+		if (chorus.size() == 5) {
+			chorus_voice_count_f = validate_setting("chorus voice-count",
+			                                        chorus[0],
+			                                        chorus_voice_count_f,
+			                                        0,
+			                                        99);
+
+			chorus_level = validate_setting("chorus level",
+			                                chorus[1],
+			                                chorus_level,
+			                                0.0,
+			                                10.0);
+
+			chorus_speed = validate_setting(
+			        "chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
+
+			chorus_depth = validate_setting("chorus depth",
+			                                chorus[3],
+			                                chorus_depth,
+			                                0.0,
+			                                21.0);
+
+			if (chorus[4] == "triangle") {
+				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
+
+			} else if (chorus[4] != "sine") { // default is sine
+				LOG_WARNING(
+				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
+				        "needs to be 'sine' or 'triangle'",
+				        chorus[4].c_str());
+			}
+
+		} else {
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom chorus settings (%d), "
+			        "should be five",
+			        static_cast<int>(chorus.size()));
+		}
+	}
+
+	// API accept an integer voice-count
+	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
+
+	// Applies setting to all groups
+	constexpr int FxGroup = -1;
+
+// Current API calls as of 2.2
+#if FLUIDSYNTH_VERSION_MINOR >= 2
+	fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
+	fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
+	fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
+	fluid_synth_set_chorus_group_speed(synth, FxGroup, chorus_speed);
+	fluid_synth_set_chorus_group_depth(synth, FxGroup, chorus_depth);
+
+	fluid_synth_set_chorus_group_type(synth,
+	                                  FxGroup,
+	                                  static_cast<int>(chorus_mod_wave));
+
+// deprecated API calls prior to 2.2
+#else
+	fluid_synth_set_chorus_on(synth, chorus_enabled);
+	fluid_synth_set_chorus(synth,
+	                       chorus_voice_count,
+	                       chorus_level,
+	                       chorus_speed,
+	                       chorus_depth,
+	                       chorus_mod_wave);
+#endif
+
+	if (chorus_enabled) {
+		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
+		        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
+		        chorus_voice_count,
+		        chorus_level,
+		        chorus_speed,
+		        chorus_depth,
+		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE
+		                ? "sine"
+		                : "triangle");
+	}
+}
+
+static void setup_reverb(fluid_synth_t* synth)
+{
+	assert(synth);
+
+	// Get the user's reverb settings
+	const auto reverb = split(
+	        get_fluidsynth_section()->Get_string("fsynth_reverb"));
+
+	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
+
+	// Default reverb settings
+	auto reverb_room_size = 0.61;
+	auto reverb_damping   = 0.23;
+	auto reverb_width     = 0.76;
+	auto reverb_level     = 0.56;
+
+	// Apply custom reverb settings if provided
+	if (reverb_enabled && reverb.size() > 1) {
+		if (reverb.size() == 4) {
+			reverb_room_size = validate_setting("reverb room-size",
+			                                    reverb[0],
+			                                    reverb_room_size,
+			                                    0.0,
+			                                    1.0);
+
+			reverb_damping = validate_setting("reverb damping",
+			                                  reverb[1],
+			                                  reverb_damping,
+			                                  0.0,
+			                                  1.0);
+
+			reverb_width = validate_setting("reverb width",
+			                                reverb[2],
+			                                reverb_width,
+			                                0.0,
+			                                100.0);
+
+			reverb_level = validate_setting(
+			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
+		} else {
+			LOG_WARNING(
+			        "FSYNTH: Invalid number of custom reverb settings (%d), "
+			        "should be four",
+			        static_cast<int>(reverb.size()));
+		}
+	}
+
+	// Applies setting to all groups
+	constexpr int FxGroup = -1;
+
+// Current API calls as of 2.2
+#if FLUIDSYNTH_VERSION_MINOR >= 2
+	fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
+	fluid_synth_set_reverb_group_roomsize(synth,
+	                                      FxGroup,
+	                                      reverb_room_size);
+
+	fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
+	fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
+	fluid_synth_set_reverb_group_level(synth, FxGroup, reverb_level);
+
+// deprecated API calls prior to 2.2
+#else
+	fluid_synth_set_reverb_on(synth, reverb_enabled);
+	fluid_synth_set_reverb(synth,
+	                       reverb_room_size,
+	                       reverb_damping,
+	                       reverb_width,
+	                       reverb_level);
+#endif
+
+	if (reverb_enabled) {
+		LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
+		        "%.2f damping, %.2f width, and level %.2f",
+		        reverb_room_size,
+		        reverb_damping,
+		        reverb_width,
+		        reverb_level);
+	}
+}
+
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
@@ -311,7 +528,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		        sf_volume_percent);
 	}
 
-	// applies setting to all groups
+	// Applies setting to all groups
 	constexpr int FxGroup = -1;
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
@@ -319,195 +536,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
-	// Checks if the passed value is within valid range and returns the
-	// default if it's not
-	auto validate_setting = [=](const char* name,
-	                            const std::string& str_val,
-	                            const double def_val,
-	                            const double min_val,
-	                            const double max_val) {
-		// convert the string to a double
-		const auto val = atof(str_val.c_str());
-		if (val < min_val || val > max_val) {
-			LOG_WARNING(
-			        "FSYNTH: Invalid %s setting (%s), needs to be between "
-			        "%.2f and %.2f: using default (%.2f)",
-			        name,
-			        str_val.c_str(),
-			        min_val,
-			        max_val,
-			        def_val);
-			return def_val;
-		}
-		return val;
-	};
-
-	// Get the user's chorus settings
-	const auto chorus   = split(section->Get_string("fsynth_chorus"));
-	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
-
-	// Does the SoundFont have known-issues with chorus?
-	const auto is_problematic_font =
-	        find_in_case_insensitive("FluidR3", sf_path.string()) ||
-	        find_in_case_insensitive("zdoom", sf_path.string());
-
-	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
-		chorus_enabled = false;
-		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
-		         section->Get_string("soundfont").c_str());
-	}
-
-	// default chorus settings
-	auto chorus_voice_count_f = 3.0;
-	auto chorus_level         = 1.2;
-	auto chorus_speed         = 0.3;
-	auto chorus_depth         = 8.0;
-	auto chorus_mod_wave      = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
-
-	// apply custom chorus settings if provided
-	if (chorus_enabled && chorus.size() > 1) {
-		if (chorus.size() == 5) {
-			chorus_voice_count_f = validate_setting("chorus voice-count",
-			                                        chorus[0],
-			                                        chorus_voice_count_f,
-			                                        0,
-			                                        99);
-
-			chorus_level = validate_setting("chorus level",
-			                                chorus[1],
-			                                chorus_level,
-			                                0.0,
-			                                10.0);
-
-			chorus_speed = validate_setting(
-			        "chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
-
-			chorus_depth = validate_setting("chorus depth",
-			                                chorus[3],
-			                                chorus_depth,
-			                                0.0,
-			                                21.0);
-
-			if (chorus[4] == "triangle") {
-				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
-
-			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING(
-				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				        "needs to be 'sine' or 'triangle'",
-				        chorus[4].c_str());
-			}
-
-		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom chorus settings (%d), "
-			        "should be five",
-			        static_cast<int>(chorus.size()));
-		}
-	}
-	// API accept an integer voice-count
-	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
-
-	// Get the user's reverb settings
-	const auto reverb         = split(section->Get_string("fsynth_reverb"));
-	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
-
-	// Default reverb settings
-	auto reverb_room_size = 0.61;
-	auto reverb_damping   = 0.23;
-	auto reverb_width     = 0.76;
-	auto reverb_level     = 0.56;
-
-	// Apply custom reverb settings if provided
-	if (reverb_enabled && reverb.size() > 1) {
-		if (reverb.size() == 4) {
-			reverb_room_size = validate_setting("reverb room-size",
-			                                    reverb[0],
-			                                    reverb_room_size,
-			                                    0.0,
-			                                    1.0);
-
-			reverb_damping = validate_setting("reverb damping",
-			                                  reverb[1],
-			                                  reverb_damping,
-			                                  0.0,
-			                                  1.0);
-
-			reverb_width = validate_setting("reverb width",
-			                                reverb[2],
-			                                reverb_width,
-			                                0.0,
-			                                100.0);
-
-			reverb_level = validate_setting(
-			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
-		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom reverb settings (%d), "
-			        "should be four",
-			        static_cast<int>(reverb.size()));
-		}
-	}
-
-// Current API calls as of 2.2
-#if FLUIDSYNTH_VERSION_MINOR >= 2
-	fluid_synth_chorus_on(fluid_synth.get(), FxGroup, chorus_enabled);
-	fluid_synth_set_chorus_group_nr(fluid_synth.get(), FxGroup, chorus_voice_count);
-	fluid_synth_set_chorus_group_level(fluid_synth.get(), FxGroup, chorus_level);
-	fluid_synth_set_chorus_group_speed(fluid_synth.get(), FxGroup, chorus_speed);
-	fluid_synth_set_chorus_group_depth(fluid_synth.get(), FxGroup, chorus_depth);
-
-	fluid_synth_set_chorus_group_type(fluid_synth.get(),
-	                                  FxGroup,
-	                                  static_cast<int>(chorus_mod_wave));
-
-	fluid_synth_reverb_on(fluid_synth.get(), FxGroup, reverb_enabled);
-	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(),
-	                                      FxGroup,
-	                                      reverb_room_size);
-
-	fluid_synth_set_reverb_group_damp(fluid_synth.get(), FxGroup, reverb_damping);
-	fluid_synth_set_reverb_group_width(fluid_synth.get(), FxGroup, reverb_width);
-	fluid_synth_set_reverb_group_level(fluid_synth.get(), FxGroup, reverb_level);
-
-// deprecated API calls prior to 2.2
-#else
-	fluid_synth_set_chorus_on(fluid_synth.get(), chorus_enabled);
-	fluid_synth_set_chorus(fluid_synth.get(),
-	                       chorus_voice_count,
-	                       chorus_level,
-	                       chorus_speed,
-	                       chorus_depth,
-	                       chorus_mod_wave);
-
-	fluid_synth_set_reverb_on(fluid_synth.get(), reverb_enabled);
-	fluid_synth_set_reverb(fluid_synth.get(),
-	                       reverb_room_size,
-	                       reverb_damping,
-	                       reverb_width,
-	                       reverb_level);
-#endif
-
-	if (chorus_enabled) {
-		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
-		        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
-		        chorus_voice_count,
-		        chorus_level,
-		        chorus_speed,
-		        chorus_depth,
-		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE
-		                ? "sine"
-		                : "triangle");
-	}
-
-	if (reverb_enabled) {
-		LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
-		        "%.2f damping, %.2f width, and level %.2f",
-		        reverb_room_size,
-		        reverb_damping,
-		        reverb_width,
-		        reverb_level);
-	}
+	setup_chorus(fluid_synth.get(), sf_path);
+	setup_reverb(fluid_synth.get());
 
 	MIXER_LockMixerThread();
 
