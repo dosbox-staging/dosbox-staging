@@ -41,6 +41,7 @@
 #include "mixer.h"
 #include "pic.h"
 #include "rwqueue.h"
+#include "sblaster.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
@@ -259,11 +260,11 @@ struct SbInfo {
 		int value      = 0;
 		uint32_t count = 0;
 	} e2 = {};
-
-	MixerChannelPtr chan = nullptr;
 };
 
 static SbInfo sb = {};
+
+static std::unique_ptr<SBLASTER> sblaster = {};
 
 // clang-format off
 
@@ -1229,17 +1230,14 @@ static void flush_remainig_dma_transfer()
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
 	}
 }
-
-static void set_channel_rate_hz(const int requested_rate_hz)
+void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 {
 	const auto rate_hz = std::clamp(requested_rate_hz,
 	                                MinPlaybackRateHz,
-
 	                                NativeDacRateHz);
-
-	assert(sb.chan);
-	if (sb.chan->GetSampleRate() != rate_hz) {
-		sb.chan->SetSampleRate(rate_hz);
+	assert(channel);
+	if (channel->GetSampleRate() != rate_hz) {
+		channel->SetSampleRate(rate_hz);
 	}
 }
 
@@ -1315,7 +1313,9 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
 	}
 	sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 	sb.dma.min  = (sb.dma.rate * 3) / 1000;
-	set_channel_rate_hz(freq_hz);
+
+	assert(sblaster);
+	sblaster->SetChannelRateHz(freq_hz);
 
 	PIC_RemoveEvents(ProcessDMATransfer);
 	// Set to be masked, the dma call can change this again.
@@ -1452,7 +1452,9 @@ static void dsp_reset()
 	sb.irq.pending_8bit  = false;
 	sb.irq.pending_16bit = false;
 
-	set_channel_rate_hz(DefaultPlaybackRateHz);
+	if (sblaster) {
+		sblaster->SetChannelRateHz(DefaultPlaybackRateHz);
+	}
 
 	init_speaker_state();
 
@@ -1510,7 +1512,11 @@ static void dsp_adc_callback(const DmaChannel* /*chan*/, const DmaEvent event)
 static void dsp_change_rate(const uint32_t freq_hz)
 {
 	if (sb.freq_hz != freq_hz && sb.dma.mode != DmaMode::None) {
-		set_channel_rate_hz(freq_hz / (sb.mixer.stereo_enabled ? 2 : 1));
+
+		assert(sblaster);
+		sblaster->SetChannelRateHz(freq_hz /
+		                           (sb.mixer.stereo_enabled ? 2 : 1));
+
 		sb.dma.rate = (freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 	}
@@ -2186,14 +2192,15 @@ static uint8_t read_sb_pro_volume(const uint8_t* src)
 
 static void dsp_change_stereo(const bool stereo)
 {
+	assert(sblaster);
 	if (!sb.dma.stereo && stereo) {
-		set_channel_rate_hz(sb.freq_hz / 2);
+		sblaster->SetChannelRateHz(sb.freq_hz / 2);
 		sb.dma.mul *= 2;
 		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 
 	} else if (sb.dma.stereo && !stereo) {
-		set_channel_rate_hz(sb.freq_hz);
+		sblaster->SetChannelRateHz(sb.freq_hz);
 		sb.dma.mul /= 2;
 		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
@@ -2320,7 +2327,8 @@ static void ctmixer_write(const uint8_t val)
 					                  ? "Enabling"
 					                  : "Disabling");
 
-					sb.chan->SetLowPassFilter(
+					assert(sblaster && sblaster->channel);
+					sblaster->channel->SetLowPassFilter(
 					        sb.mixer.filter_enabled
 					                ? FilterState::On
 					                : FilterState::Off);
@@ -2858,21 +2866,26 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 
 static void sblaster_mixer_callback([[maybe_unused]]const int requested_frames)
 {
-	// We can ignore requested frames as this function gets called in a loop until it gets what it needs
-	// Overflow is not a concern as extra frames will remain in the channel's buffer and get mixed on the next callback
+	assert(sblaster && sblaster->channel);
+
+	// We can ignore requested frames as this function gets called in a loop
+	// until it gets what it needs Overflow is not a concern as extra frames
+	// will remain in the channel's buffer and get mixed on the next callback
 
 	const auto frames = soundblaster_mixer_queue.Dequeue();
 	if (!frames) {
 		// Queue must be stopped, otherwise Dequeue() will block until some frames are available
-		sb.chan->AddSilence();
+		sblaster->channel->AddSilence();
 		return;
 	}
 	// Weird double de-referencing syntax as the object type is std::optional<std::unique_ptr<AudioVector>>
-	(*frames)->AddSamples(sb.chan.get());
+	(*frames)->AddSamples(sblaster->channel.get());
 }
 
 static void generate_frames(const int frames_requested)
 {
+	assert(sblaster && sblaster->channel);
+
 	static int ticks_of_silence = 0;
 
 	switch (sb.mode) {
@@ -2906,14 +2919,14 @@ static void generate_frames(const int frames_requested)
 		// This is speaker on but playing silence
 		soundblaster_mixer_queue.Stop();
 		soundblaster_mixer_queue.Clear();
-		sb.chan->Enable(false);
+		sblaster->channel->Enable(false);
 	}
 	break;
 
 	case DspMode::Dac:
 	// No-op if channel is already running
 	soundblaster_mixer_queue.Start();
-	sb.chan->Enable(true);
+	sblaster->channel->Enable(true);
 	ticks_of_silence = 0;
 
 	if (sb.dac.used > 0) {
@@ -2932,7 +2945,7 @@ static void generate_frames(const int frames_requested)
 	{
 		// No-op if channel is already running
 		soundblaster_mixer_queue.Start();
-		sb.chan->Enable(true);
+		sblaster->channel->Enable(true);
 		ticks_of_silence = 0;
 
 		auto len = check_cast<uint32_t>(frames_requested);
@@ -2954,17 +2967,19 @@ static void generate_frames(const int frames_requested)
 
 static void sblaster_pic_callback()
 {
+	assert(sblaster && sblaster->channel);
+
 	if (!sb.speaker_enabled) {
 		// These are all no-ops if we're already stopped
 		soundblaster_mixer_queue.Stop();
 		soundblaster_mixer_queue.Clear();
-		sb.chan->Enable(false);
+		sblaster->channel->Enable(false);
 		return;
 	}
 
 	static float frame_counter = 0.0f;
 
-	frame_counter += sb.chan->GetFramesPerTick();
+	frame_counter += sblaster->channel->GetFramesPerTick();
 	const int total_frames = ifloor(frame_counter);
 	frame_counter -= static_cast<float>(total_frames);
 
@@ -3123,308 +3138,282 @@ static bool is_cms_enabled(const SbType sbtype)
 
 void shutdown_sblaster(Section*);
 
-class SBLASTER final {
-private:
-	// Data
-	IO_ReadHandleObject read_handlers[0x10]   = {};
-	IO_WriteHandleObject write_handlers[0x10] = {};
+void SBLASTER::SetupEnvironment()
+{
+	// Ensure our port and addresses will fit in our format widths.
+	// The config selection controls their actual values, so this is
+	// a maximum-limit.
+	assert(sb.hw.base < 0xfff);
+	assert(sb.hw.irq <= 12);
+	assert(sb.hw.dma8 < 10);
 
-	static constexpr auto BlasterEnvVar = "BLASTER";
+	char blaster_env_val[] = "AHHH II DD HH TT";
 
-	OplMode oplmode = OplMode::None;
-	bool cms        = false;
+	if (sb.type == SbType::SB16) {
+		assert(sb.hw.dma16 < 10);
+		safe_sprintf(blaster_env_val,
+		             "A%x I%u D%u H%u T%d",
+		             sb.hw.base,
+		             sb.hw.irq,
+		             sb.hw.dma8,
+		             sb.hw.dma16,
+		             static_cast<int>(sb.type));
+	} else {
+		safe_sprintf(blaster_env_val,
+		             "A%x I%u D%u T%d",
+		             sb.hw.base,
+		             sb.hw.irq,
+		             sb.hw.dma8,
+		             static_cast<int>(sb.type));
+	}
 
-	void SetupEnvironment()
-	{
-		// Ensure our port and addresses will fit in our format widths.
-		// The config selection controls their actual values, so this is
-		// a maximum-limit.
-		assert(sb.hw.base < 0xfff);
-		assert(sb.hw.irq <= 12);
-		assert(sb.hw.dma8 < 10);
+	// Update AUTOEXEC.BAT line
+	LOG_MSG("%s: Setting '%s' environment variable to '%s'",
+	        sb_log_prefix(),
+	        BlasterEnvVar,
+	        blaster_env_val);
 
-		char blaster_env_val[] = "AHHH II DD HH TT";
+	AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
+}
 
-		if (sb.type == SbType::SB16) {
-			assert(sb.hw.dma16 < 10);
-			safe_sprintf(blaster_env_val,
-			             "A%x I%u D%u H%u T%d",
-			             sb.hw.base,
-			             sb.hw.irq,
-			             sb.hw.dma8,
-			             sb.hw.dma16,
-			             static_cast<int>(sb.type));
-		} else {
-			safe_sprintf(blaster_env_val,
-			             "A%x I%u D%u T%d",
-			             sb.hw.base,
-			             sb.hw.irq,
-			             sb.hw.dma8,
-			             static_cast<int>(sb.type));
+void SBLASTER::ClearEnvironment()
+{
+	AUTOEXEC_SetVariable(BlasterEnvVar, "");
+}
+
+SBLASTER::SBLASTER(Section* conf)
+{
+	assert(conf);
+
+	MIXER_LockMixerThread();
+
+	Section_prop* section = static_cast<Section_prop*>(conf);
+
+	sb.hw.base = section->Get_hex("sbbase");
+	sb.hw.irq  = static_cast<uint8_t>(section->Get_int("irq"));
+
+	sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
+
+	// Magic 32 divisor was probably the result of experimentation
+	sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
+
+	sb.mixer.enabled = section->Get_bool("sbmixer");
+
+	sb.mixer.stereo_enabled = false;
+
+	const auto sbtype_pref = section->Get_string("sbtype");
+
+	sb.type     = determine_sb_type(sbtype_pref);
+	sb.ess_type = determine_ess_type(sbtype_pref);
+
+	switch (sb.ess_type) {
+	case EssType::None: break;
+	case EssType::Es1688:
+		sb.mixer.ess_id_str[0] = 0x16;
+		sb.mixer.ess_id_str[1] = 0x88;
+		sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
+		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
+	}
+
+	oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type, sb.ess_type);
+
+	// Init OPL
+	switch (oplmode) {
+	case OplMode::None:
+		write_handlers[0].Install(Port::AdLib::Command,
+		                          GUS_MirrorAdLibCommandPortWrite,
+		                          io_width_t::byte);
+		break;
+
+	case OplMode::Opl2:
+	case OplMode::DualOpl2:
+	case OplMode::Opl3:
+	case OplMode::Opl3Gold:
+	case OplMode::Esfm: {
+		OPL_Init(section, oplmode);
+		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
+		assert(opl_channel);
+
+		const std::string opl_filter_str = section->Get_string("opl_filter");
+		configure_opl_filter(opl_channel, opl_filter_str, sb.type);
+	} break;
+	}
+
+	cms = is_cms_enabled(sb.type);
+	if (cms) {
+		CMS_Init(section);
+	}
+
+	// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
+	const auto has_dac = (sb.type != SbType::None &&
+	                      sb.type != SbType::GameBlaster);
+
+	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma")) : 0;
+
+	// Configure the BIOS DAC callbacks as soon as the card's access
+	// ports ( port, IRQ, and potential 8-bit DMA address) are
+	// defined.
+	//
+	if (BIOS_ConfigureTandyDacCallbacks()) {
+		// Disable the hot warmup when the SB is being used as
+		// the Tandy's DAC because the BIOS toggles the SB's
+		// speaker on and off rapidly per-audio-sequence,
+		// resulting in "edge-to-edge" samples.
+		//
+		sb.dsp.hot_warmup_ms = 0;
+	}
+
+	if (!has_dac) {
+		MIXER_UnlockMixerThread();
+		return;
+	}
+
+	// The code below here sets up the DAC and DMA channels on all
+	// "sbtype = sb*" Sound Blaster type cards.
+	//
+	auto dma_channel = DMA_GetChannel(sb.hw.dma8);
+	assert(dma_channel);
+	dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
+
+	// Only Sound Blaster 16 uses a 16-bit DMA channel.
+	if (sb.type == SbType::SB16) {
+		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+
+		// Reserve the second DMA channel only if it's unique.
+		if (sb.hw.dma16 != sb.hw.dma8) {
+			dma_channel = DMA_GetChannel(sb.hw.dma16);
+			assert(dma_channel);
+			dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
 		}
+	}
 
-		// Update AUTOEXEC.BAT line
-		LOG_MSG("%s: Setting '%s' environment variable to '%s'",
+	std::set channel_features = {ChannelFeature::ReverbSend,
+	                             ChannelFeature::ChorusSend,
+	                             ChannelFeature::DigitalAudio};
+
+	if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2 ||
+	    sb.type == SbType::SB16) {
+		channel_features.insert(ChannelFeature::Stereo);
+	}
+
+	channel = MIXER_AddChannel(sblaster_mixer_callback,
+	                           DefaultPlaybackRateHz,
+	                           ChannelName::SoundBlasterDac,
+	                           channel_features);
+
+	const std::string sb_filter_prefs = section->Get_string("sb_filter");
+
+	const auto sb_filter_always_on = section->Get_bool("sb_filter_always_on");
+
+	configure_sb_filter(channel, sb_filter_prefs, sb_filter_always_on, sb.type);
+
+	sb.dsp.state       = DspState::Normal;
+	sb.dsp.out.lastval = 0xaa;
+	sb.dma.chan        = nullptr;
+
+	for (uint8_t i = 4; i <= 0xf; ++i) {
+		if (i == 8 || i == 9) {
+			continue;
+		}
+		// Disable mixer ports for lower soundblaster
+		if ((sb.type == SbType::SB1 || sb.type == SbType::SB2) &&
+		    (i == 4 || i == 5)) {
+			continue;
+		}
+		read_handlers[i].Install(sb.hw.base + i, read_sb, io_width_t::byte);
+
+		write_handlers[i].Install(sb.hw.base + i, write_sb, io_width_t::byte);
+	}
+	for (uint16_t i = 0; i < 256; ++i) {
+		asp_regs[i] = 0;
+	}
+	asp_regs[5] = 0x01;
+	asp_regs[9] = 0xf8;
+
+	dsp_reset();
+
+	ctmixer_reset();
+
+	ProcessDMATransfer = &play_dma_transfer;
+
+	SetupEnvironment();
+
+	// Sound Blaster MIDI interface
+	if (!MIDI_IsAvailable()) {
+		sb.midi_enabled = false;
+	} else {
+		sb.midi_enabled = true;
+	}
+
+	if (sb.type == SbType::SB16) {
+		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
 		        sb_log_prefix(),
-		        BlasterEnvVar,
-		        blaster_env_val);
-
-		AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
+		        sb.hw.base,
+		        sb.hw.irq,
+		        sb.hw.dma8,
+		        sb.hw.dma16);
+	} else {
+		LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
+		        sb_log_prefix(),
+		        sb.hw.base,
+		        sb.hw.irq,
+		        sb.hw.dma8);
 	}
+	TIMER_AddTickHandler(sblaster_pic_callback);
+	MIXER_UnlockMixerThread();
+}
 
-	void ClearEnvironment()
-	{
-		AUTOEXEC_SetVariable(BlasterEnvVar, "");
+SBLASTER::~SBLASTER()
+{
+	MIXER_LockMixerThread();
+	TIMER_DelTickHandler(sblaster_pic_callback);
+
+	// Prevent discovery of the Sound Blaster via the environment
+	ClearEnvironment();
+
+	// Shutdown any FM Synth devices
+	if (oplmode != OplMode::None) {
+		OPL_ShutDown();
 	}
-
-public:
-	SBLASTER(Section* conf)
-	{
-		assert(conf);
-
-		MIXER_LockMixerThread();
-
-		Section_prop* section = static_cast<Section_prop*>(conf);
-
-		sb.hw.base = section->Get_hex("sbbase");
-		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
-
-		sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
-
-		// Magic 32 divisor was probably the result of experimentation
-		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
-
-		sb.mixer.enabled = section->Get_bool("sbmixer");
-		sb.mixer.stereo_enabled = false;
-
-		const auto sbtype_pref = section->Get_string("sbtype");
-
-		sb.type     = determine_sb_type(sbtype_pref);
-		sb.ess_type = determine_ess_type(sbtype_pref);
-
-		switch (sb.ess_type) {
-		case EssType::None: break;
-		case EssType::Es1688:
-			sb.mixer.ess_id_str[0] = 0x16;
-			sb.mixer.ess_id_str[1] = 0x88;
-			sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
-			sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
-		}
-
-		oplmode = determine_oplmode(section->Get_string("oplmode"),
-		                            sb.type,
-		                            sb.ess_type);
-
-		// Init OPL
-		switch (oplmode) {
-		case OplMode::None:
-			write_handlers[0].Install(Port::AdLib::Command,
-			                          GUS_MirrorAdLibCommandPortWrite,
-			                          io_width_t::byte);
-			break;
-
-		case OplMode::Opl2:
-		case OplMode::DualOpl2:
-		case OplMode::Opl3:
-		case OplMode::Opl3Gold:
-		case OplMode::Esfm: {
-			OPL_Init(section, oplmode);
-			auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
-			assert(opl_channel);
-
-			const std::string opl_filter_str = section->Get_string(
-			        "opl_filter");
-			configure_opl_filter(opl_channel, opl_filter_str, sb.type);
-		} break;
-		}
-
-		cms = is_cms_enabled(sb.type);
-		if (cms) {
-			CMS_Init(section);
-		}
-
-		// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
-		const auto has_dac = (sb.type != SbType::None &&
-		                      sb.type != SbType::GameBlaster);
-
-		sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma"))
-		                     : 0;
-
-		// Configure the BIOS DAC callbacks as soon as the card's access
-		// ports ( port, IRQ, and potential 8-bit DMA address) are
-		// defined.
-		//
-		if (BIOS_ConfigureTandyDacCallbacks()) {
-			// Disable the hot warmup when the SB is being used as
-			// the Tandy's DAC because the BIOS toggles the SB's
-			// speaker on and off rapidly per-audio-sequence,
-			// resulting in "edge-to-edge" samples.
-			//
-			sb.dsp.hot_warmup_ms = 0;
-		}
-
-		if (!has_dac) {
-			MIXER_UnlockMixerThread();
-			return;
-		}
-
-		// The code below here sets up the DAC and DMA channels on all
-		// "sbtype = sb*" Sound Blaster type cards.
-		//
-		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
-		assert(dma_channel);
-		dma_channel->ReserveFor(sb_log_prefix(), shutdown_sblaster);
-
-		// Only Sound Blaster 16 uses a 16-bit DMA channel.
-		if (sb.type == SbType::SB16) {
-			sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
-
-			// Reserve the second DMA channel only if it's unique.
-			if (sb.hw.dma16 != sb.hw.dma8) {
-				dma_channel = DMA_GetChannel(sb.hw.dma16);
-				assert(dma_channel);
-				dma_channel->ReserveFor(sb_log_prefix(),
-				                        shutdown_sblaster);
-			}
-		}
-
-		std::set channel_features = {ChannelFeature::ReverbSend,
-		                             ChannelFeature::ChorusSend,
-		                             ChannelFeature::DigitalAudio};
-
-		if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2 ||
-		    sb.type == SbType::SB16) {
-			channel_features.insert(ChannelFeature::Stereo);
-		}
-
-		sb.chan = MIXER_AddChannel(sblaster_mixer_callback,
-		                           DefaultPlaybackRateHz,
-		                           ChannelName::SoundBlasterDac,
-		                           channel_features);
-
-		const std::string sb_filter_prefs = section->Get_string("sb_filter");
-
-		const auto sb_filter_always_on = section->Get_bool(
-		        "sb_filter_always_on");
-
-		configure_sb_filter(sb.chan,
-		                    sb_filter_prefs,
-		                    sb_filter_always_on,
-		                    sb.type);
-
-		sb.dsp.state       = DspState::Normal;
-		sb.dsp.out.lastval = 0xaa;
-		sb.dma.chan        = nullptr;
-
-		for (uint8_t i = 4; i <= 0xf; ++i) {
-			if (i == 8 || i == 9) {
-				continue;
-			}
-			// Disable mixer ports for lower soundblaster
-			if ((sb.type == SbType::SB1 || sb.type == SbType::SB2) &&
-			    (i == 4 || i == 5)) {
-				continue;
-			}
-			read_handlers[i].Install(sb.hw.base + i,
-			                         read_sb,
-			                         io_width_t::byte);
-
-			write_handlers[i].Install(sb.hw.base + i,
-			                          write_sb,
-			                          io_width_t::byte);
-		}
-		for (uint16_t i = 0; i < 256; ++i) {
-			asp_regs[i] = 0;
-		}
-		asp_regs[5] = 0x01;
-		asp_regs[9] = 0xf8;
-
-		dsp_reset();
-
-		ctmixer_reset();
-
-		ProcessDMATransfer = &play_dma_transfer;
-
-		SetupEnvironment();
-
-		// Sound Blaster MIDI interface
-		if (!MIDI_IsAvailable()) {
-			sb.midi_enabled = false;
-		} else {
-			sb.midi_enabled = true;
-		}
-
-		if (sb.type == SbType::SB16) {
-			LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
-			        sb_log_prefix(),
-			        sb.hw.base,
-			        sb.hw.irq,
-			        sb.hw.dma8,
-			        sb.hw.dma16);
-		} else {
-			LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
-			        sb_log_prefix(),
-			        sb.hw.base,
-			        sb.hw.irq,
-			        sb.hw.dma8);
-		}
-		TIMER_AddTickHandler(sblaster_pic_callback);
+	if (cms) {
+		CMS_ShutDown();
+	}
+	if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
 		MIXER_UnlockMixerThread();
+		return;
 	}
 
-	~SBLASTER()
-	{
-		MIXER_LockMixerThread();
-		TIMER_DelTickHandler(sblaster_pic_callback);
+	LOG_MSG("%s: Shutting down", sb_log_prefix());
 
-		// Prevent discovery of the Sound Blaster via the environment
-		ClearEnvironment();
+	// Stop playback
+	if (channel) {
+		soundblaster_mixer_queue.Stop();
+		channel->Enable(false);
+	}
+	// Stop the game from accessing the IO ports
+	for (auto& rh : read_handlers) {
+		rh.Uninstall();
+	}
+	for (auto& wh : write_handlers) {
+		wh.Uninstall();
+	}
+	dsp_reset(); // Stop everything
+	sb.dsp.reset_tally = 0;
 
-		// Shutdown any FM Synth devices
-		if (oplmode != OplMode::None) {
-			OPL_ShutDown();
-		}
-		if (cms) {
-			CMS_ShutDown();
-		}
-		if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
-			MIXER_UnlockMixerThread();
-			return;
-		}
+	// Deregister the mixer channel and remove it
+	assert(channel);
+	MIXER_DeregisterChannel(channel);
+	channel.reset();
 
-		LOG_MSG("%s: Shutting down", sb_log_prefix());
-
-		// Stop playback
-		if (sb.chan) {
-			soundblaster_mixer_queue.Stop();
-			sb.chan->Enable(false);
-		}
-		// Stop the game from accessing the IO ports
-		for (auto& rh : read_handlers) {
-			rh.Uninstall();
-		}
-		for (auto& wh : write_handlers) {
-			wh.Uninstall();
-		}
-		dsp_reset(); // Stop everything
-		sb.dsp.reset_tally = 0;
-
-		// Deregister the mixer channel and remove it
-		assert(sb.chan);
-		MIXER_DeregisterChannel(sb.chan);
-		sb.chan.reset();
-
-		// Reset the DMA channels as the mixer is no longer reading samples
-		DMA_ResetChannel(sb.hw.dma8);
-		if (sb.type == SbType::SB16) {
-			DMA_ResetChannel(sb.hw.dma16);
-		}
-
-		sb = {};
-		MIXER_UnlockMixerThread();
+	// Reset the DMA channels as the mixer is no longer reading samples
+	DMA_ResetChannel(sb.hw.dma8);
+	if (sb.type == SbType::SB16) {
+		DMA_ResetChannel(sb.hw.dma16);
 	}
 
-}; // End of SBLASTER class
+	sb = {};
+	MIXER_UnlockMixerThread();
+}
 
 void init_sblaster_dosbox_settings(Section_prop& secprop)
 {
@@ -3511,8 +3500,6 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "Force the Sound Blaster Pro 2 filter to be always on (disabled by default).\n"
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
-
-static std::unique_ptr<SBLASTER> sblaster = {};
 
 void init_sblaster(Section* sec)
 {
