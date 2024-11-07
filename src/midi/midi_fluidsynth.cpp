@@ -948,7 +948,11 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 		}
 	}
 
-	std::sort(sf_files.begin(), sf_files.end());
+	std::sort(sf_files.begin(),
+	          sf_files.end(),
+	          [](const std_fs::path& a, const std_fs::path& b) {
+		          return a.filename() < b.filename();
+	          });
 
 	for (const auto& path : sf_files) {
 		write_line(path);
