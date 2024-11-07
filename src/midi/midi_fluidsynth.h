@@ -73,6 +73,7 @@ private:
 
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
+
 	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
 
 	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
