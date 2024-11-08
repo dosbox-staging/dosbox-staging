@@ -999,17 +999,9 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 static void fluidsynth_init([[maybe_unused]] Section* sec)
 {
-	const auto device = MIDI_GetCurrentDevice();
-
-	if (device && device->GetName() == MidiDeviceName::FluidSynth) {
-		const auto fluid_device = dynamic_cast<MidiDeviceFluidSynth*>(device);
-
-		const auto sf_name = get_fluidsynth_section()->Get_string("soundfont");
-		const auto sf_path = find_sf_file(sf_name);
-
-		if (fluid_device->GetCurrentSoundFontPath() != sf_path) {
-			MIDI_Init();
-		}
+	if (const auto device = MIDI_GetCurrentDevice();
+	    device && device->GetName() == MidiDeviceName::FluidSynth) {
+		MIDI_Init();
 	}
 }
 
