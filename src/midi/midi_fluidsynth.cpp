@@ -49,12 +49,17 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	// Name 'default.sf2' picks the default SoundFont if it's installed
-	// in the OS. Usually it's Fluid_R3.
+	// in the OS (usually "Fluid_R3").
 	auto str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
 	str_prop->Set_help(
-	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
-	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
-	        "'soundfonts' directory within your DOSBox configuration directory.");
+	        "Name or path of SoundFont file to use ('default.sf2' by default).\n"
+	        "The SoundFont will be looked up in the following locations in order:\n"
+	        "  - The user-defined SoundFont directory (see 'soundfont_dir').\n"
+	        "  - The 'soundfonts' directory in your DOSBox configuration directory.\n"
+	        "  - Other common system locations.\n"
+	        "The '.sf2' extension can be omitted. You can use paths relative to the above\n"
+	        "locations or absolute paths as well.\n"
+	        "Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.");
 
 	str_prop = secprop.Add_string("soundfont_dir", WhenIdle, "");
 	str_prop->Set_help(
