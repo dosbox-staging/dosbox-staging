@@ -32,7 +32,6 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
-#include "audio_vector.h"
 #include "../capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
@@ -215,8 +214,6 @@ struct MixerSettings {
 
 static struct MixerSettings mixer = {};
 
-extern RWQueue<std::unique_ptr<AudioVector>> soundblaster_mixer_queue;
-
 [[maybe_unused]] static const char* to_string(const ResampleMethod m)
 {
 	switch (m) {
@@ -299,6 +296,8 @@ void MIXER_LockMixerThread()
 
 	REELMAGIC_NotifyLockMixer();
 
+	SBLASTER_NotifyLockMixer();
+
 	mixer.mutex.lock();
 }
 
@@ -313,6 +312,9 @@ void MIXER_UnlockMixerThread()
 	GUS_NotifyUnlockMixer();
 
 	REELMAGIC_NotifyUnlockMixer();
+
+	SBLASTER_NotifyLockMixer();
+
 	mixer.mutex.unlock();
 }
 
@@ -2167,21 +2169,6 @@ void MixerChannel::AddSamples_m8(const int num_frames, const uint8_t* data)
 	AddSamples<uint8_t, false, false, true>(num_frames, data);
 }
 
-void MixerChannel::AddSamples_s8(const int num_frames, const uint8_t* data)
-{
-	AddSamples<uint8_t, true, false, true>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_m8s(const int num_frames, const int8_t* data)
-{
-	AddSamples<int8_t, false, true, true>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_s8s(const int num_frames, const int8_t* data)
-{
-	AddSamples<int8_t, true, true, true>(num_frames, data);
-}
-
 void MixerChannel::AddSamples_m16(const int num_frames, const int16_t* data)
 {
 	AddSamples<int16_t, false, true, true>(num_frames, data);
@@ -2190,16 +2177,6 @@ void MixerChannel::AddSamples_m16(const int num_frames, const int16_t* data)
 void MixerChannel::AddSamples_s16(const int num_frames, const int16_t* data)
 {
 	AddSamples<int16_t, true, true, true>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_m16u(const int num_frames, const uint16_t* data)
-{
-	AddSamples<uint16_t, false, false, true>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_s16u(const int num_frames, const uint16_t* data)
-{
-	AddSamples<uint16_t, true, false, true>(num_frames, data);
 }
 
 void MixerChannel::AddSamples_mfloat(const int num_frames, const float* data)
@@ -2220,16 +2197,6 @@ void MixerChannel::AddSamples_m16_nonnative(const int num_frames, const int16_t*
 void MixerChannel::AddSamples_s16_nonnative(const int num_frames, const int16_t* data)
 {
 	AddSamples<int16_t, true, true, false>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data)
-{
-	AddSamples<uint16_t, false, false, false>(num_frames, data);
-}
-
-void MixerChannel::AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data)
-{
-	AddSamples<uint16_t, true, false, false>(num_frames, data);
 }
 
 void MixerChannel::AddAudioFrames(const std::vector<AudioFrame>& frames)
