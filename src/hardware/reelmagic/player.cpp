@@ -928,3 +928,12 @@ ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig()
 {
 	return _globalDefaultPlayerConfiguration;
 }
+
+void REELMAGIC_NotifyLockMixer()
+{
+	reel_magic_audio.output_queue.Stop();
+}
+void REELMAGIC_NotifyUnlockMixer()
+{
+	reel_magic_audio.output_queue.Start();
+}

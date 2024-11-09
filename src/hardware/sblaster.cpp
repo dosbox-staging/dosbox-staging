@@ -280,7 +280,7 @@ struct SbInfo {
 
 static SbInfo sb = {};
 
-static std::unique_ptr<SBLASTER> sblaster = {};
+std::unique_ptr<SBLASTER> sblaster = {};
 
 class CallbackType {
 public:

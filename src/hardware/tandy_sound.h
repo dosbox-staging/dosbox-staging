@@ -86,6 +86,4 @@ private:
 	int sample_rate_hz = 0;
 };
 
-extern std::unique_ptr<TandyDAC> tandy_dac;
-
 #endif

@@ -114,6 +114,4 @@ private:
 	bool can_trigger_irq = false;
 };
 
-extern std::unique_ptr<Ps1Dac> ps1_dac;
-
 #endif

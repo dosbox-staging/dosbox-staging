@@ -45,6 +45,4 @@ public:
 	virtual void PicCallback(const int requested_frames)            = 0;
 };
 
-extern std::unique_ptr<PcSpeaker> pc_speaker;
-
 #endif

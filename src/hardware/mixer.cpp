@@ -38,22 +38,16 @@
 #include "checks.h"
 #include "control.h"
 #include "cross.h"
-#include "gus.h"
 #include "hardware.h"
-#include "lpt_dac.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"
 #include "midi.h"
-#include "pcspeaker.h"
 #include "pic.h"
-#include "ps1audio.h"
-#include "reelmagic/player.h"
 #include "ring_buffer.h"
 #include "rwqueue.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "tandy_sound.h"
 #include "timer.h"
 #include "tracy.h"
 #include "video.h"
@@ -295,45 +289,30 @@ bool MIXER_FastForwardModeEnabled()
 // Individual channels also have a mutex which can be safely aquired without stopping these queues
 void MIXER_LockMixerThread()
 {
-	if (pc_speaker) {
-		pc_speaker->output_queue.Stop();
-	}
-	if (tandy_dac) {
-		tandy_dac->output_queue.Stop();
-	}
-	if (ps1_dac) {
-		ps1_dac->output_queue.Stop();
-	}
-	if (lpt_dac) {
-		lpt_dac->output_queue.Stop();
-	}
-	if (gus) {
-		gus->output_queue.Stop();
-	}
-	soundblaster_mixer_queue.Stop();
-	reel_magic_audio.output_queue.Stop();
+	PCSPEAKER_NotifyLockMixer();
+
+	TANDYDAC_NotifyLockMixer();
+
+	PS1DAC_NotifyLockMixer();
+
+	GUS_NotifyLockMixer();
+
+	REELMAGIC_NotifyLockMixer();
+
 	mixer.mutex.lock();
 }
 
 void MIXER_UnlockMixerThread()
 {
-	if (pc_speaker) {
-		pc_speaker->output_queue.Start();
-	}
-	if (tandy_dac) {
-		tandy_dac->output_queue.Start();
-	}
-	if (ps1_dac) {
-		ps1_dac->output_queue.Start();
-	}
-	if (lpt_dac) {
-		lpt_dac->output_queue.Start();
-	}
-	if (gus) {
-		gus->output_queue.Start();
-	}
-	soundblaster_mixer_queue.Start();
-	reel_magic_audio.output_queue.Start();
+	PCSPEAKER_NotifyUnlockMixer();
+
+	TANDYDAC_NotifyUnlockMixer();
+
+	PS1DAC_NotifyUnlockMixer();
+
+	GUS_NotifyUnlockMixer();
+
+	REELMAGIC_NotifyUnlockMixer();
 	mixer.mutex.unlock();
 }
 
