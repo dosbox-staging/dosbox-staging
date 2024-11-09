@@ -1200,9 +1200,12 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					}
 					fprintf(outfile, ".");
 				};
+
 				print_values("CONFIG_VALID_VALUES", p->GetValues());
 				print_values("CONFIG_DEPRECATED_VALUES", p->GetDeprecatedValues());
+
 				fprintf(outfile, "\n");
+				fprintf(outfile, "#\n");
 			}
 		} else {
 			upcase(temp);
