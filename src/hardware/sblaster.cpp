@@ -829,7 +829,20 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			// ready for playback. This is when we set the callback running to
 			// play the data.
 			sblaster->MaybeWakeUp();
-			callback_type.SetPerTick();
+
+			// If the DMA transfer is setup with a base count of fewer than
+			// three elements (which is four bytes given one 16-bit stereo frame
+			// held in an 8-bit DMA channel), then we know the software intends
+			// to overwrite the DMA content on the fly instead of pre-generating
+			// large chunks of DMA audio. In these cases we prefer the
+			// fine-grained per-frame callback. (The minus one is because DMA
+			// counts are in addition to one; so a base count of zero is one
+			// element).
+			constexpr auto MaxSingleFrameBaseCount = sizeof(int16_t) * 2 - 1;
+
+			(chan->base_count <= MaxSingleFrameBaseCount)
+			        ? callback_type.SetPerFrame()
+			        : callback_type.SetPerTick();
 		}
 		break;
 	default: assert(false); break;
