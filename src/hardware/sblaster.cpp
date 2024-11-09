@@ -266,6 +266,23 @@ static SbInfo sb = {};
 
 static std::unique_ptr<SBLASTER> sblaster = {};
 
+class CallbackType {
+public:
+	void SetNone();
+	void SetPerTick();
+	void SetPerFrame();
+	~CallbackType()
+	{
+		SetNone();
+	}
+
+private:
+	enum class TimingType { None, PerTick, PerFrame };
+	TimingType timing_type = TimingType::None;
+};
+
+static CallbackType callback_type = {};
+
 // clang-format off
 
 // Number of bytes in input for commands (sb/sbpro)
@@ -1230,6 +1247,57 @@ static void flush_remainig_dma_transfer()
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
 	}
 }
+
+static void per_tick_callback();
+
+static void per_frame_callback(uint32_t);
+
+static void add_next_frame_callback()
+{
+	assert(sblaster);
+	assert(sblaster->channel);
+
+	PIC_AddEvent(per_frame_callback, sblaster->channel->GetMillisPerFrame());
+}
+
+void CallbackType::SetNone()
+{
+	if (timing_type != TimingType::None) {
+
+		(timing_type == TimingType::PerTick)
+		        ? TIMER_DelTickHandler(per_tick_callback)
+		        : PIC_RemoveEvents(per_frame_callback);
+
+		timing_type = TimingType::None;
+	}
+}
+
+void CallbackType::SetPerTick()
+{
+	if (timing_type != TimingType::PerTick) {
+
+		SetNone();
+
+		frames_added_this_tick = 0;
+
+		TIMER_AddTickHandler(per_tick_callback);
+
+		timing_type = TimingType::PerTick;
+	}
+}
+
+void CallbackType::SetPerFrame()
+{
+	if (timing_type != TimingType::PerFrame) {
+
+		SetNone();
+
+		add_next_frame_callback();
+
+		timing_type = TimingType::PerFrame;
+	}
+}
+
 void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 {
 	const auto rate_hz = std::clamp(requested_rate_hz,
@@ -2965,9 +3033,16 @@ static void generate_frames(const int frames_requested)
 	}
 }
 
-static void sblaster_pic_callback()
+// This callback is run once per emulator tick (every 1ms), so it generates a
+// batch of frames covering each 1ms time period. For example, if the Sound
+// Blater's running at 8 Hz, then that's 8 frames per call. Many rates aren't
+// evenly divisible by 1000 (For example, 22050 Hz is 22.05 frames/millisecond),
+// so this function keeps track of exact fractional frames and uses rounding to
+// ensure partial frames are accounted for and generated across N calls.
+static void per_tick_callback()
 {
-	assert(sblaster && sblaster->channel);
+	assert(sblaster);
+	assert(sblaster->channel);
 
 	if (!sb.speaker_enabled) {
 		// These are all no-ops if we're already stopped
@@ -2988,6 +3063,32 @@ static void sblaster_pic_callback()
 	}
 
 	frames_added_this_tick -= total_frames;
+}
+
+// This callback is run exactly once per frame, so it only generates a single
+// frame each call. This allows the emulator (and game) to run between each
+// frame, which is more accurate because changes to the Sound Blaster are
+// reflected in the next frame.
+//
+// This approach is more costly to emulate so we use it only when conditions
+// demand it, and prefer the leaner per-tick approach otherwise. However,
+// if/when the Sound Blaster is moved off the main emulator loop then we can
+// (ideally) use this all of the time.
+static void per_frame_callback(uint32_t)
+{
+	assert(sblaster);
+	assert(sblaster->channel);
+
+	if (!sb.speaker_enabled) {
+		// These are all no-ops if we're already stopped
+		soundblaster_mixer_queue.Stop();
+		soundblaster_mixer_queue.Clear();
+		sblaster->channel->Enable(false);
+		return;
+	}
+
+	generate_frames(1);
+	add_next_frame_callback();
 }
 
 static SbType determine_sb_type(const std::string& pref)
@@ -3359,14 +3460,14 @@ SBLASTER::SBLASTER(Section* conf)
 		        sb.hw.irq,
 		        sb.hw.dma8);
 	}
-	TIMER_AddTickHandler(sblaster_pic_callback);
+	callback_type.SetPerTick();
 	MIXER_UnlockMixerThread();
 }
 
 SBLASTER::~SBLASTER()
 {
 	MIXER_LockMixerThread();
-	TIMER_DelTickHandler(sblaster_pic_callback);
+	callback_type.SetNone();
 
 	// Prevent discovery of the Sound Blaster via the environment
 	ClearEnvironment();
