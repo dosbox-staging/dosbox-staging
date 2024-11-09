@@ -62,7 +62,6 @@ constexpr uint8_t DspNoCommand = 0;
 
 constexpr uint16_t DmaBufSize = 1024;
 constexpr uint8_t DspBufSize  = 64;
-constexpr uint16_t DspDacSize = 512;
 
 constexpr uint8_t SbShift      = 14;
 constexpr uint16_t SbShiftMask = ((1 << SbShift) - 1);
@@ -125,6 +124,31 @@ enum class DmaMode {
 };
 
 enum class EssType { None, Es1688 };
+
+class Dac {
+public:
+	// When the DAC is in use, we run the Sound Blaster at exactly the rate
+	// the DAC is being written to and generate frame by frame. To support
+	// this, we need to measure the rate the DAC is being written to.
+	std::optional<int> MeasureDacRateHz();
+	AudioFrame RenderFrame();
+
+private:
+	// We use two criteria to monitor and decide when the rate's changed:
+	// percent difference (versus current) and when the new rate persists
+	// across a sequential count. These two thresholds (1% change confirmed
+	// across 10 sequential changes) were selected based on inspecting
+	// actual games and demos (Alone in the Dark, Overload demo, EMF demo,
+	// Cronolog demo, Chickens demo). These get the timing right without
+	// whip-sawing or chasing.
+	//
+	static constexpr float PercentDifferenceThreshold = 0.01f;
+	static constexpr int SequentialChangesThreshold   = 10;
+
+	float last_write_ms = {};
+	int current_rate_hz = MinPlaybackRateHz;
+	int sequential_changes_tally = {};
+};
 
 struct SbInfo {
 	uint32_t freq_hz = 0;
@@ -198,15 +222,7 @@ struct SbInfo {
 		int warmup_remaining_ms = 0;
 	} dsp = {};
 
-	struct {
-		int16_t data[DspDacSize + 1] = {};
-
-		// Number of entries in the DAC
-		uint16_t used = 0;
-
-		// Index of current entry
-		int16_t last = 0;
-	} dac = {};
+	Dac dac = {};
 
 	struct {
 		uint8_t index = 0;
@@ -805,6 +821,13 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			("DMA unmasked,starting output, auto %d block %d",
 			 static_cast<int>(chan->is_autoiniting),
 			 chan->base_count);
+
+			// Unmasking the DMA channel is the point when the software has
+			// finished setting up the Sound Blaster's state (frequency, bit
+			// depth, stereo, etc) as well as the DMA controller, and is finally
+			// ready for playback. This is when we set the callback running to
+			// play the data.
+			callback_type.SetPerTick();
 		}
 		break;
 	default: assert(false); break;
@@ -1309,11 +1332,53 @@ void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 	}
 }
 
+AudioFrame Dac::RenderFrame()
+{
+	return sb.speaker_enabled ? lut_u8to16[sb.dsp.in.data[0]] : 0.0f;
+}
+
+std::optional<int> Dac::MeasureDacRateHz()
+{
+	const auto curr_write_ms = static_cast<float>(PIC_FullIndex());
+	const auto elapsed_ms    = curr_write_ms - last_write_ms;
+	last_write_ms            = curr_write_ms;
+
+	if (elapsed_ms <= 0) {
+		return std::nullopt;
+	}
+
+	const auto measured_rate = MillisInSecond / elapsed_ms;
+
+	const auto change_pct = std::fabs(measured_rate - current_rate_hz) /
+	                        current_rate_hz;
+
+	sequential_changes_tally = (change_pct > PercentDifferenceThreshold)
+	                                 ? sequential_changes_tally + 1
+	                                 : 0;
+
+	if (sequential_changes_tally > SequentialChangesThreshold) {
+		sequential_changes_tally = 0;
+		current_rate_hz          = iroundf(measured_rate);
+		return current_rate_hz;
+	}
+
+	return std::nullopt;
+}
+
 static void dsp_change_mode(const DspMode mode)
 {
-	if (sb.mode != mode) {
-		sb.mode = mode;
+	if (sb.mode == mode) {
+		return;
 	}
+	switch (mode) {
+	case DspMode::Dac: sb.dac = {}; break;
+	case DspMode::None:
+	case DspMode::Dma:
+	case DspMode::DmaPause:
+	case DspMode::DmaMasked: break;
+	};
+
+	sb.mode = mode;
 }
 
 static void dsp_raise_irq_event(const uint32_t /*val*/)
@@ -1510,10 +1575,9 @@ static void dsp_reset()
 	}
 
 	sb.adpcm         = {};
+	sb.dac           = {};
 	sb.freq_hz       = DefaultPlaybackRateHz;
 	sb.time_constant = 45;
-	sb.dac.used      = 0;
-	sb.dac.last      = 0;
 	sb.e2.value      = 0xaa;
 	sb.e2.count      = 0;
 
@@ -1734,10 +1798,19 @@ static void dsp_do_command()
 
 	case 0x10: // Direct DAC
 		dsp_change_mode(DspMode::Dac);
-		if (sb.dac.used < DspDacSize) {
-			const auto mono_sample = lut_u8to16[sb.dsp.in.data[0]];
-			sb.dac.data[sb.dac.used++] = mono_sample;
-			sb.dac.data[sb.dac.used++] = mono_sample;
+		if (!sblaster->channel->is_enabled) {
+			sblaster->channel->Enable(true);
+			soundblaster_mixer_queue.Start();
+
+			// If we're waking up, then the DAC hasn't been running (or maybe
+			// wasn't running at all), so start with a fresh DAC state and
+			// ensure we're using per-frame callback timing.
+			sb.dac = {};
+			callback_type.SetPerFrame();
+		}
+
+		if (const auto dac_rate_hz = sb.dac.MeasureDacRateHz(); dac_rate_hz) {
+			sblaster->SetChannelRateHz(*dac_rate_hz);
 		}
 		break;
 
@@ -2992,21 +3065,13 @@ static void generate_frames(const int frames_requested)
 	break;
 
 	case DspMode::Dac:
-	// No-op if channel is already running
-	soundblaster_mixer_queue.Start();
-	sblaster->channel->Enable(true);
-	ticks_of_silence = 0;
-
-	if (sb.dac.used > 0) {
-		enqueue_frames(std::make_unique<AudioVectorStretched>(sb.dac.used, sb.dac.data));
-		// Reverse the addition done by enqueue_frames()
-		// This works everywhere but here because of stretched frames
-		frames_added_this_tick -= sb.dac.used;
-		frames_added_this_tick += frames_requested;
-		sb.dac.used = 0;
-	} else {
-		sb.mode = DspMode::None;
-	}
+	// DAC mode must render one frame at a time because the DOS
+	// program will be writing to the DAC register at the playback
+	// rate.
+	assert(frames_requested == 1);
+	soundblaster_mixer_queue.NonblockingEnqueue(
+			std::make_unique<AudioVectorM8>(frames_requested,
+											sb.dsp.in.data));
 	break;
 
 	case DspMode::Dma:
@@ -3460,7 +3525,6 @@ SBLASTER::SBLASTER(Section* conf)
 		        sb.hw.irq,
 		        sb.hw.dma8);
 	}
-	callback_type.SetPerTick();
 	MIXER_UnlockMixerThread();
 }
 
