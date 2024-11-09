@@ -599,6 +599,19 @@ void TandyPSG::AudioCallback(const int requested_frames)
 std::unique_ptr<TandyDAC> tandy_dac = {};
 std::unique_ptr<TandyPSG> tandy_psg = {};
 
+void TANDYDAC_NotifyLockMixer()
+{
+	if (tandy_dac) {
+		tandy_dac->output_queue.Stop();
+	}
+}
+void TANDYDAC_NotifyUnlockMixer()
+{
+	if (tandy_dac) {
+		tandy_dac->output_queue.Start();
+	}
+}
+
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma)
 {
 	if (!tandy_dac) {

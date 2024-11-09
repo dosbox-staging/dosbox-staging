@@ -385,5 +385,3 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
-
-extern std::unique_ptr<Gus> gus;

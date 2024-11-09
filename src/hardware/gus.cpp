@@ -1483,6 +1483,19 @@ void GUS_MirrorAdLibCommandPortWrite([[maybe_unused]] const io_port_t port,
 	}
 }
 
+void GUS_NotifyLockMixer()
+{
+	if (gus) {
+		gus->output_queue.Stop();
+	}
+}
+void GUS_NotifyUnlockMixer()
+{
+	if (gus) {
+		gus->output_queue.Start();
+	}
+}
+
 static void gus_destroy([[maybe_unused]] Section* sec)
 {
 	// GUS destroy is run when the user wants to deactivate the GUS:
