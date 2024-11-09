@@ -182,18 +182,4 @@ private:
 	std::vector<uint16_t> data = {};
 };
 
-class AudioVectorStretched final : public AudioVector {
-public:
-	AudioVectorStretched(int _num_frames, const int16_t* _data)
-		: AudioVector(_num_frames),
-		  data(_data, _data + _num_frames) {}
-
-	void AddSamples(MixerChannel* channel) final
-	{
-		channel->AddStretched(num_frames, data.data());
-	}
-private:
-	std::vector<int16_t> data = {};
-};
-
 #endif

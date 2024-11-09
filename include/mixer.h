@@ -262,8 +262,6 @@ public:
 	void AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data);
 	void AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data);
 
-	void AddStretched(const int num_frames, int16_t* data);
-
 	void Enable(const bool should_enable);
 
 	// Pass-through to the sleeper
