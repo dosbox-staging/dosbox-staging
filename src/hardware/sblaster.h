@@ -32,6 +32,10 @@ public:
 
 	void SetChannelRateHz(const int requested_rate_hz);
 
+	// Returns true of the channel was sleeping and was awoken.
+	// Returns false if the channel was already awake.
+	bool MaybeWakeUp();
+
 	// Public members used by MIXER_PullFromQueueCallback
 	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = nullptr;
