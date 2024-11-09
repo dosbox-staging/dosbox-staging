@@ -812,6 +812,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 		break;
 
 	case DmaEvent::IsUnmasked:
+
 		if (sb.mode == DspMode::DmaMasked && sb.dma.mode != DmaMode::None) {
 			dsp_change_mode(DspMode::Dma);
 			// sb.mode=DspMode::Dma;
@@ -827,6 +828,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			// depth, stereo, etc) as well as the DMA controller, and is finally
 			// ready for playback. This is when we set the callback running to
 			// play the data.
+			sblaster->MaybeWakeUp();
 			callback_type.SetPerTick();
 		}
 		break;
@@ -1370,6 +1372,13 @@ void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 	}
 }
 
+// Wake up the queue and channel to resume processing and playback
+bool SBLASTER::MaybeWakeUp()
+{
+	output_queue.Start();
+	return channel->WakeUp();
+}
+
 AudioFrame Dac::RenderFrame()
 {
 	return sb.speaker_enabled ? lut_u8to16[sb.dsp.in.data[0]] : 0.0f;
@@ -1836,10 +1845,7 @@ static void dsp_do_command()
 
 	case 0x10: // Direct DAC
 		dsp_change_mode(DspMode::Dac);
-		if (!sblaster->channel->is_enabled) {
-			sblaster->channel->Enable(true);
-			sblaster->output_queue.Start();
-
+		if (sblaster->MaybeWakeUp()) {
 			// If we're waking up, then the DAC hasn't been running (or maybe
 			// wasn't running at all), so start with a fresh DAC state and
 			// ensure we're using per-frame callback timing.
@@ -3049,48 +3055,14 @@ static void generate_frames(const int frames_requested)
 	assert(sblaster->channel);
 	assert(sblaster->output_queue.IsRunning());
 
-	static std::vector<AudioFrame> empty_frames = {};
-	static int ticks_of_silence = 0;
-
 	switch (sb.mode) {
 	case DspMode::None:
 	case DspMode::DmaPause:
-	case DspMode::DmaMasked:
-		if (!sblaster->output_queue.IsRunning()) {
-			// We've been playing silence and are continuing to play
-			// silence Nothing to do except increment this variable
-			// so we don't loop forever
-			frames_added_this_tick += frames_requested;
-			break;
-		}
-		// Enqueue a tick's worth of silenced frames
-		// Some games (Tyrian for example) will switch to DmaMasked
-		// briefly (less than 5 ticks usually) We can't use AddSilence
-		// on the mixer thread as that asks for a blocksize of audio
-		// (usually over 10ms)
+	case DspMode::DmaMasked: {
+		static std::vector<AudioFrame> empty_frames = {};
 		empty_frames.resize(frames_requested);
 		enqueue_frames(empty_frames);
-
-		++ticks_of_silence;
-		if (ticks_of_silence > 5000) {
-			// We've been playing silence for 5 seconds
-			// Some games only play DMA sound in certain segments or
-			// for small durations Either we're not in a DMA game at
-			// all or its been quiet for a while Stop the mixer
-			// channel for performance reasons as this channel
-			// blocks waiting for the main thread to provide more
-			// audio 5 seconds is safe to avoid stuttering. Be
-			// careful if modifying this value as we're about to
-			// clear pending audio.
-
-			// This is different from the "sb.speaker_enable = false"
-			// state If the speaker is off, this function never gets
-			// called This is speaker on but playing silence
-			sblaster->output_queue.Stop();
-			sblaster->output_queue.Clear();
-			sblaster->channel->Enable(false);
-		}
-		break;
+	} break;
 
 	case DspMode::Dac:
 		// DAC mode must render one frame at a time because the DOS
@@ -3102,10 +3074,11 @@ static void generate_frames(const int frames_requested)
 
 	case DspMode::Dma:
 	{
-		// No-op if channel is already running
-		sblaster->output_queue.Start();
-		sblaster->channel->Enable(true);
-		ticks_of_silence = 0;
+		// This is a no-op if the channel is already running. DMA
+		// processing can go for some time using auto-init mode without
+		// having to send IO calls to the card; so we keep it awake when
+		// DMA is still running.
+		sblaster->MaybeWakeUp();
 
 		auto len = check_cast<uint32_t>(frames_requested);
 		len *= sb.dma.mul;
@@ -3135,11 +3108,8 @@ static void per_tick_callback()
 	assert(sblaster);
 	assert(sblaster->channel);
 
-	if (!sb.speaker_enabled) {
-		// These are all no-ops if we're already stopped
-		sblaster->output_queue.Stop();
-		sblaster->output_queue.Clear();
-		sblaster->channel->Enable(false);
+	if (!sblaster->channel->is_enabled) {
+		callback_type.SetNone();
 		return;
 	}
 
@@ -3170,11 +3140,8 @@ static void per_frame_callback(uint32_t)
 	assert(sblaster);
 	assert(sblaster->channel);
 
-	if (!sb.speaker_enabled) {
-		// These are all no-ops if we're already stopped
-		sblaster->output_queue.Stop();
-		sblaster->output_queue.Clear();
-		sblaster->channel->Enable(false);
+	if (!sblaster->channel->is_enabled) {
+		callback_type.SetNone();
 		return;
 	}
 
@@ -3478,7 +3445,8 @@ SBLASTER::SBLASTER(Section* conf)
 
 	std::set channel_features = {ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend,
-	                             ChannelFeature::DigitalAudio};
+	                             ChannelFeature::DigitalAudio,
+	                             ChannelFeature::Sleep};
 
 	if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2 ||
 	    sb.type == SbType::SB16) {
