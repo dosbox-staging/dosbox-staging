@@ -1363,7 +1363,7 @@ void DOSBOX_Init()
 	        "Important: The [autoexec] section must be the last section in the config!");
 
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for " DOSBOX_PROJECT_NAME
+	        "# This is the configuration file for " DOSBOX_NAME
 	        " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 
