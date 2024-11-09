@@ -23,6 +23,7 @@
 
 #include "inout.h"
 #include "mixer.h"
+#include "rwqueue.h"
 
 class SBLASTER final {
 public:
@@ -31,6 +32,8 @@ public:
 
 	void SetChannelRateHz(const int requested_rate_hz);
 
+	// Public members used by MIXER_PullFromQueueCallback
+	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = nullptr;
 
 private:

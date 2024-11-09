@@ -26,7 +26,6 @@
 #include <string>
 #include <tuple>
 
-#include "audio_vector.h"
 #include "autoexec.h"
 #include "bios.h"
 #include "bit_view.h"
@@ -124,6 +123,8 @@ enum class DmaMode {
 };
 
 enum class EssType { None, Es1688 };
+
+enum class FrameType { Mono, Stereo };
 
 class Dac {
 public:
@@ -361,7 +362,6 @@ static int e2_incr_table[4][9] = {
 };
 
 static int frames_added_this_tick = 0;
-RWQueue<std::unique_ptr<AudioVector>> soundblaster_mixer_queue{128};
 
 static const char* sb_log_prefix()
 {
@@ -932,22 +932,68 @@ static std::array<uint8_t, 2> decode_adpcm_4bit(const uint8_t data)
 	        decode_adpcm_portion(data & 0xf, AdjustMap, ScaleMap, LastIndex)};
 }
 
+// Convert sample to float based on type
 template <typename T>
-static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
+static constexpr float to_float(T sample)
 {
-	if (sb.dsp.warmup_remaining_ms <= 0) {
-		return buffer;
+	if constexpr (std::is_same_v<T, uint8_t>) {
+		return lut_u8to16[sample];
+	}
+	if constexpr (std::is_same_v<T, int8_t>) {
+		return lut_s8to16[sample];
+	}
+	if constexpr (std::is_same_v<T, uint16_t>) {
+		return static_cast<int16_t>(le16_to_host(sample) -
+		                            Mixer_GetSilentDOSSample<T>());
+	}
+	if constexpr (std::is_same_v<T, int16_t>) {
+		return static_cast<int16_t>(
+		        le16_to_host(static_cast<uint16_t>(sample)));
+	}
+	// compile-time checks to prevent the template being misused
+	static_assert(std::is_integral_v<T>, "Conversion is only for integers");
+	static_assert(sizeof(T) <= 2, "Conversion is only for 8 & 16-bit ints");
+	return 0.0f;
+}
+
+// Returns a vector of AudioFrames from the source samples. If the Sound Blaster
+// is still warming up or the speaker's off, then the frames will be silent.
+template <FrameType frame_type, typename T>
+static std::vector<AudioFrame>& maybe_silence(const T* samples,
+                                              const uint32_t num_samples)
+{
+	assert(samples);
+	assert(num_samples > 0);
+
+	constexpr auto SamplesPerFrame = (frame_type == FrameType::Mono) ? 1 : 2;
+
+	const size_t num_frames = num_samples / SamplesPerFrame;
+
+	static std::vector<AudioFrame> frames = {};
+	frames.clear();
+	frames.reserve(num_frames);
+
+	// Return silent frames if still in warmup
+	if (sb.dsp.warmup_remaining_ms > 0) {
+		frames.resize(num_frames);
+		--sb.dsp.warmup_remaining_ms;
+		return frames;
+	} else if (!sb.speaker_enabled) {
+		frames.resize(num_frames);
+		return frames;
+	}
+	// Process samples into AudioFrames
+	for (size_t i = 0; i < num_frames; ++i) {
+		const float left = to_float(samples[i * SamplesPerFrame]);
+
+		const float right = (frame_type == FrameType::Mono)
+		                          ? left
+		                          : to_float(samples[i * 2 + 1]);
+
+		frames.emplace_back(left, right);
 	}
 
-	static std::vector<T> quiet_buffer = {};
-	constexpr auto Silent = Mixer_GetSilentDOSSample<T>();
-
-	if (quiet_buffer.size() < num_samples) {
-		quiet_buffer.resize(num_samples, Silent);
-	}
-
-	--sb.dsp.warmup_remaining_ms;
-	return quiet_buffer.data();
+	return frames;
 }
 
 static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t i = 0)
@@ -967,10 +1013,11 @@ static uint32_t read_dma_16bit(const uint32_t bytes_to_read, const uint32_t i = 
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static void enqueue_frames(std::unique_ptr<AudioVector> frames)
+static void enqueue_frames(std::vector<AudioFrame>& frames)
 {
-	frames_added_this_tick += frames->num_frames;
-	soundblaster_mixer_queue.NonblockingEnqueue(std::move(frames));
+	assert(sblaster);
+	frames_added_this_tick += static_cast<int>(frames.size());
+	sblaster->output_queue.NonblockingBulkEnqueue(frames);
 }
 
 static void play_dma_transfer(const uint32_t bytes_requested)
@@ -1023,8 +1070,7 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			constexpr auto NumDecoded = check_cast<uint8_t>(
 			        decoded.size());
 
-			enqueue_frames(std::make_unique<AudioVectorM8>(
-				NumDecoded, maybe_silence(NumDecoded, decoded.data())));
+			enqueue_frames(maybe_silence<FrameType::Mono>(decoded.data(), NumDecoded));
 			num_samples += NumDecoded;
 			i++;
 		}
@@ -1062,11 +1108,9 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			if (frames) {
 				if (sb.dma.sign) {
 					const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-					enqueue_frames(std::make_unique<AudioVectorS8S>(
-						frames, maybe_silence(samples, signed_buf)));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(signed_buf, samples));
 				} else {
-					enqueue_frames(std::make_unique<AudioVectorS8>(
-						frames, maybe_silence(samples, sb.dma.buf.b8)));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(sb.dma.buf.b8, samples));
 				}
 			}
 			// Otherwise there's an unhandled dangling sample from
@@ -1081,16 +1125,13 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		} else { // Mono
 			bytes_read = read_dma_8bit(bytes_to_read);
 			samples    = bytes_read;
-			frames     = check_cast<uint16_t>(samples / channels);
-			assert(channels == 1 && frames == samples); // sanity-check
-			                                            // mono
+			// mono sanity-check
+			assert(channels == 1);
 			if (sb.dma.sign) {
 				const auto signed_buf = reinterpret_cast<int8_t*>(sb.dma.buf.b8);
-				enqueue_frames(std::make_unique<AudioVectorM8S>(
-					frames, maybe_silence(samples, signed_buf)));
+				enqueue_frames(maybe_silence<FrameType::Mono>(signed_buf, samples));
 			} else {
-				enqueue_frames(std::make_unique<AudioVectorM8>(
-					frames, maybe_silence(samples, sb.dma.buf.b8)));
+				enqueue_frames(maybe_silence<FrameType::Mono>(sb.dma.buf.b8, samples));
 			}
 		}
 		break;
@@ -1109,12 +1150,10 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			// Only add whole frames when in stereo DMA mode
 			if (frames) {
 				if (sb.dma.sign) {
-					enqueue_frames(std::make_unique<AudioVectorS16>(
-						frames, maybe_silence(samples, sb.dma.buf.b16)));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(sb.dma.buf.b16, samples));
 				} else {
 					const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-					enqueue_frames(std::make_unique<AudioVectorS16U>(
-						frames, maybe_silence(samples, unsigned_buf)));
+					enqueue_frames(maybe_silence<FrameType::Stereo>(unsigned_buf, samples));
 				}
 			}
 			if (samples & 1) {
@@ -1129,16 +1168,15 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		} else { // 16-bit mono
 			bytes_read = read_dma_16bit(bytes_to_read);
 			samples    = bytes_read / dma16_to_sample_divisor;
-			frames     = check_cast<uint16_t>(samples / channels);
-			assert(channels == 1 && frames == samples); // sanity-check
-			                                            // mono
+
+			// mono sanity check
+			assert(channels == 1);
+
 			if (sb.dma.sign) {
-				enqueue_frames(std::make_unique<AudioVectorM16>(
-					frames, maybe_silence(samples, sb.dma.buf.b16)));
+				enqueue_frames(maybe_silence<FrameType::Mono>(sb.dma.buf.b16, samples));
 			} else {
 				const auto unsigned_buf = reinterpret_cast<uint16_t*>(sb.dma.buf.b16);
-				enqueue_frames(std::make_unique<AudioVectorM16U>(
-					frames, maybe_silence(samples, unsigned_buf)));
+				enqueue_frames(maybe_silence<FrameType::Mono>(unsigned_buf, samples));
 			}
 		}
 		break;
@@ -1800,7 +1838,7 @@ static void dsp_do_command()
 		dsp_change_mode(DspMode::Dac);
 		if (!sblaster->channel->is_enabled) {
 			sblaster->channel->Enable(true);
-			soundblaster_mixer_queue.Start();
+			sblaster->output_queue.Start();
 
 			// If we're waking up, then the DAC hasn't been running (or maybe
 			// wasn't running at all), so start with a fresh DAC state and
@@ -3005,79 +3043,67 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 	return (sbaddr != 0 && sbirq != 0 && sbdma != 0);
 }
 
-static void sblaster_mixer_callback([[maybe_unused]]const int requested_frames)
-{
-	assert(sblaster && sblaster->channel);
-
-	// We can ignore requested frames as this function gets called in a loop
-	// until it gets what it needs Overflow is not a concern as extra frames
-	// will remain in the channel's buffer and get mixed on the next callback
-
-	const auto frames = soundblaster_mixer_queue.Dequeue();
-	if (!frames) {
-		// Queue must be stopped, otherwise Dequeue() will block until some frames are available
-		sblaster->channel->AddSilence();
-		return;
-	}
-	// Weird double de-referencing syntax as the object type is std::optional<std::unique_ptr<AudioVector>>
-	(*frames)->AddSamples(sblaster->channel.get());
-}
-
 static void generate_frames(const int frames_requested)
 {
-	assert(sblaster && sblaster->channel);
+	assert(sblaster);
+	assert(sblaster->channel);
+	assert(sblaster->output_queue.IsRunning());
 
+	static std::vector<AudioFrame> empty_frames = {};
 	static int ticks_of_silence = 0;
 
 	switch (sb.mode) {
 	case DspMode::None:
 	case DspMode::DmaPause:
 	case DspMode::DmaMasked:
-	if (!soundblaster_mixer_queue.IsRunning()) {
-		// We've been playing silence and are continuing to play silence
-		// Nothing to do except increment this variable so we don't loop forever
-		frames_added_this_tick += frames_requested;
+		if (!sblaster->output_queue.IsRunning()) {
+			// We've been playing silence and are continuing to play
+			// silence Nothing to do except increment this variable
+			// so we don't loop forever
+			frames_added_this_tick += frames_requested;
+			break;
+		}
+		// Enqueue a tick's worth of silenced frames
+		// Some games (Tyrian for example) will switch to DmaMasked
+		// briefly (less than 5 ticks usually) We can't use AddSilence
+		// on the mixer thread as that asks for a blocksize of audio
+		// (usually over 10ms)
+		empty_frames.resize(frames_requested);
+		enqueue_frames(empty_frames);
+
+		++ticks_of_silence;
+		if (ticks_of_silence > 5000) {
+			// We've been playing silence for 5 seconds
+			// Some games only play DMA sound in certain segments or
+			// for small durations Either we're not in a DMA game at
+			// all or its been quiet for a while Stop the mixer
+			// channel for performance reasons as this channel
+			// blocks waiting for the main thread to provide more
+			// audio 5 seconds is safe to avoid stuttering. Be
+			// careful if modifying this value as we're about to
+			// clear pending audio.
+
+			// This is different from the "sb.speaker_enable = false"
+			// state If the speaker is off, this function never gets
+			// called This is speaker on but playing silence
+			sblaster->output_queue.Stop();
+			sblaster->output_queue.Clear();
+			sblaster->channel->Enable(false);
+		}
 		break;
-	}
-	// Enqueue a tick's worth of silenced frames
-	// Some games (Tyrian for example) will switch to DmaMasked briefly (less than 5 ticks usually)
-	// We can't use AddSilence on the mixer thread as that asks for a blocksize of audio (usually over 10ms)
-	enqueue_frames(std::make_unique<AudioVectorM8S>(
-		frames_requested,
-		std::vector<int8_t>(frames_requested).data()
-	));
-
-	++ticks_of_silence;
-	if (ticks_of_silence > 5000) {
-		// We've been playing silence for 5 seconds
-		// Some games only play DMA sound in certain segments or for small durations
-		// Either we're not in a DMA game at all or its been quiet for a while
-		// Stop the mixer channel for performance reasons as this channel blocks waiting for the main thread to provide more audio
-		// 5 seconds is safe to avoid stuttering. Be careful if modifying this value as we're about to clear pending audio.
-
-		// This is different from the "sb.speaker_enable = false" state
-		// If the speaker is off, this function never gets called
-		// This is speaker on but playing silence
-		soundblaster_mixer_queue.Stop();
-		soundblaster_mixer_queue.Clear();
-		sblaster->channel->Enable(false);
-	}
-	break;
 
 	case DspMode::Dac:
-	// DAC mode must render one frame at a time because the DOS
-	// program will be writing to the DAC register at the playback
-	// rate.
-	assert(frames_requested == 1);
-	soundblaster_mixer_queue.NonblockingEnqueue(
-			std::make_unique<AudioVectorM8>(frames_requested,
-											sb.dsp.in.data));
-	break;
+		// DAC mode must render one frame at a time because the DOS
+		// program will be writing to the DAC register at the playback
+		// rate.
+		assert(frames_requested == 1);
+		sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+		break;
 
 	case DspMode::Dma:
 	{
 		// No-op if channel is already running
-		soundblaster_mixer_queue.Start();
+		sblaster->output_queue.Start();
 		sblaster->channel->Enable(true);
 		ticks_of_silence = 0;
 
@@ -3111,8 +3137,8 @@ static void per_tick_callback()
 
 	if (!sb.speaker_enabled) {
 		// These are all no-ops if we're already stopped
-		soundblaster_mixer_queue.Stop();
-		soundblaster_mixer_queue.Clear();
+		sblaster->output_queue.Stop();
+		sblaster->output_queue.Clear();
 		sblaster->channel->Enable(false);
 		return;
 	}
@@ -3146,8 +3172,8 @@ static void per_frame_callback(uint32_t)
 
 	if (!sb.speaker_enabled) {
 		// These are all no-ops if we're already stopped
-		soundblaster_mixer_queue.Stop();
-		soundblaster_mixer_queue.Clear();
+		sblaster->output_queue.Stop();
+		sblaster->output_queue.Clear();
 		sblaster->channel->Enable(false);
 		return;
 	}
@@ -3351,8 +3377,6 @@ SBLASTER::SBLASTER(Section* conf)
 {
 	assert(conf);
 
-	MIXER_LockMixerThread();
-
 	Section_prop* section = static_cast<Section_prop*>(conf);
 
 	sb.hw.base = section->Get_hex("sbbase");
@@ -3430,7 +3454,6 @@ SBLASTER::SBLASTER(Section* conf)
 	}
 
 	if (!has_dac) {
-		MIXER_UnlockMixerThread();
 		return;
 	}
 
@@ -3462,7 +3485,16 @@ SBLASTER::SBLASTER(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	channel = MIXER_AddChannel(sblaster_mixer_callback,
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
+	constexpr bool NativeOrder = true;
+
+	const auto callback = std::bind(
+	        MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
+
+	channel = MIXER_AddChannel(callback,
 	                           DefaultPlaybackRateHz,
 	                           ChannelName::SoundBlasterDac,
 	                           channel_features);
@@ -3525,12 +3557,14 @@ SBLASTER::SBLASTER(Section* conf)
 		        sb.hw.irq,
 		        sb.hw.dma8);
 	}
-	MIXER_UnlockMixerThread();
+
+	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
+	// This provides a good size to avoid over-runs and stalls.
+	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
 }
 
 SBLASTER::~SBLASTER()
 {
-	MIXER_LockMixerThread();
 	callback_type.SetNone();
 
 	// Prevent discovery of the Sound Blaster via the environment
@@ -3544,7 +3578,6 @@ SBLASTER::~SBLASTER()
 		CMS_ShutDown();
 	}
 	if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
-		MIXER_UnlockMixerThread();
 		return;
 	}
 
@@ -3552,7 +3585,7 @@ SBLASTER::~SBLASTER()
 
 	// Stop playback
 	if (channel) {
-		soundblaster_mixer_queue.Stop();
+		output_queue.Stop();
 		channel->Enable(false);
 	}
 	// Stop the game from accessing the IO ports
@@ -3568,7 +3601,6 @@ SBLASTER::~SBLASTER()
 	// Deregister the mixer channel and remove it
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
-	channel.reset();
 
 	// Reset the DMA channels as the mixer is no longer reading samples
 	DMA_ResetChannel(sb.hw.dma8);
@@ -3577,7 +3609,20 @@ SBLASTER::~SBLASTER()
 	}
 
 	sb = {};
-	MIXER_UnlockMixerThread();
+}
+
+void SBLASTER_NotifyLockMixer()
+{
+	if (sblaster) {
+		sblaster->output_queue.Stop();
+	}
+}
+
+void SBLASTER_NotifyUnlockMixer()
+{
+	if (sblaster) {
+		sblaster->output_queue.Start();
+	}
 }
 
 void init_sblaster_dosbox_settings(Section_prop& secprop)
@@ -3670,14 +3715,18 @@ void init_sblaster(Section* sec)
 {
 	assert(sec);
 
+	MIXER_LockMixerThread();
 	sblaster = std::make_unique<SBLASTER>(sec);
+	MIXER_UnlockMixerThread();
 
 	constexpr auto ChangeableAtRuntime = true;
 	sec->AddDestroyFunction(&shutdown_sblaster, ChangeableAtRuntime);
 }
 
 void shutdown_sblaster(Section* /*sec*/) {
+	MIXER_LockMixerThread();
 	sblaster = {};
+	MIXER_UnlockMixerThread();
 }
 
 void SB_AddConfigSection(const ConfigPtr& conf)

@@ -248,19 +248,12 @@ public:
 	void AddSamples(const int num_frames, const Type* data);
 
 	void AddSamples_m8(const int num_frames, const uint8_t* data);
-	void AddSamples_s8(const int num_frames, const uint8_t* data);
-	void AddSamples_m8s(const int num_frames, const int8_t* data);
-	void AddSamples_s8s(const int num_frames, const int8_t* data);
 	void AddSamples_m16(const int num_frames, const int16_t* data);
 	void AddSamples_s16(const int num_frames, const int16_t* data);
-	void AddSamples_m16u(const int num_frames, const uint16_t* data);
-	void AddSamples_s16u(const int num_frames, const uint16_t* data);
 	void AddSamples_mfloat(const int num_frames, const float* data);
 	void AddSamples_sfloat(const int num_frames, const float* data);
 	void AddSamples_m16_nonnative(const int num_frames, const int16_t* data);
 	void AddSamples_s16_nonnative(const int num_frames, const int16_t* data);
-	void AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data);
-	void AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data);
 
 	void Enable(const bool should_enable);
 
