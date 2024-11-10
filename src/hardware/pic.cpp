@@ -16,13 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "pic.h"
+#include "cpu.h"
 #include "dosbox.h"
 #include "inout.h"
-#include "cpu.h"
-#include "callback.h"
-#include "pic.h"
-#include "timer.h"
 #include "setup.h"
+#include "timer.h"
 
 // PIC Controllers
 // ~~~~~~~~~~~~~~~
@@ -41,8 +40,8 @@
 #define PIC_QUEUESIZE 512
 
 struct PIC_Controller {
-	Bitu icw_words;
-	Bitu icw_index;
+	int icw_words;
+	int icw_index;
 	bool special;
 	bool auto_eoi;
 	bool rotate_on_auto_eoi;
@@ -68,7 +67,7 @@ struct PIC_Controller {
 
 	void update_active_irq() {
 		if (isr == 0) {active_irq = 8; return;}
-		for(uint8_t i = 0, s = 1; i < 8;i++, s<<=1){
+		for (int i = 0, s = 1; i < 8; i++, s <<= 1) {
 			if( isr & s){
 				active_irq = i;
 				return;
@@ -80,7 +79,7 @@ struct PIC_Controller {
 		const uint8_t possible_irq = (irr&imrr)&isrr;
 		if (possible_irq) {
 			const uint8_t a_irq = special?8:active_irq;
-			for(uint8_t i = 0, s = 1; i < a_irq;i++, s<<=1){
+			for (int i = 0, s = 1; i < a_irq; i++, s <<= 1) {
 				if ( possible_irq & s ) {
 					// There is an IRQ ready to be served,
 					// so signal the primary controller
@@ -193,7 +192,7 @@ void PIC_Controller::start_irq(uint8_t val) {
 
 struct PICEntry {
 	double index;
-	Bitu value;
+	uint32_t value;
 	PIC_EventHandler pic_event;
 	PICEntry * next;
 };
@@ -202,12 +201,12 @@ static struct {
 	PICEntry entries[PIC_QUEUESIZE];
 	PICEntry * free_entry;
 	PICEntry * next_entry;
-} pic_queue;
+} pic_queue = {};
 
 static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
-	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
+	const auto pic = &pics[port == 0x20 ? 0 : 1];
 
 	if (val & 0x10) { // ICW1 issued
 		if (val & 0x04) {
@@ -271,7 +270,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 static void write_data(io_port_t port, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
-	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
+	const auto pic = &pics[port == 0x21 ? 0 : 1];
 	switch (pic->icw_index) {
 	case 0: /* mask register */ pic->set_imr(val); break;
 	case 1: /* icw2          */
@@ -334,9 +333,9 @@ static uint8_t read_data(io_port_t port, io_width_t)
 void PIC_ActivateIRQ(const uint8_t irq)
 {
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
-	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
+	const auto pic  = &pics[irq > 7 ? 1 : 0];
 
-	int32_t OldCycles = CPU_Cycles;
+	const auto OldCycles = CPU_Cycles.load();
 	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
 
 	if (OldCycles != CPU_Cycles) {
@@ -360,7 +359,7 @@ void PIC_ActivateIRQ(const uint8_t irq)
 void PIC_DeActivateIRQ(const uint8_t irq)
 {
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
-	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
+	const auto pic  = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
 }
 
@@ -372,7 +371,7 @@ static void secondary_startIRQ()
 	const uint8_t max = secondary_controller.special
 	                            ? 8
 	                            : secondary_controller.active_irq;
-	for (uint8_t i = 0, s = 1; i < max; i++, s <<= 1) {
+	for (int i = 0, s = 1; i < max; i++, s <<= 1) {
 		if (p & s) {
 			pic1_irq = i;
 			break;
@@ -408,7 +407,7 @@ void PIC_runIRQs(void) {
 	const uint8_t max = primary_controller.special
 	                            ? 8
 	                            : primary_controller.active_irq;
-	for (uint8_t i = 0, s = 1; i < max; i++, s <<= 1) {
+	for (int i = 0, s = 1; i < max; i++, s <<= 1) {
 		if (p & s) {
 			if (i == 2) { // second pic
 				secondary_startIRQ();
@@ -424,18 +423,18 @@ void PIC_runIRQs(void) {
 
 void PIC_SetIRQMask(uint32_t irq, bool masked)
 {
-	uint32_t t = irq > 7 ? (irq - 8) : irq;
-	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
+	const uint32_t t = irq > 7 ? (irq - 8) : irq;
+	const auto pic   = &pics[irq > 7 ? 1 : 0];
 	// clear bit
 	const auto bit = static_cast<uint8_t>(1 << t);
-	uint8_t newmask = pic->imr;
+	auto newmask   = pic->imr;
 	newmask &= ~bit;
 	if (masked) newmask |= bit;
 	pic->set_imr(newmask);
 }
 
 static void AddEntry(PICEntry * entry) {
-	PICEntry * find_entry=pic_queue.next_entry;
+	auto find_entry = pic_queue.next_entry;
 	if (find_entry == nullptr) {
 		entry->next=nullptr;
 		pic_queue.next_entry=entry;
@@ -461,10 +460,11 @@ static void AddEntry(PICEntry * entry) {
 			}
 		}
 	}
-	Bits cycles=PIC_MakeCycles(pic_queue.next_entry->index-PIC_TickIndex());
-	if (cycles<CPU_Cycles) {
-		CPU_CycleLeft+=CPU_Cycles;
-		CPU_Cycles=0;
+	const auto cycles = PIC_MakeCycles(pic_queue.next_entry->index -
+	                                   PIC_TickIndex());
+	if (cycles < CPU_Cycles) {
+		CPU_CycleLeft += CPU_Cycles;
+		CPU_Cycles = 0;
 	}
 }
 static bool InEventService = false;
@@ -476,7 +476,7 @@ void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
-	PICEntry * entry=pic_queue.free_entry;
+	const auto entry = pic_queue.free_entry;
 	if(InEventService) entry->index = delay + srv_lag;
 	else entry->index = delay + PIC_TickIndex();
 
@@ -488,9 +488,8 @@ void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
 
 void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
 {
-	PICEntry *entry = pic_queue.next_entry;
-	PICEntry *prev_entry;
-	prev_entry = nullptr;
+	auto entry           = pic_queue.next_entry;
+	PICEntry* prev_entry = nullptr;
 	while (entry) {
 		if ((entry->pic_event == handler) && (entry->value == val)) {
 			if (prev_entry) {
@@ -513,9 +512,8 @@ void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
 }
 
 void PIC_RemoveEvents(PIC_EventHandler handler) {
-	PICEntry * entry=pic_queue.next_entry;
-	PICEntry * prev_entry;
-	prev_entry=nullptr;
+	auto entry           = pic_queue.next_entry;
+	PICEntry* prev_entry = nullptr;
 	while (entry) {
 		if (entry->pic_event == handler) {
 			if (prev_entry) {
@@ -554,7 +552,7 @@ bool PIC_RunQueue(void) {
 	InEventService = true;
 	while (pic_queue.next_entry &&
 	       (pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) <= index_nd_f)) {
-		PICEntry *entry = pic_queue.next_entry;
+		const auto entry     = pic_queue.next_entry;
 		pic_queue.next_entry = entry->next;
 
 		srv_lag = entry->index;
@@ -595,8 +593,8 @@ static TickerBlock * firstticker=nullptr;
 
 
 void TIMER_DelTickHandler(TIMER_TickHandler handler) {
-	TickerBlock * ticker=firstticker;
-	TickerBlock * * tick_where=&firstticker;
+	auto ticker     = firstticker;
+	auto tick_where = &firstticker;
 	while (ticker) {
 		if (ticker->handler==handler) {
 			*tick_where=ticker->next;
@@ -609,7 +607,7 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler) {
 }
 
 void TIMER_AddTickHandler(TIMER_TickHandler handler) {
-	TickerBlock * newticker=new TickerBlock;
+	const auto newticker = new TickerBlock;
 	newticker->next=firstticker;
 	newticker->handler=handler;
 	firstticker=newticker;
@@ -621,15 +619,15 @@ void TIMER_AddTick(void) {
 	CPU_Cycles=0;
 	PIC_Ticks++;
 	/* Go through the list of scheduled events and lower their index with 1000 */
-	PICEntry * entry=pic_queue.next_entry;
+	auto entry = pic_queue.next_entry;
 	while (entry) {
-		entry->index -= 1.0f;
+		entry->index -= 1.0;
 		entry=entry->next;
 	}
 	/* Call our list of ticker handlers */
-	TickerBlock * ticker=firstticker;
+	auto ticker = firstticker;
 	while (ticker) {
-		TickerBlock * nextticker=ticker->next;
+		auto nextticker = ticker->next;
 		ticker->handler();
 		ticker=nextticker;
 	}
@@ -645,18 +643,17 @@ public:
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck = 0;
 		PIC_Ticks = 0;
-		Bitu i;
-		for (i=0;i<2;i++) {
-			pics[i].auto_eoi=false;
-			pics[i].rotate_on_auto_eoi=false;
-			pics[i].request_issr=false;
-			pics[i].special=false;
-			pics[i].single=false;
-			pics[i].icw_index=0;
-			pics[i].icw_words=0;
-			pics[i].irr = pics[i].isr = pics[i].imrr = 0;
-			pics[i].isrr = pics[i].imr = 0xff;
-			pics[i].active_irq = 8;
+		for (auto& pic : pics) {
+			pic.auto_eoi           = false;
+			pic.rotate_on_auto_eoi = false;
+			pic.request_issr       = false;
+			pic.special            = false;
+			pic.single             = false;
+			pic.icw_index          = 0;
+			pic.icw_words          = 0;
+			pic.irr = pic.isr = pic.imrr = 0;
+			pic.isrr = pic.imr = 0xff;
+			pic.active_irq     = 8;
 		}
 		primary_controller.vector_base = 0x08;
 		secondary_controller.vector_base = 0x70;
@@ -688,7 +685,7 @@ public:
 		WriteHandler[2].Install(0xa0, write_command, io_width_t::byte);
 		WriteHandler[3].Install(0xa1, write_data, io_width_t::byte);
 		/* Initialize the pic queue */
-		for (i=0;i<PIC_QUEUESIZE-1;i++) {
+		for (int i = 0; i < PIC_QUEUESIZE - 1; i++) {
 			pic_queue.entries[i].next=&pic_queue.entries[i+1];
 		}
 		pic_queue.entries[PIC_QUEUESIZE-1].next=nullptr;
