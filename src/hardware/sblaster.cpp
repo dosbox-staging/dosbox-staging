@@ -385,7 +385,7 @@ static const char* sb_log_prefix()
 
 static void dsp_change_mode(const DspMode mode);
 
-static void flush_remainig_dma_transfer();
+static void flush_remaining_dma_transfer();
 static void suppress_dma_transfer(const uint32_t size);
 static void play_dma_transfer(const uint32_t size);
 
@@ -411,7 +411,7 @@ static void dsp_enable_speaker(const bool enabled)
 	// content before releasing the channel for playback.
 	if (enabled) {
 		PIC_RemoveEvents(suppress_dma_transfer);
-		flush_remainig_dma_transfer();
+		flush_remaining_dma_transfer();
 
 		// Speaker powered-on after cold-state, give it warmup time
 		sb.dsp.warmup_remaining_ms = sb.dsp.cold_warmup_ms;
@@ -816,7 +816,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 		if (sb.mode == DspMode::DmaMasked && sb.dma.mode != DmaMode::None) {
 			dsp_change_mode(DspMode::Dma);
 			// sb.mode=DspMode::Dma;
-			flush_remainig_dma_transfer();
+			flush_remaining_dma_transfer();
 
 			LOG(LOG_SB, LOG_NORMAL)
 			("DMA unmasked,starting output, auto %d block %d",
@@ -1282,7 +1282,7 @@ static void suppress_dma_transfer(const uint32_t bytes_to_read)
 	}
 }
 
-static void flush_remainig_dma_transfer()
+static void flush_remaining_dma_transfer()
 {
 	if (!sb.dma.left) {
 		return;
