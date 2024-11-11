@@ -3519,11 +3519,7 @@ SBLASTER::SBLASTER(Section* conf)
 	SetupEnvironment();
 
 	// Sound Blaster MIDI interface
-	if (!MIDI_IsAvailable()) {
-		sb.midi_enabled = false;
-	} else {
-		sb.midi_enabled = true;
-	}
+	sb.midi_enabled = MIDI_IsAvailable();
 
 	if (sb.type == SbType::SB16) {
 		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
