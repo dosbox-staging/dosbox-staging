@@ -48,8 +48,6 @@ private:
 
 	OplMode oplmode = OplMode::None;
 
-	bool cms = false;
-
 	void SetupEnvironment();
 	void ClearEnvironment();
 };

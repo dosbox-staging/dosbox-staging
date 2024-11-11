@@ -3411,8 +3411,7 @@ SBLASTER::SBLASTER(Section* conf)
 	} break;
 	}
 
-	cms = is_cms_enabled(sb.type);
-	if (cms) {
+	if (is_cms_enabled(sb.type)) {
 		CMS_Init(section);
 	}
 
@@ -3557,9 +3556,10 @@ SBLASTER::~SBLASTER()
 	if (oplmode != OplMode::None) {
 		OPL_ShutDown();
 	}
-	if (cms) {
-		CMS_ShutDown();
-	}
+
+	// No-op if not running
+	CMS_ShutDown();
+
 	if (sb.type == SbType::None || sb.type == SbType::GameBlaster) {
 		return;
 	}
