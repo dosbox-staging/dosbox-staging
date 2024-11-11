@@ -2525,7 +2525,9 @@ static void ctmixer_write(const uint8_t val)
 					                  ? "Enabling"
 					                  : "Disabling");
 
-					assert(sblaster && sblaster->channel);
+					assert(sblaster);
+					assert(sblaster->channel);
+
 					sblaster->channel->SetLowPassFilter(
 					        sb.mixer.filter_enabled
 					                ? FilterState::On
