@@ -652,7 +652,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
 
-	pint = secprop->Add_int("memsize", when_idle, 16);
+	pint = secprop->Add_int("memsize", only_at_start, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
 	        "Amount of memory of the emulated machine has in MB (16 by default).\n"
