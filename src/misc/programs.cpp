@@ -906,15 +906,10 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				const auto* property = tsec->Get_prop(pvars[1]);
+				auto* property = tsec->Get_prop(pvars[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
-					return;
-				}
-
-				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
 					return;
 				}
 
@@ -935,6 +930,13 @@ void CONFIG::Run(void)
 
 				if (value.empty()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+					return;
+				}
+
+				// If the value can't be set at runtime then queue it and let the user know
+				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+					property->SetQueueableValue(std::move(value));
 					return;
 				}
 
