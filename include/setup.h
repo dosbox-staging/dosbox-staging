@@ -430,6 +430,16 @@ public:
 	Property* Get_prop(int index);
 	Property* Get_prop(const std::string_view propname);
 
+	const_it begin() const
+	{
+		return properties.begin();
+	}
+
+	const_it end() const
+	{
+		return properties.end();
+	}
+
 	int Get_int(const std::string& _propname) const;
 
 	std::string Get_string(const std::string& _propname) const;
