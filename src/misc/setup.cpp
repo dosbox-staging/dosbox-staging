@@ -1567,6 +1567,50 @@ bool Config::ParseConfigFile(const std::string& type,
 	return true;
 }
 
+// Applies queued configuration settings to CLI arguments. It replaces any
+// existing settings with their latest values. For example, if "machine=value"
+// was set multiple times, only the most recent value is preserved in the final
+// CLI args.
+void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
+{
+	for (const auto section : sectionlist) {
+		const auto properties = dynamic_cast<Section_prop*>(section);
+		if (!properties) {
+			continue;
+		}
+
+		for (const auto property : *properties) {
+			const auto queued_value = property->GetQueuedValue();
+			if (!queued_value) {
+				continue;
+			}
+
+			constexpr auto set_prefix = "--set";
+
+			const auto key_prefix = format_str("%s=",
+			                                   property->propname.c_str());
+
+			// Remove existing matches
+			auto it = args.begin();
+			while (it != args.end() && std::next(it) != args.end()) {
+				const auto current = it;
+				const auto next    = std::next(it);
+
+				if (*current == set_prefix &&
+				    next->starts_with(key_prefix)) {
+					it = args.erase(current, std::next(next));
+				} else {
+					++it;
+				}
+			}
+
+			// Add the new arguments with the queued value
+			args.emplace_back(set_prefix);
+			args.emplace_back(key_prefix + *queued_value);
+		}
+	}
+}
+
 parse_environ_result_t parse_environ(const char* const* envp) noexcept
 {
 	assert(envp);

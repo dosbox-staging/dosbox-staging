@@ -829,9 +829,10 @@ CONFIG -get "section property"
         config -get "cpu core"
     6. To view the list of possible cpu cores:
         config -help cpu core
-    7. To change the machine type and restart:
+    7. To change the machine type, memory size, and restart:
         config -set "machine cga"
-        config -wc -r
+        config -set "memsize 1"
+        config -r
     8. To configure the autoexec section to auto-mount a directory at start:
         config -axadd "mount c c:\dosgames" "c:"
         config -wc
