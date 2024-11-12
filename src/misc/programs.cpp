@@ -215,7 +215,7 @@ void Program::ChangeToLongCmd()
 	}
 
 	// Clear so it gets even more save
-	full_arguments.assign(""); 
+	full_arguments.assign("");
 }
 
 bool Program::SuppressWriteOut(const char* format)
@@ -1147,7 +1147,8 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
-	        "Setting '%s' is not changeable at runtime.\n");
+	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
+	        "However, it will be applied on restart by running 'CONFIG -r' or via the restart hotkey.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"

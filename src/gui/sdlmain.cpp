@@ -4573,6 +4573,9 @@ extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
 void restart_dosbox(std::vector<std::string> &parameters) {
+
+	control->ApplyQueuedValuesToCli(parameters);
+
 #ifdef WIN32
 	std::string command_line = {};
 	bool first = true;

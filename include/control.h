@@ -132,6 +132,8 @@ public:
 	const Section_line& GetOverwrittenAutoexecSection() const;
 	const std::string& GetOverwrittenAutoexecConf() const;
 
+	void ApplyQueuedValuesToCli(std::vector<std::string>& args) const;
+
 	void SetStartUp(void (*_function)(void));
 	void Init() const;
 	void ShutDown();
