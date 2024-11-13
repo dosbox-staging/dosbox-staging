@@ -970,7 +970,7 @@ Property* Section_prop::Get_prop(int index)
 Property* Section_prop::Get_prop(const std::string_view propname)
 {
 	for (Property* property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return property;
 		}
 	}
@@ -980,7 +980,7 @@ Property* Section_prop::Get_prop(const std::string_view propname)
 std::string Section_prop::Get_string(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
-		if ((*tel)->propname == _propname) {
+		if (iequals((*tel)->propname, _propname)) {
 			return ((*tel)->GetValue());
 		}
 	}
@@ -990,7 +990,7 @@ std::string Section_prop::Get_string(const std::string& _propname) const
 Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return dynamic_cast<Prop_bool*>(property);
 		}
 	}
@@ -1001,7 +1001,7 @@ Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return dynamic_cast<Prop_string*>(property);
 		}
 	}
@@ -1011,7 +1011,7 @@ Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 Hex Section_prop::Get_hex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
-		if ((*tel)->propname == _propname) {
+		if (iequals((*tel)->propname, _propname)) {
 			return ((*tel)->GetValue());
 		}
 	}
