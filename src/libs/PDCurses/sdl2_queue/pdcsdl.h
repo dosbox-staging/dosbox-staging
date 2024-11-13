@@ -4,7 +4,7 @@
 
 #include <queue>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #ifdef PDC_WIDE
 # include <SDL_ttf.h>
 #endif

@@ -77,7 +77,7 @@
 #include "setup.h"
 #include "shell.h"
 
-#include "SDL_thread.h"
+#include <SDL3/SDL_mutex.h>
 
 // Enable to activate IMF_LOG calls
 #define IMFC_VERBOSE_LOGGING 0
@@ -89,7 +89,7 @@ constexpr uint8_t MinIrqAddress = 2;
 constexpr uint8_t MaxIrqAddress = 7;
 
 #if IMFC_VERBOSE_LOGGING
-SDL_mutex* m_loggerMutex = nullptr;
+SDL_Mutex* m_loggerMutex = nullptr;
 template <typename... Args>
 void IMF_LOG(std::string format, const Args&... args)
 {
@@ -280,7 +280,7 @@ template <typename BufferDataType>
 struct CyclicBufferState {
 private:
 	const std::string m_name           = {};
-	SDL_mutex* m_mutex                 = nullptr;
+	SDL_Mutex* m_mutex                 = nullptr;
 	bool m_locked                      = false;
 	unsigned int lastReadByteIndex     = 0;
 	unsigned int indexForNextWriteByte = 0;
@@ -5239,7 +5239,7 @@ private:
 	DataContainer<bool> m_piuGroup1DataAvailable;
 	DataContainer<bool> m_piuGroup1DataAcknowledgement;
 
-	SDL_mutex* m_hardwareMutex = {};
+	SDL_Mutex* m_hardwareMutex = {};
 	Intel8253 m_timer;
 	InverterGate m_invTimerAClear;
 	DFlipFlop m_df1;
@@ -5257,8 +5257,8 @@ private:
 	SDL_Thread* m_mainThread                  = nullptr;
 	SDL_Thread* m_interruptThread             = nullptr;
 	bool m_interruptHandlerRunning            = {};
-	SDL_mutex* m_interruptHandlerRunningMutex = nullptr;
-	SDL_cond* m_interruptHandlerRunningCond    = nullptr;
+	SDL_Mutex* m_interruptHandlerRunningMutex = nullptr;
+	SDL_Condition* m_interruptHandlerRunningCond    = nullptr;
 
 	static constexpr auto NumIoHandlers                           = 16;
 	std::array<IO_ReadHandleObject, NumIoHandlers> readHandlers   = {};
@@ -12907,14 +12907,14 @@ public:
 		                  SDL_LockMutex(m_interruptHandlerRunningMutex);
 		                  // log("m_interruptHandlerRunning = true");
 		                  m_interruptHandlerRunning = true;
-		                  SDL_CondSignal(m_interruptHandlerRunningCond);
+		                  SDL_SignalCondition(m_interruptHandlerRunningCond);
 		                  SDL_UnlockMutex(m_interruptHandlerRunningMutex);
 	                  } /*callbackOnLowToHigh*/,
 	                  [this]() {
 		                  SDL_LockMutex(m_interruptHandlerRunningMutex);
 		                  // log("m_interruptHandlerRunning = false");
 		                  m_interruptHandlerRunning = false;
-		                  SDL_CondSignal(m_interruptHandlerRunningCond);
+		                  SDL_SignalCondition(m_interruptHandlerRunningCond);
 		                  SDL_UnlockMutex(m_interruptHandlerRunningMutex);
 	                  } /*callbackOnToHighToLow*/),
 	          m_tsr("TSR"),
@@ -13029,7 +13029,7 @@ public:
 		m_hardwareMutex                = SDL_CreateMutex();
 		m_interruptHandlerRunning      = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
-		m_interruptHandlerRunningCond  = SDL_CreateCond();
+		m_interruptHandlerRunningCond  = SDL_CreateCondition();
 		m_mainThread = SDL_CreateThread(&imfMainThreadStart, "imfc-main", this);
 		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart,
 		                                     "imfc-interrupt",
@@ -13072,8 +13072,8 @@ public:
 		while (keepRunning.load()) {
 			SDL_LockMutex(m_interruptHandlerRunningMutex);
 			while (!m_interruptHandlerRunning) {
-				SDL_CondWait(m_interruptHandlerRunningCond,
-				             m_interruptHandlerRunningMutex);
+				SDL_WaitCondition(m_interruptHandlerRunningCond,
+				                  m_interruptHandlerRunningMutex);
 			}
 			SDL_UnlockMutex(m_interruptHandlerRunningMutex);
 			interruptHandler();

@@ -30,8 +30,6 @@
 #include <string>
 #include <vector>
 
-#include <SDL_endian.h>
-
 #include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "channel_names.h"

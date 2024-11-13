@@ -90,7 +90,7 @@ libcpu = static_library(
     libcpu_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
         ghc_dep,
         tracy_dep,
         libloguru_dep,

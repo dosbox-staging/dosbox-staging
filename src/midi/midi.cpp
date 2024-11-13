@@ -29,7 +29,7 @@
 #include <memory>
 #include <string>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "../capture/capture.h"
 #include "ansi_code_markup.h"

@@ -1,8 +1,8 @@
 option(
-    'use_sdl2_net',
+    'use_sdl3_net',
     type: 'boolean',
     value: true,
-    description: 'Enable networking features via SDL2_net (modem, ipx)',
+    description: 'Enable networking features via SDL3_net (modem, ipx)',
 )
 
 option(
@@ -208,8 +208,8 @@ option(
         'mt32emu',
         'opusfile',
         'png',
-        'sdl2',
-        'sdl2_net',
+        'sdl3',
+        'sdl3_net',
         'slirp',
         'speexdsp',
         'tracy',

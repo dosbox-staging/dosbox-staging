@@ -30,7 +30,7 @@ libmisc_dependencies = [
     libloguru_dep,
     libslirp_dep,
     libwhereami_dep,
-    sdl2_dep,
+    sdl3_dep,
     stdcppfs_dep,
     winsock2_dep,
 ]

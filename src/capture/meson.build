@@ -18,7 +18,7 @@ libcapture = static_library(
         libloguru_dep,
         libzmbv_dep,
         png_dep,
-        sdl2_dep,
+        sdl3_dep,
     ],
     cpp_args: warnings,
 )

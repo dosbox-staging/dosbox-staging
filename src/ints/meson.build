@@ -22,7 +22,7 @@ libints = static_library(
     libints_sources,
     include_directories: incdir,
     dependencies: [
-        sdl2_dep,
+        sdl3_dep,
         ghc_dep,
         libloguru_dep,
     ],

@@ -36,7 +36,7 @@
 #include "config.h"
 
 #include <vector>    // provides: vector
-#include <SDL.h>     // provides: SDL_RWops
+#include <SDL3/SDL.h>     // provides: SDL_RWops
 #include "archive.h" // provides: archive
 
 // Ensure we only get the API
@@ -67,7 +67,7 @@ struct mp3_t {
     std::vector<drmp3_seek_point_serial> seek_points_vector = {};
 };
 
-uint64_t populate_seek_points(struct SDL_RWops* const context,
+uint64_t populate_seek_points(struct SDL_IOStream* const context,
                               mp3_t* p_mp3,
                               const char* seektable_filename,
                               bool &result);

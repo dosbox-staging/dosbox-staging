@@ -38,7 +38,7 @@
 #include "string_utils.h"
 #include "support.h"
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 CHECK_NARROWING();
 

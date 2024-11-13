@@ -32,7 +32,7 @@
 #include <queue>
 #include <vector>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #include "control.h"
 #include "joystick.h"
@@ -439,15 +439,15 @@ public:
 
 	CBind *CreateEventBind(SDL_Event *event) override
 	{
-		if (event->type != SDL_KEYDOWN)
+		if (event->type != SDL_EVENT_KEY_DOWN)
 			return nullptr;
-		return CreateKeyBind(event->key.keysym.scancode);
+		return CreateKeyBind(event->key.scancode);
 	}
 
 	bool CheckEvent(SDL_Event * event) override {
-		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
-		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
-		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
+		if (event->type!=SDL_EVENT_KEY_DOWN && event->type!=SDL_EVENT_KEY_UP) return false;
+		uintptr_t key = static_cast<uintptr_t>(event->key.scancode);
+		if (event->type==SDL_EVENT_KEY_DOWN) ActivateBindList(&lists[key],0x7fff,true);
 		else DeactivateBindList(&lists[key],true);
 		return 0;
 	}
@@ -601,11 +601,9 @@ static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
 #if SDL_VERSION_ATLEAST(2, 0, 14)
 	if (!joystick)
 		return;
-	if (!SDL_JoystickHasLED(joystick))
-		return;
 
 	// apply the color
-	SDL_JoystickSetLED(joystick, color.red, color.green, color.blue);
+	SDL_SetJoystickLED(joystick, color.red, color.green, color.blue);
 #endif
 }
 
@@ -645,8 +643,8 @@ public:
 		// We refer to the device index as `stick_index`, and to the
 		// instance ID as `stick_id`.
 
-		sdl_joystick = SDL_JoystickOpen(stick_index);
-		stick_id = SDL_JoystickInstanceID(sdl_joystick);
+		sdl_joystick = SDL_OpenJoystick(stick_index);
+		stick_id = SDL_GetJoystickID(sdl_joystick);
 
 		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==nullptr) {
@@ -655,17 +653,17 @@ public:
 			return;
 		}
 
-		const int sdl_axes = SDL_JoystickNumAxes(sdl_joystick);
+		const int sdl_axes = SDL_GetNumJoystickAxes(sdl_joystick);
 		if (sdl_axes < 0)
 			LOG_MSG("SDL: Can't detect axes; %s", SDL_GetError());
 		axes = clamp(sdl_axes, 0, MAXAXIS);
 
-		const int sdl_hats = SDL_JoystickNumHats(sdl_joystick);
+		const int sdl_hats = SDL_GetNumJoystickHats(sdl_joystick);
 		if (sdl_hats < 0)
 			LOG_MSG("SDL: Can't detect hats; %s", SDL_GetError());
 		hats = clamp(sdl_hats, 0, MAXHAT);
 
-		buttons = SDL_JoystickNumButtons(sdl_joystick); // TODO returns -1 on error
+		buttons = SDL_GetNumJoystickButtons(sdl_joystick); // TODO returns -1 on error
 		button_wrap = buttons;
 		button_cap = buttons;
 		if (button_wrapping_enabled) {
@@ -676,7 +674,7 @@ public:
 			button_wrap = MAXBUTTON;
 
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
-		        SDL_JoystickNameForIndex(stick_index), axes, buttons, hats);
+		        SDL_GetJoystickNameForID(stick_index), axes, buttons, hats);
 
 		// Trigger buttons that are actually analogue axis need special handling
 		// This function detects such triggers and sets the is_trigger variable for them
@@ -686,7 +684,7 @@ public:
 	~CStickBindGroup() override
 	{
 		set_joystick_led(sdl_joystick, off_color);
-		SDL_JoystickClose(sdl_joystick);
+		SDL_CloseJoystick(sdl_joystick);
 		sdl_joystick = nullptr;
 
 		delete[] pos_axis_lists;
@@ -727,7 +725,7 @@ public:
 	}
 
 	CBind * CreateEventBind(SDL_Event * event) override {
-		if (event->type==SDL_JOYAXISMOTION) {
+		if (event->type==SDL_EVENT_JOYSTICK_AXIS_MOTION) {
 			const int axis_id = event->jaxis.axis;
 			const auto axis_position = event->jaxis.value;
 
@@ -745,7 +743,7 @@ public:
 			const bool toggled = axis_position > 0 || is_trigger[axis_id];
 			return CreateAxisBind(axis_id, toggled);
 
-		} else if (event->type == SDL_JOYBUTTONDOWN) {
+		} else if (event->type == SDL_EVENT_JOYSTICK_BUTTON_DOWN) {
 			if (event->jbutton.which != stick_id)
 				return nullptr;
 #if defined (REDUCE_JOYSTICK_POLLING)
@@ -753,7 +751,7 @@ public:
 #else
 			return CreateButtonBind(event->jbutton.button);
 #endif
-		} else if (event->type==SDL_JOYHATMOTION) {
+		} else if (event->type==SDL_EVENT_JOYSTICK_HAT_MOTION) {
 			if (event->jhat.which != stick_id) return nullptr;
 			if (event->jhat.value == 0) return nullptr;
 			if (event->jhat.value>(SDL_HAT_UP|SDL_HAT_RIGHT|SDL_HAT_DOWN|SDL_HAT_LEFT)) return nullptr;
@@ -766,7 +764,7 @@ public:
 		SDL_JoyButtonEvent *jbutton = nullptr;
 
 		switch(event->type) {
-			case SDL_JOYAXISMOTION:
+			case SDL_EVENT_JOYSTICK_AXIS_MOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
@@ -775,11 +773,11 @@ public:
 						JOYSTICK_Move_Y(emustick, jaxis->value);
 				}
 				break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
+			case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+			case SDL_EVENT_JOYSTICK_BUTTON_UP:
 				jbutton = &event->jbutton;
 				bool state;
-				state = jbutton->type == SDL_JOYBUTTONDOWN;
+				state = jbutton->type == SDL_EVENT_JOYSTICK_BUTTON_DOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick_id) {
 					JOYSTICK_Button(emustick, but, state);
@@ -820,7 +818,7 @@ public:
 		std::fill_n(button_pressed, MAXBUTTON, false);
 		/* read button states */
 		for (int i = 0; i < button_cap; i++) {
-			if (SDL_JoystickGetButton(sdl_joystick, i))
+			if (SDL_GetJoystickButton(sdl_joystick, i))
 				button_pressed[i % button_wrap]=true;
 		}
 		for (int i = 0; i < button_wrap; i++) {
@@ -832,7 +830,7 @@ public:
 			}
 		}
 		for (int i = 0; i < axes; i++) {
-			Sint16 caxis_pos = SDL_JoystickGetAxis(sdl_joystick, i);
+			Sint16 caxis_pos = SDL_GetJoystickAxis(sdl_joystick, i);
 			/* activate bindings for joystick position */
 			if (caxis_pos>1) {
 				if (old_neg_axis_state[i]) {
@@ -864,7 +862,7 @@ public:
 		}
 		for (int i = 0; i < hats; i++) {
 			assert(i < MAXHAT);
-			const uint8_t chat_state = SDL_JoystickGetHat(sdl_joystick, i);
+			const uint8_t chat_state = SDL_GetJoystickHat(sdl_joystick, i);
 
 			/* activate binding if hat state has changed */
 			if ((chat_state & SDL_HAT_UP) != (old_hat_state[i] & SDL_HAT_UP)) {
@@ -938,7 +936,7 @@ private:
 	const char * BindStart() override
 	{
 		if (sdl_joystick)
-			return SDL_JoystickNameForIndex(stick_index);
+			return SDL_GetJoystickNameForID(stick_index);
 		else
 			return "[missing joystick]";
 	}
@@ -975,7 +973,7 @@ private:
 
 	void DetectTriggerButtons()
 	{
-		char* sdl_mapping = SDL_GameControllerMappingForDeviceIndex(stick_index);
+		char* sdl_mapping = SDL_GetGamepadMappingForID(stick_index);
 		if (!sdl_mapping) {
 			return;
 		}
@@ -1032,7 +1030,7 @@ public:
 		SDL_JoyButtonEvent *jbutton = nullptr;
 
 		switch(event->type) {
-			case SDL_JOYAXISMOTION:
+			case SDL_EVENT_JOYSTICK_AXIS_MOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
@@ -1041,11 +1039,11 @@ public:
 						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
 		        }
 		        break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
+			case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+			case SDL_EVENT_JOYSTICK_BUTTON_UP:
 				jbutton = &event->jbutton;
 				bool state;
-				state = jbutton->type == SDL_JOYBUTTONDOWN;
+				state = jbutton->type == SDL_EVENT_JOYSTICK_BUTTON_DOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
@@ -1097,7 +1095,7 @@ public:
 		SDL_JoyHatEvent *jhat = nullptr;
 
 		switch(event->type) {
-			case SDL_JOYAXISMOTION:
+			case SDL_EVENT_JOYSTICK_AXIS_MOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
@@ -1108,16 +1106,16 @@ public:
 						JOYSTICK_Move_X(1, jaxis->value);
 				}
 				break;
-			case SDL_JOYHATMOTION:
+			case SDL_EVENT_JOYSTICK_HAT_MOTION:
 				jhat = &event->jhat;
 				if (jhat->which == stick_id)
 					DecodeHatPosition(jhat->value);
 				break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
+			case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
+			case SDL_EVENT_JOYSTICK_BUTTON_UP:
 				jbutton = &event->jbutton;
 			bool state;
-			state=jbutton->type==SDL_JOYBUTTONDOWN;
+			state=jbutton->type==SDL_EVENT_JOYSTICK_BUTTON_DOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
 				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
@@ -1228,7 +1226,7 @@ public:
 		        {0x8888, 0x8000, 0x800, 0x80, 0x08},
 		        {0x5440, 0x4000, 0x400, 0x40, 0x1000}};
 		switch(event->type) {
-			case SDL_JOYAXISMOTION:
+			case SDL_EVENT_JOYSTICK_AXIS_MOTION:
 				jaxis = &event->jaxis;
 				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
@@ -1237,7 +1235,7 @@ public:
 						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
 				}
 				break;
-			case SDL_JOYHATMOTION:
+			case SDL_EVENT_JOYSTICK_HAT_MOTION:
 				jhat = &event->jhat;
 				if (jhat->which == stick_id && jhat->hat < 2) {
 					if (jhat->value == SDL_HAT_CENTERED)
@@ -1252,13 +1250,13 @@ public:
 						button_state|=hat_magic[jhat->hat][4];
 				}
 				break;
-			case SDL_JOYBUTTONDOWN:
+			case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
 				if (jbutton->which == stick_id)
 					button_state|=button_magic[but];
 				break;
-			case SDL_JOYBUTTONUP:
+			case SDL_EVENT_JOYSTICK_BUTTON_UP:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
 				if (jbutton->which == stick_id)
@@ -1443,12 +1441,15 @@ void CBindGroup::DeactivateBindList(CBindList * list,bool ev_trigger) {
 
 static void DrawText(int32_t x, int32_t y, const char* text, const Rgb888& color)
 {
-	SDL_Rect character_rect = {0, 0, 8, 14};
-	SDL_Rect dest_rect      = {x, y, 8, 14};
+	// TODO: SDL 3 replaced SDL_RenderCopy with SDL_RenderTexture
+	// Same function except now it takes a rect of floats instead of ints
+	// Make sure this doesn't explode
+	SDL_FRect character_rect = {0, 0, 8, 14};
+	SDL_FRect dest_rect      = {(float)x, (float)y, 8, 14};
 	SDL_SetTextureColorMod(mapper.font_atlas, color.red, color.green, color.blue);
 	while (*text) {
 		character_rect.y = *text * character_rect.h;
-		SDL_RenderCopy(mapper.renderer,
+		SDL_RenderTexture(mapper.renderer,
 		               mapper.font_atlas,
 		               &character_rect,
 		               &dest_rect);
@@ -1460,7 +1461,7 @@ static void DrawText(int32_t x, int32_t y, const char* text, const Rgb888& color
 class CButton {
 public:
 	CButton(int32_t p_x, int32_t p_y, int32_t p_dx, int32_t p_dy)
-	        : rect{p_x, p_y, p_dx, p_dy},
+	        : rect{(float)p_x, (float)p_y, (float)p_dx, (float)p_dy}, // TODO: Get rid of these ugly casts (SDL 3 migration)
 	          color(color_white),
 	          enabled(true)
 	{
@@ -1477,7 +1478,7 @@ public:
 		                       color.green,
 		                       color.blue,
 		                       SDL_ALPHA_OPAQUE);
-		SDL_RenderDrawRect(mapper.renderer, &rect);
+		SDL_RenderRect(mapper.renderer, &rect);
 	}
 
 	virtual bool OnTop(int32_t _x, int32_t _y)
@@ -1501,7 +1502,9 @@ public:
 	}
 
 protected:
-	SDL_Rect rect;
+	// TODO: This had to be changed from SDL_Rect to SDL_FRect for SDL 3
+	// Make sure this doesn't explode
+	SDL_FRect rect;
 	Rgb888 color;
 	bool enabled;
 };
@@ -1676,7 +1679,8 @@ public:
 			break;
 		}
 		if (checked) {
-			const SDL_Rect checkbox_rect = {rect.x + rect.w - rect.h + 2,
+			// TODO: More Rect to FRect conversion
+			const SDL_FRect checkbox_rect = {rect.x + rect.w - rect.h + 2,
 			                                rect.y + 2,
 			                                rect.h - 4,
 			                                rect.h - 4};
@@ -2790,11 +2794,11 @@ void BIND_MappingEvents() {
 	static CButton *lastHoveredButton = nullptr;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
-		case SDL_MOUSEBUTTONDOWN:
+		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 			isButtonPressed = true;
 			/* Further check where are we pointing at right now */
 			[[fallthrough]];
-		case SDL_MOUSEMOTION:
+		case SDL_EVENT_MOUSE_MOTION:
 			if (!isButtonPressed)
 				break;
 			/* Maybe we have been pointing at a specific button for
@@ -2822,7 +2826,7 @@ void BIND_MappingEvents() {
 				}
 			}
 			break;
-		case SDL_MOUSEBUTTONUP:
+		case SDL_EVENT_MOUSE_BUTTON_UP:
 			isButtonPressed = false;
 			if (lastHoveredButton) {
 				/* For most buttons the actual new color is going to be green; But not for a few others. */
@@ -2841,23 +2845,27 @@ void BIND_MappingEvents() {
 			SetActiveBind(mapper.abind); // force redraw key binding
 			                             // description
 			break;
-		case SDL_WINDOWEVENT:
+		case SDL_EVENT_WINDOW_RESIZED:
+		case SDL_EVENT_WINDOW_RESTORED:
 			/* The resize event MAY arrive e.g. when the mapper is
 			 * toggled, at least on X11. Furthermore, the restore
 			 * event should be handled on Android.
 			 */
-			if ((event.window.event == SDL_WINDOWEVENT_RESIZED) ||
-			    (event.window.event == SDL_WINDOWEVENT_RESTORED)) {
-				GFX_UpdateDisplayDimensions(event.window.data1,
-				                            event.window.data2);
-				SDL_RenderSetLogicalSize(mapper.renderer, 640, 480);
-				mapper.redraw = true;
-			}
-			if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
-				mapper.redraw = true;
-			}
+			GFX_UpdateDisplayDimensions(event.window.data1,
+										event.window.data2);
+
+			// TODO: This function has changed meaning in SDL 3. Quote from migration guide: https://github.com/libsdl-org/SDL/blob/main/docs/README-migration.md
+			// SDL_RenderSetLogicalSize() (now called SDL_SetRenderLogicalPresentation()) in SDL2 would modify the scaling and viewport state.
+			// In SDL3, logical presentation maintains its state separately, so the app can use its own viewport and scaling while also setting a logical size.
+
+			// No idea if SDL_LOGICAL_PRESENTATION_DISABLED is correct. It's a new parameter and I just chose the first one :)
+			SDL_SetRenderLogicalPresentation(mapper.renderer, 640, 480, SDL_LOGICAL_PRESENTATION_DISABLED);
+			mapper.redraw = true;
 			break;
-		case SDL_QUIT:
+		case SDL_EVENT_WINDOW_EXPOSED:
+			mapper.redraw = true;
+			break;
+		case SDL_EVENT_QUIT:
 			isButtonPressed = false;
 			lastHoveredButton = nullptr;
 			mapper.exit=true;
@@ -2903,9 +2911,12 @@ static void QueryJoysticks()
 	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
 
 	// Record how many joysticks are present and set our desired minimum axis
-	const auto num_joysticks = SDL_NumJoysticks();
-	if (num_joysticks < 0) {
-		LOG_WARNING("MAPPER: SDL_NumJoysticks() failed: %s", SDL_GetError());
+	int num_joysticks = 0;
+	const auto throwaway_joystick_array = SDL_GetJoysticks(&num_joysticks);
+	if (throwaway_joystick_array) {
+		SDL_free(throwaway_joystick_array);
+	} else {
+		LOG_WARNING("MAPPER: SDL_GetJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
 		if (wants_auto_config) {
 			joytype = JOY_NONE_FOUND;
@@ -2935,14 +2946,14 @@ static void QueryJoysticks()
 	// Check which, if any, of the first two joysticks are useable
 	bool useable[2] = {false, false};
 	for (int i = 0; i < req_min_axis; ++i) {
-		SDL_Joystick *stick = SDL_JoystickOpen(i);
+		SDL_Joystick *stick = SDL_OpenJoystick(i);
 		set_joystick_led(stick, marginal_color);
 
-		useable[i] = (SDL_JoystickNumAxes(stick) >= req_min_axis) ||
-		             (SDL_JoystickNumButtons(stick) > 0);
+		useable[i] = (SDL_GetNumJoystickAxes(stick) >= req_min_axis) ||
+		             (SDL_GetNumJoystickButtons(stick) > 0);
 
 		set_joystick_led(stick, off_color);
-		SDL_JoystickClose(stick);
+		SDL_CloseJoystick(stick);
 	}
 
 	// Set the type of joystick based on which are useable
@@ -2965,7 +2976,7 @@ static void QueryJoysticks()
 
 static void CreateBindGroups() {
 	bindgroups.clear();
-	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
+	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_SCANCODE_COUNT);
 	keybindgroups.push_back(key_bind_group);
 
 	assert(joytype != JOY_UNSET);
@@ -2977,11 +2988,11 @@ static void CreateBindGroups() {
 #if defined (REDUCE_JOYSTICK_POLLING)
 		// direct access to the SDL joystick, thus removed from the event handling
 		if (mapper.sticks.num)
-			SDL_JoystickEventState(SDL_DISABLE);
+			SDL_SetJoystickEventsEnabled(false);
 #else
 		// enable joystick event handling
 		if (mapper.sticks.num)
-			SDL_JoystickEventState(SDL_ENABLE);
+			SDL_SetJoystickEventsEnabled(true);
 		else
 			return;
 #endif
@@ -3099,31 +3110,10 @@ void MAPPER_DisplayUI() {
 			       SDL_GetError());
 		}
 
-		const auto renderer_drivers_count = SDL_GetNumRenderDrivers();
-		if (renderer_drivers_count <= 0) {
-			E_Exit("MAPPER: Failed to retrieve available SDL renderer drivers: %s",
-			       SDL_GetError());
+		mapper.renderer = SDL_CreateRenderer(mapper.window, "opengl");
+		if (!mapper.renderer) {
+			E_Exit("MAPPER: Failed to create OpenGL renderer: %s", SDL_GetError());
 		}
-		int renderer_driver_index = -1;
-		for (int i = 0; i < renderer_drivers_count; ++i) {
-			SDL_RendererInfo renderer_info = {};
-			if (SDL_GetRenderDriverInfo(i, &renderer_info) < 0) {
-				E_Exit("MAPPER: Failed to retrieve SDL renderer driver info: %s",
-				       SDL_GetError());
-			}
-			assert(renderer_info.name);
-			if (strcmp(renderer_info.name, "opengl") == 0) {
-				renderer_driver_index = i;
-				break;
-			}
-		}
-		if (renderer_driver_index == -1) {
-			E_Exit("MAPPER: OpenGL support in SDL renderer is unavailable but required for OpenGL output");
-		}
-		constexpr uint32_t renderer_flags = 0;
-		mapper.renderer = SDL_CreateRenderer(mapper.window,
-		                                     renderer_driver_index,
-		                                     renderer_flags);
 	}
 #endif
 	if (mapper.renderer == nullptr) {
@@ -3131,14 +3121,17 @@ void MAPPER_DisplayUI() {
 		       SDL_GetError());
 	}
 
-	if (SDL_RenderSetLogicalSize(mapper.renderer, 640, 480) < 0) {
+	// TODO: See previous comment about ths function
+	if (!SDL_SetRenderLogicalPresentation(mapper.renderer, 640, 480, SDL_LOGICAL_PRESENTATION_DISABLED)) {
 		LOG_WARNING("MAPPER: Failed to set renderer logical size: %s",
 		            SDL_GetError());
 	}
 
 	// Create font atlas surface
-	SDL_Surface* atlas_surface = SDL_CreateRGBSurfaceFrom(
-	        int10_font_14, 8, 256 * 14, 1, 1, 0, 0, 0, 0);
+
+	// TODO (SDL 3 migration): Make sure this format works. Translated from SDL_CreateRGBSurfaceFrom()
+	// Original code was passing 1 bit per pixel for depth. I looked at the SDL code and that translated to SDL_PIXELFORMAT_INDEX1MSB
+	SDL_Surface* atlas_surface = SDL_CreateSurfaceFrom(8, 256 * 14, SDL_PIXELFORMAT_INDEX1MSB, int10_font_14, 1);
 	if (atlas_surface == nullptr) {
 		E_Exit("MAPPER: Failed to create atlas surface: %s", SDL_GetError());
 	}
@@ -3146,8 +3139,8 @@ void MAPPER_DisplayUI() {
 	// Invert default surface palette
 	const SDL_Color atlas_colors[2] = {{0x00, 0x00, 0x00, 0x00},
 	                                   {0xff, 0xff, 0xff, 0xff}};
-	if (SDL_SetPaletteColors(atlas_surface->format->palette, atlas_colors, 0, 2) <
-	    0) {
+	SDL_Palette* palette = SDL_CreateSurfacePalette(atlas_surface);
+	if (!SDL_SetPaletteColors(palette, atlas_colors, 0, 2)) {
 		LOG_WARNING("MAPPER: Failed to set colors in font atlas: %s",
 		            SDL_GetError());
 	}
@@ -3155,7 +3148,7 @@ void MAPPER_DisplayUI() {
 	// Convert surface to texture for accelerated SDL renderer
 	mapper.font_atlas = SDL_CreateTextureFromSurface(mapper.renderer,
 	                                                 atlas_surface);
-	SDL_FreeSurface(atlas_surface);
+	SDL_DestroySurface(atlas_surface);
 	atlas_surface = nullptr;
 	if (mapper.font_atlas == nullptr) {
 		E_Exit("MAPPER: Failed to create font texture atlas: %s",
@@ -3171,7 +3164,7 @@ void MAPPER_DisplayUI() {
 	mapper.redraw=true;
 	SetActiveEvent(nullptr);
 #if defined (REDUCE_JOYSTICK_POLLING)
-	SDL_JoystickEventState(SDL_ENABLE);
+	SDL_SetJoystickEventsEnabled(true);
 #endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
@@ -3184,7 +3177,8 @@ void MAPPER_DisplayUI() {
 	/* ONE SHOULD NOT FORGET TO DO THIS!
 	Unless a memory leak is desired... */
 	SDL_DestroyTexture(mapper.font_atlas);
-	SDL_RenderSetLogicalSize(mapper.renderer, 0, 0);
+	// TODO: See previous comment about this function
+	SDL_SetRenderLogicalPresentation(mapper.renderer, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
 	SDL_SetRenderDrawColor(mapper.renderer,
 	                       color_black.red,
 	                       color_black.green,
@@ -3193,20 +3187,20 @@ void MAPPER_DisplayUI() {
 #if C_OPENGL
 	if (context) {
 #if SDL_VERSION_ATLEAST(2, 0, 10)
-		if (SDL_RenderFlush(mapper.renderer) < 0) {
+		if (!SDL_FlushRenderer(mapper.renderer)) {
 			LOG_WARNING("MAPPER: Failed to flush pending renderer commands: %s",
 			            SDL_GetError());
 		}
 #endif
 		SDL_DestroyRenderer(mapper.renderer);
-		if (SDL_GL_MakeCurrent(mapper.window, context) < 0) {
+		if (!SDL_GL_MakeCurrent(mapper.window, context)) {
 			LOG_ERR("MAPPER: Failed to restore OpenGL context: %s",
 			        SDL_GetError());
 		}
 	}
 #endif
 #if defined (REDUCE_JOYSTICK_POLLING)
-	SDL_JoystickEventState(SDL_DISABLE);
+	SDL_SetJoystickEventsEnabled(false);
 #endif
 	GFX_ResetScreen();
 	MOUSE_NotifyTakeOver(false);
@@ -3300,10 +3294,10 @@ void MAPPER_BindKeys(Section* sec)
 		button->BindColor();
 	}
 
-	if (SDL_GetModState()&KMOD_CAPS)
+	if (SDL_GetModState() & SDL_KMOD_CAPS)
 		MAPPER_TriggerEvent(caps_lock_event, false);
 
-	if (SDL_GetModState()&KMOD_NUM)
+	if (SDL_GetModState() & SDL_KMOD_NUM)
 		MAPPER_TriggerEvent(num_lock_event, false);
 
 	GFX_RegenerateWindow(sec);
