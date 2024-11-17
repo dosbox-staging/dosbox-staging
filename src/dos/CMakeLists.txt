@@ -11,6 +11,7 @@ add_library(libdos STATIC
 		dos_ioctl.cpp
 		dos_keyboard_layout.cpp
 		dos_locale.cpp
+		dos_locale_data.cpp
 		dos_memory.cpp
 		dos_misc.cpp
 		dos_mscdex.cpp
