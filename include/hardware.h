@@ -86,4 +86,7 @@ void SBLASTER_NotifyUnlockMixer();
 void REELMAGIC_NotifyLockMixer();
 void REELMAGIC_NotifyUnlockMixer();
 
+void LPTDAC_NotifyLockMixer();
+void LPTDAC_NotifyUnlockMixer();
+
 #endif

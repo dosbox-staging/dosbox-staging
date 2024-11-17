@@ -138,7 +138,7 @@ LptDac::~LptDac()
 	MIXER_DeregisterChannel(channel);
 }
 
-std::unique_ptr<LptDac> lpt_dac = {};
+static std::unique_ptr<LptDac> lpt_dac = {};
 
 static void LPT_DAC_PicCallback()
 {
@@ -221,4 +221,18 @@ void LPT_DAC_Init(Section* section)
 	TIMER_AddTickHandler(LPT_DAC_PicCallback);
 
 	MIXER_UnlockMixerThread();
+}
+
+void LPTDAC_NotifyLockMixer()
+{
+	if (lpt_dac) {
+		lpt_dac->output_queue.Stop();
+	}
+}
+
+void LPTDAC_NotifyUnlockMixer()
+{
+	if (lpt_dac) {
+		lpt_dac->output_queue.Start();
+	}
 }
