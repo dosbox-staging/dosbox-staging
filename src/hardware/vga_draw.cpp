@@ -1304,7 +1304,9 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	double draw_skip = 0.0;
 	if (vga.draw.vblank_skip) {
 		draw_skip = vga.draw.delay.htotal * static_cast<double>(vga.draw.vblank_skip);
-		vga.draw.address += vga.draw.address_add * vga.draw.vblank_skip / vga.draw.address_line_total;
+		vga.draw.address += vga.draw.address_add *
+		                    (vga.draw.vblank_skip /
+		                     vga.draw.address_line_total);
 	}
 
 	// add the draw event
