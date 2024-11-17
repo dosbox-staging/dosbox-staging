@@ -292,6 +292,8 @@ void MIXER_LockMixerThread()
 
 	PS1DAC_NotifyLockMixer();
 
+	LPTDAC_NotifyLockMixer();
+
 	GUS_NotifyLockMixer();
 
 	REELMAGIC_NotifyLockMixer();
@@ -308,6 +310,8 @@ void MIXER_UnlockMixerThread()
 	TANDYDAC_NotifyUnlockMixer();
 
 	PS1DAC_NotifyUnlockMixer();
+
+	LPTDAC_NotifyUnlockMixer();
 
 	GUS_NotifyUnlockMixer();
 
