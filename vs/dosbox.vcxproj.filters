@@ -592,6 +592,15 @@
     <ClCompile Include="..\src\misc\help_util.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\host_locale_macos.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\host_locale_posix.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\misc\host_locale_win32.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
