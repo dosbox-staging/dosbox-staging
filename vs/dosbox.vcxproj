@@ -675,6 +675,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\dos_ioctl.cpp" />
     <ClCompile Include="..\src\dos\dos_keyboard_layout.cpp" />
     <ClCompile Include="..\src\dos\dos_locale.cpp" />
+    <ClCompile Include="..\src\dos\dos_locale_data.cpp" />
     <ClCompile Include="..\src\dos\dos_memory.cpp" />
     <ClCompile Include="..\src\dos\dos_misc.cpp" />
     <ClCompile Include="..\src\dos\dos_mscdex.cpp" />
