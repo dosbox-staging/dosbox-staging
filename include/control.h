@@ -147,6 +147,8 @@ public:
 	const std::string& GetLanguage();
 	const char* SetProp(std::vector<std::string>& pvars);
 
+	const std::string& GetArgumentLanguage();
+
 	bool SecureMode() const
 	{
 		return secure_mode;

@@ -1802,6 +1802,11 @@ const std::string& Config::GetLanguage()
 	return lang;
 }
 
+const std::string& Config::GetArgumentLanguage()
+{
+	return arguments.lang;
+}
+
 // forward declaration
 void MSG_Init(Section_prop*);
 
