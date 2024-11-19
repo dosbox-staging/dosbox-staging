@@ -48,7 +48,7 @@ jobs:
             run_tests: false # the shell_cmds_tests hang on arm64
             build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
-            max_warnings: 42
+            max_warnings: 0
 
     steps:
       - name: Checkout repository
