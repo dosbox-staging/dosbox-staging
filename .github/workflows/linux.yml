@@ -112,7 +112,7 @@ jobs:
               -Duse_sdl2_net=false
               -Duse_slirp=false
             needs_min_deps: true
-            max_warnings: 2
+            max_warnings: 0
 
           - name: GCC 12, Debian 12, ARMv7
             os: ubuntu-22.04
