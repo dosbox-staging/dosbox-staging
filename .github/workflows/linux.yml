@@ -112,7 +112,7 @@ jobs:
               -Duse_sdl2_net=false
               -Duse_slirp=false
             needs_min_deps: true
-            max_warnings: -1
+            max_warnings: 2
 
           - name: GCC 12, Debian 12, ARMv7
             os: ubuntu-22.04
@@ -137,7 +137,7 @@ jobs:
           - name: GCC 12, Debian 12, ppc64le
             os: ubuntu-22.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 21
+            max_warnings: 0
             run_tests: true
             cross: true
             arch: ppc64el
