@@ -88,8 +88,8 @@ uint8_t MIDI_message_len_by_status[256] = {
 #include "midi_alsa.h"
 #endif
 
-static std::unique_ptr<MidiDevice> create_device(const std::string& name,
-                                                 const std::string& config)
+static std::unique_ptr<MidiDevice> create_device([[maybe_unused]] const std::string& name,
+                                                 [[maybe_unused]] const std::string& config)
 {
 	using namespace MidiDeviceName;
 
