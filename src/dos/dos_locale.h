@@ -415,6 +415,34 @@ struct CountryInfoEntry {
 	std::string GetMsgName() const;
 };
 
+// List of all the supported alphabets
+enum class Script : uint8_t {
+	Latin,
+	Arabic,
+	Armenian,
+	Cherokee,
+	Cyrillic,
+	Georgian,
+	Greek,
+	Hebrew,
+};
+
+struct ScriptInfoEntry {
+	// Script code according to ISO 15924, but uppercase
+	std::string script_code;
+
+	std::string script_name;
+
+	std::string GetMsgName() const;
+};
+
+struct CodePageInfoEntry {
+	std::string description = {};
+	Script script           = {};
+
+	static std::string GetMsgName(const uint16_t code_page);
+};
+
 enum class KeyboardScript {
 	// Latin scripts
 	LatinQwerty, /// always keep it the 1st one!
@@ -435,7 +463,6 @@ enum class KeyboardScript {
 	Georgian,
 	Greek,
 	Hebrew,
-	Thai,
 	// Markers for comparing
 	LastQwertyLikeScript = LatinAsertt,
 	LastLatinScript      = LatinNonStandard,
@@ -465,6 +492,8 @@ namespace LocaleData {
 
 extern const std::map<std::string, std::vector<uint16_t>> BundledCpiContent;
 extern const std::map<uint16_t, CodePageWarning>          CodePageWarnings;
+extern const std::map<Script, ScriptInfoEntry>            ScriptInfo;
+extern const std::map<uint16_t, CodePageInfoEntry>        CodePageInfo;
 extern const std::vector<KeyboardLayoutInfoEntry>         KeyboardLayoutInfo;
 extern const std::map<uint16_t, DosCountry>               CodeToCountryCorrectionMap;
 extern const std::map<DosCountry, CountryInfoEntry>       CountryInfo;
@@ -475,11 +504,12 @@ extern const std::map<DosCountry, CountryInfoEntry>       CountryInfo;
 
 std::string DOS_GenerateListCountriesMessage();
 std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command = false);
+std::string DOS_GenerateListCodePagesMessage();
 
 // Functions for the KEYB command - help output
 
 std::string DOS_GetKeyboardLayoutName(const std::string& layout);
-std::string DOS_GetKeyboardScriptName(const KeyboardScript script);
+std::string DOS_GetKeyboardScriptName(const KeyboardScript keyboard_script);
 std::string DOS_GetShortcutKeyboardScript1();
 std::string DOS_GetShortcutKeyboardScript2();
 std::string DOS_GetShortcutKeyboardScript3();
@@ -488,6 +518,8 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript2(const std::string& la
                                                            const uint16_t code_page);
 std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& layout,
                                                            const uint16_t code_page);
+
+std::string DOS_GetCodePageDescription(const uint16_t code_page);
 
 std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page);
 

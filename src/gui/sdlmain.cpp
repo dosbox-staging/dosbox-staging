@@ -4274,7 +4274,9 @@ static void messages_add_command_line()
 	        "                           Codes are to be used in the 'country' config setting.\n"
 	        "\n"
 	        "  --list-layouts           List all supported keyboard layouts with their codes.\n"
-	        "                           Codes are to be used in the 'keyboardlayout' config setting.\n"
+	        "                           Codes are to be used in the 'keyboard_layout' config setting.\n"
+	        "\n"
+	        "  --list-code-pages        List all bundled code pages.\n"
 	        "\n"
 	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
 	        "                           Shaders are to be used in the 'glshader' config setting.\n"
@@ -4688,6 +4690,12 @@ static void list_keyboard_layouts()
 	printf("%s\n", message_utf8.c_str());
 }
 
+static void list_code_pages()
+{
+	const auto message_utf8 = DOS_GenerateListCodePagesMessage();
+	printf("%s\n", message_utf8.c_str());
+}
+
 static int print_primary_config_location()
 {
 	const auto path = GetPrimaryConfigPath();
@@ -4787,8 +4795,8 @@ int sdl_main(int argc, char* argv[])
 	loguru::g_preamble_pipe    = true;
 
 	if (arguments->version || arguments->help || arguments->printconf ||
-	    arguments->editconf || arguments->eraseconf ||
-	    arguments->list_countries || arguments->list_layouts ||
+	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
+	    arguments->list_layouts || arguments->list_code_pages ||
 	    arguments->list_glshaders || arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -4901,6 +4909,10 @@ int sdl_main(int argc, char* argv[])
 		}
 		if (arguments->list_layouts) {
 			list_keyboard_layouts();
+			return 0;
+		}
+		if (arguments->list_code_pages) {
+			list_code_pages();
 			return 0;
 		}
 		if (arguments->list_glshaders) {
