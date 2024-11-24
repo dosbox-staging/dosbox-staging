@@ -108,6 +108,7 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> WinToDosKeyboard
 	// Czech (programmers, QWERTY)
 	{ "00010405", { "cz489" }      }, // Czech (QWERTY)
 	{ "00020405", { "cz489" }      }, // Czech Programmers
+	{ "0001041b", { "cz489" }      }, // Slovak (QWERTY)
 	// German (standard, QWERTZ)
 	{ "00000407", { "de" }         }, // German
 	{ "00010407", { "de" }         }, // German (IBM)
@@ -329,10 +330,6 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> WinToDosKeyboard
 	{ "0000105f", { "us" }         }, // Tifinagh (Basic)
 	{ "0001105f", { "us" }         }, // Tifinagh (Extended)
 	{ "00000420", { "us" }         }, // Urdu
-
-	// In some cases we do not have a matching QWERTY layout; if so, use
-	// the US International keyboard with the best available code page
-	{ "0001041b", { "ux", 437 }    }, // Slovak (QWERTY)
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the QWERTZ layout is typically used
