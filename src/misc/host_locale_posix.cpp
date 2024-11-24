@@ -200,6 +200,8 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard
 	{ "cz:qwerty-mac",              { "cz489" }      },
 	{ "cz:qwerty_bksl",             { "cz489" }      },
 	{ "cz:winkeys-qwerty",          { "cz489" }      },
+	{ "sk:qwerty",                  { "cz489" }      }, // Slovakia
+	{ "sk:qwerty_bksl",             { "cz489" }      },
 	// German (standard, QWERTZ)
 	{ "de:mac",                     { "de" }         },
 	{ "de:mac_nodeadkeys",          { "de" }         },
@@ -407,30 +409,32 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard
 	{ "np",                         { "us" }         }, // Nepal
 	{ "th",                         { "us" }         }, // Thailand
 	{ "tw",                         { "us" }         }, // Taiwan
+
 	// In some cases we do not have a matching QWERTY layout; if so, use
-	// the US International keyboard with the best available code page
-	{ "ba:us",                      { "ux", 437 }    }, // Bosnia
+	// the US/International keyboard with the best available code page
+	{ "ba:us",                      { "ux", 850 }    }, // Bosnia
 	{ "de:us",                      { "ux", 850 }    }, // Germany
 	{ "de:qwerty",                  { "ux", 850 }    },
 	{ "de:dsb",                     { "ux", 850 }    }, // Sorbian
 	{ "fr:us",                      { "ux", 850 }    }, // France
-	{ "hr:us",                      { "ux", 437 }    }, // Croatia
+	{ "hr:us",                      { "ux", 850 }    }, // Croatia
 	{ "it:us",                      { "ux", 850 }    }, // Italy
-	{ "me:cyrillicyz",              { "ux", 850 }    }, // Montenegro
+	{ "me:cyrillicyz",              { "us", 855 }    }, // Montenegro
 	{ "me:latinunicodeyz",          { "ux", 850 }    },
 	{ "me:latinyz",                 { "ux", 850 }    },
-	{ "si:us",                      { "ux", 437 }    }, // Slovenia
-	{ "sk:qwerty",                  { "ux", 437 }    }, // Slovakia
-	{ "sk:qwerty_bksl",             { "ux", 437 }    },
+	{ "si:us",                      { "ux", 850 }    }, // Slovenia
 	{ "tm:alt",                     { "ux", 437 }    }, // Turkmenistan
-	{ "us:hbs",                     { "us", 437 }    }, // Serbo-Croatian
+	{ "us:hbs",                     { "ux", 850 }    }, // Serbo-Croatian
 	{ "vn:us",                      { "ux", 850 }    }, // Vietnam
+
 	// In some cases we do not have a matching QWERTZ layout; if so, use
 	// the German keyboard with the best available code page
 	{ "it:lldde",                   { "de", 850 }    }, // Ladin
+
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the AZERTY layout is typically used
 	{ "gn",                         { "fr", 437 }    }, // Gwinea, N'Ko
+
 	// In some cases we do not have a matching AZERTY layout; if so, use
 	// the French keyboard with the best available code page
 	{ "vn:fr",                      { "fr", 850 }    }, // Vietnam
@@ -558,6 +562,7 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> TtyToDosKeyboard
 	{ "cz-qwerty",                           { "cz489" }     },
 	{ "sunt5-cz-us",                         { "cz489" }     },
 	{ "sunt5-us-cz",                         { "cz489" }     },
+	{ "sk-prog-qwerty",                      { "cz489" }     }, // Slovakia
 	// German (standard, QWERTZ)
 	{ "de",                                  { "de" }        },
 	{ "de_alt_UTF-8",                        { "de" }        },
@@ -755,9 +760,8 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> TtyToDosKeyboard
 	// Serbian (deadkey, QWERTZ/national)
 	{ "sr-latin",                            { "yc" }        },
 	// In some cases we do not have a matching QWERTY layout; if so, use
-	// the US International keyboard with the best available code page
-	{ "sk-prog-qwerty",                      { "ux", 437 }   }, // Slovakia
-	{ "sr-cy",                               { "us", 437 }   }, // Serbia
+	// the US/International keyboard with the best available code page
+	{ "sr-cy",                               { "us", 855 }   }, // Serbia
 };
 // clang-format on
 
