@@ -2241,6 +2241,20 @@ std::string uppercase_dos(const std::string& str, const uint16_t code_page)
 	return uppercase_dos_common(str, get_custom_code_page(code_page));
 }
 
+size_t length_utf8(const std::string& str)
+{
+	// TODO: Provide more efficient implementation;
+	// this will require UTF-8 decoder refactoring
+
+	constexpr uint16_t BasicCodePage = 437;
+
+	return utf8_to_dos(str,
+	                   DosStringConvertMode::NoSpecialCharacters,
+	                   UnicodeFallback::Simple,
+	                   BasicCodePage)
+	        .length();
+}
+
 bool is_code_page_equal(const uint16_t code_page1, const uint16_t code_page2)
 {
 	load_config_if_needed();

@@ -43,6 +43,18 @@ std::string CountryInfoEntry::GetMsgName() const
 	return base_str + country_code;
 }
 
+std::string ScriptInfoEntry::GetMsgName() const
+{
+	const std::string base_str = "SCRIPT_NAME_";
+	return base_str + script_code;
+}
+
+std::string CodePageInfoEntry::GetMsgName(const uint16_t code_page)
+{
+	const std::string base_str = "CODE_PAGE_DESCRIPTION_";
+	return base_str + std::to_string(code_page);
+}
+
 std::string KeyboardLayoutInfoEntry::GetMsgName() const
 {
 	assert(!layout_codes.empty());
@@ -85,6 +97,117 @@ const std::map<std::string, std::vector<uint16_t>> LocaleData::BundledCpiContent
 // clang-format off
 const std::map<uint16_t, CodePageWarning> LocaleData::CodePageWarnings = {
         { 60258, CodePageWarning::DottedI },
+};
+// clang-format on
+
+// clang-format off
+const std::map<Script, ScriptInfoEntry> LocaleData::ScriptInfo = {
+        { Script::Latin,    { "LATN", "Latin"    } },
+        { Script::Arabic,   { "ARAB", "Arabic"   } },
+        { Script::Armenian, { "ARMN", "Armenian" } },
+        { Script::Cherokee, { "CHER", "Cherokee" } },
+        { Script::Cyrillic, { "CYRL", "Cyrillic" } },
+        { Script::Georgian, { "GEOR", "Georgian" } },
+        { Script::Greek,    { "GREK", "Greek"    } },
+        { Script::Hebrew,   { "HEBR", "Hebrew"   } },
+};
+// clang-format on
+
+// clang-format off
+const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
+	// Standard ROM code page
+	{ 437,   { "United States",                                   Script::Latin    } },
+	// FreeDOS standard package code pages
+	{ 113,   { "Yugoslavian",                                     Script::Latin    } },
+	{ 667,   { "Polish, Mazovia encoding",                        Script::Latin    } },
+	{ 668,   { "Polish, 852-compatible",                          Script::Latin    } },
+	{ 737,   { "Greek-2",                                         Script::Greek    } },
+	{ 770,   { "Baltic",                                          Script::Latin    } },
+	{ 771,   { "Lithuanian and Russian, KBL encoding",            Script::Cyrillic } },
+	{ 773,   { "Latin-7 (Baltic, old encoding)",                  Script::Latin    } },
+	{ 775,   { "Latin-7 (Baltic)",                                Script::Latin    } },
+	{ 777,   { "Lithuanian, accented, old encoding",              Script::Latin    } },
+	{ 778,   { "Lithuanian, accented, LST 1590-2 encoding",       Script::Latin    } },
+	{ 808,   { "Russian, with EUR symbol",                        Script::Cyrillic } },
+	{ 848,   { "Ukrainian, with EUR symbol",                      Script::Cyrillic } },
+	{ 849,   { "Belarusian, with EUR symbol",                     Script::Cyrillic } },
+	{ 850,   { "Latin-1 (Western European)",                      Script::Latin    } },
+	{ 851,   { "Greek, old encoding",                             Script::Greek    } },
+	{ 852,   { "Latin-2 (Central European), with EUR symbol",     Script::Latin    } },
+	{ 853,   { "Latin-3 (Turkish, Maltese, and Esperanto)",       Script::Latin    } },
+	{ 855,   { "South Slavic",                                    Script::Cyrillic } },
+	{ 856,   { "Hebrew-2, with EUR symbol",                       Script::Hebrew   } },
+	{ 857,   { "Latin-5 (Turkish), with EUR symbol",              Script::Latin    } },
+	{ 858,   { "Latin-1 (Western European), with EUR symbol",     Script::Latin    } },
+	{ 859,   { "Latin-9 (Western European), with EUR symbol",     Script::Latin    } },
+	{ 860,   { "Portuguese",                                      Script::Latin    } },
+	{ 861,   { "Icelandic",                                       Script::Latin    } },
+	{ 862,   { "Hebrew-2",                                        Script::Hebrew   } },
+	{ 863,   { "Canadian French",                                 Script::Latin    } },
+	{ 864,   { "Arabic",                                          Script::Arabic   } },
+	{ 865,   { "Nordic",                                          Script::Latin    } },
+	{ 866,   { "Russian",                                         Script::Cyrillic } },
+	{ 867,   { "Czech and Slovak, Kamenický encoding",            Script::Latin    } },
+	{ 869,   { "Greek, with EUR symbol",                          Script::Greek    } },
+	{ 872,   { "South Slavic, with EUR symbol",                   Script::Cyrillic } },
+	{ 899,   { "Armenian, ArmSCII-8A encoding",                   Script::Armenian } },
+	{ 991,   { "Polish, Mazovia encoding, with PLN symbol",       Script::Latin    } },
+	{ 1116,  { "Estonian",                                        Script::Latin    } },
+	{ 1117,  { "Latvian",                                         Script::Latin    } },
+	{ 1118,  { "Lithuanian, LST 1283 encoding",                   Script::Latin    } },
+	{ 1119,  { "Lithuanian and Russian, LST 1284 encoding",       Script::Cyrillic } },
+	{ 1125,  { "Ukrainian",                                       Script::Cyrillic } },
+	{ 1131,  { "Belarusian",                                      Script::Cyrillic } },
+	{ 3012,  { "Latvian and Russian, RusLat encoding",            Script::Cyrillic } },
+	{ 3021,  { "Bulgarian, MIK encoding",                         Script::Cyrillic } },
+	{ 3845,  { "Hungarian, CWI-2 encoding",                       Script::Latin    } },
+	{ 3846,  { "Turkish",                                         Script::Latin    } },
+	{ 3848,  { "Brazilian, ABICOMP encoding",                     Script::Latin    } },
+	{ 30000, { "Saami, Kalo and Finnic",                          Script::Latin    } },
+	{ 30001, { "Celtic and Scots, with EUR symbol",               Script::Latin    } },
+	{ 30002, { "Tajik, with EUR symbol",                          Script::Cyrillic } },
+	{ 30003, { "Latin American, with EUR symbol",                 Script::Latin    } },
+	{ 30004, { "Greenlandic and North Germanic, with EUR symbol", Script::Latin    } },
+	{ 30005, { "Nigerian, with EUR symbol",                       Script::Latin    } },
+	{ 30006, { "Vietnamese, VISCII encoding",                     Script::Latin    } },
+	{ 30007, { "Latin and Romance, with EUR symbol",              Script::Latin    } },
+	{ 30008, { "Abkhaz and Ossetian, with EUR symbol",            Script::Cyrillic } },
+	{ 30009, { "Romani and Turkic, with EUR symbol",              Script::Latin    } },
+	{ 30010, { "Gagauz and Moldovan, with EUR symbol",            Script::Cyrillic } },
+	{ 30011, { "Russian Southern, with EUR symbol",               Script::Cyrillic } },
+	{ 30012, { "Siberian, with EUR symbol",                       Script::Cyrillic } },
+	{ 30013, { "Turkic, with EUR symbol",                         Script::Cyrillic } },
+	{ 30014, { "Finno-ugric (Mari, Udmurt), with EUR symbol",     Script::Cyrillic } },
+	{ 30015, { "Khanty, with EUR symbol",                         Script::Cyrillic } },
+	{ 30016, { "Mansi, with EUR symbol",                          Script::Cyrillic } },
+	{ 30017, { "Russian Northwestern, with EUR symbol",           Script::Cyrillic } },
+	{ 30018, { "Tatar Latin and Russian, with EUR symbol",        Script::Cyrillic } },
+	{ 30019, { "Chechen Latin and Russian, with EUR symbol",      Script::Cyrillic } },
+	{ 30020, { "Low Saxon and Frisian, with EUR symbol",          Script::Latin    } },
+	{ 30021, { "Oceania, with EUR symbol",                        Script::Latin    } },
+	{ 30022, { "Canadian First Nations, with EUR symbol",         Script::Latin    } },
+	{ 30023, { "Southern African, with EUR symbol",               Script::Latin    } },
+	{ 30024, { "Northern and Eastern African, with EUR symbol",   Script::Latin    } },
+	{ 30025, { "Western African, with EUR symbol",                Script::Latin    } },
+	{ 30026, { "Central African, with EUR symbol",                Script::Latin    } },
+	{ 30027, { "Beninese, with EUR symbol",                       Script::Latin    } },
+	{ 30028, { "Nigerien, with EUR symbol",                       Script::Latin    } },
+	{ 30029, { "Mexican, with EUR symbol",                        Script::Latin    } },
+	{ 30030, { "Mexican-2, with EUR symbol",                      Script::Latin    } },
+	{ 30031, { "Latin-4 (Northern European), with EUR symbol",    Script::Latin    } },
+	{ 30032, { "Latin-6, with EUR symbol",                        Script::Latin    } },
+	{ 30033, { "Crimean Tatar, with UAH symbol",                  Script::Latin    } },
+	{ 30034, { "Cherokee",                                        Script::Cherokee } },
+	{ 30039, { "Ukrainian, with UAH symbol",                      Script::Cyrillic } },
+	{ 30040, { "Russian, with UAH symbol",                        Script::Cyrillic } },
+	{ 58152, { "Kazakh, with EUR symbol",                         Script::Cyrillic } },
+	{ 58210, { "Azeri Cyrillic and Russian",                      Script::Cyrillic } },
+	{ 59234, { "Tatar",                                           Script::Cyrillic } },
+	{ 58335, { "Kashubian, Mazovia-based, with PLN symbol",       Script::Latin    } },
+	{ 59829, { "Georgian",                                        Script::Georgian } },
+	{ 60258, { "Azeri Latin and Russian",                         Script::Cyrillic } },
+	{ 60853, { "Georgian with capital letters",                   Script::Georgian } },
+	{ 62306, { "Uzbek",                                           Script::Cyrillic } },
 };
 // clang-format on
 

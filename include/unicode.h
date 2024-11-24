@@ -92,6 +92,9 @@ std::string lowercase_dos(const std::string& str, const uint16_t code_page);
 std::string uppercase_dos(const std::string& str);
 std::string uppercase_dos(const std::string& str, const uint16_t code_page);
 
+// Calculate length of a UTF-8 encoded string
+size_t length_utf8(const std::string& str);
+
 // Check if two code pages are the same
 bool is_code_page_equal(const uint16_t code_page1, const uint16_t code_page2);
 

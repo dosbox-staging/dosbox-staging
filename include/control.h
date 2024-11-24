@@ -46,6 +46,7 @@ struct CommandLineArguments {
 	bool fullscreen;
 	bool list_countries;
 	bool list_layouts;
+	bool list_code_pages;
 	bool list_glshaders;
 	bool version;
 	bool help;
