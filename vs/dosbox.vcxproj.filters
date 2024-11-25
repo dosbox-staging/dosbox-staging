@@ -1023,6 +1023,9 @@
     <ClInclude Include="..\include\mem_unaligned.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\messages.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\midi.h">
       <Filter>include</Filter>
     </ClInclude>
