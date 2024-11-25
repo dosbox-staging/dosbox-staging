@@ -45,6 +45,7 @@ static const std::string ResourceDirCodePage = "freedos-cpi";
 static void notify_code_page_changed()
 {
 	// Re-create various information to match new code page
+	MSG_NotifyNewCodePage();
 	DOS_UpdateCurrentProgramName();
 	DOS_RepopulateCountryInfo();
 	AUTOEXEC_NotifyNewCodePage();
@@ -1234,8 +1235,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 	}
 
 	// Log loaded code page
-	if (old_code_page != dos.loaded_codepage ||
-	    old_font_origin != loaded_layout->GetCodePageFontOrigin()) {
+	if (old_code_page != dos.loaded_codepage) {
 		switch (loaded_layout->GetCodePageFontOrigin()) {
 		case CodePageFontOrigin::Rom:
 			LOG_MSG("LOCALE: Loaded code page %d (ROM font)",
@@ -1267,7 +1267,8 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		        DOS_GetKeyboardLayoutName(new_keyboard_layout).c_str());
 	}
 
-	if (old_code_page != dos.loaded_codepage) {
+	if (old_code_page != dos.loaded_codepage ||
+	    old_font_origin != loaded_layout->GetCodePageFontOrigin()) {
 		notify_code_page_changed();
 	}
 

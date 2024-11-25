@@ -96,7 +96,11 @@ static std::map<Placement, std::list<std::string>> autoexec_lines;
 // AUTOEXEC.BAT generation code
 // ***************************************************************************
 
-std::string create_autoexec_bat_utf8()
+// Warning: only execute this once, when the initial AUTOEXEC.BAT is being
+// created. Language might change at runtime, affecting the length of strings;
+// if this happens when executing the AUTOEXEC.BAT, changed offsets in the file
+// might confuse our COMMAND.COM, leading to errors in BAT file execution.
+static std::string create_autoexec_bat_utf8()
 {
 	std::string out;
 
@@ -138,10 +142,10 @@ std::string create_autoexec_bat_utf8()
 	// We want unprocessed UTF8 form of messages here (thus 'MSG_GetRaw'
 	// calls, not 'MSG_Get'), they will be converted to DOS code page later,
 	// together with the '[autoexec]' section content
-	static const std::string comment_start    = ":: ";
-	static const std::string header_generated = comment_start +
+	static const std::string comment_start = ":: ";
+	const std::string header_generated = comment_start +
 		MSG_GetRaw("AUTOEXEC_BAT_GENERATED");
-	static const std::string header_autoexec_section = comment_start +
+	const std::string header_autoexec_section = comment_start +
 		MSG_GetRaw("AUTOEXEC_BAT_CONFIG_SECTION");
 
 	// Put 'ECHO OFF' and 'SET variable=value' if needed

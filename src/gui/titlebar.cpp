@@ -230,12 +230,9 @@ static std::string get_dosbox_version()
 
 static std::string get_mouse_hint_simple()
 {
-	// We are using 'MSG_GetRaw' here as we want messages to stay as UTF-8
-
 	if (state.mouse_hint_id == MouseHint::CapturedHotkey ||
 	    state.mouse_hint_id == MouseHint::CapturedHotkeyMiddle) {
-		// 'MSG_GetRaw' because we want messages to stay as UTF-8
-		return MSG_GetRaw("TITLEBAR_HINT_CAPTURED");
+		return MSG_GetForHost("TITLEBAR_HINT_CAPTURED");
 	} else {
 		return {};
 	}
@@ -246,8 +243,9 @@ static std::string get_mouse_hint_full()
 	char hint_buffer[200] = {0};
 
 	auto create_hint_str = [&](const char* requested_name) {
-		// 'MSG_GetRaw' because we want messages to stay as UTF-8
-		safe_sprintf(hint_buffer, MSG_GetRaw(requested_name), PRIMARY_MOD_NAME);
+		safe_sprintf(hint_buffer,
+		             MSG_GetForHost(requested_name),
+		             PRIMARY_MOD_NAME);
 		return hint_buffer;
 	};
 
@@ -291,16 +289,16 @@ static void maybe_add_muted_mark(std::string& title_str)
 {
 	// Do not add 'mute' tag if emulator is paused
 	if (state.is_audio_muted && !sdl.is_paused) {
-		title_str = BeginTag + MSG_GetRaw("TITLEBAR_MUTED") + EndTag +
-		            title_str;
+		title_str = BeginTag + MSG_GetForHost("TITLEBAR_MUTED") +
+		            EndTag + title_str;
 	}
 }
 
 static void maybe_add_recording_pause_mark(std::string& title_str)
 {
 	if (sdl.is_paused) {
-		title_str = BeginTag + MSG_GetRaw("TITLEBAR_PAUSED") + EndTag +
-		            title_str;
+		title_str = BeginTag + MSG_GetForHost("TITLEBAR_PAUSED") +
+		            EndTag + title_str;
 		return;
 	}
 
