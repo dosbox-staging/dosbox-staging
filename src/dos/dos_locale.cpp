@@ -556,12 +556,12 @@ static const std::string AnsiHighlight = "[color=light-green]";
 static std::string get_output_header(const char* header_msg_id,
                                      const bool for_keyb_command = false)
 {
-	const std::string raw_header = MSG_GetRaw(header_msg_id);
 	if (for_keyb_command) {
-		return AnsiWhite + raw_header + ":" + AnsiReset + "\n\n";
+		return AnsiWhite + MSG_Get(header_msg_id) + ":" + AnsiReset + "\n\n";
 	} else {
-		return std::string("\n") + raw_header + "\n" +
-		       std::string(raw_header.size(), '-') + "\n\n";
+		std::string header_str = MSG_GetForHost(header_msg_id);
+		return std::string("\n") + header_str.c_str() + "\n" +
+		       std::string(header_str.size(), '-') + "\n\n";
 	}
 }
 
@@ -574,11 +574,11 @@ std::string DOS_GenerateListCountriesMessage()
 	     ++it) {
 		message += format_str("  %-5d - %s\n",
 		                      enum_val(it->first),
-		                      MSG_GetRaw(it->second.GetMsgName().c_str()));
+		                      MSG_GetForHost(it->second.GetMsgName()));
 	}
 
 	message += "\n";
-	message += MSG_GetRaw("DOSBOX_HELP_LIST_COUNTRIES_2");
+	message += MSG_GetForHost("DOSBOX_HELP_LIST_COUNTRIES_2");
 	message += "\n";
 
 	return message;
@@ -627,7 +627,13 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		column_1_width = std::max(column_1_width, column_1_raw.length());
 
 		// Column 2 - localized keyboard name/description
-		const auto column_2 = MSG_GetRaw(entry.GetMsgName().c_str());
+		std::string column_2;
+		if (for_keyb_command) {
+			column_2 = MSG_Get(entry.GetMsgName());
+		} else {
+			column_2 = MSG_GetForHost(entry.GetMsgName());
+		}
+
 		table.push_back({column_1_ansi, column_2, highlight});
 	}
 
@@ -655,7 +661,7 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		return convert_ansi_markup(message);
 	} else {
 		message += "\n";
-		message += MSG_GetRaw("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
+		message += MSG_GetForHost("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
 		message += "\n";
 
 		return message;
@@ -684,8 +690,8 @@ std::string DOS_GenerateListCodePagesMessage()
 		Row row = {};
 
 		row.column1 = format_str("% 7d - ", entry.first);
-		row.column2 = MSG_GetRaw(page_msg_name.c_str());
-		row.column3 = MSG_GetRaw(script_msg_name.c_str());
+		row.column2 = MSG_GetForHost(page_msg_name);
+		row.column3 = MSG_GetForHost(script_msg_name);
 
 		max_column2_length = std::max(max_column2_length,
 		                              length_utf8(row.column2));
@@ -708,7 +714,7 @@ std::string DOS_GenerateListCodePagesMessage()
 	}
 
 	message += "\n";
-	message += MSG_GetRaw("DOSBOX_HELP_LIST_CODE_PAGES_2");
+	message += MSG_GetForHost("DOSBOX_HELP_LIST_CODE_PAGES_2");
 	message += "\n";
 
 	return message;
