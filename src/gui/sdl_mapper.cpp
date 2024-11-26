@@ -2097,6 +2097,10 @@ static void SetActiveEvent(CEvent * event) {
 		mapper.abindit=event->bindlist.begin();
 		if (mapper.abindit!=event->bindlist.end()) {
 			SetActiveBind(*(mapper.abindit));
+
+			const auto new_bind = dynamic_cast<CKeyBind*>(*mapper.abindit);
+			drop_other_bound_events(new_bind);
+
 		} else SetActiveBind(nullptr);
 		bind_but.add->Enable(true);
 	}
