@@ -27,6 +27,7 @@
 #include "checks.h"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <unordered_map>
 
 CHECK_NARROWING();
 
@@ -39,7 +40,7 @@ CHECK_NARROWING();
 // 'System Settings' -> 'Keyboard' -> 'Text Input' -> 'Input Sources' settings
 // on macOS 'Sequoia' 15.1.1.
 // clang-format off
-static const std::map<int64_t, KeyboardLayoutMaybeCodepage> MacToDosKeyboard = {
+static const std::unordered_map<int64_t, KeyboardLayoutMaybeCodepage> MacToDosKeyboard = {
 	// US (standard, QWERTY/national)
 	{  0,     { "us" }         }, // U. S.
 	{  15,    { "us" }         }, // Australian
