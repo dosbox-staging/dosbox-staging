@@ -1892,6 +1892,8 @@ public:
 		        defmod & MMOD1 ? " mod1" : "",
 		        defmod & MMOD2 ? " mod2" : "",
 		        defmod & MMOD3 ? " mod3" : "");
+
+		drop_other_bound_events(this);
 	}
 
 protected:
