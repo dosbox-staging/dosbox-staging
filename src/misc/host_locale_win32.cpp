@@ -26,6 +26,7 @@
 #include "string_utils.h"
 
 #include <stringapiset.h>
+#include <unordered_map>
 #include <windows.h>
 #include <winnls.h>
 
@@ -34,7 +35,7 @@ CHECK_NARROWING();
 // Mapping from modern Windows to DOS keyboard layouts. Developed using
 // https://kbdlayout.info web page for layout visualization
 // clang-format off
-static const std::map<std::string, KeyboardLayoutMaybeCodepage> WinToDosKeyboard = {
+static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> WinToDosKeyboard = {
 	// US (standard, QWERTY/national)
 	{ "00000409", { "us" }         }, // US
 	{ "00050409", { "us" }         }, // US English Table for IBM Arabic 238_L

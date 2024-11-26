@@ -33,6 +33,7 @@
 
 #include <cstdio>
 #include <fstream>
+#include <unordered_map>
 #include <set>
 #include <string>
 
@@ -72,7 +73,7 @@ static const std::set<std::string> KeyboardModels102 = {"pc102",
 // - /usr/share/X11/xkb/rules/evdev.lst
 // - 'localectl list-x11-keymap-variants <layout>' command
 // clang-format off
-static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard = {
+static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard = {
 	// US (standard, QWERTY/national)
 	{ "us",                         { "us" }         },
 	{ "us:chr",                     { "us", 30034 }  }, // Cherokee
@@ -455,7 +456,7 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard
 
 // Mapping as above, but for certain 102-key keyboard layouts only
 // clang-format off
-static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard102 = {
+static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard102 = {
 	// Icelandic (102-key, QWERTY)
 	{ "is",                         { "is161" }      },
         // Ukrainian (102-key, 2007, QWERTY/national)
@@ -467,7 +468,7 @@ static const std::map<std::string, KeyboardLayoutMaybeCodepage> X11ToDosKeyboard
 // - /usr/share/keymaps
 // - 'localectl list-keymaps' command
 // clang-format off
-static const std::map<std::string, KeyboardLayoutMaybeCodepage> TtyToDosKeyboard = {
+static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> TtyToDosKeyboard = {
 	// US (standard, QWERTY/national)
 	{ "us",                                  { "us" }        },
 	{ "us1",                                 { "us" }        },
