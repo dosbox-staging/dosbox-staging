@@ -775,7 +775,7 @@ std::string DOS_GetKeyboardScriptName(const KeyboardScript keyboard_script)
 	assert(LocaleData::ScriptInfo.contains(script));
 	const auto msg_id = LocaleData::ScriptInfo.at(script).GetMsgName();
 
-	std::string result = MSG_Get(msg_id.c_str());
+	std::string result = MSG_Get(msg_id);
 
 	switch (keyboard_script) {
 	case KeyboardScript::LatinQwerty:
@@ -897,7 +897,7 @@ std::string DOS_GetCodePageDescription(const uint16_t code_page)
 		return {};
 	}
 
-	return MSG_Get(CodePageInfoEntry::GetMsgName(code_page).c_str());
+	return MSG_Get(CodePageInfoEntry::GetMsgName(code_page));
 }
 
 std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page)
