@@ -919,7 +919,7 @@ static std::pair<std::string, std::string> split_posix_locale(const std::string&
 static std::optional<DosCountry> get_dos_country(const std::string& category,
                                                  std::string& log_info)
 {
-	const std::vector<std::string> Variables = {LcAll, category};
+	const std::vector<std::string> Variables = {LcAll, category, VariableLang};
 
 	const auto [variable, value] = get_env_variable_from_list(Variables);
 	if (value.empty()) {
