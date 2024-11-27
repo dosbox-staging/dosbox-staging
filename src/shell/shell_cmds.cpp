@@ -227,10 +227,10 @@ bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
 
 	MoreOutputStrings output(*this);
 	std::string short_key("SHELL_CMD_" + command + "_HELP");
-	output.AddString("%s\n", MSG_Get(short_key.c_str()));
+	output.AddString("%s\n", MSG_Get(short_key));
 	std::string long_key("SHELL_CMD_" + command + "_HELP_LONG");
-	if (MSG_Exists(long_key.c_str()))
-		output.AddString("%s", MSG_Get(long_key.c_str()));
+	if (MSG_Exists(long_key))
+		output.AddString("%s", MSG_Get(long_key));
 	else
 		output.AddString("%s\n", command.c_str());
 	output.Display();
