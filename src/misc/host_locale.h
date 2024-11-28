@@ -41,9 +41,17 @@ struct KeyboardLayoutMaybeCodepage {
 	// is a specific need to use a particular code page, set it here
 	std::optional<uint16_t> code_page = {};
 
+	// Set this if the host layout does not have a reasonable FreeDOS
+	// counterpart and the mapping is very poor/imprecise; this will lower
+	// the priority of this particular layout as much as possible
+	bool is_mapping_fuzzy = false;
+
 	bool operator==(const KeyboardLayoutMaybeCodepage& other) const
 	{
 		if (keyboard_layout != other.keyboard_layout) {
+			return false;
+		}
+		if (is_mapping_fuzzy != other.is_mapping_fuzzy) {
 			return false;
 		}
 		if (!code_page && !other.code_page) {
@@ -89,7 +97,12 @@ struct HostLocale {
 	// If the host OS support code cannot determine any of these values, it
 	// should leave them as default
 
+	// Keyboard layouts, optionally with code pages
 	std::vector<KeyboardLayoutMaybeCodepage> keyboard_layout_list = {};
+
+	// If the keyboard layouts list retrieved from the host OS is already
+	// sorted by user priority, set this to 'true'.
+	bool is_layout_list_sorted = false;
 
 	// DOS country code
 	std::optional<DosCountry> country = {};

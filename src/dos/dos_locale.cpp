@@ -1167,7 +1167,8 @@ static void preprocess_detected_keyboard_layouts(
 }
 
 static void sort_detected_keyboard_layouts(
-        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
+        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts,
+        const bool is_layout_list_sorted)
 {
 	// Get the relevant keyboard layout information into a local std::map
 	std::map<std::string, KeyboardLayoutInfoEntry> info_map = {};
@@ -1223,6 +1224,10 @@ static void sort_detected_keyboard_layouts(
 		return has_script_above(entry, KeyboardScript::LatinQwerty);
 	};
 
+	auto has_code_page = [&](const KeyboardLayoutMaybeCodepage& entry) {
+		return entry.code_page && (*entry.code_page != DefaultCodePage);
+	};
+
 	auto count_supported_scripts = [&](const KeyboardLayoutMaybeCodepage& entry) {
 		uint8_t result         = 1;
 		const auto& info_entry = info_map.at(
@@ -1253,7 +1258,20 @@ static void sort_detected_keyboard_layouts(
 			// 'l' less preferable than 'r'    => return false
 			// both layouts equally preferable => return false
 			if (l == r) {
-			        return false;
+				return false;
+			}
+
+			// Do not use fuzzy mappings if others are available
+			if (!l.is_mapping_fuzzy && r.is_mapping_fuzzy) {
+				return true;
+			} else if (l.is_mapping_fuzzy && !r.is_mapping_fuzzy) {
+				return false;
+			}
+
+			// Skip remaining criteria if the host OS provided us
+			// with the list already sorted by user preference
+			if (is_layout_list_sorted) {
+				return false;
 			}
 
 			// Prefer keyboard layouts containing a non-Latin script
@@ -1295,10 +1313,8 @@ static void sort_detected_keyboard_layouts(
 
 			// Prefer layouts with non-default and non-standard code
 			// page
-			const bool l_has_code_page = l.code_page &&
-			                             (*l.code_page != DefaultCodePage);
-			const bool r_has_code_page = r.code_page &&
-			                             (*r.code_page != DefaultCodePage);
+			const bool l_has_code_page = has_code_page(l);
+			const bool r_has_code_page = has_code_page(r);
 			if (l_has_code_page && !r_has_code_page) {
 				return true;
 			} else if (!l_has_code_page && r_has_code_page) {
@@ -1325,12 +1341,14 @@ static void sort_detected_keyboard_layouts(
 
 			// For now I have no sane idea for more criteria...
 			return false;
-		});
+	        });
 }
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 {
-	auto keyboard_layouts = GetHostLocale().keyboard_layout_list;
+	const auto &host_locale = GetHostLocale();
+
+	auto keyboard_layouts = host_locale.keyboard_layout_list;
 
 	// Keyboard layouts in modern OSes support just one script (like only
 	// Latin, only Greek, only Cyrillic, etc.) and in countries using
@@ -1344,7 +1362,8 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 	// layouts to DOS ones, our task is now to guess which one is the most
 	// likely to be the main national one (Greek, Hebrew, etc.).
 
-	sort_detected_keyboard_layouts(keyboard_layouts);
+	sort_detected_keyboard_layouts(keyboard_layouts,
+	                               host_locale.is_layout_list_sorted);
 	preprocess_detected_keyboard_layouts(keyboard_layouts);
 
 	return keyboard_layouts;
