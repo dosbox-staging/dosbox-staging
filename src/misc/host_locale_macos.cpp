@@ -36,303 +36,306 @@ CHECK_NARROWING();
 // Detection data
 // ***************************************************************************
 
+// Constant to mark poor/imprecise keyboard layout mappings
+constexpr bool Fuzzy = true;
+
 // Mapping from Macintosh to DOS keyboard layout. Collected using:
 // 'System Settings' -> 'Keyboard' -> 'Text Input' -> 'Input Sources' settings
 // on macOS 'Sequoia' 15.1.1.
 // clang-format off
 static const std::unordered_map<int64_t, KeyboardLayoutMaybeCodepage> MacToDosKeyboard = {
 	// US (standard, QWERTY/national)
-	{  0,     { "us" }         }, // U. S.
-	{  15,    { "us" }         }, // Australian
-	{  29,    { "us" }         }, // Canadian
-	{  252,   { "us" }         }, // ABC
-	{ -1,     { "us" }         }, // Unicode Hex Input
-	{ -2,     { "us" }         }, // ABC - Extended
-	{ -3,     { "us" }         }, // ABC - India
-	{ -50,    { "us", 30021 }  }, // Hawaiian
-	{ -52,    { "us", 30021 }  }, // Samoan
-	{ -26112, { "us", 30034 }  }, // Cherokee - Nation
-	{ -26113, { "us", 30034 }  }, // Cherokee - QWERTY
+	{  0,     { "us" }             }, // U. S.
+	{  15,    { "us" }             }, // Australian
+	{  29,    { "us" }             }, // Canadian
+	{  252,   { "us" }             }, // ABC
+	{ -1,     { "us" }             }, // Unicode Hex Input
+	{ -2,     { "us" }             }, // ABC - Extended
+	{ -3,     { "us" }             }, // ABC - India
+	{ -50,    { "us", 30021 }      }, // Hawaiian
+	{ -52,    { "us", 30021 }      }, // Samoan
+	{ -26112, { "us", 30034 }      }, // Cherokee - Nation
+	{ -26113, { "us", 30034 }      }, // Cherokee - QWERTY
 	// US (international, QWERTY)
-	{  15000, { "ux" }         }, // U.S. International - PC
+	{  15000, { "ux" }             }, // U.S. International - PC
 	// US (Colemak)
-	{  12825, { "co" }         }, // Colemak
+	{  12825, { "co" }             }, // Colemak
 	// US (Dvorak)
-	{  16300, { "dv" }         }, // Dvorak
-	{  16301, { "dv" }         }, // Dvorak - QWERTY
+	{  16300, { "dv" }             }, // Dvorak
+	{  16301, { "dv" }             }, // Dvorak - QWERTY
 	// US (left-hand Dvorak)
-	{  16302, { "lh" }         }, // Dvorak Left-Handed
+	{  16302, { "lh" }             }, // Dvorak Left-Handed
 	// US (right-hand Dvorak)
-	{  16303, { "rh" }         }, // Dvorak Right-Handed
+	{  16303, { "rh" }             }, // Dvorak Right-Handed
 	// UK (standard, QWERTY)
-	{  2,     { "uk" }         }, // British
-	{  50,    { "uk" }         }, // Irish
-	{ -500,   { "uk" }         }, // Irish - Extended
-	{ -790,   { "uk", 30001 }  }, // Welsh
+	{  2,     { "uk" }             }, // British
+	{  50,    { "uk" }             }, // Irish
+	{ -500,   { "uk" }             }, // Irish - Extended
+	{ -790,   { "uk", 30001 }      }, // Welsh
 	// UK (alternate, QWERTY)
-	{  250,   { "uk168" }      }, // British - PC
+	{  250,   { "uk168" }          }, // British - PC
 	// Arabic (AZERTY/Arabic)
-	{ -17920, { "ar462" }      }, // Arabic
-	{ -17923, { "ar462" }      }, // Arabic - 123
-	{ -17940, { "ar462" }      }, // Arabic - AZERTY
-	{ -17921, { "ar462" }      }, // Arabic - PC
-	{ -2902,  { "ar462" }      }, // Afghan Dari
-	{ -2904,  { "ar462" }      }, // Afghan Pashto
-	{ -2903,  { "ar462" }      }, // Afghan Uzbek
-	{ -17960, { "ar462" }      }, // Persian - Legacy
-	{ -2901,  { "ar462" }      }, // Persian - Standard
-	{ -31486, { "ar462" }      }, // Syriac - Arabic
+	{ -17920, { "ar462" }          }, // Arabic
+	{ -17923, { "ar462" }          }, // Arabic - 123
+	{ -17940, { "ar462" }          }, // Arabic - AZERTY
+	{ -17921, { "ar462" }          }, // Arabic - PC
+	{ -2902,  { "ar462" }          }, // Afghan Dari
+	{ -2904,  { "ar462" }          }, // Afghan Pashto
+	{ -2903,  { "ar462" }          }, // Afghan Uzbek
+	{ -17960, { "ar462" }          }, // Persian - Legacy
+	{ -2901,  { "ar462" }          }, // Persian - Standard
+	{ -31486, { "ar462" }          }, // Syriac - Arabic
 	// Arabic (QWERTY/Arabic)
-	{ -18000, { "ar470" }      }, // Arabic - QWERTY
-	{ -19000, { "ar470" }      }, // Jawi
-	{ -1959,  { "ar470" }      }, // Persian - QWERTY
-	{ -22374, { "ar470" }      }, // Sindhi
-	{ -17926, { "ar470" }      }, // Sorani Kurdish
-	{ -30291, { "ar470" }      }, // Syriac - QWERTY
-	{ -27000, { "ar470" }      }, // Uyghur
+	{ -18000, { "ar470" }          }, // Arabic - QWERTY
+	{ -19000, { "ar470" }          }, // Jawi
+	{ -1959,  { "ar470" }          }, // Persian - QWERTY
+	{ -22374, { "ar470" }          }, // Sindhi
+	{ -17926, { "ar470" }          }, // Sorani Kurdish
+	{ -30291, { "ar470" }          }, // Syriac - QWERTY
+	{ -27000, { "ar470" }          }, // Uyghur
 	// Azeri (QWERTY/Cyrillic)"
-	{ -49,    { "az" }         }, // Azeri
+	{ -49,    { "az" }             }, // Azeri
 	// Belgian (AZERTY)
-	{  6,     { "be" }         }, // Belgian
+	{  6,     { "be" }             }, // Belgian
 	// Bulgarian (QWERTY/national)
-	{  19528, { "bg" }         }, // Bulgarian - Standard
+	{  19528, { "bg" }             }, // Bulgarian - Standard
 	// Bulgarian (QWERTY/phonetic)
-	{  19529, { "bg103" }      }, // Bulgarian - QWERTY
+	{  19529, { "bg103" }          }, // Bulgarian - QWERTY
 	// Brazilian (ABNT layout, QWERTY)
-	{  128,   { "br" }         }, // Brazilian - ABNT2
+	{  128,   { "br" }             }, // Brazilian - ABNT2
 	// Brazilian (US layout, QWERTY)
-	{  72,    { "br274" }      }, // Brazilian
-	{  71,    { "br274" }      }, // Brazilian - Legacy
+	{  72,    { "br274" }          }, // Brazilian
+	{  71,    { "br274" }          }, // Brazilian - Legacy
 	// Belarusian (QWERTY/national)
-	{  19517, { "by" }         }, // Belarusian
+	{  19517, { "by" }             }, // Belarusian
 	// Canadian (standard, QWERTY)
-	{ -19336, { "cf" }         }, // Canadian - PC
+	{ -19336, { "cf" }             }, // Canadian - PC
 	// Canadian (dual-layer, QWERTY)
-	{  80,    { "cf445" }      }, // Canadian - CSA
+	{  80,    { "cf445" }          }, // Canadian - CSA
 	// Czech (QWERTZ)
-	{ -14193, { "cz" }         }, // Czech
+	{ -14193, { "cz" }             }, // Czech
 	// Czech (programmers, QWERTY)
-	{  30778, { "cz489" }      }, // Czech - QWERTY
-	{  30779, { "cz489" }      }, // Slovak - QWERTY
+	{  30778, { "cz489" }          }, // Czech - QWERTY
+	{  30779, { "cz489" }          }, // Slovak - QWERTY
 	// German (standard, QWERTZ)
-	{  3,     { "de" }         }, // German
-	{ -18133, { "de" }         }, // German - Standard
-	{  92,    { "de" }         }, // Austrian
-	{  253,   { "de", 437 }    }, // ABC - QWERTZ
+	{  3,     { "de" }             }, // German
+	{ -18133, { "de" }             }, // German - Standard
+	{  92,    { "de" }             }, // Austrian
+	{  253,   { "de", 437 }        }, // ABC - QWERTZ
 	// Danish (QWERTY)
-	{  9,     { "dk" }         }, // Danish
+	{  9,     { "dk" }             }, // Danish
 	// Estonian (QWERTY)
-	{  30764, { "ee" }         }, // Estonian
+	{  30764, { "ee" }             }, // Estonian
 	// Spanish (QWERTY)
-	{  87,    { "es" }         }, // Spanish
-	{  8,     { "es" }         }, // Spanish - Legacy
+	{  87,    { "es" }             }, // Spanish
+	{  8,     { "es" }             }, // Spanish - Legacy
 	// Finnish (QWERTY/ASERTT)
-	{  17,    { "fi" }         }, // Finnish
-	{ -17,    { "fi" }         }, // Finnish - Extended
-	{ -18,    { "fi", 30000 }  }, // Finnish Sámi - PC
-	{ -1202,  { "fi", 30000 }  }, // Inari Sámi
-	{ -1206,  { "fi", 30000 }  }, // Skolt Sámi
+	{  17,    { "fi" }             }, // Finnish
+	{ -17,    { "fi" }             }, // Finnish - Extended
+	{ -18,    { "fi", 30000 }      }, // Finnish Sámi - PC
+	{ -1202,  { "fi", 30000 }      }, // Inari Sámi
+	{ -1206,  { "fi", 30000 }      }, // Skolt Sámi
 	// Faroese (QWERTY)
-	{ -47,    { "fo" }         }, // Faroese
+	{ -47,    { "fo" }             }, // Faroese
 	// French (standard, AZERTY)
-	{  1,     { "fr" }         }, // French
-	{  60,    { "fr" }         }, // French - PC
-	{  1111,  { "fr" }         }, // French - Numerical
-	{  251,   { "fr", 437 }    }, // ABC - AZERTY
+	{  1,     { "fr" }             }, // French
+	{  60,    { "fr" }             }, // French - PC
+	{  1111,  { "fr" }             }, // French - Numerical
+	{  251,   { "fr", 437 }        }, // ABC - AZERTY
 	// French (international, AZERTY)
 	// TODO: Is 30024 or 30025 a better one for the ADLaM/Wolof languages?
-	{ -29472, { "fx", 30025 }  }, // Adlam
+	{ -29472, { "fx", 30025 }      }, // Adlam
 	// Greek (459, non-standard/national)
-	{ -18944, { "gk459" }      }, // Greek
-	{ -18945, { "gk459" }      }, // Greek Polytonic
+	{ -18944, { "gk459" }          }, // Greek
+	{ -18945, { "gk459" }          }, // Greek Polytonic
 	// Croatian (QWERTZ/national)
-	{ -69,    { "hr" }         }, // Croatian - QWERTZ
+	{ -69,    { "hr" }             }, // Croatian - QWERTZ
 	// Hungarian (101-key, QWERTY)
-	{  30767, { "hu" }         }, // Hungarian - QWERTY
+	{  30767, { "hu" }             }, // Hungarian - QWERTY
 	// Hungarian (102-key, QWERTZ)
-	{  30763, { "hu208" }      }, // Hungarian
+	{  30763, { "hu208" }          }, // Hungarian
 	// Armenian (QWERTY/national)
-	{ -28161, { "hy" }         }, // Armenian - HM QWERTY
-	{ -28164, { "hy" }         }, // Armenian - Western QWERTY
+	{ -28161, { "hy" }             }, // Armenian - HM QWERTY
+	{ -28164, { "hy" }             }, // Armenian - Western QWERTY
 	// Hebrew (QWERTY/national)
-	{ -18432, { "il" }         }, // Hebrew
-	{ -18433, { "il" }         }, // Hebrew - PC
-	{ -18500, { "il" }         }, // Hebrew - QWERTY
-	{ -18501, { "il" }         }, // Yiddish - QWERTY
+	{ -18432, { "il" }             }, // Hebrew
+	{ -18433, { "il" }             }, // Hebrew - PC
+	{ -18500, { "il" }             }, // Hebrew - QWERTY
+	{ -18501, { "il" }             }, // Yiddish - QWERTY
 	// Icelandic (101-key, QWERTY)
-	{ -21,    { "is" }         }, // Icelandic
+	{ -21,    { "is" }             }, // Icelandic
 	// Italian (standard, QWERTY/national)
-	{  223,   { "it" }         }, // Italian
+	{  223,   { "it" }             }, // Italian
 	// Georgian (QWERTY/national)
-	{ -27650, { "ka" }         }, // Georgian - QWERTY
+	{ -27650, { "ka" }             }, // Georgian - QWERTY
 	// Kazakh (476, QWERTY/national)
-	{ -19501, { "kk476" }      }, // Kazakh
+	{ -19501, { "kk476" }          }, // Kazakh
 	// Kyrgyz (QWERTY/national)
-	{  19459, { "ky" }         }, // Kyrgyz
+	{  19459, { "ky" }             }, // Kyrgyz
 	// Latin American (QWERTY)
-	{  89,    { "la" }         }, // Latin American
+	{  89,    { "la" }             }, // Latin American
 	// Lithuanian (Baltic, QWERTY/phonetic)
-	{  30761, { "lt" }         }, // Lithuanian
+	{  30761, { "lt" }             }, // Lithuanian
 	// Latvian (standard, QWERTY/phonetic)
-	{  30765, { "lv" }         }, // Latvian
+	{  30765, { "lv" }             }, // Latvian
 	// Macedonian (QWERTZ/national)
-	{  19523, { "mk" }         }, // Macedonian
+	{  19523, { "mk" }             }, // Macedonian
 	// Mongolian (QWERTY/national)
-	{ -2276,  { "mn" }         }, // Mongolian
+	{ -2276,  { "mn" }             }, // Mongolian
 	// Maltese (UK layout, QWERTY)
-	{ -501,   { "mt" }         }, // Maltese
+	{ -501,   { "mt" }             }, // Maltese
 	// Nigerian (QWERTY)
-	{ -2461,  { "ng" }         }, // Hausa
-	{ -32355, { "ng" }         }, // Igbo
-	{ -32377, { "ng" }         }, // Yoruba
+	{ -2461,  { "ng" }             }, // Hausa
+	{ -32355, { "ng" }             }, // Igbo
+	{ -32377, { "ng" }             }, // Yoruba
 	// Dutch (QWERTY)
-	{  26,    { "nl" }         }, // Dutch
+	{  26,    { "nl" }             }, // Dutch
 	// Norwegian (QWERTY/ASERTT)
-	{  12,    { "no" }         }, // Norwegian
-	{ -12,    { "no" }         }, // Norwegian - Extended
-	{ -1209,  { "no", 30000 }  }, // Lule Sámi (Norway)
-	{ -1200,  { "no", 30000 }  }, // North Sámi
-	{ -1201,  { "no", 30000 }  }, // North Sámi - PC
-	{ -13,    { "no", 30000 }  }, // Norwegian Sámi - PC
-	{ -1207,  { "no", 30000 }  }, // South Sámi
+	{  12,    { "no" }             }, // Norwegian
+	{ -12,    { "no" }             }, // Norwegian - Extended
+	{ -1209,  { "no", 30000 }      }, // Lule Sámi (Norway)
+	{ -1200,  { "no", 30000 }      }, // North Sámi
+	{ -1201,  { "no", 30000 }      }, // North Sámi - PC
+	{ -13,    { "no", 30000 }      }, // Norwegian Sámi - PC
+	{ -1207,  { "no", 30000 }      }, // South Sámi
 	// Polish (programmers, QWERTY/phonetic)
-	{  30788, { "pl" }         }, // Polish
+	{  30788, { "pl" }             }, // Polish
 	// Polish (typewriter, QWERTZ/phonetic)
-	{  30762, { "pl214" }      }, // Polish - QWERTZ
+	{  30762, { "pl214" }          }, // Polish - QWERTZ
 	// Portuguese (QWERTY)
-	{  10,    { "po" }         }, // Portuguese
+	{  10,    { "po" }             }, // Portuguese
 	// Romanian (QWERTY/phonetic)
-	{ -39,    { "ro446" }      }, // Romanian
-	{ -38,    { "ro446" }      }, // Romanian - Standard
+	{ -39,    { "ro446" }          }, // Romanian
+	{ -38,    { "ro446" }          }, // Romanian - Standard
 	// Russian (standard, QWERTY/national)
-	{  19456, { "ru" }         }, // Russian
-	{  19458, { "ru" }         }, // Russian - PC
-	{  19457, { "ru" }         }, // Russian - QWERTY
+	{  19456, { "ru" }             }, // Russian
+	{  19458, { "ru" }             }, // Russian - PC
+	{  19457, { "ru" }             }, // Russian - QWERTY
 	// Russian (extended standard, QWERTY/national)
-	{ -14457, { "rx", 30013 }  }, // Chuvash
-	{  23978, { "rx", 30011 }  }, // Ingush
-	{  19690, { "rx", 30017 }  }, // Kildin Sámi
+	{ -14457, { "rx", 30013 }      }, // Chuvash
+	{  23978, { "rx", 30011 }      }, // Ingush
+	{  19690, { "rx", 30017 }      }, // Kildin Sámi
 	// Swiss (German, QWERTZ)
-	{  19,    { "sd" }         }, // Swiss German
+	{  19,    { "sd" }             }, // Swiss German
 	// Swiss (French, QWERTZ)
-	{  18,    { "sf" }         }, // Swiss French
+	{  18,    { "sf" }             }, // Swiss French
 	// Slovak (QWERTZ)
-	{ -11013, { "sk" }         }, // Slovak
+	{ -11013, { "sk" }             }, // Slovak
 	// Albanian (deadkeys, QWERTZ)
-	{ -31882, { "sq448" }      }, // Albanian
+	{ -31882, { "sq448" }          }, // Albanian
 	// Swedish (QWERTY/ASERTT)
-	{  7,     { "sv" }         }, // Swedish
-	{  224,   { "sv" }         }, // Swedish - Legacy
-	{ -15,    { "sv", 30000 }  }, // Swedish Sámi - PC
-	{ -1203,  { "sv", 30000 }  }, // Lule Sámi (Sweden)
-	{ -1205,  { "sv", 30000 }  }, // Pite Sámi
-	{ -1208,  { "sv", 30000 }  }, // Ume Sámi
+	{  7,     { "sv" }             }, // Swedish
+	{  224,   { "sv" }             }, // Swedish - Legacy
+	{ -15,    { "sv", 30000 }      }, // Swedish Sámi - PC
+	{ -1203,  { "sv", 30000 }      }, // Lule Sámi (Sweden)
+	{ -1205,  { "sv", 30000 }      }, // Pite Sámi
+	{ -1208,  { "sv", 30000 }      }, // Ume Sámi
 	// Tajik (QWERTY/national)
-	{  19460, { "tj" }         }, // Tajik (Cyrillic)
+	{  19460, { "tj" }             }, // Tajik (Cyrillic)
 	// Turkmen (QWERTY/phonetic)
-	{  15228, { "tm" }         }, // Turkmen
+	{  15228, { "tm" }             }, // Turkmen
 	// Turkish (QWERTY)
-	{ -36,    { "tr" }         }, // Turkish Q
-	{ -35,    { "tr" }         }, // Turkish Q - Legacy
+	{ -36,    { "tr" }             }, // Turkish Q
+	{ -35,    { "tr" }             }, // Turkish Q - Legacy
 	// Turkish (non-standard)
-	{ -5482,  { "tr440" }      }, // Turkish F
-	{ -24,    { "tr440" }      }, // Turkish F - Legacy
+	{ -5482,  { "tr440" }          }, // Turkish F
+	{ -24,    { "tr440" }          }, // Turkish F - Legacy
 	// Ukrainian (101-key, QWERTY/national)
-	{ -2354,  { "ua" }         }, // Ukrainian
-	{  19518, { "ua" }         }, // Ukrainian - Legacy  
-	{ -23205, { "ua" }         }, // Ukrainian - QWERTY
+	{ -2354,  { "ua" }             }, // Ukrainian
+	{  19518, { "ua" }             }, // Ukrainian - Legacy  
+	{ -23205, { "ua" }             }, // Ukrainian - QWERTY
 	// Uzbek (QWERTY/national)
-	{  19461, { "uz" }         }, // Uzbek (Cyrillic)
+	{  19461, { "uz" }             }, // Uzbek (Cyrillic)
 	// Vietnamese (QWERTY)
-	{ -31232, { "vi" }         }, // Vietnamese
+	{ -31232, { "vi" }             }, // Vietnamese
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the QWERTY layout is typically used
-	{ -32044, { "us" }         }, // Akan
-	{ -18940, { "us" }         }, // Apache
-	{ -14789, { "us" }         }, // Assamese - InScript
-	{ -22528, { "us" }         }, // Bangla - InScript 
-	{ -22529, { "us" }         }, // Bangla - QWERTY
-	{ -11396, { "us" }         }, // Bodo
-	{ -18438, { "us" }         }, // Chickasaw
-	{ -17340, { "us" }         }, // Choctaw
-	{ -20481, { "us" }         }, // Devanagari - QWERTY
-	{ -17410, { "us" }         }, // Dhivehi - QWERTY
-	{ -25281, { "us" }         }, // Dogri
-	{ -2728,  { "us" }         }, // Dzongkha
-	{ -27432, { "us" }         }, // Ge'ez
-	{ -21504, { "us" }         }, // Gujarati - InScript
-	{ -21505, { "us" }         }, // Gujarati - QWERTY
-	{ -20992, { "us" }         }, // Gurmukhi - InScript
-	{ -20993, { "us" }         }, // Gurmukhi - QWERTY
-	{ -27472, { "us" }         }, // Hanifi Rohingya
-	{ -20480, { "us" }         }, // Hindi - InScript
-	{ -20564, { "us" }         }, // Hmong (Pahawh)
-	{ -30606, { "us" }         }, // Inuktitut - Nattilik
-	{ -30602, { "us" }         }, // Inuktitut - Nutaaq
-	{ -30603, { "us" }         }, // Inuttitut - Nunavik
-	{ -30604, { "us" }         }, // Inuktitut - Nunavut
-	{ -30600, { "us" }         }, // Inuktitut - QWERTY
-	{  11538, { "us" }         }, // Kabyle - QWERTY
-	{ -24064, { "us" }         }, // Kannada - InScript
-	{ -24065, { "us" }         }, // Kannada - QWERTY
-	{ -22530, { "us" }         }, // Kashmiri (Devanagari)
-	{ -26114, { "us" }         }, // Khmer
-	{ -25282, { "us" }         }, // Konkani
-	{ -361,   { "us" }         }, // Kurmanji Kurdish
-	{ -26115, { "us" }         }, // Lao
-	{ -23562, { "us" }         }, // Lushootseed
-	{ -25283, { "us" }         }, // Maithili - InScript
-	{ -24576, { "us" }         }, // Malayalam - InScript
-	{ -24577, { "us" }         }, // Malayalam - QWERTY
-	{ -3047,  { "us" }         }, // Mandaic - Arabic
-	{ -17993, { "us" }         }, // Mandaic - QWERTY
-	{ -22532, { "us" }         }, // Manipuri (Bengali)
-	{ -22534, { "us" }         }, // Manipuri (Meetei Mayek)
-	{ -51,    { "us" }         }, // Māori - InScript
-	{ -25284, { "us" }         }, // Marathi
-	{ -13161, { "us" }         }, // Mi'kmaq
-	{ -23561, { "us" }         }, // Mvskoke
-	{ -25602, { "us" }         }, // Myanmar
-	{ -25601, { "us" }         }, // Myanmar - QWERTY
-	{ -25709, { "us" }         }, // N'Ko - QWERTY
-	{ -18939, { "us" }         }, // Navajo
-	{ -25286, { "us" }         }, // Nepali - InScript
-	{ -31135, { "us" }         }, // Nepali - Remington
-	{ -22016, { "us" }         }, // Odiya - InScript
-	{ -22017, { "us" }         }, // Odiya - QWERTY
-	{  38342, { "us" }         }, // Osage - QWERTY
-	{ -20563, { "us" }         }, // Rejang - QWERTY
-	{ -23064, { "us" }         }, // Sanskrit
-	{ -22538, { "us" }         }, // Santali (Devanagari) - InScript
-	{ -22536, { "us" }         }, // Santali - (Ol Chiki)
-	{ -16901, { "us" }         }, // Sindhi (Devanagari) - InScript
-	{ -25088, { "us" }         }, // Sinhala
-	{ -25089, { "us" }         }, // Sinhala - QWERTY
-	{ -23552, { "us" }         }, // Telugu - InScript
-	{ -23553, { "us" }         }, // Telugu - QWERTY
-	{ -26624, { "us" }         }, // Thai
-	{ -24616, { "us" }         }, // Thai - Pattachote
-	{ -26628, { "us" }         }, // Tibetan - Otani
-	{ -26625, { "us" }         }, // Tibetan - QWERTY
-	{ -2398,  { "us" }         }, // Tibetan - Wylie
-	{  88,    { "us" }         }, // Tongan
-	{ -17925, { "us" }         }, // Urdu
-	{ -23498, { "us" }         }, // Wancho - QWERTY
-	{  4300,  { "us" }         }, // Wolastoqey
+	{ -32044, { "us", {},  Fuzzy } }, // Akan
+	{ -18940, { "us", {},  Fuzzy } }, // Apache
+	{ -14789, { "us", {},  Fuzzy } }, // Assamese - InScript
+	{ -22528, { "us", {},  Fuzzy } }, // Bangla - InScript 
+	{ -22529, { "us", {},  Fuzzy } }, // Bangla - QWERTY
+	{ -11396, { "us", {},  Fuzzy } }, // Bodo
+	{ -18438, { "us", {},  Fuzzy } }, // Chickasaw
+	{ -17340, { "us", {},  Fuzzy } }, // Choctaw
+	{ -20481, { "us", {},  Fuzzy } }, // Devanagari - QWERTY
+	{ -17410, { "us", {},  Fuzzy } }, // Dhivehi - QWERTY
+	{ -25281, { "us", {},  Fuzzy } }, // Dogri
+	{ -2728,  { "us", {},  Fuzzy } }, // Dzongkha
+	{ -27432, { "us", {},  Fuzzy } }, // Ge'ez
+	{ -21504, { "us", {},  Fuzzy } }, // Gujarati - InScript
+	{ -21505, { "us", {},  Fuzzy } }, // Gujarati - QWERTY
+	{ -20992, { "us", {},  Fuzzy } }, // Gurmukhi - InScript
+	{ -20993, { "us", {},  Fuzzy } }, // Gurmukhi - QWERTY
+	{ -27472, { "us", {},  Fuzzy } }, // Hanifi Rohingya
+	{ -20480, { "us", {},  Fuzzy } }, // Hindi - InScript
+	{ -20564, { "us", {},  Fuzzy } }, // Hmong (Pahawh)
+	{ -30606, { "us", {},  Fuzzy } }, // Inuktitut - Nattilik
+	{ -30602, { "us", {},  Fuzzy } }, // Inuktitut - Nutaaq
+	{ -30603, { "us", {},  Fuzzy } }, // Inuktitut - Nunavik
+	{ -30604, { "us", {},  Fuzzy } }, // Inuktitut - Nunavut
+	{ -30600, { "us", {},  Fuzzy } }, // Inuktitut - QWERTY
+	{  11538, { "us", {},  Fuzzy } }, // Kabyle - QWERTY
+	{ -24064, { "us", {},  Fuzzy } }, // Kannada - InScript
+	{ -24065, { "us", {},  Fuzzy } }, // Kannada - QWERTY
+	{ -22530, { "us", {},  Fuzzy } }, // Kashmiri (Devanagari)
+	{ -26114, { "us", {},  Fuzzy } }, // Khmer
+	{ -25282, { "us", {},  Fuzzy } }, // Konkani
+	{ -361,   { "us", {},  Fuzzy } }, // Kurmanji Kurdish
+	{ -26115, { "us", {},  Fuzzy } }, // Lao
+	{ -23562, { "us", {},  Fuzzy } }, // Lushootseed
+	{ -25283, { "us", {},  Fuzzy } }, // Maithili - InScript
+	{ -24576, { "us", {},  Fuzzy } }, // Malayalam - InScript
+	{ -24577, { "us", {},  Fuzzy } }, // Malayalam - QWERTY
+	{ -3047,  { "us", {},  Fuzzy } }, // Mandaic - Arabic
+	{ -17993, { "us", {},  Fuzzy } }, // Mandaic - QWERTY
+	{ -22532, { "us", {},  Fuzzy } }, // Manipuri (Bengali)
+	{ -22534, { "us", {},  Fuzzy } }, // Manipuri (Meetei Mayek)
+	{ -51,    { "us", {},  Fuzzy } }, // Māori - InScript
+	{ -25284, { "us", {},  Fuzzy } }, // Marathi
+	{ -13161, { "us", {},  Fuzzy } }, // Mi'kmaq
+	{ -23561, { "us", {},  Fuzzy } }, // Mvskoke
+	{ -25602, { "us", {},  Fuzzy } }, // Myanmar
+	{ -25601, { "us", {},  Fuzzy } }, // Myanmar - QWERTY
+	{ -25709, { "us", {},  Fuzzy } }, // N'Ko - QWERTY
+	{ -18939, { "us", {},  Fuzzy } }, // Navajo
+	{ -25286, { "us", {},  Fuzzy } }, // Nepali - InScript
+	{ -31135, { "us", {},  Fuzzy } }, // Nepali - Remington
+	{ -22016, { "us", {},  Fuzzy } }, // Odiya - InScript
+	{ -22017, { "us", {},  Fuzzy } }, // Odiya - QWERTY
+	{  38342, { "us", {},  Fuzzy } }, // Osage - QWERTY
+	{ -20563, { "us", {},  Fuzzy } }, // Rejang - QWERTY
+	{ -23064, { "us", {},  Fuzzy } }, // Sanskrit
+	{ -22538, { "us", {},  Fuzzy } }, // Santali (Devanagari) - InScript
+	{ -22536, { "us", {},  Fuzzy } }, // Santali - (Ol Chiki)
+	{ -16901, { "us", {},  Fuzzy } }, // Sindhi (Devanagari) - InScript
+	{ -25088, { "us", {},  Fuzzy } }, // Sinhala
+	{ -25089, { "us", {},  Fuzzy } }, // Sinhala - QWERTY
+	{ -23552, { "us", {},  Fuzzy } }, // Telugu - InScript
+	{ -23553, { "us", {},  Fuzzy } }, // Telugu - QWERTY
+	{ -26624, { "us", {},  Fuzzy } }, // Thai
+	{ -24616, { "us", {},  Fuzzy } }, // Thai - Pattachote
+	{ -26628, { "us", {},  Fuzzy } }, // Tibetan - Otani
+	{ -26625, { "us", {},  Fuzzy } }, // Tibetan - QWERTY
+	{ -2398,  { "us", {},  Fuzzy } }, // Tibetan - Wylie
+	{  88,    { "us", {},  Fuzzy } }, // Tongan
+	{ -17925, { "us", {},  Fuzzy } }, // Urdu
+	{ -23498, { "us", {},  Fuzzy } }, // Wancho - QWERTY
+	{  4300,  { "us", {},  Fuzzy } }, // Wolastoqey
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the AZERTY layout is typically used
-	{  6983,  { "fr", 437 }    }, // Kabyle - AZERTY
-	{ -25708, { "fr", 437 }    }, // N'Ko
-	{ -12482, { "fr", 437 }    }, // Tifinagh - AZERTY
+	{  6983,  { "fr", 437, Fuzzy } }, // Kabyle - AZERTY
+	{ -25708, { "fr", 437, Fuzzy } }, // N'Ko
+	{ -12482, { "fr", 437, Fuzzy } }, // Tifinagh - AZERTY
 
 	// In some cases we do not have a matching QWERTY layout; if so, use
 	// the US/International keyboard with the best available code page
-	{ -68,    { "ux", 850 }    }, // Croatian - QWERTY
-	{  19521, { "us", 855 }    }, // Serbian
-	{ -19521, { "ux", 850 }    }, // Serbian (Latin)
-	{ -66,    { "ux", 850 }    }, // Slovenian
+	{ -68,    { "ux", 850, Fuzzy } }, // Croatian - QWERTY
+	{  19521, { "us", 855, Fuzzy } }, // Serbian
+	{ -19521, { "ux", 850, Fuzzy } }, // Serbian (Latin)
+	{ -66,    { "ux", 850, Fuzzy } }, // Slovenian
 };
 // clang-format on
 

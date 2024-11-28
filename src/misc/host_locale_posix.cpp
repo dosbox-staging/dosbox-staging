@@ -69,6 +69,9 @@ static const std::set<std::string> KeyboardModels102 = {"pc102",
                                                         "pc105",
                                                         "pc105+inet"};
 
+// Constant to mark poor/imprecise keyboard layout mappings
+constexpr bool Fuzzy = true;
+
 // Mapping from X11 to DOS keyboard layouts. Reference:
 // - /usr/share/X11/xkb/rules/evdev.lst
 // - 'localectl list-x11-keymap-variants <layout>' command
@@ -389,56 +392,57 @@ static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> X11ToD
 	{ "rs",                         { "yc" }         },
 	// Serbian (no deadkey, QWERTZ/national)
 	{ "rs:combiningkeys",           { "yc450" }      },
+
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the QWERTY layout is typically used
-	{ "brai",                       { "us" }         }, // Braille
-	{ "bd",                         { "us" }         }, // Bangladesh
-	{ "bt",                         { "us" }         }, // Buthan (Dzongkha)
-	{ "cn",                         { "us" }         }, // China
-	{ "et",                         { "us" }         }, // Ethiopia (Amharic)
-	{ "gh",                         { "us" }         }, // Ghana
-	{ "id",                         { "us" }         }, // Indonesia
-	{ "in",                         { "us" }         }, // India
-	{ "kh",                         { "us" }         }, // Khmer
-	{ "kr",                         { "us" }         }, // Korea
-	{ "jp",                         { "us" }         }, // Japan
-	{ "la",                         { "us" }         }, // Laos
-	{ "lk",                         { "us" }         }, // Sinhala
-	{ "md",                         { "us" }         }, // Moldavia
-	{ "mm",                         { "us" }         }, // Myanmar
-	{ "mv",                         { "us" }         }, // Maldives (Dhivehi)
-	{ "np",                         { "us" }         }, // Nepal
-	{ "th",                         { "us" }         }, // Thailand
-	{ "tw",                         { "us" }         }, // Taiwan
+	{ "brai",                   { "us", {},  Fuzzy } }, // Braille
+	{ "bd",                     { "us", {},  Fuzzy } }, // Bangladesh
+	{ "bt",                     { "us", {},  Fuzzy } }, // Buthan (Dzongkha)
+	{ "cn",                     { "us", {},  Fuzzy } }, // China
+	{ "et",                     { "us", {},  Fuzzy } }, // Ethiopia (Amharic)
+	{ "gh",                     { "us", {},  Fuzzy } }, // Ghana
+	{ "id",                     { "us", {},  Fuzzy } }, // Indonesia
+	{ "in",                     { "us", {},  Fuzzy } }, // India
+	{ "kh",                     { "us", {},  Fuzzy } }, // Khmer
+	{ "kr",                     { "us", {},  Fuzzy } }, // Korea
+	{ "jp",                     { "us", {},  Fuzzy } }, // Japan
+	{ "la",                     { "us", {},  Fuzzy } }, // Laos
+	{ "lk",                     { "us", {},  Fuzzy } }, // Sinhala
+	{ "md",                     { "us", {},  Fuzzy } }, // Moldavia
+	{ "mm",                     { "us", {},  Fuzzy } }, // Myanmar
+	{ "mv",                     { "us", {},  Fuzzy } }, // Maldives (Dhivehi)
+	{ "np",                     { "us", {},  Fuzzy } }, // Nepal
+	{ "th",                     { "us", {},  Fuzzy } }, // Thailand
+	{ "tw",                     { "us", {},  Fuzzy } }, // Taiwan
 
 	// In some cases we do not have a matching QWERTY layout; if so, use
 	// the US/International keyboard with the best available code page
-	{ "ba:us",                      { "ux", 850 }    }, // Bosnia
-	{ "de:us",                      { "ux", 850 }    }, // Germany
-	{ "de:qwerty",                  { "ux", 850 }    },
-	{ "de:dsb",                     { "ux", 850 }    }, // Sorbian
-	{ "fr:us",                      { "ux", 850 }    }, // France
-	{ "hr:us",                      { "ux", 850 }    }, // Croatia
-	{ "it:us",                      { "ux", 850 }    }, // Italy
-	{ "me:cyrillicyz",              { "us", 855 }    }, // Montenegro
-	{ "me:latinunicodeyz",          { "ux", 850 }    },
-	{ "me:latinyz",                 { "ux", 850 }    },
-	{ "si:us",                      { "ux", 850 }    }, // Slovenia
-	{ "tm:alt",                     { "ux", 437 }    }, // Turkmenistan
-	{ "us:hbs",                     { "ux", 850 }    }, // Serbo-Croatian
-	{ "vn:us",                      { "ux", 850 }    }, // Vietnam
+	{ "ba:us",                  { "ux", 850, Fuzzy } }, // Bosnia
+	{ "de:us",                  { "ux", 850, Fuzzy } }, // Germany
+	{ "de:qwerty",              { "ux", 850, Fuzzy } },
+	{ "de:dsb",                 { "ux", 850, Fuzzy } }, // Sorbian
+	{ "fr:us",                  { "ux", 850, Fuzzy } }, // France
+	{ "hr:us",                  { "ux", 850, Fuzzy } }, // Croatia
+	{ "it:us",                  { "ux", 850, Fuzzy } }, // Italy
+	{ "me:cyrillicyz",          { "us", 855, Fuzzy } }, // Montenegro
+	{ "me:latinunicodeyz",      { "ux", 850, Fuzzy } },
+	{ "me:latinyz",             { "ux", 850, Fuzzy } },
+	{ "si:us",                  { "ux", 850, Fuzzy } }, // Slovenia
+	{ "tm:alt",                 { "ux", 437, Fuzzy } }, // Turkmenistan
+	{ "us:hbs",                 { "ux", 850, Fuzzy } }, // Serbo-Croatian
+	{ "vn:us",                  { "ux", 850, Fuzzy } }, // Vietnam
 
 	// In some cases we do not have a matching QWERTZ layout; if so, use
 	// the German keyboard with the best available code page
-	{ "it:lldde",                   { "de", 850 }    }, // Ladin
+	{ "it:lldde",               { "de", 850, Fuzzy } }, // Ladin
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the AZERTY layout is typically used
-	{ "gn",                         { "fr", 437 }    }, // Gwinea, N'Ko
+	{ "gn",                     { "fr", 437, Fuzzy } }, // Gwinea, N'Ko
 
 	// In some cases we do not have a matching AZERTY layout; if so, use
 	// the French keyboard with the best available code page
-	{ "vn:fr",                      { "fr", 850 }    }, // Vietnam
+	{ "vn:fr",                  { "fr", 850, Fuzzy } }, // Vietnam
 
 	// Certain DOS keyboard layouts are never detected by this mechanism,
 	// due to various reason:
@@ -760,9 +764,10 @@ static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> TtyToD
 	{ "ua-ws",                               { "ua" }        },
 	// Serbian (deadkey, QWERTZ/national)
 	{ "sr-latin",                            { "yc" }        },
+
 	// In some cases we do not have a matching QWERTY layout; if so, use
 	// the US/International keyboard with the best available code page
-	{ "sr-cy",                               { "us", 855 }   }, // Serbia
+	{ "sr-cy",                          { "us", 855, Fuzzy } }, // Serbia
 };
 // clang-format on
 
@@ -1401,6 +1406,10 @@ const HostLocale& GetHostLocale()
 
 		locale->keyboard_layout_list = get_layouts_maybe_codepages(
 		        log_info.keyboard);
+
+		// Linux desktop environments keep the keyboard layouts sorted
+		// by user preference
+		locale->is_layout_list_sorted = true;
 	}
 
 	return *locale;
