@@ -97,13 +97,6 @@ struct HostLocale {
 	// If the host OS support code cannot determine any of these values, it
 	// should leave them as default
 
-	// Keyboard layouts, optionally with code pages
-	std::vector<KeyboardLayoutMaybeCodepage> keyboard_layout_list = {};
-
-	// If the keyboard layouts list retrieved from the host OS is already
-	// sorted by user priority, set this to 'true'.
-	bool is_layout_list_sorted = false;
-
 	// DOS country code
 	std::optional<DosCountry> country = {};
 
@@ -115,14 +108,27 @@ struct HostLocale {
 
 	// If detection was successful, always provide info for the log output,
 	// telling which host OS property/value was used to determine the given
-	// locale. Feel free to provide it even if detection failed.
+	// locale.
 	struct {
-		std::string keyboard  = {};
 		std::string country   = {};
 		std::string numeric   = {};
 		std::string time_date = {};
 		std::string currency  = {};
 	} log_info = {};
+};
+
+struct HostKeyboardLayouts {
+	// Keyboard layouts, optionally with code pages
+	std::vector<KeyboardLayoutMaybeCodepage> keyboard_layout_list = {};
+
+	// If the keyboard layouts list retrieved from the host OS is already
+	// sorted by user priority, set this to 'true'.
+	bool is_layout_list_sorted = false;
+
+	// If detection was successful, always provide info for the log output,
+	// telling which host OS property/value was used to determine the
+	// language.
+	std::string log_info = {};
 };
 
 struct HostLanguage {
@@ -132,11 +138,12 @@ struct HostLanguage {
 
 	// If detection was successful, always provide info for the log output,
 	// telling which host OS property/value was used to determine the
-	// language. Feel free to provide it even if detection failed.
+	// language.
 	std::string log_info = {};
 };
 
-const HostLocale& GetHostLocale();
-const HostLanguage& GetHostLanguage();
+const HostLocale&          GetHostLocale();
+const HostKeyboardLayouts& GetHostKeyboardLayouts();
+const HostLanguage&        GetHostLanguage();
 
 #endif
