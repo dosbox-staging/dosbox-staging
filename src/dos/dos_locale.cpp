@@ -1346,7 +1346,7 @@ static void sort_detected_keyboard_layouts(
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 {
-	const auto &host_locale = GetHostLocale();
+	const auto& host_locale = GetHostKeyboardLayouts();
 
 	auto keyboard_layouts = host_locale.keyboard_layout_list;
 
@@ -1402,10 +1402,11 @@ static void load_keyboard_layout()
 		}
 	}
 
-	const auto& host_locale = GetHostLocale();
-	if (using_detected && !host_locale.log_info.keyboard.empty()) {
+	if (using_detected) {
+		const auto& host_locale = GetHostKeyboardLayouts();
+		assert(!host_locale.log_info.empty());
 		LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
-		        host_locale.log_info.keyboard.c_str());
+		        host_locale.log_info.c_str());
 	}
 
 	// Apply the code page

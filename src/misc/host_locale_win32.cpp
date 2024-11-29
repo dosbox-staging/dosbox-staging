@@ -521,8 +521,19 @@ const HostLocale& GetHostLocale()
 		locale = HostLocale();
 
 		locale->country = get_dos_country(locale->log_info.country);
+	}
+
+	return *locale;
+}
+
+const HostKeyboardLayouts& GetHostKeyboardLayouts()
+{
+	static std::optional<HostKeyboardLayouts> locale = {};
+	if (!locale) {
+		locale = HostKeyboardLayouts();
+
 		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info.keyboard);
+		        locale->log_info);
 	}
 
 	return *locale;

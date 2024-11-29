@@ -1403,9 +1403,19 @@ const HostLocale& GetHostLocale()
 		locale->numeric   = get_dos_country(LcNumeric, log_info.numeric);
 		locale->time_date = get_dos_country(LcTime, log_info.time_date);
 		locale->currency  = get_dos_country(LcMonetary, log_info.currency);
+	}
+
+	return *locale;
+}
+
+const HostKeyboardLayouts& GetHostKeyboardLayouts()
+{
+	static std::optional<HostKeyboardLayouts> locale = {};
+	if (!locale) {
+		locale = HostKeyboardLayouts();
 
 		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        log_info.keyboard);
+		        locale->log_info);
 
 		// Linux desktop environments keep the keyboard layouts sorted
 		// by user preference
