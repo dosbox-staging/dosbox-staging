@@ -1357,16 +1357,16 @@ static void load_keyboard_layout()
 	bool using_detected     = false; // if layout list is autodetected
 	bool code_page_supplied = false; // if code page given in the parameter
 
-	if (config.keyboard_str.empty() || config.keyboard_str == "auto") {
+	if (config.keyboard_str == "auto") {
 		keyboard_layouts = get_detected_keyboard_layouts();
 		using_detected   = true;
 	} else {
 		const auto tokens = split(config.keyboard_str);
 		if (tokens.size() != 1 && tokens.size() != 2) {
-			keyboard_layouts = get_detected_keyboard_layouts();
-			using_detected   = true;
-			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'auto'",
+			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'us'",
 			            config.keyboard_str.c_str());
+			keyboard_layouts.push_back({"us"});
+			set_section_property_value("dos", "keyboard_layout", "us");
 		} else {
 			keyboard_layouts.push_back({tokens[0]});
 			if (tokens.size() >= 2) {
