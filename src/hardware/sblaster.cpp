@@ -771,7 +771,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 	case DmaEvent::ReachedTerminalCount: break;
 
 	case DmaEvent::IsMasked:
-		if (sb.mode != DspMode::Dma) {
+		if (sb.mode == DspMode::Dma) {
 			// Catch up to current time, but don't generate an IRQ!
 			// Fixes problems with later sci games.
 			const auto t = PIC_FullIndex() - last_dma_callback;
