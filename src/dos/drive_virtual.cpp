@@ -347,6 +347,8 @@ Virtual_File::Virtual_File(const vfile_data_t& in_data)
 
 bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	if (file_pos > file_data->size()) {
 		// File has been read beyond the end and is in an invalid state,
 		// so inform the caller with a negative rvalue.
@@ -363,6 +365,9 @@ bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)
 
 	file_pos += bytes_to_read;
 	*bytes_requested = check_cast<uint16_t>(bytes_to_read);
+
+	disk_access_delay.AddBytesRead(*bytes_requested);
+
 	return true;
 }
 
@@ -374,35 +379,47 @@ bool Virtual_File::Write(uint8_t* /*data*/, uint16_t* /*size*/)
 
 bool Virtual_File::Seek(uint32_t* new_pos, uint32_t type)
 {
+	uint32_t requested_pos = {};
+
 	switch (type) {
 	case DOS_SEEK_SET:
 		if (*new_pos <= file_data->size()) {
-			file_pos = *new_pos;
+			requested_pos = *new_pos;
 		} else {
 			return false;
 		}
 		break;
 	case DOS_SEEK_CUR:
 		if ((*new_pos + file_pos) <= file_data->size()) {
-			file_pos = *new_pos + file_pos;
+			requested_pos = *new_pos + file_pos;
 		} else {
 			return false;
 		}
 		break;
 	case DOS_SEEK_END:
 		if (*new_pos <= file_data->size()) {
-			file_pos = file_data->size() - *new_pos;
+			requested_pos = file_data->size() - *new_pos;
 		} else {
 			return false;
 		}
 		break;
 	}
+
+	if (file_pos != requested_pos) {
+		file_pos = requested_pos;
+
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddSeek();
+	}
+
 	*new_pos = file_pos;
 	return true;
 }
 
 void Virtual_File::Close()
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+	disk_access_delay.AddClose();
 }
 
 uint16_t Virtual_File::GetInformation() {
