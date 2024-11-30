@@ -707,9 +707,9 @@ void DOSBOX_Init()
 	        "Note: Only set this on a per-game basis when necessary as it slows down\n"
 	        "      the whole emulator.");
 
-	pbool = secprop->Add_bool("disk_access_delay", when_idle, false);
+	pbool = secprop->Add_bool("disk_access_delay", when_idle, true);
 	pbool->Set_help(
-	        "Emulate disk access delays ('off' by default).\n"
+	        "Emulate disk access delays ('on' by default).\n"
 	        "on:   Emulate disk access delays for floppy drives, hard drives, and CD-ROM\n"
 	        "      drives (default). This is preferable in cases were games crash or\n"
 	        "      misbehave if the disk access times are unrealistically fast (e.g.,\n"
