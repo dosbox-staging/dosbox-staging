@@ -120,9 +120,6 @@ public:
 	virtual void InitNewMedia       () {}
 	virtual bool HasDataTrack       () const = 0;
 	virtual bool HasFullMscdexSupport() = 0;
-
-protected:
-	void LagDriveResponse() const;
 };
 
 namespace CDROM {
