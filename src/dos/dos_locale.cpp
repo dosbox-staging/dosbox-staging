@@ -60,6 +60,7 @@ static struct {
 
 // Status set when populating DOS data
 static struct Populated {
+	bool is_country_international = false;
 	bool is_country_overriden     = false;
 	bool is_using_euro_currency   = false;
 	bool is_using_fallback_period = false;
@@ -162,18 +163,23 @@ static std::string get_locale_period_for_log(const LocalePeriod period)
 // Only to be called from within 'populate_all_country_info'!
 static void populate_country_code()
 {
+	auto country = current_country;
+
 	if (current_country == DosCountry::International) {
 		// MS-DOS uses the same country code for International English
 		// and Australia - we don't, as we have different settings for
-		// these. Let's imitate MS-DOS behavior.
-		dos.country_code = enum_val(DosCountry::Australia);
+		// these. Let's imitate the MS-DOS behavior.
+		country = DosCountry::Australia;
+		populated.is_country_international = true;
 	} else {
-		dos.country_code = enum_val(current_country);
+		populated.is_country_international = false;
 	}
+	dos.country_code = enum_val(country);
 
-	if (guest_country_override && *guest_country_override != current_country) {
+	if (guest_country_override && *guest_country_override != country) {
 		dos.country_code = enum_val(*guest_country_override);
 		populated.is_country_overriden = true;
+		populated.is_country_international = false;
 	}
 }
 
@@ -435,10 +441,12 @@ static void populate_all_country_info()
 	const auto& host_locale = GetHostLocale();
 
 	// Populate numeric format
-	const auto& [period, info] = get_info(static_cast<DosCountry>(dos.country_code));
-	if (!config.country && !populated.is_country_overriden &&
-	    host_locale.numeric) {
-		populated.separate_numeric  = *host_locale.numeric;
+	const auto& [period, info] = populated.is_country_international
+	                                   ? get_info(DosCountry::International)
+	                                   : get_info(static_cast<DosCountry>(
+	                                              dos.country_code));
+	if (!config.country && !populated.is_country_overriden && host_locale.numeric) {
+		populated.separate_numeric = *host_locale.numeric;
 		const auto& [period_specific,
 		             info_specific] = get_info(*host_locale.numeric);
 		populate_numeric_format(info_specific);
@@ -1013,7 +1021,7 @@ static void load_country()
 	// Parse the config file value
 	if (!config.country_str.empty() && config.country_str != "auto") {
 		const auto value = parse_int(config.country_str);
-		if (value && *value > 0 && *value <= UINT16_MAX &&
+		if (value && *value >= 0 && *value <= UINT16_MAX &&
 		    is_country_supported(static_cast<DosCountry>(*value))) {
 			config.country = static_cast<DosCountry>(*value);
 		} else {
