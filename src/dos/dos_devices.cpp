@@ -129,6 +129,8 @@ bool DOS_ExtDevice::WriteToControlChannel(PhysPt bufptr, uint16_t size, uint16_t
 
 bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
 		// INPUT
@@ -140,12 +142,16 @@ bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 			}
 			*data++ = mem_readb(bufptr);
 		}
+
+		disk_access_delay.AddBytesRead();
 	}
 	return true;
 }
 
 bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
 		mem_writeb(bufptr, *data);
@@ -158,6 +164,8 @@ bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 			}
 		}
 		data++;
+
+		disk_access_delay.AddBytesWritten();
 	}
 	return true;
 }
