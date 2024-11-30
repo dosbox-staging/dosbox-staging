@@ -68,8 +68,11 @@ isoFile::isoFile(std::shared_ptr<isoDrive> iso_drive, const char *name, FileStat
 }
 
 bool isoFile::Read(uint8_t *data, uint16_t *size) {
-	if (filePos + *size > fileEnd)
+	DiskAccessDelayGuard disk_access_delay = {};
+
+	if (filePos + *size > fileEnd) {
 		*size = (uint16_t)(fileEnd - filePos);
+	}
 
 	uint16_t nowSize = 0;
 	uint32_t sector = filePos / ISO_FRAMESIZE;
@@ -106,6 +109,9 @@ bool isoFile::Read(uint8_t *data, uint16_t *size) {
 	}
 	*size = nowSize;
 	filePos += *size;
+
+	disk_access_delay.AddBytesRead(*size);
+
 	return true;
 }
 
@@ -114,21 +120,25 @@ bool isoFile::Write(uint8_t* /*data*/, uint16_t* /*size*/) {
 }
 
 bool isoFile::Seek(uint32_t *pos, uint32_t type) {
+	uint32_t requested_pos = {};
+
 	switch (type) {
-		case DOS_SEEK_SET:
-			filePos = fileBegin + *pos;
-			break;
-		case DOS_SEEK_CUR:
-			filePos += *pos;
-			break;
-		case DOS_SEEK_END:
-			filePos = fileEnd + *pos;
-			break;
-		default:
-			return false;
+	case DOS_SEEK_SET: requested_pos = fileBegin + *pos; break;
+	case DOS_SEEK_CUR: requested_pos = filePos + *pos; break;
+	case DOS_SEEK_END: requested_pos = fileEnd + *pos; break;
+	default: return false;
 	}
-	if (filePos > fileEnd || filePos < fileBegin)
+
+	if (filePos != requested_pos) {
+		filePos = requested_pos;
+
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddSeek();
+	}
+
+	if (filePos > fileEnd || filePos < fileBegin) {
 		filePos = fileEnd;
+	}
 
 	*pos = filePos - fileBegin;
 	return true;
