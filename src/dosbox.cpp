@@ -561,6 +561,8 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
+
+	DOS_SetDiskAccessDelay(section->Get_bool("disk_access_delay"));
 }
 
 // Returns decimal seconds of elapsed uptime.
@@ -704,6 +706,17 @@ void DOSBOX_Init()
 	        "            500 to 5000 ns is the most useful range.\n"
 	        "Note: Only set this on a per-game basis when necessary as it slows down\n"
 	        "      the whole emulator.");
+
+	pbool = secprop->Add_bool("disk_access_delay", when_idle, false);
+	pbool->Set_help(
+	        "Emulate disk access delays ('off' by default).\n"
+	        "on:   Emulate disk access delays for floppy drives, hard drives, and CD-ROM\n"
+	        "      drives (default). This is preferable in cases were games crash or\n"
+	        "      misbehave if the disk access times are unrealistically fast (e.g.,\n"
+	        "      Deus, Ishar 3, Robinson's Requiem, Time Warriors, Chasm - The Rift,\n"
+	        "      Start Trek - A Final Unity, Emergency Room, etc.)\n"
+	        "off:  Disable disk access delay emulation. The only benefit to this is\n"
+	        "      this slightly faster install and load time.");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(

@@ -254,6 +254,7 @@ uint8_t DOS_FindDevice(const char* name);
 void DOS_SetupDevices();
 void DOS_ClearDrivesAndFiles();
 void DOS_ShutDownDevices();
+void DOS_SetDiskAccessDelay(const bool use_disk_access_delay);
 
 /* Execute and new process creation */
 bool DOS_NewPSP(uint16_t pspseg,uint16_t size);
