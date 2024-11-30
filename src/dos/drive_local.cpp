@@ -567,6 +567,8 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 
 bool localFile::Read(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	assert(file_handle != InvalidNativeFileHandle);
 	// check if the file is opened in write-only mode
 	if ((this->flags & 0xf) == OPEN_WRITE) {
@@ -576,6 +578,8 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 	const auto ret = read_native_file(file_handle, data, *size);
 	*size          = check_cast<uint16_t>(ret.num_bytes);
+	disk_access_delay.AddBytesRead(*size);
+
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -593,6 +597,8 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 
 bool localFile::Write(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	assert(file_handle != InvalidNativeFileHandle);
 	uint8_t lastflags = this->flags & 0xf;
 	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
@@ -607,6 +613,8 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 
 	// Truncate the file
 	if (*size == 0) {
+		disk_access_delay.AddBytesWritten();
+
 		if (!truncate_native_file(file_handle)) {
 			LOG_DEBUG("FS: Failed truncating file '%s'", name.c_str());
 			return false;
@@ -618,6 +626,8 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	// Otherwise we have some data to write
 	const auto ret = write_native_file(file_handle, data, *size);
 	*size          = check_cast<uint16_t>(ret.num_bytes);
+	disk_access_delay.AddBytesWritten(*size);
+
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -629,6 +639,8 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 {
 	assert(file_handle != InvalidNativeFileHandle);
+
+	const auto current_pos = get_native_file_position(file_handle);
 
 	// Tested this interrupt on MS-DOS 6.22
 	// The values for SEEK_CUR and SEEK_END can be negative
@@ -643,7 +655,6 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 			break;
 		}
 		case DOS_SEEK_CUR: {
-			const auto current_pos = get_native_file_position(file_handle);
 			if (current_pos == NativeSeekFailed) {
 				LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
 				DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -677,6 +688,11 @@ bool localFile::Seek(uint32_t *pos_addr, uint32_t type)
 		LOG_WARNING("FS: File seek failed for '%s'", path.string().c_str());
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
+	}
+
+	if (returned_pos != current_pos) {
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddSeek();
 	}
 
 	// The returned value is always positive.
@@ -746,6 +762,9 @@ void localFile::Close()
 
 		close_native_file(file_handle);
 		file_handle = InvalidNativeFileHandle;
+
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddClose();
 	} else {
 		MaybeFlushTime();
 	}
