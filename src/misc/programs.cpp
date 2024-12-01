@@ -1148,7 +1148,8 @@ void PROGRAMS_Init(Section* sec)
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
 	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
-	        "However, it will be applied on restart by running 'CONFIG -r' or via the restart hotkey.\n");
+	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
+	        "restart hotkey.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
