@@ -1904,6 +1904,13 @@ Plik z tabelą programów i przypisanych do nich wersji systemu DOS, w formacie
 wartości rozdzielonych tabulatorami, używany przez polecenie SETVER.EXE do
 trwałego zapamiętania ustawień (domyślnie wartość pusta).
 .
+:CONFIG_FILE_LOCKING
+Włącza blokowanie plików (emulacja SHARE.EXE; domyślnie włączona).
+Wymagane do poprawnego działania niektórych aplikacji Windows 3.1x.
+Zazwyczaj nie powoduje problemów z grami dla systemu DOS, z rzadkimi wyjątkami
+(np. demo Astral Blur). Jeśli zobaczysz błędy związane z dostępem do plików,
+spróbuj wyłączyć to ustawienie.
+.
 :CONFIGITEM_IPX
 Włącza emulację protokołu IPX po UDP/IP (domyślnie wyłączone).
 .
@@ -1963,7 +1970,7 @@ Linie z tej sekcji zostaną wykonane podczas startu.
 Ważne: sekcja [autoexec] musi znajdować się na końcu pliku konfiguracyjnego!
 .
 :CONFIGFILE_INTRO
-# DOSBox Staging %s - plik konfiguracyjny.
+# DOSBox Staging (%s) - plik konfiguracyjny.
 # Linie zaczynające się od # są komentarzami.
 
 .
@@ -2137,8 +2144,9 @@ Nie znaleziono pliku wykonywalnego: '%s'
 i
 .
 :PROGRAM_CONFIG_NOT_CHANGEABLE
-Parametr '%s' nie może być zmieniony w trakcie pracy.
-
+[color=yellow]Ustawienie '%s' nie może być zmieniony w trakcie pracy.[reset]
+Zmiana zostanie uwzględniona dopiero po restarcie poleceniem 'CONFIG -r'
+lub odpowiednim skrótem klawiszowym.
 .
 :PROGRAM_CONFIG_DEPRECATED
 [color=light-red]To ustawienie jest przestarzałe, obsługiwane wyłącznie dla kompatybilności
@@ -3071,6 +3079,15 @@ Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
 .
 :PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
 Mapowanie niedostępne przy obecnym sterowniku myszy w systemie gościa.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
+Ta kompilacja nie obsługuje mapowania fizycznych myszy.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
+Mapowanie fizycznych myszy jest niedostępne z powodu włączonego ustawienia
+'mouse_raw_input'.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
