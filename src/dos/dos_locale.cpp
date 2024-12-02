@@ -1249,83 +1249,83 @@ static void sort_detected_keyboard_layouts(
 	        keyboard_layouts.begin(),
 	        keyboard_layouts.end(),
 	        [&](const auto& l, const auto& r) {
-		        // 'l' more preferable than 'r'    => return true
-		        // 'l' less preferable than 'r'    => return false
-		        // both layouts equally preferable => return false
-		        if (l == r) {
+			// 'l' more preferable than 'r'    => return true
+			// 'l' less preferable than 'r'    => return false
+			// both layouts equally preferable => return false
+			if (l == r) {
 			        return false;
-		        }
+			}
 
-		        // Prefer keyboard layouts containing a non-Latin script
-		        const bool l_has_non_latin = has_non_latin_script(l);
-		        const bool r_has_non_latin = has_non_latin_script(r);
-		        if (l_has_non_latin && !r_has_non_latin) {
-			        return true;
-		        } else if (!l_has_non_latin && r_has_non_latin) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-Latin script
+			const bool l_has_non_latin = has_non_latin_script(l);
+			const bool r_has_non_latin = has_non_latin_script(r);
+			if (l_has_non_latin && !r_has_non_latin) {
+				return true;
+			} else if (!l_has_non_latin && r_has_non_latin) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts containing a non-QWERTY-like
-		        // script
-		        const bool l_has_non_qwerty_like = has_non_qwerty_like_script(l);
-		        const bool r_has_non_qwerty_like = has_non_qwerty_like_script(r);
-		        if (l_has_non_qwerty_like && !r_has_non_qwerty_like) {
-			        return true;
-		        } else if (!l_has_non_qwerty_like && r_has_non_qwerty_like) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-QWERTY-like
+			// script
+			const bool l_has_non_qwerty_like = has_non_qwerty_like_script(l);
+			const bool r_has_non_qwerty_like = has_non_qwerty_like_script(r);
+			if (l_has_non_qwerty_like && !r_has_non_qwerty_like) {
+				return true;
+			} else if (!l_has_non_qwerty_like && r_has_non_qwerty_like) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts containing a non-QWERTY script
-		        const bool l_has_non_qwerty = has_non_qwerty_script(l);
-		        const bool r_has_non_qwerty = has_non_qwerty_script(r);
-		        if (l_has_non_qwerty && !r_has_non_qwerty) {
-			        return true;
-		        } else if (!l_has_non_qwerty && r_has_non_qwerty) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-QWERTY script
+			const bool l_has_non_qwerty = has_non_qwerty_script(l);
+			const bool r_has_non_qwerty = has_non_qwerty_script(r);
+			if (l_has_non_qwerty && !r_has_non_qwerty) {
+				return true;
+			} else if (!l_has_non_qwerty && r_has_non_qwerty) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts supporting more scripts
-		        const auto num_scripts_l = count_supported_scripts(l);
-		        const auto num_scripts_r = count_supported_scripts(r);
-		        if (num_scripts_l > num_scripts_r) {
-			        return true;
-		        } else if (num_scripts_l < num_scripts_r) {
-			        return false;
-		        }
+			// Prefer keyboard layouts supporting more scripts
+			const auto num_scripts_l = count_supported_scripts(l);
+			const auto num_scripts_r = count_supported_scripts(r);
+			if (num_scripts_l > num_scripts_r) {
+				return true;
+			} else if (num_scripts_l < num_scripts_r) {
+				return false;
+			}
 
-		        // Prefer layouts with non-default and non-standard code
-		        // page
-		        const bool l_has_code_page = l.code_page &&
-		                                     (*l.code_page != DefaultCodePage);
-		        const bool r_has_code_page = r.code_page &&
-		                                     (*r.code_page != DefaultCodePage);
-		        if (l_has_code_page && !r_has_code_page) {
-			        return true;
-		        } else if (!l_has_code_page && r_has_code_page) {
-			        return false;
-		        }
+			// Prefer layouts with non-default and non-standard code
+			// page
+			const bool l_has_code_page = l.code_page &&
+			                             (*l.code_page != DefaultCodePage);
+			const bool r_has_code_page = r.code_page &&
+			                             (*r.code_page != DefaultCodePage);
+			if (l_has_code_page && !r_has_code_page) {
+				return true;
+			} else if (!l_has_code_page && r_has_code_page) {
+				return false;
+			}
 
-		        // Prefer layouts which are not plain US ones
-		        const bool l_is_not_us = l.keyboard_layout != "us";
-		        const bool r_is_not_us = r.keyboard_layout != "us";
-		        if (l_is_not_us && !r_is_not_us) {
-			        return true;
-		        } else if (!l_is_not_us && r_is_not_us) {
-			        return false;
-		        }
+			// Prefer layouts which are not plain US ones
+			const bool l_is_not_us = l.keyboard_layout != "us";
+			const bool r_is_not_us = r.keyboard_layout != "us";
+			if (l_is_not_us && !r_is_not_us) {
+				return true;
+			} else if (!l_is_not_us && r_is_not_us) {
+				return false;
+			}
 
-		        // Prefer layouts which are not plain UK ones
-		        const bool l_is_not_uk = l.keyboard_layout != "uk";
-		        const bool r_is_not_uk = r.keyboard_layout != "uk";
-		        if (l_is_not_uk && !r_is_not_uk) {
-			        return true;
-		        } else if (!l_is_not_uk && r_is_not_uk) {
-			        return false;
-		        }
+			// Prefer layouts which are not plain UK ones
+			const bool l_is_not_uk = l.keyboard_layout != "uk";
+			const bool r_is_not_uk = r.keyboard_layout != "uk";
+			if (l_is_not_uk && !r_is_not_uk) {
+				return true;
+			} else if (!l_is_not_uk && r_is_not_uk) {
+				return false;
+			}
 
-		        // For now I have no sane idea for more criteria...
-		        return false;
-	        });
+			// For now I have no sane idea for more criteria...
+			return false;
+		});
 }
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
