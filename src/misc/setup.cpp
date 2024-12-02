@@ -747,6 +747,17 @@ std::vector<Value> Property::GetDeprecatedValues() const
 	return values;
 }
 
+void Property::SetQueueableValue(std::string&& value)
+{
+	assert(!value.empty());
+	queueable_value = std::move(value);
+}
+
+const std::optional<std::string>& Property::GetQueuedValue() const
+{
+	return queueable_value;
+}
+
 const Value& Property::GetAlternateForDeprecatedValue(const Value& val) const
 {
 	const auto it = deprecated_and_alternate_values.find(val);
@@ -959,7 +970,7 @@ Property* Section_prop::Get_prop(int index)
 Property* Section_prop::Get_prop(const std::string_view propname)
 {
 	for (Property* property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return property;
 		}
 	}
@@ -969,7 +980,7 @@ Property* Section_prop::Get_prop(const std::string_view propname)
 std::string Section_prop::Get_string(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
-		if ((*tel)->propname == _propname) {
+		if (iequals((*tel)->propname, _propname)) {
 			return ((*tel)->GetValue());
 		}
 	}
@@ -979,7 +990,7 @@ std::string Section_prop::Get_string(const std::string& _propname) const
 Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return dynamic_cast<Prop_bool*>(property);
 		}
 	}
@@ -990,7 +1001,7 @@ Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
-		if (property->propname == propname) {
+		if (iequals(property->propname, propname)) {
 			return dynamic_cast<Prop_string*>(property);
 		}
 	}
@@ -1000,7 +1011,7 @@ Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 Hex Section_prop::Get_hex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
-		if ((*tel)->propname == _propname) {
+		if (iequals((*tel)->propname, _propname)) {
 			return ((*tel)->GetValue());
 		}
 	}
@@ -1200,9 +1211,12 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					}
 					fprintf(outfile, ".");
 				};
+
 				print_values("CONFIG_VALID_VALUES", p->GetValues());
 				print_values("CONFIG_DEPRECATED_VALUES", p->GetDeprecatedValues());
+
 				fprintf(outfile, "\n");
+				fprintf(outfile, "#\n");
 			}
 		} else {
 			upcase(temp);
@@ -1553,6 +1567,50 @@ bool Config::ParseConfigFile(const std::string& type,
 	return true;
 }
 
+// Applies queued configuration settings to CLI arguments. It replaces any
+// existing settings with their latest values. For example, if "machine=value"
+// was set multiple times, only the most recent value is preserved in the final
+// CLI args.
+void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
+{
+	for (const auto section : sectionlist) {
+		const auto properties = dynamic_cast<Section_prop*>(section);
+		if (!properties) {
+			continue;
+		}
+
+		for (const auto property : *properties) {
+			const auto queued_value = property->GetQueuedValue();
+			if (!queued_value) {
+				continue;
+			}
+
+			constexpr auto set_prefix = "--set";
+
+			const auto key_prefix = format_str("%s=",
+			                                   property->propname.c_str());
+
+			// Remove existing matches
+			auto it = args.begin();
+			while (it != args.end() && std::next(it) != args.end()) {
+				const auto current = it;
+				const auto next    = std::next(it);
+
+				if (*current == set_prefix &&
+				    next->starts_with(key_prefix)) {
+					it = args.erase(current, std::next(next));
+				} else {
+					++it;
+				}
+			}
+
+			// Add the new arguments with the queued value
+			args.emplace_back(set_prefix);
+			args.emplace_back(key_prefix + *queued_value);
+		}
+	}
+}
+
 parse_environ_result_t parse_environ(const char* const* envp) noexcept
 {
 	assert(envp);
@@ -1688,7 +1746,7 @@ Verbosity Config::GetStartupVerbosity() const
 	}
 	if (user_choice == "auto") {
 		return (cmdline->HasDirectory() || cmdline->HasExecutableName())
-		             ? Verbosity::InstantLaunch
+		             ? Verbosity::Low
 		             : Verbosity::High;
 	}
 
@@ -1697,51 +1755,9 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-const std::string& Config::GetLanguage()
+const std::string& Config::GetArgumentLanguage()
 {
-	static bool lang_is_cached = false;
-	static std::string lang    = {};
-
-	if (lang_is_cached) {
-		return lang;
-	}
-
-	// Has the user provided a language on the command line?
-	lang = arguments.lang;
-
-	// Is a language provided in the conf file?
-	if (lang.empty()) {
-		const auto section = GetSection("dosbox");
-		assert(section);
-		lang = static_cast<const Section_prop*>(section)->Get_string("language");
-	}
-
-	// Check the LANG environment variable
-	if (lang.empty()) {
-		const char* envlang = getenv("LANG");
-		if (envlang) {
-			lang = envlang;
-			clear_language_if_default(lang);
-		}
-	}
-
-	// Query the OS using OS-specific calls
-	if (lang.empty()) {
-		lang = get_language_from_os();
-		clear_language_if_default(lang);
-	}
-
-	// Drop the dialect part of the language
-	// (e.g. "en_GB.UTF8" -> "en")
-	if (lang.size() > 2) {
-		lang = lang.substr(0, 2);
-	}
-
-	// Return it as lowercase
-	lowcase(lang);
-
-	lang_is_cached = true;
-	return lang;
+	return arguments.lang;
 }
 
 // forward declaration
@@ -1910,6 +1926,7 @@ void Config::ParseArguments()
 	arguments.nolocalconf = cmdline->FindRemoveBoolArgument("nolocalconf");
 	arguments.fullscreen  = cmdline->FindRemoveBoolArgument("fullscreen");
 	arguments.list_countries = cmdline->FindRemoveBoolArgument("list-countries");
+	arguments.list_layouts = cmdline->FindRemoveBoolArgument("list-layouts");
 	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");

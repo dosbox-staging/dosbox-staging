@@ -132,7 +132,7 @@ void CDROM_Interface_Physical::CdReaderLoop()
 			audio_frames.emplace_back(left, right);
 		}
 
-		queue.BulkEnqueue(audio_frames, audio_frames.size());
+		queue.BulkEnqueue(audio_frames);
 
 		lock.lock();
 		if (mixer_channel && !is_paused && sectors_remaining > 0 && queue.IsRunning()) {

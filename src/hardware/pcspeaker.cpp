@@ -126,3 +126,16 @@ void PCSPEAKER_SetType(const PpiPortB &port_b)
 	if (pc_speaker)
 		pc_speaker->SetType(port_b);
 }
+
+void PCSPEAKER_NotifyLockMixer()
+{
+	if (pc_speaker) {
+		pc_speaker->output_queue.Stop();
+	}
+}
+void PCSPEAKER_NotifyUnlockMixer()
+{
+	if (pc_speaker) {
+		pc_speaker->output_queue.Start();
+	}
+}

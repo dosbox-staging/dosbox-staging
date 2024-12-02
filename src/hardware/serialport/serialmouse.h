@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -32,7 +34,7 @@ public:
 	void NotifyMoved(const float x_rel, const float y_rel);
 	void NotifyButton(const uint8_t new_buttons,
 	                  const MouseButtonId id); // changed button
-	void NotifyWheel(const int16_t w_rel);
+	void NotifyWheel(const float w_rel);
 
 	void BoostRate(const uint16_t rate_hz); // 0 = standard rate
 
@@ -86,12 +88,17 @@ private:
 	                                 // received mouse move event
 	bool got_another_button = false; // true = while transmitting a packet
 	                                 // we received mouse button event
-	uint8_t buttons  = 0;    // bit 0 = left, bit 1 = right, bit 2 = middle
-	float delta_x    = 0.0f; // accumulated movements not yet reported
-	float delta_y    = 0.0f;
-	int8_t counter_x = 0;    // position counters, as visible on guest size
-	int8_t counter_y = 0;
-	int8_t counter_w = 0;
+	uint8_t buttons = 0; // bit 0 = left, bit 1 = right, bit 2 = middle
+
+	// Accumulated mouse movement, waiting to be reported
+	float delta_x     = 0.0f;
+	float delta_y     = 0.0f;
+	float delta_wheel = 0.0f;
+
+	// Position counters, as visible on the guest size
+	int8_t counter_x     = 0;
+	int8_t counter_y     = 0;
+	int8_t counter_wheel = 0;
 };
 
 #endif // DOSBOX_SERIALMOUSE_H

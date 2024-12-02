@@ -44,6 +44,8 @@
 
 CHECK_NARROWING();
 
+std::unique_ptr<Ps1Dac> ps1_dac = {};
+
 static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
 	if (filter_enabled) {
@@ -421,6 +423,8 @@ private:
 	double last_rendered_ms = 0.0;
 };
 
+static std::unique_ptr<Ps1Synth> ps1_synth = {};
+
 Ps1Synth::Ps1Synth(const std::string& filter_choice)
         : device(nullptr, nullptr, Ps1PsgClockHz)
 {
@@ -553,8 +557,18 @@ Ps1Synth::~Ps1Synth()
 	MIXER_UnlockMixerThread();
 }
 
-std::unique_ptr<Ps1Dac> ps1_dac            = {};
-static std::unique_ptr<Ps1Synth> ps1_synth = {};
+void PS1DAC_NotifyLockMixer()
+{
+	if (ps1_dac) {
+		ps1_dac->output_queue.Stop();
+	}
+}
+void PS1DAC_NotifyUnlockMixer()
+{
+	if (ps1_dac) {
+		ps1_dac->output_queue.Start();
+	}
+}
 
 static void PS1AUDIO_ShutDown([[maybe_unused]] Section* sec)
 {

@@ -215,7 +215,7 @@ void Program::ChangeToLongCmd()
 	}
 
 	// Clear so it gets even more save
-	full_arguments.assign(""); 
+	full_arguments.assign("");
 }
 
 bool Program::SuppressWriteOut(const char* format)
@@ -906,15 +906,10 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				const auto* property = tsec->Get_prop(pvars[1]);
+				auto* property = tsec->Get_prop(pvars[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
-					return;
-				}
-
-				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
 					return;
 				}
 
@@ -935,6 +930,13 @@ void CONFIG::Run(void)
 
 				if (value.empty()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+					return;
+				}
+
+				// If the value can't be set at runtime then queue it and let the user know
+				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+					property->SetQueueableValue(std::move(value));
 					return;
 				}
 
@@ -1145,7 +1147,8 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
-	        "Setting '%s' is not changeable at runtime.\n");
+	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
+	        "However, it will be applied on restart by running 'CONFIG -r' or via the restart hotkey.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"

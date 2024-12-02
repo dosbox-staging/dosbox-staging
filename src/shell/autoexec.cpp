@@ -326,9 +326,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	const bool exit_arg_exists = arguments->exit;
 
 	// Check if instant-launch is active
-	const bool using_instant_launch_with_executable =
-	        control->GetStartupVerbosity() == Verbosity::InstantLaunch &&
-	        cmdline->HasExecutableName();
+	const bool using_instant_launch_with_executable = cmdline->HasExecutableName();
 
 	// Should we add an 'exit' call to the end of autoexec.bat?
 	const bool should_add_exit = exit_call_exists || exit_arg_exists ||

@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -72,7 +74,12 @@ float MOUSE_GetBallisticsCoeff(const float speed);
 uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz);
 
 float MOUSE_ClampRelativeMovement(const float rel);
+float MOUSE_ClampWheelMovement(const float rel);
 uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz);
+
+bool MOUSE_HasAccumulatedInt(const float delta);
+int8_t MOUSE_ConsumeInt8(float& delta, const bool skip_delta_update = false);
+int16_t MOUSE_ConsumeInt16(float& delta, const bool skip_delta_update = false);
 
 // ***************************************************************************
 // Mouse speed calculation

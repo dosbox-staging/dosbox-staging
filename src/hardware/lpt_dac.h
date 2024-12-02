@@ -87,6 +87,5 @@ private:
 	int frames_rendered_this_tick = 0;
 };
 
-extern std::unique_ptr<LptDac> lpt_dac;
 
 #endif

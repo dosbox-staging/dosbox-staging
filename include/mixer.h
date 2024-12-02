@@ -56,6 +56,7 @@ static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
 
 // TODO This seems like is a general-purpose lookup, consider moving it
 extern int16_t lut_u8to16[UINT8_MAX + 1];
+static constexpr int16_t* lut_s8to16 = lut_u8to16 + 128;
 
 constexpr auto Max16BitSampleValue = INT16_MAX;
 constexpr auto Min16BitSampleValue = INT16_MIN;
@@ -181,6 +182,7 @@ public:
 	int GetSampleRate() const;
 	float GetFramesPerTick() const;
 	float GetFramesPerBlock() const;
+	double GetMillisPerFrame() const;
 
 	void Set0dbScalar(const float f);
 	void UpdateCombinedVolume();
@@ -240,25 +242,18 @@ public:
 	void SetChorusLevel(const float level);
 	float GetChorusLevel() const;
 
+	void AddAudioFrames(const std::vector<AudioFrame>& frames);
+
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(const int num_frames, const Type* data);
 
 	void AddSamples_m8(const int num_frames, const uint8_t* data);
-	void AddSamples_s8(const int num_frames, const uint8_t* data);
-	void AddSamples_m8s(const int num_frames, const int8_t* data);
-	void AddSamples_s8s(const int num_frames, const int8_t* data);
 	void AddSamples_m16(const int num_frames, const int16_t* data);
 	void AddSamples_s16(const int num_frames, const int16_t* data);
-	void AddSamples_m16u(const int num_frames, const uint16_t* data);
-	void AddSamples_s16u(const int num_frames, const uint16_t* data);
 	void AddSamples_mfloat(const int num_frames, const float* data);
 	void AddSamples_sfloat(const int num_frames, const float* data);
 	void AddSamples_m16_nonnative(const int num_frames, const int16_t* data);
 	void AddSamples_s16_nonnative(const int num_frames, const int16_t* data);
-	void AddSamples_m16u_nonnative(const int num_frames, const uint16_t* data);
-	void AddSamples_s16u_nonnative(const int num_frames, const uint16_t* data);
-
-	void AddStretched(const int num_frames, int16_t* data);
 
 	void Enable(const bool should_enable);
 
@@ -302,6 +297,7 @@ public:
 		static constexpr auto DefaultWaitMs = 500;
 		static constexpr auto MaxWaitMs     = 5000;
 
+		AudioFrame last_frame          = {};
 		int64_t woken_at_ms            = {};
 		float fadeout_level            = {};
 		float fadeout_decrement_per_ms = {};
@@ -492,10 +488,12 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 {
 	// Currently only handles mono sound (output_queue is a primitive type and frames == samples)
 	// Special case for AudioType == AudioFrame (stereo floating-point sound)
-	static_assert((!stereo) || std::is_same<AudioType, AudioFrame>::value);
+	static_assert((!stereo) || std::is_same_v<AudioType, AudioFrame>);
 
 	// AudioFrame type is always stereo
-	static_assert(stereo || (!std::is_same<AudioType, AudioFrame>::value));
+	static_assert(stereo || (!std::is_same_v<AudioType, AudioFrame>));
+
+	assert(device && device->channel);
 
 	if (MIXER_FastForwardModeEnabled()) {
 		// Special case, normally only hit when using the fast-forward hotkey (Alt + F12)
@@ -515,30 +513,21 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 		// This provides a good size to avoid over-runs and stalls.
 		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * 2.0f));
 	}
-	int frames_recieved = 0;
-	if (frames_requested > 0) {
-		std::vector<AudioType> to_mix = {};
-		device->output_queue.BulkDequeue(to_mix, frames_requested);
-		frames_recieved = check_cast<int>(to_mix.size());
-		if (frames_recieved > 0) {
-			// One of the GCC CI builds throws a duplicated branch warning
-			// Clang apparently doesn't have this warning because it throws an "unknown warning" warning in the pragma
-			#ifndef __clang__
-			#pragma GCC diagnostic push
-			#pragma GCC diagnostic ignored "-Wduplicated-branches"
-			#endif
-			if (std::is_same<AudioType, AudioFrame>::value) {
-				// AudioFrame has the same memory layout as 2x floats
-				device->channel->template AddSamples<float, stereo, signeddata, nativeorder>(frames_recieved, reinterpret_cast<float*>(to_mix.data()));
-			} else {
-				device->channel->template AddSamples<AudioType, stereo, signeddata, nativeorder>(frames_recieved, to_mix.data());
-			}
-			#ifndef __clang__
-			#pragma GCC diagnostic pop
-			#endif
+	static std::vector<AudioType> to_mix = {};
+
+	const auto frames_received = check_cast<int>(
+	        device->output_queue.BulkDequeue(to_mix, frames_requested));
+
+	if (frames_received > 0) {
+		if constexpr (std::is_same_v<AudioType, AudioFrame>) {
+			device->channel->AddAudioFrames(to_mix);
+		} else {
+			device->channel->template AddSamples<AudioType, stereo, signeddata, nativeorder>(
+			        frames_received, to_mix.data());
 		}
 	}
-	if (frames_requested > frames_recieved) {
+	// Fill any shortfall with silence
+	if (frames_received < frames_requested) {
 		device->channel->AddSilence();
 	}
 }

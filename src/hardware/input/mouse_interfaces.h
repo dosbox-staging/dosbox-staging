@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,9 +55,9 @@ void MOUSEDOS_FinalizeInterrupt();
 // - understands up to 3 buttons
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs);
+                          const float x_abs, const float y_abs);
 void MOUSEDOS_NotifyButton(const MouseButtons12S buttons_12S);
-void MOUSEDOS_NotifyWheel(const int16_t w_rel);
+void MOUSEDOS_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // PS/2 mouse
@@ -73,7 +75,7 @@ void MOUSEPS2_NotifyMoved(const float x_rel, const float y_rel);
 void MOUSEPS2_NotifyMovedDummy(); // for virtual machine interfaces
 void MOUSEPS2_NotifyButton(const MouseButtons12S buttons_12S,
                            const MouseButtonsAll buttons_all);
-void MOUSEPS2_NotifyWheel(const int16_t w_rel);
+void MOUSEPS2_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
@@ -88,16 +90,16 @@ void MOUSEBIOS_FinalizeInterrupt();
 // ***************************************************************************
 
 void MOUSEVMM_NotifyInputType(const bool use_relative, const bool is_input_raw);
-void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs);
+void MOUSEVMM_NewScreenParams(const float x_abs, const float y_abs);
 void MOUSEVMM_Deactivate();
 
 // - needs absolute mouse position
 // - understands up to 3 buttons
 
 void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs);
+                          const float x_abs, const float y_abs);
 void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S);
-void MOUSEVMM_NotifyWheel(const int16_t w_rel);
+void MOUSEVMM_NotifyWheel(const float w_rel);
 
 // ***************************************************************************
 // Serial mouse
@@ -127,9 +129,9 @@ public:
 	static MouseInterface* GetSerial(const uint8_t port_id);
 
 	virtual void NotifyMoved(const float x_rel, const float y_rel,
-	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
+	                         const float x_abs, const float y_abs) = 0;
 	virtual void NotifyButton(const MouseButtonId id, const bool pressed) = 0;
-	virtual void NotifyWheel(const int16_t w_rel) = 0;
+	virtual void NotifyWheel(const float w_rel) = 0;
 
 	void NotifyInterfaceRate(const uint16_t rate_hz);
 	virtual void NotifyBooting();

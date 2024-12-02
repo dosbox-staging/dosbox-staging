@@ -173,6 +173,10 @@ public:
 		return default_value;
 	}
 
+	void SetQueueableValue(std::string&& value);
+
+	const std::optional<std::string>& GetQueuedValue() const;
+
 	bool IsRestrictedValue() const
 	{
 		return !valid_values.empty();
@@ -213,6 +217,7 @@ protected:
 	std::vector<Value> valid_values                        = {};
 	std::vector<std::string> enabled_options               = {};
 	std::map<Value, Value> deprecated_and_alternate_values = {};
+	std::optional<std::string> queueable_value             = {};
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
 
@@ -429,6 +434,16 @@ public:
 
 	Property* Get_prop(int index);
 	Property* Get_prop(const std::string_view propname);
+
+	const_it begin() const
+	{
+		return properties.begin();
+	}
+
+	const_it end() const
+	{
+		return properties.end();
+	}
 
 	int Get_int(const std::string& _propname) const;
 

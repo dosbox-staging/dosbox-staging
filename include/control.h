@@ -34,10 +34,9 @@
 
 enum class Verbosity : int8_t {
 	//                Welcome | Early Stdout |
-	Quiet,         //   no    |    no        |
-	InstantLaunch, //   no    |    yes       |
-	Low,           //   no    |    yes       |
-	High,          //   yes   |    yes       |
+	Quiet, //   no    |    no        |
+	Low,   //   no    |    yes       |
+	High,  //   yes   |    yes       |
 };
 
 struct CommandLineArguments {
@@ -46,6 +45,7 @@ struct CommandLineArguments {
 	bool nolocalconf;
 	bool fullscreen;
 	bool list_countries;
+	bool list_layouts;
 	bool list_glshaders;
 	bool version;
 	bool help;
@@ -132,6 +132,8 @@ public:
 	const Section_line& GetOverwrittenAutoexecSection() const;
 	const std::string& GetOverwrittenAutoexecConf() const;
 
+	void ApplyQueuedValuesToCli(std::vector<std::string>& args) const;
+
 	void SetStartUp(void (*_function)(void));
 	void Init() const;
 	void ShutDown();
@@ -143,8 +145,9 @@ public:
 
 	void ParseEnv();
 	void ParseConfigFiles(const std_fs::path& config_path);
-	const std::string& GetLanguage();
 	const char* SetProp(std::vector<std::string>& pvars);
+
+	const std::string& GetArgumentLanguage();
 
 	bool SecureMode() const
 	{

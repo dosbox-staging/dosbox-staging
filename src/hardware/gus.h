@@ -294,7 +294,7 @@ private:
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
-	void DmaCallback(const DmaChannel* chan, DMAEvent event);
+	void DmaCallback(const DmaChannel* chan, DmaEvent event);
 	void StartDmaTransfers();
 
 	template <SampleSize sample_size>
@@ -385,5 +385,3 @@ private:
 	bool irq_previously_interrupted = false;
 	bool should_change_irq_dma      = false;
 };
-
-extern std::unique_ptr<Gus> gus;

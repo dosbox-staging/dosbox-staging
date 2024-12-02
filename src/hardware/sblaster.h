@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,31 +18,38 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_PCSPEAKER_H
-#define DOSBOX_PCSPEAKER_H
+#ifndef SBLASTER_H
+#define SBLASTER_H
 
-#include "dosbox.h"
-
-#include <string_view>
-
+#include "inout.h"
 #include "mixer.h"
 #include "rwqueue.h"
-#include "timer.h"
 
-class PcSpeaker {
+class SBLASTER final {
 public:
-	RWQueue<float> output_queue{1};
+	SBLASTER(Section* conf);
+	~SBLASTER();
+
+	void SetChannelRateHz(const int requested_rate_hz);
+
+	// Returns true of the channel was sleeping and was awoken.
+	// Returns false if the channel was already awake.
+	bool MaybeWakeUp();
+
+	// Public members used by MIXER_PullFromQueueCallback
+	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = nullptr;
-	float frame_counter = 0.0f;
 
-	virtual ~PcSpeaker() = default;
+private:
+	IO_ReadHandleObject read_handlers[0x10]   = {};
+	IO_WriteHandleObject write_handlers[0x10] = {};
 
-	virtual void SetFilterState(const FilterState filter_state) = 0;
-	virtual bool TryParseAndSetCustomFilter(const std::string& filter_choice) = 0;
-	virtual void SetCounter(const int cntr, const PitMode pit_mode) = 0;
-	virtual void SetPITControl(const PitMode pit_mode)              = 0;
-	virtual void SetType(const PpiPortB &port_b)                    = 0;
-	virtual void PicCallback(const int requested_frames)            = 0;
+	static constexpr auto BlasterEnvVar = "BLASTER";
+
+	OplMode oplmode = OplMode::None;
+
+	void SetupEnvironment();
+	void ClearEnvironment();
 };
 
 #endif

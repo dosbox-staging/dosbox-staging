@@ -304,14 +304,6 @@ std::string strip_suffix(const std::string_view str, const std::string_view suff
 	return std::string(str);
 }
 
-void clear_language_if_default(std::string &l)
-{
-	lowcase(l);
-	if (l.size() < 2 || l.starts_with("c.") || l == "posix") {
-		l.clear();
-	}
-}
-
 std::optional<float> parse_float(const std::string& s)
 {
 	// parse_float can check if a string holds a number (or not), so we

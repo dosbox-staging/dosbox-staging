@@ -70,7 +70,7 @@ public:
 private:
 	void ChangeMode();
 
-	void DmaCallback(const DmaChannel* chan, DMAEvent event);
+	void DmaCallback(const DmaChannel* chan, DmaEvent event);
 	uint8_t ReadFromPort(io_port_t port, io_width_t);
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t);
 
@@ -85,7 +85,5 @@ private:
 	Registers regs     = {};
 	int sample_rate_hz = 0;
 };
-
-extern std::unique_ptr<TandyDAC> tandy_dac;
 
 #endif

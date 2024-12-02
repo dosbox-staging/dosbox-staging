@@ -388,7 +388,8 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  mt32_old:   Pick the best available \"old\" MT-32 model (v1.0x).\n"
 	        "  mt32_new:   Pick the best available \"new\" MT-32 model (v2.0x).\n"
 	        "  mt32:       Pick the best available MT-32 model.\n"
-	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').");
+	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').\n"
+	        "Note: Run `MIXER /LISTMIDI` to see the list of available models.");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(

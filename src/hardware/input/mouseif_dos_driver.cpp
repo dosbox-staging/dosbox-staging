@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
@@ -94,14 +96,17 @@ static MouseButtons12S pending_button_state = 0;
 // These values represent 'hardware' state, not driver state
 
 static MouseButtons12S buttons = 0;
-static float pos_x             = 0.0f;
-static float pos_y             = 0.0f;
-static int8_t counter_w        = 0; // wheel counter
+static float pos_x = 0.0f;
+static float pos_y = 0.0f;
+static int8_t counter_w = 0; // wheel counter
 
-static bool use_relative    = true; // true = ignore absolute mouse position, use relative
-static bool is_input_raw    = true; // true = no host mouse acceleration pre-applied
+// true = ignore absolute mouse position
+static bool use_relative = true;
+// true = no host mouse acceleration pre-applied
+static bool is_input_raw = true;
 
-static bool rate_is_set     = false; // true = rate was set by DOS application
+// true = rate was set by DOS application
+static bool rate_is_set     = false;
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
 
@@ -110,19 +115,19 @@ static uint16_t min_rate_hz = 0;
 
 static struct {
 	// Mouse movement
-	float x_rel    = 0.0f;
-	float y_rel    = 0.0f;
-	uint32_t x_abs = 0;
-	uint32_t y_abs = 0;
+	float x_rel = 0.0f;
+	float y_rel = 0.0f;
+	float x_abs = 0.0f;
+	float y_abs = 0.0f;
 
 	// Wheel movement
-	int16_t w_rel = 0;
+	float delta_wheel = 0.0f;
 
 	void Reset()
 	{
 		x_rel = 0.0f;
 		y_rel = 0.0f;
-		w_rel = 0;
+		delta_wheel = 0.0f;
 	}
 } pending;
 
@@ -668,11 +673,12 @@ static void update_driver_active()
 
 static uint8_t get_reset_wheel_8bit()
 {
-	if (!state.wheel_api)
+	if (!state.wheel_api) {
 		return 0;
+	}
 
 	const auto tmp = counter_w;
-	counter_w      = 0; // reading always clears the counter
+	counter_w = 0; // reading always clears the counter
 
 	// 0xff for -1, 0xfe for -2, etc.
 	return signed_to_reg8(tmp);
@@ -680,11 +686,12 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-	if (!state.wheel_api)
+	if (!state.wheel_api) {
 		return 0;
+	}
 
 	const int16_t tmp = counter_w;
-	counter_w         = 0; // reading always clears the counter
+	counter_w = 0; // reading always clears the counter
 
 	return signed_to_reg16(tmp);
 }
@@ -706,10 +713,11 @@ static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
 
 static void set_double_speed_threshold(const uint16_t threshold)
 {
-	if (threshold)
+	if (threshold) {
 		state.double_speed_threshold = threshold;
-	else
+	} else {
 		state.double_speed_threshold = 64; // default value
+	}
 }
 
 static void set_sensitivity(const uint16_t sensitivity_x,
@@ -1102,18 +1110,16 @@ static void move_cursor_captured(const float x_rel, const float y_rel)
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
-                                 const uint32_t x_abs, const uint32_t y_abs)
+                                 const float x_abs, const float y_abs)
 {
 	// Update mickey counters
 	float dx = 0.0f;
 	float dy = 0.0f;
 	update_mickeys_on_move(dx, dy, x_rel, y_rel);
 
-	auto calculate = [](const uint32_t absolute,
-	                    const uint32_t resolution) {
+	auto calculate = [](const float absolute, const uint32_t resolution) {
 		assert(resolution > 1u);
-		return static_cast<float>(absolute) /
-		       static_cast<float>(resolution - 1);
+		return absolute / static_cast<float>(resolution - 1);
 	};
 
 	// Apply mouse movement to mimic host OS
@@ -1155,13 +1161,14 @@ static uint8_t move_cursor()
 		move_cursor_captured(MOUSE_ClampRelativeMovement(pending.x_rel),
 		                     MOUSE_ClampRelativeMovement(pending.y_rel));
 
-	} else
+	} else {
 		move_cursor_seamless(pending.x_rel,
 		                     pending.y_rel,
 		                     pending.x_abs,
 		                     pending.y_abs);
+	}
 
-	// Pending relative movement is now consummed
+	// Pending relative movement is now consumed
 	pending.x_rel = 0.0f;
 	pending.y_rel = 0.0f;
 
@@ -1240,30 +1247,28 @@ static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 
 static uint8_t move_wheel()
 {
-	counter_w = clamp_to_int8(static_cast<int32_t>(counter_w + pending.w_rel));
-
-	// Pending wheel scroll is now consummed
-	pending.w_rel = 0;
+	const auto consumed = MOUSE_ConsumeInt8(pending.delta_wheel);
+	counter_w           = clamp_to_int8(counter_w + consumed);
 
 	state.last_wheel_moved_x = get_pos_x();
 	state.last_wheel_moved_y = get_pos_y();
 
-	if (counter_w != 0)
+	if (counter_w != 0) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
-		return 0;
+	}
+	return 0;
 }
 
 static uint8_t update_wheel()
 {
-	if (mouse_config.dos_immediate)
+	if (mouse_config.dos_immediate) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
-		return move_wheel();
+	}
+	return move_wheel();
 }
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
-                          const uint32_t x_abs, const uint32_t y_abs)
+                          const float x_abs, const float y_abs)
 {
 	bool event_needed = false;
 
@@ -1271,16 +1276,25 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 		// Uses relative mouse movements - processing is too complicated
 		// to easily predict whether the event can be safely omitted
 		event_needed = true;
-		// TODO: this can be done, but requyires refactoring
+		// TODO: this can be done, but requires refactoring
 	} else {
 		// Uses absolute mouse position (seamless mode), relative
 		// movements can wait to be reported - they are completely
 		// unreliable anyway
-		if (pending.x_abs != x_abs || pending.y_abs != y_abs)
+		constexpr float Epsilon = 0.5f;
+		if (std::lround(pending.x_abs / Epsilon) != std::lround(x_abs / Epsilon) ||
+		    std::lround(pending.y_abs / Epsilon) != std::lround(y_abs / Epsilon)) {
 			event_needed = true;
+		}
+		// TODO: Consider introducing some kind of sensitivity to avoid
+		// unnecessary events, for example calculated using
+		// 'state.maxpos_*' and 'mouse_shared.resolution_*' values.
+		// Problem: when the mouse is moved really fast and it leaves
+		// the window, the guest cursor is sometimes left like 30 pixels
+		// from the window's edge; we need a mitigation mechanism here
 	}
 
-	// Update values to be consummed when the event arrives
+	// Update values to be consumed when the event arrives
 	pending.x_rel = MOUSE_ClampRelativeMovement(pending.x_rel + x_rel);
 	pending.y_rel = MOUSE_ClampRelativeMovement(pending.y_rel + y_rel);
 	pending.x_abs = x_abs;
@@ -1313,7 +1327,7 @@ void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 	maybe_trigger_event();
 }
 
-void MOUSEDOS_NotifyWheel(const int16_t w_rel)
+void MOUSEDOS_NotifyWheel(const float w_rel)
 {
 	if (!state.wheel_api) {
 		return;
@@ -1323,9 +1337,9 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 	// wheel counter in 16-bit format, scrolling hundreds of lines in one
 	// go would be insane - thus, limit the wheel counter to 8 bits and
 	// reuse the code written for other mouse modules
-	pending.w_rel = clamp_to_int8(pending.w_rel + w_rel);
+	pending.delta_wheel = MOUSE_ClampWheelMovement(pending.delta_wheel + w_rel);
 
-	bool event_needed = (pending.w_rel != 0);
+	bool event_needed = MOUSE_HasAccumulatedInt(pending.delta_wheel);
 	if (event_needed && mouse_config.dos_immediate) {
 		event_needed = (move_wheel() != 0);
 	}

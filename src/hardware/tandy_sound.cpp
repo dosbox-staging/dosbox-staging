@@ -235,10 +235,10 @@ TandyDAC::~TandyDAC()
 	MIXER_UnlockMixerThread();
 }
 
-void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DMAEvent event)
+void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DmaEvent event)
 {
 	// LOG_MSG("TANDYDAC: DMA event %d", event);
-	if (event != DMA_REACHED_TC) {
+	if (event != DmaEvent::ReachedTerminalCount) {
 		return;
 	}
 	dma.is_done = true;
@@ -598,6 +598,19 @@ void TandyPSG::AudioCallback(const int requested_frames)
 // The Tandy DAC and PSG (programmable sound generator) managed pointers
 std::unique_ptr<TandyDAC> tandy_dac = {};
 std::unique_ptr<TandyPSG> tandy_psg = {};
+
+void TANDYDAC_NotifyLockMixer()
+{
+	if (tandy_dac) {
+		tandy_dac->output_queue.Stop();
+	}
+}
+void TANDYDAC_NotifyUnlockMixer()
+{
+	if (tandy_dac) {
+		tandy_dac->output_queue.Start();
+	}
+}
 
 bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma)
 {

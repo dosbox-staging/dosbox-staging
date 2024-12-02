@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,31 +18,26 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_PCSPEAKER_H
-#define DOSBOX_PCSPEAKER_H
+#ifndef DOSBOX_ASCII_H
+#define DOSBOX_ASCII_H
 
-#include "dosbox.h"
+#include <cstdint>
 
-#include <string_view>
+namespace Ascii {
 
-#include "mixer.h"
-#include "rwqueue.h"
-#include "timer.h"
-
-class PcSpeaker {
-public:
-	RWQueue<float> output_queue{1};
-	MixerChannelPtr channel = nullptr;
-	float frame_counter = 0.0f;
-
-	virtual ~PcSpeaker() = default;
-
-	virtual void SetFilterState(const FilterState filter_state) = 0;
-	virtual bool TryParseAndSetCustomFilter(const std::string& filter_choice) = 0;
-	virtual void SetCounter(const int cntr, const PitMode pit_mode) = 0;
-	virtual void SetPITControl(const PitMode pit_mode)              = 0;
-	virtual void SetType(const PpiPortB &port_b)                    = 0;
-	virtual void PicCallback(const int requested_frames)            = 0;
+enum ControlCode : uint8_t {
+	// Control characters
+	Null           = 0x00,
+	CtrlC          = 0x03,
+	Backspace      = 0x08,
+	LineFeed       = 0x0a,
+	FormFeed       = 0x0c,
+	CarriageReturn = 0x0d,
+	Escape         = 0x1b,
+	Delete         = 0x7f,
+	Extended       = 0xe0,
 };
+
+}
 
 #endif

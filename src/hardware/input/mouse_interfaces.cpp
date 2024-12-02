@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -151,9 +153,9 @@ public:
 	~InterfaceDos() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
 
 	void UpdateInputType() override;
@@ -176,9 +178,9 @@ public:
 	~InterfacePS2() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 	void NotifyBooting() override;
 
 	void UpdateInputType() override;
@@ -204,9 +206,9 @@ public:
 	~InterfaceCOM() = default;
 
 	void NotifyMoved(const float x_rel, const float y_rel,
-	                 const uint32_t x_abs, const uint32_t y_abs) override;
+	                 const float x_abs, const float y_abs) override;
 	void NotifyButton(const MouseButtonId id, const bool pressed) override;
-	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyWheel(const float w_rel) override;
 
 	void UpdateRate() override;
 
@@ -645,7 +647,7 @@ void InterfaceDos::Init()
 }
 
 void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t x_abs, const uint32_t y_abs)
+                               const float x_abs, const float y_abs)
 {
 	MOUSEDOS_NotifyMoved(x_rel * sensitivity_coeff_x,
 	                     y_rel * sensitivity_coeff_y,
@@ -663,7 +665,7 @@ void InterfaceDos::NotifyButton(const MouseButtonId button_id, const bool presse
 	MOUSEDOS_NotifyButton(GetButtonsSquished());
 }
 
-void InterfaceDos::NotifyWheel(const int16_t w_rel)
+void InterfaceDos::NotifyWheel(const float w_rel)
 {
 	MOUSEDOS_NotifyWheel(w_rel);
 }
@@ -712,7 +714,7 @@ void InterfacePS2::Init()
 }
 
 void InterfacePS2::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t x_abs, const uint32_t y_abs)
+                               const float x_abs, const float y_abs)
 {
 	// VMM always first, as it might demand event from PS/2 emulation!
 	MOUSEVMM_NotifyMoved(x_rel * sensitivity_coeff_vmm_x,
@@ -734,7 +736,7 @@ void InterfacePS2::NotifyButton(const MouseButtonId button_id, const bool presse
 	MOUSEPS2_NotifyButton(GetButtonsSquished(), GetButtonsJoined());
 }
 
-void InterfacePS2::NotifyWheel(const int16_t w_rel)
+void InterfacePS2::NotifyWheel(const float w_rel)
 {
 	// VMM always first, as it might demand event from PS/2 emulation!
 	MOUSEVMM_NotifyWheel(w_rel);
@@ -777,7 +779,7 @@ InterfaceCOM::InterfaceCOM(const uint8_t port_id)
 {}
 
 void InterfaceCOM::NotifyMoved(const float x_rel, const float y_rel,
-                               const uint32_t, const uint32_t)
+                               const float, const float)
 {
 	assert(listener);
 
@@ -797,7 +799,7 @@ void InterfaceCOM::NotifyButton(const MouseButtonId button_id, const bool presse
 	listener->NotifyButton(GetButtonsSquished()._data, button_id);
 }
 
-void InterfaceCOM::NotifyWheel(const int16_t w_rel)
+void InterfaceCOM::NotifyWheel(const float w_rel)
 {
 	assert(listener);
 

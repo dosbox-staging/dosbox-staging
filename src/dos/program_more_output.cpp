@@ -21,6 +21,7 @@
 #include "program_more_output.h"
 
 #include "../ints/int10.h"
+#include "ascii.h"
 #include "callback.h"
 #include "checks.h"
 #include "dos_inc.h"
@@ -32,15 +33,6 @@
 #include <cctype>
 
 CHECK_NARROWING();
-
-// ASCII control characters
-constexpr char code_ctrl_c = 0x03; // end of text
-constexpr char code_bs     = 0x08; // backspace
-constexpr char code_lf     = 0x0a; // line feed
-constexpr char code_ff     = 0x0c; // form feed
-constexpr char code_cr     = 0x0d; // carriage return
-constexpr char code_esc    = 0x1b;
-constexpr char code_del    = 0x7f;
 
 // ANSI control sequences
 static const std::string ansi_clear_screen = "\033[2J";
@@ -181,17 +173,18 @@ MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 			}
 			break;
 		case State::AnsiSci:
-			if (code >= '@' && code != code_del) {
+			if (code >= '@' && code != Ascii::Delete) {
 				state = State::AnsiSciEnd;
 			}
 			break;
 		default:
-			if (code == code_esc) {
+			if (code == Ascii::Escape) {
 				state = State::AnsiEsc;
-			} else if (code == code_cr) {
+			} else if (code == Ascii::CarriageReturn) {
 				state = State::NewLineCR;
-				code  = code_lf; // to handle LF/CR line endings
-			} else if (code == code_lf) {
+				// to handle LF/CR line endings
+				code = Ascii::LineFeed;
+			} else if (code == Ascii::LineFeed) {
 				state = State::NewLineLF;
 			} else {
 				state = State::Normal;
@@ -290,7 +283,7 @@ MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 
 		// Detect 'new line' due to character passing the last column
 		if (!current_column && previous_column &&
-		    code != code_cr && code != code_lf) {
+		    code != Ascii::CarriageReturn && code != Ascii::LineFeed) {
 			// The cursor just moved to new line due to too small
 			// screen width (line overflow). If this is followed by
 			// a new line, ignore it, so that it is possible to i. e.
@@ -494,17 +487,17 @@ uint32_t MoreOutputBase::GetNumLinesFromUser(UserDecision& decision)
 		uint8_t code   = 0;
 		DOS_ReadFile(STDIN, &code, &count);
 
-		if (count == 0 || code == code_ctrl_c) {
+		if (count == 0 || code == Ascii::CtrlC) {
 			// Terminate the whole displaying
 			decision = UserDecision::Cancel;
 			break;
-		} else if (code == code_esc) {
+		} else if (code == Ascii::Escape) {
 			// User has resigned, no number of lines
 			break;
-		} else if (code == code_cr && !number_str.empty()) {
+		} else if (code == Ascii::CarriageReturn && !number_str.empty()) {
 			// ENTER pressed, we have a valid number
 			return static_cast<uint32_t>(std::stoi(number_str));
-		} else if (code == code_bs && !number_str.empty()) {
+		} else if (code == Ascii::Backspace && !number_str.empty()) {
 			// BACKSPACE pressed
 			WriteOut("%c %c", code, code);
 			number_str.pop_back();
@@ -542,13 +535,13 @@ MoreOutputBase::UserDecision MoreOutputBase::WaitForCancelContinueNext()
 		const char code = static_cast<char>(tmp);
 
 		if (shutdown_requested || count == 0 || ciequals(code, 'q') ||
-		    code == code_ctrl_c || code == code_esc) {
+		    code == Ascii::CtrlC || code == Ascii::Escape) {
 			decision = UserDecision::Cancel;
 			break;
 		} else if (code == ' ') {
 			decision = UserDecision::More;
 			break;
-		} else if (code == code_cr) {
+		} else if (code == Ascii::CarriageReturn) {
 			if (has_option_expand_form_feed) {
 				decision = UserDecision::More;
 			} else {
@@ -595,7 +588,7 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 				return false; // end of data
 			}
 
-			if (should_end_on_ctrl_c && code == code_ctrl_c) {
+			if (should_end_on_ctrl_c && code == Ascii::CtrlC) {
 				if (should_print_ctrl_c) {
 					WriteOut("^C");
 				}
@@ -603,18 +596,20 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 			}
 
 			// Update counter of lines in the input stream
-			if ((last_fetched_code != code_lf && code == code_cr) ||
-			    (last_fetched_code != code_cr && code == code_lf)) {
+			if ((last_fetched_code != Ascii::LineFeed &&
+			     code == Ascii::CarriageReturn) ||
+			    (last_fetched_code != Ascii::CarriageReturn &&
+			     code == Ascii::LineFeed)) {
 				++stream_line_counter;
 			}
 			last_fetched_code = code;
 
 			// Skip one CR/LF characters for certain states
-			if (code == code_cr && should_skip_cr) {
+			if (code == Ascii::CarriageReturn && should_skip_cr) {
 				should_skip_cr = false;
 				continue;
 			}
-			if (code == code_lf && should_skip_lf) {
+			if (code == Ascii::LineFeed && should_skip_lf) {
 				should_skip_lf = false;
 				continue;
 			}
@@ -630,8 +625,8 @@ bool MoreOutputBase::GetCharacter(char& code, bool& is_last_character)
 			tabs_remaining    = option_tab_size;
 			is_replacing_last = is_last_character;
 			is_last_character = false;
-		} else if (code == code_ff &&
-			       (stream_line_counter >= start_line_num) &&
+		} else if (code == Ascii::FormFeed &&
+		           (stream_line_counter >= start_line_num) &&
 		           has_option_expand_form_feed) {
 			// FormFeed found and appropriate option is set,
 			// replace it with new lines until page is complete
@@ -875,8 +870,8 @@ void MoreOutputStrings::ProcessEndOfLines()
 	if (length >= 2) {
 		const auto code1 = input_strings[length - 2];
 		const auto code2 = input_strings[length - 1];
-		if ((code1 == code_lf && code2 == code_cr) ||
-		    (code1 == code_cr && code2 == code_lf)) {
+		if ((code1 == Ascii::LineFeed && code2 == Ascii::CarriageReturn) ||
+		    (code1 == Ascii::CarriageReturn && code2 == Ascii::LineFeed)) {
 			input_strings.pop_back();
 		}
 	}
@@ -891,17 +886,17 @@ void MoreOutputStrings::CountLines()
 		bool ignore_next_cr = false;
 		bool ignore_next_lf = false;
 		for (const auto code : input_strings) {
-			if ((code == code_cr && ignore_next_cr) ||
-			    (code == code_lf && ignore_next_lf)) {
+			if ((code == Ascii::CarriageReturn && ignore_next_cr) ||
+			    (code == Ascii::LineFeed && ignore_next_lf)) {
 				ignore_next_cr = false;
 				ignore_next_lf = false;
 				continue;
 			}
 
-			if (code == code_cr) {
+			if (code == Ascii::CarriageReturn) {
 				ignore_next_lf = true;
 				++lines;
-			} else if (code == code_lf) {
+			} else if (code == Ascii::LineFeed) {
 				ignore_next_cr = true;
 				++lines;
 			}
@@ -911,8 +906,8 @@ void MoreOutputStrings::CountLines()
 				break;
 			}
 		}
-		if (input_strings.back() == code_cr ||
-		    input_strings.back() == code_lf) {
+		if (input_strings.back() == Ascii::CarriageReturn ||
+		    input_strings.back() == Ascii::LineFeed) {
 			--lines;
 		}
 		SetLinesInStream(lines);

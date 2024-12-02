@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
@@ -56,8 +58,8 @@ static struct {
 	DosBox::Rect draw_rect = {};
 
 	// Absolute position from start of drawing area in logical units
-	uint32_t cursor_x_abs  = 0;
-	uint32_t cursor_y_abs  = 0;
+	float cursor_x_abs = 0.0f;
+	float cursor_y_abs = 0.0f;
 
 	// If mouse cursor is outside of drawing area
 	bool cursor_is_outside = false;
@@ -89,28 +91,28 @@ static struct {
 
 } state;
 
-static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y_abs)
+static void update_cursor_absolute_position(const float x_abs, const float y_abs)
 {
 	state.cursor_is_outside = false;
 
-	auto calc_pos = [&](const int pos,
+	auto calc_pos = [&](const float pos,
 	                    const int draw_start_pos,
-	                    const int draw_end_pos) -> uint32_t {
+	                    const int draw_end_pos) -> float {
 		assert(draw_end_pos - draw_start_pos > 1);
-		constexpr int min_pos = 0;
+		constexpr float MinPos = 0.0f;
 
-		if (pos < min_pos || pos < draw_start_pos) {
+		if (pos < MinPos || pos < static_cast<float>(draw_start_pos)) {
 			// Cursor is before the top or left of the draw area
 			state.cursor_is_outside = !state.is_captured;
-			return check_cast<uint32_t>(min_pos);
+			return MinPos;
 
-		} else if (pos >= draw_end_pos) {
+		} else if (pos >= static_cast<float>(draw_end_pos)) {
 			// Cursor is after the bottom or right of the draw area
 			state.cursor_is_outside = !state.is_captured;
-			return check_cast<uint32_t>(draw_end_pos - draw_start_pos - 1);
+			return static_cast<float>(draw_end_pos - draw_start_pos - 1);
 
 		} else {
-			return check_cast<uint32_t>(pos - draw_start_pos);
+			return pos - static_cast<float>(draw_start_pos);
 		}
 	};
 
@@ -119,8 +121,8 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 	const auto x2 = x1 + check_cast<int>(mouse_shared.resolution_x);
 	const auto y2 = y1 + check_cast<int>(mouse_shared.resolution_y);
 
-	state.cursor_x_abs = calc_pos(check_cast<int>(x_abs), x1, x2);
-	state.cursor_y_abs = calc_pos(check_cast<int>(y_abs), y1, y2);
+	state.cursor_x_abs = calc_pos(x_abs, x1, x2);
+	state.cursor_y_abs = calc_pos(y_abs, y1, y2);
 }
 
 static void update_cursor_visibility()
@@ -562,7 +564,7 @@ void MOUSE_NotifyBooting()
 }
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
-                      const int32_t x_abs, const int32_t y_abs)
+                      const float x_abs, const float y_abs)
 {
 	// Event from GFX
 
@@ -685,7 +687,7 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
 	}
 }
 
-void MOUSE_EventWheel(const int16_t w_rel)
+void MOUSE_EventWheel(const float w_rel)
 {
 	// Event from GFX
 

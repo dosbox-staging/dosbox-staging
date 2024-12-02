@@ -1,5 +1,7 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +23,7 @@
 #include <algorithm>
 
 #include "checks.h"
+#include "math_utils.h"
 #include "pic.h"
 
 CHECK_NARROWING();
@@ -88,16 +91,59 @@ uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz)
 
 float MOUSE_ClampRelativeMovement(const float rel)
 {
+	constexpr float Max = 2048.0f;
 	// Enforce sane upper limit of relative mouse movement
-	return std::clamp(rel, -2048.0f, 2048.0f);
+	return std::clamp(rel, -Max, Max);
+}
+
+float MOUSE_ClampWheelMovement(const float rel)
+{
+	// Chosen so that the result always fits into int8_t
+	constexpr float Max = 127.0f;
+	// Enforce sane upper limit of relative mouse wheel
+	return std::clamp(rel, -Max, Max);
 }
 
 uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz)
 {
-	constexpr uint16_t rate_min = 10;
-	constexpr uint16_t rate_max = 500;
+	constexpr uint16_t MinRate = 10;
+	constexpr uint16_t MaxRate = 500;
 
-	return std::clamp(rate_hz, rate_min, rate_max);
+	return std::clamp(rate_hz, MinRate, MaxRate);
+}
+
+bool MOUSE_HasAccumulatedInt(const float delta)
+{
+	// Value is above 0.5 for +1/-1 flip-flopping protection
+	constexpr float Threshold = 0.6f;
+
+	return std::fabs(delta) >= Threshold;
+}
+
+int8_t MOUSE_ConsumeInt8(float& delta, const bool skip_delta_update)
+{
+	if (!MOUSE_HasAccumulatedInt(delta)) {
+		return 0;
+	}
+
+	const auto consumed = std::round(delta);
+	if (!skip_delta_update) {
+		delta -= consumed;
+	}
+	return clamp_to_int8(consumed);
+}
+
+int16_t MOUSE_ConsumeInt16(float& delta, const bool skip_delta_update)
+{
+	if (!MOUSE_HasAccumulatedInt(delta)) {
+		return 0;
+	}
+
+	const auto consumed = std::round(delta);
+	if (!skip_delta_update) {
+		delta -= consumed;
+	}
+	return clamp_to_int16(consumed);
 }
 
 // ***************************************************************************

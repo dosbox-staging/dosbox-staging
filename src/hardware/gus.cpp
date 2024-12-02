@@ -722,9 +722,9 @@ void Gus::StartDmaTransfers()
 	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
-void Gus::DmaCallback(const DmaChannel*, DMAEvent event)
+void Gus::DmaCallback(const DmaChannel*, DmaEvent event)
 {
-	if (event == DMA_UNMASKED) {
+	if (event == DmaEvent::IsUnmasked) {
 		StartDmaTransfers();
 	}
 }
@@ -1480,6 +1480,19 @@ void GUS_MirrorAdLibCommandPortWrite([[maybe_unused]] const io_port_t port,
 
 	if (gus) {
 		gus->MirrorAdLibCommandRegister(check_cast<uint8_t>(reg_value));
+	}
+}
+
+void GUS_NotifyLockMixer()
+{
+	if (gus) {
+		gus->output_queue.Stop();
+	}
+}
+void GUS_NotifyUnlockMixer()
+{
+	if (gus) {
+		gus->output_queue.Start();
 	}
 }
 

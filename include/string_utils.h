@@ -285,9 +285,6 @@ std::string join_with_commas(const std::vector<std::string>& items,
                              const std::string_view and_conjunction = "and",
                              const std::string_view end_punctuation = ".");
 
-// Clear the language if it's set to the POSIX default
-void clear_language_if_default(std::string& language);
-
 // Parse the string as an integer or decimal value and return it as a float.
 // This API should give us enough numerical range and accuracy for any
 // text-based inputs.

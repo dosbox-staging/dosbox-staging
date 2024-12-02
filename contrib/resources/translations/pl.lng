@@ -67,7 +67,6 @@ Lista dostępnych opcji:
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
 Kody krajów; zazwyczaj takie same, jak telefoniczny numer kierunkowy
---------------------------------------------------------------------
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
 Powyższych kodów numerycznych należy użyć w ustawieniu 'country'

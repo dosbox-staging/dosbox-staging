@@ -24,10 +24,10 @@
 
 #include <bitset>
 #include <cassert>
-#include <deque>
 #include <numeric>
 #include <string>
 #include <tuple>
+#include <vector>
 
 #include "../ints/int10.h"
 #include "ansi_code_markup.h"
@@ -49,29 +49,51 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	// Name 'default.sf2' picks the default SoundFont if it's installed
-	// in the OS. Usually it's Fluid_R3.
-	auto* str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
+	// in the OS (usually "Fluid_R3").
+	auto str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
 	str_prop->Set_help(
-	        "Path to a SoundFont file in .sf2 format ('default.sf2' by default).\n"
-	        "You can use an absolute or relative path, or the name of an .sf2 inside the\n"
-	        "'soundfonts' directory within your DOSBox configuration directory.\n"
-	        "An optional percentage value after the name will scale the SoundFont's volume.\n"
-	        "This is useful for normalising the volume of different SoundFonts.\n"
-	        "E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%%.\n"
-	        "The percentage value can range from 1 to 800.");
+	        "Name or path of SoundFont file to use ('default.sf2' by default).\n"
+	        "The SoundFont will be looked up in the following locations in order:\n"
+	        "  - The user-defined SoundFont directory (see 'soundfont_dir').\n"
+	        "  - The 'soundfonts' directory in your DOSBox configuration directory.\n"
+	        "  - Other common system locations.\n"
+	        "The '.sf2' extension can be omitted. You can use paths relative to the above\n"
+	        "locations or absolute paths as well.\n"
+	        "Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.");
+
+	str_prop = secprop.Add_string("soundfont_dir", WhenIdle, "");
+	str_prop->Set_help(
+	        "Extra user-defined SoundFont directory (unset by default).\n"
+	        "If this is set, SoundFonts are looked up in this directory first, then in the\n"
+	        "the standard system locations.");
+
+	constexpr auto DefaultVolume = 100;
+	constexpr auto MinVolume = 1;
+	constexpr auto MaxVolume = 800;
+
+	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
+	int_prop->SetMinMax(MinVolume, MaxVolume);
+	int_prop->Set_help(
+	        format_str("Set the SoundFont's volume as a percentage (%d by default).\n"
+	                   "This is useful for normalising the volume of different SoundFonts.\n"
+	                   "The percentage value can range from %d to %d.",
+	                   DefaultVolume,
+	                   MinVolume,
+	                   MaxVolume));
 
 	str_prop = secprop.Add_string("fsynth_chorus", WhenIdle, "auto");
 	str_prop->Set_help(
-	        "Chorus effect: 'auto' (default), 'on', 'off', or custom values.\n"
-	        "When using custom values:\n"
-	        "  All five must be provided in-order and space-separated.\n"
-	        "  They are: voice-count level speed depth modulation-wave, where:\n"
-	        "    - voice-count is an integer from 0 to 99\n"
-	        "    - level is a decimal from 0.0 to 10.0\n"
-	        "    - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
-	        "    - depth is a decimal from 0.0 to 21.0\n"
-	        "    - modulation-wave is either 'sine' or 'triangle'\n"
-	        "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
+	        "Configure the FluidSynth chorus. Possible values:\n"
+	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
+	        "  on:        Always enable chorus.\n"
+	        "  off:       Disable chorus.\n"
+	        "  <custom>:  Custom setting via five space-separated values:\n"
+	        "               - voice-count:      Integer from 0 to 99\n"
+	        "               - level:            Decimal from 0.0 to 10.0\n"
+	        "               - speed:            Decimal from 0.1 to 5.0 (in Hz)\n"
+	        "               - depth:            Decimal from 0.0 to 21.0\n"
+	        "               - modulation-wave:  'sine' or 'triangle'\n"
+	        "             For example: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'\n"
 	        "Note: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
 	        "      on the FluidSynth channel instead, or enable both chorus effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
@@ -79,15 +101,16 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 	str_prop = secprop.Add_string("fsynth_reverb", WhenIdle, "auto");
 	str_prop->Set_help(
-	        "Reverb effect: 'auto' (default), 'on', 'off', or custom values.\n"
-	        "When using custom values:\n"
-	        "  All four must be provided in-order and space-separated.\n"
-	        "  They are: room-size damping width level, where:\n"
-	        "    - room-size is a decimal from 0.0 to 1.0\n"
-	        "    - damping is a decimal from 0.0 to 1.0\n"
-	        "    - width is a decimal from 0.0 to 100.0\n"
-	        "    - level is a decimal from 0.0 to 1.0\n"
-	        "  For example: reverb = 0.61 0.23 0.76 0.56\n"
+	        "Configure the FluidSynth reverb. Possible values:\n"
+	        "  auto:      Enable reverb (default).\n"
+	        "  on:        Enable reverb.\n"
+	        "  off:       Disable reverb.\n"
+	        "  <custom>:  Custom setting via four space-separated values:\n"
+	        "               - room-size:  Decimal from 0.0 to 1.0\n"
+	        "               - damping:    Decimal from 0.0 to 1.0\n"
+	        "               - width is:   Decimal from 0.0 to 100.0\n"
+	        "               - level is:   Decimal from 0.0 to 1.0\n"
+	        "             For example: 'fsynth_reverb = 0.61 0.23 0.76 0.56'\n"
 	        "Note: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
 	        "      on the FluidSynth channel instead, or enable both reverb effects at the\n"
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
@@ -101,49 +124,9 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
-// Parses the 'soundfont' setting which has the 'FILENAME [SCALE]' format.
-// The function returns the filename and the optional scale percentage as a
-// tuple. If the scale percentage is not provided, a default value of 100 is
-// used.
-std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
-{
-	constexpr auto DefaultPercent = 100;
-
-	if (line.empty()) {
-		return {line, DefaultPercent};
-	}
-
-	// Look for a space in the last 5 characters of the string
-	const auto len      = line.length();
-	const auto from_pos = len < 5 ? 0 : len - 5;
-	auto last_space_pos = line.substr(from_pos).find_last_of(' ');
-
-	if (last_space_pos == std::string::npos) {
-		return {line, DefaultPercent};
-	}
-
-	// Ensure the position is relative to the start of the entire string
-	last_space_pos += from_pos;
-
-	// Is the stuff after the last space convertable to a number?
-	int percent = 0;
-	try {
-		percent = stoi(line.substr(last_space_pos + 1));
-	} catch (...) {
-		return {line, DefaultPercent};
-	}
-
-	// A number was provided, so split it from the line
-	std::string filename = line.substr(0, last_space_pos);
-	// Drop any extra whitespace prior to the number
-	trim(filename);
-
-	return {filename, percent};
-}
-
 #if defined(WIN32)
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -157,7 +140,7 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #elif defined(MACOSX)
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	return {
 	        GetConfigDir() / DefaultSoundfontsDir,
@@ -167,12 +150,12 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #else
 
-static std::deque<std_fs::path> get_data_dirs()
+static std::vector<std_fs::path> get_platform_data_dirs()
 {
 	// First priority is user-specific data location
 	const auto xdg_data_home = get_xdg_data_home();
 
-	std::deque<std_fs::path> dirs = {
+	std::vector<std_fs::path> dirs = {
 	        xdg_data_home / "dosbox" / DefaultSoundfontsDir,
 	        xdg_data_home / DefaultSoundfontsDir,
 	        xdg_data_home / "sounds/sf2",
@@ -192,15 +175,40 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #endif
 
-static std_fs::path find_sf_file(const std::string& name)
+static Section_prop* get_fluidsynth_section()
 {
-	const std_fs::path sf_path = resolve_home(name);
+	assert(control);
+
+	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
+	assert(sec);
+
+	return sec;
+}
+
+static std::vector<std_fs::path> get_data_dirs()
+{
+	auto dirs = get_platform_data_dirs();
+
+	auto sf_dir = get_fluidsynth_section()->Get_string("soundfont_dir");
+	if (!sf_dir.empty()) {
+		// The user-provided SoundFont dir might use a different casing
+		// of the actual path on Linux & Windows, so we need to
+		// normalise that to avoid some subtle bugs downstream (see
+		// `find_sf_file()` as well).
+		dirs.insert(dirs.begin(), std_fs::canonical(sf_dir));
+	}
+	return dirs;
+}
+
+static std_fs::path find_sf_file(const std::string& sf_name)
+{
+	const std_fs::path sf_path = resolve_home(sf_name);
 	if (path_exists(sf_path)) {
 		return sf_path;
 	}
 	for (const auto& dir : get_data_dirs()) {
 		for (const auto& sf :
-		     {dir / name, dir / (name + SoundFontExtension)}) {
+		     {dir / sf_name, dir / (sf_name + SoundFontExtension)}) {
 #if 0
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
@@ -246,141 +254,59 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	            hex_values.c_str());
 }
 
-static Section_prop* get_fluidsynth_section()
+// Checks if the passed value is within valid range and returns the
+// default if it's not
+static float validate_setting(const char* name, const std::string& str_val,
+                              const double def_val, const double min_val,
+                              const double max_val)
 {
-	assert(control);
+	// Convert the string to a double
+	const auto val = atof(str_val.c_str());
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
-	assert(sec);
-
-	return sec;
+	if (val < min_val || val > max_val) {
+		LOG_WARNING(
+		        "FSYNTH: Invalid %s setting (%s), needs to be between "
+		        "%.2f and %.2f: using default (%.2f)",
+		        name,
+		        str_val.c_str(),
+		        min_val,
+		        max_val,
+		        def_val);
+		return def_val;
+	}
+	return val;
 }
 
-MidiDeviceFluidSynth::MidiDeviceFluidSynth()
+static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 {
-	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
-	                                     delete_fluid_settings);
-	if (!fluid_settings) {
-		const auto msg = "FSYNTH: new_fluid_settings failed";
-		LOG_WARNING("%s", msg);
-		throw std::runtime_error(msg);
-	}
+	assert(synth);
 
-	auto* section = get_fluidsynth_section();
-
-	// Detailed explanation of all available FluidSynth settings:
-	// http://www.fluidsynth.org/api/fluidsettings.xml
-
-	// Per the FluidSynth API, the sample-rate should be part of the
-	// settings used to instantiate the synth, so we use the mixer's native
-	// rate to configure FluidSynth.
-	const auto sample_rate_hz = MIXER_GetSampleRate();
-	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
-
-	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
-
-	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
-	                          delete_fluid_synth);
-	if (!fluid_synth) {
-		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer.";
-		LOG_WARNING("%s", msg);
-		throw std::runtime_error(msg);
-	}
-
-	// Load the requested SoundFont or quit if none provided
-	auto [sf_filename, scale_by_percent] = parse_soundfont_pref(
-	        section->Get_string("soundfont"));
-
-	const auto soundfont_path = find_sf_file(sf_filename);
-
-	if (!soundfont_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		constexpr auto ResetPresets = true;
-		fluid_synth_sfload(fluid_synth.get(),
-		                   soundfont_path.string().c_str(),
-		                   ResetPresets);
-	}
-
-	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
-		                            sf_filename.c_str());
-		LOG_WARNING("%s", msg.c_str());
-		throw std::runtime_error(msg);
-	}
-
-	if (scale_by_percent < 1 || scale_by_percent > 800) {
-		LOG_WARNING(
-		        "FSYNTH: Invalid volume scaling percentage: %d; "
-		        "must be between 1 and 800, defaulting to 100%%",
-		        scale_by_percent);
-		scale_by_percent = 100;
-	}
-	fluid_synth_set_gain(fluid_synth.get(),
-	                     static_cast<float>(scale_by_percent) / 100.0f);
-
-	// Let the user know that the SoundFont was loaded
-	if (scale_by_percent == 100) {
-		LOG_MSG("FSYNTH: Using SoundFont '%s'",
-		        soundfont_path.string().c_str());
-	} else {
-		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
-		        soundfont_path.string().c_str(),
-		        scale_by_percent);
-	}
-
-	// applies setting to all groups
-	constexpr int FxGroup = -1;
-
-	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
-	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
-
-	// Use reasonable chorus and reverb settings matching ScummVM's defaults
-
-	// Checks if the passed value is within valid range and returns the
-	// default if it's not
-	auto validate_setting = [=](const char* name,
-	                            const std::string& str_val,
-	                            const double def_val,
-	                            const double min_val,
-	                            const double max_val) {
-		// convert the string to a double
-		const auto val = atof(str_val.c_str());
-		if (val < min_val || val > max_val) {
-			LOG_WARNING(
-			        "FSYNTH: Invalid %s setting (%s), needs to be between "
-			        "%.2f and %.2f: using default (%.2f)",
-			        name,
-			        str_val.c_str(),
-			        min_val,
-			        max_val,
-			        def_val);
-			return def_val;
-		}
-		return val;
-	};
+	const auto section = get_fluidsynth_section();
 
 	// Get the user's chorus settings
-	const auto chorus   = split(section->Get_string("fsynth_chorus"));
+	const auto chorus = split(section->Get_string("fsynth_chorus"));
+
 	bool chorus_enabled = !chorus.empty() && chorus[0] != "off";
 
 	// Does the SoundFont have known-issues with chorus?
 	const auto is_problematic_font =
-	        find_in_case_insensitive("FluidR3", soundfont_path.string()) ||
-	        find_in_case_insensitive("zdoom", soundfont_path.string());
+	        find_in_case_insensitive("FluidR3", sf_path.string()) ||
+	        find_in_case_insensitive("zdoom", sf_path.string());
 
 	if (chorus_enabled && chorus[0] == "auto" && is_problematic_font) {
 		chorus_enabled = false;
 		LOG_INFO("FSYNTH: Chorus auto-disabled due to known issues with the '%s' soundfont",
-		         soundfont_path.filename().string().c_str());
+		         section->Get_string("soundfont").c_str());
 	}
 
-	// default chorus settings
+	// Default chorus settings
 	auto chorus_voice_count_f = 3.0;
 	auto chorus_level         = 1.2;
 	auto chorus_speed         = 0.3;
 	auto chorus_depth         = 8.0;
 	auto chorus_mod_wave      = fluid_chorus_mod::FLUID_CHORUS_MOD_SINE;
 
-	// apply custom chorus settings if provided
+	// Apply custom chorus settings if provided
 	if (chorus_enabled && chorus.size() > 1) {
 		if (chorus.size() == 5) {
 			chorus_voice_count_f = validate_setting("chorus voice-count",
@@ -388,13 +314,16 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 			                                        chorus_voice_count_f,
 			                                        0,
 			                                        99);
+
 			chorus_level = validate_setting("chorus level",
 			                                chorus[1],
 			                                chorus_level,
 			                                0.0,
 			                                10.0);
+
 			chorus_speed = validate_setting(
 			        "chorus speed", chorus[2], chorus_speed, 0.1, 5.0);
+
 			chorus_depth = validate_setting("chorus depth",
 			                                chorus[3],
 			                                chorus_depth,
@@ -403,6 +332,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
+
 			} else if (chorus[4] != "sine") { // default is sine
 				LOG_WARNING(
 				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
@@ -417,11 +347,57 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 			        static_cast<int>(chorus.size()));
 		}
 	}
+
 	// API accept an integer voice-count
 	const auto chorus_voice_count = static_cast<int>(round(chorus_voice_count_f));
 
+	// Applies setting to all groups
+	constexpr int FxGroup = -1;
+
+// Current API calls as of 2.2
+#if FLUIDSYNTH_VERSION_MINOR >= 2
+	fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
+	fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
+	fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
+	fluid_synth_set_chorus_group_speed(synth, FxGroup, chorus_speed);
+	fluid_synth_set_chorus_group_depth(synth, FxGroup, chorus_depth);
+
+	fluid_synth_set_chorus_group_type(synth,
+	                                  FxGroup,
+	                                  static_cast<int>(chorus_mod_wave));
+
+// deprecated API calls prior to 2.2
+#else
+	fluid_synth_set_chorus_on(synth, chorus_enabled);
+	fluid_synth_set_chorus(synth,
+	                       chorus_voice_count,
+	                       chorus_level,
+	                       chorus_speed,
+	                       chorus_depth,
+	                       chorus_mod_wave);
+#endif
+
+	if (chorus_enabled) {
+		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
+		        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
+		        chorus_voice_count,
+		        chorus_level,
+		        chorus_speed,
+		        chorus_depth,
+		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE
+		                ? "sine"
+		                : "triangle");
+	}
+}
+
+static void setup_reverb(fluid_synth_t* synth)
+{
+	assert(synth);
+
 	// Get the user's reverb settings
-	const auto reverb         = split(section->Get_string("fsynth_reverb"));
+	const auto reverb = split(
+	        get_fluidsynth_section()->Get_string("fsynth_reverb"));
+
 	const bool reverb_enabled = !reverb.empty() && reverb[0] != "off";
 
 	// Default reverb settings
@@ -461,56 +437,29 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		}
 	}
 
+	// Applies setting to all groups
+	constexpr int FxGroup = -1;
+
 // Current API calls as of 2.2
 #if FLUIDSYNTH_VERSION_MINOR >= 2
-	fluid_synth_chorus_on(fluid_synth.get(), FxGroup, chorus_enabled);
-	fluid_synth_set_chorus_group_nr(fluid_synth.get(), FxGroup, chorus_voice_count);
-	fluid_synth_set_chorus_group_level(fluid_synth.get(), FxGroup, chorus_level);
-	fluid_synth_set_chorus_group_speed(fluid_synth.get(), FxGroup, chorus_speed);
-	fluid_synth_set_chorus_group_depth(fluid_synth.get(), FxGroup, chorus_depth);
-
-	fluid_synth_set_chorus_group_type(fluid_synth.get(),
-	                                  FxGroup,
-	                                  static_cast<int>(chorus_mod_wave));
-
-	fluid_synth_reverb_on(fluid_synth.get(), FxGroup, reverb_enabled);
-	fluid_synth_set_reverb_group_roomsize(fluid_synth.get(),
+	fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
+	fluid_synth_set_reverb_group_roomsize(synth,
 	                                      FxGroup,
 	                                      reverb_room_size);
 
-	fluid_synth_set_reverb_group_damp(fluid_synth.get(), FxGroup, reverb_damping);
-	fluid_synth_set_reverb_group_width(fluid_synth.get(), FxGroup, reverb_width);
-	fluid_synth_set_reverb_group_level(fluid_synth.get(), FxGroup, reverb_level);
+	fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
+	fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
+	fluid_synth_set_reverb_group_level(synth, FxGroup, reverb_level);
 
 // deprecated API calls prior to 2.2
 #else
-	fluid_synth_set_chorus_on(fluid_synth.get(), chorus_enabled);
-	fluid_synth_set_chorus(fluid_synth.get(),
-	                       chorus_voice_count,
-	                       chorus_level,
-	                       chorus_speed,
-	                       chorus_depth,
-	                       chorus_mod_wave);
-
-	fluid_synth_set_reverb_on(fluid_synth.get(), reverb_enabled);
-	fluid_synth_set_reverb(fluid_synth.get(),
+	fluid_synth_set_reverb_on(synth, reverb_enabled);
+	fluid_synth_set_reverb(synth,
 	                       reverb_room_size,
 	                       reverb_damping,
 	                       reverb_width,
 	                       reverb_level);
 #endif
-
-	if (chorus_enabled) {
-		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
-		        "%.2f Hz speed, %.2f depth, and %s-wave modulation",
-		        chorus_voice_count,
-		        chorus_level,
-		        chorus_speed,
-		        chorus_depth,
-		        chorus_mod_wave == fluid_chorus_mod::FLUID_CHORUS_MOD_SINE
-		                ? "sine"
-		                : "triangle");
-	}
 
 	if (reverb_enabled) {
 		LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
@@ -520,6 +469,82 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		        reverb_width,
 		        reverb_level);
 	}
+}
+
+MidiDeviceFluidSynth::MidiDeviceFluidSynth()
+{
+	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
+	                                     delete_fluid_settings);
+	if (!fluid_settings) {
+		const auto msg = "FSYNTH: new_fluid_settings failed";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
+	}
+
+	auto section = get_fluidsynth_section();
+
+	// Detailed explanation of all available FluidSynth settings:
+	// http://www.fluidsynth.org/api/fluidsettings.xml
+
+	// Per the FluidSynth API, the sample-rate should be part of the
+	// settings used to instantiate the synth, so we use the mixer's native
+	// rate to configure FluidSynth.
+	const auto sample_rate_hz = MIXER_GetSampleRate();
+	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
+
+	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
+
+	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
+	                          delete_fluid_synth);
+	if (!fluid_synth) {
+		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer.";
+		LOG_WARNING("%s", msg);
+		throw std::runtime_error(msg);
+	}
+
+	// Load the requested SoundFont or quit if none provided
+	const auto sf_name = section->Get_string("soundfont");
+	const auto sf_path = find_sf_file(sf_name);
+
+	if (!sf_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
+		constexpr auto ResetPresets = true;
+		fluid_synth_sfload(fluid_synth.get(),
+		                   sf_path.string().c_str(),
+		                   ResetPresets);
+	}
+
+	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
+		const auto msg = format_str(
+		        "FSYNTH: FluidSynth failed to load '%s', check the path.",
+		        sf_name.c_str());
+
+		LOG_WARNING("%s", msg.c_str());
+		throw std::runtime_error(msg);
+	}
+
+	auto sf_volume_percent = section->Get_int("soundfont_volume");
+	fluid_synth_set_gain(fluid_synth.get(),
+	                     static_cast<float>(sf_volume_percent) / 100.0f);
+
+	// Let the user know that the SoundFont was loaded
+	if (sf_volume_percent == 100) {
+		LOG_MSG("FSYNTH: Using SoundFont '%s'", sf_path.string().c_str());
+	} else {
+		LOG_MSG("FSYNTH: Using SoundFont '%s' with volume scaled to %d%%",
+		        sf_path.string().c_str(),
+		        sf_volume_percent);
+	}
+
+	// Applies setting to all groups
+	constexpr int FxGroup = -1;
+
+	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
+	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
+
+	// Use reasonable chorus and reverb settings matching ScummVM's defaults
+
+	setup_chorus(fluid_synth.get(), sf_path);
+	setup_reverb(fluid_synth.get());
 
 	MIXER_LockMixerThread();
 
@@ -592,7 +617,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth         = std::move(fluid_synth);
 	mixer_channel = std::move(fluidsynth_channel);
 
-	current_sf2_path = soundfont_path;
+	current_sf_path = sf_path;
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
@@ -634,7 +659,7 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 	synth.reset();
 	settings.reset();
 
-	current_sf2_path = {};
+	current_sf_path = {};
 
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
@@ -866,16 +891,16 @@ void MidiDeviceFluidSynth::Render()
 
 std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
 {
-	return current_sf2_path;
+	return current_sf_path;
 }
 
-std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
+std::string format_sf_line(size_t width, const std_fs::path& sf_path)
 {
 	assert(width > 0);
 	std::vector<char> line_buf(width);
 
-	const auto& name = sf2_path.filename().string();
-	const auto& path = simplify_path(sf2_path).string();
+	const auto& name = sf_path.filename().string();
+	const auto& path = simplify_path(sf_path).string();
 
 	snprintf(line_buf.data(), width, "%-16s - %s", name.c_str(), path.c_str());
 	std::string line = line_buf.data();
@@ -889,9 +914,12 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 	// The description was too long and got trimmed; place three dots in
 	// the end to make it clear to the user.
 	const std::string cutoff = "...";
+
 	assert(line.size() > cutoff.size());
+
 	const auto start = line.end() - static_cast<int>(cutoff.size());
 	line.replace(start, line.end(), cutoff);
+
 	return line;
 }
 
@@ -899,15 +927,14 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
-	auto write_line = [&](const std_fs::path& sf2_path) {
-		const auto line = format_sf2_line(term_width - 2, sf2_path);
+	auto write_line = [&](const std_fs::path& sf_path) {
+		const auto line = format_sf_line(term_width - 2, sf_path);
 
 		const auto do_highlight = [&] {
 			if (device) {
-				const auto curr_sf2_path =
-				        device->GetCurrentSoundFontPath();
+				const auto curr_sf_path = device->GetCurrentSoundFontPath();
 
-				return curr_sf2_path && curr_sf2_path == sf2_path;
+				return curr_sf_path && curr_sf_path == sf_path;
 			}
 			return false;
 		}();
@@ -930,7 +957,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	// Print SoundFont found from user config.
 	std::error_code err = {};
 
-	std::vector<std_fs::path> sf2_files = {};
+	std::vector<std_fs::path> sf_files = {};
 
 	// Go through all SoundFont directories and list all .sf2 files.
 	for (const auto& dir_path : get_data_dirs()) {
@@ -945,42 +972,36 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 				continue;
 			}
 
-			const auto& sf2_path = entry.path();
+			const auto& sf_path = entry.path();
 
 			// Is it an .sf2 file?
-			auto ext = sf2_path.extension().string();
+			auto ext = sf_path.extension().string();
 			lowcase(ext);
 			if (ext != SoundFontExtension) {
 				continue;
 			}
 
-			sf2_files.emplace_back(sf2_path);
+			sf_files.emplace_back(sf_path);
 		}
 	}
 
-	std::sort(sf2_files.begin(), sf2_files.end());
+	std::sort(sf_files.begin(),
+	          sf_files.end(),
+	          [](const std_fs::path& a, const std_fs::path& b) {
+		          return a.filename() < b.filename();
+	          });
 
-	for (const auto& path : sf2_files) {
+	for (const auto& path : sf_files) {
 		write_line(path);
 	}
-
 	caller->WriteOut("\n");
 }
 
 static void fluidsynth_init([[maybe_unused]] Section* sec)
 {
-	const auto device = MIDI_GetCurrentDevice();
-
-	if (device && device->GetName() == MidiDeviceName::FluidSynth) {
-		const auto fluid_device = dynamic_cast<MidiDeviceFluidSynth*>(device);
-
-		const auto soundfont_pref = get_fluidsynth_section()->Get_string(
-		        "soundfont");
-		const auto path = find_sf_file(soundfont_pref);
-
-		if (fluid_device->GetCurrentSoundFontPath() != path) {
-			MIDI_Init();
-		}
+	if (const auto device = MIDI_GetCurrentDevice();
+	    device && device->GetName() == MidiDeviceName::FluidSynth) {
+		MIDI_Init();
 	}
 }
 

@@ -25,6 +25,7 @@
 #include <ctime>
 #include <array>
 
+#include "ascii.h"
 #include "bios.h"
 #include "callback.h"
 #include "dos_locale.h"
@@ -1404,9 +1405,6 @@ static Bitu DOS_26Handler(void) {
     return CBRET_NONE;
 }
 
-constexpr uint8_t code_ctrl_c = 0x03;
-constexpr uint8_t code_esc    = 0x1b;
-
 bool DOS_IsCancelRequest()
 {
 	if (shutdown_requested)
@@ -1420,10 +1418,10 @@ bool DOS_IsCancelRequest()
 		DOS_ReadFile(STDIN, &code, &count);
 
 		// Check if user requested to cancel
-		if (shutdown_requested || count == 0 ||
-			code == 'q' || code == 'Q' ||
-		    code == code_ctrl_c || code == code_esc)
+		if (shutdown_requested || count == 0 || code == 'q' ||
+		    code == 'Q' || code == Ascii::CtrlC || code == Ascii::Escape) {
 			return true;
+		}
 	}
 
 	// Return control if no key pressed
