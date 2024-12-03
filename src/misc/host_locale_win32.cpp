@@ -358,10 +358,12 @@ static std::string to_string(const wchar_t* input, const size_t input_length)
 		return {};
 	}
 
-	std::vector<char> buffer(buffer_size);
+	std::vector<char> buffer(buffer_size + 1);
 	WideCharToMultiByte(DefaultCodePage,  0, input, check_cast<int>(input_length),
 	                    buffer.data(), buffer_size, nullptr, nullptr);
-	return std::string(buffer.begin(), buffer.end());
+	buffer[buffer_size] = '\0';
+
+	return std::string(buffer.begin(), std::find(buffer.begin(), buffer.end(), '\0'));
 }
 
 static std::map<std::string, std::string> read_layouts_registry(const std::string& subkey)
