@@ -28,6 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 CHECK_NARROWING();
 
@@ -39,7 +40,7 @@ CHECK_NARROWING();
 // several historic countries and territories. Reference:
 // - https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
 // clang-format off
-static const std::map<std::string, DosCountry> IsoToDosCountryMap = {
+static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
 	// List ordered by DOS country code, primary ISO country code first
 	{ "AQ",    DosCountry::International  }, // Antarctica
 	{ "EU",    DosCountry::International  }, // European Union
