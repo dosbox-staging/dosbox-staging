@@ -18,9 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if defined(WIN32)
-
 #include "host_locale.h"
+
+#if defined(WIN32)
 
 #include "checks.h"
 #include "string_utils.h"
