@@ -352,14 +352,14 @@ static std::string to_string(const wchar_t* input, const size_t input_length)
 	}
 
 	const auto buffer_size = WideCharToMultiByte(DefaultCodePage, 0,
-                                                     input, input_length,
+                                                     input, check_cast<int>(input_length),
                                                      nullptr, 0, nullptr, nullptr);
 	if (buffer_size == 0) {
 		return {};
 	}
 
 	std::vector<char> buffer(buffer_size);
-	WideCharToMultiByte(DefaultCodePage,  0, input, input_length,
+	WideCharToMultiByte(DefaultCodePage,  0, input, check_cast<int>(input_length),
 	                    buffer.data(), buffer_size, nullptr, nullptr);
 	return std::string(buffer.begin(), buffer.end());
 }
@@ -370,7 +370,7 @@ static std::map<std::string, std::string> read_layouts_registry(const std::strin
 	const std::string Key = TEXT("Keyboard Layout\\");
 
 	// Open registry key
-	HKEY handle = 0;
+	HKEY handle = nullptr;
 	auto result = RegOpenKeyExA(
 	        HKEY_CURRENT_USER, (Key + subkey).c_str(), 0, KEY_READ, &handle);
 	if (result != ERROR_SUCCESS) {
