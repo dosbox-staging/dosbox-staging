@@ -436,6 +436,11 @@ struct ScriptInfoEntry {
 	std::string GetMsgName() const;
 };
 
+enum class AutodetectionPriority {
+	Low,
+	High
+};
+
 struct CodePageInfoEntry {
 	std::string description = {};
 	Script script           = {};
@@ -473,6 +478,10 @@ struct KeyboardLayoutInfoEntry {
 
 	// A long, user-friendly name, to be displayed in verbose output
 	std::string layout_name = {};
+
+	// High - for well-known layouts, widespread in the given country/region
+	// Low  - for exotic layouts, not even widely used by the natives
+	AutodetectionPriority priority = {};
 
 	uint16_t default_code_page = {};
 

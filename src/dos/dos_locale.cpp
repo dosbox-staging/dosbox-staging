@@ -1291,6 +1291,12 @@ static void sort_detected_keyboard_layouts(
 		assert(info_map.contains(detected_deduplicated));
 	}
 
+	auto get_layout_priority = [&](const KeyboardLayoutMaybeCodepage& entry) {
+		const auto& info_entry = info_map.at(
+		        deduplicate_layout(entry.keyboard_layout));
+		return info_entry.priority;
+	};
+
 	auto has_script_above = [&](const KeyboardLayoutMaybeCodepage& entry,
 	                            const KeyboardScript script) {
 		const auto& info_entry = info_map.at(
@@ -1376,6 +1382,13 @@ static void sort_detected_keyboard_layouts(
 			// with the list already sorted by user preference
 			if (is_layout_list_sorted) {
 				return false;
+			}
+
+			// Prefer safer keyboard layout choices
+			const auto l_priority = get_layout_priority(l);
+			const auto r_priority = get_layout_priority(r);
+			if (l_priority != r_priority) {
+				return (l_priority > r_priority);
 			}
 
 			// Prefer keyboard layouts containing a non-Latin script
