@@ -108,6 +108,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	// Layouts for English - 1.456 billion speakers worldwide
 	{
 		{ "us" }, "US (standard, QWERTY/national)",
+		// Undoubtedly a very popular keyboard layout
+		AutodetectionPriority::High,
 		437,
 		KeyboardScript::LatinQwerty,
 		{
@@ -116,47 +118,65 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ux" }, "US (international, QWERTY)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "co" }, "US (Colemak)",
+		// Undoubtedly a very niche/exotic layout
+		AutodetectionPriority::Low,
 	 	437,
 	 	KeyboardScript::LatinColemak,
 	},
 	{
 		{ "dv" }, "US (Dvorak)",
+		// Undoubtedly a very niche/exotic layout
+		AutodetectionPriority::Low,
 		437,
 		KeyboardScript::LatinDvorak,
 	},
 	{
 		{ "lh" }, "US (left-hand Dvorak)",
+		// Undoubtedly a very niche/exotic layout
+		AutodetectionPriority::Low,
 		437,
 		KeyboardScript::LatinDvorak,
 	},
 	{
 		{ "rh" }, "US (right-hand Dvorak)",
+		// Undoubtedly a very niche/exotic layout
+		AutodetectionPriority::Low,
 	 	437,
 	 	KeyboardScript::LatinDvorak,
 	},
 	{
 		{ "uk" }, "UK (standard, QWERTY)",
+		// Undoubtedly a very popular keyboard layout
+		AutodetectionPriority::High,
 		437,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "uk168" }, "UK (alternate, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		437,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "kx" }, "UK (international, QWERTY)",
+		// The QWERTY layer is almost identical to the UK layout
+		AutodetectionPriority::High,
 		30023,
 		KeyboardScript::LatinQwerty,
 	},
 	// Layouts for other languages, sorted by the main symbol
 	{
 		{ "ar462" }, "Arabic (AZERTY/Arabic)",
+		// QWERTY/AZERTY variant is selected later by a specialized code
+		AutodetectionPriority::High,
 		864,
 		KeyboardScript::LatinAzerty,
 		{
@@ -165,6 +185,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ar470" }, "Arabic (QWERTY/Arabic)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		864,
 		KeyboardScript::LatinQwerty,
 		{
@@ -173,6 +195,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "az" }, "Azeri (QWERTY/Cyrillic)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		58210, // 60258 replaces ASCII 'I' with other symbol, avoid it!
 		KeyboardScript::LatinQwerty,
 		{
@@ -182,22 +206,33 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ba" }, "Bosnian (QWERTZ)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		852,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "be" }, "Belgian (AZERTY)",
+		// Assuming French speaking countries are mostly using the
+		// AZERTY layouts
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "bx" }, "Belgian (international, AZERTY)",
+		// Assuming French speaking countries are mostly using the
+		// AZERTY layouts
+		AutodetectionPriority::High,
 		30026,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "bg" }, "Bulgarian (QWERTY/national)",
-		3021, // MIK encoding, approved by a native speaker
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
+		// Code page approved by a native speaker
+		3021, // MIK encoding
 		KeyboardScript::LatinQwerty,
 		{
 			{ 808,  KeyboardScript::Cyrillic },
@@ -209,7 +244,10 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "bg103" }, "Bulgarian (QWERTY/phonetic)",
-		3021, // MIK encoding, approved by a native speaker
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
+		// Code page approved by a native speaker
+		3021, // MIK encoding
 		KeyboardScript::LatinQwerty,
 		{
 			{ 808,  KeyboardScript::CyrillicPhonetic },
@@ -221,7 +259,10 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "bg241" }, "Bulgarian (JCUKEN/national)",
-		3021, // MIK encoding, approved by a native speaker
+		// Latin layer is atypical
+		AutodetectionPriority::Low,
+		// Code page approved by a native speaker
+		3021, // MIK encoding
 		KeyboardScript::LatinJcuken,
 		{
 			{ 808,  KeyboardScript::Cyrillic },
@@ -234,21 +275,29 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	}, 
 	{
 		{ "bn" }, "Beninese (AZERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30027,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "br" }, "Brazilian (ABNT layout, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		860,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "br274" }, "Brazilian (US layout, QWERTY)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		860,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "by", "bl" }, "Belarusian (QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		1131,
 		KeyboardScript::LatinQwerty,
 		{
@@ -260,6 +309,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ce", }, "Chechen (standard, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30019,
 		KeyboardScript::LatinQwerty,
 		{
@@ -269,6 +320,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ce443", }, "Chechen (typewriter, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30019,
 		KeyboardScript::LatinQwerty,
 		{
@@ -278,16 +331,22 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "cf", "ca" }, "Canadian (standard, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		863,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "cf445" }, "Canadian (dual-layer, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		863,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "cg" }, "Montenegrin (QWERTZ)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		852,
 		KeyboardScript::LatinQwertz,
 	},
@@ -295,51 +354,73 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	// it is said to be much more popular.
 	{
 		{ "cz" }, "Czech (QWERTZ)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		867, // Kamenický encoding; no EUR variant, unfortunately
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "cz243" }, "Czech (standard, QWERTZ)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		867, // Kamenický encoding; no EUR variant, unfortunately
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "cz489" }, "Czech (programmers, QWERTY)",
+		// Unintrusive US layout modification, uses right ALT for
+		// entering the national characters
+		AutodetectionPriority::High,
 		867, // Kamenický encoding; no EUR variant, unfortunately
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "de", "gr" }, "German (standard, QWERTZ)",
+		// Priority approved by a native speaker
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "gr453" }, "German (dual-layer, QWERTZ)",
+		// German speaking countries seem to be mostly using the QWERTZ
+		// layouts
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "dk" }, "Danish (QWERTY)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		865,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "ee", "et" }, "Estonian (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		1116, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "es", "sp" }, "Spanish (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "sx" }, "Spanish (international, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30026,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "fi", "su" }, "Finnish (QWERTY/ASERTT)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 		{
@@ -348,21 +429,30 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "fo" }, "Faroese (QWERTY)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		861,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "fr" }, "French (standard, AZERTY)",
+		// Priority approved by a native speaker
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "fx" }, "French (international, AZERTY)",
+		// Assuming French speaking countries are mostly using the
+		// AZERTY layouts
+		AutodetectionPriority::High,
 		30026,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "gk", "el" }, "Greek (319, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		869, // chosen because it has EUR currency symbol;
                      // TODO: native speaker feedback would be appreciated
 		KeyboardScript::LatinQwerty,
@@ -374,6 +464,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "gk220" }, "Greek (220, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		869, // chosen because it has EUR currency symbol;
                      // TODO: native speaker feedback would be appreciated
 		KeyboardScript::LatinQwerty,
@@ -385,6 +477,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "gk459" }, "Greek (459, non-standard/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		869, // chosen because it has EUR currency symbol;
                      // TODO: native speaker feedback would be appreciated
 		KeyboardScript::LatinNonStandard,
@@ -396,21 +490,29 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "hr" }, "Croatian (QWERTZ/national)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		852,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "hu" }, "Hungarian (101-key, QWERTY)",
+		// Priority approved by a native speaker
+		AutodetectionPriority::Low,
 		3845, // CWI-2 encoding
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "hu208" }, "Hungarian (102-key, QWERTZ)",
+		// Priority approved by a native speaker
+		AutodetectionPriority::Low,
 		3845, // CWI-2 encoding
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "hy" }, "Armenian (QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		899,
 		KeyboardScript::LatinQwerty,
 		{
@@ -419,6 +521,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "il" }, "Hebrew (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		862,
 		KeyboardScript::LatinQwerty,
 		{
@@ -428,16 +532,22 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "is" }, "Icelandic (101-key, QWERTY)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		861,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "is161" }, "Icelandic (102-key, QWERTY)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		861,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "it" }, "Italian (standard, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 		{
@@ -446,6 +556,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "it142" }, "Italian (142, QWERTY/national)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 		{
@@ -454,6 +566,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ix" }, "Italian (international, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30024,
 		KeyboardScript::LatinQwerty,
 	},
@@ -461,6 +575,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	// { { "jp" }, "Japanese", 932, ... },
 	{
 		{ "ka" }, "Georgian (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		59829,
 		KeyboardScript::LatinQwerty,
 		{
@@ -471,6 +587,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "kk" }, "Kazakh (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		58152,
 		KeyboardScript::LatinQwerty,
 		{
@@ -479,6 +597,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "kk476" }, "Kazakh (476, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		58152,
 		KeyboardScript::LatinQwerty,
 		{
@@ -487,6 +607,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ky" }, "Kyrgyz (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		58152,
 		KeyboardScript::LatinQwerty,
 		{
@@ -495,11 +617,15 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "la" }, "Latin American (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "lt" }, "Lithuanian (Baltic, QWERTY/phonetic)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		774, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 		{
@@ -509,6 +635,9 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lt210" }, "Lithuanian (programmers, QWERTY/phonetic)",
+		// Unintrusive US layout modification, uses right ALT for
+		// entering the national characters
+		AutodetectionPriority::High,
 		774, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 		{
@@ -518,6 +647,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lt211" }, "Lithuanian (AZERTY/phonetic)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		774, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinAzerty,
 		{
@@ -527,6 +658,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lt221" }, "Lithuanian (LST 1582, AZERTY/phonetic)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		774, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinAzerty,
 		{
@@ -536,6 +669,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lt456" }, "Lithuanian (QWERTY/AZERTY/phonetic)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		774, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 		{
@@ -555,6 +690,9 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lv" }, "Latvian (standard, QWERTY/phonetic)",
+		// Unintrusive US layout modification, uses right ALT for
+		// entering the national characters
+		AutodetectionPriority::High,
 		1117, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 		{
@@ -563,6 +701,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "lv455" }, "Latvian (QWERTY/UGJRMV/phonetic)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		1117, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 		{
@@ -578,6 +718,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "mk" }, "Macedonian (QWERTZ/national)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		855,
 		KeyboardScript::LatinQwertz,
 		{
@@ -587,6 +729,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "mn", "mo" }, "Mongolian (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		58152,
 		KeyboardScript::LatinQwerty,
 		{
@@ -595,31 +739,44 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "mt", "ml" }, "Maltese (UK layout, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		853,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "mt103" }, "Maltese (US layout, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		853,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "ne" }, "Nigerien (AZERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30028,
 		KeyboardScript::LatinAzerty,
 	},
 	{
 		{ "ng" }, "Nigerian (QWERTY)",
+		// Unintrusive US layout modification, uses right ALT for
+		// entering the national characters
+		AutodetectionPriority::High,
 		30005,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "nl" }, "Dutch (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "no" }, "Norwegian (QWERTY/ASERTT)",
+		// National layouts seem to be popular in the Nordic region
+		AutodetectionPriority::High,
 		865,
 		KeyboardScript::LatinQwerty,
 		{
@@ -628,6 +785,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ph" }, "Filipino (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
@@ -635,7 +794,10 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	// which preserves much more table drawing characters.
 	{
 		{ "pl" }, "Polish (programmers, QWERTY/phonetic)",
-		668, // stripped-down 852, approved by a native speaker
+		// Priority approved by a native speaker
+		AutodetectionPriority::High,
+		// Code page approved by a native speaker
+		668, // stripped-down 852
 		KeyboardScript::LatinQwerty,
 		{
 			{ 848, KeyboardScript::CyrillicPhonetic },
@@ -644,7 +806,10 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "pl214" }, "Polish (typewriter, QWERTZ/phonetic)",
-		668, // stripped-down 852, approved by a native speaker
+		// Priority approved by a native speaker
+		AutodetectionPriority::Low,
+		// Code page approved by a native speaker
+		668, // stripped-down 852
 		KeyboardScript::LatinQwertz,
 		{
 			{ 848, KeyboardScript::CyrillicPhonetic },
@@ -653,16 +818,22 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "po" }, "Portuguese (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		860, // No EUR currency variant, unfortunately
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "px" }, "Portuguese (international, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		30026,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "ro" }, "Romanian (standard, QWERTZ/phonetic)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		852,
 		KeyboardScript::LatinQwertz,
 		{
@@ -672,6 +843,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ro446" }, "Romanian (QWERTY/phonetic)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		852,
 		KeyboardScript::LatinQwerty,
 		{
@@ -681,6 +854,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ru" }, "Russian (standard, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		866,
 		KeyboardScript::LatinQwerty,
 		{
@@ -692,6 +867,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ru443" }, "Russian (typewriter, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		866,
 		KeyboardScript::LatinQwerty,
 		{
@@ -703,6 +880,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "rx" }, "Russian (extended standard, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		30011,
 		KeyboardScript::LatinQwerty,
 		{
@@ -717,6 +896,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "rx443" }, "Russian (extended typewriter, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		30011,
 		KeyboardScript::LatinQwerty,
 		{
@@ -731,16 +912,23 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "sd", "sg" }, "Swiss (German, QWERTZ)",
+		// Priority approved by a native speaker
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "sf" }, "Swiss (French, QWERTZ)",
+		// Assuming French speaking part of Switzerland also uses the
+		// QWERTZ layouts
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "si" }, "Slovenian (QWERTZ)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		852,
 		KeyboardScript::LatinQwertz,
 	},
@@ -748,21 +936,29 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	// it is said to be much more popular.
 	{
 		{ "sk" }, "Slovak (QWERTZ)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		867, // Kamenický encoding; no EUR variant, unfortunately
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "sq" }, "Albanian (no deadkeys, QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		852,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "sq448" }, "Albanian (deadkeys, QWERTZ)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		852,
 		KeyboardScript::LatinQwertz,
 	},
 	{
 		{ "sv" }, "Swedish (QWERTY/ASERTT)",
+		// A popular layout in Sweden (personal experience)
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 		{
@@ -771,6 +967,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "tj" }, "Tajik (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		30002,
 		KeyboardScript::LatinQwerty,
 		{
@@ -779,6 +977,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "tm" }, "Turkmen (QWERTY/phonetic)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		59234,
 		KeyboardScript::LatinQwerty,
 		{
@@ -787,16 +987,22 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	}, 
 	{
 		{ "tr" }, "Turkish (QWERTY)",
+		// Not sure if the layout is popular, low priority for now
+		AutodetectionPriority::Low,
 		857,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "tr440" }, "Turkish (non-standard)",
+		// Latin layer is atypical
+		AutodetectionPriority::Low,
 		857,
 		KeyboardScript::LatinNonStandard,
 	}, 
 	{
 		{ "tt" }, "Tatar (standard, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		30018,
 		KeyboardScript::LatinQwerty,
 		{
@@ -806,6 +1012,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "tt443" }, "Tatar (typewriter, QWERTY/national)",
+		// The QWERTY layer is almost identical to the US layout
+		AutodetectionPriority::High,
 		30018,
 		KeyboardScript::LatinQwerty,
 		{
@@ -815,6 +1023,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ur", "ua" }, "Ukrainian (101-key, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		1125,
 		KeyboardScript::LatinQwerty,
 		{
@@ -829,6 +1039,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ur1996" }, "Ukrainian (101-key, 1996, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		1125,
 		KeyboardScript::LatinQwerty,
 		{
@@ -843,6 +1055,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ur2001" }, "Ukrainian (102-key, 2001, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		1125,
 		KeyboardScript::LatinQwerty,
 		{
@@ -857,6 +1071,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ur2007" }, "Ukrainian (102-key, 2007, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		1125,
 		KeyboardScript::LatinQwerty,
 		{
@@ -871,6 +1087,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ur465" }, "Ukrainian (101-key, 465, QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		1125,
 		KeyboardScript::LatinQwerty,
 		{
@@ -885,6 +1103,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "uz" }, "Uzbek (QWERTY/national)",
+		// The QWERTY layer seems to be identical to the US layout
+		AutodetectionPriority::High,
 		62306,
 		KeyboardScript::LatinQwerty,
 		{
@@ -893,11 +1113,15 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "vi" }, "Vietnamese (QWERTY)",
+		// The layout differs a lot from the standard QWERTY
+		AutodetectionPriority::Low,
 		30006,
 		KeyboardScript::LatinQwerty,
 	},
 	{
 		{ "yc", "sr" }, "Serbian (deadkey, QWERTZ/national)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		855,
 		KeyboardScript::LatinQwertz,
 		{
@@ -908,6 +1132,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "yc450" }, "Serbian (no deadkey, QWERTZ/national)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		855,
 		KeyboardScript::LatinQwertz,
 		{
@@ -918,6 +1144,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "yu" }, "Yugoslavian (QWERTZ)",
+		// Balkan countries seem to be mostly using the QWERTZ layouts
+		AutodetectionPriority::High,
 		113,
 		KeyboardScript::LatinQwertz,
 	}
