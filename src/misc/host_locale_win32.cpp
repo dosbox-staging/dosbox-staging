@@ -18,9 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#if defined(WIN32)
-
 #include "host_locale.h"
+
+#if defined(WIN32)
 
 #include "checks.h"
 #include "string_utils.h"
@@ -31,6 +31,9 @@
 #include <winnls.h>
 
 CHECK_NARROWING();
+
+// Constant to mark poor/imprecise keyboard layout mappings
+constexpr bool Fuzzy = true;
 
 // Mapping from modern Windows to DOS keyboard layouts. Developed using
 // https://kbdlayout.info web page for layout visualization
@@ -272,73 +275,73 @@ static const std::unordered_map<std::string, KeyboardLayoutMaybeCodepage> WinToD
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the QWERTY layout is typically used
-	{ "0000044d", { "us" }         }, // Assamese - INSCRIPT
-	{ "00000445", { "us" }         }, // Bangla
-	{ "00020445", { "us" }         }, // Bangla - INSCRIPT
-	{ "00010445", { "us" }         }, // Bangla - INSCRIPT (Legacy)
-	{ "000b0c00", { "us" }         }, // Buginese
-	{ "00000804", { "us" }         }, // Chinese (Simplified) - US
-	{ "00001004", { "us" }         }, // Chinese (Simplified, Singapore) - US
-	{ "00000404", { "us" }         }, // Chinese (Traditional) - US
-	{ "00000c04", { "us" }         }, // Chinese (Traditional, Hong Kong S.A.R.) - US
-	{ "00001404", { "us" }         }, // Chinese (Traditional, Macao S.A.R.) - US
-	{ "00000439", { "us" }         }, // Devanagari - INSCRIPT
-	{ "00000465", { "us" }         }, // Divehi Phonetic
-	{ "00010465", { "us" }         }, // Divehi Typewriter
-	{ "00000c51", { "us" }         }, // Dzongkha
-	{ "00120c00", { "us" }         }, // Futhark
-	{ "00000447", { "us" }         }, // Gujarati
-	{ "00010439", { "us" }         }, // Hindi Traditional
-	{ "00000411", { "us" }         }, // Japanese
-	{ "00110c00", { "us" }         }, // Javanese
-	{ "0000044b", { "us" }         }, // Kannada
-	{ "00000453", { "us" }         }, // Khmer
-	{ "00010453", { "us" }         }, // Khmer (NIDA)
-	{ "00000412", { "us" }         }, // Korean
-	{ "00000454", { "us" }         }, // Lao
-	{ "00070c00", { "us" }         }, // Lisu (Basic)
-	{ "00080c00", { "us" }         }, // Lisu (Standard)
-	{ "0000044c", { "us" }         }, // Malayalam
-	{ "0000044e", { "us" }         }, // Marathi
-	{ "00010c00", { "us" }         }, // Myanmar (Phonetic order)
-	{ "00130c00", { "us" }         }, // Myanmar (Visual order)
-	{ "00000461", { "us" }         }, // Nepali
-	{ "00020c00", { "us" }         }, // New Tai Lue
-	{ "00000448", { "us" }         }, // Odia
-	{ "00040c00", { "uk" }         }, // Ogham
-	{ "000d0c00", { "us" }         }, // Ol Chiki
-	{ "000f0c00", { "it" }         }, // Old Italic
-	{ "00150c00", { "us" }         }, // Osage
-	{ "000e0c00", { "us" }         }, // Osmanya
-	{ "000a0c00", { "us" }         }, // Phags-pa
-	{ "00000446", { "us" }         }, // Punjabi
-	{ "0000045b", { "us" }         }, // Sinhala
-	{ "0001045b", { "us" }         }, // Sinhala - Wij 9
-	{ "00100c00", { "us" }         }, // Sora
-	{ "0000045a", { "us" }         }, // Syriac
-	{ "0001045a", { "us" }         }, // Syriac Phonetic
-	{ "00030c00", { "us" }         }, // Tai Le
-	{ "00000449", { "us" }         }, // Tamil
-	{ "00020449", { "us" }         }, // Tamil 99
-	{ "00030449", { "us" }         }, // Tamil Anjal
-	{ "0000044a", { "us" }         }, // Telugu
-	{ "0000041e", { "us" }         }, // Thai Kedmanee
-	{ "0002041e", { "us" }         }, // Thai Kedmanee (non-ShiftLock)
-	{ "0001041e", { "us" }         }, // Thai Pattachote
-	{ "0003041e", { "us" }         }, // Thai Pattachote (non-ShiftLock)
-	{ "00000451", { "us" }         }, // Tibetan (PRC)
-	{ "00010451", { "us" }         }, // Tibetan (PRC) - Updated
-	{ "0000105f", { "us" }         }, // Tifinagh (Basic)
-	{ "0001105f", { "us" }         }, // Tifinagh (Extended)
-	{ "00000420", { "us" }         }, // Urdu
+	{ "0000044d", { "us", {},  Fuzzy } }, // Assamese - INSCRIPT
+	{ "00000445", { "us", {},  Fuzzy } }, // Bangla
+	{ "00020445", { "us", {},  Fuzzy } }, // Bangla - INSCRIPT
+	{ "00010445", { "us", {},  Fuzzy } }, // Bangla - INSCRIPT (Legacy)
+	{ "000b0c00", { "us", {},  Fuzzy } }, // Buginese
+	{ "00000804", { "us", {},  Fuzzy } }, // Chinese (Simplified) - US
+	{ "00001004", { "us", {},  Fuzzy } }, // Chinese (Simplified, Singapore) - US
+	{ "00000404", { "us", {},  Fuzzy } }, // Chinese (Traditional) - US
+	{ "00000c04", { "us", {},  Fuzzy } }, // Chinese (Traditional, Hong Kong S.A.R.) - US
+	{ "00001404", { "us", {},  Fuzzy } }, // Chinese (Traditional, Macao S.A.R.) - US
+	{ "00000439", { "us", {},  Fuzzy } }, // Devanagari - INSCRIPT
+	{ "00000465", { "us", {},  Fuzzy } }, // Divehi Phonetic
+	{ "00010465", { "us", {},  Fuzzy } }, // Divehi Typewriter
+	{ "00000c51", { "us", {},  Fuzzy } }, // Dzongkha
+	{ "00120c00", { "us", {},  Fuzzy } }, // Futhark
+	{ "00000447", { "us", {},  Fuzzy } }, // Gujarati
+	{ "00010439", { "us", {},  Fuzzy } }, // Hindi Traditional
+	{ "00000411", { "us", {},  Fuzzy } }, // Japanese
+	{ "00110c00", { "us", {},  Fuzzy } }, // Javanese
+	{ "0000044b", { "us", {},  Fuzzy } }, // Kannada
+	{ "00000453", { "us", {},  Fuzzy } }, // Khmer
+	{ "00010453", { "us", {},  Fuzzy } }, // Khmer (NIDA)
+	{ "00000412", { "us", {},  Fuzzy } }, // Korean
+	{ "00000454", { "us", {},  Fuzzy } }, // Lao
+	{ "00070c00", { "us", {},  Fuzzy } }, // Lisu (Basic)
+	{ "00080c00", { "us", {},  Fuzzy } }, // Lisu (Standard)
+	{ "0000044c", { "us", {},  Fuzzy } }, // Malayalam
+	{ "0000044e", { "us", {},  Fuzzy } }, // Marathi
+	{ "00010c00", { "us", {},  Fuzzy } }, // Myanmar (Phonetic order)
+	{ "00130c00", { "us", {},  Fuzzy } }, // Myanmar (Visual order)
+	{ "00000461", { "us", {},  Fuzzy } }, // Nepali
+	{ "00020c00", { "us", {},  Fuzzy } }, // New Tai Lue
+	{ "00000448", { "us", {},  Fuzzy } }, // Odia
+	{ "00040c00", { "uk", {},  Fuzzy } }, // Ogham
+	{ "000d0c00", { "us", {},  Fuzzy } }, // Ol Chiki
+	{ "000f0c00", { "it", {},  Fuzzy } }, // Old Italic
+	{ "00150c00", { "us", {},  Fuzzy } }, // Osage
+	{ "000e0c00", { "us", {},  Fuzzy } }, // Osmanya
+	{ "000a0c00", { "us", {},  Fuzzy } }, // Phags-pa
+	{ "00000446", { "us", {},  Fuzzy } }, // Punjabi
+	{ "0000045b", { "us", {},  Fuzzy } }, // Sinhala
+	{ "0001045b", { "us", {},  Fuzzy } }, // Sinhala - Wij 9
+	{ "00100c00", { "us", {},  Fuzzy } }, // Sora
+	{ "0000045a", { "us", {},  Fuzzy } }, // Syriac
+	{ "0001045a", { "us", {},  Fuzzy } }, // Syriac Phonetic
+	{ "00030c00", { "us", {},  Fuzzy } }, // Tai Le
+	{ "00000449", { "us", {},  Fuzzy } }, // Tamil
+	{ "00020449", { "us", {},  Fuzzy } }, // Tamil 99
+	{ "00030449", { "us", {},  Fuzzy } }, // Tamil Anjal
+	{ "0000044a", { "us", {},  Fuzzy } }, // Telugu
+	{ "0000041e", { "us", {},  Fuzzy } }, // Thai Kedmanee
+	{ "0002041e", { "us", {},  Fuzzy } }, // Thai Kedmanee (non-ShiftLock)
+	{ "0001041e", { "us", {},  Fuzzy } }, // Thai Pattachote
+	{ "0003041e", { "us", {},  Fuzzy } }, // Thai Pattachote (non-ShiftLock)
+	{ "00000451", { "us", {},  Fuzzy } }, // Tibetan (PRC)
+	{ "00010451", { "us", {},  Fuzzy } }, // Tibetan (PRC) - Updated
+	{ "0000105f", { "us", {},  Fuzzy } }, // Tifinagh (Basic)
+	{ "0001105f", { "us", {},  Fuzzy } }, // Tifinagh (Extended)
+	{ "00000420", { "us", {},  Fuzzy } }, // Urdu
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the QWERTZ layout is typically used
-	{ "000c0c00", { "de" }         }, // Gothic
+	{ "000c0c00", { "de", {},  Fuzzy } }, // Gothic
 
 	// For some keyboard families we don't have code pages, but in the
 	// corresponding states the AZERTY layout is typically used
-	{ "00090c00", { "fr", 437 }    }, // N’Ko
+	{ "00090c00", { "fr", 437, Fuzzy } }, // N’Ko
 };
 // clang-format on
 
@@ -349,16 +352,18 @@ static std::string to_string(const wchar_t* input, const size_t input_length)
 	}
 
 	const auto buffer_size = WideCharToMultiByte(DefaultCodePage, 0,
-                                                     input, input_length,
+                                                     input, check_cast<int>(input_length),
                                                      nullptr, 0, nullptr, nullptr);
 	if (buffer_size == 0) {
 		return {};
 	}
 
-	std::vector<char> buffer(buffer_size);
-	WideCharToMultiByte(DefaultCodePage,  0, input, input_length,
+	std::vector<char> buffer(buffer_size + 1);
+	WideCharToMultiByte(DefaultCodePage,  0, input, check_cast<int>(input_length),
 	                    buffer.data(), buffer_size, nullptr, nullptr);
-	return std::string(buffer.begin(), buffer.end());
+	buffer[buffer_size] = '\0';
+
+	return std::string(buffer.begin(), std::find(buffer.begin(), buffer.end(), '\0'));
 }
 
 static std::map<std::string, std::string> read_layouts_registry(const std::string& subkey)
@@ -367,7 +372,7 @@ static std::map<std::string, std::string> read_layouts_registry(const std::strin
 	const std::string Key = TEXT("Keyboard Layout\\");
 
 	// Open registry key
-	HKEY handle = 0;
+	HKEY handle = nullptr;
 	auto result = RegOpenKeyExA(
 	        HKEY_CURRENT_USER, (Key + subkey).c_str(), 0, KEY_READ, &handle);
 	if (result != ERROR_SUCCESS) {
@@ -518,8 +523,19 @@ const HostLocale& GetHostLocale()
 		locale = HostLocale();
 
 		locale->country = get_dos_country(locale->log_info.country);
+	}
+
+	return *locale;
+}
+
+const HostKeyboardLayouts& GetHostKeyboardLayouts()
+{
+	static std::optional<HostKeyboardLayouts> locale = {};
+	if (!locale) {
+		locale = HostKeyboardLayouts();
+
 		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info.keyboard);
+		        locale->log_info);
 	}
 
 	return *locale;

@@ -60,6 +60,7 @@ static struct {
 
 // Status set when populating DOS data
 static struct Populated {
+	bool is_country_international = false;
 	bool is_country_overriden     = false;
 	bool is_using_euro_currency   = false;
 	bool is_using_fallback_period = false;
@@ -162,18 +163,23 @@ static std::string get_locale_period_for_log(const LocalePeriod period)
 // Only to be called from within 'populate_all_country_info'!
 static void populate_country_code()
 {
+	auto country = current_country;
+
 	if (current_country == DosCountry::International) {
 		// MS-DOS uses the same country code for International English
 		// and Australia - we don't, as we have different settings for
-		// these. Let's imitate MS-DOS behavior.
-		dos.country_code = enum_val(DosCountry::Australia);
+		// these. Let's imitate the MS-DOS behavior.
+		country = DosCountry::Australia;
+		populated.is_country_international = true;
 	} else {
-		dos.country_code = enum_val(current_country);
+		populated.is_country_international = false;
 	}
+	dos.country_code = enum_val(country);
 
-	if (guest_country_override && *guest_country_override != current_country) {
+	if (guest_country_override && *guest_country_override != country) {
 		dos.country_code = enum_val(*guest_country_override);
 		populated.is_country_overriden = true;
+		populated.is_country_international = false;
 	}
 }
 
@@ -435,10 +441,12 @@ static void populate_all_country_info()
 	const auto& host_locale = GetHostLocale();
 
 	// Populate numeric format
-	const auto& [period, info] = get_info(static_cast<DosCountry>(dos.country_code));
-	if (!config.country && !populated.is_country_overriden &&
-	    host_locale.numeric) {
-		populated.separate_numeric  = *host_locale.numeric;
+	const auto& [period, info] = populated.is_country_international
+	                                   ? get_info(DosCountry::International)
+	                                   : get_info(static_cast<DosCountry>(
+	                                              dos.country_code));
+	if (!config.country && !populated.is_country_overriden && host_locale.numeric) {
+		populated.separate_numeric = *host_locale.numeric;
 		const auto& [period_specific,
 		             info_specific] = get_info(*host_locale.numeric);
 		populate_numeric_format(info_specific);
@@ -1013,7 +1021,7 @@ static void load_country()
 	// Parse the config file value
 	if (!config.country_str.empty() && config.country_str != "auto") {
 		const auto value = parse_int(config.country_str);
-		if (value && *value > 0 && *value <= UINT16_MAX &&
+		if (value && *value >= 0 && *value <= UINT16_MAX &&
 		    is_country_supported(static_cast<DosCountry>(*value))) {
 			config.country = static_cast<DosCountry>(*value);
 		} else {
@@ -1159,7 +1167,8 @@ static void preprocess_detected_keyboard_layouts(
 }
 
 static void sort_detected_keyboard_layouts(
-        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts)
+        std::vector<KeyboardLayoutMaybeCodepage>& keyboard_layouts,
+        const bool is_layout_list_sorted)
 {
 	// Get the relevant keyboard layout information into a local std::map
 	std::map<std::string, KeyboardLayoutInfoEntry> info_map = {};
@@ -1215,6 +1224,10 @@ static void sort_detected_keyboard_layouts(
 		return has_script_above(entry, KeyboardScript::LatinQwerty);
 	};
 
+	auto has_code_page = [&](const KeyboardLayoutMaybeCodepage& entry) {
+		return entry.code_page && (*entry.code_page != DefaultCodePage);
+	};
+
 	auto count_supported_scripts = [&](const KeyboardLayoutMaybeCodepage& entry) {
 		uint8_t result         = 1;
 		const auto& info_entry = info_map.at(
@@ -1241,88 +1254,101 @@ static void sort_detected_keyboard_layouts(
 	        keyboard_layouts.begin(),
 	        keyboard_layouts.end(),
 	        [&](const auto& l, const auto& r) {
-		        // 'l' more preferable than 'r'    => return true
-		        // 'l' less preferable than 'r'    => return false
-		        // both layouts equally preferable => return false
-		        if (l == r) {
-			        return false;
-		        }
+			// 'l' more preferable than 'r'    => return true
+			// 'l' less preferable than 'r'    => return false
+			// both layouts equally preferable => return false
+			if (l == r) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts containing a non-Latin script
-		        const bool l_has_non_latin = has_non_latin_script(l);
-		        const bool r_has_non_latin = has_non_latin_script(r);
-		        if (l_has_non_latin && !r_has_non_latin) {
-			        return true;
-		        } else if (!l_has_non_latin && r_has_non_latin) {
-			        return false;
-		        }
+			// Do not use fuzzy mappings if others are available
+			if (!l.is_mapping_fuzzy && r.is_mapping_fuzzy) {
+				return true;
+			} else if (l.is_mapping_fuzzy && !r.is_mapping_fuzzy) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts containing a non-QWERTY-like
-		        // script
-		        const bool l_has_non_qwerty_like = has_non_qwerty_like_script(l);
-		        const bool r_has_non_qwerty_like = has_non_qwerty_like_script(r);
-		        if (l_has_non_qwerty_like && !r_has_non_qwerty_like) {
-			        return true;
-		        } else if (!l_has_non_qwerty_like && r_has_non_qwerty_like) {
-			        return false;
-		        }
+			// Skip remaining criteria if the host OS provided us
+			// with the list already sorted by user preference
+			if (is_layout_list_sorted) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts containing a non-QWERTY script
-		        const bool l_has_non_qwerty = has_non_qwerty_script(l);
-		        const bool r_has_non_qwerty = has_non_qwerty_script(r);
-		        if (l_has_non_qwerty && !r_has_non_qwerty) {
-			        return true;
-		        } else if (!l_has_non_qwerty && r_has_non_qwerty) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-Latin script
+			const bool l_has_non_latin = has_non_latin_script(l);
+			const bool r_has_non_latin = has_non_latin_script(r);
+			if (l_has_non_latin && !r_has_non_latin) {
+				return true;
+			} else if (!l_has_non_latin && r_has_non_latin) {
+				return false;
+			}
 
-		        // Prefer keyboard layouts supporting more scripts
-		        const auto num_scripts_l = count_supported_scripts(l);
-		        const auto num_scripts_r = count_supported_scripts(r);
-		        if (num_scripts_l > num_scripts_r) {
-			        return true;
-		        } else if (num_scripts_l < num_scripts_r) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-QWERTY-like
+			// script
+			const bool l_has_non_qwerty_like = has_non_qwerty_like_script(l);
+			const bool r_has_non_qwerty_like = has_non_qwerty_like_script(r);
+			if (l_has_non_qwerty_like && !r_has_non_qwerty_like) {
+				return true;
+			} else if (!l_has_non_qwerty_like && r_has_non_qwerty_like) {
+				return false;
+			}
 
-		        // Prefer layouts with non-default and non-standard code
-		        // page
-		        const bool l_has_code_page = l.code_page &&
-		                                     (*l.code_page != DefaultCodePage);
-		        const bool r_has_code_page = r.code_page &&
-		                                     (*r.code_page != DefaultCodePage);
-		        if (l_has_code_page && !r_has_code_page) {
-			        return true;
-		        } else if (!l_has_code_page && r_has_code_page) {
-			        return false;
-		        }
+			// Prefer keyboard layouts containing a non-QWERTY script
+			const bool l_has_non_qwerty = has_non_qwerty_script(l);
+			const bool r_has_non_qwerty = has_non_qwerty_script(r);
+			if (l_has_non_qwerty && !r_has_non_qwerty) {
+				return true;
+			} else if (!l_has_non_qwerty && r_has_non_qwerty) {
+				return false;
+			}
 
-		        // Prefer layouts which are not plain US ones
-		        const bool l_is_not_us = l.keyboard_layout != "us";
-		        const bool r_is_not_us = r.keyboard_layout != "us";
-		        if (l_is_not_us && !r_is_not_us) {
-			        return true;
-		        } else if (!l_is_not_us && r_is_not_us) {
-			        return false;
-		        }
+			// Prefer keyboard layouts supporting more scripts
+			const auto num_scripts_l = count_supported_scripts(l);
+			const auto num_scripts_r = count_supported_scripts(r);
+			if (num_scripts_l > num_scripts_r) {
+				return true;
+			} else if (num_scripts_l < num_scripts_r) {
+				return false;
+			}
 
-		        // Prefer layouts which are not plain UK ones
-		        const bool l_is_not_uk = l.keyboard_layout != "uk";
-		        const bool r_is_not_uk = r.keyboard_layout != "uk";
-		        if (l_is_not_uk && !r_is_not_uk) {
-			        return true;
-		        } else if (!l_is_not_uk && r_is_not_uk) {
-			        return false;
-		        }
+			// Prefer layouts with non-default and non-standard code
+			// page
+			const bool l_has_code_page = has_code_page(l);
+			const bool r_has_code_page = has_code_page(r);
+			if (l_has_code_page && !r_has_code_page) {
+				return true;
+			} else if (!l_has_code_page && r_has_code_page) {
+				return false;
+			}
 
-		        // For now I have no sane idea for more criteria...
-		        return false;
+			// Prefer layouts which are not plain US ones
+			const bool l_is_not_us = l.keyboard_layout != "us";
+			const bool r_is_not_us = r.keyboard_layout != "us";
+			if (l_is_not_us && !r_is_not_us) {
+				return true;
+			} else if (!l_is_not_us && r_is_not_us) {
+				return false;
+			}
+
+			// Prefer layouts which are not plain UK ones
+			const bool l_is_not_uk = l.keyboard_layout != "uk";
+			const bool r_is_not_uk = r.keyboard_layout != "uk";
+			if (l_is_not_uk && !r_is_not_uk) {
+				return true;
+			} else if (!l_is_not_uk && r_is_not_uk) {
+				return false;
+			}
+
+			// For now I have no sane idea for more criteria...
+			return false;
 	        });
 }
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 {
-	auto keyboard_layouts = GetHostLocale().keyboard_layout_list;
+	const auto& host_locale = GetHostKeyboardLayouts();
+
+	auto keyboard_layouts = host_locale.keyboard_layout_list;
 
 	// Keyboard layouts in modern OSes support just one script (like only
 	// Latin, only Greek, only Cyrillic, etc.) and in countries using
@@ -1336,7 +1362,8 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 	// layouts to DOS ones, our task is now to guess which one is the most
 	// likely to be the main national one (Greek, Hebrew, etc.).
 
-	sort_detected_keyboard_layouts(keyboard_layouts);
+	sort_detected_keyboard_layouts(keyboard_layouts,
+	                               host_locale.is_layout_list_sorted);
 	preprocess_detected_keyboard_layouts(keyboard_layouts);
 
 	return keyboard_layouts;
@@ -1349,16 +1376,16 @@ static void load_keyboard_layout()
 	bool using_detected     = false; // if layout list is autodetected
 	bool code_page_supplied = false; // if code page given in the parameter
 
-	if (config.keyboard_str.empty() || config.keyboard_str == "auto") {
+	if (config.keyboard_str == "auto") {
 		keyboard_layouts = get_detected_keyboard_layouts();
 		using_detected   = true;
 	} else {
 		const auto tokens = split(config.keyboard_str);
 		if (tokens.size() != 1 && tokens.size() != 2) {
-			keyboard_layouts = get_detected_keyboard_layouts();
-			using_detected   = true;
-			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'auto'",
+			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'us'",
 			            config.keyboard_str.c_str());
+			keyboard_layouts.push_back({"us"});
+			set_section_property_value("dos", "keyboard_layout", "us");
 		} else {
 			keyboard_layouts.push_back({tokens[0]});
 			if (tokens.size() >= 2) {
@@ -1375,10 +1402,11 @@ static void load_keyboard_layout()
 		}
 	}
 
-	const auto& host_locale = GetHostLocale();
-	if (using_detected && !host_locale.log_info.keyboard.empty()) {
+	if (using_detected) {
+		const auto& host_locale = GetHostKeyboardLayouts();
+		assert(!host_locale.log_info.empty());
 		LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
-		        host_locale.log_info.keyboard.c_str());
+		        host_locale.log_info.c_str());
 	}
 
 	// Apply the code page
