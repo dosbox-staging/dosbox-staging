@@ -753,22 +753,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
 	// Size the in-bound work FIFO
-
-	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
-	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
-	// MIDI message is three bytes, which gives a total of 30 bits per
-	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via the MIDI protocol.
-
-	// We have measured DOS games sending hundreds of MIDI messages within a
-	// short handful of millseconds, so a safe but very generous upper bound
-	// is used.
-	//
-	// (Note: the actual memory used by the FIFO is incremental based on
-	// actual usage).
-	//
-	static constexpr uint16_t midi_spec_max_msg_rate_hz = 1042;
-	work_fifo.Resize(midi_spec_max_msg_rate_hz * 10);
+	work_fifo.Resize(MaxMidiWorkFifoSize);
 
 	// Move the local objects into the member variables
 	service       = std::move(mt32_service);
