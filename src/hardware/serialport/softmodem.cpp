@@ -138,7 +138,7 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	// Otherwise the default listenport will be used
 
 	// TODO: Fix dialtones if requested
-	//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_CallBack,8000,"MODEM");
+	//mhd.chan=MIXER_AddChannel((MIXER_MixHandler)this->MODEM_Callback,8000,"MODEM");
 	//MIXER_Enable(mhd.chan,false);
 	//MIXER_SetMode(mhd.chan,MIXER_16MONO);
 

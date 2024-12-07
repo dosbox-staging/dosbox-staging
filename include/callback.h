@@ -25,8 +25,8 @@
 #include "mem.h"
 #endif
 
-typedef Bitu (*CallBack_Handler)();
-extern CallBack_Handler CallBack_Handlers[];
+typedef Bitu (*Callback_Handler)();
+extern Callback_Handler Callback_Handlers[];
 
 enum {
 	CB_RETN,
@@ -91,8 +91,8 @@ void CALLBACK_Idle();
 void CALLBACK_RunRealInt(uint8_t intnum);
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off);
 
-bool CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu type, const char* descr);
-callback_number_t CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu type, PhysPt addr,
+bool CALLBACK_Setup(callback_number_t cb_number, Callback_Handler handler, Bitu type, const char* descr);
+callback_number_t CALLBACK_Setup(callback_number_t cb_number, Callback_Handler handler, Bitu type, PhysPt addr,
                                  const char* descr);
 
 const char* CALLBACK_GetDescription(callback_number_t cb_number);
@@ -121,13 +121,13 @@ public:
 	virtual ~CALLBACK_HandlerObject();
 
 	//Install and allocate a callback.
-	void Install(CallBack_Handler handler,Bitu type,const char* description);
-	void Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description);
+	void Install(Callback_Handler handler,Bitu type,const char* description);
+	void Install(Callback_Handler handler,Bitu type,PhysPt addr,const char* description);
 
 	void Uninstall();
 
 	//Only allocate a callback number
-	void Allocate(CallBack_Handler handler,const char* description=nullptr);
+	void Allocate(Callback_Handler handler,const char* description=nullptr);
 	uint16_t Get_callback() {
 		return m_cb_number;
 	}
