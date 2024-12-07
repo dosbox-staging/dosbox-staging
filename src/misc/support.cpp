@@ -367,7 +367,7 @@ std::function<T()> create_randomizer(const T min_value, const T max_value)
 // Explicit template instantiations
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 template std::function<int16_t()> create_randomizer<int16_t>(const int16_t,
-                                                            const int16_t);
+                                                             const int16_t);
 template std::function<float()> create_randomizer<float>(const float, const float);
 
 // return the first existing resource
@@ -455,7 +455,7 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 
 // Get resource lines from a text file
 std::vector<std::string> get_resource_lines(const std_fs::path& name,
-                                          const ResourceImportance importance)
+                                            const ResourceImportance importance)
 {
 	const auto resource_path = get_resource_path(name);
 
@@ -483,15 +483,15 @@ std::vector<std::string> get_resource_lines(const std_fs::path& name,
 
 // Get resource lines from a text file
 std::vector<std::string> get_resource_lines(const std_fs::path& subdir,
-                                          const std_fs::path& name,
-                                          const ResourceImportance importance)
+                                            const std_fs::path& name,
+                                            const ResourceImportance importance)
 {
 	return get_resource_lines(subdir / name, importance);
 }
 
 // Load a resource blob (from a binary file)
 std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
-                                      const ResourceImportance importance)
+                                        const ResourceImportance importance)
 {
 	const auto resource_path = get_resource_path(name);
 
@@ -524,8 +524,8 @@ std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
 
 // Load a resource blob (from a binary file)
 std::vector<uint8_t> load_resource_blob(const std_fs::path& subdir,
-                                      const std_fs::path& name,
-                                      const ResourceImportance importance)
+                                        const std_fs::path& name,
+                                        const ResourceImportance importance)
 {
 	return load_resource_blob(subdir / name, importance);
 }
