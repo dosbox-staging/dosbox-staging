@@ -792,7 +792,6 @@ MidiDeviceMt32::~MidiDeviceMt32()
 		LOG_WARNING(
 		        "MT32: Fix underruns by lowering the CPU load or increasing "
 		        "the 'prebuffer' or 'blocksize' settings");
-		had_underruns = false;
 	}
 
 	MIXER_LockMixerThread();
@@ -822,12 +821,6 @@ MidiDeviceMt32::~MidiDeviceMt32()
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
 	channel.reset();
-
-	// Reset the members
-	service.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
 
 	MIXER_UnlockMixerThread();
 }
