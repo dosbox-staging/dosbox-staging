@@ -174,7 +174,7 @@ static Bitu Normal_Loop()
 				if (ret >= CB_MAX) {
 					return 0;
 				}
-				Bitu blah = (*CallBack_Handlers[ret])();
+				Bitu blah = (*Callback_Handlers[ret])();
 				if (blah) {
 					return blah;
 				}
