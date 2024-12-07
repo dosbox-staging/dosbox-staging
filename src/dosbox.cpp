@@ -160,6 +160,71 @@ void Null_Init([[maybe_unused]] Section *sec) {
 // forward declaration
 static void increase_ticks();
 
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE
+
+struct DBP_ShutdownCPU
+{
+	static Bitu Loop(void) { PIC_Ticks++; return 1; }
+	static Bits CPUDecoder(void) { return -1; }
+	static void Shutdown()
+	{
+		DOSBOX_SetLoop(DBP_ShutdownCPU::Loop);
+		cpudecoder = DBP_ShutdownCPU::CPUDecoder;
+		#ifndef C_DBP_CUSTOMTIMING
+		ticks.remain = 0;
+		#endif
+		CPU_CycleLeft = CPU_Cycles = 0;
+	}
+};
+/* #include "dbp_serialize.h"
+static struct DBPArchiveWipe : DBPArchive
+{
+	DBPArchiveWipe() : DBPArchive(MODE_SAVE), start(NULL), end(NULL), ptr(NULL) { }
+	void Grow() { size_t oldp = ptr-start, newsz = (end ? (end-start)*2 : 1024*1024); start = (Bit8u*)realloc(start, newsz); end = start + newsz; ptr = start + oldp; }
+	virtual DBPArchive& SerializeByte(void* p) { if (ptr == end) Grow(); *(ptr++) = *(Bit8u*)p; return *this; }
+	virtual DBPArchive& SerializeBytes(void* p, size_t sz) { while (ptr + sz > end) Grow(); memcpy(ptr, p, sz); ptr += sz; return *this; }
+	virtual size_t GetOffset() { return (ptr - start); }
+	Bit8u *start, *end, *ptr;
+} wipear; */
+bool DOSBOX_IsWipingPageFaultQueue;
+
+void DOSBOX_WipePageFaultQueue()
+{
+	/* go back to the first recursion of DOSBOX_RunMachine and wipe the page fault queue */
+	if (!DOSBOX_IsWipingPageFaultQueue)
+	{
+		DOSBOX_IsWipingPageFaultQueue = true;
+/* 		wipear.ptr = wipear.start;
+		wipear.flags |= DBPArchive::FLAG_NORESETINPUT;
+		DBPSerialize_All(wipear, true, true); */
+	}
+	DBP_ShutdownCPU::Shutdown();
+}
+
+void DOSBOX_ResetCPUDecoder()
+{
+	void CPU_ResetCPUDecoder(const std::string& core);
+	CPU_ResetCPUDecoder(static_cast<Section_prop *>(control->GetSection("cpu"))->Get_string("core"));
+}
+
+static void DOSBOX_RestorePageFaultWipe()
+{
+/* 	DBPArchiveReader arr(wipear.start, wipear.ptr - wipear.start);
+	arr.flags |= DBPArchive::FLAG_NORESETINPUT;
+	DBPSerialize_All(arr, true, true); */
+	DOSBOX_IsWipingPageFaultQueue = false;
+	DOSBOX_ResetCPUDecoder();
+	DOSBOX_SetNormalLoop();
+}
+
+static void DBP_FreePageFaultWipe()
+{
+/* 	if (!wipear.start) return;
+	free(wipear.start);
+	wipear.start = wipear.end = wipear.ptr = NULL; */
+}
+#endif
+
 static Bitu Normal_Loop()
 {
 	Bits ret;
@@ -174,7 +239,9 @@ static Bitu Normal_Loop()
 				if (ret >= CB_MAX) {
 					return 0;
 				}
+				paging_prevent_exception_jump = true;
 				Bitu blah = (*CallBack_Handlers[ret])();
+				paging_prevent_exception_jump = false;
 				if (blah) {
 					return blah;
 				}
@@ -445,11 +512,33 @@ void DOSBOX_SetNormalLoop() {
 	loop=Normal_Loop;
 }
 
-void DOSBOX_RunMachine()
-{
-	while ((*loop)() == 0 && !shutdown_requested)
-		;
+void DOSBOX_RunMachine(void){
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE
+	restartloop:
+	static uint32_t looprecursion;
+	looprecursion++;
+#endif
+
+	PAGE_FAULT_TRY
+	Bitu ret;
+	do {
+		ret=(*loop)();
+	} while (!ret && !shutdown_requested);
+	PAGE_FAULT_CATCH
+
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE
+	if (--looprecursion == 0)
+	{
+		if (DOSBOX_IsWipingPageFaultQueue && !shutdown_requested)
+		{
+			DOSBOX_RestorePageFaultWipe();
+			goto restartloop;
+		}
+		DBP_FreePageFaultWipe();
+	}
+#endif
 }
+
 
 static void DOSBOX_UnlockSpeed( bool pressed ) {
 	static bool autoadjust = false;

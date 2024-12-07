@@ -149,13 +149,17 @@
 		reg_edi=Pop_32();break;
 	CASE_D(0x60)												/* PUSHAD */
 	{
+		REWIND_ESP_ON_PAEGFAULT_START
 		Bitu tmpesp = reg_esp;
 		Push_32(reg_eax);Push_32(reg_ecx);Push_32(reg_edx);Push_32(reg_ebx);
 		Push_32(tmpesp);Push_32(reg_ebp);Push_32(reg_esi);Push_32(reg_edi);
+		REWIND_ESP_ON_PAGEFAULT_END
 	}; break;
 	CASE_D(0x61)												/* POPAD */
+		REWIND_ESP_ON_PAEGFAULT_START
 		reg_edi=Pop_32();reg_esi=Pop_32();reg_ebp=Pop_32();Pop_32();//Don't save ESP
 		reg_ebx=Pop_32();reg_edx=Pop_32();reg_ecx=Pop_32();reg_eax=Pop_32();
+		REWIND_ESP_ON_PAGEFAULT_END
 		break;
 	CASE_D(0x62)												/* BOUND Ed */
 		{
@@ -354,10 +358,12 @@
                 }
 	CASE_D(0x8f)												/* POP Ed */
 		{
+			REWIND_ESP_ON_PAEGFAULT_START
 			uint32_t val=Pop_32();
 			GetRM;
 			if (rm >= 0xc0 ) {GetEArd;*eard=val;}
 			else {GetEAa;SaveMd(eaa,val);}
+			REWIND_ESP_ON_PAGEFAULT_END
 			break;
 		}
 	CASE_D(0x91)												/* XCHG ECX,EAX */
@@ -457,9 +463,15 @@
 	CASE_D(0xc1)												/* GRP2 Ed,Ib */
 		GRP2D(Fetchb());break;
 	CASE_D(0xc2)												/* RETN Iw */
-		reg_eip=Pop_32();
-		reg_esp+=Fetchw();
-		continue;
+		{
+			REWIND_ESP_ON_PAEGFAULT_START
+			/* this is structured either to complete RET or leave registers unmodified if interrupted by page fault */
+			uint32_t new_eip=Pop_32();
+			reg_esp+=Fetchw();
+			reg_eip=new_eip;
+			REWIND_ESP_ON_PAGEFAULT_END
+			continue;
+		}
 	CASE_D(0xc3)												/* RETN */
 		reg_eip=Pop_32();
 		continue;
@@ -496,9 +508,11 @@
 		}
 		break;
 	CASE_D(0xc9)												/* LEAVE */
+		REWIND_ESP_ON_PAEGFAULT_START
 		reg_esp&=cpu.stack.notmask;
 		reg_esp|=(reg_ebp&cpu.stack.mask);
 		reg_ebp=Pop_32();
+		REWIND_ESP_ON_PAGEFAULT_END
 		break;
 	CASE_D(0xca)												/* RETF Iw */
 		{ 
@@ -571,10 +585,12 @@
 		}
 	CASE_D(0xe8)												/* CALL Jd */
 		{ 
+			/* must not adjust (E)IP until we have completed the instruction.
+			 * if interrupted by a page fault, EIP must be unmodified. */
 			int32_t addip=Fetchds();
-			SAVEIP;
-			Push_32(reg_eip);
-			reg_eip+=addip;
+			uint32_t here=GETIP;
+			Push_32(here);
+			reg_eip=(uint32_t)(addip+here);
 			continue;
 		}
 	CASE_D(0xe9)												/* JMP Jd */
@@ -668,9 +684,14 @@
 				RMEd(DECD);
 				break;
 			case 0x02:											/* CALL NEAR Ed */
-				if (rm >= 0xc0 ) {GetEArd;reg_eip=*eard;}
-				else {GetEAa;reg_eip=LoadMd(eaa);}
-				Push_32(GETIP);
+				{
+					/* either EIP is set to the call address or EIP does not change if interrupted by PF */
+					uint32_t new_eip;
+					if (rm >= 0xc0 ) {GetEArd;new_eip=*eard;}
+					else {GetEAa;new_eip=LoadMd(eaa);}
+					Push_32(GETIP); /* <- PF can happen here */
+					reg_eip = new_eip;
+				}
 				continue;
 			case 0x03:											/* CALL FAR Ed */
 				{

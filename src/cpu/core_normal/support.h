@@ -54,32 +54,38 @@ static inline int32_t Fetchds()
 		continue;											\
 	}
 
+//DBP: Added conditional jump macro PF-reentrant compatibility from DOSBox-X by Jonathan Campbell
+//     Source: https://github.com/joncampbell123/dosbox-x/commit/64408c6
+/* NTS: At first glance, this looks like code that will only fetch the delta for conditional jumps
+ *      if the condition is true. Further examination shows that DOSBox's core has two different
+ *      CS:IP variables, reg_ip and core.cseip which Fetchb() modifies. */
+
 //TODO Could probably make all byte operands fast?
 #define JumpCond16_b(COND) {						\
+	int8_t adj=Fetchbs();							\
 	SAVEIP;											\
-	if (COND) reg_ip+=Fetchbs();					\
-	reg_ip+=1;										\
+	if (COND) reg_ip+=adj;							\
 	continue;										\
 }
 
 #define JumpCond16_w(COND) {						\
+	int16_t adj=Fetchws();							\
 	SAVEIP;											\
-	if (COND) reg_ip+=Fetchws();					\
-	reg_ip+=2;										\
+	if (COND) reg_ip+=adj;							\
 	continue;										\
 }
 
 #define JumpCond32_b(COND) {						\
+	int8_t adj=Fetchbs();							\
 	SAVEIP;											\
-	if (COND) reg_eip+=Fetchbs();					\
-	reg_eip+=1;										\
+	if (COND) reg_eip+=adj;							\
 	continue;										\
 }
 
 #define JumpCond32_d(COND) {						\
+	int32_t adj=Fetchds();							\
 	SAVEIP;											\
-	if (COND) reg_eip+=Fetchds();					\
-	reg_eip+=4;										\
+	if (COND) reg_eip+=adj;							\
 	continue;										\
 }
 

@@ -86,6 +86,9 @@ public:
 /* Some other functions */
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled();
+void PAGING_ChangedWP(void);
+void PAGING_SwitchCPL(bool isUser);
+void PAGING_OnChangeCore(void);
 
 Bitu PAGING_GetDirBase();
 void PAGING_SetDirBase(Bitu cr3);
@@ -229,7 +232,18 @@ struct PagingBlock {
 		uint32_t used = 0;
 		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
 	} links = {};
-
+	struct {
+		uint32_t used = 0;
+		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
+	} ur_links = {};
+	struct {
+		uint32_t used = 0;
+		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
+	} krw_links = {};
+	struct {
+		uint32_t used = 0;
+		std::vector<uint32_t> entries = std::vector<uint32_t>(PAGING_LINKS);
+	} kr_links = {}; // WP-only
 	std::vector<uint32_t> firstmb = std::vector<uint32_t>(LINK_START);
 	bool enabled = false;
 };
@@ -533,5 +547,42 @@ static inline bool mem_writeq_checked(PhysPt address, uint64_t val)
 		return mem_unalignedwriteq_checked(address, val);
 	}
 }
+
+extern bool paging_prevent_exception_jump;
+
+#include <exception>
+struct GuestPageFaultException : std::exception {
+	GuestPageFaultException(Bitu n_faultcode) : faultcode(n_faultcode) {}
+	Bitu faultcode;
+};
+
+#define THROW_PAGE_FAULT(CODE) throw GuestPageFaultException(CODE)
+
+#define PAGE_FAULT_TRY \
+	restartloop2: \
+	try \
+	{
+
+#define PAGE_FAULT_CATCH \
+	} \
+	catch (GuestPageFaultException& pf) { \
+		paging_prevent_exception_jump = true; \
+		CPU_Exception(EXCEPTION_PF,pf.faultcode); \
+		paging_prevent_exception_jump = false; \
+		goto restartloop2; \
+	}
+
+#define REWIND_ESP_ON_PAEGFAULT_START \
+	{ \
+		Bitu old_esp = reg_esp; \
+		try {
+
+#define REWIND_ESP_ON_PAGEFAULT_END \
+		} \
+		catch (GuestPageFaultException&) { \
+			reg_esp = old_esp; \
+			throw; \
+		} \
+	}
 
 #endif

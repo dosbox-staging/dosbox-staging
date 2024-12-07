@@ -378,6 +378,8 @@ static inline void dyn_get_modrm()
 #define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_regbyte_to_reg_low_canuseword(host_reg,(Bitu)(DRCD_REG_BYTE(reg_index,high_byte)) - (Bitu)(&cpu_regs))
 #define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_regbyte_from_reg_low(host_reg,(Bitu)(DRCD_REG_BYTE(reg_index,high_byte)) - (Bitu)(&cpu_regs))
 
+#define MOV_FLAGS_TO_HOST_REG(host_reg) gen_mov_regval32_to_reg(host_reg,(Bitu)(DRCD_REG_FLAGS) - (Bitu)(&cpu_regs))
+
 #else
 
 #define MOV_REG_VAL_TO_HOST_REG(host_reg, reg_index) gen_mov_word_to_reg(host_reg,DRCD_REG_VAL(reg_index),true)
@@ -394,6 +396,8 @@ static inline void dyn_get_modrm()
 #define MOV_REG_BYTE_TO_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_byte_to_reg_low(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
 #define MOV_REG_BYTE_TO_HOST_REG_LOW_CANUSEWORD(host_reg, reg_index, high_byte) gen_mov_byte_to_reg_low_canuseword(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
 #define MOV_REG_BYTE_FROM_HOST_REG_LOW(host_reg, reg_index, high_byte) gen_mov_byte_from_reg_low(host_reg,DRCD_REG_BYTE(reg_index,high_byte))
+
+#define MOV_FLAGS_TO_HOST_REG(host_reg) gen_mov_word_to_reg(host_reg,DRCD_REG_FLAGS,true)
 
 #endif
 
@@ -563,7 +567,7 @@ static inline const uint8_t* gen_call_function_mm(void * func,Bitu op1,Bitu op2)
 
 
 
-enum save_info_type {db_exception, cycle_check, string_break};
+enum save_info_type {db_exception, cycle_check, string_break, trap};
 
 
 // function that is called on exceptions
@@ -623,6 +627,14 @@ static void dyn_fill_blocks(void) {
 				gen_add_direct_word(&reg_eip,save_info_dynrec[sct].eip_change,decode.big_op);
 				dyn_return(BR_Cycles);
 				break;
+			//DBP: Added trap flag emulation after POPF in dynamic core fix by koolkdev (https://sourceforge.net/p/dosbox/patches/291/)
+			case trap:
+				// trapflag is set, switch to trap-aware decoder
+				decode.cycles=save_info_dynrec[sct].cycles;
+				dyn_reduce_cycles();
+				gen_add_direct_word(&reg_eip,save_info_dynrec[sct].eip_change,decode.big_op);
+				dyn_return(BR_Trap);
+				break;
 		}
 	}
 	used_save_info_dynrec=0;
@@ -650,6 +662,19 @@ static void dyn_check_exception(HostReg reg) {
 	if (!cpu.code.big) save_info_dynrec[used_save_info_dynrec].eip_change&=0xffff;
 	save_info_dynrec[used_save_info_dynrec].type=db_exception;
 	++used_save_info_dynrec;
+}
+
+//DBP: Added trap flag emulation after POPF in dynamic core fix by koolkdev (https://sourceforge.net/p/dosbox/patches/291/)
+// check and branch if the trap flag is turned on
+static void dyn_check_trapflag(void) {
+	MOV_FLAGS_TO_HOST_REG(FC_OP1);
+	gen_and_imm(FC_OP1, FLAG_TF);
+	save_info_dynrec[used_save_info_dynrec].branch_pos=gen_create_branch_long_nonzero(FC_OP1,true);
+	save_info_dynrec[used_save_info_dynrec].cycles=decode.cycles;
+	save_info_dynrec[used_save_info_dynrec].eip_change=decode.code-decode.code_start;
+	if (!cpu.code.big) save_info_dynrec[used_save_info_dynrec].eip_change&=0xffff;
+	save_info_dynrec[used_save_info_dynrec].type=trap;
+	used_save_info_dynrec++;
 }
 
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;

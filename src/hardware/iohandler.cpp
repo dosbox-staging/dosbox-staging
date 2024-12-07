@@ -57,6 +57,11 @@ static struct {
 	IOF_Entry entries[IOF_QUEUESIZE];
 } iof_queue;
 
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page/io fault queue wiping
+extern void DOSBOX_ResetCPUDecoder();
+extern bool DOSBOX_IsWipingPageFaultQueue;
+#endif
+
 static Bits IOFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
@@ -65,8 +70,13 @@ static Bits IOFaultCore(void) {
 	if (ret<0) E_Exit("Got a dosbox close machine in IO-fault core?");
 	if (ret)
 		return ret;
+#ifndef C_DBP_PAGE_FAULT_QUEUE_WIPE
 	if (!iof_queue.used) E_Exit("IO-faul Core without IO-faul");
 	IOF_Entry * entry=&iof_queue.entries[iof_queue.used-1];
+#else // support loading save state into a iofault
+	if (!iof_queue.used) DOSBOX_ResetCPUDecoder();
+	IOF_Entry * entry=&iof_queue.entries[iof_queue.used?iof_queue.used-1:0];
+#endif
 	if (entry->cs == SegValue(cs) && entry->eip==reg_eip)
 		return -1;
 	return 0;
@@ -169,6 +179,7 @@ void IO_WriteB(io_port_t port, uint8_t val)
 {
 	log_io(io_width_t::byte, true, port, val);
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 1))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -192,7 +203,13 @@ void IO_WriteB(io_port_t port, uint8_t val)
 		reg_al = old_al;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
+#else
+		CPU_ForceV86FakeIO_Out(port,val,1);
+#endif
 	} else {
 		IO_USEC_write_delay();
 		write_byte_to_port(port, val);
@@ -203,6 +220,7 @@ void IO_WriteW(io_port_t port, uint16_t val)
 {
 	log_io(io_width_t::word, true, port, val);
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 2))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -226,7 +244,13 @@ void IO_WriteW(io_port_t port, uint16_t val)
 		reg_ax = old_ax;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
+#else
+		CPU_ForceV86FakeIO_Out(port,val,2);
+#endif
 	} else {
 		IO_USEC_write_delay();
 		write_word_to_port(port, val);
@@ -237,6 +261,7 @@ void IO_WriteD(io_port_t port, uint32_t val)
 {
 	log_io(io_width_t::dword, true, port, val);
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 4))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -260,7 +285,13 @@ void IO_WriteD(io_port_t port, uint32_t val)
 		reg_eax = old_eax;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
+#else
+		CPU_ForceV86FakeIO_Out(port,val,4);
+#endif
 	} else {
 		write_dword_to_port(port, val);
 	}
@@ -270,6 +301,7 @@ uint8_t IO_ReadB(io_port_t port)
 {
 	uint8_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 1))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -293,8 +325,14 @@ uint8_t IO_ReadB(io_port_t port)
 		reg_al = old_al;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
 		return retval;
+#else
+		return CPU_ForceV86FakeIO_In(port,1);
+#endif
 	} else {
 		IO_USEC_read_delay();
 		retval = read_byte_from_port(port);
@@ -307,6 +345,7 @@ uint16_t IO_ReadW(io_port_t port)
 {
 	uint16_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 2))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -330,7 +369,13 @@ uint16_t IO_ReadW(io_port_t port)
 		reg_ax = old_ax;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
+#else
+		return CPU_ForceV86FakeIO_In(port,2);
+#endif
 	} else {
 		IO_USEC_read_delay();
 		retval = read_word_from_port(port);
@@ -343,6 +388,7 @@ uint32_t IO_ReadD(io_port_t port)
 {
 	uint32_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 4))) {
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
 		cpudecoder=&IOFaultCore;
@@ -366,7 +412,13 @@ uint32_t IO_ReadD(io_port_t port)
 		reg_eax = old_eax;
 		reg_dx = old_dx;
 		lflags = old_lflags;
+#ifdef C_DBP_PAGE_FAULT_QUEUE_WIPE //DBP: Added this to support page fault queue wiping
+		if (!DOSBOX_IsWipingPageFaultQueue)
+#endif
 		cpudecoder=old_cpudecoder;
+#else
+		return CPU_ForceV86FakeIO_In(port,4);
+#endif
 	} else {
 		retval = read_dword_from_port(port);
 	}
@@ -379,7 +431,9 @@ uint32_t IO_ReadD(io_port_t port)
 class IO final : public Module_base {
 public:
 	IO(Section* configuration):Module_base(configuration){
-		iof_queue.used = 0;
+#ifdef C_DBP_OLD_IO_FAULT_QUEUE
+	iof_queue.used=0;
+#endif
 	}
 	~IO()
 	{

@@ -32,6 +32,7 @@
 #include "math_utils.h"
 #include "memory.h"
 #include "paging.h"
+#include "callback.h"
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
@@ -664,13 +665,13 @@ static bool cpu_switch_task(Bitu new_tss_selector,TSwitchType tstype,Bitu old_ei
 	if (reg_flags & FLAG_VM) {
 		SegSet16(cs,new_cs);
 		cpu.code.big=false;
-		cpu.cpl=3;			//We don't have segment caches so this will do
+		CPU_SetCPL(3);			//We don't have segment caches so this will do
 	} else {
 		/* Protected mode task */
 		if (new_ldt!=0) CPU_LLDT(new_ldt);
 		/* Load the new CS*/
 		Descriptor cs_desc;
-		cpu.cpl=new_cs & 3;
+		CPU_SetCPL(new_cs & 3);
 		if (!cpu.gdt.GetDescriptor(new_cs,cs_desc))
 			E_Exit("Task switch with CS beyond limits");
 		if (!cs_desc.saved.seg.p)
@@ -882,7 +883,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 							reg_sp=n_esp & 0xffff;
 						}
 
-						cpu.cpl=cs_dpl;
+						CPU_SetCPL(cs_dpl);
 						if (gate.Type() & 0x8) {	/* 32-bit Gate */
 							if (reg_flags & FLAG_VM) {
 								CPU_Push32(SegValue(gs));SegSet16(gs,0x0);
@@ -1055,7 +1056,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 
 				CPU_SetFlags(n_flags,FMASK_ALL | FLAG_VM);
 				DestroyConditionFlags();
-				cpu.cpl=3;
+				CPU_SetCPL(3);
 
 				CPU_SetSegGeneral(ss,n_ss);
 				CPU_SetSegGeneral(es,n_es);
@@ -1177,7 +1178,7 @@ void CPU_IRET(bool use32,Bitu oldeip) {
 			CPU_SetFlags(n_flags,mask);
 			DestroyConditionFlags();
 
-			cpu.cpl=n_cs_rpl;
+			CPU_SetCPL(n_cs_rpl);
 			reg_eip=n_eip;
 
 			Segs.val[ss]=n_ss;
@@ -1426,7 +1427,7 @@ call_code:
 							reg_sp=n_esp & 0xffff;
 						}
 
-						cpu.cpl = n_cs_desc.DPL();
+						CPU_SetCPL(n_cs_desc.DPL());
 						uint16_t oldcs    = SegValue(cs);
 						/* Switch to new CS:EIP */
 						Segs.phys[cs]	= n_cs_desc.GetBase();
@@ -1652,7 +1653,7 @@ RET_same_level:
 				"RET:Stack segment not present",
 				EXCEPTION_SS,n_ss & 0xfffc)
 
-			cpu.cpl = rpl;
+			CPU_SetCPL(rpl);
 			Segs.phys[cs]=desc.GetBase();
 			cpu.code.big=desc.Big()>0;
 			Segs.val[cs]=(selector&0xfffc) | cpu.cpl;
@@ -1765,7 +1766,11 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 		}
 
 		cpu.cr0 = value;
-
+		if (changed & CR0_WRITEPROTECT) [[unlikely]] {
+			if (CPU_ArchitectureType >= ArchitectureType::Intel486OldSlow) {
+				PAGING_ChangedWP();
+			}
+		}
 		if (value & CR0_PROTECTION) {
 			cpu.pmode = true;
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
@@ -2328,6 +2333,74 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 	reg_esp=(reg_esp&cpu.stack.notmask)|((sp_index)&cpu.stack.mask);
 }
 
+//DBP: Added implementation of force feed virtual 8086 mode fake I/O instructions from DOSBox-X by Jonathan Campbell
+//     Source: https://github.com/joncampbell123/dosbox-x/commit/8a9cc14
+static const Bitu vm86_fake_io_seg = 0xF000;	/* unused area in BIOS for IO instruction */
+static const Bitu vm86_fake_io_off = 0x0700;
+static Bitu vm86_fake_io_offs[3*2]={0};	/* offsets from base off because of dynamic core cache */
+static void init_vm86_fake_io() {
+	Bitu phys = (vm86_fake_io_seg << 4) + vm86_fake_io_off;
+	Bitu wo = 0;
+	/* read */
+	vm86_fake_io_offs[0] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0xEC);	/* IN AL,DX */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xCB);	/* RETF */
+	wo += 2;
+	vm86_fake_io_offs[1] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0xED);	/* IN AX,DX */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xCB);	/* RETF */
+	wo += 2;
+	vm86_fake_io_offs[2] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0x66);	/* IN EAX,DX */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xED);
+	phys_writeb(phys+wo+0x02,(uint8_t)0xCB);	/* RETF */
+	wo += 3;
+	/* write */
+	vm86_fake_io_offs[3] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0xEE);	/* OUT DX,AL */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xCB);	/* RETF */
+	wo += 2;
+	vm86_fake_io_offs[4] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0xEF);	/* OUT DX,AX */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xCB);	/* RETF */
+	wo += 2;
+	vm86_fake_io_offs[5] = vm86_fake_io_off + wo;
+	phys_writeb(phys+wo+0x00,(uint8_t)0x66);	/* OUT DX,EAX */
+	phys_writeb(phys+wo+0x01,(uint8_t)0xEF);
+	phys_writeb(phys+wo+0x02,(uint8_t)0xCB);	/* RETF */
+	wo += 3;
+}
+Bitu CPU_ForceV86FakeIO_In(Bitu port,Bitu len) {
+	Bitu old_ax,old_dx,ret;
+	/* save EAX:EDX and setup DX for IN instruction */
+	old_ax = reg_eax;
+	old_dx = reg_edx;
+	reg_edx = port;
+	/* make the CPU execute that instruction */
+	CALLBACK_RunRealFar(vm86_fake_io_seg,vm86_fake_io_offs[(len==4?2:(len-1))+0]);
+	/* take whatever the CPU or OS v86 trap left in EAX and return it */
+	ret = reg_eax;
+	if (len == 1) ret &= 0xFF;
+	else if (len == 2) ret &= 0xFFFF;
+	/* then restore EAX:EDX */
+	reg_eax = old_ax;
+	reg_edx = old_dx;
+	return ret;
+}
+void CPU_ForceV86FakeIO_Out(Bitu port,Bitu val,Bitu len) {
+	Bitu old_ax,old_dx;
+	/* save EAX:EDX and setup DX/AX for OUT instruction */
+	old_ax = reg_eax;
+	old_dx = reg_edx;
+	reg_edx = port;
+	reg_eax = val;
+	/* make the CPU execute that instruction */
+	CALLBACK_RunRealFar(vm86_fake_io_seg,vm86_fake_io_offs[(len==4?2:(len-1))+3]);
+	/* then restore EAX:EDX */
+	reg_eax = old_ax;
+	reg_edx = old_dx;
+}
+
 // Estimate the CPU speed in MHz given the amount of cycles emulated
 static double get_estimated_cpu_mhz(const int cycles)
 {
@@ -2668,6 +2741,7 @@ public:
 	{
 		if (initialised) {
 			Configure(sec);
+			PAGING_OnChangeCore();
 			return;
 		}
 
@@ -2743,6 +2817,8 @@ public:
 
 		// Set up the first CPU core
 		CPU_JMP(false, 0, 0, 0);
+		
+		init_vm86_fake_io();
 	}
 
 	~Cpu() = default;
@@ -3217,9 +3293,9 @@ static std::unique_ptr<Cpu> cpu_instance = nullptr;
 static void cpu_shutdown([[maybe_unused]] Section* sec)
 {
 #if C_DYNAMIC_X86
-	CPU_Core_Dyn_X86_Cache_Close();
+	CPU_Core_Dyn_X86_Cache_Init(false);
 #elif C_DYNREC
-	CPU_Core_Dynrec_Cache_Close();
+	CPU_Core_Dynrec_Cache_Init(false);
 #endif
 
 	cpu_instance.reset();
@@ -3232,6 +3308,45 @@ static void cpu_init(Section* sec)
 
 	constexpr auto ChangeableAtRuntime = true;
 	sec->AddDestroyFunction(&cpu_shutdown, ChangeableAtRuntime);
+}
+
+void CPU_ResetCPUDecoder(const std::string& core)
+{
+//	CPU_AutoDetermineMode &= ~(CPU_AUTODETERMINE_CORE|(CPU_AUTODETERMINE_CORE<<CPU_AUTODETERMINE_SHIFT));
+	cpudecoder = &CPU_Core_Normal_Run;
+	if (core == "simple") cpudecoder = &CPU_Core_Simple_Run;
+	else if (core == "full") cpudecoder = &CPU_Core_Full_Run;
+	#if C_DYNAMIC_X86 || C_DYNREC
+	else if (core == "auto") {
+		if (cpu.pmode) {
+		//	CPU_AutoDetermineMode |= (CPU_AUTODETERMINE_CORE<<CPU_AUTODETERMINE_SHIFT);
+			goto set_dynamic_cpudecoder;
+		} else {
+	//		CPU_AutoDetermineMode |= CPU_AUTODETERMINE_CORE;
+		}
+	}
+	#endif
+	#if C_DYNAMIC_X86
+	else if (core == "dynamic") {
+		set_dynamic_cpudecoder:
+		cpudecoder = &CPU_Core_Dyn_X86_Run;
+		CPU_Core_Dyn_X86_SetFPUMode(true);
+	} else if (core == "dynamic_nodhfpu") {
+		cpudecoder = &CPU_Core_Dyn_X86_Run;
+		CPU_Core_Dyn_X86_SetFPUMode(false);
+	}
+	#elif C_DYNREC
+	else if (core == "dynamic") {
+		set_dynamic_cpudecoder:
+		cpudecoder = &CPU_Core_Dynrec_Run;
+	}
+	#endif
+
+	#if (C_DYNAMIC_X86)
+	CPU_Core_Dyn_X86_Cache_Init(cpudecoder == &CPU_Core_Dyn_X86_Run);
+	#elif (C_DYNREC)
+	CPU_Core_Dynrec_Cache_Init(cpudecoder == &CPU_Core_Dynrec_Run);
+	#endif
 }
 
 void init_cpu_dosbox_settings(Section_prop& secprop)

@@ -17,6 +17,8 @@
  */
 
 {
+	uint32_t add_index = 0; 
+
 	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
 	                                                : SegBase(ds);
 	const auto di_base = SegBase(es);
@@ -53,7 +55,7 @@
 			count_left=0;
 		}
 	}
-	auto add_index = cpu.direction;
+	add_index = cpu.direction;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
 		for (;count>0;count--) {

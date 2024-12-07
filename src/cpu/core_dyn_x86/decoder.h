@@ -304,7 +304,7 @@ static inline void dyn_set_eip_last(void) {
 }
 
 
-enum save_info_type {db_exception, cycle_check, normal, fpu_restore};
+enum save_info_type {db_exception, cycle_check, normal, fpu_restore, trap};
 
 
 static struct {
@@ -374,6 +374,20 @@ static void dyn_check_irqrequest(void) {
 	++used_save_info;
 }
 
+static void dyn_check_trapflag(void) {
+	gen_dop_word(DOP_MOV,true,DREG(TMPB),DREG(FLAGS));
+	gen_dop_word_imm(DOP_AND,true,DREG(TMPB),FLAG_TF);
+	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
+	gen_releasereg(DREG(FLAGS));
+	gen_releasereg(DREG(TMPB));
+	dyn_savestate(&save_info[used_save_info].state);
+	save_info[used_save_info].cycles=decode.cycles;
+	save_info[used_save_info].eip_change=decode.code-decode.code_start;
+	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
+	save_info[used_save_info].type=trap;
+	used_save_info++;
+}
+
 static void dyn_fill_blocks(void) {
 	for (Bitu sct=0; sct<used_save_info; sct++) {
 		gen_fill_branch_long(save_info[sct].branch_pos);
@@ -394,6 +408,14 @@ static void dyn_fill_blocks(void) {
 				gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),save_info[sct].eip_change);
 				dyn_save_critical_regs();
 				gen_return(BR_Cycles);
+				break;
+			case trap:
+				dyn_loadstate(&save_info[sct].state);
+				decode.cycles=save_info[sct].cycles;
+				dyn_reduce_cycles();
+				gen_dop_word_imm(DOP_ADD,decode.big_op,DREG(EIP),save_info[sct].eip_change);
+				dyn_save_critical_regs();
+				gen_return(BR_Trap);
 				break;
 #ifdef X86_DYNFPU_DH_ENABLED
 			case fpu_restore:
@@ -2606,6 +2628,7 @@ restart_prefix:
 			dyn_check_bool_exception(DREG(TMPB));
 			dyn_flags_host_to_gen();
 			gen_releasereg(DREG(TMPB));
+			dyn_check_trapflag();
 			dyn_check_irqrequest();
 			break;
 		/* MOV AL,direct addresses */

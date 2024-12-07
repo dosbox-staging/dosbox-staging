@@ -744,6 +744,7 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 		case 0x9d:	// popf
 			gen_call_function_I((void *)&CPU_POPF,decode.big_op);
 			dyn_check_exception(FC_RETOP);
+			dyn_check_trapflag();
 			InvalidateFlags();
 			break;
 

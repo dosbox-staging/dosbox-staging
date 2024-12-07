@@ -78,6 +78,8 @@
 // TODO Define to 1 to use inlined memory functions in cpu core
 #define C_CORE_INLINE 1
 
+#define C_DBP_PAGE_FAULT_QUEUE_WIPE 1
+
 /* Emulator features
  *
  * Turn on or off optional emulator features that depend on external libraries.

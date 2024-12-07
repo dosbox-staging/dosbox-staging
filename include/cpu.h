@@ -34,6 +34,10 @@
 	#include "mem.h"
 #endif
 
+#ifndef DOSBOX_PAGING_H
+#include "paging.h"
+#endif
+
 constexpr auto CpuCyclesMin = 50;
 constexpr auto CpuCyclesMax = 2'000'000;
 
@@ -211,6 +215,7 @@ void CPU_Push32(const uint32_t value);
 #define CR0_FPUEMULATION     0x00000004
 #define CR0_TASKSWITCH       0x00000008
 #define CR0_FPUPRESENT       0x00000010
+#define CR0_WRITEPROTECT		0x00010000
 #define CR0_PAGING           0x80000000
 
 // Reasons for triggering a debug exception
@@ -601,5 +606,17 @@ extern CPUBlock cpu;
 void CPU_SetFlags(const uint32_t word, uint32_t mask);
 void CPU_SetFlagsd(const uint32_t word);
 void CPU_SetFlagsw(const uint32_t word);
+
+static inline void CPU_SetCPL(Bitu newcpl) {
+	if (newcpl != cpu.cpl) {
+		if (paging.enabled) {
+			if ( ((cpu.cpl < 3) && (newcpl == 3)) || ((cpu.cpl == 3) && (newcpl < 3)) )
+			PAGING_SwitchCPL(newcpl == 3);
+		}
+		cpu.cpl = newcpl;
+	}
+}
+Bitu CPU_ForceV86FakeIO_In(Bitu port,Bitu len);
+void CPU_ForceV86FakeIO_Out(Bitu port,Bitu val,Bitu len);
 
 #endif

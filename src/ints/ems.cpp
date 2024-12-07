@@ -1037,7 +1037,7 @@ static Bitu INT67_Handler(void) {
 				break;
 			case 0x0c: {	/* VCPI Switch from V86 to Protected Mode */
 				reg_flags&=(~FLAG_IF);
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 
 				/* Read data from ESI (linear address) */
 				uint32_t new_cr3=mem_readd(reg_esi);
@@ -1502,7 +1502,7 @@ public:
 				CPU_Push32(SegValue(cs));
 				CPU_Push32(reg_eip&0xffff);
 				/* Switch to V86-mode */
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 				CPU_IRET(true,0);
 			}
 		}
@@ -1545,7 +1545,7 @@ public:
 			CPU_SET_CRX(3, 0);
 			reg_flags&=(~(FLAG_IOPL|FLAG_VM));
 			CPU_LIDT(0x3ff, 0);
-			cpu.cpl=0;
+			CPU_SetCPL(0);
 		}
 	}
 };
