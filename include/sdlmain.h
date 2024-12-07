@@ -197,7 +197,7 @@ struct SDL_Block {
 		Fraction render_pixel_aspect_ratio = {1};
 
 		bool has_changed        = false;
-		GFX_CallBack_t callback = nullptr;
+		GFX_Callback_t callback = nullptr;
 		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
 	} draw = {};

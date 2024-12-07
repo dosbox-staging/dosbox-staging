@@ -642,7 +642,7 @@ void GFX_ResetScreen()
 {
 	GFX_Stop();
 	if (sdl.draw.callback) {
-		(sdl.draw.callback)(GFX_CallBackReset);
+		(sdl.draw.callback)(GFX_CallbackReset);
 	}
 	GFX_Start();
 	CPU_ResetAutoAdjust();
@@ -1452,7 +1452,7 @@ finish:
 
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
-		sdl.draw.callback(GFX_CallBackRedraw);
+		sdl.draw.callback(GFX_CallbackRedraw);
 
 	// Ensure the time to change window modes isn't counted against
 	// our paced timing. This is a rare event that depends on host
@@ -1728,7 +1728,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
-                    const VideoMode& video_mode, GFX_CallBack_t callback)
+                    const VideoMode& video_mode, GFX_Callback_t callback)
 {
 	uint8_t retFlags = 0;
 	if (sdl.updating)
@@ -2819,7 +2819,7 @@ static void GUI_ShutDown(Section *)
 	GFX_Stop();
 
 	if (sdl.draw.callback)
-		(sdl.draw.callback)( GFX_CallBackStop );
+		(sdl.draw.callback)( GFX_CallbackStop );
 
 	GFX_SetMouseCapture(false);
 	GFX_SetMouseVisibility(true);
@@ -3944,7 +3944,7 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Window has gained
 				// keyboard focus");
 				if (sdl.draw.callback)
-					sdl.draw.callback(GFX_CallBackRedraw);
+					sdl.draw.callback(GFX_CallbackRedraw);
 				focus_input();
 				continue;
 

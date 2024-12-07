@@ -77,7 +77,7 @@ public:
 	mt32emu_rom_info GetRomInfo();
 
 private:
-	void MixerCallBack(const int requested_audio_frames);
+	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	int GetNumPendingAudioFrames();
