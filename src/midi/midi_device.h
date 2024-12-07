@@ -37,7 +37,7 @@ constexpr auto Win32      = "win32";
 
 class MidiDevice {
 public:
-	enum class Type { BuiltIn, External };
+	enum class Type { Internal, External };
 
 	virtual ~MidiDevice() {}
 
