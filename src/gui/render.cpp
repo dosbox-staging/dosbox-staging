@@ -67,7 +67,7 @@ uint8_t get_bits_per_pixel(const PixelFormat pf)
 	return enum_val(pf);
 }
 
-static void render_callback(GFX_CallBackFunctions_t function);
+static void render_callback(GFX_CallbackFunctions_t function);
 
 static void check_palette()
 {
@@ -506,19 +506,19 @@ static void render_reset()
 	render.active           = true;
 }
 
-static void render_callback(GFX_CallBackFunctions_t function)
+static void render_callback(GFX_CallbackFunctions_t function)
 {
-	if (function == GFX_CallBackStop) {
+	if (function == GFX_CallbackStop) {
 		halt_render();
 		return;
-	} else if (function == GFX_CallBackRedraw) {
+	} else if (function == GFX_CallbackRedraw) {
 		render.scale.clearCache = true;
 		return;
-	} else if (function == GFX_CallBackReset) {
+	} else if (function == GFX_CallbackReset) {
 		GFX_EndUpdate(nullptr);
 		render_reset();
 	} else {
-		E_Exit("Unhandled GFX_CallBackReset %d", function);
+		E_Exit("Unhandled GFX_CallbackReset %d", function);
 	}
 }
 
@@ -1391,7 +1391,7 @@ void RENDER_Init(Section* sec)
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
 
 	if (running && needs_reinit) {
-		render_callback(GFX_CallBackReset);
+		render_callback(GFX_CallbackReset);
 		VGA_SetupDrawing(0);
 	}
 	if (!running) {

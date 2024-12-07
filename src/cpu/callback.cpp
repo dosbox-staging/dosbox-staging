@@ -28,13 +28,13 @@
 #include "math_utils.h"
 #include "mem.h"
 
-/* CallBack are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
+/* Callback are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
    And they are 16 bytes each and you can define them to behave in certain ways like a
    far return or and IRET
 */
 
-CallBack_Handler CallBack_Handlers[CB_MAX];
-std::string CallBack_Description[CB_MAX];
+Callback_Handler Callback_Handlers[CB_MAX];
+std::string Callback_Description[CB_MAX];
 
 static callback_number_t call_stop    = 0;
 static callback_number_t call_idle    = 0;
@@ -44,7 +44,7 @@ callback_number_t call_priv_io = 0;
 
 static Bitu illegal_handler()
 {
-	E_Exit("CALLBACK: Illegal CallBack called");
+	E_Exit("CALLBACK: Illegal Callback called");
 }
 
 callback_number_t CALLBACK_Allocate()
@@ -53,8 +53,8 @@ callback_number_t CALLBACK_Allocate()
 	static_assert(CB_MAX < std::numeric_limits<callback_number_t>::max());
 
 	for (callback_number_t i = 1; i < CB_MAX; ++i) {
-		if (CallBack_Handlers[i] == &illegal_handler) {
-			CallBack_Handlers[i] = nullptr;
+		if (Callback_Handlers[i] == &illegal_handler) {
+			Callback_Handlers[i] = nullptr;
 			return i;
 		}
 	}
@@ -64,7 +64,7 @@ callback_number_t CALLBACK_Allocate()
 
 void CALLBACK_DeAllocate(callback_number_t cb_num)
 {
-	CallBack_Handlers[cb_num] = &illegal_handler;
+	Callback_Handlers[cb_num] = &illegal_handler;
 }
 
 void CALLBACK_Idle() {
@@ -143,16 +143,16 @@ void CALLBACK_SIF(bool val) {
 void CALLBACK_SetDescription(callback_number_t cb_num, const char* descr)
 {
 	if (descr) {
-		CallBack_Description[cb_num] = descr;
+		Callback_Description[cb_num] = descr;
 	} else
-		CallBack_Description[cb_num].clear();
+		Callback_Description[cb_num].clear();
 }
 
 const char* CALLBACK_GetDescription(callback_number_t cb_num)
 {
 	if (cb_num >= CB_MAX)
 		return nullptr;
-	return CallBack_Description[cb_num].c_str();
+	return Callback_Description[cb_num].c_str();
 }
 
 static uint8_t callback_setup_extra(const callback_number_t callback_number,
@@ -544,18 +544,18 @@ static uint8_t callback_setup_extra(const callback_number_t callback_number,
 	return check_cast<uint8_t>(current_address - start_address);
 }
 
-bool CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu type, const char* descr)
+bool CALLBACK_Setup(callback_number_t cb_num, Callback_Handler handler, Bitu type, const char* descr)
 {
 	if (cb_num >= CB_MAX)
 		return false;
 	const bool use_callback = (handler != nullptr);
 	callback_setup_extra(cb_num, type, CALLBACK_PhysPointer(cb_num), use_callback);
-	CallBack_Handlers[cb_num] = handler;
+	Callback_Handlers[cb_num] = handler;
 	CALLBACK_SetDescription(cb_num, descr);
 	return true;
 }
 
-callback_number_t CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler handler, Bitu type, PhysPt addr, const char* descr)
+callback_number_t CALLBACK_Setup(callback_number_t cb_num, Callback_Handler handler, Bitu type, PhysPt addr, const char* descr)
 {
 	if (cb_num >= CB_MAX)
 		return 0;
@@ -564,7 +564,7 @@ callback_number_t CALLBACK_Setup(callback_number_t cb_num, CallBack_Handler hand
 
 	const auto csize = callback_setup_extra(cb_num, type, addr, use_callback);
 	if (csize > 0) {
-		CallBack_Handlers[cb_num] = handler;
+		Callback_Handlers[cb_num] = handler;
 		CALLBACK_SetDescription(cb_num, descr);
 	}
 	return csize;
@@ -595,8 +595,8 @@ void CALLBACK_HandlerObject::Uninstall(){
 		//Do nothing. Merely DeAllocate the callback
 	} else E_Exit("what kind of callback is this!");
 
-	if (!CallBack_Description[m_cb_number].empty())
-		CallBack_Description[m_cb_number].clear();
+	if (!Callback_Description[m_cb_number].empty())
+		Callback_Description[m_cb_number].clear();
 
 	CALLBACK_DeAllocate(m_cb_number);
 	installed=false;
@@ -606,7 +606,7 @@ CALLBACK_HandlerObject::~CALLBACK_HandlerObject(){
 	Uninstall();
 }
 
-void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const char* description){
+void CALLBACK_HandlerObject::Install(Callback_Handler handler,Bitu type,const char* description){
 	if(!installed) {
 		installed=true;
 		m_type=SETUP;
@@ -615,7 +615,7 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,const ch
 	} else
 		E_Exit("Callback handler object already installed");
 }
-void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt addr,const char* description){
+void CALLBACK_HandlerObject::Install(Callback_Handler handler,Bitu type,PhysPt addr,const char* description){
 	if(!installed) {
 		installed=true;
 		m_type=SETUP;
@@ -625,13 +625,13 @@ void CALLBACK_HandlerObject::Install(CallBack_Handler handler,Bitu type,PhysPt a
 		E_Exit("Callback handler object already installed");
 }
 
-void CALLBACK_HandlerObject::Allocate(CallBack_Handler handler,const char* description) {
+void CALLBACK_HandlerObject::Allocate(Callback_Handler handler,const char* description) {
 	if(!installed) {
 		installed=true;
 		m_type=NONE;
 		m_cb_number = CALLBACK_Allocate();
 		CALLBACK_SetDescription(m_cb_number, description);
-		CallBack_Handlers[m_cb_number] = handler;
+		Callback_Handlers[m_cb_number] = handler;
 	} else
 		E_Exit("Callback handler object already installed");
 }
@@ -646,12 +646,12 @@ void CALLBACK_HandlerObject::Set_RealVec(uint8_t vec){
 
 void CALLBACK_Init(Section* /*sec*/) {
 	for (callback_number_t i = 0; i < CB_MAX; ++i) {
-		CallBack_Handlers[i]=&illegal_handler;
+		Callback_Handlers[i]=&illegal_handler;
 	}
 
 	/* Setup the Stop Handler */
 	call_stop=CALLBACK_Allocate();
-	CallBack_Handlers[call_stop]=stop_handler;
+	Callback_Handlers[call_stop]=stop_handler;
 	CALLBACK_SetDescription(call_stop,"stop");
 	phys_writeb(CALLBACK_PhysPointer(call_stop)+0,0xFE);
 	phys_writeb(CALLBACK_PhysPointer(call_stop)+1,0x38);
@@ -659,7 +659,7 @@ void CALLBACK_Init(Section* /*sec*/) {
 
 	/* Setup the idle handler */
 	call_idle=CALLBACK_Allocate();
-	CallBack_Handlers[call_idle]=stop_handler;
+	Callback_Handlers[call_idle]=stop_handler;
 	CALLBACK_SetDescription(call_idle,"idle");
 	for (uint8_t i = 0; i <= 11; ++i)
 		phys_writeb(CALLBACK_PhysPointer(call_idle) + i, 0x90);

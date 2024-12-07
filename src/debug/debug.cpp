@@ -1934,7 +1934,7 @@ uint32_t DEBUG_CheckKeys(void) {
 			if (ret >= CB_MAX) {
 				ret = 0;
 			} else {
-				ret = (*CallBack_Handlers[ret])();
+				ret = (*Callback_Handlers[ret])();
 			}
 			if (ret) {
 				exitLoop=true;
