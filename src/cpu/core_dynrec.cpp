@@ -117,7 +117,7 @@ enum BlockReturn {
 	BR_OpcodeFull,
 #endif
 	BR_Iret,
-	BR_CallBack,
+	BR_Callback,
 	BR_SMCBlock
 };
 
@@ -322,7 +322,7 @@ run_block:
 #endif
 			return CBRET_NONE;
 
-		case BR_CallBack:
+		case BR_Callback:
 			// the callback code is executed in dosbox.conf, return the callback number
 			FillFlags();
 			return core_dynrec.callback;

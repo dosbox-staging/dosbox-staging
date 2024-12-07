@@ -708,7 +708,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceMt32::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceMt32::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -857,7 +857,7 @@ void MidiDeviceMt32::SendSysExMessage(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDeviceMt32::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceMt32::MixerCallback(const int requested_audio_frames)
 {
 	assert(channel);
 

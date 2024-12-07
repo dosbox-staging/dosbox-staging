@@ -549,7 +549,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -769,7 +769,7 @@ void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDeviceFluidSynth::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 
