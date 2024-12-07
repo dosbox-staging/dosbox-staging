@@ -649,14 +649,13 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
 	LOG_MSG("FSYNTH: Shutting down");
 
-	MIXER_LockMixerThread();
-
 	if (had_underruns) {
 		LOG_WARNING(
-		        "FSYNTH: Fix underruns by lowering CPU load, increasing "
-		        "your conf's prebuffer, or using a simpler SoundFont");
-		had_underruns = false;
+		        "FSYNTH: Fix underruns by lowering the CPU load, increasing "
+		        "the 'prebuffer' or 'blocksize' settings, or using a simpler SoundFont");
 	}
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (mixer_channel) {
@@ -672,19 +671,10 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 		renderer.join();
 	}
 
-	// Reset the members
-	synth.reset();
-	settings.reset();
-
-	current_sf_path = {};
-
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
 	MIXER_DeregisterChannel(mixer_channel);
 	mixer_channel.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
 
 	MIXER_UnlockMixerThread();
 }
