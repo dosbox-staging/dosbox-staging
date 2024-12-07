@@ -105,6 +105,7 @@
     </ClCompile>
     <ClCompile Include="..\src\dos\dos_locale_data.cpp">
       <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\dos_memory.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
