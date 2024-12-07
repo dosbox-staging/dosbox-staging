@@ -53,7 +53,7 @@ public:
 
 	Type GetType() const override
 	{
-		return MidiDevice::Type::BuiltIn;
+		return MidiDevice::Type::Internal;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override;
