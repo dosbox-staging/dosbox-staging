@@ -790,8 +790,8 @@ MidiDeviceMt32::~MidiDeviceMt32()
 
 	if (had_underruns) {
 		LOG_WARNING(
-		        "MT32: Fix underruns by lowering CPU load "
-		        "or increasing your conf's prebuffer");
+		        "MT32: Fix underruns by lowering the CPU load or increasing "
+		        "the 'prebuffer' or 'blocksize' settings");
 		had_underruns = false;
 	}
 
