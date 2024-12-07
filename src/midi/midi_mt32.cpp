@@ -412,16 +412,9 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 
 static void register_mt32_text_messages()
 {
-	MSG_Add("MT32_NO_SUPPORTED_MODELS", "No supported models present");
-
-	MSG_Add("MT32_ROM_NOT_LOADED", "No model is currently active");
-
-	MSG_Add("MT32_INVENTORY_TABLE_MISSING_LETTER", "-");
-	MSG_Add("MT32_INVENTORY_TABLE_AVAILABLE_LETTER", "y");
-
 	MSG_Add("MT32_ROMS_LABEL", "MT-32  models   ");
 	MSG_Add("CM32L_ROMS_LABEL", "CM-32L models   ");
-	MSG_Add("MT32_ACTIVE_ROM_LABEL", "Active model  ");
+	MSG_Add("MT32_ACTIVE_MODEL_LABEL", "Active model  ");
 	MSG_Add("MT32_SOURCE_DIR_LABEL", "ROM path      ");
 }
 
@@ -973,7 +966,7 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 	}
 }
 
-// Keep the fifo populated with freshly rendered buffers
+// Keep the FIFO populated with freshly rendered buffers
 void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
@@ -1025,7 +1018,9 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	                                                    dirs_with_models);
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_NO_SUPPORTED_MODELS"));
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_SUPPORTED_MODELS"));
 		return;
 	}
 
@@ -1080,11 +1075,11 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 
 	caller->WriteOut("%s---\n", Indent);
 
-	// Print info about the loaded ROM
+	// Print info about the active model
 	if (model_and_dir) {
 		caller->WriteOut("%s%s%s (%s)\n",
 		                 Indent,
-		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
+		                 MSG_Get("MT32_ACTIVE_MODEL_LABEL"),
 		                 model_and_dir->first->GetName(),
 		                 device->GetRomInfo().control_rom_description);
 
@@ -1103,7 +1098,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		                 dir_label.c_str(),
 		                 truncated_dir.c_str());
 	} else {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_ROM_NOT_LOADED"));
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
 	}
 
 	caller->WriteOut("\n");
