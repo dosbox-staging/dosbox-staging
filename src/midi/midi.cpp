@@ -691,15 +691,6 @@ void MIDI_ListDevices(Program* caller)
 	[[maybe_unused]] auto device_ptr = midi.device.get();
 
 	const std::string device_name = midi.device ? midi.device->GetName() : "";
-#if C_FLUIDSYNTH
-	write_device_name(MidiDeviceName::FluidSynth);
-
-	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
-	                           ? dynamic_cast<MidiDeviceFluidSynth*>(device_ptr)
-	                           : nullptr,
-
-	                   caller);
-#endif
 #if C_MT32EMU
 	write_device_name(MidiDeviceName::Mt32);
 
@@ -716,6 +707,15 @@ void MIDI_ListDevices(Program* caller)
 	                                : nullptr,
 	                        caller);
 
+#if C_FLUIDSYNTH
+	write_device_name(MidiDeviceName::FluidSynth);
+
+	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
+	                           ? dynamic_cast<MidiDeviceFluidSynth*>(device_ptr)
+	                           : nullptr,
+
+	                   caller);
+#endif
 #if C_COREMIDI
 	write_device_name(MidiDeviceName::CoreMidi);
 
@@ -813,27 +813,27 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	                   "('%s' by default):",
 	                   DefaultMidiDevicePref));
 
+	str_prop->SetOptionHelp(DefaultMidiDevicePref,
+	                        "  port:         A MIDI port of the host operating system's MIDI interface\n"
+	                        "                (default). You can configure the port to use with the\n"
+	                        "                'midiconfig' setting.");
+
 	str_prop->SetOptionHelp(
 	        MidiDeviceName::CoreAudio,
 	        "  coreaudio:    The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
 	        "                be specified with the 'midiconfig' setting.");
 
-	str_prop->SetOptionHelp(
-	        MidiDeviceName::FluidSynth,
-	        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player).\n"
-	        "                See the [fluidsynth] section for detailed configuration.");
-
 	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
 	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).");
 
 	str_prop->SetOptionHelp(MidiDeviceName::SoundCanvas,
-	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (see [soundcanvas]\n"
+	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (see the [soundcanvas]\n"
 	                        "                section).");
 
-	str_prop->SetOptionHelp(DefaultMidiDevicePref,
-	                        "  port:         A MIDI port of the host operating system's MIDI interface\n"
-	                        "                (default). The MIDI port to use can be configured with the\n"
-	                        "                'midiconfig' setting.");
+	str_prop->SetOptionHelp(
+	        MidiDeviceName::FluidSynth,
+	        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
+	        "                (see the [fluidsynth] section).");
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
@@ -842,17 +842,18 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 #if C_COREAUDIO
 		        MidiDeviceName::CoreAudio,
 #endif
+		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas,
 #if C_FLUIDSYNTH
 		        MidiDeviceName::FluidSynth,
 #endif
-		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas, "none"
+		        "none"
 	});
 
-	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
-	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("alsa", DefaultMidiDevicePref);
-	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("auto", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
 
 	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
