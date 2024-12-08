@@ -30,6 +30,14 @@ _Include relevant details for your test configuration, operating system, etc._
 
 _Ideally, you would also test your changes with a [sanitizer build](https://github.com/dosbox-staging/dosbox-staging/blob/main/BUILD.md#make-a-sanitizer-build) and confirm no issues were found._
 
+_Non-trivial changes **must be** tested on all three OSes we support. If you can't test on a particular OS, ask the team or contributors for help._
+
+The change has been manually tested on:
+
+- [ ] Windows
+- [ ] macOS
+- [ ] Linux
+
 
 # Checklist
 
@@ -43,6 +51,7 @@ I have:
 - [ ] split my work into well-defined, bisectable commits, and I [named my commits well](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#commit-messages).
 - [ ] applied the appropriate labels (bug, enhancement, refactoring, documentation, etc.)
 - [ ] [checked](https://github.com/dosbox-staging/dosbox-staging/blob/main/scripts/compile_commits.sh) that all my commits can be built.
+- [ ] the change has been manually tested on Windows, macOS, and Linux.
 - [ ] confirmed that my code does not cause performance regressions (e.g., by running the Quake benchmark).
 - [ ] added unit tests where applicable to prove the correctness of my code and to avoid future regressions.
 - [ ] provided the release notes draft (for significant user-facing changes).
