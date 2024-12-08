@@ -4,3 +4,4 @@ Debug
 Release
 *.vcxproj.filters
 *.vcxproj.user
+*.log
