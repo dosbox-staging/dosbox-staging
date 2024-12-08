@@ -553,25 +553,32 @@ static const std::string AnsiReset     = "[reset]";
 static const std::string AnsiWhite     = "[color=white]";
 static const std::string AnsiHighlight = "[color=light-green]";
 
+static std::string get_output_header(const char* header_msg_id,
+                                     const bool for_keyb_command = false)
+{
+	if (for_keyb_command) {
+		return AnsiWhite + MSG_Get(header_msg_id) + ":" + AnsiReset + "\n\n";
+	} else {
+		std::string header_str = MSG_GetForHost(header_msg_id);
+		return std::string("\n") + header_str.c_str() + "\n" +
+		       std::string(header_str.size(), '-') + "\n\n";
+	}
+}
+
 std::string DOS_GenerateListCountriesMessage()
 {
-	std::string message = {};
-
-	const std::string header = MSG_GetRaw("DOSBOX_HELP_LIST_COUNTRIES_1");
-
-	message += std::string("\n") + header + "\n";
-	message += std::string(header.size(), '-') + "\n\n";
+	std::string message = get_output_header("DOSBOX_HELP_LIST_COUNTRIES_1");
 
 	for (auto it = LocaleData::CountryInfo.begin();
 	     it != LocaleData::CountryInfo.end();
 	     ++it) {
 		message += format_str("  %-5d - %s\n",
 		                      enum_val(it->first),
-		                      MSG_GetRaw(it->second.GetMsgName().c_str()));
+		                      MSG_GetForHost(it->second.GetMsgName()));
 	}
 
 	message += "\n";
-	message += MSG_GetRaw("DOSBOX_HELP_LIST_COUNTRIES_2");
+	message += MSG_GetForHost("DOSBOX_HELP_LIST_COUNTRIES_2");
 	message += "\n";
 
 	return message;
@@ -579,17 +586,12 @@ std::string DOS_GenerateListCountriesMessage()
 
 std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 {
-	std::string message        = {};
-	std::string highlight_code = {};
-	std::string header = MSG_GetRaw("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1");
+	std::string message = get_output_header("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1",
+	                                        for_keyb_command);
 
+	std::string highlight_code = {};
 	if (for_keyb_command) {
-                header  += ":";
-		message += AnsiWhite + header + AnsiReset + "\n\n";
 		highlight_code = DOS_GetLoadedLayout();
-	} else {
-		message += std::string("\n") + header + "\n";
-		message += std::string(header.size(), '-') + "\n\n";
 	}
 
 	struct Row {
@@ -625,7 +627,13 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		column_1_width = std::max(column_1_width, column_1_raw.length());
 
 		// Column 2 - localized keyboard name/description
-		const auto column_2 = MSG_GetRaw(entry.GetMsgName().c_str());
+		std::string column_2;
+		if (for_keyb_command) {
+			column_2 = MSG_Get(entry.GetMsgName());
+		} else {
+			column_2 = MSG_GetForHost(entry.GetMsgName());
+		}
+
 		table.push_back({column_1_ansi, column_2, highlight});
 	}
 
@@ -653,11 +661,63 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		return convert_ansi_markup(message);
 	} else {
 		message += "\n";
-		message += MSG_GetRaw("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
+		message += MSG_GetForHost("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
 		message += "\n";
 
 		return message;
 	}
+}
+
+std::string DOS_GenerateListCodePagesMessage()
+{
+	std::string message = get_output_header("DOSBOX_HELP_LIST_CODE_PAGES_1");
+
+	struct Row {
+		std::string column1 = {};
+		std::string column2 = {};
+		std::string column3 = {};
+	};
+	std::vector<Row> table = {};
+
+	size_t max_column2_length = 0;
+
+	for (const auto& entry : LocaleData::CodePageInfo) {
+		assert(LocaleData::ScriptInfo.contains(entry.second.script));
+		const auto script_msg_name =
+		        LocaleData::ScriptInfo.at(entry.second.script).GetMsgName();
+		const auto page_msg_name = CodePageInfoEntry::GetMsgName(entry.first);
+
+		Row row = {};
+
+		row.column1 = format_str("% 7d - ", entry.first);
+		row.column2 = MSG_GetForHost(page_msg_name);
+		row.column3 = MSG_GetForHost(script_msg_name);
+
+		max_column2_length = std::max(max_column2_length,
+		                              length_utf8(row.column2));
+
+		if (entry.first == DefaultCodePage) {
+			table.insert(table.begin(), row);
+		} else {
+			table.push_back(row);
+		}
+	}
+
+	for (auto& row : table) {
+		std::string align = {};
+		align.resize(max_column2_length - length_utf8(row.column2), ' ');
+		row.column2 += align;
+	}
+
+	for (const auto& row : table) {
+		message += row.column1 + row.column2 + "  (" + row.column3 + ")\n";
+	}
+
+	message += "\n";
+	message += MSG_GetForHost("DOSBOX_HELP_LIST_CODE_PAGES_2");
+	message += "\n";
+
+	return message;
 }
 
 // ***************************************************************************
@@ -678,43 +738,82 @@ std::string DOS_GetKeyboardLayoutName(const std::string& layout)
 	return {};
 }
 
-std::string DOS_GetKeyboardScriptName(const KeyboardScript script)
+static Script to_script(const KeyboardScript keyboard_script)
 {
-	switch (script) {
+	switch (keyboard_script) {
 	case KeyboardScript::LatinQwerty:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (QWERTY)";
 	case KeyboardScript::LatinQwertz:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (QWERTZ)";
 	case KeyboardScript::LatinAzerty:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (AZERTY)";
 	case KeyboardScript::LatinAsertt:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (ASERTT)";
 	case KeyboardScript::LatinJcuken:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (JCUKEN)";
 	case KeyboardScript::LatinUgjrmv:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (UGJRMV)";
 	case KeyboardScript::LatinColemak:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (Colemak)";
 	case KeyboardScript::LatinDvorak:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (Dvorak)";
 	case KeyboardScript::LatinNonStandard:
-		return std::string(MSG_Get("SCRIPT_LATIN")) + " (" +
-		       MSG_Get("SCRIPT_PROPERTY_NON_STANDARD") + ")";
-	case KeyboardScript::Arabic: return MSG_Get("SCRIPT_ARABIC");
-	case KeyboardScript::Armenian: return MSG_Get("SCRIPT_ARMENIAN");
-	case KeyboardScript::Cherokee: return MSG_Get("SCRIPT_CHEROKEE");
-	case KeyboardScript::Cyrillic: return MSG_Get("SCRIPT_CYRILLIC");
-	case KeyboardScript::CyrillicPhonetic:
-		return std::string(MSG_Get("SCRIPT_CYRILLIC")) + " (" +
-		       MSG_Get("SCRIPT_PROPERTY_PHONETIC") + ")";
-	case KeyboardScript::Georgian: return MSG_Get("SCRIPT_GEORGIAN");
-	case KeyboardScript::Greek: return MSG_Get("SCRIPT_GREEK");
-	case KeyboardScript::Hebrew: return MSG_Get("SCRIPT_HEBREW");
-	case KeyboardScript::Thai: return MSG_Get("SCRIPT_THAI");
-	default: assert(false);
-	}
+		return Script::Latin;
 
-	return "<unknown keyboard script>";
+	case KeyboardScript::Cyrillic: 
+	case KeyboardScript::CyrillicPhonetic:
+		return Script::Cyrillic;
+
+	case KeyboardScript::Arabic:   return Script::Arabic;
+	case KeyboardScript::Armenian: return Script::Armenian;
+	case KeyboardScript::Cherokee: return Script::Cherokee;
+	case KeyboardScript::Georgian: return Script::Georgian;
+	case KeyboardScript::Greek:    return Script::Greek;
+	case KeyboardScript::Hebrew:   return Script::Hebrew;
+
+	default:
+		assert(false);
+		return Script::Latin;
+	}	
+}
+
+std::string DOS_GetKeyboardScriptName(const KeyboardScript keyboard_script)
+{
+	const auto script = to_script(keyboard_script);
+	assert(LocaleData::ScriptInfo.contains(script));
+	const auto msg_id = LocaleData::ScriptInfo.at(script).GetMsgName();
+
+	std::string result = MSG_Get(msg_id);
+
+	switch (keyboard_script) {
+	case KeyboardScript::LatinQwerty:
+		return result + " (QWERTY)";
+	case KeyboardScript::LatinQwertz:
+		return result + " (QWERTZ)";
+	case KeyboardScript::LatinAzerty:
+		return result + " (AZERTY)";
+	case KeyboardScript::LatinAsertt:
+		return result + " (ASERTT)";
+	case KeyboardScript::LatinJcuken:
+		return result + " (JCUKEN)";
+	case KeyboardScript::LatinUgjrmv:
+		return result + " (UGJRMV)";
+	case KeyboardScript::LatinColemak:
+		return result + " (Colemak)";
+	case KeyboardScript::LatinDvorak:
+		return result + " (Dvorak)";
+
+	case KeyboardScript::LatinNonStandard:
+		return result + " (" +
+		       MSG_Get("SCRIPT_PROPERTY_NON_STANDARD") + ")";
+	case KeyboardScript::CyrillicPhonetic:
+		return result + " (" +
+		       MSG_Get("SCRIPT_PROPERTY_PHONETIC") + ")";
+
+	case KeyboardScript::Arabic:   return result;
+	case KeyboardScript::Armenian: return result;
+	case KeyboardScript::Cherokee: return result;
+	case KeyboardScript::Cyrillic: return result;
+	case KeyboardScript::Georgian: return result;
+	case KeyboardScript::Greek:    return result;
+	case KeyboardScript::Hebrew:   return result;
+
+	default:
+		assert(false);
+		return "<unknown keyboard script>";
+	}
 }
 
 std::string DOS_GetShortcutKeyboardScript1()
@@ -790,6 +889,15 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& la
 	}
 
 	return {};
+}
+
+std::string DOS_GetCodePageDescription(const uint16_t code_page)
+{
+	if (!LocaleData::CodePageInfo.contains(code_page)) {
+		return {};
+	}
+
+	return MSG_Get(CodePageInfoEntry::GetMsgName(code_page));
 }
 
 std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page)
@@ -1549,6 +1657,11 @@ void DOS_Locale_AddMessages()
 	MSG_Add("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2",
 	        "The above codes can be used in the 'keyboard_layout' config setting.");
 
+	MSG_Add("DOSBOX_HELP_LIST_CODE_PAGES_1",
+	        "List of available code pages and relevant writing scripts");
+	MSG_Add("DOSBOX_HELP_LIST_CODE_PAGES_2",
+	        "The above code pages can be used in the 'keyboard_layout' config setting.");
+
 	// Add strings with country names
 	for (auto it = LocaleData::CountryInfo.begin();
 	     it != LocaleData::CountryInfo.end();
@@ -1557,24 +1670,26 @@ void DOS_Locale_AddMessages()
 		        it->second.country_name.c_str());
 	}
 
+	// Add strings with code page descriptions
+	for (const auto& entry : LocaleData::CodePageInfo) {
+		MSG_Add(entry.second.GetMsgName(entry.first).c_str(),
+		        entry.second.description.c_str());
+	}
+
+	// Add strings with script names
+	for (const auto& entry : LocaleData::ScriptInfo) {
+		MSG_Add(entry.second.GetMsgName().c_str(),
+		        entry.second.script_name.c_str());
+	}
+
+	MSG_Add("SCRIPT_PROPERTY_PHONETIC", "phonetic");
+	MSG_Add("SCRIPT_PROPERTY_NON_STANDARD", "non-standard");
+
 	// Add strings with keyboard layout names
 	for (const auto& entry : LocaleData::KeyboardLayoutInfo) {
 		MSG_Add(entry.GetMsgName().c_str(), entry.layout_name.c_str());
 	}
 
-	MSG_Add("SCRIPT_LATIN",    "Latin");
-	MSG_Add("SCRIPT_ARABIC",   "Arabic");
-	MSG_Add("SCRIPT_ARMENIAN", "Armenian");
-	MSG_Add("SCRIPT_CHEROKEE", "Cherokee");
-	MSG_Add("SCRIPT_CYRILLIC", "Cyrillic");
-	MSG_Add("SCRIPT_GEORGIAN", "Georgian");
-	MSG_Add("SCRIPT_GREEK",    "Greek");
-	MSG_Add("SCRIPT_HEBREW",   "Hebrew");
-	MSG_Add("SCRIPT_THAI",     "Thai");
-
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_LEFT",  "Left");
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_RIGHT", "Right");
-
-	MSG_Add("SCRIPT_PROPERTY_PHONETIC",     "phonetic");
-	MSG_Add("SCRIPT_PROPERTY_NON_STANDARD", "non-standard");
 }

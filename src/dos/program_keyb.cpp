@@ -177,7 +177,7 @@ void KEYB::WriteOutSuccess()
 	const std::string AnsiReset  = "[reset]";
 
 	const auto layout       = DOS_GetLoadedLayout();
-	const bool show_scripts = !layout.empty();
+	const bool show_layout  = !layout.empty();
 
 	// Prepare strings based on translation
 
@@ -190,7 +190,7 @@ void KEYB::WriteOutSuccess()
 	const auto script_len    = script_msg.length();
 
 	auto target_len = std::max(code_page_len, layout_len);
-	if (show_scripts) {
+	if (show_layout) {
 		target_len = std::max(target_len, script_len);
 	}
 	target_len += NormalSpacingSize;
@@ -205,7 +205,7 @@ void KEYB::WriteOutSuccess()
 	code_page_msg.resize(code_page_msg.size() + code_page_diff, ' ');
 	layout_msg.resize(layout_msg.size() + layout_diff, ' ');
 
-	if (show_scripts) {
+	if (show_layout) {
 		script_msg = AnsiWhite + script_msg + AnsiReset;
 		script_msg.resize(script_msg.size() + script_diff, ' ');
 	}
@@ -219,41 +219,55 @@ void KEYB::WriteOutSuccess()
 		WriteOut(convert_ansi_markup(message).c_str());
 	};
 
+	const auto space_layout = show_layout ? layout.length() + 2 : 0;
+	const auto space_code_page = std::to_string(dos.loaded_codepage).length();
+
+	std::string align_layout    = {};
+	std::string align_code_page = {};
+
+	if (space_layout > space_code_page) {
+		align_code_page.resize(space_layout - space_code_page, ' ');
+	} else if (space_code_page > space_layout) {
+		align_layout.resize(space_code_page - space_layout, ' ');
+	}
+
+	align_layout += " - ";
+	align_code_page += " - ";
+
 	// Start with code page and keyboard layout
 
 	message += code_page_msg + std::to_string(dos.loaded_codepage);
+	message += align_code_page;
 
-	const auto code_page_font_origin = DOS_GetCodePageFontOrigin();
-	if (code_page_font_origin != CodePageFontOrigin::Bundled) {
-		message += " (";
-		switch (code_page_font_origin) {
-		case CodePageFontOrigin::Rom:
-			message += MSG_Get("PROGRAM_KEYB_ROM_FONT");
-			break;
-		case CodePageFontOrigin::Custom:
-			message += MSG_Get("PROGRAM_KEYB_CUSTOM_FONT");
-			break;
-		default:
-			message += "???";
-			assert(false);
-			break;
-		}
-		message += ")";
+	switch (DOS_GetCodePageFontOrigin()) {
+	case CodePageFontOrigin::Rom:
+		message += MSG_Get("PROGRAM_KEYB_ROM_FONT");
+		break;
+	case CodePageFontOrigin::Bundled:
+		message += DOS_GetCodePageDescription(dos.loaded_codepage);
+		break;
+	case CodePageFontOrigin::Custom:
+		message += MSG_Get("PROGRAM_KEYB_CUSTOM_FONT");
+		break;
+	default:
+		message += "???";
+		assert(false);
+		break;
 	}
 	message += "\n";
 
 	message += layout_msg;
-	if (!show_scripts) {
+	if (!show_layout) {
 		message += MSG_Get("PROGRAM_KEYB_NOT_LOADED");
 	} else {
 		const char Apostrophe = '\'';
 
-		message += Apostrophe + layout + Apostrophe + " - ";
+		message += Apostrophe + layout + Apostrophe + align_layout;
 		message += DOS_GetKeyboardLayoutName(layout);
 	}
 	message += "\n";
 
-	if (!show_scripts) {
+	if (!show_layout) {
 		print_message();
 		return;
 	}
