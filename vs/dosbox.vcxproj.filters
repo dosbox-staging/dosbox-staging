@@ -598,12 +598,6 @@
     <ClCompile Include="..\src\misc\host_locale.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\misc\host_locale_macos.cpp">
-      <Filter>src\misc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\misc\host_locale_posix.cpp">
-      <Filter>src\misc</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\misc\host_locale_win32.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
@@ -740,145 +734,145 @@
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcclip.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcdisp.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcgetsc.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdckbd.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcscrn.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcsetsc.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\sdl2_queue\pdcutil.cpp">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addchstr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addstr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\attr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\beep.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\bkgd.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\border.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\clear.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\color.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\debug.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\delch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\deleteln.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\getch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\getstr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\getyx.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\inch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\inchstr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\initscr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\inopts.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\insch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\insstr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\instr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\kernel.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\keyname.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\mouse.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\move.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\outopts.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\overlay.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\pad.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\panel.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\printw.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\refresh.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\scanw.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\scr_dump.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\scroll.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\slk.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\termattr.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\touch.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\util.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\window.c">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\zmbv\drvproc.cpp">
       <Filter>src\libs\zmbv</Filter>
@@ -894,6 +888,9 @@
     </ClCompile>
     <ClCompile Include="..\src\misc\ethernet.cpp">
       <Filter>src\misc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\debug\debug_win32.cpp">
+      <Filter>src\debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1329,9 +1326,6 @@
     <ClInclude Include="..\src\hardware\reelmagic\mpeg_decoder.h">
       <Filter>src\hardware\reelmagic</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hardware\reelmagic\vga_passthrough.h">
-      <Filter>src\hardware\reelmagic</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\directserial.h">
       <Filter>src\hardware\serialport</Filter>
     </ClInclude>
@@ -1522,7 +1516,7 @@
       <Filter>src\libs\whereami</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h">
-      <Filter>src\libs\pdcurses</Filter>
+      <Filter>src\libs\PDcurses</Filter>
     </ClInclude>
     <ClInclude Include="..\src\libs\mverb\MVerb.h">
       <Filter>src\libs\mverb</Filter>
@@ -1534,7 +1528,6 @@
     <ClInclude Include="..\src\libs\zmbv\zmbv.h">
       <Filter>src\libs\zmbv</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\ethernet.h" />
     <ClInclude Include="..\src\hardware\compressor.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
@@ -1575,6 +1568,168 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\dos_locale.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ascii.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\object_pool.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ring_buffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shell\file_reader.h">
+      <Filter>src\shell</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\ethernet_slirp.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\host_locale.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\enet\include\enet.h">
+      <Filter>src\libs\enet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\simde\x86\mmx.h">
+      <Filter>src\libs\simde\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\gus.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\ps1audio.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\sblaster.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\tandy_sound.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_loops.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_simple.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_keyboard_layout.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\drive_local.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_attrib.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_biostest.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_boot.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_choice.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_help.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_imgmount.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_intro.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_keyb.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_loadfix.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_loadrom.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mem.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mixer.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mode.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_more.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_more_output.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mount.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mount_common.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mousectl.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_move.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_placeholder.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_rescan.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_setver.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_subst.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_tree.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\flags.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\string_ops.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_normal\prefix_0f_mmx.h">
+      <Filter>src\cpu\core_normal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\dyn_mmx.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-common.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-o3.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb-iw.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb-niw.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv8le.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dyn_x86\dyn_mmx.h">
+      <Filter>src\cpu\core_dyn_x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ethernet.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_clip.h">
       <Filter>src\dos</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1664,9 +1819,6 @@
     <Filter Include="src\libs\nuked">
       <UniqueIdentifier>{69d13cb3-0db7-4e3c-92a0-c2b1a79b5b63}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\libs\ppscale">
-      <UniqueIdentifier>{63f12ee0-e983-404f-bbd2-5b6cd633a0af}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\libs\stb_truetype">
       <UniqueIdentifier>{53a02719-2224-438f-a9f1-829e984a5791}</UniqueIdentifier>
     </Filter>
@@ -1703,14 +1855,23 @@
     <Filter Include="src\libs\ghc">
       <UniqueIdentifier>{9df2bcc2-35e3-4be4-a577-dff8be565c65}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\libs\pdcurses">
-      <UniqueIdentifier>{40435b8c-40e5-4751-ad49-5c4492538be5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\libs\manymouse">
       <UniqueIdentifier>{367194fd-13af-44ca-8bd9-b3f1190f786c}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\zmbv">
       <UniqueIdentifier>{99b19861-c042-4e3e-bf24-ee8a418866f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\enet">
+      <UniqueIdentifier>{641a8ac5-be43-4682-878c-4e0059f29577}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\PDcurses">
+      <UniqueIdentifier>{40435b8c-40e5-4751-ad49-5c4492538be5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\simde">
+      <UniqueIdentifier>{e0116c2d-767c-4d92-9a38-2ca7a13b6317}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\simde\x86">
+      <UniqueIdentifier>{923d014d-da8a-4bdf-b1bd-91d465f24ffc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

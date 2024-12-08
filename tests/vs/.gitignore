@@ -4,6 +4,7 @@ Debug
 Release
 *.vcxproj.user
 *.ncb
+*.log
 *.suo
 Win32
 x64
