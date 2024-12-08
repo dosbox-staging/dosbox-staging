@@ -167,7 +167,7 @@ public:
 	void SendSysExMessage(uint8_t* sysex, size_t len) override
 	{
 		// Acquire a MIDIPacketList
-		Byte packetBuf[MaxMidiSysExSize * 4];
+		Byte packetBuf[MaxMidiSysExBytes * 4];
 		MIDIPacketList* packetList = (MIDIPacketList*)packetBuf;
 
 		m_pCurPacket = MIDIPacketListInit(packetList);
