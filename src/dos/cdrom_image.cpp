@@ -133,7 +133,11 @@ bool CDROM_Interface_Image::BinaryFile::read(uint8_t *buffer,
 	if (!seek(offset))
 		return false;
 
-	file->read((char *)buffer, adjusted_bytes);
+	file->read((char*)buffer, adjusted_bytes);
+
+	DOS_File::DiskAccessDelayGuard disk_access_delay = {};
+	disk_access_delay.AddBytesRead(static_cast<int>(requested_bytes));
+
 	return !file->fail();
 }
 
@@ -186,6 +190,10 @@ bool CDROM_Interface_Image::BinaryFile::seek(const uint32_t offset)
 		file->seekg(0, std::ios::beg);      // "I have returned."
 		file->seekg(offset, std::ios::beg); // "It will be done."
 	}
+
+	DOS_File::DiskAccessDelayGuard disk_access_delay = {};
+	disk_access_delay.AddSeek();
+
 	return !file->fail();
 }
 
@@ -316,6 +324,9 @@ bool CDROM_Interface_Image::AudioFile::seek(const uint32_t requested_pos)
 		        elapsed_ms, average_cdrom_seek_ms);
 #endif
 
+	DOS_File::DiskAccessDelayGuard disk_access_delay = {};
+	disk_access_delay.AddSeek();
+
 	return result;
 }
 
@@ -422,6 +433,10 @@ bool CDROM_Interface_Image::AudioFile::read(uint8_t *buffer,
 	}
 	// reading DAE is an audio-task, so update our audio position
 	audio_pos += decoded_bytes;
+
+	DOS_File::DiskAccessDelayGuard disk_access_delay = {};
+	disk_access_delay.AddBytesRead(static_cast<int>(decoded_bytes));
+
 	return !(sample->flags & SOUND_SAMPLEFLAG_ERROR);
 }
 
@@ -635,7 +650,10 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 		 // reserve the track_file as a shared_ptr to avoid deletion in another thread
 		const auto track_file = player.trackFile.lock();
 		if (track_file) {
-			LagDriveResponse();
+
+			DOS_File::DiskAccessDelayGuard disk_access_delay = {};
+			disk_access_delay.AddVerySlowSeek();
+
 			const uint32_t sample_rate = track_file->getRate();
 			const uint32_t played_frames = ceil_udivide(player.playedTrackFrames
 			                               * REDBOOK_FRAMES_PER_SECOND, sample_rate);

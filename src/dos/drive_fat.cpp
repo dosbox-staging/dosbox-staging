@@ -99,6 +99,8 @@ fatFile::fatFile(const char* /*name*/, uint32_t startCluster, uint32_t fileLen,
 }
 
 bool fatFile::Read(uint8_t * data, uint16_t *size) {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	// check if file opened in write-only mode
 	if ((this->flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -114,6 +116,7 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 		currentSector = myDrive->getAbsoluteSectFromBytePos(firstCluster, seekpos);
 		if(currentSector == 0) {
 			/* EOC reached before EOF */
+			disk_access_delay.AddBytesRead();
 			*size = 0;
 			loadedSector = false;
 			return true;
@@ -131,6 +134,8 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 			return true; 
 		}
 		data[sizecount++] = sectorBuffer[curSectOff++];
+		disk_access_delay.AddBytesRead();
+
 		seekpos++;
 		if(curSectOff >= myDrive->getSectorSize()) {
 			currentSector = myDrive->getAbsoluteSectFromBytePos(firstCluster, seekpos);
@@ -153,6 +158,8 @@ bool fatFile::Read(uint8_t * data, uint16_t *size) {
 }
 
 bool fatFile::Write(uint8_t * data, uint16_t *size) {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	// check if file opened in read-only mode
 	if ((this->flags & 0xf) == OPEN_READ || myDrive->IsReadOnly()) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -168,6 +175,7 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 
 	if (seekpos < filelength && *size == 0) {
 		/* Truncate file to current position */
+		disk_access_delay.AddBytesWritten();
 		if (firstCluster != 0)
 			myDrive->deleteClustChain(firstCluster, seekpos);
 		if (seekpos == 0)
@@ -224,6 +232,8 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 			filelength = seekpos+1;
 		}
 		sectorBuffer[curSectOff++] = data[sizecount++];
+		disk_access_delay.AddBytesWritten();
+
 		seekpos++;
 		if(curSectOff >= myDrive->getSectorSize()) {
 			if(loadedSector) myDrive->writeSector(currentSector, sectorBuffer);
@@ -256,24 +266,31 @@ finalizeWrite:
 }
 
 bool fatFile::Seek(uint32_t *pos, uint32_t type) {
-	int32_t seekto=0;
-	
+	int32_t requested_pos = 0;
+
 	switch(type) {
-		case DOS_SEEK_SET:
-			seekto = (int32_t)*pos;
-			break;
+		case DOS_SEEK_SET: requested_pos = (int32_t)*pos; break;
 		case DOS_SEEK_CUR:
-			/* Is this relative seek signed? */
-			seekto = (int32_t)*pos + (int32_t)seekpos;
+			// Is this relative seek signed?
+			requested_pos = (int32_t)*pos + (int32_t)seekpos;
 			break;
 		case DOS_SEEK_END:
-			seekto = (int32_t)filelength + (int32_t)*pos;
+			requested_pos = (int32_t)filelength + (int32_t)*pos;
 			break;
 	}
 //	LOG_MSG("Seek to %d with type %d (absolute value %d)", *pos, type, seekto);
 
-	if(seekto<0) seekto = 0;
-	seekpos = (uint32_t)seekto;
+	if (requested_pos < 0) {
+		requested_pos = 0;
+	}
+
+	if (seekpos != static_cast<uint32_t>(requested_pos)) {
+		seekpos = static_cast<uint32_t>(requested_pos);
+
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddSeek();
+	}
+
 	currentSector = myDrive->getAbsoluteSectFromBytePos(firstCluster, seekpos);
 	if (currentSector == 0) {
 		/* not within file size, thus no sector is available */
@@ -309,6 +326,9 @@ void fatFile::Close()
 		if (loadedSector) {
 			myDrive->writeSector(currentSector, sectorBuffer);
 		}
+
+		DiskAccessDelayGuard disk_access_delay = {};
+		disk_access_delay.AddClose();
 	}
 
 	set_archive_on_close = false;

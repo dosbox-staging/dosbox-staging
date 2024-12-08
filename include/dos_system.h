@@ -147,7 +147,59 @@ public:
 	std::string name = {};
 	FlushTimeOnClose flush_time_on_close = FlushTimeOnClose::NoUpdate;
 	std::vector<FileRegionLock> region_locks = {};
-	/* Some Device Specific Stuff */
+
+	// The DiskAccessDelayGuard simulates realistic disk operation timing to fix
+	// games that expect specific IO delays. Creates artificial delays for file
+	// operations like Read, Write, Seek, and Close.
+	//
+	// Usage: Create an object in DOS_File IO methods and use Add*() calls to
+	//        queue delays. Delays are performed when the object is destroyed.
+	//
+	// Fixes timing issues in games like:
+	// - Chasm the Rift (1997): CDDA audio track fails to loop 
+	// - Emergency Room (1995): CDROM speed check during install
+	// - Deus (1996), Ishar 3 (1994), Robinson's Requiem (1994), and Time
+	//   Warriors (1997): division by 0 interrupt handler crash.
+	//
+	class DiskAccessDelayGuard {
+	public:
+		constexpr DiskAccessDelayGuard() = default;
+		~DiskAccessDelayGuard();
+
+		constexpr void AddBytesRead(const int bytes = 1) noexcept
+		{
+			bytes_read += bytes;
+		}
+		constexpr void AddBytesWritten(const int bytes = 1) noexcept
+		{
+			bytes_written += bytes;
+		}
+		constexpr void AddSeek() noexcept
+		{
+			++num_seeks;
+		}
+		constexpr void AddVerySlowSeek() noexcept
+		{
+			num_seeks += 50;
+		}
+		constexpr void AddClose() noexcept
+		{
+			++num_closes;
+		}
+		static constexpr void SetDelayPercent(
+		        const std::optional<float> percent) noexcept;
+
+	private:
+		constexpr int GetNumOperations() const noexcept;
+
+		inline static std::optional<float> delay_percent = {};
+
+		int bytes_read    = 0;
+		int bytes_written = 0;
+		int num_seeks     = 0;
+		int num_closes    = 0;
+	};
+
 private:
 	uint8_t hdrive = 0xff;
 };

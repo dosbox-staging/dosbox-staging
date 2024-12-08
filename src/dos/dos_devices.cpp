@@ -30,6 +30,7 @@
 #include "support.h"
 #include "drives.h"
 #include "dev_con.h"
+#include "math_utils.h"
 
 DOS_Device * Devices[DOS_DEVICES];
 
@@ -128,6 +129,8 @@ bool DOS_ExtDevice::WriteToControlChannel(PhysPt bufptr, uint16_t size, uint16_t
 
 bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
 		// INPUT
@@ -139,12 +142,16 @@ bool DOS_ExtDevice::Read(uint8_t *data, uint16_t *size)
 			}
 			*data++ = mem_readb(bufptr);
 		}
+
+		disk_access_delay.AddBytesRead();
 	}
 	return true;
 }
 
 bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 {
+	DiskAccessDelayGuard disk_access_delay = {};
+
 	PhysPt bufptr = (dos.dcp << 4) | 32;
 	for (uint16_t no = 0; no < *size; no++) {
 		mem_writeb(bufptr, *data);
@@ -157,6 +164,8 @@ bool DOS_ExtDevice::Write(uint8_t *data, uint16_t *size)
 			}
 		}
 		data++;
+
+		disk_access_delay.AddBytesWritten();
 	}
 	return true;
 }
@@ -373,6 +382,76 @@ DOS_File &DOS_File::operator=(const DOS_File &orig)
 	hdrive=orig.hdrive;
 	name = orig.name;
 	return *this;
+}
+
+void DOS_SetDiskAccessDelay(const bool use_disk_access_delay)
+{
+	auto get_delay_percent = []() -> std::optional<float> {
+		// the older the machine, the slower their disks performed
+		// relative to to the baseline (VGA machines). For example,
+		// drives in the early 80s (Hercules era) were about 3x slower
+		// than early 90s drives. CGA/Tandy/PCjr drives were about 50%
+		// slower, and EGA drives were about 25% slower. These are just
+		// rough differences; of course, floppy drives didn't see the
+		// same advances as hard disk drives and CD-ROM drives, but for
+		// games and software, these ballparks are more than sufficient.
+		switch (machine) {
+		case MCH_HERC: return 3.0f;
+		case MCH_CGA:
+		case MCH_TANDY:
+		case MCH_PCJR: return 1.5f;
+		case MCH_EGA: return 1.25f;
+		case MCH_VGA:
+		default: return 1.0f;
+		}
+	};
+
+	DOS_File::DiskAccessDelayGuard::SetDelayPercent(
+	        use_disk_access_delay ? get_delay_percent() : std::nullopt);
+
+	LOG_MSG("DOS: %s",
+	        use_disk_access_delay ? "Using realistic disk access delays"
+	                              : "Realistic disk access delays disabled");
+}
+
+DOS_File::DiskAccessDelayGuard::~DiskAccessDelayGuard()
+{
+	if (!delay_percent) {
+		return;
+	}
+	auto scaled_ops = iroundf(GetNumOperations() * *delay_percent);
+	while (scaled_ops--) {
+		CALLBACK_Idle();
+	}
+}
+
+constexpr void DOS_File::DiskAccessDelayGuard::SetDelayPercent(
+        const std::optional<float> percent) noexcept
+{
+	delay_percent = percent;
+}
+
+constexpr int DOS_File::DiskAccessDelayGuard::GetNumOperations() const noexcept
+{
+	// The Idle() callback used to inject the IO delay is too coarse to account
+	// for byte-level IO timing, so we use a quantity of N-to-1 for each
+	// delayable 'Operation' defined in the following constants. These produce
+	// disk rates roughly on par with early 90s HDDs: roughly 4 MB/s reads,
+	// slight faster writes of around 5 MB/s (assuming some HDD buffering), and
+	// several hundred seeks IOPS/s (this is a bit generous, but there's little
+	// benefit in making it even slower).
+	constexpr auto ReadBytesPerOp  = 128;
+	constexpr auto WriteBytesPerOp = 192;
+	constexpr auto SeekMultiplier  = 20;
+
+	// clang-format off
+
+	return (bytes_read / ReadBytesPerOp)
+	     + (bytes_written / WriteBytesPerOp)
+	     + (num_seeks * SeekMultiplier)
+	     + num_closes;
+
+	// clang-format on
 }
 
 uint8_t DOS_FindDevice(const char* name)
