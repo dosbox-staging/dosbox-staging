@@ -73,7 +73,7 @@ public:
 
 	void PrintStats();
 
-	std::optional<ModelAndDir> GetModelAndDir();
+	ModelAndDir GetModelAndDir();
 	mt32emu_rom_info GetRomInfo();
 
 private:
@@ -93,7 +93,7 @@ private:
 	std::unique_ptr<MT32Emu::Service> service = {};
 	std::thread renderer                      = {};
 
-	std::optional<ModelAndDir> model_and_dir = {};
+	ModelAndDir model_and_dir = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI SysEx or Msg event.
