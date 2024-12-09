@@ -65,6 +65,26 @@ constexpr uint16_t dos_pagesize = 4096;
 // is in-range of a char and returns it as such.
 char int_to_char(int val);
 
+// A change in one of these 2 commits changed the behavior of toupper() on Windows with MSVC
+// d225c9a619fc69de19a68da473dcfa244862582d - Probably this giant commit
+// 0b1f510683b36d46440a781f8e151b7f942a9f23 - This one won't compile so I can't rule it out
+
+// I found some documentation that states toupper() can change behavior based on locale
+// However, the debugger depends on this specific behavior
+// It passes in values larger than an 8 bit char can hold and needs those to stay intact
+
+// Not even sure if this is defined behavior (might be one of those janky C functions that casts int to char)
+// There are several other instances of toupper() throughout the code that should be looked at
+// This is a workaround for the specific case of the debugger for now
+// We may choose to remove this code later or use it elsewhere where only ascii letters should be considered
+constexpr int ascii_to_upper(int c)
+{
+	if (c >= 'a' && c <= 'z') {
+		return c - 'a' + 'A';
+	}
+	return c;
+}
+
 constexpr bool char_is_negative([[maybe_unused]] char c)
 {
 #if (CHAR_MIN < 0) // char is signed
