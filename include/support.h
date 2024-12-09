@@ -269,7 +269,7 @@ const std_fs::path& get_executable_path();
 std_fs::path get_resource_path(const std_fs::path& name);
 std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
 
-std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
+std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
         const std_fs::path& res_name, const std::string_view files_ext,
         const bool only_regular_files);
 
