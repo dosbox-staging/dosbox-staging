@@ -68,8 +68,8 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "the standard system locations.");
 
 	constexpr auto DefaultVolume = 100;
-	constexpr auto MinVolume = 1;
-	constexpr auto MaxVolume = 800;
+	constexpr auto MinVolume     = 1;
+	constexpr auto MaxVolume     = 800;
 
 	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
 	int_prop->SetMinMax(MinVolume, MaxVolume);
@@ -443,9 +443,7 @@ static void setup_reverb(fluid_synth_t* synth)
 // Current API calls as of 2.2
 #if FLUIDSYNTH_VERSION_MINOR >= 2
 	fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
-	fluid_synth_set_reverb_group_roomsize(synth,
-	                                      FxGroup,
-	                                      reverb_room_size);
+	fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
 
 	fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
 	fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
@@ -514,9 +512,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		const auto msg = format_str(
-		        "FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        sf_name.c_str());
+		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
+		                            sf_name.c_str());
 
 		LOG_WARNING("%s", msg.c_str());
 		throw std::runtime_error(msg);
