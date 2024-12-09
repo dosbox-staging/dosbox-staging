@@ -599,7 +599,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth         = std::move(fluid_synth);
 	mixer_channel = std::move(fluidsynth_channel);
 
-	current_sf_path = sf_path;
+	soundfont_path = sf_path;
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
@@ -861,9 +861,9 @@ void MidiDeviceFluidSynth::Render()
 	}
 }
 
-std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
+std_fs::path MidiDeviceFluidSynth::GetSoundFontPath()
 {
-	return current_sf_path;
+	return soundfont_path;
 }
 
 std::string format_sf_line(size_t width, const std_fs::path& sf_path)
@@ -904,9 +904,8 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 		const auto do_highlight = [&] {
 			if (device) {
-				const auto curr_sf_path = device->GetCurrentSoundFontPath();
-
-				return curr_sf_path && curr_sf_path == sf_path;
+				const auto curr_sf_path = device->GetSoundFontPath();
+				return curr_sf_path == sf_path;
 			}
 			return false;
 		}();
@@ -985,7 +984,6 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	Section_prop* sec = conf->AddSection_prop("fluidsynth",
 	                                          &fluidsynth_init,
 	                                          ChangeableAtRuntime);
-
 	assert(sec);
 	init_fluidsynth_dosbox_settings(*sec);
 }
