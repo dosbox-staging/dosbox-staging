@@ -2616,7 +2616,7 @@ std::string CPU_GetCyclesConfigAsString()
 		}
 
 		s += " ";
-		return s += MSG_GetRaw("TITLEBAR_CYCLES_MS");
+		return s += MSG_GetForHost("TITLEBAR_CYCLES_MS");
 
 	} else {
 		// Modern mode
@@ -2648,11 +2648,11 @@ std::string CPU_GetCyclesConfigAsString()
 		}
 
 		s += " ";
-		s += MSG_GetRaw("TITLEBAR_CYCLES_MS");
+		s += MSG_GetForHost("TITLEBAR_CYCLES_MS");
 
 		if (modern_cycles_config.throttle && !max_mode) {
 			s += " (";
-			s += MSG_GetRaw("TITLEBAR_CYCLES_THROTTLED");
+			s += MSG_GetForHost("TITLEBAR_CYCLES_THROTTLED");
 			s += ")";
 		}
 		return s;

@@ -1,3 +1,7 @@
+// Writing script used in this translation, can be one of:
+// Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew
+#SCRIPT Latin
+
 :CONFIG_FULLSCREEN
 Démarrer DOSBox directement en mode plein écran.
 .

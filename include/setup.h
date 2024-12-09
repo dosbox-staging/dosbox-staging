@@ -160,7 +160,7 @@ public:
 	// If the setting's help text contains a '%s' marker, the `GetHelp`
 	// functions will substitute it with the setting's default value.
 	std::string GetHelp() const;
-	std::string GetHelpUtf8() const;
+	std::string GetHelpForHost() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
 
