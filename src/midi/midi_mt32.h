@@ -65,7 +65,7 @@ public:
 
 	Type GetType() const override
 	{
-		return MidiDevice::Type::BuiltIn;
+		return MidiDevice::Type::Internal;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override;
@@ -77,7 +77,7 @@ public:
 	mt32emu_rom_info GetRomInfo();
 
 private:
-	void MixerCallBack(const int requested_audio_frames);
+	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	int GetNumPendingAudioFrames();

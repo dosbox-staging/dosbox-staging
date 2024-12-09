@@ -163,8 +163,8 @@ char* scan_remaining_cmdline_switch(char* cmd)
 	}
 }
 
-static char e_exit_buf[1024]; // greater scope as else it doesn't always gets
-                              // thrown right
+static char e_exit_buf[1024];
+
 void E_Exit(const char* format, ...)
 {
 #if C_DEBUG && C_HEAVY_DEBUG
@@ -278,10 +278,13 @@ int64_t stdio_num_sectors(FILE* f)
 const std_fs::path& get_executable_path()
 {
 	static std_fs::path exe_path;
+
 	if (exe_path.empty()) {
 		int length = wai_getExecutablePath(nullptr, 0, nullptr);
+
 		std::string s;
 		s.resize(check_cast<uint16_t>(length));
+
 		wai_getExecutablePath(&s[0], length, nullptr);
 		exe_path = std_fs::path(s).parent_path();
 		assert(!exe_path.empty());
@@ -356,31 +359,35 @@ using uniform_distributor_t =
 template <typename T>
 std::function<T()> create_randomizer(const T min_value, const T max_value)
 {
-	static std::random_device rd;        // one-time call to the host OS
-	static std::mt19937 generator(rd()); // seed the mersenne_twister once
+	// One-time call to the host OS
+	static std::random_device rd;
+
+	// Seed the mersenne_twister once
+	static std::mt19937 generator(rd());
 
 	return [=]() {
 		auto distribute = uniform_distributor_t<T>(min_value, max_value);
 		return distribute(generator);
 	};
 }
+
 // Explicit template instantiations
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 template std::function<int16_t()> create_randomizer<int16_t>(const int16_t,
-                                                            const int16_t);
+                                                             const int16_t);
+
 template std::function<float()> create_randomizer<float>(const float, const float);
 
-// return the first existing resource
+// Return the first existing resource
 std_fs::path get_resource_path(const std_fs::path& name)
 {
 	std::error_code ec;
 
-	// handle an absolute path
+	// Handle an absolute path
 	if (std_fs::exists(name, ec)) {
 		return name;
 	}
 
-	// try the resource paths
+	// Try the resource paths
 	for (const auto& parent : GetResourceParentPaths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
@@ -395,9 +402,9 @@ std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& n
 	return get_resource_path(subdir / name);
 }
 
-static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
-                                                       const std::string_view extension,
-                                                       const bool only_regular_files)
+static std::vector<std_fs::path> get_directory_entries(
+        const std_fs::path& dir, const std::string_view files_ext,
+        const bool only_regular_files = true)
 {
 	using namespace std_fs;
 	std::vector<std_fs::path> files = {};
@@ -409,7 +416,7 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	}
 
 	// Ensure the extension is valid
-	assert(extension.length() && extension[0] == '.');
+	assert(files_ext.length() && files_ext[0] == '.');
 
 	// Keep recursing past permission issues and follow symlinks
 	constexpr auto idir_opts = directory_options::skip_permission_denied |
@@ -417,16 +424,16 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 
 	for (const auto& entry : recursive_directory_iterator(dir, idir_opts, ec)) {
 		if (ec) {
-			// problem iterating, so skip the directory
+			// Problem iterating, so skip the directory
 			break;
 		}
 
 		if (only_regular_files && !entry.is_regular_file(ec)) {
-			// move onto the next entry
+			// Move onto the next entry
 			continue;
 		}
 
-		if (entry.path().extension() == extension) {
+		if (entry.path().extension() == files_ext) {
 			files.emplace_back(entry.path().lexically_relative(dir));
 		}
 	}
@@ -435,16 +442,16 @@ static std::vector<std_fs::path> get_directory_entries(const std_fs::path& dir,
 	return files;
 }
 
-std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
-        const std_fs::path& resource_dir, const std::string_view extension,
+std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
+        const std_fs::path& res_name, const std::string_view files_ext,
         const bool only_regular_files = true)
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
 
 	for (const auto& parent : GetResourceParentPaths()) {
-		auto res_path  = parent / resource_dir;
+		auto res_path  = parent / res_name;
 		auto res_files = get_directory_entries(res_path,
-		                                       extension,
+		                                       files_ext,
 		                                       only_regular_files);
 
 		paths_and_files.emplace(std::move(res_path), std::move(res_files));
@@ -455,7 +462,7 @@ std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
 
 // Get resource lines from a text file
 std::vector<std::string> get_resource_lines(const std_fs::path& name,
-                                          const ResourceImportance importance)
+                                            const ResourceImportance importance)
 {
 	const auto resource_path = get_resource_path(name);
 
@@ -483,15 +490,15 @@ std::vector<std::string> get_resource_lines(const std_fs::path& name,
 
 // Get resource lines from a text file
 std::vector<std::string> get_resource_lines(const std_fs::path& subdir,
-                                          const std_fs::path& name,
-                                          const ResourceImportance importance)
+                                            const std_fs::path& name,
+                                            const ResourceImportance importance)
 {
 	return get_resource_lines(subdir / name, importance);
 }
 
 // Load a resource blob (from a binary file)
 std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
-                                      const ResourceImportance importance)
+                                        const ResourceImportance importance)
 {
 	const auto resource_path = get_resource_path(name);
 
@@ -514,8 +521,9 @@ std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
 		E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
 	}
 
-	// non-const to allow movement out of the function
+	// Non-const to allow movement out of the function
 	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
+
 	// LOG_DEBUG("RESOURCE: Loaded resource '%s' [%d bytes]",
 	//           resource_path.string().c_str(),
 	//           check_cast<int>(buffer.size()));
@@ -524,8 +532,8 @@ std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
 
 // Load a resource blob (from a binary file)
 std::vector<uint8_t> load_resource_blob(const std_fs::path& subdir,
-                                      const std_fs::path& name,
-                                      const ResourceImportance importance)
+                                        const std_fs::path& name,
+                                        const ResourceImportance importance)
 {
 	return load_resource_blob(subdir / name, importance);
 }
@@ -664,16 +672,22 @@ std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
 {
 	// Are the inputs valid?
 	assert(byte_alignment > 0);
-	assert(byte_alignment % sizeof(T) == 0); // multiple of the type-size
+
+	// Multiple of the type-size
+	assert(byte_alignment % sizeof(T) == 0);
 	assert(req_elems > 0);
 
 	// Allocate the buffer with enough "space" to accomodate the alignment:
 	const auto space_elems = req_elems + byte_alignment / sizeof(T);
-	auto buffer = std::make_unique<T[]>(space_elems); // moved on return
+
+	// Moved on return
+	auto buffer = std::make_unique<T[]>(space_elems);
 
 	// Convert the number of elements into bytes, to be used by align
 	const auto req_bytes = req_elems * sizeof(T);
-	auto space_bytes     = space_elems * sizeof(T); // adjusted by align
+
+	// Adjusted by align
+	auto space_bytes = space_elems * sizeof(T);
 
 	// Align the pointer within our buffer
 	auto ptr = reinterpret_cast<void*>(buffer.get());
@@ -692,4 +706,5 @@ std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
 
 // Explicit template instantiations
 template std::pair<std::unique_ptr<uint8_t[]>, uint8_t*>
+
 make_unique_aligned_array<uint8_t>(const size_t, const size_t, const uint8_t&);

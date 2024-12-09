@@ -549,7 +549,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -594,22 +594,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
 	// Size the in-bound work FIFO
-
-	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
-	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
-	// MIDI message is three bytes, which gives a total of 30 bits per
-	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via the MIDI protocol.
-
-	// We have measured DOS games sending hundreds of MIDI messages within a
-	// short handful of millseconds, so a safe but very generous upper bound
-	// is used.
-	//
-	// (Note: the actual memory used by the FIFO is incremental based on
-	// actual usage).
-	//
-	static constexpr uint16_t MidiSpecMaxMsgRateHz = 1042;
-	work_fifo.Resize(MidiSpecMaxMsgRateHz * 10);
+	work_fifo.Resize(MaxMidiWorkFifoSize);
 
 	// If we haven't failed yet, then we're ready to begin so move the local
 	// objects into the member variables.
@@ -632,14 +617,13 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
 	LOG_MSG("FSYNTH: Shutting down");
 
-	MIXER_LockMixerThread();
-
 	if (had_underruns) {
 		LOG_WARNING(
-		        "FSYNTH: Fix underruns by lowering CPU load, increasing "
-		        "your conf's prebuffer, or using a simpler SoundFont");
-		had_underruns = false;
+		        "FSYNTH: Fix underruns by lowering the CPU load, increasing "
+		        "the 'prebuffer' or 'blocksize' settings, or using a simpler SoundFont");
 	}
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (mixer_channel) {
@@ -655,19 +639,10 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 		renderer.join();
 	}
 
-	// Reset the members
-	synth.reset();
-	settings.reset();
-
-	current_sf_path = {};
-
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
 	MIXER_DeregisterChannel(mixer_channel);
 	mixer_channel.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
 
 	MIXER_UnlockMixerThread();
 }
@@ -794,7 +769,7 @@ void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDeviceFluidSynth::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 

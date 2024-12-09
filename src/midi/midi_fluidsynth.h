@@ -53,7 +53,7 @@ public:
 
 	Type GetType() const override
 	{
-		return MidiDevice::Type::BuiltIn;
+		return MidiDevice::Type::Internal;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override;
@@ -64,7 +64,7 @@ public:
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysExMessage(const std::vector<uint8_t>& msg);
-	void MixerCallBack(const int requested_audio_frames);
+	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	int GetNumPendingAudioFrames();

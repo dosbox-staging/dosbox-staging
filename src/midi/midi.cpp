@@ -75,6 +75,7 @@ uint8_t MIDI_message_len_by_status[256] = {
 
 #include "midi_fluidsynth.h"
 #include "midi_mt32.h"
+#include "midi_soundcanvas.h"
 
 #if defined(MACOSX)
 #include "midi_coreaudio.h"
@@ -88,12 +89,16 @@ uint8_t MIDI_message_len_by_status[256] = {
 #include "midi_alsa.h"
 #endif
 
-static std::unique_ptr<MidiDevice> create_device([[maybe_unused]] const std::string& name,
-                                                 [[maybe_unused]] const std::string& config)
+static std::unique_ptr<MidiDevice> create_device(
+        [[maybe_unused]] const std::string& name,
+        [[maybe_unused]] const std::string& config)
 {
 	using namespace MidiDeviceName;
 
-	// Built-in MIDI synths
+	// Internal MIDI synths
+	if (name == SoundCanvas) {
+		return std::make_unique<MidiDeviceSoundCanvas>();
+	}
 #if C_FLUIDSYNTH
 	if (name == FluidSynth) {
 		return std::make_unique<MidiDeviceFluidSynth>();
@@ -144,7 +149,7 @@ struct Midi {
 	MidiMessage realtime_message = {};
 
 	struct {
-		uint8_t buf[MaxMidiSysExSize] = {};
+		uint8_t buf[MaxMidiSysExBytes] = {};
 
 		size_t pos       = 0;
 		int64_t delay_ms = 0;
@@ -390,7 +395,7 @@ void MIDI_RawOutByte(const uint8_t data)
 
 	if (midi.status == MidiStatus::SystemExclusive) {
 		if (is_midi_data_byte(data)) {
-			if (midi.sysex.pos < (MaxMidiSysExSize - 1)) {
+			if (midi.sysex.pos < (MaxMidiSysExBytes - 1)) {
 				midi.sysex.buf[midi.sysex.pos++] = data;
 			}
 			return;
@@ -686,6 +691,22 @@ void MIDI_ListDevices(Program* caller)
 	[[maybe_unused]] auto device_ptr = midi.device.get();
 
 	const std::string device_name = midi.device ? midi.device->GetName() : "";
+#if C_MT32EMU
+	write_device_name(MidiDeviceName::Mt32);
+
+	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
+	                         ? dynamic_cast<MidiDeviceMt32*>(device_ptr)
+	                         : nullptr,
+	                 caller);
+#endif
+
+	write_device_name(MidiDeviceName::SoundCanvas);
+
+	SOUNDCANVAS_ListDevices((device_name == MidiDeviceName::SoundCanvas)
+	                                ? dynamic_cast<MidiDeviceSoundCanvas*>(device_ptr)
+	                                : nullptr,
+	                        caller);
+
 #if C_FLUIDSYNTH
 	write_device_name(MidiDeviceName::FluidSynth);
 
@@ -694,14 +715,6 @@ void MIDI_ListDevices(Program* caller)
 	                           : nullptr,
 
 	                   caller);
-#endif
-#if C_MT32EMU
-	write_device_name(MidiDeviceName::Mt32);
-
-	MT32_ListDevices((device_name == MidiDeviceName::Mt32)
-	                         ? dynamic_cast<MidiDeviceMt32*>(device_ptr)
-	                         : nullptr,
-	                 caller);
 #endif
 #if C_COREMIDI
 	write_device_name(MidiDeviceName::CoreMidi);
@@ -800,51 +813,59 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	                   "('%s' by default):",
 	                   DefaultMidiDevicePref));
 
+	str_prop->SetOptionHelp(DefaultMidiDevicePref,
+	                        "  port:         A MIDI port of the host operating system's MIDI interface\n"
+	                        "                (default). You can configure the port to use with the\n"
+	                        "                'midiconfig' setting.");
+
 	str_prop->SetOptionHelp(
 	        MidiDeviceName::CoreAudio,
-	        "  coreaudio:   The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
-	        "               be specified with the 'midiconfig' setting.");
+	        "  coreaudio:    The built-in macOS MIDI synthesiser. The SoundFont to use can\n"
+	        "                be specified with the 'midiconfig' setting.");
+
+	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
+	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).");
+
+	str_prop->SetOptionHelp(MidiDeviceName::SoundCanvas,
+	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (see the [soundcanvas]\n"
+	                        "                section).");
 
 	str_prop->SetOptionHelp(
 	        MidiDeviceName::FluidSynth,
-	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
-	        "               See the [fluidsynth] section for detailed configuration.");
+	        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
+	        "                (see the [fluidsynth] section).");
 
-	str_prop->SetOptionHelp(MidiDeviceName::Mt32,
-	                        "  mt32:        The built-in Roland MT-32 synthesizer. See the [mt32] section\n"
-	                        "               for detailed configuration.");
+	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
-	str_prop->SetOptionHelp(DefaultMidiDevicePref,
-	                        "  port:        A MIDI port of the host operating system's MIDI interface\n"
-	                        "               (default). The MIDI port to use can be configured with the\n"
-	                        "               'midiconfig' setting.");
-
-	str_prop->SetOptionHelp("none", "  none:        Disable MIDI output.");
 	str_prop->Set_values({
 		MidiDevicePortPref,
 #if C_COREAUDIO
 		        MidiDeviceName::CoreAudio,
 #endif
+		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas,
 #if C_FLUIDSYNTH
 		        MidiDeviceName::FluidSynth,
 #endif
-		        MidiDeviceName::Mt32, "none"
+		        "none"
 	});
 
-	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
-	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("alsa", DefaultMidiDevicePref);
-	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("auto", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
+	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
 
 	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
 	        "Configuration options for the selected MIDI device (unset by default).\n"
 	        "Notes:");
 
-	str_prop->SetOptionHelp("fluidsynth_or_mt32emu",
-	                        "  - The setting has no effect when using the built-in synthesizers\n"
-	                        "    ('mididevice = fluidsynth' or 'mididevice = mt32').");
+	str_prop->SetOptionHelp(
+	        "windows_or_macos",
+	        "  - When using 'mididevice = port', find the ID or name of the MIDI port you\n"
+	        "    want to use with the DOS command 'MIXER /LISTMIDI', then set either the ID\n"
+	        "    or a substring of the name (e.g., to use the port called \"loopMIDI Port A\"\n"
+	        "    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').");
 
 	str_prop->SetOptionHelp(
 	        "coreaudio",
@@ -857,14 +878,12 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	                        "    client 14, port 0).");
 
 	str_prop->SetOptionHelp(
-	        "windows_or_macos",
-	        "  - When using 'mididevice = port', find the ID or name of the MIDI port you\n"
-	        "    want to use with the DOS command 'MIXER /LISTMIDI', then set either the ID\n"
-	        "    or a substring of the name (e.g., to use the port called \"loopMIDI Port A\"\n"
-	        "    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').");
+	        "internal_synth",
+	        "  - The setting has no effect when using the internal synthesizers\n"
+	        "    ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').");
 
 	str_prop->SetOptionHelp(
-	        "mt32",
+	        "physical_mt32",
 	        "  - If you're using a physical rev.0 Roland MT-32, the hardware may require a\n"
 	        "    delay to prevent buffer overflows. You can enable this with 'delaysysex'\n"
 	        "    after the port ID or name (e.g., 'midiconfig = 2 delaysysex').");
@@ -879,10 +898,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 #if C_ALSA
 		        "linux",
 #endif
-#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
-		        "fluidsynth_or_mt32emu",
-#endif
-		        "mt32"
+		        "internal_synth", "physical_mt32"
 	});
 
 	str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
