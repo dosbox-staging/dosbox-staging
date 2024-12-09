@@ -803,11 +803,11 @@ void MIDI_Init()
 	midi_init(get_midi_section());
 }
 
-void init_midi_dosbox_settings(Section_prop& secprop)
+static void init_mididevice_settings(Section_prop& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = secprop.Add_string("mididevice", WhenIdle, DefaultMidiDevicePref);
+	auto str_prop = secprop.Add_string("mididevice", WhenIdle, DefaultMidiDevicePref);
 	str_prop->Set_help(
 	        format_str("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	                   "('%s' by default):",
@@ -830,10 +830,9 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (see the [soundcanvas]\n"
 	                        "                section).");
 
-	str_prop->SetOptionHelp(
-	        MidiDeviceName::FluidSynth,
-	        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
-	        "                (see the [fluidsynth] section).");
+	str_prop->SetOptionHelp(MidiDeviceName::FluidSynth,
+	                        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
+	                        "                (see the [fluidsynth] section).");
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
@@ -854,8 +853,13 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	str_prop->SetDeprecatedWithAlternateValue("coremidi", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("oss", DefaultMidiDevicePref);
 	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
+}
 
-	str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
+static void init_midiconfig_settings(Section_prop& secprop)
+{
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
+
+	auto str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
 	str_prop->Set_help(
 	        "Configuration options for the selected MIDI device (unset by default).\n"
 	        "Notes:");
@@ -900,12 +904,20 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 #endif
 		        "internal_synth", "physical_mt32"
 	});
+}
 
-	str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
+void init_midi_dosbox_settings(Section_prop& secprop)
+{
+	init_mididevice_settings(secprop);
+	init_midiconfig_settings(secprop);
+
+	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
+
+	auto str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
 	str_prop->Set_values({"intelligent", "uart", "none"});
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
-	auto* bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
+	auto bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
 	bool_prop->Set_help(
 	        "Enable raw, unaltered MIDI output (disabled by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
