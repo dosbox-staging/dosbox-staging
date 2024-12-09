@@ -1404,9 +1404,12 @@ static void load_keyboard_layout()
 
 	if (using_detected) {
 		const auto& host_locale = GetHostKeyboardLayouts();
-		assert(!host_locale.log_info.empty());
-		LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
-		        host_locale.log_info.c_str());
+		if (host_locale.log_info.empty()) {
+			LOG_MSG("LOCALE: Unable to detect keyboard layout. Falling back to default or some shit.");
+		} else {
+			LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
+					host_locale.log_info.c_str());
+		}
 	}
 
 	// Apply the code page
