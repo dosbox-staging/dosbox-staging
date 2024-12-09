@@ -1079,7 +1079,7 @@ bool ChangeRegister(char* str)
 bool ParseCommand(char* str) {
 	char* found = str;
 	for(char* idx = found;*idx != 0; idx++)
-		*idx = toupper(*idx);
+		*idx = ascii_to_upper(*idx);
 
 	found = trim(found);
 	std::string s_found(found);
@@ -1743,7 +1743,7 @@ uint32_t DEBUG_CheckKeys(void) {
 			break;
 		}
 #endif
-		switch (toupper(key)) {
+		switch (ascii_to_upper(key)) {
 		case 27:	// escape (a bit slow): Clears line. and processes alt commands.
 			key=getch();
 			if(key < 0) { //Purely escape Clear line
@@ -1751,7 +1751,7 @@ uint32_t DEBUG_CheckKeys(void) {
 				break;
 			}
 
-			switch(toupper(key)) {
+			switch(ascii_to_upper(key)) {
 			case 'D' : // ALT - D: DS:SI
 				dataSeg = SegValue(ds);
 				if (cpu.pmode && !(reg_flags & FLAG_VM)) dataOfs = reg_esi;
