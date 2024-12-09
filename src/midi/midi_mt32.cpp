@@ -641,8 +641,8 @@ static std::unique_ptr<MT32Emu::Service> create_mt32_service()
 
 using DirsWithModels = std::map<std_fs::path, std::set<const LASynthModel*>>;
 
-static std::set<const LASynthModel*> find_available_models(
-        MT32Emu::Service& service, DirsWithModels& dirs_with_models)
+static std::set<const LASynthModel*> find_available_models(MT32Emu::Service& service,
+                                                           DirsWithModels& dirs_with_models)
 {
 	std::set<const LASynthModel*> available_models;
 
@@ -761,7 +761,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	// Move the local objects into the member variables
 	service       = std::move(mt32_service);
 	channel       = std::move(mixer_channel);
-	model_and_dir = std::move(loaded_model_and_dir);
+	model_and_dir = std::move(*loaded_model_and_dir);
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceMt32::Render, this);
@@ -956,7 +956,7 @@ void MidiDeviceMt32::Render()
 	}
 }
 
-std::optional<ModelAndDir> MidiDeviceMt32::GetModelAndDir()
+ModelAndDir MidiDeviceMt32::GetModelAndDir()
 {
 	return model_and_dir;
 }
@@ -1007,8 +1007,12 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		return;
 	}
 
-	const std::optional<ModelAndDir> model_and_dir = device ? device->GetModelAndDir()
-	                                                        : std::nullopt;
+	const auto model_and_dir = [&]() -> std::optional<ModelAndDir> {
+		if (device) {
+			return device->GetModelAndDir();
+		}
+		return {};
+	}();
 
 	auto highlight_model = [&](const LASynthModel* model,
 	                           const char* display_name) -> std::string {
@@ -1081,7 +1085,9 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		                 dir_label.c_str(),
 		                 truncated_dir.c_str());
 	} else {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
 	}
 
 	caller->WriteOut("\n");
@@ -1094,14 +1100,14 @@ static void mt32_init([[maybe_unused]] Section* sec)
 	if (device && device->GetName() == MidiDeviceName::Mt32) {
 		const auto mt32_device = dynamic_cast<MidiDeviceMt32*>(device);
 
-		const auto model_and_dir = mt32_device->GetModelAndDir();
-		const auto curr_model    = model_and_dir
-		                                 ? model_and_dir->first->GetName()
-		                                 : "";
+		const auto curr_model_setting =
+		        mt32_device
+		                ? mt32_device->GetModelAndDir().first->GetName()
+		                : "";
 
-		const auto new_model = get_model_setting();
+		const auto new_model_setting = get_model_setting();
 
-		if (curr_model != new_model) {
+		if (curr_model_setting != new_model_setting) {
 			MIDI_Init();
 		}
 	}
@@ -1115,7 +1121,6 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	Section_prop* sec_prop = conf->AddSection_prop("mt32",
 	                                               &mt32_init,
 	                                               ChangeableAtRuntime);
-
 	assert(sec_prop);
 	init_mt32_dosbox_settings(*sec_prop);
 
