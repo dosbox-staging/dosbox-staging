@@ -46,6 +46,10 @@
 
 #include "std_filesystem.h"
 
+// TODO This is a rather horrible dumping ground of everything... Next time
+// you add something to it, break it up into separate files (e.g.,
+// `date_helpers.h`, `file_helpers.h`, `alignment_helpers.h`, etc.)
+
 #ifdef _MSC_VER
 #define strcasecmp(a, b)     _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
