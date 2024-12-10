@@ -1412,7 +1412,7 @@ static void load_keyboard_layout()
 
 	// Apply the code page
 	KeyboardLayoutResult result = KeyboardLayoutResult::LayoutNotKnown;
-	const bool prefer_rom_font  = !using_detected && !code_page_supplied;
+	const bool prefer_rom_font  = using_detected || !code_page_supplied;
 	for (const auto& keyboard_layout : keyboard_layouts) {
 		uint16_t tried_code_page = 0;
 		if (keyboard_layout.code_page) {
@@ -1458,8 +1458,9 @@ static void load_keyboard_layout()
 
 	// Make sure some keyboard layout is actually set
 	if (DOS_GetLoadedLayout().empty()) {
+		constexpr bool PreferRomFont = true;
 		uint16_t tried_code_page = 0;
-		DOS_LoadKeyboardLayout("us", tried_code_page);
+		DOS_LoadKeyboardLayout("us", tried_code_page, {}, PreferRomFont);
 	}
 }
 
