@@ -37,7 +37,7 @@ class Program;
 // Using data bytes will result in a dummy zero lookup.
 extern uint8_t MIDI_message_len_by_status[256];
 
-constexpr auto MaxMidiSysExSize = 8192;
+constexpr auto MaxMidiSysExBytes = 8192;
 
 constexpr uint8_t MaxMidiMessageLen = 3;
 
@@ -49,6 +49,19 @@ constexpr uint8_t NumMidiNotes  = 128;
 constexpr uint8_t FirstMidiNote = 0;
 constexpr uint8_t LastMidiNote  = NumMidiNotes - 1;
 
+// MIDI has a baud rate of 31250; at optimum, this is 31,250 bits per
+// second. A MIDI byte is 8 bits plus a start and stop bit, and each
+// MIDI message is three bytes, which gives a total of 30 bits per
+// message. This means that under optimal conditions, a maximum of 1041
+// messages per second can be obtained via the MIDI protocol.
+constexpr int MaxMidiMessageRateHz = 1041;
+
+// We have measured DOS games sending hundreds of MIDI messages within a
+// short handful of millseconds, so a safe but very generous upper bound
+// is used.
+//
+// The actual memory used by the FIFO is incremental based on actual usage.
+constexpr int MaxMidiWorkFifoSize = MaxMidiMessageRateHz * 10;
 
 enum class MessageType : uint8_t { Channel, SysEx };
 
@@ -244,6 +257,8 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf);
 #if C_MT32EMU
 void MT32_AddConfigSection(const ConfigPtr& conf);
 #endif
+
+void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf);
 
 void MIDI_AddConfigSection(const ConfigPtr& conf);
 

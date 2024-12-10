@@ -46,6 +46,10 @@
 
 #include "std_filesystem.h"
 
+// TODO This is a rather horrible dumping ground of everything... Next time
+// you add something to it, break it up into separate files (e.g.,
+// `date_helpers.h`, `file_helpers.h`, `alignment_helpers.h`, etc.)
+
 #ifdef _MSC_VER
 #define strcasecmp(a, b)     _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
@@ -249,8 +253,8 @@ const std_fs::path& get_executable_path();
 std_fs::path get_resource_path(const std_fs::path& name);
 std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
 
-std::map<std_fs::path, std::vector<std_fs::path>> get_resource_dir_entries(
-        const std_fs::path& resource_dir, const std::string_view extension,
+std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
+        const std_fs::path& res_name, const std::string_view files_ext,
         const bool only_regular_files);
 
 enum class ResourceImportance { Mandatory, Optional };

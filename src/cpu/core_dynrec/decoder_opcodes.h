@@ -820,7 +820,7 @@ static bool dyn_grp4_eb(void) {
 		gen_mov_direct_dword(&core_dynrec.callback,decode_fetchw());
 		dyn_set_eip_end();
 		dyn_reduce_cycles();
-		dyn_return(BR_CallBack);
+		dyn_return(BR_Callback);
 		dyn_closeblock();
 		return true;
 	default:

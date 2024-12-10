@@ -53,18 +53,18 @@ public:
 
 	Type GetType() const override
 	{
-		return MidiDevice::Type::BuiltIn;
+		return MidiDevice::Type::Internal;
 	}
 
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
-	std::optional<std_fs::path> GetCurrentSoundFontPath();
+	std_fs::path GetSoundFontPath();
 
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysExMessage(const std::vector<uint8_t>& msg);
-	void MixerCallBack(const int requested_audio_frames);
+	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
 
 	int GetNumPendingAudioFrames();
@@ -84,7 +84,7 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
 
-	std::optional<std_fs::path> current_sf_path = {};
+	std_fs::path soundfont_path = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI SysEx or Msg event.

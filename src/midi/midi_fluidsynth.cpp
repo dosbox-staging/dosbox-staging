@@ -68,8 +68,8 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "the standard system locations.");
 
 	constexpr auto DefaultVolume = 100;
-	constexpr auto MinVolume = 1;
-	constexpr auto MaxVolume = 800;
+	constexpr auto MinVolume     = 1;
+	constexpr auto MaxVolume     = 800;
 
 	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
 	int_prop->SetMinMax(MinVolume, MaxVolume);
@@ -443,9 +443,7 @@ static void setup_reverb(fluid_synth_t* synth)
 // Current API calls as of 2.2
 #if FLUIDSYNTH_VERSION_MINOR >= 2
 	fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
-	fluid_synth_set_reverb_group_roomsize(synth,
-	                                      FxGroup,
-	                                      reverb_room_size);
+	fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
 
 	fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
 	fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
@@ -514,9 +512,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		const auto msg = format_str(
-		        "FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        sf_name.c_str());
+		const auto msg = format_str("FSYNTH: FluidSynth failed to load '%s', check the path.",
+		                            sf_name.c_str());
 
 		LOG_WARNING("%s", msg.c_str());
 		throw std::runtime_error(msg);
@@ -549,7 +546,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceFluidSynth::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -594,22 +591,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
 	// Size the in-bound work FIFO
-
-	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
-	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
-	// MIDI message is three bytes, which gives a total of 30 bits per
-	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via the MIDI protocol.
-
-	// We have measured DOS games sending hundreds of MIDI messages within a
-	// short handful of millseconds, so a safe but very generous upper bound
-	// is used.
-	//
-	// (Note: the actual memory used by the FIFO is incremental based on
-	// actual usage).
-	//
-	static constexpr uint16_t MidiSpecMaxMsgRateHz = 1042;
-	work_fifo.Resize(MidiSpecMaxMsgRateHz * 10);
+	work_fifo.Resize(MaxMidiWorkFifoSize);
 
 	// If we haven't failed yet, then we're ready to begin so move the local
 	// objects into the member variables.
@@ -617,7 +599,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	synth         = std::move(fluid_synth);
 	mixer_channel = std::move(fluidsynth_channel);
 
-	current_sf_path = sf_path;
+	soundfont_path = sf_path;
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
@@ -632,14 +614,13 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 {
 	LOG_MSG("FSYNTH: Shutting down");
 
-	MIXER_LockMixerThread();
-
 	if (had_underruns) {
 		LOG_WARNING(
-		        "FSYNTH: Fix underruns by lowering CPU load, increasing "
-		        "your conf's prebuffer, or using a simpler SoundFont");
-		had_underruns = false;
+		        "FSYNTH: Fix underruns by lowering the CPU load, increasing "
+		        "the 'prebuffer' or 'blocksize' settings, or using a simpler SoundFont");
 	}
+
+	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (mixer_channel) {
@@ -655,19 +636,10 @@ MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
 		renderer.join();
 	}
 
-	// Reset the members
-	synth.reset();
-	settings.reset();
-
-	current_sf_path = {};
-
 	// Deregister the mixer channel and remove it
 	assert(mixer_channel);
 	MIXER_DeregisterChannel(mixer_channel);
 	mixer_channel.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
 
 	MIXER_UnlockMixerThread();
 }
@@ -794,7 +766,7 @@ void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDeviceFluidSynth::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
 {
 	assert(mixer_channel);
 
@@ -889,9 +861,9 @@ void MidiDeviceFluidSynth::Render()
 	}
 }
 
-std::optional<std_fs::path> MidiDeviceFluidSynth::GetCurrentSoundFontPath()
+std_fs::path MidiDeviceFluidSynth::GetSoundFontPath()
 {
-	return current_sf_path;
+	return soundfont_path;
 }
 
 std::string format_sf_line(size_t width, const std_fs::path& sf_path)
@@ -932,9 +904,8 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 		const auto do_highlight = [&] {
 			if (device) {
-				const auto curr_sf_path = device->GetCurrentSoundFontPath();
-
-				return curr_sf_path && curr_sf_path == sf_path;
+				const auto curr_sf_path = device->GetSoundFontPath();
+				return curr_sf_path == sf_path;
 			}
 			return false;
 		}();
@@ -1013,7 +984,6 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	Section_prop* sec = conf->AddSection_prop("fluidsynth",
 	                                          &fluidsynth_init,
 	                                          ChangeableAtRuntime);
-
 	assert(sec);
 	init_fluidsynth_dosbox_settings(*sec);
 }
