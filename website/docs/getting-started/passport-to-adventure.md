@@ -127,13 +127,11 @@ folder in `DOS Games` next to `Prince of Persia` and name it `Passport to
 Adventure`. Create the `drives` subfolder in it and the `c` subfolder in the
 `drives` folder.
 
-Download the [ZIP archive][passport] from the [Passport of
-Adventure][passport-item] item at the Internet Archive (or from this
-[mirror][passport-mirror]), then extract its contents into the `c` subfolder.
+Download the [ZIP archive][passport] from the [Passport of Adventure][passport-item]
+item at the Internet Archive, then extract its contents into the `c` subfolder.
 
 [passport]: https://archive.org/download/PassportToAdventure/PassportToAdventuredemo1990lucasartsadventureCompilation.zip
 [passport-item]: https://archive.org/details/PassportToAdventure
-[passport-mirror]: https://files.dosbox-staging.org/Files/Games/Demos/PassportToAdventure.zip
 
 Below is the folder structure you should end up with. As explained before,
 we'll create one subfolder within `DOS Games` for each game; then each game
