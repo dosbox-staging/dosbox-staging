@@ -1349,6 +1349,14 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 	const auto& host_locale = GetHostKeyboardLayouts();
 
 	auto keyboard_layouts = host_locale.keyboard_layout_list;
+	if (keyboard_layouts.empty()) {
+		LOG_MSG("LOCALE: Could not detect host keyboard layouts");
+		return {};
+	}
+
+	assert(!host_locale.log_info.empty());
+	LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
+	        host_locale.log_info.c_str());
 
 	// Keyboard layouts in modern OSes support just one script (like only
 	// Latin, only Greek, only Cyrillic, etc.) and in countries using
@@ -1400,13 +1408,6 @@ static void load_keyboard_layout()
 				}
 			}
 		}
-	}
-
-	if (using_detected) {
-		const auto& host_locale = GetHostKeyboardLayouts();
-		assert(!host_locale.log_info.empty());
-		LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
-		        host_locale.log_info.c_str());
 	}
 
 	// Apply the code page
