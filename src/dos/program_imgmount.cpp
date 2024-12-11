@@ -547,6 +547,9 @@ void IMGMOUNT::Run(void)
 				IDE_CDROM_Attach(ide_index,
 				                 is_second_cable_slot,
 				                 drive_index(drive));
+
+				LOG_MSG("IDE: Using IDE controller IO timing instead of disk access delays");
+				DOS_SetDiskAccessDelay(false);
 			} else {
 				WriteOut(MSG_Get(
 				        "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"));
