@@ -1349,6 +1349,14 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_detected_keyboard_layouts()
 	const auto& host_locale = GetHostKeyboardLayouts();
 
 	auto keyboard_layouts = host_locale.keyboard_layout_list;
+	if (keyboard_layouts.empty()) {
+		LOG_MSG("LOCALE: Could not detect host keyboard layouts");
+		return {};
+	}
+
+	assert(!host_locale.log_info.empty());
+	LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
+	        host_locale.log_info.c_str());
 
 	// Keyboard layouts in modern OSes support just one script (like only
 	// Latin, only Greek, only Cyrillic, etc.) and in countries using
@@ -1402,16 +1410,9 @@ static void load_keyboard_layout()
 		}
 	}
 
-	if (using_detected) {
-		const auto& host_locale = GetHostKeyboardLayouts();
-		assert(!host_locale.log_info.empty());
-		LOG_MSG("LOCALE: Keyboard layout and code page detected from '%s'",
-		        host_locale.log_info.c_str());
-	}
-
 	// Apply the code page
 	KeyboardLayoutResult result = KeyboardLayoutResult::LayoutNotKnown;
-	const bool prefer_rom_font  = !using_detected && !code_page_supplied;
+	const bool prefer_rom_font  = using_detected || !code_page_supplied;
 	for (const auto& keyboard_layout : keyboard_layouts) {
 		uint16_t tried_code_page = 0;
 		if (keyboard_layout.code_page) {
@@ -1457,8 +1458,9 @@ static void load_keyboard_layout()
 
 	// Make sure some keyboard layout is actually set
 	if (DOS_GetLoadedLayout().empty()) {
+		constexpr bool PreferRomFont = true;
 		uint16_t tried_code_page = 0;
-		DOS_LoadKeyboardLayout("us", tried_code_page);
+		DOS_LoadKeyboardLayout("us", tried_code_page, {}, PreferRomFont);
 	}
 }
 
