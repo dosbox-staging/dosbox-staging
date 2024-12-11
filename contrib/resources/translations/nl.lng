@@ -1,3 +1,7 @@
+// Writing script used in this translation, can be one of:
+// Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew
+#SCRIPT Latin
+
 :DOSBOX_HELP
 Gebruik: %s [OPTIE]... [PAD]
 
