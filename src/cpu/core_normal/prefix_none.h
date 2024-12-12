@@ -1103,7 +1103,7 @@
 			case 0x01:										/* DEC Eb */
 				RMEb(DECB);
 				break;
-			case 0x07:										/* CallBack */
+			case 0x07:										/* Callback */
 				{
 					Bitu cb=Fetchw();
 					FillFlags();SAVEIP;

@@ -2947,7 +2947,7 @@ restart_prefix:
 				dyn_set_eip_end();
 				dyn_reduce_cycles();
 				dyn_save_critical_regs();
-				gen_return(BR_CallBack);
+				gen_return(BR_Callback);
 				dyn_closeblock();
 				goto finish_block;
 			}

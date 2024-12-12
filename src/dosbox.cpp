@@ -174,7 +174,7 @@ static Bitu Normal_Loop()
 				if (ret >= CB_MAX) {
 					return 0;
 				}
-				Bitu blah = (*CallBack_Handlers[ret])();
+				Bitu blah = (*Callback_Handlers[ret])();
 				if (blah) {
 					return blah;
 				}
@@ -872,6 +872,8 @@ void DOSBOX_Init()
 #if C_MT32EMU
 	MT32_AddConfigSection(control);
 #endif
+
+	SOUNDCANVAS_AddConfigSection(control);
 
 #if C_DEBUG
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);

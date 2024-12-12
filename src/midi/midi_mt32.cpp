@@ -389,7 +389,10 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  mt32_new:   Pick the best available \"new\" MT-32 model (v2.0x).\n"
 	        "  mt32:       Pick the best available MT-32 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'mt32_204').\n"
-	        "Note: Run `MIXER /LISTMIDI` to see the list of available models.");
+	        "Notes:\n"
+	        "  - Run `MIXER /LISTMIDI` to see the list of available models.\n"
+	        "  - This is *NOT* a General MIDI compatible MIDI device; only use it if the\n"
+	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
@@ -412,16 +415,9 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 
 static void register_mt32_text_messages()
 {
-	MSG_Add("MT32_NO_SUPPORTED_MODELS", "No supported models present");
-
-	MSG_Add("MT32_ROM_NOT_LOADED", "No model is currently active");
-
-	MSG_Add("MT32_INVENTORY_TABLE_MISSING_LETTER", "-");
-	MSG_Add("MT32_INVENTORY_TABLE_AVAILABLE_LETTER", "y");
-
 	MSG_Add("MT32_ROMS_LABEL", "MT-32  models   ");
 	MSG_Add("CM32L_ROMS_LABEL", "CM-32L models   ");
-	MSG_Add("MT32_ACTIVE_ROM_LABEL", "Active model  ");
+	MSG_Add("MT32_ACTIVE_MODEL_LABEL", "Active model  ");
 	MSG_Add("MT32_SOURCE_DIR_LABEL", "ROM path      ");
 }
 
@@ -645,8 +641,8 @@ static std::unique_ptr<MT32Emu::Service> create_mt32_service()
 
 using DirsWithModels = std::map<std_fs::path, std::set<const LASynthModel*>>;
 
-static std::set<const LASynthModel*> find_available_models(
-        MT32Emu::Service& service, DirsWithModels& dirs_with_models)
+static std::set<const LASynthModel*> find_available_models(MT32Emu::Service& service,
+                                                           DirsWithModels& dirs_with_models)
 {
 	std::set<const LASynthModel*> available_models;
 
@@ -712,7 +708,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceMt32::MixerCallBack,
+	const auto mixer_callback = std::bind(&MidiDeviceMt32::MixerCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -760,27 +756,12 @@ MidiDeviceMt32::MidiDeviceMt32()
 	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
 
 	// Size the in-bound work FIFO
-
-	// MIDI has a baud rate of 31250; at optimum, this is 31250 bits per
-	// second. A MIDI byte is 8 bits plus a start and stop bit, and each
-	// MIDI message is three bytes, which gives a total of 30 bits per
-	// message. This means that under optimal conditions, a maximum of 1042
-	// messages per second can be obtained via the MIDI protocol.
-
-	// We have measured DOS games sending hundreds of MIDI messages within a
-	// short handful of millseconds, so a safe but very generous upper bound
-	// is used.
-	//
-	// (Note: the actual memory used by the FIFO is incremental based on
-	// actual usage).
-	//
-	static constexpr uint16_t midi_spec_max_msg_rate_hz = 1042;
-	work_fifo.Resize(midi_spec_max_msg_rate_hz * 10);
+	work_fifo.Resize(MaxMidiWorkFifoSize);
 
 	// Move the local objects into the member variables
 	service       = std::move(mt32_service);
 	channel       = std::move(mixer_channel);
-	model_and_dir = std::move(loaded_model_and_dir);
+	model_and_dir = std::move(*loaded_model_and_dir);
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceMt32::Render, this);
@@ -797,9 +778,8 @@ MidiDeviceMt32::~MidiDeviceMt32()
 
 	if (had_underruns) {
 		LOG_WARNING(
-		        "MT32: Fix underruns by lowering CPU load "
-		        "or increasing your conf's prebuffer");
-		had_underruns = false;
+		        "MT32: Fix underruns by lowering the CPU load or increasing "
+		        "the 'prebuffer' or 'blocksize' settings");
 	}
 
 	MIXER_LockMixerThread();
@@ -829,12 +809,6 @@ MidiDeviceMt32::~MidiDeviceMt32()
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
 	channel.reset();
-
-	// Reset the members
-	service.reset();
-
-	last_rendered_ms   = 0.0;
-	ms_per_audio_frame = 0.0;
 
 	MIXER_UnlockMixerThread();
 }
@@ -883,7 +857,7 @@ void MidiDeviceMt32::SendSysExMessage(uint8_t* sysex, size_t len)
 
 // The callback operates at the audio frame-level, steadily adding samples to
 // the mixer until the requested numbers of audio frames is met.
-void MidiDeviceMt32::MixerCallBack(const int requested_audio_frames)
+void MidiDeviceMt32::MixerCallback(const int requested_audio_frames)
 {
 	assert(channel);
 
@@ -973,7 +947,7 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 	}
 }
 
-// Keep the fifo populated with freshly rendered buffers
+// Keep the FIFO populated with freshly rendered buffers
 void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
@@ -982,7 +956,7 @@ void MidiDeviceMt32::Render()
 	}
 }
 
-std::optional<ModelAndDir> MidiDeviceMt32::GetModelAndDir()
+ModelAndDir MidiDeviceMt32::GetModelAndDir()
 {
 	return model_and_dir;
 }
@@ -1025,12 +999,18 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	                                                    dirs_with_models);
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_NO_SUPPORTED_MODELS"));
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
+
+		caller->WriteOut("\n");
 		return;
 	}
 
-	const std::optional<ModelAndDir> model_and_dir = device ? device->GetModelAndDir()
-	                                                        : std::nullopt;
+	const auto model_and_dir = [&]() -> std::optional<ModelAndDir> {
+		if (device) {
+			return device->GetModelAndDir();
+		}
+		return {};
+	}();
 
 	auto highlight_model = [&](const LASynthModel* model,
 	                           const char* display_name) -> std::string {
@@ -1080,11 +1060,11 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 
 	caller->WriteOut("%s---\n", Indent);
 
-	// Print info about the loaded ROM
+	// Print info about the active model
 	if (model_and_dir) {
 		caller->WriteOut("%s%s%s (%s)\n",
 		                 Indent,
-		                 MSG_Get("MT32_ACTIVE_ROM_LABEL"),
+		                 MSG_Get("MT32_ACTIVE_MODEL_LABEL"),
 		                 model_and_dir->first->GetName(),
 		                 device->GetRomInfo().control_rom_description);
 
@@ -1103,7 +1083,9 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 		                 dir_label.c_str(),
 		                 truncated_dir.c_str());
 	} else {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MT32_ROM_NOT_LOADED"));
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
 	}
 
 	caller->WriteOut("\n");
@@ -1116,14 +1098,14 @@ static void mt32_init([[maybe_unused]] Section* sec)
 	if (device && device->GetName() == MidiDeviceName::Mt32) {
 		const auto mt32_device = dynamic_cast<MidiDeviceMt32*>(device);
 
-		const auto model_and_dir = mt32_device->GetModelAndDir();
-		const auto curr_model    = model_and_dir
-		                                 ? model_and_dir->first->GetName()
-		                                 : "";
+		const auto curr_model_setting =
+		        mt32_device
+		                ? mt32_device->GetModelAndDir().first->GetName()
+		                : "";
 
-		const auto new_model = get_model_setting();
+		const auto new_model_setting = get_model_setting();
 
-		if (curr_model != new_model) {
+		if (curr_model_setting != new_model_setting) {
 			MIDI_Init();
 		}
 	}
@@ -1137,7 +1119,6 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	Section_prop* sec_prop = conf->AddSection_prop("mt32",
 	                                               &mt32_init,
 	                                               ChangeableAtRuntime);
-
 	assert(sec_prop);
 	init_mt32_dosbox_settings(*sec_prop);
 
