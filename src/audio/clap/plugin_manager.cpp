@@ -197,12 +197,17 @@ static bool validate_note_ports(const clap_plugin_t* plugin)
 	const auto note_ports = static_cast<const clap_plugin_note_ports_t*>(
 	        plugin->get_extension(plugin, CLAP_EXT_NOTE_PORTS));
 
+	if (!note_ports) {
+		LOG_DEBUG("CLAP: Only plugins that implement the note ports extension are supported");
+		return false;
+	}
+
 	constexpr auto InputPort  = true;
 	constexpr auto OutputPort = false;
 
 	const auto num_in_ports = note_ports->count(plugin, InputPort);
 	if (num_in_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single MIDI input ports are support");
+		LOG_DEBUG("CLAP: Only plugins with a single MIDI input ports are supported");
 		return false;
 	}
 
@@ -229,6 +234,11 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 	const auto audio_ports = static_cast<const clap_plugin_audio_ports_t*>(
 	        plugin->get_extension(plugin, CLAP_EXT_AUDIO_PORTS));
 
+	if (!audio_ports) {
+		LOG_DEBUG("CLAP: Only plugins that implement the audio ports extension are supported");
+		return false;
+	}
+
 	constexpr auto InputPort  = true;
 	constexpr auto OutputPort = false;
 
@@ -240,7 +250,7 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 
 	const auto num_out_ports = audio_ports->count(plugin, OutputPort);
 	if (num_out_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single audio input port are supported");
+		LOG_DEBUG("CLAP: Only plugins with a single audio output port are supported");
 		return false;
 	}
 
