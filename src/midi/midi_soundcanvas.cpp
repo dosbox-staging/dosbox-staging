@@ -261,9 +261,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	}();
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n\n",
-		                 Indent,
-		                 MSG_Get("MIDI_DEVICE_NO_SUPPORTED_MODELS"));
+		caller->WriteOut("%s%s\n\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
 		return;
 	}
 

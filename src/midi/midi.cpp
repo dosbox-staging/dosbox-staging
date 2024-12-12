@@ -947,9 +947,9 @@ static void register_midi_text_messages()
 {
 	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
 	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
-	MSG_Add("MIDI_DEVICE_NO_SUPPORTED_MODELS", "No supported models present");
 	MSG_Add("MIDI_DEVICE_NO_PORTS", "No available ports");
 	MSG_Add("MIDI_DEVICE_NO_MODEL_ACTIVE", "No model is currently active");
+	MSG_Add("MIDI_DEVICE_NO_MODELS", "No available models");
 }
 
 void MIDI_AddConfigSection(const ConfigPtr& conf)
