@@ -115,8 +115,6 @@ private:
 	bool had_underruns = false;
 };
 
-const clap_plugin_t* SOUNDCANVAS_LoadPlugin(const SoundCanvasModel model);
-
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller);
 
 #endif // DOSBOX_SOUNDCANVAS_H
