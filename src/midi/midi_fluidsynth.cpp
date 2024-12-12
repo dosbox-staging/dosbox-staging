@@ -919,6 +919,8 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 {
 	const size_t term_width = INT10_GetTextColumns();
 
+	constexpr auto Indent = "  ";
+
 	auto write_line = [&](const std_fs::path& sf_path) {
 		const auto line = format_sf_line(term_width - 2, sf_path);
 
@@ -941,7 +943,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 
 			caller->WriteOut(convert_ansi_markup(output).c_str());
 		} else {
-			caller->WriteOut("  %s\n", line.c_str());
+			caller->WriteOut("%s%s\n", Indent, line.c_str());
 		}
 	};
 
@@ -982,9 +984,14 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 		          return a.filename() < b.filename();
 	          });
 
-	for (const auto& path : sf_files) {
-		write_line(path);
+	if (sf_files.empty()) {
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS"));
+	} else {
+		for (const auto& path : sf_files) {
+			write_line(path);
+		}
 	}
+
 	caller->WriteOut("\n");
 }
 
@@ -994,6 +1001,11 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 	    device && device->GetName() == MidiDeviceName::FluidSynth) {
 		MIDI_Init();
 	}
+}
+
+static void register_fluidsynth_text_messages()
+{
+	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
 }
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)
@@ -1006,6 +1018,8 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	                                          ChangeableAtRuntime);
 	assert(sec);
 	init_fluidsynth_dosbox_settings(*sec);
+
+	register_fluidsynth_text_messages();
 }
 
 #endif // C_FLUIDSYNTH
