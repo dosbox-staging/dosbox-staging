@@ -166,28 +166,36 @@ void MidiDeviceCoreMidi::SendSysExMessage(uint8_t* sysex, size_t len)
 
 void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* caller)
 {
-	Bitu numDests = MIDIGetNumberOfDestinations();
+	constexpr auto Indent = "  ";
 
-	for (Bitu i = 0; i < numDests; i++) {
+	auto num_dests   = MIDIGetNumberOfDestinations();
+	auto num_devices = 0;
+
+	for (size_t i = 0; i < num_dests; ++i) {
 		MIDIEndpointRef dest = MIDIGetDestination(i);
 		if (!dest) {
 			continue;
 		}
 
-		CFStringRef midiname = nullptr;
+		CFStringRef midi_name = nullptr;
 
 		if (MIDIObjectGetStringProperty(dest,
 		                                kMIDIPropertyDisplayName,
-		                                &midiname) == noErr) {
+		                                &midi_name) == noErr) {
 
-			const char* s = CFStringGetCStringPtr(midiname,
+			const char* s = CFStringGetCStringPtr(midi_name,
 			                                      kCFStringEncodingMacRoman);
 			if (s) {
-				caller->WriteOut("  %02d - %s\n", i, s);
+				caller->WriteOut("%s%02d - %s\n", Indent, i, s);
+				++num_devices;
 			}
 		}
 		// This is for EndPoints created by us.
 		// MIDIEndpointDispose(dest);
+	}
+
+	if (num_devices == 0) {
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_PORTS"));
 	}
 
 	caller->WriteOut("\n");
