@@ -752,8 +752,21 @@ void MIDI_ListDevices(Program* caller)
 
 static std::unique_ptr<MIDI> midi_instance = nullptr;
 
+static void midi_destroy([[maybe_unused]] Section* sec)
+{
+	midi.device.reset();
+}
+
 static void midi_init([[maybe_unused]] Section* sec)
 {
+	// This works because the registered destroy functions are always only
+	// called once (they're deleted or "consumed" after they were invoked,
+	// so you need to re-register them if you re-init the module).
+	constexpr auto ChangeableAtRuntime = true;
+
+	assert(sec);
+	sec->AddDestroyFunction(&midi_destroy, ChangeableAtRuntime);
+
 	// Retry loop
 	for (;;) {
 		MPU401_Destroy();
