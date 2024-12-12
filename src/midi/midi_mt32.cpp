@@ -999,9 +999,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	                                                    dirs_with_models);
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n",
-		                 Indent,
-		                 MSG_Get("MIDI_DEVICE_NO_SUPPORTED_MODELS"));
+		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
 
 		caller->WriteOut("\n");
 		return;
