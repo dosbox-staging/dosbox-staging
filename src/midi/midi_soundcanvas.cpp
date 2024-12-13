@@ -33,80 +33,66 @@
 #include "std_filesystem.h"
 #include "string_utils.h"
 
+namespace SoundCanvas {
+
 // Symbolic model aliases
 namespace BestModelAlias {
 constexpr auto Sc55    = "sc55";
 constexpr auto Sc55mk2 = "sc55mk2";
 } // namespace BestModelAlias
 
-const SoundCanvasSynthModel sc55_100_model = {SoundCanvasModel::Sc55_100,
-                                              "sc55_100",
-                                              "100",
-                                              "Roland SC-55 v1.00"};
+const SynthModel sc55_100_model = {Model::Sc55_100, "sc55_100", "100", "Roland SC-55 v1.00"};
 
-const SoundCanvasSynthModel sc55_110_model = {SoundCanvasModel::Sc55_110,
-                                              "sc55_110",
-                                              "110",
-                                              "Roland SC-55 v1.10"};
+const SynthModel sc55_110_model = {Model::Sc55_110, "sc55_110", "110", "Roland SC-55 v1.10"};
 
-const SoundCanvasSynthModel sc55_120_model = {SoundCanvasModel::Sc55_120,
-                                              "sc55_120",
-                                              "120",
-                                              "Roland SC-55 v1.20"};
+const SynthModel sc55_120_model = {Model::Sc55_120, "sc55_120", "120", "Roland SC-55 v1.20"};
 
-const SoundCanvasSynthModel sc55_121_model = {SoundCanvasModel::Sc55_121,
-                                              "sc55_121",
-                                              "121",
-                                              "Roland SC-55 v1.21"};
+const SynthModel sc55_121_model = {Model::Sc55_121, "sc55_121", "121", "Roland SC-55 v1.21"};
 
-const SoundCanvasSynthModel sc55_200_model = {SoundCanvasModel::Sc55_200,
-                                              "sc55_200",
-                                              "200",
-                                              "Roland SC-55 v2.00"};
+const SynthModel sc55_200_model = {Model::Sc55_200, "sc55_200", "200", "Roland SC-55 v2.00"};
 
-const SoundCanvasSynthModel sc55mk2_100 = {SoundCanvasModel::Sc55mk2_100,
-                                           "sc55mk2_100",
-                                           "mk2_100",
-                                           "Roland SC-55mk2 v1.00"};
+const SynthModel sc55mk2_100 = {Model::Sc55mk2_100,
+                                "sc55mk2_100",
+                                "mk2_100",
+                                "Roland SC-55mk2 v1.00"};
 
-const SoundCanvasSynthModel sc55mk2_101 = {SoundCanvasModel::Sc55mk2_101,
-                                           "sc55mk2_101",
-                                           "mk2_101",
-                                           "Roland SC-55mk2 v1.01"};
+const SynthModel sc55mk2_101 = {Model::Sc55mk2_101,
+                                "sc55mk2_101",
+                                "mk2_101",
+                                "Roland SC-55mk2 v1.01"};
 
 // Listed in resolution priority order
-const std::vector<const SoundCanvasSynthModel*> all_models = {&sc55_121_model,
-                                                              &sc55_120_model,
-                                                              &sc55_110_model,
-                                                              &sc55_100_model,
-                                                              &sc55_200_model,
-                                                              &sc55mk2_101,
-                                                              &sc55mk2_100};
+const std::vector<const SynthModel*> all_models = {&sc55_121_model,
+                                                   &sc55_120_model,
+                                                   &sc55_110_model,
+                                                   &sc55_100_model,
+                                                   &sc55_200_model,
+                                                   &sc55mk2_101,
+                                                   &sc55mk2_100};
 
 // Listed in resolution priority order
-const std::vector<const SoundCanvasSynthModel*> sc55_models = {&sc55_121_model,
-                                                               &sc55_120_model,
-                                                               &sc55_110_model,
-                                                               &sc55_100_model,
-                                                               &sc55_200_model};
+const std::vector<const SynthModel*> sc55_models = {&sc55_121_model,
+                                                    &sc55_120_model,
+                                                    &sc55_110_model,
+                                                    &sc55_100_model,
+                                                    &sc55_200_model};
 
 // Listed in resolution priority order
-const std::vector<const SoundCanvasSynthModel*> sc55mk2_models = {&sc55mk2_101,
-                                                                  &sc55mk2_100};
+const std::vector<const SynthModel*> sc55mk2_models = {&sc55mk2_101, &sc55mk2_100};
 
-static Section_prop* get_soundcanvas_section()
-{
-	assert(control);
+struct PluginAndModel {
+	std::unique_ptr<Clap::Plugin> plugin = nullptr;
+	SynthModel model                     = {};
+};
 
-	auto section = static_cast<Section_prop*>(control->GetSection("soundcanvas"));
-	assert(section);
-
-	return section;
-}
+} // namespace SoundCanvas
 
 static const std::optional<Clap::PluginInfo> find_plugin_for_model(
-        const SoundCanvasModel model, const std::vector<Clap::PluginInfo>& plugin_infos)
+        const SoundCanvas::Model model,
+        const std::vector<Clap::PluginInfo>& plugin_infos)
 {
+	using namespace SoundCanvas;
+
 	// Search for plugins that are likely Roland SC-55 emulators by
 	// inspecting ther descriptions
 
@@ -118,51 +104,51 @@ static const std::optional<Clap::PluginInfo> find_plugin_for_model(
 		const auto has_sc55 = has(" sc-55") || has(" sc55");
 
 		switch (model) {
-		case SoundCanvasModel::Sc55_100:
+		case Model::Sc55_100:
 			if (has_sc55 && (has(" 1.00") || has(" v1.00"))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55_110:
+		case Model::Sc55_110:
 			if (has_sc55 && (has(" 1.10") || has(" v1.10"))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55_120:
+		case Model::Sc55_120:
 			if (has_sc55 && (has(" 1.20") || has(" v1.20"))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55_121:
+		case Model::Sc55_121:
 			if (has_sc55 && (has(" 1.21") || has(" v1.21"))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55_200:
+		case Model::Sc55_200:
 			if (has_sc55 && (has(" 2.00") || has(" v2.00"))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55mk2_100:
+		case Model::Sc55mk2_100:
 			if (has_sc55 &&
 			    (has(" mk2") && (has(" 1.00") || has(" v1.00")))) {
 				return plugin_info;
 			}
 			break;
 
-		case SoundCanvasModel::Sc55mk2_101:
+		case Model::Sc55mk2_101:
 			if (has_sc55 && ((has(" mk2") || has("-mk2") || has("55mk2")) &&
 			                 (has(" 1.01") || has(" v1.01")))) {
 				return plugin_info;
 			}
 			break;
 
-		default: assertm(false, "Invalid SoundCanvasModel value");
+		default: assertm(false, "Invalid Model value");
 		};
 	}
 
@@ -170,12 +156,7 @@ static const std::optional<Clap::PluginInfo> find_plugin_for_model(
 	return {};
 }
 
-struct PluginAndModel {
-	std::unique_ptr<Clap::Plugin> plugin = nullptr;
-	SoundCanvasSynthModel model          = {};
-};
-
-PluginAndModel try_load_plugin(const SoundCanvasSynthModel& model)
+SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model)
 {
 	auto& plugin_manager    = Clap::PluginManager::GetInstance();
 	const auto plugin_infos = plugin_manager.GetPluginInfos();
@@ -195,8 +176,10 @@ PluginAndModel try_load_plugin(const SoundCanvasSynthModel& model)
 	return {};
 }
 
-PluginAndModel load_model(const std::string& wanted_model_name)
+SoundCanvas::PluginAndModel load_model(const std::string& wanted_model_name)
 {
+	using namespace SoundCanvas;
+
 	// Determine the list of model candidates and the lookup method:
 	//
 	// - Symbolic model names ('auto', 'sc55', 'sc55mk2') resolve the first
@@ -207,7 +190,7 @@ PluginAndModel load_model(const std::string& wanted_model_name)
 	//   version or fail if it's not available.
 	//
 	auto [load_first_available, candidate_models] =
-	        [&]() -> std::pair<bool, std::vector<const SoundCanvasSynthModel*>> {
+	        [&]() -> std::pair<bool, std::vector<const SoundCanvas::SynthModel*>> {
 		// Symbolic mode names (resolve the best match from a list of
 		// candidates in priority order).
 		if (wanted_model_name == "auto") {
@@ -238,133 +221,39 @@ PluginAndModel load_model(const std::string& wanted_model_name)
 	return {};
 }
 
-SoundCanvasSynthModel MidiDeviceSoundCanvas::GetModel() const
+static float native_sample_rate_hz_for_model(const SoundCanvas::Model model)
+{
+	using namespace SoundCanvas;
+
+	switch (model) {
+	// Roland SC-55
+	case Model::Sc55_100:
+	case Model::Sc55_110:
+	case Model::Sc55_120:
+	case Model::Sc55_121:
+	case Model::Sc55_200: return 32000.0;
+
+	// Roland SC-55mk2
+	case Model::Sc55mk2_100:
+	case Model::Sc55mk2_101: return 33103.0;
+
+	default: assertm(false, "Invalid SoundCanvas::Model"); return 0.0;
+	}
+}
+
+SoundCanvas::SynthModel MidiDeviceSoundCanvas::GetModel() const
 {
 	return model;
 }
 
-void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
+static Section_prop* get_soundcanvas_section()
 {
-	// Table layout constants
-	constexpr auto ColumnDelim = " ";
-	constexpr auto Indent      = "  ";
+	assert(control);
 
-	const auto available_models = [&] {
-		std::set<const SoundCanvasSynthModel*> available_models = {};
+	auto section = static_cast<Section_prop*>(control->GetSection("soundcanvas"));
+	assert(section);
 
-		for (auto m : all_models) {
-			if (const auto p = try_load_plugin(*m); p.plugin) {
-				available_models.insert(m);
-			}
-		}
-		return available_models;
-	}();
-
-	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
-		return;
-	}
-
-	const std::optional<SoundCanvasSynthModel> active_model = [&] {
-		std::optional<SoundCanvasSynthModel> model = {};
-		if (device) {
-			model = device->GetModel();
-		}
-		return model;
-	}();
-
-	const auto active_sc_model =
-	        [&]() -> std::optional<const SoundCanvasSynthModel*> {
-		const auto it = std::find_if(all_models.begin(),
-		                             all_models.end(),
-		                             [&](const SoundCanvasSynthModel* m) {
-			                             return (active_model &&
-			                                     *active_model == m);
-		                             });
-
-		if (it != all_models.end()) {
-			return *it;
-		} else {
-			return {};
-		}
-	}();
-
-	auto highlight_model = [&](const SoundCanvasSynthModel* model,
-	                           const char* display_name) -> std::string {
-		constexpr auto darkgray = "[color=dark-gray]";
-		constexpr auto green    = "[color=light-green]";
-		constexpr auto reset    = "[reset]";
-
-		const bool is_missing = (available_models.find(model) ==
-		                         available_models.end());
-
-		const auto is_active = active_sc_model && *active_sc_model == model;
-
-		const auto color = (is_missing ? darkgray
-		                               : (is_active ? green : reset));
-
-		const auto active_prefix = (is_active ? "*" : " ");
-
-		const auto model_string = format_str(
-		        "%s%s%s%s", color, active_prefix, display_name, reset);
-
-		return convert_ansi_markup(model_string.c_str());
-	};
-
-	// Print available Sound Canvas models
-	caller->WriteOut("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL"));
-
-	// Display order, from old to new
-	const std::vector<const SoundCanvasSynthModel*> models_old_to_new = {
-	        &sc55_100_model,
-	        &sc55_110_model,
-	        &sc55_120_model,
-	        &sc55_121_model,
-	        &sc55_200_model,
-	        &sc55mk2_100,
-	        &sc55mk2_101};
-
-	for (const auto& model : models_old_to_new) {
-		const auto display_name = model->display_name_short;
-		caller->WriteOut("%s%s",
-		                 highlight_model(model, display_name).c_str(),
-		                 ColumnDelim);
-	}
-	caller->WriteOut("\n");
-
-	caller->WriteOut("%s---\n", Indent);
-
-	// Print info about the active model
-	if (active_sc_model) {
-		caller->WriteOut("%s%s%s\n",
-		                 Indent,
-		                 MSG_Get("SOUNDCANVAS_ACTIVE_MODEL_LABEL"),
-		                 (*active_sc_model)->display_name_long);
-	} else {
-		caller->WriteOut("%s%s\n",
-		                 Indent,
-		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
-	}
-
-	caller->WriteOut("\n");
-}
-
-static float native_sample_rate_hz_for_model(const SoundCanvasModel model)
-{
-	switch (model) {
-	// Roland SC-55
-	case SoundCanvasModel::Sc55_100:
-	case SoundCanvasModel::Sc55_110:
-	case SoundCanvasModel::Sc55_120:
-	case SoundCanvasModel::Sc55_121:
-	case SoundCanvasModel::Sc55_200: return 32000.0;
-
-	// Roland SC-55mk2
-	case SoundCanvasModel::Sc55mk2_100:
-	case SoundCanvasModel::Sc55mk2_101: return 33103.0;
-
-	default: assertm(false, "Invalid SoundCanvasModel"); return 0.0;
-	}
+	return section;
 }
 
 static std::string get_model_setting()
@@ -374,6 +263,8 @@ static std::string get_model_setting()
 
 MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 {
+	using namespace SoundCanvas;
+
 	const auto model_name = get_model_setting();
 
 	auto plugin_wrapper = load_model(model_name);
@@ -390,7 +281,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 	const auto it = std::find_if(all_models.begin(),
 	                             all_models.end(),
-	                             [&](const SoundCanvasSynthModel* m) {
+	                             [&](const SoundCanvas::SynthModel* m) {
 		                             return model.model == m->model;
 	                             });
 	assert(it != all_models.end());
@@ -650,22 +541,130 @@ void MidiDeviceSoundCanvas::Render()
 	}
 }
 
+void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
+{
+	using namespace SoundCanvas;
+
+	// Table layout constants
+	constexpr auto ColumnDelim = " ";
+	constexpr auto Indent      = "  ";
+
+	const auto available_models = [&] {
+		std::set<const SynthModel*> available_models = {};
+
+		for (auto m : all_models) {
+			if (const auto p = try_load_plugin(*m); p.plugin) {
+				available_models.insert(m);
+			}
+		}
+		return available_models;
+	}();
+
+	if (available_models.empty()) {
+		caller->WriteOut("%s%s\n\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
+		return;
+	}
+
+	const std::optional<SynthModel> active_model = [&] {
+		std::optional<SynthModel> model = {};
+		if (device) {
+			model = device->GetModel();
+		}
+		return model;
+	}();
+
+	const auto active_sc_model = [&]() -> std::optional<const SynthModel*> {
+		const auto it = std::find_if(all_models.begin(),
+		                             all_models.end(),
+		                             [&](const SynthModel* m) {
+			                             return (active_model &&
+			                                     *active_model == m);
+		                             });
+
+		if (it != all_models.end()) {
+			return *it;
+		} else {
+			return {};
+		}
+	}();
+
+	auto highlight_model = [&](const SynthModel* model,
+	                           const char* display_name) -> std::string {
+		constexpr auto darkgray = "[color=dark-gray]";
+		constexpr auto green    = "[color=light-green]";
+		constexpr auto reset    = "[reset]";
+
+		const bool is_missing = (available_models.find(model) ==
+		                         available_models.end());
+
+		const auto is_active = active_sc_model && *active_sc_model == model;
+
+		const auto color = (is_missing ? darkgray
+		                               : (is_active ? green : reset));
+
+		const auto active_prefix = (is_active ? "*" : " ");
+
+		const auto model_string = format_str(
+		        "%s%s%s%s", color, active_prefix, display_name, reset);
+
+		return convert_ansi_markup(model_string.c_str());
+	};
+
+	// Print available Sound Canvas models
+	caller->WriteOut("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL"));
+
+	// Display order, from old to new
+	const std::vector<const SynthModel*> models_old_to_new = {&sc55_100_model,
+	                                                          &sc55_110_model,
+	                                                          &sc55_120_model,
+	                                                          &sc55_121_model,
+	                                                          &sc55_200_model,
+	                                                          &sc55mk2_100,
+	                                                          &sc55mk2_101};
+
+	for (const auto& model : models_old_to_new) {
+		const auto display_name = model->display_name_short;
+		caller->WriteOut("%s%s",
+		                 highlight_model(model, display_name).c_str(),
+		                 ColumnDelim);
+	}
+	caller->WriteOut("\n");
+
+	caller->WriteOut("%s---\n", Indent);
+
+	// Print info about the active model
+	if (active_sc_model) {
+		caller->WriteOut("%s%s%s\n",
+		                 Indent,
+		                 MSG_Get("SOUNDCANVAS_ACTIVE_MODEL_LABEL"),
+		                 (*active_sc_model)->display_name_long);
+	} else {
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
+	}
+
+	caller->WriteOut("\n");
+}
+
 static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 {
+	using namespace SoundCanvas;
+
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto* str_prop = sec_prop.Add_string("soundcanvas_model", when_idle, "auto");
 
 	// Listed in resolution priority order
 	str_prop->Set_values({"auto",
-	                      BestModelAlias::Sc55,
+	                      SoundCanvas::BestModelAlias::Sc55,
 	                      sc55_121_model.config_name,
 	                      sc55_120_model.config_name,
 	                      sc55_110_model.config_name,
 	                      sc55_100_model.config_name,
 	                      sc55_200_model.config_name,
 
-	                      BestModelAlias::Sc55mk2,
+	                      SoundCanvas::BestModelAlias::Sc55mk2,
 	                      sc55mk2_100.config_name,
 	                      sc55mk2_101.config_name});
 

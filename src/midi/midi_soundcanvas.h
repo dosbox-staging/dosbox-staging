@@ -31,7 +31,9 @@
 #include "mixer.h"
 #include "rwqueue.h"
 
-enum class SoundCanvasModel {
+namespace SoundCanvas {
+
+enum class Model {
 	// Roland SC-55
 	Sc55_100,
 	Sc55_110,
@@ -44,23 +46,25 @@ enum class SoundCanvasModel {
 	Sc55mk2_101,
 };
 
-struct SoundCanvasSynthModel {
-	SoundCanvasModel model = {};
+struct SynthModel {
+	Model model = {};
 
 	const char* config_name        = {};
 	const char* display_name_short = {};
 	const char* display_name_long  = {};
 
-	bool operator==(const SoundCanvasSynthModel* other) const
+	bool operator==(const SynthModel* other) const
 	{
 		return model == (*other).model;
 	}
 };
 
+} // namespace SoundCanvas
+
 class MidiDeviceSoundCanvas final : public MidiDevice {
 public:
-	// Throws `std::runtime_error` if the MIDI device cannot be initialiased
-	// (e.g., the requested SoundFont cannot be loaded).
+	// Throws `std::runtime_error` if the MIDI device cannot be
+	// initialiased (e.g., the requested SoundFont cannot be loaded).
 	MidiDeviceSoundCanvas();
 
 	~MidiDeviceSoundCanvas() override;
@@ -80,7 +84,7 @@ public:
 		return MidiDevice::Type::Internal;
 	}
 
-	SoundCanvasSynthModel GetModel() const;
+	SoundCanvas::SynthModel GetModel() const;
 
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
@@ -105,10 +109,10 @@ private:
 
 	std::thread renderer = {};
 
-	SoundCanvasSynthModel model = {};
+	SoundCanvas::SynthModel model = {};
 
-	// Used to track the balance of time between the last mixer callback
-	// versus the current MIDI SysEx or Msg event.
+	// Used to track the balance of time between the last mixer
+	// callback versus the current MIDI SysEx or Msg event.
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
