@@ -96,7 +96,7 @@ static std::unique_ptr<MidiDevice> create_device(
 	using namespace MidiDeviceName;
 
 	// Internal MIDI synths
-	if (name == SoundCanvas) {
+	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
 #if C_FLUIDSYNTH
