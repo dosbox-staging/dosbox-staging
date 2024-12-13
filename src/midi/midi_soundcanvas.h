@@ -72,6 +72,7 @@ public:
 
 	void SendMidiMessage(const MidiMessage& msg,
 	                     const int num_pending_audio_frames);
+
 	void SendSysExMessage(uint8_t* sysex, size_t len,
 	                      const int num_pending_audio_frames);
 

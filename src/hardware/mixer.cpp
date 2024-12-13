@@ -2292,8 +2292,10 @@ static void mix_samples(const int frames_requested)
 
 	mixer.output_buffer.clear();
 	mixer.output_buffer.resize(frames_requested);
+
 	mixer.reverb_buffer.clear();
 	mixer.reverb_buffer.resize(frames_requested);
+
 	mixer.chorus_buffer.clear();
 	mixer.chorus_buffer.resize(frames_requested);
 

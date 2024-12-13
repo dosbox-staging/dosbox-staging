@@ -395,7 +395,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 	// Run the plugin at the native sample rate of the Sound Canvas model
 	// to avoid any extra resampling passes.
-	//
 	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
 
 	// Size the out-bound audio frame FIFO
@@ -413,10 +412,16 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	const auto sc_model = *it;
 	LOG_MSG("SOUNDCANVAS: Initialised %s", sc_model->display_name_long);
 
-	// TODO handle second instance
 	RenderInstance* inst_ptr = new RenderInstance(plugin_wrapper.plugin,
 	                                              sample_rate_hz,
 	                                              "dosbox:sndcanv1");
+	render_instances.emplace_back(inst_ptr);
+
+	// Load an identical second instance
+	plugin_wrapper = load_model(model_name);
+	inst_ptr       = new RenderInstance(plugin_wrapper.plugin,
+                                      sample_rate_hz,
+                                      "dosbox:sndcanv2");
 	render_instances.emplace_back(inst_ptr);
 
 	MIXER_LockMixerThread();
@@ -519,8 +524,23 @@ int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()
 
 void MidiDeviceSoundCanvas::SendMidiMessage(const MidiMessage& msg)
 {
-	for (auto inst : render_instances) {
-		inst->SendMidiMessage(msg, GetNumPendingAudioFrames());
+	const auto num_pending_audio_frames = GetNumPendingAudioFrames();
+
+	if (render_instances.size() == 1) {
+		render_instances[0]->SendMidiMessage(msg, num_pending_audio_frames);
+
+	} else if (render_instances.size() == 2) {
+		const auto channel     = get_midi_channel(msg.status());
+		const auto odd_channel = channel % 2 == 1;
+
+		if (odd_channel) {
+			render_instances[0]->SendMidiMessage(msg, num_pending_audio_frames);
+		} else {
+			render_instances[1]->SendMidiMessage(msg, num_pending_audio_frames);
+		}
+	} else {
+		assertm(false,
+		        "Only one or two Sound Canvas render instances are supported");
 	}
 }
 
@@ -540,30 +560,53 @@ void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 	// Report buffer underruns
 	constexpr auto warning_percent = 5.0f;
 
-	// TODO handle second instance
-	auto inst = render_instances[0];
+	static std::vector<AudioFrame> audio_frames        = {};
+	static std::vector<AudioFrame> summed_audio_frames = {};
 
-	if (const auto percent_full = inst->audio_frame_fifo.GetPercentFull();
-	    percent_full < warning_percent) {
-		static auto iteration = 0;
-		if (iteration++ % 100 == 0) {
-			LOG_WARNING("SOUNDCANVAS: Audio buffer underrun");
+	summed_audio_frames.resize(requested_audio_frames);
+	std::fill(summed_audio_frames.begin(), summed_audio_frames.end(), AudioFrame{});
+
+	auto has_dequeued = false;
+
+	for (auto inst : render_instances) {
+		if (const auto percent_full = inst->audio_frame_fifo.GetPercentFull();
+		    percent_full < warning_percent) {
+
+			static auto iteration = 0;
+
+			if (iteration++ % 100 == 0) {
+				LOG_WARNING("SOUNDCANVAS: Audio buffer underrun");
+			}
+			had_underruns = true;
 		}
-		had_underruns = true;
+
+		has_dequeued |= inst->audio_frame_fifo.BulkDequeue(audio_frames,
+		                                                   requested_audio_frames);
+
+		assert(check_cast<int>(summed_audio_frames.size()) ==
+		       requested_audio_frames);
+
+		assert(check_cast<int>(audio_frames.size()) == requested_audio_frames);
+
+		auto in  = audio_frames.cbegin();
+		auto out = summed_audio_frames.begin();
+
+		while (out != summed_audio_frames.end()) {
+			*out = *out + *in;
+			++in;
+			++out;
+		}
 	}
-
-	static std::vector<AudioFrame> audio_frames = {};
-
-	const auto has_dequeued = inst->audio_frame_fifo.BulkDequeue(
-	        audio_frames, requested_audio_frames);
 
 	if (has_dequeued) {
 		mixer_channel->AddSamples_sfloat(requested_audio_frames,
-		                                 &audio_frames[0][0]);
+		                                 &summed_audio_frames[0][0]);
 
 		last_rendered_ms = PIC_FullIndex();
 	} else {
-		assert(!inst->audio_frame_fifo.IsRunning());
+		for (auto inst : render_instances) {
+			assert(!inst->audio_frame_fifo.IsRunning());
+		}
 		mixer_channel->AddSilence();
 	}
 }
