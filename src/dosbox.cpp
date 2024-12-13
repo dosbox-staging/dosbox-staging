@@ -863,8 +863,6 @@ void DOSBOX_Init()
 	MIXER_AddConfigSection(control);
 
 	// Configure MIDI
-	MIDI_AddConfigSection(control);
-
 #if C_FLUIDSYNTH
 	FSYNTH_AddConfigSection(control);
 #endif
@@ -874,6 +872,12 @@ void DOSBOX_Init()
 #endif
 
 	SOUNDCANVAS_AddConfigSection(control);
+
+	// The MIDI section must be added *after* the FluidSynth, MT-32 and
+	// SoundCanvas MIDI device sections. If the MIDI section is intialised
+	// before these, these devices would be double-initialised if selected at
+	// startup time (e.g., by having `mididevice = mt32` in the config).
+	MIDI_AddConfigSection(control);
 
 #if C_DEBUG
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);
