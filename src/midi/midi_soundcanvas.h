@@ -59,6 +59,39 @@ struct SynthModel {
 	}
 };
 
+class RenderInstance {
+public:
+	RenderInstance(std::unique_ptr<Clap::Plugin>& plugin,
+	               const int sample_rate_hz, const char* thread_name);
+	~RenderInstance();
+
+	// prevent copying
+	RenderInstance(const RenderInstance&) = delete;
+	// prevent assignment
+	RenderInstance& operator=(const RenderInstance&) = delete;
+
+	void SendMidiMessage(const MidiMessage& msg,
+	                     const int num_pending_audio_frames);
+	void SendSysExMessage(uint8_t* sysex, size_t len,
+	                      const int num_pending_audio_frames);
+
+	RWQueue<AudioFrame> audio_frame_fifo{1};
+
+private:
+	void ProcessWorkFromFifo();
+	void RenderAudioFramesToFifo(const int num_frames = 1);
+	void Render();
+
+	RWQueue<MidiWork> work_fifo{1};
+
+	struct {
+		std::unique_ptr<Clap::Plugin> plugin = nullptr;
+		Clap::EventList event_list           = {};
+	} clap = {};
+
+	std::thread renderer = {};
+};
+
 } // namespace SoundCanvas
 
 class MidiDeviceSoundCanvas final : public MidiDevice {
@@ -91,25 +124,15 @@ public:
 
 private:
 	void MixerCallback(const int requested_audio_frames);
-	void ProcessWorkFromFifo();
 
 	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_frames = 1);
-	void Render();
 
 	// Managed objects
 	MixerChannelPtr mixer_channel = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo{1};
-	RWQueue<MidiWork> work_fifo{1};
-
-	struct {
-		std::unique_ptr<Clap::Plugin> plugin = nullptr;
-		Clap::EventList event_list           = {};
-	} clap = {};
-
-	std::thread renderer = {};
 
 	SoundCanvas::SynthModel model = {};
+
+	std::vector<SoundCanvas::RenderInstance*> render_instances = {};
 
 	// Used to track the balance of time between the last mixer
 	// callback versus the current MIDI SysEx or Msg event.

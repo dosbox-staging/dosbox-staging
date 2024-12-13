@@ -42,13 +42,9 @@ constexpr auto Sc55mk2 = "sc55mk2";
 } // namespace BestModelAlias
 
 const SynthModel sc55_100_model = {Model::Sc55_100, "sc55_100", "100", "Roland SC-55 v1.00"};
-
 const SynthModel sc55_110_model = {Model::Sc55_110, "sc55_110", "110", "Roland SC-55 v1.10"};
-
 const SynthModel sc55_120_model = {Model::Sc55_120, "sc55_120", "120", "Roland SC-55 v1.20"};
-
 const SynthModel sc55_121_model = {Model::Sc55_121, "sc55_121", "121", "Roland SC-55 v1.21"};
-
 const SynthModel sc55_200_model = {Model::Sc55_200, "sc55_200", "200", "Roland SC-55 v2.00"};
 
 const SynthModel sc55mk2_100 = {Model::Sc55mk2_100,
@@ -80,19 +76,10 @@ const std::vector<const SynthModel*> sc55_models = {&sc55_121_model,
 // Listed in resolution priority order
 const std::vector<const SynthModel*> sc55mk2_models = {&sc55mk2_101, &sc55mk2_100};
 
-struct PluginAndModel {
-	std::unique_ptr<Clap::Plugin> plugin = nullptr;
-	SynthModel model                     = {};
-};
-
-} // namespace SoundCanvas
-
 static const std::optional<Clap::PluginInfo> find_plugin_for_model(
         const SoundCanvas::Model model,
         const std::vector<Clap::PluginInfo>& plugin_infos)
 {
-	using namespace SoundCanvas;
-
 	// Search for plugins that are likely Roland SC-55 emulators by
 	// inspecting ther descriptions
 
@@ -156,6 +143,11 @@ static const std::optional<Clap::PluginInfo> find_plugin_for_model(
 	return {};
 }
 
+struct PluginAndModel {
+	std::unique_ptr<Clap::Plugin> plugin = nullptr;
+	SynthModel model                     = {};
+};
+
 SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model)
 {
 	auto& plugin_manager    = Clap::PluginManager::GetInstance();
@@ -178,8 +170,6 @@ SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model
 
 SoundCanvas::PluginAndModel load_model(const std::string& wanted_model_name)
 {
-	using namespace SoundCanvas;
-
 	// Determine the list of model candidates and the lookup method:
 	//
 	// - Symbolic model names ('auto', 'sc55', 'sc55mk2') resolve the first
@@ -223,8 +213,6 @@ SoundCanvas::PluginAndModel load_model(const std::string& wanted_model_name)
 
 static float native_sample_rate_hz_for_model(const SoundCanvas::Model model)
 {
-	using namespace SoundCanvas;
-
 	switch (model) {
 	// Roland SC-55
 	case Model::Sc55_100:
@@ -240,6 +228,134 @@ static float native_sample_rate_hz_for_model(const SoundCanvas::Model model)
 	default: assertm(false, "Invalid SoundCanvas::Model"); return 0.0;
 	}
 }
+
+RenderInstance::RenderInstance(std::unique_ptr<Clap::Plugin>& plugin,
+                               const int sample_rate_hz, const char* thread_name)
+{
+	// Double the baseline PCM prebuffer because MIDI is demanding and
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up (and prevent their audio
+	// frame FIFO from running dry).
+	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
+
+	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
+	audio_frame_fifo.Resize(
+	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
+
+	// Size the in-bound work FIFO
+	work_fifo.Resize(MaxMidiWorkFifoSize);
+
+	clap.plugin = std::move(plugin);
+	clap.plugin->Activate(sample_rate_hz);
+
+	// Start rendering audio
+	const auto render = std::bind(&RenderInstance::Render, this);
+	renderer          = std::thread(render);
+
+	set_thread_name(renderer, thread_name);
+}
+
+RenderInstance::~RenderInstance()
+{
+	// Stop queueing new MIDI work and audio frames
+	work_fifo.Stop();
+	audio_frame_fifo.Stop();
+
+	// Wait for the rendering thread to finish
+	if (renderer.joinable()) {
+		renderer.join();
+	}
+}
+
+// The request to play the channel message is placed in the MIDI work FIFO
+void RenderInstance::SendMidiMessage(const MidiMessage& msg,
+                                     const int num_pending_audio_frames)
+{
+	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
+
+	MidiWork work{std::move(message), num_pending_audio_frames, MessageType::Channel};
+
+	work_fifo.Enqueue(std::move(work));
+}
+
+// The request to play the SysEx message is placed in the MIDI work FIFO
+void RenderInstance::SendSysExMessage(uint8_t* sysex, size_t len,
+                                      const int num_pending_audio_frames)
+{
+	std::vector<uint8_t> message(sysex, sysex + len);
+
+	MidiWork work{std::move(message), num_pending_audio_frames, MessageType::SysEx};
+	work_fifo.Enqueue(std::move(work));
+}
+
+void RenderInstance::RenderAudioFramesToFifo(const int num_audio_frames)
+{
+	assert(num_audio_frames > 0);
+
+	static std::vector<float> left  = {};
+	static std::vector<float> right = {};
+
+	// Maybe expand the vectors
+	if (check_cast<int>(left.size()) < num_audio_frames) {
+		left.resize(num_audio_frames);
+		right.resize(num_audio_frames);
+	}
+
+	float* audio_out[] = {left.data(), right.data()};
+
+	clap.plugin->Process(audio_out, num_audio_frames, clap.event_list);
+	clap.event_list.Clear();
+
+	for (auto i = 0; i < num_audio_frames; ++i) {
+		audio_frame_fifo.Enqueue({left[i], right[i]});
+	}
+}
+
+// The next MIDI work task is processed, which includes rendering audio frames
+// prior to sending channel and sysex messages to the plugin
+void RenderInstance::ProcessWorkFromFifo()
+{
+	const auto work = work_fifo.Dequeue();
+	if (!work) {
+		return;
+	}
+
+#if 0
+	// To log inter-cycle rendering
+	if (work->num_pending_audio_frames > 0) {
+		LOG_MSG("SOUNDCANVAS: %2u audio frames prior to %s message, followed by "
+		        "%2lu more messages. Have %4lu audio frames queued",
+		        work->num_pending_audio_frames,
+		        work->message_type == MessageType::Channel ? "channel" : "sysex",
+		        work_fifo.Size(),
+		        audio_frame_fifo.Size());
+	}
+#endif
+
+	if (work->num_pending_audio_frames > 0) {
+		RenderAudioFramesToFifo(work->num_pending_audio_frames);
+	}
+
+	if (work->message_type == MessageType::Channel) {
+		assert(work->message.size() >= MaxMidiMessageLen);
+		clap.event_list.AddMidiEvent(work->message, 0);
+
+	} else {
+		assert(work->message_type == MessageType::SysEx);
+		clap.event_list.AddMidiSysExEvent(work->message, 0);
+	}
+}
+
+// Keep the FIFO populated with freshly rendered buffers
+void RenderInstance::Render()
+{
+	while (work_fifo.IsRunning()) {
+		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
+		                    : ProcessWorkFromFifo();
+	}
+}
+
+} // namespace SoundCanvas
 
 SoundCanvas::SynthModel MidiDeviceSoundCanvas::GetModel() const
 {
@@ -277,7 +393,15 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 	model = plugin_wrapper.model;
 
-	clap.plugin = std::move(plugin_wrapper.plugin);
+	// Run the plugin at the native sample rate of the Sound Canvas model
+	// to avoid any extra resampling passes.
+	//
+	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
+
+	// Size the out-bound audio frame FIFO
+	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
+
+	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
 
 	const auto it = std::find_if(all_models.begin(),
 	                             all_models.end(),
@@ -289,12 +413,11 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	const auto sc_model = *it;
 	LOG_MSG("SOUNDCANVAS: Initialised %s", sc_model->display_name_long);
 
-	// Run the plugin at the native sample rate of the Sound Canvas model
-	// to avoid any extra resampling passes.
-	//
-	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
-
-	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
+	// TODO handle second instance
+	RenderInstance* inst_ptr = new RenderInstance(plugin_wrapper.plugin,
+	                                              sample_rate_hz,
+	                                              "dosbox:sndcanv1");
+	render_instances.emplace_back(inst_ptr);
 
 	MIXER_LockMixerThread();
 
@@ -334,29 +457,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better chance to keep up (and prevent their audio
-	// frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
-	clap.plugin->Activate(sample_rate_hz);
-
-	// Start rendering audio
-	const auto render = std::bind(&MidiDeviceSoundCanvas::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:sndcanv");
-
 	// Start playback
 	MIXER_UnlockMixerThread();
 }
@@ -379,13 +479,10 @@ MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 		mixer_channel->Enable(false);
 	}
 
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
+	// Destroy render instances
+	for (auto inst : render_instances) {
+		assert(inst);
+		delete inst;
 	}
 
 	// Deregister the mixer channel and remove it
@@ -420,24 +517,18 @@ int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()
 	return num_audio_frames;
 }
 
-// The request to play the channel message is placed in the MIDI work FIFO
 void MidiDeviceSoundCanvas::SendMidiMessage(const MidiMessage& msg)
 {
-	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
-
-	MidiWork work{std::move(message),
-	              GetNumPendingAudioFrames(),
-	              MessageType::Channel};
-
-	work_fifo.Enqueue(std::move(work));
+	for (auto inst : render_instances) {
+		inst->SendMidiMessage(msg, GetNumPendingAudioFrames());
+	}
 }
 
-// The request to play the sysex message is placed in the MIDI work FIFO
 void MidiDeviceSoundCanvas::SendSysExMessage(uint8_t* sysex, size_t len)
 {
-	std::vector<uint8_t> message(sysex, sysex + len);
-	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
-	work_fifo.Enqueue(std::move(work));
+	for (auto inst : render_instances) {
+		inst->SendSysExMessage(sysex, len, GetNumPendingAudioFrames());
+	}
 }
 
 // The callback operates at the audio frame-level, steadily adding samples to
@@ -449,7 +540,10 @@ void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 	// Report buffer underruns
 	constexpr auto warning_percent = 5.0f;
 
-	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
+	// TODO handle second instance
+	auto inst = render_instances[0];
+
+	if (const auto percent_full = inst->audio_frame_fifo.GetPercentFull();
 	    percent_full < warning_percent) {
 		static auto iteration = 0;
 		if (iteration++ % 100 == 0) {
@@ -460,8 +554,8 @@ void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 
 	static std::vector<AudioFrame> audio_frames = {};
 
-	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
-	                                                       requested_audio_frames);
+	const auto has_dequeued = inst->audio_frame_fifo.BulkDequeue(
+	        audio_frames, requested_audio_frames);
 
 	if (has_dequeued) {
 		mixer_channel->AddSamples_sfloat(requested_audio_frames,
@@ -469,75 +563,8 @@ void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 
 		last_rendered_ms = PIC_FullIndex();
 	} else {
-		assert(!audio_frame_fifo.IsRunning());
+		assert(!inst->audio_frame_fifo.IsRunning());
 		mixer_channel->AddSilence();
-	}
-}
-
-void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
-{
-	assert(num_audio_frames > 0);
-
-	static std::vector<float> left  = {};
-	static std::vector<float> right = {};
-
-	// Maybe expand the vectors
-	if (check_cast<int>(left.size()) < num_audio_frames) {
-		left.resize(num_audio_frames);
-		right.resize(num_audio_frames);
-	}
-
-	float* audio_out[] = {left.data(), right.data()};
-
-	clap.plugin->Process(audio_out, num_audio_frames, clap.event_list);
-	clap.event_list.Clear();
-
-	for (auto i = 0; i < num_audio_frames; ++i) {
-		audio_frame_fifo.Enqueue({left[i], right[i]});
-	}
-}
-
-// The next MIDI work task is processed, which includes rendering audio frames
-// prior to sending channel and sysex messages to the plugin
-void MidiDeviceSoundCanvas::ProcessWorkFromFifo()
-{
-	const auto work = work_fifo.Dequeue();
-	if (!work) {
-		return;
-	}
-
-#if 0
-	// To log inter-cycle rendering
-	if (work->num_pending_audio_frames > 0) {
-		LOG_MSG("SOUNDCANVAS: %2u audio frames prior to %s message, followed by "
-		        "%2lu more messages. Have %4lu audio frames queued",
-		        work->num_pending_audio_frames,
-		        work->message_type == MessageType::Channel ? "channel" : "sysex",
-		        work_fifo.Size(),
-		        audio_frame_fifo.Size());
-	}
-#endif
-
-	if (work->num_pending_audio_frames > 0) {
-		RenderAudioFramesToFifo(work->num_pending_audio_frames);
-	}
-
-	if (work->message_type == MessageType::Channel) {
-		assert(work->message.size() >= MaxMidiMessageLen);
-		clap.event_list.AddMidiEvent(work->message, 0);
-
-	} else {
-		assert(work->message_type == MessageType::SysEx);
-		clap.event_list.AddMidiSysExEvent(work->message, 0);
-	}
-}
-
-// Keep the FIFO populated with freshly rendered buffers
-void MidiDeviceSoundCanvas::Render()
-{
-	while (work_fifo.IsRunning()) {
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
-		                    : ProcessWorkFromFifo();
 	}
 }
 
