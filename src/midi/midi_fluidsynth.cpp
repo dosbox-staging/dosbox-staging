@@ -494,8 +494,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
 	                                     delete_fluid_settings);
 	if (!fluid_settings) {
-		const auto msg = "FSYNTH: new_fluid_settings failed";
-		LOG_WARNING("%s", msg);
+		const auto msg = "FSYNTH: Failed to initialise the FluidSynth settings";
+		LOG_ERR("%s", msg);
 		throw std::runtime_error(msg);
 	}
 
@@ -515,8 +515,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
 	                          delete_fluid_synth);
 	if (!fluid_synth) {
-		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer.";
-		LOG_WARNING("%s", msg);
+		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer";
+		LOG_ERR("%s", msg);
 		throw std::runtime_error(msg);
 	}
 
@@ -532,11 +532,10 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
-		const auto msg = format_str(
-		        "FSYNTH: FluidSynth failed to load '%s', check the path.",
-		        sf_name.c_str());
+		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
+		                            sf_name.c_str());
 
-		LOG_WARNING("%s", msg.c_str());
+		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
 
