@@ -302,7 +302,11 @@ bool CDROM_Interface_Ioctl::SetDevice(const char* path)
 		return false;
 	}
 
-	std_fs::path cannonical_path = std_fs::canonical(path);
+	std::error_code err = {};
+	const auto cannonical_path = std_fs::canonical(path, err);
+	if (err) {
+		return false;
+	}
 
 	while (mntent *entry = getmntent(mounts)) {
 		// Don't try to open names that aren't a full path. Ex: "tmpfs" "sysfs"
