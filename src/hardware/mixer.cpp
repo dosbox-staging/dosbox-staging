@@ -280,24 +280,19 @@ bool MIXER_FastForwardModeEnabled()
 }
 
 // The queues listed here are for audio devices that run on the main thread
-// The mixer thread can be waiting on the main thread to produce audio in these queues
-// We need to stop them before aquiring a mutex lock to avoid a deadlock
-// These are called infrequently when global mixer state is changed (mostly on device init/destroy and in the MIXER command line program)
-// Individual channels also have a mutex which can be safely aquired without stopping these queues
+// The mixer thread can be waiting on the main thread to produce audio in these
+// queues We need to stop them before aquiring a mutex lock to avoid a deadlock
+// These are called infrequently when global mixer state is changed (mostly on
+// device init/destroy and in the MIXER command line program) Individual channels
+// also have a mutex which can be safely aquired without stopping these queues
 void MIXER_LockMixerThread()
 {
 	PCSPEAKER_NotifyLockMixer();
-
 	TANDYDAC_NotifyLockMixer();
-
 	PS1DAC_NotifyLockMixer();
-
 	LPTDAC_NotifyLockMixer();
-
 	GUS_NotifyLockMixer();
-
 	REELMAGIC_NotifyLockMixer();
-
 	SBLASTER_NotifyLockMixer();
 
 	mixer.mutex.lock();
@@ -306,17 +301,11 @@ void MIXER_LockMixerThread()
 void MIXER_UnlockMixerThread()
 {
 	PCSPEAKER_NotifyUnlockMixer();
-
 	TANDYDAC_NotifyUnlockMixer();
-
 	PS1DAC_NotifyUnlockMixer();
-
 	LPTDAC_NotifyUnlockMixer();
-
 	GUS_NotifyUnlockMixer();
-
 	REELMAGIC_NotifyUnlockMixer();
-
 	SBLASTER_NotifyLockMixer();
 
 	mixer.mutex.unlock();
@@ -839,8 +828,7 @@ void MixerChannel::SetAppVolume(const AudioFrame gain)
 		constexpr auto MaxUnityVolume = 1.0f;
 		return clamp(vol, MinUnityVolume, MaxUnityVolume);
 	};
-	app_volume_gain = {clamp_to_unity(gain.left),
-	                   clamp_to_unity(gain.right)};
+	app_volume_gain = {clamp_to_unity(gain.left), clamp_to_unity(gain.right)};
 	UpdateCombinedVolume();
 
 #ifdef DEBUG
@@ -849,7 +837,7 @@ void MixerChannel::SetAppVolume(const AudioFrame gain)
 	        name,
 	        static_cast<double>(left),
 	        static_cast<double>(right),
-	        static_cast<double>(app_volume_gain.left  * 100.0f),
+	        static_cast<double>(app_volume_gain.left * 100.0f),
 	        static_cast<double>(app_volume_gain.right * 100.0f));
 #endif
 }
@@ -1115,13 +1103,17 @@ static float get_mixer_frames_per_tick()
 
 float MixerChannel::GetFramesPerTick() const
 {
-	const float stretch_factor = static_cast<float>(sample_rate_hz) / static_cast<float>(mixer.sample_rate_hz);
+	const float stretch_factor = static_cast<float>(sample_rate_hz) /
+	                             static_cast<float>(mixer.sample_rate_hz);
+
 	return get_mixer_frames_per_tick() * stretch_factor;
 }
 
 float MixerChannel::GetFramesPerBlock() const
 {
-	const float stretch_factor = static_cast<float>(sample_rate_hz) / static_cast<float>(mixer.sample_rate_hz);
+	const float stretch_factor = static_cast<float>(sample_rate_hz) /
+	                             static_cast<float>(mixer.sample_rate_hz);
+
 	return static_cast<float>(mixer.blocksize) * stretch_factor;
 }
 
@@ -1156,7 +1148,7 @@ void MixerChannel::Mix(const int frames_requested)
 		std::unique_lock lock(mutex);
 
 		auto stretch_factor = static_cast<float>(sample_rate_hz) /
-						static_cast<float>(mixer.sample_rate_hz);
+		                      static_cast<float>(mixer.sample_rate_hz);
 
 		auto frames_remaining = iceil(
 		        static_cast<float>(frames_needed - audio_frames.size()) *
@@ -1214,7 +1206,7 @@ void MixerChannel::AddSilence()
 				        combined_volume_gain;
 
 				AudioFrame out_frame = {};
-				out_frame[mapped_output_left]  = frame_with_gain.left;
+				out_frame[mapped_output_left] = frame_with_gain.left;
 				out_frame[mapped_output_right] = frame_with_gain.right;
 
 				audio_frames.push_back(out_frame);
@@ -1478,7 +1470,7 @@ void MixerChannel::InitZohUpsamplerState()
 	                     static_cast<float>(zoh_upsampler.target_rate_hz);
 	assert(zoh_upsampler.step < 1.0f);
 
-	zoh_upsampler.pos  = 0.0f;
+	zoh_upsampler.pos = 0.0f;
 }
 
 void MixerChannel::InitLerpUpsamplerState()
@@ -1548,8 +1540,8 @@ void MixerChannel::SetReverbLevel(const float level)
 {
 	std::lock_guard lock(mutex);
 
-	constexpr auto LevelMin    = 0.0f;
-	constexpr auto LevelMax    = 1.0f;
+	constexpr auto LevelMin   = 0.0f;
+	constexpr auto LevelMax   = 1.0f;
 	constexpr auto LevelMinDb = -40.0f;
 	constexpr auto LevelMaxDb = 0.0f;
 
@@ -1589,8 +1581,8 @@ float MixerChannel::GetReverbLevel() const
 
 void MixerChannel::SetChorusLevel(const float level)
 {
-	constexpr auto LevelMin    = 0.0f;
-	constexpr auto LevelMax    = 1.0f;
+	constexpr auto LevelMin   = 0.0f;
+	constexpr auto LevelMax   = 1.0f;
 	constexpr auto LevelMinDb = -24.0f;
 	constexpr auto LevelMaxDb = 0.0f;
 
@@ -1651,6 +1643,7 @@ static constexpr void fill_8to16_lut()
 	}
 }
 
+// clang-format off
 template <class Type, bool stereo, bool signeddata, bool nativeorder>
 AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 {
@@ -1669,7 +1662,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 				frame.left  = lut_u8to16[static_cast<uint8_t>(data[left_pos])];
 				frame.right = lut_u8to16[static_cast<uint8_t>(data[right_pos])];
 			} else {
-				frame.left = lut_u8to16[static_cast<uint8_t>(data[pos])];
+				frame.left  = lut_u8to16[static_cast<uint8_t>(data[pos])];
 			}
 		}
 		// signed 8-bit
@@ -1678,7 +1671,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 				frame.left  = lut_s8to16[static_cast<int8_t>(data[left_pos])];
 				frame.right = lut_s8to16[static_cast<int8_t>(data[right_pos])];
 			} else {
-				frame.left = lut_s8to16[static_cast<int8_t>(data[pos])];
+				frame.left  = lut_s8to16[static_cast<int8_t>(data[pos])];
 			}
 		}
 	} else {
@@ -1689,33 +1682,27 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 					frame.left  = static_cast<float>(data[left_pos]);
 					frame.right = static_cast<float>(data[right_pos]);
 				} else {
-					auto host_pt0 = reinterpret_cast<const uint8_t* const>(
-					        data + left_pos);
-					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
-					        data + right_pos);
+					auto host_pt0 = reinterpret_cast<const uint8_t* const>(data + left_pos);
+					auto host_pt1 = reinterpret_cast<const uint8_t* const>(data + right_pos);
 
 					if (sizeof(Type) == 2) {
 						frame.left  = (int16_t)host_readw(host_pt0);
 						frame.right = (int16_t)host_readw(host_pt1);
 					} else {
-						frame.left = static_cast<float>(
-						        (int32_t)host_readd(host_pt0));
-						frame.right = static_cast<float>(
-						        (int32_t)host_readd(host_pt1));
+						frame.left  = static_cast<float>((int32_t)host_readd(host_pt0));
+						frame.right = static_cast<float>((int32_t)host_readd(host_pt1));
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
 					frame.left = static_cast<float>(data[pos]);
 				} else {
-					auto host_pt = reinterpret_cast<const uint8_t* const>(
-					        data + pos);
+					auto host_pt = reinterpret_cast<const uint8_t* const>(data + pos);
 
 					if (sizeof(Type) == 2) {
 						frame.left = (int16_t)host_readw(host_pt);
 					} else {
-						frame.left = static_cast<float>(
-						        (int32_t)host_readd(host_pt));
+						frame.left = static_cast<float>((int32_t)host_readd(host_pt));
 					}
 				}
 			}
@@ -1723,56 +1710,31 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 			const auto offs = 32768;
 			if (stereo) {
 				if (nativeorder) {
-					frame.left = static_cast<float>(
-					        static_cast<int>(data[left_pos]) -
-					        offs);
-					frame.right = static_cast<float>(
-					        static_cast<int>(data[right_pos]) -
-					        offs);
+					frame.left = static_cast<float>(static_cast<int>(data[left_pos]) - offs);
+
+					frame.right = static_cast<float>(static_cast<int>(data[right_pos]) - offs);
 				} else {
-					auto host_pt0 = reinterpret_cast<const uint8_t* const>(
-					        data + left_pos);
-					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
-					        data + right_pos);
+					auto host_pt0 = reinterpret_cast<const uint8_t* const>(data + left_pos);
+					auto host_pt1 = reinterpret_cast<const uint8_t* const>(data + right_pos);
 
 					if (sizeof(Type) == 2) {
-						frame.left = static_cast<float>(
-						        static_cast<int>(host_readw(
-						                host_pt0)) -
-						        offs);
-						frame.right = static_cast<float>(
-						        static_cast<int>(host_readw(
-						                host_pt1)) -
-						        offs);
+						frame.left  = static_cast<float>(static_cast<int>(host_readw(host_pt0)) - offs);
+						frame.right = static_cast<float>(static_cast<int>(host_readw(host_pt1)) - offs);
 					} else {
-						frame.left = static_cast<float>(
-						        static_cast<int>(host_readd(
-						                host_pt0)) -
-						        offs);
-						frame.right = static_cast<float>(
-						        static_cast<int>(host_readd(
-						                host_pt1)) -
-						        offs);
+						frame.left  = static_cast<float>(static_cast<int>(host_readd(host_pt0)) - offs);
+						frame.right = static_cast<float>(static_cast<int>(host_readd(host_pt1)) - offs);
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
-					frame.left = static_cast<float>(
-					        static_cast<int>(data[pos]) - offs);
+					frame.left = static_cast<float>(static_cast<int>(data[pos]) - offs);
 				} else {
-					auto host_pt = reinterpret_cast<const uint8_t* const>(
-					        data + pos);
+					auto host_pt = reinterpret_cast<const uint8_t* const>(data + pos);
 
 					if (sizeof(Type) == 2) {
-						frame.left = static_cast<float>(
-						        static_cast<int>(host_readw(
-						                host_pt)) -
-						        offs);
+						frame.left = static_cast<float>(static_cast<int>(host_readw(host_pt)) - offs);
 					} else {
-						frame.left = static_cast<float>(
-						        static_cast<int>(host_readd(
-						                host_pt)) -
-						        offs);
+						frame.left = static_cast<float>(static_cast<int>(host_readd(host_pt)) - offs);
 					}
 				}
 			}
@@ -1780,6 +1742,7 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type* data, const int pos)
 	}
 	return frame;
 }
+// clang-format on
 
 // Converts sample stream to floats, performs output channel mappings, removes
 // clicks, and optionally performs zero-order-hold-upsampling.
@@ -1796,7 +1759,7 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 	const auto mapped_channel_left  = channel_map.left;
 	const auto mapped_channel_right = channel_map.right;
 
-	auto pos             = 0;
+	auto pos = 0;
 
 	while (pos < num_frames) {
 		prev_frame = next_frame;
@@ -1805,6 +1768,7 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 			if (stereo) {
 				next_frame.left = static_cast<float>(
 				        data[pos * 2 + 0]);
+
 				next_frame.right = static_cast<float>(
 				        data[pos * 2 + 1]);
 			} else {
@@ -1829,7 +1793,7 @@ void MixerChannel::ConvertSamplesAndMaybeZohUpsample(const Type* data,
 		envelope.Process(stereo, frame_with_gain);
 
 		AudioFrame out_frame = {};
-		out_frame[mapped_output_left]  += frame_with_gain.left;
+		out_frame[mapped_output_left] += frame_with_gain.left;
 		out_frame[mapped_output_right] += frame_with_gain.right;
 
 		convert_buffer.push_back(out_frame);
@@ -1867,7 +1831,7 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 	auto pan = [](const float sample, const float pan) -> AudioFrame {
 		return {(1.0f - pan) * sample, pan * sample};
 	};
-	const auto a = pan(frame.left,  crossfeed.pan_left);
+	const auto a = pan(frame.left, crossfeed.pan_left);
 	const auto b = pan(frame.right, crossfeed.pan_right);
 	return {a.left + b.left, a.right + b.right};
 }
@@ -1989,8 +1953,8 @@ AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 
 void MixerChannel::Sleeper::MaybeSleep()
 {
-	// A signed integer can a durration of ~24 days in milliseconds, which is
-	// surely more than enough.
+	// A signed integer can a durration of ~24 days in milliseconds, which
+	// is surely more than enough.
 	const auto awake_for_ms = check_cast<int>(GetTicksSince(woken_at_ms));
 
 	// Not enough time has passed.. .. try to sleep later
@@ -2068,9 +2032,12 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 
 	// Assert that we're not attempting to do both LERP and Speex resample
 	// We can do one or neither
-	assert((do_lerp_upsample && !do_resample) || (!do_lerp_upsample && do_resample) || (!do_lerp_upsample && !do_resample));
+	assert((do_lerp_upsample && !do_resample) ||
+	       (!do_lerp_upsample && do_resample) ||
+	       (!do_lerp_upsample && !do_resample));
 
-	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(data, num_frames);
+	ConvertSamplesAndMaybeZohUpsample<Type, stereo, signeddata, nativeorder>(
+	        data, num_frames);
 
 	// Starting index this function will start writing to
 	// The audio_frames vector can contain previously converted/resampled audio
@@ -2086,13 +2053,13 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 
 			assert(s.pos >= 0.0f && s.pos <= 1.0f);
 			AudioFrame lerped_frame = {};
-			lerped_frame.left = lerp(s.last_frame.left,
-			                           curr_frame.left,
-			                           s.pos);
+			lerped_frame.left       = lerp(s.last_frame.left,
+                                                 curr_frame.left,
+                                                 s.pos);
 
 			lerped_frame.right = lerp(s.last_frame.right,
-			                            curr_frame.right,
-			                            s.pos);
+			                          curr_frame.right,
+			                          s.pos);
 
 			audio_frames.push_back(lerped_frame);
 
@@ -2126,14 +2093,18 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		        estimate_max_out_frames(speex_resampler.state, in_frames));
 
 		// Store this as a temporary variable
-		// out_frames gets modified by Speex to reflect the actual frames it wrote
+		// out_frames gets modified by Speex to reflect the actual
+		// frames it wrote
 		const auto estimated_frames = out_frames;
 
 		audio_frames.resize(audio_frames_starting_size + estimated_frames);
 
 		// These are vectors of AudioFrame which is just 2 packed floats
-		const auto input_ptr = reinterpret_cast<const float*>(convert_buffer.data());
-		auto output_ptr = reinterpret_cast<float*>(audio_frames.data() + audio_frames_starting_size);
+		const auto input_ptr = reinterpret_cast<const float*>(
+		        convert_buffer.data());
+
+		auto output_ptr = reinterpret_cast<float*>(
+		        audio_frames.data() + audio_frames_starting_size);
 
 		speex_resampler_process_interleaved_float(speex_resampler.state,
 		                                          input_ptr,
@@ -2147,19 +2118,25 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		assert(out_frames <= estimated_frames);
 		audio_frames.resize(audio_frames_starting_size + out_frames); // only shrinks
 	} else {
-		audio_frames.insert(audio_frames.end(), convert_buffer.begin(), convert_buffer.end());
+		audio_frames.insert(audio_frames.end(),
+		                    convert_buffer.begin(),
+		                    convert_buffer.end());
 	}
 
 	// Optionally filter, apply crossfeed
 	// Runs in-place over newly added frames
 	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
 		if (filters.highpass.state == FilterState::On) {
-			audio_frames[i] = {filters.highpass.hpf[0].filter(audio_frames[i].left),
-			                   filters.highpass.hpf[1].filter(audio_frames[i].right)};
+			auto& hpf = filters.highpass.hpf;
+
+			audio_frames[i] = {hpf[0].filter(audio_frames[i].left),
+			                   hpf[1].filter(audio_frames[i].right)};
 		}
 		if (filters.lowpass.state == FilterState::On) {
-			audio_frames[i] = {filters.lowpass.lpf[0].filter(audio_frames[i].left),
-			                   filters.lowpass.lpf[1].filter(audio_frames[i].right)};
+			auto& lpf = filters.lowpass.lpf;
+
+			audio_frames[i] = {lpf[0].filter(audio_frames[i].left),
+			                   lpf[1].filter(audio_frames[i].right)};
 		}
 
 		if (do_crossfeed) {
@@ -2292,32 +2269,44 @@ static void mix_samples(const int frames_requested)
 
 	mixer.output_buffer.clear();
 	mixer.output_buffer.resize(frames_requested);
+
 	mixer.reverb_buffer.clear();
 	mixer.reverb_buffer.resize(frames_requested);
+
 	mixer.chorus_buffer.clear();
 	mixer.chorus_buffer.resize(frames_requested);
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->Mix(frames_requested);
+
 		std::lock_guard lock(channel->mutex);
-		const size_t num_frames = std::min(mixer.output_buffer.size(), channel->audio_frames.size());
+
+		const size_t num_frames = std::min(mixer.output_buffer.size(),
+		                                   channel->audio_frames.size());
+
 		for (size_t i = 0; i < num_frames; ++i) {
 			if (channel->do_sleep) {
-				mixer.output_buffer[i] += channel->sleeper.MaybeFadeOrListen(channel->audio_frames[i]);
+				mixer.output_buffer[i] += channel->sleeper.MaybeFadeOrListen(
+				        channel->audio_frames[i]);
 			} else {
 				mixer.output_buffer[i] += channel->audio_frames[i];
 			}
 
 			if (mixer.do_reverb && channel->do_reverb_send) {
-				mixer.reverb_buffer[i] += channel->audio_frames[i] * channel->reverb.send_gain;
+				mixer.reverb_buffer[i] += channel->audio_frames[i] *
+				                          channel->reverb.send_gain;
 			}
 
 			if (mixer.do_chorus && channel->do_chorus_send) {
-				mixer.chorus_buffer[i] += channel->audio_frames[i] * channel->chorus.send_gain;
+				mixer.chorus_buffer[i] += channel->audio_frames[i] *
+				                          channel->chorus.send_gain;
 			}
 		}
-		channel->audio_frames.erase(channel->audio_frames.begin(), channel->audio_frames.begin() + num_frames);
+
+		channel->audio_frames.erase(channel->audio_frames.begin(),
+		                            channel->audio_frames.begin() + num_frames);
+
 		if (channel->do_sleep) {
 			channel->sleeper.MaybeSleep();
 		}
@@ -2330,8 +2319,8 @@ static void mix_samples(const int frames_requested)
 
 			// MVerb operates on two non-interleaved sample streams
 			AudioFrame in_frame = mixer.reverb_buffer[i];
-			in_frame.left = hpf[0].filter(in_frame.left);
-			in_frame.right = hpf[1].filter(in_frame.right);
+			in_frame.left       = hpf[0].filter(in_frame.left);
+			in_frame.right      = hpf[1].filter(in_frame.right);
 
 			float* in_buf[2] = {&in_frame.left, &in_frame.right};
 
@@ -2358,15 +2347,12 @@ static void mix_samples(const int frames_requested)
 	// Apply high-pass filter to the master output
 	for (auto& frame : mixer.output_buffer) {
 		auto& hpf = mixer.highpass_filter;
-		frame = {
-			hpf[0].filter(frame.left),
-			hpf[1].filter(frame.right)
-		};
+		frame = {hpf[0].filter(frame.left), hpf[1].filter(frame.right)};
 	}
 
 	if (mixer.do_compressor) {
 		// Apply compressor to the master output as the very last step
-		for (auto& frame: mixer.output_buffer) {
+		for (auto& frame : mixer.output_buffer) {
 			frame = mixer.compressor.Process(frame);
 		}
 	}
@@ -2383,24 +2369,30 @@ static void mix_samples(const int frames_requested)
 			const auto right = static_cast<uint16_t>(
 			        clamp_to_int16(static_cast<int>(frame.right)));
 
-			mixer.capture_buffer.push_back(static_cast<int16_t>(host_to_le16(left)));
-			mixer.capture_buffer.push_back(static_cast<int16_t>(host_to_le16(right)));
+			mixer.capture_buffer.push_back(
+			        static_cast<int16_t>(host_to_le16(left)));
+
+			mixer.capture_buffer.push_back(
+			        static_cast<int16_t>(host_to_le16(right)));
 		}
 
-		if (mixer.capture_queue.Size() + mixer.capture_buffer.size() > mixer.capture_queue.MaxCapacity()) {
-			// We're producing more audio than the capture is consuming.
-			// This usually happens when the main thread is being slowed down by video encoding.
-			// Ex: Slow host CPU or using zlib rather than zlib_ng
-			// Not ideal as this results in an audible "skip forward"
-			// Without this, it's a complete stuttery mess though so it's the lesser of two evils
+		if (mixer.capture_queue.Size() + mixer.capture_buffer.size() >
+		    mixer.capture_queue.MaxCapacity()) {
+			// We're producing more audio than the capture is
+			// consuming. This usually happens when the main thread
+			// is being slowed down by video encoding. Ex: Slow host
+			// CPU or using zlib rather than zlib_ng Not ideal as
+			// this results in an audible "skip forward" Without
+			// this, it's a complete stuttery mess though so it's
+			// the lesser of two evils
 			mixer.capture_queue.Clear();
 		}
 		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer);
 	}
 
 	// Normalize the final output before sending to SDL
-	for (auto& frame: mixer.output_buffer) {
-		frame.left = normalize_sample(frame.left);
+	for (auto& frame : mixer.output_buffer) {
+		frame.left  = normalize_sample(frame.left);
 		frame.right = normalize_sample(frame.right);
 	}
 }
@@ -2414,21 +2406,27 @@ static void capture_callback()
 
 	static float frame_counter = 0.0f;
 	frame_counter += get_mixer_frames_per_tick();
+
 	const int num_frames = ifloor(frame_counter);
-	frame_counter -= static_cast<float>(num_frames);
 	assert(num_frames > 0);
+
+	frame_counter -= static_cast<float>(num_frames);
 
 	const int num_samples = num_frames * 2;
 
 	// We can't block waiting on the mixer thread
-	// Some mixer channels block waiting on the main thread and this would deadlock
+	// Some mixer channels block waiting on the main thread and this would
+	// deadlock
 	static std::vector<int16_t> frames = {};
 	frames.clear();
 
 	const int samples_available = check_cast<int>(mixer.capture_queue.Size());
 	const int samples_requested = std::min(num_samples, samples_available);
+
 	if (samples_requested > 0) {
-		mixer.capture_queue.BulkDequeue(frames, std::min(num_samples, samples_available));
+		mixer.capture_queue.BulkDequeue(frames,
+		                                std::min(num_samples,
+		                                         samples_available));
 	}
 
 	// Fill with silence if needed
@@ -2448,9 +2446,11 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	const auto frames_requested = check_cast<size_t>(bytes_requested /
 	                                                 BytesPerAudioFrame);
-	// Mac OSX has been observed to be problematic if we ever block inside SDL's callback
-	// This ensures that we do not block waiting for more audio
-	// In the queue has run dry, we write what we have available and the rest of the request is silence
+
+	// Mac OSX has been observed to be problematic if we ever block inside
+	// SDL's callback This ensures that we do not block waiting for more
+	// audio In the queue has run dry, we write what we have available and
+	// the rest of the request is silence
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
@@ -2472,61 +2472,88 @@ static void mixer_thread_loop()
 		assert(mixer.state != MixerState::Uninitialized);
 
 		// This code is mostly for the fast-forward button (hold Alt + F12)
-		const double now = PIC_FullIndex();
+		const double now         = PIC_FullIndex();
 		const double actual_time = now - last_mixed;
-		const double expected_time = (static_cast<double>(mixer.blocksize) / static_cast<double>(mixer.sample_rate_hz)) * 1000.0;
+		const double expected_time = (static_cast<double>(mixer.blocksize) /
+		                              static_cast<double>(mixer.sample_rate_hz)) *
+		                             1000.0;
 		last_mixed = now;
 
 		// "Underflow" is not a concern since moving to a threaded mixer
-		// If the CPU is running slower than real-time, the audio drivers will naturally slow down the audio
-		// Therefore, we can always request at least a blocksize worth of audio
+		// If the CPU is running slower than real-time, the audio
+		// drivers will naturally slow down the audio Therefore, we can
+		// always request at least a blocksize worth of audio
 		int frames_requested = mixer.blocksize;
 
 		if (mixer.fast_forward_mode) {
 			// Flag is set only by the fast-forward hotkey handler
-			// Usually this means the emulation core is running much faster than real-time
-			// We must consume more audio to "catch up" but always request at least a blocksize
-			frames_requested = std::max(mixer.blocksize, ifloor(actual_time * get_mixer_frames_per_tick()));
+			// Usually this means the emulation core is running much
+			// faster than real-time We must consume more audio to
+			// "catch up" but always request at least a blocksize
+			frames_requested = std::max(
+			        mixer.blocksize,
+			        ifloor(actual_time * get_mixer_frames_per_tick()));
 		}
 
 		mix_samples(frames_requested);
-		assert(mixer.output_buffer.size() == check_cast<size_t>(frames_requested));
+		assert(mixer.output_buffer.size() ==
+		       check_cast<size_t>(frames_requested));
 
 		lock.unlock();
 
 		if (mixer.state == MixerState::NoSound) {
-			// SDL callback is not running. Mixed sound gets discarded.
-			// Sleep for the expected duration to simulate the time it would have taken to playback the audio.
+			// SDL callback is not running. Mixed sound gets
+			// discarded. Sleep for the expected duration to
+			// simulate the time it would have taken to playback the
+			// audio.
 			constexpr double NanosecondsPerMillisecond = 1000000.0;
-			const uint64_t nap_time = static_cast<uint64_t>(expected_time * NanosecondsPerMillisecond);
-			std::this_thread::sleep_for(std::chrono::nanoseconds(nap_time));
+
+			const uint64_t nap_time = static_cast<uint64_t>(
+			        expected_time * NanosecondsPerMillisecond);
+
+			std::this_thread::sleep_for(
+			        std::chrono::nanoseconds(nap_time));
 			continue;
+
 		} else if (mixer.state == MixerState::Muted) {
 			// SDL callback remains active. Enqueue silence.
 			mixer.output_buffer.clear();
 			mixer.output_buffer.resize(mixer.blocksize);
+
 			mixer.final_output.BulkEnqueue(mixer.output_buffer);
 			continue;
 		}
 
-		// Only true if we were in fast-forward mode at the time we calculated frames_requested
-		// That variable could have changed by now but we need to always squash down to a blocksize of audio
+		// Only true if we were in fast-forward mode at the time we
+		// calculated frames_requested That variable could have changed
+		// by now but we need to always squash down to a blocksize of audio
 		const bool audio_needs_squashing = frames_requested > mixer.blocksize;
-		auto& to_mix = audio_needs_squashing ? mixer.fast_forward_buffer : mixer.output_buffer;
+
+		auto& to_mix = audio_needs_squashing ? mixer.fast_forward_buffer
+		                                     : mixer.output_buffer;
 
 		if (audio_needs_squashing) {
 			// This is "chipmunk mode" meant for fast-forward
-			// It's basic sample skipping to compress a large amount of audio into a single blocksize
+			// It's basic sample skipping to compress a large amount
+			// of audio into a single blocksize
 			assert(frames_requested > mixer.blocksize);
 
 			mixer.fast_forward_buffer.clear();
 			mixer.fast_forward_buffer.reserve(mixer.blocksize);
-			const float index_add = static_cast<float>(frames_requested) / static_cast<float>(mixer.blocksize);
+
+			const float index_add = static_cast<float>(frames_requested) /
+			                        static_cast<float>(mixer.blocksize);
+
 			float float_index = 0.0f;
 
 			for (int i = 0; i < mixer.blocksize; ++i) {
-				const size_t src_index = std::min(check_cast<size_t>(iroundf(float_index)), mixer.output_buffer.size() - 1);
-				mixer.fast_forward_buffer.push_back(mixer.output_buffer[src_index]);
+				const size_t src_index = std::min(
+				        check_cast<size_t>(iroundf(float_index)),
+				        mixer.output_buffer.size() - 1);
+
+				mixer.fast_forward_buffer.push_back(
+				        mixer.output_buffer[src_index]);
+
 				float_index += index_add;
 			}
 		}
@@ -2566,9 +2593,10 @@ static void set_mixer_state(const MixerState new_state)
 	if (mixer.state == MixerState::Uninitialized) {
 		mixer.final_output.Start();
 		if (mixer.sdl_device > 0) {
-			// SDL starts out paused so unpause it when we first set the mixer state.
-			// We always keep SDL running in the future.
-			// When the mixer becomes muted, we just write silence.
+			// SDL starts out paused so unpause it when we first set
+			// the mixer state. We always keep SDL running in the
+			// future. When the mixer becomes muted, we just write
+			// silence.
 			constexpr int Unpause = 0;
 			SDL_PauseAudioDevice(mixer.sdl_device, Unpause);
 		}
@@ -2651,8 +2679,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// Opening SDL audio device succeeded
 	//
 	// An opened audio device starts out paused, and should be enabled for
-	// playing by calling `SDL_PauseAudioDevice()` when you are ready for your
-	// audio callback function to be called. We do that in
+	// playing by calling `SDL_PauseAudioDevice()` when you are ready for
+	// your audio callback function to be called. We do that in
 	// `set_mixer_state()`.
 	//
 	const auto obtained_sample_rate_hz = obtained.freq;
@@ -2720,10 +2748,12 @@ static void init_master_highpass_filter()
 	// chain, instead of doing it on every single mixer channel.
 	//
 	MIXER_LockMixerThread();
+
 	constexpr auto HighpassCutoffFreqHz = 20.0;
 	for (auto& f : mixer.highpass_filter) {
 		f.setup(mixer.sample_rate_hz, HighpassCutoffFreqHz);
 	}
+
 	MIXER_UnlockMixerThread();
 }
 
@@ -2758,8 +2788,8 @@ void MIXER_Init(Section* sec)
 
 		} else {
 			if (init_sdl_sound(secprop->Get_int("rate"),
-							   secprop->Get_int("blocksize"),
-							   secprop->Get_bool("negotiate"))) {
+			                   secprop->Get_int("blocksize"),
+			                   secprop->Get_bool("negotiate"))) {
 
 				// This also unpauses the audio device which is
 				// opened in paused mode by SDL.
@@ -2826,6 +2856,7 @@ void MIXER_Mute()
 	if (mixer.state == MixerState::On) {
 		set_mixer_state(MixerState::Muted);
 		MIDI_Mute();
+
 		GFX_NotifyAudioMutedStatus(true);
 		LOG_MSG("MIXER: Muted audio output");
 	}
@@ -2836,6 +2867,7 @@ void MIXER_Unmute()
 	if (mixer.state == MixerState::Muted) {
 		set_mixer_state(MixerState::On);
 		MIDI_Unmute();
+
 		GFX_NotifyAudioMutedStatus(false);
 		LOG_MSG("MIXER: Unmuted audio output");
 	}
