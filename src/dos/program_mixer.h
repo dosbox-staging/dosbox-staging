@@ -59,7 +59,7 @@ struct SelectChannel {
 };
 
 struct SetVolume {
-	AudioFrame volume = {};
+	AudioFrame volume_as_gain = {};
 	bool operator==(const SetVolume that) const;
 };
 
@@ -69,16 +69,19 @@ struct SetStereoMode {
 };
 
 struct SetCrossfeedStrength {
+	// 0.0 to 1.0
 	float strength = {};
 	bool operator==(const SetCrossfeedStrength that) const;
 };
 
 struct SetReverbLevel {
+	// 0.0 to 1.0
 	float level = {};
 	bool operator==(const SetReverbLevel that) const;
 };
 
 struct SetChorusLevel {
+	// 0.0 to 1.0
 	float level = {};
 	bool operator==(const SetChorusLevel that) const;
 };
