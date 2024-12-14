@@ -126,12 +126,12 @@ enum class ChannelFeature {
 enum class FilterState { Off, On };
 
 struct MixerChannelSettings {
-	bool is_enabled          = {};
-	AudioFrame user_volume   = {};
-	StereoLine lineout_map   = {};
-	float crossfeed_strength = {};
-	float reverb_level       = {};
-	float chorus_level       = {};
+	bool is_enabled             = {};
+	AudioFrame user_volume_gain = {};
+	StereoLine lineout_map      = {};
+	float crossfeed_strength    = {};
+	float reverb_level          = {};
+	float chorus_level          = {};
 };
 
 enum class ResampleMethod {
@@ -190,19 +190,19 @@ public:
 	// The "user volume" is the volume level of the built-in DOSBox mixer
 	// (MIXER command)
 	const AudioFrame GetUserVolume() const;
-	void SetUserVolume(const AudioFrame volume);
+	void SetUserVolume(const AudioFrame gain);
 
 	// The "app volume" is the volume level set programmatically by DOS
 	// programs (on audio devices that support that, e.g., the Sound
 	// Blaster mixer, or the CD Audio volume level).
 	//
-	// For example, if you set the volume level of the CDAUDIO channel to 50%
-	// in the mixer via `MIXER CDAUDIO 50`, then you also set the CD audio
-	// music level in a game to "half volume", the final volume will be around
-	// 25%.
+	// For example, if you set the volume level of the CDAUDIO channel to
+	// 50% in the mixer via `MIXER CDAUDIO 50`, then you also set the CD
+	// audio music level in a game to "half volume", the final volume will
+	// be around 25%.
 	//
 	const AudioFrame GetAppVolume() const;
-	void SetAppVolume(const AudioFrame volume);
+	void SetAppVolume(const AudioFrame gain);
 
 	void SetChannelMap(const StereoLine map);
 
@@ -345,14 +345,14 @@ private:
 	std::atomic<int> sample_rate_hz = 0;
 
 	// Volume gains
-	// ~~~~~!~~~~~~
-	// The user sets this via MIXER.COM, which lets them magnify or diminish
-	// the channel's volume relative to other adjustments, such as any
-	// adjustments done by the application at runtime.
+	// ~~~~~~~~~~~~
+	// The user sets this via the MIXER command, which lets them magnify or
+	// diminish the channel's volume relative to other adjustments, such as
+	// any adjustments done by the application at runtime.
 	AudioFrame user_volume_gain = {1.0f, 1.0f};
 
 	// The application (might) adjust a channel's volume programmatically at
-	// runtime via the Sound Blaster or ReelMagic control interfaces.
+	// runtime (e.g., via the Sound Blaster or ReelMagic control interfaces).
 	AudioFrame app_volume_gain = {1.0f, 1.0f};
 
 	// The 0 dB volume gain is used to bring a channel to 0 dB in the
@@ -368,9 +368,9 @@ private:
 	//
 	float db0_volume_gain = 1.0f;
 
-	// All three of these are multiplied together to form the combined
-	// volume gain. This means we can apply one float-multiply per sample
-	// and perform all three adjustments at once.
+	// All three of these volume gains are multiplied together to form the
+	// combined volume gain. This means we can apply one float-multiply per
+	// sample and perform all three adjustments at once.
 	//
 	AudioFrame combined_volume_gain = {1.0f, 1.0f};
 
@@ -458,7 +458,7 @@ void MIXER_DisableFastForwardMode();
 bool MIXER_FastForwardModeEnabled();
 
 const AudioFrame MIXER_GetMasterVolume();
-void MIXER_SetMasterVolume(const AudioFrame volume);
+void MIXER_SetMasterVolume(const AudioFrame gain);
 
 void MIXER_Mute();
 void MIXER_Unmute();
