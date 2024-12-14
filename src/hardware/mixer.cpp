@@ -163,7 +163,7 @@ struct MixerSettings {
 
 	std::thread thread = {};
 
-	AudioFrame master_volume = {1.0f, 1.0f};
+	AudioFrame master_gain = {1.0f, 1.0f};
 
 	// Output by mix_samples, to be enqueud into the final_output queue
 	std::vector<AudioFrame> output_buffer = {};
@@ -808,10 +808,10 @@ void MixerChannel::Set0dbScalar(const float scalar)
 void MixerChannel::UpdateCombinedVolume()
 {
 	std::lock_guard lock(mutex);
-	// TODO Now that we use floats, we should apply the master volume at the
+	// TODO Now that we use floats, we should apply the master gain at the
 	// very end as it has no risk of overloading the 16-bit range
 	combined_volume_gain = user_volume_gain * app_volume_gain *
-	                       mixer.master_volume * db0_volume_gain;
+	                       mixer.master_gain * db0_volume_gain;
 }
 
 const AudioFrame MixerChannel::GetUserVolume() const
@@ -819,10 +819,10 @@ const AudioFrame MixerChannel::GetUserVolume() const
 	return user_volume_gain;
 }
 
-void MixerChannel::SetUserVolume(const AudioFrame volume)
+void MixerChannel::SetUserVolume(const AudioFrame gain)
 {
 	// Allow unconstrained user-defined values
-	user_volume_gain = volume;
+	user_volume_gain = gain;
 	UpdateCombinedVolume();
 }
 
@@ -831,7 +831,7 @@ const AudioFrame MixerChannel::GetAppVolume() const
 	return app_volume_gain;
 }
 
-void MixerChannel::SetAppVolume(const AudioFrame volume)
+void MixerChannel::SetAppVolume(const AudioFrame gain)
 {
 	// Constrain application-defined volume between 0% and 100%
 	auto clamp_to_unity = [](const float vol) {
@@ -839,8 +839,8 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 		constexpr auto MaxUnityVolume = 1.0f;
 		return clamp(vol, MinUnityVolume, MaxUnityVolume);
 	};
-	app_volume_gain = {clamp_to_unity(volume.left),
-	                   clamp_to_unity(volume.right)};
+	app_volume_gain = {clamp_to_unity(gain.left),
+	                   clamp_to_unity(gain.right)};
 	UpdateCombinedVolume();
 
 #ifdef DEBUG
@@ -856,12 +856,12 @@ void MixerChannel::SetAppVolume(const AudioFrame volume)
 
 const AudioFrame MIXER_GetMasterVolume()
 {
-	return mixer.master_volume;
+	return mixer.master_gain;
 }
 
-void MIXER_SetMasterVolume(const AudioFrame volume)
+void MIXER_SetMasterVolume(const AudioFrame gain)
 {
-	mixer.master_volume = volume;
+	mixer.master_gain = gain;
 
 	for (const auto& [_, channel] : mixer.channels) {
 		channel->UpdateCombinedVolume();
@@ -2240,7 +2240,7 @@ MixerChannelSettings MixerChannel::GetSettings() const
 	MixerChannelSettings s = {};
 
 	s.is_enabled         = is_enabled;
-	s.user_volume        = GetUserVolume();
+	s.user_volume_gain   = GetUserVolume();
 	s.lineout_map        = GetLineoutMap();
 	s.crossfeed_strength = GetCrossfeedStrength();
 	s.reverb_level       = GetReverbLevel();
@@ -2253,7 +2253,7 @@ void MixerChannel::SetSettings(const MixerChannelSettings& s)
 {
 	is_enabled = s.is_enabled;
 
-	SetUserVolume(s.user_volume);
+	SetUserVolume(s.user_volume_gain);
 	SetLineoutMap(s.lineout_map);
 
 	if (mixer.do_crossfeed) {
