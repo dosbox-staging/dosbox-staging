@@ -261,7 +261,7 @@ public:
 	bool WakeUp();
 
 	std::vector<AudioFrame> audio_frames = {};
-	std::recursive_mutex mutex = {};
+	std::recursive_mutex mutex           = {};
 
 	std::atomic<bool> is_enabled = false;
 
@@ -270,7 +270,6 @@ public:
 		float send_gain = 0.0f;
 	} reverb            = {};
 	bool do_reverb_send = false;
-
 
 	struct {
 		float level     = 0.0f;
@@ -427,7 +426,7 @@ private:
 			int order          = 0;
 			int cutoff_freq_hz = 0;
 		} lowpass = {};
-	} filters               = {};
+	} filters = {};
 
 	struct {
 		float strength  = 0.0f;
@@ -480,14 +479,15 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset);
 ChorusPreset MIXER_GetChorusPreset();
 void MIXER_SetChorusPreset(const ChorusPreset new_preset);
 
-// Generic callback used for audio devices which generate audio on the main thread
-// These devices produce audio on the main thread and consume on the mixer thread
-// This callback is the consumer part
+// Generic callback used for audio devices which generate audio on the main
+// thread These devices produce audio on the main thread and consume on the
+// mixer thread This callback is the consumer part
 template <class DeviceType, class AudioType, bool stereo, bool signeddata, bool nativeorder>
 inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* device)
 {
-	// Currently only handles mono sound (output_queue is a primitive type and frames == samples)
-	// Special case for AudioType == AudioFrame (stereo floating-point sound)
+	// Currently only handles mono sound (output_queue is a primitive type
+	// and frames == samples) Special case for AudioType == AudioFrame
+	// (stereo floating-point sound)
 	static_assert((!stereo) || std::is_same_v<AudioType, AudioFrame>);
 
 	// AudioFrame type is always stereo
@@ -496,22 +496,29 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 	assert(device && device->channel);
 
 	if (MIXER_FastForwardModeEnabled()) {
-		// Special case, normally only hit when using the fast-forward hotkey (Alt + F12)
-		// We need a very large buffer to compensate or it results in static
+		// Special case, normally only hit when using the fast-forward
+		// hotkey (Alt + F12) We need a very large buffer to compensate
+		// or it results in static
 
 		// Mostly arbitrary but it works well in testing.
-		// The queue just needs to be large enough to hold the large frame requests we get in fast-forward mode.
-		// This value can be tweaked without much consequence if it ever becomes problematic.
+		// The queue just needs to be large enough to hold the large
+		// frame requests we get in fast-forward mode. This value can be
+		// tweaked without much consequence if it ever becomes
+		// problematic.
 		constexpr float MaxExpectedFastForwardFactor = 100.0f;
-		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * MaxExpectedFastForwardFactor));
+		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() *
+		                                  MaxExpectedFastForwardFactor));
 	} else {
-		// Normal case, resize the queue to ensure we don't have high latency
-		// Resize is a fast operation, only setting a variable for max capacity
-		// It does not drop frames or append zeros to the end of the underlying data structure
+		// Normal case, resize the queue to ensure we don't have high
+		// latency Resize is a fast operation, only setting a variable
+		// for max capacity It does not drop frames or append zeros to
+		// the end of the underlying data structure
 
-		// Size to 2x blocksize. The mixer callback will request 1x blocksize.
-		// This provides a good size to avoid over-runs and stalls.
-		device->output_queue.Resize(iceil(device->channel->GetFramesPerBlock() * 2.0f));
+		// Size to 2x blocksize. The mixer callback will request 1x
+		// blocksize. This provides a good size to avoid over-runs and
+		// stalls.
+		device->output_queue.Resize(
+		        iceil(device->channel->GetFramesPerBlock() * 2.0f));
 	}
 	static std::vector<AudioType> to_mix = {};
 
