@@ -164,13 +164,18 @@ struct ChorusSettings {
 	}
 };
 
+// This shows up nicely as 50% and -6.00 dB in the MIXER command's output
+constexpr auto Minus6db = 0.501f;
+
 struct MixerSettings {
 	RWQueue<AudioFrame> final_output{1};
 	RWQueue<int16_t> capture_queue{1};
 
 	std::thread thread = {};
 
-	AudioFrame master_volume = {1.0f, 1.0f};
+	// The default master gain is -6dB (50% volume) to minimise the change
+	// for clipping.
+	AudioFrame master_volume = {Minus6db, Minus6db};
 
 	// Output by mix_samples, to be enqueud into the final_output queue
 	std::vector<AudioFrame> output_buffer = {};
