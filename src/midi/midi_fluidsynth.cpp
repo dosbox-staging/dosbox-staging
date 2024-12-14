@@ -195,7 +195,20 @@ static std::vector<std_fs::path> get_data_dirs()
 		// of the actual path on Linux & Windows, so we need to
 		// normalise that to avoid some subtle bugs downstream (see
 		// `find_sf_file()` as well).
-		dirs.insert(dirs.begin(), std_fs::canonical(sf_dir));
+		if (path_exists(sf_dir)) {
+			std::error_code err = {};
+			const auto canonical_path = std_fs::canonical(sf_dir, err);
+			if (!err) {
+				dirs.insert(dirs.begin(), canonical_path);
+			}
+		} else {
+			LOG_WARNING(
+			        "FSYNTH: Invalid `soundfont_dir` setting, "
+			        "cannot open directory '%s'; using ''",
+			        sf_dir.c_str());
+
+			set_section_property_value("fluidsynth", "soundfont_dir", "");
+		}
 	}
 	return dirs;
 }
@@ -224,8 +237,15 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 				// physical file. This prevents certain subtle
 				// bugs downstream when we use this path in
 				// comparisons.
-				//
-				return std_fs::canonical(sf).c_str();
+				std::error_code err = {};
+				const auto canonical_path =
+				        std_fs::canonical(sf, err).c_str();
+
+				if (err) {
+					return {};
+				} else {
+					return canonical_path;
+				}
 			}
 		}
 	}
