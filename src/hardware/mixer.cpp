@@ -174,8 +174,8 @@ struct MixerSettings {
 	std::vector<AudioFrame> output_buffer = {};
 
 	// Temporary mixing buffers
-	std::vector<AudioFrame> reverb_buffer       = {};
-	std::vector<AudioFrame> chorus_buffer       = {};
+	std::vector<AudioFrame> reverb_aux_buffer   = {};
+	std::vector<AudioFrame> chorus_aux_buffer   = {};
 	std::vector<int16_t> capture_buffer         = {};
 	std::vector<AudioFrame> fast_forward_buffer = {};
 
@@ -2295,11 +2295,11 @@ static void mix_samples(const int frames_requested)
 	mixer.output_buffer.clear();
 	mixer.output_buffer.resize(frames_requested);
 
-	mixer.reverb_buffer.clear();
-	mixer.reverb_buffer.resize(frames_requested);
+	mixer.reverb_aux_buffer.clear();
+	mixer.reverb_aux_buffer.resize(frames_requested);
 
-	mixer.chorus_buffer.clear();
-	mixer.chorus_buffer.resize(frames_requested);
+	mixer.chorus_aux_buffer.clear();
+	mixer.chorus_aux_buffer.resize(frames_requested);
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (const auto& [_, channel] : mixer.channels) {
@@ -2319,13 +2319,13 @@ static void mix_samples(const int frames_requested)
 			}
 
 			if (mixer.do_reverb && channel->do_reverb_send) {
-				mixer.reverb_buffer[i] += channel->audio_frames[i] *
-				                          channel->reverb.send_gain;
+				mixer.reverb_aux_buffer[i] += channel->audio_frames[i] *
+				                              channel->reverb.send_gain;
 			}
 
 			if (mixer.do_chorus && channel->do_chorus_send) {
-				mixer.chorus_buffer[i] += channel->audio_frames[i] *
-				                          channel->chorus.send_gain;
+				mixer.chorus_aux_buffer[i] += channel->audio_frames[i] *
+				                              channel->chorus.send_gain;
 			}
 		}
 
@@ -2338,12 +2338,15 @@ static void mix_samples(const int frames_requested)
 	}
 
 	if (mixer.do_reverb) {
-		for (size_t i = 0; i < mixer.reverb_buffer.size(); ++i) {
+		// Apply reverb effect to the reverb aux buffer, then mix the
+		// results to the master output.
+		//
+		for (size_t i = 0; i < mixer.reverb_aux_buffer.size(); ++i) {
 			// High-pass filter the reverb input
 			auto& hpf = mixer.reverb.highpass_filter;
 
 			// MVerb operates on two non-interleaved sample streams
-			AudioFrame in_frame = mixer.reverb_buffer[i];
+			AudioFrame in_frame = mixer.reverb_aux_buffer[i];
 			in_frame.left       = hpf[0].filter(in_frame.left);
 			in_frame.right      = hpf[1].filter(in_frame.right);
 
@@ -2361,9 +2364,10 @@ static void mix_samples(const int frames_requested)
 
 	if (mixer.do_chorus) {
 		// Apply chorus effect to the chorus aux buffer, then mix the
-		// results to the master output
-		for (size_t i = 0; i < mixer.chorus_buffer.size(); ++i) {
-			auto frame = mixer.chorus_buffer[i];
+		// results to the master output.
+		//
+		for (size_t i = 0; i < mixer.chorus_aux_buffer.size(); ++i) {
+			auto frame = mixer.chorus_aux_buffer[i];
 			mixer.chorus.chorus_engine.process(&frame.left, &frame.right);
 			mixer.output_buffer[i] += frame;
 		}
@@ -2408,13 +2412,15 @@ static void mix_samples(const int frames_requested)
 
 		if (mixer.capture_queue.Size() + mixer.capture_buffer.size() >
 		    mixer.capture_queue.MaxCapacity()) {
+
 			// We're producing more audio than the capture is
 			// consuming. This usually happens when the main thread
-			// is being slowed down by video encoding. Ex: Slow host
-			// CPU or using zlib rather than zlib_ng Not ideal as
-			// this results in an audible "skip forward" Without
-			// this, it's a complete stuttery mess though so it's
-			// the lesser of two evils
+			// is being slowed down by video encoding (e.g., slow
+			// host CPU or using zlib rather than zlib_ng). Not
+			// ideal as this results in an audible "skip forward".
+			// Without this, it's a complete stuttery mess though so
+			// it's the lesser of two evils.
+			//
 			mixer.capture_queue.Clear();
 		}
 		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer);
