@@ -233,12 +233,17 @@ public:
 	void SetResampleMethod(const ResampleMethod method);
 	void SetZeroOrderHoldUpsamplerTargetRate(const int target_rate_hz);
 
+	// The crossfeed strength is a perceptually linear scale from 0.0
+	// to 1.0. A value of 0.0 means no crossfeed, and 1.0 means the stereo
+	// signal is collapsed into mono.
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength() const;
 
+	// The reverb level is a perceptually linear scale from 0.0 to 1.0.
 	void SetReverbLevel(const float level);
 	float GetReverbLevel() const;
 
+	// The chorus level is a perceptually linear scale from 0.0 to 1.0
 	void SetChorusLevel(const float level);
 	float GetChorusLevel() const;
 
