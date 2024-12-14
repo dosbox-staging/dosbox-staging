@@ -43,7 +43,7 @@ bool SelectChannel::operator==(const SelectChannel that) const
 
 bool SetVolume::operator==(const SetVolume that) const
 {
-	return volume == that.volume;
+	return volume_as_gain == that.volume_as_gain;
 }
 
 bool SetStereoMode::operator==(const SetStereoMode that) const
@@ -85,10 +85,10 @@ void Executor::operator()(const SelectChannel cmd)
 void Executor::operator()(const SetVolume cmd)
 {
 	if (master_channel) {
-		MIXER_SetMasterVolume(cmd.volume);
+		MIXER_SetMasterVolume(cmd.volume_as_gain);
 	} else {
 		assert(channel);
-		channel->SetUserVolume({cmd.volume.left, cmd.volume.right});
+		channel->SetUserVolume(cmd.volume_as_gain);
 	}
 }
 
@@ -903,17 +903,17 @@ void MIXER::ShowMixerStatus()
 	column_layout.append({'\n'});
 
 	auto show_channel = [&](const std::string& name,
-	                        const AudioFrame& volume,
+	                        const AudioFrame& volume_as_gain,
 	                        const std::string& mode,
 	                        const std::string& xfeed,
 	                        const std::string& reverb,
 	                        const std::string& chorus) {
 		WriteOut(column_layout.c_str(),
 		         name.c_str(),
-		         static_cast<double>(gain_to_percentage(volume.left)),
-		         static_cast<double>(gain_to_percentage(volume.right)),
-		         static_cast<double>(gain_to_decibel(volume.left)),
-		         static_cast<double>(gain_to_decibel(volume.right)),
+		         static_cast<double>(gain_to_percentage(volume_as_gain.left)),
+		         static_cast<double>(gain_to_percentage(volume_as_gain.right)),
+		         static_cast<double>(gain_to_decibel(volume_as_gain.left)),
+		         static_cast<double>(gain_to_decibel(volume_as_gain.right)),
 		         mode.c_str(),
 		         xfeed.c_str(),
 		         reverb.c_str(),
