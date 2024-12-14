@@ -962,7 +962,34 @@ void MixerChannel::ConfigureResampler()
 
 		// Only init the resampler once
 		if (!speex_resampler.state) {
-			constexpr auto NumChannels     = 2; // always stereo
+
+			// Always stereo
+			constexpr auto NumChannels = 2;
+
+			// According to the Speex authors, a quality of 3 is
+			// acceptable for most desktop uses and even a qualitiy
+			// of 0 has decent enough sound (but artifacts might be
+			// heard).
+			//
+			// In our testing on a large number of DOS soundtracks,
+			// a quality of 4 yielded virtually identical sounding
+			// resampled audio (e.g., on OPL music with lots of
+			// treble-heavy fast transients), so we went with a
+			// quality 5 to be on the safe side. This has a good
+			// balance between quality, and latency, and processing
+			// power.
+			//
+			// Relevant comment from an Opus developer:
+			//
+			// "The higher settings are mostly for audiophiles,
+			// spectrograms and bragging rights. In practice, I
+			// cannot hear the difference between settings 5 and 10,
+			// despite the large difference in complexity (and
+			// overly sensitive spectrograms)."
+			//
+			// Source:
+			// https://hydrogenaud.io/index.php/topic,113655.msg935704.html#msg935704
+			//
 			constexpr auto ResampleQuality = 5;
 
 			speex_resampler.state = speex_resampler_init(NumChannels,
