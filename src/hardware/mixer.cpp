@@ -802,10 +802,7 @@ void MixerChannel::Set0dbScalar(const float scalar)
 void MixerChannel::UpdateCombinedVolume()
 {
 	std::lock_guard lock(mutex);
-	// TODO Now that we use floats, we should apply the master gain at the
-	// very end as it has no risk of overloading the 16-bit range
-	combined_volume_gain = user_volume_gain * app_volume_gain *
-	                       mixer.master_gain * db0_volume_gain;
+	combined_volume_gain = user_volume_gain * app_volume_gain * db0_volume_gain;
 }
 
 const AudioFrame MixerChannel::GetUserVolume() const
@@ -855,10 +852,6 @@ const AudioFrame MIXER_GetMasterVolume()
 void MIXER_SetMasterVolume(const AudioFrame gain)
 {
 	mixer.master_gain = gain;
-
-	for (const auto& [_, channel] : mixer.channels) {
-		channel->UpdateCombinedVolume();
-	}
 }
 
 void MixerChannel::SetChannelMap(const StereoLine map)
@@ -2380,6 +2373,11 @@ static void mix_samples(const int frames_requested)
 	for (auto& frame : mixer.output_buffer) {
 		auto& hpf = mixer.highpass_filter;
 		frame = {hpf[0].filter(frame.left), hpf[1].filter(frame.right)};
+	}
+
+	// Apply master gain
+	for (auto& frame : mixer.output_buffer) {
+		frame *= mixer.master_gain;
 	}
 
 	if (mixer.do_compressor) {
