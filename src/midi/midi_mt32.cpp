@@ -593,12 +593,12 @@ static mt32emu_report_handler_i get_report_handler_interface()
 
 		static void onErrorControlROM(void*)
 		{
-			LOG_WARNING("MT32: Couldn't open Control ROM file");
+			LOG_ERR("MT32: Error opening Control ROM file");
 		}
 
 		static void onErrorPCMROM(void*)
 		{
-			LOG_WARNING("MT32: Couldn't open PCM ROM file");
+			LOG_ERR("MT32: Error opening PCM ROM file");
 		}
 
 		static void showLCDMessage(void*, const char* message)
@@ -705,7 +705,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	if (rc != MT32EMU_RC_OK) {
 		const auto msg = format_str("MT32: Error initialising emulation, error code: %i",
 		                            rc);
-		LOG_WARNING("%s", msg.c_str());
+		LOG_ERR("%s", msg.c_str());
 		throw std::runtime_error(msg);
 	}
 
