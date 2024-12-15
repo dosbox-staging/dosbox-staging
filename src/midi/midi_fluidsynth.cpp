@@ -197,7 +197,7 @@ static std::vector<std_fs::path> get_data_dirs()
 		// `find_sf_file()` as well).
 		if (path_exists(sf_dir)) {
 			std::error_code err = {};
-			const auto canonical_path = std_fs::canonical(sf_dir, err);
+			const auto canonical_path = std_fs::canonical(sf_dir, err); //-V821
 			if (!err) {
 				dirs.insert(dirs.begin(), canonical_path);
 			}
