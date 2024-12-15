@@ -548,16 +548,12 @@ uint16_t DOS_GetCountry()
 // Helper functions for 'dosbox --list-*' commands
 // ***************************************************************************
 
-// ANSI codes for colors
-static const std::string AnsiReset     = "[reset]";
-static const std::string AnsiWhite     = "[color=white]";
-static const std::string AnsiHighlight = "[color=light-green]";
-
 static std::string get_output_header(const char* header_msg_id,
                                      const bool for_keyb_command = false)
 {
 	if (for_keyb_command) {
-		return AnsiWhite + MSG_Get(header_msg_id) + ":" + AnsiReset + "\n\n";
+		return Ansi::HighlightHeader + MSG_Get(header_msg_id) + ":" +
+		       Ansi::Reset + "\n\n";
 	} else {
 		std::string header_str = MSG_GetForHost(header_msg_id);
 		return std::string("\n") + header_str.c_str() + "\n" +
@@ -616,9 +612,9 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 			}
 			column_1_raw += layout_code;
 			if (highlight_code == layout_code) {
-				column_1_ansi += AnsiHighlight;
+				column_1_ansi += Ansi::HighlightSelection;
 				column_1_ansi += layout_code;
-				column_1_ansi += AnsiReset;
+				column_1_ansi += Ansi::Reset;
 				highlight = true;
 			} else {
 				column_1_ansi += layout_code;
@@ -637,18 +633,18 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		table.push_back({column_1_ansi, column_2, highlight});
 	}
 
-	const size_t column_1_highlighted_width = AnsiHighlight.size() +
-	                                          AnsiReset.size() + column_1_width;
+	const size_t column_1_highlighted_width = Ansi::HighlightSelection.size() +
+	                                          Ansi::Reset.size() + column_1_width;
 	for (auto& table_row : table) {
 		if (table_row.highlight) {
 			table_row.column1.resize(column_1_highlighted_width, ' ');
 			message += format_str("%s*%s %s %s- %s%s\n",
-			                      AnsiHighlight.c_str(),
-                                              AnsiReset.c_str(),
+			                      Ansi::HighlightSelection.c_str(),
+                                              Ansi::Reset.c_str(),
                                               table_row.column1.c_str(),
-			                      AnsiHighlight.c_str(),
+			                      Ansi::HighlightSelection.c_str(),
 			                      table_row.column2.c_str(),
-			                      AnsiReset.c_str());
+			                      Ansi::Reset.c_str());
 		} else {
 			table_row.column1.resize(column_1_width, ' ');
 			message += format_str("  %s - %s\n",

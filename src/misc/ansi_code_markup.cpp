@@ -25,6 +25,34 @@
 #include "support.h"
 #include "ansi_code_markup.h"
 
+// Pre-defined markups to help creating strings
+
+const std::string Ansi::Reset               = "[reset]";
+
+// Low intensity text colours
+const std::string Ansi::ColorBlack          = "[color=black]";
+const std::string Ansi::ColorBlue           = "[color=blue]";
+const std::string Ansi::ColorGreen          = "[color=green]";
+const std::string Ansi::ColorCyan           = "[color=cyan]";
+const std::string Ansi::ColorRed            = "[color=red]";
+const std::string Ansi::ColorMagenta        = "[color=magenta]";
+const std::string Ansi::ColorBrown          = "[color=brown]";
+const std::string Ansi::ColorLightGray      = "[color=light-grey]";
+
+// High intensity text colours
+const std::string Ansi::ColorDarkGray       = "[color=dark-grey]";
+const std::string Ansi::ColorLightBlue      = "[color=light-blue]";
+const std::string Ansi::ColorLightGreen     = "[color=light-green]";
+const std::string Ansi::ColorLightCyan      = "[color=light-cyan]";
+const std::string Ansi::ColorLightRed       = "[color=light-red]";
+const std::string Ansi::ColorLightMagenta   = "[color=light-magenta]";
+const std::string Ansi::ColorYellow         = "[color=yellow]";
+const std::string Ansi::ColorWhite          = "[color=white]";
+
+// Definitions to help keeping the command output style consistent
+const std::string& Ansi::HighlightHeader    = Ansi::ColorWhite;
+const std::string& Ansi::HighlightSelection = Ansi::ColorLightGreen;
+
 /*!
  * \brief Represents a markup tag.
  *
