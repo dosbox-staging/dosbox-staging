@@ -472,7 +472,7 @@ void MIXER_UnlockMixerThread();
 void MIXER_CloseAudioDevice();
 
 // Return true if the mixer was explicitly muted by the user (as opposed to
-// auto-muted when `mute_when_inactive` is enabled)
+// auto-muted when `mute_when_inactive` is enabled).
 bool MIXER_IsManuallyMuted();
 
 CrossfeedPreset MIXER_GetCrossfeedPreset();
@@ -485,14 +485,14 @@ ChorusPreset MIXER_GetChorusPreset();
 void MIXER_SetChorusPreset(const ChorusPreset new_preset);
 
 // Generic callback used for audio devices which generate audio on the main
-// thread These devices produce audio on the main thread and consume on the
-// mixer thread This callback is the consumer part
+// thread. These devices produce audio on the main thread and consume on the
+// mixer thread. This callback is the consumer part.
 template <class DeviceType, class AudioType, bool stereo, bool signeddata, bool nativeorder>
 inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* device)
 {
 	// Currently only handles mono sound (output_queue is a primitive type
-	// and frames == samples) Special case for AudioType == AudioFrame
-	// (stereo floating-point sound)
+	// and frames == samples). Special case for AudioType == AudioFrame
+	// (stereo floating-point sound).
 	static_assert((!stereo) || std::is_same_v<AudioType, AudioFrame>);
 
 	// AudioFrame type is always stereo
@@ -502,8 +502,8 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 
 	if (MIXER_FastForwardModeEnabled()) {
 		// Special case, normally only hit when using the fast-forward
-		// hotkey (Alt + F12) We need a very large buffer to compensate
-		// or it results in static
+		// hotkey (Alt + F12). We need a very large buffer to compensate
+		// or it results in static.
 
 		// Mostly arbitrary but it works well in testing.
 		// The queue just needs to be large enough to hold the large
@@ -515,9 +515,9 @@ inline void MIXER_PullFromQueueCallback(const int frames_requested, DeviceType* 
 		                                  MaxExpectedFastForwardFactor));
 	} else {
 		// Normal case, resize the queue to ensure we don't have high
-		// latency Resize is a fast operation, only setting a variable
+		// latency. Resize is a fast operation, only setting a variable
 		// for max capacity It does not drop frames or append zeros to
-		// the end of the underlying data structure
+		// the end of the underlying data structure.
 
 		// Size to 2x blocksize. The mixer callback will request 1x
 		// blocksize. This provides a good size to avoid over-runs and

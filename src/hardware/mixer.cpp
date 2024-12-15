@@ -284,12 +284,13 @@ bool MIXER_FastForwardModeEnabled()
 	return mixer.fast_forward_mode;
 }
 
-// The queues listed here are for audio devices that run on the main thread
+// The queues listed here are for audio devices that run on the main thread.
 // The mixer thread can be waiting on the main thread to produce audio in these
-// queues We need to stop them before aquiring a mutex lock to avoid a deadlock
-// These are called infrequently when global mixer state is changed (mostly on
-// device init/destroy and in the MIXER command line program) Individual channels
-// also have a mutex which can be safely aquired without stopping these queues
+// queues. We need to stop them before aquiring a mutex lock to avoid a
+// deadlock. These are called infrequently when global mixer state is changed
+// (mostly on device init/destroy and in the MIXER command line program).
+// Individual channels also have a mutex which can be safely aquired without
+// stopping these queues.
 void MIXER_LockMixerThread()
 {
 	PCSPEAKER_NotifyLockMixer();
@@ -2484,9 +2485,9 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	                                                 BytesPerAudioFrame);
 
 	// Mac OSX has been observed to be problematic if we ever block inside
-	// SDL's callback This ensures that we do not block waiting for more
-	// audio In the queue has run dry, we write what we have available and
-	// the rest of the request is silence
+	// SDL's callback. This ensures that we do not block waiting for more
+	// audio. In the queue has run dry, we write what we have available and
+	// the rest of the request is silence.
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
@@ -2515,17 +2516,17 @@ static void mixer_thread_loop()
 		                             1000.0;
 		last_mixed = now;
 
-		// "Underflow" is not a concern since moving to a threaded mixer
-		// If the CPU is running slower than real-time, the audio
-		// drivers will naturally slow down the audio Therefore, we can
-		// always request at least a blocksize worth of audio
+		// "Underflow" is not a concern since moving to a threaded
+		// mixer. If the CPU is running slower than real-time, the audio
+		// drivers will naturally slow down the audio. Therefore, we can
+		// always request at least a blocksize worth of audio.
 		int frames_requested = mixer.blocksize;
 
 		if (mixer.fast_forward_mode) {
-			// Flag is set only by the fast-forward hotkey handler
+			// Flag is set only by the fast-forward hotkey handler.
 			// Usually this means the emulation core is running much
-			// faster than real-time We must consume more audio to
-			// "catch up" but always request at least a blocksize
+			// faster than real-time. We must consume more audio to
+			// "catch up" but always request at least a blocksize.
 			frames_requested = std::max(
 			        mixer.blocksize,
 			        ifloor(actual_time * get_mixer_frames_per_tick()));
@@ -2561,17 +2562,18 @@ static void mixer_thread_loop()
 		}
 
 		// Only true if we were in fast-forward mode at the time we
-		// calculated frames_requested That variable could have changed
-		// by now but we need to always squash down to a blocksize of audio
+		// calculated frames_requested. That variable could have changed
+		// by now but we need to always squash down to a blocksize of
+		// audio.
 		const bool audio_needs_squashing = frames_requested > mixer.blocksize;
 
 		auto& to_mix = audio_needs_squashing ? mixer.fast_forward_buffer
 		                                     : mixer.output_buffer;
 
 		if (audio_needs_squashing) {
-			// This is "chipmunk mode" meant for fast-forward
+			// This is "chipmunk mode" meant for fast-forward.
 			// It's basic sample skipping to compress a large amount
-			// of audio into a single blocksize
+			// of audio into a single blocksize.
 			assert(frames_requested > mixer.blocksize);
 
 			mixer.fast_forward_buffer.clear();
