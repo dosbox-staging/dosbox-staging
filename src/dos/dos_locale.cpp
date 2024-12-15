@@ -1501,28 +1501,28 @@ static void load_keyboard_layout()
 	bool using_detected     = false; // if layout list is autodetected
 	bool code_page_supplied = false; // if code page given in the parameter
 
-	if (config.keyboard_str == "auto") {
+	const auto tokens = split(config.keyboard_str);
+	if (tokens.size() > 2) {
+		LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'auto'",
+		            config.keyboard_str.c_str());
+		set_section_property_value("dos", "keyboard_layout", "auto");
+		config.keyboard_str = "auto";
+	}
+
+	if (tokens.empty() || config.keyboard_str == "auto") {
 		keyboard_layouts = get_detected_keyboard_layouts();
 		using_detected   = true;
 	} else {
-		const auto tokens = split(config.keyboard_str);
-		if (tokens.size() != 1 && tokens.size() != 2) {
-			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'us'",
-			            config.keyboard_str.c_str());
-			keyboard_layouts.push_back({"us"});
-			set_section_property_value("dos", "keyboard_layout", "us");
-		} else {
-			keyboard_layouts.push_back({tokens[0]});
-			if (tokens.size() >= 2) {
-				const auto result = parse_int(tokens[1]);
-				if (!result || *result < 1 || *result > UINT16_MAX) {
-					LOG_WARNING("LOCALE: Invalid 'keyboard_layout' code page '%s', ignoring",
-					            tokens[1].c_str());
-				} else {
-					keyboard_layouts[0].code_page =
-					        static_cast<uint16_t>(*result);
-					code_page_supplied = true;
-				}
+		keyboard_layouts.push_back({tokens[0]});
+		if (tokens.size() == 2) {
+			const auto result = parse_int(tokens[1]);
+			if (!result || *result < 1 || *result > UINT16_MAX) {
+				LOG_WARNING("LOCALE: Invalid 'keyboard_layout' code page '%s', ignoring",
+				            tokens[1].c_str());
+			} else {
+				keyboard_layouts[0].code_page =
+				        static_cast<uint16_t>(*result);
+				code_page_supplied = true;
 			}
 		}
 	}
