@@ -37,7 +37,22 @@ class Program;
 // Using data bytes will result in a dummy zero lookup.
 extern uint8_t MIDI_message_len_by_status[256];
 
-constexpr auto MaxMidiSysExBytes = 8192;
+// A SysEx dump containing a full set of Roland MT-32 timbre and patch data is
+// around 18K (confirmed by the MT32Editor's author).
+//
+// The Roland SC-55 stores its internal state at 0x8000-0x905F in its RAM, so
+// the total data length of a bulk SysEx transmission containing all internal
+// data is 4191 bytes long.
+//
+// Given these hard upper limits, a 20K static buffer is sufficient for all
+// SysEx communications with these DOS-era MIDI devices. The standardised
+// Roland SysEx packet format can contain up to 256 data bytes. If we add the
+// header information and the checksum to this, the final maximum SysEx packet
+// length is 266 bytes. 18K worth of SysEx data can be transmitted in 72
+// packets, which makes the total length of all SysEx messages to be
+// transmitted 72 * 266 = 19,152 bytes, which is a bit under 20K.
+//
+constexpr auto MaxMidiSysExBytes = 20 * 1024;
 
 constexpr uint8_t MaxMidiMessageLen = 3;
 
