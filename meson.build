@@ -1288,6 +1288,7 @@ if conf_data.get('C_MANYMOUSE') != 0
 endif
 
 # internal libs
+subdir('src/audio')
 subdir('src/capture')
 subdir('src/cpu')
 subdir('src/dos')
