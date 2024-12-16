@@ -80,27 +80,27 @@ static const clap_host_t dosbox_clap_host = {
 }
 
 static std::pair<dynlib_handle, const clap_plugin_entry_t*> load_plugin_library(
-        const std_fs::path& plugin_path)
+        const std_fs::path& _library_path)
 {
-	const auto reported_plugin_path = plugin_path;
+	const auto reported_plugin_path = _library_path;
 
 #ifdef MACOSX
 	// The dynamic-link library is usually inside the application bundle on
 	// macOS, so we need to resolve its path, but we must always report the
 	// bundle path to the plugin instance.
 	const auto library_path = [&] {
-		if (const auto f = find_first_file(plugin_path / "Contents" / "MacOS");
+		if (const auto f = find_first_file(_library_path / "Contents" / "MacOS");
 		    f) {
 			return *f;
 		}
-		return plugin_path;
+		return _library_path;
 	}();
 
 #else // Windows, Linux
 
 	// We use the path of the dynamic-link library directly on Windows and
 	// Linux.
-	const auto library_path = plugin_path;
+	const auto library_path = _library_path;
 #endif
 
 	const auto lib = dynlib_open(library_path);
@@ -163,19 +163,19 @@ void PluginManager::EnumeratePlugins()
 		          dir.string().c_str());
 
 		for (const auto& name : plugin_names) {
-			auto plugin_path = dir / name;
+			auto library_path = dir / name;
 
 			LOG_DEBUG("CLAP: Trying to load plugin library '%s'",
-			          plugin_path.string().c_str());
+			          library_path.string().c_str());
 
-			const auto [_, plugin_entry] = load_plugin_library(plugin_path);
+			const auto [_, plugin_entry] = load_plugin_library(library_path);
 
 			if (!plugin_entry) {
 				LOG_WARNING("CLAP: Invalid plugin library '%s'",
-				            plugin_path.string().c_str());
+				            library_path.string().c_str());
 				continue;
 			}
-			const auto pi = get_plugin_infos(plugin_path, plugin_entry);
+			const auto pi = get_plugin_infos(library_path, plugin_entry);
 
 			plugin_infos.insert(plugin_infos.end(), pi.begin(), pi.end());
 		}
@@ -267,14 +267,14 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 	return true;
 }
 
-std::unique_ptr<Plugin> PluginManager::LoadPlugin(const std_fs::path& plugin_path,
+std::unique_ptr<Plugin> PluginManager::LoadPlugin(const std_fs::path& library_path,
                                                   const std::string& plugin_id) const
 {
 	LOG_DEBUG("CLAP: Loading plugin with ID '%s' from library '%s'",
 	          plugin_id.c_str(),
-	          plugin_path.c_str());
+	          library_path.c_str());
 
-	const auto [lib, plugin_entry] = load_plugin_library(plugin_path);
+	const auto [lib, plugin_entry] = load_plugin_library(library_path);
 
 	auto factory = static_cast<const clap_plugin_factory*>(
 	        plugin_entry->get_factory(CLAP_PLUGIN_FACTORY_ID));
@@ -286,13 +286,13 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const std_fs::path& plugin_pat
 	if (!plugin) {
 		LOG_ERR("CLAP: Error creating plugin with ID '%s' from library '%s'",
 		        plugin_id.c_str(),
-		        plugin_path.string().c_str());
+		        library_path.string().c_str());
 		return {};
 	}
 	if (!plugin->init(plugin)) {
 		LOG_DEBUG("CLAP: Error initialising plugin with ID '%s' from library '%s'",
 		          plugin_id.c_str(),
-		          plugin_path.string().c_str());
+		          library_path.string().c_str());
 		return {};
 	}
 

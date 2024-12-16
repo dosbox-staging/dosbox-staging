@@ -31,7 +31,7 @@
 namespace Clap {
 
 struct PluginInfo {
-	std_fs::path path = {};
+	std_fs::path library_path = {};
 
 	std::string id          = {};
 	std::string name        = {};
@@ -55,7 +55,7 @@ public:
 
 	// Use the `path` and `id` from `PluginInfo` retrieved via
 	// `GetPluginInfos()`.
-	std::unique_ptr<Plugin> LoadPlugin(const std_fs::path& plugin_path,
+	std::unique_ptr<Plugin> LoadPlugin(const std_fs::path& library_path,
 	                                   const std::string& plugin_id) const;
 
 private:
