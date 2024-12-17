@@ -51,6 +51,26 @@ static bool is_guest_booted = false;
 
 extern void DOS_ClearLaunchedProgramNames();
 
+static bool windows_multiplex()
+{
+	switch (reg_ax) {
+	// 0x1607 - Windows device callout
+	// 0x4001 - switch task to background
+	// 0x4002 - switch task to foreground
+	case 0x1605: // Windows startup
+	{
+		const uint8_t major = static_cast<uint8_t>(reg_di >> 8);
+		const uint8_t minor = static_cast<uint8_t>(reg_di & 0xff);
+		LOG_INFO("DOS: Starting Microsoft Windows %d.%d", major, minor);
+		return false;
+	}
+	case 0x1606: // Windows shutdown
+		LOG_INFO("DOS: Shutting down Microsoft Windows");
+		return false;
+	default: return false;
+	}
+}
+
 void DOS_NotifyBooting()
 {
 	is_guest_booted = true;
@@ -1531,6 +1551,8 @@ public:
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
 		}
+
+		DOS_AddMultiplexHandler(windows_multiplex);
 	}
 
 	// Shutdown the DOS OS constructs leaving only the BIOS and hardware
