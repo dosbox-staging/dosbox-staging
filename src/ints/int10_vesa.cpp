@@ -158,7 +158,7 @@ uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset)
 	mem_writed(buffer + 0x0e, int10.rom.vesa_modes);
 
 	// Memory size in 64KB blocks
-	mem_writew(buffer + 0x12, (uint16_t)(vga.vmemsize / (64 * 1024)));
+	mem_writew(buffer + 0x12, (uint16_t)(vga.get_effective_vmem_size() / (64 * 1024)));
 
 	return VESA_SUCCESS;
 }
@@ -191,7 +191,7 @@ static bool can_triple_buffer_8bit(const VideoModeBlock &m)
 	assert(m.type == M_LIN8);
 	const auto padding = m.htotal;
 	const uint32_t needed_bytes = (m.swidth + padding) * (m.vtotal + padding) * 3;
-	return vga.vmemsize >= needed_bytes;
+	return vga.get_effective_vmem_size() >= needed_bytes;
 }
 
 uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
@@ -357,11 +357,11 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		modePageSize &= ~0xFFFF;
 	}
 	int modePages = 0;
-	if (modePageSize > static_cast<int>(vga.vmemsize)) {
+	if (modePageSize > static_cast<int>(vga.get_effective_vmem_size())) {
 		// mode not supported by current hardware configuration
 		modeAttributes &= ~0x1;
 	} else if (modePageSize) {
-		modePages = (vga.vmemsize / modePageSize)-1;
+		modePages = (vga.get_effective_vmem_size() / modePageSize)-1;
 	}	
 	assert(modePages <= UINT8_MAX);
 	minfo.NumberOfImagePages = static_cast<uint8_t>(modePages);
@@ -409,7 +409,7 @@ uint8_t VESA_GetSVGAMode(uint16_t & mode) {
 
 uint8_t VESA_SetCPUWindow(uint8_t window,uint8_t address) {
 	if (window) return VESA_FAIL;
-	if ((uint32_t)(address)*64*1024 < vga.vmemsize) {
+	if ((uint32_t)(address)*64*1024 < vga.get_effective_vmem_size()) {
 		IO_Write(0x3d4,0x6a);
 		IO_Write(0x3d5, address);
 		return VESA_SUCCESS;
@@ -475,7 +475,7 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 	// offset register: virtual scanline length
 	auto new_offset = static_cast<int>(vga.config.scan_len);
 	auto screen_height = CurMode->sheight;
-	auto usable_vmem_bytes = vga.vmemsize;
+	auto usable_vmem_bytes = vga.get_effective_vmem_size();
 	uint8_t bits_per_pixel = 0;
 	uint8_t bytes_per_offset = 8;
 	bool align_to_nearest_4th_pixel = false;

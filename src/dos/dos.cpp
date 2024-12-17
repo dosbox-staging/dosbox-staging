@@ -37,6 +37,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "vga.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -62,10 +63,12 @@ static bool windows_multiplex()
 		const uint8_t major = static_cast<uint8_t>(reg_di >> 8);
 		const uint8_t minor = static_cast<uint8_t>(reg_di & 0xff);
 		LOG_INFO("DOS: Starting Microsoft Windows %d.%d", major, minor);
+		vga.win3x_vmem_hack = (major == 3);
 		return false;
 	}
 	case 0x1606: // Windows shutdown
 		LOG_INFO("DOS: Shutting down Microsoft Windows");
+		vga.win3x_vmem_hack = false;
 		return false;
 	default: return false;
 	}
@@ -75,6 +78,8 @@ void DOS_NotifyBooting()
 {
 	is_guest_booted = true;
 	DOS_ClearLaunchedProgramNames();
+
+	vga.win3x_vmem_hack = false;
 }
 
 bool DOS_IsGuestOsBooted()

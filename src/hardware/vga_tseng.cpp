@@ -352,13 +352,15 @@ void FinishSetMode_ET4K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 		((modeData->ver_overflow & 0x40) >> 2);  // line_compare
 	IO_Write(crtc_base,0x35);IO_Write(crtc_base+1,et4k_ver_overflow);
 
+	const auto effective_vmem_size = vga.get_effective_vmem_size();
+
 	// Clear remaining ext CRTC registers
 	IO_Write(crtc_base,0x31);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x32);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x33);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x34);IO_Write(crtc_base+1,0);
 	IO_Write(crtc_base,0x36);IO_Write(crtc_base+1,0);
-	IO_Write(crtc_base,0x37);IO_Write(crtc_base+1,0x0c|(vga.vmemsize==1024*1024?3:vga.vmemsize==512*1024?2:1));
+	IO_Write(crtc_base,0x37);IO_Write(crtc_base+1,0x0c|(effective_vmem_size==1024*1024?3:effective_vmem_size==512*1024?2:1));
 	// Clear ext SEQ
 	IO_Write(0x3c4,0x06);IO_Write(0x3c5,0);
 	IO_Write(0x3c4,0x07);IO_Write(0x3c5,0);
@@ -387,7 +389,7 @@ void FinishSetMode_ET4K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 	// Verified (on real hardware and in a few games): Tseng ET4000 used chain4 implementation
 	// different from standard VGA. It was also not limited to 64K in regular mode 13h.
 	vga.config.compatible_chain4 = false;
-	vga.vmemwrap = vga.vmemsize;
+	vga.vmemwrap = effective_vmem_size;
 
 	VGA_SetupHandlers();
 }
@@ -418,7 +420,7 @@ uint32_t GetClock_ET4K()
 }
 
 bool AcceptsMode_ET4K(Bitu mode) {
-	return VideoModeMemSize(mode) < vga.vmemsize;
+	return VideoModeMemSize(mode) < vga.get_effective_vmem_size();
 //	return mode != 0x3d;
 }
 
@@ -754,8 +756,8 @@ void FinishSetMode_ET3K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 
 	// Verified on functioning (at last!) hardware: Tseng ET3000 is the same as ET4000 when
 	// it comes to chain4 architecture
-    vga.config.compatible_chain4 = false;
-	vga.vmemwrap = vga.vmemsize;
+	vga.config.compatible_chain4 = false;
+	vga.vmemwrap = vga.get_effective_vmem_size();
 
 	VGA_SetupHandlers();
 }
@@ -785,8 +787,10 @@ uint32_t GetClock_ET3K()
 	return et3k.clockFreq[get_clock_index_et3k()];
 }
 
-bool AcceptsMode_ET3K(Bitu mode) {
-	return mode <= 0x37 && mode != 0x2f && VideoModeMemSize(mode) < vga.vmemsize;
+bool AcceptsMode_ET3K(Bitu mode)
+{
+	return mode <= 0x37 && mode != 0x2f &&
+               VideoModeMemSize(mode) < vga.get_effective_vmem_size();
 }
 
 void SVGA_Setup_TsengET3K(void) {

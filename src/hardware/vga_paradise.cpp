@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -169,7 +169,7 @@ void FinishSetMode_PVGA1A(io_port_t /*crtc_base*/, VGA_ModeExtraData *modeData)
 
 	if(vga.mode != M_VGA) {
 		vga.config.compatible_chain4 = false;
-		vga.vmemwrap = vga.vmemsize;
+		vga.vmemwrap = vga.get_effective_vmem_size();
 	} else {
 		vga.config.compatible_chain4 = true;
 		vga.vmemwrap = 256*1024;

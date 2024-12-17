@@ -1070,8 +1070,20 @@ struct VgaType {
 
 	// Memory for fast (usually 16-colour) rendering,
 	// always twice as big as vmemsize
-	uint8_t* fastmem  = {};
+	uint8_t* fastmem = {};
+
 	uint32_t vmemsize = 0;
+	bool win3x_vmem_hack = false;
+
+	uint32_t get_effective_vmem_size()
+	{
+		constexpr uint32_t MaxWinVMemSize = 4 * 1024 * 1024;
+		if (win3x_vmem_hack) {
+			return std::min(vmemsize, MaxWinVMemSize);
+		} else {
+			return vmemsize;
+		}
+	}
 
 	// How much delay to add to video memory I/O in nanoseconds
 	uint16_t vmem_delay_ns = 0;
