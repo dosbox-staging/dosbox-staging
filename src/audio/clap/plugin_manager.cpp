@@ -179,6 +179,7 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 
 std::shared_ptr<Library> PluginManager::GetOrLoadLibrary(const std_fs::path& library_path)
 {
+	// CLAP libraries are uniquely identified by their filesystem paths
 	const auto it = std::find_if(library_cache.cbegin(),
 	                             library_cache.cend(),
 	                             [&](const auto lib) {
@@ -190,10 +191,15 @@ std::shared_ptr<Library> PluginManager::GetOrLoadLibrary(const std_fs::path& lib
 	                             });
 
 	if (it != library_cache.end()) {
-		// create a shared_ptr
+		// Library found in the cache (meaning a plugin instance holds a
+		// shared_ptr to it).
+
+		// Create a shared_ptr & return it
 		return it->lock();
 
 	} else {
+		// Library not found in the cache; we'll need to load it and
+		// store a weak_ptr in the cache.
 		try {
 			const auto lib = std::make_shared<Library>(library_path);
 			library_cache.emplace_back(lib);

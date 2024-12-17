@@ -31,9 +31,8 @@ namespace Clap {
 // the CLAP interface.
 //
 // CLAP plugins don't support "real-time" events; you must pass in an event
-// list along with sample-accurate timing data (the sample offset of each
-// event from the start of the buffer) when calling the plugin's process
-// function.
+// list along with sample-accurate timing data (sample offsets from the start
+// of the buffer) when calling the plugin's process function.
 //
 class EventList {
 public:
@@ -48,7 +47,9 @@ public:
 	void AddMidiSysExEvent(const std::vector<uint8_t>& msg,
 	                       const uint32_t sample_offset);
 
+	// Returns the number of events
 	uint32_t Size() const;
+
 	const clap_event_header_t* Get(const uint32_t index) const;
 
 	const clap_input_events* GetInputEvents() const;

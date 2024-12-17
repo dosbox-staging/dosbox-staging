@@ -62,9 +62,9 @@ Library::Library(const std_fs::path& _library_path)
 	const auto reported_plugin_path = library_path;
 
 #ifdef MACOSX
-	// The dynamic-link library is usually inside the application bundle on
-	// macOS, so we need to resolve its path, but we must always report the
-	// bundle path to the plugin instance.
+	// The dynamic-link library is inside the application bundle on macOS, so
+	// we need to resolve its path, but we must always report the bundle path
+	// to the plugin instance.
 	const auto dynlib_path = [&] {
 		if (const auto f = find_first_file(_library_path / "Contents" / "MacOS");
 		    f) {
@@ -113,13 +113,15 @@ Library::~Library()
 	assert(plugin_entry);
 	plugin_entry->deinit();
 
+	// Unload library from memory
 	assert(lib_handle);
 	dynlib_close(lib_handle);
 }
 
 std_fs::path Library::GetPath() const
 {
-	return library_path.string();
+	assert(!library_path.empty());
+	return library_path;
 }
 
 const clap_plugin_entry_t* Library::GetPluginEntry() const
