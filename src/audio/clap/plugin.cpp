@@ -24,8 +24,11 @@
 
 #include "clap/all.h"
 
+#include "checks.h"
 #include "event_list.h"
 #include "library.h"
+
+CHECK_NARROWING();
 
 namespace Clap {
 

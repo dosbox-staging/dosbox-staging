@@ -25,8 +25,12 @@
 
 #include "clap/all.h"
 
+#include "checks.h"
 #include "logging.h"
 #include "string_utils.h"
+#include "support.h"
+
+CHECK_NARROWING();
 
 namespace Clap {
 
@@ -136,8 +140,9 @@ std::vector<PluginInfo> Library::GetPluginInfos() const
 	std::vector<PluginInfo> plugin_infos = {};
 
 	for (size_t plugin_index = 0; plugin_index < num_plugins; ++plugin_index) {
-		const auto desc = factory->get_plugin_descriptor(factory,
-		                                                 plugin_index);
+		const auto desc = factory->get_plugin_descriptor(
+		        factory, check_cast<uint32_t>(plugin_index));
+
 		if (desc) {
 			LOG_INFO("CLAP: Found plugin '%s'", desc->name);
 
