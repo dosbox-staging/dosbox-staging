@@ -32,9 +32,12 @@
 
 #include "clap/all.h"
 
+#include "checks.h"
 #include "cross.h"
 #include "logging.h"
 #include "support.h"
+
+CHECK_NARROWING();
 
 namespace Clap {
 

@@ -22,8 +22,11 @@
 
 #include <cassert>
 
+#include "checks.h"
 #include "logging.h"
 #include "midi.h"
+
+CHECK_NARROWING();
 
 namespace Clap {
 
@@ -110,7 +113,7 @@ void EventList::AddMidiSysExEvent(const std::vector<uint8_t>& msg,
 	ev.header.size     = sizeof(ev);
 	ev.port_index      = 0;
 	ev.buffer          = sysex_data.data() + sysex_data.size();
-	ev.size            = msg.size();
+	ev.size            = check_cast<uint32_t>(msg.size());
 
 	// We reserved `MaxMidiSysExBytes` for `sysex_data` to avoid
 	// reallocations, so make sure we never trigger a realloc here.
@@ -128,7 +131,7 @@ void EventList::AddMidiSysExEvent(const std::vector<uint8_t>& msg,
 
 uint32_t EventList::Size() const
 {
-	return event_offsets.size();
+	return check_cast<uint32_t>(event_offsets.size());
 }
 
 const clap_event_header_t* EventList::Get(const uint32_t index) const

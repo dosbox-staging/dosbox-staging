@@ -29,9 +29,12 @@
 #include "../audio/clap/plugin_manager.h"
 #include "ansi_code_markup.h"
 #include "channel_names.h"
+#include "checks.h"
 #include "pic.h"
 #include "std_filesystem.h"
 #include "string_utils.h"
+
+CHECK_NARROWING();
 
 namespace SoundCanvas {
 
@@ -302,7 +305,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	                                      std::placeholders::_1);
 
 	mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                 sample_rate_hz,
+	                                 iroundf(sample_rate_hz),
 	                                 ChannelName::SoundCanvas,
 	                                 {ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
@@ -348,7 +351,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// Size the in-bound work FIFO
 	work_fifo.Resize(MaxMidiWorkFifoSize);
 
-	clap.plugin->Activate(sample_rate_hz);
+	clap.plugin->Activate(iroundf(sample_rate_hz));
 
 	// Start rendering audio
 	const auto render = std::bind(&MidiDeviceSoundCanvas::Render, this);
