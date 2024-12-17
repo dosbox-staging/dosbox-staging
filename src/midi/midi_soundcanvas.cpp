@@ -262,6 +262,43 @@ static std::string get_model_setting()
 	return get_soundcanvas_section()->Get_string("soundcanvas_model");
 }
 
+static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
+{
+	if (filter_enabled) {
+		channel->SetHighPassFilter(FilterState::Off);
+
+		// All Roland SC-55 models seem to very gently soften the
+		// high-frequency response of the output which makes samples
+		// with lots of treble content a bit softer and consequently
+		// quieter in the mix (e.g., hi-hats, cymbals, harpsichord, some
+		// synth sounds, etc.)
+		//
+		// On most materials, the filter makes little difference, but in
+		// certain soundtracks the unfiltered high-frequency content can
+		// get annoying for those with sensitive ears listening in
+		// quality headphones.
+		//
+		// The filter response has been confirmed on different SC-55
+		// models (original, SC-55mk2, SC-55st, SC-55K) and recordings
+		// made by different individuals. This indicates this was
+		// either a deliberate design choice by Roland, or they just
+		// happened to use similar analog output stages in the entire
+		// SC-55 product line. This also means composers must have
+		// compensated for the softened treble resopnse, which can make
+		// the unfiltered output a little bit too harsh.
+		//
+		constexpr auto LpfOrder        = 1;
+		constexpr auto LpfCutoffFreqHz = 11000;
+
+		channel->ConfigureLowPassFilter(LpfOrder, LpfCutoffFreqHz);
+		channel->SetLowPassFilter(FilterState::On);
+
+	} else {
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+	}
+}
+
 MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 {
 	using namespace SoundCanvas;
@@ -321,16 +358,20 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	const auto filter_prefs = get_soundcanvas_section()->Get_string(
 	        "soundcanvas_filter");
 
-	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
+		const auto filter_enabled = *maybe_bool;
+		setup_filter(mixer_channel, filter_enabled);
+
+	} else if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
 			LOG_WARNING(
 			        "SOUNDCANVAS: Invalid 'soundcanvas_filter' value: '%s', "
-			        "using 'off'",
+			        "using 'on'",
 			        filter_prefs.c_str());
 		}
 
-		mixer_channel->SetHighPassFilter(FilterState::Off);
-		mixer_channel->SetLowPassFilter(FilterState::Off);
+		const auto filter_enabled = true;
+		setup_filter(mixer_channel, filter_enabled);
 
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
@@ -683,11 +724,12 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
 
-	str_prop = sec_prop.Add_string("soundcanvas_filter", when_idle, "off");
+	str_prop = sec_prop.Add_string("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the Roland Sound Canvas audio output:\n"
-	        "  off:       Don't filter the output (default).\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
