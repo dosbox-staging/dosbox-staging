@@ -18,47 +18,54 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_CLAP_PLUGIN_H
-#define DOSBOX_CLAP_PLUGIN_H
+#ifndef DOSBOX_CLAP_LIBRARY_H
+#define DOSBOX_CLAP_LIBRARY_H
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "clap/all.h"
 
-#include "event_list.h"
-#include "library.h"
+#include "dynlib.h"
+#include "std_filesystem.h"
 
 namespace Clap {
 
-// Object-oriented wrapper to a CLAP plugin instance. Only plugins with
-// exactly two 32-bit float output channels are currently supported (i.e.,
-// MIDI synths).
-//
-class Plugin {
+struct PluginInfo {
+	std_fs::path library_path = {};
 
+	std::string id          = {};
+	std::string name        = {};
+	std::string description = {};
+};
+
+// Encapsulates and manages the lifecycle of a CLAP library. CLAP libraries
+// are uniquely identified by their filesystem paths.
+class Library {
 public:
-	Plugin(const std::shared_ptr<Library> library, const clap_plugin_t* plugin);
-	~Plugin();
+	Library(const std_fs::path& library_path);
+	~Library();
 
-	void Activate(const int sample_rate_hz);
+	// Returns the path passed into the constructor
+	std_fs::path GetPath() const;
 
-	void Process(float** audio_out, const int num_frames, EventList& event_list);
+	std::vector<PluginInfo> GetPluginInfos() const;
+
+	const clap_plugin_entry_t* GetPluginEntry() const;
 
 	// prevent copying
-	Plugin(const Plugin&) = delete;
+	Library(const Library&) = delete;
 	// prevent assignment
-	Plugin& operator=(const Plugin&) = delete;
+	Library& operator=(const Library&) = delete;
 
 private:
-	std::shared_ptr<Library> library = nullptr;
-	const clap_plugin_t* plugin      = nullptr;
+	std_fs::path library_path = {};
+	dynlib_handle lib_handle  = nullptr;
 
-	clap_audio_buffer_t audio_in  = {};
-	clap_audio_buffer_t audio_out = {};
-
-	clap_process_t process = {};
+	const clap_plugin_entry_t* plugin_entry = nullptr;
 };
 
 } // namespace Clap
 
-#endif // DOSBOX_CLAP_PLUGIN_H
+#endif // DOSBOX_CLAP_LIBRARY_H

@@ -895,6 +895,9 @@
     <ClCompile Include="..\src\audio\clap\event_list.cpp">
       <Filter>src\audio\clap</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\audio\clap\library.cpp">
+      <Filter>src\audio\clap</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\audio\clap\plugin.cpp">
       <Filter>src\audio\clap</Filter>
     </ClCompile>
@@ -1745,6 +1748,9 @@
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\audio\clap\event_list.h">
+      <Filter>src\audio\clap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\clap\library.h">
       <Filter>src\audio\clap</Filter>
     </ClInclude>
     <ClInclude Include="..\src\audio\clap\plugin.h">

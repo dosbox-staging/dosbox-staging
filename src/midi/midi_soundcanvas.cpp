@@ -164,9 +164,7 @@ SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model
 	if (auto p = find_plugin_for_model(model.model, plugin_infos); p) {
 		const auto plugin_info = *p;
 
-		auto plugin = plugin_manager.LoadPlugin(plugin_info.library_path,
-		                                        plugin_info.id);
-
+		auto plugin = plugin_manager.LoadPlugin(plugin_info);
 		if (plugin) {
 			return {std::move(plugin), model};
 		}

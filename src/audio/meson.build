@@ -1,5 +1,6 @@
 libaudio_sources = files(
     'clap/event_list.cpp',
+    'clap/library.cpp',
     'clap/plugin.cpp',
     'clap/plugin_manager.cpp',
 )
