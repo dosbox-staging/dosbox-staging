@@ -24,18 +24,15 @@
 
 #include "clap/all.h"
 
-#include "dynlib.h"
 #include "event_list.h"
+#include "library.h"
 
 namespace Clap {
 
-Plugin::Plugin(dynlib_handle _lib, const clap_plugin_entry_t* _plugin_entry,
-               const clap_plugin_t* _plugin)
-        : lib(_lib),
-          plugin_entry(_plugin_entry),
-          plugin(_plugin)
+Plugin::Plugin(const std::shared_ptr<Library> _library, const clap_plugin_t* _plugin)
+        : plugin(_plugin)
 {
-	assert(plugin_entry);
+	library = std::move(_library);
 	assert(plugin);
 
 	constexpr auto NoInputChannels = 0;
@@ -63,17 +60,12 @@ Plugin::Plugin(dynlib_handle _lib, const clap_plugin_entry_t* _plugin_entry,
 
 Plugin::~Plugin()
 {
-	if (plugin) {
-		plugin->reset(plugin);
-		plugin->deactivate(plugin);
-		plugin->destroy(plugin);
-		plugin = nullptr;
-	}
-	if (plugin_entry) {
-		plugin_entry->deinit();
-		plugin_entry = nullptr;
-	}
-	dynlib_close(lib);
+	assert(plugin);
+
+	plugin->reset(plugin);
+	plugin->deactivate(plugin);
+	plugin->destroy(plugin);
+	plugin = nullptr;
 }
 
 void Plugin::Activate(const int sample_rate_hz)

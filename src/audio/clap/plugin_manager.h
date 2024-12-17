@@ -21,22 +21,15 @@
 #ifndef DOSBOX_CLAP_PLUGIN_MANAGER_H
 #define DOSBOX_CLAP_PLUGIN_MANAGER_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "dynlib.h"
+#include "library.h"
 #include "plugin.h"
 #include "std_filesystem.h"
 
 namespace Clap {
-
-struct PluginInfo {
-	std_fs::path library_path = {};
-
-	std::string id          = {};
-	std::string name        = {};
-	std::string description = {};
-};
 
 // Plugin manager to discover and load (instantiate) CLAP plugins.
 //
@@ -55,8 +48,7 @@ public:
 
 	// Use the `path` and `id` from `PluginInfo` retrieved via
 	// `GetPluginInfos()`.
-	std::unique_ptr<Plugin> LoadPlugin(const std_fs::path& library_path,
-	                                   const std::string& plugin_id) const;
+	std::unique_ptr<Plugin> LoadPlugin(const PluginInfo& plugin_info);
 
 private:
 	PluginManager()  = default;
@@ -67,11 +59,17 @@ private:
 	// prevent assignment
 	PluginManager& operator=(const PluginManager&) = delete;
 
+	// Plugin enumeration
 	void EnumeratePlugins();
 
-	std::vector<PluginInfo> plugin_infos = {};
+	std::vector<PluginInfo> plugin_info_cache = {};
 
 	bool plugins_enumerated = false;
+
+	// Library handling
+	std::shared_ptr<Library> GetOrLoadLibrary(const std_fs::path& library_path);
+
+	std::vector<std::weak_ptr<Library>> library_cache = {};
 };
 
 } // namespace Clap
