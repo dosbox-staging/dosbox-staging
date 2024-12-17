@@ -541,6 +541,10 @@ void MidiDeviceSoundCanvas::Render()
 	}
 }
 
+static std::set<const SoundCanvas::SynthModel*> available_models = {};
+
+static bool available_models_initialised = false;
+
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 {
 	using namespace SoundCanvas;
@@ -549,16 +553,14 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	constexpr auto ColumnDelim = " ";
 	constexpr auto Indent      = "  ";
 
-	const auto available_models = [&] {
-		std::set<const SynthModel*> available_models = {};
-
+	if (!available_models_initialised) {
 		for (auto m : all_models) {
 			if (const auto p = try_load_plugin(*m); p.plugin) {
 				available_models.insert(m);
 			}
 		}
-		return available_models;
-	}();
+		available_models_initialised = true;
+	}
 
 	if (available_models.empty()) {
 		caller->WriteOut("%s%s\n\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
