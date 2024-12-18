@@ -42,22 +42,10 @@
 #include <optional>
 #include <vector>
 
-#ifdef HAVE_MEMORY_RESOURCE
-	#include <memory_resource>
-#endif
-
 template <typename T>
 class RWQueue {
 private:
-#ifdef HAVE_MEMORY_RESOURCE
-	std::pmr::unsynchronized_pool_resource pool = {};
-
-	// The pooled deque recycles objects from the pool. It only allocates
-	// when it needs to grow beyond its prior peak size.
-	std::pmr::deque<T> queue = {};
-#else
-	std::deque<T> queue = {};
-#endif
+	std::deque<T> queue{}; // faster than: vector, queue, and list
 	std::mutex mutex                  = {};
 	std::condition_variable has_room  = {};
 	std::condition_variable has_items = {};
