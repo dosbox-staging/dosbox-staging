@@ -19,14 +19,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <array>
 #include <cassert>
 #include <cerrno>
 #include <new>
 #include <type_traits>
 
 #include "mem_unaligned.h"
-#include "object_pool.h"
 #include "paging.h"
 #include "types.h"
 
@@ -156,32 +154,6 @@ static uint8_t* cache_code_link_blocks = {};
 static std::vector<CacheBlock> cache_blocks(CACHE_BLOCKS);
 static CacheBlock link_blocks[2] = {}; // default linking (specially marked)
 
-// Use an object pool to manage the invalidation maps
-class InvalidationMapPool {
-private:
-	static constexpr size_t NumMapBytes = 4096;
-
-	using InvalidationMap = std::array<uint8_t, NumMapBytes>;
-
-	ObjectPool<InvalidationMap> pool = {};
-
-public:
-	constexpr uint8_t* Acquire()
-	{
-		auto invalidation_map = pool.Acquire();
-		invalidation_map->fill(0);
-		return invalidation_map->data();
-	}
-
-	void Release(uint8_t* ptr)
-	{
-		pool.Release(reinterpret_cast<InvalidationMap*>(ptr));
-	}
-};
-
-// Single object pool for all the invalidation maps
-InvalidationMapPool invalidation_map_pool = {};
-
 // the CodePageHandler class provides access to the contained
 // cache blocks and intercepts writes to the code for special treatment
 class CodePageHandler final : public PageHandler {
@@ -210,7 +182,7 @@ public:
 		memset(&hash_map,0,sizeof(hash_map));
 		memset(&write_map,0,sizeof(write_map));
 		if (invalidation_map) {
-			invalidation_map_pool.Release(invalidation_map);
+			delete [] invalidation_map;
 			invalidation_map = nullptr;
 		}
 	}
@@ -251,6 +223,17 @@ public:
 		return is_current_block;
 	}
 
+	uint8_t *alloc_invalidation_map() const
+	{
+		constexpr size_t map_size = 4096;
+		uint8_t *map = new (std::nothrow) uint8_t[map_size];
+		if (!map) {
+			E_Exit("failed to allocate invalidation_map");
+		}
+		memset(map, 0, map_size);
+		return map;
+	}
+
 	// the following functions will clean all cache blocks that are invalid
 	// now due to the write
 
@@ -276,7 +259,7 @@ public:
 				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map = invalidation_map_pool.Acquire();
+			invalidation_map = alloc_invalidation_map();
 		}
 		invalidation_map[addr]++;
 		InvalidateRange(addr,addr);
@@ -304,7 +287,7 @@ public:
 				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map = invalidation_map_pool.Acquire();
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addw(&invalidation_map[addr], 0x0101);
 		InvalidateRange(addr,addr+1);
@@ -332,7 +315,7 @@ public:
 				           // active_count is zero
 			return;
 		} else if (!invalidation_map) {
-			invalidation_map = invalidation_map_pool.Acquire();
+			invalidation_map = alloc_invalidation_map();
 		}
 		host_addd(&invalidation_map[addr], 0x01010101);
 		InvalidateRange(addr,addr+3);
@@ -359,7 +342,7 @@ public:
 			}
 		} else {
 			if (!invalidation_map)
-				invalidation_map = invalidation_map_pool.Acquire();
+				invalidation_map = alloc_invalidation_map();
 
 			invalidation_map[addr]++;
 			if (InvalidateRange(addr,addr)) {
@@ -392,7 +375,7 @@ public:
 			}
 		} else {
 			if (!invalidation_map)
-				invalidation_map = invalidation_map_pool.Acquire();
+				invalidation_map = alloc_invalidation_map();
 
 			host_addw(&invalidation_map[addr], 0x0101);
 			if (InvalidateRange(addr,addr+1)) {
@@ -425,7 +408,7 @@ public:
 			}
 		} else {
 			if (!invalidation_map)
-				invalidation_map = invalidation_map_pool.Acquire();
+				invalidation_map = alloc_invalidation_map();
 
 			host_addd(&invalidation_map[addr], 0x01010101);
 			if (InvalidateRange(addr,addr+3)) {
