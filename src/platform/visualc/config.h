@@ -85,9 +85,6 @@
 // Modern MSVC provides POSIX-like routines, so prefer that over built-in
 #define HAVE_STRNLEN
 
-// Modern MSVC provides the C++17 <memory_resource> header
-#define HAVE_MEMORY_RESOURCE
-
 // MSVC issues pedantic warnings on POSIX functions; for portability we don't
 // want to deal with these warnings, as the only way to avoid them is using
 // Microsoft-specific names and functions instead of POSIX conformant ones.

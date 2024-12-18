@@ -469,13 +469,6 @@ if cc.has_function('__builtin___clear_cache')
     conf_data.set10('HAVE_BUILTIN_CLEAR_CACHE', true)
 endif
 
-if cxx.has_type(
-    'std::pmr::unsynchronized_pool_resource',
-    prefix: '#include <memory_resource>',
-)
-    conf_data.set10('HAVE_MEMORY_RESOURCE', true)
-endif
-
 if cc.has_function('mprotect', prefix: '#include <sys/mman.h>')
     conf_data.set10('HAVE_MPROTECT', true)
 endif
