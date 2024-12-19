@@ -159,27 +159,28 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	/* Need to zero out all unused bits in modes that have any (15-bit or "32"-bit -- the last
 	   one is actually 24-bit. Without this step there may be some graphics corruption (mainly,
 	   during windows dragging. */
+	const auto effective_vmem_size = vga.get_effective_vmem_size();
 	switch(XGA_COLOR_MODE) {
 		case M_LIN8:
-		        if (memaddr >= vga.vmemsize) {
+		        if (memaddr >= effective_vmem_size) {
 			        break;
 		        }
 		        vga.mem.linear[memaddr] = c;
 		        break;
 	        case M_LIN15:
-		        if (memaddr * 2 >= vga.vmemsize) {
+		        if (memaddr * 2 >= effective_vmem_size) {
 			        break;
 		        }
 		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0x7fff);
 		        break;
 	        case M_LIN16:
-		        if (memaddr * 2 >= vga.vmemsize) {
+		        if (memaddr * 2 >= effective_vmem_size) {
 			        break;
 		        }
 		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0xffff);
 		        break;
 	        case M_LIN32:
-		        if (memaddr * 4 >= vga.vmemsize) {
+		        if (memaddr * 4 >= effective_vmem_size) {
 			        break;
 		        }
 		        ((uint32_t*)(vga.mem.linear))[memaddr] = c;
@@ -204,20 +205,21 @@ static uint32_t get_point_mask()
 Bitu XGA_GetPoint(Bitu x, Bitu y) {
 	const auto memaddr = (y * XGA_SCREEN_WIDTH) + x;
 
+	const auto effective_vmem_size = vga.get_effective_vmem_size();
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
-		if (memaddr >= vga.vmemsize) {
+		if (memaddr >= effective_vmem_size) {
 			break;
 		}
 		return vga.mem.linear[memaddr];
 	case M_LIN15:
 	case M_LIN16:
-		if (memaddr * 2 >= vga.vmemsize) {
+		if (memaddr * 2 >= effective_vmem_size) {
 			break;
 		}
 		return ((uint16_t*)(vga.mem.linear))[memaddr];
 	case M_LIN32:
-		if (memaddr * 4 >= vga.vmemsize) {
+		if (memaddr * 4 >= effective_vmem_size) {
 			break;
 		}
 		return ((uint32_t*)(vga.mem.linear))[memaddr];

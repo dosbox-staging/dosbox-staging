@@ -43,13 +43,16 @@ static bool SVGA_S3_HWCursorActive()
 void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
+
+	const auto effective_vmem_size = vga.get_effective_vmem_size();
+
 	switch (reg) {
 	case 0x31:	/* CR31 Memory Configuration */
 //TODO Base address
 		vga.s3.reg_31 = val;
 		vga.config.compatible_chain4 = !(val&0x08);
 		if (vga.config.compatible_chain4) vga.vmemwrap = 256*1024;
- 		else vga.vmemwrap = vga.vmemsize;
+ 		else vga.vmemwrap = effective_vmem_size;
 		vga.config.display_start = (vga.config.display_start&~0x30000)|((val&0x30)<<12);
 		VGA_DetermineMode();
 		VGA_SetupHandlers();
@@ -150,7 +153,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 	case 0x4c:  /* HGC start address high byte*/
 		vga.s3.hgc.startaddr &=0xff;
 		vga.s3.hgc.startaddr |= ((val & 0xf) << 8);
-		if ((((Bitu)vga.s3.hgc.startaddr)<<10)+((64*64*2)/8) > vga.vmemsize) {
+		if ((((Bitu)vga.s3.hgc.startaddr)<<10)+((64*64*2)/8) > effective_vmem_size) {
 			vga.s3.hgc.startaddr &= 0xff;	// put it back to some sane area;
 			                                // if read back of this address is ever implemented this needs to change
 			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:S3:CRTC: HGC pattern address beyond video memory" );
@@ -649,7 +652,7 @@ uint32_t SVGA_S3_GetClock(void)
 }
 
 bool SVGA_S3_AcceptsMode(Bitu mode) {
-	return VideoModeMemSize(mode) < vga.vmemsize;
+	return VideoModeMemSize(mode) < vga.get_effective_vmem_size();
 }
 
 void replace_mode_120h_with_halfline()

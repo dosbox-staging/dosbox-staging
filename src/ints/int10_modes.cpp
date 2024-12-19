@@ -866,8 +866,8 @@ static void finish_set_mode(bool clearmem) {
 		case M_CGA4_COMPOSITE:
 		case M_CGA_TEXT_COMPOSITE:
 			//  Hack we just access the memory directly
-			memset(vga.mem.linear,0,vga.vmemsize);
-			memset(vga.fastmem, 0, vga.vmemsize<<1);
+			memset(vga.mem.linear, 0, vga.get_effective_vmem_size());
+			memset(vga.fastmem, 0, vga.get_effective_vmem_size() << 1);
 			break;
 		case M_ERROR:
 			assert(false);
