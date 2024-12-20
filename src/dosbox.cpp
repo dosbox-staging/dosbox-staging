@@ -1224,9 +1224,9 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("keyboardlayout", deprecated, "");
 	pstring->Set_help("Renamed to 'keyboard_layout'.");
 
-	pstring = secprop->Add_string("keyboard_layout", only_at_start, "us");
+	pstring = secprop->Add_string("keyboard_layout", only_at_start, "auto");
 	pstring->Set_help(
-	        "Keyboard layout code ('us' by default).\n"
+	        "Keyboard layout code ('auto' by default).\n"
 	        "The list of supported keyboard layout codes can be displayed using the\n"
 	        "'--list-layouts' command-line argument, e.g., 'uk' is the British English\n"
 	        "layout. The layout can be followed by the code page number, e.g., 'uk 850'\n"
