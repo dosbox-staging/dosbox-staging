@@ -622,16 +622,21 @@ TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 TCPClientSocket::~TCPClientSocket()
 {
 #ifdef NATIVESOCKETS
-	delete nativetcpstruct;
+	if (nativetcpstruct) {
+		delete nativetcpstruct;
+	}
+	// Very important else. If we're using a native TCP socket, we can't call SDL's close.
+	// nativetcpstruct == mysock so it's a double free and it wasn't created by SDL to begin with
+	else
 #endif
 	if(mysock) {
-		if(listensocketset)
-			SDLNet_TCP_DelSocket(listensocketset, mysock);
 		SDLNet_TCP_Close(mysock);
 		LOG_INFO("SDLNET: Closed client TCP listening socket");
 	}
 
-	if(listensocketset) SDLNet_FreeSocketSet(listensocketset);
+	if (listensocketset) {
+		SDLNet_FreeSocketSet(listensocketset);
+	}
 }
 
 bool TCPClientSocket::GetRemoteAddressString(char *buffer)
