@@ -1247,7 +1247,7 @@ static std::vector<std::string> get_keyboard_layouts_tty()
 #endif // __linux__
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desktop(
-        std::string& log_info)
+        bool& is_layout_list_sorted, std::string& log_info)
 {
 	std::string source_desktop = {};
 
@@ -1275,6 +1275,10 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desk
 		if (!results_desktop.list.empty()) {
 			source_desktop = SourceGnome;
 		}
+		// At least some GNOME variants start with the most recently
+		// used keyboard layout; therefore for autodetection purposes it
+		// is safer to consider the order random if GNOME is used.
+		is_layout_list_sorted = false;
 	}
 	if (results_desktop.list.empty() &&
             is_xdg_desktop_session(XdgDesktopSession::Wayfire)) {
@@ -1368,16 +1372,21 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_tty(
 }
 #endif // __linux__
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& log_info)
+static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(
+        bool& is_layout_list_sorted, std::string& log_info)
 {
 	// Try to get keyboard layouts from the desktop session
-	const auto results_x11 = get_layouts_maybe_codepages_desktop(log_info);
+	// to start with the preferred (top priority) one.
+	is_layout_list_sorted = true;
+	const auto results_x11 = get_layouts_maybe_codepages_desktop(is_layout_list_sorted,
+	                                                             log_info);
 	if (!results_x11.empty()) {
 		return results_x11;
 	}
 
 #ifdef __linux__
 	// Try to get keyboard layouts from the text console settings
+	is_layout_list_sorted  = true;
 	const auto results_tty = get_layouts_maybe_codepages_tty(log_info);
 	if (!results_tty.empty()) {
 		return results_tty;
@@ -1415,11 +1424,7 @@ const HostKeyboardLayouts& GetHostKeyboardLayouts()
 		locale = HostKeyboardLayouts();
 
 		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info);
-
-		// Linux desktop environments keep the keyboard layouts sorted
-		// by user preference
-		locale->is_layout_list_sorted = true;
+		        locale->is_layout_list_sorted, locale->log_info);
 	}
 
 	return *locale;
