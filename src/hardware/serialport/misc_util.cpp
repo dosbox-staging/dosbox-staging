@@ -622,7 +622,7 @@ TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 TCPClientSocket::~TCPClientSocket()
 {
 #ifdef NATIVESOCKETS
-	if (nativetcpstruct) {
+	if (nativetcpstruct) { //-V809
 		delete nativetcpstruct;
 	}
 	// Very important else. If we're using a native TCP socket, we can't call SDL's close.
