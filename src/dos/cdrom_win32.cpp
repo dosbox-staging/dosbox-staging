@@ -281,20 +281,20 @@ bool CDROM_Interface_Win32::GetMediaTrayStatus(bool& mediaPresent,
 // LaserLock currently does not work with CDROM_Interface_Image or
 // CDROM_Interface_Ioctl either which does implement these. I could not find any
 // other game that uses this.
-bool CDROM_Interface_Win32::ReadSector(uint8_t* buffer, const bool raw,
-                                       const uint32_t sector)
+bool CDROM_Interface_Win32::ReadSector([[maybe_unused]]uint8_t* buffer, [[maybe_unused]]const bool raw,
+                                       [[maybe_unused]]const uint32_t sector)
 {
 	return false;
 }
 
-bool CDROM_Interface_Win32::ReadSectors(PhysPt buffer, const bool raw,
-                                        const uint32_t sector, const uint16_t num)
+bool CDROM_Interface_Win32::ReadSectors([[maybe_unused]]PhysPt buffer, [[maybe_unused]]const bool raw,
+                                        [[maybe_unused]]const uint32_t sector, [[maybe_unused]]const uint16_t num)
 {
 	return false;
 }
 
-bool CDROM_Interface_Win32::ReadSectorsHost(void* buffer, bool raw,
-                                            unsigned long sector, unsigned long num)
+bool CDROM_Interface_Win32::ReadSectorsHost([[maybe_unused]]void* buffer, [[maybe_unused]]bool raw,
+                                            [[maybe_unused]]unsigned long sector, [[maybe_unused]]unsigned long num)
 {
 	return false;
 }
