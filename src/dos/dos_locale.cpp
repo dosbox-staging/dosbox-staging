@@ -1503,7 +1503,7 @@ static void load_keyboard_layout()
 
 	const auto tokens = split(config.keyboard_str);
 	if (tokens.size() > 2) {
-		LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s', using 'auto'",
+		LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting: '%s', using 'auto'",
 		            config.keyboard_str.c_str());
 		set_section_property_value("dos", "keyboard_layout", "auto");
 		config.keyboard_str = "auto";
@@ -1517,7 +1517,7 @@ static void load_keyboard_layout()
 		if (tokens.size() == 2) {
 			const auto result = parse_int(tokens[1]);
 			if (!result || *result < 1 || *result > UINT16_MAX) {
-				LOG_WARNING("LOCALE: Invalid 'keyboard_layout' code page '%s', ignoring",
+				LOG_WARNING("LOCALE: Invalid 'keyboard_layout' code page: '%s', ignoring",
 				            tokens[1].c_str());
 			} else {
 				keyboard_layouts[0].code_page =
@@ -1561,14 +1561,14 @@ static void load_keyboard_layout()
 			                                {},
 			                                prefer_rom_font);
 			if (result != KeyboardLayoutResult::OK) {
-				LOG_WARNING("LOCALE: Unable to use specified 'keyboard_layout' setting '%s', using 'us'",
+				LOG_WARNING("LOCALE: Unable to use specified 'keyboard_layout' setting: '%s', using 'us'",
 				            config.keyboard_str.c_str());
 			}
 		} else if (result == KeyboardLayoutResult::IncompatibleMachine) {
-			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting '%s' for this display adapter, using 'us'",
+			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting: '%s' for this display adapter, using 'us'",
 			            config.keyboard_str.c_str());
 		} else {
-			LOG_WARNING("LOCALE: Unable to use specified 'keyboard_layout' setting '%s', using 'us'",
+			LOG_WARNING("LOCALE: Unable to use specified 'keyboard_layout' setting: '%s', using 'us'",
 			            config.keyboard_str.c_str());
 		}
 	}
