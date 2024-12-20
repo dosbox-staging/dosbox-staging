@@ -374,7 +374,7 @@ std::vector<int16_t> CDROM_Interface_Win32::ReadAudio(const uint32_t sector,
 	LPVOID input_buffer      = &read_info;
 	DWORD input_buffer_size  = sizeof(read_info);
 	LPVOID output_buffer     = audio_frames.data();
-	DWORD output_buffer_size = audio_frames.size() * sizeof(int16_t);
+	DWORD output_buffer_size = static_cast<DWORD>(audio_frames.size() * sizeof(int16_t));
 	LPDWORD bytes_returned   = NULL;
 	LPOVERLAPPED overlapped  = NULL;
 
