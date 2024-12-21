@@ -442,18 +442,22 @@ static void check_code_page()
 		return;
 	}
 
-	// Check if code page is known
-	const bool is_code_page_known = LocaleData::CodePageInfo.contains(
-	        dos.loaded_codepage);
-
 	// For known code pages check their compatibility
-	if (is_code_page_known) {
-		const auto code_page_script =
-		        LocaleData::CodePageInfo.at(dos.loaded_codepage).script;
+	bool is_code_page_known = false;
+	for (const auto& pack : LocaleData::CodePageInfo) {
+		if (!pack.contains(dos.loaded_codepage)) {
+			continue;
+		}
+
+		is_code_page_known = true;
+
+		const auto code_page_script = pack.at(dos.loaded_codepage).script;
 		if (*translation_script == code_page_script) {
 			is_code_page_compatible = true;
 			return;
 		}
+
+		break;
 	}
 
 	// Code page is unknown or not compatible

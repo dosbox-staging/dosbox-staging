@@ -146,10 +146,10 @@ const std::map<Script, ScriptInfoEntry> LocaleData::ScriptInfo = {
 // clang-format on
 
 // clang-format off
-const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
-	// Standard ROM code page
+const std::vector<CodePagePackInfo> LocaleData::CodePageInfo = { {
+	// ROM code page
 	{ 437,   { "United States",                                       Script::Latin    } },
-	// FreeDOS code pages - standard package
+}, {    // Most common code pages
 	{ 113,   { "Yugoslavian",                                         Script::Latin    } },
 	{ 667,   { "Polish, Mazovia encoding",                            Script::Latin    } },
 	{ 668,   { "Polish, 852-compatible",                              Script::Latin    } },
@@ -236,15 +236,16 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 58210, { "Azeri Cyrillic and Russian",                          Script::Cyrillic } },
 	{ 59234, { "Tatar",                                               Script::Cyrillic } },
 	{ 58335, { "Kashubian, Mazovia-based, with PLN symbol",           Script::Latin    } },
+	{ 58601, { "Lithuanian, accented, LST 1590-4, with EUR symbol",   Script::Latin    } },
 	{ 59829, { "Georgian",                                            Script::Georgian } },
 	{ 60258, { "Azeri Latin and Russian",                             Script::Cyrillic } },
 	{ 60853, { "Georgian with capital letters",                       Script::Georgian } },
 	{ 62306, { "Uzbek",                                               Script::Cyrillic } },
-	// FreeDOS code pages - ISO pack
+	{ 65506, { "Armenian, ArmSCII-8 encoding",                        Script::Armenian } },
+}, {    // ISO series (8859)
 	{ 813,   { "ISO-8859-7 (Greek), with EUR symbol",                 Script::Greek    } },
 	{ 819,   { "ISO-8859-1 (Western European)",                       Script::Latin    } },
 	{ 901,   { "ISO-8859-13 (Baltic), with EUR symbol",               Script::Latin    } },
-	{ 902,   { "ISO-8 (Estonian), with EUR symbol",                   Script::Latin    } },
 	{ 912,   { "ISO-8859-2 (Central European)",                       Script::Latin    } },
 	{ 913,   { "ISO-8859-3 (South European)",                         Script::Latin    } },
 	{ 914,   { "ISO-8859-4 (North European)",                         Script::Latin    } },
@@ -252,23 +253,25 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 919,   { "ISO-8859-10 (Nordic)",                                Script::Latin    } },
 	{ 920,   { "ISO-8859-9 (Turkish)",                                Script::Latin    } },
 	{ 921,   { "ISO-8859-13 (Baltic)",                                Script::Latin    } },
-	{ 922,   { "ISO-8 (Estonian)",                                    Script::Latin    } },
 	{ 923,   { "ISO-8859-15 (Western European), with EUR symbol",     Script::Latin    } },
 	{ 1124,  { "ISO 8859-5 (modified for Ukrainian)",                 Script::Cyrillic } },
 	{ 58163, { "ISO-8859-14 (Celtic)",                                Script::Latin    } },
 	{ 58258, { "ISO-8859-4 (North European), with EUR symbol",        Script::Latin    } },
+	{ 61235, { "ISO-8859-1 (Western European), with EUR symbol",      Script::Latin    } },
+	{ 63283, { "ISO-8859-1 (modified for Lithuanian)",                Script::Latin    } },
+	{ 65500, { "ISO-8859-16 (South-Eastern European)",                Script::Latin    } },
+}, {    // ISO series (remaining)
+	{ 902,   { "ISO-8 (Estonian), with EUR symbol",                   Script::Latin    } },
+	{ 922,   { "ISO-8 (Estonian)",                                    Script::Latin    } },
 	{ 58259, { "ISO-IR-201 (Volgaic)",                                Script::Cyrillic } },
 	{ 59187, { "ISO-IR-197 (Saami)",                                  Script::Latin    } },
 	{ 59283, { "ISO-IR-200 (Uralic)",                                 Script::Cyrillic } },
 	{ 60211, { "ISO-IR-209 (Saami and Finnish Romani)",               Script::Latin    } },
-	{ 61235, { "ISO-8859-1 (Western European), with EUR symbol",      Script::Latin    } },
-	{ 63283, { "ISO-8859-1 (modified for Lithuanian)",                Script::Latin    } },
-	{ 65500, { "ISO-8859-16 (South-Eastern European)",                Script::Latin    } },
 	{ 65501, { "ISO-IR-123 (Canadian and Spanish)",                   Script::Latin    } },
 	{ 65502, { "ISO-IR-143 (Technical Set)",                          Script::Latin    } },
 	{ 65503, { "ISO-IR-181 (Electrotechnical Set)",                   Script::Latin    } },
 	{ 65504, { "ISO-IR-39 (African)",                                 Script::Latin    } },
-	// FreeDOS code pages - KOI Cyrillic pack
+}, {    // KOI series
 	{ 878,   { "KOI8-R (Russian)",                                    Script::Cyrillic } },
 	{ 58222, { "KOI8-U (Russian and Ukrainian)",                      Script::Cyrillic } },
 	{ 59246, { "KOI8-RU (Russian, Belarusian, Ukrainian)",            Script::Cyrillic } },
@@ -276,7 +279,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 61294, { "KOI8-CA (full Slavic and non-Slavic)",                Script::Cyrillic } },
 	{ 62318, { "KOI8-T (Russian and Tajik)",                          Script::Cyrillic } },
 	{ 63342, { "KOI8-C (Russian and Old Russian), with EUR symbol",   Script::Cyrillic } },
-	// FreeDOS code pages - macOS pack
+}, {    // Apple series
 	{ 1275,  { "Apple Western European",                              Script::Latin    } },
 	{ 1280,  { "Apple Greek",                                         Script::Greek    } },
 	{ 1281,  { "Apple Turkish",                                       Script::Latin    } },
@@ -288,7 +291,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 58619, { "Apple Gaelic, old ortography, Welsh",                 Script::Latin    } },
 	{ 58627, { "Apple Ukrainian",                                     Script::Cyrillic } },
 	{ 58630, { "Apple Saami, Kalo, Finnic, with EUR symbol",          Script::Latin    } },
-	// FreeDOS code pages - Windows pack
+}, {    // Windows series	
 	{ 1250,  { "Windows Central European, with EUR symbol",           Script::Latin    } },
 	{ 1251,  { "Windows Cyrillic, with EUR symbol",                   Script::Cyrillic } },
 	{ 1252,  { "Windows Western European, with EUR symbol",           Script::Latin    } },
@@ -300,14 +303,12 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 58595, { "Windows Kazakh, with EUR symbol",                     Script::Cyrillic } },
 	{ 58596, { "Windows Georgian",                                    Script::Georgian } },
 	{ 58598, { "Windows Azeri, with EUR symbol",                      Script::Latin    } },
-	{ 58601, { "Lithuanian, accented, LST 1590-4, with EUR symbol",   Script::Latin    } },
 	{ 59619, { "Windows Central Asian",                               Script::Cyrillic } },
 	{ 59620, { "Windows Gaelic, old ortography, Welsh",               Script::Latin    } },
 	{ 60643, { "Windows Northeastern Iranian",                        Script::Cyrillic } },
 	{ 61667, { "Windows Inuit-Aleut",                                 Script::Cyrillic } },
 	{ 62691, { "Windows Tungus-Manchu",                               Script::Cyrillic } },
-	{ 65506, { "Armenian, ArmSCII-8 encoding",                        Script::Armenian } },
-};
+} };
 // clang-format on
 
 // ***************************************************************************
