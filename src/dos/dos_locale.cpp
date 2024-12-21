@@ -677,24 +677,22 @@ std::string DOS_GenerateListCodePagesMessage()
 
 	size_t max_column2_length = 0;
 
-	for (const auto& entry : LocaleData::CodePageInfo) {
-		assert(LocaleData::ScriptInfo.contains(entry.second.script));
-		const auto script_msg_name =
-		        LocaleData::ScriptInfo.at(entry.second.script).GetMsgName();
-		const auto page_msg_name = CodePageInfoEntry::GetMsgName(entry.first);
+	for (const auto& pack : LocaleData::CodePageInfo) {
+		for (const auto& entry : pack) {
+			assert(LocaleData::ScriptInfo.contains(entry.second.script));
+			const auto script_msg_name =
+			        LocaleData::ScriptInfo.at(entry.second.script).GetMsgName();
+			const auto page_msg_name = CodePageInfoEntry::GetMsgName(entry.first);
 
-		Row row = {};
+			Row row = {};
 
-		row.column1 = format_str("% 7d - ", entry.first);
-		row.column2 = MSG_GetForHost(page_msg_name);
-		row.column3 = MSG_GetForHost(script_msg_name);
+			row.column1 = format_str("% 7d - ", entry.first);
+			row.column2 = MSG_GetForHost(page_msg_name);
+			row.column3 = MSG_GetForHost(script_msg_name);
 
-		max_column2_length = std::max(max_column2_length,
-		                              length_utf8(row.column2));
+			max_column2_length = std::max(max_column2_length,
+			                              length_utf8(row.column2));
 
-		if (entry.first == DefaultCodePage) {
-			table.insert(table.begin(), row);
-		} else {
 			table.push_back(row);
 		}
 	}
@@ -889,11 +887,16 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& la
 
 std::string DOS_GetCodePageDescription(const uint16_t code_page)
 {
-	if (!LocaleData::CodePageInfo.contains(code_page)) {
-		return {};
+	for (const auto& pack : LocaleData::CodePageInfo) {
+		for (const auto& entry : pack) {
+			if (!is_code_page_equal(code_page, entry.first)) {
+				continue;
+			}
+			return MSG_Get(CodePageInfoEntry::GetMsgName(entry.first));
+		}
 	}
 
-	return MSG_Get(CodePageInfoEntry::GetMsgName(code_page));
+	return {};
 }
 
 std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page)
@@ -1686,9 +1689,11 @@ void DOS_Locale_AddMessages()
 	}
 
 	// Add strings with code page descriptions
-	for (const auto& entry : LocaleData::CodePageInfo) {
-		MSG_Add(entry.second.GetMsgName(entry.first).c_str(),
-		        entry.second.description.c_str());
+	for (const auto& pack : LocaleData::CodePageInfo) {
+		for (const auto& entry : pack) {
+			MSG_Add(entry.second.GetMsgName(entry.first).c_str(),
+			        entry.second.description.c_str());
+		}
 	}
 
 	// Add strings with script names

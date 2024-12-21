@@ -448,6 +448,8 @@ struct CodePageInfoEntry {
 	static std::string GetMsgName(const uint16_t code_page);
 };
 
+using CodePagePackInfo = std::map<uint16_t, CodePageInfoEntry>;
+
 enum class KeyboardScript {
 	// Latin scripts
 	LatinQwerty, /// always keep it the 1st one!
@@ -504,7 +506,7 @@ namespace LocaleData {
 extern const std::map<std::string, std::vector<uint16_t>> BundledCpiContent;
 extern const std::map<uint16_t, CodePageWarning>          CodePageWarnings;
 extern const std::map<Script, ScriptInfoEntry>            ScriptInfo;
-extern const std::map<uint16_t, CodePageInfoEntry>        CodePageInfo;
+extern const std::vector<CodePagePackInfo> CodePageInfo;
 extern const std::vector<KeyboardLayoutInfoEntry>         KeyboardLayoutInfo;
 extern const std::map<uint16_t, DosCountry>               CodeToCountryCorrectionMap;
 extern const std::map<DosCountry, CountryInfoEntry>       CountryInfo;
