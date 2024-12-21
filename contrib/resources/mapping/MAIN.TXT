@@ -479,7 +479,7 @@ ALIAS 0xa72b 0x025b #LATIN SMALL LETTER TRESILLO
 # code pages, including CP 852:
 # - U+01B5 - LATIN CAPITAL LETTER Z WITH STROKE
 # - U+01B6 - LATIN SMALL LETTER Z WITH STROKE
-# They serve exactly the same purpose (tehy are just different graphical
+# They serve exactly the same purpose (they are just different graphical
 # representations, rarely used) as the following:
 # - U+017B - LATIN CAPITAL LETTER Z WITH DOT ABOVE
 # - U+017C - LATIN SMALL LETTER Z WITH DOT ABOVE
