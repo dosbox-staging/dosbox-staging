@@ -143,10 +143,10 @@ const std::map<Script, ScriptInfoEntry> LocaleData::ScriptInfo = {
 // clang-format on
 
 // clang-format off
-const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
+const std::vector<CodePagePackInfo> LocaleData::CodePageInfo = { {
 	// Standard ROM code page
 	{ 437,   { "United States",                                       Script::Latin    } },
-	// FreeDOS code pages - standard package
+}, {    // FreeDOS code pages - standard package
 	{ 113,   { "Yugoslavian",                                         Script::Latin    } },
 	{ 667,   { "Polish, Mazovia encoding",                            Script::Latin    } },
 	{ 668,   { "Polish, 852-compatible",                              Script::Latin    } },
@@ -237,7 +237,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 60258, { "Azeri Latin and Russian",                             Script::Cyrillic } },
 	{ 60853, { "Georgian with capital letters",                       Script::Georgian } },
 	{ 62306, { "Uzbek",                                               Script::Cyrillic } },
-	// FreeDOS code pages - ISO pack
+}, {    // FreeDOS code pages - ISO pack
 	{ 813,   { "ISO-8859-7 (Greek), with EUR symbol",                 Script::Greek    } },
 	{ 819,   { "ISO-8859-1 (Western European)",                       Script::Latin    } },
 	{ 901,   { "ISO-8859-13 (Baltic), with EUR symbol",               Script::Latin    } },
@@ -265,7 +265,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 65502, { "ISO Technical Set (ISO-IR-143)",                      Script::Latin    } },
 	{ 65503, { "ISO Electrotechnical Set (ISO-IR-181)",               Script::Latin    } },
 	{ 65504, { "ISO African (ISO-IR-39)",                             Script::Latin    } },
-	// FreeDOS code pages - KOI Cyrillic pack
+}, {    // FreeDOS code pages - KOI Cyrillic pack
 	{ 878,   { "KOI8-R (Russian)",                                    Script::Cyrillic } },
 	{ 58222, { "KOI8-U (Russian and Ukrainian)",                      Script::Cyrillic } },
 	{ 59246, { "KOI8-RU (Russian, Belarusian, and Ukrainian)",        Script::Cyrillic } },
@@ -273,7 +273,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 61294, { "KOI8-CA (full Slavic and non-Slavic)",                Script::Cyrillic } },
 	{ 62318, { "KOI8-T (Russian and Tajik)",                          Script::Cyrillic } },
 	{ 63342, { "KOI8-C (Russian and Old Russian)",                    Script::Cyrillic } },
-	// FreeDOS code pages - macOS pack
+}, {    // FreeDOS code pages - macOS pack
 	{ 1275,  { "Apple Latin-1 (Western European)",                    Script::Latin    } },
 	{ 1280,  { "Apple Greek",                                         Script::Greek    } },
 	{ 1281,  { "Apple Latin-5 (Turkish)",                             Script::Latin    } },
@@ -285,7 +285,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 58619, { "Apple Gaelic, old orthography",                       Script::Latin    } },
 	{ 58627, { "Apple Ukrainian",                                     Script::Cyrillic } },
 	{ 58630, { "Apple Saami",                                         Script::Latin    } },
-	// FreeDOS code pages - Windows pack
+}, {    // FreeDOS code pages - Windows pack
 	{ 1250,  { "Windows Latin-2 (Central European), with EUR symbol", Script::Latin    } },
 	{ 1251,  { "Windows Cyrillic",                                    Script::Cyrillic } },
 	{ 1252,  { "Windows Latin-1 (Western European), with EUR symbol", Script::Latin    } },
@@ -304,7 +304,7 @@ const std::map<uint16_t, CodePageInfoEntry> LocaleData::CodePageInfo = {
 	{ 61667, { "Windows Inuit-Aleut",                                 Script::Cyrillic } },
 	{ 62691, { "Windows Tungus-Manchu",                               Script::Cyrillic } },
 	{ 65506, { "Windows Armenian",                                    Script::Armenian } },
-};
+} };
 // clang-format on
 
 // ***************************************************************************
