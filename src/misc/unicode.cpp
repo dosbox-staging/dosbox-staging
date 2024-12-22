@@ -326,23 +326,56 @@ static std::map<uint16_t, code_page_maps_t> per_code_page_mappings = {};
 // Grapheme type implementation
 // ***************************************************************************
 
+// Check for combining characters within the supported Unicode blocks
 static bool is_combining_mark(const uint32_t code_point)
 {
+	// clang-format off
 	static constexpr std::pair<uint16_t, uint16_t> Ranges[] = {
-		// clang-format off
-		{0x0300, 0x036f}, // Combining Diacritical Marks
-		{0x0653, 0x065f}, // Arabic Combining Marks
-		// Note: Arabic Combining Marks start from 0x064b, but some are
-		// present as standalone characters in arabic code pages. To
-		// allow this, we do not recognize them as combining marks!
-		// Similarly for Spacing Modifier Letters.
-		{0x02b9, 0x02bf}, // Spacing Modifier Letters
-		{0x1ab0, 0x1aff}, // Combining Diacritical Marks Extended
-		{0x1dc0, 0x1dff}, // Combining Diacritical Marks Supplement
-		{0x20d0, 0x20ff}, // Combining Diacritical Marks for Symbols
-		{0xfe20, 0xfe2f}, // Combining Half Marks
-		// clang-format on
+		// 0x02b0 - 0x02ff     Spacing Modifier Letters
+		// Not a real combining mark, but due to engine limitations
+		// we need this definition for U+1E9A decomposition rules, and
+		// the character is not used by any DOS code page nevertheless
+		{0x02be, 0x02be},
+		// 0x0300 - 0x036f     Combining Diacritical Marks
+		{0x0300, 0x036f},
+		// 0x0400 - 0x04ff     Cyrillic
+		{0x0483, 0x0489},
+		// 0x0590 - 0x05ff     Hebrew
+		{0x0591, 0x05bd},
+		{0x05bf, 0x05bf},
+		{0x05c1, 0x05c2},
+		{0x05c4, 0x05c5},
+		{0x05c7, 0x05c7},
+		// 0x0600 - 0x06ff     Arabic
+		{0x0610, 0x061a},
+		{0x064b, 0x065f},
+		{0x0670, 0x0670},
+		{0x06d6, 0x06dc},
+		{0x06df, 0x06e4},
+		{0x06e7, 0x06e8},
+		{0x06ea, 0x06ed},
+		// 0x0e00 - 0x0e7f     Thai
+		{0x0e31, 0x0e31},
+		{0x0e34, 0x0e3a},
+		{0x0e47, 0x0e4e},
+		// 0x1ab0 - 0x1aff     Combining Diacritical Marks Extended
+		{0x1ab0, 0x1aff},
+		// 0x1dc0 - 0x1dff     Combining Diacritical Marks Supplement
+		{0x1dc0, 0x1dff},
+		// 0x20d0 - 0x20ff     Combining Diacritical Marks for Symbols
+		{0x20d0, 0x20ff},
+		// 0x2de0 - 0x2dff     Cyrillic Extended-A
+		{0x2de0, 0x2dff},
+		// 0xa640 - 0xa69f     Cyrillic Extended-B
+		{0xa66f, 0xa672},
+		{0xa674, 0xa67d},
+		{0xa69e, 0xa69f},
+		// 0xfb00 - 0xfb4f     Alphabetic Presentation Forms
+		{0xfb1e, 0xfb1e},
+		// 0xfe20 - 0xfe2f     Combining Half Marks
+		{0xfe20, 0xfe2f},
 	};
+	// clang-format on
 
 	auto in_range = [code_point](const auto& range) {
 		return code_point >= range.first && code_point <= range.second;
@@ -350,15 +383,16 @@ static bool is_combining_mark(const uint32_t code_point)
 	return std::any_of(std::begin(Ranges), std::end(Ranges), in_range);
 }
 
-Grapheme::Grapheme(const uint16_t code_point)
-        : code_point(code_point),
+Grapheme::Grapheme(const uint16_t initial_code_point)
+        : code_point(initial_code_point),
           is_empty(false)
 {
-	// It is not valid to have a combining mark
-	// as a main code point of the grapheme
-
 	if (is_combining_mark(code_point)) {
-		Invalidate();
+		// It is not valid to have a combining mark as a main code point
+		// of the grapheme - move it to the list of combining marks and
+		// put space as the main code point
+		AddMark(initial_code_point);
+		code_point = ' ';
 	}
 }
 
