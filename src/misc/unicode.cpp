@@ -2137,8 +2137,8 @@ static std::string utf8_to_dos_common(const std::string& str,
 {
 	load_config_if_needed();
 
-	const auto tmp = utf8_to_wide(str);
-	return wide_to_dos(tmp, convert_mode, fallback, code_page);
+	const auto wide = utf8_to_wide(str);
+	return wide_to_dos(wide, convert_mode, fallback, code_page);
 }
 
 std::string utf8_to_dos(const std::string& str,
@@ -2168,8 +2168,8 @@ static std::string dos_to_utf8_common(const std::string& str,
 {
 	load_config_if_needed();
 
-	const auto tmp = dos_to_wide(str, convert_mode, code_page);
-	return wide_to_utf8(tmp);
+	const auto wide = dos_to_wide(str, convert_mode, code_page);
+	return wide_to_utf8(wide);
 }
 
 std::string dos_to_utf8(const std::string& str,
@@ -2185,8 +2185,51 @@ std::string dos_to_utf8(const std::string& str,
 	return dos_to_utf8_common(str, convert_mode, get_custom_code_page(code_page));
 }
 
-static std::string lowercase_dos_common(const std::string& str,
-                                        const uint16_t code_page)
+std::string fs_utf8_to_dos_437(const std::string& str)
+{
+	constexpr uint16_t CodePage = 437;
+
+	load_config_if_needed();
+	if (!prepare_code_page(CodePage)) {
+		return {};
+	}
+	assert(per_code_page_mappings.contains(CodePage));
+
+	const auto mapping = per_code_page_mappings.at(CodePage).dos_to_grapheme_normalized;
+
+	std::string str_out = {};
+	for (const auto code_point : utf8_to_wide(str)) {
+		if (is_control_code(code_point)) {
+			// Not valid for file/directory name
+			return {};
+		}
+
+		if (code_point < DecodeThresholdNonAscii) {
+			// 7-bit ASCII character
+			str_out.push_back(static_cast<char>(code_point));
+			continue;
+		}
+
+		if (!mapping.contains(code_point)) {
+			// Not a valid character for our code page
+			return {};
+		}
+
+		str_out.push_back(mapping.at(code_point));
+	}
+
+	str_out.shrink_to_fit();
+	return str_out;
+}
+
+std::string dos_437_to_fs_utf8(const std::string& str)
+{
+	constexpr uint16_t CodePage = 437;
+
+	return dos_to_utf8(str, DosStringConvertMode::NoSpecialCharacters, CodePage);
+}
+
+static std::string lowercase_dos_common(const std::string& str, const uint16_t code_page)
 {
 	load_config_if_needed();
 
