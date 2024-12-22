@@ -82,6 +82,12 @@ std::string dos_to_utf8(const std::string& str,
                         const DosStringConvertMode convert_mode,
                         const uint16_t code_page);
 
+// Specialized routines for converting between code page 437 and UTF-8 without
+// any combining marks - to be used in filesystem emulation
+
+std::string fs_utf8_to_dos_437(const std::string& str);
+std::string dos_437_to_fs_utf8(const std::string& str);
+
 // Convert DOS code page string to lower/upper case; converters are aware of all
 // the national characters. Functions without 'code_page' parameter use current
 // DOS code page.
