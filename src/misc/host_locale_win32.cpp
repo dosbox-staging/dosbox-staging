@@ -422,9 +422,9 @@ static std::map<std::string, std::string> read_layouts_registry(const std::strin
 	return layouts;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& log_info)
+static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
 {
-	log_info = {};
+	out_log_info = {};
 
 	std::vector<KeyboardLayoutMaybeCodepage> layouts = {};
 
@@ -432,12 +432,12 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	const auto substitutes = read_layouts_registry(TEXT("Substitutes"));
 	for (const auto& entry : substitutes) {
 		// Get information for log
-		if (!log_info.empty()) {
-			log_info += ";";
+		if (!out_log_info.empty()) {
+			out_log_info += ";";
 		}
-		log_info += std::string(entry.first);
-		log_info += "->";
-		log_info += entry.second;
+		out_log_info += std::string(entry.first);
+		out_log_info += "->";
+		out_log_info += entry.second;
 
 		// Check if we know a matching keyboard layout
 		auto key = entry.second;
@@ -455,10 +455,10 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	const auto preload = read_layouts_registry(TEXT("Preload"));
 	for (const auto& entry : preload) {
 		// Get information for log
-		if (!log_info.empty()) {
-			log_info += ";";
+		if (!out_log_info.empty()) {
+			out_log_info += ";";
 		}
-		log_info += entry.second;
+		out_log_info += entry.second;
 
                 auto key = entry.second;
                 lowcase(key);
@@ -470,7 +470,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	return layouts;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& log_info)
+static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 {
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 	if (!GetUserDefaultLocaleName(buffer, LOCALE_NAME_MAX_LENGTH)) {
@@ -480,7 +480,7 @@ static std::optional<DosCountry> get_dos_country(std::string& log_info)
 	}
 	const auto locale_name = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	log_info = locale_name;
+	out_log_info = locale_name;
 
 	const auto tokens = split(locale_name, "-");
 	if (tokens.size() < 2) {
@@ -490,7 +490,7 @@ static std::optional<DosCountry> get_dos_country(std::string& log_info)
 	return IsoToDosCountry(tokens[0], tokens[1]);
 }
 
-static std::string get_language_file(std::string& log_info)
+static std::string get_language_file(std::string& out_log_info)
 {
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 
@@ -505,7 +505,7 @@ static std::string get_language_file(std::string& log_info)
 
 	const auto language_territory = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	log_info = language_territory;
+	out_log_info = language_territory;
 
 	if (language_territory == "pt-BR") {
 		// We have a dedicated Brazilian translation

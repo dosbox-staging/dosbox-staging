@@ -385,22 +385,22 @@ static std::string get_locale(const CFLocaleKey key)
 	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& log_info)
+static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 {
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	log_info = language + "_" + country;
+	out_log_info = language + "_" + country;
 
 	return IsoToDosCountry(language, country);
 }
 
-static std::string get_language_file(std::string& log_info)
+static std::string get_language_file(std::string& out_log_info)
 {
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	log_info = language + "_" + country;
+	out_log_info = language + "_" + country;
 
 	if (language == "pt" && country == "BR") {
 		// We have a dedicated Brazilian translation
@@ -414,16 +414,16 @@ using AppleLayouts = std::vector<std::pair<int64_t, std::string>>;
 
 static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(
 	const AppleLayouts &apple_layouts,
-	std::string& log_info)
+	std::string& out_log_info)
 {
 	std::vector<KeyboardLayoutMaybeCodepage> result = {};
 	for (const auto& [layout_id, layout_name] : apple_layouts) {
 		// LOG_MSG("{ %- lld, { \"\" }         }, // %s",
 		//         layout_id, layout_name.c_str());
-		if (!log_info.empty()) {
-			log_info += "; ";
+		if (!out_log_info.empty()) {
+			out_log_info += "; ";
 		}
-		log_info += std::to_string(layout_id) + " (" + layout_name + ")";
+		out_log_info += std::to_string(layout_id) + " (" + layout_name + ")";
 
 		if (MacToDosKeyboard.contains(layout_id)) {
 			result.push_back(MacToDosKeyboard.at(layout_id));
@@ -504,7 +504,7 @@ static CFPropertyListRef read_plist_file()
 	return plist_ref;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& log_info)
+static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
 {
 	constexpr auto MaxIntSize = static_cast<CFIndex>(sizeof(int64_t));
 
@@ -599,7 +599,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	}
 
 	CFRelease(plist_ref);
-	return get_layouts_maybe_codepages(apple_layouts, log_info);
+	return get_layouts_maybe_codepages(apple_layouts, out_log_info);
 }
 
 const HostLocale& GetHostLocale()
