@@ -395,19 +395,23 @@ static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 	return IsoToDosCountry(language, country);
 }
 
-static std::string get_language_file(std::string& out_log_info)
+static HostLanguage get_host_language()
 {
+	HostLanguage result = {};
+
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	out_log_info = language + "_" + country;
+	result.log_info = language + "_" + country;
 
 	if (language == "pt" && country == "BR") {
 		// We have a dedicated Brazilian translation
-		return "br";
+		result.language_file = "br";
+	} else {
+		result.language_file = language;
 	}
 
-	return language;
+	return result;
 }
 
 using AppleLayouts = std::vector<std::pair<int64_t, std::string>>;
@@ -633,9 +637,7 @@ const HostLanguage& GetHostLanguage()
 	static std::optional<HostLanguage> locale = {};
 
 	if (!locale) {
-		locale = HostLanguage();
-
-		locale->language_file = get_language_file(locale->log_info);
+		locale = get_host_language();
 	}
 
 	return *locale;

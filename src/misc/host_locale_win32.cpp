@@ -490,8 +490,10 @@ static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 	return IsoToDosCountry(tokens[0], tokens[1]);
 }
 
-static std::string get_language_file(std::string& out_log_info)
+static HostLanguage get_host_language()
 {
+	HostLanguage result = {};
+
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 
 	// Get the main language name
@@ -505,14 +507,17 @@ static std::string get_language_file(std::string& out_log_info)
 
 	const auto language_territory = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	out_log_info = language_territory;
+	result.log_info = language_territory;
 
 	if (language_territory == "pt-BR") {
 		// We have a dedicated Brazilian translation
-		return "br";
+		result.language_file = "br";
+	} else {
+		const auto it = language_territory.find('-');
+		result.language_file = language_territory.substr(0, it);
 	}
 
-	return language_territory.substr(0, language_territory.find('-'));
+	return result;
 }
 
 const HostLocale& GetHostLocale()
@@ -546,9 +551,7 @@ const HostLanguage& GetHostLanguage()
 	static std::optional<HostLanguage> locale = {};
 
 	if (!locale) {
-		locale = HostLanguage();
-
-		locale->language_file = get_language_file(locale->log_info);
+		locale = get_host_language();
 	}
 
 	return *locale;

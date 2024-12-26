@@ -940,8 +940,10 @@ static std::optional<DosCountry> get_dos_country(const std::string& category,
 	return IsoToDosCountry(language, teritory);
 }
 
-static std::string get_language_file(std::string& out_log_info)
+static HostLanguage get_host_language()
 {
+	HostLanguage result = {};
+
 	const std::vector<std::string> Variables = {
 	        VariableLanguage,
 	        LcAll,
@@ -953,19 +955,20 @@ static std::string get_language_file(std::string& out_log_info)
 	if (value.empty()) {
 		return {};
 	}
-	out_log_info = variable + "=" + value;
+	result.log_info = variable + "=" + value;
 
 	const auto [language, teritory] = split_posix_locale(value);
 
 	if (language == "pt" && teritory == "BR") {
 		// We have a dedicated Brazilian translation
-		return "br";
-	}
-	if (language == "c" || language == "posix") {
-		return "en";
+		result.language_file = "br";
+	} else if (language == "c" || language == "posix") {
+		result.language_file = "en";
+	} else {
+		result.language_file = language;
 	}
 
-	return language;
+	return result;
 }
 
 static DesktopKeyboardLayouts consolidate_layouts_variants(
@@ -1435,9 +1438,7 @@ const HostLanguage& GetHostLanguage()
 	static std::optional<HostLanguage> locale = {};
 
 	if (!locale) {
-		locale = HostLanguage();
-
-		locale->language_file = get_language_file(locale->log_info);
+		locale = get_host_language();
 	}
 
 	return *locale;
