@@ -45,6 +45,12 @@ Elenco delle opzioni disponibili:
                             numerici. I codici possono essere utilizzati
                             nell'impostazione di configurazione 'country'.
 
+  --list-layouts            Elenca tutte le disposizioni della tastiera supportate e
+                            i relativi codici. I codici possono essere utilizzati
+                            nell'impostazione di configurazione 'keyboard_layout'.
+                            
+  --list-code-pages         Elenca tutte le tabelle codici supportate.
+
   --list-glshaders          Elenca tutti gli shader OpenGL disponibili e i relativi
                             percorsi. Gli shader possono essere utilizzati
                             nell'impostazione di configurazione 'glshader'.
@@ -52,6 +58,8 @@ Elenco delle opzioni disponibili:
   --fullscreen              Avvia in modalità a schermo intero.
 
   --lang <file_lingua>      Avvia con la lingua specificata in <file_lingua>.
+                            Se impostato su 'auto', l'emulatore tenterà di
+                            individuare la lingua dal sistema operativo in uso.
 
   --machine <tipo>          Emula un tipo specifico di macchina. Il tipo di macchina
                             influenza sia l'emulazione delle schede video che quelle
@@ -83,11 +91,25 @@ Elenco delle opzioni disponibili:
 
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
-Elenco dei codici paese (per lo più uguali ai prefissi telefonici)
+Elenco dei codici paese disponibili (per lo più uguali ai prefissi telefonici)
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
-I codici paese riportati sopra possono essere utilizzati, esattamente come
-elencati, nell'impostazione di configurazione 'country'.
+I codici sopra indicati possono essere utilizzati nell'impostazione di
+configurazione 'country'.
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
+Elenco dei codici di tastiera disponibili
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
+I codici sopra indicati possono essere utilizzati nell'impostazione di
+configurazione 'keyboard_layout'.
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_1
+Elenco delle tabelle codici disponibili
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_2
+Le tabelle codici sopra indicate possono essere utilizzate nell'impostazione di
+configurazione 'keyboard_layout'.
 .
 :COUNTRY_NAME_XXA
 Internazionale (inglese)
@@ -413,6 +435,636 @@ Kirghizistan
 :COUNTRY_NAME_UZB
 Uzbekistan
 .
+:CODE_PAGE_DESCRIPTION_113
+Jugoslavo
+.
+:CODE_PAGE_DESCRIPTION_437
+Stati Uniti
+.
+:CODE_PAGE_DESCRIPTION_667
+Polacco, codifica Mazovia
+.
+:CODE_PAGE_DESCRIPTION_668
+Polacco, compatibile con 852
+.
+:CODE_PAGE_DESCRIPTION_737
+Greco-2
+.
+:CODE_PAGE_DESCRIPTION_770
+Baltico
+.
+:CODE_PAGE_DESCRIPTION_771
+Lituano e russo, codifica KBL
+.
+:CODE_PAGE_DESCRIPTION_773
+Latino-7 (Baltico, vecchia codifica)
+.
+:CODE_PAGE_DESCRIPTION_775
+Latino-7 (Baltico)
+.
+:CODE_PAGE_DESCRIPTION_777
+Lituano, lettere accentate, vecchia codifica
+.
+:CODE_PAGE_DESCRIPTION_778
+Lituano, lettere accentate, codifica LST 1590-2
+.
+:CODE_PAGE_DESCRIPTION_808
+Russo, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_848
+Ucraino, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_849
+Bielorusso, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_850
+Latino-1 (Europa occidentale)
+.
+:CODE_PAGE_DESCRIPTION_851
+Greco, vecchia codifica
+.
+:CODE_PAGE_DESCRIPTION_852
+Latino-2 (Europa centrale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_853
+Latino-3 (turco, maltese ed esperanto)
+.
+:CODE_PAGE_DESCRIPTION_855
+Slavo meridionale
+.
+:CODE_PAGE_DESCRIPTION_856
+Ebraico-2, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_857
+Latino-5 (turco), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_858
+Latino-1 (Europa occidentale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_859
+Latino-9 (Europa occidentale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_860
+Portoghese
+.
+:CODE_PAGE_DESCRIPTION_861
+Islandese
+.
+:CODE_PAGE_DESCRIPTION_862
+Ebraico-2
+.
+:CODE_PAGE_DESCRIPTION_863
+Francese canadese
+.
+:CODE_PAGE_DESCRIPTION_864
+Arabo
+.
+:CODE_PAGE_DESCRIPTION_865
+Danese/norvegese
+.
+:CODE_PAGE_DESCRIPTION_866
+Russo
+.
+:CODE_PAGE_DESCRIPTION_867
+Ceco e slovacco, codifica Kamenický
+.
+:CODE_PAGE_DESCRIPTION_869
+Greco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_872
+Slavo meridionale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_899
+Armeno, codifica ArmSCII-8A
+.
+:CODE_PAGE_DESCRIPTION_991
+Polacco, codifica Mazovia, con simbolo PLN
+.
+:CODE_PAGE_DESCRIPTION_1116
+Estone
+.
+:CODE_PAGE_DESCRIPTION_1117
+Lettone
+.
+:CODE_PAGE_DESCRIPTION_1118
+Lituano, codifica LST 1283
+.
+:CODE_PAGE_DESCRIPTION_1119
+Lituano e russo, codifica LST 1284
+.
+:CODE_PAGE_DESCRIPTION_1125
+Ucraino
+.
+:CODE_PAGE_DESCRIPTION_1131
+Bielorusso
+.
+:CODE_PAGE_DESCRIPTION_3012
+Lettone e russo, codifica RusLat
+.
+:CODE_PAGE_DESCRIPTION_3021
+Bulgaro, codifica MIK
+.
+:CODE_PAGE_DESCRIPTION_3845
+Ungherese, codifica CWI-2
+.
+:CODE_PAGE_DESCRIPTION_3846
+Turco
+.
+:CODE_PAGE_DESCRIPTION_3848
+Brasiliano, codifica ABICOMP
+.
+:CODE_PAGE_DESCRIPTION_30000
+Saami, Kalo e Finnico
+.
+:CODE_PAGE_DESCRIPTION_30001
+Celtico e scozzese, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30002
+Tagiko, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30003
+Latinoamericano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30004
+Groenlandese e germanico settentrionale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30005
+Nigeriano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30006
+Vietnamita, codifica VISCII
+.
+:CODE_PAGE_DESCRIPTION_30007
+Latino e romanzo, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30008
+Abcaso e osseto, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30009
+Romani e turco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30010
+Gagauzo e Moldavo, con il simbolo dell'EUR
+.
+:CODE_PAGE_DESCRIPTION_30011
+Russo Meridionale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30012
+Siberiano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30013
+Turco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30014
+Ugro-finnico (Mari, Udmurto), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30015
+Ostiaco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30016
+Mansi, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30017
+Russo nord-occidentale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30018
+Tataro latino e russo, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30019
+Latino ceceno e russo, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30020
+Basso sassone e frisone, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30021
+Oceania, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30022
+Prime Nazioni canadesi, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30023
+Sudafricano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30024
+Africa settentrionale e orientale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30025
+Africa occidentale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30026
+Africa centrale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30027
+Beninese, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30028
+Nigeriano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30029
+Messicano, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30030
+Messicano-2, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30031
+Latino-4 (Nord Europa), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30032
+Latino-6, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_30033
+Tataro di Crimea, con simbolo UAH
+.
+:CODE_PAGE_DESCRIPTION_30034
+Cherokee
+.
+:CODE_PAGE_DESCRIPTION_30039
+Ucraino, con simbolo UAH
+.
+:CODE_PAGE_DESCRIPTION_30040
+Russo, con simbolo UAH
+.
+:CODE_PAGE_DESCRIPTION_58152
+Kazako, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_58210
+Cirillico azero e russo
+.
+:CODE_PAGE_DESCRIPTION_58335
+Casciubo, basato su Masovia, con simbolo PLN
+.
+:CODE_PAGE_DESCRIPTION_59234
+Tartaro
+.
+:CODE_PAGE_DESCRIPTION_59829
+Georgiano
+.
+:CODE_PAGE_DESCRIPTION_60258
+Azero latino e russo
+.
+:CODE_PAGE_DESCRIPTION_60853
+Georgiano con lettere maiuscole
+.
+:CODE_PAGE_DESCRIPTION_62306
+Uzbeko
+.
+:SCRIPT_NAME_LATN
+Latino
+.
+:SCRIPT_NAME_ARAB
+Arabo
+.
+:SCRIPT_NAME_ARMN
+Armeno
+.
+:SCRIPT_NAME_CHER
+Cherokee
+.
+:SCRIPT_NAME_CYRL
+Cirillico
+.
+:SCRIPT_NAME_GEOR
+Georgiano
+.
+:SCRIPT_NAME_GREK
+Greco
+.
+:SCRIPT_NAME_HEBR
+Ebraico
+.
+:SCRIPT_PROPERTY_PHONETIC
+fonetico
+.
+:SCRIPT_PROPERTY_NON_STANDARD
+non standard
+.
+:KEYBOARD_LAYOUT_NAME_US
+Stati Uniti (standard, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UX
+Stati Uniti (internazionale, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CO
+Stati Uniti (Colemak)
+.
+:KEYBOARD_LAYOUT_NAME_DV
+Stati Uniti (Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_LH
+Stati Uniti (Dvorak mano sinistra)
+.
+:KEYBOARD_LAYOUT_NAME_RH
+Stati Uniti (Dvorak mano destra)
+.
+:KEYBOARD_LAYOUT_NAME_UK
+Regno Unito (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_UK168
+Regno Unito (alternativo, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KX
+Regno Unito (internazionale, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_AR462
+Arabo (AZERTY/Arabo)
+.
+:KEYBOARD_LAYOUT_NAME_AR470
+Arabo (QWERTY/Arabo)
+.
+:KEYBOARD_LAYOUT_NAME_AZ
+Azero (QWERTY/cirillico)
+.
+:KEYBOARD_LAYOUT_NAME_BA
+Bosniaco (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_BE
+Belga (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BX
+Belga (internazionale, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BG
+Bulgaro (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_BG103
+Bulgaro (QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_BG241
+Bulgaro (JCUKEN/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_BN
+Beninese (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR
+Brasiliano (disp. ABNT, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR274
+Brasiliano (disp. statunitense, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BY
+Bielorusso (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_CE
+Ceceno (standard, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_CE443
+Ceceno (disp. macchina da scrivere, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_CF
+Canadese (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CF445
+Canadese (doppio strato, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CG
+Montenegrino (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ
+Ceco (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ243
+Ceco (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ489
+Ceco (programmatori, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_DE
+Tedesco (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_GR453
+Tedesco (doppio strato, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_DK
+Danese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_EE
+Estone (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_ES
+Spagnolo (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SX
+Spagnolo (internazionale, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FI
+Finlandese (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_FO
+Faroese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FR
+Francese (standard, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FX
+Francese (internazionale, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_GK
+Greco (319, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_GK220
+Greco (220, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_GK459
+Greco (459, non standard/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_HR
+Croato (QWERTZ/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_HU
+Ungherese (101 tasti, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_HU208
+Ungherese (102 tasti, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_HY
+Armeno (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_IL
+Ebraico (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_IS
+Islandese (101 tasti, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IS161
+Islandese (102 tasti, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IT
+Italiano (standard, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_IT142
+Italiano (142, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_IX
+Italiano (internazionale, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KA
+Georgiano (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_KK
+Kazako (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_KK476
+Kazako (476, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_KY
+Kirghiso (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_LA
+Latinoamericano (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_LT
+Lituano (baltico, QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LT210
+Lituano (programmatori, QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LT211
+Lituano (AZERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LT221
+Lituano (LST 1582, AZERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LT456
+Lituano (QWERTY/AZERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LV
+Lettone (standard, QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_LV455
+Lettone (QWERTY/UGJRMV/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_MK
+Macedone (QWERTZ/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_MN
+Mongolo (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_MT
+Maltese (disp. britannica, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_MT103
+Maltese (disp. statunitense, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NE
+Nigeriano (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NG
+Nigeriano (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NL
+Olandese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NO
+Norvegese (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_PH
+Filippino (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PL
+Polacco (programmatori, QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_PL214
+Polacco (disp. macchina da scrivere, QWERTZ/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_PO
+Portoghese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PX
+Portoghese (internazionale, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_RO
+Rumeno (standard, QWERTZ/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_RO446
+Rumeno (QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_RU
+Russo (standard, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_RU443
+Russo (disp. macchina da scrivere, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_RX
+Russo (standard esteso, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_RX443
+Russo (disp. macchina da scrivere estesa, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_SD
+Svizzero (tedesco, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SF
+Svizzero (francese, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SI
+Sloveno (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SK
+Slovacco (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SQ
+Albanese (senza tasti morti, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SQ448
+Albanese (tasti morti, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SV
+Svedese (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_TJ
+Tagiko (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_TM
+Turkmeno (QWERTY/fonetico)
+.
+:KEYBOARD_LAYOUT_NAME_TR
+Turco (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_TR440
+Turco (non standard)
+.
+:KEYBOARD_LAYOUT_NAME_TT
+Tataro (standard, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_TT443
+Tataro (disp. macchina da scrivere, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UR
+Ucraino (101 tasti, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UR1996
+Ucraino (101 tasti, 1996, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UR2001
+Ucraino (102 tasti, 2001, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UR2007
+Ucraino (102 tasti, 2007, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UR465
+Ucraino (101 tasti, 465, QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_UZ
+Uzbeko (QWERTY/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_VI
+Vietnamita (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_YC
+Serbo (tasti morti, QWERTZ/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_YC450
+Serbo (senza tasti morti, QWERTZ/nazionale)
+.
+:KEYBOARD_LAYOUT_NAME_YU
+Jugoslavo (QWERTZ)
+.
+:KEYBOARD_MOD_ADJECTIVE_LEFT
+Sinistro
+.
+:KEYBOARD_MOD_ADJECTIVE_RIGHT
+Destro
+.
 :DOSBOX_HELP_LIST_GLSHADERS_1
 Elenco degli shader GLSL disponibili
 ------------------------------------
@@ -445,6 +1097,9 @@ Utilizzo: [color=light-green]config [reset]-set [color=light-cyan][SEZIONE][rese
 .
 :TITLEBAR_CYCLES_MS
 cicli/ms
+.
+:TITLEBAR_CYCLES_THROTTLED
+limitato
 .
 :TITLEBAR_MUTED
 MUTO
@@ -684,14 +1339,15 @@ d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
 del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
 :CONFIG_LANGUAGE
-Seleziona la lingua da utilizzare: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl',
-'pl' o 'ru' (predefinito non impostato; equivalente ad 'en').
+Seleziona la lingua dei messaggi visualizzati nella finestra DOS (predefinito
+non impostato; equivalente ad 'auto'):
+  auto:      Individua la lingua dal sistema operativo in uso (predefinito).
+  <valore>:  Carica la traduzione dal file specificato.            
 Note:
-  - Questa impostazione, se utilizzata, sovrascriverà la variabile
-    d'ambiente 'LANG'.
-  - La directory 'resources/translations', inclusa nel pacchetto di DOSBox
-    Staging, contiene i file di traduzione. Per supportare questa funzione,
-    si prega di tenerla nella stessa cartella dell'eseguibile.
+  - Sono disponibili i seguenti file di lingua:
+    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' e 'ru'.
+  - La lingua inglese è integrata nell'emulatore, le altre sono invece
+    archiviate nella directory 'resources/translations' inclusa nel pacchetto.
 .
 :CONFIG_MACHINE
 Imposta la scheda video o la macchina da emulare:
@@ -781,7 +1437,7 @@ Controlla quali modalità video VESA sono disponibili:
               high color a risoluzione 320x200 sono escluse in quanto il loro
               supporto fu parziale fino alla fine degli anni '90. Sono escluse
               anche le modalità video a framebuffer lineare a 256 colori e
-              risoluzione 320x240, 400x300 e 512x384 poichè causano problemi
+              risoluzione 320x240, 400x300 e 512x384 poiché causano problemi
               di temporizzazione nei giochi che usano Build Engine.
   halfline:   Equivalente a 'compatible', ma la modalità VESA 120h è sostituita
               con una speciale modalità a mezza linea adoperata da Extreme
@@ -1208,8 +1864,17 @@ texture o Texture Mapping Unit (TMU) come segue:
   12: FBI con 4 MB e due TMU, ciascuno con 4 MB.
 .
 :CONFIG_VOODOO_MULTITHREADING
-Utilizza i thread per migliorare le prestazioni dell'emulazione 3dfx Voodoo
-(predefinito abilitato).
+Rinominato in 'voodoo_threads'
+.
+:CONFIG_VOODOO_THREADS
+Utilizza i thread per migliorare le prestazioni dell'emulazione 3dfx Voodoo:
+  auto:      Utilizza fino a 8 thread, in base ai core della CPU disponibili
+             (predefinito).
+  <valore>:  Imposta un numero specifico di thread compreso tra 1 e 16.
+Nota: I test hanno dimostrato un aumento di prestazioni tangibile con l'uso di
+      non più di 8 thread. Specificare un numero di thread più elevato può
+      portare ad un aumento irrisorio o, addirittura, ad una diminuzione delle
+      prestazioni.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilizza il filtro bilineare per emulare l'effetto smussato delle texture delle
@@ -1303,7 +1968,7 @@ Note:
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
 l'interrupt (predefinito disabilitato). Può migliorare la giocabilità,
-specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poichè per alcuni
+specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poiché per alcuni
 incrementa efficacemente la frequenza di campionamento del mouse a 1000 Hz,
 senza aumentare il sovraccarico dell'interrupt. Potrebbe causare problemi di
 compatibilità.
@@ -1353,7 +2018,7 @@ audio emulata in un file WAV funzionerà ugualmente.
 .
 :CONFIG_RATE
 Frequenza di campionamento del mixer audio di DOSBox, in Hz (predefinito %s).
-L'intervallo di valori valido é compreso tra 8000 e 96000 Hz. La maggior parte
+L'intervallo di valori valido è compreso tra 8000 e 96000 Hz. La maggior parte
 dei dispositivi audio di consumo utilizza una frequenza di campionamento nativa
 di 48000 Hz. È consigliabile non modificare questo valore, a meno che non si
 abbia una buona ragione per farlo. È molto probabile che il sistema operativo
@@ -1426,124 +2091,59 @@ Abilita l'effetto coro a livello globale per un suono più avvolgente:
 Nota: È possibile regolare con precisione i livelli di coro di ciascun canale
       tramite il comando MIXER.
 .
-:CONFIG_MIDIDEVICE
-Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
-(predefinito 'auto'):
-.
-:CONFIGITEM_MIDIDEVICE_COREMIDI
-  coremidi:   Utilizza qualsiasi dispositivo configurato nelle impostazioni
-              audio MIDI di MacOS.
-.
-:CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio:  Utilizza il sintetizzatore MIDI integrato in MacOS.
-.
-:CONFIGITEM_MIDIDEVICE_WIN32
-  win32:      Utilizza l'interfaccia di riproduzione MIDI Win32 di Windows.
-.
-:CONFIGITEM_MIDIDEVICE_OSS
-  oss:        Utilizza l'interfaccia di riproduzione MIDI OSS di Linux.
-.
-:CONFIGITEM_MIDIDEVICE_ALSA
-  alsa:       Utilizza l'interfaccia di riproduzione MIDI ALSA di Linux.
-.
-:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
-  fluidsynth: Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
-              Fare riferimento alla sezione [fluidsynth] per una configurazione
-              dettagliata.
-.
-:CONFIGITEM_MIDIDEVICE_MT32
-  mt32:       Utilizza il sintetizzatore Roland MT-32 incluso in DOSBox.
-              Fare riferimento alla sezione [mt32] per una configurazione
-              dettagliata.
-.
-:CONFIGITEM_MIDIDEVICE_AUTO
-  auto:       Utilizza uno dei sintetizzatori MIDI inclusi in DOSBox
-              (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
-              dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
-              `midiconfig`). Quest'ultimo potrebbe essere un sintetizzatore
-              software o un dispositivo fisico (predefinito).
-.
-:CONFIGITEM_MIDIDEVICE_NONE
-  none:       Disabilita l'uscita MIDI.
-.
-:CONFIG_MIDICONFIG
-Opzioni di configurazione per l'interfaccia MIDI selezionata
-(predefinito non impostato).
-Di solito è l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
-(trova l'ID/nome con il comando DOS 'MIXER /LISTMIDI').
-Note:
-.
-:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
-  - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
-    intergrati ('mididevice = fluidsynth' o 'mididevice = mt32').
-.
-:CONFIGITEM_MIDICONFIG_COREAUDIO
-  - Quando si utilizza 'coreaudio', è qui possibile specificare un SoundFont.
-.
-:CONFIGITEM_MIDICONFIG_ALSA
-  - Quando si utilizza ALSA, eseguire il comando 'aconnect -l' sul terminale
-    Linux per visualizzare l'elenco di tutte le porte MIDI aperte e
-    selezionarne una (es. 'midiconfig = 14:0' per usare il sequenziatore
-    client 14, porta 0).
-.
-:CONFIGITEM_MIDICONFIG_MT32
-  - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
-    potrebbe richiedere un ritardo per evitare che il suo buffer si
-    sovraccarichi. In tal caso, aggiungi 'delaysysex'
-    (es. 'midiconfig = 2 delaysysex').
-.
-:CONFIG_MPU401
-Modalità MPU-401 da emulare (predefinito 'intelligent').
-.
-:CONFIG_RAW_MIDI_OUTPUT
-Abilita l'uscita MIDI senza alcuna elaborazione (predefinito disabilitato).
-I driver MIDI di molti giochi non sono completamente conformi allo standard
-MIDI, il che rende la modifica delle registrazioni MIDI di questi giochi
-altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
-causando note sospese o mancanti. DOSBox corregge l'output MIDI di tali giochi
-per impostazione predefinita. Ciò non comporta alcuna differenza udibile;
-influisce solo sulla rappresentazione dei dati MIDI.
-Dovresti abilitare 'raw_midi_output' solo se hai davvero bisogno di catturare
-una sequenza MIDI (inalterata) da un programma, ad esempio quando si lavora con
-applicazioni musicali o quando si esegue il debug per problemi riguardanti
-la riproduzione MIDI.
-.
 :CONFIG_SOUNDFONT
-Percorso di un file SoundFont in formato .sf2 (predefinito 'default.sf2').
-Puoi utilizzare un percorso relativo o assoluto, o il nome di un file .sf2
-all'interno della cartella 'soundfonts' situata nella directory di
-configurazione di DOSBox.
-Un valore percentuale opzionale dopo il nome ridimensionerà il volume del
-SoundFont. Questo è utile per normalizzare il volume di diversi SoundFont.
-Es. 'il_mio_soundfont.sf2 50' attenuerà il volume del 50%%.
+Nome o percorso del file SoundFont da utilizzare (predefinito 'default.sf2').
+Il SoundFont verrà ricercato nelle seguenti posizioni, rispettivamente:
+  - Nella directory SoundFont definita dall'utente (vedi impostazione
+    'soundfont_dir').
+  - Nella cartella 'soundfonts' situata nella directory di configurazione
+    di DOSBox.
+  - In altre posizioni comuni del sistema.
+L'estensione '.sf2' può essere omessa. È possibile utilizzare percorsi relativi
+o assoluti alle posizioni sopra indicate.
+Nota: Eseguire `MIXER /LISTMIDI` per visualizzare l'elenco dei SoundFont
+      disponibili.
+.
+:CONFIG_SOUNDFONT_DIR
+Directory SoundFont definita dall'utente (predefinito non impostato).
+Se impostata, questa ha la precedenza sulle altre posizioni di ricerca.
+.
+:CONFIG_SOUNDFONT_VOLUME
+Imposta il volume del SoundFont come percentuale (predefinito 100).
+Questo è utile per normalizzare il volume di diversi SoundFont.
 Il valore percentuale può variare da 1 a 800.
 .
 :CONFIG_FSYNTH_CHORUS
-Effetto coro: 'auto' (predefinito), 'on', 'off', o valori personalizzati.
-Quando si utilizzano valori personalizzati:
-  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: conteggio-voci livello velocità profondità modulazione-onda, dove:
-    - conteggio-voci è un numero intero compreso tra 0 e 99
-    - livello è un numero decimale compreso tra 0.0 e 10.0
-    - velocità è un numero decimale, misurato in Hz, compreso tra 0.1 e 5.0
-    - profondità è un numero decimale compreso tra 0.0 e 21.0
-    - modulazione-onda è 'sine' o 'triangle'
-  Per esempio: chorus = 3 1.2 0.3 8.0 sine
+Configura l'effetto coro di FluidSynth. Valori possibili:
+  auto:             Abilita l'effetto coro, tranne che con alcuni SoundFont
+                    noti in cui l'effetto causa problemi (predefinito).
+  on:               Abilita sempre l'effetto coro.
+  off:              Disabilita l'effetto coro.
+  <personalizzato>: Impostazione personalizzata. Specificare i seguenti valori
+                    separati da uno spazio:
+                      - conteggio voci:    Numero intero da 0 a 99
+                      - livello:           Numero decimale da 0.0 a 10.0
+                      - velocità:          Numero decimale da 0.1 a 5.0 (in Hz)
+                      - profondità:        Numero decimale da 0.0 a 21.0
+                      - modulazione onda:  'sine' o 'triangle'
+                    Per esempio: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
 Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
       il coro a livello del mixer sul canale FluidSynth, oppure abilitare
       entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
       riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
 .
 :CONFIG_FSYNTH_REVERB
-Effetto riverbero: 'auto' (predefinito), 'on', 'off', o valori personalizzati.
-Quando si utilizzano valori personalizzati:
-  Tutti i parametri devono essere forniti in ordine e separati da uno spazio.
-  Essi sono: dimensione-stanza smorzamento ampiezza livello, dove:
-    - dimensione-stanza è un numero decimale compreso tra 0.0 e 1.0
-    - smorzamento è un numero decimale compreso tra 0.0 e 1.0
-    - ampiezza è un numero decimale compreso tra 0.0 e 100.0
-    - livello è un numero decimale compreso tra 0.0 e 1.0
-  Per esempio: reverb = 0.61 0.23 0.76 0.56
+Configura l'effetto riverbero di FluidSynth. Valori possibili:
+  auto:             Abilita l'effetto riverbero (predefinito).
+  on:               Abilita l'effetto riverbero.
+  off:              Disabilita l'effetto riverbero.
+  <personalizzato>: Impostazione personalizzata. Specificare i seguenti valori
+                    separati da uno spazio:
+                      - dimensione stanza:  Numero decimale da 0.0 a 1.0
+                      - smorzamento:        Numero decimale da 0.0 a 1.0
+                      - ampiezza:           Numero decimale da 0.0 a 100.0
+                      - livello:            Numero decimale da 0.0 a 1.0
+                    Per esempio: 'fsynth_reverb = 0.61 0.23 0.76 0.56'
 Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
       invece il riverbero a livello del mixer sul canale FluidSynth, oppure
       abilitare entrambi gli effetti contemporaneamente. Il modo in cui il
@@ -1556,17 +2156,26 @@ Filtro per l'uscita audio di FluidSynth:
   <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
+:FLUIDSYNTH_NO_SOUNDFONTS
+Nessun SoundFont disponibile
+.
 :CONFIG_MODEL
 Modello di Roland MT-32/CM-32ML da utilizzare.
 È necessario avere a disposizione i file ROM per il modello selezionato
-(vedi impostazione 'romdir'). L'ordine di ricerca per i modelli di cui non è
-specificata la versione nel nome, è stabilito nell'ordine seguente:
-  auto:       Sceglie il primo modello disponibile (predefinito).
-  cm32l:      Sceglie il primo modello CM-32L disponibile.
-  mt32_old:   Sceglie il primo modello MT-32 "old" disponibile (v1.0x).
-  mt32_new:   Sceglie il primo modello MT-32 "new" disponibile (v2.0x).
-  mt32:       Sceglie il primo modello MT-32 disponibile.
+(vedi impostazione 'romdir'). La ricerca dei modelli viene eseguita nel
+seguente ordine:
+  auto:       Seleziona il miglior modello disponibile (predefinito).
+  cm32l:      Seleziona il miglior modello CM-32L disponibile.
+  mt32_old:   Seleziona il miglior modello MT-32 "old" (v1.0x) disponibile.
+  mt32_new:   Seleziona il miglior modello MT-32 "new" (v2.0x) disponibile.
+  mt32:       Seleziona il miglior modello MT-32 disponibile.
   <versione>: Utilizza la versione del modello specificata (es. 'mt32_204').
+Note:
+  - Eseguire il comando `MIXER /LISTMIDI` per visualizzare l'elenco dei
+    modelli disponibili.
+  - Questo *NON* è un dispositivo compatibile con General MIDI; Si prega di
+    utilizzarlo solo se il gioco supporta il Roland MT-32 (standard precedente
+    a General MIDI).
 .
 :CONFIG_ROMDIR
 Directory contenente le ROM del Roland MT-32/CM-32ML
@@ -1585,29 +2194,134 @@ Filtro per l'uscita audio Roland MT-32/CM-32L:
   <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
-:MT32_NO_SUPPORTED_MODELS
-Nessun modello supportato disponibile
-.
-:MT32_ROM_NOT_LOADED
-Nessuna ROM è attualmente caricata
-.
-:MT32_INVENTORY_TABLE_MISSING_LETTER
--
-.
-:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-s
-.
 :MT32_ROMS_LABEL
-ROM  MT-32
+Modelli  MT-32
 .
 :CM32L_ROMS_LABEL
-ROM CM-32L
+Modelli CM-32L
 .
-:MT32_ACTIVE_ROM_LABEL
-ROM attiva
+:MT32_ACTIVE_MODEL_LABEL
+Modello attivo: 
 .
 :MT32_SOURCE_DIR_LABEL
-Caricata da
+Percorso ROM  : 
+.
+:CONFIG_SOUNDCANVAS_MODEL
+Modello di Roland Sound Canvas da utilizzare.
+Nella cartella 'plugin' situata nella directory di configurazione di DOSBox,
+devono essere presenti uno o più plugin audio CLAP che implementano i modelli
+Sound Canvas supportati. DOSBox cerca il modello richiesto esaminando le
+descrizioni dei plugin.
+La ricerca dei modelli viene eseguita nel seguente ordine:
+  auto:       Seleziona il miglior modello disponibile (predefinito).
+  sc55:       Seleziona il miglior modello SC-55 originale disponibile.
+  sc55mk2:    Seleziona il miglior modello SC-55mk2 disponibile.
+  <versione>: Utilizza la versione del modello specificata (es. 'sc55_121').
+.
+:CONFIG_SOUNDCANVAS_FILTER
+Filtro per l'uscita audio del Roland Sound Canvas:
+  on:               Filtra l'uscita audio (predefinito).
+  off:              Non filtra l'uscita audio.
+  <personalizzato>: Definizione di filtri personalizzati;
+                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+.
+:SC55_MODELS_LABEL
+Modelli SC-55
+.
+:SOUNDCANVAS_ACTIVE_MODEL_LABEL
+Modello attivo: 
+.
+:CONFIG_MIDIDEVICE
+Imposta dove l'interfaccia MPU-401 emulata invia i dati MIDI
+(predefinito 'port'):
+.
+:CONFIGITEM_MIDIDEVICE_PORT
+  port:        Porta MIDI disponibile nel sistema operativo in uso
+               (predefinito). È possibile scegliere la porta da utilizzare
+               con l'impostazione 'midiconfig'.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Sintetizzatore MIDI integrato in MacOS. È possibile specificare
+               il SoundFont da utilizzare con l'impostazione 'midiconfig'.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:        Sintetizzatore Roland MT-32 incluso in DOSBox (fare riferimento
+               alla sezione [mt32]).
+.
+:CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
+  soundcanvas: Sintetizzatore Roland SC-55 incluso in DOSBox (fare riferimento
+               alla sezione [soundcanvas]).
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:  Sintetizzatore MIDI FluidSynth incluso in DOSBox (necessita di
+               un SoundFont) (fare riferimento alla sezione [fluidsynth].
+.
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:        Disabilita l'uscita MIDI.
+.
+:CONFIG_MIDICONFIG
+Opzioni di configurazione per il dispositivo MIDI selezionato (predefinito non
+impostato).
+Note:
+.
+:CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
+  - Quando si utilizza 'mididevice = port', è necessario individuare l'ID o
+    il nome della porta MIDI che si vuole utilizzare con il comando DOS
+    'MIXER /LISTMIDI', quindi impostare l'ID o una sottostringa del nome
+    (ad esempio, per utilizzare la porta denominata "loopMIDI Port A" con ID 2,
+    impostare 'midiconfig = 2' o 'midiconfig = port a').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Quando si utilizza 'mididevice = coreaudio', in questa impostazione è
+    possibile specificare il SoundFont. È necessario usare il percorso assoluto
+    del file SoundFont.
+.
+:CONFIGITEM_MIDICONFIG_LINUX
+  - Quando si utilizza 'mididevice = port', eseguire il comando 'aconnect -l'
+    sul terminale Linux per visualizzare l'elenco di tutte le porte MIDI aperte
+    e selezionarne una (es. 'midiconfig = 14:0' per usare il sequenziatore
+    client 14, porta 0).
+.
+:CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
+  - Questa impostazione non ha effetto quando si utilizzano i sintetizzatori
+    intergrati ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').
+.
+:CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
+  - Se stai usando un vero Roland MT-32 rev. 0, l'hardware potrebbe richiedere
+    un ritardo per evitare il sovraccarico del buffer. È possibile abilitare
+    questa funzione aggiungendo 'delaysysex' dopo l'ID o il nome della porta
+    (es. 'midiconfig = 2 delaysysex').
+.
+:CONFIG_MPU401
+Modalità MPU-401 da emulare (predefinito 'intelligent').
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Abilita l'uscita MIDI senza alcuna elaborazione (predefinito disabilitato).
+I driver MIDI di molti giochi non sono completamente conformi allo standard
+MIDI, il che rende la modifica delle registrazioni MIDI di questi giochi
+altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
+causando note sospese o mancanti. DOSBox corregge l'output MIDI di tali giochi
+per impostazione predefinita. Ciò non comporta alcuna differenza udibile;
+influisce solo sulla rappresentazione dei dati MIDI.
+Dovresti abilitare 'raw_midi_output' solo se hai davvero bisogno di catturare
+una sequenza MIDI inalterata di un programma, ad esempio quando si lavora con
+applicazioni musicali o quando si esegue il debug per problemi riguardanti
+la riproduzione MIDI.
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+Elenco non supportato
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+Dispositivo non configurato
+.
+:MIDI_DEVICE_NO_PORTS
+Nessuna porta disponibile
+.
+:MIDI_DEVICE_NO_MODEL_ACTIVE
+Nessun modello è attualmente attivo
+.
+:MIDI_DEVICE_NO_MODELS
+Nessun modello disponibile
 .
 :CONFIG_SBTYPE
 Modello di Sound Blaster da emulare (predefinito 'sb16').
@@ -2081,28 +2795,41 @@ Configurazione della memoria della macchina PCjr (predefinito 'expanded').
 Imposta la versione DOS (predefinito 5.0).
 Specificare come formato principale.minore.
 Un singolo numero viene considerato come la versione principale.
-Le impostazioni comuni sono 3.3, 5.0, 6.22, e 7.1.
+Le impostazioni più comuni sono 3.3, 5.0, 6.22, e 7.1.
 .
 :CONFIG_LOCALE_PERIOD
-Seleziona il periodo della localizzazione (predefinito 'modern').
-L'impostazione 'historic' (se disponibile per il paese specificato) cerca di
-imitare i vecchi sistemi DOS per la visualizzazione di informazioni come data,
-ora o numeri, mentre con l'impostazione 'modern' tali informazioni saranno
-visualizzate seguendo le linee guida dei sistemi operativi moderni per
-un'esperienza utente più coerente.
+Imposta l'epoca della localizzazione (predefinito 'native').
+  historic:  Se sono disponibili informazioni per un dato paese, imita i
+             i vecchi sistemi DOS nella visualizzazione di ora, date o numeri.
+  modern:    Segue le linee guida dei sistemi operatvi moderni per
+             un'esperienza utente più coerente.
+  native:    Usa le impostazioni correnti del sistema operativo primario,
+             indipendentemente dal paese impostato; utilizza le informazioni
+             'modern' nel caso in cui il sistema di localizzazione DOS risulti
+             troppo limitato per seguire le impostazioni del sistema.
 .
 :CONFIG_COUNTRY
 Imposta il codice paese DOS (predefinito 'auto').
 Ciò influisce su informazioni come data, ora e formati decimali.
+Se impostato su 'auto', seleziona il codice paese corrispondente alle
+impostazioni del sistema operativo in uso.
 L'elenco dei codici paese supportati può essere visualizzato utilizzando
 l'argomento della riga di comando '--list-countries'.
-Se impostato su 'auto', verrà utilizzato il codice paese corrispondente alla
-disposizione della tastiera selezionata.
 .
 :CONFIG_KEYBOARDLAYOUT
-Codice della disposizione della tastiera (predefinito 'auto'), ad esempio 'it'
-per la disposizione italiana. Altri valori possibili sono gli stessi accettati
-da FreeDOS.
+Rinominato in 'keyboard_layout'.
+.
+:CONFIG_KEYBOARD_LAYOUT
+Codice della disposizione della tastiera (predefinito 'auto').
+L'elenco dei codici di tastiera supportati può essere visualizzato utilizzando
+l'argomento della riga di comando '--list-layouts'. Ad esempio 'it' è la
+disposizione della tastiera italiana. La disposizione può essere seguita dal
+numero di una tabella codici; ad esempio 'it 850' seleziona il set di caratteri
+utilizzato nell'Europa occidentale.
+Se impostato su 'auto', i valori saranno ottenuti dal sistema operativo in uso.
+Dopo l'avvio dell'emulatore, utilizzare il comando 'KEYB' per gestire le
+disposizioni della tastiera e le tabelle codici (esegui 'HELP KEYB' per
+ulteriori dettagli).
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Abilita l'espansione delle variabili di ambiente come %%PATH%% nell'interprete
@@ -2118,6 +2845,14 @@ file, la cronologia dei comandi non verrà salvata.
 File contenente l'elenco dei programmi e le versioni DOS loro assegnate,
 separati tramite tabulazione, utilizzato da SETVER.EXE come memoria persistente
 (predefinito non impostato).
+.
+:CONFIG_FILE_LOCKING
+Abilita la protezione dei file (emulazione del programma SHARE.EXE;
+predefinito abilitato). Ciò è necessario per il corretto funzionamento di
+alcune applicazioni Windows 3.1x. In genere non causa problemi ai giochi DOS,
+tranne in rari casi (ad esempio con la demo di Astral Blur). Se si verificano
+arresti anomali relativi ai permessi dei file, prova a disabilitare questa
+opzione.
 .
 :CONFIGITEM_IPX
 Abilita il protocollo IPX tramite l'emulazione UDP/IP
@@ -2180,7 +2915,7 @@ Importante: la sezione [autoexec] deve necessariamente essere l'ultima sezione
 del file di configurazione!
 .
 :CONFIGFILE_INTRO
-# Questo è il file di configurazione di dosbox-staging (%s).
+# Questo è il file di configurazione di DOSBox Staging (%s).
 # Le righe che iniziano con il carattere '#' sono commenti.
 
 .
@@ -2285,7 +3020,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
   -securemode       abilita la modalità sicura
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Descrizione dell'impostazione [color=light-green]'%s'[color=white] nella sezione [color=light-cyan][%s][color=white]:[reset]
+[color=white]Descrizione dell'opzione [color=light-green]'%s'[color=white] nella sezione [color=light-cyan][%s][color=white]:[reset]
 
 
 .
@@ -2315,7 +3050,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 numero intero positivo.
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]Elenco delle impostazioni nella sezione [color=light-cyan][%s][color=white]:[reset]
+[color=white]Elenco delle opzioni nella sezione [color=light-cyan][%s][color=white]:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
@@ -2364,7 +3099,10 @@ File eseguibile non trovato: '%s'
 e
 .
 :PROGRAM_CONFIG_NOT_CHANGEABLE
-L'opzione '%s' non è modificabile durante l'esecuzione.
+[color=yellow]L'opzione '%s' non può essere modificata durante l'esecuzione.[reset]
+Tuttavia le modifiche saranno applicate dopo aver eseguito il riavvio
+dell'emulatore con il comando 'CONFIG -r' o tramite l'apposito tasto di
+scelta rapida.
 
 .
 :PROGRAM_CONFIG_DEPRECATED
@@ -2372,12 +3110,6 @@ L'opzione '%s' non è modificabile durante l'esecuzione.
 compatibilità con vecchi file di configurazione. Si prega di utilizzare le
 alternative suggerite; il supporto a questa impostazione sarà rimosso in
 futuro.[reset]
-.
-:MIDI_DEVICE_LIST_NOT_SUPPORTED
-Elenco non supportato
-.
-:MIDI_DEVICE_NOT_CONFIGURED
-Dispositivo non configurato
 .
 :BIOS_REBOOTING_3
 Riavvio tra 3 secondi...
@@ -2519,6 +3251,32 @@ Comandi della cartuccia PCjr disponibili: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Nessun comando della cartuccia PCjr trovato.
+
+.
+:PROGRAM_CLIP_HELP_LONG
+Copia il testo negli appunti o recupera il contenuto degli appunti.
+
+Utilizzo:
+  [color=light-cyan]COMANDO[reset] | [color=light-green]clip[reset]
+  [color=light-green]clip[reset] < [color=light-cyan]FILE[reset]
+  [color=light-green]clip[reset]
+
+Note:
+  - Se non viene immesso nulla, il comando stampa il contenuto degli appunti.
+  - Questo comando serve solo per gestire dati di testo, non dati binari.
+
+Esempi:
+  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copia l'elenco dei file negli appunti
+  [color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copia il file negli appunti
+  [color=light-green]clip[reset]                     ; visualizza il contenuto degli appunti
+
+.
+:PROGRAM_CLIP_INPUT_TOO_LARGE
+Flusso dei dati immessi troppo grande.
+
+.
+:PROGRAM_CLIP_READ_ERROR
+Errore durante la lettura del flusso dati.
 
 .
 :MSCDEX_SUCCESS
@@ -2826,33 +3584,39 @@ Possono essere modificate nel [color=brown]mappatore dei tasti[reset].
 [color=yellow]%s+F12[reset]    Sblocca la velocità (pulsante turbo/avanzamento rapido).
 
 .
-:PROGRAM_KEYB_INFO
-Tabella codici %i caricata.
-
-.
-:PROGRAM_KEYB_INFO_LAYOUT
-Tabella codici %i caricata per la disposizione della tastiera %s.
-
-.
 :PROGRAM_KEYB_HELP_LONG
-Configura la tastiera in base alla lingua specificata.
+Configura la disposizione della tastiera e i caratteri dello schermo.
 
 Utilizzo:
-  [color=light-green]keyb[reset] [color=light-cyan][CODICELINGUA][reset]
-  [color=light-green]keyb[reset] [color=light-cyan]CODICELINGUA[reset] [color=white]TABELLACODICI[reset] [color=white][FILETABELLACODICI][reset]
+  [color=light-green]keyb[reset]
+  [color=light-green]keyb[reset] /list
+  [color=light-green]keyb[reset] [color=light-cyan]DISPOSIZIONE[reset] [[color=white]TABELLACODICI[reset]] /rom
+  [color=light-green]keyb[reset] [color=light-cyan]DISPOSIZIONE[reset] [[color=white]TABELLACODICI[reset] [[color=white]FILECPI[reset]]]
 
 Parametri:
-  [color=light-cyan]CODICELINGUA[reset]       codice lingua o ID della disposizione della tastiera
-  [color=white]TABELLACODICI[reset]      numero di una tabella codici, ad esempio [color=white]437[reset] e [color=white]850[reset]
-  [color=white]FILETABELLACODICI[reset]  file contenente informazioni per una tabella codici
+  [color=light-cyan]DISPOSIZIONE[reset]   codice di disposizione della tastiera
+  [color=white]TABELLACODICI[reset]  numero di una tabella codici, ad esempio [color=white]437[reset] o [color=white]850[reset]
+  [color=white]FILECPI[reset]        file dei caratteri dello schermo, in formato CPI o CPX
+  /list          visualizza i codici di tastiera disponibili
+  /rom           se possibile, utilizza il set di caratteri della ROM della
+                 scheda grafica
 
 Note:
-  L'esecuzione di [color=light-green]keyb[reset] senza un argomento, mostra la disposizione della
-  tastiera e la tabella codici attulamente caricati. Per modificarli, fornire
-  un [color=light-cyan]CODICELINGUA[reset] e, opzionalmente, una [color=white]TABELLACODICI[reset] e un [color=white]FILETABELLACODICI[reset].
-  Questo comando è particolarmente utile se si utilizza una tastiera non US.
-  Il [color=light-cyan]CODICELINGUA[reset] può anche essere impostato nel file di configurazione nella
-  sezione [dos] utilizzando l'impostazione "keyboardlayout = [color=light-cyan]CODICELINGUA[reset]".
+  - L'esecuzione di [color=light-green]keyb[reset] senza un argomento, mostra la disposizione della
+    tastiera e la tabella codici attualmente caricati.
+  - Il [color=white]FILECPI[reset], se specificato, deve contenere il set di caratteri per la
+    [color=white]TABELLACODICI[reset] selezionata.
+  - Se non viene specificato alcun [color=white]FILECPI[reset] personalizzato, il comando cercherà
+    un set di caratteri adatto nei file CPI inclusi.
+  - Se la [color=white]TABELLACODICI[reset] non è specificata e viene individuato un set di
+    caratteri valido nella ROM della scheda grafica, verrà utilizzato il set
+    di caratteri della ROM.
+  - Solo le schede grafiche EGA e superiori consentono di modificare il set
+    di caratteri; Le schede MDA, CGA o Hercules utilizzano sempre il set di
+    caratteri della ROM.
+  - È possibile utilizzare la disposizione della tastiera 'us' con qualsiasi
+    tabella codici; tutte le altre disposizioni funzionano solo con le tabelle
+    codici selezionate.
 
 Esempi:
   [color=light-green]keyb[reset]
@@ -2861,24 +3625,76 @@ Esempi:
   [color=light-green]keyb[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 
 .
-:PROGRAM_KEYB_NOERROR
-Disposizione della tastiera %s caricato per la tabella codici %i.
+:PROGRAM_KEYB_CODE_PAGE
+Tabella codici
+.
+:PROGRAM_KEYB_ROM_FONT
+caratteri ROM
+.
+:PROGRAM_KEYB_CUSTOM_FONT
+caratteri personalizzati
+.
+:PROGRAM_KEYB_KEYBOARD_LAYOUT
+Disposizione tastiera
+.
+:PROGRAM_KEYB_KEYBOARD_SCRIPT
+Caratteri tastiera
+.
+:PROGRAM_KEYB_NOT_LOADED
+non caricato
+.
+:PROGRAM_KEYB_WARNING_CODE_PAGE
+[color=light-red]Avviso:[reset] Si consiglia di evitare di utilizzare la tabella codici %d!
+.
+:PROGRAM_KEYB_WARNING_DOTTED_I
+Sostituisce la lettera 'I' senza punti dello standard ASCII con la variante con
+i punti e sposta il carattere originale altrove. Non esiste un modo per gestire
+questa situazione senza rischiare problemi di compatibilità con il software
+esistente!
+.
+:PROGRAM_KEYB_INVALID_CODE_PAGE
+Tabella codici non valida.
 
 .
-:PROGRAM_KEYB_FILENOTFOUND
-File di tastiera %s non trovato.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+File con disposizione della tastiera '%s' non trovato.
 
 .
-:PROGRAM_KEYB_INVALIDFILE
-File di tastiera %s non valido.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+File con disposizione della tastiera '%s' non valido.
 
 .
-:PROGRAM_KEYB_LAYOUTNOTFOUND
-Disposizione della tastiera %s inesistente per la tabella codici %i.
+:PROGRAM_KEYB_CPI_FILE_NOT_FOUND
+File di tabella codici non trovato.
 
 .
-:PROGRAM_KEYB_INVCPFILE
-File tabella codici mancante o non valido per la disposizione della tastiera %s.
+:PROGRAM_KEYB_INVALID_CPI_FILE
+File di tabella codici non valido.
+
+.
+:PROGRAM_KEYB_CPI_FILE_DR_DOS
+Il file di tabella codici ha un formato DR-DOS non supportato.
+
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Disposizione della tastiera '%s' sconosciuta.
+
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+Nessuna disposizione della tastiera '%s' per la tabella codici %d.
+
+.
+:PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
+Nessun file di tabella codici incluso per la tabella codici %d.
+
+.
+:PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE
+Nessuna tabella codici %d nel file di tabella codici.
+
+.
+:PROGRAM_KEYB_INCOMPATIBLE_MACHINE
+Impossibile modificare la tabella codici; è richiesta una macchina EGA
+o superiore.
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
@@ -3436,6 +4252,14 @@ Mappatura non disponibile in modalità senza mouse.
 .
 :PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
 Impossibile effettuare la mappatura con il driver del mouse corrente.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
+In questa build non sono supportati mouse fisici multipli.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
+Non sono supportati mouse fisici multipli se 'mouse_raw_input' è abilitato.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -4753,7 +5577,7 @@ Parametri:
   [color=white]COMANDO[reset]   comando da eseguire per ciascun file o stringa presente in [color=white](GRUPPO)[reset]
 
 Note:
-  - In un programma batch, utilizzare la sintassi [color=white]%%VAR[reset] anzichè [color=white]%VAR[reset].
+  - In un programma batch, utilizzare la sintassi [color=white]%%VAR[reset] anziché [color=white]%VAR[reset].
   - I file o le stringhe presenti in [color=white](GRUPPO)[reset] possono essere separati da
     qualsiasi separatore DOS valido.
   - Qualsiasi file presente in [color=white](GRUPPO)[reset] contenente caratteri jolly (* o ?) si
