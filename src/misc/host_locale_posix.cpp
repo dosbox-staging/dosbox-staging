@@ -1249,13 +1249,14 @@ static std::vector<std::string> get_keyboard_layouts_tty()
 }
 #endif // __linux__
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desktop(
-        bool& out_is_layout_list_sorted, std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts_desktop()
 {
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
+
+	result.is_layout_list_sorted = true;
+
 	std::string source_desktop = {};
-
-	out_log_info = {};
-
 	DesktopKeyboardLayouts results_desktop = {};
 
 	// On Wayland there is no standard way to get the configured keyboard
@@ -1281,7 +1282,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desk
 		// At least some GNOME variants start with the most recently
 		// used keyboard layout; therefore for autodetection purposes it
 		// is safer to consider the order random if GNOME is used.
-		out_is_layout_list_sorted = false;
+		result.is_layout_list_sorted = false;
 	}
 	if (results_desktop.list.empty() &&
             is_xdg_desktop_session(XdgDesktopSession::Wayfire)) {
@@ -1294,7 +1295,6 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desk
 	const bool is_keyboard_102 = KeyboardModels102.contains(results_desktop.model);
 
 	// Map the detected keyboard layouts to the matching FreeDOS layouts
-	std::vector<KeyboardLayoutMaybeCodepage> results = {};
 	for (const auto& entry : results_desktop.list) {
 		std::string key1 = {};
 		std::string key2 = {};
@@ -1308,46 +1308,48 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_desk
 			key1 = entry.layout;
 		}
 
-		if (!out_log_info.empty()) {
-			out_log_info += " ";
+		if (!result.log_info.empty()) {
+			result.log_info += " ";
 		} else if (!results_desktop.model.empty()) {
-			out_log_info += "[";
-			out_log_info += results_desktop.model + "] ";
+			result.log_info += "[";
+			result.log_info += results_desktop.model + "] ";
 		}
-		out_log_info += key1;
+		result.log_info += key1;
 
 		if (is_keyboard_102 && X11ToDosKeyboard102.contains(key1)) {
-			results.push_back(X11ToDosKeyboard102.at(key1));
+			result_list.push_back(X11ToDosKeyboard102.at(key1));
 			continue;
 		}
 
 		if (is_keyboard_102 && X11ToDosKeyboard102.contains(key2)) {
-			results.push_back(X11ToDosKeyboard102.at(key2));
+			result_list.push_back(X11ToDosKeyboard102.at(key2));
 			continue;
 		}
 
 		if (X11ToDosKeyboard.contains(key1)) {
-			results.push_back(X11ToDosKeyboard.at(key1));
+			result_list.push_back(X11ToDosKeyboard.at(key1));
 			continue;
 		}
 
 		if (X11ToDosKeyboard.contains(key2)) {
-			results.push_back(X11ToDosKeyboard.at(key2));
+			result_list.push_back(X11ToDosKeyboard.at(key2));
 			continue;
 		}
 	}
 
-	if (!out_log_info.empty()) {
-		out_log_info = source_desktop + out_log_info;
+	if (!result.log_info.empty()) {
+		result.log_info = source_desktop + result.log_info;
 	}
-	return results;
+	return result;
 }
 
 #ifdef __linux__
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_tty(
-        std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts_tty()
 {
-	out_log_info = {};
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
+
+	result.is_layout_list_sorted = true;
 
 	const auto results_tty = get_keyboard_layouts_tty();
 	if (results_tty.empty()) {
@@ -1357,41 +1359,38 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages_tty(
 	// Map the detected keyboard layouts to the matching FreeDOS layouts
 	std::vector<KeyboardLayoutMaybeCodepage> results = {};
 	for (const auto& entry : results_tty) {
-		if (!out_log_info.empty()) {
-			out_log_info += ";";
+		if (!result.log_info.empty()) {
+			result.log_info += ";";
 		}
-		out_log_info += entry;
+		result.log_info += entry;
 
 		if (TtyToDosKeyboard.contains(entry)) {
-			results.push_back(TtyToDosKeyboard.at(entry));
+			result_list.push_back(TtyToDosKeyboard.at(entry));
 			continue;
 		}
 	}
 
-	if (!out_log_info.empty()) {
-		out_log_info = SourceTty + out_log_info;
+	if (!result.log_info.empty()) {
+		result.log_info = SourceTty + result.log_info;
 	}
-	return results;
+
+	return result;
 }
 #endif // __linux__
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(
-        bool& out_is_layout_list_sorted, std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts()
 {
 	// Try to get keyboard layouts from the desktop session
 	// to start with the preferred (top priority) one.
-	out_is_layout_list_sorted = true;
-	const auto results_x11 = get_layouts_maybe_codepages_desktop(out_is_layout_list_sorted,
-	                                                             out_log_info);
-	if (!results_x11.empty()) {
+	const auto results_x11 = get_host_keyboard_layouts_desktop();
+	if (!results_x11.keyboard_layout_list.empty()) {
 		return results_x11;
 	}
 
 #ifdef __linux__
 	// Try to get keyboard layouts from the text console settings
-	out_is_layout_list_sorted  = true;
-	const auto results_tty = get_layouts_maybe_codepages_tty(out_log_info);
-	if (!results_tty.empty()) {
+	const auto results_tty = get_host_keyboard_layouts_tty();
+	if (!results_tty.keyboard_layout_list.empty()) {
 		return results_tty;
 	}
 #endif // __linux__
@@ -1423,11 +1422,9 @@ const HostLocale& GetHostLocale()
 const HostKeyboardLayouts& GetHostKeyboardLayouts()
 {
 	static std::optional<HostKeyboardLayouts> locale = {};
-	if (!locale) {
-		locale = HostKeyboardLayouts();
 
-		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->is_layout_list_sorted, locale->log_info);
+	if (!locale) {
+		locale = get_host_keyboard_layouts();
 	}
 
 	return *locale;

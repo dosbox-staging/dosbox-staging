@@ -422,52 +422,51 @@ static std::map<std::string, std::string> read_layouts_registry(const std::strin
 	return layouts;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts()
 {
-	out_log_info = {};
-
-	std::vector<KeyboardLayoutMaybeCodepage> layouts = {};
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
 
 	// First look for the user-preferred layouts
 	const auto substitutes = read_layouts_registry(TEXT("Substitutes"));
 	for (const auto& entry : substitutes) {
 		// Get information for log
-		if (!out_log_info.empty()) {
-			out_log_info += ";";
+		if (!result.log_info.empty()) {
+			result.log_info += ";";
 		}
-		out_log_info += std::string(entry.first);
-		out_log_info += "->";
-		out_log_info += entry.second;
+		result.log_info += std::string(entry.first);
+		result.log_info += "->";
+		result.log_info += entry.second;
 
 		// Check if we know a matching keyboard layout
 		auto key = entry.second;
 		lowcase(key);
 		if (WinToDosKeyboard.contains(key)) {
-			layouts.push_back(WinToDosKeyboard.at(key));
+			result_list.push_back(WinToDosKeyboard.at(key));
 		}
 	}
 
-	if (!layouts.empty()) {
-                return layouts;
-        }
+	if (!result_list.empty()) {
+		return result;
+	}
 
 	// Then check all the available layouts in the system
 	const auto preload = read_layouts_registry(TEXT("Preload"));
 	for (const auto& entry : preload) {
 		// Get information for log
-		if (!out_log_info.empty()) {
-			out_log_info += ";";
+		if (!result.log_info.empty()) {
+			result.log_info += ";";
 		}
-		out_log_info += entry.second;
+		result.log_info += entry.second;
 
-                auto key = entry.second;
+		auto key = entry.second;
                 lowcase(key);
                 if (WinToDosKeyboard.contains(key)) {
-                        layouts.push_back(WinToDosKeyboard.at(key));
-                }
+			result_list.push_back(WinToDosKeyboard.at(key));
+		}
 	}
 
-	return layouts;
+	return result;
 }
 
 static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
@@ -536,11 +535,9 @@ const HostLocale& GetHostLocale()
 const HostKeyboardLayouts& GetHostKeyboardLayouts()
 {
 	static std::optional<HostKeyboardLayouts> locale = {};
-	if (!locale) {
-		locale = HostKeyboardLayouts();
 
-		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info);
+	if (!locale) {
+		locale = get_host_keyboard_layouts();
 	}
 
 	return *locale;
