@@ -416,22 +416,22 @@ static HostLanguage get_host_language()
 
 using AppleLayouts = std::vector<std::pair<int64_t, std::string>>;
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(
-	const AppleLayouts &apple_layouts,
-	std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts(const AppleLayouts& apple_layouts)
 {
-	std::vector<KeyboardLayoutMaybeCodepage> result = {};
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
+
 	for (const auto& [layout_id, layout_name] : apple_layouts) {
 		// LOG_MSG("{ %- lld, { \"\" }         }, // %s",
 		//         layout_id, layout_name.c_str());
-		if (!out_log_info.empty()) {
-			out_log_info += "; ";
+		if (!result.log_info.empty()) {
+			result.log_info += "; ";
 		}
-		out_log_info += std::to_string(layout_id) + " (" + layout_name + ")";
+		result.log_info += std::to_string(layout_id) + " (" +
+		                   layout_name + ")";
 
 		if (MacToDosKeyboard.contains(layout_id)) {
-			result.push_back(MacToDosKeyboard.at(layout_id));
-
+			result_list.push_back(MacToDosKeyboard.at(layout_id));
 		}
 	}
 
@@ -508,7 +508,7 @@ static CFPropertyListRef read_plist_file()
 	return plist_ref;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts()
 {
 	constexpr auto MaxIntSize = static_cast<CFIndex>(sizeof(int64_t));
 
@@ -603,7 +603,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	}
 
 	CFRelease(plist_ref);
-	return get_layouts_maybe_codepages(apple_layouts, out_log_info);
+	return get_host_keyboard_layouts(apple_layouts);
 }
 
 const HostLocale& GetHostLocale()
@@ -622,11 +622,9 @@ const HostLocale& GetHostLocale()
 const HostKeyboardLayouts& GetHostKeyboardLayouts()
 {
 	static std::optional<HostKeyboardLayouts> locale = {};
-	if (!locale) {
-		locale = HostKeyboardLayouts();
 
-		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info);
+	if (!locale) {
+		locale = get_host_keyboard_layouts();
 	}
 
 	return *locale;
