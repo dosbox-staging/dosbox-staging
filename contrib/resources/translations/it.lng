@@ -43,23 +43,23 @@ Elenco delle opzioni disponibili:
 
   --list-countries          Elenca tutti i paesi supportati con i relativi codici
                             numerici. I codici possono essere utilizzati
-                            nell'impostazione di configurazione 'country'.
+                            nell'opzione di configurazione 'country'.
 
   --list-layouts            Elenca tutte le disposizioni della tastiera supportate e
                             i relativi codici. I codici possono essere utilizzati
-                            nell'impostazione di configurazione 'keyboard_layout'.
+                            nell'opzione di configurazione 'keyboard_layout'.
                             
   --list-code-pages         Elenca tutte le tabelle codici supportate.
 
   --list-glshaders          Elenca tutti gli shader OpenGL disponibili e i relativi
                             percorsi. Gli shader possono essere utilizzati
-                            nell'impostazione di configurazione 'glshader'.
+                            nell'opzione di configurazione 'glshader'.
 
   --fullscreen              Avvia in modalità a schermo intero.
 
   --lang <file_lingua>      Avvia con la lingua specificata in <file_lingua>.
                             Se impostato su 'auto', l'emulatore tenterà di
-                            individuare la lingua dal sistema operativo in uso.
+                            rilevare la lingua dal sistema operativo in uso.
 
   --machine <tipo>          Emula un tipo specifico di macchina. Il tipo di macchina
                             influenza sia l'emulazione delle schede video che quelle
@@ -94,21 +94,21 @@ Elenco delle opzioni disponibili:
 Elenco dei codici paese disponibili (per lo più uguali ai prefissi telefonici)
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
-I codici sopra indicati possono essere utilizzati nell'impostazione di
+I codici sopra indicati possono essere utilizzati nell'opzione di
 configurazione 'country'.
 .
 :DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
 Elenco dei codici di tastiera disponibili
 .
 :DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
-I codici sopra indicati possono essere utilizzati nell'impostazione di
+I codici sopra indicati possono essere utilizzati nell'opzione di
 configurazione 'keyboard_layout'.
 .
 :DOSBOX_HELP_LIST_CODE_PAGES_1
 Elenco delle tabelle codici disponibili
 .
 :DOSBOX_HELP_LIST_CODE_PAGES_2
-Le tabelle codici sopra indicate possono essere utilizzate nell'impostazione di
+Le tabelle codici sopra indicate possono essere utilizzate nell'opzione di
 configurazione 'keyboard_layout'.
 .
 :COUNTRY_NAME_XXA
@@ -769,7 +769,7 @@ Regno Unito (internazionale, QWERTY)
 Arabo (AZERTY/Arabo)
 .
 :KEYBOARD_LAYOUT_NAME_AR470
-Arabo (QWERTY/Arabo)
+Arabo (QWERTY/arabo)
 .
 :KEYBOARD_LAYOUT_NAME_AZ
 Azero (QWERTY/cirillico)
@@ -1071,8 +1071,8 @@ Elenco degli shader GLSL disponibili
 .
 :DOSBOX_HELP_LIST_GLSHADERS_2
 Gli shader di cui sopra possono essere utilizzati, esattamente come elencati,
-nell'impostazione di configurazione 'glshader', senza la necessità di
-specificare il percorso o l'estensione .glsl.
+nell'opzione di configurazione 'glshader', senza la necessità di specificare
+il percorso o l'estensione .glsl.
 .
 :DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
 Il percorso '%s' non esiste
@@ -1233,7 +1233,7 @@ Se un parametro non è specificato, verrà utilizzato il suo valore predefinito.
                                     se disponibile.
   cycles=<valore>:    Se impostato ad 'on' (predefinito), mostra il valore dei
                       cicli della CPU. Impostare su 'off' per disabilitare
-                      la visualizzazione dell'impostazione dei cicli.
+                      la visualizzazione del numero di cicli.
   mouse=<valore>:     Livello di verbosità dei messaggi di cattura del mouse:
                         none/off:  Non visualizza alcun messaggio.
                         short:     Visualizza solo il messaggio di cattura
@@ -1352,9 +1352,9 @@ Note:
 :CONFIG_MACHINE
 Imposta la scheda video o la macchina da emulare:
   hercules:      Scheda grafica Hercules (HGC)
-                 (vedi impostazione 'monochrome_palette').
+                 (vedi opzione 'monochrome_palette').
   cga_mono:      Scheda grafica CGA collegata a un monitor monocromatico
-                 (vedi impostazione 'monochrome_palette').
+                 (vedi opzione 'monochrome_palette').
   cga:           IBM Color Graphics Adapter (CGA). Abilita anche l'emulazione
                  del video composito (vedi sezione [composite]).
   pcjr:          Macchina IBM PCjr. Abilita anche l'emulazione audio PCjr e
@@ -1399,8 +1399,8 @@ Gestisce i blocchi della catena di memoria software corrotti:
 :CONFIG_VMEMSIZE
 Memoria video in MB (1-8) o KB (da 256 a 8192). 'auto' utilizza il valore
 predefinito in base alla scheda video selezionata (predefinito 'auto').
-Fare riferimento all'impostazione 'machine' per l'elenco delle opzioni valide
-e dei valori predefiniti di ogni scheda.
+Fare riferimento all'opzione 'machine' per l'elenco delle opzioni valide e
+dei valori predefiniti di ogni scheda.
 .
 :CONFIG_VMEM_DELAY
 Configura l'emulazione del ritardo di accesso alla memoria video (predefinito
@@ -1422,7 +1422,7 @@ Personalizza la frequenza dei fotogrammi della modalità video emulata:
   default:   La frequenza è determinata dalla modalità video DOS
              (predefinito).
   host:      Abbina la frequenza DOS alla frequenza di aggiornamento dello
-             schermo (vedi impostazione 'host_rate').
+             schermo (vedi opzione 'host_rate').
   <valore>:  Imposta la frequenza su un valore intero o decimale compreso
              tra 24.000 e 1000.000 Hz.
 Nota: Si consiglia la frequenza dei fotogrammi predefinita ('default'),
@@ -1463,8 +1463,8 @@ bloccheranno all'avvio (es. Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 :CONFIG_SPEED_MODS
 Consente modifiche note per migliorare le prestazioni (predefinito abilitato).
 Attualmente, nessun gioco è noto per esserne influenzato negativamente.
-Se trovi un gioco che ha problemi quando questa impostazione è abilitata,
-segnala il bug sul sito del progetto, in modo tale da poterlo elencare qui.
+Se trovi un gioco che ha problemi quando questa opzione è abilitata, segnala
+il bug sul sito del progetto, in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
@@ -1500,11 +1500,11 @@ auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
 .
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Molti giochi aprono tutti i loro file con permessi di scrittura, anche quelli
-che non modificheranno mai. Questa impostazione ti consente di proteggere
-dalla scrittura quei file pur consentendo al gioco di leggerli
-(predefinito abilitato). Un secondo caso d'uso: se stai utilizzando un
-filesystem copy-on-write o di rete, questa impostazione consente di ignorare
-le operazioni di scrittura.
+che non modificheranno mai. Questa opzione ti consente di proteggere dalla
+scrittura quei file pur consentendo al gioco di leggerli (predefinito
+abilitato). Un secondo caso d'uso: se stai utilizzando un filesystem
+copy-on-write o di rete, questa opzione consente di ignorare le operazioni
+di scrittura.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
 Consente una gestione semplificata delle opzioni di configurazione tramite
@@ -1514,7 +1514,7 @@ modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
 .
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
-utilizzando l'impostazione 'host_rate'.
+utilizzando l'opzione 'host_rate'.
 .
 :CONFIGITEM_GLSHADER
 Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
@@ -1528,17 +1528,17 @@ Opzioni shader CRT adattivo:
                          selezionata automaticamente in base allo standard
                          grafico della modalità video corrente e alla
                          dimensione dell'area di visualizzazione,
-                         indipendentemente dall'impostazione 'machine'.
+                         indipendentemente dall'opzione 'machine'.
                          Ciò significa che anche su una scheda grafica VGA
                          emulata, otterrai un'autentica emulazione di un
                          monitor EGA a scansione singola con "linee di
                          scansione spesse" visibili nei giochi EGA.
   crt-auto-machine:      Simile a 'crt-auto', ma viene selezionato il
                          monitor CRT appropriato in base alla scheda grafica
-                         configurata tramite l'impostazione 'machine'.
-                         Ad esempio, i giochi CGA e EGA utilizzeranno la
-                         modalità di visualizzazione a doppia scansione su una
-                         scheda grafica VGA emulata.
+                         configurata tramite l'opzione 'machine'. Ad esempio,
+                         i giochi CGA e EGA utilizzeranno la modalità di
+                         visualizzazione a doppia scansione su una scheda
+                         grafica VGA emulata.
   crt-auto-arcade:       Emulazione di un monitor di un cabinato arcade o di un
                          computer domestico (es. Commodore 64, Amiga), meno
                          nitido rispetto ad un tipico monitor per PC, con linee
@@ -1576,11 +1576,10 @@ Imposta la modalità di correzione delle proporzioni (predefinito 'auto'):
                       modalità video DOS con pixel non quadrati appaiano come
                       sui monitor CRT con rapporto d'aspetto 4:3, per i quali
                       sono stati progettati la maggior parte dei giochi DOS.
-                      Questa impostazione ha effetto solo sulle modalità video
-                      che utilizzano pixel non quadrati, come 320x200 o
-                      640x400; Le modalità video a pixel quadrati (ad esempio
-                      320x240, 640x480 e 800x600) verranno visualizzate
-                      così come sono.
+                      Questa opzione ha effetto solo sulle modalità video che
+                      utilizzano pixel non quadrati, come 320x200 o 640x400;
+                      Le modalità video a pixel quadrati (ad esempio 320x240,
+                      640x480 e 800x600) verranno visualizzate così come sono.
   square-pixels, off: Non applica la correzione delle proporzioni; tutte le
                       modalità video DOS vengono visualizzate con pixel
                       quadrati. La maggior parte dei giochi 320x200 appariranno
@@ -1605,7 +1604,7 @@ fattore di scala non intero nell'altra dimensione. Se l'immagine è più grande
 dell'area di visualizzazione, il ridimensionamento dei numeri interi viene
 disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
   auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
-              CRT adattivi (vedi impostazione 'glshader'), altrimenti 'off'
+              CRT adattivi (vedi opzione 'glshader'), altrimenti 'off'
               (predefinito).
   vertical:   Vincola il fattore di scala verticale a valori interi.
               Questa è l'impostazione consigliata per gli shader CRT per
@@ -1617,13 +1616,12 @@ disabilitato automaticamente (equivalente ad 'off'). Valori possibili:
 :CONFIG_VIEWPORT
 Imposta le dimensioni dell'area di visualizzazione (predefinito 'fit').
 Questa è l'area massima disegnabile; l'immagine è sempre contenuta all'interno
-di quest'area, tenendo conto delle proporzioni specificate (vedi impostazione
+di quest'area, tenendo conto delle proporzioni specificate (vedi opzione
 'aspect'). Valori possibili:
   fit:              Adatta l'area di visualizzazione alla finestra/schermo
-                    disponibile (predefinito). Con l'impostazione
-                    'integer_scaling' abilitata, potrebbero essere visualizzate
-                    delle barre nere orizzontali e/o verticali attorno
-                    all'immmagine.
+                    disponibile (predefinito). Con l'opzione 'integer_scaling'
+                    abilitata, potrebbero essere visualizzate delle barre nere
+                    orizzontali e/o verticali attorno all'immmagine.
   LxA:              Imposta le dimensioni dell'area di visualizzazione nel
                     formato LxA (ad esempio 960x720). La dimensione specificata
                     non deve essere maggiore della risoluzione del desktop.
@@ -1733,15 +1731,15 @@ Tipo di core di emulazione della CPU da utilizzare (predefinito 'auto').
   auto:     Usa il core 'normal' per i programmi che operano in modalità reale
             e il core 'dynamic' per quelli che operano in modalità protetta.
             La maggior parte dei programmi funzioneranno correttamente con
-            questa impostazione.
+            questa opzione.
   normal:   Il programma DOS viene interpretato istruzione per istruzione.
             Questo fa sì che la temporizzazione sia più accurata, ma pone un
             carico sulla CPU di sistema da 3 a 5 volte maggiore rispetto a
-            'dynamic'. Pertanto, è consigliabile utilizzare questa impostazione
+            'dynamic'. Pertanto, è consigliabile utilizzare questa opzione
             solo per i programmi eseguiti in modalità reale che non hanno
             bisogno di una CPU (emulata) veloce, o che sono sensibili alla
-            temporizzazione. Questa impostazione è inoltre necessaria per
-            programmi che modificano il proprio codice.
+            temporizzazione. Questa opzione è inoltre necessaria per programmi
+            che modificano il proprio codice.
   simple:   Simile al core 'normal', ma ottimizzata per i vecchi programmi
             eseguiti in modalità reale; potrebbe risultare in una compatibilità
             migliore con i giochi più vecchi. Passa automaticamente al core
@@ -1753,11 +1751,11 @@ Tipo di core di emulazione della CPU da utilizzare (predefinito 'auto').
             Il core 'dynamic' è una necessità per i giochi esigenti in termini
             di CPU (es. giochi 3D SVGA). I programmi che modificano il proprio
             codice potrebbero comportarsi in modo anomalo o bloccarsi con questa
-            impostazione; in tal caso utilizzare il core 'normal'.
+            opzione; in tal caso utilizzare il core 'normal'.
 .
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione (predefinito 'auto').
-È consigliabile modificare questa impostazione solamente nel caso in cui il
+È consigliabile modificare questa opzione solamente nel caso in cui il
 programma non funzioni correttamente in modalità 'auto'.
   auto:          La modalità più veloce e compatibile (predefinito). Dal
                  punto di vista tecnico, equivale alla modalità '386_fast' con
@@ -1770,11 +1768,11 @@ programma non funzioni correttamente in modalità 'auto'.
                  veloce.
   386_prefetch:  Equivalente a '386_fast', ma emula accuratamente la coda di
                  prefetch della CPU. Funziona solamente con 'core = normal'.
-                 Questa impostazione è necessaria per quei programmi che
-                 modificano il proprio codice o che impiegano tecniche
-                 anti-debugging. Alcuni giochi che richiedono l'opzione
-                 '386_prefetch' sono Contra, FIFA International Soccer (1994),
-                 Terminator 1 e X-Men: Madness in The Murderworld.
+                 Questa opzione è necessaria per quei programmi che modificano
+                 il proprio codice o che impiegano tecniche anti-debugging.
+                 Alcuni giochi che richiedono l'opzione '386_prefetch' sono
+                 Contra, FIFA International Soccer (1994), Terminator 1 e
+                 X-Men: Madness in The Murderworld.
   486:           Utilizza il CPUID di un 486, il comportamento di un 486 per
                  i registri CR, e le istruzioni extra di un 486. Effettua
                  inoltre i calcoli di livello di accesso alla pagina come un
@@ -1783,15 +1781,14 @@ programma non funzioni correttamente in modalità 'auto'.
                  il comportamento di un Pentium per i registri CR e il supporto
                  all'istruzione RDTSC. Impostazione consigliata per i giochi
                  Windows 3.x (es. Betrayal in Antara).
-  pentium_mmx:   Equivalente a 'pentium' ma include inoltre il set di istruzioni
-                 MMX. Pochissimi giochi utilizzano le istruzioni MMX; questa
-                 impostazione è per lo più utile solo per le produzioni
-                 demoscene.
+  pentium_mmx:   Equivalente a 'pentium' ma include inoltre il set di
+                 istruzioni MMX, utilizzato da pochissimi giochi. Questa
+                 opzione è per lo più utile solo per le produzioni demoscene.
 .
 :CONFIG_CYCLES
-L'impostazione 'cycles' è deprecata ma ancora consentita; si prega invece
-di utilizzare le impostazioni 'cpu_cycles', 'cpu_cycles_protected' e
-'cpu_throttle' poiché il supporto a 'cycles' verrà rimosso in futuro.
+L'opzione 'cycles' è deprecata ma ancora consentita; si prega invece di
+utilizzare le opzioni 'cpu_cycles', 'cpu_cycles_protected' e 'cpu_throttle'
+poiché il supporto a 'cycles' verrà rimosso in futuro.
 .
 :CONFIG_CPU_CYCLES
 Velocità della CPU emulata (predefinito '3000'). Se 'cpu_cycles_protected' è
@@ -1827,14 +1824,14 @@ Note:
 :CONFIG_CPU_CYCLES_PROTECTED
 Velocità della CPU emulata solo per i programmi in modalità protetta
 (predefinito '60000').
-  auto:      Utilizza l'impostazione 'cpu_cycles'.
+  auto:      Utilizza l'opzione 'cpu_cycles'.
   <numero>:  Emula un numero fisso di cicli al millisecondo (pressoché
              equivalente all'unità di misura MIPS). L'intervallo di valori
              valido è compreso tra 50 e 2000000.
   max:       Emula quanti pìu cicli la CPU di sistema è in grado di sostenere
              in un singolo core. Il numero di cicli per millisecondo può
              variare; ciò potrebbe causare problemi in alcuni programmi DOS.
-Nota: Fare riferimento all'impostazione 'cpu_cycles' per ulteriori informazioni.
+Nota: Fare riferimento all'opzione 'cpu_cycles' per ulteriori informazioni.
 .
 :CONFIG_CPU_THROTTLE
 Riduce dinamicamente il numero di cicli della CPU emulati se la CPU di sistema
@@ -1892,8 +1889,8 @@ Imposta il formato di acquisizione delle istantanee dello schermo
 (predefinito 'upscaled'):
   upscaled:  L'immagine viene ridimensionata utilizzando il metodo di
              ricampionamento Bilineare Più Nitido, mantenendo le proporzioni
-             corrette a seconda dell'impostazione 'aspect'. Il fattore di
-             scala verticale è sempre un numero intero. Ad esempio, i contenuti
+             corrette a seconda dell'opzione 'aspect'. Il fattore di scala
+             verticale è sempre un numero intero. Ad esempio, i contenuti
              con risoluzione 320x200 vengono ridimensionati a 1600x1200
              (ridimensionamento dei numeri interi 5:6), quelli 640x480 a
              1920x1440 (ridimensionamento dei numeri interi 3:3) e quelli
@@ -1953,8 +1950,8 @@ La sensibilità può essere ulteriormente regolata per ogni interfaccia del mous
 utilizzando lo strumento interno MOUSECTL.COM disponibile sull'unità Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
-Abilita questa impostazione per bypassare le impostazioni di sensibilità
-e accelerazione del mouse del tuo sistema operativo (predefinito abilitato).
+Abilita questa opzione per bypassare le impostazioni di sensibilità e
+accelerazione del mouse del tuo sistema operativo (predefinito abilitato).
 Funziona in modalità schermo intero o quando il mouse viene catturato
 in modalità finestra.
 .
@@ -2094,7 +2091,7 @@ Nota: È possibile regolare con precisione i livelli di coro di ciascun canale
 :CONFIG_SOUNDFONT
 Nome o percorso del file SoundFont da utilizzare (predefinito 'default.sf2').
 Il SoundFont verrà ricercato nelle seguenti posizioni, rispettivamente:
-  - Nella directory SoundFont definita dall'utente (vedi impostazione
+  - Nella directory SoundFont definita dall'utente (vedi opzione
     'soundfont_dir').
   - Nella cartella 'soundfonts' situata nella directory di configurazione
     di DOSBox.
@@ -2162,7 +2159,7 @@ Nessun SoundFont disponibile
 :CONFIG_MODEL
 Modello di Roland MT-32/CM-32ML da utilizzare.
 È necessario avere a disposizione i file ROM per il modello selezionato
-(vedi impostazione 'romdir'). La ricerca dei modelli viene eseguita nel
+(vedi opzione 'romdir'). La ricerca dei modelli viene eseguita nel
 seguente ordine:
   auto:       Seleziona il miglior modello disponibile (predefinito).
   cm32l:      Seleziona il miglior modello CM-32L disponibile.
@@ -2238,11 +2235,11 @@ Imposta dove l'interfaccia MPU-401 emulata invia i dati MIDI
 :CONFIGITEM_MIDIDEVICE_PORT
   port:        Porta MIDI disponibile nel sistema operativo in uso
                (predefinito). È possibile scegliere la porta da utilizzare
-               con l'impostazione 'midiconfig'.
+               con l'opzione 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_COREAUDIO
   coreaudio:   Sintetizzatore MIDI integrato in MacOS. È possibile specificare
-               il SoundFont da utilizzare con l'impostazione 'midiconfig'.
+               il SoundFont da utilizzare con l'opzione 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_MT32
   mt32:        Sintetizzatore Roland MT-32 incluso in DOSBox (fare riferimento
@@ -2254,7 +2251,7 @@ Imposta dove l'interfaccia MPU-401 emulata invia i dati MIDI
 .
 :CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  Sintetizzatore MIDI FluidSynth incluso in DOSBox (necessita di
-               un SoundFont) (fare riferimento alla sezione [fluidsynth].
+               un SoundFont) (fare riferimento alla sezione [fluidsynth]).
 .
 :CONFIGITEM_MIDIDEVICE_NONE
   none:        Disabilita l'uscita MIDI.
@@ -2272,9 +2269,9 @@ Note:
     impostare 'midiconfig = 2' o 'midiconfig = port a').
 .
 :CONFIGITEM_MIDICONFIG_COREAUDIO
-  - Quando si utilizza 'mididevice = coreaudio', in questa impostazione è
-    possibile specificare il SoundFont. È necessario usare il percorso assoluto
-    del file SoundFont.
+  - Quando si utilizza 'mididevice = coreaudio', in questa opzione è possibile
+    specificare il SoundFont. È necessario usare il percorso assoluto del file
+    SoundFont.
 .
 :CONFIGITEM_MIDICONFIG_LINUX
   - Quando si utilizza 'mididevice = port', eseguire il comando 'aconnect -l'
@@ -2283,7 +2280,7 @@ Note:
     client 14, porta 0).
 .
 :CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
-  - Questa impostazione non ha effetto quando si utilizzano i sintetizzatori
+  - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
     intergrati ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').
 .
 :CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
@@ -2303,7 +2300,7 @@ altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
 causando note sospese o mancanti. DOSBox corregge l'output MIDI di tali giochi
 per impostazione predefinita. Ciò non comporta alcuna differenza udibile;
 influisce solo sulla rappresentazione dei dati MIDI.
-Dovresti abilitare 'raw_midi_output' solo se hai davvero bisogno di catturare
+È necessario abilitare 'raw_midi_output' solo se si ha bisogno di catturare
 una sequenza MIDI inalterata di un programma, ad esempio quando si lavora con
 applicazioni musicali o quando si esegue il debug per problemi riguardanti
 la riproduzione MIDI.
@@ -2732,7 +2729,7 @@ impostazioni.
     Ctrl+Inizio.
 Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
 valori di calibrazione X o Y che puoi impostare di seguito. Quando hai trovato
-i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
+i parametri che funzionano, esci dal gioco, ripristina questa opzione su
 disabilitato e inserisci i parametri di calibrazione segnalati.
 .
 :CONFIG_JOY_X_CALIBRATION
@@ -2805,8 +2802,9 @@ Imposta l'epoca della localizzazione (predefinito 'native').
              un'esperienza utente più coerente.
   native:    Usa le impostazioni correnti del sistema operativo primario,
              indipendentemente dal paese impostato; utilizza le informazioni
-             'modern' nel caso in cui il sistema di localizzazione DOS risulti
-             troppo limitato per seguire le impostazioni del sistema.
+             'modern' come ripiego, nel caso in cui il sistema di
+             localizzazione DOS risulti troppo limitato per seguire le
+             impostazioni del sistema.
 .
 :CONFIG_COUNTRY
 Imposta il codice paese DOS (predefinito 'auto').
@@ -3106,10 +3104,9 @@ scelta rapida.
 
 .
 :PROGRAM_CONFIG_DEPRECATED
-[color=light-red]Questa impostazione è deprecata, ed è supportata solo per
-compatibilità con vecchi file di configurazione. Si prega di utilizzare le
-alternative suggerite; il supporto a questa impostazione sarà rimosso in
-futuro.[reset]
+[color=light-red]Questa opzione è deprecata, ed è supportata solo per compatibilità con i vecchi
+file di configurazione. Si prega di utilizzare le alternative suggerite;
+il supporto a questa opzione sarà rimosso in futuro.[reset]
 .
 :BIOS_REBOOTING_3
 Riavvio tra 3 secondi...
@@ -4419,7 +4416,7 @@ Parametri:
 Note:
   Per fare in modo che la tabella di versione rimanga persistente, specificare
   il percorso del file da utilizzare come memoria persistente utilizzando
-  l'impostazione 'setver_table_file = [color=light-cyan]MEMORIA[reset]', nella sezione [dos] del file
+  l'opzione 'setver_table_file = [color=light-cyan]MEMORIA[reset]', nella sezione [dos] del file
   di configurazione.
 
 Esempi:
@@ -4508,8 +4505,8 @@ Utilizzo:
   [color=light-green]fmpdrv[reset] /u  (disabilita il driver)
 
 Note:
-  L'impostazione di configurazione "reelmagic = on" permette di caricare il
-  driver all'avvio e impedisce che venga disabilitato.
+  L'opzione di configurazione "reelmagic = on" permette di caricare il driver
+  all'avvio e impedisce che venga disabilitato.
 
 .
 :PROGRAM_FMPDRV_TITLE
@@ -5483,7 +5480,7 @@ Utilizzo:
   [color=light-green]ver[reset]
 
 Note:
-  - È possibile modificare la versione DOS utilizzando l'impostazione
+  - È possibile modificare la versione DOS utilizzando l'opzione
     'ver = [color=light-cyan]VERSIONE[reset]', nella sezione [dos] del file di configurazione.
   - La versione DOS comunicata ai programmi può essere cambiata utilizzando il
     comando [color=light-green]setver[reset].
