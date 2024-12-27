@@ -557,4 +557,9 @@ public:
 
 bool config_file_is_valid(const std_fs::path& path);
 
+// Helper functions for retrieving common configuration sections
+
+Section_prop* get_joystick_section();
+Section_prop* get_sdl_section();
+
 #endif
