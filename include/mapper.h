@@ -83,4 +83,8 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t pacing_ms);
 void MAPPER_CheckEvent(SDL_Event *event);
 
+// Screen fits ~89 characters total without clipping. Allocate a few more bytes
+// for good measure.
+constexpr int MaxBindNameLength = 100;
+
 #endif
