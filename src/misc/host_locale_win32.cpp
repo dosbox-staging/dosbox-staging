@@ -469,8 +469,10 @@ static HostKeyboardLayouts get_host_keyboard_layouts()
 	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
+static HostLocaleElement get_dos_country()
 {
+	HostLocaleElement result = {};
+
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 	if (!GetUserDefaultLocaleName(buffer, LOCALE_NAME_MAX_LENGTH)) {
 		LOG_WARNING("LOCALE: Could not get default locale name, error code %lu",
@@ -479,14 +481,15 @@ static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 	}
 	const auto locale_name = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	out_log_info = locale_name;
+	result.log_info = locale_name;
 
 	const auto tokens = split(locale_name, "-");
 	if (tokens.size() < 2) {
 		return {};
 	}
 
-	return IsoToDosCountry(tokens[0], tokens[1]);
+	result.country_code = IsoToDosCountry(tokens[0], tokens[1]);
+	return result;
 }
 
 static HostLanguage get_host_language()
@@ -526,7 +529,7 @@ const HostLocale& GetHostLocale()
 	if (!locale) {
 		locale = HostLocale();
 
-		locale->country = get_dos_country(locale->log_info.country);
+		locale->country = get_dos_country();
 	}
 
 	return *locale;

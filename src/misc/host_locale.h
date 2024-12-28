@@ -87,6 +87,15 @@ struct StdLibLocale {
 	char time_separator = {};
 };
 
+struct HostLocaleElement {
+	std::optional<DosCountry> country_code = {};
+
+	// If detection was successful, always provide info for the log output,
+	// telling which host OS property/value was used to determine the given
+	// locale.
+	std::string log_info = {};
+};
+
 struct HostLocale {
 	// These are locale detected by the portable routines of C++ library.
 	// Override them if the host-specific code can do a better job detecting
@@ -98,23 +107,13 @@ struct HostLocale {
 	// should leave them as default
 
 	// DOS country code
-	std::optional<DosCountry> country = {};
+	HostLocaleElement country = {};
 
 	// These are completely optional; leave them unset if you can't get the
 	// concrete value from the host OS, do not blindly copy 'country' here!
-	std::optional<DosCountry> numeric   = {};
-	std::optional<DosCountry> time_date = {};
-	std::optional<DosCountry> currency  = {};
-
-	// If detection was successful, always provide info for the log output,
-	// telling which host OS property/value was used to determine the given
-	// locale.
-	struct {
-		std::string country   = {};
-		std::string numeric   = {};
-		std::string time_date = {};
-		std::string currency  = {};
-	} log_info = {};
+	HostLocaleElement numeric   = {};
+	HostLocaleElement time_date = {};
+	HostLocaleElement currency  = {};
 };
 
 struct HostKeyboardLayouts {
