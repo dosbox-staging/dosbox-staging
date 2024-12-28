@@ -921,23 +921,25 @@ static std::pair<std::string, std::string> split_posix_locale(const std::string&
 	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(const std::string& category,
-                                                 std::string& out_log_info)
+static HostLocaleElement get_dos_country(const std::string& category)
 {
+	HostLocaleElement result = {};
+
 	const std::vector<std::string> Variables = {LcAll, category, VariableLang};
 
 	const auto [variable, value] = get_env_variable_from_list(Variables);
 	if (value.empty()) {
 		return {};
 	}
-	out_log_info = variable + "=" + value;
+	result.log_info = variable + "=" + value;
 
 	const auto [language, teritory] = split_posix_locale(value);
 	if (is_language_generic(language)) {
 		return {};
 	}
 
-	return IsoToDosCountry(language, teritory);
+	result.country_code = IsoToDosCountry(language, teritory);
+	return result;
 }
 
 static HostLanguage get_host_language()
@@ -1405,15 +1407,13 @@ const HostLocale& GetHostLocale()
 	if (!locale) {
 		locale = HostLocale();
 
-		auto& log_info = locale->log_info;
-
 		// There is no "LC_*" variable specifying a concrete country,
 		// so we are using a telephone format - as MS-DOS locale is
 		// telephone-code based
-		locale->country   = get_dos_country(LcTelephone, log_info.country);
-		locale->numeric   = get_dos_country(LcNumeric, log_info.numeric);
-		locale->time_date = get_dos_country(LcTime, log_info.time_date);
-		locale->currency  = get_dos_country(LcMonetary, log_info.currency);
+		locale->country   = get_dos_country(LcTelephone);
+		locale->numeric   = get_dos_country(LcNumeric);
+		locale->time_date = get_dos_country(LcTime);
+		locale->currency  = get_dos_country(LcMonetary);
 	}
 
 	return *locale;
