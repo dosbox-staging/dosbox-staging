@@ -538,25 +538,26 @@ static void clear_translated_messages()
 	translation_script = {};
 }
 
-static bool load_messages(const std_fs::path& file_name)
+static bool load_messages_from_path(const std_fs::path& file_path)
 {
-	if (file_name.empty()) {
+	if (file_path.empty()) {
 		return false;
 	}
 
-	if (!path_exists(file_name) || !is_readable(file_name)) {
+	if (!path_exists(file_path) || !is_readable(file_path)) {
 		return false;
 	}
 
 	clear_translated_messages();
 
-	std::ifstream in_file(file_name);
+	std::ifstream in_file(file_path);
 
 	std::string line = {};
 	int line_number  = -1;
 
 	auto problem_generic = [&](const std::string& error) {
-		LOG_ERR("LOCALE: Translation file error in line %d: %s",
+		LOG_ERR("LOCALE: Translation file '%s' error in line %d: %s",
+		        file_path.string().c_str(),
 		        static_cast<int>(line_number),
 		        error.c_str());
 		clear_translated_messages();
@@ -564,7 +565,9 @@ static bool load_messages(const std_fs::path& file_name)
 
 	auto problem_with_message = [&](const std::string& name,
 	                                const std::string& error) {
-		LOG_ERR("LOCALE: Translation file error in line %d, message '%s': %s",
+		LOG_ERR("LOCALE: Translation file '%s' error in line %d, "
+		        "message '%s': %s",
+		        file_path.string().c_str(),
 		        static_cast<int>(line_number),
 		        name.c_str(),
 		        error.c_str());
@@ -680,13 +683,13 @@ static bool load_messages(const std_fs::path& file_name)
 	return true;
 }
 
-static bool save_messages(const std_fs::path& file_name)
+static bool save_messages_to_path(const std_fs::path& file_path)
 {
-	if (file_name.empty()) {
+	if (file_path.empty()) {
 		return false;
 	}
 
-	std::ofstream out_file(file_name);
+	std::ofstream out_file(file_path);
 
 	// Output help line
 	out_file << "// Writing script used in this translation, can be one of:\n";
@@ -787,7 +790,7 @@ bool MSG_Exists(const std::string& name)
 
 bool MSG_WriteToFile(const std::string& file_name)
 {
-	return save_messages(file_name);
+	return save_messages_to_path(file_name);
 }
 
 void MSG_NotifyNewCodePage()
@@ -805,12 +808,48 @@ void MSG_NotifyNewCodePage()
 //    filename or path: `-lang ru`. In this case, it constructs a path into the
 //    platform's config path/translations/<lang>.lng.
 
-void MSG_Init([[maybe_unused]] Section_prop *section)
-{
-	static const std_fs::path subdirectory = "translations";
-	static const std::string extension     = ".lng";
+static const std::string InternalLangauge = "en";
+static const std::string Extension        = ".lng";
+static const std_fs::path Subdirectory    = "translations";
 
-	const auto& host_language = GetHostLanguage();
+static std::string get_file_name_with_extension(const std::string& file_name)
+{
+	if (file_name.ends_with(Extension)) {
+		return file_name;
+	} else {
+		return file_name + Extension;
+	}
+}
+
+static bool load_messages_by_name(const std::string& language_file)
+{
+	if (language_file == InternalLangauge ||
+	    language_file == InternalLangauge + Extension) {
+		LOG_MSG("LOCALE: Using internal English language messages");
+		return true;
+	}
+
+	const auto file_with_extension = get_file_name_with_extension(language_file);
+	const auto file_path = get_resource_path(Subdirectory, file_with_extension);
+
+	const auto result = load_messages_from_path(file_path);
+	if (!result) {
+		LOG_MSG("LOCALE: Could not load language file '%s', "
+		        "using internal English language messages",
+		        file_with_extension.c_str());
+	} else {
+		LOG_MSG("LOCALE: Loaded language file '%s'",
+		        file_path.string().c_str());
+	}
+
+	return result;
+}
+
+void MSG_Init([[maybe_unused]] Section_prop* section)
+{
+	// Ensure autodetection happens the same time, regardless of the
+	// configuration
+	const auto& host_languages = GetHostLanguages();
 
 	// Get the language file from command line
 	assert(control);
@@ -824,78 +863,57 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 		        "language");
 	}
 
-	// If the language is English, use the internal messages
-	if (language_file == "en" || language_file == "en.lng") {
-		LOG_MSG("LOCALE: Using internal English language messages");
+	// If concrete language file is provided, load it
+	if (!language_file.empty() && language_file != "auto") {
+		load_messages_by_name(language_file);
 		return;
 	}
 
-	std_fs::path file_path = {};
-
-	// If concrete language file is provided, try to load it
-	if (!language_file.empty() && language_file != "auto") {
-		if (language_file.ends_with(extension)) {
-			file_path = get_resource_path(subdirectory, language_file);
-		} else {
-			// If a short-hand name was provided,
-                        // add the file extension
-			file_path = get_resource_path(subdirectory,
-			                              language_file + extension);
-		}
-
-		const auto result = load_messages(file_path);
-		if (!result) {
-			LOG_MSG("LOCALE: Could not load language file '%s', "
-			        "using internal English language messages",
-			        language_file.c_str());
-		} else {
-			LOG_MSG("LOCALE: Loaded language file '%s'",
-			        file_path.string().c_str());
-		}
-
-		return;
+	// Get the list of autodetected languages
+	auto language_files = host_languages.language_files;
+	if (!host_languages.language_file_gui.empty()) {
+		language_files.push_back(host_languages.language_file_gui);
 	}
 
 	// If autodetection failed, use internal English messages
-	if (host_language.language_file.empty()) {
-		if (host_language.log_info.empty()) {
-			LOG_MSG("LOCALE: Could not detect host value, "
+	if (language_files.empty()) {
+		if (host_languages.log_info.empty()) {
+			LOG_MSG("LOCALE: Could not detect host langauge, "
 			        "using internal English language messages");
 		} else {
 			LOG_MSG("LOCALE: Could not detected language file from "
 			        "host value '%s', using internal English "
 			        "language messages",
-			        host_language.log_info.c_str());
+			        host_languages.log_info.c_str());
 		}
 		return;
 	}
 
-	// If language was detected, some extra information for log is expected
-	assert(!host_language.log_info.empty());
+	// Use the first detected language for which we have a translation
+	for (const auto& detected_file : language_files) {
+		// If detected_file language is English, use internal messages
+		if (detected_file == InternalLangauge) {
+			LOG_MSG("LOCALE: Using internal English language "
+			        "messages (detected from '%s')",
+			        host_languages.log_info.c_str());
+			return;
+		}
 
-	// If autodetected messages file is English, use internal messages
-	if (host_language.language_file == "en") {
-		LOG_MSG("LOCALE: Using internal English language messages "
-		        "(detected from '%s')",
-		        host_language.log_info.c_str());
-		return;
+		const auto file_with_extension = get_file_name_with_extension(
+		        detected_file);
+		const auto file_path = get_resource_path(Subdirectory,
+		                                         file_with_extension);
+
+		if (load_messages_from_path(file_path)) {
+			LOG_MSG("LOCALE: Loaded language file '%s' "
+			        "(detected from '%s')",
+			        file_with_extension.c_str(),
+			        host_languages.log_info.c_str());
+			return;
+		}
 	}
 
-	// Try to load autodetected language
-	const auto file_extension = host_language.language_file + extension;
-	file_path = get_resource_path(subdirectory, file_extension);
-	const auto result = load_messages(file_path);
-
-	if (result) {
-		LOG_MSG("LOCALE: Loaded language file '%s' "
-		        "(detected from '%s')",
-		        file_extension.c_str(),
-		        host_language.log_info.c_str());
-	} else {
-		LOG_MSG("LOCALE: Could not load language file '%s' "
-		        "(detected from '%s'), "
-		        "using internal English language messages",
-		        file_extension.c_str(),
-		        host_language.log_info.c_str());
-	}
+	LOG_MSG("LOCALE: Could not find a valid language file corresponding to "
+	        "'%s', using internal English language messages",
+	        host_languages.log_info.c_str());
 }
