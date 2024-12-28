@@ -948,8 +948,25 @@ static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
+	auto get_language_file = [](const std::string& input) {
+		const auto [language, teritory] = split_posix_locale(input);
+		return iso_to_language_file(language, teritory);
+	};
+
+	// First try the LANGUAGE variable, according to specification:
+	// https://www.gnu.org/software/gettext/manual/html_node/The-LANGUAGE-variable.html
+	const auto values = get_env_variable(VariableLanguage);
+	if (!values.empty()) {
+		result.log_info = VariableLanguage + "=" + values;
+		for (const auto& entry : split(values, ":")) {
+			result.language_files.push_back(get_language_file(entry));
+		}
+		return result;
+	}
+
+	// If variable is not present, try the others - they store at most one
+	// value
 	const std::vector<std::string> Variables = {
-	        VariableLanguage,
 	        LcAll,
 	        LcMessages,
 	        VariableLang,
@@ -961,17 +978,7 @@ static HostLanguages get_host_languages()
 	}
 	result.log_info = variable + "=" + value;
 
-	const auto [language, teritory] = split_posix_locale(value);
-
-	if (language == "pt" && teritory == "BR") {
-		// We have a dedicated Brazilian translation
-		result.language_file_gui = "br";
-	} else if (language == "c" || language == "posix") {
-		result.language_file_gui = "en";
-	} else {
-		result.language_file_gui = language;
-	}
-
+	result.language_file_gui = get_language_file(value);
 	return result;
 }
 
