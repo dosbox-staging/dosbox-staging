@@ -63,10 +63,7 @@ constexpr Rgb888 color_white(255, 255, 255);
 constexpr Rgb888 color_red(255, 0, 0);
 constexpr Rgb888 color_green(0, 255, 0);
 
-enum BB_Types {
-	BB_Next,BB_Add,BB_Del,
-	BB_Save,BB_Exit
-};
+enum BB_Types { BB_Next, BB_Add, BB_Del, BB_Exit };
 
 enum BC_Types {
 	BC_Mod1,BC_Mod2,BC_Mod3,
@@ -111,6 +108,8 @@ typedef std::list<CBind *>::iterator CBindList_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
 
 static CBindList holdlist;
+
+static bool suppress_save_mapper_file_message = false;
 
 class CEvent {
 public:
@@ -1628,8 +1627,12 @@ public:
 				if (mapper.abindit == mapper.aevent->bindlist.end())
 					mapper.abindit=mapper.aevent->bindlist.begin();
 			}
-			if (mapper.abindit!=mapper.aevent->bindlist.end()) SetActiveBind(*(mapper.abindit));
-			else SetActiveBind(nullptr);
+			if (mapper.abindit != mapper.aevent->bindlist.end()) {
+				SetActiveBind(*(mapper.abindit));
+			} else {
+				SetActiveBind(nullptr);
+			}
+			MAPPER_SaveBinds();
 			break;
 		case BB_Next:
 			if (mapper.abindit != mapper.aevent->bindlist.end())
@@ -1637,9 +1640,6 @@ public:
 			if (mapper.abindit == mapper.aevent->bindlist.end())
 				mapper.abindit = mapper.aevent->bindlist.begin();
 			SetActiveBind(*(mapper.abindit));
-			break;
-		case BB_Save:
-			MAPPER_SaveBinds();
 			break;
 		case BB_Exit:
 			mapper.exit=true;
@@ -1693,15 +1693,19 @@ public:
 		switch (type) {
 		case BC_Mod1:
 			mapper.abind->mods^=BMOD_Mod1;
+			MAPPER_SaveBinds();
 			break;
 		case BC_Mod2:
 			mapper.abind->mods^=BMOD_Mod2;
+			MAPPER_SaveBinds();
 			break;
 		case BC_Mod3:
 			mapper.abind->mods^=BMOD_Mod3;
+			MAPPER_SaveBinds();
 			break;
 		case BC_Hold:
 			mapper.abind->flags^=BFLG_Hold;
+			MAPPER_SaveBinds();
 			break;
 		}
 		mapper.redraw=true;
@@ -2469,7 +2473,6 @@ static void CreateLayout() {
 	bind_but.del = new CBindButton(250, 400, 100, 20, "Remove bind", BB_Del);
 	bind_but.next = new CBindButton(250, 420, 100, 20, "Next bind", BB_Next);
 
-	bind_but.save=new CBindButton(400,450,50,20,"Save",BB_Save);
 	bind_but.exit=new CBindButton(450,450,50,20,"Exit",BB_Exit);
 
 	bind_but.bind_title->Change("Bind Title");
@@ -2734,8 +2737,11 @@ static void MAPPER_SaveBinds() {
 		fprintf(savefile,"\n");
 	}
 	fclose(savefile);
-	change_action_text("Mapper file saved.", color_white);
-	LOG_MSG("MAPPER: Wrote key bindings to %s", filename);
+	change_action_text("Mapping updated.", color_white);
+	if (!suppress_save_mapper_file_message) {
+		suppress_save_mapper_file_message = true;
+		LOG_INFO("MAPPER: Wrote input bindings to %s", filename);
+	}
 }
 
 static bool load_binds_from_file(const std::string_view mapperfile_path,
@@ -2751,6 +2757,8 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 		auto lines = get_resource_lines(mapper_path, optional);
 		if (lines.empty())
 			return false;
+
+		suppress_save_mapper_file_message = true;
 
 		ClearAllBinds();
 		for (auto &line : lines)
@@ -2869,6 +2877,7 @@ void BIND_MappingEvents() {
 				mapper.aevent->AddBind(newbind);
 				SetActiveEvent(mapper.aevent);
 				mapper.addbind=false;
+				MAPPER_SaveBinds();
 				break;
 			}
 		}
