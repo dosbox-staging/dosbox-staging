@@ -385,14 +385,17 @@ static std::string get_locale(const CFLocaleKey key)
 	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
+static HostLocaleElement get_dos_country()
 {
+	HostLocaleElement result = {};
+
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	out_log_info = language + "_" + country;
+	result.log_info = language + "_" + country;
 
-	return IsoToDosCountry(language, country);
+	result.country_code = IsoToDosCountry(language, country);
+	return result;
 }
 
 static HostLanguage get_host_language()
@@ -613,7 +616,7 @@ const HostLocale& GetHostLocale()
 	if (!locale) {
 		locale = HostLocale();
 
-		locale->country = get_dos_country(locale->log_info.country);
+		locale->country = get_dos_country();
 	}
 
 	return *locale;

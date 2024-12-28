@@ -445,10 +445,11 @@ static void populate_all_country_info()
 	                                   ? get_info(DosCountry::International)
 	                                   : get_info(static_cast<DosCountry>(
 	                                              dos.country_code));
-	if (!config.country && !populated.is_country_overriden && host_locale.numeric) {
-		populated.separate_numeric = *host_locale.numeric;
-		const auto& [period_specific,
-		             info_specific] = get_info(*host_locale.numeric);
+	if (!config.country && !populated.is_country_overriden &&
+	    host_locale.numeric.country_code) {
+		const auto country_code = *host_locale.numeric.country_code;
+		populated.separate_numeric = country_code;
+		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_numeric_format(info_specific);
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
@@ -466,10 +467,10 @@ static void populate_all_country_info()
 
 	// Populate time/date format
 	if (!config.country && !populated.is_country_overriden &&
-	    host_locale.time_date) {
-		populated.separate_time_date = *host_locale.time_date;
-		const auto& [period_specific,
-		             info_specific]  = get_info(*host_locale.time_date);
+	    host_locale.time_date.country_code) {
+		const auto country_code = *host_locale.time_date.country_code;
+		populated.separate_time_date = country_code;
+		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_time_date_format(info_specific);
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
@@ -489,10 +490,10 @@ static void populate_all_country_info()
 
 	// Populate currency format
 	if (!config.country && !populated.is_country_overriden &&
-	    host_locale.currency) {
-		populated.separate_currency = *host_locale.currency;
-		const auto& [period_specific,
-		             info_specific] = get_info(*host_locale.currency);
+	    host_locale.currency.country_code) {
+		const auto country_code = *host_locale.currency.country_code;
+		populated.separate_currency = country_code;
+		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_currency_format(info_specific);
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
@@ -1054,7 +1055,7 @@ static void log_country_locale(const bool only_changed_period = false)
 
 	if (!config.country && !only_changed_period) {
 		LOG_MSG("LOCALE: Country detected from '%s'",
-		        host_locale.log_info.country.c_str());
+		        host_locale.country.log_info.c_str());
 	}
 
 	std::string country_name = {};
@@ -1075,7 +1076,7 @@ static void log_country_locale(const bool only_changed_period = false)
 		LOG_MSG("LOCALE: Using numeric format for country %d - '%s', detected from '%s'",
 		        enum_val(extra_country),
 		        get_country_name_for_log(extra_country).c_str(),
-		        host_locale.log_info.numeric.c_str());
+		        host_locale.numeric.log_info.c_str());
 	}
 
 	if (populated.separate_time_date &&
@@ -1084,7 +1085,7 @@ static void log_country_locale(const bool only_changed_period = false)
 		LOG_MSG("LOCALE: Using time/date format for country %d - '%s', detected from '%s'",
 		        enum_val(extra_country),
 		        get_country_name_for_log(extra_country).c_str(),
-		        host_locale.log_info.time_date.c_str());
+		        host_locale.time_date.log_info.c_str());
 	}
 
 	if (populated.separate_currency &&
@@ -1093,7 +1094,7 @@ static void log_country_locale(const bool only_changed_period = false)
 		LOG_MSG("LOCALE: Using currency format for country %d - '%s', detected from '%s'",
 		        enum_val(extra_country),
 		        get_country_name_for_log(extra_country).c_str(),
-		        host_locale.log_info.currency.c_str());
+		        host_locale.currency.log_info.c_str());
 	}
 
 	if (populated.is_using_native_numeric || populated.is_using_native_time ||
@@ -1153,8 +1154,8 @@ static void load_country()
 		current_country = *config.country;
 	} else {
 		const auto& host_locale = GetHostLocale();
-		if (host_locale.country) {
-			current_country = *host_locale.country;
+		if (host_locale.country.country_code) {
+			current_country = *host_locale.country.country_code;
 			if (current_country == DosCountry::International) {
 				current_country = get_default_country();
 			}
