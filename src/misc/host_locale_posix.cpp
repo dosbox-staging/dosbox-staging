@@ -909,12 +909,14 @@ static std::pair<std::string, std::string> split_posix_locale(const std::string&
 
 	// Get the language
 	result.first = tmp.substr(0, tmp.find('_'));
+	trim(result.first);
 	lowcase(result.first);
 
 	const auto position = tmp.rfind('_');
 	if (position != std::string::npos) {
 		// Get the territory
 		result.second = tmp.substr(position + 1);
+		trim(result.second);
 		upcase(result.second);
 	}
 
