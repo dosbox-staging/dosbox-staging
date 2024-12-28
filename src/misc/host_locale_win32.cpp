@@ -492,9 +492,9 @@ static HostLocaleElement get_dos_country()
 	return result;
 }
 
-static HostLanguage get_host_language()
+static HostLanguages get_host_languages()
 {
-	HostLanguage result = {};
+	HostLanguages result = {};
 
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 
@@ -513,10 +513,10 @@ static HostLanguage get_host_language()
 
 	if (language_territory == "pt-BR") {
 		// We have a dedicated Brazilian translation
-		result.language_file = "br";
+		result.language_file_gui = "br";
 	} else {
 		const auto it = language_territory.find('-');
-		result.language_file = language_territory.substr(0, it);
+		result.language_file_gui = language_territory.substr(0, it);
 	}
 
 	return result;
@@ -546,12 +546,12 @@ const HostKeyboardLayouts& GetHostKeyboardLayouts()
 	return *locale;
 }
 
-const HostLanguage& GetHostLanguage()
+const HostLanguages& GetHostLanguages()
 {
-	static std::optional<HostLanguage> locale = {};
+	static std::optional<HostLanguages> locale = {};
 
 	if (!locale) {
-		locale = get_host_language();
+		locale = get_host_languages();
 	}
 
 	return *locale;

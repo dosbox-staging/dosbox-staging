@@ -398,9 +398,9 @@ static HostLocaleElement get_dos_country()
 	return result;
 }
 
-static HostLanguage get_host_language()
+static HostLanguages get_host_languages()
 {
-	HostLanguage result = {};
+	HostLanguages result = {};
 
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
@@ -409,9 +409,9 @@ static HostLanguage get_host_language()
 
 	if (language == "pt" && country == "BR") {
 		// We have a dedicated Brazilian translation
-		result.language_file = "br";
+		result.language_file_gui = "br";
 	} else {
-		result.language_file = language;
+		result.language_file_gui = language;
 	}
 
 	return result;
@@ -633,12 +633,12 @@ const HostKeyboardLayouts& GetHostKeyboardLayouts()
 	return *locale;
 }
 
-const HostLanguage& GetHostLanguage()
+const HostLanguages& GetHostLanguages()
 {
-	static std::optional<HostLanguage> locale = {};
+	static std::optional<HostLanguages> locale = {};
 
 	if (!locale) {
-		locale = get_host_language();
+		locale = get_host_languages();
 	}
 
 	return *locale;

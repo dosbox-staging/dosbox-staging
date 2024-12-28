@@ -944,9 +944,9 @@ static HostLocaleElement get_dos_country(const std::string& category)
 	return result;
 }
 
-static HostLanguage get_host_language()
+static HostLanguages get_host_languages()
 {
-	HostLanguage result = {};
+	HostLanguages result = {};
 
 	const std::vector<std::string> Variables = {
 	        VariableLanguage,
@@ -965,11 +965,11 @@ static HostLanguage get_host_language()
 
 	if (language == "pt" && teritory == "BR") {
 		// We have a dedicated Brazilian translation
-		result.language_file = "br";
+		result.language_file_gui = "br";
 	} else if (language == "c" || language == "posix") {
-		result.language_file = "en";
+		result.language_file_gui = "en";
 	} else {
-		result.language_file = language;
+		result.language_file_gui = language;
 	}
 
 	return result;
@@ -1432,12 +1432,12 @@ const HostKeyboardLayouts& GetHostKeyboardLayouts()
 	return *locale;
 }
 
-const HostLanguage& GetHostLanguage()
+const HostLanguages& GetHostLanguages()
 {
-	static std::optional<HostLanguage> locale = {};
+	static std::optional<HostLanguages> locale = {};
 
 	if (!locale) {
-		locale = get_host_language();
+		locale = get_host_languages();
 	}
 
 	return *locale;
