@@ -69,7 +69,7 @@ The official distribution packages only support Windows 7 up to version
 0.80.1:
 
 - For 64-bit Windows 7, use the [0.80.1 installer][0_80_1_x64_INSTALLER] and
-  select the MSVC build, or the [0.81.1 portable ZIP package][0_80_1_x64_ZIP].
+  select the MSVC build, or the [0.80.1 portable ZIP package][0_80_1_x64_ZIP].
 
 - For 32-bit Windows 7, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
 
