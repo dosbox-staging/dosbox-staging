@@ -323,22 +323,42 @@ static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
 std::optional<DosCountry> iso_to_dos_country(const std::string& language,
                                              const std::string& territory)
 {
-	std::string key_language  = language;
-	std::string key_territory = territory;
+	std::string language_lower_case  = language;
+	std::string territory_upper_case = territory;
 
-	lowcase(key_language);
-	upcase(key_territory);
+	lowcase(language_lower_case);
+	upcase(territory_upper_case);
 
-	const auto key = key_language + "_" + key_territory;
+	const auto key = language_lower_case + "_" + territory_upper_case;
 
 	if (IsoToDosCountryMap.contains(key)) {
 		return IsoToDosCountryMap.at(key);
 	}
-	if (IsoToDosCountryMap.contains(key_territory)) {
-		return IsoToDosCountryMap.at(key_territory);
+	if (IsoToDosCountryMap.contains(territory_upper_case)) {
+		return IsoToDosCountryMap.at(territory_upper_case);
 	}
 
 	return {};
+}
+
+std::string iso_to_language_file(const std::string& language,
+                                 const std::string& territory)
+{
+	std::string language_lower_case  = language;
+	std::string territory_upper_case = territory;
+
+	lowcase(language_lower_case);
+	upcase(territory_upper_case);
+
+	if (language_lower_case == "pt" && territory_upper_case == "BR") {
+		// We have a dedicated Brazilian translation
+		return "br";
+	} else if (language_lower_case == "c" || language_lower_case == "posix") {
+		// Default (dummy) language, used on POSIX systems
+		return "en";
+	}
+	
+	return language_lower_case;
 }
 
 // ***************************************************************************
