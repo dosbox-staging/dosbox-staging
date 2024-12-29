@@ -404,16 +404,6 @@ public:
 		return sdl_scancode_name;
 	}
 
-	bool HasSameBinding(const CKeyBind* other) const
-	{
-		return other && key == other->key && mods == other->mods;
-	}
-
-	const char* GetEventName() const
-	{
-		return event ? event->GetName() : "";
-	}
-
 	void ConfigName(char *buf) override
 	{
 		sprintf(buf, "key %d", key);
@@ -1869,16 +1859,6 @@ public:
 	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
 
 	void Active(bool yesno) override { (*handler)(yesno); }
-
-	bool HasSameBinding(const CKeyBind* other) const
-	{
-		return other && defkey == other->key && defmod == other->mods;
-	}
-
-	const char* GetEventName() const
-	{
-		return entry;
-	}
 
 	void MakeDefaultBind(char *buf)
 	{
