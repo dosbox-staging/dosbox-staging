@@ -25,6 +25,7 @@
 #include "host_locale.h"
 
 #include "checks.h"
+#include "string_utils.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <unordered_map>
@@ -392,9 +393,42 @@ static HostLocaleElement get_dos_country()
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	result.log_info = language + "_" + country;
+	result.log_info = language + "-" + country;
 
 	result.country_code = iso_to_dos_country(language, country);
+	return result;
+}
+
+static std::vector<std::string> get_preferred_languages()
+{
+	std::vector<std::string> result = {};
+
+	const auto languages_ref = CFLocaleCopyPreferredLanguages();
+
+	// We expect the root of the file to be an array
+	if (CFGetTypeID(languages_ref) != CFArrayGetTypeID()) {
+		CFRelease(languages_ref);
+		return {};
+	}
+
+	// Get all the array elements
+	const size_t num_languages = CFArrayGetCount(languages_ref);
+	for (size_t idx = 0; idx < num_languages; ++idx) {
+		const auto language_ref = CFArrayGetValueAtIndex(languages_ref, idx);
+
+		// We expect the language value to be a string
+		if (CFGetTypeID(language_ref) != CFStringGetTypeID()) {
+			continue;
+		}
+
+		const auto language_str = to_string(
+		        static_cast<CFStringRef>(language_ref));
+		if (!language_str.empty()) {
+			result.push_back(language_str);
+		}
+	}
+
+	CFRelease(languages_ref);
 	return result;
 }
 
@@ -402,16 +436,40 @@ static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
-	const auto language = get_locale(kCFLocaleLanguageCode);
-	const auto country  = get_locale(kCFLocaleCountryCode);
+	auto get_language_file = [&](const std::string& input) -> std::string {
+		const auto tokens = split(input, "-");
+		if (tokens.empty()) {
+			return {};
+		}
+		if (tokens.size() == 1) {
+			return iso_to_language_file (tokens.at(0), "");
+		}
+		return iso_to_language_file(tokens.at(0), tokens.at(1));
+	};
 
-	result.log_info = language + "_" + country;
+	// Get the list of preferred languages
+	const auto preferred_languages = get_preferred_languages();
+	for (const auto& entry : preferred_languages) {
+		if (!result.log_info.empty()) {
+			result.log_info += ", ";
+		}
+		result.log_info += entry;
 
-	if (language == "pt" && country == "BR") {
-		// We have a dedicated Brazilian translation
-		result.language_file_gui = "br";
-	} else {
-		result.language_file_gui = language;
+		result.language_files.push_back(get_language_file(entry));
+	}
+
+	// Get the GUI language
+	const auto language  = get_locale(kCFLocaleLanguageCode);
+	const auto territory = get_locale(kCFLocaleCountryCode);
+
+	if (!language.empty()) {
+		if (!result.log_info.empty()) {
+			result.log_info += "; ";
+		}
+		result.log_info += "GUI: ";
+		result.log_info += language + "-" + territory;
+
+		result.language_file_gui = iso_to_language_file(language, territory);
 	}
 
 	return result;
