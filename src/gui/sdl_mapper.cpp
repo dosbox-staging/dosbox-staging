@@ -1848,9 +1848,6 @@ protected:
 	int wmod;
 };
 
-template <typename T>
-static void drop_other_bound_events(const T* new_bind);
-
 class CHandlerEvent final : public CTriggeredEvent {
 public:
 	CHandlerEvent(const char *entry,
@@ -2036,50 +2033,6 @@ static void SetActiveBind(CBind *new_active_bind)
 {
 	mapper.abind = new_active_bind;
 	update_active_bind_ui();
-}
-
-// Drop other bound events for the given new_bind to ensure a given host button
-// sequence only performs one event.
-//
-// For example, if the host's 'F10' button was previously recording MIDI but now
-// should perform a CGA composite select action, then this function drops the
-// MIDI recording event binding.
-//
-template <typename T>
-static void drop_other_bound_events(const T* new_bind)
-{
-	assert(new_bind);
-
-	auto has_same_bind_as_new_bind = [new_bind](CBind* other) {
-		auto other_bind = dynamic_cast<CKeyBind*>(other);
-
-		if constexpr (std::is_same_v<T, CKeyBind>) {
-			if (!other_bind || new_bind->event == other_bind->event) {
-				return false;
-			}
-		}
-
-		if (new_bind->HasSameBinding(other_bind)) {
-			const auto msg = format_str(
-			        "Host button '%s' now performs '%s' instead of '%s'",
-			        other_bind->GetBindName().c_str(),
-			        new_bind->GetEventName(),
-			        other_bind->GetEventName());
-
-			LOG_WARNING("MAPPER: %s", msg.c_str());
-			change_action_text(msg.c_str(), marginal_color);
-
-			all_binds.remove(other);
-			other->event = nullptr;
-
-			return true;
-		}
-		return false;
-	};
-
-	for (const auto& event : events) {
-		event->bindlist.remove_if(has_same_bind_as_new_bind);
-	}
 }
 
 static void SetActiveEvent(CEvent * event) {
