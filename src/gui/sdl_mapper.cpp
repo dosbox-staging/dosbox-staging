@@ -266,9 +266,6 @@ public:
 	}
 
 	void ActivateBind(Bits _value,bool ev_trigger,bool skip_action=false) {
-		if (!event) {
-			return;
-		}
 		if (event->IsTrigger()) {
 			/* use value-boundary for on/off events */
 			if (_value>25000) {
@@ -289,9 +286,6 @@ public:
 		}
 	}
 	void DeActivateBind(bool ev_trigger) {
-		if (!event) {
-			return;
-		}
 		if (event->IsTrigger()) {
 			if (!active) return;
 			active=false;
