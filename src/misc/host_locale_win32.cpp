@@ -492,13 +492,86 @@ static HostLocaleElement get_dos_country()
 	return result;
 }
 
+static std::vector<std::string> get_preferred_languages()
+{
+	std::vector<std::string> result = {};
+
+	// At least on Windows 11, 'GetUserPreferredUILanguages' only returns
+	// the first language - let's read the registry instead
+
+	const LPCTSTR KeyPath = TEXT("Control Panel\\International\\User Profile\\");
+	const LPCTSTR KeyName = TEXT("Languages");
+
+	DWORD buffer_size = 0;
+
+	// Get the buffer size
+	if (RegGetValueA(HKEY_CURRENT_USER,
+	                 KeyPath,
+	                 KeyName,
+	                 RRF_RT_REG_MULTI_SZ,
+	                 nullptr,
+	                 nullptr,
+	                 &buffer_size) != ERROR_SUCCESS ||
+	    buffer_size == 0) {
+		return {};
+	}
+
+	// Get the actual data
+	std::vector<char> buffer(buffer_size + 1);
+	buffer.resize(buffer_size);
+	if (RegGetValueA(HKEY_CURRENT_USER,
+	                 KeyPath,
+	                 KeyName,
+	                 RRF_RT_REG_MULTI_SZ,
+	                 nullptr,
+	                 buffer.data(),
+	                 &buffer_size) != ERROR_SUCCESS) {
+		return {};
+	}
+	buffer.back() = '\0';
+
+	// Extract the values
+	auto iter = buffer.begin();
+	while (iter < buffer.end()) {
+		const auto element = std::string(iter, std::find(iter, buffer.end(), '\0'));
+		if (element.empty()) {
+			break;
+		}
+
+		result.push_back(element);
+		iter += element.size() + 1;
+	}
+
+	return result;
+}
+
 static HostLanguages get_host_languages()
 {
 	HostLanguages result = {};
 
-	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
+	auto get_language_file = [&](const std::string& input) -> std::string {
+		const auto tokens = split(input, "-");
+		if (tokens.empty()) {
+			return {};
+		}
+		if (tokens.size() == 1) {
+			return iso_to_language_file(tokens.at(0), "");
+		}
+		return iso_to_language_file(tokens.at(0), tokens.at(1));
+	};
 
-	// Get the main language name
+	// Get the list of preferred languages
+	for (const auto& entry : get_preferred_languages()) {
+		if (!result.log_info.empty()) {
+			result.log_info += ", ";
+		}
+		result.log_info += entry;
+
+		result.language_files.push_back(get_language_file(entry));
+	}
+
+	// Get the default GUI language
+	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 	const auto ui_language = GetUserDefaultUILanguage();
 	if (LCIDToLocaleName(ui_language, buffer, LOCALE_NAME_MAX_LENGTH, 0) == 0) {
 		LOG_WARNING("LOCALE: Could not get locale name for language 0x%04x, error code %lu",
@@ -509,16 +582,13 @@ static HostLanguages get_host_languages()
 
 	const auto language_territory = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	result.log_info = language_territory;
-
-	if (language_territory == "pt-BR") {
-		// We have a dedicated Brazilian translation
-		result.language_file_gui = "br";
-	} else {
-		const auto it = language_territory.find('-');
-		result.language_file_gui = language_territory.substr(0, it);
+	if (!result.log_info.empty()) {
+		result.log_info += "; ";
 	}
+	result.log_info += "GUI: ";
+	result.log_info += language_territory;
 
+	result.language_file_gui = get_language_file(language_territory);
 	return result;
 }
 
