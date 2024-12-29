@@ -669,8 +669,8 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "it" }, "Italian (standard, QWERTY/national)",
-		// Not sure if the layout is popular, low priority for now
-		AutodetectionPriority::Low,
+		// Priority approved by a native speaker
+		AutodetectionPriority::High,
 		850,
 		KeyboardScript::LatinQwerty,
 		{
@@ -679,7 +679,7 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "it142" }, "Italian (142, QWERTY/national)",
-		// Not sure if the layout is popular, low priority for now
+		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
@@ -689,7 +689,7 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ix" }, "Italian (international, QWERTY)",
-		// Not sure if the layout is popular, low priority for now
+		// Priority approved by a native speaker
 		AutodetectionPriority::Low,
 		30024,
 		KeyboardScript::LatinQwerty,
