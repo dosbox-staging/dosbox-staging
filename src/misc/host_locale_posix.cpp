@@ -940,7 +940,7 @@ static HostLocaleElement get_dos_country(const std::string& category)
 		return {};
 	}
 
-	result.country_code = IsoToDosCountry(language, teritory);
+	result.country_code = iso_to_dos_country(language, teritory);
 	return result;
 }
 
