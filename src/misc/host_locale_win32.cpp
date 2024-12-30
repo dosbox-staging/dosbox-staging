@@ -488,7 +488,7 @@ static HostLocaleElement get_dos_country()
 		return {};
 	}
 
-	result.country_code = IsoToDosCountry(tokens[0], tokens[1]);
+	result.country_code = iso_to_dos_country(tokens[0], tokens[1]);
 	return result;
 }
 

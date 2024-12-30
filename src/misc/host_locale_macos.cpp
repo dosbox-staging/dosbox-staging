@@ -394,7 +394,7 @@ static HostLocaleElement get_dos_country()
 
 	result.log_info = language + "_" + country;
 
-	result.country_code = IsoToDosCountry(language, country);
+	result.country_code = iso_to_dos_country(language, country);
 	return result;
 }
 

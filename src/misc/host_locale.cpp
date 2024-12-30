@@ -320,8 +320,8 @@ static const std::unordered_map<std::string, DosCountry> IsoToDosCountryMap = {
 };
 // clang-format on
 
-std::optional<DosCountry> IsoToDosCountry(const std::string& language,
-                                          const std::string& territory)
+std::optional<DosCountry> iso_to_dos_country(const std::string& language,
+                                             const std::string& territory)
 {
 	std::string key_language  = language;
 	std::string key_territory = territory;
