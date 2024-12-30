@@ -27,11 +27,10 @@
 #include <optional>
 #include <vector>
 
-// Converts language and territory in the typical POSIX format (with underscore
-// or hyphen - "en_US" or "en-US"), using 'ISO 3166-1 alpha-2' codes, to a
-// DOS country code
-std::optional<DosCountry> IsoToDosCountry(const std::string& language,
-                                          const std::string& territory);
+// Convert language and territory (using 'ISO 3166-1 alpha-2' codes) to a DOS
+// country code
+std::optional<DosCountry> iso_to_dos_country(const std::string& language,
+                                             const std::string& territory);
 
 struct KeyboardLayoutMaybeCodepage {
 	// Keyboard layout, as supported by the FreeDOS
