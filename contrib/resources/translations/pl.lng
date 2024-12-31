@@ -37,11 +37,17 @@ Lista dostępnych opcji:
 
   --list-countries             Wyświetl obsługiwane kraje wraz z ich kodami, do ustawienia 'country'.
 
+  --list-layouts               Wyświetl obsługiwane układy klawiatury wraz z ich kodami,
+                               do ustawienia 'keyboard_layout'.
+
+  --list-code-pages            Wyświetl wszystkie obsługiwane strony kodowe (czcionki ekranowe).
+
   --list-glshaders             Wyświetl dostępne shadery wraz ze ścieżkami, do ustawienia 'glshader'.
 
   --fullscreen                 Uruchom na pełnym ekranie.
 
-  --lang <plik_języka>         Uruchom z językiem komunikatów z pliku <plik_języka>.
+  --lang <plik_języka>         Uruchom z językiem komunikatów z pliku <plik_języka>. Wartość 'auto'
+                               próbuje dopasować język do ustawień systemu operacyjnego.
 
   --machine <typ>              Emuluj dany typ maszyny. Ma on wpływ na emulowane karty graficzne i
                                dźwiękowe. Dostępne type: hercules, cga, cga_mono, tandy, pcjr, ega,
@@ -74,6 +80,20 @@ Kody krajów; zazwyczaj takie same, jak telefoniczny numer kierunkowy
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
 Powyższych kodów numerycznych należy użyć w ustawieniu 'country'
+w pliku konfiguracyjnym.
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
+Dostępne układy klawiatury
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
+Powyższych kodów należy użyć w ustawieniu 'keyboard_layout'
+w pliku konfiguracyjnym.
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_1
+Dostępne strony kodowe
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_2
+Powyższych stron kodowych należy użyć w ustawieniu 'keyboard_layout'
 w pliku konfiguracyjnym.
 .
 :COUNTRY_NAME_XXA
@@ -400,6 +420,825 @@ Kirgistan
 :COUNTRY_NAME_UZB
 Uzbekistan
 .
+:CODE_PAGE_DESCRIPTION_437
+amerykańska
+.
+:CODE_PAGE_DESCRIPTION_113
+jugosłowiańska
+.
+:CODE_PAGE_DESCRIPTION_667
+polska, kodowanie Mazovia
+.
+:CODE_PAGE_DESCRIPTION_668
+polska, kodowanie kompatybilne z 852
+.
+:CODE_PAGE_DESCRIPTION_737
+grecka-2
+.
+:CODE_PAGE_DESCRIPTION_770
+bałtycka, kodowanie RST 1095:8
+.
+:CODE_PAGE_DESCRIPTION_771
+litewska i rosyjska, kodowanie KBL
+.
+:CODE_PAGE_DESCRIPTION_773
+bałtycka, kodowanie KBL
+.
+:CODE_PAGE_DESCRIPTION_775
+Latin-7 (bałtycka)
+.
+:CODE_PAGE_DESCRIPTION_777
+litewska z akcentami, kodowanie KBL
+.
+:CODE_PAGE_DESCRIPTION_778
+litewska z akcentami, kodowanie LST 1590-2
+.
+:CODE_PAGE_DESCRIPTION_808
+rosyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_848
+ukraińska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_849
+białoruska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_850
+Latin-1 (zachodnioeuropejska)
+.
+:CODE_PAGE_DESCRIPTION_851
+grecka, stare kodowanie
+.
+:CODE_PAGE_DESCRIPTION_852
+Latin-2 (środkowoeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_853
+Latin-3 (turecka, maltańska, esperancka)
+.
+:CODE_PAGE_DESCRIPTION_855
+południowosłowiańska
+.
+:CODE_PAGE_DESCRIPTION_856
+hebrajska-2, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_857
+Latin-5 (turecka), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_858
+Latin-1 (zachodnioeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_859
+Latin-9 (zachodnioeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_860
+portugalska
+.
+:CODE_PAGE_DESCRIPTION_861
+islandzka
+.
+:CODE_PAGE_DESCRIPTION_862
+hebrajska-2
+.
+:CODE_PAGE_DESCRIPTION_863
+kanadyjska francuska
+.
+:CODE_PAGE_DESCRIPTION_864
+arabska
+.
+:CODE_PAGE_DESCRIPTION_865
+nordycka
+.
+:CODE_PAGE_DESCRIPTION_866
+rosyjska
+.
+:CODE_PAGE_DESCRIPTION_867
+czeska i słowacka, kodowanie Kamenický
+.
+:CODE_PAGE_DESCRIPTION_869
+grecka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_872
+południowosłowiańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_899
+ormiańska, kodowanie ArmSCII-8A
+.
+:CODE_PAGE_DESCRIPTION_991
+polska, kodowanie Mazovia, z symbolem PLN
+.
+:CODE_PAGE_DESCRIPTION_1116
+estońska
+.
+:CODE_PAGE_DESCRIPTION_1117
+łotewska
+.
+:CODE_PAGE_DESCRIPTION_1118
+litewska, kodowanie LST 1283
+.
+:CODE_PAGE_DESCRIPTION_1119
+litewska i rosyjska, kodowanie LST 1284
+.
+:CODE_PAGE_DESCRIPTION_1125
+ukraińska
+.
+:CODE_PAGE_DESCRIPTION_1131
+białoruska
+.
+:CODE_PAGE_DESCRIPTION_3012
+łotewska i rosyjska, kodowanie RusLat
+.
+:CODE_PAGE_DESCRIPTION_3021
+bułgarska, kodowanie MIK
+.
+:CODE_PAGE_DESCRIPTION_3845
+węgierska, kodowanie CWI-2
+.
+:CODE_PAGE_DESCRIPTION_3846
+turecka
+.
+:CODE_PAGE_DESCRIPTION_3848
+brazylijska, kodowanie ABICOMP
+.
+:CODE_PAGE_DESCRIPTION_30000
+lapońska
+.
+:CODE_PAGE_DESCRIPTION_30001
+celtycka i szkocka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30002
+tadżycka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30003
+latynoamerykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30004
+grenlandzka i północnogermańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30005
+nigeryjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30006
+wietnamska, kodowanie VISCII
+.
+:CODE_PAGE_DESCRIPTION_30007
+łacińska i retoromańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30008
+abchaska i osetyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30009
+romska i turkijska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30010
+gagauska i mołdawska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30011
+południoworosyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30012
+syberyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30013
+turkijska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30014
+ugrofińska (maryjska, udmurcka), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30015
+chantyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30016
+mansyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30017
+północnozachodniorosyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30018
+tatarska (łacińska) i rosyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30019
+czeczeńska (łacińska) i rosyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30020
+zachodniodolnoniemiecka i fryzyjska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30021
+oceaniczna, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30022
+kanadyjska indiańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30023
+południowoafrykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30024
+północnoafrykańska i wschodnioafrykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30025
+zachodnioafrykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30026
+środkowoafrykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30027
+benińska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30028
+nigerska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30029
+meksykańska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30030
+meksykańska-2, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30031
+Latin-4 (północnoeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30032
+Latin-6 (nordycka), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_30033
+tatarska (krymska), z symbolem UAH
+.
+:CODE_PAGE_DESCRIPTION_30034
+irokezka
+.
+:CODE_PAGE_DESCRIPTION_30039
+ukraińska, z symbolem UAH
+.
+:CODE_PAGE_DESCRIPTION_30040
+rosyjska, z symbolem UAH
+.
+:CODE_PAGE_DESCRIPTION_58152
+kazachska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_58210
+azerska (cyrylica) i rosyjska
+.
+:CODE_PAGE_DESCRIPTION_58335
+kaszubska, kodowanie Mazovia, z symbolem PLN
+.
+:CODE_PAGE_DESCRIPTION_58601
+litewska z akcentami, kodowanie LST 1590-4, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_59234
+tatarska
+.
+:CODE_PAGE_DESCRIPTION_59829
+gruzińska
+.
+:CODE_PAGE_DESCRIPTION_60258
+azerska (łacińska) i rosyjska
+.
+:CODE_PAGE_DESCRIPTION_60853
+gruzińska z wielkimi literami
+.
+:CODE_PAGE_DESCRIPTION_62306
+uzbecka
+.
+:CODE_PAGE_DESCRIPTION_65506
+ormiańska, kodowanie ArmSCII-8
+.
+:CODE_PAGE_DESCRIPTION_813
+ISO-8859-7 (grecka), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_819
+ISO-8859-1 (zachodnioeuropejska)
+.
+:CODE_PAGE_DESCRIPTION_901
+ISO-8859-13 (bałtycka), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_912
+ISO-8859-2 (środkowoeuropejska)
+.
+:CODE_PAGE_DESCRIPTION_913
+ISO-8859-3 (południowoeuropejska)
+.
+:CODE_PAGE_DESCRIPTION_914
+ISO-8859-4 (północnoeuropejska)
+.
+:CODE_PAGE_DESCRIPTION_915
+ISO-8859-5 (cyrylica)
+.
+:CODE_PAGE_DESCRIPTION_919
+ISO-8859-10 (nordycka)
+.
+:CODE_PAGE_DESCRIPTION_920
+ISO-8859-9 (turecka)
+.
+:CODE_PAGE_DESCRIPTION_921
+ISO-8859-13 (bałtycka)
+.
+:CODE_PAGE_DESCRIPTION_923
+ISO-8859-15 (zachodnioeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1124
+ISO 8859-5 (zmodyfikowana dla języka ukraińskiego)
+.
+:CODE_PAGE_DESCRIPTION_58163
+ISO-8859-14 (celtycka)
+.
+:CODE_PAGE_DESCRIPTION_58258
+ISO-8859-4 (północnoeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_61235
+ISO-8859-1 (zachodnioeuropejska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_63283
+ISO-8859-1 (zmodyfikowana dla języka litewskiego)
+.
+:CODE_PAGE_DESCRIPTION_65500
+ISO-8859-16 (południowowschodnioeutropejska)
+.
+:CODE_PAGE_DESCRIPTION_902
+ISO-8 (estońska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_922
+ISO-8 (estońska)
+.
+:CODE_PAGE_DESCRIPTION_58259
+ISO-IR-201 (wołżańska)
+.
+:CODE_PAGE_DESCRIPTION_59187
+ISO-IR-197 (lapońska)
+.
+:CODE_PAGE_DESCRIPTION_59283
+ISO-IR-200 (uralska)
+.
+:CODE_PAGE_DESCRIPTION_60211
+ISO-IR-209 (lapońska i romska fińska)
+.
+:CODE_PAGE_DESCRIPTION_65501
+ISO-IR-123 (kanadyjska i hiszpańska)
+.
+:CODE_PAGE_DESCRIPTION_65502
+ISO-IR-143 (symbole techniczne)
+.
+:CODE_PAGE_DESCRIPTION_65503
+ISO-IR-181 (symbole elektrotechniczne)
+.
+:CODE_PAGE_DESCRIPTION_65504
+ISO-IR-39 (afrykańska)
+.
+:CODE_PAGE_DESCRIPTION_878
+KOI8-R (rosyjska)
+.
+:CODE_PAGE_DESCRIPTION_58222
+KOI8-U (rosyjska i ukraińska)
+.
+:CODE_PAGE_DESCRIPTION_59246
+KOI8-RU (rosyjska, białoruska, ukraińska)
+.
+:CODE_PAGE_DESCRIPTION_60270
+KOI8-F (słowiańska pełna)
+.
+:CODE_PAGE_DESCRIPTION_61294
+KOI8-CA (słowiańska i niesłowiańska)
+.
+:CODE_PAGE_DESCRIPTION_62318
+KOI8-T (rosyjska i tadżycka)
+.
+:CODE_PAGE_DESCRIPTION_63342
+KOI8-C (rosyjska i starorosyjska), z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1275
+Apple, zachodnioeuropejska
+.
+:CODE_PAGE_DESCRIPTION_1280
+Apple, grecka
+.
+:CODE_PAGE_DESCRIPTION_1281
+Apple, turecka
+.
+:CODE_PAGE_DESCRIPTION_1282
+Apple, środkowoeuropejska i bałtycka
+.
+:CODE_PAGE_DESCRIPTION_1283
+Apple, cyrylica
+.
+:CODE_PAGE_DESCRIPTION_1284
+Apple, chorwacka
+.
+:CODE_PAGE_DESCRIPTION_1285
+Apple, rumuńska
+.
+:CODE_PAGE_DESCRIPTION_1286
+Apple, islandzka
+.
+:CODE_PAGE_DESCRIPTION_58619
+Apple, goidelska (stara ortografia) i walijska
+.
+:CODE_PAGE_DESCRIPTION_58627
+Apple, ukraińska
+.
+:CODE_PAGE_DESCRIPTION_58630
+Apple, lapońska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1250
+Windows, środkowoeuropejska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1251
+Windows, cyrylica, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1252
+Windows, zachodnioeuropejska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1253
+Windows, grecka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1254
+Windows, turecka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1257
+Windows, bałtycka, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1270
+Windows, lapońska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_1361
+Windows, południowoeuropejska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_58595
+Windows, kazachska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_58596
+Windows, gruzińska
+.
+:CODE_PAGE_DESCRIPTION_58598
+Windows, azerska, z symbolem EUR
+.
+:CODE_PAGE_DESCRIPTION_59619
+Windows, środkowoazjatycka
+.
+:CODE_PAGE_DESCRIPTION_59620
+Windows, goidelska (stara ortografia) i walijska
+.
+:CODE_PAGE_DESCRIPTION_60643
+Windows, północnowschodnioirańska
+.
+:CODE_PAGE_DESCRIPTION_61667
+Windows, inuicka i aleucka
+.
+:CODE_PAGE_DESCRIPTION_62691
+Windows, tunguska i mandżurska
+.
+:SCRIPT_NAME_LATN
+alfabet łaciński
+.
+:SCRIPT_NAME_ARAB
+alfabet arabski
+.
+:SCRIPT_NAME_ARMN
+alfabet ormiański
+.
+:SCRIPT_NAME_CHER
+alfabet irokezki
+.
+:SCRIPT_NAME_CYRL
+cyrylica
+.
+:SCRIPT_NAME_GEOR
+alfabet gruziński
+.
+:SCRIPT_NAME_GREK
+alfabet grecki
+.
+:SCRIPT_NAME_HEBR
+alfabet hebrajski
+.
+:SCRIPT_PROPERTY_PHONETIC
+fonetyczny
+.
+:SCRIPT_PROPERTY_NON_STANDARD
+niestandardowy
+.
+:KEYBOARD_LAYOUT_NAME_US
+amerykański (standardowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UX
+amerykański (międzynarodowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CO
+amerykański (Colemak)
+.
+:KEYBOARD_LAYOUT_NAME_DV
+amerykański (Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_LH
+amerykański (Dvorak, dla leworęcznych)
+.
+:KEYBOARD_LAYOUT_NAME_RH
+amerykański (Dvorak, dla praworęcznych)
+.
+:KEYBOARD_LAYOUT_NAME_UK
+brytyjski (standardowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_UK168
+brytyjski (alternatywny, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KX
+brytyjski (międzynarodowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_AR462
+arabski (AZERTY/arabski)
+.
+:KEYBOARD_LAYOUT_NAME_AR470
+arabski (QWERTY/arabski)
+.
+:KEYBOARD_LAYOUT_NAME_AZ
+azerski (QWERTY/cyrylica)
+.
+:KEYBOARD_LAYOUT_NAME_BA
+bośniacki (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_BE
+belgijski (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BX
+belgijski (międzynarodowy, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BG
+bułgarski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_BG103
+bułgarski (QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_BG241
+bułgarski (JCUKEN/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_BN
+beniński (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR
+brazylijski (układ ABNT, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR274
+brazylijski (amerykański, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BY
+białoruski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_CE
+czeczeński (standardowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_CE443
+czeczeński (maszynistki, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_CF
+kanadyjski (standardowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CF445
+kanadyjski (dwuwarstwowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CG
+montenegryjski (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ
+czeski (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ243
+czeski (standardowy, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ489
+czeski (programisty, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_DE
+niemiecki (standardowy, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_GR453
+niemiecki (dwuwarstwowy, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_DK
+duński (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_EE
+estoński (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_ES
+hiszpański (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SX
+hiszpański (międzynarodowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FI
+fiński (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_FO
+faroeski (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FR
+francuski (standardowy, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FX
+francuski (międzynarodowy, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_GK
+grecki (319, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_GK220
+grecki (220, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_GK459
+grecki (459, niestandardowy/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_HR
+chorwacki (QWERTZ/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_HU
+węgierski (101-klawiszowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_HU208
+węgierski (102-klawiszowy, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_HY
+ormiański (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_IL
+hebrajski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_IS
+islandzki (101-klawiszowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IS161
+islandzki (102-klawiszowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IT
+włoski (standardowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_IT142
+włoski (142, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_IX
+włoski (międzynarodowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KA
+gruziński (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_KK
+kazachski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_KK476
+kazachski (476, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_KY
+kirgiski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_LA
+latynoamerykański (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_LT
+litewski (bałtycki, QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LT210
+litewski (programisty, QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LT211
+litewski (AZERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LT221
+litewski (LST 1582, AZERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LT456
+litewski (QWERTY/AZERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LV
+łotewski (standardowy, QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_LV455
+łotewski (QWERTY/UGJRMV/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_MK
+macedoński (QWERTZ/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_MN
+mongolski (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_MT
+maltański (brytyjski, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_MT103
+maltański (amerykański, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NE
+nigerski (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NG
+nigeryjski (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NL
+holenderski (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NO
+norweski (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_PH
+filipiński (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PL
+polski (programisty, QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_PL214
+polski (maszynistki, QWERTZ/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_PO
+portugalski (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PX
+portugalski (międzynarodowy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_RO
+rumuński (standardowy, QWERTZ/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_RO446
+rumuński (QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_RU
+rosyjski (standardowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_RU443
+rosyjski (maszynistki, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_RX
+rosyjski (standardowy rozszerzony, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_RX443
+rosyjski (maszynistki rozszerzony, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_SD
+szwajcarski (niemiecki, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SF
+szwajcarski (francuski, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SI
+słoweński (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SK
+słowacki (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SQ
+albański (bez martwych klawiszy, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SQ448
+albański (z martwymi klawiszami, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SV
+szwedzki (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_TJ
+tadżycki (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_TM
+turkmeński (QWERTY/fonetyczny)
+.
+:KEYBOARD_LAYOUT_NAME_TR
+turecki (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_TR440
+turecki (niestandardowy)
+.
+:KEYBOARD_LAYOUT_NAME_TT
+tatarski (standardowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_TT443
+tatarski (maszynistki, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UR
+ukraiński (101-klawiszowy, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UR1996
+ukraiński (101-klawiszowy, 1996, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UR2001
+ukraiński (102-klawiszowy, 2001, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UR2007
+ukraiński (102-klawiszowy, 2007, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UR465
+ukraiński (101-klawiszowy, 465, QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_UZ
+uzbecki (QWERTY/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_VI
+wietnamski (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_YC
+serbski (z martwymi klawiszami, QWERTZ/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_YC450
+serbski (bez martwych klawiszy, QWERTZ/narodowy)
+.
+:KEYBOARD_LAYOUT_NAME_YU
+jugosłowiański (QWERTZ)
+.
+:KEYBOARD_MOD_ADJECTIVE_LEFT
+Lewy
+.
+:KEYBOARD_MOD_ADJECTIVE_RIGHT
+Prawy
+.
 :DOSBOX_HELP_LIST_GLSHADERS_1
 Lista dostępnych shaderów GLSL
 ------------------------------
@@ -653,12 +1492,14 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
 Domyślnie 'auto'.
 .
 :CONFIG_LANGUAGE
-Język interfejsu: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', lub 'ru'
-(domyślnie nieustawiony - wybiera język angielski).
+Język wyświetlanych wiadomości:
+  auto:     Wybiera z ustawień systemu gospodarza (domyślne).
+  <język>:  Loads a translation from the given file.
 Uwagi:
-  - Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'.
-  - Pliki tłumaczeń dla poszczególnych języków znajdują się w dostarczonym
-    katalogu 'resources/translations'.
+  - Dostępne są następujące języki:
+    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', oraz 'ru'.
+  - Język angielski jest wbudowany; tłumaczenia umieszczone są w katalogu
+    'resources/translations'.
 .
 :CONFIG_MACHINE
 Typ emulowanej karty graficznej lub komputera:
@@ -1299,62 +2140,185 @@ Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
   strong:  Silny efekt.
 Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
+:CONFIG_SOUNDFONT
+Ścieżka do pliku SoundFont w formacie SF2 (domyślnie 'default.sf2').
+Plik będzie szukany w następujących lokacjach, w kolejności:
+  - W katalogu zdefiniowanym przez użytkownika (patrz 'soundfont_dir').
+  - W podkatalogu 'soundfonts' katalogu z konfiguracją.
+  - W innych miejscach typowych dla systemu operacyjnego.
+Rozszerzenie '.sf2' mozna pominąć. Można podać względną lub bezwzględną
+ścieżkę do pliku.
+Uwaga: Listę dostępnych plików SoundFont można wyświetlić poleceniem
+`MIXER /LISTMIDI`.
+.
+:CONFIG_SOUNDFONT_DIR
+Dodatkowy katalog z plikami SoundFont (modyślnie pusty).
+Jeśli zostanie ustawiony, pliki SoundFont będą poszukiwane najpierw w tym
+katalogu, a dopiero potem w innych lokalizacjach.
+.
+:CONFIG_SOUNDFONT_VOLUME
+Głośność plików SoundFont w procentach (domyślnie 100).
+Można użyć do normalizachi głośności różnych plików.
+Dozwolone są wartości procentowe od 1 do 800.
+.
+:CONFIG_FSYNTH_CHORUS
+Efekt chorus dla syntetyzatora FluidSynth:
+  auto:      Włącza efekt, z wyjątkiem znanych problematycznych plików
+             SoundFont (domyślne).
+  on:        Włącza efekt zawsze.
+  off:       Wyłącza efekt.
+  <custom>:  Ustawienie użytkownika parametrami rozdzielonymi spacjami:
+               - voice-count:      Wartość całkowita od 0 do 99
+               - level:            Wartość dziesiętna od 0.0 do 10.0
+               - speed:            Wartość dziesiętna od 0.0 do 5.0 (w Hz)
+               - depth:            Wartość dziesiętna od 0.0 do 21.0
+               - modulation-wave:  'sine' lib 'triangle'
+             Przykład: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
+Uwaga: Można wyłączyć efekt chorus z syntetyzatora FluidSynth i
+       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
+       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
+       SoundFont i ustawień efektu chorus.
+.
+:CONFIG_FSYNTH_REVERB
+Efekt pogłosu dla syntetyzatora FluidSynth:
+  auto:      Włącza efekt (domyślne).
+  on:        Enable reverb.
+  off:       Wyłącza efekt.
+  <custom>:  Ustawienie użytkownika parametrami rozdzielonymi spacjami:
+               - room-size:  Wartość dziesiętna od 0.0 do 1.0
+               - damping:    Wartość dziesiętna od 0.0 do 1.0
+               - width is:   Wartość dziesiętna od 0.0 do 100.0
+               - level is:   Wartość dziesiętna od 0.0 do 1.0
+             Przykład: 'fsynth_reverb = 0.61 0.23 0.76 0.56'
+Uwaga: Można wyłączyć efekt pogłosu z syntetyzatora FluidSynth i
+       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
+       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
+       SoundFont i ustawień efektu pogłosu.
+.
+:CONFIG_FSYNTH_FILTER
+Filtrowanie dźwięku syntetyzera FluidSynth:
+  off:       Filtrowanie wyłączone (domyślne).
+  <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
+.
+:FLUIDSYNTH_NO_SOUNDFONTS
+Brak dostępnych plików SoundFont
+.
+:CONFIG_MODEL
+Model emulowanego syntetyzatora MIDI Roland MT-32/CM-32ML.
+Musisz mieć pliki ROM dla odpowiedniego modelu (patrz 'romdir').
+Jeśli nie podasz wersji syntetyzatora, emulowany będzie model wybrany w
+kolejności poniżej.
+  auto:      Wybiera pierwszy dostępny model (domyślne).
+  cm32l:     Wybiera pierwszy dostępny model CM-32L model.
+  mt32_old:  Wybiera pierwszy dostępny model "starego" MT-32 (v1.0x).
+  mt32_new:  Wybiera pierwszy dostępny model "nowego" MT-32 (v2.0x).
+  mt32:      Wybiera pierwszy dostępny mode MT-32.
+  <wersja>:  Używa podanego modelu i wersji (np., 'mt32_204').
+Uwagi:
+  - Listę dostępnych modeli można wyświetlić poleceniem `MIXER /LISTMIDI`.
+  - To NIE JEST urządzenie zgodne ze standardem General MIDI; używaj tylko
+    jeśli gra obsługuje urządzenie Roland MT-32.
+.
+:CONFIG_ROMDIR
+Katalog zawierający ROMy syntetyzatora Roland MT-32/CM-32ML (domyślnie
+nieustawiony). Ścieżka może być względna lub bezwzględna. Pusta wartość
+spowoduje sprawdzenie podkatalogu 'mt32-roms' z katalogu z konfiguracją
+i innych typowych lokacji w danym systemie.
+Uwagi:
+  - Nazwy plików nie mają znaczenia, ROMy są identyfikowane po sumach
+    kontrolnych.
+  - Obsługiwane są zarówno obrazy ROM z przeplotem, jak i bez.
+.
+:CONFIG_MT32_FILTER
+Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
+  off:      Filtrowanie wyłączone (domyślne).
+  <filtr>:  Ustawienia użytkownika, patrz 'sb_filter'.
+.
+:MT32_ROMS_LABEL
+ROMy MT-32    
+.
+:CM32L_ROMS_LABEL
+ROMy CM-32L   
+.
+:MT32_ACTIVE_MODEL_LABEL
+Aktywny model  
+.
+:MT32_SOURCE_DIR_LABEL
+Załadowany z   
+.
+:CONFIG_SOUNDCANVAS_MODEL
+Model emulowanego syntetyzatora MIDI Roland Sound Canvas.
+Do działania potrzebuje jednej lub więcej wtyczek CLAP emulujących syntetyzator
+w podkatalogu 'plugin' katalogu z konfiguracją. Wtyczki są wyszukiwane
+na podstawie ich opisu.
+Model jest wybierany następująco:
+  auto:      Wybiera najlepszy model (domyslne).
+  sc55:      Wybiera najlepszy model oryginalnego SC-55.
+  sc55mk2:   Wybiera najlepszy model SC-55mk2.
+  <wersja>:  Wybiera określony model, np., 'sc55_121'.
+.
+:CONFIG_SOUNDCANVAS_FILTER
+Filtrowanie dźwięku syntetyzera Roland Sound Canvas:
+  on:       Filtrowanie włączone (domyślne).
+  off:      Filtrowanie wyłączone.
+  <filtr>:  Ustawienia użytkownika, patrz 'sb_filter'.
+.
+:SC55_MODELS_LABEL
+Modele SC-55  
+.
+:SOUNDCANVAS_ACTIVE_MODEL_LABEL
+Aktywny model  
+.
 :CONFIG_MIDIDEVICE
 Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401
-(domyślnie 'auto'). Jedno z:
+(domyślnie 'port'). Jedno z:
 .
-:CONFIGITEM_MIDIDEVICE_COREMIDI
-  coremidi:    Urządzenie MIDI skonfigurowane w ustawieniach macOS.
+:CONFIGITEM_MIDIDEVICE_PORT
+  port:         Port MIDI systemu gospodarza (domyślne). Port można wybrać
+                ustawieniem 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio:   Sytetyzer MIDI wbudowany w macOS.
-.
-:CONFIGITEM_MIDIDEVICE_WIN32
-  win32:       Sytetyzer MIDI Win32.
-.
-:CONFIGITEM_MIDIDEVICE_OSS
-  oss:         Interfejs MIDI Linux OSS.
-.
-:CONFIGITEM_MIDIDEVICE_ALSA
-  alsa:        Interfejs MIDI Linux ALSA.
-.
-:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
-  fluidsynth:  Wbudowany syntetyzer MIDI FluidSynth, używający plików
-               SoundFont, patrz sekcja [fluidsynth].
+  coreaudio:    Sytetyzer MIDI wbudowany w macOS.
 .
 :CONFIGITEM_MIDIDEVICE_MT32
-  mt32:        Wbudowany syntetyzer MIDI Roland MT-32, patrz sekcja [mt32].
+  mt32:         Wbudowany syntetyzer MIDI Roland MT-32, patrz sekcja [mt32].
 .
-:CONFIGITEM_MIDIDEVICE_AUTO
-  auto:        Albo jeden z wbudowanych syntetyzerów MIDI (jeśli `midiconfig`
-               jest ustawione na 'fluidsynth' lub 'mt32'), albo zewnętrzny
-               syntetyzer (każde inne ustawienie 'midiconfig') - może to być
-               zarówno syntetyzer programowy, jak i urządzenie sprzętowe.
-               Domyślne.
+:CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
+  soundcanvas:  Syntetyzator Roland SC-55, patrz sekcja [soundcanvas].
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:   Syntetyzator MIDI FluidSynth, używający plików SoundFont,
+                patrz sekcja [fluidsynth].
 .
 :CONFIGITEM_MIDIDEVICE_NONE
-  none:        Wyłącz wyjście MIDI.
+  none:         Wyłącz wyjście MIDI.
 .
 :CONFIG_MIDICONFIG
-Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
-syntetyzatora - można je sprawdzić poleceniem DOSu 'MIXER /LISTMIDI'.
-Uwagi:
+Parametry wybranego interfejsu MIDI (domyślnie puste). Uwagi:
 .
-:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
-  - Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
-    ('fluidsynth' lub 'mt32').
+:CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
+  - Dla 'mididevice = port', użyj polecenia 'MIXER /LISTMIDI' aby znaleźć port
+    MIDI, następnie podaj jego ID lub część nazwy, np. aby użyć portu
+   "loopMIDI Port A" o identyfikatorze 2, podaj  'midiconfig = 2' lub
+   'midiconfig = port a'.
 .
 :CONFIGITEM_MIDICONFIG_COREAUDIO
-  - Dla 'coreaudio', you can specify a SoundFont here.
+  - Dla 'mididevice = coreaudio' podaj tu nazwę pliku SoundFont, wymagana jest
+    ścieżka bezwzględna.
 .
-:CONFIGITEM_MIDICONFIG_ALSA
-  - Dla 'alsa'', wyświetl listę portów MIDI poleceniem 'aconnect -l' i wpisz
-    wybrany, np. 'midiconfig = 14:0' dla klienta numer 14 i portu 0.
+:CONFIGITEM_MIDICONFIG_LINUX
+  - Dla 'mididevice = port', użyj linuksowego polecenia 'aconnect -l'
+    aby wyświetlić otwarte porty MIDI i wybierz jeden z nich, np.
+    'midiconfig = 14:0' dla sekwencera 14 i portu 0.
 .
-:CONFIGITEM_MIDICONFIG_MT32
-  - Fizyczny Roland MT-32 w płytą główną w wersji 0 może potrzebować
-    opóźnienia, inaczej przepełni się jego wewnętrzny bufor. W takim wypadku
-    dodaj parametr 'delaysysex', np.: 'midiconfig = 2 delaysysex'.
+:CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
+  - Dla 'mididevice = fluidsynth', 'mt32', oraz 'soundcanvas' ustawienie jest
+    ignorowane.
+.
+:CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
+  - Jeśli używasz fizycznego urządzenia Rolan MT-32 rev. 0, może ono wymagać
+    opóźnienia aby zapobiec przepełnienia buforu. Można je włączyć słowem
+    kluczowym 'delaysysex', np. 'midiconfig = 2 delaysysex'.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401 (domyślnie 'intelligent').
@@ -1369,100 +2333,20 @@ w słyszalny sposób, wpływa jedynie na reprezentację danych MIDI.
 Włącz jedynie, jeśli potrzebujesz surowych, nieprzetworzonych danych MIDI, np.
 do pracy z programami muzycznymi, lub aby debugować problemy związane z MIDI.
 .
-:CONFIG_SOUNDFONT
-Ścieżka do pliku SoundFont w formacie SF2 (domyślnie 'default.sf2'). Może być
-względna lub bezwzględna, można też podać nazwę pliku z podkatalogu
-'soundfonts' katalogu z konfiguracją.
-Opcjonalny drugi parametr określa głośność muzyki, np. 'my_soundfont.sf2 50'
-zmniejszy głośność syntezy o 50%%. Procentowa wartość głośności powinna
-zawierać się w przedziale od 1 do 800.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+Wykrywanie nieobsługiwane
 .
-:CONFIG_FSYNTH_CHORUS
-Efekt chorus: auto' (domyślne), 'on', 'off' lub ustawienia użytkownika.
-Ustawienia użytkownika wymagają podania wszystkich 5 parametrów,
-oddzielonych spacjami, zachowując kolejność. Są to:
-voice-count level speed depth modulation-wave, gdzie:
-  voice-count:      wartość całkowita od 0 do 99
-  level:            wartość dziesiętna, od 0.0 do 10.0
-  speed:            wartość dziesiętna, od 0.1 do 5.0, wartość w Hz
-  depth:            wartość dziesiętna, od 0.0 do 21.0
-  modulation-wave:  'sine' lub 'triangle'
-  Przykład: chorus = 3 1.2 0.3 8.0 sine
-Uwaga: Można wyłączyć efekt 'chorus' z syntetyzatora FluidSynth i
-       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
-       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
-       SoundFont i ustawień efektu 'chorus'.
+:MIDI_DEVICE_NOT_CONFIGURED
+Urządzenie nie zostało skonfigurowane
 .
-:CONFIG_FSYNTH_REVERB
-Efekt pogłosu: auto', (domyślne) 'on', 'off' lub ustawienia użytkownika.
-Ustawienia użytkownika wymagają podania wszystkich 4 parametrów,
-oddzielonych spacjami, zachowując kolejność. Są to:
-room-size damping width level, gdzie:
-  room-size:  wartość dziesiętna od 0.0 do 1.0
-  damping:    wartość dziesiętna od 0.0 do 1.0
-  width:      wartość dziesiętna od 0.0 do 100.0
-  level:      wartość dziesiętna od 0.0 do 1.0
-  Przykład: reverb = 0.61 0.23 0.76 0.56
-Uwaga: Można wyłączyć efekt 'reverb' z syntetyzatora FluidSynth i
-       w zamian włączyć efekt w mikserze lub pozwolić obydwu działać
-       jednocześnie. Czy będzie to brzmiało dobrze, zależy od plików
-       SoundFont i ustawień efektu 'reverb'.
+:MIDI_DEVICE_NO_PORTS
+Brak dostępnych portów
 .
-:CONFIG_FSYNTH_FILTER
-Filtrowanie dźwięku syntetyzera FluidSynth:
-  off:       Filtrowanie wyłączone (domyślne).
-  <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
+:MIDI_DEVICE_NO_MODEL_ACTIVE
+Żaden model nie jest obecnie aktywny
 .
-:CONFIG_MODEL
-Model emulowanego syntetyzatora MIDI Roland MT-32/CM-32ML.
-Musisz mieć pliki ROM dla odpowiedniego modelu (patrz 'romdir').
-Jeśli nie podasz wersji syntetyzatora, emulowany będzie model wybrany w
-kolejności poniżej.
-  auto:       Wybiera pierwszy dostępny model (domyślne).
-  cm32l:      Wybiera pierwszy dostępny model CM-32L model.
-  mt32_old:   Wybiera pierwszy dostępny model "starego" MT-32 (v1.0x).
-  mt32_new:   Wybiera pierwszy dostępny model "nowego" MT-32 (v2.0x).
-  mt32:       Wybiera pierwszy dostępny mode MT-32.
-  <version>:  Używa podanego modelu i wersji (np., 'mt32_204').
-.
-:CONFIG_ROMDIR
-Katalog zawierający ROMy syntetyzatora Roland MT32/CM-32ML (domyślnie
-nieustawiony). Ścieżka może być względna lub bezwzględna. Pusta wartość
-spowoduje sprawdzenie podkatalogu 'mt32-roms' z katalogu z konfiguracją
-i innych typowych lokacji w danym systemie.
-Uwagi:
-  - Nazwy plików nie mają znaczenia, ROMy są identyfikowane po sumach
-    kontrolnych.
-  - Obsługiwane są zarówno obrazy ROM z przeplotem, jak i bez.
-.
-:CONFIG_MT32_FILTER
-Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
-  off:       Filtrowanie wyłączone (domyślne).
-  <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
-.
-:MT32_NO_SUPPORTED_MODELS
-Żaden obsługiwany model nie jest obecny
-.
-:MT32_ROM_NOT_LOADED
-ROM nie został załadowany
-.
-:MT32_INVENTORY_TABLE_MISSING_LETTER
--
-.
-:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-+
-.
-:MT32_ROMS_LABEL
-ROMy MT-32    
-.
-:CM32L_ROMS_LABEL
-ROMy CM-32L   
-.
-:MT32_ACTIVE_ROM_LABEL
-Aktywny ROM   
-.
-:MT32_SOURCE_DIR_LABEL
-Załadowany z  
+:MIDI_DEVICE_NO_MODELS
+Brak dostępnych modeli
 .
 :CONFIG_SBTYPE
 Model karty muzycznej Sound Blaster (domyślnie 'sb').
@@ -1892,6 +2776,16 @@ Kod języka klawiatury (domyślnie 'auto') - np. 'us' (układ amerykański), 'pl
 (polski układ programisty), 'pl214' (polski układ maszynistki). Akceptowane
 są takie same wartości, jakich używa system FreeDOS.
 .
+:CONFIG_KEYBOARD_LAYOUT
+Keyboard layout code ('auto' by default).
+The list of supported keyboard layout codes can be displayed using the
+'--list-layouts' command-line argument, e.g., 'uk' is the British English
+layout. The layout can be followed by the code page number, e.g., 'uk 850'
+selects a Western European screen font.
+Set to 'auto' to guess the values from the host OS settings.
+After startup, use the 'KEYB' command to manage keyboard layouts and code pages
+(run 'HELP KEYB' for details).
+.
 :CONFIG_EXPAND_SHELL_VARIABLE
 Rozwija zmienne środowiskowe, np. %%PATH%%, w wierszu poleceń.
 Domyślnie 'auto', włączone jeśli wersja systemu DOS to 7.0 lub wyższa.
@@ -2157,12 +3051,6 @@ za starymi plikami konfiguracyjnymi. W przyszłości zostanie usunięte, użyj
 sugerowanych alternatyw.[reset]
 
 .
-:MIDI_DEVICE_LIST_NOT_SUPPORTED
-Wykrywanie nieobsługiwane
-.
-:MIDI_DEVICE_NOT_CONFIGURED
-Urządzenie nie zostało skonfigurowane
-.
 :PROGRAM_FMPDRV_HELP_LONG
 Ładuj lub usuń wbudowany sterownik karty ReelMagic.
 
@@ -2336,6 +3224,32 @@ Dostępne komendy kartridży PCjr: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Nie znaleziono komend kartridża PCjr.
+
+.
+:PROGRAM_CLIP_HELP_LONG
+Kopiuj tekst do schowka lub odczytaj zawartość schowka.
+
+Składnia:
+  [color=light-cyan]POLECENIE[reset] | [color=light-green]clip[reset]
+  [color=light-green]clip[reset] < [color=light-cyan]PLIK[reset]
+  [color=light-green]clip[reset]
+
+Uwagi:
+  - Jeśli nie podano żadnego wejścia, polecenie wyświetla zawartość schowka.
+  - Polecenie obsługuje wyłącznie dane tekstowe (nie binarne).
+
+Przykłady:
+  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; kopiuje listę plików do schowka
+  [color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; kopiuje plik do schowka
+  [color=light-green]clip[reset]                     ; wyświetla zawartość schowka
+
+.
+:PROGRAM_CLIP_INPUT_TOO_LARGE
+Dane wejściowe zbyt duże.
+
+.
+:PROGRAM_CLIP_READ_ERROR
+Błąd podczas czytania danych wejściowych.
 
 .
 :MSCDEX_SUCCESS
@@ -2638,57 +3552,115 @@ To są domyślne skróty klawiszowe. Można je zmienić za pomocą [color=brown]
 [color=yellow]%s+F12[reset]    Odblokuj maksymalną prędkość (tryb turbo).
 
 .
-:PROGRAM_KEYB_INFO
-Strona kodowa %i została załadowana.
-
-.
-:PROGRAM_KEYB_INFO_LAYOUT
-Strona kodowa %i dla układu klawiatury '%s' została załadowana.
-
-.
 :PROGRAM_KEYB_HELP_LONG
-Konfiguruj klawiaturę i czcionkę ekranową dla danego języka.
+Konfiguruj układ klawiatury i czcionkę ekranową.
 
 Składnia:
-  [color=light-green]keyb[reset] [color=light-cyan][KLAWIATURA][reset]
-  [color=light-green]keyb[reset] [color=light-cyan]KLAWIATURA[reset] [color=white]KODOWANIE[reset] [PLIK]
+  [color=light-green]keyb[reset]
+  [color=light-green]keyb[reset] /list
+  [color=light-green]keyb[reset] [color=light-cyan]UKŁAD_KLAWIATURY[reset] [[color=white]STRONA_KODOWA[reset]] /rom
+  [color=light-green]keyb[reset] [color=light-cyan]UKŁAD_KLAWIATURY[reset] [[color=white]STRONA_KODOWA[reset] [[color=white]PLIK_CPI[reset]]]
 
 Gdzie:
-  [color=light-cyan]KLAWIATURA[reset]  układ klawiatury, np. [color=light-cyan]pl[reset] (programisty) lub [color=light-cyan]pl214[reset] (maszynistki)
-  [color=white]KODOWANIE[reset]   strona kodowa, np. [color=white]668[reset] (Polska, zalecana; zachowuje więcej
-              znaków graficznych niż 852), [color=white]667[reset] (Polska, Mazovia), [color=white]58335[reset] (język
-              kaszubski), [color=white]850[reset] (Europa Zachodnia), [color=white]858[reset] (Europa Zachodnia,
-              z symbolem euro), [color=white]852[reset] (Europa Środkowo-Wschodnia) lub [color=white]437[reset] (USA)
-  PLIK        nazwa pliku CPI lub CPX z informacjami o stronie kodowej
+  [color=light-cyan]UKŁAD_KLAWIATURY[reset]  kod układu klawiatury
+  [color=white]STRONA_KODOWA[reset]     strona kodowa, np. [color=white]437[reset] lub [color=white]668[reset]
+  PLIK_CPI          nazwa pliku CPI lub CPX z czcionką ekranową
+  /list             wyświetl dostępne kody układów klawiatury
+  /rom              jeśli możliwe, użyj czcionki z pamięci ROM karty graficznej
 
 Uwagi:
-  Uruchomienie bez argumentów pokazuje aktualny układ klawiatury i stronę
-  kodową. [color=light-cyan]KLAWIATURA[reset] może być także zmieniona w pliku konfiguracyjnym
-  w sekcji [dos], parametrem 'keyboardlayout = [color=light-cyan]KLAWIATURA[reset]'.
+  - Uruchomienie [color=light-green]keyb[reset] bez argumentów wyświetla aktualny układ klawiatury
+    i stronę kodową
+  - [color=white]PLIK_CPI[reset], jeśli jest podany, musi zawierać czcionkę ekranową dla podanej
+    strony kodowej.
+  - Jeśli [color=white]PLIK_CPI[reset] nie zostanie podany, polecenie szuka czcionki ekranowej
+    w domyślnych (dostarczonych) plikach CPI.
+  - Jeśli [color=white]STRONA_KODOWA[reset] nie zostanie podana, a czcionka ekranowa z pamięci ROM
+    karty graficznej jest odpowiednia, zostanie użyta czcionka z pamięci ROM.
+  - Jedynie karty EGA i lepsze pozwalają na zmianę czcionki ekranowej; karty
+    MDA, CGA, oraz Hercules zawsze używają czcionki ze swojej pamięci ROM.
+  - Układu klawiatury 'us' możesz używać z dowolną stroną kodową; pozostałe
+    mogą być używane jedynie z obsługiwanymi przez nie stronami kodowymi.
 
 Przykłady:
-  [color=light-green]KEYB[reset] [color=light-cyan]us[reset]
-  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
+  [color=light-green]KEYB[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]pl[reset] [color=white]667[reset]
   [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 .
-:PROGRAM_KEYB_NOERROR
-Układ klawiatury '%s' dla strony kodowej %i został załadowany.
+:PROGRAM_KEYB_CODE_PAGE
+Strona kodowa
+.
+:PROGRAM_KEYB_ROM_FONT
+czcionka ROM
+.
+:PROGRAM_KEYB_CUSTOM_FONT
+czcionka użytkownika
+.
+:PROGRAM_KEYB_KEYBOARD_LAYOUT
+Układ klawiatury
+.
+:PROGRAM_KEYB_KEYBOARD_SCRIPT
+Typ klawiatury
+.
+:PROGRAM_KEYB_NOT_LOADED
+nie załadowano
+.
+:PROGRAM_KEYB_WARNING_CODE_PAGE
+[color=light-red]Uwaga:[reset] Strona kodowa %d jest niezalecana!
+.
+:PROGRAM_KEYB_WARNING_DOTTED_I
+Zastępuja ona standardową wielką literę 'I' przez narodową wersją z kropką, a
+oryginalny symbol przenosi w inne miejsce. Nie ma możliwości pełnej obsługi
+takiej strony kodowej bez ryzyka problemów z kompatybilnością istniejącego
+oprogramowania
+.
+:PROGRAM_KEYB_WARNING_LOW_CODES
+Nie zawiera ona standardowych dla PC symboli o kodach 0-31, takie strony
+kodowe nie są w pełni obsługiwane.
+.
+:PROGRAM_KEYB_INVALID_CODE_PAGE
+Nieprawidłowa strona kodowa.
 
 .
-:PROGRAM_KEYB_FILENOTFOUND
-Nie znaleziono pliku układu klawiatury '%s'.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+Plik z układem klawiatury '%s' nie znaleziony.
 
 .
-:PROGRAM_KEYB_INVALIDFILE
-Plik układu klawiatury '%s' jest nieprawidłowy.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+Nieprawidłowy plik z układem klawiatury '%s'.
 
 .
-:PROGRAM_KEYB_LAYOUTNOTFOUND
-Brak układu klawiatury w '%s' dla strony kodowej %i.
+:PROGRAM_KEYB_CPI_FILE_NOT_FOUND
+Plik CPI nie znaleziony.
 
 .
-:PROGRAM_KEYB_INVCPFILE
-Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury '%s'.
+:PROGRAM_KEYB_INVALID_CPI_FILE
+Nieprawidłowy plik strony kodowej.
+
+.
+:PROGRAM_KEYB_CPI_FILE_DR_DOS
+Plik strony kodowej jest w niewspieranym formacie DR-DOS.
+
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Nieznany układ klawiatury '%s'.
+
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+Brak układu klawiatury '%s' dla strony kodowej %d.
+
+.
+:PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
+Brak informacji o stronie kodowej %d.
+
+.
+:PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE
+Plik nie zawiera strony kodowej %d.
+
+.
+:PROGRAM_KEYB_INCOMPATIBLE_MACHINE
+Nie można zmienić strony kodowej; wymagana maszyna z kartą EGA lub lepszą.
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
@@ -2771,6 +3743,10 @@ Nie można rozpoznać ROMu.
 Załadowano BASIC ROM.
 
 .
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Nieobsługiwany wzorzec maski - '%s'
+
+.
 :PROGRAM_LS_HELP_LONG
 Wyświetl zawartość katalogu w formie szerokiej listy.
 
@@ -2790,10 +3766,6 @@ Uwagi:
 Przykłady:
   [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
   [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
-
-.
-:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
-Nieobsługiwany wzorzec maski - '%s'
 
 .
 :PROGRAM_MEM_HELP_LONG
@@ -2827,6 +3799,152 @@ Przykłady:
 :PROGRAM_MEM_UPPER
 %10d KB wolnej pamięci UMB (górnej) w %d blokach (największy %d KB)
 
+.
+:SHELL_CMD_MIXER_HELP_LONG
+Zarządzaj ustawieniami miksera dźwięku.
+
+Składnia:
+  [color=light-green]mixer[reset] [color=light-cyan][KANAŁ][reset] [color=white]POLECENIA[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
+
+Gdzie:
+  [color=light-cyan]KANAŁ[reset]      to nazwa kanału, którego dotyczyć będą zmiany
+  [color=white]POLECENIA[reset]  to jedno lub więcej z poniższych:
+    głośność:       wartość w procentach od [color=white]0[reset] do [color=white]9999[reset], lub w decybelach
+                    poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset]); użyj [color=white]L:P[reset] aby ustawić oddzielnie
+                    głośność lewego i prawego kanału stereo (np. [color=white]10:20[reset], [color=white]150:d6[reset])
+    tryb stereo:    [color=white]stereo[reset], lub [color=white]reverse[reset] (zamiana kanałów stereo)
+    przenikanie:    wartość od [color=white]x0[reset] do [color=white]x100[reset] (tylko dla kanałów stereo)
+    efekt 'reverb': wartość od [color=white]r0[reset] do [color=white]r100[reset]
+    efekt 'chorus': wartość od [color=white]c0[reset] do [color=white]c100[reset]
+
+Uwagi:
+  Uruchomienie bez argumentów wyświetli aktualne ustawienia.
+  Wykonaj [color=light-green]mixer[reset] /listmidi aby wyświetlić dostępne urządzenia MIDI.
+  Jednym poleceniem można zmienić ustawienia jednego lub kilku kanałów.
+  Jeśli żaden kanał nie zostanie podany, ustawienia przenikania oraz efektów
+  'reverb' i 'chorus' zostaną zastosowane globalnie.
+  Opcja /noshow wprowadza ustawienia bez wyświetlenia nowych wartości.
+
+Przykłady:
+  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Kanał        Głośność  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+wył
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Reverse
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
+.
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Kanał [color=light-cyan]%s[reset] nieaktywny
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Nieprawidłowe globalne polecenie: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Nieprawidłowa głośność kanału [color=light-cyan]%s[reset]: [color=white]%s[reset] (MIXER /? wyświetli pomoc)
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Brakujące polecenie dla kanału [color=light-cyan]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Nieprawidłowe polecenie dla kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+.
+:PROGRAM_MODE_HELP_LONG
+Ustaw tryb wyświetlania lub powtarzanie klawiszy.
+
+Składnia:
+  [color=light-green]mode[reset] [color=white]KOLUMNYxLINIE[reset]
+  [color=light-green]mode[reset] [color=white]KOLUMNY,LINIE[reset]
+  [color=light-green]mode[reset] rate=[color=white]SZYBKOSĆ[reset] delay=[color=white]CZAS[reset]
+
+Gdzie:
+  [color=white]KOLUMNY[reset]   ilość znaków (kolumn) w linii (40, 80, lub 132)
+  [color=white]LINIE[reset]     ilość linii na ekranie (25, 28, 30, 34, 43, 50, lub 60)
+  [color=white]SZYBKOSĆ[reset]  szybkość powtarzania klawiszy, od [color=white]1[reset] do [color=white]32[reset]
+            (1 = najwolniej, 32 = najszybciej)
+  [color=white]CZAS[reset]      czas do rozpoczęcia powtarzania, od [color=white]1[reset] do [color=white]4[reset]
+            (1 = najkrótszy, 4 = najdłuższy)
+
+Uwagi:
+  - Dozwolone wartości [color=white]KOLUMNYxLINIE[reset] w zależności od karty graficznej:
+      Hercules           80x25
+      CGA, PCjr, Tandy   40x25, 80x25
+      EGA                40x25, 80x25, 80x43
+      SVGA (nie S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
+      SVGA (S3)          40x25, wszystkie tryby 80- i 132-kolumnowe
+
+Przykłady:
+  [color=light-green]mode[reset] [color=white]132x50
+  [color=light-green]mode[reset] [color=white]80x43[reset]
+  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
+.
+:PROGRAM_MODE_INVALID_DISPLAY_MODE
+Nieprawidłowy tryb wyświetlania: [color=white]%s[reset]
+.
+:PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
+Tryb [color=white]%s[reset] nie jest obsługiwany przez obecną kartę graficzną.
+.
+:PROGRAM_MODE_INVALID_TYPEMATIC_RATE
+Nieprawidłowe ustawienie szybkości klawiatury.
 .
 :PROGRAM_MORE_HELP_LONG
 Wyświetl plik tekstowy lub rezultat polecenia, jeden ekran na raz.
@@ -3176,152 +4294,6 @@ Przykłady:
 :PROGRAM_RESCAN_SUCCESS
 Sprawdzono zmiany na dysku.
 
-.
-:SHELL_CMD_MIXER_HELP_LONG
-Zarządzaj ustawieniami miksera dźwięku.
-
-Składnia:
-  [color=light-green]mixer[reset] [color=light-cyan][KANAŁ][reset] [color=white]POLECENIA[reset] [/noshow]
-  [color=light-green]mixer[reset] [/listmidi]
-
-Gdzie:
-  [color=light-cyan]KANAŁ[reset]      to nazwa kanału, którego dotyczyć będą zmiany
-  [color=white]POLECENIA[reset]  to jedno lub więcej z poniższych:
-    głośność:       wartość w procentach od [color=white]0[reset] do [color=white]9999[reset], lub w decybelach
-                    poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset]); użyj [color=white]L:P[reset] aby ustawić oddzielnie
-                    głośność lewego i prawego kanału stereo (np. [color=white]10:20[reset], [color=white]150:d6[reset])
-    tryb stereo:    [color=white]stereo[reset], lub [color=white]reverse[reset] (zamiana kanałów stereo)
-    przenikanie:    wartość od [color=white]x0[reset] do [color=white]x100[reset] (tylko dla kanałów stereo)
-    efekt 'reverb': wartość od [color=white]r0[reset] do [color=white]r100[reset]
-    efekt 'chorus': wartość od [color=white]c0[reset] do [color=white]c100[reset]
-
-Uwagi:
-  Uruchomienie bez argumentów wyświetli aktualne ustawienia.
-  Wykonaj [color=light-green]mixer[reset] /listmidi aby wyświetlić dostępne urządzenia MIDI.
-  Jednym poleceniem można zmienić ustawienia jednego lub kilku kanałów.
-  Jeśli żaden kanał nie zostanie podany, ustawienia przenikania oraz efektów
-  'reverb' i 'chorus' zostaną zastosowane globalnie.
-  Opcja /noshow wprowadza ustawienia bez wyświetlenia nowych wartości.
-
-Przykłady:
-  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
-.
-:SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
-.
-:SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanał        Głośność  Lewy:Prawy (dB)  Tryb    Przenikanie  Reverb  Chorus[reset]
-.
-:SHELL_CMD_MIXER_CHANNEL_OFF
-wył
-.
-:SHELL_CMD_MIXER_CHANNEL_STEREO
-Stereo
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Reverse
-.
-:SHELL_CMD_MIXER_CHANNEL_MONO
-Mono
-.
-:SHELL_CMD_MIXER_INACTIVE_CHANNEL
-Kanał [color=light-cyan]%s[reset] nieaktywny
-.
-:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
-Nieprawidłowe globalne polecenie: [color=white]%s[reset]
-.
-:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
-Nieprawidłowa głośność kanału [color=light-cyan]%s[reset]: [color=white]%s[reset] (MIXER /? wyświetli pomoc)
-.
-:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
-Nieprawidłowy poziom przenikania kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
-Nieprawidłowy poziom efektu 'chorus' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
-Nieprawidłowy poziom efektu 'reverb' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
-Brakujący poziom przenikania po [color=white]x[reset] dla kanału [color=light-cyan]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
-Brakujący poziom efektu 'chorus' po [color=white]c[reset] dla kanału [color=light-cyan]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
-Brakujący poziom efektu 'reverb' po [color=white]r[reset] dla kanału [color=light-cyan]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
-Nieprawidłowy poziom przenikania [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
-Nieprawidłowy poziom efektu 'chorus' [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
-Nieprawidłowy poziom efektu 'reverb' [color=white]%s[reset]
-(musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Brakujący poziom przenikania po [color=white]x[reset] (musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
-Brakujący poziom efektu 'chorus' po [color=white]c[reset] (musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
-Brakujący poziom efektu 'reverb' po [color=white]r[reset] (musi być pomiędzy 0 a 100)
-.
-:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
-Brakujące polecenie dla kanału [color=light-cyan]%s[reset]
-.
-:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
-Nieprawidłowe polecenie dla kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
-.
-:PROGRAM_MODE_HELP_LONG
-Ustaw tryb wyświetlania lub powtarzanie klawiszy.
-
-Składnia:
-  [color=light-green]mode[reset] [color=white]KOLUMNYxLINIE[reset]
-  [color=light-green]mode[reset] [color=white]KOLUMNY,LINIE[reset]
-  [color=light-green]mode[reset] rate=[color=white]SZYBKOSĆ[reset] delay=[color=white]CZAS[reset]
-
-Gdzie:
-  [color=white]KOLUMNY[reset]   ilość znaków (kolumn) w linii (40, 80, lub 132)
-  [color=white]LINIE[reset]     ilość linii na ekranie (25, 28, 30, 34, 43, 50, lub 60)
-  [color=white]SZYBKOSĆ[reset]  szybkość powtarzania klawiszy, od [color=white]1[reset] do [color=white]32[reset]
-            (1 = najwolniej, 32 = najszybciej)
-  [color=white]CZAS[reset]      czas do rozpoczęcia powtarzania, od [color=white]1[reset] do [color=white]4[reset]
-            (1 = najkrótszy, 4 = najdłuższy)
-
-Uwagi:
-  - Dozwolone wartości [color=white]KOLUMNYxLINIE[reset] w zależności od karty graficznej:
-      Hercules           80x25
-      CGA, PCjr, Tandy   40x25, 80x25
-      EGA                40x25, 80x25, 80x43
-      SVGA (nie S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
-      SVGA (S3)          40x25, wszystkie tryby 80- i 132-kolumnowe
-
-Przykłady:
-  [color=light-green]mode[reset] [color=white]132x50
-  [color=light-green]mode[reset] [color=white]80x43[reset]
-  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
-.
-:PROGRAM_MODE_INVALID_DISPLAY_MODE
-Nieprawidłowy tryb wyświetlania: [color=white]%s[reset]
-.
-:PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
-Tryb [color=white]%s[reset] nie jest obsługiwany przez obecną kartę graficzną.
-.
-:PROGRAM_MODE_INVALID_TYPEMATIC_RATE
-Nieprawidłowe ustawienie szybkości klawiatury.
 .
 :PROGRAM_SERIAL_HELP_LONG
 Zarządzaj portami szeregowymi.
