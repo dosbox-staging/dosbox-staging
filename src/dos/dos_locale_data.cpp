@@ -288,7 +288,7 @@ const std::vector<CodePagePackInfo> LocaleData::CodePageInfo = { {
 	{ 1284,  { "Apple Croatian",                                      Script::Latin    } },
 	{ 1285,  { "Apple Romanian",                                      Script::Latin    } },
 	{ 1286,  { "Apple Icelandic",                                     Script::Latin    } },
-	{ 58619, { "Apple Gaelic, old ortography, Welsh",                 Script::Latin    } },
+	{ 58619, { "Apple Gaelic (old ortography), Welsh",                Script::Latin    } },
 	{ 58627, { "Apple Ukrainian",                                     Script::Cyrillic } },
 	{ 58630, { "Apple Saami, Kalo, Finnic, with EUR symbol",          Script::Latin    } },
 }, {    // Windows series	
@@ -304,7 +304,7 @@ const std::vector<CodePagePackInfo> LocaleData::CodePageInfo = { {
 	{ 58596, { "Windows Georgian",                                    Script::Georgian } },
 	{ 58598, { "Windows Azeri, with EUR symbol",                      Script::Latin    } },
 	{ 59619, { "Windows Central Asian",                               Script::Cyrillic } },
-	{ 59620, { "Windows Gaelic, old ortography, Welsh",               Script::Latin    } },
+	{ 59620, { "Windows Gaelic (old ortography), Welsh",              Script::Latin    } },
 	{ 60643, { "Windows Northeastern Iranian",                        Script::Cyrillic } },
 	{ 61667, { "Windows Inuit-Aleut",                                 Script::Cyrillic } },
 	{ 62691, { "Windows Tungus-Manchu",                               Script::Cyrillic } },
