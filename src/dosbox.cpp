@@ -591,9 +591,9 @@ void DOSBOX_Init()
 	/* Setup all the different modules making up DOSBox */
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_string("language", only_at_start, "");
+	pstring = secprop->Add_string("language", only_at_start, "auto");
 	pstring->Set_help(
-	        "Select the DOS messages language (unset by default; this results in 'auto'):\n"
+	        "Select the DOS messages language:\n"
 	        "  auto:     Detects the language from the host OS (default).\n"
 	        "  <value>:  Loads a translation from the given file.\n"
 	        "Notes:\n"
