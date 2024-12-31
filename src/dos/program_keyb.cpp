@@ -363,7 +363,7 @@ void KEYB::AddMessages()
 	        "  [color=light-cyan]LAYOUT[reset]    keyboard layout code\n"
 	        "  [color=white]CODEPAGE[reset]  code page number, e.g. [color=white]437[reset] or [color=white]850[reset]\n"
 	        "  [color=white]CPIFILE[reset]   screen font file, in CPI or CPX format\n"
-	        "  /list     display available keyboard layout code\n"
+	        "  /list     display available keyboard layout codes\n"
 	        "  /rom      use screen font from display adapter ROM if possible\n"
 	        "\n"
 	        "Notes:\n"

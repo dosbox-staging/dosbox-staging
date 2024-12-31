@@ -4276,7 +4276,7 @@ static void messages_add_command_line()
 	        "  --list-layouts           List all supported keyboard layouts with their codes.\n"
 	        "                           Codes are to be used in the 'keyboard_layout' config setting.\n"
 	        "\n"
-	        "  --list-code-pages        List all bundled code pages.\n"
+	        "  --list-code-pages        List all bundled code pages (screen fonts).\n"
 	        "\n"
 	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
 	        "                           Shaders are to be used in the 'glshader' config setting.\n"
