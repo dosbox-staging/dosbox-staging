@@ -885,15 +885,36 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& la
 	return {};
 }
 
-std::string DOS_GetCodePageDescription(const uint16_t code_page)
+static std::optional<std::pair<uint16_t, CodePageInfoEntry>>
+get_code_page_info_entry(const uint16_t code_page)
 {
 	for (const auto& pack : LocaleData::CodePageInfo) {
 		for (const auto& entry : pack) {
 			if (!is_code_page_equal(code_page, entry.first)) {
 				continue;
 			}
-			return MSG_Get(CodePageInfoEntry::GetMsgName(entry.first));
+			return entry;
 		}
+	}
+
+	return {};
+}
+
+std::string DOS_GetCodePageDescription(const uint16_t code_page)
+{
+	const auto entry = get_code_page_info_entry(code_page);
+	if (entry) {
+		return MSG_Get(CodePageInfoEntry::GetMsgName(entry->first));
+	}
+
+	return {};
+}
+
+std::string DOS_GetCodePageDescriptionForLog(const uint16_t code_page)
+{
+	const auto entry = get_code_page_info_entry(code_page);
+	if (entry) {
+		return entry->second.description;
 	}
 
 	return {};

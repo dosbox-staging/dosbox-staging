@@ -239,14 +239,14 @@ void KEYB::WriteOutSuccess()
 	message += code_page_msg + std::to_string(dos.loaded_codepage);
 	message += align_code_page;
 
-	switch (DOS_GetCodePageFontOrigin()) {
-	case CodePageFontOrigin::Rom:
+	switch (dos.screen_font_origin) {
+	case ScreenFontOrigin::Rom:
 		message += MSG_Get("PROGRAM_KEYB_ROM_FONT");
 		break;
-	case CodePageFontOrigin::Bundled:
+	case ScreenFontOrigin::Bundled:
 		message += DOS_GetCodePageDescription(dos.loaded_codepage);
 		break;
-	case CodePageFontOrigin::Custom:
+	case ScreenFontOrigin::Custom:
 		message += MSG_Get("PROGRAM_KEYB_CUSTOM_FONT");
 		break;
 	default:
