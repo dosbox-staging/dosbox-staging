@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2024  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2015  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include "bios.h"
 #include "bios_disk.h"
 #include "callback.h"
+#include "dos_code_page.h"
 #include "dos_inc.h"
 #include "dos_locale.h"
 #include "drives.h"
@@ -37,10 +38,9 @@
 #include "setup.h"
 #include "string_utils.h"
 
-extern void DOS_UpdateCurrentProgramName();
+static const std::string ResourceDir = "freedos-keyboard";
 
-static const std::string ResourceDirKeyboard = "freedos-keyboard";
-static const std::string ResourceDirCodePage = "freedos-cpi";
+extern void DOS_UpdateCurrentProgramName();
 
 static void notify_code_page_changed()
 {
@@ -115,10 +115,6 @@ public:
 
 	void SetRomFont();
 
-	// read in a code page (font) from a .cpi file
-	KeyboardLayoutResult ReadCodePageFile(const std::string& cpi_file,
-	                                      const uint16_t code_page);
-
 	uint16_t ExtractCodePage(const std::string& keyboard_layout);
 
 	// read in a keyboard layout from a file
@@ -132,7 +128,6 @@ public:
 	KeyboardLayoutResult SwitchKeyboardLayout(const std::string& keyboard_layout,
 	                                          KeyboardLayout*& created_layout);
 	std::string GetLayoutName() const;
-	CodePageFontOrigin GetCodePageFontOrigin() const;
 
 private:
 	static constexpr uint8_t layout_pages = 12;
@@ -156,8 +151,6 @@ private:
 	uint16_t user_keys            = 0;
 
 	std::string current_keyboard_layout = {};
-
-	CodePageFontOrigin code_page_font_origin = CodePageFontOrigin::Unknown;
 
 	bool use_foreign_layout = false;
 
@@ -305,7 +298,7 @@ static KeyboardLayoutResult load_builtin_keyboard_layouts(const std::string& key
 	auto find_layout_id = [&](const std::string& file_name,
 	                          const bool first_only) {
 		// Could we open the file?
-		auto fp = open_bundled_file(file_name, ResourceDirKeyboard);
+		auto fp = open_bundled_file(file_name, ResourceDir);
 		if (!fp) {
 			had_file_open_error = true;
 			return false;
@@ -780,277 +773,6 @@ uint16_t KeyboardLayout::ExtractCodePage(const std::string& keyboard_layout)
 	return DefaultCodePage;
 }
 
-KeyboardLayoutResult KeyboardLayout::ReadCodePageFile(const std::string& cpi_file,
-                                                      const uint16_t code_page)
-{
-	FILE_unique_ptr file = {};
-	if (cpi_file.empty()) {
-		// Try to open file from bundled resources
-		const auto file_name = DOS_GetBundledCpiFileName(code_page);
-		if (file_name.empty()) {
-			LOG_WARNING("LOCALE: No bundled CPI file for code page %d",
-			            code_page);
-			return KeyboardLayoutResult::NoBundledCpiFileForCodePage;
-		}
-		file = open_bundled_file(DOS_GetBundledCpiFileName(code_page),
-		                         ResourceDirCodePage);
-		if (!file) {
-			LOG_WARNING("LOCALE: Could not open bundled CPI file '%s'",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::CpiFileNotFound;
-		}
-	} else {
-		// Try to open DOS file
-		file = open_layout_file(cpi_file);
-		if (!file) {
-			LOG_WARNING("LOCALE: Could not open CPI file '%s'",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::CpiFileNotFound;
-		}
-	}
-
-	std::array<uint8_t, UINT16_MAX + 1> cpi_buf;
-	constexpr size_t cpi_unit_size = sizeof(cpi_buf[0]);
-
-	size_t cpi_buf_size = 0;
-	size_t size_of_cpxdata = 0;
-	bool upxfound = false;
-	size_t found_at_pos = 5;
-
-	constexpr auto bytes_to_detect_upx = 5;
-
-	const auto dr = fread(cpi_buf.data(),
-	                      cpi_unit_size,
-	                      bytes_to_detect_upx,
-	                      file.get());
-	// check if file is valid
-	if (dr < 5) {
-		LOG_WARNING("LOCALE: Code page file '%s' is invalid", cpi_file.c_str());
-		return KeyboardLayoutResult::InvalidCpiFile;
-	}
-
-	// Helper used by both the compressed and uncompressed code paths to read the entire file
-	auto read_entire_cp_file = [&](size_t& bytes_read) {
-		if (fseek(file.get(), 0, SEEK_SET) != 0) {
-			LOG_ERR("LOCALE: Could not seek to start of compressed file '%s': %s: ",
-			        cpi_file.c_str(),
-			        strerror(errno));
-			return false;
-		}
-		bytes_read = fread(cpi_buf.data(),
-		                   cpi_unit_size,
-		                   cpi_buf.size(),
-		                   file.get());
-		return (bytes_read > 0);
-	};
-
-	// check if non-compressed cpi file
-	if ((cpi_buf[0] != 0xff) || (cpi_buf[1] != 0x46) || (cpi_buf[2] != 0x4f) || (cpi_buf[3] != 0x4e) ||
-	    (cpi_buf[4] != 0x54)) {
-		// check if dr-dos custom cpi file
-		if ((cpi_buf[0] == 0x7f) && (cpi_buf[1] != 0x44) && (cpi_buf[2] != 0x52) && (cpi_buf[3] != 0x46) &&
-		    (cpi_buf[4] != 0x5f)) {
-			LOG_WARNING("LOCALE: Code page file '%s' has unsupported DR-DOS format",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::UnsupportedCpiFileDrDos;
-		}
-
-		// Read enough data to scan for UPX's identifier and version
-		const auto scan_size = 100;
-		assert(scan_size <= cpi_buf.size());
-		if (fread(cpi_buf.data(), cpi_unit_size, scan_size, file.get()) !=
-		    scan_size) {
-			LOG_WARNING("LOCALE: Code page file '%s' is too small, could not read initial %d bytes",
-			            cpi_file.c_str(),
-			            scan_size + ds);
-			return KeyboardLayoutResult::InvalidCpiFile;
-		}
-		// Scan for the UPX identifier
-		const auto upx_id     = std::string_view{"UPX!"};
-		const auto scan_buf   = std::string_view{reinterpret_cast<char*>(cpi_buf.data()), scan_size};
-		const auto upx_id_pos = scan_buf.find(upx_id);
-
-		// did we find the UPX identifier?
-		upxfound = upx_id_pos != scan_buf.npos;
-		if (!upxfound) {
-			LOG_WARNING("LOCALE: Code page file '%s' is invalid, could not find the UPX identifier",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::InvalidCpiFile;
-		}
-		// The IPX version byte comes after the identifier pattern
-		const auto upx_ver_pos = upx_id_pos + upx_id.length();
-		const auto upx_ver     = cpi_buf[upx_ver_pos];
-
-		// Can we handle this version?
-		constexpr uint8_t upx_min_ver = 10;
-		if (upx_ver < upx_min_ver) {
-			LOG_WARNING("LOCALE: Code page file '%s' is packed with UPX version %u, but %u+ is needed",
-			            cpi_file.c_str(),
-			            upx_ver,
-			            upx_min_ver);
-			return KeyboardLayoutResult::InvalidCpiFile;
-		}
-		// The next data comes after the version (used for decompression below)
-		found_at_pos += upx_ver_pos + sizeof(upx_ver);
-
-		// Read the entire compressed CPX file
-		if (!read_entire_cp_file(size_of_cpxdata)) {
-			LOG_WARNING("LOCALE: Code page file '%s' is invalid",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::InvalidCpiFile;
-		}
-
-	} else {
-		// read the entire uncompressed CPI file
-		if (!read_entire_cp_file(cpi_buf_size)) {
-			LOG_WARNING("LOCALE: Code page file '%s' is invalid",
-			            cpi_file.c_str());
-			return KeyboardLayoutResult::InvalidCpiFile;
-		}
-	}
-
-	if (upxfound) {
-		if (size_of_cpxdata > 0xfe00) {
-			E_Exit("Size of UPX-compressed data too big");
-		}
-
-		found_at_pos+=19;
-		// prepare for direct decompression
-		cpi_buf[found_at_pos]=0xcb;
-
-		uint16_t seg=0;
-		uint16_t size=0x1500;
-		if (!DOS_AllocateMemory(&seg,&size)) E_Exit("Not enough free low memory to unpack data");
-
-		const auto dos_segment = static_cast<uint32_t>((seg << 4) + 0x100);
-		assert(size_of_cpxdata <= cpi_buf.size());
-		MEM_BlockWrite(dos_segment, cpi_buf.data(), size_of_cpxdata);
-
-		// setup segments
-		uint16_t save_ds=SegValue(ds);
-		uint16_t save_es=SegValue(es);
-		uint16_t save_ss=SegValue(ss);
-		uint32_t save_esp=reg_esp;
-		SegSet16(ds,seg);
-		SegSet16(es,seg);
-		SegSet16(ss,seg+0x1000);
-		reg_esp=0xfffe;
-
-		// let UPX unpack the file
-		CALLBACK_RunRealFar(seg,0x100);
-
-		SegSet16(ds,save_ds);
-		SegSet16(es,save_es);
-		SegSet16(ss,save_ss);
-		reg_esp=save_esp;
-
-		// get unpacked content
-		MEM_BlockRead(dos_segment, cpi_buf.data(), cpi_buf.size());
-		cpi_buf_size=65536;
-
-		DOS_FreeMemory(seg);
-	}
-
-	constexpr auto data_start_index = 0x13;
-	static_assert(data_start_index < cpi_buf.size());
-	auto start_pos = host_readd(&cpi_buf[data_start_index]);
-
-	// Internally unpacking some UPX code-page files can result in unparseable data
-	if (start_pos >= cpi_buf_size) {
-		LOG_WARNING("LOCALE: Code page file '%s' is invalid, could not parse %scode-data at position %u",
-		            cpi_file.c_str(),
-		            upxfound ? "UPX-unpacked " : "",
-		            start_pos);
-		return KeyboardLayoutResult::InvalidCpiFile;
-	}
-
-	const auto number_of_codepages = host_readw(&cpi_buf.at(start_pos));
-	start_pos+=4;
-
-	// search if codepage is provided by file
-	for (uint16_t test_codepage = 0; test_codepage < number_of_codepages; test_codepage++) {
-		// device type can be display/printer (only the first is supported)
-		const auto device_type = host_readw(&cpi_buf.at(start_pos + 0x04));
-		const auto font_codepage = host_readw(&cpi_buf.at(start_pos + 0x0e));
-		const auto font_data_header_pt = host_readd(&cpi_buf.at(start_pos + 0x16));
-		const auto font_type = host_readw(&cpi_buf.at(font_data_header_pt));
-
-		if ((device_type == 0x0001) && (font_type == 0x0001) &&
-		    (font_codepage == code_page)) {
-			// valid/matching codepage found
-
-			const auto number_of_fonts = host_readw(&cpi_buf.at(font_data_header_pt + 0x02));
-			// const uint16_t font_data_length = host_readw(&cpi_buf[font_data_header_pt + 0x04]);
-
-			auto font_data_start = font_data_header_pt + 0x06;
-
-			// load all fonts if possible
-			bool font_changed = false;
-			for (uint16_t current_font = 0; current_font < number_of_fonts; ++current_font) {
-				const auto font_height = cpi_buf.at(font_data_start);
-				font_data_start += 6;
-				if (font_height == 0x10) {
-					// 16x8 font
-					const auto font16pt = RealToPhysical(int10.rom.font_16);
-					for (uint16_t i = 0; i < 256 * 16; ++i) {
-						phys_writeb(font16pt + i, cpi_buf.at(font_data_start + i));
-					}
-					// terminate alternate list to prevent loading
-					phys_writeb(RealToPhysical(int10.rom.font_16_alternate),0);
-					font_changed=true;
-				} else if (font_height == 0x0e) {
-					// 14x8 font
-					const auto font14pt = RealToPhysical(int10.rom.font_14);
-					for (uint16_t i = 0; i < 256 * 14; ++i) {
-						phys_writeb(font14pt + i, cpi_buf.at(font_data_start + i));
-					}
-					// terminate alternate list to prevent loading
-					phys_writeb(RealToPhysical(int10.rom.font_14_alternate),0);
-					font_changed=true;
-				} else if (font_height == 0x08) {
-					// 8x8 fonts
-					auto font8pt = RealToPhysical(int10.rom.font_8_first);
-					for (uint16_t i = 0; i < 128 * 8; ++i) {
-						phys_writeb(font8pt + i, cpi_buf.at(font_data_start + i));
-					}
-					font8pt=RealToPhysical(int10.rom.font_8_second);
-					for (uint16_t i = 0; i < 128 * 8; ++i) {
-						phys_writeb(font8pt + i,
-						            cpi_buf.at(font_data_start + i + 128 * 8));
-					}
-					font_changed=true;
-				}
-				font_data_start+=font_height*256;
-			}
-
-			// Set code page entries
-			dos.loaded_codepage   = code_page;
-			code_page_font_origin = cpi_file.empty()
-			                              ? CodePageFontOrigin::Bundled
-			                              : CodePageFontOrigin::Custom;
-
-			// update font if necessary
-			if (font_changed && (CurMode->type==M_TEXT) &&
-			    (machine == MCH_EGA || machine == MCH_VGA)) {
-				INT10_ReloadFont();
-			}
-			INT10_SetupRomMemoryChecksum();
-
-			return KeyboardLayoutResult::OK;
-		}
-
-		start_pos = host_readd(&cpi_buf.at(start_pos));
-		start_pos+=2;
-	}
-
-	if (cpi_file.empty()) {
-		LOG_WARNING("LOCALE: Code page %d not found in a bundled CPI file",
-		            code_page);
-		return KeyboardLayoutResult::NoBundledCpiFileForCodePage;
-	}
-	return KeyboardLayoutResult::NoCodePageInCpiFile;
-}
-
 bool KeyboardLayout::IsLayoutAvailable(const std::string& keyboard_layout)
 {
 	for (const auto& availalbe_layout : available_layouts) {
@@ -1078,8 +800,7 @@ KeyboardLayoutResult KeyboardLayout::SwitchKeyboardLayout(
 			KeyboardLayout *temp_layout = new KeyboardLayout();
 
 			auto code_page = temp_layout->ExtractCodePage(keyboard_layout);
-			if (machine != MCH_EGA && machine != MCH_VGA &&
-			    code_page != DefaultCodePage) {
+			if (!DOS_CanLoadScreenFonts() && code_page != DefaultCodePage) {
 				delete temp_layout;
 				return KeyboardLayoutResult::IncompatibleMachine;
 			}
@@ -1093,11 +814,12 @@ KeyboardLayoutResult KeyboardLayout::SwitchKeyboardLayout(
 
 			// ...else keyboard layout loaded successfully,
 			// change code page accordingly
-			result = temp_layout->ReadCodePageFile("", code_page);
+			result = DOS_LoadScreenFont(code_page);
 			if (result != KeyboardLayoutResult::OK) {
 				delete temp_layout;
 				return result;
 			}
+
 			// Everything went fine, switch to new layout
 			created_layout=temp_layout;
 		}
@@ -1109,25 +831,9 @@ KeyboardLayoutResult KeyboardLayout::SwitchKeyboardLayout(
 	return KeyboardLayoutResult::OK;
 }
 
-void KeyboardLayout::SetRomFont()
-{
-	INT10_ReloadRomFonts();
-	if (CurMode->type == M_TEXT) {
-		INT10_ReloadFont();
-	}
-
-	dos.loaded_codepage   = DefaultCodePage;
-	code_page_font_origin = CodePageFontOrigin::Rom;
-}
-
 std::string KeyboardLayout::GetLayoutName() const
 {
 	return current_keyboard_layout;
-}
-
-CodePageFontOrigin KeyboardLayout::GetCodePageFontOrigin() const
-{
-	return code_page_font_origin;
 }
 
 static std::unique_ptr<KeyboardLayout> loaded_layout = {};
@@ -1150,9 +856,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 {
 	const bool code_page_autodetect = (code_page == 0);
 	const auto old_code_page        = dos.loaded_codepage;
-	const auto old_font_origin      = loaded_layout
-	                                        ? loaded_layout->GetCodePageFontOrigin()
-	                                        : CodePageFontOrigin::Unknown;
+	const auto old_font_type        = dos.screen_font_type;
 	const auto old_keyboard_layout  = DOS_GetLoadedLayout();
 
 	if (code_page_autodetect && !cpi_file.empty()) {
@@ -1164,7 +868,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 
 	std::vector<uint16_t> code_pages = {};
 
-	if (machine != MCH_EGA && machine != MCH_VGA) {
+	if (!DOS_CanLoadScreenFonts()) {
 		// Can't set custom code page on pre-EGA display adapters
 		if (code_page_autodetect) {
 			code_pages.push_back(DefaultCodePage);
@@ -1209,11 +913,11 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 	}
 
 	// Keyboard layout loaded successfully, change code page accordingly
-	if ((machine != MCH_EGA && machine != MCH_VGA) ||
+	if (!DOS_CanLoadScreenFonts() ||
 	    (prefer_rom_font && code_page == DefaultCodePage)) {
-		new_layout->SetRomFont();
+		DOS_SetRomScreenFont();
 	} else {
-		result = new_layout->ReadCodePageFile(cpi_file, code_page);
+		result = DOS_LoadScreenFont(code_page, cpi_file);
 		if (result != KeyboardLayoutResult::OK) {
 			return result;
 		}
@@ -1234,25 +938,6 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		loaded_layout.reset(changed_layout);
 	}
 
-	// Log loaded code page
-	if (old_code_page != dos.loaded_codepage) {
-		switch (loaded_layout->GetCodePageFontOrigin()) {
-		case CodePageFontOrigin::Rom:
-			LOG_MSG("LOCALE: Loaded code page %d (ROM font)",
-			        dos.loaded_codepage);
-			break;
-		case CodePageFontOrigin::Bundled:
-			LOG_MSG("LOCALE: Loaded code page %d", dos.loaded_codepage);
-			break;
-		case CodePageFontOrigin::Custom:
-			LOG_MSG("LOCALE: Loaded code page %d from '%s' file",
-			        dos.loaded_codepage,
-			        cpi_file.c_str());
-			break;
-		default: assert(false); break;
-		}
-	}
-
 	if (DOS_GetCodePageWarning(dos.loaded_codepage)) {
 		LOG_WARNING("LOCALE: Code page %d is not recommended",
 		            dos.loaded_codepage);
@@ -1268,7 +953,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 	}
 
 	if (old_code_page != dos.loaded_codepage ||
-	    old_font_origin != loaded_layout->GetCodePageFontOrigin()) {
+	    old_font_type != dos.screen_font_type) {
 		notify_code_page_changed();
 	}
 
@@ -1282,13 +967,4 @@ std::string DOS_GetLoadedLayout()
 	}
 
 	return {};
-}
-
-CodePageFontOrigin DOS_GetCodePageFontOrigin()
-{
-	if (loaded_layout) {
-		return loaded_layout->GetCodePageFontOrigin();
-	}
-
-	return CodePageFontOrigin::Rom;
 }

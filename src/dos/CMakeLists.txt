@@ -5,6 +5,7 @@ add_library(libdos STATIC
 		cdrom_win32.cpp
 		dos.cpp
 		dos_classes.cpp
+		dos_code_page.cpp
 		dos_devices.cpp
 		dos_execute.cpp
 		dos_files.cpp
