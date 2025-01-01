@@ -85,6 +85,9 @@
     <ClCompile Include="..\src\dos\dos_classes.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\dos_code_page.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\dos_devices.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
@@ -1629,6 +1632,9 @@
     </ClInclude>
     <ClInclude Include="..\src\gui\render_simple.h">
       <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_code_page.h">
+      <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\dos_keyboard_layout.h">
       <Filter>src\dos</Filter>

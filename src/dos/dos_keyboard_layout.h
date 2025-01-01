@@ -25,36 +25,36 @@
 
 enum class KeyboardLayoutResult {
 	OK,
-	// Could not open the keyboard SYS file
-	LayoutFileNotFound,
-	// Wrong file format
-	InvalidLayoutFile,
+
 	// Could not open the CPI file
 	CpiFileNotFound,
-	// Wrong CPP file format
+	// I/O error while reading the file
+	CpiReadError,
+	// Wrong CPI file format
 	InvalidCpiFile,
-	// Unsupported CPI file format (DR-DOS)
-	UnsupportedCpiFileDrDos,
-	// Keyboard layout not known
-	LayoutNotKnown,
-	// Keyboard layout does not support code page
-	NoLayoutForCodePage,
+	// CPI file size over the internal limit
+	CpiFileTooLarge,
+	// Unsupported CPI file format (FreeDOS)
+	UnsupportedCpxFile,
+	// The CPI file is meant to be used with printers
+	PrinterCpiFile,
+	// Code page found, but the screen font is unusable
+	ScreenFontUnusable,
 	// Code page not known
 	NoBundledCpiFileForCodePage,
 	// No code page in user-supplied CPI file
 	NoCodePageInCpiFile,
 	// Pre-EGA machines can't change the code page
 	IncompatibleMachine,
-};
 
-enum class CodePageFontOrigin {
-	Unknown,
-	// From graphics adapter ROM
-	Rom,
-	// From one of the bundled CPI files
-	Bundled,
-	// From user provided CPI file
-	Custom,
+	// Could not open the keyboard SYS file
+	LayoutFileNotFound,
+	// Wrong file format
+	InvalidLayoutFile,
+	// Keyboard layout not known
+	LayoutNotKnown,
+	// Keyboard layout does not support code page
+	NoLayoutForCodePage,
 };
 
 // Tries to load a keyboard layout and a code page.
@@ -67,6 +67,5 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
                                             const bool prefer_rom_font = false);
 
 std::string DOS_GetLoadedLayout();
-CodePageFontOrigin DOS_GetCodePageFontOrigin();
 
 #endif
