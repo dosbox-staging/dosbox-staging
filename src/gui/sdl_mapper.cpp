@@ -2789,8 +2789,7 @@ void MAPPER_CheckEvent(SDL_Event *event)
 	case SDL_CONTROLLERDEVICEREMOVED:
 	case SDL_JOYDEVICEREMOVED:
 	case SDL_JOYDEVICEADDED:
-		MAPPER_HandleJoyDeviceEvent(
-		        reinterpret_cast<SDL_JoyDeviceEvent*>(event));
+		MAPPER_HandleJoyDeviceEvent(&event->jdevice);
 		return;
 	default: break;
 	}
@@ -2847,8 +2846,7 @@ void BIND_MappingEvents()
 		case SDL_CONTROLLERDEVICEREMOVED:
 		case SDL_JOYDEVICEREMOVED:
 		case SDL_JOYDEVICEADDED:
-			MAPPER_HandleJoyDeviceEvent(
-			        reinterpret_cast<SDL_JoyDeviceEvent*>(&event));
+			MAPPER_HandleJoyDeviceEvent(&event.jdevice);
 			mapper.redraw = true;
 			break;
 		case SDL_MOUSEBUTTONDOWN:
