@@ -25,6 +25,7 @@
 #include "host_locale.h"
 
 #include "checks.h"
+#include "string_utils.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <unordered_map>
@@ -385,49 +386,113 @@ static std::string get_locale(const CFLocaleKey key)
 	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
+static HostLocaleElement get_dos_country()
 {
+	HostLocaleElement result = {};
+
 	const auto language = get_locale(kCFLocaleLanguageCode);
 	const auto country  = get_locale(kCFLocaleCountryCode);
 
-	out_log_info = language + "_" + country;
+	result.log_info = language + "-" + country;
 
-	return IsoToDosCountry(language, country);
+	result.country_code = iso_to_dos_country(language, country);
+	return result;
 }
 
-static std::string get_language_file(std::string& out_log_info)
+static std::vector<std::string> get_preferred_languages()
 {
-	const auto language = get_locale(kCFLocaleLanguageCode);
-	const auto country  = get_locale(kCFLocaleCountryCode);
+	std::vector<std::string> result = {};
 
-	out_log_info = language + "_" + country;
+	const auto languages_ref = CFLocaleCopyPreferredLanguages();
 
-	if (language == "pt" && country == "BR") {
-		// We have a dedicated Brazilian translation
-		return "br";
+	// We expect the root of the file to be an array
+	if (CFGetTypeID(languages_ref) != CFArrayGetTypeID()) {
+		CFRelease(languages_ref);
+		return {};
 	}
 
-	return language;
+	// Get all the array elements
+	const size_t num_languages = CFArrayGetCount(languages_ref);
+	for (size_t idx = 0; idx < num_languages; ++idx) {
+		const auto language_ref = CFArrayGetValueAtIndex(languages_ref, idx);
+
+		// We expect the language value to be a string
+		if (CFGetTypeID(language_ref) != CFStringGetTypeID()) {
+			continue;
+		}
+
+		const auto language_str = to_string(
+		        static_cast<CFStringRef>(language_ref));
+		if (!language_str.empty()) {
+			result.push_back(language_str);
+		}
+	}
+
+	CFRelease(languages_ref);
+	return result;
+}
+
+static HostLanguages get_host_languages()
+{
+	HostLanguages result = {};
+
+	auto get_language_file = [&](const std::string& input) -> std::string {
+		const auto tokens = split(input, "-");
+		if (tokens.empty()) {
+			return {};
+		}
+		if (tokens.size() == 1) {
+			return iso_to_language_file (tokens.at(0), "");
+		}
+		return iso_to_language_file(tokens.at(0), tokens.at(1));
+	};
+
+	// Get the list of preferred languages
+	const auto preferred_languages = get_preferred_languages();
+	for (const auto& entry : preferred_languages) {
+		if (!result.log_info.empty()) {
+			result.log_info += ", ";
+		}
+		result.log_info += entry;
+
+		result.language_files.push_back(get_language_file(entry));
+	}
+
+	// Get the GUI language
+	const auto language  = get_locale(kCFLocaleLanguageCode);
+	const auto territory = get_locale(kCFLocaleCountryCode);
+
+	if (!language.empty()) {
+		if (!result.log_info.empty()) {
+			result.log_info += "; ";
+		}
+		result.log_info += "GUI: ";
+		result.log_info += language + "-" + territory;
+
+		result.language_file_gui = iso_to_language_file(language, territory);
+	}
+
+	return result;
 }
 
 using AppleLayouts = std::vector<std::pair<int64_t, std::string>>;
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(
-	const AppleLayouts &apple_layouts,
-	std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts(const AppleLayouts& apple_layouts)
 {
-	std::vector<KeyboardLayoutMaybeCodepage> result = {};
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
+
 	for (const auto& [layout_id, layout_name] : apple_layouts) {
 		// LOG_MSG("{ %- lld, { \"\" }         }, // %s",
 		//         layout_id, layout_name.c_str());
-		if (!out_log_info.empty()) {
-			out_log_info += "; ";
+		if (!result.log_info.empty()) {
+			result.log_info += "; ";
 		}
-		out_log_info += std::to_string(layout_id) + " (" + layout_name + ")";
+		result.log_info += std::to_string(layout_id) + " (" +
+		                   layout_name + ")";
 
 		if (MacToDosKeyboard.contains(layout_id)) {
-			result.push_back(MacToDosKeyboard.at(layout_id));
-
+			result_list.push_back(MacToDosKeyboard.at(layout_id));
 		}
 	}
 
@@ -504,7 +569,7 @@ static CFPropertyListRef read_plist_file()
 	return plist_ref;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts()
 {
 	constexpr auto MaxIntSize = static_cast<CFIndex>(sizeof(int64_t));
 
@@ -599,7 +664,7 @@ static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std:
 	}
 
 	CFRelease(plist_ref);
-	return get_layouts_maybe_codepages(apple_layouts, out_log_info);
+	return get_host_keyboard_layouts(apple_layouts);
 }
 
 const HostLocale& GetHostLocale()
@@ -609,7 +674,7 @@ const HostLocale& GetHostLocale()
 	if (!locale) {
 		locale = HostLocale();
 
-		locale->country = get_dos_country(locale->log_info.country);
+		locale->country = get_dos_country();
 	}
 
 	return *locale;
@@ -618,24 +683,20 @@ const HostLocale& GetHostLocale()
 const HostKeyboardLayouts& GetHostKeyboardLayouts()
 {
 	static std::optional<HostKeyboardLayouts> locale = {};
-	if (!locale) {
-		locale = HostKeyboardLayouts();
 
-		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info);
+	if (!locale) {
+		locale = get_host_keyboard_layouts();
 	}
 
 	return *locale;
 }
 
-const HostLanguage& GetHostLanguage()
+const HostLanguages& GetHostLanguages()
 {
-	static std::optional<HostLanguage> locale = {};
+	static std::optional<HostLanguages> locale = {};
 
 	if (!locale) {
-		locale = HostLanguage();
-
-		locale->language_file = get_language_file(locale->log_info);
+		locale = get_host_languages();
 	}
 
 	return *locale;
