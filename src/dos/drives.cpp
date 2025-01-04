@@ -25,12 +25,16 @@
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
 
+constexpr bool is_special_character(const char c)
+{
+	constexpr auto special_characters = std::string_view("\"+=,;:<>[]|?*");
+	return special_characters.find(c) != std::string_view::npos;
+}
+
 // TODO Right now label formatting seems to be a bit of mess, with various
 // places in code setting/expecting different format, so simple GetLabel() on
 // a drive object might not yield an expected result. Not sure how to sort it
 // out, but it will require some attention to detail.
-// Also: this function is too strict - it removes all punctuation when *some*
-// punctuation is acceptable in drive labels (e.g. '_' or '-').
 //
 std::string To_Label(const char* name) {
 	// Reformat the name per the DOS label specification:
@@ -38,7 +42,15 @@ std::string To_Label(const char* name) {
 	// - Internal spaces allowed but no: tabs ? / \ | . , ; : + = [ ] < > " '
 	std::string label(name);
 	trim(label); // strip front-and-back white-space
-	strip_punctuation(label); // strip all punctuation
+	label.erase(std::remove_if(label.begin(),
+	                           label.end(),
+	                           [](unsigned char c) {
+		                           return c == '\t' || c == '/' ||
+		                                  c == '\\' || c == '.' ||
+		                                  c == '\'' ||
+		                                  is_special_character(c);
+	                           }),
+	            label.end());
 	label.resize(11); // collapse remainder to (at-most) 11 chars
 	upcase(label);
 	return label;
@@ -73,12 +85,6 @@ void Set_Label(const char* const input, char* const output, bool cdrom)
 	//Remove trailing dot. except when on cdrom and filename is exactly 8 (9 including the dot) letters. MSCDEX feature/bug (fifa96 cdrom detection)
 	if((labelPos > 0) && (output[labelPos-1] == '.') && !(cdrom && labelPos ==9))
 		output[labelPos-1] = 0;
-}
-
-constexpr bool is_special_character(const char c)
-{
-    constexpr auto special_characters = std::string_view("\"+=,;:<>[]|?*");
-    return special_characters.find(c) != std::string_view::npos;
 }
 
 /* Generate 8.3 names from LFNs, with tilde usage (from ~1 to ~9999). */
