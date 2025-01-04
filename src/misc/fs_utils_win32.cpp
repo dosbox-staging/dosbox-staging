@@ -95,7 +95,7 @@ NativeFileHandle open_native_file(const std_fs::path& path, const bool write_acc
 
 	return CreateFileW(path.c_str(),
 	                   access,
-	                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                   FILE_SHARE_READ | FILE_SHARE_WRITE,
 	                   nullptr,
 	                   OPEN_EXISTING,
 	                   FILE_ATTRIBUTE_NORMAL,
@@ -111,7 +111,7 @@ NativeFileHandle create_native_file(const std_fs::path& path,
 
 	return CreateFileW(path.c_str(),
 	                   GENERIC_READ | GENERIC_WRITE,
-	                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+	                   FILE_SHARE_READ | FILE_SHARE_WRITE,
 	                   nullptr,
 	                   CREATE_ALWAYS,
 	                   win32_attributes,
