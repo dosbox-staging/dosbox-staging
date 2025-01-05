@@ -111,6 +111,9 @@ static CBindList holdlist;
 
 static bool suppress_save_mapper_file_message = false;
 
+// In SDL ticks (msec)
+static auto joystick_subsystem_init_timestamp = std::numeric_limits<uint32_t>::max();
+
 class CEvent {
 public:
 	CEvent(const char *ev_entry) : bindlist{}
@@ -732,10 +735,8 @@ public:
 
 			if (event->jaxis.which != stick_id)
 				return nullptr;
-#if defined(REDUCE_JOYSTICK_POLLING)
 			if (axis_id >= axes)
 				return nullptr;
-#endif
 			if (abs(axis_position) < 25000)
 				return nullptr;
 
@@ -747,11 +748,7 @@ public:
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
 			if (event->jbutton.which != stick_id)
 				return nullptr;
-#if defined (REDUCE_JOYSTICK_POLLING)
-			return CreateButtonBind(event->jbutton.button%button_wrap);
-#else
-			return CreateButtonBind(event->jbutton.button);
-#endif
+			return CreateButtonBind(event->jbutton.button % button_wrap);
 		} else if (event->type==SDL_JOYHATMOTION) {
 			if (event->jhat.which != stick_id) return nullptr;
 			if (event->jhat.value == 0) return nullptr;
@@ -760,32 +757,9 @@ public:
 		} else return nullptr;
 	}
 
-	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = nullptr;
-		SDL_JoyButtonEvent *jbutton = nullptr;
-
-		switch(event->type) {
-			case SDL_JOYAXISMOTION:
-				jaxis = &event->jaxis;
-				if(jaxis->which == stick_id) {
-					if(jaxis->axis == 0)
-						JOYSTICK_Move_X(emustick, jaxis->value);
-					else if (jaxis->axis == 1)
-						JOYSTICK_Move_Y(emustick, jaxis->value);
-				}
-				break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				jbutton = &event->jbutton;
-				bool state;
-				state = jbutton->type == SDL_JOYBUTTONDOWN;
-				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick_id) {
-					JOYSTICK_Button(emustick, but, state);
-				}
-				break;
-			}
-			return false;
+	bool CheckEvent([[maybe_unused]] SDL_Event* event) override
+	{
+		return false;
 	}
 
 	virtual void UpdateJoystick() {
@@ -1026,34 +1000,6 @@ public:
 		JOYSTICK_Enable(1, true);
 	}
 
-	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = nullptr;
-		SDL_JoyButtonEvent *jbutton = nullptr;
-
-		switch(event->type) {
-			case SDL_JOYAXISMOTION:
-				jaxis = &event->jaxis;
-				if(jaxis->which == stick_id && jaxis->axis < 4) {
-					if(jaxis->axis & 1)
-						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
-					else
-						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
-		        }
-		        break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				jbutton = &event->jbutton;
-				bool state;
-				state = jbutton->type == SDL_JOYBUTTONDOWN;
-				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick_id) {
-					JOYSTICK_Button((but >> 1), (but & 1), state);
-				}
-				break;
-		}
-		return false;
-	}
-
 	void UpdateJoystick() override {
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
@@ -1088,42 +1034,6 @@ public:
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
 		JOYSTICK_Move_Y(1, INT16_MAX);
-	}
-
-	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = nullptr;
-		SDL_JoyButtonEvent * jbutton = nullptr;
-		SDL_JoyHatEvent *jhat = nullptr;
-
-		switch(event->type) {
-			case SDL_JOYAXISMOTION:
-				jaxis = &event->jaxis;
-				if(jaxis->which == stick_id) {
-					if(jaxis->axis == 0)
-						JOYSTICK_Move_X(0, jaxis->value);
-					else if (jaxis->axis == 1)
-						JOYSTICK_Move_Y(0, jaxis->value);
-					else if (jaxis->axis == 2)
-						JOYSTICK_Move_X(1, jaxis->value);
-				}
-				break;
-			case SDL_JOYHATMOTION:
-				jhat = &event->jhat;
-				if (jhat->which == stick_id)
-					DecodeHatPosition(jhat->value);
-				break;
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				jbutton = &event->jbutton;
-			bool state;
-			state=jbutton->type==SDL_JOYBUTTONDOWN;
-				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick_id) {
-					JOYSTICK_Button((but >> 1), (but & 1), state);
-				}
-				break;
-		}
-		return false;
 	}
 
 	void UpdateJoystick() override {
@@ -1214,66 +1124,6 @@ public:
 		emulated_hats=1;
 		if (button_wrapping_enabled) button_wrap=emulated_buttons;
 		JOYSTICK_Enable(1,true);
-	}
-
-	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = nullptr;
-		SDL_JoyButtonEvent * jbutton = nullptr;
-		SDL_JoyHatEvent * jhat = nullptr;
-		Bitu but = 0;
-		static const unsigned button_magic[6] = {
-		        0x02, 0x04, 0x10, 0x100, 0x20, 0x200};
-		static const unsigned hat_magic[2][5] = {
-		        {0x8888, 0x8000, 0x800, 0x80, 0x08},
-		        {0x5440, 0x4000, 0x400, 0x40, 0x1000}};
-		switch(event->type) {
-			case SDL_JOYAXISMOTION:
-				jaxis = &event->jaxis;
-				if(jaxis->which == stick_id && jaxis->axis < 4) {
-					if(jaxis->axis & 1)
-						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
-					else
-						JOYSTICK_Move_X(jaxis->axis >> 1 & 1, jaxis->value);
-				}
-				break;
-			case SDL_JOYHATMOTION:
-				jhat = &event->jhat;
-				if (jhat->which == stick_id && jhat->hat < 2) {
-					if (jhat->value == SDL_HAT_CENTERED)
-						button_state &= ~hat_magic[jhat->hat][0];
-					if (jhat->value & SDL_HAT_UP)
-						button_state|=hat_magic[jhat->hat][1];
-					if(jhat->value & SDL_HAT_RIGHT)
-						button_state|=hat_magic[jhat->hat][2];
-					if(jhat->value & SDL_HAT_DOWN)
-						button_state|=hat_magic[jhat->hat][3];
-					if(jhat->value & SDL_HAT_LEFT)
-						button_state|=hat_magic[jhat->hat][4];
-				}
-				break;
-			case SDL_JOYBUTTONDOWN:
-				jbutton = &event->jbutton;
-				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick_id)
-					button_state|=button_magic[but];
-				break;
-			case SDL_JOYBUTTONUP:
-				jbutton = &event->jbutton;
-				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick_id)
-					button_state&=~button_magic[but];
-				break;
-		}
-
-		unsigned i;
-		uint16_t j;
-		j=button_state;
-		for(i=0;i<16;i++) if (j & 1) break; else j>>=1;
-		JOYSTICK_Button(0,0,i&1);
-		JOYSTICK_Button(0,1,(i>>1)&1);
-		JOYSTICK_Button(1,0,(i>>2)&1);
-		JOYSTICK_Button(1,1,(i>>3)&1);
-		return false;
 	}
 
 	void UpdateJoystick() override {
@@ -2637,8 +2487,8 @@ static void ClearAllBinds()
 	}
 }
 
-static void CreateDefaultBinds() {
-	ClearAllBinds();
+static void CreateDefaultBinds()
+{
 	char buffer[512];
 	Bitu i=0;
 	while (DefaultKeys[i].eventend) {
@@ -2760,7 +2610,6 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 
 		suppress_save_mapper_file_message = true;
 
-		ClearAllBinds();
 		for (auto &line : lines)
 			CreateStringBind(line.data());
 
@@ -2787,17 +2636,70 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 
 void MAPPER_CheckEvent(SDL_Event *event)
 {
-	for (auto &group : bindgroups)
-		if (group->CheckEvent(event))
+	switch (event->type) {
+	case SDL_CONTROLLERDEVICEADDED:
+	case SDL_CONTROLLERDEVICEREMOVED:
+	case SDL_JOYDEVICEREMOVED:
+	case SDL_JOYDEVICEADDED:
+		MAPPER_HandleJoyDeviceEvent(&event->jdevice);
+		return;
+	default: break;
+	}
+
+	for (auto& group : bindgroups) {
+		if (group->CheckEvent(event)) {
 			return;
+		}
+	}
 }
 
-void BIND_MappingEvents() {
+void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event)
+{
+	// Hack to eliminate redundant initialization and corresponding log spam
+	// at startup
+	if (!SDL_TICKS_PASSED(event->timestamp, joystick_subsystem_init_timestamp)) {
+		return;
+	}
+	switch (event->type) {
+	case SDL_CONTROLLERDEVICEADDED:
+	case SDL_JOYDEVICEADDED: {
+		auto index    = event->which;
+		auto joystick = SDL_JoystickOpen(index);
+		auto name     = SDL_JoystickName(joystick);
+		LOG_INFO("MAPPER: Game controller '%s' has been plugged in", name);
+		SDL_JoystickClose(joystick);
+		break;
+	}
+	case SDL_CONTROLLERDEVICEREMOVED:
+	case SDL_JOYDEVICEREMOVED: {
+		auto joystick = SDL_JoystickFromInstanceID(event->which);
+		auto name     = SDL_JoystickName(joystick);
+		LOG_INFO("MAPPER: Game controller '%s' has been disconnected", name);
+		SDL_JoystickClose(joystick);
+		break;
+	}
+	default:
+		LOG_DEBUG("MAPPER:  MAPPER_HandleJoyDeviceEvent: Unexpected event type '%d' received",
+		          event->type);
+		assert(false);
+	}
+	MAPPER_BindKeys(get_sdl_section());
+}
+
+void BIND_MappingEvents()
+{
 	SDL_Event event;
 	static bool isButtonPressed = false;
 	static CButton *lastHoveredButton = nullptr;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
+		case SDL_CONTROLLERDEVICEADDED:
+		case SDL_CONTROLLERDEVICEREMOVED:
+		case SDL_JOYDEVICEREMOVED:
+		case SDL_JOYDEVICEADDED:
+			MAPPER_HandleJoyDeviceEvent(&event.jdevice);
+			mapper.redraw = true;
+			break;
 		case SDL_MOUSEBUTTONDOWN:
 			isButtonPressed = true;
 			/* Further check where are we pointing at right now */
@@ -2884,6 +2786,17 @@ void BIND_MappingEvents() {
 	}
 }
 
+static void ClearSticks()
+{
+	// Free any allocated sticks
+	for (int i = 0; i < MAXSTICKS; ++i) {
+		delete mapper.sticks.stick[i];
+		mapper.sticks.stick[i] = nullptr;
+	}
+	mapper.sticks.num        = 0;
+	mapper.sticks.num_groups = 0;
+}
+
 //  Initializes SDL's joystick subsystem an setups up initial joystick settings.
 
 // If the user wants auto-configuration, then this sets joytype based on queried
@@ -2896,7 +2809,7 @@ void BIND_MappingEvents() {
 static void QueryJoysticks()
 {
 	// Reset our joystick status
-	mapper.sticks.num = 0;
+	ClearSticks();
 
 	JOYSTICK_ParseConfiguredType();
 
@@ -2906,8 +2819,10 @@ static void QueryJoysticks()
 		return;
 	}
 
-	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
+	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK) {
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+		joystick_subsystem_init_timestamp = SDL_GetTicks();
+	}
 
 	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
 
@@ -2972,8 +2887,23 @@ static void QueryJoysticks()
 	}
 }
 
-static void CreateBindGroups() {
+static void ClearBindGroups()
+{
+	for (auto& ptr : keybindgroups) {
+		delete ptr;
+	}
+	keybindgroups.clear();
+
+	for (auto& ptr : stickbindgroups) {
+		delete ptr;
+	}
+	stickbindgroups.clear();
+
 	bindgroups.clear();
+}
+
+static void CreateBindGroups()
+{
 	CKeyBindGroup* key_bind_group = new CKeyBindGroup(SDL_NUM_SCANCODES);
 	keybindgroups.push_back(key_bind_group);
 
@@ -2983,22 +2913,6 @@ static void CreateBindGroups() {
 		return;
 
 	if (joytype != JOY_NONE_FOUND) {
-#if defined (REDUCE_JOYSTICK_POLLING)
-		// direct access to the SDL joystick, thus removed from the event handling
-		if (mapper.sticks.num)
-			SDL_JoystickEventState(SDL_DISABLE);
-#else
-		// enable joystick event handling
-		if (mapper.sticks.num)
-			SDL_JoystickEventState(SDL_ENABLE);
-		else
-			return;
-#endif
-		// Free up our previously assigned joystick slot before assinging below
-		if (mapper.sticks.stick[mapper.sticks.num_groups]) {
-			delete mapper.sticks.stick[mapper.sticks.num_groups];
-			mapper.sticks.stick[mapper.sticks.num_groups] = nullptr;
-		}
 
 		uint8_t joyno = 0;
 		switch (joytype) {
@@ -3051,14 +2965,12 @@ bool MAPPER_IsUsingJoysticks() {
 	return (mapper.sticks.num > 0);
 }
 
-#if defined (REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks() {
 	for (Bitu i=0; i<mapper.sticks.num_groups; i++) {
 		assert(mapper.sticks.stick[i]);
 		mapper.sticks.stick[i]->UpdateJoystick();
 	}
 }
-#endif
 
 void MAPPER_LosingFocus() {
 	for (const auto& event : events) {
@@ -3179,9 +3091,6 @@ void MAPPER_DisplayUI() {
 	mapper.exit = false;
 	mapper.redraw=true;
 	SetActiveEvent(nullptr);
-#if defined (REDUCE_JOYSTICK_POLLING)
-	SDL_JoystickEventState(SDL_ENABLE);
-#endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
 			mapper.redraw = false;
@@ -3214,9 +3123,6 @@ void MAPPER_DisplayUI() {
 		}
 	}
 #endif
-#if defined (REDUCE_JOYSTICK_POLLING)
-	SDL_JoystickEventState(SDL_DISABLE);
-#endif
 	GFX_ResetScreen();
 	MOUSE_NotifyTakeOver(false);
 }
@@ -3235,22 +3141,10 @@ static void MAPPER_Destroy(Section *sec) {
 
 	buttons.clear();
 
-	for (auto & ptr : keybindgroups)
-		delete ptr;
-	keybindgroups.clear();
-
-	for (auto & ptr : stickbindgroups)
-		delete ptr;
-	stickbindgroups.clear();
-
-	// Free any allocated sticks
-	for (int i = 0; i < MAXSTICKS; ++i) {
-		delete mapper.sticks.stick[i];
-		mapper.sticks.stick[i] = nullptr;
-	}
+	ClearBindGroups();
+	ClearSticks();
 
 	// Empty the remaining lists now that their pointers are defunct
-	bindgroups.clear();
 	handlergroup.clear();
 	holdlist.clear();
 
@@ -3292,14 +3186,15 @@ void MAPPER_BindKeys(Section* sec)
 	assert(property);
 	mapper.filename = property->realpath.string();
 
+	ClearAllBinds();
+	ClearBindGroups();
 	QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
 	if (buttons.empty())
 		CreateLayout();
 
-	if (bindgroups.empty())
-		CreateBindGroups();
+	CreateBindGroups();
 
 	// Create binds from file or fallback to internals
 	if (!load_binds_from_file(mapper.filename, mapperfile_value))
@@ -3314,8 +3209,6 @@ void MAPPER_BindKeys(Section* sec)
 
 	if (SDL_GetModState()&KMOD_NUM)
 		MAPPER_TriggerEvent(num_lock_event, false);
-
-	GFX_RegenerateWindow(sec);
 }
 
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {
@@ -3341,6 +3234,7 @@ void MAPPER_StartUp(Section* sec)
 	// mapperfile=file.map"` commands
 	constexpr auto changeable_at_runtime = true;
 	section->AddInitFunction(&MAPPER_BindKeys, changeable_at_runtime);
+	section->AddInitFunction(&GFX_RegenerateWindow, changeable_at_runtime);
 
 	// Runs one-time on shutdown
 	section->AddDestroyFunction(&MAPPER_Destroy);

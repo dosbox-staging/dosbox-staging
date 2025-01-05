@@ -453,16 +453,6 @@ static double get_host_refresh_rate()
 	return refresh_rate;
 }
 
-static Section_prop* get_sdl_section()
-{
-	assert(control);
-
-	auto sdl_section = static_cast<Section_prop*>(control->GetSection("sdl"));
-	assert(sdl_section);
-
-	return sdl_section;
-}
-
 // Reset and populate the vsync settings from the config. This is
 // called on-demand after startup and on output mode changes (e.g., switching
 // from the 'texture' backend to 'opengl').
@@ -3829,7 +3819,6 @@ bool GFX_Events()
 #endif
 
 	SDL_Event event;
-#if defined (REDUCE_JOYSTICK_POLLING)
 	static auto last_check_joystick = GetTicks();
 	auto current_check_joystick = GetTicks();
 	if (GetTicksDiff(current_check_joystick, last_check_joystick) > 20) {
@@ -3837,7 +3826,6 @@ bool GFX_Events()
 		if (MAPPER_IsUsingJoysticks()) SDL_JoystickUpdate();
 		MAPPER_UpdateJoysticks();
 	}
-#endif
 	while (SDL_PollEvent(&event)) {
 #if C_DEBUG
 		if (is_debugger_event(event)) {
@@ -5094,6 +5082,7 @@ int sdl_main(int argc, char* argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
+		GFX_RegenerateWindow(sdl_sec);
 
 		if (arguments->startmapper) {
 			MAPPER_DisplayUI();
