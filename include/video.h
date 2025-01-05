@@ -69,6 +69,8 @@
 //   postfixes is highly recommended in such cases to remove ambiguity.
 //
 
+#define REDUCE_JOYSTICK_POLLING
+
 enum class RenderingBackend {
 	Texture,
 	OpenGl
@@ -430,7 +432,9 @@ void GFX_SetMouseRawInput(const bool requested_raw_input);
 // Detects the presence of a desktop environment or window manager
 bool GFX_HaveDesktopEnvironment();
 
+#if defined(REDUCE_JOYSTICK_POLLING)
 void MAPPER_UpdateJoysticks(void);
+#endif
 
 DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
                                       const DosBox::Rect& render_size_px,

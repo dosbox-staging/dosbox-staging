@@ -390,7 +390,7 @@ double JOYSTICK_GetMove_Y(uint8_t which)
 
 void JOYSTICK_ParseConfiguredType()
 {
-	const auto conf    = get_joystick_section();
+	const auto conf = control->GetSection("joystick");
 	const auto section = static_cast<Section_prop *>(conf);
 	const auto type = section->Get_string("joysticktype");
 
