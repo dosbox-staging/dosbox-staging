@@ -232,6 +232,79 @@ std::string localDrive::MapDosToHostFilename(const char* const dos_name)
 	return dirCache.GetExpandNameAndNormaliseCase(newname);
 }
 
+void localFile::ReplaceNativeFileHandle(const NativeFileHandle new_handle, const std_fs::path& new_path)
+{
+	close_native_file(file_handle);
+	file_handle = new_handle;
+	path = new_path;
+}
+
+[[maybe_unused]] static void copy_file_contents(const NativeFileHandle source_handle, const std_fs::path& dest_path)
+{
+	const auto dest_handle = open_native_file(dest_path, true);
+	if (dest_handle == InvalidNativeFileHandle) {
+		LOG_WARNING("FS: Failed to open file '%s'", dest_path.string().c_str());
+		return;
+	}
+	seek_native_file(source_handle, 0, NativeSeek::Set);
+	uint8_t buffer[4096] = {};
+	while (true) {
+		const auto read_result = read_native_file(source_handle, buffer, sizeof(buffer));
+		if (read_result.num_bytes < 1) {
+			break;
+		}
+		write_native_file(dest_handle, buffer, read_result.num_bytes);
+	}
+	close_native_file(dest_handle);
+}
+
+// Windows specific hack. This handles the case where a file gets unlinked with file handles still open.
+// FILE_SHARE_DELETE gets mostly the correct behavior here except it prevents a new file with the same name from being created.
+// See issue with the game Abuse here: https://github.com/dosbox-staging/dosbox-staging/issues/4123
+// POSIX gives us the behavior we want by default so nothing needs to be done on non-Windows OSs.
+#if defined(WIN32)
+static void move_open_handles_to_temp(const std_fs::path& path)
+{
+	std_fs::path temp_filename = {};
+	for (auto& file : Files) {
+		auto local_file = dynamic_cast<localFile*>(file.get());
+		if (!local_file || local_file->GetPath() != path) {
+			continue;
+		}
+		auto file_pos = get_native_file_position(local_file->file_handle);
+		if (file_pos == NativeSeekFailed) {
+			LOG_WARNING("FS: Failed to get current file pos. Setting to zero and hoping for the best :)");
+			file_pos = 0;
+		}
+		if (temp_filename.empty()) {
+			temp_filename = create_temp_file();
+			if (temp_filename.empty()) {
+				LOG_WARNING("FS: Failed to create temp file");
+				return;
+			}
+			copy_file_contents(local_file->file_handle, temp_filename);
+		}
+		const uint8_t permissions = local_file->flags & 0xf;
+		bool write_access = false;
+		if (permissions == OPEN_WRITE || permissions == OPEN_READWRITE) {
+			write_access = true;
+		}
+		const auto temp_handle = open_native_file(temp_filename, write_access);
+		if (temp_handle == InvalidNativeFileHandle) {
+			LOG_WARNING("FS: Failed to open temp file '%s'", temp_filename.string().c_str());
+			continue;
+		}
+		seek_native_file(temp_handle, file_pos, NativeSeek::Set);
+		local_file->ReplaceNativeFileHandle(temp_handle, temp_filename);
+	}
+	// After all file handles have been moved, we can delete the temp file
+	// Since we open files with FILE_SHARE_DELETE this will succeed and the handles are still accessible
+	if (!temp_filename.empty() && !DeleteFileW(temp_filename.c_str())) {
+		LOG_WARNING("FS: Failed to delete temp file '%s'", temp_filename.string().c_str());
+	}
+}
+#endif
+
 // Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(const char* name)
 {
@@ -258,6 +331,9 @@ bool localDrive::FileUnlink(const char* name)
 
 	// Can we remove the file without issue?
 	if (remove(fullname) == 0) {
+		#if defined(WIN32)
+		move_open_handles_to_temp(fullname);
+		#endif
 		timestamp_cache.erase(fullname);
 		dirCache.DeleteEntry(newname);
 		return true;

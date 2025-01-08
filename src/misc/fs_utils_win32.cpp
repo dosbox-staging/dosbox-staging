@@ -256,4 +256,28 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date,
 	SetFileTime(handle, nullptr, nullptr, &write_time);
 }
 
+std_fs::path create_temp_file()
+{
+	// Max path length plus null terminator
+	constexpr DWORD BUFFER_SIZE = MAX_PATH + 1;
+	wchar_t temp_path[BUFFER_SIZE] = {};
+	const DWORD path_len = GetTempPathW(BUFFER_SIZE, temp_path);
+	if (path_len == 0) {
+		return {};
+	}
+	assert(path_len <= BUFFER_SIZE);
+
+	// Prefix only uses first 3 letters, abreviate DosBox Staging
+	const wchar_t *prefix = L"DBS";
+	// Zero for unique_number uses system time
+	// Zero also means it creates the file and ensures it is unique
+	constexpr UINT unique_number = 0;
+	wchar_t full_temp_path[BUFFER_SIZE] = {};
+	UINT full_len = GetTempFileNameW(temp_path, prefix, unique_number, full_temp_path);
+	if (full_len > 0) {
+		return full_temp_path;
+	}
+	return {};
+}
+
 #endif

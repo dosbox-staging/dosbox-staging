@@ -39,6 +39,8 @@
 	// Cannot be constexpr due to Win32 macro
 	#define InvalidNativeFileHandle INVALID_HANDLE_VALUE
 
+	std_fs::path create_temp_file();
+
 #else // Linux, macOS
 	using NativeFileHandle = int;
 	constexpr NativeFileHandle InvalidNativeFileHandle = -1;

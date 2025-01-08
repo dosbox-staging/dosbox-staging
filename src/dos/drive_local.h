@@ -38,6 +38,7 @@ public:
 	void Close() override;
 	uint16_t GetInformation() override;
 	bool IsOnReadOnlyMedium() const override { return read_only_medium; }
+	void ReplaceNativeFileHandle(const NativeFileHandle new_handle, const std_fs::path& new_path);
 	const char* GetBaseDir() const
 	{
 		return basedir;
@@ -51,7 +52,7 @@ public:
 
 private:
 	void MaybeFlushTime();
-	const std_fs::path path = {};
+	std_fs::path path = {};
 	const char* basedir     = nullptr;
 
 	const bool read_only_medium = false;
