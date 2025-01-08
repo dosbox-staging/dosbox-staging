@@ -355,7 +355,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 
 		if (is_directory) {
-			drive_c_directory = Quote + argument + Quote;
+			drive_c_directory  = argument;
 			has_dir_or_command = true;
 			continue;
 		}
