@@ -256,4 +256,9 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date,
 	SetFileTime(handle, nullptr, nullptr, &write_time);
 }
 
+bool delete_native_file(const std_fs::path& path)
+{
+	return remove(path.string().c_str()) == 0;
+}
+
 #endif
