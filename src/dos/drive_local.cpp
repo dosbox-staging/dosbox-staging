@@ -257,7 +257,7 @@ bool localDrive::FileUnlink(const char* name)
 	const char* fullname = dirCache.GetExpandNameAndNormaliseCase(newname);
 
 	// Can we remove the file without issue?
-	if (remove(fullname) == 0) {
+	if (delete_native_file(fullname)) {
 		timestamp_cache.erase(fullname);
 		dirCache.DeleteEntry(newname);
 		return true;

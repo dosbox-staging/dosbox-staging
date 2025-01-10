@@ -482,4 +482,9 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date, const
 	futimens(handle, unix_times);
 }
 
+bool delete_native_file(const std_fs::path& path)
+{
+	return remove(path.c_str()) == 0;
+}
+
 #endif
