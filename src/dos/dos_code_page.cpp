@@ -1880,6 +1880,10 @@ static void maybe_read_bundled_font(const uint16_t code_page)
 	                         name_for_log);
 }
 
+// ***************************************************************************
+// Support for font patching and code page duplicates
+// ***************************************************************************
+
 static std::optional<uint16_t> find_ega_font_storage_index(const uint16_t code_page)
 {
 	if (ega_font_storage.contains(code_page)) {
@@ -1895,6 +1899,91 @@ static std::optional<uint16_t> find_ega_font_storage_index(const uint16_t code_p
 	}
 
 	return {};
+}
+
+static void patch_font_dotted_i(ScreenFont& font)
+{
+	// Incomplete fonts should not be allowed in storage
+	assert(font.font_8x16.size() == ScreenFont::FullSize_8x16);
+	assert(font.font_8x14.size() == ScreenFont::FullSize_8x14);
+	assert(font.font_8x8.size()  == ScreenFont::FullSize_8x8);
+
+	// Codes of characters to swap
+	constexpr uint8_t CodePoint1 = 0x49;
+	constexpr uint8_t CodePoint2 = 0xf2;
+
+	// Lambda to patch individual font size variant
+	auto swap_code_points = [&](std::vector<uint8_t>& font_data,
+	                            const uint8_t height) {
+		for (auto idx = 0; idx < height; ++idx) {
+			std::swap(font_data[CodePoint1 * height + idx],
+			          font_data[CodePoint2 * height + idx]);
+		}
+	};
+
+	swap_code_points(font.font_8x16, 16);
+	swap_code_points(font.font_8x14, 14);
+	swap_code_points(font.font_8x8,  8);
+}
+
+static void patch_font_low_codes(ScreenFont& font, const uint16_t code_page)
+{
+	// Incomplete fonts should not be allowed in storage
+	assert(font.font_8x16.size() == ScreenFont::FullSize_8x16);
+	assert(font.font_8x14.size() == ScreenFont::FullSize_8x14);
+	assert(font.font_8x8.size()  == ScreenFont::FullSize_8x8);
+
+	constexpr uint8_t InitialCharactersToReplace = 32;
+
+	// Source code page for the characters to replace; this one is present
+	// in the same CPI file as many code pages we need to patch
+	constexpr uint16_t SourceCodePage = 1280;
+
+	// Ensure we have the source data loaded
+	maybe_read_bundled_font(SourceCodePage);
+	if (!ega_font_storage.contains(SourceCodePage)) {
+		LOG_ERR("LOCALE: Cound not get data to patch the code page %d screen font",
+		        code_page);
+		return;
+	}
+	const auto& source = ega_font_storage.at(SourceCodePage);
+
+	// Incomplete fonts should not be allowed in storage
+	assert(source.font_8x16.size() == ScreenFont::FullSize_8x16);
+	assert(source.font_8x14.size() == ScreenFont::FullSize_8x14);
+	assert(source.font_8x8.size()  == ScreenFont::FullSize_8x8);
+
+	// Lambda to patch individual font size variant
+	auto replace_characters = [&](std::vector<uint8_t>& font_data,
+	                              const std::vector<uint8_t>& source_data,
+	                              const uint8_t height) {
+		std::copy_n(source_data.begin(),
+		            InitialCharactersToReplace * height,
+		            font_data.begin());
+	};
+
+	replace_characters(font.font_8x16, source.font_8x16, 16);
+	replace_characters(font.font_8x14, source.font_8x14, 14);
+	replace_characters(font.font_8x8,  source.font_8x8,  8);
+}
+
+const std::optional<ScreenFont> get_patched_screen_font(const uint16_t code_page)
+{
+	const auto storage_index = find_ega_font_storage_index(code_page);
+	if (!storage_index || !ega_font_storage.contains(*storage_index)) {
+		return {};
+	}
+
+	auto font = ega_font_storage.at(*storage_index);
+
+	if (LocaleData::NeedsPatchDottedI.contains(code_page)) {
+		patch_font_dotted_i(font);
+	}
+	if (LocaleData::NeedsPatchLowCodes.contains(code_page)) {
+		patch_font_low_codes(font, code_page);
+	}
+
+	return font;
 }
 
 // ***************************************************************************
@@ -1985,12 +2074,11 @@ static KeyboardLayoutResult load_custom_screen_font(const uint16_t code_page,
 	}
 
 	maybe_read_bundled_font(code_page);
-	const auto storage_index = find_ega_font_storage_index(code_page);
-	if (storage_index) {
+	const auto fallback_font = get_patched_screen_font(code_page);
+	if (fallback_font) {
 		// Use the bundled font as a fallback - in case the one from the
 		// user's CPI file does not provide all the resolutions we need
-		set_screen_font(result.screen_font,
-		                ega_font_storage.at(*storage_index));
+		set_screen_font(result.screen_font, *fallback_font);
 	} else {
 		set_screen_font(result.screen_font);
 	}
@@ -2014,13 +2102,13 @@ static KeyboardLayoutResult load_bundled_screen_font(const uint16_t code_page)
 	}
 
 	maybe_read_bundled_font(code_page);
-	const auto storage_index = find_ega_font_storage_index(code_page);
-	if (!storage_index) {
+	const auto patched_font = get_patched_screen_font(code_page);
+	if (!patched_font) {
 		return KeyboardLayoutResult::NoBundledCpiFileForCodePage;
 	}
 
-	set_screen_font(ega_font_storage.at(*storage_index));
-	dos.loaded_codepage  = code_page;
+	set_screen_font(*patched_font);
+	dos.loaded_codepage    = code_page;
 	dos.screen_font_type = ScreenFontType::Bundled;
 
 	LOG_MSG("LOCALE: Loaded code page %d - '%s'",

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,22 +113,15 @@ const std::map<std::string, std::vector<uint16_t>> LocaleData::BundledCpiContent
 };
 // clang-format on
 
+// List of code pages from bundled CPI files needing the given patch
+
 // clang-format off
-const std::map<uint16_t, CodePageWarning> LocaleData::CodePageWarnings = {
-        { 60258, CodePageWarning::DottedI  },
-        { 1275,  CodePageWarning::LowCodes },
-        { 1281,  CodePageWarning::LowCodes },
-        { 1282,  CodePageWarning::LowCodes },
-        { 1283,  CodePageWarning::LowCodes },
-        { 1284,  CodePageWarning::LowCodes },
-        { 1285,  CodePageWarning::LowCodes },
-        { 1286,  CodePageWarning::LowCodes },
-        { 58619, CodePageWarning::LowCodes },
-        { 58627, CodePageWarning::LowCodes },
-        { 58630, CodePageWarning::LowCodes },
-        { 60643, CodePageWarning::LowCodes },
-        { 61667, CodePageWarning::LowCodes },
-        { 62691, CodePageWarning::LowCodes },
+const std::set<uint16_t> LocaleData::NeedsPatchDottedI  = {
+	60258
+};
+const std::set<uint16_t> LocaleData::NeedsPatchLowCodes = {
+	1275, 1281, 1282, 1283, 1284, 1285, 1286,
+	58619, 58627, 58630, 60643, 61667, 62691
 };
 // clang-format on
 
