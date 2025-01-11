@@ -21,6 +21,7 @@
 #include "dos_code_page.h"
 
 #include "../ints/int10.h"
+#include "autoexec.h"
 #include "bios.h"
 #include "checks.h"
 #include "dos_locale.h"
@@ -43,6 +44,17 @@ CHECK_NARROWING();
 // References:
 // - https://www.seasip.info/DOS/CPI/cpi.html
 // - http://kbd-project.org/docs/font-formats/font-formats-3.html
+
+extern void DOS_UpdateCurrentProgramName();
+
+static void notify_code_page_changed()
+{
+	// Re-create various information to match new code page
+	MSG_NotifyNewCodePage();
+	DOS_UpdateCurrentProgramName();
+	DOS_RepopulateCountryInfo();
+	AUTOEXEC_NotifyNewCodePage();
+}
 
 // ***************************************************************************
 // Constants
@@ -2138,6 +2150,7 @@ static KeyboardLayoutResult load_custom_screen_font(const uint16_t code_page,
 	        code_page,
 	        canonical_file_name.c_str());
 
+	notify_code_page_changed();
 	return KeyboardLayoutResult::OK;
 }
 
@@ -2145,7 +2158,7 @@ static KeyboardLayoutResult load_bundled_screen_font(const uint16_t code_page)
 {
 	if (dos.loaded_codepage == code_page &&
 	    dos.screen_font_origin == ScreenFontOrigin::Bundled) {
-		// Already loaded - skip
+		// Already loaded - skip loading and notifying other subsystems
 		return KeyboardLayoutResult::OK;
 	}
 
@@ -2163,6 +2176,7 @@ static KeyboardLayoutResult load_bundled_screen_font(const uint16_t code_page)
 	        code_page,
 	        DOS_GetCodePageDescriptionForLog(code_page).c_str());
 
+	notify_code_page_changed();
 	return KeyboardLayoutResult::OK;
 }
 
@@ -2170,7 +2184,7 @@ static void load_default_screen_font()
 {
 	if (dos.loaded_codepage == DefaultCodePage &&
 	    dos.screen_font_origin == ScreenFontOrigin::Rom) {
-		// Already loaded - skip
+		// Already loaded - skip loading and notifying other subsystems
 		return;
 	}
 
@@ -2183,6 +2197,8 @@ static void load_default_screen_font()
 	dos.screen_font_origin = ScreenFontOrigin::Rom;
 
 	LOG_MSG("LOCALE: Loaded code page %d (ROM font)", dos.loaded_codepage);
+
+	notify_code_page_changed();
 }
 
 // ***************************************************************************
