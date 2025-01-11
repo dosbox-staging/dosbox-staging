@@ -36,7 +36,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v4.0.1
+      - uses: actions/cache@v4
         id: cache-pvs
         with:
           path: pvs-package
@@ -56,7 +56,7 @@ jobs:
 
       - name: Cache subprojects
         id:   cache-subprojects
-        uses: actions/cache@v4.0.1
+        uses: actions/cache@v4
         with:
           path: subprojects.tar
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
