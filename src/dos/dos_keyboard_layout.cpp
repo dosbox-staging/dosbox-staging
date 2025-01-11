@@ -24,8 +24,6 @@
 #include <string_view>
 
 #include "../ints/int10.h"
-#include "autoexec.h"
-#include "bios.h"
 #include "bios_disk.h"
 #include "callback.h"
 #include "dos_code_page.h"
@@ -39,17 +37,6 @@
 #include "string_utils.h"
 
 static const std::string ResourceDir = "freedos-keyboard";
-
-extern void DOS_UpdateCurrentProgramName();
-
-static void notify_code_page_changed()
-{
-	// Re-create various information to match new code page
-	MSG_NotifyNewCodePage();
-	DOS_UpdateCurrentProgramName();
-	DOS_RepopulateCountryInfo();
-	AUTOEXEC_NotifyNewCodePage();
-}
 
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path.
@@ -855,8 +842,6 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
                                             const bool prefer_rom_font)
 {
 	const bool code_page_autodetect = (code_page == 0);
-	const auto old_code_page        = dos.loaded_codepage;
-	const auto old_font_type        = dos.screen_font_type;
 	const auto old_keyboard_layout  = DOS_GetLoadedLayout();
 
 	if (code_page_autodetect && !cpi_file.empty()) {
@@ -950,11 +935,6 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		LOG_MSG("LOCALE: Loaded keyboard layout '%s' - '%s'",
 		        new_keyboard_layout.c_str(),
 		        DOS_GetKeyboardLayoutName(new_keyboard_layout).c_str());
-	}
-
-	if (old_code_page != dos.loaded_codepage ||
-	    old_font_type != dos.screen_font_type) {
-		notify_code_page_changed();
 	}
 
 	return result;
