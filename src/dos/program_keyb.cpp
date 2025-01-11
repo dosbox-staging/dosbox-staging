@@ -341,24 +341,6 @@ void KEYB::WriteOutSuccess()
 		message += "\n";
 	}
 
-	const auto warn = DOS_GetCodePageWarning(dos.loaded_codepage);
-	if (warn) {
-		message += "\n";
-		message += format_str(MSG_Get("PROGRAM_KEYB_WARNING_CODE_PAGE"),
-		                      dos.loaded_codepage);
-		message += "\n";
-		switch (*warn) {
-		case CodePageWarning::LowCodes:
-			message += MSG_Get("PROGRAM_KEYB_WARNING_LOW_CODES");
-			break;
-		case CodePageWarning::DottedI:
-			message += MSG_Get("PROGRAM_KEYB_WARNING_DOTTED_I");
-			break;
-		default: assert(false); break;
-		}
-		message += "\n";
-	}
-
 	print_message();
 }
 
@@ -409,16 +391,6 @@ void KEYB::AddMessages()
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_LAYOUT", "Keyboard layout");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_SCRIPT", "Keyboard script");
 	MSG_Add("PROGRAM_KEYB_NOT_LOADED", "not loaded");
-	// Warnings
-	MSG_Add("PROGRAM_KEYB_WARNING_CODE_PAGE",
-	        "[color=light-red]Warning:[reset] It is recommended to avoid using code page %d!");
-	MSG_Add("PROGRAM_KEYB_WARNING_DOTTED_I",
-	        "It replaces the standard ASCII dotless letter 'I' with a national dotted\n"
-	        "variant and moves the original character elsewhere. There is no way to fully\n"
-	        "handle this without risking compatibility problems with existing software!");
-	MSG_Add("PROGRAM_KEYB_WARNING_LOW_CODES",
-	        "It does not contain the standard PC symbols 0-31, such code pages are currently\n"
-	        "not fully supported.");
 	// Error messages - KEYB program related
 	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n");
 	// Error messages - CPI file related
