@@ -923,11 +923,6 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		loaded_layout.reset(changed_layout);
 	}
 
-	if (DOS_GetCodePageWarning(dos.loaded_codepage)) {
-		LOG_WARNING("LOCALE: Code page %d is not recommended",
-		            dos.loaded_codepage);
-	}
-
 	// Log loaded keyboard layout
 	const auto new_keyboard_layout = DOS_GetLoadedLayout();
 	if (old_keyboard_layout != new_keyboard_layout) {

@@ -176,13 +176,13 @@
 # The list of known issues with the code pages mentioned above:
 #
 # 60258:
-# - dotted capital I in place of the ASCII capital 'I' is not handled
-#   and will most likely never be - unless the screen font is patched
+# - dotted capital I in place of the ASCII capital 'I' is not handled; the
+#   bundled CPI loader swaps the characters to ensure ASCII compliance
 #
 # 1275, 1281, 1282, 1283, 1284, 1285, 1286, 58619, 58627, 58630, 60643, 61667,
 # and 62691:
-# - code pages do not provide ASCII characters 0-31; most likely this will
-#   eventually be solved by patching the code pages
+# - code pages do not provide ASCII characters 0-31; the bundled CPI loader
+#   patches these fonts to improve compatibility with old software
 #
 # 30007:
 # - contains LATIN SMALL/CAPITAL LETTER L WITH MIDDLE DOT characters, which
@@ -3126,11 +3126,11 @@ EXTENDS CODEPAGE 819
 
 CODEPAGE 60258 # Azeri Latin and Russian
 # reference: https://en.wikipedia.org/wiki/Azerbaijani_alphabet
-# TODO: This code page replaces latin capital I (code point 0x49) with dotted I; the current
-#       code can't handle this, it expects 7-bit ASCII character range to be immutable
 0xf0 0x00d6        #LATIN CAPITAL LETTER O WITH DIAERESIS
 0xf1 0x00f6        #LATIN SMALL LETTER O WITH DIAERESIS
-0xf2 0x0049        #LATIN CAPITAL LETTER I
+# NOTE: The FreeDOS code page ontains LATIN CAPITAL LETTER I here and the dotted
+# variant at code point 0x49; our bundled CPI loader patches the screen font
+0xf2 0x0130        #LATIN CAPITAL LETTER I WITH DOT ABOVE
 0xf3 0x0131        #LATIN SMALL LETTER DOTLESS I
 0xf4 0x00dc        #LATIN CAPITAL LETTER U WITH DIAERESIS
 0xf5 0x00fc        #LATIN SMALL LETTER U WITH DIAERESIS

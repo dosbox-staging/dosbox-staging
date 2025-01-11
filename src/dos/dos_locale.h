@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <string>
 
 constexpr uint16_t DefaultCodePage = 437;
@@ -494,19 +495,13 @@ struct KeyboardLayoutInfoEntry {
 	std::string GetMsgName() const;
 };
 
-enum class CodePageWarning {
-	// ASCII codes 0x00-0x20 are different than on regular DOS code pages
-	LowCodes, 
-	// Code page puts a 'dotted I' in place of the regular ASCII 'I'
-	DottedI, 
-};
-
 namespace LocaleData {
 
 extern const std::map<std::string, std::vector<uint16_t>> BundledCpiContent;
-extern const std::map<uint16_t, CodePageWarning>          CodePageWarnings;
+extern const std::set<uint16_t>                           NeedsPatchDottedI;
+extern const std::set<uint16_t>                           NeedsPatchLowCodes;
 extern const std::map<Script, ScriptInfoEntry>            ScriptInfo;
-extern const std::vector<CodePagePackInfo> CodePageInfo;
+extern const std::vector<CodePagePackInfo>                CodePageInfo;
 extern const std::vector<KeyboardLayoutInfoEntry>         KeyboardLayoutInfo;
 extern const std::map<uint16_t, DosCountry>               CodeToCountryCorrectionMap;
 extern const std::map<DosCountry, CountryInfoEntry>       CountryInfo;
@@ -534,8 +529,6 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& la
 
 std::string DOS_GetCodePageDescription(const uint16_t code_page);
 std::string DOS_GetCodePageDescriptionForLog(const uint16_t code_page);
-
-std::optional<CodePageWarning> DOS_GetCodePageWarning(const uint16_t code_page);
 
 // DOS API support
 
