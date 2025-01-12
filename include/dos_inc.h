@@ -965,6 +965,8 @@ struct DOS_Block {
 	uint16_t loaded_codepage = {};
 
 	ScreenFontType screen_font_type = {};
+	// Only valid if 'screen_font_origin' is 'ScreenFontType::Custom'
+	std::string screen_font_file_name = {};
 
 	uint16_t dcp = {};
 };

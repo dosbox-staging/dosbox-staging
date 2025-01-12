@@ -20,9 +20,11 @@
 
 #include "program_keyb.h"
 
+#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "dos_locale.h"
 #include "program_more_output.h"
+#include "shell.h"
 #include "string_utils.h"
 
 #include <iostream>
@@ -253,6 +255,10 @@ void KEYB::WriteOutSuccess()
 	message += code_page_msg + std::to_string(dos.loaded_codepage);
 	message += align_code_page;
 
+	const auto space_file_name = INT10_GetTextColumns() - 1 - target_len -
+		std::max(align_code_page.length() + space_code_page,
+		         align_layout.length() + space_layout);
+
 	switch (dos.screen_font_type) {
 	case ScreenFontType::Rom:
 		message += MSG_Get("PROGRAM_KEYB_ROM_FONT");
@@ -261,7 +267,7 @@ void KEYB::WriteOutSuccess()
 		message += DOS_GetCodePageDescription(dos.loaded_codepage);
 		break;
 	case ScreenFontType::Custom:
-		message += MSG_Get("PROGRAM_KEYB_CUSTOM_FONT");
+		message += shorten_path(dos.screen_font_file_name, space_file_name);
 		break;
 	default:
 		message += "???";
@@ -387,7 +393,6 @@ void KEYB::AddMessages()
 	// Success/status message
 	MSG_Add("PROGRAM_KEYB_CODE_PAGE", "Code page");
 	MSG_Add("PROGRAM_KEYB_ROM_FONT", "ROM font");
-	MSG_Add("PROGRAM_KEYB_CUSTOM_FONT", "custom font");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_LAYOUT", "Keyboard layout");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_SCRIPT", "Keyboard script");
 	MSG_Add("PROGRAM_KEYB_NOT_LOADED", "not loaded");
