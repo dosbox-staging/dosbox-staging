@@ -2082,8 +2082,9 @@ static KeyboardLayoutResult load_custom_screen_font(const uint16_t code_page,
 	} else {
 		set_screen_font(result.screen_font);
 	}
-	dos.loaded_codepage  = code_page;
-	dos.screen_font_type = ScreenFontType::Custom;
+	dos.loaded_codepage       = code_page;
+	dos.screen_font_type      = ScreenFontType::Custom;
+	dos.screen_font_file_name = canonical_file_name;
 
 	LOG_MSG("LOCALE: Loaded code page %d from '%s' file",
 	        code_page,
@@ -2108,8 +2109,9 @@ static KeyboardLayoutResult load_bundled_screen_font(const uint16_t code_page)
 	}
 
 	set_screen_font(*patched_font);
-	dos.loaded_codepage    = code_page;
-	dos.screen_font_type = ScreenFontType::Bundled;
+	dos.loaded_codepage       = code_page;
+	dos.screen_font_type      = ScreenFontType::Bundled;
+	dos.screen_font_file_name = {};
 
 	LOG_MSG("LOCALE: Loaded code page %d - '%s'",
 	        code_page,
@@ -2132,8 +2134,9 @@ static void load_default_screen_font()
 		INT10_ReloadFont();
 	}
 
-	dos.loaded_codepage  = DefaultCodePage;
-	dos.screen_font_type = ScreenFontType::Rom;
+	dos.loaded_codepage       = DefaultCodePage;
+	dos.screen_font_type      = ScreenFontType::Rom;
+	dos.screen_font_file_name = {};
 
 	LOG_MSG("LOCALE: Loaded code page %d (ROM font)", dos.loaded_codepage);
 
