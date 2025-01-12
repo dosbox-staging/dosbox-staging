@@ -705,6 +705,8 @@ private:
 	                         const uint32_t font_offset,
 	                         ParserResult& result);
 
+	uint32_t AdaptOffset(const uint32_t value, bool& is_adaptation_needed);
+
 	// Concrete screen font extraction
 
 	std::optional<ScreenFont> GetScreenFontFormat1(const uint16_t num_fonts,
@@ -1255,26 +1257,37 @@ void CpiParser::ExtractAndStoreFont(const CodePageEntryHeader& header,
 	}
 }
 
+uint32_t CpiParser::AdaptOffset(const uint32_t value, bool& is_adaptation_needed)
+{
+	// Some CPI files require offset value conversion (example: 'EGA.ICE'
+	// from MS-DOS 6.0 require all the offsets converted, but it is said
+	// some CPI files require offset conversion only for pointing above the
+	// 64 KB). Detect when the conversion is needed.
+
+	if (IsFormatMsDos() && GetContentSize() > UINT16_MAX &&
+	    value > GetContentSize() && value != UINT32_MAX) {
+		is_adaptation_needed = true;
+	}
+
+	if (is_adaptation_needed) {
+		return ConvertOffset(value);
+	} else {
+		return value;
+	}
+}
+
 ParserResult CpiParser::GetFontsCommonPart(const uint16_t code_page_filter)
 {
 	// Helper code for offset format conmversion
 	bool cpih_offset_adaptation_needed = false;
 	bool cpeh_offset_adaptation_needed = false;
 
-	auto adapt_cpih = [&](const uint32_t value) -> uint32_t {
-		if (cpih_offset_adaptation_needed) {
-			return ConvertOffset(value);
-		} else {
-			return value;
-		}
+	auto adapt_cpih = [&](const uint32_t value) {
+		return AdaptOffset(value, cpih_offset_adaptation_needed);
 	};
 
-	auto adapt_cpeh = [&](const uint32_t value) -> uint32_t {
-		if (cpeh_offset_adaptation_needed) {
-			return ConvertOffset(value);
-		} else {
-			return value;
-		}
+	auto adapt_cpeh = [&](const uint32_t value) {
+		return AdaptOffset(value, cpeh_offset_adaptation_needed);
 	};
 
 	// Read the FontInfoHeader structure
@@ -1312,18 +1325,6 @@ ParserResult CpiParser::GetFontsCommonPart(const uint16_t code_page_filter)
 		const auto header = ReadCodePageEntryHeader();
 		if (!header) {
 			break;
-		}
-
-		// The first iteration is the best time to detect if the CPI
-		// file requires offset conversion; one example of such file is
-		// EGA.ICE from MS-DOS 6.0
-		if (idx == 0 && IsFormatMsDos()) {
-			if (header->cpih_offset > UINT16_MAX) {
-				cpih_offset_adaptation_needed = true;
-			}
-			if (header->next_cpeh_offset > UINT16_MAX) {
-				cpeh_offset_adaptation_needed = true;
-			}
 		}
 
 		bool should_skip = false;
