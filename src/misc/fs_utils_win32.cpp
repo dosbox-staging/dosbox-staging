@@ -258,46 +258,58 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date,
 
 // Includes a Windows specific hack.
 // We move the file to be deleted to a temp file before delete.
-// This allows a file with the same name to be created even if there are open file handles.
-// See bug report about the game Abuse: https://github.com/dosbox-staging/dosbox-staging/issues/4123
+// This allows a file with the same name to be created even if there are open
+// file handles. See bug report about the game Abuse:
+// https://github.com/dosbox-staging/dosbox-staging/issues/4123
 bool delete_native_file(const std_fs::path& path)
 {
 	// Prefix of the temp file. Only uses 3 characters.
 	// $ as convention to designate temp file followed by DB for DosBox.
-	const wchar_t *prefix = L"$DB";
+	const wchar_t* prefix = L"$DB";
 
 	// Zero for UniqueNumber uses system time.
 	// Zero also means it creates the file and ensures it is unique.
 	constexpr UINT UniqueNumber = 0;
 
-	// Maximum return size of GetTempFileNameW() is MAX_PATH plus a null terminator.
+	// Maximum return size of GetTempFileNameW() is MAX_PATH plus a null
+	// terminator.
 	wchar_t temp_file[MAX_PATH + 1] = {};
 
-	// Create a temporary file inside the same directory as the file to be deleted.
-	// Returns unique identifier on success and 0 on failure.
-	if (GetTempFileNameW(path.parent_path().c_str(), prefix, UniqueNumber, temp_file) == 0) {
-		LOG_ERR("FS: Failed to create temp file. Deleting '%s' directly.", path.string().c_str());
-		// We failed to create a temp file but we should still try to delete the original file.
+	// Create a temporary file inside the same directory as the file to be
+	// deleted. Returns unique identifier on success and 0 on failure.
+	if (GetTempFileNameW(path.parent_path().c_str(), prefix, UniqueNumber, temp_file) ==
+	    0) {
+		LOG_ERR("FS: Failed to create temp file. Deleting '%s' directly.",
+		        path.string().c_str());
+		// We failed to create a temp file but we should still try to
+		// delete the original file.
 		return DeleteFileW(path.c_str());
 	}
 
-	// Above function creates the temp file so we replace it here with the flag MOVEFILE_REPLACE_EXISTING.
+	// Above function creates the temp file so we replace it here with the
+	// flag MOVEFILE_REPLACE_EXISTING.
 	if (MoveFileExW(path.c_str(), temp_file, MOVEFILE_REPLACE_EXISTING)) {
 		// We can immediately delete the temporary file.
 		// Any open handles can be still be read from or written to.
 		// A new file can be created with the original file name.
 		if (!DeleteFileW(temp_file)) {
-			LOG_ERR("FS: Failed to delete temporary file: '%s'", std_fs::path(temp_file).string().c_str());
-			// Failed to delete the temp file but the original file was moved.
-			// We should still return success so that the filesystem removes the original file from the cache.
+			LOG_ERR("FS: Failed to delete temporary file: '%s'",
+			        std_fs::path(temp_file).string().c_str());
+			// Failed to delete the temp file but the original file
+			// was moved. We should still return success so that the
+			// filesystem removes the original file from the cache.
 		}
 		return true;
 	}
 
-	// We failed to move the file. We need to delete both the temp file and the original file.
-	LOG_ERR("FS: Failed to move '%s' to temp file '%s' before delete.", path.string().c_str(), std_fs::path(temp_file).string().c_str());
+	// We failed to move the file. We need to delete both the temp file and
+	// the original file.
+	LOG_ERR("FS: Failed to move '%s' to temp file '%s' before delete.",
+	        path.string().c_str(),
+	        std_fs::path(temp_file).string().c_str());
 	if (!DeleteFileW(temp_file)) {
-		LOG_ERR("FS: Failed to delete temporary file: '%s'", std_fs::path(temp_file).string().c_str());
+		LOG_ERR("FS: Failed to delete temporary file: '%s'",
+		        std_fs::path(temp_file).string().c_str());
 	}
 	return DeleteFileW(path.c_str());
 }
