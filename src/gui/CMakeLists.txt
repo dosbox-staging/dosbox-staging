@@ -6,6 +6,7 @@ add_library(libgui STATIC
 		sdlmain.cpp
 		shader_manager.cpp
 		titlebar.cpp
+		truetype.cpp
 )
 
 find_package(OpenGL REQUIRED)

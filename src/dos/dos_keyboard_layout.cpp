@@ -35,6 +35,7 @@
 #include "math_utils.h"
 #include "regs.h"
 #include "setup.h"
+#include "truetype.h"
 #include "string_utils.h"
 
 extern void DOS_UpdateCurrentProgramName();
@@ -49,6 +50,7 @@ static void notify_code_page_changed()
 	DOS_UpdateCurrentProgramName();
 	DOS_RepopulateCountryInfo();
 	AUTOEXEC_NotifyNewCodePage();
+	TRUETYPE_NotifyNewCodePage();
 }
 
 // A common pattern in the keyboard layout file is to try opening the requested

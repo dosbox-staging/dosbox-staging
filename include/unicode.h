@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,10 +23,14 @@
 
 #include <string>
 
-// Get recommended DOS code page to render the UTF-8 strings to. This
-// might not be the code page set using KEYB command, for example due
-// to emulated hardware limitations, or duplicated code page numbers
+// Get recommended DOS code page to render the UTF-8 strings to. This might not
+// be the code page set using KEYB command, for example due to emulated hardware
+// limitations, or duplicated code page numbers
 uint16_t get_utf8_code_page();
+
+// Returns the information whether the Unicode engine knows the given DOS code
+// page and is able to use it for string conversion
+bool is_code_page_supported(const uint16_t code_page);
 
 // Specifies what to do if the DOS code page does not contain character
 // representing given Unicode grapheme
@@ -62,6 +66,10 @@ enum class DosStringConvertMode {
 	NoSpecialCharacters
 };
 
+// The current implementation is limited to 16-bit Unicode code points
+using UnicodeCodePoint = uint16_t;
+using UnicodeString    = std::vector<UnicodeCodePoint>;
+
 // Convert the UTF-8 string to the format intended for display inside emulated
 // environment, or vice-versa. Code page '0' means a pure 7-bit ASCII. Functions
 // without 'code_page' parameters use current DOS code page.
@@ -81,6 +89,15 @@ std::string dos_to_utf8(const std::string& str,
 std::string dos_to_utf8(const std::string& str,
                         const DosStringConvertMode convert_mode,
                         const uint16_t code_page);
+
+// Convert the DOS format string to plain Unicode, without any encoding
+
+UnicodeString dos_to_unicode(const std::string& str,
+                             const DosStringConvertMode convert_mode);
+
+UnicodeString dos_to_unicode(const std::string& str,
+                             const DosStringConvertMode convert_mode,
+                             const uint16_t code_page);
 
 // Specialized routines for converting between code page 437 and UTF-8 without
 // any combining marks - to be used in filesystem emulation
