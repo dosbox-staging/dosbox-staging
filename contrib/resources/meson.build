@@ -2,6 +2,7 @@ resources = [
     'drives',
     'freedos-cpi',
     'freedos-keyboard',
+    'fonts-console',
     'glshaders',
     'mapping',
     'mapping-freedos.org',

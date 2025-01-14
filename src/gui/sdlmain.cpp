@@ -73,6 +73,7 @@
 #include "timer.h"
 #include "titlebar.h"
 #include "tracy.h"
+#include "truetype.h"
 #include "vga.h"
 #include "video.h"
 
@@ -3612,6 +3613,7 @@ static void read_config(Section* sec)
 	}
 
 	TITLEBAR_ReadConfig(*conf);
+	TRUETYPE_ReadConfig();
 }
 
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
@@ -4381,6 +4383,13 @@ static void config_add_sdl()
 	        "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(get_sdl_texture_renderers());
 
+	// XXX perhaps move these somewhere else
+	pstring = sdl_sec->Add_string("text_output", always, "normal");
+	pstring->Set_help("XXX1\n");
+	pstring->Set_values({ "normal", "ttf_bitmap", "ttf_crt", "ttf_hires" });
+	pstring = sdl_sec->Add_string("text_font", always, "");
+	pstring->Set_help("XXX2\n");
+
 	auto pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->Set_help(
 	        "Number of display to use; values depend on OS and user "
@@ -5075,6 +5084,9 @@ int sdl_main(int argc, char* argv[])
 
 		// Init all the sections
 		control->Init();
+
+		// XXX temporary location
+		TRUETYPE_Init();
 
 		// Some extra SDL Functions
 		Section_prop* sdl_sec = get_sdl_section();
