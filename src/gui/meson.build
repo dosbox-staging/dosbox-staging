@@ -6,6 +6,7 @@ libgui_sources = files(
     'sdlmain.cpp',
     'shader_manager.cpp',
     'titlebar.cpp',
+    'truetype.cpp',
 )
 
 libgui = static_library(
