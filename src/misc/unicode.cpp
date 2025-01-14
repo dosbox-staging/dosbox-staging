@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ CHECK_NARROWING();
 // Note: Most of the Unicode engine data is stored in external files, loaded and
 // parsed during runtime
 
-using box_drawing_set_t = std::array<uint16_t, 40>;
+using box_drawing_set_t = std::array<UnicodeCodePoint, 40>;
 
 // List of box drawing characters, ordered as in code page 437
 static constexpr box_drawing_set_t BoxDrawingSetRegular = {
@@ -134,8 +134,8 @@ static constexpr box_drawing_set_t BoxDrawingSetLight = {
 // Additional box drawing fallback data - each group of aliases is applied as
 // a whole, even if the code page actually have some characters
 
-using alias_t                         = std::pair<uint16_t, uint16_t>;
-using alias_groups_t                  = std::vector<std::vector<alias_t>>;
+using alias_t        = std::pair<UnicodeCodePoint, UnicodeCodePoint>;
+using alias_groups_t = std::vector<std::vector<alias_t>>;
 
 const alias_groups_t box_alias_groups = {
 	// Note: If you compare horizontal and vertical, the groups might seem
@@ -196,20 +196,18 @@ const alias_groups_t box_alias_groups = {
 // Unicode engine
 // ***************************************************************************
 
-using wide_string = std::vector<uint16_t>;
-
 // Class representing a grapheme - one main code point + optionally a number
 // os code points represening combining marks
 class Grapheme final {
 public:
 	Grapheme() = default;
-	Grapheme(const uint16_t code_point);
+	Grapheme(const UnicodeCodePoint code_point);
 
 	[[nodiscard]] bool IsEmpty() const;
 	[[nodiscard]] bool IsValid() const;
 	[[nodiscard]] bool HasMark() const;
-	[[nodiscard]] uint16_t GetCodePoint() const;
-	void PushInto(wide_string& str_out) const;
+	[[nodiscard]] UnicodeCodePoint GetCodePoint() const;
+	void PushInto(UnicodeString& str_out) const;
 
 	void Invalidate();
 	void AddMark(const uint16_t code_point);
@@ -222,10 +220,10 @@ public:
 
 private:
 	// Unicode code point
-	uint16_t code_point = static_cast<uint16_t>(' ');
+	UnicodeCodePoint code_point = static_cast<UnicodeCodePoint>(' ');
 	// Combining marks
-	wide_string marks        = {};
-	wide_string marks_sorted = {};
+	UnicodeString marks        = {};
+	UnicodeString marks_sorted = {};
 
 	bool is_empty = true;
 	bool is_valid = true;
@@ -238,14 +236,14 @@ using map_dos_to_grapheme_t = std::map<uint8_t, Grapheme>;
 
 // Mapping between Unicode box character code point and fallback code point
 // supported by given code page
-using map_box_code_points_t = std::map<uint16_t, uint16_t>;
+using map_box_code_points_t = std::map<UnicodeCodePoint, UnicodeCodePoint>;
 
 // Mapping between lowercase and uppercase code points
-using map_code_point_case_t    = std::map<uint16_t, uint16_t>;
+using map_code_point_case_t    = std::map<UnicodeCodePoint, UnicodeCodePoint>;
 using map_dos_character_case_t = std::vector<uint8_t>;
 
 // Rules how to decompose code points to split-out all the combining marks
-using decomposition_rules_t = std::map<uint16_t, Grapheme>;
+using decomposition_rules_t = std::map<UnicodeCodePoint, Grapheme>;
 
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
 using config_aliases_t    = std::vector<alias_t>;
@@ -330,7 +328,7 @@ static std::map<uint16_t, code_page_maps_t> per_code_page_mappings = {};
 static bool is_combining_mark(const uint32_t code_point)
 {
 	// clang-format off
-	static constexpr std::pair<uint16_t, uint16_t> Ranges[] = {
+	static constexpr std::pair<UnicodeCodePoint, UnicodeCodePoint> Ranges[] = {
 		// 0x02b0 - 0x02ff     Spacing Modifier Letters
 		// Not a real combining mark, but due to engine limitations
 		// we need this definition for U+1E9A decomposition rules, and
@@ -383,7 +381,7 @@ static bool is_combining_mark(const uint32_t code_point)
 	return std::any_of(std::begin(Ranges), std::end(Ranges), in_range);
 }
 
-Grapheme::Grapheme(const uint16_t initial_code_point)
+Grapheme::Grapheme(const UnicodeCodePoint initial_code_point)
         : code_point(initial_code_point),
           is_empty(false)
 {
@@ -411,12 +409,12 @@ bool Grapheme::HasMark() const
 	return !marks.empty();
 }
 
-uint16_t Grapheme::GetCodePoint() const
+UnicodeCodePoint Grapheme::GetCodePoint() const
 {
 	return code_point;
 }
 
-void Grapheme::PushInto(wide_string& str_out) const
+void Grapheme::PushInto(UnicodeString& str_out) const
 {
 	if (is_empty || !is_valid) {
 		return;
@@ -438,7 +436,7 @@ void Grapheme::Invalidate()
 	marks_sorted.clear();
 }
 
-void Grapheme::AddMark(const uint16_t in_code_point)
+void Grapheme::AddMark(const UnicodeCodePoint in_code_point)
 {
 	if (!is_valid) {
 		// Can't add combining mark to invalid grapheme
@@ -544,7 +542,7 @@ constexpr uint8_t ControlCodeThreshold = 0x20;
 
 // Unicode code points for screen codes from 0x00 to 0x1f
 // see: https://en.wikipedia.org/wiki/Code_page_437
-constexpr std::array<uint16_t, 0x20> ScreenCodesWide = {
+constexpr std::array<UnicodeCodePoint, 0x20> ScreenCodesWide = {
 	// clang-format off
 	0x0020, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, // 00-07
 	0x25d8, 0x25cb, 0x25d9, 0x2642, 0x2640, 0x266a, 0x266b, 0x263c, // 08-13
@@ -553,15 +551,15 @@ constexpr std::array<uint16_t, 0x20> ScreenCodesWide = {
 	// clang-format on
 };
 
-constexpr uint16_t ScreenCodeWide7f = 0x2302; // 'del' character
+constexpr UnicodeCodePoint ScreenCodeWide7f = 0x2302; // 'del' character
 
-static bool is_control_code(const uint16_t value)
+static bool is_control_code(const UnicodeCodePoint value)
 {
 	return (value < ControlCodeThreshold) || (value == ControlCodeDelete);
 }
 
-static std::optional<uint16_t> control_code_to_wide(const uint8_t byte,
-                                                    const DosStringConvertMode convert_mode)
+static std::optional<UnicodeCodePoint> control_code_to_unicode(const uint8_t byte,
+                                                               const DosStringConvertMode convert_mode)
 {
 
 	if (convert_mode == DosStringConvertMode::NoSpecialCharacters) {
@@ -633,7 +631,7 @@ static std::optional<uint8_t> grapheme_to_screen_code(const Grapheme& grapheme,
 // Conversion routines
 // ***************************************************************************
 
-static wide_string utf8_to_wide(const std::string& str)
+static UnicodeString utf8_to_unicode_common(const std::string& str)
 {
 	// Convert UTF-8 string to a sequence of decoded integers
 
@@ -653,7 +651,7 @@ static wide_string utf8_to_wide(const std::string& str)
 		already_warned = true;
 	};
 
-	wide_string str_out = {};
+	UnicodeString str_out = {};
 	str_out.reserve(str.size());
 
 	for (size_t i = 0; i < str.size(); ++i) {
@@ -746,13 +744,13 @@ static wide_string utf8_to_wide(const std::string& str)
 			warn_decode_problem(i); // not UTF8 encoding
 		}
 
-		str_out.push_back(static_cast<uint16_t>(code_point));
+		str_out.push_back(static_cast<UnicodeCodePoint>(code_point));
 	}
 
 	return str_out;
 }
 
-static std::string wide_to_utf8(const wide_string& str)
+static std::string wide_to_utf8(const UnicodeString& str)
 {
 	std::string str_out = {};
 	str_out.reserve(str.size() * 2);
@@ -787,9 +785,9 @@ static std::string wide_to_utf8(const wide_string& str)
 	return str_out;
 }
 
-static void warn_code_point(const uint16_t code_point)
+static void warn_code_point(const UnicodeCodePoint code_point)
 {
-	static std::set<uint16_t> already_warned;
+	static std::set<UnicodeCodePoint> already_warned;
 	if (already_warned.count(code_point) > 0) {
 		return;
 	}
@@ -807,7 +805,7 @@ static void warn_code_page(const uint16_t code_page)
 	LOG_WARNING("UNICODE: Requested unknown code page %d", code_page);
 }
 
-static std::string wide_to_dos(const wide_string& str,
+static std::string wide_to_dos(const UnicodeString& str,
                                const DosStringConvertMode convert_mode,
                                const UnicodeFallback fallback,
                                const uint16_t code_page)
@@ -934,7 +932,7 @@ static std::string wide_to_dos(const wide_string& str,
 	};
 
 	// Handle unknown code points
-	auto push_unknown = [&](const uint16_t code_point) {
+	auto push_unknown = [&](const UnicodeCodePoint code_point) {
 		if (fallback == UnicodeFallback::EmptyString) {
 			return false;
 		}
@@ -1015,11 +1013,11 @@ static std::string wide_to_dos(const wide_string& str,
 	return str_out;
 }
 
-static wide_string dos_to_wide(const std::string& str,
-                               const DosStringConvertMode convert_mode,
-                               const uint16_t code_page)
+static UnicodeString dos_to_unicode_common(const std::string& str,
+                                           const DosStringConvertMode convert_mode,
+                                           const uint16_t code_page)
 {
-	wide_string str_out = {};
+	UnicodeString str_out = {};
 	str_out.reserve(str.size());
 
 	for (const auto character : str) {
@@ -1035,7 +1033,7 @@ static wide_string dos_to_wide(const std::string& str,
 				mappings.grapheme_to_dos[byte].PushInto(str_out);
 			}
 		} else if (is_control_code(byte)) {
-			const auto wide = control_code_to_wide(byte, convert_mode);
+			const auto wide = control_code_to_unicode(byte, convert_mode);
 			if (wide) {
 				str_out.push_back(*wide);
 			} else {
@@ -1196,7 +1194,7 @@ static bool get_code_page(const std::string& token, uint16_t& code_page)
 
 static bool get_grapheme(const std::vector<std::string>& tokens, Grapheme& grapheme)
 {
-	uint16_t code_point = 0;
+	UnicodeCodePoint code_point = 0;
 	if (tokens.size() < 2 || !get_hex_16bit(tokens[1], code_point)) {
 		return false;
 	}
@@ -1236,7 +1234,7 @@ static void error_parsing(const std::string& file_name, const size_t line_num,
 	}
 }
 
-static void error_code_point_found_twice(const uint16_t code_point,
+static void error_code_point_found_twice(const UnicodeCodePoint code_point,
                                          const std::string& file_name,
                                          const size_t line_num)
 {
@@ -1422,8 +1420,8 @@ static void import_config_main(const std_fs::path& path_root)
 				return;
 			}
 
-			uint16_t code_point_1 = 0;
-			uint16_t code_point_2 = 0;
+			UnicodeCodePoint code_point_1 = 0;
+			UnicodeCodePoint code_point_2 = 0;
 			if (!get_hex_16bit(tokens[1], code_point_1) ||
 			    !get_hex_16bit(tokens[2], code_point_2)) {
 				error_parsing(file_name, line_num);
@@ -1601,8 +1599,8 @@ static void import_decomposition(const std_fs::path& path_root)
 			continue; // empty line
 		}
 
-		uint16_t code_point_1 = 0;
-		uint16_t code_point_2 = 0;
+		UnicodeCodePoint code_point_1 = 0;
+		UnicodeCodePoint code_point_2 = 0;
 
 		if (tokens.size() < 3 || !get_hex_16bit(tokens[0], code_point_1) ||
 		    !get_hex_16bit(tokens[1], code_point_2)) {
@@ -1660,8 +1658,8 @@ static void import_mapping_ascii(const std_fs::path& path_root)
 			continue; // empty line
 		}
 
-		uint16_t code_point = 0;
-		uint8_t character   = 0;
+		UnicodeCodePoint code_point = 0;
+		uint8_t          character  = 0;
 
 		if (tokens.size() != 2 || !get_hex_16bit(tokens[0], code_point) ||
 		    !get_ascii(tokens[1], character)) {
@@ -1699,8 +1697,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 	size_t line_num      = 0;
 
 	// All the encountered uppercase/lowercase code points
-	std::set<uint16_t> all_uppercase = {};
-	std::set<uint16_t> all_lowercase = {};
+	std::set<UnicodeCodePoint> all_uppercase = {};
+	std::set<UnicodeCodePoint> all_lowercase = {};
 
 	map_code_point_case_t new_uppercase = {};
 	map_code_point_case_t new_lowercase = {};
@@ -1716,8 +1714,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 			return;
 		}
 
-		uint16_t code_point_upper = 0;
-		uint16_t code_point_lower = 0;
+		UnicodeCodePoint code_point_upper = 0;
+		UnicodeCodePoint code_point_lower = 0;
 
 		// Skip code points which do not have corresponding upper/lower
 		// case characters - they would be needed if we were providing
@@ -2164,6 +2162,13 @@ uint16_t get_utf8_code_page()
 	return 0;
 }
 
+bool is_code_page_supported(const uint16_t code_page)
+{
+	load_config_if_needed();
+
+	return config_mappings.contains(deduplicate_code_page(code_page));
+}
+
 static std::string utf8_to_dos_common(const std::string& str,
                                       const DosStringConvertMode convert_mode,
                                       const UnicodeFallback fallback,
@@ -2171,7 +2176,7 @@ static std::string utf8_to_dos_common(const std::string& str,
 {
 	load_config_if_needed();
 
-	const auto wide = utf8_to_wide(str);
+	const auto wide = utf8_to_unicode_common(str);
 	return wide_to_dos(wide, convert_mode, fallback, code_page);
 }
 
@@ -2202,7 +2207,7 @@ static std::string dos_to_utf8_common(const std::string& str,
 {
 	load_config_if_needed();
 
-	const auto wide = dos_to_wide(str, convert_mode, code_page);
+	const auto wide = dos_to_unicode_common(str, convert_mode, code_page);
 	return wide_to_utf8(wide);
 }
 
@@ -2219,6 +2224,21 @@ std::string dos_to_utf8(const std::string& str,
 	return dos_to_utf8_common(str, convert_mode, get_custom_code_page(code_page));
 }
 
+UnicodeString dos_to_unicode(const std::string& str,
+                             const DosStringConvertMode convert_mode)
+{
+	load_config_if_needed();
+
+	return dos_to_unicode_common(str, convert_mode, get_utf8_code_page());
+}
+
+UnicodeString dos_to_unicode(const std::string& str,
+                             const DosStringConvertMode convert_mode,
+                             const uint16_t code_page)
+{
+	return dos_to_unicode_common(str, convert_mode, get_custom_code_page(code_page));
+}
+
 std::string fs_utf8_to_dos_437(const std::string& str)
 {
 	constexpr uint16_t CodePage = 437;
@@ -2232,7 +2252,7 @@ std::string fs_utf8_to_dos_437(const std::string& str)
 	const auto mapping = per_code_page_mappings.at(CodePage).dos_to_grapheme_normalized;
 
 	std::string str_out = {};
-	for (const auto code_point : utf8_to_wide(str)) {
+	for (const auto code_point : utf8_to_unicode_common(str)) {
 		if (is_control_code(code_point)) {
 			// Not valid for file/directory name
 			return {};

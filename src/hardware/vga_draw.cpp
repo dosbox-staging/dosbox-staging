@@ -36,6 +36,7 @@
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb565.h"
+#include "truetype.h"
 #include "vga.h"
 #include "video.h"
 
@@ -1197,6 +1198,9 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	++vga.draw.cursor.count; // Do this here, else the cursor speed depends
 	                         // on the frameskip
 	if (vga.draw.vga_override || !ReelMagic_RENDER_StartUpdate()) {
+		return;
+	}
+	if (TRUETYPE_Render()) {
 		return;
 	}
 
