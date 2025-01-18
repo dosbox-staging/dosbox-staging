@@ -894,6 +894,15 @@ private:
 };
 extern DOS_InfoBlock dos_infoblock;
 
+enum class ScreenFontOrigin {
+	// From the graphics adapter ROM
+	Rom,
+	// From one of the bundled CPI files
+	Bundled,
+	// From user provided CPI file
+	Custom,
+};
+
 struct DOS_Block {
 	DOS_Date date       = {};
 	DOS_Version version = {};
@@ -954,6 +963,11 @@ struct DOS_Block {
 
 	uint16_t country_code    = {};
 	uint16_t loaded_codepage = {};
+
+	ScreenFontOrigin screen_font_origin = {};
+	// Only valid if 'screen_font_origin' is 'ScreenFontOrigin::Custom'
+	std::string screen_font_file_name = {};
+
 	uint16_t dcp = {};
 };
 
