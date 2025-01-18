@@ -54,12 +54,13 @@ jobs:
         run:  scripts/fetch-and-tar-subprojects.sh
 
   build_ubuntu:
-    name: ${{ matrix.conf.name }}
-    runs-on: ${{ matrix.conf.os }}
+    name: ${{ matrix.conf.name }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.conf.os }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     needs: cache_subprojects
     strategy:
       matrix:
+        arch: [x64, arm64]
         conf:
 
           - name: GCC 12, Ubuntu 22.04
