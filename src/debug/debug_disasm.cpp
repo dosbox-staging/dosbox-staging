@@ -627,7 +627,7 @@ static void outhex(char subtype, int extend, int optional, int defsize, int sign
   }
   switch (n) {
   case 1:
-       if (sign && (char)delta<0) {
+       if (sign && (signed char)delta<0) {
          delta = -delta;
          signchar = '-';
        } else
