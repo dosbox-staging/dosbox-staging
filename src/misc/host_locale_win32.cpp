@@ -422,56 +422,57 @@ static std::map<std::string, std::string> read_layouts_registry(const std::strin
 	return layouts;
 }
 
-static std::vector<KeyboardLayoutMaybeCodepage> get_layouts_maybe_codepages(std::string& out_log_info)
+static HostKeyboardLayouts get_host_keyboard_layouts()
 {
-	out_log_info = {};
-
-	std::vector<KeyboardLayoutMaybeCodepage> layouts = {};
+	HostKeyboardLayouts result = {};
+	auto& result_list = result.keyboard_layout_list;
 
 	// First look for the user-preferred layouts
 	const auto substitutes = read_layouts_registry(TEXT("Substitutes"));
 	for (const auto& entry : substitutes) {
 		// Get information for log
-		if (!out_log_info.empty()) {
-			out_log_info += ";";
+		if (!result.log_info.empty()) {
+			result.log_info += ";";
 		}
-		out_log_info += std::string(entry.first);
-		out_log_info += "->";
-		out_log_info += entry.second;
+		result.log_info += std::string(entry.first);
+		result.log_info += "->";
+		result.log_info += entry.second;
 
 		// Check if we know a matching keyboard layout
 		auto key = entry.second;
 		lowcase(key);
 		if (WinToDosKeyboard.contains(key)) {
-			layouts.push_back(WinToDosKeyboard.at(key));
+			result_list.push_back(WinToDosKeyboard.at(key));
 		}
 	}
 
-	if (!layouts.empty()) {
-                return layouts;
-        }
+	if (!result_list.empty()) {
+		return result;
+	}
 
 	// Then check all the available layouts in the system
 	const auto preload = read_layouts_registry(TEXT("Preload"));
 	for (const auto& entry : preload) {
 		// Get information for log
-		if (!out_log_info.empty()) {
-			out_log_info += ";";
+		if (!result.log_info.empty()) {
+			result.log_info += ";";
 		}
-		out_log_info += entry.second;
+		result.log_info += entry.second;
 
-                auto key = entry.second;
+		auto key = entry.second;
                 lowcase(key);
                 if (WinToDosKeyboard.contains(key)) {
-                        layouts.push_back(WinToDosKeyboard.at(key));
-                }
+			result_list.push_back(WinToDosKeyboard.at(key));
+		}
 	}
 
-	return layouts;
+	return result;
 }
 
-static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
+static HostLocaleElement get_dos_country()
 {
+	HostLocaleElement result = {};
+
 	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 	if (!GetUserDefaultLocaleName(buffer, LOCALE_NAME_MAX_LENGTH)) {
 		LOG_WARNING("LOCALE: Could not get default locale name, error code %lu",
@@ -480,21 +481,97 @@ static std::optional<DosCountry> get_dos_country(std::string& out_log_info)
 	}
 	const auto locale_name = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	out_log_info = locale_name;
+	result.log_info = locale_name;
 
 	const auto tokens = split(locale_name, "-");
 	if (tokens.size() < 2) {
 		return {};
 	}
 
-	return IsoToDosCountry(tokens[0], tokens[1]);
+	result.country_code = iso_to_dos_country(tokens[0], tokens[1]);
+	return result;
 }
 
-static std::string get_language_file(std::string& out_log_info)
+static std::vector<std::string> get_preferred_languages()
 {
-	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
+	std::vector<std::string> result = {};
 
-	// Get the main language name
+	// At least on Windows 11, 'GetUserPreferredUILanguages' only returns
+	// the first language - let's read the registry instead
+
+	const LPCTSTR KeyPath = TEXT("Control Panel\\International\\User Profile\\");
+	const LPCTSTR KeyName = TEXT("Languages");
+
+	DWORD buffer_size = 0;
+
+	// Get the buffer size
+	if (RegGetValueA(HKEY_CURRENT_USER,
+	                 KeyPath,
+	                 KeyName,
+	                 RRF_RT_REG_MULTI_SZ,
+	                 nullptr,
+	                 nullptr,
+	                 &buffer_size) != ERROR_SUCCESS ||
+	    buffer_size == 0) {
+		return {};
+	}
+
+	// Get the actual data
+	std::vector<char> buffer(buffer_size + 1);
+	buffer.resize(buffer_size);
+	if (RegGetValueA(HKEY_CURRENT_USER,
+	                 KeyPath,
+	                 KeyName,
+	                 RRF_RT_REG_MULTI_SZ,
+	                 nullptr,
+	                 buffer.data(),
+	                 &buffer_size) != ERROR_SUCCESS) {
+		return {};
+	}
+	buffer.back() = '\0';
+
+	// Extract the values
+	auto iter = buffer.begin();
+	while (iter < buffer.end()) {
+		const auto element = std::string(iter, std::find(iter, buffer.end(), '\0'));
+		if (element.empty()) {
+			break;
+		}
+
+		result.push_back(element);
+		iter += element.size() + 1;
+	}
+
+	return result;
+}
+
+static HostLanguages get_host_languages()
+{
+	HostLanguages result = {};
+
+	auto get_language_file = [&](const std::string& input) -> std::string {
+		const auto tokens = split(input, "-");
+		if (tokens.empty()) {
+			return {};
+		}
+		if (tokens.size() == 1) {
+			return iso_to_language_file(tokens.at(0), "");
+		}
+		return iso_to_language_file(tokens.at(0), tokens.at(1));
+	};
+
+	// Get the list of preferred languages
+	for (const auto& entry : get_preferred_languages()) {
+		if (!result.log_info.empty()) {
+			result.log_info += ", ";
+		}
+		result.log_info += entry;
+
+		result.language_files.push_back(get_language_file(entry));
+	}
+
+	// Get the default GUI language
+	wchar_t buffer[LOCALE_NAME_MAX_LENGTH];
 	const auto ui_language = GetUserDefaultUILanguage();
 	if (LCIDToLocaleName(ui_language, buffer, LOCALE_NAME_MAX_LENGTH, 0) == 0) {
 		LOG_WARNING("LOCALE: Could not get locale name for language 0x%04x, error code %lu",
@@ -505,14 +582,14 @@ static std::string get_language_file(std::string& out_log_info)
 
 	const auto language_territory = to_string(&buffer[0], LOCALE_NAME_MAX_LENGTH);
 
-	out_log_info = language_territory;
-
-	if (language_territory == "pt-BR") {
-		// We have a dedicated Brazilian translation
-		return "br";
+	if (!result.log_info.empty()) {
+		result.log_info += "; ";
 	}
+	result.log_info += "GUI: ";
+	result.log_info += language_territory;
 
-	return language_territory.substr(0, language_territory.find('-'));
+	result.language_file_gui = get_language_file(language_territory);
+	return result;
 }
 
 const HostLocale& GetHostLocale()
@@ -522,7 +599,7 @@ const HostLocale& GetHostLocale()
 	if (!locale) {
 		locale = HostLocale();
 
-		locale->country = get_dos_country(locale->log_info.country);
+		locale->country = get_dos_country();
 	}
 
 	return *locale;
@@ -531,24 +608,20 @@ const HostLocale& GetHostLocale()
 const HostKeyboardLayouts& GetHostKeyboardLayouts()
 {
 	static std::optional<HostKeyboardLayouts> locale = {};
-	if (!locale) {
-		locale = HostKeyboardLayouts();
 
-		locale->keyboard_layout_list = get_layouts_maybe_codepages(
-		        locale->log_info);
+	if (!locale) {
+		locale = get_host_keyboard_layouts();
 	}
 
 	return *locale;
 }
 
-const HostLanguage& GetHostLanguage()
+const HostLanguages& GetHostLanguages()
 {
-	static std::optional<HostLanguage> locale = {};
+	static std::optional<HostLanguages> locale = {};
 
 	if (!locale) {
-		locale = HostLanguage();
-
-		locale->language_file = get_language_file(locale->log_info);
+		locale = get_host_languages();
 	}
 
 	return *locale;

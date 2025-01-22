@@ -27,11 +27,15 @@
 #include <optional>
 #include <vector>
 
-// Converts language and territory in the typical POSIX format (with underscore
-// or hyphen - "en_US" or "en-US"), using 'ISO 3166-1 alpha-2' codes, to a
-// DOS country code
-std::optional<DosCountry> IsoToDosCountry(const std::string& language,
-                                          const std::string& territory);
+// Convert language and territory (using 'ISO 3166-1 alpha-2' codes) to a DOS
+// country code
+std::optional<DosCountry> iso_to_dos_country(const std::string& language,
+                                             const std::string& territory);
+
+// Convert language and territory (using 'ISO 3166-1 alpha-2' codes, also
+// supports POSIX dummy languages) to a language file name (without extension)
+std::string iso_to_language_file(const std::string& language,
+                                 const std::string& territory);
 
 struct KeyboardLayoutMaybeCodepage {
 	// Keyboard layout, as supported by the FreeDOS
@@ -87,6 +91,15 @@ struct StdLibLocale {
 	char time_separator = {};
 };
 
+struct HostLocaleElement {
+	std::optional<DosCountry> country_code = {};
+
+	// If detection was successful, always provide info for the log output,
+	// telling which host OS property/value was used to determine the given
+	// locale.
+	std::string log_info = {};
+};
+
 struct HostLocale {
 	// These are locale detected by the portable routines of C++ library.
 	// Override them if the host-specific code can do a better job detecting
@@ -98,23 +111,13 @@ struct HostLocale {
 	// should leave them as default
 
 	// DOS country code
-	std::optional<DosCountry> country = {};
+	HostLocaleElement country = {};
 
 	// These are completely optional; leave them unset if you can't get the
 	// concrete value from the host OS, do not blindly copy 'country' here!
-	std::optional<DosCountry> numeric   = {};
-	std::optional<DosCountry> time_date = {};
-	std::optional<DosCountry> currency  = {};
-
-	// If detection was successful, always provide info for the log output,
-	// telling which host OS property/value was used to determine the given
-	// locale.
-	struct {
-		std::string country   = {};
-		std::string numeric   = {};
-		std::string time_date = {};
-		std::string currency  = {};
-	} log_info = {};
+	HostLocaleElement numeric   = {};
+	HostLocaleElement time_date = {};
+	HostLocaleElement currency  = {};
 };
 
 struct HostKeyboardLayouts {
@@ -131,19 +134,23 @@ struct HostKeyboardLayouts {
 	std::string log_info = {};
 };
 
-struct HostLanguage {
-	// If the host OS support code cannot determine the UI language, leave
-	// it as default
-	std::string language_file = {}; // translation (messages)
+struct HostLanguages {
+	// Put here the name of the language file corresponding to the host UI
+	// language. Leave empty if it can't be determined.
+	std::string language_file_gui = {};
+
+	// If the OS allows to get the list of UI languages preferred by the
+	// user, put it here.
+	std::vector<std::string> language_files = {};
 
 	// If detection was successful, always provide info for the log output,
-	// telling which host OS property/value was used to determine the
+	// telling which host OS properties/values were used to determine the
 	// language.
 	std::string log_info = {};
 };
 
 const HostLocale&          GetHostLocale();
 const HostKeyboardLayouts& GetHostKeyboardLayouts();
-const HostLanguage&        GetHostLanguage();
+const HostLanguages&       GetHostLanguages();
 
 #endif
