@@ -894,6 +894,15 @@ private:
 };
 extern DOS_InfoBlock dos_infoblock;
 
+enum class ScreenFontType {
+	// Graphics adapter ROM font
+	Rom,
+	// Bundled CPI files font
+	Bundled,
+	// User provided CPI file font
+	Custom,
+};
+
 struct DOS_Block {
 	DOS_Date date       = {};
 	DOS_Version version = {};
@@ -954,6 +963,11 @@ struct DOS_Block {
 
 	uint16_t country_code    = {};
 	uint16_t loaded_codepage = {};
+
+	ScreenFontType screen_font_type = {};
+	// Only valid if 'screen_font_origin' is 'ScreenFontType::Custom'
+	std::string screen_font_file_name = {};
+
 	uint16_t dcp = {};
 };
 
