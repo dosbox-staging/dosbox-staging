@@ -718,6 +718,8 @@ private:
 
 	// Top-level file structure parsers
 
+	bool ShouldSkipCodePage(const CodePageEntryHeader& header);
+
 	ParserResult GetFontsCommonPart(const uint16_t code_page_filter);
 	ParserResult GetFontsMsDos(const uint32_t fih_offset,
 	                           const uint16_t code_page_filter);
@@ -1276,6 +1278,27 @@ uint32_t CpiParser::AdaptOffset(const uint32_t value, bool& is_adaptation_needed
 	}
 }
 
+bool CpiParser::ShouldSkipCodePage(const CodePageEntryHeader& header)
+{
+	bool should_skip = false;
+
+	// Check if code page is valid
+	if (header.code_page == 0) {
+		Warn(header.struct_offset,
+		     header.StructName,
+		     format_str("invalid code page %d", header.code_page));
+		should_skip = true;
+	}
+
+	// Check if device name is valid
+	if (!IsDeviceNameValid(header)) {
+		Warn(header.struct_offset, header.StructName, "invalid device name");
+		should_skip = true;
+	}
+
+	return should_skip;
+}
+
 ParserResult CpiParser::GetFontsCommonPart(const uint16_t code_page_filter)
 {
 	// Helper code for offset format conmversion
@@ -1327,22 +1350,7 @@ ParserResult CpiParser::GetFontsCommonPart(const uint16_t code_page_filter)
 			break;
 		}
 
-		bool should_skip = false;
-
-		// Check if code page is valid
-		if (header->code_page == 0) {
-			Warn(header->struct_offset, header->StructName,
-			     format_str("invalid code page %d", header->code_page));
-			should_skip = true;
-		}
-
-		// Check if device name is valid
-		const bool is_device_valid = IsDeviceNameValid(*header);
-		if (!is_device_valid) {
-			Warn(header->struct_offset, header->StructName,
-			     "invalid device name");
-			should_skip = true;
-		}
+		bool should_skip = ShouldSkipCodePage(*header);
 
 		const auto cpih_offset      = adapt_cpih(header->cpih_offset);
 		const auto next_cpeh_offset = adapt_cpeh(header->next_cpeh_offset);
