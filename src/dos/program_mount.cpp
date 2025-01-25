@@ -78,7 +78,7 @@ void MOUNT::ShowUsage()
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
 #ifdef WIN32
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_WIN32"));
-#elif MACOSX
+#elif defined(MACOSX)
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_MACOSX"));
 #else
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_OTHER"));

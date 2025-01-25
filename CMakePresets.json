@@ -1,0 +1,108 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Configure for Debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Configure for Release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "debug-macos",
+      "displayName": "Debug (macOS)",
+      "description": "Configure for Debug build",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/debug-macos",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release-macos",
+      "displayName": "Release (macOS host CPU)",
+      "description": "Configure for Release build",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/release-macos",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "release-macos-arm64",
+      "displayName": "Release (macOS arm64)",
+      "description": "Configure for Release build",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/release-macos-arm64",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "release-macos-x64",
+      "displayName": "Release (macOS x64)",
+      "description": "Configure for Release build",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/release-macos-x64",
+      "cacheVariables": {
+        "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "configurePreset": "release"
+    },
+    {
+      "name": "debug-macos",
+      "configurePreset" : "debug-macos",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-macos",
+      "configurePreset" : "release-macos",
+      "configuration": "Release"
+    },
+    {
+      "name": "release-macos-arm64",
+      "configurePreset" : "release-macos-arm64",
+      "configuration": "Release"
+    },
+    {
+      "name": "release-macos-x64",
+      "configurePreset" : "release-macos-x64",
+      "configuration": "Release"
+    }
+  ]
+}
