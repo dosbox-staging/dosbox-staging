@@ -85,3 +85,6 @@ tools/unlock_the_magic_mpeg_ps.exe
 obj-*.-linux-gnu
 debian
 
+# CMake
+CMakeUserPresets.json
+cmake-build-*/

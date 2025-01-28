@@ -29,6 +29,7 @@ add_library(libdos STATIC
 		program_biostest.cpp
 		program_boot.cpp
 		program_choice.cpp
+		program_clip.cpp
 		program_help.cpp
 		program_imgmount.cpp
 		program_intro.cpp

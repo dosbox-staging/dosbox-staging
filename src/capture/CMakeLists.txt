@@ -11,7 +11,7 @@ add_library(libcapture STATIC
 		image/png_writer.cpp
 )
 
-find_package(PNG REQUIRED)
+find_package(PNG CONFIG REQUIRED)
 
 target_link_libraries(libcapture PRIVATE
 		loguru
