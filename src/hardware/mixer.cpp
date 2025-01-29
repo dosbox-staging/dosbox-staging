@@ -312,7 +312,7 @@ void MIXER_UnlockMixerThread()
 	LPTDAC_NotifyUnlockMixer();
 	GUS_NotifyUnlockMixer();
 	REELMAGIC_NotifyUnlockMixer();
-	SBLASTER_NotifyLockMixer();
+	SBLASTER_NotifyUnlockMixer();
 
 	mixer.mutex.unlock();
 }
