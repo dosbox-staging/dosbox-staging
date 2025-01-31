@@ -2986,11 +2986,10 @@ static void generate_frames(const int frames_requested)
 	switch (sb.mode) {
 	case DspMode::None:
 	case DspMode::DmaPause:
-	case DspMode::DmaMasked: {
-		static std::vector<AudioFrame> empty_frames = {};
-		empty_frames.resize(frames_requested);
-		enqueue_frames(empty_frames);
-	} break;
+	case DspMode::DmaMasked:
+		sblaster->output_queue.Stop();
+		frames_added_this_tick += frames_requested;
+		break;
 
 	case DspMode::Dac:
 		// Frames get added synchronously inside dsp_do_command
