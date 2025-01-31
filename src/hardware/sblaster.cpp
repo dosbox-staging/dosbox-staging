@@ -283,23 +283,6 @@ static SbInfo sb = {};
 
 std::unique_ptr<SBLASTER> sblaster = {};
 
-class CallbackType {
-public:
-	void SetNone();
-	void SetPerTick();
-	void SetPerFrame();
-	~CallbackType()
-	{
-		SetNone();
-	}
-
-private:
-	enum class TimingType { None, PerTick, PerFrame };
-	TimingType timing_type = TimingType::None;
-};
-
-static CallbackType callback_type = {};
-
 // clang-format off
 
 // Number of bytes in input for commands (sb/sbpro)
@@ -825,20 +808,6 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 			// ready for playback. This is when we set the callback running to
 			// play the data.
 			sblaster->MaybeWakeUp();
-
-			// If the DMA transfer is setup with a base count of fewer than
-			// three elements (which is four bytes given one 16-bit stereo frame
-			// held in an 8-bit DMA channel), then we know the software intends
-			// to overwrite the DMA content on the fly instead of pre-generating
-			// large chunks of DMA audio. In these cases we prefer the
-			// fine-grained per-frame callback. (The minus one is because DMA
-			// counts are in addition to one; so a base count of zero is one
-			// element).
-			constexpr auto MaxSingleFrameBaseCount = sizeof(int16_t) * 2 - 1;
-
-			(chan->base_count <= MaxSingleFrameBaseCount)
-			        ? callback_type.SetPerFrame()
-			        : callback_type.SetPerTick();
 		}
 		break;
 	default: assert(false); break;
@@ -1320,56 +1289,6 @@ static void flush_remaining_dma_transfer()
 	}
 }
 
-static void per_tick_callback();
-
-static void per_frame_callback(uint32_t);
-
-static void add_next_frame_callback()
-{
-	assert(sblaster);
-	assert(sblaster->channel);
-
-	PIC_AddEvent(per_frame_callback, sblaster->channel->GetMillisPerFrame());
-}
-
-void CallbackType::SetNone()
-{
-	if (timing_type != TimingType::None) {
-
-		(timing_type == TimingType::PerTick)
-		        ? TIMER_DelTickHandler(per_tick_callback)
-		        : PIC_RemoveEvents(per_frame_callback);
-
-		timing_type = TimingType::None;
-	}
-}
-
-void CallbackType::SetPerTick()
-{
-	if (timing_type != TimingType::PerTick) {
-
-		SetNone();
-
-		frames_added_this_tick = 0;
-
-		TIMER_AddTickHandler(per_tick_callback);
-
-		timing_type = TimingType::PerTick;
-	}
-}
-
-void CallbackType::SetPerFrame()
-{
-	if (timing_type != TimingType::PerFrame) {
-
-		SetNone();
-
-		add_next_frame_callback();
-
-		timing_type = TimingType::PerFrame;
-	}
-}
-
 void SBLASTER::SetChannelRateHz(const int requested_rate_hz)
 {
 	const auto rate_hz = std::clamp(requested_rate_hz,
@@ -1843,15 +1762,27 @@ static void dsp_do_command()
 		const bool was_asleep = sblaster->MaybeWakeUp();
 		if (changed_modes || was_asleep) {
 			// If we're waking up, then the DAC hasn't been running (or maybe
-			// wasn't running at all), so start with a fresh DAC state and
-			// ensure we're using per-frame callback timing.
+			// wasn't running at all), so start with a fresh DAC state.
 			sb.dac = {};
-			callback_type.SetPerFrame();
 		}
 
 		if (const auto dac_rate_hz = sb.dac.MeasureDacRateHz(); dac_rate_hz) {
 			sblaster->SetChannelRateHz(*dac_rate_hz);
 		}
+
+		sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+
+		// Stopping the queue here makes the mixer dequeue nonblocking.
+		// Direct DAC mode has no set sample rate and it varies quite frequently.
+		// Without this call, I was getting stutters in OPL music in Alone in the Dark.
+
+		// If there are reports of glitchy DAC sound, we may want to revisit this.
+		// The previous approaches of per-frame callbacks and audio stretching solved this by matching to the mixer's sample rate.
+		// The advantage here is that we guarantee to never block OPL or MIDI music channels.
+
+		// It's a bit of a trade-off but with my sample size of 1 game, this sounds fine.
+		// Direct DAC on the SoundBlaster is very rarely used.
+		sblaster->output_queue.Stop();
 		break;
 		}
 
@@ -3051,7 +2982,6 @@ static void generate_frames(const int frames_requested)
 {
 	assert(sblaster);
 	assert(sblaster->channel);
-	assert(sblaster->output_queue.IsRunning());
 
 	switch (sb.mode) {
 	case DspMode::None:
@@ -3063,11 +2993,9 @@ static void generate_frames(const int frames_requested)
 	} break;
 
 	case DspMode::Dac:
-		// DAC mode must render one frame at a time because the DOS
-		// program will be writing to the DAC register at the playback
-		// rate.
-		assert(frames_requested == 1);
-		sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+		// Frames get added synchronously inside dsp_do_command
+		// Nothing to do here except increment the counter
+		frames_added_this_tick += frames_requested;
 		break;
 
 	case DspMode::Dma:
@@ -3106,11 +3034,6 @@ static void per_tick_callback()
 	assert(sblaster);
 	assert(sblaster->channel);
 
-	if (!sblaster->channel->is_enabled) {
-		callback_type.SetNone();
-		return;
-	}
-
 	static float frame_counter = 0.0f;
 
 	frame_counter += sblaster->channel->GetFramesPerTick();
@@ -3122,29 +3045,6 @@ static void per_tick_callback()
 	}
 
 	frames_added_this_tick -= total_frames;
-}
-
-// This callback is run exactly once per frame, so it only generates a single
-// frame each call. This allows the emulator (and game) to run between each
-// frame, which is more accurate because changes to the Sound Blaster are
-// reflected in the next frame.
-//
-// This approach is more costly to emulate so we use it only when conditions
-// demand it, and prefer the leaner per-tick approach otherwise. However,
-// if/when the Sound Blaster is moved off the main emulator loop then we can
-// (ideally) use this all of the time.
-static void per_frame_callback(uint32_t)
-{
-	assert(sblaster);
-	assert(sblaster->channel);
-
-	if (!sblaster->channel->is_enabled) {
-		callback_type.SetNone();
-		return;
-	}
-
-	generate_frames(1);
-	add_next_frame_callback();
 }
 
 static SbType determine_sb_type(const std::string& pref)
@@ -3522,11 +3422,13 @@ SBLASTER::SBLASTER(Section* conf)
 	// Size to 2x blocksize. The mixer callback will request 1x blocksize.
 	// This provides a good size to avoid over-runs and stalls.
 	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
+
+	TIMER_AddTickHandler(per_tick_callback);
 }
 
 SBLASTER::~SBLASTER()
 {
-	callback_type.SetNone();
+	TIMER_DelTickHandler(per_tick_callback);
 
 	// Prevent discovery of the Sound Blaster via the environment
 	ClearEnvironment();
