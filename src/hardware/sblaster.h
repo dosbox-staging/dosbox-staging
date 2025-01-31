@@ -39,6 +39,7 @@ public:
 	// Public members used by MIXER_PullFromQueueCallback
 	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = nullptr;
+	std::atomic<int> num_frames_needed = 0;
 
 private:
 	IO_ReadHandleObject read_handlers[0x10]   = {};

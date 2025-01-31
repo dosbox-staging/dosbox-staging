@@ -3035,7 +3035,10 @@ static void per_tick_callback()
 
 	static float frame_counter = 0.0f;
 
-	frame_counter += sblaster->channel->GetFramesPerTick();
+	frame_counter += std::max(
+		sblaster->channel->GetFramesPerTick(),
+		static_cast<float>(sblaster->num_frames_needed.load(std::memory_order_acquire)));
+
 	const int total_frames = ifloor(frame_counter);
 	frame_counter -= static_cast<float>(total_frames);
 
@@ -3074,8 +3077,13 @@ void SBLASTER::AudioCallback(const int frames_requested)
 		        iceil(channel->GetFramesPerBlock() * 2.0f));
 	}
 
+	const auto frames_in_queue = check_cast<int>(output_queue.Size());
+	if (frames_in_queue < frames_requested) {
+		num_frames_needed.store(frames_requested - frames_in_queue, std::memory_order_release);
+	}
 	const auto frames_received = check_cast<int>(
 	        output_queue.BulkDequeue(mixer_buffer, frames_requested));
+	num_frames_needed.store(0, std::memory_order_release);
 
 	if (frames_received > 0) {
 			channel->AddAudioFrames(mixer_buffer);
