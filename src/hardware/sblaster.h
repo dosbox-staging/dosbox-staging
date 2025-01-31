@@ -48,8 +48,11 @@ private:
 
 	OplMode oplmode = OplMode::None;
 
+	std::vector<AudioFrame> mixer_buffer = {};
+
 	void SetupEnvironment();
 	void ClearEnvironment();
+	void AudioCallback(const int frames_requested);
 };
 
 #endif

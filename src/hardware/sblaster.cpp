@@ -3046,6 +3046,46 @@ static void per_tick_callback()
 	frames_added_this_tick -= total_frames;
 }
 
+void SBLASTER::AudioCallback(const int frames_requested)
+{
+	if (MIXER_FastForwardModeEnabled()) {
+		// Special case, normally only hit when using the fast-forward
+		// hotkey (Alt + F12). We need a very large buffer to compensate
+		// or it results in static.
+
+		// Mostly arbitrary but it works well in testing.
+		// The queue just needs to be large enough to hold the large
+		// frame requests we get in fast-forward mode. This value can be
+		// tweaked without much consequence if it ever becomes
+		// problematic.
+		constexpr float MaxExpectedFastForwardFactor = 100.0f;
+		output_queue.Resize(iceil(channel->GetFramesPerBlock() *
+		                                  MaxExpectedFastForwardFactor));
+	} else {
+		// Normal case, resize the queue to ensure we don't have high
+		// latency. Resize is a fast operation, only setting a variable
+		// for max capacity It does not drop frames or append zeros to
+		// the end of the underlying data structure.
+
+		// Size to 2x blocksize. The mixer callback will request 1x
+		// blocksize. This provides a good size to avoid over-runs and
+		// stalls.
+		output_queue.Resize(
+		        iceil(channel->GetFramesPerBlock() * 2.0f));
+	}
+
+	const auto frames_received = check_cast<int>(
+	        output_queue.BulkDequeue(mixer_buffer, frames_requested));
+
+	if (frames_received > 0) {
+			channel->AddAudioFrames(mixer_buffer);
+	}
+	// Fill any shortfall with silence
+	if (frames_received < frames_requested) {
+		channel->AddSilence();
+	}
+}
+
 static SbType determine_sb_type(const std::string& pref)
 {
 	if (pref == "gb") {
@@ -3349,14 +3389,10 @@ SBLASTER::SBLASTER(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	constexpr bool Stereo      = true;
-	constexpr bool SignedData  = true;
-	constexpr bool NativeOrder = true;
-
 	const auto callback = std::bind(
-	        MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+	        &SBLASTER::AudioCallback,
+	        this,
+	        std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
 	                           DefaultPlaybackRateHz,
