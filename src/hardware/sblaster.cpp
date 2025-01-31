@@ -383,8 +383,6 @@ static const char* sb_log_prefix()
 	}
 }
 
-static void dsp_change_mode(const DspMode mode);
-
 static void flush_remaining_dma_transfer();
 static void suppress_dma_transfer(const uint32_t size);
 static void play_dma_transfer(const uint32_t size);
@@ -805,7 +803,6 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 
 			sb.mode = DspMode::DmaMasked;
 
-			// dsp_change_mode(DspMode::DmaMasked);
 			LOG(LOG_SB, LOG_NORMAL)
 			("DMA masked,stopping output, left %d", chan->curr_count);
 		}
@@ -814,8 +811,7 @@ static void dsp_dma_callback(const DmaChannel* chan, const DmaEvent event)
 	case DmaEvent::IsUnmasked:
 
 		if (sb.mode == DspMode::DmaMasked && sb.dma.mode != DmaMode::None) {
-			dsp_change_mode(DspMode::Dma);
-			// sb.mode=DspMode::Dma;
+			sb.mode = DspMode::Dma;
 			flush_remaining_dma_transfer();
 
 			LOG(LOG_SB, LOG_NORMAL)
@@ -1425,22 +1421,6 @@ std::optional<int> Dac::MeasureDacRateHz()
 	return std::nullopt;
 }
 
-static void dsp_change_mode(const DspMode mode)
-{
-	if (sb.mode == mode) {
-		return;
-	}
-	switch (mode) {
-	case DspMode::Dac: sb.dac = {}; break;
-	case DspMode::None:
-	case DspMode::Dma:
-	case DspMode::DmaPause:
-	case DspMode::DmaMasked: break;
-	};
-
-	sb.mode = mode;
-}
-
 static void dsp_raise_irq_event(const uint32_t /*val*/)
 {
 	sb_raise_irq(SbIrq::Irq8);
@@ -1609,7 +1589,7 @@ static void dsp_reset()
 
 	PIC_DeActivateIRQ(sb.hw.irq);
 
-	dsp_change_mode(DspMode::None);
+	sb.mode = DspMode::None;
 	dsp_flush_data();
 
 	sb.dsp.cmd     = DspNoCommand;
@@ -1857,8 +1837,11 @@ static void dsp_do_command()
 		break;
 
 	case 0x10: // Direct DAC
-		dsp_change_mode(DspMode::Dac);
-		if (sblaster->MaybeWakeUp()) {
+		{
+		const bool changed_modes = sb.mode != DspMode::Dac;
+		sb.mode = DspMode::Dac;
+		const bool was_asleep = sblaster->MaybeWakeUp();
+		if (changed_modes || was_asleep) {
 			// If we're waking up, then the DAC hasn't been running (or maybe
 			// wasn't running at all), so start with a fresh DAC state and
 			// ensure we're using per-frame callback timing.
@@ -1870,6 +1853,7 @@ static void dsp_do_command()
 			sblaster->SetChannelRateHz(*dac_rate_hz);
 		}
 		break;
+		}
 
 	case 0x24: // Singe Cycle 8-Bit DMA ADC
 		// Directly write to left?
@@ -2004,7 +1988,6 @@ static void dsp_do_command()
 		[[fallthrough]];
 
 	case 0xd0: // Halt 8-bit DMA
-		// dsp_change_mode(DspMode::None);
 		LOG(LOG_SB, LOG_NORMAL)("Halt DMA Command");
 		// Games sometimes already program a new dma before stopping,
 		// gives noise
