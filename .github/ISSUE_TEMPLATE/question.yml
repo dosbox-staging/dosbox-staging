@@ -11,6 +11,7 @@ body:
         #### Make sure that you have:
         - provided a descriptive and succinct title
         - have read all questions carefully have answered **all** of them
+
         [Please consider a donation to the DOSBox Staging project](https://www.dosbox-staging.org/get-involved/#make-a-donation).
 
   - type: checkboxes
@@ -18,7 +19,7 @@ body:
     attributes:
       label: Are you using the latest DOSBox Staging version?
       description: |
-        Look up the latest release version [on our website](https://github.com/dosbox-staging/dosbox-staging/releases) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
+        Look up the latest release version [on our website](https://www.dosbox-staging.org/) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
         To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
       options:
         - label: I have checked and I'm using the latest release.
@@ -28,7 +29,6 @@ body:
     id: verinfo
     attributes:
       label: Different version than latest?
-      description: alpha, git, or custom branch?
       placeholder: "E.g., 0.83.0-alpha, git version, branch testing."
     validations:
       required: false
@@ -73,7 +73,7 @@ body:
   - type: textarea
     id: question
     attributes:
-      label: What's your question and how can we help?
+      label: What is your question and how can we help?
       description: Ask us a question
       placeholder: "How do I ..."
     validations:
