@@ -7,6 +7,16 @@ This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
 support today's systems.
 
+## Donations
+
+If you enjoy using DOSBox Staging, please [consider a
+donation](https://www.dosbox-staging.org/get-involved/#make-a-donation) to the
+project.
+
+If you want to help but can't afford a donation, check out the [Get
+involved](https://www.dosbox-staging.org/get-involved/) page of our website
+for other ways to contribute.
+
 
 ## Build status
 
