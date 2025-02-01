@@ -30,7 +30,7 @@ body:
     id: verinfo
     attributes:
       label: Different version than latest?
-      placeholder: "E.g., 0.83.0-alpha, git version, branch testing."
+      placeholder: "E.g., 0.83.0-alpha, git version, branch testing"
     validations:
       required: false
 
