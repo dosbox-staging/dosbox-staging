@@ -5,6 +5,7 @@ labels:      enhancement
 
 body:
   - type: markdown
+    id: intro
     attributes:
       value: |
         ## Please fill out the form completely. Incomplete submissions will be closed!
