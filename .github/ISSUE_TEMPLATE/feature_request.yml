@@ -1,41 +1,45 @@
-name: Feature Request
-description: Suggest an idea (a new feature or other improvement) for this project
-labels: enhancement
-#assignees: 'anonymous@temp'
+name:        Feature request
+description: Suggest an idea (a new feature or other improvement)
+title:       Think about the title, twice
+labels:      enhancement
 
 body:
   - type: markdown
     attributes:
       value: |
-        ## Please fill out forms as cleanly as possible.
-        #### Make sure that you have
-        * properly edited & filled in the title of this bug report
+        ## Please fill out the form completely. Incomplete submissions will be closed!
+        #### Make sure that you have:
+        - provided a descriptive and succinct title
+        - have read all questions carefully have answered **all** of them
+        [Please consider a donation to the DOSBox Staging project](https://www.dosbox-staging.org/get-involved/#make-a-donation).
+
   - type: checkboxes
     id: version
     attributes:
-      label: Are you using the latest Dosbox-Staging Version?
+      label: Are you using the latest DOSBox Staging version?
       description: |
-        What version are you using? Check the [latest release](https://github.com/dosbox-staging/dosbox-staging/releases)
-        Run `dosbox --version`
-        Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
-        Provide 'git' version or 'other' in description
+        Look up the latest release version [on our website](https://github.com/dosbox-staging/dosbox-staging/releases) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
+        To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
       options:
-        - label: I have checked releases and am using the latest release.
+        - label: I have checked and I'm using the latest release.
           required: true
+
   - type: input
     id: verinfo
     attributes:
       label: Different version than latest?
-      description: Alpha, Git, or Branch?
-      placeholder: "Ex. 0.83.0-alpha, git version, branch testing."
+      description: alpha, git, or custom branch?
+      placeholder: "E.g., 0.83.0-alpha, git version, branch testing."
     validations:
       required: false
+
   - type: dropdown
     id: OS
     attributes:
-      label: What Operating System are you using?
+      label: What operating system are you using?
       multiple: false
       options:
+        - Please select
         - Windows 11
         - Windows 10
         - Windows 8
@@ -47,30 +51,41 @@ body:
         - Linux ARM (Raspberry Pi)
         - Other
     validations:
-      required: false
+      required: true
+
   - type: input
     id: other
     attributes:
-      label: If Other OS, please describe
-      description: Other details
-      placeholder: "Windows, Mac OSX version, Debian, Ubuntu, Arch, etc."
+      label: If other OS or Linux, please describe
+      placeholder: "Details about your OS; if Linux, state your desktop environment (KDE, Gnome, XFCE, etc.)"
     validations:
       required: false
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Are you running DOSBox Staging on a native OS?
+      description: We only support running DOSBox Staging on a native operating system; running on a guest OS in a VM or hypervisor is not supported.
+      options:
+        - label: I am running Staging on a native OS
+          required: true
+
   - type: textarea
     id: related
     attributes:
       label: Is your feature request related to a problem? Please describe.
-      description: Related
-      placeholder: "Ex. I'm always frustrated when"
+      placeholder: "E.g., I would love if Staging could do ..."
     validations:
       required: true
+
   - type: textarea
     id: solution
     attributes:
       label: Describe the solution you'd like
-      placeholder: "Ex. How can we make it better?"
+      placeholder: "How can we make things better?"
     validations:
       required: false
+
   - type: textarea
     id: alternative
     attributes:
@@ -79,18 +94,19 @@ body:
       placeholder: "Similar idea or software"
     validations:
       required: false
+
   - type: textarea
     id: additional
     attributes:
       label: Add any other context or screenshots about the feature request here.
-      description: Screenshots or Links?
-      placeholder: "Ex. Screenshot or Link"
+      placeholder: "Screenshots, links, mockups, etc."
     validations:
       required: false
+
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct & Contributing Guidelines
+      label: Code of Conduct and Contributing Guidelines
       description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
       options:
         - label: Yes, I agree.
