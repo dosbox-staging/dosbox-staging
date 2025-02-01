@@ -1,0 +1,9 @@
+contact_links:
+  - name: Wiki
+    url: https://github.com/dosbox-staging/dosbox-staging/wiki
+    about: Please check if your question is already answered here.
+
+  - name: Discord
+    url: https://discord.gg/WwAg3Xf
+    about: Alternatively, you can ask questions on our Discord, but for bugs you'll need an issue ticket.
+
