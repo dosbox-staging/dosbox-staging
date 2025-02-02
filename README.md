@@ -17,10 +17,6 @@ support today's systems.
 [![macOS build status][build-mac-badge]][build-mac-ci]
 
 
-## Code quality status
-
-[![Coverity status][coverity-badge]][3]
-
 ## Stable release builds
 
 [Linux](https://www.dosbox-staging.org/releases/linux/),
@@ -50,7 +46,6 @@ support today's systems.
 
 [1]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [2]: https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
-[3]: https://scan.coverity.com/projects/dosbox-staging
 [4]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [5]: https://github.com/emilk/loguru
 [6]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
@@ -59,7 +54,6 @@ support today's systems.
 ## Source code analysis tools
 
 - [PVS-Studio](https://pvs-studio.com/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) — C++ static analyser
-- [Coverity](https://scan.coverity.com/) — C++ static analyser
 - [Clang Static Analyzer](https://clang-analyzer.llvm.org/) — C++ static analyser
 - [Pylint](https://pypi.org/project/pylint/) — Python static analyser
 - [markdownlint](https://github.com/DavidAnson/markdownlint) — style checker and linter for Markdown
@@ -288,8 +282,6 @@ git fetch origin "refs/notes/*:refs/notes/*"
 
 [build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
 [build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
-
-[coverity-badge]: https://img.shields.io/coverity/scan/dosbox-staging
 
 
 ## Website & documentation

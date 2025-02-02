@@ -425,9 +425,8 @@ function fetch_workflows() {
 	declare -gA workflows
 	for workflow_path in ".github/workflows/"*.yml; do
 
-		# Guard: skip our Config heavy and Coverity analysis workflows
-		if [[ "$workflow_path" == *"config.yml"*
-		   || "$workflow_path" == *"coverity.yml"* ]]; then
+		# Guard: skip our Config heavy workflow
+		if [[ "$workflow_path" == *"config.yml"* ]]; then
 			continue
 		fi
 
