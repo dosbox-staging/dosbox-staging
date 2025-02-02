@@ -2,6 +2,7 @@ name:        Feature request
 description: Suggest an idea (a new feature or other improvement)
 title:       Think about the title, twice
 labels:      enhancement
+type:        feature
 
 body:
   - type: markdown
