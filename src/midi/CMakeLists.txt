@@ -17,4 +17,6 @@ target_link_libraries(libmidi PRIVATE
 		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 		MT32Emu::mt32emu
 		FluidSynth::libfluidsynth
+		libaudio
+		libhardware
 )

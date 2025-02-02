@@ -93,5 +93,5 @@ target_link_libraries(libhardware PRIVATE
 		libmidi
 		libshell
 		PkgConfig::SPEEXDSP
-		iir::iir
+		iir::iir_static
 		$<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>)
