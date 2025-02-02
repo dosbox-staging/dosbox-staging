@@ -24,6 +24,7 @@ if __name__ == "__main__":
         "/System/Library/Frameworks/AppKit.framework/",
         "/System/Library/Frameworks/AudioToolbox.framework/",
         "/System/Library/Frameworks/AudioUnit.framework/",
+        "/System/Library/Frameworks/AVFoundation.framework/",
         "/System/Library/Frameworks/Carbon.framework/",
         "/System/Library/Frameworks/Cocoa.framework/",
         "/System/Library/Frameworks/CoreAudio.framework/",

@@ -34,9 +34,16 @@ CCACHE_SLOPPINESS="pch_defines,time_macros"
 > **Note**
 >
 > CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet. Please ignore the
-> `CMakeLists.txt` files in the source tree.
-
+> feature; it's not ready for public consumption yet, but if you want to experiment:
+> 
+> **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
+> 
+> You'll need vcpkg installed and your VCPKG_ROOT environment variable set to vcpkg's 
+> installed location. There are presets via CMakePresets.json for convenience. For the
+> generic `release` and `debug` presets, you'll need Ninja build installed. You should
+> then be able to run e.g. `cmake --preset=debug && cmake --build --preset=debug` to 
+> produce a debug build in the `build/debug` directory. vcpkg will automatically install
+> dependencies during the build; there is no need to explicitly run `vcpkg install`.
 
 ## OS-specific instructions
 
