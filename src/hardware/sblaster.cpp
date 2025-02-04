@@ -3080,11 +3080,14 @@ static void generate_frames(const int frames_requested)
 	} break;
 
 	case DspMode::Dac:
-		// DAC mode must render one frame at a time because the DOS
+		// DAC mode typically renders one frame at a time because the DOS
 		// program will be writing to the DAC register at the playback
 		// rate.
-		assert(frames_requested == 1);
-		sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+		// In a mixer underflow situation, we render the current frame multiple times.
+		for (int i = 0; i < frames_requested; ++i) {
+			sblaster->output_queue.NonblockingEnqueue(sb.dac.RenderFrame());
+		}
+		frames_added_this_tick += frames_requested;
 		break;
 
 	case DspMode::Dma:
@@ -3130,7 +3133,9 @@ static void per_tick_callback()
 
 	static float frame_counter = 0.0f;
 
-	frame_counter += sblaster->channel->GetFramesPerTick();
+	frame_counter += std::max(
+		static_cast<float>(sblaster->frames_needed.exchange(0, std::memory_order_acq_rel)),
+		sblaster->channel->GetFramesPerTick());
 	const int total_frames = ifloor(frame_counter);
 	frame_counter -= static_cast<float>(total_frames);
 
@@ -3160,8 +3165,29 @@ static void per_frame_callback(uint32_t)
 		return;
 	}
 
-	generate_frames(1);
+	int mixer_needs = std::max(
+		sblaster->frames_needed.exchange(0, std::memory_order_acq_rel),
+		1);
+
+	// Frames added this tick is only useful when we're in an underflow situation with the mixer.
+	// generate_frames() may not give us everything we need in a single call.
+	// We're not concerned about over-filling while in this mode so just zero it out.
+	frames_added_this_tick = 0;
+	while (frames_added_this_tick < mixer_needs) {
+		generate_frames(mixer_needs - frames_added_this_tick);
+	}
+
 	add_next_frame_callback();
+}
+
+void SBLASTER::MixerCallback(const int frames_requested)
+{
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
+	constexpr bool NativeOrder = true;
+
+	frames_needed.store(std::max(frames_requested - check_cast<int>(output_queue.Size()), 0), std::memory_order_release);
+	MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>(frames_requested, this);
 }
 
 static SbType determine_sb_type(const std::string& pref)
@@ -3467,14 +3493,10 @@ SBLASTER::SBLASTER(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	constexpr bool Stereo      = true;
-	constexpr bool SignedData  = true;
-	constexpr bool NativeOrder = true;
-
 	const auto callback = std::bind(
-	        MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+	        &SBLASTER::MixerCallback,
+	        this,
+	        std::placeholders::_1);
 
 	channel = MIXER_AddChannel(callback,
 	                           DefaultPlaybackRateHz,
