@@ -134,7 +134,7 @@ struct PIC_Controller {
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
-std::atomic<uint32_t> PIC_Ticks = 0;
+uint32_t PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 std::atomic<double> atomic_pic_index = 0.0;
 
@@ -566,9 +566,9 @@ bool PIC_RunQueue(void) {
 		if (cycles < CPU_CycleLeft) {
 			CPU_Cycles = cycles;
 		} else {
-			CPU_Cycles = CPU_CycleLeft.load();
+			CPU_Cycles=CPU_CycleLeft;
 		}
-	} else CPU_Cycles = CPU_CycleLeft.load();
+	} else CPU_Cycles=CPU_CycleLeft;
 	CPU_CycleLeft-=CPU_Cycles;
 	PIC_runIRQs();
 	return true;
@@ -606,8 +606,8 @@ void TIMER_AddTickHandler(TIMER_TickHandler handler) {
 
 void TIMER_AddTick(void) {
 	/* Setup new amount of cycles for PIC */
-	CPU_CycleLeft = CPU_CycleMax.load();
-	CPU_Cycles = 0;
+	CPU_CycleLeft=CPU_CycleMax;
+	CPU_Cycles=0;
 	PIC_Ticks++;
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic_queue.next_entry;

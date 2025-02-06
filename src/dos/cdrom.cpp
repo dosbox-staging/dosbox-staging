@@ -86,7 +86,7 @@ void CDROM_Interface::LagDriveResponse() const
 
 	// Handle tick-rollover
 	static decltype(PIC_Ticks) prev_ticks = 0;
-	prev_ticks = std::min(PIC_Ticks.load(), prev_ticks.load());
+	prev_ticks = std::min(PIC_Ticks, prev_ticks);
 
 	// Ensure results a monotonically increasing
 	auto since_last_response_ms = [=]() { return PIC_Ticks - prev_ticks; };
@@ -95,7 +95,7 @@ void CDROM_Interface::LagDriveResponse() const
 		CALLBACK_Idle();
 	}
 
-	prev_ticks = PIC_Ticks.load();
+	prev_ticks = PIC_Ticks;
 }
 
 void CDROM_Interface_Physical::CdReaderLoop()
