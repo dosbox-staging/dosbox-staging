@@ -257,8 +257,6 @@ static void halt_render()
 	render.active   = false;
 }
 
-extern uint32_t PIC_Ticks;
-
 void RENDER_EndUpdate(bool abort)
 {
 	if (!render.updating) {
