@@ -24,8 +24,6 @@
 #include "timer.h"
 #include "setup.h"
 
-#include <mutex>
-
 // PIC Controllers
 // ~~~~~~~~~~~~~~~
 // The sources here identify the two Programmable Interrupt Controllers
@@ -133,7 +131,6 @@ struct PIC_Controller {
 	void start_irq(uint8_t val);
 };
 
-static std::mutex pic_mutex = {};
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
@@ -324,7 +321,6 @@ static uint8_t read_data(io_port_t port, io_width_t)
 // DOS managed up to 15 IRQs
 void PIC_ActivateIRQ(const uint8_t irq)
 {
-	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 
@@ -351,7 +347,6 @@ void PIC_ActivateIRQ(const uint8_t irq)
 // DOS managed up to 15 IRQs
 void PIC_DeActivateIRQ(const uint8_t irq)
 {
-	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
@@ -388,7 +383,6 @@ static void inline primary_startIRQ(uint8_t i)
 }
 
 void PIC_runIRQs(void) {
-	std::lock_guard lock(pic_mutex);
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) {
 		return;
