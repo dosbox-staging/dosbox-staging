@@ -297,7 +297,7 @@ static void increase_ticks()
 		auto ratio = (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
 		             ticks.done;
 
-		auto new_cycle_max = CPU_CycleMax.load();
+		auto new_cycle_max = CPU_CycleMax;
 
 		auto cproc = static_cast<int64_t>(CPU_CycleMax) *
 		             static_cast<int64_t>(ticks.scheduled);
@@ -417,7 +417,7 @@ static void increase_ticks()
 		// ticks.added > 15 but ticks.scheduled < 5, lower the cycles
 		// but do not reset the scheduled/done ticks to take them into
 		// account during the next auto cycle adjustment.
-		CPU_CycleMax = CPU_CycleMax / 3;
+		CPU_CycleMax /= 3;
 
 		if (CPU_CycleMax < auto_cpu_cycles_min) {
 			CPU_CycleMax = auto_cpu_cycles_min;
@@ -462,7 +462,7 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 		if (CPU_CycleAutoAdjust) {
 			autoadjust = true;
 			CPU_CycleAutoAdjust = false;
-			CPU_CycleMax = CPU_CycleMax / 3;
+			CPU_CycleMax /= 3;
 			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
 		}
 	} else {

@@ -33,7 +33,7 @@ extern uint32_t PIC_IRQCheck;
 
 // Elapsed milliseconds since starting DOSBox
 // Holds ~4.2 B milliseconds or ~48 days before rolling over
-extern std::atomic<uint32_t> PIC_Ticks;
+extern uint32_t PIC_Ticks;
 
 extern std::atomic<double> atomic_pic_index;
 
