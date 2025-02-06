@@ -29,7 +29,7 @@
 typedef void(PIC_EOIHandler)();
 typedef void (*PIC_EventHandler)(uint32_t val);
 
-extern std::atomic<uint32_t> PIC_IRQCheck;
+extern uint32_t PIC_IRQCheck;
 
 // Elapsed milliseconds since starting DOSBox
 // Holds ~4.2 B milliseconds or ~48 days before rolling over

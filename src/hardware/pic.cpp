@@ -138,7 +138,7 @@ static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
 std::atomic<uint32_t> PIC_Ticks = 0;
-std::atomic<uint32_t> PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
+uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 
 void PIC_Controller::set_imr(uint8_t val) {
 	if (machine == MCH_PCJR) {
