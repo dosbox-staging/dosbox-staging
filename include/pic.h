@@ -35,6 +35,8 @@ extern uint32_t PIC_IRQCheck;
 // Holds ~4.2 B milliseconds or ~48 days before rolling over
 extern std::atomic<uint32_t> PIC_Ticks;
 
+extern std::atomic<double> atomic_pic_index;
+
 // The number of cycles not done yet (ND)
 static inline int32_t PIC_TickIndexND()
 {
@@ -58,6 +60,20 @@ static inline int32_t PIC_MakeCycles(double amount)
 static inline double PIC_FullIndex()
 {
 	return static_cast<double>(PIC_Ticks) + PIC_TickIndex();
+}
+
+// Thread safe version of PIC_FullIndex()
+// Callers on the main thread should prefer PIC_FullIndex() as it is more precise.
+// I attempted to change this everywhere and had regressions from VGA code for example.
+// It should be good enough for audio though.
+static inline double PIC_AtomicIndex()
+{
+	return atomic_pic_index.load(std::memory_order_acquire);
+}
+
+static inline void PIC_UpdateAtomicIndex()
+{
+	atomic_pic_index.store(PIC_FullIndex(), std::memory_order_release);
 }
 
 void PIC_ActivateIRQ(uint8_t irq);

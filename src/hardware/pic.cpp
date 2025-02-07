@@ -136,6 +136,7 @@ static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
 std::atomic<uint32_t> PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
+std::atomic<double> atomic_pic_index = 0.0;
 
 void PIC_Controller::set_imr(uint8_t val) {
 	if (machine == MCH_PCJR) {
@@ -527,6 +528,8 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 
 
 bool PIC_RunQueue(void) {
+	PIC_UpdateAtomicIndex();
+
 	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=0;
