@@ -812,7 +812,7 @@ void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
 		mixer_channel->AddSamples_sfloat(requested_audio_frames,
 		                                 &audio_frames[0][0]);
 
-		last_rendered_ms = PIC_FullIndex();
+		last_rendered_ms = PIC_AtomicIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
 		mixer_channel->AddSilence();
