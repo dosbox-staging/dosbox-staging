@@ -531,7 +531,7 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 		channel->AddSamples_mfloat(1, &sample);
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 Ps1Synth::~Ps1Synth()
