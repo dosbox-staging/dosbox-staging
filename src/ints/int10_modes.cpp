@@ -2002,7 +2002,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			}
 		}
 	} else {
-		for (auto ct = 0; ct < NumVgaAttributeRegisters; ++ct) {
+		for (auto ct = 0x10; ct < NumVgaAttributeRegisters; ++ct) {
 			// Skip overscan register
 			if (ct == 0x11) {
 				continue;
