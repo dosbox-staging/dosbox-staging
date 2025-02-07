@@ -1031,7 +1031,7 @@ void MidiHandler_mt32::MixerCallBack(const int requested_audio_frames)
 		channel->AddSamples_sfloat(requested_audio_frames,
 		                           &audio_frames[0][0]);
 
-		last_rendered_ms = PIC_FullIndex();
+		last_rendered_ms = PIC_AtomicIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
 		channel->AddSilence();
