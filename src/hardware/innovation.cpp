@@ -256,7 +256,7 @@ void Innovation::AudioCallback(const int requested_frames)
 		}
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 Innovation innovation;
