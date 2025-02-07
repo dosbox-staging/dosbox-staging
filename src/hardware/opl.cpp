@@ -466,7 +466,7 @@ void Opl::AudioCallback(const int requested_frames)
 		channel->AddSamples_sfloat(1, &frame[0]);
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 void Opl::CacheWrite(const io_port_t port, const uint8_t val)
