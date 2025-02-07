@@ -1469,6 +1469,8 @@ Gus::~Gus()
 		dma_channel->Reset();
 	}
 
+	TIMER_DelTickHandler(GUS_PicCallback);
+
 	MIXER_UnlockMixerThread();
 }
 
