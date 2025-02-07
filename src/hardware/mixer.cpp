@@ -2509,7 +2509,7 @@ static void mixer_thread_loop()
 		assert(mixer.state != MixerState::Uninitialized);
 
 		// This code is mostly for the fast-forward button (hold Alt + F12)
-		const double now         = PIC_FullIndex();
+		const double now         = PIC_AtomicIndex();
 		const double actual_time = now - last_mixed;
 		const double expected_time = (static_cast<double>(mixer.blocksize) /
 		                              static_cast<double>(mixer.sample_rate_hz)) *
