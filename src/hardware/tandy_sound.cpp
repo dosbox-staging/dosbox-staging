@@ -592,7 +592,7 @@ void TandyPSG::AudioCallback(const int requested_frames)
 		channel->AddSamples_mfloat(1, &sample);
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 // The Tandy DAC and PSG (programmable sound generator) managed pointers
