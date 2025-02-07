@@ -4995,7 +4995,7 @@ AudioFrame ym2151_device::RenderFrame()
 
 void ym2151_device::RenderUpToNow()
 {
-	const auto now = PIC_FullIndex();
+	const auto now = PIC_AtomicIndex();
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_render;
@@ -5032,7 +5032,7 @@ void ym2151_device::sound_stream_update(const int requested_frames)
 		audio_channel->AddSamples_sfloat(1, &frame[0]);
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 // clang-format off
