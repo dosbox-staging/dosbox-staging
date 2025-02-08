@@ -9,6 +9,7 @@
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/../resources"
       }
@@ -21,8 +22,59 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/../resources"
+      }
+    },
+    {
+      "name": "debug-linux",
+      "displayName": "Debug (Linux host CPU), using system libs",
+      "description": "Configure for Debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug-linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RESOURCE_COPY_PATH": "/resources",
+        "USE_SYSTEM_LIBS": "ON"
+      }
+    },
+    {
+      "name": "release-linux",
+      "displayName": "Release (Linux host CPU), using system libs",
+      "description": "Configure for Release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release-linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "RESOURCE_COPY_PATH": "/resources",
+        "USE_SYSTEM_LIBS": "ON"
+      }
+    },
+    {
+      "name": "debug-linux-vcpkg",
+      "displayName": "Debug (Linux host CPU), using vcpkg",
+      "description": "Configure for Debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug-linux",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RESOURCE_COPY_PATH": "/resources"
+      }
+    },
+    {
+      "name": "release-linux-vcpkg",
+      "displayName": "Release (Linux host CPU), using vcpkg",
+      "description": "Configure for Release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release-linux",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "RESOURCE_COPY_PATH": "/resources"
       }
     },
     {
@@ -33,6 +85,7 @@
       "binaryDir": "${sourceDir}/build/debug-macos",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -45,6 +98,7 @@
       "binaryDir": "${sourceDir}/build/release-macos",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -58,6 +112,7 @@
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -71,6 +126,7 @@
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "x86_64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -84,6 +140,7 @@
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -97,6 +154,7 @@
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -110,6 +168,26 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "debug-linux",
+      "configurePreset" : "debug-linux",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-linux",
+      "configurePreset" : "release-linux",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-linux-vcpkg",
+      "configurePreset" : "debug-linux",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-linux-vcpkg",
+      "configurePreset" : "release-linux",
+      "configuration": "Release"
     },
     {
       "name": "debug-macos",
