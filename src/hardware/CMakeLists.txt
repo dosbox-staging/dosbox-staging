@@ -79,8 +79,11 @@ add_library(libhardware STATIC
 
 pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
 
-find_package(iir CONFIG REQUIRED)
-find_package(SDL2_net CONFIG REQUIRED)
+find_package(iir REQUIRED)
+target_link_libraries(libhardware PRIVATE $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>)
+
+find_package(SDL2_net REQUIRED)
+target_link_libraries(libhardware PRIVATE $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>)
 
 target_link_libraries(libhardware PRIVATE
 		libesfmu
@@ -92,6 +95,4 @@ target_link_libraries(libhardware PRIVATE
 		libgui
 		libmidi
 		libshell
-		PkgConfig::SPEEXDSP
-		$<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
-		$<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>)
+		PkgConfig::SPEEXDSP)

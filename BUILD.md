@@ -34,16 +34,10 @@ CCACHE_SLOPPINESS="pch_defines,time_macros"
 > **Note**
 >
 > CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet, but if you want to experiment:
+> feature; it's not ready for public consumption yet. If you want to experiment,
+> check the [chapter](#experimental-cmake-support) at the end of the document.
 > 
 > **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
-> 
-> You'll need vcpkg installed and your VCPKG_ROOT environment variable set to vcpkg's 
-> installed location. There are presets via CMakePresets.json for convenience. For the
-> generic `release` and `debug` presets, you'll need Ninja build installed. You should
-> then be able to run e.g. `cmake --preset=debug && cmake --build --preset=debug` to 
-> produce a debug build in the `build/debug` directory. vcpkg will automatically install
-> dependencies during the build; there is no need to explicitly run `vcpkg install`.
 
 ## OS-specific instructions
 
@@ -355,3 +349,107 @@ will leave your normal `build/` files untouched.
 Run the sanitizer binary as you normally would, then exit and look for
 sanitizer messages in the log output.  If none exist, then your program
 is running clean.
+
+## Experimental CMake support
+
+> **Note**
+>
+> This is experimental, internal-only, work-in-progress feature.
+> 
+> **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
+
+### Building on Linux, using system dependencies
+
+1. Install the necessary build tools:
+
+- GCC or Clang compiler
+- GIT
+- CMake
+- pkg-config
+
+1. Install the dependencies, development packages are needed too:
+
+- SDL 2.x
+- SDL2_net
+- IIR
+- OpusFile
+- MT32Emu
+- FluidSynth
+- ALSA
+- libpng
+- OpenGL headers
+
+1. Clone DOSBox Staging:
+
+```bash
+git clone https://github.com/dosbox-staging/dosbox-staging.git
+```
+
+1. Configure the sources and build DOSBox Staging:
+
+```bash
+cd dosbox-staging
+cmake --preset=release-linux
+cmake --build --preset=release-linux
+```
+
+1. You can now launch DOSBox with the command:
+
+```bash
+./build/release-linux/dosbox
+```
+
+### Building on Linux, using `vcpkg` to fetch dependencies at compile time
+
+1. Install the necessary build tools:
+
+- for Ubuntu:
+
+```bash
+sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
+             autoconf bison libtool libgl1-mesa-dev libsdl2-dev
+```
+
+1. Install the `vcpkg` tool:
+
+- clone the `vcpkg` tool into your home directory
+
+```bash
+cd ~
+git clone https://github.com/microsoft/vcpkg.git
+```
+
+- bootstrap the `vcpkg` tool:
+
+```bash
+cd vcpkg
+./bootstrap-vcpkg.sh -disableMetrics
+```
+
+- set the vcpkg path in your compile shell (it is recommended to add the command
+  to your shell startup script, usually `~/.bashrc`)
+
+```bash
+export VCPKG_ROOT=$HOME/vcpkg
+```
+
+1. Clone DOSBox Staging into your home directory:
+
+```bash
+cd ~
+git clone https://github.com/dosbox-staging/dosbox-staging.git
+```
+
+1. Configure the sources and build DOSBox Staging:
+
+```bash
+cd dosbox-staging
+cmake --preset=release-linux-vcpkg
+cmake --build --preset=release-linux-vcpkg
+```
+
+1. You can now launch DOSBox with the command:
+
+```bash
+./build/release-linux/dosbox
+```
