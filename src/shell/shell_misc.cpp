@@ -486,6 +486,23 @@ void CommandPrompt::SetCursor(const std::string::size_type index)
 	                   position_zero.page);
 }
 
+// Only for use in ExecuteProgram()
+// Not suitable for generic use as it only handles 3 letter file extensions.
+// It also doesn't look at space padding, which never happens here.
+// Space padding matters when dealing with internal DOS data strctures which we are not doing.
+static std::string_view get_executable_extension(const std::string_view filename)
+{
+	constexpr size_t ExtensionSize = 4;
+	if (filename.size() <= ExtensionSize) {
+		return "";
+	}
+	const auto dot_position = filename.size() - ExtensionSize;
+	if (filename[dot_position] != '.') {
+		return "";
+	}
+	return filename.substr(dot_position);
+}
+
 bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 {
 	if (name.size() > 1 && (std::isalpha(name[0]) != 0) &&
@@ -498,14 +515,8 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 		return true;
 	}
 
-	const auto fullname                                = ResolvePath(name);
-	constexpr decltype(fullname.size()) extension_size = 4;
-
-	if (fullname.empty() || fullname.size() <= extension_size) {
-		return false;
-	}
-
-	auto extension = fullname.substr(fullname.size() - extension_size);
+	const auto fullname  = ResolvePath(name);
+	const auto extension = get_executable_extension(fullname);
 
 	if (iequals(extension, ".BAT")) {
 		const auto current_echo = batchfiles.empty()
@@ -538,7 +549,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 
 std::string DOS_Shell::ResolvePath(const std::string_view name) const
 {
-	static constexpr auto extensions = {"", ".COM", ".EXE", ".BAT"};
+	static constexpr auto Extensions = {".COM", ".EXE", ".BAT"};
 
 	std::vector<std::string> prefixes = {""};
 
@@ -558,11 +569,24 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 		                std::make_move_iterator(path_directories.end()));
 	}
 
+	const bool has_extension = !get_executable_extension(name).empty();
+
 	for (const auto& prefix : prefixes) {
-		for (const auto& extension : extensions) {
-			std::string file = prefix + std::string(name) + extension;
+		if (has_extension) {
+			// User typed in something with an extension.
+			// Don't try to add a 2nd extension.
+			const std::string file = prefix + std::string(name);
 			if (DOS_FileExists(file.c_str())) {
 				return file;
+			}
+		} else {
+			// User typed in a command with no extension. Ex "DOOM".
+			// Try "DOOM.COM", "DOOM.EXE", "DOOM.BAT" in that order.
+			for (const auto& extension : Extensions) {
+				const std::string file = prefix + std::string(name) + extension;
+				if (DOS_FileExists(file.c_str())) {
+					return file;
+				}
 			}
 		}
 	}
