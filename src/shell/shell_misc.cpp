@@ -498,7 +498,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 		return true;
 	}
 
-	const auto fullname                                = Which(name);
+	const auto fullname                                = ResolvePath(name);
 	constexpr decltype(fullname.size()) extension_size = 4;
 
 	if (fullname.empty() || fullname.size() <= extension_size) {
@@ -536,7 +536,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 	return false;
 }
 
-std::string DOS_Shell::Which(const std::string_view name) const
+std::string DOS_Shell::ResolvePath(const std::string_view name) const
 {
 	static constexpr auto extensions = {"", ".COM", ".EXE", ".BAT"};
 
