@@ -38,32 +38,6 @@
       }
     },
     {
-      "name": "release-windows",
-      "displayName": "Release (Windows host CPU)",
-      "description": "Configure for Release build",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/release-windows",
-      "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/Resources"
-      }
-    },
-    {
-      "name": "debug-windows",
-      "displayName": "Debug (Windows host CPU)",
-      "description": "Configure for Debug build",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/debug-windows",
-      "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/Resources"
-      }
-    },
-    {
       "name": "release-macos",
       "displayName": "Release (macOS host CPU)",
       "description": "Configure for Release build",
@@ -100,6 +74,32 @@
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
+    },
+    {
+      "name": "debug-windows",
+      "displayName": "Debug (Windows host CPU)",
+      "description": "Configure for Debug build",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/debug-windows",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RESOURCE_COPY_PATH": "/Resources"
+      }
+    },
+    {
+      "name": "release-windows",
+      "displayName": "Release (Windows host CPU)",
+      "description": "Configure for Release build",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/release-windows",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_BUILD_TYPE": "Release",
+        "RESOURCE_COPY_PATH": "/Resources"
+      }
     }
   ],
   "buildPresets": [
@@ -110,16 +110,6 @@
     {
       "name": "release",
       "configurePreset": "release"
-    },
-    {
-      "name": "debug-windows",
-      "configurePreset" : "debug-windows",
-      "configuration": "Debug"
-    },
-    {
-      "name": "release-windows",
-      "configurePreset" : "release-windows",
-      "configuration": "Release"
     },
     {
       "name": "debug-macos",
@@ -139,6 +129,16 @@
     {
       "name": "release-macos-x86_64",
       "configurePreset" : "release-macos-x86_64",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-windows",
+      "configurePreset" : "debug-windows",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-windows",
+      "configurePreset" : "release-windows",
       "configuration": "Release"
     }
   ]
