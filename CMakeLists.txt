@@ -48,6 +48,10 @@ else()
 	message(NOTICE "Unknown compiler")
 endif()
 
+# Enable color output for certain compilers
+if (DOSBOX_COMPILER_GCC OR DOSBOX_COMPILER_CLANG)
+	add_compile_options("-fdiagnostics-color=always")
+endif()
 
 find_package(Git)
 if(Git_FOUND)
