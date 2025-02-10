@@ -78,7 +78,7 @@
 
 static void switch_console_to_utf8()
 {
-#if WIN32
+#ifdef WIN32
 	constexpr uint16_t CodePageUtf8 = 65001;
 	if (!sdl.original_code_page) {
 		sdl.original_code_page = GetConsoleOutputCP();
@@ -92,7 +92,7 @@ static void switch_console_to_utf8()
 
 static void restore_console_encoding()
 {
-#if WIN32
+#ifdef WIN32
 	if (sdl.original_code_page) {
 		SetConsoleOutputCP(sdl.original_code_page);
 		sdl.original_code_page = 0;
