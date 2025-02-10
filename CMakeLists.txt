@@ -26,7 +26,7 @@ include(CheckSymbolExists)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 	set(DOSBOX_PLATFORM_WINDOWS ON)
-	set(WIN32 ON)
+	add_compile_definitions(WIN32)
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 	set(DOSBOX_PLATFORM_MACOS ON)
 	set(MACOSX ON)
