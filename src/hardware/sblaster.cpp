@@ -1011,21 +1011,69 @@ static std::vector<AudioFrame>& maybe_silence(const T* samples,
 	return frames;
 }
 
-static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t i = 0)
+static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t buffer_index = 0)
 {
-	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8 + i);
-	assert(bytes_read <= DmaBufSize * sizeof(sb.dma.buf.b8[0]));
+	static_assert(sizeof(sb.dma.buf.b8[0]) == 1);
+
+	if (buffer_index >= DmaBufSize) {
+		// Should never happen as the code is currently written.
+		// Calling code has buffer_index either 0 or 1 to handle a dangling sample from the last read.
+		// This is to solve an edge case for stereo sound when the DMA buffer has an odd number of samples.
+		assertm(false, "SBLASTER: Read requested out of bounds of sb.dma.buf.b8");
+		return 0;
+	}
+
+	// Assert that the DMA controller is configured for 8-bit reads,
+	// so we don't have to do the whole song and dance we do for 16-bit.
+	// We should always be dealing with bytes here.
+	assertm(!sb.dma.chan->is_16bit, "SBLASTER: read_dma_8bit() called but DMA controller is configured for 8-bit reads");
+
+	const uint32_t bytes_available = DmaBufSize - buffer_index;
+	const uint32_t clamped_bytes = std::min(bytes_to_read, bytes_available);
+	const auto bytes_read = sb.dma.chan->Read(clamped_bytes, sb.dma.buf.b8 + buffer_index);
+	assert(bytes_read <= clamped_bytes);
 
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static uint32_t read_dma_16bit(const uint32_t bytes_to_read, const uint32_t i = 0)
+static uint32_t read_dma_16bit(const uint32_t words_to_read, const uint32_t buffer_index = 0)
 {
-	const auto unsigned_buf = reinterpret_cast<uint8_t*>(sb.dma.buf.b16 + i);
-	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, unsigned_buf);
-	assert(bytes_read <= DmaBufSize * sizeof(sb.dma.buf.b16[0]));
+	static_assert(sizeof(sb.dma.buf.b16[0]) == 2);
 
-	return check_cast<uint32_t>(bytes_read);
+	if (buffer_index >= DmaBufSize) {
+		// Should never happen as the code is currently written.
+		// Calling code has buffer_index either 0 or 1 to handle a dangling sample from the last read.
+		// This is to solve an edge case for stereo sound when the DMA buffer has an odd number of samples.
+		assertm(false, "SBLASTER: Read requested out of bounds of sb.dma.buf.b16");
+		return 0;
+	}
+
+	// In dma.cpp, if sb.dma.chan->is_16bit is set, we're dealing with 16-bit words.
+	// Otherwise, we're dealing with 8-bit words (bytes).
+	// Calling code handles this case and conditionally divides by two.
+	uint32_t bytes_requested = words_to_read;
+	if (sb.dma.chan->is_16bit) {
+		bytes_requested *= 2;
+		// Calling code uses these internal SoundBlaster variables.
+		// sb.dma.chan->is_16bit is the source of truth in terms of memory safety.
+		// Assert that these two always match up.
+		assertm(sb.dma.mode == DmaMode::Pcm16Bit, "SoundBlaster expected 8-bit read but DMA controller is 16-bit");
+	} else {
+		assertm(sb.dma.mode == DmaMode::Pcm16BitAliased, "SoundBlaster expected 16-bit read but DMA controller is 8-bit");
+	}
+
+	// Clamp words to read so we don't overflow our buffer.
+	const uint32_t bytes_available = (DmaBufSize - buffer_index) * 2;
+	uint32_t clamped_words = std::min(bytes_requested, bytes_available);
+	if (sb.dma.chan->is_16bit) {
+		clamped_words /= 2;
+	}
+
+	const auto unsigned_buf = reinterpret_cast<uint8_t*>(sb.dma.buf.b16 + buffer_index);
+	const auto words_read = sb.dma.chan->Read(clamped_words, unsigned_buf);
+	assert(words_read <= clamped_words);
+
+	return check_cast<uint32_t>(words_read);
 }
 
 static void enqueue_frames(std::vector<AudioFrame>& frames)
