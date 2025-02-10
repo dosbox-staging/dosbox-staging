@@ -57,7 +57,7 @@ void INTRO::DisplayMount(void) {
     /* Basic mounting has a version for each operating system.
         * This is done this way so both messages appear in the language file*/
     WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_START"));
-#if (WIN32)
+#ifdef WIN32
     WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_WINDOWS"));
 #else
     WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_OTHER"));
