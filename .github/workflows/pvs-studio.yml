@@ -22,7 +22,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-22.04
     env:
-      debfile: pvs-studio-7.34.87460.207-amd64
+      debfile: pvs-studio-7.34.87460.207-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
