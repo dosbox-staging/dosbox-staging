@@ -476,11 +476,7 @@ void FPU_ESC5_Normal(Bitu rm) {
 	const uint8_t group = (rm >> 3) & 7;
 	const uint8_t sub   = (rm & 7);
 	switch (group) {
-	case 0x00: /* FFREE STi */ fpu.tags[STV(sub)] = TAG_Empty;
-	#if !C_FPU_X86
-		fpu.regs_memcpy[STV(sub)].reset();
-	#endif
-		break;
+	case 0x00: /* FFREE STi */ fpu.tags[STV(sub)] = TAG_Empty; break;
 	case 0x01: /* FXCH STi*/
 		FPU_FXCH(TOP,STV(sub));
 		break;
@@ -592,10 +588,8 @@ void FPU_ESC7_Normal(Bitu rm) {
 	const uint8_t group = (rm >> 3) & 7;
 	const uint8_t sub   = (rm & 7);
 	switch (group) {
-	case 0x00: /* FFREEP STi*/ fpu.tags[STV(sub)] = TAG_Empty;
-	#if !C_FPU_X86
-		fpu.regs_memcpy[STV(sub)].reset();
-	#endif
+	case 0x00: /* FFREEP STi*/
+		fpu.tags[STV(sub)] = TAG_Empty;
 		FPU_FPOP();
 		break;
 	case 0x01: /* FXCH STi*/

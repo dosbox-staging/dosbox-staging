@@ -92,7 +92,7 @@ struct FPU_rec {
 	FPU_Reg regs[9]         = {};
 #if !C_FPU_X86
     // for FILD/FIST 64-bit memcpy fix
-	std::optional<int64_t> regs_memcpy[9] = {};
+	int64_t regs_memcpy[9] = {};
 #endif
 	FPU_P_Reg p_regs[9]     = {};
 	MMX_reg mmx_regs[8]     = {};
