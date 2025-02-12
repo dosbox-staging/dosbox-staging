@@ -40,9 +40,6 @@ static void FPU_FNSTCW(PhysPt addr){
 
 static void FPU_FFREE(Bitu st) {
 	fpu.tags[st] = TAG_Empty;
-#if !C_FPU_X86
-	fpu.regs_memcpy[st].reset();
-	#endif
 }
 
 	#if C_FPU_X86
