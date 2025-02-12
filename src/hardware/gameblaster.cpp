@@ -250,7 +250,7 @@ void GameBlaster::AudioCallback(const int requested_frames)
 		channel->AddSamples_sfloat(1, &frame[0]);
 		--frames_remaining;
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms = PIC_AtomicIndex();
 }
 
 void GameBlaster::WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t)
