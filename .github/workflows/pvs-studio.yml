@@ -44,7 +44,7 @@ jobs:
 
       - name:  Fetch PVS-Studio package
         if:    steps.cache-pvs.outputs.cache-hit != 'true'
-        run:   wget "https://cdn.pvs-studio.com/${debfile}" -O "pvs-package/pvs.deb"
+        run:   wget "https://files.pvs-studio.com/${debfile}" -O "pvs-package/pvs.deb"
 
       - name: Install dependencies
         run: |
