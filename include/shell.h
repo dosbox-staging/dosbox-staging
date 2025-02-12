@@ -110,7 +110,7 @@ private:
 	bool WriteHelp(const std::string& command, char* args);
 	[[nodiscard]] std::string ReadCommand();
 	[[nodiscard]] std::string SubstituteEnvironmentVariables(std::string_view command);
-	[[nodiscard]] std::string Which(std::string_view name) const;
+	[[nodiscard]] std::string ResolvePath(std::string_view name) const;
 
 	friend class AutoexecEditor;
 
