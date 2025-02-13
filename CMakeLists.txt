@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.22)
 
 set(VCPKG_USE_HOST_TOOLS ON)
 
@@ -48,6 +48,10 @@ else()
 	message(NOTICE "Unknown compiler")
 endif()
 
+# Enable color output for certain compilers
+if (DOSBOX_COMPILER_GCC OR DOSBOX_COMPILER_CLANG)
+	add_compile_options("-fdiagnostics-color=always")
+endif()
 
 find_package(Git)
 if(Git_FOUND)
@@ -198,7 +202,6 @@ add_subdirectory(src)
 target_link_libraries(dosbox PRIVATE
 		$<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
 		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-
 		libcapture
 		libmisc
 		libcpu
