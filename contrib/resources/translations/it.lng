@@ -435,11 +435,11 @@ Kirghizistan
 :COUNTRY_NAME_UZB
 Uzbekistan
 .
-:CODE_PAGE_DESCRIPTION_113
-Jugoslavo
-.
 :CODE_PAGE_DESCRIPTION_437
 Stati Uniti
+.
+:CODE_PAGE_DESCRIPTION_113
+Jugoslavo
 .
 :CODE_PAGE_DESCRIPTION_667
 Polacco, codifica Mazovia
@@ -451,19 +451,19 @@ Polacco, compatibile con 852
 Greco-2
 .
 :CODE_PAGE_DESCRIPTION_770
-Baltico
+Baltico, codifica RST 1095:89
 .
 :CODE_PAGE_DESCRIPTION_771
 Lituano e russo, codifica KBL
 .
 :CODE_PAGE_DESCRIPTION_773
-Latino-7 (Baltico, vecchia codifica)
+Baltico, codifica KBL
 .
 :CODE_PAGE_DESCRIPTION_775
 Latino-7 (Baltico)
 .
 :CODE_PAGE_DESCRIPTION_777
-Lituano, lettere accentate, vecchia codifica
+Lituano, lettere accentate, codifica KBL
 .
 :CODE_PAGE_DESCRIPTION_778
 Lituano, lettere accentate, codifica LST 1590-2
@@ -574,7 +574,7 @@ Turco
 Brasiliano, codifica ABICOMP
 .
 :CODE_PAGE_DESCRIPTION_30000
-Saami, Kalo e Finnico
+Lingue sami, kalo, finnico
 .
 :CODE_PAGE_DESCRIPTION_30001
 Celtico e scozzese, con simbolo EUR
@@ -595,7 +595,7 @@ Nigeriano, con simbolo EUR
 Vietnamita, codifica VISCII
 .
 :CODE_PAGE_DESCRIPTION_30007
-Latino e romanzo, con simbolo EUR
+Latino e romancio, con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30008
 Abcaso e osseto, con simbolo EUR
@@ -637,7 +637,7 @@ Latino ceceno e russo, con simbolo EUR
 Basso sassone e frisone, con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30021
-Oceania, con simbolo EUR
+Oceanico, con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30022
 Prime Nazioni canadesi, con simbolo EUR
@@ -667,10 +667,10 @@ Messicano, con simbolo EUR
 Messicano-2, con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30031
-Latino-4 (Nord Europa), con simbolo EUR
+Latino-4 (Europa settentrionale), con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30032
-Latino-6, con simbolo EUR
+Latino-6 (nordico), con simbolo EUR
 .
 :CODE_PAGE_DESCRIPTION_30033
 Tataro di Crimea, con simbolo UAH
@@ -693,6 +693,9 @@ Cirillico azero e russo
 :CODE_PAGE_DESCRIPTION_58335
 Casciubo, basato su Masovia, con simbolo PLN
 .
+:CODE_PAGE_DESCRIPTION_58601
+Lituano, lettere accentate, LST 1590-4, con simbolo EUR
+.
 :CODE_PAGE_DESCRIPTION_59234
 Tartaro
 .
@@ -707,6 +710,192 @@ Georgiano con lettere maiuscole
 .
 :CODE_PAGE_DESCRIPTION_62306
 Uzbeko
+.
+:CODE_PAGE_DESCRIPTION_65506
+Armeno, codifica ArmSCII-8
+.
+:CODE_PAGE_DESCRIPTION_813
+ISO-8859-7 (greco), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_819
+ISO-8859-1 (Europa occidentale)
+.
+:CODE_PAGE_DESCRIPTION_901
+ISO-8859-13 (baltico), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_912
+ISO-8859-2 (Europa centrale)
+.
+:CODE_PAGE_DESCRIPTION_913
+ISO-8859-3 (Europa meridionale)
+.
+:CODE_PAGE_DESCRIPTION_914
+ISO-8859-4 (Europa settentrionale)
+.
+:CODE_PAGE_DESCRIPTION_915
+ISO-8859-5 (cirillico)
+.
+:CODE_PAGE_DESCRIPTION_919
+ISO-8859-10 (nordico)
+.
+:CODE_PAGE_DESCRIPTION_920
+ISO-8859-9 (turco)
+.
+:CODE_PAGE_DESCRIPTION_921
+ISO-8859-13 (baltico)
+.
+:CODE_PAGE_DESCRIPTION_923
+ISO-8859-15 (Europa occidentale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1124
+ISO 8859-5 (modificato per l'ucraino)
+.
+:CODE_PAGE_DESCRIPTION_58163
+ISO-8859-14 (celtico)
+.
+:CODE_PAGE_DESCRIPTION_58258
+ISO-8859-4 (Europa settentrionale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_61235
+ISO-8859-1 (Europa occidentale), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_63283
+ISO-8859-1 (modificato per il lituano)
+.
+:CODE_PAGE_DESCRIPTION_65500
+ISO-8859-16 (Europa sud-orientale)
+.
+:CODE_PAGE_DESCRIPTION_902
+ISO-8 (estone), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_922
+ISO-8 (estone)
+.
+:CODE_PAGE_DESCRIPTION_58259
+ISO-IR-201 (lingue volgaiche)
+.
+:CODE_PAGE_DESCRIPTION_59187
+ISO-IR-197 (lingue sami)
+.
+:CODE_PAGE_DESCRIPTION_59283
+ISO-IR-200 (lingue uraliche)
+.
+:CODE_PAGE_DESCRIPTION_60211
+ISO-IR-209 (lingue sami, romani finlandese)
+.
+:CODE_PAGE_DESCRIPTION_65501
+ISO-IR-123 (canadese e spagnolo)
+.
+:CODE_PAGE_DESCRIPTION_65502
+ISO-IR-143 (simboli tecnici)
+.
+:CODE_PAGE_DESCRIPTION_65503
+ISO-IR-181 (simboli elettrotecnici)
+.
+:CODE_PAGE_DESCRIPTION_65504
+ISO-IR-39 (latino africano)
+.
+:CODE_PAGE_DESCRIPTION_878
+KOI8-R (russo)
+.
+:CODE_PAGE_DESCRIPTION_58222
+KOI8-U (russo e ucraino)
+.
+:CODE_PAGE_DESCRIPTION_59246
+KOI8-RU (russo, bielorusso, ucraino)
+.
+:CODE_PAGE_DESCRIPTION_60270
+KOI8-F (cirillico slavo completo)
+.
+:CODE_PAGE_DESCRIPTION_61294
+KOI8-CA (cirillico slavo completo e non slavo)
+.
+:CODE_PAGE_DESCRIPTION_62318
+KOI8-T (russo e tagico)
+.
+:CODE_PAGE_DESCRIPTION_63342
+KOI8-C (russo e russo antico), con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1275
+Apple Europa occidentale
+.
+:CODE_PAGE_DESCRIPTION_1280
+Apple greco
+.
+:CODE_PAGE_DESCRIPTION_1281
+Apple turco
+.
+:CODE_PAGE_DESCRIPTION_1282
+Apple Europa centrale e baltico
+.
+:CODE_PAGE_DESCRIPTION_1283
+Apple cirillico
+.
+:CODE_PAGE_DESCRIPTION_1284
+Apple croato
+.
+:CODE_PAGE_DESCRIPTION_1285
+Apple rumeno
+.
+:CODE_PAGE_DESCRIPTION_1286
+Apple islandese
+.
+:CODE_PAGE_DESCRIPTION_58619
+Apple gaelico (ortografia antica), gallese
+.
+:CODE_PAGE_DESCRIPTION_58627
+Apple ucraino
+.
+:CODE_PAGE_DESCRIPTION_58630
+Apple sami, kalo, finnico, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1250
+Windows Europa centrale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1251
+Windows cirillico, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1252
+Windows Europa occidentale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1253
+Windows greco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1254
+Windows turco, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1257
+Windows baltico, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1270
+Windows sami, kalo, finnico, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_1361
+Windows Europa meridionale, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_58595
+Windows kazako, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_58596
+Windows georgiano
+.
+:CODE_PAGE_DESCRIPTION_58598
+Windows azero, con simbolo EUR
+.
+:CODE_PAGE_DESCRIPTION_59619
+Windows Asia centrale
+.
+:CODE_PAGE_DESCRIPTION_59620
+Windows gaelico (ortografia antica), gallese
+.
+:CODE_PAGE_DESCRIPTION_60643
+Windows iraniano nord-orientale
+.
+:CODE_PAGE_DESCRIPTION_61667
+Windows inuit-aleutino
+.
+:CODE_PAGE_DESCRIPTION_62691
+Windows manciù-tunguso
 .
 :SCRIPT_NAME_LATN
 Latino
@@ -1339,8 +1528,7 @@ d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
 del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
 :CONFIG_LANGUAGE
-Seleziona la lingua dei messaggi visualizzati nella finestra DOS (predefinito
-non impostato; equivalente ad 'auto'):
+Seleziona la lingua dei messaggi visualizzati in DOSBox:
   auto:      Individua la lingua dal sistema operativo in uso (predefinito).
   <valore>:  Carica la traduzione dal file specificato.            
 Note:
@@ -1656,7 +1844,7 @@ Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
 :CONFIG_CGA_COLORS
 Imposta l'interpretazione dei colori CGA RGBI (predefinito 'default').
 Interessa tutti i tipi di macchine in grado di visualizzare grafica CGA o
-migliore. Preimpostazioni integrate:
+migliore. Profili integrati:
   default:      Tavolozza CGA emulata come negli adattatori VGA (predefinito).
   tandy <bl>:   Emulazione di un monitor Tandy con livello del marrone
                 regolabile. Il livello del marrone può essere fornito come
@@ -1855,8 +2043,8 @@ Abilita l'emulazione 3dfx Voodoo (predefinito abilitato).
 :CONFIG_VOODOO_MEMSIZE
 Imposta la quantità di memoria video per la scheda grafica 3dfx Voodoo,
 4 o 12 MB. La memoria viene utilizzata dall'interfaccia del buffer dei
-fotogrammi o Frame Buffer Interface (FBI) e dall'unità di gestione delle
-texture o Texture Mapping Unit (TMU) come segue:
+fotogrammi (o Frame Buffer Interface, FBI) e dall'unità di gestione delle
+texture (o Texture Mapping Unit, TMU) come segue:
    4: FBI con 2 MB e un TMU con 2 MB (predefinito).
   12: FBI con 4 MB e due TMU, ciascuno con 4 MB.
 .
@@ -1865,13 +2053,15 @@ Rinominato in 'voodoo_threads'
 .
 :CONFIG_VOODOO_THREADS
 Utilizza i thread per migliorare le prestazioni dell'emulazione 3dfx Voodoo:
-  auto:      Utilizza fino a 8 thread, in base ai core della CPU disponibili
+  auto:      Utilizza fino a 16 thread, in base ai core della CPU disponibili
              (predefinito).
-  <valore>:  Imposta un numero specifico di thread compreso tra 1 e 16.
-Nota: I test hanno dimostrato un aumento di prestazioni tangibile con l'uso di
-      non più di 8 thread. Specificare un numero di thread più elevato può
-      portare ad un aumento irrisorio o, addirittura, ad una diminuzione delle
-      prestazioni.
+  <valore>:  Imposta un numero specifico di thread compreso tra 1 e 128.
+Nota: Impostando questa opzione su un valore più alto del numero di processori
+      logici supportati dal tuo hardware, è molto probabile possa verificarsi
+      una diminuzione delle prestazioni. È stato testato che si possono avere
+      buoni risultati con un massimo di 8-16 thread. Non sono attualmente
+      disponibili dati riguardo processori con più core, quindi se possiedi un
+      processore AMD Threadripper o simile, facci sapere come va.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilizza il filtro bilineare per emulare l'effetto smussato delle texture delle
@@ -1898,7 +2088,7 @@ Imposta il formato di acquisizione delle istantanee dello schermo
              frazionario in orizzontale e con numeri interi in verticale).
              I nomi delle istantanee ridimensionate non hanno alcun suffisso
              (es. "image0001.png").
-  rendered:  Viene acquisita l'immagine postrenderizzata mostrata sullo schermo
+  rendered:  Viene acquisita l'immagine renderizzata mostrata sullo schermo.
              I nomi delle istantanee renderizzate terminano con '-rendered'
              (es. 'image0001-rendered.png').
   raw:       Viene acquisito il contenuto del framebuffer non elaborato
@@ -1956,11 +2146,25 @@ Funziona in modalità schermo intero o quando il mouse viene catturato
 in modalità finestra.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Abilita il driver del mouse DOS integrato (predefinito abilitato).
-Note:
-  - Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
-  - Quando un sistema operativo guest viene avviato, il driver integrato viene
-    disabilitato automaticamente.
+Abilita il driver del mouse incluso in DOSBox (predefinito abilitato).
+Esso assicura la latenza più bassa possibile e il movimento del mouse più
+fluido, quindi si consiglia di disabilitarlo e caricare un driver DOS esterno
+solo se realmente necessario (ad esempio, se un gioco non è compatibile con
+il driver integrato).
+  on:   Abilita il driver del mouse integrato. Le opzioni `ps2_mouse_model` e
+        `com_mouse_model` non hanno alcun effetto se si utilizza il driver
+        integrato.
+  off:  Disabilita il driver del mouse integrato (se non è necessaro il
+        supporto del mouse o se si vuole caricare un driver DOS esterno).
+        Per utilizzare un driver DOS esterno (ad es. MOUSE.COM o CTMOUSE.EXE),
+        configurare il tipo di mouse nelle opzioni `ps2_mouse_model` o
+        `com_mouse_model`, quindi caricare il driver.
+        Un driver DOS esterno potrebbe aumentare la compatibilità con alcuni
+        programmi, ma introdurrà una maggiore latenza.
+Nota: Se si avvia una versione di MS-DOS o Windows 9x all'interno di DOSBox,
+      il driver integrato verrà disabilitato automaticamente. Se si utilzza
+      Windows 3.x, il driver integrato non verrà disabilitato ma quello di
+      Windows prenderà il sopravvento.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
@@ -1969,22 +2173,28 @@ specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poiché per alcuni
 incrementa efficacemente la frequenza di campionamento del mouse a 1000 Hz,
 senza aumentare il sovraccarico dell'interrupt. Potrebbe causare problemi di
 compatibilità.
-Elenco di giochi incompatibili noti:
+Elenco di alcuni giochi noti non compatibili:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
 Se trovi un altro gioco incompatibile, segnalalo in modo da poter aggiornare
 questo elenco.
 .
 :CONFIG_PS2_MOUSE_MODEL
-Modello mouse porta PS/2 AUX:
+Imposta il modello del mouse sulla porta PS/2 AUX o, più precisamente, il tipo
+di mouse virtuale collegato alla porta PS/2 emulata (predefinito 'explorer').
+Questa opzione non ha alcun effetto sul driver del mouse integrato (fare
+riferimento a 'dos_mouse_driver').
   standard:     3 pulsanti, mouse PS/2 standard.
   intellimouse: 3 pulsanti + rotellina, Microsoft IntelliMouse.
   explorer:     5 pulsanti + rotellina, Microsoft IntelliMouse Explorer
                 (predefinito).
-  none:         nessun mouse PS/2 emulato.
+  none:         nessun mouse PS/2.
 .
 :CONFIG_COM_MOUSE_MODEL
-Modello mouse predefinito porta COM (seriale):
+Imposta il modello predefinito del mouse seriale o, più precisamente, il tipo
+di mouse virtuale collegato alle porte COM emulate (predefinito 'wheel+msm').
+Questa opzione non ha alcun effetto sul driver del mouse integrato (fare
+riferimento a 'dos_mouse_driver').
   2button:     2 pulsanti, mouse Microsoft.
   3button:     3 pulsanti, mouse Logitech;
                per lo più compatibile con mouse Microsoft.
@@ -2047,46 +2257,58 @@ il ritaglio (clipping) dell'uscita audio:
   on:        Abilita il compressore (predefinito).
 .
 :CONFIG_CROSSFEED
-Abilita l'alimentazione incrociata a livello globale su tutti i canali stereo
-per l'ascolto in cuffia:
+Abilita l'alimentazione incrociata sui canali OPL e CMS (Gameblaster) del mixer
+Con questi dispositivi audio, nella riproduzione in stereofonia, molti giochi
+distribuiscono gli strumenti al 100%% nel canale sinistro e al 100%% in quello
+destro, il che può risultare spiacevole da ascoltare con le cuffie. Abilitando
+l'alimentazione incrociata, una parte del segnale del canale sinistro viene
+miscelato nel canale destro e viceversa, creando un'esperienza di ascolto più
+naturale.
   off:       Alimentazione incrociata disabilitata (predefinito).
-  on:        Abilita l'alimentazione incrociata (preimpostazione 'normal').
+  on:        Abilita l'alimentazione incrociata (profilo 'normal').
   light:     Alimentazione incrociata minima (intensità 15).
   normal:    Alimentazione incrociata normale (intensità 40).
   strong:    Alimentazione incrociata forte (intensità 65).
-Nota: È possibile regolare con precisione l'intensità dell'alimentazione
-      incrociata di ciascun canale tramite il comando MIXER.
+Note:
+  - Utilizzare il comando MIXER per applicare l'alimentazione incrociata anche
+    ad altri canali audio e per regolarne l'intensità in ciascun canale.
 .
 :CONFIG_REVERB
 Abilita l'effetto riverbero a livello globale per aggiungere un senso di
 spazializzazione del suono:
   off:       Nessun riverbero (predefinito).
-  on:        Abilita riverbero (preimpostazione 'medium').
+  on:        Abilita riverbero (profilo 'medium').
   tiny:      Simula il suono di un piccolo altoparlante integrato;
              specificamente progettato per sistemi audio di piccole dimensioni
              (altoparlante interno, Tandy, PS/1 Audio, e dispositivi DAC LPT).
   small:     Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
              che usano un singolo canale del sintetizzatore (tipicamente OPL)
              sia per la musica che per gli effetti sonori.
-  medium:    Preimpostazione Stanza Media; funziona bene con un'ampia varietà
-             di giochi
-  large:     Preimpostazione Grande Sala; è consigliato per i giochi che
-             utilizzano canali separati per musica e audio digitale.
-  huge:      Variante della preimpostazione Grande Sala con intensità maggiore;
-             funziona davvero bene nei giochi con colonne sonore più suggestive
-Nota: È possibile regolare con precisione i livelli di riverbero di ciascun
-      canale tramite il comando MIXER.
+  medium:    Profilo Stanza Media; funziona bene con un'ampia varietà di giochi
+  large:     Profilo Grande Sala; è consigliato per i giochi che utilizzano
+             canali separati per musica e audio digitale.
+  huge:      Variante del profilo Grande Sala con intensità maggiore; funziona
+             davvero bene nei giochi con colonne sonore più suggestive.
+Note:
+  - I profili applicano una notevole quantità di riverbero ai canali dei
+    sintetizzatori (ad eccezione di quelli con effetto riverbero incorporato,
+    come il Roland MT-32) e una quantità minima ai canali dell'audio digitale.
+  - Utilizzare il comando MIXER per regolare i livelli di riverbero in ciascun
+    canale.
 .
 :CONFIG_CHORUS
 Abilita l'effetto coro a livello globale per un suono più avvolgente:
   off:       Nessun effetto coro (predefinito).
-  on:        Abilita effetto coro (preimpostazione 'normal').
+  on:        Abilita effetto coro (profilo 'normal').
   light:     Effetto coro leggero (particolarmente adatto per la musica
              sintetizzata che presenta molto rumore bianco).
   normal:    Effetto coro normale; funziona bene con un'ampia varietà di giochi
   strong:    Effetto coro molto evidente.
-Nota: È possibile regolare con precisione i livelli di coro di ciascun canale
-      tramite il comando MIXER.
+Note:
+  - I profili applicano l'effetto coro solo ai canali dei sintetizzatori (ad
+    eccezione di quelli con effetto coro integrato, come il Roland MT-32).
+  - Utilizzare il comando MIXER per regolare i livelli di coro in ciascun
+    canale.
 .
 :CONFIG_SOUNDFONT
 Nome o percorso del file SoundFont da utilizzare (predefinito 'default.sf2').
@@ -2206,9 +2428,9 @@ Percorso ROM  :
 :CONFIG_SOUNDCANVAS_MODEL
 Modello di Roland Sound Canvas da utilizzare.
 Nella cartella 'plugin' situata nella directory di configurazione di DOSBox,
-devono essere presenti uno o più plugin audio CLAP che implementano i modelli
-Sound Canvas supportati. DOSBox cerca il modello richiesto esaminando le
-descrizioni dei plugin.
+devono essere presenti uno o più moduli audio CLAP che implementano i modelli
+Sound Canvas supportati. DOSBox individua il modello richiesto esaminando le
+descrizioni dei moduli audio disponibili.
 La ricerca dei modelli viene eseguita nel seguente ordine:
   auto:       Seleziona il miglior modello disponibile (predefinito).
   sc55:       Seleziona il miglior modello SC-55 originale disponibile.
@@ -2496,7 +2718,8 @@ Canale DMA della scheda Gravis UltraSound (predefinito 3).
 .
 :CONFIG_GUS_FILTER
 Filtro per l'uscita audio della scheda Gravis UltraSound:
-  off:              Non filtra l'uscita audio (predefinito).
+  on:               Filtra l'uscita audio (predefinito).
+  off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
@@ -2746,7 +2969,8 @@ Può essere disabled, dummy, mouse, modem, nullmodem, direct
 (predefinito 'dummy').
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Il parametro 'irq' è valido per tutti i tipi di dispositivi.
-  - per 'mouse':      model (sovrascrive l'impostazione della sezione [mouse]).
+  - per 'mouse':      model (facoltativo; sovrascrive l'opzione
+                      'com_mouse_model').
   - per 'direct':     realport (richiesto), rxdelay (facoltativo).
                       (es. realport:COM1, realport:ttyS0).
   - per 'modem':      listenport, sock, bps (tutti facoltativi).
@@ -2863,10 +3087,11 @@ software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
   - 10.0.2.2:       IP del gateway e del servizio DHCP.
   - 10.0.2.3:       IP del server DNS virtuale.
   - 10.0.2.15:      Primo IP fornito dal DHCP, il tuo IP!
-Nota: All'interno del DOS, la configurazione richiede un pacchetto driver
+Nota: All'interno del DOS, la configurazione richiede un driver di pacchetto
       NE2000, un client DHCP e una pila TCP/IP. Potrebbe essere necessario
-      inoltrare le porte dall'host al guest DOS, e dal router al tuo host
-      quando funge da server per i giochi multigiocatore.
+      inoltrare le porte dal sistema operativo primario all'emulatore DOS
+      e dal router al sistema stesso, quando quest'ultimo funge da server per
+      i giochi multigiocatore.
 .
 :CONFIGITEM_NICBASE_SLIRP
 Indirizzo di base della scheda NE2000 (predefinito 300).
@@ -2883,29 +3108,34 @@ Nota: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
 Indirizzo MAC della scheda NE2000 (predefinito 'AC:DE:48:88:99:AA').
 .
 :CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
-Inoltra una o più porte TCP dall'host al guest DOS (predefinito non impostato).
+Inoltra una o più porte TCP dal sistema operativo primario all'emulatore DOS
+(predefinito non impostato).
 Il formato è:
   porta1  porta2  porta3 ... (ad es. 21 80 443)
-  Questo inoltrerà FTP, HTTP e HTTPS al guest DOS.
-Se le porte sono privilegiate sull'host, è possibile utilizzare una mappatura:
-  host:guest  ..., (ad es. 8021:21 8080:80)
-  Questo inoltrerà le porte 8021 e 8080 a FTP e HTTP nel guest DOS.
+  Questo inoltrerà le porte FTP, HTTP e HTTPS verso l'emulatore DOS.
+Se le porte sono privilegiate sul sistema primario, è possibile utilizzare una
+mappatura:
+  primario:emulatore  ..., (ad es. 8021:21 8080:80)
+  Questo inoltrerà le porte 8021 e 8080 verso quelle FTP e HTTP
+  dell'emulatore DOS.
 Un intervallo di porte adiacenti può essere abbreviato con un trattino:
   inizio-fine ... (ad es. 27910-27960)
-  Questo inoltrerà le porte da 27910 a 27960 al guest DOS.
+  Questo inoltrerà le porte da 27910 a 27960 verso l'emulatore DOS.
 Le mappature e gli intervalli possono essere combinati:
-  hinizio-hfine:ginizio-gfine ..., (ad es. 8040-8080:20-60)
-  Questo inoltra le porte da 8040 a 8080 in 20 a 60 nel guest DOS.
+  pinizio-pfine:einizio-efine ..., (ad es. 8040-8080:20-60)
+  Questo inoltra le porte da 8040 a 8080 verso l'intervallo di porte
+  dell'emulatore DOS che va da 20 a 60.
 Note:
   - Se gli intervalli mappati differiscono, l'intervallo più corto viene
     esteso per adattarsi.
-  - Se vengono fornite porte host in conflitto, viene impostata solo la prima.
-  - Se vengono fornite porte guest in conflitto, l'ultima regola ha la
-    precedenza.
+  - Se vengono fornite porte del sistema operativo primario in conflitto,
+    viene impostata solo la prima.
+  - Se vengono fornite porte dell'emulatore DOS in conflitto, l'ultima regola
+    ha la precedenza.
 .
 :CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
-Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
-Il formato è lo stesso dell'inoltro porte TCP.
+Inoltra una o più porte UDP dal sistema operativo primario all'emulatore DOS
+(predefinito non impostato). Il formato è lo stesso dell'inoltro porte TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Ogni riga in questa sezione viene eseguita all'avvio come comando DOS.
@@ -3570,7 +3800,7 @@ Possono essere modificate nel [color=brown]mappatore dei tasti[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
            rilevare modifiche.
 [color=yellow]%s+F5[reset]     Scatta un'istantanea dello schermo (immagine renderizzata).
-[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (risoluzione originale).
+[color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (immagine ridimensionata).
 [color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
 [color=yellow]%s+F7[reset]   %s Avvia/Ferma la registrazione dell'uscita video in un file zmbv.
 [color=yellow]%s+F8[reset]   %s Disattiva/Riattiva l'audio.
@@ -3593,7 +3823,7 @@ Utilizzo:
 Parametri:
   [color=light-cyan]DISPOSIZIONE[reset]   codice di disposizione della tastiera
   [color=white]TABELLACODICI[reset]  numero di una tabella codici, ad esempio [color=white]437[reset] o [color=white]850[reset]
-  [color=white]FILECPI[reset]        file dei caratteri dello schermo, in formato CPI o CPX
+  [color=white]FILECPI[reset]        file dei caratteri dello schermo, in formato CPI
   /list          visualizza i codici di tastiera disponibili
   /rom           se possibile, utilizza il set di caratteri della ROM della
                  scheda grafica
@@ -3603,6 +3833,9 @@ Note:
     tastiera e la tabella codici attualmente caricati.
   - Il [color=white]FILECPI[reset], se specificato, deve contenere il set di caratteri per la
     [color=white]TABELLACODICI[reset] selezionata.
+  - I formati MS-DOS, DR-DOS e Windows NT dei file CPI sono supportati in modo
+    nativo. I file CPX di FreeDOS devono essere prima decompressi con il
+    programma di terze parti [color=light-green]upx[reset].
   - Se non viene specificato alcun [color=white]FILECPI[reset] personalizzato, il comando cercherà
     un set di caratteri adatto nei file CPI inclusi.
   - Se la [color=white]TABELLACODICI[reset] non è specificata e viene individuato un set di
@@ -3628,9 +3861,6 @@ Tabella codici
 :PROGRAM_KEYB_ROM_FONT
 caratteri ROM
 .
-:PROGRAM_KEYB_CUSTOM_FONT
-caratteri personalizzati
-.
 :PROGRAM_KEYB_KEYBOARD_LAYOUT
 Disposizione tastiera
 .
@@ -3640,45 +3870,38 @@ Caratteri tastiera
 :PROGRAM_KEYB_NOT_LOADED
 non caricato
 .
-:PROGRAM_KEYB_WARNING_CODE_PAGE
-[color=light-red]Avviso:[reset] Si consiglia di evitare di utilizzare la tabella codici %d!
-.
-:PROGRAM_KEYB_WARNING_DOTTED_I
-Sostituisce la lettera 'I' senza punti dello standard ASCII con la variante con
-i punti e sposta il carattere originale altrove. Non esiste un modo per gestire
-questa situazione senza rischiare problemi di compatibilità con il software
-esistente!
-.
 :PROGRAM_KEYB_INVALID_CODE_PAGE
 Tabella codici non valida.
-
-.
-:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
-File con disposizione della tastiera '%s' non trovato.
-
-.
-:PROGRAM_KEYB_INVALID_LAYOUT_FILE
-File con disposizione della tastiera '%s' non valido.
 
 .
 :PROGRAM_KEYB_CPI_FILE_NOT_FOUND
 File di tabella codici non trovato.
 
 .
+:PROGRAM_KEYB_CPI_READ_ERROR
+Errore durante la lettura del file di tabella codici.
+
+.
 :PROGRAM_KEYB_INVALID_CPI_FILE
 File di tabella codici non valido.
 
 .
-:PROGRAM_KEYB_CPI_FILE_DR_DOS
-Il file di tabella codici ha un formato DR-DOS non supportato.
+:PROGRAM_KEYB_CPI_FILE_TOO_LARGE
+Il file di tabella codici è troppo grande.
 
 .
-:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
-Disposizione della tastiera '%s' sconosciuta.
+:PROGRAM_KEYB_UNSUPPORTED_CPX_FILE
+Formato CPX di FreeDOS non supportato. Convertire il file nel formato CPI
+tramite il programma di terze parti [color=light-green]upx[reset].
 
 .
-:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
-Nessuna disposizione della tastiera '%s' per la tabella codici %d.
+:PROGRAM_KEYB_PRINTER_CPI_FILE
+Questo è un file di tabella codici per le stampanti e non contiene un set di
+caratteri.
+
+.
+:PROGRAM_KEYB_SCREEN_FONT_UNUSABLE
+Tabella codici %d trovata, ma impossibile utilizzare il set di caratteri.
 
 .
 :PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
@@ -3690,8 +3913,24 @@ Nessuna tabella codici %d nel file di tabella codici.
 
 .
 :PROGRAM_KEYB_INCOMPATIBLE_MACHINE
-Impossibile modificare la tabella codici; è richiesta una macchina EGA
+Impossibile modificare il set di caratteri; è richiesta una macchina EGA
 o superiore.
+
+.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+File di disposizione della tastiera '%s' non trovato.
+
+.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+File di disposizione della tastiera '%s' non valido.
+
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Disposizione della tastiera '%s' sconosciuta.
+
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+Nessuna disposizione della tastiera '%s' per la tabella codici %d.
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
@@ -4252,7 +4491,7 @@ Impossibile effettuare la mappatura con il driver del mouse corrente.
 
 .
 :PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
-In questa build non sono supportati mouse fisici multipli.
+In questa versione di sviluppo non sono supportati mouse fisici multipli.
 
 .
 :PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
@@ -4654,7 +4893,7 @@ Echo disattivato.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Impossibile spostarsi su: %s
+Impossibile spostarsi in: %s
 
 .
 :SHELL_CMD_CHDIR_HINT
