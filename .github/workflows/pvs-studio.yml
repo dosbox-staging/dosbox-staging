@@ -1,8 +1,5 @@
 name: PVS-Studio analysis
 
-# If the CI job fails with 404-not-found, then PVS studio has updated the release.
-# Get the new DEB version from: https://pvs-studio.com/en/pvs-studio/download-all/
-
 on:
   push:
     paths-ignore:
@@ -21,37 +18,29 @@ jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-22.04
-    env:
-      debfile: pvs-studio-7.34.87460.207-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: false
 
-      - run:  sudo apt-get update
-
-      - name: Log and setup environment
+      - name: Configure PVS-Studio repository
         run: |
-          ./scripts/log-env.sh
-          mkdir -p pvs-package
-
-      - uses: actions/cache@v4
-        id: cache-pvs
-        with:
-          path: pvs-package
-          key: ${{ env.debfile }}
-
-      - name:  Fetch PVS-Studio package
-        if:    steps.cache-pvs.outputs.cache-hit != 'true'
-        run:   wget "https://files.pvs-studio.com/${debfile}" -O "pvs-package/pvs.deb"
+          set -xeu
+          wget -q -O - https://files.pvs-studio.com/etc/pubkey.txt | sudo apt-key add -
+          sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/etc/viva64.list
 
       - name: Install dependencies
         run: |
           set -xeu
+          sudo apt-get update
           sudo apt-get install -y strace $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
-          sudo dpkg -i "pvs-package/pvs.deb"
+          sudo apt-get install pvs-studio
+
+      - name: Configure PVS-Studio license
+        run: |
+          set -xeu
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
       - name: Cache subprojects
