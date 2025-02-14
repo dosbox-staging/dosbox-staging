@@ -39,6 +39,7 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "math_utils.h"
+#include "mixer.h"
 #include "mouse.h"
 #include "pic.h"
 #include "rgb888.h"
@@ -3010,6 +3011,8 @@ void MAPPER_DisplayUI() {
 	// main will recreate its rendering pipeline.
 	GFX_DisengageRendering();
 
+	MIXER_LockMixerThread();
+
 	// Be sure that there is no update in progress
 	GFX_EndUpdate( nullptr );
 	mapper.window = GFX_GetWindow();
@@ -3117,6 +3120,8 @@ void MAPPER_DisplayUI() {
 	}
 
 	// Exiting the mapper
+	MIXER_UnlockMixerThread();
+
 	SDL_DestroyTexture(mapper.font_atlas);
 	SDL_RenderSetLogicalSize(mapper.renderer, 0, 0);
 	SDL_SetRenderDrawColor(mapper.renderer,
