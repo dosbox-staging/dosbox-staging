@@ -9,26 +9,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  repo-check:
-    name: Repository commit check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - id: commit-check
-        run: echo "has-commits=$(./scripts/has-commits-since.sh '24 hours ago')"  >> $GITHUB_OUTPUT
-    outputs:
-      has-commits: ${{ steps.commit-check.outputs.has-commits }}
-
   build_on_platform:
     name: ${{ matrix.name }}
     # The host should always be linux
     runs-on: ubuntu-22.04
-    needs: repo-check
-    if: needs.repo-check.outputs.has-commits == 'true'
     strategy:
       fail-fast: false
       matrix:
