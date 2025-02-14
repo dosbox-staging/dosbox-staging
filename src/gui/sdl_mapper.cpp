@@ -2982,15 +2982,22 @@ void MAPPER_LosingFocus() {
 
 void MAPPER_RunEvent(uint32_t /*val*/)
 {
-	KEYBOARD_ClrBuffer();           // Clear buffer
-	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
+	// Clear buffer
+	KEYBOARD_ClrBuffer();           
+	
+	// Release any keys pressed (buffer gets filled again).
+	GFX_LosingFocus();		
+
 	MAPPER_DisplayUI();
 }
 
 void MAPPER_Run(bool pressed) {
-	if (pressed)
+	if (pressed) {
 		return;
-	PIC_AddEvent(MAPPER_RunEvent,0);	//In case mapper deletes the key object that ran it
+	}
+
+	// In case mapper deletes the key object that ran it
+	PIC_AddEvent(MAPPER_RunEvent,0);	
 }
 
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,uint32_t flags);
@@ -3006,11 +3013,13 @@ void MAPPER_DisplayUI() {
 	// Be sure that there is no update in progress
 	GFX_EndUpdate( nullptr );
 	mapper.window = GFX_GetWindow();
+
 	if (mapper.window == nullptr) {
 		E_Exit("MAPPER: Could not initialize video mode: %s",
 		       SDL_GetError());
 	}
 	mapper.renderer = SDL_GetRenderer(mapper.window);
+
 #if C_OPENGL
 	SDL_GLContext context = nullptr;
 	if (!mapper.renderer) {
@@ -3025,6 +3034,7 @@ void MAPPER_DisplayUI() {
 			E_Exit("MAPPER: Failed to retrieve available SDL renderer drivers: %s",
 			       SDL_GetError());
 		}
+
 		int renderer_driver_index = -1;
 		for (int i = 0; i < renderer_drivers_count; ++i) {
 			SDL_RendererInfo renderer_info = {};
@@ -3038,10 +3048,13 @@ void MAPPER_DisplayUI() {
 				break;
 			}
 		}
+
 		if (renderer_driver_index == -1) {
 			E_Exit("MAPPER: OpenGL support in SDL renderer is unavailable but required for OpenGL output");
 		}
+
 		constexpr uint32_t renderer_flags = 0;
+
 		mapper.renderer = SDL_CreateRenderer(mapper.window,
 		                                     renderer_driver_index,
 		                                     renderer_flags);
@@ -3060,6 +3073,7 @@ void MAPPER_DisplayUI() {
 	// Create font atlas surface
 	SDL_Surface* atlas_surface = SDL_CreateRGBSurfaceFrom(
 	        int10_font_14, 8, 256 * 14, 1, 1, 0, 0, 0, 0);
+
 	if (atlas_surface == nullptr) {
 		E_Exit("MAPPER: Failed to create atlas surface: %s", SDL_GetError());
 	}
@@ -3087,10 +3101,12 @@ void MAPPER_DisplayUI() {
 		last_clicked->BindColor();
 		last_clicked=nullptr;
 	}
-	/* Go in the event loop */
+
+	// Enter mapper event loop
 	mapper.exit = false;
-	mapper.redraw=true;
+	mapper.redraw = true;
 	SetActiveEvent(nullptr);
+
 	while (!mapper.exit) {
 		if (mapper.redraw) {
 			mapper.redraw = false;
@@ -3099,8 +3115,8 @@ void MAPPER_DisplayUI() {
 		BIND_MappingEvents();
 		Delay(1);
 	}
-	/* ONE SHOULD NOT FORGET TO DO THIS!
-	Unless a memory leak is desired... */
+
+	// Exiting the mapper
 	SDL_DestroyTexture(mapper.font_atlas);
 	SDL_RenderSetLogicalSize(mapper.renderer, 0, 0);
 	SDL_SetRenderDrawColor(mapper.renderer,
@@ -3127,16 +3143,16 @@ void MAPPER_DisplayUI() {
 	MOUSE_NotifyTakeOver(false);
 }
 
-static void MAPPER_Destroy(Section *sec) {
-	(void) sec; // unused but present for API compliance
-
+static void MAPPER_Destroy([[maybe_unused]] Section *sec) {
 	// Stop any ongoing typing as soon as possible (because it access events)
 	MAPPER_StopAutoTyping();
+
 	// Release all the accumulated allocations by the mapper
 	events.clear();
 
-	for (auto & ptr : all_binds)
+	for (auto& ptr : all_binds) {
 		delete ptr;
+	}
 	all_binds.clear();
 
 	buttons.clear();
@@ -3191,24 +3207,28 @@ void MAPPER_BindKeys(Section* sec)
 	QueryJoysticks();
 
 	// Create the graphical layout for all registered key-binds
-	if (buttons.empty())
+	if (buttons.empty()) {
 		CreateLayout();
+	}
 
 	CreateBindGroups();
 
 	// Create binds from file or fallback to internals
-	if (!load_binds_from_file(mapper.filename, mapperfile_value))
+	if (!load_binds_from_file(mapper.filename, mapperfile_value)) {
 		CreateDefaultBinds();
+	}
 
 	for (const auto& button : buttons) {
 		button->BindColor();
 	}
 
-	if (SDL_GetModState()&KMOD_CAPS)
+	if (SDL_GetModState() & KMOD_CAPS) {
 		MAPPER_TriggerEvent(caps_lock_event, false);
+	}
 
-	if (SDL_GetModState()&KMOD_NUM)
+	if (SDL_GetModState() & KMOD_NUM) {
 		MAPPER_TriggerEvent(num_lock_event, false);
+	}
 }
 
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {
