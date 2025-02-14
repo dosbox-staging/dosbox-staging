@@ -39,6 +39,7 @@
 #include "keyboard.h"
 #include "mapper.h"
 #include "math_utils.h"
+#include "mixer.h"
 #include "mouse.h"
 #include "pic.h"
 #include "rgb888.h"
@@ -2996,6 +2997,8 @@ void MAPPER_Run(bool pressed) {
 		return;
 	}
 
+	MIXER_Mute();
+
 	// In case mapper deletes the key object that ran it
 	PIC_AddEvent(MAPPER_RunEvent,0);	
 }
@@ -3117,6 +3120,8 @@ void MAPPER_DisplayUI() {
 	}
 
 	// Exiting the mapper
+	MIXER_Unmute();
+
 	SDL_DestroyTexture(mapper.font_atlas);
 	SDL_RenderSetLogicalSize(mapper.renderer, 0, 0);
 	SDL_SetRenderDrawColor(mapper.renderer,
