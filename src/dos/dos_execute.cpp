@@ -193,18 +193,24 @@ void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resi
 }
 
 static bool MakeEnv(char * name,uint16_t * segment) {
-	/* If segment to copy environment is 0 copy the caller's environment */
-	DOS_PSP psp(dos.psp());
-	PhysPt envread,envwrite;
-	uint16_t envsize=1;
-	bool parentenv=true;
+	// If segment to copy environment is 0 copy the caller's environment
+	PhysPt envread, envwrite;
+	uint16_t envsize = 1;
+	bool parentenv   = true;
 
-	if (*segment==0) {
-		if (!psp.GetEnvironment()) parentenv=false;				//environment seg=0
-		envread=PhysicalMake(psp.GetEnvironment(),0);
+	if (*segment == 0) {
+		DOS_PSP psp(dos.psp());
+		if (!psp.GetEnvironment()) {
+			// environment seg=0
+			parentenv = false;
+		}
+		envread = PhysicalMake(psp.GetEnvironment(), 0);
 	} else {
-		if (!*segment) parentenv=false;						//environment seg=0
-		envread=PhysicalMake(*segment,0);
+		if (!*segment) {
+			// environment seg=0
+			parentenv = false;
+		}
+		envread = PhysicalMake(*segment, 0);
 	}
 
 	if (parentenv) {

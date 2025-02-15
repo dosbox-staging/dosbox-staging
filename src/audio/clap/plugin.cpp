@@ -32,7 +32,7 @@ CHECK_NARROWING();
 
 namespace Clap {
 
-Plugin::Plugin(const std::shared_ptr<Library> _library, const clap_plugin_t* _plugin)
+Plugin::Plugin(std::shared_ptr<Library> _library, const clap_plugin_t* _plugin)
         : plugin(_plugin)
 {
 	library = std::move(_library);

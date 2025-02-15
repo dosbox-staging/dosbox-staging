@@ -1330,9 +1330,6 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			return nullptr;
 		}
 
-		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
-		                                                 "unknown vendor");
-
 		SDL_GL_DeleteContext(temp_context);
 		SDL_DestroyWindow(temp_window);
 		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
