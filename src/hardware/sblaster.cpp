@@ -3234,7 +3234,12 @@ void SBLASTER::MixerCallback(const int frames_requested)
 	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
 
-	frames_needed.store(std::max(frames_requested - check_cast<int>(output_queue.Size()), 0), std::memory_order_release);
+	// Fast forward mode can cause the mixer to get very far behind.
+	// In extreme cases, it can cause SoundBlaster code to integer overflow and get stuck in an infinte loop.
+	// Avoid that by not setting frames_needed and just letting the mixer block.
+	if (!MIXER_FastForwardModeEnabled()) {
+		frames_needed.store(std::max(frames_requested - check_cast<int>(output_queue.Size()), 0), std::memory_order_release);
+	}
 	MIXER_PullFromQueueCallback<SBLASTER, AudioFrame, Stereo, SignedData, NativeOrder>(frames_requested, this);
 }
 
