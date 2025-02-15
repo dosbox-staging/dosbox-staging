@@ -61,65 +61,11 @@ enum KBD_KEYS {
 	KBD_kpdivide, KBD_kpmultiply, KBD_kpminus, KBD_kpplus,
 	KBD_kpenter, KBD_kpperiod,
 
+	// If you intend to add multimedia keyboard scancodes, please check the
+	// 'README.md' from the implementation directory for the list of known
+	// scancodes.
+
 	KBD_LAST,
-
-	// The keys below are not currently supported, thus they are placed
-	// after KBD_LAST.
-	// Note that our BIOS might be unable to handle the scancodes of these
-	// keys correctly - this needs to be tested before the support is added.
-
-	// Scancodes 1 and 2 for these keys were confirmed using the Microsoft
-	// 'Digital Media Pro Keyboard':
-	// - model 1031 (as printed on the box)
-	// - model KC-0405 (as printed on the bottom side sticker)
-	// - part number X809745-002 (as printed on the bottom side sticker)
-	// If querried, the keyboard returns ID 0x41.
-
-	KBD_guimenu,
-
-	KBD_acpi_sleep, KBD_log_off,
-
-	KBD_undo, KBD_redo, KBD_help,
-
-	KBD_vol_mute, KBD_vol_up, KBD_vol_down,
-
-	KBD_media_play, KBD_media_stop,
-	KBD_media_prev, KBD_media_next,
-	KBD_media_music, KBD_media_pictures,
-
-	KBD_zoom_in, KBD_zoom_out,
-
-	KBD_calculator, KBD_email, KBD_messenger, KBD_www_home,
-
-	KBD_my_documents,
-
-	KBD_new, KBD_open, KBD_close, KBD_save, KBD_print, KBD_spell,
-	KBD_reply, KBD_forward, KBD_send,
-
-	KBD_favorites, KBD_favorite1, KBD_favorite2,
-	KBD_favorite3, KBD_favorite4, KBD_favorite5,
-
-	// Scancodes below were taken from various sources - if possible, test
-	// on real hardware before enabling them.
-
-	KBD_acpi_power, KBD_acpi_wake,
-
-	KBD_f13, KBD_f14, KBD_f15, KBD_f16, KBD_f17, KBD_f18,
-	KBD_f19, KBD_f20, KBD_f21, KBD_f22, KBD_f23, KBD_f24,
-	KBD_sys_req,
-
-	KBD_intl1, KBD_intl2, KBD_intl4, KBD_intl5,
-	KBD_katakana, KBD_fugirana, KBD_kanji, KBD_hiragana,
-
-	KBD_cut, KBD_copy, KBD_paste,
-
-	KBD_media_eject,
-	KBD_media_select, // media_video according to some sources
-
-	KBD_www_search, KBD_www_favorites, KBD_www_refresh,
-	KBD_www_stop, KBD_www_forward, KBD_www_back,
-
-	KBD_my_computer,
 
 	// clang-format on
 };
