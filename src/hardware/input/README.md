@@ -1,4 +1,7 @@
+
 # Input code
+
+## Existing code layout
 
 Few comments on input device emulation code organization:
 
@@ -81,3 +84,106 @@ code, under GPL2-or-above license
 Serial mice emulation - idea is similar to `mouseif_*.cpp` files, but
 implemented in object-oriented way, as a serial port device; multiple
 instances can exist, for each serial port.
+
+## Not implemented keyboard scancodes
+
+Multimedia keyboards are not emulated yet - this chapter contains a list of
+known scancodes (taken from various sources, many confirmed using a real
+keyboard) which can be added.
+Note that our BIOS might be unable to handle these scancodes  correctly - this
+needs to be tested before the support is added.
+
+| Key              | Scancode set 1 | Scancode set 2 | Remarks |
+|------------------|----------------|----------------|---------|
+| SysReq           | `0x54`         | `0x84`         |         |
+| Menu             | `0xe0 0x5d`    | `0xe0 0x2f`    | (1)     |
+| Log Off          | `0xe0 0x16`    | `0xe0 0x3c`    | (1)     |
+| ACPI Sleep       | `0xe0 0x5f`    | `0xe0 0x3f`    | (1)     |
+| ACPI Wake        | `0xe0 0x63`    | `0xe0 0x5e`    |         |
+| ACPI Power       | `0xe0 0x5e`    | `0xe0 0x37`    |         |
+| F13              | `0x5b`         | `0x1f`         |         |
+| F14              | `0x5c`         | `0x27`         |         |
+| F15              | `0x5d`         | `0x2f`         |         |
+| F16              | `0x63`         | `0x5e`         |         |
+| F17              | `0x64`         | `0x08`         |         |
+| F18              | `0x65`         | `0x10`         |         |
+| F19              | `0x66`         | `0x18`         |         |
+| F20              | `0x67`         | `0x20`         |         |
+| F21              | `0x68`         | `0x28`         |         |
+| F22              | `0x69`         | `0x30`         |         |
+| F23              | `0x6a`         | `0x38`         |         |
+| F24              | `0x6b`         | `0x40`         |         |
+| Intl 1           | `0x59`         | (unknown)      |         |
+| Intl 2           |                |                | (A)     |
+| Intl 4           | `0x7d`         | `0x6a`         |         |
+| Intl 5           | `0x7e`         | `0x6d`         |         |
+| Katakana         | `0x70`         | `0x13`         |         |
+| Fugirana         | `0x77`         | `0x62`         |         |
+| Kanji            | `0x79`         | `0x64`         |         |
+| Hiragana         | `0x7b`         | `0x67`         |         |
+| Undo             | `0xe0 0x08`    | `0xe0 0x3d`    | (1)     |
+| Redo             | `0xe0 0x07`    | `0xe0 0x36`    | (1)     |
+| Help             | `0xe0 0x3b`    | `0xe0 0x05`    | (1)     |
+| Volume Mute      | `0xe0 0x20`    | `0xe0 0x23`    | (1)     |
+| Volume+          | `0xe0 0x30`    | `0xe0 0x32`    | (1)     |
+| Volume-          | `0xe0 0x2e`    | `0xe0 0x21`    | (1)     |
+| Media Play/Pause | `0xe0 0x22`    | `0xe0 0x34`    | (1)     |
+| Media Stop       | `0xe0 0x24`    | `0xe0 0x3b`    | (1)     |
+| Media Previous   | `0xe0 0x10`    | `0xe0 0x15`    | (1)     |
+| Media Next       | `0xe0 0x19`    | `0xe0 0x4d`    | (1)     |
+| Media Music      | `0xe0 0x3c`    | `0xe0 0x06`    | (1)     |
+| Media Pictures   | `0xe0 0x64`    | `0xe0 0x08`    | (1)     |
+| Media Select     | `0xe0 0x6d`    | `0xe0 0x50`    | (B)     |
+| Media Eject      | `0xe0 0x2c`    | `0xe0 0x1a`    |         |
+| Zoom+            | `0xe0 0x0b`    | `0xe0 0x45`    | (1)     |
+| Zoom-            | `0xe0 0x11`    | `0xe0 0x1d`    | (1)     |
+| Calculator       | `0xe0 0x21`    | `0xe0 0x2b`    | (1)     |
+| E-Mail           | `0xe0 0x6c`    | `0xe0 0x48`    | (1)     |
+| Messenger        | `0xe0 0x05`    | `0xe0 0x25`    | (1)     |
+| WWW Home         | `0xe0 0x32`    | `0xe0 0x3a`    | (1)     |
+| WWW Forward      | `0xe0 0x69`    | `0xe0 0x30`    |         |
+| WWW Back         | `0xe0 0x6a`    | `0xe0 0x38`    |         |
+| WWW Stop         | `0xe0 0x68`    | `0xe0 0x28`    |         |
+| WWW Refresh      | `0xe0 0x67`    | `0xe0 0x20`    |         |
+| WWW Search       | `0xe0 0x65`    | `0xe0 0x10`    |         |
+| WWW Favorites    | `0xe0 0x66`    | `0xe0 0x18`    |         |
+| My Computer      | `0xe0 0x6b`    | `0xe0 0x40`    |         |
+| My Documents     | `0xe0 0x4c`    | `0xe0 0x73`    | (1)     |
+| Cut              | `0xe0 0x17`    | `0xe0 0x43`    |         |
+| Copy             | `0xe0 0x18`    | `0xe0 0x44`    |         |
+| Paste            | `0xe0 0x1a`    | `0xe0 0x46`    |         |
+| New              | `0xe0 0x3e`    | `0xe0 0x0c`    | (1)     |
+| Open             | `0xe0 0x3f`    | `0xe0 0x03`    | (1)     |
+| Close            | `0xe0 0x40`    | `0xe0 0x0b`    | (1)     |
+| Save             | `0xe0 0x57`    | `0xe0 0x78`    | (1)     |
+| Print            | `0xe0 0x58`    | `0xe0 0x07`    | (1)     |
+| Spell            | `0xe0 0x23`    | `0xe0 0x33`    | (1)     |
+| Reply            | `0xe0 0x41`    | `0xe0 0x83`    | (1)     |
+| Forward          | `0xe0 0x42`    | `0xe0 0x0a`    | (1)     |
+| Send             | `0xe0 0x43`    | `0xe0 0x01`    | (1)     |
+| My Favorites     | `0xe0 0x78`    | `0xe0 0x63`    | (1)     |
+| My Favorite 1    | `0xe0 0x73`    | `0xe0 0x51`    | (1)     |
+| My Favorite 2    | `0xe0 0x74`    | `0xe0 0x53`    | (1)     |
+| My Favorite 3    | `0xe0 0x75`    | `0xe0 0x5c`    | (1)     |
+| My Favorite 4    | `0xe0 0x76`    | `0xe0 0x5f`    | (1)     |
+| My Favorite 5    | `0xe0 0x77`    | `0xe0 0x62`    | (1)     |
+
+| Key              | Scancode set 3 | Remarks |
+|------------------|----------------|---------|
+| Menu             | `0x8d`         |         |
+| F13              | `0x08`         |         |
+| Intl 2           | `0x53`         |         |
+| Intl 4           | `0x5d`         |         |
+| Intl 5           | `0x7b`         |         |
+| Hiragana         | `0x85`         |         |
+| Kanji            | `0x86`         |         |
+| katagana         | `0x87`         |         |
+
+(1) Scancodes confirmed using the Microsoft 'Digital Media Pro Keyboard':
+- model 1031 (as printed on the box)
+- model KC-0405 (as printed on the bottom side sticker)
+- part number X809745-002 (as printed on the bottom side sticker)
+- if querried, the keyboard returns ID 0x41
+
+(A) Intl 2 and backslash have same scancodes 1 and 2
+(B) Media Video according to some sources
