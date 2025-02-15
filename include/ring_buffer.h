@@ -48,7 +48,7 @@ class RingBuffer {
 #endif
 
 public:
-	RingBuffer() {}
+	RingBuffer() = default;
 
 	RingBuffer(const T initValue)
 	{

@@ -749,8 +749,10 @@ bool DOS_CloseFile(uint16_t entry, bool fcb, uint8_t * refcnt) {
 	};
 	Files[handle]->Close();
 
-	DOS_PSP psp(dos.psp());
-	if (!fcb) psp.SetFileHandle(entry,0xff);
+	if (!fcb) {
+		DOS_PSP psp(dos.psp());
+		psp.SetFileHandle(entry, 0xff);
+	}
 
 	Bits refs=Files[handle]->RemoveRef();
 	if (refs<=0) {
@@ -1215,12 +1217,16 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 		// default drive forced, this intentionally invalidates an extended FCB
 		mem_writeb(PhysicalMake(seg,offset),0);
 	}
-	DOS_FCB fcb(seg,offset,false);	// always a non-extended FCB
+
+	// always a non-extended FCB
+	DOS_FCB fcb(seg, offset, false);
+
 	bool hasdrive = false;
-	bool hasname = false;
-	bool hasext = false;
-	Bitu index=0;
-	uint8_t fill=' ';
+	bool hasname  = false;
+	bool hasext   = false;
+	Bitu index    = 0;
+	uint8_t fill  = ' ';
+
 /* First get the old data from the fcb */
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -1280,7 +1286,6 @@ uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
 	if(!isvalid(string[0])) goto savefcb;
 
 	hasname = true;
-	fill = ' ';
 	index = 0;
 	/* Copy the name */	
 	while (true) {
@@ -1862,7 +1867,9 @@ bool DOS_UnlockFile(const uint16_t entry, const uint32_t pos, const uint32_t len
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	}
-	for (auto it = Files[handle]->region_locks.begin(); it != Files[handle]->region_locks.end(); ++it) {
+
+	const auto last = Files[handle]->region_locks.end();
+	for (auto it = Files[handle]->region_locks.begin(); it != last; ++it) {
 		if (it->pos == pos && it->len == len) {
 			Files[handle]->region_locks.erase(it);
 			return true;
