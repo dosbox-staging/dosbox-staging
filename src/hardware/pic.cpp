@@ -24,8 +24,6 @@
 #include "timer.h"
 #include "setup.h"
 
-#include <mutex>
-
 // PIC Controllers
 // ~~~~~~~~~~~~~~~
 // The sources here identify the two Programmable Interrupt Controllers
@@ -133,12 +131,12 @@ struct PIC_Controller {
 	void start_irq(uint8_t val);
 };
 
-static std::mutex pic_mutex = {};
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
-std::atomic<uint32_t> PIC_Ticks = 0;
-std::atomic<uint32_t> PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
+uint32_t PIC_Ticks = 0;
+uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
+std::atomic<double> atomic_pic_index = 0.0;
 
 void PIC_Controller::set_imr(uint8_t val) {
 	if (machine == MCH_PCJR) {
@@ -208,7 +206,6 @@ static struct {
 
 static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
-	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
@@ -265,7 +262,6 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 
 static void write_data(io_port_t port, io_val_t value, io_width_t)
 {
-	std::lock_guard lock(pic_mutex);
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	switch (pic->icw_index) {
@@ -309,7 +305,6 @@ static void write_data(io_port_t port, io_val_t value, io_width_t)
 
 static uint8_t read_command(io_port_t port, io_width_t)
 {
-	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 	if (pic->request_issr) {
 		return pic->isr;
@@ -320,7 +315,6 @@ static uint8_t read_command(io_port_t port, io_width_t)
 
 static uint8_t read_data(io_port_t port, io_width_t)
 {
-	std::lock_guard lock(pic_mutex);
 	PIC_Controller *pic = &pics[port == 0x21 ? 0 : 1];
 	return pic->imr;
 }
@@ -328,7 +322,6 @@ static uint8_t read_data(io_port_t port, io_width_t)
 // DOS managed up to 15 IRQs
 void PIC_ActivateIRQ(const uint8_t irq)
 {
-	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 
@@ -355,7 +348,6 @@ void PIC_ActivateIRQ(const uint8_t irq)
 // DOS managed up to 15 IRQs
 void PIC_DeActivateIRQ(const uint8_t irq)
 {
-	std::lock_guard lock(pic_mutex);
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	PIC_Controller *pic = &pics[irq > 7 ? 1 : 0];
 	pic->lower_irq(t);
@@ -392,7 +384,6 @@ static void inline primary_startIRQ(uint8_t i)
 }
 
 void PIC_runIRQs(void) {
-	std::lock_guard lock(pic_mutex);
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) {
 		return;
@@ -537,6 +528,8 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 
 
 bool PIC_RunQueue(void) {
+	PIC_UpdateAtomicIndex();
+
 	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=0;
@@ -573,9 +566,9 @@ bool PIC_RunQueue(void) {
 		if (cycles < CPU_CycleLeft) {
 			CPU_Cycles = cycles;
 		} else {
-			CPU_Cycles = CPU_CycleLeft.load();
+			CPU_Cycles=CPU_CycleLeft;
 		}
-	} else CPU_Cycles = CPU_CycleLeft.load();
+	} else CPU_Cycles=CPU_CycleLeft;
 	CPU_CycleLeft-=CPU_Cycles;
 	PIC_runIRQs();
 	return true;
@@ -613,8 +606,8 @@ void TIMER_AddTickHandler(TIMER_TickHandler handler) {
 
 void TIMER_AddTick(void) {
 	/* Setup new amount of cycles for PIC */
-	CPU_CycleLeft = CPU_CycleMax.load();
-	CPU_Cycles = 0;
+	CPU_CycleLeft=CPU_CycleMax;
+	CPU_Cycles=0;
 	PIC_Ticks++;
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic_queue.next_entry;
