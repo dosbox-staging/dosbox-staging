@@ -242,6 +242,7 @@ struct MidiWork {
 	std::vector<uint8_t> message = {};
 	int num_pending_audio_frames = 0;
 	MessageType message_type     = {};
+	double timestamp             = 0.0;
 
 	// Default value constructor
 	MidiWork()                      = default;
@@ -249,11 +250,12 @@ struct MidiWork {
 	MidiWork& operator=(MidiWork&&) = default;
 
 	// Construct from movable values
-	MidiWork(std::vector<uint8_t>&& _message,
-	         const int _num_audio_frames_pending, const MessageType _message_type)
+	MidiWork(std::vector<uint8_t>&& _message, const int _num_audio_frames_pending,
+	         const MessageType _message_type, const double _timestamp)
 	        : message(std::move(_message)),
 	          num_pending_audio_frames(_num_audio_frames_pending),
-	          message_type(_message_type)
+	          message_type(_message_type),
+	          timestamp(_timestamp)
 	{
 		// leave the source in a valid state
 		_message.clear();
