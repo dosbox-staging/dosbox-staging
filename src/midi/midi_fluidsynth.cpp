@@ -695,7 +695,8 @@ void MidiDeviceFluidSynth::SendMidiMessage(const MidiMessage& msg)
 
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
-	              MessageType::Channel};
+	              MessageType::Channel,
+	              PIC_AtomicIndex()};
 
 	work_fifo.Enqueue(std::move(work));
 }
@@ -704,7 +705,12 @@ void MidiDeviceFluidSynth::SendMidiMessage(const MidiMessage& msg)
 void MidiDeviceFluidSynth::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
-	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
+
+	MidiWork work{std::move(message),
+	              GetNumPendingAudioFrames(),
+	              MessageType::SysEx,
+	              PIC_AtomicIndex()};
+
 	work_fifo.Enqueue(std::move(work));
 }
 
