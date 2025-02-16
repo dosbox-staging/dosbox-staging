@@ -1322,6 +1322,9 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 
 void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 {
+	LOG_TRACE("MOUSEDOS_NotifyButton: left %d, right %d, middle %d",
+	          new_buttons_12S.left, new_buttons_12S.right, new_buttons_12S.middle);
+
 	pending_button = true;
 	pending_button_state = new_buttons_12S;
 	maybe_trigger_event();

@@ -409,12 +409,15 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 static bool should_drop_move()
 {
-	return state.should_drop_events ||
-	       (state.cursor_is_outside && !state.is_seamless);
+//	LOG_INFO("*** should_drop_move: should_drop_events: %d, cursor_is_outside: %d, is_seamless: %d", state.should_drop_events, state.cursor_is_outside, state.is_seamless);
+	auto result = state.should_drop_events || (state.cursor_is_outside && !state.is_seamless);
+//	LOG_INFO("    result: %d", result);
+	return result;
 }
 
 static bool should_drop_press_or_wheel()
 {
+	LOG_INFO("*** should_drop_press_or_wheel: should_drop_events: %d, cursor_is_outside: %d", state.should_drop_events, state.cursor_is_outside);
 	return state.should_drop_events ||
 	       state.cursor_is_outside;
 }
@@ -625,8 +628,23 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	}
 }
 
+char* to_string(const MouseButtonId button_id)
+{
+	using enum MouseButtonId;
+	switch (button_id) {
+	case Left: return "Left";
+	case Right: return "Right";
+	case Middle: return "Middle";
+	case Extra1: return "Extra1";
+	case Extra2: return "Extra2";
+	case None: return "None";
+	default: return "unknown";
+	};
+}
+
 void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 {
+	LOG_TRACE("MOUSE_EventButton: button_id: %s (%0x), pressed: %d", to_string(button_id), button_id, pressed);
 	// Event from GFX
 
 	// Never ignore any button releases - always pass them
@@ -635,20 +653,24 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 	if (pressed) {
 		// Handle mouse capture by button click
 		if (state.should_capture_on_click) {
+			LOG_TRACE("  should_capture_on_click");
 			state.capture_was_requested = true;
 			MOUSE_UpdateGFX();
 			return;
 		}
 
 		const auto is_middle = (button_id == MouseButtonId::Middle);
+		LOG_TRACE("  is_middle: %d", is_middle);
 
 		// Handle mouse capture toggle by middle click
 		if (is_middle && state.should_capture_on_middle) {
+			LOG_TRACE("  is_middle && state.should_capture_on_middle");
 			state.capture_was_requested = true;
 			MOUSE_UpdateGFX();
 			return;
 		}
 		if (is_middle && state.should_release_on_middle) {
+			LOG_TRACE("  is_middle && state.should_release_on_middle");
 			state.capture_was_requested = false;
 			MOUSE_UpdateGFX();
 			return;
@@ -656,6 +678,7 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 
 		// Drop unneeded events
 		if (should_drop_press_or_wheel()) {
+			LOG_TRACE("  Drop unneeded events");
 			return;
 		}
 	}
