@@ -440,7 +440,7 @@ MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 
 int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()
 {
-	const auto now_ms = PIC_FullIndex();
+	const auto now_ms = PIC_AtomicIndex();
 
 	// Wake up the channel and update the last rendered time datum.
 	assert(mixer_channel);
