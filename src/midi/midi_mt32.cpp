@@ -841,9 +841,12 @@ int MidiDeviceMt32::GetNumPendingAudioFrames()
 void MidiDeviceMt32::SendMidiMessage(const MidiMessage& msg)
 {
 	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
+
 	MidiWork work{std::move(message),
 	              GetNumPendingAudioFrames(),
-	              MessageType::Channel};
+	              MessageType::Channel,
+	              PIC_AtomicIndex()};
+
 	work_fifo.Enqueue(std::move(work));
 }
 
@@ -851,7 +854,12 @@ void MidiDeviceMt32::SendMidiMessage(const MidiMessage& msg)
 void MidiDeviceMt32::SendSysExMessage(uint8_t* sysex, size_t len)
 {
 	std::vector<uint8_t> message(sysex, sysex + len);
-	MidiWork work{std::move(message), GetNumPendingAudioFrames(), MessageType::SysEx};
+
+	MidiWork work{std::move(message),
+	              GetNumPendingAudioFrames(),
+	              MessageType::SysEx,
+	              PIC_AtomicIndex()};
+
 	work_fifo.Enqueue(std::move(work));
 }
 
