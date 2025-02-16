@@ -92,10 +92,14 @@ public:
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
+	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
 	void RenderAudioFramesToFifo(const int num_frames = 1);
 	void Render();
+	void RenderBacklogged();
+
+	void AddClapEvent(const MidiWork& work);
 
 	// Managed objects
 	MixerChannelPtr mixer_channel = nullptr;
@@ -116,7 +120,8 @@ private:
 	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
-	bool had_underruns = false;
+	bool had_underruns           = false;
+	bool is_work_fifo_backlogged = false;
 };
 
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller);

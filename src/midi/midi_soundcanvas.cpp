@@ -554,6 +554,16 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifo()
 		return;
 	}
 
+	// Detect if the work FIFO is heavily backlogged and enter the special
+	// backlogged rendering mode. This happens in fast-forward mode if the
+	// Sound Canvas emulation can't keep up with the sped-up CPU emulation.
+	const auto delta_from_now    = PIC_AtomicIndex() - work->timestamp;
+	constexpr auto OneSecondInMs = 1000.0;
+
+	if (delta_from_now > OneSecondInMs) {
+		is_work_fifo_backlogged = true;
+	}
+
 #if 0
 	// To log inter-cycle rendering
 	if (work->num_pending_audio_frames > 0) {
@@ -570,22 +580,100 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifo()
 		RenderAudioFramesToFifo(work->num_pending_audio_frames);
 	}
 
-	if (work->message_type == MessageType::Channel) {
-		assert(work->message.size() >= MaxMidiMessageLen);
-		clap.event_list.AddMidiEvent(work->message, 0);
+	AddClapEvent(*work);
+}
+
+void MidiDeviceSoundCanvas::AddClapEvent(const MidiWork& work)
+{
+	if (work.message_type == MessageType::Channel) {
+		assert(work.message.size() >= MaxMidiMessageLen);
+		clap.event_list.AddMidiEvent(work.message, 0);
 
 	} else {
-		assert(work->message_type == MessageType::SysEx);
-		clap.event_list.AddMidiSysExEvent(work->message, 0);
+		assert(work.message_type == MessageType::SysEx);
+		clap.event_list.AddMidiSysExEvent(work.message, 0);
 	}
+}
+
+void MidiDeviceSoundCanvas::RenderBacklogged()
+{
+	// This will only keep the MIDI events we must process (e.g. program
+	// change and SysEx messages).
+	ProcessWorkFromFifoBacklogged();
+
+	// We must drip-feed these essential MIDI events to the Sound Canvas
+	// emulation while in fast-forward mode and render a nominal sample now
+	// and then to keep the emulation ticking along. Batching them up in
+	// groups of 10 does the job fine.
+	//
+	// If we'd let them pile up and send them to the Sound Canvas in one big
+	// batch after exiting fast-forward mode, we'd overload the Sound
+	// Canvas' input buffers so not all messages would be processed. This
+	// has been proven to not be a viable approach as it resulted in
+	// wrong-sounding instruments in many cases.
+	//
+	if (clap.event_list.Size() > 10) {
+		RenderAudioFramesToFifo();
+	}
+
+	if (!MIXER_FastForwardModeEnabled()) {
+		is_work_fifo_backlogged = false;
+
+		// Send "All Notes Off" message to all MIDI channels when
+		// exiting from fast-forward mode. This is the best we can do as
+		// we've skipped processing any "Note On" or "Note Off" messages
+		// while in fast-forward mode. There would be a lot of hanging
+		// notes if we don't do this.
+		for (uint8_t ch = 0; ch < NumMidiChannels; ++ch) {
+			const uint8_t status = MidiStatus::ControlChange | ch;
+			const std::vector<uint8_t> all_notes_off_msg = {
+			        status, MidiChannelMode::AllNotesOff};
+
+			clap.event_list.AddMidiEvent(all_notes_off_msg, 0);
+		}
+	}
+}
+
+void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
+{
+	const auto work = work_fifo.Dequeue();
+	if (!work) {
+		return;
+	}
+
+	// If we're in backlogged mode when fast-forward is activated, it means
+	// the Sound Canvas can't keep up with the sped-up CPU emulation.
+	// Therefore, we need to minimise the work to catch up. We can't just
+	// not process any MIDI events at all; we need to keep processing
+	// program change, control change, etc. events, otherwise there's a real
+	// chance the instrument sounds will be wrong when we resume normal
+	// playback. But we can drop all MIDI notes and bypass the actual audio
+	// rendering (we'll just render a few samples from time to time to keep
+	// the Sound Canvas emulation ticking along); this way we can catch up
+	// and stay in sync with the CPU emulation.
+	//
+	if (const auto status = get_midi_status(work->message[0]);
+	    get_midi_message_type(status) == MessageType::Channel) {
+
+		if (status == MidiStatus::NoteOn || status == MidiStatus::NoteOff) {
+			// Drop all MIDI note messages as we won't render any audio
+			return;
+		}
+	}
+
+	AddClapEvent(*work);
 }
 
 // Keep the FIFO populated with freshly rendered buffers
 void MidiDeviceSoundCanvas::Render()
 {
 	while (work_fifo.IsRunning()) {
-		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
-		                    : ProcessWorkFromFifo();
+		if (is_work_fifo_backlogged) {
+			RenderBacklogged();
+		} else {
+			work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
+			                    : ProcessWorkFromFifo();
+		}
 	}
 }
 
