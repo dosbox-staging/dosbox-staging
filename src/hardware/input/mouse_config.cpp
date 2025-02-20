@@ -34,26 +34,26 @@
 
 CHECK_NARROWING();
 
-MouseConfig     mouse_config;
+MouseConfig mouse_config;
 MousePredefined mouse_predefined;
 
-constexpr auto capture_type_seamless_str  = "seamless";
-constexpr auto capture_type_onclick_str   = "onclick";
-constexpr auto capture_type_onstart_str   = "onstart";
-constexpr auto capture_type_nomouse_str   = "nomouse";
+constexpr auto capture_type_seamless_str = "seamless";
+constexpr auto capture_type_onclick_str  = "onclick";
+constexpr auto capture_type_onstart_str  = "onstart";
+constexpr auto capture_type_nomouse_str  = "nomouse";
 
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
 constexpr auto model_ps2_explorer_str     = "explorer";
 constexpr auto model_ps2_nomouse_str      = "none";
 
-constexpr auto model_com_2button_str      = "2button";
-constexpr auto model_com_3button_str      = "3button";
-constexpr auto model_com_wheel_str        = "wheel";
-constexpr auto model_com_msm_str          = "msm";
-constexpr auto model_com_2button_msm_str  = "2button+msm";
-constexpr auto model_com_3button_msm_str  = "3button+msm";
-constexpr auto model_com_wheel_msm_str    = "wheel+msm";
+constexpr auto model_com_2button_str     = "2button";
+constexpr auto model_com_3button_str     = "3button";
+constexpr auto model_com_wheel_str       = "wheel";
+constexpr auto model_com_msm_str         = "msm";
+constexpr auto model_com_2button_msm_str = "2button+msm";
+constexpr auto model_com_3button_msm_str = "3button+msm";
+constexpr auto model_com_wheel_msm_str   = "wheel+msm";
 
 static const std::vector<uint16_t> list_rates = {
         // Commented out values are probably not interesting
@@ -61,7 +61,7 @@ static const std::vector<uint16_t> list_rates = {
         //  10",  // PS/2 mouse
         //  20",  // PS/2 mouse
         //  30",  // bus/InPort mouse
-        40,  // PS/2 mouse, approx. limit for 1200 baud serial mouse
+        40, // PS/2 mouse, approx. limit for 1200 baud serial mouse
         //  50,   // bus/InPort mouse
         60,  // PS/2 mouse, used by Microsoft Mouse Driver 8.20
         80,  // PS/2 mouse, approx. limit for 2400 baud serial mouse
@@ -251,21 +251,21 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 	return;
 }
 
-static void config_read(Section *section)
+static void config_read(Section* section)
 {
 	assert(section);
-	const Section_prop *conf = dynamic_cast<Section_prop *>(section);
+	const Section_prop* conf = dynamic_cast<Section_prop*>(section);
 	assert(conf);
-	if (!conf)
+	if (!conf) {
 		return;
+	}
 
 	// Settings changeable during runtime
 
 	SetCaptureType(conf->Get_string("mouse_capture"));
 	SetSensitivity(conf->Get_string("mouse_sensitivity"));
 
-	mouse_config.multi_display_aware =
-		conf->Get_bool("mouse_multi_display_aware");
+	mouse_config.multi_display_aware = conf->Get_bool("mouse_multi_display_aware");
 
 	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
@@ -303,15 +303,14 @@ static void config_read(Section *section)
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
 
-	if (!GFX_HaveDesktopEnvironment() &&
-	    mouse_config.is_virtualbox_mouse_enabled) {
-	    	// VirtualBox guest side driver is able to request us to re-use
-	    	// host side cursor (at least the 3rd party DOS driver does so)
-	    	// and we have no way to refuse, there seems to be no easy way
-	    	// to handle the situation gracefully in a no-desktop
-	    	// environment unless we want to display our own mouse cursor.
-	    	// Therefore, it is best to block the VirtualBox mouse API - it
-	    	// wasn't designed for such a use case.
+	if (!GFX_HaveDesktopEnvironment() && mouse_config.is_virtualbox_mouse_enabled) {
+		// VirtualBox guest side driver is able to request us to re-use
+		// host side cursor (at least the 3rd party DOS driver does so)
+		// and we have no way to refuse, there seems to be no easy way
+		// to handle the situation gracefully in a no-desktop
+		// environment unless we want to display our own mouse cursor.
+		// Therefore, it is best to block the VirtualBox mouse API - it
+		// wasn't designed for such a use case.
 		LOG_WARNING("MOUSE: VirtualBox interface cannot work in a no-desktop environment");
 		mouse_config.is_virtualbox_mouse_enabled = false;
 	}
@@ -321,7 +320,7 @@ static void config_read(Section *section)
 	MOUSE_StartupIfReady();
 }
 
-static void config_init(Section_prop &secprop)
+static void config_init(Section_prop& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
@@ -331,8 +330,7 @@ static void config_init(Section_prop &secprop)
 
 	// General configuration
 
-	prop_str = secprop.Add_string("mouse_capture", always,
-	                              capture_type_onclick_str);
+	prop_str = secprop.Add_string("mouse_capture", always, capture_type_onclick_str);
 	assert(prop_str);
 	prop_str->Set_values({capture_type_seamless_str,
 	                      capture_type_onclick_str,
@@ -352,16 +350,18 @@ static void config_init(Section_prop &secprop)
 	        "For touch-screen control, use 'seamless'.");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
-	prop_bool->Set_help("Release the captured mouse by middle-clicking, and also capture it in\n"
-	                    "seamless mode (enabled by default).");
+	prop_bool->Set_help(
+	        "Release the captured mouse by middle-clicking, and also capture it in\n"
+	        "seamless mode (enabled by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
-	prop_bool->Set_help("Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
-	                    "mode on systems with more than one display (enabled by default).\n"
-	                    "Note: You should disable this if it incorrectly detects multiple displays\n"
-	                    "      when only one should actually be used. This might happen if you are\n"
-	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
-	                    "      audio-only listening.");
+	prop_bool->Set_help(
+	        "Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
+	        "mode on systems with more than one display (enabled by default).\n"
+	        "Note: You should disable this if it incorrectly detects multiple displays\n"
+	        "      when only one should actually be used. This might happen if you are\n"
+	        "      using mirrored display mode or using an AV receiver's HDMI input for\n"
+	        "      audio-only listening.");
 
 	prop_str = secprop.Add_string("mouse_sensitivity", always, "100");
 	prop_str->Set_help(
@@ -447,13 +447,16 @@ static void config_init(Section_prop &secprop)
 	// VMM interfaces
 
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
-	prop_bool->Set_help("VMware mouse interface (enabled by default).\n"
-	                    "Fully compatible only with experimental 3rd party Windows 3.1x driver.\n"
-	                    "Note: Requires PS/2 mouse to be enabled.");
+	prop_bool->Set_help(
+	        "VMware mouse interface (enabled by default).\n"
+	        "Fully compatible only with experimental 3rd party Windows 3.1x driver.\n"
+	        "Note: Requires PS/2 mouse to be enabled.");
+
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
-	prop_bool->Set_help("VirtualBox mouse interface (enabled by default).\n"
-	                    "Fully compatible only with 3rd party Windows 3.1x driver.\n"
-	                    "Note: Requires PS/2 mouse to be enabled.");
+	prop_bool->Set_help(
+	        "VirtualBox mouse interface (enabled by default).\n"
+	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
+	        "Note: Requires PS/2 mouse to be enabled.");
 }
 
 void MOUSE_AddConfigSection(const ConfigPtr& conf)
