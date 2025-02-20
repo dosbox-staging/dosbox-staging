@@ -1119,7 +1119,7 @@ void DOSBOX_Init()
 	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
 	        "Additional parameters must be on the same line in the form of\n"
 	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
-	        "  - for 'mouse':      model (overrides the setting from the [mouse] section)\n"
+	        "  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).\n"
 	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
 	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
 	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
