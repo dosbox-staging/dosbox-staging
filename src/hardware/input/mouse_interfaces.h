@@ -59,6 +59,8 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 void MOUSEDOS_NotifyButton(const MouseButtons12S buttons_12S);
 void MOUSEDOS_NotifyWheel(const float w_rel);
 
+void MOUSEDOS_NotifyModelChanged();
+
 // ***************************************************************************
 // PS/2 mouse
 // ***************************************************************************
