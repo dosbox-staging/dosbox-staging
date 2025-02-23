@@ -60,7 +60,7 @@ static constexpr uint8_t  cursor_size_x  = 16;
 static constexpr uint8_t  cursor_size_y  = 16;
 static constexpr uint16_t cursor_size_xy = cursor_size_x * cursor_size_y;
 
-static constexpr uint8_t num_buttons = 3;
+static constexpr uint8_t MaxButtons = 3;
 
 enum class MouseCursor : uint8_t { Software = 0, Hardware = 1, Text = 2 };
 
@@ -145,14 +145,14 @@ static struct { // DOS driver state
 	// be used by malicious code to escape from emulation!
 
 	bool enabled   = false; // TODO: make use of this
-	bool wheel_api = false; // CuteMouse compatible wheel extension
+	bool wheel_api = false; // CuteMouse compatible WheelAPI v1.0 extension
 
-	uint16_t times_pressed[num_buttons]   = {0};
-	uint16_t times_released[num_buttons]  = {0};
-	uint16_t last_released_x[num_buttons] = {0};
-	uint16_t last_released_y[num_buttons] = {0};
-	uint16_t last_pressed_x[num_buttons]  = {0};
-	uint16_t last_pressed_y[num_buttons]  = {0};
+	uint16_t times_pressed[MaxButtons]   = {0};
+	uint16_t times_released[MaxButtons]  = {0};
+	uint16_t last_released_x[MaxButtons] = {0};
+	uint16_t last_released_y[MaxButtons] = {0};
+	uint16_t last_pressed_x[MaxButtons]  = {0};
+	uint16_t last_pressed_y[MaxButtons]  = {0};
 	uint16_t last_wheel_moved_x           = 0;
 	uint16_t last_wheel_moved_y           = 0;
 
@@ -234,6 +234,20 @@ static uint16_t info_offset_version   = 0;
 static uint16_t info_offset_copyright = 0;
 
 static RealPt user_callback;
+
+// ***************************************************************************
+// Model capabilities support
+// ***************************************************************************
+
+static bool has_middle_button()
+{
+	return mouse_config.model_dos != MouseModelDos::TwoButton;
+}
+
+static bool has_wheel()
+{
+	return mouse_config.model_dos == MouseModelDos::Wheel;
+}
 
 // ***************************************************************************
 // Delayed event support
@@ -673,7 +687,7 @@ static void update_driver_active()
 
 static uint8_t get_reset_wheel_8bit()
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return 0;
 	}
 
@@ -686,7 +700,7 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return 0;
 	}
 
@@ -1030,7 +1044,7 @@ static void reset()
 	state.last_wheel_moved_x = 0;
 	state.last_wheel_moved_y = 0;
 
-	for (uint16_t idx = 0; idx < num_buttons; idx++) {
+	for (uint16_t idx = 0; idx < MaxButtons; idx++) {
 		state.times_pressed[idx]   = 0;
 		state.times_released[idx]  = 0;
 		state.last_pressed_x[idx]  = 0;
@@ -1329,7 +1343,7 @@ void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 
 void MOUSEDOS_NotifyWheel(const float w_rel)
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return;
 	}
 
@@ -1360,7 +1374,7 @@ static Bitu int33_handler()
 		[[fallthrough]];
 	case 0x21:               // MS MOUSE v6.0+ - software reset
 		reg_ax = 0xffff; // mouse driver installed
-		reg_bx = 3;      // for 2 buttons return 0xffff
+		reg_bx = has_middle_button() ? 3 :0xffff;
 		reset();
 		break;
 	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
@@ -1405,19 +1419,20 @@ static Bitu int33_handler()
 	           // data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && state.wheel_api && has_wheel()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
-		} else if (idx < num_buttons) {
+		} else if (idx < MaxButtons) { // XXX
 			reg_ax                   = buttons._data;
 			reg_bx                   = state.times_pressed[idx];
 			reg_cx                   = state.last_pressed_x[idx];
 			reg_dx                   = state.last_pressed_y[idx];
 			state.times_pressed[idx] = 0;
 		} else {
-			// unsupported - try to do something same
+			// unsupported - try to do something sane
+			// XXX check the real driver behavior
 			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
@@ -1429,12 +1444,12 @@ static Bitu int33_handler()
 	           // / mouse wheel data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && state.wheel_api && has_wheel()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
-		} else if (idx < num_buttons) {
+		} else if (idx < MaxButtons) { // XXX
 			reg_ax = buttons._data;
 			reg_bx = state.times_released[idx];
 			reg_cx = state.last_released_x[idx];
@@ -1442,7 +1457,8 @@ static Bitu int33_handler()
 
 			state.times_released[idx] = 0;
 		} else {
-			// unsupported - try to do something same
+			// unsupported - try to do something sane
+			// XXX check the real driver behavior
 			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
@@ -1551,16 +1567,17 @@ static Bitu int33_handler()
 		draw_cursor();
 		break;
 	case 0x11: // WheelAPI v1.0+ - get mouse capabilities
-		reg_ax          = 0x574d; // Identifier for detection purposes
-		reg_bx          = 0;      // Reserved capabilities flags
-		reg_cx          = 1;      // Wheel is supported
-		state.wheel_api = true; // This call enables WheelAPI extensions
+		reg_ax = 0x574d; // Identifier for detection purposes
+		reg_bx = 0;      // Reserved capabilities flags
+		reg_cx = has_wheel() ? 1 : 0;
+		// This call enables the WheelAPI extensions
+		state.wheel_api = true;
 		counter_w       = 0;
 		// Previous implementation provided Genius Mouse 9.06 function
 		// to get number of buttons
 		// (https://sourceforge.net/p/dosbox/patches/32/), it was
-		// returning 0xffff in reg_ax and number of buttons in reg_bx; I
-		// suppose the WheelAPI extensions are more useful
+		// returning 0xffff in reg_ax and number of buttons in reg_bx;
+		// I suppose the WheelAPI extensions are more useful
 		break;
 	case 0x12: // MS MOUSE - set large graphics cursor block
 		LOG_WARNING("MOUSE (DOS): Large graphics cursor block not implemented");
