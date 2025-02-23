@@ -824,7 +824,7 @@ static void bios_flush_aux()
 			IO_ReadB(port_num_i8042_data);
 		}
 
-		const auto start_ticks = PIC_Ticks.load();
+		const auto start_ticks = PIC_Ticks;
 		while (PIC_Ticks - start_ticks <= max_wait_ms) {
 			CALLBACK_Idle();
 			has_more = bios_is_aux_byte_waiting();
