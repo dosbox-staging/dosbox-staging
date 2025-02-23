@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,10 @@ constexpr auto capture_type_seamless_str = "seamless";
 constexpr auto capture_type_onclick_str  = "onclick";
 constexpr auto capture_type_onstart_str  = "onstart";
 constexpr auto capture_type_nomouse_str  = "nomouse";
+
+constexpr auto model_dos_2button_str = "2button";
+constexpr auto model_dos_3button_str = "3button";
+constexpr auto model_dos_wheel_str   = "wheel";
 
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
@@ -128,6 +132,25 @@ static void SetCaptureType(const std::string_view capture_str)
 		mouse_config.capture = MouseCapture::NoMouse;
 	} else {
 		assert(false);
+	}
+}
+
+static void SetDosModel(const std::string_view model_str)
+{
+	const auto previous_model = mouse_config.model_dos;
+
+	if (model_str == model_dos_2button_str) {
+		mouse_config.model_dos = MouseModelDos::TwoButton;
+	} else if (model_str == model_dos_3button_str) {
+		mouse_config.model_dos = MouseModelDos::ThreeButton;
+	} else if (model_str == model_dos_wheel_str) {
+		mouse_config.model_dos = MouseModelDos::Wheel;
+	} else {
+		assert(false);
+	}
+
+	if (previous_model != mouse_config.model_dos) {
+		MOUSEDOS_NotifyModelChanged();
 	}
 }
 
@@ -267,9 +290,12 @@ static void config_read(Section* section)
 
 	mouse_config.multi_display_aware = conf->Get_bool("mouse_multi_display_aware");
 
-	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
-	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
-	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
+	mouse_config.middle_release    = conf->Get_bool("mouse_middle_release");
+	mouse_config.raw_input         = conf->Get_bool("mouse_raw_input");
+	mouse_config.dos_driver_modern = conf->Get_bool("dos_driver_modern");
+	mouse_config.dos_immediate     = conf->Get_bool("dos_mouse_immediate");
+
+	SetDosModel(conf->Get_string("dos_mouse_model"));
 
 	// Settings below should be read only once
 
@@ -286,7 +312,7 @@ static void config_read(Section* section)
 		return;
 	}
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
 	mouse_config.dos_driver = conf->Get_bool("dos_mouse_driver");
 
@@ -378,12 +404,12 @@ static void config_init(Section_prop& secprop)
 	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
 	        "captured in windowed mode.");
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Enable the built-in mouse driver (enabled by default). This results in the\n"
+	        "Enable the built-in DOS mouse driver (enabled by default). This results in the\n"
 	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
 	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
 	        "not compatible with the built-in driver).\n"
@@ -398,6 +424,31 @@ static void config_init(Section_prop& secprop)
 	        "Note: The built-in driver is auto-disabled if you boot into real MS-DOS or\n"
 	        "      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,\n"
 	        "      but the Windows 3.x mouse driver takes over.");
+
+	prop_str = secprop.Add_string("dos_mouse_model",
+	                              always,
+	                              model_dos_wheel_str);
+	assert(prop_str);
+	prop_str->Set_values({model_dos_2button_str,
+	                      model_dos_3button_str,
+	                      model_dos_wheel_str});
+	prop_str->Set_help(
+	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('wheel'\n"
+	        "by default).\n"
+	        "  2button:  2 buttons, use for some old games which malfunction if the middle\n"
+	        "            button gets pressed.\n"
+	        "  3button:  3 buttons, only supported by very few games.\n"
+	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.");
+
+	// TODO: Consider supporting the VBMouse WheelAPI version 2.0 for
+	// dual-wheel support; for now the specification is a draft only and no
+	// software exists which uses this API.
+
+	prop_bool = secprop.Add_bool("dos_driver_modern", always, false);
+	assert(prop_bool);
+	prop_bool->Set_help(
+	        "Enable modern (v7.0+) mouse driver behavior (disabled by default).\n"
+	        "Needed at least by Descent II with the official Voodoo patch.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
 	assert(prop_bool);
