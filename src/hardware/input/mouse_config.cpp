@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,10 @@ constexpr auto capture_type_seamless_str = "seamless";
 constexpr auto capture_type_onclick_str  = "onclick";
 constexpr auto capture_type_onstart_str  = "onstart";
 constexpr auto capture_type_nomouse_str  = "nomouse";
+
+constexpr auto model_dos_2button_str = "2button";
+constexpr auto model_dos_3button_str = "3button";
+constexpr auto model_dos_wheel_str   = "wheel";
 
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
@@ -131,6 +135,26 @@ static void SetCaptureType(const std::string_view capture_str)
 	}
 }
 
+static void SetDosDriverModel(const std::string_view model_str)
+{
+	auto new_model = mouse_config.model_dos;
+
+	if (model_str == model_dos_2button_str) {
+		new_model = MouseModelDos::TwoButton;
+	} else if (model_str == model_dos_3button_str) {
+		new_model = MouseModelDos::ThreeButton;
+	} else if (model_str == model_dos_wheel_str) {
+		new_model = MouseModelDos::Wheel;
+	} else {
+		assert(false);
+	}
+
+	if (new_model != mouse_config.model_dos) {
+		mouse_config.model_dos = new_model;
+		MOUSEDOS_NotifyModelChanged();
+	}
+}
+
 static void SetPs2Model(const std::string_view model_str)
 {
 	if (model_str == model_ps2_standard_str) {
@@ -151,6 +175,52 @@ static void SetComModel(const std::string_view model_str)
 	[[maybe_unused]] const auto result = MouseConfig::ParseComModel(
 	        model_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
 	assert(result);
+}
+
+static void SetDosDriverOptions(const std::string_view options_str)
+{
+	auto& last_options_str = mouse_config.dos_driver_last_options_str;
+	if (last_options_str == options_str) {
+		return;
+	}
+	last_options_str = options_str;
+
+	mouse_config.dos_driver_immediate = false;
+	mouse_config.dos_driver_modern    = false;
+
+	bool config_needs_sync = false;
+
+	for (const auto& token : split(options_str, " ,")) {
+		if (token == "immediate") {
+			mouse_config.dos_driver_immediate = true;
+		} else if (token == "modern") {
+			mouse_config.dos_driver_modern = true;
+		} else {
+			LOG_WARNING(
+			        "MOUSE: Invalid 'builtin_dos_mouse_driver_options' "
+			        "parameter: '%s', ignoring",
+			        token.c_str());
+			config_needs_sync = true;
+		}
+	}
+
+	if (config_needs_sync) {
+		// Config syntax was wrong, create valid setting
+		last_options_str = {};
+		if (mouse_config.dos_driver_immediate) {
+			last_options_str = "immediate";
+		}
+		if (mouse_config.dos_driver_modern) {
+			if (!last_options_str.empty()) {
+				last_options_str += " ";
+			}
+			last_options_str += "modern";
+		}
+
+		set_section_property_value("mouse",
+		                           "builtin_dos_mouse_driver_options",
+		                           last_options_str);
+	}
 }
 
 static void SetSensitivity(const std::string_view sensitivity_str)
@@ -269,7 +339,8 @@ static void config_read(Section* section)
 
 	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
-	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
+
+	SetDosDriverModel(conf->Get_string("builtin_dos_mouse_driver_model"));
 
 	// Settings below should be read only once
 
@@ -286,9 +357,10 @@ static void config_read(Section* section)
 		return;
 	}
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
-	mouse_config.dos_driver = conf->Get_bool("dos_mouse_driver");
+	mouse_config.dos_driver_enabled = conf->Get_bool("builtin_dos_mouse_driver");
+	SetDosDriverOptions(conf->Get_string("builtin_dos_mouse_driver_options"));
 
 	// PS/2 AUX port mouse configuration
 
@@ -378,12 +450,12 @@ static void config_init(Section_prop& secprop)
 	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
 	        "captured in windowed mode.");
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
-	prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
+	prop_bool = secprop.Add_bool("builtin_dos_mouse_driver", only_at_start, true);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Enable the built-in mouse driver (enabled by default). This results in the\n"
+	        "Enable the built-in DOS mouse driver (enabled by default). This results in the\n"
 	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
 	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
 	        "not compatible with the built-in driver).\n"
@@ -399,18 +471,39 @@ static void config_init(Section_prop& secprop)
 	        "      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,\n"
 	        "      but the Windows 3.x mouse driver takes over.");
 
-	prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
-	assert(prop_bool);
-	prop_bool->Set_help(
-	        "Update mouse movement counters immediately, without waiting for interrupt\n"
-	        "(disabled by default). May improve gameplay, especially in fast-paced games\n"
-	        "(arcade, FPS, etc.), as for some games it effectively boosts the mouse\n"
-	        "sampling rate to 1000 Hz, without increasing interrupt overhead.\n"
-	        "Might cause compatibility issues. List of known incompatible games:\n"
-	        "  - Ultima Underworld: The Stygian Abyss\n"
-	        "  - Ultima Underworld II: Labyrinth of Worlds\n"
-	        "Please report it if you find another incompatible game so we can update this\n"
-	        "list.");
+	prop_str = secprop.Add_string("builtin_dos_mouse_driver_model",
+	                              always,
+	                              model_dos_wheel_str);
+	assert(prop_str);
+	prop_str->Set_values(
+	        {model_dos_2button_str, model_dos_3button_str, model_dos_wheel_str});
+	prop_str->Set_help(
+	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('wheel'\n"
+	        "by default).\n"
+	        "  2button:  2 buttons, use for some old games which malfunction if the middle\n"
+	        "            button gets pressed.\n"
+	        "  3button:  3 buttons, only supported by very few games.\n"
+	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.");
+
+	// TODO: Consider supporting the VBMouse WheelAPI version 2.0 for
+	// dual-wheel support; for now the specification is a draft only and no
+	// software exists which uses this API.
+
+	prop_str = secprop.Add_string("builtin_dos_mouse_driver_options", always, "");
+	assert(prop_str);
+	prop_str->Set_help(
+	        "Additional built-in DOS mouse driver settings, space or comma separated\n"
+	        "(unset by default).\n"
+	        "  immediate:  Update mouse movement counters immediately, without waiting for\n"
+	        "              interrupt. May improve mouse movement reaction time in fast-paced\n"
+	        "              games (arcade, FPS, etc.), but causes issues in some titles.\n"
+	        "              List of known incompatible games:\n"
+	        "                - Ultima Underworld: The Stygian Abyss\n"
+	        "                - Ultima Underworld II: Labyrinth of Worlds\n"
+	        "              Please report it if you find another incompatible game so we can\n"
+	        "              update this list.\n"
+	        "  modern:     Enable modern (v7.0+) mouse driver behavior. Needed at least by\n"
+	        "              Descent II with the official Voodoo patch.");
 
 	// Physical mice configuration
 
