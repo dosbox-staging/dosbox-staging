@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -59,7 +59,13 @@ extern MousePredefined mouse_predefined;
 // Configuration file content
 // ***************************************************************************
 
-enum class MouseCapture : uint8_t { Seamless, OnClick, OnStart, NoMouse };
+enum class MouseCapture { Seamless, OnClick, OnStart, NoMouse };
+
+enum class MouseModelDos {
+	TwoButton,
+	ThreeButton,
+	Wheel,
+};
 
 enum class MouseModelPS2 : uint8_t {
 	NoMouse      = 0xff,
@@ -69,7 +75,7 @@ enum class MouseModelPS2 : uint8_t {
 	Explorer     = 0x04,
 };
 
-enum class MouseModelCOM : uint8_t {
+enum class MouseModelCOM {
 	NoMouse, // dummy value or no mouse
 	Microsoft,
 	Logitech,
@@ -87,8 +93,13 @@ struct MouseConfig {
 	bool raw_input           = false; // true = relative input is raw data
 	bool multi_display_aware = false;
 
-	bool dos_driver    = false; // whether DOS virtual mouse driver should be enabled
-	bool dos_immediate = false;
+	bool dos_driver_enabled   = false;
+	bool dos_driver_modern    = false;
+	bool dos_driver_immediate = false;
+
+	std::string dos_driver_last_options_str = {};
+
+	MouseModelDos model_dos = MouseModelDos::TwoButton;
 
 	MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
 
