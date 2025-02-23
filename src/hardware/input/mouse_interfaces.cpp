@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -639,7 +639,7 @@ InterfaceDos::InterfaceDos()
 void InterfaceDos::Init()
 {
 	MouseInterface::Init();
-	if (mouse_config.dos_driver) {
+	if (mouse_config.dos_driver_enabled) {
 		emulated = true;
 		MOUSEDOS_Init();
 	}
