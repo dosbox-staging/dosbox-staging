@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ static constexpr uint8_t  cursor_size_x  = 16;
 static constexpr uint8_t  cursor_size_y  = 16;
 static constexpr uint16_t cursor_size_xy = cursor_size_x * cursor_size_y;
 
-static constexpr uint8_t num_buttons = 3;
+static constexpr auto MaxButtons = 3;
 
 enum class MouseCursor : uint8_t { Software = 0, Hardware = 1, Text = 2 };
 
@@ -145,14 +145,14 @@ static struct { // DOS driver state
 	// be used by malicious code to escape from emulation!
 
 	bool enabled   = false; // TODO: make use of this
-	bool wheel_api = false; // CuteMouse compatible wheel extension
+	bool wheel_api = false; // CuteMouse compatible WheelAPI v1.0 extension
 
-	uint16_t times_pressed[num_buttons]   = {0};
-	uint16_t times_released[num_buttons]  = {0};
-	uint16_t last_released_x[num_buttons] = {0};
-	uint16_t last_released_y[num_buttons] = {0};
-	uint16_t last_pressed_x[num_buttons]  = {0};
-	uint16_t last_pressed_y[num_buttons]  = {0};
+	uint16_t times_pressed[MaxButtons]   = {0};
+	uint16_t times_released[MaxButtons]  = {0};
+	uint16_t last_released_x[MaxButtons] = {0};
+	uint16_t last_released_y[MaxButtons] = {0};
+	uint16_t last_pressed_x[MaxButtons]  = {0};
+	uint16_t last_pressed_y[MaxButtons]  = {0};
 	uint16_t last_wheel_moved_x           = 0;
 	uint16_t last_wheel_moved_y           = 0;
 
@@ -234,6 +234,43 @@ static uint16_t info_offset_version   = 0;
 static uint16_t info_offset_copyright = 0;
 
 static RealPt user_callback;
+
+// ***************************************************************************
+// Model capabilities support
+// ***************************************************************************
+
+static uint8_t get_num_buttons()
+{
+	switch (mouse_config.model_dos) {
+	case MouseModelDos::TwoButton:
+		return 2;
+	default:
+		return 3;
+	}
+}
+
+static uint8_t get_button_mask()
+{
+	MouseButtonsAll button_mask = {};
+
+	switch (get_num_buttons()) {
+	case 2:
+		button_mask.left  = 1;
+		button_mask.right = 1;
+		break;
+	default:
+		button_mask.left   = 1;
+		button_mask.right  = 1;
+		button_mask.middle = 1;
+	}
+
+	return button_mask._data;
+}
+
+static bool has_wheel()
+{
+	return mouse_config.model_dos == MouseModelDos::Wheel;
+}
 
 // ***************************************************************************
 // Delayed event support
@@ -673,7 +710,7 @@ static void update_driver_active()
 
 static uint8_t get_reset_wheel_8bit()
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return 0;
 	}
 
@@ -686,7 +723,7 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return 0;
 	}
 
@@ -1030,7 +1067,7 @@ static void reset()
 	state.last_wheel_moved_x = 0;
 	state.last_wheel_moved_y = 0;
 
-	for (uint16_t idx = 0; idx < num_buttons; idx++) {
+	for (uint16_t idx = 0; idx < MaxButtons; idx++) {
 		state.times_pressed[idx]   = 0;
 		state.times_released[idx]  = 0;
 		state.last_pressed_x[idx]  = 0;
@@ -1191,7 +1228,7 @@ static uint8_t move_cursor()
 
 static uint8_t update_moved()
 {
-	if (mouse_config.dos_immediate) {
+	if (mouse_config.dos_driver_immediate) {
 		return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
 	} else {
 		return move_cursor();
@@ -1261,7 +1298,7 @@ static uint8_t move_wheel()
 
 static uint8_t update_wheel()
 {
-	if (mouse_config.dos_immediate) {
+	if (mouse_config.dos_driver_immediate) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
 	}
 	return move_wheel();
@@ -1310,7 +1347,7 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 	// constantly (don't ask me, why) - doing too much optimization
 	// can cause the game to skip mouse events.
 
-	if (event_needed && mouse_config.dos_immediate) {
+	if (event_needed && mouse_config.dos_driver_immediate) {
 		event_needed = (move_cursor() != 0);
 	}
 
@@ -1322,14 +1359,19 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 
 void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 {
-	pending_button = true;
-	pending_button_state = new_buttons_12S;
-	maybe_trigger_event();
+	auto new_button_state = new_buttons_12S;
+	new_button_state._data &= get_button_mask();
+
+	if (pending_button_state != new_button_state) {
+		pending_button = true;
+		pending_button_state = new_button_state;
+		maybe_trigger_event();
+	}
 }
 
 void MOUSEDOS_NotifyWheel(const float w_rel)
 {
-	if (!state.wheel_api) {
+	if (!state.wheel_api || !has_wheel()) {
 		return;
 	}
 
@@ -1340,7 +1382,7 @@ void MOUSEDOS_NotifyWheel(const float w_rel)
 	pending.delta_wheel = MOUSE_ClampWheelMovement(pending.delta_wheel + w_rel);
 
 	bool event_needed = MOUSE_HasAccumulatedInt(pending.delta_wheel);
-	if (event_needed && mouse_config.dos_immediate) {
+	if (event_needed && mouse_config.dos_driver_immediate) {
 		event_needed = (move_wheel() != 0);
 	}
 
@@ -1348,6 +1390,18 @@ void MOUSEDOS_NotifyWheel(const float w_rel)
 		pending_wheel = true;
 		maybe_trigger_event();
 	}
+}
+
+void MOUSEDOS_NotifyModelChanged()
+{
+	// If new mouse model has no wheel, disable the extension
+	if (!has_wheel()) {
+		state.wheel_api = true;
+		counter_w       = 0;		
+	}
+
+	// Make sure button state has no buttons which are no longer present
+	MOUSEDOS_NotifyButton(pending_button_state);
 }
 
 static Bitu int33_handler()
@@ -1358,9 +1412,9 @@ static Bitu int33_handler()
 	case 0x00: // MS MOUSE - reset driver and read status
 		reset_hardware();
 		[[fallthrough]];
-	case 0x21:               // MS MOUSE v6.0+ - software reset
+	case 0x21: // MS MOUSE v6.0+ - software reset
 		reg_ax = 0xffff; // mouse driver installed
-		reg_bx = 3;      // for 2 buttons return 0xffff
+		reg_bx = (get_num_buttons() == 2) ? 0xffff : get_num_buttons();
 		reset();
 		break;
 	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
@@ -1405,19 +1459,21 @@ static Bitu int33_handler()
 	           // data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && state.wheel_api && has_wheel()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
-		} else if (idx < num_buttons) {
-			reg_ax                   = buttons._data;
-			reg_bx                   = state.times_pressed[idx];
-			reg_cx                   = state.last_pressed_x[idx];
-			reg_dx                   = state.last_pressed_y[idx];
+		} else if (idx < get_num_buttons()) {
+			reg_ax = buttons._data;
+			reg_bx = state.times_pressed[idx];
+			reg_cx = state.last_pressed_x[idx];
+			reg_dx = state.last_pressed_y[idx];
+
 			state.times_pressed[idx] = 0;
 		} else {
-			// unsupported - try to do something same
+			// unsupported - try to do something sane
+			// TODO: Check the real driver behavior
 			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
@@ -1429,12 +1485,12 @@ static Bitu int33_handler()
 	           // / mouse wheel data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && state.wheel_api && has_wheel()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
-		} else if (idx < num_buttons) {
+		} else if (idx < get_num_buttons()) {
 			reg_ax = buttons._data;
 			reg_bx = state.times_released[idx];
 			reg_cx = state.last_released_x[idx];
@@ -1442,7 +1498,8 @@ static Bitu int33_handler()
 
 			state.times_released[idx] = 0;
 		} else {
-			// unsupported - try to do something same
+			// unsupported - try to do something sane
+			// TODO: Check the real driver behavior
 			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
@@ -1550,17 +1607,22 @@ static Bitu int33_handler()
 		state.update_region_y[1] = reg_to_signed16(reg_di);
 		draw_cursor();
 		break;
-	case 0x11: // WheelAPI v1.0+ - get mouse capabilities
-		reg_ax          = 0x574d; // Identifier for detection purposes
-		reg_bx          = 0;      // Reserved capabilities flags
-		reg_cx          = 1;      // Wheel is supported
-		state.wheel_api = true; // This call enables WheelAPI extensions
-		counter_w       = 0;
-		// Previous implementation provided Genius Mouse 9.06 function
-		// to get number of buttons
-		// (https://sourceforge.net/p/dosbox/patches/32/), it was
-		// returning 0xffff in reg_ax and number of buttons in reg_bx; I
-		// suppose the WheelAPI extensions are more useful
+	case 0x11: // WheelAPI v1.0+ / Genius Mouse - get mouse capabilities
+		if (has_wheel()) {
+			// WheelAPI implementation
+			// GTEST.COM from the Genius mouse driver package
+			// reports 3 buttons if it sees this extension
+			reg_ax = 0x574d; // Identifier for detection purposes
+			reg_bx = 0;      // Reserved capabilities flags
+			reg_cx = has_wheel() ? 1 : 0;
+			// This call enables the WheelAPI extensions
+			state.wheel_api = true;
+			counter_w       = 0;
+		} else {
+			// Genius Mouse 9.06 API implementation
+			reg_ax = 0xffff;
+			reg_bx = get_num_buttons();		
+		}
 		break;
 	case 0x12: // MS MOUSE - set large graphics cursor block
 		LOG_WARNING("MOUSE (DOS): Large graphics cursor block not implemented");
@@ -1634,12 +1696,22 @@ static Bitu int33_handler()
 		state.hidden    = 1;
 		// According to Ralf Brown Interrupt List it returns 0x20 if
 		// success,  but CuteMouse source code claims the code for
-		// success if 0x1f. Both agree that 0xffff means failure.
+		// success is 0x1f. Both agree that 0xffff means failure.
 		// Since reg_ax is 0x1f here, no need to change anything.
+		// [FeralChild64] My results:
+		// - MS driver 6.24 always returns 0xffff
+		// - MS driver 8.20 returns 0xffff if 'state.enabled == false'
+		// - 3rd party drivers I tested (A4Tech 8.04a, Genius 9.20,
+		//   Mouse Systems 8.00, DR-DOS driver 1.1) never return anything
 		break;
 	case 0x20: // MS MOUSE v6.0+ - enable mouse driver
 		state.enabled = true;
 		state.hidden  = state.oldhidden;
+		if (mouse_config.dos_driver_modern) {
+			// Checked that MS driver alters AX this way starting
+			// from version 7.
+			reg_ax = 0xffff;
+		}
 		break;
 	case 0x22: // MS MOUSE v6.0+ - set language for messages
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
