@@ -42,6 +42,10 @@ constexpr auto capture_type_onclick_str  = "onclick";
 constexpr auto capture_type_onstart_str  = "onstart";
 constexpr auto capture_type_nomouse_str  = "nomouse";
 
+constexpr auto model_dos_2button_str = "2button";
+constexpr auto model_dos_3button_str = "3button";
+constexpr auto model_dos_wheel_str   = "wheel";
+
 constexpr auto model_ps2_standard_str     = "standard";
 constexpr auto model_ps2_intellimouse_str = "intellimouse";
 constexpr auto model_ps2_explorer_str     = "explorer";
@@ -126,6 +130,19 @@ static void SetCaptureType(const std::string_view capture_str)
 		mouse_config.capture = MouseCapture::OnStart;
 	} else if (capture_str == capture_type_nomouse_str) {
 		mouse_config.capture = MouseCapture::NoMouse;
+	} else {
+		assert(false);
+	}
+}
+
+static void SetDosModel(const std::string_view model_str)
+{
+	if (model_str == model_dos_2button_str) {
+		mouse_config.model_dos = MouseModelDos::TwoButton;
+	} else if (model_str == model_dos_3button_str) {
+		mouse_config.model_dos = MouseModelDos::ThreeButton;
+	} else if (model_str == model_dos_wheel_str) {
+		mouse_config.model_dos = MouseModelDos::Wheel;
 	} else {
 		assert(false);
 	}
@@ -271,6 +288,8 @@ static void config_read(Section* section)
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
 	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
 
+	SetDosModel(conf->Get_string("dos_mouse_model"));
+
 	// Settings below should be read only once
 
 	if (mouse_shared.ready_config) {
@@ -286,9 +305,11 @@ static void config_read(Section* section)
 		return;
 	}
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
 	mouse_config.dos_driver = conf->Get_bool("dos_mouse_driver");
+	// XXX dos_mouse_model
+
 
 	// PS/2 AUX port mouse configuration
 
@@ -378,12 +399,12 @@ static void config_init(Section_prop& secprop)
 	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
 	        "captured in windowed mode.");
 
-	// DOS driver configuration
+	// Built-in DOS driver configuration
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Enable the built-in mouse driver (enabled by default). This results in the\n"
+	        "Enable the built-in DOS mouse driver (enabled by default). This results in the\n"
 	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
 	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
 	        "not compatible with the built-in driver).\n"
@@ -398,6 +419,25 @@ static void config_init(Section_prop& secprop)
 	        "Note: The built-in driver is auto-disabled if you boot into real MS-DOS or\n"
 	        "      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,\n"
 	        "      but the Windows 3.x mouse driver takes over.");
+
+	prop_str = secprop.Add_string("dos_mouse_model",
+	                              always,
+	                              model_dos_wheel_str);
+	assert(prop_str);
+	prop_str->Set_values({model_dos_2button_str,
+	                      model_dos_3button_str,
+	                      model_dos_wheel_str});
+	prop_str->Set_help(
+	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('wheel'\n"
+	        "by default).\n"
+	        "  2button:  2 buttons, use for some old games which malfunction if the middle\n"
+	        "            button gets pressed.\n"
+	        "  3button:  3 buttons, only supported by very few games.\n"
+	        "  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.\n");
+
+	// TODO: Consider supporting the VBMouse WheelAPI version 2.0 for
+	// dual-wheel support; for now the specification is a draft only and no
+	// software exists which uses this API.
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
 	assert(prop_bool);

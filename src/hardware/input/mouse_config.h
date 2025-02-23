@@ -59,7 +59,13 @@ extern MousePredefined mouse_predefined;
 // Configuration file content
 // ***************************************************************************
 
-enum class MouseCapture : uint8_t { Seamless, OnClick, OnStart, NoMouse };
+enum class MouseCapture { Seamless, OnClick, OnStart, NoMouse };
+
+enum class MouseModelDos {
+	TwoButton,
+	ThreeButton,
+	Wheel,
+};
 
 enum class MouseModelPS2 : uint8_t {
 	NoMouse      = 0xff,
@@ -69,7 +75,7 @@ enum class MouseModelPS2 : uint8_t {
 	Explorer     = 0x04,
 };
 
-enum class MouseModelCOM : uint8_t {
+enum class MouseModelCOM {
 	NoMouse, // dummy value or no mouse
 	Microsoft,
 	Logitech,
@@ -89,6 +95,8 @@ struct MouseConfig {
 
 	bool dos_driver    = false; // whether DOS virtual mouse driver should be enabled
 	bool dos_immediate = false;
+
+	MouseModelDos model_dos = MouseModelDos::TwoButton;
 
 	MouseModelPS2 model_ps2 = MouseModelPS2::Standard;
 
