@@ -8,6 +8,9 @@
 #include "setup.h"
 #include "timer.h"
 
+#include <algorithm>
+#include <vector>
+
 // PIC Controllers
 // ~~~~~~~~~~~~~~~
 // The sources here identify the two Programmable Interrupt Controllers
@@ -21,8 +24,6 @@
 // It should be noted that some historical documents described the two PICs in a
 // "master-slave" relationship, which is misleading given that fact that the
 // primary has no control over the secondary.
-
-#define PIC_QUEUESIZE 512
 
 struct PIC_Controller {
 	int icw_words;
@@ -180,14 +181,9 @@ struct PICEntry {
 	double index;
 	uint32_t value;
 	PIC_EventHandler pic_event;
-	PICEntry * next;
 };
 
-static struct {
-	PICEntry entries[PIC_QUEUESIZE];
-	PICEntry * free_entry;
-	PICEntry * next_entry;
-} pic_queue = {};
+static std::vector<PICEntry> pic_queue = {};
 
 static void write_command(io_port_t port, io_val_t value, io_width_t)
 {
@@ -321,10 +317,10 @@ void PIC_ActivateIRQ(const uint8_t irq)
 	const uint8_t t = irq > 7 ? (irq - 8) : irq;
 	const auto pic  = &pics[irq > 7 ? 1 : 0];
 
-	const auto OldCycles = CPU_Cycles.load();
+	const auto old_cycles = CPU_Cycles;
 	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
 
-	if (OldCycles != CPU_Cycles) {
+	if (old_cycles != CPU_Cycles) {
 		// if CPU_Cycles have changed, this means that the interrupt was triggered by an I/O
 		// register write rather than an event.
 		// Real hardware executes 0 to ~13 NOPs or comparable instructions
@@ -419,35 +415,17 @@ void PIC_SetIRQMask(uint32_t irq, bool masked)
 	pic->set_imr(newmask);
 }
 
-static void AddEntry(PICEntry * entry) {
-	auto find_entry = pic_queue.next_entry;
-	if (find_entry == nullptr) {
-		entry->next=nullptr;
-		pic_queue.next_entry=entry;
-	} else if (find_entry->index > entry->index) {
-		pic_queue.next_entry=entry;
-		entry->next=find_entry;
-	} else {
-		while (find_entry) {
-			if (find_entry->next) {
-				/* See if the next index comes later than this
-				 * one */
-				if (find_entry->next->index > entry->index) {
-					entry->next      = find_entry->next;
-					find_entry->next = entry;
-					break;
-				} else {
-					find_entry = find_entry->next;
-				}
-			} else {
-				entry->next      = find_entry->next;
-				find_entry->next = entry;
-				break;
-			}
-		}
-	}
-	const auto cycles = PIC_MakeCycles(pic_queue.next_entry->index -
-	                                   PIC_TickIndex());
+static void AddEntry(const PICEntry& entry)
+{
+	const auto it = std::ranges::lower_bound(pic_queue,
+	                                         entry.index,
+	                                         std::less(),
+	                                         &PICEntry::index);
+
+	pic_queue.insert(it, entry);
+
+	// Check if new entry changes the cycle timing
+	const auto cycles = PIC_MakeCycles(pic_queue.front().index - PIC_TickIndex());
 	if (cycles < CPU_Cycles) {
 		CPU_CycleLeft += CPU_Cycles;
 		CPU_Cycles = 0;
@@ -458,77 +436,40 @@ static double srv_lag = 0.0;
 
 void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
 {
-	if (!pic_queue.free_entry) {
-		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
-		return;
+	PICEntry entry;
+	if (InEventService) {
+		entry.index = delay + srv_lag;
+	} else {
+		entry.index = delay + PIC_TickIndex();
 	}
-	const auto entry = pic_queue.free_entry;
-	if(InEventService) entry->index = delay + srv_lag;
-	else entry->index = delay + PIC_TickIndex();
 
-	entry->pic_event=handler;
-	entry->value=val;
-	pic_queue.free_entry=pic_queue.free_entry->next;
+	entry.pic_event = handler;
+	entry.value     = val;
+
 	AddEntry(entry);
 }
 
 void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
 {
-	auto entry           = pic_queue.next_entry;
-	PICEntry* prev_entry = nullptr;
-	while (entry) {
-		if ((entry->pic_event == handler) && (entry->value == val)) {
-			if (prev_entry) {
-				prev_entry->next=entry->next;
-				entry->next=pic_queue.free_entry;
-				pic_queue.free_entry=entry;
-				entry=prev_entry->next;
-				continue;
-			} else {
-				pic_queue.next_entry=entry->next;
-				entry->next=pic_queue.free_entry;
-				pic_queue.free_entry=entry;
-				entry=pic_queue.next_entry;
-				continue;
-			}
-		}
-		prev_entry=entry;
-		entry=entry->next;
-	}
+	std::erase_if(pic_queue, [&handler, val](const PICEntry& entry) {
+		return (entry.pic_event == handler) && (entry.value == val);
+	});
 }
 
-void PIC_RemoveEvents(PIC_EventHandler handler) {
-	auto entry           = pic_queue.next_entry;
-	PICEntry* prev_entry = nullptr;
-	while (entry) {
-		if (entry->pic_event == handler) {
-			if (prev_entry) {
-				prev_entry->next=entry->next;
-				entry->next=pic_queue.free_entry;
-				pic_queue.free_entry=entry;
-				entry=prev_entry->next;
-				continue;
-			} else {
-				pic_queue.next_entry=entry->next;
-				entry->next=pic_queue.free_entry;
-				pic_queue.free_entry=entry;
-				entry=pic_queue.next_entry;
-				continue;
-			}
-		}
-		prev_entry=entry;
-		entry=entry->next;
-	}
+void PIC_RemoveEvents(PIC_EventHandler handler)
+{
+	std::erase_if(pic_queue, [&handler](const PICEntry& entry) {
+		return (entry.pic_event == handler);
+	});
 }
-
 
 bool PIC_RunQueue(void) {
 	PIC_UpdateAtomicIndex();
 
 	/* Check to see if a new millisecond needs to be started */
-	CPU_CycleLeft+=CPU_Cycles;
-	CPU_Cycles=0;
-	if (CPU_CycleLeft<=0) {
+	CPU_CycleLeft += CPU_Cycles;
+	CPU_Cycles = 0;
+	if (CPU_CycleLeft <= 0) {
 		return false;
 	}
 
@@ -536,24 +477,21 @@ bool PIC_RunQueue(void) {
 
 	/* Check the queue for an entry */
 	InEventService = true;
-	while (pic_queue.next_entry &&
-	       (pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) <= index_nd_f)) {
-		const auto entry     = pic_queue.next_entry;
-		pic_queue.next_entry = entry->next;
+	while (!pic_queue.empty() &&
+	       (pic_queue.front().index * static_cast<double>(CPU_CycleMax) <=
+	        index_nd_f)) {
+		const auto entry = pic_queue.front();
+		pic_queue.erase(pic_queue.begin());
 
-		srv_lag = entry->index;
-		(entry->pic_event)(entry->value); // call the event handler
-
-		/* Put the entry in the free list */
-		entry->next=pic_queue.free_entry;
-		pic_queue.free_entry=entry;
+		srv_lag = entry.index;
+		(entry.pic_event)(entry.value); // call the event handler
 	}
 	InEventService = false;
 
 	/* Check when to set the new cycle end */
-	if (pic_queue.next_entry) {
+	if (!pic_queue.empty()) {
 		auto cycles = static_cast<int32_t>(
-		        pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) -
+		        pic_queue.front().index * static_cast<double>(CPU_CycleMax) -
 		        index_nd_f);
 		if (!cycles) {
 			cycles = 1;
@@ -563,40 +501,24 @@ bool PIC_RunQueue(void) {
 		} else {
 			CPU_Cycles=CPU_CycleLeft;
 		}
-	} else CPU_Cycles=CPU_CycleLeft;
-	CPU_CycleLeft-=CPU_Cycles;
+	} else {
+		CPU_Cycles = CPU_CycleLeft;
+	}
+	CPU_CycleLeft -= CPU_Cycles;
 	PIC_runIRQs();
 	return true;
 }
 
 /* The TIMER Part */
-struct TickerBlock {
-	TIMER_TickHandler handler;
-	TickerBlock * next;
-};
 
-static TickerBlock * firstticker=nullptr;
-
+static std::vector<TIMER_TickHandler> ticker_blocks = {};
 
 void TIMER_DelTickHandler(TIMER_TickHandler handler) {
-	auto ticker     = firstticker;
-	auto tick_where = &firstticker;
-	while (ticker) {
-		if (ticker->handler==handler) {
-			*tick_where=ticker->next;
-			delete ticker;
-			return;
-		}
-		tick_where=&ticker->next;
-		ticker=ticker->next;
-	}
+	std::erase(ticker_blocks, handler);
 }
 
 void TIMER_AddTickHandler(TIMER_TickHandler handler) {
-	const auto newticker = new TickerBlock;
-	newticker->next=firstticker;
-	newticker->handler=handler;
-	firstticker=newticker;
+	ticker_blocks.emplace_back(handler);
 }
 
 void TIMER_AddTick(void) {
@@ -604,18 +526,13 @@ void TIMER_AddTick(void) {
 	CPU_CycleLeft=CPU_CycleMax;
 	CPU_Cycles=0;
 	PIC_Ticks++;
-	/* Go through the list of scheduled events and lower their index with 1000 */
-	auto entry = pic_queue.next_entry;
-	while (entry) {
-		entry->index -= 1.0;
-		entry=entry->next;
+	/* Go through the list of scheduled events and lower the index */
+	for (auto& entry : pic_queue) {
+		entry.index -= 1.0;
 	}
 	/* Call our list of ticker handlers */
-	auto ticker = firstticker;
-	while (ticker) {
-		auto nextticker = ticker->next;
-		ticker->handler();
-		ticker=nextticker;
+	for (auto& handler : ticker_blocks) {
+		handler();
 	}
 }
 
@@ -670,13 +587,6 @@ public:
 		ReadHandler[3].Install(0xa1, read_data, io_width_t::byte);
 		WriteHandler[2].Install(0xa0, write_command, io_width_t::byte);
 		WriteHandler[3].Install(0xa1, write_data, io_width_t::byte);
-		/* Initialize the pic queue */
-		for (int i = 0; i < PIC_QUEUESIZE - 1; i++) {
-			pic_queue.entries[i].next=&pic_queue.entries[i+1];
-		}
-		pic_queue.entries[PIC_QUEUESIZE-1].next=nullptr;
-		pic_queue.free_entry=&pic_queue.entries[0];
-		pic_queue.next_entry=nullptr;
 	}
 
 	~PIC_8259A(){
