@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.22)
 
 set(VCPKG_USE_HOST_TOOLS ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Generate compile_commands.json for use with LSPs")
+
 project(dosbox-staging
 		LANGUAGES C CXX
 		VERSION 0.83.0
