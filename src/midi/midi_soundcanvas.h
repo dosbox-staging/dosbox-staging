@@ -92,10 +92,14 @@ public:
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
+	void ProcessWorkFromFifoBacklogged();
 
 	int GetNumPendingAudioFrames();
 	void RenderAudioFramesToFifo(const int num_frames = 1);
 	void Render();
+	void RenderBacklogged();
+
+	void AddClapEvent(const MidiWork& work);
 
 	// Managed objects
 	MixerChannelPtr mixer_channel = nullptr;
