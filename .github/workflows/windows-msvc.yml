@@ -63,7 +63,7 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Setup CMake
-        uses: lukka/get-cmake@v3.31.5
+        uses: lukka/get-cmake@v3.31.6
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -140,7 +140,7 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Setup CMake
-        uses: lukka/get-cmake@v3.31.5
+        uses: lukka/get-cmake@v3.31.6
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
