@@ -334,7 +334,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Download MSVC artifact
-        uses: dawidd6/action-download-artifact@v8
+        uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: windows-msvc.yml
