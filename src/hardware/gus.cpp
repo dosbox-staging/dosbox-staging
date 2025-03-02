@@ -892,8 +892,6 @@ void Gus::PrintStats()
 
 uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
-	RenderUpToNow();
-
 	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
 	case 0x206: return irq_status;
