@@ -7076,7 +7076,7 @@ static int get_num_total_threads()
 {
 	constexpr auto MinThreads     = 1;
 	constexpr auto MaxAutoThreads = 16;
-	constexpr auto MaxThreads     = 16;
+	constexpr auto MaxThreads     = 128;
 
 	constexpr auto SectionName = "voodoo";
 	constexpr auto SettingName = "voodoo_threads";
