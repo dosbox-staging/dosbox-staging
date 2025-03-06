@@ -842,9 +842,9 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("voodoo_threads", only_at_start, "auto");
 	pstring->Set_help(
 	        "Use threads to improve 3dfx Voodoo performance:\n"
-	        "  auto:     Use up to 8 threads based on available CPU cores (default).\n"
+	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
 	        "  <value>:  Set a specific number of threads between 1 and 16.\n"
-	        "Note: Tests show that frame rates increase up to 8 threads after which\n"
+	        "Note: Tests show that frame rates increase up to 16 threads after which\n"
 	        "      they level off or decrease, in general.");
 
 	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
