@@ -156,6 +156,4 @@ bool get_expanded_files(const std::string &path,
                         bool files_only,
                         bool skip_native_path = false) noexcept;
 
-int get_num_physical_cpus();
-
 #endif
