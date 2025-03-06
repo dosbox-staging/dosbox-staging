@@ -7069,13 +7069,13 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 }
 
 // Get the number of total threads to use for Voodoo work based on the user's
-// conf setting. By default we use up to 8 threads (which includes the main
+// conf setting. By default we use up to 16 threads (which includes the main
 // thread) however the user can customize this.
 
 static int get_num_total_threads()
 {
 	constexpr auto MinThreads     = 1;
-	constexpr auto MaxAutoThreads = 8;
+	constexpr auto MaxAutoThreads = 16;
 	constexpr auto MaxThreads     = 16;
 
 	constexpr auto SectionName = "voodoo";
