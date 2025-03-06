@@ -908,10 +908,10 @@ struct triangle_worker
 {
 	triangle_worker(const int num_threads_)
 	        : num_threads(num_threads_),
-	          num_workers(num_threads + 1),
+	          num_work_units(num_threads + 1),
 	          threads(num_threads)
 	{
-		assert(num_workers > num_threads);
+		assert(num_work_units > num_threads);
 	}
 
 	triangle_worker()                                  = delete;
@@ -919,7 +919,7 @@ struct triangle_worker
 	triangle_worker& operator=(const triangle_worker&) = delete;
 
 	const int num_threads = 0;
-	const int num_workers = 0;
+	const int num_work_units = 0;
 
 	bool disable_bilinear_filter = {};
 
@@ -947,7 +947,7 @@ struct voodoo_state
 {
 	voodoo_state(const int num_threads)
 	        : tworker(num_threads),
-	          thread_stats(tworker.num_workers)
+	          thread_stats(tworker.num_work_units)
 	{
 		assert(!thread_stats.empty());
 	}
@@ -4397,14 +4397,14 @@ static void triangle_worker_work(const triangle_worker& tworker,
 
 	// The number of workers represents the total work, while the start and
 	// end represent a fraction (up to 100%) of the total total.
-	assert(work_end > 0 && tworker.num_workers >= work_end);
+	assert(work_end > 0 && tworker.num_work_units >= work_end);
 
 	// The following suppresses div-by-0 false positive reported in Clang
 	// analysis. This is confirmed fixed in Clang v18.
-	const auto num_workers = tworker.num_workers ? tworker.num_workers : 1;
+	const auto num_work_units = tworker.num_work_units ? tworker.num_work_units : 1;
 
-	const int32_t from = tworker.totalpix * work_start / num_workers;
-	const int32_t to   = tworker.totalpix * work_end / num_workers;
+	const int32_t from = tworker.totalpix * work_start / num_work_units;
+	const int32_t to   = tworker.totalpix * work_end / num_work_units;
 
 	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0;
 	     curscan != scanend && lastsum < to;
@@ -4455,15 +4455,15 @@ static int do_triangle_work(triangle_worker& tworker)
 	// Extra load but this should ensure we don't overflow the index,
 	// with the fetch_add below in case of spurious wake-ups.
 	int i = tworker.worker_index.load(std::memory_order_acquire);
-	if (i >= tworker.num_workers) {
+	if (i >= tworker.num_work_units) {
 		return i;
 	}
 
 	i = tworker.worker_index.fetch_add(1, std::memory_order_acq_rel);
-	if (i < tworker.num_workers) {
+	if (i < tworker.num_work_units) {
 		triangle_worker_work(tworker, i, i + 1);
 		int done = tworker.done_count.fetch_add(1, std::memory_order_acq_rel) + 1;
-		if (done >= tworker.num_workers) {
+		if (done >= tworker.num_work_units) {
 			tworker.done_count.notify_all();
 		}
 	}
@@ -4478,7 +4478,7 @@ static int triangle_worker_thread_func()
 	triangle_worker& tworker = v->tworker;
 	while (tworker.threads_active.load(std::memory_order_acquire)) {
 		int i = do_triangle_work(tworker);
-		if (i >= tworker.num_workers) {
+		if (i >= tworker.num_work_units) {
 			tworker.worker_index.wait(i, std::memory_order_acquire);
 		}
 	}
@@ -4506,7 +4506,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 	if (!tworker.num_threads) {
 		// do not use threaded calculation
 		tworker.totalpix = 0xFFFFFFF;
-		triangle_worker_work(tworker, 0, tworker.num_workers);
+		triangle_worker_work(tworker, 0, tworker.num_work_units);
 		return;
 	}
 
@@ -4545,7 +4545,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 	// Don't wake up threads for just a few pixels
 	if (tworker.totalpix <= 200)
 	{
-		triangle_worker_work(tworker, 0, tworker.num_workers);
+		triangle_worker_work(tworker, 0, tworker.num_work_units);
 		return;
 	}
 
@@ -4571,11 +4571,11 @@ static void triangle_worker_run(triangle_worker& tworker)
 	tworker.worker_index.notify_all();
 
 	// Main thread also does the same work as the worker threads
-	while (do_triangle_work(tworker) < tworker.num_workers);
+	while (do_triangle_work(tworker) < tworker.num_work_units);
 
 	// Wait until all work has been completed by the worker thread.
 	int i;
-	while ((i = tworker.done_count.load(std::memory_order_acquire)) < tworker.num_workers) {
+	while ((i = tworker.done_count.load(std::memory_order_acquire)) < tworker.num_work_units) {
 		tworker.done_count.wait(i, std::memory_order_acquire);
 	}
 }
