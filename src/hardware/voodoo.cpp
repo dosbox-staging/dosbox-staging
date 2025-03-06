@@ -908,7 +908,7 @@ struct triangle_worker
 {
 	triangle_worker(const int num_threads_)
 	        : num_threads(num_threads_),
-	          num_work_units(num_threads + 1),
+	          num_work_units((num_threads + 1) * 4),
 	          threads(num_threads)
 	{
 		assert(num_work_units > num_threads);
