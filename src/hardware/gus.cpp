@@ -388,21 +388,45 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	assert(channel);
 
+	// We render at the GUS' internal mixer rate, then ZOH upsample to
+	// the native 44.1 kHz GUS rate. This emulates the behaviour of the
+	// real GF1 chip which always outputs a 44.1 kHz sample stream to
+	// the DAC, but starts dropping samples in the internal mixer above
+	// 14 active voices due to bandwidth limitations. Technically, we
+	// could emulate this exact behaviour, but in practice it would 
+	// make little to no difference compared to our current method.
+	//
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
+	channel->SetZeroOrderHoldUpsamplerTargetRate(GusOutputSampleRate);
+
 	// GUS is prone to accumulating beyond the 16-bit range so we scale back
 	// by RMS.
 	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
 	channel->Set0dbScalar(rms_squared);
 
-	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		if (filter_prefs != "off") {
-			LOG_WARNING("GUS: Invalid 'gus_filter' setting: '%s', using 'off'",
-			            filter_prefs.c_str());
+	// The filter parameters have been tweaked by analysing real hardware
+	// recordings of the GUS Classic (GF1 chip).
+	//
+	auto enable_filter = [&]() {
+		constexpr auto Order        = 1;
+		constexpr auto CutoffFreqHz = 8000;
+
+		channel->ConfigureLowPassFilter(Order, CutoffFreqHz);
+		channel->SetLowPassFilter(FilterState::On);
+	};
+
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
+		if (*maybe_bool) {
+			enable_filter();
+		} else {
+			channel->SetLowPassFilter(FilterState::Off);
 		}
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		LOG_WARNING("GUS: Invalid 'gus_filter' setting: '%s', using 'on'",
+		            filter_prefs.c_str());
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("gus", "gus_filter", "off");
+		set_section_property_value("gus", "gus_filter", "on");
+		enable_filter();
 	}
 
 	ms_per_render = MillisInSecond / channel->GetSampleRate();
@@ -434,9 +458,20 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 		assert(active_voices <= voices.size());
 		active_voice_mask = 0xffffffffu >> (MAX_VOICES - active_voices);
 
-		// Gravis' calculation to convert from number of active voices
-		// to playback frame rate. Ref: UltraSound Lowlevel ToolKit
-		// v2.22 (21 December 1994), pp. 3 of 113.
+		// Authentically emulate the playback rate degradation
+		// dependent on the number of active voices (hardware
+		// channels) of the original GF1 chip found on the GUS
+		// Classic and MAX boards.
+		//
+		// The playback rate is 44.1 kHz up until 14 active voices,
+		// then it linearly drops to 19,293 Hz with all 32 voices
+		// enabled.
+		//
+		// Gravis' calculation to convert from number of active
+		// voices to playback frame rate. Ref: UltraSound
+		// Lowlevel ToolKit v2.22 (21 December 1994), pp. 3 of
+		// 113.
+		//
 		sample_rate_hz = ifloor(1000000.0 / (1.619695497 * active_voices));
 
 		ms_per_render = MillisInSecond / sample_rate_hz;
@@ -1558,11 +1593,12 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	int_prop->Set_values({"1", "3", "5", "6", "7"});
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
 
-	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "off");
+	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the Gravis UltraSound audio output:\n"
-	        "  off:       Don't filter the output (default).\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");

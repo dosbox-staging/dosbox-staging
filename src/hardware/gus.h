@@ -28,6 +28,8 @@
 // Global Constants
 // ----------------
 
+constexpr auto GusOutputSampleRate = 44100;
+
 // AdLib emulation state constant
 constexpr uint8_t ADLIB_CMD_DEFAULT = 85;
 
