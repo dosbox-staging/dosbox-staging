@@ -4452,6 +4452,31 @@ static void triangle_worker_work(const triangle_worker& tworker,
 	sum_statistics(&v->thread_stats[work_start], &my_stats);
 }
 
+// NOTE (weirddan455): In case anyone wants to optimize this further on ARM:
+//
+// I was conservative with setting memory order on these atomic variables.
+// I've set all loads to acquire, stores to release, and load+modify+store to acq_rel.
+// x86 gets these semantics essentially for free due to it being a strongly ordered platform.
+// On x86, if you ask for relaxed ordering, you'll get aquire/release anyway barring compiler re-ordering.
+//
+// ARM is weakly ordered though so there could be performance gains by relaxing some of these.
+// I can't reliably test for that since I don't have the hardware.
+// They can't all be made relaxed and it gets somewhat complicated to determine what you need.
+//
+// To anyone feeling adventurous, here are some resources:
+//
+// Rust's atomic guide. Rust uses the same semantics as C++ with regard to memory ordering and is good at grasping the basics.
+// https://doc.rust-lang.org/nomicon/atomics.html
+//
+// cppreference for memory order. This one describes things more thoroughly and formally but is harder to understand:
+// https://en.cppreference.com/w/cpp/atomic/memory_order
+//
+// We shouldn't ever need Sequentially Consistent memory ordering for this use-case.
+// That's for edge cases like some lockless multiple producer multiple consumer queues.
+//
+// Loads should be either acquire or relaxed.
+// Stores should be either release or relaxed.
+// Fetch+Modify+Store operations (like fetch_add) can be acq_rel, acquire, release, or relaxed.
 static int do_triangle_work(triangle_worker& tworker)
 {
 	// Extra load but this should ensure we don't overflow the index,
