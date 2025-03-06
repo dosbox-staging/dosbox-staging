@@ -4450,36 +4450,49 @@ static void triangle_worker_work(const triangle_worker& tworker,
 	sum_statistics(&v->thread_stats[work_start], &my_stats);
 }
 
-static void do_triangle_work(triangle_worker& tworker)
+static int do_triangle_work(triangle_worker& tworker)
 {
-	int i;
-	while ((i = tworker.worker_index.load()) < tworker.num_workers) {
-		// compare_exchange_weak modifies work_start but only on failure (when another thread has modified the expected value)
-		auto work_start = i;
-		const auto work_end = i + 1;
+	// Extra load but this should ensure we don't overflow the index,
+	// with the fetch_add below in case of spurious wake-ups.
+	int i = tworker.worker_index.load(std::memory_order_acquire);
+	if (i >= tworker.num_workers) {
+		return i;
+	}
 
-		if (tworker.worker_index.compare_exchange_weak(work_start, work_end)) {
-			triangle_worker_work(tworker, work_start, work_end);
-			++tworker.done_count;
+	i = tworker.worker_index.fetch_add(1, std::memory_order_acq_rel);
+	if (i < tworker.num_workers) {
+		triangle_worker_work(tworker, i, i + 1);
+		int done = tworker.done_count.fetch_add(1, std::memory_order_acq_rel) + 1;
+		if (done >= tworker.num_workers) {
+			tworker.done_count.notify_all();
 		}
 	}
+
+	// fetch_add returns the previous worker index.
+	// We want to return the current.
+	return i + 1;
 }
 
 static int triangle_worker_thread_func()
 {
 	triangle_worker& tworker = v->tworker;
-	while (tworker.threads_active) {
-		do_triangle_work(tworker);
+	while (tworker.threads_active.load(std::memory_order_acquire)) {
+		int i = do_triangle_work(tworker);
+		if (i >= tworker.num_workers) {
+			tworker.worker_index.wait(i, std::memory_order_acquire);
+		}
 	}
 	return 0;
 }
 
 static void triangle_worker_shutdown(triangle_worker& tworker)
 {
-	if (!tworker.threads_active) {
+	if (!tworker.threads_active.load(std::memory_order_acquire)) {
 		return;
 	}
-	tworker.threads_active = false;
+	tworker.threads_active.store(false, std::memory_order_release);
+	tworker.worker_index.store(0, std::memory_order_release);
+	tworker.worker_index.notify_all();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4536,9 +4549,13 @@ static void triangle_worker_run(triangle_worker& tworker)
 		return;
 	}
 
-	if (!tworker.threads_active)
+	// The main thread is the only one who sets threads_active (here and in shutdown) so there is no race condition.
+	// In the future, if this changes, this will need to be an atomic compare_exchange.
+	// For now, this is better because 99% of the time threads_active == true.
+	// We only spin up the threads once and a load is much faster than a compare_exchange.
+	if (!tworker.threads_active.load(std::memory_order_acquire))
 	{
-		tworker.threads_active = true;
+		tworker.threads_active.store(true, std::memory_order_release);
 
 		for (auto& triangle_worker : tworker.threads) {
 			triangle_worker = std::thread([] {
@@ -4547,16 +4564,20 @@ static void triangle_worker_run(triangle_worker& tworker)
 		}
 	}
 
-	tworker.done_count = 0;
+	tworker.done_count.store(0, std::memory_order_release);
 
 	// Reseting this index triggers the worker threads to start working
-	tworker.worker_index = 0;
+	tworker.worker_index.store(0, std::memory_order_release);
+	tworker.worker_index.notify_all();
 
 	// Main thread also does the same work as the worker threads
-	do_triangle_work(tworker);
+	while (do_triangle_work(tworker) < tworker.num_workers);
 
-	// Busy wait for all worker threads to finish
-	while (tworker.done_count < tworker.num_workers);
+	// Wait until all work has been completed by the worker thread.
+	int i;
+	while ((i = tworker.done_count.load(std::memory_order_acquire)) < tworker.num_workers) {
+		tworker.done_count.wait(i, std::memory_order_acquire);
+	}
 }
 
 /*-------------------------------------------------
