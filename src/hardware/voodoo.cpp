@@ -938,7 +938,7 @@ struct triangle_worker
 	std::vector<std::thread> threads = {};
 
 	// Worker threads start working when this gets reset to 0
-	std::atomic<int> worker_index = INT_MAX;
+	std::atomic<int> work_index = INT_MAX;
 
 	std::atomic<int> done_count = 0;
 };
@@ -4454,12 +4454,12 @@ static int do_triangle_work(triangle_worker& tworker)
 {
 	// Extra load but this should ensure we don't overflow the index,
 	// with the fetch_add below in case of spurious wake-ups.
-	int i = tworker.worker_index.load(std::memory_order_acquire);
+	int i = tworker.work_index.load(std::memory_order_acquire);
 	if (i >= tworker.num_work_units) {
 		return i;
 	}
 
-	i = tworker.worker_index.fetch_add(1, std::memory_order_acq_rel);
+	i = tworker.work_index.fetch_add(1, std::memory_order_acq_rel);
 	if (i < tworker.num_work_units) {
 		triangle_worker_work(tworker, i, i + 1);
 		int done = tworker.done_count.fetch_add(1, std::memory_order_acq_rel) + 1;
@@ -4479,7 +4479,7 @@ static int triangle_worker_thread_func()
 	while (tworker.threads_active.load(std::memory_order_acquire)) {
 		int i = do_triangle_work(tworker);
 		if (i >= tworker.num_work_units) {
-			tworker.worker_index.wait(i, std::memory_order_acquire);
+			tworker.work_index.wait(i, std::memory_order_acquire);
 		}
 	}
 	return 0;
@@ -4491,8 +4491,8 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 		return;
 	}
 	tworker.threads_active.store(false, std::memory_order_release);
-	tworker.worker_index.store(0, std::memory_order_release);
-	tworker.worker_index.notify_all();
+	tworker.work_index.store(0, std::memory_order_release);
+	tworker.work_index.notify_all();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4567,8 +4567,8 @@ static void triangle_worker_run(triangle_worker& tworker)
 	tworker.done_count.store(0, std::memory_order_release);
 
 	// Reseting this index triggers the worker threads to start working
-	tworker.worker_index.store(0, std::memory_order_release);
-	tworker.worker_index.notify_all();
+	tworker.work_index.store(0, std::memory_order_release);
+	tworker.work_index.notify_all();
 
 	// Main thread also does the same work as the worker threads
 	while (do_triangle_work(tworker) < tworker.num_work_units);
