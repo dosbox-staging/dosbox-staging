@@ -24,6 +24,13 @@
 #include "config.h"
 #include "std_filesystem.h"
 
+enum class DynLibResult
+{
+	Success,
+	LibOpenErr,
+	ResolveSymErr,
+};
+
 #ifdef WIN32
 
 #include <windows.h>
