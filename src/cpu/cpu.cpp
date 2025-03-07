@@ -254,6 +254,8 @@ static void set_modern_cycles_config(const CpuMode mode)
 	}
 }
 
+static bool is_protected_mode_program = false;
+
 void CPU_RestoreRealModeCyclesConfig()
 {
 	if (cpu.pmode || (!last_auto_determine_mode.auto_core &&
@@ -274,6 +276,7 @@ void CPU_RestoreRealModeCyclesConfig()
 			set_modern_cycles_config(CpuMode::Real);
 		}
 
+		is_protected_mode_program = false;
 		GFX_NotifyCyclesChanged();
 	}
 #if C_DYNAMIC_X86 || C_DYNREC
@@ -1776,6 +1779,8 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 				break;
 			}
 
+			is_protected_mode_program = true;
+
 #if C_DYNAMIC_X86
 			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dyn_X86_Cache_Init(true);
@@ -2634,7 +2639,7 @@ std::string CPU_GetCyclesConfigAsString()
 			}
 		};
 
-		if (cpu.pmode) {
+		if (is_protected_mode_program) {
 			if (conf.protected_mode_auto) {
 				// 'cpu_cycles' controls both real and protected
 				// mode
