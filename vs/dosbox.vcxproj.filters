@@ -1770,6 +1770,12 @@
       <Filter>src\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\src\audio\noise_gate.h" />
+    <ClInclude Include="..\src\audio\gate.h">
+      <Filter>src\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dynlib.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
