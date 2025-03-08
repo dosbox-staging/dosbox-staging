@@ -43,7 +43,6 @@ jobs:
           - configure_flags:  -Duse_slirp=false
           - configure_flags:  -Duse_sdl2_net=false
           - configure_flags:  -Duse_opengl=false         # TODO opengl is always disabled on msys2
-          - configure_flags:  -Duse_fluidsynth=false
           - configure_flags:  -Denable_debugger=normal
           - configure_flags:  -Denable_debugger=heavy
           - configure_flags:  -Ddynamic_core=dyn-x86

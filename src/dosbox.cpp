@@ -834,9 +834,7 @@ void DOSBOX_Init()
 	MIXER_AddConfigSection(control);
 
 	// Configure MIDI
-#if C_FLUIDSYNTH
 	FSYNTH_AddConfigSection(control);
-#endif
 
 #if C_MT32EMU
 	MT32_AddConfigSection(control);
