@@ -46,7 +46,7 @@ jobs:
             cc: gcc
             max_warnings: 2
             run_tests: true
-            build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
+            build_flags: -Dbuildtype=debug
 
           - name: GCC (UCRT) x86_64 +debugger
             toolchain: ucrt-
@@ -71,7 +71,7 @@ jobs:
             cc: clang
             max_warnings: 2
             run_tests: true
-            build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
+            build_flags: -Dbuildtype=debug
 
     defaults:
       run:
@@ -109,7 +109,6 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python-pip
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth
 
       - shell: msys2 {0}
         run: |
@@ -219,7 +218,6 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
             mingw-w64-clang-${{matrix.conf.arch}}-python-pip
-            mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth
 
       - shell: msys2 {0}
         run: |

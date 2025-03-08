@@ -96,9 +96,6 @@
 // Define to 1 to use opengl display output support
 #cmakedefine01 C_OPENGL
 
-// Define to 1 to enable FluidSynth integration (built-in MIDI synth)
-#cmakedefine01 C_FLUIDSYNTH
-
 // Define to 1 to enable libslirp Ethernet support
 #cmakedefine01 C_SLIRP
 

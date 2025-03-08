@@ -18,7 +18,6 @@ libmidi = static_library(
         alsa_dep,
         coreaudio_dep,
         coremidi_dep,
-        fluid_dep,
         ghc_dep,
         libiir_dep,
         libloguru_dep,
