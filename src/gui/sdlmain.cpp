@@ -5035,7 +5035,6 @@ int sdl_main(int argc, char* argv[])
 		}
 #endif
 
-#if C_FLUIDSYNTH
 		const auto soundfonts_dir = GetConfigDir() / DefaultSoundfontsDir;
 
 		if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
@@ -5043,7 +5042,6 @@ int sdl_main(int argc, char* argv[])
 			            soundfonts_dir.string().c_str(),
 			            safe_strerror(errno).c_str());
 		}
-#endif
 
 #if C_MT32EMU
 		const auto mt32_rom_dir = GetConfigDir() / DefaultMt32RomsDir;

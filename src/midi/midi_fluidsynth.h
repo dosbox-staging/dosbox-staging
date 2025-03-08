@@ -23,18 +23,27 @@
 
 #include "midi_device.h"
 
-#if C_FLUIDSYNTH
-
 #include <atomic>
-#include <fluidsynth.h>
+//#include <fluidsynth.h>
 #include <memory>
 #include <optional>
 #include <thread>
 #include <vector>
 
+#include "dynlib.h"
 #include "mixer.h"
 #include "rwqueue.h"
 #include "std_filesystem.h"
+
+namespace fsynth {
+
+typedef void fluid_settings_t;
+typedef void fluid_synth_t;
+
+extern void (*delete_fluid_settings)(fluid_settings_t*);
+extern void (*delete_fluid_synth)(fluid_synth_t*);
+
+} // namespace fsynth
 
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
@@ -60,7 +69,6 @@ public:
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
 	std_fs::path GetSoundFontPath();
-
 private:
 	void ApplyChannelMessage(const std::vector<uint8_t>& msg);
 	void ApplySysExMessage(const std::vector<uint8_t>& msg);
@@ -72,12 +80,12 @@ private:
 	void Render();
 
 	using FluidSynthSettingsPtr =
-	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
+	        std::unique_ptr<fsynth::fluid_settings_t, decltype(fsynth::delete_fluid_settings)>;
 
-	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(&delete_fluid_synth)>;
+	using FluidSynthPtr = std::unique_ptr<fsynth::fluid_synth_t, decltype(fsynth::delete_fluid_synth)>;
 
-	FluidSynthSettingsPtr settings{nullptr, &delete_fluid_settings};
-	FluidSynthPtr synth{nullptr, &delete_fluid_synth};
+	FluidSynthSettingsPtr settings{nullptr, fsynth::delete_fluid_settings};
+	FluidSynthPtr synth{nullptr, fsynth::delete_fluid_synth};
 
 	MixerChannelPtr mixer_channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};
@@ -95,7 +103,5 @@ private:
 };
 
 void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller);
-
-#endif // C_FLUIDSYNTH
 
 #endif

@@ -266,9 +266,7 @@ struct MidiWork {
 	MidiWork& operator=(const MidiWork&) = delete;
 };
 
-#if C_FLUIDSYNTH
 void FSYNTH_AddConfigSection(const ConfigPtr& conf);
-#endif
 
 #if C_MT32EMU
 void MT32_AddConfigSection(const ConfigPtr& conf);

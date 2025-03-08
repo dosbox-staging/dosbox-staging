@@ -139,7 +139,6 @@ set(C_SLIRP OFF)
 set(C_NE2000 OFF)
 
 set(C_OPENGL ON)
-set(C_FLUIDSYNTH ON)    # TODO: Option
 set(C_MT32EMU ON)       # TODO: Option
 
 set(C_TRACY OFF)        # TODO: Option

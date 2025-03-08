@@ -97,9 +97,6 @@
 // Define to 1 to use opengl display output support
 #mesondefine C_OPENGL
 
-// Define to 1 to enable FluidSynth integration (built-in MIDI synth)
-#mesondefine C_FLUIDSYNTH
-
 // Define to 1 to enable libslirp Ethernet support
 #mesondefine C_SLIRP
 

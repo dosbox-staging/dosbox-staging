@@ -220,7 +220,7 @@
       <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;fluidsynth.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -262,7 +262,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;fluidsynth.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -303,7 +303,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;fluidsynth.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ngd.lib;iir.lib;opengl32.lib;SDL2_netd.lib;winmm.lib;libpng16d.lib;SDL2maind.lib;SDL2d.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -347,7 +347,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;fluidsynth.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile />
@@ -455,7 +455,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;fluidsynth.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>
@@ -508,7 +508,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>slirp.lib;fluidsynth.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>slirp.lib;zlib-ng.lib;iir.lib;opengl32.lib;winmm.lib;libpng16.lib;SDL2_net.lib;SDL2.lib;SDL2main.lib;odbc32.lib;odbccp32.lib;ws2_32.lib;mt32emu.lib;opusfile.lib;opus.lib;ogg.lib;speexdsp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)\dosbox.exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>
@@ -925,6 +925,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\include\dos_system.h" />
     <ClInclude Include="..\include\dosbox.h" />
     <ClInclude Include="..\include\drives.h" />
+    <ClInclude Include="..\include\dynlib.h" />
     <ClInclude Include="..\include\ethernet.h" />
     <ClInclude Include="..\include\fpu.h" />
     <ClInclude Include="..\include\fraction.h" />
