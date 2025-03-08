@@ -347,7 +347,11 @@ static void set_global_crossfeed(const MixerChannelPtr& channel)
 {
 	assert(channel);
 
-	if (!mixer.do_crossfeed || !channel->HasFeature(ChannelFeature::Stereo)) {
+	const auto apply_crossfeed = (channel->GetName() == ChannelName::Opl &&
+	                              channel->HasFeature(ChannelFeature::Stereo)) ||
+	                             (channel->GetName() == ChannelName::Cms);
+
+	if (!mixer.do_crossfeed || !apply_crossfeed) {
 		channel->SetCrossfeedStrength(0.0f);
 	} else {
 		channel->SetCrossfeedStrength(mixer.crossfeed.global_strength);
@@ -3010,13 +3014,20 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable crossfeed globally on all stereo channels for headphone listening:\n"
+	        "Enable crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games\n"
+	        "pan the instruments 100%% left and 100%% right in the stereo field on these audio\n"
+	        "devices which is unpleasant to listen to in headphones. With crossfeed enabled,\n"
+	        "a portion of the left channel signal is mixed into the right channel and vice\n"
+	        "versa, creating a more natural listening experience.\n"
 	        "  off:     No crossfeed (default).\n"
 	        "  on:      Enable crossfeed (normal preset).\n"
 	        "  light:   Light crossfeed (strength 15).\n"
 	        "  normal:  Normal crossfeed (strength 40).\n"
 	        "  strong:  Strong crossfeed (strength 65).\n"
-	        "Note: You can fine-tune each channel's crossfeed strength using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - Use the MIXER command to apply crossfeed to other audio channels as well\n"
+	        "    and to fine-tune the crossfeed strength per channel.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
 	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
