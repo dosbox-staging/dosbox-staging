@@ -3055,7 +3055,12 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Note: You can fine-tune each channel's reverb level using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - The presets apply a noticeable amount of reverb to the synth mixer channels\n"
+	        "    (except for synths with built-in reverb; e.g., the Roland MT-32), and a\n"
+	        "    subtle amount to the digital audio channels.\n"
+	        "  - Use the MIXER command to fine-tune the reverb levels per channel.");
 	string_prop->Set_values(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
