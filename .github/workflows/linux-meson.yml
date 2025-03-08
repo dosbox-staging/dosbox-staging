@@ -93,7 +93,6 @@ jobs:
               -Dbuildtype=minsize
               -Dunit_tests=disabled
               -Duse_alsa=false
-              -Duse_fluidsynth=false
               -Duse_mt32emu=false
               -Duse_opengl=false
               -Duse_sdl2_net=false
