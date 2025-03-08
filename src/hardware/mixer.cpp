@@ -3063,7 +3063,11 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           features lots of white noise).\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Note: You can fine-tune each channel's chorus level using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - The presets apply the chorus effect to the synth channels only (except\n"
+	        "    for synths with built-in chorus; e.g. the Roland MT-32).\n"
+	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
