@@ -21,6 +21,11 @@ if (C_ALSA)
 	target_link_libraries(libmidi PRIVATE ALSA::ALSA)
 endif()
 
+if (C_COREMIDI)
+	target_link_libraries(libmidi PRIVATE "-framework CoreFoundation")
+	target_link_libraries(libmidi PRIVATE "-framework CoreMIDI")
+endif()
+
 target_link_libraries(libmidi PRIVATE
 		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 		libaudio
