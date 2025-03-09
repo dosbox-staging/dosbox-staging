@@ -3,6 +3,9 @@ libaudio_sources = files(
     'clap/library.cpp',
     'clap/plugin.cpp',
     'clap/plugin_manager.cpp',
+
+    'compressor.cpp',
+    'envelope.cpp',
 )
 
 libaudio = static_library(
