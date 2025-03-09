@@ -458,13 +458,12 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 				// comparisons.
 				std::error_code err = {};
 				const auto canonical_path =
-				        std_fs::canonical(sf, err).c_str();
+				        std_fs::canonical(sf, err);
 
 				if (err) {
 					return {};
-				} else {
-					return canonical_path;
 				}
+				return canonical_path;
 			}
 		}
 	}
