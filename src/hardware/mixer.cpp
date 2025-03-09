@@ -347,7 +347,10 @@ static void set_global_crossfeed(const MixerChannelPtr& channel)
 {
 	assert(channel);
 
-	if (!mixer.do_crossfeed || !channel->HasFeature(ChannelFeature::Stereo)) {
+	const auto apply_crossfeed = (channel->GetName() == ChannelName::Opl) ||
+	                             (channel->GetName() == ChannelName::Cms);
+
+	if (!mixer.do_crossfeed || !apply_crossfeed) {
 		channel->SetCrossfeedStrength(0.0f);
 	} else {
 		channel->SetCrossfeedStrength(mixer.crossfeed.global_strength);
@@ -3010,13 +3013,20 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable crossfeed globally on all stereo channels for headphone listening:\n"
+	        "Enable crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games\n"
+	        "pan the instruments 100%% left and 100%% right in the stereo field on these audio\n"
+	        "devices which is unpleasant to listen to in headphones. With crossfeed enabled,\n"
+	        "a portion of the left channel signal is mixed into the right channel and vice\n"
+	        "versa, creating a more natural listening experience.\n"
 	        "  off:     No crossfeed (default).\n"
 	        "  on:      Enable crossfeed (normal preset).\n"
 	        "  light:   Light crossfeed (strength 15).\n"
 	        "  normal:  Normal crossfeed (strength 40).\n"
 	        "  strong:  Strong crossfeed (strength 65).\n"
-	        "Note: You can fine-tune each channel's crossfeed strength using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - Use the MIXER command to apply crossfeed to other audio channels as well\n"
+	        "    and to fine-tune the crossfeed strength per channel.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
 	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
@@ -3034,7 +3044,12 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Note: You can fine-tune each channel's reverb level using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - The presets apply a noticeable amount of reverb to the synth mixer channels\n"
+	        "    (except for synths with built-in reverb; e.g., the Roland MT-32), and a\n"
+	        "    subtle amount to the digital audio channels.\n"
+	        "  - Use the MIXER command to fine-tune the reverb levels per channel.");
 	string_prop->Set_values(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
@@ -3047,7 +3062,11 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           features lots of white noise).\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Note: You can fine-tune each channel's chorus level using the MIXER.");
+	        "\n"
+	        "Notes:\n"
+	        "  - The presets apply the chorus effect to the synth channels only (except\n"
+	        "    for synths with built-in chorus; e.g. the Roland MT-32).\n"
+	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
