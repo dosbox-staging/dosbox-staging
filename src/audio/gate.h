@@ -50,17 +50,21 @@ public:
 	Gate();
 	~Gate();
 
-	void Configure(const int sample_rate_hz, const float threshold_db,
-	               const float attack_time_ms, const float release_time_ms);
+	void Configure(const int sample_rate_hz, const float _0dbfs_sample_value,
+	               const float threshold_db, const float attack_time_ms,
+	               const float release_time_ms);
 
 	AudioFrame Process(const AudioFrame in);
 
 	// prevent copying
-	Gate(const Gate &) = delete;
+	Gate(const Gate&) = delete;
 	// prevent assignment
-	Gate &operator=(const Gate &) = delete;
+	Gate& operator=(const Gate&) = delete;
 
 private:
+	float scale_in  = {};
+	float scale_out = {};
+
 	float threshold_value = {};
 	float attack_coeff    = {};
 	float release_coeff   = {};

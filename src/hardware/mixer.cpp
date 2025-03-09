@@ -32,6 +32,7 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "../audio/compressor.h"
 #include "../capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
@@ -325,6 +326,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
           handler(_handler),
           features(_features)
 {
+	do_gate  = HasFeature(ChannelFeature::Gate);
 	do_sleep = HasFeature(ChannelFeature::Sleep);
 }
 
@@ -1109,6 +1111,10 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 	                EnvelopeMaxExpansionOverMs,
 	                EnvelopeExpiresAfterSeconds);
 
+	if (do_gate) {
+		InitGate();
+	}
+
 	if (filters.highpass.state == FilterState::On) {
 		InitHighPassFilter();
 	}
@@ -1297,6 +1303,32 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 		                    filters.lowpass.order,
 		                    filters.lowpass.cutoff_freq_hz);
 	}
+}
+
+void MixerChannel::ConfigureGate(const float threshold_db, const float attack_time_ms,
+                                 const float release_time_ms)
+{
+	assert(attack_time_ms > 0.0f);
+	assert(release_time_ms > 0.0f);
+
+	gate.threshold_db    = threshold_db;
+	gate.attack_time_ms  = attack_time_ms;
+	gate.release_time_ms = release_time_ms;
+
+	InitGate();
+}
+
+void MixerChannel::InitGate()
+{
+	assert(gate.attack_time_ms > 0.0f);
+	assert(gate.release_time_ms > 0.0f);
+
+	const auto _0dbfs_sample_value = Max16BitSampleValue;
+	gate.processor.Configure(sample_rate_hz,
+	                         _0dbfs_sample_value,
+	                         gate.threshold_db,
+	                         gate.attack_time_ms,
+	                         gate.release_time_ms);
 }
 
 FilterState MixerChannel::GetHighPassFilterState() const
@@ -2174,9 +2206,13 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		                    convert_buffer.end());
 	}
 
-	// Optionally filter, apply crossfeed
-	// Runs in-place over newly added frames
+	// Optionally gate, filter, and apply crossfeed.
+	// Runs in-place over newly added frames.
 	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
+		if (do_gate) {
+			audio_frames[i] = gate.processor.Process(audio_frames[i]);
+		}
+
 		if (filters.highpass.state == FilterState::On) {
 			auto& hpf = filters.highpass.hpf;
 

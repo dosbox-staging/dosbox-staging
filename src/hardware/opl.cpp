@@ -29,6 +29,7 @@
 #include "checks.h"
 #include "control.h"
 #include "cpu.h"
+#include "math_utils.h"
 #include "mapper.h"
 #include "mem.h"
 #include "opl_capture.h"
@@ -834,6 +835,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	std::set channel_features = {ChannelFeature::Sleep,
 	                             ChannelFeature::FadeOut,
+	                             ChannelFeature::Gate,
 	                             ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
@@ -856,6 +858,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	channel->SetResampleMethod(ResampleMethod::Resample);
 
+
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
 	//
@@ -864,8 +867,14 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	// settings. The value cannot be "improved"; there's simply no
 	// universally "good" setting that would work well in all games in
 	// existence.
-	constexpr auto opl_volume_scale_factor = 1.5f;
-	channel->Set0dbScalar(opl_volume_scale_factor);
+	//
+	constexpr auto OplVolumeGain = 1.5f;
+	channel->Set0dbScalar(OplVolumeGain);
+
+	const auto threshold_db      = -60.0f;
+	constexpr auto AttackTimeMs  = 1.0f;
+	constexpr auto ReleaseTimeMs = 10.0f;
+	channel->ConfigureGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
 
 	// Setup fadeout
 	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {
@@ -965,17 +974,22 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 
 	pstring = secprop.Add_string("opl_fadeout", when_idle, "off");
 	pstring->Set_help(
-	        "Fade out the OPL synth output after the last IO port write:\n"
-	        "  off:       Don't fade out; residual output will play forever (default).\n"
-	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
+	        "Fade out hanging notes on the OPL synth, or mute residual low-level OPL noise:\n"
+	        "  off:       Don't fade out hanging notes or mute low-level noise.\n"
+	        "  mute:      Mute residual low-level noise (default). In some games, there is a\n"
+	        "             constant faint noise between sounds where there should be silence\n"
+	        "             (e.g. Gods). This accurately emulates the hardware, but it can be\n"
+	        "             annoying to people with sensitive hearing.\n"
+	        "  fade:      Fade out hanging notes. You should only enable this in games that\n"
+	        "             sometimes play hanging notes that never stop (e.g., Bard's Tale).\n"
 	        "  <custom>:  A custom fade-out definition in the following format:\n"
 	        "               WAIT FADE\n"
-	        "             Where WAIT is how long after the last IO port write fading begins,\n"
-	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
-	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
+	        "             Where WAIT is how long after the last I/O port write fading begins\n"
+	        "             (between 100 and 5000 milliseconds); and FADE is the fade-out\n"
+	        "             period (between 10 and 3000 milliseconds).\n"
 	        "             Examples:\n"
-	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
-	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
+	        "               300 200   (wait 300 ms before fading out over a 200 ms period)\n"
+	        "               1000 3000 (wait 1 second before fading out over 3 seconds)");
 
 	auto pbool = secprop.Add_bool("opl_remove_dc_bias", when_idle, false);
 	pbool->Set_help(

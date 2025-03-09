@@ -32,14 +32,21 @@ Gate::Gate() = default;
 
 Gate::~Gate() = default;
 
-void Gate::Configure(const int _sample_rate_hz, const float threshold_db,
-                     const float attack_time_ms, const float release_time_ms)
+void Gate::Configure(const int _sample_rate_hz, const float _0dbfs_sample_value,
+                     const float threshold_db, const float attack_time_ms,
+                     const float release_time_ms)
 {
 	assert(_sample_rate_hz > 0);
 	assert(attack_time_ms > 0.0f);
 	assert(release_time_ms > 0.0f);
 
 	const auto sample_rate_hz = static_cast<float>(_sample_rate_hz);
+
+	scale_in  = 1.0f / _0dbfs_sample_value;
+	scale_out = _0dbfs_sample_value;
+
+	LOG_TRACE("scale_in   %f", scale_in);
+	LOG_TRACE("scale_out  %f", scale_out);
 
 	threshold_value = std::exp2(threshold_db / 6.0f);
 
@@ -49,22 +56,31 @@ void Gate::Configure(const int _sample_rate_hz, const float threshold_db,
 	release_coeff = 1.0f /
 	                std::pow(10.0f, 1000.0f / (release_time_ms * sample_rate_hz));
 
+	LOG_TRACE("thres   %f", threshold_value);
+	LOG_TRACE("attack  %f", attack_coeff);
+	LOG_TRACE("release %f", release_coeff);
+
 	seek_v  = 1.0f;
 	seek_to = 1.0f;
 }
 
 AudioFrame Gate::Process(const AudioFrame in)
 {
-	const auto is_open = std::abs(in.left) > threshold_value ||
-	                     std::abs(in.right) > threshold_value;
+	const float left  = in.left * scale_in;
+	const float right = in.right * scale_in;
+
+	const auto is_open = std::abs(left) > threshold_value ||
+	                     std::abs(right) > threshold_value;
 
 	if (is_open) {
 		// attack phase
-		seek_v *= attack_coeff + (1 - attack_coeff);
+		seek_v = seek_v * attack_coeff + (1 - attack_coeff);
 	} else {
 		// release phase
 		seek_v *= release_coeff;
 	}
 
-	return {in.left * seek_v, in.right * seek_v};
+	const auto gain_scalar = seek_v * scale_out;
+
+	return {left * gain_scalar, right * gain_scalar};
 }
