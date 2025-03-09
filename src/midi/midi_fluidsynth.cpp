@@ -104,6 +104,31 @@ enum fluid_interp
 };
 
 /**
+ * FluidSynth log levels.
+ */
+enum fluid_log_level
+{
+    FLUID_PANIC,   /**< The synth can't function correctly any more */
+    FLUID_ERR,     /**< Serious error occurred */
+    FLUID_WARN,    /**< Warning */
+    FLUID_INFO,    /**< Verbose informational messages */
+    FLUID_DBG,     /**< Debugging messages */
+    LAST_LOG_LEVEL /**< @internal This symbol is not part of the public API and ABI
+                     stability guarantee and may change at any time! */
+};
+
+/* This typedef comes from FluidSynth */
+
+/**
+ * Log function handler callback type used by fluid_set_log_function().
+ *
+ * @param level Log level (#fluid_log_level)
+ * @param message Log message text
+ * @param data User data pointer supplied to fluid_set_log_function().
+ */
+typedef void (*fluid_log_function_t)(int level, const char *message, void *data);
+
+/**
  * FluidSynth dynamic library handle
  */
 static dynlib_handle fsynth_lib = {};
@@ -120,7 +145,9 @@ void (*fluid_version)(int *major, int *minor, int *micro) = nullptr;
 fluid_settings_t* (*new_fluid_settings)(void)                       = nullptr;
 fluid_synth_t*       (*new_fluid_synth)(fluid_settings_t *settings) = nullptr;
 
-int  (*fluid_settings_setnum)(fluid_settings_t *settings, const char *name, double val) = nullptr;
+fluid_log_function_t (*fluid_set_log_function)(int level, fluid_log_function_t fun, void *data)      = nullptr;
+
+int  (*fluid_settings_setnum)(fluid_settings_t *settings, const char *name, double val)              = nullptr;
 
 int               (*fluid_synth_chorus_on)(fluid_synth_t *synth, int fx_group, int on)               = nullptr;
 int     (*fluid_synth_set_chorus_group_nr)(fluid_synth_t *synth, int fx_group, int nr)               = nullptr;
@@ -192,6 +219,7 @@ static DynLibResult load_fsynth_dynlib()
 			return DynLibResult::LibOpenErr;
 		}
 		DB_GET_FSYNTH_SYM(fluid_version);
+        DB_GET_FSYNTH_SYM(fluid_set_log_function);
 
 		DB_GET_FSYNTH_SYM(new_fluid_settings);
 		DB_GET_FSYNTH_SYM(new_fluid_synth);
@@ -226,6 +254,11 @@ static DynLibResult load_fsynth_dynlib()
 		DB_GET_FSYNTH_SYM(fluid_synth_pitch_bend);
 		DB_GET_FSYNTH_SYM(fluid_synth_sysex);
 		DB_GET_FSYNTH_SYM(fluid_synth_write_float);
+
+        /* Keep ERR and PANIC logging only */
+        for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
+            fluid_set_log_function(level, nullptr, nullptr);
+        }
 	}
 	return DynLibResult::Success;
 }
