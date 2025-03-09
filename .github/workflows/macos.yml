@@ -119,7 +119,7 @@ jobs:
             arch: x86_64
             build_flags: -Db_lto=true
             brew_path: /usr/local/homebrew
-            minimum_deployment: '10.15'
+            minimum_deployment: '11.0'
             needs_deps: true
             needs_libintl_workaround: false
 

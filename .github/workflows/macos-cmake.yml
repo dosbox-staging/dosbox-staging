@@ -39,7 +39,7 @@ jobs:
         runner:
           - host: macos-15
             arch: x86_64
-            minimum_deployment: '10.15'
+            minimum_deployment: '11.0'
 
           - host: macos-15
             arch: arm64

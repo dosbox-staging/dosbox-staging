@@ -908,10 +908,10 @@ struct triangle_worker
 {
 	triangle_worker(const int num_threads_)
 	        : num_threads(num_threads_),
-	          num_workers(num_threads + 1),
+	          num_work_units((num_threads + 1) * 4),
 	          threads(num_threads)
 	{
-		assert(num_workers > num_threads);
+		assert(num_work_units > num_threads);
 	}
 
 	triangle_worker()                                  = delete;
@@ -919,7 +919,7 @@ struct triangle_worker
 	triangle_worker& operator=(const triangle_worker&) = delete;
 
 	const int num_threads = 0;
-	const int num_workers = 0;
+	const int num_work_units = 0;
 
 	bool disable_bilinear_filter = {};
 
@@ -938,7 +938,7 @@ struct triangle_worker
 	std::vector<std::thread> threads = {};
 
 	// Worker threads start working when this gets reset to 0
-	std::atomic<int> worker_index = INT_MAX;
+	std::atomic<int> work_index = INT_MAX;
 
 	std::atomic<int> done_count = 0;
 };
@@ -947,7 +947,7 @@ struct voodoo_state
 {
 	voodoo_state(const int num_threads)
 	        : tworker(num_threads),
-	          thread_stats(tworker.num_workers)
+	          thread_stats(tworker.num_work_units)
 	{
 		assert(!thread_stats.empty());
 	}
@@ -4397,14 +4397,14 @@ static void triangle_worker_work(const triangle_worker& tworker,
 
 	// The number of workers represents the total work, while the start and
 	// end represent a fraction (up to 100%) of the total total.
-	assert(work_end > 0 && tworker.num_workers >= work_end);
+	assert(work_end > 0 && tworker.num_work_units >= work_end);
 
 	// The following suppresses div-by-0 false positive reported in Clang
 	// analysis. This is confirmed fixed in Clang v18.
-	const auto num_workers = tworker.num_workers ? tworker.num_workers : 1;
+	const auto num_work_units = tworker.num_work_units ? tworker.num_work_units : 1;
 
-	const int32_t from = tworker.totalpix * work_start / num_workers;
-	const int32_t to   = tworker.totalpix * work_end / num_workers;
+	const int32_t from = tworker.totalpix * work_start / num_work_units;
+	const int32_t to   = tworker.totalpix * work_end / num_work_units;
 
 	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0;
 	     curscan != scanend && lastsum < to;
@@ -4450,36 +4450,74 @@ static void triangle_worker_work(const triangle_worker& tworker,
 	sum_statistics(&v->thread_stats[work_start], &my_stats);
 }
 
-static void do_triangle_work(triangle_worker& tworker)
+// NOTE (weirddan455): In case anyone wants to optimize this further on ARM:
+//
+// I was conservative with setting memory order on these atomic variables.
+// I've set all loads to acquire, stores to release, and load+modify+store to acq_rel.
+// x86 gets these symantics essentially for free due to it being a stronly ordered platform.
+// On x86, if you ask for relaxed ordering, you'll get aquire/release anyway baring compiler re-ordering.
+//
+// ARM is weakly ordered though so there could be performance gains by relaxing some of these.
+// I can't reliably test for that since I don't have the hardware.
+// They can't all be made relaxed and it gets somewhat complicated to determine what you need.
+//
+// To anyone feeling adventurous, here are some resources:
+//
+// Rust's atomic guide. Rust uses the same symantics as C++ with regard to memory ordering and is good at grasping the basics.
+// https://doc.rust-lang.org/nomicon/atomics.html
+//
+// cppreference for memory order. This one describes things more thoroughly and formally but is harder to understand:
+// https://en.cppreference.com/w/cpp/atomic/memory_order
+//
+// We shouldn't ever need Sequentially Consistent memory ordering for this use-case.
+// That's for edge cases like some lockless multiple producer multiple consumer queues.
+//
+// Loads should be either acquire or relaxed.
+// Stores should be either release or relaxed.
+// Fetch+Modify+Store operations (like fetch_add) can be acq_rel, acquire, release, or relaxed.
+static int do_triangle_work(triangle_worker& tworker)
 {
-	int i;
-	while ((i = tworker.worker_index.load()) < tworker.num_workers) {
-		// compare_exchange_weak modifies work_start but only on failure (when another thread has modified the expected value)
-		auto work_start = i;
-		const auto work_end = i + 1;
+	// Extra load but this should ensure we don't overflow the index,
+	// with the fetch_add below in case of spurious wake-ups.
+	int i = tworker.work_index.load(std::memory_order_acquire);
+	if (i >= tworker.num_work_units) {
+		return i;
+	}
 
-		if (tworker.worker_index.compare_exchange_weak(work_start, work_end)) {
-			triangle_worker_work(tworker, work_start, work_end);
-			++tworker.done_count;
+	i = tworker.work_index.fetch_add(1, std::memory_order_acq_rel);
+	if (i < tworker.num_work_units) {
+		triangle_worker_work(tworker, i, i + 1);
+		int done = tworker.done_count.fetch_add(1, std::memory_order_acq_rel) + 1;
+		if (done >= tworker.num_work_units) {
+			tworker.done_count.notify_all();
 		}
 	}
+
+	// fetch_add returns the previous worker index.
+	// We want to return the current.
+	return i + 1;
 }
 
 static int triangle_worker_thread_func()
 {
 	triangle_worker& tworker = v->tworker;
-	while (tworker.threads_active) {
-		do_triangle_work(tworker);
+	while (tworker.threads_active.load(std::memory_order_acquire)) {
+		int i = do_triangle_work(tworker);
+		if (i >= tworker.num_work_units) {
+			tworker.work_index.wait(i, std::memory_order_acquire);
+		}
 	}
 	return 0;
 }
 
 static void triangle_worker_shutdown(triangle_worker& tworker)
 {
-	if (!tworker.threads_active) {
+	if (!tworker.threads_active.load(std::memory_order_acquire)) {
 		return;
 	}
-	tworker.threads_active = false;
+	tworker.threads_active.store(false, std::memory_order_release);
+	tworker.work_index.store(0, std::memory_order_release);
+	tworker.work_index.notify_all();
 
 	for (auto& thread : tworker.threads) {
 		if (thread.joinable()) {
@@ -4493,7 +4531,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 	if (!tworker.num_threads) {
 		// do not use threaded calculation
 		tworker.totalpix = 0xFFFFFFF;
-		triangle_worker_work(tworker, 0, tworker.num_workers);
+		triangle_worker_work(tworker, 0, tworker.num_work_units);
 		return;
 	}
 
@@ -4532,13 +4570,17 @@ static void triangle_worker_run(triangle_worker& tworker)
 	// Don't wake up threads for just a few pixels
 	if (tworker.totalpix <= 200)
 	{
-		triangle_worker_work(tworker, 0, tworker.num_workers);
+		triangle_worker_work(tworker, 0, tworker.num_work_units);
 		return;
 	}
 
-	if (!tworker.threads_active)
+	// The main thread is the only one who sets threads_active (here and in shutdown) so there is no race condition.
+	// In the future, if this changes, this will need to be an atomic compare_exchange.
+	// For now, this is better because 99% of the time threads_active == true.
+	// We only spin up the threads once and a load is much faster than a compare_exchange.
+	if (!tworker.threads_active.load(std::memory_order_acquire))
 	{
-		tworker.threads_active = true;
+		tworker.threads_active.store(true, std::memory_order_release);
 
 		for (auto& triangle_worker : tworker.threads) {
 			triangle_worker = std::thread([] {
@@ -4547,16 +4589,20 @@ static void triangle_worker_run(triangle_worker& tworker)
 		}
 	}
 
-	tworker.done_count = 0;
+	tworker.done_count.store(0, std::memory_order_release);
 
 	// Reseting this index triggers the worker threads to start working
-	tworker.worker_index = 0;
+	tworker.work_index.store(0, std::memory_order_release);
+	tworker.work_index.notify_all();
 
 	// Main thread also does the same work as the worker threads
-	do_triangle_work(tworker);
+	while (do_triangle_work(tworker) < tworker.num_work_units);
 
-	// Busy wait for all worker threads to finish
-	while (tworker.done_count < tworker.num_workers);
+	// Wait until all work has been completed by the worker thread.
+	int i;
+	while ((i = tworker.done_count.load(std::memory_order_acquire)) < tworker.num_work_units) {
+		tworker.done_count.wait(i, std::memory_order_acquire);
+	}
 }
 
 /*-------------------------------------------------
@@ -7046,14 +7092,14 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 }
 
 // Get the number of total threads to use for Voodoo work based on the user's
-// conf setting. By default we use up to 8 threads (which includes the main
+// conf setting. By default we use up to 16 threads (which includes the main
 // thread) however the user can customize this.
 
 static int get_num_total_threads()
 {
 	constexpr auto MinThreads     = 1;
-	constexpr auto MaxAutoThreads = 8;
-	constexpr auto MaxThreads     = 16;
+	constexpr auto MaxAutoThreads = 16;
+	constexpr auto MaxThreads     = 128;
 
 	constexpr auto SectionName = "voodoo";
 	constexpr auto SettingName = "voodoo_threads";
@@ -7087,7 +7133,7 @@ static int get_num_total_threads()
 		set_section_property_value(SectionName, SettingName, AutoSetting);
 	}
 
-	return std::clamp(get_num_physical_cpus(), MinThreads, MaxAutoThreads);
+	return std::clamp(SDL_GetCPUCount(), MinThreads, MaxAutoThreads);
 }
 
 /***************************************************************************
