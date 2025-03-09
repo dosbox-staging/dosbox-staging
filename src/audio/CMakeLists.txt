@@ -6,6 +6,7 @@ add_library(libaudio STATIC
 
 		compressor.cpp
 		envelope.cpp
+		gate.cpp
 )
 
 target_link_libraries(libaudio PRIVATE
