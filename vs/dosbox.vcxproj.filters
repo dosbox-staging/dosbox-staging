@@ -175,9 +175,6 @@
     <ClCompile Include="..\src\hardware\cmos.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\compressor.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\covox.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -185,9 +182,6 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\dma.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\envelope.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\gameblaster.cpp">
@@ -907,6 +901,12 @@
     <ClCompile Include="..\src\audio\clap\plugin_manager.cpp">
       <Filter>src\audio\clap</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\audio\compressor.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\audio\envelope.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\midi\midi_soundcanvas.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
@@ -982,9 +982,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\drives.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\envelope.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\fpu.h">
@@ -1549,9 +1546,6 @@
     <ClInclude Include="..\src\libs\zmbv\zmbv.h">
       <Filter>src\libs\zmbv</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hardware\compressor.h">
-      <Filter>src\hardware</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\hardware\covox.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
@@ -1770,6 +1764,12 @@
     </ClInclude>
     <ClInclude Include="..\src\midi\midi_soundcanvas.h">
       <Filter>src\midi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\compressor.h">
+      <Filter>src\audio</Filter>
+    </ClInclude>
+	<ClInclude Include="..\src\audio\envelope.h">
+      <Filter>src\audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
