@@ -35,10 +35,10 @@
 #include <utility>
 #include <vector>
 
-#include "../src/hardware/compressor.h"
+#include "../audio/compressor.h"
+#include "../audio/envelope.h"
 #include "audio_frame.h"
 #include "control.h"
-#include "envelope.h"
 #include "math_utils.h"
 
 #include <Iir.h>
