@@ -324,6 +324,9 @@ private:
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames);
 
+	void InitHighPassFilter();
+	void InitLowPassFilter();
+
 	void ConfigureResampler();
 	void ClearResampler();
 	void InitZohUpsamplerState();

@@ -1103,6 +1103,13 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 	                EnvelopeMaxExpansionOverMs,
 	                EnvelopeExpiresAfterSeconds);
 
+	if (filters.highpass.state == FilterState::On) {
+		InitHighPassFilter();
+	}
+	if (filters.lowpass.state == FilterState::On) {
+		InitLowPassFilter();
+	}
+
 	ConfigureResampler();
 }
 
@@ -1319,38 +1326,56 @@ static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_
 
 void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_freq_hz)
 {
-	assert(order > 0);
+	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
-
-	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= MaxFilterOrder);
-	for (auto& f : filters.highpass.hpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
-	}
-
 	filters.highpass.order          = order;
 	filters.highpass.cutoff_freq_hz = cutoff_freq_hz;
+
+	InitHighPassFilter();
+}
+
+void MixerChannel::InitHighPassFilter()
+{
+	assert(filters.highpass.order > 0 && filters.highpass.order <= MaxFilterOrder);
+	assert(filters.highpass.cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
+
+	for (auto& f : filters.highpass.hpf) {
+		f.setup(filters.highpass.order,
+		        mixer.sample_rate_hz,
+		        filters.highpass.cutoff_freq_hz);
+	}
 }
 
 void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_freq_hz)
 {
-	assert(order > 0);
+	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
-
-	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= MaxFilterOrder);
-	for (auto& f : filters.lowpass.lpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
-	}
-
 	filters.lowpass.order          = order;
 	filters.lowpass.cutoff_freq_hz = cutoff_freq_hz;
+
+	InitLowPassFilter();
+}
+
+void MixerChannel::InitLowPassFilter()
+{
+	assert(filters.lowpass.order > 0 && filters.lowpass.order <= MaxFilterOrder);
+	assert(filters.lowpass.cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
+
+	for (auto& f : filters.lowpass.lpf) {
+		f.setup(filters.lowpass.order,
+		        mixer.sample_rate_hz,
+		        filters.lowpass.cutoff_freq_hz);
+	}
 }
 
 // Tries to set custom filter settings from the passed in filter preferences.
