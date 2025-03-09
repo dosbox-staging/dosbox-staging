@@ -591,6 +591,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\audio\gate.cpp" />
     <ClCompile Include="..\src\debug\debug_win32.cpp" />
     <ClCompile Include="..\src\audio\clap\event_list.cpp" />
     <ClCompile Include="..\src\audio\clap\library.cpp" />
@@ -986,7 +987,8 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\audio\clap\plugin.h" />
     <ClInclude Include="..\src\audio\clap\plugin_manager.h" />
     <ClInclude Include="..\src\audio\compressor.h" />
-	<ClInclude Include="..\src\audio\envelope.h" />
+    <ClInclude Include="..\src\audio\envelope.h" />
+    <ClInclude Include="..\src\audio\gate.h" />
     <ClInclude Include="..\src\capture\capture.h" />
     <ClInclude Include="..\src\capture\capture_audio.h" />
     <ClInclude Include="..\src\capture\capture_midi.h" />

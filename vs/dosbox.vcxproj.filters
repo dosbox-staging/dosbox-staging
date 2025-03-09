@@ -910,6 +910,9 @@
     <ClCompile Include="..\src\midi\midi_soundcanvas.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\audio\gate.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h">
@@ -1768,7 +1771,10 @@
     <ClInclude Include="..\src\audio\compressor.h">
       <Filter>src\audio</Filter>
     </ClInclude>
-	<ClInclude Include="..\src\audio\envelope.h">
+    <ClInclude Include="..\src\audio\envelope.h">
+      <Filter>src\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\gate.h">
       <Filter>src\audio</Filter>
     </ClInclude>
   </ItemGroup>
