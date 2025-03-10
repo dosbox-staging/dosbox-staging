@@ -186,7 +186,7 @@ void PIC_Controller::start_irq(uint8_t val) {
 		isr |= 1<<(val);
 		isrr = ~isr;
 	} else if (rotate_on_auto_eoi) {
-		E_Exit("rotate on auto EOI not handled");
+		LOG_ERR("PIC: Rotate on auto EOI not handled");
 	}
 }
 
@@ -210,15 +210,23 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
 	if (val & 0x10) { // ICW1 issued
-		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
-		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
-		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
+		if (val & 0x04) {
+			LOG_ERR("PIC: 4-byte interval not handled");
+		}
+		if (val & 0x08) {
+			LOG_ERR("PIC: Level triggered mode not handled");
+		}
+		if (val & 0xe0) {
+			LOG_ERR("PIC: 8080/8085 mode not handled");
+		}
 		pic->set_imr(0);
 		pic->single=(val&0x02)==0x02;
 		pic->icw_index=1;			// next is ICW2
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
 	} else if (val & 0x08) {                // OCW3 issued
-		if (val&0x04) E_Exit("PIC: poll command not handled");
+		if (val & 0x04) {
+			LOG_ERR("PIC: Poll command not handled");
+		}
 		if (val&0x02) {		// function select
 			if (val&0x01) pic->request_issr=true;	/* select read interrupt in-service register */
 			else pic->request_issr=false;			/* select read interrupt request register */
@@ -233,7 +241,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 	} else {                        // OCW2 issued
 		if (val&0x20) {		// EOI commands
 			if (val & 0x80) {
-				E_Exit("rotate mode not supported");
+				LOG_ERR("PIC: Rotate mode not supported");
 			}
 			if (val & 0x40) { // specific EOI
 				pic->isr &= ~(1 << ((val - 0x60)));
@@ -292,10 +300,13 @@ static void write_data(io_port_t port, io_val_t value, io_width_t)
 
 		LOG(LOG_PIC, LOG_NORMAL)("%d:ICW 4 %u", port == 0x21 ? 0 : 1, val);
 
-		if ((val & 0x01) == 0)
-			E_Exit("PIC:ICW4: %x, 8085 mode not handled", val);
-		if ((val & 0x10) != 0)
-			LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled", val);
+		if ((val & 0x01) == 0) {
+			LOG_ERR("PIC:ICW4: %x, 8085 mode not handled", val);
+		}
+		if ((val & 0x10) != 0) {
+			LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled",
+			        val);
+		}
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
 		break;
@@ -367,9 +378,9 @@ static void secondary_startIRQ()
 			break;
 		}
 	}
-	// Maybe change the E_Exit to a return
 	if (pic1_irq == 8) {
-		E_Exit("PIC: IRQ 2 is active, but IRQ is not active on the secondary controller.");
+		LOG_ERR("PIC: IRQ 2 is active, but IRQ is not active on the secondary controller.");
+		return;
 	}
 
 	secondary_controller.start_irq(pic1_irq);
