@@ -154,8 +154,6 @@ private:
 
 		bool active        = false;
 		bool mixer_enabled = false;
-
-		bool wants_dc_bias_removed = false;
 	} ctrl = {};
 
 	void Init();

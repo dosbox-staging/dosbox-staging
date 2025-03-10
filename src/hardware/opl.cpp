@@ -353,43 +353,6 @@ void Opl::EsfmSetLegacyMode()
 	ESFM_write_port(&esfm.chip, 0, 0);
 }
 
-template <LineIndex line_index>
-int16_t remove_dc_bias(const int16_t back_sample)
-{
-	// Calculate the number of samples we need average across to maintain
-	// the lowest frequency given an assumed playback rate.
-	constexpr auto PcmPlaybackRateHz      = 16000;
-	constexpr auto LowestFreqToMaintainHz = 200;
-	constexpr auto NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
-
-	static int sum = 0;
-
-	static std::queue<int16_t> samples = {};
-
-	// Clear the queue if the stream isn't biased
-	constexpr int16_t BiasThreshold = 5;
-	if (back_sample < BiasThreshold) {
-		sum     = 0;
-		samples = {};
-		return back_sample;
-	}
-
-	// Keep a running sum and push the sample to the back of the queue
-	sum += back_sample;
-	samples.push(back_sample);
-
-	int16_t average      = 0;
-	int16_t front_sample = 0;
-	if (samples.size() == NumToAverage) {
-		// Compute the average and deduct it from the front sample
-		average      = static_cast<int16_t>(sum / NumToAverage);
-		front_sample = samples.front();
-		sum -= front_sample;
-		samples.pop();
-	}
-	return static_cast<int16_t>(front_sample - average);
-}
-
 AudioFrame Opl::RenderFrame()
 {
 	static int16_t buf[2] = {};
@@ -397,21 +360,11 @@ AudioFrame Opl::RenderFrame()
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_generate_stream(&esfm.chip, buf, 1);
 
-		if (ctrl.wants_dc_bias_removed) {
-			buf[0] = remove_dc_bias<Left>(buf[0]);
-			buf[1] = remove_dc_bias<Right>(buf[1]);
-		}
-
 		AudioFrame frame = {buf[0], buf[1]};
 		return frame;
 
 	} else { // OPL
 		OPL3_GenerateStream(&opl.chip, buf, 1);
-
-		if (ctrl.wants_dc_bias_removed) {
-			buf[0] = remove_dc_bias<Left>(buf[0]);
-			buf[1] = remove_dc_bias<Right>(buf[1]);
-		}
 
 		AudioFrame frame = {};
 		if (adlib_gold) {
@@ -872,11 +825,6 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 		set_section_property_value("sblaster", "opl_fadeout", "off");
 	}
 
-	ctrl.wants_dc_bias_removed = section->Get_bool("opl_remove_dc_bias");
-	if (ctrl.wants_dc_bias_removed) {
-		LOG_MSG("%s: DC bias removal enabled", channel->GetName().c_str());
-	}
-
 	Init();
 
 	using namespace std::placeholders;
@@ -976,14 +924,6 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "             Examples:\n"
 	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
 	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
-
-	auto pbool = secprop.Add_bool("opl_remove_dc_bias", when_idle, false);
-	pbool->Set_help(
-	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
-	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
-	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
-	        "(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other\n"
-	        "affected games.");
 
 	pstring = secprop.Add_string("oplemu", deprecated, "");
 	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
