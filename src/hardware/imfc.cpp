@@ -577,7 +577,8 @@ constexpr bool operator!=(const FractionalNote& a, const FractionalNote& b) noex
 constexpr FractionalNote operator-(const FractionalNote& a,
                                    const FractionalNote& b) noexcept
 {
-	const auto val = check_cast<uint16_t>(a.GetUint16() - b.GetUint16());
+	// 16-bit wrap-around is expected and normal
+	const auto val = static_cast<uint16_t>(a.GetUint16() - b.GetUint16());
 	return to_fractional_note(val);
 }
 
