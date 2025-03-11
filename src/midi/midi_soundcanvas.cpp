@@ -340,7 +340,8 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                 iroundf(sample_rate_hz),
 	                                 ChannelName::SoundCanvas,
-	                                 {ChannelFeature::Sleep,
+	                                 {ChannelFeature::NoiseGate,
+	                                  ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
 	                                  ChannelFeature::Synthesizer});
 
@@ -349,6 +350,22 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// CLAP plugins render float audio frames between -1.0f and +1.0f, so we
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
+
+	// The original SC-55 models ("mk1") have a tendency to output a low
+	// level constant noise from time to time depending on previous MIDI
+	// input. Implementations accurate to the hardwave behaviour might
+	// emulate this noise as well, so we'll use our audio gate to remove it.
+	
+	// This effectively disables the gate on the mk2
+	const auto is_mk1_model = (sc_model->model <= Model::Sc55_200);
+	const auto threshold_db = is_mk1_model ? -70.0f : -1000.0f;
+
+	constexpr auto AttackTimeMs  = 1.0f;
+	constexpr auto ReleaseTimeMs = 1000.0f;
+	mixer_channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
+
+	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	mixer_channel->EnableNoiseGate(denoiser_enabled);
 
 	// Set up channel filter
 	const auto filter_prefs = get_soundcanvas_section()->Get_string(
