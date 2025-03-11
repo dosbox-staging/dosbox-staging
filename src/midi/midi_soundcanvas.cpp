@@ -354,6 +354,19 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
+	if (sc_model->model <= Model::Sc55_200) {
+		// The original SC-55 models ("mk1") have a tendency to output a low
+		// level constant noise from time to time depending on previous MIDI
+		// input. Implementations accurate to the hardwave behaviour might
+		// emulate this noise as well, so we'll use our audio gate to remove
+		// it if that's what the user wishes.
+		//
+		constexpr auto ThresholdDb   = -75.0f;
+		constexpr auto AttackTimeMs  = 1.0f;
+		constexpr auto ReleaseTimeMs = 1000.0f;
+		//mixer_channel->ConfigureGate(ThresholdDb, AttackTimeMs, ReleaseTimeMs);
+	}
+
 	// Set up channel filter
 	const auto filter_prefs = get_soundcanvas_section()->Get_string(
 	        "soundcanvas_filter");
