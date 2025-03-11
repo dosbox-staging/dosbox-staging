@@ -3029,8 +3029,8 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games\n"
-	        "pan the instruments 100%% left and 100%% right in the stereo field on these audio\n"
+	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan\n"
+	        "the instruments 100%% left and 100%% right in the stereo field on these audio\n"
 	        "devices which is unpleasant to listen to in headphones. With crossfeed enabled,\n"
 	        "a portion of the left channel signal is mixed into the right channel and vice\n"
 	        "versa, creating a more natural listening experience.\n"
@@ -3047,7 +3047,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable reverb globally to add a sense of space to the sound:\n"
+	        "Reverb effect that adds a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
 	        "  on:      Enable reverb (medium preset).\n"
 	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
@@ -3071,7 +3071,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	string_prop = sec_prop.Add_string("chorus", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
+	        "Chorus effect that adds a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
 	        "  light:   A light chorus effect (especially suited for synth music that\n"
