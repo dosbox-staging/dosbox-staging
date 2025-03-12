@@ -31,6 +31,7 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "pic.h"
+#include "setup.h"
 #include "std_filesystem.h"
 #include "string_utils.h"
 
@@ -249,12 +250,7 @@ SoundCanvas::SynthModel MidiDeviceSoundCanvas::GetModel() const
 
 static Section_prop* get_soundcanvas_section()
 {
-	assert(control);
-
-	auto section = static_cast<Section_prop*>(control->GetSection("soundcanvas"));
-	assert(section);
-
-	return section;
+	return get_section("soundcanvas");
 }
 
 static std::string get_model_setting()
