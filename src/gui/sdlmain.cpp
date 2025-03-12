@@ -1313,28 +1313,10 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
-		}
-
-		// We need a context to query the vendor string.
-		const auto temp_window = SDL_CreateWindow(
-		        "", 0, 0, 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-		if (temp_window == nullptr) {
-			LOG_ERR("SDL: Failed to create temporary window: %s",
-			        SDL_GetError());
-			return nullptr;
-		}
-		const auto temp_context = SDL_GL_CreateContext(temp_window);
-		if (temp_context == nullptr) {
-			LOG_ERR("OPENGL: Failed to create temporary context: %s",
-			        SDL_GetError());
-			return nullptr;
-		}
-
-		SDL_GL_DeleteContext(temp_context);
-		SDL_DestroyWindow(temp_window);
-		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
-			        SDL_GetError());
+			if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+				LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
+						SDL_GetError());
+			}
 		}
 #endif
 		if (!sdl.desktop.window.show_decorations) {
@@ -1348,6 +1330,14 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		assert(sdl.window == nullptr); // enusre we don't leak
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+		if (!sdl.window && rendering_backend == RenderingBackend::Texture && (flags & SDL_WINDOW_OPENGL)) {
+			// opengl_driver_crash_workaround() call above conditionally sets SDL_WINDOW_OPENGL.
+			// It sometimes gets this wrong (ex. SDL_VIDEODRIVER=dummy).
+			// This can only be determined reliably by trying SDL_CreateWindow().
+			// If we failed to create the window, try again without it.
+			flags &= ~SDL_WINDOW_OPENGL;
+			sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+		}
 		if (!sdl.window) {
 			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
