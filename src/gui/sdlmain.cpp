@@ -1313,11 +1313,10 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
-		}
-
-		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
-			        SDL_GetError());
+			if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+				LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
+						SDL_GetError());
+			}
 		}
 #endif
 		if (!sdl.desktop.window.show_decorations) {
