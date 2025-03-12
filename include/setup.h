@@ -563,5 +563,6 @@ Section_prop* get_section(const char* section_name);
 
 Section_prop* get_joystick_section();
 Section_prop* get_sdl_section();
+Section_prop* get_mixer_section();
 
 #endif
