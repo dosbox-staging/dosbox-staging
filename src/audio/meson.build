@@ -6,6 +6,7 @@ libaudio_sources = files(
 
     'compressor.cpp',
     'envelope.cpp',
+    'noise_gate.cpp',
 )
 
 libaudio = static_library(
