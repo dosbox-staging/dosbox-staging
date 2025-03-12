@@ -2854,6 +2854,15 @@ static void init_master_highpass_filter()
 	MIXER_UnlockMixerThread();
 }
 
+static void init_denoiser(bool enabled)
+{
+	for (const auto& [_, channel] : mixer.channels) {
+		if (channel->HasFeature(ChannelFeature::Gate)) {
+			channel->SetGate(enabled ? GateState::On : GateState::Off);
+		}
+	}
+}
+
 void MIXER_Init(Section* sec)
 {
 	Section_prop* secprop = static_cast<Section_prop*>(sec);
@@ -2939,6 +2948,9 @@ void MIXER_Init(Section* sec)
 	if (mixer.chorus.preset != new_chorus_preset) {
 		MIXER_SetChorusPreset(new_chorus_preset);
 	}
+
+	// Init per-channel denoisers
+	init_denoiser(secprop->Get_bool("denoiser"));
 
 	init_master_highpass_filter();
 
@@ -3128,14 +3140,13 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	bool_prop = sec_prop.Add_bool("denoiser", WhenIdle, DefaultOn);
 	bool_prop->Set_help(
 	        "Remove low-level residual noise from the output of the OPL synth and the Roland\n"
-	        "Sound Canvas. The emulation of these devices is very faithful to the original\n"
+	        "Sound Canvas. The emulation of these devices is accurate to the original\n"
 	        "hardware units, which includes the emulation of a very low-level semi-random\n"
 	        "noise. Although this is authentic, most people would find it slightly annoying.\n"
 	        "  off:  Disable the denoiser.\n"
-	        "  on:   Enable the denoiser on the OPL synth and the Sound Canvas (default).\n"
+	        "  on:   Enable the denoiser on the OPL and SOUNDCANVAS channels (default).\n"
 	        "        The denoiser does not introduce any sound quality degradation; it only\n"
-	        "        removes the barely audible residual noise in quiet passages via an audio\n"
-	        "        gate.");
+	        "        removes the barely audible residual noise in quiet passages.");
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
