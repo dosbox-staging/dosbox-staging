@@ -244,16 +244,6 @@ StereoLine MixerChannel::GetLineoutMap() const
 	return output_map;
 }
 
-static Section_prop* get_mixer_section()
-{
-	assert(control);
-
-	auto section = static_cast<Section_prop*>(control->GetSection("mixer"));
-	assert(section);
-
-	return section;
-}
-
 int MIXER_GetPreBufferMs()
 {
 	assert(mixer.prebuffer_ms > 0);

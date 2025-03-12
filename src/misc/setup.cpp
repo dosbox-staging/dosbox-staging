@@ -2001,3 +2001,8 @@ Section_prop* get_sdl_section()
 {
 	return get_section("sdl");
 }
+
+Section_prop* get_mixer_section()
+{
+	return get_section("mixer");
+}
