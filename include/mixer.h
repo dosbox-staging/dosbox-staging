@@ -117,6 +117,7 @@ enum class ChannelFeature {
 	ChorusSend,
 	DigitalAudio,
 	FadeOut,
+	Gate,
 	ReverbSend,
 	Sleep,
 	Stereo,
@@ -124,6 +125,8 @@ enum class ChannelFeature {
 };
 
 enum class FilterState { Off, On };
+
+enum class GateState { Off, On };
 
 struct MixerChannelSettings {
 	bool is_enabled             = {};
@@ -222,6 +225,7 @@ public:
 
 	void ConfigureGate(const float threshold_db, const float attack_time_ms,
 	                   const float release_time_ms);
+	void SetGate(const GateState state);
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);

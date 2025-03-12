@@ -1309,8 +1309,11 @@ void MixerChannel::ConfigureGate(const float threshold_db, const float attack_ti
 	gate.release_time_ms = release_time_ms;
 
 	InitGate();
+}
 
-	do_gate = true;
+void MixerChannel::SetGate(const GateState state)
+{
+	do_gate = (state == GateState::On);
 }
 
 void MixerChannel::InitGate()
