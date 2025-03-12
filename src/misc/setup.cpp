@@ -1982,7 +1982,7 @@ bool config_file_is_valid(const std_fs::path& path)
 }
 
 // Get up-to-date in-memory model of a config section
-static Section_prop* get_section(const char* section_name)
+Section_prop* get_section(const char* section_name)
 {
 	assert(control);
 
