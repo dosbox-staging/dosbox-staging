@@ -1315,23 +1315,6 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			flags |= SDL_WINDOW_OPENGL;
 		}
 
-		// We need a context to query the vendor string.
-		const auto temp_window = SDL_CreateWindow(
-		        "", 0, 0, 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-		if (temp_window == nullptr) {
-			LOG_ERR("SDL: Failed to create temporary window: %s",
-			        SDL_GetError());
-			return nullptr;
-		}
-		const auto temp_context = SDL_GL_CreateContext(temp_window);
-		if (temp_context == nullptr) {
-			LOG_ERR("OPENGL: Failed to create temporary context: %s",
-			        SDL_GetError());
-			return nullptr;
-		}
-
-		SDL_GL_DeleteContext(temp_context);
-		SDL_DestroyWindow(temp_window);
 		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
