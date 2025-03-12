@@ -1330,6 +1330,14 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		assert(sdl.window == nullptr); // enusre we don't leak
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+		if (!sdl.window && rendering_backend == RenderingBackend::Texture && (flags & SDL_WINDOW_OPENGL)) {
+			// opengl_driver_crash_workaround() call above conditionally sets SDL_WINDOW_OPENGL.
+			// It sometimes gets this wrong (ex. SDL_VIDEODRIVER=dummy).
+			// This can only be determined reliably by trying SDL_CreateWindow().
+			// If we failed to create the window, try again without it.
+			flags &= ~SDL_WINDOW_OPENGL;
+			sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+		}
 		if (!sdl.window) {
 			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
