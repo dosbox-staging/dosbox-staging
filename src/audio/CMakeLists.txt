@@ -6,6 +6,7 @@ add_library(libaudio STATIC
 
 		compressor.cpp
 		envelope.cpp
+		noise_gate.cpp
 )
 
 find_package(iir REQUIRED)
@@ -14,3 +15,4 @@ target_link_libraries(libaudio PRIVATE $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,i
 target_link_libraries(libaudio PRIVATE
 		loguru
 )
+
