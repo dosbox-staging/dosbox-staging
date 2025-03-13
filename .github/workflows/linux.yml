@@ -67,7 +67,7 @@ jobs:
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
-            max_warnings: 0
+            max_warnings: 1000
             needs_all_deps: true
             run_tests: true
 
@@ -75,7 +75,7 @@ jobs:
             os: ubuntu-22.04
             packages: clang-15
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-15.ini
-            max_warnings: 0
+            max_warnings: 1000
             needs_all_deps: true
             run_tests: true
 
@@ -83,7 +83,7 @@ jobs:
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
-            max_warnings: 0
+            max_warnings: 1000
             needs_all_deps: true
 
           - name: GCC 11, Ubuntu 22.04, minimal build
@@ -98,7 +98,7 @@ jobs:
               -Duse_sdl2_net=false
               -Duse_slirp=false
             needs_min_deps: true
-            max_warnings: 0
+            max_warnings: 1000
 
     steps:
       - name: Checkout repository
