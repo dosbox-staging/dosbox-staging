@@ -1,4 +1,5 @@
 name: macOS builds
+permissions:  read-all
 
 on:
   push:
@@ -48,7 +49,7 @@ jobs:
             run_tests: false # the shell_cmds_tests hang on arm64
             build_flags: -Dbuildtype=debug
             brew_path: /opt/homebrew
-            max_warnings: 42
+            max_warnings: 0
 
     steps:
       - name: Checkout repository
@@ -118,7 +119,7 @@ jobs:
             arch: x86_64
             build_flags: -Db_lto=true
             brew_path: /usr/local/homebrew
-            minimum_deployment: '10.15'
+            minimum_deployment: '11.0'
             needs_deps: true
             needs_libintl_workaround: false
 
