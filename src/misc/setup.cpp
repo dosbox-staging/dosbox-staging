@@ -1982,7 +1982,7 @@ bool config_file_is_valid(const std_fs::path& path)
 }
 
 // Get up-to-date in-memory model of a config section
-static Section_prop* get_section(const char* section_name)
+Section_prop* get_section(const char* section_name)
 {
 	assert(control);
 
@@ -2000,4 +2000,9 @@ Section_prop* get_joystick_section()
 Section_prop* get_sdl_section()
 {
 	return get_section("sdl");
+}
+
+Section_prop* get_mixer_section()
+{
+	return get_section("mixer");
 }

@@ -29,6 +29,7 @@
 #include "checks.h"
 #include "control.h"
 #include "cpu.h"
+#include "math_utils.h"
 #include "mapper.h"
 #include "mem.h"
 #include "opl_capture.h"
@@ -834,6 +835,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	std::set channel_features = {ChannelFeature::Sleep,
 	                             ChannelFeature::FadeOut,
+	                             ChannelFeature::NoiseGate,
 	                             ChannelFeature::ReverbSend,
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
@@ -856,6 +858,9 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	channel->SetResampleMethod(ResampleMethod::Resample);
 
+	// We're generating the samples in the full 16-bit value range, so this
+	// effectively just adds a 1.5x gain factor.
+	//
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
 	//
@@ -864,8 +869,45 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	// settings. The value cannot be "improved"; there's simply no
 	// universally "good" setting that would work well in all games in
 	// existence.
-	constexpr auto opl_volume_scale_factor = 1.5f;
-	channel->Set0dbScalar(opl_volume_scale_factor);
+	//
+	constexpr auto OplVolumeGain = 1.5f;
+	channel->Set0dbScalar(OplVolumeGain);
+
+	// This gets rid of the residual noise which is in the [-8, 0] range
+	// on the OPL2, and in the [-18, 0] range on the OPL3 (in absolute
+	// unscaled 16-bit sample values).
+	// 
+	// This is accurate hardware behaviour, but pretty annoying to people
+	// with sensitive hearing. The OPL chips use bitwise inversion to
+	// negate operator output for the negative part of sine, so a small
+	// oscillation between 0 and -1 can happen even when envelope generator
+	// is muted.
+	//
+	// Non-exclusive list of affected games:
+	//
+	// - 1st Degree, The (Win 3.x game; when playing either test song in
+	//   the MIDI Setup)
+	// - Beneath A Steel Sky (right from the start and during the intro)
+	// - Doom E2M2 music (in the quiet parts)
+	// - Gateway (audible after exiting to DOS)
+	// - Gateway II: Homeworld (audible after exiting to DOS)
+	// - Gods (after starting the game)
+	// - Passport to Adventure / Monkey Island demo (after the startup music
+	//   is finished)
+	// - Tetris Classic (audible after the level music finished playing)
+	// - Wizardry 6
+	//
+	// This gate threshold is fine-tuned to get rid of both [-9, 0] OPL2
+	// and [-18, 0] OPL3 noise while leaving very low level signals largely
+	// intact (they 100 ms release time is a key factor in achieving that).
+	// 
+	const auto threshold_db = -65.0f + gain_to_decibel(OplVolumeGain);
+	constexpr auto AttackTimeMs  = 1.0f;
+	constexpr auto ReleaseTimeMs = 100.0f;
+	channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
+
+	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	channel->EnableNoiseGate(denoiser_enabled);
 
 	// Setup fadeout
 	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {
@@ -965,17 +1007,18 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 
 	pstring = secprop.Add_string("opl_fadeout", when_idle, "off");
 	pstring->Set_help(
-	        "Fade out the OPL synth output after the last IO port write:\n"
-	        "  off:       Don't fade out; residual output will play forever (default).\n"
-	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
+	        "Fade out hanging notes on the OPL synth:\n"
+	        "  off:       Don't fade out hanging notes (default).\n"
+	        "  fade:      Fade out hanging notes. You should only enable this in games that\n"
+	        "             sometimes play hanging notes that never stop (e.g., Bard's Tale).\n"
 	        "  <custom>:  A custom fade-out definition in the following format:\n"
 	        "               WAIT FADE\n"
-	        "             Where WAIT is how long after the last IO port write fading begins,\n"
-	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
-	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
+	        "             Where WAIT is how long after the last I/O port write fading begins\n"
+	        "             (between 100 and 5000 milliseconds); and FADE is the fade-out\n"
+	        "             period (between 10 and 3000 milliseconds).\n"
 	        "             Examples:\n"
-	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
-	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
+	        "               300 200   (wait 300 ms before fading out over a 200 ms period)\n"
+	        "               1000 3000 (wait 1 second before fading out over 3 seconds)");
 
 	auto pbool = secprop.Add_bool("opl_remove_dc_bias", when_idle, false);
 	pbool->Set_help(
