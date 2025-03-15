@@ -1944,9 +1944,12 @@ Nazwa zmieniona na 'voodoo_threads'.
 :CONFIG_VOODOO_THREADS
 Używa wątków procesora do polepszenia wydajności karty 3dfx:
   auto:       Używa do 8 wątków, zależnie od ilości rdzeni (domyślne).
-  <wartość>:  Używa określonej ilości wątków, od 1 do 16.
-Uwaga: Testy wykazują, że wydajność rośnie do 8 wątków, powyżej nie ma już
-       poprawy lub wydajność maleje.
+  <wartość>:  Używa określonej ilości wątków, od 1 do 128.
+Uwaga: Wartość większa od ilości logicznych procesorów najprawdopodobniej
+       obniży wydajność. Sprawdzono, że wydajność skaluje się do około 8-16
+       wątków, ale ustawienie nie było testowane na procesorach z bardzo dużą
+       ilością rdzeni; jeśli posiadasz procesor Threadripper lub podobny,
+       daj znać jak się on zachowuje.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Używa filtrowania bilinearnego żeby zasymulować efekt wygładzania tekstur
@@ -2019,10 +2022,20 @@ kiedy kursor myszy jest przejęty w trybie okienkowym.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Włącza wbudowany sterownik myszy dla programów DOS (domyślnie włączone).
-Uwagi:
-  - Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
-  - Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany
-    sterownik jest automatycznie wyłączany.
+Zapewnia najniższe opóźnienia i najbardziej płynny ruch kursora myszy, więc
+wyłącz jedynie, jeśli masz dobry powód (np. gra nie jest z nim kompatybilna).
+  on:   Włącza sterownik. Ustawienia `ps2_mouse_model` oraz `com_mouse_model`
+        nie mają żadnego wpływu na wbudowany sterownik.
+  off:  Wyłącza sterownik (jeśli nie potrzebujesz obsługi myszy lub chcesz
+        użyć oryginalnego sterownika dla systemu DOS).
+        Aby użyć oryginalnego sterownika myszy dla systemu DOS (np. MOUSE.COM
+        lub CTMOUSE.EXE), skonfiguruj typ myszy przy pomocy `ps2_mouse_model`
+        lub `com_mouse_model` i uruchom sterownik. oryginalne sterowniki mogą
+        zapewnić lepszą kompatybilność, ale zwiększą opóźnienia.
+Uwaga: Wbudowany sterownik zostanie automatycznie wyłączony jeśli uruchomisz
+       oryginalny system MS-DOS lub Windows 9x. Jeśli uruchomisz Windows 3.x,
+       sterownik nie zostanie wyłączony, ale sterownik systemu Windows 3.x
+       przejmie jego funkcje.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Natychmiastowa aktualizacja liczników ruchu, bez oczekiwania na przerwanie
@@ -2036,26 +2049,28 @@ Jeśli znajdziesz inną niekompatybilną grę, zgłoś (po angielsku) raport o
 błędzie, a zaktualizujemy tę listę.
 .
 :CONFIG_PS2_MOUSE_MODEL
-Model myszy podłączonej do portu PS/2 AUX:
+Model myszy podłączonej do portu PS/2 AUX. Innymi słowy, typ myszy wpiętej do
+wirtualnego portu PS/2 (domyślnie 'explorer').
+Nie ma wpływu na wbudowany sterownik myszy (patrz 'dos_mouse_driver').
   standard:       3 przyciski, standardowa mysz PS/2.
   intellimouse:   3 przyciski + rolka, mysz Microsoft IntelliMouse.
   explorer:       5 przycisków + rolka, mysz Microsoft IntelliMouse Explorer.
-  none:           Mysz PS/2 nie jest emulowana.
-Domyślnie 'explorer'.
+  none:           Brak myszy PS/2.
 .
 :CONFIG_COM_MOUSE_MODEL
-Domyślny model myszy podłączonej do portu COM (serial):
+Domyślny model myszy podłączonej do portu COM (serial). Innymi słowy, typ myszy
+wpiętej do wirtualnego portu COM (domyślnie 'wheel+msm').
+Nie ma wpływu na wbudowany sterownik myszy (patrz 'dos_mouse_driver').
   2button:        2 przyciski, mysz Microsoft.
   3button:        3 przyciski, mysz Logitech,
                   dość kompatybilna z myszą Microsoft.
   wheel:          3 przyciski + rolka,
                   dość kompatybilna z myszą Microsoft.
   msm:            3 przyciski, mysz Mouse Systems,
-                   ta mysz jest NIEKOMPATYBILNA z myszą Microsoft.
+                  ta mysz NIE JEST KOMPATYBILNA z myszą Microsoft.
   2button+msm:    Automatyczna selekcja pomiędzy '2button' oraz 'msm'.
   3button+msm:    Automatyczna selekcja pomiędzy '3button' oraz 'msm'.
   wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
-Domyślnie 'wheel+msm'.
 Uwaga: Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
 :CONFIG_VMWARE_MOUSE
@@ -2104,14 +2119,20 @@ Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
   on:   Włącza kompresor dynamiki (domyślne).
 .
 :CONFIG_CROSSFEED
-Włącza (globalnie) efekt przenikania kanałów stereo, przydatne jeśli używasz
-słuchawek:
+Włącza efekt przenikania kanałów stereo układów OPL oraz CMS (Gameblaster).
+Wiele gier umieszcza instrumenty całkowicie po lewej lub prawej stronie,
+co daje nieprzyjemne wrażenia przy używaniu słuchawek. Po włączeniu efektu
+część dźwięku z lewego kanału jest miksowana z prawym kanałem, i vice versa,
+dając bardziej naturalny dźwięk.
   off:     Bez efektu (domyślne).
   on:      Włącza przenikanie (normalne ustawienia).
   light:   Słaby efekt (siła 15).
   normal:  Normalny efekt (siła 40).
   strong:  Silny efekt (siła 65).
-Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
+
+Uwagi:
+  - Użyj polecenia MIXER aby zastosować efekt do innych kanałów audio lub
+    zmienić ustawienie dla pojedynczego kanału.
 .
 :CONFIG_REVERB
 Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
@@ -2127,8 +2148,12 @@ Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
   large:   Wrażenie dużej hali, zalecane do gier używających oddzielnych
            kanałów dla muzyki i efektów dźwiękowych.
   huge:    Mocniejszy wariant dużej hali, odpowiedni do gier z atmosferyczną
-           ścieżką dźwiękową.
-Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
+
+Uwagi:
+  - Ustawienie dodaje dość znaczący efekt do syntetyzerów dźwięku (z wyjątkiem
+    tych, które mają własne efekty pogłosu, np. Roland MT-32), ale niewielki
+    efekt dla dźwięku digitalizowanego.
+  - Użyj polecenia MIXER aby zmienić ustawienie dla pojedynczego kanału.
 .
 :CONFIG_CHORUS
 Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
@@ -2138,7 +2163,11 @@ Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
            ilością białego szumu.
   normal:  Normalny efekt, odpowiedni dla wielu różnych gier.
   strong:  Silny efekt.
-Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
+
+Uwagi:
+  - Ustawienie dodaje efekt wyłącznie do syntetyzerów dźwięku (z wyjątkiem
+    tych, które mają własne efekty 'chorus', np. Roland MT-32).
+  - Użyj polecenia MIXER aby zmienić ustawienie dla pojedynczego kanału.
 .
 :CONFIG_SOUNDFONT
 Ścieżka do pliku SoundFont w formacie SF2 (domyślnie 'default.sf2').
@@ -2498,7 +2527,8 @@ Numer kanału DMA karty muzycznej Gravis UltraSound (domyślnie 3).
 .
 :CONFIG_GUS_FILTER
 Filtrowanie dźwięku karty Gravis UltraSound:
-  off:       Filtrowanie wyłączone (domyślne).
+  on:        Filtrowanie włączone (domyślne).
+  off:       Filtrowanie wyłączone.
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_ULTRADIR
@@ -2709,7 +2739,7 @@ Można podać dodatkowe parametry w formie parametr:wartość, muszą być
 wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
 (opcjonalny) irq:numer.
   - Dla urządzenia 'mouse' (mysz szeregowa):
-      model, nadpisuje ustawienie z sekcji [mouse].
+      model, nadpisuje ustawienie 'com_mouse_model'.
   - Dla urządzenia 'direct' (bezpośredni dostęp do portu COM gospodarza):
       realport (wymagany), rxdelay (opcjonalny).
       Przykład: realport:COM1 realport:ttyS0.
