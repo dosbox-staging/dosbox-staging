@@ -162,9 +162,9 @@ bool Value::SetInt(const std::string& in)
 bool Value::SetDouble(const std::string& in)
 {
 	std::istringstream input(in);
-	double result = std::numeric_limits<double>::infinity();
+	double result = std::numeric_limits<double>::max();
 	input >> result;
-	if (result == std::numeric_limits<double>::infinity()) {
+	if (result == std::numeric_limits<double>::max()) {
 		return false;
 	}
 	_double = result;
