@@ -7,7 +7,7 @@ project(
     ).stdout().strip(),
 
     license: 'GPL-2.0-or-later',
-    meson_version: '>= 0.59.0',
+    meson_version: '>= 1.7.0',
     default_options: [
         'cpp_std=c++20',
         'buildtype=release',
