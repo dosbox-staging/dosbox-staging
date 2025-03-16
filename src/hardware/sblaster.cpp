@@ -3562,6 +3562,9 @@ SBLASTER::SBLASTER(Section* conf)
 
 	configure_sb_filter(channel, sb_filter_prefs, sb_filter_always_on, sb.type);
 
+	// TODO
+	channel->ConfigureDcRemover(50.0f);
+
 	sb.dsp.state       = DspState::Normal;
 	sb.dsp.out.lastval = 0xaa;
 	sb.dma.chan        = nullptr;

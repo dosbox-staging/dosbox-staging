@@ -81,6 +81,18 @@ struct AudioFrame {
 		return {left + that.left, right + that.right};
 	}
 
+	// Difference
+	constexpr AudioFrame& operator-=(const AudioFrame& that)
+	{
+		*this = *this - that;
+		return *this;
+	}
+
+	constexpr AudioFrame operator-(const AudioFrame& that) const
+	{
+		return {left - that.left, right - that.right};
+	}
+
 	// Gain
 	constexpr AudioFrame& operator*=(const float gain)
 	{
@@ -93,6 +105,17 @@ struct AudioFrame {
 		return {left * gain, right * gain};
 	}
 
+	constexpr AudioFrame& operator/=(const float atten)
+	{
+		*this = *this / atten;
+		return *this;
+	}
+
+	constexpr AudioFrame operator/(const float atten) const
+	{
+		return {left / atten, right / atten};
+	}
+
 	constexpr AudioFrame& operator*=(const AudioFrame& gain)
 	{
 		*this = *this * gain;
@@ -102,6 +125,17 @@ struct AudioFrame {
 	constexpr AudioFrame operator*(const AudioFrame& gain) const
 	{
 		return {left * gain.left, right * gain.right};
+	}
+
+	constexpr AudioFrame& operator/=(const AudioFrame& atten)
+	{
+		*this = *this / atten;
+		return *this;
+	}
+
+	constexpr AudioFrame operator/(const AudioFrame& atten) const
+	{
+		return {left * atten.left, right * atten.right};
 	}
 };
 

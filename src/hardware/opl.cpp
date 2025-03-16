@@ -354,42 +354,42 @@ void Opl::EsfmSetLegacyMode()
 	ESFM_write_port(&esfm.chip, 0, 0);
 }
 
-template <LineIndex line_index>
-int16_t remove_dc_bias(const int16_t back_sample)
-{
-	// Calculate the number of samples we need average across to maintain
-	// the lowest frequency given an assumed playback rate.
-	constexpr auto PcmPlaybackRateHz      = 16000;
-	constexpr auto LowestFreqToMaintainHz = 200;
-	constexpr auto NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
-
-	static int sum = 0;
-
-	static std::queue<int16_t> samples = {};
-
-	// Clear the queue if the stream isn't biased
-	constexpr int16_t BiasThreshold = 5;
-	if (back_sample < BiasThreshold) {
-		sum     = 0;
-		samples = {};
-		return back_sample;
-	}
-
-	// Keep a running sum and push the sample to the back of the queue
-	sum += back_sample;
-	samples.push(back_sample);
-
-	int16_t average      = 0;
-	int16_t front_sample = 0;
-	if (samples.size() == NumToAverage) {
-		// Compute the average and deduct it from the front sample
-		average      = static_cast<int16_t>(sum / NumToAverage);
-		front_sample = samples.front();
-		sum -= front_sample;
-		samples.pop();
-	}
-	return static_cast<int16_t>(front_sample - average);
-}
+//template <LineIndex line_index>
+//int16_t remove_dc_bias(const int16_t back_sample)
+//{
+//	// Calculate the number of samples we need average across to maintain
+//	// the lowest frequency given an assumed playback rate.
+//	constexpr auto PcmPlaybackRateHz      = 16000;
+//	constexpr auto LowestFreqToMaintainHz = 200;
+//	constexpr auto NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
+//
+//	static int sum = 0;
+//
+//	static std::queue<int16_t> samples = {};
+//
+//	// Clear the queue if the stream isn't biased
+//	constexpr int16_t BiasThreshold = 5;
+//	if (back_sample < BiasThreshold) {
+//		sum     = 0;
+//		samples = {};
+//		return back_sample;
+//	}
+//
+//	// Keep a running sum and push the sample to the back of the queue
+//	sum += back_sample;
+//	samples.push(back_sample);
+//
+//	int16_t average      = 0;
+//	int16_t front_sample = 0;
+//	if (samples.size() == NumToAverage) {
+//		// Compute the average and deduct it from the front sample
+//		average      = static_cast<int16_t>(sum / NumToAverage);
+//		front_sample = samples.front();
+//		sum -= front_sample;
+//		samples.pop();
+//	}
+//	return static_cast<int16_t>(front_sample - average);
+//}
 
 AudioFrame Opl::RenderFrame()
 {
@@ -398,10 +398,10 @@ AudioFrame Opl::RenderFrame()
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_generate_stream(&esfm.chip, buf, 1);
 
-		if (ctrl.wants_dc_bias_removed) {
-			buf[0] = remove_dc_bias<Left>(buf[0]);
-			buf[1] = remove_dc_bias<Right>(buf[1]);
-		}
+		//if (ctrl.wants_dc_bias_removed) {
+		//	buf[0] = remove_dc_bias<Left>(buf[0]);
+		//	buf[1] = remove_dc_bias<Right>(buf[1]);
+		//}
 
 		AudioFrame frame = {buf[0], buf[1]};
 		return frame;
@@ -409,10 +409,10 @@ AudioFrame Opl::RenderFrame()
 	} else { // OPL
 		OPL3_GenerateStream(&opl.chip, buf, 1);
 
-		if (ctrl.wants_dc_bias_removed) {
-			buf[0] = remove_dc_bias<Left>(buf[0]);
-			buf[1] = remove_dc_bias<Right>(buf[1]);
-		}
+		//if (ctrl.wants_dc_bias_removed) {
+		//	buf[0] = remove_dc_bias<Left>(buf[0]);
+		//	buf[1] = remove_dc_bias<Right>(buf[1]);
+		//}
 
 		AudioFrame frame = {};
 		if (adlib_gold) {
@@ -908,6 +908,9 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
 	channel->EnableNoiseGate(denoiser_enabled);
+
+	// TODO
+	channel->ConfigureDcRemover(5.0f);
 
 	// Setup fadeout
 	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {

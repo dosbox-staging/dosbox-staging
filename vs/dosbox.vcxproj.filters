@@ -904,6 +904,9 @@
     <ClCompile Include="..\src\audio\compressor.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\audio\dc_remover.cpp">
+      <Filter>src\audio</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\audio\envelope.cpp">
       <Filter>src\audio</Filter>
     </ClCompile>
@@ -1769,6 +1772,9 @@
       <Filter>src\midi</Filter>
     </ClInclude>
     <ClInclude Include="..\src\audio\compressor.h">
+      <Filter>src\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\audio\dc_remover.h">
       <Filter>src\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\src\audio\envelope.h">

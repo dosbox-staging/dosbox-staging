@@ -1311,6 +1311,19 @@ void MixerChannel::ConfigureNoiseGate(const float threshold_db, const float atta
 	InitNoiseGate();
 }
 
+void MixerChannel::ConfigureDcRemover(const float _bias_threshold)
+{
+	// TODO
+	dc_remover.bias_threshold = _bias_threshold;
+
+	const auto _0dbfs_sample_value = Max16BitSampleValue;
+	dc_remover.processor.Configure(sample_rate_hz,
+	                               _0dbfs_sample_value,
+	                               _bias_threshold);
+
+//	do_dc_remove = true;
+}
+
 void MixerChannel::EnableNoiseGate(const bool enabled)
 {
 	LOG_MSG("%s: Noise gate %s", name.c_str(), (enabled ? "enabled" : "disabled"));
@@ -2208,6 +2221,9 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 	// Optionally gate, filter, and apply crossfeed.
 	// Runs in-place over newly added frames.
 	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
+		if (do_dc_remove) {
+			audio_frames[i] = dc_remover.processor.Process(audio_frames[i]);
+		}
 		if (do_noise_gate) {
 			audio_frames[i] = noise_gate.processor.Process(audio_frames[i]);
 		}
@@ -2435,10 +2451,10 @@ static void mix_samples(const int frames_requested)
 	}
 
 	// Apply high-pass filter to the master output
-	for (auto& frame : mixer.output_buffer) {
-		auto& hpf = mixer.highpass_filter;
-		frame = {hpf[0].filter(frame.left), hpf[1].filter(frame.right)};
-	}
+	//for (auto& frame : mixer.output_buffer) {
+	//	auto& hpf = mixer.highpass_filter;
+	//	frame = {hpf[0].filter(frame.left), hpf[1].filter(frame.right)};
+	//}
 
 	// Apply master gain
 	for (auto& frame : mixer.output_buffer) {

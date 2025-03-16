@@ -35,6 +35,7 @@
 #include <utility>
 #include <vector>
 
+#include "../audio/dc_remover.h"
 #include "../audio/envelope.h"
 #include "../audio/noise_gate.h"
 #include "audio_frame.h"
@@ -224,6 +225,8 @@ public:
 	void ConfigureNoiseGate(const float threshold_db, const float attack_time_ms,
 	                        const float release_time_ms);
 	void EnableNoiseGate(const bool enabled);
+
+	void ConfigureDcRemover(const float _bias_threshold);
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
@@ -436,6 +439,12 @@ private:
 		float release_time_ms = 20.0f;
 	} noise_gate       = {};
 	bool do_noise_gate = false;
+
+	struct {
+		DcRemover processor;
+		float bias_threshold = 0.0f;
+	} dc_remover      = {};
+	bool do_dc_remove = false;
 
 	struct {
 		struct {
