@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -205,8 +205,8 @@ void SERIAL::AddMessages() {
 	        "  For [color=light-cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK\n"
 	        "  For [color=light-cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,\n"
 	        "                  PORT, INHSOCKET, SOCK\n"
-	        "  For [color=light-cyan]MOUSE[reset]     : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,\n"
-	        "                  2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)\n"
+	        "  For [color=light-cyan]MOUSE[reset]     : IRQ, MODEL (2BUTTON, 3BUTTON, WHEEL, MSM, 2BUTTON+MSM,\n"
+	        "                  3BUTTON+MSM, or WHEEL+MSM)\n"
 	        "  For [color=light-cyan]DIRECT[reset]    : IRQ, REALPORT (required), RXDELAY\n"
 	        "  For [color=light-cyan]DUMMY[reset]     : IRQ\n"
 	        "\n"
@@ -215,7 +215,7 @@ void SERIAL::AddMessages() {
 	        "  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client\n"
 	        "  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server\n"
 	        "  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux\n"
-	        "  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse\n");
+	        "  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] MODEL:MSM                     : Mouse Systems mouse\n");
 	MSG_Add("PROGRAM_SERIAL_SHOW_PORT", "COM%d: %s %s\n");
 	MSG_Add("PROGRAM_SERIAL_BAD_PORT",
 	        "Must specify a numeric port value between 1 and %d, inclusive.\n");
