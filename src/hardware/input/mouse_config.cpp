@@ -94,25 +94,25 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 bool MouseConfig::ParseComModel(const std::string_view model_str,
                                 MouseModelCOM& model, bool& auto_msm)
 {
-	if (model_str == ModelCom2Button) {
+	if (iequals(model_str, ModelCom2Button)) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
-	} else if (model_str == ModelCom3Button) {
+	} else if (iequals(model_str, ModelCom3Button)) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
-	} else if (model_str == ModelComWheel) {
+	} else if (iequals(model_str, ModelComWheel)) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
-	} else if (model_str == ModelComMsm) {
+	} else if (iequals(model_str, ModelComMsm)) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
-	} else if (model_str == ModelCom2ButtonMsm) {
+	} else if (iequals(model_str, ModelCom2ButtonMsm)) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
-	} else if (model_str == ModelCom3ButtonMsm) {
+	} else if (iequals(model_str, ModelCom3ButtonMsm)) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
-	} else if (model_str == ModelComWheelMsm) {
+	} else if (iequals(model_str, ModelComWheelMsm)) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
 	} else {
@@ -124,13 +124,13 @@ bool MouseConfig::ParseComModel(const std::string_view model_str,
 
 static void set_capture_type(const std::string_view capture_str)
 {
-	if (capture_str == CaptureTypeSeamless) {
+	if (iequals(capture_str, CaptureTypeSeamless)) {
 		mouse_config.capture = MouseCapture::Seamless;
-	} else if (capture_str == CaptureTypeOnClick) {
+	} else if (iequals(capture_str, CaptureTypeOnClick)) {
 		mouse_config.capture = MouseCapture::OnClick;
-	} else if (capture_str == CaptureTypeOnStart) {
+	} else if (iequals(capture_str, CaptureTypeOnStart)) {
 		mouse_config.capture = MouseCapture::OnStart;
-	} else if (capture_str == CaptureTypeNoMouse) {
+	} else if (iequals(capture_str, CaptureTypeNoMouse)) {
 		mouse_config.capture = MouseCapture::NoMouse;
 	} else {
 		assertm(false, "Invalid mouse capture value");
@@ -141,11 +141,11 @@ static void set_dos_driver_model(const std::string_view model_str)
 {
 	auto new_model = mouse_config.model_dos;
 
-	if (model_str == ModelDos2Button) {
+	if (iequals(model_str, ModelDos2Button)) {
 		new_model = MouseModelDos::TwoButton;
-	} else if (model_str == ModelDos3Button) {
+	} else if (iequals(model_str, ModelDos3Button)) {
 		new_model = MouseModelDos::ThreeButton;
-	} else if (model_str == ModelDosWheel) {
+	} else if (iequals(model_str, ModelDosWheel)) {
 		new_model = MouseModelDos::Wheel;
 	} else {
 		assertm(false, "Invalid DOS driver mouse model value");
@@ -159,13 +159,13 @@ static void set_dos_driver_model(const std::string_view model_str)
 
 static void set_ps2_mouse_model(const std::string_view model_str)
 {
-	if (model_str == ModelPs2Standard) {
+	if (iequals(model_str, ModelPs2Standard)) {
 		mouse_config.model_ps2 = MouseModelPS2::Standard;
-	} else if (model_str == ModelPs2Intellimouse) {
+	} else if (iequals(model_str, ModelPs2Intellimouse)) {
 		mouse_config.model_ps2 = MouseModelPS2::IntelliMouse;
-	} else if (model_str == ModelPs2Explorer) {
+	} else if (iequals(model_str, ModelPs2Explorer)) {
 		mouse_config.model_ps2 = MouseModelPS2::Explorer;
-	} else if (model_str == ModelPs2NoMouse) {
+	} else if (iequals(model_str, ModelPs2NoMouse)) {
 		mouse_config.model_ps2 = MouseModelPS2::NoMouse;
 	} else {
 		assertm(false, "Invalid PS/2 mouse model value");
