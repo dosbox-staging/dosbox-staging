@@ -37,27 +37,27 @@ CHECK_NARROWING();
 MouseConfig mouse_config;
 MousePredefined mouse_predefined;
 
-constexpr auto capture_type_seamless_str = "seamless";
-constexpr auto capture_type_onclick_str  = "onclick";
-constexpr auto capture_type_onstart_str  = "onstart";
-constexpr auto capture_type_nomouse_str  = "nomouse";
+constexpr auto CaptureTypeSeamless = "seamless";
+constexpr auto CaptureTypeOnClick  = "onclick";
+constexpr auto CaptureTypeOnStart  = "onstart";
+constexpr auto CaptureTypeNoMouse  = "nomouse";
 
-constexpr auto model_dos_2button_str = "2button";
-constexpr auto model_dos_3button_str = "3button";
-constexpr auto model_dos_wheel_str   = "wheel";
+constexpr auto ModelDos2Button = "2button";
+constexpr auto ModelDos3Button = "3button";
+constexpr auto ModelDosWheel   = "wheel";
 
-constexpr auto model_ps2_standard_str     = "standard";
-constexpr auto model_ps2_intellimouse_str = "intellimouse";
-constexpr auto model_ps2_explorer_str     = "explorer";
-constexpr auto model_ps2_nomouse_str      = "none";
+constexpr auto ModelPs2Standard     = "standard";
+constexpr auto ModelPs2Intellimouse = "intellimouse";
+constexpr auto ModelPs2Explorer     = "explorer";
+constexpr auto ModelPs2NoMouse      = "none";
 
-constexpr auto model_com_2button_str     = "2button";
-constexpr auto model_com_3button_str     = "3button";
-constexpr auto model_com_wheel_str       = "wheel";
-constexpr auto model_com_msm_str         = "msm";
-constexpr auto model_com_2button_msm_str = "2button+msm";
-constexpr auto model_com_3button_msm_str = "3button+msm";
-constexpr auto model_com_wheel_msm_str   = "wheel+msm";
+constexpr auto ModelCom2Button     = "2button";
+constexpr auto ModelCom3Button     = "3button";
+constexpr auto ModelComWheel       = "wheel";
+constexpr auto ModelComMsm         = "msm";
+constexpr auto ModelCom2ButtonMsm  = "2button+msm";
+constexpr auto ModelCom3ButtonMsm  = "3button+msm";
+constexpr auto ModelComWheelMsm    = "wheel+msm";
 
 static const std::vector<uint16_t> list_rates = {
         // Commented out values are probably not interesting
@@ -92,25 +92,25 @@ const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 bool MouseConfig::ParseComModel(const std::string_view model_str,
                                 MouseModelCOM& model, bool& auto_msm)
 {
-	if (model_str == model_com_2button_str) {
+	if (iequals(model_str, ModelCom2Button)) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
-	} else if (model_str == model_com_3button_str) {
+	} else if (iequals(model_str, ModelCom3Button)) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
-	} else if (model_str == model_com_wheel_str) {
+	} else if (iequals(model_str, ModelComWheel)) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
-	} else if (model_str == model_com_msm_str) {
+	} else if (iequals(model_str, ModelComMsm)) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
-	} else if (model_str == model_com_2button_msm_str) {
+	} else if (iequals(model_str, ModelCom2ButtonMsm)) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
-	} else if (model_str == model_com_3button_msm_str) {
+	} else if (iequals(model_str, ModelCom3ButtonMsm)) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
-	} else if (model_str == model_com_wheel_msm_str) {
+	} else if (iequals(model_str, ModelComWheelMsm)) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
 	} else {
@@ -122,13 +122,13 @@ bool MouseConfig::ParseComModel(const std::string_view model_str,
 
 static void set_capture_type(const std::string_view capture_str)
 {
-	if (capture_str == capture_type_seamless_str) {
+	if (iequals(capture_str, CaptureTypeSeamless)) {
 		mouse_config.capture = MouseCapture::Seamless;
-	} else if (capture_str == capture_type_onclick_str) {
+	} else if (iequals(capture_str, CaptureTypeOnClick)) {
 		mouse_config.capture = MouseCapture::OnClick;
-	} else if (capture_str == capture_type_onstart_str) {
+	} else if (iequals(capture_str, CaptureTypeOnStart)) {
 		mouse_config.capture = MouseCapture::OnStart;
-	} else if (capture_str == capture_type_nomouse_str) {
+	} else if (iequals(capture_str, CaptureTypeNoMouse)) {
 		mouse_config.capture = MouseCapture::NoMouse;
 	} else {
 		assert(false);
@@ -139,11 +139,11 @@ static void set_dos_driver_model(const std::string_view model_str)
 {
 	auto new_model = mouse_config.model_dos;
 
-	if (model_str == model_dos_2button_str) {
+	if (iequals(model_str, ModelDos2Button)) {
 		new_model = MouseModelDos::TwoButton;
-	} else if (model_str == model_dos_3button_str) {
+	} else if (iequals(model_str, ModelDos3Button)) {
 		new_model = MouseModelDos::ThreeButton;
-	} else if (model_str == model_dos_wheel_str) {
+	} else if (iequals(model_str, ModelDosWheel)) {
 		new_model = MouseModelDos::Wheel;
 	} else {
 		assert(false);
@@ -157,13 +157,13 @@ static void set_dos_driver_model(const std::string_view model_str)
 
 static void set_ps2_mouse_model(const std::string_view model_str)
 {
-	if (model_str == model_ps2_standard_str) {
+	if (iequals(model_str, ModelPs2Standard)) {
 		mouse_config.model_ps2 = MouseModelPS2::Standard;
-	} else if (model_str == model_ps2_intellimouse_str) {
+	} else if (iequals(model_str, ModelPs2Intellimouse)) {
 		mouse_config.model_ps2 = MouseModelPS2::IntelliMouse;
-	} else if (model_str == model_ps2_explorer_str) {
+	} else if (iequals(model_str, ModelPs2Explorer)) {
 		mouse_config.model_ps2 = MouseModelPS2::Explorer;
-	} else if (model_str == model_ps2_nomouse_str) {
+	} else if (iequals(model_str, ModelPs2NoMouse)) {
 		mouse_config.model_ps2 = MouseModelPS2::NoMouse;
 	} else {
 		assert(false);
@@ -402,12 +402,12 @@ static void config_init(Section_prop& secprop)
 
 	// General configuration
 
-	prop_str = secprop.Add_string("mouse_capture", always, capture_type_onclick_str);
+	prop_str = secprop.Add_string("mouse_capture", always, CaptureTypeOnClick);
 	assert(prop_str);
-	prop_str->Set_values({capture_type_seamless_str,
-	                      capture_type_onclick_str,
-	                      capture_type_onstart_str,
-	                      capture_type_nomouse_str});
+	prop_str->Set_values({CaptureTypeSeamless,
+	                      CaptureTypeOnClick,
+	                      CaptureTypeOnStart,
+	                      CaptureTypeNoMouse});
 	prop_str->Set_help(
 	        "Set the mouse capture behaviour:\n"
 	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
@@ -473,10 +473,10 @@ static void config_init(Section_prop& secprop)
 
 	prop_str = secprop.Add_string("builtin_dos_mouse_driver_model",
 	                              always,
-	                              model_dos_wheel_str);
+	                              ModelDosWheel);
 	assert(prop_str);
 	prop_str->Set_values(
-	        {model_dos_2button_str, model_dos_3button_str, model_dos_wheel_str});
+	        {ModelDos2Button, ModelDos3Button, ModelDosWheel});
 	prop_str->Set_help(
 	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('wheel'\n"
 	        "by default).\n"
@@ -506,12 +506,12 @@ static void config_init(Section_prop& secprop)
 	// TODO: PS/2 mouse might be hot-pluggable
 	prop_str = secprop.Add_string("ps2_mouse_model",
 	                              only_at_start,
-	                              model_ps2_explorer_str);
+	                              ModelPs2Explorer);
 	assert(prop_str);
-	prop_str->Set_values({model_ps2_standard_str,
-	                      model_ps2_intellimouse_str,
-	                      model_ps2_explorer_str,
-	                      model_ps2_nomouse_str});
+	prop_str->Set_values({ModelPs2Standard,
+	                      ModelPs2Intellimouse,
+	                      ModelPs2Explorer,
+	                      ModelPs2NoMouse});
 	prop_str->Set_help(
 	        "Set the PS/2 AUX port mouse model, or in other words, the type of the virtual\n"
 	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default).\n"
@@ -523,15 +523,15 @@ static void config_init(Section_prop& secprop)
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,
-	                              model_com_wheel_msm_str);
+	                              ModelComWheelMsm);
 	assert(prop_str);
-	prop_str->Set_values({model_com_2button_str,
-	                      model_com_3button_str,
-	                      model_com_wheel_str,
-	                      model_com_msm_str,
-	                      model_com_2button_msm_str,
-	                      model_com_3button_msm_str,
-	                      model_com_wheel_msm_str});
+	prop_str->Set_values({ModelCom2Button,
+	                      ModelCom3Button,
+	                      ModelComWheel,
+	                      ModelComMsm,
+	                      ModelCom2ButtonMsm,
+	                      ModelCom3ButtonMsm,
+	                      ModelComWheelMsm});
 	prop_str->Set_help(
 	        "Set the default COM (serial) mouse model, or in other words, the type of the\n"
 	        "virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).\n"
