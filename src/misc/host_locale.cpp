@@ -375,30 +375,23 @@ StdLibLocale::StdLibLocale()
 		return;
 	}
 
-	// Detect numeric format
+	DetectNumericFormat(locale);
+	DetectDateOrder(locale);
+	DetectTimeDateFormat(locale);
+	DetectCurrencyFormat(locale);
+}
+
+void StdLibLocale::DetectNumericFormat(std::locale& locale)
+{
 	const auto& std_numeric = std::use_facet<std::numpunct<char>>(locale);
 
 	thousands_separator = std_numeric.thousands_sep();
 	decimal_separator   = std_numeric.decimal_point();
+}
 
-	// Detect monetary format
-	constexpr bool InternationalSymbols = true;
-
-	const auto& std_symbol   = std::use_facet<std::moneypunct<char>>(locale);
-	const auto& std_currency = std::use_facet<std::moneypunct<char, InternationalSymbols>>(locale);
-
-	currency_code = std_symbol.curr_symbol();
-	currency_utf8 = std_currency.curr_symbol();
-	trim(currency_code);
-	trim(currency_utf8);
-
-	const auto src_precision = std_currency.frac_digits();
-	if (src_precision > 0 && src_precision <= UINT8_MAX) {
-		currency_precision = static_cast<uint8_t>(src_precision);
-	}
-
-	// Detect time/date format - this can fail, C++ library is allowed
-	// to just return 'std::time_base::no_order'
+void StdLibLocale::DetectDateOrder(std::locale& locale)
+{
+	// This can fail, C++ library can return 'std::time_base::no_order'
 	const auto& std_time = std::use_facet<std::time_get<char>>(locale);
 
 	switch (std_time.date_order()) {
@@ -415,9 +408,10 @@ StdLibLocale::StdLibLocale()
 	default:  // no order
                 break;
 	}
+}
 
-	// Remaining ones has to be detected by examining test conversions
-
+void StdLibLocale::DetectTimeDateFormat(std::locale& locale)
+{
 	std::tm test_time_date = {};
 
 	test_time_date.tm_isdst = 0;   // no DST in effect
@@ -428,35 +422,22 @@ StdLibLocale::StdLibLocale()
 	test_time_date.tm_min   = 14;
 	test_time_date.tm_sec   = 15;
 
-	const double TestMoney = 123.45;
-
-	std::stringstream test_time_stream       = {};
-	std::stringstream test_date_stream       = {};
-	std::stringstream test_money_code_stream = {};
-	std::stringstream test_money_utf8_stream = {};
+	std::stringstream test_time_stream = {};
+	std::stringstream test_date_stream = {};
 
 	test_time_stream.imbue(locale);
 	test_date_stream.imbue(locale);
-	test_money_code_stream.imbue(locale);
-	test_money_utf8_stream.imbue(locale);
 
 	test_time_stream << std::put_time(&test_time_date, "%X");
 	test_date_stream << std::put_time(&test_time_date, "%x");
-	test_money_code_stream << std::showbase << std::put_money(TestMoney, true);
-	test_money_utf8_stream << std::showbase << std::put_money(TestMoney, false);
 
-	auto time_example       = test_time_stream.str();
-	auto date_example       = test_date_stream.str();
-	auto money_code_example = test_money_code_stream.str();
-	auto money_utf8_example = test_money_utf8_stream.str();
+	auto time_example = test_time_stream.str();
+	auto date_example = test_date_stream.str();
 
 	trim(time_example);
 	trim(date_example);
-	trim(money_code_example);
-	trim(money_utf8_example);
 
 	// Examine rendered strings for time format and separator
-
 	const auto position_hours_24h = time_example.find("22");
 	const auto position_hours_12h = time_example.find("10");
 	const auto position_minutes   = time_example.find("14");
@@ -478,7 +459,6 @@ StdLibLocale::StdLibLocale()
 	}
 
 	// Examine rendered strings for date format and separator
-
 	const auto position_year  = date_example.find("11");
 	const auto position_month = date_example.find("12");
 	const auto position_day   = date_example.find("13");
@@ -504,9 +484,49 @@ StdLibLocale::StdLibLocale()
 			date_separator = date_example[position_month + 2];
 		}
 	}
+}
 
-	// Examine rendered strings for currency format
+void StdLibLocale::DetectCurrencyFormat(std::locale& locale)
+{
+	// Skip this following part on Windows, it does not return UTF-8 values
+#if !defined(WIN32)
+	constexpr bool InternationalSymbols = true;
 
+	const auto& std_symbol   = std::use_facet<std::moneypunct<char>>(locale);
+	const auto& std_currency = std::use_facet<std::moneypunct<char,
+	        InternationalSymbols>>(locale);
+
+	currency_code = std_symbol.curr_symbol();
+	currency_utf8 = std_currency.curr_symbol();
+	trim(currency_code);
+	trim(currency_utf8);
+
+	const auto src_precision = std_currency.frac_digits();
+	if (src_precision > 0 && src_precision <= UINT8_MAX) {
+		currency_precision = static_cast<uint8_t>(src_precision);
+	}
+
+	// Render sample currency value to strings
+	std::stringstream test_money_code_stream = {};
+	std::stringstream test_money_utf8_stream = {};
+
+	test_money_code_stream.imbue(locale);
+	test_money_utf8_stream.imbue(locale);
+
+	const double MoneyTestValue = 123.45;
+
+	test_money_code_stream << std::showbase
+	                       << std::put_money(MoneyTestValue, true);
+	test_money_utf8_stream << std::showbase
+	                       << std::put_money(MoneyTestValue, false);
+
+	auto money_code_example = test_money_code_stream.str();
+	auto money_utf8_example = test_money_utf8_stream.str();
+
+	trim(money_code_example);
+	trim(money_utf8_example);
+
+	// Examine rendered strings to detect currency format
 	auto detect_format =
 	        [](const std::string& example,
 	           const std::string& currency) -> std::optional<DosCurrencyFormat> {
@@ -529,4 +549,5 @@ StdLibLocale::StdLibLocale()
 
 	currency_code_format = detect_format(money_code_example, currency_code);
 	currency_utf8_format = detect_format(money_code_example, currency_utf8);
+#endif
 }

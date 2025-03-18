@@ -24,6 +24,7 @@
 #include "../dos/dos_locale.h"
 
 #include <cstdint>
+#include <locale>
 #include <optional>
 #include <vector>
 
@@ -89,6 +90,12 @@ struct StdLibLocale {
 
 	char date_separator = {};
 	char time_separator = {};
+
+private:
+	void DetectNumericFormat(std::locale& locale);
+	void DetectDateOrder(std::locale& locale);
+	void DetectTimeDateFormat(std::locale& locale);
+	void DetectCurrencyFormat(std::locale& locale);
 };
 
 struct HostLocaleElement {
