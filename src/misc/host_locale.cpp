@@ -382,8 +382,10 @@ StdLibLocale::StdLibLocale()
 	decimal_separator   = std_numeric.decimal_point();
 
 	// Detect monetary format
-	const auto& std_symbol = std::use_facet<std::moneypunct<char, true>>(locale);
-	const auto& std_currency = std::use_facet<std::moneypunct<char>>(locale);
+	constexpr bool InternationalSymbols = true;
+
+	const auto& std_symbol   = std::use_facet<std::moneypunct<char>>(locale);
+	const auto& std_currency = std::use_facet<std::moneypunct<char, InternationalSymbols>>(locale);
 
 	currency_code = std_symbol.curr_symbol();
 	currency_utf8 = std_currency.curr_symbol();
