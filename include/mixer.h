@@ -35,10 +35,10 @@
 #include <utility>
 #include <vector>
 
-#include "../src/hardware/compressor.h"
+#include "../audio/envelope.h"
+#include "../audio/noise_gate.h"
 #include "audio_frame.h"
 #include "control.h"
-#include "envelope.h"
 #include "math_utils.h"
 
 #include <Iir.h>
@@ -117,6 +117,7 @@ enum class ChannelFeature {
 	ChorusSend,
 	DigitalAudio,
 	FadeOut,
+	NoiseGate,
 	ReverbSend,
 	Sleep,
 	Stereo,
@@ -220,6 +221,10 @@ public:
 	// Fill up until needed
 	void AddSilence();
 
+	void ConfigureNoiseGate(const float threshold_db, const float attack_time_ms,
+	                        const float release_time_ms);
+	void EnableNoiseGate(const bool enabled);
+
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
 	FilterState GetHighPassFilterState() const;
@@ -310,6 +315,7 @@ public:
 		bool wants_fadeout = false;
 		bool had_signal    = false;
 	};
+
 	Sleeper sleeper;
 	bool do_sleep = false;
 
@@ -323,6 +329,11 @@ private:
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void ConvertSamplesAndMaybeZohUpsample(const Type* data, const int frames);
+
+	void InitNoiseGate();
+
+	void InitHighPassFilter();
+	void InitLowPassFilter();
 
 	void ConfigureResampler();
 	void ClearResampler();
@@ -416,6 +427,15 @@ private:
 	struct {
 		SpeexResamplerState* state = nullptr;
 	} speex_resampler = {};
+
+	struct {
+		NoiseGate processor;
+
+		float threshold_db    = -60.0f;
+		float attack_time_ms  = 1.0f;
+		float release_time_ms = 20.0f;
+	} noise_gate       = {};
+	bool do_noise_gate = false;
 
 	struct {
 		struct {

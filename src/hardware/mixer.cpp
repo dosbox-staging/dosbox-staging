@@ -32,6 +32,7 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "../audio/compressor.h"
 #include "../capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
@@ -242,16 +243,6 @@ void MixerChannel::SetLineoutMap(const StereoLine map)
 StereoLine MixerChannel::GetLineoutMap() const
 {
 	return output_map;
-}
-
-static Section_prop* get_mixer_section()
-{
-	assert(control);
-
-	auto section = static_cast<Section_prop*>(control->GetSection("mixer"));
-	assert(section);
-
-	return section;
 }
 
 int MIXER_GetPreBufferMs()
@@ -1113,6 +1104,17 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 	                EnvelopeMaxExpansionOverMs,
 	                EnvelopeExpiresAfterSeconds);
 
+	if (do_noise_gate) {
+		InitNoiseGate();
+	}
+
+	if (filters.highpass.state == FilterState::On) {
+		InitHighPassFilter();
+	}
+	if (filters.lowpass.state == FilterState::On) {
+		InitLowPassFilter();
+	}
+
 	ConfigureResampler();
 }
 
@@ -1296,6 +1298,38 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 	}
 }
 
+void MixerChannel::ConfigureNoiseGate(const float threshold_db, const float attack_time_ms,
+                                      const float release_time_ms)
+{
+	assert(attack_time_ms > 0.0f);
+	assert(release_time_ms > 0.0f);
+
+	noise_gate.threshold_db    = threshold_db;
+	noise_gate.attack_time_ms  = attack_time_ms;
+	noise_gate.release_time_ms = release_time_ms;
+
+	InitNoiseGate();
+}
+
+void MixerChannel::EnableNoiseGate(const bool enabled)
+{
+	LOG_MSG("%s: Noise gate %s", name.c_str(), (enabled ? "enabled" : "disabled"));
+	do_noise_gate = enabled;
+}
+
+void MixerChannel::InitNoiseGate()
+{
+	assert(noise_gate.attack_time_ms > 0.0f);
+	assert(noise_gate.release_time_ms > 0.0f);
+
+	const auto _0dbfs_sample_value = Max16BitSampleValue;
+	noise_gate.processor.Configure(sample_rate_hz,
+	                               _0dbfs_sample_value,
+	                               noise_gate.threshold_db,
+	                               noise_gate.attack_time_ms,
+	                               noise_gate.release_time_ms);
+}
+
 FilterState MixerChannel::GetHighPassFilterState() const
 {
 	return filters.highpass.state;
@@ -1329,38 +1363,56 @@ static int clamp_filter_cutoff_freq([[maybe_unused]] const std::string& channel_
 
 void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_freq_hz)
 {
-	assert(order > 0);
+	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
-
-	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= MaxFilterOrder);
-	for (auto& f : filters.highpass.hpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
-	}
-
 	filters.highpass.order          = order;
 	filters.highpass.cutoff_freq_hz = cutoff_freq_hz;
+
+	InitHighPassFilter();
+}
+
+void MixerChannel::InitHighPassFilter()
+{
+	assert(filters.highpass.order > 0 && filters.highpass.order <= MaxFilterOrder);
+	assert(filters.highpass.cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
+
+	for (auto& f : filters.highpass.hpf) {
+		f.setup(filters.highpass.order,
+		        mixer.sample_rate_hz,
+		        filters.highpass.cutoff_freq_hz);
+	}
 }
 
 void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_freq_hz)
 {
-	assert(order > 0);
+	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
-
-	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
-	assert(order > 0 && order <= MaxFilterOrder);
-	for (auto& f : filters.lowpass.lpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
-	}
-
 	filters.lowpass.order          = order;
 	filters.lowpass.cutoff_freq_hz = cutoff_freq_hz;
+
+	InitLowPassFilter();
+}
+
+void MixerChannel::InitLowPassFilter()
+{
+	assert(filters.lowpass.order > 0 && filters.lowpass.order <= MaxFilterOrder);
+	assert(filters.lowpass.cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
+
+	for (auto& f : filters.lowpass.lpf) {
+		f.setup(filters.lowpass.order,
+		        mixer.sample_rate_hz,
+		        filters.lowpass.cutoff_freq_hz);
+	}
 }
 
 // Tries to set custom filter settings from the passed in filter preferences.
@@ -2153,9 +2205,13 @@ void MixerChannel::AddSamples(const int num_frames, const Type* data)
 		                    convert_buffer.end());
 	}
 
-	// Optionally filter, apply crossfeed
-	// Runs in-place over newly added frames
+	// Optionally gate, filter, and apply crossfeed.
+	// Runs in-place over newly added frames.
 	for (size_t i = audio_frames_starting_size; i < audio_frames.size(); ++i) {
+		if (do_noise_gate) {
+			audio_frames[i] = noise_gate.processor.Process(audio_frames[i]);
+		}
+
 		if (filters.highpass.state == FilterState::On) {
 			auto& hpf = filters.highpass.hpf;
 
@@ -2799,6 +2855,15 @@ static void init_master_highpass_filter()
 	MIXER_UnlockMixerThread();
 }
 
+static void init_denoiser(bool enabled)
+{
+	for (const auto& [_, channel] : mixer.channels) {
+		if (channel->HasFeature(ChannelFeature::NoiseGate)) {
+			channel->EnableNoiseGate(enabled);
+		}
+	}
+}
+
 void MIXER_Init(Section* sec)
 {
 	Section_prop* secprop = static_cast<Section_prop*>(sec);
@@ -2884,6 +2949,9 @@ void MIXER_Init(Section* sec)
 	if (mixer.chorus.preset != new_chorus_preset) {
 		MIXER_SetChorusPreset(new_chorus_preset);
 	}
+
+	// Init per-channel denoisers
+	init_denoiser(secprop->Get_bool("denoiser"));
 
 	init_master_highpass_filter();
 
@@ -3014,8 +3082,8 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games\n"
-	        "pan the instruments 100%% left and 100%% right in the stereo field on these audio\n"
+	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan\n"
+	        "the instruments 100%% left and 100%% right in the stereo field on these audio\n"
 	        "devices which is unpleasant to listen to in headphones. With crossfeed enabled,\n"
 	        "a portion of the left channel signal is mixed into the right channel and vice\n"
 	        "versa, creating a more natural listening experience.\n"
@@ -3032,7 +3100,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable reverb globally to add a sense of space to the sound:\n"
+	        "Reverb effect that adds a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
 	        "  on:      Enable reverb (medium preset).\n"
 	        "  tiny:    Simulates the sound of a small integrated speaker in a room;\n"
@@ -3056,7 +3124,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	string_prop = sec_prop.Add_string("chorus", WhenIdle, "off");
 	string_prop->Set_help(
-	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
+	        "Chorus effect that adds a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
 	        "  light:   A light chorus effect (especially suited for synth music that\n"
@@ -3069,6 +3137,17 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "    for synths with built-in chorus; e.g. the Roland MT-32).\n"
 	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
 	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
+
+	bool_prop = sec_prop.Add_bool("denoiser", WhenIdle, DefaultOn);
+	bool_prop->Set_help(
+	        "Remove low-level residual noise from the output of the OPL synth and the Roland\n"
+	        "Sound Canvas. The emulation of these devices is accurate to the original\n"
+	        "hardware units, which includes the emulation of a very low-level semi-random\n"
+	        "noise. Although this is authentic, most people would find it slightly annoying.\n"
+	        "  off:  Disable the denoiser.\n"
+	        "  on:   Enable the denoiser on the OPL and SOUNDCANVAS channels (default).\n"
+	        "        The denoiser does not introduce any sound quality degradation; it only\n"
+	        "        removes the barely audible residual noise in quiet passages.");
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }

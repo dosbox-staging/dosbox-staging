@@ -3,6 +3,10 @@ libaudio_sources = files(
     'clap/library.cpp',
     'clap/plugin.cpp',
     'clap/plugin_manager.cpp',
+
+    'compressor.cpp',
+    'envelope.cpp',
+    'noise_gate.cpp',
 )
 
 libaudio = static_library(
@@ -10,6 +14,7 @@ libaudio = static_library(
     libaudio_sources,
     include_directories: incdir,
     dependencies: [
+        libiir_dep,
         libloguru_dep,
     ],
     cpp_args: warnings,
