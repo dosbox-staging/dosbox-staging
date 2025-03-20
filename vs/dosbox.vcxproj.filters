@@ -1771,6 +1771,9 @@
     <ClInclude Include="..\src\midi\midi_soundcanvas.h">
       <Filter>src\midi</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\dynlib.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
