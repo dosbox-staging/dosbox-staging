@@ -19,6 +19,7 @@
 
 #include "int10.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstring>
@@ -2202,10 +2203,11 @@ bool INT10_SetVideoMode(uint16_t mode)
 }
 
 uint32_t VideoModeMemSize(uint16_t mode) {
-	if (!IS_VGA_ARCH)
+	if (!IS_VGA_ARCH) {
 		return 0;
+	}
 
-	// lanmda function to return a reference to the modelist based on the
+	// Lambda function to return a reference to the modelist based on the
 	// svgaCard switch
 	auto get_mode_list = [](SVGACards card) -> const std::vector<VideoModeBlock> & {
 		switch (card) {
@@ -2255,6 +2257,22 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	}
 	assert(mem_bytes >= 0);
 	return static_cast<uint32_t>(mem_bytes);
+}
+
+std::optional<const VideoModeBlock> INT10_FindSvgaVideoMode(uint16_t mode)
+{
+	assert(ModeList_VGA.size());
+
+	const auto it = std::find_if(ModeList_VGA.begin(),
+	                             ModeList_VGA.end(),
+	                             [&](const VideoModeBlock& v) {
+		                             return v.mode == mode;
+	                             });
+
+	if (it == ModeList_VGA.end()) {
+		return {};
+	}
+	return *it;
 }
 
 static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_setting)

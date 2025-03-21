@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 
+#include <optional>
 #include <vector>
 
 #include "bit_view.h"
@@ -333,6 +334,7 @@ inline uint8_t CURSOR_POS_ROW(const uint8_t page)
 
 void INT10_SetupPalette();
 
+std::optional<const VideoModeBlock> INT10_FindSvgaVideoMode(uint16_t mode);
 bool INT10_SetVideoMode(uint16_t mode);
 void INT10_SetCurMode(void);
 bool INT10_VideoModeChangeInProgress();
