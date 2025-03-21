@@ -19,6 +19,7 @@
 
 #include "int10.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 
@@ -194,7 +195,8 @@ static bool can_triple_buffer_8bit(const VideoModeBlock &m)
 	return vga.vmemsize >= needed_bytes;
 }
 
-uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
+uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
+{
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
 	PhysPt buf=PhysicalMake(seg,off);
@@ -211,19 +213,12 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 		}
 	}
 
-	// Find the requested mode in our table of VGA modes
-	bool found_mode = false;
-	assert(ModeList_VGA.size());
-	auto mblock = ModeList_VGA.back();
-	for (auto &v : ModeList_VGA) {
-		if (v.mode == mode) {
-			mblock = v;
-			found_mode = true;
-			break;
-		}
-	}
-	if (!found_mode)
+	// Find the requested mode in our table of SVGA modes
+	const auto maybe_mode_block = INT10_FindSvgaVideoMode(mode);
+	if (!maybe_mode_block) {
 		return VESA_FAIL;
+	}
+	const auto mblock = *maybe_mode_block;
 
 	// Was the found mode VESA 2.0 but the user requested VESA 1.2?
 	if (mblock.mode >= vesa_2_0_modes_start && int10.vesa_oldvbe)
