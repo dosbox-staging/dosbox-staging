@@ -166,10 +166,15 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 
 				const auto& mode = it->second;
 
-				if (mode < MinVesaBiosModeNumber) {
-					INT10_SetVideoMode(mode);
+				if (VESA_IsVesaMode(mode)) {
+					if (INT10_FindSvgaVideoMode(mode)) {
+						VESA_SetSVGAMode(mode);
+					} else {
+						WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_VESA_MODE"),
+						         mode_str.c_str());
+					}
 				} else {
-					VESA_SetSVGAMode(mode);
+					INT10_SetVideoMode(mode);
 				}
 			} else {
 				WriteOut(MSG_Get("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE"),
@@ -288,6 +293,9 @@ void MODE::AddMessages()
 	        "      SVGA (non-S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50\n"
 	        "      SVGA (S3)          40x25, all 80 and 132-column modes\n"
 	        "\n"
+	        "  - The 132x28, 132x30, and 132x34 modes are only available if `vesa_modes`\n"
+	        "    is set to `all`.\n"
+	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]mode[reset] [color=white]132x50\n"
 	        "  [color=light-green]mode[reset] [color=white]80x43[reset]\n"
@@ -298,6 +306,9 @@ void MODE::AddMessages()
 
 	MSG_Add("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE",
 	        "Display mode [color=white]%s[reset] is not supported on this graphics adapter.");
+
+	MSG_Add("PROGRAM_MODE_UNSUPPORTED_VESA_MODE",
+	        "VESA display mode [color=white]%s[reset] is not supported; set `vesa_modes = all` to enable it.");
 
 	MSG_Add("PROGRAM_MODE_INVALID_TYPEMATIC_RATE",
 	        "Invalid typematic rate setting.");
