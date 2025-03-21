@@ -751,9 +751,14 @@ void filter_compatible_s3_vesa_modes()
 	}
 
 	auto mode_allowed = [&](const VideoModeBlock& m) {
-		// Allow all text modes
+		// Only allow standard text modes
 		if (m.type == M_TEXT) {
-			return true;
+			constexpr auto _132x28 = 0x230;
+			constexpr auto _132x30 = 0x231;
+			constexpr auto _132x34 = 0x232;
+
+			return !contains(std::vector({_132x28, _132x30, _132x34}),
+			                 m.mode);
 		}
 
 		// Allow all non-VESA modes (standard VGA modes, and CGA and EGA
