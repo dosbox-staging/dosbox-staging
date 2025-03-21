@@ -768,7 +768,8 @@ void filter_compatible_s3_vesa_modes()
 		}
 
 		// Allow common standard VESA modes, except 320x200 hi-color
-		// modes that were rarely properly supported until the late 90s.
+		// modes that were rarely properly supported until the late 90s,
+		// and the DOSBox-specific widescreen modes.
 		constexpr auto s3_vesa_modes_start = 0x150;
 
 		if (m.mode < s3_vesa_modes_start) {
@@ -776,8 +777,20 @@ void filter_compatible_s3_vesa_modes()
 			constexpr auto _320x200_16bit = 0x10e;
 			constexpr auto _320x200_32bit = 0x10f;
 
-			return !(m.mode == _320x200_15bit || m.mode == _320x200_16bit ||
-			         m.mode == _320x200_32bit);
+			// Additional DOSBox-specific widescreen modes
+			constexpr auto _848x480_8bit  = 0x222;
+			constexpr auto _848x480_15bit = 0x223;
+			constexpr auto _848x480_16bit = 0x224;
+			constexpr auto _848x480_32bit = 0x225;
+
+			return !contains(std::vector({_320x200_15bit,
+			                              _320x200_16bit,
+			                              _320x200_32bit,
+			                              _848x480_8bit,
+			                              _848x480_15bit,
+			                              _848x480_16bit,
+			                              _848x480_32bit}),
+			                 m.mode);
 		}
 
 		// Selectively allow S3-specific VESA modes.
