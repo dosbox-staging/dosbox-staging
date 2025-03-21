@@ -216,11 +216,11 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 
 	mode &= 0x3fff; // vbe2 compatible, ignore lfb and keep screen content bits
 	if (mode < MinVesaBiosModeNumber) {
-		return 0x01;
+		return VESA_FAIL;
 	}
 	if (svga.accepts_mode) {
 		if (!svga.accepts_mode(mode)) {
-			return 0x01;
+			return VESA_FAIL;
 		}
 	}
 
