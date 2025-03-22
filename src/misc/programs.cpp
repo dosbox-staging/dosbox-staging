@@ -1014,7 +1014,7 @@ void PROGRAMS_Init(Section* sec)
 	sec->AddDestroyFunction(&PROGRAMS_Destroy);
 
 	// List config
-	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");
+	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n\n");
 	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "[color=white]Primary config file:[reset]\n  %s\n");
 	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", "\n[color=white]Additional config files:[reset]\n  ");
 
@@ -1022,8 +1022,8 @@ void PROGRAMS_Init(Section* sec)
 	        "[color=white]DOSBox Staging %s configuration directory:[reset]\n  %s\n\n");
 
 	// Write config
-	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open config file '%s'\n");
-	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing current config to '%s'\n");
+	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open config file '%s'\n\n");
+	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing current config to '%s'\n\n");
 
 	// Help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
@@ -1108,7 +1108,7 @@ void PROGRAMS_Init(Section* sec)
 	        "%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
-	        "[color=yellow]This setting cannot be changed at runtime.[reset]\n");
+	        "[color=yellow]This setting cannot be changed at runtime.[reset]\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
@@ -1119,38 +1119,38 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
 	        "[color=white]List of configuration sections:[reset]\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Secure mode enabled.\n");
+	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Secure mode enabled.\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
-	        "This operation is not permitted in secure mode.\n");
+	        "This operation is not permitted in secure mode.\n\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for setting '%s'.\n");
+	        "'%s' is not a valid value for setting '%s'.\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
-	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
+	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
-	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");
+	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n\n");
 
-	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
+	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n\n");
 
 	MSG_Add("PROGRAM_PATH_TOO_LONG",
-	        "The path '%s' exceeds the DOS limit of %d characters.\n");
+	        "The path '%s' exceeds the DOS limit of %d characters.\n\n");
 
-	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n");
+	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n\n");
 
 	MSG_Add("CONJUNCTION_AND", "and");
 
 	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
 	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
-	        "restart hotkey.\n");
+	        "restart hotkey.\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
-	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
+	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n\n");
 }

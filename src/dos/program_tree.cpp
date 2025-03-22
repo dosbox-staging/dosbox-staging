@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2024  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -441,10 +441,11 @@ void TREE::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]tree[reset]          ; displays directory tree starting from current directory\n"
-	        "  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n");
+	        "  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n"
+	        "\n");
 
 	MSG_Add("PROGRAM_TREE_DIRECTORY", " Directory tree for volume %s");
 
 	MSG_Add("PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS",
-	        "Too many files or subdirectories.\n");
+	        "Too many files or subdirectories.\n\n");
 }
