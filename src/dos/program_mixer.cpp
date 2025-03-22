@@ -772,9 +772,6 @@ void MIXER::Run()
 
 	} else {
 		// Error (no mixer command was executed)
-		if (show_status) {
-			ShowMixerStatus();
-		}
 		auto error = std::get<MixerCommand::Error>(result);
 		const auto error_message = error.message.c_str();
 		WriteOut("%s", error_message);
