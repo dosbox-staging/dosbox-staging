@@ -266,7 +266,7 @@ std::vector<uint8_t> LS::GetColumnWidths(const std::vector<uint8_t>& name_widths
 void LS::AddMessages()
 {
 	MSG_Add("PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN",
-	        "Unhandled wildcard pattern - '%s'\n");
+	        "Unhandled wildcard pattern - '%s'\n\n");
 
 	MSG_Add("PROGRAM_LS_HELP_LONG",
 	        "Display directory contents in wide list format.\n"
@@ -286,5 +286,6 @@ void LS::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]\n"
-	        "  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]\n");
+	        "  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]\n"
+	        "\n");
 }

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,7 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "program_mount_common.h"
 #include "program_mount.h"
 
 #include "dosbox.h"
@@ -38,7 +37,7 @@
 void MOUNT::ListMounts()
 {
 	const std::string header_drive = MSG_Get("PROGRAM_MOUNT_STATUS_DRIVE");
-	const std::string header_type = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
+	const std::string header_type  = MSG_Get("PROGRAM_MOUNT_STATUS_TYPE");
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 	const int term_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
@@ -83,6 +82,7 @@ void MOUNT::ShowUsage()
 #else
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_OTHER"));
 #endif
+	output.AddString("\n");
 	output.Display();
 }
 
@@ -403,13 +403,14 @@ void MOUNT::Run(void) {
 	return;
 }
 
-void MOUNT::AddMessages() {
+void MOUNT::AddMessages()
+{
 	AddCommonMountMessages();
 	if (MSG_Exists("PROGRAM_MOUNT_HELP")) {
 		return;
 	}
 	MSG_Add("PROGRAM_MOUNT_HELP",
-	        "Map physical folders or drives to a virtual drive letter.\n");
+	        "Map physical folders or drives to a virtual drive letter.\n\n");
 
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
 	        "Mount a directory from the host OS to a drive letter.\n"
@@ -431,39 +432,64 @@ void MOUNT::AddMessages() {
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
 	        "Examples:\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_WIN32",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_MACOSX",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
+
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_OTHER",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 
-	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CD-ROMs found: %d\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory.\n");
-	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
-	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
-	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
-	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
-	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
-	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR", "'%c' is not a valid drive identifier.\n");
-	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
-	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
-	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
+	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND", "CD-ROMs found: %d\n\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_1", "Directory %s doesn't exist.\n\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_2", "%s isn't a directory.\n\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED",
+	        "Drive %c already mounted with %s\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS",
+	        "Drive %c has successfully been removed.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL",
+	        "Virtual Drives can not be unMOUNTed.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR",
+	        "'%c' is not a valid drive identifier.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_WARNING_WIN",
+	        "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER",
+	        "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_NO_OPTION",
+	        "Warning: Ignoring unsupported option '%s'.\n\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE",
 	        "A normal directory needs to be MOUNTed first before an overlay can be added on\n"
-	        "top.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE","The overlay is NOT compatible with the drive that is specified.\n");
+	        "top.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE",
+	        "The overlay is NOT compatible with the drive that is specified.\n\n");
+
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE",
 	        "The overlay needs to be specified using the same addressing as the underlying\n"
-	        "drive. No mixing of relative and absolute paths.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
+	        "drive. No mixing of relative and absolute paths.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE",
+	        "The overlay directory can not be the same as underlying drive.\n\n");
+
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR", "Something went wrong.\n\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay %s on drive %c mounted.\n\n");
 }

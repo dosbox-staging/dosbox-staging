@@ -34,61 +34,69 @@ void LOADFIX::Run(void)
 		return;
 	}
 	uint16_t commandNr = 1;
-	uint16_t kb = 64;
+	uint16_t kb        = 64;
 	if (cmd->FindCommand(commandNr, temp_line)) {
 		if (temp_line[0] == '-' || temp_line[0] == '/') {
 			const auto ch = std::toupper(temp_line[1]);
 			if ((ch == 'D') || (ch == 'F')) {
 				// Deallocate all
 				DOS_FreeProcessMemory(0x40);
-				WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOCALL"),kb);
+				WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOCALL"), kb);
 				return;
 			} else {
 				// Set mem amount to allocate
-				kb = atoi(temp_line.c_str()+1);
-				if (kb==0) kb=64;
+				kb = atoi(temp_line.c_str() + 1);
+				if (kb == 0) {
+					kb = 64;
+				}
 				commandNr++;
 			}
 		}
 	}
 	// Allocate Memory
 	uint16_t segment;
-	uint16_t blocks = kb*1024/16;
-	if (DOS_AllocateMemory(&segment,&blocks)) {
-		DOS_MCB mcb((uint16_t)(segment-1));
-		mcb.SetPSPSeg(0x40);			// use fake segment
-		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"),kb);
+	uint16_t blocks = kb * 1024 / 16;
+	if (DOS_AllocateMemory(&segment, &blocks)) {
+		DOS_MCB mcb((uint16_t)(segment - 1));
+		mcb.SetPSPSeg(0x40); // use fake segment
+		WriteOut(MSG_Get("PROGRAM_LOADFIX_ALLOC"), kb);
 		// Prepare commandline...
-		if (cmd->FindCommand(commandNr++,temp_line)) {
+		if (cmd->FindCommand(commandNr++, temp_line)) {
 			// get Filename
 			char filename[128];
 			safe_strcpy(filename, temp_line.c_str());
 			// Setup commandline
-			char args[256+1];
-			args[0] = 0;
-			bool found = cmd->FindCommand(commandNr++,temp_line);
+			char args[256 + 1];
+			args[0]    = 0;
+			bool found = cmd->FindCommand(commandNr++, temp_line);
 			while (found) {
-				if (safe_strlen(args)+temp_line.length()+1>256) break;
+				if (safe_strlen(args) + temp_line.length() + 1 > 256) {
+					break;
+				}
 				safe_strcat(args, temp_line.c_str());
-				found = cmd->FindCommand(commandNr++,temp_line);
-				if (found)
+				found = cmd->FindCommand(commandNr++, temp_line);
+				if (found) {
 					safe_strcat(args, " ");
+				}
 			}
 			// Use shell to start program
 			DOS_Shell shell;
-			// If it's a batch file, this call places it into an internal data structure.
+			// If it's a batch file, this call places it into an
+			// internal data structure.
 			shell.ExecuteProgram(filename, args);
-			// Actually run the batch file. This is a no-op if it's an executable.
+			// Actually run the batch file. This is a no-op if it's
+			// an executable.
 			shell.RunBatchFile();
 			DOS_FreeMemory(segment);
-			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
+			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"), kb);
 		}
 	} else {
-		WriteOut(MSG_Get("PROGRAM_LOADFIX_ERROR"),kb);
+		WriteOut(MSG_Get("PROGRAM_LOADFIX_ERROR"), kb);
 	}
 }
 
-void LOADFIX::AddMessages() {
+void LOADFIX::AddMessages()
+{
 	MSG_Add("PROGRAM_LOADFIX_HELP_LONG",
 	        "Load a program in the specific memory region and then run it.\n"
 	        "\n"
@@ -113,9 +121,11 @@ void LOADFIX::AddMessages() {
 	        "  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]\n"
 	        "  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]\n"
 	        "  [color=light-green]loadfix[reset] [color=white]-128[reset]\n"
-	        "  [color=light-green]loadfix[reset] /d\n");
-	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
-	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
-	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");
-	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
+	        "  [color=light-green]loadfix[reset] /d\n"
+	        "\n");
+
+	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n\n");
+	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL", "Used memory freed.\n\n");
+	MSG_Add("PROGRAM_LOADFIX_ERROR", "Memory allocation error.\n\n");
 }

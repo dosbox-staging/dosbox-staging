@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2024  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -778,7 +778,7 @@ void MIXER::Run()
 		}
 		auto error = std::get<MixerCommand::Error>(result);
 		const auto error_message = error.message.c_str();
-		WriteOut("%s\n", error_message);
+		WriteOut("%s", error_message);
 
 		// To give people a hint if their [autoexec] contains invalid
 		// MIXER commands.
@@ -818,7 +818,8 @@ void MIXER::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-	        "  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]");
+	        "  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]"
+	        "\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
 	        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
@@ -832,69 +833,69 @@ void MIXER::AddMessages()
 	MSG_Add("SHELL_CMD_MIXER_CHANNEL_MONO", "Mono");
 
 	MSG_Add("SHELL_CMD_MIXER_INACTIVE_CHANNEL",
-	        "Channel [color=light-cyan]%s[reset] is not active");
+	        "Channel [color=light-cyan]%s[reset] is not active\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND",
-	        "Invalid global command: [color=white]%s[reset]");
+	        "Invalid global command: [color=white]%s[reset]\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND",
 	        "Invalid volume for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset] (run MIXER /? for help)");
+	        "[color=white]%s[reset] (run MIXER /? for help)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH",
 	        "Invalid crossfeed strength for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset]\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL",
 	        "Invalid chorus level for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset]\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_REVERB_LEVEL",
 	        "Invalid reverb level for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]\n(must be between 0 and 100)");
+	        "[color=white]%s[reset]\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH",
 	        "Missing crossfeed strength after [color=white]x[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL",
 	        "Missing chorus level after [color=white]c[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_REVERB_LEVEL",
 	        "Missing reverb level after [color=white]r[reset] for the "
-	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
+	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH",
 	        "Invalid global crossfeed strength [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL",
 	        "Invalid global chorus level [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL",
 	        "Invalid global reverb level [color=white]%s[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH",
 	        "Missing global crossfeed strength after [color=white]x[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL",
 	        "Missing global chorus level after [color=white]c[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL",
 	        "Missing global reverb level after [color=white]r[reset] "
-	        "(must be between 0 and 100)");
+	        "(must be between 0 and 100)\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND",
-	        "Missing command for the [color=light-cyan]%s[reset] channel");
+	        "Missing command for the [color=light-cyan]%s[reset] channel\n\n");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
 	        "Invalid command for the [color=light-cyan]%s[reset] channel: "
-	        "[color=white]%s[reset]");
+	        "[color=white]%s[reset]\n\n");
 }
 
 void MIXER::ShowMixerStatus()

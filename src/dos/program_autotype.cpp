@@ -186,5 +186,6 @@ void AUTOTYPE::AddMessages() {
 	        "  [color=light-green]autotype[reset] -list\n"
 	        "  [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]\n"
 	        "  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]\n"
-	        "  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter[reset]\n");
+	        "  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter[reset]\n"
+	        "\n");
 }

@@ -1066,7 +1066,7 @@ void PROGRAMS_Init(Section* sec)
 	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    show the description and the current value of a config\n"
 	        "                    property\n"
-			"\n"
+	        "\n"
 	        "  -help sections\n"
 	        "  -h    sections\n"
 	        "  -?    sections    [reset]list the names of all config sections\n"
@@ -1086,7 +1086,8 @@ void PROGRAMS_Init(Section* sec)
 	        "  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
 	        "                    set the value of a config property"
 	        "\n\n"
-	        "  -securemode       enable secure mode");
+	        "  -securemode       enable secure mode"
+	        "\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
 	        "[color=white]Description of the [color=light-green]'%s'[color=white] "
