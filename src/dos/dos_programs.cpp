@@ -41,7 +41,6 @@
 #include "program_mount.h"
 #include "program_mousectl.h"
 #include "program_move.h"
-#include "program_placeholder.h"
 #include "program_rescan.h"
 #include "program_serial.h"
 #include "program_setver.h"

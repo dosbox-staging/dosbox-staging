@@ -583,9 +583,6 @@
     <ClCompile Include="..\src\dos\program_move.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\dos\program_placeholder.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dos\program_subst.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
@@ -1697,9 +1694,6 @@
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\program_move.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\dos\program_placeholder.h">
       <Filter>src\dos</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dos\program_rescan.h">
