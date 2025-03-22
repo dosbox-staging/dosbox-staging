@@ -1585,7 +1585,7 @@ void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
 				continue;
 			}
 
-			constexpr auto set_prefix = "--set";
+			constexpr auto SetPrefix = "--set";
 
 			const auto key_prefix = format_str("%s=",
 			                                   property->propname.c_str());
@@ -1596,7 +1596,7 @@ void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
 				const auto current = it;
 				const auto next    = std::next(it);
 
-				if (*current == set_prefix &&
+				if (*current == SetPrefix &&
 				    next->starts_with(key_prefix)) {
 					it = args.erase(current, std::next(next));
 				} else {
@@ -1605,7 +1605,7 @@ void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
 			}
 
 			// Add the new arguments with the queued value
-			args.emplace_back(set_prefix);
+			args.emplace_back(SetPrefix);
 			args.emplace_back(key_prefix + *queued_value);
 		}
 	}

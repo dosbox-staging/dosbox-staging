@@ -137,6 +137,7 @@ bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const 
 	assert(control);
 	const auto section_dosbox = static_cast<Section_prop*>(
 	        control->GetSection("dosbox"));
+
 	assert(section_dosbox);
 	if (!section_dosbox->Get_bool("shell_config_shortcuts")) {
 		return false;
