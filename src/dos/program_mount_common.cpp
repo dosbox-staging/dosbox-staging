@@ -27,14 +27,15 @@
 
 Bitu ZDRIVE_NUM = 25;
 
-const char *UnmountHelper(char umount)
+const char* UnmountHelper(char umount)
 {
-	const char drive_id = toupper(umount);
+	const char drive_id           = toupper(umount);
 	const bool using_drive_number = (drive_id >= '0' && drive_id <= '3');
 	const bool using_drive_letter = (drive_id >= 'A' && drive_id <= 'Z');
 
-	if (!using_drive_number && !using_drive_letter)
+	if (!using_drive_number && !using_drive_letter) {
 		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR");
+	}
 
 	const uint8_t i_drive = using_drive_number ? (drive_id - '0')
 	                                           : drive_index(drive_id);
@@ -50,15 +51,14 @@ const char *UnmountHelper(char umount)
 
 	if (Drives[i_drive]) {
 		switch (DriveManager::UnmountDrive(i_drive)) {
-			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
-			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
+		case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
+		case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
 		}
 		Drives[i_drive] = nullptr;
-		mem_writeb(RealToPhysical(dos.tables.mediaid)+i_drive*9,0);
+		mem_writeb(RealToPhysical(dos.tables.mediaid) + i_drive * 9, 0);
 		if (i_drive == DOS_GetDefaultDrive()) {
 			DOS_SetDrive(ZDRIVE_NUM);
 		}
-
 	}
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
