@@ -132,35 +132,48 @@ bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
 	return true;
 }
 
-bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const std::string args)
+bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::string _args)
 {
 	assert(control);
 	const auto section_dosbox = static_cast<Section_prop*>(
 	        control->GetSection("dosbox"));
+
+	auto args = _args;
+	trim(args);
 
 	assert(section_dosbox);
 	if (!section_dosbox->Get_bool("shell_config_shortcuts")) {
 		return false;
 	}
 
-	Section* test = control->GetSectionFromProperty(cmd_in);
-	if (!test) {
+	Section* section = control->GetSectionFromProperty(property_name);
+	if (!section) {
 		return false;
 	}
 
 	if (args.empty()) {
-		std::string val = test->GetPropValue(cmd_in);
+		std::string val = section->GetPropValue(property_name);
 		if (val != NO_SUCH_PROPERTY) {
 			WriteOut("%s\n", val.c_str());
 		}
 		return true;
 	}
 
-	char newcom[1024];
-	safe_sprintf(newcom, "z:\\config -set %s %s%s", test->GetName(), cmd_in,
-	             args.c_str());
-	DoCommand(newcom);
+	char command[1024];
 
+	if (args.starts_with("/?")) {
+		safe_sprintf(command, "z:\\config -h %s %s", section->GetName(), property_name);
+		DoCommand(command);
+		return true;
+	}
+
+	safe_sprintf(command,
+	             "z:\\config -set %s %s %s",
+	             section->GetName(),
+	             property_name,
+	             args.c_str());
+
+	DoCommand(command);
 	return true;
 }
 
