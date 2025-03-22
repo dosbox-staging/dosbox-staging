@@ -113,14 +113,14 @@ TEST(Value, Hex)
 TEST(Value, Bool)
 {
 	Value test_value{true};
-	Value check_value("true", Value::V_BOOL);
+	Value check_value("on", Value::V_BOOL);
 	EXPECT_EQ(test_value.type, check_value.type);
 	EXPECT_EQ(test_value.type, Value::V_BOOL);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
 	EXPECT_EQ(test_value.ToString(), check_value.ToString());
-	EXPECT_EQ(test_value.ToString(), "true");
+	EXPECT_EQ(test_value.ToString(), "on");
 	EXPECT_TRUE(test_value);
 }
 
