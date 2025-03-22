@@ -473,8 +473,11 @@ void DOS_Shell::Run()
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA"),
 					         MMOD2_NAME);
 			}
-			if (machine == MCH_HERC)
+
+			if (machine == MCH_HERC) {
 				WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
+			}
+
 			WriteOut(MSG_Get("SHELL_STARTUP_END"));
 		}
 		safe_strcpy(input_line, line.c_str());
@@ -794,29 +797,32 @@ void SHELL_Init() {
 	        "[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
 	        "║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white] ║\n"
 	        "║                                                                    ║\n"
-	        "║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║\n"
-	        "║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║\n"
-	        "║                                                                    ║\n"
-	        "║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║\n"
-	        "║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║\n"
-	        "║ For more information read the [color=light-cyan]README[color=white] file in the DOSBox directory. ║\n"
+	        "║ Type [color=yellow]INTRO[color=white] and press [color=light-red]Enter[color=white] for a brief introduction.               ║\n"
+	        "║ Type [color=yellow]HELP[color=white]  and press [color=light-red]Enter[color=white] for a summary of the shell commands.    ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_CGA",
-	        "║ DOSBox supports Composite CGA mode.                                ║\n"
-	        "║ Use [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║\n"
-	        "║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.   ║\n"
+	        "║ Press [color=light-red]F12[color=white] to cycle through CGA composite modes (ON, OFF and AUTO). ║\n"
+	        "║ [color=light-red]F10[color=white] selects the composite setting to change, and [color=light-red](%s+)F11[color=white] changes ║\n"
+	        "║ it (watch the logs for the updated settings).                      ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_CGA_MONO",
-	        "║ Use [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║\n"
-	        "║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                ║\n"
+	        "║ Press [color=light-red]F11[color=white] to cycle through the monochrome color modes.             ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_HERC",
-	        "║ Use [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color. ║\n"
+	        "║ Press [color=light-red]F11[color=white] to cycle through the monochrome color modes.             ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_DEBUG",
 	        "║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║\n"
 	        "║                                                                    ║\n");
+
 	MSG_Add("SHELL_STARTUP_END",
+	        "║ To get the most out of DOSBox Staging, please read our             ║\n"
+	        "║ [color=light-cyan]Getting Started guide[color=white] and [color=light-cyan]wiki pages[color=white] (links are on our website).   ║\n"
+	        "║                                                                    ║\n"
 	        "║ [color=yellow]https://www.dosbox-staging.org[color=white]                                     ║\n"
 	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
 	        "\n");

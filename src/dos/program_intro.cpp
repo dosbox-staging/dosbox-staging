@@ -53,19 +53,21 @@ void INTRO::WriteOutProgramIntroSpecial()
 	         MMOD2_NAME); // Alt, for turbo
 }
 
-void INTRO::DisplayMount(void) {
-    /* Basic mounting has a version for each operating system.
-        * This is done this way so both messages appear in the language file*/
-    WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_START"));
+void INTRO::DisplayMount(void)
+{
+	/* Basic mounting has a version for each operating system.
+	 * This is done this way so both messages appear in the language file*/
+	WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_START"));
 #ifdef WIN32
-    WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_WINDOWS"));
+	WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_WINDOWS"));
 #else
-    WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_OTHER"));
+	WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_OTHER"));
 #endif
-    WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_END"));
+	WriteOut(MSG_Get("PROGRAM_INTRO_MOUNT_END"));
 }
 
-void INTRO::Run(void) {
+void INTRO::Run(void)
+{
 	// Usage
 	if (HelpRequested()) {
 		MoreOutputStrings output(*this);
@@ -75,39 +77,33 @@ void INTRO::Run(void) {
 		output.Display();
 		return;
 	}
-    if (cmd->FindExist("cdrom",false)) {
-#ifdef WIN32
-        WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
-#else
-        WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
-#endif
-        return;
-    }
-    if (cmd->FindExist("mount",false)) {
-        WriteOut("\033[2J");//Clear screen before printing
-        DisplayMount();
-        return;
-    }
-    if (cmd->FindExist("special",false)) {
-        WriteOutProgramIntroSpecial();
-        return;
-    }
-    /* Default action is to show all pages */
-    WriteOut(MSG_Get("PROGRAM_INTRO"));
-    uint8_t c;uint16_t n=1;
-    DOS_ReadFile (STDIN,&c,&n);
-    DisplayMount();
-    DOS_ReadFile (STDIN,&c,&n);
-#ifdef WIN32
-    WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
-#else
-    WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_OTHER"));
-#endif
-    DOS_ReadFile(STDIN, &c, &n);
-    WriteOutProgramIntroSpecial();
+	if (cmd->FindExist("cdrom", false)) {
+		WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"), PRIMARY_MOD_NAME);
+		return;
+	}
+	if (cmd->FindExist("mount", false)) {
+		WriteOut("\033[2J"); // Clear screen before printing
+		DisplayMount();
+		return;
+	}
+	if (cmd->FindExist("special", false)) {
+		WriteOutProgramIntroSpecial();
+		return;
+	}
+	/* Default action is to show all pages */
+	WriteOut(MSG_Get("PROGRAM_INTRO"));
+	uint8_t c;
+	uint16_t n = 1;
+	DOS_ReadFile(STDIN, &c, &n);
+	DisplayMount();
+	DOS_ReadFile(STDIN, &c, &n);
+	WriteOut(MSG_Get("PROGRAM_INTRO_CDROM"));
+	DOS_ReadFile(STDIN, &c, &n);
+	WriteOutProgramIntroSpecial();
 }
 
-void INTRO::AddMessages() {
+void INTRO::AddMessages()
+{
 	MSG_Add("PROGRAM_INTRO_HELP",
 	        "Display a full-screen introduction to DOSBox Staging.\n\n");
 
@@ -129,31 +125,36 @@ void INTRO::AddMessages() {
 	        "  [color=light-green]intro[reset] [color=white]cdrom[reset]\n"
 	        "\n");
 
-    MSG_Add("PROGRAM_INTRO",
-	        "[erases=entire][color=light-green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.\n"
-	        "DOSBox creates a shell for you which looks like old plain DOS.\n"
+	MSG_Add("PROGRAM_INTRO",
+	        "[erases=entire][color=light-green]Welcome to DOSBox Staging[reset], an x86 PC emulator to run old DOS games.\n"
 	        "\n"
-	        "For information about basic mount type [color=light-blue]intro mount[reset]\n"
-	        "For information about CD-ROM support type [color=light-blue]intro cdrom[reset]\n"
-	        "For information about special keys type [color=light-blue]intro special[reset]\n"
-	        "For more information, visit DOSBox Staging wiki:[color=light-blue]\n" WIKI_URL
-	        "[reset]\n"
+	        "DOSBox Staging includes its own DOS-like shell, so you don't need real\n"
+		    "MS-DOS to use it.\n"
 	        "\n"
-	        "[color=light-red]DOSBox will stop/exit without a warning if an error occurred![reset]\n"
+	        "For basic drive mounting info, run [color=light-blue]intro mount[reset]\n"
+	        "For basic CD-ROM mounting info, run [color=light-blue]intro cdrom[reset]\n"
+	        "For the list of special keys, run [color=light-blue]intro special[reset]\n"
+	        "\n"
+	        "To get the most out of DOSBox Staging, read our [color=white]Getting Started guide[reset]:\n"
+	        "[color=yellow]https://www.dosbox-staging.org/getting-started/[reset]\n"
+	        "\n"
+	        "The [color=white]DOSBox Staging wiki[reset] contains many helpful guides and game-specific tips:\n"
+	        "[color=yellow]https://github.com/dosbox-staging/dosbox-staging/wiki[reset]\n"
 	        "\n");
 
 	MSG_Add("PROGRAM_INTRO_MOUNT_START",
-	    "[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
-	    "Before you can use the files located on your own filesystem,\n"
-	    "you have to mount the directory containing the files.\n"
-	    "\n");
+	        "[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
+	        "\n"
+	        "Before you can use the files located on your own filesystem,\n"
+	        "you have to mount the directory containing the files.\n"
+	        "\n");
 
 	MSG_Add("PROGRAM_INTRO_MOUNT_WINDOWS",
 	        "[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗\n"
 	        "║ [color=light-green]mount c c:\\dosgames\\ [color=white]will create a C drive with c:\\dosgames as contents.║\n"
 	        "║                                                                         ║\n"
 	        "║ [color=light-green]c:\\dosgames\\ [color=white]is an example. Replace it with your own games directory.   ║\n"
-	        "╚═════════════════════════════════════════════════════════════════════════╝[reset]\n");
+	        "╚═════════════════════════════════════════════════════════════════════════╝[reset]\n\n");
 
 	MSG_Add("PROGRAM_INTRO_MOUNT_OTHER",
 	        "[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗\n"
@@ -163,55 +164,60 @@ void INTRO::AddMessages() {
 	        "╚══════════════════════════════════════════════════════════════════════╝[reset]\n");
 
 	MSG_Add("PROGRAM_INTRO_MOUNT_END",
-	        "After successfully mounting the disk you can type [color=light-blue]c:[reset] to go to your freshly\n"
-	        "mounted C-drive. Typing [color=light-blue]dir[reset] there will show its contents."
-	        " [color=light-blue]cd[reset] will allow you to\n"
-	        "enter a directory (recognised by the [color=yellow][][reset] in a directory listing).\n"
+	        "After successfully mounting the disk, you can type [color=light-blue]c:[reset] to go to your freshly\n"
+	        "mounted C drive. Typing [color=light-blue]dir[reset] there will show its contents."
+	        " [color=light-blue]cd[reset] will allow you\n"
+	        "to enter a directory (recognised by the [color=yellow][][reset] in a directory listing).\n"
+	        "\n"
 	        "You can run programs/files with extensions [color=red].exe .bat[reset] and [color=red].com[reset].\n");
 
-	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
-	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
-	        "the files as read-only.\n"
-	        "Usually this is enough for most games:\n"
-	        "[color=light-blue]mount D C:\\example -t cdrom[reset]\n"
-	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-	        "[color=light-blue]mount D C:\\example -t cdrom -label CDLABEL[reset]\n"
+	MSG_Add("PROGRAM_INTRO_CDROM",
+	        "[erases=entire][color=yellow]Mounting CD-ROM drives and images[reset]\n"
 	        "\n"
-	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
-	        "[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
-	        "[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n");
-
-	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
-	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
-	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
-	        "the files as read-only.\n"
-	        "Usually this is enough for most games:\n"
-	        "[color=light-blue]mount D ~/example -t cdrom[reset]\n"
-	        "If it doesn't work you might have to tell DOSBox the label of the CD-ROM:\n"
-	        "[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]\n"
+	        "The [color=light-green]mount[reset] command works on all normal directories. It installs MSCDEX\n"
+	        "and marks the files as read-only.\n"
 	        "\n"
-	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
-	        "[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
-	        "[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n");
+	        "To mount the directory [color=light-cyan]cd-dir[reset] relative to the startup directory as the [color=white]D[reset] drive\n"
+		    "(you can use absolute paths as well):\n"
+	        "\n"
+	        "  [color=light-green]mount [color=white]D [color=light-cyan]cd-dir [reset]-t cdrom\n"
+	        "\n"
+	        "For some programs, you'll need to specify the label of the CD-ROM as well:\n"
+	        "\n"
+	        "  [color=light-green]mount [color=white]D [color=light-cyan]cd-dir [reset]-t cdrom -label CDLABEL\n"
+	        "\n"
+	        "Use [color=light-green]imgmount[reset] to mount one or more ISO or CUE/BIN images to a drive letter:\n"
+	        "\n"
+	        "  [color=light-green]imgmount [color=white]D [color=light-cyan]cd/disc1.iso [reset]-t iso\n"
+	        "  [color=light-green]imgmount [color=white]D [color=light-cyan]cd/disc1.cue [reset]-t iso\n"
+	        "  [color=light-green]imgmount [color=white]D [color=light-cyan]cd/disc1.cue cd/disc2.cue [reset]-t iso\n"
+	        "  [color=light-green]imgmount [color=white]D [color=light-cyan]cd/*.cue [reset]-t iso\n"
+	        "\n"
+	        "Press [color=yellow]%s+F4[reset] to switch between multiple CD-ROM images mounted to the same\n"
+	        "drive letter.\n"
+	        "\n"
+	        "Run [color=light-green]imgmount /?[reset] for further details.\n"
+	        "\n");
 
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
-	        "[erases=entire][color=light-green]Special keys:[reset]\n"
-	        "These are the default keybindings.\n"
-	        "They can be changed in the [color=brown]keymapper[reset].\n"
+	        "[erases=entire][color=light-green]Special keys[reset]\n"
+	        "\n"
+	        "This is a list of the most important special keys.\n"
+	        "You can change these key bindings in the [color=brown]keymapper[reset].\n"
 	        "\n"
 	        "[color=yellow]%s+Enter[reset]  Switch between fullscreen and window mode.\n"
-	        "[color=yellow]%s+Pause[reset]  Pause/Unpause emulator.\n"
-	        "[color=yellow]%s+F1[reset]   %s Start the [color=brown]keymapper[reset].\n"
-	        "[color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.\n"
-	        "[color=yellow]%s+F5[reset]     Save a screenshot of the rendered image.\n"
-	        "[color=yellow]%s+F5[reset]   %s Save a screenshot of the DOS pre-rendered image.\n"
-	        "[color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.\n"
-	        "[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.\n"
-	        "[color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.\n"
-	        "[color=yellow]%s+F9[reset]   %s Shutdown emulator.\n"
-	        "[color=yellow]%s+F10[reset]  %s Capture/Release the mouse.\n"
-	        "[color=yellow]%s+F11[reset]  %s Slow down emulation.\n"
-	        "[color=yellow]%s+F12[reset]  %s Speed up emulation.\n"
-	        "[color=yellow]%s+F12[reset]    Unlock speed (turbo button/fast forward).\n");
+	        "[color=yellow]%s+Pause[reset]  Pause/unpause the emulation.\n"
+	        "[color=yellow]%s+F1[reset]   %s Open the [color=brown]keymapper[reset].\n"
+	        "[color=yellow]%s+F4[reset]   %s Swap mounted disk image, and scan for changes on all mounted drives.\n"
+	        "[color=yellow]%s+F5[reset]     Save screenshot.\n"
+	        "[color=yellow]%s+F5[reset]   %s Save raw screenshot.\n"
+	        "[color=yellow]%s+F6[reset]   %s Start/stop recording sound output to a WAV file.\n"
+	        "[color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a ZMBV file.\n"
+	        "[color=yellow]%s+F8[reset]   %s Mute/unmute audio.\n"
+	        "[color=yellow]%s+F9[reset]   %s Shut down the emulator.\n"
+	        "[color=yellow]%s+F10[reset]  %s Capture/release the mouse.\n"
+	        "[color=yellow]%s+F11[reset]  %s Increase CPU cycles (slow down the emulation).\n"
+	        "[color=yellow]%s+F12[reset]  %s Decrease CPU cycles (speed up the emulation).\n"
+	        "[color=yellow]%s+F12[reset]    Toggle fast-forward mode.\n"
+	        "\n");
 }

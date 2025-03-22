@@ -112,10 +112,6 @@ void Add_VFiles(const bool add_autoexec)
 
 void DOS_SetupPrograms(void)
 {
-	/*Add misc messages */
-	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
-	MSG_Add("WIKI_URL", WIKI_URL);
-
 	const auto add_autoexec = false;
 	Add_VFiles(add_autoexec);
 }

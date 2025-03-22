@@ -33,10 +33,6 @@
 #include "dos_inc.h"
 #include "help_util.h"
 
-#define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
-
-#define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Adding-utilities"
-
 class CommandLine {
 public:
 	CommandLine(int argc, const char* const argv[]);
