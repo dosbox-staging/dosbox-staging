@@ -774,7 +774,6 @@ void MIXER::Run()
 		// Error (no mixer command was executed)
 		if (show_status) {
 			ShowMixerStatus();
-			WriteOut("\n");
 		}
 		auto error = std::get<MixerCommand::Error>(result);
 		const auto error_message = error.message.c_str();
@@ -979,4 +978,6 @@ void MIXER::ShowMixerStatus()
 		             reverb,
 		             chorus);
 	}
+
+	WriteOut("\n");
 }
