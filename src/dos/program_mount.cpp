@@ -504,12 +504,12 @@ void MOUNT::AddMessages()
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND", "CD-ROMs found: %d\n\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_1", "Directory %s doesn't exist.\n\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_2", "%s isn't a directory.\n\n");
-	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s\n\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_1", "Directory '%s' doesn't exist.\n\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_2", "'%s' isn't a directory.\n\n");
+	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type '%s'\n\n");
 
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED",
-	        "Drive %c already mounted with %s\n\n");
+	        "Drive %c already mounted with '%s'\n\n");
 
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n\n");
 
@@ -546,5 +546,5 @@ void MOUNT::AddMessages()
 	        "The overlay directory can not be the same as underlying drive.\n\n");
 
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR", "Something went wrong.\n\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay %s on drive %c mounted.\n\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay '%s' on drive %c mounted.\n\n");
 }
