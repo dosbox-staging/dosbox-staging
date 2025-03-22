@@ -22,12 +22,12 @@
 
 #include <string>
 
+#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "checks.h"
 #include "program_more_output.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "../ints/int10.h"
 
 CHECK_NARROWING();
 
@@ -43,7 +43,7 @@ void LS::Run()
 	}
 
 	constexpr bool remove_if_found = true;
-	const bool has_option_all = cmd->FindExist("/a", remove_if_found);
+	const bool has_option_all      = cmd->FindExist("/a", remove_if_found);
 
 	auto patterns = cmd->GetArguments();
 
@@ -70,12 +70,11 @@ void LS::Run()
 
 		if ((last_backslash != std::string::npos &&
 		     last_backslash > first_wildcard) ||
-		    (last_slash != std::string::npos &&
-		     last_slash > first_wildcard)) {
+		    (last_slash != std::string::npos && last_slash > first_wildcard)) {
 
-		    WriteOut(MSG_Get("PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN"),
-		             pattern.c_str());
-		    return;
+			WriteOut(MSG_Get("PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN"),
+			         pattern.c_str());
+			return;
 		}
 	}
 
@@ -222,7 +221,8 @@ std::vector<uint8_t> LS::GetColumnWidths(const std::vector<uint8_t>& name_widths
 
 	// Use screen_width-1 because we never want to print line up to the
 	// actual limit; this would cause unnecessary line wrapping
-	const auto max_columns = static_cast<size_t>((screen_width - 1) / min_column_width);
+	const auto max_columns = static_cast<size_t>((screen_width - 1) /
+	                                             min_column_width);
 	std::vector<uint8_t> column_widths(max_columns);
 
 	// This function returns true when column number is too high to fit
@@ -243,8 +243,8 @@ std::vector<uint8_t> LS::GetColumnWidths(const std::vector<uint8_t>& name_widths
 			const uint8_t new_width = std::max(old_width, width);
 
 			column_widths[current_column] = new_width;
-			max_line_width = check_cast<uint8_t>(max_line_width +
-			                                     new_width - old_width);
+			max_line_width                = check_cast<uint8_t>(
+                                max_line_width + new_width - old_width);
 
 			if (max_line_width >= screen_width) {
 				return true;
