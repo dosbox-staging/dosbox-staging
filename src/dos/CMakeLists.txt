@@ -47,7 +47,6 @@ add_library(libdos STATIC
 		program_mount_common.cpp
 		program_mousectl.cpp
 		program_move.cpp
-		program_placeholder.cpp
 		program_rescan.cpp
 		program_serial.cpp
 		program_setver.cpp
