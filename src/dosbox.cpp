@@ -772,12 +772,12 @@ void DOSBOX_Init()
 	        "Mount settings can be optionally provided using a [c].conf file along-side\n"
 	        "the drive's directory, with content as follows:\n"
 	        "  [drive]\n"
-	        "  type    = dir, overlay, floppy, or cdrom\n"
-	        "  label   = custom_label\n"
-	        "  path    = path-specification, ie: path = %%path%%;c:\\tools\n"
+	        "  type     = dir, overlay, floppy, or cdrom\n"
+	        "  label    = custom_label\n"
+	        "  path     = path-specification (e.g., path = %%path%%;c:\\tools)\n"
 	        "  override_drive = mount the directory to this drive instead (default empty)\n"
-	        "  verbose = true or false\n"
-	        "  readonly = true or false");
+	        "  verbose  = on or off\n"
+	        "  readonly = on or off");
 
 	pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	pstring->Set_values({"auto", "high", "low", "quiet"});
@@ -1175,7 +1175,7 @@ void DOSBOX_Init()
 
 	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("ems", when_idle, "true");
-	pstring->Set_values({"true", "emsboard", "emm386", "false"});
+	pstring->Set_values({"true", "emsboard", "emm386", "off"});
 	pstring->Set_help(
 	        "Enable EMS support (enabled by default). Enabled provides the best\n"
 	        "compatibility but certain applications may run better with other choices,\n"
@@ -1241,7 +1241,7 @@ void DOSBOX_Init()
 	// COMMAND.COM settings
 
 	pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
-	pstring->Set_values({"auto", "true", "false"});
+	pstring->Set_values({"auto", "on", "off"});
 	pstring->Set_help(
 	        "Enable expanding environment variables such as %%PATH%% in the DOS command shell\n"
 	        "(auto by default, enabled if DOS version >= 7.0).\n"

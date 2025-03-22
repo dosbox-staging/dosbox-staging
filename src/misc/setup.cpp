@@ -196,7 +196,7 @@ std::string Value::ToString() const
 		oss << _hex;
 		break;
 	case V_INT: oss << _int; break;
-	case V_BOOL: oss << std::boolalpha << _bool; break;
+	case V_BOOL: oss << (_bool ? "on" : "off"); break;
 	case V_STRING: oss << _string; break;
 	case V_DOUBLE:
 		oss.precision(2);
@@ -1170,8 +1170,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 				// Percentage signs are encoded as '%%' in the
 				// config descriptions because they are sent
 				// through printf-like functions (e.g.,
-				// WriteOut()). So we need to de-escape them before
-				// writing them into the config.
+				// WriteOut()). So we need to de-escape them
+				// before writing them into the config.
 				auto s = format_str(help);
 
 				fprintf(outfile,
@@ -1213,7 +1213,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 				};
 
 				print_values("CONFIG_VALID_VALUES", p->GetValues());
-				print_values("CONFIG_DEPRECATED_VALUES", p->GetDeprecatedValues());
+				print_values("CONFIG_DEPRECATED_VALUES",
+				             p->GetDeprecatedValues());
 
 				fprintf(outfile, "\n");
 				fprintf(outfile, "#\n");

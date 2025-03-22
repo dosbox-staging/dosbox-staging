@@ -479,9 +479,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				std::vector<Value> pv = p->GetValues();
 
 				if (p->Get_type() == Value::V_BOOL) {
-					// Possible values for boolean are true
-					// & false
-					possible_values += "true, false";
+					possible_values += "on, off";
 
 				} else if (p->Get_type() == Value::V_INT) {
 					// Print min & max for integer values if
