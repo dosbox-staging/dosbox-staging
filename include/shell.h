@@ -112,6 +112,8 @@ private:
 	[[nodiscard]] std::string SubstituteEnvironmentVariables(std::string_view command);
 	[[nodiscard]] std::string ResolvePath(std::string_view name) const;
 
+	bool ExecuteConfigChange(const char* const cmd_in, const std::string args);
+
 	friend class AutoexecEditor;
 
 	std::shared_ptr<ShellHistory> history  = {};
@@ -149,7 +151,6 @@ public:
 	// 'virtual' needed for unit tests
 	virtual bool ExecuteShellCommand(const char* const name, char* arguments);
 	bool ExecuteProgram(std::string_view name, std::string_view args);
-	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
 
 	// HACK: Don't use in new code
 	// TODO: Remove the call to this function from autoexec
