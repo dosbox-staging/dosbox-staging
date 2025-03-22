@@ -117,8 +117,9 @@ void CLIP::AddMessages()
 	        "Examples:\n"
 	        "  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copies the list of files to the clipboard\n"
 	        "  [color=light-green]clip[reset] < [color=light-cyan]Z:\\AUTOEXEC.BAT[reset]   ; copies the file to the clipboard\n"
-	        "  [color=light-green]clip[reset]                     ; displays the clipboard's content\n");
+	        "  [color=light-green]clip[reset]                     ; displays the clipboard's content\n"
+	        "\n");
 
-	MSG_Add("PROGRAM_CLIP_INPUT_TOO_LARGE", "Input stream too large.\n");
-	MSG_Add("PROGRAM_CLIP_READ_ERROR", "Error reading input stream.\n");
+	MSG_Add("PROGRAM_CLIP_INPUT_TOO_LARGE", "Input stream too large.\n\n");
+	MSG_Add("PROGRAM_CLIP_READ_ERROR", "Error reading input stream.\n\n");
 }

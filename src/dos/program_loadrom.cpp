@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -127,12 +127,16 @@ void LOADROM::AddMessages()
 	        "  you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]\n");
-	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE", "Must specify ROM file to load.\n");
-	MSG_Add("PROGRAM_LOADROM_CANT_OPEN", "ROM file not accessible.\n");
-	MSG_Add("PROGRAM_LOADROM_TOO_LARGE", "ROM file too large.\n");
+	        "  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]\n"
+	        "\n");
+
+	MSG_Add("PROGRAM_LOADROM_SPECIFY_FILE", "Must specify ROM file to load.\n\n");
+	MSG_Add("PROGRAM_LOADROM_CANT_OPEN", "ROM file not accessible.\n\n");
+	MSG_Add("PROGRAM_LOADROM_TOO_LARGE", "ROM file too large.\n\n");
+
 	MSG_Add("PROGRAM_LOADROM_INCOMPATIBLE",
-	        "Video BIOS not supported by machine type.\n");
-	MSG_Add("PROGRAM_LOADROM_UNRECOGNIZED", "ROM file not recognized.\n");
-	MSG_Add("PROGRAM_LOADROM_BASIC_LOADED", "BASIC ROM loaded.\n");
+	        "Video BIOS not supported by machine type.\n\n");
+
+	MSG_Add("PROGRAM_LOADROM_UNRECOGNIZED", "ROM file not recognized.\n\n");
+	MSG_Add("PROGRAM_LOADROM_BASIC_LOADED", "BASIC ROM loaded.\n\n");
 }

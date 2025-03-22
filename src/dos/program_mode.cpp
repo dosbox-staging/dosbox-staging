@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -291,14 +291,15 @@ void MODE::AddMessages()
 	        "Examples:\n"
 	        "  [color=light-green]mode[reset] [color=white]132x50\n"
 	        "  [color=light-green]mode[reset] [color=white]80x43[reset]\n"
-	        "  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]");
+	        "  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]\n"
+	        "\n");
 
 	MSG_Add("PROGRAM_MODE_INVALID_DISPLAY_MODE",
-	        "Invalid display mode: [color=white]%s[reset]");
+	        "Invalid display mode: [color=white]%s[reset]\n\n");
 
 	MSG_Add("PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE",
-	        "Display mode [color=white]%s[reset] is not supported on this graphics adapter.");
+	        "Display mode [color=white]%s[reset] is not supported on this graphics adapter.\n\n");
 
 	MSG_Add("PROGRAM_MODE_INVALID_TYPEMATIC_RATE",
-	        "Invalid typematic rate setting.");
+	        "Invalid typematic rate setting.\n\n");
 }

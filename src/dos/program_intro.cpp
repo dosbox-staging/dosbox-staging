@@ -110,6 +110,7 @@ void INTRO::Run(void) {
 void INTRO::AddMessages() {
 	MSG_Add("PROGRAM_INTRO_HELP",
 	        "Display a full-screen introduction to DOSBox Staging.\n");
+
 	MSG_Add("PROGRAM_INTRO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]intro[reset]\n"
@@ -125,7 +126,9 @@ void INTRO::AddMessages() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]intro[reset]\n"
-	        "  [color=light-green]intro[reset] [color=white]cdrom[reset]\n");
+	        "  [color=light-green]intro[reset] [color=white]cdrom[reset]\n"
+	        "\n");
+
     MSG_Add("PROGRAM_INTRO",
 	        "[erases=entire][color=light-green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.\n"
 	        "DOSBox creates a shell for you which looks like old plain DOS.\n"
@@ -136,34 +139,36 @@ void INTRO::AddMessages() {
 	        "For more information, visit DOSBox Staging wiki:[color=light-blue]\n" WIKI_URL
 	        "[reset]\n"
 	        "\n"
-	        "[color=light-red]DOSBox will stop/exit without a warning if an error occurred![reset]\n");
+	        "[color=light-red]DOSBox will stop/exit without a warning if an error occurred![reset]\n"
+	        "\n");
+
 	MSG_Add("PROGRAM_INTRO_MOUNT_START",
-		"[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
-		"Before you can use the files located on your own filesystem,\n"
-		"you have to mount the directory containing the files.\n"
-		"\n"
-		);
+	    "[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
+	    "Before you can use the files located on your own filesystem,\n"
+	    "you have to mount the directory containing the files.\n"
+	    "\n");
+
 	MSG_Add("PROGRAM_INTRO_MOUNT_WINDOWS",
-		"[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗\n"
-		"║ [color=light-green]mount c c:\\dosgames\\ [color=white]will create a C drive with c:\\dosgames as contents.║\n"
-		"║                                                                         ║\n"
-		"║ [color=light-green]c:\\dosgames\\ [color=white]is an example. Replace it with your own games directory.   ║\n"
-		"╚═════════════════════════════════════════════════════════════════════════╝[reset]\n"
-		);
+	        "[bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗\n"
+	        "║ [color=light-green]mount c c:\\dosgames\\ [color=white]will create a C drive with c:\\dosgames as contents.║\n"
+	        "║                                                                         ║\n"
+	        "║ [color=light-green]c:\\dosgames\\ [color=white]is an example. Replace it with your own games directory.   ║\n"
+	        "╚═════════════════════════════════════════════════════════════════════════╝[reset]\n");
+
 	MSG_Add("PROGRAM_INTRO_MOUNT_OTHER",
-		"[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗\n"
-		"║ [color=light-green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║\n"
-		"║                                                                      ║\n"
-		"║ [color=light-green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║\n"
-		"╚══════════════════════════════════════════════════════════════════════╝[reset]\n"
-		);
+	        "[bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗\n"
+	        "║ [color=light-green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║\n"
+	        "║                                                                      ║\n"
+	        "║ [color=light-green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║\n"
+	        "╚══════════════════════════════════════════════════════════════════════╝[reset]\n");
+
 	MSG_Add("PROGRAM_INTRO_MOUNT_END",
-		"After successfully mounting the disk you can type [color=light-blue]c:[reset] to go to your freshly\n"
-		"mounted C-drive. Typing [color=light-blue]dir[reset] there will show its contents."
-		" [color=light-blue]cd[reset] will allow you to\n"
-		"enter a directory (recognised by the [color=yellow][][reset] in a directory listing).\n"
-		"You can run programs/files with extensions [color=red].exe .bat[reset] and [color=red].com[reset].\n"
-		);
+	        "After successfully mounting the disk you can type [color=light-blue]c:[reset] to go to your freshly\n"
+	        "mounted C-drive. Typing [color=light-blue]dir[reset] there will show its contents."
+	        " [color=light-blue]cd[reset] will allow you to\n"
+	        "enter a directory (recognised by the [color=yellow][][reset] in a directory listing).\n"
+	        "You can run programs/files with extensions [color=red].exe .bat[reset] and [color=red].com[reset].\n");
+
 	MSG_Add("PROGRAM_INTRO_CDROM_WINDOWS",
 	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
 	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
@@ -176,6 +181,7 @@ void INTRO::AddMessages() {
 	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n");
+
 	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
 	        "[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]\n"
 	        "The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks\n"
@@ -188,6 +194,7 @@ void INTRO::AddMessages() {
 	        "Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n");
+
 	MSG_Add("PROGRAM_INTRO_SPECIAL",
 	        "[erases=entire][color=light-green]Special keys:[reset]\n"
 	        "These are the default keybindings.\n"

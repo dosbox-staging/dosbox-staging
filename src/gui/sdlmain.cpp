@@ -4285,19 +4285,20 @@ static void messages_add_command_line()
 	        "\n"
 	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
-	        "  -V, --version            Print version information and exit.\n");
+	        "  -V, --version            Print version information and exit.\n"
+	        "\n");
 }
 
 static void messages_add_sdl()
 {
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property '%s' in section [%s]\n");
+	        "There is no property '%s' in section [%s]\n\n");
 
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
 	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
-	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
+	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n\n");
 
 	TITLEBAR_AddMessages();
 }

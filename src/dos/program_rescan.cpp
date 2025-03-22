@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -79,6 +80,8 @@ void RESCAN::AddMessages() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]\n"
-	        "  [color=light-green]rescan[reset] /a\n");
-	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive re-scanned.\n");
+	        "  [color=light-green]rescan[reset] /a\n"
+	        "\n");
+
+	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive re-scanned.\n\n");
 }
