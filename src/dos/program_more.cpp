@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -166,7 +166,6 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 	if (!shutdown_requested && !found) {
 		result_errorcode = DOSERR_FILE_NOT_FOUND;
 		WriteOut(MSG_Get("PROGRAM_MORE_NO_FILE"));
-		WriteOut("\n");
 		return false;
 	}
 
@@ -212,35 +211,50 @@ void MORE::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; displays sorted directory one screen at a time\n"
-	        "  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\\MANUAL.TXT[reset]   ; shows the file's content with tab size 4\n");
+	        "  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\\MANUAL.TXT[reset]   ; shows the file's content with tab size 4\n"
+	        "\n");
 
-	MSG_Add("PROGRAM_MORE_NO_FILE", "No input file found.");
+	MSG_Add("PROGRAM_MORE_NO_FILE", "No input file found.\n\n");
+
 	MSG_Add("PROGRAM_MORE_END",
 	        "[reset][color=brown]--- end of input ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_NEW_FILE",
 	        "[reset][color=brown]--- file %s ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_NEW_DEVICE",
 	        "[reset][color=brown]--- device %s ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_SINGLE",
 	        "[reset][color=brown]--- press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_PERCENT",
 	        "[reset][color=brown]--- (%d%%) press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_MULTI",
 	        "[reset][color=brown]--- press SPACE or ENTER for more, N for next file, Q to quit ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_SHORT",
 	        "[reset][color=brown]--- more ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_SHORT_PERCENT",
 	        "[reset][color=brown]--- (%d%%) more ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_PROMPT_LINE",
 	        "[reset][color=brown]--- line %u ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_OPEN_ERROR",
 	        "[reset][color=light-red]--- could not open %s ---[reset]");
+
 	MSG_Add("PROGRAM_MORE_TERMINATE",
 	        "[reset][color=brown](terminated)[reset]");
+
 	MSG_Add("PROGRAM_MORE_NEXT_FILE",
 	        "[reset][color=brown](next file)[reset]");
+
 	MSG_Add("PROGRAM_MORE_SKIPPED",
 	        "[reset][color=brown](skipped content)[reset]");
+
 	MSG_Add("PROGRAM_MORE_HOW_MANY_LINES",
 	        "[reset][color=brown]how many lines?[reset]");
 }

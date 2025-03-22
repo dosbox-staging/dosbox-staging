@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -586,55 +586,69 @@ void MOUSECTL::AddMessages()
 	        "    per-interface sensitivity set by this commands works on top of that.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");
+	        "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game"
+	        "\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_PATTERN",
-	        "Incorrect syntax, only ASCII characters allowed in pattern.\n");
+	        "Incorrect syntax, only ASCII characters allowed in pattern.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY",
-	        "Incorrect syntax, sensitivity needs to be in -999 to +999 range.\n");
+	        "Incorrect syntax, sensitivity needs to be in -999 to +999 range.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_DUPLICATED",
-	        "Incorrect syntax, duplicated mouse interfaces.\n");
+	        "Incorrect syntax, duplicated mouse interfaces.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_SYNTAX_MIN_RATE",
-	        "Incorrect syntax, sampling rate has to be one of:\n%s\n");
+	        "Incorrect syntax, sampling rate has to be one of:\n%s\n\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
-	        "Mapping not available in no-mouse mode.\n");
+	        "Mapping not available in no-mouse mode.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER",
-	        "Mapping not possible with current guest mouse driver.\n");
+	        "Mapping not possible with current guest mouse driver.\n\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT",
-	        "Individual physical mice not supported in this build.\n");
-	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT",
-	        "Individual physical mice not supported if 'mouse_raw_input' is enabled.\n");
+	        "Individual physical mice not supported in this build.\n\n");
 
-        MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
-	        "No mouse interfaces available.\n");
+	MSG_Add("PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT",
+	        "Individual physical mice not supported if 'mouse_raw_input' is enabled.\n\n");
+
+	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
+	        "No mouse interfaces available.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",
-	        "Mouse interface not available.\n");
-	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE",
-	        "No physical mice detected.\n");
+	        "Mouse interface not available.\n\n");
+
+	MSG_Add("PROGRAM_MOUSECTL_NO_PHYSICAL_MICE", "No physical mice detected.\n\n");
+
 	MSG_Add("PROGRAM_MOUSECTL_NO_MATCH",
-	        "No available mouse found matching the pattern.\n");
+	        "No available mouse found matching the pattern.\n\n");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER1",
 	        "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT1",
 	        "[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HEADER2",
 	        "[color=white]Interface     Mouse Name[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2",
 	        "[color=light-cyan]%-4s[reset]          %s");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED", "not mapped    %s");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_HOST", "uses system pointer");
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED", "mapped physical mouse");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED",
 	        "[color=light-red]mapped mouse disconnected[reset]");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED", "disabled");
 
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM",
 	        "Sampling rates for mice on [color=light-cyan]COM[reset] interfaces are estimations only.");
+
 	MSG_Add("PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN",
 	        "Sampling rates with minimum value set are marked with '*'.");
 
@@ -642,6 +656,7 @@ void MOUSECTL::AddMessages()
 	        "Click [color=white]left[reset] mouse button to map the physical mouse to the interface. Clicking\n"
 	        "any other button cancels the mapping and assigns system pointer to all the\n"
 	        "mouse interfaces.");
+
 	MSG_Add("PROGRAM_MOUSECTL_MAP_CANCEL", "(mapping cancelled)");
 	MSG_Add("PROGRAM_MOUSECTL_MAP_HINT",
 	        "Seamless mouse integration is always disabled while mapping is in effect\n"

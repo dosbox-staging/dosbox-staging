@@ -1092,27 +1092,28 @@ public:
 		        "\n"
 		        "Notes:\n"
 		        "  The \"reelmagic = on\" configuration setting loads the\n"
-		        "  driver on startup and prevents it from being unloaded.\n");
+		        "  driver on startup and prevents it from being unloaded.\n"
+		        "\n");
 
 		MSG_Add("PROGRAM_FMPDRV_TITLE",
-		        "ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu\n");
+		        "ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu\n\n");
 
 		MSG_Add("PROGRAM_FMPDRV_LOADED",
-		        "[reset][color=brown]Loaded at interrupt %xh[reset]\n");
+		        "[reset][color=brown]Loaded at interrupt %xh[reset]\n\n");
 
 		MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED",
-		        "[reset][color=brown]Already loaded at interrupt %xh[reset]\n");
+		        "[reset][color=brown]Already loaded at interrupt %xh[reset]\n\n");
 
 		MSG_Add("PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT",
-		        "[reset][color=light-red]Not loaded: No free interrupts![reset]\n");
+		        "[reset][color=light-red]Not loaded: No free interrupts![reset]\n\n");
 
-		MSG_Add("PROGRAM_FMPDRV_UNLOADED", "[reset][color=brown]Driver unloaded[reset]\n");
+		MSG_Add("PROGRAM_FMPDRV_UNLOADED", "[reset][color=brown]Driver unloaded[reset]\n\n");
 
 		MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED",
-		        "[reset][color=brown]Driver was not loaded[reset]\n");
+		        "[reset][color=brown]Driver was not loaded[reset]\n\n");
 
 		MSG_Add("PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED",
-		        "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n");
+		        "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n\n");
 
 		messages_were_added = true;
 	}

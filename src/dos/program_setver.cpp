@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2024  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -394,6 +394,7 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 		if (has_arg_batch) {
 			output.AddString(":: %s\n",
 			                 MSG_Get("PROGRAM_SETVER_BATCH_GLOBAL"));
+
 			output.AddString("%s%d.%02d /g /q\n",
 			                 setver_command.c_str(),
 			                 setver_table.version_global.major,
@@ -401,6 +402,7 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 		} else {
 			const auto tmp_str = indent(MSG_Get("PROGRAM_SETVER_GLOBAL"),
 			                            indent_size_1);
+
 			output.AddString("%s%d.%02d\n",
 			                 tmp_str.c_str(),
 			                 setver_table.version_global.major,
@@ -447,6 +449,7 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 	print(setver_table.by_file_name,
 	      indent_size_1,
 	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_NAME"));
+
 	print(setver_table.by_file_path,
 	      indent_size_2,
 	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_PATH"));
@@ -730,17 +733,21 @@ void SETVER::AddMessages()
 	        "Examples:\n"
 	        "  [color=light-green]setver[reset] /b              ; displays settings as a batch file\n"
 	        "  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file\n"
-	        "  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported\n");
+	        "  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported\n"
+	        "\n");
 
 	MSG_Add("PROGRAM_SETVER_WRONG_TABLE",
 	        "Only version table in Z:\\ directory is supported.");
+
 	MSG_Add("PROGRAM_SETVER_INVALID_VERSION", "Invalid DOS version.");
 
 	MSG_Add("PROGRAM_SETVER_TABLE_UPDATED", "Version table updated.");
 	MSG_Add("PROGRAM_SETVER_TABLE_CLEARED", "Version table cleared.");
 	MSG_Add("PROGRAM_SETVER_TABLE_ALREADY_EMPTY", "Version table already empty.");
+
 	MSG_Add("PROGRAM_SETVER_TABLE_ENTRY_REMOVED",
 	        "Entry removed from version table.");
+
 	MSG_Add("PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND",
 	        "Entry not found in version table.");
 
@@ -748,8 +755,10 @@ void SETVER::AddMessages()
 	MSG_Add("PROGRAM_SETVER_GLOBAL", "Global reported version");
 
 	MSG_Add("PROGRAM_SETVER_BATCH_GLOBAL", "rule for every executable");
+
 	MSG_Add("PROGRAM_SETVER_BATCH_BY_FILE_NAME",
 	        "rules for matching by file name only");
+
 	MSG_Add("PROGRAM_SETVER_BATCH_BY_FILE_PATH",
 	        "rules for matching by file name with path");
 }

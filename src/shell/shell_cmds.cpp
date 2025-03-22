@@ -150,7 +150,7 @@ bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const 
 	if (line && !line[0]) {
 		std::string val = test->GetPropValue(cmd_in);
 		if (val != NO_SUCH_PROPERTY) {
-			WriteOut("%s\n", val.c_str());
+			WriteOut("%s\n\n", val.c_str());
 		}
 		return true;
 	}
@@ -404,12 +404,14 @@ void DOS_Shell::CMD_HELP(char * args){
 		// Print help for all the commands
 		MoreOutputStrings output(*this);
 		PrintHelpForCommands(output, HELP_Filter::All);
+		output.AddString("\n");
 		output.Display();
 	} else {
 		// Print help for just the common commands
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_HELP"));
 		PrintHelpForCommands(output, HELP_Filter::Common);
+		output.AddString("\n");
 		output.Display();
 	}
 }
@@ -1472,6 +1474,7 @@ void DOS_Shell::CMD_SET(char * args) {
 		for (const auto& entry : psp->GetAllRawEnvironmentStrings()) {
 			WriteOut("%s\n", entry.c_str());
 		}
+		WriteOut("\n");
 		return;
 	}
 	//There are args:
@@ -1688,7 +1691,7 @@ void DOS_Shell::CMD_PAUSE(char *args) {
 	DOS_ReadFile(STDIN, &c, &n);
 	if (c == 0)
 		DOS_ReadFile(STDIN, &c, &n); // read extended key
-	WriteOut_NoParsing("\n");
+	WriteOut_NoParsing("\n\n");
 }
 
 void DOS_Shell::CMD_CALL(char * args){
@@ -1971,7 +1974,8 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
 void MAPPER_StopAutoTyping();
 void DOS_21Handler();
 
-void DOS_Shell::CMD_CHOICE(char * args){
+void DOS_Shell::CMD_CHOICE(char* args)
+{
 	HELP("CHOICE");
 
 	// Parse "/n"; does the user want to show choices or not?
@@ -1989,8 +1993,8 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	// helper to snip the stack of regex matches from the cmdline
 	auto snip_matches_from_cmdline = [&]() {
 		while (!matches.empty()) {
-			const auto &m = matches.top();
-			const auto start = static_cast<size_t>(m.position());
+			const auto& m     = matches.top();
+			const auto start  = static_cast<size_t>(m.position());
 			const auto length = static_cast<size_t>(m.length());
 			assert(start + length <= cmdline.size());
 			cmdline.erase(start, length);
@@ -1998,11 +2002,12 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		}
 	};
 	// helper to search the cmdline for the last regex match
-	auto search_cmdline_for = [&](const std::regex &r) -> bool {
+	auto search_cmdline_for = [&](const std::regex& r) -> bool {
 		matches = {};
 		auto it = std::sregex_iterator(cmdline.begin(), cmdline.end(), r);
-		while (it != std::sregex_iterator())
+		while (it != std::sregex_iterator()) {
 			matches.emplace(*it++);
+		}
 		match = matches.size() ? matches.top() : std::smatch();
 		return match.ready();
 	};
@@ -2011,32 +2016,36 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	static const std::regex re_choices("/[cC]:?([0-9a-zA-Z]+)");
 	const auto has_choices = search_cmdline_for(re_choices);
 	auto choices = has_choices ? match[1].str() : std::string("yn");
-	if (always_capitalize)
+	if (always_capitalize) {
 		upcase(choices);
+	}
 	remove_duplicates(choices);
 	snip_matches_from_cmdline();
 
 	// Parse /t[:]c,nn ... was a default choice and timeout provided?
 	static const std::regex re_timeout(R"(/[tT]:?([0-9a-zA-Z]),(\d+))");
-	auto has_default = search_cmdline_for(re_timeout);
+	auto has_default          = search_cmdline_for(re_timeout);
 	const auto default_wait_s = has_default ? std::stoi(match[2]) : 0;
-	char default_choice = has_default ? match[1].str()[0] : '\0';
-	if (always_capitalize)
+	char default_choice       = has_default ? match[1].str()[0] : '\0';
+	if (always_capitalize) {
 		default_choice = check_cast<char>(toupper(default_choice));
+	}
 	snip_matches_from_cmdline();
 
 	// Parse and print any text message(s) witout whitespace and quotes
 	static const std::regex re_trim(R"(^["\s]+|["\s]+$)");
 	const auto messages = split(std::regex_replace(cmdline, re_trim, ""));
-	for (const auto &message : messages)
+	for (const auto& message : messages) {
 		WriteOut("%s ", message.c_str());
+	}
 
 	// Show question prompt of the form [a,b]? where a b are the choice values
 	if (should_show_choices) {
 		WriteOut_NoParsing("[");
 		assert(choices.size() > 0);
-		for (size_t i = 0; i < choices.size() - 1; i++)
+		for (size_t i = 0; i < choices.size() - 1; i++) {
 			WriteOut("%c,", choices[i]);
+		}
 		WriteOut("%c]?", choices.back());
 	}
 
@@ -2046,16 +2055,17 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	                             default_wait_s > 0;
 	if (using_auto_type) {
 		std::vector<std::string> sequence{std::string{default_choice}};
-		const auto start_after_ms = static_cast<uint32_t>(default_wait_s * 1000);
+		const auto start_after_ms = static_cast<uint32_t>(
+		        default_wait_s * 1000);
 		MAPPER_AutoType(sequence, start_after_ms, 500);
 	}
 
 	// Begin waiting for input, but maybe break on some conditions
 	constexpr char ctrl_c = 3;
-	char choice = '\0';
-	uint16_t bytes_read = 1;
+	char choice           = '\0';
+	uint16_t bytes_read   = 1;
 	while (!contains(choices, choice)) {
-		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t *>(&choice), &bytes_read);
+		DOS_ReadFile(STDIN, reinterpret_cast<uint8_t*>(&choice), &bytes_read);
 		if (!bytes_read) {
 			WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_EOF"));
 			dos.return_code = 255;
@@ -2063,14 +2073,18 @@ void DOS_Shell::CMD_CHOICE(char * args){
 			        dos.return_code);
 			return;
 		}
-		if (always_capitalize)
+		if (always_capitalize) {
 			choice = static_cast<char>(toupper(choice));
-		if (using_auto_type)
+		}
+		if (using_auto_type) {
 			MAPPER_StopAutoTyping();
-		if (shutdown_requested)
+		}
+		if (shutdown_requested) {
 			break;
-		if (choice == ctrl_c)
+		}
+		if (choice == ctrl_c) {
 			break;
+		}
 	}
 
 	// Print the choice and return the index (or zero if aborted)
@@ -2078,9 +2092,11 @@ void DOS_Shell::CMD_CHOICE(char * args){
 	if (contains(choices, choice)) {
 		WriteOut("%c\n", choice);
 		const auto nth_choice = choices.find(choice) % 254 + 1;
-		dos.return_code = check_cast<uint8_t>(nth_choice);
-		LOG_MSG("CHOICE: '%c' (#%u of %d choices)", choice,
-		        dos.return_code, num_choices);
+		dos.return_code       = check_cast<uint8_t>(nth_choice);
+		LOG_MSG("CHOICE: '%c' (#%u of %d choices)",
+		        choice,
+		        dos.return_code,
+		        num_choices);
 	} else {
 		WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_ABORTED"));
 		dos.return_code = 0;
@@ -2088,6 +2104,7 @@ void DOS_Shell::CMD_CHOICE(char * args){
 		            dos.return_code,
 		            num_choices);
 	}
+	WriteOut("\n");
 }
 
 void DOS_Shell::CMD_PATH(char *args){
@@ -2103,9 +2120,9 @@ void DOS_Shell::CMD_PATH(char *args){
 		return;
 	} else {
 		if (const auto envvar = psp->GetEnvironmentValue("PATH"))
-			WriteOut("%s\n", envvar->c_str());
+			WriteOut("%s\n\n", envvar->c_str());
 		else
-			WriteOut("PATH=(null)\n");
+			WriteOut("PATH=(null)\n\n");
 	}
 }
 
@@ -2427,7 +2444,7 @@ void DOS_Shell::CMD_MOVE(char* args)
 		const auto dest_drive_letter   = final_destination[0];
 		if (source_drive_letter == dest_drive_letter) {
 			if (DOS_Rename(source.c_str(), final_destination.c_str())) {
-				WriteOut("%s => %s\n",
+				WriteOut("%s => %s\n\n",
 				         source.c_str(),
 				         final_destination.c_str());
 			} else {
@@ -2476,7 +2493,7 @@ void DOS_Shell::CMD_MOVE(char* args)
 			} while (bytes_requested == buffer_capacity);
 
 			if (success) {
-				WriteOut("%s => %s\n",
+				WriteOut("%s => %s\n\n",
 				         source.c_str(),
 				         final_destination.c_str());
 			}
@@ -2596,7 +2613,7 @@ void DOS_Shell::CMD_RENAME(char* args)
 		}
 
 		if (!DOS_Rename(old_fullpath.c_str(), new_fullpath.c_str())) {
-			WriteOut("Rename %s -> %s failed\n",
+			WriteOut("Rename %s -> %s failed\n\n",
 			         old_fullpath.c_str(),
 			         new_fullpath.c_str());
 		}
