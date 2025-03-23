@@ -1584,17 +1584,11 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable Gravis UltraSound emulation ('off' by default).\n"
-	        "Many games and all demos upload their own sounds, but some rely on the\n"
-	        "instrument patch files included with the GUS for MIDI playback (see 'ultradir'\n"
-	        "for details). Some games also require ULTRAMID.EXE to be loaded prior to\n"
-	        "starting the game.\n"
-	        "\n"
-	        "Note: The default settings of base address 240, IRQ 5, and DMA 3 have been\n"
-	        "      chosen so the GUS can coexist with a Sound Blaster card. This works fine\n"
-	        "      for the majority of programs, but some games and demos expect the GUS\n"
-	        "      factory defaults of base address 220, IRQ 11, and DMA 1. The default\n"
-	        "      IRQ 11 is also problematic with specific versions of the DOS4GW extender\n"
-	        "      that cannot handle IRQs above 7.");
+	        "The default settings of base address 240, IRQ 5, and DMA 3 have been chosen so\n"
+	        "the GUS can coexist with a Sound Blaster card. This works fine for the majority\n"
+	        "of programs, but some games and demos expect the GUS factory defaults of base\n"
+	        "address 220, IRQ 11, and DMA 1. The default IRQ 11 is also problematic with\n"
+	        "specific versions of the DOS4GW extender that cannot handle IRQs above 7.");
 
 	auto* hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
@@ -1623,11 +1617,9 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
 	assert(str_prop);
 	str_prop->Set_help(
-	        "Path to the UltraSound directory ('C:\\ULTRASND' by default).\n"
-	        "This should have a 'MIDI' subdirectory containing the patches (instrument\n"
-	        "files) required by some games for MIDI music playback. Not all games need these\n"
-	        "patches; many GUS-native games and all demos upload their own custom sounds\n"
-	        "instead.");
+	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
+	        "In this directory, there should be a 'MIDI' directory that contains the patch\n"
+	        "files for GUS playback.");
 }
 
 void GUS_AddConfigSection(const ConfigPtr& conf)
