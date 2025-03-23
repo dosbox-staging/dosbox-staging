@@ -352,12 +352,12 @@ static void config_init(Section_prop& secprop)
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
 	prop_bool->Set_help(
 	        "Release the captured mouse by middle-clicking, and also capture it in\n"
-	        "seamless mode (enabled by default).");
+	        "seamless mode ('on' by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
 	prop_bool->Set_help(
 	        "Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
-	        "mode on systems with more than one display (enabled by default).\n"
+	        "mode on systems with more than one display ('on' by default).\n"
 	        "Note: You should disable this if it incorrectly detects multiple displays\n"
 	        "      when only one should actually be used. This might happen if you are\n"
 	        "      using mirrored display mode or using an AV receiver's HDMI input for\n"
@@ -375,18 +375,18 @@ static void config_init(Section_prop& secprop)
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(
 	        "Enable to bypass your operating system's mouse acceleration and sensitivity\n"
-	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
-	        "captured in windowed mode.");
+	        "settings ('on' by default). Works in fullscreen or when the mouse is captured\n"
+	        "in windowed mode.");
 
 	// DOS driver configuration
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", only_at_start, true);
 	assert(prop_bool);
 	prop_bool->Set_help(
-	        "Enable the built-in mouse driver (enabled by default). This results in the\n"
-	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
-	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
-	        "not compatible with the built-in driver).\n"
+	        "Enable the built-in mouse driver ('on' by default). This results in the lowest\n"
+	        "possible latency and the smoothest mouse movement, so only disable it and load\n"
+	        "a real DOS mouse driver if it's really necessary (e.g., if a game is not\n"
+	        "compatible with the built-in driver).\n"
 	        "  on:   Enable the built-in mouse driver. `ps2_mouse_model` and\n"
 	        "        `com_mouse_model` have no effect on the built-in driver.\n"
 	        "  off:  Disable the built-in mouse driver (if you don't want mouse support or\n"
@@ -403,7 +403,7 @@ static void config_init(Section_prop& secprop)
 	assert(prop_bool);
 	prop_bool->Set_help(
 	        "Update mouse movement counters immediately, without waiting for interrupt\n"
-	        "(disabled by default). May improve gameplay, especially in fast-paced games\n"
+	        "('off' by default). May improve gameplay, especially in fast-paced games\n"
 	        "(arcade, FPS, etc.), as for some games it effectively boosts the mouse\n"
 	        "sampling rate to 1000 Hz, without increasing interrupt overhead.\n"
 	        "Might cause compatibility issues. List of known incompatible games:\n"
@@ -463,13 +463,13 @@ static void config_init(Section_prop& secprop)
 
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
 	prop_bool->Set_help(
-	        "VMware mouse interface (enabled by default).\n"
-	        "Fully compatible only with experimental 3rd party Windows 3.1x driver.\n"
+	        "VMware mouse interface ('on' by default).\n"
+	        "with experimental 3rd party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
 	prop_bool->Set_help(
-	        "VirtualBox mouse interface (enabled by default).\n"
+	        "VirtualBox mouse interface ('on' by default).\n"
 	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 }

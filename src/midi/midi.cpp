@@ -932,7 +932,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 
 	auto bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
 	bool_prop->Set_help(
-	        "Enable raw, unaltered MIDI output (disabled by default).\n"
+	        "Enable raw, unaltered MIDI output ('off' by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
 	        "which makes editing the MIDI recordings of these games very error-prone and\n"
 	        "cumbersome in MIDI sequencers, often resulting in hanging or missing notes.\n"

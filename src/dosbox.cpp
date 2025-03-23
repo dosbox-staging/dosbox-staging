@@ -736,17 +736,17 @@ void DOSBOX_Init()
 	        "               demoscene productions.");
 
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
-	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters (disabled by default).");
+	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");
 
 	pbool = secprop->Add_bool("vga_render_per_scanline", only_at_start, true);
 	pbool->Set_help(
-	        "Emulate accurate per-scanline VGA rendering (enabled by default).\n"
+	        "Emulate accurate per-scanline VGA rendering ('on' by default).\n"
 	        "Currently, you need to disable this for a few games, otherwise they will crash\n"
 	        "at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
 
 	pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	pbool->Set_help(
-	        "Permit changes known to improve performance (enabled by default).\n"
+	        "Permit changes known to improve performance ('on' by default).\n"
 	        "Currently, no games are known to be negatively affected by this.\n"
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
@@ -767,7 +767,7 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("automount", only_at_start, true);
 	pbool->Set_help(
 	        "Mount 'drives/[c]' directories as drives on startup, where [c] is a lower-case\n"
-	        "drive letter from 'a' to 'y' (enabled by default). The 'drives' folder can be\n"
+	        "drive letter from 'a' to 'y' ('on' by default). The 'drives' folder can be\n"
 	        "provided relative to the current directory or via built-in resources.\n"
 	        "Mount settings can be optionally provided using a [c].conf file along-side\n"
 	        "the drive's directory, with content as follows:\n"
@@ -793,13 +793,13 @@ void DOSBOX_Init()
 	pbool->Set_help(
 	        "Many games open all their files with writable permissions; even files that they\n"
 	        "never modify. This setting lets you write-protect those files while still\n"
-	        "allowing the game to read them (enabled by default). A second use-case: if\n"
-	        "you're using a copy-on-write or network-based filesystem, this setting avoids\n"
+	        "allowing the game to read them ('on' by default). A second use-case: if you're\n"
+	        "using a copy-on-write or network-based filesystem, this setting avoids\n"
 	        "triggering write operations for these write-protected files.");
 
 	pbool = secprop->Add_bool("shell_config_shortcuts", when_idle, true);
 	pbool->Set_help(
-	        "Allow shortcuts for simpler configuration management (enabled by default).\n"
+	        "Allow shortcuts for simpler configuration management ('on' by default).\n"
 	        "E.g., instead of 'config -set sbtype sb16', it is enough to execute\n"
 	        "'sbtype sb16', and instead of 'config -get sbtype', you can just execute\n"
 	        "the 'sbtype' command.");
@@ -824,7 +824,7 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("voodoo", &VOODOO_Init);
 
 	pbool = secprop->Add_bool("voodoo", when_idle, true);
-	pbool->Set_help("Enable 3dfx Voodoo emulation (enabled by default).");
+	pbool->Set_help("Enable 3dfx Voodoo emulation ('on' by default).");
 
 	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "4");
 	pstring->Set_values({"4", "12"});
@@ -853,8 +853,8 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
 	pbool->Set_help(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
-	        "(disabled by default). Only suggested if you have a fast desktop-class CPU, as\n"
-	        "it can impact frame rates on slower systems.");
+	        "('off' by default). Only suggested if you have a fast desktop-class CPU, as it\n"
+	        "can impact frame rates on slower systems.");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
@@ -991,7 +991,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
 
 	pbool = secprop->Add_bool("ps1audio", when_idle, false);
-	pbool->Set_help("Enable IBM PS/1 Audio emulation (disabled by default).");
+	pbool->Set_help("Enable IBM PS/1 Audio emulation ('off' by default).");
 
 	pstring = secprop->Add_string("ps1audio_filter", when_idle, "on");
 	pstring->Set_help(
@@ -1063,25 +1063,23 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("timed", when_idle, true);
 	pbool->Set_help(
-	        "Enable timed intervals for axis (enabled by default).\n"
+	        "Enable timed intervals for axis ('on' by default).\n"
 	        "Experiment with this option, if your joystick drifts away.");
 
 	pbool = secprop->Add_bool("autofire", when_idle, false);
-	pbool->Set_help(
-	        "Fire continuously as long as the button is pressed\n"
-	        "(disabled by default).");
+	pbool->Set_help("Fire continuously as long as the button is pressed ('off' by default)");
 
 	pbool = secprop->Add_bool("swap34", when_idle, false);
 	pbool->Set_help(
-	        "Swap the 3rd and the 4th axis (disabled by default).\n"
-	        "Can be useful for certain joysticks.");
+	        "Swap the 3rd and the 4th axis ('off' by default). Can be useful for certain\n"
+	        "joysticks.");
 
 	pbool = secprop->Add_bool("buttonwrap", when_idle, false);
-	pbool->Set_help("Enable button wrapping at the number of emulated buttons (disabled by default).");
+	pbool->Set_help("Enable button wrapping at the number of emulated buttons ('off' by default).");
 
 	pbool = secprop->Add_bool("circularinput", when_idle, false);
 	pbool->Set_help(
-	        "Enable translation of circular input to square output (disabled by default).\n"
+	        "Enable translation of circular input to square output ('off' by default).\n"
 	        "Try enabling this if your left analog stick can only move in a circle.");
 
 	pint = secprop->Add_int("deadzone", when_idle, 10);
@@ -1093,8 +1091,8 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	pbool->Set_help(
 	        "Enable hotkeys to allow realtime calibration of the joystick's X and Y axes\n"
-	        "(disabled by default). Only consider this if in-game calibration fails and\n"
-	        "other settings have been tried.\n"
+	        "('off' by default). Only consider this as a last resort if in-game calibration\n"
+	        "doesn't work correctly.\n"
 	        "  - Ctrl/Cmd+Arrow-keys adjust the axis' scalar value:\n"
 	        "      - Left and Right diminish or magnify the x-axis scalar, respectively.\n"
 	        "      - Down and Up diminish or magnify the y-axis scalar, respectively.\n"
@@ -1171,18 +1169,18 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("dos", &DOS_Init);
 	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
 	pbool = secprop->Add_bool("xms", when_idle, true);
-	pbool->Set_help("Enable XMS support (enabled by default).");
+	pbool->Set_help("Enable XMS support ('on' by default).");
 
 	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("ems", when_idle, "true");
 	pstring->Set_values({"true", "emsboard", "emm386", "off"});
 	pstring->Set_help(
-	        "Enable EMS support (enabled by default). Enabled provides the best\n"
-	        "compatibility but certain applications may run better with other choices,\n"
-	        "or require EMS support to be disabled to work at all.");
+	        "Enable EMS support ('on' by default). Enabled provides the best compatibility\n"
+	        "but certain applications may run better with other choices, or require EMS\n"
+	        "support to be disabled to work at all.");
 
 	pbool = secprop->Add_bool("umb", when_idle, true);
-	pbool->Set_help("Enable UMB support (enabled by default).");
+	pbool->Set_help("Enable UMB support ('on' by default).");
 
 	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
 	pstring->Set_values({"expanded", "standard"});
@@ -1266,7 +1264,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DOS_InitFileLocking, changeable_at_runtime);
 	pbool = secprop->Add_bool("file_locking", when_idle, true);
 	pbool->Set_help(
-	        "Enable file locking (SHARE.EXE emulation; enabled by default).\n"
+	        "Enable file locking (SHARE.EXE emulation; 'on' by default).\n"
 	        "This is required for some Windows 3.1x applications to work properly.\n"
 	        "It generally does not cause problems for DOS games except in rare cases\n"
 	        "(e.g., Astral Blur demo). If you experience crashes related to file\n"
@@ -1283,7 +1281,7 @@ void DOSBOX_Init()
 	secprop = control->AddInactiveSectionProp("ipx");
 #endif
 	pbool = secprop->Add_bool("ipx", when_idle, false);
-	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation (disabled by default).");
+	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation ('off' by default).");
 #if C_IPX
 	pbool->SetEnabledOptions({"ipx"});
 #endif
@@ -1298,7 +1296,7 @@ void DOSBOX_Init()
 	pbool->SetOptionHelp(
 	        "SLIRP",
 	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
-	        "network (using libslirp) with properties as follows (enabled by default):\n"
+	        "network (using libslirp) with properties as follows ('on' by default):\n"
 	        "  - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.\n"
 	        "  - 10.0.2.2:       IP of the gateway and DHCP service.\n"
 	        "  - 10.0.2.3:       IP of the virtual DNS server.\n"
