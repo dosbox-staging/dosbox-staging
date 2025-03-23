@@ -237,11 +237,13 @@ static struct MixerSettings mixer = {};
 
 void MixerChannel::SetLineoutMap(const StereoLine map)
 {
+	std::lock_guard lock(mutex);
 	output_map = map;
 }
 
-StereoLine MixerChannel::GetLineoutMap() const
+StereoLine MixerChannel::GetLineoutMap()
 {
+	std::lock_guard lock(mutex);
 	return output_map;
 }
 
@@ -319,13 +321,15 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
 	do_sleep = HasFeature(ChannelFeature::Sleep);
 }
 
-bool MixerChannel::HasFeature(const ChannelFeature feature) const
+bool MixerChannel::HasFeature(const ChannelFeature feature)
 {
+	std::lock_guard lock(mutex);
 	return features.find(feature) != features.end();
 }
 
-std::set<ChannelFeature> MixerChannel::GetFeatures() const
+std::set<ChannelFeature> MixerChannel::GetFeatures()
 {
+	std::lock_guard lock(mutex);
 	return features;
 }
 
@@ -790,8 +794,9 @@ void MixerChannel::Set0dbScalar(const float scalar)
 	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
 	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(Max16BitSampleValue));
 
-	db0_volume_gain = scalar;
+	std::lock_guard lock(mutex);
 
+	db0_volume_gain = scalar;
 	UpdateCombinedVolume();
 }
 
@@ -801,25 +806,31 @@ void MixerChannel::UpdateCombinedVolume()
 	combined_volume_gain = user_volume_gain * app_volume_gain * db0_volume_gain;
 }
 
-const AudioFrame MixerChannel::GetUserVolume() const
+const AudioFrame MixerChannel::GetUserVolume()
 {
+	std::lock_guard lock(mutex);
 	return user_volume_gain;
 }
 
 void MixerChannel::SetUserVolume(const AudioFrame gain)
 {
+	std::lock_guard lock(mutex);
+
 	// Allow unconstrained user-defined values
 	user_volume_gain = gain;
 	UpdateCombinedVolume();
 }
 
-const AudioFrame MixerChannel::GetAppVolume() const
+const AudioFrame MixerChannel::GetAppVolume()
 {
+	std::lock_guard lock(mutex);
 	return app_volume_gain;
 }
 
 void MixerChannel::SetAppVolume(const AudioFrame gain)
 {
+	std::lock_guard lock(mutex);
+
 	// Constrain application-defined volume between 0% and 100%
 	auto clamp_to_unity = [](const float vol) {
 		constexpr auto MinUnityVolume = 0.0f;
@@ -854,6 +865,9 @@ void MixerChannel::SetChannelMap(const StereoLine map)
 {
 	assert(map.left == Left || map.left == Right);
 	assert(map.right == Left || map.right == Right);
+
+	std::lock_guard lock(mutex);
+
 	channel_map = map;
 
 #ifdef DEBUG
@@ -1052,6 +1066,8 @@ void MixerChannel::ConfigureResampler()
 // Clear the resampler and prime its input queue with zeroes
 void MixerChannel::ClearResampler()
 {
+	std::lock_guard lock(mutex);
+
 	if (do_lerp_upsample) {
 		InitLerpUpsamplerState();
 	}
@@ -1118,13 +1134,15 @@ void MixerChannel::SetSampleRate(const int new_sample_rate_hz)
 	ConfigureResampler();
 }
 
-const std::string& MixerChannel::GetName() const
+const std::string& MixerChannel::GetName()
 {
+	std::lock_guard lock(mutex);
 	return name;
 }
 
-int MixerChannel::GetSampleRate() const
+int MixerChannel::GetSampleRate()
 {
+	std::lock_guard lock(mutex);
 	return sample_rate_hz;
 }
 
@@ -1133,24 +1151,30 @@ static float get_mixer_frames_per_tick()
 	return static_cast<float>(mixer.sample_rate_hz) / 1000.0f;
 }
 
-float MixerChannel::GetFramesPerTick() const
+float MixerChannel::GetFramesPerTick()
 {
+	std::lock_guard lock(mutex);
+
 	const float stretch_factor = static_cast<float>(sample_rate_hz) /
 	                             static_cast<float>(mixer.sample_rate_hz);
 
 	return get_mixer_frames_per_tick() * stretch_factor;
 }
 
-float MixerChannel::GetFramesPerBlock() const
+float MixerChannel::GetFramesPerBlock()
 {
+	std::lock_guard lock(mutex);
+
 	const float stretch_factor = static_cast<float>(sample_rate_hz) /
 	                             static_cast<float>(mixer.sample_rate_hz);
 
 	return static_cast<float>(mixer.blocksize) * stretch_factor;
 }
 
-double MixerChannel::GetMillisPerFrame() const
+double MixerChannel::GetMillisPerFrame()
 {
+	std::lock_guard lock(mutex);
+
 	// Note: the double return value is used for PIC timing (which uses
 	// doubles)
 
@@ -1159,6 +1183,8 @@ double MixerChannel::GetMillisPerFrame() const
 
 void MixerChannel::SetPeakAmplitude(const int peak)
 {
+	std::lock_guard lock(mutex);
+
 	peak_amplitude = peak;
 	envelope.Update(sample_rate_hz,
 	                peak_amplitude,
@@ -1269,6 +1295,7 @@ static void log_filter_settings(const std::string& channel_name,
 void MixerChannel::SetHighPassFilter(const FilterState state)
 {
 	std::lock_guard lock(mutex);
+
 	filters.highpass.state = state;
 
 	if (filters.highpass.state == FilterState::On) {
@@ -1285,6 +1312,7 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 void MixerChannel::SetLowPassFilter(const FilterState state)
 {
 	std::lock_guard lock(mutex);
+
 	filters.lowpass.state = state;
 
 	if (filters.lowpass.state == FilterState::On) {
@@ -1304,6 +1332,8 @@ void MixerChannel::ConfigureNoiseGate(const float threshold_db, const float atta
 	assert(attack_time_ms > 0.0f);
 	assert(release_time_ms > 0.0f);
 
+	std::lock_guard lock(mutex);
+
 	noise_gate.threshold_db    = threshold_db;
 	noise_gate.attack_time_ms  = attack_time_ms;
 	noise_gate.release_time_ms = release_time_ms;
@@ -1313,6 +1343,8 @@ void MixerChannel::ConfigureNoiseGate(const float threshold_db, const float atta
 
 void MixerChannel::EnableNoiseGate(const bool enabled)
 {
+	std::lock_guard lock(mutex);
+
 	LOG_MSG("%s: Noise gate %s", name.c_str(), (enabled ? "enabled" : "disabled"));
 	do_noise_gate = enabled;
 }
@@ -1322,6 +1354,8 @@ void MixerChannel::InitNoiseGate()
 	assert(noise_gate.attack_time_ms > 0.0f);
 	assert(noise_gate.release_time_ms > 0.0f);
 
+	std::lock_guard lock(mutex);
+
 	const auto _0dbfs_sample_value = Max16BitSampleValue;
 	noise_gate.processor.Configure(sample_rate_hz,
 	                               _0dbfs_sample_value,
@@ -1330,13 +1364,15 @@ void MixerChannel::InitNoiseGate()
 	                               noise_gate.release_time_ms);
 }
 
-FilterState MixerChannel::GetHighPassFilterState() const
+FilterState MixerChannel::GetHighPassFilterState()
 {
+	std::lock_guard lock(mutex);
 	return filters.highpass.state;
 }
 
-FilterState MixerChannel::GetLowPassFilterState() const
+FilterState MixerChannel::GetLowPassFilterState()
 {
+	std::lock_guard lock(mutex);
 	return filters.lowpass.state;
 }
 
@@ -1366,6 +1402,8 @@ void MixerChannel::ConfigureHighPassFilter(const int order, const int _cutoff_fr
 	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
 
+	std::lock_guard lock(mutex);
+
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
 	filters.highpass.order          = order;
@@ -1392,6 +1430,8 @@ void MixerChannel::ConfigureLowPassFilter(const int order, const int _cutoff_fre
 {
 	assert(order > 0 && order <= MaxFilterOrder);
 	assert(_cutoff_freq_hz > 0);
+
+	std::lock_guard lock(mutex);
 
 	const auto cutoff_freq_hz = clamp_filter_cutoff_freq(name, _cutoff_freq_hz);
 
@@ -1420,6 +1460,8 @@ void MixerChannel::InitLowPassFilter()
 // otherwise and disables all filters for the channel.
 bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 {
+	std::lock_guard lock(mutex);
+
 	SetLowPassFilter(FilterState::Off);
 	SetHighPassFilter(FilterState::Off);
 
@@ -1548,6 +1590,8 @@ void MixerChannel::InitZohUpsamplerState()
 {
 	assert(sample_rate_hz < zoh_upsampler.target_rate_hz);
 
+	std::lock_guard lock(mutex);
+
 	zoh_upsampler.step = static_cast<float>(sample_rate_hz) /
 	                     static_cast<float>(zoh_upsampler.target_rate_hz);
 	assert(zoh_upsampler.step < 1.0f);
@@ -1558,6 +1602,8 @@ void MixerChannel::InitZohUpsamplerState()
 void MixerChannel::InitLerpUpsamplerState()
 {
 	assert(sample_rate_hz < mixer.sample_rate_hz);
+
+	std::lock_guard lock(mutex);
 
 	lerp_upsampler.step = static_cast<float>(sample_rate_hz) /
 	                      static_cast<float>(mixer.sample_rate_hz.load());
@@ -1613,8 +1659,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 #endif
 }
 
-float MixerChannel::GetCrossfeedStrength() const
+float MixerChannel::GetCrossfeedStrength()
 {
+	std::lock_guard lock(mutex);
 	return crossfeed.strength;
 }
 
@@ -1656,13 +1703,16 @@ void MixerChannel::SetReverbLevel(const float level)
 #endif
 }
 
-float MixerChannel::GetReverbLevel() const
+float MixerChannel::GetReverbLevel()
 {
+	std::lock_guard lock(mutex);
 	return reverb.level;
 }
 
 void MixerChannel::SetChorusLevel(const float level)
 {
+	std::lock_guard lock(mutex);
+
 	constexpr auto LevelMin   = 0.0f;
 	constexpr auto LevelMax   = 1.0f;
 	constexpr auto LevelMinDb = -24.0f;
@@ -1697,8 +1747,9 @@ void MixerChannel::SetChorusLevel(const float level)
 #endif
 }
 
-float MixerChannel::GetChorusLevel() const
+float MixerChannel::GetChorusLevel()
 {
+	std::lock_guard lock(mutex);
 	return chorus.level;
 }
 
@@ -1906,7 +1957,7 @@ static spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state
 	return ceil_udivide(in_frames * ratio_den, ratio_num);
 }
 
-AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
+AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame)
 {
 	// Pan mono sample using -6dB linear pan law in the stereo field
 	// pan: 0.0 = left, 0.5 = center, 1.0 = right
@@ -2280,8 +2331,10 @@ void MixerChannel::AddAudioFrames(const std::vector<AudioFrame>& frames)
 	}
 }
 
-std::string MixerChannel::DescribeLineout() const
+std::string MixerChannel::DescribeLineout()
 {
+	std::lock_guard lock(mutex);
+
 	if (!HasFeature(ChannelFeature::Stereo)) {
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
 	}
@@ -2298,8 +2351,10 @@ std::string MixerChannel::DescribeLineout() const
 	return "unknown";
 }
 
-MixerChannelSettings MixerChannel::GetSettings() const
+MixerChannelSettings MixerChannel::GetSettings()
 {
+	std::lock_guard lock(mutex);
+
 	MixerChannelSettings s = {};
 
 	s.is_enabled         = is_enabled;
@@ -2314,6 +2369,8 @@ MixerChannelSettings MixerChannel::GetSettings() const
 
 void MixerChannel::SetSettings(const MixerChannelSettings& s)
 {
+	std::lock_guard lock(mutex);
+
 	is_enabled = s.is_enabled;
 
 	SetUserVolume(s.user_volume_gain);
