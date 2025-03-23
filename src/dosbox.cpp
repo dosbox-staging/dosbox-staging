@@ -849,11 +849,10 @@ void DOSBOX_Init()
 	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
 	        "      let us know how it goes.");
 
-	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
+	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, true);
 	pbool->Set_help(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
-	        "(disabled by default). Only suggested if you have a fast desktop-class CPU, as\n"
-	        "it can impact frame rates on slower systems.");
+	        "('on' by default).");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
