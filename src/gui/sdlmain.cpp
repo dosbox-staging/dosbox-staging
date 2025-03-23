@@ -4375,7 +4375,7 @@ static void config_add_sdl()
 
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	pbool->Set_help(
-	        "Start directly in fullscreen (disabled by default).\n"
+	        "Start directly in fullscreen ('off' by default).\n"
 	        "Run INTRO and see Special Keys for window control hotkeys.");
 
 	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
@@ -4402,7 +4402,7 @@ static void config_add_sdl()
 	        "             0,0 is the top-left corner of the screen.");
 
 	pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
+	pbool->Set_help("Enable window decorations in windowed mode ('on' by default).");
 
 	TITLEBAR_AddConfig(*sdl_sec);
 
@@ -4473,7 +4473,7 @@ static void config_add_sdl()
 	pbool->Set_help("Moved to [mouse] section and renamed to 'mouse_raw_input'.");
 
 	pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
+	pbool->Set_help("Keep the console open if an error has occurred ('on' by default).");
 
 	pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	pmulti->SetValue("auto auto");
@@ -4489,10 +4489,10 @@ static void config_add_sdl()
 	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
-	pbool->Set_help("Mute the sound when the window is inactive (disabled by default).");
+	pbool->Set_help("Mute the sound when the window is inactive ('off' by default).");
 
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
-	pbool->Set_help("Pause emulation when the window is inactive (disabled by default).");
+	pbool->Set_help("Pause emulation when the window is inactive ('off' by default).");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(

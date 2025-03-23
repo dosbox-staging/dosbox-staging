@@ -3383,7 +3383,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "cannot keep up (%s by default).\n"
 	        "Only affects fixed cycles settings. When enabled, the number of cycles per\n"
 	        "millisecond can vary; this might cause issues in some DOS programs.",
-	        (CpuThrottleDefault ? "enabled" : "disabled")));
+	        (CpuThrottleDefault ? "'on'" : "'off'")));
 
 	auto pint = secprop.Add_int("cycleup", Always, DefaultCpuCycleUp);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);

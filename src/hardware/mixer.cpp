@@ -2969,7 +2969,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	auto bool_prop = sec_prop.Add_bool("nosound", OnlyAtStart, false);
 	assert(bool_prop);
 	bool_prop->Set_help(
-	        "Enable silent mode (disabled by default).\n"
+	        "Enable silent mode ('off' by default).\n"
 	        "Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.\n"
 	        "Capturing the emulated audio output to a WAV file works in silent mode.");
 

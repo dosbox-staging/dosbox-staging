@@ -13453,13 +13453,13 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 
 	const auto bool_prop = secprop.Add_bool("imfc", when_idle, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable the IBM Music Feature Card (disabled by default).");
+	bool_prop->Set_help("Enable the IBM Music Feature Card ('off' by default).");
 
 	const auto hex_prop = secprop.Add_hex("imfc_base", when_idle, 0x2A20);
 	assert(hex_prop);
 	hex_prop->Set_values({"2A20", "2A30"});
 	hex_prop->Set_help(
-	        "The IO base address of the IBM Music Feature Card (2A20 by default).");
+	        "The IO base address of the IBM Music Feature Card ('2A20' by default).");
 
 	const auto int_prop = secprop.Add_int("imfc_irq", when_idle, 3);
 	assert(int_prop);

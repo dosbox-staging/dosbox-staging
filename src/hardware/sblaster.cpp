@@ -3723,7 +3723,7 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 
 	auto pbool = secprop.Add_bool("sbmixer", when_idle, true);
 	pbool->Set_help(
-	        "Allow the Sound Blaster mixer to modify volume levels (enabled by default).\n"
+	        "Allow the Sound Blaster mixer to modify volume levels ('on' by default).\n"
 	        "Sound Blaster Pro 1 and later cards allow programs to set the volume of the\n"
 	        "digital audio (DAC), FM synth, and CD Audio output. These correspond to the\n"
 	        "SB, OPL, and CDAUDIO DOSBox mixer channels, respectively.\n"
@@ -3761,7 +3761,7 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 
 	pbool = secprop.Add_bool("sb_filter_always_on", when_idle, false);
 	pbool->Set_help(
-	        "Force the Sound Blaster Pro 2 filter to be always on (disabled by default).\n"
+	        "Force the Sound Blaster Pro 2 filter to be always on ('off' by default).\n"
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
 
