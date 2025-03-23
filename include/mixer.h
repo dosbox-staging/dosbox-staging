@@ -177,20 +177,20 @@ public:
 	             const std::set<ChannelFeature>& features);
 	~MixerChannel();
 
-	bool HasFeature(ChannelFeature feature) const;
-	std::set<ChannelFeature> GetFeatures() const;
-	const std::string& GetName() const;
-	int GetSampleRate() const;
-	float GetFramesPerTick() const;
-	float GetFramesPerBlock() const;
-	double GetMillisPerFrame() const;
+	bool HasFeature(ChannelFeature feature);
+	std::set<ChannelFeature> GetFeatures();
+	const std::string& GetName();
+	int GetSampleRate();
+	float GetFramesPerTick();
+	float GetFramesPerBlock();
+	double GetMillisPerFrame();
 
 	void Set0dbScalar(const float f);
 	void UpdateCombinedVolume();
 
 	// The "user volume" is the volume level of the built-in DOSBox mixer
 	// (MIXER command)
-	const AudioFrame GetUserVolume() const;
+	const AudioFrame GetUserVolume();
 	void SetUserVolume(const AudioFrame gain);
 
 	// The "app volume" is the volume level set programmatically by DOS
@@ -202,20 +202,20 @@ public:
 	// audio music level in a game to "half volume", the final volume will
 	// be around 25%.
 	//
-	const AudioFrame GetAppVolume() const;
+	const AudioFrame GetAppVolume();
 	void SetAppVolume(const AudioFrame gain);
 
 	void SetChannelMap(const StereoLine map);
 
 	void SetLineoutMap(const StereoLine map);
-	StereoLine GetLineoutMap() const;
+	StereoLine GetLineoutMap();
 
-	std::string DescribeLineout() const;
+	std::string DescribeLineout();
 	void SetSampleRate(const int sample_rate_hz);
 	void SetPeakAmplitude(const int peak);
 	void Mix(const int frames_requested);
 
-	MixerChannelSettings GetSettings() const;
+	MixerChannelSettings GetSettings();
 	void SetSettings(const MixerChannelSettings& s);
 
 	// Fill up until needed
@@ -227,8 +227,8 @@ public:
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
-	FilterState GetHighPassFilterState() const;
-	FilterState GetLowPassFilterState() const;
+	FilterState GetHighPassFilterState();
+	FilterState GetLowPassFilterState();
 	void ConfigureHighPassFilter(const int order, const int cutoff_freq_hz);
 	void ConfigureLowPassFilter(const int order, const int cutoff_freq_hz);
 	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
@@ -242,15 +242,15 @@ public:
 	// to 1.0. A value of 0.0 means no crossfeed, and 1.0 means the stereo
 	// signal is collapsed into mono.
 	void SetCrossfeedStrength(const float strength);
-	float GetCrossfeedStrength() const;
+	float GetCrossfeedStrength();
 
 	// The reverb level is a perceptually linear scale from 0.0 to 1.0.
 	void SetReverbLevel(const float level);
-	float GetReverbLevel() const;
+	float GetReverbLevel();
 
 	// The chorus level is a perceptually linear scale from 0.0 to 1.0
 	void SetChorusLevel(const float level);
-	float GetChorusLevel() const;
+	float GetChorusLevel();
 
 	void AddAudioFrames(const std::vector<AudioFrame>& frames);
 
@@ -340,7 +340,7 @@ private:
 	void InitZohUpsamplerState();
 	void InitLerpUpsamplerState();
 
-	AudioFrame ApplyCrossfeed(const AudioFrame frame) const;
+	AudioFrame ApplyCrossfeed(const AudioFrame frame);
 
 	std::string name = {};
 	Envelope envelope;
