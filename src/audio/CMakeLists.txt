@@ -10,4 +10,5 @@ add_library(libaudio STATIC
 
 target_link_libraries(libaudio PRIVATE
 		loguru
+		$<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
 )

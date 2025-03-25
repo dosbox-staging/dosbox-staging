@@ -24,10 +24,8 @@ add_library(libhardware STATIC
 		adlib_gold.cpp
 		cmos.cpp
 		covox.cpp
-		compressor.cpp
 		disney.cpp
 		dma.cpp
-		envelope.cpp
 		gameblaster.cpp
 		gus.cpp
 		ide.cpp

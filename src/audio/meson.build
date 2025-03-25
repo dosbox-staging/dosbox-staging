@@ -13,6 +13,7 @@ libaudio = static_library(
     libaudio_sources,
     include_directories: incdir,
     dependencies: [
+        libiir_dep,
         libloguru_dep,
     ],
     cpp_args: warnings,
