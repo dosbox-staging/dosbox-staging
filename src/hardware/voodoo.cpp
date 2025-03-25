@@ -7923,11 +7923,12 @@ PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
 	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
-void VOODOO_Destroy(Section* /*sec*/) {
+
+static void voodoo_destroy(Section* /*sec*/) {
 	voodoo_shutdown();
 }
 
-void VOODOO_Init(Section* sec)
+static void voodoo_init(Section* sec)
 {
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
@@ -7942,7 +7943,7 @@ void VOODOO_Init(Section* sec)
 
 	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
 
-	sec->AddDestroyFunction(&VOODOO_Destroy,false);
+	sec->AddDestroyFunction(&voodoo_destroy, false);
 
 	// Check 64 KB alignment of LFB base
 	static_assert((PciVoodooLfbBase & 0xffff) == 0);
@@ -7961,3 +7962,59 @@ void VOODOO_Init(Section* sec)
 	        num_threads == 1 ? "thread" : "threads",
 	        (voodoo_bilinear_filtering ? "" : "no "));
 }
+
+static void init_voodoo_dosbox_settings(Section_prop& secprop)
+{
+	constexpr auto Deprecated  = Property::Changeable::Deprecated;
+	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
+	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
+
+	auto* bool_prop = secprop.Add_bool("voodoo", WhenIdle, true);
+	bool_prop->Set_help(
+	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
+	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
+	        "powerful CPU. Most games need the DOS Glide driver called 'GLIDE2X.OVL' to be\n"
+	        "in the path for 3dfx mode to work. Many games include their own Glide driver\n"
+	        "variants, but for some you need to provide a suitable 'GLIDE2X.OVL' version.\n"
+	        "A small number of games integrate the Glide driver into their code, so they\n"
+	        "don't need 'GLIDE2X.OVL'.");
+
+	auto* str_prop = secprop.Add_string("voodoo_memsize", OnlyAtStart, "4");
+	str_prop->Set_values({"4", "12"});
+	str_prop->Set_help(
+	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
+	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"
+	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
+	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
+
+	// Deprecate the boolean Voodoo multithreading setting
+	bool_prop = secprop.Add_bool("voodoo_multithreading", Deprecated, false);
+	bool_prop->Set_help("Renamed to 'voodoo_threads'");
+
+	str_prop = secprop.Add_string("voodoo_threads", OnlyAtStart, "auto");
+	str_prop->Set_help(
+	        "Use threads to improve 3dfx Voodoo performance:\n"
+	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
+	        "  <value>:  Set a specific number of threads between 1 and 128.\n"
+	        "Note: Setting this to a higher value than the number of logical CPUs your\n"
+	        "      hardware supports is very likely to harm performance. This has been\n"
+	        "      measured to scale well up to 8-16 threads, but it has not been tested\n"
+	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
+	        "      let us know how it goes.");
+
+	bool_prop = secprop.Add_bool("voodoo_bilinear_filtering", OnlyAtStart, true);
+	bool_prop->Set_help(
+	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
+	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
+	        "try turning it off if you're not getting adequate performance.");
+}
+
+void VOODOO_AddConfigSection(const ConfigPtr& conf)
+{
+	assert(conf);
+
+	Section_prop* sec = conf->AddSection_prop("voodoo", &voodoo_init);
+	assert(sec);
+	init_voodoo_dosbox_settings(*sec);
+}
+

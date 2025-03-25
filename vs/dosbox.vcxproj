@@ -1104,6 +1104,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\hardware\ston1_dac.h" />
     <ClInclude Include="..\src\hardware\tandy_sound.h" />
     <ClInclude Include="..\src\hardware\virtualbox.h" />
+    <ClInclude Include="..\src\hardware\voodoo.h" />
     <ClInclude Include="..\src\hardware\vmware.h" />
     <ClInclude Include="..\src\hardware\input\intel8042.h" />
     <ClInclude Include="..\src\hardware\input\intel8255.h" />
