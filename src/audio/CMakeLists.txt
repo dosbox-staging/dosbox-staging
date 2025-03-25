@@ -3,6 +3,9 @@ add_library(libaudio STATIC
 		clap/library.cpp
 		clap/plugin.cpp
 		clap/plugin_manager.cpp
+
+		compressor.cpp
+		envelope.cpp
 )
 
 target_link_libraries(libaudio PRIVATE
