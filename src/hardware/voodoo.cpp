@@ -88,10 +88,6 @@
 #include <SDL.h>
 #include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
 
-#if defined(__SSE2__)
-#include <emmintrin.h>
-#endif
-
 #include "bitops.h"
 #include "byteorder.h"
 #include "control.h"
@@ -104,6 +100,7 @@
 #include "pic.h"
 #include "render.h"
 #include "setup.h"
+#include "simde/x86/sse2.h"
 #include "support.h"
 #include "vga.h"
 
@@ -214,34 +211,40 @@ inline int32_t mul_32x32_shift(int32_t a, int32_t b, int8_t shift)
 	return (int32_t)(((int64_t)a * (int64_t)b) >> shift);
 }
 
-#if defined(__SSE2__)
-static int16_t sse2_scale_table[256][8];
-#endif
+static simde__m128i sse2_scale_table[256];
 
 inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
                                   rgb_t rgb11, uint8_t u, uint8_t v)
 {
-#if defined(__SSE2__)
-	const __m128i scale_u = *(__m128i*)sse2_scale_table[u];
-	const __m128i scale_v = *(__m128i*)sse2_scale_table[v];
-	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
-		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
-		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
-		scale_v), 15), _mm_setzero_si128()), _mm_setzero_si128()));
-#else
-	uint32_t ag0, ag1, rb0, rb1;
-	rb0 = (rgb00 & 0x00ff00ff) + ((((rgb01 & 0x00ff00ff) - (rgb00 & 0x00ff00ff)) * u) >> 8);
-	rb1 = (rgb10 & 0x00ff00ff) + ((((rgb11 & 0x00ff00ff) - (rgb10 & 0x00ff00ff)) * u) >> 8);
-	rgb00 >>= 8;
-	rgb01 >>= 8;
-	rgb10 >>= 8;
-	rgb11 >>= 8;
-	ag0 = (rgb00 & 0x00ff00ff) + ((((rgb01 & 0x00ff00ff) - (rgb00 & 0x00ff00ff)) * u) >> 8);
-	ag1 = (rgb10 & 0x00ff00ff) + ((((rgb11 & 0x00ff00ff) - (rgb10 & 0x00ff00ff)) * u) >> 8);
-	rb0 = (rb0 & 0x00ff00ff) + ((((rb1 & 0x00ff00ff) - (rb0 & 0x00ff00ff)) * v) >> 8);
-	ag0 = (ag0 & 0x00ff00ff) + ((((ag1 & 0x00ff00ff) - (ag0 & 0x00ff00ff)) * v) >> 8);
-	return ((ag0 << 8) & 0xff00ff00) | (rb0 & 0x00ff00ff);
-#endif
+	const simde__m128i scale_u = sse2_scale_table[u];
+	const simde__m128i scale_v = sse2_scale_table[v];
+	return simde_mm_cvtsi128_si32(simde_mm_packus_epi16(
+	        simde_mm_packs_epi32(
+	                simde_mm_srli_epi32(
+	                        simde_mm_madd_epi16(
+	                                simde_mm_max_epi16(
+	                                        simde_mm_slli_epi32(
+	                                                simde_mm_madd_epi16(
+	                                                        simde_mm_unpacklo_epi8(
+	                                                                simde_mm_unpacklo_epi8(
+	                                                                        simde_mm_cvtsi32_si128(rgb01),
+	                                                                        simde_mm_cvtsi32_si128(rgb00)),
+	                                                                simde_mm_setzero_si128()),
+	                                                        scale_u),
+	                                                15),
+	                                        simde_mm_srli_epi32(
+	                                                simde_mm_madd_epi16(
+	                                                        simde_mm_unpacklo_epi8(
+	                                                                simde_mm_unpacklo_epi8(
+	                                                                        simde_mm_cvtsi32_si128(rgb11),
+	                                                                        simde_mm_cvtsi32_si128(rgb10)),
+	                                                                simde_mm_setzero_si128()),
+	                                                        scale_u),
+	                                                1)),
+	                                scale_v),
+	                        15),
+	                simde_mm_setzero_si128()),
+	        simde_mm_setzero_si128()));
 }
 
 struct poly_vertex
@@ -7210,13 +7213,11 @@ static void voodoo_init() {
 		dither2_lookup = generate_dither_lut(dither_matrix_2x2);
 		dither4_lookup = generate_dither_lut(dither_matrix_4x4);
 
-#if defined(__SSE2__)
 		/* create sse2 scale table for rgba_bilinear_filter */
-		for (int16_t i = 0; i != 256; i++) {
-			sse2_scale_table[i][0] = sse2_scale_table[i][2] = sse2_scale_table[i][4] = sse2_scale_table[i][6] = i;
-			sse2_scale_table[i][1] = sse2_scale_table[i][3] = sse2_scale_table[i][5] = sse2_scale_table[i][7] = 256-i;
+		for (int i = 0; i != 256; i++) {
+			sse2_scale_table[i] = simde_mm_setr_epi16(
+			        i, 256 - i, i, 256 - i, i, 256 - i, i, 256 - i);
 		}
-#endif
 	}
 
 	v->tmu_config = 0x11;	// revision 1
