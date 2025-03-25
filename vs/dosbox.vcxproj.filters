@@ -1547,6 +1547,171 @@
     <ClInclude Include="..\src\dos\dos_locale.h">
       <Filter>src\dos</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ascii.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\object_pool.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ring_buffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\shell\file_reader.h">
+      <Filter>src\shell</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\ethernet_slirp.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\misc\host_locale.h">
+      <Filter>src\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\enet\include\enet.h">
+      <Filter>src\libs\enet</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\libs\simde\x86\mmx.h">
+      <Filter>src\libs\simde\x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\gus.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\ps1audio.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\sblaster.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\tandy_sound.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+	<ClInclude Include="..\src\hardware\voodoo.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_loops.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_simple.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_code_page.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_keyboard_layout.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\drive_local.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_attrib.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_biostest.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_boot.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_choice.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_help.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_imgmount.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_intro.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_keyb.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_loadfix.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_loadrom.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mem.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mixer.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mode.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_more.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_more_output.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mount.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mount_common.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_mousectl.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_move.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_placeholder.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_rescan.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_setver.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_subst.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\program_tree.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\flags.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\string_ops.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_normal\prefix_0f_mmx.h">
+      <Filter>src\cpu\core_normal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\dyn_mmx.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-common.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-o3.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb-iw.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv4le-thumb-niw.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dynrec\risc_armv8le.h">
+      <Filter>src\cpu\core_dynrec</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\cpu\core_dyn_x86\dyn_mmx.h">
+      <Filter>src\cpu\core_dyn_x86</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ethernet.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">

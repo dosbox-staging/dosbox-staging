@@ -39,6 +39,7 @@
 #include "dos/dos_locale.h"
 #include "dos_inc.h"
 #include "hardware.h"
+#include "hardware/voodoo.h"
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
@@ -85,7 +86,6 @@ void FPU_Init(Section*);
 void DMA_Init(Section*);
 
 void PCI_Init(Section*);
-void VOODOO_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
@@ -820,46 +820,8 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&KEYBOARD_Init);
 	secprop->AddInitFunction(&PCI_Init); // PCI bus
 
-	secprop = control->AddSection_prop("voodoo", &VOODOO_Init);
-
-	pbool = secprop->Add_bool("voodoo", when_idle, true);
-	pbool->Set_help(
-	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
-	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
-	        "powerful CPU. Most games need the DOS Glide driver called 'GLIDE2X.OVL' to be\n"
-	        "in the path for 3dfx mode to work. Many games include their own Glide driver\n"
-	        "variants, but for some you need to provide a suitable 'GLIDE2X.OVL' version.\n"
-	        "A small number of games integrate the Glide driver into their code, so they\n"
-	        "don't need 'GLIDE2X.OVL'.");
-
-	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "4");
-	pstring->Set_values({"4", "12"});
-	pstring->Set_help(
-	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
-	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"
-	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
-	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
-
-	// Deprecate the boolean Voodoo multithreading setting
-	pbool = secprop->Add_bool("voodoo_multithreading", deprecated, false);
-	pbool->Set_help("Renamed to 'voodoo_threads'");
-
-	pstring = secprop->Add_string("voodoo_threads", only_at_start, "auto");
-	pstring->Set_help(
-	        "Use threads to improve 3dfx Voodoo performance:\n"
-	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
-	        "  <value>:  Set a specific number of threads between 1 and 128.\n"
-	        "Note: Setting this to a higher value than the number of logical CPUs your\n"
-	        "      hardware supports is very likely to harm performance. This has been\n"
-	        "      measured to scale well up to 8-16 threads, but it has not been tested\n"
-	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
-	        "      let us know how it goes.");
-
-	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, true);
-	pbool->Set_help(
-	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
-	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
-	        "try turning it off if you're not getting adequate performance.");
+	// Configure 3dfx Voodoo settings
+	VOODOO_AddConfigSection(control);
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
