@@ -84,6 +84,7 @@ find_package(SDL2_net REQUIRED)
 target_link_libraries(libhardware PRIVATE $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>)
 
 target_link_libraries(libhardware PRIVATE
+		libaudio
 		libesfmu
 		libresidfp
 		libym7128bemu
