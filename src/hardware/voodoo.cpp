@@ -78,6 +78,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <bit>
 #include <cassert>
 #include <cmath>
 #include <condition_variable>
@@ -1045,36 +1046,6 @@ struct poly_extra_data
 };
 #endif
 
-inline uint8_t count_leading_zeros(uint32_t value)
-{
-#ifdef _MSC_VER
-	DWORD idx = 0;
-	return (_BitScanReverse(&idx, value) ? (uint8_t)(31 - idx) : (uint8_t)32);
-#else
-	return (value != 0u ? (uint8_t)__builtin_clz(value) : (uint8_t)32);
-#endif
-	//int32_t result;
-	//
-	//#if defined _MSC_VER
-	//__asm
-	//{
-	//	bsr   eax,value
-	//	jnz   skip
-	//	mov   eax,63
-	//skip:
-	//	xor   eax,31
-	//	mov   result,eax
-	//}
-	//#else
-	//result = 32;
-	//while(value > 0) {
-	//	result--;
-	//	value >>= 1;
-	//}
-	//#endif
-	//return (uint8_t)result;
-}
-
 /*************************************
  *
  *  Computes a fast 16.16 reciprocal
@@ -1128,7 +1099,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	}
 
 	/* determine how many leading zeros in the value and shift it up high */
-	lz = count_leading_zeros(temp);
+	lz = std::countl_zero(temp);
 	temp <<= lz;
 	exponent += lz;
 
@@ -2347,7 +2318,7 @@ do																				\
 			wfloat = 0xffff;													\
 		else																	\
 		{																		\
-			const auto exp = count_leading_zeros(temp);                         \
+			const auto exp = std::countl_zero(temp);	                        \
 			const auto right_shift = std::max(0, 19 - exp);	                    \
 			wfloat = ((exp << 12) | ((~temp >> right_shift) & 0xfff));          \
 			if (wfloat < 0xffff) wfloat++;										\
@@ -2370,7 +2341,7 @@ do																				\
 				depthval = 0xffff;												\
 			else																\
 			{																	\
-				const auto exp = count_leading_zeros(temp);                     \
+				const auto exp = std::countl_zero(temp);						\
 				const auto right_shift = std::max(0, 19 - exp);	                \
 				depthval = ((exp << 12) | ((~temp >> right_shift) & 0xfff));    \
 				if (depthval < 0xffff) depthval++;								\
