@@ -1627,6 +1627,9 @@
     <ClInclude Include="..\src\hardware\tandy_sound.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
+	<ClInclude Include="..\src\hardware\voodoo.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\gui\render_loops.h">
       <Filter>src\gui</Filter>
     </ClInclude>
