@@ -135,80 +135,71 @@ static dynlib_handle fsynth_lib = {};
 
 /* The following function pointers will be set to their corresponding symbols in the FluidSynth library */
 
-// clang-format off
+/**
+ * A 'X-Macro' to generate a list of function pointers to symbols in the 
+ * Fluidsynth library. While hacky, this ensures that all symbols will 
+ * be declared and resolved without risk of accidentally forgetting one or more.
+ * 
+ * The FSFUNC macro should have the signature (return_type, symbol_name, signature)
+ */
+#define FSYNTH_FUNC_LIST(FSFUNC) \
+	FSFUNC(void, delete_fluid_settings, (fluid_settings_t*)) \
+	FSFUNC(void, delete_fluid_synth, (fluid_synth_t*)) \
+	FSFUNC(void, fluid_version, (int *major, int *minor, int *micro)) \
+	FSFUNC(fluid_settings_t*, new_fluid_settings, (void)) \
+	FSFUNC(fluid_synth_t*, new_fluid_synth, (fluid_settings_t *settings)) \
+	FSFUNC(fluid_log_function_t, fluid_set_log_function, (int level, fluid_log_function_t fun, void *data)) \
+	FSFUNC(int, fluid_settings_setnum, (fluid_settings_t *settings, const char *name, double val)) \
+	FSFUNC(int, fluid_synth_chorus_on, (fluid_synth_t *synth, int fx_group, int on)) \
+	FSFUNC(int, fluid_synth_set_chorus_group_nr, (fluid_synth_t *synth, int fx_group, int nr)) \
+	FSFUNC(int, fluid_synth_set_chorus_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
+	FSFUNC(int, fluid_synth_set_chorus_group_speed, (fluid_synth_t *synth, int fx_group, double speed)) \
+	FSFUNC(int, fluid_synth_set_chorus_group_depth, (fluid_synth_t *synth, int fx_group, double depth_ms)) \
+	FSFUNC(int, fluid_synth_set_chorus_group_type, (fluid_synth_t *synth, int fx_group, int type)) \
+	FSFUNC(int, fluid_synth_reverb_on, (fluid_synth_t *synth, int fx_group, int on)) \
+	FSFUNC(int, fluid_synth_set_reverb_group_roomsize, (fluid_synth_t *synth, int fx_group, double roomsize)) \
+	FSFUNC(int, fluid_synth_set_reverb_group_damp, (fluid_synth_t *synth, int fx_group, double damping)) \
+	FSFUNC(int, fluid_synth_set_reverb_group_width, (fluid_synth_t *synth, int fx_group, double width)) \
+	FSFUNC(int, fluid_synth_set_reverb_group_level, (fluid_synth_t *synth, int fx_group, double level)) \
+	FSFUNC(int, fluid_synth_sfcount, (fluid_synth_t *synth)) \
+	FSFUNC(int, fluid_synth_sfload, (fluid_synth_t *synth, const char *filename, int reset_presets)) \
+	FSFUNC(void, fluid_synth_set_gain, (fluid_synth_t *synth, float gain)) \
+	FSFUNC(int, fluid_synth_set_interp_method, (fluid_synth_t *synth, int chan, int interp_method)) \
+	FSFUNC(int, fluid_synth_noteoff, (fluid_synth_t *synth, int chan, int key)) \
+	FSFUNC(int, fluid_synth_noteon, (fluid_synth_t *synth, int chan, int key, int vel)) \
+	FSFUNC(int, fluid_synth_key_pressure, (fluid_synth_t *synth, int chan, int key, int val)) \
+	FSFUNC(int, fluid_synth_cc, (fluid_synth_t *synth, int chan, int ctrl, int val)) \
+	FSFUNC(int, fluid_synth_program_change, (fluid_synth_t *synth, int chan, int program)) \
+	FSFUNC(int, fluid_synth_channel_pressure, (fluid_synth_t *synth, int chan, int val)) \
+	FSFUNC(int, fluid_synth_pitch_bend, (fluid_synth_t *synth, int chan, int val)) \
+	FSFUNC(int, fluid_synth_sysex, (fluid_synth_t *synth, const char *data, int len, char *response, int *response_len, int *handled, int dryrun)) \
+	FSFUNC(int, fluid_synth_write_float, (fluid_synth_t *synth, int len, void *lout,  int loff, int lincr, void *rout, int roff, int rincr))
 
-void (*delete_fluid_settings)(fluid_settings_t*) = nullptr;
-void (*delete_fluid_synth)   (fluid_synth_t*)    = nullptr;
+/**
+ * Macro to declare function pointers
+ */
+#define FSYNTH_FUNC_DECLARE(ret_type, name, sig) \
+	ret_type (*name)sig = nullptr;
 
-void (*fluid_version)(int *major, int *minor, int *micro) = nullptr;
-
-fluid_settings_t* (*new_fluid_settings)(void)                       = nullptr;
-fluid_synth_t*       (*new_fluid_synth)(fluid_settings_t *settings) = nullptr;
-
-fluid_log_function_t (*fluid_set_log_function)(int level, fluid_log_function_t fun, void *data)      = nullptr;
-
-int  (*fluid_settings_setnum)(fluid_settings_t *settings, const char *name, double val)              = nullptr;
-
-int               (*fluid_synth_chorus_on)(fluid_synth_t *synth, int fx_group, int on)               = nullptr;
-int     (*fluid_synth_set_chorus_group_nr)(fluid_synth_t *synth, int fx_group, int nr)               = nullptr;
-int  (*fluid_synth_set_chorus_group_level)(fluid_synth_t *synth, int fx_group, double level)         = nullptr;
-int  (*fluid_synth_set_chorus_group_speed)(fluid_synth_t *synth, int fx_group, double speed)         = nullptr;
-int  (*fluid_synth_set_chorus_group_depth)(fluid_synth_t *synth, int fx_group, double depth_ms)      = nullptr;
-int   (*fluid_synth_set_chorus_group_type)(fluid_synth_t *synth, int fx_group, int type)             = nullptr;
-
-int                  (*fluid_synth_reverb_on)(fluid_synth_t *synth, int fx_group, int on)            = nullptr;
-int  (*fluid_synth_set_reverb_group_roomsize)(fluid_synth_t *synth, int fx_group, double roomsize)   = nullptr;
-int      (*fluid_synth_set_reverb_group_damp)(fluid_synth_t *synth, int fx_group, double damping)    = nullptr;
-int     (*fluid_synth_set_reverb_group_width)(fluid_synth_t *synth, int fx_group, double width)      = nullptr;
-int     (*fluid_synth_set_reverb_group_level)(fluid_synth_t *synth, int fx_group, double level)      = nullptr;
-
-int            (*fluid_synth_sfcount)(fluid_synth_t *synth)                                          = nullptr;
-int             (*fluid_synth_sfload)(fluid_synth_t *synth, const char *filename, int reset_presets) = nullptr;
-void          (*fluid_synth_set_gain)(fluid_synth_t *synth, float gain)                              = nullptr;
-int  (*fluid_synth_set_interp_method)(fluid_synth_t *synth, int chan, int interp_method)             = nullptr;
-int            (*fluid_synth_noteoff)(fluid_synth_t *synth, int chan, int key)                       = nullptr;
-int             (*fluid_synth_noteon)(fluid_synth_t *synth, int chan, int key, int vel)              = nullptr;
-int       (*fluid_synth_key_pressure)(fluid_synth_t *synth, int chan, int key, int val)              = nullptr;
-int                 (*fluid_synth_cc)(fluid_synth_t *synth, int chan, int ctrl, int val)             = nullptr;
-int     (*fluid_synth_program_change)(fluid_synth_t *synth, int chan, int program)                   = nullptr;
-int   (*fluid_synth_channel_pressure)(fluid_synth_t *synth, int chan, int val)                       = nullptr;
-int         (*fluid_synth_pitch_bend)(fluid_synth_t *synth, int chan, int val)                       = nullptr;
-
-int        (*fluid_synth_sysex)(fluid_synth_t *synth, 
-                                const char *data, 
-                                int len,
-                                char *response, 
-                                int *response_len, 
-                                int *handled, 
-                                int dryrun) = nullptr;
-                                
-int  (*fluid_synth_write_float)(fluid_synth_t *synth, 
-                                int len,
-                                void *lout, 
-                                int loff, 
-                                int lincr,
-                                void *rout, 
-                                int roff, 
-                                int rincr) = nullptr;
-
-// clang-format on
+FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
 
 } // namespace fsynth
 
 /**
- * A filthy macro to make resolving library symbols a little less verbose, 
- * while still including robust error checking.
+ * A filthy macro to resolve fluidsynth symbols, and return from the 
+ * calling function below on error.
  */
-#define DB_GET_FSYNTH_SYM(sym) sym = (decltype(sym))dynlib_get_symbol(fsynth_lib, #sym); \
-	if (!sym) { dynlib_close(fsynth_lib); return DynLibResult::ResolveSymErr; }
+#define FSYNTH_FUNC_GET_SYM(ret_type, name, sig) \
+	name = (decltype(name))dynlib_get_symbol(fsynth_lib, #name); \
+	if (!name) { \
+		dynlib_close(fsynth_lib); \
+		return DynLibResult::ResolveSymErr; \
+	}
 
 /**
  * Load the FluidSynth library and resolve all required symbols.
  * 
  * If the library is already loaded, does nothing.
- * 
- * IMPORTANT: If adding a new symbol above, remember to resolve 
- * the symbol in this function, otherwise Dosbox is likely to segfault.
  */
 static DynLibResult load_fsynth_dynlib()
 {
@@ -218,42 +209,7 @@ static DynLibResult load_fsynth_dynlib()
 		if (!fsynth_lib) {
 			return DynLibResult::LibOpenErr;
 		}
-		DB_GET_FSYNTH_SYM(fluid_version);
-        DB_GET_FSYNTH_SYM(fluid_set_log_function);
-
-		DB_GET_FSYNTH_SYM(new_fluid_settings);
-		DB_GET_FSYNTH_SYM(new_fluid_synth);
-		
-		DB_GET_FSYNTH_SYM(delete_fluid_settings);
-		DB_GET_FSYNTH_SYM(delete_fluid_synth);
-		DB_GET_FSYNTH_SYM(fluid_settings_setnum);
-
-		DB_GET_FSYNTH_SYM(fluid_synth_chorus_on);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_chorus_group_nr);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_chorus_group_level);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_chorus_group_speed);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_chorus_group_depth);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_chorus_group_type);
-
-		DB_GET_FSYNTH_SYM(fluid_synth_reverb_on);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_reverb_group_roomsize);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_reverb_group_damp);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_reverb_group_width);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_reverb_group_level);
-
-		DB_GET_FSYNTH_SYM(fluid_synth_sfcount);
-		DB_GET_FSYNTH_SYM(fluid_synth_sfload);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_gain);
-		DB_GET_FSYNTH_SYM(fluid_synth_set_interp_method);
-		DB_GET_FSYNTH_SYM(fluid_synth_noteoff);
-		DB_GET_FSYNTH_SYM(fluid_synth_noteon);
-		DB_GET_FSYNTH_SYM(fluid_synth_key_pressure);
-		DB_GET_FSYNTH_SYM(fluid_synth_cc);
-		DB_GET_FSYNTH_SYM(fluid_synth_program_change);
-		DB_GET_FSYNTH_SYM(fluid_synth_channel_pressure);
-		DB_GET_FSYNTH_SYM(fluid_synth_pitch_bend);
-		DB_GET_FSYNTH_SYM(fluid_synth_sysex);
-		DB_GET_FSYNTH_SYM(fluid_synth_write_float);
+		FSYNTH_FUNC_LIST(FSYNTH_FUNC_GET_SYM)
 
         /* Keep ERR and PANIC logging only */
         for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
