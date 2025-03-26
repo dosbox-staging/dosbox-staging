@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -33,9 +33,10 @@ void MEM::Run(void)
 		output.Display();
 		return;
 	}
-	/* Show conventional Memory */
+
 	WriteOut("\n");
 
+	// Show conventional memory
 	uint16_t umb_start   = dos_infoblock.GetStartOfUMBChain();
 	uint8_t umb_flag     = dos_infoblock.GetUMBChainState();
 	uint8_t old_memstrat = DOS_GetMemAllocStrategy() & 0xff;
@@ -83,7 +84,7 @@ void MEM::Run(void)
 		}
 	}
 
-	/* Test for and show free XMS */
+	// Test for and show free XMS
 	reg_ax = 0x4300;
 	CALLBACK_RunRealInt(0x2f);
 	if (reg_al == 0x80) {
@@ -97,7 +98,8 @@ void MEM::Run(void)
 		CALLBACK_RunRealFar(xms_seg, xms_off);
 		WriteOut(MSG_Get("PROGRAM_MEM_EXTEND"), reg_edx);
 	}
-	/* Test for and show free EMS */
+
+	// Test for and show free EMS
 	uint16_t handle;
 	char emm[9] = {'E', 'M', 'M', 'X', 'X', 'X', 'X', '0', 0};
 	if (DOS_OpenFile(emm, 0, &handle)) {
@@ -106,6 +108,8 @@ void MEM::Run(void)
 		CALLBACK_RunRealInt(0x67);
 		WriteOut(MSG_Get("PROGRAM_MEM_EXPAND"), reg_bx * 16);
 	}
+
+	WriteOut("\n");
 }
 
 void MEM::AddMessages()
@@ -124,10 +128,13 @@ void MEM::AddMessages()
 	        "  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]mem[reset]\n");
+	        "  [color=light-green]mem[reset]\n"
+	        "\n");
+
 	MSG_Add("PROGRAM_MEM_CONVEN", "%10d KB free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND", "%10d KB free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND", "%10d KB free expanded memory\n");
+
 	MSG_Add("PROGRAM_MEM_UPPER",
 	        "%10d KB free upper memory in %d blocks (largest UMB %d KB)\n");
 }

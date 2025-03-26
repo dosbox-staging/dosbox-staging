@@ -617,28 +617,29 @@ static const char* const init_line      = "/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
 	// Generic messages, to be used by any command or DOS program
-	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
-	MSG_Add("SHELL_ILLEGAL_FILE_NAME", "Illegal filename.\n");
-	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s\n");
-	MSG_Add("SHELL_ILLEGAL_SWITCH_COMBO", "Illegal switch combination.\n");
-	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n");
-	MSG_Add("SHELL_TOO_MANY_PARAMETERS", "Too many parameters.\n");
-	MSG_Add("SHELL_EXPECTED_FILE_NOT_DIR", "Expected a file, not a directory.\n");
-	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n");
-	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n");
-	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n");
-	MSG_Add("SHELL_FILE_OPEN_ERROR", "File open error - '%s'\n");
-	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
-	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
-	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
-	MSG_Add("SHELL_NO_SUBDIRS_TO_DISPLAY", "No subdirectories to display.\n");
-	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY", "No files or subdirectories to display.\n");
-	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n");
-	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n");
+	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n\n");
+	MSG_Add("SHELL_ILLEGAL_FILE_NAME", "Illegal filename.\n\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s\n\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH_COMBO", "Illegal switch combination.\n\n");
+	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n\n");
+	MSG_Add("SHELL_TOO_MANY_PARAMETERS", "Too many parameters.\n\n");
+	MSG_Add("SHELL_EXPECTED_FILE_NOT_DIR", "Expected a file, not a directory.\n\n");
+	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n\n");
+	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n\n");
+	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n\n");
+	MSG_Add("SHELL_FILE_OPEN_ERROR", "File open error - '%s'\n\n");
+	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n\n");
+	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n\n");
+	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n\n");
+	MSG_Add("SHELL_NO_SUBDIRS_TO_DISPLAY", "No subdirectories to display.\n\n");
+	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY", "No files or subdirectories to display.\n\n");
+	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n\n");
+	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n\n");
 
 	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP", "If you want a list of all supported commands, run [color=yellow]help /all[reset]\n"
 			"A short list of the most often used commands:\n");
+
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
 	        "Start the DOSBox Staging command shell.\n"
 	        "\n"
@@ -659,24 +660,29 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]command[reset]\n"
 	        "  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hello world![reset]\n"
-	        "  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]\n");
+	        "  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]\n"
+	        "\n");
 
-	MSG_Add("SHELL_CMD_ECHO_ON", "Echo is on.\n");
-	MSG_Add("SHELL_CMD_ECHO_OFF", "Echo is off.\n");
+	MSG_Add("SHELL_CMD_ECHO_ON", "Echo is on.\n\n");
+	MSG_Add("SHELL_CMD_ECHO_OFF", "Echo is off.\n\n");
 
-	MSG_Add("SHELL_CMD_CHDIR_ERROR", "Unable to change to: %s\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT", "Hint: To change to a different drive, run [color=yellow]%c:[reset]\n");
+	MSG_Add("SHELL_CMD_CHDIR_ERROR", "Unable to change to: %s\n\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT", "Hint: To change to a different drive, run [color=yellow]%c:[reset]\n\n");
 
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2",
 	        "Directory name is longer than 8 characters and/or contains spaces.\n"
-	        "Try [color=yellow]cd %s[reset]\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_3", "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n");
+	        "Try [color=yellow]cd %s[reset]\n\n");
+
+	MSG_Add("SHELL_CMD_CHDIR_HINT_3", "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n\n");
 
 	MSG_Add("SHELL_CMD_DATE_HELP", "Display or change the internal date.\n");
-	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
-	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
+	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n\n");
+
+	// "2SoMoDiMiDoFrSa"
+	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat");
+
 	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
-	MSG_Add("SHELL_CMD_DATE_SETHLP", "Run [color=yellow]date %s[reset] to change the current date.\n");
+	MSG_Add("SHELL_CMD_DATE_SETHLP", "Run [color=yellow]date %s[reset] to change the current date.\n\n");
 
 	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
 	        "Usage:\n"
@@ -695,12 +701,14 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]date[reset]\n"
 	        "  [color=light-green]date[reset] /h\n"
-	        "  [color=light-green]date[reset] [color=light-cyan]%s[reset]\n");
+	        "  [color=light-green]date[reset] [color=light-cyan]%s[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_TIME_HELP", "Display or change the internal time.\n");
-	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
+	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
-	MSG_Add("SHELL_CMD_TIME_SETHLP", "Run [color=yellow]time %s[reset] to change the current time.\n");
+	MSG_Add("SHELL_CMD_TIME_SETHLP", "Run [color=yellow]time %s[reset] to change the current time.\n\n");
+
 	MSG_Add("SHELL_CMD_TIME_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]time[reset] [/t]\n"
@@ -718,41 +726,46 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]time[reset]\n"
 	        "  [color=light-green]time[reset] /h\n"
-	        "  [color=light-green]time[reset] [color=light-cyan]%s[reset]\n");
+	        "  [color=light-green]time[reset] [color=light-cyan]%s[reset]\n"
+	        "\n");
 
-	MSG_Add("SHELL_CMD_MKDIR_ERROR", "Unable to make: %s.\n");
-	MSG_Add("SHELL_CMD_RMDIR_ERROR", "Unable to remove: %s.\n");
+	MSG_Add("SHELL_CMD_MKDIR_ERROR", "Unable to make: %s.\n\n");
+	MSG_Add("SHELL_CMD_RMDIR_ERROR", "Unable to remove: %s.\n\n");
 
-	MSG_Add("SHELL_CMD_DEL_ERROR", "Unable to delete: %s.\n");
+	MSG_Add("SHELL_CMD_DEL_ERROR", "Unable to delete: %s.\n\n");
 
-	MSG_Add("SHELL_CMD_SET_NOT_SET", "Environment variable '%s' not defined.\n");
-	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE", "Not enough environment space left.\n");
+	MSG_Add("SHELL_CMD_SET_NOT_SET", "Environment variable '%s' not defined.\n\n");
+	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE", "Not enough environment space left.\n\n");
+
 	MSG_Add("SHELL_CMD_SET_OPTION_P_UNSUPPORTED",
-	        "Option /P is not supported; please use the CHOICE command.\n");
+	        "Option /P is not supported; please use the CHOICE command.\n\n");
 
-	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME", "IF EXIST: Missing filename.\n");
-	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER", "IF ERRORLEVEL: Missing number.\n");
-	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER", "IF ERRORLEVEL: Invalid number.\n");
+	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME", "IF EXIST: Missing filename.\n\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER", "IF ERRORLEVEL: Missing number.\n\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER", "IF ERRORLEVEL: Invalid number.\n\n");
 
-	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL", "No label supplied to GOTO command.\n");
-	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND", "GOTO: Label '%s' not found.\n");
+	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL", "No label supplied to GOTO command.\n\n");
+	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND", "GOTO: Label '%s' not found.\n\n");
 
-	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection: %s\n");
+	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection: %s\n\n");
 
-	MSG_Add("SHELL_CMD_FAILED_PIPE", "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
+	MSG_Add("SHELL_CMD_FAILED_PIPE",
+	        "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n\n");
 
 	MSG_Add("SHELL_CMD_DIR_VOLUME", " Volume in drive %c is %s\n");
-	MSG_Add("SHELL_CMD_DIR_INTRO", " Directory of %s\n");
+	MSG_Add("SHELL_CMD_DIR_INTRO", " Directory of %s\n\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED", "%17d file(s) %21s bytes\n");
-	MSG_Add("SHELL_CMD_DIR_BYTES_FREE", "%17d dir(s)  %21s bytes free\n");
+	MSG_Add("SHELL_CMD_DIR_BYTES_FREE", "%17d dir(s)  %21s bytes free\n\n");
 
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND", "Drive %c does not exist!\nYou must [color=yellow]mount[reset] it first. "
-			"Run [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND",
+	        "Drive %c does not exist!\n"
+	        "You must [color=yellow]mount[reset] it first. Run [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n"
+	        "\n");
 
-	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND", "Illegal command: %s\n");
+	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND", "Illegal command: %s\n\n");
+
 	MSG_Add("SHELL_CMD_PAUSE", "Press any key to continue...");
 	MSG_Add("SHELL_CMD_PAUSE_HELP", "Wait for a keystroke to continue.\n");
-
 	MSG_Add("SHELL_CMD_PAUSE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]pause[reset]\n"
@@ -766,12 +779,16 @@ void SHELL_Init() {
 	        "  any key on the keyboard (except for certain control keys) to continue.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]pause[reset]\n");
+	        "  [color=light-green]pause[reset]\n"
+	        "\n");
 
-	MSG_Add("SHELL_CMD_COPY_FAILURE", "Copy failure: %s.\n");
-	MSG_Add("SHELL_CMD_COPY_SUCCESS", "   %d File(s) copied.\n");
-	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE", "Unable to remove, drive not in use.\n");
-	MSG_Add("SHELL_CMD_SUBST_FAILURE", "SUBST failed, the target drive may already exist.\nNote it is only possible to use SUBST on local drives.");
+	MSG_Add("SHELL_CMD_COPY_FAILURE", "Copy failure: %s.\n\n");
+	MSG_Add("SHELL_CMD_COPY_SUCCESS", "   %d File(s) copied.\n\n");
+	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE", "Unable to remove, drive not in use.\n\n");
+
+	MSG_Add("SHELL_CMD_SUBST_FAILURE",
+	        "SUBST failed, the target drive may already exist.\n"
+	        "Note it is only possible to use SUBST on local drives.\n\n");
 
 	MSG_Add("SHELL_STARTUP_BEGIN",
 	        "[bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗\n"
@@ -805,7 +822,7 @@ void SHELL_Init() {
 	        "\n");
 
 	MSG_Add("SHELL_STARTUP_SUB",
-	        "[color=light-green]" DOSBOX_PROJECT_NAME " %s[reset]\n");
+	        "[color=light-green]" DOSBOX_PROJECT_NAME " %s[reset]\n\n");
 
 	MSG_Add("SHELL_CMD_CHDIR_HELP", "Display or change the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
@@ -822,7 +839,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]cd[reset]\n"
-	        "  [color=light-green]cd[reset] [color=light-cyan]mydir[reset]\n");
+	        "  [color=light-green]cd[reset] [color=light-cyan]mydir[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_CLS_HELP", "Clear the DOS screen.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP_LONG",
@@ -837,10 +855,12 @@ void SHELL_Init() {
 	        "  prompt (e.g., [color=white]Z:\\>[reset] or [color=white]C:\\GAMES>[reset]) on the top-left corner of the screen.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]cls[reset]\n");
+	        "  [color=light-green]cls[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_DIR_HELP",
 	        "Display a list of files and subdirectories in a directory.\n");
+
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]dir[reset] [color=light-cyan][PATTERN][reset] [/w] \\[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
@@ -863,10 +883,12 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]dir[reset] [color=light-cyan][reset]\n"
 	        "  [color=light-green]dir[reset] [color=light-cyan]games.*[reset] /p\n"
-	        "  [color=light-green]dir[reset] [color=light-cyan]c:\\games\\*.exe[reset] /b /o[color=white]-d[reset]\n");
+	        "  [color=light-green]dir[reset] [color=light-cyan]c:\\games\\*.exe[reset] /b /o[color=white]-d[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_ECHO_HELP",
 	        "Display messages and enable/disable command echoing.\n");
+
 	MSG_Add("SHELL_CMD_ECHO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]\n"
@@ -882,7 +904,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]echo[reset] [color=light-cyan]off[reset]\n"
-	        "  [color=light-green]echo[reset] [color=light-cyan]Hello world![reset]\n");
+	        "  [color=light-green]echo[reset] [color=light-cyan]Hello world![reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_EXIT_HELP", "Exit from the DOS shell.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP_LONG",
@@ -897,11 +920,14 @@ void SHELL_Init() {
 	        "  If there is no DOS program running, the command quits from DOSBox Staging.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]exit[reset]\n");
-	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
+	        "  [color=light-green]exit[reset]\n"
+	        "\n");
+
+	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n\n");
 
 	MSG_Add("SHELL_CMD_HELP_HELP",
 	        "Display help information for DOS commands.\n");
+
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]help[reset]\n"
@@ -918,7 +944,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]help[reset] [color=light-cyan]dir[reset]\n"
-	        "  [color=light-green]help[reset] /all\n");
+	        "  [color=light-green]help[reset] /all\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_MKDIR_HELP", "Create a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
@@ -935,7 +962,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]md[reset] [color=light-cyan]newdir[reset]\n"
-	        "  [color=light-green]md[reset] [color=light-cyan]c:\\games\\dir[reset]\n");
+	        "  [color=light-green]md[reset] [color=light-cyan]c:\\games\\dir[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_RMDIR_HELP", "Remove a directory.\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG",
@@ -950,7 +978,8 @@ void SHELL_Init() {
 	        "  The directory must be empty, with no files or subdirectories.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]rd[reset] [color=light-cyan]emptydir[reset]\n");
+	        "  [color=light-green]rd[reset] [color=light-cyan]emptydir[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_SET_HELP", "Display or change environment variables.\n");
 	MSG_Add("SHELL_CMD_SET_HELP_LONG",
@@ -968,10 +997,12 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]set[reset]\n"
-	        "  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]\n");
+	        "  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_IF_HELP",
 	        "Perform conditional processing in batch programs.\n");
+
 	MSG_Add("SHELL_CMD_IF_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND\n"
@@ -993,10 +1024,12 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir\n"
 	        "  [color=light-green]if[reset] [color=white]\"%%myvar%%\"==\"mystring\"[reset] echo Hello world!\n"
-	        "  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit\n");
+	        "  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_GOTO_HELP",
 	        "Jump to a labeled line in a batch program.\n");
+
 	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]\n"
@@ -1009,7 +1042,8 @@ void SHELL_Init() {
 	        "  - The label must be unique, and can be anywhere within the batch program.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]\n");
+	        "  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_SHIFT_HELP", "Left-shift command-line parameters in a batch program.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP_LONG",
@@ -1024,7 +1058,8 @@ void SHELL_Init() {
 	        "  Running [color=light-green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]shift[reset]\n");
+	        "  [color=light-green]shift[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
@@ -1040,7 +1075,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]type[reset] [color=light-cyan]text.txt[reset]\n"
-	        "  [color=light-green]type[reset] [color=light-cyan]c:\\dos\\readme.txt[reset]\n");
+	        "  [color=light-green]type[reset] [color=light-cyan]c:\\dos\\readme.txt[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_REM_HELP", "Add comments in a batch program.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG",
@@ -1055,9 +1091,10 @@ void SHELL_Init() {
 	        "  - You can also temporarily comment out some commands with this command.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]rem[reset] [color=light-cyan]This is my test batch program.[reset]\n");
+	        "  [color=light-green]rem[reset] [color=light-cyan]This is my test batch program.[reset]\n"
+	        "\n");
 
-	MSG_Add("SHELL_CMD_NO_WILD", "This is a simple version of the command, no wildcards allowed!\n");
+	MSG_Add("SHELL_CMD_NO_WILD", "This is a simple version of the command, no wildcards allowed!\n\n");
 
 	MSG_Add("SHELL_CMD_RENAME_HELP", "Rename one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
@@ -1075,7 +1112,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]ren[reset] [color=white]oldname[reset] [color=light-cyan]newname[reset]\n"
-	        "  [color=light-green]ren[reset] [color=white]c:\\dos\\file.txt[reset] [color=light-cyan]f.txt[reset]\n");
+	        "  [color=light-green]ren[reset] [color=white]c:\\dos\\file.txt[reset] [color=light-cyan]f.txt[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_DELETE_HELP", "Remove one or more files.\n");
 	MSG_Add("SHELL_CMD_DELETE_HELP_LONG",
@@ -1096,7 +1134,8 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]del[reset] [color=light-cyan]test.bat[reset]\n"
 	        "  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]\n"
-	        "  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]\n");
+	        "  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_COPY_HELP", "Copy one or more files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP_LONG",
@@ -1116,10 +1155,12 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]\n"
 	        "  [color=light-green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=light-cyan]file3.txt[reset]\n"
-	        "  [color=light-green]copy[reset] [color=white]..\\c*.*[reset]\n");
+	        "  [color=light-green]copy[reset] [color=white]..\\c*.*[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_CALL_HELP",
 	        "Start a batch program from within another batch program.\n");
+
 	MSG_Add("SHELL_CMD_CALL_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETERS][reset]\n"
@@ -1134,7 +1175,9 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]call[reset] [color=white]mybatch.bat[reset]\n"
-	        "  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Hello world![reset]\n");
+	        "  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Hello world![reset]\n"
+	        "\n");
+
 	MSG_Add("SHELL_CMD_SUBST_HELP", "Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP_LONG",
 	        "Usage:\n"
@@ -1151,7 +1194,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\\games[reset]\n"
-	        "  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]\n");
+	        "  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP", "Load a DOS program into upper memory.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP_LONG",
@@ -1169,10 +1213,10 @@ void SHELL_Init() {
 	        "  Not all DOS TSR programs can be loaded into upper memory with this command.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]\n");
+	        "  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]\n"
+	        "\n");
 
-	MSG_Add("SHELL_CMD_ATTRIB_HELP",
-			"Display or change file attributes.\n");
+	MSG_Add("SHELL_CMD_ATTRIB_HELP", "Display or change file attributes.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]\n"
@@ -1191,12 +1235,15 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]\n"
-	        "  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]\n");
-	MSG_Add("SHELL_CMD_ATTRIB_GET_ERROR", "Unable to get attributes: %s\n");
-	MSG_Add("SHELL_CMD_ATTRIB_SET_ERROR", "Unable to set attributes: %s\n");
+	        "  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]\n"
+	        "\n");
+
+	MSG_Add("SHELL_CMD_ATTRIB_GET_ERROR", "Unable to get attributes: %s\n\n");
+	MSG_Add("SHELL_CMD_ATTRIB_SET_ERROR", "Unable to set attributes: %s\n\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP",
 	        "Wait for a keypress and set an ERRORLEVEL value.\n");
+
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]choice[reset] [color=light-cyan][TEXT][reset]\n"
@@ -1217,12 +1264,18 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Continue[reset]\n"
-	        "  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Type the letter a, b, or c[reset]\n");
-	MSG_Add("SHELL_CMD_CHOICE_EOF", "\n[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.\n");
-	MSG_Add("SHELL_CMD_CHOICE_ABORTED", "\n[color=yellow]Choice aborted.[reset]\n");
+	        "  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Type the letter a, b, or c[reset]\n"
+	        "\n");
+
+	MSG_Add("SHELL_CMD_CHOICE_EOF",
+	        "\n[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.\n\n");
+
+	MSG_Add("SHELL_CMD_CHOICE_ABORTED",
+	        "\n[color=yellow]Choice aborted.[reset]\n\n");
 
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Display or set a search path for executable files.\n");
+
 	MSG_Add("SHELL_CMD_PATH_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]path[reset]\n"
@@ -1238,7 +1291,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]path[reset]\n"
-	        "  [color=light-green]path[reset] [color=light-cyan]Z:\\;C:\\DOS[reset]\n");
+	        "  [color=light-green]path[reset] [color=light-cyan]Z:\\;C:\\DOS[reset]\n"
+	        "\n");
 
 	MSG_Add("SHELL_CMD_VER_HELP", "Display the DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG",
@@ -1253,13 +1307,17 @@ void SHELL_Init() {
 	        "  - The old '[color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]VERSION[reset]' syntax to change the DOS version is deprecated.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]ver[reset]\n");
+	        "  [color=light-green]ver[reset]\n"
+	        "\n");
+
 	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
-	                             "DOS version %d.%02d\n");
-	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
+	                             "DOS version %d.%02d\n\n");
+
+	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n\n");
 
 	MSG_Add("SHELL_CMD_VOL_HELP",
 	        "Display the disk volume and serial number, if they exist.\n");
+
 	MSG_Add("SHELL_CMD_VOL_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]vol[reset] [color=light-cyan][DRIVE:][reset]\n"
@@ -1272,7 +1330,9 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]vol[reset]\n"
-	        "  [color=light-green]vol[reset] [color=light-cyan]c:[reset]\n");
+	        "  [color=light-green]vol[reset] [color=light-cyan]c:[reset]\n"
+	        "\n");
+
 	MSG_Add("SHELL_CMD_VOL_OUTPUT",
 	        "\n"
 	        " Volume in drive %c is %s\n"
@@ -1281,6 +1341,7 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_CMD_MOVE_HELP",
 	        "Move files and rename files and directories.\n");
+
 	MSG_Add("SHELL_CMD_MOVE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]move[reset] [color=white]FILENAME1[,FILENAME2,...][reset] [color=light-cyan]DESTINATION[reset]\n"
@@ -1300,11 +1361,15 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]move[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]\n"
-	        "  [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]mydir[reset]\n");
+	        "  [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]mydir[reset]\n"
+	        "\n");
+
 	MSG_Add("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE",
-	        "Cannot move multiple files to a single file.\n");
+	        "Cannot move multiple files to a single file.\n\n");
+
 	MSG_Add("SHELL_CMD_FOR_HELP",
 	        "Run a specified command for each string in a set.\n");
+
 	MSG_AddNoFormatString("SHELL_CMD_FOR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
@@ -1325,7 +1390,8 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]\n"
-	        "  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]\n");
+	        "  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]\n"
+	        "\n");
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();

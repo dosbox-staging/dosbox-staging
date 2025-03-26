@@ -39,8 +39,8 @@ void KEYB::Run()
 	}
 
 	constexpr bool RemoveIfFound = true;
-	const bool has_option_list = cmd->FindExist("/list", RemoveIfFound);
-	const bool has_option_rom  = cmd->FindExist("/rom", RemoveIfFound);
+	const bool has_option_list   = cmd->FindExist("/list", RemoveIfFound);
+	const bool has_option_rom    = cmd->FindExist("/rom", RemoveIfFound);
 
 	if (has_option_list && has_option_rom) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH_COMBO"));
@@ -192,8 +192,8 @@ void KEYB::WriteOutSuccess()
 	const std::string AnsiYellow = "[color=yellow]";
 	const std::string AnsiReset  = "[reset]";
 
-	const auto layout       = DOS_GetLoadedLayout();
-	const bool show_layout  = !layout.empty();
+	const auto layout      = DOS_GetLoadedLayout();
+	const bool show_layout = !layout.empty();
 
 	// Prepare strings based on translation
 
@@ -256,8 +256,8 @@ void KEYB::WriteOutSuccess()
 	message += align_code_page;
 
 	const auto space_file_name = INT10_GetTextColumns() - 1 - target_len -
-		std::max(align_code_page.length() + space_code_page,
-		         align_layout.length() + space_layout);
+	                             std::max(align_code_page.length() + space_code_page,
+	                                      align_layout.length() + space_layout);
 
 	switch (dos.screen_font_type) {
 	case ScreenFontType::Rom:
@@ -389,43 +389,62 @@ void KEYB::AddMessages()
 	        "  [color=light-green]KEYB[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
-	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
+	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi\n"
+	        "\n");
+
 	// Success/status message
 	MSG_Add("PROGRAM_KEYB_CODE_PAGE", "Code page");
 	MSG_Add("PROGRAM_KEYB_ROM_FONT", "ROM font");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_LAYOUT", "Keyboard layout");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_SCRIPT", "Keyboard script");
 	MSG_Add("PROGRAM_KEYB_NOT_LOADED", "not loaded");
+
 	// Error messages - KEYB program related
-	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n");
+	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n\n");
+
 	// Error messages - CPI file related
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_NOT_FOUND",
-	        "Code page information file not found.\n");
+	        "Code page information file not found.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_READ_ERROR",
-	        "Error reading code page information file.\n");
+	        "Error reading code page information file.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_CPI_FILE",
-	        "Invalid code page information file.\n");
+	        "Invalid code page information file.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_TOO_LARGE",
-	        "Code page information file too large.\n");
+	        "Code page information file too large.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_UNSUPPORTED_CPX_FILE",
 	        "Unsupported FreeDOS CPX file format. Convert the file to the CPI format by\n"
-	        "uncompressing it with the 3rd party [color=light-green]upx[reset] tool.\n");
+	        "uncompressing it with the 3rd party [color=light-green]upx[reset] tool.\n"
+	        "\n");
+
 	MSG_Add("PROGRAM_KEYB_PRINTER_CPI_FILE",
-	        "This is a printer code page information file, it does not contain screen fonts.\n");
+	        "This is a printer code page information file, it does not contain screen fonts.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_SCREEN_FONT_UNUSABLE",
-	        "Code page %d found, but the screen font could not be used.\n");
+	        "Code page %d found, but the screen font could not be used.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_BUNDLED_CPI_FILE",
 	        "No bundled code page information file for code page %d.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE",
-	        "No code page %d in the code page information file.\n");
+	        "No code page %d in the code page information file.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_INCOMPATIBLE_MACHINE",
-	        "Can't change the screen font; EGA machine or better is required.\n");
+	        "Can't change the screen font; EGA machine or better is required.\n\n");
+
 	// Error messages - keyboard layout file related
 	MSG_Add("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND",
-	        "File with keyboard layout '%s' not found.\n");
+	        "File with keyboard layout '%s' not found.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_LAYOUT_FILE",
-	        "Invalid file with keyboard layout '%s'.\n");
-	MSG_Add("PROGRAM_KEYB_LAYOUT_NOT_KNOWN", "Keyboard layout '%s' not known.\n");
+	        "Invalid file with keyboard layout '%s'.\n\n");
+
+	MSG_Add("PROGRAM_KEYB_LAYOUT_NOT_KNOWN",
+	        "Keyboard layout '%s' not known.\n\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE",
-	        "No keyboard layout '%s' for code page %d.\n");
+	        "No keyboard layout '%s' for code page %d.\n\n");
 }
