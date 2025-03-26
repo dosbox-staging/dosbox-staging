@@ -193,6 +193,7 @@ FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
 	name = (decltype(name))dynlib_get_symbol(fsynth_lib, #name); \
 	if (!name) { \
 		dynlib_close(fsynth_lib); \
+		err_str = "FSYNTH: Failed to get symbol: '" #ret_type " " #name #sig "'"; \
 		return DynLibResult::ResolveSymErr; \
 	}
 
@@ -201,12 +202,13 @@ FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
  * 
  * If the library is already loaded, does nothing.
  */
-static DynLibResult load_fsynth_dynlib()
+static DynLibResult load_fsynth_dynlib(std::string& err_str)
 {
 	using namespace fsynth;
 	if (!fsynth_lib) {
 		fsynth_lib = dynlib_open(fsynth_dynlib_file);
 		if (!fsynth_lib) {
+			err_str = "FSYNTH: Failed to load FluidSynth library";
 			return DynLibResult::LibOpenErr;
 		}
 		FSYNTH_FUNC_LIST(FSYNTH_FUNC_GET_SYM)
@@ -649,20 +651,15 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
 	using namespace fsynth;
 
-	DynLibResult res = load_fsynth_dynlib();
+	std::string sym_err_msg;
+	DynLibResult res = load_fsynth_dynlib(sym_err_msg);
 	switch (res) {
 		case DynLibResult::Success:
 			break;
-		case DynLibResult::LibOpenErr: {
-			const auto sym_msg = "FSYNTH: Failed to load FluidSynth library";
-			LOG_ERR("%s", sym_msg);
-			throw std::runtime_error(sym_msg);
-			break;
-		}
+		case DynLibResult::LibOpenErr:
 		case DynLibResult::ResolveSymErr: {
-			const auto sym_msg = "FSYNTH: Failed to resolve one or more FluidSynth symbols";
-			LOG_ERR("%s", sym_msg);
-			throw std::runtime_error(sym_msg);
+			LOG_ERR("%s", sym_err_msg.c_str());
+			throw std::runtime_error(sym_err_msg);
 			break;
 		}
 	}
