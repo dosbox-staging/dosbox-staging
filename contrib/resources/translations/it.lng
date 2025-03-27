@@ -1350,7 +1350,7 @@ Numero dello schermo da utilizzare; Il valore dipende dal sistema operativo
 e dalle impostazioni dell'utente (predefinito 0).
 .
 :CONFIG_FULLSCREEN
-Avvia direttamente a schermo intero (predefinito disabilitato).
+Avvia direttamente a schermo intero (predefinito 'off').
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida per il controllo della finestra.
 .
@@ -1378,8 +1378,7 @@ Imposta la posizione iniziale della finestra per la modalità finestra:
              0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
-Abilita le decorazioni delle finestre in modalità finestra
-(predefinito abilitato).
+Abilita le decorazioni delle finestre in modalità finestra (predefinito 'on').
 .
 :CONFIG_WINDOW_TITLEBAR
 Elenco di informazioni, separate da spazi, da visualizzare nella barra del
@@ -1500,7 +1499,7 @@ Spostato nella sezione [mouse] e rinominato in 'mouse_sensitivity'.
 Spostato nella sezione [mouse] e rinominato in 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
-Mantiene la console aperta se si verifica un errore (predefinito abilitato).
+Mantiene la console aperta se si verifica un errore (predefinito 'on').
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
@@ -1508,11 +1507,10 @@ in primo piano o inattiva (predefinito 'auto auto').
 'auto' lascia che sia il sistema operativo primario a gestire la priorità.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Disattiva il suono quando la finestra è inattiva (predefinito disabilitato).
+Disattiva il suono quando la finestra è inattiva (predefinito 'off').
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Mette in pausa l'emulazione quando la finestra è inattiva
-(predefinito disabilitato).
+Mette in pausa l'emulazione quando la finestra è inattiva (predefinito 'off').
 .
 :CONFIG_MAPPERFILE
 Percorso del file di mappatura (predefinito 'mapper-sdl2-XYZ.map', dove XYZ è
@@ -1639,17 +1637,15 @@ Controlla quali modalità video VESA sono disponibili:
               richieste dalle produzioni demoscene della fine degli anni '90.
 .
 :CONFIG_VGA_8DOT_FONT
-Utilizza caratteri larghi 8 pixel nelle schede grafiche VGA
-(predefinito disabilitato).
+Utilizza caratteri larghi 8 pixel nelle schede grafiche VGA (predefinito 'off')
 .
 :CONFIG_VGA_RENDER_PER_SCANLINE
-Emula la renderizzazione VGA accurata per linea di scansione
-(predefinito abilitato).
+Emula la renderizzazione VGA accurata per linea di scansione (predefinito 'on')
 Al momento è necessario disabilitarlo per alcuni giochi, altrimenti si
 bloccheranno all'avvio (es. Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 .
 :CONFIG_SPEED_MODS
-Consente modifiche note per migliorare le prestazioni (predefinito abilitato).
+Consente modifiche note per migliorare le prestazioni (predefinito 'on').
 Attualmente, nessun gioco è noto per esserne influenzato negativamente.
 Se trovi un gioco che ha problemi quando questa opzione è abilitata, segnala
 il bug sul sito del progetto, in modo tale da poterlo elencare qui.
@@ -1663,18 +1659,18 @@ Indica come vengono gestite le sezioni autoexec da più file di configurazione.
 .
 :CONFIG_AUTOMOUNT
 Monta le directory 'drives/[c]' come unità all'avvio, dove [c] è una lettera di
-unità in formato minuscolo da 'a' a 'y' (predefinito abilitato).
+unità in formato minuscolo da 'a' a 'y' (predefinito 'on').
 La cartella 'drives' può essere fornita in relazione alla directory corrente o
 tramite le risorse integrate.
 Inoltre possono essere fornite le impostazioni di montaggio utilizzando
 un file [c].conf accanto alla directory dell'unità, con il seguente contenuto:
   [drive]
-  type    = dir, overlay, floppy, o cdrom
-  label   = etichetta_personalizzata
-  path    = percorso di ricerca eseguibili, cioè: path = %%path%%;c:\tools
+  type     = dir, overlay, floppy, o cdrom
+  label    = etichetta_personalizzata
+  path     = percorso di ricerca eseguibili (es. path = %%path%%;c:\tools)
   override_drive = monta invece la directory su questa unità (predef. vuoto)
-  verbose = true o false
-  readonly = true o false
+  verbose  = on o off
+  readonly = on o off
 .
 :CONFIG_STARTUP_VERBOSITY
 Determina il livello di verbosità prima di avviare l'emulatore
@@ -1689,14 +1685,13 @@ auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Molti giochi aprono tutti i loro file con permessi di scrittura, anche quelli
 che non modificheranno mai. Questa opzione ti consente di proteggere dalla
-scrittura quei file pur consentendo al gioco di leggerli (predefinito
-abilitato). Un secondo caso d'uso: se stai utilizzando un filesystem
-copy-on-write o di rete, questa opzione consente di ignorare le operazioni
-di scrittura.
+scrittura quei file pur consentendo al gioco di leggerli (predefinito 'on').
+Secondo caso d'uso: se stai utilizzando un filesystem copy-on-write o di rete,
+questa opzione consente di ignorare le operazioni di scrittura.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
 Consente una gestione semplificata delle opzioni di configurazione tramite
-comandi in formato abbreviato (predefinito abilitato). Ad esempio invece di
+comandi in formato abbreviato (predefinito 'on'). Ad esempio invece di
 'config -set sbtype sb16', è sufficiente eseguire 'sbtype sb16'; allo stesso
 modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
 .
@@ -2019,13 +2014,13 @@ Velocità della CPU emulata solo per i programmi in modalità protetta
   max:       Emula quanti pìu cicli la CPU di sistema è in grado di sostenere
              in un singolo core. Il numero di cicli per millisecondo può
              variare; ciò potrebbe causare problemi in alcuni programmi DOS.
-Nota: Fare riferimento all'opzione 'cpu_cycles' per ulteriori informazioni.
+Nota: Per ulteriori informazioni, fare riferimento all'opzione 'cpu_cycles'.
 .
 :CONFIG_CPU_THROTTLE
 Riduce dinamicamente il numero di cicli della CPU emulati se la CPU di sistema
-non è in grado di gestirli (predefinito disabilitato). Ha effetto solo se i
-cicli sono impostati ad un valore fisso. Se abilitato, il numero di cicli per
-millisecondo può variare; ciò potrebbe causare problemi in alcuni programmi DOS.
+non è in grado di gestirli (predefinito 'off'). Ha effetto solo se i cicli sono
+impostati su un valore fisso. Se abilitato, il numero di cicli per millisecondo
+può variare; ciò potrebbe causare problemi in alcuni programmi DOS.
 .
 :CONFIG_CYCLEUP
 Numero di cicli da aggiungere con l'apposito tasto di scelta rapida
@@ -2038,13 +2033,20 @@ Numero di cicli da sottrarre con l'apposito tasto di scelta rapida
 diminuzione percentuale.
 .
 :CONFIG_VOODOO
-Abilita l'emulazione 3dfx Voodoo (predefinito abilitato).
+Abilita l'emulazione della scheda grafica 3dfx Voodoo (predefinito 'on').
+Si tratta di un'emulazione di basso livello, che non utilizza la GPU di sistema
+attraverso l'API OpenGL, per cui richiede una CPU veloce. Affinché la modalità
+3dfx funzioni, per la maggior parte dei giochi è necessario il driver DOS Glide
+denominato 'GLIDE2X.OVL', e che questo sia aggiunto nella variabile di
+ambiente PATH. Molti giochi includono le proprie versioni di questo driver, ma
+per alcuni è necessario fornirne uno. Un piccolo numero di giochi integra il
+driver Glide nel proprio codice, quindi non hanno bisogno di 'GLIDE2X.OVL'.
 .
 :CONFIG_VOODOO_MEMSIZE
-Imposta la quantità di memoria video per la scheda grafica 3dfx Voodoo,
-4 o 12 MB. La memoria viene utilizzata dall'interfaccia del buffer dei
-fotogrammi (o Frame Buffer Interface, FBI) e dall'unità di gestione delle
-texture (o Texture Mapping Unit, TMU) come segue:
+Imposta la quantità di memoria video per la scheda grafica 3dfx Voodoo.
+La memoria viene utilizzata dall'interfaccia del buffer dei fotogrammi
+(o Frame Buffer Interface, FBI) e dall'unità di gestione delle texture
+(o Texture Mapping Unit, TMU) come segue:
    4: FBI con 2 MB e un TMU con 2 MB (predefinito).
   12: FBI con 4 MB e due TMU, ciascuno con 4 MB.
 .
@@ -2065,9 +2067,9 @@ Nota: Impostando questa opzione su un valore più alto del numero di processori
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilizza il filtro bilineare per emulare l'effetto smussato delle texture delle
-schede 3dfx Voodoo (predefinito disabilitato). Consigliato solo se disponi di
-una CPU ad alte prestazioni, poiché può influire sulla frequenza dei fotogrammi
-sui sistemi più lenti.
+schede 3dfx Voodoo (predefinito 'on'). Nei sistemi più lenti, il filtro
+bilineare può impattare sulle prestazioni; provare a disattivarlo se non si
+ottengono prestazioni adeguate.
 .
 :CONFIG_CAPTURE_DIR
 Directory in cui vengono salvate le acquisizioni audio, video, MIDI e
@@ -2119,12 +2121,12 @@ di continuità 'seamless'.
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Rilascia il mouse facendo clic con il pulsante centrale. Se è stata impostata
 la modalità di controllo senza soluzione di continuità 'seamless', esso si
-occuperà anche di catturarlo (predefinito abilitato).
+occuperà anche di catturarlo (predefinito 'on').
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Consente il funzionamento della modalità mouse senza soluzione di continuità
 e il rilascio del puntatore del mouse in modalità schermo intero nei sistemi
-multischermo (predefinito abilitato).
+multischermo (predefinito 'on').
 Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
       schermi multipli, quando in realtà ne è presente solo uno. Ciò potrebbe
       accadere se si utilizza la modalità di visualizzazione speculare o
@@ -2141,12 +2143,12 @@ utilizzando lo strumento interno MOUSECTL.COM disponibile sull'unità Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Abilita questa opzione per bypassare le impostazioni di sensibilità e
-accelerazione del mouse del tuo sistema operativo (predefinito abilitato).
+accelerazione del mouse del tuo sistema operativo (predefinito 'on').
 Funziona in modalità schermo intero o quando il mouse viene catturato
 in modalità finestra.
 .
-:CONFIG_DOS_MOUSE_DRIVER
-Abilita il driver del mouse incluso in DOSBox (predefinito abilitato).
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER
+Abilita il driver del mouse DOS incluso in DOSBox (predefinito 'on').
 Esso assicura la latenza più bassa possibile e il movimento del mouse più
 fluido, quindi si consiglia di disabilitarlo e caricare un driver DOS esterno
 solo se realmente necessario (ad esempio, se un gioco non è compatibile con
@@ -2166,18 +2168,43 @@ Nota: Se si avvia una versione di MS-DOS o Windows 9x all'interno di DOSBox,
       Windows 3.x, il driver integrato non verrà disabilitato ma quello di
       Windows prenderà il sopravvento.
 .
+:CONFIG_DOS_MOUSE_DRIVER
+Rinominato in 'builtin_dos_mouse_driver'.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_MODEL
+Imposta il modello del mouse da emulare tramite il driver del mouse DOS
+incluso in DOSBox (predefinito '2button').
+  2button:  2 pulsanti, l'opzione più sicura nella maggioranza dei casi.
+            La maggior parte dei giochi DOS supporta solo mouse con 2 pulsanti.
+            Alcuni inoltre potrebbero avere problemi con i mouse che presentano
+            un pulsante centrale.
+  3button:  3 pulsanti, tipologia di mouse supportata da pochissimi giochi DOS.
+            Da utilizzare solo se il gioco supporta un mouse a 3 pulsanti.
+  wheel:    3 pulsanti + rotellina, supporta l'API CuteMouse Wheel v1.0.
+            Nessun gioco DOS utilizza la rotellina del mouse, solo un ristretto
+            numero di applicazioni DOS e Windows 3.x con speciali driver di
+            terze parti.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_OPTIONS
+Impostazioni aggiuntive del driver del mouse DOS integrato, come elenco di
+opzioni separate da uno spazio o una virgola (predefinito non impostato).
+  immediate:  Aggiorna immediatamente i contatori di movimento del mouse, senza
+              attendere l'interrupt. Può migliorare la latenza del mouse nei
+              giochi dal ritmo veloce (arcade, FPS, ecc.), ma potrebbe causare
+              problemi con alcuni titoli.
+              Elenco di alcuni giochi noti non compatibili:
+                - Ultima Underworld: The Stygian Abyss
+                - Ultima Underworld II: Labyrinth of Worlds
+              Si prega di segnalare altri giochi incompatibili così da poter
+              aggiornare questo elenco.
+  modern:     Se presente, viene emulato il comportamento del driver del mouse
+              Microsoft v7.0+, in caso contrario quello della v6.0 e precedenti
+              (le due versioni sono leggermente incompatibili). Finora, solo
+              Descent II con l'aggiornamento ufficiale per il supporto 3dfx
+              Voodoo ha richiesto il comportamento della v7.0+.
+.
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
-l'interrupt (predefinito disabilitato). Può migliorare la giocabilità,
-specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poiché per alcuni
-incrementa efficacemente la frequenza di campionamento del mouse a 1000 Hz,
-senza aumentare il sovraccarico dell'interrupt. Potrebbe causare problemi di
-compatibilità.
-Elenco di alcuni giochi noti non compatibili:
-  - Ultima Underworld: The Stygian Abyss
-  - Ultima Underworld II: Labyrinth of Worlds
-Se trovi un altro gioco incompatibile, segnalalo in modo da poter aggiornare
-questo elenco.
+Configurare utilizzando l'opzione 'builtin_dos_mouse_driver_options'.
 .
 :CONFIG_PS2_MOUSE_MODEL
 Imposta il modello del mouse sulla porta PS/2 AUX o, più precisamente, il tipo
@@ -2208,17 +2235,17 @@ riferimento a 'dos_mouse_driver').
 Nota: Abilita i mouse della porta COM nella sezione [serial].
 .
 :CONFIG_VMWARE_MOUSE
-Interfaccia del mouse VMware (predefinito abilitato).
+Interfaccia del mouse VMware (predefinito 'on').
 Pienamente compatibile solo con driver Windows 3.1x sperimentali di terze parti
 Nota: Richiede che il mouse PS/2 sia abilitato.
 .
 :CONFIG_VIRTUALBOX_MOUSE
-Interfaccia del mouse VirtualBox (predefinito abilitato).
+Interfaccia del mouse VirtualBox (predefinito 'on').
 Pienamente compatibile solo con driver Windows 3.1x di terze parti.
 Nota: Richiede che il mouse PS/2 sia abilitato.
 .
 :CONFIG_NOSOUND
-Abilita la modalità silenziosa (predefinito disabilitato).
+Abilita la modalità silenziosa (predefinito 'off').
 In questa modalità, l'emulazione audio è comunque abilitata ma DOSBox non
 riprodurrà alcun suono. In modalità silenziosa, l'acquisizione dell'uscita
 audio emulata in un file WAV funzionerà ugualmente.
@@ -2257,7 +2284,7 @@ il ritaglio (clipping) dell'uscita audio:
   on:        Abilita il compressore (predefinito).
 .
 :CONFIG_CROSSFEED
-Abilita l'alimentazione incrociata sui canali OPL e CMS (Gameblaster) del mixer
+Imposta l'alimentazione incrociata sui canali OPL e CMS (Gameblaster) del mixer
 Con questi dispositivi audio, nella riproduzione in stereofonia, molti giochi
 distribuiscono gli strumenti al 100%% nel canale sinistro e al 100%% in quello
 destro, il che può risultare spiacevole da ascoltare con le cuffie. Abilitando
@@ -2274,8 +2301,7 @@ Note:
     ad altri canali audio e per regolarne l'intensità in ciascun canale.
 .
 :CONFIG_REVERB
-Abilita l'effetto riverbero a livello globale per aggiungere un senso di
-spazializzazione del suono:
+Effetto riverbero che aggiunge un senso di spazializzazione al suono:
   off:       Nessun riverbero (predefinito).
   on:        Abilita riverbero (profilo 'medium').
   tiny:      Simula il suono di un piccolo altoparlante integrato;
@@ -2297,7 +2323,7 @@ Note:
     canale.
 .
 :CONFIG_CHORUS
-Abilita l'effetto coro a livello globale per un suono più avvolgente:
+Effetto coro che arricchisce grandemente il suono:
   off:       Nessun effetto coro (predefinito).
   on:        Abilita effetto coro (profilo 'normal').
   light:     Effetto coro leggero (particolarmente adatto per la musica
@@ -2309,6 +2335,18 @@ Note:
     eccezione di quelli con effetto coro integrato, come il Roland MT-32).
   - Utilizzare il comando MIXER per regolare i livelli di coro in ciascun
     canale.
+.
+:CONFIG_DENOISER
+Rimuove il rumore residuo di basso livello dall'uscita audio del sintetizzatore
+OPL e del Roland Sound Canvas. L'emulazione di questi dispositivi è fedele ai
+moduli sonori originali, compresa l'emulazione di un rumore semi-casuale di
+livello molto basso. Sebbene sia autentico, alcune persone potrebbero trovarlo
+fastidioso.
+  off:  Disabilità la riduzione del rumore.
+  on:   Abilita la riduzione del rumore sui canali OPL e SOUNDCANVAS 
+        (predefinito). Questo filtro audio non introduce alcun degrado nella
+        qualità del suono; rimuove solo il rumore residuo appena udibile nei
+        momenti di silenzo.
 .
 :CONFIG_SOUNDFONT
 Nome o percorso del file SoundFont da utilizzare (predefinito 'default.sf2').
@@ -2373,7 +2411,7 @@ Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
 Filtro per l'uscita audio di FluidSynth:
   off:              Non filtra l'uscita audio (predefinito).
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :FLUIDSYNTH_NO_SOUNDFONTS
 Nessun SoundFont disponibile
@@ -2411,7 +2449,7 @@ Note:
 Filtro per l'uscita audio Roland MT-32/CM-32L:
   off:              Non filtra l'uscita audio (predefinito).
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :MT32_ROMS_LABEL
 Modelli  MT-32
@@ -2427,11 +2465,11 @@ Percorso ROM  :
 .
 :CONFIG_SOUNDCANVAS_MODEL
 Modello di Roland Sound Canvas da utilizzare.
-Nella cartella 'plugin' situata nella directory di configurazione di DOSBox,
-devono essere presenti uno o più moduli audio CLAP che implementano i modelli
-Sound Canvas supportati. DOSBox individua il modello richiesto esaminando le
-descrizioni dei moduli audio disponibili.
-La ricerca dei modelli viene eseguita nel seguente ordine:
+Nella cartella 'plugins' situata nella directory di installazione o
+configurazione di DOSBox, devono essere presenti uno o più moduli audio CLAP
+che implementano i modelli Sound Canvas supportati. DOSBox individua il modello
+richiesto esaminando le descrizioni dei moduli audio disponibili.
+La ricerca del modello viene eseguita nel seguente ordine:
   auto:       Seleziona il miglior modello disponibile (predefinito).
   sc55:       Seleziona il miglior modello SC-55 originale disponibile.
   sc55mk2:    Seleziona il miglior modello SC-55mk2 disponibile.
@@ -2442,7 +2480,7 @@ Filtro per l'uscita audio del Roland Sound Canvas:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :SC55_MODELS_LABEL
 Modelli SC-55
@@ -2515,7 +2553,7 @@ Note:
 Modalità MPU-401 da emulare (predefinito 'intelligent').
 .
 :CONFIG_RAW_MIDI_OUTPUT
-Abilita l'uscita MIDI senza alcuna elaborazione (predefinito disabilitato).
+Abilita l'uscita MIDI senza alcuna elaborazione (predefinito 'off').
 I driver MIDI di molti giochi non sono completamente conformi allo standard
 MIDI, il che rende la modifica delle registrazioni MIDI di questi giochi
 altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
@@ -2577,7 +2615,7 @@ Canale High DMA della scheda Sound Blaster 16 (predefinito 5).
 .
 :CONFIG_SBMIXER
 Permette al mixer della scheda Sound Blaster di modificare i livelli di volume
-(predefinito abilitato).
+(predefinito 'on').
 Le schede Sound Blaster Pro 1 e successive consentono ai programmi di impostare
 il volume dell'uscita audio digitale (DAC), del sintetizzatore FM, e del CD
 Audio. Questi corrispondono rispettivamente ai canali del mixer di DOSBox SB,
@@ -2618,8 +2656,8 @@ Sound Blaster:
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
 Forza il filtro della scheda Sound Blaster Pro 2 ad essere sempre attivo
-(predefinito disabilitato). Gli altri modelli di Sound Blaster non consentono
-di attivare/disattivare il filtro nel software.
+(predefinito 'off'). Gli altri modelli di Sound Blaster non consentono di
+attivare/disattivare il filtro nel software.
 .
 :CONFIG_OPLRATE
 L'uscita OPL viene ora ricampionata alla frequenza di riproduzione del mixer.
@@ -2644,24 +2682,24 @@ Note:
     modelli Sound Blaster originali.
 .
 :CONFIG_OPL_FADEOUT
-Dissolvenza in chiusura dell'uscita audio del sintetizzatore OPL dopo l'ultima
-scrittura della porta I/O:
-  off:              Non applica la dissolvenza; l'audio residuo verrà
-                    riprodotto per sempre (predefinito).
-  on:               Attende 0,5s prima di applicare la dissolvenza su un
-                    periodo di 0,5s.
+Dissolvenza sulle note sospese del sintetizzatore OPL:
+  off:              Non applica la dissolvenza sulle note sospese (predefinito).
+  on:               Applica la dissolvenza sulle note sospese. Si consiglia di
+                    abilitare questa opzione solo nei giochi che presentano
+                    note riprodotte all'infinito (es. Bard's Tale).
   <personalizzato>: Definizione di una dissolvenza personalizzata nel seguente
                     formato:
                       ATTESA DISSOLVENZA
                     Dove ATTESA è il tempo trascorso tra l'ultima scrittura
-                    della porta I/O e l'inizio della dissolvenza, compreso tra
-                    100 e 5000 millisecondi, mentre DISSOLVENZA è il periodo
-                    di tempo in cui viene applicata la dissolvenza, compreso
-                    tra 10 e 3000 millisecondi. Esempi:
-                       300 200 (Attende 300ms prima di applicare la dissolvenza
-                                su un periodo di 200ms.)
-                       1000 3000 (Attende 1s prima di applicare la dissolvenza
-                                  su un periodo di 3s.)
+                    della porta I/O e l'inizio della dissolvenza (compreso tra
+                    100 e 5000 millisecondi), mentre DISSOLVENZA è il periodo
+                    di tempo in cui viene applicata la dissolvenza (compreso
+                    tra 10 e 3000 millisecondi).
+                    Esempi:
+                       300 200   (Attende 300 ms prima di applicare la dissolvenza
+                                 su un periodo di 200 ms.)
+                       1000 3000 (Attende 1 secondo prima di applicare la
+                                 dissolvenza su un periodo di 3 secondi.)
 .
 :CONFIG_OPL_REMOVE_DC_BIAS
 Rimuove la polarizzazione CC dall'uscita OPL. Dovrebbe essere usato solo
@@ -2681,7 +2719,7 @@ Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
                     Utilizza il filtro di questo modello di Sound Blaster.
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_CMS
 Abilita l'emulazione CMS (predefinito 'auto').
@@ -2695,17 +2733,23 @@ Filtro per l'uscita audio CMS della scheda Sound Blaster:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_GUS
-Abilita l'emulazione della scheda Gravis UltraSound (predefinito disabilitato).
-Le impostazioni predefinite di indirizzo porta I/O 240, IRQ 5 e DMA 3 sono
-state scelte in modo tale che la scheda GUS possa coesistere con una scheda
-Sound Blaster. Funziona bene per la maggior parte dei programmi, ma alcuni
-giochi e demo si aspettano le impostazioni predefinite di fabbrica della scheda
-GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1. Da notare inoltre che il
-valore predefinito dell'IRQ 11 può essere problematico con alcune versioni
-specifiche dell'extender DOS4GW che non possono gestire IRQ superiori a 7.
+Abilita l'emulazione della scheda audio Gravis UltraSound (predefinito 'off').
+Tutte le demo e molti giochi caricano sulla scheda i propri suoni, ma alcuni si
+affidano ai campioni audio degli strumenti inclusi con la scheda GUS e
+utilizzati per la riproduzione MIDI (per ulteriori dettagli, fare riferimento
+a 'ultradir'). Inoltre alcuni giochi richiedono che il programma ULTRAMID.EXE
+sia caricato prima di essere eseguiti.
+Nota: Le impostazioni predefinite di indirizzo porta I/O 240, IRQ 5 e DMA 3
+      sono state scelte in modo tale che la scheda GUS possa coesistere con una
+      scheda Sound Blaster. Funziona bene per la maggior parte dei programmi,
+      ma alcuni giochi e demo si aspettano le impostazioni predefinite di
+      fabbrica della scheda GUS, cioè: indirizzo porta I/O 220, IRQ 11 e DMA 1.
+      Da notare inoltre che il valore predefinito dell'IRQ 11 può essere
+      problematico con alcune versioni specifiche dell'extender DOS4GW che non
+      possono gestire IRQ superiori a 7.
 .
 :CONFIG_GUSBASE
 Indirizzo porta I/O della scheda Gravis Ultrasound (predefinito 240).
@@ -2721,18 +2765,21 @@ Filtro per l'uscita audio della scheda Gravis UltraSound:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_ULTRADIR
 Percorso per la directory UltraSound (predefinito 'C:\ULTRASND').
-In essa dovrebbe essere presente una directory 'MIDI' con al suo interno
-i campioni audio Gravis Ultrasound per la riproduzione MIDI.
+In essa dovrebbe essere presente una sottodirectory 'MIDI', contenente i
+campioni audio degli strumenti, richiesti da alcuni giochi per la riproduzione
+della musica MIDI. Non tutti i giochi hanno bisogno di questi campioni audio;
+molti giochi nativi GUS e tutte le demo caricano invece i propri suoni
+personalizzati.
 .
 :CONFIG_IMFC
-Abilita la scheda IBM Music Feature (predefinito disabilitato).
+Abilita la scheda IBM Music Feature (predefinito 'off').
 .
 :CONFIG_IMFC_BASE
-Indirizzo porta I/O della scheda IBM Music Feature (predefinito 2A20).
+Indirizzo porta I/O della scheda IBM Music Feature (predefinito '2A20').
 .
 :CONFIG_IMFC_IRQ
 Numero IRQ della scheda IBM Music Feature (predefinito 3).
@@ -2742,7 +2789,7 @@ Filtro per l'uscita audio della scheda IBM Music Feature:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_SIDMODEL
 Modello di chip da emulare nella scheda Innovation SSI-2001:
@@ -2778,7 +2825,7 @@ Regola l'intensità del filtro del chip 8580 come percentuale da 0 a 100
 Filtro per l'uscita audio della scheda Innovation:
   off:              Non filtra l'uscita audio (predefinito).
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_PCSPEAKER
 Modello di emulazione dell'altoparlante interno del PC (PC speaker):
@@ -2796,7 +2843,7 @@ Filtro per l'uscita audio dell'altoparlante interno del PC (PC speaker):
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_ZERO_OFFSET
 La compensazione CC è ora rimossa globalmente dall'uscita del mixer principale.
@@ -2821,21 +2868,21 @@ l'ultima scrittura della porta I/O:
   on:               Attende 0,5s prima di applicare la dissolvenza su un
                     periodo di 0,5s.
   <personalizzato>: Definizione di una dissolvenza personalizzata;
-                    fare riferimento a 'opl_fadeout' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'opl_fadeout'.
 .
 :CONFIG_TANDY_FILTER
 Filtro per l'uscita audio del sintetizzatore Tandy:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtro per l'uscita audio del DAC Tandy:
   on:                Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_LPT_DAC
 Tipo di DAC collegato alla porta parallela:
@@ -2849,27 +2896,27 @@ Filtro per i dispositivi audio DAC LPT:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_DISNEY
 Usa 'lpt_dac = disney' per abilitare l'emulazione Disney Sound Source.
 .
 :CONFIG_PS1AUDIO
-Abilita l'emulazione audio IBM PS/1 (predefinito disabilitato).
+Abilita l'emulazione audio IBM PS/1 (predefinito 'off').
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtro per l'uscita audio del sintetizzatore PS/1:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtro per l'uscita audio del DAC PS/1:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati;
-                    fare riferimento a 'sb_filter' per ulteriori dettagli.
+                    per ulteriori dettagli, fare riferimento a 'sb_filter'.
 .
 :CONFIG_REELMAGIC
 Supporto per la riproduzione MPEG di ReelMagic (alias REALmagic).
@@ -2910,23 +2957,23 @@ Ricorda di reimpostare il file di mappatura di DOSBox se l'hai salvato in
 precedenza.
 .
 :CONFIG_TIMED
-Abilita gli intervalli temporizzati per gli assi (predefinito abilitato).
+Abilita gli intervalli temporizzati per gli assi (predefinito 'on').
 Sperimenta con questa opzione se hai problemi di deriva (drift) dei controlli.
 .
 :CONFIG_AUTOFIRE
-Continua a fare fuoco finché tieni il tasto premuto (predefinito disabilitato).
+Continua a fare fuoco finché tieni il tasto premuto (predefinito 'off').
 .
 :CONFIG_SWAP34
-Scambia il 3° e il 4° asse (predefinito disabilitato).
-Può essere utile per alcuni joystick.
+Scambia il 3° e il 4° asse (predefinito 'off'). Può essere utile per alcuni
+joystick.
 .
 :CONFIG_BUTTONWRAP
 Permette di associare i pulsanti del joystick emulato ai pulsanti ridondanti
-del joystick reale o ai tasti della tastiera (predefinito disabilitato).
+del joystick reale o ai tasti della tastiera (predefinito 'off').
 .
 :CONFIG_CIRCULARINPUT
 Abilita la traduzione dell'input circolare in output quadrato
-(predefinito disabilitato).
+(predefinito 'off').
 Prova ad abilitarlo se la tua levetta analogica sinistra può muoversi solo in
 cerchio.
 .
@@ -2936,9 +2983,9 @@ Impostandolo a 100, trasforma la levetta analogica in digitale.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Attiva i tasti di scelta rapida per consentire la calibrazione in tempo reale
-degli assi X e Y del joystick (predefinito disabilitato). Consideralo solo se
-la calibrazione all'interno del gioco fallisce e sono state provate altre
-impostazioni.
+degli assi X e Y del joystick (predefinito 'off'). Consideralo solo come ultima
+risorsa, nel caso in cui la calibrazione all'interno del gioco non funziona
+correttamente.
   - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
       - Destra e Sinistra ingrandiscono o diminuiscono rispettivamente lo
         scalare dell'asse X.
@@ -2994,15 +3041,15 @@ File utilizzato per mappare numeri di telefono falsi su indirizzi
 (predefinito 'phonebook.txt').
 .
 :CONFIG_XMS
-Abilita il supporto alla memoria estesa XMS (predefinito abilitato).
+Abilita il supporto alla memoria estesa XMS (predefinito 'on').
 .
 :CONFIG_EMS
-Abilita il supporto alla memoria espansa EMS (predefinito abilitato).
-L'abilitazione fornisce la migliore compatibilità ma alcune applicazioni
+Abilita il supporto alla memoria espansa EMS (predefinito 'on').
+Abilitare l'EMS assicura la migliore compatibilità, ma alcune applicazioni
 potrebbero funzionare meglio con altre scelte, o richiederne la disabilitazione
 .
 :CONFIG_UMB
-Abilita il supporto alla memoria superiore UMB (predefinito abilitato).
+Abilita il supporto alla memoria superiore UMB (predefinito 'on').
 .
 :CONFIG_PCJR_MEMORY_CONFIG
 Configurazione della memoria della macchina PCjr (predefinito 'expanded').
@@ -3070,19 +3117,18 @@ separati tramite tabulazione, utilizzato da SETVER.EXE come memoria persistente
 .
 :CONFIG_FILE_LOCKING
 Abilita la protezione dei file (emulazione del programma SHARE.EXE;
-predefinito abilitato). Ciò è necessario per il corretto funzionamento di
+predefinito 'on'). Ciò è necessario per il corretto funzionamento di
 alcune applicazioni Windows 3.1x. In genere non causa problemi ai giochi DOS,
 tranne in rari casi (ad esempio con la demo di Astral Blur). Se si verificano
 arresti anomali relativi ai permessi dei file, prova a disabilitare questa
 opzione.
 .
 :CONFIGITEM_IPX
-Abilita il protocollo IPX tramite l'emulazione UDP/IP
-(predefinito disabilitato).
+Abilita l'emulazione IPX tramite UDP/IP (predefinito 'off').
 .
 :CONFIGITEM_NE2000_SLIRP
 Abilita l'emulazione della scheda di rete Novell NE2000 su una rete basata su
-software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
+software (usando libslirp) con le seguenti proprietà (predefinito 'on'):
   - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
   - 10.0.2.2:       IP del gateway e del servizio DHCP.
   - 10.0.2.3:       IP del server DNS virtuale.
@@ -4213,6 +4259,8 @@ Note:
       EGA                40x25, 80x25, 80x43
       SVGA (non S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
       SVGA (S3)          40x25, tutte le modalità a 80 e 132 colonne
+  - Le modalità 132x28, 132x30 e 132x34 sono disponibili solo se 'vesa_modes'
+    è impostato su 'all'.
 
 Esempi:
   [color=light-green]mode[reset] [color=white]132x50
@@ -4224,6 +4272,10 @@ Modalità di visualizzazione non valida: [color=white]%s[reset]
 .
 :PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
 Modalità di visualizzazione [color=white]%s[reset] non supportata su questa scheda video.
+.
+:PROGRAM_MODE_UNSUPPORTED_VESA_MODE
+La modalità di visualizzazione VESA [color=white]%s[reset] non è supportata.
+Impostare 'vesa_modes = all' per abilitarla.
 .
 :PROGRAM_MODE_INVALID_TYPEMATIC_RATE
 Impostazione frequenza tipomatica non valida.
@@ -4602,8 +4654,8 @@ Parametri:
   Per [color=light-cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK
   Per [color=light-cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                   PORT, INHSOCKET, SOCK
-  Per [color=light-cyan]MOUSE[reset]     : IRQ, RATE (NORMAL o SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
-                  2BTN+MSM, 3BTN+MSM, o WHEEL+MSM)
+  Per [color=light-cyan]MOUSE[reset]     : IRQ, MODEL (2BUTTON, 3BUTTON, WHEEL, MSM, 2BUTTON+MSM,
+                  3BUTTON+MSM, o WHEEL+MSM)
   Per [color=light-cyan]DIRECT[reset]    : IRQ, REALPORT (richiesto), RXDELAY
   Per [color=light-cyan]DUMMY[reset]     : IRQ
 
@@ -4612,7 +4664,7 @@ Esempi:
   [color=light-green]serial[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250: Connesso a TCP:1250 come client
   [color=light-green]serial[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1       : Ascolto su UDP:5000 come server
   [color=light-green]serial[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0            : Usa una porta fisica su Linux
-  [color=light-green]serial[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                     : Mouse di tipo Mouse Systems
+  [color=light-green]serial[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] MODEL:MSM                    : Mouse di tipo Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
