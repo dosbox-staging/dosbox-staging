@@ -119,7 +119,7 @@ void SERIAL::Run()
 		// They entered something, but do we have a matching type?
 		auto desired_type = SERIAL_PORT_TYPE::INVALID;
 		for (const auto& [type, name] : serial_type_names) {
-			if (temp_line == name) {
+			if (iequals(temp_line, name)) {
 				desired_type = type;
 				break;
 			}
