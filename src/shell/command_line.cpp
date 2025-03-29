@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -151,6 +151,23 @@ bool CommandLine::FindStringBegin(const char* const begin, std::string& value,
 	size_t len = strlen(begin);
 	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
 		if (strncmp(begin, (*it).c_str(), len) == 0) {
+			value = ((*it).c_str() + len);
+			if (remove) {
+				cmds.erase(it);
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CommandLine::FindStringCaseInsensitiveBegin(const char* const begin,
+                                                 std::string& value,
+                                                 bool remove)
+{
+	size_t len = strlen(begin);
+	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
+		if (iequals(begin, std::string_view(*it).substr(0, len))) {
 			value = ((*it).c_str() + len);
 			if (remove) {
 				cmds.erase(it);
