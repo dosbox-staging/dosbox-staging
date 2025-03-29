@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -216,6 +216,7 @@ inline bool is_empty(const char* str) noexcept
 
 // case-insensitive comparisons
 bool ciequals(const char a, const char b);
+bool ciequals_n(const char *a, const char *b, const size_t length = SIZE_MAX);
 
 // case-insensitive comparison for combinations of
 // const char *, const std::string&, and const string_view
