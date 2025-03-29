@@ -21,6 +21,6 @@
 #ifndef DOSBOX_VERSION_H
 #define DOSBOX_VERSION_H
 
-#define DOSBOX_VERSION "0.82.0"
+#define DOSBOX_VERSION "0.82.1"
 
 #endif
