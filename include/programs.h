@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -57,6 +57,10 @@ public:
 
 	bool FindStringBegin(const char* const begin, std::string& value,
 	                     bool remove = false);
+
+	bool FindStringCaseInsensitiveBegin(const char* const begin,
+	                                    std::string& value,
+	                                    bool remove = false);
 
 	bool FindStringRemain(const char* const name, std::string& value);
 
