@@ -90,8 +90,22 @@ Lijst van beschikbare opties:
 Lijst met landcodes (merendeels hetzelfde als telefooncodes)
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
-De bovenstaande numerieke landcodes kunnen gebruikt worden
-met de configuratie-instelling 'country'.
+De bovenstaande codes kunnen worden gebruikt in de
+configuratie-instelling 'land'.
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
+Lijst met beschikbare toetsenbordindelingscodes
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
+De bovenstaande codes kunnen worden gebruikt in de
+configuratie-instelling 'keyboard_layout'.
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_1
+Lijst met beschikbare codepagina's
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_2
+De bovenstaande codepagina's kunnen worden gebruikt in de
+configuratie-instelling 'keyboard_layout'.
 .
 :COUNTRY_NAME_XXA
 Internationaal (Engels)
@@ -417,6 +431,825 @@ Kirgizië
 :COUNTRY_NAME_UZB
 Oezbekistan
 .
+:CODE_PAGE_DESCRIPTION_437
+Verenigde Staten
+.
+:CODE_PAGE_DESCRIPTION_113
+Joegoslavisch
+.
+:CODE_PAGE_DESCRIPTION_667
+Pools, Mazovië-codering
+.
+:CODE_PAGE_DESCRIPTION_668
+Pools, 852-compatibel
+.
+:CODE_PAGE_DESCRIPTION_737
+Grieks-2
+.
+:CODE_PAGE_DESCRIPTION_770
+Baltisch, RST 1095:89 codering
+.
+:CODE_PAGE_DESCRIPTION_771
+Litouws en Russisch, KBL-codering
+.
+:CODE_PAGE_DESCRIPTION_773
+Baltisch, KBL-codering
+.
+:CODE_PAGE_DESCRIPTION_775
+Latijn-7 (Baltisch)
+.
+:CODE_PAGE_DESCRIPTION_777
+Litouws, geaccentueerd, KBL-codering
+.
+:CODE_PAGE_DESCRIPTION_778
+Litouws, geaccentueerd, LST 1590-2 codering
+.
+:CODE_PAGE_DESCRIPTION_808
+Russisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_848
+Oekraïens, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_849
+Wit-Russisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_850
+Latijn-1 (West-Europees)
+.
+:CODE_PAGE_DESCRIPTION_851
+Grieks, oude codering
+.
+:CODE_PAGE_DESCRIPTION_852
+Latijn-2 (Centraal-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_853
+Latijn-3 (Turks, Maltees, Esperanto)
+.
+:CODE_PAGE_DESCRIPTION_855
+Zuid-Slavisch
+.
+:CODE_PAGE_DESCRIPTION_856
+Hebreeuws-2, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_857
+Latijns-5 (Turks), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_858
+Latijns-1 (West-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_859
+Latijns-9 (West-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_860
+Portugees
+.
+:CODE_PAGE_DESCRIPTION_861
+IJslands
+.
+:CODE_PAGE_DESCRIPTION_862
+Hebreeuws-2
+.
+:CODE_PAGE_DESCRIPTION_863
+Canadees Frans
+.
+:CODE_PAGE_DESCRIPTION_864
+Arabisch
+.
+:CODE_PAGE_DESCRIPTION_865
+Noords
+.
+:CODE_PAGE_DESCRIPTION_866
+Russisch
+.
+:CODE_PAGE_DESCRIPTION_867
+Tsjechisch en Slowaaks, Kamenický-codering
+.
+:CODE_PAGE_DESCRIPTION_869
+Grieks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_872
+Zuid-Slavisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_899
+Armeens, ArmSCII-8A-codering
+.
+:CODE_PAGE_DESCRIPTION_991
+Poolse, Mazovië-codering, met PLN-symbool
+.
+:CODE_PAGE_DESCRIPTION_1116
+Estisch
+.
+:CODE_PAGE_DESCRIPTION_1117
+Lets
+.
+:CODE_PAGE_DESCRIPTION_1118
+Litouws, LST 1283-codering
+.
+:CODE_PAGE_DESCRIPTION_1119
+Litouws en Russisch, LST 1284-codering
+.
+:CODE_PAGE_DESCRIPTION_1125
+Oekraïens
+.
+:CODE_PAGE_DESCRIPTION_1131
+Wit-Russisch
+.
+:CODE_PAGE_DESCRIPTION_3012
+Lets en Russisch, RusLat-codering
+.
+:CODE_PAGE_DESCRIPTION_3021
+Bulgaars, MIK-codering
+.
+:CODE_PAGE_DESCRIPTION_3845
+Hongaars, CWI-2-codering
+.
+:CODE_PAGE_DESCRIPTION_3846
+Turks
+.
+:CODE_PAGE_DESCRIPTION_3848
+Braziliaans, ABICOMP-codering
+.
+:CODE_PAGE_DESCRIPTION_30000
+Saami, Kalo, Fins
+.
+:CODE_PAGE_DESCRIPTION_30001
+Keltisch en Schots, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30002
+Tadzjieks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30003
+Latijns-Amerikaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30004
+Groenlands en Noord-Germaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30005
+Nigeriaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30006
+Vietnamees, VISCII-codering
+.
+:CODE_PAGE_DESCRIPTION_30007
+Latijn en Reto-Romaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30008
+Abchazisch en Ossetisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30009
+Romani en Turks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30010
+Gagauz en Moldavisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30011
+Russisch Zuid, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30012
+Siberisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30013
+Turks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30014
+Fins-Oegrisch (Mari, Oedmoerts), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30015
+Khanty, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30016
+Mansi, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30017
+Russisch Noordwestelijk, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30018
+Tataars Latijn en Russisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30019
+Tsjetsjeens, Latijn en Russisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30020
+Nedersaksisch en Fries, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30021
+Oceanisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30022
+Canadese First Nations, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30023
+Zuidelijk Afrikaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30024
+Noord- en Oost-Afrika, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30025
+West-Afrikaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30026
+Centraal-Afrikaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30027
+Beninees, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30028
+Niger, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30029
+Mexicaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30030
+Mexicaans-2, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30031
+Latijns-4 (Noord-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30032
+Latijns-6 (Noords), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_30033
+Krim-Tataars, met UAH-symbool
+.
+:CODE_PAGE_DESCRIPTION_30034
+Cherokee
+.
+:CODE_PAGE_DESCRIPTION_30039
+Oekraïens, met UAH-symbool
+.
+:CODE_PAGE_DESCRIPTION_30040
+Russisch, met UAH-symbool
+.
+:CODE_PAGE_DESCRIPTION_58152
+Kazachs, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_58210
+Azerbeidzjaans Cyrillisch en Russisch
+.
+:CODE_PAGE_DESCRIPTION_58335
+Kashubisch, gebaseerd op Mazovië, met PLN-symbool
+.
+:CODE_PAGE_DESCRIPTION_58601
+Litouws, geaccentueerd, LST 1590-4, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_59234
+Tataars
+.
+:CODE_PAGE_DESCRIPTION_59829
+Georgisch
+.
+:CODE_PAGE_DESCRIPTION_60258
+Azerbeidzjaans Latijn en Russisch
+.
+:CODE_PAGE_DESCRIPTION_60853
+Georgisch met hoofdletters
+.
+:CODE_PAGE_DESCRIPTION_62306
+Oezbeeks
+.
+:CODE_PAGE_DESCRIPTION_65506
+Armeens, ArmSCII-8-codering
+.
+:CODE_PAGE_DESCRIPTION_813
+ISO-8859-7 (Grieks), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_819
+ISO-8859-1 (West-Europees)
+.
+:CODE_PAGE_DESCRIPTION_901
+ISO-8859-13 (Baltische landen), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_912
+ISO-8859-2 (Midden-Europa)
+.
+:CODE_PAGE_DESCRIPTION_913
+ISO-8859-3 (Zuid-Europees)
+.
+:CODE_PAGE_DESCRIPTION_914
+ISO-8859-4 (Noord-Europees)
+.
+:CODE_PAGE_DESCRIPTION_915
+ISO-8859-5 (Cyrillisch)
+.
+:CODE_PAGE_DESCRIPTION_919
+ISO-8859-10 (Noords)
+.
+:CODE_PAGE_DESCRIPTION_920
+ISO-8859-9 (Turks)
+.
+:CODE_PAGE_DESCRIPTION_921
+ISO-8859-13 (Baltische landen)
+.
+:CODE_PAGE_DESCRIPTION_923
+ISO-8859-15 (West-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1124
+ISO 8859-5 (aangepast voor Oekraïens)
+.
+:CODE_PAGE_DESCRIPTION_58163
+ISO-8859-14 (Keltisch)
+.
+:CODE_PAGE_DESCRIPTION_58258
+ISO-8859-4 (Noord-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_61235
+ISO-8859-1 (West-Europees), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_63283
+ISO-8859-1 (aangepast voor Litouws)
+.
+:CODE_PAGE_DESCRIPTION_65500
+ISO-8859-16 (Zuidoost-Europa)
+.
+:CODE_PAGE_DESCRIPTION_902
+ISO-8 (Ests), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_922
+ISO-8 (Ests)
+.
+:CODE_PAGE_DESCRIPTION_58259
+ISO-IR-201 (Volgaïsch)
+.
+:CODE_PAGE_DESCRIPTION_59187
+ISO-IR-197 (Saami)
+.
+:CODE_PAGE_DESCRIPTION_59283
+ISO-IR-200 (Oeraal)
+.
+:CODE_PAGE_DESCRIPTION_60211
+ISO-IR-209 (Saami en Finse Romani)
+.
+:CODE_PAGE_DESCRIPTION_65501
+ISO-IR-123 (Canadees en Spaans)
+.
+:CODE_PAGE_DESCRIPTION_65502
+ISO-IR-143 (Technische set)
+.
+:CODE_PAGE_DESCRIPTION_65503
+ISO-IR-181 (Elektrotechnische set)
+.
+:CODE_PAGE_DESCRIPTION_65504
+ISO-IR-39 (Afrikaans)
+.
+:CODE_PAGE_DESCRIPTION_878
+KOI8-R (Russisch)
+.
+:CODE_PAGE_DESCRIPTION_58222
+KOI8-U (Russisch en Oekraïens)
+.
+:CODE_PAGE_DESCRIPTION_59246
+KOI8-RU (Russisch, Wit-Russisch, Oekraïens)
+.
+:CODE_PAGE_DESCRIPTION_60270
+KOI8-F (volledig Slavisch)
+.
+:CODE_PAGE_DESCRIPTION_61294
+KOI8-CA (volledig Slavisch en niet-Slavisch)
+.
+:CODE_PAGE_DESCRIPTION_62318
+KOI8-T (Russisch en Tadzjieks)
+.
+:CODE_PAGE_DESCRIPTION_63342
+KOI8-C (Russisch en Oud-Russisch), met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1275
+Apple West-Europees
+.
+:CODE_PAGE_DESCRIPTION_1280
+Apple Grieks
+.
+:CODE_PAGE_DESCRIPTION_1281
+Apple Turks
+.
+:CODE_PAGE_DESCRIPTION_1282
+Apple Centraal-Europees en Baltisch
+.
+:CODE_PAGE_DESCRIPTION_1283
+Apple Cyrillisch
+.
+:CODE_PAGE_DESCRIPTION_1284
+Apple Kroatisch
+.
+:CODE_PAGE_DESCRIPTION_1285
+Apple Roemeense
+.
+:CODE_PAGE_DESCRIPTION_1286
+Apple IJslands
+.
+:CODE_PAGE_DESCRIPTION_58619
+Apple Gaelisch (oude orthografie), Welsh
+.
+:CODE_PAGE_DESCRIPTION_58627
+Apple Oekraïens
+.
+:CODE_PAGE_DESCRIPTION_58630
+Apple Saami, Kalo, Finnic, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1250
+Windows Centraal-Europees, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1251
+Windows Cyrillisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1252
+Windows West-Europees, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1253
+Windows Grieks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1254
+Windows Turks, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1257
+Windows Baltisch, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1270
+Windows Saami, Kalo, Finnic, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_1361
+Windows Zuid-Europees, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_58595
+Windows Kazachs, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_58596
+Windows Georgisch
+.
+:CODE_PAGE_DESCRIPTION_58598
+Windows Azerbeidzjaans, met EUR-symbool
+.
+:CODE_PAGE_DESCRIPTION_59619
+Windows Centraal-Aziatisch
+.
+:CODE_PAGE_DESCRIPTION_59620
+Windows Gaelisch (oude orthografie), Welsh
+.
+:CODE_PAGE_DESCRIPTION_60643
+Windows Noordoost-Iraans
+.
+:CODE_PAGE_DESCRIPTION_61667
+Windows Inuit-Aleuten
+.
+:CODE_PAGE_DESCRIPTION_62691
+Windows Toengoes-Mantsjoe
+.
+:SCRIPT_NAME_LATN
+Latijns
+.
+:SCRIPT_NAME_ARAB
+Arabisch
+.
+:SCRIPT_NAME_ARMN
+Armeens
+.
+:SCRIPT_NAME_CHER
+Cherokee
+.
+:SCRIPT_NAME_CYRL
+Cyrillisch
+.
+:SCRIPT_NAME_GEOR
+Georgisch
+.
+:SCRIPT_NAME_GREK
+Grieks
+.
+:SCRIPT_NAME_HEBR
+Hebreeuws
+.
+:SCRIPT_PROPERTY_PHONETIC
+fonetisch
+.
+:SCRIPT_PROPERTY_NON_STANDARD
+niet-standaard
+.
+:KEYBOARD_LAYOUT_NAME_US
+VS (standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UX
+VS (internationaal, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CO
+VS (Colemak)
+.
+:KEYBOARD_LAYOUT_NAME_DV
+VS (Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_LH
+VS (linkerhand Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_RH
+VS (rechterhand Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_UK
+VK (standaard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_UK168
+VK (alternatief, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KX
+VK (internationaal, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_AR462
+Arabisch (AZERTY/Arabisch)
+.
+:KEYBOARD_LAYOUT_NAME_AR470
+Arabisch (QWERTY/Arabisch)
+.
+:KEYBOARD_LAYOUT_NAME_AZ
+Azerbeidzjaans (QWERTY/Cyrillisch)
+.
+:KEYBOARD_LAYOUT_NAME_BA
+Bosnisch (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_BE
+Belgisch (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BX
+Belgisch (internationaal, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BG
+Bulgaars (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_BG103
+Bulgaars (QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_BG241
+Bulgaars (JCUKEN/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_BN
+Beninees (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR
+Braziliaans (ABNT-indeling, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR274
+Braziliaans (VS-indeling, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BY
+Wit-Russisch (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_CE
+Tsjetsjeens (standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_CE443
+Tsjetsjeens (typemachine, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_CF
+Canadees (standaard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CF445
+Canadees (dubbellaags, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CG
+Montenegrijns (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ
+Tsjechisch (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ243
+Tsjechisch (standaard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ489
+Tsjechisch (programmeurs, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_DE
+Duits (standaard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_GR453
+Duits (dubbellaags, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_DK
+Deens (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_EE
+Estisch (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_ES
+Spaans (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SX
+Spaans (internationaal, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FI
+Fins (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_FO
+Faeröers (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FR
+Frans (standaard, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FX
+Frans (internationaal, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_GK
+Grieks (319, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_GK220
+Grieks (220, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_GK459
+Grieks (459, niet-standaard/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_HR
+Kroatisch (QWERTZ/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_HU
+Hongaars (101-toetsen, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_HU208
+Hongaars (102-toetsen, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_HY
+Armeens (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_IL
+Hebreeuws (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_IS
+IJslands (101-toetsen, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IS161
+IJslands (102-toetsen, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IT
+Italiaans (standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_IT142
+Italiaans (142, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_IX
+Italiaans (internationaal, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KA
+Georgisch (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_KK
+Kazachs (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_KK476
+Kazachs (476, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_KY
+Kirgizisch (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_LA
+Latijns-Amerikaans (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_LT
+Litouws (Baltisch, QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LT210
+Litouws (programmeurs, QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LT211
+Litouws (AZERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LT221
+Litouws (LST 1582, AZERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LT456
+Litouws (QWERTY/AZERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LV
+Lets (standaard, QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_LV455
+Lets (QWERTY/UGJRMV/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_MK
+Macedonisch (QWERTZ/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_MN
+Mongools (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_MT
+Maltees (VK-indeling, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_MT103
+Maltees (VS-indeling, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NE
+Nigerees (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NG
+Nigeriaans (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NL
+Nederlands (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NO
+Noors (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_PH
+Filipijns (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PL
+Pools (programmeurs, QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_PL214
+Pools (typemachine, QWERTZ/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_PO
+Portugees (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PX
+Portugees (internationaal, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_RO
+Roemeens (standaard, QWERTZ/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_RO446
+Roemeens (QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_RU
+Russisch (standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_RU443
+Russisch (typemachine, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_RX
+Russisch (uitgebreide standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_RX443
+Russisch (uitgebreide typemachine, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_SD
+Zwitsers (Duits, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SF
+Zwitsers (Frans, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SI
+Sloveens (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SK
+Slowaaks (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SQ
+Albanees (geen dode toetsen, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SQ448
+Albanees (met dode toetsen, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SV
+Zweeds (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_TJ
+Tadzjieks (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_TM
+Turkmeens (QWERTY/fonetisch)
+.
+:KEYBOARD_LAYOUT_NAME_TR
+Turks (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_TR440
+Turks (niet-standaard)
+.
+:KEYBOARD_LAYOUT_NAME_TT
+Tataars (standaard, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_TT443
+Tataars (typemachine, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UR
+Oekraïens (101-toetsen, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UR1996
+Oekraïens (101-toetsen, 1996, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UR2001
+Oekraïens (102 toetsen, 2001, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UR2007
+Oekraïens (102 toetsen, 2007, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UR465
+Oekraïens (101-toetsen, 465, QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_UZ
+Oezbeeks (QWERTY/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_VI
+Vietnamees (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_YC
+Servisch (met dode toetsen, QWERTZ/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_YC450
+Servisch (geen dode toetsen, QWERTZ/nationaal)
+.
+:KEYBOARD_LAYOUT_NAME_YU
+Joegoslavisch (QWERTZ)
+.
+:KEYBOARD_MOD_ADJECTIVE_LEFT
+Links
+.
+:KEYBOARD_MOD_ADJECTIVE_RIGHT
+Rechts
+.
 :DOSBOX_HELP_LIST_GLSHADERS_1
 Lijst met beschikbare GLSL-shaders
 ----------------------------------
@@ -449,6 +1282,9 @@ Gebruik: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset]
 .
 :TITLEBAR_CYCLES_MS
 cycli/ms
+.
+:TITLEBAR_CYCLES_THROTTLED
+vertraagd
 .
 :TITLEBAR_MUTED
 GEDEMPT
@@ -664,13 +1500,14 @@ te overschrijven die gewoonlijk de OS-screensaver blokkeert terwijl de
 emulator actief is (standaard 'auto').
 .
 :CONFIG_LANGUAGE
-Selecteer een taal: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', of 'ru'
-(standaard niet gezet; dit is standaard Engels).
+Selecteer de taal van de DOS-berichten:
+auto: detecteert de taal van het host-besturingssysteem (standaard).
+<waarde>: laadt een vertaling van het opgegeven bestand.
 Opmerkingen:
-  - Deze instelling overschrijft de 'LANG'-omgevingsvariabele, indien gezet.
-  - De map 'resources/translations' gebundeld met het uitvoerbare bestand
-    bevat deze bestanden. Bewaar het naast het uitvoerbare bestand om deze
-    functie te ondersteunen.
+  - De volgende taalbestanden zijn beschikbaar:
+    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' en 'ru'.
+  - Engels is ingebouwd, de rest is opgeslagen in de gebundelde map
+    'resources/translations'.
 .
 :CONFIG_MACHINE
 Zet de video kaart of machine type om te emuleren.
@@ -789,8 +1626,8 @@ Koppel-instellingen kunnen optioneel worden geleverd met behulp van een
   label   = aangepast_label
   path    = pad-specificatie, dwz: pad = %%path%%;c:\tools
   override_drive = koppel de map i.p.v. aan dit station (standaard leeg)
-  verbose = true of false
-  readonly = true of false
+  verbose = 'on' of 'off'
+  readonly = 'on' of 'off'
 .
 :CONFIG_STARTUP_VERBOSITY
 Bepaalt hoe verbose de opstart is voordat het programma wordt weergegeven:
@@ -1127,23 +1964,41 @@ Aantal cycli om af te trekken met de 'Dec Cycles'-sneltoets (standaard 20).
 Waarden lager dan 100 worden behandeld als een percentageafname.
 .
 :CONFIG_VOODOO
-Schakel 3dfx Voodoo-emulatie in (standaard aan).
+Schakel 3dfx Voodoo-emulatie in (standaard aan). Dit is authentieke low-level
+emulatie van de Voodoo-kaart zonder OpenGL-passthrough, dus het vereist een
+krachtige CPU. De meeste spelen hebben de DOS Glide-driver genaamd
+'GLIDE2X.OVL' nodig om in het pad te staan ​​voor de 3dfx-modus om te werken.
+Veel spelen bevatten hun eigen Glide-drivervarianten, maar voor sommige moet je
+ een geschikte 'GLIDE2X.OVL'-versie leveren.
+Een klein aantal games integreert de Glide-driver in hun code, dus ze hebben
+'GLIDE2X.OVL' niet nodig.
 .
 :CONFIG_VOODOO_MEMSIZE
-Stel de hoeveelheid videogeheugen in voor 3dfx Voodoo-graphics, 4 of 12 MB.
-Het geheugen wordt als volgt gebruikt door de Frame Buffer Interface (FBI)
-en Texture Mapping Unit (TMU):
+Stel de hoeveelheid videogeheugen in voor 3dfx Voodoo-graphics. Het geheugen
+wordt als volgt gebruikt door de Frame Buffer Interface (FBI) en Texture
+Mapping Unit (TMU):
    4: 2 MB voor de FBI en één TMU met 2 MB (standaard)
   12: 4 MB voor de FBI en twee TMU's van elk 4 MB.
 .
 :CONFIG_VOODOO_MULTITHREADING
-Gebruik threads om de prestaties van 3dfx Voodoo te verbeteren (standaard aan).
+Hernoemd naar 'voodoo_threads'
+.
+:CONFIG_VOODOO_THREADS
+Gebruik threads om de prestaties van 3dfx Voodoo te verbeteren:
+  auto:      Gebruik maximaal 16 threads op basis van beschikbare
+             CPU-cores (standaard).
+  <waarde>:  Stel een specifiek aantal threads in tussen 1 en 128.
+Opmerking: Als u dit instelt op een hogere waarde dan het aantal logische CPU's
+      dat uw hardware ondersteunt, is de kans groot dat dit de prestaties
+      schaadt. Dit is gemeten om goed te schalen tot 8-16 threads, maar het is
+      niet getest op een CPU met meerdere cores. Als u een Threadripper of een
+      vergelijkbare CPU hebt, laat ons dan weten hoe het gaat.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Gebruik bilineaire filtering om het textuurverzachtende effect van 3dfx Voodoo
-te emuleren (standaard uit). Alleen aanbevolen als U een snelle CPU van
-desktopklasse heeft, omdat dit de framesnelheden op langzamere systemen kan
-beïnvloeden.
+te emuleren (standaard aan). Bilineaire filtering kan de framesnelheid op
+tragere systemen beïnvloeden.
+Probeer deze uit te schakelen als u niet voldoende prestaties krijgt.
 .
 :CONFIG_CAPTURE_DIR
 Directory waar de verschillende opnames worden opgeslagen, zoals audio-,
@@ -1212,18 +2067,30 @@ besturingssysteem te omzeilen (standaard aan). Werkt in volledig scherm of
 wanneer de muis wordt vastgelegd in venstermodus.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Activeer het ingebouwde DOS-muisstuurprogramma (standaard aan).
-Opmerkingen:
-  - Schakel deze optie uit als u van plan bent het originele MOUSE.COM
-    stuurprogramma te gebruiken in geëmuleerde DOS.
-  - Wanneer het gast-besturingssysteem wordt opgestart, wordt het
-    ingebouwde stuurprogramma automatisch uitgeschakeld.
+Schakel de ingebouwde muisdriver in (standaard aan). Dit resulteert in de
+laagst mogelijke latentie en de soepelste muisbeweging, dus schakel het alleen
+uit en laad een echte DOS-muisdriver als het echt nodig is (bijvoorbeeld als
+een spel niet compatibel is met de ingebouwde driver).
+  on:   Schakel de ingebouwde muisdriver in. `ps2_mouse_model` en
+        `com_mouse_model` hebben geen effect op de ingebouwde driver.
+  off:  Schakel de ingebouwde muisdriver uit (als u geen muisondersteuning wilt
+        of als u een echte DOS-muisdriver wilt laden). Om een ​​echte DOS-driver
+        te gebruiken (bijvoorbeeld MOUSE.COM of CTMOUSE.EXE), configureert u
+        het muistype met `ps2_mouse_model` of `com_mouse_model` en laadt u
+        vervolgens de driver. Een echte DOS-driver kan de compatibiliteit met
+        sommige programma's vergroten, maar zal meer invoerlatentie
+        introduceren.
+Let op: De ingebouwde driver wordt automatisch uitgeschakeld als u opstart in
+        echte MS-DOS of Windows 9x onder DOSBox. Onder Windows 3.x wordt de
+        driver niet uitgeschakeld, maar neemt de Windows 3.x muisdriver het
+        over.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Werkt muisbewegingstellers onmiddellijk bij, zonder te wachten op onderbreking.
-Kan de gameplay verbeteren, vooral in snelle spelen (arcade, FPS, enz.) - zoals
-voor sommige spelen verhoogt het effectief de bemonsteringssnelheid van de muis
-tot 1000 Hz, zonder de interrupt-overhead te verhogen.
+Werkt muisbewegingstellers onmiddellijk bij, zonder te wachten op onderbreking
+(standaard uit). Kan de gameplay verbeteren, vooral in snelle spelen (arcade,
+FPS, enz.) - zoals voor sommige spelen verhoogt het effectief de
+bemonsteringssnelheid van de muis tot 1000 Hz, zonder de interrupt-overhead
+te verhogen.
 Kan compatibiliteitsproblemen veroorzaken. Bekende incompatibele spelen lijst:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
@@ -1231,12 +2098,15 @@ Dien een bug in bij het project als je een ander spel vindt dat niet werkt
 wanneer dit is ingeschakeld, we zullen deze lijst bijwerken.
 .
 :CONFIG_PS2_MOUSE_MODEL
-PS/2 AUX-poort muismodel:
+Stel het PS/2 AUX-poortmuismodel in, of met andere woorden, het type virtuele
+muis dat is aangesloten op de geëmuleerde PS/2-muispoort
+(standaard 'explorer').
+De instelling heeft geen effect op de ingebouwde muisdriver
+(zie 'dos_mouse_driver').
   standard:      3 knoppen, standaard PS/2-muis.
   intellimouse:  3 knoppen + wiel, Microsoft IntelliMouse.
-  explorer:      5 knoppen + wiel, Microsoft IntelliMouse Explorer.
+  explorer:      5 knoppen + wiel, Microsoft IntelliMouse Explorer (standaard).
   none:          geen PS/2 muis emulatie.
-Standaard: explorer
 .
 :CONFIG_COM_MOUSE_MODEL
 COM (seriële) poort standaard muismodel:
@@ -1297,17 +2167,23 @@ clipping van de audio-uitvoer te voorkomen:
   on:   Compressor inschakelen (standaard).
 .
 :CONFIG_CROSSFEED
-Stel crossfeed globaal in op alle stereokanalen voor luisteren met een
-hoofdtelefoon:
+Stel crossfeed in op de OPL en CMS (Gameblaster) mixerkanalen. Veel spelen
+pannen de instrumenten 100%% naar links en 100%% naar rechts in het stereoveld
+op deze audioapparaten, wat onaangenaam is om naar te luisteren in een
+koptelefoon. Met crossfeed ingeschakeld, wordt een deel van het
+linkerkanaalsignaal gemixt in het rechterkanaal en vice versa, wat zorgt voor
+een natuurlijkere luisterervaring.
   off:     Geen crossfeed (standaard).
   on:      Schakel crossfeed in (normale preset).
   light:   lichte crossfeed (sterkte 15)
   normal:  normale crossfeed (sterkte 40)
   strong:  sterke crossfeed (sterkte 65)
-Opmerking: U kunt crossfeed per kanaal instellen via mixercommando's.
+Opmerking:
+  - Gebruik de opdracht MIXER om crossfeed ook op andere audiokanalen toe te
+    passen en om de crossfeed-sterkte per kanaal nauwkeurig af te stellen.
 .
 :CONFIG_REVERB
-Schakel reverb globaal in om een gevoel van ruimte toe te voegen:
+Schakel reverb (galm) globaal in om een gevoel van ruimte toe te voegen:
   off:     Geen reverb (standaard).
   on:      Activeer reverb (gemiddelde voorinstelling).
   tiny:    Simuleert het geluid van een kleine geïntegreerde luidspreker in een
@@ -1322,131 +2198,88 @@ Schakel reverb globaal in om een gevoel van ruimte toe te voegen:
            afzonderlijke kanalen gebruiken voor muziek en digitale audio.
   huge:    Een sterkere variant van de grote zaal preset; werkt heel goed in
            sommige games met meer sfeervolle soundtracks.
-Opmerking: u kunt de reverbniveaus per kanaal afstemmen via mixercommando's.
+Opmerking:
+  - De presets passen een merkbare hoeveelheid galm toe op de synthmixerkanalen
+    (behalve synths met ingebouwde galm; bijvoorbeeld de Roland MT-32) en een
+    subtiele hoeveelheid op de digitale audiokanalen.
+  - Gebruik de MIXER-opdracht om de galmniveaus per kanaal nauwkeurig af te
+    stemmen.
 .
 :CONFIG_CHORUS
-Schakel chorus globaal in om een gevoel van stereobeweging aan het geluid toe
-te voegen:
+Choruseffect dat een gevoel van stereobeweging aan het geluid toevoegt:
   off:     Geen chorus (standaard).
   on:      Activeer chorus (normale voorinstelling).
   light:   Een licht choruseffect (vooral geschikt voor synthmuziek met veel
            witte ruis.)
   normal:  Normaal chorus dat goed werkt met vele spellen.
   strong:  Een duidelijk en upfront chorus effect.
-Opmerking: u kunt de chorusniveaus per kanaal afstemmen via mixercommando's.
+Opmerking:
+  - De presets passen het choruseffect alleen toe op de synthkanalen (behalve
+    synths met ingebouwde chorus; bijvoorbeeld de Roland MT-32).
+  - Gebruik de MIXER-opdracht om de chorusniveaus per kanaal nauwkeurig af te
+    stemmen.
 .
-:CONFIG_MIDIDEVICE
-Stel in waar MIDI-gegevens van de geëmuleerde MPU-401 MIDI-interface naartoe
-worden verzonden (standaard 'auto'):
-.
-:CONFIGITEM_MIDIDEVICE_COREMIDI
-  coremidi:    Elk apparaat dat is geconfigureerd in de macOS Audio
-               MIDI-installatie.
-.
-:CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio:   Gebruik de ingebouwde macOS MIDI-synthesizer.
-.
-:CONFIGITEM_MIDIDEVICE_WIN32
-  win32:       Gebruik de Win32 MIDI-afspeelinterface.
-.
-:CONFIGITEM_MIDIDEVICE_OSS
-  oss:         Gebruik de Linux OSS MIDI-afspeelinterface.
-.
-:CONFIGITEM_MIDIDEVICE_ALSA
-  alsa:        Gebruik de Linux ALSA MIDI-afspeelinterface.
-.
-:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
-  fluidsynth:  De ingebouwde FluidSynth MIDI-synthesizer (SoundFont-speler).
-               Zie de sectie [fluidsynth] voor gedetailleerde configuratie.
-.
-:CONFIGITEM_MIDIDEVICE_MT32
-  mt32:        De ingebouwde Roland MT-32 synthesizer.
-               Zie de [mt32] sectie voor gedetailleerde configuratie.
-.
-:CONFIGITEM_MIDIDEVICE_AUTO
-  auto:        Een van de ingebouwde MIDI-synthesizers (als `midiconfig` is
-               ingesteld op 'fluidsynth' of 'mt32'), of een MIDI-apparaat
-               extern aan DOSBox (elke andere 'midiconfig'-waarde). Dit kan een
-               softwaresynthesizer of fysiek apparaat zijn. Dit is het
-               standaardgedrag.
-.
-:CONFIGITEM_MIDIDEVICE_NONE
-  none:        MIDI-uitvoer uitschakelen.
-.
-:CONFIG_MIDICONFIG
-Configuratieopties voor de geselecteerde MIDI-interface (standaard uit).
-Dit is meestal de ID of naam van de MIDI-synthesizer die u wilt gebruiken
-(zoek de ID/naam met de DOS-opdracht 'MIXER /LISTMIDI').
-Opmerkingen:
-.
-:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
-  - Deze optie heeft geen effect bij gebruik van de ingebouwde synthesizers
-    ('mididevice = fluidsynth' of 'mididevice = mt32').
-.
-:CONFIGITEM_MIDICONFIG_COREAUDIO
-  - Wanneer u 'coreaudio' gebruikt, kunt u hier een SoundFont opgeven.
-.
-:CONFIGITEM_MIDICONFIG_ALSA
-  - Wanneer u ALSA gebruikt, gebruikt u de Linux-opdracht 'aconnect -l' om alle
-    open MIDI-poorten weer te geven en er een te selecteren (bijv.
-    'midiconfig = 14:0' voor sequencerclient 14, poort 0).
-.
-:CONFIGITEM_MIDICONFIG_MT32
-  - Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, heeft de
-    hardware mogelijk een vertraging nodig om te voorkomen dat de buffer
-    overloopt.
-    Voeg in dat geval 'delaysysex' toe (bijv. 'midiconfig = 2 delaysysex').
-.
-:CONFIG_MPU401
-Type MPU-401 om te emuleren (standaard: 'intelligent').
-.
-:CONFIG_RAW_MIDI_OUTPUT
-Schakel onbewerkte, ongewijzigde MIDI-uitvoer in (standaard uit).
-De MIDI-stuurprogramma's van veel spelen voldoen niet volledig aan de MIDI-
-standaard, waardoor het bewerken van de MIDI-opnamen van deze spelen erg
-foutgevoelig en omslachtig is in MIDI-sequencers, wat vaak resulteert in
-hangende of ontbrekende noten. DOSBox corrigeert standaard de MIDI-uitvoer
-van dergelijke spellen. Dit resulteert in geen enkel hoorbaar verschil; het
-heeft alleen invloed op de weergave van de MIDI-data. U moet 'raw_midi_output'
-alleen inschakelen als u echt de onbewerkte, ongewijzigde MIDI-uitvoer van een
-programma wilt vastleggen, b.v. bij het werken met muziektoepassingen of bij
-het debuggen van MIDI-problemen.
+:CONFIG_DENOISER
+Verwijder laag niveau restruis van de output van de OPL synth en de Roland
+Sound Canvas. De emulatie van deze apparaten is nauwkeurig tot de originele
+hardware-eenheden, wat de emulatie van een zeer laag niveau semi-willekeurige
+ruis omvat. Hoewel dit authentiek is, zouden de meeste mensen het enigszins
+vervelend vinden.
+  off:  Schakel de denoiser uit.
+  on:   Schakel de denoiser in op de OPL en SOUNDCANVAS kanalen (standaard).
+        De denoiser introduceert geen geluidskwaliteitsdegradatie; het
+        verwijdert alleen de nauwelijks hoorbare restruis in rustige passages.
 .
 :CONFIG_SOUNDFONT
 Pad naar een SoundFont-bestand in .sf2-formaat. (standaard 'default.sf2').
-U kunt een absoluut of relatief pad gebruiken, of de naam van een .sf2 in de
-'soundfonts'-map in de DOSBox-configuratiemap.
-Een optionele procentuele waarde achter de naam schaalt het volume van het
-SoundFont. Dit is handig voor het normaliseren van het volume van verschillende
-SoundFonts. Bijvoorbeeld 'my_soundfont.sf2 50' verzwakt het volume met 50%%.
-De procentuele waarde kan variëren van 1 tot 800.
+De SoundFont wordt op de volgende locaties in volgorde opgezocht:
+  - De door de gebruiker gedefinieerde SoundFont-directory (zie
+    'soundfont_dir').
+  - De 'soundfonts'-directory in uw DOSBox-configuratiedirectory.
+  - Andere algemene systeemlocaties.
+De extensie '.sf2' kan worden weggelaten. U kunt ook paden gebruiken die
+relatief zijn aan de bovenstaande locaties of absolute paden.
+Let op: voer `MIXER /LISTMIDI` uit om de lijst met beschikbare SoundFonts
+        te bekijken.
+.
+:CONFIG_SOUNDFONT_DIR
+Extra door de gebruiker gedefinieerde SoundFont-directory (standaard uit).
+Als dit is ingesteld, worden SoundFonts eerst in deze directory opgezocht en
+vervolgens in de standaard systeemlocaties.
+.
+:CONFIG_SOUNDFONT_VOLUME
+Stel het volume van het SoundFont in als percentage (standaard 100).
+Dit is handig om het volume van verschillende SoundFonts te normaliseren.
+De percentagewaarde kan variëren van 1 tot 800.
 .
 :CONFIG_FSYNTH_CHORUS
-Chorus effect: 'auto' (standaard), 'on', 'off', of aangepaste waarden.
-Bij gebruik van aangepaste waarden:
-  Alle vijf moeten op volgorde en spatie gescheiden worden verstrekt.
-  Dit zijn: stemmentelling level snelheid breedte modulatie-golf, waar:
-    - stemmentelling is een geheel getal van 0 tot 99.
-    - level is een decimaal van 0.0 tot 10.0
-    - snelheid is een decimaal, gemeten in Hz, van 0.1 tot 5.0
-    - breedte is een decimaal van 0.0 tot 21.0
-    - modulatie-golf is ofwel 'sine' of 'triangle'
-  Bijvoorbeeld: chorus = 3 1.2 0.3 8.0 sine
+Configureer de FluidSynth-chorus. Mogelijke waarden:
+  auto:      Chorus inschakelen, behalve voor bekende problematische SoundFonts (standaard).
+  on:        Chorus altijd inschakelen.
+  off:       Chorus uitschakelen.
+  <op-maat>: Aangepaste instelling via vijf door spaties gescheiden waarden:
+               - voice-count: Integer van 0 tot 99
+               - level: Decimaal van 0.0 tot 10.0
+               - speed: Decimaal van 0.1 tot 5.0 (in Hz)
+               - depth: Decimaal van 0.0 tot 21.0
+               - modulation-wave: 'sine' of 'triangle'
+             Bijvoorbeeld: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
 Opmerking: U kunt de FluidSynth-chorus uitschakelen en in plaats daarvan de
            chorus op mixerniveau op het FluidSynth-kanaal inschakelen, of
            beide chorus-effecten tegelijkertijd inschakelen. Of dit goed
            klinkt, hangt af van het SoundFont en de chorus-instellingen.
 .
 :CONFIG_FSYNTH_REVERB
-Reverb-effect: 'auto', 'on', 'off' of aangepaste waarden.
-Bij gebruik van aangepaste waarden:
-  Alle vier moeten op volgorde en spatie gescheiden worden verstrekt.
-  Dit zijn: kamer-grootte demping breedte level, waar:
-    - kamer-grootte is een decimaal van 0.0 tot 1.0
-    - demping is een decimaal van 0.0 tot 1.0
-    - breedte is een decimaal van 0.0 tot 100.0
-    - level is een decimaal van 0.0 tot 1.0
-  Bijvoorbeeld: reverb = 0.61 0.23 0.76 0.56
+Configureer de FluidSynth-reverb. Mogelijke waarden:
+  auto:      Reverb inschakelen (standaard).
+  on:        Reverb inschakelen.
+  off:       Reverb uitschakelen.
+  <op-maat>: Aangepaste instelling via vier door spaties gescheiden waarden:
+               - room-size: Decimaal van 0.0 tot 1.0
+               - damping: Decimaal van 0.0 tot 1.0
+               - width is: Decimaal van 0.0 tot 100.0
+               - level is: Decimaal van 0.0 tot 1.0
+             Bijvoorbeeld: 'fsynth_reverb = 0.61 0.23 0.76 0.56'
 Opmerking: U kunt de FluidSynth-reverb uitschakelen en in plaats daarvan de
            reverb op mixerniveau op het FluidSynth-kanaal inschakelen, of
            beide reverb-effecten tegelijkertijd inschakelen. Of dit goed
@@ -1457,18 +2290,26 @@ Filter voor de FluidSynth-audio-uitgang:
   off:       Filter de uitgang niet (standaard).
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
+:FLUIDSYNTH_NO_SOUNDFONTS
+Geen beschikbare SoundFonts
+.
 :CONFIG_MODEL
 Het Roland MT-32/CM-32ML-model dat u kunt gebruiken.
 De ROM-bestanden voor het geselecteerde model moeten beschikbaar zijn
 (zie 'romdir').
-De opzoekvolgorde voor modellen die geen versie in hun naam specificeren,
-wordt uitgevoerd in de aangegeven volgorde.
-  auto:       Kies het eerste beschikbare model (standaard).
-  cm32l:      Kies het eerste beschikbare CM-32L-model.
-  mt32_old:   Kies het eerste beschikbare "oude" MT-32-model (v1.0x).
-  mt32_new:   Kies het eerste beschikbare "nieuwe" MT-32-model (v2.0x).
+De opzoekvolgorde voor het beste modellen wordt uitgevoerd in de aangegeven
+volgorde.
+  auto:       Kies het beste beschikbare model (standaard).
+  cm32l:      Kies het beste beschikbare CM-32L-model.
+  mt32_old:   Kies het beste beschikbare "oude" MT-32-model (v1.0x).
+  mt32_new:   Kies het beste beschikbare "nieuwe" MT-32-model (v2.0x).
   mt32:       Kies het eerste beschikbare MT-32-model.
   <versie>:   Gebruik de exact opgegeven modelversie (bijv. 'mt32_204').
+Opmerkingen:
+- Voer `MIXER /LISTMIDI` uit om de lijst met beschikbare modellen te zien.
+- Dit is *GEEN* General MIDI-compatibel MIDI-apparaat; gebruik het alleen als
+  het spel Roland MT-32 MIDI ondersteunt (wat ouder is dan General MIDI).
+
 .
 :CONFIG_ROMDIR
 De map met de Roland MT-32/CM-32ML ROM's (standaard niet ingesteld).
@@ -1485,29 +2326,128 @@ Filter voor de Roland MT-32/CM-32L audio-uitgang:
   off:       Filter de uitvoer niet (standaard).
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
-:MT32_NO_SUPPORTED_MODELS
-Geen ondersteunde modellen aanwezig.
-.
-:MT32_ROM_NOT_LOADED
-Geen ROM is momenteel geladen
-.
-:MT32_INVENTORY_TABLE_MISSING_LETTER
--
-.
-:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-j
-.
 :MT32_ROMS_LABEL
-MT-32  ROMs  
+MT-32 modelen
 .
 :CM32L_ROMS_LABEL
-CM-32L ROMs  
+CM-32L modelen
 .
-:MT32_ACTIVE_ROM_LABEL
-Actieve ROM    
+:MT32_ACTIVE_MODEL_LABEL
+Actief model  
 .
 :MT32_SOURCE_DIR_LABEL
-Geladen van    
+ROM pad       
+.
+:CONFIG_SOUNDCANVAS_MODEL
+Het Roland Sound Canvas-model dat u wilt gebruiken.
+Een of meer CLAP-audioplugins die de ondersteunde Sound Canvas-modellen
+implementeren, moeten aanwezig zijn in de 'plugin'-directory in uw
+DOSBox-configuratiedirectory. DOSBox zoekt naar het gevraagde model door de
+pluginbeschrijvingen te inspecteren. De zoekopdracht naar de beste modellen
+wordt uitgevoerd in de volgorde zoals vermeld:
+  auto:       Kies het beste beschikbare model (standaard).
+  sc55:       Kies het beste beschikbare originele SC-55-model.
+  sc55mk2:    Kies het beste beschikbare SC-55mk2-model.
+  <versie>:   Gebruik de exacte opgegeven modelversie (bijv. 'sc55_121').
+.
+:CONFIG_SOUNDCANVAS_FILTER
+Filter voor de Roland Sound Canvas audio-uitgang:
+  on:        Filter de uitvoer (standaard).
+  off:       Filter de uitvoer niet.
+  <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
+.
+:SC55_MODELS_LABEL
+SC-55 modelen   
+.
+:SOUNDCANVAS_ACTIVE_MODEL_LABEL
+Actief model:    
+.
+:CONFIG_MIDIDEVICE
+Stel in waar MIDI-gegevens van de geëmuleerde MPU-401 MIDI-interface naartoe
+worden verzonden (standaard 'auto'):
+.
+:CONFIGITEM_MIDIDEVICE_PORT
+  poort:        Een MIDI-poort van de MIDI-interface van het
+                hostbesturingssysteem (standaard). U kunt de poort
+                configureren voor gebruik met de instelling 'midiconfig'.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:    De ingebouwde macOS MIDI-synthesizer. Het te gebruiken
+                SoundFont kan worden opgegeven met de instelling 'midiconfig'.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:         De interne Roland MT-32 synthesizer (zie het [mt32] gedeelte).
+.
+:CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
+  soundcanvas:  de ingebouwde Roland SC-55 synthesiser (zie de [soundcanvas]
+                sectie).
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:  De ingebouwde FluidSynth MIDI-synthesizer (SoundFont-speler)
+               (zie de [fluidsynth] sectie).
+.
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:        MIDI-uitvoer uitschakelen.
+.
+:CONFIG_MIDICONFIG
+Configuratieopties voor de geselecteerde MIDI-interface (standaard uit).
+Opmerkingen:
+.
+:CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
+  - Wanneer u 'mididevice = port' gebruikt, zoekt u de ID of naam van de
+     IDI-poort die u wilt gebruiken met de DOS-opdracht 'MIXER /LISTMIDI' en
+     stelt u vervolgens de ID of een subtekenreeks van de naam in (om
+     bijvoorbeeld de poort 'loopMIDI Port A' met ID 2 te gebruiken, stelt u
+     'midiconfig = 2' of 'midiconfig = port a' in).
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Wanneer u 'coreaudio' gebruikt, kunt u hier een SoundFont opgeven.
+.
+:CONFIGITEM_MIDICONFIG_LINUX
+  - Wanneer u 'mididevice = port' gebruikt, gebruikt u de Linux-opdracht
+    'aconnect -l' om alle open MIDI-poorten weer te geven en er een te
+    selecteren (bijvoorbeeld 'midiconfig = 14:0' voor sequencerclient 14,
+    poort 0).
+.
+:CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
+  - De instelling heeft geen effect bij gebruik van de interne synthesizers
+    ('mididevice = fluidsynth', 'mt32' of 'soundcanvas').
+.
+:CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
+  - Als u een fysieke rev.0 Roland MT-32 gebruikt, kan de hardware een
+    vertraging nodig hebben om bufferoverlopen te voorkomen. U kunt dit
+    inschakelen met 'delaysysex' na de poort-ID of naam (bijv.
+    'midiconfig = 2 delaysysex').
+.
+:CONFIG_MPU401
+Type MPU-401 om te emuleren (standaard: 'intelligent').
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Schakel onbewerkte, ongewijzigde MIDI-uitvoer in (standaard uit).
+De MIDI-stuurprogramma's van veel spelen voldoen niet volledig aan de MIDI-
+standaard, waardoor het bewerken van de MIDI-opnamen van deze spelen erg
+foutgevoelig en omslachtig is in MIDI-sequencers, wat vaak resulteert in
+hangende of ontbrekende noten. DOSBox corrigeert standaard de MIDI-uitvoer
+van dergelijke spellen. Dit resulteert in geen enkel hoorbaar verschil; het
+heeft alleen invloed op de weergave van de MIDI-data. U moet 'raw_midi_output'
+alleen inschakelen als u echt de onbewerkte, ongewijzigde MIDI-uitvoer van een
+programma wilt vastleggen, b.v. bij het werken met muziektoepassingen of bij
+het debuggen van MIDI-problemen.
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+Lijst wordt niet ondersteund
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+Apparaat niet geconfigureerd
+.
+:MIDI_DEVICE_NO_PORTS
+Geen beschikbare poorten
+.
+:MIDI_DEVICE_NO_MODEL_ACTIVE
+Er is momenteel geen model actief
+.
+:MIDI_DEVICE_NO_MODELS
+Geen beschikbare modellen
 .
 :CONFIG_SBTYPE
 Sound Blaster-model om te emuleren (standaard 'sb16').
@@ -1539,7 +2479,7 @@ Het IRQ-nummer van de Sound Blaster (standaard 7).
 Het DMA-nummer van de Sound Blaster (standaard 1).
 .
 :CONFIG_HDMA
-Het hoge DMA-nummer van de Sound Blaster (standaard 5).
+Het hoge DMA-nummer van de Sound Blaster 16 (standaard 5).
 .
 :CONFIG_SBMIXER
 Laat de Sound Blaster-mixer volumeniveaus aanpassen (standaard aan).
@@ -1577,8 +2517,9 @@ Type filter om te emuleren voor de digitale geluidsuitvoer van Sound Blaster:
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Force the Sound Blaster Pro 2 filter to be always on (disabled by default).
-Other Sound Blaster models don't allow toggling the filter in software.
+Forceer de Sound Blaster Pro 2 filter om altijd aan te staan ​​(standaard uit).
+Andere Sound Blaster-modellen staan ​​niet toe om het filter in software te
+schakelen.
 .
 :CONFIG_OPLRATE
 De OPL-uitvoer wordt nu transparant opnieuw gesampled naar de
@@ -1647,12 +2588,17 @@ Filter voor de Sound Blaster CMS-uitvoer:
 .
 :CONFIG_GUS
 Schakel Gravis UltraSound-emulatie in (standaard uit).
-De standaardinstellingen van basisadres 240, IRQ 5 en DMA 3 zijn gekozen zodat
-de GUS naast een Sound Blaster-kaart kan bestaan. Dit werkt prima voor de
-meeste programma's, maar sommige games en demo's verwachten de
-GUS-fabrieksinstellingen van basisadres 220, IRQ 11, DMA 1. Het standaard
-IRQ 11 is ook problematisch bij specifieke versies van de DOS4GW-extender
-die geen IRQ's boven 7 aankunnen.
+Veel games en alle demo's uploaden hun eigen geluiden, maar sommige vertrouwen
+op de instrument patch bestanden die bij de GUS zijn inbegrepen voor MIDI
+playback (zie 'ultradir' voor details). Sommige games vereisen ook dat
+ULTRAMID.EXE geladen wordt voordat de game gestart wordt.
+
+Let op: De standaardinstellingen van basisadres 240, IRQ 5 en DMA 3 zijn
+        gekozen zodat de GUS kan coëxisteren met een Sound Blaster kaart. Dit
+        werkt prima voor de meeste programma's, maar sommige spelen en demo's
+        verwachten de GUS fabrieksinstellingen van basisadres 220, IRQ 11 en
+        DMA 1. De standaard IRQ 11 is ook problematisch met specifieke versies
+        van de DOS4GW extender die geen IRQ's boven 7 aankunnen.
 .
 :CONFIG_GUSBASE
 Het IO-basisadres van de Gravis UltraSound (standaard 240).
@@ -1665,13 +2611,16 @@ Het DMA-nummer van de Gravis UltraSound (standaard 3).
 .
 :CONFIG_GUS_FILTER
 Filter voor de Gravis UltraSound audio-uitgang:
+  on:        Filter de uitvoer (standaard).
   off:       Filter de uitvoer niet.
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_ULTRADIR
-Pad naar UltraSound-map (standaard 'C:\ULTRASND').
-In deze map zou er een MIDI-map moeten zijn die de patchbestanden voor
-GUS-weergave bevat.
+Pad naar de UltraSound-directory (standaard 'C:\ULTRASND').
+Dit zou een 'MIDI'-subdirectory moeten hebben met de patches
+(instrumentbestanden) die sommige games nodig hebben voor het afspelen van
+MIDI-muziek. Niet alle games hebben deze patches nodig; veel GUS-native games
+en alle demo's uploaden in plaats daarvan hun eigen aangepaste geluiden.
 .
 :CONFIG_IMFC
 Schakel de IBM Music Feature Card in (standaard uit).
@@ -1685,7 +2634,7 @@ Het IRQ-nummer van de IBM Music Feature Card (standaard 3).
 :CONFIG_IMFC_FILTER
 Filter voor de uitvoer van de IBM Music Feature Card:
   on:        Filter de uitvoer (standaard).
-  off:       De uitvoer niet filteren.
+  off:       Filter de uitvoer niet.
   <op maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_SIDMODEL
@@ -1784,7 +2733,7 @@ Filter voor de LPT DAC-audioapparaat(en):
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_DISNEY
-Gebruik 'lpt_dac=disney' om de Disney Sound Source in te schakelen.
+Gebruik 'lpt_dac = disney' om de Disney Sound Source in te schakelen.
 .
 :CONFIG_PS1AUDIO
 Schakel IBM PS/1 Audio-emulatie in (standaard uitgeschakeld).
@@ -1932,23 +2881,38 @@ Een enkel nummer wordt behandeld als de hoofdversie.
 Gebruikelijke instellingen zijn 3.3, 5.0, 6.22 en 7.1.
 .
 :CONFIG_LOCALE_PERIOD
-Stel het locale-tijdperk in (standaard 'modern'). Historische instellingen
-(indien beschikbaar voor het betreffende land) proberen oud DOS-gedrag na te
-bootsen bij het weergeven van informatie zoals datums, tijd of cijfers,
-moderne instellingen volgen hedendaagse praktijken voor gebruikerservaring die
-consistenter zijn met typische hostsystemen.
+Stel locale epoch in (standaard 'native').
+  historic:  Als er gegevens beschikbaar zijn voor het opgegeven land, boots
+             dan het oude DOS-gedrag na bij het weergeven van tijd, datums of
+             getallen.
+  modern:    Volg de huidige praktijken voor een gebruikerservaring die
+             consistenter is met typische hostsystemen.
+  native:    Hergebruik de huidige host-OS-instellingen, ongeacht het
+             ingestelde land; gebruik 'moderne' gegevens om de gaten op te
+             vullen wanneer het DOS-localesysteem te beperkt is om de
+             desktopinstellingen te volgen.
 .
 :CONFIG_COUNTRY
-Stel de DOS-landcode in (standaard 'auto'). Dit heeft invloed op landspecifieke
-informatie, zoals datum, tijd en decimale notaties. De lijst met ondersteunde
-landcodes kan worden weergegeven met de '--list-countries'
-opdrachtregelargument. Indien ingesteld op 'auto', wordt de landcode gebruikt
-die overeenkomt met de geselecteerde toetsenbordindeling.
+Stel DOS-landcode in (standaard 'auto').
+Dit heeft invloed op landspecifieke informatie zoals datum, tijd en decimale
+notaties. Als dit is ingesteld op 'auto', wordt de landcode geselecteerd die de
+host-OS-instellingen weerspiegelt.
+De lijst met landcodes kan worden weergegeven met het opdrachtregelargument
+'--list-countries'.
 .
 :CONFIG_KEYBOARDLAYOUT
-Taalcode van de toetsenbordindeling (standaard 'auto'), of bijv. 'us' voor de
-US English indeling. Andere mogelijke waarden zijn dezelfde zoals die ook door
-FreeDOS geaccepteerd worden.
+Hernoemd naar 'keyboard_layout'.
+.
+:CONFIG_KEYBOARD_LAYOUT
+Toetsenbordindelingscode (standaard 'auto').
+De lijst met ondersteunde toetsenbordindelingscodes kan worden weergegeven met
+het opdrachtregelargument '--list-layouts', bijvoorbeeld 'uk' is de Britse
+Engelse indeling. De indeling kan worden gevolgd door het codepaginanummer,
+bijvoorbeeld 'uk 850' selecteert een West-Europees schermlettertype.
+Instellen op 'auto' om de waarden te raden op basis van de
+host-OS-instellingen.
+Gebruik na het opstarten de opdracht 'KEYB' om toetsenbordindelingen en
+codepagina's te beheren (voer 'HELP KEYB' uit voor meer informatie).
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Schakel het uitbreiden van omgevingsvariabelen zoals %%PATH%% in de DOS-
@@ -1963,6 +2927,13 @@ Bestand met permanente opdrachtregelgeschiedenis (standaard
 Bestand met de lijst met applicaties en toegewezen DOS-versies, in een door
 tabs gescheiden indeling, gebruikt door SETVER.EXE als permanente opslag
 (standaard leeg).
+.
+:CONFIG_FILE_LOCKING
+Schakel bestandsvergrendeling in (SHARE.EXE-emulatie; standaard aan).
+Dit is vereist voor sommige Windows 3.1x-toepassingen om goed te werken.
+Het veroorzaakt over het algemeen geen problemen voor DOS-spelen, behalve in
+zeldzame gevallen (bijv. Astral Blur-demo). Als u crashes ervaart die verband
+houden met bestandsmachtigingen, kunt u proberen dit uit te schakelen.
 .
 :CONFIGITEM_IPX
 Schakel IPX over UDP/IP-emulatie in (standaard uit).
@@ -2213,12 +3184,6 @@ met oude configuraties. Gebruik de voorgestelde alternatieven; ondersteuning
 wordt in de toekomst verwijderd.[reset]
 
 .
-:MIDI_DEVICE_LIST_NOT_SUPPORTED
-Lijst wordt niet ondersteund
-.
-:MIDI_DEVICE_NOT_CONFIGURED
-Apparaat niet geconfigureerd
-.
 :BIOS_REBOOTING_3
 Herstarten binnen 3 seconden...
 .
@@ -2356,6 +3321,34 @@ Beschikbare opdrachten voor PCjr-cartridges: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Geen PCjr-cartridge opdrachten gevonden
+
+.
+:PROGRAM_CLIP_HELP_LONG
+Kopieer tekst naar het klembord of haal de inhoud van het klembord op.
+
+Gebruik:
+  [color=light-cyan]COMMANDO[reset] | [color=light-green]clip[reset]
+  [color=light-green]clip[reset] < [color=light-cyan]BESTAND[reset]
+  [color=light-green]clip[reset]
+
+Opmerkingen:
+  - Als er geen invoer wordt opgegeven, wordt de inhoud van het klembord
+    afgedrukt.
+  - Deze opdracht is alleen voor het verwerken van tekstgegevens, niet voor
+    binaire gegevens.
+
+Voorbeelden:
+  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; kopieert de bestandenlijst naar het klembord
+  [color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; kopieert het bestand naar het klembord
+  [color=light-green]clip[reset]                     ; toont de inhoud van het klembord
+
+.
+:PROGRAM_CLIP_INPUT_TOO_LARGE
+Invoerstroom te groot.
+
+.
+:PROGRAM_CLIP_READ_ERROR
+Fout bij het lezen van de invoerstroom.
 
 .
 :MSCDEX_SUCCESS
@@ -2655,59 +3648,123 @@ Ze kunnen worden gewijzigd in de [color=brown]toetsenmapper[reset].
 [color=yellow]%s+F12[reset]    Ontgrendel de snelheid (turboknop/snel vooruit).
 
 .
-:PROGRAM_KEYB_INFO
-Codetabel %i is geladen
-
-.
-:PROGRAM_KEYB_INFO_LAYOUT
-Codetabel %i is geladen voor lay-out %s
-
-.
 :PROGRAM_KEYB_HELP_LONG
 Configureert een toetsenbord voor een specifieke taal.
 
 Gebruik:
-  [color=light-green]keyb[reset] [color=light-cyan][TAALCODE][reset]
-  [color=light-green]keyb[reset] [color=light-cyan]TAALCODE[reset] [color=white]CODETABEL[reset] [CODETABELBESTAND]
+  [color=light-green]keyb[reset]
+  [color=light-green]keyb[reset] /list
+  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODETABEL[reset]] /rom
+  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODETABEL[reset] [[color=white]CPI-BESTAND[reset]]]
 
 Parameters:
-  [color=light-cyan]TAALCODE[reset]         taalcode of toetsenbordindeling-ID
-  [color=white]CODETABEL[reset]        codetabelnummer, zoals [color=white]437[reset] en [color=white]850[reset].
-  [color=white]CODETABELBESTAND[reset] bestand met informatie voor een codetabel
+  [color=light-cyan]INDELING[reset]    Toetsenbordindelingscode
+  [color=white]CODETABEL[reset]  codepaginanummber, bijv. [color=white]437[reset] of [color=white]850[reset]
+  [color=white]CPI-BESTAND[reset]   schermlettertypebestand, in CPI-formaat
+  /list     geeft beschikbare toetsenbordindelingscodes weer
+  /rom      Gebruik indien mogelijk het schermlettertype uit de ROM van de
+            beeldschermadapter
 
 Opmerkingen:
-  [color=light-green]keyb[reset] zonder argument toont de momenteel geladen toetsenboardindeling en
-  codetabel. Het zal veranderen naar [color=light-cyan]TAALCODE[reset] indien opgegeven, optioneel met
-  [color=white]CODETABEL[reset] en een extra CODETABELBESTAND om een specifieke codetabelnummer en
-  codetabelbestand te laden, indien opgegeven. Dit is handig als u een niet-VS
-  toetsenbord gebruikt. De [color=light-cyan]TAALCODE[reset] kan ook in het configuratiebestand onder
-  de sectie [dos] met behulp van de "keyboardlayout = [color=light-cyan]TAALCODE[reset]" instelling.
+  - Als u [color=light-green]keyb[reset] uitvoert zonder argument, worden de momenteel geladen
+    toetsenbordindeling en codepagina weergegeven.
+  - Het [color=white]CPI-BESTAND[reset] moet, indien opgegeven, het schermlettertype bevatten voor
+    de gegeven [color=white]CODETABEL[reset].
+  - MS-DOS, DR-DOS en Windows NT formaten van de CPI bestanden worden direct
+    ondersteund. De FreeDOS CPX bestanden moeten eerst worden uitgepakt met de
+    3rd party [color=light-green]upx[reset] tool.
+  - Als er geen aangepast [color=white]CPI-BESTAND[reset] is opgegeven, zoekt de opdracht naar een
+    geschikt schermlettertype in de gebundelde CPI-bestanden.
+  - Als [color=white]CODETABEL[reset] niet is opgegeven en het schermlettertype van de ROM van de
+    beeldschermadapter geschikt is, wordt het schermlettertype van de ROM
+    gebruikt.
+  - Alleen EGA of betere beeldschermadapters maken het mogelijk om het
+    schermlettertype te wijzigen; MDA, CGA of Hercules gebruiken altijd het
+    ROM-schermlettertype.
+  - U kunt het 'VS'-toetsenbordindeling gebruiken met elke codepagina. Alle
+    andere indelingen werken alleen met geselecteerde codepagina's.
 
 Voorbeelden:
   [color=light-green]KEYB[reset]
   [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
   [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
-  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mijncp.cpi
 
 .
-:PROGRAM_KEYB_NOERROR
-Toetsenbordindeling %s geladen voor codetabel %i
+:PROGRAM_KEYB_CODE_PAGE
+Codepagina
+.
+:PROGRAM_KEYB_ROM_FONT
+ROM-lettertype
+.
+:PROGRAM_KEYB_KEYBOARD_LAYOUT
+Toetsenbordindeling
+.
+:PROGRAM_KEYB_KEYBOARD_SCRIPT
+Toetsenbordscript
+.
+:PROGRAM_KEYB_NOT_LOADED
+niet geladen
+.
+:PROGRAM_KEYB_INVALID_CODE_PAGE
+Ongeldige codepagina.
 
 .
-:PROGRAM_KEYB_FILENOTFOUND
-Toetsenbordbestand %s niet gevonden
+:PROGRAM_KEYB_CPI_FILE_NOT_FOUND
+Codepagina-informatiebestand niet gevonden.
 
 .
-:PROGRAM_KEYB_INVALIDFILE
-Toetsenbordbestand %s ongeldig
+:PROGRAM_KEYB_CPI_READ_ERROR
+Fout bij het lezen van het codepagina-informatiebestand.
 
 .
-:PROGRAM_KEYB_LAYOUTNOTFOUND
-Geen lay-out in %s voor codetabel %i
+:PROGRAM_KEYB_INVALID_CPI_FILE
+Ongeldig codepagina-informatiebestand.
 
 .
-:PROGRAM_KEYB_INVCPFILE
-Geen of ongeldig codetabelbestand voor lay-out %s
+:PROGRAM_KEYB_CPI_FILE_TOO_LARGE
+Het codepagina-informatiebestand is te groot.
+
+.
+:PROGRAM_KEYB_UNSUPPORTED_CPX_FILE
+Niet-ondersteund FreeDOS CPX-bestandsformaat. Converteer het bestand naar het
+CPI-formaat door het uit te pakken met de [color=light-green]upx[reset]-tool van derden.
+
+.
+:PROGRAM_KEYB_PRINTER_CPI_FILE
+Dit is een printercodepagina-informatiebestand en bevat geen schermlettertypen.
+
+.
+:PROGRAM_KEYB_SCREEN_FONT_UNUSABLE
+Codepagina %d gevonden, maar het schermlettertype kon niet worden gebruikt.
+
+.
+:PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
+Er is geen gebundeld codepagina-informatiebestand voor codepagina %d.
+
+.
+:PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE
+Er is geen codepagina %d in het codepagina-informatiebestand.
+
+.
+:PROGRAM_KEYB_INCOMPATIBLE_MACHINE
+Kan het schermlettertype niet wijzigen; EGA-machine of beter is vereist.
+
+.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+Bestand met toetsenbordindeling '%s' niet gevonden.
+
+.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+Ongeldig bestand met toetsenbordindeling '%s'.
+
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Toetsenbordindeling '%s' niet bekend.
+
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+Geen toetsenbordindeling '%s' voor codepagina %d.
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
@@ -2992,6 +4049,10 @@ Ongeldige weergavemodus: [color=white]%s[reset]
 :PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
 Weergavemodus [color=white]%s[reset] wordt niet ondersteund op deze grafische adapter.
 .
+:PROGRAM_MODE_UNSUPPORTED_VESA_MODE
+VESA-weergavemodus %s wordt niet ondersteund; stel `vesa_modes = all`
+in om deze in te schakelen.
+.
 :PROGRAM_MODE_INVALID_TYPEMATIC_RATE
 Ongeldige typematische herhaling instelling.
 .
@@ -3251,6 +4312,15 @@ Mapping niet beschikbaar in geen-muis-modus.
 .
 :PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
 Mapping is niet mogelijk met het huidige gastmuisstuurprogramma.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
+Individuele fysieke muizen worden niet ondersteund in deze build.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
+Individuele fysieke muizen worden niet ondersteund als 'mouse_raw_input' is
+ingeschakeld.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -3634,11 +4704,11 @@ Voorbeelden:
 
 .
 :SHELL_CMD_ECHO_ON
-ECHO is aan.
+Echo is aan.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO is uit.
+Echo is uit.
 
 .
 :SHELL_CMD_CHDIR_ERROR
