@@ -3654,28 +3654,28 @@ Configureert een toetsenbord voor een specifieke taal.
 Gebruik:
   [color=light-green]keyb[reset]
   [color=light-green]keyb[reset] /list
-  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODETABEL[reset]] /rom
-  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODETABEL[reset] [[color=white]CPI-BESTAND[reset]]]
+  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODEPAGINA[reset]] /rom
+  [color=light-green]keyb[reset] [color=light-cyan]INDELING[reset] [[color=white]CODEPAGINA[reset] [[color=white]CPI-BESTAND[reset]]]
 
 Parameters:
   [color=light-cyan]INDELING[reset]    Toetsenbordindelingscode
-  [color=white]CODETABEL[reset]  codepaginanummber, bijv. [color=white]437[reset] of [color=white]850[reset]
-  [color=white]CPI-BESTAND[reset]   schermlettertypebestand, in CPI-formaat
-  /list     geeft beschikbare toetsenbordindelingscodes weer
-  /rom      Gebruik indien mogelijk het schermlettertype uit de ROM van de
-            beeldschermadapter
+  [color=white]CODEPAGINA[reset]  codepaginanummber, bijv. [color=white]437[reset] of [color=white]850[reset]
+  [color=white]CPI-BESTAND[reset] schermlettertypebestand, in CPI-formaat
+  /list       geeft beschikbare toetsenbordindelingscodes weer
+  /rom        Gebruik indien mogelijk het schermlettertype uit de ROM van de
+              beeldschermadapter
 
 Opmerkingen:
   - Als u [color=light-green]keyb[reset] uitvoert zonder argument, worden de momenteel geladen
     toetsenbordindeling en codepagina weergegeven.
   - Het [color=white]CPI-BESTAND[reset] moet, indien opgegeven, het schermlettertype bevatten voor
-    de gegeven [color=white]CODETABEL[reset].
+    de gegeven [color=white]CODEPAGINA[reset].
   - MS-DOS, DR-DOS en Windows NT formaten van de CPI bestanden worden direct
     ondersteund. De FreeDOS CPX bestanden moeten eerst worden uitgepakt met de
     3rd party [color=light-green]upx[reset] tool.
   - Als er geen aangepast [color=white]CPI-BESTAND[reset] is opgegeven, zoekt de opdracht naar een
     geschikt schermlettertype in de gebundelde CPI-bestanden.
-  - Als [color=white]CODETABEL[reset] niet is opgegeven en het schermlettertype van de ROM van de
+  - Als [color=white]CODEPAGINA[reset] niet is opgegeven en het schermlettertype van de ROM van de
     beeldschermadapter geschikt is, wordt het schermlettertype van de ROM
     gebruikt.
   - Alleen EGA of betere beeldschermadapters maken het mogelijk om het
