@@ -1,6 +1,6 @@
-mkdocs-material == 9.5.40
+mkdocs-material == 9.6.10
 mkdocs-minify-plugin == 0.7.1
-mkdocs-redirects == 1.2.1
+mkdocs-redirects == 1.2.2
 mkdocs-glightbox == 0.4.0
 mdx-gh-links == 0.4
 
