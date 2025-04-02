@@ -1,6 +1,7 @@
 #define DOSBoxAppName "DOSBox Staging"
 #define DOSBoxAppDirName "DOSBox Staging"
 #define DOSBoxAppVersion "DOSBOX-STAGING-VERSION"
+#define DOSBoxGitHash "DOSBOX-STAGING-GIT-HASH"
 #define DOSBoxAppInternal "dosbox-staging"
 #define DOSBoxAppURL "https://www.dosbox-staging.org/"
 #define DOSBoxAppExeName "dosbox.exe"
@@ -23,7 +24,7 @@ DisableWelcomePage=no
 DisableProgramGroupPage=yes
 InfoBeforeFile=setup_preamble.txt
 OutputDir=.\
-OutputBaseFilename={#DOSBoxAppInternal}-windows-x64-{#DOSBoxAppVersion}-setup
+OutputBaseFilename={#DOSBoxAppInternal}-windows-x64-{#DOSBoxAppVersion}-{#DOSBoxGitHash}-setup
 SetupIconFile={#DOSBoxAppInternal}.ico
 Compression=lzma
 SolidCompression=yes

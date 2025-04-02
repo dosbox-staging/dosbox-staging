@@ -300,13 +300,15 @@ jobs:
         shell: bash
         run: |
           set -x
-          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          VERSION=$(./scripts/get-version.sh version)
+          GIT_HASH=$(./scripts/get-version.sh hash)
           PACKAGE_INFO="release ${VERSION}"
 
           mkdir -p out/program
 
           sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|"   contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-GIT-HASH|${GIT_HASH}|" contrib/windows_installer/DOSBox-Staging-setup.iss
 
           cp contrib/windows_installer/*                   out
           cp contrib/icons/windows/dosbox-staging.ico      out
