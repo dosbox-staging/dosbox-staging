@@ -12,7 +12,7 @@ hide:
 [Download DOSBox Staging 0.82.1 Universal Binary (dmg)][0_82_1]
 <br>
 <small>
-sha256: TODO<wbr>TODO
+sha256: 8e2e7b68bdac71c1ae5258e0f24fd06c<wbr>0778ce62c80042d604d141a0b5c1878a
 </small>
 
 </section>

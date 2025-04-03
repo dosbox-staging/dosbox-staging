@@ -12,14 +12,14 @@ hide:
 - [Download DOSBox Staging 0.82.1 (x86_64, Installer)][0_82_1_INSTALLER]
   <br>
   <small>
-  sha256: TODO<wbr>TODO
+  sha256: c69e67cbda6a44019d5a6b44d53cf353<wbr>56209cb28e835c2538ed3b2ad017c5b6
 
   </small>
 
 - [Download DOSBox Staging 0.82.1 (x86_64, Portable ZIP)][0_82_1_ZIP]
   <br>
   <small>
-  sha256: TODO<wbr>TODO
+  sha256: a8d4452801f4dde295d1e0835826878e<wbr>710d1a14a9e2525b190347c9f38a13a2
   </small>
 
 </section>
