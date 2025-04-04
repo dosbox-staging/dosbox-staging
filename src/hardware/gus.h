@@ -217,11 +217,13 @@ union ResetRegister {
 	bit_view<2, 1> are_irqs_enabled;
 };
 
+// Default state: lines disabled, latches enabled
+constexpr uint8_t MixControlRegisterDefaultState = 0b0000'1011;
+
 // Mix Control Register (2X0), section 2.13, page 28, of the UltraSound Software
 // Development Kit (SDK) Version 2.22
 union MixControlRegister {
-	// Default state: lines disabled, latches enabled
-	uint8_t data = 0b0000'1011;
+	uint8_t data = MixControlRegisterDefaultState;
 
 	bit_view<0, 1> line_in_disabled;
 	bit_view<1, 1> line_out_disabled;

@@ -1119,7 +1119,7 @@ void Gus::Reset() noexcept
 	PIC_RemoveEvents(GUS_TimerEvent);
 
 	reset_register.data = {};
-	mix_control_register.data = {};
+	mix_control_register.data = MixControlRegisterDefaultState;
 }
 
 static void GUS_TimerEvent(uint32_t t)
