@@ -58,7 +58,7 @@ Tools need to be installed and the license agreed to.
 
     ```shell
     sudo port -q install cmake ccache meson libsdl2 libsdl2_net opusfile \
-              pkgconfig python311
+              glib2 pkgconfig python311
     ```
 
 ## Building
