@@ -1072,6 +1072,11 @@ static Bitu reboot_handler()
 		const auto start = PIC_FullIndex();
 		while ((PIC_FullIndex() - start) < delay_ms) {
 			CALLBACK_Idle();
+			// Bail out if the user closes the window.
+			// Otherwise we get stuck in an infinite loop.
+			if (shutdown_requested) {
+				return CBRET_NONE;
+			}
 		}
 	}
 
