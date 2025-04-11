@@ -59,7 +59,7 @@ jobs:
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
   
       - name: Setup CMake
-        uses: lukka/get-cmake@56d043d188c3612951d8755da8f4b709ec951ad6 # v3.31.6
+        uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1
 
       - name: Clone vcpkg
         run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
