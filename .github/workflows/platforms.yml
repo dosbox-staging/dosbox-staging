@@ -38,7 +38,7 @@ jobs:
         with:
           submodules: false
 
-      - uses: uraimo/run-on-arch-action@v3.0.0
+      - uses: uraimo/run-on-arch-action@v3.0.1
         name: Build artifact
         id: build
         with:
