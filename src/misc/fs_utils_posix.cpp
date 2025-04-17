@@ -162,11 +162,18 @@ constexpr int PermissionsRW = S_IWUSR | S_IWGRP | S_IWOTH | PermissionsRO;
 
 // Attributes 'hidden', 'system', and 'archive' are always taken from the
 // host extended attributes.
-constexpr uint8_t XattrReadMask = 0b0010'0110; // hidden, system, archive
-// Attributes 'read-only' and 'directory' are stored in extended attributes,
-// but not used by DOSBox, for these we are always using host file system
-// attribute bits.
-constexpr uint8_t XattrWriteMask = 0b0001'0001 | XattrReadMask;
+// XattrReadMask = bitflags for read-only, hidden, system, and archive
+constexpr uint8_t XattrReadMask = 0b0010'0111;
+
+// Attributes 'read-only' and 'directory' are stored in extended attributes.
+// For files, read-only is checked using host file system permissions.
+// For directories, read-only is checked by either file system permission or the extended attribute.
+// We do not set file system permissions when a DOS program marks a directory as read-only.
+// MS-DOS does not prevent new files from being created inside read-only directories.
+// Linux does prevent this so we must not set the host directory read-only.
+// XattrWriteMask = bitflag for directory OR'd with XattrReadMask
+constexpr uint8_t XattrWriteMask = 0b0001'0000 | XattrReadMask;
+
 // We are storing DOS file attributes in Unix extended attributes, using same
 // format as WINE, Samba 3, and DOSEmu 2.
 static const std::string XattrName = "user.DOSATTRIB";
@@ -315,7 +322,13 @@ uint16_t local_drive_get_attributes(const std_fs::path& path,
 	}
 
 	attributes.directory = is_directory;
-	attributes.read_only = is_read_only;
+	if (is_directory) {
+		// Directories need to honor the extended attribute.
+		// See comment above XattrWriteMask.
+		attributes.read_only = attributes.read_only || is_read_only;
+	} else {
+		attributes.read_only = is_read_only;
+	}
 
 	return DOSERR_NONE;
 }
@@ -329,8 +342,16 @@ uint16_t local_drive_set_attributes(const std_fs::path& path,
 
 	bool status = make_writable(path);
 	if (status) {
+		struct stat file_info;
+		bool is_directory = true;
+		if (stat(path.c_str(), &file_info) == 0) {
+			is_directory = file_info.st_mode & S_IFDIR;
+		}
 		status = set_xattr(path, attributes);
-		if (status && attributes.read_only) {
+		if (status && attributes.read_only && !is_directory) {
+			// Sets permissions on the host filesystem.
+			// Don't do this for directories.
+			// MS-DOS allows new files to be created in read-only directories.
 			status = make_readonly(path);
 		}
 	}
