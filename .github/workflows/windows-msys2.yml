@@ -1,4 +1,4 @@
-name: Windows MSYS2 builds (deprecated)
+name: Windows MSYS2 builds
 
 on:
   push:

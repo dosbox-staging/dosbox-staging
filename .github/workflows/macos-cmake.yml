@@ -1,0 +1,150 @@
+name: macOS CMake release builds
+permissions:  read-all
+
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+  pull_request:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_macos_release:
+    name: Release build (${{ matrix.runner.arch }})
+    runs-on: ${{ matrix.runner.host }}
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    env:
+      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.runner.minimum_deployment }}
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
+    strategy:
+      matrix:
+        runner:
+          - host: macos-15
+            arch: x86_64
+            minimum_deployment: '11.0'
+
+          - host: macos-15
+            arch: arm64
+            minimum_deployment: '11.0'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+  
+      - name: Setup CMake
+        uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1
+
+      - name: Clone vcpkg
+        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
+  
+      - name: Bootstrap vcpkg
+        run: |
+          cd $VCPKG_ROOT
+          ./bootstrap-vcpkg.sh         
+            
+      - name: Log environment
+        run:  arch -arch=${{ matrix.runner.arch }} ./scripts/log-env.sh
+
+      - name: Inject version string
+        run: |
+          set -x
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Setup and build release
+        run: |
+          set -x
+          cmake --preset release-macos-${{ matrix.runner.arch }}          
+          cmake --build --preset release-macos-${{ matrix.runner.arch }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: dosbox-${{ matrix.runner.arch }}
+          path: build/release-macos-${{ matrix.runner.arch }}/Release/dosbox
+          overwrite: true
+
+      - name: Upload resources
+        uses: actions/upload-artifact@v4
+        with:
+          name: Resources
+          path: build/release-macos-${{ matrix.runner.arch }}/Resources
+          overwrite: true
+
+  publish_universal_build:
+    name: Publish universal build
+    needs: build_macos_release
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Inject version string
+        run: |
+          set -x
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Install brew depedencies
+        run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+
+      - name: Package
+        run: |
+          mv Resources ../
+          ./scripts/create-package.sh \
+            -p macos \
+            -v "${{ env.VERSION }}" \
+            -f \
+            "$(pwd)" \
+            "$(pwd)"
+
+      - name: Create dmg
+        run: |
+          ln -s /Applications dist/
+
+          codesign -s "-" "dist/DOSBox Staging.app" --force --deep -v
+
+          hdiutil create \
+              -volname "DOSBox Staging" \
+              -srcfolder dist \
+              -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
+
+      - name: Upload disk image
+        uses: actions/upload-artifact@v4
+        # GitHub automatically zips the artifacts, and there's no option
+        # to skip it or upload a file only.
+        with:
+          name: dosbox-staging-macOS-universal-${{ env.VERSION }}
+          path: dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg
