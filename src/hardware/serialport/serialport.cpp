@@ -1184,7 +1184,7 @@ bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *c
 {
 	bool result = false;
 	std::string tmpstring;
-	if (cmd->FindStringBegin(name, tmpstring, false))
+	if (cmd->FindStringCaseInsensitiveBegin(name, tmpstring, false))
 		result = (sscanf(tmpstring.c_str(), "%" PRIu32, &data) == 1);
 	return result;
 }

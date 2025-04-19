@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2021  The DOSBox Team
+ *  Copyright (C) 2002-2025  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ CDirectSerial::CDirectSerial(const uint8_t port_idx, CommandLine *cmd)
     rx_retry_max = 0;
 
 	std::string tmpstring;
-	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
+	if(!cmd->FindStringCaseInsensitiveBegin("realport:",tmpstring,false)) return;
 
 	LOG_MSG("SERIAL: Port %" PRIu8 " opening %s.", GetPortNumber(), tmpstring.c_str());
 	if(!SERIAL_open(tmpstring.c_str(), &comport)) {

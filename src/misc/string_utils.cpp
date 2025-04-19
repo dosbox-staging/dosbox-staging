@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -203,6 +203,22 @@ std::string join_with_commas(const std::vector<std::string>& items,
 bool ciequals(const char a, const char b)
 {
 	return tolower(a) == tolower(b);
+}
+
+bool ciequals_n(const char *a, const char *b, const size_t length)
+{
+	for (size_t position = 0; position < length; ++position) {
+		const auto char_a = *(a + position);
+		const auto char_b = *(b + position);
+		if (!ciequals(char_a, char_b)) {
+			return false;
+		}
+		if (char_a == '\0') {
+			return true;
+		}
+	}
+
+	return true;
 }
 
 bool natural_compare(const std::string& a_str, const std::string& b_str)
