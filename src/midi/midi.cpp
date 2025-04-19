@@ -99,11 +99,9 @@ static std::unique_ptr<MidiDevice> create_device(
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
-#if C_FLUIDSYNTH
 	if (name == FluidSynth) {
 		return std::make_unique<MidiDeviceFluidSynth>();
 	}
-#endif
 #if C_MT32EMU
 	if (name == Mt32) {
 		return std::make_unique<MidiDeviceMt32>();
@@ -707,7 +705,6 @@ void MIDI_ListDevices(Program* caller)
 	                                : nullptr,
 	                        caller);
 
-#if C_FLUIDSYNTH
 	write_device_name(MidiDeviceName::FluidSynth);
 
 	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
@@ -715,7 +712,6 @@ void MIDI_ListDevices(Program* caller)
 	                           : nullptr,
 
 	                   caller);
-#endif
 #if C_COREMIDI
 	write_device_name(MidiDeviceName::CoreMidi);
 
@@ -855,9 +851,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 		        MidiDeviceName::CoreAudio,
 #endif
 		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas,
-#if C_FLUIDSYNTH
 		        MidiDeviceName::FluidSynth,
-#endif
 		        "none"
 	});
 
