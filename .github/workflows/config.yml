@@ -1,4 +1,4 @@
-name: Config heavy builds
+name: Config heavy
 
 on:
   schedule: [cron: '0 16 * * *']
