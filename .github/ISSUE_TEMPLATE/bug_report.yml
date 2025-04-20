@@ -1,133 +1,161 @@
-name: Bug Report
-description: File a Bug report
-labels: bug
-#assignees: 'anonymous@temp'
+name:        Bug report
+description: File a bug report
+title:       Think about the title, twice
+labels:      bug
+type:        bug
 
 body:
   - type: markdown
+    id: intro
     attributes:
       value: |
-        ## Please fill out forms as cleanly as possible.
-        #### Make sure that you have
-        * properly edited & filled in the title of this bug report
+        ## Please fill out the form completely. Incomplete submissions will be closed!
+        #### Make sure that you have:
+        - provided a descriptive and succinct title
+        - have read all questions carefully have answered **all** of them
+
+        [Please consider a donation to the DOSBox Staging project](https://www.dosbox-staging.org/get-involved/#make-a-donation).
+
   - type: checkboxes
     id: version
     attributes:
-      label: Are you using the latest Dosbox-Staging Version?
+      label: Are you using the latest DOSBox Staging version?
       description: |
-        What version are you using? Check the [latest release](https://github.com/dosbox-staging/dosbox-staging/releases)
-        Run `dosbox --version`
-        Type `ver` command inside DOSBox shell; If the version is reported as `git` (meaning you compiled it yourself), use `git describe` command.
-        Provide 'git' version or 'other' in description
+        Look up the latest release version [on our website](https://www.dosbox-staging.org/) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
+        To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
       options:
-        - label: I have checked releases and am using the latest release.
+        - label: I have checked and I'm using the latest release.
           required: true
+
   - type: input
     id: verinfo
     attributes:
       label: Different version than latest?
-      description: Alpha, Git, or Branch?
-      placeholder: "Ex. 0.82.0-alpha, git version, branch testing."
+      placeholder: "E.g., 0.83.0-alpha, git version, branch testing"
     validations:
       required: false
+
   - type: dropdown
-    id: OS
+    id: os
     attributes:
-      label: What Operating System are you using?
+      label: What operating system are you using?
       multiple: false
       options:
+        - Please select
         - Windows 11
         - Windows 10
         - Windows 8
         - Windows 7
-        - Windows Other
         - macOS (Intel)
         - macOS (Apple Silicon)
         - Linux x86
         - Linux x86_64
-        - Linux ppc64le
         - Linux ARM (Raspberry Pi)
         - Other
     validations:
-      required: false
+      required: true
+
   - type: input
-    id: other
+    id: other_os
     attributes:
-      label: If Other OS, please describe
-      description: Other details
-      placeholder: "Windows, Mac OSX version, Debian, Ubuntu, Arch, etc."
+      label: If other OS or Linux, please describe
+      placeholder: "Details about your OS; if Linux, state your desktop environment (KDE, Gnome, XFCE, etc.)"
     validations:
       required: false
+
+  - type: checkboxes
+    id: native-os
+    attributes:
+      label: Are you running DOSBox Staging on a native OS?
+      description: We only support running DOSBox Staging on a native operating system; running on a guest OS in a VM or hypervisor is not supported.
+      options:
+        - label: I am running Staging on a native OS
+          required: true
+
+  - type: checkboxes
+    id: official-linux-release
+    attributes:
+      label: Are you able to trigger the issue with our official DOSBox Staging release?
+      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/releases/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/releases/linux/#non-official-repackaged-releases) for further info.
+      options:
+        - label: I am running an official Staging release, not a release installed by my operating system's package manager, or a version repackaged by an external team.
+          required: true
+
   - type: input
     id: hardware
     attributes:
       label: Relevant hardware info
-      description: Hardware
-      placeholder: "CPU, GPU, device brand/model: e.g. Raspberry Pi3B+, Nvidia, etc"
+      placeholder: "CPU, GPU, device brand/model (e.g., Raspberry Pi3B+, Nvidia RTX 3060, etc.)"
     validations:
       required: false
+
   - type: checkboxes
-    id: checked
+    id: checked-dupes
     attributes:
       label: Have you checked that no other similar issue already exists?
-      description: Searched issues before creating report?
       options:
-        - label: I have searched and not found similar issues.
+        - label: I have searched and have not found similar issues.
           required: true
+
   - type: textarea
     id: description
     attributes:
-      label: A clear and concise description of what the bug is.
-      description: Describe what happens, what software were you running? _Include screenshot if possible_
-      placeholder: "How & When does this occur?"
+      label: A clear and concise description of what the bug is
+      description: Describe what happens, what software were you running? Try to specify the exact version of the game you're running. _Include screenshots if possible._
+      placeholder: "How and when does this occur?"
     validations:
       required: true
+
   - type: textarea
     id: steps
     attributes:
-      label: Steps to reproduce the behaviour.
-      description: How can we reproduce this?
+      label: Steps to reproduce the behaviour
+      description: If we can't reproduce what you're experiencing, we can't fix it. Provide detailed steps on how to reproduce the bug; don't assume we're familiar with the software. For games, you can attach save game file in a ZIP archive if that helps.
       value: |
-        Explain how to reproduce
+        Explain in detail how to reproduce the bug. Assume no familiarity with the software.
         1. 
         2.
         3.
     validations:
       required: false
+
   - type: input
     id: package_url
     attributes:
       label: Download URL of affected game or software
       description: |
         If a single game or program is affected, provide a download link to ensure we're using binary-exact files and version(s).
-        This is required unless the issue broadly applies.
-      placeholder: "example: https://archive.org/details/StarWarsX-wingDemo"
+        This is _required_ unless the issue broadly applies.
+      placeholder: "E.g., https://archive.org/details/StarWarsX-wingDemo"
     validations:
       required: false
+
   - type: textarea
     id: config_file
     attributes:
       label: Your configuration
       description: |
-        Share the config file(s) you've been using to run the program. (`dosbox-staging.conf`) 
-        Please avoid pasting the full config, _use attachments or links_ in a [Gist](https://gist.github.com/)
-      placeholder: "example: texture_renderer = opengl"
+        Share the config file(s) you are using to run the program. (`dosbox-staging.conf`) 
+        Please avoid pasting the full config; _use attachments or links_ in a [Gist](https://gist.github.com/) instead.
+      placeholder: "Your configuration (if short), or provide Gist link"
       render: ini # syntax highlighting
     validations:
       required: false
+
   - type: textarea
     id: log
     attributes:
-      label: Provide a Log
-      description: Please avoid pasting the full log, _use attachments or links_ in a [Gist](https://gist.github.com/)
-      placeholder: "Copy & paste error log section or provide link"
+      label: Provide a log
+      description: Please avoid pasting the full log; _use attachments or links_ in a [Gist](https://gist.github.com/) instead.
+      placeholder: "Relevant part of the log (if short), or provide Gist link"
       render: text
     validations:
       required: false
+
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct & Contributing Guidelines
+      label: Code of conduct and contributing guidelines
       description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
       options:
         - label: Yes, I agree.
