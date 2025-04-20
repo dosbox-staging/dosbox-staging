@@ -19,8 +19,9 @@ sha256: 0b7ca2e0f1fbc10fe51c05011f6cad72<wbr>d10608658de0a58e22a5a936d5e7d075
 </section>
 
 
-Our pre-compiled builds run on most desktop Linux distributions (x86\_64 only for
-now). They only depend on the C/C++, ALSA, and OpenGL system libraries.
+Our official build runs on most desktop Linux distributions (x86\_64 only for
+now). It only depends on the C/C++, ALSA, and OpenGL system libraries; all
+other libraries are statically linked.
 
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
@@ -38,95 +39,35 @@ From the x86 family of processors, a processor with SSSE3 (Supplemental
 Streaming SIMD Extensions 3) is required.
 
 
-## External repository packages
+## Non-official repackaged releases
 
-DOSBox Staging is also packaged by external teams, as listed below.
-These packages may have variations in configuration file locations,
-filesystem or network restrictions, feature exclusions, and other
-differences compared to the project-released tarball.
+DOSBox Staging is also repackaged by external teams as distribution-specific
+repository packages, containerised images, etc. These repackaged releases may
+have variations in configuration file locations, filesystem or network
+restrictions, feature exclusions, and other differences compared to our
+official tarball releases. They might also have bugs introduced by using
+different library versions than what we have tested out official releases
+with.
 
-To understand these potential differences, we recommend referring to the
-repository's documentation and, if uncertain, comparing against the
-project-released tarball.
-
-The DOSBox Staging team does not track or document these differences.
-For issues specific to these packages, please contact the respective
+The DOSBox Staging team does _not_ track or document these differences.
+For issues specific to these non-official packages, we recommend referring to the
+repository's documentation, and when in doubt, please contact the respective
 repository owners.
 
+!!! warning "Non-official releases and support"
 
-### Containerised packages
+    We only provide support for our official releases. Any number of weird
+    issues can happen if you start using different library versions, different
+    compilers, different compiler flags or revisions, etc. Many of these
+    issues are hard to notice without being intimately familiar with
+    our software and doing hundreds of hours of testing---the amount of
+    testing we typically put into each release.
 
-[![Download from Flathub](https://flathub.org/assets/badges/flathub-badge-en.png){ class=linux-badge width=35% align=left }][flathub]
-
-[flathub]:https://flathub.org/apps/details/io.github.dosbox-staging
-
-
-### Fedora repository package
-
-    sudo dnf install dosbox-staging
-
-### Gentoo repository package
-
-    emerge games-emulation/dosbox-staging
-
-### Ubuntu and Mint repository package
-
-Available via [Personal Package Archive](https://launchpad.net/~feignint/+archive/ubuntu/dosbox-staging):
-
-    sudo add-apt-repository ppa:feignint/dosbox-staging
-    sudo apt-get update
-    sudo apt install dosbox-staging
-
-### Arch and Manjaro repository package
-
-Available via [Arch User Repository](https://aur.archlinux.org/packages/dosbox-staging).
-
-### NixOS repository package
-
-Available via NixOS or Home Manager. Add the following to your `configuration.nix` file:
-
-For NixOS:
-
-    environment.systemPackages = with pkgs; [
-      dosbox-staging
-    ];
-
-For Home Manager:
-
-    home.packages = with pkgs; [
-      dosbox-staging
-    ];
-
-Then rebuild your system with: `nixos-rebuild switch`
-
-### Other repository packages
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/dosbox-staging.svg){ width=230 }][other-repos]
-
-[other-repos]:https://repology.org/project/dosbox-staging/versions
-
-## Steam
-
-You can easily configure your DOS games on Steam to use DOSBox Staging via
-[Boxtron](https://github.com/dreamer/boxtron) (a community-developed
-Steam Play compatibility tool for DOS games).
-
-Boxtron will automatically use `dosbox` if found in your path, or can be
-configured to use a specific binary by editing the file
-`~/.config/boxtron.conf` and overriding [dosbox.cmd][boxtron-conf]:
-
-    cmd = ~/path-to-dosbox-staging/dosbox
-
-[boxtron-conf]:https://github.com/dreamer/boxtron/wiki/Configuration#dosboxcmd
-
-
-## RetroPie package
-
-You can easily configure your DOS games on
-[Retropie](https://retropie.org.uk/) to use DOSBox Staging via
-[RetroPie-Setup](https://github.com/RetroPie/RetroPie-Setup) (select
-**Optional Packages** --> **DOSBox Staging**).
-
+    Therefore, if you believe you've found a bug, and you're not using our
+    official Linux release, the first thing to do is to re-test with that.
+    **Please only report issues that are reproducible using our official
+    release!** If the problem is only present in the non-official package, you
+    should ask the person or team who did the repackaging for help.
 
 ## Development snapshot builds
 
