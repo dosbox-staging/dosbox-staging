@@ -133,7 +133,7 @@ typedef void (*fluid_log_function_t)(int level, const char *message, void *data)
  */
 static dynlib_handle fsynth_lib = {};
 
-/* The following function pointers will be set to their corresponding symbols in the FluidSynth library */
+// The following function pointers will be set to their corresponding symbols in the FluidSynth library
 
 /**
  * A 'X-Macro' to generate a list of function pointers to symbols in the 
@@ -213,7 +213,7 @@ static DynLibResult load_fsynth_dynlib(std::string& err_str)
 		}
 		FSYNTH_FUNC_LIST(FSYNTH_FUNC_GET_SYM)
 
-        /* Keep ERR and PANIC logging only */
+        // Keep ERR and PANIC logging only
         for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
             fluid_set_log_function(level, nullptr, nullptr);
         }
