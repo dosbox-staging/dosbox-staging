@@ -110,17 +110,17 @@ install:
 	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/1024x1024/apps/"
 	mkdir -m 0755 -p "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps"
 
-	install -p -m 0644 $(PNG_DIR)/icon_16.png "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_22.png "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_24.png "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_32.png "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_48.png "$(DESTDIR)$(datadir)/icons/hicolor/48x48/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_96.png "$(DESTDIR)$(datadir)/icons/hicolor/96x96/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_128.png "$(DESTDIR)$(datadir)/icons/hicolor/128x128/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_256.png "$(DESTDIR)$(datadir)/icons/hicolor/256x256/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_512.png "$(DESTDIR)$(datadir)/icons/hicolor/512x512/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 $(PNG_DIR)/icon_1024.png "$(DESTDIR)$(datadir)/icons/hicolor/1024x1024/apps/org.dosbox-staging.dosbox-staging.png"
-	install -p -m 0644 svg/dosbox-staging.svg "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/org.dosbox-staging.dosbox-staging.svg"
+	install -p -m 0644 $(PNG_DIR)/icon_16.png "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_22.png "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_24.png "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_32.png "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_48.png "$(DESTDIR)$(datadir)/icons/hicolor/48x48/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_96.png "$(DESTDIR)$(datadir)/icons/hicolor/96x96/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_128.png "$(DESTDIR)$(datadir)/icons/hicolor/128x128/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_256.png "$(DESTDIR)$(datadir)/icons/hicolor/256x256/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_512.png "$(DESTDIR)$(datadir)/icons/hicolor/512x512/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 $(PNG_DIR)/icon_1024.png "$(DESTDIR)$(datadir)/icons/hicolor/1024x1024/apps/org.dosbox_staging.dosbox_staging.png"
+	install -p -m 0644 svg/dosbox-staging.svg "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps/org.dosbox_staging.dosbox_staging.svg"
 
 clean:
 	rm -rf $(MACOS_ICONSET_DIR)
