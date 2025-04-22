@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright (C) 2020-2024  The DOSBox Staging Team -->
 <component type="desktop">
-  <id>org.dosbox-staging.dosbox-staging</id>
+  <id>org.dosbox_staging.dosbox_staging</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0-or-later</project_license>
   <name>DOSBox Staging</name>
@@ -63,7 +63,7 @@
     <control>console</control>
     <control>gamepad</control>
   </recommends>
-  <launchable type="desktop-id">org.dosbox-staging.dosbox-staging.desktop</launchable>
+  <launchable type="desktop-id">org.dosbox_staging.dosbox_staging.desktop</launchable>
   <developer_name>The DOSBox Staging Team</developer_name>
   <update_contact>john@johnnovak.net</update_contact>
   <url type="homepage">https://www.dosbox-staging.org/</url>
