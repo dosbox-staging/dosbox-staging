@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2019-2024  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@
 // Fully qualified application ID for the emulator; see
 // https://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-names
 // for more details
-#define DOSBOX_APP_ID "org.dosbox-staging.dosbox-staging"
+#define DOSBOX_APP_ID "org.dosbox_staging.dosbox_staging"
 
 
 int sdl_main(int argc, char *argv[]);
