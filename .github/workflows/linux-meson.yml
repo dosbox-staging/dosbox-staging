@@ -1,4 +1,5 @@
 name: Linux Meson builds (deprecated)
+permissions: read-all
 
 on:
   push:

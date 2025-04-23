@@ -1,4 +1,5 @@
 name: PVS-Studio analysis
+permissions: read-all
 
 on:
   push:

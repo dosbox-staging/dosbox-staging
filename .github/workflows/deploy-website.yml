@@ -1,4 +1,5 @@
 name: Deploy website
+permissions: read-all
 
 on:
   workflow_dispatch:

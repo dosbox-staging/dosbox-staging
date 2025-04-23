@@ -1,5 +1,5 @@
 name: macOS builds
-permissions:  read-all
+permissions: read-all
 
 on:
   push:

@@ -1,5 +1,5 @@
 name: macOS Meson builds (deprecated)
-permissions:  read-all
+permissions: read-all
 
 on:
   push:
