@@ -1,4 +1,5 @@
 name: Platform builds
+permissions: read-all
 
 on:
   schedule: [cron: '0 14 * * *']

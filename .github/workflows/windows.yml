@@ -1,4 +1,5 @@
 name: Windows builds
+permissions: read-all
 
 on:
   push:
@@ -68,8 +69,8 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
-            vs-prerelease: true
-            msbuild-architecture: ${{ matrix.conf.arch }}
+          vs-prerelease: true
+          msbuild-architecture: ${{ matrix.conf.arch }}
 
       - name:  Integrate packages
         shell: pwsh

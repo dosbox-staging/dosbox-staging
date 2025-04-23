@@ -1,4 +1,5 @@
 name: Windows MSYS2 builds (deprecated)
+permissions: read-all
 
 on:
   push:
