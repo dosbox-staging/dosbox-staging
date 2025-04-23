@@ -14,6 +14,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # TODO: Enable certain warnings-as-errors for at least MSVC, Clang & GCC
 
+# Disable the noisy narrowing and conversion warnings by default.
+# Use the CHECK_NARROWING() macro to opt-in these checks on a per-file basis.
+# See `include/checks.h` for details.
+if (MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion -Wno-narrowing")
+endif()
+
 option(OPT_DEBUG "Enable debugging" $<IF:$<CONFIG:Debug>,ON,OFF>)
 option(OPT_HEAVY_DEBUG "Enable heavy debugging" OFF)
 
