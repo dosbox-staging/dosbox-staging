@@ -184,10 +184,6 @@ configure_file(src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.
 
 ### end of config.h ###
 
-if (DOSBOX_COMPILER_MSVC)
-	add_compile_options("/experimental:newLambdaProcessor") # Avoids error https://developercommunity.visualstudio.com/t/lambda-fails-to-implicitly-capture-constexpr-value/610504
-endif()
-
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
 target_include_directories(dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
