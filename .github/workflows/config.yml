@@ -1,4 +1,5 @@
 name: Config heavy builds
+permissions: read-all
 
 on:
   schedule: [cron: '0 16 * * *']

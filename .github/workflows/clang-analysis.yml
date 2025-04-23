@@ -1,4 +1,5 @@
 name: Clang analysis
+permissions: read-all
 
 on:
   push:

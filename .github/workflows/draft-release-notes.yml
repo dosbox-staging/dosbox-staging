@@ -1,4 +1,5 @@
 name: Update release notes draft
+permissions: read-all
 
 on:
   push:
