@@ -1,0 +1,207 @@
+name: Linux CMake builds
+permissions: read-all
+
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+  pull_request:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_linux:
+    name: ${{ matrix.conf.name }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.conf.os }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
+    strategy:
+      matrix:
+#       TODO enable arm64 builds
+#        arch: [x64, arm64]
+        arch: [x64]
+        conf:
+          - name: GCC 12, Ubuntu 22.04
+            os: ubuntu-22.04
+            cmake_preset: release-linux-vcpkg
+            cc: gcc
+            cxx: g++
+            max_warnings: 14
+
+          - name: Clang 15, Ubuntu 22.04
+            os: ubuntu-22.04
+            cmake_preset: release-linux-vcpkg
+            cc: clang
+            cxx: clang++
+            max_warnings: 14
+
+          - name: GCC 12, Ubuntu 22.04, debugger build
+            os: ubuntu-22.04
+            cmake_preset: debug-linux-vcpkg
+            cmake_flags: -DOPT_HEAVY_DEBUG=ON
+            cc: gcc
+            cxx: g++
+            max_warnings: 14
+
+          # TODO turn this into a minimal build target once we have CMake
+          # feature toggling implemented
+          - name: GCC 11, Ubuntu 22.04
+            os: ubuntu-22.04
+            cmake_preset: release-linux-vcpkg
+            cc: gcc
+            cxx: g++
+            max_warnings: 14
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1
+
+      - name: Install dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
+              libxft-dev libpipewire-0.3-dev
+
+      - name: Clone vcpkg
+        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
+
+      - name: Bootstrap vcpkg
+        run: |
+          cd $VCPKG_ROOT
+          ./bootstrap-vcpkg.sh
+
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+
+      - name: Inject version string
+        run: |
+          set -x
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Setup and build
+        run: |
+          set -x
+          export CC=${{ matrix.conf.cc }}
+          export CXX=${{ matrix.conf.cxx }}
+          cmake ${{ matrix.conf.cmake_flags }} --preset ${{ matrix.conf.cmake_preset }}
+          cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
+
+#      - name: Run tests
+#        run:  TODO
+
+      - name: Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  ./scripts/count-warnings.py -lf build.log
+
+
+  build_linux_release:
+    name: Release build
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1
+
+      - name: Install all dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
+              libxft-dev libpipewire-0.3-dev
+
+      - name: Clone vcpkg
+        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
+
+      - name: Bootstrap vcpkg
+        run: |
+          cd $VCPKG_ROOT
+          ./bootstrap-vcpkg.sh
+
+      - name: Log environment
+        run:  ./scripts/log-env.sh
+
+      - name: Inject version string
+        run: |
+          set -x
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Setup and build
+        run: |
+          set -x
+          cmake --preset release-linux-vcpkg
+          cmake --build --preset release-linux-vcpkg
+
+      - name: Dump workspace contents
+        run: find $RUNNER_WORKSPACE
+
+      - name: Package
+        run: |
+          echo "*** dosbox transitive deps:"
+          ldd build/release-linux/dosbox
+
+          ./scripts/create-package.sh \
+            -p linux \
+            build/release-linux \
+            "dosbox-staging-linux-x86_64-$VERSION"
+
+      - name: Create tarball
+        run: |
+          tar -cJf "dosbox-staging-linux-x86_64-$VERSION.tar.xz" \
+            "dosbox-staging-linux-x86_64-$VERSION"
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        # GitHub automatically zips the artifacts (there's no way to create
+        # a tarball), and it removes all executable flags while zipping.
+        # Letting it zip a tarball preserves flags in the compressed files.
+        with:
+          name: dosbox-staging-linux-x86_64-${{ env.VERSION }}
+          path: dosbox-staging-linux-x86_64-${{ env.VERSION }}.tar.xz
