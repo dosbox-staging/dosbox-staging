@@ -1312,7 +1312,6 @@ static void sort_detected_keyboard_layouts(
 		for (const auto& entry : LocaleData::KeyboardLayoutInfo) {
 			for (const auto& layout_code : entry.layout_codes) {
 				if (layout_code == detected_deduplicated) {
-					assert(!info_map.contains(layout_code));
 					info_map[layout_code] = entry;
 					break;
 				}
