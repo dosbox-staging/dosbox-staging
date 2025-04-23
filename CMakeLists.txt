@@ -48,21 +48,8 @@ else()
 	message(FATAL_ERROR "Unknown system ${CMAKE_SYSTEM_NAME}")
 endif()
 
-# TODO: Proper compiler simulation detection (i.e. clang on MSVC)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-	set(DOSBOX_COMPILER_CLANG ON)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	set(DOSBOX_COMPILER_GCC ON)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_CXX_SIMULATE_ID STREQUAL "" AND CMAKE_C_SIMULATE_ID STREQUAL "")
-	set(DOSBOX_COMPILER_MSVC ON)
-else()
-	message(NOTICE "Unknown compiler")
-endif()
-
 # Enable color output for certain compilers
-if (DOSBOX_COMPILER_GCC OR DOSBOX_COMPILER_CLANG)
-	add_compile_options("-fdiagnostics-color=always")
-endif()
+set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 find_package(Git)
 if(Git_FOUND)
