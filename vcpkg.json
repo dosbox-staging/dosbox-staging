@@ -11,7 +11,14 @@
     "libpng",
     "libslirp",
     "opusfile",
-    "sdl2",
+    {
+      "name": "sdl2",
+      "platform": "linux",
+      "features": ["alsa", "dbus", "ibus", "wayland", "x11"]
+    }, {
+      "name": "sdl2",
+      "platform": "!linux"
+    },
     "sdl2-net",
     "speexdsp",
     {
