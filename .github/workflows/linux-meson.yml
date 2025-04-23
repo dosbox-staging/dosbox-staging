@@ -1,4 +1,4 @@
-name: Linux builds
+name: Linux Meson builds (deprecated)
 
 on:
   push:
