@@ -84,6 +84,8 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
+constexpr auto DefaultBuiltinDosMouseDriverOptions = "";
+
 const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
 	return list_rates;
@@ -179,6 +181,9 @@ static void set_serial_mouse_model(const std::string_view model_str)
 
 static void set_dos_driver_options(const std::string_view options_str)
 {
+	const std::string OptionImmediate = "immediate";
+	const std::string OptionModern    = "modern";
+
 	auto& last_options_str = mouse_config.dos_driver_last_options_str;
 	if (last_options_str == options_str) {
 		return;
@@ -188,39 +193,49 @@ static void set_dos_driver_options(const std::string_view options_str)
 	mouse_config.dos_driver_immediate = false;
 	mouse_config.dos_driver_modern    = false;
 
-	bool config_needs_sync = false;
-
 	for (const auto& token : split(options_str, " ,")) {
-		if (token == "immediate") {
+		if (token == OptionImmediate) {
 			mouse_config.dos_driver_immediate = true;
-		} else if (token == "modern") {
+		} else if (token == OptionModern) {
 			mouse_config.dos_driver_modern = true;
 		} else {
 			LOG_WARNING(
 			        "MOUSE: Invalid 'builtin_dos_mouse_driver_options' "
-			        "parameter: '%s', ignoring",
+			        "parameter: '%s', using defaults",
 			        token.c_str());
-			config_needs_sync = true;
+
+			set_section_property_value("mouse",
+			                           "builtin_dos_mouse_driver_options",
+			                           DefaultBuiltinDosMouseDriverOptions);
+
+			set_dos_driver_options(DefaultBuiltinDosMouseDriverOptions);
+			return;
 		}
 	}
 
-	if (config_needs_sync) {
-		// Config syntax was wrong, create valid setting
-		last_options_str = {};
-		if (mouse_config.dos_driver_immediate) {
-			last_options_str = "immediate";
-		}
-		if (mouse_config.dos_driver_modern) {
-			if (!last_options_str.empty()) {
-				last_options_str += " ";
-			}
-			last_options_str += "modern";
-		}
-
-		set_section_property_value("mouse",
-		                           "builtin_dos_mouse_driver_options",
-		                           last_options_str);
+	// Log new config options
+	static std::string last_logged_str = "";
+	if (options_str == last_logged_str) {
+		return;
 	}
+
+	std::string log_options = {};
+	if (mouse_config.dos_driver_immediate) {
+		log_options = OptionImmediate;
+	}
+	if (mouse_config.dos_driver_modern) {
+		if (!log_options.empty()) {
+			log_options += ", ";
+		}
+		log_options += OptionModern;
+	}
+
+	if (log_options.empty()) {
+		log_options = "none";
+	}
+
+	LOG_INFO("MOUSE (DOS): Driver options: %s", log_options.c_str());
+	last_logged_str = options_str;
 }
 
 static void set_sensitivity(const std::string_view sensitivity_str)
@@ -493,7 +508,9 @@ static void config_init(Section_prop& secprop)
 	        "            No DOS game uses the mouse wheel, only a handful of DOS applications\n"
 	        "            and Windows 3.x with special third-party drivers.");
 
-	prop_str = secprop.Add_string("builtin_dos_mouse_driver_options", always, "");
+	prop_str = secprop.Add_string("builtin_dos_mouse_driver_options",
+	                              always,
+	                              DefaultBuiltinDosMouseDriverOptions);
 	assert(prop_str);
 	prop_str->Set_help(
 	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
