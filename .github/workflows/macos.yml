@@ -31,7 +31,7 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.conf.minimum_deployment }}
-      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+#      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
     strategy:
@@ -53,12 +53,12 @@ jobs:
         with:
           submodules: false
 
-      - name: Export GitHub Actions cache environment variables
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+#      - name: Export GitHub Actions cache environment variables
+#        uses: actions/github-script@v7
+#        with:
+#          script: |
+#            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+#            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Setup CMake
         uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1

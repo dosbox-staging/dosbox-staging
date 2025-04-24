@@ -16,10 +16,10 @@
 #define C_IPX 1
 
 /* Define to 1 to enable NE2000 emulation */
-#define C_NE2000 1
+#define C_NE2000 0
 
 /* Define to 1 to enable slirp networking support, requires libslirp */
-#define C_SLIRP 1
+#define C_SLIRP 0
 
 /* Define to 1 to enable dual-mouse gaming support using ManyMouse library */
 #define C_MANYMOUSE 1
@@ -61,7 +61,7 @@
 #define C_CORE_INLINE 1
 
 /* Define to 1 to enable FluidSynth MIDI synthesizer */
-#define C_FLUIDSYNTH 1
+#define C_FLUIDSYNTH 0
 
 // Define to 1 to enable MT-32 emulator
 #define C_MT32EMU 1
