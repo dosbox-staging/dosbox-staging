@@ -156,6 +156,8 @@ struct HostLanguages {
 	std::string log_info = {};
 };
 
+bool IsMonetaryUtf8(const std::locale& locale);
+
 const HostLocale&          GetHostLocale();
 const HostKeyboardLayouts& GetHostKeyboardLayouts();
 const HostLanguages&       GetHostLanguages();

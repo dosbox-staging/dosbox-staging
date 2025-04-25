@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -592,6 +592,11 @@ static HostLanguages get_host_languages()
 	return result;
 }
 
+bool IsMonetaryUtf8([[maybe_unused]] const std::locale& locale)
+{
+	return false;
+}
+
 const HostLocale& GetHostLocale()
 {
 	static std::optional<HostLocale> locale = {};
@@ -625,6 +630,15 @@ const HostLanguages& GetHostLanguages()
 	}
 
 	return *locale;
+}
+
+// ***************************************************************************
+// Overridden generic locale fetch routines
+// ***************************************************************************
+
+void StdLibLocale::DetectCurrencyFormat([[maybe_unused]] const std::locale& locale)
+{
+	// Not implemented for Windows
 }
 
 #endif
