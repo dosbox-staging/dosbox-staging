@@ -667,6 +667,11 @@ static HostKeyboardLayouts get_host_keyboard_layouts()
 	return get_host_keyboard_layouts(apple_layouts);
 }
 
+bool IsMonetaryUtf8([[maybe_unused]] const std::locale& locale)
+{
+	return false;
+}
+
 const HostLocale& GetHostLocale()
 {
 	static std::optional<HostLocale> locale = {};

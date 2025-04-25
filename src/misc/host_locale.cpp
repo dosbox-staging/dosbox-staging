@@ -417,8 +417,14 @@ void StdLibLocale::GetDateFormat(const std::locale& locale)
 	}
 }
 
+#if !defined(WIN32)
 void StdLibLocale::DetectCurrencyFormat(const std::locale& locale)
 {
+	// We can only get a suitable data if monetary locale format is UTF-8
+	if (!IsMonetaryUtf8(locale)) {
+		return;
+	}
+
 	// Retrieve currency code
 	constexpr bool International = true;
 	const auto& format_code =
@@ -479,6 +485,7 @@ void StdLibLocale::DetectCurrencyFormat(const std::locale& locale)
 	currency_code_format = detect_format(money_code_example, currency_code);
 	currency_utf8_format = detect_format(money_code_example, currency_utf8);
 }
+#endif
 
 void StdLibLocale::DetectTimeDateFormat(const std::locale& locale)
 {

@@ -1409,6 +1409,36 @@ static HostKeyboardLayouts get_host_keyboard_layouts()
 	return {};
 }
 
+bool IsMonetaryUtf8(const std::locale& locale)
+{
+	auto check_utf8 = [](const std::locale& locale,
+	                     const std::string& variable) -> std::optional<bool> {
+		for (auto entry : split(locale.name(), ";\n\r")) {
+			trim(entry);
+			if (!entry.starts_with(variable)) {
+				continue;
+			}
+
+			upcase(entry);
+			return (entry.find("UTF8")  != std::string::npos) ||
+			       (entry.find("UTF-8") != std::string::npos);
+		}
+
+		return {};
+	};
+
+	bool found_utf8 = false;
+	for (const auto& variable : { "LC_ALL", "LC_MONETARY", "LANG" }) {
+		const auto result = check_utf8(locale, variable);
+		if (result) {
+			found_utf8 = *result;
+			break;
+		}
+	}
+
+	return found_utf8;
+}
+
 const HostLocale& GetHostLocale()
 {
 	static std::optional<HostLocale> locale = {};
