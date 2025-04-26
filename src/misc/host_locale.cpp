@@ -387,6 +387,10 @@ StdLibLocale::StdLibLocale()
 	DetectTimeDateFormat(locale);
 }
 
+// On macOS the C++ standard library returns generic values. To get the real
+// values, we need to refer to the CoreFoundation API.
+#if !C_COREFOUNDATION
+
 void StdLibLocale::GetNumericFormat(const std::locale& locale)
 {
 	const auto& format = std::use_facet<std::numpunct<char>>(locale);
@@ -564,3 +568,5 @@ void StdLibLocale::DetectTimeDateFormat(const std::locale& locale)
 		}
 	}
 }
+
+#endif

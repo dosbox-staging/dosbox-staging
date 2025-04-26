@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@
 #include "string_utils.h"
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <cctype>
 #include <unordered_map>
 
 CHECK_NARROWING();
@@ -344,26 +345,25 @@ static const std::unordered_map<int64_t, KeyboardLayoutMaybeCodepage> MacToDosKe
 // Generic helper routines
 // ***************************************************************************
 
-static std::string to_string(const CFStringRef string_ref)
+static std::string to_string(const CFStringRef string_ref,
+                             const CFStringEncoding encoding = kCFStringEncodingASCII)
 {
 	if (!string_ref) {
 		return {};
 	}
 
-	constexpr auto Encoding = kCFStringEncodingASCII;
-
-	const char* buffer = CFStringGetCStringPtr(string_ref, Encoding);
+	const char* buffer = CFStringGetCStringPtr(string_ref, encoding);
 	if (buffer != nullptr) {
 		return buffer;
 	}
 
 	const auto max_length = CFStringGetMaximumSizeForEncoding(
-	        CFStringGetLength(string_ref), Encoding);
+	        CFStringGetLength(string_ref), encoding);
 
 	std::string result = {};
 	result.resize(max_length + 1);
 
-	if (!CFStringGetCString(string_ref, result.data(), max_length + 1, Encoding)) {
+	if (!CFStringGetCString(string_ref, result.data(), max_length + 1, encoding)) {
 		// Conversion attempt failed
 		return {};
 	}
@@ -705,6 +705,166 @@ const HostLanguages& GetHostLanguages()
 	}
 
 	return *locale;
+}
+
+// ***************************************************************************
+// Overridden generic locale fetch routines
+// ***************************************************************************
+
+void StdLibLocale::GetNumericFormat([[maybe_unused]] const std::locale& locale)
+{
+	const auto mac_decimal_separator = get_locale(kCFLocaleDecimalSeparator);
+	const auto mac_thousands_separator = get_locale(kCFLocaleGroupingSeparator);
+
+	if (mac_decimal_separator.length() != 1 ||
+	    mac_thousands_separator.length() > 1) {
+		// Detection failed
+		return;
+	}
+
+	decimal_separator = mac_decimal_separator[0];
+	if (mac_thousands_separator.empty()) {
+		thousands_separator = ' ';
+	} else {
+		thousands_separator = mac_thousands_separator[0];
+	}
+}
+
+void StdLibLocale::GetDateFormat([[maybe_unused]] const std::locale& locale)
+{
+	// Nothing to do on macOS
+}
+
+void StdLibLocale::DetectCurrencyFormat([[maybe_unused]] const std::locale& locale)
+{
+	// Skip for macOS; although we can get the currency code using the
+	// 'kCFLocaleCurrencyCode' locale, the 'kCFLocaleCurrencySymbol' does
+	// not seem to be reliable; it is often (depending on the locale)
+	// either empty or it duplicates the 3-letter currency code.
+}
+
+void StdLibLocale::DetectTimeDateFormat([[maybe_unused]] const std::locale& locale)
+{
+	const auto locale_ref = CFLocaleCopyCurrent();
+
+	const auto formatter_ref = CFDateFormatterCreate(kCFAllocatorDefault,
+	                                                 locale_ref,
+	                                                 kCFDateFormatterShortStyle,
+	                                                 kCFDateFormatterShortStyle);
+
+	// Example format string we'll have to parse: 'dd/MM/y, h:mm a'
+	const auto format_string = to_string(CFDateFormatterGetFormat(formatter_ref),
+	                                     kCFStringEncodingUTF8);
+
+	CFRelease(formatter_ref);
+	CFRelease(locale_ref);
+
+	// Get the start of the first occurence of the format specifier
+	auto get_position_1st = [](const std::string_view format,
+	                           const char specifier) {
+		return std::min(format.find(check_cast<char>(tolower(specifier))),
+		                format.find(check_cast<char>(toupper(specifier))));
+	};
+
+	// Get the start of the second occurence of the format specifier
+	auto get_position_2nd = [&](const std::string_view format,
+	                            const char specifier) {
+		const auto position_1st = get_position_1st(format, specifier);
+		if (position_1st == std::string::npos ||
+		    position_1st + 1 >= format.length()) {
+			// The format specifier didn't occur even once or
+			// it did occur at the end of string only
+			return std::string::npos;
+		}
+
+		// Skip past the end of the 1st occurence
+		auto position = position_1st + 1;
+		while (format[position_1st] == format[position]) {
+			++position;
+			if (position >= format.length()) {
+				return std::string::npos;
+			}
+		}
+
+		const auto position_substring = get_position_1st(format.substr(position),
+		                                                 specifier);
+		if (position_substring == std::string::npos) {
+			return std::string::npos;
+		}
+
+		return position + position_substring;
+	};
+
+	const auto position_hour  = get_position_1st(format_string, 'h');
+	const auto position_am_pm = get_position_1st(format_string, 'a');
+	const auto position_day   = get_position_1st(format_string, 'd');
+	const auto position_year  = get_position_1st(format_string, 'y');
+
+	const auto position_m_1st = get_position_1st(format_string, 'm');
+	const auto position_m_2nd = get_position_2nd(format_string, 'm');
+
+	const auto position_minute = (position_hour < position_year)
+	                                   ? position_m_1st
+	                                   : position_m_2nd;
+	const auto position_month  = (position_hour < position_year)
+	                                   ? position_m_2nd
+	                                   : position_m_1st;
+
+	if (position_minute == std::string::npos ||
+	    position_hour   == std::string::npos ||
+	    position_day    == std::string::npos ||
+	    position_month  == std::string::npos ||
+	    position_year   == std::string::npos) {
+		// String format unknown, detection failed
+		return;
+	}
+
+	// Detect time format
+	if (position_am_pm == std::string::npos) {
+		time_format = DosTimeFormat::Time24H;
+	} else {
+		time_format = DosTimeFormat::Time12H;
+	}
+
+	// Detect time separator
+	if (position_hour + 1 < position_minute) {
+		const auto candidate = format_string[position_minute - 1];
+		if (is_printable_ascii(candidate)) {
+			time_separator = candidate;
+		}
+	}
+
+	// Check if calendar is Gregorian
+	const auto calendar_ref = CFCalendarCopyCurrent();
+	const auto calendar_id  = CFCalendarGetIdentifier(calendar_ref);
+	CFRelease(calendar_ref);
+	if (calendar_id != kCFGregorianCalendar) {
+		return;
+	}
+
+	// Detect date format and separator
+	char candidate_1 = 0;
+	char candidate_2 = 0;
+
+	if (position_day + 1 < position_month && position_month + 1 < position_year) {
+		date_format = DosDateFormat::DayMonthYear;
+		candidate_1 = format_string[position_month - 1];
+		candidate_2 = format_string[position_year - 1];
+	}
+	if (position_month + 1 < position_day && position_day + 1 < position_year) {
+		date_format = DosDateFormat::MonthDayYear;
+		candidate_1 = format_string[position_day - 1];
+		candidate_2 = format_string[position_year - 1];
+	}
+	if (position_year + 1 < position_month && position_month + 1 < position_day) {
+		date_format = DosDateFormat::YearMonthDay;
+		candidate_1 = format_string[position_month - 1];
+		candidate_2 = format_string[position_day - 1];
+	}
+
+	if (candidate_1 == candidate_2 && is_printable_ascii(candidate_1)) {
+		date_separator = candidate_1;
+	}
 }
 
 #endif
