@@ -910,9 +910,7 @@
     <ClCompile Include="..\src\midi\midi_soundcanvas.cpp">
       <Filter>src\midi</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\audio\gate.cpp">
-      <Filter>src\audio</Filter>
-    </ClCompile>
+    <ClCompile Include="..\src\audio\noise_gate.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h">
@@ -1624,7 +1622,7 @@
     <ClInclude Include="..\src\hardware\tandy_sound.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
-	<ClInclude Include="..\src\hardware\voodoo.h">
+    <ClInclude Include="..\src\hardware\voodoo.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\render_loops.h">
@@ -1777,9 +1775,7 @@
     <ClInclude Include="..\src\audio\envelope.h">
       <Filter>src\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\audio\gate.h">
-      <Filter>src\audio</Filter>
-    </ClInclude>
+    <ClInclude Include="..\src\audio\noise_gate.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
