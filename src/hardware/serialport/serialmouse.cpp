@@ -167,43 +167,50 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 	rate_coeff = estimate(1200) / rate_hz;
 }
 
+void CSerialMouse::LogMouseModel()
+{
+	std::string model_name = {};
+	switch (model) {
+	case MouseModelCOM::Microsoft:
+		model_name     = "2 buttons (Microsoft)";
+		has_3rd_button = false;
+		has_wheel      = false;
+		break;
+	case MouseModelCOM::Logitech:
+		model_name     = "3 buttons (Logitech)";
+		has_3rd_button = true;
+		has_wheel      = false;
+		break;
+	case MouseModelCOM::Wheel:
+		model_name     = "3 buttons + wheel";
+		has_3rd_button = true;
+		has_wheel      = true;
+		break;
+	case MouseModelCOM::MouseSystems:
+		model_name     = "3 buttons (Mouse Systems)";
+		has_3rd_button = true;
+		has_wheel      = false;
+		break;
+	case MouseModelCOM::NoMouse:
+		LOG_MSG("MOUSE (COM%d): Disabled", port_num);
+		break;
+	default:
+		assertm(false, "unknown mouse model (COM)");
+		break;
+	}
+
+	if (!model_name.empty()) {
+		LOG_MSG("MOUSE (COM%d): Using a %s model protocol", port_num,
+		        model_name.c_str());
+	}
+}
+
 void CSerialMouse::SetModel(const MouseModelCOM new_model)
 {
 	if (model != new_model) {
-		model            = new_model;
-		const char *name = nullptr;
-		switch (model) {
-		case MouseModelCOM::NoMouse: // just to print out log in the
-		                             // destructor
-			name = "(none)";
-			break;
-		case MouseModelCOM::Microsoft:
-			name           = "Microsoft, 2 buttons";
-			has_3rd_button = false;
-			has_wheel      = false;
-			break;
-		case MouseModelCOM::Logitech:
-			name           = "Logitech, 3 buttons";
-			has_3rd_button = true;
-			has_wheel      = false;
-			break;
-		case MouseModelCOM::Wheel:
-			name           = "wheel, 3 buttons";
-			has_3rd_button = true;
-			has_wheel      = true;
-			break;
-		case MouseModelCOM::MouseSystems:
-			name           = "Mouse Systems, 3 buttons";
-			has_3rd_button = true;
-			has_wheel      = false;
-			break;
-		default:
-			assert(false); // unimplemented
-			break;
-		}
-
-		if (name)
-			LOG_MSG("MOUSE (COM%d): %s", port_num, name);
+		model = new_model;
+		
+		LogMouseModel();
 	}
 
 	// So far all emulated mice are 1200 bauds, but report anyway

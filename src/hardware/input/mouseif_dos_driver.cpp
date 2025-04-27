@@ -702,6 +702,44 @@ static void draw_cursor()
 // DOS driver interface implementation
 // ***************************************************************************
 
+static void maybe_log_mouse_model()
+{
+	if (!mouse_config.dos_driver_enabled) {
+		return;
+	}
+
+	static bool first_time = true;
+	static MouseModelDos last_logged = {};
+
+	if (!first_time && mouse_config.model_dos == last_logged) {
+		return;
+	}
+
+	std::string model_name = {};
+	switch (mouse_config.model_dos) {
+	case MouseModelDos::TwoButton:
+		model_name = "2 buttons";
+		break;
+	case MouseModelDos::ThreeButton:
+		model_name = "3 buttons";
+		break;
+	case MouseModelDos::Wheel:
+		model_name = "3 buttons + wheel";
+		break;
+	default:
+		assertm(false, "unknown mouse model (DOS)");
+		break;
+	}
+
+	if (!model_name.empty()) {
+		LOG_INFO("MOUSE (DOS): Built-in driver is simulating a %s model",
+			 model_name.c_str());
+	}
+
+	first_time  = false;
+	last_logged = mouse_config.model_dos;
+}
+
 static void update_driver_active()
 {
 	mouse_shared.active_dos = (state.user_callback_mask != 0);
@@ -1394,6 +1432,8 @@ void MOUSEDOS_NotifyWheel(const float w_rel)
 
 void MOUSEDOS_NotifyModelChanged()
 {
+	maybe_log_mouse_model();
+
 	// If new mouse model has no wheel, disable the extension
 	if (!has_wheel()) {
 		state.wheel_api = true;
@@ -2146,6 +2186,8 @@ void MOUSEDOS_Init()
 	state.user_callback_segment = 0x6362;    // magic value
 	state.hidden                = 1;         // hide cursor on startup
 	state.bios_screen_mode      = UINT8_MAX; // non-existing mode
+
+	maybe_log_mouse_model();
 
 	set_sensitivity(50, 50, 50);
 	reset_hardware();

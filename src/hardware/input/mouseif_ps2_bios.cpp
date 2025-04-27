@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -172,31 +172,52 @@ static void terminate_unlock_sequence()
 	unlock_idx_xp = 0;
 }
 
-static void set_protocol(const MouseModelPS2 new_protocol)
+static void maybe_log_mouse_protocol()
+{
+	static bool first_time = true;
+	static MouseModelPS2 last_logged = {};
+
+	if (!first_time && protocol == last_logged) {
+		return;
+	}
+
+	std::string protocol_name = {};
+	switch (protocol) {
+	case MouseModelPS2::Standard:
+		protocol_name = "3 buttons";
+		break;
+	case MouseModelPS2::IntelliMouse:
+		protocol_name = "3 buttons + wheel (IntelliMouse)";
+		break;
+	case MouseModelPS2::Explorer:
+		protocol_name = "5 buttons + wheel (IntelliMouse Explorer)";
+		break;
+	case MouseModelPS2::NoMouse:
+		break;
+	default:
+		assertm(false, "unknown mouse model (PS/2)");
+		break;
+	}
+
+	if (!protocol_name.empty()) {
+		LOG_MSG("MOUSE (PS/2): Using a %s protocol, selected by guest software",
+	        	protocol_name.c_str());
+	}	
+
+	first_time  = false;
+	last_logged = protocol;
+}
+
+static void set_protocol(const MouseModelPS2 new_protocol, bool is_startup = false)
 {
 	terminate_unlock_sequence();
 
-	static bool first_time = true;
-	if (first_time || protocol != new_protocol) {
-		const char* protocol_name = nullptr;
+	if (is_startup || protocol != new_protocol) {
+		protocol = new_protocol;
 
-		first_time = false;
-		protocol   = new_protocol;
-
-		switch (protocol) {
-		case MouseModelPS2::Standard:
-			protocol_name = "Standard, 3 buttons";
-			break;
-		case MouseModelPS2::IntelliMouse:
-			protocol_name = "IntelliMouse, wheel, 3 buttons";
-			break;
-		case MouseModelPS2::Explorer:
-			protocol_name = "IntelliMouse Explorer, wheel, 5 buttons";
-			break;
-		default: break;
+		if (!is_startup) {
+			maybe_log_mouse_protocol();
 		}
-
-		LOG_MSG("MOUSE (PS/2): %s", protocol_name);
 
 		frame.clear();
 		MOUSEPS2_UpdateButtonSquish();
@@ -528,7 +549,7 @@ static void cmd_reset(bool is_startup = false)
 {
 	cmd_set_defaults();
 
-	set_protocol(MouseModelPS2::Standard);
+	set_protocol(MouseModelPS2::Standard, is_startup);
 	frame.clear();
 
 	if (is_startup) {
@@ -642,6 +663,8 @@ bool MOUSEPS2_PortWrite(const uint8_t byte)
 	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
 		return false; // no mouse emulated
 	}
+
+	maybe_log_mouse_protocol();
 
 	if (byte != static_cast<uint8_t>(AuxCommand::ResetDev) && mode_wrap &&
 	    byte != static_cast<uint8_t>(AuxCommand::ResetWrapMode)) {
@@ -955,6 +978,8 @@ void MOUSEBIOS_Subfunction_C2() // INT 15h, AH = 0xc2
 		set_return_value(BiosRetVal::InterfaceError);
 		return;
 	}
+
+	maybe_log_mouse_protocol();
 
 	switch (reg_al) {
 	case 0x00: // enable/disable mouse
