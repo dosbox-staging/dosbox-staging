@@ -314,4 +314,31 @@ bool delete_native_file(const std_fs::path& path)
 	return DeleteFileW(path.c_str());
 }
 
+bool local_drive_remove_dir(const std_fs::path& path)
+{
+	if (RemoveDirectoryW(path.c_str())) {
+		return true;
+	}
+	// Windows specific hack: MS-DOS allows removal of read-only directories.
+	// Windows does not. If we have a read-only directory, we need to make it not read-only.
+	DWORD attributes = GetFileAttributesW(path.c_str());
+	if (attributes == INVALID_FILE_ATTRIBUTES) {
+		return false;
+	}
+	if ((attributes & FILE_ATTRIBUTE_READONLY) == 0) {
+		return false;
+	}
+	attributes &= ~FILE_ATTRIBUTE_READONLY;
+	if (!SetFileAttributesW(path.c_str(), attributes)) {
+		return false;
+	}
+	if (RemoveDirectoryW(path.c_str())) {
+		return true;
+	}
+	// Removal still failed. Restore original attributes.
+	attributes |= FILE_ATTRIBUTE_READONLY;
+	SetFileAttributesW(path.c_str(), attributes);
+	return false;
+}
+
 #endif
