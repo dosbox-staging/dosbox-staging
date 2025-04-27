@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "dosbox-staging",
   "description": "DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.",
-  "version": "0.82.1",
+  "version": "0.82.2",
   "dependencies": [
     "fluidsynth",
     "gtest",

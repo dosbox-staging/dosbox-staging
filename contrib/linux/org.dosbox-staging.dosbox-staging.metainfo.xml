@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2020-2024  The DOSBox Staging Team -->
+<!-- Copyright (C) 2020-2025  The DOSBox Staging Team -->
 <component type="desktop">
   <id>org.dosbox-staging.dosbox-staging</id>
   <metadata_license>CC0-1.0</metadata_license>
@@ -37,6 +37,7 @@
     <category>Emulator</category>
   </categories>
   <releases>
+<!--	<release version="0.82.2" date="2025-05-02"/> -->
 	<release version="0.82.1" date="2025-04-04"/>
 	<release version="0.82.0" date="2024-10-27"/>
     <release version="0.81.2" date="2024-07-21"/>
