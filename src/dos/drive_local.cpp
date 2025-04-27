@@ -468,9 +468,12 @@ bool localDrive::RemoveDir(const char* dir)
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-	int temp = rmdir(dirCache.GetExpandNameAndNormaliseCase(newdir));
-	if (temp==0) dirCache.DeleteEntry(newdir,true);
-	return (temp==0);
+
+	const auto success = local_drive_remove_dir(dirCache.GetExpandNameAndNormaliseCase(newdir));
+	if (success) {
+		dirCache.DeleteEntry(newdir, true);
+	}
+	return success;
 }
 
 bool localDrive::TestDir(const char* dir)

@@ -508,4 +508,9 @@ bool delete_native_file(const std_fs::path& path)
 	return unlink(path.c_str()) == 0;
 }
 
+bool local_drive_remove_dir(const std_fs::path& path)
+{
+	return rmdir(path.c_str()) == 0;
+}
+
 #endif
