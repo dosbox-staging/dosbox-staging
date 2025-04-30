@@ -95,7 +95,7 @@ jobs:
         if:    matrix.system.name == 'Linux'
         run: |
           sudo apt-get -y update
-          sudo apt-get install $(cat packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install $(cat packages/ubuntu-20.04-meson-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name:  Install dependencies (macOS)
