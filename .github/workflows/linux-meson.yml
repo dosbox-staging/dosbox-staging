@@ -122,7 +122,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             ${{ matrix.conf.packages }} \
-            $(cat packages/${{ matrix.conf.os }}-apt.txt)
+            $(cat packages/${{ matrix.conf.os }}-meson-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Log environment
@@ -175,7 +175,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
-            $(cat packages/ubuntu-22.04-apt.txt)
+            $(cat packages/ubuntu-22.04-meson-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Restore subprojects cache
