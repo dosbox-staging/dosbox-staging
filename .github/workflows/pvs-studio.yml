@@ -19,11 +19,25 @@ jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-22.04
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: false
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@57c20a23a6cac5b90f31864439996e5b206df9dc # v4.0.1
 
       - name: Configure PVS-Studio repository
         run: |
@@ -33,37 +47,43 @@ jobs:
 
       - name: Install dependencies
         run: |
-          set -xeu
+          export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y strace $(cat packages/ubuntu-22.04-apt.txt)
-          sudo pip3 install --upgrade meson ninja
+          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
+              libxft-dev libpipewire-0.3-dev
           sudo apt-get install pvs-studio
+
+      - name: Clone vcpkg
+        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
+
+      - name: Bootstrap vcpkg
+        run: |
+          cd $VCPKG_ROOT
+          ./bootstrap-vcpkg.sh
+
+      - name: Log environment
+        run:  ./scripts/log-env.sh
 
       - name: Configure PVS-Studio license
         run: |
           set -xeu
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
-      - name: Cache subprojects
-        id:   cache-subprojects
-        uses: actions/cache@v4
-        with:
-          path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
-          enableCrossOsArchive: true
-
-      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
-        name: Generate subprojects cache
-        run:  scripts/fetch-and-tar-subprojects.sh
-
-      - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
-
-      - name: Build
+      - name: Setup and build
         run: |
-          set -xeu
-          meson setup -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-15.ini build
-          pvs-studio-analyzer trace -- meson compile -C build
+          set -x
+          export CC=clang
+          export CXX=clang++
+          cmake --preset debug-linux-vcpkg
+
+          # TODO Consider using the the PV-Studio CMake integration instead
+          # of calling the `pvs-studio-analyzer` directly. That might be a
+          # more maintainable approach, but needs further investigation.
+          # More info:
+          # - https://pvs-studio.com/en/docs/manual/0036/
+          # - https://github.com/viva64/pvs-studio-cmake-examples
+          #
+          pvs-studio-analyzer trace -- cmake --build --preset debug-linux-vcpkg
 
       - name: Analyze
         run: |

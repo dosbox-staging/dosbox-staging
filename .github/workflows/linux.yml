@@ -1,4 +1,4 @@
-name: Linux CMake builds
+name: Linux builds
 permissions: read-all
 
 on:
