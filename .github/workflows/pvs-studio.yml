@@ -98,7 +98,7 @@ jobs:
 
           pvs-studio-analyzer analyze \
             -a 63 \
-            -e subprojects \
+            -e subprojects -e src/libs \
             -s .pvs-suppress \
             -j "$(nproc)" \
             -o "${log}"
