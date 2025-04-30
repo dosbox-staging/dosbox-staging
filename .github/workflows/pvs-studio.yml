@@ -44,13 +44,12 @@ jobs:
           set -xeu
           wget -q -O - https://files.pvs-studio.com/etc/pubkey.txt | sudo apt-key add -
           sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/etc/viva64.list
+          sudo apt-get update
 
       - name: Install dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get update
-          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
-              libxft-dev libpipewire-0.3-dev
+          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
           sudo apt-get install pvs-studio
 
       - name: Clone vcpkg

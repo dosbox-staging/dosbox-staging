@@ -89,8 +89,7 @@ jobs:
       - name: Install dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
-              libxft-dev libpipewire-0.3-dev
+          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
       - name: Clone vcpkg
         run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
@@ -153,8 +152,7 @@ jobs:
       - name: Install all dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          sudo apt-get install libsdl2-dev libgl1-mesa-dev libegl1-mesa-dev \
-              libxft-dev libpipewire-0.3-dev
+          sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
       - name: Clone vcpkg
         run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
