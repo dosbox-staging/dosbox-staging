@@ -331,6 +331,7 @@ public:
 private:
 	static struct imagePlayer {
 		// Objects, pointers, and then scalars; in descending size-order.
+		std::mutex mutex                   = {};
 		std::weak_ptr<TrackFile> trackFile = {};
 		MixerChannelPtr channel            = nullptr;
 		CDROM_Interface_Image* cd          = nullptr;
@@ -340,7 +341,6 @@ private:
 		uint32_t playedTrackFrames  = 0;
 		uint32_t totalTrackFrames   = 0;
 		uint32_t startSector        = 0;
-		uint32_t totalRedbookFrames = 0;
 		bool isPlaying              = false;
 		bool isPaused               = false;
 
@@ -364,6 +364,8 @@ private:
 	                 const bool mode2);
 	std::vector<Track>::iterator GetTrack(const uint32_t sector);
 	void CDAudioCallback(const int desired_track_frames);
+	void PlayNextAudioTrack();
+	bool PlayAudioTrack(const Track& track, const uint32_t sector_offset);
 
 	// Private functions for cue sheet processing
 	bool  LoadCueSheet(const char *cuefile);
@@ -380,6 +382,7 @@ private:
 	std::vector<Track>   tracks;
 	std::vector<uint8_t> readBuffer;
 	std::string          mcn;
+	size_t               currentTrackIndex = 0;
 	static int           refCount;
 };
 

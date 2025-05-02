@@ -531,6 +531,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 
 bool CDROM_Interface_Image::SetDevice(const char* path)
 {
+	std::lock_guard lock(player.mutex);
 	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
 		// print error message on dosbox console
@@ -701,41 +702,20 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	return true;
 }
 
-bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
+bool CDROM_Interface_Image::PlayAudioTrack(const Track& track, const uint32_t sector_offset)
 {
-	// Find the track that holds the requested sector
-	track_const_iter track = GetTrack(start);
-	std::shared_ptr<TrackFile> track_file;
-	if (track != tracks.end())
-		track_file = track->file;
-
-	// Guard: sanity check the request beyond what GetTrack already checks
-	if (len == 0 || track == tracks.end() || !track_file ||
-	    track->attr == 0x40 || !player.channel) {
+	const auto track_file = track.file;
+	if (!track_file || track.attr == 0x40 || !player.channel) {
 		StopAudio();
-#ifdef DEBUG
-		LOG_MSG("CDROM: PlayAudioSector => sanity check failed");
-#endif
 		return false;
 	}
-	// If the request falls into the pregap, which is prior to the track's
-	// actual start but not so earlier that it falls into the prior track's
-	// audio, then we simply skip the pre-gap (beacuse we can't negatively
-	// seek into the track) and instead start playback at the actual track
-	// start.
-	if (start < track->start) {
-		len -= (track->start - start);
-		start = track->start;
-	}
 
-	// Calculate the requested byte offset from the sector offset
-	const auto sector_offset = start - track->start;
-	const auto byte_offset = track->skip + sector_offset * track->sectorSize;
+	const auto byte_offset = track.skip + sector_offset * track.sectorSize;
 
 	// Guard: Bail if our track could not be seeked
 	if (!track_file->seek(byte_offset)) {
 		LOG_MSG("CDROM: Track %d failed to seek to byte %u, so cancelling playback",
-		        track->number, byte_offset);
+		        track.number, byte_offset);
 		StopAudio();
 		return false;
 	}
@@ -750,10 +730,9 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 	// Update our player with properties about this playback sequence
 	player.cd = this;
 	player.trackFile = track_file;
-	player.startSector = start;
-	player.totalRedbookFrames = len;
 	player.isPlaying = true;
 	player.isPaused = false;
+	currentTrackIndex = track.number - 1;
 
 	// Assign the mixer function associated with this track's content type
 	if (track_file->getEndian() == AUDIO_S16SYS) {
@@ -766,6 +745,44 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 		                         : &MixerChannel::AddSamples_m16_nonnative;
 	}
 
+	// start the channel!
+	player.channel->SetSampleRate(track_rate);
+	player.channel->Enable(true);
+	return true;
+}
+
+bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
+{
+	std::lock_guard lock(player.mutex);
+
+	// Find the track that holds the requested sector
+	track_const_iter track = GetTrack(start);
+
+	// Guard: sanity check the request beyond what GetTrack already checks
+	if (len == 0 || track == tracks.end()) {
+		StopAudio();
+#ifdef DEBUG
+		LOG_MSG("CDROM: PlayAudioSector => sanity check failed");
+#endif
+		return false;
+	}
+	// If the request falls into the pregap, which is prior to the track's
+	// actual start but not so earlier that it falls into the prior track's
+	// audio, then we simply skip the pre-gap (because we can't negatively
+	// seek into the track) and instead start playback at the actual track
+	// start.
+	if (start < track->start) {
+		len -= (track->start - start);
+		start = track->start;
+	}
+
+	const auto sector_offset = start - track->start;
+	if (!PlayAudioTrack(*track, sector_offset)) {
+		return false;
+	}
+
+	player.startSector = start;
+
 	/**
 	 *  Convert Redbook frames (len) to Track PCM frames, rounding up to whole
 	 *  integer frames. Note: the intermediate numerator in the calculation
@@ -773,8 +790,8 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 	 *  64-bit.
 	 */
 	player.playedTrackFrames = 0;
-	player.totalTrackFrames = player.totalRedbookFrames *
-	                          (track_rate / REDBOOK_FRAMES_PER_SECOND);
+	player.totalTrackFrames = len *
+	                          (track->file->getRate() / REDBOOK_FRAMES_PER_SECOND);
 
 #ifdef DEBUG
 	if (start < track->start) {
@@ -801,9 +818,6 @@ bool CDROM_Interface_Image::PlayAudioSector(uint32_t start, uint32_t len)
 	}
 #endif
 
-	// start the channel!
-	player.channel->SetSampleRate(track_rate);
-	player.channel->Enable(true);
 	return true;
 }
 
@@ -1001,6 +1015,20 @@ bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned lon
 	return success;
 }
 
+void CDROM_Interface_Image::PlayNextAudioTrack()
+{
+	const auto next_track_index = currentTrackIndex + 1;
+	if (next_track_index >= tracks.size()) {
+		StopAudio();
+		return;
+	}
+
+	const auto &next_track = tracks[next_track_index];
+	assert(next_track.number == next_track_index + 1);
+
+	PlayAudioTrack(next_track, 0);
+}
+
 void CDROM_Interface_Image::CDAudioCallback(const int desired_track_frames)
 {
 	/**
@@ -1008,6 +1036,7 @@ void CDROM_Interface_Image::CDAudioCallback(const int desired_track_frames)
 	 *  our track_file pointer could be removed by the main thread.
 	 *  We reserve the track_file up-front for the scope of this call.
 	 */
+	std::lock_guard lock(player.mutex);
 	std::shared_ptr<TrackFile> track_file = player.trackFile.lock();
 
 	// Guards: Bail if the request or our player is invalid
@@ -1032,22 +1061,7 @@ void CDROM_Interface_Image::CDAudioCallback(const int desired_track_frames)
 		// This particular CDDA track has come to an end, but the
 		// program has requested we continue playing for a longer
 		// period. So keep going!
-		const auto fraction_played = static_cast<double>(
-		                                     player.playedTrackFrames) /
-		                             player.totalTrackFrames;
-
-		const auto played_redbook_frames = static_cast<uint32_t>(
-		        ceil(fraction_played * player.totalRedbookFrames));
-
-		const auto new_redbook_start_frame = player.startSector +
-		                                     played_redbook_frames;
-
-		const auto remaining_redbook_frames = player.totalRedbookFrames -
-		                                      played_redbook_frames;
-
-		player.cd->PlayAudioSector(new_redbook_start_frame,
-		                           remaining_redbook_frames);
-
+		player.cd->PlayNextAudioTrack();
 		return;
 	}
 
