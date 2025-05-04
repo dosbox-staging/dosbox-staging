@@ -130,10 +130,10 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(const char* name, cmd_it& it, bool neednext)
+bool CommandLine::FindEntry(const std::string& name, cmd_it& it, bool neednext)
 {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
-		if (!strcasecmp((*it).c_str(), name)) {
+		if (iequals((*it).c_str(), name)) {
 			cmd_it itnext = it;
 			++itnext;
 			if (neednext && (itnext == cmds.end())) {
@@ -145,12 +145,12 @@ bool CommandLine::FindEntry(const char* name, cmd_it& it, bool neednext)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(const char* const begin, std::string& value,
+bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
                                   bool remove)
 {
-	size_t len = strlen(begin);
+	const auto len = begin.length();
 	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
-		if (strncmp(begin, (*it).c_str(), len) == 0) {
+		if (begin.substr(0, len) == (*it).substr(0, len)) {
 			value = ((*it).c_str() + len);
 			if (remove) {
 				cmds.erase(it);
@@ -161,11 +161,11 @@ bool CommandLine::FindStringBegin(const char* const begin, std::string& value,
 	return false;
 }
 
-bool CommandLine::FindStringCaseInsensitiveBegin(const char* const begin,
+bool CommandLine::FindStringCaseInsensitiveBegin(const std::string& begin,
                                                  std::string& value,
                                                  bool remove)
 {
-	size_t len = strlen(begin);
+	const auto len = begin.length();
 	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
 		if (iequals(begin, std::string_view(*it).substr(0, len))) {
 			value = ((*it).c_str() + len);
@@ -178,7 +178,7 @@ bool CommandLine::FindStringCaseInsensitiveBegin(const char* const begin,
 	return false;
 }
 
-bool CommandLine::FindStringRemain(const char* name, std::string& value)
+bool CommandLine::FindStringRemain(const std::string& name, std::string& value)
 {
 	cmd_it it;
 	value.clear();
@@ -197,16 +197,16 @@ bool CommandLine::FindStringRemain(const char* name, std::string& value)
 // Allowing /C dir and /Cdir
 // Restoring quotes back into the commands so command /C mount d "/tmp/a b"
 // works as intended
-bool CommandLine::FindStringRemainBegin(const char* name, std::string& value)
+bool CommandLine::FindStringRemainBegin(const std::string& name, std::string& value)
 {
 	cmd_it it;
 	value.clear();
 
 	if (!FindEntry(name, it)) {
-		size_t len = strlen(name);
+		size_t len = name.length();
 
 		for (it = cmds.begin(); it != cmds.end(); ++it) {
-			if (strncasecmp(name, (*it).c_str(), len) == 0) {
+			if (iequals(name.substr(0, len), (*it).substr(0, len))) {
 				std::string temp = ((*it).c_str() + len);
 				// Restore quotes for correct parsing in later
 				// stages

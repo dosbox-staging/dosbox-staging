@@ -55,16 +55,16 @@ public:
 
 	bool FindCommand(unsigned int which, std::string& value) const;
 
-	bool FindStringBegin(const char* const begin, std::string& value,
+	bool FindStringBegin(const std::string& begin, std::string& value,
 	                     bool remove = false);
 
-	bool FindStringCaseInsensitiveBegin(const char* const begin,
+	bool FindStringCaseInsensitiveBegin(const std::string& begin,
 	                                    std::string& value,
 	                                    bool remove = false);
 
-	bool FindStringRemain(const char* const name, std::string& value);
+	bool FindStringRemain(const std::string& name, std::string& value);
 
-	bool FindStringRemainBegin(const char* const name, std::string& value);
+	bool FindStringRemainBegin(const std::string& name, std::string& value);
 
 	bool GetStringRemain(std::string& value);
 
@@ -101,7 +101,7 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name       = "";
 
-	bool FindEntry(const char* const name, cmd_it& it, bool neednext = false);
+	bool FindEntry(const std::string& name, cmd_it& it, bool neednext = false);
 
 	std::string FindRemoveSingleString(const char* name);
 
