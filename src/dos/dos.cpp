@@ -59,8 +59,8 @@ static bool windows_multiplex()
 	// 0x4002 - switch task to foreground
 	case 0x1605: // Windows startup
 	{
-		const uint8_t major = static_cast<uint8_t>(reg_di >> 8);
-		const uint8_t minor = static_cast<uint8_t>(reg_di & 0xff);
+		const auto major = static_cast<uint8_t>(reg_di >> 8);
+		const auto minor = static_cast<uint8_t>(reg_di & 0xff);
 		LOG_INFO("DOS: Starting Microsoft Windows %d.%d", major, minor);
 		return false;
 	}
