@@ -89,7 +89,7 @@ CSerialMouse::~CSerialMouse()
 	}
 
 	removeEvent(SERIAL_TX_EVENT); // clear events
-	SetModel(MouseModelCOM::NoMouse);
+	LOG_MSG("MOUSE (COM%d): Disconnected", port_num);
 }
 
 void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
