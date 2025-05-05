@@ -244,8 +244,12 @@ static uint8_t get_num_buttons()
 	switch (mouse_config.model_dos) {
 	case MouseModelDos::TwoButton:
 		return 2;
-	default:
+	case MouseModelDos::ThreeButton:
+	case MouseModelDos::Wheel:
 		return 3;
+	default:
+		assertm(false, "unknown mouse model (DOS)");
+		return 2;
 	}
 }
 
@@ -253,14 +257,10 @@ static uint8_t get_button_mask()
 {
 	MouseButtonsAll button_mask = {};
 
-	switch (get_num_buttons()) {
-	case 2:
-		button_mask.left  = 1;
-		button_mask.right = 1;
-		break;
-	default:
-		button_mask.left   = 1;
-		button_mask.right  = 1;
+	button_mask.left  = 1;
+	button_mask.right = 1;
+
+	if (get_num_buttons() >= 3) {
 		button_mask.middle = 1;
 	}
 
