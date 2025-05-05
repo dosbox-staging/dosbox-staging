@@ -22,7 +22,7 @@
 #include "programs.h"
 #include "string_utils.h"
 
-bool CommandLine::FindExist(const char* name, bool remove)
+bool CommandLine::FindExist(const std::string& name, bool remove)
 {
 	cmd_it it;
 	if (!(FindEntry(name, it, false))) {
@@ -61,7 +61,7 @@ bool CommandLine::ExistsPriorTo(const std::list<std::string_view>& pre_args,
 	return false;
 }
 
-bool CommandLine::FindInt(const char* name, int& value, bool remove)
+bool CommandLine::FindInt(const std::string& name, int& value, bool remove)
 {
 	cmd_it it, it_next;
 
@@ -79,7 +79,7 @@ bool CommandLine::FindInt(const char* name, int& value, bool remove)
 	return true;
 }
 
-bool CommandLine::FindString(const char* name, std::string& value, bool remove)
+bool CommandLine::FindString(const std::string& name, std::string& value, bool remove)
 {
 	cmd_it it, it_next;
 
@@ -402,8 +402,8 @@ bool CommandLine::FindBoolArgument(const std::string& name, bool remove,
 	char short_name[3]            = {};
 	short_name[0]                 = '-';
 	short_name[1]                 = short_letter;
-	return FindExist(double_dash.c_str(), remove) ||
-	       FindExist(dash.c_str(), remove) ||
+	return FindExist(double_dash, remove) ||
+	       FindExist(dash, remove) ||
 	       (short_letter && FindExist(short_name, remove));
 }
 
