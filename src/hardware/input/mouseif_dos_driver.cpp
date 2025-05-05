@@ -241,11 +241,13 @@ static RealPt user_callback;
 
 static uint8_t get_num_buttons()
 {
+	using enum MouseModelDos;
+
 	switch (mouse_config.model_dos) {
-	case MouseModelDos::TwoButton:
+	case TwoButton:
 		return 2;
-	case MouseModelDos::ThreeButton:
-	case MouseModelDos::Wheel:
+	case ThreeButton:
+	case Wheel:
 		return 3;
 	default:
 		assertm(false, "unknown mouse model (DOS)");
@@ -704,6 +706,8 @@ static void draw_cursor()
 
 static void maybe_log_mouse_model()
 {
+	using enum MouseModelDos;
+
 	if (!mouse_config.dos_driver_enabled) {
 		return;
 	}
@@ -717,13 +721,13 @@ static void maybe_log_mouse_model()
 
 	std::string model_name = {};
 	switch (mouse_config.model_dos) {
-	case MouseModelDos::TwoButton:
+	case TwoButton:
 		model_name = "2 buttons";
 		break;
-	case MouseModelDos::ThreeButton:
+	case ThreeButton:
 		model_name = "3 buttons";
 		break;
-	case MouseModelDos::Wheel:
+	case Wheel:
 		model_name = "3 buttons + wheel";
 		break;
 	default:

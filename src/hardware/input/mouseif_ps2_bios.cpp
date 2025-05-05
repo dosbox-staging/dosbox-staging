@@ -174,6 +174,8 @@ static void terminate_unlock_sequence()
 
 static void maybe_log_mouse_protocol()
 {
+	using enum MouseModelPS2;
+
 	static bool first_time = true;
 	static MouseModelPS2 last_logged = {};
 
@@ -183,16 +185,16 @@ static void maybe_log_mouse_protocol()
 
 	std::string protocol_name = {};
 	switch (protocol) {
-	case MouseModelPS2::Standard:
+	case Standard:
 		protocol_name = "3 buttons";
 		break;
-	case MouseModelPS2::IntelliMouse:
+	case IntelliMouse:
 		protocol_name = "3 buttons + wheel (IntelliMouse)";
 		break;
-	case MouseModelPS2::Explorer:
+	case Explorer:
 		protocol_name = "5 buttons + wheel (IntelliMouse Explorer)";
 		break;
-	case MouseModelPS2::NoMouse:
+	case NoMouse:
 		break;
 	default:
 		assertm(false, "unknown mouse model (PS/2)");
@@ -493,15 +495,13 @@ static void cmd_set_sample_rate(const uint8_t new_rate_hz)
 	static const std::vector<uint8_t> unlock_sequence_im = {200, 100, 80};
 	static const std::vector<uint8_t> unlock_sequence_xp = {200, 200, 80};
 
-	if (mouse_config.model_ps2 == MouseModelPS2::IntelliMouse) {
-		process_unlock(unlock_sequence_im,
-		               unlock_idx_im,
-		               MouseModelPS2::IntelliMouse);
-	} else if (mouse_config.model_ps2 == MouseModelPS2::Explorer) {
-		process_unlock(unlock_sequence_im,
-		               unlock_idx_im,
-		               MouseModelPS2::IntelliMouse);
-		process_unlock(unlock_sequence_xp, unlock_idx_xp, MouseModelPS2::Explorer);
+	using enum MouseModelPS2;
+
+	if (mouse_config.model_ps2 == IntelliMouse) {
+		process_unlock(unlock_sequence_im, unlock_idx_im, IntelliMouse);
+	} else if (mouse_config.model_ps2 == Explorer) {
+		process_unlock(unlock_sequence_im, unlock_idx_im, IntelliMouse);
+		process_unlock(unlock_sequence_xp, unlock_idx_xp, Explorer);
 	}
 }
 
