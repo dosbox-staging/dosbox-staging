@@ -149,7 +149,7 @@ bool CommandLine::FindStringBegin(const std::string& begin, std::string& value,
                                   bool remove)
 {
 	const auto len = begin.length();
-	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
+	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
 		if (begin.substr(0, len) == (*it).substr(0, len)) {
 			value = ((*it).c_str() + len);
 			if (remove) {
@@ -166,7 +166,7 @@ bool CommandLine::FindStringCaseInsensitiveBegin(const std::string& begin,
                                                  bool remove)
 {
 	const auto len = begin.length();
-	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
+	for (auto it = cmds.begin(); it != cmds.end(); ++it) {
 		if (iequals(begin, std::string_view(*it).substr(0, len))) {
 			value = ((*it).c_str() + len);
 			if (remove) {
@@ -244,8 +244,8 @@ bool CommandLine::GetStringRemain(std::string& value)
 		return false;
 	}
 
-	cmd_it it = cmds.begin();
-	value     = (*it++);
+	auto it = cmds.begin();
+	value   = (*it++);
 
 	for (; it != cmds.end(); ++it) {
 		value += " ";
@@ -286,7 +286,7 @@ int CommandLine::GetParameterFromList(const char* const params[],
 
 	enum { P_START, P_FIRSTNOMATCH, P_FIRSTMATCH } parsestate = P_START;
 
-	cmd_it it = cmds.begin();
+	auto it = cmds.begin();
 
 	while (it != cmds.end()) {
 		bool found = false;
