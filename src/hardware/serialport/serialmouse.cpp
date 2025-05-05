@@ -94,6 +94,8 @@ CSerialMouse::~CSerialMouse()
 
 void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 {
+	using enum MouseModelCOM;
+
 	std::string option;
 	if (cmd->FindStringBegin("rate:", option, false))
 		LOG_WARNING("MOUSE (COM%d): Deprecated option 'rate:' - ignored",
@@ -105,25 +107,25 @@ void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 		LOG_WARNING("MOUSE (COM%d): Deprecated option 'type:'", port_num);
 
 		if (option == "2btn") {
-			param_model    = MouseModelCOM::Microsoft;
+			param_model    = Microsoft;
 			param_auto_msm = false;
 		} else if (option == "2btn+msm") {
-			param_model    = MouseModelCOM::Microsoft;
+			param_model    = Microsoft;
 			param_auto_msm = true;
 		} else if (option == "3btn") {
-			param_model    = MouseModelCOM::Logitech;
+			param_model    = Logitech;
 			param_auto_msm = false;
 		} else if (option == "3btn+msm") {
-			param_model    = MouseModelCOM::Logitech;
+			param_model    = Logitech;
 			param_auto_msm = true;
 		} else if (option == "wheel") {
-			param_model    = MouseModelCOM::Wheel;
+			param_model    = Wheel;
 			param_auto_msm = false;
 		} else if (option == "wheel+msm") {
-			param_model    = MouseModelCOM::Wheel;
+			param_model    = Wheel;
 			param_auto_msm = true;
 		} else if (option == "msm") {
-			param_model    = MouseModelCOM::MouseSystems;
+			param_model    = MouseSystems;
 			param_auto_msm = false;
 		} else {
 			LOG_ERR("MOUSE (COM%d): Invalid type '%s'",
@@ -136,7 +138,9 @@ void CSerialMouse::HandleDeprecatedOptions(CommandLine *cmd)
 
 void CSerialMouse::BoostRate(const uint16_t rate_hz)
 {
-	if (!rate_hz || model == MouseModelCOM::NoMouse) {
+	using enum MouseModelCOM;
+
+	if (!rate_hz || model == NoMouse) {
 		rate_coeff = 1.0f;
 		return;
 	}
@@ -146,13 +150,11 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 		// In addition to byte_len, the mouse has to send
 		// 3 more bits per each byte: start, parity, stop
 
-		if (model == MouseModelCOM::Microsoft ||
-		    model == MouseModelCOM::Logitech ||
-		    model == MouseModelCOM::Wheel) {
+		if (model == Microsoft || model == Logitech ||  model == Wheel) {
 			// Microsoft-style protocol
 			// single movement needs exactly 3 bytes to be reported
 			return bauds / (static_cast<float>(port_byte_len + 3) * 3.0f);
-		} else if (model == MouseModelCOM::MouseSystems) {
+		} else if (model == MouseSystems) {
 			// Mouse Systems protocol
 			// single movement needs per average 2.5 bytes to be
 			// reported
@@ -169,29 +171,31 @@ void CSerialMouse::BoostRate(const uint16_t rate_hz)
 
 void CSerialMouse::LogMouseModel()
 {
+	using enum MouseModelCOM;
+
 	std::string model_name = {};
 	switch (model) {
-	case MouseModelCOM::Microsoft:
+	case Microsoft:
 		model_name     = "2 buttons (Microsoft)";
 		has_3rd_button = false;
 		has_wheel      = false;
 		break;
-	case MouseModelCOM::Logitech:
+	case Logitech:
 		model_name     = "3 buttons (Logitech)";
 		has_3rd_button = true;
 		has_wheel      = false;
 		break;
-	case MouseModelCOM::Wheel:
+	case Wheel:
 		model_name     = "3 buttons + wheel";
 		has_3rd_button = true;
 		has_wheel      = true;
 		break;
-	case MouseModelCOM::MouseSystems:
+	case MouseSystems:
 		model_name     = "3 buttons (Mouse Systems)";
 		has_3rd_button = true;
 		has_wheel      = false;
 		break;
-	case MouseModelCOM::NoMouse:
+	case NoMouse:
 		LOG_MSG("MOUSE (COM%d): Disabled", port_num);
 		break;
 	default:
@@ -306,19 +310,23 @@ void CSerialMouse::NotifyWheel(const float w_rel)
 
 void CSerialMouse::StartPacketId() // send the mouse identifier
 {
-	if (model == MouseModelCOM::NoMouse)
+	using enum MouseModelCOM;
+
+	if (model == NoMouse) {
 		return;
+	}
+
 	AbortPacket();
 	ClearCounters();
 
 	packet_len = 0;
 	switch (model) {
-	case MouseModelCOM::Microsoft: packet[packet_len++] = 'M'; break;
-	case MouseModelCOM::Logitech:
+	case Microsoft: packet[packet_len++] = 'M'; break;
+	case Logitech:
 		packet[packet_len++] = 'M';
 		packet[packet_len++] = '3';
 		break;
-	case MouseModelCOM::Wheel:
+	case Wheel:
 		packet[packet_len++] = 'M';
 		packet[packet_len++] = 'Z';
 		packet[packet_len++] = '@'; // for some reason 86Box sends more
@@ -327,7 +335,7 @@ void CSerialMouse::StartPacketId() // send the mouse identifier
 		packet[packet_len++] = 0;
 		packet[packet_len++] = 0;
 		break;
-	case MouseModelCOM::MouseSystems: packet[packet_len++] = 'H'; break;
+	case MouseSystems: packet[packet_len++] = 'H'; break;
 	default:
 		assert(false); // unimplemented
 		break;
@@ -340,11 +348,13 @@ void CSerialMouse::StartPacketId() // send the mouse identifier
 
 void CSerialMouse::StartPacketData(const bool extended)
 {
-	if (model == MouseModelCOM::NoMouse)
-		return;
+	using enum MouseModelCOM;
 
-	if (model == MouseModelCOM::Microsoft ||
-	    model == MouseModelCOM::Logitech || model == MouseModelCOM::Wheel) {
+	if (model == NoMouse) {
+		return;
+	}
+
+	if (model == Microsoft || model == Logitech || model == Wheel) {
 		//          -- -- -- -- -- -- -- --
 		// Byte 0:   X  1 LB RB Y7 Y6 X7 X6
 		// Byte 1:   X  0 X5 X4 X3 X2 X1 X0
@@ -377,7 +387,7 @@ void CSerialMouse::StartPacketData(const bool extended)
 		}
 		need_xmit_part2 = false;
 
-	} else if (model == MouseModelCOM::MouseSystems) {
+	} else if (model == MouseSystems) {
 		//          -- -- -- -- -- -- -- --
 		// Byte 0:   1  0  0  0  0 LB MB RB
 		// Byte 1:  X7 X6 X5 X4 X3 X2 X1 X0
@@ -409,8 +419,7 @@ void CSerialMouse::StartPacketData(const bool extended)
 
 void CSerialMouse::StartPacketPart2()
 {
-	// port settings are valid at this point
-
+	// Port settings are valid at this point
 	if (model == MouseModelCOM::MouseSystems) {
 		//          -- -- -- -- -- -- -- --
 		// Byte 3:  X7 X6 X5 X4 X3 X2 X1 X0
@@ -488,6 +497,8 @@ void CSerialMouse::handleUpperEvent(const uint16_t event_type)
 
 void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 {
+	using enum MouseModelCOM;
+
 	AbortPacket();
 
 	// We have to select between Microsoft-style protocol (this includes
@@ -505,26 +516,25 @@ void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 	if (divider != divider_1200_baud) {
 		// We need 1200 bauds for a mouse; TODO:support faster serial
 		// mice, see https://man7.org/linux/man-pages/man4/mouse.4.html
-		SetModel(MouseModelCOM::NoMouse);
+		SetModel(NoMouse);
 		return;
 	}
 
 	// Require 1 sop bit
 	if (!one_stop_bit) {
-		SetModel(MouseModelCOM::NoMouse);
+		SetModel(NoMouse);
 		return;
 	}
 
 	// Require parity 'N'
 	if (parity_id == 1 || parity_id == 3 || parity_id == 5 || parity_id == 7) {
-		SetModel(MouseModelCOM::NoMouse);
+		SetModel(NoMouse);
 		return;
 	}
 
 	// Check protocol compatibility with byte length
-	bool ok_microsoft     = (param_model != MouseModelCOM::MouseSystems);
-	bool ok_mouse_systems = param_auto_msm ||
-	                        (param_model == MouseModelCOM::MouseSystems);
+	bool ok_microsoft     = (param_model != MouseSystems);
+	bool ok_mouse_systems = param_auto_msm || (param_model == MouseSystems);
 
 	// NOTE: It seems some software (at least The Settlers) tries to use
 	// Microsoft-style protocol by setting port to 8 bits per byte;
@@ -542,9 +552,9 @@ void CSerialMouse::updatePortConfig(const uint16_t divider, const uint8_t lcr)
 	if (ok_microsoft) {
 		SetModel(param_model);
 	} else if (ok_mouse_systems) {
-		SetModel(MouseModelCOM::MouseSystems);
+		SetModel(MouseSystems);
 	} else {
-		SetModel(MouseModelCOM::NoMouse);
+		SetModel(NoMouse);
 	}
 }
 
