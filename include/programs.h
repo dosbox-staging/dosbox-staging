@@ -47,10 +47,10 @@ public:
 		return file_name.c_str();
 	}
 
-	bool FindExist(const char* const name, bool remove = false);
-	bool FindInt(const char* const name, int& value, bool remove = false);
+	bool FindExist(const std::string& name, bool remove = false);
+	bool FindInt(const std::string& name, int& value, bool remove = false);
 
-	bool FindString(const char* const name, std::string& value,
+	bool FindString(const std::string& name, std::string& value,
 	                bool remove = false);
 
 	bool FindCommand(unsigned int which, std::string& value) const;
