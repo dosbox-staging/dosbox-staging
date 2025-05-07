@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -308,4 +308,16 @@ TEST(ConvertAnsiMarkup, StartupMessage)
 	        "\xBA                                                                    \xBA\n";
     EXPECT_EQ(convert_ansi_markup(new_msg), orig_msg);
 }
+}
+
+TEST(StripAnsiMarkup, ColorUppercaseTag)
+{
+    const auto str = "[COLOR=red]this colour is red";
+    EXPECT_EQ(strip_ansi_markup(str), "this colour is red");
+}
+
+TEST(StripAnsiMarkup, MixedMarkupExistingAnsi)
+{
+    const auto str = "This is \033[31mred text with no markup. [color=blue]And this blue text with markup.";
+    EXPECT_EQ(strip_ansi_markup(str), "This is \033[31mred text with no markup. And this blue text with markup.");
 }
