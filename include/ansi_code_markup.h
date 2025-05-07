@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2024  The DOSBox Staging Team
+ *  Copyright (C) 2022-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,7 +25,9 @@
 
 // Convert marked up strings to strings with ANSI codes
 std::string convert_ansi_markup(const char* str);
-std::string convert_ansi_markup(const std::string &str);
+std::string convert_ansi_markup(const std::string& str);
+
+std::string strip_ansi_markup(const std::string& str);
 
 // Pre-defined markups to help creating strings
 namespace Ansi {
