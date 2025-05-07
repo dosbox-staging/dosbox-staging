@@ -2824,8 +2824,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	if ((mixer.sdl_device = SDL_OpenAudioDevice(
 	             DeviceName, IsCapture, &desired, &obtained, sdl_allow_flags)) ==
 	    SdlError) {
-		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output is disabled",
-		            SDL_GetError());
+		LOG_ERR("MIXER: Can't open audio device: '%s'; sound output is disabled",
+		        SDL_GetError());
 
 		set_section_property_value("mixer", "nosound", "off");
 		return false;
@@ -2849,9 +2849,9 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 
 	// Did SDL negotiate a different playback rate?
 	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
-		LOG_WARNING("MIXER: SDL negotiated the requested sample rate of %d to %d Hz",
-		            requested_sample_rate_hz,
-		            obtained_sample_rate_hz);
+		LOG_INFO("MIXER: SDL negotiated the requested sample rate of %d to %d Hz",
+		         requested_sample_rate_hz,
+		         obtained_sample_rate_hz);
 
 		set_section_property_value("mixer",
 		                           "rate",
