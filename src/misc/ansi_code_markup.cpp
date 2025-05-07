@@ -379,3 +379,31 @@ std::string convert_ansi_markup(const char *str)
 	}
 	return result;
 }
+
+std::string strip_ansi_markup(const std::string& str)
+{
+	std::string result;
+	const char* begin      = str.c_str();
+	const char* last_match = str.c_str();
+	std::cmatch m;
+
+	while (std::regex_search(begin, m, markup)) {
+		// Copy text before current match to output string
+		result += m.prefix().str();
+
+		// Continue the next iteration from the end of the current match
+		begin += m.position() + m.length();
+		last_match = m[0].second;
+	}
+
+	// Add the rest of the string after all matches have been found
+	result += last_match;
+
+	// And just in case our result is empty for some reason, set output
+	// string to input string
+	if (result.empty()) {
+		result = str;
+	}
+
+	return result;
+}
