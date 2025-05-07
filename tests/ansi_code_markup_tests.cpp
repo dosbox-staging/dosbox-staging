@@ -292,3 +292,15 @@ TEST(ConvertAnsiMarkup, StartupMessage)
     EXPECT_EQ(convert_ansi_markup(new_msg), orig_msg);
 }
 }
+
+TEST(StripAnsiMarkup, ColorUppercaseTag)
+{
+    const auto str = "[COLOR=red]this colour is red";
+    EXPECT_EQ(strip_ansi_markup(str), "this colour is red");
+}
+
+TEST(StripAnsiMarkup, MixedMarkupExistingAnsi)
+{
+    const auto str = "This is \033[31mred text with no markup. [color=blue]And this blue text with markup.";
+    EXPECT_EQ(strip_ansi_markup(str), "This is \033[31mred text with no markup. And this blue text with markup.");
+}
