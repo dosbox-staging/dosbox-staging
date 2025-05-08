@@ -219,8 +219,6 @@ static void increase_ticks()
 		return;
 	}
 
-	constexpr auto MicrosInMillisecond = 1000;
-
 	const auto ticks_new_us = GetTicksUs();
 	const auto ticks_new    = ticks_new_us / MicrosInMillisecond;
 
@@ -561,6 +559,7 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
+
 }
 
 static void DOSBOX_ConfigChanged(Section* sec)
@@ -880,6 +879,9 @@ void DOSBOX_Init()
 
 	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);
+
+	// Configure Disk noise emulation
+	DISKNOISE_AddConfigSection(control);
 
 	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",

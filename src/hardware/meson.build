@@ -24,6 +24,7 @@ libhardware_sources = files(
     'adlib_gold.cpp',
     'cmos.cpp',
     'covox.cpp',
+    'disk_noise.cpp',
     'disney.cpp',
     'dma.cpp',
     'gameblaster.cpp',
