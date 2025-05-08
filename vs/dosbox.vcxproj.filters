@@ -1393,9 +1393,6 @@
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h">
       <Filter>src\libs\decoders</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\decoders\xxhash.h">
-      <Filter>src\libs\decoders</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\ESFMu\esfm.h">
       <Filter>src\libs\ESFMu</Filter>
     </ClInclude>
