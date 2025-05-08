@@ -26,7 +26,7 @@ GPL-2.0-or-later terms, however there are some exceptions:
   to the public domain.
 
 - Libraries in src/libs directory, are licensed as follows:
-   - decoders/archive.h, stb.h, and stb_vorbis.h: Public Domain
+   - stb.h and stb_vorbis.h: Public Domain
    - decoders/dr_flac.h, dr_mp3.h, and dr_wav.h: Public Domain or MIT
    - decoders/xxhash.h: BSD 2-Clause
    - enet: MIT

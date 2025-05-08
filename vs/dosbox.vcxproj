@@ -1126,7 +1126,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\hardware\serialport\serialmouse.h" />
     <ClInclude Include="..\src\hardware\serialport\softmodem.h" />
     <ClInclude Include="..\src\ints\int10.h" />
-    <ClInclude Include="..\src\libs\decoders\archive.h" />
     <ClInclude Include="..\src\libs\decoders\dr_flac.h" />
     <ClInclude Include="..\src\libs\decoders\dr_mp3.h" />
     <ClInclude Include="..\src\libs\decoders\dr_wav.h" />
