@@ -37,6 +37,8 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "pic.h"
+#include "../hardware/disk_noise.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -148,6 +150,43 @@ static uint16_t DOS_GetAmount(void) {
 #ifndef DOSBOX_CPU_H
 #include "cpu.h"
 #endif
+
+// Taken from Dosbox-X
+int hdd_data_rate = 0;    // 2.1MBytes/sec mid 1990s IDE PIO hard drive without SMARTDRV
+int fdd_data_rate = 0;
+
+void DOS_SetDataRate(int rate, int type) {
+	if (type == 0) {
+		hdd_data_rate = rate;
+	} else {
+		fdd_data_rate = rate;
+	}
+}
+
+void diskio_delay(Bits value/*bytes*/, DiskNoiseDevice* disknoise, int type = -1) {
+    if ((type == 0 && fdd_data_rate != 0) || (type != 0 && hdd_data_rate != 0)) {
+        double scalar;
+        double endtime;
+
+        if(type == 0) { // Floppy
+            scalar = (double)value / fdd_data_rate; 
+            endtime = PIC_FullIndex() + (scalar * 1000);
+        }
+        else { // Hard drive or CD-ROM
+            scalar = (double)value / hdd_data_rate;
+            endtime = PIC_FullIndex() + (scalar * 1000);
+        }
+        /* MS-DOS will most likely enable interrupts in the course of
+         * performing disk I/O */
+        CPU_STI();
+
+        do {
+			disknoise->PlaySeek();
+            CALLBACK_Idle();
+        } while (PIC_FullIndex() < endtime);
+    }
+}
+
 static inline void modify_cycles(Bits value) {
 	if((4*value+5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
