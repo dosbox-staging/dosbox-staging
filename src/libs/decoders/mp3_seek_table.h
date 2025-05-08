@@ -29,7 +29,6 @@
  * The seek table handler makes use of the following single-header
  * public libraries:
  *   - dr_mp3: http://mackron.github.io/dr_mp3.html, by David Reid
- *   - xxHash: http://cyan4973.github.io/xxHash, by Yann Collet
  */
 
 #include "config.h"

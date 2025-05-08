@@ -1134,7 +1134,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\decoders\SDL_sound_internal.h" />
     <ClInclude Include="..\src\libs\decoders\stb.h" />
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
-    <ClInclude Include="..\src\libs\decoders\xxhash.h" />
     <ClInclude Include="..\src\libs\enet\include\enet.h" />
     <ClInclude Include="..\src\libs\ESFMu\esfm.h" />
     <ClInclude Include="..\src\libs\manymouse\manymouse.h" />
