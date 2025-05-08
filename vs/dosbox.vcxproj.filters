@@ -1369,9 +1369,6 @@
     <ClInclude Include="..\src\ints\int10.h">
       <Filter>src\ints</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\decoders\archive.h">
-      <Filter>src\libs\decoders</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\decoders\dr_flac.h">
       <Filter>src\libs\decoders</Filter>
     </ClInclude>
