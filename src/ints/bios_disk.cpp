@@ -29,6 +29,7 @@
 #include "drives.h"
 #include "mapper.h"
 #include "string_utils.h"
+#include "../hardware/disk_noise.h"
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},	// SS/DD 5.25"
@@ -326,6 +327,8 @@ static bool has_image(const std::array<T, N> &arr) {
 	return std::any_of(std::begin(arr), std::end(arr), to_bool);
 }
 
+void diskio_delay(Bits value/*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+
 static Bitu INT13_DiskHandler(void) {
 	uint16_t segat, bufptr;
 	uint8_t sectbuf[512];
@@ -414,6 +417,24 @@ static Bitu INT13_DiskHandler(void) {
 		bufptr = reg_bx;
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl & 63)+i), sectbuf);
+
+			// Determine delay based on whether it's a floppy or
+			// hard disk
+			if (drivenum < 2) { // TODO: This is a hack
+				diskio_delay(512, floppy_noise.get(), 0); // Floppy
+				                                          // disk
+				if (floppy_noise) {
+					floppy_noise->PlaySeek(); // Play noise
+					                          // on read
+				}
+			} else {
+				diskio_delay(512, hdd_noise.get()); // Hard disk
+				if (hdd_noise) {
+					hdd_noise->PlaySeek(); // Play noise on
+					                       // read
+				}
+			}
+
 			if((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
@@ -442,6 +463,24 @@ static Bitu INT13_DiskHandler(void) {
 				bufptr++;
 			}
 			last_status = imageDiskList[drivenum]->Write_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)), (uint32_t)((reg_cl & 63) + i), &sectbuf[0]);
+
+			// Determine delay based on whether it's a floppy or
+			// hard disk
+			if (drivenum < 2) { // TODO: This is a hack
+				diskio_delay(512, floppy_noise.get(), 0); // Floppy
+				                                          // disk
+				if (floppy_noise) {
+					floppy_noise->PlaySeek(); // Play noise
+					                          // on read
+				}
+			} else {
+				diskio_delay(512, hdd_noise.get()); // Hard disk
+				if (hdd_noise) {
+					hdd_noise->PlaySeek(); // Play noise on
+					                       // read
+				}
+			}
+			
 			if(last_status != 0x00) {
 				CALLBACK_SCF(true);
 				return CBRET_NONE;

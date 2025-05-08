@@ -50,6 +50,10 @@ constexpr auto SoundCanvas          = "SOUNDCANVAS";
 constexpr auto StereoOn1Dac         = "STON1";
 constexpr auto TandyDac             = "TANDYDAC";
 constexpr auto TandyPsg             = "TANDY";
+constexpr auto FloppySpin           = "FLOPPY_SPIN";
+constexpr auto FloppySeek           = "FLOPPY_SEEK";
+constexpr auto HddSpin              = "HDD_SPIN";
+constexpr auto HddSeek              = "HDD_SEEK";
 
 } // namespace ChannelName
 
@@ -85,6 +89,10 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::StereoOn1Dac,
         ChannelName::TandyDac,
         ChannelName::TandyPsg,
+        ChannelName::FloppySpin,
+        ChannelName::FloppySeek,
+        ChannelName::HddSpin,
+        ChannelName::HddSeek,
 };
 // clang-format on
 
