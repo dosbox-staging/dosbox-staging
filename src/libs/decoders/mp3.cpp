@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2018-2021  kcgen <kcgen@users.noreply.github.com>
  *  Copyright (C) 2001-2017  Ryan C. Gordon <icculus@icculus.org>
  *
@@ -39,8 +39,6 @@
 #include "SDL_sound.h"
 #define __SDL_SOUND_INTERNAL__
 #include "SDL_sound_internal.h"
-
-static constexpr char fast_seek_filename[] = "fastseek.lut";
 
 static size_t mp3_read(void* const pUserData, void* const pBufferOut, const size_t bytesToRead)
 {
@@ -131,7 +129,7 @@ static int32_t MP3_open(Sound_Sample* const sample, const char* const ext)
 
     bool result;
     // Count the MP3's frames
-    const uint64_t num_frames = populate_seek_points(internal->rw, p_mp3, fast_seek_filename, result);
+    const uint64_t num_frames = populate_seek_points(p_mp3, result);
     if (!result) {
         SNDDBG(("MP3: Unable to count the number of PCM frames.\n"));
         MP3_close(sample);

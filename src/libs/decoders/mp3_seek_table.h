@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2021  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2018-2021  kcgen <kcgen@users.noreply.github.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,6 @@
 
 #include <vector>    // provides: vector
 #include <SDL.h>     // provides: SDL_RWops
-#include "archive.h" // provides: archive
 
 // Ensure we only get the API
 #ifdef DR_MP3_IMPLEMENTATION
@@ -45,31 +44,14 @@
 #endif
 #include "dr_mp3.h" // provides: drmp3
 
-// Note: this C++ struct must match (in binary-form) the "drmp3_seek_point" struct
-//       defined in dr_mp3.h.  If that changes, then update this to match, along
-//       with adjusting the Serialize() template function that union's the values.
-//
-struct drmp3_seek_point_serial {
-    drmp3_uint64 seekPosInBytes;      // Points to the first byte of an MP3 frame.
-    drmp3_uint64 pcmFrameIndex;       // The index of the PCM frame this seek point targets.
-    drmp3_uint16 mp3FramesToDiscard;  // The number of whole MP3 frames to be discarded before pcmFramesToDiscard.
-    drmp3_uint16 pcmFramesToDiscard;
-    template <class T> void Serialize(T& archive) {
-            archive & seekPosInBytes & pcmFrameIndex & mp3FramesToDiscard & pcmFramesToDiscard;
-    }
-};
-
 // Our private-decoder structure where we hold:
 //   - a pointer to the working dr_mp3 instance
-//   - a template vector of seek_points (the serializeable form)
+//   - a vector of seek_points
 struct mp3_t {
     drmp3* p_dr = nullptr;    // the actual drmp3 instance we open, read, and seek within
-    std::vector<drmp3_seek_point_serial> seek_points_vector = {};
+    std::vector<drmp3_seek_point> seek_points_vector = {};
 };
 
-uint64_t populate_seek_points(struct SDL_RWops* const context,
-                              mp3_t* p_mp3,
-                              const char* seektable_filename,
-                              bool &result);
+uint64_t populate_seek_points(mp3_t* p_mp3, bool &result);
 
 #endif
