@@ -31,6 +31,7 @@
 #include "dos_locale.h"
 #include "drives.h"
 #include "mem.h"
+#include "pic.h"
 #include "program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"
@@ -148,8 +149,89 @@ static uint16_t DOS_GetAmount(void) {
 #ifndef DOSBOX_CPU_H
 #include "cpu.h"
 #endif
-static inline void modify_cycles(Bits value) {
-	if((4*value+5) < CPU_Cycles) {
+
+static std::vector<std::function<void()>> io_callbacks_floppy;
+static std::vector<std::function<void()>> io_callbacks_harddisk;
+static std::vector<std::function<void()>> io_callbacks_cdrom;
+
+void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type)
+{
+	switch (disk_type) {
+	case DiskType::Floppy: io_callbacks_floppy.push_back(callback); break;
+	case DiskType::HardDisk:
+		io_callbacks_harddisk.push_back(callback);
+		break;
+	case DiskType::CdRom: io_callbacks_cdrom.push_back(callback); break;
+	default:
+		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
+		return;
+	}
+}
+
+// Call any registered callbacks in the supplied callback vector
+void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
+{
+	std::vector<std::function<void()>> io_callbacks;
+
+	switch (disk_type) {
+	case DiskType::Floppy: io_callbacks = io_callbacks_floppy; break;
+	case DiskType::HardDisk: io_callbacks = io_callbacks_harddisk; break;
+	case DiskType::CdRom: io_callbacks = io_callbacks_cdrom; break;
+	default:
+		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
+		return;
+	}
+
+	if (io_callbacks.size() > 0) {
+		for (auto& callback : io_callbacks) {
+			callback();
+		}
+	}
+}
+
+DiskType DOS_GetDiskTypeFromMediaByte(uint8_t media_byte)
+{
+	switch (media_byte) {
+	case 0xF0:
+		// 3.5" 1.44MB floppy
+		return DiskType::Floppy;
+	case 0xF9:
+		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
+		return DiskType::Floppy;
+	case 0xFD:
+		// 5.25" 360KB floppy
+		return DiskType::Floppy;
+	case 0xFF:
+		// 5.25" 320KB floppy
+		return DiskType::Floppy;
+	case 0xFC:
+		// 5.25" 180KB floppy
+		return DiskType::Floppy;
+	case 0xFE:
+		// 5.25" 160KB floppy
+		return DiskType::Floppy;
+	case 0xF8: return DiskType::HardDisk;
+	default: return DiskType::HardDisk;
+	}
+}
+
+void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
+{
+	uint8_t handle = RealHandle(reg_handle);
+
+	if (handle != 0xff && Files[handle]) {
+		uint8_t drive = Files[handle]->GetDrive();
+		if (drive >= Drives.size()) {
+			return;
+		}
+		DOS_ExecuteRegisteredCallbacks(DOS_GetDiskTypeFromMediaByte(
+		        Drives[drive]->GetMediaByte()));
+	}
+}
+
+static inline void modify_cycles(Bits value)
+{
+	if ((4 * value + 5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
 		CPU_IODelayRemoved += 4*value;
 	} else {
@@ -747,6 +829,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -756,6 +839,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3d:		/* OPEN Open existing file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -765,6 +849,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x3e:		/* CLOSE Close file */
 		if (DOS_CloseFile(reg_bx,false,&reg_al)) {
 			/* al destroyed with pre-close refcount from sft */
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -776,7 +861,7 @@ static Bitu DOS_21Handler(void) {
 			uint16_t toread=DOS_GetAmount();
 			dos.echo=true;
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
-				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
+			        MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
 				CALLBACK_SCF(false);
 			} else {
@@ -792,8 +877,9 @@ static Bitu DOS_21Handler(void) {
 			uint16_t towrite=DOS_GetAmount();
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
 			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
-				reg_ax=towrite;
-	   			CALLBACK_SCF(false);
+			        DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+			        reg_ax = towrite;
+			        CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
 				CALLBACK_SCF(true);
