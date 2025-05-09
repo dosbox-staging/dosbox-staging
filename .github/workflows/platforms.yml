@@ -88,7 +88,6 @@ jobs:
             #  - zlib-ng fails to compile for ARM targets, work around by just disabling
             #    it until a proper fix can be found
             meson setup \
-                  -Duse_fluidsynth=false \
                   -Duse_sdl2_net=false \
                   -Duse_opengl=false \
                   -Duse_mt32emu=false \

@@ -99,11 +99,9 @@ static std::unique_ptr<MidiDevice> create_device(
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
-#if C_FLUIDSYNTH
 	if (name == FluidSynth) {
 		return std::make_unique<MidiDeviceFluidSynth>();
 	}
-#endif
 #if C_MT32EMU
 	if (name == Mt32) {
 		return std::make_unique<MidiDeviceMt32>();
@@ -707,7 +705,6 @@ void MIDI_ListDevices(Program* caller)
 	                                : nullptr,
 	                        caller);
 
-#if C_FLUIDSYNTH
 	write_device_name(MidiDeviceName::FluidSynth);
 
 	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
@@ -715,7 +712,6 @@ void MIDI_ListDevices(Program* caller)
 	                           : nullptr,
 
 	                   caller);
-#endif
 #if C_COREMIDI
 	write_device_name(MidiDeviceName::CoreMidi);
 
@@ -840,12 +836,14 @@ static void init_mididevice_settings(Section_prop& secprop)
 	                        "  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).");
 
 	str_prop->SetOptionHelp(MidiDeviceName::SoundCanvas,
-	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (see the [soundcanvas]\n"
-	                        "                section).");
+	                        "  soundcanvas:  The internal Roland SC-55 synthesiser (requires a CLAP audio\n"
+	                        "                plugin that implements the Sound Canvas to be available;\n"
+	                        "                see the [soundcanvas] section).");
 
 	str_prop->SetOptionHelp(MidiDeviceName::FluidSynth,
 	                        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
-	                        "                (see the [fluidsynth] section).");
+	                        "                (requires the FluidSynth dynamic-link library to be available;\n"
+	                        "                see the [fluidsynth] section).");
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
@@ -855,9 +853,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 		        MidiDeviceName::CoreAudio,
 #endif
 		        MidiDeviceName::Mt32, MidiDeviceName::SoundCanvas,
-#if C_FLUIDSYNTH
 		        MidiDeviceName::FluidSynth,
-#endif
 		        "none"
 	});
 
