@@ -24,7 +24,7 @@
 #include "midi_device.h"
 
 #include <atomic>
-//#include <fluidsynth.h>
+#include <fluidsynth.h>
 #include <memory>
 #include <optional>
 #include <thread>
@@ -36,9 +36,6 @@
 #include "std_filesystem.h"
 
 namespace fsynth {
-
-typedef void fluid_settings_t;
-typedef void fluid_synth_t;
 
 extern void (*delete_fluid_settings)(fluid_settings_t*);
 extern void (*delete_fluid_synth)(fluid_synth_t*);
@@ -80,9 +77,9 @@ private:
 	void Render();
 
 	using FluidSynthSettingsPtr =
-	        std::unique_ptr<fsynth::fluid_settings_t, decltype(fsynth::delete_fluid_settings)>;
+	        std::unique_ptr<fluid_settings_t, decltype(fsynth::delete_fluid_settings)>;
 
-	using FluidSynthPtr = std::unique_ptr<fsynth::fluid_synth_t, decltype(fsynth::delete_fluid_synth)>;
+	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(fsynth::delete_fluid_synth)>;
 
 	FluidSynthSettingsPtr settings{nullptr, fsynth::delete_fluid_settings};
 	FluidSynthPtr synth{nullptr, fsynth::delete_fluid_synth};

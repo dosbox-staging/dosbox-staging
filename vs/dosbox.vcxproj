@@ -200,7 +200,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -242,7 +242,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -283,7 +283,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -328,7 +328,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -380,7 +380,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;C_TRACY;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -436,7 +436,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -489,7 +489,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -542,7 +542,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\src\libs;..\src\libs\include;..\src\libs\ghc;..\src\libs\PDCurses;..\src\libs\loguru;..\src\libs\whereami;..\src\platform\visualc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;C_TRACY;TRACY_ENABLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -1137,6 +1137,23 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\libs\decoders\stb_vorbis.h" />
     <ClInclude Include="..\src\libs\enet\include\enet.h" />
     <ClInclude Include="..\src\libs\ESFMu\esfm.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\audio.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\event.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\gen.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\ladspa.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\log.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\midi.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\misc.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\mod.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\seq.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\seqbind.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\settings.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\sfont.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\shell.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\synth.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\types.h" />
+    <ClInclude Include="..\src\libs\include\fluidsynth\voice.h" />
     <ClInclude Include="..\src\libs\manymouse\manymouse.h" />
     <ClInclude Include="..\src\libs\mverb\MVerb.h" />
     <ClInclude Include="..\src\libs\nuked\opl3.h" />
@@ -1189,6 +1206,9 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\src\dosbox.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\libs\include\fluidsynth\version.h.in" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

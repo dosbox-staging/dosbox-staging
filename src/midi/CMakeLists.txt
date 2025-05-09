@@ -10,6 +10,8 @@ add_library(libmidi STATIC
   midi_soundcanvas.cpp
 )
 
+target_include_directories(libmidi PRIVATE ../libs/include)
+
 find_package(MT32Emu REQUIRED)
 target_link_libraries(libmidi PRIVATE MT32Emu::mt32emu)
 
