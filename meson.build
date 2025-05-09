@@ -1216,6 +1216,7 @@ endif
 incdir = [
     include_directories('include', '.'),
     include_directories('src/libs', is_system: true),
+    include_directories('src/libs/include', is_system: true),
 ]
 
 

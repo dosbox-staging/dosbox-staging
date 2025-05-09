@@ -73,61 +73,6 @@ constexpr FSynthVersion max_fsynth_version_exclusive = {3, 0, 0};
 
 namespace fsynth 
 {
-
-/* The following enums are copied from FluidSynth */
-
-/**
- * Chorus modulation waveform type.
- */
-enum fluid_chorus_mod
-{
-    FLUID_CHORUS_MOD_SINE = 0,            /**< Sine wave chorus modulation */
-    FLUID_CHORUS_MOD_TRIANGLE = 1         /**< Triangle wave chorus modulation */
-};
-
-enum fluid_interp
-{
-    FLUID_INTERP_NONE = 0,        /**< No interpolation: Fastest, but questionable audio quality */
-    FLUID_INTERP_LINEAR = 1,      /**< Straight-line interpolation: A bit slower, reasonable audio quality */
-    FLUID_INTERP_4THORDER = 4,    /**< Fourth-order interpolation, best quality, the default */
-
-    /**
-     * Seventh-point sinc interpolation
-     * @note This interpolation method was believed to provide highest quality. However, in Feb. 2025 it was discovered
-     * that for certain samples it does introduce ringing artifacts, which
-     * are not present in the 4th order interpolation. This is not a bug, it's rather a limitation of only using 7 points for the sinc interpolation.
-     */
-    FLUID_INTERP_7THORDER = 7,
-
-    FLUID_INTERP_DEFAULT = FLUID_INTERP_4THORDER, /**< Default interpolation method */
-    FLUID_INTERP_HIGHEST = FLUID_INTERP_7THORDER, /**< Highest interpolation method */
-};
-
-/**
- * FluidSynth log levels.
- */
-enum fluid_log_level
-{
-    FLUID_PANIC,   /**< The synth can't function correctly any more */
-    FLUID_ERR,     /**< Serious error occurred */
-    FLUID_WARN,    /**< Warning */
-    FLUID_INFO,    /**< Verbose informational messages */
-    FLUID_DBG,     /**< Debugging messages */
-    LAST_LOG_LEVEL /**< @internal This symbol is not part of the public API and ABI
-                     stability guarantee and may change at any time! */
-};
-
-/* This typedef comes from FluidSynth */
-
-/**
- * Log function handler callback type used by fluid_set_log_function().
- *
- * @param level Log level (#fluid_log_level)
- * @param message Log message text
- * @param data User data pointer supplied to fluid_set_log_function().
- */
-typedef void (*fluid_log_function_t)(int level, const char *message, void *data);
-
 /**
  * FluidSynth dynamic library handle
  */
@@ -190,9 +135,9 @@ FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
  * calling function below on error.
  */
 #define FSYNTH_FUNC_GET_SYM(ret_type, name, sig) \
-	name = (decltype(name))dynlib_get_symbol(fsynth_lib, #name); \
-	if (!name) { \
-		dynlib_close(fsynth_lib); \
+	fsynth::name = (decltype(fsynth::name))dynlib_get_symbol(fsynth::fsynth_lib, #name); \
+	if (!fsynth::name) { \
+		dynlib_close(fsynth::fsynth_lib); \
 		err_str = "FSYNTH: Failed to get symbol: '" #ret_type " " #name #sig "'"; \
 		return DynLibResult::ResolveSymErr; \
 	}
@@ -204,10 +149,9 @@ FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
  */
 static DynLibResult load_fsynth_dynlib(std::string& err_str)
 {
-	using namespace fsynth;
-	if (!fsynth_lib) {
-		fsynth_lib = dynlib_open(fsynth_dynlib_file);
-		if (!fsynth_lib) {
+	if (!fsynth::fsynth_lib) {
+		fsynth::fsynth_lib = dynlib_open(fsynth_dynlib_file);
+		if (!fsynth::fsynth_lib) {
 			err_str = "FSYNTH: Failed to load FluidSynth library";
 			return DynLibResult::LibOpenErr;
 		}
@@ -215,7 +159,7 @@ static DynLibResult load_fsynth_dynlib(std::string& err_str)
 
         // Keep ERR and PANIC logging only
         for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
-            fluid_set_log_function(level, nullptr, nullptr);
+            fsynth::fluid_set_log_function(level, nullptr, nullptr);
         }
 	}
 	return DynLibResult::Success;
@@ -473,11 +417,8 @@ static float validate_setting(const char* name, const std::string& str_val,
 	return val;
 }
 
-static void setup_chorus(fsynth::fluid_synth_t* synth, const std_fs::path& sf_path)
-{
-	using namespace fsynth;
-
-	assert(synth);
+static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
+{	assert(synth);
 
 	const auto section = get_fluidsynth_section();
 
@@ -553,13 +494,13 @@ static void setup_chorus(fsynth::fluid_synth_t* synth, const std_fs::path& sf_pa
 	constexpr int FxGroup = -1;
 
 // Current API calls as of 2.2
-	fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
-	fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
-	fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
-	fluid_synth_set_chorus_group_speed(synth, FxGroup, chorus_speed);
-	fluid_synth_set_chorus_group_depth(synth, FxGroup, chorus_depth);
+	fsynth::fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
+	fsynth::fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
+	fsynth::fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
+	fsynth::fluid_synth_set_chorus_group_speed(synth, FxGroup, chorus_speed);
+	fsynth::fluid_synth_set_chorus_group_depth(synth, FxGroup, chorus_depth);
 
-	fluid_synth_set_chorus_group_type(synth,
+	fsynth::fluid_synth_set_chorus_group_type(synth,
 	                                  FxGroup,
 	                                  static_cast<int>(chorus_mod_wave));
 
@@ -576,11 +517,8 @@ static void setup_chorus(fsynth::fluid_synth_t* synth, const std_fs::path& sf_pa
 	}
 }
 
-static void setup_reverb(fsynth::fluid_synth_t* synth)
-{
-	using namespace fsynth;
-
-	assert(synth);
+static void setup_reverb(fluid_synth_t* synth)
+{	assert(synth);
 
 	// Get the user's reverb settings
 	const auto reverb = split(
@@ -629,12 +567,12 @@ static void setup_reverb(fsynth::fluid_synth_t* synth)
 	constexpr int FxGroup = -1;
 
 // Current API calls as of 2.2
-	fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
-	fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
+	fsynth::fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
+	fsynth::fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
 
-	fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
-	fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
-	fluid_synth_set_reverb_group_level(synth, FxGroup, reverb_level);
+	fsynth::fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
+	fsynth::fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
+	fsynth::fluid_synth_set_reverb_group_level(synth, FxGroup, reverb_level);
 
 
 	if (reverb_enabled) {
@@ -649,8 +587,6 @@ static void setup_reverb(fsynth::fluid_synth_t* synth)
 
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
-	using namespace fsynth;
-
 	std::string sym_err_msg;
 	DynLibResult res = load_fsynth_dynlib(sym_err_msg);
 	switch (res) {
@@ -665,7 +601,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	FSynthVersion vers = {};
-	fluid_version(&vers.major, &vers.minor, &vers.micro);
+	fsynth::fluid_version(&vers.major, &vers.minor, &vers.micro);
 	if (vers < min_fsynth_version || vers >= max_fsynth_version_exclusive) {
 		const auto msg = "FSYNTH: FluidSynth version must be at least 2.2.3 and less than 3.0.0";
 		LOG_ERR("%s. Version loaded is %d.%d.%d", msg, vers.major, vers.minor, vers.micro);
@@ -674,8 +610,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		LOG_MSG("FSYNTH: Successfully loaded FluidSynth %d.%d.%d", vers.major, vers.minor, vers.micro);
 	}
 	
-	FluidSynthSettingsPtr fluid_settings(new_fluid_settings(),
-	                                     delete_fluid_settings);
+	FluidSynthSettingsPtr fluid_settings(fsynth::new_fluid_settings(),
+	                                     fsynth::delete_fluid_settings);
 	if (!fluid_settings) {
 		const auto msg = "FSYNTH: Failed to initialise the FluidSynth settings";
 		LOG_ERR("%s", msg);
@@ -693,10 +629,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sample_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
-	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
+	fsynth::fluid_settings_setnum(fluid_settings.get(),
+	                              "synth.sample-rate",
+	                              sample_rate_hz);
 
-	FluidSynthPtr fluid_synth(new_fluid_synth(fluid_settings.get()),
-	                          delete_fluid_synth);
+	FluidSynthPtr fluid_synth(fsynth::new_fluid_synth(fluid_settings.get()),
+	                          fsynth::delete_fluid_synth);
 	if (!fluid_synth) {
 		const auto msg = "FSYNTH: Failed to create the FluidSynth synthesizer";
 		LOG_ERR("%s", msg);
@@ -707,14 +645,14 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sf_name = section->Get_string("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
-	if (!sf_path.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	if (!sf_path.empty() && fsynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto ResetPresets = true;
-		fluid_synth_sfload(fluid_synth.get(),
-		                   sf_path.string().c_str(),
-		                   ResetPresets);
+		fsynth::fluid_synth_sfload(fluid_synth.get(),
+								   sf_path.string().c_str(),
+								   ResetPresets);
 	}
 
-	if (fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	if (fsynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		const auto msg = format_str("FSYNTH: Error loading SoundFont '%s'",
 		                            sf_name.c_str());
 
@@ -723,8 +661,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	auto sf_volume_percent = section->Get_int("soundfont_volume");
-	fluid_synth_set_gain(fluid_synth.get(),
-	                     static_cast<float>(sf_volume_percent) / 100.0f);
+	fsynth::fluid_synth_set_gain(fluid_synth.get(),
+								 static_cast<float>(sf_volume_percent) / 100.0f);
 
 	// Let the user know that the SoundFont was loaded
 	if (sf_volume_percent == 100) {
@@ -739,7 +677,9 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	constexpr int FxGroup = -1;
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
-	fluid_synth_set_interp_method(fluid_synth.get(), FxGroup, FLUID_INTERP_HIGHEST);
+	fsynth::fluid_synth_set_interp_method(fluid_synth.get(),
+	                                      FxGroup,
+	                                      FLUID_INTERP_HIGHEST);
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
@@ -899,17 +839,15 @@ void MidiDeviceFluidSynth::SendSysExMessage(uint8_t* sysex, size_t len)
 
 void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 {
-	using namespace fsynth;
-
 	const auto status_byte = msg[0];
 	const auto status      = get_midi_status(status_byte);
 	const auto channel     = get_midi_channel(status_byte);
 
 	// clang-format off
 	switch (status) {
-	case MidiStatus::NoteOff:         fluid_synth_noteoff(     synth.get(), channel, msg[1]);         break;
-	case MidiStatus::NoteOn:          fluid_synth_noteon(      synth.get(), channel, msg[1], msg[2]); break;
-	case MidiStatus::PolyKeyPressure: fluid_synth_key_pressure(synth.get(), channel, msg[1], msg[2]); break;
+	case MidiStatus::NoteOff:         fsynth::fluid_synth_noteoff(     synth.get(), channel, msg[1]);         break;
+	case MidiStatus::NoteOn:          fsynth::fluid_synth_noteon(      synth.get(), channel, msg[1], msg[2]); break;
+	case MidiStatus::PolyKeyPressure: fsynth::fluid_synth_key_pressure(synth.get(), channel, msg[1], msg[2]); break;
 
 	case MidiStatus::ControlChange: {
 		const auto controller = msg[1];
@@ -954,13 +892,13 @@ void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 			// used rarely and usually only to add some subtle flair to the
 			// start of the notes in synth-oriented soundtracks.
 		} else {
-			fluid_synth_cc(synth.get(), channel, controller, value);
+			fsynth::fluid_synth_cc(synth.get(), channel, controller, value);
 		}
 	} break;
 
-	case MidiStatus::ProgramChange:   fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
-	case MidiStatus::ChannelPressure: fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
-	case MidiStatus::PitchBend:       fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
+	case MidiStatus::ProgramChange:   fsynth::fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::ChannelPressure: fsynth::fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
+	case MidiStatus::PitchBend:       fsynth::fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
 	default: log_unknown_midi_message(msg); break;
 	}
 	// clang-format on
@@ -969,12 +907,10 @@ void MidiDeviceFluidSynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 // Apply the sysex message to the service
 void MidiDeviceFluidSynth::ApplySysExMessage(const std::vector<uint8_t>& msg)
 {
-	using namespace fsynth;
-
 	const char* data = reinterpret_cast<const char*>(msg.data());
 	const auto n     = static_cast<int>(msg.size());
 
-	fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
+	fsynth::fluid_synth_sysex(synth.get(), data, n, nullptr, nullptr, nullptr, false);
 }
 
 // The callback operates at the audio frame-level, steadily adding samples to
@@ -1014,8 +950,6 @@ void MidiDeviceFluidSynth::MixerCallback(const int requested_audio_frames)
 
 void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 {
-	using namespace fsynth;
-
 	static std::vector<AudioFrame> audio_frames = {};
 
 	// Maybe expand the vector
@@ -1023,14 +957,14 @@ void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 		audio_frames.resize(num_audio_frames);
 	}
 
-	fluid_synth_write_float(synth.get(),
-	                        num_audio_frames,
-	                        &audio_frames[0][0],
-	                        0,
-	                        2,
-	                        &audio_frames[0][0],
-	                        1,
-	                        2);
+	fsynth::fluid_synth_write_float(synth.get(),
+									num_audio_frames,
+									&audio_frames[0][0],
+									0,
+									2,
+									&audio_frames[0][0],
+									1,
+									2);
 
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
