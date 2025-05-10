@@ -546,7 +546,7 @@ uint16_t DOS_GetCountry()
 }
 
 // ***************************************************************************
-// Helper functions for 'dosbox --list-*' commands
+// Helper functions for commands and logging output
 // ***************************************************************************
 
 static std::string get_output_header(const char* header_msg_id,
@@ -719,18 +719,32 @@ std::string DOS_GenerateListCodePagesMessage()
 // Helper functions for KEYB.COM command
 // ***************************************************************************
 
-std::string DOS_GetKeyboardLayoutName(const std::string& layout)
+static std::string get_keyboard_layout_name(const std::string& layout,
+                                            const bool translated)
 {
 	const auto layout_deduplicated = deduplicate_layout(layout);
 
 	for (const auto& entry : LocaleData::KeyboardLayoutInfo) {
 		assert(!entry.layout_codes.empty());
 		if (entry.layout_codes[0] == layout_deduplicated) {
-			return MSG_Get(entry.GetMsgName().c_str());
+			return translated ? MSG_Get(entry.GetMsgName())
+			                  : entry.layout_name;
 		}
 	}
 
 	return {};
+}
+
+std::string DOS_GetKeyboardLayoutName(const std::string& layout)
+{
+	constexpr bool Translated = true;
+	return get_keyboard_layout_name(layout, Translated);
+}
+
+std::string DOS_GetEnglishKeyboardLayoutName(const std::string& layout)
+{
+	constexpr bool Translated = false;
+	return get_keyboard_layout_name(layout, Translated);
 }
 
 static Script to_script(const KeyboardScript keyboard_script)
@@ -911,7 +925,7 @@ std::string DOS_GetCodePageDescription(const uint16_t code_page)
 	return {};
 }
 
-std::string DOS_GetCodePageDescriptionForLog(const uint16_t code_page)
+std::string DOS_GetEnglishCodePageDescription(const uint16_t code_page)
 {
 	const auto entry = get_code_page_info_entry(code_page);
 	if (entry) {

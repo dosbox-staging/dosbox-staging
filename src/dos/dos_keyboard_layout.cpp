@@ -929,7 +929,7 @@ KeyboardLayoutResult DOS_LoadKeyboardLayout(const std::string& keyboard_layout,
 		assert(!new_keyboard_layout.empty());
 		LOG_MSG("LOCALE: Loaded keyboard layout '%s' - '%s'",
 		        new_keyboard_layout.c_str(),
-		        DOS_GetKeyboardLayoutName(new_keyboard_layout).c_str());
+		        DOS_GetEnglishKeyboardLayoutName(new_keyboard_layout).c_str());
 	}
 
 	return result;

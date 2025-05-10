@@ -2115,7 +2115,7 @@ static KeyboardLayoutResult load_bundled_screen_font(const uint16_t code_page)
 
 	LOG_MSG("LOCALE: Loaded code page %d - '%s'",
 	        code_page,
-	        DOS_GetCodePageDescriptionForLog(code_page).c_str());
+	        DOS_GetEnglishCodePageDescription(code_page).c_str());
 
 	notify_code_page_changed();
 	return KeyboardLayoutResult::OK;

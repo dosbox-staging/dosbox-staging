@@ -528,7 +528,11 @@ std::optional<KeyboardScript> DOS_GetKeyboardLayoutScript3(const std::string& la
                                                            const uint16_t code_page);
 
 std::string DOS_GetCodePageDescription(const uint16_t code_page);
-std::string DOS_GetCodePageDescriptionForLog(const uint16_t code_page);
+
+// Functions for logging purposes
+
+std::string DOS_GetEnglishKeyboardLayoutName(const std::string& layout);
+std::string DOS_GetEnglishCodePageDescription(const uint16_t code_page);
 
 // DOS API support
 
