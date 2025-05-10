@@ -22,6 +22,7 @@
 #define DOSBOX_DYNLIB_H
 
 #include "config.h"
+#include "logging.h"
 #include "std_filesystem.h"
 
 enum class DynLibResult
@@ -68,7 +69,11 @@ using dynlib_handle = void*;
 
 inline dynlib_handle dynlib_open(const std_fs::path& path) noexcept
 {
-	return dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+	auto result = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+	if (result == nullptr) {
+		LOG_ERR("DYNLIB: Error opening '%s', details: %s", path.c_str(), dlerror());
+	}
+	return result;
 }
 
 inline void* dynlib_get_symbol(dynlib_handle lib, const char* name) noexcept
