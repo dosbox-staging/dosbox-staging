@@ -193,6 +193,11 @@ include_directories(include src/libs src/gui ${CMAKE_CURRENT_BINARY_DIR}/include
 
 add_subdirectory(src)
 
+if(DOSBOX_PLATFORM_LINUX STREQUAL ON)
+	add_subdirectory(contrib/icons)
+	add_dependencies(dosbox copy_icons_linux)
+endif()
+
 target_link_libraries(dosbox PRIVATE
 		$<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
 		$<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
