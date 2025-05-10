@@ -88,3 +88,4 @@ debian
 # CMake
 CMakeUserPresets.json
 cmake-build-*/
+Resources
