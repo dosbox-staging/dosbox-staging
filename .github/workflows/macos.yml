@@ -74,12 +74,6 @@ jobs:
       - name: Log environment
         run: arch -arch=${{ matrix.conf.arch }} ./scripts/log-env.sh
 
-      - name: Inject version string
-        run: |
-          set -x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Setup and build release
         run: |
           set -x
