@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,14 +21,13 @@
 #ifndef DOSBOX_CONFIG_H
 #define DOSBOX_CONFIG_H
 
-// This file is a template for the CMake build process.
-//
-// Placeholders surrounded by '@' characters are substituted with concrete
-// values at the start of the build process, and a file `config.cpp` is
-// written to the build output directory.
+// Current DOSBox Staging version without 'v' prefix (e.g., 0.79.1,
+// 0.81.1-alpha)
+#define DOSBOX_VERSION "${DOSBOX_VERSION}"
 
-// Git hash of the build
-#define BUILD_GIT_HASH "@git_hash@"
+// Minimum 5-char long Git hash of the build; can be longer to guarantee
+// uniqueness (e.g., da3c5, c22ef8)
+#define BUILD_GIT_HASH "${BUILD_GIT_HASH}"
 
 /* Operating System
  */

@@ -8,6 +8,7 @@ project(dosbox-staging
 		LANGUAGES C CXX
 		VERSION 0.83.0
 )
+set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -52,20 +53,20 @@ endif()
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 find_package(Git)
-if(Git_FOUND)
+if (Git_FOUND)
 	execute_process(
-			COMMAND ${GIT_EXECUTABLE} log -1 --format=%h
-			WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-			OUTPUT_VARIABLE VCS_TAG
-			OUTPUT_STRIP_TRAILING_WHITESPACE
+		COMMAND ${GIT_EXECUTABLE} rev-parse --short=5 HEAD
+		WORKING_DIRECTORY         ${CMAKE_CURRENT_LIST_DIR}
+		OUTPUT_VARIABLE           BUILD_GIT_HASH
+		OUTPUT_STRIP_TRAILING_WHITESPACE
 	)
 else()
-	set(VCS_TAG "dirty")
+	set(BUILD_GIT_HASH "?")
 endif()
 
 check_include_file("unistd.h" HAS_UNISTD)
 if (NOT HAS_UNISTD)
-	configure_file(src/platform/visualc/unistd.h ${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h @ONLY)
+	configure_file(src/platform/visualc/unistd.h ${CMAKE_CURRENT_BINARY_DIR}/include/unistd.h)
 endif()
 
 ### config.h shenanigans
@@ -167,7 +168,7 @@ set(CUSTOM_DATADIR " ")
 set(project_name "${PROJECT_NAME}")
 set(version "${PROJECT_VERSION}")
 
-configure_file(src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.h @ONLY)
+configure_file(src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
 
 ### end of config.h ###
 
