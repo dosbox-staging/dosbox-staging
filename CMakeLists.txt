@@ -199,7 +199,7 @@ configure_file(
 
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
 target_include_directories(
-  dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
+  dosbox PRIVATE include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 add_custom_command(
