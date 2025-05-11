@@ -21,14 +21,6 @@
 #ifndef DOSBOX_CONFIG_H
 #define DOSBOX_CONFIG_H
 
-// Current DOSBox Staging version without 'v' prefix (e.g., 0.79.1,
-// 0.81.1-alpha)
-#define DOSBOX_VERSION "${DOSBOX_VERSION}"
-
-// Minimum 5-char long Git hash of the build; can be longer to guarantee
-// uniqueness (e.g., da3c5, c22ef8)
-#define BUILD_GIT_HASH "${BUILD_GIT_HASH}"
-
 /* Operating System
  */
 

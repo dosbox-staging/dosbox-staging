@@ -59,6 +59,7 @@
 #include "support.h"
 #include "timer.h"
 #include "tracy.h"
+#include "version.h"
 #include "video.h"
 
 bool shutdown_requested = false;
@@ -433,7 +434,7 @@ const char* DOSBOX_GetVersion() noexcept
 
 const char* DOSBOX_GetDetailedVersion() noexcept
 {
-	static constexpr char version[] = DOSBOX_VERSION " (" BUILD_GIT_HASH ")";
+	static constexpr char version[] = DOSBOX_VERSION " (" BUILD_GIT_HASH BUILD_GIT_DIRTY ")";
 	return version;
 }
 

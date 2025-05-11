@@ -29,10 +29,23 @@ fi
 
 ROOT=$(git rev-parse --show-toplevel)
 
-VERSION=$(
-    grep "#define\\s*DOSBOX_VERSION\\s*\"" "$ROOT/include/version.h" \
-        | cut -d"\"" -f2
+# xargs trims the leading whitespace and collapses multiple consecutive
+# spaces into single spaces
+#
+# Gets the version number, e.g. 0.83.0
+VERSION_NUMBER=$(
+	grep "\\s\+VERSION\\s\+[0-9].[0-9]\+.[0-9]\+" CMakeLists.txt \
+		| xargs | cut -d" " -f2
 )
+
+# Gets the version suffix, e.g. -alpha
+VERSION_SUFFIX=$(
+	grep "set(DOSBOX_VERSION\\s\+${PROJECT_VERSION}" CMakeLists.txt \
+		| xargs | cut -d"}" -f2 | cut -d")" -f1 | xargs
+)
+
+VERSION=$VERSION_NUMBER$VERSION_SUFFIX
+
 
 GIT_HASH=$(git rev-parse --short=5 HEAD)
 

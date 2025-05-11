@@ -202,6 +202,23 @@ target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/version.h ALL
+
+  COMMAND ${CMAKE_COMMAND}
+    -D DOSBOX_VERSION=${DOSBOX_VERSION}
+    -D TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}/include
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/GetVersion.cmake
+
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# rebuild version.h every time
+add_custom_target(get_version ALL
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/include/version.h
+)
+add_dependencies(dosbox get_version)
+
 # TODO This happens on every execution, better to have a target with
 # dependencies instead
 add_custom_target(copy_assets ALL
