@@ -201,6 +201,15 @@ target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
+# Allow dynamically loading externalised vcpkg dependencies at runtime
+# from the $EXE_DIR/lib directory
+if (APPLE)
+  set(CMAKE_INSTALL_RPATH "@executable_path/lib")
+else()
+  set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+endif()
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+
 # TODO This happens on every execution, better to have a target with
 # dependencies instead
 add_custom_target(copy_assets ALL
