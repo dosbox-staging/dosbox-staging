@@ -47,11 +47,11 @@ constexpr auto SoundFontExtension = ".sf2";
  * Platform specific FluidSynth shared library name
  */
 #if defined(WIN32)
-constexpr const char fsynth_dynlib_file[] = "libfluidsynth-3.dll";
+constexpr const char* fsynth_dynlib_file = "fluidsynth-3.dll";
 #elif defined(MACOSX)
-constexpr const char fsynth_dynlib_file[] = "libfluidsynth.3.dylib";
+constexpr const char* fsynth_dynlib_file = "libfluidsynth.3.dylib";
 #else
-constexpr const char fsynth_dynlib_file[] = "libfluidsynth.so.3";
+constexpr const char* fsynth_dynlib_file = "libfluidsynth.so.3";
 #endif
 
 
