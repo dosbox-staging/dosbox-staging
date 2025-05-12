@@ -26,9 +26,9 @@ concurrency:
 
 jobs:
   build_macos_release:
-    name: Release build (${{ matrix.conf.arch }})
+    name:    Release build (${{ matrix.conf.arch }})
     runs-on: ${{ matrix.conf.host }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.conf.minimum_deployment }}
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
@@ -100,8 +100,8 @@ jobs:
           overwrite: true
 
   publish_universal_build:
-    name: Publish universal build
-    needs: build_macos_release
+    name:    Publish universal build
+    needs:   build_macos_release
     runs-on: macos-15
     steps:
       - name: Checkout repository
@@ -131,6 +131,21 @@ jobs:
             "$(pwd)" \
             "$(pwd)"
 
+
+      - name: Inject external vcpkg dependencies
+        run: |
+          set -x
+          DEPS_VERSION=v0.83.0
+          ZIP_NAME=dosbox-vcpkg-deps-macos-universal.zip
+
+          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$DEPS_VERSION/$ZIP_NAME
+          unzip $ZIP_NAME -d vcpkg-deps
+
+          LIB_DIR="dist/DOSBox Staging.app/Contents/MacOS/lib"
+          mkdir "$LIB_DIR"
+          cp vcpkg-deps/release/* "$LIB_DIR"
+
+
       - name: Create dmg
         run: |
           ln -s /Applications dist/
@@ -141,6 +156,7 @@ jobs:
               -volname "DOSBox Staging" \
               -srcfolder dist \
               -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
+
 
       - name: Upload disk image
         uses: actions/upload-artifact@v4

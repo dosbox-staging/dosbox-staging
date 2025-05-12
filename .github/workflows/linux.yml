@@ -26,9 +26,9 @@ concurrency:
 
 jobs:
   build_linux:
-    name: ${{ matrix.conf.name }} ${{ matrix.arch }}
+    name:    ${{ matrix.conf.name }} ${{ matrix.arch }}
     runs-on: ${{ matrix.conf.os }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -42,14 +42,14 @@ jobs:
           - name: GCC 12, Ubuntu 22.04
             os: ubuntu-22.04
             cmake_preset: release-linux-vcpkg
-            cc: gcc
+            cc:  gcc
             cxx: g++
             max_warnings: 14
 
           - name: Clang 15, Ubuntu 22.04
             os: ubuntu-22.04
             cmake_preset: release-linux-vcpkg
-            cc: clang
+            cc:  clang
             cxx: clang++
             max_warnings: 14
 
@@ -57,7 +57,7 @@ jobs:
             os: ubuntu-22.04
             cmake_preset: debug-linux-vcpkg
             cmake_flags: -DOPT_HEAVY_DEBUG=ON
-            cc: gcc
+            cc:  gcc
             cxx: g++
             max_warnings: 14
 
@@ -66,7 +66,7 @@ jobs:
           - name: GCC 11, Ubuntu 22.04
             os: ubuntu-22.04
             cmake_preset: release-linux-vcpkg
-            cc: gcc
+            cc:  gcc
             cxx: g++
             max_warnings: 14
 
@@ -100,7 +100,7 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run:  ./scripts/log-env.sh
+        run: ./scripts/log-env.sh
 
       - name: Inject version string
         run: |
@@ -126,9 +126,9 @@ jobs:
 
 
   build_linux_release:
-    name: Release build
+    name:    Release build
     runs-on: ubuntu-22.04
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -163,7 +163,7 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run:  ./scripts/log-env.sh
+        run: ./scripts/log-env.sh
 
       - name: Inject version string
         run: |
@@ -189,6 +189,21 @@ jobs:
             -p linux \
             build/release-linux \
             "dosbox-staging-linux-x86_64-$VERSION"
+
+
+      - name: Inject external vcpkg dependencies
+        run: |
+          set -x
+          DEPS_VERSION=v0.83.0
+          ZIP_NAME=dosbox-vcpkg-deps-linux-x86_64.zip
+
+          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$DEPS_VERSION/$ZIP_NAME
+          unzip $ZIP_NAME -d vcpkg-deps
+
+          LIB_DIR="dosbox-staging-linux-x86_64-$VERSION/lib"
+          mkdir $LIB_DIR
+          cp vcpkg-deps/release/* $LIB_DIR
+
 
       - name: Create tarball
         run: |
