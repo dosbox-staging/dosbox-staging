@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2024-2024  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,9 @@
 
 #include <cstdint>
 #include <string>
+
+// Load translated messages according to the configuration
+void MSG_LoadMessages();
 
 // Add message (in UTF-8 encoding) to the translation system
 void MSG_Add(const std::string& name, const std::string& message);

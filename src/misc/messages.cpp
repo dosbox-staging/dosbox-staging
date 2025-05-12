@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -845,11 +845,9 @@ static bool load_messages_by_name(const std::string& language_file)
 	return result;
 }
 
-void MSG_Init([[maybe_unused]] Section_prop* section)
+static std::optional<std::string> get_new_language_file()
 {
-	// Ensure autodetection happens the same time, regardless of the
-	// configuration
-	const auto& host_languages = GetHostLanguages();
+	static std::optional<std::string> old_language_file = {};
 
 	// Get the language file from command line
 	assert(control);
@@ -862,6 +860,32 @@ void MSG_Init([[maybe_unused]] Section_prop* section)
 		language_file = static_cast<const Section_prop*>(section)->Get_string(
 		        "language");
 	}
+
+	// Check if requested language has changed
+	if (old_language_file && *old_language_file == language_file) {
+		// Config not changed, nothing to do
+		return {};
+	}
+
+	old_language_file = language_file;
+	return language_file;
+}
+
+void MSG_LoadMessages()
+{
+	// Ensure autodetection happens the same time, regardless of the
+	// configuration
+	const auto& host_languages = GetHostLanguages();
+
+	// Check if the language configuration has changed
+	const auto new_language_file = get_new_language_file();
+	if (!new_language_file) {
+		// Config not changed, nothing to do
+		return;
+	}
+
+	const auto& language_file = *new_language_file;
+	clear_translated_messages();
 
 	// If concrete language file is provided, load it
 	if (!language_file.empty() && language_file != "auto") {
