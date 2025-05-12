@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2024  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2023  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1761,9 +1761,6 @@ const std::string& Config::GetArgumentLanguage()
 	return arguments.lang;
 }
 
-// forward declaration
-void MSG_Init(Section_prop*);
-
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
 void Config::ParseConfigFiles(const std_fs::path& config_dir)
@@ -1800,9 +1797,7 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 	// to discover the user's desired language. At this point, we can now
 	// initialise the messaging system which honours the language and loads
 	// those messages.
-	if (const auto sec = GetSection("dosbox"); sec) {
-		MSG_Init(static_cast<Section_prop*>(sec));
-	}
+	MSG_LoadMessages();
 }
 
 static char return_msg[200];

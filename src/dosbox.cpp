@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -563,6 +563,17 @@ static void DOSBOX_RealInit(Section* sec)
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 }
 
+static void DOSBOX_ConfigChanged(Section* sec)
+{
+	static bool first_time = true;
+	if (first_time) {
+		first_time = false;
+		DOSBOX_RealInit(sec);
+	}
+
+	MSG_LoadMessages();
+}
+
 // Returns decimal seconds of elapsed uptime.
 // The first call starts the uptime counter (and returns 0.0 seconds of uptime).
 double DOSBOX_GetUptime()
@@ -581,7 +592,7 @@ void DOSBOX_Init()
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
-	// constexpr auto always     = Property::Changeable::Always;
+	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto deprecated    = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle     = Property::Changeable::WhenIdle;
@@ -590,8 +601,10 @@ void DOSBOX_Init()
 
 	/* Setup all the different modules making up DOSBox */
 
-	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_string("language", only_at_start, "auto");
+	secprop = control->AddSection_prop("dosbox",
+	                                   &DOSBOX_ConfigChanged,
+	                                   changeable_at_runtime);
+	pstring = secprop->Add_string("language", always, "auto");
 	pstring->Set_help(
 	        "Select the DOS messages language:\n"
 	        "  auto:     Detects the language from the host OS (default).\n"
