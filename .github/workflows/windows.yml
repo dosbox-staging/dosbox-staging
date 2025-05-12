@@ -30,9 +30,9 @@ env:
 
 jobs:
   build_windows_vs:
-    name: ${{ matrix.conf.name }}
+    name:    ${{ matrix.conf.name }}
     runs-on: windows-2022
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     strategy:
       matrix:
         conf:
@@ -46,7 +46,7 @@ jobs:
         with:
           submodules: false
 
-      - name: Checkout vcpkg baseline
+      - name:  Checkout vcpkg baseline
         shell: pwsh
         run: |
           $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
@@ -80,7 +80,7 @@ jobs:
 
       - name:  Log environment
         shell: pwsh
-        run:   .\scripts\log-env.ps1
+        run: .\scripts\log-env.ps1
 
       - name:  Run tests
         shell: pwsh
@@ -94,8 +94,8 @@ jobs:
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }} | Tee-Object build.log
 
-      - name: Print VCPKG error log
-        if: failure()
+      - name:  Print VCPKG error log
+        if:    failure()
         shell: pwsh
         run: Get-Content -Path vcpkg_installed/${{ matrix.conf.arch }}-windows/vcpkg/issue_body.md
 
@@ -107,7 +107,7 @@ jobs:
 
   build_windows_vs_release:
     name: Release ${{ matrix.debugger && 'w/ debugger' || '' }} (${{ matrix.arch }})
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    if:   github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     outputs:
       dosbox_version: ${{ steps.set_vars.outputs.dosbox_version }}
 
@@ -123,7 +123,7 @@ jobs:
         with:
           submodules: false
 
-      - name: Checkout vcpkg baseline
+      - name:  Checkout vcpkg baseline
         shell: pwsh
         run: |
           $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
@@ -146,8 +146,8 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
-            vs-prerelease: true
-            msbuild-architecture: ${{ matrix.arch }}
+          vs-prerelease: true
+          msbuild-architecture: ${{ matrix.arch }}
 
       - name:  Integrate packages
         shell: pwsh
@@ -178,7 +178,7 @@ jobs:
           sed -i "s|BUILD_GIT_HASH \"git\"|BUILD_GIT_HASH \"$GIT_HASH\"|" src/platform/visualc/config.h
 
       - name:  Enable the debugger in config.h
-        if: ${{ matrix.debugger }}
+        if:    ${{ matrix.debugger }}
         shell: bash
         run: |
           set -x
@@ -191,13 +191,13 @@ jobs:
           cd vs
           MSBuild -m dosbox.sln -t:dosbox:Rebuild -p:Configuration=Release -p:Platform=${{ matrix.arch }}
 
-      - name: Print VCPKG error log
-        if: failure()
+      - name:  Print VCPKG error log
+        if:    failure()
         shell: pwsh
         run: Get-Content -Path vcpkg_installed/${{ matrix.conf.arch }}-windows/vcpkg/issue_body.md
 
-      - name: Package standard build
-        if: ${{ !matrix.debugger }}
+      - name:  Package standard build
+        if:    ${{ !matrix.debugger }}
         shell: bash
         run: |
           set -x
@@ -224,6 +224,21 @@ jobs:
             ${{ steps.set_vars.outputs.build_dir }} \
             ${{ steps.set_vars.outputs.pkg_dir }}
 
+
+      - name:  Inject external vcpkg dependencies
+        if:    ${{ matrix.arch == 'x64' && !matrix.debugger }}
+        shell: bash
+        run: |
+          set -x
+          DEPS_VERSION=v0.83.0
+          ZIP_NAME=dosbox-vcpkg-deps-windows-x64.zip
+
+          curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
+          unzip $ZIP_NAME -d vcpkg-deps
+
+          cp vcpkg-deps/release/* ${{ steps.set_vars.outputs.pkg_dir }}
+
+
       - name: Upload package
         if:   ${{ !matrix.debugger }}
         uses: actions/upload-artifact@v4
@@ -231,7 +246,6 @@ jobs:
           name: ${{ steps.set_vars.outputs.pkg_dir }}-without-debugger
           path: ${{ steps.set_vars.outputs.pkg_dir }}
           overwrite: true
-
 
       - name:  Package the debugger build
         if:    ${{ matrix.debugger }}
@@ -262,6 +276,7 @@ jobs:
     strategy:
       matrix:
         arch: [x64, ARM64]
+
     steps:
       - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v4
@@ -272,8 +287,8 @@ jobs:
 
 
   build_installer:
-    name: Build installer (${{ matrix.arch }} )
-    needs: merge_artifacts
+    name:    Build installer (${{ matrix.arch }} )
+    needs:   merge_artifacts
     runs-on: windows-2022
     strategy:
       matrix:
@@ -297,6 +312,7 @@ jobs:
           VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
 
+
       - name: Prepare Windows installer
         shell: bash
         run: |
@@ -316,6 +332,7 @@ jobs:
 
           mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
           mv out/program/dosbox*.exe                       out
+
 
       - name: Build Windows installer
         shell: pwsh
