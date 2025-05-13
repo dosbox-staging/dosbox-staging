@@ -22,6 +22,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # `include/checks.h` for details.
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
+  
+  # Disable cl/clangcl warnings about insecure C functions
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion -Wno-narrowing")
 endif()
