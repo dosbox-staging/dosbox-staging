@@ -25,20 +25,20 @@
 #include <ctime>
 #include <array>
 
+#include "../hardware/disk_noise.h"
 #include "ascii.h"
 #include "bios.h"
 #include "callback.h"
 #include "dos_locale.h"
 #include "drives.h"
 #include "mem.h"
+#include "pic.h"
 #include "program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
-#include "pic.h"
-#include "../hardware/disk_noise.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -152,10 +152,12 @@ static uint16_t DOS_GetAmount(void) {
 #endif
 
 // Taken from Dosbox-X
-int hdd_data_rate = 0;    // 2.1MBytes/sec mid 1990s IDE PIO hard drive without SMARTDRV
+int hdd_data_rate = 0; // 2.1MBytes/sec mid 1990s IDE PIO hard drive without
+                       // SMARTDRV
 int fdd_data_rate = 0;
 
-void DOS_SetDataRate(int rate, int type) {
+void DOS_SetDataRate(int rate, int type)
+{
 	if (type == 0) {
 		hdd_data_rate = rate;
 	} else {
@@ -163,31 +165,32 @@ void DOS_SetDataRate(int rate, int type) {
 	}
 }
 
-void diskio_delay(Bits value/*bytes*/, DiskNoiseDevice* disknoise, int type = -1) {
-    if ((type == 0 && fdd_data_rate != 0) || (type != 0 && hdd_data_rate != 0)) {
-        double scalar;
-        double endtime;
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1)
+{
+	if ((type == 0 && fdd_data_rate != 0) || (type != 0 && hdd_data_rate != 0)) {
+		double scalar;
+		double endtime;
 
-        if(type == 0) { // Floppy
-            scalar = (double)value / fdd_data_rate; 
-            endtime = PIC_FullIndex() + (scalar * 1000);
-        }
-        else { // Hard drive or CD-ROM
-            scalar = (double)value / hdd_data_rate;
-            endtime = PIC_FullIndex() + (scalar * 1000);
-        }
-        /* MS-DOS will most likely enable interrupts in the course of
-         * performing disk I/O */
-        CPU_STI();
+		if (type == 0) { // Floppy
+			scalar  = (double)value / fdd_data_rate;
+			endtime = PIC_FullIndex() + (scalar * 1000);
+		} else { // Hard drive or CD-ROM
+			scalar  = (double)value / hdd_data_rate;
+			endtime = PIC_FullIndex() + (scalar * 1000);
+		}
+		/* MS-DOS will most likely enable interrupts in the course of
+		 * performing disk I/O */
+		CPU_STI();
 
-        do {
+		do {
 			disknoise->PlaySeek();
-            CALLBACK_Idle();
-        } while (PIC_FullIndex() < endtime);
-    }
+			CALLBACK_Idle();
+		} while (PIC_FullIndex() < endtime);
+	}
 }
 
-static inline void modify_cycles(Bits value) {
+static inline void modify_cycles(Bits value)
+{
 	if((4*value+5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
 		CPU_IODelayRemoved += 4*value;

@@ -34,13 +34,13 @@
 #include <limits>
 #include <sys/types.h>
 
+#include "../hardware/disk_noise.h"
+#include "cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
-#include "string_utils.h"
-#include "cross.h"
 #include "inout.h"
-#include "../hardware/disk_noise.h"
+#include "string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)
 {
@@ -554,7 +554,7 @@ Bits localDrive::UnMount()
 	return 0;
 }
 
-void diskio_delay(Bits value/*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
 
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
