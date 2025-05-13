@@ -35,12 +35,12 @@
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
-namespace fsynth {
+namespace FluidSynth {
 
 extern void (*delete_fluid_settings)(fluid_settings_t*);
 extern void (*delete_fluid_synth)(fluid_synth_t*);
 
-} // namespace fsynth
+} // namespace FluidSynth
 
 class MidiDeviceFluidSynth final : public MidiDevice {
 public:
@@ -77,12 +77,12 @@ private:
 	void Render();
 
 	using FluidSynthSettingsPtr =
-	        std::unique_ptr<fluid_settings_t, decltype(fsynth::delete_fluid_settings)>;
+	        std::unique_ptr<fluid_settings_t, decltype(FluidSynth::delete_fluid_settings)>;
 
-	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(fsynth::delete_fluid_synth)>;
+	using FluidSynthPtr = std::unique_ptr<fluid_synth_t, decltype(FluidSynth::delete_fluid_synth)>;
 
-	FluidSynthSettingsPtr settings{nullptr, fsynth::delete_fluid_settings};
-	FluidSynthPtr synth{nullptr, fsynth::delete_fluid_synth};
+	FluidSynthSettingsPtr settings{nullptr, FluidSynth::delete_fluid_settings};
+	FluidSynthPtr synth{nullptr, FluidSynth::delete_fluid_synth};
 
 	MixerChannelPtr mixer_channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};

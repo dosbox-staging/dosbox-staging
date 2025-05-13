@@ -99,7 +99,8 @@ static std::unique_ptr<MidiDevice> create_device(
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
-	if (name == FluidSynth) {
+	// namespace prefix required to avoid ambiguity with FluidSynth namespace
+	if (name == MidiDeviceName::FluidSynth) {
 		return std::make_unique<MidiDeviceFluidSynth>();
 	}
 #if C_MT32EMU
