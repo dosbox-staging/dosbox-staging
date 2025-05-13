@@ -39,12 +39,18 @@ List of available options:
   --list-countries         List all supported countries with their numeric codes.
                            Codes are to be used in the 'country' config setting.
 
+  --list-layouts           List all supported keyboard layouts with their codes.
+                           Codes are to be used in the 'keyboard_layout' config setting.
+
+  --list-code-pages        List all bundled code pages (screen fonts).
+
   --list-glshaders         List all available OpenGL shaders and their paths.
                            Shaders are to be used in the 'glshader' config setting.
 
   --fullscreen             Start in fullscreen mode.
 
-  --lang <lang_file>       Start with the language specified in <lang_file>.
+  --lang <lang_file>       Start with the language specified in <lang_file>. If set to
+                           'auto', tries to detect the language from the host OS.
 
   --machine <type>         Emulate a specific type of machine. The machine type has
                            influence on both the emulated video and sound cards.
@@ -74,12 +80,22 @@ List of available options:
 
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
-List of country codes (mostly same as telephone call codes)
------------------------------------------------------------
+List of available country codes (mostly same as telephone call codes)
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
-The above numeric country codes can be used exactly as listed
-in the 'country' config setting.
+The above codes can be used in the 'country' config setting.
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
+List of available keyboard layout codes
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
+The above codes can be used in the 'keyboard_layout' config setting.
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_1
+List of available code pages
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_2
+The above code pages can be used in the 'keyboard_layout' config setting.
 .
 :COUNTRY_NAME_XXA
 International (English)
@@ -405,6 +421,825 @@ Kyrgyzstan
 :COUNTRY_NAME_UZB
 Uzbekistan
 .
+:CODE_PAGE_DESCRIPTION_437
+United States
+.
+:CODE_PAGE_DESCRIPTION_113
+Yugoslavian
+.
+:CODE_PAGE_DESCRIPTION_667
+Polish, Mazovia encoding
+.
+:CODE_PAGE_DESCRIPTION_668
+Polish, 852-compatible
+.
+:CODE_PAGE_DESCRIPTION_737
+Greek-2
+.
+:CODE_PAGE_DESCRIPTION_770
+Baltic, RST 1095:89 encoding
+.
+:CODE_PAGE_DESCRIPTION_771
+Lithuanian and Russian, KBL encoding
+.
+:CODE_PAGE_DESCRIPTION_773
+Baltic, KBL encoding
+.
+:CODE_PAGE_DESCRIPTION_775
+Latin-7 (Baltic)
+.
+:CODE_PAGE_DESCRIPTION_777
+Lithuanian, accented, KBL encoding
+.
+:CODE_PAGE_DESCRIPTION_778
+Lithuanian, accented, LST 1590-2 encoding
+.
+:CODE_PAGE_DESCRIPTION_808
+Russian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_848
+Ukrainian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_849
+Belarusian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_850
+Latin-1 (Western European)
+.
+:CODE_PAGE_DESCRIPTION_851
+Greek, old encoding
+.
+:CODE_PAGE_DESCRIPTION_852
+Latin-2 (Central European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_853
+Latin-3 (Turkish, Maltese, Esperanto)
+.
+:CODE_PAGE_DESCRIPTION_855
+South Slavic
+.
+:CODE_PAGE_DESCRIPTION_856
+Hebrew-2, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_857
+Latin-5 (Turkish), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_858
+Latin-1 (Western European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_859
+Latin-9 (Western European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_860
+Portuguese
+.
+:CODE_PAGE_DESCRIPTION_861
+Icelandic
+.
+:CODE_PAGE_DESCRIPTION_862
+Hebrew-2
+.
+:CODE_PAGE_DESCRIPTION_863
+Canadian French
+.
+:CODE_PAGE_DESCRIPTION_864
+Arabic
+.
+:CODE_PAGE_DESCRIPTION_865
+Nordic
+.
+:CODE_PAGE_DESCRIPTION_866
+Russian
+.
+:CODE_PAGE_DESCRIPTION_867
+Czech and Slovak, Kamenický encoding
+.
+:CODE_PAGE_DESCRIPTION_869
+Greek, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_872
+South Slavic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_899
+Armenian, ArmSCII-8A encoding
+.
+:CODE_PAGE_DESCRIPTION_991
+Polish, Mazovia encoding, with PLN symbol
+.
+:CODE_PAGE_DESCRIPTION_1116
+Estonian
+.
+:CODE_PAGE_DESCRIPTION_1117
+Latvian
+.
+:CODE_PAGE_DESCRIPTION_1118
+Lithuanian, LST 1283 encoding
+.
+:CODE_PAGE_DESCRIPTION_1119
+Lithuanian and Russian, LST 1284 encoding
+.
+:CODE_PAGE_DESCRIPTION_1125
+Ukrainian
+.
+:CODE_PAGE_DESCRIPTION_1131
+Belarusian
+.
+:CODE_PAGE_DESCRIPTION_3012
+Latvian and Russian, RusLat encoding
+.
+:CODE_PAGE_DESCRIPTION_3021
+Bulgarian, MIK encoding
+.
+:CODE_PAGE_DESCRIPTION_3845
+Hungarian, CWI-2 encoding
+.
+:CODE_PAGE_DESCRIPTION_3846
+Turkish
+.
+:CODE_PAGE_DESCRIPTION_3848
+Brazilian, ABICOMP encoding
+.
+:CODE_PAGE_DESCRIPTION_30000
+Saami, Kalo, Finnic
+.
+:CODE_PAGE_DESCRIPTION_30001
+Celtic and Scots, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30002
+Tajik, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30003
+Latin American, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30004
+Greenlandic and North Germanic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30005
+Nigerian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30006
+Vietnamese, VISCII encoding
+.
+:CODE_PAGE_DESCRIPTION_30007
+Latin and Romansh, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30008
+Abkhaz and Ossetian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30009
+Romani and Turkic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30010
+Gagauz and Moldovan, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30011
+Russian Southern, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30012
+Siberian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30013
+Turkic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30014
+Finno-ugric (Mari, Udmurt), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30015
+Khanty, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30016
+Mansi, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30017
+Russian Northwestern, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30018
+Tatar Latin and Russian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30019
+Chechen Latin and Russian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30020
+Low Saxon and Frisian, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30021
+Oceanic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30022
+Canadian First Nations, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30023
+Southern African, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30024
+Northern and Eastern African, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30025
+Western African, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30026
+Central African, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30027
+Beninese, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30028
+Nigerien, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30029
+Mexican, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30030
+Mexican-2, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30031
+Latin-4 (Northern European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30032
+Latin-6 (Nordic), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_30033
+Crimean Tatar, with UAH symbol
+.
+:CODE_PAGE_DESCRIPTION_30034
+Cherokee
+.
+:CODE_PAGE_DESCRIPTION_30039
+Ukrainian, with UAH symbol
+.
+:CODE_PAGE_DESCRIPTION_30040
+Russian, with UAH symbol
+.
+:CODE_PAGE_DESCRIPTION_58152
+Kazakh, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_58210
+Azeri Cyrillic and Russian
+.
+:CODE_PAGE_DESCRIPTION_58335
+Kashubian, Mazovia-based, with PLN symbol
+.
+:CODE_PAGE_DESCRIPTION_58601
+Lithuanian, accented, LST 1590-4, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_59234
+Tatar
+.
+:CODE_PAGE_DESCRIPTION_59829
+Georgian
+.
+:CODE_PAGE_DESCRIPTION_60258
+Azeri Latin and Russian
+.
+:CODE_PAGE_DESCRIPTION_60853
+Georgian with capital letters
+.
+:CODE_PAGE_DESCRIPTION_62306
+Uzbek
+.
+:CODE_PAGE_DESCRIPTION_65506
+Armenian, ArmSCII-8 encoding
+.
+:CODE_PAGE_DESCRIPTION_813
+ISO-8859-7 (Greek), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_819
+ISO-8859-1 (Western European)
+.
+:CODE_PAGE_DESCRIPTION_901
+ISO-8859-13 (Baltic), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_912
+ISO-8859-2 (Central European)
+.
+:CODE_PAGE_DESCRIPTION_913
+ISO-8859-3 (South European)
+.
+:CODE_PAGE_DESCRIPTION_914
+ISO-8859-4 (North European)
+.
+:CODE_PAGE_DESCRIPTION_915
+ISO-8859-5 (Cyrillic)
+.
+:CODE_PAGE_DESCRIPTION_919
+ISO-8859-10 (Nordic)
+.
+:CODE_PAGE_DESCRIPTION_920
+ISO-8859-9 (Turkish)
+.
+:CODE_PAGE_DESCRIPTION_921
+ISO-8859-13 (Baltic)
+.
+:CODE_PAGE_DESCRIPTION_923
+ISO-8859-15 (Western European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1124
+ISO 8859-5 (modified for Ukrainian)
+.
+:CODE_PAGE_DESCRIPTION_58163
+ISO-8859-14 (Celtic)
+.
+:CODE_PAGE_DESCRIPTION_58258
+ISO-8859-4 (North European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_61235
+ISO-8859-1 (Western European), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_63283
+ISO-8859-1 (modified for Lithuanian)
+.
+:CODE_PAGE_DESCRIPTION_65500
+ISO-8859-16 (South-Eastern European)
+.
+:CODE_PAGE_DESCRIPTION_902
+ISO-8 (Estonian), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_922
+ISO-8 (Estonian)
+.
+:CODE_PAGE_DESCRIPTION_58259
+ISO-IR-201 (Volgaic)
+.
+:CODE_PAGE_DESCRIPTION_59187
+ISO-IR-197 (Saami)
+.
+:CODE_PAGE_DESCRIPTION_59283
+ISO-IR-200 (Uralic)
+.
+:CODE_PAGE_DESCRIPTION_60211
+ISO-IR-209 (Saami and Finnish Romani)
+.
+:CODE_PAGE_DESCRIPTION_65501
+ISO-IR-123 (Canadian and Spanish)
+.
+:CODE_PAGE_DESCRIPTION_65502
+ISO-IR-143 (Technical Set)
+.
+:CODE_PAGE_DESCRIPTION_65503
+ISO-IR-181 (Electrotechnical Set)
+.
+:CODE_PAGE_DESCRIPTION_65504
+ISO-IR-39 (African)
+.
+:CODE_PAGE_DESCRIPTION_878
+KOI8-R (Russian)
+.
+:CODE_PAGE_DESCRIPTION_58222
+KOI8-U (Russian and Ukrainian)
+.
+:CODE_PAGE_DESCRIPTION_59246
+KOI8-RU (Russian, Belarusian, Ukrainian)
+.
+:CODE_PAGE_DESCRIPTION_60270
+KOI8-F (full Slavic)
+.
+:CODE_PAGE_DESCRIPTION_61294
+KOI8-CA (full Slavic and non-Slavic)
+.
+:CODE_PAGE_DESCRIPTION_62318
+KOI8-T (Russian and Tajik)
+.
+:CODE_PAGE_DESCRIPTION_63342
+KOI8-C (Russian and Old Russian), with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1275
+Apple Western European
+.
+:CODE_PAGE_DESCRIPTION_1280
+Apple Greek
+.
+:CODE_PAGE_DESCRIPTION_1281
+Apple Turkish
+.
+:CODE_PAGE_DESCRIPTION_1282
+Apple Central European and Baltic
+.
+:CODE_PAGE_DESCRIPTION_1283
+Apple Cyrillic
+.
+:CODE_PAGE_DESCRIPTION_1284
+Apple Croatian
+.
+:CODE_PAGE_DESCRIPTION_1285
+Apple Romanian
+.
+:CODE_PAGE_DESCRIPTION_1286
+Apple Icelandic
+.
+:CODE_PAGE_DESCRIPTION_58619
+Apple Gaelic (old ortography), Welsh
+.
+:CODE_PAGE_DESCRIPTION_58627
+Apple Ukrainian
+.
+:CODE_PAGE_DESCRIPTION_58630
+Apple Saami, Kalo, Finnic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1250
+Windows Central European, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1251
+Windows Cyrillic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1252
+Windows Western European, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1253
+Windows Greek, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1254
+Windows Turkish, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1257
+Windows Baltic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1270
+Windows Saami, Kalo, Finnic, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_1361
+Windows South European, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_58595
+Windows Kazakh, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_58596
+Windows Georgian
+.
+:CODE_PAGE_DESCRIPTION_58598
+Windows Azeri, with EUR symbol
+.
+:CODE_PAGE_DESCRIPTION_59619
+Windows Central Asian
+.
+:CODE_PAGE_DESCRIPTION_59620
+Windows Gaelic (old ortography), Welsh
+.
+:CODE_PAGE_DESCRIPTION_60643
+Windows Northeastern Iranian
+.
+:CODE_PAGE_DESCRIPTION_61667
+Windows Inuit-Aleut
+.
+:CODE_PAGE_DESCRIPTION_62691
+Windows Tungus-Manchu
+.
+:SCRIPT_NAME_LATN
+Latin
+.
+:SCRIPT_NAME_ARAB
+Arabic
+.
+:SCRIPT_NAME_ARMN
+Armenian
+.
+:SCRIPT_NAME_CHER
+Cherokee
+.
+:SCRIPT_NAME_CYRL
+Cyrillic
+.
+:SCRIPT_NAME_GEOR
+Georgian
+.
+:SCRIPT_NAME_GREK
+Greek
+.
+:SCRIPT_NAME_HEBR
+Hebrew
+.
+:SCRIPT_PROPERTY_PHONETIC
+phonetic
+.
+:SCRIPT_PROPERTY_NON_STANDARD
+non-standard
+.
+:KEYBOARD_LAYOUT_NAME_US
+US (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UX
+US (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CO
+US (Colemak)
+.
+:KEYBOARD_LAYOUT_NAME_DV
+US (Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_LH
+US (left-hand Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_RH
+US (right-hand Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_UK
+UK (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_UK168
+UK (alternate, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KX
+UK (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_AR462
+Arabic (AZERTY/Arabic)
+.
+:KEYBOARD_LAYOUT_NAME_AR470
+Arabic (QWERTY/Arabic)
+.
+:KEYBOARD_LAYOUT_NAME_AZ
+Azeri (QWERTY/Cyrillic)
+.
+:KEYBOARD_LAYOUT_NAME_BA
+Bosnian (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_BE
+Belgian (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BX
+Belgian (international, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BG
+Bulgarian (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_BG103
+Bulgarian (QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_BG241
+Bulgarian (JCUKEN/national)
+.
+:KEYBOARD_LAYOUT_NAME_BN
+Beninese (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR
+Brazilian (ABNT layout, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR274
+Brazilian (US layout, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BY
+Belarusian (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CE
+Chechen (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CE443
+Chechen (typewriter, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CF
+Canadian (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CF445
+Canadian (dual-layer, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CG
+Montenegrin (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ
+Czech (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ243
+Czech (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ489
+Czech (programmers, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_DE
+German (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_GR453
+German (dual-layer, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_DK
+Danish (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_EE
+Estonian (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_ES
+Spanish (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SX
+Spanish (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FI
+Finnish (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_FO
+Faroese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FR
+French (standard, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FX
+French (international, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_GK
+Greek (319, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_GK220
+Greek (220, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_GK459
+Greek (459, non-standard/national)
+.
+:KEYBOARD_LAYOUT_NAME_HR
+Croatian (QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_HU
+Hungarian (101-key, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_HU208
+Hungarian (102-key, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_HY
+Armenian (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IL
+Hebrew (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IS
+Icelandic (101-key, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IS161
+Icelandic (102-key, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IT
+Italian (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IT142
+Italian (142, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IX
+Italian (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KA
+Georgian (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KK
+Kazakh (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KK476
+Kazakh (476, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KY
+Kyrgyz (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_LA
+Latin American (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_LT
+Lithuanian (Baltic, QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LT210
+Lithuanian (programmers, QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LT211
+Lithuanian (AZERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LT221
+Lithuanian (LST 1582, AZERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LT456
+Lithuanian (QWERTY/AZERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LV
+Latvian (standard, QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_LV455
+Latvian (QWERTY/UGJRMV/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_MK
+Macedonian (QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_MN
+Mongolian (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_MT
+Maltese (UK layout, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_MT103
+Maltese (US layout, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NE
+Nigerien (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NG
+Nigerian (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NL
+Dutch (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NO
+Norwegian (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_PH
+Filipino (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PL
+Polish (programmers, QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_PL214
+Polish (typewriter, QWERTZ/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_PO
+Portuguese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PX
+Portuguese (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_RO
+Romanian (standard, QWERTZ/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_RO446
+Romanian (QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_RU
+Russian (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RU443
+Russian (typewriter, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RX
+Russian (extended standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RX443
+Russian (extended typewriter, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_SD
+Swiss (German, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SF
+Swiss (French, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SI
+Slovenian (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SK
+Slovak (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SQ
+Albanian (no deadkeys, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SQ448
+Albanian (deadkeys, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SV
+Swedish (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_TJ
+Tajik (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_TM
+Turkmen (QWERTY/phonetic)
+.
+:KEYBOARD_LAYOUT_NAME_TR
+Turkish (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_TR440
+Turkish (non-standard)
+.
+:KEYBOARD_LAYOUT_NAME_TT
+Tatar (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_TT443
+Tatar (typewriter, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR
+Ukrainian (101-key, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR1996
+Ukrainian (101-key, 1996, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR2001
+Ukrainian (102-key, 2001, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR2007
+Ukrainian (102-key, 2007, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR465
+Ukrainian (101-key, 465, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UZ
+Uzbek (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_VI
+Vietnamese (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_YC
+Serbian (deadkey, QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_YC450
+Serbian (no deadkey, QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_YU
+Yugoslavian (QWERTZ)
+.
+:KEYBOARD_MOD_ADJECTIVE_LEFT
+Left
+.
+:KEYBOARD_MOD_ADJECTIVE_RIGHT
+Right
+.
 :DOSBOX_HELP_LIST_GLSHADERS_1
 List of available GLSL shaders
 ------------------------------
@@ -437,6 +1272,9 @@ Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] 
 :TITLEBAR_CYCLES_MS
 cycles/ms
 .
+:TITLEBAR_CYCLES_THROTTLED
+throttled
+.
 :TITLEBAR_MUTED
 MUTED
 .
@@ -467,12 +1305,35 @@ seamless mouse, %s+F10 to capture
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
 seamless mouse, %s+F10 or middle-click to capture
 .
-:CONFIG_FULLSCREEN
-Start directly in fullscreen (disabled by default).
-Run INTRO and see Special Keys for window control hotkeys.
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
+Rendering backend to use for graphics output ('opengl' by default).
+Only the 'opengl' backend has shader support and is thus the preferred option.
+The 'texture' backend is only provided as a last resort fallback for buggy or
+non-existent OpenGL drivers (this is extremely rare).
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Rendering backend to use for graphics output ('texture' by default).
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     OpenGL backend with shader support (default).
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    SDL's texture backend with bilinear interpolation.
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  SDL's texture backend with nearest-neighbour interpolation
+              (no bilinear).
+.
+:CONFIG_TEXTURE_RENDERER
+Render driver to use in 'texture' output mode ('auto' by default).
+Use 'texture_renderer = auto' for an automatic choice.
 .
 :CONFIG_DISPLAY
 Number of display to use; values depend on OS and user settings (0 by default).
+.
+:CONFIG_FULLSCREEN
+Start directly in fullscreen ('off' by default).
+Run INTRO and see Special Keys for window control hotkeys.
 .
 :CONFIG_FULLRESOLUTION
 What resolution to use for fullscreen: 'original', 'desktop'
@@ -495,7 +1356,44 @@ Set initial window position for windowed mode:
              0,0 is the top-left corner of the screen.
 .
 :CONFIG_WINDOW_DECORATIONS
-Enable window decorations in windowed mode (enabled by default).
+Enable window decorations in windowed mode ('on' by default).
+.
+:CONFIG_WINDOW_TITLEBAR
+Space separated list of information to be displayed in the window's titlebar
+('program=name dosbox=auto cycles=on mouse=full' by default). If a parameter
+is not specified, its default value is used.
+Possible information to display are:
+  animation=<value>:  If set to 'on' (default), animate the audio/video
+                      recording mark. Set to 'off' to disable animation; this
+                      is useful if your screen font produces weird results.
+  program=<value>:    Display the name of the running program.
+                      <value> can be one of:
+                        none/off:  Do not display program name.
+                        name:      Program name, with file extension (default).
+                        path:      Name, extension, and full absolute path.
+                        segment:   Display program memory segment name.
+                        'Title':   Custom name. Alternatively, you can use
+                                   "Title", (Title), <Title> or [Title] form.
+                      Note: With some software (like Windows 3.1x in enhanced
+                      mode) it is impossible to recognize the full program
+                      name or path; in such cases 'segment' is used instead.
+  dosbox=<value>:     Display 'DOSBox Staging' in the title bar.
+                      <value> can be one of:
+                        always:   Always display 'DOSBox Staging'.
+                        auto:     Only display it if no program is running or
+                                  'program=none' is set (default).
+  version=<value>:    Display DOSBox version information.
+                      <value> can be one of:
+                         none/off:  Do not display DOSBox version (default).
+                         simple:    Simple version information.
+                         detailed:  Include Git hash, if available.
+  cycles=<value>:     If set to 'on' (default), show CPU cycles setting.
+                      Set to 'off' to disable cycles setting display.
+  mouse=<value>:      Mouse capturing hint verbosity level:
+                        none/off:  Do not display any mouse hints.
+                        short:     Only display if mouse is captured.
+                        full:      Display verbose information on how to
+                                   capture or release the cursor (default).
 .
 :CONFIG_TRANSPARENCY
 Set the transparency of the DOSBox Staging screen (0 by default).
@@ -546,30 +1444,6 @@ Select the frame presentation mode:
   cfr:   Always present DOS frames at a constant frame rate.
   vfr:   Always present changed DOS frames at a variable frame rate.
 .
-:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
-Video system to use for output ('opengl' by default).
-Some shaders require bilinear interpolation, making that the safest choice.
-.
-:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
-Video system to use for output ('texture' by default).
-Some shaders require bilinear interpolation, making that the safest choice.
-.
-:CONFIGITEM_OUTPUT_OPENGL
-  opengl:     Uses bilinear interpolation.
-.
-:CONFIGITEM_OUTPUT_TEXTURE
-  texture:    Uses bilinear interpolation.
-.
-:CONFIGITEM_OUTPUT_OPENGLNB
-  openglnb:   Uses nearest-neighbour interpolation (no bilinear).
-.
-:CONFIGITEM_OUTPUT_TEXTURENB
-  texturenb:  Uses nearest-neighbour interpolation (no bilinear).
-.
-:CONFIG_TEXTURE_RENDERER
-Render driver to use in 'texture' output mode ('auto' by default).
-Use 'texture_renderer = auto' for an automatic choice.
-.
 :CONFIG_CAPTURE_MOUSE
 Moved to [mouse] section and renamed to 'mouse_capture'.
 .
@@ -580,7 +1454,7 @@ Moved to [mouse] section and renamed to 'mouse_sensitivity'.
 Moved to [mouse] section and renamed to 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
-Keep the console open if an error has occurred (enabled by default).
+Keep the console open if an error has occurred ('on' by default).
 .
 :CONFIG_PRIORITY
 Priority levels to apply when active and inactive, respectively.
@@ -588,10 +1462,10 @@ Priority levels to apply when active and inactive, respectively.
 'auto' lets the host operating system manage the priority.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Mute the sound when the window is inactive (disabled by default).
+Mute the sound when the window is inactive ('off' by default).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Pause emulation when the window is inactive (disabled by default).
+Pause emulation when the window is inactive ('off' by default).
 .
 :CONFIG_MAPPERFILE
 Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the
@@ -605,51 +1479,15 @@ Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment
 variable which usually blocks the OS screensaver while the emulator is
 running ('auto' by default).
 .
-:CONFIG_WINDOW_TITLEBAR
-Space separated list of information to be displayed in the window's titlebar
-('program=name dosbox=auto cycles=on mouse=full' by default). If a parameter
-is not specified, its default value is used.
-Possible information to display are:
-  animation=<value>:  If set to 'on' (default), animate the audio/video
-                      recording mark. Set to 'off' to disable animation; this
-                      is useful if your screen font produces weird results.
-  program=<value>:    Display the name of the running program.
-                      <value> can be one of:
-                        none/off:  Do not display program name.
-                        name:      Program name, with file extension (default).
-                        path:      Name, extension, and full absolute path.
-                        segment:   Display program memory segment name.
-                        'Title':   Custom name. Alternatively, you can use
-                                   "Title", (Title), <Title> or [Title] form.
-                      Note: With some software (like Windows 3.1x in enhanced
-                      mode) it is impossible to recognize the full program
-                      name or path; in such cases 'segment' is used instead.
-  dosbox=<value>:     Display 'DOSBox Staging' in the title bar.
-                      <value> can be one of:
-                        always:   Always display 'DOSBox Staging'.
-                        auto:     Only display it if no program is running or
-                                  'program=none' is set (default).
-  version=<value>:    Display DOSBox version information.
-                      <value> can be one of:
-                         none/off:  Do not display DOSBox version (default).
-                         simple:    Simple version information.
-                         detailed:  Include Git hash, if available.
-  cycles=<value>:     If set to 'on' (default), show CPU cycles setting.
-                      Set to 'off' to disable cycles setting display.
-  mouse=<value>:      Mouse capturing hint verbosity level:
-                        none/off:  Do not display any mouse hints.
-                        short:     Only display if mouse is captured.
-                        full:      Display verbose information on how to
-                                   capture or release the cursor (default).
-.
 :CONFIG_LANGUAGE
-Select a language to use: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',
-or 'ru' (unset by default; this defaults to English).
+Select the DOS messages language:
+  auto:     Detects the language from the host OS (default).
+  <value>:  Loads a translation from the given file.
 Notes:
-  - This setting will override the 'LANG' environment variable, if set.
-  - The bundled 'resources/translations' directory with the executable holds
-    these files. Please keep it along-side the executable to support this
-    feature.
+  - The following language files are available:
+    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' and 'ru'.
+  - English is built-in, the rest is stored in the bundled
+    'resources/translations' directory.
 .
 :CONFIG_MACHINE
 Set the video adapter or machine to emulate:
@@ -695,36 +1533,57 @@ How software-corrupted memory chain blocks should be handled:
 :CONFIG_VMEMSIZE
 Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for
 the selected video adapter ('auto' by default). See the 'machine' setting for
-the list of valid options per adapter.
+the list of valid options and defaults per adapter.
+.
+:CONFIG_VMEM_DELAY
+Set video memory access delay emulation ('off' by default).
+  off:      Disable video memory access delay emulation (default).
+            This is preferable for most games to avoid slowdowns.
+  on:       Enable video memory access delay emulation (3000 ns).
+            This can help reduce or eliminate flicker in Hercules,
+            CGA, EGA, and early VGA games.
+  <value>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;
+            500 to 5000 ns is the most useful range.
+Note: Only set this on a per-game basis when necessary as it slows down
+      the whole emulator.
 .
 :CONFIG_DOS_RATE
-Customize the emulated video mode's frame rate, in Hz:
-  default:  The DOS video mode determines the rate (recommended; default).
+Customize the emulated video mode's frame rate.
+  default:  The DOS video mode determines the rate (default).
   host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
-We recommend the 'default' rate; otherwise test and set on a per-game basis.
+  <value>:  Sets the rate to an exact value in between 24.000 and 1000.000 Hz.
+Note: We recommend the 'default' rate, otherwise test and set on a per-game
+      basis.
 .
 :CONFIG_VESA_MODES
-Controls the selection of VESA 1.2 and 2.0 modes offered:
-  compatible:  A tailored selection that maximizes game compatibility.
-               This is recommended along with 4 or 8 MB of video memory
-               (default).
-  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by
-               Extreme Assault. Use only if needed, as it's not S3 compatible.
-  all:         All modes for a given video memory size, however some games
-               may not use them properly (flickering) or may need
-               more system memory to use them.
+Controls which VESA video modes are available:
+  compatible:  Only the most compatible VESA modes for the configured video
+               memory size (default). Recommended with 4 or 8 MB of video
+               memory ('vmemsize') for the widest compatiblity with games.
+               320x200 high colour modes are excluded as they were not
+               properly supported until the late '90s. The 256-colour linear
+               framebuffer 320x240, 400x300, and 512x384 modes are also
+               excluded as they cause timing problems in Build Engine games.
+  halfline:    Same as 'compatible', but the 120h VESA mode is replaced with
+               a special halfline mode used by Extreme Assault. Use only if
+               needed.
+  all:         All modes are available, including extra DOSBox-specific VESA
+               modes. Use 8 MB of video memory for the best results. Some
+               games misbehave in the presence of certain VESA modes; try
+               'compatible' mode if this happens. The 320x200 high colour
+               modes available in this mode are often required by late '90s
+               demoscene productions.
 .
 :CONFIG_VGA_8DOT_FONT
-Use 8-pixel-wide fonts on VGA adapters (disabled by default).
+Use 8-pixel-wide fonts on VGA adapters ('off' by default).
 .
 :CONFIG_VGA_RENDER_PER_SCANLINE
-Emulate accurate per-scanline VGA rendering (enabled by default).
+Emulate accurate per-scanline VGA rendering ('on' by default).
 Currently, you need to disable this for a few games, otherwise they will crash
 at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance (enabled by default).
+Permit changes known to improve performance ('on' by default).
 Currently, no games are known to be negatively affected by this.
 Please file a bug with the project if you find a game that fails
 when this is enabled so we will list them here.
@@ -736,16 +1595,17 @@ How autoexec sections are handled from multiple config files:
 .
 :CONFIG_AUTOMOUNT
 Mount 'drives/[c]' directories as drives on startup, where [c] is a lower-case
-drive letter from 'a' to 'y' (enabled by default). The 'drives' folder can be
+drive letter from 'a' to 'y' ('on' by default). The 'drives' folder can be
 provided relative to the current directory or via built-in resources.
 Mount settings can be optionally provided using a [c].conf file along-side
 the drive's directory, with content as follows:
   [drive]
-  type    = dir, overlay, floppy, or cdrom
-  label   = custom_label
-  path    = path-specification, ie: path = %%path%%;c:\tools
+  type     = dir, overlay, floppy, or cdrom
+  label    = custom_label
+  path     = path-specification (e.g., path = %%path%%;c:\tools)
   override_drive = mount the directory to this drive instead (default empty)
-  verbose = true or false
+  verbose  = on or off
+  readonly = on or off
 .
 :CONFIG_STARTUP_VERBOSITY
 Controls verbosity prior to displaying the program ('auto' by default):
@@ -758,12 +1618,12 @@ Controls verbosity prior to displaying the program ('auto' by default):
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Many games open all their files with writable permissions; even files that they
 never modify. This setting lets you write-protect those files while still
-allowing the game to read them (enabled by default). A second use-case: if
-you're using a copy-on-write or network-based filesystem, this setting avoids
+allowing the game to read them ('on' by default). A second use-case: if you're
+using a copy-on-write or network-based filesystem, this setting avoids
 triggering write operations for these write-protected files.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
-Allow shortcuts for simpler configuration management (enabled by default).
+Allow shortcuts for simpler configuration management ('on' by default).
 E.g., instead of 'config -set sbtype sb16', it is enough to execute
 'sbtype sb16', and instead of 'config -get sbtype', you can just execute
 the 'sbtype' command.
@@ -771,120 +1631,9 @@ the 'sbtype' command.
 :CONFIG_FRAMESKIP
 Consider capping frame rates using the 'host_rate' setting.
 .
-:CONFIG_ASPECT
-Set the aspect ratio correction mode (auto by default):
-  auto, on:            Apply aspect ratio correction for modern square-pixel
-                       flat-screen displays, so DOS video modes with non-square
-                       pixels appear as they would on a 4:3 display aspect
-                       ratio CRT monitor the majority of DOS games were
-                       designed for. This setting only affects video modes that
-                       use non-square pixels, such as 320x200 or 640x400;.
-                       square-pixelmodes (e.g., 320x240, 640x480, and 800x600),
-                       are displayed as-is.
-  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes
-                       are displayed with square pixels. Most 320x200 games
-                       will appear squashed, but a minority of titles (e.g.,
-                       DOS ports of PAL Amiga games) need square pixels to
-                       appear as the artists intended.
-  stretch:             Calculate the aspect ratio from the viewport's
-                       dimensions. Combined with 'viewport', this mode is
-                       useful to force arbitrary aspect ratios (e.g.,
-                       stretching DOS games to fullscreen on 16:9 displays) and
-                       to emulate the horizontal and vertical stretch controls
-                       of CRT monitors.
-.
-:CONFIG_INTEGER_SCALING
-Constrain the horizontal or vertical scaling factor to the largest integer
-value so the image still fits into the viewport. The configured aspect ratio is
-always maintained according to the 'aspect' and 'viewport' settings, which may
-result in a non-integer scaling factor in the other dimension. If the image is
-larger than the viewport, the integer scaling constraint is auto-disabled (same
-as 'off'). Possible values:
-  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only
-               (see 'glshader'), otherwise 'off' (default).
-  vertical:    Constrain the vertical scaling factor to integer values.
-               This is the recommended setting for CRT shaders to avoid uneven
-               scanlines and interference artifacts.
-  horizontal:  Constrain the horizontal scaling factor to integer values.
-  off:         No integer scaling constraint is applied; the image fills the
-               viewport while maintaining the configured aspect ratio.
-.
-:CONFIG_VIEWPORT
-Set the viewport size (maximum drawable area). The video output is always
-contained within the viewport while taking the configured aspect ratio into
-account (see 'aspect'). Possible values:
-  fit:             Fit the viewport into the available window/screen (default).
-                   There might be padding (black areas) around the image with
-                   'integer_scaling' enabled.
-  WxH:             Set a fixed viewport size in WxH format in logical units
-                   (e.g., 960x720). The specified size must not be larger than
-                   the desktop. If it's larger than the window size, it's
-                   scaled to fit within the window.
-  N%:              Similar to 'WxH' but the size is specified as a percentage
-                   of the desktop size.
-  relative H% V%:  The viewport is set to a 4:3 aspect ratio rectangle fit into
-                   the available window/screen, then it's scaled by the H and V
-                   horizontal and vertical scaling factors (valid range is from
-                   20% to 300%). The resulting viewport is allowed to extend
-                   beyond the window/screen. Useful to force arbitrary display
-                   aspect ratios with 'aspect = stretch' and to zoom into the
-                   image. This effectively emulates the horizontal and vertical
-                   stretch controls of CRT monitors.
-Notes:
-  - Using 'relative' mode with 'integer_scaling' enabled could lead to
-    surprising (but correct) results.
-  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey
-    actions to set the stretch in 'relative' mode in real-time.
-.
-:CONFIG_MONOCHROME_PALETTE
-Set the palette for monochrome display emulation ('amber' by default).
-Works only with the 'hercules' and 'cga_mono' machine types.
-Note: You can also cycle through the available palettes via hotkeys.
-.
-:CONFIG_CGA_COLORS
-Set the interpretation of CGA RGBI colours. Affects all machine types capable
-of displaying CGA or better graphics. Built-in presets:
-  default:       The canonical CGA palette, as emulated by VGA adapters
-                 (default).
-  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown
-                 level. The brown level can be provided as an optional second
-                 parameter (0 - red, 50 - brown, 100 - dark yellow;
-                 defaults to 50). E.g. tandy 100
-  tandy-warm:    Emulation of the actual colour output of an unknown Tandy
-                 monitor.
-  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor
-                 with a unique contrast control that dims non-bright colours
-                 only. The contrast can be optionally provided as a second
-                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60
-  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Palettes used by the Amiga ports of Sierra AGI games.
-  agi-amigaish:  A mix of EGA and Amiga colours used by the Sarien
-                 AGI-interpreter.
-  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
-  colodore:      Commodore 64 inspired colours based on the Colodore palette.
-  colodore-sat:  Colodore palette with 20% more saturation.
-  dga16:         A modern take on the canonical CGA palette with dialed back
-                 contrast.
-You can also set custom colours by specifying 16 space or comma separated
-colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full
-red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours
-are ordered as follows:
-  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
-  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
-Their default values, shown here in 6-digit hex code format, are:
-  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
-  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
-.
-:CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
-  - If you used the normal2x/3x scalers, set the desired 'windowresolution'
-    or 'viewport' instead, or consider using 'integer_scaling'.
-  - If you used an advanced scaler, consider one of the 'glshader'
-    options instead.
-.
 :CONFIGITEM_GLSHADER
 Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL
-output modes. Adaptive CRT shader options:
+output modes ('crt-auto' by default). Adaptive CRT shader options:
   crt-auto:               A CRT shader that prioritises developer intent and
                           how people experienced the game at the time of
                           release (default). The appropriate shader variant is
@@ -907,9 +1656,132 @@ output modes. Adaptive CRT shader options:
   crt-auto-arcade-sharp:  A sharper variant of the arcade shader for those who
                           like the thick scanlines but want to retain the
                           horizontal sharpness of a typical PC monitor.
-Other options include 'sharp', 'none', a shader listed using the
-'--list-glshaders' command-line argument, or an absolute or relative path
-to a file. In all cases, you may omit the shader's '.glsl' file extension.
+
+Other shader options include (non-exhaustive list):
+  sharp:                  Upscale the image treating the pixels as rectangles.
+                          Results in a sharp image with minimum blur.
+  bilinear:               Upscale the image using bilinear interpolation
+                          (results in a blurry image).
+  nearest:                Upscale the image using nearest-neighbour
+                          interpolation (also known as "no bilinear"). Results
+                          in the sharpest possible image at the expense of
+                          uneven pixels (this is less of an issue on high
+                          resolution screens).
+
+Start DOSBox Staging with the '--list-glshaders' command line option to see the
+full list of available shaders. You can also use an absolute or relative path to
+a file. In all cases, you may omit the shader's '.glsl' file extension.
+.
+:CONFIG_ASPECT
+Set the aspect ratio correction mode ('auto' by default):
+  auto, on:            Apply aspect ratio correction for modern square-pixel
+                       flat-screen displays, so DOS video modes with non-square
+                       pixels appear as they would on a 4:3 display aspect
+                       ratio CRT monitor the majority of DOS games were
+                       designed for. This setting only affects video modes that
+                       use non-square pixels, such as 320x200 or 640x400;.
+                       square-pixelmodes (e.g., 320x240, 640x480, and 800x600),
+                       are displayed as-is.
+  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes
+                       are displayed with square pixels. Most 320x200 games
+                       will appear squashed, but a minority of titles (e.g.,
+                       DOS ports of PAL Amiga games) need square pixels to
+                       appear as the artists intended.
+  stretch:             Calculate the aspect ratio from the viewport's
+                       dimensions. Combined with 'viewport', this mode is
+                       useful to force arbitrary aspect ratios (e.g.,
+                       stretching DOS games to fullscreen on 16:9 displays) and
+                       to emulate the horizontal and vertical stretch controls
+                       of CRT monitors.
+.
+:CONFIG_INTEGER_SCALING
+Constrain the horizontal or vertical scaling factor to the largest integer
+value so the image still fits into the viewport ('auto' by default). The
+configured aspect ratio is always maintained according to the 'aspect' and
+'viewport' settings, which may result in a non-integer scaling factor in the
+other dimension. If the image is larger than the viewport, the integer scaling
+constraint is auto-disabled (same as 'off'). Possible values:
+  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only
+               (see 'glshader'), otherwise 'off' (default).
+  vertical:    Constrain the vertical scaling factor to integer values.
+               This is the recommended setting for CRT shaders to avoid uneven
+               scanlines and interference artifacts.
+  horizontal:  Constrain the horizontal scaling factor to integer values.
+  off:         No integer scaling constraint is applied; the image fills the
+               viewport while maintaining the configured aspect ratio.
+.
+:CONFIG_VIEWPORT
+Set the viewport size ('fit' by default). This is the maximum drawable area;
+the video output is always contained within the viewport while taking the
+configured aspect ratio into account (see 'aspect'). Possible values:
+  fit:             Fit the viewport into the available window/screen (default).
+                   There might be padding (black areas) around the image with
+                   'integer_scaling' enabled.
+  WxH:             Set a fixed viewport size in WxH format in logical units
+                   (e.g., 960x720). The specified size must not be larger than
+                   the desktop. If it's larger than the window size, it's
+                   scaled to fit within the window.
+  N%%:              Similar to 'WxH' but the size is specified as a percentage
+                   of the desktop size.
+  relative H%% V%%:  The viewport is set to a 4:3 aspect ratio rectangle fit into
+                   the available window/screen, then it's scaled by the H and V
+                   horizontal and vertical scaling factors (valid range is from
+                   20%% to 300%%). The resulting viewport is allowed to extend
+                   beyond the window/screen. Useful to force arbitrary display
+                   aspect ratios with 'aspect = stretch' and to zoom into the
+                   image. This effectively emulates the horizontal and vertical
+                   stretch controls of CRT monitors.
+Notes:
+  - Using 'relative' mode with 'integer_scaling' enabled could lead to
+    surprising (but correct) results.
+  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey
+    actions to set the stretch in 'relative' mode in real-time.
+.
+:CONFIG_MONOCHROME_PALETTE
+Set the palette for monochrome display emulation ('amber' by default).
+Works only with the 'hercules' and 'cga_mono' machine types.
+Note: You can also cycle through the available palettes via hotkeys.
+.
+:CONFIG_CGA_COLORS
+Set the interpretation of CGA RGBI colours ('default' by default). Affects all
+machine types capable of displaying CGA or better graphics. Built-in presets:
+  default:       The canonical CGA palette, as emulated by VGA adapters
+                 (default).
+  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown
+                 level. The brown level can be provided as an optional second
+                 parameter (0 - red, 50 - brown, 100 - dark yellow;
+                 defaults to 50). E.g. tandy 100
+  tandy-warm:    Emulation of the actual colour output of an unknown Tandy
+                 monitor.
+  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor
+                 with a unique contrast control that dims non-bright colours
+                 only. The contrast can be optionally provided as a second
+                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60
+  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
+                 Palettes used by the Amiga ports of Sierra AGI games.
+  agi-amigaish:  A mix of EGA and Amiga colours used by the Sarien
+                 AGI-interpreter.
+  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
+  colodore:      Commodore 64 inspired colours based on the Colodore palette.
+  colodore-sat:  Colodore palette with 20%% more saturation.
+  dga16:         A modern take on the canonical CGA palette with dialed back
+                 contrast.
+You can also set custom colours by specifying 16 space or comma separated
+colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full
+red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours
+are ordered as follows:
+  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
+  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
+Their default values, shown here in 6-digit hex code format, are:
+  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
+.
+:CONFIG_SCALER
+Software scalers are deprecated in favour of hardware-accelerated options:
+  - If you used the normal2x/3x scalers, set the desired 'windowresolution'
+    or 'viewport' instead, or consider using 'integer_scaling'.
+  - If you used an advanced scaler, consider one of the 'glshader'
+    options instead.
 .
 :CONFIG_COMPOSITE
 Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine
@@ -938,48 +1810,140 @@ Luminosity of the image, from dark to light (0 by default).
 Convergence of subpixel elements, from blurry to sharp (0 by default).
 .
 :CONFIG_CORE
-CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic
-if available and appropriate.
+Type of CPU emulation core to use ('auto' by default).
+  auto:     'normal' core for real mode programs, 'dynamic' core for protected
+            mode programs (default). Most programs will run correctly with this
+            setting.
+  normal:   The DOS program is interpreted instruction by instruction. This
+            yields the most accurate timings, but puts 3-5 times more load on
+            the host CPU compared to the 'dynamic' core. Therefore, it's
+            generally only recommended for real mode programs that don't need
+            a fast emulated CPU or are timing-sensitive. The 'normal' core is
+            also necessary for programs that self-modify their code.
+  simple:   The 'normal' core optimised for old real mode programs; it might
+            give you slightly better compatibility with older games. Auto-
+            switches to the 'normal' core in protected mode.
+  dynamic:  The instructions of the DOS program are translated to host CPU
+            instructions in blocks and are then executed directly. This puts
+            3-5 times less load on the host CPU compared to the 'normal' core,
+            but the timings might be less accurate. The 'dynamic' core is a
+            necessity for demanding DOS programs (e.g., 3D SVGA games).
+            Programs that self-modify their code might misbehave or crash on
+            the 'dynamic' core; use the 'normal' core for such programs.
 .
 :CONFIG_CPUTYPE
-CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.
-Prefetch variant emulates the prefetch queue and requires the 'normal' core.
+CPU type to emulate ('auto' by default).
+You should only change this if the program doesn't run correctly on 'auto'.
+  auto:          The fastest and most compatible setting (default).
+                 Technically, this is '386_fast' plus 486 CPUID, 486 CR
+                 register behaviour, and extra 486 instructions.
+  386:           386 CPUID and 386 specific page access level calculation.
+  386_fast:      Same as '386' but with loose page privilege checks which is
+                 much faster.
+  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.
+                 Requires 'core = normal'. This setting is necessary for
+                 programs that self-modify their code or employ anti-debugging
+                 tricks. Games that require '386_prefetch' include Contra, FIFA
+                 International Soccer (1994), Terminator 1, and X-Men: Madness
+                 in The Murderworld.
+  486:           486 CPUID, 486+ specific page access level calculation, 486 CR
+                 register behaviour, and extra 486 instructions.
+  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register
+                 behaviour, and RDTSC instruction support. Recommended for
+                 Windows 3.x games (e.g., Betrayal in Antara).
+  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few
+                 games use MMX instructions; it's mostly only useful for
+                 demoscene productions.
 .
 :CONFIG_CYCLES
-Number of instructions DOSBox tries to emulate per millisecond
-('auto' by default). Setting this value too high may result in sound drop-outs
-and lags.
-  auto:            Try to guess what a game needs. It usually works, but can
-                   fail with certain games.
-  fixed <number>:  Set a fixed number of cycles. This is what you usually
-                   need if 'auto' fails (e.g. 'fixed 4000').
-  max:             Allocate as much cycles as your computer is able to handle.
+The 'cycles' setting is deprecated but still accepted; please use the
+'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' settings instead as
+support will be removed in the future.
+.
+:CONFIG_CPU_CYCLES
+Speed of the emulated CPU ('3000' by default). If 'cpu_cycles_protected' is on
+'auto', this sets the cycles for both real and protected mode programs.
+  <number>:  Emulate a fixed number of cycles per millisecond (roughly
+             equivalent to MIPS). Valid range is from 50 to 2000000.
+  max:       Emulate as many cycles as your host CPU can handle on a single
+             core. The number of cycles per millisecond can vary; this might
+             cause issues in some DOS programs.
+Notes:
+  - Setting the CPU speed to 'max' or to high fixed values may result in sound
+    drop-outs and general lagginess.
+  - Set the lowest fixed cycles value that runs the game at an acceptable speed
+    for the best results.
+  - Ballpark cycles values for common CPUs. DOSBox does not do cycle-accurate
+    CPU emulation, so treat these as starting points, then fine-tune per game.
+      8088 (4.77 MHz)     300
+      286-8               700
+      286-12             1500
+      386SX-20           3000
+      386DX-33           6000
+      386DX-40           8000
+      486DX-33          12000
+      486DX/2-66        25000
+      Pentium 90        50000
+      Pentium MMX-166  100000
+      Pentium II 300   200000
+.
+:CONFIG_CPU_CYCLES_PROTECTED
+Speed of the emulated CPU for protected mode programs only
+('60000' by default).
+  auto:      Use the `cpu_cycles' setting.
+  <number>:  Emulate a fixed number of cycles per millisecond (roughly
+             equivalent to MIPS). Valid range is from 50 to 2000000.
+  max:       Emulate as many cycles as your host CPU can handle on a single
+             core. The number of cycles per millisecond can vary; this might
+             cause issues in some DOS programs.
+Note: See 'cpu_cycles' setting for further info.
+.
+:CONFIG_CPU_THROTTLE
+Throttle down the number of emulated CPU cycles dynamically if your host CPU
+cannot keep up ('off' by default).
+Only affects fixed cycles settings. When enabled, the number of cycles per
+millisecond can vary; this might cause issues in some DOS programs.
 .
 :CONFIG_CYCLEUP
-Number of cycles added with the increase cycles hotkey (10 by default).
-Setting it lower than 100 will be a percentage.
+Number of cycles to add with the 'Inc Cycles' hotkey (10 by default).
+Values lower than 100 are treated as a percentage increase.
 .
 :CONFIG_CYCLEDOWN
-Number of cycles subtracted with the decrease cycles hotkey (20 by default).
-Setting it lower than 100 will be a percentage.
+Number of cycles to subtract with the 'Dec Cycles' hotkey (20 by default).
+Values lower than 100 are treated as a percentage decrease.
 .
 :CONFIG_VOODOO
-Enable 3dfx Voodoo emulation (enabled by default).
+Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level
+emulation of the Voodoo card without any OpenGL passthrough, so it requires a
+powerful CPU. Most games need the DOS Glide driver called 'GLIDE2X.OVL' to be
+in the path for 3dfx mode to work. Many games include their own Glide driver
+variants, but for some you need to provide a suitable 'GLIDE2X.OVL' version.
+A small number of games integrate the Glide driver into their code, so they
+don't need 'GLIDE2X.OVL'.
 .
 :CONFIG_VOODOO_MEMSIZE
-Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 MB.
-The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit
-(TMU) as follows:
+Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by
+the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:
    4: 2 MB for the FBI and one TMU with 2 MB (default).
   12: 4 MB for the FBI and two TMUs, each with 4 MB.
 .
 :CONFIG_VOODOO_MULTITHREADING
-Use threads to improve 3dfx Voodoo performance (enabled by default).
+Renamed to 'voodoo_threads'
+.
+:CONFIG_VOODOO_THREADS
+Use threads to improve 3dfx Voodoo performance:
+  auto:     Use up to 16 threads based on available CPU cores (default).
+  <value>:  Set a specific number of threads between 1 and 128.
+Note: Setting this to a higher value than the number of logical CPUs your
+      hardware supports is very likely to harm performance. This has been
+      measured to scale well up to 8-16 threads, but it has not been tested
+      on a many-core CPU. If you have a Threadripper or similar CPU, please
+      let us know how it goes.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect
-(disabled by default). Only suggested if you have a fast desktop-class CPU, as
-it can impact frame rates on slower systems.
+('on' by default). Bilinear filtering can impact frame rates on slower systems;
+try turning it off if you're not getting adequate performance.
 .
 :CONFIG_CAPTURE_DIR
 Directory where the various captures are saved, such as audio, video, MIDI
@@ -1023,11 +1987,11 @@ For touch-screen control, use 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Release the captured mouse by middle-clicking, and also capture it in
-seamless mode (enabled by default).
+seamless mode ('on' by default).
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Allow seamless mouse behavior and mouse pointer release to work in fullscreen
-mode on systems with more than one display (enabled by default).
+mode on systems with more than one display ('on' by default).
 Note: You should disable this if it incorrectly detects multiple displays
       when only one should actually be used. This might happen if you are
       using mirrored display mode or using an AV receiver's HDMI input for
@@ -1043,35 +2007,73 @@ MOUSECTL.COM tool available on the Z drive.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Enable to bypass your operating system's mouse acceleration and sensitivity
-settings (enabled by default). Works in fullscreen or when the mouse is
-captured in windowed mode.
+settings ('on' by default). Works in fullscreen or when the mouse is captured
+in windowed mode.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER
+Enable the built-in DOS mouse driver ('on' by default). This results in the
+lowest possible latency and the smoothest mouse movement, so only disable it
+and load a real DOS mouse driver if it's really necessary (e.g., if a game is
+not compatible with the built-in driver).
+  on:   Enable the built-in mouse driver. `ps2_mouse_model` and
+        `com_mouse_model` have no effect on the built-in driver.
+  off:  Disable the built-in mouse driver (if you don't want mouse support or
+        you want to load a real DOS mouse driver). To use a real DOS driver
+        (e.g., MOUSE.COM or CTMOUSE.EXE), configure the mouse type with
+        `ps2_mouse_model` or `com_mouse_model`, then load the driver.
+        A real DOS driver might increase compatibility with some programs,
+        but will introduce more input latency.
+Note: The built-in driver is auto-disabled if you boot into real MS-DOS or
+      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,
+      but the Windows 3.x mouse driver takes over.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Enable built-in DOS mouse driver (enabled by default).
-Notes:
-  - Disable if you intend to use original MOUSE.COM driver in emulated DOS.
-  - When guest OS is booted, built-in driver gets disabled automatically.
+Renamed to 'builtin_dos_mouse_driver'.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_MODEL
+Set the mouse model to be simulated by the built-in DOS mouse driver ('2button'
+by default).
+  2button:  2 buttons, the safest option for most games. The majority of DOS
+            games onoly support 2 buttons, some might misbehave if the middle
+            button is pressed.
+  3button:  3 buttons, only supported by very few DOS games. Only use this if
+            the game is known to support a 3-button mouse.
+  wheel:    3 buttons + wheel, supports the CuteMouse WheelAPI version 1.0.
+            No DOS game uses the mouse wheel, only a handful of DOS applications
+            and Windows 3.x with special third-party drivers.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_OPTIONS
+Additional built-in DOS mouse driver settings as a list of space or comma
+separated options (unset by default).
+  immediate:  Update mouse movement counters immediately, without waiting for
+              interrupt. May improve mouse latency in fast-paced games (arcade,
+              FPS, etc.), but might cause issues in some titles.
+              List of known incompatible games:
+                - Ultima Underworld: The Stygian Abyss
+                - Ultima Underworld II: Labyrinth of Worlds
+              Please report other incompatible games so we can update this list.
+  modern:     If provided, v7.0+ Microsoft mouse driver behaviour is emulated,
+              otherwise the v6.0 and earlier behaviour (the two are slightly
+              incompatible). Only Descent II with the official Voodoo patch has
+              been found to require the v7.0+ behaviour so far.
+
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Update mouse movement counters immediately, without waiting for interrupt
-(disabled by default). May improve gameplay, especially in fast-paced games
-(arcade, FPS, etc.), as for some games it effectively boosts the mouse
-sampling rate to 1000 Hz, without increasing interrupt overhead.
-Might cause compatibility issues. List of known incompatible games:
-  - Ultima Underworld: The Stygian Abyss
-  - Ultima Underworld II: Labyrinth of Worlds
-Please report it if you find another incompatible game so we can update this
-list.
+Configure using 'builtin_dos_mouse_driver_options'.
 .
 :CONFIG_PS2_MOUSE_MODEL
-PS/2 AUX port mouse model:
+Set the PS/2 AUX port mouse model, or in other words, the type of the virtual
+mouse plugged into the emulated PS/2 mouse port ('explorer' by default).
+The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').
   standard:      3 buttons, standard PS/2 mouse.
   intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.
   explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer (default).
-  none:          no PS/2 mouse emulated.
+  none:          no PS/2 mouse.
 .
 :CONFIG_COM_MOUSE_MODEL
-COM (serial) port default mouse model:
+Set the default COM (serial) mouse model, or in other words, the type of the
+virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).
+The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').
   2button:      2 buttons, Microsoft mouse.
   3button:      3 buttons, Logitech mouse;
                 mostly compatible with Microsoft mouse.
@@ -1085,34 +2087,42 @@ COM (serial) port default mouse model:
 Note: Enable COM port mice in the [serial] section.
 .
 :CONFIG_VMWARE_MOUSE
-VMware mouse interface (enabled by default).
-Fully compatible only with experimental 3rd party Windows 3.1x driver.
+VMware mouse interface ('on' by default).
+with experimental 3rd party Windows 3.1x driver.
 Note: Requires PS/2 mouse to be enabled.
 .
 :CONFIG_VIRTUALBOX_MOUSE
-VirtualBox mouse interface (enabled by default).
+VirtualBox mouse interface ('on' by default).
 Fully compatible only with 3rd party Windows 3.1x driver.
 Note: Requires PS/2 mouse to be enabled.
 .
 :CONFIG_NOSOUND
-Enable silent mode (disabled by default).
-Sound is still fully emulated in silent mode, but DOSBox outputs silence.
+Enable silent mode ('off' by default).
+Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.
+Capturing the emulated audio output to a WAV file works in silent mode.
 .
 :CONFIG_RATE
-Mixer sample rate (%s by default).
+Sample rate of DOSBox's internal audio mixer in Hz (%s by default).
+Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio
+hardware uses a native rate of 48000 Hz. Recommend leaving this as-is unless
+you have good reason to change it. The OS will most likely resample non-standard
+sample rates to 48000 Hz anyway.
 .
 :CONFIG_BLOCKSIZE
-Mixer block size in sample frames (%s by default). Larger values might help
-with sound stuttering but the sound will also be more lagged.
+Block size of the host audio device in sample frames (%s by default).
+Valid range is 64 to 8192. Should be set to power-of-two values (e.g., 256,
+512, 1024, etc.) Larger values might help with sound stuttering but will
+introduce more latency. Also see 'negotiate'.
 .
 :CONFIG_PREBUFFER
-How many milliseconds of sound to render on top of the blocksize
-(%s by default). Larger values might help with sound stuttering but the sound
-will also be more lagged.
+How many milliseconds of sound to render in advance on top of 'blocksize'
+(%s by default). Larger values might help with sound stuttering but will
+introduce more latency.
 .
 :CONFIG_NEGOTIATE
-Let the system audio driver negotiate possibly better sample rate and blocksize
-settings (%s by default).
+Negotiate a possibly better 'blocksize' setting (%s by default).
+Enable it if you're not getting audio or the sound is stuttering with your
+'blocksize' setting. Disable it to force the manually set 'blocksize' value.
 .
 :CONFIG_COMPRESSOR
 Enable the auto-leveling compressor on the master channel to prevent clipping
@@ -1121,21 +2131,28 @@ of the audio output:
   on:   Enable compressor (default).
 .
 :CONFIG_CROSSFEED
-Enable crossfeed globally on all stereo channels for headphone listening:
+Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan
+the instruments 100%% left and 100%% right in the stereo field on these audio
+devices which is unpleasant to listen to in headphones. With crossfeed enabled,
+a portion of the left channel signal is mixed into the right channel and vice
+versa, creating a more natural listening experience.
   off:     No crossfeed (default).
   on:      Enable crossfeed (normal preset).
   light:   Light crossfeed (strength 15).
   normal:  Normal crossfeed (strength 40).
   strong:  Strong crossfeed (strength 65).
-Note: You can fine-tune each channel's crossfeed strength using the MIXER.
+
+Notes:
+  - Use the MIXER command to apply crossfeed to other audio channels as well
+    and to fine-tune the crossfeed strength per channel.
 .
 :CONFIG_REVERB
-Enable reverb globally to add a sense of space to the sound:
+Reverb effect that adds a sense of space to the sound:
   off:     No reverb (default).
   on:      Enable reverb (medium preset).
   tiny:    Simulates the sound of a small integrated speaker in a room;
            specifically designed for small-speaker audio systems
-           (PC Speaker, Tandy, PS/1 Audio, and LPT DAC devices).
+           (PC speaker, Tandy, PS/1 Audio, and LPT DAC devices).
   small:   Adds a subtle sense of space; good for games that use a single
            synth channel (typically OPL) for both music and sound effects.
   medium:  Medium room preset that works well with a wide variety of games.
@@ -1143,128 +2160,85 @@ Enable reverb globally to add a sense of space to the sound:
            channels for music and digital audio.
   huge:    A stronger variant of the large hall preset; works really well
            in some games with more atmospheric soundtracks.
-Note: You can fine-tune each channel's reverb level using the MIXER.
+
+Notes:
+  - The presets apply a noticeable amount of reverb to the synth mixer channels
+    (except for synths with built-in reverb; e.g., the Roland MT-32), and a
+    subtle amount to the digital audio channels.
+  - Use the MIXER command to fine-tune the reverb levels per channel.
 .
 :CONFIG_CHORUS
-Enable chorus globally to add a sense of stereo movement to the sound:
+Chorus effect that adds a sense of stereo movement to the sound:
   off:     No chorus (default).
   on:      Enable chorus (normal preset).
   light:   A light chorus effect (especially suited for synth music that
            features lots of white noise).
   normal:  Normal chorus that works well with a wide variety of games.
   strong:  An obvious and upfront chorus effect.
-Note: You can fine-tune each channel's chorus level using the MIXER.
-.
-:CONFIG_MIDIDEVICE
-Set where MIDI data from the emulated MPU-401 MIDI interface is sent
-('auto' by default):
-.
-:CONFIGITEM_MIDIDEVICE_COREMIDI
-  coremidi:    Any device that has been configured in the macOS
-               Audio MIDI Setup.
-.
-:CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio:   Use the built-in macOS MIDI synthesiser.
-.
-:CONFIGITEM_MIDIDEVICE_WIN32
-  win32:       Use the Win32 MIDI playback interface.
-.
-:CONFIGITEM_MIDIDEVICE_OSS
-  oss:         Use the Linux OSS MIDI playback interface.
-.
-:CONFIGITEM_MIDIDEVICE_ALSA
-  alsa:        Use the Linux ALSA MIDI playback interface.
-.
-:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
-  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).
-               See the [fluidsynth] section for detailed configuration.
-.
-:CONFIGITEM_MIDIDEVICE_MT32
-  mt32:        The built-in Roland MT-32 synthesizer.
-               See the [mt32] section for detailed configuration.
-.
-:CONFIGITEM_MIDIDEVICE_AUTO
-  auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is
-               set to 'fluidsynth' or 'mt32'), or a MIDI device external to
-               DOSBox (any other 'midiconfig' value). This might be a software
-               synthesizer or physical device. This is the default behaviour.
-.
-:CONFIGITEM_MIDIDEVICE_NONE
-  none:        Disable MIDI output.
-.
-:CONFIG_MIDICONFIG
-Configuration options for the selected MIDI interface (unset by default).
-This is usually the ID or name of the MIDI synthesizer you want
-to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').
-Notes:
 
+Notes:
+  - The presets apply the chorus effect to the synth channels only (except
+    for synths with built-in chorus; e.g. the Roland MT-32).
+  - Use the MIXER command to fine-tune the chorus levels per channel.
 .
-:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
-  - This option has no effect when using the built-in synthesizers
-    ('mididevice = fluidsynth' or 'mididevice = mt32').
-.
-:CONFIGITEM_MIDICONFIG_COREAUDIO
-  - When using 'coreaudio', you can specify a SoundFont here.
-.
-:CONFIGITEM_MIDICONFIG_ALSA
-  - When using ALSA, use the Linux command 'aconnect -l' to list all open
-    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer
-    client 14, port 0).
-.
-:CONFIGITEM_MIDICONFIG_MT32
-  - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware
-    may require a delay in order to prevent its buffer from overflowing.
-    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').
-.
-:CONFIG_MPU401
-MPU-401 mode to emulate ('intelligent' by default).
-.
-:CONFIG_RAW_MIDI_OUTPUT
-Enable raw, unaltered MIDI output (disabled by default).
-The MIDI drivers of many games don't fully conform to the MIDI standard,
-which makes editing the MIDI recordings of these games very error-prone and
-cumbersome in MIDI sequencers, often resulting in hanging or missing notes.
-DOSBox corrects the MIDI output of such games by default. This results in no
-audible difference whatsoever; it only affects the representation of the MIDI
-data. You should only enable 'raw_midi_output' if you really need to capture
-the raw, unaltered MIDI output of a program, e.g. when working with music
-applications, or when debugging MIDI issues.
+:CONFIG_DENOISER
+Remove low-level residual noise from the output of the OPL synth and the Roland
+Sound Canvas. The emulation of these devices is accurate to the original
+hardware units, which includes the emulation of a very low-level semi-random
+noise. Although this is authentic, most people would find it slightly annoying.
+  off:  Disable the denoiser.
+  on:   Enable the denoiser on the OPL and SOUNDCANVAS channels (default).
+        The denoiser does not introduce any sound quality degradation; it only
+        removes the barely audible residual noise in quiet passages.
 .
 :CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format ('default.sf2' by default).
-You can use an absolute or relative path, or the name of an .sf2 inside the
-'soundfonts' directory within your DOSBox configuration directory.
-An optional percentage value after the name will scale the SoundFont's volume.
+Name or path of SoundFont file to use ('default.sf2' by default).
+The SoundFont will be looked up in the following locations in order:
+  - The user-defined SoundFont directory (see 'soundfont_dir').
+  - The 'soundfonts' directory in your DOSBox configuration directory.
+  - Other common system locations.
+The '.sf2' extension can be omitted. You can use paths relative to the above
+locations or absolute paths as well.
+Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.
+.
+:CONFIG_SOUNDFONT_DIR
+Extra user-defined SoundFont directory (unset by default).
+If this is set, SoundFonts are looked up in this directory first, then in the
+the standard system locations.
+.
+:CONFIG_SOUNDFONT_VOLUME
+Set the SoundFont's volume as a percentage (100 by default).
 This is useful for normalising the volume of different SoundFonts.
-E.g. 'my_soundfont.sf2 50' will attenuate the volume by 50%.
 The percentage value can range from 1 to 800.
 .
 :CONFIG_FSYNTH_CHORUS
-Chorus effect: 'auto' (default), 'on', 'off', or custom values.
-When using custom values:
-  All five must be provided in-order and space-separated.
-  They are: voice-count level speed depth modulation-wave, where:
-    - voice-count is an integer from 0 to 99
-    - level is a decimal from 0.0 to 10.0
-    - speed is a decimal, measured in Hz, from 0.1 to 5.0
-    - depth is a decimal from 0.0 to 21.0
-    - modulation-wave is either 'sine' or 'triangle'
-  For example: chorus = 3 1.2 0.3 8.0 sine
+Configure the FluidSynth chorus. Possible values:
+  auto:      Enable chorus, except for known problematic SoundFonts (default).
+  on:        Always enable chorus.
+  off:       Disable chorus.
+  <custom>:  Custom setting via five space-separated values:
+               - voice-count:      Integer from 0 to 99
+               - level:            Decimal from 0.0 to 10.0
+               - speed:            Decimal from 0.1 to 5.0 (in Hz)
+               - depth:            Decimal from 0.0 to 21.0
+               - modulation-wave:  'sine' or 'triangle'
+             For example: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
 Note: You can disable the FluidSynth chorus and enable the mixer-level chorus
       on the FluidSynth channel instead, or enable both chorus effects at the
       same time. Whether this sounds good depends on the SoundFont and the
       chorus settings being used.
 .
 :CONFIG_FSYNTH_REVERB
-Reverb effect: 'auto' (default), 'on', 'off', or custom values.
-When using custom values:
-  All four must be provided in-order and space-separated.
-  They are: room-size damping width level, where:
-    - room-size is a decimal from 0.0 to 1.0
-    - damping is a decimal from 0.0 to 1.0
-    - width is a decimal from 0.0 to 100.0
-    - level is a decimal from 0.0 to 1.0
-  For example: reverb = 0.61 0.23 0.76 0.56
+Configure the FluidSynth reverb. Possible values:
+  auto:      Enable reverb (default).
+  on:        Enable reverb.
+  off:       Disable reverb.
+  <custom>:  Custom setting via four space-separated values:
+               - room-size:  Decimal from 0.0 to 1.0
+               - damping:    Decimal from 0.0 to 1.0
+               - width is:   Decimal from 0.0 to 100.0
+               - level is:   Decimal from 0.0 to 1.0
+             For example: 'fsynth_reverb = 0.61 0.23 0.76 0.56'
 Note: You can disable the FluidSynth reverb and enable the mixer-level reverb
       on the FluidSynth channel instead, or enable both reverb effects at the
       same time. Whether this sounds good depends on the SoundFont and the
@@ -1275,17 +2249,24 @@ Filter for the FluidSynth audio output:
   off:       Don't filter the output (default).
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
+:FLUIDSYNTH_NO_SOUNDFONTS
+No available SoundFonts
+.
 :CONFIG_MODEL
 The Roland MT-32/CM-32ML model to use.
 You must have the ROM files for the selected model available (see 'romdir').
-The lookup order for models that don't specify a version in their name is
-performed in order as listed.
-  auto:       Pick the first available model (default).
-  cm32l:      Pick the first available CM-32L model.
-  mt32_old:   Pick the first available "old" MT-32 model (v1.0x).
-  mt32_new:   Pick the first available "new" MT-32 model (v2.0x).
-  mt32:       Pick the first available MT-32 model.
+The lookup for the best models is performed in order as listed.
+  auto:       Pick the best available model (default).
+  cm32l:      Pick the best available CM-32L model.
+  mt32_old:   Pick the best available "old" MT-32 model (v1.0x).
+  mt32_new:   Pick the best available "new" MT-32 model (v2.0x).
+  mt32:       Pick the best available MT-32 model.
   <version>:  Use the exact specified model version (e.g., 'mt32_204').
+Notes:
+  - Run `MIXER /LISTMIDI` to see the list of available models.
+  - This is *NOT* a General MIDI compatible MIDI device; only use it if the
+    game is known to support Roland MT-32 MIDI (which predates General MIDI).
+
 .
 :CONFIG_ROMDIR
 The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).
@@ -1302,42 +2283,144 @@ Filter for the Roland MT-32/CM-32L audio output:
   off:       Don't filter the output (default).
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
-:MT32_NO_SUPPORTED_MODELS
-No supported models present
-.
-:MT32_ROM_NOT_LOADED
-No ROM is currently loaded
-.
-:MT32_INVENTORY_TABLE_MISSING_LETTER
--
-.
-:MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-y
-.
 :MT32_ROMS_LABEL
-MT-32  ROMs  
+MT-32  models   
 .
 :CM32L_ROMS_LABEL
-CM-32L ROMs  
+CM-32L models   
 .
-:MT32_ACTIVE_ROM_LABEL
-Active ROM    
+:MT32_ACTIVE_MODEL_LABEL
+Active model  
 .
 :MT32_SOURCE_DIR_LABEL
-Loaded from   
+ROM path      
+.
+:CONFIG_SOUNDCANVAS_MODEL
+The Roland Sound Canvas model to use.
+One or more CLAP audio plugins that implement the supported Sound Canvas
+models must be present in the 'plugins' directory in your DOSBox installation
+or configuration directory. DOSBox searches for the requested model by
+inspecting the plugin descriptions. The lookup for the best model is
+performed in order as listed.
+  auto:       Pick the best available model (default).
+  sc55:       Pick the best available original SC-55 model.
+  sc55mk2:    Pick the best available SC-55mk2 model.
+  <version>:  Use the exact specified model version (e.g., 'sc55_121').
+.
+:CONFIG_SOUNDCANVAS_FILTER
+Filter for the Roland Sound Canvas audio output:
+  on:        Filter the output (default).
+  off:       Don't filter the output.
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
+:SC55_MODELS_LABEL
+SC-55 models    
+.
+:SOUNDCANVAS_ACTIVE_MODEL_LABEL
+Active model:    
+.
+:CONFIG_MIDIDEVICE
+Set where MIDI data from the emulated MPU-401 MIDI interface is sent
+('port' by default):
+.
+:CONFIGITEM_MIDIDEVICE_PORT
+  port:         A MIDI port of the host operating system's MIDI interface
+                (default). You can configure the port to use with the
+                'midiconfig' setting.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:    The built-in macOS MIDI synthesiser. The SoundFont to use can
+                be specified with the 'midiconfig' setting.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:         The internal Roland MT-32 synthesizer (see the [mt32] section).
+.
+:CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
+  soundcanvas:  The internal Roland SC-55 synthesiser (see the [soundcanvas]
+                section).
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)
+                (see the [fluidsynth] section).
+.
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:         Disable MIDI output.
+.
+:CONFIG_MIDICONFIG
+Configuration options for the selected MIDI device (unset by default).
+Notes:
+.
+:CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
+  - When using 'mididevice = port', find the ID or name of the MIDI port you
+    want to use with the DOS command 'MIXER /LISTMIDI', then set either the ID
+    or a substring of the name (e.g., to use the port called "loopMIDI Port A"
+    with ID 2, set 'midiconfig = 2' or 'midiconfig = port a').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - When using 'mididevice = coreaudio', this setting specifies the SoundFont
+    to use. You must use the absolute path of the SoundFont file.
+.
+:CONFIGITEM_MIDICONFIG_LINUX
+  - When using 'mididevice = port', use the Linux command 'aconnect -l' to list
+    all open MIDI ports and select one (e.g., 'midiconfig = 14:0' for sequencer
+    client 14, port 0).
+.
+:CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
+  - The setting has no effect when using the internal synthesizers
+    ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').
+.
+:CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
+  - If you're using a physical rev.0 Roland MT-32, the hardware may require a
+    delay to prevent buffer overflows. You can enable this with 'delaysysex'
+    after the port ID or name (e.g., 'midiconfig = 2 delaysysex').
+.
+:CONFIG_MPU401
+MPU-401 mode to emulate ('intelligent' by default).
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Enable raw, unaltered MIDI output ('off' by default).
+The MIDI drivers of many games don't fully conform to the MIDI standard,
+which makes editing the MIDI recordings of these games very error-prone and
+cumbersome in MIDI sequencers, often resulting in hanging or missing notes.
+DOSBox corrects the MIDI output of such games by default. This results in no
+audible difference whatsoever; it only affects the representation of the MIDI
+data. You should only enable 'raw_midi_output' if you really need to capture
+the raw, unaltered MIDI output of a program, e.g. when working with music
+applications, or when debugging MIDI issues.
+.
+:MIDI_DEVICE_LIST_NOT_SUPPORTED
+Listing not supported
+.
+:MIDI_DEVICE_NOT_CONFIGURED
+Device not configured
+.
+:MIDI_DEVICE_NO_PORTS
+No available ports
+.
+:MIDI_DEVICE_NO_MODEL_ACTIVE
+No model is currently active
+.
+:MIDI_DEVICE_NO_MODELS
+No available models
 .
 :CONFIG_SBTYPE
 Sound Blaster model to emulate ('sb16' by default).
 The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.
-  gb:        Game Blaster        - CMS
-  sb1:       Sound Blaster 1.0   - OPL2, CMS
-  sb2:       Sound Blaster 2.0   - OPL2
-  sbpro1:    Sound Blaster Pro   - Dual OPL2
-  sbpro2:    Sound Blaster Pro 2 - OPL3
-  sb16:      Sound Blaster 16    - OPL3 (default)
+  gb:        Game Blaster          - CMS
+  sb1:       Sound Blaster 1.0     - OPL2, CMS
+  sb2:       Sound Blaster 2.0     - OPL2
+  sbpro1:    Sound Blaster Pro     - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2   - OPL3
+  sb16:      Sound Blaster 16      - OPL3 (default)
+  ess:       ESS ES1688 AudioDrive - ESFM
   none/off:  Disable Sound Blaster emulation.
-Note: Creative Music System was later rebranded to Game Blaster; they are the
-      same card.
+Notes:
+  - Creative Music System was later rebranded to Game Blaster; they are the
+    same card.
+  - The 'ess' option is for getting ESS Enhanced FM music via the card's ESFM
+    synthesiser in games that support it. The ESS DAC is not emulated but the
+    card is Sound Blaster Pro compatible; just configure the game for Sound
+    Blaster digital sound.
 .
 :CONFIG_SBBASE
 The IO address of the Sound Blaster (220 by default).
@@ -1352,56 +2435,21 @@ The DMA channel of the Sound Blaster (1 by default).
 The High DMA channel of the Sound Blaster 16 (5 by default).
 .
 :CONFIG_SBMIXER
-Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).
+Allow the Sound Blaster mixer to modify volume levels ('on' by default).
+Sound Blaster Pro 1 and later cards allow programs to set the volume of the
+digital audio (DAC), FM synth, and CD Audio output. These correspond to the
+SB, OPL, and CDAUDIO DOSBox mixer channels, respectively.
+  on:   The final level of the above channels is a combination of the volume
+        set by the program, and the volume set in the DOSBox mixer.
+  off:  Only the DOSBox mixer determines the volume of these channels.
+Note: Some games change the volume levels dynamically (e.g., lower the FM music
+      volume when speech is playing); it's best to leave 'sbmixer' enabled for
+      such games.
 .
 :CONFIG_SBWARMUP
 Silence initial DMA audio after card power-on, in milliseconds
 (100 by default). This mitigates pops heard when starting many SB-based games.
 Reduce this if you notice intial playback is missing audio.
-.
-:CONFIG_OPLRATE
-The OPL waveform is now sampled at the mixer's playback rate to avoid
-resampling.
-.
-:CONFIG_CMS
-Enable CMS emulation ('auto' by default).
-  off:   Disable CMS emulation (except when the Game Blaster is selected).
-  on:    Enable CMS emulation on Sound Blaster 1 and 2.
-  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.
-.
-:CONFIG_OPLMODE
-OPL model to emulate ('auto' by default).
-  auto:      Use the appropriate model determined by 'sbtype'.
-  opl2:      OPL2 (mono).
-  dualopl2:  Dual OPL2 (stereo).
-  opl3:      OPL3 (stereo).
-  opl3gold:  OPL3 (stereo) and the optional AdLib Gold Surround module.
-             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.
-  none/off:  Disable OPL emulation.
-Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.
-.
-:CONFIG_OPL_FADEOUT
-Fade out the OPL synth output after the last IO port write:
-  off:       Don't fade out; residual output will play forever (default).
-  on:        Wait 0.5s before fading out over a 0.5s period.
-  <custom>:  A custom fade-out definition in the following format:
-               WAIT FADE
-             Where WAIT is how long after the last IO port write fading begins,
-             ranging between 100 and 5000 milliseconds; and FADE is the
-             fade-out period, ranging between 10 and 3000 milliseconds.
-             Examples:
-                300 200 (Wait 300ms before fading out over a 200ms period)
-                1000 3000 (Wait 1s before fading out over a 3s period)
-.
-:CONFIG_OPL_REMOVE_DC_BIAS
-Remove DC bias from the OPL output. This should only be used as a last resort
-to fix popping in games that play PCM audio using the OPL synthesiser on a
-Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6
-(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other
-affected games.
-.
-:CONFIG_OPLEMU
-Only 'nuked' OPL emulation is supported now.
 .
 :CONFIG_SB_FILTER
 Type of filter to emulate for the Sound Blaster digital sound output:
@@ -1421,8 +2469,51 @@ Type of filter to emulate for the Sound Blaster digital sound output:
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Force the Sound Blaster filter to be always on
-(disallow programs from turning the filter off; disabled by default).
+Force the Sound Blaster Pro 2 filter to be always on ('off' by default).
+Other Sound Blaster models don't allow toggling the filter in software.
+.
+:CONFIG_OPLRATE
+The OPL output is now transparently resampled to the mixer's sample rate.
+.
+:CONFIG_OPLMODE
+OPL model to emulate ('auto' by default).
+  auto:      Use the appropriate model determined by 'sbtype'.
+  opl2:      Yamaha OPL2 (YM3812, mono).
+  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).
+  opl3:      Yamaha OPL3 (YMF262, stereo).
+  opl3gold:  OPL3 and the optional AdLib Gold Surround module.
+             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.
+  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).
+  none/off:  Disable OPL emulation.
+Notes:
+  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.
+  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;
+    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to
+    get ESFM-flavoured OPL with original Sound Blaster models.
+.
+:CONFIG_OPL_FADEOUT
+Fade out hanging notes on the OPL synth:
+  off:       Don't fade out hanging notes (default).
+  fade:      Fade out hanging notes. You should only enable this in games that
+             sometimes play hanging notes that never stop (e.g., Bard's Tale).
+  <custom>:  A custom fade-out definition in the following format:
+               WAIT FADE
+             Where WAIT is how long after the last I/O port write fading begins
+             (between 100 and 5000 milliseconds); and FADE is the fade-out
+             period (between 10 and 3000 milliseconds).
+             Examples:
+               300 200   (wait 300 ms before fading out over a 200 ms period)
+               1000 3000 (wait 1 second before fading out over 3 seconds)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Remove DC bias from the OPL output. This should only be used as a last resort
+to fix popping in games that play PCM audio using the OPL synthesiser on a
+Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6
+(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other
+affected games.
+.
+:CONFIG_OPLEMU
+Only 'nuked' OPL emulation is supported now.
 .
 :CONFIG_OPL_FILTER
 Type of filter to emulate for the Sound Blaster OPL output:
@@ -1432,6 +2523,12 @@ Type of filter to emulate for the Sound Blaster OPL output:
   off:       Don't filter the output.
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
+:CONFIG_CMS
+Enable CMS emulation ('auto' by default).
+  off:   Disable CMS emulation (except when the Game Blaster is selected).
+  on:    Enable CMS emulation on Sound Blaster 1 and 2.
+  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.
+.
 :CONFIG_CMS_FILTER
 Filter for the Sound Blaster CMS output:
   on:        Filter the output (default).
@@ -1439,11 +2536,18 @@ Filter for the Sound Blaster CMS output:
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_GUS
-Enable Gravis UltraSound emulation (disabled by default).
-The default settings of base address 240, IRQ 5, and DMA 3 have been chosen
-so the GUS can coexist with a Sound Blaster card. This works fine for the
-majority of programs, but some games and demos expect the GUS factory
-defaults of base address 220, IRQ 11, and DMA 1.
+Enable Gravis UltraSound emulation ('off' by default).
+Many games and all demos upload their own sounds, but some rely on the
+instrument patch files included with the GUS for MIDI playback (see 'ultradir'
+for details). Some games also require ULTRAMID.EXE to be loaded prior to
+starting the game.
+
+Note: The default settings of base address 240, IRQ 5, and DMA 3 have been
+      chosen so the GUS can coexist with a Sound Blaster card. This works fine
+      for the majority of programs, but some games and demos expect the GUS
+      factory defaults of base address 220, IRQ 11, and DMA 1. The default
+      IRQ 11 is also problematic with specific versions of the DOS4GW extender
+      that cannot handle IRQs above 7.
 .
 :CONFIG_GUSBASE
 The IO base address of the Gravis UltraSound (240 by default).
@@ -1454,21 +2558,24 @@ The IRQ number of the Gravis UltraSound (5 by default).
 :CONFIG_GUSDMA
 The DMA channel of the Gravis UltraSound (3 by default).
 .
-:CONFIG_ULTRADIR
-Path to UltraSound directory ('C:\ULTRASND' by default).
-In this directory there should be a 'MIDI' directory that contains the patch
-files for GUS playback.
-.
 :CONFIG_GUS_FILTER
 Filter for the Gravis UltraSound audio output:
-  off:       Don't filter the output (default).
+  on:        Filter the output (default).
+  off:       Don't filter the output.
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
+:CONFIG_ULTRADIR
+Path to the UltraSound directory ('C:\ULTRASND' by default).
+This should have a 'MIDI' subdirectory containing the patches (instrument
+files) required by some games for MIDI music playback. Not all games need these
+patches; many GUS-native games and all demos upload their own custom sounds
+instead.
+.
 :CONFIG_IMFC
-Enable the IBM Music Feature Card (disabled by default).
+Enable the IBM Music Feature Card ('off' by default).
 .
 :CONFIG_IMFC_BASE
-The IO base address of the IBM Music Feature Card (2A20 by default).
+The IO base address of the IBM Music Feature Card ('2A20' by default).
 .
 :CONFIG_IMFC_IRQ
 The IRQ number of the IBM Music Feature Card (3 by default).
@@ -1514,15 +2621,15 @@ Filter for the Innovation audio output:
 .
 :CONFIG_PCSPEAKER
 PC speaker emulation model:
-  discrete:  Waveform is created using discrete steps (default).
-             Works well for games that use RealSound-type effects.
-  impulse:   Waveform is created using sinc impulses.
-             Recommended for square-wave games, like Commander Keen.
-             While improving accuracy, it is more CPU intensive.
-  none/off:  Don't use the PC Speaker.
+  impulse:   A very faithful emulation of the PC speaker's output (default).
+             Works with most games, but may result in garbled sound or silence
+             in a small number of programs.
+  discrete:  Legacy simplified PC speaker emulation; only use this on specific
+             titles that give you problems with the 'impulse' model.
+  none/off:  Don't emulate the PC speaker.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filter for the PC Speaker output:
+Filter for the PC speaker output:
   on:        Filter the output (default).
   off:       Don't filter the output.
   <custom>:  Custom filter definition; see 'sb_filter' for details.
@@ -1572,10 +2679,10 @@ Filter for the LPT DAC audio device(s):
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_DISNEY
-Use 'lpt_dac=disney' to enable the Disney Sound Source.
+Use 'lpt_dac = disney' to enable the Disney Sound Source.
 .
 :CONFIG_PS1AUDIO
-Enable IBM PS/1 Audio emulation (disabled by default).
+Enable IBM PS/1 Audio emulation ('off' by default).
 .
 :CONFIG_PS1AUDIO_FILTER
 Filter for the PS/1 Audio synth output:
@@ -1624,22 +2731,21 @@ Type of joystick to emulate:
 Remember to reset DOSBox's mapperfile if you saved it earlier.
 .
 :CONFIG_TIMED
-Enable timed intervals for axis (enabled by default).
+Enable timed intervals for axis ('on' by default).
 Experiment with this option, if your joystick drifts away.
 .
 :CONFIG_AUTOFIRE
-Fire continuously as long as the button is pressed
-(disabled by default).
+Fire continuously as long as the button is pressed ('off' by default)
 .
 :CONFIG_SWAP34
-Swap the 3rd and the 4th axis (disabled by default).
-Can be useful for certain joysticks.
+Swap the 3rd and the 4th axis ('off' by default). Can be useful for certain
+joysticks.
 .
 :CONFIG_BUTTONWRAP
-Enable button wrapping at the number of emulated buttons (disabled by default).
+Enable button wrapping at the number of emulated buttons ('off' by default).
 .
 :CONFIG_CIRCULARINPUT
-Enable translation of circular input to square output (disabled by default).
+Enable translation of circular input to square output ('off' by default).
 Try enabling this if your left analog stick can only move in a circle.
 .
 :CONFIG_DEADZONE
@@ -1648,8 +2754,8 @@ Percentage of motion to ignore (10 by default).
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Enable hotkeys to allow realtime calibration of the joystick's X and Y axes
-(disabled by default). Only consider this if in-game calibration fails and
-other settings have been tried.
+('off' by default). Only consider this as a last resort if in-game calibration
+doesn't work correctly.
   - Ctrl/Cmd+Arrow-keys adjust the axis' scalar value:
       - Left and Right diminish or magnify the x-axis scalar, respectively.
       - Down and Up diminish or magnify the y-axis scalar, respectively.
@@ -1673,7 +2779,7 @@ Set type of device connected to the COM1 port.
 Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).
 Additional parameters must be on the same line in the form of
 parameter:value. The optional 'irq' parameter is common for all types.
-  - for 'mouse':      model (overrides the setting from the [mouse] section)
+  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).
   - for 'direct':     realport (required), rxdelay (optional).
                       (e.g., realport:COM1, realport:ttyS0).
   - for 'modem':      listenport, sock, bps (all optional).
@@ -1697,15 +2803,22 @@ File used to map fake phone numbers to addresses
 ('phonebook.txt' by default).
 .
 :CONFIG_XMS
-Enable XMS support (enabled by default).
+Enable XMS support ('on' by default).
 .
 :CONFIG_EMS
-Enable EMS support (enabled by default). Enabled provides the best
-compatibility but certain applications may run better with other choices,
-or require EMS support to be disabled to work at all.
+Enable EMS support ('on' by default). Enabled provides the best compatibility
+but certain applications may run better with other choices, or require EMS
+support to be disabled to work at all.
 .
 :CONFIG_UMB
-Enable UMB support (enabled by default).
+Enable UMB support ('on' by default).
+.
+:CONFIG_PCJR_MEMORY_CONFIG
+PCjr memory layout ('expanded' by default).
+  expanded:  640 KB total memory with applications residing above 128 KB.
+             Compatible with most games.
+  standard:  128 KB total memory with applications residing below 96 KB.
+             Required for some older games (e.g., Jumpman, Troll).
 .
 :CONFIG_VER
 Set DOS version (5.0 by default). Specify in major.minor format.
@@ -1713,24 +2826,38 @@ A single number is treated as the major version.
 Common settings are 3.3, 5.0, 6.22, and 7.1.
 .
 :CONFIG_LOCALE_PERIOD
-Set locale epoch ('modern' by default). Historic settings (if available
-for the given country) try to mimic old DOS behaviour when displaying
-information such as dates, time, or numbers, modern ones follow current day
-practices for user experience more consistent with typical host systems.
+Set locale epoch ('native' by default).
+  historic:  If data is available for the given country, mimic old DOS behavior
+             when displaying time, dates, or numbers.
+  modern:    Follow current day practices for user experience more consistent
+             with typical host systems.
+  native:    Re-use current host OS settings, regardless of the country set;
+             use 'modern' data to fill-in the gaps when the DOS locale system
+             is too limited to follow the desktop settings.
 .
 :CONFIG_COUNTRY
 Set DOS country code ('auto' by default).
 This affects country-specific information such as date, time, and decimal
-formats. The list of supported country codes can be displayed using
-'--list-countries' command-line argument. If set to 'auto', the country code
-corresponding to the selected keyboard layout will be used.
+formats. If set to 'auto', selects the country code reflecting the host
+OS settings.
+The list of country codes can be displayed using '--list-countries'
+command-line argument.
 .
 :CONFIG_KEYBOARDLAYOUT
-Keyboard layout code ('auto' by default), i.e. 'us' for US English layout.
-Other possible values are the same as accepted by FreeDOS.
+Renamed to 'keyboard_layout'.
+.
+:CONFIG_KEYBOARD_LAYOUT
+Keyboard layout code ('auto' by default).
+The list of supported keyboard layout codes can be displayed using the
+'--list-layouts' command-line argument, e.g., 'uk' is the British English
+layout. The layout can be followed by the code page number, e.g., 'uk 850'
+selects a Western European screen font.
+Set to 'auto' to guess the values from the host OS settings.
+After startup, use the 'KEYB' command to manage keyboard layouts and code pages
+(run 'HELP KEYB' for details).
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Enable expanding environment variables such as %PATH% in the DOS command shell
+Enable expanding environment variables such as %%PATH%% in the DOS command shell
 (auto by default, enabled if DOS version >= 7.0).
 FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.
 .
@@ -1743,19 +2870,19 @@ File containing the list of applications and assigned DOS versions, in a
 tab-separated format, used by SETVER.EXE as a persistent storage
 (empty by default).
 .
-:CONFIG_PCJR_MEMORY_CONFIG
-PCjr memory layout ('expanded' by default).
-  expanded:  640 KB total memory with applications residing above 128 KB.
-             Compatible with most games.
-  standard:  128 KB total memory with applications residing below 96 KB.
-             Required for some older games (e.g., Jumpman, Troll).
+:CONFIG_FILE_LOCKING
+Enable file locking (SHARE.EXE emulation; 'on' by default).
+This is required for some Windows 3.1x applications to work properly.
+It generally does not cause problems for DOS games except in rare cases
+(e.g., Astral Blur demo). If you experience crashes related to file
+permissions, you can try disabling this.
 .
 :CONFIGITEM_IPX
-Enable IPX over UDP/IP emulation (disabled by default).
+Enable IPX over UDP/IP emulation ('off' by default).
 .
 :CONFIGITEM_NE2000_SLIRP
 Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows (enabled by default):
+network (using libslirp) with properties as follows ('on' by default):
   - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.
   - 10.0.2.2:       IP of the gateway and DHCP service.
   - 10.0.2.3:       IP of the virtual DNS server.
@@ -1803,12 +2930,11 @@ Forward one or more UDP ports from the host into the DOS guest
 (unset by default). The format is the same as for TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
-Lines in this section will be run at startup.
-You can put your MOUNT lines here.
-
+Each line in this section is executed at startup as a DOS command.
+Important: The [autoexec] section must be the last section in the config!
 .
 :CONFIGFILE_INTRO
-# This is the configuration file for dosbox-staging (%s).
+# This is the configuration file for DOSBox Staging (%s).
 # Lines starting with a '#' character are comments.
 
 .
@@ -1888,6 +3014,10 @@ Where [color=white]COMMAND[reset] is one of:
                     show the description and the current value of a config
                     property
 
+  -help sections
+  -h    sections
+  -?    sections    [reset]list the names of all config sections
+
   -axclear          clear the [autoexec] section
   -axadd [color=white]LINE[reset]       append a line to the end of the [autoexec] section
   -axtype           show the contents of the [autoexec] section
@@ -1902,11 +3032,11 @@ Where [color=white]COMMAND[reset] is one of:
 
   -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]
                     set the value of a config property
+
+  -securemode       enable secure mode
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Purpose of property [color=light-green]'%s'[color=white] (contained in section [color=light-cyan][%s][color=white]):[reset]
-
-%s
+[color=white]Description of the [color=light-green]'%s'[color=white] setting in the [color=light-cyan][%s][color=white] section:[reset]
 
 
 .
@@ -1922,30 +3052,29 @@ Where [color=white]COMMAND[reset] is one of:
 [color=white]Current value:[reset]    %s
 
 .
-:PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Purpose of section [%s]:[reset]
-%s
-[color=white]Current value:[reset]
+:PROGRAM_CONFIG_HLP_AUTOEXEC
+[color=white]Description of the [color=light-cyan][autoexec][color=white] section:[reset]
+
 %s
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-This property cannot be changed at runtime.
+[color=yellow]This setting cannot be changed at runtime.[reset]
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
 positive integer
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-[color=white]Section [color=light-cyan][%s] [color=white]contains the following properties:[reset]
+[color=white]List of settings in the [color=light-cyan][%s][color=white] section:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-[color=white]DOSBox configuration contains the following sections:[reset]
+[color=white]List of configuration sections:[reset]
 
 .
 :PROGRAM_CONFIG_SECURE_ON
-Switched to secure mode.
+Secure mode enabled.
 
 .
 :PROGRAM_CONFIG_SECURE_DISALLOW
@@ -1957,7 +3086,7 @@ Section [%s] doesn't exist.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-'%s' is not a valid value for property '%s'.
+'%s' is not a valid value for setting '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1986,13 +3115,24 @@ Executable file not found: '%s'
 and
 .
 :PROGRAM_CONFIG_NOT_CHANGEABLE
-Property '%s' is not changeable at runtime.
+[color=yellow]The '%s' setting can't be changed at runtime.[reset]
+However, it will be applied on restart by running 'CONFIG -r' or via the
+restart hotkey.
+
 .
-:MIDI_DEVICE_LIST_NOT_SUPPORTED
-Listing not supported
+:PROGRAM_CONFIG_DEPRECATED
+[color=light-red]This is a deprecated setting only kept for compatibility with old configs.
+Please use the suggested alternatives; support will be removed in the future.[reset]
+
 .
-:MIDI_DEVICE_NOT_CONFIGURED
-Device not configured
+:BIOS_REBOOTING_3
+Rebooting in 3 seconds...
+.
+:BIOS_REBOOTING_2
+Rebooting in 2 seconds...
+.
+:BIOS_REBOOTING_1
+Rebooting in 1 second...
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
 Local directory
@@ -2121,6 +3261,32 @@ Available PCjr cartridge commands: %s
 No PCjr cartridge commands found.
 
 .
+:PROGRAM_CLIP_HELP_LONG
+Copy text to the clipboard or retrieve the clipboard's content.
+
+Usage:
+  [color=light-cyan]COMMAND[reset] | [color=light-green]clip[reset]
+  [color=light-green]clip[reset] < [color=light-cyan]FILE[reset]
+  [color=light-green]clip[reset]
+
+Notes:
+  - If no input is provided, the command prints out the clipboard's content.
+  - This command is only for handling text data, not binary data.
+
+Examples:
+  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copies the list of files to the clipboard
+  [color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copies the file to the clipboard
+  [color=light-green]clip[reset]                     ; displays the clipboard's content
+
+.
+:PROGRAM_CLIP_INPUT_TOO_LARGE
+Input stream too large.
+
+.
+:PROGRAM_CLIP_READ_ERROR
+Error reading input stream.
+
+.
 :MSCDEX_SUCCESS
 MSCDEX installed.
 
@@ -2182,6 +3348,10 @@ Swap slot
 .
 :PROGRAM_MOUNT_STATUS_1
 The currently mounted drives are:
+
+.
+:PROGRAM_MOUNT_READONLY
+Mounted read-only
 
 .
 :PROGRAM_IMGMOUNT_HELP_LONG
@@ -2367,45 +3537,28 @@ You can run programs/files with extensions [color=red].exe .bat[reset] and [colo
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
 [erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
-DOSBox provides CD-ROM emulation on two levels.
-
-The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
-and marks the files read-only. Usually this is enough for most games:
+The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks
+the files as read-only.
+Usually this is enough for most games:
 [color=light-blue]mount D C:\example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
 [color=light-blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-The [color=brown]next[reset] level adds some low-level support.
-Therefore only works on CD-ROM drives:
-[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
-Replace [color=red]D:\ [reset]with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
-[color=light-blue]mount -listcd[reset]
-
-Additionally, you can use imgmount to mount ISO or CUE/BIN images:
+Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
 [erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
-DOSBox provides CD-ROM emulation on two levels.
-
-The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
-and marks the files read-only. Usually this is enough for most games:
+The [color=light-blue]mount[reset] command works on all normal directories. It installs MSCDEX and marks
+the files as read-only.
+Usually this is enough for most games:
 [color=light-blue]mount D ~/example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
 [color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-The [color=brown]next[reset] level adds some low-level support.
-Therefore only works on CD-ROM drives:
-[color=light-blue]mount d[reset] [color=red]~/example[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
-
-Replace [color=red]~/example[reset] with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
-[color=light-blue]mount -listcd[reset]
-
-Additionally, you can use imgmount to mount ISO or CUE/BIN images:
+Additionally, you can use [color=light-blue]imgmount[reset] to mount ISO or CUE/BIN images:
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
@@ -2431,33 +3584,38 @@ They can be changed in the [color=brown]keymapper[reset].
 [color=yellow]%s+F12[reset]    Unlock speed (turbo button/fast forward).
 
 .
-:PROGRAM_KEYB_INFO
-Codepage %i has been loaded.
-
-.
-:PROGRAM_KEYB_INFO_LAYOUT
-Codepage %i has been loaded for layout %s.
-
-.
 :PROGRAM_KEYB_HELP_LONG
-Configure a keyboard for a specific language.
+Configure a keyboard layout and screen font.
 
 Usage:
-  [color=light-green]keyb[reset] [color=light-cyan][LANGCODE][reset]
-  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [color=white][CODEPAGEFILE][reset]
+  [color=light-green]keyb[reset]
+  [color=light-green]keyb[reset] /list
+  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset]] /rom
+  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset] [[color=white]CPIFILE[reset]]]
 
 Parameters:
-  [color=light-cyan]LANGCODE[reset]      language code or keyboard layout ID
-  [color=white]CODEPAGE[reset]      code page number, such as [color=white]437[reset] and [color=white]850[reset]
-  [color=white]CODEPAGEFILE[reset]  file containing information for a code page
+  [color=light-cyan]LAYOUT[reset]    keyboard layout code
+  [color=white]CODEPAGE[reset]  code page number, e.g. [color=white]437[reset] or [color=white]850[reset]
+  [color=white]CPIFILE[reset]   screen font file, in CPI format
+  /list     display available keyboard layout codes
+  /rom      use screen font from display adapter ROM if possible
 
 Notes:
-  Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout
-  and code page. It will change to [color=light-cyan]LANGCODE[reset] if provided, optionally with a
-  [color=white]CODEPAGE[reset] and an additional [color=white]CODEPAGEFILE[reset] to load the specified code page
-  number and code page file if provided. This command is especially useful if
-  you use a non-US keyboard, and [color=light-cyan]LANGCODE[reset] can also be set in the configuration
-  file under the [dos] section using the "keyboardlayout = [color=light-cyan]LANGCODE[reset]" setting.
+  - Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout
+    and code page.
+  - The [color=white]CPIFILE[reset], if specified, must contain the screen font for the given
+    [color=white]CODEPAGE[reset].
+  - MS-DOS, DR-DOS, and Windows NT formats of the CPI files are supported
+    directly. The FreeDOS CPX files have to be uncompressed first with the 3rd
+    party [color=light-green]upx[reset] tool.
+  - If no custom [color=white]CPIFILE[reset] is specified, the command looks for a suitable screen
+    font in the bundled CPI files.
+  - If [color=white]CODEPAGE[reset] is not specified, and the screen font from the display adapter
+    ROM is suitable, it uses the ROM screen font.
+  - Only EGA or better display adapters allow to change the screen font; MDA,
+    CGA, or Hercules always use the ROM screen font.
+  - You can use the 'us' keyboard layout with any code page; all the other
+    layouts work with selected code pages only.
 
 Examples:
   [color=light-green]KEYB[reset]
@@ -2466,24 +3624,80 @@ Examples:
   [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 
 .
-:PROGRAM_KEYB_NOERROR
-Keyboard layout %s loaded for codepage %i.
+:PROGRAM_KEYB_CODE_PAGE
+Code page
+.
+:PROGRAM_KEYB_ROM_FONT
+ROM font
+.
+:PROGRAM_KEYB_KEYBOARD_LAYOUT
+Keyboard layout
+.
+:PROGRAM_KEYB_KEYBOARD_SCRIPT
+Keyboard script
+.
+:PROGRAM_KEYB_NOT_LOADED
+not loaded
+.
+:PROGRAM_KEYB_INVALID_CODE_PAGE
+Invalid code page.
 
 .
-:PROGRAM_KEYB_FILENOTFOUND
-Keyboard file %s not found.
+:PROGRAM_KEYB_CPI_FILE_NOT_FOUND
+Code page information file not found.
 
 .
-:PROGRAM_KEYB_INVALIDFILE
-Keyboard file %s invalid.
+:PROGRAM_KEYB_CPI_READ_ERROR
+Error reading code page information file.
 
 .
-:PROGRAM_KEYB_LAYOUTNOTFOUND
-No layout in %s for codepage %i.
+:PROGRAM_KEYB_INVALID_CPI_FILE
+Invalid code page information file.
 
 .
-:PROGRAM_KEYB_INVCPFILE
-None or invalid codepage file for layout %s.
+:PROGRAM_KEYB_CPI_FILE_TOO_LARGE
+Code page information file too large.
+
+.
+:PROGRAM_KEYB_UNSUPPORTED_CPX_FILE
+Unsupported FreeDOS CPX file format. Convert the file to the CPI format by
+uncompressing it with the 3rd party [color=light-green]upx[reset] tool.
+
+.
+:PROGRAM_KEYB_PRINTER_CPI_FILE
+This is a printer code page information file, it does not contain screen fonts.
+
+.
+:PROGRAM_KEYB_SCREEN_FONT_UNUSABLE
+Code page %d found, but the screen font could not be used.
+
+.
+:PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
+No bundled code page information file for code page %d.
+
+.
+:PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE
+No code page %d in the code page information file.
+
+.
+:PROGRAM_KEYB_INCOMPATIBLE_MACHINE
+Can't change the screen font; EGA machine or better is required.
+
+.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+File with keyboard layout '%s' not found.
+
+.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+Invalid file with keyboard layout '%s'.
+
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Keyboard layout '%s' not known.
+
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+No keyboard layout '%s' for code page %d.
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
@@ -2733,6 +3947,48 @@ Missing command for the [color=light-cyan]%s[reset] channel
 :SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
 Invalid command for the [color=light-cyan]%s[reset] channel: [color=white]%s[reset]
 .
+:PROGRAM_MODE_HELP_LONG
+Set the display mode or the keyboard's typematic rate.
+
+Usage:
+  [color=light-green]mode[reset] [color=white]COLSxLINES[reset]
+  [color=light-green]mode[reset] [color=white]COLS,LINES[reset]
+  [color=light-green]mode[reset] rate=[color=white]RATE[reset] delay=[color=white]DELAY[reset]
+
+Parameters:
+  [color=white]COLS[reset]      number of characters (columns) per line (40, 80, or 132)
+  [color=white]LINES[reset]     number of lines on the screen (25, 28, 30, 34, 43, 50, or 60)
+  [color=white]RATE[reset]      key repeat rate, from [color=white]1[reset] to [color=white]32[reset] (1 = slowest, 32 = fastest)
+  [color=white]DELAY[reset]     key repeat delay, from [color=white]1[reset] to [color=white]4[reset] (1 = shortest, 4 = longest)
+
+Notes:
+  - Valid [color=white]COLSxLINES[reset] combinations per graphics adapter type:
+      Hercules           80x25
+      CGA, PCjr, Tandy   40x25, 80x25
+      EGA                40x25, 80x25, 80x43
+      SVGA (non-S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
+      SVGA (S3)          40x25, all 80 and 132-column modes
+
+  - The 132x28, 132x30, and 132x34 modes are only available if `vesa_modes`
+    is set to `all`.
+
+Examples:
+  [color=light-green]mode[reset] [color=white]132x50
+  [color=light-green]mode[reset] [color=white]80x43[reset]
+  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
+.
+:PROGRAM_MODE_INVALID_DISPLAY_MODE
+Invalid display mode: [color=white]%s[reset]
+.
+:PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
+Display mode [color=white]%s[reset] is not supported on this graphics adapter.
+.
+:PROGRAM_MODE_UNSUPPORTED_VESA_MODE
+VESA display mode [color=white]%s[reset] is not supported; set `vesa_modes = all` to enable it.
+.
+:PROGRAM_MODE_INVALID_TYPEMATIC_RATE
+Invalid typematic rate setting.
+.
 :PROGRAM_MORE_HELP_LONG
 Display command output or text file one screen at a time.
 
@@ -2826,8 +4082,7 @@ Map physical folders or drives to a virtual drive letter.
 Mount a directory from the host OS to a drive letter.
 
 Usage:
-  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
-  [color=light-green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)
+  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-ro] [-freesize SIZE] [-label LABEL]
   [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)
 
 Parameters:
@@ -2839,9 +4094,7 @@ Parameters:
 
 Notes:
   - '-t overlay' redirects writes for mounted drive to another directory.
-  - '-usecd ID' gives direct access to a CD-ROM drive.
-    This is needed for CD audio (only supported on Windows and Linux).
-    Run 'mount -cd' to find out the list of valid IDs.
+  - '-ro' mounts the drive as read-only.
   - Additional options are described in the manual (README file, chapter 4).
 
 Examples:
@@ -2849,19 +4102,19 @@ Examples:
 .
 :PROGRAM_MOUNT_HELP_LONG_WIN32
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\dosgames[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_HELP_LONG_MACOSX
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Game CD"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Game CD"[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_HELP_LONG_OTHER
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
@@ -2992,6 +4245,14 @@ Mapping not available in no-mouse mode.
 Mapping not possible with current guest mouse driver.
 
 .
+:PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
+Individual physical mice not supported in this build.
+
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
+Individual physical mice not supported if 'mouse_raw_input' is enabled.
+
+.
 :PROGRAM_MOUSECTL_NO_INTERFACES
 No mouse interfaces available.
 
@@ -3091,8 +4352,8 @@ Parameters:
   For [color=light-cyan]MODEM[reset]     : IRQ, LISTENPORT, SOCK
   For [color=light-cyan]NULLMODEM[reset] : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                   PORT, INHSOCKET, SOCK
-  For [color=light-cyan]MOUSE[reset]     : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
-                  2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
+  For [color=light-cyan]MOUSE[reset]     : IRQ, MODEL (2BUTTON, 3BUTTON, WHEEL, MSM, 2BUTTON+MSM,
+                  3BUTTON+MSM, or WHEEL+MSM)
   For [color=light-cyan]DIRECT[reset]    : IRQ, REALPORT (required), RXDELAY
   For [color=light-cyan]DUMMY[reset]     : IRQ
 
@@ -3101,7 +4362,7 @@ Examples:
   [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
   [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
   [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux
-  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] MODEL:MSM                     : Mouse Systems mouse
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -3488,6 +4749,10 @@ Environment variable '%s' not defined.
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
 Not enough environment space left.
+
+.
+:SHELL_CMD_SET_OPTION_P_UNSUPPORTED
+Option /P is not supported; please use the CHOICE command.
 
 .
 :SHELL_CMD_IF_EXIST_MISSING_FILENAME
