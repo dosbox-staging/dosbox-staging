@@ -68,7 +68,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf);
 void INNOVATION_AddConfigSection(const ConfigPtr &conf);
 
 // Disk noise emulation configuration and initialisation
-void DISKNOISE_AddConfigSection(const ConfigPtr &conf);
+void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
 
 // Common lock notification calls used by the mixer
 void PCSPEAKER_NotifyLockMixer();

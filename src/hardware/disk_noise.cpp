@@ -134,7 +134,7 @@ size_t DiskNoiseDevice::ChooseWeightedSeekIndex() const
 }
 
 DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
-								 const std::string& spin_up_sample_path,
+                                 const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
                                  const std::string& spin_channel_name,
@@ -142,10 +142,10 @@ DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
                                  const unsigned int& spin_volume,
                                  const unsigned int& seek_volume)
         : enable_disk_noise_(),
-		  spin_up_sample_(),
+          spin_up_sample_(),
           spin_sample_(),
           current_seek_sample_(),
-		  seek_sample_weights_(),
+          seek_sample_weights_(),
           seek_samples_(),
           spin_pos_(0),
           seek_pos_(0),
@@ -326,7 +326,7 @@ void DISKNOISE_Init(Section* section)
 	                 floppy_seek_paths.end(),
 	                 [](const auto& s) { return s.empty(); })) {
 		floppy_noise = std::make_unique<DiskNoiseDevice>(enable_disk_noise,
-														 floppy_spin_up,
+		                                                 floppy_spin_up,
 		                                                 floppy_spin,
 		                                                 floppy_seek_paths,
 		                                                 "FLOPPY_SPIN",
@@ -340,7 +340,7 @@ void DISKNOISE_Init(Section* section)
 	                 hdd_seek_paths.end(),
 	                 [](const auto& s) { return s.empty(); })) {
 		hdd_noise = std::make_unique<DiskNoiseDevice>(enable_disk_noise,
-													  hdd_spin_up,
+		                                              hdd_spin_up,
 		                                              hdd_spin,
 		                                              hdd_seek_paths,
 		                                              "HDD_SPIN",
@@ -360,19 +360,23 @@ void init_disknoise_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	auto* bool_prop = secprop.Add_bool("enable_disk_noise_emulation", only_at_start, false);
+	auto* bool_prop = secprop.Add_bool("enable_disk_noise_emulation",
+	                                   only_at_start,
+	                                   false);
 	bool_prop->Set_help(
 	        "Enables emulated disk noises for hard disks and floppy drives.\n"
 	        "This plays disk spinning and seek noises using configurable samples.\n"
 	        "Up to 9 seek samples are supported per disk type. Sample 1 has\n"
-			"the highest chance of being played, and sample 9 has the lowest chance.\n"
-			"Sample should be in 16-bit PCM WAV format at 44100 Hz, and can be\n"
-			"located in the dosbox resources directory or beconfigured with an\n"
-			"absolute path.\n"
-			"This can be combined with the 'hdd_io_speed' and 'fdd_io_speed settings'\n"
-			"for an authentic experience. This feature is disabled by default.\n");
+	        "the highest chance of being played, and sample 9 has the lowest chance.\n"
+	        "Sample should be in 16-bit PCM WAV format at 44100 Hz, and can be\n"
+	        "located in the dosbox resources directory or beconfigured with an\n"
+	        "absolute path.\n"
+	        "This can be combined with the 'hdd_io_speed' and 'fdd_io_speed settings'\n"
+	        "for an authentic experience. This feature is disabled by default.\n");
 
-	auto* str_prop = secprop.Add_string("floppy_spin_up_sample", only_at_start, "fdd_spinup.wav");
+	auto* str_prop = secprop.Add_string("floppy_spin_up_sample",
+	                                    only_at_start,
+	                                    "fdd_spinup.wav");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Path to a .wav file for the floppy spin-up noise.\n"
@@ -394,7 +398,9 @@ void init_disknoise_dosbox_settings(Section_prop& secprop)
 	int_prop->Set_help(
 	        "Set the volume of the floppy disk seek sound between 0 to 100 (Default: 60).\n");
 
-	str_prop = secprop.Add_string("hdd_spin_up_sample", only_at_start, "hdd_spinup.wav");
+	str_prop = secprop.Add_string("hdd_spin_up_sample",
+	                              only_at_start,
+	                              "hdd_spinup.wav");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Path to a .wav file for the hard disk spin-up noise.\n"
@@ -419,15 +425,17 @@ void init_disknoise_dosbox_settings(Section_prop& secprop)
 	for (int i = 1; i <= 9; ++i) {
 		const std::string idx = std::to_string(i);
 
-		auto* fseek_prop = secprop.Add_string("floppy_seek_sample_" + idx,
-		                                      Property::Changeable::OnlyAtStart,
-											  ("fdd_seek" + idx + ".wav").c_str());
+		auto* fseek_prop =
+		        secprop.Add_string("floppy_seek_sample_" + idx,
+		                           Property::Changeable::OnlyAtStart,
+		                           ("fdd_seek" + idx + ".wav").c_str());
 		assert(fseek_prop);
 		fseek_prop->Set_help("Path to floppy seek sample " + idx + ".");
 
-		auto* hseek_prop = secprop.Add_string("hdd_seek_sample_" + idx,
-		                                      Property::Changeable::OnlyAtStart,
-											  ("hdd_seek" + idx + ".wav").c_str());
+		auto* hseek_prop =
+		        secprop.Add_string("hdd_seek_sample_" + idx,
+		                           Property::Changeable::OnlyAtStart,
+		                           ("hdd_seek" + idx + ".wav").c_str());
 		assert(hseek_prop);
 		hseek_prop->Set_help("Path to hard disk seek sample " + idx + ".");
 	}

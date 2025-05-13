@@ -567,7 +567,6 @@ static void DOSBOX_RealInit(Section* sec)
 	DOS_SetDataRate(hdd_io_speed, 0);
 	const auto fdd_io_speed = section->Get_int("fdd_io_speed");
 	DOS_SetDataRate(fdd_io_speed, 1);
-	
 }
 
 // Returns decimal seconds of elapsed uptime.
@@ -814,15 +813,15 @@ void DOSBOX_Init()
 	pint = secprop->Add_int("hdd_io_speed", when_idle, 0);
 	pint->Set_help(
 	        "Sets a maximum data transfer speed for the hard disk. Use a value like\n"
-			"2100000 for a 2.1MBytes/sec mid 1990s IDE PIO hard drive\n"
-			"To disable any delay and run at maximum speed, set this to 0.");
+	        "2100000 for a 2.1MBytes/sec mid 1990s IDE PIO hard drive\n"
+	        "To disable any delay and run at maximum speed, set this to 0.");
 	pint->SetMinMax(0, INT_MAX);
 
 	pint = secprop->Add_int("fdd_io_speed", when_idle, 0);
 	pint->Set_help(
 	        "Sets a maximum data transfer speed for the floppy disk. Use a value like\n"
-			"62500 for a standard 3.5 inch floppy drive. To disable any delay and run\n"
-			"at maximum speed, set this to 0.");
+	        "62500 for a standard 3.5 inch floppy drive. To disable any delay and run\n"
+	        "at maximum speed, set this to 0.");
 	pint->SetMinMax(0, INT_MAX);
 
 	// Configure render settings
@@ -893,7 +892,6 @@ void DOSBOX_Init()
 
 	// Configure Disk noise emulation
 	DISKNOISE_AddConfigSection(control);
-
 
 	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",

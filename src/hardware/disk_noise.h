@@ -32,13 +32,13 @@
 class DiskNoiseDevice {
 public:
 	DiskNoiseDevice(const bool enable_disk_noise,
-					const std::string& spin_up_sample_path,
-					const std::string& spin_sample_path,
+	                const std::string& spin_up_sample_path,
+	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
 	                const std::string& spin_channel_name,
 	                const std::string& seek_channel_name,
-					const unsigned int& spin_volume,
-					const unsigned int& seek_volume);
+	                const unsigned int& spin_volume,
+	                const unsigned int& seek_volume);
 
 	void ActivateSpin();
 	void PlaySeek();
@@ -51,7 +51,6 @@ private:
 	void AudioCallbackSpin(const int len);
 	void AudioCallbackSeek(const int len);
 
-
 	bool enable_disk_noise_;
 	std::vector<int16_t> spin_up_sample_;
 	size_t spin_up_pos_ = 0;
@@ -61,16 +60,15 @@ private:
 	std::vector<std::vector<int16_t>> seek_samples_;
 	unsigned int spin_volume_ = 50;
 	unsigned int seek_volume_ = 50;
-	unsigned int spin_pos_ = 0;
-	unsigned int seek_pos_ = 0;
-	int last_activity_     = 0;
+	unsigned int spin_pos_    = 0;
+	unsigned int seek_pos_    = 0;
+	int last_activity_        = 0;
 
 	std::shared_ptr<MixerChannel> spin_channel_;
 	std::shared_ptr<MixerChannel> seek_channel_;
 
 	static constexpr int spinup_fade_ms = 300;
 };
-
 
 // Expose the disk noise devices to be able to affect them from hdd/fdd code
 extern std::unique_ptr<DiskNoiseDevice> floppy_noise;

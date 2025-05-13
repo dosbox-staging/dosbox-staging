@@ -22,14 +22,14 @@
 #include <cassert>
 #include <utility>
 
+#include "../hardware/disk_noise.h"
 #include "callback.h"
-#include "regs.h"
-#include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
 #include "mapper.h"
+#include "mem.h"
+#include "regs.h"
 #include "string_utils.h"
-#include "../hardware/disk_noise.h"
 
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},	// SS/DD 5.25"
@@ -327,9 +327,10 @@ static bool has_image(const std::array<T, N> &arr) {
 	return std::any_of(std::begin(arr), std::end(arr), to_bool);
 }
 
-void diskio_delay(Bits value/*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
 
-static Bitu INT13_DiskHandler(void) {
+static Bitu INT13_DiskHandler(void)
+{
 	uint16_t segat, bufptr;
 	uint8_t sectbuf[512];
 	uint8_t  drivenum;
@@ -435,7 +436,7 @@ static Bitu INT13_DiskHandler(void) {
 				}
 			}
 
-			if((last_status != 0x00) || (killRead)) {
+			if ((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
 				reg_ah = 0x04;
@@ -480,8 +481,8 @@ static Bitu INT13_DiskHandler(void) {
 					                       // read
 				}
 			}
-			
-			if(last_status != 0x00) {
+
+			if (last_status != 0x00) {
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
@@ -628,7 +629,6 @@ static Bitu INT13_DiskHandler(void) {
 	}
 	return CBRET_NONE;
 }
-
 
 void BIOS_SetupDisks(void) {
 /* TODO Start the time correctly */
