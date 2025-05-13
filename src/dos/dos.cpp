@@ -152,16 +152,15 @@ static uint16_t DOS_GetAmount(void) {
 #endif
 
 // Taken from Dosbox-X
-int hdd_data_rate = 0; // 2.1MBytes/sec mid 1990s IDE PIO hard drive without
-                       // SMARTDRV
+int hdd_data_rate = 0;
 int fdd_data_rate = 0;
 
 void DOS_SetDataRate(int rate, int type)
 {
 	if (type == 0) {
-		hdd_data_rate = rate;
+		hdd_data_rate = rate * 1024; // Floppy
 	} else {
-		fdd_data_rate = rate;
+		fdd_data_rate = rate * 1024; // Hard drive or CD-ROM
 	}
 }
 
