@@ -119,6 +119,7 @@ inline bool is_machine(const int type) {
 constexpr auto DefaultMt32RomsDir   = "mt32-roms";
 constexpr auto DefaultSoundfontsDir = "soundfonts";
 constexpr auto GlShadersDir         = "glshaders";
+constexpr auto DiskNoiseDir         = "disknoise";
 constexpr auto PluginsDir           = "plugins";
 
 #endif /* DOSBOX_DOSBOX_H */

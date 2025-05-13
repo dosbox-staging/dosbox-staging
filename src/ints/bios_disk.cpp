@@ -22,12 +22,13 @@
 #include <cassert>
 #include <utility>
 
+#include "../hardware/disk_noise.h"
 #include "callback.h"
-#include "regs.h"
-#include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
 #include "mapper.h"
+#include "mem.h"
+#include "regs.h"
 #include "string_utils.h"
 
 diskGeo DiskGeometryList[] = {
@@ -326,7 +327,10 @@ static bool has_image(const std::array<T, N> &arr) {
 	return std::any_of(std::begin(arr), std::end(arr), to_bool);
 }
 
-static Bitu INT13_DiskHandler(void) {
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+
+static Bitu INT13_DiskHandler(void)
+{
 	uint16_t segat, bufptr;
 	uint8_t sectbuf[512];
 	uint8_t  drivenum;
@@ -414,7 +418,25 @@ static Bitu INT13_DiskHandler(void) {
 		bufptr = reg_bx;
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl & 63)+i), sectbuf);
-			if((last_status != 0x00) || (killRead)) {
+
+			// Determine delay based on whether it's a floppy or
+			// hard disk
+			if (drivenum < 2) { // TODO: This is a hack
+				diskio_delay(512, floppy_noise.get(), 0); // Floppy
+				                                          // disk
+				if (floppy_noise) {
+					floppy_noise->PlaySeek(); // Play noise
+					                          // on read
+				}
+			} else {
+				diskio_delay(512, hdd_noise.get()); // Hard disk
+				if (hdd_noise) {
+					hdd_noise->PlaySeek(); // Play noise on
+					                       // read
+				}
+			}
+
+			if ((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
 				reg_ah = 0x04;
@@ -442,7 +464,25 @@ static Bitu INT13_DiskHandler(void) {
 				bufptr++;
 			}
 			last_status = imageDiskList[drivenum]->Write_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)), (uint32_t)((reg_cl & 63) + i), &sectbuf[0]);
-			if(last_status != 0x00) {
+
+			// Determine delay based on whether it's a floppy or
+			// hard disk
+			if (drivenum < 2) { // TODO: This is a hack
+				diskio_delay(512, floppy_noise.get(), 0); // Floppy
+				                                          // disk
+				if (floppy_noise) {
+					floppy_noise->PlaySeek(); // Play noise
+					                          // on read
+				}
+			} else {
+				diskio_delay(512, hdd_noise.get()); // Hard disk
+				if (hdd_noise) {
+					hdd_noise->PlaySeek(); // Play noise on
+					                       // read
+				}
+			}
+
+			if (last_status != 0x00) {
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
@@ -589,7 +629,6 @@ static Bitu INT13_DiskHandler(void) {
 	}
 	return CBRET_NONE;
 }
-
 
 void BIOS_SetupDisks(void) {
 /* TODO Start the time correctly */

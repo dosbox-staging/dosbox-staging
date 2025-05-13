@@ -67,6 +67,9 @@ void IMFC_AddConfigSection(const ConfigPtr& conf);
 // Innovation SSI-2001 configuration and initialisation
 void INNOVATION_AddConfigSection(const ConfigPtr &conf);
 
+// Disk noise emulation configuration and initialisation
+void DISKNOISE_AddConfigSection(const ConfigPtr& conf);
+
 // Common lock notification calls used by the mixer
 void PCSPEAKER_NotifyLockMixer();
 void PCSPEAKER_NotifyUnlockMixer();
@@ -79,6 +82,9 @@ void PS1DAC_NotifyUnlockMixer();
 
 void GUS_NotifyLockMixer();
 void GUS_NotifyUnlockMixer();
+
+void DISKNOISE_NotifyLockMixer();
+void DISKNOISE_NotifyUnlockMixer();
 
 void SBLASTER_NotifyLockMixer();
 void SBLASTER_NotifyUnlockMixer();

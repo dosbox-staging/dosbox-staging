@@ -34,12 +34,13 @@
 #include <limits>
 #include <sys/types.h>
 
+#include "../hardware/disk_noise.h"
+#include "cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
-#include "string_utils.h"
-#include "cross.h"
 #include "inout.h"
+#include "string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)
 {
@@ -553,6 +554,8 @@ Bits localDrive::UnMount()
 	return 0;
 }
 
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
                        uint16_t _free_clusters, uint8_t _mediaid,
@@ -584,6 +587,25 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		return false;
 	}
 
+	// Determine if the file is on a disk mounted as floppy or hard drive
+	const int type = local_drive.lock()->GetMediaByte();
+	if (type == 0xF0) {
+		// Floppy drive
+		diskio_delay(*size, floppy_noise.get(), 0); // Floppy disk
+		if (floppy_noise) {
+			floppy_noise->PlaySeek(); // Play noise on read
+		}
+	} else if (type == 0xF8) {
+		// Hard drive
+		diskio_delay(*size, hdd_noise.get()); // Hard disk
+		if (hdd_noise) {
+			hdd_noise->PlaySeek(); // Play noise on read
+		}
+	} else {
+		// Unknown drive type
+		LOG_DEBUG("Unknown drive type %02X", type);
+	}
+
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
 	/* Same for Igor */
 	/* hardrive motion => unmask irq 2. Only do it when it's masked as
@@ -591,6 +613,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	uint8_t mask = IO_Read(0x21);
 	if (mask & 0x4)
 		IO_Write(0x21, mask & 0xfb);
+
 	return true;
 }
 
@@ -616,6 +639,25 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		}
 		// Truncation succeeded if we made it here
 		return true;
+	}
+
+	// Determine if the file is on a disk mounted as floppy or hard drive
+	const int type = local_drive.lock()->GetMediaByte();
+	if (type == 0xF0) {
+		// Floppy drive
+		diskio_delay(*size, floppy_noise.get(), 0); // Floppy disk
+		if (floppy_noise) {
+			floppy_noise->PlaySeek(); // Play noise on read
+		}
+	} else if (type == 0xF8) {
+		// Hard drive
+		diskio_delay(*size, hdd_noise.get()); // Hard disk
+		if (hdd_noise) {
+			hdd_noise->PlaySeek(); // Play noise on read
+		}
+	} else {
+		// Unknown drive type
+		LOG_DEBUG("Unknown drive type %02X", type);
 	}
 
 	// Otherwise we have some data to write
