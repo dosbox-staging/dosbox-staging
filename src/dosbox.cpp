@@ -825,16 +825,16 @@ void DOSBOX_Init()
 
 	pint = secprop->Add_int("hdd_io_speed", when_idle, 0);
 	pint->Set_help(
-	        "Sets a maximum data transfer speed for the hard disk. Use a value like\n"
-	        "2100000 for a 2.1MBytes/sec mid 1990s IDE PIO hard drive\n"
-	        "To disable any delay and run at maximum speed, set this to 0.");
+	        "Sets a maximum data transfer speed for the hard disk in kb/s.\n"
+	        "Example: 2100 simulates 2.1MBytes/sec mid 1990s IDE PIO hard drive.\n"
+	        "The default is 0, which disables any delay and runs at maximum speed.");
 	pint->SetMinMax(0, INT_MAX);
 
 	pint = secprop->Add_int("fdd_io_speed", when_idle, 0);
 	pint->Set_help(
-	        "Sets a maximum data transfer speed for the floppy disk. Use a value like\n"
-	        "62500 for a standard 3.5 inch floppy drive. To disable any delay and run\n"
-	        "at maximum speed, set this to 0.");
+	        "Sets a maximum data transfer speed for the floppy disk in kb/s.\n"
+	        "Example: 62 for a standard 3.5 inch floppy drive.\n"
+	        "The default is 0, which disables any delay and runs at maximum speed.");
 	pint->SetMinMax(0, INT_MAX);
 
 	// Configure render settings
