@@ -25,46 +25,46 @@ Défini la taille de la fenêtre pendant l'utilisation en mode fenêtré :
              aux dimensions indiquées, au format lxh (largeur x hauteur). Par ex. : 1024x768.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Set the viewport size (drawable area) within the window/screen:
-  fit:       Fit the viewport to the available window/screen (default).
-  <custom>:  Limit the viewport within to a custom resolution or percentage of
-             the desktop. Specified in WxH, N%%, N.M%%. Examples: 960x720 or 50%%
+Définit la taille de la vue (zone dessinable) dans la fenêtre/écran :
+  fit:       Ajuste la vue à la fenêtre/écran disponible (par défaut).
+  <custom>:  Limite la vue à une résolution personnalisée ou un pourcentage du
+             bureau. Spécifié au format LxH, N%%, N.M%%. Exemples : 960x720 ou 50%%
 .
 :CONFIG_WINDOW_POSITION
-Set initial window position when running in windowed mode:
-  auto:      Let the window manager decide the position.
-  <custom>:  Set window position in X,Y format. For example: 250,100
-             0,0 is the top-left corner of the screen.
+Définit la position initiale de la fenêtre en mode fenêtré :
+  auto:      Laisse le gestionnaire de fenêtres décider de la position.
+  <custom>:  Définit la position de la fenêtre au format X,Y. Par exemple : 250,100
+             0,0 correspond au coin supérieur gauche de l'écran.
 .
 :CONFIG_WINDOW_DECORATIONS
-Controls whether to display window decorations in windowed mode.
+Contrôle l'affichage des décorations de fenêtre en mode fenêtré.
 .
 :CONFIG_TRANSPARENCY
-Set the transparency of the DOSBox Staging screen.
-From 0 (no transparency) to 90 (high transparency).
+Définit la transparence de l'écran DOSBox Staging.
+De 0 (aucune transparence) à 90 (haute transparence).
 .
 :CONFIG_MAX_RESOLUTION
-This setting has been renamed to viewport_resolution.
+Ce paramètre a été renommé en viewport_resolution.
 .
 :CONFIG_HOST_RATE
-Set the host's refresh rate:
-  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh display.
-  sdi:       Use serial device interface (SDI) rates, without further adjustment.
-  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR displays).
-  <custom>:  Specify a custom rate as a whole or decimal value greater than 23.000.
+Définit le taux de rafraîchissement de l'hôte :
+  auto:      Utilise les taux SDI, ou les taux VRR en plein écran sur un écran haute fréquence.
+  sdi:       Utilise les taux d'interface de périphérique série (SDI), sans ajustement supplémentaire.
+  vrr:       Déduit 3 Hz du taux rapporté (meilleure pratique pour les écrans VRR).
+  <custom>:  Spécifie un taux personnalisé comme valeur entière ou décimale supérieure à 23.000.
 .
 :CONFIG_VSYNC
 Paramètre de synchro verticale non implémenté (paramètre ignoré)
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next frame. 0 disables this and will always render.
+Nombre de microsecondes pour permettre au rendu de bloquer avant de sauter la trame suivante. 0 désactive cette fonction et effectue toujours le rendu.
 .
 :CONFIG_PRESENTATION_MODE
-Optionally select the frame presentation mode:
-  auto:  Intelligently time and drop frames to prevent
-         emulation stalls, based on host and DOS frame rates.
-  cfr:   Always present DOS frames at a constant frame rate.
-  vfr:   Always present changed DOS frames at a variable frame rate.
+Sélectionne optionnellement le mode de présentation des images :
+  auto:  Synchronise et supprime intelligemment les images pour éviter
+         les blocages d'émulation, basé sur les fréquences d'images de l'hôte et du DOS.
+  cfr:   Présente toujours les images DOS à un taux d'images constant.
+  vfr:   Présente toujours les images DOS modifiées à un taux d'images variable.
 .
 :CONFIG_OUTPUT
 Système vidéo à utiliser pour la sortie.
@@ -107,16 +107,16 @@ Niveaux de priorité pour DOSBox. La deuxième valeur après la virgule est lors
 pause n'est valable que pour la seconde entrée.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Mute the sound when the window is inactive.
+Couper le son lorsque la fenêtre est inactive.
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Pause emulation when the window is inactive.
+Mettre en pause l'émulation lorsque la fenêtre est inactive.
 .
 :CONFIG_MAPPERFILE
-File used to load/save the key/event mappings.
-Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
-They can be loaded by name, for example: mapperfile = xbox/xenon2.map
-Note: the -resetmapper commandline flag only deletes the default mapperfile.
+Fichier utilisé pour charger/sauvegarder les mappages de touches/événements.
+Des mappages préconfigurés sont regroupés dans le répertoire 'resources/mapperfiles'.
+Ils peuvent être chargés par nom, par exemple : mapperfile = xbox/xenon2.map
+Remarque : l'option de ligne de commande -resetmapper supprime uniquement le fichier mapperfile par défaut.
 .
 :CONFIG_SCREENSAVER
 Utilisez 'allow' (autorise) ou 'block' (bloque) pour outrepasser la variable d'environnement
@@ -139,55 +139,55 @@ bien que quelques jeux puissent nécessiter une valeur plus élevée.
 Il n'y a généralement pas de gain de vitesse en augmentant cette valeur.
 .
 :CONFIG_MCB_FAULT_STRATEGY
-How software-corrupted memory chain blocks should be handled:
-  deny:    Quit (and report) when faults are detected (default).
-  repair:  Repair (and report) faults using adjacent chain blocks.
-  report:  Report faults but otherwise proceed as-is.
-  allow:   Allow faults to go unreported (hardware behavior).
-The default (deny) is recommended unless a game is failing with MCB corruption errors.
+Comment les blocs de chaîne de mémoire corrompus par logiciel doivent être traités :
+  deny:    Quitte (et signale) lorsque des erreurs sont détectées (par défaut).
+  repair:  Répare (et signale) les erreurs en utilisant les blocs de chaîne adjacents.
+  report:  Signale les erreurs mais continue le traitement comme tel.
+  allow:   Permet aux erreurs de ne pas être signalées (comportement matériel).
+La valeur par défaut (deny) est recommandée sauf si un jeu échoue avec des erreurs de corruption MCB.
 .
 :CONFIG_VMEMSIZE
-Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per video adapter.
+Mémoire vidéo en Mio (1-8) ou Kio (256 à 8192). 'auto' utilise la valeur par défaut selon l'adaptateur vidéo.
 .
 :CONFIG_DOS_RATE
-Customize the emulated video mode's frame rate, in Hz:
-default:  The DOS video mode determines the rate (recommended).
-host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
-We recommend the 'default' rate; otherwise test and set on a per-game basis.
+Personnalise la fréquence d'images du mode vidéo émulé, en Hz :
+default:  Le mode vidéo DOS détermine la fréquence (recommandé).
+host:     Fait correspondre la fréquence DOS à celle de l'hôte (voir le paramètre 'host_rate').
+<valeur>:  Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000 (Hz).
+Nous recommandons la fréquence 'default' ; sinon, testez et réglez au cas par cas selon les jeux.
 .
 :CONFIG_VESA_MODES
-Controls the selection of VESA 1.2 and 2.0 modes offered:
-  compatible   A tailored selection that maximizes game compatibility.
-               This is recommended along with 4 or 8 MB of video memory.
-  halfline     Supports the low-resolution halfline VESA 2.0 mode used by
-               Extreme Assault. Use only if needed, as it's not S3 compatible.
-  all          Offers all modes for a given video memory size, however
-               some games may not use them properly (flickering) or may need
-               more system memory (mem = ) to use them.
+Contrôle la sélection des modes VESA 1.2 et 2.0 proposés :
+  compatible   Une sélection adaptée qui maximise la compatibilité des jeux.
+               Ceci est recommandé avec 4 ou 8 Mo de mémoire vidéo.
+  halfline     Prend en charge le mode VESA 2.0 halfline à basse résolution utilisé par
+               Extreme Assault. À utiliser uniquement si nécessaire, car non compatible S3.
+  all          Propose tous les modes pour une taille de mémoire vidéo donnée, cependant
+               certains jeux peuvent ne pas les utiliser correctement (scintillement) ou peuvent nécessiter
+               plus de mémoire système (mem = ) pour les utiliser.
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
+Permet des modifications connues pour améliorer les performances. Actuellement, aucun jeu 
+n'est connu pour être affecté par ce paramètre. Veuillez signaler un bug au projet si vous trouvez un
+jeu qui échoue lorsque ce paramètre est défini sur true, afin que nous puissions les lister ici.
 .
 :CONFIG_AUTOEXEC_SECTION
-How autoexec sections are handled from multiple config files.
-join      : combines them into one big section (legacy behavior).
-overwrite : use the last one encountered, like other conf settings.
+Comment les sections autoexec sont gérées à partir de plusieurs fichiers de configuration.
+join      : les combine en une seule grande section (comportement hérité).
+overwrite : utilise la dernière rencontrée, comme les autres paramètres de configuration.
 .
 :CONFIG_AUTOMOUNT
-Mounts 'drives/[c]' directories as drives on startup, where [c] is
-a lower-case drive letter from a to y.  The 'drives' folder can be
-provided relative to the current directory or via built-in resources.
-Mount settings can be optionally provided using a [c].conf file along-
--side the drive's directory, with content as follows:
+Monte les répertoires 'drives/[c]' comme lecteurs au démarrage, où [c] est
+une lettre de lecteur minuscule de a à y. Le dossier 'drives' peut être
+fourni relativement au répertoire courant ou via les ressources intégrées.
+Les paramètres de montage peuvent être éventuellement fournis en utilisant un fichier [c].conf 
+à côté du répertoire du lecteur, avec le contenu suivant :
   [drive]
-  type    = dir, overlay, floppy, or cdrom
-  label   = custom_label
-  path    = path-specification, ie: path = %%path%%;c:\tools
-  override_drive = mount the directory to this drive instead (default empty)
-  verbose = true or false
+  type    = dir, overlay, floppy, ou cdrom
+  label   = étiquette_personnalisée
+  path    = spécification-du-chemin, ex : path = %%path%%;c:\tools
+  override_drive = monter le répertoire sur ce lecteur à la place (vide par défaut)
+  verbose = true ou false
 .
 :CONFIG_STARTUP_VERBOSITY
 Contrôle la verbosité avant l'affichage du programme :
@@ -211,26 +211,26 @@ Fonctionne seulement lors de l'émulation hercules ou cga_mono.
 Vous pouvez aussi faire défiler les couleurs disponibles avec F11.
 .
 :CONFIG_CGA_COLORS
-Sets the interpretation of CGA RGBI colors. Affects all machine types capable of
-displaying CGA or better graphics. Built-in presets:
-  default:       The canonical CGA palette, as emulated by VGA adapters (default).
-  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable Brown Level
-                 (0 - red, 50 - brown, 100 - dark yellow; defaults to 50).
-  tandy-warm:    Emulation of the actual color output of an unknown Tandy monitor.
-  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor with
-                 a unique Contrast control that dims non-bright colors only
-                 (0 to 100; defaults to 100).
+Définit l'interprétation des couleurs RGBI CGA. Affecte tous les types de machines capables
+d'afficher des graphiques CGA ou supérieurs. Préréglages intégrés :
+  default:       La palette CGA canonique, telle qu'émulée par les adaptateurs VGA (par défaut).
+  tandy [BL]:    Émulation d'un moniteur Tandy idéalisé avec Niveau de Brun ajustable
+                 (0 - rouge, 50 - brun, 100 - jaune foncé ; par défaut 50).
+  tandy-warm:    Émulation de la sortie couleur réelle d'un moniteur Tandy inconnu.
+  ibm5153 [C]:   Émulation de la sortie couleur réelle d'un moniteur IBM 5153 avec
+                 un contrôle de Contraste unique qui atténue uniquement les couleurs non vives
+                 (0 à 100 ; par défaut à 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Palettes used by the Amiga ports of Sierra AGI games
-                 (see the manual for further details).
-  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien AGI-interpreter.
-  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
-  colodore:      Commodore 64 inspired colors based on the Colodore palette.
-  colodore-sat:  Colodore palette with 20%% more saturation.
-  dga16:         A modern take on the canonical CGA palette with dialed back contrast.
-You can also set custom colors by specifying 16 space or comma separated color values,
-either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red), or decimal
-RGB triplets (e.g. (255, 0, 255) for magenta).
+                 Palettes utilisées par les portages Amiga des jeux Sierra AGI
+                 (voir le manuel pour plus de détails).
+  agi-amigaish:  Un mélange de couleurs EGA et Amiga utilisé par l'interpréteur AGI Sarien.
+  scumm-amiga:   Palette utilisée par les portages Amiga des jeux EGA LucasArts.
+  colodore:      Couleurs inspirées du Commodore 64 basées sur la palette Colodore.
+  colodore-sat:  Palette Colodore avec 20%% plus de saturation.
+  dga16:         Une version moderne de la palette CGA canonique avec contraste réduit.
+Vous pouvez également définir des couleurs personnalisées en spécifiant 16 valeurs de couleur séparées par des espaces ou des virgules,
+soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge vif), soit en triplets
+RGB décimaux (par ex. (255, 0, 255) pour magenta).
 .
 :CONFIG_SCALER
 Scaler utilisé pour agrandir/améliorer les modes basse résolution.
@@ -256,22 +256,24 @@ Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
       Then read the new settings from your console and enter them here.
 .
 :CONFIG_ERA
-Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.
+Ère de la technologie composite. Quand 'auto', PCjr utilise la nouvelle et
+CGA/Tandy utilisent l'ancienne.
 .
 :CONFIG_HUE
-Appearance of RGB palette. For example, adjust until sky is blue.
+Apparence de la palette RGB.
+Par exemple, ajustez jusqu'à ce que le ciel soit bleu.
 .
 :CONFIG_SATURATION
-Intensity of colors, from washed out to vivid.
+Intensité des couleurs, de délavé à vif.
 .
 :CONFIG_CONTRAST
-Ratio between the dark and light area.
+Rapport entre la zone sombre et la zone claire.
 .
 :CONFIG_BRIGHTNESS
-Luminosity of the image, from dark to light.
+Luminosité de l'image, de sombre à claire.
 .
 :CONFIG_CONVERGENCE
-Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
+Convergence des éléments sous-pixels, de flou à net (CGA et Tandy uniquement).
 .
 :CONFIG_CORE
 Core CPU utilisé dans l'émulation. 'auto' bascule de 'normal' à 'dynamic' si c'est disponible et
@@ -311,47 +313,47 @@ Taille de bloc du mixer, des blocs plus grands peuvent aider pour les saccades d
 Nombre de millisecondes de données à garder en amont du paramètre blocksize.
 .
 :CONFIG_NEGOTIATE
-Let the system audio driver negotiate (possibly) better rate and blocksize settings.
+Laisser le pilote audio système négocier (si possible) de meilleurs paramètres de taux et de taille de bloc.
 .
 :CONFIG_COMPRESSOR
-Enable the auto-leveling compressor on the master channel to prevent clipping
-of the audio output:
-  off:  Disable compressor.
-  on:   Enable compressor (default).
+Active le compresseur de nivellement automatique sur le canal principal pour éviter l'écrêtage
+de la sortie audio :
+  off:  Désactive le compresseur.
+  on:   Active le compresseur (par défaut).
 .
 :CONFIG_CROSSFEED
-Set crossfeed globally on all stereo channels for headphone listening:
-  off:         No crossfeed (default).
-  on:          Enable crossfeed (at strength 40).
-  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed (off)
-               and 100 full crossfeed (effectively turning stereo content into mono).
-Note: You can set per-channel crossfeed via mixer commands.
+Définit le crossfeed globalement sur tous les canaux stéréo pour l'écoute au casque :
+  off:         Pas de crossfeed (par défaut).
+  on:          Active le crossfeed (avec une intensité de 40).
+  <strength>:  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de crossfeed (désactivé)
+               et 100 un crossfeed complet (transformant effectivement le contenu stéréo en mono).
+Remarque : Vous pouvez définir le crossfeed par canal via les commandes du mixer.
 .
 :CONFIG_REVERB
-Enable reverb globally to add a sense of space to the sound:
-  off:     No reverb (default).
-  on:      Enable reverb (medium preset).
-  tiny:    Simulates the sound of a small integrated speaker in a room;
-           specifically designed for small-speaker audio systems
-           (PC Speaker, Tandy, PS/1 Audio, and LPT DAC devices).
-  small:   Adds a subtle sense of space; good for games that use a single
-           synth channel (typically OPL) for both music and sound effects.
-  medium:  Medium room preset that works well with a wide variety of games.
-  large:   Large hall preset recommended for games that use separate
-           channels for music and digital audio.
-  huge:    A stronger variant of the large hall preset; works really well
-           in some games with more atmospheric soundtracks.
-Note: You can fine-tune per-channel reverb levels via mixer commands.
+Active la réverbération globalement pour ajouter une sensation d'espace au son :
+  off:     Pas de réverbération (par défaut).
+  on:      Active la réverbération (préréglage moyen).
+  tiny:    Simule le son d'un petit haut-parleur intégré dans une pièce ;
+           spécialement conçu pour les systèmes audio à petits haut-parleurs
+           (PC Speaker, Tandy, PS/1 Audio et périphériques LPT DAC).
+  small:   Ajoute une subtile sensation d'espace ; bon pour les jeux qui utilisent un seul
+           canal de synthé (typiquement OPL) pour la musique et les effets sonores.
+  medium:  Préréglage de pièce moyenne qui fonctionne bien avec une grande variété de jeux.
+  large:   Préréglage de grande salle recommandé pour les jeux qui utilisent des canaux
+           séparés pour la musique et l'audio numérique.
+  huge:    Une variante plus forte du préréglage de grande salle ; fonctionne très bien
+           avec certains jeux aux bandes sonores plus atmosphériques.
+Remarque : Vous pouvez ajuster précisément les niveaux de réverbération par canal via les commandes du mixer.
 .
 :CONFIG_CHORUS
-Enable chorus globally to add a sense of stereo movement to the sound:
-  off:     No chorus (default).
-  on:      Enable chorus (normal preset).
-  light:   A light chorus effect (especially suited for
-           synth music that features lots of white noise.)
-  normal:  Normal chorus that works well with a wide variety of games.
-  strong:  An obvious and upfront chorus effect.
-Note: You can fine-tune per-channel chorus levels via mixer commands.
+Active le chorus globalement pour ajouter une sensation de mouvement stéréo au son :
+  off:     Pas de chorus (par défaut).
+  on:      Active le chorus (préréglage normal).
+  light:   Un effet de chorus léger (particulièrement adapté aux
+           musiques synthé qui comportent beaucoup de bruit blanc).
+  normal:  Chorus normal qui fonctionne bien avec une grande variété de jeux.
+  strong:  Un effet de chorus évident et direct.
+Remarque : Vous pouvez ajuster précisément les niveaux de chorus par canal via les commandes du mixer.
 .
 :CONFIG_MIDIDEVICE
 Préiphérique qui recevra les données MIDI (depuis l'interface
@@ -382,52 +384,52 @@ Reportez vous au README/Manuel pour plus d'informations.
 Type de MPU-401 à émuler.
 .
 :CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format. You can use an
-absolute or relative path, or the name of an .sf2 inside
-the 'soundfonts' directory within your DOSBox configuration
-directory.
-Note: The optional volume scaling percentage after the filename
-has been deprecated. Please use a mixer command instead to
-change the FluidSynth audio channel's volume, e.g.:
+Chemin vers un fichier SoundFont au format .sf2. Vous pouvez utiliser un
+chemin absolu ou relatif, ou le nom d'un fichier .sf2 à l'intérieur
+du répertoire 'soundfonts' dans votre répertoire de configuration
+DOSBox.
+Remarque : Le pourcentage optionnel de mise à l'échelle du volume après le nom du fichier
+est obsolète. Veuillez plutôt utiliser une commande du mixeur pour
+changer le volume du canal audio FluidSynth, par exemple :
   MIXER FSYNTH 200
 .
 :CONFIG_FSYNTH_CHORUS
-Chorus effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All five must be provided in-order and space-separated.
-  They are: voice-count level speed depth modulation-wave, where:
-  - voice-count is an integer from 0 to 99.
-  - level is a decimal from 0.0 to 10.0
-  - speed is a decimal, measured in Hz, from 0.1 to 5.0
-  - depth is a decimal from 0.0 to 21.0
-  - modulation-wave is either 'sine' or 'triangle'
-  For example: chorus = 3 1.2 0.3 8.0 sine
-Note: You can disable the FluidSynth chorus and enable the
-mixer-level chorus on the FluidSynth channel instead, or
-enable both chorus effects at the same time. Whether this
-sounds good depends on the SoundFont and the chorus settings
-being used.
+Effet de chorus : 'auto', 'on', 'off', ou valeurs personnalisées.
+Lors de l'utilisation de valeurs personnalisées :
+  Les cinq valeurs doivent être fournies dans l'ordre et séparées par des espaces.
+  Ce sont : nombre-voix niveau vitesse profondeur onde-modulation, où :
+  - nombre-voix est un entier de 0 à 99.
+  - niveau est un décimal de 0.0 à 10.0
+  - vitesse est un décimal, mesuré en Hz, de 0.1 à 5.0
+  - profondeur est un décimal de 0.0 à 21.0
+  - onde-modulation est soit 'sine' soit 'triangle'
+  Par exemple : chorus = 3 1.2 0.3 8.0 sine
+Remarque : Vous pouvez désactiver le chorus FluidSynth et activer le
+chorus au niveau du mixer sur le canal FluidSynth à la place, ou
+activer les deux effets de chorus en même temps. Que cela
+sonne bien dépend du SoundFont et des paramètres de chorus
+utilisés.
 .
 :CONFIG_FSYNTH_REVERB
-Reverb effect: 'auto', 'on', 'off', or custom values.
-When using custom values:
-  All four must be provided in-order and space-separated.
-  They are: room-size damping width level, where:
-  - room-size is a decimal from 0.0 to 1.0
-  - damping is a decimal from 0.0 to 1.0
-  - width is a decimal from 0.0 to 100.0
-  - level is a decimal from 0.0 to 1.0
-  For example: reverb = 0.61 0.23 0.76 0.56
-Note: You can disable the FluidSynth reverb and enable the
-mixer-level reverb on the FluidSynth channel instead, or
-enable both reverb effects at the same time. Whether this
-sounds good depends on the SoundFont and the reverb settings
-being used.
+Effet de réverbération : 'auto', 'on', 'off', ou valeurs personnalisées.
+Lors de l'utilisation de valeurs personnalisées :
+  Les quatre valeurs doivent être fournies dans l'ordre et séparées par des espaces.
+  Ce sont : taille-pièce atténuation largeur niveau, où :
+  - taille-pièce est un décimal de 0.0 à 1.0
+  - atténuation est un décimal de 0.0 à 1.0
+  - largeur est un décimal de 0.0 à 100.0
+  - niveau est un décimal de 0.0 à 1.0
+  Par exemple : reverb = 0.61 0.23 0.76 0.56
+Remarque : Vous pouvez désactiver la réverbération FluidSynth et activer la
+réverbération au niveau du mixer sur le canal FluidSynth à la place, ou
+activer les deux effets de réverbération en même temps. Que cela
+sonne bien dépend de la SoundFont et des paramètres de réverbération
+utilisés.
 .
 :CONFIG_FSYNTH_FILTER
-Filter for the FluidSynth audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie audio FluidSynth :
+  off:       Ne pas filtrer la sortie (par défaut).
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_MODEL
 Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
@@ -445,21 +447,21 @@ utiliser le répertoire 'mt32-roms' dans le répertoire de configuration
 de DOSBox, ou un autre répertoire habituel du système.
 .
 :CONFIG_MT32_FILTER
-Filter for the Roland MT-32/CM-32L audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie audio Roland MT-32/CM-32L :
+  off:       Ne pas filtrer la sortie (par défaut).
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :MT32_NO_SUPPORTED_MODELS
-No supported models present.
+Aucun modèle pris en charge présent.
 .
 :MT32_ROM_NOT_LOADED
-No ROM is currently loaded
+Aucune ROM n'est actuellement chargée
 .
 :MT32_INVENTORY_TABLE_MISSING_LETTER
 -
 .
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
-y
+o
 .
 :MT32_ACTIVE_ROM_LABEL
 Active ROM  : 
@@ -486,9 +488,9 @@ Numéro High DMA de la Sound Blaster.
 Permet au mixer Sound Blaster de modifier le mixer de DOSBox.
 .
 :CONFIG_SBWARMUP
-Silence initial DMA audio after card power-on, in milliseconds.
-This mitigates pops heard when starting many SB-based games.
-Reduce this if you notice intial playback is missing audio.
+Silence initial de l'audio DMA après la mise sous tension de la carte, en millisecondes.
+Cela atténue les bruits entendus lors du lancement de nombreux jeux basés sur SB.
+Réduisez cette valeur si vous remarquez que la lecture initiale manque de son.
 .
 :CONFIG_OPLRATE
 oplrate est déprécié . La forme d'onde OPL waveform est maintenant échantillonnée
@@ -503,40 +505,40 @@ Fournisseur de l'émulation OPL. 'compat' fournit une meilleure qualité,
 'nuked' est par défaut et le plus précis (mais le plus gourmand en CPU).
 .
 :CONFIG_SB_FILTER
-Type of filter to emulate for the Sound Blaster digital sound output:
-  auto:      Use the appropriate filter determined by 'sbtype'.
+Type de filtre à émuler pour la sortie sonore numérique Sound Blaster :
+  auto:      Utilise le filtre approprié déterminé par 'sbtype'.
   sb1, sb2, sbpro1, sbpro2, sb16:
-             Use the filter of this Sound Blaster model.
-  modern:    Use linear interpolation upsampling that acts as a low-pass filter;
-             this is the legacy DOSBox behaviour (default).
-  off:       Don't filter the output.
-  <custom>:  One or two custom filters in the following format:
-               TYPE ORDER FREQ
-             Where TYPE can be 'hpf' (high-pass) or 'lpf' (low-pass),
-             ORDER is the order of the filter from 1 to 16
-             (1st order = 6dB/oct slope, 2nd order = 12dB/oct, etc.),
-             and FREQ is the cutoff frequency in Hz. Examples:
+             Utilise le filtre de ce modèle de Sound Blaster.
+  modern:    Utilise l'interpolation linéaire qui agit comme un filtre passe-bas ;
+             c'est le comportement hérité de DOSBox (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Un ou deux filtres personnalisés au format suivant :
+               TYPE ORDRE FREQ
+             Où TYPE peut être 'hpf' (passe-haut) ou 'lpf' (passe-bas),
+             ORDRE est l'ordre du filtre de 1 à 16
+             (1er ordre = pente de 6dB/oct, 2ème ordre = 12dB/oct, etc.),
+             et FREQ est la fréquence de coupure en Hz. Exemples :
                 lpf 2 12000
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Force the Sound Blaster filter to be always on
-(disallow programs from turning the filter off).
+Force le filtre Sound Blaster à être toujours activé
+(interdire aux programmes de désactiver le filtre).
 .
 :CONFIG_OPL_FILTER
-Type of filter to emulate for the Sound Blaster OPL output:
-  auto:      Use the appropriate filter determined by 'sbtype' (default).
+Type de filtre à émuler pour la sortie OPL Sound Blaster :
+  auto:      Utilise le filtre approprié déterminé par 'sbtype' (par défaut).
   sb1, sb2, sbpro1, sbpro2, sb16:
-             Use the filter of this Sound Blaster model.
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+             Utilise le filtre de ce modèle de Sound Blaster.
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_CMS_FILTER
-Filter for the Sound Blaster CMS output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
-.
+Filtre pour la sortie CMS Sound Blaster :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  .
 :CONFIG_GUS
 Activer l'émulation Gravis UltraSound.
 .
@@ -556,99 +558,85 @@ les fichiers de patch pour la lecture GUS. Le jeu de patch
 utilisé avec Timidity devrait bien fonctionner correctement.
 .
 :CONFIG_GUS_FILTER
-Filter for the Gravis UltraSound audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie audio Gravis UltraSound :
+  off:       Ne pas filtrer la sortie (par défaut).
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_SIDMODEL
-Model of chip to emulate in the Innovation SSI-2001 card:
- - auto:  Selects the 6581 chip.
- - 6581:  The original chip, known for its bassy and rich character.
- - 8580:  A later revision that more closely matched the SID specification.
-          It fixed the 6581's DC bias and is less prone to distortion.
-          The 8580 is an option on reproduction cards, like the DuoSID.
- - none:  Disables the card.
+Modèle de puce à émuler dans la carte Innovation SSI-2001 :
+ - auto:  Sélectionne la puce 6581.
+ - 6581:  La puce originale, connue pour son caractère riche en graves.
+ - 8580:  Une révision ultérieure qui correspondait plus étroitement aux spécifications SID.
+          Elle a corrigé le biais DC du 6581 et est moins sujette à la distorsion.
+          Le 8580 est une option sur les cartes de reproduction, comme le DuoSID.
+ - none:  Désactive la carte.
 .
 :CONFIG_SIDCLOCK
-The SID chip's clock frequency, which is jumperable on reproduction cards.
- - default: uses 0.895 MHz, per the original SSI-2001 card.
- - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
- - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
- - hardsid: uses 1.000 MHz, available on the DuoSID.
+La fréquence d'horloge de la puce SID, configurable sur les cartes de reproduction.
+ - default: utilise 0.895 MHz, selon la carte SSI-2001 originale.
+ - c64ntsc: utilise 1.023 MHz, selon les PC Commodore NTSC et le DuoSID.
+ - c64pal:  utilise 0.985 MHz, selon les PC Commodore PAL et le DuoSID.
+ - hardsid: utilise 1.000 MHz, disponible sur le DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+L'adresse du port IO de l'Innovation SSI-2001.
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Le filtrage analogique du SID signifiait que chaque puce était physiquement unique.
+Ajuste la force de filtrage du 6581 en pourcentage de 0 à 100.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Ajuste la force de filtrage du 8580 en pourcentage de 0 à 100.
 .
 :CONFIG_INNOVATION_FILTER
-Filter for the Innovation audio output:
-  off:       Don't filter the output (default).
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
-.
-:CONFIG_PCSPEAKER
-Activer l'émulation du haut-parleur PC.
+Filtre pour la sortie audio Innovation :
+  off:       Ne pas filtrer la sortie (par défaut).
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PCSPEAKER_FILTER
-Filter for the PC Speaker output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
-.
-:CONFIG_ZERO_OFFSET
-Neutralise et empêche DC-offset du haut-parleur PC d'endommager d'autres sources.
-'auto' active ceci pour les systèmes non-Windows et le désactive pour Windows.
-Si votre OS corrige lui-même le DC-offset, alors paramétrez ceci à 'false'.
-.
-:CONFIG_TANDY
-Activer l'émulation du Tandy Sound System. Pour 'auto', l'émulation est présente seulement si la machine est paramétrée sur 'tandy'.
+Filtre pour la sortie PC Speaker :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_TANDY_FILTER
-Filter for the Tandy synth output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie synthé Tandy :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_TANDY_DAC_FILTER
-Filter for the Tandy DAC output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie DAC Tandy :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_LPT_DAC
-Type of DAC plugged into the parallel port:
+Type de DAC branché sur le port parallèle :
   disney:    Disney Sound Source.
   covox:     Covox Speech Thing.
-  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.
-  none/off:  Don't use a parallel port DAC (default).
+  ston1:     DAC Stereo-on-1, en stéréo jusqu'à 30 kHz.
+  none/off:  Ne pas utiliser de DAC sur port parallèle (par défaut).
 .
 :CONFIG_LPT_DAC_FILTER
-Filter for the LPT DAC audio device(s):
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
-.
-:CONFIG_DISNEY
-Activer l'émulation Disney Sound Source. (compatible Covox Voice Master et Speech Thing).
+Filtre pour le(s) périphérique(s) audio LPT DAC :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PS1AUDIO
-Enable IBM PS/1 Audio emulation.
+Active l'émulation audio IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
-Filter for the PS/1 Audio synth output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie synthé PS/1 Audio :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
-Filter for the PS/1 Audio DAC output:
-  on:        Filter the output (default).
-  off:       Don't filter the output.
-  <custom>:  Custom filter definition; see 'sb_filter' for details.
+Filtre pour la sortie DAC PS/1 Audio :
+  on:        Filtre la sortie (par défaut).
+  off:       Ne pas filtrer la sortie.
+  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_JOYSTICKTYPE
 Type de manette à émuler : auto (défaut),
@@ -681,24 +669,23 @@ Essayez d'activer ceci si votre stick analogique gauche peut seulement bouger da
 Pourcentage de mouvement à ignorer. 100 transforme le stick en un stick digital.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Activates hotkeys to allow realtime calibration of the joystick's x and y axis.
-Only consider this if in-game calibration fails and other settings have been tried.
- - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
-     - left and right diminish or magnify the x-axis scalar, respectively.
-     - down and up diminish or magnify the y-axis scalar, respectively.
- - Alt+Arrow-keys adjusts the axis' offset position:
-     - left and right shift x-axis offset in the given direction.
-     - down and up shift the y-axis offset in the given direction.
- - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.
-Each tap will report X or Y calibration values you can set below. When you find parameters that work,
-quit the game, switch this setting back to false, and populate the reported calibration parameters.
+Active les raccourcis clavier permettant la calibration en temps réel des axes x et y du joystick.
+Ne considérez cette option que si la calibration en jeu échoue et que d'autres paramètres ont été essayés.
+ - Ctrl/Cmd+Flèches ajuste la valeur scalaire de l'axe :
+     - gauche et droite diminuent ou augmentent le scalaire de l'axe x, respectivement.
+     - bas et haut diminuent ou augmentent le scalaire de l'axe y, respectivement.
+ - Alt+Flèches ajuste la position de décalage de l'axe :
+     - gauche et droite déplacent le décalage de l'axe x dans la direction donnée.
+     - bas et haut déplacent le décalage de l'axe y dans la direction donnée.
+ - Réinitialisez la calibration X et Y en utilisant Ctrl+Suppr et Ctrl+Début, respectivement.
+Chaque frappe affichera les valeurs de calibration X ou Y que vous pouvez définir ci-dessous. Lorsque vous trouvez des paramètres qui fonctionnent,
+quittez le jeu, désactivez ce paramètre et remplissez les paramètres de calibration indiqués.
 .
 :CONFIG_JOY_X_CALIBRATION
-Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+Appliquer les paramètres de calibration de l'axe x à partir des raccourcis. La valeur par défaut est 'auto'.
 .
 :CONFIG_JOY_Y_CALIBRATION
-Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
-.
+Appliquer les paramètres de calibration de l'axe y à partir des raccourcis. La valeur par défaut est 'auto'.
 :CONFIG_SERIAL1
 Définir le type de périphérique connecté au port série.
 Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'direct'.
@@ -741,15 +728,15 @@ Un nombre seul est traité comme une version majeure.
 Les paramètres communs sont 3.3, 5.0, 6.22, and 7.1.
 .
 :CONFIG_COUNTRY
-Set DOS country code which will affect country-specific
-information such as date, time, and decimal formats.
-If set to 0, the country code corresponding to the
-selected keyboard layout will be used.
+Définit le code pays DOS qui affectera les informations spécifiques au pays
+telles que les formats de date, d'heure et décimaux.
+Si défini à 0, le code pays correspondant à la
+disposition de clavier sélectionnée sera utilisé.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Enable expanding environment variables such as %%PATH%%
-while in the DOS command shell. FreeDOS and MS-DOS 7/8
-COMMAND.COM supports this behavior.
+Active l'expansion des variables d'environnement telles que %%PATH%%
+dans l'interpréteur de commandes DOS. FreeDOS et MS-DOS 7/8
+COMMAND.COM prennent en charge ce comportement.
 .
 :CONFIG_KEYBOARDLAYOUT
 Code langue pour la disposition du clavier (ou aucun).
@@ -758,52 +745,52 @@ Code langue pour la disposition du clavier (ou aucun).
 Activer l'IPX par émulation UDP/IP.
 .
 :CONFIG_NE2000
-Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows:
- - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
- - 10.0.2.2      : IP of the gateway and DHCP service.
- - 10.0.2.3      : IP of the virtual DNS server.
- - 10.0.2.15     : First IP provided by DHCP, your IP!
-Note: Inside DOS, setting this up requires an NE2000 packet driver,
-      DHCP client, and TCP/IP stack. You might need port-forwarding
-      from the host into the DOS guest, and from your router to your
-      host when acting as the server for multiplayer games.
+Active l'émulation d'une carte réseau Novell NE2000 sur un réseau logiciel
+(utilisant libslirp) avec les propriétés suivantes :
+ - 255.255.255.0 : Masque de sous-réseau du LAN virtuel 10.0.2.0.
+ - 10.0.2.2      : IP de la passerelle et du service DHCP.
+ - 10.0.2.3      : IP du serveur DNS virtuel.
+ - 10.0.2.15     : Première IP fournie par DHCP, votre IP !
+Remarque : Dans DOS, la configuration nécessite un pilote de paquets NE2000,
+      un client DHCP et une pile TCP/IP. Vous pourriez avoir besoin de redirection de ports
+      de l'hôte vers l'invité DOS, et de votre routeur vers votre
+      hôte lorsque vous agissez en tant que serveur pour les jeux multijoueurs.
 .
 :CONFIG_NICBASE
-The base address of the NE2000 card.
-Note: Addresses 220 and 240 might not be available as they're assigned
-      to the Sound Blaster and Gravis UltraSound by default.
+L'adresse de base de la carte NE2000.
+Remarque : Les adresses 220 et 240 peuvent ne pas être disponibles car elles sont attribuées
+      à la Sound Blaster et à la Gravis UltraSound par défaut.
 .
 :CONFIG_NICIRQ
-The interrupt used by the NE2000 card.
-Note: IRQs 3 and 5 might not be available as they're assigned
-      to 'serial2' and the Gravis UltraSound by default.
+L'interruption utilisée par la carte NE2000.
+Remarque : Les IRQ 3 et 5 peuvent ne pas être disponibles car elles sont attribuées
+      à 'serial2' et à la Gravis UltraSound par défaut.
 .
 :CONFIG_MACADDR
-The MAC address of the NE2000 card.
+L'adresse MAC de la carte NE2000.
 .
 :CONFIG_TCP_PORT_FORWARDS
-Forwards one or more TCP ports from the host into the DOS guest.
-The format is:
-  port1  port2  port3 ... (e.g., 21 80 443)
-  This will forward FTP, HTTP, and HTTPS into the DOS guest.
-If the ports are privileged on the host, a mapping can be used
-  host:guest  ..., (e.g., 8021:21 8080:80)
-  This will forward ports 8021 and 8080 to FTP and HTTP in the guest
-A range of adjacent ports can be abbreviated with a dash:
-  start-end ... (e.g., 27910-27960)
-  This will forward ports 27910 to 27960 into the DOS guest.
-Mappings and ranges can be combined, too:
-  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
-  This forwards ports 8040 to 8080 into 20 to 60 in the guest
-Notes:
-  - If mapped ranges differ, the shorter range is extended to fit.
-  - If conflicting host ports are given, only the first one is setup.
-  - If conflicting guest ports are given, the latter rule takes precedent.
+Transmet un ou plusieurs ports TCP de l'hôte vers l'invité DOS.
+Le format est :
+  port1  port2  port3 ... (par ex., 21 80 443)
+  Cela transmettra FTP, HTTP et HTTPS vers l'invité DOS.
+Si les ports sont privilégiés sur l'hôte, un mappage peut être utilisé
+  hôte:invité  ..., (par ex., 8021:21 8080:80)
+  Cela transmettra les ports 8021 et 8080 vers FTP et HTTP dans l'invité
+Une plage de ports adjacents peut être abrégée avec un tiret :
+  début-fin ... (par ex., 27910-27960)
+  Cela transmettra les ports 27910 à 27960 vers l'invité DOS.
+Les mappages et les plages peuvent également être combinés :
+  hdébut-hfin:gdébut-gfin ..., (par ex., 8040-8080:20-60)
+  Cela transmet les ports 8040 à 8080 vers 20 à 60 dans l'invité
+Remarques :
+  - Si les plages mappées diffèrent, la plage la plus courte est étendue pour s'adapter.
+  - Si des ports hôtes conflictuels sont donnés, seul le premier est configuré.
+  - Si des ports invités conflictuels sont donnés, la dernière règle a la priorité.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Forwards one or more UDP ports from the host into the DOS guest.
-The format is the same as for TCP port forwards.
+Transmet un ou plusieurs ports UDP de l'hôte vers l'invité DOS.
+Le format est le même que pour les transmissions de ports TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Les lignes de cette section seront lancées au démarrage.
@@ -1133,9 +1120,9 @@ vous devez monter les répertoires contenant les fichiers.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c:\dosgames\[color=white] créera un lecteur C avec c:\dosgames pour contenu. ║
+║ [color=green]mount c c:\jeuxdos\[color=white] créera un lecteur C avec c:\jeuxdos pour contenu. ║
 ║                                                                         ║
-║ [color=green]c:\dosgames\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
+║ [color=green]c:\jeuxdos\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
 ╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
@@ -1143,7 +1130,7 @@ vous devez monter les répertoires contenant les fichiers.
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════════╗
 ║ [color=green]mount c ~/jeuxdos[color=white] créera un lecteur C avec ~/jeuxdos pour contenu.          ║
 ║                                                                             ║
-║ [color=green]~/dosgames[color=white] est un exemple. Remplacez-le par votre propre répertoire de jeux.[color=white]║
+║ [color=green]~/jeuxdos[color=white] est un exemple. Remplacez-le par votre propre répertoire de jeux.[color=white]║
 ╚═════════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
@@ -1415,15 +1402,13 @@ La syntaxe de la commande est incorrecte.
 
 .
 :SHELL_ACCESS_DENIED
-Access denied - '%s'
-
+Accès refusé - '%s'
 .
 :SHELL_FILE_CREATE_ERROR
-File creation error - '%s'
-
+Erreur de création de fichier - '%s'
 .
 :SHELL_FILE_OPEN_ERROR
-File open error - '%s'
+Erreur d'ouverture de fichier - '%s'
 
 .
 :SHELL_FILE_NOT_FOUND
@@ -1840,18 +1825,18 @@ La version spécifiée de DOS n'est pas correcte.
 
 .
 :PROGRAM_PATH_TOO_LONG
-The path "%s" exceeds the DOS maximum length of %d characters
+Le chemin "%s" dépasse la longueur maximale DOS de %d caractères
 
 .
 :PROGRAM_EXECUTABLE_MISSING
-Executable file not found: %s
+Fichier exécutable non trouvé : %s
 
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
-listing not supported
+liste non prise en charge
 .
 :MIDI_DEVICE_NOT_CONFIGURED
-device not configured
+périphérique non configuré
 .
 :WIKI_ADD_UTILITIES_ARTICLE
 https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
@@ -1860,25 +1845,25 @@ https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :PROGRAM_AUTOTYPE_HELP_LONG
-Performs scripted keyboard entry into a running DOS game.
+Effectue une saisie clavier programmée dans un jeu DOS en cours d'exécution.
 
-Usage:
+Utilisation :
   [color=light-green]autotype[reset] -list
-  [color=light-green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=light-cyan]BUTTONS[reset]
+  [color=light-green]autotype[reset] [-w [color=white]ATTENTE[reset]] [-p [color=white]CADENCE[reset]] [color=light-cyan]BOUTONS[reset]
 
-Where:
-  [color=white]WAIT[reset]    is the number of seconds to wait before typing begins (max of 30).
-  [color=white]PACE[reset]    is the number of seconds before each keystroke (max of 10).
-  [color=light-cyan]BUTTONS[reset] is one or more space-separated buttons.
+Où :
+  [color=white]ATTENTE[reset]   est le nombre de secondes d'attente avant le début de la saisie (max 30).
+  [color=white]CADENCE[reset]   est le nombre de secondes entre chaque frappe (max 10).
+  [color=light-cyan]BOUTONS[reset]  sont un ou plusieurs boutons séparés par des espaces.
 
-Notes:
-  The [color=light-cyan]BUTTONS[reset] supplied in the command will be autotyped into running DOS games
-  after they start. Autotyping begins after [color=light-cyan]WAIT[reset] seconds, and each button is
-  entered every [color=white]PACE[reset] seconds. The [color=light-cyan],[reset] character inserts an extra [color=white]PACE[reset] delay.
-  [color=white]WAIT[reset] and [color=white]PACE[reset] default to 2 and 0.5 seconds respectively if not specified.
-  A list of all available button names can be obtained using the -list option.
+Remarques :
+  Les [color=light-cyan]BOUTONS[reset] fournis dans la commande seront automatiquement tapés dans les jeux DOS
+  après leur démarrage. La saisie automatique commence après [color=white]ATTENTE[reset] secondes, et chaque bouton est
+  saisi toutes les [color=white]CADENCE[reset] secondes. Le caractère [color=light-cyan],[reset] insère un délai [color=white]CADENCE[reset] supplémentaire.
+  [color=white]ATTENTE[reset] et [color=white]CADENCE[reset] ont par défaut 2 et 0,5 secondes respectivement s'ils ne sont pas spécifiés.
+  Une liste de tous les noms de boutons disponibles peut être obtenue avec l'option -list.
 
-Examples:
+Exemples :
   [color=light-green]autotype[reset] -list
   [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]
   [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]
@@ -1886,215 +1871,215 @@ Examples:
 [reset]
 .
 :PROGRAM_BOOT_HELP_LONG
-Boots DOSBox Staging from a DOS drive or disk image.
+Démarre DOSBox Staging à partir d'un lecteur DOS ou d'une image disque.
 
-Usage:
-  [color=light-green]boot[reset] [color=white]DRIVE[reset]
-  [color=light-green]boot[reset] [color=light-cyan]IMAGEFILE[reset]
+Utilisation :
+  [color=light-green]boot[reset] [color=white]LECTEUR[reset]
+  [color=light-green]boot[reset] [color=light-cyan]FICHIERIMAGE[reset]
 
-Where:
-  [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].
-  [color=light-cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.
+Où :
+  [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A:[reset], [color=white]C:[reset], ou [color=white]D:[reset].
+  [color=light-cyan]FICHIERIMAGE[reset] est une ou plusieurs images de disquette, séparées par des espaces.
 
-Notes:
-  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.
-  The DOS drive or disk image must be bootable, containing DOS system files.
-  If more than one disk images are specified, you can swap them with a hotkey.
+Remarques :
+  Une lettre de lecteur DOS doit avoir été montée précédemment avec la commande [color=light-green]imgmount[reset].
+  Le lecteur DOS ou l'image disque doit être amorçable, contenant des fichiers système DOS.
+  Si plusieurs images disque sont spécifiées, vous pouvez les permuter avec un raccourci clavier.
 
-Examples:
+Exemples :
   [color=light-green]boot[reset] [color=white]c:[reset]
   [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 
 .
 :PROGRAM_BOOT_IMAGE_MOUNTED
-Floppy image(s) already mounted.
+Image(s) de disquette déjà montée(s).
 
 .
 :PROGRAM_MOUNT_STATUS_NAME
-Image name
+Nom de l'image
 .
 :PROGRAM_MOUNT_STATUS_SLOT
-Swap slot
+Emplacement d'échange
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-No drive available
+Aucun lecteur disponible
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
-No available IDE controllers. Drive will not have IDE emulation.
+Aucun contrôleur IDE disponible. Le lecteur n'aura pas d'émulation IDE.
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
-DOSBox provides CD-ROM emulation on two levels.
+[erases=entire][color=light-green]Comment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[reset]
+DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 
-The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
-and marks the files read-only. Usually this is enough for most games:
-[color=light-blue]mount D C:\example -t cdrom[reset]
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[color=light-blue]mount D C:\example -t cdrom -label CDLABEL[reset]
+Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
+et marque les fichiers comme étant en lecture seule. Généralement, cela suffit pour la plupart des jeux :
+[color=light-blue]mount D C:\exemple -t cdrom[reset]
+Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
+[color=light-blue]mount D C:\exemple -t cdrom -label ETIQUETTE_CD[reset]
 
-The [color=brown]next[reset] level adds some low-level support.
-Therefore only works on CD-ROM drives:
+Le [color=brown]niveau suivant[reset] ajoute une prise en charge de bas niveau.
+Il ne fonctionne donc que sur les lecteurs CD-ROM :
 [color=light-blue]mount d [color=red]D:\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
-Replace [color=red]D:\[reset] with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=brown]0[reset] with the number reported for your CD-ROM if you type:
+Remplacez [color=red]D:\[reset] par l'emplacement de votre CD-ROM.
+Remplacez le [color=yellow]0[reset] dans [color=light-blue]-usecd [color=brown]0[reset] par le numéro indiqué pour votre CD-ROM si vous tapez :
 [color=light-blue]mount -listcd[reset]
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+De plus, vous pouvez utiliser imgmount pour monter des images iso ou cue/bin :
 [color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
-DOSBox provides CD-ROM emulation on two levels.
+[erases=entire][color=light-green]Comment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[reset]
+DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 
-The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
-and marks the files read-only. Usually this is enough for most games:
-[color=light-blue]mount D ~/example -t cdrom[reset]
-If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]
+Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
+et marque les fichiers comme étant en lecture seule. Généralement, cela suffit pour la plupart des jeux :
+[color=light-blue]mount D ~/exemple -t cdrom[reset]
+Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
+[color=light-blue]mount D ~/exemple -t cdrom -label ETIQUETTE_CD[reset]
 
-The [color=brown]next[reset] level adds some low-level support.
-Therefore only works on CD-ROM drives:
-[color=light-blue]mount d [color=red]~/example[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
+Le [color=brown]niveau suivant[reset] ajoute une prise en charge de bas niveau.
+Il ne fonctionne donc que sur les lecteurs CD-ROM :
+[color=light-blue]mount d [color=red]~/exemple[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
 
-Replace [color=red]~/example[reset] with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=brown]0[reset] with the number reported for your CD-ROM if you type:
+Remplacez [color=red]~/exemple[reset] par l'emplacement de votre CD-ROM.
+Remplacez le [color=yellow]0[reset] dans [color=light-blue]-usecd [color=brown]0[reset] par le numéro indiqué pour votre CD-ROM si vous tapez :
 [color=light-blue]mount -listcd[reset]
 
-Additionally, you can use imgmount to mount iso or cue/bin images:
+De plus, vous pouvez utiliser imgmount pour monter des images iso ou cue/bin :
 [color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
 [color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_KEYB_HELP_LONG
-Configures a keyboard for a specific language.
+Configure un clavier pour une langue spécifique.
 
-Usage:
-  [color=light-green]keyb[reset] [color=light-cyan][LANGCODE][reset]
-  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]
+Utilisation :
+  [color=light-green]keyb[reset] [color=light-cyan][CODELANGUE][reset]
+  [color=light-green]keyb[reset] [color=light-cyan]CODELANGUE[reset] [color=white]CODEPAGE[reset] [FICHIERCODEPAGE]
 
-Where:
-  [color=light-cyan]LANGCODE[reset]     is a language code or keyboard layout ID.
-  [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].
-  CODEPAGEFILE is a file containing information for a code page.
+Où :
+  [color=light-cyan]CODELANGUE[reset]     est un code de langue ou un ID de disposition clavier.
+  [color=white]CODEPAGE[reset]     est un numéro de page de code, comme [color=white]437[reset] et [color=white]850[reset].
+  FICHIERCODEPAGE est un fichier contenant des informations pour une page de code.
 
-Notes:
-  Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout
-  and code page. It will change to [color=light-cyan]LANGCODE[reset] if provided, optionally with a
-  [color=white]CODEPAGE[reset] and an additional CODEPAGEFILE to load the specified code page
-  number and code page file if provided. This command is especially useful if
-  you use a non-US keyboard, and [color=light-cyan]LANGCODE[reset] can also be set in the configuration
-  file under the [dos] section using the "keyboardlayout = [color=light-cyan]LANGCODE[reset]" setting.
+Remarques :
+  L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition clavier actuellement chargée
+  et la page de code. Elle changera pour [color=light-cyan]CODELANGUE[reset] si fourni, éventuellement avec une
+  [color=white]CODEPAGE[reset] et un FICHIERCODEPAGE supplémentaire pour charger le numéro de page de code
+  spécifié et le fichier de page de code s'il est fourni. Cette commande est particulièrement utile si
+  vous utilisez un clavier non-US, et [color=light-cyan]CODELANGUE[reset] peut également être défini dans le fichier de configuration
+  sous la section [dos] en utilisant le paramètre "keyboardlayout = [color=light-cyan]CODELANGUE[reset]".
 
-Examples:
+Exemples :
   [color=light-green]KEYB[reset]
   [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
   [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
-  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] moncp.cpi
 
 .
 :PROGRAM_LOADFIX_HELP_LONG
-Loads a program in the specific memory region and then runs it.
+Charge un programme dans la région mémoire spécifique puis l'exécute.
 
-Usage:
-  [color=light-green]loadfix[reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]
-  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]
+Utilisation :
+  [color=light-green]loadfix[reset] [color=light-cyan]JEU[reset] [color=white][PARAMETRES][reset]
+  [color=light-green]loadfix[reset] [/d] (ou [/f])[reset]
 
-Where:
-  [color=light-cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.
+Où :
+  [color=light-cyan]JEU[reset] est un jeu ou programme à charger, éventuellement avec des paramètres.
 
-Notes:
-  The most common use cases of this command are to fix DOS games or programs
-  which show either the "[color=white]Packed File Corrupt[reset]" or "[color=white]Not enough memory"[reset] (e.g.,
-  from some 1980's games such as California Games II) error message when run.
-  Running [color=light-green]loadfix[reset] without an argument simply allocates memory for your game
-  to run; you can free the memory with either /d or /f option when it finishes.
+Remarques :
+  Les cas d'utilisation les plus courants de cette commande sont de corriger les jeux DOS ou programmes
+  qui affichent soit le message "[color=white]Packed File Corrupt[reset]" ou "[color=white]Not enough memory"[reset] (par ex.,
+  de certains jeux des années 1980 comme California Games II) lors de leur exécution.
+  L'exécution de [color=light-green]loadfix[reset] sans argument alloue simplement de la mémoire pour que votre jeu
+  s'exécute ; vous pouvez libérer la mémoire avec l'option /d ou /f lorsqu'il se termine.
 
-Examples:
-  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]args[reset]
+Exemples :
+  [color=light-green]loadfix[reset] [color=light-cyan]monjeu[reset] [color=white]args[reset]
   [color=light-green]loadfix[reset] /d
 
 .
 :PROGRAM_LOADROM_HELP_LONG
-Loads a ROM image of the video BIOS or IBM BASIC.
+Charge une image ROM du BIOS vidéo ou d'IBM BASIC.
 
-Usage:
-  [color=light-green]loadrom [color=light-cyan]IMAGEFILE[reset]
+Utilisation :
+  [color=light-green]loadrom [color=light-cyan]FICHIERIAMGE[reset]
 
-Where:
-  [color=light-cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.
+Où :
+  [color=light-cyan]FICHIERIAMGE[reset] est une image ROM de BIOS vidéo ou d'IBM BASIC.
 
-Notes:
-   After loading an IBM BASIC ROM image into the emulated ROM with the command,
-   you can run the original IBM BASIC interpreter program in DOSBox Staging.
+Remarques :
+   Après avoir chargé une image ROM d'IBM BASIC dans la ROM émulée avec la commande,
+   vous pouvez exécuter le programme interpréteur IBM BASIC original dans DOSBox Staging.
 
-Examples:
+Exemples :
   [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]
 
 .
 :PROGRAM_MEM_HELP_LONG
-Displays the DOS memory information.
+Affiche les informations de mémoire DOS.
 
-Usage:
+Utilisation :
   [color=light-green]mem[reset]
 
-Where:
-  This command has no parameters.
+Où :
+  Cette commande n'a pas de paramètres.
 
-Notes:
-  This command shows the DOS memory status, including the free conventional
-  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.
+Remarques :
+  Cette commande affiche l'état de la mémoire DOS, y compris la mémoire conventionnelle
+  libre, la mémoire UMB (haute), la mémoire XMS (étendue) et la mémoire EMS (paginée).
 
-Examples:
+Exemples :
   [color=light-green]mem[reset]
 
 .
 :PROGRAM_RESCAN_HELP_LONG
-Scans for changes on mounted DOS drives.
+Recherche les changements sur les lecteurs DOS montés.
 
-Usage:
-  [color=light-green]rescan[reset] [color=light-cyan]DRIVE[reset]
+Utilisation :
+  [color=light-green]rescan[reset] [color=light-cyan]LECTEUR[reset]
   [color=light-green]rescan[reset] [/a]
 
-Where:
-  [color=light-cyan]DRIVE[reset] is the drive to scan for changes.
+Où :
+  [color=light-cyan]LECTEUR[reset] est le lecteur à scanner pour les changements.
 
-Notes:
-  - Running [color=light-green]rescan[reset] without an argument scans for changes of the current drive.
-  - Changes to this drive made on the host will then be reflected inside DOS.
-  - You can also scan for changes on all mounted drives with the /a option.
+Remarques :
+  - L'exécution de [color=light-green]rescan[reset] sans argument scan les changements du lecteur courant.
+  - Les modifications apportées à ce lecteur sur l'hôte seront alors reflétées dans DOS.
+  - Vous pouvez également scanner les changements sur tous les lecteurs montés avec l'option /a.
 
-Examples:
+Exemples :
   [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
   [color=light-green]rescan[reset] /a
 
 .
 :SHELL_CMD_MIXER_HELP_LONG
-Displays or changes the sound mixer settings.
+Affiche ou modifie les paramètres du mixeur audio.
 
-Usage:
-  [color=light-green]mixer[reset] [color=light-cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]
+Utilisation :
+  [color=light-green]mixer[reset] [color=light-cyan][CANAL][reset] [color=white]COMMANDES[reset] [/noshow]
   [color=light-green]mixer[reset] [/listmidi]
 
-Where:
-  [color=light-cyan]CHANNEL[reset]  is the sound channel to change the settings of.
-  [color=white]COMMANDS[reset] is one or more of the following commands:
-    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])
-               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
-    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
-    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]
+Où :
+  [color=light-cyan]CANAL[reset]    est le canal audio à modifier.
+  [color=white]COMMANDES[reset] sont une ou plusieurs des commandes suivantes :
+    Volume :    [color=white]0[reset] à [color=white]100[reset], ou valeur en décibels préfixée par [color=white]d[reset] (par ex. [color=white]d-7.5[reset])
+                utilisez [color=white]G:D[reset] pour définir les côtés gauche et droit séparément (par ex. [color=white]10:20[reset])
+    Sortie ligne : [color=white]stereo[reset], [color=white]reverse[reset] (pour les canaux stéréo uniquement)
+    Crossfeed :  [color=white]x0[reset] à [color=white]x100[reset]    Réverbération : [color=white]r0[reset] à [color=white]r100[reset]    Chorus : [color=white]c0[reset] à [color=white]c100[reset]
 
-Notes:
-  Running [color=light-green]mixer[reset] without an argument shows the current mixer settings.
-  You may change the settings of more than one channel in a single command.
-  If channel is unspecified, you can set crossfeed, reverb or chorus globally.
-  You can view the list of available MIDI devices with /listmidi.
-  The /noshow option applies the changes without showing the mixer settings.
+Remarques :
+  L'exécution de [color=light-green]mixer[reset] sans argument affiche les paramètres actuels du mixeur.
+  Vous pouvez modifier les paramètres de plusieurs canaux en une seule commande.
+  Si le canal n'est pas spécifié, vous pouvez définir le crossfeed, la réverbération ou le chorus globalement.
+  Vous pouvez afficher la liste des périphériques MIDI disponibles avec /listmidi.
+  L'option /noshow applique les modifications sans afficher les paramètres du mixeur.
 
-Examples:
+Exemples :
   [color=light-green]mixer[reset] [color=light-cyan]cdda[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
@@ -2102,42 +2087,42 @@ Examples:
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Channel      Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+[color=white]Canal        Volume     Volume (dB)   Mode     Xfeed  Réverb  Chorus[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
-off
+éteint
 .
 :SHELL_CMD_MIXER_CHANNEL_STEREO
-Stereo
+Stéréo
 .
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
 .
 :PROGRAM_SERIAL_HELP_LONG
-Manages the serial ports.
+Gère les ports série.
 
-Usage:
-  [color=light-green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.
-  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]DEVICE[reset] [settings]   Attach specified device to the given port.
+Utilisation :
+  [color=light-green]serial[reset] [color=white][PORT#][reset]                   Liste tous les ports ou le port spécifié ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], ou [color=white]4[reset]).
+  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]PERIPHERIQUE[reset] [paramètres]   Attache le périphérique spécifié au port donné.
 
-Where:
-  [color=light-cyan]DEVICE[reset]   One of: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], or [color=light-cyan]DISABLED[reset]
+Où :
+  [color=light-cyan]PERIPHERIQUE[reset]   Un des : [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], ou [color=light-cyan]DISABLED[reset]
 
-  Optional settings for each [color=light-cyan]DEVICE[reset]:
-  For [color=light-cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
-  For [color=light-cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+  Paramètres optionnels pour chaque [color=light-cyan]PERIPHERIQUE[reset] :
+  Pour [color=light-cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  Pour [color=light-cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                    PORT, INHSOCKET, SOCK
-  For [color=light-cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
-                   2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
-  For [color=light-cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
-  For [color=light-cyan]DUMMY[reset]      : IRQ
+  Pour [color=light-cyan]MOUSE[reset]      : IRQ, RATE (NORMAL ou SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+                   2BTN+MSM, 3BTN+MSM, ou WHEEL+MSM)
+  Pour [color=light-cyan]DIRECT[reset]     : IRQ, REALPORT (requis), RXDELAY
+  Pour [color=light-cyan]DUMMY[reset]      : IRQ
 
-Examples:
-  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server
-  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux
-  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
+Exemples :
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Écoute sur TCP:1250 en tant que serveur
+  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Se connecte à TCP:1250 en tant que client
+  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Écoute sur UDP:5000 en tant que serveur
+  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Utilise un port physique sous Linux
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Souris Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2145,11 +2130,11 @@ COM%d: %s %s
 
 .
 :PROGRAM_SERIAL_BAD_PORT
-Must specify a numeric port value between 1 and %d, inclusive.
+Vous devez spécifier une valeur de port numérique entre 1 et %d inclus.
 
 .
 :PROGRAM_SERIAL_BAD_TYPE
-Type must be one of the following:
+Le type doit être l'un des suivants :
 
 .
 :PROGRAM_SERIAL_INDENTED_LIST
@@ -2157,407 +2142,407 @@ Type must be one of the following:
 
 .
 :SHELL_CMD_COMMAND_HELP_LONG
-Starts the DOSBox Staging command shell.
-Usage:
+Démarre l'interpréteur de commandes DOSBox Staging.
+Utilisation :
   [color=light-green]command[reset]
-  [color=light-green]command[reset] /c (or /init) [color=light-cyan]COMMAND[reset]
+  [color=light-green]command[reset] /c (ou /init) [color=light-cyan]COMMANDE[reset]
 
-Where:
-  [color=light-cyan]COMMAND[reset] is a DOS command, game, or program to run.
+Où :
+  [color=light-cyan]COMMANDE[reset] est une commande DOS, un jeu ou un programme à exécuter.
 
-Notes:
-  DOSBox Staging automatically starts a DOS command shell by invoking this
-  command with /init option when it starts, which shows the welcome banner.
-  You can load a new instance of the command shell by running [color=light-green]command[reset].
-  Adding a /c option along with [color=light-cyan]COMMAND[reset] allows this command to run the
-  specified command (optionally with parameters) and then exit automatically.
+Remarques :
+  DOSBox Staging démarre automatiquement un interpréteur de commandes DOS en appelant cette
+  commande avec l'option /init au démarrage, ce qui affiche la bannière de bienvenue.
+  Vous pouvez charger une nouvelle instance de l'interpréteur de commandes en exécutant [color=light-green]command[reset].
+  L'ajout d'une option /c avec [color=light-cyan]COMMANDE[reset] permet à cette commande d'exécuter la
+  commande spécifiée (éventuellement avec des paramètres) puis de quitter automatiquement.
 
-Examples:
+Exemples :
   [color=light-green]command[reset]
-  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hello world![reset]
+  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Bonjour le monde ![reset]
   [color=light-green]command[reset] /init [color=light-cyan]dir[reset]
 
 .
 :SHELL_CMD_TIME_ERROR
-The specified time is not correct.
+L'heure spécifiée n'est pas correcte.
 
 .
 :SHELL_CMD_TIME_SETHLP
-Type 'time %s' to change.
+Tapez 'time %s' pour changer.
 
 .
 :SHELL_CMD_DUPLICATE_REDIRECTION
-Duplicate redirection - %s
+Redirection en double - %s
 
 .
 :SHELL_CMD_FAILED_PIPE
 
-Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
+Échec de la création/ouverture d'un fichier temporaire pour la redirection. Vérifiez la variable %%TEMP%%.
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]pause[reset]
 
-Where:
-  This command has no parameters.
+Où :
+  Cette commande n'a pas de paramètres.
 
-Notes:
-  This command is especially useful in batch programs to allow a user to
-  continue the batch program execution with a key press. The user can press
-  any key on the keyboard (except for certain control keys) to continue.
+Remarques :
+  Cette commande est particulièrement utile dans les programmes batch pour permettre à un utilisateur de
+  continuer l'exécution du programme batch en appuyant sur une touche. L'utilisateur peut appuyer sur
+  n'importe quelle touche du clavier (sauf certaines touches de contrôle) pour continuer.
 
-Examples:
+Exemples :
   [color=light-green]pause[reset]
 
 .
 :SHELL_CMD_CLS_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]cls[reset]
 
-Where:
-  This command has no parameters.
+Où :
+  Cette commande n'a pas de paramètres.
 
-Notes:
-  Running [color=light-green]cls[reset] clears all text on the DOS screen, except for the command
-  prompt (e.g., [color=white]Z:\>[reset] or [color=white]C:\GAMES>[reset]) on the top-left corner of the screen.
+Remarques :
+  L'exécution de [color=light-green]cls[reset] efface tout le texte sur l'écran DOS, à l'exception de l'invite de commande
+  (par exemple, [color=white]Z:\>[reset] ou [color=white]C:\GAMES>[reset]) dans le coin supérieur gauche de l'écran.
 
-Examples:
+Exemples :
   [color=light-green]cls[reset]
 
 .
 :SHELL_CMD_ECHO_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
   [color=light-green]echo[reset] [color=light-cyan][MESSAGE][reset]
 
-Where:
-  [color=light-cyan]on|off[reset]  Turns on/off command echoing.
-  [color=light-cyan]MESSAGE[reset] The message to display.
+Où :
+  [color=light-cyan]on|off[reset]  Active/désactive l'écho des commandes.
+  [color=light-cyan]MESSAGE[reset] Le message à afficher.
 
-Notes:
-  - Running [color=light-green]echo[reset] without an argument shows the current on or off status.
-  - Echo is especially useful when writing or debugging batch files.
+Remarques :
+  - L'exécution de [color=light-green]echo[reset] sans argument affiche l'état actuel on ou off.
+  - Echo est particulièrement utile lors de l'écriture ou du débogage de fichiers batch.
 
-Examples:
+Exemples :
   [color=light-green]echo[reset] [color=light-cyan]off[reset]
-  [color=light-green]echo[reset] [color=light-cyan]Hello world![reset]
+  [color=light-green]echo[reset] [color=light-cyan]Bonjour le monde ![reset]
 
 .
 :SHELL_CMD_EXIT_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]exit[reset]
 
-Where:
-  This command has no parameters.
+Où :
+  Cette commande n'a pas de paramètres.
 
-Notes:
-  If you start a DOS shell from a program, running [color=light-green]exit[reset] returns to the program.
-  If there is no DOS program running, the command quits from DOSBox Staging.
+Remarques :
+  Si vous démarrez un shell DOS depuis un programme, l'exécution de [color=light-green]exit[reset] retourne au programme.
+  S'il n'y a pas de programme DOS en cours d'exécution, la commande quitte DOSBox Staging.
 
-Examples:
+Exemples :
   [color=light-green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
-Preventing an early 'exit' call from terminating.
+Fin de l'émulation annulée suite à une commande 'exit' précoce.
 
 .
 :SHELL_CMD_HELP_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]help[reset]
   [color=light-green]help[reset] /a[ll]
-  [color=light-green]help[reset] [color=light-cyan]COMMAND[reset]
+  [color=light-green]help[reset] [color=light-cyan]COMMANDE[reset]
 
-Where:
-  [color=light-cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=light-cyan]dir[reset].
+Où :
+  [color=light-cyan]COMMANDE[reset] est le nom d'une commande DOS interne, comme [color=light-cyan]dir[reset].
 
-Notes:
-  - Running [color=light-green]echo[reset] without an argument displays a DOS command list.
-  - You can view a full list of internal commands with the /a or /all option.
-  - Instead of [color=light-green]help[reset] [color=light-cyan]COMMAND[reset], you can also get command help with [color=light-cyan]COMMAND[reset] /?.
+Remarques :
+  - L'exécution de [color=light-green]echo[reset] sans argument affiche une liste de commandes DOS.
+  - Vous pouvez afficher une liste complète des commandes internes avec l'option /a ou /all.
+  - Au lieu de [color=light-green]help[reset] [color=light-cyan]COMMANDE[reset], vous pouvez également obtenir l'aide de la commande avec [color=light-cyan]COMMANDE[reset] /?.
 
-Examples:
+Exemples :
   [color=light-green]help[reset] [color=light-cyan]dir[reset]
   [color=light-green]help[reset] /all
 
 .
 :PROGRAM_INTRO_HELP
-Displays a full-screen introduction to DOSBox Staging.
+Affiche une introduction en plein écran à DOSBox Staging.
 
 .
 :PROGRAM_INTRO_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]intro[reset]
   [color=light-green]intro[reset] [color=white]PAGE[reset]
 
-Where:
-  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].
+Où :
+  [color=white]PAGE[reset] est le nom de la page à afficher, notamment [color=white]cdrom[reset], [color=white]mount[reset] et [color=white]special[reset].
 
-Notes:
-  Running [color=light-green]intro[reset] without an argument displays one information page at a time;
-  press any key to move to the next page. If a page name is provided, then the
-  specified page will be displayed directly.
+Remarques :
+  L'exécution de [color=light-green]intro[reset] sans argument affiche une page d'information à la fois ;
+  appuyez sur n'importe quelle touche pour passer à la page suivante. Si un nom de page est fourni, alors la
+  page spécifiée sera affichée directement.
 
-Examples:
+Exemples :
   [color=light-green]intro[reset]
   [color=light-green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_SET_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]set[reset]
-  [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][STRING][reset]
+  [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][CHAINE][reset]
 
-Where:
-  [color=white]VARIABLE[reset] The name of the environment variable.
-  [color=light-cyan]STRING[reset]   A series of characters to assign to the variable.
+Où :
+  [color=white]VARIABLE[reset] Le nom de la variable d'environnement.
+  [color=light-cyan]CHAINE[reset]   Une série de caractères à assigner à la variable.
 
-Notes:
-  - Assigning an empty string to the variable removes the variable.
-  - The command without a parameter displays current environment variables.
+Remarques :
+  - L'assignation d'une chaîne vide à la variable supprime la variable.
+  - La commande sans paramètre affiche les variables d'environnement actuelles.
 
-Examples:
+Exemples :
   [color=light-green]set[reset]
-  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]
+  [color=light-green]set[reset] [color=white]nom[reset]=[color=light-cyan]valeur[reset]
 
 .
 :SHELL_CMD_IF_HELP_LONG
-Usage:
-  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND
-  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND
-  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FILE[reset] COMMAND
+Utilisation :
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NOMBRE[reset] COMMANDE
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]CH1==CH2[reset] COMMANDE
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FICHIER[reset] COMMANDE
 
-Where:
-  [color=white]NUMBER[reset]     is a positive integer less or equal to the desired value.
-  [color=white]STR1==STR2[reset] compares two text strings (case-sensitive).
-  [color=white]FILE[reset]       is an exact file name to check for existence.
-  COMMAND    is a DOS command or program to run, optionally with parameters.
+Où :
+  [color=white]NOMBRE[reset]     est un entier positif inférieur ou égal à la valeur souhaitée.
+  [color=white]CH1==CH2[reset]   compare deux chaînes de texte (sensible à la casse).
+  [color=white]FICHIER[reset]    est un nom de fichier exact à vérifier pour l'existence.
+  COMMANDE    est une commande ou un programme DOS à exécuter, avec des paramètres optionnels.
 
-Notes:
-  The COMMAND is run if any of the three conditions in the usage are met.
-  If [color=light-magenta]not[reset] is specified, then the command runs only with the false condition.
-  The [color=light-cyan]errorlevel[reset] condition is useful for checking if a programs ran correctly.
-  If either [color=white]STR1[reset] or [color=white]STR2[reset] may be empty, you can enclose them in quotes (").
+Remarques :
+  La COMMANDE est exécutée si l'une des trois conditions d'utilisation est remplie.
+  Si [color=light-magenta]not[reset] est spécifié, alors la commande s'exécute uniquement avec la condition fausse.
+  La condition [color=light-cyan]errorlevel[reset] est utile pour vérifier si un programme s'est exécuté correctement.
+  Si [color=white]CH1[reset] ou [color=white]CH2[reset] peut être vide, vous pouvez les entourer de guillemets (").
 
-Examples:
+Exemples :
   [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=light-green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Hello world!
-  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit
+  [color=light-green]if[reset] [color=white]"%%mavariable%%"=="machaine"[reset] echo Bonjour le monde !
+  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]fichier.txt[reset] exit
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
-Usage:
-  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]
+Utilisation :
+  [color=light-green]goto[reset] [color=light-cyan]ETIQUETTE[reset]
 
-Where:
-  [color=light-cyan]LABEL[reset] is text string used in the batch program as a label.
+Où :
+  [color=light-cyan]ETIQUETTE[reset] est une chaîne de texte utilisée dans le programme batch comme étiquette.
 
-Notes:
-  A label is on a line by itself, beginning with a colon (:).
-  The label must be unique, and can be anywhere within the batch program.
+Remarques :
+  Une étiquette est sur une ligne à part, commençant par deux-points (:).
+  L'étiquette doit être unique et peut être n'importe où dans le programme batch.
 
-Examples:
-  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]
+Exemples :
+  [color=light-green]goto[reset] [color=light-cyan]monetiquette[reset]
 
 .
 :SHELL_CMD_SHIFT_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]shift[reset]
 
-Where:
-  This command has no parameters.
+Où :
+  Cette commande n'a pas de paramètres.
 
-Notes:
-  This command allows a DOS batch program to accept more than 9 parameters.
-  Running [color=light-green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
+Remarques :
+  Cette commande permet à un programme batch DOS d'accepter plus de 9 paramètres.
+  L'exécution de [color=light-green]shift[reset] décale vers la gauche la variable de programme batch %%1 vers %%0, %%2 vers %%1, etc.
 
-Examples:
+Exemples :
   [color=light-green]shift[reset]
 
 .
 :SHELL_CMD_DELETE_HELP_LONG
-Usage:
-  [color=light-green]del[reset] [color=light-cyan]PATTERN[reset]
-  [color=light-green]erase[reset] [color=light-cyan]PATTERN[reset]
+Utilisation :
+  [color=light-green]del[reset] [color=light-cyan]MOTIF[reset]
+  [color=light-green]erase[reset] [color=light-cyan]MOTIF[reset]
 
-Where:
-  [color=light-cyan]PATTERN[reset] can be either an exact filename (such as [color=light-cyan]file.txt[reset]) or an inexact
-          filename using one or more wildcards, which are the asterisk (*)
-          representing any sequence of one or more characters, and the question
-          mark (?) representing any single character, such as [color=light-cyan]*.bat[reset] and [color=light-cyan]c?.txt[reset].
+Où :
+  [color=light-cyan]MOTIF[reset] peut être soit un nom de fichier exact (comme [color=light-cyan]fichier.txt[reset]) soit un nom
+         de fichier inexact utilisant un ou plusieurs caractères génériques, qui sont l'astérisque (*)
+         représentant n'importe quelle séquence d'un ou plusieurs caractères, et le point
+         d'interrogation (?) représentant n'importe quel caractère unique, comme [color=light-cyan]*.bat[reset] et [color=light-cyan]c?.txt[reset].
 
-Warning:
-  Be careful when using a pattern with wildcards, especially [color=light-cyan]*.*[reset], as all files
-  matching the pattern will be deleted.
+Avertissement :
+  Soyez prudent lors de l'utilisation d'un motif avec des caractères génériques, surtout [color=light-cyan]*.*[reset], car tous les fichiers
+  correspondant au motif seront supprimés.
 
-Examples:
+Exemples :
   [color=light-green]del[reset] [color=light-cyan]test.bat[reset]
   [color=light-green]del[reset] [color=light-cyan]c*.*[reset]
   [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]
 
 .
 :SHELL_CMD_COPY_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]copy[reset] [color=white]SOURCE[reset] [color=light-cyan][DESTINATION][reset]
   [color=light-green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=light-cyan][DESTINATION][reset]
 
-Where:
-  [color=white]SOURCE[reset]      Can be either an exact filename or an inexact filename with
-              wildcards, which are the asterisk (*) and the question mark (?).
-  [color=light-cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.
+Où :
+  [color=white]SOURCE[reset]      Peut être soit un nom de fichier exact soit un nom de fichier inexact avec
+              des caractères génériques, qui sont l'astérisque (*) et le point d'interrogation (?).
+  [color=light-cyan]DESTINATION[reset] Un nom de fichier ou répertoire exact, ne contenant pas de caractères génériques.
 
-Notes:
-  The [color=white]+[reset] operator combines multiple source files provided to a single file.
-  Destination is optional: if omitted, files are copied to the current path.
+Remarques :
+  L'opérateur [color=white]+[reset] combine plusieurs fichiers source fournis en un seul fichier.
+  La destination est facultative : si elle est omise, les fichiers sont copiés dans le chemin actuel.
 
-Examples:
-  [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]
-  [color=light-green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=light-cyan]file3.txt[reset]
+Exemples :
+  [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]nouveau.bat[reset]
+  [color=light-green]copy[reset] [color=white]fichier1.txt+fichier2.txt[reset] [color=light-cyan]fichier3.txt[reset]
   [color=light-green]copy[reset] [color=white]..\c*.*[reset]
 
 .
 :SHELL_CMD_CALL_HELP_LONG
-Usage:
-  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETERS][reset]
+Utilisation :
+  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETRES][reset]
 
-Where:
-  [color=white]BATCH[reset]      is a batch program to launch.
-  [color=light-cyan]PARAMETERS[reset] are optional parameters for the batch program.
+Où :
+  [color=white]BATCH[reset]       est un programme batch à lancer.
+  [color=light-cyan]PARAMETRES[reset] sont des paramètres optionnels pour le programme batch.
 
-Notes:
-  After calling another batch program, the original batch program will
-  resume running after the other batch program ends.
+Remarques :
+  Après avoir appelé un autre programme batch, le programme batch original
+  reprendra son exécution après la fin de l'autre programme batch.
 
-Examples:
-  [color=light-green]call[reset] [color=white]mybatch.bat[reset]
-  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Hello world![reset]
+Exemples :
+  [color=light-green]call[reset] [color=white]monbatch.bat[reset]
+  [color=light-green]call[reset] [color=white]fichier.bat[reset] [color=light-cyan]Bonjour le monde ![reset]
 
 .
 :SHELL_CMD_SUBST_HELP_LONG
-Usage:
-  [color=light-green]subst[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset]
-  [color=light-green]subst[reset] [color=white]DRIVE[reset] /d
+Utilisation :
+  [color=light-green]subst[reset] [color=white]LECTEUR[reset] [color=light-cyan]CHEMIN[reset]
+  [color=light-green]subst[reset] [color=white]LECTEUR[reset] /d
 
-Where:
-  [color=white]DRIVE[reset] is a drive to which you want to assign a path.
-  [color=light-cyan]PATH[reset]  is a mounted DOS path you want to assign to.
+Où :
+  [color=white]LECTEUR[reset] est un lecteur auquel vous voulez assigner un chemin.
+  [color=light-cyan]CHEMIN[reset]  est un chemin DOS monté que vous voulez assigner.
 
-Notes:
-  The path must be on a drive mounted by the [color=light-green]mount[reset] command.
-  You can remove an assigned drive with the /d option.
+Remarques :
+  Le chemin doit être sur un lecteur monté par la commande [color=light-green]mount[reset].
+  Vous pouvez supprimer un lecteur assigné avec l'option /d.
 
-Examples:
-  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\games[reset]
+Exemples :
+  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\jeux[reset]
   [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
-Usage:
-  [color=light-green]lh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
-  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
+Utilisation :
+  [color=light-green]lh[reset] [color=light-cyan]PROGRAMME[reset] [color=white][PARAMETRES][reset]
+  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAMME[reset] [color=white][PARAMETRES][reset]
 
-Where:
-  [color=light-cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.
+Où :
+  [color=light-cyan]PROGRAMME[reset] est un programme TSR DOS à charger, éventuellement avec des paramètres.
 
-Notes:
-  This command intends to save the conventional memory by loading specified DOS
-  TSR programs into upper memory if possible. Such programs may be required for
-  some DOS games; XMS and UMB memory must be enabled (xms=true and umb=true).
-  Not all DOS TSR programs can be loaded into upper memory with this command.
+Remarques :
+  Cette commande vise à économiser la mémoire conventionnelle en chargeant des programmes TSR DOS
+  spécifiés dans la mémoire haute si possible. Ces programmes peuvent être nécessaires pour
+  certains jeux DOS ; la mémoire XMS et UMB doit être activée (xms=true et umb=true).
+  Tous les programmes TSR DOS ne peuvent pas être chargés dans la mémoire haute avec cette commande.
 
-Examples:
+Exemples :
   [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
-Usage:
-  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]
+Utilisation :
+  [color=light-green]attrib[reset] [color=white][ATTRIBUTS][reset] [color=light-cyan]MOTIF[reset] [/S]
 
-Where:
-  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
+Où :
+  [color=white]ATTRIBUTS[reset] sont des attributs à appliquer, incluant un ou plusieurs des suivants :
              [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
-             Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [color=light-cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
-             wildcards, which are the asterisk (*) and the question mark (?),
-             or an exact name of a directory.
-Notes:
-  Multiple attributes can be specified in the command, separated by spaces.
-  If not specified, the command shows the current file/directory attributes.
+             Où : R = Lecture seule, A = Archive, S = Système, H = Caché
+  [color=light-cyan]MOTIF[reset]     peut être soit un nom de fichier exact soit un nom de fichier inexact avec
+             des caractères génériques, qui sont l'astérisque (*) et le point d'interrogation (?),
+             ou un nom exact de répertoire.
+Remarques :
+  Plusieurs attributs peuvent être spécifiés dans la commande, séparés par des espaces.
+  Si non spécifié, la commande affiche les attributs actuels du fichier/répertoire.
 
-Examples:
-  [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]
+Exemples :
+  [color=light-green]attrib[reset] [color=light-cyan]fichier.txt[reset]
   [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
-Unable to get attributes: %s
+Impossible d'obtenir les attributs : %s
 
 .
 :SHELL_CMD_ATTRIB_SET_ERROR
-Unable to set attributes: %s
+Impossible de définir les attributs : %s
 
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.
+[color=light-red]Échec du choix[reset] : le flux d'entrée s'est terminé sans un choix valide.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
 
-[color=yellow]Choice aborted.[reset]
+[color=yellow]Choix annulé.[reset]
 
 .
 :SHELL_CMD_PATH_HELP_LONG
-Usage:
+Utilisation :
   [color=light-green]path[reset]
-  [color=light-green]path[reset] [color=light-cyan][[drive:]path[;...][reset]
+  [color=light-green]path[reset] [color=light-cyan][[lecteur:]chemin[;...][reset]
 
-Where:
-  [color=light-cyan][[drive:]path[;...][reset] is a path containing a drive and directory.
-  More than one path can be specified, separated by a semi-colon (;).
+Où :
+  [color=light-cyan][[lecteur:]chemin[;...][reset] est un chemin contenant un lecteur et un répertoire.
+  Plusieurs chemins peuvent être spécifiés, séparés par un point-virgule (;).
 
-Notes:
-  Parameter with a semi-colon (;) only clears all search path settings.
-  The path can also be set using [color=light-green]set[reset] command, e.g. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
+Remarques :
+  Un paramètre avec uniquement un point-virgule (;) efface tous les paramètres de chemin de recherche.
+  Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
 
-Examples:
+Exemples :
   [color=light-green]path[reset]
   [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
-DOSBox Commands
+Commandes DOSBox
 .
 :HELP_UTIL_CATEGORY_FILE
-File/Directory Commands
+Commandes Fichier/Répertoire
 .
 :HELP_UTIL_CATEGORY_BATCH
-Batch File Commands
+Commandes Fichier Batch
 .
 :HELP_UTIL_CATEGORY_MISC
-Miscellaneous Commands
+Commandes Diverses
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
-Unknown Command
+Commande Inconnue
 .
 :MOUNT_TYPE_LOCAL_DIRECTORY
-Local directory
+Répertoire local
 .
 :MOUNT_TYPE_CDROM
-CD-ROM drive
+Lecteur CD-ROM
 .
 :MOUNT_TYPE_FAT
-FAT image
+Image FAT
 .
 :MOUNT_TYPE_ISO
-ISO image
+Image ISO
 .
 :MOUNT_TYPE_VIRTUAL
-Internal virtual drive
+Lecteur virtuel interne
 .
 :MOUNT_TYPE_UNKNOWN
-unknown drive
+lecteur inconnu
 .
 :CONJUNCTION_AND
 et
