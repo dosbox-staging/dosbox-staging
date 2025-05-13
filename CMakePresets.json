@@ -143,6 +143,10 @@
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
       }
     },
     {
@@ -157,6 +161,10 @@
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
       }
     }
   ],
