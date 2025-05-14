@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "../libs/decoders/dr_mp3.h"
+#include "channel_names.h"
 #include "checks.h"
 #include "mixer.h"
 #include "setup.h"
@@ -66,8 +67,23 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 		float* data = drmp3_open_file_and_read_pcm_frames_f32(
 		        candidate.string().c_str(), &config, &frame_count, nullptr);
 		if (!data) {
-			LOG_WARNING("DISKNOISE: Failed to decode MP3 sample: %s",
+			LOG_WARNING("DISKNOISE: Failed to decode MP3 file %s",
 			            candidate.c_str());
+			continue;
+		}
+
+		// Verify that the mp3 is stereo and 44.1kHz
+		if (config.channels != 2) {
+			LOG_WARNING("DISKNOISE: MP3 file %s is not stereo.",
+			            candidate.c_str());
+			drmp3_free(data, nullptr);
+			continue;
+		}
+		if (config.sampleRate != SampleRate) {
+			LOG_WARNING("DISKNOISE: MP3 file %s should be 44.1kHz, but %dkHz data was found",
+			            candidate.c_str(),
+			            config.sampleRate / 1000);
+			drmp3_free(data, nullptr);
 			continue;
 		}
 
@@ -172,8 +188,8 @@ DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
 	if (!mix_channel_) {
 		MIXER_LockMixerThread();
 		mix_channel_ = MIXER_AddChannel(AudioCallback,
-		                                44100,
-		                                "DISKNOISE",
+		                                SampleRate,
+		                                ChannelName::DiskNoise,
 		                                {ChannelFeature::Stereo});
 		mix_channel_->Enable(true);
 		MIXER_UnlockMixerThread();
