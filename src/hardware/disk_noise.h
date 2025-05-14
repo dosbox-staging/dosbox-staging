@@ -41,8 +41,8 @@ public:
 	void Shutdown();
 
 private:
-	const int SampleRate    = 44100;
-	bool enable_disk_noise_ = false;
+	const unsigned int SampleRate = 22050;
+	bool enable_disk_noise_       = false;
 
 	float spin_volume_ = 0.0;
 	float seek_volume_ = 0.0;
