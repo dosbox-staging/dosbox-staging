@@ -219,8 +219,6 @@ static void increase_ticks()
 		return;
 	}
 
-	constexpr auto MicrosInMillisecond = 1000;
-
 	const auto ticks_new_us = GetTicksUs();
 	const auto ticks_new    = ticks_new_us / MicrosInMillisecond;
 
@@ -564,9 +562,9 @@ static void DOSBOX_RealInit(Section* sec)
 
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section->Get_int("hdd_io_speed");
-	DOS_SetDataRate(hdd_io_speed, 0);
+	DOS_SetDataRate(hdd_io_speed, DiskType::HardDisk);
 	const auto fdd_io_speed = section->Get_int("fdd_io_speed");
-	DOS_SetDataRate(fdd_io_speed, 1);
+	DOS_SetDataRate(fdd_io_speed, DiskType::Floppy);
 }
 
 static void DOSBOX_ConfigChanged(Section* sec)

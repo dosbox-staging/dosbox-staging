@@ -87,6 +87,12 @@ enum class DosReturnMode : uint8_t {
 	TerminateAndStayResident = 3
 };
 
+enum class DiskType : uint8_t {
+	Floppy   = 0,
+	HardDisk = 1,
+	CDRom    = 2,
+};
+
 #define DOS_FILES   255
 #define DOS_DRIVES  26
 #define DOS_DEVICES 10
@@ -147,7 +153,7 @@ bool DOS_DuplicateEntry(uint16_t entry,uint16_t * newentry);
 bool DOS_ForceDuplicateEntry(uint16_t entry,uint16_t newentry);
 bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
-void DOS_SetDataRate(int rate, int type);
+void DOS_SetDataRate(int rate, DiskType type);
 
 uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();
