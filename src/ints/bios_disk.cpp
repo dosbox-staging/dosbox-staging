@@ -63,7 +63,12 @@ void BIOS_SetEquipment(uint16_t equipment);
 /* 2 floppys and 2 harddrives, max */
 std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
 std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
-
+// Image Disk List always has the first two slots be floppy disks and the last
+// two being hard disks
+std::vector<DiskType> imageDiskListTypes = {DiskType::Floppy,
+                                            DiskType::Floppy,
+                                            DiskType::HardDisk,
+                                            DiskType::HardDisk};
 unsigned int swapPosition;
 
 void updateDPT(void) {
@@ -422,7 +427,7 @@ static Bitu INT13_DiskHandler(void)
 
 			// Determine delay based on whether it's a floppy or
 			// hard disk
-			if (drivenum < 2) { // TODO: This is a hack
+			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				diskio_delay(512, floppy_noise.get(), DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->PlaySeek();
@@ -465,7 +470,7 @@ static Bitu INT13_DiskHandler(void)
 
 			// Determine delay based on whether it's a floppy or
 			// hard disk
-			if (drivenum < 2) { // TODO: This is a hack
+			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				diskio_delay(512, floppy_noise.get(), DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->PlaySeek();
