@@ -28,8 +28,8 @@ namespace ChannelName {
 // The CDAUDIO channel has numbered suffixes (ex. CDAUDIO_0, CDAUDIO_1) appened
 // for physical CDROM devices. This is to avoid conflicts with multiple drives
 // and CDROM_Interface_Image (which does not have a suffix).
-constexpr auto CdAudio              = "CDAUDIO";
-constexpr auto MaxCdAudioChannel    = 32;
+constexpr auto CdAudio           = "CDAUDIO";
+constexpr auto MaxCdAudioChannel = 32;
 
 constexpr auto Cms                  = "CMS";
 constexpr auto CovoxDac             = "COVOX";
@@ -50,10 +50,7 @@ constexpr auto SoundCanvas          = "SOUNDCANVAS";
 constexpr auto StereoOn1Dac         = "STON1";
 constexpr auto TandyDac             = "TANDYDAC";
 constexpr auto TandyPsg             = "TANDY";
-constexpr auto FloppySpin           = "FLOPPY_SPIN";
-constexpr auto FloppySeek           = "FLOPPY_SEEK";
-constexpr auto HddSpin              = "HDD_SPIN";
-constexpr auto HddSeek              = "HDD_SEEK";
+constexpr auto DiskNoise            = "DISKNOISE";
 
 } // namespace ChannelName
 
@@ -89,10 +86,7 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::StereoOn1Dac,
         ChannelName::TandyDac,
         ChannelName::TandyPsg,
-        ChannelName::FloppySpin,
-        ChannelName::FloppySeek,
-        ChannelName::HddSpin,
-        ChannelName::HddSeek,
+        ChannelName::DiskNoise,
 };
 // clang-format on
 
