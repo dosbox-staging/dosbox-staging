@@ -136,7 +136,7 @@ set(C_IPX ON)
 
 # More networking (TODO: Option)
 set(C_SLIRP OFF)
-set(C_NE2000 OFF)
+set(C_NE2000 ON)
 
 set(C_OPENGL ON)
 set(C_MT32EMU ON)       # TODO: Option
