@@ -554,7 +554,8 @@ Bits localDrive::UnMount()
 	return 0;
 }
 
-void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1);
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise,
+                  DiskType type = DiskType::Floppy);
 
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
@@ -591,7 +592,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	const int type = local_drive.lock()->GetMediaByte();
 	if (type == 0xF0) {
 		// Floppy drive
-		diskio_delay(*size, floppy_noise.get(), 0); // Floppy disk
+		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
@@ -601,9 +602,6 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
-	} else {
-		// Unknown drive type
-		LOG_DEBUG("Unknown drive type %02X", type);
 	}
 
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
@@ -645,7 +643,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	const int type = local_drive.lock()->GetMediaByte();
 	if (type == 0xF0) {
 		// Floppy drive
-		diskio_delay(*size, floppy_noise.get(), 0); // Floppy disk
+		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
@@ -655,9 +653,6 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
-	} else {
-		// Unknown drive type
-		LOG_DEBUG("Unknown drive type %02X", type);
 	}
 
 	// Otherwise we have some data to write

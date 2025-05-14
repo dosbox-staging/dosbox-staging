@@ -122,4 +122,7 @@ constexpr auto GlShadersDir         = "glshaders";
 constexpr auto DiskNoiseDir         = "disknoise";
 constexpr auto PluginsDir           = "plugins";
 
+constexpr auto MicrosInMillisecond = 1000;
+constexpr auto BytesPerKilobyte    = 1024;
+
 #endif /* DOSBOX_DOSBOX_H */

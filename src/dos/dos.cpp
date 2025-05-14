@@ -155,33 +155,39 @@ static uint16_t DOS_GetAmount(void) {
 int hdd_data_rate = 0;
 int fdd_data_rate = 0;
 
-void DOS_SetDataRate(int rate, int type)
+void DOS_SetDataRate(int rate, DiskType type)
 {
-	if (type == 0) {
-		hdd_data_rate = rate * 1024; // Floppy
+	if (type == DiskType::Floppy) {
+		hdd_data_rate = rate * BytesPerKilobyte;
 	} else {
-		fdd_data_rate = rate * 1024; // Hard drive or CD-ROM
+		fdd_data_rate = rate * BytesPerKilobyte;
 	}
 }
 
-void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise, int type = -1)
+void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise,
+                  DiskType type = DiskType::HardDisk)
 {
-	if ((type == 0 && fdd_data_rate != 0) || (type != 0 && hdd_data_rate != 0)) {
+	if ((type == DiskType::Floppy && fdd_data_rate != 0) ||
+	    (type != DiskType::Floppy && hdd_data_rate != 0)) {
 		double scalar;
 		double endtime;
 
-		if (type == 0) { // Floppy
-			scalar  = (double)value / fdd_data_rate;
-			endtime = PIC_FullIndex() + (scalar * 1000);
-		} else { // Hard drive or CD-ROM
-			scalar  = (double)value / hdd_data_rate;
-			endtime = PIC_FullIndex() + (scalar * 1000);
+		if (type == DiskType::Floppy) {
+			scalar = static_cast<double>(value) /
+			         static_cast<double>(fdd_data_rate);
+			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
+		} else {
+			scalar = static_cast<double>(value) /
+			         static_cast<double>(hdd_data_rate);
+			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
 		}
 		/* MS-DOS will most likely enable interrupts in the course of
 		 * performing disk I/O */
 		CPU_STI();
 
 		do {
+			// Keep calling disknoise trigger to prevent long delays
+			// from also delaying seek noises
 			disknoise->PlaySeek();
 			CALLBACK_Idle();
 		} while (PIC_FullIndex() < endtime);
