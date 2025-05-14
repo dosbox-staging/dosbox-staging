@@ -29,6 +29,7 @@
 #include <string>
 #include <vector>
 
+#include "../libs/decoders/dr_mp3.h"
 #include "checks.h"
 #include "mixer.h"
 #include "setup.h"
@@ -41,48 +42,52 @@ std::shared_ptr<MixerChannel> DiskNoiseDevice::mix_channel_ = nullptr;
 std::vector<DiskNoiseDevice*> DiskNoiseDevice::active_devices_;
 std::mutex DiskNoiseDevice::device_mutex_;
 
-// Load a disk noise sample. Expects a WAV file with 16-bit PCM data at 44100 Hz.
-void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<int16_t>& buffer)
+void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& buffer)
 {
-	constexpr auto SampleExtension = ".wav";
-
 	if (path.empty()) {
 		return;
 	}
-	// Start with the name as-is and then try from resources
+
+	constexpr auto SampleExtension = ".mp3";
+
 	const auto candidate_paths = {std_fs::path(path),
 	                              std_fs::path(path + SampleExtension),
 	                              get_resource_path(DiskNoiseDir, path),
 	                              get_resource_path(DiskNoiseDir,
 	                                                path + SampleExtension)};
 
-	for (const auto& path : candidate_paths) {
-		if (std_fs::exists(path) &&
-		    (std_fs::is_regular_file(path) || std_fs::is_symlink(path))) {
-			std::ifstream file(path, std::ios::binary);
-			if (!file.is_open()) {
-				LOG_WARNING("DISKNOISE: Failed to open %s",
-				            path.c_str());
-				return;
-			}
-
-			// Skip 44 bytes of the WAV header
-			char header[44];
-			file.read(header, 44);
-
-			std::vector<int16_t> temp;
-			int16_t sample;
-			while (file.read(reinterpret_cast<char*>(&sample),
-			                 sizeof(sample))) {
-				temp.push_back(sample);
-			}
-			LOG_DEBUG("DISKNOISE: Loaded %zu samples from %s",
-			          temp.size(),
-			          path.c_str());
-			buffer = std::move(temp);
-			return;
+	for (const auto& candidate : candidate_paths) {
+		if (!std_fs::exists(candidate)) {
+			continue;
 		}
+
+		drmp3_config config;
+		drmp3_uint64 frame_count;
+		float* data = drmp3_open_file_and_read_pcm_frames_f32(
+		        candidate.string().c_str(), &config, &frame_count, nullptr);
+		if (!data) {
+			LOG_WARNING("DISKNOISE: Failed to decode MP3 sample: %s",
+			            candidate.c_str());
+			continue;
+		}
+
+		// Scale data to integer value range
+		const float scale = static_cast<float>(INT16_MAX);
+		for (size_t i = 0; i < frame_count * config.channels; ++i) {
+			data[i] *= scale;
+		}
+
+		// Interleave stereo data if needed
+		buffer.assign(data, data + (frame_count * config.channels));
+		drmp3_free(data, nullptr);
+
+		LOG_DEBUG("DISKNOISE: Loaded %zu float samples from %s",
+		          buffer.size(),
+		          candidate.c_str());
+		return;
 	}
+
+	LOG_WARNING("DISKNOISE: Failed to find MP3 sample: %s", path.c_str());
 }
 
 void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
@@ -94,7 +99,7 @@ void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
 			continue;
 		}
 
-		std::vector<int16_t> sample;
+		std::vector<float> sample;
 		LoadSample(path, sample);
 		if (!sample.empty()) {
 			seek_samples_.push_back(std::move(sample));
@@ -217,7 +222,6 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 	std::vector<float> out(frames * 2, 0.0f);
 
 	std::lock_guard<std::mutex> lock(device_mutex_);
-	const size_t num_devices = active_devices_.size();
 
 	// Find out how many samples need to be mixed
 	int active_samples = 0;
@@ -241,7 +245,7 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 
 	const float mix_scale = 1.0f / static_cast<float>(active_samples);
 
-	auto scale_sample = [](int16_t sample, float volume, float scale) -> float {
+	auto scale_sample = [](float sample, float volume, float scale) -> float {
 		return static_cast<float>(sample) * volume * scale;
 	};
 
@@ -327,22 +331,22 @@ void DISKNOISE_Init(Section* section)
 	const bool enable_floppy_disk_noise = prop->Get_bool("floppy_disk_noise");
 	const bool enable_hard_disk_noise = prop->Get_bool("hard_disk_noise");
 
-	const auto spin_up = "hdd_spinup.wav";
-	const auto spin    = "hdd_spin.wav";
+	const auto spin_up = "hdd_spinup.mp3";
+	const auto spin    = "hdd_spin.mp3";
 	std::vector<std::string> hdd_seek_samples;
 	for (int i = 1; i <= 9; ++i) {
-		hdd_seek_samples.push_back("hdd_seek" + std::to_string(i) + ".wav");
+		hdd_seek_samples.push_back("hdd_seek" + std::to_string(i) + ".mp3");
 	}
 
-	const auto floppy_spin_up = "fdd_spinup.wav";
-	const auto floppy_spin    = "fdd_spin.wav";
+	const auto floppy_spin_up = "fdd_spinup.mp3";
+	const auto floppy_spin    = "fdd_spin.mp3";
 	std::vector<std::string> floppy_seek_samples;
 	for (int i = 1; i <= 9; ++i) {
-		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".wav");
+		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".mp3");
 	}
 
-	constexpr float hdd_spin_volume = 1.0f; // 0.4f
-	constexpr float hdd_seek_volume = 1.0f; // 0.2f
+	constexpr float hdd_spin_volume = 0.4f;
+	constexpr float hdd_seek_volume = 0.2f;
 
 	constexpr float floppy_spin_volume = 0.2f;
 	constexpr float floppy_seek_volume = 0.6f;
