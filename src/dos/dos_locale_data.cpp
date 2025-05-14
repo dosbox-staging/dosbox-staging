@@ -334,8 +334,9 @@ const std::vector<KeyboardLayoutInfoEntry> LocaleData::KeyboardLayoutInfo = {
 	},
 	{
 		{ "ux" }, "US (international, QWERTY)",
-		// The QWERTY layer is almost identical to the US layout
-		AutodetectionPriority::High,
+		// The QWERTY layer is almost very similar to the US layout,
+		// but uses dead keys, which might be confusing
+		AutodetectionPriority::Low,
 		850,
 		KeyboardScript::LatinQwerty,
 	},
