@@ -24,6 +24,7 @@ add_library(libhardware STATIC
 		adlib_gold.cpp
 		cmos.cpp
 		covox.cpp
+		disk_noise.cpp
 		disney.cpp
 		dma.cpp
 		gameblaster.cpp

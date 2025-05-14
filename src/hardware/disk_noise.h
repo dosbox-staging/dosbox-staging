@@ -34,8 +34,7 @@ public:
 	                const std::string& spin_up_sample_path,
 	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
-	                const float& spin_volume,
-	                const float& seek_volume);
+	                const float& spin_volume, const float& seek_volume);
 
 	void ActivateSpin();
 	void PlaySeek();
@@ -46,10 +45,10 @@ private:
 
 	float spin_volume_ = 0.0;
 	float seek_volume_ = 0.0;
-	std::vector<int16_t> spin_up_sample_;
-	std::vector<int16_t> spin_sample_;
-	std::vector<int16_t> current_seek_sample_;
-	std::vector<std::vector<int16_t>> seek_samples_;
+	std::vector<float> spin_up_sample_;
+	std::vector<float> spin_sample_;
+	std::vector<float> current_seek_sample_;
+	std::vector<std::vector<float>> seek_samples_;
 	std::vector<int> seek_sample_weights_;
 
 	size_t spin_pos_    = 0;
@@ -60,7 +59,7 @@ private:
 	static std::vector<DiskNoiseDevice*> active_devices_;
 	static std::mutex device_mutex_;
 
-	void LoadSample(const std::string& path, std::vector<int16_t>& buffer);
+	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
 	int ChooseWeightedSeekIndex() const;
 	static void AudioCallback(int frames);
