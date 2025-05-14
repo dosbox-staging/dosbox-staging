@@ -125,4 +125,14 @@ constexpr auto PluginsDir           = "plugins";
 constexpr auto MicrosInMillisecond = 1000;
 constexpr auto BytesPerKilobyte    = 1024;
 
+constexpr auto HardDiskSpeedMaximum = 0;
+constexpr auto HardDiskSpeedFast    = 15000;
+constexpr auto HardDiskSpeedMedium  = 2500;
+constexpr auto HardDiskSpeedSlow    = 600;
+
+constexpr auto FloppyDiskSpeedMaximum = 0;
+constexpr auto FloppyDiskSpeedFast    = 120;
+constexpr auto FloppyDiskSpeedMedium  = 60;
+constexpr auto FloppyDiskSpeedSlow    = 30;
+
 #endif /* DOSBOX_DOSBOX_H */

@@ -561,10 +561,28 @@ static void DOSBOX_RealInit(Section* sec)
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 
 	// Set the disk IO data rate
-	const auto hdd_io_speed = section->Get_int("hdd_io_speed");
-	DOS_SetDataRate(hdd_io_speed, DiskType::HardDisk);
-	const auto fdd_io_speed = section->Get_int("fdd_io_speed");
-	DOS_SetDataRate(fdd_io_speed, DiskType::Floppy);
+	const auto hdd_io_speed = section->Get_string("hard_disk_speed");
+	if (hdd_io_speed == "fast") {
+		DOS_SetDataRate(HardDiskSpeedFast, DiskType::HardDisk);
+	} else if (hdd_io_speed == "medium") {
+		DOS_SetDataRate(HardDiskSpeedMedium, DiskType::HardDisk);
+	} else if (hdd_io_speed == "slow") {
+		DOS_SetDataRate(HardDiskSpeedSlow, DiskType::HardDisk);
+	} else {
+		DOS_SetDataRate(HardDiskSpeedMaximum, DiskType::HardDisk);
+	}
+
+	// Set the floppy disk IO data rate
+	const auto floppy_io_speed = section->Get_string("floppy_disk_speed");
+	if (floppy_io_speed == "fast") {
+		DOS_SetDataRate(FloppyDiskSpeedFast, DiskType::Floppy);
+	} else if (floppy_io_speed == "medium") {
+		DOS_SetDataRate(FloppyDiskSpeedMedium, DiskType::Floppy);
+	} else if (floppy_io_speed == "slow") {
+		DOS_SetDataRate(FloppyDiskSpeedSlow, DiskType::Floppy);
+	} else {
+		DOS_SetDataRate(FloppyDiskSpeedMaximum, DiskType::Floppy);
+	}
 }
 
 // Returns decimal seconds of elapsed uptime.
@@ -808,19 +826,23 @@ void DOSBOX_Init()
 	        "'sbtype sb16', and instead of 'config -get sbtype', you can just execute\n"
 	        "the 'sbtype' command.");
 
-	pint = secprop->Add_int("hdd_io_speed", when_idle, 0);
-	pint->Set_help(
-	        "Sets a maximum data transfer speed for the hard disk in kb/s.\n"
-	        "Example: 2100 simulates 2.1MBytes/sec mid 1990s IDE PIO hard drive.\n"
-	        "The default is 0, which disables any delay and runs at maximum speed.");
-	pint->SetMinMax(0, INT_MAX);
+	pstring = secprop->Add_string("hard_disk_speed", only_at_start, "maximum");
+	pstring->Set_values({"maximum", "fast", "medium", "slow"});
+	pstring->Set_help(
+	        "Controls the speed of hard disk operations.\n"
+	        "  maximum:     Full speed, no additional slowdown (default)\n"
+	        "  fast:        A harddisk from 1995 with a transfer rate of 15 MB/s\n"
+	        "  medium:      A harddisk from 1990 with a transfer rate of 2.5 MB/s\n"
+	        "  slow:        A harddisk from 1985 with a transfer rate of 600 KB/s\n");
 
-	pint = secprop->Add_int("fdd_io_speed", when_idle, 0);
-	pint->Set_help(
-	        "Sets a maximum data transfer speed for the floppy disk in kb/s.\n"
-	        "Example: 62 for a standard 3.5 inch floppy drive.\n"
-	        "The default is 0, which disables any delay and runs at maximum speed.");
-	pint->SetMinMax(0, INT_MAX);
+	pstring = secprop->Add_string("floppy_disk_speed", only_at_start, "maximum");
+	pstring->Set_values({"maximum", "fast", "medium", "slow"});
+	pstring->Set_help(
+	        "Controls the speed of floppy disk operations.\n"
+	        "  maximum:     Full speed, no additional slowdown (default)\n"
+	        "  fast:        DS-ED floppy speed of 120 KB/s\n"
+	        "  medium:      DS-HD floppy speed of 60 KB/s (standard HD drives)\n"
+	        "  slow:        DS-DD floppy speed of 30 KB/s\n");
 
 	// Configure render settings
 	RENDER_AddConfigSection(control);
