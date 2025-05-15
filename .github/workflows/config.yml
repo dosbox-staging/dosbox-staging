@@ -85,10 +85,10 @@ jobs:
         if:    >
           matrix.system.name == 'Windows' &&
           steps.cache-msys2.outputs.cache-hit != 'true'
-        shell: python scripts\msys-bash.py {0}
+        shell: python scripts\ci\msys-bash.py {0}
         run: |
            pacman -S --noconfirm $(cat packages/windows-latest-msys2.txt)
-           .github/scripts/shrink-msys2.sh
+           ./scripts/ci/shrink-msys2.sh
 
       - name:  Install dependencies (Linux)
         if:    matrix.system.name == 'Linux'
@@ -119,7 +119,7 @@ jobs:
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'
-        shell: python scripts\msys-bash.py {0}
+        shell: python scripts\ci\msys-bash.py {0}
         run: |
           export PATH="/mingw64/bin:$PATH"
           meson setup \
