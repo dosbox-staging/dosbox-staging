@@ -72,6 +72,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "mixer.h"
+#include "notifications.h"
 #include "pic.h"
 #include "regs.h"
 #include "setup.h"
@@ -13426,8 +13427,13 @@ static void imfc_init(Section* sec)
 			channel->SetLowPassFilter(FilterState::Off);
 		}
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'on'",
-		            filter_choice.c_str());
+		// TODO use common error message
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "IMFC",
+		                      "Invalid [color=light-green]'imfc_filter'[reset] "
+		                      "setting: [color=white]'%s'[reset], "
+		                      "using [color=white]'on'[reset]",
+		                      filter_choice.c_str());
 
 		set_section_property_value("imfc", "imfc_filter", "on");
 		enable_filter();
