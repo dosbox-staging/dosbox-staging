@@ -57,6 +57,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "mixer.h"
+#include "notifications.h"
 #include "pic.h"
 #include "regs.h"
 #include "setup.h"
@@ -13411,8 +13412,12 @@ static void imfc_init(Section* sec)
 			channel->SetLowPassFilter(FilterState::Off);
 		}
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'on'",
-		            filter_choice.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "IMFC",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      "imfc_filter",
+		                      filter_choice.c_str(),
+		                      "on");
 
 		set_section_property_value("imfc", "imfc_filter", "on");
 		enable_filter();
