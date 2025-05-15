@@ -160,7 +160,7 @@ pkg_linux()
 
     install -DT contrib/linux/install-icons.sh "${pkg_dir}/install-icons.sh"
 
-    DESTDIR="$(realpath "$pkg_dir")" make -C contrib/icons/ install datadir=
+    DESTDIR="$(realpath "$pkg_dir")" make -C extras/icons/ install datadir=
 }
 
 pkg_macos()
@@ -175,7 +175,7 @@ pkg_macos()
     install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
     install_file contrib/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
     install_file contrib/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
-    install_file contrib/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
+    install_file extras/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
     sed -i '' -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
 

@@ -241,9 +241,9 @@ jobs:
           sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
 
           cp extras/windows-installer/*                    out
-          cp contrib/icons/windows/dosbox-staging.ico      out
-          cp contrib/icons/windows/dosbox-staging.bmp      out
-          cp contrib/icons/windows/dosbox-staging-side.bmp out
+          cp extras/icons/windows/dosbox-staging.ico      out
+          cp extras/icons/windows/dosbox-staging.bmp      out
+          cp extras/icons/windows/dosbox-staging-side.bmp out
 
           mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
           mv out/program/dosbox*.exe                       out
