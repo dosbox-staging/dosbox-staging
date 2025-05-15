@@ -37,7 +37,7 @@ jobs:
 
       - name: Inject versioned package name
         run: |
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
 
           # Debianize the package version by replacing the first dash after
           # the numbered tag with a tilde. Subsequence dashes are ok.
@@ -57,7 +57,7 @@ jobs:
 
       - name: Build the package
         run: |
-          ./scripts/build-debian-package.sh
+          ./scripts/packaging/linux/build-debian-package.sh
 
           # Move the package into the repo so the uploader can access it
           mv ../${{ env.PACKAGE_NAME }}.deb .
