@@ -43,29 +43,6 @@ std::shared_ptr<MixerChannel> DiskNoiseDevice::mix_channel_ = nullptr;
 std::vector<DiskNoiseDevice*> DiskNoiseDevice::active_devices_;
 std::mutex DiskNoiseDevice::device_mutex_;
 
-// Custom read procedure for drflac
-static size_t drflac_stream_read_proc(void* pUserData, void* pBufferOut,
-                                      size_t bytesToRead)
-{
-	auto* stream = static_cast<std::istream*>(pUserData);
-	stream->read(static_cast<char*>(pBufferOut),
-	             static_cast<std::streamsize>(bytesToRead));
-	return static_cast<size_t>(stream->gcount());
-}
-
-// Custom seek procedure for drflac
-static drflac_bool32 drflac_stream_seek_proc(void* pUserData, int offset,
-                                             drflac_seek_origin origin)
-{
-	auto* stream               = static_cast<std::istream*>(pUserData);
-	std::ios_base::seekdir dir = (origin == drflac_seek_origin_start)
-	                                   ? std::ios::beg
-	                                   : std::ios::cur;
-	stream->clear(); // clear EOF/fail flags
-	stream->seekg(offset, dir);
-	return stream->good() ? DRFLAC_TRUE : DRFLAC_FALSE;
-}
-
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& buffer)
 {
 	if (path.empty()) {
