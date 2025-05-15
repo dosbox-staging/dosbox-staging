@@ -35,6 +35,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "math_utils.h"
+#include "notifications.h"
 #include "mixer.h"
 #include "pic.h"
 #include "programs.h"
@@ -323,10 +324,12 @@ static std::vector<std_fs::path> get_data_dirs()
 				dirs.insert(dirs.begin(), canonical_path);
 			}
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid `soundfont_dir` setting, "
-			        "cannot open directory '%s'; using ''",
-			        sf_dir.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "Invalid [color=light-green]'soundfont_dir'[reset] "
+			                      "setting; cannot open directory [color=white]'%s'[reset], "
+			                      "using [color=white]''[reset]",
+			                      sf_dir.c_str());
 
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
@@ -404,14 +407,17 @@ static float validate_setting(const char* name, const std::string& str_val,
 	const auto val = atof(str_val.c_str());
 
 	if (val < min_val || val > max_val) {
-		LOG_WARNING(
-		        "FSYNTH: Invalid %s setting (%s), needs to be between "
-		        "%.2f and %.2f: using default (%.2f)",
-		        name,
-		        str_val.c_str(),
-		        min_val,
-		        max_val,
-		        def_val);
+		// TODO use common error message
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "FSYNTH",
+		                      "Invalid [color=light-green]'%s'[reset] setting: "
+		                      "[color=white]%s[reset]; must be between "
+		                      "%.2f and %.2f, using [color=white]%.2f[reset]",
+		                      name,
+		                      str_val.c_str(),
+		                      min_val,
+		                      max_val,
+		                      def_val);
 		return def_val;
 	}
 	return val;
@@ -473,17 +479,22 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 
 			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING(
-				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				        "needs to be 'sine' or 'triangle'",
+				NOTIFY_DisplayWarning(
+				        Notification::Source::Console,
+				        "FSYNTH",
+				        "Invalid chorus modulation wave type: "
+				        "[color=white]'%s'[reset]; "
+				        "must be [color=white]'sine'[reset] "
+				        "or [color=white]'triangle'[reset]",
 				        chorus[4].c_str());
 			}
 
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom chorus settings (%d), "
-			        "should be five",
-			        static_cast<int>(chorus.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "Invalid number of custom chorus settings: %d, "
+			                      "must be five space-separated values",
+			                      static_cast<int>(chorus.size()));
 		}
 	}
 
@@ -556,10 +567,11 @@ static void setup_reverb(fluid_synth_t* synth)
 			reverb_level = validate_setting(
 			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom reverb settings (%d), "
-			        "should be four",
-			        static_cast<int>(reverb.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "Invalid number of custom reverb settings: %d, "
+			                      "must be four space-separated values",
+			                      static_cast<int>(reverb.size()));
 		}
 	}
 
@@ -710,8 +722,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
-			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
-			            filter_prefs.c_str());
+			// TODO use common error message
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "Invalid [color=light-green]'fsynth_filter'[reset] value: "
+			                      "[color=white]'%s'[reset], using [color=white]'off'[reset]",
+			                      filter_prefs.c_str());
 		}
 
 		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
