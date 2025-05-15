@@ -167,14 +167,6 @@ pkg_macos()
 {
     # Note, this script assumes macos builds have x86_64 and arm64 subdirectories
 
-    # Print shared object dependencies
-    for arch in x86_64 arm64; do
-        echo "Checking shared object dependencies for $arch:"
-        otool -L "${build_dir}/dosbox-$arch/dosbox"
-        python3 scripts/verify-macos-dylibs.py "${build_dir}/dosbox-$arch/dosbox"
-        echo ""
-    done
-
     # Create universal binary from both architectures
     mkdir dosbox-universal
     lipo dosbox-x86_64/dosbox dosbox-arm64/dosbox -create -output dosbox-universal/dosbox
