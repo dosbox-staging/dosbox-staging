@@ -37,6 +37,7 @@
 #include "gus.h"
 #include "hardware.h"
 #include "math_utils.h"
+#include "notifications.h"
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
@@ -422,8 +423,13 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 			channel->SetLowPassFilter(FilterState::Off);
 		}
 	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
-		LOG_WARNING("GUS: Invalid 'gus_filter' setting: '%s', using 'on'",
-		            filter_prefs.c_str());
+		// TODO use common error message
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "GUS",
+		                      "Invalid [color=light-green]'gus_filter'[reset] "
+		                      "setting: [color=white]'%s'[reset], "
+		                      "using [color=white]'on'[reset]",
+		                      filter_prefs.c_str());
 
 		set_section_property_value("gus", "gus_filter", "on");
 		enable_filter();
