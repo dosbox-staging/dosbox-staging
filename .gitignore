@@ -13,8 +13,8 @@ make.log
 missed.txt
 
 # Common names for meson build dirs
-build
-builddir
+/build
+/builddir
 
 # VCPKG
 vcpkg_installed
