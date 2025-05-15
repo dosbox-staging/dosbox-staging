@@ -7,6 +7,7 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "control.h"
+#include "notifications.h"
 #include "pic.h"
 #include "support.h"
 
@@ -79,8 +80,12 @@ void Innovation::Open(const std::string_view model_choice,
 		        channel_filter_choice);
 
 		if (!filter_choice_has_bool) {
-			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' setting: '%s', using 'off'",
-			            channel_filter_choice.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "INNOVATION",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "innovation_filter",
+			                      channel_filter_choice.c_str(),
+			                      "off");
 		}
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
