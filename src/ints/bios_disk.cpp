@@ -430,6 +430,7 @@ static Bitu INT13_DiskHandler(void)
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				diskio_delay(512, floppy_noise.get(), DiskType::Floppy);
 				if (floppy_noise) {
+					floppy_noise->ActivateSpin();
 					floppy_noise->PlaySeek();
 				}
 			} else {
@@ -473,6 +474,7 @@ static Bitu INT13_DiskHandler(void)
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				diskio_delay(512, floppy_noise.get(), DiskType::Floppy);
 				if (floppy_noise) {
+					floppy_noise->ActivateSpin();
 					floppy_noise->PlaySeek();
 				}
 			} else {

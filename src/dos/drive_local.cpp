@@ -594,6 +594,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		// Floppy drive
 		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
+			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 	} else if (type == 0xF8) {
@@ -645,6 +646,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 		// Floppy drive
 		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
+			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 	} else if (type == 0xF8) {

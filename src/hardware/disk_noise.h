@@ -34,7 +34,8 @@ public:
 	                const std::string& spin_up_sample_path,
 	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
-	                const float& spin_volume, const float& seek_volume);
+	                const float& spin_volume, const float& seek_volume,
+	                bool loop_spin_sample);
 
 	void ActivateSpin();
 	void PlaySeek();
@@ -52,6 +53,7 @@ private:
 	std::vector<std::vector<float>> seek_samples_;
 	std::vector<int> seek_sample_weights_;
 
+	bool loop_spin_sample_ = false;
 	size_t spin_pos_    = 0;
 	size_t spin_up_pos_ = 0;
 	size_t seek_pos_    = 0;
