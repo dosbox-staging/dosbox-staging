@@ -50,7 +50,7 @@ cd "$TEMP_DIR" || { echo "Failed to change to $TEMP_DIR"; exit 1; }
 rm "DOSBox Staging.app/Contents/Info.plist-e"
 rm "DOSBox Staging.app/Contents/SharedSupport/README-e"
 
-codesign -s "$DEVELOPER_IDENTITY" -fv --timestamp -o runtime --entitlements "${SCRIPT_DIR}/contrib/macos/Entitlements.plist" "DOSBox Staging.app"
+codesign -s "$DEVELOPER_IDENTITY" -fv --timestamp -o runtime --entitlements "${SCRIPT_DIR}/extras/macos/Entitlements.plist" "DOSBox Staging.app"
 
 hdiutil create -volname "$ATTACHED_VOLUME_NAME" -srcfolder "$TEMP_DIR" -ov -format UDZO "$OUTPUT_DMG"
 
