@@ -115,7 +115,7 @@ jobs:
         run:  scripts/fetch-and-tar-subprojects.sh
 
       - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
+        run:  scripts/ci/extract-subprojects-tar.sh
 
       - name:  Build ${{ matrix.conf.configure_flags }} (Windows)
         if:    matrix.system.name == 'Windows'

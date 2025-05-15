@@ -80,7 +80,7 @@ jobs:
 
           run: |
             # Log the environment
-            sh ./scripts/log-env.sh
+            sh ./scripts/ci/log-env.sh
             screenfetch
 
             # Setup

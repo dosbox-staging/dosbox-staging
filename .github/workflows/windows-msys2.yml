@@ -137,7 +137,7 @@ jobs:
         run:  scripts/fetch-and-tar-subprojects.sh
 
       - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
+        run:  scripts/ci/extract-subprojects-tar.sh
         continue-on-error: true
         #
         # As of 2023-06-22, MSYS2's tar warns about being unable to apply
@@ -145,7 +145,7 @@ jobs:
         # This is a work-around until tar is fixed.
 
       - name: Log environment
-        run:  ./scripts/log-env.sh
+        run:  ./scripts/ci/log-env.sh
 
       - name: Setup build
         run: |
@@ -167,7 +167,7 @@ jobs:
         if:   matrix.conf.run_tests != true
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python ./scripts/count-warnings.py -lf build.log
+        run:  python ./scripts/ci/count-warnings.py -lf build.log
 
   build_msys2_release:
     name: ${{ matrix.conf.name }} Release
@@ -246,7 +246,7 @@ jobs:
         run:  scripts/fetch-and-tar-subprojects.sh
 
       - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
+        run:  scripts/ci/extract-subprojects-tar.sh
         continue-on-error: true
         #
         # As of 2023-06-22, MSYS2's tar warns about being unable to apply
@@ -254,12 +254,12 @@ jobs:
         # This is a work-around until tar is fixed.
 
       - name: Log environment
-        run:  ./scripts/log-env.sh
+        run:  ./scripts/ci/log-env.sh
 
       - name: Inject version string
         run: |
           set -x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Inject package name
