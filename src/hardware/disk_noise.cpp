@@ -116,8 +116,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 		const unsigned int channels      = decoder->channels;
 		const unsigned int sample_rate   = decoder->sampleRate;
 		const drflac_uint64 total_frames = decoder->totalPCMFrameCount;
+		const unsigned int hertz_to_kHz  = 1000;
 
-		// Verify that the mp3 is stereo and 22kHz
 		if (channels != 1) {
 			LOG_WARNING("DISKNOISE: FLAC file %s is not mono.",
 			            candidate.c_str());
@@ -125,9 +125,10 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			continue;
 		}
 		if (sample_rate != SampleRate) {
-			LOG_WARNING("DISKNOISE: FLAC file %s should be 44.1kHz, but %dkHz was found",
+			LOG_WARNING("DISKNOISE: FLAC file %s should be %dkHz, but %dkHz was found",
 			            candidate.c_str(),
-			            sample_rate / 1000);
+			            SampleRate / hertz_to_kHz,
+			            sample_rate / hertz_to_kHz);
 			drflac_close(decoder);
 			continue;
 		}
@@ -217,7 +218,8 @@ DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
-                                 const float& spin_volume, const float& seek_volume)
+                                 const float& spin_volume,
+                                 const float& seek_volume, bool loop_spin_sample)
         : spin_volume_(spin_volume),
           seek_volume_(seek_volume),
           spin_up_sample_(),
@@ -227,6 +229,8 @@ DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
           seek_sample_weights_()
 {
 	enable_disk_noise_ = enable_disk_noise;
+	loop_spin_sample_  = loop_spin_sample;
+
 	if (!enable_disk_noise_) {
 		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
@@ -263,6 +267,17 @@ void DiskNoiseDevice::ActivateSpin()
 	if (!mix_channel_->is_enabled) {
 		mix_channel_->Enable(true);
 	}
+
+	// Floppy spin samples can be re-started at any time
+	if (!loop_spin_sample_) {
+		// Check if the sample is still playing and don't interrupt if
+		// it does
+		if (spin_sample_.empty() || spin_pos_ + 1 < spin_sample_.size()) {
+			return;
+		}
+		// Restart spin sample
+		spin_pos_ = 0;
+	}
 }
 
 void DiskNoiseDevice::PlaySeek()
@@ -293,16 +308,18 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 
 	std::lock_guard<std::mutex> lock(device_mutex_);
 
-	// Find out how many samples need to be mixed
+	// Find out how many samples are actually playing
 	int active_samples = 0;
 	for (auto* device : active_devices_) {
 		if ((!device->spin_up_sample_.empty() &&
 		     device->spin_up_pos_ + 1 < device->spin_up_sample_.size()) ||
-		    !device->spin_sample_.empty()) {
+		    (!device->spin_sample_.empty() ||
+		     device->spin_pos_ + 1 < device->spin_sample_.size())) {
 			active_samples++;
 		}
 		if (!device->current_seek_sample_.empty() &&
-		    device->seek_pos_ + 1 < device->current_seek_sample_.size()) {
+		    (device->seek_pos_ + 1 < device->current_seek_sample_.size() ||
+		     device->loop_spin_sample_)) {
 			active_samples++;
 		}
 	}
@@ -335,7 +352,10 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 				        device->spin_up_sample_[device->spin_up_pos_++],
 				        device->spin_volume_,
 				        mix_scale);
-			} else if (!device->spin_sample_.empty()) {
+			} else if (!device->spin_sample_.empty() &&
+			           (device->spin_pos_ + 1 <
+			                    device->spin_sample_.size() ||
+			            device->loop_spin_sample_)) {
 				mixed_l += scale_sample(
 				        device->spin_sample_[device->spin_pos_],
 				        device->spin_volume_,
@@ -344,7 +364,13 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 				        device->spin_sample_[device->spin_pos_++],
 				        device->spin_volume_,
 				        mix_scale);
-				if (device->spin_pos_ >= device->spin_sample_.size()) {
+
+				// Loop the spin sound if enabled. Used for
+				// persistent HDD noise Not used for floppy
+				// noise because motor should stop after r/w
+				// operations aredone
+				if (device->spin_pos_ >= device->spin_sample_.size() &&
+				    device->loop_spin_sample_) {
 					device->spin_pos_ = 0;
 				}
 			}
@@ -426,14 +452,16 @@ void DISKNOISE_Init(Section* section)
 	                                              spin,
 	                                              hdd_seek_samples,
 	                                              hdd_spin_volume,
-	                                              hdd_seek_volume);
+	                                              hdd_seek_volume,
+	                                              true);
 
 	floppy_noise = std::make_unique<DiskNoiseDevice>(enable_floppy_disk_noise,
 	                                                 floppy_spin_up,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
 	                                                 floppy_spin_volume,
-	                                                 floppy_seek_volume);
+	                                                 floppy_seek_volume,
+	                                                 false);
 }
 
 void DISKNOISE_ShutDown([[maybe_unused]] Section* section)
