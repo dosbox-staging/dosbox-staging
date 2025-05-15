@@ -6,6 +6,7 @@
 
 #include "channel_names.h"
 #include "checks.h"
+#include "notifications.h"
 #include "pic.h"
 #include "setup.h"
 
@@ -120,8 +121,12 @@ void GameBlaster::Open(const int port_choice, const std::string& card_choice,
 			channel->SetLowPassFilter(FilterState::Off);
 		}
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'on'",
-		            filter_choice.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CMS",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      "cms_filter",
+		                      filter_choice.c_str(),
+		                      "on");
 
 		set_section_property_value("sblaster", "cms_filter", "on");
 		enable_filter();
