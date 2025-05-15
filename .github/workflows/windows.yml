@@ -69,7 +69,7 @@ jobs:
 
       - name:  Log environment
         shell: pwsh
-        run:   .\scripts\log-env.ps1
+        run:   .\scripts\ci\log-env.ps1
 
       - name:  Set variables
         id:    set_vars
@@ -78,7 +78,7 @@ jobs:
           set -x
           echo "build_dir=build/release-windows/Release" >> $GITHUB_OUTPUT
 
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
           echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
 
@@ -106,7 +106,7 @@ jobs:
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python3 ./scripts/count-warnings.py -lf --msclang build.log
+        run:  python3 ./scripts/ci/count-warnings.py -lf --msclang build.log
 
       - name:  Package standard build
         if:    ${{ !matrix.conf.debugger }}

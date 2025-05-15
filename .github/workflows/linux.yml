@@ -92,12 +92,12 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run: ./scripts/log-env.sh
+        run: ./scripts/ci/log-env.sh
 
       - name: Inject version string
         run: |
           set -x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup and build
@@ -114,7 +114,7 @@ jobs:
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  ./scripts/count-warnings.py -lf build.log
+        run:  ./scripts/ci/count-warnings.py -lf build.log
 
 
   build_linux_release:
@@ -147,12 +147,12 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run: ./scripts/log-env.sh
+        run: ./scripts/ci/log-env.sh
 
       - name: Inject version string
         run: |
           set -x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Setup and build
