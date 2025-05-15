@@ -65,8 +65,8 @@ If you have Ruby already, you can install the tool with `gem install mdl`.
 Please refer to the project's documentation for [further installation
 instructions](https://github.com/markdownlint/markdownlint).
 
-You can run the linter by executing `../scripts/verify-markdown.sh` from the
-[`website`](/website) directory. Please fix all the issues the linter
+You can run the linter by executing `../scripts/linting/verify-markdown.sh`
+from the [`website`](/website) directory. Please fix all the issues the linter
 complains about; you won't be able to merge your PR in the presence of
 warnings.
 
