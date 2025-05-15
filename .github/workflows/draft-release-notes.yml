@@ -24,16 +24,16 @@ jobs:
 
       - name: Query pull requests
         run: |
-          ./scripts/release-notes-drafter.py query \
+          ./scripts/tools/release-notes-drafter.py query \
               -p pull-requests.csv -s $RELEASE_START_TIME
 
       - name: Generate release notes draft
         run: |
-          ./scripts/release-notes-drafter.py process \
+          ./scripts/tools/release-notes-drafter.py process \
               -i pull-requests.csv -m release-notes.md
 
       - name: Update release notes draft
         run: |
-          ./scripts/release-notes-drafter.py publish \
+          ./scripts/tools/release-notes-drafter.py publish \
               -n release-notes.md -t $DRAFT_RELEASE_TAG
 
