@@ -238,9 +238,9 @@ jobs:
           mkdir -p out/program
 
           sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
 
-          cp contrib/windows_installer/*                   out
+          cp extras/windows-installer/*                    out
           cp contrib/icons/windows/dosbox-staging.ico      out
           cp contrib/icons/windows/dosbox-staging.bmp      out
           cp contrib/icons/windows/dosbox-staging-side.bmp out
