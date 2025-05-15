@@ -64,7 +64,7 @@ If you're using Visual Studio, use the x86-64 release build target.
 The binary is supported by resource files relative to it, so we recommend
 running it from it's present location.  However, if you want to package
 up the binary along with its dependencies and resource tree, you can run:
-`./scripts/create-package.sh` to learn more.
+`./scripts/packaging/create-package.sh` to learn more.
 
 ## Debug build (for code contributors or diagnosing a crash)
 

@@ -174,7 +174,7 @@ jobs:
           echo "*** dosbox transitive deps:"
           ldd build/release-linux/dosbox
 
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p linux \
             build/release-linux \
             "dosbox-staging-linux-x86_64-$VERSION"

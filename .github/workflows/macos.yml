@@ -125,7 +125,7 @@ jobs:
       - name: Package
         run: |
           mv Resources ../
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p macos \
             -v "${{ env.VERSION }}" \
             -f \
