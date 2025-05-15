@@ -123,9 +123,9 @@ you build a binary optimized for gaming.
 10. Create a package of the binary and DLLs to a destination directory:
 
    ``` shell
-   ./scripts/create-package.sh -p msys2 build/release-gcc ../dosbox-staging-gcc-pkg
+   ./scripts/packaging/create-package.sh -p msys2 build/release-gcc ../dosbox-staging-gcc-pkg
    # or
-   ./scripts/create-package.sh -p msys2 build/release-clang ../dosbox-staging-clang-pkg
+   ./scripts/packaging/create-package.sh -p msys2 build/release-clang ../dosbox-staging-clang-pkg
    ```
 
 [^1]: <https://devblogs.microsoft.com/cppblog/vcpkg-is-now-included-with-visual-studio/>.

@@ -5,7 +5,7 @@
 The macOS DMG disk image is built by the "Package" and "Create dmg" steps of
 the [.github/workflows/macos.yml](/.github/workflows/macos.yml) GitHub action:
 
-1. The "Package" step calls [scripts/create-package.sh](/scripts/create-package.sh).
+1. The "Package" step calls [scripts/packaging/create-package.sh](/scripts/packaging/create-package.sh).
    The `pkg_macos` function of that script prepares the contents of the DMG
    file, so if you want to make changes to it (e.g. add/rename files), this is
    the function to modify.

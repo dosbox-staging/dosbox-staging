@@ -136,7 +136,7 @@ jobs:
           enableCrossOsArchive: true
 
       - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
+        run:  scripts/ci/extract-subprojects-tar.sh
 
       - name: Meson setup
         run:  |
@@ -186,7 +186,7 @@ jobs:
           enableCrossOsArchive: true
 
       - name: Extract subprojects cache
-        run:  scripts/extract-subprojects-tar.sh
+        run:  scripts/ci/extract-subprojects-tar.sh
 
       - name: Log environment
         run:  ./scripts/ci/log-env.sh
@@ -214,7 +214,7 @@ jobs:
 
       - name: Package
         run: |
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p linux \
             build \
             "dosbox-staging-linux-x86_64-$VERSION"

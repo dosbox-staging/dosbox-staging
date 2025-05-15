@@ -305,7 +305,7 @@ jobs:
       - name: Package
         run: |
           # Package the debug build to bring in required dependencies such as ncurses
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p msys2 \
             "$BUILD_DEBUGGER_DIR" \
             "$PKG_RELEASE"
