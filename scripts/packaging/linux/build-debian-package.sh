@@ -29,14 +29,14 @@ is_source_clean() {
 copy_debian_metadata_to_root() {
     # Avoid polluting the repo root with Debian's metadata, so we copy
     # it to the root at the time of use; then delete it when we're done.
-    cp -rf contrib/linux/debian .
+    cp -rf extras/linux/debian .
     trap 'rm -rf debian' EXIT
 }
 
 setup_common_variables() {
     local DEBIAN_VERSION=11
 
-    cp -rv contrib/linux/debian .
+    cp -rv extras/linux/debian .
 
     PACKAGE="$(grep Package: debian/control | sed 's/.*: //')"
 
