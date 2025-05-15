@@ -173,8 +173,8 @@ pkg_macos()
 
     install -d   "${macos_content_dir}/MacOS/"
     install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
-    install_file contrib/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
-    install_file contrib/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
+    install_file extras/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
+    install_file extras/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
     install_file extras/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
     sed -i '' -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
@@ -182,8 +182,8 @@ pkg_macos()
 	# Install start commands
 	start_command="Start DOSBox Staging.command"
 	start_logging_command="Start DOSBox Staging (logging).command"
-	install -m 755 "contrib/macos/${start_command}"         "${macos_dist_dir}/${start_command}"
-	install -m 755 "contrib/macos/${start_logging_command}" "${macos_dist_dir}/${start_logging_command}"
+	install -m 755 "extras/macos/${start_command}"         "${macos_dist_dir}/${start_command}"
+	install -m 755 "extras/macos/${start_logging_command}" "${macos_dist_dir}/${start_logging_command}"
 
 	# Hide command extensions in Finder
 	file_attr="00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
@@ -191,8 +191,8 @@ pkg_macos()
 	xattr -x -w com.apple.FinderInfo "$file_attr" "${macos_dist_dir}/${start_logging_command}"
 
 	# Set up visual appearance of the root folder of the DMG image
-	install_file contrib/macos/background/background.tiff "${macos_dist_dir}/.hidden/background.tiff"
-	install_file contrib/macos/DS_Store "${macos_dist_dir}/.DS_Store"
+	install_file extras/macos/background/background.tiff "${macos_dist_dir}/.hidden/background.tiff"
+	install_file extras/macos/DS_Store "${macos_dist_dir}/.DS_Store"
 }
 
 pkg_windows()
