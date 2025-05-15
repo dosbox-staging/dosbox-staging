@@ -22,7 +22,7 @@ jobs:
         run:  sudo apt-get update
 
       - name: Run shellcheck
-        run:  ./scripts/verify-bash.sh
+        run:  ./scripts/linting/verify-bash.sh
 
       - name: Install pylint
         run: |
@@ -30,7 +30,7 @@ jobs:
           sudo pip3 install pylint beautifulsoup4 html5lib
 
       - name: Run pylint
-        run:  ./scripts/verify-python.sh
+        run:  ./scripts/linting/verify-python.sh
 
       - name: Install markdownlint
         run: |
@@ -39,7 +39,7 @@ jobs:
           sudo gem install mdl
 
       - name: Run markdownlint
-        run:  ./scripts/verify-markdown.sh
+        run:  ./scripts/linting/verify-markdown.sh
 
       - name: Install appstream-util
         run:  sudo apt-get install appstream-util
