@@ -131,7 +131,7 @@ jobs:
           fi
 
           # Package
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p windows \
             ${{ steps.set_vars.outputs.build_dir }} \
             ${{ steps.set_vars.outputs.pkg_dir }}

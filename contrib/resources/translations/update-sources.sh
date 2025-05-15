@@ -28,7 +28,7 @@ check_package() {
 	echo ""
 	echo "  3. meson compile -C build/full-static"
 	echo ""
-	echo "  4. ./scripts/create-package.sh -f -p linux build/full-static build/lang"
+	echo "  4. ./scripts/packaging/create-package.sh -f -p linux build/full-static build/lang"
 	echo ""
 	echo "  5. cd contrib/resources/translations"
 	echo ""
