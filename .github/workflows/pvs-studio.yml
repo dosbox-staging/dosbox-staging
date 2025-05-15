@@ -53,7 +53,7 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run:  ./scripts/log-env.sh
+        run:  ./scripts/ci/log-env.sh
 
       - name: Configure PVS-Studio license
         run: |
@@ -125,4 +125,4 @@ jobs:
         run: |
           echo "Full report is included in build Artifacts"
           echo
-          ./scripts/count-pvs-bugs.py "pvs-report.csv" "${MAX_BUGS}"
+          ./scripts/ci/count-pvs-bugs.py "pvs-report.csv" "${MAX_BUGS}"

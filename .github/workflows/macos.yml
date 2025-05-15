@@ -64,7 +64,7 @@ jobs:
           ./bootstrap-vcpkg.sh
 
       - name: Log environment
-        run: arch -arch=${{ matrix.conf.arch }} ./scripts/log-env.sh
+        run: arch -arch=${{ matrix.conf.arch }} ./scripts/ci/log-env.sh
 
       - name: Setup and build release
         run: |
@@ -78,7 +78,7 @@ jobs:
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run:  python3 ./scripts/count-warnings.py -lf build.log
+        run:  python3 ./scripts/ci/count-warnings.py -lf build.log
 
       - name: Verify executable RPATH
         run: |
@@ -113,7 +113,7 @@ jobs:
       - name: Inject version string
         run: |
           set -x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install brew depedencies
