@@ -798,7 +798,7 @@ void MSG_NotifyNewCodePage()
 	check_code_page();
 }
 
-// MSG_Init loads the requested language provided on the command line or
+// MSG_LoadMessages loads the requested language provided on the command line or
 // from the language = conf setting.
 
 // 1. The provided language can be an exact filename and path to the lng
