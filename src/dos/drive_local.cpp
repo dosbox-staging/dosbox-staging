@@ -602,15 +602,9 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 
 	const auto disk_type = getDiskTypeFromMediaByte(
 	        local_drive.lock()->GetMediaByte());
-	switch (disk_type) {
-	case DiskType::Floppy:
-		DOS_PerformDiskIoDelay(*num_bytes, DiskType::Floppy);
-		break;
-	case DiskType::HardDisk:
-		DOS_PerformDiskIoDelay(*num_bytes, DiskType::HardDisk);
-		break;
-	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;
-	}
+
+	DOS_ExecuteRegisteredCallbacks(disk_type);
+	DOS_PerformDiskIoDelay(*num_bytes, disk_type);
 
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
 	/* Same for Igor */
@@ -649,15 +643,9 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 
 	const auto disk_type = getDiskTypeFromMediaByte(
 	        local_drive.lock()->GetMediaByte());
-	switch (disk_type) {
-	case DiskType::Floppy:
-		DOS_PerformDiskIoDelay(*num_bytes, DiskType::Floppy);
-		break;
-	case DiskType::HardDisk:
-		DOS_PerformDiskIoDelay(*num_bytes, DiskType::HardDisk);
-		break;
-	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;
-	}
+
+	DOS_ExecuteRegisteredCallbacks(disk_type);
+	DOS_PerformDiskIoDelay(*num_bytes, disk_type);
 
 	// Otherwise we have some data to write
 	const auto ret = write_native_file(file_handle, data, *num_bytes);
