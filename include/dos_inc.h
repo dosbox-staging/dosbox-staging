@@ -87,11 +87,7 @@ enum class DosReturnMode : uint8_t {
 	TerminateAndStayResident = 3
 };
 
-enum class DiskType : uint8_t {
-	Floppy   = 0,
-	HardDisk = 1,
-	CDRom    = 2,
-};
+enum class DiskType { Floppy, HardDisk, CdRom };
 
 #define DOS_FILES   255
 #define DOS_DRIVES  26
