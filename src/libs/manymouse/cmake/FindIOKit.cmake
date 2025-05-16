@@ -14,7 +14,7 @@
 #  IOKit_INCLUDE_DIRS - the IOKit include directories 
 #  IOKit_LIBRARIES - link these to use IOKit
 
-include(FindPkgMacros)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src/libs/manymouse/cmake/FindPkgMacros.cmake)
 findpkg_begin(IOKit)
 
 # construct search paths
