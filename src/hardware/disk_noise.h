@@ -46,8 +46,8 @@ private:
 	const unsigned int SampleRate = 22050;
 	bool enable_disk_noise_       = false;
 
-	float spin_volume_ = 0.0;
-	float seek_volume_ = 0.0;
+	float spin_volume_ = 0.0f;
+	float seek_volume_ = 0.0f;
 	std::vector<float> spin_up_sample_;
 	std::vector<float> spin_sample_;
 	std::vector<float> current_seek_sample_;
