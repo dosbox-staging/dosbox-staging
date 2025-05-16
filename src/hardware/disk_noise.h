@@ -35,7 +35,6 @@ public:
 	                const std::string& spin_up_sample_path,
 	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
-	                const float& spin_volume, const float& seek_volume,
 	                bool loop_spin_sample);
 
 	void ActivateSpin();
@@ -46,8 +45,7 @@ private:
 	const unsigned int SampleRate = 22050;
 	bool enable_disk_noise       = false;
 
-	float spin_volume = 0.0f;
-	float seek_volume = 0.0f;
+	const float DisknoiseGain = 0.2f;
 	std::vector<float> spin_up_sample;
 	std::vector<float> spin_sample;
 	std::vector<float> current_seek_sample;
