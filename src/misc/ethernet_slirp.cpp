@@ -31,16 +31,85 @@
 #endif
 
 #include "dosbox.h"
+#include "dynlib.h"
 #include "ethernet_slirp.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
 
+/**
+ * Platform specific libslirp shared library name
+ */
+#if defined(WIN32)
+constexpr const char* libslirp_dynlib_file = "slirp-0.dll";
+#elif defined(MACOSX)
+constexpr const char* libslirp_dynlib_file = "libslirp.0.dylib";
+#else
+constexpr const char* libslirp_dynlib_file = "libslirp.so.0";
+#endif
+
+namespace LibSlirp
+{
+/**
+ * libslirp dynamic library handle
+ */
+static dynlib_handle libslirp_lib = {};
+
+#define LIBSLIRP_FUNC_LIST(SLIRPFUNC) \
+	SLIRPFUNC(const char*, slirp_version_string, (void)) \
+	SLIRPFUNC(void, slirp_cleanup, (Slirp *slirp)) \
+	SLIRPFUNC(Slirp*, slirp_new, (const SlirpConfig *cfg, const SlirpCb *callbacks,void *opaque)) \
+	SLIRPFUNC(int, slirp_add_hostfwd, (Slirp *slirp, int is_udp, struct in_addr host_addr, int host_port, struct in_addr guest_addr, int guest_port)) \
+	SLIRPFUNC(int, slirp_remove_hostfwd, (Slirp *slirp, int is_udp, struct in_addr host_addr, int host_port)) \
+	SLIRPFUNC(void, slirp_input, (Slirp *slirp, const uint8_t *pkt, int pkt_len)) \
+	SLIRPFUNC(void, slirp_pollfds_fill, (Slirp *slirp, uint32_t *timeout, SlirpAddPollCb add_poll, void *opaque)) \
+	SLIRPFUNC(void, slirp_pollfds_poll, (Slirp *slirp, int select_error, SlirpGetREventsCb get_revents, void *opaque))
+
+/**
+ * Macro to declare function pointers
+ */
+#define LIBSLIRP_FUNC_DECLARE(ret_type, name, sig) \
+	ret_type (*name)sig = nullptr;
+
+LIBSLIRP_FUNC_LIST(LIBSLIRP_FUNC_DECLARE)
+
+} // namespace LibSlirp
+
+/**
+ * A filthy macro to resolve libslirp symbols, and return from the 
+ * calling function below on error.
+ */
+#define LIBSLIRP_FUNC_GET_SYM(ret_type, name, sig) \
+	LibSlirp::name = (decltype(LibSlirp::name))dynlib_get_symbol(LibSlirp::libslirp_lib, #name); \
+	if (!LibSlirp::name) { \
+		dynlib_close(LibSlirp::libslirp_lib); \
+		err_str = "SLIRP: Failed to get symbol: '" #ret_type " " #name #sig "'"; \
+		return DynLibResult::ResolveSymErr; \
+	}
+
+/**
+ * Load the libslirp library and resolve all required symbols.
+ * 
+ * If the library is already loaded, does nothing.
+ */
+static DynLibResult load_libslirp_dynlib(std::string& err_str)
+{
+	if (!LibSlirp::libslirp_lib) {
+		LibSlirp::libslirp_lib = dynlib_open(libslirp_dynlib_file);
+		if (!LibSlirp::libslirp_lib) {
+			err_str = "SLIRP: Failed to load libslirp library";
+			return DynLibResult::LibOpenErr;
+		}
+		LIBSLIRP_FUNC_LIST(LIBSLIRP_FUNC_GET_SYM)
+	}
+	return DynLibResult::Success;
+}
+
 /* Begin boilerplate to map libslirp's C-based callbacks to our C++
  * object. The user data is provided inside the 'opaque' pointer.
  */
 
-db_ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
+static slirp_ssize_t db_slirp_receive_packet(const void *buf, size_t len, void *opaque)
 {
 	// sentinels
 	if (!len)
@@ -58,49 +127,49 @@ db_ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 	                           bytes_to_receive);
 }
 
-void slirp_guest_error(const char *msg, [[maybe_unused]] void *opaque)
+static void db_slirp_guest_error(const char *msg, [[maybe_unused]] void *opaque)
 {
 	LOG_MSG("SLIRP: Slirp error: %s", msg);
 }
 
-int64_t slirp_clock_get_ns([[maybe_unused]] void *opaque)
+static int64_t db_slirp_clock_get_ns([[maybe_unused]] void *opaque)
 {
 	return GetTicksUs() * 1000;
 }
 
-void *slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
+static void *db_slirp_timer_new(SlirpTimerCb cb, void *cb_opaque, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return conn->TimerNew(cb, cb_opaque);
 }
 
-void slirp_timer_free(void *timer, void *opaque)
+static void db_slirp_timer_free(void *timer, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerFree(real_timer);
 }
 
-void slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
+static void db_slirp_timer_mod(void *timer, int64_t expire_time, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	struct slirp_timer *real_timer = (struct slirp_timer *)timer;
 	conn->TimerMod(real_timer, expire_time);
 }
 
-int slirp_add_poll(int fd, int events, void *opaque)
+static int db_slirp_add_poll(int fd, int events, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return (fd < 0) ? fd : conn->PollAdd(fd, events);
 }
 
-int slirp_get_revents(int idx, void *opaque)
+static int db_slirp_get_revents(int idx, void *opaque)
 {
 	const auto conn = static_cast<SlirpEthernetConnection *>(opaque);
 	return (idx < 0) ? idx : conn->PollGetSlirpRevents(idx);
 }
 
-void slirp_register_poll_fd(int fd, void *opaque)
+static void db_slirp_register_poll_fd(int fd, void *opaque)
 {
 	// sentinel
 	if (fd < 0)
@@ -109,7 +178,7 @@ void slirp_register_poll_fd(int fd, void *opaque)
 	conn->PollRegister(fd);
 }
 
-void slirp_unregister_poll_fd(int fd, void *opaque)
+static void db_slirp_unregister_poll_fd(int fd, void *opaque)
 {
 	// sentinel
 	if (fd < 0)
@@ -118,7 +187,7 @@ void slirp_unregister_poll_fd(int fd, void *opaque)
 	conn->PollUnregister(fd);
 }
 
-void slirp_notify([[maybe_unused]] void *opaque)
+static void db_slirp_notify([[maybe_unused]] void *opaque)
 {
 	// empty, function is provided for API compliance
 }
@@ -139,26 +208,37 @@ SlirpEthernetConnection::SlirpEthernetConnection()
           polls()
 #endif
 {
-	slirp_callbacks.send_packet = slirp_receive_packet;
-	slirp_callbacks.guest_error = slirp_guest_error;
-	slirp_callbacks.clock_get_ns = slirp_clock_get_ns;
-	slirp_callbacks.timer_new = slirp_timer_new;
-	slirp_callbacks.timer_free = slirp_timer_free;
-	slirp_callbacks.timer_mod = slirp_timer_mod;
-	slirp_callbacks.register_poll_fd = slirp_register_poll_fd;
-	slirp_callbacks.unregister_poll_fd = slirp_unregister_poll_fd;
-	slirp_callbacks.notify = slirp_notify;
+	slirp_callbacks.send_packet = db_slirp_receive_packet;
+	slirp_callbacks.guest_error = db_slirp_guest_error;
+	slirp_callbacks.clock_get_ns = db_slirp_clock_get_ns;
+	slirp_callbacks.timer_new = db_slirp_timer_new;
+	slirp_callbacks.timer_free = db_slirp_timer_free;
+	slirp_callbacks.timer_mod = db_slirp_timer_mod;
+	slirp_callbacks.register_poll_fd = db_slirp_register_poll_fd;
+	slirp_callbacks.unregister_poll_fd = db_slirp_unregister_poll_fd;
+	slirp_callbacks.notify = db_slirp_notify;
 }
 
 SlirpEthernetConnection::~SlirpEthernetConnection()
 {
 	if (slirp)
-		slirp_cleanup(slirp);
+		LibSlirp::slirp_cleanup(slirp);
 }
 
 bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 {
-	LOG_MSG("SLIRP: Slirp version: %s", slirp_version_string());
+	std::string sym_err_msg;
+	switch (load_libslirp_dynlib(sym_err_msg)) {
+		using enum DynLibResult;
+		case Success:
+			break;
+		case LibOpenErr:
+		case ResolveSymErr: {
+			LOG_ERR("%s", sym_err_msg.c_str());
+			return false;
+		}
+	}
+	LOG_MSG("SLIRP: Successfully loaded Slirp version: %s", LibSlirp::slirp_version_string());
 
 	/* Config */
 	config.version = 1;
@@ -204,7 +284,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	config.tftp_path = nullptr;
 	config.bootfile = nullptr;
 
-	slirp = slirp_new(&config, &slirp_callbacks, this);
+	slirp = LibSlirp::slirp_new(&config, &slirp_callbacks, this);
 	if (slirp) {
 		const auto section = static_cast<Section_prop *>(dosbox_config);
 		assert(section);
@@ -233,7 +313,7 @@ void SlirpEthernetConnection::ClearPortForwards(const bool is_udp, std::map<int,
 	inet_pton(AF_INET, "0.0.0.0", &bind_addr);
 
 	for (const auto &[host_port, guest_port] : existing_port_forwards)
-		if (slirp_remove_hostfwd(slirp, is_udp, bind_addr, host_port) >= 0)
+		if (LibSlirp::slirp_remove_hostfwd(slirp, is_udp, bind_addr, host_port) >= 0)
 			LOG_INFO("SLIRP: Removed old %s port %d:%d forward", protocol, host_port, guest_port);
 		else
 			LOG_WARNING("SLIRP: Failed removing old %s port %d:%d foward", protocol, host_port, guest_port);
@@ -344,7 +424,7 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 		LOG_MSG("SLIRP: Processing %s port forward rule: %s", protocol, forward_rule.c_str());
 		while (n--) {
 			// Add the port forward rule
-			if (slirp_add_hostfwd(slirp, is_udp, bind_addr, host_port, bind_addr, guest_port) == 0) {
+			if (LibSlirp::slirp_add_hostfwd(slirp, is_udp, bind_addr, host_port, bind_addr, guest_port) == 0) {
 				forwarded_ports[host_port] = guest_port;
 				LOG_MSG("SLIRP: Setup %s port %d:%d forward", protocol, host_port, guest_port);
 			} else {
@@ -368,7 +448,7 @@ void SlirpEthernetConnection::SendPacket(const uint8_t *packet, int len)
 		            len, GetMTU());
 		return;
 	}
-	slirp_input(slirp, packet, len);
+	LibSlirp::slirp_input(slirp, packet, len);
 }
 
 void SlirpEthernetConnection::GetPackets(std::function<int(const uint8_t *, int)> callback)
@@ -377,9 +457,9 @@ void SlirpEthernetConnection::GetPackets(std::function<int(const uint8_t *, int)
 	uint32_t timeout_ms = 0;
 	PollsClear();
 	PollsAddRegistered();
-	slirp_pollfds_fill(slirp, &timeout_ms, slirp_add_poll, this);
+	LibSlirp::slirp_pollfds_fill(slirp, &timeout_ms, db_slirp_add_poll, this);
 	const bool poll_failed = !PollsPoll(timeout_ms);
-	slirp_pollfds_poll(slirp, poll_failed, slirp_get_revents, this);
+	LibSlirp::slirp_pollfds_poll(slirp, poll_failed, db_slirp_get_revents, this);
 	TimersRun();
 }
 
@@ -421,7 +501,7 @@ void SlirpEthernetConnection::TimerMod(struct slirp_timer *timer, int64_t expire
 
 void SlirpEthernetConnection::TimersRun()
 {
-	int64_t now = slirp_clock_get_ns(nullptr);
+	int64_t now = db_slirp_clock_get_ns(nullptr);
 	for (struct slirp_timer *timer : timers) {
 		if (timer->expires_ns && timer->expires_ns < now) {
 			timer->expires_ns = 0;
