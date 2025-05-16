@@ -572,6 +572,22 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 	dirCache.SetBaseDir(basedir);
 }
 
+static DiskType getDiskTypeFromMediaByte(uint8_t media_byte)
+{
+	switch (media_byte) {
+		case 0xF0:
+			// 3.5" floppy
+			return DiskType::Floppy;
+		case 0xF9:
+			// 5.25" floppy
+			return DiskType::Floppy;
+		case 0xF8:
+			return DiskType::HardDisk;
+		default:
+			return DiskType::HardDisk;
+	}
+}
+
 bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 {
 	assert(file_handle != InvalidNativeFileHandle);
@@ -588,21 +604,23 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 		return false;
 	}
 
-	// Determine if the file is on a disk mounted as floppy or hard drive
-	const int type = local_drive.lock()->GetMediaByte();
-	if (type == 0xF0) {
-		// Floppy drive
+	const auto disk_type = getDiskTypeFromMediaByte(
+	        local_drive.lock()->GetMediaByte());
+	switch (disk_type) {
+	case DiskType::Floppy:
 		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
-	} else if (type == 0xF8) {
-		// Hard drive
+		break;
+	case DiskType::HardDisk:
 		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
+		break;
+	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;
 	}
 
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
@@ -640,21 +658,23 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 		return true;
 	}
 
-	// Determine if the file is on a disk mounted as floppy or hard drive
-	const int type = local_drive.lock()->GetMediaByte();
-	if (type == 0xF0) {
-		// Floppy drive
+	const auto disk_type = getDiskTypeFromMediaByte(
+	        local_drive.lock()->GetMediaByte());
+	switch (disk_type) {
+	case DiskType::Floppy:
 		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
-	} else if (type == 0xF8) {
-		// Hard drive
+		break;
+	case DiskType::HardDisk:
 		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
+		break;
+	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;
 	}
 
 	// Otherwise we have some data to write
