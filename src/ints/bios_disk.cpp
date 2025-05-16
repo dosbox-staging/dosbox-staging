@@ -341,6 +341,9 @@ static Bitu INT13_DiskHandler(void)
 	last_drive = reg_dl;
 	drivenum = GetDosDriveNumber(reg_dl);
 	const bool any_images = has_image(imageDiskList);
+	// This is an assumed default block transfer size
+	// used for the IO delay and sound triggering
+	const int default_transfer_size_bytes = 512;
 
 	// unconditionally enable the interrupt flag
 	CALLBACK_SIF(true);
@@ -425,7 +428,7 @@ static Bitu INT13_DiskHandler(void)
 			// Determine delay based on whether it's a floppy or
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
-				DOS_PerformDiskIoDelay(512,
+				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       floppy_noise.get(),
 				                       DiskType::Floppy);
 				if (floppy_noise) {
@@ -433,7 +436,8 @@ static Bitu INT13_DiskHandler(void)
 					floppy_noise->PlaySeek();
 				}
 			} else {
-				DOS_PerformDiskIoDelay(512, hdd_noise.get());
+				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
+				                       hdd_noise.get());
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}
@@ -471,7 +475,7 @@ static Bitu INT13_DiskHandler(void)
 			// Determine delay based on whether it's a floppy or
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
-				DOS_PerformDiskIoDelay(512,
+				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       floppy_noise.get(),
 				                       DiskType::Floppy);
 				if (floppy_noise) {
@@ -479,7 +483,8 @@ static Bitu INT13_DiskHandler(void)
 					floppy_noise->PlaySeek();
 				}
 			} else {
-				DOS_PerformDiskIoDelay(512, hdd_noise.get());
+				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
+				                       hdd_noise.get());
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}
