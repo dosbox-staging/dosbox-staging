@@ -554,8 +554,8 @@ Bits localDrive::UnMount()
 	return 0;
 }
 
-void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise,
-                  DiskType type = DiskType::Floppy);
+void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice *disknoise,
+                   DiskType type = DiskType::HardDisk);
 
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
@@ -572,7 +572,7 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 	dirCache.SetBaseDir(basedir);
 }
 
-bool localFile::Read(uint8_t *data, uint16_t *size)
+bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 {
 	assert(file_handle != InvalidNativeFileHandle);
 	// check if the file is opened in write-only mode
@@ -581,8 +581,8 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		return false;
 	}
 
-	const auto ret = read_native_file(file_handle, data, *size);
-	*size          = check_cast<uint16_t>(ret.num_bytes);
+	const auto ret = read_native_file(file_handle, data, *num_bytes);
+	*num_bytes     = check_cast<uint16_t>(ret.num_bytes);
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -592,14 +592,14 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	const int type = local_drive.lock()->GetMediaByte();
 	if (type == 0xF0) {
 		// Floppy drive
-		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
+		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 	} else if (type == 0xF8) {
 		// Hard drive
-		diskio_delay(*size, hdd_noise.get()); // Hard disk
+		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
@@ -616,7 +616,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	return true;
 }
 
-bool localFile::Write(uint8_t *data, uint16_t *size)
+bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 {
 	assert(file_handle != InvalidNativeFileHandle);
 	uint8_t lastflags = this->flags & 0xf;
@@ -631,7 +631,7 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	set_archive_on_close = true;
 
 	// Truncate the file
-	if (*size == 0) {
+	if (*num_bytes == 0) {
 		if (!truncate_native_file(file_handle)) {
 			LOG_DEBUG("FS: Failed truncating file '%s'", name.c_str());
 			return false;
@@ -644,22 +644,22 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	const int type = local_drive.lock()->GetMediaByte();
 	if (type == 0xF0) {
 		// Floppy drive
-		diskio_delay(*size, floppy_noise.get(), DiskType::Floppy);
+		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 	} else if (type == 0xF8) {
 		// Hard drive
-		diskio_delay(*size, hdd_noise.get()); // Hard disk
+		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
 	}
 
 	// Otherwise we have some data to write
-	const auto ret = write_native_file(file_handle, data, *size);
-	*size          = check_cast<uint16_t>(ret.num_bytes);
+	const auto ret = write_native_file(file_handle, data, *num_bytes);
+	*num_bytes     = check_cast<uint16_t>(ret.num_bytes);
 	if (ret.error) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
