@@ -154,18 +154,24 @@ static uint16_t DOS_GetAmount(void) {
 int hdd_data_rate_byte_per_sec   = 0;
 int fdd_data_rate_byte_per_sec   = 0;
 int cdrom_data_rate_byte_per_sec = 0;
+bool fdd_delay_enabled		 = false;
+bool hdd_delay_enabled		 = false;
+bool cdrom_delay_enabled	 = false;
 
 void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType type)
 {
 	switch (type) {
 	case DiskType::Floppy:
 		fdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		fdd_delay_enabled = true;
 		break;
 	case DiskType::HardDisk:
 		hdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		hdd_delay_enabled = true;
 		break;
 	case DiskType::CdRom:
 		cdrom_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		cdrom_delay_enabled = true;
 		break;
 	default:
 		LOG(LOG_DOSMISC, LOG_WARN)("DOS:0x%X:Unknown disk type %d",
@@ -178,9 +184,7 @@ void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType type)
 void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
                   DiskType type = DiskType::HardDisk)
 {
-	if ((type == DiskType::Floppy && fdd_data_rate_byte_per_sec == 0) ||
-	    (type == DiskType::HardDisk && hdd_data_rate_byte_per_sec == 0) ||
-	    (type == DiskType::CdRom && cdrom_data_rate_byte_per_sec == 0)) {
+	if (!fdd_delay_enabled && !hdd_delay_enabled && !cdrom_delay_enabled) {
 		return;
 	}
 
