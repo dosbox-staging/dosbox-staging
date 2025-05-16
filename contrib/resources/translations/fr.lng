@@ -2547,3 +2547,147 @@ lecteur inconnu
 :CONJUNCTION_AND
 et
 .
+:DOSBOX_HELP
+Utilisation : %s [OPTION]... [CHEMIN]
+
+CHEMIN                     Si CHEMIN est un dossier, il est monté comme C:.
+                           Si CHEMIN est une image disque amorçable (IMA/IMG), elle est démarrée.
+                           Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D:.
+                           Si CHEMIN est un exécutable DOS (BAT/COM/EXE), son dossier parent
+                           est monté comme C: et l’exécutable est lancé. À la fin de
+                           l’exécution, DOSBox Staging se ferme.
+
+Liste des options disponibles :
+
+  --conf <fichier_conf>    Démarre avec les options spécifiées dans <fichier_conf>.
+                           Plusieurs fichiers de configuration peuvent être spécifiés.
+                           Exemple : --conf conf1.conf --conf conf2.conf
+
+  --printconf              Affiche l’emplacement du fichier de configuration principal.
+
+  --editconf               Ouvre le fichier de configuration principal dans un éditeur de texte.
+
+  --eraseconf              Supprime le fichier de configuration principal.
+
+  --noprimaryconf          Ne pas charger ou créer le fichier de configuration principal.
+
+  --nolocalconf            Ne pas charger le fichier de configuration local 'dosbox.conf'
+                           s’il est présent dans le dossier de travail courant.
+
+  --set <param>=<valeur>   Définit un paramètre de configuration. Plusieurs paramètres
+                           peuvent être spécifiés. Exemple :
+                           --set mididevice=fluidsynth --set soundfont=monsoundfont.sf2
+
+  --working-dir <chemin>   Définit le dossier de travail à <chemin>. DOSBox agira comme s’il
+                           était lancé depuis ce dossier.
+
+  --list-countries         Liste tous les pays pris en charge avec leurs codes numériques.
+                           Les codes sont à utiliser dans le paramètre 'country'.
+
+  --list-layouts           Liste toutes les dispositions de clavier prises en charge avec leurs codes.
+                           Les codes sont à utiliser dans le paramètre 'keyboard_layout'.
+
+  --list-code-pages        Liste toutes les pages de codes incluses (polices d’écran).
+
+  --list-glshaders         Liste tous les shaders OpenGL disponibles et leurs chemins.
+                           Les shaders sont à utiliser dans le paramètre 'glshader'.
+
+  --fullscreen             Démarre en mode plein écran.
+
+  --lang <fichier_lang>    Démarre avec la langue spécifiée dans <fichier_lang>. Si défini sur
+                           'auto', tente de détecter la langue du système hôte.
+
+  --machine <type>         Émule un type de machine spécifique. Le type de machine influence
+                           la carte vidéo et la carte son émulées.
+                           Choix valides : hercules, cga, cga_mono, tandy,
+                           pcjr, ega, svga_s3 (par défaut), svga_et3000, svga_et4000,
+                           svga_paradise, vesa_nolfb, vesa_oldvbe.
+
+  -c <commande>            Exécute la commande DOS spécifiée avant de traiter CHEMIN.
+                           Plusieurs commandes peuvent être spécifiées.
+
+  --noautoexec             N’exécute pas les commandes DOS des sections [autoexec].
+
+  --exit                   Quitte après l’exécution des '-c <commande>' et des sections [autoexec].
+
+  --startmapper            Lance l’interface graphique du mapper.
+
+  --erasemapper            Supprime le fichier de configuration du mapper par défaut.
+
+  --securemode             Active le mode sécurisé en désactivant les commandes MOUNT et IMGMOUNT.
+
+  --socket <num>           Lance nullmodem sur le numéro de socket spécifié.
+
+  -h, -?, --help           Affiche ce message d’aide et quitte.
+
+  -V, --version            Affiche la version et quitte.
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Liste des codes pays disponibles (principalement identiques aux indicatifs téléphoniques)
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration 'country'.
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
+Liste des codes de dispositions de clavier disponibles
+.
+:DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
+Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration 'keyboard_layout'.
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_1
+Liste des pages de codes disponibles
+.
+:DOSBOX_HELP_LIST_CODE_PAGES_2
+Les pages de codes ci-dessus peuvent être utilisées dans le paramètre de configuration 'keyboard_layout'.
+.
+:COUNTRY_NAME_XXA
+International (Anglais)
+.
+:COUNTRY_NAME_USA
+États-Unis
+.
+:COUNTRY_NAME_CAN_FR
+Canada (Français)
+.
+:COUNTRY_NAME_XLA
+Amérique Latine
+.
+:COUNTRY_NAME_CAN_EN
+Canada (Anglais)
+.
+:COUNTRY_NAME_RUS
+Russie
+.
+:COUNTRY_NAME_EGY
+Égypte
+.
+:COUNTRY_NAME_ZAF
+Afrique du Sud
+.
+:COUNTRY_NAME_GRC
+Grèce
+.
+:COUNTRY_NAME_NLD
+Pays-Bas
+.
+:COUNTRY_NAME_BEL
+Belgique
+.
+:COUNTRY_NAME_FRA
+France
+.
+:COUNTRY_NAME_ESP
+Espagne
+.
+:COUNTRY_NAME_HUN
+Hongrie
+.
+:COUNTRY_NAME_YUG
+Yougoslavie
+.
+:COUNTRY_NAME_ITA
+Italie
+.
+:COUNTRY_NAME_ROU
+Roumanie
+.
