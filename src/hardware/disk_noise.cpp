@@ -82,9 +82,6 @@ void DiskNoises::AudioCallback(const int frames)
 	// stereo interleaved buffer
 	std::vector<AudioFrame> out(frames, {0.0f, 0.0f});
 
-	const float mix_scale = 1.0f / static_cast<float>(
-	                                       disk_noises->active_devices.size());
-
 	for (auto* device : disk_noises->active_devices) {
 		bool sample_is_playing = false;
 		for (int i = 0; i < frames; ++i) {
