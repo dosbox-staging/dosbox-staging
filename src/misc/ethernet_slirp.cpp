@@ -193,18 +193,7 @@ static void db_slirp_notify([[maybe_unused]] void *opaque)
 /* End boilerplate */
 
 SlirpEthernetConnection::SlirpEthernetConnection()
-        : EthernetConnection(),
-          config(),
-          timers(),
-          get_packet_callback(),
-          registered_fds(),
-#ifdef WIN32
-          readfds(),
-          writefds(),
-          exceptfds()
-#else /* !WIN32 */
-          polls()
-#endif
+        : EthernetConnection()
 {
 	slirp_callbacks.send_packet = db_slirp_receive_packet;
 	slirp_callbacks.guest_error = db_slirp_guest_error;
@@ -254,8 +243,8 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 	config.if_mtu = ethernet_frame_size;
 	config.if_mru = ethernet_frame_size;
 
-	config.enable_emu = 0; // buggy - keep this at 0
-	config.in_enabled = 1;
+	config.enable_emu = false; // buggy - keep this at false
+	config.in_enabled = true;
 
 	// The IPv4 network the guest and host services are on
 	inet_pton(AF_INET, "10.0.2.0", &config.vnetwork);
@@ -268,7 +257,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 
 	/* IPv6 code is left here as reference but disabled as no DOS-era
 	 * software supports it and might get confused by it */
-	config.in6_enabled = 0;
+	config.in6_enabled = false;
 	inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
 	config.vprefix_len = 64;
 	inet_pton(AF_INET6, "fec0::2", &config.vhost6);
@@ -328,7 +317,7 @@ std::map<int, int> SlirpEthernetConnection::SetupPortForwards(const bool is_udp,
 	inet_pton(AF_INET, "0.0.0.0", &bind_addr);
 
 	// Split the rules first by spaces
-	for (auto &forward_rule : split_with_empties(port_forward_rules, ' ')) {
+	for (const auto &forward_rule : split_with_empties(port_forward_rules, ' ')) {
 		if (forward_rule.empty())
 			continue;
 
