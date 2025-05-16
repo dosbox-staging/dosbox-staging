@@ -39,13 +39,12 @@ public:
 
 	void ActivateSpin();
 	void PlaySeek();
+	std::vector<float> GetSample();
 	void Shutdown();
 
 private:
-	const unsigned int SampleRate = 22050;
-	bool enable_disk_noise       = false;
-
 	const float DisknoiseGain = 0.2f;
+	bool enable_disk_noise    = false;
 
 	struct {
 		std::vector<float> spin_up_sample;
@@ -65,16 +64,30 @@ private:
 	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
 	int ChooseWeightedSeekIndex() const;
-	static void AudioCallback(int frames);
 };
 
 class DiskNoises {
 public:
 	DiskNoises();
-	static std::unique_ptr<DiskNoises> GetDiskNoises();
+	void Initialize(const bool enable_floppy_disk_noise,
+	                const bool enable_hard_disk_noise,
+	                const std::string& spin_up, const std::string& spin,
+	                const std::vector<std::string>& hdd_seek_samples,
+	                const std::string& floppy_spin_up,
+	                const std::string& floppy_spin,
+	                const std::vector<std::string>& floppy_seek_samples);
+	void Shutdown();
+
 	std::shared_ptr<MixerChannel> mix_channel;
 	std::vector<DiskNoiseDevice*> active_devices;
 	std::mutex device_mutex;
+	const unsigned int SampleRate = 22050;
+
+private:
+	std::unique_ptr<DiskNoiseDevice> floppy_noise;
+	std::unique_ptr<DiskNoiseDevice> hdd_noise;
+
+	static void AudioCallback(int frames);
 };
 
 static std::unique_ptr<DiskNoises> disk_noises;
