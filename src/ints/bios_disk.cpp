@@ -22,7 +22,6 @@
 #include <cassert>
 #include <utility>
 
-#include "../hardware/disk_noise.h"
 #include "callback.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
@@ -430,16 +429,9 @@ static Bitu INT13_DiskHandler(void)
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       DiskType::Floppy);
-				if (floppy_noise) {
-					floppy_noise->ActivateSpin();
-					floppy_noise->PlaySeek();
-				}
 			} else {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       DiskType::HardDisk);
-				if (hdd_noise) {
-					hdd_noise->PlaySeek();
-				}
 			}
 
 			if ((last_status != 0x00) || (killRead)) {
@@ -476,16 +468,9 @@ static Bitu INT13_DiskHandler(void)
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       DiskType::Floppy);
-				if (floppy_noise) {
-					floppy_noise->ActivateSpin();
-					floppy_noise->PlaySeek();
-				}
 			} else {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
 				                       DiskType::HardDisk);
-				if (hdd_noise) {
-					hdd_noise->PlaySeek();
-				}
 			}
 
 			if (last_status != 0x00) {

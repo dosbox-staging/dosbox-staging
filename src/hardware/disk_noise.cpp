@@ -233,6 +233,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	DOS_RegisterIoCallback([this]() {
 		// This callback is called from the DOS code
 		// to trigger the spin and seek sounds
+		ActivateSpin();
 		PlaySeek();
 	}, disk_type);
 }

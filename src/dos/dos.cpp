@@ -196,12 +196,20 @@ void DOS_RegisterIoCallback(std::function<void()> callback, DiskType type)
 	}
 }
 
+// Call any registered callbacks in the supplied callback vector
+static void execute_registered_callbacks(std::vector<std::function<void()>>& io_callbacks)
+{
+	if (io_callbacks.size() > 0) {
+		for (auto& callback : io_callbacks) {
+			callback();
+		}
+	}
+}
+
+// Add a delay as configured for the relevant disk type, and call any
+// registered callbacks.
 void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType type)
 {
-	if (!fdd_delay_enabled && !hdd_delay_enabled && !cdrom_delay_enabled) {
-		return;
-	}
-
 	double scalar;
 	std::vector<std::function<void()>> io_callbacks;
 
@@ -226,6 +234,12 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType type)
 		return;
 	}
 
+	execute_registered_callbacks(io_callbacks);
+
+	if (!fdd_delay_enabled && !hdd_delay_enabled && !cdrom_delay_enabled) {
+		return;
+	}
+
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
 
 	/* MS-DOS will most likely enable interrupts in the course of
@@ -233,12 +247,7 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType type)
 	CPU_STI();
 
 	do {
-		// Call any registered callbacks for this disk type
-		if (io_callbacks.size() > 0) {
-			for (auto& callback : io_callbacks) {
-				callback();
-			}
-		}
+		execute_registered_callbacks(io_callbacks);
 		CALLBACK_Idle();
 	} while (PIC_FullIndex() < endtime);
 }
