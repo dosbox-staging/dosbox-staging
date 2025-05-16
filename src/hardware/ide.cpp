@@ -27,7 +27,6 @@
 #include "timer.h"
 
 #include "../src/dos/cdrom.h"
-#include "disk_noise.h"
 
 extern int bootdrive;
 extern bool bootguest, bootvm, use_quick_reboot;
@@ -2131,9 +2130,6 @@ IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
         : IDEDevice(c, IDE_TYPE_HDD),
           bios_disk_index(disk_index)
 {
-	if (hdd_noise) {
-		hdd_noise->ActivateSpin();
-	}
 }
 
 IDEATADevice::~IDEATADevice()

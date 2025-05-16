@@ -67,8 +67,4 @@ private:
 	static void AudioCallback(int frames);
 };
 
-// Expose the disk noise devices to be able to affect them from hdd/fdd code
-extern std::unique_ptr<DiskNoiseDevice> floppy_noise;
-extern std::unique_ptr<DiskNoiseDevice> hdd_noise;
-
 #endif // DOSBOX_DISK_NOISE_H
