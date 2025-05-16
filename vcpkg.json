@@ -8,7 +8,6 @@
     "iir1",
     "libmt32emu",
     "libpng",
-    "libslirp",
     "opusfile",
     {
       "name": "sdl2",
