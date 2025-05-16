@@ -29,7 +29,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion -Wno-narrowing")
 endif()
 
-option(OPT_DEBUG "Enable debugging" $<IF:$<CONFIG:Debug>,ON,OFF>)
+option(OPT_DEBUG "Enable debugging" OFF)
 option(OPT_HEAVY_DEBUG "Enable heavy debugging" OFF)
 
 if(OPT_HEAVY_DEBUG)
