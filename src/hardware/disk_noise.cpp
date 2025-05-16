@@ -38,10 +38,18 @@
 
 CHECK_NARROWING();
 
-// Static member definitions
-std::shared_ptr<MixerChannel> DiskNoiseDevice::mix_channel = nullptr;
-std::vector<DiskNoiseDevice*> DiskNoiseDevice::active_devices;
-std::mutex DiskNoiseDevice::device_mutex;
+
+DiskNoises::DiskNoises() {
+	mix_channel = nullptr;
+}
+
+static DiskNoises* GetDiskNoises()
+{
+	if (!disk_noises) {
+		disk_noises = std::make_unique<DiskNoises>();
+	}
+	return disk_noises.get();
+}
 
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& buffer)
 {
@@ -214,22 +222,23 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	LoadSample(spin_sample_path, spin_sample);
 	LoadSeekSamples(seek_sample_paths);
 
-	std::lock_guard<std::mutex> lock(device_mutex);
+	std::lock_guard<std::mutex> lock(GetDiskNoises()->device_mutex);
 
 	// Lazily create the static mixer channel if it doesn't exist yet
-	if (!mix_channel) {
+	if (!GetDiskNoises()->mix_channel) {
 		MIXER_LockMixerThread();
-		mix_channel = MIXER_AddChannel(AudioCallback,
-		                                SampleRate,
-		                                ChannelName::DiskNoise,
-		                                {ChannelFeature::Stereo});
-		mix_channel->Enable(true);
+		GetDiskNoises()->mix_channel =
+		        MIXER_AddChannel(AudioCallback,
+		                         SampleRate,
+		                         ChannelName::DiskNoise,
+		                         {ChannelFeature::Stereo});
+		GetDiskNoises()->mix_channel->Enable(true);
 		MIXER_UnlockMixerThread();
 		float vol_gain = percentage_to_gain(100);
-		mix_channel->SetAppVolume({vol_gain, vol_gain});
+		GetDiskNoises()->mix_channel->SetAppVolume({vol_gain, vol_gain});
 	}
 
-	active_devices.push_back(this);
+	GetDiskNoises()->active_devices.push_back(this);
 	DOS_RegisterIoCallback([this]() {
 		// This callback is called from the DOS code
 		// to trigger the spin and seek sounds
@@ -244,8 +253,8 @@ void DiskNoiseDevice::ActivateSpin()
 		return;
 	}
 
-	if (!mix_channel->is_enabled) {
-		mix_channel->Enable(true);
+	if (!GetDiskNoises()->mix_channel->is_enabled) {
+		GetDiskNoises()->mix_channel->Enable(true);
 	}
 
 	// Floppy spin samples can be re-started at any time
@@ -286,11 +295,11 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 	// stereo interleaved buffer
 	std::vector<float> out(frames * 2, 0.0f);
 
-	std::lock_guard<std::mutex> lock(device_mutex);
+	std::lock_guard<std::mutex> lock(GetDiskNoises()->device_mutex);
 
 	// Find out how many samples are actually playing
 	int active_samples = 0;
-	for (auto* device : active_devices) {
+	for (auto* device : GetDiskNoises()->active_devices) {
 		if ((!device->spin_up_sample.empty() &&
 		     device->spin_up_pos + 1 < device->spin_up_sample.size()) ||
 		    (!device->spin_sample.empty() ||
@@ -306,17 +315,19 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 
 	// Fill the output buffer with silence if no active samples
 	if (active_samples == 0) {
-		mix_channel->AddSamples_sfloat(frames, out.data());
+		GetDiskNoises()->mix_channel->AddSamples_sfloat(frames, out.data());
 		return;
 	}
 
-	const float mix_scale = 1.0f / static_cast<float>(active_devices.size());
+	const float mix_scale = 1.0f /
+	                        static_cast<float>(
+	                                GetDiskNoises()->active_devices.size());
 
 	auto scale_sample = [](float sample, float volume, float scale) -> float {
 		return static_cast<float>(sample) * volume * scale;
 	};
 
-	for (auto* device : active_devices) {
+	for (auto* device : GetDiskNoises()->active_devices) {
 		for (int i = 0; i < frames; ++i) {
 			float mixed_l = 0.0f;
 			float mixed_r = 0.0f;
@@ -378,21 +389,22 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 		}
 	}
 
-	mix_channel->AddSamples_sfloat(frames, out.data());
+	GetDiskNoises()->mix_channel->AddSamples_sfloat(frames, out.data());
 }
 
 void DiskNoiseDevice::Shutdown()
 {
-	std::lock_guard<std::mutex> lock(device_mutex);
-	active_devices.erase(std::remove(active_devices.begin(),
-	                                  active_devices.end(),
-	                                  this),
-	                      active_devices.end());
+	std::lock_guard<std::mutex> lock(GetDiskNoises()->device_mutex);
+	GetDiskNoises()->active_devices.erase(
+	        std::remove(GetDiskNoises()->active_devices.begin(),
+	                    GetDiskNoises()->active_devices.end(),
+	                    this),
+	        GetDiskNoises()->active_devices.end());
 
-	if (active_devices.empty() && mix_channel) {
-		mix_channel->Enable(false);
-		MIXER_DeregisterChannel(mix_channel);
-		mix_channel.reset();
+	if (GetDiskNoises()->active_devices.empty() && GetDiskNoises()->mix_channel) {
+		GetDiskNoises()->mix_channel->Enable(false);
+		MIXER_DeregisterChannel(GetDiskNoises()->mix_channel);
+		GetDiskNoises()->mix_channel.reset();
 	}
 }
 

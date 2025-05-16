@@ -57,14 +57,21 @@ private:
 	size_t spin_up_pos = 0;
 	size_t seek_pos    = 0;
 
-	static std::shared_ptr<MixerChannel> mix_channel;
-	static std::vector<DiskNoiseDevice*> active_devices;
-	static std::mutex device_mutex;
-
 	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
 	int ChooseWeightedSeekIndex() const;
 	static void AudioCallback(int frames);
 };
+
+class DiskNoises {
+public:
+	DiskNoises();
+	static std::unique_ptr<DiskNoises> GetDiskNoises();
+	std::shared_ptr<MixerChannel> mix_channel;
+	std::vector<DiskNoiseDevice*> active_devices;
+	std::mutex device_mutex;
+};
+
+static std::unique_ptr<DiskNoises> disk_noises;
 
 #endif // DOSBOX_DISK_NOISE_H
