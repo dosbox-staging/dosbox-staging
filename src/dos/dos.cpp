@@ -151,46 +151,73 @@ static uint16_t DOS_GetAmount(void) {
 #include "cpu.h"
 #endif
 
-int hdd_data_rate_kbyte_per_sec = 0;
-int fdd_data_rate_kbyte_per_sec = 0;
+int hdd_data_rate_byte_per_sec   = 0;
+int fdd_data_rate_byte_per_sec   = 0;
+int cdrom_data_rate_byte_per_sec = 0;
 
-void DOS_SetDiskSpeed(int rate, DiskType type)
+void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType type)
 {
-	if (type == DiskType::Floppy) {
-		hdd_data_rate_kbyte_per_sec = rate * BytesPerKilobyte;
-	} else {
-		fdd_data_rate_kbyte_per_sec = rate * BytesPerKilobyte;
+	switch (type) {
+	case DiskType::Floppy:
+		fdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		break;
+	case DiskType::HardDisk:
+		hdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		break;
+	case DiskType::CdRom:
+		cdrom_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
+		break;
+	default:
+		LOG(LOG_DOSMISC, LOG_WARN)("DOS:0x%X:Unknown disk type %d",
+		                           reg_ah,
+		                           static_cast<int>(type));
+		return;
 	}
 }
 
-void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise,
+void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
                   DiskType type = DiskType::HardDisk)
 {
-	if ((type == DiskType::Floppy && fdd_data_rate_kbyte_per_sec != 0) ||
-	    (type != DiskType::Floppy && hdd_data_rate_kbyte_per_sec != 0)) {
-		double scalar;
-		double endtime;
-
-		if (type == DiskType::Floppy) {
-			scalar = static_cast<double>(value) /
-			         static_cast<double>(fdd_data_rate_kbyte_per_sec);
-			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
-		} else {
-			scalar = static_cast<double>(value) /
-			         static_cast<double>(hdd_data_rate_kbyte_per_sec);
-			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
-		}
-		/* MS-DOS will most likely enable interrupts in the course of
-		 * performing disk I/O */
-		CPU_STI();
-
-		do {
-			// Keep calling disknoise trigger to prevent long delays
-			// from also delaying seek noises
-			disknoise->PlaySeek();
-			CALLBACK_Idle();
-		} while (PIC_FullIndex() < endtime);
+	if ((type == DiskType::Floppy && fdd_data_rate_byte_per_sec == 0) ||
+	    (type == DiskType::HardDisk && hdd_data_rate_byte_per_sec == 0) ||
+	    (type == DiskType::CdRom && cdrom_data_rate_byte_per_sec == 0)) {
+		return;
 	}
+
+	double scalar;
+
+	switch (type) {
+	case DiskType::Floppy:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         static_cast<double>(fdd_data_rate_byte_per_sec);
+		break;
+	case DiskType::HardDisk:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         static_cast<double>(hdd_data_rate_byte_per_sec);
+		break;
+	case DiskType::CdRom:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         static_cast<double>(cdrom_data_rate_byte_per_sec);
+		break;
+	default:
+		LOG(LOG_DOSMISC, LOG_WARN)("DOS:0x%X:Unknown disk type %d",
+		                           reg_ah,
+		                           static_cast<int>(type));
+		return;
+	}
+
+	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
+
+	/* MS-DOS will most likely enable interrupts in the course of
+	 * performing disk I/O */
+	CPU_STI();
+
+	do {
+		// Keep calling disknoise trigger to prevent long delays
+		// from also delaying seek noises
+		disknoise->PlaySeek();
+		CALLBACK_Idle();
+	} while (PIC_FullIndex() < endtime);
 }
 
 static inline void modify_cycles(Bits value)
