@@ -99,6 +99,7 @@ target_link_libraries(libhardware PRIVATE
   libresidfp
   libym7128bemu
   libtalchorus
+  $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
   libints
   libgui

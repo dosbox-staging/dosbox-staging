@@ -79,6 +79,15 @@ if(NOT HAS_UNISTD)
   )
 endif()
 
+# File-descriptor manipulation routines, such as FD_ZERO, are used
+# by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
+# routines aren't universally available.
+if(DOSBOX_PLATFORM_WINDOWS)
+  check_symbol_exists(FD_ZERO  "winsock2.h"    HAVE_FD_ZERO)
+else()
+  check_symbol_exists(FD_ZERO  "sys/select.h"  HAVE_FD_ZERO)
+endif()
+
 ### config.h shenanigans
 
 set(TEST_CODE_BUILTIN_AVAILABLE "
@@ -151,9 +160,43 @@ if(OPT_DEBUG)
   endif()
 endif()
 
+# ManyMouse - optional XInput support
+option(OPT_MANYMOUSE
+       "Use ManyMouse library for single-computer multiplayer gaming in The Settlers I/II"
+       ON
+)
+
+# ManyMouse - optional XInput support
+option(OPT_XINPUT
+       "Let ManyMouse use the X Input protocol"
+       OFF
+)
+
 # ManyMouse
-set(C_MANYMOUSE OFF)    # TODO
-set(SUPPORT_XINPUT2 OFF)    # TODO
+if (OPT_MANYMOUSE)
+  if (NOT HAVE_FD_ZERO)
+    message(WARNING "ManyMouse requires FD_ZERO support")
+  elseif(DOSBOX_PLATFORM_MACOS)
+    include (${CMAKE_CURRENT_SOURCE_DIR}/src/libs/manymouse/cmake/FindIOKit.cmake)
+    if (NOT ${IOKit_FOUND})
+      message(WARNING "ManyMouse requires IOKit")
+    else()
+      set(C_MANYMOUSE ON)
+    endif()
+  else()
+    set(C_MANYMOUSE ON)
+  endif()
+
+  if (C_MANYMOUSE AND OPT_XINPUT)
+    check_include_file("X11/extensions/XInput2.h" HAVE_XINPUT)
+    include (${CMAKE_ROOT}/Modules/FindX11.cmake)
+    if ((NOT ${X11_Xinput_FOUND}) OR (NOT HAVE_XINPUT))
+      message(WARNING "XInput not found.")
+    else()
+      set(SUPPORT_XINPUT2 ON)
+    endif()
+  endif()
+endif()
 
 # macOS
 set(C_COREAUDIO      "${DOSBOX_PLATFORM_MACOS}")
