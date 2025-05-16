@@ -151,34 +151,33 @@ static uint16_t DOS_GetAmount(void) {
 #include "cpu.h"
 #endif
 
-// Taken from Dosbox-X
-int hdd_data_rate = 0;
-int fdd_data_rate = 0;
+int hdd_data_rate_kbyte_per_sec = 0;
+int fdd_data_rate_kbyte_per_sec = 0;
 
-void DOS_SetDataRate(int rate, DiskType type)
+void DOS_SetDiskSpeed(int rate, DiskType type)
 {
 	if (type == DiskType::Floppy) {
-		hdd_data_rate = rate * BytesPerKilobyte;
+		hdd_data_rate_kbyte_per_sec = rate * BytesPerKilobyte;
 	} else {
-		fdd_data_rate = rate * BytesPerKilobyte;
+		fdd_data_rate_kbyte_per_sec = rate * BytesPerKilobyte;
 	}
 }
 
 void diskio_delay(Bits value /*bytes*/, DiskNoiseDevice* disknoise,
                   DiskType type = DiskType::HardDisk)
 {
-	if ((type == DiskType::Floppy && fdd_data_rate != 0) ||
-	    (type != DiskType::Floppy && hdd_data_rate != 0)) {
+	if ((type == DiskType::Floppy && fdd_data_rate_kbyte_per_sec != 0) ||
+	    (type != DiskType::Floppy && hdd_data_rate_kbyte_per_sec != 0)) {
 		double scalar;
 		double endtime;
 
 		if (type == DiskType::Floppy) {
 			scalar = static_cast<double>(value) /
-			         static_cast<double>(fdd_data_rate);
+			         static_cast<double>(fdd_data_rate_kbyte_per_sec);
 			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
 		} else {
 			scalar = static_cast<double>(value) /
-			         static_cast<double>(hdd_data_rate);
+			         static_cast<double>(hdd_data_rate_kbyte_per_sec);
 			endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
 		}
 		/* MS-DOS will most likely enable interrupts in the course of
