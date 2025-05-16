@@ -196,11 +196,8 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
-                                 const float& spin_volume,
-                                 const float& seek_volume, bool loop_spin_sample)
-        : spin_volume(spin_volume),
-          seek_volume(seek_volume),
-          spin_up_sample(),
+                                 bool loop_spin_sample)
+        : spin_up_sample(),
           spin_sample(),
           current_seek_sample(),
           seek_samples(),
@@ -328,11 +325,11 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 			            device->spin_up_sample.size()) {
 				mixed_l += scale_sample(
 				        device->spin_up_sample[device->spin_up_pos],
-				        device->spin_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
 				        device->spin_up_sample[device->spin_up_pos++],
-				        device->spin_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 			} else if (!device->spin_sample.empty() &&
 			           (device->spin_pos+ 1 <
@@ -340,11 +337,11 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 			            device->loop_spin_sample)) {
 				mixed_l += scale_sample(
 				        device->spin_sample[device->spin_pos],
-				        device->spin_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
 				        device->spin_sample[device->spin_pos++],
-				        device->spin_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 
 				// Loop the spin sound if enabled. Used for
@@ -362,11 +359,11 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 			            device->current_seek_sample.size()) {
 				mixed_l += scale_sample(
 				        device->current_seek_sample[device->seek_pos],
-				        device->seek_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
 				        device->current_seek_sample[device->seek_pos++],
-				        device->seek_volume,
+				        device->DisknoiseGain,
 				        mix_scale);
 			}
 
@@ -423,19 +420,11 @@ static void disknoise_init(Section* section)
 		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".flac");
 	}
 
-	constexpr float hdd_spin_volume = 0.4f;
-	constexpr float hdd_seek_volume = 0.2f;
-
-	constexpr float floppy_spin_volume = 0.2f;
-	constexpr float floppy_seek_volume = 0.6f;
-
 	hdd_noise = std::make_unique<DiskNoiseDevice>(DiskType::HardDisk,
 	                                              enable_hard_disk_noise,
 	                                              spin_up,
 	                                              spin,
 	                                              hdd_seek_samples,
-	                                              hdd_spin_volume,
-	                                              hdd_seek_volume,
 	                                              true);
 
 	floppy_noise = std::make_unique<DiskNoiseDevice>(DiskType::Floppy,
@@ -443,8 +432,6 @@ static void disknoise_init(Section* section)
 	                                                 floppy_spin_up,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
-	                                                 floppy_spin_volume,
-	                                                 floppy_seek_volume,
 	                                                 false);
 }
 
