@@ -46,16 +46,21 @@ private:
 	bool enable_disk_noise       = false;
 
 	const float DisknoiseGain = 0.2f;
-	std::vector<float> spin_up_sample;
-	std::vector<float> spin_sample;
-	std::vector<float> current_seek_sample;
-	std::vector<std::vector<float>> seek_samples;
-	std::vector<int> seek_sample_weights;
 
-	bool loop_spin_sample = false;
-	size_t spin_pos    = 0;
-	size_t spin_up_pos = 0;
-	size_t seek_pos    = 0;
+	struct {
+		std::vector<float> spin_up_sample;
+		std::vector<float> sample;
+		size_t pos = 0;
+		size_t spin_up_pos = 0;
+		bool loop = false;
+	} spin = {};
+
+	struct {
+		std::vector<float> current_sample;
+		std::vector<std::vector<float>> samples;
+		std::vector<int> sample_weights;
+		size_t pos = 0;
+	} seek = {};
 
 	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);

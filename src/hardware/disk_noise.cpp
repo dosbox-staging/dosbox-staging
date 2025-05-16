@@ -151,33 +151,35 @@ void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
 	for (const auto& path : paths) {
 		if (path.empty()) {
 			// Placeholder for missing sample files
-			seek_samples.emplace_back();
+			seek.samples.emplace_back();
 			continue;
 		}
 
 		std::vector<float> sample;
 		LoadSample(path, sample);
 		if (!sample.empty()) {
-			seek_samples.push_back(std::move(sample));
+			seek.samples.push_back(std::move(sample));
 		} else {
-			seek_samples.emplace_back();
+			seek.samples.emplace_back();
 		}
 	}
 
 	// Assign weights with descending priority (most weight to first samples)
 	const int max_weight = 10;
-	seek_sample_weights.resize(seek_samples.size());
-	for (unsigned int i = 0; i < seek_samples.size(); ++i) {
-		seek_sample_weights[i] = static_cast<int>(max_weight - i);
+	seek.sample_weights.resize(
+	        seek.samples.size());
+	for (unsigned int i = 0; i < seek.samples.size(); ++i) {
+		seek.sample_weights[i] = static_cast<int>(
+		        max_weight - i);
 	}
 }
 
 int DiskNoiseDevice::ChooseWeightedSeekIndex() const
 {
 	int total_weight = 0;
-	for (unsigned int i = 0; i < seek_samples.size(); ++i) {
-		if (!seek_samples[i].empty()) {
-			total_weight += seek_sample_weights[i];
+	for (unsigned int i = 0; i < seek.samples.size(); ++i) {
+		if (!seek.samples[i].empty()) {
+			total_weight += seek.sample_weights[i];
 		}
 	}
 
@@ -187,12 +189,12 @@ int DiskNoiseDevice::ChooseWeightedSeekIndex() const
 
 	const int r = static_cast<int>(rand()) % total_weight;
 	int sum     = 0;
-	for (unsigned int i = 0; i < seek_samples.size(); ++i) {
-		if (seek_samples[i].empty()) {
+	for (unsigned int i = 0; i < seek.samples.size(); ++i) {
+		if (seek.samples[i].empty()) {
 			continue;
 		}
 
-		sum += seek_sample_weights[i];
+		sum += seek.sample_weights[i];
 		if (r < sum) {
 			return i;
 		}
@@ -205,21 +207,15 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
                                  bool loop_spin_sample)
-        : spin_up_sample(),
-          spin_sample(),
-          current_seek_sample(),
-          seek_samples(),
-          seek_sample_weights(),
-		  enable_disk_noise(enable_disk_noise),
-		  loop_spin_sample(loop_spin_sample)
+        : enable_disk_noise(enable_disk_noise)
 {
 	if (!enable_disk_noise) {
 		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
 	}
-
-	LoadSample(spin_up_sample_path, spin_up_sample);
-	LoadSample(spin_sample_path, spin_sample);
+	spin.loop = loop_spin_sample;
+	LoadSample(spin_up_sample_path, spin.spin_up_sample);
+	LoadSample(spin_sample_path, spin.sample);
 	LoadSeekSamples(seek_sample_paths);
 
 	std::lock_guard<std::mutex> lock(GetDiskNoises()->device_mutex);
@@ -258,14 +254,14 @@ void DiskNoiseDevice::ActivateSpin()
 	}
 
 	// Floppy spin samples can be re-started at any time
-	if (!loop_spin_sample) {
+	if (!spin.loop) {
 		// Check if the sample is still playing and don't interrupt if
 		// it does
-		if (spin_sample.empty() || spin_pos + 1 < spin_sample.size()) {
+		if (spin.sample.empty() || spin.pos + 1 < spin.sample.size()) {
 			return;
 		}
 		// Restart spin sample
-		spin_pos = 0;
+		spin.pos = 0;
 	}
 }
 
@@ -276,18 +272,19 @@ void DiskNoiseDevice::PlaySeek()
 	}
 
 	const size_t index = ChooseWeightedSeekIndex();
-	if (index >= seek_samples.size() || seek_samples[index].empty()) {
+	if (index >= seek.samples.size() ||
+	    seek.samples[index].empty()) {
 		return;
 	}
 
 	// Check if the sample is still playing and don't interrupt if it does
-	if (!current_seek_sample.empty() &&
-	    seek_pos + 1 < current_seek_sample.size()) {
+	if (!seek.current_sample.empty() &&
+	    seek.pos + 1 < seek.current_sample.size()) {
 		return;
 	}
 
-	current_seek_sample = seek_samples[index];
-	seek_pos            = 0;
+	seek.current_sample = seek.samples[index];
+	seek.pos            = 0;
 }
 
 void DiskNoiseDevice::AudioCallback(const int frames)
@@ -297,28 +294,6 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 
 	std::lock_guard<std::mutex> lock(GetDiskNoises()->device_mutex);
 
-	// Find out how many samples are actually playing
-	int active_samples = 0;
-	for (auto* device : GetDiskNoises()->active_devices) {
-		if ((!device->spin_up_sample.empty() &&
-		     device->spin_up_pos + 1 < device->spin_up_sample.size()) ||
-		    (!device->spin_sample.empty() ||
-		     device->spin_pos + 1 < device->spin_sample.size())) {
-			active_samples++;
-		}
-		if (!device->current_seek_sample.empty() &&
-		    (device->seek_pos + 1 < device->current_seek_sample.size() ||
-		     device->loop_spin_sample)) {
-			active_samples++;
-		}
-	}
-
-	// Fill the output buffer with silence if no active samples
-	if (active_samples == 0) {
-		GetDiskNoises()->mix_channel->AddSamples_sfloat(frames, out.data());
-		return;
-	}
-
 	const float mix_scale = 1.0f /
 	                        static_cast<float>(
 	                                GetDiskNoises()->active_devices.size());
@@ -327,32 +302,40 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 		return static_cast<float>(sample) * volume * scale;
 	};
 
+	bool some_sample_is_playing = false;
 	for (auto* device : GetDiskNoises()->active_devices) {
+		bool sample_is_playing = false;
 		for (int i = 0; i < frames; ++i) {
 			float mixed_l = 0.0f;
 			float mixed_r = 0.0f;
 
-			if (!device->spin_up_sample.empty() &&
-			    device->spin_up_pos + 1 <
-			            device->spin_up_sample.size()) {
+			if (!device->spin.spin_up_sample.empty() &&
+			    device->spin.spin_up_pos + 1 <
+			            device->spin.spin_up_sample.size()) {
+				some_sample_is_playing = true;
 				mixed_l += scale_sample(
-				        device->spin_up_sample[device->spin_up_pos],
+				        device->spin.spin_up_sample
+				                [device->spin.spin_up_pos],
 				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
-				        device->spin_up_sample[device->spin_up_pos++],
+				        device->spin.spin_up_sample
+				                [device->spin.spin_up_pos++],
 				        device->DisknoiseGain,
 				        mix_scale);
-			} else if (!device->spin_sample.empty() &&
-			           (device->spin_pos+ 1 <
-			                    device->spin_sample.size() ||
-			            device->loop_spin_sample)) {
+			} else if (!device->spin.sample.empty() &&
+			           (device->spin.pos + 1 <
+			                    device->spin.sample.size() ||
+			            device->spin.loop)) {
+				some_sample_is_playing = true;
 				mixed_l += scale_sample(
-				        device->spin_sample[device->spin_pos],
+				        device->spin.sample[device->spin
+				                                                 .pos],
 				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
-				        device->spin_sample[device->spin_pos++],
+				        device->spin.sample[device->spin
+				                                                 .pos++],
 				        device->DisknoiseGain,
 				        mix_scale);
 
@@ -360,21 +343,26 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 				// persistent HDD noise Not used for floppy
 				// noise because motor should stop after r/w
 				// operations aredone
-				if (device->spin_pos >= device->spin_sample.size() &&
-				    device->loop_spin_sample) {
-					device->spin_pos = 0;
+				if (device->spin.pos >=
+				            device->spin.sample.size() &&
+				    device->spin.loop) {
+					device->spin.pos = 0;
 				}
 			}
 
-			if (!device->current_seek_sample.empty() &&
-			    device->seek_pos + 1 <
-			            device->current_seek_sample.size()) {
+			if (!device->seek.current_sample.empty() &&
+			    device->seek.pos + 1 <
+			            device->seek
+			                    .current_sample.size()) {
+				some_sample_is_playing = true;
 				mixed_l += scale_sample(
-				        device->current_seek_sample[device->seek_pos],
+				        device->seek.current_sample
+				                [device->seek.pos],
 				        device->DisknoiseGain,
 				        mix_scale);
 				mixed_r += scale_sample(
-				        device->current_seek_sample[device->seek_pos++],
+				        device->seek.current_sample
+				                [device->seek.pos++],
 				        device->DisknoiseGain,
 				        mix_scale);
 			}
@@ -383,10 +371,17 @@ void DiskNoiseDevice::AudioCallback(const int frames)
 			out[i * 2 + 1] += mixed_r;
 		}
 
-		if (!device->current_seek_sample.empty() &&
-		    device->seek_pos >= device->current_seek_sample.size()) {
-			device->current_seek_sample.clear();
+		if (!device->seek.current_sample.empty() &&
+		    device->seek.pos >=
+		            device->seek.current_sample.size()) {
+			device->seek.current_sample.clear();
 		}
+	}
+
+	// Fill the output buffer with silence if no active samples
+	if (!some_sample_is_playing) {
+		GetDiskNoises()->mix_channel->AddSamples_sfloat(frames, out.data());
+		return;
 	}
 
 	GetDiskNoises()->mix_channel->AddSamples_sfloat(frames, out.data());
