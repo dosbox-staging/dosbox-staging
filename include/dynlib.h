@@ -34,7 +34,12 @@ enum class DynLibResult {
 #ifdef WIN32
 
 // clang-format off
-// 'windows.h' must be included first, otherwise we'll get compilation errors
+// 'windows.h' must be included first, otherwise we'll get compilation errors.
+// Defining WIN32_LEAN_AND_MEAN ensures that winsock.h is not included, which 
+// conflicts with winsock2.h used by slirp
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 #include <libloaderapi.h>
 // clang-format on
