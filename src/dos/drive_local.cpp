@@ -605,16 +605,16 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 	        local_drive.lock()->GetMediaByte());
 	switch (disk_type) {
 	case DiskType::Floppy:
-		DOS_PerformDiskIoDelay(*num_bytes, floppy_noise.get(), DiskType::Floppy);
+		DOS_PerformDiskIoDelay(*num_bytes, DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
-			floppy_noise->PlaySeek(); // Play noise on read
+			floppy_noise->PlaySeek();
 		}
 		break;
 	case DiskType::HardDisk:
-		DOS_PerformDiskIoDelay(*num_bytes, hdd_noise.get()); // Hard disk
+		DOS_PerformDiskIoDelay(*num_bytes, DiskType::HardDisk);
 		if (hdd_noise) {
-			hdd_noise->PlaySeek(); // Play noise on read
+			hdd_noise->PlaySeek();
 		}
 		break;
 	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;
@@ -659,16 +659,16 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 	        local_drive.lock()->GetMediaByte());
 	switch (disk_type) {
 	case DiskType::Floppy:
-		DOS_PerformDiskIoDelay(*num_bytes, floppy_noise.get(), DiskType::Floppy);
+		DOS_PerformDiskIoDelay(*num_bytes, DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
-			floppy_noise->PlaySeek(); // Play noise on read
+			floppy_noise->PlaySeek();
 		}
 		break;
 	case DiskType::HardDisk:
-		DOS_PerformDiskIoDelay(*num_bytes, hdd_noise.get()); // Hard disk
+		DOS_PerformDiskIoDelay(*num_bytes, DiskType::HardDisk);
 		if (hdd_noise) {
-			hdd_noise->PlaySeek(); // Play noise on read
+			hdd_noise->PlaySeek();
 		}
 		break;
 	default: LOG_WARNING("FS: Unknown disk type %d", disk_type); break;

@@ -429,7 +429,6 @@ static Bitu INT13_DiskHandler(void)
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-				                       floppy_noise.get(),
 				                       DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->ActivateSpin();
@@ -437,7 +436,7 @@ static Bitu INT13_DiskHandler(void)
 				}
 			} else {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-				                       hdd_noise.get());
+				                       DiskType::HardDisk);
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}
@@ -476,7 +475,6 @@ static Bitu INT13_DiskHandler(void)
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-				                       floppy_noise.get(),
 				                       DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->ActivateSpin();
@@ -484,7 +482,7 @@ static Bitu INT13_DiskHandler(void)
 				}
 			} else {
 				DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-				                       hdd_noise.get());
+				                       DiskType::HardDisk);
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}
