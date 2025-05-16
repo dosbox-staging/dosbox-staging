@@ -80,7 +80,7 @@ void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
 void DiskNoises::AudioCallback(const int frames)
 {
 	// stereo interleaved buffer
-	std::vector<float> out(frames * 2, 0.0f);
+	std::vector<AudioFrame> out(frames, {0.0f, 0.0f});
 
 	const float mix_scale = 1.0f / static_cast<float>(
 	                                       disk_noises->active_devices.size());
@@ -93,12 +93,12 @@ void DiskNoises::AudioCallback(const int frames)
 
 			std::vector<float> sample = device->GetSample();
 
-			out[i * 2] += sample[0];
-			out[i * 2 + 1] += sample[1];
+			out[i].left += sample[0];
+			out[i].right += sample[1];
 		}
 	}
 
-	disk_noises->mix_channel->AddSamples_sfloat(frames, out.data());
+	disk_noises->mix_channel->AddAudioFrames(out);
 }
 
 void DiskNoises::Shutdown()
