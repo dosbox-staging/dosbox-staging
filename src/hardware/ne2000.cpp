@@ -24,8 +24,6 @@
 
 #include "ne2000.h"
 
-#if C_NE2000
-
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
@@ -1548,5 +1546,3 @@ void NE2K_Init(Section* sec)
 		instance = nullptr;
 	}
 }
-
-#endif // C_NE2000
