@@ -20,8 +20,6 @@
 
 #include "config.h"
 
-#if C_SLIRP
-
 #include <algorithm>
 #include <map>
 #include <stdexcept>
@@ -703,7 +701,5 @@ int SlirpEthernetConnection::PollGetSlirpRevents(int idx)
 	}
 	return slirp_revents;
 }
-
-#endif
 
 #endif

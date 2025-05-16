@@ -23,8 +23,6 @@
 
 #include "dosbox.h"
 
-#if C_SLIRP
-
 #include <map>
 #include <deque>
 #include <vector>
@@ -144,7 +142,5 @@ private:
 	fd_set exceptfds = {}; /*!< Exceptional descriptors for select() */
 #endif
 };
-
-#endif
 
 #endif
