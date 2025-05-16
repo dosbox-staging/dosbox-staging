@@ -44,24 +44,24 @@ public:
 
 private:
 	const unsigned int SampleRate = 22050;
-	bool enable_disk_noise_       = false;
+	bool enable_disk_noise       = false;
 
-	float spin_volume_ = 0.0f;
-	float seek_volume_ = 0.0f;
-	std::vector<float> spin_up_sample_;
-	std::vector<float> spin_sample_;
-	std::vector<float> current_seek_sample_;
-	std::vector<std::vector<float>> seek_samples_;
-	std::vector<int> seek_sample_weights_;
+	float spin_volume = 0.0f;
+	float seek_volume = 0.0f;
+	std::vector<float> spin_up_sample;
+	std::vector<float> spin_sample;
+	std::vector<float> current_seek_sample;
+	std::vector<std::vector<float>> seek_samples;
+	std::vector<int> seek_sample_weights;
 
-	bool loop_spin_sample_ = false;
-	size_t spin_pos_    = 0;
-	size_t spin_up_pos_ = 0;
-	size_t seek_pos_    = 0;
+	bool loop_spin_sample = false;
+	size_t spin_pos    = 0;
+	size_t spin_up_pos = 0;
+	size_t seek_pos    = 0;
 
-	static std::shared_ptr<MixerChannel> mix_channel_;
-	static std::vector<DiskNoiseDevice*> active_devices_;
-	static std::mutex device_mutex_;
+	static std::shared_ptr<MixerChannel> mix_channel;
+	static std::vector<DiskNoiseDevice*> active_devices;
+	static std::mutex device_mutex;
 
 	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
