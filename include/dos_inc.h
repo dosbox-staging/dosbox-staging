@@ -31,7 +31,6 @@
 #include <string>
 #include <type_traits>
 
-#include "disk_noise.h"
 #include "dos_system.h"
 #include "mem.h"
 
@@ -151,8 +150,9 @@ bool DOS_ForceDuplicateEntry(uint16_t entry,uint16_t newentry);
 bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 void DOS_SetDiskSpeed(int rate_kbyte_per_sec, DiskType type);
-void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
-                            DiskType type = DiskType::HardDisk);
+void DOS_RegisterIoCallback(std::function<void()> callback, DiskType type);
+void DOS_PerformDiskIoDelay(Bits data_transferred_bytes,
+                            DiskType type);
 
 uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();

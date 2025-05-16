@@ -25,7 +25,6 @@
 #include <ctime>
 #include <array>
 
-#include "../hardware/disk_noise.h"
 #include "ascii.h"
 #include "bios.h"
 #include "callback.h"
@@ -174,39 +173,56 @@ void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType type)
 		cdrom_delay_enabled = true;
 		break;
 	default:
-		LOG(LOG_DOSMISC, LOG_WARN)("DOS:0x%X:Unknown disk type %d",
-		                           reg_ah,
-		                           static_cast<int>(type));
+		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(type));
 		return;
 	}
 }
 
-void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
-                  DiskType type = DiskType::HardDisk)
+static std::vector<std::function<void()>> io_callbacks_floppy;
+static std::vector<std::function<void()>> io_callbacks_harddisk;
+static std::vector<std::function<void()>> io_callbacks_cdrom;
+
+void DOS_RegisterIoCallback(std::function<void()> callback, DiskType type)
+{
+	switch (type) {
+	case DiskType::Floppy: io_callbacks_floppy.push_back(callback); break;
+	case DiskType::HardDisk:
+		io_callbacks_harddisk.push_back(callback);
+		break;
+	case DiskType::CdRom: io_callbacks_cdrom.push_back(callback); break;
+	default:
+		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(type));
+		return;
+	}
+}
+
+void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType type)
 {
 	if (!fdd_delay_enabled && !hdd_delay_enabled && !cdrom_delay_enabled) {
 		return;
 	}
 
 	double scalar;
+	std::vector<std::function<void()>> io_callbacks;
 
 	switch (type) {
 	case DiskType::Floppy:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         static_cast<double>(fdd_data_rate_byte_per_sec);
+		io_callbacks = io_callbacks_floppy;
 		break;
 	case DiskType::HardDisk:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         static_cast<double>(hdd_data_rate_byte_per_sec);
+		io_callbacks = io_callbacks_harddisk;
 		break;
 	case DiskType::CdRom:
 		scalar = static_cast<double>(data_transferred_bytes) /
 		         static_cast<double>(cdrom_data_rate_byte_per_sec);
+		io_callbacks = io_callbacks_cdrom;
 		break;
 	default:
-		LOG(LOG_DOSMISC, LOG_WARN)("DOS:0x%X:Unknown disk type %d",
-		                           reg_ah,
-		                           static_cast<int>(type));
+		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(type));
 		return;
 	}
 
@@ -217,9 +233,12 @@ void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
 	CPU_STI();
 
 	do {
-		// Keep calling disknoise trigger to prevent long delays
-		// from also delaying seek noises
-		disknoise->PlaySeek();
+		// Call any registered callbacks for this disk type
+		if (io_callbacks.size() > 0) {
+			for (auto& callback : io_callbacks) {
+				callback();
+			}
+		}
 		CALLBACK_Idle();
 	} while (PIC_FullIndex() < endtime);
 }

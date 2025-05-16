@@ -191,7 +191,8 @@ int DiskNoiseDevice::ChooseWeightedSeekIndex() const
 	}
 	return 0;
 }
-DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
+DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
+								 const bool enable_disk_noise,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
@@ -233,6 +234,11 @@ DiskNoiseDevice::DiskNoiseDevice(const bool enable_disk_noise,
 	}
 
 	active_devices_.push_back(this);
+	DOS_RegisterIoCallback([this]() {
+		// This callback is called from the DOS code
+		// to trigger the spin and seek sounds
+		PlaySeek();
+	}, disk_type);
 }
 
 void DiskNoiseDevice::ActivateSpin()
@@ -424,7 +430,8 @@ void DISKNOISE_Init(Section* section)
 	constexpr float floppy_spin_volume = 0.2f;
 	constexpr float floppy_seek_volume = 0.6f;
 
-	hdd_noise = std::make_unique<DiskNoiseDevice>(enable_hard_disk_noise,
+	hdd_noise = std::make_unique<DiskNoiseDevice>(DiskType::HardDisk,
+	                                              enable_hard_disk_noise,
 	                                              spin_up,
 	                                              spin,
 	                                              hdd_seek_samples,
@@ -432,7 +439,8 @@ void DISKNOISE_Init(Section* section)
 	                                              hdd_seek_volume,
 	                                              true);
 
-	floppy_noise = std::make_unique<DiskNoiseDevice>(enable_floppy_disk_noise,
+	floppy_noise = std::make_unique<DiskNoiseDevice>(DiskType::Floppy,
+	                                                 enable_floppy_disk_noise,
 	                                                 floppy_spin_up,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
