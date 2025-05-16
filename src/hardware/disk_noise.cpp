@@ -90,10 +90,10 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			continue;
 		}
 
-		const unsigned int channels      = decoder->channels;
-		const unsigned int sample_rate   = decoder->sampleRate;
-		const drflac_uint64 total_frames = decoder->totalPCMFrameCount;
-		const unsigned int hertz_to_kHz  = 1000;
+		const auto channels         = decoder->channels;
+		const auto sample_rate      = decoder->sampleRate;
+		const auto total_frames     = decoder->totalPCMFrameCount;
+		const auto HertzToKilohertz = 1000;
 
 		if (channels != 1) {
 			LOG_WARNING("DISKNOISE: FLAC file %s is not mono.",
@@ -104,8 +104,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 		if (sample_rate != SampleRate) {
 			LOG_WARNING("DISKNOISE: FLAC file %s should be %dkHz, but %dkHz was found",
 			            candidate.c_str(),
-			            SampleRate / hertz_to_kHz,
-			            sample_rate / hertz_to_kHz);
+			            SampleRate / HertzToKilohertz,
+			            sample_rate / HertzToKilohertz);
 			drflac_close(decoder);
 			continue;
 		}
