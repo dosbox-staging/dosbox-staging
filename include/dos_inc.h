@@ -149,10 +149,11 @@ bool DOS_DuplicateEntry(uint16_t entry,uint16_t * newentry);
 bool DOS_ForceDuplicateEntry(uint16_t entry,uint16_t newentry);
 bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate);
 bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
-void DOS_SetDiskSpeed(int rate_kbyte_per_sec, DiskType type);
-void DOS_RegisterIoCallback(std::function<void()> callback, DiskType type);
-void DOS_PerformDiskIoDelay(Bits data_transferred_bytes,
-                            DiskType type);
+void DOS_SetDiskSpeed(int rate_kbyte_per_sec, DiskType disk_type);
+void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type);
+void DOS_ExecuteRegisteredCallbacks(DiskType disk_type);
+void DOS_PerformDiskIoDelay(
+        Bits data_transferred_bytes, DiskType disk_type);
 
 uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();
