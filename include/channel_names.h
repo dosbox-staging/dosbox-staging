@@ -33,6 +33,7 @@ constexpr auto MaxCdAudioChannel = 32;
 
 constexpr auto Cms                  = "CMS";
 constexpr auto CovoxDac             = "COVOX";
+constexpr auto DiskNoise            = "DISKNOISE";
 constexpr auto DisneySoundSourceDac = "DISNEY";
 constexpr auto FluidSynth           = "FSYNTH";
 constexpr auto GravisUltrasound     = "GUS";
@@ -50,7 +51,6 @@ constexpr auto SoundCanvas          = "SOUNDCANVAS";
 constexpr auto StereoOn1Dac         = "STON1";
 constexpr auto TandyDac             = "TANDYDAC";
 constexpr auto TandyPsg             = "TANDY";
-constexpr auto DiskNoise            = "DISKNOISE";
 
 } // namespace ChannelName
 
@@ -69,6 +69,7 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::CdAudio,
         ChannelName::Cms,
         ChannelName::CovoxDac,
+        ChannelName::DiskNoise,
         ChannelName::DisneySoundSourceDac,
         ChannelName::FluidSynth,
         ChannelName::GravisUltrasound,
@@ -86,7 +87,6 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::StereoOn1Dac,
         ChannelName::TandyDac,
         ChannelName::TandyPsg,
-        ChannelName::DiskNoise,
 };
 // clang-format on
 
