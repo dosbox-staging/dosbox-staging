@@ -332,9 +332,6 @@ static bool has_image(const std::array<T, N> &arr) {
 	return std::any_of(std::begin(arr), std::end(arr), to_bool);
 }
 
-void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice* disknoise,
-                   DiskType type = DiskType::HardDisk);
-
 static Bitu INT13_DiskHandler(void)
 {
 	uint16_t segat, bufptr;
@@ -428,13 +425,15 @@ static Bitu INT13_DiskHandler(void)
 			// Determine delay based on whether it's a floppy or
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
-				delay_disk_io(512, floppy_noise.get(), DiskType::Floppy);
+				DOS_PerformDiskIoDelay(512,
+				                       floppy_noise.get(),
+				                       DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->ActivateSpin();
 					floppy_noise->PlaySeek();
 				}
 			} else {
-				delay_disk_io(512, hdd_noise.get());
+				DOS_PerformDiskIoDelay(512, hdd_noise.get());
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}
@@ -472,13 +471,15 @@ static Bitu INT13_DiskHandler(void)
 			// Determine delay based on whether it's a floppy or
 			// hard disk
 			if (imageDiskListTypes[drivenum] == DiskType::Floppy) {
-				delay_disk_io(512, floppy_noise.get(), DiskType::Floppy);
+				DOS_PerformDiskIoDelay(512,
+				                       floppy_noise.get(),
+				                       DiskType::Floppy);
 				if (floppy_noise) {
 					floppy_noise->ActivateSpin();
 					floppy_noise->PlaySeek();
 				}
 			} else {
-				delay_disk_io(512, hdd_noise.get());
+				DOS_PerformDiskIoDelay(512, hdd_noise.get());
 				if (hdd_noise) {
 					hdd_noise->PlaySeek();
 				}

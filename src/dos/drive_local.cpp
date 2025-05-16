@@ -554,9 +554,6 @@ Bits localDrive::UnMount()
 	return 0;
 }
 
-void delay_disk_io(Bits data_transferred_bytes, DiskNoiseDevice *disknoise,
-                   DiskType type = DiskType::HardDisk);
-
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
                        uint8_t _sectors_cluster, uint16_t _total_clusters,
                        uint16_t _free_clusters, uint8_t _mediaid,
@@ -608,14 +605,14 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 	        local_drive.lock()->GetMediaByte());
 	switch (disk_type) {
 	case DiskType::Floppy:
-		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
+		DOS_PerformDiskIoDelay(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 		break;
 	case DiskType::HardDisk:
-		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
+		DOS_PerformDiskIoDelay(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
@@ -662,14 +659,14 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 	        local_drive.lock()->GetMediaByte());
 	switch (disk_type) {
 	case DiskType::Floppy:
-		delay_disk_io(*num_bytes, floppy_noise.get(), DiskType::Floppy);
+		DOS_PerformDiskIoDelay(*num_bytes, floppy_noise.get(), DiskType::Floppy);
 		if (floppy_noise) {
 			floppy_noise->ActivateSpin();
 			floppy_noise->PlaySeek(); // Play noise on read
 		}
 		break;
 	case DiskType::HardDisk:
-		delay_disk_io(*num_bytes, hdd_noise.get()); // Hard disk
+		DOS_PerformDiskIoDelay(*num_bytes, hdd_noise.get()); // Hard disk
 		if (hdd_noise) {
 			hdd_noise->PlaySeek(); // Play noise on read
 		}
