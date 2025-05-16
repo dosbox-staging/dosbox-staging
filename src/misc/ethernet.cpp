@@ -28,7 +28,6 @@
 EthernetConnection *ETHERNET_OpenConnection([[maybe_unused]] const std::string &backend)
 {
 	EthernetConnection *conn = nullptr;
-#if C_SLIRP
 	// Currently only slirp is supported
 	if (backend == "slirp") {
 		conn = new SlirpEthernetConnection;
@@ -40,7 +39,6 @@ EthernetConnection *ETHERNET_OpenConnection([[maybe_unused]] const std::string &
 			conn = nullptr;
 		}
 	}
-#endif
 
 	return conn;
 }
