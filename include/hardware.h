@@ -83,9 +83,6 @@ void PS1DAC_NotifyUnlockMixer();
 void GUS_NotifyLockMixer();
 void GUS_NotifyUnlockMixer();
 
-void DISKNOISE_NotifyLockMixer();
-void DISKNOISE_NotifyUnlockMixer();
-
 void SBLASTER_NotifyLockMixer();
 void SBLASTER_NotifyUnlockMixer();
 
