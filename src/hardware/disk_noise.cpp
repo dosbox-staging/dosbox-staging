@@ -81,21 +81,22 @@ void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
 	                                                 false);
 }
 
-void DiskNoises::AudioCallback(const int frames)
+void DiskNoises::AudioCallback(const int num_frames_requested)
 {
 	// stereo interleaved buffer
-	std::vector<AudioFrame> out(frames, {0.0f, 0.0f});
+	std::vector<AudioFrame> out(num_frames_requested, {0.0f, 0.0f});
 
 	for (auto* device : disk_noises->active_devices) {
 		bool sample_is_playing = false;
-		for (int i = 0; i < frames; ++i) {
+		// Mix audio frames from all active devices
+		for (int i = 0; i < num_frames_requested; ++i) {
 			float mixed_l = 0.0f;
 			float mixed_r = 0.0f;
 
-			std::vector<float> sample = device->GetSample();
+			AudioFrame sample = device->GetNextFrame();
 
-			out[i].left += sample[0];
-			out[i].right += sample[1];
+			out[i].left += sample.left;
+			out[i].right += sample.right;
 		}
 	}
 
@@ -118,21 +119,18 @@ void DiskNoises::Shutdown()
 	}
 }
 
-std::vector<float> DiskNoiseDevice::GetSample()
+AudioFrame DiskNoiseDevice::GetNextFrame()
 {
 	const float DiskNoiseGain = 0.2f;
-	float sample_l            = 0.0f;
-	float sample_r            = 0.0f;
+	float sample              = 0.0f;
 
 	// Mix in spinup and spin samples
 	if (!spin.spin_up_sample.empty() &&
 	    spin.spin_up_pos + 1 < spin.spin_up_sample.size()) {
-		sample_l += spin.spin_up_sample[spin.spin_up_pos] * DiskNoiseGain;
-		sample_r += spin.spin_up_sample[spin.spin_up_pos++] * DiskNoiseGain;
+		sample += spin.spin_up_sample[spin.spin_up_pos++] * DiskNoiseGain;
 	} else if (!spin.sample.empty() &&
 	           (spin.pos + 1 < spin.sample.size() || spin.loop)) {
-		sample_l += spin.sample[spin.pos] * DiskNoiseGain;
-		sample_r += spin.sample[spin.pos++] * DiskNoiseGain;
+		sample += spin.sample[spin.pos++] * DiskNoiseGain;
 
 		// Loop the spin sound if enabled. Used for
 		// persistent HDD noise Not used for floppy
@@ -146,8 +144,7 @@ std::vector<float> DiskNoiseDevice::GetSample()
 	// Mix in seek sample, if it's playing
 	if (!seek.current_sample.empty() &&
 	    seek.pos + 1 < seek.current_sample.size()) {
-		sample_l += seek.current_sample[seek.pos] * DiskNoiseGain;
-		sample_r += seek.current_sample[seek.pos++] * DiskNoiseGain;
+		sample += seek.current_sample[seek.pos++] * DiskNoiseGain;
 	}
 
 	// If seek sample has finished playing, clear entry
@@ -155,7 +152,7 @@ std::vector<float> DiskNoiseDevice::GetSample()
 		seek.current_sample.clear();
 	}
 
-	return {sample_l, sample_r};
+	return AudioFrame{sample, sample};
 }
 
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& buffer)
