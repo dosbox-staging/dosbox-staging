@@ -50,6 +50,17 @@ unsigned int result_errorcode = 0;
 
 static bool is_guest_booted = false;
 
+struct DiskSettings {
+	int hdd_data_rate_byte_per_sec   = 0;
+	int fdd_data_rate_byte_per_sec   = 0;
+	int cdrom_data_rate_byte_per_sec = 0;
+	bool fdd_delay_enabled           = false;
+	bool hdd_delay_enabled           = false;
+	bool cdrom_delay_enabled         = false;
+};
+
+static struct DiskSettings disk_settings = {};
+
 extern void DOS_ClearLaunchedProgramNames();
 
 static bool windows_multiplex()
@@ -150,27 +161,24 @@ static uint16_t DOS_GetAmount(void) {
 #include "cpu.h"
 #endif
 
-int hdd_data_rate_byte_per_sec   = 0;
-int fdd_data_rate_byte_per_sec   = 0;
-int cdrom_data_rate_byte_per_sec = 0;
-bool fdd_delay_enabled		 = false;
-bool hdd_delay_enabled		 = false;
-bool cdrom_delay_enabled	 = false;
 
 void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType disk_type)
 {
 	switch (disk_type) {
 	case DiskType::Floppy:
-		fdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
-		fdd_delay_enabled = true;
+		disk_settings.fdd_data_rate_byte_per_sec = speed_kbyte_per_sec *
+		                                          BytesPerKilobyte;
+		disk_settings.fdd_delay_enabled = true;
 		break;
 	case DiskType::HardDisk:
-		hdd_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
-		hdd_delay_enabled = true;
+		disk_settings.hdd_data_rate_byte_per_sec = speed_kbyte_per_sec *
+		                                          BytesPerKilobyte;
+		disk_settings.hdd_delay_enabled = true;
 		break;
 	case DiskType::CdRom:
-		cdrom_data_rate_byte_per_sec = speed_kbyte_per_sec * BytesPerKilobyte;
-		cdrom_delay_enabled = true;
+		disk_settings.cdrom_data_rate_byte_per_sec = speed_kbyte_per_sec *
+		                                            BytesPerKilobyte;
+		disk_settings.cdrom_delay_enabled = true;
 		break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
@@ -227,7 +235,8 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 // registered callbacks.
 void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 {
-	if (!fdd_delay_enabled && !hdd_delay_enabled && !cdrom_delay_enabled) {
+	if (!disk_settings.fdd_delay_enabled && !disk_settings.hdd_delay_enabled &&
+	    !disk_settings.cdrom_delay_enabled) {
 		return;
 	}
 
@@ -236,15 +245,15 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 	switch (disk_type) {
 	case DiskType::Floppy:
 		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(fdd_data_rate_byte_per_sec);
+		         static_cast<double>(disk_settings.fdd_data_rate_byte_per_sec);
 		break;
 	case DiskType::HardDisk:
 		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(hdd_data_rate_byte_per_sec);
+		         static_cast<double>(disk_settings.hdd_data_rate_byte_per_sec);
 		break;
 	case DiskType::CdRom:
 		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(cdrom_data_rate_byte_per_sec);
+		         static_cast<double>(disk_settings.cdrom_data_rate_byte_per_sec);
 		break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
@@ -253,8 +262,8 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
 
-	/* MS-DOS will most likely enable interrupts in the course of
-	 * performing disk I/O */
+	// MS-DOS will most likely enable interrupts in the course of
+	// performing disk I/O
 	CPU_STI();
 
 	do {
