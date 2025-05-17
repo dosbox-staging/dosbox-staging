@@ -106,7 +106,7 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ## Build instructions
 
-Read [BUILD.md] for the comprehensive compilation guide.
+Read [docs/BUILD.md] for the comprehensive compilation guide.
 
 > **Note**
 >
@@ -221,11 +221,11 @@ a significant length of time.
 ### Windows (MSYS2), macOS (MacPorts), Haiku, NixOS, others
 
 Instructions for other build systems and operating systems are documented
-in [BUILD.md].
+in [docs/BUILD.md].
 
 Links to OS-specific instructions: [MSYS2], [MacPorts], [Haiku], [NixOS].
 
-[BUILD.md]: BUILD.md
+[BUILD.md]: docs/BUILD.md
 [MSYS2]:    docs/build-windows.md
 [MacPorts]: docs/build-macos.md
 [Haiku]:    docs/build-haiku.md

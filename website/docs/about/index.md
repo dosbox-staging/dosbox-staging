@@ -43,7 +43,7 @@ The key features for developers are summarised [here](https://github.com/dosbox-
 - Encourage **new contributors** by removing barriers to entry.
 - Prioritise **code quality** to minimise technical
   debt and ease maintenance. This generally means following the
-  [Staging Coding Style Guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#coding-style)
+  [Staging Coding Style Guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/CONTRIBUTING.md#coding-style)
   and best practices such as the [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
 
