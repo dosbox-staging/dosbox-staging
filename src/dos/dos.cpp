@@ -51,12 +51,9 @@ unsigned int result_errorcode = 0;
 static bool is_guest_booted = false;
 
 struct DiskSettings {
-	int hdd_data_rate_byte_per_sec   = 0;
-	int fdd_data_rate_byte_per_sec   = 0;
-	int cdrom_data_rate_byte_per_sec = 0;
-	bool fdd_delay_enabled           = false;
-	bool hdd_delay_enabled           = false;
-	bool cdrom_delay_enabled         = false;
+	DiskSpeed hdd_disk_speed   = DiskSpeed::Maximum;
+	DiskSpeed fdd_disk_speed   = DiskSpeed::Maximum;
+	DiskSpeed cdrom_disk_speed = DiskSpeed::Maximum;
 };
 
 static struct DiskSettings disk_settings = {};
@@ -161,24 +158,15 @@ static uint16_t DOS_GetAmount(void) {
 #include "cpu.h"
 #endif
 
-
-void DOS_SetDiskSpeed(int speed_kbyte_per_sec, DiskType disk_type)
+void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
 {
 	switch (disk_type) {
-	case DiskType::Floppy:
-		disk_settings.fdd_data_rate_byte_per_sec = speed_kbyte_per_sec *
-		                                          BytesPerKilobyte;
-		disk_settings.fdd_delay_enabled = true;
-		break;
+	case DiskType::Floppy: disk_settings.fdd_disk_speed = disk_speed; break;
 	case DiskType::HardDisk:
-		disk_settings.hdd_data_rate_byte_per_sec = speed_kbyte_per_sec *
-		                                          BytesPerKilobyte;
-		disk_settings.hdd_delay_enabled = true;
+		disk_settings.hdd_disk_speed = disk_speed;
 		break;
 	case DiskType::CdRom:
-		disk_settings.cdrom_data_rate_byte_per_sec = speed_kbyte_per_sec *
-		                                            BytesPerKilobyte;
-		disk_settings.cdrom_delay_enabled = true;
+		disk_settings.cdrom_disk_speed = disk_speed;
 		break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
@@ -233,31 +221,46 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 
 // Add a delay as configured for the relevant disk type, and call any
 // registered callbacks.
+
 void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 {
-	if (!disk_settings.fdd_delay_enabled && !disk_settings.hdd_delay_enabled &&
-	    !disk_settings.cdrom_delay_enabled) {
-		return;
-	}
-
-	double scalar;
-
 	switch (disk_type) {
 	case DiskType::Floppy:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(disk_settings.fdd_data_rate_byte_per_sec);
+		DOS_PerformFloppyIoDelay(data_transferred_bytes);
 		break;
 	case DiskType::HardDisk:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(disk_settings.hdd_data_rate_byte_per_sec);
+		DOS_PerformHardDiskIoDelay(data_transferred_bytes);
 		break;
 	case DiskType::CdRom:
-		scalar = static_cast<double>(data_transferred_bytes) /
-		         static_cast<double>(disk_settings.cdrom_data_rate_byte_per_sec);
+		DOS_PerformCdRomIoDelay(data_transferred_bytes);
 		break;
 	default:
 		LOG_WARNING("DOS: Unknown disk type %d", static_cast<int>(disk_type));
 		return;
+	}
+}
+
+void DOS_PerformHardDiskIoDelay(Bits data_transferred_bytes)
+{
+	constexpr auto HardDiskSpeedFastKbPerSec   = 15000;
+	constexpr auto HardDiskSpeedMediumKbPerSec = 2500;
+	constexpr auto HardDiskSpeedSlowKbPerSec   = 600;
+	double scalar;
+
+	switch (disk_settings.hdd_disk_speed) {
+	case DiskSpeed::Fast:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (HardDiskSpeedFastKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Medium:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (HardDiskSpeedMediumKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Slow:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (HardDiskSpeedSlowKbPerSec * BytesPerKilobyte);
+		break;
+	default: return;
 	}
 
 	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
@@ -267,7 +270,77 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 	CPU_STI();
 
 	do {
-		DOS_ExecuteRegisteredCallbacks(disk_type);
+		DOS_ExecuteRegisteredCallbacks(DiskType::HardDisk);
+		CALLBACK_Idle();
+	} while (PIC_FullIndex() < endtime);
+}
+
+void DOS_PerformFloppyIoDelay(Bits data_transferred_bytes)
+{
+	constexpr auto FloppyDiskSpeedFastKbPerSec   = 120;
+	constexpr auto FloppyDiskSpeedMediumKbPerSec = 60;
+	constexpr auto FloppyDiskSpeedSlowKbPerSec   = 30;
+	double scalar;
+
+	switch (disk_settings.fdd_disk_speed) {
+	case DiskSpeed::Fast:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (FloppyDiskSpeedFastKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Medium:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (FloppyDiskSpeedMediumKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Slow:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (FloppyDiskSpeedSlowKbPerSec * BytesPerKilobyte);
+		break;
+	default: return;
+	}
+
+	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
+
+	// MS-DOS will most likely enable interrupts in the course of
+	// performing disk I/O
+	CPU_STI();
+
+	do {
+		DOS_ExecuteRegisteredCallbacks(DiskType::Floppy);
+		CALLBACK_Idle();
+	} while (PIC_FullIndex() < endtime);
+}
+
+void DOS_PerformCdRomIoDelay(Bits data_transferred_bytes)
+{
+	constexpr auto CdRomSpeedFastKbPerSec   = 1200;
+	constexpr auto CdRomSpeedMediumKbPerSec = 300;
+	constexpr auto CdRomSpeedSlowKbPerSec   = 150;
+	double scalar;
+
+	switch (disk_settings.cdrom_disk_speed) {
+	case DiskSpeed::Fast:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (CdRomSpeedFastKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Medium:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (CdRomSpeedMediumKbPerSec * BytesPerKilobyte);
+		break;
+	case DiskSpeed::Slow:
+		scalar = static_cast<double>(data_transferred_bytes) /
+		         (CdRomSpeedSlowKbPerSec * BytesPerKilobyte);
+		break;
+	default: return;
+	}
+
+	double endtime = PIC_FullIndex() + (scalar * MicrosInMillisecond);
+
+	// MS-DOS will most likely enable interrupts in the course of
+	// performing disk I/O
+	CPU_STI();
+
+	do {
+		DOS_ExecuteRegisteredCallbacks(DiskType::CdRom);
 		CALLBACK_Idle();
 	} while (PIC_FullIndex() < endtime);
 }

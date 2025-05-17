@@ -563,25 +563,25 @@ static void DOSBOX_RealInit(Section* sec)
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section->Get_string("hard_disk_speed");
 	if (hdd_io_speed == "fast") {
-		DOS_SetDiskSpeed(HardDiskSpeedFast, DiskType::HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
 	} else if (hdd_io_speed == "medium") {
-		DOS_SetDiskSpeed(HardDiskSpeedMedium, DiskType::HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::HardDisk);
 	} else if (hdd_io_speed == "slow") {
-		DOS_SetDiskSpeed(HardDiskSpeedSlow, DiskType::HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::HardDisk);
 	} else {
-		DOS_SetDiskSpeed(HardDiskSpeedMaximum, DiskType::HardDisk);
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::HardDisk);
 	}
 
 	// Set the floppy disk IO data rate
 	const auto floppy_io_speed = section->Get_string("floppy_disk_speed");
 	if (floppy_io_speed == "fast") {
-		DOS_SetDiskSpeed(FloppyDiskSpeedFast, DiskType::Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
 	} else if (floppy_io_speed == "medium") {
-		DOS_SetDiskSpeed(FloppyDiskSpeedMedium, DiskType::Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::Floppy);
 	} else if (floppy_io_speed == "slow") {
-		DOS_SetDiskSpeed(FloppyDiskSpeedSlow, DiskType::Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::Floppy);
 	} else {
-		DOS_SetDiskSpeed(FloppyDiskSpeedMaximum, DiskType::Floppy);
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
 }
 
