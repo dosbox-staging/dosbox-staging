@@ -4,8 +4,7 @@ set -e
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2024  The DOSBox Staging Team
-# Copyright (C) 2020-2022  Sherman Perry
+# Copyright (C) 2020-2025  The DOSBox Staging Team
 
 usage()
 {
@@ -13,16 +12,16 @@ usage()
     Usage: -p <platform> [-h -c <commit> -b <branch> -r <repo> -v <version> -f] BUILD_DIR PACKAGE_DIR
     Where:
         -h          : Show this help message
-        -p          : Build platform. Can be one of linux, macos, msys2, msvc
+        -p          : Build platform. Can be one of windows, macos, linux, msvc
         -c          : Git commit
         -b          : Git branch
         -r          : Git repository
         -v          : DOSBox Staging version
         -f          : Force creation if PACKAGE_DIR is not empty
-        BUILD_DIR   : Meson build directory
+        BUILD_DIR   : Build directory
         PACKAGE_DIR : Package directory
 
-    Note: On macos, '-v' must be set. On msvc, the environment variable VC_REDIST_DIR must be set."
+    Note: On macos, '-v' must be set. On windows & msvc, the environment variable VC_REDIST_DIR must be set."
 }
 
 create_parent_dir()
@@ -31,7 +30,7 @@ create_parent_dir()
     dir=$(dirname "$path")
     if [ "$dir" != "." ]; then
         case $platform in
-             msvc) mkdir -p "$dir" ;;
+             windows|msvc) mkdir -p "$dir" ;;
              macos) install -d "${dir}/"
         esac
     fi
@@ -42,9 +41,9 @@ install_file()
     src=$1
     dest=$2
     case $platform in
-        linux|msys2) install -DT -m 644 "$src" "$dest" ;;
-        msvc) create_parent_dir "$dest" && cp "$src" "$dest" ;;
-        macos) create_parent_dir "$dest" && install -m 644 "$src" "$dest" ;;
+        linux)        install -DT -m 644 "$src" "$dest" ;;
+        windows|msvc) create_parent_dir "$dest" && cp "$src" "$dest" ;;
+        macos)        create_parent_dir "$dest" && install -m 644 "$src" "$dest" ;;
     esac
 }
 
@@ -80,7 +79,7 @@ install_doc()
             install_file licenses/Zlib.txt         "${macos_content_dir}/doc/licenses/Zlib.txt"
             readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
-        msys2|msvc)
+        windows|msvc)
             install_file docs/README.template      "${pkg_dir}/README.txt"
             install_file LICENSE                   "${pkg_dir}/LICENSE.txt"
             install_file docs/README.video         "${pkg_dir}/doc/video.txt"
@@ -127,10 +126,14 @@ install_doc()
 
 install_resources()
 {
-    case "$platform" in
-    "macos")
+    case $platform in
+    macos)
         local src_dir=${build_dir}/../Resources
         local dest_dir=${macos_content_dir}/Resources
+        ;;
+    windows)
+        local src_dir=${build_dir}/../Resources
+        local dest_dir=${pkg_dir}/resources
         ;;
     *)
         local src_dir=${build_dir}/resources
@@ -198,19 +201,7 @@ pkg_macos()
 	install_file contrib/macos/DS_Store "${macos_dist_dir}/.DS_Store"
 }
 
-pkg_msys2()
-{
-    install -DT "${build_dir}/dosbox.exe" "${pkg_dir}/dosbox.exe"
-
-    # Discover and copy required dll files
-    ntldd -R "${pkg_dir}/dosbox.exe" \
-        | sed -e 's/^[[:blank:]]*//g' \
-        | cut -d ' ' -f 3 \
-        | grep -E -i '(mingw|clang)(32|64)' \
-        | sed -e 's|\\|/|g' \
-        | xargs cp --target-directory="${pkg_dir}/"
-}
-
+# TODO delete once the Windows CMake migration has been completed
 pkg_msvc()
 {
     # Get the release dir name from $build_dir
@@ -222,6 +213,22 @@ pkg_msvc()
     # Copy dll files
     cp "${build_dir}"/*.dll                  "${pkg_dir}/"
     cp "src/libs/zmbv/${release_dir}"/*.dll  "${pkg_dir}/"
+
+    # Copy MSVC C++ redistributable files
+    cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
+    cp "$VC_REDIST_DIR"/*.dll                "${pkg_dir}/"
+}
+
+pkg_windows()
+{
+    # Get the release dir name from $build_dir
+    release_dir=$(basename -- "$(dirname -- "${build_dir}")")/$(basename -- "${build_dir}")
+
+    # Copy binary
+    cp "${build_dir}/dosbox.exe"  "${pkg_dir}/dosbox.exe"
+
+    # Copy dll files
+    cp "${build_dir}"/*.dll                  "${pkg_dir}/"
 
     # Copy MSVC C++ redistributable files
     cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
@@ -267,7 +274,7 @@ fi
 
 p=$platform
 case $p in
-    linux|macos|msys2|msvc) true ;;
+    linux|macos|msvc|windows) true ;;
     *) platform="unsupported" ;;
 esac
 
@@ -304,6 +311,11 @@ if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
     usage
     exit 1
 fi
+if [ "$platform" = "windows" ] && [ -z "$VC_REDIST_DIR" ]; then
+    echo "VC_REDIST_DIR environment variable not set"
+    usage
+    exit 1
+fi
 
 if [ -f "$pkg_dir" ]; then
     echo "PACKAGE_DIR must not be a file"
@@ -325,9 +337,10 @@ install_doc
 install_resources
 
 case $platform in
-    linux) pkg_linux ;;
-    macos) pkg_macos ;;
-    msys2) pkg_msys2 ;;
-    msvc)  pkg_msvc  ;;
-    *)     echo "Oops."; usage; exit 1 ;;
+    windows) pkg_windows ;;
+    macos)   pkg_macos   ;;
+    linux)   pkg_linux   ;;
+    # TODO delete these once the Window CMake migration has been completed
+    msvc)    pkg_msvc    ;;
+    *)     echo "Unsupported platform."; usage; exit 1 ;;
 esac
