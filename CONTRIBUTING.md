@@ -297,7 +297,7 @@ You'll need to submit code changes via GitHub PRs. The key points
 
 3. Make sure that all your commits can be compiled individually. This is very
    important for bisecting, and we strictly enforce it. You can just run
-   `scripts/compile_commits.sh` to compile all commits of the PR you're
+   `scripts/tools/compile-commits.sh` to compile all commits of the PR you're
    working on.
 
 
@@ -364,8 +364,8 @@ For an example of a commit that followed all of these rules, see commit
 
 Make sure that all your commits can be compiled individually. This is very
 important for bisecting, and we strictly enforce it. You can simply just run
-`scripts/compile_commits.sh` to compile all commits of the PR you're working
-on.
+`scripts/tools/compile-commits.sh` to compile all commits of the PR you're
+working on.
 
 
 ### clang-format
@@ -383,9 +383,9 @@ specific line ranges (run `clang-format --help` to learn how), or use our
 helper script to format C/C++ code touched by your latest commit:
 
     $ git commit -m "Edit some C++ code"
-    $ ./scripts/format-commit.sh
+    $ ./scripts/tools/format-commit.sh
 
-Run `./scripts/format-commit.sh --help` to learn about available options.
+Run `./scripts/tools/format-commit.sh --help` to learn about available options.
 
 
 #### Vim integration
@@ -414,9 +414,9 @@ missing Python 3 support.
 
 Out gating mechanism tracks the number of warnings per OS/compiler. To see a
 summary of warnings in your build, do a clean build and then use the script
-`./scripts/count-warnings.py`:
+`./scripts/ci/count-warnings.py`:
 
     make -j "$(nproc)" |& tee build.log
-    ./scripts/count-warnings.py build.log
+    ./scripts/ci/count-warnings.py build.log
 
-Run `./scripts/count-warnings.py --help` to learn about available options.
+Run `./scripts/ci/count-warnings.py --help` to learn about available options.
