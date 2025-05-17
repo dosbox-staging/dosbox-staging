@@ -21,6 +21,8 @@ add_library(libmisc STATIC
   unicode.cpp
 )
 
+target_include_directories(libmisc PRIVATE ../libs/include)
+
 target_link_libraries(libmisc PRIVATE
   libwhereami $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )

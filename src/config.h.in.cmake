@@ -96,12 +96,6 @@
 // Define to 1 to use opengl display output support
 #cmakedefine01 C_OPENGL
 
-// Define to 1 to enable libslirp Ethernet support
-#cmakedefine01 C_SLIRP
-
-// Define to 1 to enable Novell NE 2000 NIC emulation
-#cmakedefine01 C_NE2000
-
 // Define to 1 to enable the Tracy profiling server
 #cmakedefine01 C_TRACY
 

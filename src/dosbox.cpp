@@ -1265,11 +1265,7 @@ void DOSBOX_Init()
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
-#if C_SLIRP
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
-#else
-	secprop = control->AddInactiveSectionProp("ethernet");
-#endif
 
 	pbool = secprop->Add_bool("ne2000", when_idle, true);
 	pbool->SetOptionHelp(
@@ -1284,9 +1280,8 @@ void DOSBOX_Init()
 	        "      client, and TCP/IP stack. You might need port-forwarding from the host\n"
 	        "      into the DOS guest, and from your router to your host when acting as the\n"
 	        "      server for multiplayer games.");
-#if C_SLIRP
+
 	pbool->SetEnabledOptions({"SLIRP"});
-#endif
 
 	phex = secprop->Add_hex("nicbase", when_idle, 0x300);
 	phex->Set_values(
@@ -1295,9 +1290,8 @@ void DOSBOX_Init()
 	                    "Base address of the NE2000 card (300 by default).\n"
 	                    "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
 	                    "      Sound Blaster and Gravis UltraSound by default.");
-#if C_SLIRP
+
 	phex->SetEnabledOptions({"SLIRP"});
-#endif
 
 	pint = secprop->Add_int("nicirq", when_idle, 3);
 	pint->Set_values({"3", "4", "5", "9", "10", "11", "12", "14", "15"});
@@ -1305,16 +1299,14 @@ void DOSBOX_Init()
 	                    "The interrupt used by the NE2000 card (3 by default).\n"
 	                    "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
 	                    "      'serial2' and the Gravis UltraSound by default.");
-#if C_SLIRP
+
 	pint->SetEnabledOptions({"SLIRP"});
-#endif
 
 	pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
 	pstring->SetOptionHelp("SLIRP",
 	                       "The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
-#if C_SLIRP
+
 	pstring->SetEnabledOptions({"SLIRP"});
-#endif
 
 	pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
 	pstring->SetOptionHelp(
@@ -1337,18 +1329,16 @@ void DOSBOX_Init()
 	        "  - If mapped ranges differ, the shorter range is extended to fit.\n"
 	        "  - If conflicting host ports are given, only the first one is setup.\n"
 	        "  - If conflicting guest ports are given, the latter rule takes precedent.");
-#if C_SLIRP
+
 	pstring->SetEnabledOptions({"SLIRP"});
-#endif
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
 	pstring->SetOptionHelp(
 	        "SLIRP",
 	        "Forward one or more UDP ports from the host into the DOS guest\n"
 	        "(unset by default). The format is the same as for TCP port forwards.");
-#if C_SLIRP
+
 	pstring->SetEnabledOptions({"SLIRP"});
-#endif
 
 	//	secprop->AddInitFunction(&CREDITS_Init);
 

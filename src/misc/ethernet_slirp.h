@@ -23,20 +23,11 @@
 
 #include "dosbox.h"
 
-#if C_SLIRP
-
 #include <map>
 #include <deque>
 #include <vector>
 
-// Specific unreleased slirp to work with MSVC
-#if _MSC_VER >= 1920
 #include <slirp/libslirp.h>
-#define db_ssize_t slirp_ssize_t
-#else
-#include <libslirp.h>
-#define db_ssize_t ssize_t
-#endif
 
 #include "config.h"
 #include "ethernet.h"
@@ -151,7 +142,5 @@ private:
 	fd_set exceptfds = {}; /*!< Exceptional descriptors for select() */
 #endif
 };
-
-#endif
 
 #endif
