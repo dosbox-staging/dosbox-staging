@@ -48,10 +48,10 @@ MSVC_WARN_PATTERN = re.compile(
 # For recognizing warnings in Visual Studio Clang format:
 #
 MSCLANG_WARN_PATTERN = re.compile(
-    r">[^>]*?([^:]+)\((\d+),\d+\): warning : .+? \[-W(.+?)\](.*)")
-#             ~~~~~    ~~~  ~~~              ~~~      ~~~    ~~
-#             ↑        ↑     ↑               ↑        ↑      ↑
-#             file     line column          message  type   extra
+    r"([^:]+)\((\d+),\d+\): warning : .+? \[-W(.+?)\](.*)")
+#      ~~~~~    ~~~  ~~~              ~~~      ~~~    ~~
+#      ↑        ↑     ↑               ↑        ↑      ↑
+#      file     line column          message  type   extra
 
 
 class MessageFormat(enum.Enum):
