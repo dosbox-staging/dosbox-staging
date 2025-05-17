@@ -84,7 +84,7 @@ website: Update feature highlights on the front page
 ```
 
 Please familiarise yourself with [our PR contribution
-guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#submitting-patches--pull-requests)
+guidelines](CONTRIBUTING.md#submitting-patches--pull-requests)
 if you haven't done so already.
 
 
