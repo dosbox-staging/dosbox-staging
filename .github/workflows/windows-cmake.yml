@@ -1,0 +1,279 @@
+name: Windows CMake builds
+permissions: read-all
+
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+  pull_request:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VCPKG_ROOT: C:\vcpkg
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+
+jobs:
+  build_windows_release:
+    name: Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
+    if:   github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    outputs:
+      dosbox_version: ${{ steps.set_vars.outputs.dosbox_version }}
+
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        conf:
+          # TODO reinstate ARM64 build at some point, but we'll need to build the
+          # external vcpkg dependencies for AMR64 first
+          - arch: x64
+            debugger: false
+            max_warnings: 20
+
+          - arch: x64
+            debugger: true
+            max_warnings: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name:  Checkout vcpkg baseline
+        shell: pwsh
+        run: |
+          $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
+          cd $env:VCPKG_INSTALLATION_ROOT
+          git fetch
+          rm vcpkg.exe
+          git -c advice.detachedHead=false checkout $baseline
+          bootstrap-vcpkg.bat -disableMetrics
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@v4.0.1
+
+      - name:  Log environment
+        shell: pwsh
+        run:   .\scripts\log-env.ps1
+
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          echo "build_dir=build/release-windows/Release" >> $GITHUB_OUTPUT
+
+          VERSION=$(./scripts/get-version.sh version-and-hash)
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
+          echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name:  Set the Git hash in config.h
+        shell: bash
+        run: |
+          set -x
+          GIT_HASH=$(./scripts/get-version.sh hash)
+          sed -i "s|BUILD_GIT_HASH \"git\"|BUILD_GIT_HASH \"$GIT_HASH\"|" src/platform/visualc/config.h
+
+      # TODO run tests
+      #- name:  Build release
+      #  if:    ${{ !matrix.conf.debugger }}
+      #  shell: pwsh
+      #  run: |
+      #    TODO
+
+      - name:  Build release
+        if:    ${{ !matrix.conf.debugger }}
+        shell: pwsh
+        run: |
+          cmake --preset release-windows
+          cmake --build --preset release-windows >> build.log 2>&1
+
+      - name:  Build release with debugger
+        if:    ${{ matrix.conf.debugger }}
+        shell: pwsh
+        run: |
+          cmake --preset release-windows -DOPT_DEBUG=ON -DOPT_HEAVY_DEBUG=ON
+          cmake --build --preset release-windows >> build.log 2>&1
+
+      - name: Summarize warnings
+        env:
+          MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
+        run:  python3 ./scripts/count-warnings.py -lf --msclang build.log
+
+      - name:  Package standard build
+        if:    ${{ !matrix.conf.debugger }}
+        shell: bash
+        run: |
+          set -x
+          # Construct VC_REDIST_DIR
+          readonly VC_REDIST_BASE="C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC"
+          readonly VC_REDIST_CRT_VERSION="Microsoft.VC143.CRT"
+
+          for ENTRY in "$VC_REDIST_BASE"/*
+          do
+              ENTRY=$ENTRY/${{ matrix.conf.arch }}/$VC_REDIST_CRT_VERSION
+              if [ -d "$ENTRY" ]; then
+                  export VC_REDIST_DIR=$ENTRY
+                  break
+              fi
+          done
+          if [ ! -d "$VC_REDIST_DIR" ]; then
+              echo "Failed to find MSVC Redistributable"
+              exit 1
+          fi
+
+          # Package
+          ./scripts/create-package.sh \
+            -p windows \
+            ${{ steps.set_vars.outputs.build_dir }} \
+            ${{ steps.set_vars.outputs.pkg_dir }}
+
+
+      - name:  Inject external vcpkg dependencies
+        if:    ${{ !matrix.conf.debugger }}
+        shell: bash
+        run: |
+          set -x
+          DEPS_VERSION=v0.83.0
+          ZIP_NAME=dosbox-vcpkg-deps-windows-${{ matrix.conf.arch }}.zip
+
+          curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
+          unzip $ZIP_NAME -d vcpkg-deps
+
+          cp vcpkg-deps/release/* ${{ steps.set_vars.outputs.pkg_dir }}
+
+
+      - name: Upload package
+        if:   ${{ !matrix.conf.debugger }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-without-debugger
+          path: ${{ steps.set_vars.outputs.pkg_dir }}
+          overwrite: true
+
+      - name:  Package debugger build
+        if:    ${{ matrix.conf.debugger }}
+        shell: bash
+        run: |
+          set -x
+          mkdir -p ${{ steps.set_vars.outputs.pkg_dir }}
+          # Move the debugger build into the release area
+          ls ${{ steps.set_vars.outputs.build_dir }}
+          cp ${{ steps.set_vars.outputs.build_dir }}/dosbox.exe ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
+
+      - name: Upload debugger artifact
+        if:   ${{ matrix.conf.debugger }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-with-debugger
+          path: ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          overwrite: true
+
+
+  merge_artifacts:
+    name: Merge release & debugger artifacts (${{ matrix.arch }} )
+    needs: build_windows_release
+    outputs:
+      dosbox_version: ${{ needs.build_windows_release.outputs.dosbox_version }}
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # TODO reinstate ARM64 build at some point, but we'll need to build the
+        # external vcpkg dependencies for AMR64 first
+        # arch: [x64, ARM64]
+        arch: [x64]
+
+    steps:
+      - name: Merge artifacts (${{ matrix.arch }} )
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ needs.build_windows_release.outputs.dosbox_version }}
+          pattern: dosbox-staging-windows-${{ matrix.arch }}-*
+          delete-merged: 'true'
+
+
+  build_installer:
+    name:    Build installer (${{ matrix.arch }} )
+    needs:   merge_artifacts
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        # We only provide x64 installers as ARM64 support is experimental
+        arch: [x64]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
+
+
+      - name: Prepare Windows installer
+        shell: bash
+        run: |
+          set -x
+          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          PACKAGE_INFO="release ${VERSION}"
+
+          mkdir -p out/program
+
+          sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
+          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" contrib/windows_installer/DOSBox-Staging-setup.iss
+
+          cp contrib/windows_installer/*                   out
+          cp contrib/icons/windows/dosbox-staging.ico      out
+          cp contrib/icons/windows/dosbox-staging.bmp      out
+          cp contrib/icons/windows/dosbox-staging-side.bmp out
+
+          mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
+          mv out/program/dosbox*.exe                       out
+
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          cd out
+          C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
+          dir
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_vars.outputs.pkg_dir }}-setup
+          path: ${{ github.workspace }}\out\${{ steps.set_vars.outputs.pkg_dir }}-setup.exe
+          overwrite: true
