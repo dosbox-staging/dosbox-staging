@@ -67,7 +67,7 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
 	                                              spin,
 	                                              hdd_seek_samples,
 	                                              true);
-	active_devices.push_back(hdd_noise.get());
+	active_devices.push_back(hdd_noise);
 
 	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
 	                                                 enable_floppy_disk_noise,
@@ -75,7 +75,7 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
 	                                                 false);
-	active_devices.push_back(floppy_noise.get());
+	active_devices.push_back(floppy_noise);
 	MIXER_UnlockMixerThread();
 }
 
@@ -88,7 +88,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 	// Mix audio frames from all active devices
 	for (int i = 0; i < num_frames_requested; ++i) {
 		AudioFrame mixed_sample = {0.0f, 0.0f};
-		for (auto* device : disk_noises->active_devices) {
+		for (const auto& device : disk_noises->active_devices) {
 			AudioFrame sample = device->GetNextFrame();
 			mixed_sample += sample;
 		}

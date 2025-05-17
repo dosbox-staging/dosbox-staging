@@ -75,7 +75,8 @@ public:
 	~DiskNoises();
 
 	std::shared_ptr<MixerChannel> mix_channel;
-	std::vector<DiskNoiseDevice*> active_devices;
+	std::vector<std::shared_ptr<DiskNoiseDevice>> active_devices;
+
 	std::mutex device_mutex;
 
 private:
