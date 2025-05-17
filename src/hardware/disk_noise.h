@@ -36,11 +36,10 @@ public:
 	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
 	                bool loop_spin_sample);
-
+	~DiskNoiseDevice();
 	void ActivateSpin();
 	void PlaySeek();
 	std::vector<float> GetSample();
-	void Shutdown();
 
 private:
 	bool enable_disk_noise    = false;
