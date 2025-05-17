@@ -126,10 +126,6 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	    spin.spin_up_it != spin.spin_up_sample.end()) {
 		sample += (*spin.spin_up_it) * DiskNoiseGain;
 		++spin.spin_up_it;
-		if (spin.spin_up_it == spin.spin_up_sample.end()) {
-			// Finished spin_up_sample
-			spin.spin_up_it = spin.spin_up_sample.end();
-		}
 	} else if (!spin.sample.empty() &&
 	           (spin.spin_it != spin.sample.end() || spin.loop)) {
 		// Loop the spin sound if enabled. Used for
