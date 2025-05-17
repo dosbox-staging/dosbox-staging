@@ -58,11 +58,10 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
                                        ChannelName::DiskNoise,
 	                                             {ChannelFeature::Stereo});
 	mix_channel->Enable(true);
-	MIXER_UnlockMixerThread();
 	float vol_gain = percentage_to_gain(100);
 	mix_channel->SetAppVolume({vol_gain, vol_gain});
 
-	hdd_noise = std::make_unique<DiskNoiseDevice>(DiskType::HardDisk,
+	hdd_noise = std::make_shared<DiskNoiseDevice>(DiskType::HardDisk,
 	                                              enable_hard_disk_noise,
 	                                              spin_up,
 	                                              spin,
@@ -70,13 +69,14 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
 	                                              true);
 	active_devices.push_back(hdd_noise.get());
 
-	floppy_noise = std::make_unique<DiskNoiseDevice>(DiskType::Floppy,
+	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
 	                                                 enable_floppy_disk_noise,
 	                                                 floppy_spin_up,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
 	                                                 false);
 	active_devices.push_back(floppy_noise.get());
+	MIXER_UnlockMixerThread();
 }
 
 void DiskNoises::AudioCallback(const int num_frames_requested)
@@ -100,6 +100,8 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 DiskNoises::~DiskNoises()
 {
+	MIXER_LockMixerThread();
+
 	if (floppy_noise) {
 		floppy_noise.reset();
 	}
@@ -114,6 +116,8 @@ DiskNoises::~DiskNoises()
 		MIXER_DeregisterChannel(mix_channel);
 		mix_channel.reset();
 	}
+
+	MIXER_UnlockMixerThread();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()

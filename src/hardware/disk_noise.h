@@ -79,8 +79,8 @@ public:
 	std::mutex device_mutex;
 
 private:
-	std::unique_ptr<DiskNoiseDevice> floppy_noise;
-	std::unique_ptr<DiskNoiseDevice> hdd_noise;
+	std::shared_ptr<DiskNoiseDevice> floppy_noise;
+	std::shared_ptr<DiskNoiseDevice> hdd_noise;
 
 	void AudioCallback(int frames);
 };
