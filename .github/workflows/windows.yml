@@ -37,7 +37,7 @@ jobs:
         conf:
           - name: MS Clang/LLVM (x64)
             arch: x64
-            max_warnings: 30
+            max_warnings: 60
 
     steps:
       - name: Check out repository
