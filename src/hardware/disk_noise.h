@@ -66,20 +66,17 @@ private:
 
 class DiskNoises {
 public:
-	DiskNoises();
-	void Initialize(const bool enable_floppy_disk_noise,
-	                const bool enable_hard_disk_noise,
-	                const std::string& spin_up, const std::string& spin,
-	                const std::vector<std::string>& hdd_seek_samples,
-	                const std::string& floppy_spin_up,
-	                const std::string& floppy_spin,
-	                const std::vector<std::string>& floppy_seek_samples);
-	void Shutdown();
+	DiskNoises(const bool enable_floppy_disk_noise,
+	           const bool enable_hard_disk_noise,
+	           const std::string& spin_up, const std::string& spin,
+	           const std::vector<std::string>& hdd_seek_samples,
+	           const std::string& floppy_spin_up, const std::string& floppy_spin,
+	           const std::vector<std::string>& floppy_seek_samples);
+	~DiskNoises();
 
 	std::shared_ptr<MixerChannel> mix_channel;
 	std::vector<DiskNoiseDevice*> active_devices;
 	std::mutex device_mutex;
-	const unsigned int SampleRate = 22050;
 
 private:
 	std::unique_ptr<DiskNoiseDevice> floppy_noise;

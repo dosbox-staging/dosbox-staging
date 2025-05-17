@@ -39,28 +39,24 @@
 CHECK_NARROWING();
 
 static std::unique_ptr<DiskNoises> disk_noises;
+const unsigned int DiskNoiseSampleRateInHz = 22050;
 
-DiskNoises::DiskNoises() {
-	mix_channel = nullptr;
-}
-
-void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
-                            const bool enable_hard_disk_noise,
-                            const std::string& spin_up, const std::string& spin,
-                            const std::vector<std::string>& hdd_seek_samples,
-                            const std::string& floppy_spin_up,
-                            const std::string& floppy_spin,
-                            const std::vector<std::string>& floppy_seek_samples)
+DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
+                       const bool enable_hard_disk_noise,
+                       const std::string& spin_up, const std::string& spin,
+                       const std::vector<std::string>& hdd_seek_samples,
+                       const std::string& floppy_spin_up,
+                       const std::string& floppy_spin,
+                       const std::vector<std::string>& floppy_seek_samples)
 {
-
 	MIXER_LockMixerThread();
 	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
 	                                      this,
 	                                      std::placeholders::_1);
-	mix_channel = MIXER_AddChannel(mixer_callback,
-	                               SampleRate,
-	                               ChannelName::DiskNoise,
-	                               {ChannelFeature::Stereo});
+	mix_channel               = MIXER_AddChannel(mixer_callback,
+                                       DiskNoiseSampleRateInHz,
+                                       ChannelName::DiskNoise,
+	                                             {ChannelFeature::Stereo});
 	mix_channel->Enable(true);
 	MIXER_UnlockMixerThread();
 	float vol_gain = percentage_to_gain(100);
@@ -72,6 +68,7 @@ void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
 	                                              spin,
 	                                              hdd_seek_samples,
 	                                              true);
+	active_devices.push_back(hdd_noise.get());
 
 	floppy_noise = std::make_unique<DiskNoiseDevice>(DiskType::Floppy,
 	                                                 enable_floppy_disk_noise,
@@ -79,6 +76,7 @@ void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
 	                                                 false);
+	active_devices.push_back(floppy_noise.get());
 }
 
 void DiskNoises::AudioCallback(const int num_frames_requested)
@@ -100,7 +98,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 	disk_noises->mix_channel->AddAudioFrames(out);
 }
 
-void DiskNoises::Shutdown()
+DiskNoises::~DiskNoises()
 {
 	if (floppy_noise) {
 		floppy_noise.reset();
@@ -220,10 +218,10 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			drflac_close(decoder);
 			continue;
 		}
-		if (sample_rate != disk_noises->SampleRate) {
+		if (sample_rate != DiskNoiseSampleRateInHz) {
 			LOG_WARNING("DISKNOISE: FLAC file '%s' should be %dkHz, but %dkHz was found",
 			            candidate.c_str(),
-			            disk_noises->SampleRate / HertzToKilohertz,
+			            DiskNoiseSampleRateInHz / HertzToKilohertz,
 			            sample_rate / HertzToKilohertz);
 			drflac_close(decoder);
 			continue;
@@ -343,7 +341,6 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 
 	LoadSeekSamples(seek_sample_paths);
 
-	disk_noises->active_devices.push_back(this);
 	DOS_RegisterIoCallback([this]() {
 		// This callback is called from the DOS code
 		// to trigger the spin and seek sounds
@@ -403,7 +400,6 @@ void DiskNoiseDevice::PlaySeek()
 static void disknoise_init(Section* section)
 {
 	constexpr auto MaxNumSeekSamples = 9;
-	disk_noises = std::make_unique<DiskNoises>();
 
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
@@ -424,19 +420,14 @@ static void disknoise_init(Section* section)
 	for (int i = 1; i <= MaxNumSeekSamples; ++i) {
 		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".flac");
 	}
-	disk_noises->Initialize(enable_floppy_disk_noise,
-	                        enable_hard_disk_noise,
-	                        spin_up,
-	                        spin,
-	                        hdd_seek_samples,
-	                        floppy_spin_up,
-	                        floppy_spin,
-	                        floppy_seek_samples);
-}
-
-static void disknoise_shutdown([[maybe_unused]] Section* section)
-{
-	disk_noises->Shutdown();
+	disk_noises = std::make_unique<DiskNoises>(enable_floppy_disk_noise,
+	                                           enable_hard_disk_noise,
+	                                           spin_up,
+	                                           spin,
+	                                           hdd_seek_samples,
+	                                           floppy_spin_up,
+	                                           floppy_spin,
+	                                           floppy_seek_samples);
 }
 
 static void init_disknoise_dosbox_settings(Section_prop& secprop)
