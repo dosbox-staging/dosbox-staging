@@ -107,6 +107,8 @@ DiskNoises::~DiskNoises()
 	if (hdd_noise) {
 		hdd_noise.reset();
 	}
+	active_devices.clear();
+
 	if (active_devices.empty() && mix_channel) {
 		mix_channel->Enable(false);
 		MIXER_DeregisterChannel(mix_channel);
@@ -351,12 +353,6 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 
 DiskNoiseDevice::~DiskNoiseDevice()
 {
-    std::lock_guard<std::mutex> lock(disk_noises->device_mutex);
-    disk_noises->active_devices.erase(
-            std::remove(disk_noises->active_devices.begin(),
-                        disk_noises->active_devices.end(),
-                        this),
-            disk_noises->active_devices.end());
 }
 
 void DiskNoiseDevice::ActivateSpin()
@@ -397,6 +393,13 @@ void DiskNoiseDevice::PlaySeek()
 	seek.current_it     = seek.current_sample.begin();
 }
 
+static void disknoise_destroy([[maybe_unused]] Section* sec)
+{
+	if (disk_noises) {
+		disk_noises = nullptr;
+	}
+}
+
 static void disknoise_init(Section* section)
 {
 	constexpr auto MaxNumSeekSamples = 9;
@@ -428,6 +431,9 @@ static void disknoise_init(Section* section)
 	                                           floppy_spin_up,
 	                                           floppy_spin,
 	                                           floppy_seek_samples);
+
+	constexpr auto changeable_at_runtime = true;
+	section->AddDestroyFunction(&disknoise_destroy, changeable_at_runtime);
 }
 
 static void init_disknoise_dosbox_settings(Section_prop& secprop)
