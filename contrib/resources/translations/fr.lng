@@ -4411,3 +4411,919 @@ Active la carte IBM Music Feature (désactivée par défaut).
 :CONFIG_IMFC_BASE
 L'adresse de base d'entré-sortie de la carte IBM Music Feature (“2A20” par défaut).
 .
+:CONFIG_IMFC_IRQ
+Le numéro IRQ de la IBM Music Feature Card (3 par défaut).
+.
+:CONFIG_IMFC_FILTER
+Filtre pour la sortie de la IBM Music Feature Card :
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition personnalisée du filtre ; voir “sb_filter” pour plus de détails.
+.
+:CONFIG_PCSPEAKER
+Modèle d'émulation de haut-parleur PC :
+ impulse : Émulation très fidèle de la sortie du haut-parleur PC (par défaut).
+             Fonctionne avec la plupart des jeux, mais peut entraîner un son
+             brouillé ou un silence dans un petit nombre de programmes.
+ discrete :  Émulation simplifiée du haut-parleur du PC ;
+                 n'utilisez cette option que pour des titres spécifiques sur
+                qui vous posent des problèmes avec le modèle « impulse ».
+ none/off :  N'émule pas le haut-parleur du PC.
+.
+:CONFIG_ZERO_OFFSET
+Le décalage DC est désormais éliminé globalement de la sortie du
+mixeur principal.
+.
+:CONFIG_TANDY
+Paramétrer l'émulation du son Tandy/PCjr 3 Voice :
+  auto : Active automatiquement le son Tandy/PCjr pour les types
+            de machines 'tandy' et 'pcjr' uniquement (par défaut).
+  on :    Active le son Tandy/PCjr avec prise en charge du DAC, si possible.
+            La plupart des jeux nécessitent également que la machine soit
+            réglée sur 'tandy' ou 'pcjr' pour fonctionner.
+  psg :  Active uniquement le générateur de son programmable à trois voix
+            de la carte sans activer le DAC pour éviter les conflits avec d'autres
+            cartes utilisant le DMA numéro 1.
+  off :   Désactive le son Tandy/PCjr.
+.
+:CONFIG_TANDY_FADEOUT
+Permet de faire disparaître la sortie du synthétiseur Tandy
+après la dernière écriture sur le port IO :
+  off:       Ne pas faire de fondu ; la sortie résiduelle sera jouée
+              pour toujours (par défaut).
+  on:        Attendre 0,5s avant d'effectuer un fondu sur une période de 0,5s.
+  <custom>:  Définition personnalisée du fondu ; voir “opl_fadeout”
+                     pour plus de détails.
+.
+:CONFIG_DISNEY
+Utilisez 'lpt_dac = disney' pour activer le Disney Sound Source.
+.
+:CONFIG_REELMAGIC
+ReelMagic (alias REALmagic) Prise en charge de la lecture MPEG :
+  off:       Désactiver le support (par défaut).
+  cardonly:  Initialiser la carte sans charger le pilote FMPDRV.EXE.
+  on:       Initialise la carte et charge le pilote FMPDRV.EXE au démarrage.
+.
+:CONFIG_REELMAGIC_KEY
+Définit la clé magique 32 bits utilisée pour décoder les vidéos du jeu :
+  auto:      Utilise les routines intégrées pour déterminer la clé (valeur par défaut).
+  common:    Utilise la clé la plus couramment utilisée, qui est 0x40044041.
+  thehorde:  Utilise la clé de The Horde, qui est 0xC39D7088.
+  <custom>:  Définit une clé personnalisée au format hexadécimal (ex. : 0x12345678).
+
+.
+:CONFIG_REELMAGIC_FCODE
+Remplace la logique de rafraîchissement d'image utilisée
+pendant la lecture vidéo :
+  0:       Pas de remplacement : tentative de découverte
+           automatique de la fréquence (par défaut).
+  1 à 7:   Remplace la fréquence d'images par l'une des suivantes
+             (utiliser 1 à 7) :
+           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, ou 7=59.94 images/sec.
+
+.
+:CONFIG_PCJR_MEMORY_CONFIG
+Disposition de la mémoire du PCjr ('expanded' par défaut).
+  expanded:  640 Ko de mémoire totale avec les applications résidant
+              au-dessus de 128 Ko.
+             Compatible avec la plupart des jeux.
+  standard:  128 Ko de mémoire totale avec les applications résidant
+             en dessous de 96 Ko.
+             Nécessaire pour certains jeux plus anciens (ex. : Jumpman, Troll).
+
+.
+:CONFIG_LOCALE_PERIOD
+Définit les paramètres régionaux ('native' par défaut).
+  historic:  Si des données sont disponibles pour le pays donné,
+             imiter l'ancien comportement de DOS
+             lors de l'affichage de l'heure, des dates ou des nombres.
+  modern:    Suivre les pratiques actuelles pour une expérience utilisateur
+             plus cohérente avec les systèmes hôtes typiques.
+  native:    Réutiliser les paramètres du système d'exploitation hôte,
+             quel que soit le pays défini ;
+             utiliser les donnée 'modernes pour combler les lacunes lorsque
+             le système de traduction DOS est trop limité pour suivre les
+             paramètres du bureau.
+
+.
+:CONFIG_KEYBOARD_LAYOUT
+Code de disposition du clavier ('auto' par défaut).
+La liste des codes de disposition de clavier pris en charge peut être affichée à l'aide de
+l'argument de ligne de commande '--list-layouts', par exemple, 'uk' correspond à la disposition
+britannique anglaise. La disposition peut être suivie du numéro de page de code, par exemple,
+'uk 850' sélectionne une police d'écran d'Europe occidentale.
+Définir sur 'auto' pour deviner les valeurs à partir des paramètres du système hôte.
+Après le démarrage, utilisez la commande 'KEYB' pour gérer les dispositions de clavier et les pages de code
+(exécutez 'HELP KEYB' pour plus de détails).
+
+.
+:CONFIG_SHELL_HISTORY_FILE
+Fichier contenant l'historique persistant de la ligne de commande ('shell_history.txt' par défaut).
+Le définir comme vide désactive l'historique persistant du shell.
+.
+:CONFIG_SETVER_TABLE_FILE
+Fichier tabulé contenant la liste des applications et les versions de DOS correspondantes,
+pour un stockage permanent. Utilisé par SETVER.EXE
+(vide par défaut).
+.
+:CONFIG_FILE_LOCKING
+Activer le verrouillage des fichiers (émulation SHARE.EXE ; 'on' par défaut).  
+Cela est nécessaire pour que certaines applications Windows 3.1x fonctionnent correctement.  
+Cela ne pose généralement pas de problème pour les jeux DOS, sauf dans de rares cas  
+(par exemple, la démo Astral Blur). Si vous rencontrez des plantages liés aux  
+permissions de fichiers, vous pouvez essayer de désactiver cette option. 
+.
+:CONFIGITEM_IPX
+Activer l'émulation IPX sur le protocole UDP/IP ('off' par défaut).
+.
+:CONFIGITEM_NE2000_SLIRP
+Activer l'émulation d'une carte réseau Novell NE2000 sur un réseau basé sur
+logiciel (en utilisant libslirp) avec les propriétés suivantes ('on' par défaut) :
+- 255.255.255.0 :  Sous-réseau du LAN virtuel 10.0.2.0.
+- 10.0.2.2 :       IP de la passerelle et du service DHCP.
+- 10.0.2.3 :       IP du serveur DNS virtuel.
+- 10.0.2.15 :      Première IP attribuée par DHCP, votre IP !
+Note : À l'intérieur de DOS, la configuration nécessite un pilote de paquet NE2000,
+un client DHCP et une pile TCP/IP. Vous pourriez avoir besoin de rediriger
+des ports depuis l'hôte vers l'invité DOS, ainsi que depuis votre routeur vers
+votre hôte lorsque vous agissez en tant que serveur pour des jeux multijoueurs.
+.
+:CONFIGITEM_NICBASE_SLIRP
+Adresse de base de la carte NE2000 (300 par défaut).
+Note : Les adresses 220 et 240 pourraient ne pas être disponibles, car elles sont
+attribuées par défaut à la Sound Blaster et à la Gravis UltraSound.
+.
+:CONFIGITEM_NICIRQ_SLIRP
+L'interruption utilisée par la carte NE2000 (3 par défaut).
+Note : Les IRQs 3 et 5 pourraient ne pas être disponibles, car elles sont
+attribuées par défaut à 'serial2' et à la Gravis UltraSound.
+
+.
+:CONFIGITEM_MACADDR_SLIRP
+L'adresse MAC de la carte NE2000 ('AC:DE:48:88:99:AA' par défaut).
+.
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
+Transférer un ou plusieurs ports TCP de l'hôte vers l'invité DOS
+(non défini par défaut).
+Le format est :
+port1  port2  port3 ... (ex. : 21 80 443)
+Cela transférera FTP, HTTP et HTTPS vers l'invité DOS.
+Si les ports sont réservés sur l'hôte, un mappage peut être utilisé :
+hôte:invité  ..., (ex. : 8021:21 8080:80)
+Cela transférera les ports 8021 et 8080 vers FTP et HTTP dans l'invité.
+Une plage de ports adjacents peut être abrégée avec un tiret :
+début-fin ... (ex. : 27910-27960)
+Cela transférera les ports 27910 à 27960 vers l'invité DOS.
+Les mappages et plages peuvent aussi être combinés :
+hdébut-hfin:gdébut-gfin ..., (ex. : 8040-8080:20-60)
+Cela transférera les ports 8040 à 8080 vers 20 à 60 dans l'invité.
+Notes :
+- Si les plages mappées diffèrent, la plage la plus courte est étendue pour correspondre.
+- Si des ports hôtes en conflit sont donnés, seul le premier est configuré.
+- Si des ports invités en conflit sont donnés, la dernière règle prévaut.
+.
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
+Transférer un ou plusieurs ports UDP de l'hôte vers l'invité DOS
+(non défini par défaut). Le format est le même que pour les
+transferts de ports TCP.
+.
+:CONFIG_DEPRECATED_VALUES
+valeurs obsolètes
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
+[color=white]Valeurs possibles :[reset]  %s
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
+[color=white]Valeur par défaut :[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
+[color=white]Valeur actuelle :[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_AUTOEXEC
+[color=white]Description de la [color=light-cyan]autoexec][color=white] section :[reset]
+
+%s
+.
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+[color=yellow]Le paramètre '%s' ne peut pas être modifié en cours d'exécution.[reset]
+Cependant, il sera appliqué au redémarrage en exécutant 'CONFIG -r'
+ou via le raccourci clavier de redémarrage.
+
+.
+:PROGRAM_CONFIG_DEPRECATED
+[color=light-red]Ce paramètre est obsolète et uniquement conservé pour la
+compatibilité avec les anciennes configurations. Veuillez utiliser les alternatives
+suggérées ; la prise en charge sera supprimée à l'avenir.[reset]
+
+.
+:BIOS_REBOOTING_3
+Redémarrage dans 3 secondes...
+.
+:BIOS_REBOOTING_2
+Redémarrage dans 2 secondes...
+.
+:BIOS_REBOOTING_1
+Redémarrage dans 1 seconde...
+.
+:PROGRAM_CLIP_HELP_LONG
+Copier du texte dans le presse-papiers ou récupérer son contenu.
+Utilisation :
+[color=light-cyan]COMMANDE[reset] | [color=light-green]clip[reset]
+[color=light-green]clip[reset] < [color=light-cyan]FICHIER[reset]
+[color=light-green]clip[reset]
+Notes :
+- Si aucune entrée n'est fournie, la commande affiche le contenu du presse-papiers.
+- Cette commande ne gère que les données textuelles, pas les données binaires.
+Exemples :
+[color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copie la liste des fichiers dans le presse-papiers
+[color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
+[color=light-green]clip[reset]                     ; affiche le contenu du presse-papiers
+
+.
+:PROGRAM_CLIP_INPUT_TOO_LARGE
+Flux en entrée trop volumineux.
+.
+:PROGRAM_CLIP_READ_ERROR
+Erreur de lecture du flux en entrée.
+.
+:PROGRAM_MOUNT_READONLY
+Monté en lecture seule
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Jeux\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/NOMUTILISATEUR/Games/doom.iso[reset] -t cdrom
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/NOMUTILISATEUR/jeux/doom.iso[reset] -t cdrom
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+.
+:PROGRAM_KEYB_CODE_PAGE
+Page de code
+.
+:PROGRAM_KEYB_ROM_FONT
+Police de caractères en ROM
+.
+:PROGRAM_KEYB_KEYBOARD_LAYOUT
+Disposition du clavier
+.
+:PROGRAM_KEYB_KEYBOARD_SCRIPT
+Script clavier
+.
+:PROGRAM_KEYB_NOT_LOADED
+non chargé
+.
+:PROGRAM_KEYB_INVALID_CODE_PAGE
+Page de code invalide.
+.
+:PROGRAM_KEYB_CPI_FILE_NOT_FOUND
+Fichier d'informations sur la page de code introuvable.
+.
+:PROGRAM_KEYB_CPI_READ_ERROR
+Erreur de lecture du fichier d'informations sur la page de code.
+.
+:PROGRAM_KEYB_INVALID_CPI_FILE
+Fichier d'informations sur la page de code invalide.
+.
+:PROGRAM_KEYB_CPI_FILE_TOO_LARGE
+Fichier d'informations sur la page de code trop volumineux.
+.
+:PROGRAM_KEYB_UNSUPPORTED_CPX_FILE
+Format de fichier CPX FreeDOS non pris en charge. Convertissez le fichier au
+format CPI en le décompressant avec l'outil tiers [color=light-green]upx[reset].
+
+.
+:PROGRAM_KEYB_PRINTER_CPI_FILE
+Il s'agit d'un fichier d'informations sur la page de code de l'imprimante,
+il ne contient pas de polices d'écran.
+.
+:PROGRAM_KEYB_SCREEN_FONT_UNUSABLE
+Page de code %d trouvée, mais la police d'écran n'a pas pu être utilisée.
+.
+:PROGRAM_KEYB_NO_BUNDLED_CPI_FILE
+Aucun fichier d'informations sur la page de code n'est fourni
+pour la page de code %d.
+.
+:PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE
+Aucune page de code %d dans le fichier d'informations
+sur la page de code.
+.
+:PROGRAM_KEYB_INCOMPATIBLE_MACHINE
+Impossible de modifier la police d'écran ; une machine EGA ou
+supérieure est requise.
+
+.
+:PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND
+Fichier contenant la disposition de clavier '%s' introuvable.
+.
+:PROGRAM_KEYB_INVALID_LAYOUT_FILE
+Fichier invalide contenant la disposition de clavier '%s'.
+.
+:PROGRAM_KEYB_LAYOUT_NOT_KNOWN
+Disposition de clavier '%s' inconnue.
+.
+:PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE
+Aucune disposition de clavier '%s' pour la page de code %d.
+.
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Motif de caractère générique non géré - '%s'.
+.
+:PROGRAM_LS_HELP_LONG
+Afficher le contenu du répertoire sous forme de liste étendue.
+
+Utilisation :
+  [color=light-green]ls[reset] [[color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset], ...]] [[color=light-cyan]PATH[reset] [[color=light-cyan]CHEMIN[reset], ...]] [/a]
+
+Paramètres :
+  [color=light-cyan]PATTERN[reset]  soit un nom de fichier exact, soit un nom de fichier approximatif avec des caractères génériques,
+tels que l'astérisque (*) et le point d'interrogation (?)
+[color=light-cyan]PATH[reset]     chemin exact dans un lecteur DOS monté pour afficher son contenu
+/a             liste tous les fichiers et répertoires, y compris les fichiers cachés et système
+
+Remarques :
+  La commande affichera les répertoires en [color=light-blue]bleu[reset], les programmes DOS exécutables
+  (*.com, *.exe, *.bat) en [color=light-green]vert[reset], et les autres fichiers avec la couleur normale.
+
+Exemples :
+  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Inverser
+.
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Le canal [color=light-cyan]%s[reset] n'est pas actif.
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Commande globale invalide : [color=white]%s[reset]
+
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Volume invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[reset]
+(exécutez MIXER /? pour obtenir de l'aide).
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Force de crossfeed invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[reset]
+(doit être comprise entre 0 et 100).
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Niveau de chorus invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Niveau de réverbération invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[reset]
+(doit être compris entre 0 et 100)
+
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Force de crossfeed manquante après [color=white]x[reset] pour le canal [color=light-cyan]%s[reset]
+(doit être comprise entre 0 et 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Niveau de chorus manquant après [color=white]c[reset] pour le canal [color=light-cyan]%s[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Niveau de réverbération manquant après [color=white]r[reset] pour le canal [color=light-cyan]%s[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Force de crossfeed globale invalide [color=white]%s[reset]
+(doit être comprise entre 0 et 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Niveau de chorus global invalide [color=white]%s[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Niveau de réverbération global invalide [color=white]%s[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Missing global crossfeed strength after [color=white]x[reset]
+(must be between 0 and 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Niveau de chorus global manquant après [color=white]c[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Niveau de réverbération global manquant après [color=white]r[reset]
+(doit être compris entre 0 et 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Commande manquante pour le canal [color=light-cyan]%s[reset]
+
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Commande invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[reset]
+
+.
+:PROGRAM_MODE_HELP_LONG
+Définit le mode d'affichage ou le taux de répétition du clavier.
+
+Utilisation:
+  [color=light-green]mode[reset] [color=white]COLSxLINES[reset]
+  [color=light-green]mode[reset] [color=white]COLS,LINES[reset]
+  [color=light-green]mode[reset] rate=[color=white]RATE[reset] delay=[color=white]DELAY[reset]
+
+Paramètres:
+  [color=white]COLS[reset]      nombre de caractères (colonnes) par ligne (40, 80 ou 132)
+  [color=white]LINES[reset]     nombre de lignes à l'écran (25, 28, 30, 34, 43, 50 ou 60)
+  [color=white]RATE[reset]      taux de répétition des touches, de [color=white]1[reset] à [color=white]32[reset] (1 = le plus lent, 32 = le plus rapide)
+  [color=white]DELAY[reset]     délai avant répétition, de [color=white]1[reset] à [color=white]4[reset] (1 = le plus court, 4 = le plus long)
+
+Remarques:
+  - Combinaisons valides [color=white]COLSxLINES[reset] par type d'adaptateur graphique:
+      Hercules           80x25
+      CGA, PCjr, Tandy   40x25, 80x25
+      EGA                40x25, 80x25, 80x43
+      SVGA (non-S3)      40x25, 80x25, 80x28, 80x30, 80x34, 80x43, 80x50
+      SVGA (S3)          40x25, tous les modes 80 et 132 colonnes
+
+  - Les modes 132x28, 132x30 et 132x34 ne sont disponibles que si `vesa_modes`
+    est réglé sur `all`.
+
+Exemples:
+  [color=light-green]mode[reset] [color=white]132x50
+  [color=light-green]mode[reset] [color=white]80x43[reset]
+  [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
+.
+:PROGRAM_MODE_INVALID_DISPLAY_MODE
+Mode d'affichage invalide: [color=white]%s[reset]
+.
+:PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
+Le mode d'affichage [color=white]%s[reset] n'est pas pris en charge par cet adaptateur graphique.
+.
+:PROGRAM_MODE_UNSUPPORTED_VESA_MODE
+Le mode d'affichage VESA [color=white]%s[reset] n'est pas pris en charge ; définissez vesa_modes = all pour l'activer.
+.
+:PROGRAM_MODE_INVALID_TYPEMATIC_RATE
+Paramètre de taux de répétition invalide.
+.
+:PROGRAM_MORE_HELP_LONG
+Affiche la sortie d'une commande ou le contenu d'un fichier texte une page à la fois.
+
+Utilisation:
+  [color=light-cyan]COMMAND[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]FILE[reset]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset] ...]
+
+Paramètres:
+  [color=light-cyan]COMMAND[reset]  commande dont on affiche la sortie
+  [color=light-cyan]FILE[reset]     nom exact du fichier à afficher, éventuellement avec un chemin
+  [color=light-cyan]PATTERN[reset]  soit un chemin vers un fichier unique, soit un chemin comportant des caractères génériques, à savoir
+           l'astérisque (*) et le point d'interrogation (?)
+  /c       efface l'écran avant chaque fichier
+  /e       mode étendu, avec davantage de raccourcis clavier disponibles
+  /p       traite le caractère de saut de page / de form feed
+  /s       compresse plusieurs lignes vides en une seule
+  /t[color=white]n[reset]      définit la taille des tabulations, de 1 à 9, la valeur par défaut est 8
+  +[color=white]nnn[reset]     saute les [color=white]nnn[reset] premières lignes du premier fichier
+
+Remarques:
+ - Cette commande est uniquement destinée à la consultation de fichiers texte, et non de fichiers binaires.
+ - Les raccourcis clavier suivants sont disponibles:
+   [color=yellow]Space[reset]          pour afficher l'écran suivant.
+   [color=yellow]Enter[reset]          pour afficher la ligne suivante.
+   [color=yellow]N[reset] ou [color=yellow]F[reset]         pour passer au fichier suivant.
+   [color=yellow]Q[reset], [color=yellow]Esc[reset],
+   [color=yellow]Ctrl+C[reset] pour interrompre la commande.
+ - Également, [color=yellow]Ctrl+C[reset] peut être utilisé pour interrompre la commande lors de la lecture des données provenant du clavier,
+    comme lorsque [color=light-green]more[reset] est exécuté sans aucun argument.
+ - Les raccourcis clavier supplémentaires suivants sont disponibles uniquement en mode étendu:
+   [color=yellow]P[reset] [color=white]nnn[reset]          pour afficher les [color=white]nnn[reset] lignes suivantes puis redemander.
+   [color=yellow]S[reset] [color=white]nnn[reset]          pour sauter les [color=white]nnn[reset] lignes suivantes.
+   [color=yellow]=[reset]              pour afficher le numéro de ligne courant.
+ - L'option /p désactive certains raccourcis clavier incompatibles.
+
+Exemples: 
+  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; affiche le répertoire trié une page à la fois
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]   ; affiche le contenu du fichier avec une taille de tabulation de 4
+.
+:PROGRAM_MORE_NO_FILE
+Pas de fichier d'entré trouvé.
+.
+:PROGRAM_MORE_END
+[reset][color=brown]--- fin d'entrée ---[reset]
+.
+:PROGRAM_MORE_NEW_FILE
+[reset][color=brown]--- fichier %s ---[reset]
+.
+:PROGRAM_MORE_NEW_DEVICE
+[reset][color=brown]--- périphérique %s ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SINGLE
+[reset][color=brown]--- appuyez sur SPACE pour la page suivante, ENTER pour la ligne suivante, Q pour quitter ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=brown]--- (%d%%) appuyez sur SPACE pour la page suivante, ENTER pour la ligne suivante, Q pour quitter ---[reset]
+
+.
+:PROGRAM_MORE_PROMPT_MULTI
+[reset][color=brown]--- appuyez sur SPACE ou ENTER pour continuer, N pour le fichier suivant, Q pour quitter ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=brown]--- suite ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=brown]--- (%d%%) suite ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=brown]--- ligne %u ---[reset]
+.
+:PROGRAM_MORE_OPEN_ERROR
+[reset][color=light-red]--- impossible d'ouvrir %s ---[reset]
+.
+:PROGRAM_MORE_TERMINATE
+[reset][color=brown](terminé)[reset]  
+.
+:PROGRAM_MORE_NEXT_FILE
+[reset][color=brown](fichier suivant)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=brown](contenu ignoré)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=brown]combien de lignes ?[reset]
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\jeuxdos[reset]  
+[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom  
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]  
+[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/CD Jeu"[reset] -t cdrom  
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]  
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/NOMUTILISATEUR/CD Jeu"[reset] -t cdrom  
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay  
+.
+:PROGRAM_MOUSECTL_HELP_LONG
+Gère les souris physiques et logiques.
+
+Utilisation:
+  [color=light-green]mousectl[reset] [-all]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=light-cyan]NAME[reset]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
+
+Paramètres:
+  [color=white]INTERFACE[reset]    une de [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
+  -map -unmap  mapper/démapper la souris physique, en respectant les caractères génériques DOS dans [color=light-cyan]NAME[reset]
+  -s -sx -sy   définir la sensibilité / pour l'axe x / pour l'axe y, de -999 à +999
+  -r           définir le taux d'échantillonnage minimal de la souris
+  -on -off     activer ou désactiver la souris sur l'interface donnée
+  -reset       rétablir les paramètres par défaut de la souris
+
+Remarques:
+  - Si la sensibilité ou le taux est omis, il est réinitialisé à sa valeur par défaut.
+  - La sensibilité de la souris définie dans le fichier de configuration agit comme un facteur d'échelle global,
+    la sensibilité par interface définie par cette commande s'appliquant en complément.
+
+Exemples:
+  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; demande à l'utilisateur de sélectionner les souris pour un jeu à deux joueurs
+.
+:PROGRAM_MOUSECTL_SYNTAX_PATTERN
+Syntaxe incorrecte, seuls les caractères ASCII sont autorisés dans le motif.
+.
+:PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
+Syntaxe incorrecte, la sensibilité doit être comprise entre -999 et +999.
+.
+:PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
+Syntaxe incorrecte, interfaces de souris en double.
+.
+:PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
+Syntaxe incorrecte, le taux d'échantillonnage doit être l'un des suivants :
+%s
+.
+:PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
+Le mappage n'est pas disponible en mode sans souris.
+.
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Le mappage n'est pas possible avec le pilote de souris invité actuel.
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT
+Les souris physiques individuelles ne sont pas prises en charge dans cette version.
+.
+:PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
+Les souris physiques individuelles ne sont pas prises en charge si 'mouse_raw_input' est activé.
+.
+:PROGRAM_MOUSECTL_NO_INTERFACES
+Aucune interface de souris disponible.
+.
+:PROGRAM_MOUSECTL_MISSING_INTERFACES
+Interface de souris indisponible.
+.
+:PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
+Aucune souris physique détectée.
+.
+:PROGRAM_MOUSECTL_NO_MATCH
+Aucune souris disponible correspondant au motif.
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER1
+[color=white]Interface      Sensibilité      Taux (Hz)     Statut[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT1
+[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+.
+:PROGRAM_MOUSECTL_TABLE_HEADER2
+[color=white]Interface     Nom de la souris[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2
+[color=light-cyan]%-4s[reset]          %s
+.
+:PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
+[color=white]non mappé    %s[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_HOST
+utilise le pointeu du système hôte
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED
+souris physique mappée
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
+[color=light-red]souris mappée déconnectée[reset]
+.
+:PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
+désactivé
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
+Les taux d'échantillonnage pour les souris sur les interfaces[color=light-cyan] COM[reset] ne sont que des estimations.
+.
+:PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
+Les taux d'échantillonnage dont la valeur minimale est définie sont marqués d'un '*'.
+.
+:PROGRAM_MOUSECTL_MAP_ADVICE
+Cliquez sur le bouton [color=white]gauche[reset] de la souris pour mapper la souris physique
+à l'interface. Cliquer sur n'importe quel autre bouton annule le mappage et attribue le pointeur
+système à toutes les interfaces de souris.
+.
+:PROGRAM_MOUSECTL_MAP_CANCEL
+(mappage annulé)
+.
+:PROGRAM_MOUSECTL_MAP_HINT
+L'intégration transparente de la souris est toujours désactivée lorsque le
+mappage est en cours et les souris mappées reçoivent toujours des
+événements d'entrée brute.
+.
+:PROGRAM_SETVER_HELP_LONG
+Affiche ou définit la version DOS rapportée aux applications.
+
+Utilisation:
+  [color=light-green]setver[reset] \[/b] [/p]
+  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] [color=light-cyan]VERSION[reset] [/q]
+  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] /d [/q]
+  [color=light-green]setver[reset] [color=light-cyan]VERSION[reset] /g [/q]
+  [color=light-green]setver[reset] /d /g [/q]
+  [color=light-green]setver[reset] /d /all [/q]
+
+Paramètres:
+  [color=light-cyan]FILE[reset]     fichier (optionnellement avec chemin) auquel appliquer les paramètres
+  [color=light-cyan]VERSION[reset]  version DOS, au format [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] ou [color=white]n[reset]
+  /g       réglage global, appliqué à tous les exécutables
+  /d       supprimer l'entrée de la table de version
+  /all     avec /d, efface l'intégralité de la table de version
+  /b       affiche la liste au format d'un fichier batch
+  /p       affiche une page à la fois
+  /q       mode silencieux, omet les messages de confirmation
+  /delete et /quiet ont la même signification que /d et /q, respectivement
+
+Remarques:
+  Pour une table de version persistante, spécifiez le stockage dans le fichier de configuration
+  sous la section [dos], en utilisant le réglage 'setver_table_file = [color=light-cyan]STORAGE[reset]'.
+
+Exemples:
+  [color=light-green]setver[reset] /b              ; affiche les paramètres sous forme de fichier batch
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; indique la version DOS 6.22 pour chaque fichier RETRO.COM
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; cesse de surcharger la version DOS rapportée
+.
+:PROGRAM_SETVER_WRONG_TABLE
+Seule la table de version dans le répertoire Z:\ est prise en charge.
+.
+:PROGRAM_SETVER_INVALID_VERSION
+Version DOS incorrecte.
+.
+:PROGRAM_SETVER_TABLE_UPDATED
+Table de version mise à jour.
+.
+:PROGRAM_SETVER_TABLE_CLEARED
+Table de version vidée.
+.
+:PROGRAM_SETVER_TABLE_ALREADY_EMPTY
+Table de version déjà vide.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_REMOVED
+Entrée enlevée de la table de version.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND
+Entrée introuvable dans la table de version.
+.
+:PROGRAM_SETVER_TABLE_EMPTY
+La table de version est vide.
+.
+:PROGRAM_SETVER_GLOBAL
+Version globale indiquée
+.
+:PROGRAM_SETVER_BATCH_GLOBAL
+règle pour chaque exécutable
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_NAME
+règles pour la correspondance par nom de fichier uniquement
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_PATH
+règles pour la correspondance par nom de fichier avec chemin
+.
+:PROGRAM_TREE_HELP_LONG
+Affiche l'arborescence du répertoire sous forme graphique.
+
+Utilisation:
+  [color=light-green]tree[reset] [color=light-cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+
+Paramètres:
+  [color=light-cyan]DIRECTORY[reset]  nom du répertoire à afficher
+  [color=white]ORDER[reset]      ordre d'affichage, l'un des suivants :
+                 [color=white]n[reset] (par nom, alphabétique),
+                 [color=white]s[reset] (par taille, du plus petit en premier),
+                 [color=white]e[reset] (par extension, alphabétique),
+                 [color=white]d[reset] (par date/heure, du plus ancien en premier),
+             avec un préfixe optionnel [color=white]-[reset] pour inverser l'ordre
+  /a         utilise uniquement les caractères ASCII sur 7 bits
+  /b         affichage concis, sans en-tête ni pied de page
+  /f         affiche également les fichiers
+  /p         affiche une page à la fois, raccourcit la sortie pour s'adapter à la largeur de l'écran
+  /da        affiche les attributs
+  /df        affiche la taille des fichiers
+  /dh        affiche également les fichiers et répertoires cachés et système
+  /o[color=white]ORDER[reset]    ordonne la liste (voir ci-dessus)
+
+Remarques:
+  Si [color=light-cyan]DIRECTORY[reset] est omis, le répertoire courant est utilisé.
+
+Exemples:
+  [color=light-green]tree[reset]          ; affiche l'arborescence du répertoire à partir du répertoire courant
+  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; affiche récursivement le contenu du lecteur C:, y compris les fichiers
+.
+:PROGRAM_TREE_DIRECTORY
+Arborescence du répertoire pour le volume %s
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Trop de fichiers ou de sous-répertoires.
+.
+:PROGRAM_FMPDRV_HELP_LONG
+Charger ou décharger le pilote intégré ReelMagic Full Motion Player.
+
+Utilisation:
+  [color=light-green]fmpdrv[reset]     (charge le pilote)
+  [color=light-green]fmpdrv[reset] /u  (décharge le pilote)
+
+Remarques:
+  Le paramètre de configuration "reelmagic = on" charge le pilote
+  au démarrage et empêche sa décharge.
+.
+:PROGRAM_FMPDRV_TITLE
+Pilote ReelMagic Full Motion Player (intégré) %hhu.%hhu
+.
+:PROGRAM_FMPDRV_LOADED
+Chargé à l'interruption %xh
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=brownDéjà chargé à l'interruption %xh[reset]
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=light-red]Non chargé : Pas d'interruptions libres ![reset]
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=brown]Pilote déchargé[reset]
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=brown]Le pilote n'a pas été chargé[reset]
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=brown]Le pilote n'a pas été déchargé : configuré pour rester résident[reset]
+.
+:AUTOEXEC_BAT_GENERATED
+généré à partir de la configuration et de la ligne de commande
+.
+:AUTOEXEC_BAT_CONFIG_SECTION
+depuis la section [autoexec]
+.
+:SHELL_ILLEGAL_FILE_NAME
+Nom de fichier interdit.
+.
+:SHELL_ILLEGAL_SWITCH_COMBO
+Combinaison de commutateurs illégale.
+.
+:SHELL_TOO_MANY_PARAMETERS
+Trop de paramètres.
+.
+:SHELL_EXPECTED_FILE_NOT_DIR
+Un fichier était attendu, pas un répertoire.
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Répertoire introuvable - '%s'
+.
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Aucun sous-répertoire à afficher.
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Aucun fichier ou sous-répertoire à afficher.
+.
+:SHELL_READ_ERROR
+Erreur de lecture du fichier - '%s'
+.
+:SHELL_WRITE_ERROR
+Erreur d'écriture du fichier - '%s'
+.
+:SHELL_CMD_SET_OPTION_P_UNSUPPORTED
+L'option /P n'est pas prise en charge ; veuillez utiliser la commande CHOICE.
+.
+:SHELL_CMD_VOL_HELP
+Affiche le volume du disque et le numéro de série, s'ils existent.
+.
+:SHELL_CMD_VOL_HELP_LONG
+Utilisation:
+  [color=light-green]vol[reset] [color=light-cyan][DRIVE:][reset]
+
+Paramètres:
+  [color=light-cyan]DRIVE[reset]  lettre du lecteur suivie d'un deux-points
+
+Remarques:
+  Exécuter [color=light-green]vol[reset] sans argument utilise le lecteur courant.
+
+Exemples:
+  [color=light-green]vol[reset]
+  [color=light-green]vol[reset] [color=light-cyan]c:[reset]
+.
+:SHELL_CMD_VOL_OUTPUT
+
+ Volume sur le lecteur %c est %s
+ Le numéro de série du volume est %04X-%04X
+.
+:SHELL_CMD_MOVE_HELP
+Déplace des fichiers et renomme des fichiers et des répertoires.
+.
+:SHELL_CMD_MOVE_HELP_LONG
+Utilisation:
+  [color=light-green]move[reset] [color=white]FILENAME1[,FILENAME2,...][reset] [color=light-cyan]DESTINATION[reset]
+  [color=light-green]move[reset] [color=white]DIRECTORY1[reset] [color=light-cyan]DIRECTORY2[reset]
+
+Paramètres:
+  [color=white]FILENAME[reset]     soit un nom de fichier exact, soit un nom inexact avec des jokers,
+               qui sont l'astérisque (*) et le point d'interrogation (?);
+               plusieurs noms de fichiers séparés par des virgules peuvent être indiqués
+  [color=white]DIRECTORY[reset]    nom exact du répertoire, ne comportant aucun caractère générique
+  [color=light-cyan]DESTINATION[reset]  nom exact de fichier ou de répertoire, sans caractères génériques
+
+Remarques:
+  - Si plusieurs fichiers source sont spécifiés, [color=light-cyan]DESTINATION[reset] doit être un répertoire.
+    Sinon, un répertoire sera créé pour vous.
+  - Si un seul fichier source est spécifié, il écrasera [color=light-cyan]DESTINATION[reset].
+
+Exemples:
+  [color=light-green]move[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]
+  [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]mydir[reset]
+.
+:SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
+Impossible de déplacer plusieurs fichiers vers un seul fichier.
+.
+:SHELL_CMD_FOR_HELP
+Exécute une commande spécifiée pour chaque chaîne dans un ensemble.
+.
+:SHELL_CMD_FOR_HELP_LONG
+Utilisation:
+  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]
+
+Paramètres:
+  [color=white]%VAR[reset]     un caractère représentant une variable, précédé d'un '%'
+  [color=light-cyan]in[reset]       mot-clé insensible à la casse
+  [color=white](SET)[reset]    ensemble de chaînes servant à remplacer les instances de [color=white]%VAR[reset] dans [color=white]COMMAND[reset]
+  [color=light-cyan]do[reset]       mot-clé insensible à la casse
+  [color=white]COMMAND[reset]  commande à exécuter pour chaque chaîne de [color=white](SET)[reset]
+
+Remarques:
+  - Dans les fichiers batch, [color=white]%VAR[reset] doit être indiqué comme [color=white]%%VAR[reset] (deux signes de pourcentage).
+  - Les chaînes dans [color=white](SET)[reset] peuvent être séparées par n'importe quel séparateur DOS valide.
+  - Toute chaîne dans [color=white](SET)[reset] contenant des jokers (* ou ?) s'étend à l'ensemble des fichiers correspondants dans le répertoire courant.
+  - L'utilisation d'une autre commande [color=light-green]for[reset] comme [color=white]COMMAND[reset] n'est pas autorisée.
+
+Exemples:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+.
