@@ -43,7 +43,6 @@ public:
 	void Shutdown();
 
 private:
-	const float DisknoiseGain = 0.2f;
 	bool enable_disk_noise    = false;
 
 	struct {

@@ -38,7 +38,6 @@
 
 CHECK_NARROWING();
 
-
 DiskNoises::DiskNoises() {
 	mix_channel = nullptr;
 }
@@ -118,8 +117,9 @@ void DiskNoises::Shutdown()
 
 std::vector<float> DiskNoiseDevice::GetSample()
 {
-	float sample_l = 0.0f;
-	float sample_r = 0.0f;
+	const float DisknoiseGain = 0.2f;
+	float sample_l            = 0.0f;
+	float sample_r            = 0.0f;
 
 	// Mix in spinup and spin samples
 	if (!spin.spin_up_sample.empty() &&
