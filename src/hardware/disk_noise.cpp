@@ -39,7 +39,7 @@
 CHECK_NARROWING();
 
 static std::unique_ptr<DiskNoises> disk_noises;
-const unsigned int DiskNoiseSampleRateInHz = 22050;
+static const unsigned int DiskNoiseSampleRateInHz = 22050;
 
 DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
                        const bool enable_hard_disk_noise,
