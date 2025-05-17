@@ -105,12 +105,10 @@ void DiskNoises::AudioCallback(const int frames)
 void DiskNoises::Shutdown()
 {
 	if (floppy_noise) {
-		floppy_noise->Shutdown();
 		floppy_noise.reset();
 	}
 
 	if (hdd_noise) {
-		hdd_noise->Shutdown();
 		hdd_noise.reset();
 	}
 	if (active_devices.empty() && mix_channel) {
@@ -336,6 +334,16 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	}, disk_type);
 }
 
+DiskNoiseDevice::~DiskNoiseDevice()
+{
+    std::lock_guard<std::mutex> lock(disk_noises->device_mutex);
+    disk_noises->active_devices.erase(
+            std::remove(disk_noises->active_devices.begin(),
+                        disk_noises->active_devices.end(),
+                        this),
+            disk_noises->active_devices.end());
+}
+
 void DiskNoiseDevice::ActivateSpin()
 {
 	if (!enable_disk_noise) {
@@ -374,16 +382,6 @@ void DiskNoiseDevice::PlaySeek()
 
 	seek.current_sample = seek.samples[index];
 	seek.pos            = 0;
-}
-
-void DiskNoiseDevice::Shutdown()
-{
-	std::lock_guard<std::mutex> lock(disk_noises->device_mutex);
-	disk_noises->active_devices.erase(
-	        std::remove(disk_noises->active_devices.begin(),
-	                    disk_noises->active_devices.end(),
-	                    this),
-	        disk_noises->active_devices.end());
 }
 
 static void disknoise_init(Section* section)
