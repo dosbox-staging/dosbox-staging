@@ -842,20 +842,20 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("hard_disk_speed", only_at_start, "maximum");
 	pstring->Set_values({"maximum", "fast", "medium", "slow"});
 	pstring->Set_help(
-	        "Controls the speed of hard disk operations.\n"
-	        "  maximum:     Full speed, no additional slowdown (default)\n"
-	        "  fast:        A harddisk from 1995 with a transfer rate of 15 MB/s\n"
-	        "  medium:      A harddisk from 1990 with a transfer rate of 2.5 MB/s\n"
-	        "  slow:        A harddisk from 1985 with a transfer rate of 600 KB/s\n");
+			"Set the emulated hard disk speed ('maximum' by default).\n"
+			"  maximum:  As fast as possible, no slowdown (default)\n"
+			"  fast:     Typical mid-1990s hard disk speed (~15 MB/s)\n"
+			"  medium:   Typical early 1990s hard disk speed (~2.5 MB/s)\n"
+			"  slow:     Typical 1980s hard disk speed (~600 kB/s)");
 
 	pstring = secprop->Add_string("floppy_disk_speed", only_at_start, "maximum");
 	pstring->Set_values({"maximum", "fast", "medium", "slow"});
 	pstring->Set_help(
-	        "Controls the speed of floppy disk operations.\n"
-	        "  maximum:     Full speed, no additional slowdown (default)\n"
-	        "  fast:        DS-ED floppy speed of 120 KB/s\n"
-	        "  medium:      DS-HD floppy speed of 60 KB/s (standard HD drives)\n"
-	        "  slow:        DS-DD floppy speed of 30 KB/s\n");
+	        "Set the emulated floppy disk speed ('maximum' by default).\n"
+	        "  maximum:  As fast as possible, no slowdown (default)\n"
+	        "  fast:     Extra-high density (ED) floppy speed (~120 kB/s)\n"
+	        "  medium:   High density (HD) floppy speed (~60 kB/s)\n"
+	        "  slow:     Double density (DD) floppy speed (~30 kB/s)");
 
 	// Configure render settings
 	RENDER_AddConfigSection(control);

@@ -429,16 +429,15 @@ static void init_disknoise_dosbox_settings(Section_prop& secprop)
 
 	auto* bool_prop = secprop.Add_bool("hard_disk_noise", only_at_start, false);
 	bool_prop->Set_help(
-	        "Enables emulated noises for hard disks.\n"
-	        "This plays disk spinning and seek noises using pre-recorded samples.\n"
-	        "This can be combined with the 'hdd_io_speed' setting for an'\n"
-	        "authentic experience. This feature is disabled by default.\n");
+	        "Enable emulated hard disk noises ('off' by default).\n"
+	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
+	        "set 'hard_disk_speed' to lower than 'maximum' for an authentic experience.");
 
 	bool_prop = secprop.Add_bool("floppy_disk_noise", only_at_start, false);
 	bool_prop->Set_help(
-	        "Enables emulated noises for floppy disks.\n"
-	        "This can be combined with the 'fdd_io_speed' setting for an'\n"
-	        "authentic experience. This feature is disabled by default.\n");
+			"Enable emulated floppy disk noises ('off' by default).\n"
+			"Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
+			"set 'floppy_disk_speed' to lower than 'maximum' for an authentic experience.");
 }
 
 void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
