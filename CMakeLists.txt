@@ -231,6 +231,10 @@ include_directories(
 
 add_subdirectory(src)
 
+if(WIN32)
+  target_sources(dosbox PRIVATE src/winres.rc)
+endif()
+
 target_link_libraries(dosbox PRIVATE
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
