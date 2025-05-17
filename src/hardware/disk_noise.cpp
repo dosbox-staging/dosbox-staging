@@ -52,7 +52,10 @@ void DiskNoises::Initialize(const bool enable_floppy_disk_noise,
 {
 
 	MIXER_LockMixerThread();
-	mix_channel = MIXER_AddChannel(AudioCallback,
+	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
+	                                      this,
+	                                      std::placeholders::_1);
+	mix_channel = MIXER_AddChannel(mixer_callback,
 	                               SampleRate,
 	                               ChannelName::DiskNoise,
 	                               {ChannelFeature::Stereo});
