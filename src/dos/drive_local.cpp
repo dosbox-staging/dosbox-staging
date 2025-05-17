@@ -568,7 +568,7 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 	dirCache.SetBaseDir(basedir);
 }
 
-static DiskType getDiskTypeFromMediaByte(uint8_t media_byte)
+static DiskType get_disk_type_from_media_byte(uint8_t media_byte)
 {
 	switch (media_byte) {
 		case 0xF0:
@@ -600,7 +600,7 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 		return false;
 	}
 
-	const auto disk_type = getDiskTypeFromMediaByte(
+	const auto disk_type = get_disk_type_from_media_byte(
 	        local_drive.lock()->GetMediaByte());
 
 	DOS_ExecuteRegisteredCallbacks(disk_type);
@@ -641,7 +641,7 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 		return true;
 	}
 
-	const auto disk_type = getDiskTypeFromMediaByte(
+	const auto disk_type = get_disk_type_from_media_byte(
 	        local_drive.lock()->GetMediaByte());
 
 	DOS_ExecuteRegisteredCallbacks(disk_type);
