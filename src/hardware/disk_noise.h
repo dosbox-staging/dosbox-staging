@@ -44,19 +44,19 @@ public:
 private:
 	bool enable_disk_noise    = false;
 
-	struct {
+	struct SpinSample {
 		std::vector<float> spin_up_sample;
 		std::vector<float> sample;
-		size_t pos = 0;
-		size_t spin_up_pos = 0;
 		bool loop = false;
+		std::vector<float>::iterator spin_up_it = spin_up_sample.end();
+		std::vector<float>::iterator spin_it    = sample.end();
 	} spin = {};
 
-	struct {
-		std::vector<float> current_sample;
+	struct SeekSample {
 		std::vector<std::vector<float>> samples;
 		std::vector<int> sample_weights;
-		size_t pos = 0;
+		std::vector<float> current_sample;
+		std::vector<float>::iterator current_it = current_sample.end();
 	} seek = {};
 
 	void LoadSample(const std::string& path, std::vector<float>& buffer);

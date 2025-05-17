@@ -126,30 +126,40 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 
 	// Mix in spinup and spin samples
 	if (!spin.spin_up_sample.empty() &&
-	    spin.spin_up_pos + 1 < spin.spin_up_sample.size()) {
-		sample += spin.spin_up_sample[spin.spin_up_pos++] * DiskNoiseGain;
+	    spin.spin_up_it != spin.spin_up_sample.end()) {
+		sample += (*spin.spin_up_it) * DiskNoiseGain;
+		++spin.spin_up_it;
+		if (spin.spin_up_it == spin.spin_up_sample.end()) {
+			// Finished spin_up_sample
+			spin.spin_up_it = spin.spin_up_sample.end();
+		}
 	} else if (!spin.sample.empty() &&
-	           (spin.pos + 1 < spin.sample.size() || spin.loop)) {
-		sample += spin.sample[spin.pos++] * DiskNoiseGain;
-
+	           (spin.spin_it != spin.sample.end() || spin.loop)) {
 		// Loop the spin sound if enabled. Used for
 		// persistent HDD noise Not used for floppy
 		// noise because motor should stop after r/w
 		// operations aredone
-		if (spin.pos >= spin.sample.size() && spin.loop) {
-			spin.pos = 0;
+		if (spin.spin_it == spin.sample.end() && spin.loop) {
+			spin.spin_it = spin.sample.begin();
+		}
+		if (spin.spin_it != spin.sample.end()) {
+			sample += (*spin.spin_it) * DiskNoiseGain;
+			++spin.spin_it;
 		}
 	}
 
 	// Mix in seek sample, if it's playing
 	if (!seek.current_sample.empty() &&
-	    seek.pos + 1 < seek.current_sample.size()) {
-		sample += seek.current_sample[seek.pos++] * DiskNoiseGain;
+	    seek.current_it != seek.current_sample.end()) {
+		sample += (*seek.current_it) * DiskNoiseGain;
+		++seek.current_it;
 	}
 
 	// If seek sample has finished playing, clear entry
-	if (!seek.current_sample.empty() && seek.pos >= seek.current_sample.size()) {
+	if (!seek.current_sample.empty() &&
+	    seek.current_it == seek.current_sample.end()) {
 		seek.current_sample.clear();
+		seek.current_it = seek.current_sample.end();
 	}
 
 	return AudioFrame{sample, sample};
@@ -320,6 +330,20 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	spin.loop = loop_spin_sample;
 	LoadSample(spin_up_sample_path, spin.spin_up_sample);
 	LoadSample(spin_sample_path, spin.sample);
+
+	// After loading spin_up_sample and sample:
+	if (!spin.spin_up_sample.empty()) {
+		spin.spin_up_it = spin.spin_up_sample.begin();
+	} else {
+		spin.spin_up_it = spin.spin_up_sample.end();
+	}
+
+	if (!spin.sample.empty()) {
+		spin.spin_it = spin.sample.begin();
+	} else {
+		spin.spin_it = spin.sample.end();
+	}
+
 	LoadSeekSamples(seek_sample_paths);
 
 	disk_noises->active_devices.push_back(this);
@@ -351,11 +375,11 @@ void DiskNoiseDevice::ActivateSpin()
 	if (!spin.loop) {
 		// Check if the sample is still playing and don't interrupt if
 		// it does
-		if (spin.sample.empty() || spin.pos + 1 < spin.sample.size()) {
+		if (spin.sample.empty() || spin.spin_it != spin.sample.end()) {
 			return;
 		}
 		// Restart spin sample
-		spin.pos = 0;
+		spin.spin_it = spin.sample.begin();
 	}
 }
 
@@ -366,19 +390,17 @@ void DiskNoiseDevice::PlaySeek()
 	}
 
 	const size_t index = ChooseWeightedSeekIndex();
-	if (index >= seek.samples.size() ||
-	    seek.samples[index].empty()) {
+	if (index >= seek.samples.size() || seek.samples[index].empty()) {
 		return;
 	}
 
-	// Check if the sample is still playing and don't interrupt if it does
 	if (!seek.current_sample.empty() &&
-	    seek.pos + 1 < seek.current_sample.size()) {
+	    seek.current_it != seek.current_sample.end()) {
 		return;
 	}
 
 	seek.current_sample = seek.samples[index];
-	seek.pos            = 0;
+	seek.current_it     = seek.current_sample.begin();
 }
 
 static void disknoise_init(Section* section)
