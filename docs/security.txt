@@ -12,7 +12,7 @@ Hash: SHA256
 # This file conforms to draft RFC:
 # https://datatracker.ietf.org/doc/html/draft-foudil-securitytxt-12
 
-Canonical: https://github.com/dosbox-staging/dosbox-staging/blob/main/security.txt
+Canonical: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/security.txt
 
 # The DOSBox Staging team is comprised of volunteers focussing
 # on various aspects of the project. Please inform the team as
