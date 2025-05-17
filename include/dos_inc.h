@@ -152,10 +152,10 @@ bool DOS_SetFileDate(uint16_t entry, uint16_t ntime, uint16_t ndate);
 void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type);
 void DOS_RegisterIoCallback(std::function<void()> callback, DiskType disk_type);
 void DOS_ExecuteRegisteredCallbacks(DiskType disk_type);
-void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type);
-void DOS_PerformHardDiskIoDelay(Bits data_transferred_bytes);
-void DOS_PerformFloppyIoDelay(Bits data_transferred_bytes);
-void DOS_PerformCdRomIoDelay(Bits data_transferred_bytes);
+void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type);
+void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes);
+void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes);
+void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes);
 uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();
 

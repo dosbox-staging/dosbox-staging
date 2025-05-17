@@ -222,7 +222,7 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 // Add a delay as configured for the relevant disk type, and call any
 // registered callbacks.
 
-void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
+void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 {
 	switch (disk_type) {
 	case DiskType::Floppy:
@@ -240,7 +240,7 @@ void DOS_PerformDiskIoDelay(Bits data_transferred_bytes, DiskType disk_type)
 	}
 }
 
-void DOS_PerformHardDiskIoDelay(Bits data_transferred_bytes)
+void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 {
 	constexpr auto HardDiskSpeedFastKbPerSec   = 15000;
 	constexpr auto HardDiskSpeedMediumKbPerSec = 2500;
@@ -275,7 +275,7 @@ void DOS_PerformHardDiskIoDelay(Bits data_transferred_bytes)
 	} while (PIC_FullIndex() < endtime);
 }
 
-void DOS_PerformFloppyIoDelay(Bits data_transferred_bytes)
+void DOS_PerformFloppyIoDelay(uint16_t data_transferred_bytes)
 {
 	constexpr auto FloppyDiskSpeedFastKbPerSec   = 120;
 	constexpr auto FloppyDiskSpeedMediumKbPerSec = 60;
@@ -310,7 +310,7 @@ void DOS_PerformFloppyIoDelay(Bits data_transferred_bytes)
 	} while (PIC_FullIndex() < endtime);
 }
 
-void DOS_PerformCdRomIoDelay(Bits data_transferred_bytes)
+void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 {
 	constexpr auto CdRomSpeedFastKbPerSec   = 1200;
 	constexpr auto CdRomSpeedMediumKbPerSec = 300;
