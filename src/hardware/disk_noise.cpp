@@ -177,7 +177,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			continue;
 		}
 
-		// --- Load entire file into memory ---
+		// Load entire file into memory
 		std::ifstream file(candidate, std::ios::binary | std::ios::ate);
 		if (!file) {
 			LOG_WARNING("DISKNOISE: Failed to open file '%s'",
@@ -195,7 +195,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			continue;
 		}
 
-		// --- Decode FLAC from memory ---
+		// Decode FLAC from memory
 		drflac* decoder = drflac_open_memory(file_data.data(),
 		                                     file_data.size(),
 		                                     nullptr);
