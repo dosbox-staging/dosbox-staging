@@ -2691,3 +2691,1723 @@ Italie
 :COUNTRY_NAME_ROU
 Roumanie
 .
+:COUNTRY_NAME_CHE
+Suisse
+.
+:COUNTRY_NAME_CZE
+Tchéquie
+.
+:COUNTRY_NAME_AUT
+Autriche
+.
+:COUNTRY_NAME_GBR
+Royaume-Uni
+.
+:COUNTRY_NAME_DNK
+Danemark
+.
+:COUNTRY_NAME_SWE
+Suède
+.
+:COUNTRY_NAME_NOR
+Norvège
+.
+:COUNTRY_NAME_POL
+Pologne
+.
+:COUNTRY_NAME_DEU
+Allemagne
+.
+:COUNTRY_NAME_MEX
+Mexique
+.
+:COUNTRY_NAME_ARG
+Argentine
+.
+:COUNTRY_NAME_BRA
+Brésil
+.
+:COUNTRY_NAME_CHL
+Chili
+.
+:COUNTRY_NAME_COL
+Colombie
+.
+:COUNTRY_NAME_VEN
+Venezuela
+.
+:COUNTRY_NAME_MYS
+Malaisie
+.
+:COUNTRY_NAME_AUS
+Australie
+.
+:COUNTRY_NAME_IDN
+Indonésie
+.
+:COUNTRY_NAME_PHL
+Philippines
+.
+:COUNTRY_NAME_NZL
+Nouvelle-Zélande
+.
+:COUNTRY_NAME_SGP
+Singapour
+.
+:COUNTRY_NAME_THA
+Thaïlande
+.
+:COUNTRY_NAME_KAZ
+Kazakhstan
+.
+:COUNTRY_NAME_JPN
+Japon
+.
+:COUNTRY_NAME_KOR
+Corée du Sud
+.
+:COUNTRY_NAME_VNM
+Vietnam
+.
+:COUNTRY_NAME_CHN
+Chine
+.
+:COUNTRY_NAME_TUR
+Turquie
+.
+:COUNTRY_NAME_IND
+Inde
+.
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Asie (Anglais)
+.
+:COUNTRY_NAME_MAR
+Maroc
+.
+:COUNTRY_NAME_DZA
+Algérie
+.
+:COUNTRY_NAME_TUN
+Tunisie
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Bénin
+.
+:COUNTRY_NAME_NGA
+Nigéria
+.
+:COUNTRY_NAME_FRO
+Îles Féroé
+.
+:COUNTRY_NAME_PRT
+Portugal
+.
+:COUNTRY_NAME_LUX
+Luxembourg
+.
+:COUNTRY_NAME_IRL
+Irlande
+.
+:COUNTRY_NAME_ISL
+Islande
+.
+:COUNTRY_NAME_ALB
+Albanie
+.
+:COUNTRY_NAME_MLT
+Malte
+.
+:COUNTRY_NAME_FIN
+Finlande
+.
+:COUNTRY_NAME_BGR
+Bulgarie
+.
+:COUNTRY_NAME_LTU
+Lituanie
+.
+:COUNTRY_NAME_LVA
+Lettonie
+.
+:COUNTRY_NAME_EST
+Estonie
+.
+:COUNTRY_NAME_ARM
+Arménie
+.
+:COUNTRY_NAME_BLR
+Biélorussie
+.
+:COUNTRY_NAME_UKR
+Ukraine
+.
+:COUNTRY_NAME_SRB
+Serbie
+.
+:COUNTRY_NAME_MNE
+Monténégro
+.
+:COUNTRY_NAME_HRV
+Croatie
+.
+:COUNTRY_NAME_SVN
+Slovénie
+.
+:COUNTRY_NAME_BIH_LAT
+Bosnie-Herzégovine (Latin)
+.
+:COUNTRY_NAME_BIH_CYR
+Bosnie-Herzégovine (Cyrillique)
+.
+:COUNTRY_NAME_MKD
+Macédoine du Nord
+.
+:COUNTRY_NAME_SVK
+Slovaquie
+.
+:COUNTRY_NAME_GTM
+Guatemala
+.
+:COUNTRY_NAME_SLV
+El Salvador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nicaragua
+.
+:COUNTRY_NAME_CRI
+Costa Rica
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Bolivie
+.
+:COUNTRY_NAME_ECU
+Équateur
+.
+:COUNTRY_NAME_PRY
+Paraguay
+.
+:COUNTRY_NAME_URY
+Uruguay
+.
+:COUNTRY_NAME_XME
+Arabe (Moyen-Orient)
+.
+:COUNTRY_NAME_HKG
+Hong Kong
+.
+:COUNTRY_NAME_TWN
+Taïwan
+.
+:COUNTRY_NAME_LBN
+Liban
+.
+:COUNTRY_NAME_JOR
+Jordanie
+.
+:COUNTRY_NAME_SYR
+Syrie
+.
+:COUNTRY_NAME_KWT
+Koweït
+.
+:COUNTRY_NAME_SAU
+Arabie saoudite
+.
+:COUNTRY_NAME_YEM
+Yémen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Émirats arabes unis
+.
+:COUNTRY_NAME_ISR
+Israël
+.
+:COUNTRY_NAME_BHR
+Bahreïn
+.
+:COUNTRY_NAME_QAT
+Qatar
+.
+:COUNTRY_NAME_MNG
+Mongolie
+.
+:COUNTRY_NAME_TJK
+Tadjikistan
+.
+:COUNTRY_NAME_TKM
+Turkménistan
+.
+:COUNTRY_NAME_AZE
+Azerbaïdjan
+.
+:COUNTRY_NAME_GEO
+Géorgie
+.
+:COUNTRY_NAME_KGZ
+Kirghizistan
+.
+:COUNTRY_NAME_UZB
+Ouzbékistan
+.
+:CODE_PAGE_DESCRIPTION_437
+États-Unis
+.
+:CODE_PAGE_DESCRIPTION_113
+Yougoslave
+.
+:CODE_PAGE_DESCRIPTION_667
+Polonais, encodage Mazovien
+.
+:CODE_PAGE_DESCRIPTION_668
+Polonais, compatible avec la page de code 852
+.
+:CODE_PAGE_DESCRIPTION_737
+Grec-2
+.
+:CODE_PAGE_DESCRIPTION_770
+Encodage baltique, RST 1095:89
+.
+:CODE_PAGE_DESCRIPTION_771
+Lituanien et russe, encodage KBL
+.
+:CODE_PAGE_DESCRIPTION_773
+Baltique, encodage KBL
+.
+:CODE_PAGE_DESCRIPTION_775
+Latin-7 (baltique)
+.
+:CODE_PAGE_DESCRIPTION_777
+Lituanien, accentué, encodage KBL
+.
+:CODE_PAGE_DESCRIPTION_778
+Lituanien, accentué, encodage LST 1590-2
+.
+:CODE_PAGE_DESCRIPTION_808
+Russe, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_848
+Ukrainien, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_849
+Biélorusse, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_850
+Latin-1 (Europe de l'ouest)
+.
+:CODE_PAGE_DESCRIPTION_851
+Grec, ancien encodage
+.
+:CODE_PAGE_DESCRIPTION_852
+Latin-2 (Europe centrale), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_853
+Latin-3 (turc, maltais, espéranto)
+.
+:CODE_PAGE_DESCRIPTION_855
+Slovène
+.
+:CODE_PAGE_DESCRIPTION_856
+Hébreu-2, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_857
+Latin-5 (turc), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_858
+Latin-1 (Europe occidentale), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_859
+Latin-9 (Europe occidentale), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_860
+Portugais
+.
+:CODE_PAGE_DESCRIPTION_861
+Islandais
+.
+:CODE_PAGE_DESCRIPTION_862
+Hébreu-2
+.
+:CODE_PAGE_DESCRIPTION_863
+Français canadien
+.
+:CODE_PAGE_DESCRIPTION_864
+Arabe
+.
+:CODE_PAGE_DESCRIPTION_865
+Nordique
+.
+:CODE_PAGE_DESCRIPTION_866
+Russe
+.
+:CODE_PAGE_DESCRIPTION_867
+Tchèque et slovaque, encodage Kamenický
+.
+:CODE_PAGE_DESCRIPTION_869
+Grec, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_872
+Slovène, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_899
+Arménien, encodage ArmSCII-8A
+.
+:CODE_PAGE_DESCRIPTION_991
+Polonais, encodage Mazovien, avec symbole PLN
+.
+:CODE_PAGE_DESCRIPTION_1116
+Estonien
+.
+:CODE_PAGE_DESCRIPTION_1117
+Letton
+.
+:CODE_PAGE_DESCRIPTION_1118
+Lituanien, encodage LST 1283
+.
+:CODE_PAGE_DESCRIPTION_1119
+Lituanien et russe, encodage LST 1284
+.
+:CODE_PAGE_DESCRIPTION_1125
+Ukrainien
+.
+:CODE_PAGE_DESCRIPTION_1131
+Biélorusse
+.
+:CODE_PAGE_DESCRIPTION_3012
+Letton et russe, encodage RusLat
+.
+:CODE_PAGE_DESCRIPTION_3021
+Bulgare, encodage MIK
+.
+:CODE_PAGE_DESCRIPTION_3845
+Hongrois, encodage CWI-2
+.
+:CODE_PAGE_DESCRIPTION_3846
+Turc
+.
+:CODE_PAGE_DESCRIPTION_3848
+Brésilien, encodage ABICOMP
+.
+:CODE_PAGE_DESCRIPTION_30000
+Same, Kalo, Finnique
+.
+:CODE_PAGE_DESCRIPTION_30001
+Celtique et écossais, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30002
+Tadjik, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30003
+Amérique latine, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30004
+Groenlandais et nord-germanique, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30005
+Nigérian, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30006
+Vietnamien, encodage VISCII
+.
+:CODE_PAGE_DESCRIPTION_30007
+Latin et romanche, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30008
+Abkhaze et ossète, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30009
+Romani et turcique, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30010
+Gagaouze et moldave, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30011
+Russe du Sud, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30012
+Sibérien, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30013
+Turcique, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30014
+Finno-ougrien (Mari, Oudmourte), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30015
+Khanty, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30016
+Mansi, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30017
+Russe du Nord-Ouest, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30018
+Tatar latin et russe, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30019
+Tchétchène latin et russe, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30020
+Bas saxon et frison, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30021
+Océanien, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30022
+Premières Nations canadiennes, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30023
+Africain austral, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30024
+Nord et est africain, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30025
+Africain occidental, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30026
+Africain central, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30027
+Béninois, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30028
+Nigérien, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30029
+Mexicain, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30030
+Mexicain-2, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30031
+Latin-4 (Europe du Nord), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30032
+Latin-6 (nordique), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_30033
+Tatar de Crimée, avec symbole UAH
+.
+:CODE_PAGE_DESCRIPTION_30034
+Cherokee
+.
+:CODE_PAGE_DESCRIPTION_30039
+Ukrainien, avec symbole UAH
+.
+:CODE_PAGE_DESCRIPTION_30040
+Russe, avec symbole UAH
+.
+:CODE_PAGE_DESCRIPTION_58152
+Kazakh, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_58210
+Azéri cyrillique et russe
+.
+:CODE_PAGE_DESCRIPTION_58335
+Kachoube, basé sur Mazovie, avec symbole PLN
+.
+:CODE_PAGE_DESCRIPTION_58601
+Lituanien, accentué, encodage LST 1590-4, avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_59234
+Tatar
+.
+:CODE_PAGE_DESCRIPTION_59829
+Géorgien
+.
+:CODE_PAGE_DESCRIPTION_60258
+Azéri latin et russe
+.
+:CODE_PAGE_DESCRIPTION_60853
+Géorgien avec lettres majuscules
+.
+:CODE_PAGE_DESCRIPTION_62306
+Ouzbek
+.
+:CODE_PAGE_DESCRIPTION_65506
+Arménien, encodage ArmSCII-8
+.
+:CODE_PAGE_DESCRIPTION_813
+ISO-8859-7 (grec), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_819
+ISO-8859-1 (Europe occidentale)
+.
+:CODE_PAGE_DESCRIPTION_901
+ISO-8859-13 (baltique), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_912
+ISO-8859-2 (Europe centrale)
+.
+:CODE_PAGE_DESCRIPTION_913
+ISO-8859-3 (Europe du Sud)
+.
+:CODE_PAGE_DESCRIPTION_914
+ISO-8859-4 (Europe du Nord)
+.
+:CODE_PAGE_DESCRIPTION_915
+ISO-8859-5 (cyrillique)
+.
+:CODE_PAGE_DESCRIPTION_919
+ISO-8859-10 (nordique)
+.
+:CODE_PAGE_DESCRIPTION_920
+ISO-8859-9 (turc)
+.
+:CODE_PAGE_DESCRIPTION_921
+ISO-8859-13 (baltique)
+.
+:CODE_PAGE_DESCRIPTION_923
+ISO-8859-15 (Europe occidentale), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_1124
+ISO-8859-5 (modifié pour l’ukrainien)
+.
+:CODE_PAGE_DESCRIPTION_58163
+ISO-8859-14 (Celtique)
+.
+:CODE_PAGE_DESCRIPTION_58258
+ISO-8859-4 (Europe du Nord), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_61235
+ISO-8859-1 (Europe occidentale), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_63283
+ISO-8859-1 (modifié pour le lituanien)
+.
+:CODE_PAGE_DESCRIPTION_65500
+ISO-8859-16 (Europe du Sud-Est)
+.
+:CODE_PAGE_DESCRIPTION_902
+ISO-8 (estonien), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_922
+ISO-8 (estonien)
+.
+:CODE_PAGE_DESCRIPTION_58259
+ISO-IR-201 (volgaïque)
+.
+:CODE_PAGE_DESCRIPTION_59187
+ISO-IR-197 (same)
+.
+:CODE_PAGE_DESCRIPTION_59283
+ISO-IR-200 (ouralique)
+.
+:CODE_PAGE_DESCRIPTION_60211
+ISO-IR-209 (same et romani finnois)
+.
+:CODE_PAGE_DESCRIPTION_65501
+ISO-IR-123 (canadien et espagnol)
+.
+:CODE_PAGE_DESCRIPTION_65502
+ISO-IR-143 (jeu technique)
+.
+:CODE_PAGE_DESCRIPTION_65503
+ISO-IR-181 (jeu électrotechnique)
+.
+:CODE_PAGE_DESCRIPTION_65504
+ISO-IR-39 (africain)
+.
+:CODE_PAGE_DESCRIPTION_878
+KOI8-R (russe)
+.
+:CODE_PAGE_DESCRIPTION_58222
+KOI8-U (russe et ukrainien)
+.
+:CODE_PAGE_DESCRIPTION_59246
+KOI8-RU (russe, bélarusse, ukrainien)
+.
+:CODE_PAGE_DESCRIPTION_60270
+KOI8-F (Slave complet)
+.
+:CODE_PAGE_DESCRIPTION_61294
+KOI8-CA (slave complet et non-slave)
+.
+:CODE_PAGE_DESCRIPTION_62318
+KOI8-T (russe et tadjik)
+.
+:CODE_PAGE_DESCRIPTION_63342
+KOI8-C (russe et vieux russe), avec symbole euro
+.
+:CODE_PAGE_DESCRIPTION_1275
+Europe occidentale (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1280
+Grec (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1281
+Turc (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1282
+Europe centrale et baltique (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1283
+Cyrillique (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1284
+Croate (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1285
+Roumain (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1286
+Islandais (Apple)
+.
+:CODE_PAGE_DESCRIPTION_58619
+gaélique (Apple, ancienne orthographe), gallois
+.
+:CODE_PAGE_DESCRIPTION_58627
+Ukrainien (Apple)
+.
+:CODE_PAGE_DESCRIPTION_58630
+Same, Kalo, Finnique, avec symbole euro (Apple)
+.
+:CODE_PAGE_DESCRIPTION_1250
+Europe centrale, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1251
+Cyrillique, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1252
+Europe occidentale, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1253
+Grec, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1254
+Turc, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1257
+Balte, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1270
+Same, Kalo, Finnique, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_1361
+Europe du Sud, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_58595
+Kazakh, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_58596
+Géorgien (Windows)
+.
+:CODE_PAGE_DESCRIPTION_58598
+Azéri, avec symbole euro (Windows)
+.
+:CODE_PAGE_DESCRIPTION_59619
+Asie centrale (Windows)
+.
+:CODE_PAGE_DESCRIPTION_59620
+Gaélique (Windows, ancienne orthographe), gallois
+.
+:CODE_PAGE_DESCRIPTION_60643
+Iranien du Nord-Est (Windows)
+.
+:CODE_PAGE_DESCRIPTION_61667
+Inuit-aléoute (Windows)
+.
+:CODE_PAGE_DESCRIPTION_62691
+Toungouse-mandchou (Windows)
+.
+:SCRIPT_NAME_LATN
+Latin
+.
+:SCRIPT_NAME_ARAB
+Arabe
+.
+:SCRIPT_NAME_ARMN
+Arménien
+.
+:SCRIPT_NAME_CHER
+Cherokee
+.
+:SCRIPT_NAME_CYRL
+Cyrillique
+.
+:SCRIPT_NAME_GEOR
+Géorgien
+.
+:SCRIPT_NAME_GREK
+Grec
+.
+:SCRIPT_NAME_HEBR
+Hébreu
+.
+:SCRIPT_PROPERTY_PHONETIC
+phonétique
+.
+:SCRIPT_PROPERTY_NON_STANDARD
+non-standard
+.
+:KEYBOARD_LAYOUT_NAME_US
+États-Unis (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UX
+États-Unis (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CO
+États-Unis (Colemak)
+.
+:KEYBOARD_LAYOUT_NAME_DV
+États-Unis (Dvorak)
+.
+:KEYBOARD_LAYOUT_NAME_LH
+États-Unis (Dvorak gaucher)
+.
+:KEYBOARD_LAYOUT_NAME_RH
+États-Unis (Dvorak droitier)
+.
+:KEYBOARD_LAYOUT_NAME_UK
+Royaume-Uni (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_UK168
+Royaume-Uni (alternatif, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KX
+Royaume-Uni (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_AR462
+Arabe (AZERTY/arabe)
+.
+:KEYBOARD_LAYOUT_NAME_AR470
+Arabe (QWERTY/arabe)
+.
+:KEYBOARD_LAYOUT_NAME_AZ
+Azéri (QWERTY/cyrillique)
+.
+:KEYBOARD_LAYOUT_NAME_BA
+Bosniaque (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_BE
+Belge (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BX
+Belge (international, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BG
+Bulgare (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_BG103
+Bulgare (QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_BG241
+Bulgare (JCUKEN/national)
+.
+:KEYBOARD_LAYOUT_NAME_BN
+Bénin (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR
+Brésilien (disposition ABNT, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BR274
+Brésilien (disposition États-Unienne, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_BY
+Biélorusse (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CE
+Tchétchène (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CE443
+Tchétchène (machine à écrire, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_CF
+Canadien (standard, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CF445
+Canadien (disposition double, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_CG
+Monténégrin (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ
+Tchèque (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ243
+Tchèque (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_CZ489
+Tchèque (développeurs, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_DE
+Allemand (standard, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_GR453
+Allemand (disposition double, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_DK
+Danois (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_EE
+Estonien (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_ES
+Espagnol (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SX
+Espagnol (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FI
+Finnois (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_FO
+Féroïen (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FR
+Français (standard, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_FX
+Français (international, AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_GK
+Grec (319, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_GK220
+Grec (220, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_GK459
+Grec (459, non-standard/national)
+.
+:KEYBOARD_LAYOUT_NAME_HR
+Croate (QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_HU
+Hongrois (101 touches, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_HU208
+Hongrois (102 touches, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_HY
+Arménien (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IL
+Hébreu (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IS
+Islandais (101 touches, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IS161
+Islandais (102 touches, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_IT
+Italien (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IT142
+Italien (142, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_IX
+Italien (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_KA
+Géorgien (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KK
+Kazakh (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KK476
+Kazakh (476, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_KY
+Kirghize (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_LA
+Amérique latine (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_LT
+Lituanien (Baltique, QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LT210
+Lituanien (développeurs, QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LT211
+Lituanien (AZERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LT221
+Lituanien (LST 1582, AZERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LT456
+Lituanien (QWERTY/AZERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LV
+Letton (standard, QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_LV455
+Letton (QWERTY/UGJRMV/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_MK
+Macédonien (QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_MN
+Mongol (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_MT
+Maltais (disposition du Royaume-Uni, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_MT103
+Maltais (disposition états-unienne, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NE
+Niger (AZERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NG
+Niger (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NL
+Néerlandais (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_NO
+Norvégien (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_PH
+Philippin (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PL
+Polonais (développeurs, QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_PL214
+Polonais (machine à écrire, QWERTZ/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_PO
+Portugais (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_PX
+Portugais (international, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_RO
+Roumain (standard, QWERTZ/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_RO446
+Roumain (QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_RU
+Russe (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RU443
+Russe (machine à écrire, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RX
+Russe (standard étendu, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_RX443
+Russe (machine à écrire, étendu, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_SD
+Suisse (Allemand, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SF
+Suisse (Français, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SI
+Slovène (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SK
+Slovaque (QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SQ
+Albanais (pas de touches mortes, QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_SQ448
+Albanais (touches mortes, QWERTZ)
+.
+:KEYBOARD_LAYOUT_NAME_SV
+Suèdois (QWERTY/ASERTT)
+.
+:KEYBOARD_LAYOUT_NAME_TJ
+Tadjik (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_TM
+Turkmène (QWERTY/phonétique)
+.
+:KEYBOARD_LAYOUT_NAME_TR
+Turc (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_TR440
+Turc (non-standard)
+.
+:KEYBOARD_LAYOUT_NAME_TT
+Turc (standard, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_TT443
+Tatar (machine à écrire, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR
+Ukrainien (101 touches, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR1996
+Ukrainien (101 touches, 1996, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR2001
+Ukrainien (102 touches, 2001, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR2007
+Ukrainien (102 touches, 2007, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UR465
+Ukrainien (101 touches, 465, QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_UZ
+Ouzbèke (QWERTY/national)
+.
+:KEYBOARD_LAYOUT_NAME_VI
+Vietnamien (QWERTY)
+.
+:KEYBOARD_LAYOUT_NAME_YC
+Serbe (touche morte, QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_YC450
+Serbe (pas de touche morte, QWERTZ/national)
+.
+:KEYBOARD_LAYOUT_NAME_YU
+Yougoslave (QWERTZ)
+.
+:KEYBOARD_MOD_ADJECTIVE_LEFT
+Gauche
+.
+:KEYBOARD_MOD_ADJECTIVE_RIGHT
+Droite
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Liste des nuanceurs GLSL disponibles
+------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Les nuanceurs ci-dessus peuvent être utilisés exactement comme indiqué
+dans le paramètre de configuration « glshader », sans qu'il soit nécessaire
+d'indiquer le chemin des ressources ou l'extension .glsl.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Le chemin '%s' n'existe pas.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Le chemin '%s' n'a pas de nuanceurs.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Le chemin '%s' comporte:
+.
+:TITLEBAR_CYCLES_MS
+cycles/ms
+.
+:TITLEBAR_CYCLES_THROTTLED
+ralenti
+.
+:TITLEBAR_MUTED
+muet
+.
+:TITLEBAR_PAUSED
+EN PAUSE
+.
+:TITLEBAR_HINT_CAPTURED
+curseur captif
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY
+curseur captif, %s+F10 pour le libérer
+.
+:TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
+curseur captif, %s+F10 or clic-milieu pour le libérer
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY
+pour capturer le curseur, appuyez sur %s+F10
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
+pour capturer le curseur, appuyez sur %s+F10 ou clic-milieu
+.
+:TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
+pour capturer le curseur, appuyez sur %s+F10 ou cliquez
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY
+souris transparente, %s+F10 pour capturer le curseur
+.
+:TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
+souris transparente, %s+F10 ou clic-milieu le curseur
+.
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
+Le moteur de rendu à utiliser pour la sortie graphique (« opengl » par défaut).
+Seul le moteur « opengl » prend en charge les nuanceurs et constitue donc l'option préférée.
+Le moteur 'texture' n'est fourni qu'en dernier recours en cas de bogues ou de pilotes
+bogués ou inexistants (ce qui est extrêmement rare).
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Le moteur de rendu à utiliser pour la sortie graphique (« texture » par défaut).
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Moteur OpenGL avec support des nuanceurs (par défaut).
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Le moteur de rendu de SDL avec interpolation bilinéaire.
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Le moteur de rendu de SDL avec interpolation du plus proche voisin (non-bilinéaire).
+.
+:CONFIG_WINDOW_TITLEBAR
+Liste séparée par des espaces des informations à afficher dans la barre de titre de la fenêtre
+('program=name dosbox=auto cycles=on mouse=full' par défaut). Si un paramètre
+n'est pas spécifié, sa valeur par défaut est utilisée.
+Les informations pouvant être affichées sont les suivantes
+  animation=<valeur> : si la valeur est « on » (par défaut), la marque d'enregistrement audio/vidéo est animée.
+                      d'enregistrement audio/vidéo. La valeur « off » désactive l'animation.
+                      Ceci est utile si votre police d'écran produit des résultats bizarres.
+  program=<valeur> :    Affiche le nom du programme en cours d'exécution.
+                      <valeur> peut être l'un des éléments suivants
+                        none/off :  Ne pas afficher le nom du programme.
+                        name : nom du programme, avec l'extension du fichier (par défaut).
+                        chemin :      Nom, extension et chemin absolu complet.
+                        segment :   Affiche le nom du segment de mémoire du programme.
+                        Title » (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire « Title », (Title), <Title> ou [Title].
+                                   « Titre », (Titre), <Titre> ou [Titre].
+                      Remarque : Avec certains logiciels (comme Windows 3.1x en mode amélioré),
+                      il est impossible de reconnaître le nom ou le chemin d'accès complet du programme.
+                      Dans ce cas, le terme « segment » est utilisé à la place du nom du programme ou du chemin d'accès. 
+  dosbox=<valeur> :     Affiche « DOSBox Staging » dans la barre de titre.
+                      <valeur> peut être l'un des éléments suivants
+                        always :   Affiche toujours « DOSBox Staging ».
+                        auto :     Ne l'affiche que si aucun programme n'est en cours d'exécution ou si
+                                  ou si l'option 'program=none' est activée (valeur par défaut).
+  version=<valeur> :    Affiche les informations relatives à la version de DOSBox.
+                      <valeur> peut être l'un des éléments suivants
+                         none/off :  Ne pas afficher la version de DOSBox (valeur par défaut).
+                         simple :    Informations simples sur la version.
+                         detailed :  Inclut le hash Git, s'il est disponible.
+  cycles=<valeur> : Si la valeur est 'on' (par défaut), les cycles du processeur sont affichés.
+                      La valeur 'off' désactive l'affichage des cycles.
+  mouse=<valeur> :      Niveau de verbosité de l'indice de capture de la souris :
+                        none/off :  N'affiche aucune indication sur la souris.
+                        short : ne s'affiche que si la souris est capturée.
+                        full :      Affiche des informations détaillées sur la façon de capturer ou de relâcher le curseur (par défaut).
+                                   de capturer ou de relâcher le curseur (par défaut).
+.
+:CONFIG_VMEM_DELAY
+Définit l'émulation du délai d'accès à la mémoire vidéo (« off » par défaut).
+  off :      Désactive l'émulation du délai d'accès à la mémoire vidéo (par défaut).
+             Cette option est préférable pour la plupart des jeux afin d'éviter les ralentissements.
+  on :       Active l'émulation du délai d'accès à la mémoire vidéo (3000 ns).
+              Cela permet de réduire ou d'éliminer le scintillement dans les jeux Hercules,
+             CGA, EGA et les premiers jeux VGA.
+  <valeur> : Définit le délai d'accès en nanosecondes. 
+                   La plage de validité est comprise entre 0 et 20000 ns ;
+                   500 à 5000 ns est la plage la plus utile.
+Remarque : Ne définissez cette valeur que si nécessaire pour un jeu,
+      car elle ralentit l'ensemble de l'émulateur.
+.
+:CONFIG_VGA_8DOT_FONT
+Utiliser des polices de 8 pixels de large sur les adaptateurs VGA (désactivé par défaut).
+.
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Émuler un rendu VGA précis par ligne de balayage (« on » par défaut).
+Actuellement, vous devez désactiver cette fonction pour quelques jeux,
+sinon ils se planteront au démarrage
+(par exemple, Deus, Ishar 3, Robinson's Requiem, Time Warriors).
+.
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+De nombreux jeux ouvrent tous leurs fichiers avec des autorisations d'écriture,
+même les fichiers qu'ils ne modifient jamais.
+Ce paramètre vous permet de protéger ces fichiers en écriture tout en permettant
+au jeu de les lire (« on » par défaut). Un deuxième cas d'utilisation : si vous
+utilisez un système de fichiers en copie sur écriture ou en réseau,
+ce paramètre évite de de déclencher des opérations d'écriture pour ces fichiers
+protégés en écriture.
+.
+:CONFIG_SHELL_CONFIG_SHORTCUTS
+Autoriser les raccourcis pour simplifier la gestion de la configuration ('on' par défaut).
+Par exemple, au lieu de « config -set sbtype sb16 », il suffit d'exécuter
+'sbtype sb16', et au lieu de 'config -get sbtype', il suffit d'exécuter
+la commande 'sbtype'.
+.
+:CONFIG_FRAMESKIP
+Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre « host_rate ».
+.
+:CONFIGITEM_GLSHADER
+Définit un nuanceur d'émulation de moniteur CRT adaptatif ou un shader GLSL normal
+dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur CRT adaptatif :
+  crt-auto :               Un shader CRT qui donne la priorité à l'intention du développeur
+                           et la façon dont les gens ont vécu le jeu au moment de sa sortie (par défaut).
+                          La variante de nuanceur appropriée est automatiquement sélectionnée
+                          en fonction de la norme graphique du mode vidéo actuel et de la taille de la vue,
+                          indépendamment du paramètre « machine ». Cela signifie que
+                          que même sur une carte VGA émulée, vous obtiendrez
+                          une émulation authentique de moniteur EGA à balayage unique avec
+                          avec des « lignes de balayage épaisses » visibles dans les jeux EGA.
+  crt-auto-machine :       Similaire à 'crt-auto', mais il choisit un moniteur CRT
+                          fixe adapté à l'adaptateur vidéo configuré via le paramètre 'machine'.
+                          Par exemple, les jeux CGA et EGA apparaîtront en double balayage
+                          sur un adaptateur VGA émulé.
+  crt-auto-arcade        Émulation d'un moniteur d'arcade ou d'ordinateur domestique moins
+                          moins net qu'un moniteur PC typique, avec des lignes de balayage épaisses
+                          en mode basse résolution. Cette option fantaisiste n'existe pas dans la réalité,
+                          mais elle peut être très amusante. surtout avec les portages DOS des jeux Amiga.
+  crt-auto-arcade-sharp :  Une variante plus nette du nuanceur d'arcade pour ceux qui
+                          qui aiment les lignes de balayage épaisses mais veulent conserver la
+                          la netteté horizontale d'un moniteur PC typique.
+
+Les autres nuanceurs disponibles sont (liste non exhaustive) :
+  sharp :                  Augmente l'échelle de l'image en traitant les pixels comme des rectangles.
+                          Il en résulte une image nette avec le flou réduit au minimum.
+  bilinear :              Augmente l'échelle de l'image en utilisant l'interpolation bilinéaire
+                          (donne une image floue).
+  nearest :                Augmente l'échelle de l'image en utilisant l'interpolation du plus proche voisin
+                          le plus proche (également connu sous le nom de « non bilinéaire »).
+                          Résulte en une image la plus nette possible au détriment des
+                          pixels irréguliers (ce problème se pose moins sur les écrans à haute
+                          résolution).
+
+Lancez DOSBox Staging avec l'option de ligne de commande '--list-glshaders'
+pour voir la liste complète des nuanceurs disponibles.
+Vous pouvez également utiliser un chemin absolu ou relatif vers un fichier.
+Dans tous les cas, vous pouvez omettre l'extension de fichier '.glsl' du nuanceur.
+.
+:CONFIG_INTEGER_SCALING
+Contraint le facteur d'échelle horizontal ou vertical à la plus grande
+valeur entière pour que l'image s'adapte toujours à la fenêtre d'affichage
+ (« auto » par défaut).
+Le rapport de forme configuré est toujours maintenu en fonction des paramètres
+« aspect » et « viewport », ce qui peut entraîner un facteur d'échelle non entier
+dans l'autre dimension.
+Si l'image est plus grande que la fenêtre d'affichage, la mise à l'échelle
+basées sur des nombres entiers est désactivée automatiquement (comme pour « off »).
+Valeurs possibles :
+  auto : mode « vertical » activé automatiquement pour les nuanceurs CRT adaptatifs
+                uniquement (voir 'glshader'), sinon 'off' (par défaut).
+  vertical :    Limite le facteur d'échelle vertical à des valeurs entières.
+               C'est le paramètre recommandé pour les nuanceurs CRT afin d'éviter
+              les lignes de balayage inégales et les artefacts d'interférence.
+  horizontal :  Limite le facteur d'échelle horizontal à des valeurs entières.
+  off :         Aucune contrainte de mise à l'échelle n'est appliquée ; l'image remplit
+                 la fenêtre d'affichage tout en conservant le rapport hauteur/largeur configuré.
+.
+:CONFIG_VIEWPORT
+Définit la taille de la fenêtre d'affichage (« fit » par défaut). Il s'agit de la zone
+maximale pouvant être dessinée ;
+la sortie vidéo est toujours contenue dans la fenêtre d'affichage en tenant compte
+du rapport de forme configuré (voir « aspect »). Valeurs possibles :
+  fit :             Ajuste la fenêtre d'affichage à la fenêtre ou à l'écran disponible (par défaut).
+                   Il peut y avoir des zones de remplissage (zones noires) autour de l'image si
+                   'integer_scaling' est activé.
+  WxH : Définit une taille de fenêtre fixe au format WxH en unités logiques
+                   (par exemple, 960x720). La taille spécifiée ne doit pas être plus grande que
+                   le bureau. Si elle est supérieure à la taille de la fenêtre,
+                   elle est mise à l'échelle pour tenir dans la fenêtre.
+  N%% :              Semblable à « WxH », mais la taille est spécifiée en pourcentage
+                    de la taille du bureau.
+  H%% V%% relatif :  La fenêtre d'affichage est définie comme un rectangle 
+                   au rapport d'aspect 4:3 qui s'adapte à la fenêtre ou à l'écran disponible.
+                   la fenêtre/l'écran disponible, puis elle est mise à l'échelle par les facteurs
+                   d'échelle horizontale et verticale H et V (la plage valide est comprise entre
+                   20 % à 300 %). La fenêtre d'affichage résultante peut s'étendre
+                   au-delà de la fenêtre ou de l'écran. Utile pour forcer un affichage arbitraire
+                   avec 'aspect = stretch' et pour zoomer sur l'image.
+                   Ceci émule efficacement les contrôles d'étirement horizontal et vertical
+                   des moniteurs CRT.
+
+Remarques :
+  - L'utilisation du mode « relative » avec l'option « integer_scaling » activée peut donner
+    des résultats surprenants (mais corrects).
+  - Vous pouvez utiliser les raccourcis clavier « Stretch Axis », « Inc Stretch » et « Dec Stretch »
+    pour définir l'étirement en mode « relative » en temps réel.
+.
+:CONFIG_CPU_CYCLES
+Vitesse du CPU émulé ('3000' par défaut). Si 'cpu_cycles_protected' est sur
+'auto', cela définit les cycles pour les programmes en mode réel et en mode protégé.
+  <nombre> : Émuler un nombre fixe de cycles par milliseconde (à peu près
+             équivalent à MIPS). La plage de validité est comprise entre 50 et 2000000.
+  max :       Émule autant de cycles que le processeur hôte peut gérer sur un seul cœur.
+             Le nombre de cycles par milliseconde peut varier.
+             Peu recommandé pour certains programmes DOS.
+Remarques :
+  - Le réglage de la vitesse du processeur sur « max » ou sur des valeurs fixes élevées
+    peut entraîner des pertes de son et un décalage en règle général.
+  - Pour obtenir les meilleurs résultats, réglez la valeur de cycle fixe la plus basse qui
+    permette de faire tourner le jeu à une vitesse acceptable.
+  - Valeurs approximatives de cycles pour les processeurs courants.
+    DOSBox ne fait pas d'émulation stricte des cycles CPU,
+    il faut donc considérer ces valeurs comme des points de départ,
+    puis les ajuster en fonction du jeu.
+      8088 (4,77 MHz) 300
+      286-8 700
+      286-12 1500
+      386SX-20 3000
+      386DX-33 6000
+      386DX-40 8000
+      486DX-33 12000
+      486DX/2-66 25000
+      Pentium 90 50000
+      Pentium MMX-166 100000
+      Pentium II 300 200000
+.
+:CONFIG_CPU_CYCLES_PROTECTED
+Vitesse du CPU émulé pour les programmes en mode protégé uniquement
+('60000' par défaut).
+  auto :      Utilise le paramètre `cpu_cycles'.
+  <number> : Émule un nombre fixe de cycles par milliseconde (à peu près
+             équivalent à MIPS). La plage de validité est comprise entre 50 et 2000000.
+  max :       Émule autant de cycles que le processeur hôte peut gérer sur un seul cœur.
+             core. Le nombre de cycles par milliseconde peut varier.
+             Peu recommandé pour certains programmes DOS.
+Note : Voir le paramètre 'cpu_cycles' pour plus d'informations.
+.
+:CONFIG_CPU_THROTTLE
+Réduire dynamiquement le nombre de cycles du CPU émulé si le CPU hôte
+ne peut pas suivre (« off » par défaut).
+N'affecte que les paramètres de cycles fixes. Lorsqu'il est activé, le nombre de cycles par
+milliseconde peut varier, ce qui peut causer des problèmes dans certains programmes DOS.
+.
+:CONFIG_VOODOO
+Activer l'émulation 3dfx Voodoo (activée par défaut). Il s'agit d'une émulation
+authentique de bas niveau de la carte Voodoo non déchargé via OpenGL, ce qui nécessite un
+CPU hôte puissant. La plupart des jeux nécessitent que le pilote DOS Glide appelé 'GLIDE2X.OVL'
+soit dans le chemin d'accès pour que le mode 3dfx fonctionne.
+De nombreux jeux incluent leurs propres variantes du pilote Glide
+mais pour certains d'entre eux, vous devez fournir une version appropriée de 'GLIDE2X.OVL'.
+Un petit nombre de jeux intègrent le pilote Glide dans leur code, de sorte qu'ils n'ont pas besoin de 'GLIDE2X.OVL'.
+.
+:CONFIG_VOODOO_MEMSIZE
+Définir la quantité de mémoire vidéo pour les graphiques 3dfx Voodoo.
+La mémoire est utilisée par l'interface Frame Buffer (FBI) et l'unité de mappage
+de texture (TMU) comme suit :
+   4 : 2 Mo pour la FBI et une TMU de 2 Mo (par défaut).
+  12 : 4 Mo pour la FBI et deux TMU, chacune avec 4 Mo.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Renommé en 'voodoo_threads'
+.
+:CONFIG_VOODOO_THREADS
+Utiliser les fils d'exécution pour améliorer les performances 3dfx Voodoo :
+  auto :     Utiliser jusqu'à 16 fils en fonction des cœurs de CPU hôte disponibles
+                (par défaut).
+  <valeur> : Définit un nombre spécifique de threads entre 1 et 128.
+Note : Définir une valeur plus élevée que le nombre de CPU logiques supportés par votre
+      matériel est très susceptible de nuire aux performances. Cette fonction a montré après mesures
+      qu'elle s'adapte bien à 8-16 threads, mais elle n'a pas été testée sur un
+      processeur avec beaucoup plus de cœurs.
+      Si vous avez un Threadripper ou un CPU similaire, merci de nous
+      faire part de vos expériences.
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Utilisez le filtrage bilinéaire pour émuler l'effet de lissage des textures
+des cartes 3dfx Voodoo (« on » par défaut). Le filtrage bilinéaire peut
+avoir un impact sur le nombre d'images par seconde sur les systèmes plus lents ;
+essayez de le désactiver si vous n'obtenez pas des performances suffisantes.
+.
+:CONFIG_CAPTURE_DIR
+Répertoire où sont enregistrées les différentes captures, telles que les captures
+audio, vidéo, MIDI et les captures d'écran. (« capture » dans le répertoire de 
+travail actuel par défaut).
+.
+:CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
+Définit le format de capture de l'action de capture d'écran par défaut (« upscaled » par défaut) :
+  upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport de forme correct est conservé,
+            en fonction du paramètre « aspect ».
+             Le facteur d'échelle verticale est toujours un nombre entier. Par exemple,
+             un contenu de 320x200 est mis à l'échelle en 1600x1200 (mise à l'échelle entière de 5:6),
+             640x480 à 1920x1440 (mise à l'échelle entière 3:3), et 640x350 à
+             1400x1050 (mise à l'échelle 2,1875:3 ; fractionnaire horizontalement et entière verticalement).
+             Les noms de fichiers des captures d'écran mises à l'échelle
+             n'ont pas de postfixe (par exemple, « image0001.png »).
+  rendered :  L'image après rendu et après traitement, affichée à l'écran est capturée.
+             Les noms de fichiers des captures d'écran rendues se terminent par
+             '-rendered' (par exemple 'image0001-rendered.png').
+  raw  :       Le contenu du framebuffer brut est capturé (ce qui donne
+             toujours des pixels carrés). Les noms de fichiers des captures d'écran brutes
+             se terminent par « -raw » (par exemple, « image0001-raw.png »).
+Si plusieurs formats sont spécifiés, séparés par des espaces, l'action de capture d'écran
+par défaut enregistrera plusieurs images dans les formats spécifiés.
+Des raccourcis clavier permettant de prendre des captures d'écran dans des formats spécifiques
+sont également disponibles.
+.
+:CONFIG_MOUSE_CAPTURE
+Définit le comportement de capture de la souris :
+  onclick :   Capture la souris lorsque l'on clique sur n'importe quel bouton de la souris dans la fenêtre
+             (par défaut).
+  onstart :   Capture la souris immédiatement au démarrage. Peut ne pas fonctionner correctement
+             sur certains systèmes d'exploitation hôtes.
+  seamless :  Permet à la souris de se déplacer de manière transparente entre la fenêtre DOSBox et le reste du bureau.
+             le reste du bureau ; capture uniquement avec un clic du milieu ou un raccourci clavier.
+             Ce mode ne fonctionne pas correctement avec tous les jeux.
+             Windows 3.1x peut être rendu compatible avec un pilote de souris personnalisé.
+  nomouse :   Cache le curseur de la souris et n'envoie pas les données de la souris au jeu.
+Pour le contrôle de l'écran tactile, utilisez « seamless ».
+.
+:CONFIG_MOUSE_MIDDLE_RELEASE
+Relâchez la souris capturée par un clic du milieu, et capturez-la
+également en mode transparent (« on » par défaut).
+.
+:CONFIG_MOUSE_MULTI_DISPLAY_AWARE
+Permettre un comportement transparent de la souris et le relâchement du pointeur
+de la souris en mode plein écran sur les systèmes ayant plus d'un écran (activé par défaut).
+Remarque : vous devez désactiver cette option si elle détecte de manière incorrecte
+       plusieurs écrans alors qu'un seul devrait être utilisé.
+      Cela peut se produire si vous utilisez le mode d'affichage en miroir ou si vous
+      utilisez l'entrée HDMI d'un récepteur AV pour uniquement écouter l'audio.
+.
+:CONFIG_MOUSE_SENSITIVITY
+Sensibilité globale de la souris pour les axes horizontal et vertical, en pourcentage
+(100 par défaut). Les valeurs peuvent être séparées par des espaces, des virgules ou des points-virgules
+(c'est-à-dire 100,150). Les valeurs négatives inversent l'axe, tandis que zéro le désactive.
+Il suffit  d'une seule valeur pour définir la sensibilité pour les deux axes.
+La sensibilité peut être affinée pour chaque interface de souris à l'aide de l'outil interne
+MOUSECTL.COM disponible sur le lecteur Z.
+.
+:CONFIG_MOUSE_RAW_INPUT
+Permet de contourner les paramètres d'accélération et de sensibilité de la souris
+de votre système d'exploitation (« on » par défaut). Fonctionne en plein écran
+ou lorsque la souris est capturée en mode fenêtré.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER
+Activer le pilote de souris DOS intégré (« on » par défaut). Il en résulte
+la latence la plus faible possible et les mouvements de souris les plus fluides, donc ne le désactivez
+et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par exemple, si un jeu n'est
+pas compatible avec le pilote intégré).
+ on :   Active le pilote de souris intégré. `ps2_mouse_model` et
+ `com_mouse_model` n'ont aucun effet sur le pilote intégré.
+ off :  Désactive le pilote de souris intégré (si vous ne voulez pas de support de la souris ou
+ si vous voulez charger un vrai pilote de souris DOS). Pour utiliser un vrai pilote DOS
+ (par exemple, MOUSE.COM ou CTMOUSE.EXE), configurez le type de souris avec
+ `ps2_mouse_model` ou `com_mouse_model`, puis chargez le pilote.
+        Un vrai pilote DOS peut améliorer la compatibilité avec certains programmes,
+ mais introduira plus de latence d'entrée.
+Note : Le pilote intégré est automatiquement désactivé si vous démarrez sous MS-DOS ou
+ Windows 9x sous DOSBox. Sous Windows 3.x, le pilote n'est pas désactivé,
+ mais le pilote de souris de Windows 3.x prend le relais.
+.
+:CONFIG_DOS_MOUSE_DRIVER
+Renommé en 'builtin_dos_mouse_driver'.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_MODEL
+Définit le modèle de souris à simuler par le pilote de souris DOS intégré ('2button'
+par défaut).
+  2button : 2 boutons, l'option la plus sûre pour la plupart des jeux. La majorité des jeux DOS
+ ne supportent que 2 boutons, certains peuvent mal se comporter si le bouton central
+ est pressé.
+  3button :  3 boutons, supporté par très peu de jeux DOS. N'utilisez cette option que si
+ le jeu est connu pour supporter une souris à 3 boutons.
+ wheel : 3 boutons + molette, supporte l'interface CuteMouse WheelAPI version 1.0.
+            Aucun jeu DOS n'utilise la molette de la souris, seulement une poignée d'applications DOS
+ et Windows 3.x avec des pilotes tiers spéciaux.
+.
+:CONFIG_BUILTIN_DOS_MOUSE_DRIVER_OPTIONS
+Paramètres supplémentaires du pilote de souris DOS sous la forme d'une
+liste d'options séparées par des espaces ou des virgules (non définies par défaut).
+  immediate :  Met à jour les compteurs de mouvements de la souris immédiatement,
+                      sans attendre l'interruption. Peut améliorer la latence de la souris
+                      dans les jeux rapides (arcade, FPS, etc.), mais peut causer des problème
+                      dans d'autres.
+              Liste des jeux incompatibles connus :
+                - Ultima Underworld : The Stygian Abyss
+                - Ultima Underworld II : Labyrinth of Worlds
+             Veuillez nous signaler d'autres jeux incompatibles afin que nous puissions mettre à jour cette liste.
+  modern : Si fourni, le comportement du pilote de souris Microsoft v7.0+ est émulé,
+                 sinon le comportement v6.0 et antérieur (les deux sont légèrement
+                 incompatibles). Jusqu'à présent, seul Descent II avec le patch officiel Voodoo a
+                 nécessité le comportement v7.0+.
+.
+:CONFIG_DOS_MOUSE_IMMEDIATE
+Configuré via l'option  'builtin_dos_mouse_driver_options'.
+.
+:CONFIG_PS2_MOUSE_MODEL
+Définit le modèle de souris du port PS/2 AUX, ou en d'autres termes, le type de la souris virtuelle
+branchée sur le port souris PS/2 émulé ('explorer' par défaut).
+Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir 'dos_mouse_driver').
+ standard : 3 boutons, souris PS/2 standard.
+ intellimouse :  3 boutons + molette, Microsoft IntelliMouse.
+ explorer :      5 boutons + molette, Microsoft IntelliMouse Explorer (par défaut).
+ none : pas de souris PS/2.
+.
+:CONFIG_COM_MOUSE_MODEL
+Définit le modèle de souris COM (série) par défaut, ou en d'autres termes, le type de la souris virtuelle
+branchée sur les ports COM émulés ('wheel+msm' par défaut).
+Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir “dos_mouse_driver”).
+  2button :      2 boutons, souris Microsoft.
+  3button :      3 boutons, souris Logitech ;
+                       principalement compatible avec la souris Microsoft.
+  wheel :         3 boutons + molette ;
+                      principalement compatible avec la souris Microsoft.
+  msm :          3 boutons, souris Mouse Systems ;
+                      PAS compatible avec la souris Microsoft.
+  2button+msm :  Choix automatique entre “2button” et “msm”.
+  3button+msm :  Choix automatique entre '3button' et 'msm'.
+  wheel+msm :    Choix automatique entre “wheel” et “msm” (par défaut).
+Note : Activez le port COM souris dans la section [serial].
+.
+:CONFIG_VMWARE_MOUSE
+Interface souris VMware (activée par défaut).
+avec un pilote expérimental de tierce partie pour Windows 3.1x.
+Remarque : la souris PS/2 doit être activée.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+Interface souris VirtualBox (activée par défaut).
+Entièrement compatible uniquement avec le pilote Windows 3.1x d'une tierce partie.
+Remarque : la souris PS/2 doit être activée.
+.
+:CONFIG_DENOISER
+Supprime le bruit résiduel de faible niveau de la sortie de la puce OPL et du Roland
+Sound Canvas. L'émulation de ces appareils est fidèle aux unités matérielles originales
+, ce qui inclut l'émulation d'un bruit semi-aléatoire de très faible niveau. 
+Bien que ce bruit soit authentique, la plupart des gens le trouveraient légèrement gênant.
+ off :  Désactive le débruiteur.
+ on :   Active le débruiteur sur les canaux OPL et SOUNDCANVAS (par défaut).
+        Le débruiteur n'introduit aucune dégradation de la qualité du son ;
+       il se contente de supprimer le bruit résiduel à peine audible dans les passages calmes.
+.
+:CONFIG_SOUNDFONT_DIR
+Répertoire SoundFont supplémentaire défini par l'utilisateur (non défini par défaut).
+Si ce paramètre est défini, les banques de sons sont d'abord recherchées dans ce répertoire,
+puis dans les emplacements standards du système.
+.
+:CONFIG_SOUNDFONT_VOLUME
+Définir le volume de la banque de sons en pourcentage (100 par défaut).
+Ceci est utile pour normaliser le volume de différentes banques de sons.
+La valeur du pourcentage peut varier de 1 à 800.
+.
+:FLUIDSYNTH_NO_SOUNDFONTS
+Pas de banque de sons disponible.
+.
+:MT32_ROMS_LABEL
+Modèle MT-32
+.
+:CM32L_ROMS_LABEL
+Modèle CM-32L
+.
+:MT32_ACTIVE_MODEL_LABEL
+Modèle actif
+.
+:CONFIG_SOUNDCANVAS_MODEL
+Le modèle de Roland Sound Canvas à utiliser.
+Un ou plusieurs plugins audio CLAP qui implémentent les modèles Sound Canvas
+pris en charge doivent être présents dans le répertoire 'plugins' de votre installation DOSBox
+ou dans votre répertoire de configuration. DOSBox recherche le modèle demandé en
+inspectant les descriptions des plugins. La recherche du meilleur modèle est
+effectuée dans l'ordre de la liste.
+ auto :       Choisit le meilleur modèle disponible (par défaut).
+ sc55 : Choisit le meilleur modèle original SC-55 disponible.
+ sc55mk2 :    Choisit le meilleur modèle de SC-55mk2 disponible.
+  <version> :  Utilise la version exacte du modèle spécifié (par exemple, “sc55_121”).
+.
+:CONFIG_SOUNDCANVAS_FILTER
+Filtre pour la sortie audio du Roland Sound Canvas :
+ on :        Filtre la sortie (par défaut).
+ off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir “sb_filter” pour plus de détails.
+.
+:SC55_MODELS_LABEL
+Modèles de SC-55
+.
+:SOUNDCANVAS_ACTIVE_MODEL_LABEL
+Modèle actif:
+.
+:CONFIGITEM_MIDIDEVICE_PORT
+  port:         Un port MIDI de l'interface MIDI du système d'exploitation hôte
+ (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre « midiconfig ».
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:    Le synthétiseur MIDI intégré à macOS. La banque de sons à utiliser
+peut être spécifiée à l'aide du paramètre 'midiconfig'.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
+  mt32:         Le synthétiseur interne Roland MT-32 (voir la section [mt32]).
+.
+:CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
+  soundcanvas:  Le synthétiseur interne Roland SC-55 (voir la section [soundcanvas]).
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
+  fluidsynth:   Le synthétiseur MIDI interne FluidSynth (lecteur de banques de sons)
+ (voir la section [fluidsynth]).
+.
+:CONFIGITEM_MIDIDEVICE_NONE
+  none:         Désactive la sortie MIDI.
+.
+:CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
+  - Lorsque vous utilisez "mididevice = port", trouvez l'ID ou le nom du port MIDI que vous
+ souhaitez utiliser avec la commande DOS "MIXER /LISTMIDI", puis définissez l'ID
+ ou une sous-chaîne du nom (par exemple, pour utiliser le port appelé "loopMIDI Port A"
+ avec l'ID 2, définissez "midiconfig = 2" ou "midiconfig = port a").
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Lorsque vous utilisez « mididevice = coreaudio », ce paramètre spécifie la banque de sons
+ à utiliser. Vous devez utiliser le chemin absolu du fichier SoundFont.
+.
+:CONFIGITEM_MIDICONFIG_LINUX
+  - Lorsque vous utilisez « mididevice = port », utilisez la commande Linux « aconnect -l » pour répertorier
+ tous les ports MIDI ouverts et en sélectionner un (par exemple, « midiconfig = 14:0 » pour le séquenceur
+ client 14, port 0).
+.
+:CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
+  - Ce paramètre n'a aucun effet sur l'utilisation des synthétiseurs internes
+ ('mididevice = fluidsynth', 'mt32' ou 'soundcanvas').
+.
+:CONFIGITEM_MIDICONFIG_PHYSICAL_MT32
+  - Si vous utilisez un Roland MT-32 physique modèle 'rev.0', le matériel peut
+    nécessiter un délai pour éviter les débordements de tampon.
+    Vous pouvez l'activer avec 'delaysysex' après l'ID ou le nom du port
+    (par exemple, 'midiconfig = 2 delaysysex').
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Activer la sortie MIDI brute, non altérée (« off » par défaut).
+Les pilotes MIDI de nombreux jeux ne sont pas entièrement conformes à la norme MIDI,
+, ce qui rend l'édition des enregistrements MIDI de ces jeux très sujette aux erreurs et
+gênante dans les séquenceurs MIDI, entraînant souvent des notes suspendues ou manquantes.
+DOSBox corrige la sortie MIDI de ces jeux par défaut. Cela n'entraîne aucune différence
+audible ; cela affecte uniquement la représentation des données MIDI.
+Vous ne devez activer 'raw_midi_output' que si vous avez vraiment besoin de capturer
+la sortie MIDI brute et non altérée d'un programme, par exemple lorsque vous
+travaillez avec des applications musicales, ou lorsque vous déboguez des problèmes MIDI.
+.
+:MIDI_DEVICE_NO_PORTS
+Pas de port disponible.
+.
+:MIDI_DEVICE_NO_MODEL_ACTIVE
+Aucun modèle n'est actuellement actif.
+.
+:MIDI_DEVICE_NO_MODELS
+Aucun modèle disponible.
+.
+:CONFIG_OPL_FADEOUT
+Fondu des notes suspendues pour l'émulation OPL :
+  off :       Ne pas faire disparaître les notes suspendues (par défaut).
+  fade :      Permet de faire disparaître en fondu les notes suspendues.
+                Vous ne devriez activer cette option que dans les jeux où
+                des notes suspendues qui ne s'arrêtent jamais (par exemple, Bard's Tale).
+  <custom> :  Une définition de fondu personnalisé dans le format suivant :
+               WAIT FADE
+               Où WAIT est le temps écoulé depuis la dernière écriture
+               sur le port d'E/S et où le fondu commence
+               (entre 100 et 5000 millisecondes) ;
+               et FADE est la période de fondu (entre 10 et 3000 millisecondes).
+               Exemples :
+                300 200 (attendre 300 ms avant d'effectuer un fondu sur une période de 200 ms)
+                1000 3000 (attendre 1 seconde avant d'effectuer un fondu sur une période de 3 secondes)
+.
+:CONFIG_OPL_REMOVE_DC_BIAS
+Supprimez la polarisation DC de la sortie OPL. Ceci ne devrait être utilisé qu'en dernier recours
+pour corriger les 'pops' dans les jeux qui jouent de l'audio PCM en utilisant le synthétiseur OPL
+sur une carte Sound Blaster ou AdLib, comme dans : Golden Eagle (1991), Wizardry 6
+(1990), et Wizardry 7 (1992). Veuillez ouvrir un ticket d'incident si vous trouvez d'autres jeux
+dans ce cas.
+.
+:CONFIG_CMS
+Active l'émulation CMS (« auto » par défaut).
+ off :   Désactive l'émulation CMS (sauf lorsque le Game Blaster est sélectionné).
+ on :    Active l'émulation CMS sur Sound Blaster 1 et 2.
+ auto :  Active automatiquement l'émulation CMS pour la Sound Blaster 1 et
+            la Game Blaster.
+.
+:CONFIG_IMFC
+Active la carte IBM Music Feature (désactivée par défaut).
+.
+:CONFIG_IMFC_BASE
+L'adresse de base d'entré-sortie de la carte IBM Music Feature (“2A20” par défaut).
+.
