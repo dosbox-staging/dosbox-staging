@@ -29,7 +29,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion -Wno-narrowing")
 endif()
 
-option(OPT_DEBUG "Enable debugging" $<IF:$<CONFIG:Debug>,ON,OFF>)
+option(OPT_DEBUG "Enable debugging" OFF)
 option(OPT_HEAVY_DEBUG "Enable heavy debugging" OFF)
 
 if(OPT_HEAVY_DEBUG)
@@ -234,6 +234,10 @@ include_directories(
 )
 
 add_subdirectory(src)
+
+if(WIN32)
+  target_sources(dosbox PRIVATE src/winres.rc)
+endif()
 
 target_link_libraries(dosbox PRIVATE
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
