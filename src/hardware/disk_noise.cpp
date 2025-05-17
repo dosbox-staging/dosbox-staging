@@ -120,19 +120,19 @@ void DiskNoises::Shutdown()
 
 std::vector<float> DiskNoiseDevice::GetSample()
 {
-	const float DisknoiseGain = 0.2f;
+	const float DiskNoiseGain = 0.2f;
 	float sample_l            = 0.0f;
 	float sample_r            = 0.0f;
 
 	// Mix in spinup and spin samples
 	if (!spin.spin_up_sample.empty() &&
 	    spin.spin_up_pos + 1 < spin.spin_up_sample.size()) {
-		sample_l += spin.spin_up_sample[spin.spin_up_pos] * DisknoiseGain;
-		sample_r += spin.spin_up_sample[spin.spin_up_pos++] * DisknoiseGain;
+		sample_l += spin.spin_up_sample[spin.spin_up_pos] * DiskNoiseGain;
+		sample_r += spin.spin_up_sample[spin.spin_up_pos++] * DiskNoiseGain;
 	} else if (!spin.sample.empty() &&
 	           (spin.pos + 1 < spin.sample.size() || spin.loop)) {
-		sample_l += spin.sample[spin.pos] * DisknoiseGain;
-		sample_r += spin.sample[spin.pos++] * DisknoiseGain;
+		sample_l += spin.sample[spin.pos] * DiskNoiseGain;
+		sample_r += spin.sample[spin.pos++] * DiskNoiseGain;
 
 		// Loop the spin sound if enabled. Used for
 		// persistent HDD noise Not used for floppy
@@ -146,8 +146,8 @@ std::vector<float> DiskNoiseDevice::GetSample()
 	// Mix in seek sample, if it's playing
 	if (!seek.current_sample.empty() &&
 	    seek.pos + 1 < seek.current_sample.size()) {
-		sample_l += seek.current_sample[seek.pos] * DisknoiseGain;
-		sample_r += seek.current_sample[seek.pos++] * DisknoiseGain;
+		sample_l += seek.current_sample[seek.pos] * DiskNoiseGain;
+		sample_r += seek.current_sample[seek.pos++] * DiskNoiseGain;
 	}
 
 	// If seek sample has finished playing, clear entry
@@ -425,15 +425,15 @@ static void disknoise_shutdown([[maybe_unused]] Section* section)
 
 static void init_disknoise_dosbox_settings(Section_prop& secprop)
 {
-	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto* bool_prop = secprop.Add_bool("hard_disk_noise", only_at_start, false);
+	auto* bool_prop = secprop.Add_bool("hard_disk_noise", OnlyAtStart, false);
 	bool_prop->Set_help(
 	        "Enable emulated hard disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
 	        "set 'hard_disk_speed' to lower than 'maximum' for an authentic experience.");
 
-	bool_prop = secprop.Add_bool("floppy_disk_noise", only_at_start, false);
+	bool_prop = secprop.Add_bool("floppy_disk_noise", OnlyAtStart, false);
 	bool_prop->Set_help(
 			"Enable emulated floppy disk noises ('off' by default).\n"
 			"Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
@@ -444,11 +444,11 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = false;
+	constexpr auto ChangeableAtRuntime = false;
 
 	Section_prop* sec = conf->AddSection_prop("disknoise",
 	                                          &disknoise_init,
-	                                          changeable_at_runtime);
+	                                          ChangeableAtRuntime);
 	assert(sec);
 	init_disknoise_dosbox_settings(*sec);
 }
