@@ -138,7 +138,7 @@
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/debug-windows",
       "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Debug",
@@ -156,7 +156,7 @@
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/release-windows",
       "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
         "CMAKE_BUILD_TYPE": "Release",
