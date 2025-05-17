@@ -39,7 +39,7 @@ public:
 	~DiskNoiseDevice();
 	void ActivateSpin();
 	void PlaySeek();
-	std::vector<float> GetSample();
+	AudioFrame GetNextFrame();
 
 private:
 	bool enable_disk_noise    = false;
