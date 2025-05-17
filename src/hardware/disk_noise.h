@@ -86,7 +86,7 @@ private:
 	std::unique_ptr<DiskNoiseDevice> floppy_noise;
 	std::unique_ptr<DiskNoiseDevice> hdd_noise;
 
-	static void AudioCallback(int frames);
+	void AudioCallback(int frames);
 };
 
 static std::unique_ptr<DiskNoises> disk_noises;
