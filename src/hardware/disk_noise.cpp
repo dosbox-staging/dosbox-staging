@@ -388,6 +388,7 @@ void DiskNoiseDevice::Shutdown()
 
 static void disknoise_init(Section* section)
 {
+	constexpr auto MaxNumSeekSamples = 9;
 	disk_noises = std::make_unique<DiskNoises>();
 
 	assert(section);
@@ -399,14 +400,14 @@ static void disknoise_init(Section* section)
 	const auto spin_up = "hdd_spinup.flac";
 	const auto spin    = "hdd_spin.flac";
 	std::vector<std::string> hdd_seek_samples;
-	for (int i = 1; i <= 9; ++i) {
+	for (int i = 1; i <= MaxNumSeekSamples; ++i) {
 		hdd_seek_samples.push_back("hdd_seek" + std::to_string(i) + ".flac");
 	}
 
 	const auto floppy_spin_up = "fdd_spinup.flac";
 	const auto floppy_spin    = "fdd_spin.flac";
 	std::vector<std::string> floppy_seek_samples;
-	for (int i = 1; i <= 9; ++i) {
+	for (int i = 1; i <= MaxNumSeekSamples; ++i) {
 		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".flac");
 	}
 	disk_noises->Initialize(enable_floppy_disk_noise,
@@ -424,7 +425,7 @@ static void disknoise_shutdown([[maybe_unused]] Section* section)
 	disk_noises->Shutdown();
 }
 
-void init_disknoise_dosbox_settings(Section_prop& secprop)
+static void init_disknoise_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 

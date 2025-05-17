@@ -64,7 +64,7 @@ std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
 std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
 // Image Disk List always has the first two slots be floppy disks and the last
 // two being hard disks
-std::vector<DiskType> imageDiskListTypes = {DiskType::Floppy,
+static std::vector<DiskType> image_disk_list_types = {DiskType::Floppy,
                                             DiskType::Floppy,
                                             DiskType::HardDisk,
                                             DiskType::HardDisk};
@@ -342,7 +342,7 @@ static Bitu INT13_DiskHandler(void)
 	const bool any_images = has_image(imageDiskList);
 	// This is an assumed default block transfer size
 	// used for the IO delay and sound triggering
-	const int default_transfer_size_bytes = 512;
+	constexpr auto DefaultTransferSizeBytes = 512;
 
 	// unconditionally enable the interrupt flag
 	CALLBACK_SIF(true);
@@ -424,9 +424,10 @@ static Bitu INT13_DiskHandler(void)
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl & 63)+i), sectbuf);
 
-			DOS_ExecuteRegisteredCallbacks(imageDiskListTypes[drivenum]);
-			DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-			                       imageDiskListTypes[drivenum]);
+			DOS_ExecuteRegisteredCallbacks(
+			        image_disk_list_types[drivenum]);
+			DOS_PerformDiskIoDelay(DefaultTransferSizeBytes,
+			                       image_disk_list_types[drivenum]);
 
 			if ((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
@@ -457,9 +458,9 @@ static Bitu INT13_DiskHandler(void)
 			}
 			last_status = imageDiskList[drivenum]->Write_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)), (uint32_t)((reg_cl & 63) + i), &sectbuf[0]);
 
-			DOS_ExecuteRegisteredCallbacks(imageDiskListTypes[drivenum]);
-			DOS_PerformDiskIoDelay(default_transfer_size_bytes,
-			                       imageDiskListTypes[drivenum]);
+			DOS_ExecuteRegisteredCallbacks(image_disk_list_types[drivenum]);
+			DOS_PerformDiskIoDelay(DefaultTransferSizeBytes,
+			                       image_disk_list_types[drivenum]);
 
 			if (last_status != 0x00) {
 				CALLBACK_SCF(true);
