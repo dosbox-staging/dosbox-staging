@@ -38,6 +38,8 @@
 
 CHECK_NARROWING();
 
+static std::unique_ptr<DiskNoises> disk_noises;
+
 DiskNoises::DiskNoises() {
 	mix_channel = nullptr;
 }

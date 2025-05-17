@@ -89,6 +89,4 @@ private:
 	void AudioCallback(int frames);
 };
 
-static std::unique_ptr<DiskNoises> disk_noises;
-
 #endif // DOSBOX_DISK_NOISE_H
