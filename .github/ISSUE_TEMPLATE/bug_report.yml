@@ -156,7 +156,7 @@ body:
     id: terms
     attributes:
       label: Code of conduct and contributing guidelines
-      description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/CODE_OF_CONDUCT.md).
+      description: By submitting this issue, you agree to follow our [contributing guidelines](https://github.com/dosbox-staging/dosbox-staging/blob/master/docs/CONTRIBUTING.md) and [code of conduct](https://github.com/dosbox-staging/dosbox-staging/blob/master/docs/CODE_OF_CONDUCT.md).
       options:
         - label: Yes, I agree.
           required: true

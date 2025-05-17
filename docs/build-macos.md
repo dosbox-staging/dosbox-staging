@@ -76,7 +76,7 @@ meson setup build
 meson compile -C build
 ```
 
-See more build options in [BUILD.md](/BUILD.md).
+See more build options in [BUILD.md](BUILD.md).
 
 
 ## Permissions and running
