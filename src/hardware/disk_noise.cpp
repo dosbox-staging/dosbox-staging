@@ -67,7 +67,7 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
 	                                              spin,
 	                                              hdd_seek_samples,
 	                                              true);
-	active_devices.push_back(hdd_noise);
+	active_devices.emplace_back(hdd_noise);
 
 	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
 	                                                 enable_floppy_disk_noise,
@@ -75,7 +75,7 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
 	                                                 floppy_spin,
 	                                                 floppy_seek_samples,
 	                                                 false);
-	active_devices.push_back(floppy_noise);
+	active_devices.emplace_back(floppy_noise);
 	MIXER_UnlockMixerThread();
 }
 
@@ -122,7 +122,7 @@ DiskNoises::~DiskNoises()
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
 {
-	const float DiskNoiseGain = 0.2f;
+	constexpr float DiskNoiseGain = 0.2f;
 	float sample              = 0.0f;
 
 	// Mix in spinup and spin samples
@@ -270,7 +270,7 @@ void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
 		std::vector<float> sample = {};
 		LoadSample(path, sample);
 		if (!sample.empty()) {
-			seek.samples.push_back(std::move(sample));
+			seek.samples.emplace_back(std::move(sample));
 		} else {
 			seek.samples.emplace_back();
 		}
@@ -418,14 +418,15 @@ static void disknoise_init(Section* section)
 	const auto spin    = "hdd_spin.flac";
 	std::vector<std::string> hdd_seek_samples = {};
 	for (auto  i = 1; i <= MaxNumSeekSamples; ++i) {
-		hdd_seek_samples.push_back("hdd_seek" + std::to_string(i) + ".flac");
+		hdd_seek_samples.emplace_back("hdd_seek" + std::to_string(i) + ".flac");
 	}
 
 	const auto floppy_spin_up = "fdd_spinup.flac";
 	const auto floppy_spin    = "fdd_spin.flac";
 	std::vector<std::string> floppy_seek_samples = {};
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
-		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".flac");
+		floppy_seek_samples.emplace_back("fdd_seek" +
+		                                 std::to_string(i) + ".flac");
 	}
 	disk_noises = std::make_unique<DiskNoises>(enable_floppy_disk_noise,
 	                                           enable_hard_disk_noise,
