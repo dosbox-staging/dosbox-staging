@@ -1770,7 +1770,7 @@ Set the aspect ratio correction mode ('auto' by default):
 Contraint le facteur d'échelle horizontal ou vertical à la plus grande
 valeur entière pour que l'image s'adapte toujours à la fenêtre d'affichage
  ('auto' par défaut).
-Le rapport de forme configuré est toujours maintenu en fonction des paramètres
+Le rapport d'aspect configuré est toujours maintenu en fonction des paramètres
 'aspect' et 'viewport', ce qui peut entraîner un facteur d'échelle non entier
 dans l'autre dimension.
 Si l'image est plus grande que la fenêtre d'affichage, la mise à l'échelle
@@ -1792,7 +1792,7 @@ Valeurs possibles :
 :CONFIG_VIEWPORT
 Définit la taille de la fenêtre d'affichage ('fit' par défaut). Il s'agit de la
 zone maximale pouvant être dessinée ; la sortie vidéo est toujours contenue
-dans la fenêtre d'affichage en tenant  compte du rapport de forme configuré
+dans la fenêtre d'affichage en tenant  compte du rapport d'aspect configuré
 (voir 'aspect'). Valeurs possibles :
   fit :             Ajuste la fenêtre d'affichage à la fenêtre ou à l'écran
                     disponible (par défaut).
@@ -2058,7 +2058,7 @@ travail actuel par défaut).
 Définit le format de capture de l'action de capture d'écran par défaut
 ('upscaled' par défaut) :
   upscaled : L'image est redimensionnée avec une netteté bilinéaire et le
-             rapport de forme correct est conservé, en fonction du paramètre
+             rapport d'aspect correct est conservé, en fonction du paramètre
              'aspect'. Le facteur d'échelle verticale est toujours un nombre
              entier. Par exemple, un contenu de 320x200 est mis à l'échelle en
              1600x1200 (mise à l'échelle entière de 5:6),
