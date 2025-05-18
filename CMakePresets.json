@@ -2,32 +2,6 @@
   "version": 3,
   "configurePresets": [
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "description": "Configure for Debug build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/../resources"
-      }
-    },
-    {
-      "name": "release",
-      "displayName": "Release",
-      "description": "Configure for Release build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/../resources"
-      }
-    },
-    {
       "name": "debug-linux",
       "displayName": "Debug (Linux host CPU), using system libs",
       "description": "Configure for Debug build",
@@ -169,14 +143,6 @@
     }
   ],
   "buildPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug"
-    },
-    {
-      "name": "release",
-      "configurePreset": "release"
-    },
     {
       "name": "debug-linux",
       "configurePreset" : "debug-linux",
