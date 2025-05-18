@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -3396,6 +3396,14 @@ static void apply_active_settings()
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
 		MIXER_Unmute();
 	}
+
+	// At least on some platforms grabbing the keyboard has to be repeated
+	// each time we regain focus
+	if (sdl.window) {
+		SDL_SetWindowKeyboardGrab(sdl.window,
+	        	                  sdl.keyboard_capture ? SDL_TRUE :
+	        	                                         SDL_FALSE);
+	}
 }
 
 static void ApplyInactiveSettings()
@@ -3465,6 +3473,8 @@ static void read_gui_config(Section* sec)
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
 
 	sdl.mute_when_inactive = (!sdl.pause_when_inactive) && section->Get_bool("mute_when_inactive");
+
+	sdl.keyboard_capture = section->Get_bool("keyboard_capture");
 
 	// Assume focus on startup
 	apply_active_settings();
@@ -4494,6 +4504,9 @@ static void config_add_sdl()
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
 	pbool->Set_help("Pause emulation when the window is inactive ('off' by default).");
 
+	pbool = sdl_sec->Add_bool("keyboard_capture", on_start, false);
+	pbool->Set_help("Takes over more host OS keyboard shortcuts ('off' by default).");
+
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
@@ -4938,6 +4951,10 @@ int sdl_main(int argc, char* argv[])
 		// Seamless mouse integration feels more 'seamless' if mouse
 		// clicks on out-of-focus window are passed to the guest
 		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+
+		// We have a keyboard shortcut to exit the fullscreen mode,
+		// so we don't necessary need the ALT+TAB shortcut
+		SDL_SetHint(SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED, "0");
 
 		if (const auto err = check_kmsdrm_setting(); err != 0) {
 			return err;
