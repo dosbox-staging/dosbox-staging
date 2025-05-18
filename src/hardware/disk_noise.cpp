@@ -126,10 +126,15 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	float sample              = 0.0f;
 
 	// Mix in spinup and spin samples
-	if (!spin.spin_up_sample.empty() &&
-	    spin.spin_up_it != spin.spin_up_sample.end()) {
-		sample += (*spin.spin_up_it) * DiskNoiseGain;
-		++spin.spin_up_it;
+	if (!spin.spin_up_sample.empty()) {
+		if (spin.spin_up_it != spin.spin_up_sample.end()) {
+			sample += (*spin.spin_up_it) * DiskNoiseGain;
+			++spin.spin_up_it;
+		} else {
+			// If spinup sample has finished playing, clear entry
+			spin.spin_up_sample.clear();
+			spin.spin_up_it = spin.spin_up_sample.end();
+		}
 	} else if (!spin.sample.empty() &&
 	           (spin.spin_it != spin.sample.end() || spin.loop)) {
 		// Loop the spin sound if enabled. Used for
@@ -148,18 +153,19 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	// Mix in seek sample, if it's playing
 	if (!seek.current_sample.empty() &&
 	    seek.current_it != seek.current_sample.end()) {
-		sample += (*seek.current_it) * DiskNoiseGain;
-		++seek.current_it;
-	}
+			sample += (*seek.current_it) * DiskNoiseGain;
+			++seek.current_it;
+		}
 
 	// If seek sample has finished playing, clear entry
 	if (!seek.current_sample.empty() &&
 	    seek.current_it == seek.current_sample.end()) {
 		seek.current_sample.clear();
+		seek.current_it = seek.current_sample.end();
 	}
 
 	return AudioFrame{sample};
-}
+        }
 
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& destination_buffer)
 {
@@ -331,16 +337,18 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	if (!spin.spin_up_sample.empty()) {
 		spin.spin_up_it = spin.spin_up_sample.begin();
 	} else {
-		spin.spin_up_it = {};
+		spin.spin_up_it = spin.spin_up_sample.end();
 	}
 
 	if (!spin.sample.empty()) {
 		spin.spin_it = spin.sample.begin();
 	} else {
-		spin.spin_it = {};
+		spin.spin_it = spin.sample.end();
 	}
 
 	LoadSeekSamples(seek_sample_paths);
+	seek.current_sample.clear();
+	seek.current_it = seek.current_sample.end();
 
 	DOS_RegisterIoCallback([this]() {
 		// This callback is called from the DOS code
@@ -378,19 +386,22 @@ void DiskNoiseDevice::PlaySeek()
 		return;
 	}
 
-	const size_t index = ChooseWeightedSeekIndex();
-	if (index >= seek.samples.size() || seek.samples[index].empty()) {
-		return;
-	}
-
+	// Check if the sample is still playing and don't interrupt if it is
 	if (!seek.current_sample.empty() &&
 	    seek.current_it != seek.current_sample.end()) {
 		return;
 	}
 
-	seek.current_sample = seek.samples[index];
-	if (!seek.current_sample.empty()) {
-		seek.current_it = seek.current_sample.begin();
+	// Select a seek sample
+	const size_t index = ChooseWeightedSeekIndex();
+	if (index >= seek.samples.size() || seek.samples[index].empty()) {
+		return;
+	}
+
+	// Set the new seek sample
+	if (!seek.samples[index].empty()) {
+		seek.current_sample = seek.samples[index];
+		seek.current_it     = seek.current_sample.begin();
 	}
 }
 
