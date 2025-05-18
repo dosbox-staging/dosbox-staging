@@ -61,7 +61,7 @@ private:
 
 	void LoadSample(const std::string& path, std::vector<float>& buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
-	int ChooseWeightedSeekIndex() const;
+	size_t ChooseWeightedSeekIndex() const;
 };
 
 class DiskNoises {
