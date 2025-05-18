@@ -1459,9 +1459,12 @@ public:
 		}
 
 		ethernet = ETHERNET_OpenConnection("slirp");
-		if(!ethernet)
-		{
-			LOG_MSG("NE2000: Failed to initialise Slirp Ethernet backend");
+		if (!ethernet) {
+			LOG_WARNING(
+			        "NE2000: Failed to initialise Slirp Ethernet backend; "
+			        "setting 'ne2000' to 'off'");
+
+			set_section_property_value("ethernet", "ne2000", "off");
 			load_success = false;
 			return;
 		}
