@@ -3,7 +3,7 @@
   "configurePresets": [
     {
       "name": "debug-linux",
-      "displayName": "Debug (Linux host CPU), using vcpkg",
+      "displayName": "Debug (Linux, host CPU, vcpkg)",
       "description": "Configure for Debug build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug",
@@ -16,7 +16,7 @@
     },
     {
       "name": "release-linux",
-      "displayName": "Release (Linux host CPU), using vcpkg",
+      "displayName": "Release (Linux, host CPU, vcpkg)",
       "description": "Configure for Release build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release",
@@ -29,7 +29,7 @@
     },
     {
       "name": "debug-linux-system-libs",
-      "displayName": "Debug (Linux host CPU), using system libs",
+      "displayName": "Debug (Linux, host CPU, system libs)",
       "description": "Configure for Debug build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/debug",
@@ -41,7 +41,7 @@
     },
     {
       "name": "release-linux-system-libs",
-      "displayName": "Release (Linux host CPU), using system libs",
+      "displayName": "Release (Linux, host CPU, system libs)",
       "description": "Configure for Release build",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/release",
@@ -53,7 +53,7 @@
     },
     {
       "name": "debug-macos",
-      "displayName": "Debug (macOS host CPU)",
+      "displayName": "Debug (macOS, host CPU)",
       "description": "Configure for Debug build",
       "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/debug",
@@ -66,7 +66,7 @@
     },
     {
       "name": "release-macos",
-      "displayName": "Release (macOS host CPU)",
+      "displayName": "Release (macOS, host CPU)",
       "description": "Configure for Release build",
       "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/release",
@@ -79,7 +79,7 @@
     },
     {
       "name": "release-macos-arm64",
-      "displayName": "Release (macOS arm64)",
+      "displayName": "Release (macOS, arm64)",
       "description": "Configure for Release build",
       "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/release-arm64",
@@ -93,7 +93,7 @@
     },
     {
       "name": "release-macos-x86_64",
-      "displayName": "Release (macOS x86_64)",
+      "displayName": "Release (macOS, x86_64)",
       "description": "Configure for Release build",
       "generator": "Xcode",
       "binaryDir": "${sourceDir}/build/release-x86_64",
@@ -107,12 +107,12 @@
     },
     {
       "name": "debug-windows",
-      "displayName": "Debug (Windows host CPU)",
+      "displayName": "Debug (Windows, host CPU)",
       "description": "Configure for Debug build",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
@@ -125,12 +125,12 @@
     },
     {
       "name": "release-windows",
-      "displayName": "Release (Windows host CPU)",
+      "displayName": "Release (Windows, host CPU)",
       "description": "Configure for Release build",
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Release",
