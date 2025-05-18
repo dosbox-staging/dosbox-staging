@@ -38,7 +38,7 @@
 
 CHECK_NARROWING();
 
-static std::unique_ptr<DiskNoises> disk_noises;
+static std::unique_ptr<DiskNoises> disk_noises = nullptr;
 static const unsigned int DiskNoiseSampleRateInHz = 22050;
 
 DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
@@ -87,7 +87,7 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 	// Mix audio frames from all active devices
 	for (size_t i = 0; i < num_frames_requested; ++i) {
-		AudioFrame mixed_sample = {0.0f, 0.0f};
+		AudioFrame mixed_sample = {};
 		for (const auto& device : disk_noises->active_devices) {
 			AudioFrame sample = device->GetNextFrame();
 			mixed_sample += sample;
@@ -228,7 +228,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 			continue;
 		}
 
-		std::vector<float> temp(static_cast<size_t>(total_frames) * channels);
+		auto vector_size = static_cast<size_t>(total_frames) * channels;
+		std::vector<float> temp(vector_size);
 		drflac_uint64 frames_read = drflac_read_pcm_frames_f32(decoder,
 		                                                       total_frames,
 		                                                       temp.data());
@@ -331,13 +332,13 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	if (!spin.spin_up_sample.empty()) {
 		spin.spin_up_it = spin.spin_up_sample.begin();
 	} else {
-		spin.spin_up_it = spin.spin_up_sample.end();
+		spin.spin_up_it = {};
 	}
 
 	if (!spin.sample.empty()) {
 		spin.spin_it = spin.sample.begin();
 	} else {
-		spin.spin_it = spin.sample.end();
+		spin.spin_it = {};
 	}
 
 	LoadSeekSamples(seek_sample_paths);
@@ -399,6 +400,7 @@ static void disknoise_destroy([[maybe_unused]] Section* sec)
 	if (disk_noises) {
 		disk_noises = nullptr;
 	}
+
 }
 
 static void disknoise_init(Section* section)
@@ -413,14 +415,14 @@ static void disknoise_init(Section* section)
 
 	const auto spin_up = "hdd_spinup.flac";
 	const auto spin    = "hdd_spin.flac";
-	std::vector<std::string> hdd_seek_samples;
+	std::vector<std::string> hdd_seek_samples = {};
 	for (auto  i = 1; i <= MaxNumSeekSamples; ++i) {
 		hdd_seek_samples.push_back("hdd_seek" + std::to_string(i) + ".flac");
 	}
 
 	const auto floppy_spin_up = "fdd_spinup.flac";
 	const auto floppy_spin    = "fdd_spin.flac";
-	std::vector<std::string> floppy_seek_samples;
+	std::vector<std::string> floppy_seek_samples = {};
 	for (auto i = 1; i <= MaxNumSeekSamples; ++i) {
 		floppy_seek_samples.push_back("fdd_seek" + std::to_string(i) + ".flac");
 	}

@@ -73,12 +73,12 @@ public:
 	           const std::vector<std::string>& floppy_seek_samples);
 	~DiskNoises();
 
-	std::shared_ptr<MixerChannel> mix_channel;
-	std::vector<std::shared_ptr<DiskNoiseDevice>> active_devices;
+	std::shared_ptr<MixerChannel> mix_channel = nullptr;
+	std::vector<std::shared_ptr<DiskNoiseDevice>> active_devices = {};
 
 private:
-	std::shared_ptr<DiskNoiseDevice> floppy_noise;
-	std::shared_ptr<DiskNoiseDevice> hdd_noise;
+	std::shared_ptr<DiskNoiseDevice> floppy_noise = nullptr;
+	std::shared_ptr<DiskNoiseDevice> hdd_noise = nullptr;
 
 	void AudioCallback(int frames);
 };
