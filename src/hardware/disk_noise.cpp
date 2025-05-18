@@ -162,7 +162,7 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	return AudioFrame{sample, sample};
 }
 
-void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& buffer)
+void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& destination_buffer)
 {
 	if (path.empty()) {
 		return;
@@ -247,7 +247,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& bu
 			sample *= scale;
 		}
 
-		buffer = std::move(temp);
+		destination_buffer = std::move(temp);
 		LOG_DEBUG("DISKNOISE: Loaded %zu samples from '%s'",
 		          buffer.size(),
 		          candidate.c_str());

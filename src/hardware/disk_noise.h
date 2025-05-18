@@ -59,7 +59,7 @@ private:
 		std::vector<float>::iterator current_it = current_sample.end();
 	} seek = {};
 
-	void LoadSample(const std::string& path, std::vector<float>& buffer);
+	void LoadSample(const std::string& path, std::vector<float>& destination_buffer);
 	void LoadSeekSamples(const std::vector<std::string>& paths);
 	size_t ChooseWeightedSeekIndex() const;
 };
