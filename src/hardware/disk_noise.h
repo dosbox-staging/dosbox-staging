@@ -30,8 +30,7 @@
 
 class DiskNoiseDevice {
 public:
-	DiskNoiseDevice(const DiskType disk_type,
-					const bool enable_disk_noise,
+	DiskNoiseDevice(const DiskType disk_type, const bool disk_noise_enabled,
 	                const std::string& spin_up_sample_path,
 	                const std::string& spin_sample_path,
 	                const std::vector<std::string>& seek_sample_paths,
@@ -42,7 +41,7 @@ public:
 	AudioFrame GetNextFrame();
 
 private:
-	bool enable_disk_noise    = false;
+	bool disk_noise_enabled = false;
 
 	struct SpinSample {
 		std::vector<float> spin_up_sample;

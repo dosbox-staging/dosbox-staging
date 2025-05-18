@@ -313,14 +313,14 @@ size_t DiskNoiseDevice::ChooseWeightedSeekIndex() const
 	return 0;
 }
 DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
-                                 const bool enable_disk_noise,
+                                 const bool disk_noise_enabled,
                                  const std::string& spin_up_sample_path,
                                  const std::string& spin_sample_path,
                                  const std::vector<std::string>& seek_sample_paths,
                                  bool loop_spin_sample)
-        : enable_disk_noise(enable_disk_noise)
+        : disk_noise_enabled(disk_noise_enabled)
 {
-	if (!enable_disk_noise) {
+	if (!disk_noise_enabled) {
 		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
 	}
@@ -357,7 +357,7 @@ DiskNoiseDevice::~DiskNoiseDevice()
 
 void DiskNoiseDevice::ActivateSpin()
 {
-	if (!enable_disk_noise) {
+	if (!disk_noise_enabled) {
 		return;
 	}
 
@@ -375,7 +375,7 @@ void DiskNoiseDevice::ActivateSpin()
 
 void DiskNoiseDevice::PlaySeek()
 {
-	if (!enable_disk_noise) {
+	if (!disk_noise_enabled) {
 		return;
 	}
 
