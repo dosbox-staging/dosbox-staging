@@ -1267,19 +1267,19 @@ void DOSBOX_Init()
 
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
 
-	pbool = secprop->Add_bool("ne2000", when_idle, true);
+	pbool = secprop->Add_bool("ne2000", when_idle, false);
 	pbool->SetOptionHelp(
 	        "SLIRP",
-	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
-	        "network (using libslirp) with properties as follows ('on' by default):\n"
-	        "  - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.\n"
-	        "  - 10.0.2.2:       IP of the gateway and DHCP service.\n"
-	        "  - 10.0.2.3:       IP of the virtual DNS server.\n"
-	        "  - 10.0.2.15:      First IP provided by DHCP, your IP!\n"
-	        "Note: Inside DOS, setting this up requires an NE2000 packet driver, DHCP\n"
-	        "      client, and TCP/IP stack. You might need port-forwarding from the host\n"
-	        "      into the DOS guest, and from your router to your host when acting as the\n"
-	        "      server for multiplayer games.");
+	        "Enable emulation of a Novell NE2000 network card on a software-based network\n"
+	        "with the following properties ('off' by default):\n"
+	        "  - 255.255.255.0   Subnet mask of the 10.0.2.0 virtual LAN.\n"
+	        "  - 10.0.2.2        IP of the gateway and DHCP service.\n"
+	        "  - 10.0.2.3        IP of the virtual DNS server.\n"
+	        "  - 10.0.2.15       First IP provided by DHCP (this is your IP)\n"
+	        "Note: Using this feature requires an NE2000 packet driver, a DHCP client, and a\n"
+	        "      TCP/IP stack set up in DOS. You might need port-forwarding from your host\n"
+	        "      OS into DOSBox, and from your router to your host OS when acting as the\n"
+	        "      server in multiplayer games.");
 
 	pbool->SetEnabledOptions({"SLIRP"});
 
