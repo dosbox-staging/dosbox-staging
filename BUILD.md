@@ -389,8 +389,8 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ```bash
 cd dosbox-staging
-cmake --preset=release-linux
-cmake --build --preset=release-linux
+cmake --preset=release-linux-system-libs
+cmake --build --preset=release-linux-system-libs
 ```
 
 1. You can now launch DOSBox with the command:
@@ -444,8 +444,8 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ```bash
 cd dosbox-staging
-cmake --preset=release-linux-vcpkg
-cmake --build --preset=release-linux-vcpkg
+cmake --preset=release-linux
+cmake --build --preset=release-linux
 ```
 
 1. You can now launch DOSBox with the command:

@@ -41,21 +41,21 @@ jobs:
         conf:
           - name: GCC 12, Ubuntu 22.04
             os: ubuntu-22.04
-            cmake_preset: release-linux-vcpkg
+            cmake_preset: release-linux
             cc:  gcc
             cxx: g++
             max_warnings: 14
 
           - name: Clang 15, Ubuntu 22.04
             os: ubuntu-22.04
-            cmake_preset: release-linux-vcpkg
+            cmake_preset: release-linux
             cc:  clang
             cxx: clang++
             max_warnings: 14
 
           - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
-            cmake_preset: debug-linux-vcpkg
+            cmake_preset: debug-linux
             cmake_flags: -DOPT_HEAVY_DEBUG=ON
             cc:  gcc
             cxx: g++
@@ -65,7 +65,7 @@ jobs:
           # feature toggling implemented
           - name: GCC 11, Ubuntu 22.04
             os: ubuntu-22.04
-            cmake_preset: release-linux-vcpkg
+            cmake_preset: release-linux
             cc:  gcc
             cxx: g++
             max_warnings: 14
@@ -174,8 +174,8 @@ jobs:
       - name: Setup and build
         run: |
           set -x
-          cmake --preset release-linux-vcpkg
-          cmake --build --preset release-linux-vcpkg
+          cmake --preset release-linux
+          cmake --build --preset release-linux
 
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE

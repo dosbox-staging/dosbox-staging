@@ -3,6 +3,32 @@
   "configurePresets": [
     {
       "name": "debug-linux",
+      "displayName": "Debug (Linux host CPU), using vcpkg",
+      "description": "Configure for Debug build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "RESOURCE_COPY_PATH": "/resources"
+      }
+    },
+    {
+      "name": "release-linux",
+      "displayName": "Release (Linux host CPU), using vcpkg",
+      "description": "Configure for Release build",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/release",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
+        "CMAKE_BUILD_TYPE": "Release",
+        "RESOURCE_COPY_PATH": "/resources"
+      }
+    },
+    {
+      "name": "debug-linux-system-libs",
       "displayName": "Debug (Linux host CPU), using system libs",
       "description": "Configure for Debug build",
       "generator": "Ninja",
@@ -14,7 +40,7 @@
       }
     },
     {
-      "name": "release-linux",
+      "name": "release-linux-system-libs",
       "displayName": "Release (Linux host CPU), using system libs",
       "description": "Configure for Release build",
       "generator": "Ninja",
@@ -26,32 +52,6 @@
       }
     },
     {
-      "name": "debug-linux-vcpkg",
-      "displayName": "Debug (Linux host CPU), using vcpkg",
-      "description": "Configure for Debug build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "RESOURCE_COPY_PATH": "/resources"
-      }
-    },
-    {
-      "name": "release-linux-vcpkg",
-      "displayName": "Release (Linux host CPU), using vcpkg",
-      "description": "Configure for Release build",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
-        "CMAKE_BUILD_TYPE": "Release",
-        "RESOURCE_COPY_PATH": "/resources"
-      }
-    },
-    {
       "name": "debug-macos",
       "displayName": "Debug (macOS host CPU)",
       "description": "Configure for Debug build",
@@ -59,7 +59,7 @@
       "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -72,7 +72,7 @@
       "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -86,7 +86,7 @@
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -100,7 +100,7 @@
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "x86_64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       }
@@ -114,7 +114,7 @@
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/Resources"
       },
@@ -132,7 +132,7 @@
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-        "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/Resources"
       },
@@ -145,52 +145,52 @@
   "buildPresets": [
     {
       "name": "debug-linux",
-      "configurePreset" : "debug-linux",
+      "configurePreset": "debug-linux",
       "configuration": "Debug"
     },
     {
       "name": "release-linux",
-      "configurePreset" : "release-linux",
+      "configurePreset": "release-linux",
       "configuration": "Release"
     },
     {
-      "name": "debug-linux-vcpkg",
-      "configurePreset" : "debug-linux",
+      "name": "debug-linux-system-libs",
+      "configurePreset": "debug-linux-system-libs",
       "configuration": "Debug"
     },
     {
-      "name": "release-linux-vcpkg",
-      "configurePreset" : "release-linux",
+      "name": "release-linux-system-libs",
+      "configurePreset": "release-linux-system-libs",
       "configuration": "Release"
     },
     {
       "name": "debug-macos",
-      "configurePreset" : "debug-macos",
+      "configurePreset": "debug-macos",
       "configuration": "Debug"
     },
     {
       "name": "release-macos",
-      "configurePreset" : "release-macos",
+      "configurePreset": "release-macos",
       "configuration": "Release"
     },
     {
       "name": "release-macos-arm64",
-      "configurePreset" : "release-macos-arm64",
+      "configurePreset": "release-macos-arm64",
       "configuration": "Release"
     },
     {
       "name": "release-macos-x86_64",
-      "configurePreset" : "release-macos-x86_64",
+      "configurePreset": "release-macos-x86_64",
       "configuration": "Release"
     },
     {
       "name": "debug-windows",
-      "configurePreset" : "debug-windows",
+      "configurePreset": "debug-windows",
       "configuration": "Debug"
     },
     {
       "name": "release-windows",
-      "configurePreset" : "release-windows",
+      "configurePreset": "release-windows",
       "configuration": "Release"
     }
   ]
