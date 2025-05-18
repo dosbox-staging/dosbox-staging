@@ -6,7 +6,7 @@
       "displayName": "Debug (Linux host CPU), using system libs",
       "description": "Configure for Debug build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug-linux",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "RESOURCE_COPY_PATH": "/resources",
@@ -18,7 +18,7 @@
       "displayName": "Release (Linux host CPU), using system libs",
       "description": "Configure for Release build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release-linux",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "RESOURCE_COPY_PATH": "/resources",
@@ -30,7 +30,7 @@
       "displayName": "Debug (Linux host CPU), using vcpkg",
       "description": "Configure for Debug build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug-linux",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
@@ -43,7 +43,7 @@
       "displayName": "Release (Linux host CPU), using vcpkg",
       "description": "Configure for Release build",
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/release-linux",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
@@ -56,7 +56,7 @@
       "displayName": "Debug (macOS host CPU)",
       "description": "Configure for Debug build",
       "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/debug-macos",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
@@ -69,7 +69,7 @@
       "displayName": "Release (macOS host CPU)",
       "description": "Configure for Release build",
       "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/release-macos",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_FIND_PACKAGE_PREFER_CONFIG" : "ON",
@@ -82,7 +82,7 @@
       "displayName": "Release (macOS arm64)",
       "description": "Configure for Release build",
       "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/release-macos-arm64",
+      "binaryDir": "${sourceDir}/build/release-arm64",
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "arm64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -96,7 +96,7 @@
       "displayName": "Release (macOS x86_64)",
       "description": "Configure for Release build",
       "generator": "Xcode",
-      "binaryDir": "${sourceDir}/build/release-macos-x86_64",
+      "binaryDir": "${sourceDir}/build/release-x86_64",
       "cacheVariables": {
         "CMAKE_OSX_ARCHITECTURES": "x86_64",
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -110,7 +110,7 @@
       "displayName": "Debug (Windows host CPU)",
       "description": "Configure for Debug build",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/debug-windows",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -128,7 +128,7 @@
       "displayName": "Release (Windows host CPU)",
       "description": "Configure for Release build",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build/release-windows",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_GENERATOR_TOOLSET": "ClangCL",      
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",

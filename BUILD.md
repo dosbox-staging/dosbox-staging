@@ -396,7 +396,7 @@ cmake --build --preset=release-linux
 1. You can now launch DOSBox with the command:
 
 ```bash
-./build/release-linux/dosbox
+./build/release/dosbox
 ```
 
 ### Building on Linux, using `vcpkg` to fetch dependencies at compile time
@@ -451,5 +451,5 @@ cmake --build --preset=release-linux-vcpkg
 1. You can now launch DOSBox with the command:
 
 ```bash
-./build/release-linux/dosbox
+./build/release/dosbox
 ```

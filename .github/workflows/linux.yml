@@ -183,11 +183,11 @@ jobs:
       - name: Package
         run: |
           echo "*** dosbox transitive deps:"
-          ldd build/release-linux/dosbox
+          ldd build/release/dosbox
 
           ./scripts/create-package.sh \
             -p linux \
-            build/release-linux \
+            build/release \
             "dosbox-staging-linux-x86_64-$VERSION"
 
 
