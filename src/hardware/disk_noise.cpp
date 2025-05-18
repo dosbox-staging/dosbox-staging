@@ -158,7 +158,7 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 		seek.current_sample.clear();
 	}
 
-	return AudioFrame{sample, sample};
+	return AudioFrame{sample};
 }
 
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& destination_buffer)
