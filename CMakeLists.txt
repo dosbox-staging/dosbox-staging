@@ -195,19 +195,19 @@ configure_file(
 
 ### end of config.h ###
 
-add_executable(dosbox src/main.cpp src/dosbox.cpp)
-target_include_directories(
-  dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
-)
-
 # Allow dynamically loading externalised vcpkg dependencies at runtime
-# from the $EXE_DIR/lib directory
+# from the $EXE_DIR/lib directory (must be set before 'add_executable')
 if (APPLE)
   set(CMAKE_INSTALL_RPATH "@executable_path/lib")
 else()
   set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
 endif()
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+
+add_executable(dosbox src/main.cpp src/dosbox.cpp)
+target_include_directories(
+  dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
+)
 
 # TODO This happens on every execution, better to have a target with
 # dependencies instead
