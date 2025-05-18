@@ -41,9 +41,9 @@
 #if defined(WIN32)
 constexpr const char* libslirp_dynlib_file = "slirp-0.dll";
 #elif defined(MACOSX)
-constexpr const char* libslirp_dynlib_file = "libslirp.0.dylib";
+constexpr const char* libslirp_dynlib_file = "libslirp.dylib";
 #else
-constexpr const char* libslirp_dynlib_file = "libslirp.so.0";
+constexpr const char* libslirp_dynlib_file = "libslirp.so";
 #endif
 
 namespace LibSlirp
