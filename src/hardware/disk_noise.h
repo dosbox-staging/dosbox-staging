@@ -44,17 +44,17 @@ private:
 	bool disk_noise_enabled = false;
 
 	struct SpinSample {
-		std::vector<float> spin_up_sample;
-		std::vector<float> sample;
-		bool loop = false;
+		std::vector<float> spin_up_sample             = {};
+		std::vector<float> sample                     = {};
+		bool loop                                     = false;
 		std::vector<float>::const_iterator spin_up_it = {};
-		std::vector<float>::const_iterator spin_it = {};
+		std::vector<float>::const_iterator spin_it    = {};
 	} spin = {};
 
 	struct SeekSample {
-		std::vector<std::vector<float>> samples;
-		std::vector<int> sample_weights;
-		std::vector<float> current_sample;
+		std::vector<std::vector<float>> samples       = {};
+		std::vector<int> sample_weights               = {};
+		std::vector<float> current_sample             = {};
 		std::vector<float>::const_iterator current_it = {};
 	} seek = {};
 
@@ -75,8 +75,6 @@ public:
 
 	std::shared_ptr<MixerChannel> mix_channel;
 	std::vector<std::shared_ptr<DiskNoiseDevice>> active_devices;
-
-	std::mutex device_mutex;
 
 private:
 	std::shared_ptr<DiskNoiseDevice> floppy_noise;
