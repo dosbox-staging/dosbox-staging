@@ -1853,29 +1853,34 @@ Vous pouvez également définir des couleurs personnalisées en spécifiant 16
 valeurs de couleur séparées par des espaces ou des virgules,
 soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge
 vif), soit en triplets RGB décimaux (par ex. (255, 0, 255) pour magenta).
-The 16 colours are ordered as follows:
-  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
-  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
-Their default values, shown here in 6-digit hex code format, are:
+Les 16 couleurs sont ordonnés dans l'ordre qui suit:
+  noire, bleu, vert, cyan, rouge, magenta, brun, gris clair, gris foncé,
+  bleu clair, vert clair, cyan clair, rouge clair, magenta clair, jaune, blanc.
+Leurs valeurs par défaut, présentées ici en format hexadécimal à 6 chiffres,
+sont:
   #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
   #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
-Software scalers are deprecated in favour of hardware-accelerated options:
-  - If you used the normal2x/3x scalers, set the desired 'windowresolution'
-    or 'viewport' instead, or consider using 'integer_scaling'.
-  - If you used an advanced scaler, consider one of the 'glshader'
-    options instead.
+Les algos de mise à l'échelle logiciels sont obsolètes au profit des options
+accélérées par le matériel :
+  - Si vous utilisiez les scalers normal2x/3x, définissez la valeur souhaitée de
+    'windowresolution' ou 'viewport' à la place, ou envisagez d'utiliser
+    'integer_scaling'.
+  - Si vous utilisiez un scaler avancé, envisagez l'une des options 'glshader'
+    à la place.
 .
 :CONFIG_COMPOSITE
-Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine
-types; 'auto' by default). 'auto' lets the program decide.
-Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,
-      then copy the new settings from the logs into your config.
+Active le mode composite au démarrage (uniquement pour les types de machines
+'cga', 'pcjr' et 'tandy' ; 'auto' par défaut). 'auto' laisse le programme
+décider.
+Note : Affinez les réglages ci-dessous (par ex., 'hue') à l'aide des raccourcis
+       composite, puis copiez les nouveaux paramètres depuis les journaux dans
+       votre configuration.
 .
 :CONFIG_ERA
-Ère de la technologie composite. Quand 'auto', PCjr utilise la nouvelle et
-CGA/Tandy utilisent l'ancienne.
+Ère de la technologie composite. Quand 'auto' est utilisé, PCjr utilise la
+nouvelle et CGA/Tandy utilisent l'ancienne.
 .
 :CONFIG_HUE
 Apparence de la palette RGB.
@@ -2951,7 +2956,8 @@ Essayez d'activer ceci si votre stick analogique gauche peut seulement bouger
 dans un cercle.
 .
 :CONFIG_DEADZONE
-Pourcentage de mouvement à ignorer. 100 transforme le stick en un stick digital.
+Pourcentage de mouvement à ignorer. 100 transforme le stick en un stick
+numérique.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Active les raccourcis clavier permettant la calibration en temps réel des axes x
@@ -3132,22 +3138,22 @@ L'adresse MAC de la carte NE2000 ('AC :DE :48 :88 :99 :AA' par défaut).
 Transférer un ou plusieurs ports TCP de l'hôte vers l'invité DOS
 (non défini par défaut).
 Le format est :
-port1  port2  port3 ... (ex. : 21 80 443)
-Cela transférera FTP, HTTP et HTTPS vers l'invité DOS.
+  port1  port2  port3 ... (ex. : 21 80 443)
+  Cela transférera FTP, HTTP et HTTPS vers l'invité DOS.
 Si les ports sont réservés sur l'hôte, un mappage peut être utilisé :
-hôte :invité  ..., (ex. : 8021 :21 8080 :80)
-Cela transférera les ports 8021 et 8080 vers FTP et HTTP dans l'invité.
+  hôte :invité  ..., (ex. : 8021 :21 8080 :80)
+  Cela transférera les ports 8021 et 8080 vers FTP et HTTP dans l'invité.
 Une plage de ports adjacents peut être abrégée avec un tiret :
-début-fin ... (ex. : 27910-27960)
-Cela transférera les ports 27910 à 27960 vers l'invité DOS.
+  début-fin ... (ex. : 27910-27960)
+  Cela transférera les ports 27910 à 27960 vers l'invité DOS.
 Les mappages et plages peuvent aussi être combinés :
-hdébut-hfin :gdébut-gfin ..., (ex. : 8040-8080 :20-60)
-Cela transférera les ports 8040 à 8080 vers 20 à 60 dans l'invité.
+  hdébut-hfin :gdébut-gfin ..., (ex. : 8040-8080 :20-60)
+  Cela transférera les ports 8040 à 8080 vers 20 à 60 dans l'invité.
 Notes :
-- Si les plages mappées diffèrent, la plage la plus courte est étendue pour
+  - Si les plages mappées diffèrent, la plage la plus courte est étendue pour
 correspondre.
-- Si des ports hôtes en conflit sont donnés, seul le premier est configuré.
-- Si des ports invités en conflit sont donnés, la dernière règle prévaut.
+  - Si des ports hôtes en conflit sont donnés, seul le premier est configuré.
+  - Si des ports invités en conflit sont donnés, la dernière règle prévaut.
 .
 :CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Transférer un ou plusieurs ports UDP de l'hôte vers l'invité DOS
@@ -3190,66 +3196,69 @@ Impossible d'ouvrir le fichier %s
 Écriture du fichier de configuration %s
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Perform configuration management and other miscellaneous actions.
+:SHELL_CMD_CONFIG_HELP_LONG
+Effectue la gestion de la configuration et d'autres actions diverses.
 
-Usage:
-  [color=light-green]config[reset] [color=white]COMMAND[reset] [color=light-cyan][PARAMETERS][reset]
+Utilisation :
+  [color=light-green]config[reset] [color=white]COMMANDE[reset] [color=light-cyan][PARAMÈTRES][reset]
 
-Where [color=white]COMMAND[reset] is one of:
+Où [color=white]COMMANDE[reset] est l'une des suivantes :
   -writeconf
-  -wc               write the current configuration to the local `dosbox.conf`
-                    config file in the current working directory
+  -wc               écrit la configuration actuelle dans le fichier `dosbox.conf`
+                    situé dans le répertoire de travail actuel
 
-  -writeconf [color=white]PATH[reset]
-  -wc [color=white]PATH          [reset]if [color=white]PATH[reset] is a filename, write the current configuration to
-                    that file in the current working directory, otherwise to the
-                    specified absolute or relative path
+  -writeconf [color=white]CHEMIN[reset]
+  -wc [color=white]CHEMIN        [reset]si [color=white]CHEMIN[reset] est un nom de fichier,
+                    la configuration actuelle est écrite
+                    dans ce fichier du répertoire de travail actuel, sinon dans
+                    le chemin absolu ou relatif spécifié
 
-  -wcd              write the current configuration to the primary (default)
-                    `dosbox-staging.conf` config file in the configuration
-                    directory
+  -wcd              écrit la configuration actuelle dans le fichier principal
+                    par défaut `dosbox-staging.conf` situé dans le répertoire
+                    de configuration
 
-  -writelang [color=white]FILENAME[reset]
-  -wl [color=white]FILENAME      [reset]write the current language strings to [color=white]FILENAME [reset]in the
-                    current working directory
+  -writelang [color=white]FICHIER[reset]
+  -wl [color=white]FICHIER      [reset]écrit les chaînes de langue actuelles
+                    dans [color=white]FICHIER[reset] situé dans le répertoire de travail actuel
 
-  -r [color=light-cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]
-                    restart DOSBox with the optionally supplied config
-                    properties
+  -r [color=light-cyan][PROPRIÉTÉ1=VALEUR1 [PROPRIÉTÉ2=VALEUR2 ...]][reset]
+                    redémarre DOSBox avec les propriétés de configuration
+                    fournies en option
 
-  -l                show the currently loaded config files and command line
-                    arguments provided at startup
+  -l                affiche les fichiers de configuration actuellement chargés
+                    et les arguments fournis à l'exécution
 
   -help [color=white]SECTION[reset]
   -h    [color=white]SECTION[reset]
-  -?    [color=white]SECTION     [reset]list the names of all properties in a config section
+  -?    [color=white]SECTION     [reset]liste les noms de toutes les propriétés d'une section de configuration
 
-  -help [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
-  -h    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
-  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
-                    show the description and the current value of a config
-                    property
+  -help [color=light-cyan][SECTION][reset] [color=white]PROPRIÉTÉ[reset]
+  -h    [color=light-cyan][SECTION][reset] [color=white]PROPRIÉTÉ[reset]
+  -?    [color=light-cyan][SECTION][reset] [color=white]PROPRIÉTÉ[reset]
+                    affiche la description et la valeur actuelle d'une
+                    propriété de configuration
 
   -help sections
   -h    sections
-  -?    sections    [reset]list the names of all config sections
+  -?    sections    [reset]liste les noms de toutes les sections de configuration
 
-  -axclear          clear the [autoexec] section
-  -axadd [color=white]LINE[reset]       append a line to the end of the [autoexec] section
-  -axtype           show the contents of the [autoexec] section
-  -securemode       switch to secure mode
-  -avistart         start AVI recording
-  -avistop          stop AVI recording
-  -startmapper      start the keymapper
+  -axclear          efface la section [autoexec]
+  -axadd [color=white]LIGNE[reset]       ajoute une ligne à la fin de la section [autoexec]
+  -axtype           affiche le contenu de la section [autoexec]
+  -securemode       bascule en mode sécurisé
+  -avistart         démarre l'enregistrement AVI
+  -avistop          arrête l'enregistrement AVI
+  -startmapper      lance le keymapper
 
-  -get [color=white]SECTION      [reset]show all properties and their values in a config section
-  -get [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
-                    show the value of a single config property
+  -get [color=white]SECTION      [reset]affiche toutes les propriétés et leurs valeurs
+                    dans une section de configuration
+  -get [color=light-cyan][SECTION][reset] [color=white]PROPRIÉTÉ[reset]
+                    affiche la valeur d'une seule propriété de configuration
 
-  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]
-                    set the value of a config property
+  -set [color=light-cyan][SECTION][reset] [color=white]PROPRIÉTÉ[reset][=][color=white]VALEUR[reset]
+                    définit la valeur d'une propriété de configuration
 
-  -securemode       enable secure mode
+  -securemode       active le mode sécurisé
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
 [color=white]Description of the [color=light-green]'%s'[color=white] setting in the [color=light-cyan][%s][color=white] section:[reset]
@@ -3392,7 +3401,7 @@ Utilisation :
   [color=light-green]boot[reset] [color=white]LECTEUR[reset]
   [color=light-green]boot[reset] [color=light-cyan]FICHIERIMAGE[reset]
 
-Où :
+Paramètres :
   [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A:[reset], [color=white]C:[reset], ou [color=white]D:[reset].
   [color=light-cyan]FICHIERIMAGE[reset] est une ou plusieurs images de disquette, séparées par des espaces.
 
@@ -3553,7 +3562,7 @@ Avec :
 Notes :
   - %s+F4 échange & monte le CDROM-SET ou le FICHIERIMAGE suivant si spécifié.
 Exemples :
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/jeux/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/NOMUTILISATEUR/jeux/doom.iso[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquette1.img disquette2.img disquette3.img[reset] -t floppy
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]~/dos/lecteur_c.img[reset] -t hdd
@@ -3639,7 +3648,7 @@ Utilisation :
   [color=light-green]intro[reset]
   [color=light-green]intro[reset] [color=white]PAGE[reset]
 
-Où :
+Paramètres :
   [color=white]PAGE[reset] est le nom de la page à afficher, notamment [color=white]cdrom[reset], [color=white]mount[reset] et [color=white]special[reset].
 
 Remarques :
@@ -3762,28 +3771,31 @@ Utilisation :
   [color=light-green]keyb[reset] [color=light-cyan][CODELANGUE][reset]
   [color=light-green]keyb[reset] [color=light-cyan]CODELANGUE[reset] [color=white]CODEPAGE[reset] [FICHIERCODEPAGE]
 
-Où :
+Paramètres :
   [color=light-cyan]CODELANGUE[reset]     est un code de langue ou un ID de disposition clavier.
   [color=white]CODEPAGE[reset]     est un numéro de page de code, comme [color=white]437[reset] et [color=white]850[reset].
   FICHIERCODEPAGE est un fichier contenant des informations pour une page de
   code.
 
 Remarques :
-  - L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition clavier actuellement chargée
-  et la page de code.
-  - The [color=white]CPIFILE[reset], if specified, must contain the screen font for the given
-    [color=white]CODEPAGE[reset].
-  - MS-DOS, DR-DOS, and Windows NT formats of the CPI files are supported
-    directly. The FreeDOS CPX files have to be uncompressed first with the 3rd
-    party [color=light-green]upx[reset] tool.
-  - If no custom [color=white]CPIFILE[reset] is specified, the command looks for a suitable screen
-    font in the bundled CPI files.
-  - If [color=white]CODEPAGE[reset] is not specified, and the screen font from the display adapter
-    ROM is suitable, it uses the ROM screen font.
-  - Only EGA or better display adapters allow to change the screen font; MDA,
-    CGA, or Hercules always use the ROM screen font.
-  - You can use the 'us' keyboard layout with any code page; all the other
-    layouts work with selected code pages only.
+  - L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition
+  clavier actuellement chargée et la page de code.
+  - Le [color=white]FICHIERCPI[reset], s'il est spécifié, doit contenir la
+    police d’écran pour la [color=white]CODEPAGE[reset] donnée.
+  - Les formats CPI de MS-DOS, DR-DOS et Windows NT sont pris en charge
+    directement. Les fichiers CPX de FreeDOS doivent d'abord être décompressés
+    avec l’outil tiers [color=light-green]upx[reset].
+  - Si aucun [color=white]FICHIERCPI[reset] personnalisé n’est spécifié, la
+    commande recherche une police d'écran appropriée parmi les fichiers CPI
+    intégrés.
+  - Si [color=white]CODEPAGE[reset] n'est pas spécifiée et que la police d'écran de
+    l'adaptateur d'affichage ROM est adaptée, elle sera utilisée.
+  - Seuls les adaptateurs EGA ou supérieurs permettent de modifier la police
+    d’écran ; les MDA, CGA ou Hercules utilisent toujours la police ROM.
+  - Vous pouvez utiliser la disposition de clavier 'us' avec n'importe quelle
+    page de code ; toutes les autres dispositions fonctionnent uniquement avec
+    certaines pages de code sélectionnées.
+
 
 Exemples :
   [color=light-green]KEYB[reset]
@@ -3863,7 +3875,7 @@ Utilisation :
   [color=light-green]loadfix[reset] [color=light-cyan]JEU[reset] [color=white][PARAMETRES][reset]
   [color=light-green]loadfix[reset] [/d] (ou [/f])[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]JEU[reset] est un jeu ou programme à charger, éventuellement avec des paramètres.
 
 Remarques :
@@ -3898,7 +3910,7 @@ Charge une image ROM du BIOS vidéo ou d'IBM BASIC.
 Utilisation :
   [color=light-green]loadrom [color=light-cyan]FICHIERIAMGE[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]FICHIERIAMGE[reset] est une image ROM de BIOS vidéo ou d'IBM BASIC.
 
 Remarques :
@@ -3958,7 +3970,7 @@ Affiche les informations de mémoire DOS.
 Utilisation :
   [color=light-green]mem[reset]
 
-Où :
+Paramètres :
   Cette commande n'a pas de paramètres.
 
 Remarques :
@@ -3990,7 +4002,7 @@ Utilisation :
   [color=light-green]mixer[reset] [color=light-cyan][CANAL][reset] [color=white]COMMANDES[reset] [/noshow]
   [color=light-green]mixer[reset] [/listmidi]
 
-Où :
+Paramètres :
   [color=light-cyan]CANAL[reset]    est le canal audio à modifier.
   [color=white]COMMANDES[reset] sont une ou plusieurs des commandes suivantes :
     Volume :    [color=white]0[reset] à [color=white]100[reset], ou valeur en décibels préfixée par [color=white]d[reset] (par ex. [color=white]d-7.5[reset])
@@ -4077,8 +4089,8 @@ Niveau de réverbération global invalide [color=white]%s[reset]
 (doit être compris entre 0 et 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Missing global crossfeed strength after [color=white]x[reset]
-(must be between 0 and 100)
+Valeur globale de crossfeed manquante après [color=white]x[reset]
+(doit être entre 0 et 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
 Niveau de chorus global manquant après [color=white]c[reset]
@@ -4225,7 +4237,7 @@ Pas de fichier d'entré trouvé.
 [reset][color=brown]combien de lignes ?[reset]
 .
 :PROGRAM_MOUNT_HELP
-relie les dossiers ou lecteurs physiques à une lettre de lecteur virtuel.
+Relie les dossiers ou lecteurs physiques à une lettre de lecteur virtuel.
 .
 :PROGRAM_MOUNT_HELP_LONG
 Monte un répertoire de l'OS hôte sur une lettre de lecteur.
@@ -4450,7 +4462,7 @@ Utilisation :
   [color=light-green]rescan[reset] [color=light-cyan]LECTEUR[reset]
   [color=light-green]rescan[reset] [/a]
 
-Où :
+Paramètres :
   [color=light-cyan]LECTEUR[reset] est le lecteur à scanner pour les changements.
 
 Remarques :
@@ -4474,7 +4486,7 @@ Utilisation :
   [color=light-green]serial[reset] [color=white][PORT#][reset]                   Liste tous les ports ou le port spécifié ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], ou [color=white]4[reset]).
   [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]PERIPHERIQUE[reset] [paramètres]   Attache le périphérique spécifié au port donné.
 
-Où :
+Paramètres :
   [color=light-cyan]PERIPHERIQUE[reset]   Un des : [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], ou [color=light-cyan]DISABLED[reset]
 
   Paramètres optionnels pour chaque [color=light-cyan]PERIPHERIQUE[reset] :
@@ -4712,7 +4724,7 @@ Utilisation :
   [color=light-green]command[reset]
   [color=light-green]command[reset] /c (ou /init) [color=light-cyan]COMMANDE[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]COMMANDE[reset] est une commande DOS, un jeu ou un programme à exécuter.
 
 Remarques :
@@ -4860,7 +4872,7 @@ Attendre l'appui sur 1 touche pour continuer.
 Utilisation :
   [color=light-green]pause[reset]
 
-Où :
+Paramètres :
   Cette commande n'a pas de paramètres.
 
 Remarques :
@@ -4948,7 +4960,7 @@ Effacer l'écran.
 Utilisation :
   [color=light-green]cls[reset]
 
-Où :
+Paramètres :
   Cette commande n'a pas de paramètres.
 
 Remarques :
@@ -4986,7 +4998,7 @@ Utilisation :
   [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
   [color=light-green]echo[reset] [color=light-cyan][MESSAGE][reset]
 
-Où :
+Paramètres :
   [color=light-cyan]on|off[reset]  Active/désactive l'écho des commandes.
   [color=light-cyan]MESSAGE[reset] Le message à afficher.
 
@@ -5007,7 +5019,7 @@ Sortir du shell.
 Utilisation :
   [color=light-green]exit[reset]
 
-Où :
+Paramètres :
   Cette commande n'a pas de paramètres.
 
 Remarques :
@@ -5030,7 +5042,7 @@ Utilisation :
   [color=light-green]help[reset] /a[ll]
   [color=light-green]help[reset] [color=light-cyan]COMMANDE[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]COMMANDE[reset] est le nom d'une commande DOS interne, comme [color=light-cyan]dir[reset].
 
 Remarques :
@@ -5065,7 +5077,7 @@ Utilisation :
   [color=light-green]set[reset]
   [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][CHAINE][reset]
 
-Où :
+Paramètres :
   [color=white]VARIABLE[reset] Le nom de la variable d'environnement.
   [color=light-cyan]CHAINE[reset]   Une série de caractères à assigner à la variable.
 
@@ -5086,7 +5098,7 @@ Utilisation :
   [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]CH1==CH2[reset] COMMANDE
   [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FICHIER[reset] COMMANDE
 
-Où :
+Paramètres :
   [color=white]NOMBRE[reset]     est un entier positif inférieur ou égal à la valeur souhaitée.
   [color=white]CH1==CH2[reset]   compare deux chaînes de texte (sensible à la casse).
   [color=white]FICHIER[reset]    est un nom de fichier exact à vérifier pour l'existence.
@@ -5112,7 +5124,7 @@ Aller à la ligne de l'étiquette définie dans un script batch.
 Utilisation :
   [color=light-green]goto[reset] [color=light-cyan]ETIQUETTE[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]ETIQUETTE[reset] est une chaîne de texte utilisée dans le programme batch comme étiquette.
 
 Remarques :
@@ -5130,7 +5142,7 @@ Décaler les paramètres de ligne de commande vers la gauche dans un script batc
 Utilisation :
   [color=light-green]shift[reset]
 
-Où :
+Paramètres :
   Cette commande n'a pas de paramètres.
 
 Remarques :
@@ -5161,11 +5173,21 @@ C'est une version simple de la commande, aucun joker autorisé !
 Renomme un ou plusieurs fichiers.
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [lecteur :][chemin]nomfichier1 nomfichier2.
-REN [lecteur :][chemin]nomfichier1 nomfichier2.
+Utilisation :
+  [color=light-green]ren[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]
+  [color=light-green]rename[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]
 
-Notez que vous ne pouvez pas spécifier un nouveau lecteur ou chemin pour votre
-fichier cible.
+Paramètres :
+  [color=white]SOURCE[reset]       nom du fichier à renommer
+  [color=light-cyan]DESTINATION[reset]  nouveau nom du fichier renommé
+
+Remarques :
+  - Le nom du fichier source doit être exact, avec un chemin facultatif.
+  - Le nom du fichier de destination doit être exact et sans chemin.
+
+Exemples :
+  [color=light-green]ren[reset] [color=white]anciennom[reset] [color=light-cyan]nouveaunom[reset]
+  [color=light-green]ren[reset] [color=white]c:\dos\fichier.txt[reset] [color=light-cyan]f.txt[reset]
 .
 :SHELL_CMD_DELETE_HELP
 Supprimer un ou plusieurs fichiers.
@@ -5175,7 +5197,7 @@ Utilisation :
   [color=light-green]del[reset] [color=light-cyan]MOTIF[reset]
   [color=light-green]erase[reset] [color=light-cyan]MOTIF[reset]
 
-Où :
+Paramètres :
   [color=light-cyan]MOTIF[reset] peut être soit un nom de fichier exact (comme [color=light-cyan]fichier.txt[reset]) soit un nom
         de fichier inexact utilisant un ou plusieurs caractères génériques, qui
         sont l'astérisque (*) représentant n'importe quelle séquence d'un ou
@@ -5199,7 +5221,7 @@ Utilisation :
   [color=light-green]copy[reset] [color=white]SOURCE[reset] [color=light-cyan][DESTINATION][reset]
   [color=light-green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=light-cyan][DESTINATION][reset]
 
-Où :
+Paramètres :
   [color=white]SOURCE[reset] Peut être soit un nom de fichier exact soit un nom de fichier inexact
               avec des caractères génériques, qui sont l'astérisque (*) et le
               point d'interrogation (?).
@@ -5222,7 +5244,7 @@ Lancer un fichier batch à partir d'un autre fichier batch..
 Utilisation :
   [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETRES][reset]
 
-Où :
+Paramètres :
   [color=white]BATCH[reset]       est un programme batch à lancer.
   [color=light-cyan]PARAMETRES[reset] sont des paramètres optionnels pour le programme batch.
 
@@ -5242,7 +5264,7 @@ Utilisation :
   [color=light-green]subst[reset] [color=white]LECTEUR[reset] [color=light-cyan]CHEMIN[reset]
   [color=light-green]subst[reset] [color=white]LECTEUR[reset] /d
 
-Où :
+Paramètres :
   [color=white]LECTEUR[reset] est un lecteur auquel vous voulez assigner un chemin.
   [color=light-cyan]CHEMIN[reset]  est un chemin DOS monté que vous voulez assigner.
 
@@ -5262,7 +5284,7 @@ Utilisation :
   [color=light-green]lh[reset] [color=light-cyan]PROGRAMME[reset] [color=white][PARAMETRES][reset]
   [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAMME[reset] [color=white][PARAMETRES][reset]
 
-Où :
+Paramètres :
   [color=light-cyan]PROGRAMME[reset] est un programme TSR DOS à charger, éventuellement avec des paramètres.
 
 Remarques :
@@ -5285,10 +5307,10 @@ Ne fait rien. Fourni pour la compatibilité.
 Utilisation :
   [color=light-green]attrib[reset] [color=white][ATTRIBUTS][reset] [color=light-cyan]MOTIF[reset] [/S]
 
-Où :
+Paramètres :
   [color=white]ATTRIBUTS[reset] sont des attributs à appliquer, incluant un ou plusieurs des suivants :
              [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
-             Où : R = Lecture seule, A = Archive, S = Système, H = Caché
+             Paramètres : R = Lecture seule, A = Archive, S = Système, H = Caché
   [color=light-cyan]MOTIF[reset]     peut être soit un nom de fichier exact soit un nom de fichier inexact avec
              des caractères génériques, qui sont l'astérisque (*) et le point
              d'interrogation (?), ou un nom exact de répertoire.
@@ -5333,7 +5355,7 @@ Utilisation :
   [color=light-green]path[reset]
   [color=light-green]path[reset] [color=light-cyan][[lecteur :]chemin[;...][reset]
 
-Où :
+Paramètres :
   [color=light-cyan][[lecteur :]chemin[;...][reset] est un chemin contenant un lecteur et un répertoire.
   Plusieurs chemins peuvent être spécifiés, séparés par un point-virgule (;).
 
