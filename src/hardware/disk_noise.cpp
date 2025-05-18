@@ -229,11 +229,10 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 			continue;
 		}
 
-		std::vector<float> temp = {};
-		temp.resize(static_cast<size_t>(total_frames) * channels);
+		destination_buffer.resize(static_cast<size_t>(total_frames) * channels);
 		drflac_uint64 frames_read = drflac_read_pcm_frames_f32(decoder,
 		                                                       total_frames,
-		                                                       temp.data());
+		                                                       destination_buffer.data());
 		drflac_close(decoder);
 
 		if (frames_read == 0) {
@@ -244,13 +243,12 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 
 		// Scale data to integer value range
 		const float scale = static_cast<float>(INT16_MAX);
-		for (auto& sample : temp) {
+		for (auto& sample : destination_buffer) {
 			sample *= scale;
 		}
 
-		destination_buffer = std::move(temp);
 		LOG_DEBUG("DISKNOISE: Loaded %zu samples from '%s'",
-		          buffer.size(),
+		          destination_buffer.size(),
 		          candidate.c_str());
 		return;
 	}
