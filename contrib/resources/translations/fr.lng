@@ -1242,7 +1242,7 @@ Liste des nuanceurs GLSL disponibles
 .
 :DOSBOX_HELP_LIST_GLSHADERS_2
 Les nuanceurs ci-dessus peuvent être utilisés exactement comme indiqué
-dans le paramètre de configuration ' glshader ', sans qu'il soit nécessaire
+dans le paramètre de configuration 'glshader', sans qu'il soit nécessaire
 d'indiquer le chemin des ressources ou l'extension .glsl.
 .
 :DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
@@ -1300,13 +1300,13 @@ souris transparente, %s+F10 pour capturer le curseur
 souris transparente, %s+F10 ou clic-milieu le curseur
 .
 :CONFIGITEM_OUTPUT_OPENGL_DEFAULT
-Le moteur de rendu à utiliser pour la sortie graphique (' opengl ' par défaut).
-Seul le moteur ' opengl ' prend en charge les nuanceurs et constitue donc l'option préférée.
+Le moteur de rendu à utiliser pour la sortie graphique ('opengl' par défaut).
+Seul le moteur 'opengl' prend en charge les nuanceurs et constitue donc l'option préférée.
 Le moteur 'texture' n'est fourni qu'en dernier recours en cas de bogues ou de pilotes
 bogués ou inexistants (ce qui est extrêmement rare).
 .
 :CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
-Le moteur de rendu à utiliser pour la sortie graphique (' texture ' par défaut).
+Le moteur de rendu à utiliser pour la sortie graphique ('texture' par défaut).
 .
 :CONFIGITEM_OUTPUT_OPENGL
   opengl :     Moteur OpenGL avec support des nuanceurs (par défaut).
@@ -1358,9 +1358,9 @@ Liste séparée par des espaces des informations à afficher dans la barre de ti
 ('program=name dosbox=auto cycles=on mouse=full' par défaut). Si un paramètre
 n'est pas spécifié, sa valeur par défaut est utilisée.
 Les informations pouvant être affichées sont les suivantes
-animation=<valeur> : si la valeur est ' on ' (par défaut), la marque
+animation=<valeur> : si la valeur est 'on' (par défaut), la marque
 d'enregistrement audio/vidéo est animée.
-                      d'enregistrement audio/vidéo. La valeur ' off ' désactive l'animation.
+                      d'enregistrement audio/vidéo. La valeur 'off' désactive l'animation.
                       Ceci est utile si votre police d'écran produit des résultats bizarres.
   program=<valeur> :    Affiche le nom du programme en cours d'exécution.
                       <valeur> peut être l'un des éléments suivants
@@ -1368,14 +1368,14 @@ d'enregistrement audio/vidéo est animée.
                         name : nom du programme, avec l'extension du fichier (par défaut).
                         chemin :      Nom, extension et chemin absolu complet.
                         segment :   Affiche le nom du segment de mémoire du programme.
-                        Title ' (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire ' Title ', (Title), <Title> ou [Title].
-                                   ' Titre ', (Titre), <Titre> ou [Titre].
+                        Title ' (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire 'Title', (Title), <Title> ou [Title].
+                                   'Titre', (Titre), <Titre> ou [Titre].
                       Remarque : Avec certains logiciels (comme Windows 3.1x en mode amélioré),
                       il est impossible de reconnaître le nom ou le chemin d'accès complet du programme.
-                      Dans ce cas, le terme ' segment ' est utilisé à la place du nom du programme ou du chemin d'accès. 
+                      Dans ce cas, le terme 'segment' est utilisé à la place du nom du programme ou du chemin d'accès. 
   dosbox=<valeur> :     Affiche ' DOSBox Staging ' dans la barre de titre.
                       <valeur> peut être l'un des éléments suivants
-                        always :   Affiche toujours ' DOSBox Staging '.
+                        always :   Affiche toujours 'DOSBox Staging'.
                         auto :     Ne l'affiche que si aucun programme n'est en cours d'exécution ou si
                                   ou si l'option 'program=none' est activée (valeur par défaut).
   version=<valeur> :    Affiche les informations relatives à la version de DOSBox.
@@ -1515,7 +1515,7 @@ Mémoire vidéo en Mio (1-8) ou Kio (256 à 8192). 'auto' utilise la valeur par
 défaut selon l'adaptateur vidéo.
 .
 :CONFIG_VMEM_DELAY
-Définit l'émulation du délai d'accès à la mémoire vidéo (' off ' par défaut).
+Définit l'émulation du délai d'accès à la mémoire vidéo ('off' par défaut).
   off :      Désactive l'émulation du délai d'accès à la mémoire vidéo (par défaut).
              Cette option est préférable pour la plupart des jeux afin d'éviter les ralentissements.
   on :       Active l'émulation du délai d'accès à la mémoire vidéo (3000 ns).
@@ -1550,7 +1550,7 @@ peuvent nécessiter
 Utiliser des polices de 8 pixels de large sur les adaptateurs VGA (désactivé par défaut).
 .
 :CONFIG_VGA_RENDER_PER_SCANLINE
-Émuler un rendu VGA précis par ligne de balayage (' on ' par défaut).
+Émuler un rendu VGA précis par ligne de balayage ('on' par défaut).
 Actuellement, vous devez désactiver cette fonction pour quelques jeux,
 sinon ils se planteront au démarrage
 (par exemple, Deus, Ishar 3, Robinson's Requiem, Time Warriors).
@@ -1591,7 +1591,7 @@ auto        | 'low' si exec ou dir sont utilisés, sinon 'high'
 De nombreux jeux ouvrent tous leurs fichiers avec des autorisations d'écriture,
 même les fichiers qu'ils ne modifient jamais.
 Ce paramètre vous permet de protéger ces fichiers en écriture tout en permettant
-au jeu de les lire (' on ' par défaut). Un deuxième cas d'utilisation : si vous
+au jeu de les lire ('on' par défaut). Un deuxième cas d'utilisation : si vous
 utilisez un système de fichiers en copie sur écriture ou en réseau,
 ce paramètre évite de de déclencher des opérations d'écriture pour ces fichiers
 protégés en écriture.
@@ -1603,7 +1603,7 @@ Par exemple, au lieu de ' config -set sbtype sb16 ', il suffit d'exécuter
 la commande 'sbtype'.
 .
 :CONFIG_FRAMESKIP
-Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre ' host_rate '.
+Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre 'host_rate'.
 .
 :CONFIGITEM_GLSHADER
 Définit un nuanceur d'émulation de écran cathodique adaptatif ou un shader GLSL normal
@@ -1612,7 +1612,7 @@ dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur ca
                            et la façon dont les gens ont vécu le jeu au moment de sa sortie (par défaut).
                           La variante de nuanceur appropriée est automatiquement sélectionnée
                           en fonction de la norme graphique du mode vidéo actuel et de la taille de la fenêtre d'afichage,
-                          indépendamment du paramètre ' machine '. Cela signifie que
+                          indépendamment du paramètre 'machine'. Cela signifie que
                           que même sur une carte VGA émulée, vous obtiendrez
                           une émulation authentique de écran EGA à balayage unique avec
                           avec des ' lignes de balayage épaisses ' visibles dans les jeux EGA.
@@ -1655,14 +1655,14 @@ et 800x600, seront affichés tel quel.
 :CONFIG_INTEGER_SCALING
 Contraint le facteur d'échelle horizontal ou vertical à la plus grande
 valeur entière pour que l'image s'adapte toujours à la fenêtre d'affichage
- (' auto ' par défaut).
+ ('auto' par défaut).
 Le rapport de forme configuré est toujours maintenu en fonction des paramètres
-' aspect ' et ' viewport ', ce qui peut entraîner un facteur d'échelle non entier
+'aspect' et 'viewport', ce qui peut entraîner un facteur d'échelle non entier
 dans l'autre dimension.
 Si l'image est plus grande que la fenêtre d'affichage, la mise à l'échelle
-basées sur des nombres entiers est désactivée automatiquement (comme pour ' off ').
+basées sur des nombres entiers est désactivée automatiquement (comme pour 'off').
 Valeurs possibles :
-  auto : mode ' vertical ' activé automatiquement pour les nuanceurs cathodique adaptatifs
+  auto : mode 'vertical' activé automatiquement pour les nuanceurs cathodique adaptatifs
                 uniquement (voir 'glshader'), sinon 'off' (par défaut).
   vertical :    Limite le facteur d'échelle vertical à des valeurs entières.
                C'est le paramètre recommandé pour les nuanceurs cathodique afin d'éviter
@@ -1672,10 +1672,10 @@ Valeurs possibles :
                  la fenêtre d'affichage tout en conservant le rapport hauteur/largeur configuré.
 .
 :CONFIG_VIEWPORT
-Définit la taille de la fenêtre d'affichage (' fit ' par défaut). Il s'agit de la zone
+Définit la taille de la fenêtre d'affichage ('fit' par défaut). Il s'agit de la zone
 maximale pouvant être dessinée ;
 la sortie vidéo est toujours contenue dans la fenêtre d'affichage en tenant compte
-du rapport de forme configuré (voir ' aspect '). Valeurs possibles :
+du rapport de forme configuré (voir 'aspect'). Valeurs possibles :
   fit :             Ajuste la fenêtre d'affichage à la fenêtre ou à l'écran disponible (par défaut).
                    Il peut y avoir des zones de remplissage (zones noires) autour de l'image si
                    'integer_scaling' est activé.
@@ -1683,7 +1683,7 @@ du rapport de forme configuré (voir ' aspect '). Valeurs possibles :
                    (par exemple, 960x720). La taille spécifiée ne doit pas être plus grande que
                    le bureau. Si elle est supérieure à la taille de la fenêtre,
                    elle est mise à l'échelle pour tenir dans la fenêtre.
-  N%% :              Semblable à ' WxH ', mais la taille est spécifiée en pourcentage
+  N%% :              Semblable à 'WxH', mais la taille est spécifiée en pourcentage
                     de la taille du bureau.
   H%% V%% relatif :  La fenêtre d'affichage est définie comme un rectangle 
                    au rapport d'aspect 4 :3 qui s'adapte à la fenêtre ou à l'écran disponible.
@@ -1696,10 +1696,10 @@ du rapport de forme configuré (voir ' aspect '). Valeurs possibles :
                    des écrans cathodiques.
 
 Remarques :
-  - L'utilisation du mode ' relative ' avec l'option ' integer_scaling ' activée peut donner
+  - L'utilisation du mode 'relative' avec l'option 'integer_scaling' activée peut donner
     des résultats surprenants (mais corrects).
-  - Vous pouvez utiliser les raccourcis clavier ' Stretch Axis ', ' Inc Stretch ' et ' Dec Stretch '
-    pour Définit l'étirement en mode ' relative ' en temps réel.
+  - Vous pouvez utiliser les raccourcis clavier 'Stretch Axis', 'Inc Stretch'
+    et 'Dec Stretch' pour Définit l'étirement en mode 'relative' en temps réel.
 .
 :CONFIG_MONOCHROME_PALETTE
 Sélectionne la palette par défaut pour l'affichage monochrome.
@@ -1791,7 +1791,7 @@ Vitesse du CPU émulé ('3000' par défaut). Si 'cpu_cycles_protected' est sur
              Le nombre de cycles par milliseconde peut varier.
              Peu recommandé pour certains programmes DOS.
 Remarques :
-  - Le réglage de la vitesse du processeur sur ' max ' ou sur des valeurs fixes élevées
+  - Le réglage de la vitesse du processeur sur 'max' ou sur des valeurs fixes élevées
     peut entraîner des pertes de son et un décalage en règle général.
   - Pour obtenir les meilleurs résultats, réglez la valeur de cycle fixe la plus basse qui
     permette de faire tourner le jeu à une vitesse acceptable.
@@ -1824,7 +1824,7 @@ Note : Voir le paramètre 'cpu_cycles' pour plus d'informations.
 .
 :CONFIG_CPU_THROTTLE
 Réduire dynamiquement le nombre de cycles du CPU émulé si le CPU hôte
-ne peut pas suivre (' off ' par défaut).
+ne peut pas suivre ('off' par défaut).
 N'affecte que les paramètres de cycles fixes. Lorsqu'il est activé, le nombre de cycles par
 milliseconde peut varier, ce qui peut causer des problèmes dans certains programmes DOS.
 .
@@ -1870,13 +1870,13 @@ après mesures
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilisez le filtrage bilinéaire pour émuler l'effet de lissage des textures
-des cartes 3dfx Voodoo (' on ' par défaut). Le filtrage bilinéaire peut
+des cartes 3dfx Voodoo ('on' par défaut). Le filtrage bilinéaire peut
 avoir un impact sur le nombre d'images par seconde sur les systèmes plus lents ;
 essayez de le désactiver si vous n'obtenez pas des performances suffisantes.
 .
 :CONFIG_CAPTURE_DIR
 Répertoire où sont enregistrées les différentes captures, telles que les captures
-audio, vidéo, MIDI et les captures d'écran. (' capture ' dans le répertoire de 
+audio, vidéo, MIDI et les captures d'écran. ('capture' dans le répertoire de 
 travail actuel par défaut).
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
@@ -1884,7 +1884,7 @@ Définit le format de capture de l'action de capture d'écran par défaut ('
 upscaled ' par défaut) :
 upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport
 de forme correct est conservé,
-            en fonction du paramètre ' aspect '.
+            en fonction du paramètre 'aspect'.
              Le facteur d'échelle verticale est toujours un nombre entier. Par exemple,
              un contenu de 320x200 est mis à l'échelle en 1600x1200 (mise à l'échelle entière de 5 :6),
              640x480 à 1920x1440 (mise à l'échelle entière 3 :3), et 640x350 à
@@ -1917,11 +1917,11 @@ fenêtre DOSBox et le reste du bureau.
              Ce mode ne fonctionne pas correctement avec tous les jeux.
              Windows 3.1x peut être rendu compatible avec un pilote de souris personnalisé.
   nomouse :   Cache le curseur de la souris et n'envoie pas les données de la souris au jeu.
-Pour le contrôle de l'écran tactile, utilisez ' seamless '.
+Pour le contrôle de l'écran tactile, utilisez 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Relâchez la souris capturée par un clic du milieu, et capturez-la
-également en mode transparent (' on ' par défaut).
+également en mode transparent ('on' par défaut).
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Permettre un comportement transparent de la souris et le relâchement du pointeur
@@ -1943,11 +1943,11 @@ MOUSECTL.COM disponible sur le lecteur Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Permet de contourner les paramètres d'accélération et de sensibilité de la souris
-de votre système d'exploitation (' on ' par défaut). Fonctionne en plein écran
+de votre système d'exploitation ('on' par défaut). Fonctionne en plein écran
 ou lorsque la souris est capturée en mode fenêtré.
 .
 :CONFIG_BUILTIN_DOS_MOUSE_DRIVER
-Activer le pilote de souris DOS intégré (' on ' par défaut). Il en résulte
+Activer le pilote de souris DOS intégré ('on' par défaut). Il en résulte
 la latence la plus faible possible et les mouvements de souris les plus fluides,
 donc ne le désactivez
 et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par
@@ -2239,7 +2239,7 @@ Préiphérique qui recevra les données MIDI (depuis l'interface
 .
 :CONFIGITEM_MIDIDEVICE_PORT
   port :         Un port MIDI de l'interface MIDI du système d'exploitation hôte
- (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre ' midiconfig '.
+ (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_COREAUDIO
   coreaudio :    Le synthétiseur MIDI intégré à macOS. La banque de sons à utiliser
@@ -2304,7 +2304,7 @@ tous les ports MIDI ouverts et en sélectionner un (par exemple, ' midiconfig =
 Type de MPU-401 à émuler.
 .
 :CONFIG_RAW_MIDI_OUTPUT
-Activer la sortie MIDI brute, non altérée (' off ' par défaut).
+Activer la sortie MIDI brute, non altérée ('off' par défaut).
 Les pilotes MIDI de nombreux jeux ne sont pas entièrement conformes à la norme MIDI,
 , ce qui rend l'édition des enregistrements MIDI de ces jeux très sujette aux erreurs et
 gênante dans les séquenceurs MIDI, entraînant souvent des notes suspendues ou manquantes.
@@ -2420,8 +2420,8 @@ Type de filtre à émuler pour la sortie OPL Sound Blaster :
   <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_CMS
-Active l'émulation CMS (' auto ' par défaut).
- off :   Désactive l'émulation CMS (sauf lorsque le Game Blaster est sélectionné).
+Active l'émulation CMS ('auto' par défaut).
+ off :   Désactive l'émulation CMS (sauf lorsque la Game Blaster est sélectionné).
  on :    Active l'émulation CMS sur Sound Blaster 1 et 2.
  auto :  Active automatiquement l'émulation CMS pour la Sound Blaster 1 et
             la Game Blaster.
@@ -2508,7 +2508,7 @@ Modèle d'émulation de haut-parleur PC :
              brouillé ou un silence dans un petit nombre de programmes.
  discrete :  Émulation simplifiée du haut-parleur du PC ;
                  n'utilisez cette option que pour des titres spécifiques sur
-                qui vous posent des problèmes avec le modèle ' impulse '.
+                qui vous posent des problèmes avec le modèle 'impulse'.
  none/off :  N'émule pas le haut-parleur du PC.
 .
 :CONFIG_PCSPEAKER_FILTER
