@@ -1461,7 +1461,7 @@ public:
 		ethernet = ETHERNET_OpenConnection("slirp");
 		if(!ethernet)
 		{
-			LOG_MSG("NE2000: Failed to open Ethernet slirp backend");
+			LOG_MSG("NE2000: Failed to initialise Slirp Ethernet backend");
 			load_success = false;
 			return;
 		}
