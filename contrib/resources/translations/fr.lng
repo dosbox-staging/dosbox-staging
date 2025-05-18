@@ -1,11 +1,11 @@
 :DOSBOX_HELP
 Utilisation : %s [OPTION]... [CHEMIN]
 
-CHEMIN                     Si CHEMIN est un dossier, il est monté comme C :.
+CHEMIN                     Si CHEMIN est un dossier, il est monté comme C:.
                            Si CHEMIN est une image disque amorçable (IMA/IMG), elle est démarrée.
-                           Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D :.
+                           Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D:.
                            Si CHEMIN est un exécutable DOS (BAT/COM/EXE), son dossier parent
-                           est monté comme C : et l’exécutable est lancé. À la fin de
+                           est monté comme C: et l’exécutable est lancé. À la fin de
                            l’exécution, DOSBox Staging se ferme.
 
 Liste des options disponibles :
@@ -1575,7 +1575,7 @@ Les paramètres de montage peuvent être éventuellement fournis en utilisant un
   [drive]
   type    = dir, overlay, floppy, ou cdrom
   label   = étiquette_personnalisée
-  path    = spécification-du-chemin, ex : path = %%path%%;c :\tools
+  path    = spécification-du-chemin, ex : path = %%path%%;C:\tools
   override_drive = monter le répertoire sur ce lecteur à la place (vide par défaut)
   verbose = true ou false
 .
@@ -2900,7 +2900,7 @@ Utilité de la propriété '%s' (contenue dans la section '%s') :
 [color=white]Valeur actuelle :[reset]  %s
 .
 :PROGRAM_CONFIG_HLP_AUTOEXEC
-[color=white]Description de la [color=light-cyan]autoexec][color=white] section :[reset]
+[color=white]Description de la [color=light-cyan][autoexec][color=white] section :[reset]
 
 %s
 .
@@ -3025,7 +3025,7 @@ Utilisation :
   [color=light-green]boot[reset] [color=light-cyan]FICHIERIMAGE[reset]
 
 Où :
-  [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A :[reset], [color=white]C :[reset], ou [color=white]D :[reset].
+  [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A:[reset], [color=white]C:[reset], ou [color=white]D:[reset].
   [color=light-cyan]FICHIERIMAGE[reset] est une ou plusieurs images de disquette, séparées par des espaces.
 
 Remarques :
@@ -3035,7 +3035,7 @@ Si plusieurs images disque sont spécifiées, vous pouvez les permuter avec un
 raccourci clavier.
 
 Exemples :
-  [color=light-green]boot[reset] [color=white]c :[reset]
+  [color=light-green]boot[reset] [color=white]C:[reset]
   [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -3096,7 +3096,7 @@ Notes :
 - Cette commande ne gère que les données textuelles, pas les données binaires.
 Exemples :
 [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copie la liste des fichiers dans le presse-papiers
-[color=light-green]clip[reset] < [color=light-cyan]Z :\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
+[color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
 [color=light-green]clip[reset]                     ; affiche le contenu du presse-papiers
 .
 :PROGRAM_CLIP_INPUT_TOO_LARGE
@@ -3184,10 +3184,10 @@ Exemples :
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]demarrage.img[reset] -t hdd -fs none -size 512,63,32,1023
 .
 :PROGRAM_IMGMOUNT_HELP_LONG_WIN32
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C :\Jeux\doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Jeux\doom.iso[reset] -t cdrom
 .
 :PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/NOMUTILISATEUR/Games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/NOMUTILISATEUR/Jeux/doom.iso[reset] -t cdrom
 .
 :PROGRAM_IMGMOUNT_HELP_LONG_OTHER
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/NOMUTILISATEUR/jeux/doom.iso[reset] -t cdrom
@@ -3294,9 +3294,9 @@ vous devez monter les répertoires contenant les fichiers.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c :\jeuxdos\[color=white] créera un lecteur C avec c :\jeuxdos pour contenu. ║
+║ [color=green]mount c C:\jeuxdos\[color=white] créera un lecteur C avec C:\jeuxdos pour contenu. ║
 ║                                                                         ║
-║ [color=green]c :\jeuxdos\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
+║ [color=green]C:\jeuxdos\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
 ╚═════════════════════════════════════════════════════════════════════════╝[reset]
 .
 :PROGRAM_INTRO_MOUNT_OTHER
@@ -3307,7 +3307,7 @@ vous devez monter les répertoires contenant les fichiers.
 ╚═════════════════════════════════════════════════════════════════════════════╝[reset]
 .
 :PROGRAM_INTRO_MOUNT_END
-Quand le montage est complété avec succès, tapez [color=light-blue]c :[reset] pour aller your freshly
+Quand le montage est complété avec succès, tapez [color=light-blue]C:[reset] pour aller
 sur votre nouveau lecteur C monté. Taper [color=light-blue]dir[reset] à cet endroit montrera son contenu. [color=light-blue]cd[reset] vous permettra
 d'entrer dans un répertoire (reconnaissable par les [color=yellow][][reset] dans le listing du répertoire).
 Vous pouvez exécutez des programmes/fichiers finissant par [color=red].exe .bat[reset] et [color=red].com[reset].
@@ -3319,20 +3319,20 @@ DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
 et marque les fichiers comme étant en lecture seule. Généralement, cela suffit
 pour la plupart des jeux :
-[color=light-blue]mount D C :\exemple -t cdrom[reset]
+[color=light-blue]mount D C:\exemple -t cdrom[reset]
 Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
-[color=light-blue]mount D C :\exemple -t cdrom -label ETIQUETTE_CD[reset]
+[color=light-blue]mount D C:\exemple -t cdrom -label ETIQUETTE_CD[reset]
 
 Le [color=brown]niveau suivant[reset] ajoute une prise en charge de bas niveau.
 Il ne fonctionne donc que sur les lecteurs CD-ROM :
-[color=light-blue]mount d [color=red]D :\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
-Remplacez [color=red]D :\[reset] par l'emplacement de votre CD-ROM.
+[color=light-blue]mount d [color=red]D:\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
+Remplacez [color=red]D:\[reset] par l'emplacement de votre CD-ROM.
 Remplacez le [color=yellow]0[reset] dans [color=light-blue]-usecd [color=brown]0[reset] par le numéro indiqué pour votre CD-ROM si vous tapez :
 [color=light-blue]mount -listcd[reset]
 
 De plus, vous pouvez utiliser imgmount pour monter des images iso ou cue/bin :
-[color=light-blue]imgmount D C :\cd.iso -t cdrom[reset]
-[color=light-blue]imgmount D C :\cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 .
 :PROGRAM_INTRO_CDROM_OTHER
 [erases=entire][color=light-green]Comment monter un lecteur CD-ROM réel/virtuel dans DOSBox :[reset]
@@ -3777,7 +3777,7 @@ mode étendu :
 
 Exemples : 
   [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; affiche le répertoire trié une page à la fois
-  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A :\MANUAL.TXT[reset]   ; affiche le contenu du fichier avec une taille de tabulation de 4
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]   ; affiche le contenu du fichier avec une taille de tabulation de 4
 .
 :PROGRAM_MORE_NO_FILE
 Pas de fichier d'entré trouvé.
@@ -3853,8 +3853,8 @@ Exemples :
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_de_sauvegarde[reset] -t overlay
 .
 :PROGRAM_MOUNT_HELP_LONG_WIN32
-[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C :\jeuxdos[reset]  
-[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D :\ [reset]-t cdrom  
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\jeuxdos[reset]  
+[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom  
 [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay
 .
 :PROGRAM_MOUNT_HELP_LONG_MACOSX
@@ -3895,7 +3895,7 @@ Les lecteurs virtuels ne peuvent pas être démontés.
 '%c' n'est pas un identifiant de lecteur valide.
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=light-red]Monter c :\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
+[color=light-red]Monter C:\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
 .
 :PROGRAM_MOUNT_WARNING_OTHER
 [color=light-red]Monter / n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
@@ -4052,7 +4052,7 @@ Remarques :
   - Vous pouvez également scanner les changements sur tous les lecteurs montés avec l'option /a.
 
 Exemples :
-  [color=light-green]rescan[reset] [color=light-cyan]c :[reset]
+  [color=light-green]rescan[reset] [color=light-cyan]C:[reset]
   [color=light-green]rescan[reset] /a
 .
 :PROGRAM_RESCAN_SUCCESS
@@ -4128,7 +4128,7 @@ Exemples :
   [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; cesse de surcharger la version DOS rapportée
 .
 :PROGRAM_SETVER_WRONG_TABLE
-Seule la table de version dans le répertoire Z :\ est prise en charge.
+Seule la table de version dans le répertoire Z:\ est prise en charge.
 .
 :PROGRAM_SETVER_INVALID_VERSION
 Version DOS incorrecte.
@@ -4191,7 +4191,7 @@ Remarques :
 
 Exemples :
   [color=light-green]tree[reset]          ; affiche l'arborescence du répertoire à partir du répertoire courant
-  [color=light-green]tree[reset] [color=light-cyan]C :[reset] /f    ; affiche récursivement le contenu du lecteur C :, y compris les fichiers
+  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; affiche récursivement le contenu du lecteur C:, y compris les fichiers
 .
 :PROGRAM_TREE_DIRECTORY
 Arborescence du répertoire pour le volume %s
@@ -4217,7 +4217,7 @@ Pilote ReelMagic Full Motion Player (intégré) %hhu.%hhu
 Chargé à l'interruption %xh
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=brownDéjà chargé à l'interruption %xh[reset]
+[reset][color=brown]Déjà chargé à l'interruption %xh[reset]
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
 [reset][color=light-red]Non chargé : Pas d'interruptions libres ![reset]
@@ -4326,14 +4326,14 @@ ECHO est désactivé.
 Impossible de CHanger vers : %s.
 .
 :SHELL_CMD_CHDIR_HINT
-Astuce : pour changer de lecteur, tapez [color=red]%c :[reset]
+Astuce : pour changer de lecteur, tapez [color=red]%C:[reset]
 .
 :SHELL_CMD_CHDIR_HINT_2
 Le nom de répertoire est plus long que 8 caractères et/ou contient des espaces.
 Essayez [color=red]cd %s[reset]
 .
 :SHELL_CMD_CHDIR_HINT_3
-Vous êtes encore sur le lecteur Z :, changez pour un lecteur monté avec [color=red]C :[reset].
+Vous êtes encore sur le lecteur Z:, changez pour un lecteur monté avec [color=red]C:[reset].
 .
 :SHELL_CMD_DATE_HELP
 Affiche ou change la date interne.
@@ -4536,7 +4536,7 @@ Où :
 
 Remarques :
   L'exécution de [color=light-green]cls[reset] efface tout le texte sur l'écran DOS, à l'exception de l'invite de commande
-  (par exemple, [color=white]Z :\>[reset] ou [color=white]C :\GAMES>[reset]) dans le coin supérieur gauche de l'écran.
+  (par exemple, [color=white]Z:\>[reset] ou [color=white]C:\JEUX>[reset]) dans le coin supérieur gauche de l'écran.
 
 Exemples :
   [color=light-green]cls[reset]
@@ -4821,7 +4821,7 @@ Remarques :
   Vous pouvez supprimer un lecteur assigné avec l'option /d.
 
 Exemples :
-  [color=light-green]subst[reset] [color=white]d :[reset] [color=light-cyan]c :\jeux[reset]
+  [color=light-green]subst[reset] [color=white]D:[reset] [color=light-cyan]C:\jeux[reset]
   [color=light-green]subst[reset] [color=white]e :[reset] [color=light-cyan]/d[reset]
 .
 :SHELL_CMD_LOADHIGH_HELP
@@ -4878,8 +4878,8 @@ Impossible de Définit les attributs : %s
 Attendre l'appui sur une touche et Définit le ERRORLEVEL.
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C :choix] [/N] [/S] texte
-  /C[ :]choix  -  Spécifie les touches utilisables. Par défaut : yn (oui/non).
+CHOICE [/C:choix] [/N] [/S] texte
+  /C[:]choix  -  Spécifie les touches utilisables. Par défaut : yn (oui/non).
   /N  -  N'affiche pas les choix à la fin du prompt.
   /S  -  Active la sensibilité à la casse des choix.
   texte  -  Texte à afficher comme prompt.
@@ -4907,11 +4907,11 @@ Où :
 Remarques :
 Un paramètre avec uniquement un point-virgule (;) efface tous les paramètres de
 chemin de recherche.
-  Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z :\[reset]
+  Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
 
 Exemples :
   [color=light-green]path[reset]
-  [color=light-green]path[reset] [color=light-cyan]Z :\;C :\DOS[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 .
 :SHELL_CMD_VER_HELP
 Voir ou redéfinir la version de DOS indiquée.
@@ -4956,7 +4956,7 @@ Remarques :
 
 Exemples :
   [color=light-green]vol[reset]
-  [color=light-green]vol[reset] [color=light-cyan]c :[reset]
+  [color=light-green]vol[reset] [color=light-cyan]C:[reset]
 .
 :SHELL_CMD_VOL_OUTPUT
 
