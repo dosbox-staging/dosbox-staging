@@ -1,11 +1,16 @@
+// Writing script used in this translation, can be one of:
+// Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew
+#SCRIPT Latin
+
 :DOSBOX_HELP
 Utilisation : %s [OPTION]... [CHEMIN]
 
-CHEMIN                     Si CHEMIN est un dossier, il est monté comme C:.
-                           Si CHEMIN est une image disque amorçable (IMA/IMG), elle est démarrée.
+CHEMIN                     Si CHEMIN est un dossier, il est monté en tant que C:.
+                           Si CHEMIN est une image disque amorçable (IMA/IMG),
+                           elle est démarrée.
                            Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D:.
                            Si CHEMIN est un exécutable DOS (BAT/COM/EXE), son dossier parent
-                           est monté comme C: et l’exécutable est lancé. À la fin de
+                           est monté en tant que C: et l’exécutable est lancé. À la fin de
                            l’exécution, DOSBox Staging se ferme.
 
 Liste des options disponibles :
@@ -63,27 +68,30 @@ Liste des options disponibles :
 
   --startmapper            Lance l’interface graphique du mapper.
 
-  --erasemapper            Supprime le fichier de configuration du mapper par défaut.
+  --erasemapper            Supprime le fichier de configuration par défaut du mapper.
 
-  --securemode             Active le mode sécurisé en désactivant les commandes MOUNT et IMGMOUNT.
+  --securemode             Active le mode sécurisé en désactivant les commandes
+                           MOUNT et IMGMOUNT.
 
   --socket <num>           Lance nullmodem sur le numéro de socket spécifié.
 
   -h, -?, --help           Affiche ce message d’aide et quitte.
 
   -V, --version            Affiche la version et quitte.
+
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
 Liste des codes pays disponibles (principalement identiques aux indicatifs téléphoniques)
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
-Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration 'country'.
+Les codes ci-dessus peuvent être utilisés avec le paramètre de configuration
+'country'.
 .
 :DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1
 Liste des codes de dispositions de clavier disponibles
 .
 :DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
-Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration
+Les codes ci-dessus peuvent être utilisés avec le paramètre de configuration
 'keyboard_layout'.
 .
 :DOSBOX_HELP_LIST_CODE_PAGES_1
@@ -823,7 +831,7 @@ Roumain (Apple)
 Islandais (Apple)
 .
 :CODE_PAGE_DESCRIPTION_58619
-gaélique (Apple, ancienne orthographe), gallois
+Gaélique (Apple, ancienne orthographe), gallois
 .
 :CODE_PAGE_DESCRIPTION_58627
 Ukrainien (Apple)
@@ -1242,7 +1250,7 @@ Liste des nuanceurs GLSL disponibles
 .
 :DOSBOX_HELP_LIST_GLSHADERS_2
 Les nuanceurs ci-dessus peuvent être utilisés exactement comme indiqué
-dans le paramètre de configuration 'glshader', sans qu'il soit nécessaire
+avec le paramètre de configuration 'glshader', sans qu'il soit nécessaire
 d'indiquer le chemin des ressources ou l'extension .glsl.
 .
 :DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
@@ -1255,13 +1263,13 @@ Le chemin '%s' n'a pas de nuanceurs.
 Le chemin '%s' comporte :
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
-Aucune section ou propriété..
+Aucune section ou propriété correspondante: %s
 .
 :PROGRAM_CONFIG_NO_PROPERTY
-Il n'y a aucune propriété '%s' dans la section '%s'.
+Il n'y a aucune propriété '%s' dans la section [%s].
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Syntaxe correcte : config -set 'section propriété'.
+Usage : [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PROPRIETE[reset][=][color=white]VALEUR[reset]
 .
 :TITLEBAR_CYCLES_MS
 cycles/ms
@@ -1276,28 +1284,28 @@ muet
 EN PAUSE
 .
 :TITLEBAR_HINT_CAPTURED
-curseur captif
+souris captive
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-curseur captif, %s+F10 pour le libérer
+souris captive, %s+F10 pour la libérer
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-curseur captif, %s+F10 or clic-milieu pour le libérer
+souris captive, %s+F10 or clic-milieu pour la libérer
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
-pour capturer le curseur, appuyez sur %s+F10
+pour capturer la souris, appuyez sur %s+F10
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
-pour capturer le curseur, appuyez sur %s+F10 ou clic-milieu
+pour capturer la souris, appuyez sur %s+F10 ou clic-milieu
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
-pour capturer le curseur, appuyez sur %s+F10 ou cliquez
+pour capturer la souris, appuyez sur %s+F10 ou cliquez sur n'importe quel bouton
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY
-souris transparente, %s+F10 pour capturer le curseur
+souris transparente, %s+F10 pour capturer la souris
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-souris transparente, %s+F10 ou clic-milieu le curseur
+souris transparente, %s+F10 ou clic-milieu pour la capturer
 .
 :CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Le moteur de rendu à utiliser pour la sortie graphique ('opengl' par défaut).
@@ -1315,148 +1323,152 @@ Le moteur de rendu à utiliser pour la sortie graphique ('texture' par défaut).
   texture :    Le moteur de rendu de SDL avec interpolation bilinéaire.
 .
 :CONFIGITEM_OUTPUT_TEXTURENB
-texturenb :  Le moteur de rendu de SDL avec interpolation du plus proche voisin
-(non-bilinéaire).
+  texturenb :  Le moteur de rendu de SDL avec interpolation du plus proche
+               voisin (non-bilinéaire).
 .
 :CONFIG_TEXTURE_RENDERER
 Choisissez un pilote de rendu à utiliser en mode de rendu texturé.
-Utilisez texture_renderer=auto pour un choix automatique.
+Utilisez 'texture_renderer = auto' pour un choix automatique.
 .
 :CONFIG_DISPLAY
 Nombre d'écrans à utiliser ; les valeurs dépendent de l'OS et des paramètres utilisateur.
 .
 :CONFIG_FULLSCREEN
 Démarrer DOSBox directement en mode plein écran.
+Run INTRO and see Special Keys for window control hotkeys.
 .
 :CONFIG_FULLRESOLUTION
 Résolution utiliser pour le mode plein écran : 'original', 'desktop' (bureau)
-ou une taille fixe (ex. : 1024x768).
+ou une taille fixe, exemple : 1024x768 ('desktop' par défaut).
 .
 :CONFIG_WINDOWRESOLUTION
-Défini la taille de la fenêtre pendant l'utilisation en mode fenêtré :
-  default :   Sélectionne la meilleure option basée sur
-             votre environnement et d'autres paramètres.
-  original :  Redimensionne la fenêtre suivant la résolution
-             choisie par le programme émulé.
-  resizable : Permet le redimensionnement de la fenêtre de l'émulateur.
-             Ceci est une option expérimentale, marche seulement avec
-             output=opengl et glshader=sharp (ou none)
-  <custom> :  Redimensionne le contenu de la fenêtre
-             aux dimensions indiquées, au format lxh (largeur x hauteur). Par ex. : 1024x768.
+Set intial window size for windowed mode. You can still resize the window
+after startup.
+  default:   Select the best option based on your environment and other
+             settings (such as whether aspect ratio correction is enabled).
+  small, medium, large (s, m, l):
+             Size the window relative to the desktop.
+  WxH:       Specify window size in WxH format in logical units
+             (e.g., 1024x768).
 .
 :CONFIG_WINDOW_POSITION
-Définit la position initiale de la fenêtre en mode fenêtré :
-  auto :      Laisse le gestionnaire de fenêtres décider de la position.
-  <custom> :  Définit la position de la fenêtre au format X,Y. Par exemple : 250,100
-             0,0 correspond au coin supérieur gauche de l'écran.
+Set initial window position for windowed mode:
+  auto:      Let the window manager decide the position (default).
+  X,Y:       Set window position in X,Y format (e.g., 250,100).
+             0,0 is the top-left corner of the screen.
 .
 :CONFIG_WINDOW_DECORATIONS
 Contrôle l'affichage des décorations de fenêtre en mode fenêtré.
 .
 :CONFIG_WINDOW_TITLEBAR
-Liste séparée par des espaces des informations à afficher dans la barre de titre de la fenêtre
-('program=name dosbox=auto cycles=on mouse=full' par défaut). Si un paramètre
-n'est pas spécifié, sa valeur par défaut est utilisée.
-Les informations pouvant être affichées sont les suivantes
-animation=<valeur> : si la valeur est 'on' (par défaut), la marque
-d'enregistrement audio/vidéo est animée.
-                      d'enregistrement audio/vidéo. La valeur 'off' désactive l'animation.
-                      Ceci est utile si votre police d'écran produit des résultats bizarres.
+Liste séparée par des espaces des informations à afficher dans la barre de
+titre de la fenêtre ('program=name dosbox=auto cycles=on mouse=full' par défaut)
+Si un paramètre n'est pas spécifié, sa valeur par défaut est utilisée.
+Les informations pouvant être affichées sont les suivantes :
+  animation=<valeur> : si la valeur est 'on' (par défaut), la marque
+                      d'enregistrement audio/vidéo est animée.
+                      d'enregistrement audio/vidéo. La valeur 'off' désactive
+                      l'animation.
+                      Ceci est utile si votre police d'écran produit des
+                      résultats bizarres.
   program=<valeur> :    Affiche le nom du programme en cours d'exécution.
                       <valeur> peut être l'un des éléments suivants
                         none/off :  Ne pas afficher le nom du programme.
-                        name : nom du programme, avec l'extension du fichier (par défaut).
+                        name : nom du programme, avec l'extension du fichier
+                        (par défaut).
                         chemin :      Nom, extension et chemin absolu complet.
-                        segment :   Affiche le nom du segment de mémoire du programme.
-                        Title ' (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire 'Title', (Title), <Title> ou [Title].
-                                   'Titre', (Titre), <Titre> ou [Titre].
-                      Remarque : Avec certains logiciels (comme Windows 3.1x en mode amélioré),
-                      il est impossible de reconnaître le nom ou le chemin d'accès complet du programme.
-                      Dans ce cas, le terme 'segment' est utilisé à la place du nom du programme ou du chemin d'accès. 
-  dosbox=<valeur> :     Affiche ' DOSBox Staging ' dans la barre de titre.
+                        segment :   Affiche le nom du segment de mémoire du
+                        programme.
+                        'Title' :   Nom personnalisé. Vous pouvez également
+                        utiliser 'Titre', (Titre), <Titre> ou [Titre].
+                      Remarque : Avec certains logiciels (comme Windows 3.1x en
+                      mode amélioré), il est impossible de reconnaître le nom
+                      ou le chemin d'accès complet du programme ; Dans ce cas,
+                      le terme 'segment' est utilisé à la place du nom du
+                      programme ou du chemin d'accès.
+  dosbox=<valeur> :     Affiche 'DOSBox Staging' dans la barre de titre.
                       <valeur> peut être l'un des éléments suivants
                         always :   Affiche toujours 'DOSBox Staging'.
-                        auto :     Ne l'affiche que si aucun programme n'est en cours d'exécution ou si
-                                  ou si l'option 'program=none' est activée (valeur par défaut).
-  version=<valeur> :    Affiche les informations relatives à la version de DOSBox.
+                        auto :     Ne l'affiche que si aucun programme n'est en
+                        cours d'exécution ou si ou si l'option 'program=none'
+                        est activée (valeur par défaut).
+  version=<valeur> :    Affiche les informations relatives à la version de
+                        DOSBox.
                       <valeur> peut être l'un des éléments suivants
-                         none/off :  Ne pas afficher la version de DOSBox (valeur par défaut).
+                         none/off :  Ne pas afficher la version de DOSBox
+                         (valeur par défaut).
                          simple :    Informations simples sur la version.
                          detailed :  Inclut le hash Git, s'il est disponible.
-  cycles=<valeur> : Si la valeur est 'on' (par défaut), les cycles du processeur sont affichés.
+  cycles=<valeur> :   Si la valeur est 'on' (par défaut), les cycles du
+                      processeur sont affichés.
                       La valeur 'off' désactive l'affichage des cycles.
-  mouse=<valeur> :      Niveau de verbosité de l'indice de capture de la souris :
-                        none/off :  N'affiche aucune indication sur la souris.
-                        short : ne s'affiche que si la souris est capturée.
-full :      Affiche des informations détaillées sur la façon de capturer ou de
-relâcher le curseur (par défaut).
-                                   de capturer ou de relâcher le curseur (par défaut).
+  mouse=<valeur> :    Niveau de verbosité de l'indice de capture de la souris :
+                      none/off :  N'affiche aucune indication sur la souris.
+                      short :     Ne s'affiche que si la souris est capturée.
+                      full :      Affiche des informations détaillées sur la
+                                  façon de capturer ou de relâcher le curseur
+                                  (par défaut).
 .
 :CONFIG_TRANSPARENCY
-Définit la transparence de l'écran DOSBox Staging.
+Définit la transparence de l'écran de DOSBox Staging (0 par défaut).
 De 0 (aucune transparence) à 90 (haute transparence).
 .
 :CONFIG_MAX_RESOLUTION
-Ce paramètre a été renommé en viewport_resolution.
+Moved to [render] section and renamed to 'viewport'.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Définit la taille de la fenêtre d'affichage (zone dessinable) dans la fenêtre/
-écran :
-  fit :       Ajuste la fenêtre d'affichage à la fenêtre/écran disponible
-             (par défaut).
-  <custom> :  Limite la fenêtre d'affichage à une résolution personnalisée ou un
-             pourcentage du bureau. Spécifié au format LxH, N%%, N.M%%.
-             Exemples : 960x720 ou 50%%
+Moved to [render] section and renamed to 'viewport'.
 .
 :CONFIG_HOST_RATE
-Définit le taux de rafraîchissement de l'hôte :
-  auto :      Utilise les taux SDI, ou les taux VRR en plein écran sur un écran haute fréquence.
-sdi :       Utilise les taux d'interface de périphérique série (SDI), sans
-ajustement supplémentaire.
-  vrr :       Déduit 3 Hz du taux rapporté (meilleure pratique pour les écrans VRR).
-<custom> :  Spécifie un taux personnalisé comme valeur entière ou décimale
-supérieure à 23.000.
+Set the host's refresh rate:
+  auto:      Use SDI rates, or VRR rates when in fullscreen on a high-refresh
+             rate display (default).
+  sdi:       Use serial device interface (SDI) rates, without further
+             adjustment.
+  vrr:       Deduct 3 Hz from the reported rate (best practice for VRR
+             displays).
+  N:         Specify custom refresh rate in Hz (decimal values are allowed;
+             23.000 is the allowed minimum).
 .
 :CONFIG_VSYNC
-Paramètre de synchro verticale non implémenté (paramètre ignoré)
+Set the host video driver's vertical synchronization (vsync) mode:
+  auto:      Limit vsync to beneficial cases, such as when using an
+             interpolating VRR display in fullscreen (default).
+  on:        Enable vsync. This can prevent tearing in some games but will
+             impact performance or drop frames when the DOS rate exceeds the
+             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).
+  adaptive:  Enables vsync when the frame rate is higher than the host rate,
+             but disables it when the frame rate drops below the host rate.
+             This is a reasonable alternative on macOS instead of 'on'.
+             Note: only valid in OpenGL output modes; otherwise treated as
+             'on'.
+  off:       Attempt to disable vsync to allow quicker frame presentation at
+             the risk of tearing in some games.
+  yield:     Let the host's video driver control video synchronization.
 .
 :CONFIG_VSYNC_SKIP
 Nombre de microsecondes pour permettre au rendu de bloquer avant de sauter la
-trame suivante. 0 désactive cette fonction et effectue toujours le rendu.
+trame suivante. Par exemple, une valeur de 7000 est en gros égale à la moitiée
+du temps de trame à 70 Hz. 0 désactive cette fonction et effectue toujours le
+rendu (valeur par défaut).
 .
 :CONFIG_PRESENTATION_MODE
-Sélectionne optionnellement le mode de présentation des images :
+Sélectionne le mode de présentation des images :
   auto :  Synchronise et supprime intelligemment les images pour éviter
-         les blocages d'émulation, basé sur les fréquences d'images de l'hôte et du DOS.
+          les blocages d'émulation, basé sur les fréquences d'images de l'hôte
+          et du DOS (valeur par défaut).
   cfr :   Présente toujours les images DOS à un taux d'images constant.
-  vfr :   Présente toujours les images DOS modifiées à un taux d'images variable.
+  vfr :   Présente toujours les images DOS modifiées à un taux d'images
+          variable.
 .
 :CONFIG_CAPTURE_MOUSE
-Méthode de contrôle de la souris :
-   onclick :       La souris sera capturée après
-                   le premier clic dans la fenêtre
-   onstart :       La souris est capturée immédiatement au démarrage
-                   (similaire au vrai DOS).
-   seamless :      La souris peut bouger sans contrainte dans et en-dehors
-                   de la fenêtre DOSBox et ne peut pas être capturée.
-   nomouse :       La souris est désactivée et cachée sans aucun
-                   signal envoyé au jeu.
-Gestion du clic-milieu (second paramètre) :
-   middlegame :    Les clics-milieu sont envoyés au jeu
-   middlerelease : Les clics-milieu libèrent la souris
-                   (non envoyés au jeu). De plus, les clics-milieu
-                   seront envoyés au jeu en mode plein écran ou en mode
-                   seamless.
-Defaults (si non présent ou incorrect) : seamless middlerelease
+Moved to [mouse] section and renamed to 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Sensibilité de la souris. Le second paramètre optionnel spécifie la sensibilité
-verticale (ex. 100,-50).
+Moved to [mouse] section and renamed to 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Outrepasse les paramètres de votre système pour l'accélération et la sensibilité
-de la souris. CelA marche en mode plein écran
-ou quand la souris est capturé en mode fenêtré.
+Moved to [mouse] section and renamed to 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
 Attend avant de fermer la console si DOSBox a une erreur.
@@ -1467,39 +1479,69 @@ DOSBox n'est pas actif/réduit.
 pause n'est valable que pour la seconde entrée.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Couper le son lorsque la fenêtre est inactive.
+Couper le son lorsque la fenêtre est inactive ('off' par défaut).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Mettre en pause l'émulation lorsque la fenêtre est inactive.
+Mettre en pause l'émulation lorsque la fenêtre est inactive ('off' par défaut).
 .
 :CONFIG_MAPPERFILE
 Fichier utilisé pour charger/sauvegarder les mappages de touches/événements.
-Des mappages préconfigurés sont regroupés dans le répertoire 'resources/mapperfiles'.
-Ils peuvent être chargés par nom, par exemple : mapperfile = xbox/xenon2.map
-Remarque : l'option de ligne de commande -resetmapper supprime uniquement le
-fichier mapperfile par défaut.
+Des mappages préconfigurés sont regroupés dans le répertoire
+'resources/mapperfiles'.
+Ils peuvent être chargés via le nom, par exemple : mapperfile = xbox/xenon2.map
+Remarque : l'option de ligne de commande '--resetmapper' supprime uniquement le
+           fichier par défaut du mapper.
 .
 :CONFIG_SCREENSAVER
 Utilisez 'allow' (autorise) ou 'block' (bloque) pour outrepasser la variable
-d'environnement
-SDL_VIDEO_ALLOW_SCREENSAVER (qui bloque généralement la capture d'écran de l'OS
-pendant que l'émulateur est lancé).
+d'environnement SDL_VIDEO_ALLOW_SCREENSAVER, qui bloque généralement l'écran de
+veille pendant que l'émulateur est actif ('auto' par défaut).
+
 .
 :CONFIG_LANGUAGE
-Sélectionner un autre fichier de langue.
+Select the DOS messages language:
+  auto:     Detects the language from the host OS (default).
+  <value>:  Loads a translation from the given file.
+Notes:
+  - The following language files are available:
+    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' and 'ru'.
+  - English is built-in, the rest is stored in the bundled
+    'resources/translations' directory.
 .
 :CONFIG_MACHINE
-Type de machine que DOSBox essaye d'émuler.
+Set the video adapter or machine to emulate:
+  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').
+  cga_mono:       CGA adapter connected to a monochrome monitor (see
+                  'monochrome_palette').
+  cga:            IBM Color Graphics Adapter (CGA). Also enables composite
+                  video emulation (see [composite] section).
+  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite
+                  video emulation (see [composite] section).
+  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy
+                  sound and composite video emulation (see [composite]
+                  section).
+  ega:            IBM Enhanced Graphics Adapter (EGA).
+  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,
+                  can be set to 256K or 1MB with 'vmemsize'). This is the
+                  closest to IBM's original VGA adapter.
+  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).
+  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by
+                  default, can be set to 256K or 512K with 'vmemsize').
+  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to
+                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)
+  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.
+  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the "no linear
+                  framebuffer" hack (needed only by a few games).
 .
 :CONFIG_CAPTURES
-Répertoire où les objets comme les sons WAVE, musiques MIDI, et captures d'écran
-sont enregistrés.
+Moved to [capture] section and renamed to 'capture_dir'.
 .
 :CONFIG_MEMSIZE
-Quantité de mémoire dont DOSBox dispose en mégaoctets.
-Il est mieux de laisser cette valeur d'origine pour éviter les problèmes avec certains jeux,
-bien que quelques jeux puissent nécessiter une valeur plus élevée.
-Il n'y a généralement pas de gain de vitesse en augmentant cette valeur.
+Quantité de mémoire dont DOSBox dispose en mégaoctets (16 par défaut).
+Il est mieux de laisser cette valeur par défaut pour éviter les problèmes avec
+certains jeux, bien que quelques jeux puissent nécessiter une valeur plus
+élevée. Il n'y a généralement pas de gain de vitesse en augmentant cette
+valeur.
 .
 :CONFIG_MCB_FAULT_STRATEGY
 Comment les blocs de chaîne de mémoire corrompus par logiciel doivent être traités :
@@ -1512,7 +1554,8 @@ erreurs de corruption MCB.
 .
 :CONFIG_VMEMSIZE
 Mémoire vidéo en Mio (1-8) ou Kio (256 à 8192). 'auto' utilise la valeur par
-défaut selon l'adaptateur vidéo.
+défaut selon l'adaptateur vidéo. ('auto' par défaut). Voir le paramètre
+'machine' pour avoir la liste des options valides pour chaque adaptateur.
 .
 :CONFIG_VMEM_DELAY
 Définit l'émulation du délai d'accès à la mémoire vidéo ('off' par défaut).
@@ -1529,22 +1572,32 @@ Remarque : Ne définissez cette valeur que si nécessaire pour un jeu,
 .
 :CONFIG_DOS_RATE
 Personnalise la fréquence d'images du mode vidéo émulé, en Hz :
-default :  Le mode vidéo DOS détermine la fréquence (recommandé).
-host :     Fait correspondre la fréquence DOS à celle de l'hôte (voir le paramètre 'host_rate').
-<valeur> :  Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000 (Hz).
-Nous recommandons la fréquence 'default' ; sinon, testez et réglez au cas par
-cas selon les jeux.
+  default :  Le mode vidéo DOS détermine la fréquence (par défaut).
+  host :     Fait correspondre la fréquence DOS à celle de l'hôte
+             (voir le paramètre 'host_rate').
+  <valeur> : Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000
+             (Hz).
+Remarque : Nous recommandons la fréquence 'default' ; sinon, testez et réglez
+           au cas par cas selon les jeux.
 .
 :CONFIG_VESA_MODES
-Contrôle la sélection des modes VESA 1.2 et 2.0 proposés :
-  compatible   Une sélection adaptée qui maximise la compatibilité des jeux.
-               Ceci est recommandé avec 4 ou 8 Mo de mémoire vidéo.
-  halfline     Prend en charge le mode VESA 2.0 halfline à basse résolution utilisé par
-               Extreme Assault. À utiliser uniquement si nécessaire, car non compatible S3.
-  all          Propose tous les modes pour une taille de mémoire vidéo donnée, cependant
-certains jeux peuvent ne pas les utiliser correctement (scintillement) ou
-peuvent nécessiter
-               plus de mémoire système (mem = ) pour les utiliser.
+Controls which VESA video modes are available:
+  compatible:  Only the most compatible VESA modes for the configured video
+               memory size (default). Recommended with 4 or 8 MB of video
+               memory ('vmemsize') for the widest compatiblity with games.
+               320x200 high colour modes are excluded as they were not
+               properly supported until the late '90s. The 256-colour linear
+               framebuffer 320x240, 400x300, and 512x384 modes are also
+               excluded as they cause timing problems in Build Engine games.
+  halfline:    Same as 'compatible', but the 120h VESA mode is replaced with
+               a special halfline mode used by Extreme Assault. Use only if
+               needed.
+  all:         All modes are available, including extra DOSBox-specific VESA
+               modes. Use 8 MB of video memory for the best results. Some
+               games misbehave in the presence of certain VESA modes; try
+               'compatible' mode if this happens. The 320x200 high colour
+               modes available in this mode are often required by late '90s
+               demoscene productions.
 .
 :CONFIG_VGA_8DOT_FONT
 Utiliser des polices de 8 pixels de large sur les adaptateurs VGA (désactivé par défaut).
@@ -1563,28 +1616,32 @@ jeu qui échoue lorsque ce paramètre est défini sur true, afin que nous puissi
 .
 :CONFIG_AUTOEXEC_SECTION
 Comment les sections autoexec sont gérées à partir de plusieurs fichiers de configuration.
-join      : les combine en une seule grande section (comportement hérité).
-overwrite : utilise la dernière rencontrée, comme les autres paramètres de configuration.
+  join      : Les combine en une seule grande section (comportement hérité et
+              par défaut).
+  overwrite : Utilise la dernière rencontrée, comme les autres paramètres de configuration.
 .
 :CONFIG_AUTOMOUNT
 Monte les répertoires 'drives/[c]' comme lecteurs au démarrage, où [c] est
-une lettre de lecteur minuscule de a à y. Le dossier 'drives' peut être
-fourni relativement au répertoire courant ou via les ressources intégrées.
-Les paramètres de montage peuvent être éventuellement fournis en utilisant un fichier [c].conf 
-à côté du répertoire du lecteur, avec le contenu suivant :
+une lettre de lecteur minuscule de a à y ('on par défaut). Le dossier 'drives'
+peut être fourni relativement au répertoire courant ou via des ressources
+intégrées.
+Les paramètres de montage peuvent être éventuellement fournis en utilisant un
+fichier [c].conf à côté du répertoire du lecteur, avec le contenu suivant :
   [drive]
   type    = dir, overlay, floppy, ou cdrom
   label   = étiquette_personnalisée
-  path    = spécification-du-chemin, ex : path = %%path%%;C:\tools
-  override_drive = monter le répertoire sur ce lecteur à la place (vide par défaut)
-  verbose = true ou false
+  path    = spécification du chemin, ex : path = %%path%%;C:\tools
+  override_drive = monter le répertoire sur ce lecteur à la place
+  (vide par défaut)
+  verbose = on ou off (pour que DOSBox Staging soit bavard lors du montage)
+  readonly = on ou off (pour la lecture seule)
 .
 :CONFIG_STARTUP_VERBOSITY
-Contrôle la verbosité avant l'affichage du programme :
-            | Écran de bienvenue | Sorties écran de démarrage
-high        |        oui         |            oui
-low         |        non         |            oui
-quiet       |        non         |            non
+Contrôle la verbosité avant l'affichage du programme ('auto' par défaut) :
+            | Écran de bienvenue | Écritures dans la console au démarrage
+high        |        oui         |            oui, et importantes
+low         |        non         |            oui, mais réduites
+quiet       |        non         |            aucune
 auto        | 'low' si exec ou dir sont utilisés, sinon 'high'
 .
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
@@ -1607,7 +1664,8 @@ Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre 'hos
 .
 :CONFIGITEM_GLSHADER
 Définit un nuanceur d'émulation de écran cathodique adaptatif ou un shader GLSL normal
-dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur cathodique adaptatif :
+dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur
+cathodique adaptatif :
   crt-auto :               Un shader cathodique qui donne la priorité à l'intention du développeur
                            et la façon dont les gens ont vécu le jeu au moment de sa sortie (par défaut).
                           La variante de nuanceur appropriée est automatiquement sélectionnée
@@ -1645,12 +1703,26 @@ Vous pouvez également utiliser un chemin absolu ou relatif vers un fichier.
 Dans tous les cas, vous pouvez omettre l'extension de fichier '.glsl' du nuanceur.
 .
 :CONFIG_ASPECT
-Met à l'échelle la résolution verticale pour produire un aspect d'affichage 4:3,
-correspondant à celui des écrans à définition standard d'origine
-pour lequel la majorité des jeux DOS ont été conçus. Ce paramètre
-n'affecte que les modes vidéo qui utilisent des pixels non carrés, tels que
-320x200 ou 640x400 ; alors que les modes de pixels carrés, tels que 640x480
-et 800x600, seront affichés tel quel.
+Set the aspect ratio correction mode ('auto' by default):
+  auto, on:            Apply aspect ratio correction for modern square-pixel
+                       flat-screen displays, so DOS video modes with non-square
+                       pixels appear as they would on a 4:3 display aspect
+                       ratio CRT monitor the majority of DOS games were
+                       designed for. This setting only affects video modes that
+                       use non-square pixels, such as 320x200 or 640x400;.
+                       square-pixelmodes (e.g., 320x240, 640x480, and 800x600),
+                       are displayed as-is.
+  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes
+                       are displayed with square pixels. Most 320x200 games
+                       will appear squashed, but a minority of titles (e.g.,
+                       DOS ports of PAL Amiga games) need square pixels to
+                       appear as the artists intended.
+  stretch:             Calculate the aspect ratio from the viewport's
+                       dimensions. Combined with 'viewport', this mode is
+                       useful to force arbitrary aspect ratios (e.g.,
+                       stretching DOS games to fullscreen on 16:9 displays) and
+                       to emulate the horizontal and vertical stretch controls
+                       of CRT monitors.
 .
 :CONFIG_INTEGER_SCALING
 Contraint le facteur d'échelle horizontal ou vertical à la plus grande
@@ -1694,7 +1766,6 @@ du rapport de forme configuré (voir 'aspect'). Valeurs possibles :
                    avec 'aspect = stretch' et pour zoomer sur l'image.
                    Ceci émule efficacement les contrôles d'étirement horizontal et vertical
                    des écrans cathodiques.
-
 Remarques :
   - L'utilisation du mode 'relative' avec l'option 'integer_scaling' activée peut donner
     des résultats surprenants (mais corrects).
@@ -1727,22 +1798,26 @@ d'afficher des graphiques CGA ou supérieurs. Préréglages intégrés :
 Vous pouvez également définir des couleurs personnalisées en spécifiant 16
 valeurs de couleur séparées par des espaces ou des virgules,
 soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge
-vif), soit en triplets
-RGB décimaux (par ex. (255, 0, 255) pour magenta).
+vif), soit en triplets RGB décimaux (par ex. (255, 0, 255) pour magenta).
+The 16 colours are ordered as follows:
+  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
+  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
+Their default values, shown here in 6-digit hex code format, are:
+  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
-Algorithme de mise à l'échelle utilisé pour agrandir/améliorer les modes basse
-résolution.
-Si l'option 'forced' est ajoutée, alors le scaler sera utilisé même si
-le résultat ne semble pas celui escompté.
-Notez que certains scalers peuvent utiliser des bords noirs pour remplir l'image
-dans la résolution configuré. Si ce n'est pas l'effet voulu,
-essayez un scaler différent ou activez le mode plein écran.
+Software scalers are deprecated in favour of hardware-accelerated options:
+  - If you used the normal2x/3x scalers, set the desired 'windowresolution'
+    or 'viewport' instead, or consider using 'integer_scaling'.
+  - If you used an advanced scaler, consider one of the 'glshader'
+    options instead.
 .
 :CONFIG_COMPOSITE
-Enable composite mode on start. 'auto' lets the program decide.
-Note : Fine-tune the settings below (ie : hue) using the composite hotkeys.
-      Then read the new settings from your console and enter them here.
+Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine
+types; 'auto' by default). 'auto' lets the program decide.
+Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,
+      then copy the new settings from the logs into your config.
 .
 :CONFIG_ERA
 Ère de la technologie composite. Quand 'auto', PCjr utilise la nouvelle et
@@ -1765,11 +1840,50 @@ Luminosité de l'image, de sombre à claire.
 Convergence des éléments sous-pixels, de flou à net (CGA et Tandy uniquement).
 .
 :CONFIG_CORE
-Core CPU utilisé dans l'émulation. 'auto' bascule de 'normal' à 'dynamic' si
-c'est disponible et approprié.
+Type of CPU emulation core to use ('auto' by default).
+  auto:     'normal' core for real mode programs, 'dynamic' core for protected
+            mode programs (default). Most programs will run correctly with this
+            setting.
+  normal:   The DOS program is interpreted instruction by instruction. This
+            yields the most accurate timings, but puts 3-5 times more load on
+            the host CPU compared to the 'dynamic' core. Therefore, it's
+            generally only recommended for real mode programs that don't need
+            a fast emulated CPU or are timing-sensitive. The 'normal' core is
+            also necessary for programs that self-modify their code.
+  simple:   The 'normal' core optimised for old real mode programs; it might
+            give you slightly better compatibility with older games. Auto-
+            switches to the 'normal' core in protected mode.
+  dynamic:  The instructions of the DOS program are translated to host CPU
+            instructions in blocks and are then executed directly. This puts
+            3-5 times less load on the host CPU compared to the 'normal' core,
+            but the timings might be less accurate. The 'dynamic' core is a
+            necessity for demanding DOS programs (e.g., 3D SVGA games).
+            Programs that self-modify their code might misbehave or crash on
+            the 'dynamic' core; use the 'normal' core for such programs.
 .
 :CONFIG_CPUTYPE
-Coeur de CPU utilisé dans l'émulation. 'auto' est le choix le plus rapide.
+CPU type to emulate ('auto' by default).
+You should only change this if the program doesn't run correctly on 'auto'.
+  auto:          The fastest and most compatible setting (default).
+                 Technically, this is '386_fast' plus 486 CPUID, 486 CR
+                 register behaviour, and extra 486 instructions.
+  386:           386 CPUID and 386 specific page access level calculation.
+  386_fast:      Same as '386' but with loose page privilege checks which is
+                 much faster.
+  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.
+                 Requires 'core = normal'. This setting is necessary for
+                 programs that self-modify their code or employ anti-debugging
+                 tricks. Games that require '386_prefetch' include Contra, FIFA
+                 International Soccer (1994), Terminator 1, and X-Men: Madness
+                 in The Murderworld.
+  486:           486 CPUID, 486+ specific page access level calculation, 486 CR
+                 register behaviour, and extra 486 instructions.
+  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register
+                 behaviour, and RDTSC instruction support. Recommended for
+                 Windows 3.x games (e.g., Betrayal in Antara).
+  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few
+                 games use MMX instructions; it's mostly only useful for
+                 demoscene productions.
 .
 :CONFIG_CYCLES
 Nombre d'instructions que DOSBox essaye d'émuler à chaque milliseconde.
@@ -1823,16 +1937,19 @@ Vitesse du CPU émulé pour les programmes en mode protégé uniquement
 Note : Voir le paramètre 'cpu_cycles' pour plus d'informations.
 .
 :CONFIG_CPU_THROTTLE
-Réduire dynamiquement le nombre de cycles du CPU émulé si le CPU hôte
-ne peut pas suivre ('off' par défaut).
-N'affecte que les paramètres de cycles fixes. Lorsqu'il est activé, le nombre de cycles par
-milliseconde peut varier, ce qui peut causer des problèmes dans certains programmes DOS.
+Réduit dynamiquement le nombre de cycles du CPU émulé si le CPU hôte ne peut
+pas suivre ('off' par défaut).
+N'affecte que les paramètres de cycles fixes. Lorsqu'il est activé, le nombre
+de cycles par milliseconde peut varier, ce qui peut causer des problèmes dans
+certains programmes DOS.
 .
 :CONFIG_CYCLEUP
-Nombre de cycles à ajouter/soustraire avec la combinaison de touches.
+Number of cycles to add with the 'Inc Cycles' hotkey (10 by default).
+Values lower than 100 are treated as a percentage increase.
 .
 :CONFIG_CYCLEDOWN
-Le paramétrer à moins de 100 donnera un pourcentage.
+Number of cycles to subtract with the 'Dec Cycles' hotkey (20 by default).
+Values lower than 100 are treated as a percentage decrease.
 .
 :CONFIG_VOODOO
 Activer l'émulation 3dfx Voodoo (activée par défaut). Il s'agit d'une émulation
@@ -1864,9 +1981,9 @@ Note : Définit une valeur plus élevée que le nombre de CPU logiques supporté
 matériel est très susceptible de nuire aux performances. Cette fonction a montré
 après mesures
       qu'elle s'adapte bien à 8-16 threads, mais elle n'a pas été testée sur un
-      processeur avec beaucoup plus de cœurs.
-      Si vous avez un Threadripper ou un CPU similaire, merci de nous
-      faire part de vos expériences.
+      processeur avec beaucoup de cœurs.
+      Si vous avez un Threadripper ou un CPU similaire, merci de nous faire
+      part de vos expériences.
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilisez le filtrage bilinéaire pour émuler l'effet de lissage des textures
@@ -1880,8 +1997,8 @@ audio, vidéo, MIDI et les captures d'écran. ('capture' dans le répertoire de
 travail actuel par défaut).
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
-Définit le format de capture de l'action de capture d'écran par défaut ('
-upscaled ' par défaut) :
+Définit le format de capture de l'action de capture d'écran par défaut
+('upscaled' par défaut) :
 upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport
 de forme correct est conservé,
             en fonction du paramètre 'aspect'.
@@ -1937,7 +2054,7 @@ Sensibilité globale de la souris pour les axes horizontal et vertical, en pourc
 virgules ou des points-virgules
 (c'est-à-dire 100,150). Les valeurs négatives inversent l'axe, tandis que zéro
 le désactive.
-Il suffit  d'une seule valeur pour Définit la sensibilité pour les deux axes.
+Il suffit  d'une seule valeur pour définir la sensibilité pour les deux axes.
 La sensibilité peut être affinée pour chaque interface de souris à l'aide de l'outil interne
 MOUSECTL.COM disponible sur le lecteur Z.
 .
@@ -1947,7 +2064,7 @@ de votre système d'exploitation ('on' par défaut). Fonctionne en plein écran
 ou lorsque la souris est capturée en mode fenêtré.
 .
 :CONFIG_BUILTIN_DOS_MOUSE_DRIVER
-Activer le pilote de souris DOS intégré ('on' par défaut). Il en résulte
+Active le pilote de souris DOS intégré ('on' par défaut). Il en résulte
 la latence la plus faible possible et les mouvements de souris les plus fluides,
 donc ne le désactivez
 et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par
@@ -1961,9 +2078,10 @@ pas compatible avec le pilote intégré).
  `ps2_mouse_model` ou `com_mouse_model`, puis chargez le pilote.
         Un vrai pilote DOS peut améliorer la compatibilité avec certains programmes,
  mais introduira plus de latence d'entrée.
-Note : Le pilote intégré est automatiquement désactivé si vous démarrez sous MS-DOS ou
- Windows 9x sous DOSBox. Sous Windows 3.x, le pilote n'est pas désactivé,
- mais le pilote de souris de Windows 3.x prend le relais.
+Remarques : Le pilote intégré est automatiquement désactivé si vous démarrez
+            sous MS-DOS ou Windows 9x dans DOSBox. Sous Windows 3.x, le pilote
+            n'est pas désactivé, mais le pilote de souris de Windows 3.x prend
+            le relais.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Renommé en 'builtin_dos_mouse_driver'.
@@ -1992,7 +2110,7 @@ liste d'options séparées par des espaces ou des virgules (non définies par d�
                 - Ultima Underworld II : Labyrinth of Worlds
 Veuillez nous signaler d'autres jeux incompatibles afin que nous puissions
 mettre à jour cette liste.
-  modern : Si fourni, le comportement du pilote de souris Microsoft v7.0+ est émulé,
+  modern :     Si fourni, le comportement du pilote de souris Microsoft v7.0+ est émulé,
                  sinon le comportement v6.0 et antérieur (les deux sont légèrement
                  incompatibles). Jusqu'à présent, seul Descent II avec le patch officiel Voodoo a
                  nécessité le comportement v7.0+.
@@ -2002,13 +2120,14 @@ Configuré via l'option  'builtin_dos_mouse_driver_options'.
 .
 :CONFIG_PS2_MOUSE_MODEL
 Définit le modèle de souris du port PS/2 AUX, ou en d'autres termes, le type de
-la souris virtuelle
-branchée sur le port souris PS/2 émulé ('explorer' par défaut).
-Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir 'dos_mouse_driver').
- standard : 3 boutons, souris PS/2 standard.
- intellimouse :  3 boutons + molette, Microsoft IntelliMouse.
- explorer :      5 boutons + molette, Microsoft IntelliMouse Explorer (par défaut).
- none : pas de souris PS/2.
+la souris virtuelle branchée sur le port souris PS/2 émulé
+('explorer' par défaut).
+Ce paramètre n'a aucun effet sur le pilote de souris intégré
+(voir 'dos_mouse_driver').
+  standard : 3 boutons, souris PS/2 standard.
+  intellimouse :  3 boutons + molette, Microsoft IntelliMouse.
+  explorer :      5 boutons + molette, Microsoft IntelliMouse Explorer (par défaut).
+  none : pas de souris PS/2.
 .
 :CONFIG_COM_MOUSE_MODEL
 Définit le modèle de souris COM (série) par défaut, ou en d'autres termes, le
@@ -2025,10 +2144,10 @@ Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir “dos_mou
   2button+msm :  Choix automatique entre “2button” et “msm”.
   3button+msm :  Choix automatique entre '3button' et 'msm'.
   wheel+msm :    Choix automatique entre “wheel” et “msm” (par défaut).
-Note : Activez le port COM souris dans la section [serial].
+Remarques : Activez le port COM souris dans la section [serial].
 .
 :CONFIG_VMWARE_MOUSE
-Interface souris VMware (activée par défaut).
+Interface souris VMware ('on' par défaut).
 avec un pilote expérimental de tierce partie pour Windows 3.1x.
 Remarque : la souris PS/2 doit être activée.
 .
@@ -2038,38 +2157,54 @@ Entièrement compatible uniquement avec le pilote Windows 3.1x d'une tierce part
 Remarque : la souris PS/2 doit être activée.
 .
 :CONFIG_NOSOUND
-Activer le mode silencieux, le son étant cependant toujours émulé.
+Enable silent mode ('off' by default).
+Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.
+Capturing the emulated audio output to a WAV file works in silent mode.
 .
 :CONFIG_RATE
-Taux d'échantillonnage du mixer, paramétrer tout taux d'un périphérique plus
-haut que cela va probablement détériorer sa qualité sonore.
+Sample rate of DOSBox's internal audio mixer in Hz (%s by default).
+Valid range is 8000 to 96000 Hz. The vast majority of consumer-grade audio
+hardware uses a native rate of 48000 Hz. Recommend leaving this as-is unless
+you have good reason to change it. The OS will most likely resample non-standard
+sample rates to 48000 Hz anyway.
 .
 :CONFIG_BLOCKSIZE
-Taille de bloc du mixer, des blocs plus grands peuvent aider pour les saccades
-de son mais il sera aussi moins en phase.
+Block size of the host audio device in sample frames (%s by default).
+Valid range is 64 to 8192. Should be set to power-of-two values (e.g., 256,
+512, 1024, etc.) Larger values might help with sound stuttering but will
+introduce more latency. Also see 'negotiate'.
 .
 :CONFIG_PREBUFFER
-Nombre de millisecondes de données à garder en amont du paramètre blocksize.
+How many milliseconds of sound to render in advance on top of 'blocksize'
+(%s by default). Larger values might help with sound stuttering but will
+introduce more latency.
 .
 :CONFIG_NEGOTIATE
-Laisser le pilote audio système négocier (si possible) de meilleurs paramètres
-de taux et de taille de bloc.
+Negotiate a possibly better 'blocksize' setting (%s by default).
+Enable it if you're not getting audio or the sound is stuttering with your
+'blocksize' setting. Disable it to force the manually set 'blocksize' value.
 .
 :CONFIG_COMPRESSOR
 Active le compresseur de nivellement automatique sur le canal principal pour
-éviter l'écrêtage
-de la sortie audio :
+éviter l'écrêtage de la sortie audio :
   off :  Désactive le compresseur.
   on :   Active le compresseur (par défaut).
 .
 :CONFIG_CROSSFEED
-Définit le crossfeed globalement sur tous les canaux stéréo pour l'écoute au casque :
-  off :         Pas de crossfeed (par défaut).
-  on :          Active le crossfeed (avec une intensité de 40).
-<strength> :  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de
-crossfeed (désactivé)
-               et 100 un crossfeed complet (transformant effectivement le contenu stéréo en mono).
-Remarque : Vous pouvez Définit le crossfeed par canal via les commandes du mixer.
+Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan
+the instruments 100%% left and 100%% right in the stereo field on these audio
+devices which is unpleasant to listen to in headphones. With crossfeed enabled,
+a portion of the left channel signal is mixed into the right channel and vice
+versa, creating a more natural listening experience.
+  off:     No crossfeed (default).
+  on:      Enable crossfeed (normal preset).
+  light:   Light crossfeed (strength 15).
+  normal:  Normal crossfeed (strength 40).
+  strong:  Strong crossfeed (strength 65).
+
+Notes:
+  - Use the MIXER command to apply crossfeed to other audio channels as well
+    and to fine-tune the crossfeed strength per channel.
 .
 :CONFIG_REVERB
 Active la réverbération globalement pour ajouter une sensation d'espace au son :
@@ -2085,19 +2220,26 @@ Active la réverbération globalement pour ajouter une sensation d'espace au son
            séparés pour la musique et l'audio numérique.
   huge :    Une variante plus forte du préréglage de grande salle ; fonctionne très bien
            avec certains jeux aux bandes sonores plus atmosphériques.
-Remarque : Vous pouvez ajuster précisément les niveaux de réverbération par
-canal via les commandes du mixer.
+
+Remarque :
+  - The presets apply a noticeable amount of reverb to the synth mixer channels
+    (except for synths with built-in reverb; e.g., the Roland MT-32), and a
+    subtle amount to the digital audio channels.
+  - Use the MIXER command to fine-tune the reverb levels per channel.
 .
 :CONFIG_CHORUS
-Active le chorus globalement pour ajouter une sensation de mouvement stéréo au son :
-  off :     Pas de chorus (par défaut).
-  on :      Active le chorus (préréglage normal).
-  light :   Un effet de chorus léger (particulièrement adapté aux
-           musiques synthé qui comportent beaucoup de bruit blanc).
-  normal :  Chorus normal qui fonctionne bien avec une grande variété de jeux.
-  strong :  Un effet de chorus évident et direct.
-Remarque : Vous pouvez ajuster précisément les niveaux de chorus par canal via
-les commandes du mixer.
+Chorus effect that adds a sense of stereo movement to the sound:
+  off:     No chorus (default).
+  on:      Enable chorus (normal preset).
+  light:   A light chorus effect (especially suited for synth music that
+           features lots of white noise).
+  normal:  Normal chorus that works well with a wide variety of games.
+  strong:  An obvious and upfront chorus effect.
+
+Notes:
+  - The presets apply the chorus effect to the synth channels only (except
+    for synths with built-in chorus; e.g. the Roland MT-32).
+  - Use the MIXER command to fine-tune the chorus levels per channel.
 .
 :CONFIG_DENOISER
 Supprime le bruit résiduel de faible niveau de la sortie de la puce OPL et du Roland
@@ -2130,32 +2272,33 @@ Ceci est utile pour normaliser le volume de différentes banques de sons.
 La valeur du pourcentage peut varier de 1 à 800.
 .
 :CONFIG_FSYNTH_CHORUS
-Effet de chorus : 'auto', 'on', 'off', ou valeurs personnalisées.
-Lors de l'utilisation de valeurs personnalisées :
-  Les cinq valeurs doivent être fournies dans l'ordre et séparées par des espaces.
-  Ce sont : nombre-voix niveau vitesse profondeur onde-modulation, où :
-  - nombre-voix est un entier de 0 à 99.
-  - niveau est un décimal de 0.0 à 10.0
-  - vitesse est un décimal, mesuré en Hz, de 0.1 à 5.0
-  - profondeur est un décimal de 0.0 à 21.0
-  - onde-modulation est soit 'sine' soit 'triangle'
-  Par exemple : chorus = 3 1.2 0.3 8.0 sine
-Remarque : Vous pouvez désactiver le chorus FluidSynth et activer le
-chorus au niveau du mixer sur le canal FluidSynth à la place, ou
-activer les deux effets de chorus en même temps. Que cela
-sonne bien dépend du SoundFont et des paramètres de chorus
-utilisés.
+Configure the FluidSynth chorus. Possible values:
+  auto:      Enable chorus, except for known problematic SoundFonts (default).
+  on:        Always enable chorus.
+  off:       Disable chorus.
+  <custom>:  Custom setting via five space-separated values:
+               - voice-count:      Integer from 0 to 99
+               - level:            Decimal from 0.0 to 10.0
+               - speed:            Decimal from 0.1 to 5.0 (in Hz)
+               - depth:            Decimal from 0.0 to 21.0
+               - modulation-wave:  'sine' or 'triangle'
+             For example: 'fsynth_chorus = 3 1.2 0.3 8.0 sine'
+Note: You can disable the FluidSynth chorus and enable the mixer-level chorus
+      on the FluidSynth channel instead, or enable both chorus effects at the
+      same time. Whether this sounds good depends on the SoundFont and the
+      chorus settings being used.
 .
 :CONFIG_FSYNTH_REVERB
-Effet de réverbération : 'auto', 'on', 'off', ou valeurs personnalisées.
-Lors de l'utilisation de valeurs personnalisées :
-  Les quatre valeurs doivent être fournies dans l'ordre et séparées par des espaces.
-  Ce sont : taille-pièce atténuation largeur niveau, où :
-  - taille-pièce est un décimal de 0.0 à 1.0
-  - atténuation est un décimal de 0.0 à 1.0
-  - largeur est un décimal de 0.0 à 100.0
-  - niveau est un décimal de 0.0 à 1.0
-  Par exemple : reverb = 0.61 0.23 0.76 0.56
+Configure the FluidSynth reverb. Possible values:
+  auto:      Enable reverb (default).
+  on:        Enable reverb.
+  off:       Disable reverb.
+  <custom>:  Custom setting via four space-separated values:
+               - room-size:  Decimal from 0.0 to 1.0
+               - damping:    Decimal from 0.0 to 1.0
+               - width is:   Decimal from 0.0 to 100.0
+               - level is:   Decimal from 0.0 to 1.0
+             For example: 'fsynth_reverb = 0.61 0.23 0.76 0.56'
 Remarque : Vous pouvez désactiver la réverbération FluidSynth et activer la
 réverbération au niveau du mixer sur le canal FluidSynth à la place, ou
 activer les deux effets de réverbération en même temps. Que cela
@@ -2171,19 +2314,30 @@ Filtre pour la sortie audio FluidSynth :
 Pas de banque de sons disponible.
 .
 :CONFIG_MODEL
-Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
-si les deux sets de ROMs sont fournis. Pour les premiers jeux Sierra et Dune 2,
-il est recommandé d'utiliser 'mt32', alors qu les jeux récents utilisent
-plutôt les effets sonores supplémentaires CM-32L (utilisez 'auto' ou 'cm32l')
+The Roland MT-32/CM-32ML model to use.
+You must have the ROM files for the selected model available (see 'romdir').
+The lookup for the best models is performed in order as listed.
+  auto:       Pick the best available model (default).
+  cm32l:      Pick the best available CM-32L model.
+  mt32_old:   Pick the best available "old" MT-32 model (v1.0x).
+  mt32_new:   Pick the best available "new" MT-32 model (v2.0x).
+  mt32:       Pick the best available MT-32 model.
+  <version>:  Use the exact specified model version (e.g., 'mt32_204').
+Notes:
+  - Run `MIXER /LISTMIDI` to see the list of available models.
+  - This is *NOT* a General MIDI compatible MIDI device; only use it if the
+    game is known to support Roland MT-32 MIDI (which predates General MIDI).
+
 .
 :CONFIG_ROMDIR
-Répertoire contenant les ROMs nécessaires MT-32 et/ou CM-32L
-nommés comme ceci :
-  MT32_CONTROL.ROM ou CM32L_CONTROL.ROM - fichier(s) de contrôle ROM.
-  MT32_PCM.ROM ou CM32L_PCM.ROM - fichier(s) PCM ROM.
-Le répertoire peut être absolu ou relatif, ou laisser vide pour
-utiliser le répertoire 'mt32-roms' dans le répertoire de configuration
-de DOSBox, ou un autre répertoire habituel du système.
+The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).
+The directory can be absolute or relative, or leave it unset to use the
+'mt32-roms' directory in your DOSBox configuration directory. Other common
+system locations will be checked as well.
+Notes:
+  - The file names of the ROM files do not matter; the ROMS are identified
+    by their checksums.
+  - Both interleaved and non-interlaved ROM files are supported.
 .
 :CONFIG_MT32_FILTER
 Filtre pour la sortie audio Roland MT-32/CM-32L :
@@ -2228,22 +2382,18 @@ Modèles de SC-55
 Modèle actif :
 .
 :CONFIG_MIDIDEVICE
-Préiphérique qui recevra les données MIDI (depuis l'interface
-émulée - MPU-401). Choisissez l'un des suivants :
-'fluidsynth', pour utiliser le synthétiseur MIDI intégré. Reportez-vous
-       à la section [fluidsynth] pour la configuration détaillée.
-'mt32', pour utiliser le synthétiseur Roland MT-32 intégré. Reportez-vous
-       à la section [mt32] pour la configuration détaillée.
-'auto', pour utiliser le premier lecteur MIDI externe disponible. Cela
-       peut être un synthétiseur logiciel ou un périphérique matériel.
+Set where MIDI data from the emulated MPU-401 MIDI interface is sent
+('port' by default):
 .
 :CONFIGITEM_MIDIDEVICE_PORT
   port :         Un port MIDI de l'interface MIDI du système d'exploitation hôte
- (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre 'midiconfig'.
+                 (par défaut). Vous pouvez configurer le port à utiliser à
+                 l'aide du paramètre 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio :    Le synthétiseur MIDI intégré à macOS. La banque de sons à utiliser
-peut être spécifiée à l'aide du paramètre 'midiconfig'.
+  coreaudio :    Le synthétiseur MIDI intégré à macOS. La banque de sons à
+                 utiliser peut être spécifiée à l'aide du paramètre
+                 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_MT32
   mt32 :         Le synthétiseur interne Roland MT-32 (voir la section [mt32]).
@@ -2253,19 +2403,21 @@ peut être spécifiée à l'aide du paramètre 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth :   Le synthétiseur MIDI interne FluidSynth (lecteur de banques de sons)
- (voir la section [fluidsynth]).
+                 (voir la section [fluidsynth]).
 .
 :CONFIGITEM_MIDIDEVICE_NONE
   none :         Désactive la sortie MIDI.
 .
 :CONFIG_MIDICONFIG
-Options de configuration pour l'interface MIDI sélectionnée.
+Options de configuration pour l'interface MIDI sélectionnée 
+(Non valorisé par défaut).
+Remarques:
 Il s'agit généralement de l'ID ou du nom du synthétiseur MIDI que vous voulez
 utiliser (trouver son ID/nom avec la commande DOS 'mixer /listmidi').
 - Cette option n'a aucun effet lors de l'utilisation d'un synthétiseur intégré
   (mididevice = 'fluidsynth' ou 'mt32').
-- Lors de l'utilisation d'ALSA, utiliser la commande Linux 'aconnect -l' pour lister
-  les ports MIDI et en sélectionner un (par exemple 'midiconfig=14 :0'
+- Lors de l'utilisation d'ALSA, utiliser la commande Linux 'aconnect -l' pour
+  lister les ports MIDI et en sélectionner un (par exemple 'midiconfig=14 :0'
   pour le séquenceur client 14, port 0).
 - Si vous utiliser un Roland MT-32 avec un PCB en révision 0,
   le matériel peut demander un délai afin d'éviter que son
@@ -2330,22 +2482,47 @@ Aucun modèle n'est actuellement actif.
 Aucun modèle disponible.
 .
 :CONFIG_SBTYPE
-Type de Sound Blaster à émuler. 'gb' pour Game Blaster.
+Sound Blaster model to emulate ('sb16' by default).
+The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.
+  gb:        Game Blaster          - CMS
+  sb1:       Sound Blaster 1.0     - OPL2, CMS
+  sb2:       Sound Blaster 2.0     - OPL2
+  sbpro1:    Sound Blaster Pro     - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2   - OPL3
+  sb16:      Sound Blaster 16      - OPL3 (default)
+  ess:       ESS ES1688 AudioDrive - ESFM
+  none/off:  Disable Sound Blaster emulation.
+Notes:
+  - Creative Music System was later rebranded to Game Blaster; they are the
+    same card.
+  - The 'ess' option is for getting ESS Enhanced FM music via the card's ESFM
+    synthesiser in games that support it. The ESS DAC is not emulated but the
+    card is Sound Blaster Pro compatible; just configure the game for Sound
+    Blaster digital sound.
 .
 :CONFIG_SBBASE
-Adresse IO de la Sound Blaster.
+Adresse IO de la Sound Blaster (220 par défaut).
 .
 :CONFIG_IRQ
-Numéro d'IRQ de la Sound Blaster.
+Numéro d'IRQ de la Sound Blaster (7 par défaut).
 .
 :CONFIG_DMA
-Numéro DMA de la Sound Blaster.
+Numéro DMA de la Sound Blaster (1 par défaut).
 .
 :CONFIG_HDMA
-Numéro High DMA de la Sound Blaster.
+Numéro High DMA de la Sound Blaster (5 par défaut).
 .
 :CONFIG_SBMIXER
-Permet au mixer Sound Blaster de modifier le mixer de DOSBox.
+Allow the Sound Blaster mixer to modify volume levels ('on' by default).
+Sound Blaster Pro 1 and later cards allow programs to set the volume of the
+digital audio (DAC), FM synth, and CD Audio output. These correspond to the
+SB, OPL, and CDAUDIO DOSBox mixer channels, respectively.
+  on:   The final level of the above channels is a combination of the volume
+        set by the program, and the volume set in the DOSBox mixer.
+  off:  Only the DOSBox mixer determines the volume of these channels.
+Note: Some games change the volume levels dynamically (e.g., lower the FM music
+      volume when speech is playing); it's best to leave 'sbmixer' enabled for
+      such games.
 .
 :CONFIG_SBWARMUP
 Silence initial de l'audio DMA après la mise sous tension de la carte, en millisecondes.
@@ -2378,8 +2555,20 @@ oplrate est déprécié . La forme d'onde OPL waveform est maintenant échantill
         au rythme de lecture du mixer pour éviter le rééchantillonnage.
 .
 :CONFIG_OPLMODE
-Type d'émulation OPL. Sur 'auto' le mode est déterminé par 'sbtype'.
-Tous les modes OPL sont compatibles AdLib, sauf pour 'cms'.
+OPL model to emulate ('auto' by default).
+  auto:      Use the appropriate model determined by 'sbtype'.
+  opl2:      Yamaha OPL2 (YM3812, mono).
+  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).
+  opl3:      Yamaha OPL3 (YMF262, stereo).
+  opl3gold:  OPL3 and the optional AdLib Gold Surround module.
+             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.
+  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).
+  none/off:  Disable OPL emulation.
+Notes:
+  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.
+  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;
+    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to
+    get ESFM-flavoured OPL with original Sound Blaster models..
 .
 :CONFIG_OPL_FADEOUT
 Fondu des notes suspendues pour l'émulation OPL :
@@ -2434,6 +2623,17 @@ Filtre pour la sortie CMS Sound Blaster :
 .
 :CONFIG_GUS
 Activer l'émulation Gravis UltraSound.
+Many games and all demos upload their own sounds, but some rely on the
+instrument patch files included with the GUS for MIDI playback (see 'ultradir'
+for details). Some games also require ULTRAMID.EXE to be loaded prior to
+starting the game.
+
+Note: The default settings of base address 240, IRQ 5, and DMA 3 have been
+      chosen so the GUS can coexist with a Sound Blaster card. This works fine
+      for the majority of programs, but some games and demos expect the GUS
+      factory defaults of base address 220, IRQ 11, and DMA 1. The default
+      IRQ 11 is also problematic with specific versions of the DOS4GW extender
+      that cannot handle IRQs above 7.
 .
 :CONFIG_GUSBASE
 Adresse de base IO de la Gravis UltraSound.
@@ -2494,7 +2694,8 @@ Le filtrage analogique du SID signifiait que chaque puce était physiquement uni
 Ajuste la force de filtrage du 6581 en pourcentage de 0 à 100.
 .
 :CONFIG_8580FILTER
-Ajuste la force de filtrage du 8580 en pourcentage de 0 à 100.
+Ajuste la force de filtrage du 8580 en pourcentage de 0 à 100
+(50 par défaut).
 .
 :CONFIG_INNOVATION_FILTER
 Filtre pour la sortie audio Innovation :
@@ -2540,7 +2741,7 @@ après la dernière écriture sur le port IO :
               pour toujours (par défaut).
   on :        Attendre 0,5s avant d'effectuer un fondu sur une période de 0,5s.
   <custom> :  Définition personnalisée du fondu ; voir “opl_fadeout”
-                     pour plus de détails.
+              pour plus de détails.
 .
 :CONFIG_TANDY_FILTER
 Filtre pour la sortie synthé Tandy :
@@ -2586,10 +2787,10 @@ Filtre pour la sortie DAC PS/1 Audio :
   <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_REELMAGIC
-ReelMagic (alias REALmagic) Prise en charge de la lecture MPEG :
+Prise en charge de la lecture MPEG ReelMagic (alias REALmagic) :
   off :       Désactiver le support (par défaut).
   cardonly :  Initialiser la carte sans charger le pilote FMPDRV.EXE.
-  on :       Initialise la carte et charge le pilote FMPDRV.EXE au démarrage.
+  on :        Initialise la carte et charge le pilote FMPDRV.EXE au démarrage.
 .
 :CONFIG_REELMAGIC_KEY
 Définit la clé magique 32 bits utilisée pour décoder les vidéos du jeu :
@@ -2608,16 +2809,19 @@ pendant la lecture vidéo :
            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, ou 7=59.94 images/sec.
 .
 :CONFIG_JOYSTICKTYPE
-Type de manette à émuler : auto (défaut),
-aucun (désactive l'émulation du joystick)
-2axis (supporte deux manettes),
-4axis (supporte une manette, première manette utilisée),
-4axis_2 (supporte une manette, seconde manette utilisée),
-fcs (Thrustmaster), ch (CH Flightstick).
-'none' désactive l'émulation de la manette.
-'auto' choisit l'émulation selon la(les) manette(s) réelle(s).
-(Rappelez-vous de réinitialiser le fichier de correspondance des touches DOSBox
-si vous l'avez sauvé plus tôt)
+Type of joystick to emulate:
+  auto:      Detect and use any joystick(s), if possible (default).
+             Joystick emulation is disabled if no joystick is found.
+  2axis:     Support up to two joysticks, each with 2 axis.
+  4axis:     Support the first joystick only, as a 4-axis type.
+  4axis_2:   Support the second joystick only, as a 4-axis type.
+  fcs:       Emulate joystick as an original Thrustmaster FCS.
+  ch:        Emulate joystick as an original CH Flightstick.
+  hidden:    Prevent DOS from seeing the joystick(s), but enable them
+             for mapping.
+  disabled:  Fully disable joysticks: won't be polled, mapped,
+             or visible in DOS.
+Remember to reset DOSBox's mapperfile if you saved it earlier.
 .
 :CONFIG_TIMED
 Activer des intervalles de temps pour les axes. Tester cette option si votre manette dérive.
@@ -2664,16 +2868,19 @@ Appliquer les paramètres de calibration de l'axe y à partir des raccourcis. La
 valeur par défaut est 'auto'.
 .
 :CONFIG_SERIAL1
-Définit le type de périphérique connecté au port série.
-Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'direct'.
-Les paramètres additionnels doivent être sur la même ligne sous la forme
-paramètre :valeur. Le paramètre pour tous les types est l'IRQ (optionnel).
-Pour 'direct' : realport (port réel, requis), rxdelay (optionnel).
-                     (realport :COM1 realport :ttyS0).
-Pour 'modem' : listenport (port d'écoute, optionnel).
-Pour 'nullmodem' : server, rxdelay, txdelay, telnet, usedtr,
-                transparent, port, inhsocket (tous optionnels).
-Exemple : 'serial1=modem listenport :5000'.
+Set type of device connected to the COM1 port.
+Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).
+Additional parameters must be on the same line in the form of
+parameter:value. The optional 'irq' parameter is common for all types.
+  - for 'mouse':      model (optional; overrides the 'com_mouse_model' setting).
+  - for 'direct':     realport (required), rxdelay (optional).
+                      (e.g., realport:COM1, realport:ttyS0).
+  - for 'modem':      listenport, sock, bps (all optional).
+  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
+                      transparent, port, inhsocket, sock (all optional).
+The 'sock' parameter specifies the protocol to use at both sides of the
+connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.
+Example: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
 Voir serial1
@@ -2860,35 +3067,71 @@ Impossible d'ouvrir le fichier %s
 Écriture du fichier de configuration %s
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Outil de configuration :
--writeconf ou -wc sans paramètre : écrit dans le fichier de configuration primaire chargé.
--writeconf ou -wc avec un nom de fichier : écrit le fichier dans le répertoire de configuration.
-Utilisez -writelang ou -wl nom de fichier pour écrire les clefs de language courant.
--r [paramètres]
- Redémarre DOSBox, soit en utilisant les paramètres précédents ou tout autre ajouté.
--wcp [nom de fichier]
-Écrit le fichier de configuration dans le répertoire du programme,
-dosbox-staging.conf ou le nom de fichier 
- spécifié.
--wcd
- Écrit dans le fichier de configuration par défaut dans le répertoire de configuration.
--l liste les paramètres de configuration.
--h, -help, -? sections / nom de section / nom de propriété
- Sans paramètres, affiche cet écran d'aide. Ajoutez 'sections' pour une liste de
-sections. Pour des infos à propos d'une section spécifique ou d'une propriété
-spécifique ajoutez son nom après.
--axclear nettoye la section autoexec.
--axadd [ligne] ajoute une ligne à la section autoexec.
--axtype affiche le contenu de la section autoexec.
--securemode bascule en mode sécurisé.
--avistart démarre l'enregistrement AVI.
--avistop arrête l'enregistrement AVI.
--startmapper démarre le keymapper.
--get 'section propriété' affiche la valeur de la propriété.
--set 'section propriété=valeur' change la valeur.
+Perform configuration management and other miscellaneous actions.
+
+Usage:
+  [color=light-green]config[reset] [color=white]COMMAND[reset] [color=light-cyan][PARAMETERS][reset]
+
+Where [color=white]COMMAND[reset] is one of:
+  -writeconf
+  -wc               write the current configuration to the local `dosbox.conf`
+                    config file in the current working directory
+
+  -writeconf [color=white]PATH[reset]
+  -wc [color=white]PATH          [reset]if [color=white]PATH[reset] is a filename, write the current configuration to
+                    that file in the current working directory, otherwise to the
+                    specified absolute or relative path
+
+  -wcd              write the current configuration to the primary (default)
+                    `dosbox-staging.conf` config file in the configuration
+                    directory
+
+  -writelang [color=white]FILENAME[reset]
+  -wl [color=white]FILENAME      [reset]write the current language strings to [color=white]FILENAME [reset]in the
+                    current working directory
+
+  -r [color=light-cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]
+                    restart DOSBox with the optionally supplied config
+                    properties
+
+  -l                show the currently loaded config files and command line
+                    arguments provided at startup
+
+  -help [color=white]SECTION[reset]
+  -h    [color=white]SECTION[reset]
+  -?    [color=white]SECTION     [reset]list the names of all properties in a config section
+
+  -help [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
+  -h    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
+  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
+                    show the description and the current value of a config
+                    property
+
+  -help sections
+  -h    sections
+  -?    sections    [reset]list the names of all config sections
+
+  -axclear          clear the [autoexec] section
+  -axadd [color=white]LINE[reset]       append a line to the end of the [autoexec] section
+  -axtype           show the contents of the [autoexec] section
+  -securemode       switch to secure mode
+  -avistart         start AVI recording
+  -avistop          stop AVI recording
+  -startmapper      start the keymapper
+
+  -get [color=white]SECTION      [reset]show all properties and their values in a config section
+  -get [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]
+                    show the value of a single config property
+
+  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]
+                    set the value of a config property
+
+  -securemode       enable secure mode
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Utilité de la propriété '%s' (contenue dans la section '%s') :
+[color=white]Description of the [color=light-green]'%s'[color=white] setting in the [color=light-cyan][%s][color=white] section:[reset]
+
+
 .
 :PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
 [color=white]Valeurs possibles :[reset]  %s
@@ -2992,13 +3235,13 @@ https ://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 https ://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :PROGRAM_AUTOTYPE_HELP_LONG
-Effectue une saisie clavier programmée dans un jeu DOS en cours d'exécution.
+Effectue une saisie clavier préprogrammée dans un jeu DOS en cours d'exécution.
 
 Utilisation :
   [color=light-green]autotype[reset] -list
   [color=light-green]autotype[reset] [-w [color=white]ATTENTE[reset]] [-p [color=white]CADENCE[reset]] [color=light-cyan]BOUTONS[reset]
 
-Où :
+Paramètres :
   [color=white]ATTENTE[reset]   est le nombre de secondes d'attente avant le début de la saisie (max 30).
   [color=white]CADENCE[reset]   est le nombre de secondes entre chaque frappe (max 10).
   [color=light-cyan]BOUTONS[reset]  sont un ou plusieurs boutons séparés par des espaces.
@@ -3054,12 +3297,11 @@ Pour cette commande, on peut spécifier une succession de disquettes et basculer
 entre elles avec %s+F4, et -l spécifie le lecteur monté sur lequel démarrer.
 Sans lettre de lecteur spécifiée, le démarrage par défaut s'effectue sur A.
 Les seules lettres de lecteur démarrables sont A, C, et D. Pour démarrer à partir
-d'un disque dur (C ou D), l'image doit avoir au préalable été montée avec la commande
-[color=light-blue]IMGMOUNT[reset].
+d'un disque dur (C ou D), l'image doit avoir au préalable été montée avec la
+commande [color=light-blue]IMGMOUNT[reset].
 
-La syntaxe de cette commande est :
-
-[color=light-blue]BOOT [diskimg1.img diskimg2.img] [-l lettre_de_lecteur][reset]
+Tapez [color=light-blue]BOOT /?[reset] pour obtenir la syntaxe de cette
+commande.
 .
 :PROGRAM_BOOT_UNABLE
 Impossible de démarrer à partir du lecteur %c
@@ -3086,18 +3328,21 @@ Cartouche de commandes PCjr disponible :%s
 Pas de cartouche PCjr de commande trouvée
 .
 :PROGRAM_CLIP_HELP_LONG
-Copier du texte dans le presse-papiers ou récupérer son contenu.
+Copie du texte dans le presse-papiers ou récupérer son contenu.
+
 Utilisation :
-[color=light-cyan]COMMANDE[reset] | [color=light-green]clip[reset]
-[color=light-green]clip[reset] < [color=light-cyan]FICHIER[reset]
-[color=light-green]clip[reset]
+  [color=light-cyan]COMMANDE[reset] | [color=light-green]clip[reset]
+  [color=light-green]clip[reset] < [color=light-cyan]FICHIER[reset]
+  [color=light-green]clip[reset]
+
 Notes :
-- Si aucune entrée n'est fournie, la commande affiche le contenu du presse-papiers.
-- Cette commande ne gère que les données textuelles, pas les données binaires.
+  - Si aucune entrée n'est fournie, la commande affiche le contenu du presse-papiers.
+  - Cette commande ne gère que les données textuelles, pas les données binaires.
+
 Exemples :
-[color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copie la liste des fichiers dans le presse-papiers
-[color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
-[color=light-green]clip[reset]                     ; affiche le contenu du presse-papiers
+  [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copie la liste des fichiers dans le presse-papiers
+  [color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
+  [color=light-green]clip[reset]                     ; affiche le contenu du presse-papiers
 .
 :PROGRAM_CLIP_INPUT_TOO_LARGE
 Flux en entrée trop volumineux.
@@ -3109,7 +3354,8 @@ Erreur de lecture du flux en entrée.
 MSCDEX installé.
 .
 :MSCDEX_ERROR_MULTIPLE_CDROMS
-MSCDEX : Échec : Les lettres de lecteur d'unités CD-ROM multiples doivent être continues.
+MSCDEX : Échec : Les lettres de lecteur d'unités CD-ROM multiples doivent être
+contiguës.
 .
 :MSCDEX_ERROR_NOT_SUPPORTED
 MSCDEX : Échec : Pas encore supporté.
@@ -3121,7 +3367,8 @@ MSCDEX : La localisation spécifiée n'est pas un lecteur CD-ROM.
 MSCDEX : Échec : Fichier non valide ou impossible à ouvrir.
 .
 :MSCDEX_TOO_MANY_DRIVES
-MSCDEX : Échec : Trop de lecteurs CD-ROM (max. : 5). L'installation de MSCDEX a échouée.
+MSCDEX : Échec : Trop de lecteurs CD-ROM (max. : 5). L'installation de MSCDEX
+a échouée.
 .
 :MSCDEX_LIMITED_SUPPORT
 MSCDEX : Sous-répertoire monté : support limité.
@@ -3160,7 +3407,7 @@ Les lecteurs montés actuellement sont :
 Monté en lecture seule
 .
 :PROGRAM_IMGMOUNT_HELP_LONG
-Monte une image CD-ROM, disquette, ou disque dur sur une lettre de lecteur.
+Monte une image CD-ROM, disquette, ou de disque dur sur une lettre de lecteur.
 
 Usage :
   [color=light-green]imgmount[reset] [color=white]LECTEUR[reset] [color=light-cyan]CDROM-SET[reset] [CDROM-SET2 [..]] [-fs iso] -t cdrom|iso 
@@ -3206,11 +3453,12 @@ Vous devez spécifier le numéro de lecteur (0 ou 3) sur lequel monter l'image
 (0,1=fda,fdb;2,3=hda,hdb).
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Pour les images [color=brown]CD-ROM[reset] :   [color=light-blue]IMGMOUNT lettre-lecteur localisation-image -t iso[reset]
+For CD-ROM images:
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso
+For hard drive images, must specify drive geometry:
+  bytes-per-sector,sectors-per-head,heads,cylinders
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size bps,spc,hpc,cyl
 
-Pour les images de [color=brown]disque dur[reset] : vous devez spécifier la géométrie du disque dur :
-bytes_par_secteur, secteurs_par_cylindre, têtes_par_cylindre, cylindres.
-[color=light-blue]IMGMOUNT lettre-lecteur localisation-image -size bps,spc,tpc,cyl[reset]
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
 Aucun lecteur disponible
@@ -3249,7 +3497,7 @@ Lecteur déjà monté avec cette lettre.
 Ne peut pas créer de lecteur depuis un fichier.
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Lecteur numéro %d monté comme %s
+Lecteur numéro %d monté en tant que %s
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
 L'image doit être sur un hôte ou sur un disque local.
@@ -3388,13 +3636,21 @@ Où :
   FICHIERCODEPAGE est un fichier contenant des informations pour une page de code.
 
 Remarques :
-  L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition clavier actuellement chargée
-  et la page de code. Elle changera pour [color=light-cyan]CODELANGUE[reset] si fourni, éventuellement avec une
-  [color=white]CODEPAGE[reset] et un FICHIERCODEPAGE supplémentaire pour charger le numéro de page de code
-spécifié et le fichier de page de code s'il est fourni. Cette commande est
-particulièrement utile si
-  vous utilisez un clavier non-US, et [color=light-cyan]CODELANGUE[reset] peut également être défini dans le fichier de configuration
-  sous la section [dos] en utilisant le paramètre 'keyboardlayout = [color=light-cyan]CODELANGUE[reset]'.
+  - L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition clavier actuellement chargée
+  et la page de code.
+  - The [color=white]CPIFILE[reset], if specified, must contain the screen font for the given
+    [color=white]CODEPAGE[reset].
+  - MS-DOS, DR-DOS, and Windows NT formats of the CPI files are supported
+    directly. The FreeDOS CPX files have to be uncompressed first with the 3rd
+    party [color=light-green]upx[reset] tool.
+  - If no custom [color=white]CPIFILE[reset] is specified, the command looks for a suitable screen
+    font in the bundled CPI files.
+  - If [color=white]CODEPAGE[reset] is not specified, and the screen font from the display adapter
+    ROM is suitable, it uses the ROM screen font.
+  - Only EGA or better display adapters allow to change the screen font; MDA,
+    CGA, or Hercules always use the ROM screen font.
+  - You can use the 'us' keyboard layout with any code page; all the other
+    layouts work with selected code pages only.
 
 Exemples :
   [color=light-green]KEYB[reset]
@@ -3406,7 +3662,7 @@ Exemples :
 Page de code
 .
 :PROGRAM_KEYB_ROM_FONT
-Police de caractères en ROM
+Police de caractères ROM
 .
 :PROGRAM_KEYB_KEYBOARD_LAYOUT
 Disposition du clavier
