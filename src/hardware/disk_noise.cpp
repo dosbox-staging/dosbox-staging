@@ -191,7 +191,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		std::streamsize size = file.tellg();
 		file.seekg(0, std::ios::beg);
 
-		std::vector<uint8_t> file_data(static_cast<size_t>(size));
+		std::vector<uint8_t> file_data = {};
+		file_data.resize(static_cast<size_t>(size));
 		if (!file.read(reinterpret_cast<char*>(file_data.data()), size)) {
 			LOG_WARNING("DISKNOISE: Failed to read file '%s'",
 			            candidate.c_str());
@@ -228,8 +229,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 			continue;
 		}
 
-		auto vector_size = static_cast<size_t>(total_frames) * channels;
-		std::vector<float> temp(vector_size);
+		std::vector<float> temp = {};
+		temp.resize(static_cast<size_t>(total_frames) * channels);
 		drflac_uint64 frames_read = drflac_read_pcm_frames_f32(decoder,
 		                                                       total_frames,
 		                                                       temp.data());
@@ -266,7 +267,7 @@ void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
 			continue;
 		}
 
-		std::vector<float> sample;
+		std::vector<float> sample = {};
 		LoadSample(path, sample);
 		if (!sample.empty()) {
 			seek.samples.push_back(std::move(sample));
