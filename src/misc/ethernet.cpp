@@ -34,7 +34,6 @@ EthernetConnection *ETHERNET_OpenConnection([[maybe_unused]] const std::string &
 		assert(control);
 		const auto settings = control->GetSection("ethernet");
 		if (!conn->Initialize(settings)) {
-			LOG_WARNING("Failed to initialize the slirp Ethernet backend");
 			delete conn;
 			conn = nullptr;
 		}
