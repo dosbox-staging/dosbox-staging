@@ -22,7 +22,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # `include/checks.h` for details.
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
-  
+
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
@@ -203,6 +203,20 @@ add_executable(dosbox src/main.cpp src/dosbox.cpp)
 target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
+
+# Address sanitizer support
+option(ASAN_ENABLED "Build with address sanitizer" ON)
+
+if(ASAN_ENABLED)
+  if(MSVC)
+    target_compile_options(dosbox PUBLIC /fsanitize=address)
+  else()
+    target_compile_options(dosbox PUBLIC
+      -O1 -fsanitize=address,undefined -fsanitize-address-use-after-scope -fno-sanitize-recover=all -fno-omit-frame-pointer
+    )
+    target_link_options(dosbox PUBLIC -fsanitize=address,undefined)
+  endif()
+endif()
 
 # Allow dynamically loading externalised vcpkg dependencies at runtime
 # from the $EXE_DIR/lib directory
