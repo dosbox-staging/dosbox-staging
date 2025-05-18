@@ -127,9 +127,8 @@ void GameBlaster::Open(const int port_choice, const std::string& card_choice,
 		enable_filter();
 	}
 
-	LOG_MSG("CMS: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
-	        base_port,
-	        ChipClockHz / 1e6);
+	LOG_MSG("CMS: Running on port %xh with two Phillips SAA-1099 chips",
+	        base_port);
 
 	assert(channel);
 	assert(devices[0]);
