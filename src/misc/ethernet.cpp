@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021  The DOSBox Staging Team
+ *  Copyright (C) 2025-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,13 +25,15 @@
 #include "control.h"
 #include "ethernet_slirp.h"
 
-EthernetConnection *ETHERNET_OpenConnection([[maybe_unused]] const std::string &backend)
+EthernetConnection* ETHERNET_OpenConnection([[maybe_unused]] const std::string& backend)
 {
-	EthernetConnection *conn = nullptr;
+	EthernetConnection* conn = nullptr;
+
 	// Currently only slirp is supported
 	if (backend == "slirp") {
 		conn = new SlirpEthernetConnection;
 		assert(control);
+
 		const auto settings = control->GetSection("ethernet");
 		if (!conn->Initialize(settings)) {
 			delete conn;
