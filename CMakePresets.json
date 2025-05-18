@@ -140,6 +140,26 @@
         "UseMultiToolTask": "true",
         "EnforceProcessCountAcrossBuilds": "true"
       }
+    },
+    {
+      "name": "sanitizer-windows",
+      "displayName": "Sanitizer build (Windows, host CPU)",
+      "description": "Configure for sanitizer Debug build",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build/sanitizer",
+      "cacheVariables": {
+        "CMAKE_GENERATOR_TOOLSET": "ClangCL",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_FIND_PACKAGE_PREFER_CONFIG": "ON",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS_DEBUG": "/Zi /Od /RTC1 /MDd /D_DEBUG /DDEBUG /guard:cf /sdl /analyze /fsanitize=address /JMC /external:anglebrackets /external:W0 /permissive- /W4 /w14640",
+        "CMAKE_MSVC_RUNTIME_LIBRARY": "MultiThreadedDebug",
+        "RESOURCE_COPY_PATH": "/Resources"
+      },
+      "environment": {
+        "UseMultiToolTask": "true",
+        "EnforceProcessCountAcrossBuilds": "true"
+      }
     }
   ],
   "buildPresets": [
