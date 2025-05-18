@@ -1,4 +1,4 @@
-// Writing script used in this translation, can be one of:
+// Writing script used in this translation, can be one of :
 // Latin, Arabic, Armenian, Cherokee, Cyrillic, Georgian, Greek, Hebrew
 #SCRIPT Latin
 
@@ -14,26 +14,29 @@ ou une taille fixe (ex. : 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
 Défini la taille de la fenêtre pendant l'utilisation en mode fenêtré :
-  default:   Sélectionne la meilleure option basée sur
+  default :   Sélectionne la meilleure option basée sur
              votre environnement et d'autres paramètres.
-  original:  Redimensionne la fenêtre suivant la résolution
+  original :  Redimensionne la fenêtre suivant la résolution
              choisie par le programme émulé.
-  resizable: Permet le redimensionnement de la fenêtre de l'émulateur.
+  resizable : Permet le redimensionnement de la fenêtre de l'émulateur.
              Ceci est une option expérimentale, marche seulement avec
              output=opengl et glshader=sharp (ou none)
-  <custom>:  Redimensionne le contenu de la fenêtre
+  <custom> :  Redimensionne le contenu de la fenêtre
              aux dimensions indiquées, au format lxh (largeur x hauteur). Par ex. : 1024x768.
 .
 :CONFIG_VIEWPORT_RESOLUTION
-Définit la taille de la vue (zone dessinable) dans la fenêtre/écran :
-  fit:       Ajuste la vue à la fenêtre/écran disponible (par défaut).
-  <custom>:  Limite la vue à une résolution personnalisée ou un pourcentage du
-             bureau. Spécifié au format LxH, N%%, N.M%%. Exemples : 960x720 ou 50%%
+Définit la taille de la fenêtre d'affichage (zone dessinable) dans la fenêtre/
+écran :
+  fit :       Ajuste la fenêtre d'affichage à la fenêtre/écran disponible
+             (par défaut).
+  <custom> :  Limite la fenêtre d'affichage à une résolution personnalisée ou un
+             pourcentage du bureau. Spécifié au format LxH, N%%, N.M%%.
+             Exemples : 960x720 ou 50%%
 .
 :CONFIG_WINDOW_POSITION
 Définit la position initiale de la fenêtre en mode fenêtré :
-  auto:      Laisse le gestionnaire de fenêtres décider de la position.
-  <custom>:  Définit la position de la fenêtre au format X,Y. Par exemple : 250,100
+  auto :      Laisse le gestionnaire de fenêtres décider de la position.
+  <custom> :  Définit la position de la fenêtre au format X,Y. Par exemple : 250,100
              0,0 correspond au coin supérieur gauche de l'écran.
 .
 :CONFIG_WINDOW_DECORATIONS
@@ -48,11 +51,11 @@ Ce paramètre a été renommé en viewport_resolution.
 .
 :CONFIG_HOST_RATE
 Définit le taux de rafraîchissement de l'hôte :
-  auto:      Utilise les taux SDI, ou les taux VRR en plein écran sur un écran haute fréquence.
-sdi:       Utilise les taux d'interface de périphérique série (SDI), sans
+  auto :      Utilise les taux SDI, ou les taux VRR en plein écran sur un écran haute fréquence.
+sdi :       Utilise les taux d'interface de périphérique série (SDI), sans
 ajustement supplémentaire.
-  vrr:       Déduit 3 Hz du taux rapporté (meilleure pratique pour les écrans VRR).
-<custom>:  Spécifie un taux personnalisé comme valeur entière ou décimale
+  vrr :       Déduit 3 Hz du taux rapporté (meilleure pratique pour les écrans VRR).
+<custom> :  Spécifie un taux personnalisé comme valeur entière ou décimale
 supérieure à 23.000.
 .
 :CONFIG_VSYNC
@@ -64,10 +67,10 @@ trame suivante. 0 désactive cette fonction et effectue toujours le rendu.
 .
 :CONFIG_PRESENTATION_MODE
 Sélectionne optionnellement le mode de présentation des images :
-  auto:  Synchronise et supprime intelligemment les images pour éviter
+  auto :  Synchronise et supprime intelligemment les images pour éviter
          les blocages d'émulation, basé sur les fréquences d'images de l'hôte et du DOS.
-  cfr:   Présente toujours les images DOS à un taux d'images constant.
-  vfr:   Présente toujours les images DOS modifiées à un taux d'images variable.
+  cfr :   Présente toujours les images DOS à un taux d'images constant.
+  vfr :   Présente toujours les images DOS modifiées à un taux d'images variable.
 .
 :CONFIG_OUTPUT
 Système vidéo à utiliser pour la sortie.
@@ -148,10 +151,10 @@ Il n'y a généralement pas de gain de vitesse en augmentant cette valeur.
 .
 :CONFIG_MCB_FAULT_STRATEGY
 Comment les blocs de chaîne de mémoire corrompus par logiciel doivent être traités :
-  deny:    Quitte (et signale) lorsque des erreurs sont détectées (par défaut).
-  repair:  Répare (et signale) les erreurs en utilisant les blocs de chaîne adjacents.
-  report:  Signale les erreurs mais continue le traitement comme tel.
-  allow:   Permet aux erreurs de ne pas être signalées (comportement matériel).
+  deny :    Quitte (et signale) lorsque des erreurs sont détectées (par défaut).
+  repair :  Répare (et signale) les erreurs en utilisant les blocs de chaîne adjacents.
+  report :  Signale les erreurs mais continue le traitement comme tel.
+  allow :   Permet aux erreurs de ne pas être signalées (comportement matériel).
 La valeur par défaut (deny) est recommandée sauf si un jeu échoue avec des
 erreurs de corruption MCB.
 .
@@ -161,9 +164,9 @@ défaut selon l'adaptateur vidéo.
 .
 :CONFIG_DOS_RATE
 Personnalise la fréquence d'images du mode vidéo émulé, en Hz :
-default:  Le mode vidéo DOS détermine la fréquence (recommandé).
-host:     Fait correspondre la fréquence DOS à celle de l'hôte (voir le paramètre 'host_rate').
-<valeur>:  Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000 (Hz).
+default :  Le mode vidéo DOS détermine la fréquence (recommandé).
+host :     Fait correspondre la fréquence DOS à celle de l'hôte (voir le paramètre 'host_rate').
+<valeur> :  Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000 (Hz).
 Nous recommandons la fréquence 'default' ; sinon, testez et réglez au cas par
 cas selon les jeux.
 .
@@ -198,7 +201,7 @@ Les paramètres de montage peuvent être éventuellement fournis en utilisant un
   [drive]
   type    = dir, overlay, floppy, ou cdrom
   label   = étiquette_personnalisée
-  path    = spécification-du-chemin, ex : path = %%path%%;c:\tools
+  path    = spécification-du-chemin, ex : path = %%path%%;c :\tools
   override_drive = monter le répertoire sur ce lecteur à la place (vide par défaut)
   verbose = true ou false
 .
@@ -226,21 +229,21 @@ Vous pouvez aussi faire défiler les couleurs disponibles avec F11.
 :CONFIG_CGA_COLORS
 Définit l'interprétation des couleurs RGBI CGA. Affecte tous les types de machines capables
 d'afficher des graphiques CGA ou supérieurs. Préréglages intégrés :
-  default:       La palette CGA canonique, telle qu'émulée par les adaptateurs VGA (par défaut).
-  tandy [BL]:    Émulation d'un moniteur Tandy idéalisé avec Niveau de Brun ajustable
+  default :       La palette CGA canonique, telle qu'émulée par les adaptateurs VGA (par défaut).
+  tandy [BL] :    Émulation d'un moniteur Tandy idéalisé avec Niveau de Brun ajustable
                  (0 - rouge, 50 - brun, 100 - jaune foncé ; par défaut 50).
-  tandy-warm:    Émulation de la sortie couleur réelle d'un moniteur Tandy inconnu.
-  ibm5153 [C]:   Émulation de la sortie couleur réelle d'un moniteur IBM 5153 avec
+  tandy-warm :    Émulation de la sortie couleur réelle d'un moniteur Tandy inconnu.
+  ibm5153 [C] :   Émulation de la sortie couleur réelle d'un moniteur IBM 5153 avec
                  un contrôle de Contraste unique qui atténue uniquement les couleurs non vives
                  (0 à 100 ; par défaut à 100).
-  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
+  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3 :
                  Palettes utilisées par les portages Amiga des jeux Sierra AGI
                  (voir le manuel pour plus de détails).
-  agi-amigaish:  Un mélange de couleurs EGA et Amiga utilisé par l'interpréteur AGI Sarien.
-  scumm-amiga:   Palette utilisée par les portages Amiga des jeux EGA LucasArts.
-  colodore:      Couleurs inspirées du Commodore 64 basées sur la palette Colodore.
-  colodore-sat:  Palette Colodore avec 20%% plus de saturation.
-  dga16:         Une version moderne de la palette CGA canonique avec contraste réduit.
+  agi-amigaish :  Un mélange de couleurs EGA et Amiga utilisé par l'interpréteur AGI Sarien.
+  scumm-amiga :   Palette utilisée par les portages Amiga des jeux EGA LucasArts.
+  colodore :      Couleurs inspirées du Commodore 64 basées sur la palette Colodore.
+  colodore-sat :  Palette Colodore avec 20%% plus de saturation.
+  dga16 :         Une version moderne de la palette CGA canonique avec contraste réduit.
 Vous pouvez également définir des couleurs personnalisées en spécifiant 16
 valeurs de couleur séparées par des espaces ou des virgules,
 soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge
@@ -248,8 +251,9 @@ vif), soit en triplets
 RGB décimaux (par ex. (255, 0, 255) pour magenta).
 .
 :CONFIG_SCALER
-Scaler utilisé pour agrandir/améliorer les modes basse résolution.
-Si l'option "forced" est ajoutée, alors le scaler sera utilisé même si
+Algorithme de mise à l'échelle utilisé pour agrandir/améliorer les modes basse
+résolution.
+Si l'option 'forced' est ajoutée, alors le scaler sera utilisé même si
 le résultat ne semble pas celui escompté.
 Notez que certains scalers peuvent utiliser des bords noirs pour remplir l'image
 dans la résolution configuré. Si ce n'est pas l'effet voulu,
@@ -267,7 +271,7 @@ scan2x, scan3x, tv2x, tv3x, sharp (défaut).
 .
 :CONFIG_COMPOSITE
 Enable composite mode on start. 'auto' lets the program decide.
-Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
+Note : Fine-tune the settings below (ie : hue) using the composite hotkeys.
       Then read the new settings from your console and enter them here.
 .
 :CONFIG_ERA
@@ -303,7 +307,7 @@ Paramétrer une trop grande valeur donne des coupures de son et des saccades.
 Les cycles peuvent être définis de 3 façons :
   'auto'          essaye de deviner ce dont un jeu a besoin.
                   Cela fonctionne généralement, mais peut échouer avec certains jeux.
-  '#nombre'       définira une quantité fixe de cycles. C'est généralement ce qu'il faut 
+  '#nombre'       Définita une quantité fixe de cycles. C'est généralement ce qu'il faut 
                   si 'auto' échoue. (Exemple : '4000')
   'max'           allouera autant de cycles que votre ordinateur est capable 
                   de gérer.
@@ -337,43 +341,43 @@ de taux et de taille de bloc.
 Active le compresseur de nivellement automatique sur le canal principal pour
 éviter l'écrêtage
 de la sortie audio :
-  off:  Désactive le compresseur.
-  on:   Active le compresseur (par défaut).
+  off :  Désactive le compresseur.
+  on :   Active le compresseur (par défaut).
 .
 :CONFIG_CROSSFEED
 Définit le crossfeed globalement sur tous les canaux stéréo pour l'écoute au casque :
-  off:         Pas de crossfeed (par défaut).
-  on:          Active le crossfeed (avec une intensité de 40).
-<strength>:  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de
+  off :         Pas de crossfeed (par défaut).
+  on :          Active le crossfeed (avec une intensité de 40).
+<strength> :  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de
 crossfeed (désactivé)
                et 100 un crossfeed complet (transformant effectivement le contenu stéréo en mono).
-Remarque : Vous pouvez définir le crossfeed par canal via les commandes du mixer.
+Remarque : Vous pouvez Définit le crossfeed par canal via les commandes du mixer.
 .
 :CONFIG_REVERB
 Active la réverbération globalement pour ajouter une sensation d'espace au son :
-  off:     Pas de réverbération (par défaut).
-  on:      Active la réverbération (préréglage moyen).
-  tiny:    Simule le son d'un petit haut-parleur intégré dans une pièce ;
+  off :     Pas de réverbération (par défaut).
+  on :      Active la réverbération (préréglage moyen).
+  tiny :    Simule le son d'un petit haut-parleur intégré dans une pièce ;
            spécialement conçu pour les systèmes audio à petits haut-parleurs
            (PC Speaker, Tandy, PS/1 Audio et périphériques LPT DAC).
-  small:   Ajoute une subtile sensation d'espace ; bon pour les jeux qui utilisent un seul
+  small :   Ajoute une subtile sensation d'espace ; bon pour les jeux qui utilisent un seul
            canal de synthé (typiquement OPL) pour la musique et les effets sonores.
-  medium:  Préréglage de pièce moyenne qui fonctionne bien avec une grande variété de jeux.
-  large:   Préréglage de grande salle recommandé pour les jeux qui utilisent des canaux
+  medium :  Préréglage de pièce moyenne qui fonctionne bien avec une grande variété de jeux.
+  large :   Préréglage de grande salle recommandé pour les jeux qui utilisent des canaux
            séparés pour la musique et l'audio numérique.
-  huge:    Une variante plus forte du préréglage de grande salle ; fonctionne très bien
+  huge :    Une variante plus forte du préréglage de grande salle ; fonctionne très bien
            avec certains jeux aux bandes sonores plus atmosphériques.
 Remarque : Vous pouvez ajuster précisément les niveaux de réverbération par
 canal via les commandes du mixer.
 .
 :CONFIG_CHORUS
 Active le chorus globalement pour ajouter une sensation de mouvement stéréo au son :
-  off:     Pas de chorus (par défaut).
-  on:      Active le chorus (préréglage normal).
-  light:   Un effet de chorus léger (particulièrement adapté aux
+  off :     Pas de chorus (par défaut).
+  on :      Active le chorus (préréglage normal).
+  light :   Un effet de chorus léger (particulièrement adapté aux
            musiques synthé qui comportent beaucoup de bruit blanc).
-  normal:  Chorus normal qui fonctionne bien avec une grande variété de jeux.
-  strong:  Un effet de chorus évident et direct.
+  normal :  Chorus normal qui fonctionne bien avec une grande variété de jeux.
+  strong :  Un effet de chorus évident et direct.
 Remarque : Vous pouvez ajuster précisément les niveaux de chorus par canal via
 les commandes du mixer.
 .
@@ -394,12 +398,12 @@ utiliser (trouver son ID/nom avec la commande DOS 'mixer /listmidi').
 - Cette option n'a aucun effet lors de l'utilisation d'un synthétiseur intégré
   (mididevice = 'fluidsynth' ou 'mt32').
 - Lors de l'utilisation d'ALSA, utiliser la commande Linux 'aconnect -l' pour lister
-  les ports MIDI et en sélectionner un (par exemple 'midiconfig=14:0'
+  les ports MIDI et en sélectionner un (par exemple 'midiconfig=14 :0'
   pour le séquenceur client 14, port 0).
 - Si vous utiliser un Roland MT-32 avec un PCB en révision 0,
   le matériel peut demander un délai afin d'éviter que son
   tampon ne déborde. Dans ce cas, ajoutez 'delaysysex',
-  par exemple: 'midiconfig=2 delaysysex'.
+  par exemple : 'midiconfig=2 delaysysex'.
 Reportez vous au README/Manuel pour plus d'informations.
 .
 :CONFIG_MPU401
@@ -450,8 +454,8 @@ utilisés.
 .
 :CONFIG_FSYNTH_FILTER
 Filtre pour la sortie audio FluidSynth :
-  off:       Ne pas filtrer la sortie (par défaut).
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  off :       Ne pas filtrer la sortie (par défaut).
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_MODEL
 Modèle de synthétiseur à utiliser. Par défaut, préfère CM-32L
@@ -470,8 +474,8 @@ de DOSBox, ou un autre répertoire habituel du système.
 .
 :CONFIG_MT32_FILTER
 Filtre pour la sortie audio Roland MT-32/CM-32L :
-  off:       Ne pas filtrer la sortie (par défaut).
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  off :       Ne pas filtrer la sortie (par défaut).
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :MT32_NO_SUPPORTED_MODELS
 Aucun modèle pris en charge présent.
@@ -528,13 +532,13 @@ Fournisseur de l'émulation OPL. 'compat' fournit une meilleure qualité,
 .
 :CONFIG_SB_FILTER
 Type de filtre à émuler pour la sortie sonore numérique Sound Blaster :
-  auto:      Utilise le filtre approprié déterminé par 'sbtype'.
-  sb1, sb2, sbpro1, sbpro2, sb16:
+  auto :      Utilise le filtre approprié déterminé par 'sbtype'.
+  sb1, sb2, sbpro1, sbpro2, sb16 :
              Utilise le filtre de ce modèle de Sound Blaster.
-  modern:    Utilise l'interpolation linéaire qui agit comme un filtre passe-bas ;
+  modern :    Utilise l'interpolation linéaire qui agit comme un filtre passe-bas ;
              c'est le comportement hérité de DOSBox (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Un ou deux filtres personnalisés au format suivant :
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Un ou deux filtres personnalisés au format suivant :
                TYPE ORDRE FREQ
              Où TYPE peut être 'hpf' (passe-haut) ou 'lpf' (passe-bas),
              ORDRE est l'ordre du filtre de 1 à 16
@@ -549,17 +553,17 @@ Force le filtre Sound Blaster à être toujours activé
 .
 :CONFIG_OPL_FILTER
 Type de filtre à émuler pour la sortie OPL Sound Blaster :
-  auto:      Utilise le filtre approprié déterminé par 'sbtype' (par défaut).
-  sb1, sb2, sbpro1, sbpro2, sb16:
+  auto :      Utilise le filtre approprié déterminé par 'sbtype' (par défaut).
+  sb1, sb2, sbpro1, sbpro2, sb16 :
              Utilise le filtre de ce modèle de Sound Blaster.
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_CMS_FILTER
 Filtre pour la sortie CMS Sound Blaster :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
   .
 :CONFIG_GUS
 Activer l'émulation Gravis UltraSound.
@@ -581,24 +585,24 @@ utilisé avec Timidity devrait bien fonctionner correctement.
 .
 :CONFIG_GUS_FILTER
 Filtre pour la sortie audio Gravis UltraSound :
-  off:       Ne pas filtrer la sortie (par défaut).
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  off :       Ne pas filtrer la sortie (par défaut).
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_SIDMODEL
 Modèle de puce à émuler dans la carte Innovation SSI-2001 :
- - auto:  Sélectionne la puce 6581.
- - 6581:  La puce originale, connue pour son caractère riche en graves.
- - 8580:  Une révision ultérieure qui correspondait plus étroitement aux spécifications SID.
+ - auto :  Sélectionne la puce 6581.
+ - 6581 :  La puce originale, connue pour son caractère riche en graves.
+ - 8580 :  Une révision ultérieure qui correspondait plus étroitement aux spécifications SID.
           Elle a corrigé le biais DC du 6581 et est moins sujette à la distorsion.
           Le 8580 est une option sur les cartes de reproduction, comme le DuoSID.
- - none:  Désactive la carte.
+ - none :  Désactive la carte.
 .
 :CONFIG_SIDCLOCK
 La fréquence d'horloge de la puce SID, configurable sur les cartes de reproduction.
- - default: utilise 0.895 MHz, selon la carte SSI-2001 originale.
- - c64ntsc: utilise 1.023 MHz, selon les PC Commodore NTSC et le DuoSID.
- - c64pal:  utilise 0.985 MHz, selon les PC Commodore PAL et le DuoSID.
- - hardsid: utilise 1.000 MHz, disponible sur le DuoSID.
+ - default : utilise 0.895 MHz, selon la carte SSI-2001 originale.
+ - c64ntsc : utilise 1.023 MHz, selon les PC Commodore NTSC et le DuoSID.
+ - c64pal :  utilise 0.985 MHz, selon les PC Commodore PAL et le DuoSID.
+ - hardsid : utilise 1.000 MHz, disponible sur le DuoSID.
 .
 :CONFIG_SIDPORT
 L'adresse du port IO de l'Innovation SSI-2001.
@@ -612,54 +616,54 @@ Ajuste la force de filtrage du 8580 en pourcentage de 0 à 100.
 .
 :CONFIG_INNOVATION_FILTER
 Filtre pour la sortie audio Innovation :
-  off:       Ne pas filtrer la sortie (par défaut).
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  off :       Ne pas filtrer la sortie (par défaut).
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PCSPEAKER_FILTER
 Filtre pour la sortie PC Speaker :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_TANDY_FILTER
 Filtre pour la sortie synthé Tandy :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtre pour la sortie DAC Tandy :
-  on:        Filtre la sortie (par défaut).
-off:       Ne pas filtrer la sortie.  <custom>:  Définition de filtre
+  on :        Filtre la sortie (par défaut).
+off :       Ne pas filtrer la sortie.  <custom> :  Définition de filtre
 personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_LPT_DAC
 Type de DAC branché sur le port parallèle :
-  disney:    Disney Sound Source.
-  covox:     Covox Speech Thing.
-  ston1:     DAC Stereo-on-1, en stéréo jusqu'à 30 kHz.
-  none/off:  Ne pas utiliser de DAC sur port parallèle (par défaut).
+  disney :    Disney Sound Source.
+  covox :     Covox Speech Thing.
+  ston1 :     DAC Stereo-on-1, en stéréo jusqu'à 30 kHz.
+  none/off :  Ne pas utiliser de DAC sur port parallèle (par défaut).
 .
 :CONFIG_LPT_DAC_FILTER
 Filtre pour le(s) périphérique(s) audio LPT DAC :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PS1AUDIO
 Active l'émulation audio IBM PS/1.
 .
 :CONFIG_PS1AUDIO_FILTER
 Filtre pour la sortie synthé PS/1 Audio :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtre pour la sortie DAC PS/1 Audio :
-  on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.
-  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+  on :        Filtre la sortie (par défaut).
+  off :       Ne pas filtrer la sortie.
+  <custom> :  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_JOYSTICKTYPE
 Type de manette à émuler : auto (défaut),
@@ -705,7 +709,7 @@ paramètres ont été essayés.
      - bas et haut déplacent le décalage de l'axe y dans la direction donnée.
  - Réinitialisez la calibration X et Y en utilisant Ctrl+Suppr et Ctrl+Début, respectivement.
 Chaque frappe affichera les valeurs de calibration X ou Y que vous pouvez
-définir ci-dessous. Lorsque vous trouvez des paramètres qui fonctionnent,
+Définit ci-dessous. Lorsque vous trouvez des paramètres qui fonctionnent,
 quittez le jeu, désactivez ce paramètre et remplissez les paramètres de
 calibration indiqués.
 .
@@ -717,16 +721,16 @@ valeur par défaut est 'auto'.
 Appliquer les paramètres de calibration de l'axe y à partir des raccourcis. La
 valeur par défaut est 'auto'.
 :CONFIG_SERIAL1
-Définir le type de périphérique connecté au port série.
+Définit le type de périphérique connecté au port série.
 Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'direct'.
 Les paramètres additionnels doivent être sur la même ligne sous la forme
-paramètre:valeur. Le paramètre pour tous les types est l'IRQ (optionnel).
+paramètre :valeur. Le paramètre pour tous les types est l'IRQ (optionnel).
 Pour 'direct' : realport (port réel, requis), rxdelay (optionnel).
-                     (realport:COM1 realport:ttyS0).
+                     (realport :COM1 realport :ttyS0).
 Pour 'modem' : listenport (port d'écoute, optionnel).
 Pour 'nullmodem' : server, rxdelay, txdelay, telnet, usedtr,
                 transparent, port, inhsocket (tous optionnels).
-Exemple : 'serial1=modem listenport:5000'.
+Exemple : 'serial1=modem listenport :5000'.
 .
 :CONFIG_SERIAL2
 Voir serial1
@@ -805,13 +809,13 @@ Le format est :
   port1  port2  port3 ... (par ex., 21 80 443)
   Cela transmettra FTP, HTTP et HTTPS vers l'invité DOS.
 Si les ports sont privilégiés sur l'hôte, un mappage peut être utilisé
-  hôte:invité  ..., (par ex., 8021:21 8080:80)
+  hôte :invité  ..., (par ex., 8021 :21 8080 :80)
   Cela transmettra les ports 8021 et 8080 vers FTP et HTTP dans l'invité
 Une plage de ports adjacents peut être abrégée avec un tiret :
   début-fin ... (par ex., 27910-27960)
   Cela transmettra les ports 27910 à 27960 vers l'invité DOS.
 Les mappages et les plages peuvent également être combinés :
-  hdébut-hfin:gdébut-gfin ..., (par ex., 8040-8080:20-60)
+  hdébut-hfin :gdébut-gfin ..., (par ex., 8040-8080 :20-60)
   Cela transmet les ports 8040 à 8080 vers 20 à 60 dans l'invité
 Remarques :
   - Si les plages mappées diffèrent, la plage la plus courte est étendue pour s'adapter.
@@ -840,11 +844,11 @@ Aucune section ou propriété..
 
 .
 :PROGRAM_CONFIG_NO_PROPERTY
-Il n'y a aucune propriété "%s" dans la section "%s".
+Il n'y a aucune propriété '%s' dans la section '%s'.
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Syntaxe correcte : config -set "section propriété".
+Syntaxe correcte : config -set 'section propriété'.
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -857,7 +861,7 @@ Fichier de configuration primaire :
 
 .
 :PROGRAM_CONFIG_ADDITIONAL_CONF
-Fichiers de configuration additionnels:
+Fichiers de configuration additionnels :
 
 .
 :PROGRAM_CONFIG_CONFDIR
@@ -890,7 +894,7 @@ dosbox-staging.conf ou le nom de fichier
  Écrit dans le fichier de configuration par défaut dans le répertoire de configuration.
 -l liste les paramètres de configuration.
 -h, -help, -? sections / nom de section / nom de propriété
- Sans paramètres, affiche cet écran d'aide. Ajoutez "sections" pour une liste de
+ Sans paramètres, affiche cet écran d'aide. Ajoutez 'sections' pour une liste de
 sections. Pour des infos à propos d'une section spécifique ou d'une propriété
 spécifique ajoutez son nom après.
 -axclear nettoye la section autoexec.
@@ -900,17 +904,17 @@ spécifique ajoutez son nom après.
 -avistart démarre l'enregistrement AVI.
 -avistop arrête l'enregistrement AVI.
 -startmapper démarre le keymapper.
--get "section propriété" affiche la valeur de la propriété.
--set "section propriété=valeur" change la valeur.
+-get 'section propriété' affiche la valeur de la propriété.
+-set 'section propriété=valeur' change la valeur.
 
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Utilité de la propriété "%s" (contenue dans la section "%s"):
+Utilité de la propriété '%s' (contenue dans la section '%s') :
 
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-Utilité de la section "%s" :
+Utilité de la section '%s' :
 %s
 Valeur actuelle :
 %s
@@ -941,15 +945,15 @@ Cette opération n'est pas permise en mode sécurisé.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-La section "%s" n'existe pas.
+La section '%s' n'existe pas.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" n'est pas une valeur correcte pour la propriété "%s".
+'%s' n'est pas une valeur correcte pour la propriété '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Syntaxe correcte : config -get "section propriété".
+Syntaxe correcte : config -get 'section propriété'.
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
@@ -1016,7 +1020,7 @@ Les lecteurs virtuels ne peuvent pas être démontés.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=light-red]Monter c:\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
+[color=light-red]Monter c :\ n'est PAS recommandé. Veuillez monter un (sous-)répertoire la prochaine fois.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
@@ -1024,7 +1028,7 @@ Les lecteurs virtuels ne peuvent pas être démontés.
 
 .
 :PROGRAM_MOUNT_NO_OPTION
-Attention: option '%s' non supportée et ignorée.
+Attention : option '%s' non supportée et ignorée.
 
 .
 :PROGRAM_MOUNT_OVERLAY_NO_BASE
@@ -1139,7 +1143,7 @@ Pour des informations basqiues à propos du montage tapez [color=light-blue]intr
 Pour des informations sur le support des CD-ROM tapez [color=light-blue]intro cdrom[reset]
 Pour des informations sur les touches spéciales tapez [color=light-blue]intro special[reset]
 Pour accéder au wiki de DOSBox Staging, visitez :[color=light-blue]
-https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
+https ://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
 [color=light-red]DOSBox s'arrêtera/quittera sans avertissement si une erreur survient ![reset]
 
@@ -1153,9 +1157,9 @@ vous devez monter les répertoires contenant les fichiers.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c:\jeuxdos\[color=white] créera un lecteur C avec c:\jeuxdos pour contenu. ║
+║ [color=green]mount c c :\jeuxdos\[color=white] créera un lecteur C avec c :\jeuxdos pour contenu. ║
 ║                                                                         ║
-║ [color=green]c:\jeuxdos\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
+║ [color=green]c :\jeuxdos\[color=white] est un exemple. Remplacez-le par votre propre répertoire.  [color=white]║
 ╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
@@ -1168,7 +1172,7 @@ vous devez monter les répertoires contenant les fichiers.
 
 .
 :PROGRAM_INTRO_MOUNT_END
-Quand le montage est complété avec succès, tapez [color=light-blue]c:[reset] pour aller your freshly
+Quand le montage est complété avec succès, tapez [color=light-blue]c :[reset] pour aller your freshly
 sur votre nouveau lecteur C monté. Taper [color=light-blue]dir[reset] à cet endroit montrera son contenu. [color=light-blue]cd[reset] vous permettra
 d'entrer dans un répertoire (reconnaissable par les [color=yellow][][reset] dans le listing du répertoire).
 Vous pouvez exécutez des programmes/fichiers finissant par [color=red].exe .bat[reset] et [color=red].com[reset].
@@ -1318,7 +1322,7 @@ Notes :
 
 Exemples :
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/JEU CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/media/USERNAME/JEU CD'[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_de_sauvegarde[reset] -t overlay
 
 .
@@ -1355,7 +1359,7 @@ Type '%s' non supporté. Spécifiez 'floppy' (disquette), 'hdd' (disque dur),
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Format "%s" non supporté. Spécifiez 'fat' ou 'iso' ou 'none' (aucun).
+Format '%s' non supporté. Spécifiez 'fat' ou 'iso' ou 'none' (aucun).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_FILE
@@ -1472,7 +1476,7 @@ Impossible de CHanger vers : %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Astuce : pour changer de lecteur, tapez [color=red]%c:[reset]
+Astuce : pour changer de lecteur, tapez [color=red]%c :[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
@@ -1481,7 +1485,7 @@ Essayez [color=red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Vous êtes encore sur le lecteur Z:, changez pour un lecteur monté avec [color=red]C:[reset].
+Vous êtes encore sur le lecteur Z :, changez pour un lecteur monté avec [color=red]C :[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -1504,11 +1508,11 @@ Tapez 'date MM-JJ-AAAA' pour changer
 .
 :SHELL_CMD_DATE_HELP_LONG
 DATE [[/T] [/H] [/S] | MM-JJ-AAAA]
-  MM-JJ-AAAA: nouvelle date à utiliser
-  /S:         Utilise de façon permanente l'heure et la date de l'hôte pour le DOS
-  /F:         Rebascule sur l'heure interne de DOSBox (contraire de /S)
-  /T:         Affiche seulement la date
-  /H:         Synchronise avec l'hôte
+  MM-JJ-AAAA : nouvelle date à utiliser
+  /S :         Utilise de façon permanente l'heure et la date de l'hôte pour le DOS
+  /F :         Rebascule sur l'heure interne de DOSBox (contraire de /S)
+  /T :         Affiche seulement la date
+  /H :         Synchronise avec l'hôte
 
 .
 :SHELL_CMD_TIME_HELP
@@ -1520,8 +1524,8 @@ Heure courante :
 .
 :SHELL_CMD_TIME_HELP_LONG
 TIME [/T] [/H]
-  /T:         Affiche seulement l'heure
-  /H:         Synchronise avec l'hôte
+  /T :         Affiche seulement l'heure
+  /H :         Synchronise avec l'hôte
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -1617,7 +1621,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════════════╗
 ║ [color=green]Bienvenue dans DOSBox Staging %-44s[color=white] ║
 ║                                                                            ║
-║ Pour une courte introduction pour les nouveaux utilisateurs, tapez: [color=brown]INTRO[color=white]  ║
+║ Pour une courte introduction pour les nouveaux utilisateurs, tapez : [color=brown]INTRO[color=white]  ║
 ║ Pour la liste des commandes supportées par le shell, tapez : [color=yellow]HELP[color=white]          ║
 ║                                                                            ║
 ║ Pour ajuster la vitesse du CPU émulé, essayez [color=red]%s+F11[color=white] et [color=red]%s+F12[color=white].%s%s        ║
@@ -1650,7 +1654,7 @@ Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 
 .
 :SHELL_STARTUP_END
-║ [color=brown]https://www.dosbox-staging.org[color=white]                                             ║
+║ [color=brown]https ://www.dosbox-staging.org[color=white]                                             ║
 ╚════════════════════════════════════════════════════════════════════════════╝[reset]
 
 
@@ -1664,14 +1668,14 @@ Affiche/change le répertoire courant.
 
 .
 :SHELL_CMD_CHDIR_HELP_LONG
-CHDIR [lecteur:][chemin]
+CHDIR [lecteur :][chemin]
 CHDIR [..]
-CD [lecteur:][chemin]
+CD [lecteur :][chemin]
 CD [..]
 
   ..   Indique que vous voulez changer vers le répertoire parent.
 
-Tapez 'CD lecteur': pour afficher le répertoire courant dans le lecteur spécifié.
+Tapez 'CD lecteur' : pour afficher le répertoire courant dans le lecteur spécifié.
 Tapez 'CD' sans paramètres pour afficher le lecteur et le répertoire courant.
 
 .
@@ -1684,9 +1688,9 @@ Affiche une liste de fichiers et sous-répertoires dans un répertoire.
 
 .
 :SHELL_CMD_DIR_HELP_LONG
-DIR [lecteur:][chemin][nomdefichier] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
+DIR [lecteur :][chemin][nomdefichier] [/[W|B]] [/P] [/[AD]|[A-D]] [/O[-][N|E|S|D]]
 
-  [lecteur:][chemin][nomdefichier]
+  [lecteur :][chemin][nomdefichier]
               Sépcifie le lecteur, répertoire, et/ou fichiers à afficher.
   /W          Utilise le format d'affichage large.
   /B          Utilise le format minimal (ni en-tête ni résumé).
@@ -1716,8 +1720,8 @@ Créer un répertoire.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
-MKDIR [lecteur:][chemin]
-MD [lecteur:][chemin]
+MKDIR [lecteur :][chemin]
+MD [lecteur :][chemin]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -1725,8 +1729,8 @@ Supprimer un répertoire.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
-RMDIR [lecteur:][chemin]
-RD [lecteur:][chemin]
+RMDIR [lecteur :][chemin]
+RD [lecteur :][chemin]
 
 .
 :SHELL_CMD_SET_HELP
@@ -1750,7 +1754,7 @@ Affiche le contenu d'un fichier texte.
 
 .
 :SHELL_CMD_TYPE_HELP_LONG
-TAPEZ [lecteur:][chemin][nomdefichier]
+TAPEZ [lecteur :][chemin][nomdefichier]
 
 .
 :SHELL_CMD_REM_HELP
@@ -1770,8 +1774,8 @@ Renomme un ou plusieurs fichiers.
 
 .
 :SHELL_CMD_RENAME_HELP_LONG
-RENAME [lecteur:][chemin]nomfichier1 nomfichier2.
-REN [lecteur:][chemin]nomfichier1 nomfichier2.
+RENAME [lecteur :][chemin]nomfichier1 nomfichier2.
+REN [lecteur :][chemin]nomfichier1 nomfichier2.
 
 Notez que vous ne pouvez pas spécifier un nouveau lecteur ou chemin pour votre fichier cible.
 
@@ -1809,12 +1813,12 @@ ls : ne peut accéder à '%s' : Aucun fichier ou répertoire de ce nom
 
 .
 :SHELL_CMD_CHOICE_HELP
-Attendre l'appui sur une touche et définir le ERRORLEVEL.
+Attendre l'appui sur une touche et Définit le ERRORLEVEL.
 
 .
 :SHELL_CMD_CHOICE_HELP_LONG
-CHOICE [/C:choix] [/N] [/S] texte
-  /C[:]choix  -  Spécifie les touches utilisables. Par défaut : yn (oui/non).
+CHOICE [/C :choix] [/N] [/S] texte
+  /C[ :]choix  -  Spécifie les touches utilisables. Par défaut : yn (oui/non).
   /N  -  N'affiche pas les choix à la fin du prompt.
   /S  -  Active la sensibilité à la casse des choix.
   texte  -  Texte à afficher comme prompt.
@@ -1829,7 +1833,7 @@ Fourni pour la compatibilité.
 
 .
 :SHELL_CMD_VER_HELP
-Voir ou régler la version de DOS reportée.
+Voir ou redéfinir la version de DOS indiquée.
 
 .
 :SHELL_CMD_VER_HELP_LONG
@@ -1844,7 +1848,7 @@ Avec :
 
 Notes :
   La version de DOS peut aussi être réglée dans le fichier de configuration
-  sous la section [dos] en utilisant le paramètre "ver = [color=light-cyan]VERSION[reset]".
+  sous la section [dos] en utilisant le paramètre 'ver = [color=light-cyan]VERSION[reset]'.
 
 Exemples :
   [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]6.22[reset]
@@ -1861,7 +1865,7 @@ La version spécifiée de DOS n'est pas correcte.
 
 .
 :PROGRAM_PATH_TOO_LONG
-Le chemin "%s" dépasse la longueur maximale DOS de %d caractères
+Le chemin '%s' dépasse la longueur maximale DOS de %d caractères
 
 .
 :PROGRAM_EXECUTABLE_MISSING
@@ -1875,10 +1879,10 @@ liste non prise en charge
 périphérique non configuré
 .
 :WIKI_ADD_UTILITIES_ARTICLE
-https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+https ://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
 .
 :WIKI_URL
-https://github.com/dosbox-staging/dosbox-staging/wiki
+https ://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :PROGRAM_AUTOTYPE_HELP_LONG
 Effectue une saisie clavier programmée dans un jeu DOS en cours d'exécution.
@@ -1914,7 +1918,7 @@ Utilisation :
   [color=light-green]boot[reset] [color=light-cyan]FICHIERIMAGE[reset]
 
 Où :
-  [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A:[reset], [color=white]C:[reset], ou [color=white]D:[reset].
+  [color=white]LECTEUR[reset] est un lecteur à partir duquel démarrer, doit être [color=white]A :[reset], [color=white]C :[reset], ou [color=white]D :[reset].
   [color=light-cyan]FICHIERIMAGE[reset] est une ou plusieurs images de disquette, séparées par des espaces.
 
 Remarques :
@@ -1924,7 +1928,7 @@ Si plusieurs images disque sont spécifiées, vous pouvez les permuter avec un
 raccourci clavier.
 
 Exemples :
-  [color=light-green]boot[reset] [color=white]c:[reset]
+  [color=light-green]boot[reset] [color=white]c :[reset]
   [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 
 .
@@ -1953,20 +1957,20 @@ DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
 et marque les fichiers comme étant en lecture seule. Généralement, cela suffit
 pour la plupart des jeux :
-[color=light-blue]mount D C:\exemple -t cdrom[reset]
+[color=light-blue]mount D C :\exemple -t cdrom[reset]
 Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
-[color=light-blue]mount D C:\exemple -t cdrom -label ETIQUETTE_CD[reset]
+[color=light-blue]mount D C :\exemple -t cdrom -label ETIQUETTE_CD[reset]
 
 Le [color=brown]niveau suivant[reset] ajoute une prise en charge de bas niveau.
 Il ne fonctionne donc que sur les lecteurs CD-ROM :
-[color=light-blue]mount d [color=red]D:\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
-Remplacez [color=red]D:\[reset] par l'emplacement de votre CD-ROM.
+[color=light-blue]mount d [color=red]D :\[color=light-blue] -t cdrom -usecd [color=brown]0[reset]
+Remplacez [color=red]D :\[reset] par l'emplacement de votre CD-ROM.
 Remplacez le [color=yellow]0[reset] dans [color=light-blue]-usecd [color=brown]0[reset] par le numéro indiqué pour votre CD-ROM si vous tapez :
 [color=light-blue]mount -listcd[reset]
 
 De plus, vous pouvez utiliser imgmount pour monter des images iso ou cue/bin :
-[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
-[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D C :\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C :\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
@@ -2012,7 +2016,7 @@ Remarques :
 spécifié et le fichier de page de code s'il est fourni. Cette commande est
 particulièrement utile si
   vous utilisez un clavier non-US, et [color=light-cyan]CODELANGUE[reset] peut également être défini dans le fichier de configuration
-  sous la section [dos] en utilisant le paramètre "keyboardlayout = [color=light-cyan]CODELANGUE[reset]".
+  sous la section [dos] en utilisant le paramètre 'keyboardlayout = [color=light-cyan]CODELANGUE[reset]'.
 
 Exemples :
   [color=light-green]KEYB[reset]
@@ -2034,7 +2038,7 @@ Où :
 Remarques :
 Les cas d'utilisation les plus courants de cette commande sont de corriger les
 jeux DOS ou programmes
-  qui affichent soit le message "[color=white]Packed File Corrupt[reset]" ou "[color=white]Not enough memory"[reset] (par ex.,
+  qui affichent soit le message '[color=white]Packed File Corrupt[reset]' ou '[color=white]Not enough memory'[reset] (par ex.,
   de certains jeux des années 1980 comme California Games II) lors de leur exécution.
   L'exécution de [color=light-green]loadfix[reset] sans argument alloue simplement de la mémoire pour que votre jeu
   s'exécute ; vous pouvez libérer la mémoire avec l'option /d ou /f lorsqu'il se termine.
@@ -2094,7 +2098,7 @@ Remarques :
   - Vous pouvez également scanner les changements sur tous les lecteurs montés avec l'option /a.
 
 Exemples :
-  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
+  [color=light-green]rescan[reset] [color=light-cyan]c :[reset]
   [color=light-green]rescan[reset] /a
 
 .
@@ -2109,14 +2113,14 @@ Où :
   [color=light-cyan]CANAL[reset]    est le canal audio à modifier.
   [color=white]COMMANDES[reset] sont une ou plusieurs des commandes suivantes :
     Volume :    [color=white]0[reset] à [color=white]100[reset], ou valeur en décibels préfixée par [color=white]d[reset] (par ex. [color=white]d-7.5[reset])
-                utilisez [color=white]G:D[reset] pour définir les côtés gauche et droit séparément (par ex. [color=white]10:20[reset])
+                utilisez [color=white]G :D[reset] pour Définit les côtés gauche et droit séparément (par ex. [color=white]10 :20[reset])
     Sortie ligne : [color=white]stereo[reset], [color=white]reverse[reset] (pour les canaux stéréo uniquement)
     Crossfeed :  [color=white]x0[reset] à [color=white]x100[reset]    Réverbération : [color=white]r0[reset] à [color=white]r100[reset]    Chorus : [color=white]c0[reset] à [color=white]c100[reset]
 
 Remarques :
   L'exécution de [color=light-green]mixer[reset] sans argument affiche les paramètres actuels du mixeur.
   Vous pouvez modifier les paramètres de plusieurs canaux en une seule commande.
-Si le canal n'est pas spécifié, vous pouvez définir le crossfeed, la
+Si le canal n'est pas spécifié, vous pouvez Définit le crossfeed, la
 réverbération ou le chorus globalement.
   Vous pouvez afficher la liste des périphériques MIDI disponibles avec /listmidi.
   L'option /noshow applique les modifications sans afficher les paramètres du mixeur.
@@ -2126,7 +2130,7 @@ Exemples :
   [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+%-22s %4.0f :%-4.0f %+6.2f :%-+6.2f  %-8s %5s %7s %7s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
 [color=white]Canal        Volume     Volume (dB)   Mode     Xfeed  Réverb  Chorus[reset]
@@ -2160,15 +2164,15 @@ Où :
   Pour [color=light-cyan]DUMMY[reset]      : IRQ
 
 Exemples :
-  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Écoute sur TCP:1250 en tant que serveur
-  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Se connecte à TCP:1250 en tant que client
-  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Écoute sur UDP:5000 en tant que serveur
-  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Utilise un port physique sous Linux
-  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Souris Mouse Systems
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT :1250                 : Écoute sur TCP :1250 en tant que serveur
+  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER :10.0.0.6 PORT :1250 : Se connecte à TCP :1250 en tant que client
+  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT :5000 SOCK :1        : Écoute sur UDP :5000 en tant que serveur
+  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT :ttyUSB0             : Utilise un port physique sous Linux
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE :MSM                      : Souris Mouse Systems
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
-COM%d: %s %s
+COM%d : %s %s
 
 .
 :PROGRAM_SERIAL_BAD_PORT
@@ -2250,7 +2254,7 @@ Où :
 
 Remarques :
   L'exécution de [color=light-green]cls[reset] efface tout le texte sur l'écran DOS, à l'exception de l'invite de commande
-  (par exemple, [color=white]Z:\>[reset] ou [color=white]C:\GAMES>[reset]) dans le coin supérieur gauche de l'écran.
+  (par exemple, [color=white]Z :\>[reset] ou [color=white]C :\GAMES>[reset]) dans le coin supérieur gauche de l'écran.
 
 Exemples :
   [color=light-green]cls[reset]
@@ -2369,11 +2373,11 @@ Remarques :
   La COMMANDE est exécutée si l'une des trois conditions d'utilisation est remplie.
   Si [color=light-magenta]not[reset] est spécifié, alors la commande s'exécute uniquement avec la condition fausse.
   La condition [color=light-cyan]errorlevel[reset] est utile pour vérifier si un programme s'est exécuté correctement.
-  Si [color=white]CH1[reset] ou [color=white]CH2[reset] peut être vide, vous pouvez les entourer de guillemets (").
+  Si [color=white]CH1[reset] ou [color=white]CH2[reset] peut être vide, vous pouvez les entourer de guillemets (').
 
 Exemples :
   [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=light-green]if[reset] [color=white]"%%mavariable%%"=="machaine"[reset] echo Bonjour le monde !
+  [color=light-green]if[reset] [color=white]'%%mavariable%%'=='machaine'[reset] echo Bonjour le monde !
   [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]fichier.txt[reset] exit
 
 .
@@ -2385,7 +2389,7 @@ Où :
   [color=light-cyan]ETIQUETTE[reset] est une chaîne de texte utilisée dans le programme batch comme étiquette.
 
 Remarques :
-  Une étiquette est sur une ligne à part, commençant par deux-points (:).
+  Une étiquette est sur une ligne à part, commençant par deux-points ( :).
   L'étiquette doit être unique et peut être n'importe où dans le programme batch.
 
 Exemples :
@@ -2481,8 +2485,8 @@ Remarques :
   Vous pouvez supprimer un lecteur assigné avec l'option /d.
 
 Exemples :
-  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\jeux[reset]
-  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
+  [color=light-green]subst[reset] [color=white]d :[reset] [color=light-cyan]c :\jeux[reset]
+  [color=light-green]subst[reset] [color=white]e :[reset] [color=light-cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
@@ -2530,7 +2534,7 @@ Impossible d'obtenir les attributs : %s
 
 .
 :SHELL_CMD_ATTRIB_SET_ERROR
-Impossible de définir les attributs : %s
+Impossible de Définit les attributs : %s
 
 .
 :SHELL_CMD_CHOICE_EOF
@@ -2546,20 +2550,20 @@ Impossible de définir les attributs : %s
 :SHELL_CMD_PATH_HELP_LONG
 Utilisation :
   [color=light-green]path[reset]
-  [color=light-green]path[reset] [color=light-cyan][[lecteur:]chemin[;...][reset]
+  [color=light-green]path[reset] [color=light-cyan][[lecteur :]chemin[;...][reset]
 
 Où :
-  [color=light-cyan][[lecteur:]chemin[;...][reset] est un chemin contenant un lecteur et un répertoire.
+  [color=light-cyan][[lecteur :]chemin[;...][reset] est un chemin contenant un lecteur et un répertoire.
   Plusieurs chemins peuvent être spécifiés, séparés par un point-virgule (;).
 
 Remarques :
 Un paramètre avec uniquement un point-virgule (;) efface tous les paramètres de
 chemin de recherche.
-  Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
+  Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z :\[reset]
 
 Exemples :
   [color=light-green]path[reset]
-  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z :\;C :\DOS[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
@@ -2601,11 +2605,11 @@ et
 :DOSBOX_HELP
 Utilisation : %s [OPTION]... [CHEMIN]
 
-CHEMIN                     Si CHEMIN est un dossier, il est monté comme C:.
+CHEMIN                     Si CHEMIN est un dossier, il est monté comme C :.
                            Si CHEMIN est une image disque amorçable (IMA/IMG), elle est démarrée.
-                           Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D:.
+                           Si CHEMIN est une image CD-ROM (CUE/ISO), elle est montée comme D :.
                            Si CHEMIN est un exécutable DOS (BAT/COM/EXE), son dossier parent
-                           est monté comme C: et l’exécutable est lancé. À la fin de
+                           est monté comme C : et l’exécutable est lancé. À la fin de
                            l’exécution, DOSBox Staging se ferme.
 
 Liste des options disponibles :
@@ -3033,7 +3037,7 @@ Polonais, compatible avec la page de code 852
 Grec-2
 .
 :CODE_PAGE_DESCRIPTION_770
-Encodage baltique, RST 1095:89
+Encodage baltique, RST 1095 :89
 .
 :CODE_PAGE_DESCRIPTION_771
 Lituanien et russe, encodage KBL
@@ -3842,7 +3846,7 @@ Liste des nuanceurs GLSL disponibles
 .
 :DOSBOX_HELP_LIST_GLSHADERS_2
 Les nuanceurs ci-dessus peuvent être utilisés exactement comme indiqué
-dans le paramètre de configuration « glshader », sans qu'il soit nécessaire
+dans le paramètre de configuration ' glshader ', sans qu'il soit nécessaire
 d'indiquer le chemin des ressources ou l'extension .glsl.
 .
 :DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
@@ -3852,7 +3856,7 @@ Le chemin '%s' n'existe pas.
 Le chemin '%s' n'a pas de nuanceurs.
 .
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
-Le chemin '%s' comporte:
+Le chemin '%s' comporte :
 .
 :TITLEBAR_CYCLES_MS
 cycles/ms
@@ -3891,22 +3895,22 @@ souris transparente, %s+F10 pour capturer le curseur
 souris transparente, %s+F10 ou clic-milieu le curseur
 .
 :CONFIGITEM_OUTPUT_OPENGL_DEFAULT
-Le moteur de rendu à utiliser pour la sortie graphique (« opengl » par défaut).
-Seul le moteur « opengl » prend en charge les nuanceurs et constitue donc l'option préférée.
+Le moteur de rendu à utiliser pour la sortie graphique (' opengl ' par défaut).
+Seul le moteur ' opengl ' prend en charge les nuanceurs et constitue donc l'option préférée.
 Le moteur 'texture' n'est fourni qu'en dernier recours en cas de bogues ou de pilotes
 bogués ou inexistants (ce qui est extrêmement rare).
 .
 :CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
-Le moteur de rendu à utiliser pour la sortie graphique (« texture » par défaut).
+Le moteur de rendu à utiliser pour la sortie graphique (' texture ' par défaut).
 .
 :CONFIGITEM_OUTPUT_OPENGL
-  opengl:     Moteur OpenGL avec support des nuanceurs (par défaut).
+  opengl :     Moteur OpenGL avec support des nuanceurs (par défaut).
 .
 :CONFIGITEM_OUTPUT_TEXTURE
-  texture:    Le moteur de rendu de SDL avec interpolation bilinéaire.
+  texture :    Le moteur de rendu de SDL avec interpolation bilinéaire.
 .
 :CONFIGITEM_OUTPUT_TEXTURENB
-texturenb:  Le moteur de rendu de SDL avec interpolation du plus proche voisin
+texturenb :  Le moteur de rendu de SDL avec interpolation du plus proche voisin
 (non-bilinéaire).
 .
 :CONFIG_WINDOW_TITLEBAR
@@ -3914,9 +3918,9 @@ Liste séparée par des espaces des informations à afficher dans la barre de ti
 ('program=name dosbox=auto cycles=on mouse=full' par défaut). Si un paramètre
 n'est pas spécifié, sa valeur par défaut est utilisée.
 Les informations pouvant être affichées sont les suivantes
-animation=<valeur> : si la valeur est « on » (par défaut), la marque
+animation=<valeur> : si la valeur est ' on ' (par défaut), la marque
 d'enregistrement audio/vidéo est animée.
-                      d'enregistrement audio/vidéo. La valeur « off » désactive l'animation.
+                      d'enregistrement audio/vidéo. La valeur ' off ' désactive l'animation.
                       Ceci est utile si votre police d'écran produit des résultats bizarres.
   program=<valeur> :    Affiche le nom du programme en cours d'exécution.
                       <valeur> peut être l'un des éléments suivants
@@ -3924,14 +3928,14 @@ d'enregistrement audio/vidéo est animée.
                         name : nom du programme, avec l'extension du fichier (par défaut).
                         chemin :      Nom, extension et chemin absolu complet.
                         segment :   Affiche le nom du segment de mémoire du programme.
-                        Title » (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire « Title », (Title), <Title> ou [Title].
-                                   « Titre », (Titre), <Titre> ou [Titre].
+                        Title ' (titre) :   Nom personnalisé. Vous pouvez également utiliser le formulaire ' Title ', (Title), <Title> ou [Title].
+                                   ' Titre ', (Titre), <Titre> ou [Titre].
                       Remarque : Avec certains logiciels (comme Windows 3.1x en mode amélioré),
                       il est impossible de reconnaître le nom ou le chemin d'accès complet du programme.
-                      Dans ce cas, le terme « segment » est utilisé à la place du nom du programme ou du chemin d'accès. 
-  dosbox=<valeur> :     Affiche « DOSBox Staging » dans la barre de titre.
+                      Dans ce cas, le terme ' segment ' est utilisé à la place du nom du programme ou du chemin d'accès. 
+  dosbox=<valeur> :     Affiche ' DOSBox Staging ' dans la barre de titre.
                       <valeur> peut être l'un des éléments suivants
-                        always :   Affiche toujours « DOSBox Staging ».
+                        always :   Affiche toujours ' DOSBox Staging '.
                         auto :     Ne l'affiche que si aucun programme n'est en cours d'exécution ou si
                                   ou si l'option 'program=none' est activée (valeur par défaut).
   version=<valeur> :    Affiche les informations relatives à la version de DOSBox.
@@ -3949,7 +3953,7 @@ relâcher le curseur (par défaut).
                                    de capturer ou de relâcher le curseur (par défaut).
 .
 :CONFIG_VMEM_DELAY
-Définit l'émulation du délai d'accès à la mémoire vidéo (« off » par défaut).
+Définit l'émulation du délai d'accès à la mémoire vidéo (' off ' par défaut).
   off :      Désactive l'émulation du délai d'accès à la mémoire vidéo (par défaut).
              Cette option est préférable pour la plupart des jeux afin d'éviter les ralentissements.
   on :       Active l'émulation du délai d'accès à la mémoire vidéo (3000 ns).
@@ -3965,7 +3969,7 @@ Remarque : Ne définissez cette valeur que si nécessaire pour un jeu,
 Utiliser des polices de 8 pixels de large sur les adaptateurs VGA (désactivé par défaut).
 .
 :CONFIG_VGA_RENDER_PER_SCANLINE
-Émuler un rendu VGA précis par ligne de balayage (« on » par défaut).
+Émuler un rendu VGA précis par ligne de balayage (' on ' par défaut).
 Actuellement, vous devez désactiver cette fonction pour quelques jeux,
 sinon ils se planteront au démarrage
 (par exemple, Deus, Ishar 3, Robinson's Requiem, Time Warriors).
@@ -3974,19 +3978,19 @@ sinon ils se planteront au démarrage
 De nombreux jeux ouvrent tous leurs fichiers avec des autorisations d'écriture,
 même les fichiers qu'ils ne modifient jamais.
 Ce paramètre vous permet de protéger ces fichiers en écriture tout en permettant
-au jeu de les lire (« on » par défaut). Un deuxième cas d'utilisation : si vous
+au jeu de les lire (' on ' par défaut). Un deuxième cas d'utilisation : si vous
 utilisez un système de fichiers en copie sur écriture ou en réseau,
 ce paramètre évite de de déclencher des opérations d'écriture pour ces fichiers
 protégés en écriture.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
 Autoriser les raccourcis pour simplifier la gestion de la configuration ('on' par défaut).
-Par exemple, au lieu de « config -set sbtype sb16 », il suffit d'exécuter
+Par exemple, au lieu de ' config -set sbtype sb16 ', il suffit d'exécuter
 'sbtype sb16', et au lieu de 'config -get sbtype', il suffit d'exécuter
 la commande 'sbtype'.
 .
 :CONFIG_FRAMESKIP
-Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre « host_rate ».
+Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre ' host_rate '.
 .
 :CONFIGITEM_GLSHADER
 Définit un nuanceur d'émulation de moniteur CRT adaptatif ou un shader GLSL normal
@@ -3994,11 +3998,11 @@ dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur CR
   crt-auto :               Un shader CRT qui donne la priorité à l'intention du développeur
                            et la façon dont les gens ont vécu le jeu au moment de sa sortie (par défaut).
                           La variante de nuanceur appropriée est automatiquement sélectionnée
-                          en fonction de la norme graphique du mode vidéo actuel et de la taille de la vue,
-                          indépendamment du paramètre « machine ». Cela signifie que
+                          en fonction de la norme graphique du mode vidéo actuel et de la taille de la fenêtre d'afichage,
+                          indépendamment du paramètre ' machine '. Cela signifie que
                           que même sur une carte VGA émulée, vous obtiendrez
                           une émulation authentique de moniteur EGA à balayage unique avec
-                          avec des « lignes de balayage épaisses » visibles dans les jeux EGA.
+                          avec des ' lignes de balayage épaisses ' visibles dans les jeux EGA.
   crt-auto-machine :       Similaire à 'crt-auto', mais il choisit un moniteur CRT
                           fixe adapté à l'adaptateur vidéo configuré via le paramètre 'machine'.
                           Par exemple, les jeux CGA et EGA apparaîtront en double balayage
@@ -4017,7 +4021,7 @@ Les autres nuanceurs disponibles sont (liste non exhaustive) :
   bilinear :              Augmente l'échelle de l'image en utilisant l'interpolation bilinéaire
                           (donne une image floue).
   nearest :                Augmente l'échelle de l'image en utilisant l'interpolation du plus proche voisin
-                          le plus proche (également connu sous le nom de « non bilinéaire »).
+                          le plus proche (également connu sous le nom de ' non bilinéaire ').
                           Résulte en une image la plus nette possible au détriment des
                           pixels irréguliers (ce problème se pose moins sur les écrans à haute
                           résolution).
@@ -4030,14 +4034,14 @@ Dans tous les cas, vous pouvez omettre l'extension de fichier '.glsl' du nuanceu
 :CONFIG_INTEGER_SCALING
 Contraint le facteur d'échelle horizontal ou vertical à la plus grande
 valeur entière pour que l'image s'adapte toujours à la fenêtre d'affichage
- (« auto » par défaut).
+ (' auto ' par défaut).
 Le rapport de forme configuré est toujours maintenu en fonction des paramètres
-« aspect » et « viewport », ce qui peut entraîner un facteur d'échelle non entier
+' aspect ' et ' viewport ', ce qui peut entraîner un facteur d'échelle non entier
 dans l'autre dimension.
 Si l'image est plus grande que la fenêtre d'affichage, la mise à l'échelle
-basées sur des nombres entiers est désactivée automatiquement (comme pour « off »).
+basées sur des nombres entiers est désactivée automatiquement (comme pour ' off ').
 Valeurs possibles :
-  auto : mode « vertical » activé automatiquement pour les nuanceurs CRT adaptatifs
+  auto : mode ' vertical ' activé automatiquement pour les nuanceurs CRT adaptatifs
                 uniquement (voir 'glshader'), sinon 'off' (par défaut).
   vertical :    Limite le facteur d'échelle vertical à des valeurs entières.
                C'est le paramètre recommandé pour les nuanceurs CRT afin d'éviter
@@ -4047,10 +4051,10 @@ Valeurs possibles :
                  la fenêtre d'affichage tout en conservant le rapport hauteur/largeur configuré.
 .
 :CONFIG_VIEWPORT
-Définit la taille de la fenêtre d'affichage (« fit » par défaut). Il s'agit de la zone
+Définit la taille de la fenêtre d'affichage (' fit ' par défaut). Il s'agit de la zone
 maximale pouvant être dessinée ;
 la sortie vidéo est toujours contenue dans la fenêtre d'affichage en tenant compte
-du rapport de forme configuré (voir « aspect »). Valeurs possibles :
+du rapport de forme configuré (voir ' aspect '). Valeurs possibles :
   fit :             Ajuste la fenêtre d'affichage à la fenêtre ou à l'écran disponible (par défaut).
                    Il peut y avoir des zones de remplissage (zones noires) autour de l'image si
                    'integer_scaling' est activé.
@@ -4058,10 +4062,10 @@ du rapport de forme configuré (voir « aspect »). Valeurs possibles :
                    (par exemple, 960x720). La taille spécifiée ne doit pas être plus grande que
                    le bureau. Si elle est supérieure à la taille de la fenêtre,
                    elle est mise à l'échelle pour tenir dans la fenêtre.
-  N%% :              Semblable à « WxH », mais la taille est spécifiée en pourcentage
+  N%% :              Semblable à ' WxH ', mais la taille est spécifiée en pourcentage
                     de la taille du bureau.
   H%% V%% relatif :  La fenêtre d'affichage est définie comme un rectangle 
-                   au rapport d'aspect 4:3 qui s'adapte à la fenêtre ou à l'écran disponible.
+                   au rapport d'aspect 4 :3 qui s'adapte à la fenêtre ou à l'écran disponible.
                    la fenêtre/l'écran disponible, puis elle est mise à l'échelle par les facteurs
                    d'échelle horizontale et verticale H et V (la plage valide est comprise entre
                    20 % à 300 %). La fenêtre d'affichage résultante peut s'étendre
@@ -4071,10 +4075,10 @@ du rapport de forme configuré (voir « aspect »). Valeurs possibles :
                    des moniteurs CRT.
 
 Remarques :
-  - L'utilisation du mode « relative » avec l'option « integer_scaling » activée peut donner
+  - L'utilisation du mode ' relative ' avec l'option ' integer_scaling ' activée peut donner
     des résultats surprenants (mais corrects).
-  - Vous pouvez utiliser les raccourcis clavier « Stretch Axis », « Inc Stretch » et « Dec Stretch »
-    pour définir l'étirement en mode « relative » en temps réel.
+  - Vous pouvez utiliser les raccourcis clavier ' Stretch Axis ', ' Inc Stretch ' et ' Dec Stretch '
+    pour Définit l'étirement en mode ' relative ' en temps réel.
 .
 :CONFIG_CPU_CYCLES
 Vitesse du CPU émulé ('3000' par défaut). Si 'cpu_cycles_protected' est sur
@@ -4085,7 +4089,7 @@ Vitesse du CPU émulé ('3000' par défaut). Si 'cpu_cycles_protected' est sur
              Le nombre de cycles par milliseconde peut varier.
              Peu recommandé pour certains programmes DOS.
 Remarques :
-  - Le réglage de la vitesse du processeur sur « max » ou sur des valeurs fixes élevées
+  - Le réglage de la vitesse du processeur sur ' max ' ou sur des valeurs fixes élevées
     peut entraîner des pertes de son et un décalage en règle général.
   - Pour obtenir les meilleurs résultats, réglez la valeur de cycle fixe la plus basse qui
     permette de faire tourner le jeu à une vitesse acceptable.
@@ -4118,23 +4122,23 @@ Note : Voir le paramètre 'cpu_cycles' pour plus d'informations.
 .
 :CONFIG_CPU_THROTTLE
 Réduire dynamiquement le nombre de cycles du CPU émulé si le CPU hôte
-ne peut pas suivre (« off » par défaut).
+ne peut pas suivre (' off ' par défaut).
 N'affecte que les paramètres de cycles fixes. Lorsqu'il est activé, le nombre de cycles par
 milliseconde peut varier, ce qui peut causer des problèmes dans certains programmes DOS.
 .
 :CONFIG_VOODOO
 Activer l'émulation 3dfx Voodoo (activée par défaut). Il s'agit d'une émulation
-authentique de bas niveau de la carte Voodoo non déchargé via OpenGL, ce qui nécessite un
+authentique et bas niveau de la carte Voodoo non déchargée via OpenGL, ce qui nécessite un
 CPU hôte puissant. La plupart des jeux nécessitent que le pilote DOS Glide
-appelé 'GLIDE2X.OVL'
-soit dans le chemin d'accès pour que le mode 3dfx fonctionne.
+appelé 'GLIDE2X.OVL' soit dans le chemin d'accès pour fonctionner en mode 3dfx.
 De nombreux jeux incluent leurs propres variantes du pilote Glide
-mais pour certains d'entre eux, vous devez fournir une version appropriée de 'GLIDE2X.OVL'.
+mais pour certains d'entre eux, vous devez fournir une version appropriée de
+'GLIDE2X.OVL'.
 Un petit nombre de jeux intègrent le pilote Glide dans leur code, de sorte
 qu'ils n'ont pas besoin de 'GLIDE2X.OVL'.
 .
 :CONFIG_VOODOO_MEMSIZE
-Définir la quantité de mémoire vidéo pour les graphiques 3dfx Voodoo.
+Définit la quantité de mémoire vidéo pour les graphiques 3dfx Voodoo.
 La mémoire est utilisée par l'interface Frame Buffer (FBI) et l'unité de mappage
 de texture (TMU) comme suit :
    4 : 2 Mo pour la FBI et une TMU de 2 Mo (par défaut).
@@ -4148,7 +4152,7 @@ Utiliser les fils d'exécution pour améliorer les performances 3dfx Voodoo :
   auto :     Utiliser jusqu'à 16 fils en fonction des cœurs de CPU hôte disponibles
                 (par défaut).
   <valeur> : Définit un nombre spécifique de threads entre 1 et 128.
-Note : Définir une valeur plus élevée que le nombre de CPU logiques supportés par votre
+Note : Définit une valeur plus élevée que le nombre de CPU logiques supportés par votre
 matériel est très susceptible de nuire aux performances. Cette fonction a montré
 après mesures
       qu'elle s'adapte bien à 8-16 threads, mais elle n'a pas été testée sur un
@@ -4158,34 +4162,34 @@ après mesures
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
 Utilisez le filtrage bilinéaire pour émuler l'effet de lissage des textures
-des cartes 3dfx Voodoo (« on » par défaut). Le filtrage bilinéaire peut
+des cartes 3dfx Voodoo (' on ' par défaut). Le filtrage bilinéaire peut
 avoir un impact sur le nombre d'images par seconde sur les systèmes plus lents ;
 essayez de le désactiver si vous n'obtenez pas des performances suffisantes.
 .
 :CONFIG_CAPTURE_DIR
 Répertoire où sont enregistrées les différentes captures, telles que les captures
-audio, vidéo, MIDI et les captures d'écran. (« capture » dans le répertoire de 
+audio, vidéo, MIDI et les captures d'écran. (' capture ' dans le répertoire de 
 travail actuel par défaut).
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
-Définit le format de capture de l'action de capture d'écran par défaut («
-upscaled » par défaut) :
+Définit le format de capture de l'action de capture d'écran par défaut ('
+upscaled ' par défaut) :
 upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport
 de forme correct est conservé,
-            en fonction du paramètre « aspect ».
+            en fonction du paramètre ' aspect '.
              Le facteur d'échelle verticale est toujours un nombre entier. Par exemple,
-             un contenu de 320x200 est mis à l'échelle en 1600x1200 (mise à l'échelle entière de 5:6),
-             640x480 à 1920x1440 (mise à l'échelle entière 3:3), et 640x350 à
-1400x1050 (mise à l'échelle 2,1875:3 ; fractionnaire horizontalement et entière
+             un contenu de 320x200 est mis à l'échelle en 1600x1200 (mise à l'échelle entière de 5 :6),
+             640x480 à 1920x1440 (mise à l'échelle entière 3 :3), et 640x350 à
+1400x1050 (mise à l'échelle 2,1875 :3 ; fractionnaire horizontalement et entière
 verticalement).
              Les noms de fichiers des captures d'écran mises à l'échelle
-             n'ont pas de postfixe (par exemple, « image0001.png »).
+             n'ont pas de postfixe (par exemple, ' image0001.png ').
   rendered :  L'image après rendu et après traitement, affichée à l'écran est capturée.
              Les noms de fichiers des captures d'écran rendues se terminent par
              '-rendered' (par exemple 'image0001-rendered.png').
   raw  :       Le contenu du framebuffer brut est capturé (ce qui donne
              toujours des pixels carrés). Les noms de fichiers des captures d'écran brutes
-             se terminent par « -raw » (par exemple, « image0001-raw.png »).
+             se terminent par ' -raw ' (par exemple, ' image0001-raw.png ').
 Si plusieurs formats sont spécifiés, séparés par des espaces, l'action de capture d'écran
 par défaut enregistrera plusieurs images dans les formats spécifiés.
 Des raccourcis clavier permettant de prendre des captures d'écran dans des
@@ -4205,11 +4209,11 @@ fenêtre DOSBox et le reste du bureau.
              Ce mode ne fonctionne pas correctement avec tous les jeux.
              Windows 3.1x peut être rendu compatible avec un pilote de souris personnalisé.
   nomouse :   Cache le curseur de la souris et n'envoie pas les données de la souris au jeu.
-Pour le contrôle de l'écran tactile, utilisez « seamless ».
+Pour le contrôle de l'écran tactile, utilisez ' seamless '.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Relâchez la souris capturée par un clic du milieu, et capturez-la
-également en mode transparent (« on » par défaut).
+également en mode transparent (' on ' par défaut).
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Permettre un comportement transparent de la souris et le relâchement du pointeur
@@ -4225,17 +4229,17 @@ Sensibilité globale de la souris pour les axes horizontal et vertical, en pourc
 virgules ou des points-virgules
 (c'est-à-dire 100,150). Les valeurs négatives inversent l'axe, tandis que zéro
 le désactive.
-Il suffit  d'une seule valeur pour définir la sensibilité pour les deux axes.
+Il suffit  d'une seule valeur pour Définit la sensibilité pour les deux axes.
 La sensibilité peut être affinée pour chaque interface de souris à l'aide de l'outil interne
 MOUSECTL.COM disponible sur le lecteur Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Permet de contourner les paramètres d'accélération et de sensibilité de la souris
-de votre système d'exploitation (« on » par défaut). Fonctionne en plein écran
+de votre système d'exploitation (' on ' par défaut). Fonctionne en plein écran
 ou lorsque la souris est capturée en mode fenêtré.
 .
 :CONFIG_BUILTIN_DOS_MOUSE_DRIVER
-Activer le pilote de souris DOS intégré (« on » par défaut). Il en résulte
+Activer le pilote de souris DOS intégré (' on ' par défaut). Il en résulte
 la latence la plus faible possible et les mouvements de souris les plus fluides,
 donc ne le désactivez
 et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par
@@ -4341,7 +4345,7 @@ Si ce paramètre est défini, les banques de sons sont d'abord recherchées dans
 puis dans les emplacements standards du système.
 .
 :CONFIG_SOUNDFONT_VOLUME
-Définir le volume de la banque de sons en pourcentage (100 par défaut).
+Définit le volume de la banque de sons en pourcentage (100 par défaut).
 Ceci est utile pour normaliser le volume de différentes banques de sons.
 La valeur du pourcentage peut varier de 1 à 800.
 .
@@ -4380,44 +4384,44 @@ Filtre pour la sortie audio du Roland Sound Canvas :
 Modèles de SC-55
 .
 :SOUNDCANVAS_ACTIVE_MODEL_LABEL
-Modèle actif:
+Modèle actif :
 .
 :CONFIGITEM_MIDIDEVICE_PORT
-  port:         Un port MIDI de l'interface MIDI du système d'exploitation hôte
- (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre « midiconfig ».
+  port :         Un port MIDI de l'interface MIDI du système d'exploitation hôte
+ (par défaut). Vous pouvez configurer le port à utiliser à l'aide du paramètre ' midiconfig '.
 .
 :CONFIGITEM_MIDIDEVICE_COREAUDIO
-  coreaudio:    Le synthétiseur MIDI intégré à macOS. La banque de sons à utiliser
+  coreaudio :    Le synthétiseur MIDI intégré à macOS. La banque de sons à utiliser
 peut être spécifiée à l'aide du paramètre 'midiconfig'.
 .
 :CONFIGITEM_MIDIDEVICE_MT32
-  mt32:         Le synthétiseur interne Roland MT-32 (voir la section [mt32]).
+  mt32 :         Le synthétiseur interne Roland MT-32 (voir la section [mt32]).
 .
 :CONFIGITEM_MIDIDEVICE_SOUNDCANVAS
-  soundcanvas:  Le synthétiseur interne Roland SC-55 (voir la section [soundcanvas]).
+  soundcanvas :  Le synthétiseur interne Roland SC-55 (voir la section [soundcanvas]).
 .
 :CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
-  fluidsynth:   Le synthétiseur MIDI interne FluidSynth (lecteur de banques de sons)
+  fluidsynth :   Le synthétiseur MIDI interne FluidSynth (lecteur de banques de sons)
  (voir la section [fluidsynth]).
 .
 :CONFIGITEM_MIDIDEVICE_NONE
-  none:         Désactive la sortie MIDI.
+  none :         Désactive la sortie MIDI.
 .
 :CONFIGITEM_MIDICONFIG_WINDOWS_OR_MACOS
-  - Lorsque vous utilisez "mididevice = port", trouvez l'ID ou le nom du port MIDI que vous
- souhaitez utiliser avec la commande DOS "MIXER /LISTMIDI", puis définissez l'ID
- ou une sous-chaîne du nom (par exemple, pour utiliser le port appelé "loopMIDI Port A"
- avec l'ID 2, définissez "midiconfig = 2" ou "midiconfig = port a").
+  - Lorsque vous utilisez 'mididevice = port', trouvez l'ID ou le nom du port MIDI que vous
+ souhaitez utiliser avec la commande DOS 'MIXER /LISTMIDI', puis définissez l'ID
+ ou une sous-chaîne du nom (par exemple, pour utiliser le port appelé 'loopMIDI Port A'
+ avec l'ID 2, définissez 'midiconfig = 2' ou 'midiconfig = port a').
 .
 :CONFIGITEM_MIDICONFIG_COREAUDIO
-  - Lorsque vous utilisez « mididevice = coreaudio », ce paramètre spécifie la banque de sons
+  - Lorsque vous utilisez ' mididevice = coreaudio ', ce paramètre spécifie la banque de sons
  à utiliser. Vous devez utiliser le chemin absolu du fichier SoundFont.
 .
 :CONFIGITEM_MIDICONFIG_LINUX
-- Lorsque vous utilisez « mididevice = port », utilisez la commande Linux «
-aconnect -l » pour répertorier
-tous les ports MIDI ouverts et en sélectionner un (par exemple, « midiconfig =
-14:0 » pour le séquenceur
+- Lorsque vous utilisez ' mididevice = port ', utilisez la commande Linux '
+aconnect -l ' pour répertorier
+tous les ports MIDI ouverts et en sélectionner un (par exemple, ' midiconfig =
+14 :0 ' pour le séquenceur
  client 14, port 0).
 .
 :CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
@@ -4431,7 +4435,7 @@ tous les ports MIDI ouverts et en sélectionner un (par exemple, « midiconfig =
     (par exemple, 'midiconfig = 2 delaysysex').
 .
 :CONFIG_RAW_MIDI_OUTPUT
-Activer la sortie MIDI brute, non altérée (« off » par défaut).
+Activer la sortie MIDI brute, non altérée (' off ' par défaut).
 Les pilotes MIDI de nombreux jeux ne sont pas entièrement conformes à la norme MIDI,
 , ce qui rend l'édition des enregistrements MIDI de ces jeux très sujette aux erreurs et
 gênante dans les séquenceurs MIDI, entraînant souvent des notes suspendues ou manquantes.
@@ -4477,7 +4481,7 @@ trouvez d'autres jeux
 dans ce cas.
 .
 :CONFIG_CMS
-Active l'émulation CMS (« auto » par défaut).
+Active l'émulation CMS (' auto ' par défaut).
  off :   Désactive l'émulation CMS (sauf lorsque le Game Blaster est sélectionné).
  on :    Active l'émulation CMS sur Sound Blaster 1 et 2.
  auto :  Active automatiquement l'émulation CMS pour la Sound Blaster 1 et
@@ -4505,7 +4509,7 @@ Modèle d'émulation de haut-parleur PC :
              brouillé ou un silence dans un petit nombre de programmes.
  discrete :  Émulation simplifiée du haut-parleur du PC ;
                  n'utilisez cette option que pour des titres spécifiques sur
-                qui vous posent des problèmes avec le modèle « impulse ».
+                qui vous posent des problèmes avec le modèle ' impulse '.
  none/off :  N'émule pas le haut-parleur du PC.
 .
 :CONFIG_ZERO_OFFSET
@@ -4527,10 +4531,10 @@ Paramétrer l'émulation du son Tandy/PCjr 3 Voice :
 :CONFIG_TANDY_FADEOUT
 Permet de faire disparaître la sortie du synthétiseur Tandy
 après la dernière écriture sur le port IO :
-  off:       Ne pas faire de fondu ; la sortie résiduelle sera jouée
+  off :       Ne pas faire de fondu ; la sortie résiduelle sera jouée
               pour toujours (par défaut).
-  on:        Attendre 0,5s avant d'effectuer un fondu sur une période de 0,5s.
-  <custom>:  Définition personnalisée du fondu ; voir “opl_fadeout”
+  on :        Attendre 0,5s avant d'effectuer un fondu sur une période de 0,5s.
+  <custom> :  Définition personnalisée du fondu ; voir “opl_fadeout”
                      pour plus de détails.
 .
 :CONFIG_DISNEY
@@ -4538,46 +4542,46 @@ Utilisez 'lpt_dac = disney' pour activer le Disney Sound Source.
 .
 :CONFIG_REELMAGIC
 ReelMagic (alias REALmagic) Prise en charge de la lecture MPEG :
-  off:       Désactiver le support (par défaut).
-  cardonly:  Initialiser la carte sans charger le pilote FMPDRV.EXE.
-  on:       Initialise la carte et charge le pilote FMPDRV.EXE au démarrage.
+  off :       Désactiver le support (par défaut).
+  cardonly :  Initialiser la carte sans charger le pilote FMPDRV.EXE.
+  on :       Initialise la carte et charge le pilote FMPDRV.EXE au démarrage.
 .
 :CONFIG_REELMAGIC_KEY
 Définit la clé magique 32 bits utilisée pour décoder les vidéos du jeu :
-  auto:      Utilise les routines intégrées pour déterminer la clé (valeur par défaut).
-  common:    Utilise la clé la plus couramment utilisée, qui est 0x40044041.
-  thehorde:  Utilise la clé de The Horde, qui est 0xC39D7088.
-  <custom>:  Définit une clé personnalisée au format hexadécimal (ex. : 0x12345678).
+  auto :      Utilise les routines intégrées pour déterminer la clé (valeur par défaut).
+  common :    Utilise la clé la plus couramment utilisée, qui est 0x40044041.
+  thehorde :  Utilise la clé de The Horde, qui est 0xC39D7088.
+  <custom> :  Définit une clé personnalisée au format hexadécimal (ex. : 0x12345678).
 
 .
 :CONFIG_REELMAGIC_FCODE
 Remplace la logique de rafraîchissement d'image utilisée
 pendant la lecture vidéo :
-  0:       Pas de remplacement : tentative de découverte
+  0 :       Pas de remplacement : tentative de découverte
            automatique de la fréquence (par défaut).
-  1 à 7:   Remplace la fréquence d'images par l'une des suivantes
+  1 à 7 :   Remplace la fréquence d'images par l'une des suivantes
              (utiliser 1 à 7) :
            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, ou 7=59.94 images/sec.
 
 .
 :CONFIG_PCJR_MEMORY_CONFIG
 Disposition de la mémoire du PCjr ('expanded' par défaut).
-  expanded:  640 Ko de mémoire totale avec les applications résidant
+  expanded :  640 Ko de mémoire totale avec les applications résidant
               au-dessus de 128 Ko.
              Compatible avec la plupart des jeux.
-  standard:  128 Ko de mémoire totale avec les applications résidant
+  standard :  128 Ko de mémoire totale avec les applications résidant
              en dessous de 96 Ko.
              Nécessaire pour certains jeux plus anciens (ex. : Jumpman, Troll).
 
 .
 :CONFIG_LOCALE_PERIOD
 Définit les paramètres régionaux ('native' par défaut).
-  historic:  Si des données sont disponibles pour le pays donné,
+  historic :  Si des données sont disponibles pour le pays donné,
              imiter l'ancien comportement de DOS
              lors de l'affichage de l'heure, des dates ou des nombres.
-  modern:    Suivre les pratiques actuelles pour une expérience utilisateur
+  modern :    Suivre les pratiques actuelles pour une expérience utilisateur
              plus cohérente avec les systèmes hôtes typiques.
-  native:    Réutiliser les paramètres du système d'exploitation hôte,
+  native :    Réutiliser les paramètres du système d'exploitation hôte,
              quel que soit le pays défini ;
              utiliser les donnée 'modernes pour combler les lacunes lorsque
              le système de traduction DOS est trop limité pour suivre les
@@ -4591,7 +4595,8 @@ l'argument de ligne de commande '--list-layouts', par exemple, 'uk' correspond �
 la disposition
 britannique anglaise. La disposition peut être suivie du numéro de page de code, par exemple,
 'uk 850' sélectionne une police d'écran d'Europe occidentale.
-Définir sur 'auto' pour deviner les valeurs à partir des paramètres du système hôte.
+Réglez le sur 'auto' pour deviner les valeurs à partir des paramètres du
+système hôte.
 Après le démarrage, utilisez la commande 'KEYB' pour gérer les dispositions de
 clavier et les pages de code
 (exécutez 'HELP KEYB' pour plus de détails).
@@ -4642,7 +4647,7 @@ attribuées par défaut à 'serial2' et à la Gravis UltraSound.
 
 .
 :CONFIGITEM_MACADDR_SLIRP
-L'adresse MAC de la carte NE2000 ('AC:DE:48:88:99:AA' par défaut).
+L'adresse MAC de la carte NE2000 ('AC :DE :48 :88 :99 :AA' par défaut).
 .
 :CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Transférer un ou plusieurs ports TCP de l'hôte vers l'invité DOS
@@ -4651,13 +4656,13 @@ Le format est :
 port1  port2  port3 ... (ex. : 21 80 443)
 Cela transférera FTP, HTTP et HTTPS vers l'invité DOS.
 Si les ports sont réservés sur l'hôte, un mappage peut être utilisé :
-hôte:invité  ..., (ex. : 8021:21 8080:80)
+hôte :invité  ..., (ex. : 8021 :21 8080 :80)
 Cela transférera les ports 8021 et 8080 vers FTP et HTTP dans l'invité.
 Une plage de ports adjacents peut être abrégée avec un tiret :
 début-fin ... (ex. : 27910-27960)
 Cela transférera les ports 27910 à 27960 vers l'invité DOS.
 Les mappages et plages peuvent aussi être combinés :
-hdébut-hfin:gdébut-gfin ..., (ex. : 8040-8080:20-60)
+hdébut-hfin :gdébut-gfin ..., (ex. : 8040-8080 :20-60)
 Cela transférera les ports 8040 à 8080 vers 20 à 60 dans l'invité.
 Notes :
 - Si les plages mappées diffèrent, la plage la plus courte est étendue pour correspondre.
@@ -4720,7 +4725,7 @@ Notes :
 - Cette commande ne gère que les données textuelles, pas les données binaires.
 Exemples :
 [color=light-cyan]dir[reset] | [color=light-green]clip[reset]               ; copie la liste des fichiers dans le presse-papiers
-[color=light-green]clip[reset] < [color=light-cyan]Z:\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
+[color=light-green]clip[reset] < [color=light-cyan]Z :\AUTOEXEC.BAT[reset]   ; copie le fichier dans le presse-papiers
 [color=light-green]clip[reset]                     ; affiche le contenu du presse-papiers
 
 .
@@ -4734,7 +4739,7 @@ Erreur de lecture du flux en entrée.
 Monté en lecture seule
 .
 :PROGRAM_IMGMOUNT_HELP_LONG_WIN32
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Jeux\doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C :\Jeux\doom.iso[reset] -t cdrom
 
 .
 :PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
@@ -4913,19 +4918,19 @@ Commande invalide pour le canal [color=light-cyan]%s[reset] : [color=white]%s[re
 :PROGRAM_MODE_HELP_LONG
 Définit le mode d'affichage ou le taux de répétition du clavier.
 
-Utilisation:
+Utilisation :
   [color=light-green]mode[reset] [color=white]COLSxLINES[reset]
   [color=light-green]mode[reset] [color=white]COLS,LINES[reset]
   [color=light-green]mode[reset] rate=[color=white]RATE[reset] delay=[color=white]DELAY[reset]
 
-Paramètres:
+Paramètres :
   [color=white]COLS[reset]      nombre de caractères (colonnes) par ligne (40, 80 ou 132)
   [color=white]LINES[reset]     nombre de lignes à l'écran (25, 28, 30, 34, 43, 50 ou 60)
   [color=white]RATE[reset]      taux de répétition des touches, de [color=white]1[reset] à [color=white]32[reset] (1 = le plus lent, 32 = le plus rapide)
   [color=white]DELAY[reset]     délai avant répétition, de [color=white]1[reset] à [color=white]4[reset] (1 = le plus court, 4 = le plus long)
 
-Remarques:
-  - Combinaisons valides [color=white]COLSxLINES[reset] par type d'adaptateur graphique:
+Remarques :
+  - Combinaisons valides [color=white]COLSxLINES[reset] par type d'adaptateur graphique :
       Hercules           80x25
       CGA, PCjr, Tandy   40x25, 80x25
       EGA                40x25, 80x25, 80x43
@@ -4935,13 +4940,13 @@ Remarques:
   - Les modes 132x28, 132x30 et 132x34 ne sont disponibles que si `vesa_modes`
     est réglé sur `all`.
 
-Exemples:
+Exemples :
   [color=light-green]mode[reset] [color=white]132x50
   [color=light-green]mode[reset] [color=white]80x43[reset]
   [color=light-green]mode[reset] rate=[color=white]32[reset] delay=[color=white]1[reset]
 .
 :PROGRAM_MODE_INVALID_DISPLAY_MODE
-Mode d'affichage invalide: [color=white]%s[reset]
+Mode d'affichage invalide : [color=white]%s[reset]
 .
 :PROGRAM_MODE_UNSUPPORTED_DISPLAY_MODE
 Le mode d'affichage [color=white]%s[reset] n'est pas pris en charge par cet adaptateur graphique.
@@ -4955,12 +4960,12 @@ Paramètre de taux de répétition invalide.
 :PROGRAM_MORE_HELP_LONG
 Affiche la sortie d'une commande ou le contenu d'un fichier texte une page à la fois.
 
-Utilisation:
+Utilisation :
   [color=light-cyan]COMMAND[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
   [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]FILE[reset]
   [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset] ...]
 
-Paramètres:
+Paramètres :
   [color=light-cyan]COMMAND[reset]  commande dont on affiche la sortie
   [color=light-cyan]FILE[reset]     nom exact du fichier à afficher, éventuellement avec un chemin
   [color=light-cyan]PATTERN[reset]  soit un chemin vers un fichier unique, soit un chemin comportant des caractères génériques, à savoir
@@ -4972,10 +4977,10 @@ Paramètres:
   /t[color=white]n[reset]      définit la taille des tabulations, de 1 à 9, la valeur par défaut est 8
   +[color=white]nnn[reset]     saute les [color=white]nnn[reset] premières lignes du premier fichier
 
-Remarques:
+Remarques :
 - Cette commande est uniquement destinée à la consultation de fichiers texte, et
 non de fichiers binaires.
- - Les raccourcis clavier suivants sont disponibles:
+ - Les raccourcis clavier suivants sont disponibles :
    [color=yellow]Space[reset]          pour afficher l'écran suivant.
    [color=yellow]Enter[reset]          pour afficher la ligne suivante.
    [color=yellow]N[reset] ou [color=yellow]F[reset]         pour passer au fichier suivant.
@@ -4984,15 +4989,15 @@ non de fichiers binaires.
  - Également, [color=yellow]Ctrl+C[reset] peut être utilisé pour interrompre la commande lors de la lecture des données provenant du clavier,
     comme lorsque [color=light-green]more[reset] est exécuté sans aucun argument.
 - Les raccourcis clavier supplémentaires suivants sont disponibles uniquement en
-mode étendu:
+mode étendu :
    [color=yellow]P[reset] [color=white]nnn[reset]          pour afficher les [color=white]nnn[reset] lignes suivantes puis redemander.
    [color=yellow]S[reset] [color=white]nnn[reset]          pour sauter les [color=white]nnn[reset] lignes suivantes.
    [color=yellow]=[reset]              pour afficher le numéro de ligne courant.
  - L'option /p désactive certains raccourcis clavier incompatibles.
 
-Exemples: 
+Exemples : 
   [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; affiche le répertoire trié une page à la fois
-  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]   ; affiche le contenu du fichier avec une taille de tabulation de 4
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A :\MANUAL.TXT[reset]   ; affiche le contenu du fichier avec une taille de tabulation de 4
 .
 :PROGRAM_MORE_NO_FILE
 Pas de fichier d'entré trouvé.
@@ -5041,25 +5046,25 @@ Pas de fichier d'entré trouvé.
 [reset][color=brown]combien de lignes ?[reset]
 .
 :PROGRAM_MOUNT_HELP_LONG_WIN32
-[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\jeuxdos[reset]  
-[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom  
+[color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C :\jeuxdos[reset]  
+[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D :\ [reset]-t cdrom  
 [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_HELP_LONG_MACOSX
 [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]  
-[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/CD Jeu"[reset] -t cdrom  
+[color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/Volumes/CD Jeu'[reset] -t cdrom  
 [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay
 .
 :PROGRAM_MOUNT_HELP_LONG_OTHER
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jeuxdos[reset]  
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/NOMUTILISATEUR/CD Jeu"[reset] -t cdrom  
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/media/NOMUTILISATEUR/CD Jeu'[reset] -t cdrom  
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]mes_fichiers_sauvegardes[reset] -t overlay  
 .
 :PROGRAM_MOUSECTL_HELP_LONG
 Gère les souris physiques et logiques.
 
-Utilisation:
+Utilisation :
   [color=light-green]mousectl[reset] [-all]
   [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=light-cyan]NAME[reset]
   [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
@@ -5068,21 +5073,21 @@ Utilisation:
   [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
   [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
 
-Paramètres:
+Paramètres :
   [color=white]INTERFACE[reset]    une de [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
   -map -unmap  mapper/démapper la souris physique, en respectant les caractères génériques DOS dans [color=light-cyan]NAME[reset]
-  -s -sx -sy   définir la sensibilité / pour l'axe x / pour l'axe y, de -999 à +999
-  -r           définir le taux d'échantillonnage minimal de la souris
+  -s -sx -sy   Définit la sensibilité / pour l'axe x / pour l'axe y, de -999 à +999
+  -r           Définit le taux d'échantillonnage minimal de la souris
   -on -off     activer ou désactiver la souris sur l'interface donnée
   -reset       rétablir les paramètres par défaut de la souris
 
-Remarques:
+Remarques :
   - Si la sensibilité ou le taux est omis, il est réinitialisé à sa valeur par défaut.
 - La sensibilité de la souris définie dans le fichier de configuration agit
 comme un facteur d'échelle global,
     la sensibilité par interface définie par cette commande s'appliquant en complément.
 
-Exemples:
+Exemples :
   [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; demande à l'utilisateur de sélectionner les souris pour un jeu à deux joueurs
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
@@ -5127,7 +5132,7 @@ Aucune souris disponible correspondant au motif.
 [color=white]Interface      Sensibilité      Taux (Hz)     Statut[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+[color=light-cyan]%-4s[reset]          X :%+.3d Y :%+.3d       %1s %3s       %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interface     Nom de la souris[reset]
@@ -5173,7 +5178,7 @@ mappage est en cours et les souris mappées reçoivent toujours des
 :PROGRAM_SETVER_HELP_LONG
 Affiche ou définit la version DOS rapportée aux applications.
 
-Utilisation:
+Utilisation :
   [color=light-green]setver[reset] \[/b] [/p]
   [color=light-green]setver[reset] [color=light-cyan]FILE[reset] [color=light-cyan]VERSION[reset] [/q]
   [color=light-green]setver[reset] [color=light-cyan]FILE[reset] /d [/q]
@@ -5181,7 +5186,7 @@ Utilisation:
   [color=light-green]setver[reset] /d /g [/q]
   [color=light-green]setver[reset] /d /all [/q]
 
-Paramètres:
+Paramètres :
   [color=light-cyan]FILE[reset]     fichier (optionnellement avec chemin) auquel appliquer les paramètres
   [color=light-cyan]VERSION[reset]  version DOS, au format [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] ou [color=white]n[reset]
   /g       réglage global, appliqué à tous les exécutables
@@ -5192,17 +5197,17 @@ Paramètres:
   /q       mode silencieux, omet les messages de confirmation
   /delete et /quiet ont la même signification que /d et /q, respectivement
 
-Remarques:
+Remarques :
   Pour une table de version persistante, spécifiez le stockage dans le fichier de configuration
   sous la section [dos], en utilisant le réglage 'setver_table_file = [color=light-cyan]STORAGE[reset]'.
 
-Exemples:
+Exemples :
   [color=light-green]setver[reset] /b              ; affiche les paramètres sous forme de fichier batch
   [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; indique la version DOS 6.22 pour chaque fichier RETRO.COM
   [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; cesse de surcharger la version DOS rapportée
 .
 :PROGRAM_SETVER_WRONG_TABLE
-Seule la table de version dans le répertoire Z:\ est prise en charge.
+Seule la table de version dans le répertoire Z :\ est prise en charge.
 .
 :PROGRAM_SETVER_INVALID_VERSION
 Version DOS incorrecte.
@@ -5240,10 +5245,10 @@ règles pour la correspondance par nom de fichier avec chemin
 :PROGRAM_TREE_HELP_LONG
 Affiche l'arborescence du répertoire sous forme graphique.
 
-Utilisation:
+Utilisation :
   [color=light-green]tree[reset] [color=light-cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
 
-Paramètres:
+Paramètres :
   [color=light-cyan]DIRECTORY[reset]  nom du répertoire à afficher
   [color=white]ORDER[reset]      ordre d'affichage, l'un des suivants :
                  [color=white]n[reset] (par nom, alphabétique),
@@ -5260,12 +5265,12 @@ Paramètres:
   /dh        affiche également les fichiers et répertoires cachés et système
   /o[color=white]ORDER[reset]    ordonne la liste (voir ci-dessus)
 
-Remarques:
+Remarques :
   Si [color=light-cyan]DIRECTORY[reset] est omis, le répertoire courant est utilisé.
 
-Exemples:
+Exemples :
   [color=light-green]tree[reset]          ; affiche l'arborescence du répertoire à partir du répertoire courant
-  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; affiche récursivement le contenu du lecteur C:, y compris les fichiers
+  [color=light-green]tree[reset] [color=light-cyan]C :[reset] /f    ; affiche récursivement le contenu du lecteur C :, y compris les fichiers
 .
 :PROGRAM_TREE_DIRECTORY
 Arborescence du répertoire pour le volume %s
@@ -5276,12 +5281,12 @@ Trop de fichiers ou de sous-répertoires.
 :PROGRAM_FMPDRV_HELP_LONG
 Charger ou décharger le pilote intégré ReelMagic Full Motion Player.
 
-Utilisation:
+Utilisation :
   [color=light-green]fmpdrv[reset]     (charge le pilote)
   [color=light-green]fmpdrv[reset] /u  (décharge le pilote)
 
-Remarques:
-  Le paramètre de configuration "reelmagic = on" charge le pilote
+Remarques :
+  Le paramètre de configuration 'reelmagic = on' charge le pilote
   au démarrage et empêche sa décharge.
 .
 :PROGRAM_FMPDRV_TITLE
@@ -5345,18 +5350,18 @@ L'option /P n'est pas prise en charge ; veuillez utiliser la commande CHOICE.
 Affiche le volume du disque et le numéro de série, s'ils existent.
 .
 :SHELL_CMD_VOL_HELP_LONG
-Utilisation:
-  [color=light-green]vol[reset] [color=light-cyan][DRIVE:][reset]
+Utilisation :
+  [color=light-green]vol[reset] [color=light-cyan][DRIVE :][reset]
 
-Paramètres:
+Paramètres :
   [color=light-cyan]DRIVE[reset]  lettre du lecteur suivie d'un deux-points
 
-Remarques:
+Remarques :
   Exécuter [color=light-green]vol[reset] sans argument utilise le lecteur courant.
 
-Exemples:
+Exemples :
   [color=light-green]vol[reset]
-  [color=light-green]vol[reset] [color=light-cyan]c:[reset]
+  [color=light-green]vol[reset] [color=light-cyan]c :[reset]
 .
 :SHELL_CMD_VOL_OUTPUT
 
@@ -5367,23 +5372,23 @@ Exemples:
 Déplace des fichiers et renomme des fichiers et des répertoires.
 .
 :SHELL_CMD_MOVE_HELP_LONG
-Utilisation:
+Utilisation :
   [color=light-green]move[reset] [color=white]FILENAME1[,FILENAME2,...][reset] [color=light-cyan]DESTINATION[reset]
   [color=light-green]move[reset] [color=white]DIRECTORY1[reset] [color=light-cyan]DIRECTORY2[reset]
 
-Paramètres:
+Paramètres :
   [color=white]FILENAME[reset]     soit un nom de fichier exact, soit un nom inexact avec des jokers,
                qui sont l'astérisque (*) et le point d'interrogation (?);
                plusieurs noms de fichiers séparés par des virgules peuvent être indiqués
   [color=white]DIRECTORY[reset]    nom exact du répertoire, ne comportant aucun caractère générique
   [color=light-cyan]DESTINATION[reset]  nom exact de fichier ou de répertoire, sans caractères génériques
 
-Remarques:
+Remarques :
   - Si plusieurs fichiers source sont spécifiés, [color=light-cyan]DESTINATION[reset] doit être un répertoire.
     Sinon, un répertoire sera créé pour vous.
   - Si un seul fichier source est spécifié, il écrasera [color=light-cyan]DESTINATION[reset].
 
-Exemples:
+Exemples :
   [color=light-green]move[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]
   [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]mydir[reset]
 .
@@ -5394,23 +5399,23 @@ Impossible de déplacer plusieurs fichiers vers un seul fichier.
 Exécute une commande spécifiée pour chaque chaîne dans un ensemble.
 .
 :SHELL_CMD_FOR_HELP_LONG
-Utilisation:
+Utilisation :
   [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]
 
-Paramètres:
+Paramètres :
   [color=white]%VAR[reset]     un caractère représentant une variable, précédé d'un '%'
   [color=light-cyan]in[reset]       mot-clé insensible à la casse
   [color=white](SET)[reset]    ensemble de chaînes servant à remplacer les instances de [color=white]%VAR[reset] dans [color=white]COMMAND[reset]
   [color=light-cyan]do[reset]       mot-clé insensible à la casse
   [color=white]COMMAND[reset]  commande à exécuter pour chaque chaîne de [color=white](SET)[reset]
 
-Remarques:
+Remarques :
   - Dans les fichiers batch, [color=white]%VAR[reset] doit être indiqué comme [color=white]%%VAR[reset] (deux signes de pourcentage).
   - Les chaînes dans [color=white](SET)[reset] peuvent être séparées par n'importe quel séparateur DOS valide.
   - Toute chaîne dans [color=white](SET)[reset] contenant des jokers (* ou ?) s'étend à l'ensemble des fichiers correspondants dans le répertoire courant.
   - L'utilisation d'une autre commande [color=light-green]for[reset] comme [color=white]COMMAND[reset] n'est pas autorisée.
 
-Exemples:
+Exemples :
   [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
   [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 .
