@@ -1606,27 +1606,27 @@ la commande 'sbtype'.
 Envisagez de limiter le nombre d'images par seconde à l'aide du paramètre ' host_rate '.
 .
 :CONFIGITEM_GLSHADER
-Définit un nuanceur d'émulation de moniteur CRT adaptatif ou un shader GLSL normal
-dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur CRT adaptatif :
-  crt-auto :               Un shader CRT qui donne la priorité à l'intention du développeur
+Définit un nuanceur d'émulation de écran cathodique adaptatif ou un shader GLSL normal
+dans les modes de sortie OpenGL ('crt-auto' par défaut). Options du nuanceur cathodique adaptatif :
+  crt-auto :               Un shader cathodique qui donne la priorité à l'intention du développeur
                            et la façon dont les gens ont vécu le jeu au moment de sa sortie (par défaut).
                           La variante de nuanceur appropriée est automatiquement sélectionnée
                           en fonction de la norme graphique du mode vidéo actuel et de la taille de la fenêtre d'afichage,
                           indépendamment du paramètre ' machine '. Cela signifie que
                           que même sur une carte VGA émulée, vous obtiendrez
-                          une émulation authentique de moniteur EGA à balayage unique avec
+                          une émulation authentique de écran EGA à balayage unique avec
                           avec des ' lignes de balayage épaisses ' visibles dans les jeux EGA.
-  crt-auto-machine :       Similaire à 'crt-auto', mais il choisit un moniteur CRT
+  crt-auto-machine :       Similaire à 'crt-auto', mais il choisit un écran cathodique
                           fixe adapté à l'adaptateur vidéo configuré via le paramètre 'machine'.
                           Par exemple, les jeux CGA et EGA apparaîtront en double balayage
                           sur un adaptateur VGA émulé.
-  crt-auto-arcade        Émulation d'un moniteur d'arcade ou d'ordinateur domestique moins
-                          moins net qu'un moniteur PC typique, avec des lignes de balayage épaisses
+  crt-auto-arcade        Émulation d'un écran d'arcade ou d'ordinateur domestique moins
+                          moins net qu'un écran PC typique, avec des lignes de balayage épaisses
                           en mode basse résolution. Cette option fantaisiste n'existe pas dans la réalité,
                           mais elle peut être très amusante. surtout avec les portages DOS des jeux Amiga.
   crt-auto-arcade-sharp :  Une variante plus nette du nuanceur d'arcade pour ceux qui
                           qui aiment les lignes de balayage épaisses mais veulent conserver la
-                          la netteté horizontale d'un moniteur PC typique.
+                          la netteté horizontale d'un écran PC typique.
 
 Les autres nuanceurs disponibles sont (liste non exhaustive) :
   sharp :                  Augmente l'échelle de l'image en traitant les pixels comme des rectangles.
@@ -1646,7 +1646,7 @@ Dans tous les cas, vous pouvez omettre l'extension de fichier '.glsl' du nuanceu
 .
 :CONFIG_ASPECT
 Met à l'échelle la résolution verticale pour produire un aspect d'affichage 4:3,
-correspondant à celui des moniteurs à définition standard d'origine
+correspondant à celui des écrans à définition standard d'origine
 pour lequel la majorité des jeux DOS ont été conçus. Ce paramètre
 n'affecte que les modes vidéo qui utilisent des pixels non carrés, tels que
 320x200 ou 640x400 ; alors que les modes de pixels carrés, tels que 640x480
@@ -1662,10 +1662,10 @@ dans l'autre dimension.
 Si l'image est plus grande que la fenêtre d'affichage, la mise à l'échelle
 basées sur des nombres entiers est désactivée automatiquement (comme pour ' off ').
 Valeurs possibles :
-  auto : mode ' vertical ' activé automatiquement pour les nuanceurs CRT adaptatifs
+  auto : mode ' vertical ' activé automatiquement pour les nuanceurs cathodique adaptatifs
                 uniquement (voir 'glshader'), sinon 'off' (par défaut).
   vertical :    Limite le facteur d'échelle vertical à des valeurs entières.
-               C'est le paramètre recommandé pour les nuanceurs CRT afin d'éviter
+               C'est le paramètre recommandé pour les nuanceurs cathodique afin d'éviter
               les lignes de balayage inégales et les artefacts d'interférence.
   horizontal :  Limite le facteur d'échelle horizontal à des valeurs entières.
   off :         Aucune contrainte de mise à l'échelle n'est appliquée ; l'image remplit
@@ -1693,7 +1693,7 @@ du rapport de forme configuré (voir ' aspect '). Valeurs possibles :
                    au-delà de la fenêtre ou de l'écran. Utile pour forcer un affichage arbitraire
                    avec 'aspect = stretch' et pour zoomer sur l'image.
                    Ceci émule efficacement les contrôles d'étirement horizontal et vertical
-                   des moniteurs CRT.
+                   des écrans cathodiques.
 
 Remarques :
   - L'utilisation du mode ' relative ' avec l'option ' integer_scaling ' activée peut donner
@@ -1710,10 +1710,10 @@ Vous pouvez aussi faire défiler les couleurs disponibles avec F11.
 Définit l'interprétation des couleurs RGBI CGA. Affecte tous les types de machines capables
 d'afficher des graphiques CGA ou supérieurs. Préréglages intégrés :
   default :       La palette CGA canonique, telle qu'émulée par les adaptateurs VGA (par défaut).
-  tandy [BL] :    Émulation d'un moniteur Tandy idéalisé avec Niveau de Brun ajustable
+  tandy [BL] :    Émulation d'un écran Tandy idéalisé avec Niveau de Brun ajustable
                  (0 - rouge, 50 - brun, 100 - jaune foncé ; par défaut 50).
-  tandy-warm :    Émulation de la sortie couleur réelle d'un moniteur Tandy inconnu.
-  ibm5153 [C] :   Émulation de la sortie couleur réelle d'un moniteur IBM 5153 avec
+  tandy-warm :    Émulation de la sortie couleur réelle d'un écran Tandy inconnu.
+  ibm5153 [C] :   Émulation de la sortie couleur réelle d'un écran IBM 5153 avec
                  un contrôle de Contraste unique qui atténue uniquement les couleurs non vives
                  (0 à 100 ; par défaut à 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3 :
