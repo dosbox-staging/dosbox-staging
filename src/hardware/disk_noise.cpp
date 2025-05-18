@@ -156,7 +156,6 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	if (!seek.current_sample.empty() &&
 	    seek.current_it == seek.current_sample.end()) {
 		seek.current_sample.clear();
-		seek.current_it = seek.current_sample.end();
 	}
 
 	return AudioFrame{sample, sample};
@@ -390,7 +389,9 @@ void DiskNoiseDevice::PlaySeek()
 	}
 
 	seek.current_sample = seek.samples[index];
-	seek.current_it     = seek.current_sample.begin();
+	if (!seek.current_sample.empty()) {
+		seek.current_it = seek.current_sample.begin();
+	}
 }
 
 static void disknoise_destroy([[maybe_unused]] Section* sec)
