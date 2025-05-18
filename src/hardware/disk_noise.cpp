@@ -400,8 +400,10 @@ void DiskNoiseDevice::PlaySeek()
 
 	// Set the new seek sample
 	if (!seek.samples[index].empty()) {
+		MIXER_LockMixerThread();
 		seek.current_sample = seek.samples[index];
 		seek.current_it     = seek.current_sample.begin();
+		MIXER_UnlockMixerThread();
 	}
 }
 

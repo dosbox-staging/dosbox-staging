@@ -47,15 +47,15 @@ private:
 		std::vector<float> spin_up_sample             = {};
 		std::vector<float> sample                     = {};
 		bool loop                                     = false;
-		std::vector<float>::const_iterator spin_up_it = sample.end();
-		std::vector<float>::const_iterator spin_it	  = spin_up_sample.end();
+		std::vector<float>::const_iterator spin_up_it;
+		std::vector<float>::const_iterator spin_it;
 	} spin = {};
 
 	struct SeekSample {
 		std::vector<std::vector<float>> samples       = {};
 		std::vector<int> sample_weights               = {};
 		std::vector<float> current_sample             = {};
-		std::vector<float>::const_iterator current_it = current_sample.end();
+		std::vector<float>::const_iterator current_it;
 	} seek = {};
 
 	void LoadSample(const std::string& path, std::vector<float>& destination_buffer);
