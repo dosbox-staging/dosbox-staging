@@ -49,15 +49,18 @@ Ce paramètre a été renommé en viewport_resolution.
 :CONFIG_HOST_RATE
 Définit le taux de rafraîchissement de l'hôte :
   auto:      Utilise les taux SDI, ou les taux VRR en plein écran sur un écran haute fréquence.
-  sdi:       Utilise les taux d'interface de périphérique série (SDI), sans ajustement supplémentaire.
+sdi:       Utilise les taux d'interface de périphérique série (SDI), sans
+ajustement supplémentaire.
   vrr:       Déduit 3 Hz du taux rapporté (meilleure pratique pour les écrans VRR).
-  <custom>:  Spécifie un taux personnalisé comme valeur entière ou décimale supérieure à 23.000.
+<custom>:  Spécifie un taux personnalisé comme valeur entière ou décimale
+supérieure à 23.000.
 .
 :CONFIG_VSYNC
 Paramètre de synchro verticale non implémenté (paramètre ignoré)
 .
 :CONFIG_VSYNC_SKIP
-Nombre de microsecondes pour permettre au rendu de bloquer avant de sauter la trame suivante. 0 désactive cette fonction et effectue toujours le rendu.
+Nombre de microsecondes pour permettre au rendu de bloquer avant de sauter la
+trame suivante. 0 désactive cette fonction et effectue toujours le rendu.
 .
 :CONFIG_PRESENTATION_MODE
 Sélectionne optionnellement le mode de présentation des images :
@@ -92,7 +95,8 @@ Gestion du clic-milieu (second paramètre) :
 Defaults (si non présent ou incorrect) : seamless middlerelease
 .
 :CONFIG_SENSITIVITY
-Sensibilité de la souris. Le second paramètre optionnel spécifie la sensibilité verticale (ex. 100,-50).
+Sensibilité de la souris. Le second paramètre optionnel spécifie la sensibilité
+verticale (ex. 100,-50).
 .
 :CONFIG_RAW_MOUSE_INPUT
 Outrepasse les paramètres de votre système pour l'accélération et la sensibilité
@@ -103,7 +107,8 @@ ou quand la souris est capturé en mode fenêtré.
 Attend avant de fermer la console si DOSBox a une erreur.
 .
 :CONFIG_PRIORITY
-Niveaux de priorité pour DOSBox. La deuxième valeur après la virgule est lorsque DOSBox n'est pas actif/réduit.
+Niveaux de priorité pour DOSBox. La deuxième valeur après la virgule est lorsque
+DOSBox n'est pas actif/réduit.
 pause n'est valable que pour la seconde entrée.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
@@ -116,10 +121,12 @@ Mettre en pause l'émulation lorsque la fenêtre est inactive.
 Fichier utilisé pour charger/sauvegarder les mappages de touches/événements.
 Des mappages préconfigurés sont regroupés dans le répertoire 'resources/mapperfiles'.
 Ils peuvent être chargés par nom, par exemple : mapperfile = xbox/xenon2.map
-Remarque : l'option de ligne de commande -resetmapper supprime uniquement le fichier mapperfile par défaut.
+Remarque : l'option de ligne de commande -resetmapper supprime uniquement le
+fichier mapperfile par défaut.
 .
 :CONFIG_SCREENSAVER
-Utilisez 'allow' (autorise) ou 'block' (bloque) pour outrepasser la variable d'environnement
+Utilisez 'allow' (autorise) ou 'block' (bloque) pour outrepasser la variable
+d'environnement
 SDL_VIDEO_ALLOW_SCREENSAVER (qui bloque généralement la capture d'écran de l'OS
 pendant que l'émulateur est lancé).
 .
@@ -130,7 +137,8 @@ Sélectionner un autre fichier de langue.
 Type de machine que DOSBox essaye d'émuler.
 .
 :CONFIG_CAPTURES
-Répertoire où les objets comme les sons WAVE, musiques MIDI, et captures d'écran sont enregistrés.
+Répertoire où les objets comme les sons WAVE, musiques MIDI, et captures d'écran
+sont enregistrés.
 .
 :CONFIG_MEMSIZE
 Quantité de mémoire dont DOSBox dispose en mégaoctets.
@@ -144,17 +152,20 @@ Comment les blocs de chaîne de mémoire corrompus par logiciel doivent être tr
   repair:  Répare (et signale) les erreurs en utilisant les blocs de chaîne adjacents.
   report:  Signale les erreurs mais continue le traitement comme tel.
   allow:   Permet aux erreurs de ne pas être signalées (comportement matériel).
-La valeur par défaut (deny) est recommandée sauf si un jeu échoue avec des erreurs de corruption MCB.
+La valeur par défaut (deny) est recommandée sauf si un jeu échoue avec des
+erreurs de corruption MCB.
 .
 :CONFIG_VMEMSIZE
-Mémoire vidéo en Mio (1-8) ou Kio (256 à 8192). 'auto' utilise la valeur par défaut selon l'adaptateur vidéo.
+Mémoire vidéo en Mio (1-8) ou Kio (256 à 8192). 'auto' utilise la valeur par
+défaut selon l'adaptateur vidéo.
 .
 :CONFIG_DOS_RATE
 Personnalise la fréquence d'images du mode vidéo émulé, en Hz :
 default:  Le mode vidéo DOS détermine la fréquence (recommandé).
 host:     Fait correspondre la fréquence DOS à celle de l'hôte (voir le paramètre 'host_rate').
 <valeur>:  Définit la fréquence à une valeur exacte, entre 24,000 et 1000,000 (Hz).
-Nous recommandons la fréquence 'default' ; sinon, testez et réglez au cas par cas selon les jeux.
+Nous recommandons la fréquence 'default' ; sinon, testez et réglez au cas par
+cas selon les jeux.
 .
 :CONFIG_VESA_MODES
 Contrôle la sélection des modes VESA 1.2 et 2.0 proposés :
@@ -163,12 +174,14 @@ Contrôle la sélection des modes VESA 1.2 et 2.0 proposés :
   halfline     Prend en charge le mode VESA 2.0 halfline à basse résolution utilisé par
                Extreme Assault. À utiliser uniquement si nécessaire, car non compatible S3.
   all          Propose tous les modes pour une taille de mémoire vidéo donnée, cependant
-               certains jeux peuvent ne pas les utiliser correctement (scintillement) ou peuvent nécessiter
+certains jeux peuvent ne pas les utiliser correctement (scintillement) ou
+peuvent nécessiter
                plus de mémoire système (mem = ) pour les utiliser.
 .
 :CONFIG_SPEED_MODS
 Permet des modifications connues pour améliorer les performances. Actuellement, aucun jeu 
-n'est connu pour être affecté par ce paramètre. Veuillez signaler un bug au projet si vous trouvez un
+n'est connu pour être affecté par ce paramètre. Veuillez signaler un bug au
+projet si vous trouvez un
 jeu qui échoue lorsque ce paramètre est défini sur true, afin que nous puissions les lister ici.
 .
 :CONFIG_AUTOEXEC_SECTION
@@ -228,8 +241,10 @@ d'afficher des graphiques CGA ou supérieurs. Préréglages intégrés :
   colodore:      Couleurs inspirées du Commodore 64 basées sur la palette Colodore.
   colodore-sat:  Palette Colodore avec 20%% plus de saturation.
   dga16:         Une version moderne de la palette CGA canonique avec contraste réduit.
-Vous pouvez également définir des couleurs personnalisées en spécifiant 16 valeurs de couleur séparées par des espaces ou des virgules,
-soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge vif), soit en triplets
+Vous pouvez également définir des couleurs personnalisées en spécifiant 16
+valeurs de couleur séparées par des espaces ou des virgules,
+soit en codes hexadécimaux à 3 ou 6 chiffres (par ex. #f00 ou #ff0000 pour rouge
+vif), soit en triplets
 RGB décimaux (par ex. (255, 0, 255) pour magenta).
 .
 :CONFIG_SCALER
@@ -276,8 +291,8 @@ Luminosité de l'image, de sombre à claire.
 Convergence des éléments sous-pixels, de flou à net (CGA et Tandy uniquement).
 .
 :CONFIG_CORE
-Core CPU utilisé dans l'émulation. 'auto' bascule de 'normal' à 'dynamic' si c'est disponible et
-approprié.
+Core CPU utilisé dans l'émulation. 'auto' bascule de 'normal' à 'dynamic' si
+c'est disponible et approprié.
 .
 :CONFIG_CPUTYPE
 Coeur de CPU utilisé dans l'émulation. 'auto' est le choix le plus rapide.
@@ -304,19 +319,23 @@ Le paramétrer à moins de 100 donnera un pourcentage.
 Activer le mode silencieux, le son étant cependant toujours émulé.
 .
 :CONFIG_RATE
-Taux d'échantillonnage du mixer, paramétrer tout taux d'un périphérique plus haut que cela va probablement détériorer sa qualité sonore.
+Taux d'échantillonnage du mixer, paramétrer tout taux d'un périphérique plus
+haut que cela va probablement détériorer sa qualité sonore.
 .
 :CONFIG_BLOCKSIZE
-Taille de bloc du mixer, des blocs plus grands peuvent aider pour les saccades de son mais il sera aussi moins en phase.
+Taille de bloc du mixer, des blocs plus grands peuvent aider pour les saccades
+de son mais il sera aussi moins en phase.
 .
 :CONFIG_PREBUFFER
 Nombre de millisecondes de données à garder en amont du paramètre blocksize.
 .
 :CONFIG_NEGOTIATE
-Laisser le pilote audio système négocier (si possible) de meilleurs paramètres de taux et de taille de bloc.
+Laisser le pilote audio système négocier (si possible) de meilleurs paramètres
+de taux et de taille de bloc.
 .
 :CONFIG_COMPRESSOR
-Active le compresseur de nivellement automatique sur le canal principal pour éviter l'écrêtage
+Active le compresseur de nivellement automatique sur le canal principal pour
+éviter l'écrêtage
 de la sortie audio :
   off:  Désactive le compresseur.
   on:   Active le compresseur (par défaut).
@@ -325,7 +344,8 @@ de la sortie audio :
 Définit le crossfeed globalement sur tous les canaux stéréo pour l'écoute au casque :
   off:         Pas de crossfeed (par défaut).
   on:          Active le crossfeed (avec une intensité de 40).
-  <strength>:  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de crossfeed (désactivé)
+<strength>:  Définit l'intensité du crossfeed de 0 à 100, où 0 signifie pas de
+crossfeed (désactivé)
                et 100 un crossfeed complet (transformant effectivement le contenu stéréo en mono).
 Remarque : Vous pouvez définir le crossfeed par canal via les commandes du mixer.
 .
@@ -343,7 +363,8 @@ Active la réverbération globalement pour ajouter une sensation d'espace au son
            séparés pour la musique et l'audio numérique.
   huge:    Une variante plus forte du préréglage de grande salle ; fonctionne très bien
            avec certains jeux aux bandes sonores plus atmosphériques.
-Remarque : Vous pouvez ajuster précisément les niveaux de réverbération par canal via les commandes du mixer.
+Remarque : Vous pouvez ajuster précisément les niveaux de réverbération par
+canal via les commandes du mixer.
 .
 :CONFIG_CHORUS
 Active le chorus globalement pour ajouter une sensation de mouvement stéréo au son :
@@ -353,7 +374,8 @@ Active le chorus globalement pour ajouter une sensation de mouvement stéréo au
            musiques synthé qui comportent beaucoup de bruit blanc).
   normal:  Chorus normal qui fonctionne bien avec une grande variété de jeux.
   strong:  Un effet de chorus évident et direct.
-Remarque : Vous pouvez ajuster précisément les niveaux de chorus par canal via les commandes du mixer.
+Remarque : Vous pouvez ajuster précisément les niveaux de chorus par canal via
+les commandes du mixer.
 .
 :CONFIG_MIDIDEVICE
 Préiphérique qui recevra les données MIDI (depuis l'interface
@@ -608,7 +630,8 @@ Filtre pour la sortie synthé Tandy :
 :CONFIG_TANDY_DAC_FILTER
 Filtre pour la sortie DAC Tandy :
   on:        Filtre la sortie (par défaut).
-  off:       Ne pas filtrer la sortie.  <custom>:  Définition de filtre personnalisée ; voir 'sb_filter' pour les détails.
+off:       Ne pas filtrer la sortie.  <custom>:  Définition de filtre
+personnalisée ; voir 'sb_filter' pour les détails.
 .
 :CONFIG_LPT_DAC
 Type de DAC branché sur le port parallèle :
@@ -647,7 +670,8 @@ aucun (désactive l'émulation du joystick)
 fcs (Thrustmaster), ch (CH Flightstick).
 'none' désactive l'émulation de la manette.
 'auto' choisit l'émulation selon la(les) manette(s) réelle(s).
-(Rappelez-vous de réinitialiser le fichier de correspondance des touches DOSBox si vous l'avez sauvé plus tôt)
+(Rappelez-vous de réinitialiser le fichier de correspondance des touches DOSBox
+si vous l'avez sauvé plus tôt)
 .
 :CONFIG_TIMED
 Activer des intervalles de temps pour les axes. Tester cette option si votre manette dérive.
@@ -669,8 +693,10 @@ Essayez d'activer ceci si votre stick analogique gauche peut seulement bouger da
 Pourcentage de mouvement à ignorer. 100 transforme le stick en un stick digital.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Active les raccourcis clavier permettant la calibration en temps réel des axes x et y du joystick.
-Ne considérez cette option que si la calibration en jeu échoue et que d'autres paramètres ont été essayés.
+Active les raccourcis clavier permettant la calibration en temps réel des axes x
+et y du joystick.
+Ne considérez cette option que si la calibration en jeu échoue et que d'autres
+paramètres ont été essayés.
  - Ctrl/Cmd+Flèches ajuste la valeur scalaire de l'axe :
      - gauche et droite diminuent ou augmentent le scalaire de l'axe x, respectivement.
      - bas et haut diminuent ou augmentent le scalaire de l'axe y, respectivement.
@@ -678,14 +704,18 @@ Ne considérez cette option que si la calibration en jeu échoue et que d'autres
      - gauche et droite déplacent le décalage de l'axe x dans la direction donnée.
      - bas et haut déplacent le décalage de l'axe y dans la direction donnée.
  - Réinitialisez la calibration X et Y en utilisant Ctrl+Suppr et Ctrl+Début, respectivement.
-Chaque frappe affichera les valeurs de calibration X ou Y que vous pouvez définir ci-dessous. Lorsque vous trouvez des paramètres qui fonctionnent,
-quittez le jeu, désactivez ce paramètre et remplissez les paramètres de calibration indiqués.
+Chaque frappe affichera les valeurs de calibration X ou Y que vous pouvez
+définir ci-dessous. Lorsque vous trouvez des paramètres qui fonctionnent,
+quittez le jeu, désactivez ce paramètre et remplissez les paramètres de
+calibration indiqués.
 .
 :CONFIG_JOY_X_CALIBRATION
-Appliquer les paramètres de calibration de l'axe x à partir des raccourcis. La valeur par défaut est 'auto'.
+Appliquer les paramètres de calibration de l'axe x à partir des raccourcis. La
+valeur par défaut est 'auto'.
 .
 :CONFIG_JOY_Y_CALIBRATION
-Appliquer les paramètres de calibration de l'axe y à partir des raccourcis. La valeur par défaut est 'auto'.
+Appliquer les paramètres de calibration de l'axe y à partir des raccourcis. La
+valeur par défaut est 'auto'.
 :CONFIG_SERIAL1
 Définir le type de périphérique connecté au port série.
 Peut être 'disabled' (désactivé), 'dummy' (factice), 'modem', 'nullmodem', 'direct'.
@@ -853,14 +883,16 @@ Utilisez -writelang ou -wl nom de fichier pour écrire les clefs de language cou
 -r [paramètres]
  Redémarre DOSBox, soit en utilisant les paramètres précédents ou tout autre ajouté.
 -wcp [nom de fichier]
- Écrit le fichier de configuration dans le répertoire du programme, dosbox-staging.conf ou le nom de fichier 
+Écrit le fichier de configuration dans le répertoire du programme,
+dosbox-staging.conf ou le nom de fichier 
  spécifié.
 -wcd
  Écrit dans le fichier de configuration par défaut dans le répertoire de configuration.
 -l liste les paramètres de configuration.
 -h, -help, -? sections / nom de section / nom de propriété
  Sans paramètres, affiche cet écran d'aide. Ajoutez "sections" pour une liste de
- sections. Pour des infos à propos d'une section spécifique ou d'une propriété spécifique ajoutez son nom après.
+sections. Pour des infos à propos d'une section spécifique ou d'une propriété
+spécifique ajoutez son nom après.
 -axclear nettoye la section autoexec.
 -axadd [ligne] ajoute une ligne à la section autoexec.
 -axtype affiche le contenu de la section autoexec.
@@ -1004,7 +1036,8 @@ Cette redirection n'est PAS compatible avec le lecteur spécifié.
 
 .
 :PROGRAM_MOUNT_OVERLAY_MIXED_BASE
-La redirection doit être spécifiée en utilisant le même adressage que le disque sous-jacent. Pas de mélange de chemins relatifs et absolus.
+La redirection doit être spécifiée en utilisant le même adressage que le disque
+sous-jacent. Pas de mélange de chemins relatifs et absolus.
 .
 :PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE
 Le répertoire de redirection ne peut pas être le même que celui du lecteur sous-jacent.
@@ -1294,7 +1327,8 @@ Vous devez spécifier la lettre de lecteur sur laquelle monter l'image.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Vous devez spécifier le numéro de lecteur (0 ou 3) sur lequel monter l'image (0,1=fda,fdb;2,3=hda,hdb).
+Vous devez spécifier le numéro de lecteur (0 ou 3) sur lequel monter l'image
+(0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
@@ -1316,7 +1350,8 @@ Utilisez le paramètre -size bps,spc,tpc,cyl pour spécifier la géométrie.
 
 .
 :PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
-Type '%s' non supporté. Spécifiez 'floppy' (disquette), 'hdd' (disque dur), 'cdrom', ou 'iso'.
+Type '%s' non supporté. Spécifiez 'floppy' (disquette), 'hdd' (disque dur),
+'cdrom', ou 'iso'.
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
@@ -1574,7 +1609,8 @@ Impossible d'enlever, lecteur non utilisé.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-SUBST a échoué. Vous avez fait une erreur dans votre ligne de commande ou le lecteur cible est déjà utilisé.
+SUBST a échoué. Vous avez fait une erreur dans votre ligne de commande ou le
+lecteur cible est déjà utilisé.
 Il n'est possible d'utiliser SUBST que sur les lecteurs locaux.
 .
 :SHELL_STARTUP_BEGIN
@@ -1884,7 +1920,8 @@ Où :
 Remarques :
   Une lettre de lecteur DOS doit avoir été montée précédemment avec la commande [color=light-green]imgmount[reset].
   Le lecteur DOS ou l'image disque doit être amorçable, contenant des fichiers système DOS.
-  Si plusieurs images disque sont spécifiées, vous pouvez les permuter avec un raccourci clavier.
+Si plusieurs images disque sont spécifiées, vous pouvez les permuter avec un
+raccourci clavier.
 
 Exemples :
   [color=light-green]boot[reset] [color=white]c:[reset]
@@ -1914,7 +1951,8 @@ Aucun contrôleur IDE disponible. Le lecteur n'aura pas d'émulation IDE.
 DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 
 Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
-et marque les fichiers comme étant en lecture seule. Généralement, cela suffit pour la plupart des jeux :
+et marque les fichiers comme étant en lecture seule. Généralement, cela suffit
+pour la plupart des jeux :
 [color=light-blue]mount D C:\exemple -t cdrom[reset]
 Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
 [color=light-blue]mount D C:\exemple -t cdrom -label ETIQUETTE_CD[reset]
@@ -1936,7 +1974,8 @@ De plus, vous pouvez utiliser imgmount pour monter des images iso ou cue/bin :
 DOSBox fournit l'émulation CD-ROM sur deux niveaux.
 
 Le niveau [color=brown]basique[reset] fonctionne sur tous les répertoires normaux, il installe MSCDEX
-et marque les fichiers comme étant en lecture seule. Généralement, cela suffit pour la plupart des jeux :
+et marque les fichiers comme étant en lecture seule. Généralement, cela suffit
+pour la plupart des jeux :
 [color=light-blue]mount D ~/exemple -t cdrom[reset]
 Si cela ne fonctionne pas, vous devrez peut-être indiquer à DOSBox l'étiquette du CD-ROM :
 [color=light-blue]mount D ~/exemple -t cdrom -label ETIQUETTE_CD[reset]
@@ -1970,7 +2009,8 @@ Remarques :
   L'exécution de [color=light-green]keyb[reset] sans argument montre la disposition clavier actuellement chargée
   et la page de code. Elle changera pour [color=light-cyan]CODELANGUE[reset] si fourni, éventuellement avec une
   [color=white]CODEPAGE[reset] et un FICHIERCODEPAGE supplémentaire pour charger le numéro de page de code
-  spécifié et le fichier de page de code s'il est fourni. Cette commande est particulièrement utile si
+spécifié et le fichier de page de code s'il est fourni. Cette commande est
+particulièrement utile si
   vous utilisez un clavier non-US, et [color=light-cyan]CODELANGUE[reset] peut également être défini dans le fichier de configuration
   sous la section [dos] en utilisant le paramètre "keyboardlayout = [color=light-cyan]CODELANGUE[reset]".
 
@@ -1992,7 +2032,8 @@ Où :
   [color=light-cyan]JEU[reset] est un jeu ou programme à charger, éventuellement avec des paramètres.
 
 Remarques :
-  Les cas d'utilisation les plus courants de cette commande sont de corriger les jeux DOS ou programmes
+Les cas d'utilisation les plus courants de cette commande sont de corriger les
+jeux DOS ou programmes
   qui affichent soit le message "[color=white]Packed File Corrupt[reset]" ou "[color=white]Not enough memory"[reset] (par ex.,
   de certains jeux des années 1980 comme California Games II) lors de leur exécution.
   L'exécution de [color=light-green]loadfix[reset] sans argument alloue simplement de la mémoire pour que votre jeu
@@ -2075,7 +2116,8 @@ Où :
 Remarques :
   L'exécution de [color=light-green]mixer[reset] sans argument affiche les paramètres actuels du mixeur.
   Vous pouvez modifier les paramètres de plusieurs canaux en une seule commande.
-  Si le canal n'est pas spécifié, vous pouvez définir le crossfeed, la réverbération ou le chorus globalement.
+Si le canal n'est pas spécifié, vous pouvez définir le crossfeed, la
+réverbération ou le chorus globalement.
   Vous pouvez afficher la liste des périphériques MIDI disponibles avec /listmidi.
   L'option /noshow applique les modifications sans afficher les paramètres du mixeur.
 
@@ -2177,7 +2219,8 @@ Redirection en double - %s
 .
 :SHELL_CMD_FAILED_PIPE
 
-Échec de la création/ouverture d'un fichier temporaire pour la redirection. Vérifiez la variable %%TEMP%%.
+Échec de la création/ouverture d'un fichier temporaire pour la redirection.
+Vérifiez la variable %%TEMP%%.
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
@@ -2188,8 +2231,10 @@ Où :
   Cette commande n'a pas de paramètres.
 
 Remarques :
-  Cette commande est particulièrement utile dans les programmes batch pour permettre à un utilisateur de
-  continuer l'exécution du programme batch en appuyant sur une touche. L'utilisateur peut appuyer sur
+Cette commande est particulièrement utile dans les programmes batch pour
+permettre à un utilisateur de
+continuer l'exécution du programme batch en appuyant sur une touche.
+L'utilisateur peut appuyer sur
   n'importe quelle touche du clavier (sauf certaines touches de contrôle) pour continuer.
 
 Exemples :
@@ -2281,7 +2326,8 @@ Où :
 
 Remarques :
   L'exécution de [color=light-green]intro[reset] sans argument affiche une page d'information à la fois ;
-  appuyez sur n'importe quelle touche pour passer à la page suivante. Si un nom de page est fourni, alors la
+appuyez sur n'importe quelle touche pour passer à la page suivante. Si un nom de
+page est fourni, alors la
   page spécifiée sera affichée directement.
 
 Exemples :
@@ -2368,7 +2414,8 @@ Utilisation :
 
 Où :
   [color=light-cyan]MOTIF[reset] peut être soit un nom de fichier exact (comme [color=light-cyan]fichier.txt[reset]) soit un nom
-         de fichier inexact utilisant un ou plusieurs caractères génériques, qui sont l'astérisque (*)
+de fichier inexact utilisant un ou plusieurs caractères génériques, qui sont
+l'astérisque (*)
          représentant n'importe quelle séquence d'un ou plusieurs caractères, et le point
          d'interrogation (?) représentant n'importe quel caractère unique, comme [color=light-cyan]*.bat[reset] et [color=light-cyan]c?.txt[reset].
 
@@ -2394,7 +2441,8 @@ Où :
 
 Remarques :
   L'opérateur [color=white]+[reset] combine plusieurs fichiers source fournis en un seul fichier.
-  La destination est facultative : si elle est omise, les fichiers sont copiés dans le chemin actuel.
+La destination est facultative : si elle est omise, les fichiers sont copiés
+dans le chemin actuel.
 
 Exemples :
   [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]nouveau.bat[reset]
@@ -2446,10 +2494,12 @@ Où :
   [color=light-cyan]PROGRAMME[reset] est un programme TSR DOS à charger, éventuellement avec des paramètres.
 
 Remarques :
-  Cette commande vise à économiser la mémoire conventionnelle en chargeant des programmes TSR DOS
+Cette commande vise à économiser la mémoire conventionnelle en chargeant des
+programmes TSR DOS
   spécifiés dans la mémoire haute si possible. Ces programmes peuvent être nécessaires pour
   certains jeux DOS ; la mémoire XMS et UMB doit être activée (xms=true et umb=true).
-  Tous les programmes TSR DOS ne peuvent pas être chargés dans la mémoire haute avec cette commande.
+Tous les programmes TSR DOS ne peuvent pas être chargés dans la mémoire haute
+avec cette commande.
 
 Exemples :
   [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]
@@ -2503,7 +2553,8 @@ Où :
   Plusieurs chemins peuvent être spécifiés, séparés par un point-virgule (;).
 
 Remarques :
-  Un paramètre avec uniquement un point-virgule (;) efface tous les paramètres de chemin de recherche.
+Un paramètre avec uniquement un point-virgule (;) efface tous les paramètres de
+chemin de recherche.
   Le chemin peut également être défini à l'aide de la commande [color=light-green]set[reset], par exemple [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
 
 Exemples :
@@ -2632,13 +2683,15 @@ Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration 
 Liste des codes de dispositions de clavier disponibles
 .
 :DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2
-Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration 'keyboard_layout'.
+Les codes ci-dessus peuvent être utilisés dans le paramètre de configuration
+'keyboard_layout'.
 .
 :DOSBOX_HELP_LIST_CODE_PAGES_1
 Liste des pages de codes disponibles
 .
 :DOSBOX_HELP_LIST_CODE_PAGES_2
-Les pages de codes ci-dessus peuvent être utilisées dans le paramètre de configuration 'keyboard_layout'.
+Les pages de codes ci-dessus peuvent être utilisées dans le paramètre de
+configuration 'keyboard_layout'.
 .
 :COUNTRY_NAME_XXA
 International (Anglais)
@@ -3853,14 +3906,16 @@ Le moteur de rendu à utiliser pour la sortie graphique (« texture » par défa
   texture:    Le moteur de rendu de SDL avec interpolation bilinéaire.
 .
 :CONFIGITEM_OUTPUT_TEXTURENB
-  texturenb:  Le moteur de rendu de SDL avec interpolation du plus proche voisin (non-bilinéaire).
+texturenb:  Le moteur de rendu de SDL avec interpolation du plus proche voisin
+(non-bilinéaire).
 .
 :CONFIG_WINDOW_TITLEBAR
 Liste séparée par des espaces des informations à afficher dans la barre de titre de la fenêtre
 ('program=name dosbox=auto cycles=on mouse=full' par défaut). Si un paramètre
 n'est pas spécifié, sa valeur par défaut est utilisée.
 Les informations pouvant être affichées sont les suivantes
-  animation=<valeur> : si la valeur est « on » (par défaut), la marque d'enregistrement audio/vidéo est animée.
+animation=<valeur> : si la valeur est « on » (par défaut), la marque
+d'enregistrement audio/vidéo est animée.
                       d'enregistrement audio/vidéo. La valeur « off » désactive l'animation.
                       Ceci est utile si votre police d'écran produit des résultats bizarres.
   program=<valeur> :    Affiche le nom du programme en cours d'exécution.
@@ -3889,7 +3944,8 @@ Les informations pouvant être affichées sont les suivantes
   mouse=<valeur> :      Niveau de verbosité de l'indice de capture de la souris :
                         none/off :  N'affiche aucune indication sur la souris.
                         short : ne s'affiche que si la souris est capturée.
-                        full :      Affiche des informations détaillées sur la façon de capturer ou de relâcher le curseur (par défaut).
+full :      Affiche des informations détaillées sur la façon de capturer ou de
+relâcher le curseur (par défaut).
                                    de capturer ou de relâcher le curseur (par défaut).
 .
 :CONFIG_VMEM_DELAY
@@ -4069,11 +4125,13 @@ milliseconde peut varier, ce qui peut causer des problèmes dans certains progra
 :CONFIG_VOODOO
 Activer l'émulation 3dfx Voodoo (activée par défaut). Il s'agit d'une émulation
 authentique de bas niveau de la carte Voodoo non déchargé via OpenGL, ce qui nécessite un
-CPU hôte puissant. La plupart des jeux nécessitent que le pilote DOS Glide appelé 'GLIDE2X.OVL'
+CPU hôte puissant. La plupart des jeux nécessitent que le pilote DOS Glide
+appelé 'GLIDE2X.OVL'
 soit dans le chemin d'accès pour que le mode 3dfx fonctionne.
 De nombreux jeux incluent leurs propres variantes du pilote Glide
 mais pour certains d'entre eux, vous devez fournir une version appropriée de 'GLIDE2X.OVL'.
-Un petit nombre de jeux intègrent le pilote Glide dans leur code, de sorte qu'ils n'ont pas besoin de 'GLIDE2X.OVL'.
+Un petit nombre de jeux intègrent le pilote Glide dans leur code, de sorte
+qu'ils n'ont pas besoin de 'GLIDE2X.OVL'.
 .
 :CONFIG_VOODOO_MEMSIZE
 Définir la quantité de mémoire vidéo pour les graphiques 3dfx Voodoo.
@@ -4091,7 +4149,8 @@ Utiliser les fils d'exécution pour améliorer les performances 3dfx Voodoo :
                 (par défaut).
   <valeur> : Définit un nombre spécifique de threads entre 1 et 128.
 Note : Définir une valeur plus élevée que le nombre de CPU logiques supportés par votre
-      matériel est très susceptible de nuire aux performances. Cette fonction a montré après mesures
+matériel est très susceptible de nuire aux performances. Cette fonction a montré
+après mesures
       qu'elle s'adapte bien à 8-16 threads, mais elle n'a pas été testée sur un
       processeur avec beaucoup plus de cœurs.
       Si vous avez un Threadripper ou un CPU similaire, merci de nous
@@ -4109,13 +4168,16 @@ audio, vidéo, MIDI et les captures d'écran. (« capture » dans le répertoire
 travail actuel par défaut).
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
-Définit le format de capture de l'action de capture d'écran par défaut (« upscaled » par défaut) :
-  upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport de forme correct est conservé,
+Définit le format de capture de l'action de capture d'écran par défaut («
+upscaled » par défaut) :
+upscaled :  L'image est redimensionnée avec une netteté bilinéaire et le rapport
+de forme correct est conservé,
             en fonction du paramètre « aspect ».
              Le facteur d'échelle verticale est toujours un nombre entier. Par exemple,
              un contenu de 320x200 est mis à l'échelle en 1600x1200 (mise à l'échelle entière de 5:6),
              640x480 à 1920x1440 (mise à l'échelle entière 3:3), et 640x350 à
-             1400x1050 (mise à l'échelle 2,1875:3 ; fractionnaire horizontalement et entière verticalement).
+1400x1050 (mise à l'échelle 2,1875:3 ; fractionnaire horizontalement et entière
+verticalement).
              Les noms de fichiers des captures d'écran mises à l'échelle
              n'ont pas de postfixe (par exemple, « image0001.png »).
   rendered :  L'image après rendu et après traitement, affichée à l'écran est capturée.
@@ -4126,16 +4188,19 @@ Définit le format de capture de l'action de capture d'écran par défaut (« up
              se terminent par « -raw » (par exemple, « image0001-raw.png »).
 Si plusieurs formats sont spécifiés, séparés par des espaces, l'action de capture d'écran
 par défaut enregistrera plusieurs images dans les formats spécifiés.
-Des raccourcis clavier permettant de prendre des captures d'écran dans des formats spécifiques
+Des raccourcis clavier permettant de prendre des captures d'écran dans des
+formats spécifiques
 sont également disponibles.
 .
 :CONFIG_MOUSE_CAPTURE
 Définit le comportement de capture de la souris :
-  onclick :   Capture la souris lorsque l'on clique sur n'importe quel bouton de la souris dans la fenêtre
+onclick :   Capture la souris lorsque l'on clique sur n'importe quel bouton de
+la souris dans la fenêtre
              (par défaut).
   onstart :   Capture la souris immédiatement au démarrage. Peut ne pas fonctionner correctement
              sur certains systèmes d'exploitation hôtes.
-  seamless :  Permet à la souris de se déplacer de manière transparente entre la fenêtre DOSBox et le reste du bureau.
+seamless :  Permet à la souris de se déplacer de manière transparente entre la
+fenêtre DOSBox et le reste du bureau.
              le reste du bureau ; capture uniquement avec un clic du milieu ou un raccourci clavier.
              Ce mode ne fonctionne pas correctement avec tous les jeux.
              Windows 3.1x peut être rendu compatible avec un pilote de souris personnalisé.
@@ -4156,8 +4221,10 @@ Remarque : vous devez désactiver cette option si elle détecte de manière inco
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilité globale de la souris pour les axes horizontal et vertical, en pourcentage
-(100 par défaut). Les valeurs peuvent être séparées par des espaces, des virgules ou des points-virgules
-(c'est-à-dire 100,150). Les valeurs négatives inversent l'axe, tandis que zéro le désactive.
+(100 par défaut). Les valeurs peuvent être séparées par des espaces, des
+virgules ou des points-virgules
+(c'est-à-dire 100,150). Les valeurs négatives inversent l'axe, tandis que zéro
+le désactive.
 Il suffit  d'une seule valeur pour définir la sensibilité pour les deux axes.
 La sensibilité peut être affinée pour chaque interface de souris à l'aide de l'outil interne
 MOUSECTL.COM disponible sur le lecteur Z.
@@ -4169,8 +4236,10 @@ ou lorsque la souris est capturée en mode fenêtré.
 .
 :CONFIG_BUILTIN_DOS_MOUSE_DRIVER
 Activer le pilote de souris DOS intégré (« on » par défaut). Il en résulte
-la latence la plus faible possible et les mouvements de souris les plus fluides, donc ne le désactivez
-et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par exemple, si un jeu n'est
+la latence la plus faible possible et les mouvements de souris les plus fluides,
+donc ne le désactivez
+et ne chargez un vrai pilote de souris DOS que si c'est vraiment nécessaire (par
+exemple, si un jeu n'est
 pas compatible avec le pilote intégré).
  on :   Active le pilote de souris intégré. `ps2_mouse_model` et
  `com_mouse_model` n'ont aucun effet sur le pilote intégré.
@@ -4209,7 +4278,8 @@ liste d'options séparées par des espaces ou des virgules (non définies par d�
               Liste des jeux incompatibles connus :
                 - Ultima Underworld : The Stygian Abyss
                 - Ultima Underworld II : Labyrinth of Worlds
-             Veuillez nous signaler d'autres jeux incompatibles afin que nous puissions mettre à jour cette liste.
+Veuillez nous signaler d'autres jeux incompatibles afin que nous puissions
+mettre à jour cette liste.
   modern : Si fourni, le comportement du pilote de souris Microsoft v7.0+ est émulé,
                  sinon le comportement v6.0 et antérieur (les deux sont légèrement
                  incompatibles). Jusqu'à présent, seul Descent II avec le patch officiel Voodoo a
@@ -4219,7 +4289,8 @@ liste d'options séparées par des espaces ou des virgules (non définies par d�
 Configuré via l'option  'builtin_dos_mouse_driver_options'.
 .
 :CONFIG_PS2_MOUSE_MODEL
-Définit le modèle de souris du port PS/2 AUX, ou en d'autres termes, le type de la souris virtuelle
+Définit le modèle de souris du port PS/2 AUX, ou en d'autres termes, le type de
+la souris virtuelle
 branchée sur le port souris PS/2 émulé ('explorer' par défaut).
 Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir 'dos_mouse_driver').
  standard : 3 boutons, souris PS/2 standard.
@@ -4228,7 +4299,8 @@ Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir 'dos_mouse
  none : pas de souris PS/2.
 .
 :CONFIG_COM_MOUSE_MODEL
-Définit le modèle de souris COM (série) par défaut, ou en d'autres termes, le type de la souris virtuelle
+Définit le modèle de souris COM (série) par défaut, ou en d'autres termes, le
+type de la souris virtuelle
 branchée sur les ports COM émulés ('wheel+msm' par défaut).
 Ce paramètre n'a aucun effet sur le pilote de souris intégré (voir “dos_mouse_driver”).
   2button :      2 boutons, souris Microsoft.
@@ -4288,7 +4360,8 @@ Modèle actif
 :CONFIG_SOUNDCANVAS_MODEL
 Le modèle de Roland Sound Canvas à utiliser.
 Un ou plusieurs plugins audio CLAP qui implémentent les modèles Sound Canvas
-pris en charge doivent être présents dans le répertoire 'plugins' de votre installation DOSBox
+pris en charge doivent être présents dans le répertoire 'plugins' de votre
+installation DOSBox
 ou dans votre répertoire de configuration. DOSBox recherche le modèle demandé en
 inspectant les descriptions des plugins. La recherche du meilleur modèle est
 effectuée dans l'ordre de la liste.
@@ -4341,8 +4414,10 @@ peut être spécifiée à l'aide du paramètre 'midiconfig'.
  à utiliser. Vous devez utiliser le chemin absolu du fichier SoundFont.
 .
 :CONFIGITEM_MIDICONFIG_LINUX
-  - Lorsque vous utilisez « mididevice = port », utilisez la commande Linux « aconnect -l » pour répertorier
- tous les ports MIDI ouverts et en sélectionner un (par exemple, « midiconfig = 14:0 » pour le séquenceur
+- Lorsque vous utilisez « mididevice = port », utilisez la commande Linux «
+aconnect -l » pour répertorier
+tous les ports MIDI ouverts et en sélectionner un (par exemple, « midiconfig =
+14:0 » pour le séquenceur
  client 14, port 0).
 .
 :CONFIGITEM_MIDICONFIG_INTERNAL_SYNTH
@@ -4392,10 +4467,13 @@ Fondu des notes suspendues pour l'émulation OPL :
                 1000 3000 (attendre 1 seconde avant d'effectuer un fondu sur une période de 3 secondes)
 .
 :CONFIG_OPL_REMOVE_DC_BIAS
-Supprimez la polarisation DC de la sortie OPL. Ceci ne devrait être utilisé qu'en dernier recours
-pour corriger les 'pops' dans les jeux qui jouent de l'audio PCM en utilisant le synthétiseur OPL
+Supprimez la polarisation DC de la sortie OPL. Ceci ne devrait être utilisé
+qu'en dernier recours
+pour corriger les 'pops' dans les jeux qui jouent de l'audio PCM en utilisant le
+synthétiseur OPL
 sur une carte Sound Blaster ou AdLib, comme dans : Golden Eagle (1991), Wizardry 6
-(1990), et Wizardry 7 (1992). Veuillez ouvrir un ticket d'incident si vous trouvez d'autres jeux
+(1990), et Wizardry 7 (1992). Veuillez ouvrir un ticket d'incident si vous
+trouvez d'autres jeux
 dans ce cas.
 .
 :CONFIG_CMS
@@ -4509,16 +4587,19 @@ Définit les paramètres régionaux ('native' par défaut).
 :CONFIG_KEYBOARD_LAYOUT
 Code de disposition du clavier ('auto' par défaut).
 La liste des codes de disposition de clavier pris en charge peut être affichée à l'aide de
-l'argument de ligne de commande '--list-layouts', par exemple, 'uk' correspond à la disposition
+l'argument de ligne de commande '--list-layouts', par exemple, 'uk' correspond à
+la disposition
 britannique anglaise. La disposition peut être suivie du numéro de page de code, par exemple,
 'uk 850' sélectionne une police d'écran d'Europe occidentale.
 Définir sur 'auto' pour deviner les valeurs à partir des paramètres du système hôte.
-Après le démarrage, utilisez la commande 'KEYB' pour gérer les dispositions de clavier et les pages de code
+Après le démarrage, utilisez la commande 'KEYB' pour gérer les dispositions de
+clavier et les pages de code
 (exécutez 'HELP KEYB' pour plus de détails).
 
 .
 :CONFIG_SHELL_HISTORY_FILE
-Fichier contenant l'historique persistant de la ligne de commande ('shell_history.txt' par défaut).
+Fichier contenant l'historique persistant de la ligne de commande
+('shell_history.txt' par défaut).
 Le définir comme vide désactive l'historique persistant du shell.
 .
 :CONFIG_SETVER_TABLE_FILE
@@ -4528,7 +4609,8 @@ pour un stockage permanent. Utilisé par SETVER.EXE
 .
 :CONFIG_FILE_LOCKING
 Activer le verrouillage des fichiers (émulation SHARE.EXE ; 'on' par défaut).  
-Cela est nécessaire pour que certaines applications Windows 3.1x fonctionnent correctement.  
+Cela est nécessaire pour que certaines applications Windows 3.1x fonctionnent
+correctement.  
 Cela ne pose généralement pas de problème pour les jeux DOS, sauf dans de rares cas  
 (par exemple, la démo Astral Blur). Si vous rencontrez des plantages liés aux  
 permissions de fichiers, vous pouvez essayer de désactiver cette option. 
@@ -4891,7 +4973,8 @@ Paramètres:
   +[color=white]nnn[reset]     saute les [color=white]nnn[reset] premières lignes du premier fichier
 
 Remarques:
- - Cette commande est uniquement destinée à la consultation de fichiers texte, et non de fichiers binaires.
+- Cette commande est uniquement destinée à la consultation de fichiers texte, et
+non de fichiers binaires.
  - Les raccourcis clavier suivants sont disponibles:
    [color=yellow]Space[reset]          pour afficher l'écran suivant.
    [color=yellow]Enter[reset]          pour afficher la ligne suivante.
@@ -4900,7 +4983,8 @@ Remarques:
    [color=yellow]Ctrl+C[reset] pour interrompre la commande.
  - Également, [color=yellow]Ctrl+C[reset] peut être utilisé pour interrompre la commande lors de la lecture des données provenant du clavier,
     comme lorsque [color=light-green]more[reset] est exécuté sans aucun argument.
- - Les raccourcis clavier supplémentaires suivants sont disponibles uniquement en mode étendu:
+- Les raccourcis clavier supplémentaires suivants sont disponibles uniquement en
+mode étendu:
    [color=yellow]P[reset] [color=white]nnn[reset]          pour afficher les [color=white]nnn[reset] lignes suivantes puis redemander.
    [color=yellow]S[reset] [color=white]nnn[reset]          pour sauter les [color=white]nnn[reset] lignes suivantes.
    [color=yellow]=[reset]              pour afficher le numéro de ligne courant.
@@ -4994,7 +5078,8 @@ Paramètres:
 
 Remarques:
   - Si la sensibilité ou le taux est omis, il est réinitialisé à sa valeur par défaut.
-  - La sensibilité de la souris définie dans le fichier de configuration agit comme un facteur d'échelle global,
+- La sensibilité de la souris définie dans le fichier de configuration agit
+comme un facteur d'échelle global,
     la sensibilité par interface définie par cette commande s'appliquant en complément.
 
 Exemples:
@@ -5023,7 +5108,8 @@ Le mappage n'est pas possible avec le pilote de souris invité actuel.
 Les souris physiques individuelles ne sont pas prises en charge dans cette version.
 .
 :PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT
-Les souris physiques individuelles ne sont pas prises en charge si 'mouse_raw_input' est activé.
+Les souris physiques individuelles ne sont pas prises en charge si
+'mouse_raw_input' est activé.
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Aucune interface de souris disponible.
@@ -5072,7 +5158,8 @@ Les taux d'échantillonnage dont la valeur minimale est définie sont marqués d
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
 Cliquez sur le bouton [color=white]gauche[reset] de la souris pour mapper la souris physique
-à l'interface. Cliquer sur n'importe quel autre bouton annule le mappage et attribue le pointeur
+à l'interface. Cliquer sur n'importe quel autre bouton annule le mappage et
+attribue le pointeur
 système à toutes les interfaces de souris.
 .
 :PROGRAM_MOUSECTL_MAP_CANCEL
