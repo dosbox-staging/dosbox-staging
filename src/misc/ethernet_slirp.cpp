@@ -225,7 +225,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 			return false;
 		}
 	}
-	LOG_MSG("SLIRP: Successfully loaded Slirp version: %s", LibSlirp::slirp_version_string());
+	LOG_MSG("SLIRP: Successfully loaded Slirp %s", LibSlirp::slirp_version_string());
 
 	/* Config */
 	config.version = 1;
