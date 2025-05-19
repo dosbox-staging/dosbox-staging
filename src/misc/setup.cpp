@@ -415,7 +415,6 @@ bool Prop_int::ValidateValue(const Value& in)
 	            min_value.ToString().c_str(),
 	            max_value.ToString().c_str(),
 	            va);
-
 	value = va;
 	return true;
 }
