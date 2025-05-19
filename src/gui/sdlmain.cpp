@@ -4343,20 +4343,6 @@ static void add_command_line_help_message()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
-static void add_essential_messages()
-{
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property '%s' in section [%s]\n");
-
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
-	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
-
-	TITLEBAR_AddMessages();
-}
-
 static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
@@ -5262,10 +5248,10 @@ int sdl_main(int argc, char* argv[])
 		// Register essential DOS messages needed by some command line
 		// switches and during startup or reboot
 		add_command_line_help_message();
-		add_essential_messages();
 
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
+		TITLEBAR_AddMessages();
 
 		// Add [sdl] config section
 		init_sdl_config_section();

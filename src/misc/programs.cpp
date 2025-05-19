@@ -1056,4 +1056,13 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
 	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+	        "There is no property '%s' in section [%s]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
+	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
 }
