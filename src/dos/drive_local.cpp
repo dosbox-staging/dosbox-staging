@@ -572,10 +572,22 @@ static DiskType get_disk_type_from_media_byte(uint8_t media_byte)
 {
 	switch (media_byte) {
 		case 0xF0:
-			// 3.5" floppy
+			// 3.5" 1.44MB floppy
 			return DiskType::Floppy;
 		case 0xF9:
-			// 5.25" floppy
+			// 5.25" 1.2MB floppy or 3.5" 720KB floppy
+			return DiskType::Floppy;
+		case 0xFD:
+			// 5.25" 360KB floppy
+			return DiskType::Floppy;
+		case 0xFF:
+			// 5.25" 320KB floppy
+			return DiskType::Floppy;
+		case 0xFC:
+			// 5.25" 180KB floppy
+			return DiskType::Floppy;
+		case 0xFE:
+			// 5.25" 160KB floppy
 			return DiskType::Floppy;
 		case 0xF8:
 			return DiskType::HardDisk;
