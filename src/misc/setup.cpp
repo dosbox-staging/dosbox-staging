@@ -33,6 +33,7 @@
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "messages.h"
 #include "notifications.h"
 #include "string_utils.h"
 #include "support.h"
@@ -443,7 +444,7 @@ bool Prop_int::ValidateValue(const Value& in)
 		va = mi;
 	}
 
-		// TODO duplicate?
+	// TODO duplicate?
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
 	                      "Invalid [color=light-green]'%s'[reset] setting: "
@@ -1799,6 +1800,7 @@ Verbosity Config::GetStartupVerbosity() const
 		             : Verbosity::High;
 	}
 
+	// TODO duplicate?
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "SETUP",
 	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "

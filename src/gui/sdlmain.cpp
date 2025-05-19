@@ -4288,20 +4288,6 @@ static void messages_add_command_line()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
-static void messages_add_sdl()
-{
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property '%s' in section [%s]\n");
-
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
-	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
-
-	TITLEBAR_AddMessages();
-}
-
 static void config_add_sdl()
 {
 	constexpr bool changeable_at_runtime = true;
@@ -4815,7 +4801,7 @@ int sdl_main(int argc, char* argv[])
 		messages_add_command_line();
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
-		messages_add_sdl();
+		TITLEBAR_AddMessages();
 		config_add_sdl();
 
 		// Register DOSBox's (and all modules) messages and conf sections
