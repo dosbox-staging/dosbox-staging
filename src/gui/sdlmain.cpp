@@ -4209,7 +4209,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	return drivers;
 }
 
-static void messages_add_command_line()
+static void add_command_line_messages()
 {
 	MSG_Add("DOSBOX_HELP",
 	        "Usage: %s [OPTION]... [PATH]\n"
@@ -4288,7 +4288,7 @@ static void messages_add_command_line()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
-static void config_add_sdl()
+static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
 
@@ -4798,11 +4798,12 @@ int sdl_main(int argc, char* argv[])
 
 		// Register sdlmain's messages, conf sections, and essential
 		// DOS messages, needed by some command line switches
-		messages_add_command_line();
+		add_command_line_messages();
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
 		TITLEBAR_AddMessages();
-		config_add_sdl();
+
+		init_sdl_config_section();
 
 		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
