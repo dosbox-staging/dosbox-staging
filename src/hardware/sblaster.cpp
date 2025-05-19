@@ -21,8 +21,10 @@
 #include "hardware.h"
 #include "inout.h"
 #include "math_utils.h"
+#include "messages.h"
 #include "midi.h"
 #include "mixer.h"
+#include "notifications.h"
 #include "pic.h"
 #include "rwqueue.h"
 #include "sblaster.h"
@@ -369,6 +371,14 @@ static const char* sb_log_prefix()
 	}
 }
 
+constexpr auto SblasterSectionName = "sblaster";
+
+static void set_sblaster_property_value(const std::string_view property_name,
+                                        const std::string_view property_value)
+{
+	set_section_property_value(SblasterSectionName, property_name, property_value);
+}
+
 static void dsp_change_mode(const DspMode mode);
 
 static void flush_remaining_dma_transfer();
@@ -564,12 +574,19 @@ static void configure_sb_filter_for_model(MixerChannelPtr channel,
 		if (const auto maybe_filter_type = determine_filter_type(filter_choice,
 		                                                         sb_type)) {
 			return *maybe_filter_type;
-		} else {
-			LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'modern'",
-			            sb_log_prefix(),
-			            filter_choice.c_str());
 
-			set_section_property_value("sblaster", "sb_filter", "modern");
+		} else {
+			constexpr auto SettingName  = "sb_filter";
+			constexpr auto DefaultValue = "modern";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      filter_choice.c_str(),
+			                      DefaultValue);
+
+			set_sblaster_property_value(SettingName, DefaultValue);
 			return FilterType::Modern;
 		}
 	}();
@@ -662,12 +679,19 @@ static void configure_opl_filter_for_model(MixerChannelPtr opl_channel,
 		if (const auto maybe_filter_type = determine_filter_type(filter_choice,
 		                                                         sb_type)) {
 			return *maybe_filter_type;
-		} else {
-			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'auto'",
-			            sb_log_prefix(),
-			            filter_choice.c_str());
 
-			set_section_property_value("sblaster", "opl_filter", "auto");
+		} else {
+			constexpr auto SettingName  = "opl_filter";
+			constexpr auto DefaultValue = "auto";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      SettingName,
+			                      filter_choice.c_str(),
+			                      DefaultValue);
+
+			set_sblaster_property_value(SettingName, DefaultValue);
 
 			if (const auto filter_type = determine_filter_type("auto", sb_type);
 			    filter_type) {
@@ -3315,18 +3339,23 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 		// "falsey" setting ("off", "none", "false", etc.)
 		return OplMode::None;
 
-	} else { // ESS
+	} else {
+		// ESS
 		if (pref == "esfm" || pref == "auto") {
 			return OplMode::Esfm;
 
 		} else {
-			LOG_WARNING(
-			        "OPL: Invalid 'oplmode' setting for the ESS card: '%s', "
-			        "using 'auto'", pref.c_str());
+			constexpr auto SettingName  = "oplmode";
+			constexpr auto DefaultValue = "auto";
 
-			auto* sect_updater = static_cast<Section_prop*>(
-			        control->GetSection("sblaster"));
-			sect_updater->Get_prop("oplmode")->SetValue("auto");
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "OPL",
+			                      "SBLASTER_INVALID_ESS_OPLMODE",
+			                      SettingName,
+			                      pref.c_str(),
+			                      DefaultValue);
+
+			set_sblaster_property_value(SettingName, DefaultValue);
 
 			return OplMode::Esfm;
 		}
@@ -3335,54 +3364,66 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 
 static bool is_cms_enabled(const SbType sbtype)
 {
-	const auto* sect = static_cast<Section_prop*>(control->GetSection("sblaster"));
+	const auto* sect = static_cast<Section_prop*>(
+	        control->GetSection(SblasterSectionName));
 	assert(sect);
 
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
 		if (sect->Get_string("oplmode") == "cms") {
-			LOG_WARNING(
-			        "%s: The 'cms' setting for 'oplmode' is deprecated; "
-			        "use 'cms = on' instead.",
-			        sb_log_prefix());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "OPL",
+			                      "SBLASTER_CMS_OPLMODE_DEPRECATED");
+
 			return true;
+
 		} else {
 			const auto cms_str = sect->Get_string("cms");
 			const auto cms_enabled_opt = parse_bool_setting(cms_str);
+
 			if (cms_enabled_opt) {
 				return *cms_enabled_opt;
+
 			} else if (cms_str == "auto") {
-				return sbtype == SbType::SB1 || sbtype == SbType::GameBlaster;
+				return sbtype == SbType::SB1 ||
+				       sbtype == SbType::GameBlaster;
 			}
 			return false;
 		}
 	}();
 
 	switch (sbtype) {
-	case SbType::SB2: // CMS is optional for Sound Blaster 1 and 2
+	// CMS is optional for Sound Blaster 1 and 2
+	case SbType::SB2:
 	case SbType::SB1: return cms_enabled;
+
 	case SbType::GameBlaster:
 		if (!cms_enabled) {
-			LOG_WARNING(
-			        "%s: 'cms' setting is 'off', but is forced to 'auto' "
-			        "on the Game Blaster.",
-			        sb_log_prefix());
-			auto* sect_updater = static_cast<Section_prop*>(
-			        control->GetSection("sblaster"));
-			sect_updater->Get_prop("cms")->SetValue("auto");
+			constexpr auto SettingName  = "cms";
+			constexpr auto DefaultValue = "auto";
+
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "SBLASTER_CMS_FORCED_AUTO",
+			                      SettingName,
+			                      DefaultValue);
+
+			set_sblaster_property_value(SettingName, DefaultValue);
 		}
-		return true; // Game Blaster is CMS
+		// Game Blaster is CMS
+		return true;
 	default:
 		if (cms_enabled) {
-			LOG_WARNING(
-			        "%s: 'cms' setting 'on' not supported on this card, "
-			        "using 'auto'.",
-			        sb_log_prefix());
+			constexpr auto SettingName  = "cms";
+			constexpr auto DefaultValue = "auto";
 
-			auto* sect_updater = static_cast<Section_prop*>(
-			        control->GetSection("sblaster"));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      sb_log_prefix(),
+			                      "SBLASTER_CMS_FORCED_OFF",
+			                      SettingName,
+			                      DefaultValue);
 
-			sect_updater->Get_prop("cms")->SetValue("auto");
+			set_sblaster_property_value(SettingName, DefaultValue);
 		}
 		return false;
 	}
@@ -3784,14 +3825,40 @@ void shutdown_sblaster(Section* /*sec*/) {
 	MIXER_UnlockMixerThread();
 }
 
+
+static void register_sblaster_text_messages()
+{
+	MSG_Add("SBLASTER_INVALID_ESS_OPLMODE",
+	        "Invalid [color=light-green]'%s'[reset] "
+	        "setting for the ESS card: [color=white]'%s'[reset], "
+	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("SBLASTER_CMS_OPLMODE_DEPRECATED",
+	        "The [color=white]'cms'[reset] setting for "
+	        "[color=light-green]'oplmode'[reset] is deprecated; "
+	        "use [color=white]'cms = on'[reset] instead");
+
+	MSG_Add("SBLASTER_CMS_FORCED_AUTO",
+	        "[color=light-green]'%s'[reset] setting is "
+	        "[color=white]'off'[reset], but is forced to "
+	        "[color=white]'%s'[reset] on the Game Blaster");
+
+	MSG_Add("SBLASTER_CMS_FORCED_OFF",
+	        "[color=light-green]'%s'[reset] setting "
+	        "[color=white]'on'[reset] not supported on "
+	        "this card, forcing [color=white]'%s'[reset]");
+}
+
 void SB_AddConfigSection(const ConfigPtr& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 
 	assert(conf);
-	Section_prop* secprop = conf->AddSection_prop("sblaster",
+	Section_prop* secprop = conf->AddSection_prop(SblasterSectionName,
 	                                              &init_sblaster,
 	                                              changeable_at_runtime);
 	assert(secprop);
 	init_sblaster_dosbox_settings(*secprop);
+
+	register_sblaster_text_messages();
 }
