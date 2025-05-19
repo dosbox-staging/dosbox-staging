@@ -80,10 +80,19 @@ jobs:
           cmake --preset release-macos-${{ matrix.conf.arch }}
           cmake --build --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee build.log
 
+      - name: Dump workspace contents
+        run: find $RUNNER_WORKSPACE
+
       - name: Summarize warnings
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
         run:  python3 ./scripts/count-warnings.py -lf build.log
+
+      - name: Verify executable RPATH
+        run: |
+          set -x
+          otool -l build/release-macos-${{ matrix.conf.arch }}/Release/dosbox \
+            | grep "path @executable_path/lib"
 
       - name: Upload binary
         uses: actions/upload-artifact@v4

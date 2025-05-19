@@ -180,6 +180,11 @@ jobs:
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE
 
+      - name: Verify executable RPATH
+        run: |
+          set -x
+          objdump -x build/release-linux/dosbox | grep \$ORIGIN/lib
+
       - name: Package
         run: |
           echo "*** dosbox transitive deps:"
