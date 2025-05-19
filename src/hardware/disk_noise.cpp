@@ -26,6 +26,7 @@
 #include <cstring>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -122,6 +123,7 @@ DiskNoises::~DiskNoises()
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	constexpr float DiskNoiseGain = 0.2f;
 	float sample              = 0.0f;
 
@@ -165,7 +167,7 @@ AudioFrame DiskNoiseDevice::GetNextFrame()
 	}
 
 	return AudioFrame{sample};
-        }
+}
 
 void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& destination_buffer)
 {
@@ -329,6 +331,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 		LOG_INFO("DISKNOISE: Disk noise emulation disabled");
 		return;
 	}
+
 	spin.loop = loop_spin_sample;
 	LoadSample(spin_up_sample_path, spin.spin_up_sample);
 	LoadSample(spin_sample_path, spin.sample);
@@ -382,6 +385,7 @@ void DiskNoiseDevice::ActivateSpin()
 
 void DiskNoiseDevice::PlaySeek()
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	if (!disk_noise_enabled) {
 		return;
 	}
@@ -400,10 +404,8 @@ void DiskNoiseDevice::PlaySeek()
 
 	// Set the new seek sample
 	if (!seek.samples[index].empty()) {
-		MIXER_LockMixerThread();
 		seek.current_sample = seek.samples[index];
 		seek.current_it     = seek.current_sample.begin();
-		MIXER_UnlockMixerThread();
 	}
 }
 

@@ -42,6 +42,7 @@ public:
 
 private:
 	bool disk_noise_enabled = false;
+	std::mutex mutex = {};
 
 	struct SpinSample {
 		std::vector<float> spin_up_sample             = {};
