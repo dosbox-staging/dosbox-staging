@@ -2157,7 +2157,7 @@ Esta operación no está permitida en el modo seguro.
 La sección [%s] no existe.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' no es un valor válido para la propiedad '%s'.
 
 .

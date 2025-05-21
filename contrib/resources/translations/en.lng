@@ -1956,7 +1956,7 @@ This operation is not permitted in secure mode.
 Section [%s] doesn't exist.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' is not a valid value for property '%s'.
 
 .
