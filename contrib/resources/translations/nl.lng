@@ -3000,7 +3000,7 @@ Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!
 :CONFIG_VALID_VALUES
 Mogelijke waarden
 .
-:CONFIG_DEPRECATED_VALUES
+:CONFIG_DEPRECATION_WARNING
 Verouderde waarden
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -3145,7 +3145,7 @@ Deze bewerking is niet toegestaan in de beveiligde modus.
 Sectie [%s] bestaat niet.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' is geen geldige waarde voor eigenschap '%s'.
 
 .

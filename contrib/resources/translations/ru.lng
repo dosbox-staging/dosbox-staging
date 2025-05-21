@@ -1078,7 +1078,7 @@ MAC-адрес карты NE2000.
 Раздел "%s" не существует.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 "%s" недопустимое значение свойства "%s".
 
 .
