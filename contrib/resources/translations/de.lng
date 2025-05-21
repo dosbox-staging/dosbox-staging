@@ -2120,7 +2120,7 @@ Diese Operation ist im sicheren Modus nicht erlaubt.
 Abschnitt [%s] existiert nicht.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' ist kein gültiger Wert für die Eigenschaft '%s'.
 
 .
