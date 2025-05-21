@@ -3196,7 +3196,7 @@ del file di configurazione!
 :CONFIG_VALID_VALUES
 Valori possibili
 .
-:CONFIG_DEPRECATED_VALUES
+:CONFIG_DEPRECATION_WARNING
 Valori deprecati
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -3343,7 +3343,7 @@ Operazione non consentita in modalità sicura.
 La sezione [%s] non esiste.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' non è un valore valido per l'opzione '%s'.
 
 .
