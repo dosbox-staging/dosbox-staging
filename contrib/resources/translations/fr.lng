@@ -925,7 +925,7 @@ Cette opération n'est pas permise en mode sécurisé.
 La section "%s" n'existe pas.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 "%s" n'est pas une valeur correcte pour la propriété "%s".
 
 .
