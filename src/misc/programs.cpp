@@ -458,7 +458,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 
 				if (p->IsDeprecated()) {
 					output.AddString(MSG_Get(
-					        "PROGRAM_CONFIG_DEPRECATED"));
+					        "PROGRAM_CONFIG_DEPRECATION_WARNING"));
 					output.AddString("\n");
 				}
 
@@ -1068,9 +1068,20 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR",
 	        "Section [color=light-cyan][%s][reset] doesn't exist.\n");
 
-	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
+	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
 	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
-	        "using the existing value\n");
+	        "using [color=white]'%s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]. "
+	        "Value is outside of the valid range of %s-%s, using [color=white]'%d'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+	        "Setting [color=light-green]'%s = %s'[reset] is deprecated, "
+	        "falling back to the alternate: [color=light-green]'%s = %s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
+	        "Deprecated setting [color=light-green]'%s'[reset]");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
@@ -1093,7 +1104,7 @@ void PROGRAMS_Init(Section* sec)
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
 	        "restart hotkey.\n");
 
-	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
+	MSG_Add("PROGRAM_CONFIG_DEPRECATION_WARNING",
 	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
 	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
 
