@@ -231,8 +231,23 @@ DosDateTime get_dos_file_time(const NativeFileHandle handle)
 		return ret;
 	}
 
+	// FileTimeToLocalFileTime does seem to correctly account for DST but
+	// we're doing this anyway for consistency. See the comment in
+	// set_dos_file_time.
+	SYSTEMTIME write_systime = {};
+	if (!FileTimeToSystemTime(&write_time, &write_systime)) {
+		return ret;
+	}
+
+	SYSTEMTIME local_write_systime = {};
+	if (!SystemTimeToTzSpecificLocalTimeEx(nullptr,
+	                                       &write_systime,
+	                                       &local_write_systime)) {
+		return ret;
+	}
+
 	FILETIME local_write_time = {};
-	if (!FileTimeToLocalFileTime(&write_time, &local_write_time)) {
+	if (!SystemTimeToFileTime(&local_write_systime, &local_write_time)) {
 		return ret;
 	}
 
@@ -248,8 +263,23 @@ void set_dos_file_time(const NativeFileHandle handle, const uint16_t date,
 		return;
 	}
 
+	// We cannot use LocalFileTimeToFileTime because it uses the *current*
+	// DST state when converting from local time to UTC instead of DST state
+	// during the date that was passed.
+	SYSTEMTIME local_write_systime = {};
+	if (!FileTimeToSystemTime(&local_write_time, &local_write_systime)) {
+		return;
+	}
+
+	SYSTEMTIME write_systime = {};
+	if (!TzSpecificLocalTimeToSystemTimeEx(nullptr,
+	                                       &local_write_systime,
+	                                       &write_systime)) {
+		return;
+	}
+
 	FILETIME write_time = {};
-	if (!LocalFileTimeToFileTime(&local_write_time, &write_time)) {
+	if (!SystemTimeToFileTime(&write_systime, &write_time)) {
 		return;
 	}
 
