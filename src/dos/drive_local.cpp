@@ -568,34 +568,6 @@ localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
 	dirCache.SetBaseDir(basedir);
 }
 
-static DiskType get_disk_type_from_media_byte(uint8_t media_byte)
-{
-	switch (media_byte) {
-		case 0xF0:
-			// 3.5" 1.44MB floppy
-			return DiskType::Floppy;
-		case 0xF9:
-			// 5.25" 1.2MB floppy or 3.5" 720KB floppy
-			return DiskType::Floppy;
-		case 0xFD:
-			// 5.25" 360KB floppy
-			return DiskType::Floppy;
-		case 0xFF:
-			// 5.25" 320KB floppy
-			return DiskType::Floppy;
-		case 0xFC:
-			// 5.25" 180KB floppy
-			return DiskType::Floppy;
-		case 0xFE:
-			// 5.25" 160KB floppy
-			return DiskType::Floppy;
-		case 0xF8:
-			return DiskType::HardDisk;
-		default:
-			return DiskType::HardDisk;
-	}
-}
-
 bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 {
 	assert(file_handle != InvalidNativeFileHandle);
@@ -612,11 +584,6 @@ bool localFile::Read(uint8_t *data, uint16_t *num_bytes)
 		return false;
 	}
 
-	const auto disk_type = get_disk_type_from_media_byte(
-	        local_drive.lock()->GetMediaByte());
-
-	DOS_ExecuteRegisteredCallbacks(disk_type);
-	DOS_PerformDiskIoDelay(*num_bytes, disk_type);
 
 	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
 	/* Same for Igor */
@@ -652,12 +619,6 @@ bool localFile::Write(uint8_t *data, uint16_t *num_bytes)
 		// Truncation succeeded if we made it here
 		return true;
 	}
-
-	const auto disk_type = get_disk_type_from_media_byte(
-	        local_drive.lock()->GetMediaByte());
-
-	DOS_ExecuteRegisteredCallbacks(disk_type);
-	DOS_PerformDiskIoDelay(*num_bytes, disk_type);
 
 	// Otherwise we have some data to write
 	const auto ret = write_native_file(file_handle, data, *num_bytes);

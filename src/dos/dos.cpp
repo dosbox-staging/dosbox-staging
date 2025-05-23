@@ -240,6 +240,50 @@ void DOS_PerformDiskIoDelay(uint16_t data_transferred_bytes, DiskType disk_type)
 	}
 }
 
+static DiskType get_disk_type_from_media_byte(uint8_t media_byte)
+{
+	switch (media_byte) {
+	case 0xF0:
+		// 3.5" 1.44MB floppy
+		return DiskType::Floppy;
+	case 0xF9:
+		// 5.25" 1.2MB floppy or 3.5" 720KB floppy
+		return DiskType::Floppy;
+	case 0xFD:
+		// 5.25" 360KB floppy
+		return DiskType::Floppy;
+	case 0xFF:
+		// 5.25" 320KB floppy
+		return DiskType::Floppy;
+	case 0xFC:
+		// 5.25" 180KB floppy
+		return DiskType::Floppy;
+	case 0xFE:
+		// 5.25" 160KB floppy
+		return DiskType::Floppy;
+	case 0xF8: return DiskType::HardDisk;
+	default: return DiskType::HardDisk;
+	}
+}
+
+void DOS_ExecuteRegisteredCallbacksByHandle(uint16_t reg_handle)
+{
+	uint8_t handle = RealHandle(reg_handle);
+	if (handle != 0xff && Files[handle]) {
+		uint8_t drive = Files[handle]->GetDrive();
+		DOS_ExecuteRegisteredCallbacks(get_disk_type_from_media_byte(Drives[drive]->GetMediaByte()));
+	}
+}
+
+static void DOS_PerformDiskIoDelayByHandle(uint16_t data_transferred_bytes, uint16_t reg_handle)
+{
+	uint8_t handle = RealHandle(reg_handle);
+	if (handle != 0xff && Files[handle]) {
+		uint8_t drive = Files[handle]->GetDrive();
+		DOS_PerformDiskIoDelay(data_transferred_bytes, get_disk_type_from_media_byte(Drives[drive]->GetMediaByte()));
+	}
+}
+
 void DOS_PerformHardDiskIoDelay(uint16_t data_transferred_bytes)
 {
 	constexpr auto HardDiskSpeedFastKbPerSec   = 15000;
@@ -945,6 +989,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+			DOS_PerformDiskIoDelayByHandle(2048, reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -954,6 +1000,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x3d:		/* OPEN Open existing file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_OpenFile(name1,reg_al,&reg_ax)) {
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+			DOS_PerformDiskIoDelayByHandle(1024, reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -963,6 +1011,8 @@ static Bitu DOS_21Handler(void) {
 	case 0x3e:		/* CLOSE Close file */
 		if (DOS_CloseFile(reg_bx,false,&reg_al)) {
 			/* al destroyed with pre-close refcount from sft */
+			DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+			DOS_PerformDiskIoDelayByHandle(512, reg_bx);
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -974,6 +1024,7 @@ static Bitu DOS_21Handler(void) {
 			uint16_t toread=DOS_GetAmount();
 			dos.echo=true;
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
+				DOS_PerformDiskIoDelayByHandle(toread, reg_bx);
 				MEM_BlockWrite(SegPhys(ds)+reg_dx,dos_copybuf,toread);
 				reg_ax=toread;
 				CALLBACK_SCF(false);
@@ -990,6 +1041,8 @@ static Bitu DOS_21Handler(void) {
 			uint16_t towrite=DOS_GetAmount();
 			MEM_BlockRead(SegPhys(ds)+reg_dx,dos_copybuf,towrite);
 			if (DOS_WriteFile(reg_bx,dos_copybuf,&towrite)) {
+				DOS_ExecuteRegisteredCallbacksByHandle(reg_bx);
+				DOS_PerformDiskIoDelayByHandle(towrite, reg_bx);
 				reg_ax=towrite;
 	   			CALLBACK_SCF(false);
 			} else {
