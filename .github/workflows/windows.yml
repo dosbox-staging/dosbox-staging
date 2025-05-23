@@ -80,7 +80,7 @@ jobs:
 
       - name:  Log environment
         shell: pwsh
-        run: .\scripts\log-env.ps1
+        run: .\scripts\ci\log-env.ps1
 
       - name:  Run tests
         shell: pwsh
@@ -103,7 +103,7 @@ jobs:
         shell: pwsh
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run: python scripts\count-warnings.py -f --msclang vs\build.log
+        run: python scripts\ci\count-warnings.py -f --msclang vs\build.log
 
   build_windows_vs_release:
     name: Release ${{ matrix.debugger && 'w/ debugger' || '' }} (${{ matrix.arch }})
@@ -157,7 +157,7 @@ jobs:
 
       - name:  Log environment
         shell: pwsh
-        run:   .\scripts\log-env.ps1
+        run:   .\scripts\ci\log-env.ps1
 
       - name:  Set variables
         id:    set_vars
@@ -166,7 +166,7 @@ jobs:
           set -x
           echo "build_dir=vs/${{ matrix.arch }}/Release" >> $GITHUB_OUTPUT
 
-          VERSION=$(./scripts/get-version.sh version-and-hash)
+          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
           echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
 
@@ -174,7 +174,7 @@ jobs:
         shell: bash
         run: |
           set -x
-          GIT_HASH=$(./scripts/get-version.sh hash)
+          GIT_HASH=$(./scripts/ci/get-version.sh hash)
           sed -i "s|BUILD_GIT_HASH \"git\"|BUILD_GIT_HASH \"$GIT_HASH\"|" src/platform/visualc/config.h
 
       - name:  Enable the debugger in config.h
@@ -219,7 +219,7 @@ jobs:
           fi
 
           # Package
-          ./scripts/create-package.sh \
+          ./scripts/packaging/create-package.sh \
             -p msvc \
             ${{ steps.set_vars.outputs.build_dir }} \
             ${{ steps.set_vars.outputs.pkg_dir }}
@@ -323,12 +323,12 @@ jobs:
           mkdir -p out/program
 
           sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" contrib/windows_installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
 
-          cp contrib/windows_installer/*                   out
-          cp contrib/icons/windows/dosbox-staging.ico      out
-          cp contrib/icons/windows/dosbox-staging.bmp      out
-          cp contrib/icons/windows/dosbox-staging-side.bmp out
+          cp extras/windows-installer/*                    out
+          cp extras/icons/windows/dosbox-staging.ico      out
+          cp extras/icons/windows/dosbox-staging.bmp      out
+          cp extras/icons/windows/dosbox-staging-side.bmp out
 
           mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
           mv out/program/dosbox*.exe                       out
