@@ -65,7 +65,7 @@ jobs:
           bootstrap-vcpkg.bat -disableMetrics
 
       - name: Setup CMake
-        uses: lukka/get-cmake@v4.0.1
+        uses: lukka/get-cmake@v4.0.2
 
       - name:  Log environment
         shell: pwsh
