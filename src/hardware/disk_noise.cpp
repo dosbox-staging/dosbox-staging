@@ -191,8 +191,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		// Load entire file into memory
 		std::ifstream file(candidate, std::ios::binary | std::ios::ate);
 		if (!file) {
-			LOG_WARNING("DISKNOISE: Failed to open file '%ls'",
-			            candidate.c_str());
+			LOG_WARNING("DISKNOISE: Failed to open file '%s'",
+			            candidate.string().c_str());
 			continue;
 		}
 
@@ -202,8 +202,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		std::vector<uint8_t> file_data = {};
 		file_data.resize(static_cast<size_t>(size));
 		if (!file.read(reinterpret_cast<char*>(file_data.data()), size)) {
-			LOG_WARNING("DISKNOISE: Failed to read file '%ls'",
-			            candidate.c_str());
+			LOG_WARNING("DISKNOISE: Failed to read file '%s'",
+			            candidate.string().c_str());
 			continue;
 		}
 
@@ -212,8 +212,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		                                     file_data.size(),
 		                                     nullptr);
 		if (!decoder) {
-			LOG_WARNING("DISKNOISE: Failed to parse FLAC file '%ls'",
-			            candidate.c_str());
+			LOG_WARNING("DISKNOISE: Failed to parse FLAC file '%s'",
+			            candidate.string().c_str());
 			continue;
 		}
 
@@ -223,14 +223,14 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		const auto HertzToKilohertz = 1000;
 
 		if (channels != 1) {
-			LOG_WARNING("DISKNOISE: FLAC file '%ls' is not mono.",
-			            candidate.c_str());
+			LOG_WARNING("DISKNOISE: FLAC file '%s' is not mono.",
+			            candidate.string().c_str());
 			drflac_close(decoder);
 			continue;
 		}
 		if (sample_rate != DiskNoiseSampleRateInHz) {
-			LOG_WARNING("DISKNOISE: FLAC file '%ls' should be %dkHz, but %dkHz was found",
-			            candidate.c_str(),
+			LOG_WARNING("DISKNOISE: FLAC file '%s' should be %dkHz, but %dkHz was found",
+			            candidate.string().c_str(),
 			            DiskNoiseSampleRateInHz / HertzToKilohertz,
 			            sample_rate / HertzToKilohertz);
 			drflac_close(decoder);
@@ -244,8 +244,8 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		drflac_close(decoder);
 
 		if (frames_read == 0) {
-			LOG_WARNING("DISKNOISE: Failed to decode FLAC frames from '%ls'",
-			            candidate.c_str());
+			LOG_WARNING("DISKNOISE: Failed to decode FLAC frames from '%s'",
+			            candidate.string().c_str());
 			continue;
 		}
 
@@ -255,9 +255,9 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 			sample *= scale;
 		}
 
-		LOG_DEBUG("DISKNOISE: Loaded %zu samples from '%ls'",
+		LOG_DEBUG("DISKNOISE: Loaded %zu samples from '%s'",
 		          destination_buffer.size(),
-		          candidate.c_str());
+		          candidate.string().c_str());
 		return;
 	}
 
