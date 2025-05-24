@@ -82,13 +82,6 @@ jobs:
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
           echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
 
-      - name:  Set the Git hash in config.h
-        shell: bash
-        run: |
-          set -x
-          GIT_HASH=$(./scripts/get-version.sh hash)
-          sed -i "s|BUILD_GIT_HASH \"git\"|BUILD_GIT_HASH \"$GIT_HASH\"|" src/platform/visualc/config.h
-
       # TODO run tests
       #- name:  Build release
       #  if:    ${{ !matrix.conf.debugger }}
