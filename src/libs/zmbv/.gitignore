@@ -1,7 +1,0 @@
-# Visual Studio
-.vs
-Debug
-Release
-*.vcxproj.filters
-*.vcxproj.user
-*.log
