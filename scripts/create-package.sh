@@ -12,7 +12,7 @@ usage()
     Usage: -p <platform> [-h -c <commit> -b <branch> -r <repo> -v <version> -f] BUILD_DIR PACKAGE_DIR
     Where:
         -h          : Show this help message
-        -p          : Build platform. Can be one of windows, macos, linux, msvc
+        -p          : Build platform. Can be one of windows, macos, linux
         -c          : Git commit
         -b          : Git branch
         -r          : Git repository
@@ -21,7 +21,9 @@ usage()
         BUILD_DIR   : Build directory
         PACKAGE_DIR : Package directory
 
-    Note: On macos, '-v' must be set. On windows & msvc, the environment variable VC_REDIST_DIR must be set."
+    Notes: 
+      - On 'macos', '-v' must be set.
+      - On 'windows', the VC_REDIST_DIR env var must be set."
 }
 
 create_parent_dir()
@@ -30,7 +32,7 @@ create_parent_dir()
     dir=$(dirname "$path")
     if [ "$dir" != "." ]; then
         case $platform in
-             windows|msvc) mkdir -p "$dir" ;;
+             windows) mkdir -p "$dir" ;;
              macos) install -d "${dir}/"
         esac
     fi
@@ -41,9 +43,9 @@ install_file()
     src=$1
     dest=$2
     case $platform in
-        linux)        install -DT -m 644 "$src" "$dest" ;;
-        windows|msvc) create_parent_dir "$dest" && cp "$src" "$dest" ;;
-        macos)        create_parent_dir "$dest" && install -m 644 "$src" "$dest" ;;
+        linux)   install -DT -m 644 "$src" "$dest" ;;
+        windows) create_parent_dir "$dest" && cp "$src" "$dest" ;;
+        macos)   create_parent_dir "$dest" && install -m 644 "$src" "$dest" ;;
     esac
 }
 
@@ -79,7 +81,7 @@ install_doc()
             install_file licenses/Zlib.txt         "${macos_content_dir}/doc/licenses/Zlib.txt"
             readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
-        windows|msvc)
+        windows)
             install_file docs/README.template      "${pkg_dir}/README.txt"
             install_file LICENSE                   "${pkg_dir}/LICENSE.txt"
             install_file docs/README.video         "${pkg_dir}/doc/video.txt"
@@ -201,24 +203,6 @@ pkg_macos()
 	install_file contrib/macos/DS_Store "${macos_dist_dir}/.DS_Store"
 }
 
-# TODO delete once the Windows CMake migration has been completed
-pkg_msvc()
-{
-    # Get the release dir name from $build_dir
-    release_dir=$(basename -- "$(dirname -- "${build_dir}")")/$(basename -- "${build_dir}")
-
-    # Copy binary
-    cp "${build_dir}/dosbox.exe"  "${pkg_dir}/dosbox.exe"
-
-    # Copy dll files
-    cp "${build_dir}"/*.dll                  "${pkg_dir}/"
-    cp "src/libs/zmbv/${release_dir}"/*.dll  "${pkg_dir}/"
-
-    # Copy MSVC C++ redistributable files
-    cp docs/vc_redist.txt                    "${pkg_dir}/doc/vc_redist.txt"
-    cp "$VC_REDIST_DIR"/*.dll                "${pkg_dir}/"
-}
-
 pkg_windows()
 {
     # Get the release dir name from $build_dir
@@ -274,7 +258,7 @@ fi
 
 p=$platform
 case $p in
-    linux|macos|msvc|windows) true ;;
+    linux|macos|windows) true ;;
     *) platform="unsupported" ;;
 esac
 
@@ -306,11 +290,6 @@ if [ "$platform" = "macos" ]; then
     macos_content_dir="${macos_dist_dir}/DOSBox Staging.app/Contents"
 fi
 
-if [ "$platform" = "msvc" ] && [ -z "$VC_REDIST_DIR" ]; then
-    echo "VC_REDIST_DIR environment variable not set"
-    usage
-    exit 1
-fi
 if [ "$platform" = "windows" ] && [ -z "$VC_REDIST_DIR" ]; then
     echo "VC_REDIST_DIR environment variable not set"
     usage
@@ -340,7 +319,5 @@ case $platform in
     windows) pkg_windows ;;
     macos)   pkg_macos   ;;
     linux)   pkg_linux   ;;
-    # TODO delete these once the Window CMake migration has been completed
-    msvc)    pkg_msvc    ;;
     *)     echo "Unsupported platform."; usage; exit 1 ;;
 esac
