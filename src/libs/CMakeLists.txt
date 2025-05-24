@@ -1,6 +1,7 @@
 add_subdirectory(decoders)
 add_subdirectory(ESFMu)
 add_subdirectory(loguru)
+add_subdirectory(manymouse)
 add_subdirectory(nuked)
 add_subdirectory(PDCurses)
 add_subdirectory(residfp)

@@ -79,6 +79,15 @@ if(NOT HAS_UNISTD)
   )
 endif()
 
+# File-descriptor manipulation routines, such as FD_ZERO, are used
+# by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
+# routines aren't universally available, such as on Android.
+if(DOSBOX_PLATFORM_WINDOWS)
+  check_symbol_exists(FD_ZERO  "winsock2.h"    HAVE_FD_ZERO)
+else()
+  check_symbol_exists(FD_ZERO  "sys/select.h"  HAVE_FD_ZERO)
+endif()
+
 ### config.h shenanigans
 
 set(TEST_CODE_BUILTIN_AVAILABLE "
@@ -152,8 +161,26 @@ if(OPT_DEBUG)
 endif()
 
 # ManyMouse
-set(C_MANYMOUSE OFF)    # TODO
-set(SUPPORT_XINPUT2 OFF)    # TODO
+if (DOSBOX_PLATFORM_MACOS)
+  include (${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/FindIOKit.cmake)
+  set(C_MANYMOUSE (${HAVE_FD_ZERO} AND ${IOKit_FOUND}))
+else()
+  set(C_MANYMOUSE "${HAVE_FD_ZERO}")
+endif()
+
+# ManyMouse - optional XInput support
+option(OPT_XINPUT
+       "Let ManyMouse use the X Input protocol"
+       OFF
+)
+check_include_file("X11/extensions/XInput2.h" HAS_XINPUT)
+if (C_MANYMOUSE AND HAS_XINPUT AND OPT_XINPUT)
+  include (${CMAKE_ROOT}/Modules/FindX11.cmake)
+  if (NOT ${X11_Xinput_FOUND})
+    message(FATAL_ERROR "XInput not found.")
+  endif()
+  set(SUPPORT_XINPUT2 ON)
+endif()
 
 # macOS
 set(C_COREAUDIO      "${DOSBOX_PLATFORM_MACOS}")
@@ -238,6 +265,7 @@ endif()
 target_link_libraries(dosbox PRIVATE
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+  $<IF:$<BOOL:${SUPPORT_XINPUT2}>,${X11_Xinput_LIB},>
   libcapture
   libmisc
   libcpu
