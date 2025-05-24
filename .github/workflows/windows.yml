@@ -1,4 +1,4 @@
-name: Windows CMake builds
+name: Windows builds
 permissions: read-all
 
 on:
