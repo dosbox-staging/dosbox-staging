@@ -23,11 +23,11 @@
 #include <utility>
 
 #include "callback.h"
-#include "regs.h"
-#include "mem.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
 #include "mapper.h"
+#include "mem.h"
+#include "regs.h"
 #include "string_utils.h"
 
 diskGeo DiskGeometryList[] = {
@@ -62,7 +62,12 @@ void BIOS_SetEquipment(uint16_t equipment);
 /* 2 floppys and 2 harddrives, max */
 std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
 std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
-
+// Image Disk List always has the first two slots be floppy disks and the last
+// two being hard disks
+static std::vector<DiskType> image_disk_list_types = {DiskType::Floppy,
+                                            DiskType::Floppy,
+                                            DiskType::HardDisk,
+                                            DiskType::HardDisk};
 unsigned int swapPosition;
 
 void updateDPT(void) {
@@ -326,7 +331,8 @@ static bool has_image(const std::array<T, N> &arr) {
 	return std::any_of(std::begin(arr), std::end(arr), to_bool);
 }
 
-static Bitu INT13_DiskHandler(void) {
+static Bitu INT13_DiskHandler(void)
+{
 	uint16_t segat, bufptr;
 	uint8_t sectbuf[512];
 	uint8_t  drivenum;
@@ -334,6 +340,9 @@ static Bitu INT13_DiskHandler(void) {
 	last_drive = reg_dl;
 	drivenum = GetDosDriveNumber(reg_dl);
 	const bool any_images = has_image(imageDiskList);
+	// This is an assumed default block transfer size
+	// used for the IO delay and sound triggering
+	constexpr auto DefaultTransferSizeBytes = 512;
 
 	// unconditionally enable the interrupt flag
 	CALLBACK_SIF(true);
@@ -414,7 +423,13 @@ static Bitu INT13_DiskHandler(void) {
 		bufptr = reg_bx;
 		for (Bitu i = 0; i < reg_al; i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl & 63)+i), sectbuf);
-			if((last_status != 0x00) || (killRead)) {
+
+			DOS_ExecuteRegisteredCallbacks(
+			        image_disk_list_types[drivenum]);
+			DOS_PerformDiskIoDelay(DefaultTransferSizeBytes,
+			                       image_disk_list_types[drivenum]);
+
+			if ((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
 				reg_ah = 0x04;
@@ -442,7 +457,12 @@ static Bitu INT13_DiskHandler(void) {
 				bufptr++;
 			}
 			last_status = imageDiskList[drivenum]->Write_Sector((uint32_t)reg_dh, (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)), (uint32_t)((reg_cl & 63) + i), &sectbuf[0]);
-			if(last_status != 0x00) {
+
+			DOS_ExecuteRegisteredCallbacks(image_disk_list_types[drivenum]);
+			DOS_PerformDiskIoDelay(DefaultTransferSizeBytes,
+			                       image_disk_list_types[drivenum]);
+
+			if (last_status != 0x00) {
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
@@ -589,7 +609,6 @@ static Bitu INT13_DiskHandler(void) {
 	}
 	return CBRET_NONE;
 }
-
 
 void BIOS_SetupDisks(void) {
 /* TODO Start the time correctly */

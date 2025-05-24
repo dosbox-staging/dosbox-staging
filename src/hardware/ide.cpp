@@ -2129,7 +2129,8 @@ void IDEATADevice::generate_identify_device()
 IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
         : IDEDevice(c, IDE_TYPE_HDD),
           bios_disk_index(disk_index)
-{}
+{
+}
 
 IDEATADevice::~IDEATADevice()
 {}
