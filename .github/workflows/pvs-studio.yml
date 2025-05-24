@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      BUILD_DIR: build/
 
     steps:
       - name: Checkout repository
@@ -65,7 +66,7 @@ jobs:
           set -x
           export CC=clang
           export CXX=clang++
-          cmake --preset debug-linux-vcpkg
+          cmake --preset debug-linux-vcpkg -B ${{ env.BUILD_DIR }}
 
           # TODO Consider using the the PV-Studio CMake integration instead
           # of calling the `pvs-studio-analyzer` directly. That might be a
@@ -74,7 +75,7 @@ jobs:
           # - https://pvs-studio.com/en/docs/manual/0036/
           # - https://github.com/viva64/pvs-studio-cmake-examples
           #
-          pvs-studio-analyzer trace -- cmake --build --preset debug-linux-vcpkg
+          pvs-studio-analyzer trace -- cmake --build ${{ env.BUILD_DIR }} --preset debug-linux-vcpkg
 
       - name: Analyze
         run: |

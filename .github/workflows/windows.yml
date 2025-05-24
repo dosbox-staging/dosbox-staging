@@ -34,6 +34,8 @@ jobs:
     outputs:
       dosbox_version: ${{ steps.set_vars.outputs.dosbox_version }}
 
+    env:
+      BUILD_DIR: build/release-windows-${{ matrix.conf.arch }}
     runs-on: windows-2022
     strategy:
       matrix:
@@ -76,7 +78,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          echo "build_dir=build/release-windows/Release" >> $GITHUB_OUTPUT
 
           VERSION=$(./scripts/get-version.sh version-and-hash)
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
@@ -93,15 +94,15 @@ jobs:
         if:    ${{ !matrix.conf.debugger }}
         shell: pwsh
         run: |
-          cmake --preset release-windows
-          cmake --build --preset release-windows >> build.log 2>&1
+          cmake --preset release-windows -B ${{ env.BUILD_DIR }}
+          cmake --build ${{ env.BUILD_DIR }} --preset release-windows >> build.log 2>&1
 
       - name:  Build release with debugger
         if:    ${{ matrix.conf.debugger }}
         shell: pwsh
         run: |
-          cmake --preset release-windows -DOPT_DEBUG=ON -DOPT_HEAVY_DEBUG=ON
-          cmake --build --preset release-windows >> build.log 2>&1
+          cmake --preset release-windows -DOPT_DEBUG=ON -DOPT_HEAVY_DEBUG=ON -B ${{ env.BUILD_DIR }}
+          cmake --build ${{ env.BUILD_DIR }} --preset release-windows >> build.log 2>&1
 
       - name: Summarize warnings
         env:
@@ -133,7 +134,7 @@ jobs:
           # Package
           ./scripts/create-package.sh \
             -p windows \
-            ${{ steps.set_vars.outputs.build_dir }} \
+            ${{ env.BUILD_DIR }}/Release \
             ${{ steps.set_vars.outputs.pkg_dir }}
 
 
@@ -166,8 +167,8 @@ jobs:
           set -x
           mkdir -p ${{ steps.set_vars.outputs.pkg_dir }}
           # Move the debugger build into the release area
-          ls ${{ steps.set_vars.outputs.build_dir }}
-          cp ${{ steps.set_vars.outputs.build_dir }}/dosbox.exe ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          ls ${{ env.BUILD_DIR }}/Release
+          cp ${{ env.BUILD_DIR }}/Release/dosbox.exe ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}

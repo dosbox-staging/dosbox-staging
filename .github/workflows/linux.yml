@@ -105,8 +105,8 @@ jobs:
           set -x
           export CC=${{ matrix.conf.cc }}
           export CXX=${{ matrix.conf.cxx }}
-          cmake ${{ matrix.conf.cmake_flags }} --preset ${{ matrix.conf.cmake_preset }}
-          cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
+          cmake ${{ matrix.conf.cmake_flags }} --preset ${{ matrix.conf.cmake_preset }} -B ./build/${{ matrix.conf.cmake_preset }}
+          cmake --build ./build/${{ matrix.conf.cmake_preset }} --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
 
 #      - name: Run tests
 #        run:  TODO
@@ -123,6 +123,7 @@ jobs:
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      BUILD_DIR: build/release-linux
 
     steps:
       - name: Checkout repository
@@ -158,8 +159,8 @@ jobs:
       - name: Setup and build
         run: |
           set -x
-          cmake --preset release-linux-vcpkg
-          cmake --build --preset release-linux-vcpkg
+          cmake --preset release-linux-vcpkg -B ${{ env.BUILD_DIR }}
+          cmake --build ${{ env.BUILD_DIR }} --preset release-linux-vcpkg
 
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE
@@ -167,16 +168,16 @@ jobs:
       - name: Verify executable RPATH
         run: |
           set -x
-          objdump -x build/release-linux/dosbox | grep \$ORIGIN/lib
+          objdump -x ${{ env.BUILD_DIR }}/dosbox | grep \$ORIGIN/lib
 
       - name: Package
         run: |
           echo "*** dosbox transitive deps:"
-          ldd build/release-linux/dosbox
+          ldd ${{ env.BUILD_DIR }}/dosbox
 
           ./scripts/create-package.sh \
             -p linux \
-            build/release-linux \
+            ${{ env.BUILD_DIR }} \
             "dosbox-staging-linux-x86_64-$VERSION"
 
 
