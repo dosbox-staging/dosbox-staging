@@ -261,7 +261,7 @@ void DiskNoiseDevice::LoadSample(const std::string& path, std::vector<float>& de
 		return;
 	}
 
-	LOG_WARNING("DISKNOISE: Failed to find FLAC file: '%ls'", path.c_str());
+	LOG_WARNING("DISKNOISE: Failed to find FLAC file: '%s'", path.c_str());
 }
 
 void DiskNoiseDevice::LoadSeekSamples(const std::vector<std::string>& paths)
