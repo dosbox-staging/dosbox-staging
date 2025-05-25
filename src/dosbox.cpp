@@ -560,6 +560,29 @@ static void DOSBOX_RealInit(Section* sec)
 
 	VGA_SetRatePreference(section->Get_string("dos_rate"));
 
+	// Set the disk IO data rate
+	const auto hdd_io_speed = section->Get_string("hard_disk_speed");
+	if (hdd_io_speed == "fast") {
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
+	} else if (hdd_io_speed == "medium") {
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::HardDisk);
+	} else if (hdd_io_speed == "slow") {
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::HardDisk);
+	} else {
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::HardDisk);
+	}
+
+	// Set the floppy disk IO data rate
+	const auto floppy_io_speed = section->Get_string("floppy_disk_speed");
+	if (floppy_io_speed == "fast") {
+		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
+	} else if (floppy_io_speed == "medium") {
+		DOS_SetDiskSpeed(DiskSpeed::Medium, DiskType::Floppy);
+	} else if (floppy_io_speed == "slow") {
+		DOS_SetDiskSpeed(DiskSpeed::Slow, DiskType::Floppy);
+	} else {
+		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
+	}
 }
 
 static void DOSBOX_ConfigChanged(Section* sec)
@@ -815,6 +838,24 @@ void DOSBOX_Init()
 	        "E.g., instead of 'config -set sbtype sb16', it is enough to execute\n"
 	        "'sbtype sb16', and instead of 'config -get sbtype', you can just execute\n"
 	        "the 'sbtype' command.");
+
+	pstring = secprop->Add_string("hard_disk_speed", only_at_start, "maximum");
+	pstring->Set_values({"maximum", "fast", "medium", "slow"});
+	pstring->Set_help(
+	        "Set the emulated hard disk speed ('maximum' by default).\n"
+	        "  maximum:  As fast as possible, no slowdown (default)\n"
+	        "  fast:     Typical mid-1990s hard disk speed (~15 MB/s)\n"
+	        "  medium:   Typical early 1990s hard disk speed (~2.5 MB/s)\n"
+	        "  slow:     Typical 1980s hard disk speed (~600 kB/s)");
+
+	pstring = secprop->Add_string("floppy_disk_speed", only_at_start, "maximum");
+	pstring->Set_values({"maximum", "fast", "medium", "slow"});
+	pstring->Set_help(
+	        "Set the emulated floppy disk speed ('maximum' by default).\n"
+	        "  maximum:  As fast as possible, no slowdown (default)\n"
+	        "  fast:     Extra-high density (ED) floppy speed (~120 kB/s)\n"
+	        "  medium:   High density (HD) floppy speed (~60 kB/s)\n"
+	        "  slow:     Double density (DD) floppy speed (~30 kB/s)");
 
 	// Configure render settings
 	RENDER_AddConfigSection(control);
