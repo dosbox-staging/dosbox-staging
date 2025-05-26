@@ -244,3 +244,4 @@ target_link_libraries(dosbox PRIVATE
   libdos
   libfpu
 )
+
