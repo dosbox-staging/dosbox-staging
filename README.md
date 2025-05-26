@@ -3,9 +3,11 @@
 ![GPL-2.0-or-later][gpl-badge]
 [![Chat][discord-badge]][discord]
 
-This repository attempts to modernize the DOSBox codebase by using current
-development practices and tools, fixing issues, and adding features that better
-support today's systems.
+DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
+
+It is a (mostly) drop-in replacement for older DOSBox versions—your existing configurations will continue to work, and you will have access to many advanced features.
+
+For a detailed description of the project's scope please refer to the [About](https://www.dosbox-staging.org/about/) page on our website.
 
 ## Donations
 
@@ -18,6 +20,12 @@ involved](https://www.dosbox-staging.org/get-involved/) page of our website
 for other ways to contribute.
 
 
+## Project website
+
+https://www.dosbox-staging.org/
+
+First-time users and people migrating from other DOSBox variants should start by reading the [Getting started guide](https://www.dosbox-staging.org/getting-started/).
+
 ## Build status
 
 [![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
@@ -29,9 +37,10 @@ for other ways to contribute.
 
 ## Stable release builds
 
-[Linux](https://www.dosbox-staging.org/releases/linux/),
 [Windows](https://www.dosbox-staging.org/releases/windows/),
 [macOS](https://www.dosbox-staging.org/releases/macos/)
+[Linux](https://www.dosbox-staging.org/releases/linux/),
+
 
 ## Test builds & development snapshots
 
@@ -144,26 +153,6 @@ sudo zypper install ccache gcc gcc-c++ meson alsa-devel libatomic1 libpng-devel 
 ```
 
 ``` shell
-# Void Linux
-sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
-                     fluidsynth-devel libiir1-devel libmt32emu-devel \
-                     libpng-devel libslirp-devel opusfile-devel \
-                     speexdsp-devel libatomic-devel libXi-devel
-```
-
-``` shell
-# NixOS
-# With Home Manager on home.nix (Recommended Permanent Installation)
-home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \
-                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \
-                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
-                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
-
-# Note: the same package list will work with environment.systemPackages
-# on configuration.nix
-```
-
-``` shell
 # macOS
 xcode-select --install
 brew install cmake ccache meson libpng sdl2 sdl2_net opusfile \
@@ -205,8 +194,6 @@ brew install cmake ccache meson libpng sdl2 sdl2_net opusfile \
 
     The binary depends on local resources relative to it, so we suggest
     symlinking to the binary from your `PATH`, such as into `~/.local/bin/`.
-
-    Have fun!
 
 
 ### Windows – Visual Studio (2022 or newer)
