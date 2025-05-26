@@ -293,7 +293,6 @@ TEST(ConvertAnsiMarkup, StartupMessage)
 	        "\xBA                                                                    \xBA\n"
 	        "\xBA To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and \033[31m%s+F12[color=white].%s%s       \xBA\n"
 	        "\xBA To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 \xBA\n"
-	        "\xBA For more information read the [color=light-cyan]README[color=white] file in the DOSBox directory. \xBA\n"
 	        "\xBA                                                                    \xBA\n";
 
     std::string orig_msg = "\033[44m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
@@ -306,7 +305,6 @@ TEST(ConvertAnsiMarkup, StartupMessage)
 	        "\xBA                                                                    \xBA\n"
 	        "\xBA To adjust the emulated CPU speed, use \033[31;1m%s+F11\033[37;1m and \033[31m%s+F12\033[37;1m.%s%s       \xBA\n"
 	        "\xBA To activate the keymapper \033[31;1m%s+F1\033[37;1m.%s                                 \xBA\n"
-	        "\xBA For more information read the \033[36;1mREADME\033[37;1m file in the DOSBox directory. \xBA\n"
 	        "\xBA                                                                    \xBA\n";
     EXPECT_EQ(convert_ansi_markup(new_msg), orig_msg);
 }
