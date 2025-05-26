@@ -56,7 +56,6 @@ install_doc()
         linux)
             install_file docs/README.template      "${pkg_dir}/README"
             install_file LICENSE                   "${pkg_dir}/LICENSE"
-            install_file README                    "${pkg_dir}/doc/manual.txt"
             install_file docs/dosbox.1             "${pkg_dir}/man/dosbox.1"
             install_file licenses/BSD-2-Clause.txt "${pkg_dir}/doc/licenses/BSD-2-Clause.txt"
             install_file licenses/BSD-3-Clause.txt "${pkg_dir}/doc/licenses/BSD-3-Clause.txt"
@@ -70,8 +69,6 @@ install_doc()
         macos)
             install_file docs/README.template      "${macos_content_dir}/SharedSupport/README"
             install_file LICENSE                   "${macos_content_dir}/SharedSupport/LICENSE"
-            install_file README                    "${macos_content_dir}/SharedSupport/manual.txt"
-            install_file docs/README.video         "${macos_content_dir}/SharedSupport/video.txt"
             install_file licenses/BSD-2-Clause.txt "${macos_content_dir}/doc/licenses/BSD-2-Clause.txt"
             install_file licenses/BSD-3-Clause.txt "${macos_content_dir}/doc/licenses/BSD-3-Clause.txt"
             install_file licenses/DEBUG.COM.txt    "${macos_content_dir}/doc/licenses/DEBUG.COM.txt"
@@ -84,8 +81,6 @@ install_doc()
         windows)
             install_file docs/README.template      "${pkg_dir}/README.txt"
             install_file LICENSE                   "${pkg_dir}/LICENSE.txt"
-            install_file docs/README.video         "${pkg_dir}/doc/video.txt"
-            install_file README                    "${pkg_dir}/doc/manual.txt"
             install_file licenses/BSD-2-Clause.txt "${pkg_dir}/doc/licenses/BSD-2-Clause.txt"
             install_file licenses/BSD-3-Clause.txt "${pkg_dir}/doc/licenses/BSD-3-Clause.txt"
             install_file licenses/DEBUG.COM.txt    "${pkg_dir}/doc/licenses/DEBUG.COM.txt"

@@ -428,7 +428,6 @@ void MOUNT::AddMessages() {
 	        "Notes:\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
 	        "  - '-ro' mounts the drive as read-only.\n"
-	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
 	        "Examples:\n");
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_WIN32",

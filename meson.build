@@ -61,7 +61,7 @@ install_data(
     'licenses/Zlib.txt',
     install_dir: licenses_dir,
 )
-install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
+install_data('docs/AUTHORS', 'docs/THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
 subdir('extras/icons')

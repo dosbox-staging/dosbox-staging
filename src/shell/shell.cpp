@@ -782,7 +782,6 @@ void SHELL_Init() {
 	        "║                                                                    ║\n"
 	        "║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║\n"
 	        "║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║\n"
-	        "║ For more information read the [color=light-cyan]README[color=white] file in the DOSBox directory. ║\n"
 	        "║                                                                    ║\n");
 	MSG_Add("SHELL_STARTUP_CGA",
 	        "║ DOSBox supports Composite CGA mode.                                ║\n"
