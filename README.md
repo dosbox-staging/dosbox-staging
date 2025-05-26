@@ -72,7 +72,6 @@ First-time users and people migrating from other DOSBox variants should start by
 ## Source code analysis tools
 
 - [PVS-Studio](https://pvs-studio.com/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) — C++ static analyser
-- [Clang Static Analyzer](https://clang-analyzer.llvm.org/) — C++ static analyser
 - [Pylint](https://pypi.org/project/pylint/) — Python static analyser
 - [markdownlint](https://github.com/DavidAnson/markdownlint) — style checker and linter for Markdown
 - [ShellCheck](https://www.shellcheck.net/) — shell script analysis tool
