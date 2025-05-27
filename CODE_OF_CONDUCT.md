@@ -39,7 +39,7 @@ bar for ourselves.
   and create a new project, just as we stand on the shoulders of those who gave
   us the right to create this project.
 
-## Reporting Issues
+## Reporting issues
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported by contacting the project team (see below). All complaints will be
@@ -50,7 +50,7 @@ details of specific enforcement policies may be posted separately.
 
 The project team can be contacted [via Discord](https://discord.gg/WwAg3Xf).
 
-## License and Acknowledgement
+## License and acknowledgement
 
 This text is shared under the [CC0 - No Rights Reserved
 license](https://creativecommons.org/share-your-work/public-domain/cc0/).
