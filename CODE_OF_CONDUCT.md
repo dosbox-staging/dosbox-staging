@@ -1,4 +1,4 @@
-# Code of Conduct
+# Code of conduct
 
 In order to foster a welcoming, positive, and rewarding experience, we as
 community members pledge to uphold this code of conduct.
