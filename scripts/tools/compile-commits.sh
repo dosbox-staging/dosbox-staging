@@ -34,7 +34,7 @@ compile_commit() {
 
 	# Configure if the build directory does not exist (this happens when
 	# compiling the first commit)
-	if ! test -d "$BUILD_DIR"; then
+	if ! test -d "${BUILD_DIR:?}/$CMAKE_PRESET"; then
 		DO_CONFIGURE=1
 	fi
 
@@ -92,7 +92,7 @@ BUILD_DIR=build
 echo
 
 # Ensure CMake configure is triggered before compiling the first commit
-rm -rf $BUILD_DIR
+rm -rf "${BUILD_DIR:?}/$CMAKE_PRESET"
 
 PARENT_BRANCH=main
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
