@@ -1,6 +1,6 @@
 resources = [
     'drives',
-    'disknoise',
+    'disknoises',
     'freedos-cpi',
     'freedos-keyboard',
     'glshaders',

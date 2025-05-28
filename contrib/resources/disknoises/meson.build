@@ -4,6 +4,7 @@ resource_files = [
     'fdd_seek3.flac',
     'fdd_seek4.flac',
     'fdd_seek5.flac',
+    'fdd_seek6.flac',
     'fdd_seek7.flac',
     'fdd_seek8.flac',
     'fdd_seek9.flac',

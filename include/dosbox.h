@@ -119,7 +119,7 @@ inline bool is_machine(const int type) {
 constexpr auto DefaultMt32RomsDir   = "mt32-roms";
 constexpr auto DefaultSoundfontsDir = "soundfonts";
 constexpr auto GlShadersDir         = "glshaders";
-constexpr auto DiskNoiseDir         = "disknoise";
+constexpr auto DiskNoiseDir         = "disknoises";
 constexpr auto PluginsDir           = "plugins";
 
 constexpr auto MicrosInMillisecond = 1000;
