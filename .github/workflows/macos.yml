@@ -136,10 +136,10 @@ jobs:
       - name: Inject external vcpkg dependencies
         run: |
           set -x
-          DEPS_VERSION=v0.83.0
+          EXT_DEPS_VERSION=v0.83.0-1
           ZIP_NAME=dosbox-vcpkg-deps-macos-universal.zip
 
-          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$DEPS_VERSION/$ZIP_NAME
+          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$EXT_DEPS_VERSION/$ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
           LIB_DIR="dist/DOSBox Staging.app/Contents/MacOS/lib"
