@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -262,6 +262,10 @@ bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
 
 void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
                    const uint8_t exit_code);
+
+// Creates a fake TSR memory area for the currently running command.
+// Returns start segment if memory allocation succeeded.
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes);
 
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
