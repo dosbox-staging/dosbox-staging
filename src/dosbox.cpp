@@ -54,7 +54,6 @@ void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void IO_Init(Section * );
 void CALLBACK_Init(Section*);
-void PROGRAMS_Init(Section*);
 //void CREDITS_Init(Section*);
 void VGA_Init(Section*);
 
@@ -1394,6 +1393,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
 	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");
+
+	// Needs to be initialised early before the config settings get applied
+	PROGRAMS_AddMessages();
 
 	// Initialize the uptime counter when launching the first shell. This
 	// ensures that slow-performing configurable tasks (like loading MIDI

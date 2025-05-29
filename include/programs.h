@@ -160,6 +160,9 @@ protected:
 	HELP_Detail help_detail{};
 };
 
+void PROGRAMS_AddMessages();
+void PROGRAMS_Init(Section* sec);
+
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
 
 void PROGRAMS_Destroy([[maybe_unused]] Section* sec);

@@ -901,19 +901,16 @@ void PROGRAMS_Destroy([[maybe_unused]] Section* sec)
 	internal_progs.clear();
 }
 
-void PROGRAMS_Init(Section* sec)
+void PROGRAMS_AddMessages()
 {
-	// Setup a special callback to start virtual programs
-	call_program = CALLBACK_Allocate();
-	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
-
-	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(&PROGRAMS_Destroy);
-
 	// List config
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");
-	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "[color=white]Primary config file:[reset]\n  %s\n");
-	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", "\n[color=white]Additional config files:[reset]\n  ");
+
+	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF",
+	        "[color=white]Primary config file:[reset]\n  %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF",
+	        "\n[color=white]Additional config files:[reset]\n  ");
 
 	MSG_Add("PROGRAM_CONFIG_CONFDIR",
 	        "[color=white]DOSBox Staging %s configuration directory:[reset]\n  %s\n\n");
@@ -963,7 +960,7 @@ void PROGRAMS_Init(Section* sec)
 	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    show the description and the current value of a config\n"
 	        "                    property\n"
-			"\n"
+	        "\n"
 	        "  -help sections\n"
 	        "  -h    sections\n"
 	        "  -?    sections    [reset]list the names of all config sections\n"
@@ -1023,27 +1020,13 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR",
 	        "Section [color=light-cyan][%s][reset] doesn't exist.\n");
 
-	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
-	        "using [color=white]'%s'[reset]");
-
-	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
-	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]. "
-	        "Value is outside of the valid range of %s-%s, using [color=white]'%d'[reset]");
-
-	MSG_Add("PROGRAM_CONFIG_DEPRECATED_FALLBACK",
-	        "Setting [color=light-green]'%s = %s'[reset] is deprecated, "
-	        "falling back to the alternate: [color=light-green]'%s = %s'[reset]\n");
-
-	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
-	        "Deprecated setting [color=light-green]'%s'[reset]");
-
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
 	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
-	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");
+	        "\n[color=white]DOSBox was started with the following command "
+	        "line arguments:[reset]\n  %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
 
@@ -1060,16 +1043,47 @@ void PROGRAMS_Init(Section* sec)
 	        "restart hotkey.\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATION_WARNING",
-	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
-	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
-
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
-	        "No such section or property: [color=light-green]'%s'[reset]\n");
+	        "[color=light-red]This is a deprecated setting only kept for "
+	        "compatibility with old configs.\n"
+	        "Please use the suggested alternatives; support will be removed "
+	        "in the future.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property [color=light-green]'%s'[reset] in section [color=light-cyan][%s][reset]\n");
+	        "There is no property [color=light-green]'%s'[reset] in section "
+	        "[color=light-cyan][%s][reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
 	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
 	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
+	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+	        "Setting [color=light-green]'%s = %s'[reset] is deprecated, "
+	        "falling back to the alternate: [color=light-green]'%s = %s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]. "
+	        "Value is outside of the valid range of %s-%s, using [color=white]'%d'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_NO_HELP",
+	        "No help available for the setting [color=light-green]'%s'[reset].");
+
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
+	        "No such section or property: [color=light-green]'%s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
+	        "Deprecated setting [color=light-green]'%s'[reset]");
+}
+
+void PROGRAMS_Init(Section* sec)
+{
+	// Setup a special callback to start virtual programs
+	call_program = CALLBACK_Allocate();
+	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
+
+	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
+	sec->AddDestroyFunction(&PROGRAMS_Destroy);
 }
