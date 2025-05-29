@@ -29,7 +29,6 @@ void MSG_LoadMessages();
 
 // Add message (in UTF-8 encoding) to the translation system
 void MSG_Add(const std::string& name, const std::string& message);
-void MSG_AddNoFormatString(const std::string& name, const std::string& message);
 
 // Get message text, adapted to the current code page,
 // with markup tags converted to ANSI escape codes

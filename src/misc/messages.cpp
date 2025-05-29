@@ -53,10 +53,7 @@ class Message {
 public:
 	// Note: any message needs to be verified before it can be safely used!
 
-	// Constructor for original, English strings
-	Message(const std::string& message, const bool can_contain_format_string);
-	// Constructor for translated strings from external file
-	Message(const std::string& message);
+	Message(const std::string& message, const bool is_english);
 
 	const std::string& Get();
 	const std::string& GetRaw();
@@ -86,7 +83,6 @@ private:
 	                               const Message& english);
 
 	const bool is_english;
-	const bool can_contain_format_string;
 
 	bool is_verified = false;
 	bool is_ok       = true;
@@ -112,16 +108,9 @@ private:
 	std::vector<FormatSpecifier> format_specifiers = {};
 };
 
-Message::Message(const std::string& message, const bool can_contain_format_string)
-        : is_english(true),
-          can_contain_format_string(can_contain_format_string),
+Message::Message(const std::string& message, const bool is_english)
+        : is_english(is_english),
           message_raw(message)
-{}
-
-Message::Message(const std::string& message)
-	: is_english(false),
-	  can_contain_format_string(false),
-	  message_raw(message)
 {}
 
 std::string Message::GetLogStart(const std::string& name) const
@@ -370,10 +359,7 @@ void Message::VerifyEnglish(const std::string& name)
 		return;
 	}
 
-	if (can_contain_format_string) {
-		VerifyFormatString(name);
-	}
-
+	VerifyFormatString(name);
 	VerifyMessage(name);
 	is_verified = true;
 }
@@ -387,11 +373,9 @@ void Message::VerifyTranslated(const std::string& name, const Message& english)
 
 	const auto is_english_valid = english.IsValid();
 
-	if (english.can_contain_format_string) {
-		VerifyFormatString(name);
-		if (is_english_valid) {
-			VerifyFormatStringAgainst(name, english);
-		}
+	VerifyFormatString(name);
+	if (is_english_valid) {
+		VerifyFormatStringAgainst(name, english);
 	}
 
 	VerifyMessage(name);
@@ -473,27 +457,6 @@ static void check_code_page()
 	                           : "is unknown and can't be used with",
 	        script_name.c_str());
 	return;
-}
-
-static void add_message(const std::string& name, const std::string& message,
-                        const bool can_contain_format_string)
-{
-	if (dictionary_english.contains(name)) {
-		if (dictionary_english.at(name).GetRaw() != message) {
-			dictionary_english.at(name).MarkInvalid();
-			LOG_ERR("LOCALE: Duplicate text for '%s'", name.c_str());
-		}
-		return;
-	}
-
-	message_order.push_back(name);
-	dictionary_english.emplace(name, Message(message, can_contain_format_string));
-
-	auto& english = dictionary_english.at(name);
-	english.VerifyEnglish(name);
-	if (dictionary_translated.contains(name)) {
-		dictionary_translated.at(name).VerifyTranslated(name, english);
-	}
 }
 
 static const char* get_message(const std::string& name,
@@ -655,7 +618,8 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 			return false;
 		}
 
-		dictionary_translated.emplace(name, Message(text));
+		constexpr bool IsEnglish = false;
+		dictionary_translated.emplace(name, Message(text, IsEnglish));
 
 		auto& translated = dictionary_translated.at(name);
 		if (dictionary_english.contains(name)) {
@@ -755,14 +719,24 @@ static bool save_messages_to_path(const std_fs::path& file_path)
 
 void MSG_Add(const std::string& name, const std::string& message)
 {
-	constexpr bool CanContainFormatString = true;
-	add_message(name, message, CanContainFormatString);
-}
+	if (dictionary_english.contains(name)) {
+		if (dictionary_english.at(name).GetRaw() != message) {
+			dictionary_english.at(name).MarkInvalid();
+			LOG_ERR("LOCALE: Duplicate text for '%s'", name.c_str());
+		}
+		return;
+	}
 
-void MSG_AddNoFormatString(const std::string& name, const std::string& message)
-{
-	constexpr bool CanContainFormatString = false;
-	add_message(name, message, CanContainFormatString);
+	constexpr bool IsEnglish = true;
+
+	message_order.push_back(name);
+	dictionary_english.emplace(name, Message(message, IsEnglish));
+
+	auto& english = dictionary_english.at(name);
+	english.VerifyEnglish(name);
+	if (dictionary_translated.contains(name)) {
+		dictionary_translated.at(name).VerifyTranslated(name, english);
+	}
 }
 
 const char* MSG_Get(const std::string& name)

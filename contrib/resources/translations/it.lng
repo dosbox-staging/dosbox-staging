@@ -5854,18 +5854,18 @@ Esegue il comando specificato per ogni file o stringa di un gruppo.
 .
 :SHELL_CMD_FOR_HELP_LONG
 Utilizzo:
-  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](GRUPPO)[reset] [color=light-cyan]do[reset] [color=white]COMANDO[reset]
+  [color=light-green]for[reset] [color=white]%%VAR[reset] [color=light-cyan]in[reset] [color=white](GRUPPO)[reset] [color=light-cyan]do[reset] [color=white]COMANDO[reset]
 
 Parametri:
-  [color=white]%VAR[reset]      singolo carattere che rappresenta una variabile, con prefisso '%'
+  [color=white]%%VAR[reset]      singolo carattere che rappresenta una variabile, con prefisso '%%'
   [color=light-cyan]in[reset]        parte del comando [color=light-green]for[reset], senza distinzione tra maiuscole e minuscole
-  [color=white](GRUPPO)[reset]  gruppo di file o stringhe con cui sostituire le istanze [color=white]%VAR[reset]
+  [color=white](GRUPPO)[reset]  gruppo di file o stringhe con cui sostituire le istanze [color=white]%%VAR[reset]
             nel [color=white]COMANDO[reset]
   [color=light-cyan]do[reset]        parte del comando [color=light-green]for[reset], senza distinzione tra maiuscole e minuscole
   [color=white]COMANDO[reset]   comando da eseguire per ciascun file o stringa presente in [color=white](GRUPPO)[reset]
 
 Note:
-  - In un programma batch, utilizzare la sintassi [color=white]%%VAR[reset] anziché [color=white]%VAR[reset].
+  - In un programma batch, utilizzare la sintassi [color=white]%%%%VAR[reset] anziché [color=white]%%VAR[reset].
   - I file o le stringhe presenti in [color=white](GRUPPO)[reset] possono essere separati da
     qualsiasi separatore DOS valido.
   - Qualsiasi file presente in [color=white](GRUPPO)[reset] contenente caratteri jolly (* o ?) si
@@ -5873,8 +5873,8 @@ Note:
   - Non è consentito l'utilizzo di un altro comando [color=light-green]for[reset] come [color=white]COMANDO[reset].
 
 Esempi:
-  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](UNO DUE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
-  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](UNO DUE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]
+  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
