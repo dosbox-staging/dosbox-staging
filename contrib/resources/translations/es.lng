@@ -4488,18 +4488,18 @@ Ejecutar un comando por cada cadena especificada en el conjunto.
 .
 :SHELL_CMD_FOR_HELP_LONG
 Uso:
-  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](CONJUNTO)[reset] [color=light-cyan]do[reset] [color=white]COMANDO[reset]
+  [color=light-green]for[reset] [color=white]%%VAR[reset] [color=light-cyan]in[reset] [color=white](CONJUNTO)[reset] [color=light-cyan]do[reset] [color=white]COMANDO[reset]
 
 Parámetros:
-  [color=white]%VAR[reset]        un solo carácter representando una variable, prefijado por '%'
+  [color=white]%%VAR[reset]        un solo carácter representando una variable, prefijado por '%%'
   [color=light-cyan]in[reset]          palabra clave no sensible a las mayúsculas
   [color=white](CONJUNTO)[reset]  conjunto de cadenas por el cual se reemplazarán las instancias
-              de [color=white]%VAR[reset] en [color=white]COMANDO[reset]
+              de [color=white]%%VAR[reset] en [color=white]COMANDO[reset]
   [color=light-cyan]do[reset]          palabra clave no sensible a las mayúsculas
   [color=white]COMANDO[reset]     comando a repetir para cada cadena en [color=white](CONJUNTO)[reset]
 
 Notas:
-  - En los programas por lotes, [color=white]%VAR[reset] debe escribirse como [color=white]%%VAR[reset] (con dos signos
+  - En los programas por lotes, [color=white]%%VAR[reset] debe escribirse como [color=white]%%%%VAR[reset] (con dos signos
     de porcentaje).
   - Las cadenas en [color=white](CONJUNTO)[reset] deben separarse por un separador de DOS válido.
   - Cualquier cadena en [color=white](CONJUNTO)[reset] que contenga comodines (* o ?) será expandida
@@ -4507,8 +4507,8 @@ Notas:
   - Usar otro comando [color=light-green]for[reset] como [color=white]COMANDO[reset] no está permitido.
 
 Ejemplos:
-  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](UNO DOS)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
-  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](UNO DOS)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]
+  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -241,12 +241,14 @@ bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
 
 	MoreOutputStrings output(*this);
 	std::string short_key("SHELL_CMD_" + command + "_HELP");
-	output.AddString("%s\n", MSG_Get(short_key));
+	output.AddString(MSG_Get(short_key));
+	output.AddString("\n");
 	std::string long_key("SHELL_CMD_" + command + "_HELP_LONG");
-	if (MSG_Exists(long_key))
-		output.AddString("%s", MSG_Get(long_key));
-	else
+	if (MSG_Exists(long_key)) {
+		output.AddString(MSG_Get(long_key));
+	} else {
 		output.AddString("%s\n", command.c_str());
+	}
 	output.Display();
 
 	return true;

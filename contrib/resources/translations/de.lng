@@ -4471,21 +4471,21 @@ Führt angegebenen Befehl für jede Zeichenkette in einer Gruppe aus.
 .
 :SHELL_CMD_FOR_HELP_LONG
 Verwendung:
-  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](GRUPPE)[reset] [color=light-cyan]do[reset] [color=white]BEFEHL[reset]
+  [color=light-green]for[reset] [color=white]%%VAR[reset] [color=light-cyan]in[reset] [color=white](GRUPPE)[reset] [color=light-cyan]do[reset] [color=white]BEFEHL[reset]
 
 Wobei:
-  [color=white]%VAR[reset]     Ein einzelnes Zeichen, das eine Variable darstellt und dem ein '%'
+  [color=white]%%VAR[reset]     Ein einzelnes Zeichen, das eine Variable darstellt und dem ein '%%'
            vorangestellt ist.
   [color=light-cyan]in[reset]       Ein Schlüsselwort, bei dem Groß- und Kleinschreibung nicht
            unterschieden wird.
-  [color=white](GRUPPE)[reset] Die Menge der Zeichenketten, die die [color=white]%VAR[reset]-Instanzen in [color=white]BEFEHL[reset]
+  [color=white](GRUPPE)[reset] Die Menge der Zeichenketten, die die [color=white]%%VAR[reset]-Instanzen in [color=white]BEFEHL[reset]
            ersetzen.
   [color=light-cyan]do[reset]       Ein Schlüsselwort, bei dem Groß- und Kleinschreibung nicht
            unterschieden wird.
   [color=white]BEFEHL[reset]   Der Befehl, der für jeden String in [color=white](GRUPPE)[reset] wiederholt werden soll.
 
 Hinweise:
-  - In Batch-Dateien muss [color=white]%VAR[reset] als [color=white]%%VAR[reset] (zwei Prozentzeichen) geschrieben
+  - In Batch-Dateien muss [color=white]%%VAR[reset] als [color=white]%%%%VAR[reset] (zwei Prozentzeichen) geschrieben
     werden.
   - Zeichenketten in [color=white](GRUPPE)[reset] können durch jedes gültige DOS-Trennzeichen
     getrennt werden.
@@ -4494,8 +4494,8 @@ Hinweise:
   - Die Verwendung eines anderen [color=light-green]for[reset]-Befehls als [color=white]BEFEHL[reset] ist nicht erlaubt.
 
 Beispiele:
-  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](EINS WEI)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
-  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](EINS WEI)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]
+  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]
 .
 :HELP_UTIL_CATEGORY_DOSBOX
 DOSBox-Befehle

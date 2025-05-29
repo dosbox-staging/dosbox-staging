@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1304,27 +1304,27 @@ void SHELL_Init() {
 	        "Cannot move multiple files to a single file.\n");
 	MSG_Add("SHELL_CMD_FOR_HELP",
 	        "Run a specified command for each string in a set.\n");
-	MSG_AddNoFormatString("SHELL_CMD_FOR_HELP_LONG",
+	MSG_Add("SHELL_CMD_FOR_HELP_LONG",
 	        "Usage:\n"
-	        "  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
+	        "  [color=light-green]for[reset] [color=white]%%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
 	        "\n"
 	        "Parameters:\n"
-	        "  [color=white]%VAR[reset]     single character representing a variable, prefixed by a '%'\n"
+	        "  [color=white]%%VAR[reset]     single character representing a variable, prefixed by a '%%'\n"
 	        "  [color=light-cyan]in[reset]       case-insensitive keyword\n"
-	        "  [color=white](SET)[reset]    set of strings to replace [color=white]%VAR[reset] instances in [color=white]COMMAND[reset]\n"
+	        "  [color=white](SET)[reset]    set of strings to replace [color=white]%%VAR[reset] instances in [color=white]COMMAND[reset]\n"
 	        "  [color=light-cyan]do[reset]       case-insensitive keyword\n"
 	        "  [color=white]COMMAND[reset]  command to repeat for each string in [color=white](SET)[reset]\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - In batch files, [color=white]%VAR[reset] must be written as [color=white]%%VAR[reset] (two percent signs) instead.\n"
+	        "  - In batch files, [color=white]%%VAR[reset] must be written as [color=white]%%VAR[reset] (two percent signs) instead.\n"
 	        "  - Strings in [color=white](SET)[reset] may be separated by any valid DOS separator.\n"
 	        "  - Any string in [color=white](SET)[reset] containing wildcards (* or ?) will expand to\n"
 	        "    the set of matching files in the current directory.\n"
 	        "  - Using another [color=light-green]for[reset] command as [color=white]COMMAND[reset] is not permitted.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]\n"
-	        "  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]\n");
+	        "  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]\n"
+	        "  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]\n");
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();

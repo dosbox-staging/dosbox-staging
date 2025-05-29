@@ -5605,17 +5605,17 @@ Voert een opgegeven opdracht uit voor elke string in een set.
 .
 :SHELL_CMD_FOR_HELP_LONG
 Gebruik:
-  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMANDO[reset]
+  [color=light-green]for[reset] [color=white]%%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMANDO[reset]
 
 Parameters:
-  [color=white]%VAR[reset]    enkel teken dat een variabele vertegenwoordigt, voorafgegaan door '%'
+  [color=white]%%VAR[reset]    enkel teken dat een variabele vertegenwoordigt, voorafgegaan door '%%'
   [color=light-cyan]in[reset]      hoofdletterongevoelig trefwoord.
-  [color=white](SET)[reset]   set strings die [color=white]%VAR[reset] instanties in [color=white]COMMANDO[reset] moeten vervangen.
+  [color=white](SET)[reset]   set strings die [color=white]%%VAR[reset] instanties in [color=white]COMMANDO[reset] moeten vervangen.
   [color=light-cyan]do[reset]      hoofdletterongevoelig trefwoord.
   [color=white]COMMAND[reset] commando dat moet worden herhaald voor elke string in [color=white](SET)[reset].
 
 Opmerkingen:
-  - In batchbestanden moet [color=white]%VAR[reset] worden geschreven als [color=white]%%VAR[reset]
+  - In batchbestanden moet [color=white]%%VAR[reset] worden geschreven als [color=white]%%%%VAR[reset]
     (twee procenttekens).
   - Strings in [color=white](SET)[reset] mogen worden gescheiden door elk geldig
     DOS-scheidingsteken.
@@ -5624,8 +5624,8 @@ Opmerkingen:
   - Het gebruik van een ander [color=light-green]for[reset] commando als [color=white]COMMANDO[reset] is niet toegestaan.
 
 Voorbeelden:
-  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](EEN TWEE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
-  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](EEN TWEE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]
+  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX

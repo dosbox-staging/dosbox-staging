@@ -5448,17 +5448,17 @@ Wykonaj polecenie dla każdego z podanych łańcuchów.
 .
 :SHELL_CMD_FOR_HELP_LONG
 Składnia:
-  [color=light-green]for[reset] [color=white]%ZMIENNA[reset] [color=light-cyan]in[reset] [color=white](ŁAŃCUCHY)[reset] [color=light-cyan]do[reset] [color=white]POLECENIE[reset]
+  [color=light-green]for[reset] [color=white]%%ZMIENNA[reset] [color=light-cyan]in[reset] [color=white](ŁAŃCUCHY)[reset] [color=light-cyan]do[reset] [color=white]POLECENIE[reset]
 
 Gdzie:
-  [color=white]%ZMIENNA[reset]    pojedynczy znak będący nazwą zmiennej, poprzedzony '%'
+  [color=white]%%ZMIENNA[reset]    pojedynczy znak będący nazwą zmiennej, poprzedzony '%%'
   [color=light-cyan]in[reset]          słowo kluczowe, wielkość liter nie ma znaczenia
-  [color=white](ŁAŃCUCHY)[reset]  łańcuchy, które zostaną podstawione pod [color=white]%ZMIENNĄ[reset] w [color=white]POLECENIU[reset]
+  [color=white](ŁAŃCUCHY)[reset]  łańcuchy, które zostaną podstawione pod [color=white]%%ZMIENNĄ[reset] w [color=white]POLECENIU[reset]
   [color=light-cyan]do[reset]          słowo kluczowe, wielkość liter nie ma znaczenia
   [color=white]POLECENIE[reset]   polecenie, które zostanie wykonane dla każdego z łańcuchów
 
 Uwagi:
-  W plikach wsadowych [color=white]%ZMIENNA[reset] musi zostać zapisana jako [color=white]%%ZMIENNA[reset] (musi być
+  W plikach wsadowych [color=white]%%ZMIENNA[reset] musi zostać zapisana jako [color=white]%%%%ZMIENNA[reset] (musi być
   poprzedzona dwoma znakami procentu).
   [color=white](ŁAŃCUCHY)[reset] można rozdzielić dowolnym separatorem.
   [color=white](ŁAŃCUCHY)[reset] zawierające symbole wieloznaczności (* lub ?) zostaną zastąpione
@@ -5466,8 +5466,8 @@ Uwagi:
   Użycie kolejnego [color=light-green]for[reset] jako [color=white]POLECENIA[reset] jest niedozwolone.
 
 Przykłady:
-  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](RAZ DWA)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
-  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
+  [color=light-green]for[reset] [color=white]%%C[reset] [color=light-cyan]in[reset] [color=white](RAZ DWA)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%%C[reset]
+  [color=light-green]for[reset] [color=white]%%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
