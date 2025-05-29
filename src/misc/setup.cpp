@@ -85,8 +85,9 @@ bool Value::operator==(const Value& other) const
 	return false;
 }
 
-bool Value::operator==(const Hex& other) const {
-    return this->_hex == other;
+bool Value::operator==(const Hex& other) const
+{
+	return this->_hex == other;
 }
 
 bool Value::operator<(const Value& other) const
@@ -163,7 +164,7 @@ bool Value::SetBool(const std::string& in)
 	auto in_lowercase = in;
 	lowcase(in_lowercase);
 	const auto parsed = parse_bool_setting(in_lowercase);
-	_bool = parsed ? *parsed : false;
+	_bool             = parsed ? *parsed : false;
 	return parsed.has_value();
 }
 
@@ -655,7 +656,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 		return false;
 	}
 
-	Value::Etype prevtype = Value::V_NONE;
+	Value::Etype prevtype    = Value::V_NONE;
 	std::string prevargument = "";
 
 	std::string::size_type loc = std::string::npos;
@@ -981,7 +982,6 @@ Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 	return nullptr;
 }
 
-
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
@@ -1245,7 +1245,7 @@ Section_prop* Config::AddInactiveSectionProp(const char* section_name)
 	        "Only letters and digits are allowed in section name");
 
 	constexpr bool inactive = false;
-	auto s = std::make_unique<Section_prop>(section_name, inactive);
+	auto s        = std::make_unique<Section_prop>(section_name, inactive);
 	auto* section = s.get();
 	sectionlist.push_back(s.release());
 	return section;
@@ -1637,16 +1637,16 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 std::optional<bool> parse_bool_setting(const std::string_view setting)
 {
 	static const std::unordered_map<std::string_view, bool> mapping{
-	        {"enabled", true},
-	        {"true", true},
-	        {"on", true},
-	        {"yes", true},
+	        { "enabled",  true},
+	        {    "true",  true},
+	        {      "on",  true},
+	        {     "yes",  true},
 
 	        {"disabled", false},
-	        {"false", false},
-	        {"off", false},
-	        {"no", false},
-	        {"none", false},
+	        {   "false", false},
+	        {     "off", false},
+	        {      "no", false},
+	        {    "none", false},
 	};
 
 	const auto it = mapping.find(setting);
@@ -1824,8 +1824,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* secprop = GetSectionFromProperty(
-			        pvars[0].c_str());
+			Section* secprop = GetSectionFromProperty(pvars[0].c_str());
 
 			if (secprop) {
 				pvars.insert(pvars.begin(),
@@ -1865,8 +1864,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			}
 
 			// Is this a property?
-			Section* sec2 = GetSectionFromProperty(
-			        pvars[1].c_str());
+			Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 
 			if (!sec2) {
 				// Not a property
@@ -1912,8 +1910,8 @@ void Config::ParseArguments()
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
 	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");
-	arguments.securemode = cmdline->FindRemoveBoolArgument("securemode");
-	arguments.noautoexec = cmdline->FindRemoveBoolArgument("noautoexec");
+	arguments.securemode  = cmdline->FindRemoveBoolArgument("securemode");
+	arguments.noautoexec  = cmdline->FindRemoveBoolArgument("noautoexec");
 
 	arguments.eraseconf = cmdline->FindRemoveBoolArgument("eraseconf") ||
 	                      cmdline->FindRemoveBoolArgument("resetconf");
@@ -1922,10 +1920,10 @@ void Config::ParseArguments()
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
 	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
-	                     cmdline->FindRemoveBoolArgument("help", '?'));
+                          cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
-	arguments.lang = cmdline->FindRemoveStringArgument("lang");
+	arguments.lang    = cmdline->FindRemoveStringArgument("lang");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
 	arguments.socket = cmdline->FindRemoveIntArgument("socket");
