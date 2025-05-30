@@ -2901,7 +2901,7 @@ Ważne: sekcja [autoexec] musi znajdować się na końcu pliku konfiguracyjnego!
 # Linie zaczynające się od # są komentarzami.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Możliwe wartości
 .
 :CONFIG_DEPRECATION_WARNING

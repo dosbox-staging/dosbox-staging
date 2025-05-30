@@ -971,7 +971,7 @@ MAC-адрес карты NE2000.
 # Строки, начинающиеся со знака '#' - это комментарии.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Возможные значения
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
