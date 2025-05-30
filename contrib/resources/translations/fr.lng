@@ -815,7 +815,7 @@ Vous pouvez mettre vos commandes MOUNT ici.
 # Les lignes commençant avec un '#' sont des commentaires.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valeurs possibles
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR

@@ -2997,7 +2997,7 @@ Belangrijk: De sectie [autoexec] moet de laatste sectie in de config zijn!
 # Regels die beginnen met een '#'-teken zijn opmerkingen.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Mogelijke waarden
 .
 :CONFIG_DEPRECATION_WARNING

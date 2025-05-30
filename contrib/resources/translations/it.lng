@@ -3193,7 +3193,7 @@ del file di configurazione!
 # Le righe che iniziano con il carattere '#' sono commenti.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valori possibili
 .
 :CONFIG_DEPRECATION_WARNING

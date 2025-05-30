@@ -1975,7 +1975,7 @@ Du kannst deine MOUNT-Zeilen hier einfügen.
 # Zeilen, die mit einem '#' Zeichen beginnen, sind Kommentare.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Mögliche Werte
 .
 :CONFIG_DEPRECATED_VALUES
