@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,7 @@
 #include "program_mode.h"
 #include "program_more.h"
 #include "program_mount.h"
+#include "program_mouse.h"
 #include "program_mousectl.h"
 #include "program_move.h"
 #include "program_placeholder.h"
@@ -96,6 +97,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("MODE.COM", ProgramCreate<MODE>);
 	PROGRAMS_MakeFile("MORE.COM", ProgramCreate<MORE>);
 	PROGRAMS_MakeFile("MOUNT.COM", ProgramCreate<MOUNT>);
+	PROGRAMS_MakeFile("MOUSE.COM", ProgramCreate<MOUSE>);
 	PROGRAMS_MakeFile("MOUSECTL.COM", ProgramCreate<MOUSECTL>);
 	PROGRAMS_MakeFile("MOVE.EXE", ProgramCreate<MOVE>);
 	PROGRAMS_MakeFile("RESCAN.COM", ProgramCreate<RESCAN>);
