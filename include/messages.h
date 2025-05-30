@@ -17,8 +17,17 @@ void MSG_Add(const std::string& name, const std::string& message);
 // with markup tags converted to ANSI escape codes
 const char* MSG_Get(const std::string& message_key);
 
-// Get message text in UTF-8, without ANSI markup tags conversions
-const char* MSG_GetRaw(const std::string& message_key);
+/*
+ * Get the original English message in UTF-8.
+ *
+ * On success, this returns the exact same byte-sequence previously added with
+ * `MSG_Add()` without any DOS code page or ANSI markup tags conversions
+ * applied.
+ *
+ * Returns " MESSAGE NOT FOUND! " or " MESSAGE NOT VALID! " if there was an
+ * error.
+ */
+const char* MSG_GetEnglishRaw(const std::string& message_key);
 
 /*
  * Get the translated message in UTF-8.

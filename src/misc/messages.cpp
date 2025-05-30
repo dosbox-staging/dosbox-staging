@@ -756,7 +756,7 @@ const char* MSG_Get(const std::string& message_key)
 	return get_message(message_key);
 }
 
-const char* MSG_GetRaw(const std::string& message_key)
+const char* MSG_GetEnglishRaw(const std::string& message_key)
 {
 	constexpr bool RawRequested = true;
 	return get_message(message_key, RawRequested);
