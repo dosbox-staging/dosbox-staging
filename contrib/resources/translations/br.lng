@@ -1885,7 +1885,7 @@ Você pode colocar suas linhas de MOUNT aqui.
 # Linhas que começam com o caractere '#' são comentários.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valores possíveis
 .
 :CONFIG_DEPRECATED_VALUES

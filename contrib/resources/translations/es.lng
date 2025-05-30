@@ -2012,7 +2012,7 @@ Puede colocar aquí sus líneas MOUNT.
 # Las líneas que comienzan con el carácter '#' son comentarios.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valores posibles
 .
 :CONFIG_DEPRECATED_VALUES

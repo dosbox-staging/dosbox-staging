@@ -1391,9 +1391,6 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 
-	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
-	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");
-
 	// Needs to be initialised early before the config settings get applied
 	PROGRAMS_AddMessages();
 
