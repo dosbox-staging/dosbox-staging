@@ -215,7 +215,7 @@ static std::string get_mouse_hint_simple()
 {
 	if (state.mouse_hint_id == MouseHint::CapturedHotkey ||
 	    state.mouse_hint_id == MouseHint::CapturedHotkeyMiddle) {
-		return MSG_GetForHost("TITLEBAR_HINT_CAPTURED");
+		return MSG_GetTranslatedRaw("TITLEBAR_HINT_CAPTURED");
 	} else {
 		return {};
 	}
@@ -227,7 +227,7 @@ static std::string get_mouse_hint_full()
 
 	auto create_hint_str = [&](const char* requested_name) {
 		safe_sprintf(hint_buffer,
-		             MSG_GetForHost(requested_name),
+		             MSG_GetTranslatedRaw(requested_name),
 		             PRIMARY_MOD_NAME);
 		return hint_buffer;
 	};
@@ -272,7 +272,7 @@ static void maybe_add_muted_mark(std::string& title_str)
 {
 	// Do not add 'mute' tag if emulator is paused
 	if (state.is_audio_muted && !sdl.is_paused) {
-		title_str = BeginTag + MSG_GetForHost("TITLEBAR_MUTED") +
+		title_str = BeginTag + MSG_GetTranslatedRaw("TITLEBAR_MUTED") +
 		            EndTag + title_str;
 	}
 }
@@ -280,7 +280,7 @@ static void maybe_add_muted_mark(std::string& title_str)
 static void maybe_add_recording_pause_mark(std::string& title_str)
 {
 	if (sdl.is_paused) {
-		title_str = BeginTag + MSG_GetForHost("TITLEBAR_PAUSED") +
+		title_str = BeginTag + MSG_GetTranslatedRaw("TITLEBAR_PAUSED") +
 		            EndTag + title_str;
 		return;
 	}

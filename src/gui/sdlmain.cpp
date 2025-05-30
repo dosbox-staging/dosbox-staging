@@ -4956,7 +4956,7 @@ static std::optional<int> maybe_handle_command_line_output_only_actions(
 		return 0;
 	}
 	if (args.help) {
-		const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
+		const auto help = format_str(MSG_GetTranslatedRaw("DOSBOX_HELP"),
 		                             program_name);
 		printf("%s", help.c_str());
 		return 0;
