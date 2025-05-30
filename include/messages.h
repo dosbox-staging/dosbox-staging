@@ -20,10 +20,18 @@ const char* MSG_Get(const std::string& message_key);
 // Get message text in UTF-8, without ANSI markup tags conversions
 const char* MSG_GetRaw(const std::string& message_key);
 
-// Like 'MSG_GetRaw', but does not check if code page is compatible with current
-// translation.
-// Use this one if the string is going to be logged or sent to the host OS.
-const char* MSG_GetForHost(const std::string& message_key);
+/*
+ * Get the translated message in UTF-8.
+ *
+ * On success, this returns the translated message, or English message if no
+ * translation exists for the current language, without any DOS code page or
+ * ANSI markup tags conversions applied. It effectively returns the translated
+ * message as-is from the UTF-8 language file.
+ *
+ * Returns " MESSAGE NOT FOUND! " or " MESSAGE NOT VALID! " if there was an
+ * error.
+ */
+const char* MSG_GetTranslatedRaw(const std::string& message_key);
 
 bool MSG_Exists(const std::string& message_key);
 
