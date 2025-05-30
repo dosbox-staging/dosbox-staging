@@ -1114,6 +1114,10 @@ void PROGRAMS_AddMessages()
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
 	        "Deprecated setting [color=light-green]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_VALID_VALUES", "Possible values");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_VALUES", "Deprecated values");
 }
 
 void PROGRAMS_Init(Section* sec)
