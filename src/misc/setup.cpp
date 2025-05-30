@@ -403,7 +403,8 @@ bool Prop_int::ValidateValue(const Value& in)
 	// Handle ranges if specified
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
 
 	// No ranges
 	if (mi == -1 && ma == -1) {
@@ -431,7 +432,7 @@ bool Prop_int::ValidateValue(const Value& in)
 	                      in.ToString().c_str(),
 	                      min_value.ToString().c_str(),
 	                      max_value.ToString().c_str(),
-	                      va);
+	                      std::to_string(va).c_str());
 
 	value = va;
 	return true;
@@ -447,7 +448,9 @@ bool Prop_int::IsValidValue(const Value& in)
 	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
+
 	if (mi == -1 && ma == -1) {
 		return true;
 	}
