@@ -15,7 +15,7 @@ const char* MSG_Get(const std::string&)
 	return "";
 }
 
-const char* MSG_GetRaw(const std::string&)
+const char* MSG_GetEnglishRaw(const std::string&)
 {
 	return "";
 }
