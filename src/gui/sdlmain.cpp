@@ -4861,7 +4861,7 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->help) {
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
-			const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
+			const auto help = format_str(MSG_GetTranslatedRaw("DOSBOX_HELP"),
 			                             program_name);
 			printf("%s", help.c_str());
 			return 0;
