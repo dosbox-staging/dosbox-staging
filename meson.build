@@ -2,7 +2,7 @@ project(
     'dosbox-staging', 'c', 'cpp',
 
     version: run_command(
-      meson.project_source_root() + '/scripts/get-version.sh',
+      meson.project_source_root() + '/scripts/ci/get-version.sh',
       'version', check: true,
     ).stdout().strip(),
 
@@ -420,7 +420,7 @@ add_project_link_arguments(link_supported_arguments, language: 'cpp')
 # all the build files in all the subdirs.
 #
 git_hash = run_command(
-  './scripts/get-version.sh', 'hash', check: true,
+  './scripts/ci/get-version.sh', 'hash', check: true,
 ).stdout().strip()
 
 conf_data = configuration_data()
