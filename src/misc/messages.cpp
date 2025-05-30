@@ -111,11 +111,11 @@ const std::string& Message::Get()
 
 	const auto current_code_page = get_utf8_code_page();
 	if (message_dos_ansi.empty() || code_page != current_code_page) {
-		code_page = current_code_page;
+		code_page        = current_code_page;
 		message_dos_ansi = utf8_to_dos(convert_ansi_markup(message_raw),
-                                               DosStringConvertMode::WithControlCodes,
-                                               UnicodeFallback::Box,
-                                               code_page);
+		                               DosStringConvertMode::WithControlCodes,
+		                               UnicodeFallback::Box,
+		                               code_page);
 	}
 
 	return message_dos_ansi;
@@ -322,7 +322,8 @@ void Message::VerifyFormatStringAgainst(const std::string& name, const Message& 
 		    (specifier.width == "*" && specifier_english.width != "*") ||
 		    (specifier.width != "*" && specifier_english.width == "*") ||
 		    (specifier.precision == "*" && specifier_english.precision != "*") ||
-		    (specifier.precision != "*" && specifier_english.precision == "*")) {
+		    (specifier.precision != "*" &&
+		     specifier_english.precision == "*")) {
 			LOG_WARNING(
 			        "%s has format specifier '%s' "
 			        "incompatible with English counterpart '%s'",
@@ -606,7 +607,8 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 
 		auto& translated = dictionary_translated.at(name);
 		if (dictionary_english.contains(name)) {
-			translated.VerifyTranslated(name, dictionary_english.at(name));
+			translated.VerifyTranslated(name,
+			                            dictionary_english.at(name));
 		}
 	}
 
