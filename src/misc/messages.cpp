@@ -762,7 +762,7 @@ const char* MSG_GetRaw(const std::string& message_key)
 	return get_message(message_key, RawRequested);
 }
 
-const char* MSG_GetForHost(const std::string& message_key)
+const char* MSG_GetTranslatedRaw(const std::string& message_key)
 {
 	constexpr bool RawRequested      = true;
 	constexpr bool SkipCodePageCheck = true;

@@ -332,7 +332,7 @@ std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_config_name(propname))) {
-		std::string help_text = MSG_GetForHost(create_config_name(propname));
+		std::string help_text = MSG_GetTranslatedRaw(create_config_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -355,10 +355,10 @@ std::string Property::GetHelpForHost() const
 			}
 			if (iequals(val, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}))) {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, {})));
 			} else {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, val)));
 			}
 		}
@@ -1113,7 +1113,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	}
 
 	// Print start of config file and add a return to improve readibility
-	fprintf(outfile, MSG_GetForHost("CONFIGFILE_INTRO"), DOSBOX_VERSION);
+	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO"), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
@@ -1173,7 +1173,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetForHost(values_msg_key));
+					        MSG_GetTranslatedRaw(values_msg_key));
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -1208,7 +1208,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr   = MSG_GetForHost(temp);
+			const char* helpstr   = MSG_GetTranslatedRaw(temp);
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
