@@ -1453,22 +1453,26 @@ static Bitu int33_handler()
 	using namespace bit::literals;
 
 	switch (reg_ax) {
-	case 0x00: // MS MOUSE - reset driver and read status
+	// MS MOUSE v1.0+ - reset driver and read status
+	case 0x00:
 		reset_hardware();
 		[[fallthrough]];
-	case 0x21: // MS MOUSE v6.0+ - software reset
+	// MS MOUSE v6.0+ - software reset
+	case 0x21:
 		reg_ax = 0xffff; // mouse driver installed
 		reg_bx = (get_num_buttons() == 2) ? 0xffff : get_num_buttons();
 		reset();
 		break;
-	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
+	// MS MOUSE v1.0+ - show mouse cursor
+	case 0x01:
 		if (state.hidden) {
 			--state.hidden;
 		}
 		state.update_region_y[1] = -1; // offscreen
 		draw_cursor();
 		break;
-	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
+	// MS MOUSE v1.0+ - hide mouse cursor
+	case 0x02:
 		if (INT10_IsTextMode(*CurMode)) {
 			restore_cursor_background_text();
 		} else {
@@ -1476,15 +1480,16 @@ static Bitu int33_handler()
 		}
 		++state.hidden;
 		break;
-	case 0x03: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button
-	           // status
+	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button state
+	case 0x03:
 		reg_bl = buttons._data;
 		reg_bh = get_reset_wheel_8bit(); // CuteMouse clears wheel
 		                                 // counter too
 		reg_cx = get_pos_x();
 		reg_dx = get_pos_y();
 		break;
-	case 0x04: // MS MOUSE v1.0+ - position mouse cursor
+	// MS MOUSE v1.0+ - position mouse cursor
+	case 0x04:
 	{
 		// If position isn't different from current position, don't
 		// change it. (position is rounded so numbers get lost when the
@@ -1499,8 +1504,8 @@ static Bitu int33_handler()
 		draw_cursor();
 		break;
 	}
-	case 0x05: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel
-	           // data
+	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel data
+	case 0x05:
 	{
 		const uint16_t idx = reg_bx; // button index
 		if (idx == 0xffff && state.wheel_api && has_wheel()) {
@@ -1525,8 +1530,8 @@ static Bitu int33_handler()
 		}
 		break;
 	}
-	case 0x06: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get button release data
-	           // / mouse wheel data
+	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button release / wheel data
+	case 0x06:
 	{
 		const uint16_t idx = reg_bx; // button index
 		if (idx == 0xffff && state.wheel_api && has_wheel()) {
@@ -1551,7 +1556,8 @@ static Bitu int33_handler()
 		}
 		break;
 	}
-	case 0x07: // MS MOUSE v1.0+ - define horizontal cursor range
+	// MS MOUSE v1.0+ - define horizontal cursor range
+	case 0x07:
 		// Lemmings set 1-640 and wants that. Iron Seed set 0-640. but
 		// doesn't like 640. Iron Seed works if newvideo mode with mode
 		// 13 sets 0-639. Larry 6 actually wants newvideo mode with mode
@@ -1565,7 +1571,8 @@ static Bitu int33_handler()
 		// Or alternatively this:
 		// pos_x = (state.maxpos_x - state.minpos_x + 1) / 2;
 		break;
-	case 0x08: // MS MOUSE v1.0+ - define vertical cursor range
+	// MS MOUSE v1.0+ - define vertical cursor range
+	case 0x08:
 		// not sure what to take instead of the CurMode (see case 0x07
 		// as well) especially the cases where sheight= 400 and we set
 		// it with the mouse_reset to 200 disabled it at the moment.
@@ -1581,7 +1588,8 @@ static Bitu int33_handler()
 		// Or alternatively this:
 		// pos_y = (state.maxpos_y - state.minpos_y + 1) / 2;
 		break;
-	case 0x09: // MS MOUSE v3.0+ - define GFX cursor
+	// MS MOUSE v3.0+ - define GFX cursor
+	case 0x09:
 	{
 		auto clamp_hot = [](const uint16_t reg, const int cursor_size) {
 			return std::clamp(reg_to_signed16(reg),
@@ -1601,7 +1609,8 @@ static Bitu int33_handler()
 		draw_cursor();
 		break;
 	}
-	case 0x0a: // MS MOUSE v3.0+ - define text cursor
+	// MS MOUSE v3.0+ - define text cursor
+	case 0x0a:
 		// TODO: shouldn't we use MouseCursor::Text, not
 		// MouseCursor::Software?
 		state.cursor_type   = (reg_bx ? MouseCursor::Hardware
@@ -1613,45 +1622,53 @@ static Bitu int33_handler()
 		}
 		draw_cursor();
 		break;
-	case 0x27: // MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
+	// MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
+	case 0x27:
 		reg_ax = state.text_and_mask;
 		reg_bx = state.text_xor_mask;
 		[[fallthrough]];
-	case 0x0b: // MS MOUSE v1.0+ - read motion data
+	// MS MOUSE v1.0+ - read motion data
+	case 0x0b:
 		reg_cx = mickey_counter_to_reg16(state.mickey_counter_x);
 		reg_dx = mickey_counter_to_reg16(state.mickey_counter_y);
 		state.mickey_counter_x = 0;
 		state.mickey_counter_y = 0;
 		break;
-	case 0x0c: // MS MOUSE v1.0+ - define user callback parameters
+	// MS MOUSE v1.0+ - define user callback parameters
+	case 0x0c:
 		state.user_callback_mask    = reg_cx;
 		state.user_callback_segment = SegValue(es);
 		state.user_callback_offset  = reg_dx;
 		update_driver_active();
 		break;
-	case 0x0d: // MS MOUSE v1.0+ - light pen emulation on
+	// MS MOUSE v1.0+ - light pen emulation on
+	case 0x0d:
 		// Both buttons down = pen pressed, otherwise pen considered
 		// off-screen
 		// TODO: maybe implement light pen using SDL touch events?
 		LOG_WARNING("MOUSE (DOS): Light pen emulation not implemented");
 		break;
-	case 0x0e: // MS MOUSE v1.0+ - light pen emulation off
+	// MS MOUSE v1.0+ - light pen emulation off
+	case 0x0e:
 		// Although light pen emulation is not implemented, it is OK for
 		// the application to only disable it (like 'The Settlers' game
 		// is doing during initialization)
 		break;
-	case 0x0f: // MS MOUSE v1.0+ - define mickey/pixel rate
+	// MS MOUSE v1.0+ - define mickey/pixel rate
+	case 0x0f:
 		set_mickey_pixel_rate(reg_to_signed16(reg_cx),
 		                      reg_to_signed16(reg_dx));
 		break;
-	case 0x10: // MS MOUSE v1.0+ - define screen region for updating
+	// MS MOUSE v1.0+ - define screen region for updating
+	case 0x10:
 		state.update_region_x[0] = reg_to_signed16(reg_cx);
 		state.update_region_y[0] = reg_to_signed16(reg_dx);
 		state.update_region_x[1] = reg_to_signed16(reg_si);
 		state.update_region_y[1] = reg_to_signed16(reg_di);
 		draw_cursor();
 		break;
-	case 0x11: // WheelAPI v1.0+ / Genius Mouse - get mouse capabilities
+	// WheelAPI v1.0+ / Genius Mouse - get mouse capabilities
+	case 0x11:
 		if (has_wheel()) {
 			// WheelAPI implementation
 			// GTEST.COM from the Genius mouse driver package
@@ -1668,13 +1685,16 @@ static Bitu int33_handler()
 			reg_bx = get_num_buttons();		
 		}
 		break;
-	case 0x12: // MS MOUSE - set large graphics cursor block
+	// MS MOUSE - set large graphics cursor block
+	case 0x12:
 		LOG_WARNING("MOUSE (DOS): Large graphics cursor block not implemented");
 		break;
-	case 0x13: // MS MOUSE v5.0+ - set double-speed threshold
+	// MS MOUSE v5.0+ - set double-speed threshold
+	case 0x13:
 		set_double_speed_threshold(reg_bx);
 		break;
-	case 0x14: // MS MOUSE v3.0+ - exchange event-handler
+	// MS MOUSE v3.0+ - exchange event-handler
+	case 0x14:
 	{
 		const auto old_segment = state.user_callback_segment;
 		const auto old_offset  = state.user_callback_offset;
@@ -1690,13 +1710,16 @@ static Bitu int33_handler()
 		SegSet16(es, old_segment);
 		break;
 	}
-	case 0x15: // MS MOUSE v6.0+ - get driver storage space requirements
+	// MS MOUSE v6.0+ - get driver storage space requirements
+	case 0x15:
 		reg_bx = sizeof(state);
 		break;
-	case 0x16: // MS MOUSE v6.0+ - save driver state
+	// MS MOUSE v6.0+ - save driver state
+	case 0x16:
 		MEM_BlockWrite(SegPhys(es) + reg_dx, &state, sizeof(state));
 		break;
-	case 0x17: // MS MOUSE v6.0+ - load driver state
+	// MS MOUSE v6.0+ - load driver state
+	case 0x17:
 		MEM_BlockRead(SegPhys(es) + reg_dx, &state, sizeof(state));
 		pending.Reset();
 		update_driver_active();
@@ -1706,32 +1729,39 @@ static Bitu int33_handler()
 		// TODO: we should probably also fake an event for mouse
 		// movement, redraw cursor, etc.
 		break;
-	case 0x18: // MS MOUSE v6.0+ - set alternate mouse user handler
-	case 0x19: // MS MOUSE v6.0+ - set alternate mouse user handler
+	// MS MOUSE v6.0+ - set alternate mouse user handler
+	case 0x18:
+	case 0x19:
 		LOG_WARNING("MOUSE (DOS): Alternate mouse user handler not implemented");
 		break;
-	case 0x1a: // MS MOUSE v6.0+ - set mouse sensitivity
+	// MS MOUSE v6.0+ - set mouse sensitivity
+	case 0x1a:
 		// NOTE: Ralf Brown Interrupt List (and some other sources)
 		// claim, that this should duplicate functions 0x0f and 0x13 -
 		// this is not true at least for Mouse Systems driver v8.00 and
 		// IBM/Microsoft driver v8.20
 		set_sensitivity(reg_bx, reg_cx, reg_dx);
 		break;
-	case 0x1b: //  MS MOUSE v6.0+ - get mouse sensitivity
+	//  MS MOUSE v6.0+ - get mouse sensitivity
+	case 0x1b:
 		reg_bx = state.sensitivity_x;
 		reg_cx = state.sensitivity_y;
 		reg_dx = state.unknown_01;
 		break;
-	case 0x1c: // MS MOUSE v6.0+ - set interrupt rate
+	// MS MOUSE v6.0+ - set interrupt rate
+	case 0x1c:
 		set_interrupt_rate(reg_bx);
 		break;
-	case 0x1d: // MS MOUSE v6.0+ - set display page number
+	// MS MOUSE v6.0+ - set display page number
+	case 0x1d:
 		state.page = reg_bl;
 		break;
-	case 0x1e: // MS MOUSE v6.0+ - get display page number
+	// MS MOUSE v6.0+ - get display page number
+	case 0x1e:
 		reg_bx = state.page;
 		break;
-	case 0x1f: // MS MOUSE v6.0+ - disable mouse driver
+	// MS MOUSE v6.0+ - disable mouse driver
+	case 0x1f:
 		// ES:BX old mouse driver Zero at the moment TODO
 		reg_bx = 0;
 		SegSet16(es, 0);
@@ -1748,7 +1778,8 @@ static Bitu int33_handler()
 		// - 3rd party drivers I tested (A4Tech 8.04a, Genius 9.20,
 		//   Mouse Systems 8.00, DR-DOS driver 1.1) never return anything
 		break;
-	case 0x20: // MS MOUSE v6.0+ - enable mouse driver
+	// MS MOUSE v6.0+ - enable mouse driver
+	case 0x20:
 		state.enabled = true;
 		state.hidden  = state.oldhidden;
 		if (mouse_config.dos_driver_modern) {
@@ -1757,24 +1788,27 @@ static Bitu int33_handler()
 			reg_ax = 0xffff;
 		}
 		break;
-	case 0x22: // MS MOUSE v6.0+ - set language for messages
+	// MS MOUSE v6.0+ - set language for messages
+	case 0x22:
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
 		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
 		// Italian
 		state.language = reg_bx;
 		break;
-	case 0x23: // MS MOUSE v6.0+ - get language for messages
+	// MS MOUSE v6.0+ - get language for messages
+	case 0x23:
 		reg_bx = state.language;
 		break;
-	case 0x24: // MS MOUSE v6.26+ - get Software version, mouse type, and
-	           // IRQ number
+	// MS MOUSE v6.26+ - get software version, mouse type, and IRQ number
+	case 0x24:
 		reg_bh = driver_version_major;
 		reg_bl = driver_version_minor;
 		// 1 = bus, 2 = serial, 3 = inport, 4 = PS/2, 5 = HP
 		reg_ch = 0x04; // PS/2
 		reg_cl = 0; // PS/2 mouse; for others it would be an IRQ number
 		break;
-	case 0x25: // MS MOUSE v6.26+ - get general driver information
+	// MS MOUSE v6.26+ - get general driver information
+	case 0x25:
 	{
 		// See https://github.com/FDOS/mouse/blob/master/int33.lst
 		// AL = count of currently-active Mouse Display Drivers (MDDs)
@@ -1795,12 +1829,14 @@ static Bitu int33_handler()
 		reg_dx = 0;
 		break;
 	}
-	case 0x26: // MS MOUSE v6.26+ - get maximum virtual coordinates
+	// MS MOUSE v6.26+ - get maximum virtual coordinates
+	case 0x26:
 		reg_bx = (state.enabled ? 0x0000 : 0xffff);
 		reg_cx = signed_to_reg16(state.maxpos_x);
 		reg_dx = signed_to_reg16(state.maxpos_y);
 		break;
-	case 0x28: // MS MOUSE v7.0+ - set video mode
+	// MS MOUSE v7.0+ - set video mode
+	case 0x28:
 		// TODO: According to PC sourcebook
 		//       Entry:
 		//       CX = Requested video mode
@@ -1810,7 +1846,8 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Set video mode not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	case 0x29: // MS MOUSE v7.0+ - enumerate video modes
+	// MS MOUSE v7.0+ - enumerate video modes
+	case 0x29:
 		// TODO: According to PC sourcebook
 		//       Entry:
 		//       CX = 0 for first, != 0 for next
@@ -1820,7 +1857,8 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Enumerate video modes not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	case 0x2a: // MS MOUSE v7.01+ - get cursor hot spot
+	// MS MOUSE v7.01+ - get cursor hot spot
+	case 0x2a:
 		// Microsoft uses a negative byte counter
 		// for cursor visibility
 		reg_al = static_cast<uint8_t>(-state.hidden);
@@ -1828,11 +1866,16 @@ static Bitu int33_handler()
 		reg_cx = signed_to_reg16(state.hot_y);
 		reg_dx = 0x04; // PS/2 mouse type
 		break;
-	case 0x2b: // MS MOUSE v7.0+ - load acceleration profiles
-	case 0x2c: // MS MOUSE v7.0+ - get acceleration profiles
-	case 0x2d: // MS MOUSE v7.0+ - select acceleration profile
-	case 0x2e: // MS MOUSE v8.10+ - set acceleration profile names
-	case 0x33: // MS MOUSE v7.05+ - get/switch accelleration profile
+	// MS MOUSE v7.0+ - load acceleration profiles
+	case 0x2b:
+	// MS MOUSE v7.0+ - get acceleration profiles
+	case 0x2c:
+	// MS MOUSE v7.0+ - select acceleration profile
+	case 0x2d:
+	// MS MOUSE v8.10+ - set acceleration profile names
+	case 0x2e:
+	// MS MOUSE v7.05+ - get/switch accelleration profile
+	case 0x33:
 		// Input: CX = buffer length, ES:DX = buffer address
 		// Output: CX = bytes in buffer; buffer content:
 		//     offset 0x00 - mouse type and port
@@ -1854,21 +1897,25 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Custom acceleration profiles not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	case 0x2f: // MS MOUSE v7.02+ - mouse hardware reset
+	// MS MOUSE v7.02+ - mouse hardware reset
+	case 0x2f:
 		LOG_WARNING("MOUSE (DOS): Hardware reset not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	case 0x30: // MS MOUSE v7.04+ - get/set BallPoint information
+	// MS MOUSE v7.04+ - get/set BallPoint information
+	case 0x30:
 		LOG_WARNING("MOUSE (DOS): Get/set BallPoint information not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	case 0x31: // MS MOUSE v7.05+ - get current min/max virtual coordinates
+	// MS MOUSE v7.05+ - get current min/max virtual coordinates
+	case 0x31:
 		reg_ax = signed_to_reg16(state.minpos_x);
 		reg_bx = signed_to_reg16(state.minpos_y);
 		reg_cx = signed_to_reg16(state.maxpos_x);
 		reg_dx = signed_to_reg16(state.maxpos_y);
 		break;
-	case 0x32: // MS MOUSE v7.05+ - get active advanced functions
+	// MS MOUSE v7.05+ - get active advanced functions
+	case 0x32:
 		reg_ax = 0;
 		reg_bx = 0; // unused
 		reg_cx = 0; // unused
@@ -1892,27 +1939,43 @@ static Bitu int33_handler()
 		bit::set(reg_ah, b6); // function 0x26 supported
 		bit::set(reg_ah, b7); // function 0x25 supported
 		break;
-	case 0x34: // MS MOUSE v8.0+ - get initialization file
+	// MS MOUSE v8.0+ - get initialization file
+	case 0x34:
 		SegSet16(es, info_segment);
 		reg_dx = info_offset_ini_file;
 		break;
-	case 0x35: // MS MOUSE v8.10+ - LCD screen large pointer support
+	// MS MOUSE v8.10+ - LCD screen large pointer support
+	case 0x35:
 		LOG_WARNING("MOUSE (DOS): LCD screen large pointer support not implemented");
 		break;
-	case 0x4d: // MS MOUSE - return pointer to copyright string
+	// MS MOUSE - return pointer to copyright string
+	case 0x4d:
 		SegSet16(es, info_segment);
 		reg_di = info_offset_copyright;
 		break;
-	case 0x6d: // MS MOUSE - get version string
+	// MS MOUSE - get version string
+	case 0x6d:
 		SegSet16(es, info_segment);
 		reg_di = info_offset_version;
 		break;
-	case 0x70:   // Mouse Systems       - installation check
-	case 0x72:   // Mouse Systems 7.01+ - unknown functionality
-	             // Genius Mouse 9.06+  - unknown functionality
-	case 0x73:   // Mouse Systems 7.01+ - get button assignments
-	             // VBADOS              - get driver info
-	case 0x53c1: // Logitech CyberMan   - unknown functionality
+	// Mouse Systems - installation check
+	case 0x70:
+	// Mouse Systems 7.01+ - unknown functionality
+	// Genius Mouse 9.06+  - unknown functionality
+	case 0x72:
+	// Mouse Systems 7.01+ - get button assignments
+	// VBADOS driver       - get driver info
+	case 0x73:
+	// Logitech CyberMan - get 3D position, orientation, and button status
+	case 0x5301:
+	// Logitech CyberMan - generate tactile feedback
+	case 0x5330:
+	// Logitech CyberMan - exchange event handlers
+	case 0x53c0:
+	// Logitech CyberMan - get static device data and driver support status
+	case 0x53c1:		
+	// Logitech CyberMan - get dynamic device data
+	case 0x53c2:
 		// Do not print out any warnings for known 3rd party oem driver
 		// extensions - every software (except the one bound to the
 		// particular driver) should continue working correctly even if
