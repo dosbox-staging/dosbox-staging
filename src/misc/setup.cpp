@@ -30,9 +30,12 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "ansi_code_markup.h"
+#include "console.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "notifications.h"
 #include "string_utils.h"
 #include "support.h"
 #include "version.h"
@@ -100,8 +103,9 @@ bool Value::operator==(const Value& other) const
 	return false;
 }
 
-bool Value::operator==(const Hex& other) const {
-    return this->_hex == other;
+bool Value::operator==(const Hex& other) const
+{
+	return this->_hex == other;
 }
 
 bool Value::operator<(const Value& other) const
@@ -178,7 +182,7 @@ bool Value::SetBool(const std::string& in)
 	auto in_lowercase = in;
 	lowcase(in_lowercase);
 	const auto parsed = parse_bool_setting(in_lowercase);
-	_bool = parsed ? *parsed : false;
+	_bool             = parsed ? *parsed : false;
 	return parsed.has_value();
 }
 
@@ -232,10 +236,12 @@ bool Property::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -243,13 +249,16 @@ bool Property::IsValidValue(const Value& in)
 bool Property::IsValueDeprecated(const Value& val) const
 {
 	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
+
 	if (is_deprecated) {
-		LOG_WARNING("CONFIG: Setting '%s = %s' is deprecated, "
-		            "falling back to the alternate: '%s = %s'",
-		            propname.c_str(),
-		            val.ToString().c_str(),
-		            propname.c_str(),
-		            GetAlternateForDeprecatedValue(val).ToString().c_str());
+		NOTIFY_DisplayWarning(
+		        Notification::Source::Console,
+		        "CONFIG",
+		        "PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+		        propname.c_str(),
+		        val.ToString().c_str(),
+		        propname.c_str(),
+		        GetAlternateForDeprecatedValue(val).ToString().c_str());
 	}
 	return is_deprecated;
 }
@@ -337,7 +346,11 @@ std::string Property::GetHelp() const
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
+
 		return "No help available for '" + propname + "'\n";
 	}
 	return result;
@@ -347,7 +360,7 @@ std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_config_name(propname))) {
-		std::string help_text = MSG_GetForHost(create_config_name(propname));
+		std::string help_text = MSG_GetTranslatedRaw(create_config_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -370,16 +383,19 @@ std::string Property::GetHelpForHost() const
 			}
 			if (iequals(val, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}))) {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, {})));
 			} else {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, val)));
 			}
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
 	}
 	return result;
 }
@@ -402,7 +418,8 @@ bool Prop_int::ValidateValue(const Value& in)
 	// Handle ranges if specified
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
 
 	// No ranges
 	if (mi == -1 && ma == -1) {
@@ -423,13 +440,14 @@ bool Prop_int::ValidateValue(const Value& in)
 		va = mi;
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
-	            "Value outside of the valid range %s-%s, using '%d'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            min_value.ToString().c_str(),
-	            max_value.ToString().c_str(),
-	            va);
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      std::to_string(va).c_str());
 
 	value = va;
 	return true;
@@ -445,7 +463,9 @@ bool Prop_int::IsValidValue(const Value& in)
 	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
+
 	if (mi == -1 && ma == -1) {
 		return true;
 	}
@@ -453,14 +473,14 @@ bool Prop_int::IsValidValue(const Value& in)
 		return true;
 	}
 
-	LOG_WARNING(
-	        "CONFIG: Invalid '%s' setting: '%s'. "
-	        "Value outside of the valid range %s-%s, using '%s'",
-	        propname.c_str(),
-	        in.ToString().c_str(),
-	        min_value.ToString().c_str(),
-	        max_value.ToString().c_str(),
-	        default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -526,10 +546,12 @@ bool Prop_string::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -568,10 +590,12 @@ bool Prop_bool::SetValue(const std::string& input)
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
-		LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-		            propname.c_str(),
-		            input.c_str(),
-		            default_value.ToString().c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      propname.c_str(),
+		                      input.c_str(),
+		                      default_value.ToString().c_str());
 	}
 	return is_valid;
 }
@@ -671,7 +695,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 		return false;
 	}
 
-	Value::Etype prevtype = Value::V_NONE;
+	Value::Etype prevtype    = Value::V_NONE;
 	std::string prevargument = "";
 
 	std::string::size_type loc = std::string::npos;
@@ -997,7 +1021,6 @@ Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 	return nullptr;
 }
 
-
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
@@ -1047,9 +1070,16 @@ bool Section_prop::HandleInputline(const std::string& line)
 		}
 
 		if (p->IsDeprecated()) {
-			LOG_WARNING("CONFIG: Deprecated option '%s'\n\n%s\n",
-			            name.c_str(),
-			            p->GetHelpForHost().c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "CONFIG",
+			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
+			                      name.c_str());
+
+			LOG_WARNING("CONFIG: %s",
+			            strip_ansi_markup(p->GetHelpForHost()).c_str());
+
+			CONSOLE_Write("%s\n\n",
+			              convert_ansi_markup(p->GetHelp()).c_str());
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
@@ -1059,7 +1089,10 @@ bool Section_prop::HandleInputline(const std::string& line)
 		return p->SetValue(val);
 	}
 
-	LOG_WARNING("CONFIG: Invalid option '%s'", name.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_PROPERTY_ERROR",
+	                      name.c_str());
 	return false;
 }
 
@@ -1128,7 +1161,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	}
 
 	// Print start of config file and add a return to improve readibility
-	fprintf(outfile, MSG_GetForHost("CONFIGFILE_INTRO"), DOSBOX_VERSION);
+	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO"), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
@@ -1188,7 +1221,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetForHost(values_msg_key));
+					        MSG_GetTranslatedRaw(values_msg_key));
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -1212,8 +1245,10 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile, ".");
 				};
 
-				print_values("CONFIG_VALID_VALUES", p->GetValues());
-				print_values("CONFIG_DEPRECATED_VALUES",
+				print_values("PROGRAM_CONFIG_VALID_VALUES",
+				             p->GetValues());
+
+				print_values("PROGRAM_CONFIG_DEPRECATED_VALUES",
 				             p->GetDeprecatedValues());
 
 				fprintf(outfile, "\n");
@@ -1223,7 +1258,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr   = MSG_GetForHost(temp);
+			const char* helpstr   = MSG_GetTranslatedRaw(temp);
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
@@ -1261,7 +1296,7 @@ Section_prop* Config::AddInactiveSectionProp(const char* section_name)
 	        "Only letters and digits are allowed in section name");
 
 	constexpr bool inactive = false;
-	auto s = std::make_unique<Section_prop>(section_name, inactive);
+	auto s        = std::make_unique<Section_prop>(section_name, inactive);
 	auto* section = s.get();
 	sectionlist.push_back(s.release());
 	return section;
@@ -1653,16 +1688,16 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 std::optional<bool> parse_bool_setting(const std::string_view setting)
 {
 	static const std::unordered_map<std::string_view, bool> mapping{
-	        {"enabled", true},
-	        {"true", true},
-	        {"on", true},
-	        {"yes", true},
+	        { "enabled",  true},
+	        {    "true",  true},
+	        {      "on",  true},
+	        {     "yes",  true},
 
 	        {"disabled", false},
-	        {"false", false},
-	        {"off", false},
-	        {"no", false},
-	        {"none", false},
+	        {   "false", false},
+	        {     "off", false},
+	        {      "no", false},
+	        {    "none", false},
 	};
 
 	const auto it = mapping.find(setting);
@@ -1751,8 +1786,12 @@ Verbosity Config::GetStartupVerbosity() const
 		             : Verbosity::High;
 	}
 
-	LOG_WARNING("SETUP: Invalid 'startup_verbosity' setting: '%s', using 'high'",
-	            user_choice.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "SETUP",
+	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "
+	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
+	                      user_choice.c_str());
+
 	return Verbosity::High;
 }
 
@@ -1840,8 +1879,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* secprop = GetSectionFromProperty(
-			        pvars[0].c_str());
+			Section* secprop = GetSectionFromProperty(pvars[0].c_str());
 
 			if (secprop) {
 				pvars.insert(pvars.begin(),
@@ -1881,8 +1919,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			}
 
 			// Is this a property?
-			Section* sec2 = GetSectionFromProperty(
-			        pvars[1].c_str());
+			Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 
 			if (!sec2) {
 				// Not a property
@@ -1928,8 +1965,8 @@ void Config::ParseArguments()
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
 	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");
-	arguments.securemode = cmdline->FindRemoveBoolArgument("securemode");
-	arguments.noautoexec = cmdline->FindRemoveBoolArgument("noautoexec");
+	arguments.securemode  = cmdline->FindRemoveBoolArgument("securemode");
+	arguments.noautoexec  = cmdline->FindRemoveBoolArgument("noautoexec");
 
 	arguments.eraseconf = cmdline->FindRemoveBoolArgument("eraseconf") ||
 	                      cmdline->FindRemoveBoolArgument("resetconf");
@@ -1938,10 +1975,10 @@ void Config::ParseArguments()
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
 	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
-	                     cmdline->FindRemoveBoolArgument("help", '?'));
+                          cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
-	arguments.lang = cmdline->FindRemoveStringArgument("lang");
+	arguments.lang    = cmdline->FindRemoveStringArgument("lang");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
 	arguments.socket = cmdline->FindRemoveIntArgument("socket");
