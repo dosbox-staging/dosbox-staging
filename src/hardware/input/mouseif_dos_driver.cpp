@@ -1631,6 +1631,7 @@ static Bitu int33_handler()
 	case 0x0b:
 		reg_cx = mickey_counter_to_reg16(state.mickey_counter_x);
 		reg_dx = mickey_counter_to_reg16(state.mickey_counter_y);
+		// TODO: We might be losing partial mickeys, to be investigated
 		state.mickey_counter_x = 0;
 		state.mickey_counter_y = 0;
 		break;
