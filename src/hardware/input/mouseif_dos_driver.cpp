@@ -1440,7 +1440,7 @@ void MOUSEDOS_NotifyModelChanged()
 
 	// If new mouse model has no wheel, disable the extension
 	if (!has_wheel()) {
-		state.wheel_api = true;
+		state.wheel_api = false;
 		counter_w       = 0;		
 	}
 
