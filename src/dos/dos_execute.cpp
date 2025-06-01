@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -268,7 +268,8 @@ bool DOS_ChildPSP(uint16_t segment, uint16_t size) {
 	return true;
 }
 
-static void SetupPSP(uint16_t pspseg,uint16_t memsize,uint16_t envseg) {
+static void setup_psp(uint16_t pspseg, uint16_t memsize, uint16_t envseg)
+{
 	/* Fix the PSP for psp and environment MCB's */
 	DOS_MCB mcb((uint16_t)(pspseg-1));
 	mcb.SetPSPSeg(pspseg);
@@ -278,14 +279,18 @@ static void SetupPSP(uint16_t pspseg,uint16_t memsize,uint16_t envseg) {
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
 	psp.SetEnvironment(envseg);
-
-	/* Copy file handles */
-	DOS_PSP oldpsp(dos.psp());
-	psp.CopyFileTable(&oldpsp,true);
-
 }
 
-static void SetupCMDLine(uint16_t pspseg,DOS_ParamBlock & block) {
+static void copy_file_handles(uint16_t pspseg)
+{
+	DOS_PSP psp(pspseg);
+
+	DOS_PSP oldpsp(dos.psp());
+	psp.CopyFileTable(&oldpsp, true);
+}
+
+static void setup_command_line(uint16_t pspseg, DOS_ParamBlock& block)
+{
 	DOS_PSP psp(pspseg);
 	// if cmdtail==0 it will inited as empty in SetCommandTail
 	psp.SetCommandTail(block.exec.cmdtail);
@@ -442,8 +447,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 	/* Setup a psp */
 	if (flags!=OVERLAY) {
 		// Create psp after closing exe, to avoid dead file handle of exe in copied psp
-		SetupPSP(pspseg,memsize,envseg);
-		SetupCMDLine(pspseg,block);
+		setup_psp(pspseg, memsize, envseg);
+		copy_file_handles(pspseg);
+		setup_command_line(pspseg, block);
 	};
 	CALLBACK_SCF(false);		/* Carry flag cleared for caller if successfull */
 	if (flags==OVERLAY) {
@@ -570,4 +576,59 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		return true;
 	}
 	return false;
+}
+
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
+                                              const bool force_low_memory)
+{
+	constexpr uint16_t StackNeeded = 0x80;
+	constexpr uint16_t PspSegments = 0x10;
+	constexpr uint32_t MaxTsrSize  = 512 * 1024;
+
+	// Try to matche the smallest block
+	const uint8_t MemAllocStrategy = force_low_memory ? 0x01 : 0x81;
+
+	if (bytes == 0 || bytes > MaxTsrSize || reg_sp <= StackNeeded) {
+		return {};
+	}
+
+	// Get current DOS PSP
+	DOS_PSP psp(dos.psp());
+
+	// Reserve stack space for the fake process
+	reg_sp -= StackNeeded;
+
+	// Set empty DOS parameter block
+	DOS_ParamBlock param_block(SegPhys(ss) + reg_sp);
+	param_block.Clear();
+
+	// Calculate number of memory blocks to allocate
+	uint16_t blocks = PspSegments + (bytes + 15) / 16;
+
+	// Allocate memory
+	uint16_t psp_seg = 0;
+	const auto old_strategy = DOS_GetMemAllocStrategy();
+	DOS_SetMemAllocStrategy(MemAllocStrategy);
+	const auto result = DOS_AllocateMemory(&psp_seg, &blocks);
+	DOS_SetMemAllocStrategy(old_strategy);
+
+	if (!result) {
+		// Memory allocation failed
+		reg_sp += StackNeeded;
+		return {};
+	}
+
+	// Setup the PSP
+	setup_psp(psp_seg, blocks, 0);
+
+	// Clear the TSR memory
+	const auto start_seg = psp_seg + PspSegments;
+	for (auto idx = start_seg; idx < blocks - PspSegments; idx++) {
+		mem_writeq(PhysicalMake(idx, 0), 0);
+		mem_writeq(PhysicalMake(idx, 8), 0);
+	}
+
+	// Cleanup and return the free space start segment
+	reg_sp += StackNeeded;
+	return start_seg;
 }
