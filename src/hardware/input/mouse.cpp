@@ -1143,6 +1143,8 @@ void MOUSE_StartupIfReady()
 	mouse_shared.started = true;
 
 	MOUSE_UpdateGFX();
+
+	MOUSEDOS_Init();
 }
 
 void MOUSE_NotifyReadyGFX()
