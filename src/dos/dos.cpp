@@ -31,6 +31,7 @@
 #include "dos_locale.h"
 #include "drives.h"
 #include "mem.h"
+#include "mouse.h"
 #include "pic.h"
 #include "program_mount_common.h"
 #include "regs.h"
@@ -67,19 +68,26 @@ constexpr auto EstimatedFileCloseIoOverheadInBytes    = 512;
 static bool windows_multiplex()
 {
 	switch (reg_ax) {
-	// 0x1607 - Windows device callout
-	// 0x4001 - switch task to background
-	// 0x4002 - switch task to foreground
-	case 0x1605: // Windows startup
+	// Windows startup
+	case 0x1605:
 	{
 		const auto major = static_cast<uint8_t>(reg_di >> 8);
 		const auto minor = static_cast<uint8_t>(reg_di & 0xff);
 		LOG_INFO("DOS: Starting Microsoft Windows %d.%d", major, minor);
+		MOUSEDOS_HandleWindowsStartup();
 		return false;
 	}
-	case 0x1606: // Windows shutdown
+	// Windows shutdown
+	case 0x1606:
 		LOG_INFO("DOS: Shutting down Microsoft Windows");
+		MOUSEDOS_HandleWindowsShutdown();
 		return false;
+	// Windows device callout
+	case 0x1607:
+		MOUSEDOS_HandleWindowsCallout();
+		return false;
+	// 0x4001 - switch task to background
+	// 0x4002 - switch task to foreground
 	default: return false;
 	}
 }
