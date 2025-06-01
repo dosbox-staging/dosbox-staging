@@ -255,6 +255,12 @@ bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
 void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
                    const uint8_t exit_code);
 
+// Creates a fake TSR memory area for the currently running command, initializes
+// the TSR memory area with 0's.
+// Returns start segment if memory allocation succeeded.
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
+                                              const bool force_low_memory = false);
+
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
 bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks);
