@@ -36,12 +36,12 @@ CHECK_NARROWING();
 // - https://www.fysnet.net/faq.htm
 
 // Versions are stored in BCD code - 0x09 = version 9, 0x10 = version 10, etc.
-static constexpr uint8_t driver_version_major = 0x08;
-static constexpr uint8_t driver_version_minor = 0x05;
+static constexpr uint8_t DriverVersionMajor = 0x08;
+static constexpr uint8_t DriverVersionMinor = 0x05;
 
-static constexpr uint8_t  cursor_size_x  = 16;
-static constexpr uint8_t  cursor_size_y  = 16;
-static constexpr uint16_t cursor_size_xy = cursor_size_x * cursor_size_y;
+static constexpr uint8_t  CursorSizeX  = 16;
+static constexpr uint8_t  CursorSizeY  = 16;
+static constexpr uint16_t CursorSizeXY = CursorSizeX * CursorSizeY;
 
 static constexpr auto MaxButtons = 3;
 
@@ -186,22 +186,22 @@ static struct { // DOS driver state
 	int16_t hot_y      = 0; // cursor hot spot, vertical
 
 	struct {
-		bool enabled                 = false;
-		uint16_t pos_x               = 0;
-		uint16_t pos_y               = 0;
-		uint8_t data[cursor_size_xy] = {0};
+		bool enabled               = false;
+		uint16_t pos_x             = 0;
+		uint16_t pos_y             = 0;
+		uint8_t data[CursorSizeXY] = {0};
 
 	} background = {};
 
 	MouseCursor cursor_type = MouseCursor::Software;
 
 	// cursor shape definition
-	uint16_t text_and_mask                       = 0;
-	uint16_t text_xor_mask                       = 0;
-	bool user_screen_mask                        = false;
-	bool user_cursor_mask                        = false;
-	uint16_t user_def_screen_mask[cursor_size_x] = {0};
-	uint16_t user_def_cursor_mask[cursor_size_y] = {0};
+	uint16_t text_and_mask                     = 0;
+	uint16_t text_xor_mask                     = 0;
+	bool user_screen_mask                      = false;
+	bool user_cursor_mask                      = false;
+	uint16_t user_def_screen_mask[CursorSizeX] = {0};
+	uint16_t user_def_cursor_mask[CursorSizeY] = {0};
 
 	// user callback
 	uint16_t user_callback_mask    = 0;
@@ -352,17 +352,17 @@ static uint16_t mickey_counter_to_reg16(const float x)
 // Data - default cursor/mask
 // ***************************************************************************
 
-static constexpr uint16_t default_text_and_mask = 0x77ff;
-static constexpr uint16_t default_text_xor_mask = 0x7700;
+static constexpr uint16_t DefaultTextAndMask = 0x77ff;
+static constexpr uint16_t DefaultTextXorMask = 0x7700;
 
 // clang-format off
 
-static uint16_t default_screen_mask[cursor_size_y] = {
+static uint16_t DefaultScreenMask[CursorSizeY] = {
 	0x3fff, 0x1fff, 0x0fff, 0x07ff, 0x03ff, 0x01ff, 0x00ff, 0x007f,
 	0x003f, 0x001f, 0x01ff, 0x00ff, 0x30ff, 0xf87f, 0xf87f, 0xfcff
 };
 
-static uint16_t default_cursor_mask[cursor_size_y] = {
+static uint16_t DefaultCursorMask[CursorSizeY] = {
 	0x0000, 0x4000, 0x6000, 0x7000, 0x7800, 0x7c00, 0x7e00, 0x7f00,
 	0x7f80, 0x7c00, 0x6c00, 0x4600, 0x0600, 0x0300, 0x0300, 0x0000
 };
@@ -549,12 +549,12 @@ static void restore_cursor_background()
 	uint16_t data_pos = 0;
 	int16_t x1        = static_cast<int16_t>(state.background.pos_x);
 	int16_t y1        = static_cast<int16_t>(state.background.pos_y);
-	int16_t x2        = static_cast<int16_t>(x1 + cursor_size_x - 1);
-	int16_t y2        = static_cast<int16_t>(y1 + cursor_size_y - 1);
+	int16_t x2        = static_cast<int16_t>(x1 + CursorSizeX - 1);
+	int16_t y2        = static_cast<int16_t>(y1 + CursorSizeY - 1);
 
 	clip_cursor_area(x1, x2, y1, y2, addx1, addx2, addy);
 
-	data_pos = static_cast<uint16_t>(addy * cursor_size_x);
+	data_pos = static_cast<uint16_t>(addy * CursorSizeX);
 	for (int16_t y = y1; y <= y2; y++) {
 		data_pos = static_cast<uint16_t>(data_pos + addx1);
 		for (int16_t x = x1; x <= x2; x++) {
@@ -624,12 +624,12 @@ static void draw_cursor()
 	uint16_t data_pos = 0;
 	int16_t x1 = static_cast<int16_t>(get_pos_x() / xratio - state.hot_x);
 	int16_t y1 = static_cast<int16_t>(get_pos_y() - state.hot_y);
-	int16_t x2 = static_cast<int16_t>(x1 + cursor_size_x - 1);
-	int16_t y2 = static_cast<int16_t>(y1 + cursor_size_y - 1);
+	int16_t x2 = static_cast<int16_t>(x1 + CursorSizeX - 1);
+	int16_t y2 = static_cast<int16_t>(y1 + CursorSizeY - 1);
 
 	clip_cursor_area(x1, x2, y1, y2, addx1, addx2, addy);
 
-	data_pos = static_cast<uint16_t>(addy * cursor_size_x);
+	data_pos = static_cast<uint16_t>(addy * CursorSizeX);
 	for (int16_t y = y1; y <= y2; y++) {
 		data_pos = static_cast<uint16_t>(data_pos + addx1);
 		for (int16_t x = x1; x <= x2; x++) {
@@ -646,11 +646,11 @@ static void draw_cursor()
 	state.background.pos_y = static_cast<uint16_t>(get_pos_y() - state.hot_y);
 
 	// Draw Mousecursor
-	data_pos               = static_cast<uint16_t>(addy * cursor_size_x);
+	data_pos               = static_cast<uint16_t>(addy * CursorSizeX);
 	const auto screen_mask = state.user_screen_mask ? state.user_def_screen_mask
-	                                                : default_screen_mask;
+	                                                : DefaultScreenMask;
 	const auto cursor_mask = state.user_cursor_mask ? state.user_def_cursor_mask
-	                                                : default_cursor_mask;
+	                                                : DefaultCursorMask;
 	for (int16_t y = y1; y <= y2; y++) {
 		uint16_t sc_mask = screen_mask[addy + y - y1];
 		uint16_t cu_mask = cursor_mask[addy + y - y1];
@@ -660,14 +660,16 @@ static void draw_cursor()
 			data_pos = static_cast<uint16_t>(data_pos + addx1);
 		};
 		for (int16_t x = x1; x <= x2; x++) {
-			constexpr auto highest_bit = (1 << (cursor_size_x - 1));
-			uint8_t pixel              = 0;
+			constexpr auto HighestBit = (1 << (CursorSizeX - 1));
+			uint8_t pixel = 0;
 			// ScreenMask
-			if (sc_mask & highest_bit)
+			if (sc_mask & HighestBit) {
 				pixel = state.background.data[data_pos];
+			}
 			// CursorMask
-			if (cu_mask & highest_bit)
+			if (cu_mask & HighestBit) {
 				pixel = pixel ^ 0x0f;
+			}
 			sc_mask = static_cast<uint16_t>(sc_mask << 1);
 			cu_mask = static_cast<uint16_t>(cu_mask << 1);
 			// Set Pixel
@@ -831,7 +833,7 @@ static void notify_interface_rate()
 	// PS/2 mice - and hopefully this is safe (if it's not, user can
 	// always adjust it in configuration file or with MOUSECTL.COM).
 
-	constexpr uint16_t rate_default_hz = 200;
+	constexpr uint16_t DefaultRateHz = 200;
 
 	if (rate_is_set) {
 		// Rate was set by guest application - use this value. The
@@ -842,7 +844,7 @@ static void notify_interface_rate()
 		MouseInterface::GetDOS()->NotifyInterfaceRate(min_rate_hz);
 	} else {
 		// No user setting in effect - use default value
-		MouseInterface::GetDOS()->NotifyInterfaceRate(rate_default_hz);
+		MouseInterface::GetDOS()->NotifyInterfaceRate(DefaultRateHz);
 	}
 }
 
@@ -931,14 +933,12 @@ void MOUSEDOS_BeforeNewVideoMode()
 
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 {
-	constexpr uint8_t last_non_svga_mode = 0x13;
-
 	// Gather screen mode information
 
 	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
 
 	const bool is_svga_mode = IS_VGA_ARCH &&
-	                          (bios_screen_mode > last_non_svga_mode);
+	                          (bios_screen_mode > LastNonSvgaModeNumber);
 	const bool is_svga_text = is_svga_mode && INT10_IsTextMode(*CurMode);
 
 	// Perform common actions - clear pending mouse events, etc.
@@ -952,8 +952,8 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	state.hot_y              = 0;
 	state.user_screen_mask   = false;
 	state.user_cursor_mask   = false;
-	state.text_and_mask      = default_text_and_mask;
-	state.text_xor_mask      = default_text_xor_mask;
+	state.text_and_mask      = DefaultTextAndMask;
+	state.text_xor_mask      = DefaultTextXorMask;
 	state.page               = 0;
 	state.update_region_y[1] = -1; // offscreen
 	state.cursor_type        = MouseCursor::Software;
@@ -972,20 +972,20 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	// Helper lambda for setting text mode max position x/y
 
 	auto set_maxpos_text = [&]() {
-		constexpr uint16_t threshold_lo = 1;
-		constexpr uint16_t threshold_hi = 250;
+		constexpr uint16_t ThresholdLow  = 1;
+		constexpr uint16_t ThresholdHigh = 250;
 
-		constexpr uint16_t default_rows    = 25;
-		constexpr uint16_t default_columns = 80;
+		constexpr uint16_t DefaultRows    = 25;
+		constexpr uint16_t DefaultColumns = 80;
 
 		uint16_t columns = INT10_GetTextColumns();
 		uint16_t rows    = INT10_GetTextRows();
 
-		if (rows < threshold_lo || rows > threshold_hi) {
-			rows = default_rows;
+		if (rows < ThresholdLow || rows > ThresholdHigh) {
+			rows = DefaultRows;
 		}
-		if (columns < threshold_lo || columns > threshold_hi) {
-			columns = default_columns;
+		if (columns < ThresholdLow || columns > ThresholdHigh) {
+			columns = DefaultColumns;
 		}
 
 		state.maxpos_x = static_cast<int16_t>(8 * columns - 1);
@@ -1075,8 +1075,8 @@ static void reset()
 	pending.Reset();
 
 	MOUSEDOS_BeforeNewVideoMode();
-	constexpr bool is_mode_changing = false;
-	MOUSEDOS_AfterNewVideoMode(is_mode_changing);
+	constexpr bool IsModeChanging = false;
+	MOUSEDOS_AfterNewVideoMode(IsModeChanging);
 
 	set_mickey_pixel_rate(8, 16);
 	set_double_speed_threshold(0); // set default value
@@ -1581,13 +1581,13 @@ static Bitu int33_handler()
 		};
 
 		PhysPt src = SegPhys(es) + reg_dx;
-		MEM_BlockRead(src, state.user_def_screen_mask, cursor_size_y * 2);
-		src += cursor_size_y * 2;
-		MEM_BlockRead(src, state.user_def_cursor_mask, cursor_size_y * 2);
+		MEM_BlockRead(src, state.user_def_screen_mask, CursorSizeY * 2);
+		src += CursorSizeY * 2;
+		MEM_BlockRead(src, state.user_def_cursor_mask, CursorSizeY * 2);
 		state.user_screen_mask = true;
 		state.user_cursor_mask = true;
-		state.hot_x            = clamp_hot(reg_bx, cursor_size_x);
-		state.hot_y            = clamp_hot(reg_cx, cursor_size_y);
+		state.hot_x            = clamp_hot(reg_bx, CursorSizeX);
+		state.hot_y            = clamp_hot(reg_cx, CursorSizeY);
 		state.cursor_type      = MouseCursor::Text;
 		draw_cursor();
 		break;
@@ -1785,8 +1785,8 @@ static Bitu int33_handler()
 		break;
 	// MS MOUSE v6.26+ - get software version, mouse type, and IRQ number
 	case 0x24:
-		reg_bh = driver_version_major;
-		reg_bl = driver_version_minor;
+		reg_bh = DriverVersionMajor;
+		reg_bl = DriverVersionMinor;
 		// 1 = bus, 2 = serial, 3 = inport, 4 = PS/2, 5 = HP
 		reg_ch = 0x04; // PS/2
 		reg_cl = 0; // PS/2 mouse; for others it would be an IRQ number
@@ -1801,9 +1801,9 @@ static Bitu int33_handler()
 		//    - bits 4-5: current cursor type
 		//    - bit 6: 1 = driver is newer integrated type
 		//    - bit 7: 1 = loaded as device driver rather than TSR
-		constexpr auto integrated_driver = (1 << 6);
+		constexpr auto IntegratedDriver = (1 << 6);
 		const auto cursor_type = static_cast<uint8_t>(state.cursor_type) << 4;
-		reg_ah = static_cast<uint8_t>(integrated_driver | cursor_type |
+		reg_ah = static_cast<uint8_t>(IntegratedDriver | cursor_type |
 		                              get_interrupt_rate());
 		// BX - cursor lock flag for OS/2 to prevent reentrancy problems
 		// CX - mouse code active flag (for OS/2)
@@ -2055,27 +2055,27 @@ static void prepare_driver_info()
 		return std::to_string(high_nibble(byte));
 	};
 
-	static_assert(low_nibble(driver_version_minor) <= 9);
-	static_assert(low_nibble(driver_version_major) <= 9);
-	static_assert(high_nibble(driver_version_minor) <= 9);
-	static_assert(high_nibble(driver_version_major) <= 9);
+	static_assert(low_nibble(DriverVersionMinor) <= 9);
+	static_assert(low_nibble(DriverVersionMajor) <= 9);
+	static_assert(high_nibble(DriverVersionMinor) <= 9);
+	static_assert(high_nibble(DriverVersionMajor) <= 9);
 
 	std::string str_version = "version ";
-	if (high_nibble(driver_version_major) > 0) {
-		str_version = str_version + high_nibble_str(driver_version_major);
+	if (high_nibble(DriverVersionMajor) > 0) {
+		str_version = str_version + high_nibble_str(DriverVersionMajor);
 	}
 
-	str_version = str_version + low_nibble_str(driver_version_major) +
-	              std::string(".") + high_nibble_str(driver_version_minor) +
-	              low_nibble_str(driver_version_minor);
+	str_version = str_version + low_nibble_str(DriverVersionMajor) +
+	              std::string(".") + high_nibble_str(DriverVersionMinor) +
+	              low_nibble_str(DriverVersionMinor);
 
 	const size_t length_bytes = (str_version.length() + 1) +
 	                            (str_copyright.length() + 1);
 	assert(length_bytes <= UINT8_MAX);
 
-	constexpr uint8_t bytes_per_block = 0x10;
-	auto length_blocks = static_cast<uint16_t>(length_bytes / bytes_per_block);
-	if (length_bytes % bytes_per_block) {
+	constexpr uint8_t BytesPerBlock = 0x10;
+	auto length_blocks = static_cast<uint16_t>(length_bytes / BytesPerBlock);
+	if (length_bytes % BytesPerBlock) {
 		length_blocks = static_cast<uint16_t>(length_blocks + 1);
 	}
 
@@ -2084,7 +2084,7 @@ static void prepare_driver_info()
 	// TODO: if 'MOUSE.INI' file gets implemented, INT 33 function 0x32
 	// should be updated to indicate function 0x34 is supported
 	std::string str_combined = str_version + '\0' + str_copyright + '\0';
-	const size_t size = static_cast<size_t>(length_blocks) * bytes_per_block;
+	const size_t size = static_cast<size_t>(length_blocks) * BytesPerBlock;
 	str_combined.resize(size, '\0');
 
 	info_offset_ini_file  = check_cast<uint16_t>(str_version.length());
