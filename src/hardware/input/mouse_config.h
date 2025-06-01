@@ -76,7 +76,9 @@ struct MouseConfig {
 	bool raw_input           = false; // true = relative input is raw data
 	bool multi_display_aware = false;
 
-	bool dos_driver_enabled   = false;
+	bool dos_driver_autoexec = false;
+	bool dos_driver_no_tsr   = false;
+
 	bool dos_driver_modern    = false;
 	bool dos_driver_immediate = false;
 

@@ -9,6 +9,7 @@ add_library(libhardware STATIC
   input/mouse_interfaces.cpp
   input/mouse_manymouse.cpp
   input/mouseif_dos_driver.cpp
+  input/mouseif_dos_driver_state.cpp
   input/mouseif_ps2_bios.cpp
   input/mouseif_virtual_machines.cpp
 
