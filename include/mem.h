@@ -11,7 +11,8 @@
 #include "mem_unaligned.h"
 #include "types.h"
 
-constexpr uint16_t MemPageSize = 4096;
+constexpr uint16_t MemPageSize     = 4096;
+constexpr uint8_t  RealSegmentSize = 16;
 
 typedef uint32_t PhysPt;
 typedef uint8_t* HostPt;

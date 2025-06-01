@@ -255,6 +255,31 @@ bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
 void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
                    const uint8_t exit_code);
 
+// Creates a fake TSR memory area for the currently running command, initializes
+// the TSR memory area with 0's.
+// Returns start segment if memory allocation succeeded.
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
+                                              const bool force_low_memory = false);
+
+// Constants for memory allocation strategy
+namespace DosMemAllocStrategy {
+
+	// Tries low (conventional) memory
+	constexpr uint16_t LowMemoryFirstFit  = 0x00;
+	constexpr uint16_t LowMemoryBestFit   = 0x01;
+	constexpr uint16_t LowMemoryLastFit   = 0x02;
+
+	// Tries UMB memory
+	constexpr uint16_t UmbMemoryFirstFit = 0x40;
+	constexpr uint16_t UmbMemoryBestFit  = 0x41;
+	constexpr uint16_t UmbMemoryLastFit  = 0x42;
+
+	// Tries UMB first, then low (conventional) memory
+	constexpr uint16_t FirstFit = 0x80;
+	constexpr uint16_t BestFit  = 0x81;
+	constexpr uint16_t LastFit  = 0x82;
+}
+
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
 bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks);
