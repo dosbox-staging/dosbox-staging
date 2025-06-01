@@ -37,6 +37,10 @@ CHECK_NARROWING();
 MouseConfig mouse_config;
 MousePredefined mouse_predefined;
 
+constexpr auto BuiltinDosDriverOff   = "off";
+constexpr auto BuiltinDosDriverOn    = "on";
+constexpr auto BuiltinDosDriverNoTsr = "no-tsr";
+
 constexpr auto CaptureTypeSeamless = "seamless";
 constexpr auto CaptureTypeOnClick  = "onclick";
 constexpr auto CaptureTypeOnStart  = "onstart";
@@ -138,6 +142,22 @@ static void set_capture_type(const std::string_view capture_str)
 		mouse_config.capture = NoMouse;
 	} else {
 		assertm(false, "Invalid mouse capture value");
+	}
+}
+
+static void set_dos_driver_mode(const std::string_view mode_str)
+{
+	if (iequals(mode_str, BuiltinDosDriverOff)) {
+		mouse_config.dos_driver_autoexec = false;
+		mouse_config.dos_driver_no_tsr   = false;
+	} else if (iequals(mode_str, BuiltinDosDriverOn)) {
+		mouse_config.dos_driver_autoexec = true;
+		mouse_config.dos_driver_no_tsr   = false;
+	} else if (iequals(mode_str, BuiltinDosDriverNoTsr)) {
+		mouse_config.dos_driver_autoexec = false;
+		mouse_config.dos_driver_no_tsr   = true;
+	} else {
+		assertm(false, "Invalid mouse driver mode");
 	}
 }
 
@@ -382,19 +402,15 @@ static void config_read(Section* section)
 	}
 
 	// Built-in DOS driver configuration
-
-	mouse_config.dos_driver_enabled = conf->Get_bool("builtin_dos_mouse_driver");
+	set_dos_driver_mode(conf->Get_string("builtin_dos_mouse_driver"));
 
 	// PS/2 AUX port mouse configuration
-
 	set_ps2_mouse_model(conf->Get_string("ps2_mouse_model"));
 
 	// COM port mouse configuration
-
 	set_serial_mouse_model(conf->Get_string("com_mouse_model"));
 
 	// VMM PCI interfaces
-
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
 
@@ -476,24 +492,34 @@ static void config_init(Section_prop& secprop)
 
 	// Built-in DOS driver configuration
 
-	prop_bool = secprop.Add_bool("builtin_dos_mouse_driver", only_at_start, true);
-	assert(prop_bool);
-	prop_bool->Set_help(
-	        "Enable the built-in DOS mouse driver ('on' by default). This results in the\n"
+	prop_str = secprop.Add_string("builtin_dos_mouse_driver",
+	                              only_at_start,
+	                              BuiltinDosDriverOn);
+	assert(prop_str);
+	prop_str->Set_values(
+	        {BuiltinDosDriverOff, BuiltinDosDriverOn, BuiltinDosDriverNoTsr});
+	prop_str->Set_help(
+	        "Built-in DOS mouse driver mode ('on' by default). This driver results in the\n"
 	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
 	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
 	        "not compatible with the built-in driver).\n"
-	        "  on:   Enable the built-in mouse driver. `ps2_mouse_model` and\n"
-	        "        `com_mouse_model` have no effect on the built-in driver.\n"
-	        "  off:  Disable the built-in mouse driver (if you don't want mouse support or\n"
-	        "        you want to load a real DOS mouse driver). To use a real DOS driver\n"
-	        "        (e.g., MOUSE.COM or CTMOUSE.EXE), configure the mouse type with\n"
-	        "        `ps2_mouse_model` or `com_mouse_model`, then load the driver.\n"
-	        "        A real DOS driver might increase compatibility with some programs,\n"
-	        "        but will introduce more input latency.\n"
-	        "Note: The built-in driver is auto-disabled if you boot into real MS-DOS or\n"
-	        "      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,\n"
-	        "      but the Windows 3.x mouse driver takes over.");
+	        "  on:      Simulate a mouse driver TSR program loaded from AUTOEXEC.BAT. This is\n"
+	        "           the most compatible way to emulate the DOS mouse driver, but if it\n"
+	        "           doesn't work with your game, try the 'no-tsr' setting.\n"
+	        "  no-tsr:  Enable the mouse driver without simulating the TSR program. Let us\n"
+	        "           know if it fixes any software not working with the 'on' setting.\n"
+	        "  off:     Disable the built-in mouse driver. It can still be started in runtime\n"
+	        "           by manually running the MOUSE.COM utility available on drive Z.\n"
+	        "Notes:\n"
+	        "  - The `ps2_mouse_model` and `com_mouse_model` settings have no effect on the\n"
+	        "    built-in driver.\n"
+	        "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
+	        "    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
+	        "    Windows 3.x mouse driver takes over.\n"
+	        "  - To use a real DOS driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure the\n"
+	        "    mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
+	        "    driver. A real DOS driver might increase compatibility with some programs,\n"
+	        "    but will introduce more input latency.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", deprecated, true);
 	prop_bool->Set_help("Renamed to 'builtin_dos_mouse_driver'.");

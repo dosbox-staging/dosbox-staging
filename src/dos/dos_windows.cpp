@@ -269,6 +269,7 @@ bool WINDOWS_Int2F_Handler()
 		         windows_version_minor);
 		is_windows_started = true;
 		check_for_enhanced_mode();
+		MOUSEDOS_HandleWindowsStartup();
 		return false;
 	}
 	// Windows startup complete
@@ -278,6 +279,7 @@ bool WINDOWS_Int2F_Handler()
 		// Looks like the enhanced mode is only enabled at this stage,
 		// at least for the most common Windows versions
 		check_for_enhanced_mode();
+		MOUSEDOS_HandleWindowsStartup();
 		return false;
 	// Windows shutdown initiated
 	// (it seems it is only called in 386 Enhanced mode)
@@ -290,19 +292,24 @@ bool WINDOWS_Int2F_Handler()
 		LOG_INFO("DOS: Microsoft Windows shutdown complete");
 		is_windows_started = false;
 		is_enhanced_mode   = false;
+		MOUSEDOS_HandleWindowsShutdown();
 		return false;
 	// Windows device callout
 	case 0x1607:
+		MOUSEDOS_HandleWindowsCallout();
 		return false;
 	// Windows goes into the background
 	case 0x4001:
 		LOG_DEBUG("DOS: Microsoft Windows going background");
+		MOUSEDOS_NotifyWindowsBackground();
 		return false;
 	// Windows returns to foreground
 	case 0x4002:
 		LOG_DEBUG("DOS: Microsoft Windows going foreground");
+		MOUSEDOS_NotifyWindowsForeground();
 		return false;
-	default: return false;
+	default:
+		return false;
 	}
 }
 

@@ -46,6 +46,7 @@ add_library(libdos STATIC
   program_more_output.cpp
   program_mount.cpp
   program_mount_common.cpp
+  program_mouse.cpp
   program_mousectl.cpp
   program_move.cpp
   program_placeholder.cpp

@@ -160,6 +160,8 @@ public:
 
 	void UpdateInputType() override;
 
+	void NotifyDosDriverStartup() override;
+
 private:
 	friend class MouseInterface;
 
@@ -534,6 +536,11 @@ void MouseInterface::UnRegisterListener()
 	assert(false); // should never be called for unsupported interface
 }
 
+void MouseInterface::NotifyDosDriverStartup()
+{
+	assert(false); // should never be called for unsupported interface
+}
+
 void MouseInterface::UpdateConfig()
 {
 	UpdateInputType();
@@ -639,10 +646,11 @@ InterfaceDos::InterfaceDos()
 void InterfaceDos::Init()
 {
 	MouseInterface::Init();
-	if (mouse_config.dos_driver_enabled) {
-		emulated = true;
-		MOUSEDOS_Init();
-	}
+}
+
+void InterfaceDos::NotifyDosDriverStartup()
+{
+	emulated = true;
 	MOUSEDOS_NotifyMinRate(min_rate_hz);
 }
 
