@@ -74,7 +74,8 @@ constexpr uint16_t VgaFlagsRecOffset = 0x89;
 // Ref: http://www.techhelpmanual.com/74-egasaveptrrec.html
 #define BIOSMEM_VS_POINTER    0xa8
 
-constexpr uint16_t MaxEgaBiosModeNumber = 0x10;
+constexpr uint16_t MaxEgaBiosModeNumber  = 0x10;
+constexpr uint16_t LastNonSvgaModeNumber = 0x13;
 
 constexpr uint16_t MinVesaBiosModeNumber = 0x100;
 constexpr uint16_t MaxVesaBiosModeNumber = 0x7ff;
