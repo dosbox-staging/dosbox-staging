@@ -20,27 +20,41 @@ CHECK_NARROWING();
 MouseConfig mouse_config;
 MousePredefined mouse_predefined;
 
-constexpr auto CaptureTypeSeamless = "seamless";
-constexpr auto CaptureTypeOnClick  = "onclick";
-constexpr auto CaptureTypeOnStart  = "onstart";
-constexpr auto CaptureTypeNoMouse  = "nomouse";
+namespace OptionBuiltInDosDriver {
+	constexpr auto Off   = "off";
+	constexpr auto On    = "on";
+	constexpr auto NoTsr = "no-tsr";
+}
 
-constexpr auto ModelDos2Button = "2button";
-constexpr auto ModelDos3Button = "3button";
-constexpr auto ModelDosWheel   = "wheel";
+namespace OptionCaptureType {
+	constexpr auto Seamless = "seamless";
+	constexpr auto OnClick  = "onclick";
+	constexpr auto OnStart  = "onstart";
+	constexpr auto NoMouse  = "nomouse";
+}
 
-constexpr auto ModelPs2Standard     = "standard";
-constexpr auto ModelPs2Intellimouse = "intellimouse";
-constexpr auto ModelPs2Explorer     = "explorer";
-constexpr auto ModelPs2NoMouse      = "none";
+namespace OptionModelDos {
+	constexpr auto TwoButton   = "2button";
+	constexpr auto ThreeButton = "3button";
+	constexpr auto Wheel       = "wheel";
+}
 
-constexpr auto ModelCom2Button    = "2button";
-constexpr auto ModelCom3Button    = "3button";
-constexpr auto ModelComWheel      = "wheel";
-constexpr auto ModelComMsm        = "msm";
-constexpr auto ModelCom2ButtonMsm = "2button+msm";
-constexpr auto ModelCom3ButtonMsm = "3button+msm";
-constexpr auto ModelComWheelMsm   = "wheel+msm";
+namespace OptionModelPs2 {
+	constexpr auto Standard     = "standard";
+	constexpr auto Intellimouse = "intellimouse";
+	constexpr auto Explorer     = "explorer";
+	constexpr auto NoMouse      = "none";
+}
+
+namespace OptionModelCom {
+	constexpr auto TwoButton      = "2button";
+	constexpr auto ThreeButton    = "3button";
+	constexpr auto Wheel          = "wheel";
+	constexpr auto Msm            = "msm";
+	constexpr auto TwoButtonMsm   = "2button+msm";
+	constexpr auto ThreeButtonMsm = "3button+msm";
+	constexpr auto WheelMsm       = "wheel+msm";
+}
 
 static const std::vector<uint16_t> list_rates = {
         // Commented out values are probably not interesting
@@ -79,25 +93,25 @@ bool MouseConfig::ParseComModel(const std::string_view model_str,
 {
 	using enum MouseModelCOM;
 
-	if (iequals(model_str, ModelCom2Button)) {
+	if (iequals(model_str, OptionModelCom::TwoButton)) {
 		model    = Microsoft;
 		auto_msm = false;
-	} else if (iequals(model_str, ModelCom3Button)) {
+	} else if (iequals(model_str, OptionModelCom::ThreeButton)) {
 		model    = Logitech;
 		auto_msm = false;
-	} else if (iequals(model_str, ModelComWheel)) {
+	} else if (iequals(model_str, OptionModelCom::Wheel)) {
 		model    = Wheel;
 		auto_msm = false;
-	} else if (iequals(model_str, ModelComMsm)) {
+	} else if (iequals(model_str, OptionModelCom::Msm)) {
 		model    = MouseSystems;
 		auto_msm = false;
-	} else if (iequals(model_str, ModelCom2ButtonMsm)) {
+	} else if (iequals(model_str, OptionModelCom::TwoButtonMsm)) {
 		model    = Microsoft;
 		auto_msm = true;
-	} else if (iequals(model_str, ModelCom3ButtonMsm)) {
+	} else if (iequals(model_str, OptionModelCom::ThreeButtonMsm)) {
 		model    = Logitech;
 		auto_msm = true;
-	} else if (iequals(model_str, ModelComWheelMsm)) {
+	} else if (iequals(model_str, OptionModelCom::WheelMsm)) {
 		model    = Wheel;
 		auto_msm = true;
 	} else {
@@ -111,16 +125,32 @@ static void set_capture_type(const std::string_view capture_str)
 {
 	using enum MouseCapture;
 
-	if (iequals(capture_str, CaptureTypeSeamless)) {
+	if (iequals(capture_str, OptionCaptureType::Seamless)) {
 		mouse_config.capture = Seamless;
-	} else if (iequals(capture_str, CaptureTypeOnClick)) {
+	} else if (iequals(capture_str, OptionCaptureType::OnClick)) {
 		mouse_config.capture = OnClick;
-	} else if (iequals(capture_str, CaptureTypeOnStart)) {
+	} else if (iequals(capture_str, OptionCaptureType::OnStart)) {
 		mouse_config.capture = OnStart;
-	} else if (iequals(capture_str, CaptureTypeNoMouse)) {
+	} else if (iequals(capture_str, OptionCaptureType::NoMouse)) {
 		mouse_config.capture = NoMouse;
 	} else {
 		assertm(false, "Invalid mouse capture value");
+	}
+}
+
+static void set_dos_driver_mode(const std::string_view mode_str)
+{
+	if (iequals(mode_str, OptionBuiltInDosDriver::Off)) {
+		mouse_config.dos_driver_autoexec = false;
+		mouse_config.dos_driver_no_tsr   = false;
+	} else if (iequals(mode_str, OptionBuiltInDosDriver::On)) {
+		mouse_config.dos_driver_autoexec = true;
+		mouse_config.dos_driver_no_tsr   = false;
+	} else if (iequals(mode_str, OptionBuiltInDosDriver::NoTsr)) {
+		mouse_config.dos_driver_autoexec = false;
+		mouse_config.dos_driver_no_tsr   = true;
+	} else {
+		assertm(false, "Invalid mouse driver mode");
 	}
 }
 
@@ -130,11 +160,11 @@ static void set_dos_driver_model(const std::string_view model_str)
 
 	auto new_model = mouse_config.model_dos;
 
-	if (iequals(model_str, ModelDos2Button)) {
+	if (iequals(model_str, OptionModelDos::TwoButton)) {
 		new_model = TwoButton;
-	} else if (iequals(model_str, ModelDos3Button)) {
+	} else if (iequals(model_str, OptionModelDos::ThreeButton)) {
 		new_model = ThreeButton;
-	} else if (iequals(model_str, ModelDosWheel)) {
+	} else if (iequals(model_str, OptionModelDos::Wheel)) {
 		new_model = Wheel;
 	} else {
 		assertm(false, "Invalid DOS driver mouse model value");
@@ -150,13 +180,13 @@ static void set_ps2_mouse_model(const std::string_view model_str)
 {
 	using enum MouseModelPS2;
 
-	if (iequals(model_str, ModelPs2Standard)) {
+	if (iequals(model_str, OptionModelPs2::Standard)) {
 		mouse_config.model_ps2 = Standard;
-	} else if (iequals(model_str, ModelPs2Intellimouse)) {
+	} else if (iequals(model_str, OptionModelPs2::Intellimouse)) {
 		mouse_config.model_ps2 = IntelliMouse;
-	} else if (iequals(model_str, ModelPs2Explorer)) {
+	} else if (iequals(model_str, OptionModelPs2::Explorer)) {
 		mouse_config.model_ps2 = Explorer;
-	} else if (iequals(model_str, ModelPs2NoMouse)) {
+	} else if (iequals(model_str, OptionModelPs2::NoMouse)) {
 		mouse_config.model_ps2 = NoMouse;
 	} else {
 		assertm(false, "Invalid PS/2 mouse model value");
@@ -365,19 +395,15 @@ static void config_read(Section* section)
 	}
 
 	// Built-in DOS driver configuration
-
-	mouse_config.dos_driver_enabled = conf->Get_bool("builtin_dos_mouse_driver");
+	set_dos_driver_mode(conf->Get_string("builtin_dos_mouse_driver"));
 
 	// PS/2 AUX port mouse configuration
-
 	set_ps2_mouse_model(conf->Get_string("ps2_mouse_model"));
 
 	// COM port mouse configuration
-
 	set_serial_mouse_model(conf->Get_string("com_mouse_model"));
 
 	// VMM PCI interfaces
-
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
 
@@ -409,12 +435,14 @@ static void config_init(Section_prop& secprop)
 
 	// General configuration
 
-	prop_str = secprop.Add_string("mouse_capture", always, CaptureTypeOnClick);
+	prop_str = secprop.Add_string("mouse_capture", always, OptionCaptureType::OnClick);
 	assert(prop_str);
-	prop_str->Set_values({CaptureTypeSeamless,
-	                      CaptureTypeOnClick,
-	                      CaptureTypeOnStart,
-	                      CaptureTypeNoMouse});
+	prop_str->Set_values({
+		OptionCaptureType::Seamless,
+		OptionCaptureType::OnClick,
+		OptionCaptureType::OnStart,
+		OptionCaptureType::NoMouse
+	});
 	prop_str->Set_help(
 	        "Set the mouse capture behaviour:\n"
 	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
@@ -459,34 +487,51 @@ static void config_init(Section_prop& secprop)
 
 	// Built-in DOS driver configuration
 
-	prop_bool = secprop.Add_bool("builtin_dos_mouse_driver", only_at_start, true);
-	assert(prop_bool);
-	prop_bool->Set_help(
-	        "Enable the built-in DOS mouse driver ('on' by default). This results in the\n"
-	        "lowest possible latency and the smoothest mouse movement, so only disable it\n"
-	        "and load a real DOS mouse driver if it's really necessary (e.g., if a game is\n"
-	        "not compatible with the built-in driver).\n"
-	        "  on:   Enable the built-in mouse driver. `ps2_mouse_model` and\n"
-	        "        `com_mouse_model` have no effect on the built-in driver.\n"
-	        "  off:  Disable the built-in mouse driver (if you don't want mouse support or\n"
-	        "        you want to load a real DOS mouse driver). To use a real DOS driver\n"
-	        "        (e.g., MOUSE.COM or CTMOUSE.EXE), configure the mouse type with\n"
-	        "        `ps2_mouse_model` or `com_mouse_model`, then load the driver.\n"
-	        "        A real DOS driver might increase compatibility with some programs,\n"
-	        "        but will introduce more input latency.\n"
-	        "Note: The built-in driver is auto-disabled if you boot into real MS-DOS or\n"
-	        "      Windows 9x under DOSBox. Under Windows 3.x, the driver is not disabled,\n"
-	        "      but the Windows 3.x mouse driver takes over.");
+	prop_str = secprop.Add_string("builtin_dos_mouse_driver",
+	                              only_at_start,
+	                              OptionBuiltInDosDriver::On);
+	assert(prop_str);
+	prop_str->Set_values({
+		OptionBuiltInDosDriver::Off,
+		OptionBuiltInDosDriver::On,
+		OptionBuiltInDosDriver::NoTsr
+	});
+	prop_str->Set_help(
+	        "Built-in DOS mouse driver mode ('on' by default). It bypasses the PS/2 and\n"
+	        "serial (COM) ports and communicates with the mouse directly. This results in\n"
+	        "lower input lag, smoother movement, and increased mouse responsiveness, so only\n"
+	        "disable it and load a real DOS mouse driver if it's really necessary (e.g., if a\n"
+	        "game is not compatible with the built-in driver).\n"
+	        "  on:      Simulate a mouse driver TSR program loaded from AUTOEXEC.BAT\n"
+	        "           (default). This is the most compatible way to emulate the DOS mouse\n"
+	        "           driver, but if it doesn't work with your game, try the 'no-tsr'\n"
+	        "           setting.\n"
+	        "  no-tsr:  Enable the mouse driver without simulating the TSR program. Let us\n"
+	        "           know if it fixes any software not working with the 'on' setting.\n"
+	        "  off:     Disable the built-in mouse driver. You can still start it at runtime\n"
+	        "           by executing the bundled MOUSE.COM from drive Z.\n"
+	        "Notes:\n"
+	        "  - The `ps2_mouse_model` and `com_mouse_model` settings have no effect on the\n"
+	        "    built-in driver.\n"
+	        "  - The driver is auto-disabled if you boot into real MS-DOS or Windows 9x\n"
+	        "    under DOSBox. Under Windows 3.x, the driver is not disabled, but the\n"
+	        "    Windows 3.x mouse driver takes over.\n"
+	        "  - To use a real DOS mouse driver (e.g., MOUSE.COM or CTMOUSE.EXE), configure\n"
+	        "    the mouse type with `ps2_mouse_model` or `com_mouse_model`, then load the\n"
+	        "    driver.\n");
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", deprecated, true);
 	prop_bool->Set_help("Renamed to 'builtin_dos_mouse_driver'.");
 
 	prop_str = secprop.Add_string("builtin_dos_mouse_driver_model",
 	                              always,
-	                              ModelDos2Button);
+	                              OptionModelDos::TwoButton);
 	assert(prop_str);
-	prop_str->Set_values(
-	        {ModelDos2Button, ModelDos3Button, ModelDosWheel});
+	prop_str->Set_values({
+		OptionModelDos::TwoButton,
+		OptionModelDos::ThreeButton,
+		OptionModelDos::Wheel
+	});
 	prop_str->Set_help(
 	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('2button'\n"
 	        "by default).\n"
@@ -526,12 +571,14 @@ static void config_init(Section_prop& secprop)
 	// TODO: PS/2 mouse might be hot-pluggable
 	prop_str = secprop.Add_string("ps2_mouse_model",
 	                              only_at_start,
-	                              ModelPs2Explorer);
+	                              OptionModelPs2::Explorer);
 	assert(prop_str);
-	prop_str->Set_values({ModelPs2Standard,
-	                      ModelPs2Intellimouse,
-	                      ModelPs2Explorer,
-	                      ModelPs2NoMouse});
+	prop_str->Set_values({
+		OptionModelPs2::Standard,
+		OptionModelPs2::Intellimouse,
+		OptionModelPs2::Explorer,
+		OptionModelPs2::NoMouse
+	});
 	prop_str->Set_help(
 	        "Set the PS/2 AUX port mouse model, or in other words, the type of the virtual\n"
 	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default).\n"
@@ -543,15 +590,17 @@ static void config_init(Section_prop& secprop)
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,
-	                              ModelComWheelMsm);
+	                              OptionModelCom::WheelMsm);
 	assert(prop_str);
-	prop_str->Set_values({ModelCom2Button,
-	                      ModelCom3Button,
-	                      ModelComWheel,
-	                      ModelComMsm,
-	                      ModelCom2ButtonMsm,
-	                      ModelCom3ButtonMsm,
-	                      ModelComWheelMsm});
+	prop_str->Set_values({
+		OptionModelCom::TwoButton,
+		OptionModelCom::ThreeButton,
+		OptionModelCom::Wheel,
+		OptionModelCom::Msm,
+		OptionModelCom::TwoButtonMsm,
+		OptionModelCom::ThreeButtonMsm,
+		OptionModelCom::WheelMsm
+	});
 	prop_str->Set_help(
 	        "Set the default COM (serial) mouse model, or in other words, the type of the\n"
 	        "virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).\n"

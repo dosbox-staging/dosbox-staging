@@ -547,6 +547,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY", "No files or subdirectories to display.\n");
 	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n");
 	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n");
+	MSG_Add("SHELL_CANT_RUN_UNDER_WINDOWS",
+	        "This command cannot be executed under Microsoft Windows.\n");
 
 	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP", "If you want a list of all supported commands, run [color=yellow]help /all[reset]\n"
