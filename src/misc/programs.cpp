@@ -847,11 +847,11 @@ void CONFIG::Run(void)
 
 				tsec->ExecuteDestroy(false);
 
-				const auto line_utf8 = dos_to_utf8(inputline,
-					                           DosStringConvertMode::NoSpecialCharacters);
+				const auto line_utf8 = dos_to_utf8(
+				        inputline,
+				        DosStringConvertMode::NoSpecialCharacters);
 
-				bool change_success = tsec->HandleInputline(line_utf8);
-
+				tsec->HandleInputline(line_utf8);
 				tsec->ExecuteInit(false);
 			}
 			return;
