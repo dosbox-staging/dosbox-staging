@@ -866,9 +866,7 @@ void CONFIG::Run(void)
 				const auto line_utf8 = dos_to_utf8(inputline,
 					                           DosStringConvertMode::NoSpecialCharacters);
 
-				bool change_success = tsec->HandleInputline(
-				        line_utf8.c_str());
-
+				tsec->HandleInputline(line_utf8.c_str());
 				tsec->ExecuteInit(false);
 			}
 			return;
