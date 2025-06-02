@@ -229,13 +229,11 @@ static void create_autoexec_bat_dos(const std::string& input_utf8,
 	                                             autoexec_bat_dos.end());
 
 	// Register/refresh Z:\AUTOEXEC.BAT file
-	if (is_vfile_registered) {
-		VFILE_Update(AutoexecFileName.c_str(), std::move(autoexec_bat_bin));
-	} else {
-		VFILE_Register(AutoexecFileName.c_str(),
-		               std::move(autoexec_bat_bin));
-		is_vfile_registered = true;
+	if (!VFILE_Update(AutoexecFileName.c_str(), autoexec_bat_bin)) {
+		VFILE_Register(AutoexecFileName.c_str(), autoexec_bat_bin);
 	}
+
+	is_vfile_registered = true;
 
 	// Store current code page for caching purposes
 	vfile_code_page = code_page;

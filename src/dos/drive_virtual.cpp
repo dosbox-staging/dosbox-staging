@@ -206,18 +206,21 @@ void VFILE_Register(const char *name,
 	first_file = new_file;
 }
 
-void VFILE_Register(const char *name, const std::vector<uint8_t> &blob, const char *dir)
+void VFILE_Register(const char *name, const std::vector<uint8_t> &data, const char *dir)
 {
-	VFILE_Register(name, blob.data(), check_cast<uint32_t>(blob.size()), dir);
+	VFILE_Register(name, data.data(), check_cast<uint32_t>(data.size()), dir);
 }
 
-void VFILE_Update(const char* name, std::vector<uint8_t> blob, const char* dir)
+bool VFILE_Update(const char* name, const std::vector<uint8_t> &data, const char* dir)
 {
 	auto vfile = find_vfile_by_name_and_dir(name, dir);
 
 	if (vfile) {
-		vfile->data = std::make_shared<std::vector<uint8_t>>(std::move(blob));
+		vfile->data = std::make_shared<std::vector<uint8_t>>(data);
+		return true;
 	}
+
+	return false;
 }
 
 void VFILE_Remove(const char* name, const char* dir)

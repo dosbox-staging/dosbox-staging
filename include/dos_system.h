@@ -417,9 +417,9 @@ void VFILE_Register(const char *name,
                     const uint8_t *data,
                     const uint32_t size,
                     const char *dir = "");
-void VFILE_Register(const char* name, const std::vector<uint8_t>& blob,
+void VFILE_Register(const char* name, const std::vector<uint8_t>& data,
                     const char* dir = "");
-void VFILE_Update(const char* name, std::vector<uint8_t> blob, const char* dir = "");
+bool VFILE_Update(const char* name, const std::vector<uint8_t> &data, const char* dir = "");
 void VFILE_Remove(const char* name, const char* dir = "");
 
 #endif
