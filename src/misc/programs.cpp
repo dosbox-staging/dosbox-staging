@@ -30,8 +30,8 @@
 #include <sstream>
 #include <vector>
 
-#include "../dos/program_more_output.h"
 #include "../capture/capture.h"
+#include "../dos/program_more_output.h"
 #include "callback.h"
 #include "control.h"
 #include "cross.h"
@@ -273,7 +273,8 @@ private:
 	}
 };
 
-void CONFIG::DisplayHelp() {
+void CONFIG::DisplayHelp()
+{
 	MoreOutputStrings output(*this);
 	output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
 	output.Display();
@@ -575,7 +576,8 @@ void CONFIG::Run(void)
 
 			if (control->startup_params.size() > 0) {
 				std::string test;
-				for (size_t k = 0; k < control->startup_params.size();
+				for (size_t k = 0;
+				     k < control->startup_params.size();
 				     ++k) {
 					test += control->startup_params[k] + " ";
 				}
@@ -634,8 +636,7 @@ void CONFIG::Run(void)
 
 		case P_HELP:
 		case P_HELP2:
-		case P_HELP3:
-			HandleHelpCommand(pvars); return;
+		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
 			Section_line* sec = dynamic_cast<Section_line*>(
@@ -660,8 +661,8 @@ void CONFIG::Run(void)
 				return;
 			}
 			for (const auto& pvar : pvars) {
-				const auto line_utf8 = dos_to_utf8(pvar,
-				                                   DosStringConvertMode::WithControlCodes);
+				const auto line_utf8 = dos_to_utf8(
+				        pvar, DosStringConvertMode::WithControlCodes);
 				sec->HandleInputline(line_utf8);
 			}
 			break;
@@ -740,9 +741,10 @@ void CONFIG::Run(void)
 						if (p == nullptr) {
 							break;
 						}
-						const auto val_dos = utf8_to_dos(p->GetValue().ToString(),
-						                                 DosStringConvertMode::NoSpecialCharacters,
-						                                 UnicodeFallback::Simple);
+						const auto val_dos = utf8_to_dos(
+						        p->GetValue().ToString(),
+						        DosStringConvertMode::NoSpecialCharacters,
+						        UnicodeFallback::Simple);
 						WriteOut("%s=%s\n",
 						         p->propname.c_str(),
 						         val_dos.c_str());
@@ -758,9 +760,10 @@ void CONFIG::Run(void)
 						return;
 					}
 					// it's a property name
-					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0].c_str()),
-					                                 DosStringConvertMode::NoSpecialCharacters,
-					                                 UnicodeFallback::Simple);
+					const auto val_dos = utf8_to_dos(
+					        sec->GetPropValue(pvars[0].c_str()),
+					        DosStringConvertMode::NoSpecialCharacters,
+					        UnicodeFallback::Simple);
 					WriteOut("%s", val_dos.c_str());
 					DOS_PSP(psp->GetParent())
 					        .SetEnvironmentValue("CONFIG",
@@ -779,19 +782,22 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				const std::string val_utf8 = sec->GetPropValue(prop_name);
+				const std::string val_utf8 = sec->GetPropValue(
+				        prop_name);
 				if (val_utf8 == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
 					         prop_name,
 					         sec_name);
 					return;
 				}
-				const auto val_dos = utf8_to_dos(val_utf8,
-				                                 DosStringConvertMode::NoSpecialCharacters,
-				                                 UnicodeFallback::Simple);
+				const auto val_dos = utf8_to_dos(
+				        val_utf8,
+				        DosStringConvertMode::NoSpecialCharacters,
+				        UnicodeFallback::Simple);
 				WriteOut("%s\n", val_dos.c_str());
 				DOS_PSP(psp->GetParent())
-				        .SetEnvironmentValue("CONFIG", val_dos.c_str());
+				        .SetEnvironmentValue("CONFIG",
+				                             val_dos.c_str());
 				break;
 			}
 			default:
@@ -819,16 +825,19 @@ void CONFIG::Run(void)
 				WriteOut(result);
 
 			} else {
-				auto* tsec = dynamic_cast<Section_prop *>(control->GetSection(pvars[0]));
+				auto* tsec = dynamic_cast<Section_prop*>(
+				        control->GetSection(pvars[0]));
 				if (!tsec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					         pvars[0].c_str());
 					return;
 				}
 
 				auto* property = tsec->Get_prop(pvars[1]);
 
 				if (!property) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					         pvars[1].c_str());
 					return;
 				}
 
@@ -852,9 +861,14 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				// If the value can't be set at runtime then queue it and let the user know
-				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+				// If the value can't be set at runtime then
+				// queue it and let the user know
+				if (property->GetChange() ==
+				    Property::Changeable::OnlyAtStart) {
+
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
+					         pvars[1].c_str());
+
 					property->SetQueueableValue(std::move(value));
 					return;
 				}
@@ -863,8 +877,9 @@ void CONFIG::Run(void)
 
 				tsec->ExecuteDestroy(false);
 
-				const auto line_utf8 = dos_to_utf8(inputline,
-					                           DosStringConvertMode::NoSpecialCharacters);
+				const auto line_utf8 = dos_to_utf8(
+				        inputline,
+				        DosStringConvertMode::NoSpecialCharacters);
 
 				tsec->HandleInputline(line_utf8.c_str());
 				tsec->ExecuteInit(false);
