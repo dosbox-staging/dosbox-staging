@@ -124,7 +124,7 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncMode { Unset, Off, On, Adaptive, Yield };
+enum class VsyncMode { Unset, Off, On, Adaptive };
 
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
