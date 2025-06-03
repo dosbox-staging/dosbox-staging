@@ -1,0 +1,36 @@
+set(freedoscpi_files
+    EGA.CPI
+    EGA2.CPI
+    EGA3.CPI
+    EGA4.CPI
+    EGA5.CPI
+    EGA6.CPI
+    EGA7.CPI
+    EGA8.CPI
+    EGA9.CPI
+    EGA10.CPI
+    EGA11.CPI
+    EGA12.CPI
+    EGA13.CPI
+    EGA14.CPI
+    EGA15.CPI
+    EGA16.CPI
+    EGA17.CPI
+    EGA18.CPI
+    EGAISO.CPI
+    EGA2ISO.CPI
+    EGA3ISO.CPI
+    EGA4ISO.CPI
+    EGA5ISO.CPI
+    EGA6ISO.CPI
+    EGAKOI.CPI
+    EGA2KOI.CPI
+    EGAMAC.CPI
+    EGA2MAC.CPI
+    EGAWIN.CPI
+    EGA2WIN.CPI
+    EGA3WIN.CPI
+    EGA4WIN.CPI
+)
+
+list(TRANSFORM freedoscpi_files PREPEND "freedos-cpi/")

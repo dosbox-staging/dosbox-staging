@@ -1,0 +1,31 @@
+set(mappingunicode_files
+    CP_437.TXT
+    CP_737.TXT
+    CP_775.TXT
+    CP_850.TXT
+    CP_852.TXT
+    CP_855.TXT
+    CP_856.TXT
+    CP_857.TXT
+    CP_860.TXT
+    CP_861.TXT
+    CP_862.TXT
+    CP_863.TXT
+    CP_864.TXT
+    CP_865.TXT
+    CP_866.TXT
+    CP_869.TXT
+    CP_874.TXT
+    CP_1250.TXT
+    CP_1251.TXT
+    CP_1252.TXT
+    CP_1253.TXT
+    CP_1254.TXT
+    CP_1255.TXT
+    CP_1256.TXT
+    CP_1257.TXT
+    CP_1258.TXT
+    license.txt
+)
+
+list(TRANSFORM mappingunicode_files PREPEND "mapping-unicode.org/")

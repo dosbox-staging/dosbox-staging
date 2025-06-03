@@ -1,0 +1,45 @@
+set(mappingwikipedia_files
+    CP_708.TXT
+    CP_720.TXT
+    CP_773.TXT
+    CP_776.TXT
+    CP_777.TXT
+    CP_778.TXT
+    CP_813.TXT
+    CP_819.TXT
+    CP_851.TXT
+    CP_853.TXT
+    CP_878.TXT
+    CP_899.TXT
+    CP_912.TXT
+    CP_913.TXT
+    CP_914.TXT
+    CP_915.TXT
+    CP_916.TXT
+    CP_919.TXT
+    CP_921.TXT
+    CP_922.TXT
+    CP_1089.TXT
+    CP_1111.TXT
+    CP_1117.TXT
+    CP_1270.TXT
+    CP_1275.TXT
+    CP_1280.TXT
+    CP_1282.TXT
+    CP_1283.TXT
+    CP_3021.TXT
+    CP_3848.TXT
+    CP_28601.TXT
+    CP_58601.TXT
+    CP_59620.TXT
+    CP_60270.TXT
+    CP_62318.TXT
+    CP_63342.TXT
+    CP_65501.TXT
+    CP_65502.TXT
+    CP_65503.TXT
+    CP_65504.TXT
+    CP_65506.TXT
+)
+
+list(TRANSFORM mappingwikipedia_files PREPEND "mapping-wikipedia.org/")

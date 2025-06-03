@@ -1,0 +1,41 @@
+set(glshaders_files
+    crt/arcade-4k.glsl
+    crt/arcade-1080p.glsl
+    crt/arcade-1440p.glsl
+    crt/arcade-sharp-4k.glsl
+    crt/arcade-sharp-1080p.glsl
+    crt/arcade-sharp-1440p.glsl
+    crt/cga-4k.glsl
+    crt/cga-720p.glsl
+    crt/cga-1080p.glsl
+    crt/cga-1440p.glsl
+    crt/composite-4k.glsl
+    crt/composite-1080p.glsl
+    crt/composite-1440p.glsl
+    crt/ega-4k.glsl
+    crt/ega-720p.glsl
+    crt/ega-1080p.glsl
+    crt/ega-1440p.glsl
+    crt/hercules.glsl
+    crt/monochrome-hires.glsl
+    crt/monochrome-lowres.glsl
+    crt/vga-4k.glsl
+    crt/vga-1080p-fake-double-scan.glsl
+    crt/vga-1080p.glsl
+    crt/vga-1440p.glsl
+    interpolation/bilinear.glsl
+    interpolation/catmull-rom.glsl
+    interpolation/nearest.glsl
+    interpolation/sharp.glsl
+    misc/fixvideo-scanlines.glsl
+    misc/fixvideo.glsl
+    scaler/advinterp2x.glsl
+    scaler/advinterp3x.glsl
+    scaler/advmame2x.glsl
+    scaler/advmame3x.glsl
+    scaler/xbr-lv2-3d.glsl
+    scaler/xbr-lv2-noblend.glsl
+    scaler/xbr-lv3.glsl
+)
+
+list(TRANSFORM glshaders_files PREPEND "glshaders/")
