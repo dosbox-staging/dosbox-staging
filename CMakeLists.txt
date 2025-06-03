@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.27)
 
 set(VCPKG_USE_HOST_TOOLS ON)
 
@@ -254,7 +254,8 @@ target_include_directories(
 
 # TODO This happens on every execution, better to have a target with
 # dependencies instead
-add_custom_target(copy_assets ALL
+include(contrib/resources/Resources.cmake)
+add_custom_target(copy_assets SOURCES ${DOSBOX_RESOURCE_FILES_ROOT} 
   COMMAND ${CMAKE_COMMAND} -E copy_directory
     "${CMAKE_CURRENT_SOURCE_DIR}/contrib/resources"
     "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}"
@@ -287,3 +288,90 @@ target_link_libraries(dosbox PRIVATE
   libdos
   libfpu
 )
+
+### Install targets ###
+
+# Set install directories
+if(WIN32)
+  set(CMAKE_INSTALL_BINDIR ".")
+  set(CMAKE_INSTALL_SBINDIR ".")
+  set(CMAKE_INSTALL_LIBDIR ".")
+  set(CMAKE_INSTALL_INCLUDEDIR ".")
+  set(CMAKE_INSTALL_SYSCONFDIR ".")
+  set(CMAKE_INSTALL_SHARESTATEDIR ".")
+  set(CMAKE_INSTALL_LOCALSTATEDIR ".")
+  set(CMAKE_INSTALL_RUNSTATEDIR ".")
+  set(CMAKE_INSTALL_DATADIR ".")
+  set(CMAKE_INSTALL_INFODIR ".")
+  set(CMAKE_INSTALL_LOCALEDIR ".")
+  set(CMAKE_INSTALL_MANDIR ".")
+  set(CMAKE_INSTALL_DOCDIR "doc")
+  set(CMAKE_INSTALL_LIBEXECDIR ".")
+elseif(NOT APPLE)
+  include(GNUInstallDirs)
+endif()
+
+# Install Dosbox target
+if(WIN32)
+  install(
+    TARGETS dosbox
+    RUNTIME_DEPENDENCIES
+    PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+    POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
+    DIRECTORIES $<TARGET_FILE_DIR:dosbox>
+  )
+elseif(APPLE)
+else()
+  install(TARGETS dosbox)
+endif()
+
+# Install resource files
+# Note, on MAC OS, resources can be installed as part of the bundle
+if(NOT APPLE)
+  foreach(_RES_FILE ${DOSBOX_RESOURCE_FILES})
+    cmake_path(GET _RES_FILE PARENT_PATH OUT_DIR_COMPONENT)
+    cmake_path(SET OUT_DIR NORMALIZE "${CMAKE_INSTALL_DATADIR}/$<IF:$<BOOL:${LINUX}>,${CMAKE_PROJECT_NAME},resources>/${OUT_DIR_COMPONENT}")
+    install(
+      FILES "contrib/resources/${_RES_FILE}" 
+      DESTINATION "${OUT_DIR}"
+    )  
+  endforeach()
+endif()
+
+# Install license files
+install(
+  DIRECTORY licenses/
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/$<IF:$<BOOL:${LINUX}>,licenses/${CMAKE_PROJECT_NAME},licenses>"
+)
+
+include(extras/icons/Icons.cmake)
+
+# OS Specific install rules
+if(LINUX)
+  # Install PNG icons
+  while(DOSBOX_PNG_ICONS)
+    list(POP_FRONT DOSBOX_PNG_ICONS ICON_FILE ICON_SIZE)
+    install(
+      FILES "${DOSBOX_PNG_ICON_DIR}/${ICON_FILE}"
+      DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/${ICON_SIZE}x${ICON_SIZE}/apps"
+      RENAME "org.dosbox_staging.dosbox_staging.png"
+    )
+  endwhile()
+  # Install SVG icon
+  install(
+    FILES "${DOSBOX_SVG_ICON}"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
+    RENAME "org.dosbox_staging.dosbox_staging.svg"
+  )
+  # Install desktop file
+  install(
+    FILES "contrib/linux/org.dosbox_staging.dosbox_staging.desktop"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
+  )
+
+  # Install metainfo file
+  install(
+    FILES "contrib/linux/org.dosbox_staging.dosbox_staging.metainfo.xml"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/metainfo"
+  )
+endif()
