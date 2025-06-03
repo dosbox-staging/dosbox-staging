@@ -667,10 +667,6 @@ static void initialize_vsync_settings()
 		sdl.vsync.when_windowed.requested   = VsyncMode::Off;
 		sdl.vsync.when_fullscreen.requested = VsyncMode::Off;
 
-	} else if (user_pref == "yield") {
-		sdl.vsync.when_windowed.requested   = VsyncMode::Yield;
-		sdl.vsync.when_fullscreen.requested = VsyncMode::Yield;
-
 	} else {
 		assert(user_pref == "auto");
 
@@ -1158,7 +1154,7 @@ static VsyncMode measure_vsynced_rate(int& bench_rate)
 
 static void set_vsync(const VsyncMode mode)
 {
-	if (mode == VsyncMode::Yield) {
+	if (mode == VsyncMode::Off) {
 		return;
 	}
 #if C_OPENGL
@@ -4535,9 +4531,8 @@ static void init_sdl_config_section()
 	        "             Note: only valid in OpenGL output modes; otherwise treated as\n"
 	        "             'on'.\n"
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
-	        "             the risk of tearing in some games.\n"
-	        "  yield:     Let the host's video driver control video synchronization.");
-	pstring->SetValues({"auto", "on", "adaptive", "off", "yield"});
+	        "             the risk of tearing in some games.");
+	pstring->SetValues({"auto", "on", "adaptive", "off"});
 
 	pint = sdl_sec->AddInt("vsync_skip", on_start, 0);
 	pint->SetHelp(
