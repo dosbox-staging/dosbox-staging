@@ -332,7 +332,6 @@ bool GFX_Events();
 // Useful during output initialization or transitions.
 void GFX_DisengageRendering();
 
-uint8_t GFX_GetBestMode(const uint8_t flags);
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
 
 struct ShaderInfo;
