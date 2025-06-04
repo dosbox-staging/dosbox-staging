@@ -316,6 +316,11 @@ void RENDER_Reinit()
 	render_init(get_render_section());
 }
 
+static uint8_t get_best_mode(const uint8_t flags)
+{
+	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
+}
+
 static void render_reset()
 {
 	static std::mutex render_reset_mutex;
@@ -381,7 +386,7 @@ static void render_reset()
 		break;
 	}
 
-	gfx_flags = GFX_GetBestMode(gfx_flags);
+	gfx_flags = get_best_mode(gfx_flags);
 
 	if (!gfx_flags) {
 		if (simpleBlock == &ScaleNormal1x) {
