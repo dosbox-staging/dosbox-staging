@@ -1368,7 +1368,6 @@ static HostKeyboardLayouts get_host_keyboard_layouts_tty()
 	}
 
 	// Map the detected keyboard layouts to the matching FreeDOS layouts
-	std::vector<KeyboardLayoutMaybeCodepage> results = {};
 	for (const auto& entry : results_tty) {
 		if (!result.log_info.empty()) {
 			result.log_info += ";";
