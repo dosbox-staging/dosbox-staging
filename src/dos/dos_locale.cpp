@@ -1743,7 +1743,7 @@ void DOS_Locale_AddMessages()
 
 	// Add strings with keyboard layout names
 	for (const auto& entry : LocaleData::KeyboardLayoutInfo) {
-		MSG_Add(entry.GetMsgName().c_str(), entry.layout_name.c_str());
+		MSG_Add(entry.GetMsgName(), entry.layout_name);
 	}
 
 	MSG_Add("KEYBOARD_MOD_ADJECTIVE_LEFT",  "Left");
