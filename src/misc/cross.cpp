@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -596,7 +596,7 @@ bool get_expanded_files(const std::string &path,
 		if (WildFileCmp(filename.string().c_str(),
 		                p.filename().string().c_str(),
 		                long_compare)) {
-			files.push_back((dir / filename).string());
+			files.emplace_back((dir / filename).string());
 		}
 	}
 
