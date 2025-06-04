@@ -141,20 +141,11 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncMode { Unset, Off, On, Adaptive };
+enum class VsyncMode { Off, On, Adaptive };
 
 struct VsyncSettings {
 	// The vsync mode the user asked for.
-	VsyncMode requested = VsyncMode::Unset;
-
-	// What the auto-determined state is after setting the requested vsync state.
-	// The video driver may honor the requested vsync mode, ignore it, change
-	// it, or be outright buggy.
-	VsyncMode auto_determined  = VsyncMode::Unset;
-
-	// The actual frame rate after setting the requested vsync mode; it's used
-	// to select the auto-determined vsync mode.
-	int benchmarked_rate = 0;
+	VsyncMode mode = VsyncMode::Off;
 };
 
 enum PRIORITY_LEVELS {
