@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2002-2024  The DOSBox Team
+ *  Copyright (C) 2002-2025  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -303,16 +303,16 @@ void KEYB::WriteOutSuccess()
 	std::vector<std::pair<std::string, std::string>> table = {};
 
 	if (script1) {
-		table.push_back({DOS_GetKeyboardScriptName(*script1),
-		                 DOS_GetShortcutKeyboardScript1()});
+		table.emplace_back(DOS_GetKeyboardScriptName(*script1),
+		                   DOS_GetShortcutKeyboardScript1());
 	}
 	if (script2) {
-		table.push_back({DOS_GetKeyboardScriptName(*script2),
-		                 DOS_GetShortcutKeyboardScript2()});
+		table.emplace_back(DOS_GetKeyboardScriptName(*script2),
+		                   DOS_GetShortcutKeyboardScript2());
 	}
 	if (script3) {
-		table.push_back({DOS_GetKeyboardScriptName(*script3),
-		                 DOS_GetShortcutKeyboardScript3()});
+		table.emplace_back(DOS_GetKeyboardScriptName(*script3),
+		                   DOS_GetShortcutKeyboardScript3());
 	}
 
 	const bool show_shortcuts = (table.size() > 1);
