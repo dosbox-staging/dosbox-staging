@@ -92,16 +92,18 @@ uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz)
 float MOUSE_ClampRelativeMovement(const float rel)
 {
 	constexpr float Max = 2048.0f;
+	constexpr float Min = -Max;
 	// Enforce sane upper limit of relative mouse movement
-	return std::clamp(rel, -Max, Max);
+	return std::clamp(rel, Min, Max);
 }
 
 float MOUSE_ClampWheelMovement(const float rel)
 {
 	// Chosen so that the result always fits into int8_t
 	constexpr float Max = 127.0f;
+	constexpr float Min = -Max;
 	// Enforce sane upper limit of relative mouse wheel
-	return std::clamp(rel, -Max, Max);
+	return std::clamp(rel, Min, Max);
 }
 
 uint16_t MOUSE_ClampRateHz(const uint16_t rate_hz)
