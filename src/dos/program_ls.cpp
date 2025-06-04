@@ -88,7 +88,7 @@ void LS::Run()
 	}
 
 	if (patterns.empty()) {
-		patterns.push_back({});
+		patterns.emplace_back();
 	}
 	for (auto& pattern : patterns) {
 		pattern = to_search_pattern(pattern.c_str());
