@@ -794,11 +794,6 @@ static bool is_command_pressed(const SDL_Event event)
 	MIXER_UnlockMixerThread();
 }
 
-uint8_t GFX_GetBestMode(const uint8_t flags)
-{
-	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
-}
-
 // Let the presentation layer safely call no-op functions.
 // Useful during output initialization or transitions.
 void GFX_DisengageRendering()
