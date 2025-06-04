@@ -1229,7 +1229,7 @@ void MixerChannel::AddSilence()
 	if (audio_frames.size() < frames_needed) {
 		if (prev_frame.left == 0.0f && prev_frame.right == 0.0f) {
 			while (audio_frames.size() < frames_needed) {
-				audio_frames.push_back({0.0f, 0.0f});
+				audio_frames.emplace_back(0.0f, 0.0f);
 			}
 
 			// Make sure the next samples are zero when they get
