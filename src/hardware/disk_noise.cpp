@@ -432,7 +432,7 @@ DiskNoiseDevice::DiskNoiseDevice(const DiskType disk_type,
 	        disk_type);
 }
 
-DiskNoiseDevice::~DiskNoiseDevice() {}
+DiskNoiseDevice::~DiskNoiseDevice() = default;
 
 void DiskNoiseDevice::ActivateSpin()
 {
