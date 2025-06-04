@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -62,12 +62,12 @@ constexpr char char_cr = 0x0d; // carriage return
 // AUTOEXEC.BAT data - both source and binary
 // ***************************************************************************
 
-// Generated AUTOEXEC.BAT, un UTF-8 format
-static std::string autoexec_bat_utf8 = {};
-// Whether AUTOEXEC.BAT is already registered on the Z: drive
-static bool is_vfile_registered = false;
-// Code page used to generate Z:\AUTOEXEC.BAT from the internal UTF-8 version
-static uint16_t vfile_code_page = 0;
+// Generated AUTOEXEC.BAT, in UTF-8 format
+static std::optional<std::string> autoexec_bat_utf8 = {};
+// Generated AUTOEXEC.BAT, in DOS encoding, in a binary format,
+static std::vector<uint8_t> autoexec_bat_bin = {};
+// Code page used to generate 'autoexec_bat_bin'
+static std::optional<uint16_t> vfile_code_page = {};
 
 // Data to be used to generate AUTOEXEC.BAT
 
@@ -97,18 +97,19 @@ static std::map<Placement, std::list<std::string>> autoexec_lines;
 // ***************************************************************************
 
 // Warning: only execute this once, when the initial AUTOEXEC.BAT is being
-// created. Language might change at runtime, affecting the length of strings;
-// if this happens when executing the AUTOEXEC.BAT, changed offsets in the file
-// might confuse our COMMAND.COM, leading to errors in BAT file execution.
-static std::string create_autoexec_bat_utf8()
+// created. Data used to generate the file might change at runtime, affecting
+// the length of strings; if this happens when executing the AUTOEXEC.BAT,
+// changed offsets might confuse our COMMAND.COM, leading to errors.
+static void create_autoexec_bat_utf8()
 {
-	std::string out;
+	assert(!autoexec_bat_utf8);
+	autoexec_bat_utf8 = std::string();
 
 	// Helper lamdbas
 
 	auto push_new_line = [&] { // DOS line ending is CR+LF
-		out.push_back(char_cr);
-		out.push_back(char_lf);
+		autoexec_bat_utf8->push_back(char_cr);
+		autoexec_bat_utf8->push_back(char_lf);
 	};
 
 	auto push_string = [&](const std::string& line) {
@@ -118,13 +119,13 @@ static std::string create_autoexec_bat_utf8()
 		}
 
 		for (const auto& character : line) {
-			out.push_back(character);
+			autoexec_bat_utf8->push_back(character);
 		}
 		push_new_line();
 	};
 
 	auto push_header = [&](const std::string& comment) {
-		if (!out.empty()) {
+		if (!autoexec_bat_utf8->empty()) {
 			push_new_line();
 		}
 		push_string(comment);
@@ -209,31 +210,23 @@ static std::string create_autoexec_bat_utf8()
 	}
 
 #ifdef DEBUG_AUTOEXEC
-	LOG_INFO("AUTOEXEC: New file content\n\n%s", out.c_str());
+	LOG_INFO("AUTOEXEC: New file content\n\n%s", autoexec_bat_utf8->c_str());
 #endif // DEBUG_AUTOEXEC
-
-	return out;
 }
 
-static void create_autoexec_bat_dos(const std::string& input_utf8,
-                                    const uint16_t code_page)
+static void create_autoexec_bat_bin(const uint16_t code_page)
 {
+	assert(autoexec_bat_utf8);
+
 	// Convert UTF-8 AUTOEXEC.BAT to DOS code page
-	const auto autoexec_bat_dos = utf8_to_dos(input_utf8,
+	const auto autoexec_bat_dos = utf8_to_dos(*autoexec_bat_utf8,
 	                                          DosStringConvertMode::WithControlCodes,
 	                                          UnicodeFallback::Box,
 	                                          code_page);
 
 	// Convert the result to a binary format
-	auto autoexec_bat_bin = std::vector<uint8_t>(autoexec_bat_dos.begin(),
-	                                             autoexec_bat_dos.end());
-
-	// Register/refresh Z:\AUTOEXEC.BAT file
-	if (!VFILE_Update(AutoexecFileName.c_str(), autoexec_bat_bin)) {
-		VFILE_Register(AutoexecFileName.c_str(), autoexec_bat_bin);
-	}
-
-	is_vfile_registered = true;
+	autoexec_bat_bin = std::vector<uint8_t>(autoexec_bat_dos.begin(),
+	                                        autoexec_bat_dos.end());
 
 	// Store current code page for caching purposes
 	vfile_code_page = code_page;
@@ -418,7 +411,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 
 	// Fetch [autoexec] sections
-
 	if (!has_option_no_autoexec) {
 		if (should_join_autoexecs) {
 			ProcessConfigFile(*static_cast<const Section_line*>(configuration),
@@ -432,7 +424,6 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 
 	// Enable secure boot if needed
-
 	if (has_option_securemode) {
 		if (has_boot_image) {
 			// Secure mode does not allow booting - so skip it
@@ -448,13 +439,9 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 
 	// Add exit command if needed
-
 	if (should_add_exit) {
 		AddLine(Placement::CommandsAfterAutoexecSection, "@EXIT");
 	}
-
-	// Register the AUTOEXEC.BAT file if not already done
-	AUTOEXEC_RegisterFile();
 }
 
 void AutoExecModule::ProcessConfigFile(const Section_line& section,
@@ -579,25 +566,6 @@ void AutoExecModule::AddMessages()
 	MSG_Add("AUTOEXEC_BAT_CONFIG_SECTION", "from [autoexec] section");
 }
 
-void AUTOEXEC_NotifyNewCodePage()
-{
-	// No need to do anything during the shutdown or if Z:\AUTOEXEC.BAT file
-	// does not exist yet
-	if (shutdown_requested || !is_vfile_registered) {
-		return;
-	}
-
-	// No need to do anything if the code page used by UTF-8 engine is still
-	// the same as when Z:\AUTOEXEC.BAT was generated/refreshed
-	const auto code_page = get_utf8_code_page();
-	if (code_page == vfile_code_page) {
-		return;
-	}
-
-	// Recreate the AUTOEXEC.BAT file as visible on DOS side
-	create_autoexec_bat_dos(autoexec_bat_utf8, code_page);
-}
-
 void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 {
 #if C_DEBUG
@@ -625,15 +593,40 @@ void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 	}
 }
 
-void AUTOEXEC_RegisterFile()
-{
-	autoexec_bat_utf8 = create_autoexec_bat_utf8();
-	create_autoexec_bat_dos(autoexec_bat_utf8, get_utf8_code_page());
-}
-
 static std::unique_ptr<AutoExecModule> autoexec_module{};
+
+void AUTOEXEC_RefreshFile()
+{
+	// No need to do anything during the shutdown
+	if (shutdown_requested) {
+		return;
+	}
+
+	// Don't do anything if we did not collect the config data yet
+	if (!autoexec_module) {
+		return;
+	}
+
+	// Create the UTF-8 version of the file, if necesary
+	if (!autoexec_bat_utf8) {
+		create_autoexec_bat_utf8();
+	}
+
+	// No need to do anything if the code page used by UTF-8 engine is still
+	// the same as when Z:\AUTOEXEC.BAT was generated/refreshed
+	const auto code_page = get_utf8_code_page();
+	if (!vfile_code_page || code_page != *vfile_code_page) {
+		create_autoexec_bat_bin(code_page);
+	}
+
+	// Register/refresh Z:\AUTOEXEC.BAT file
+	if (!VFILE_Update(AutoexecFileName.c_str(), autoexec_bat_bin)) {
+		VFILE_Register(AutoexecFileName.c_str(), autoexec_bat_bin);
+	}
+}
 
 void AUTOEXEC_Init(Section* sec)
 {
 	autoexec_module = std::make_unique<AutoExecModule>(sec);
+	AUTOEXEC_RefreshFile();
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,7 @@ unsigned int vfile_pos = 1;
 uint16_t fztime = 0;
 uint16_t fzdate = 0;
 char sfn[DOS_NAMELENGTH_ASCII];
-void Add_VFiles(const bool add_autoexec);
+void Add_VFiles();
 extern DOS_Shell *first_shell;
 
 class VFILE_Block;
@@ -677,5 +677,5 @@ void Virtual_Drive::EmptyCache()
 	vfile_pos = 1;
 	PROGRAMS_Destroy(nullptr);
 	vfilenames = {Filename{"", ""}};
-	Add_VFiles(first_shell != nullptr);
+	Add_VFiles();
 }
