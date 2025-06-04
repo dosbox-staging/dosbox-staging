@@ -210,7 +210,7 @@ void Message::VerifyFormatString(const std::string& name)
 
 		// Found a new specifier - parse it according to:
 		// - https://cplusplus.com/reference/cstdio/printf/
-		format_specifiers.push_back({});
+		format_specifiers.emplace_back();
 		auto& specifier = format_specifiers.back();
 
 		// First check for POSIX format string extensions
