@@ -53,7 +53,7 @@ static void notify_code_page_changed()
 	MSG_NotifyNewCodePage();
 	DOS_UpdateCurrentProgramName();
 	DOS_RepopulateCountryInfo();
-	AUTOEXEC_NotifyNewCodePage();
+	AUTOEXEC_RefreshFile();
 }
 
 // ***************************************************************************

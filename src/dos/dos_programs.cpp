@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ void REELMAGIC_MaybeCreateFmpdrvExecutable();
 void VFILE_GetPathZDrive(std::string& path, const std::string& dirname);
 void VFILE_RegisterZDrive(const std_fs::path& z_drive_path);
 
-void Add_VFiles(const bool add_autoexec)
+void Add_VFiles()
 {
 	const std::string dirname = "drivez";
 
@@ -106,9 +106,7 @@ void Add_VFiles(const bool add_autoexec)
 
 	REELMAGIC_MaybeCreateFmpdrvExecutable();
 
-	if (add_autoexec) {
-		AUTOEXEC_RegisterFile();
-	}
+	AUTOEXEC_RefreshFile();
 }
 
 void DOS_SetupPrograms(void)
@@ -117,6 +115,5 @@ void DOS_SetupPrograms(void)
 	MSG_Add("WIKI_ADD_UTILITIES_ARTICLE", WIKI_ADD_UTILITIES_ARTICLE);
 	MSG_Add("WIKI_URL", WIKI_URL);
 
-	const auto add_autoexec = false;
-	Add_VFiles(add_autoexec);
+	Add_VFiles();
 }
