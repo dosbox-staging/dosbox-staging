@@ -261,13 +261,27 @@ private:
 
 	void AddMessages();
 
+	struct AutoMountSettings {
+		std::string override_drive = {};
+		std::string type           = {};
+		std::string label	   = {};
+		bool readonly		   = false;
+		std::string path	   = {};
+		bool verbose		   = false;
+	};
+
 	// Specify a 'Drive' config object with allowed key and value types
 	static std::unique_ptr<Config> SpecifyDriveConf();
 
 	// Parse a 'Drive' config file and return object with allowed key and
 	// value types
-	static std::tuple<std::string, std::string, std::string, bool> ParseDriveConf(
-		std::string drive_letter, const std_fs::path& conf_path);
+	static std::optional<AutoMountSettings> ParseDriveConf(const std_fs::path& conf_path);
+
+	// Build a command to mount a drive from a folder, based on the
+	// provided settings
+	static std::string BuildAutoMountFolderCommand(std::string_view dir_letter,
+		const std_fs::path& drive_path,
+	        const std::optional<AutoMountSettings>& settings);
 };
 
 AutoExecModule::AutoExecModule(Section* configuration)
@@ -536,54 +550,73 @@ std::unique_ptr<Config> AutoExecModule::SpecifyDriveConf()
 	return conf;
 }
 
-std::tuple<std::string, std::string, std::string, bool> AutoExecModule::ParseDriveConf(
-        std::string drive_letter, const std_fs::path& conf_path)
+std::optional<AutoExecModule::AutoMountSettings> AutoExecModule::ParseDriveConf(
+	const std_fs::path& conf_path)
 {
-	// Default return values
-	constexpr auto default_args = "";
-	constexpr auto default_path = "";
-	constexpr auto default_verbosity = false;
+	AutoMountSettings settings = {};
 
 	// If the conf path doesn't exist, at least return the default quiet arg
 	if (!path_exists(conf_path))
-		return {drive_letter, default_args, default_path, default_verbosity};
+		return settings;
 
 	// If we couldn't parse it, return the defaults
 	const auto conf = SpecifyDriveConf();
 	assert(conf);
 	if (!conf->ParseConfigFile("auto-mounted drive", conf_path.string()))
-		return {drive_letter, default_args, default_path, default_verbosity};
+		return settings;
 
-	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));
+	const auto section = static_cast<Section_prop*>(conf->GetSection("drive"));
 
-	// Construct the mount arguments
-	const std::string override_drive = settings->Get_string("override_drive");
-	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y')
-		drive_letter = override_drive;
-	else if (!override_drive.empty()) {
-		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid", conf_path.string().c_str(), override_drive.c_str());
+	const auto override_drive = section->Get_string("override_drive");
+	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y') {
+		settings.override_drive = override_drive;
+	} else if (!override_drive.empty()) {
+		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid", conf_path.c_str(), override_drive.c_str());
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
-	std::string drive_type = settings->Get_string("type");
-	if (!drive_type.empty()) {
-		drive_type.insert(0, " -t ");
+	settings.readonly = section->Get_bool("readonly");
+	settings.label = section->Get_string("label");
+	settings.type = section->Get_string("type");
+	settings.path = section->Get_string("path");
+	settings.verbose = section->Get_bool("verbose");
+
+	return settings;
+}
+
+std::string AutoExecModule::BuildAutoMountFolderCommand(
+        const std::string_view dir_letter, const std_fs::path& drive_path,
+        const std::optional<AutoMountSettings>& settings)
+{
+	auto command = CmdMount;
+
+	if (!settings.has_value() || settings->override_drive.empty()) {
+		command += dir_letter;
+	} else {
+		command += settings->override_drive;
 	}
 
-	std::string drive_label = settings->Get_string("label");
-	if (!drive_label.empty()) {
-		drive_label.insert(0, " -label ");
+	command += " " + Quote + simplify_path(drive_path).string() + Quote;
+
+	if (settings.has_value()) {
+		if (!settings->type.empty()) {
+			command += " -t " + settings->type;
+		}
+
+		if (!settings->label.empty()) {
+			command += " -label " + settings->label;
+		}
+
+		if (settings->readonly) {
+			command += " -ro";
+		}
+
+		if (!settings->verbose) {
+			command += ToNul;
+		}
 	}
 
-	const auto is_readonly = settings->Get_bool("readonly");
-
-	const auto mount_args = drive_type + drive_label + (is_readonly ? " -ro" : "");
-
-	const std::string path_val = settings->Get_string("path");
-
-	const auto is_verbose = settings->Get_bool("verbose");
-
-	return {drive_letter, mount_args, path_val, is_verbose};
+	return command;
 }
 
 // Takes in a drive letter (eg: 'c') and attempts to mount the 'drives/c',
@@ -598,19 +631,15 @@ void AutoExecModule::AutoMountDrive(const std::string& dir_letter)
 
 	// Try parsing the [x].conf file
 	const auto conf_path  = drive_path.string() + ".conf";
-	const auto [drive_letter, mount_args, path_val, is_verbose] =
-	        ParseDriveConf(dir_letter, conf_path);
+	const auto settings = ParseDriveConf(conf_path);
 
 	// Install mount as an autoexec command
-	AddLine(Placement::InitialAutogeneratedCommands,
-	        CmdMount + drive_letter + " " + Quote +
-	                simplify_path(drive_path).string() + Quote +
-	                mount_args + (is_verbose ? "" : ToNul));
+	AddLine(Placement::InitialAutogeneratedCommands, BuildAutoMountFolderCommand(dir_letter, drive_path, settings));
 
 	// Install PATH as an autoexec command
-	if (!path_val.empty()) {
+	if (settings.has_value() && !settings->path.empty()) {
 		AddLine(Placement::InitialAutogeneratedCommands,
-		        CmdSetPath + path_val);
+		        CmdSetPath + settings->path);
 	}
 }
 
