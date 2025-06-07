@@ -35,6 +35,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "math_utils.h"
+#include "notifications.h"
 #include "mixer.h"
 #include "pic.h"
 #include "programs.h"
@@ -323,10 +324,10 @@ static std::vector<std_fs::path> get_data_dirs()
 				dirs.insert(dirs.begin(), canonical_path);
 			}
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid `soundfont_dir` setting, "
-			        "cannot open directory '%s'; using ''",
-			        sf_dir.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
+			                      sf_dir.c_str());
 
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
@@ -404,14 +405,14 @@ static float validate_setting(const char* name, const std::string& str_val,
 	const auto val = atof(str_val.c_str());
 
 	if (val < min_val || val > max_val) {
-		LOG_WARNING(
-		        "FSYNTH: Invalid %s setting (%s), needs to be between "
-		        "%.2f and %.2f: using default (%.2f)",
-		        name,
-		        str_val.c_str(),
-		        min_val,
-		        max_val,
-		        def_val);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "FSYNTH",
+		                      "FLUIDSYNTH_INVALID_SYNTH_PARAMETER",
+		                      name,
+		                      str_val.c_str(),
+		                      min_val,
+		                      max_val,
+		                      def_val);
 		return def_val;
 	}
 	return val;
@@ -472,18 +473,18 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 
-			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING(
-				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				        "needs to be 'sine' or 'triangle'",
-				        chorus[4].c_str());
+			} else if (chorus[4] != "sine") {
+				// default is sine
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "FSYNTH",
+				                      "FLUIDSYNTH_INVALID_CHORUS_WAVE",
+				                      chorus[4].c_str());
 			}
 
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom chorus settings (%d), "
-			        "should be five",
-			        static_cast<int>(chorus.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FLUIDSYNTH_INVALID_NUM_CHORUS_PARAMS",
+			                      std::to_string(chorus.size()).c_str());
 		}
 	}
 
@@ -493,7 +494,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 	// Applies setting to all groups
 	constexpr int FxGroup = -1;
 
-// Current API calls as of 2.2
+	// Current API calls as of 2.2
 	FluidSynth::fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
 	FluidSynth::fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
 	FluidSynth::fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
@@ -556,17 +557,17 @@ static void setup_reverb(fluid_synth_t* synth)
 			reverb_level = validate_setting(
 			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom reverb settings (%d), "
-			        "should be four",
-			        static_cast<int>(reverb.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "FLUIDSYNTH_INVALID_NUM_REVERB_PARAMS",
+			                      std::to_string(reverb.size()).c_str());
 		}
 	}
 
 	// Applies setting to all groups
 	constexpr int FxGroup = -1;
 
-// Current API calls as of 2.2
+	// Current API calls as of 2.2
 	FluidSynth::fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
 	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
 
@@ -710,8 +711,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
-			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
-			            filter_prefs.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "fsynth_filter",
+			                      filter_prefs.c_str(),
+			                      "off");
 		}
 
 		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
@@ -1135,6 +1140,29 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 static void register_fluidsynth_text_messages()
 {
 	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
+
+	MSG_Add("FLUIDSYNTH_INVALID_SOUNDFONT_DIR",
+	        "Invalid [color=light-green]'soundfont_dir'[reset] setting; "
+	        "cannot open directory [color=white]'%s'[reset], "
+	        "using [color=white]''[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_SYNTH_PARAMETER",
+	        "Invalid [color=light-green]'%s'[reset] synth parameter: "
+	        "[color=white]%s[reset]; must be between %.2f and %.2f, "
+	        "using [color=white]%.2f[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_CHORUS_WAVE",
+	        "Invalid chorus modulation wave type: [color=white]'%s'[reset]; "
+	        "must be [color=white]'sine'[reset] or "
+	        "[color=white]'triangle'[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_NUM_CHORUS_PARAMS",
+	        "Invalid number of custom chorus settings: %d, "
+	        "must be five space-separated values");
+
+	MSG_Add("FLUIDSYNTH_INVALID_NUM_REVERB_PARAMS",
+	        "Invalid number of custom reverb settings: %d, "
+	        "space-separated values");
 }
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)
