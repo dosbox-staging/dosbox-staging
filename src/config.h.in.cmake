@@ -126,6 +126,9 @@
 // Compiler supports Core Foundation headers
 #cmakedefine01 C_COREFOUNDATION
 
+// Compiler supports Core Graphics headers
+#cmakedefine01 C_COREGRAPHICS
+
 // Compiler supports Core Services headers
 #cmakedefine01 C_CORESERVICES
 

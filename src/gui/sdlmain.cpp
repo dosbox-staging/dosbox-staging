@@ -43,6 +43,29 @@
 #include <windows.h>
 #endif
 
+#if C_COREGRAPHICS
+#include <CoreGraphics/CGError.h>
+extern "C" {
+	// Definitions of a well-known private macOS API
+
+	typedef int CGSConnection;
+	typedef enum {
+	    kCGSGlobalHotKeyInvalid                      = -1,
+	    kCGSGlobalHotKeyEnable                       = 0,
+	    kCGSGlobalHotKeyDisable                      = 1,
+	    kCGSGlobalHotKeyDisableExceptUniversalAccess = 2,
+	    kCGSGlobalHotKeySleep                        = 4,
+	    kCGSGlobalHotKeyScreenSaver                  = 6,
+	} CGSGlobalHotKeyOperatingMode;
+
+	CGSConnection _CGSDefaultConnection();
+	CGError CGSGetGlobalHotKeyOperatingMode(CGSConnection connection,
+	                                        CGSGlobalHotKeyOperatingMode* mode);
+	CGError CGSSetGlobalHotKeyOperatingMode(CGSConnection connection,
+	                                        CGSGlobalHotKeyOperatingMode mode);
+}
+#endif
+
 #include <SDL.h>
 #if C_OPENGL
 #include <SDL_opengl.h>
@@ -3403,6 +3426,13 @@ static void apply_active_settings()
 		SDL_SetWindowKeyboardGrab(sdl.window,
 	        	                  sdl.keyboard_capture ? SDL_TRUE :
 	        	                                         SDL_FALSE);
+#if C_COREGRAPHICS
+		// At least some SDL library builds omit this call, as a result
+		// SDL_SetWindowKeyboardGrab does not have any effect on macOS
+		CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(),
+			sdl.keyboard_capture ? kCGSGlobalHotKeyDisable :
+			                       kCGSGlobalHotKeyEnable);
+#endif
 	}
 }
 
