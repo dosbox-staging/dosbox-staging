@@ -13,6 +13,7 @@ libgui = static_library(
     libgui_sources,
     include_directories: incdir,
     dependencies: [
+        coregraphics_dep,
         ghc_dep,
         libiir_dep,
         libloguru_dep,

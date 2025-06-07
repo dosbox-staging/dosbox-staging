@@ -1034,6 +1034,7 @@ endif
 coreaudio_dep = optional_dep
 coremidi_dep = optional_dep
 corefoundation_dep = optional_dep
+coregraphics_dep = optional_dep
 iokit_dep = optional_dep
 if host_machine.system() == 'darwin'
 
@@ -1132,6 +1133,25 @@ if host_machine.system() == 'darwin'
         warning('''Core Foundation disabled becaue Foundation missing''')
     endif
     summary('CoreFoundation support', corefoundation_dep.found())
+
+    # Graphics extras
+    coregraphics_dep = dependency(
+        'appleframeworks',
+        modules: ['CoreGraphics'],
+        required: false,
+        include_type: 'system',
+    )
+    if coregraphics_dep.found()
+        if cxx.check_header('CoreGraphics/CoreGraphics.h')
+            conf_data.set10('C_COREGRAPHICS', true)
+        else
+            warning('''Core Graphics disabled because header is unusable''')
+            coregraphics_dep = disabler()
+        endif
+    else
+        warning('''Core Graphics disabled becaue Graphics missing''')
+    endif
+    summary('CoreGraphics support', coregraphics_dep.found())
 
     # SDL CD dependency
     coreservices_dep = dependency(
