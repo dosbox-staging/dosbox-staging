@@ -3969,47 +3969,6 @@ bool GFX_Events()
 				continue;
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-			case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
-				// New display might have a different resolution
-				// and DPI scaling set, so recalculate that and
-				// set viewport
-				check_and_handle_dpi_change(sdl.window,
-				                            sdl.rendering_backend);
-
-				SDL_Rect display_bounds = {};
-				SDL_GetDisplayBounds(event.window.data1,
-				                     &display_bounds);
-				sdl.desktop.full.width  = display_bounds.w;
-				sdl.desktop.full.height = display_bounds.h;
-
-				sdl.display_number = event.window.data1;
-
-				const auto canvas_size_px = get_canvas_size_in_pixels(
-				        sdl.rendering_backend);
-
-				sdl.draw_rect_px = to_sdl_rect(
-				        calc_draw_rect_in_pixels(canvas_size_px));
-
-				if (sdl.rendering_backend == RenderingBackend::Texture) {
-					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.draw_rect_px);
-				}
-#	if C_OPENGL
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-
-				maybe_auto_switch_shader();
-#	endif
-				notify_new_mouse_screen_params();
-				continue;
-			}
-#endif
-
 			case SDL_WINDOWEVENT_SIZE_CHANGED: {
 				// LOG_DEBUG("SDL: The window size has changed");
 
