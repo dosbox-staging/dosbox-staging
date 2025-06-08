@@ -4219,7 +4219,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	return drivers;
 }
 
-static void messages_add_command_line()
+static void add_command_line_help_message()
 {
 	MSG_Add("DOSBOX_HELP",
 	        "Usage: %s [OPTION]... [PATH]\n"
@@ -4298,7 +4298,7 @@ static void messages_add_command_line()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
-static void messages_add_sdl()
+static void add_essential_messages()
 {
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 
@@ -4312,7 +4312,7 @@ static void messages_add_sdl()
 	TITLEBAR_AddMessages();
 }
 
-static void config_add_sdl()
+static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
 
@@ -4900,24 +4900,31 @@ int sdl_main(int argc, char* argv[])
 		//
 		InitConfigDir();
 
-		// Register sdlmain's messages, conf sections, and essential
-		// DOS messages, needed by some command line switches
-		messages_add_command_line();
+		// Register essential DOS messages needed by some command line
+		// switches and during startup or reboot
+		add_command_line_help_message();
+		add_essential_messages();
+
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
-		messages_add_sdl();
-		config_add_sdl();
 
-		// Register DOSBox's (and all modules) messages and conf sections
-		DOSBOX_Init();
+		// Add [sdl] config section
+		init_sdl_config_section();
+
+		// Register the config sections and messages of all the other modules
+		DOSBOX_InitAllModuleConfigsAndMessages();
 
 		// Before loading any configs, write the default primary config if it
 		// doesn't exist when:
+		//
 		// - secure mode is NOT enabled with the '--securemode' option,
+		//
 		// - AND we're not in portable mode (portable mode is enabled when
 		//   'dosbox-staging.conf' exists in the executable directory)
+		//
 		// - AND the primary config is NOT disabled with the
 		//   '--noprimaryconf' option.
+		//
 		if (!arguments->securemode && !arguments->noprimaryconf) {
 			const auto primary_config_path = GetPrimaryConfigPath();
 
@@ -4935,9 +4942,10 @@ int sdl_main(int argc, char* argv[])
 			}
 		}
 
-		// After DOSBOX_Init() is done, all the conf sections have been
-		// registered, so we're ready to parse the conf files.
-		//
+		// After DOSBOX_InitAllModuleConfigsAndMessages() is done, all the
+		// config sections have been registered, so we're ready to parse the
+		// config files.
+		//	
 		control->ParseConfigFiles(GetConfigDir());
 
 		// Handle command line options that don't start the emulator but only

@@ -52,7 +52,7 @@ public:
 
 		Section *_sec;
 		// This will register all the init functions, but won't run them
-		DOSBOX_Init();
+		DOSBOX_InitAllModuleConfigsAndMessages();
 
 		for (auto section_name : sections) {
 			_sec = control->GetSection(section_name);
