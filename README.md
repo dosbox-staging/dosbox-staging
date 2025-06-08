@@ -106,7 +106,11 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 ## Build instructions
 
-Read [docs/BUILD.md] for the comprehensive compilation guide.
+Please refer to the platform specific build instructions:
+
+- [Windows](docs/build-windows.md)
+- [macOS](docs/build-macos.md)
+- [Linux](docs/build-linux.md)
 
 > **Note**
 >

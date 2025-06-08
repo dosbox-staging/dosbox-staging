@@ -28,7 +28,7 @@ _Provide clear instructions so the reviewers can reproduce and verify your resul
 
 _Include relevant details for your test configuration, operating system, etc._
 
-_Ideally, you would also test your changes with a [sanitizer build](https://github.com/dosbox-staging/dosbox-staging/blob/main/BUILD.md#make-a-sanitizer-build) and confirm no issues were found._
+_Ideally, you would also test your changes with a [sanitizer build](https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-linux.md#make-a-sanitizer-build) and confirm no issues were found._
 
 _Non-trivial changes **must be** tested on all three OSes we support. If you can't test on a particular OS, ask the team or contributors for help._
 
