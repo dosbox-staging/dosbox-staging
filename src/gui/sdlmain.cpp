@@ -4750,20 +4750,8 @@ static void set_wm_class()
 #endif
 }
 
-int sdl_main(int argc, char* argv[])
+static void init_logger(const CommandLineArguments& arguments)
 {
-	// Ensure we perform SDL cleanup and restore console settings
-	atexit(QuitSDL);
-
-	switch_console_to_utf8();
-
-	CommandLine command_line(argc, argv);
-	control = std::make_unique<Config>(&command_line);
-
-	const auto arguments = &control->arguments;
-
-	// Set up logging after command line was parsed and trivial arguments have
-	// been handled
 	loguru::g_preamble_date    = true;
 	loguru::g_preamble_time    = true;
 	loguru::g_preamble_uptime  = false;
@@ -4788,6 +4776,23 @@ int sdl_main(int argc, char* argv[])
 	        LOGURU_VERSION_MAJOR,
 	        LOGURU_VERSION_MINOR,
 	        LOGURU_VERSION_PATCH);
+}
+
+int sdl_main(int argc, char* argv[])
+{
+	// Ensure we perform SDL cleanup and restore console settings
+	atexit(QuitSDL);
+
+	switch_console_to_utf8();
+
+	CommandLine command_line(argc, argv);
+	control = std::make_unique<Config>(&command_line);
+
+	const auto arguments = &control->arguments;
+
+	// Set up logging after command line was parsed and trivial arguments
+	// have been handled
+	init_logger(arguments);
 
 	int return_code = 0;
 
