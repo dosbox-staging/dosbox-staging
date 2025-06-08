@@ -266,7 +266,7 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	// the result points to a static string but can be null
 	const auto result = glGetString(requested_name);
 
-	// the default, howeever, needs to be valid
+	// the default, however, needs to be valid
 	assert(default_result);
 
 	return result ? reinterpret_cast<const char*>(result) : default_result;
@@ -3874,6 +3874,7 @@ void GFX_RegenerateWindow(Section* sec)
 	GFX_ResetScreen();
 }
 
+// TODO check if this workaround is still needed
 #if defined(MACOSX)
 #define DB_POLLSKIP 3
 #else
@@ -4018,6 +4019,8 @@ static void handle_user_event(const SDL_Event& event)
 bool GFX_Events()
 {
 #if defined(MACOSX)
+	// TODO check if this workaround is still needed
+	//
 	// Don't poll too often. This can be heavy on the OS, especially Macs.
 	// In idle mode 3000-4000 polls are done per second without this check.
 	// Macs, with this code,  max 250 polls per second. (non-macs unused
@@ -4084,6 +4087,8 @@ bool GFX_Events()
 				GFX_ResetScreen();
 
 #if C_OPENGL && defined(MACOSX)
+				// TODO check if this workaround is still needed
+	
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
@@ -4192,6 +4197,7 @@ bool GFX_Events()
 				continue;
 
 #if C_OPENGL && defined(MACOSX)
+			// TODO check if this workaround is still needed
 			case SDL_WINDOWEVENT_MOVED:
 				// LOG_DEBUG("SDL: Window has been moved to %d,
 				// %d",
@@ -5552,6 +5558,8 @@ int sdl_main(int argc, char* argv[])
 	} catch (char* error) {
 		return_code = 1;
 
+		// TODO Show warning popup dialog with the error (use the tiny
+		// osdialog lib) with console log fallback
 		GFX_ShowMsg("Exit to error: %s", error);
 
 		fflush(nullptr);
@@ -5565,6 +5573,7 @@ int sdl_main(int argc, char* argv[])
 			fgetc(stdin);
 
 #elif defined(WIN32)
+			// TODO not needed once we should the popup dialog
 			Sleep(5000);
 #endif
 		}
@@ -5580,6 +5589,7 @@ int sdl_main(int argc, char* argv[])
 #if defined(WIN32)
 	// Might not be needed if the shutdown function switches to windowed
 	// mode, but it doesn't hurt
+	// TODO is this still needed on current SDL?
 	sticky_keys(true);
 #endif
 
