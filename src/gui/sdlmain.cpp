@@ -3386,8 +3386,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	RENDER_Reinit();
 }
 
-// extern void UI_Run(bool);
-
 static void apply_active_settings()
 {
 	set_priority(sdl.priority.active);
@@ -4969,8 +4967,11 @@ int sdl_main(int argc, char* argv[])
 			}
 			freopen(STDERR_FILE, "w", stderr);
 
-			setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // Line buffered
-			setvbuf(stderr, NULL, _IONBF, BUFSIZ); // No buffering
+			// Line buffered
+			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+			// No buffering
+			setvbuf(stderr, NULL, _IONBF, BUFSIZ);
+
 		} else {
 			if (AllocConsole()) {
 				fclose(stdin);
@@ -4997,8 +4998,9 @@ int sdl_main(int argc, char* argv[])
 		}
 #endif
 #endif // WIN32
+
 		// Seamless mouse integration feels more 'seamless' if mouse
-		// clicks on out-of-focus window are passed to the guest
+		// clicks on unfocused windows are passed to the guest.
 		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 
 		// We have a keyboard shortcut to exit the fullscreen mode,
@@ -5033,11 +5035,11 @@ int sdl_main(int argc, char* argv[])
 #if defined SDL_HINT_APP_NAME
 		// For KDE 6 volume applet and PipeWire audio driver; further
 		// SetHint calls have no effect in the GUI, only the first
-		// advertised name is used
+		// advertised name is used.
 		SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
 #endif
 #if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
-		// Useful for 'pw-top' and possibly other PipeWire CLI tools
+		// Useful for 'pw-top' and possibly other PipeWire CLI tools.
 		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
 #endif
 
@@ -5120,11 +5122,8 @@ int sdl_main(int argc, char* argv[])
 #endif
 
 		control->ParseEnv();
-		//		UI_Init();
-		//		if (control->cmdline->FindExist("-startui"))
-		// UI_Run(false);
 
-		// Init all the sections
+		// Execute all registered section init functions
 		control->Init();
 
 		// Some extra SDL Functions
@@ -5139,7 +5138,7 @@ int sdl_main(int argc, char* argv[])
 			MAPPER_DisplayUI();
 		}
 
-		// Run the machine until shutdown
+		// Start emulation and run it until shutdown
 		control->StartUp();
 
 		// Shutdown and release
