@@ -1660,24 +1660,6 @@ static bool is_using_kmsdrm_driver()
 	return driver_str == "kmsdrm";
 }
 
-static int check_kmsdrm_setting()
-{
-	// Simple pre-check to see if we're using kmsdrm
-	if (!is_using_kmsdrm_driver())
-		return 0;
-
-	// Do we have read access to the event subsystem
-	if (auto f = fopen("/dev/input/event0", "r"); f) {
-		fclose(f);
-		return 0;
-	}
-
-	// We're using KMSDRM, but we don't have read access to the event subsystem
-	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
-	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
-	return 1;
-}
-
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
@@ -4735,6 +4717,76 @@ static void init_logger(const CommandLineArguments& arguments)
 	        LOGURU_VERSION_PATCH);
 }
 
+static bool check_kmsdrm_setting()
+{
+	// Simple pre-check to see if we're using kmsdrm
+	if (!is_using_kmsdrm_driver()) {
+		return true;
+	}
+
+	// Do we have read access to the event subsystem
+	if (auto f = fopen("/dev/input/event0", "r"); f) {
+		fclose(f);
+		return true;
+	}
+
+	// We're using KMSDRM, but we don't have read access to the event subsystem
+	return false;
+}
+
+static void init_sdl()
+{
+#if defined(WIN32) && SDL_VERSION_ATLEAST(2, 24, 0)
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
+		LOG_WARNING("SDL: Failed to set DPI awareness flag");
+	}
+	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
+		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+	}
+#endif
+
+	// Seamless mouse integration feels more 'seamless' if mouse
+	// clicks on unfocused windows are passed to the guest.
+	SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+
+	if (!check_kmsdrm_setting()) {
+		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
+		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
+	}
+
+	// Timer is needed for title bar animations
+	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
+		E_Exit("SDL: Can't init SDL %s", SDL_GetError());
+	}
+	sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
+	if (sdl.start_event_id == UINT32_MAX) {
+		E_Exit("SDL: Failed to alocate event IDs");
+	}
+
+	sdl.initialized = true;
+
+	SDL_version sdl_version = {};
+	SDL_GetVersion(&sdl_version);
+
+	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
+	        sdl_version.major,
+	        sdl_version.minor,
+	        sdl_version.patch,
+	        SDL_GetCurrentVideoDriver(),
+	        SDL_GetCurrentAudioDriver());
+
+#if defined SDL_HINT_APP_NAME
+	// For KDE 6 volume applet and PipeWire audio driver; further
+	// SetHint calls have no effect in the GUI, only the first
+	// advertised name is used.
+	SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
+#endif
+#if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
+	// Useful for 'pw-top' and possibly other PipeWire CLI tools.
+	SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
+#endif
+}
+
 int sdl_main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings
@@ -4900,57 +4952,9 @@ int sdl_main(int argc, char* argv[])
 
 #if defined(WIN32)
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
-
-#if SDL_VERSION_ATLEAST(2, 24, 0)
-		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") ==
-		    SDL_FALSE) {
-			LOG_WARNING("SDL: Failed to set DPI awareness flag");
-		}
-		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
-			LOG_WARNING("SDL: Failed to set DPI scaling flag");
-		}
 #endif
-#endif // WIN32
 
-		// Seamless mouse integration feels more 'seamless' if mouse
-		// clicks on unfocused windows are passed to the guest.
-		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-
-		if (const auto err = check_kmsdrm_setting(); err != 0) {
-			return err;
-		}
-
-		// Timer is needed for title bar animations
-		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
-			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
-		}
-		sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
-		if (sdl.start_event_id == UINT32_MAX) {
-			E_Exit("SDL: Failed to alocate event IDs");
-		}
-
-		sdl.initialized = true;
-
-		SDL_version sdl_version = {};
-		SDL_GetVersion(&sdl_version);
-
-		LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
-		        sdl_version.major,
-		        sdl_version.minor,
-		        sdl_version.patch,
-		        SDL_GetCurrentVideoDriver(),
-		        SDL_GetCurrentAudioDriver());
-
-#if defined SDL_HINT_APP_NAME
-		// For KDE 6 volume applet and PipeWire audio driver; further
-		// SetHint calls have no effect in the GUI, only the first
-		// advertised name is used.
-		SDL_SetHint(SDL_HINT_APP_NAME, DOSBOX_NAME);
-#endif
-#if defined SDL_HINT_AUDIO_DEVICE_STREAM_NAME
-		// Useful for 'pw-top' and possibly other PipeWire CLI tools.
-		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_STREAM_NAME, DOSBOX_NAME);
-#endif
+		init_sdl();
 
 		for (auto line : arguments->set) {
 			trim(line);
