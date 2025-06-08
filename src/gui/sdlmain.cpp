@@ -2354,6 +2354,9 @@ static void focus_input()
 }
 
 #if defined (WIN32)
+// TODO what is this hack/workaround for?
+// is it still needed on current SDL?
+
 STICKYKEYS stick_keys = {sizeof(STICKYKEYS), 0};
 void sticky_keys(bool restore){
 	static bool inited = false;
@@ -5082,6 +5085,8 @@ int sdl_main(int argc, char* argv[])
 	} catch (char* error) {
 		return_code = 1;
 
+		// TODO Show warning popup dialog with the error (use the tiny
+		// osdialog lib) with console log fallback
 		GFX_ShowMsg("Exit to error: %s", error);
 
 		fflush(nullptr);
@@ -5095,6 +5100,7 @@ int sdl_main(int argc, char* argv[])
 			fgetc(stdin);
 
 #elif defined(WIN32)
+			// TODO not needed once we should the popup dialog
 			Sleep(5000);
 #endif
 		}
@@ -5110,6 +5116,7 @@ int sdl_main(int argc, char* argv[])
 #if defined(WIN32)
 	// Might not be needed if the shutdown function switches to windowed
 	// mode, but it doesn't hurt
+	// TODO is this still needed on current SDL?
 	sticky_keys(true);
 #endif
 
