@@ -604,8 +604,10 @@ double DOSBOX_GetUptime()
 	return GetTicksSince(start_ms) / MillisInSecond;
 }
 
-void DOSBOX_Init()
+void DOSBOX_InitAllModuleConfigsAndMessages()
 {
+	// Note the [sdl] section is initialised in sdlmain.cpp
+	
 	Section_prop* secprop             = nullptr;
 	Prop_bool* pbool                  = nullptr;
 	Prop_int* pint                    = nullptr;
