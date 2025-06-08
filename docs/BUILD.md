@@ -2,19 +2,18 @@
 
 ## Minimum build requirements
 
-Install dependencies listed in [README.md](README.md).  Although `ccache` is
+Install dependencies listed in [README.md](README.md). Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
 up builds. The minimum set of dependencies is:
 
 - C/C++ compiler with support for C++20
 - SDL >= 2.0.5
 - Opusfile
-- Meson >= 0.56, or Visual Studio Community Edition 2022
-- OS that is mostly POSIX-compliant or up-to-date Windows system
-
+- Meson >= 0.56
 
 All other dependencies are optional and can be disabled while configuring the
 build (in `meson setup` step).
+
 
 ## General notes
 
@@ -39,6 +38,7 @@ CCACHE_SLOPPINESS="pch_defines,time_macros"
 > 
 > **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
 
+
 ## Standard release build, all features enabled
 
 ``` shell
@@ -48,12 +48,11 @@ meson compile -C build/release
 
 Your binary is `build/release/dosbox`.
 
-If you're using Visual Studio, use the x86-64 release build target.
-
 The binary is supported by resource files relative to it, so we recommend
 running it from it's present location.  However, if you want to package
 up the binary along with its dependencies and resource tree, you can run:
 `./scripts/packaging/create-package.sh` to learn more.
+
 
 ## Debug build (for code contributors or diagnosing a crash)
 
@@ -71,9 +70,6 @@ meson compile -C build/debugger
 
 For the heavy debugger, use `heavy` instead of `normal`.
 
-If using Visual Studio set the `C_DEBUG` and optionally the
-`C_HEAVY_DEBUG` values to `1` inside `src/platform/visualc/config.h`,
-and then perform a release build.
 
 ## Make a build with profiling enabled
 
@@ -86,8 +82,6 @@ meson setup -Dtracy=true build/release-tracy
 meson compile -C build/release-tracy
 ```
 
-If using Visual Studio, select the `Tracy` build configuration.
-
 We have instrumented a very small core of subsystem functions for baseline
 demonstration purposes. You can add additional profiling macros to your functions
 of interest.
@@ -96,17 +90,14 @@ The resulting binary requires the Tracy profiler server to view profiling
 data. If using Meson on a *nix system, switch to
 `subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
 
-If using Windows, binaries are available from the [releases](https://github.com/wolfpld/tracy/releases)
-page, or you can build it locally with Visual Studio using the solution at
-`subprojects/tracy.x.x.x.x/profiler/build/win32/Tracy.sln`
-
 Start the instrumented Staging binary, then start the server. You should see
 Staging as an available client for Connect.
 
 You can also run the server on a different machine on the network, even on a
-different platform, profiling Linux from Windows or vice versa, for example.
+different platform.
 
 Please refer to the Tracy documentation for further information.
+
 
 ## Repository and package maintainers
 
@@ -124,6 +115,7 @@ Detailed documentation: [Meson: Core options][meson-core]
 
 [meson-core]: https://mesonbuild.com/Builtin-options.html#core-options
 
+
 ### Disabling dependencies
 
 The majority of dependencies are optional and can be disabled. For example,
@@ -136,6 +128,7 @@ meson compile -C build
 
 We highly recommend package maintainers only offer DOSBox Staging if all
 its features (and dependencies) can be provided.
+
 
 ### List Meson's setup options
 
@@ -154,6 +147,7 @@ meson configure build
 Options can be passed to the `meson setup` command using `-Doption=value`
 notation or using comma-separated notation (i.e.: `-Doption=value1,value2,value3`)
 when the option supports multiple values.
+
 
 ### If your build fails
 
@@ -207,6 +201,7 @@ meson setup -Dbuildtype=debug build/debug
 meson test -C build/debug
 ```
 
+
 ### Run unit tests (with user-supplied gtest sources)
 
 *Appropriate during packaging or when user is behind a proxy or without
@@ -245,6 +240,7 @@ Concrete example:
 ./build/debug/tests/bitops --gtest_filter=bitops.nominal_byte
 ```
 
+
 ### Bisecting and building old versions
 
 To automate and ensure successful builds when bisecting or building old
@@ -253,57 +249,19 @@ versions, run `meson setup --wipe` on your build area before every build.
 This updates the build area with critical metadata to match that of the
 checked out sources, such as the C++ language standard.
 
-An alias like the following can be used on macOS, Linux, and Windows MSYS
-environments to build versions 0.77 and newer:
+An alias like the following can be used to build versions 0.77 and newer:
 
-`alias build_staging='meson setup --wipe build && ninja -C build'`
+```shell
+  alias build_staging='meson setup --wipe build && ninja -C build'
+```
 
-Prior to version 0.77 the Autotools build system was used. A build script
+Prior to version 0.77, the Autotools build system was used. A build script
 available in these old versions can be used (choose one for your compiler):
 
-`./scripts/build.sh -c clang -t release` or `./scripts/build.sh -c gcc -t release`
-
-### Build test coverage report
-
-Prerequisite: Install Clang's `lcov` package and/or the GCC-equivalent `gcovr` package.
-
-Build and run the tests:
-
-``` shell
-meson setup -Dbuildtype=debug -Db_coverage=true build/cov
-meson compile -C build/cov
-meson test -C build/cov
+```shell
+./scripts/build.sh -c clang -t release` or `./scripts/build.sh -c gcc -t release
 ```
 
-Generate and view the coverage report:
-
-``` shell
-cd build/cov
-ninja coverage-html
-cd meson-logs/coveragereport
-firefox index.html
-```
-
-### Static analysis report
-
-Prerequisites:
-
-``` shell
-# Fedora
-sudo dnf install clang-analyzer
-```
-
-``` shell
-# Debian, Ubuntu
-sudo apt install clang-tools
-```
-
-Build and generate report:
-
-``` shell
-meson setup -Dbuildtype=debug build/debug
-ninja -C build/debug scan-build
-```
 
 ### Make a sanitizer build
 
@@ -312,19 +270,13 @@ Compared to a debug build, sanitizer builds take longer to compile
 and run slower, so are often reserved to exercise new features or
 perform a periodic whole-program check-up.
 
-- **Linux users:**:  We recommend using Clang's latest
-stable version. If you're using a Debian or Ubuntu-based distro,
-LLVM has a helpful one-time setup script [here](https://apt.llvm.org/).
+We recommend using Clang's latest stable version. If you're using a Debian or
+Ubuntu-based distro, LLVM has a helpful one-time setup script
+[here](https://apt.llvm.org/).
 
-- **Windows users:** Start by setting up MSYS2 as described in the
-_docs/build-windows.md_document. Ensure you've opened an MSYS2 MinGW
-Clang x64 terminal before proceeding and that `clang --version`
-reports version 13.x (or greater).
-
-The following uses Clang's toolchain to create a sanitizer build
-that checks for address and behavior issues, two of the most common
-classes of issues. See Meson's list of built-in options for other
-sanitizer types.
+The following uses Clang's toolchain to create a sanitizer build that checks
+for address and behavior issues, two of the most common classes of issues. See
+Meson's list of built-in options for other sanitizer types.
 
 ``` shell
 meson setup -Dbuildtype=debug --native-file=.github/meson/native-clang.ini \
@@ -339,6 +291,7 @@ Run the sanitizer binary as you normally would, then exit and look for
 sanitizer messages in the log output.  If none exist, then your program
 is running clean.
 
+
 ## Experimental CMake support
 
 > **Note**
@@ -347,7 +300,7 @@ is running clean.
 > 
 > **PLEASE DO NOT SUBMIT ANY BUGS OR HELP REQUESTS!**
 
-### Building on Linux, using system dependencies
+### Using system dependencies
 
 1. Install the necessary build tools:
 
@@ -384,11 +337,11 @@ cmake --build --preset=release-linux
 
 1. You can now launch DOSBox with the command:
 
-```bash
+``` bash
 ./build/release-linux/dosbox
 ```
 
-### Building on Linux, using `vcpkg` to fetch dependencies at compile time
+### Using `vcpkg` to fetch dependencies at compile time
 
 1. Install the necessary build tools:
 
