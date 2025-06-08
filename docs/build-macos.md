@@ -93,3 +93,46 @@ See more build options in [BUILD.md](BUILD.md).
     ./build/dosbox
     ```
 
+
+## Using FluidSynth and Slirp during local development
+
+FluidSynth and Slirp are difficult and time-consuming to build, therefore they
+are built in separate project as libraries which are then loaded
+dynamically at runtime (think of it as a plugin system). These dynamic
+libraries are injected into our official release packages in the CI builds
+(including the dev builds), but you'll need to ensure they're available for
+local development. See the README of the
+[dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
+project for further info.
+
+This is one possible solution to make these libraries available for local
+development. You only have to do this if you're working on something related
+to the FluidSynth MIDI synth or NE2000 networking via Slirp.
+
+1. Download the latest release ZIP from the
+   [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
+   project.
+
+2. Unpack the ZIP package; you'll find two sets of libraries inside for debug
+   and release builds.
+
+3. Copy the contents of the ZIP to a location outside of the CMake build
+   directory. E.g., you can put them into `$REPO_DIR/lib`.
+
+4. Assuming you're using the `debug-macos` CMake preset, do the following
+   _after_ doing a successful build:
+
+  ```
+  cd $REPO_DIR
+  ln -s $PWD/lib/debug build/debug-macos/Debug/lib
+  xattr -r -d com.apple.quarantine lib                                                                         [
+  ```
+
+  > [!IMPORTANT]
+  > The `xattr` command is very important! Without that, macOS Gatekeeper
+  > won't let DOSBox Staging load the dynamic libraries at runtime when
+  > enabling FluidSynth by setting `mididevice = fluidsynth` or NE2000
+  > networking by `ne2000 = on`.
+
+You'll only need to do this once after a successful build. If you delete the
+CMake build folder, redo step 4.
