@@ -72,7 +72,7 @@ void DOSBOX_RunMachine();
 void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();
 
-void DOSBOX_Init(void);
+void DOSBOX_InitAllModuleConfigsAndMessages(void);
 
 void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
 
