@@ -5177,13 +5177,10 @@ int sdl_main(int argc, char* argv[])
 		// Execute all registered section init functions
 		control->Init();
 
-		// Some extra SDL Functions
-		Section_prop* sdl_sec = get_sdl_section();
-
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
-		MAPPER_BindKeys(sdl_sec);
-		GFX_RegenerateWindow(sdl_sec);
+		MAPPER_BindKeys(get_sdl_section());
+		GFX_RegenerateWindow(get_sdl_section());
 
 		if (arguments->startmapper) {
 			MAPPER_DisplayUI();
