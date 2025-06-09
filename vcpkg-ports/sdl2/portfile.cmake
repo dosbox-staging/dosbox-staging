@@ -2,7 +2,7 @@ vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO libsdl-org/SDL
     REF "release-${VERSION}"
-    SHA512 c3bbec85835e7f50662c408d220b0706d4247738472cb93fe44341d9cc81093988ac34993b43e2e4178969381d6097a1f401be97476deaec9f0dded01e7e11a1
+    SHA512 d5622d6bb7266f7942a7b8ad43e8a22524893bf0c2ea1af91204838d9b78d32768843f6faa248757427b8404b8c6443776d4afa6b672cd8571a4e0c03a829383
     HEAD_REF main
     PATCHES
         deps.patch
@@ -13,11 +13,6 @@ vcpkg_from_github(
 string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "static" SDL_STATIC)
 string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "dynamic" SDL_SHARED)
 string(COMPARE EQUAL "${VCPKG_CRT_LINKAGE}" "static" FORCE_STATIC_VCRT)
-
-# SDL_SetWindowKeyboardGrab() only works on macOS if SDL_MAC_NO_SANDBOX
-# is defined
-string(APPEND VCPKG_C_FLAGS   " -DSDL_MAC_NO_SANDBOX")
-string(APPEND VCPKG_CXX_FLAGS " -DSDL_MAC_NO_SANDBOX")
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
@@ -43,7 +38,6 @@ endif()
 if(VCPKG_TARGET_IS_UWP)
     set(configure_opts WINDOWS_USE_MSBUILD)
 endif()
-
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
