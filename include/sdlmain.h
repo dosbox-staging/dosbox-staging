@@ -294,8 +294,6 @@ struct SDL_Block {
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	bool keyboard_capture = false;
-
 	SDL_Rect draw_rect_px     = {};
 	SDL_Window* window        = nullptr;
 	SDL_Renderer* renderer    = nullptr;
