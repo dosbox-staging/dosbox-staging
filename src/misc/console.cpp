@@ -47,8 +47,3 @@ void CONSOLE_RawWrite(std::string_view output)
 
 	dos.internal_output = false;
 }
-
-uint8_t CONSOLE_GetLastWrittenCharacter()
-{
-	return last_written_character;
-}
