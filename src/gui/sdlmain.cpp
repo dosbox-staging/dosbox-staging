@@ -4759,12 +4759,12 @@ int sdl_main(int argc, char* argv[])
 	// Ensure we perform SDL cleanup and restore console settings
 	atexit(QuitSDL);
 
-	switch_console_to_utf8();
-
 	CommandLine command_line(argc, argv);
 	control = std::make_unique<Config>(&command_line);
 
 	const auto arguments = &control->arguments;
+
+	switch_console_to_utf8();
 
 	// Set up logging after command line was parsed and trivial arguments have
 	// been handled
