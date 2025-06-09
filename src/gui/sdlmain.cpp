@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <signal.h>
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
@@ -39,7 +40,6 @@
 
 #ifdef WIN32
 #include <process.h>
-#include <signal.h>
 #include <windows.h>
 #endif
 
@@ -4773,6 +4773,36 @@ int sdl_main(int argc, char* argv[])
 	control = std::make_unique<Config>(&command_line);
 
 	const auto arguments = &control->arguments;
+
+	if (arguments->wait_pid) {
+#ifdef WIN32
+		// Synchronize permission is all we need for WaitForSingleObject()
+		constexpr DWORD DesiredAccess = SYNCHRONIZE;
+		constexpr BOOL InheritHandles = FALSE;
+		HANDLE process                = OpenProcess(DesiredAccess,
+                                             InheritHandles,
+                                             *arguments->wait_pid);
+		if (process) {
+			// Waits for the process to terminate.
+			// If we failed to open it, it's probably already dead.
+			constexpr DWORD Timeout = INFINITE;
+			WaitForSingleObject(process, Timeout);
+			CloseHandle(process);
+		}
+#else
+		for (;;) {
+			// Signal of 0 does not actually send a signal.
+			// It only checks for existance and permissions of the PID.
+			constexpr int Signal = 0;
+			int ret = kill(*arguments->wait_pid, Signal);
+			// ESRCH means PID does not exist.
+			if (ret == -1 && errno == ESRCH) {
+				break;
+			}
+			Delay(50);
+		}
+#endif
+	}
 
 	switch_console_to_utf8();
 
