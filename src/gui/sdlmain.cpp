@@ -3432,7 +3432,7 @@ static void set_priority_levels(const std::string& active_pref,
 
 static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 {
-	restart_dosbox();
+	DOSBOX_Restart();
 }
 
 static void read_gui_config(Section* sec)
@@ -4570,8 +4570,7 @@ static void remove_waitpid(std::vector<std::string> &parameters)
 	}
 }
 
-void restart_dosbox(std::vector<std::string> &parameters)
-{
+void DOSBOX_Restart(std::vector<std::string> &parameters) {
 
 	control->ApplyQueuedValuesToCli(parameters);
 
