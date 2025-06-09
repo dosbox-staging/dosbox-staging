@@ -4833,6 +4833,52 @@ static void maybe_write_primary_config(const CommandLineArguments* args)
 	}
 }
 
+static std::optional<int> maybe_handle_command_line_output_only_actions(
+        const CommandLineArguments* args, char* argv[])
+{
+	if (args->version) {
+		printf(version_msg, DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
+		return 0;
+	}
+	if (args->help) {
+		assert(argv && argv[0]);
+		const auto program_name = argv[0];
+		const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
+		                             program_name);
+		printf("%s", help.c_str());
+		return 0;
+	}
+	if (args->editconf) {
+		return edit_primary_config();
+	}
+	if (args->eraseconf) {
+		return erase_primary_config_file();
+	}
+	if (args->erasemapper) {
+		return erase_mapper_file();
+	}
+	if (args->printconf) {
+		return print_primary_config_location();
+	}
+	if (args->list_countries) {
+		list_countries();
+		return 0;
+	}
+	if (args->list_layouts) {
+		list_keyboard_layouts();
+		return 0;
+	}
+	if (args->list_code_pages) {
+		list_code_pages();
+		return 0;
+	}
+	if (args->list_glshaders) {
+		list_glshaders();
+		return 0;
+	}
+	return {};
+}
+
 static bool check_kmsdrm_setting()
 {
 	// Simple pre-check to see if we're using kmsdrm
@@ -5125,47 +5171,10 @@ int sdl_main(int argc, char* argv[])
 
 		// Handle command line options that don't start the emulator but only
 		// perform some actions and print the results to the console.
-		if (arguments->version) {
-			printf(version_msg,
-			       DOSBOX_PROJECT_NAME,
-			       DOSBOX_GetDetailedVersion());
-			return 0;
-		}
-		if (arguments->help) {
-			assert(argv && argv[0]);
-			const auto program_name = argv[0];
-			const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
-			                             program_name);
-			printf("%s", help.c_str());
-			return 0;
-		}
-		if (arguments->editconf) {
-			return edit_primary_config();
-		}
-		if (arguments->eraseconf) {
-			return erase_primary_config_file();
-		}
-		if (arguments->erasemapper) {
-			return erase_mapper_file();
-		}
-		if (arguments->printconf) {
-			return print_primary_config_location();
-		}
-		if (arguments->list_countries) {
-			list_countries();
-			return 0;
-		}
-		if (arguments->list_layouts) {
-			list_keyboard_layouts();
-			return 0;
-		}
-		if (arguments->list_code_pages) {
-			list_code_pages();
-			return 0;
-		}
-		if (arguments->list_glshaders) {
-			list_glshaders();
-			return 0;
+		if (const auto return_code = maybe_handle_command_line_output_only_actions(
+		            arguments, argv);
+		    return_code) {
+			return *return_code;
 		}
 
 #if defined(WIN32) && !(C_DEBUG)
