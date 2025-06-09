@@ -229,7 +229,6 @@ static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
-static void clean_up_sdl_resources();
 static void handle_video_resize(int width, int height);
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
@@ -1293,6 +1292,22 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	//         new_dpi_scale);
 
 	apply_new_dpi_scale(new_dpi_scale);
+}
+
+static void clean_up_sdl_resources()
+{
+	if (sdl.texture.pixelFormat) {
+		SDL_FreeFormat(sdl.texture.pixelFormat);
+		sdl.texture.pixelFormat = nullptr;
+	}
+	if (sdl.texture.texture) {
+		SDL_DestroyTexture(sdl.texture.texture);
+		sdl.texture.texture = nullptr;
+	}
+	if (sdl.texture.input_surface) {
+		SDL_FreeSurface(sdl.texture.input_surface);
+		sdl.texture.input_surface = nullptr;
+	}
 }
 
 static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
@@ -2754,22 +2769,6 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 		The older values from application startup are returned. */
 		sdl.desktop.full.width = width;
 		sdl.desktop.full.height = height;
-	}
-}
-
-static void clean_up_sdl_resources()
-{
-	if (sdl.texture.pixelFormat) {
-		SDL_FreeFormat(sdl.texture.pixelFormat);
-		sdl.texture.pixelFormat = nullptr;
-	}
-	if (sdl.texture.texture) {
-		SDL_DestroyTexture(sdl.texture.texture);
-		sdl.texture.texture = nullptr;
-	}
-	if (sdl.texture.input_surface) {
-		SDL_FreeSurface(sdl.texture.input_surface);
-		sdl.texture.input_surface = nullptr;
 	}
 }
 
