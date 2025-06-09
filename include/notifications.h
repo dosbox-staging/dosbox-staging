@@ -169,7 +169,7 @@ void display_message([[maybe_unused]] const Level level, const Source source,
 	// result in a crash. One way this can happen is when setting an
 	// out-of-range config value for a config that will be only applied a
 	// restart (e.g., `memsize 123456` followed by `config -r`).
-	const auto is_console_initialised = first_shell;
+	const auto is_console_initialised = (DOS_GetFirstShell() != nullptr);
 
 	if (source == Source::Console && is_console_initialised) {
 		const auto format = MSG_Get(message_name);
