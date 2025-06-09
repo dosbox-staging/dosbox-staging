@@ -4879,6 +4879,37 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 	}
 }
 
+[[maybe_unused]] static void apply_windows_debugger_workaround(const bool is_console_disabled)
+{
+	// Can't disable the console with debugger enabled
+	if (is_console_disabled) {
+		FreeConsole();
+		// Redirect standard input and standard output
+		//
+		if (freopen(STDOUT_FILE, "w", stdout) == NULL) {
+			// No stdout so don't write messages
+			no_stdout = true;
+		}
+		freopen(STDERR_FILE, "w", stderr);
+
+		// Line buffered
+		setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
+		// No buffering
+		setvbuf(stderr, NULL, _IONBF, BUFSIZ);
+
+	} else {
+		if (AllocConsole()) {
+			fclose(stdin);
+			fclose(stdout);
+			fclose(stderr);
+			freopen("CONIN$", "r", stdin);
+			freopen("CONOUT$", "w", stdout);
+			freopen("CONOUT$", "w", stderr);
+		}
+		SetConsoleTitle("DOSBox Status Window");
+	}
+}
+
 static void maybe_create_resource_directories()
 {
 	const auto plugins_dir = GetConfigDir() / PluginsDir;
@@ -5094,35 +5125,9 @@ int sdl_main(int argc, char* argv[])
 			return 0;
 		}
 
-		// Can't disable the console with debugger enabled
 #if defined(WIN32) && !(C_DEBUG)
-		if (arguments->noconsole) {
-			FreeConsole();
-			// Redirect standard input and standard output
-			//
-			if (freopen(STDOUT_FILE, "w", stdout) == NULL) {
-				// No stdout so don't write messages
-				no_stdout = true;
-			}
-			freopen(STDERR_FILE, "w", stderr);
-
-			// Line buffered
-			setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
-			// No buffering
-			setvbuf(stderr, NULL, _IONBF, BUFSIZ);
-
-		} else {
-			if (AllocConsole()) {
-				fclose(stdin);
-				fclose(stdout);
-				fclose(stderr);
-				freopen("CONIN$", "r", stdin);
-				freopen("CONOUT$", "w", stdout);
-				freopen("CONOUT$", "w", stderr);
-			}
-			SetConsoleTitle("DOSBox Status Window");
-		}
-#endif // defined(WIN32) && !(C_DEBUG)
+		apply_windows_debugger_workaround(arguments->noconsole);
+#endif
 
 #if defined(WIN32)
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
