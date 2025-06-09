@@ -82,7 +82,6 @@ DOSBox Staging has the following library dependencies:
 
 | Dependency                                               | Provides feature                                | vcpkg package name | vcpkg version   | Optional?           |
 | -------------------------------------------------------- | ----------------------------------------------- | ------------------ | --------------- | ------------------- |
-| [FluidSynth](https://www.fluidsynth.org/)                | General MIDI synthesizer                        | fluidsynth         | 2.4.4#1         | yes :green_circle:  |
 | [Google Test+Mock](https://github.com/google/googletest) | Unit testing (development)                      | gmock              | 1.6.0#1         | yes :green_circle:  |
 | [IIR](https://github.com/berndporr/iir1)                 | Audio filtering                                 | iir1               | 1.9.5#1         | **no** :red_circle: |
 | [libpng](http://www.libpng.org/pub/png/libpng.html)      | PNG encoding of screen captures                 | libpng             | 1.6.46#0        | yes :green_circle:  |
@@ -90,10 +89,25 @@ DOSBox Staging has the following library dependencies:
 | [Opus File](https://opus-codec.org/)                     | CD Audio playback for Opus-encoded audio tracks | opusfile           | 0.12+20221121#1 | **no** :red_circle: |
 | [SDL 2.0](https://github.com/libsdl-org/SDL)             | OS-agnostic API for video, audio, and eventing  | sdl2               | 2.32.6#0        | **no** :red_circle: |
 | [SDL_net 2.0](https://github.com/libsdl-org/SDL_net)     | Network API for emulated serial and IPX         | sdl2-net           | 2.2.0#3         | yes :green_circle:  |
-| [slirp](https://gitlab.freedesktop.org/slirp)            | TCP/IP library for Ethernet emulation           | libslirp           | 4.9.0#0         | yes :green_circle:  |
 | [SpeexDSP](https://github.com/xiph/speexdsp)             | Audio resampling                                | speexdsp           | 1.2.1#1         | **no** :red_circle: |
 | [Tracy Profiler](https://github.com/wolfpld/tracy)       | Event profiler (development)                    | tracy              | 0.11.1#2        | yes :green_circle:  |
 | [zlib-ng](https://github.com/zlib-ng/zlib-ng)            | ZMBV video capture                              | zlib-ng            | 2.2.4#1         | yes :green_circle:  |
+
+
+### Dynamically loaded dependencies
+
+**FluidSynth** and **Slirp** are built separately as dynamic libraries (via
+vcpkg) and are loaded on-demand at runtime if available. Please refer to the
+[dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
+project for further details. To check the versions of these dependencies
+included in our stable and dev build packages, check out the comments of the
+[releases packages](https://github.com/dosbox-staging/dosbox-staging-ext/releases) of
+the [dosbox-staging-ext](https://github.com/dosbox-staging/dosbox-staging-ext)
+project.
+
+For information on the optional **Nuked SC-55 CLAP** audio plugin, check out
+the [plugin's GitHub repository](https://github.com/johnnovak/Nuked-SC55-CLAP/) (note Nuked SC-55
+CLAP is _not_ a DOSBox Staging project).
 
 
 ## Get the sources
