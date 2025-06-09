@@ -607,7 +607,7 @@ void CONFIG::Run(void)
 				return;
 			}
 			if (pvars.size() == 0) {
-				restart_dosbox();
+				DOSBOX_Restart();
 			} else {
 				std::vector<std::string> restart_params;
 				restart_params.push_back(
@@ -620,7 +620,7 @@ void CONFIG::Run(void)
 				                      remaining_args.begin(),
 				                      remaining_args.end());
 
-				restart_dosbox(restart_params);
+				DOSBOX_Restart(restart_params);
 			}
 			return;
 

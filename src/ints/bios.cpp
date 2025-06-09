@@ -1081,7 +1081,7 @@ static Bitu reboot_handler()
 	}
 
 	// Restart
-	restart_dosbox();
+	DOSBOX_Restart();
 	return CBRET_NONE;
 }
 
