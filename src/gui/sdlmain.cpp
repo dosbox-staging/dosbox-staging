@@ -2776,7 +2776,7 @@ static void clean_up_sdl_resources()
 	}
 }
 
-static void GUI_ShutDown(Section *)
+static void shutdown_gui(Section *)
 {
 	GFX_Stop();
 
@@ -3430,7 +3430,7 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 
 static void read_gui_config(Section* sec)
 {
-	sec->AddDestroyFunction(&GUI_ShutDown);
+	sec->AddDestroyFunction(&shutdown_gui);
 	Section_prop* section = static_cast<Section_prop*>(sec);
 
 	sdl.active          = false;
