@@ -2748,7 +2748,7 @@ void GFX_Start() {
 	sdl.active=true;
 }
 
-void GFX_ObtainDisplayDimensions() {
+static void get_display_dimensions() {
 	SDL_Rect displayDimensions;
 	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
 	sdl.desktop.full.width = displayDimensions.w;
@@ -2764,7 +2764,7 @@ void GFX_ObtainDisplayDimensions() {
 void GFX_UpdateDisplayDimensions(int width, int height)
 {
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
-		/* Note: We should not use GFX_ObtainDisplayDimensions
+		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
 		sdl.desktop.full.width = width;
@@ -3531,7 +3531,7 @@ static void read_gui_config(Section* sec)
 
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
-		GFX_ObtainDisplayDimensions();
+		get_display_dimensions();
 	}
 
 	set_output(section, is_aspect_ratio_correction_enabled());
@@ -3654,7 +3654,7 @@ static void handle_video_resize(int width, int height)
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
-		/* Note: We should not use GFX_ObtainDisplayDimensions
+		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
 		sdl.desktop.full.width  = width;
