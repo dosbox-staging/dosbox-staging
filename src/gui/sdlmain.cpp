@@ -229,17 +229,6 @@ static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
-static void handle_video_resize(int width, int height);
-
-static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
-static bool present_frame_texture();
-#if C_OPENGL
-static void update_frame_gl(const uint16_t *changedLines);
-static bool present_frame_gl();
-static const char* safe_gl_get_string(const GLenum requested_name,
-                                      const char* default_result);
-#endif
-
 static const char* to_string(const VsyncMode mode)
 {
 	switch (mode) {
@@ -1700,6 +1689,103 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
+// Texture update and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
+{
+	SDL_UpdateTexture(sdl.texture.texture,
+	                  nullptr, // update entire texture
+	                  sdl.texture.input_surface->pixels,
+	                  sdl.texture.input_surface->pitch);
+}
+
+static bool present_frame_texture()
+{
+	const auto is_presenting = render_pacer->CanRun();
+	if (is_presenting) {
+		SDL_RenderClear(sdl.renderer);
+		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranteed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
+		SDL_RenderPresent(sdl.renderer);
+	}
+	render_pacer->Checkpoint();
+	return is_presenting;
+}
+
+#if C_OPENGL
+
+// OpenGL frame-based update and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+static void update_frame_gl(const uint16_t* changedLines)
+{
+	if (changedLines) {
+		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
+		const auto pitch = sdl.opengl.pitch;
+		int y = 0;
+		size_t index = 0;
+		while (y < sdl.draw.render_height_px) {
+			if (!(index & 1)) {
+				y += changedLines[index];
+			} else {
+				const uint8_t *pixels = framebuf + y * pitch;
+				const int height_px = changedLines[index];
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
+				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
+				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+				y += height_px;
+			}
+			index++;
+		}
+	} else {
+		sdl.opengl.actual_frame_count++;
+	}
+}
+
+static bool present_frame_gl()
+{
+	const auto is_presenting = render_pacer->CanRun();
+	if (is_presenting) {
+		glClear(GL_COLOR_BUFFER_BIT);
+		if (sdl.opengl.program_object) {
+			glUniform1i(sdl.opengl.ruby.frame_count,
+			            sdl.opengl.actual_frame_count++);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		} else {
+			glCallList(sdl.opengl.displaylist);
+		}
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranateed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
+		SDL_GL_SwapWindow(sdl.window);
+	}
+	render_pacer->Checkpoint();
+	return is_presenting;
+}
+#endif
+
+
+
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback)
@@ -2516,16 +2602,6 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 	FrameMark;
 }
 
-// Texture update and presentation
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
-{
-	SDL_UpdateTexture(sdl.texture.texture,
-	                  nullptr, // update entire texture
-	                  sdl.texture.input_surface->pixels,
-	                  sdl.texture.input_surface->pitch);
-}
-
 static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
 	// This should be impossible, but maybe the user is hitting the screen
@@ -2645,89 +2721,6 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	}
 	return image;
 }
-
-static bool present_frame_texture()
-{
-	const auto is_presenting = render_pacer->CanRun();
-	if (is_presenting) {
-		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
-
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined rendering
-			// commands have finished, so we're guaranteed to read the
-			// contents of the up-to-date backbuffer here right before the
-			// buffer swap.
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
-		}
-
-		SDL_RenderPresent(sdl.renderer);
-	}
-	render_pacer->Checkpoint();
-	return is_presenting;
-}
-
-// OpenGL frame-based update and presentation
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#if C_OPENGL
-static void update_frame_gl(const uint16_t* changedLines)
-{
-	if (changedLines) {
-		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
-		const auto pitch = sdl.opengl.pitch;
-		int y = 0;
-		size_t index = 0;
-		while (y < sdl.draw.render_height_px) {
-			if (!(index & 1)) {
-				y += changedLines[index];
-			} else {
-				const uint8_t *pixels = framebuf + y * pitch;
-				const int height_px = changedLines[index];
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
-				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-				y += height_px;
-			}
-			index++;
-		}
-	} else {
-		sdl.opengl.actual_frame_count++;
-	}
-}
-
-static bool present_frame_gl()
-{
-	const auto is_presenting = render_pacer->CanRun();
-	if (is_presenting) {
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count,
-			            sdl.opengl.actual_frame_count++);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
-		}
-
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined rendering
-			// commands have finished, so we're guaranateed to read the
-			// contents of the up-to-date backbuffer here right before the
-			// buffer swap.
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
-		}
-
-		SDL_GL_SwapWindow(sdl.window);
-	}
-	render_pacer->Checkpoint();
-	return is_presenting;
-}
-#endif
 
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
