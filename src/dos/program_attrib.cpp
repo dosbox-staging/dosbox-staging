@@ -12,7 +12,12 @@ void ATTRIB::Run()
 {
 	std::string tmp = "";
 	cmd->GetStringRemain(tmp);
+
 	char args[CMD_MAXLINE];
 	safe_strcpy(args, tmp.c_str());
-	first_shell->CMD_ATTRIB(args);
+
+	auto shell = DOS_GetFirstShell();
+	assert(shell);
+
+	shell->CMD_ATTRIB(args);
 }
