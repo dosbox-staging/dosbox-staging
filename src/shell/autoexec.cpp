@@ -750,8 +750,10 @@ void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 	upcase(name_upcase);
 
 	// If shell is already running, refresh variable content
-	if (first_shell) {
-		first_shell->SetEnv(name_upcase, value);
+	auto shell = DOS_GetFirstShell();
+
+	if (shell) {
+		shell->SetEnv(name_upcase.c_str(), value.c_str());
 	}
 
 	// Update our internal list of variables to set in AUTOEXEC.BAT
