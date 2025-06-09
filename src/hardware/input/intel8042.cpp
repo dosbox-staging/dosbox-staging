@@ -863,7 +863,7 @@ static void execute_command(const Command command, const uint8_t param)
 		MEM_A20_Enable(bit::is(param, b1));
 		if (!bit::is(param, b0)) {
 			LOG_WARNING("I8042: Clearing P2 bit 0 locks a real PC");
-			restart_dosbox();
+			DOSBOX_Restart();
 		}
 		break;
 	case Command::SimulateInputKbd: // 0xd2
@@ -899,7 +899,7 @@ static void execute_command(const Command command, const uint8_t param)
 			}
 			if (code == 0xf0 && !(lines & 0b0001)) {
 				// System reset via keyboard controller
-				restart_dosbox();
+				DOSBOX_Restart();
 			}
 		} else {
 			// If we are here, than either this function
