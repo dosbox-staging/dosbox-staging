@@ -40,6 +40,4 @@ void CONSOLE_Write(const std::string& format, const Args&... args)
 	CONSOLE_Write(format.c_str(), args...);
 }
 
-uint8_t CONSOLE_GetLastWrittenCharacter();
-
 #endif // DOSBOX_CONSOLE_H
