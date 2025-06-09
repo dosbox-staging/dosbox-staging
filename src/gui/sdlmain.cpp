@@ -4876,6 +4876,50 @@ static void init_sdl()
 #endif
 }
 
+static void handle_cli_set_commands(const std::vector<std::string>& set_args)
+{
+	for (auto command : set_args) {
+		trim(command);
+
+		if (command.empty() || command[0] == '%' || command[0] == '\0' ||
+		    command[0] == '#' || command[0] == '\n') {
+			continue;
+		}
+
+		std::vector<std::string> pvars(1, std::move(command));
+
+		const char* result = control->SetProp(pvars);
+
+		if (strlen(result)) {
+			LOG_WARNING("CONFIG: %s", result);
+		} else {
+			Section* tsec = control->GetSection(pvars[0]);
+			std::string value(pvars[2]);
+
+			// Due to parsing, there can be a '=' at the
+			// start of the value.
+			while (value.size() &&
+			       (value.at(0) == ' ' || value.at(0) == '=')) {
+				value.erase(0, 1);
+			}
+
+			for (auto i = 3; i < pvars.size(); i++) {
+				value += (std::string(" ") + pvars[i]);
+			}
+
+			std::string inputline = pvars[1] + "=" + value;
+
+			bool change_success = tsec->HandleInputline(
+			        inputline.c_str());
+
+			if (!change_success && !value.empty()) {
+				LOG_WARNING("CONFIG: Cannot set '%s'",
+				            inputline.c_str());
+			}
+		}
+	}
+}
+
 int sdl_main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings
@@ -5081,46 +5125,11 @@ int sdl_main(int argc, char* argv[])
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
 #endif
 
-		for (auto line : arguments->set) {
-			trim(line);
+		init_sdl();
 
-			if (line.empty() || line[0] == '%' || line[0] == '\0' ||
-			    line[0] == '#' || line[0] == '\n') {
-				continue;
-			}
-
-			std::vector<std::string> pvars(1, std::move(line));
-
-			const char* result = control->SetProp(pvars);
-
-			if (strlen(result)) {
-				LOG_WARNING("CONFIG: %s", result);
-			} else {
-				Section* tsec = control->GetSection(pvars[0]);
-				std::string value(pvars[2]);
-
-				// Due to parsing, there can be a '=' at the
-				// start of the value.
-				while (value.size() && (value.at(0) == ' ' ||
-				                        value.at(0) == '=')) {
-					value.erase(0, 1);
-				}
-
-				for (Bitu i = 3; i < pvars.size(); i++) {
-					value += (std::string(" ") + pvars[i]);
-				}
-
-				std::string inputline = pvars[1] + "=" + value;
-
-				bool change_success = tsec->HandleInputline(
-				        inputline.c_str());
-
-				if (!change_success && !value.empty()) {
-					LOG_WARNING("CONFIG: Cannot set '%s'",
-					            inputline.c_str());
-				}
-			}
-		}
+		// Handle configuration settings passed with `--set` commands from the
+		// CLI.
+		handle_cli_set_commands(arguments->set);
 
 		// Plugins
 		const auto plugins_dir = GetConfigDir() / PluginsDir;
