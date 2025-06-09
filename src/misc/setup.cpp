@@ -1989,6 +1989,7 @@ void Config::ParseArguments()
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
 	arguments.socket = cmdline->FindRemoveIntArgument("socket");
+	arguments.wait_pid = cmdline->FindRemoveIntArgument("waitpid");
 
 	arguments.conf = cmdline->FindRemoveVectorArgument("conf");
 	arguments.set  = cmdline->FindRemoveVectorArgument("set");
