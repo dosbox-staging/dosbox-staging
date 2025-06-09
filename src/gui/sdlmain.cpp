@@ -4505,7 +4505,11 @@ static void config_add_sdl()
 	pbool->Set_help("Pause emulation when the window is inactive ('off' by default).");
 
 	pbool = sdl_sec->Add_bool("keyboard_capture", always, false);
-	pbool->Set_help("Takes over more host OS keyboard shortcuts ('off' by default).");
+	pbool->Set_help(
+	        "Capture system keyboard shortcuts ('off' by default).\n"
+	        "When enabled, most system shortcuts such as Alt+Tab are captured and sent to\n"
+	        "DOSBox Staging. This is useful for Windows 3.1x and some DOS programs with\n"
+	        "unchangeable keyboard shortcuts that conflict with system shortcuts.");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(
