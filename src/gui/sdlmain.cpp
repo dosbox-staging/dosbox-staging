@@ -4821,7 +4821,7 @@ static bool check_kmsdrm_setting()
 
 static void init_sdl()
 {
-#if defined(WIN32) && SDL_VERSION_ATLEAST(2, 24, 0)
+#if defined(WIN32)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE) {
 		LOG_WARNING("SDL: Failed to set DPI awareness flag");
 	}
