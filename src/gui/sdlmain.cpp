@@ -4802,6 +4802,37 @@ static void init_logger(const CommandLineArguments* args, int argc, char* argv[]
 	loguru::init(argc, argv);
 }
 
+static void maybe_write_primary_config(const CommandLineArguments* args)
+{
+	// Before loading any configs, write the default primary config if it
+	// doesn't exist when:
+	//
+	// - secure mode is NOT enabled with the '--securemode' option,
+	//
+	// - AND we're not in portable mode (portable mode is enabled when
+	//   'dosbox-staging.conf' exists in the executable directory)
+	//
+	// - AND the primary config is NOT disabled with the
+	//   '--noprimaryconf' option.
+	//
+	if (!args->securemode && !args->noprimaryconf) {
+		const auto primary_config_path = GetPrimaryConfigPath();
+
+		if (!config_file_is_valid(primary_config_path)) {
+			// No config is loaded at this point, so we're
+			// writing the default settings to the primary
+			// config.
+			if (control->WriteConfig(primary_config_path)) {
+				LOG_MSG("CONFIG: Created primary config file '%s'",
+				        primary_config_path.string().c_str());
+			} else {
+				LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
+				            primary_config_path.string().c_str());
+			}
+		}
+	}
+}
+
 static bool check_kmsdrm_setting()
 {
 	// Simple pre-check to see if we're using kmsdrm
@@ -5084,33 +5115,7 @@ int sdl_main(int argc, char* argv[])
 		// Register the config sections and messages of all the other modules
 		DOSBOX_InitAllModuleConfigsAndMessages();
 
-		// Before loading any configs, write the default primary config if it
-		// doesn't exist when:
-		//
-		// - secure mode is NOT enabled with the '--securemode' option,
-		//
-		// - AND we're not in portable mode (portable mode is enabled when
-		//   'dosbox-staging.conf' exists in the executable directory)
-		//
-		// - AND the primary config is NOT disabled with the
-		//   '--noprimaryconf' option.
-		//
-		if (!arguments->securemode && !arguments->noprimaryconf) {
-			const auto primary_config_path = GetPrimaryConfigPath();
-
-			if (!config_file_is_valid(primary_config_path)) {
-				// No config is loaded at this point, so we're
-				// writing the default settings to the primary
-				// config.
-				if (control->WriteConfig(primary_config_path)) {
-					LOG_MSG("CONFIG: Created primary config file '%s'",
-					        primary_config_path.string().c_str());
-				} else {
-					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
-					            primary_config_path.string().c_str());
-				}
-			}
-		}
+		maybe_write_primary_config(arguments);
 
 		// After DOSBOX_InitAllModuleConfigsAndMessages() is done, all the
 		// config sections have been registered, so we're ready to parse the
