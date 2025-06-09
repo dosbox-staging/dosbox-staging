@@ -229,17 +229,6 @@ static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
-static void handle_video_resize(int width, int height);
-
-static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
-static bool present_frame_texture();
-#if C_OPENGL
-static void update_frame_gl(const uint16_t *changedLines);
-static bool present_frame_gl();
-static const char* safe_gl_get_string(const GLenum requested_name,
-                                      const char* default_result);
-#endif
-
 static const char* to_string(const VsyncMode mode)
 {
 	switch (mode) {
@@ -1700,6 +1689,223 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
+// Texture update and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
+{
+	SDL_UpdateTexture(sdl.texture.texture,
+	                  nullptr, // update entire texture
+	                  sdl.texture.input_surface->pixels,
+	                  sdl.texture.input_surface->pitch);
+}
+
+static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
+{
+	// This should be impossible, but maybe the user is hitting the screen
+	// capture hotkey on startup even before DOS comes alive.
+	if (!sdl.maybe_video_mode) {
+		LOG_WARNING("SDL: The DOS video mode needs to be set "
+		            "before we can get the rendered image");
+		return {};
+	}
+
+	RenderedImage image = {};
+
+	// The draw rect can extends beyond the bounds of the window or the screen
+	// in fullscreen when we're "zooming into" the DOS content in `relative`
+	// viewport mode. But rendered captures should always capture what we see
+	// on the screen, so only the visible part of the enlarged image.
+	// Therefore, we need to clip the draw rect to the bounds of the canvas
+	// (the total visible area of the window or screen), and only capture the
+	// resulting output rectangle.
+	
+	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	canvas_rect_px.x = 0.0f;
+	canvas_rect_px.y = 0.0f;
+
+	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
+	        to_rect(sdl.draw_rect_px));
+
+	auto allocate_image = [&]() {
+		image.params.width              = iroundf(output_rect_px.w);
+		image.params.height             = iroundf(output_rect_px.h);
+		image.params.double_width       = false;
+		image.params.double_height      = false;
+		image.params.pixel_aspect_ratio = {1};
+		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
+
+		assert(sdl.maybe_video_mode);
+		image.params.video_mode = *sdl.maybe_video_mode;
+
+		image.is_flipped_vertically = false;
+
+		image.pitch = image.params.width *
+		              (get_bits_per_pixel(image.params.pixel_format) / 8);
+
+		image.palette_data = nullptr;
+
+		const auto image_size_bytes = check_cast<uint32_t>(
+		        image.params.height * image.pitch);
+		image.image_data = new uint8_t[image_size_bytes];
+	};
+
+#if C_OPENGL
+	// Get the OpenGL-renderer surface
+	// -------------------------------
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+		glReadBuffer(GL_BACK);
+
+		// Alignment is 4 by default which works fine when using the
+		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
+		// to be able to use the GL_BGR format in order to conserve
+		// memory. This should not cause any slowdowns whatsoever.
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+		allocate_image();
+
+		glReadPixels(iroundf(output_rect_px.x),
+		             iroundf(output_rect_px.y),
+		             image.params.width,
+		             image.params.height,
+		             GL_BGR,
+		             GL_UNSIGNED_BYTE,
+		             image.image_data);
+
+		image.is_flipped_vertically = true;
+		return image;
+	}
+#endif
+
+	// Get the SDL texture-renderer surface
+	// ------------------------------------
+	const auto renderer = SDL_GetRenderer(sdl.window);
+	if (!renderer) {
+		LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
+		            SDL_GetError());
+		return {};
+	}
+
+	allocate_image();
+
+	// SDL2 pixel formats are a bit weird coming from OpenGL...
+	// You would think SDL_PIXELFORMAT_BGR888 is an alias of
+	// SDL_PIXELFORMAT_BGR24, but the two are actually very
+	// different:
+	//
+	// - SDL_PIXELFORMAT_BGR24 is an "array format"; it specifies
+	//   the endianness-agnostic memory layout just like OpenGL
+	//   pixel formats.
+	//
+	// - SDL_PIXELFORMAT_BGR888 is a "packed format" which uses
+	//   native types, therefore its memory layout depends on the
+	//   endianness.
+	//
+	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
+	//
+	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
+
+	if (SDL_RenderReadPixels(renderer,
+	                         &read_rect_px,
+	                         SDL_PIXELFORMAT_BGR24,
+	                         image.image_data,
+	                         image.pitch) != 0) {
+
+		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
+		            SDL_GetError());
+
+		delete[] image.image_data;
+		return {};
+	}
+	return image;
+}
+
+static bool present_frame_texture()
+{
+	const auto is_presenting = render_pacer->CanRun();
+	if (is_presenting) {
+		SDL_RenderClear(sdl.renderer);
+		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranteed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
+		SDL_RenderPresent(sdl.renderer);
+	}
+	render_pacer->Checkpoint();
+	return is_presenting;
+}
+
+#if C_OPENGL
+
+// OpenGL frame-based update and presentation
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+static void update_frame_gl(const uint16_t* changedLines)
+{
+	if (changedLines) {
+		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
+		const auto pitch = sdl.opengl.pitch;
+		int y = 0;
+		size_t index = 0;
+		while (y < sdl.draw.render_height_px) {
+			if (!(index & 1)) {
+				y += changedLines[index];
+			} else {
+				const uint8_t *pixels = framebuf + y * pitch;
+				const int height_px = changedLines[index];
+				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
+				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
+				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+				y += height_px;
+			}
+			index++;
+		}
+	} else {
+		sdl.opengl.actual_frame_count++;
+	}
+}
+
+static bool present_frame_gl()
+{
+	const auto is_presenting = render_pacer->CanRun();
+	if (is_presenting) {
+		glClear(GL_COLOR_BUFFER_BIT);
+		if (sdl.opengl.program_object) {
+			glUniform1i(sdl.opengl.ruby.frame_count,
+			            sdl.opengl.actual_frame_count++);
+			glDrawArrays(GL_TRIANGLES, 0, 3);
+		} else {
+			glCallList(sdl.opengl.displaylist);
+		}
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranateed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
+		SDL_GL_SwapWindow(sdl.window);
+	}
+	render_pacer->Checkpoint();
+	return is_presenting;
+}
+#endif
+
+
+
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback)
@@ -2512,219 +2718,6 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 
 	FrameMark;
 }
-
-// Texture update and presentation
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
-{
-	SDL_UpdateTexture(sdl.texture.texture,
-	                  nullptr, // update entire texture
-	                  sdl.texture.input_surface->pixels,
-	                  sdl.texture.input_surface->pitch);
-}
-
-static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
-{
-	// This should be impossible, but maybe the user is hitting the screen
-	// capture hotkey on startup even before DOS comes alive.
-	if (!sdl.maybe_video_mode) {
-		LOG_WARNING("SDL: The DOS video mode needs to be set "
-		            "before we can get the rendered image");
-		return {};
-	}
-
-	RenderedImage image = {};
-
-	// The draw rect can extends beyond the bounds of the window or the screen
-	// in fullscreen when we're "zooming into" the DOS content in `relative`
-	// viewport mode. But rendered captures should always capture what we see
-	// on the screen, so only the visible part of the enlarged image.
-	// Therefore, we need to clip the draw rect to the bounds of the canvas
-	// (the total visible area of the window or screen), and only capture the
-	// resulting output rectangle.
-	
-	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
-	canvas_rect_px.x = 0.0f;
-	canvas_rect_px.y = 0.0f;
-
-	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
-	        to_rect(sdl.draw_rect_px));
-
-	auto allocate_image = [&]() {
-		image.params.width              = iroundf(output_rect_px.w);
-		image.params.height             = iroundf(output_rect_px.h);
-		image.params.double_width       = false;
-		image.params.double_height      = false;
-		image.params.pixel_aspect_ratio = {1};
-		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
-
-		assert(sdl.maybe_video_mode);
-		image.params.video_mode = *sdl.maybe_video_mode;
-
-		image.is_flipped_vertically = false;
-
-		image.pitch = image.params.width *
-		              (get_bits_per_pixel(image.params.pixel_format) / 8);
-
-		image.palette_data = nullptr;
-
-		const auto image_size_bytes = check_cast<uint32_t>(
-		        image.params.height * image.pitch);
-		image.image_data = new uint8_t[image_size_bytes];
-	};
-
-#if C_OPENGL
-	// Get the OpenGL-renderer surface
-	// -------------------------------
-	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		glReadBuffer(GL_BACK);
-
-		// Alignment is 4 by default which works fine when using the
-		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
-		// to be able to use the GL_BGR format in order to conserve
-		// memory. This should not cause any slowdowns whatsoever.
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-		allocate_image();
-
-		glReadPixels(iroundf(output_rect_px.x),
-		             iroundf(output_rect_px.y),
-		             image.params.width,
-		             image.params.height,
-		             GL_BGR,
-		             GL_UNSIGNED_BYTE,
-		             image.image_data);
-
-		image.is_flipped_vertically = true;
-		return image;
-	}
-#endif
-
-	// Get the SDL texture-renderer surface
-	// ------------------------------------
-	const auto renderer = SDL_GetRenderer(sdl.window);
-	if (!renderer) {
-		LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
-		            SDL_GetError());
-		return {};
-	}
-
-	allocate_image();
-
-	// SDL2 pixel formats are a bit weird coming from OpenGL...
-	// You would think SDL_PIXELFORMAT_BGR888 is an alias of
-	// SDL_PIXELFORMAT_BGR24, but the two are actually very
-	// different:
-	//
-	// - SDL_PIXELFORMAT_BGR24 is an "array format"; it specifies
-	//   the endianness-agnostic memory layout just like OpenGL
-	//   pixel formats.
-	//
-	// - SDL_PIXELFORMAT_BGR888 is a "packed format" which uses
-	//   native types, therefore its memory layout depends on the
-	//   endianness.
-	//
-	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
-	//
-	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
-
-	if (SDL_RenderReadPixels(renderer,
-	                         &read_rect_px,
-	                         SDL_PIXELFORMAT_BGR24,
-	                         image.image_data,
-	                         image.pitch) != 0) {
-
-		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
-		            SDL_GetError());
-
-		delete[] image.image_data;
-		return {};
-	}
-	return image;
-}
-
-static bool present_frame_texture()
-{
-	const auto is_presenting = render_pacer->CanRun();
-	if (is_presenting) {
-		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
-
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined rendering
-			// commands have finished, so we're guaranteed to read the
-			// contents of the up-to-date backbuffer here right before the
-			// buffer swap.
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
-		}
-
-		SDL_RenderPresent(sdl.renderer);
-	}
-	render_pacer->Checkpoint();
-	return is_presenting;
-}
-
-// OpenGL frame-based update and presentation
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#if C_OPENGL
-static void update_frame_gl(const uint16_t* changedLines)
-{
-	if (changedLines) {
-		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
-		const auto pitch = sdl.opengl.pitch;
-		int y = 0;
-		size_t index = 0;
-		while (y < sdl.draw.render_height_px) {
-			if (!(index & 1)) {
-				y += changedLines[index];
-			} else {
-				const uint8_t *pixels = framebuf + y * pitch;
-				const int height_px = changedLines[index];
-				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
-				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-				y += height_px;
-			}
-			index++;
-		}
-	} else {
-		sdl.opengl.actual_frame_count++;
-	}
-}
-
-static bool present_frame_gl()
-{
-	const auto is_presenting = render_pacer->CanRun();
-	if (is_presenting) {
-		glClear(GL_COLOR_BUFFER_BIT);
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count,
-			            sdl.opengl.actual_frame_count++);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
-		}
-
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined rendering
-			// commands have finished, so we're guaranateed to read the
-			// contents of the up-to-date backbuffer here right before the
-			// buffer swap.
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
-		}
-
-		SDL_GL_SwapWindow(sdl.window);
-	}
-	render_pacer->Checkpoint();
-	return is_presenting;
-}
-#endif
 
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
