@@ -3400,9 +3400,11 @@ static void apply_active_settings()
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
 	if (sdl.window) {
+		const auto capture_keyboard = get_sdl_section()->Get_bool(
+		        "keyboard_capture");
+
 		SDL_SetWindowKeyboardGrab(sdl.window,
-	        	                  sdl.keyboard_capture ? SDL_TRUE :
-	        	                                         SDL_FALSE);
+		                          capture_keyboard ? SDL_TRUE : SDL_FALSE);
 	}
 }
 
@@ -3473,8 +3475,6 @@ static void read_gui_config(Section* sec)
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
 
 	sdl.mute_when_inactive = (!sdl.pause_when_inactive) && section->Get_bool("mute_when_inactive");
-
-	sdl.keyboard_capture = section->Get_bool("keyboard_capture");
 
 	// Assume focus on startup
 	apply_active_settings();
@@ -4504,7 +4504,7 @@ static void config_add_sdl()
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
 	pbool->Set_help("Pause emulation when the window is inactive ('off' by default).");
 
-	pbool = sdl_sec->Add_bool("keyboard_capture", on_start, false);
+	pbool = sdl_sec->Add_bool("keyboard_capture", always, false);
 	pbool->Set_help("Takes over more host OS keyboard shortcuts ('off' by default).");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
