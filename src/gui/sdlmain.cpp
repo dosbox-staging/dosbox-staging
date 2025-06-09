@@ -3388,7 +3388,7 @@ static void apply_active_settings()
 	}
 }
 
-static void ApplyInactiveSettings()
+static void apply_inactive_settings()
 {
 	set_priority(sdl.priority.inactive);
 	MOUSE_NotifyWindowActive(false);
@@ -3921,7 +3921,7 @@ bool GFX_Events()
 					GFX_ForceFullscreenExit();
 				}
 #endif
-				ApplyInactiveSettings();
+				apply_inactive_settings();
 				GFX_LosingFocus();
 				break;
 
@@ -4015,7 +4015,7 @@ bool GFX_Events()
 
 			case SDL_WINDOWEVENT_MINIMIZED:
 				// LOG_DEBUG("SDL: Window has been minimized");
-				ApplyInactiveSettings();
+				apply_inactive_settings();
 				break;
 
 			case SDL_WINDOWEVENT_MAXIMIZED:
@@ -4052,7 +4052,7 @@ bool GFX_Events()
 					 * Instead of waiting for the user to hit Alt+Break, we wait for the window to
 					 * regain window or input focus.
 					 */
-					ApplyInactiveSettings();
+					apply_inactive_settings();
 					SDL_Event ev;
 
 					KEYBOARD_ClrBuffer();
