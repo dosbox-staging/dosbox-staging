@@ -14,6 +14,11 @@ string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "static" SDL_STATIC)
 string(COMPARE EQUAL "${VCPKG_LIBRARY_LINKAGE}" "dynamic" SDL_SHARED)
 string(COMPARE EQUAL "${VCPKG_CRT_LINKAGE}" "static" FORCE_STATIC_VCRT)
 
+# SDL_SetWindowKeyboardGrab() only works on macOS if SDL_MAC_NO_SANDBOX
+# is defined
+string(APPEND VCPKG_C_FLAGS   " -DSDL_MAC_NO_SANDBOX")
+string(APPEND VCPKG_CXX_FLAGS " -DSDL_MAC_NO_SANDBOX")
+
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
     FEATURES
         alsa     SDL_ALSA
@@ -38,6 +43,7 @@ endif()
 if(VCPKG_TARGET_IS_UWP)
     set(configure_opts WINDOWS_USE_MSBUILD)
 endif()
+
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
