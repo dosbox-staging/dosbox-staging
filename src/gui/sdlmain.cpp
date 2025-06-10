@@ -112,10 +112,10 @@ static void restore_console_encoding()
 #define APIENTRYP APIENTRY*
 #endif
 
-/* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these
- * typedefs. If they're already defined they should match these definitions, so
- * no conflicts.
- */
+// Don't guard these with GL_VERSION_2_0 - Apple defines it but not these
+// typedefs. If they're already defined they should match these definitions,
+// so no conflicts.
+//
 typedef void(APIENTRYP PFNGLATTACHSHADERPROC)(GLuint program, GLuint shader);
 typedef void(APIENTRYP PFNGLCOMPILESHADERPROC)(GLuint shader);
 typedef GLuint(APIENTRYP PFNGLCREATEPROGRAMPROC)();
@@ -158,11 +158,11 @@ typedef void(APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC)(GLuint index, GLint size,
                                                      GLsizei stride,
                                                      const GLvoid* pointer);
 
-/* Apple defines these functions in their GL header (as core functions)
- * so we can't use their names as function pointers. We can't link
- * directly as some platforms may not have them. So they get their own
- * namespace here to keep the official names but avoid collisions.
- */
+// Apple defines these functions in their GL header (as core functions) so we
+// can't use their names as function pointers. We can't link directly as some
+// platforms may not have them. So they get their own namespace here to keep
+// the official names but avoid collisions.
+//
 namespace gl2 {
 PFNGLATTACHSHADERPROC glAttachShader                       = nullptr;
 PFNGLCOMPILESHADERPROC glCompileShader                     = nullptr;
@@ -185,9 +185,9 @@ PFNGLUSEPROGRAMPROC glUseProgram                           = nullptr;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer         = nullptr;
 } // namespace gl2
 
-/* "using" is meant to hide identical names declared in outer scope
- * but is unreliable, so just redefine instead.
- */
+// "using" is meant to hide identical names declared in outer scope but is
+// unreliable, so just redefine instead.
+//
 #define glAttachShader            gl2::glAttachShader
 #define glCompileShader           gl2::glCompileShader
 #define glCreateProgram           gl2::glCreateProgram
@@ -1417,7 +1417,9 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		const auto pos = get_initial_window_position_or_default(default_val);
 
-		assert(sdl.window == nullptr); // enusre we don't leak
+		// ensure we don't leak
+		assert(sdl.window == nullptr);
+
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 
 		if (!sdl.window && rendering_backend == RenderingBackend::Texture &&
@@ -1487,11 +1489,12 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			goto finish;
 		}
 	}
-	/* Fullscreen mode switching has its limits, and is also problematic on
-	 * some window managers. For now, the following may work up to some
-	 * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
-	 * although it has its own issues.
-	 */
+
+	// Fullscreen mode switching has its limits, and is also problematic on
+	// some window managers. For now, the following may work up to some
+	// level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
+	// although it has its own issues.
+	//
 	if (fullscreen) {
 		SDL_DisplayMode displayMode;
 		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
@@ -1660,7 +1663,7 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
-/* Create a GLSL shader object, load the shader source, and compile the shader. */
+// Create a GLSL shader object, load the shader source, and compile the shader.
 static GLuint BuildShader(GLenum type, const std::string& source)
 {
 	GLuint shader            = 0;
@@ -1796,8 +1799,9 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines)
 {
+	// update entire texture
 	SDL_UpdateTexture(sdl.texture.texture,
-	                  nullptr, // update entire texture
+	                  nullptr,
 	                  sdl.texture.input_surface->pixels,
 	                  sdl.texture.input_surface->pitch);
 }
@@ -1944,7 +1948,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 	switch (sdl.want_rendering_backend) {
 	case RenderingBackend::Texture: {
-	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
+	fallback_texture:
+		// FIXME: Must be replaced with a proper fallback system.
 
 		if (!SetupWindowScaled(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
@@ -1976,8 +1981,9 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			texture_input_surface = nullptr;
 		}
 
-		assert(texture_input_surface == nullptr); // ensure we don't leak
-		                                          //
+		// ensure we don't leak
+		assert(texture_input_surface == nullptr);
+
 		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
 		        0, render_width_px, render_height_px, 32, texture_format);
 		if (!texture_input_surface) {
@@ -1990,14 +1996,16 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		assert(sdl.texture.texture);
 		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
+		// ensure we don't leak
+		assert(sdl.texture.pixelFormat == nullptr);
+
 		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
 
 		switch (SDL_BITSPERPIXEL(pixel_format)) {
 		case 8: retFlags = GFX_CAN_8; break;
 		case 15: retFlags = GFX_CAN_15; break;
 		case 16: retFlags = GFX_CAN_16; break;
-		case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
+		case 24: // SDL_BYTESPERPIXEL is probably 4, though.
 		case 32: retFlags = GFX_CAN_32; break;
 		}
 
@@ -2047,8 +2055,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		sdl.frame.update  = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
-
-		break; // RenderingBackend::Texture
+		break;
 	}
 	case RenderingBackend::OpenGl: {
 #if C_OPENGL
@@ -2098,8 +2105,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		SetupWindowScaled(RenderingBackend::OpenGl);
 
-		/* We may simply use SDL_BYTESPERPIXEL
-		here rather than SDL_BITSPERPIXEL   */
+		// We may simply use SDL_BYTESPERPIXEL here rather than
+		// SDL_BITSPERPIXEL
 		if (!sdl.window ||
 		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
 			LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
@@ -2258,12 +2265,13 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			}
 		}
 
-		/* Create the texture and display list */
+		// Create the texture and display list
 		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
 		                               render_height_px * MAX_BYTES_PER_PIXEL;
 
-		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = render_width_px * 4;
+		// 32 bit colour
+		sdl.opengl.framebuf = malloc(framebuffer_bytes);
+		sdl.opengl.pitch    = render_width_px * 4;
 
 		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
@@ -2648,7 +2656,8 @@ void sticky_keys(bool restore)
 	STICKYKEYS s = {sizeof(STICKYKEYS), 0};
 	SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
 
-	if (!(s.dwFlags & SKF_STICKYKEYSON)) { // Not on already
+	if (!(s.dwFlags & SKF_STICKYKEYSON)) {
+		// Not on already
 		s.dwFlags &= ~SKF_HOTKEYACTIVE;
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
 	}
@@ -2858,7 +2867,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
-	// -------------------------------
+	//
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		glReadBuffer(GL_BACK);
 
@@ -2884,7 +2893,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 #endif
 
 	// Get the SDL texture-renderer surface
-	// ------------------------------------
+	//
 	const auto renderer = SDL_GetRenderer(sdl.window);
 	if (!renderer) {
 		LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
@@ -2962,18 +2971,18 @@ static void get_display_dimensions()
 	sdl.desktop.full.height = displayDimensions.h;
 }
 
-/* Manually update display dimensions in case of a window resize,
- * IF there is the need for that ("yes" on Android, "no" otherwise).
- * Used for the mapper UI on Android.
- * Reason is the usage of GFX_GetSDLSurfaceSubwindowDims, as well as a
- * mere notification of the fact that the window's dimensions are modified.
- */
+// Manually update display dimensions in case of a window resize, IF there is
+// the need for that ("yes" on Android, "no" otherwise). Used for the mapper
+// UI on Android. Reason is the usage of GFX_GetSDLSurfaceSubwindowDims, as
+// well as a mere notification of the fact that the window's dimensions are
+// modified.
+//
 void GFX_UpdateDisplayDimensions(int width, int height)
 {
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
-		/* Note: We should not use get_display_dimensions()
-		(SDL_GetDisplayBounds) on Android after a screen rotation:
-		The older values from application startup are returned. */
+		// Note: We should not use get_display_dimensions()
+		// (SDL_GetDisplayBounds) on Android after a screen rotation:
+		// The older values from application startup are returned.
 		sdl.desktop.full.width  = width;
 		sdl.desktop.full.height = height;
 	}
@@ -3047,7 +3056,8 @@ static void set_priority(PRIORITY_LEVELS level)
 		break;
 
 #elif defined(HAVE_SETPRIORITY)
-		/* Linux use group as dosbox has mulitple threads under linux */
+	// Linux use group as dosbox has mulitple threads under linux
+	//
 	case PRIORITY_LEVEL_LOWEST: setpriority(PRIO_PGRP, 0, PRIO_MAX); break;
 	case PRIORITY_LEVEL_LOWER:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 3));
@@ -3499,10 +3509,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
-	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL
-		                                                         is
-		                                                         requested
-		                                                       */
+	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
+
 		if (!set_default_window_mode()) {
 			LOG_WARNING(
 			        "OPENGL: Could not create OpenGL window, "
@@ -3569,7 +3577,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			LOG_INFO("OPENGL: NPOT textures %s",
 			         npot_support_msg.c_str());
 		}
-	} /* OPENGL is requested end */
+	}
 #endif // OPENGL
 
 	if (!set_default_window_mode()) {
@@ -3684,14 +3692,15 @@ static void read_gui_config(Section* sec)
 	sdl.desktop.full.height = 0;
 
 	if (!fullresolution.empty()) {
-		lowcase(fullresolution); // so x and X are allowed
-								 //
+		// so x and X are allowed
+		lowcase(fullresolution);
+
 		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
 
-			if (fullresolution != "desktop") { // desktop uses 0x0,
-				                           // below sets a
-				                           // custom WxH
+			if (fullresolution != "desktop") {
+				// desktop uses 0x0, below sets a custom WxH
+
 				std::vector<std::string> dimensions =
 				        split_with_empties(fullresolution, 'x');
 
@@ -3774,7 +3783,6 @@ static void read_gui_config(Section* sec)
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 
-	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
@@ -3791,7 +3799,7 @@ static void read_gui_config(Section* sec)
 	                  "Cap Mouse");
 
 #if C_DEBUG
-/* Pause binds with activate-debugger */
+// Pause binds with activate-debugger
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
 	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD, "pause", "Pause Emu.");
@@ -3799,16 +3807,16 @@ static void read_gui_config(Section* sec)
 	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
 	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2, "pause", "Pause Emu.");
 #endif
-	/* Get Keyboard state of numlock and capslock */
+	// Get keyboard state of numlock and capslock
 	SDL_Keymod keystate = SDL_GetModState();
 
 	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
-	// numlock and capslock states on startup. Instead, these states must
-	// be toggled by the user /after/ starting DOSBox.
+	// numlock and capslock states on startup. Instead, these states must be
+	// toggled by the user /after/ starting DOSBox.
 	startup_state_numlock  = keystate & KMOD_NUM;
 	startup_state_capslock = keystate & KMOD_CAPS;
 
-	// Notify MOUSE subsystem that it can start now
+	// Notify mouse subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
 }
 
@@ -3894,12 +3902,15 @@ void GFX_RegenerateWindow(Section* sec)
 
 static void handle_video_resize(int width, int height)
 {
-	/* Maybe a screen rotation has just occurred, so we simply resize.
-	There may be a different cause for a forced resized, though.    */
+	// Maybe a screen rotation has just occurred, so we simply resize. There
+	// may be a different cause for a forced resized, though.
+	//
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
-		/* Note: We should not use get_display_dimensions()
-		(SDL_GetDisplayBounds) on Android after a screen rotation:
-		The older values from application startup are returned. */
+
+		// Note: We should not use get_display_dimensions()
+		// (SDL_GetDisplayBounds) on Android after a screen rotation:
+		// The older values from application startup are returned.
+		//
 		sdl.desktop.full.width  = width;
 		sdl.desktop.full.height = height;
 	}
@@ -3935,17 +3946,16 @@ static void handle_video_resize(int width, int height)
 	notify_new_mouse_screen_params();
 }
 
-/* TODO: Properly set window parameters and remove this routine.
- *
- * This function is triggered after window is shown to fixup sdl.window
- * properties in predictable manner on all platforms.
- *
- * In specific usecases, certain sdl.window properties might be left unitialized
- * when starting in fullscreen, which might trigger severe problems for end
- * users (e.g. placing window partially off-screen, or using fullscreen
- * resolution for window size).
- */
-
+// TODO: Properly set window parameters and remove this routine.
+//
+// This function is triggered after window is shown to fixup sdl.window
+// properties in predictable manner on all platforms.
+//
+// In specific usecases, certain sdl.window properties might be left
+// unitialized when starting in fullscreen, which might trigger severe
+// problems for end users (e.g. placing window partially off-screen, or using
+// fullscreen resolution for window size).
+//
 static void finalise_window_state()
 {
 	assert(sdl.window);
@@ -4036,7 +4046,7 @@ bool GFX_Events()
 	// the ALT-TAB stuff for WIN32.
 	static auto last_check = GetTicks();
 
-	auto current_check     = GetTicks();
+	auto current_check = GetTicks();
 
 	if (GetTicksDiff(current_check, last_check) <= DB_POLLSKIP) {
 		return true;
@@ -4088,10 +4098,11 @@ bool GFX_Events()
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
 				// LOG_DEBUG("SDL: Window has been restored");
-				/* We may need to re-create a texture
-				 * and more on Android. Another case:
-				 * Update surface while using X11.
-				 */
+
+				// We may need to re-create a texture and more
+				// on Android. Another case: Update surface
+				// while using X11.
+				//
 				GFX_ResetScreen();
 
 #if C_OPENGL && defined(MACOSX)
@@ -4153,19 +4164,19 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Window has been exposed "
 				//               "and should be redrawn");
 
-				/* TODO: below is not consistently true :(
-				 * seems incorrect on KDE and sometimes on MATE
-				 *
-				 * Note that on Windows/Linux-X11/Wayland/macOS,
-				 * event is fired after toggling between full vs
-				 * windowed modes. However this is never fired
-				 * on the Raspberry Pi (when rendering to the
-				 * Framebuffer); therefore we rely on the
-				 * FOCUS_GAINED event to catch window startup
-				 * and size toggles.
-				 */
-				// LOG_DEBUG("SDL: Window has gained
-				// keyboard focus");
+				// TODO: below is not consistently true :(
+				// seems incorrect on KDE and sometimes on MATE
+				//
+				// Note that on Windows/Linux-X11/Wayland/macOS,
+				// event is fired after toggling between full vs
+				// windowed modes. However this is never fired
+				// on the Raspberry Pi (when rendering to the
+				// Framebuffer); therefore we rely on the
+				// FOCUS_GAINED event to catch window startup
+				// and size toggles.
+
+				// LOG_DEBUG("SDL: Window has gained keyboard
+				// focus");
 				if (sdl.draw.callback) {
 					sdl.draw.callback(GFX_CallbackRedraw);
 				}
@@ -4262,21 +4273,21 @@ bool GFX_Events()
 			default: break;
 			}
 
-			/* Non-focus priority is set to pause; check to see if
-			 * we've lost window or input focus i.e. has the window
-			 * been minimised or made inactive?
-			 */
+			// Non-focus priority is set to pause; check to see if
+			// we've lost window or input focus i.e. has the window
+			// been minimised or made inactive?
+			//
 			if (sdl.pause_when_inactive) {
 				if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
 				    (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
-					/* Window has lost focus, pause the
-					 * emulator. This is similar to what
-					 * PauseDOSBox() does, but the exit
-					 * criteria is different. Instead of
-					 * waiting for the user to hit
-					 * Alt+Break, we wait for the window to
-					 * regain window or input focus.
-					 */
+					// Window has lost focus, pause the
+					// emulator. This is similar to what
+					// PauseDOSBox() does, but the exit
+					// criteria is different. Instead of
+					// waiting for the user to hit
+					// Alt+Break, we wait for the window to
+					// regain window or input focus.
+					//
 					apply_inactive_settings();
 					SDL_Event ev;
 
@@ -4307,12 +4318,9 @@ bool GFX_Events()
 						case SDL_QUIT:
 							GFX_RequestExit(true);
 							break;
-						case SDL_WINDOWEVENT: // wait
-						                      // until
-						                      // we get
-						                      // window
-						                      // focus
-						                      // back
+						case SDL_WINDOWEVENT:
+							// wait until we get
+							// window focus back
 							if ((ev.window.event ==
 							     SDL_WINDOWEVENT_FOCUS_LOST) ||
 							    (ev.window.event ==
@@ -4323,6 +4331,7 @@ bool GFX_Events()
 							     SDL_WINDOWEVENT_RESTORED) ||
 							    (ev.window.event ==
 							     SDL_WINDOWEVENT_EXPOSED)) {
+
 								// We've got
 								// focus back,
 								// so unpause
@@ -4344,21 +4353,21 @@ bool GFX_Events()
 									}
 								}
 
-								/* Now poke a
-								 * "release ALT"
-								 * command into
-								 * the keyboard
-								 * buffer we
-								 * have to do
-								 * this,
-								 * otherwise ALT
-								 * will 'stick'
-								 * and cause
-								 * problems with
-								 * the app
-								 * running in
-								 * the DOSBox.
-								 */
+								// Now poke a
+								// "release ALT"
+								// command into
+								// the keyboard
+								// buffer we
+								// have to do
+								// this,
+								// otherwise ALT
+								// will 'stick'
+								// and cause
+								// problems with
+								// the app
+								// running in
+								// the DOSBox.
+								//
 								KEYBOARD_AddKey(KBD_leftalt,
 								                false);
 								KEYBOARD_AddKey(KBD_rightalt,
@@ -4452,8 +4461,8 @@ static BOOL WINAPI console_event_handler(DWORD event)
 }
 #endif
 
-/* static variable to show wether there is not a valid stdout.
- * Fixes some bugs when -noconsole is used in a read only directory */
+// static variable to show wether there is not a valid stdout.
+// Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
 
 void GFX_ShowMsg(const char* format, ...)
@@ -4467,7 +4476,8 @@ void GFX_ShowMsg(const char* format, ...)
 
 	buf[sizeof(buf) - 1] = '\0';
 	if (!no_stdout) {
-		puts(buf); // Else buf is parsed again. (puts adds end of line)
+		// Else buf is parsed again. (puts adds end of line)
+		puts(buf);
 	}
 }
 
@@ -4880,7 +4890,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 
-	bool first               = true;
+	bool first = true;
 
 	for (const auto& arg : parameters) {
 		if (!first) {
@@ -5080,8 +5090,9 @@ static void set_wm_class()
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
 #else
 #if !defined(WIN32) && !defined(MACOSX)
-	constexpr int overwrite = 0; // don't overwrite
-								 //
+	// don't overwrite
+	constexpr int overwrite = 0;
+
 	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
 	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
 #endif
