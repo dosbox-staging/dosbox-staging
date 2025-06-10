@@ -504,9 +504,9 @@ void DiskNoises::SetLastIoPath(const std::string& path,
 
 static void disknoise_destroy([[maybe_unused]] Section* sec)
 {
-	if (disk_noises) {
-		disk_noises = nullptr;
-	}
+	MIXER_LockMixerThread();
+	disk_noises.reset();
+	MIXER_UnlockMixerThread();
 }
 
 static void disknoise_init(Section* section)
