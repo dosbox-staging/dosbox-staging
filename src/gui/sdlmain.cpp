@@ -275,7 +275,7 @@ constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
 
 
 #ifdef DB_OPENGL_ERROR
-void OPENGL_ERROR(const char* message)
+static void maybe_log_opengl_error(const char* message)
 {
 	GLenum r = glGetError();
 	if (r == GL_NO_ERROR) {
@@ -287,7 +287,7 @@ void OPENGL_ERROR(const char* message)
 	} while ((r = glGetError()) != GL_NO_ERROR);
 }
 #else
-void OPENGL_ERROR(const char*) {
+static void maybe_log_opengl_error(const char*) {
 	return;
 }
 #endif
@@ -2391,7 +2391,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			glEndList();
 		}
 
-		OPENGL_ERROR("End of setsize");
+		maybe_log_opengl_error("End of setsize");
 
 		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
 		sdl.frame.update  = update_frame_gl;
@@ -2635,7 +2635,7 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	case RenderingBackend::OpenGl:
 #if C_OPENGL
 		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
-		OPENGL_ERROR("end of start update");
+		maybe_log_opengl_error("end of start update");
 		if (pixels == nullptr) {
 			return false;
 		}
