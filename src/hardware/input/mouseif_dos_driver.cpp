@@ -70,12 +70,6 @@ static bool delay_running  = false;
 // true = delay timer expired, event can be sent immediately
 static bool delay_finished = true;
 
-static bool pending_moved  = false;
-static bool pending_button = false;
-static bool pending_wheel  = false;
-
-static MouseButtons12S pending_button_state = 0;
-
 // These values represent 'hardware' state, not driver state
 
 static MouseButtons12S buttons = 0;
@@ -97,6 +91,12 @@ static uint16_t min_rate_hz = 0;
 // but not necessary visible to the application
 
 static struct {
+	bool has_mouse_moved    = false;
+	bool has_button_changed = false;
+	bool has_wheel_moved    = false;
+
+	MouseButtons12S button_state = 0;
+
 	// Mouse movement
 	float x_rel = 0.0f;
 	float y_rel = 0.0f;
@@ -263,7 +263,9 @@ static bool has_wheel()
 
 static bool has_pending_event()
 {
-	return pending_moved || pending_button || pending_wheel;
+	return pending.has_mouse_moved ||
+	       pending.has_button_changed ||
+	       pending.has_wheel_moved;
 }
 
 static void maybe_trigger_event(); // forward declaration
@@ -308,9 +310,9 @@ static void clear_pending_events()
 		delay_running = false;
 	}
 
-	pending_moved  = false;
-	pending_button = pending_button_state._data;
-	pending_wheel  = false;
+	pending.has_mouse_moved    = false;
+	pending.has_button_changed = pending.button_state._data;
+	pending.has_wheel_moved    = false;
 	maybe_start_delay_timer(delay_ms);
 }
 
@@ -1377,7 +1379,7 @@ void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
 	}
 
 	if (event_needed) {
-		pending_moved = true;
+		pending.has_mouse_moved = true;
 		maybe_trigger_event();
 	}
 }
@@ -1387,9 +1389,9 @@ void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 	auto new_button_state = new_buttons_12S;
 	new_button_state._data &= get_button_mask();
 
-	if (pending_button_state != new_button_state) {
-		pending_button = true;
-		pending_button_state = new_button_state;
+	if (pending.button_state != new_button_state) {
+		pending.has_button_changed = true;
+		pending.button_state = new_button_state;
 		maybe_trigger_event();
 	}
 }
@@ -1412,7 +1414,7 @@ void MOUSEDOS_NotifyWheel(const float w_rel)
 	}
 
 	if (event_needed) {
-		pending_wheel = true;
+		pending.has_wheel_moved = true;
 		maybe_trigger_event();
 	}
 }
@@ -1428,7 +1430,7 @@ void MOUSEDOS_NotifyModelChanged()
 	}
 
 	// Make sure button state has no buttons which are no longer present
-	MOUSEDOS_NotifyButton(pending_button_state);
+	MOUSEDOS_NotifyButton(pending.button_state);
 }
 
 static Bitu int33_handler()
@@ -2104,7 +2106,7 @@ uint8_t MOUSEDOS_DoInterrupt()
 
 	uint8_t mask = 0x00;
 
-	if (pending_moved) {
+	if (pending.has_mouse_moved) {
 		mask = update_moved();
 
 		// Taken from DOSBox X: HERE within the IRQ 12 handler
@@ -2119,21 +2121,21 @@ uint8_t MOUSEDOS_DoInterrupt()
 			draw_cursor();
 		}
 
-		pending_moved = false;
+		pending.has_mouse_moved = false;
 	}
 
-	if (pending_button) {
-		const auto new_mask = mask | update_buttons(pending_button_state);
+	if (pending.has_button_changed) {
+		const auto new_mask = mask | update_buttons(pending.button_state);
 		mask = static_cast<uint8_t>(new_mask);
 
-		pending_button = false;
+		pending.has_button_changed = false;
 	}
 
-	if (pending_wheel) {
+	if (pending.has_wheel_moved) {
 		const auto new_mask = mask | update_wheel();
 		mask = static_cast<uint8_t>(new_mask);
 
-		pending_wheel = false;
+		pending.has_wheel_moved = false;
 	}
 
 	// If DOS driver's client is not interested in this particular
