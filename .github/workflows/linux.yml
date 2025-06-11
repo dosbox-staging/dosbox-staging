@@ -81,6 +81,7 @@ jobs:
       - name: Install dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
           sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
       - name: Clone vcpkg
@@ -136,6 +137,7 @@ jobs:
       - name: Install all dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
+          sudo apt-get update
           sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
       - name: Clone vcpkg
