@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -30,8 +30,8 @@
 #include <sstream>
 #include <vector>
 
-#include "../dos/program_more_output.h"
 #include "../capture/capture.h"
+#include "../dos/program_more_output.h"
 #include "callback.h"
 #include "control.h"
 #include "cross.h"
@@ -65,44 +65,8 @@ static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
 static uint8_t last_written_character = '\n';
-constexpr int WriteOutBufSize         = 16384;
 
-static void write_to_stdout(std::string_view output)
-{
-	dos.internal_output = true;
-
-	for (const auto& chr : output) {
-		uint8_t out;
-		uint16_t bytes_to_write = 1;
-
-		if (chr == '\n' && last_written_character != '\r') {
-			out = '\r';
-			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
-		}
-
-		out = static_cast<uint8_t>(chr);
-
-		last_written_character = out;
-
-		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
-	}
-	dos.internal_output = false;
-}
-
-static void truncated_chars_message(int size)
-{
-	if (size > WriteOutBufSize) {
-		constexpr int MessageSize = 128;
-		char message[MessageSize];
-
-		snprintf(message,
-		         MessageSize,
-		         "\n\nERROR: OUTPUT TOO LONG: %d CHARS TRUNCATED",
-		         size - WriteOutBufSize);
-
-		write_to_stdout(message);
-	}
-}
+constexpr int WriteOutBufSize = 16384;
 
 void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 {
@@ -240,26 +204,7 @@ bool Program::SuppressWriteOut(const char* format)
 	return true;
 }
 
-// TODO: Refactor messages and related functions like WriteOut that use variadic
-// args to instead use format strings when dosbox-staging starts using C++20
-
-void Program::WriteOut(const char* format, ...)
-{
-	if (SuppressWriteOut(format)) {
-		return;
-	}
-
-	char buf[WriteOutBufSize];
-	std::va_list msg;
-
-	va_start(msg, format);
-	const int size = std::vsnprintf(buf, WriteOutBufSize, format, msg) + 1;
-	va_end(msg);
-
-	write_to_stdout(buf);
-	truncated_chars_message(size);
-}
-
+// TODO Only used by the unit tests, try to get rid of it later
 void Program::WriteOut(const char* format, const char* arguments)
 {
 	if (SuppressWriteOut(format)) {
@@ -267,10 +212,9 @@ void Program::WriteOut(const char* format, const char* arguments)
 	}
 
 	char buf[WriteOutBufSize];
-	const int size = std::snprintf(buf, WriteOutBufSize, format, arguments) + 1;
+	std::snprintf(buf, WriteOutBufSize, format, arguments);
 
-	write_to_stdout(buf);
-	truncated_chars_message(size);
+	CONSOLE_RawWrite(buf);
 }
 
 void Program::WriteOut_NoParsing(const char* str)
@@ -279,7 +223,7 @@ void Program::WriteOut_NoParsing(const char* str)
 		return;
 	}
 
-	write_to_stdout(str);
+	CONSOLE_RawWrite(str);
 }
 
 void Program::ResetLastWrittenChar(char c)
@@ -350,7 +294,8 @@ private:
 	}
 };
 
-void CONFIG::DisplayHelp() {
+void CONFIG::DisplayHelp()
+{
 	MoreOutputStrings output(*this);
 	output.AddString(MSG_Get("SHELL_CMD_CONFIG_HELP_LONG"));
 	output.Display();
@@ -514,7 +459,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 
 				if (p->IsDeprecated()) {
 					output.AddString(MSG_Get(
-					        "PROGRAM_CONFIG_DEPRECATED"));
+					        "PROGRAM_CONFIG_DEPRECATION_WARNING"));
 					output.AddString("\n");
 				}
 
@@ -652,7 +597,8 @@ void CONFIG::Run(void)
 
 			if (control->startup_params.size() > 0) {
 				std::string test;
-				for (size_t k = 0; k < control->startup_params.size();
+				for (size_t k = 0;
+				     k < control->startup_params.size();
 				     ++k) {
 					test += control->startup_params[k] + " ";
 				}
@@ -711,8 +657,7 @@ void CONFIG::Run(void)
 
 		case P_HELP:
 		case P_HELP2:
-		case P_HELP3:
-			HandleHelpCommand(pvars); return;
+		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
 			Section_line* sec = dynamic_cast<Section_line*>(
@@ -737,8 +682,8 @@ void CONFIG::Run(void)
 				return;
 			}
 			for (const auto& pvar : pvars) {
-				const auto line_utf8 = dos_to_utf8(pvar,
-				                                   DosStringConvertMode::WithControlCodes);
+				const auto line_utf8 = dos_to_utf8(
+				        pvar, DosStringConvertMode::WithControlCodes);
 				sec->HandleInputline(line_utf8);
 			}
 			break;
@@ -817,9 +762,10 @@ void CONFIG::Run(void)
 						if (p == nullptr) {
 							break;
 						}
-						const auto val_dos = utf8_to_dos(p->GetValue().ToString(),
-						                                 DosStringConvertMode::NoSpecialCharacters,
-						                                 UnicodeFallback::Simple);
+						const auto val_dos = utf8_to_dos(
+						        p->GetValue().ToString(),
+						        DosStringConvertMode::NoSpecialCharacters,
+						        UnicodeFallback::Simple);
 						WriteOut("%s=%s\n",
 						         p->propname.c_str(),
 						         val_dos.c_str());
@@ -835,9 +781,10 @@ void CONFIG::Run(void)
 						return;
 					}
 					// it's a property name
-					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0].c_str()),
-					                                 DosStringConvertMode::NoSpecialCharacters,
-					                                 UnicodeFallback::Simple);
+					const auto val_dos = utf8_to_dos(
+					        sec->GetPropValue(pvars[0].c_str()),
+					        DosStringConvertMode::NoSpecialCharacters,
+					        UnicodeFallback::Simple);
 					WriteOut("%s", val_dos.c_str());
 					DOS_PSP(psp->GetParent())
 					        .SetEnvironmentValue("CONFIG",
@@ -856,19 +803,22 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				const std::string val_utf8 = sec->GetPropValue(prop_name);
+				const std::string val_utf8 = sec->GetPropValue(
+				        prop_name);
 				if (val_utf8 == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
 					         prop_name,
 					         sec_name);
 					return;
 				}
-				const auto val_dos = utf8_to_dos(val_utf8,
-				                                 DosStringConvertMode::NoSpecialCharacters,
-				                                 UnicodeFallback::Simple);
+				const auto val_dos = utf8_to_dos(
+				        val_utf8,
+				        DosStringConvertMode::NoSpecialCharacters,
+				        UnicodeFallback::Simple);
 				WriteOut("%s\n", val_dos.c_str());
 				DOS_PSP(psp->GetParent())
-				        .SetEnvironmentValue("CONFIG", val_dos.c_str());
+				        .SetEnvironmentValue("CONFIG",
+				                             val_dos.c_str());
 				break;
 			}
 			default:
@@ -896,16 +846,19 @@ void CONFIG::Run(void)
 				WriteOut(result);
 
 			} else {
-				auto* tsec = dynamic_cast<Section_prop *>(control->GetSection(pvars[0]));
+				auto* tsec = dynamic_cast<Section_prop*>(
+				        control->GetSection(pvars[0]));
 				if (!tsec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					         pvars[0].c_str());
 					return;
 				}
 
 				auto* property = tsec->Get_prop(pvars[1]);
 
 				if (!property) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					         pvars[1].c_str());
 					return;
 				}
 
@@ -929,9 +882,14 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				// If the value can't be set at runtime then queue it and let the user know
-				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+				// If the value can't be set at runtime then
+				// queue it and let the user know
+				if (property->GetChange() ==
+				    Property::Changeable::OnlyAtStart) {
+
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
+					         pvars[1].c_str());
+
 					property->SetQueueableValue(std::move(value));
 					return;
 				}
@@ -940,19 +898,11 @@ void CONFIG::Run(void)
 
 				tsec->ExecuteDestroy(false);
 
-				const auto line_utf8 = dos_to_utf8(inputline,
-					                           DosStringConvertMode::NoSpecialCharacters);
+				const auto line_utf8 = dos_to_utf8(
+				        inputline,
+				        DosStringConvertMode::NoSpecialCharacters);
 
-				bool change_success = tsec->HandleInputline(
-				        line_utf8.c_str());
-
-				if (!change_success) {
-					trim(value);
-					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         value.c_str(),
-					         pvars[1].c_str());
-				}
-
+				tsec->HandleInputline(line_utf8.c_str());
 				tsec->ExecuteInit(false);
 			}
 			return;
@@ -1002,19 +952,16 @@ void PROGRAMS_Destroy([[maybe_unused]] Section* sec)
 	internal_progs.clear();
 }
 
-void PROGRAMS_Init(Section* sec)
+void PROGRAMS_AddMessages()
 {
-	// Setup a special callback to start virtual programs
-	call_program = CALLBACK_Allocate();
-	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
-
-	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(&PROGRAMS_Destroy);
-
 	// List config
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");
-	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "[color=white]Primary config file:[reset]\n  %s\n");
-	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", "\n[color=white]Additional config files:[reset]\n  ");
+
+	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF",
+	        "[color=white]Primary config file:[reset]\n  %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF",
+	        "\n[color=white]Additional config files:[reset]\n  ");
 
 	MSG_Add("PROGRAM_CONFIG_CONFDIR",
 	        "[color=white]DOSBox Staging %s configuration directory:[reset]\n  %s\n\n");
@@ -1064,7 +1011,7 @@ void PROGRAMS_Init(Section* sec)
 	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    show the description and the current value of a config\n"
 	        "                    property\n"
-			"\n"
+	        "\n"
 	        "  -help sections\n"
 	        "  -h    sections\n"
 	        "  -?    sections    [reset]list the names of all config sections\n"
@@ -1121,17 +1068,16 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
 
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
-
-	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "'%s' is not a valid value for setting '%s'.\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR",
+	        "Section [color=light-cyan][%s][reset] doesn't exist.\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Usage: [color=light-green]config[reset] -get "
 	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
-	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");
+	        "\n[color=white]DOSBox was started with the following command "
+	        "line arguments:[reset]\n  %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
 
@@ -1147,7 +1093,52 @@ void PROGRAMS_Init(Section* sec)
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
 	        "restart hotkey.\n");
 
-	MSG_Add("PROGRAM_CONFIG_DEPRECATED",
-	        "[color=light-red]This is a deprecated setting only kept for compatibility with old configs.\n"
-	        "Please use the suggested alternatives; support will be removed in the future.[reset]\n");
+	MSG_Add("PROGRAM_CONFIG_DEPRECATION_WARNING",
+	        "[color=light-red]This is a deprecated setting only kept for "
+	        "compatibility with old configs.\n"
+	        "Please use the suggested alternatives; support will be removed "
+	        "in the future.[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+	        "There is no property [color=light-green]'%s'[reset] in section "
+	        "[color=light-cyan][%s][reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
+	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_INVALID_SETTING",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset], "
+	        "using [color=white]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+	        "Setting [color=light-green]'%s = %s'[reset] is deprecated, "
+	        "falling back to the alternate: [color=light-green]'%s = %s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	        "Invalid [color=light-green]'%s'[reset] setting: [color=white]'%s'[reset]. "
+	        "must be between %s-%s, using [color=white]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_NO_HELP",
+	        "No help available for the setting [color=light-green]'%s'[reset].");
+
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
+	        "No such section or property: [color=light-green]'%s'[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
+	        "Deprecated setting [color=light-green]'%s'[reset]");
+
+	MSG_Add("PROGRAM_CONFIG_VALID_VALUES", "Possible values");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_VALUES", "Deprecated values");
+}
+
+void PROGRAMS_Init(Section* sec)
+{
+	// Setup a special callback to start virtual programs
+	call_program = CALLBACK_Allocate();
+	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
+
+	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
+	sec->AddDestroyFunction(&PROGRAMS_Destroy);
 }

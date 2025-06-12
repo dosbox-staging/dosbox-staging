@@ -1,6 +1,7 @@
 # Sources without messages.cpp or messages_stubs.cpp
 libmisc_nomsg_sources = [
     'ansi_code_markup.cpp',
+    'console.cpp',
     'cross.cpp',
     'ethernet.cpp',
     'ethernet_slirp.cpp',

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2025  The DOSBox Staging Team
+ *  Copyright (C) 2025-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,26 +18,26 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "program_choice.h"
+#ifndef DOSBOX_CONSOLE_H
+#define DOSBOX_CONSOLE_H
 
 #include <string>
 
-#include "shell.h"
 #include "string_utils.h"
 
-extern unsigned int result_errorcode;
+void CONSOLE_RawWrite(const std::string_view output);
 
-void CHOICE::Run()
+template <typename... Args>
+void CONSOLE_Write(const char* format, const Args&... args)
 {
-	std::string tmp = "";
-	cmd->GetStringRemain(tmp);
-
-	char args[CMD_MAXLINE];
-	safe_strcpy(args, tmp.c_str());
-
-	auto shell = DOS_GetFirstShell();
-	assert(shell);
-
-	shell->CMD_CHOICE(args);
-	result_errorcode = dos.return_code;
+	const auto str = format_str(format, args...);
+	CONSOLE_RawWrite(str);
 }
+
+template <typename... Args>
+void CONSOLE_Write(const std::string& format, const Args&... args)
+{
+	CONSOLE_Write(format.c_str(), args...);
+}
+
+#endif // DOSBOX_CONSOLE_H

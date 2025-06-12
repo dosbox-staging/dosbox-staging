@@ -4219,7 +4219,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	return drivers;
 }
 
-static void messages_add_command_line()
+static void add_command_line_messages()
 {
 	MSG_Add("DOSBOX_HELP",
 	        "Usage: %s [OPTION]... [PATH]\n"
@@ -4298,21 +4298,7 @@ static void messages_add_command_line()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
-static void messages_add_sdl()
-{
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-	        "There is no property '%s' in section [%s]\n");
-
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
-	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
-
-	TITLEBAR_AddMessages();
-}
-
-static void config_add_sdl()
+static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
 
@@ -4422,10 +4408,14 @@ static void config_add_sdl()
 	        "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_string("max_resolution", deprecated, "");
-	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
+	pstring->Set_help(
+	        "Moved to [color=light-cyan][render][reset] section "
+	        "and renamed to [color=light-green]'viewport'[reset].");
 
 	pstring = sdl_sec->Add_string("viewport_resolution", deprecated, "");
-	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
+	pstring->Set_help(
+	        "Moved to [color=light-cyan][render][reset] section "
+	        "and renamed to [color=light-green]'viewport'[reset].");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
@@ -4474,13 +4464,19 @@ static void config_add_sdl()
 	pstring->Set_values({"auto", "cfr", "vfr"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
-	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
+	pmulti->Set_help(
+	        "Moved to [color=light-cyan][mouse][reset] section and "
+	        "renamed to [color=light-green]'mouse_capture'[reset].");
 
 	pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_sensitivity'.");
+	pmulti->Set_help(
+	        "Moved to [color=light-cyan][mouse][reset] section and "
+	        "renamed to [color=light-green]'mouse_sensitivity'[reset].");
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
-	pbool->Set_help("Moved to [mouse] section and renamed to 'mouse_raw_input'.");
+	pbool->Set_help(
+	        "Moved to [color=light-cyan][mouse][reset] section and "
+	        "renamed to [color=light-green]'mouse_raw_input'[reset].");
 
 	pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	pbool->Set_help("Keep the console open if an error has occurred ('on' by default).");
@@ -4829,11 +4825,12 @@ int sdl_main(int argc, char* argv[])
 
 		// Register sdlmain's messages, conf sections, and essential
 		// DOS messages, needed by some command line switches
-		messages_add_command_line();
+		add_command_line_messages();
 		DOS_Locale_AddMessages();
 		RENDER_AddMessages();
-		messages_add_sdl();
-		config_add_sdl();
+		TITLEBAR_AddMessages();
+
+		init_sdl_config_section();
 
 		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
@@ -4878,7 +4875,7 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->help) {
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
-			const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
+			const auto help = format_str(MSG_GetTranslatedRaw("DOSBOX_HELP"),
 			                             program_name);
 			printf("%s", help.c_str());
 			return 0;

@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 
+#include "console.h"
 #include "dos_inc.h"
 #include "help_util.h"
 
@@ -127,10 +128,16 @@ public:
 	DOS_PSP* psp          = nullptr;
 
 	virtual void Run(void) = 0;
-	virtual void WriteOut(const char* format, const char* arguments);
 
 	// printf to DOS stdout
-	virtual void WriteOut(const char* format, ...);
+	template <typename... Args>
+	void WriteOut(const char* format, const Args&... args)
+	{
+		CONSOLE_Write(format, args...);
+	}
+
+	// TODO Only used by the unit tests, try to get rid of it later
+	virtual void WriteOut(const char* format, const char* arguments);
 
 	// Write string to DOS stdout
 	void WriteOut_NoParsing(const char* str);
@@ -149,6 +156,9 @@ public:
 protected:
 	HELP_Detail help_detail{};
 };
+
+void PROGRAMS_AddMessages();
+void PROGRAMS_Init(Section* sec);
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
 

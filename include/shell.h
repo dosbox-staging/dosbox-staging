@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *  Copyright (C) 2020-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -36,9 +36,7 @@ constexpr auto CMD_MAXLINE = 4096;
 
 extern callback_number_t call_shellstop;
 
-/* first_shell is used to add and delete stuff from the shell env
- * by "external" programs. (config) */
-extern DOS_Shell* first_shell;
+DOS_Shell* DOS_GetFirstShell();
 
 class LineReader {
 public:
