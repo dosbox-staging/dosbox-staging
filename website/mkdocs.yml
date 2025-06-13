@@ -108,6 +108,7 @@ nav:
     - Linux: releases/linux.md
 
     - Release notes:
+      - 0.82.2: releases/release-notes/0.82.2.md
       - 0.82.1: releases/release-notes/0.82.1.md
       - 0.82.0: releases/release-notes/0.82.0.md
       - 0.81.2: releases/release-notes/0.81.2.md
