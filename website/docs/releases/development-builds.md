@@ -212,8 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 </table>
 </div>
 
-¹ Windows builds include x86_64 installer and portable ZIP packages, and the
-experimental ARM64 portable ZIP package.
+¹ Windows builds include x86_64 installer and portable ZIP packages.
 
 ² macOS builds include Intel, Apple silicon, and universal binary package.
 
