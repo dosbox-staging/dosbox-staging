@@ -150,9 +150,9 @@ function set_ci_status(workflow_file, os_name, description) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  set_ci_status("windows-msvc.yml", "windows", "Windows ¹")
-  set_ci_status("macos.yml",        "macos",   "macOS ²")
-  set_ci_status("linux.yml",        "linux",   "Linux ³")
+  set_ci_status("windows.yml", "windows", "Windows ¹")
+  set_ci_status("macos.yml",   "macos",   "macOS ²")
+  set_ci_status("linux.yml",   "linux",   "Linux ³")
 })
 
 </script>
