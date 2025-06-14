@@ -18,6 +18,7 @@ libdos_sources = files(
     'dos_mscdex.cpp',
     'dos_programs.cpp',
     'dos_tables.cpp',
+    'dos_windows.cpp',
     'drive_cache.cpp',
     'drive_fat.cpp',
     'drive_iso.cpp',
