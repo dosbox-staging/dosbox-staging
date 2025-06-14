@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <signal.h>
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
@@ -39,7 +40,6 @@
 
 #ifdef WIN32
 #include <process.h>
-#include <signal.h>
 #include <windows.h>
 #endif
 
@@ -4570,11 +4570,38 @@ static int edit_primary_config()
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
-void restart_dosbox(std::vector<std::string> &parameters) {
+static void remove_waitpid(std::vector<std::string> &parameters)
+{
+	auto it = parameters.begin();
+	while (it != parameters.end()) {
+		if (*it == "-waitpid" || *it == "--waitpid") {
+			it = parameters.erase(it);
+			if (it != parameters.end()) {
+				auto &pid = *it;
+				if (!pid.empty() && std::isdigit(pid[0])) {
+					// The integer value should be the next element following "--waitpid".
+					// If we found an integer, remove it as well.
+					it = parameters.erase(it);
+				}
+			}
+		} else {
+			++it;
+		}
+	}
+}
+
+void restart_dosbox(std::vector<std::string> &parameters)
+{
 
 	control->ApplyQueuedValuesToCli(parameters);
 
+	// Remove any existing --waitpid parameters.
+	// This can happen with multiple restarts.
+	remove_waitpid(parameters);
+
 #ifdef WIN32
+	parameters.emplace_back("--waitpid");
+	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 	bool first = true;
 	for (const auto &arg : parameters) {
@@ -4585,6 +4612,8 @@ void restart_dosbox(std::vector<std::string> &parameters) {
 		first = false;
 	}
 #else
+	parameters.emplace_back("--waitpid");
+	parameters.emplace_back(std::to_string(getpid()));
 	char** newargs = new char* [parameters.size() + 1];
 	// parameter 0 is the executable path
 	// contents of the vector follow
@@ -4595,9 +4624,7 @@ void restart_dosbox(std::vector<std::string> &parameters) {
 	newargs[parameters.size()] = nullptr;
 #endif // WIN32
 
-	MIXER_CloseAudioDevice();
-	Delay(50);
-	QuitSDL();
+	GFX_RequestExit(true);
 
 #if C_DEBUG
 	// shutdown curses
@@ -4646,13 +4673,24 @@ void restart_dosbox(std::vector<std::string> &parameters) {
 			current_directory,
 			&startup_info,
 			&process_information)) {
-		E_Exit("Restarting failed");
+		LOG_ERR("Restart failed: CreateProcess failed");
 	}
-	ExitProcess(ERROR_SUCCESS);
 #else
-	if (execvp(newargs[0], newargs) == -1) {
-		E_Exit("Restarting failed");
+	int ret = fork();
+	switch (ret) {
+		case -1:
+			LOG_ERR("Restart failed: fork failed: %s", strerror(errno));
+			break;
+		case 0:
+			// Newly created child process immediately executes a new instance of DOSBox.
+			// It is not safe for a child process in a multi-threaded program to do much else.
+			if (execvp(newargs[0], newargs) == -1) {
+				E_Exit("Restart failed: execvp failed: %s", strerror(errno));
+			}
+			break;
 	}
+	// Original (parent) process continues execution here.
+	// It will proceed to do a normal shutdown due to GFX_RequestExit(true); above.
 	delete [] newargs;
 #endif // WIN32
 }
@@ -4769,12 +4807,42 @@ int sdl_main(int argc, char* argv[])
 	// Ensure we perform SDL cleanup and restore console settings
 	atexit(QuitSDL);
 
-	switch_console_to_utf8();
-
 	CommandLine command_line(argc, argv);
 	control = std::make_unique<Config>(&command_line);
 
 	const auto arguments = &control->arguments;
+
+	if (arguments->wait_pid) {
+#ifdef WIN32
+		// Synchronize permission is all we need for WaitForSingleObject()
+		constexpr DWORD DesiredAccess = SYNCHRONIZE;
+		constexpr BOOL InheritHandles = FALSE;
+		HANDLE process                = OpenProcess(DesiredAccess,
+                                             InheritHandles,
+                                             *arguments->wait_pid);
+		if (process) {
+			// Waits for the process to terminate.
+			// If we failed to open it, it's probably already dead.
+			constexpr DWORD Timeout = INFINITE;
+			WaitForSingleObject(process, Timeout);
+			CloseHandle(process);
+		}
+#else
+		for (;;) {
+			// Signal of 0 does not actually send a signal.
+			// It only checks for existance and permissions of the PID.
+			constexpr int Signal = 0;
+			int ret = kill(*arguments->wait_pid, Signal);
+			// ESRCH means PID does not exist.
+			if (ret == -1 && errno == ESRCH) {
+				break;
+			}
+			Delay(50);
+		}
+#endif
+	}
+
+	switch_console_to_utf8();
 
 	// Set up logging after command line was parsed and trivial arguments have
 	// been handled

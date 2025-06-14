@@ -64,6 +64,7 @@ struct CommandLineArguments {
 	std::vector<std::string> set;
 	std::optional<std::vector<std::string>> editconf;
 	std::optional<int> socket;
+	std::optional<int> wait_pid;
 };
 
 class Config {
