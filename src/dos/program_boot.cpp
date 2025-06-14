@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2024  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include "callback.h"
 #include "control.h"
 #include "dma.h"
+#include "dos_windows.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "mapper.h"
@@ -535,6 +536,7 @@ void BOOT::NotifyBooting()
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
 	VMWARE_NotifyBooting();
+	WINDOWS_NotifyBooting();
 }
 
 void BOOT::AddMessages()
