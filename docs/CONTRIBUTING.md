@@ -156,8 +156,7 @@ advice on good C coding style.
 
 Following all the details of formatting style is tedious; that's why we use a
 custom [clang-format](https://clang.llvm.org/docs/ClangFormat.html) ruleset to
-make it crystal clear. See the ["Using clang-format"](#using-clang-format)
-section to learn how.
+make it crystal clear. See the [clang-format](#clang-format) section to learn how.
 
 [Linux coding style]:https://www.kernel.org/doc/html/latest/process/coding-style.html
 
