@@ -615,23 +615,29 @@ std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
 	return command;
 }
 
-// Check if the specified drive path contains mountable images
-std::vector<std_fs::path> get_mountable_images_paths(const std_fs::path& drive_path)
+// Get all files in the given directory that have the specified extensions.
+std::vector<std_fs::path> get_files_by_ext(
+        const std_fs::path& drive_path,
+        const std::initializer_list<std::string_view>& extensions)
 {
-	std::vector<std_fs::path> image_paths;
+	std::vector<std_fs::path> paths = {};
 
 	for (const auto& entry : std_fs::directory_iterator(drive_path)) {
 		if (entry.exists() && entry.is_regular_file()) {
 			const auto& path = entry.path();
 			std::string ext  = path.extension();
 			lowcase(ext);
-			if (ext == ".iso" || ext == ".cue") {
-				image_paths.push_back(path);
+			if (std::ranges::find(extensions, ext) != extensions.end()) {
+				paths.push_back(path);
 			}
 		}
 	}
 
-	return image_paths;
+	std::ranges::sort(paths, [](const std_fs::path& a, const std_fs::path& b) {
+		return a.filename() < b.filename();
+	});
+
+	return paths;
 }
 
 // Build a command to mount CD images in a folder, based on the
@@ -678,8 +684,8 @@ void AutoExecModule::AutoMountDetectedDrive(const std::string& dir_letter)
 	const auto conf_path = drive_path.string() + ".conf";
 	const auto settings  = parse_drive_conf(conf_path);
 
-	// See if there are mountable images in the path
-	const auto image_paths = get_mountable_images_paths(drive_path);
+	// See if there are mountable images in drive_path
+	const auto image_paths = get_files_by_ext(drive_path, {".cue", ".iso"});
 
 	// Explicitly setting the drive type to anything but 'cdrom' will force
 	// dosbox to mount the path as a directory, even if there are mountable
