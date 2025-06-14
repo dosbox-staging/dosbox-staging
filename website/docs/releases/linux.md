@@ -9,10 +9,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.82.1 (x86_64)][0_82_1]
+[Download DOSBox Staging 0.82.2 (x86_64)][0_82_2]
 <br>
 <small>
-sha256: 0b7ca2e0f1fbc10fe51c05011f6cad72<wbr>d10608658de0a58e22a5a936d5e7d075
+sha256: TODO<wbr>TODO
 
 </small>
 
@@ -26,7 +26,7 @@ other libraries are statically linked.
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
-Check out the [0.82.1 release notes](release-notes/0.82.1.md) to learn
+Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn
 about the changes and improvements introduced in this release.
 
 If you're new to DOSBox Staging, we highly recommend following the
@@ -79,13 +79,19 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
-- [Download DOSBox Staging 0.82.0 (x86_64)][0_82_0]
+- [DOSBox Staging 0.82.1 (x86_64)][0_82_1]
+  <br>
+  <small>
+  sha256: 0b7ca2e0f1fbc10fe51c05011f6cad72<wbr>d10608658de0a58e22a5a936d5e7d075
+  </small>
+
+- [DOSBox Staging 0.82.0 (x86_64)][0_82_0]
   <br>
   <small>
   sha256: fd491de6e989da2b34be743fd419735b<wbr>efc80e6f507ec15b9b3ea6164624dabf
   </small>
 
-- [Download DOSBox Staging 0.81.2 (x86_64)][0_81_2]
+- [DOSBox Staging 0.81.2 (x86_64)][0_81_2]
   <br>
   <small>
   sha256: c47f1767ae1371666f40e3a4e13272da<wbr>5c5a98c9c6f355b4fb82bac0d3911a68
@@ -175,6 +181,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-linux-x86_64-v0.82.2.tar.xz
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-linux-x86_64-v0.82.1.tar.xz
 [0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-linux-x86_64-v0.82.0.tar.xz
 [0_81_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.2/dosbox-staging-linux-v0.81.2.tar.xz

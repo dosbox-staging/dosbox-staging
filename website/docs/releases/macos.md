@@ -9,10 +9,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.82.1 Universal Binary (dmg)][0_82_1]
+[Download DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2]
 <br>
 <small>
-sha256: 8e2e7b68bdac71c1ae5258e0f24fd06c<wbr>0778ce62c80042d604d141a0b5c1878a
+sha256: TODO<wbr>TODO
 </small>
 
 </section>
@@ -20,7 +20,7 @@ sha256: 8e2e7b68bdac71c1ae5258e0f24fd06c<wbr>0778ce62c80042d604d141a0b5c1878a
 DOSBos Staging requires **macOS 11 (Big Sur) or later**, and supports both
 Intel and Apple silicon Macs.
 
-Check out the [0.82.1 release notes](release-notes/0.82.1.md) to learn about
+Check out the [0.82.2 release notes](release-notes/0.82.2.md) to learn about
 the changes and improvements introduced by this release.
 
 If you're new to DOSBox Staging, we highly recommend following the
@@ -82,13 +82,20 @@ article](https://support.apple.com/en-us/102445) for further info.
 
 ## Older releases
 
-- [Download DOSBox Staging 0.82.0 Universal Binary (dmg)][0_82_0] (macOS 10.15 or newer)
+
+- [DOSBox Staging 0.82.1 Universal Binary (dmg)][0_82_1] (macOS 14 or newer)
+  <br>
+  <small>
+  sha256: 8e2e7b68bdac71c1ae5258e0f24fd06c<wbr>0778ce62c80042d604d141a0b5c1878a
+  </small>
+
+- [DOSBox Staging 0.82.0 Universal Binary (dmg)][0_82_0] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: ff77f0647d2431f010c6d9dcc29bcf3a<wbr>b1177cb40fef1009d9bafd1475180b5b
   </small>
 
-- [Download DOSBox Staging 0.81.2 Universal Binary (dmg)][0_81_2] (macOS 10.15 or newer)
+- [DOSBox Staging 0.81.2 Universal Binary (dmg)][0_81_2] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 718968485a0418ead3434285e3a6ab48<wbr>53914d29d38e14289711af1b2152368e
@@ -196,6 +203,7 @@ article](https://support.apple.com/en-us/102445) for further info.
   sha256: 8a5c12d1b6567d6e981acd76e30dec41<wbr>a73a699963b714f4f1dcf0fc853fc9f6
   </small>
 
+[0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-macOS-v0.82.2.dmg
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-macOS-v0.82.1.dmg
 [0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-macOS-v0.82.0.dmg
 [0_81_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.2/dosbox-staging-macOS-v0.81.2.dmg
