@@ -264,10 +264,10 @@ private:
 	struct AutoMountSettings {
 		std::string override_drive = {};
 		std::string type           = {};
-		std::string label	   = {};
-		bool readonly		   = false;
-		std::string path	   = {};
-		bool verbose		   = false;
+		std::string label          = {};
+		bool readonly              = false;
+		std::string path           = {};
+		bool verbose               = false;
 	};
 
 	// Specify a 'Drive' config object with allowed key and value types
@@ -279,18 +279,20 @@ private:
 
 	// Build a command to mount a drive from a folder, based on the
 	// provided settings
-	static std::string BuildAutoMountFolderCommand(std::string_view dir_letter,
-		const std_fs::path& drive_path,
+	static std::string BuildAutoMountFolderCommand(
+	        std::string_view dir_letter, const std_fs::path& drive_path,
 	        const std::optional<AutoMountSettings>& settings);
 
 	// Check if the specified drive path contains mountable images
-	static std::vector<std_fs::path> GetMountableImagesPaths(const std_fs::path& drive_path);
+	static std::vector<std_fs::path> GetMountableImagesPaths(
+	        const std_fs::path& drive_path);
 
 	// Build a command to mount images in a folder, based on the
 	// provided settings
-	static std::string BuildAutoMountImagesCommand(std::string_view dir_letter,
-		const std::vector<std_fs::path>& image_paths,
-		const std::optional<AutoMountSettings>& settings);
+	static std::string BuildAutoMountImagesCommand(
+	        std::string_view dir_letter,
+	        const std::vector<std_fs::path>& image_paths,
+	        const std::optional<AutoMountSettings>& settings);
 };
 
 AutoExecModule::AutoExecModule(Section* configuration)
@@ -560,35 +562,40 @@ std::unique_ptr<Config> AutoExecModule::SpecifyDriveConf()
 }
 
 std::optional<AutoExecModule::AutoMountSettings> AutoExecModule::ParseDriveConf(
-	const std_fs::path& conf_path)
+        const std_fs::path& conf_path)
 {
 	AutoMountSettings settings = {};
 
 	// If the conf path doesn't exist, at least return the default quiet arg
-	if (!path_exists(conf_path))
+	if (!path_exists(conf_path)) {
 		return settings;
+	}
 
 	// If we couldn't parse it, return the defaults
 	const auto conf = SpecifyDriveConf();
 	assert(conf);
-	if (!conf->ParseConfigFile("auto-mounted drive", conf_path.string()))
+	if (!conf->ParseConfigFile("auto-mounted drive", conf_path.string())) {
 		return settings;
+	}
 
 	const auto section = static_cast<Section_prop*>(conf->GetSection("drive"));
 
 	const auto override_drive = section->Get_string("override_drive");
-	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y') {
+	if (override_drive.length() == 1 && override_drive[0] >= 'a' &&
+	    override_drive[0] <= 'y') {
 		settings.override_drive = override_drive;
 	} else if (!override_drive.empty()) {
-		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid", conf_path.c_str(), override_drive.c_str());
+		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid",
+		        conf_path.c_str(),
+		        override_drive.c_str());
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
 	settings.readonly = section->Get_bool("readonly");
-	settings.label = section->Get_string("label");
-	settings.type = section->Get_string("type");
-	settings.path = section->Get_string("path");
-	settings.verbose = section->Get_bool("verbose");
+	settings.label    = section->Get_string("label");
+	settings.type     = section->Get_string("type");
+	settings.path     = section->Get_string("path");
+	settings.verbose  = section->Get_bool("verbose");
 
 	return settings;
 }
@@ -632,10 +639,10 @@ std::vector<std_fs::path> AutoExecModule::GetMountableImagesPaths(const std_fs::
 {
 	std::vector<std_fs::path> image_paths;
 
-	for (auto const& entry : std_fs::directory_iterator(drive_path)) {
-		if (entry.exists() && entry.is_regular_file() ) {
-			auto const& path = entry.path();
-			std::string ext = path.extension();
+	for (const auto& entry : std_fs::directory_iterator(drive_path)) {
+		if (entry.exists() && entry.is_regular_file()) {
+			const auto& path = entry.path();
+			std::string ext  = path.extension();
 			lowcase(ext);
 			if (ext == ".iso" || ext == ".cue") {
 				image_paths.push_back(path);
@@ -647,8 +654,9 @@ std::vector<std_fs::path> AutoExecModule::GetMountableImagesPaths(const std_fs::
 }
 
 std::string AutoExecModule::BuildAutoMountImagesCommand(
-	const std::string_view dir_letter, const std::vector<std_fs::path>& image_paths,
-	const std::optional<AutoMountSettings>& settings)
+        const std::string_view dir_letter,
+        const std::vector<std_fs::path>& image_paths,
+        const std::optional<AutoMountSettings>& settings)
 {
 	auto command = CmdImgMount;
 
@@ -658,7 +666,7 @@ std::string AutoExecModule::BuildAutoMountImagesCommand(
 		command += settings->override_drive;
 	}
 
-	for (auto const& path : image_paths) {
+	for (const auto& path : image_paths) {
 		command += " " + Quote + simplify_path(path).string() + Quote;
 	}
 
@@ -675,7 +683,6 @@ std::string AutoExecModule::BuildAutoMountImagesCommand(
 	return command;
 }
 
-
 // Takes in a drive letter (eg: 'c') and attempts to mount the 'drives/c',
 // extends system path if needed
 void AutoExecModule::AutoMountDetectedDrive(const std::string& dir_letter)
@@ -687,8 +694,8 @@ void AutoExecModule::AutoMountDetectedDrive(const std::string& dir_letter)
 	}
 
 	// Try parsing the [x].conf file
-	const auto conf_path  = drive_path.string() + ".conf";
-	const auto settings = ParseDriveConf(conf_path);
+	const auto conf_path = drive_path.string() + ".conf";
+	const auto settings  = ParseDriveConf(conf_path);
 
 	// See if there are mountable images in the path
 	const auto image_paths = GetMountableImagesPaths(drive_path);
@@ -696,14 +703,15 @@ void AutoExecModule::AutoMountDetectedDrive(const std::string& dir_letter)
 	// Explicitly setting the drive type to anything but 'cdrom' will force
 	// dosbox to mount the path as a directory, even if there are mountable
 	// images in the path
-	if (image_paths.empty() || (!settings->type.empty() && settings->type != "cdrom")) {
+	if (image_paths.empty() ||
+	    (!settings->type.empty() && settings->type != "cdrom")) {
 		// Install mount as an autoexec command
 		AddLine(Placement::InitialAutogeneratedCommands,
-			BuildAutoMountFolderCommand(dir_letter, drive_path, settings));
+		        BuildAutoMountFolderCommand(dir_letter, drive_path, settings));
 	} else {
 		// Install imgmount as an autoexec command
 		AddLine(Placement::InitialAutogeneratedCommands,
-			BuildAutoMountImagesCommand(dir_letter, image_paths, settings));
+		        BuildAutoMountImagesCommand(dir_letter, image_paths, settings));
 	}
 
 	// Install PATH as an autoexec command
