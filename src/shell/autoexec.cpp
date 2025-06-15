@@ -616,9 +616,8 @@ std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
 }
 
 // Get all files in the given directory that have the specified extensions.
-std::vector<std_fs::path> get_files_by_ext(
-        const std_fs::path& drive_path,
-        const std::initializer_list<std::string_view>& extensions)
+std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
+                                           const std::vector<std::string_view>& extensions)
 {
 	std::vector<std_fs::path> paths = {};
 
@@ -685,7 +684,8 @@ void AutoExecModule::AutoMountDetectedDrive(const std::string& dir_letter)
 	const auto settings  = parse_drive_conf(conf_path);
 
 	// See if there are mountable images in drive_path
-	const auto image_paths = get_files_by_ext(drive_path, {".cue", ".iso"});
+	const std::vector<std::string_view> cd_image_extensions = {".cue", ".iso"};
+	const auto image_paths = get_files_by_ext(drive_path, cd_image_extensions);
 
 	// Explicitly setting the drive type to anything but 'cdrom' will force
 	// dosbox to mount the path as a directory, even if there are mountable
