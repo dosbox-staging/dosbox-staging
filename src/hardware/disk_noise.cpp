@@ -50,34 +50,36 @@ DiskNoises::DiskNoises(const bool enable_floppy_disk_noise,
                        const std::string& floppy_spin,
                        const std::vector<std::string>& floppy_seek_samples)
 {
-	MIXER_LockMixerThread();
-	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
-	mix_channel               = MIXER_AddChannel(mixer_callback,
-                                       DiskNoiseSampleRateInHz,
-                                       ChannelName::DiskNoise,
-	                                             {ChannelFeature::Stereo});
-	mix_channel->Enable(true);
-	float vol_gain = percentage_to_gain(100);
-	mix_channel->SetAppVolume({vol_gain, vol_gain});
+	if (enable_floppy_disk_noise || enable_hard_disk_noise) {
+		MIXER_LockMixerThread();
+		const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
+		                                      this,
+		                                      std::placeholders::_1);
+		mix_channel = MIXER_AddChannel(mixer_callback,
+		                               DiskNoiseSampleRateInHz,
+		                               ChannelName::DiskNoise,
+		                               {ChannelFeature::Stereo});
+		mix_channel->Enable(true);
+		float vol_gain = percentage_to_gain(100);
+		mix_channel->SetAppVolume({vol_gain, vol_gain});
 
-	hdd_noise = std::make_shared<DiskNoiseDevice>(DiskType::HardDisk,
-	                                              enable_hard_disk_noise,
-	                                              spin_up,
-	                                              spin,
-	                                              hdd_seek_samples,
-	                                              true);
-	active_devices.emplace_back(hdd_noise);
+		hdd_noise = std::make_shared<DiskNoiseDevice>(DiskType::HardDisk,
+		                                              enable_hard_disk_noise,
+		                                              spin_up,
+		                                              spin,
+		                                              hdd_seek_samples,
+		                                              true);
+		active_devices.emplace_back(hdd_noise);
 
-	floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
-	                                                 enable_floppy_disk_noise,
-	                                                 floppy_spin_up,
-	                                                 floppy_spin,
-	                                                 floppy_seek_samples,
-	                                                 false);
-	active_devices.emplace_back(floppy_noise);
-	MIXER_UnlockMixerThread();
+		floppy_noise = std::make_shared<DiskNoiseDevice>(DiskType::Floppy,
+		                                                 enable_floppy_disk_noise,
+		                                                 floppy_spin_up,
+		                                                 floppy_spin,
+		                                                 floppy_seek_samples,
+		                                                 false);
+		active_devices.emplace_back(floppy_noise);
+		MIXER_UnlockMixerThread();
+	}
 }
 
 DiskNoises* DiskNoises::GetInstance()
@@ -109,24 +111,26 @@ void DiskNoises::AudioCallback(const int num_frames_requested)
 
 DiskNoises::~DiskNoises()
 {
-	MIXER_LockMixerThread();
+	if (floppy_noise || hdd_noise) {
+		MIXER_LockMixerThread();
 
-	if (floppy_noise) {
-		floppy_noise.reset();
+		if (floppy_noise) {
+			floppy_noise.reset();
+		}
+
+		if (hdd_noise) {
+			hdd_noise.reset();
+		}
+		active_devices.clear();
+
+		if (active_devices.empty() && mix_channel) {
+			mix_channel->Enable(false);
+			MIXER_DeregisterChannel(mix_channel);
+			mix_channel.reset();
+		}
+
+		MIXER_UnlockMixerThread();
 	}
-
-	if (hdd_noise) {
-		hdd_noise.reset();
-	}
-	active_devices.clear();
-
-	if (active_devices.empty() && mix_channel) {
-		mix_channel->Enable(false);
-		MIXER_DeregisterChannel(mix_channel);
-		mix_channel.reset();
-	}
-
-	MIXER_UnlockMixerThread();
 }
 
 AudioFrame DiskNoiseDevice::GetNextFrame()
