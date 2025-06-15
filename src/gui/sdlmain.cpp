@@ -4802,6 +4802,26 @@ static void set_wm_class()
 #endif
 }
 
+static void init_logger(const CommandLineArguments& arguments)
+{
+	loguru::g_preamble_date    = true;
+	loguru::g_preamble_time    = true;
+	loguru::g_preamble_uptime  = false;
+	loguru::g_preamble_thread  = false;
+	loguru::g_preamble_file    = false;
+	loguru::g_preamble_verbose = false;
+	loguru::g_preamble_pipe    = true;
+
+	if (arguments->version || arguments->help || arguments->printconf ||
+	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
+	    arguments->list_layouts || arguments->list_code_pages ||
+	    arguments->list_glshaders || arguments->erasemapper) {
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+	}
+
+	loguru::init(argc, argv);
+}
+
 int sdl_main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings
@@ -4844,27 +4864,17 @@ int sdl_main(int argc, char* argv[])
 
 	switch_console_to_utf8();
 
-	// Set up logging after command line was parsed and trivial arguments have
-	// been handled
-	loguru::g_preamble_date    = true;
-	loguru::g_preamble_time    = true;
-	loguru::g_preamble_uptime  = false;
-	loguru::g_preamble_thread  = false;
-	loguru::g_preamble_file    = false;
-	loguru::g_preamble_verbose = false;
-	loguru::g_preamble_pipe    = true;
+	// Set up logging after command line was parsed and trivial arguments
+	// have been handled
+	init_logger(arguments);
 
-	if (arguments->version || arguments->help || arguments->printconf ||
-	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
-	    arguments->list_layouts || arguments->list_code_pages ||
-	    arguments->list_glshaders || arguments->erasemapper) {
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-	}
-
-	loguru::init(argc, argv);
+	CommandLine command_line(argc, argv);
+	control = std::make_unique<Config>(&command_line);
 
 	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
+
+	const auto arguments = &control->arguments;
 
 	LOG_MSG("LOG: Loguru version %d.%d.%d initialised",
 	        LOGURU_VERSION_MAJOR,
