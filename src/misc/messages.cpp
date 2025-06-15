@@ -450,43 +450,15 @@ static void check_code_page()
 	return;
 }
 
-static const char* get_message(const std::string& message_key,
-                               const bool raw_requested        = false,
-                               const bool skip_code_page_check = false)
-{
-	// Check if message exists in English dictionary
+static bool check_message_exists(const std::string& message_key) {
 	if (!dictionary_english.contains(message_key)) {
 		if (!already_warned_not_found.contains(message_key)) {
-
-			LOG_WARNING("LOCALE: Message '%s' not found",
-			            message_key.c_str());
+			LOG_WARNING("LOCALE: Message '%s' not found", message_key.c_str());
 			already_warned_not_found.insert(message_key);
 		}
-		return MsgNotFound.c_str();
+		return false;
 	}
-
-	// Try to return translated string, if possible
-	if ((is_code_page_compatible || skip_code_page_check) &&
-	    dictionary_translated.contains(message_key) &&
-	    dictionary_translated.at(message_key).IsValid()) {
-
-		if (raw_requested) {
-			return dictionary_translated.at(message_key).GetRaw().c_str();
-		} else {
-			return dictionary_translated.at(message_key).Get().c_str();
-		}
-	}
-
-	// Try to return the original, English string
-	if (!dictionary_english.at(message_key).IsValid()) {
-		return MsgNotValid.c_str();
-	}
-
-	if (raw_requested) {
-		return dictionary_english.at(message_key).GetRaw().c_str();
-	} else {
-		return dictionary_english.at(message_key).Get().c_str();
-	}
+	return true;
 }
 
 static void clear_translated_messages()
@@ -622,7 +594,7 @@ static bool load_messages_from_path(const std_fs::path& file_path)
 		}
 
 		constexpr bool IsEnglish = false;
-		dictionary_translated.emplace(message_key, Message(text, IsEnglish));
+		dictionary_translated.try_emplace(message_key, Message(text, IsEnglish));
 
 		auto& translated = dictionary_translated.at(message_key);
 
@@ -742,7 +714,7 @@ void MSG_Add(const std::string& message_key, const std::string& message)
 	constexpr bool IsEnglish = true;
 
 	message_order.push_back(message_key);
-	dictionary_english.emplace(message_key, Message(message, IsEnglish));
+	dictionary_english.try_emplace(message_key, Message(message, IsEnglish));
 
 	auto& english = dictionary_english.at(message_key);
 	english.VerifyEnglish(message_key);
@@ -753,21 +725,54 @@ void MSG_Add(const std::string& message_key, const std::string& message)
 
 const char* MSG_Get(const std::string& message_key)
 {
-	return get_message(message_key);
+	if (!check_message_exists(message_key)) {
+		return MsgNotFound.c_str();
+	}
+
+	// Try to return the translated message converted to the current DOS code
+	// page and the ANSI tags converted to ANSI sequences
+	if (is_code_page_compatible &&
+	    dictionary_translated.contains(message_key) &&
+	    dictionary_translated.at(message_key).IsValid()) {
+
+		return dictionary_translated.at(message_key).Get().c_str();
+	}
+
+	// Fall back to English if any errors
+	if (!dictionary_english.at(message_key).IsValid()) {
+		return MsgNotValid.c_str();
+	}
+	return dictionary_english.at(message_key).Get().c_str();
 }
 
 const char* MSG_GetEnglishRaw(const std::string& message_key)
 {
-	constexpr bool RawRequested = true;
-	return get_message(message_key, RawRequested);
+	if (!check_message_exists(message_key)) {
+		return MsgNotFound.c_str();
+	}
+
+	// Return English original in UTF-8 with the ANSI tags intact
+	if (!dictionary_english.at(message_key).IsValid()) {
+		return MsgNotValid.c_str();
+	}
+	return dictionary_english.at(message_key).GetRaw().c_str();
 }
 
 const char* MSG_GetTranslatedRaw(const std::string& message_key)
 {
-	constexpr bool RawRequested      = true;
-	constexpr bool SkipCodePageCheck = true;
+	if (!check_message_exists(message_key)) {
+		return MsgNotFound.c_str();
+	}
 
-	return get_message(message_key, RawRequested, SkipCodePageCheck);
+	// Try to return the translated message in UTF-8 with the ANSI tags intact
+	if (dictionary_translated.contains(message_key) &&
+	    dictionary_translated.at(message_key).IsValid()) {
+
+		return dictionary_translated.at(message_key).GetRaw().c_str();
+	}
+
+	// Fall back to the English message if any errors
+	return MSG_GetEnglishRaw(message_key);
 }
 
 bool MSG_Exists(const std::string& message_key)
