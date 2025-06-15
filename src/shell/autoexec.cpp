@@ -615,7 +615,7 @@ std::string build_auto_mount_dir_cmd(const std::string_view dir_letter,
 	return command;
 }
 
-// Get all files in the given directory that have the specified extensions.
+// Get all files in the given directory that have the specified extensions
 std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
                                            const std::vector<std::string_view>& extensions)
 {
@@ -632,9 +632,7 @@ std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
 		}
 	}
 
-	std::ranges::sort(paths, [](const std_fs::path& a, const std_fs::path& b) {
-		return a.filename() < b.filename();
-	});
+	std::ranges::sort(paths, natural_compare);
 
 	return paths;
 }
