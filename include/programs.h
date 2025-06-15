@@ -33,6 +33,9 @@ public:
 	}
 
 	bool FindExist(const std::string& name, bool remove = false);
+
+	bool FindExistRemoveAll(const std::string& name);
+
 	bool FindInt(const std::string& name, int& value, bool remove = false);
 
 	bool FindString(const std::string& name, std::string& value,

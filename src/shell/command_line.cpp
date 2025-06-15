@@ -17,6 +17,18 @@ bool CommandLine::FindExist(const std::string& name, bool remove)
 	return true;
 }
 
+bool CommandLine::FindExistRemoveAll(const std::string& name)
+{
+	constexpr bool RemoveIfFound = true;
+
+	bool exists = false;
+	while (FindExist(name, RemoveIfFound)) {
+		exists = true;
+	}
+
+	return exists;
+}
+
 // Checks if any of the command line arguments are found in the pre_args *and*
 // exist prior to any of the post_args. If none of the command line arguments
 // are found in the pre_args then false is returned.
