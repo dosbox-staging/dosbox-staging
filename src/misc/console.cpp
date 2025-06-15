@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2025  The DOSBox Staging Team
+ *  Copyright (C) 2024-2025  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -10,7 +10,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
@@ -18,26 +18,32 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "program_choice.h"
+#include "checks.h"
+#include "console.h"
+#include "dos_inc.h"
 
-#include <string>
+CHECK_NARROWING();
 
-#include "shell.h"
-#include "string_utils.h"
+static uint8_t last_written_character = '\n';
 
-extern unsigned int result_errorcode;
-
-void CHOICE::Run()
+void CONSOLE_RawWrite(std::string_view output)
 {
-	std::string tmp = "";
-	cmd->GetStringRemain(tmp);
+	dos.internal_output = true;
 
-	char args[CMD_MAXLINE];
-	safe_strcpy(args, tmp.c_str());
+	for (const auto& chr : output) {
+		uint8_t out;
+		uint16_t bytes_to_write = 1;
 
-	auto shell = DOS_GetFirstShell();
-	assert(shell);
+		if (chr == '\n' && last_written_character != '\r') {
+			out = '\r';
+			DOS_WriteFile(STDOUT, &out, &bytes_to_write);
+		}
 
-	shell->CMD_CHOICE(args);
-	result_errorcode = dos.return_code;
+		out = static_cast<uint8_t>(chr);
+		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
+
+		last_written_character = out;
+	}
+
+	dos.internal_output = false;
 }
