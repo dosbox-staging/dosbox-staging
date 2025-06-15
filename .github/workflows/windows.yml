@@ -94,14 +94,14 @@ jobs:
         shell: pwsh
         run: |
           cmake --preset release-windows
-          cmake --build --preset release-windows >> build.log 2>&1
+          cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
 
       - name:  Build release with debugger
         if:    ${{ matrix.conf.debugger }}
         shell: pwsh
         run: |
           cmake --preset release-windows -DOPT_DEBUG=ON -DOPT_HEAVY_DEBUG=ON
-          cmake --build --preset release-windows >> build.log 2>&1
+          cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
 
       - name: Summarize warnings
         env:
