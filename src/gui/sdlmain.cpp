@@ -4802,6 +4802,26 @@ static void set_wm_class()
 #endif
 }
 
+static void init_logger(const CommandLineArguments* args, int argc, char* argv[])
+{
+	loguru::g_preamble_date    = true;
+	loguru::g_preamble_time    = true;
+	loguru::g_preamble_uptime  = false;
+	loguru::g_preamble_thread  = false;
+	loguru::g_preamble_file    = false;
+	loguru::g_preamble_verbose = false;
+	loguru::g_preamble_pipe    = true;
+
+	if (args->version || args->help || args->printconf || args->editconf ||
+	    args->eraseconf || args->list_countries || args->list_layouts ||
+	    args->list_code_pages || args->list_glshaders || args->erasemapper) {
+
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+	}
+
+	loguru::init(argc, argv);
+}
+
 int sdl_main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings
@@ -4844,24 +4864,9 @@ int sdl_main(int argc, char* argv[])
 
 	switch_console_to_utf8();
 
-	// Set up logging after command line was parsed and trivial arguments have
-	// been handled
-	loguru::g_preamble_date    = true;
-	loguru::g_preamble_time    = true;
-	loguru::g_preamble_uptime  = false;
-	loguru::g_preamble_thread  = false;
-	loguru::g_preamble_file    = false;
-	loguru::g_preamble_verbose = false;
-	loguru::g_preamble_pipe    = true;
-
-	if (arguments->version || arguments->help || arguments->printconf ||
-	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
-	    arguments->list_layouts || arguments->list_code_pages ||
-	    arguments->list_glshaders || arguments->erasemapper) {
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-	}
-
-	loguru::init(argc, argv);
+	// Set up logging after command line was parsed and trivial arguments
+	// have been handled
+	init_logger(arguments, argc, argv);
 
 	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
