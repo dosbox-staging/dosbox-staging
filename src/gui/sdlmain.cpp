@@ -2530,8 +2530,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			sdl.opengl.actual_frame_count = 0;
 
 		} else {
-			GLfloat tex_width  = ((GLfloat)render_width_px /
-                                             (GLfloat)texsize_w_px);
+			GLfloat tex_width = ((GLfloat)render_width_px /
+			                     (GLfloat)texsize_w_px);
 
 			GLfloat tex_height = ((GLfloat)render_height_px /
 			                      (GLfloat)texsize_h_px);
@@ -4016,6 +4016,294 @@ static void handle_user_event(const SDL_Event& event)
 	}
 }
 
+static void handle_pause_when_inactive(const SDL_Event& event)
+{
+	// Non-focus priority is set to pause; check to see if we've lost window
+	// or input focus i.e. has the window been minimised or made inactive?
+	//
+	if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
+	    (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
+		// Window has lost focus, pause the emulator. This is similar to
+		// what PauseDOSBox() does, but the exit criteria is different.
+		// Instead of waiting for the user to hit Alt+Break, we wait for
+		// the window to regain window or input focus.
+		//
+		apply_inactive_settings();
+		SDL_Event ev;
+
+		KEYBOARD_ClrBuffer();
+
+		bool paused = true;
+
+		// Prevent the mixer from running while in our pause loop.
+		// Muting is not ideal for some sound devices such as GUS that
+		// loop samples. This also saves CPU time by not rendering
+		// samples we're not going to play anyway.
+		MIXER_LockMixerThread();
+
+		while (paused && !shutdown_requested) {
+			// WaitEvent() waits for an event rather than
+			// polling, so CPU usage drops to zero.
+			SDL_WaitEvent(&ev);
+
+			switch (ev.type) {
+			case SDL_QUIT: GFX_RequestExit(true); break;
+			case SDL_WINDOWEVENT: {
+				const auto we = ev.window.event;
+
+				// wait until we get window focus back
+				if ((we == SDL_WINDOWEVENT_FOCUS_LOST) ||
+				    (we == SDL_WINDOWEVENT_MINIMIZED) ||
+				    (we == SDL_WINDOWEVENT_FOCUS_GAINED) ||
+				    (we == SDL_WINDOWEVENT_RESTORED) ||
+				    (we == SDL_WINDOWEVENT_EXPOSED)) {
+
+					// We've got focus back, so unpause and
+					// break out of the loop
+					if ((we == SDL_WINDOWEVENT_FOCUS_GAINED) ||
+					    (we == SDL_WINDOWEVENT_RESTORED) ||
+					    (we == SDL_WINDOWEVENT_EXPOSED)) {
+
+						sdl.is_paused = false;
+						GFX_RefreshTitle();
+
+						if (we == SDL_WINDOWEVENT_FOCUS_GAINED) {
+							paused = false;
+							apply_active_settings();
+						}
+					}
+
+					// Now poke a "release ALT" command into
+					// the keyboard buffer we have to do
+					// this, otherwise ALT will 'stick' and
+					// cause problems with the app running
+					// in the DOSBox.
+					//
+					KEYBOARD_AddKey(KBD_leftalt, false);
+					KEYBOARD_AddKey(KBD_rightalt, false);
+
+					if (we == SDL_WINDOWEVENT_RESTORED) {
+						// We may need to re-create a
+						// texture and more
+						GFX_ResetScreen();
+					}
+				}
+			} break;
+			}
+		}
+		MIXER_UnlockMixerThread();
+	}
+}
+
+static bool handle_sdl_windowevent(const SDL_Event& event)
+{
+	switch (event.window.event) {
+	case SDL_WINDOWEVENT_RESTORED:
+		// LOG_DEBUG("SDL: Window has been restored");
+
+		// We may need to re-create a texture and more on Android.
+		// Another case: Update surface while using X11.
+		//
+		GFX_ResetScreen();
+
+#if C_OPENGL && defined(MACOSX)
+		// TODO check if this workaround is still needed
+
+		// LOG_DEBUG("SDL: Reset macOS's GL viewport after
+		// window-restore");
+		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+			glViewport(sdl.draw_rect_px.x,
+			           sdl.draw_rect_px.y,
+			           sdl.draw_rect_px.w,
+			           sdl.draw_rect_px.h);
+		}
+#endif
+		focus_input();
+		return true;
+
+	case SDL_WINDOWEVENT_RESIZED: {
+		// TODO pixels or logical unit?
+		// LOG_DEBUG("SDL: Window has been resized to %dx%d",
+		// event.window.data1, event.window.data2);
+
+		// When going from an initial fullscreen to windowed state, this
+		// event will be called moments before SDL's windowed mode is
+		// engaged, so simply ensure the window size has already been
+		// established:
+		assert(sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0);
+
+		// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
+		// resizing the window, so we're only logging the display
+		// settings if there is a change since the last window resized
+		// event.
+		static int prev_width  = 0;
+		static int prev_height = 0;
+
+		const auto new_width  = event.window.data1;
+		const auto new_height = event.window.data2;
+
+		if (prev_width != new_width || prev_height != new_height) {
+			log_display_properties(sdl.draw.render_width_px,
+			                       sdl.draw.render_height_px,
+			                       sdl.maybe_video_mode,
+			                       sdl.rendering_backend);
+		}
+
+		prev_width  = new_width;
+		prev_height = new_height;
+		return true;
+	}
+
+	case SDL_WINDOWEVENT_FOCUS_GAINED:
+		apply_active_settings();
+		[[fallthrough]];
+
+	case SDL_WINDOWEVENT_EXPOSED:
+		// LOG_DEBUG("SDL: Window has been exposed and should be redrawn");
+
+		// TODO: below is not consistently true :( seems incorrect on
+		// KDE and sometimes on MATE
+		//
+		// Note that on Windows/Linux-X11/Wayland/macOS, event is fired
+		// after toggling between full vs windowed modes. However this
+		// is never fired on the Raspberry Pi (when rendering to the
+		// Framebuffer); therefore we rely on the FOCUS_GAINED event to
+		// catch window startup and size toggles.
+
+		// LOG_DEBUG("SDL: Window has gained keyboard focus");
+
+		if (sdl.draw.callback) {
+			sdl.draw.callback(GFX_CallbackRedraw);
+		}
+		focus_input();
+		return true;
+
+	case SDL_WINDOWEVENT_FOCUS_LOST:
+		// LOG_DEBUG("SDL: Window has lost keyboard
+		// focus");
+#ifdef WIN32
+		if (sdl.desktop.fullscreen) {
+			VGA_KillDrawing();
+			GFX_ForceFullscreenExit();
+		}
+#endif
+		apply_inactive_settings();
+		GFX_LosingFocus();
+		return false;
+
+	case SDL_WINDOWEVENT_ENTER:
+		// LOG_DEBUG("SDL: Window has gained mouse focus");
+		return true;
+
+	case SDL_WINDOWEVENT_LEAVE:
+		// LOG_DEBUG("SDL: Window has lost mouse focus");
+		return true;
+
+	case SDL_WINDOWEVENT_SHOWN:
+		// LOG_DEBUG("SDL: Window has been shown");
+		maybe_auto_switch_shader();
+		return true;
+
+	case SDL_WINDOWEVENT_HIDDEN:
+		// LOG_DEBUG("SDL: Window has been hidden");
+		return true;
+
+#if C_OPENGL && defined(MACOSX)
+	// TODO check if this workaround is still needed
+	case SDL_WINDOWEVENT_MOVED:
+		// LOG_DEBUG("SDL: Window has been moved to %d, %d",
+		// event.window.data1, event.window.data2);
+
+		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+			glViewport(sdl.draw_rect_px.x,
+			           sdl.draw_rect_px.y,
+			           sdl.draw_rect_px.w,
+			           sdl.draw_rect_px.h);
+		}
+		return true;
+#endif
+
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
+		// New display might have a different resolution and DPI scaling set,
+		// so recalculate that and set viewport
+		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend);
+
+		SDL_Rect display_bounds = {};
+		SDL_GetDisplayBounds(event.window.data1, &display_bounds);
+		sdl.desktop.full.width  = display_bounds.w;
+		sdl.desktop.full.height = display_bounds.h;
+
+		sdl.display_number = event.window.data1;
+
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.rendering_backend);
+
+		sdl.draw_rect_px = to_sdl_rect(
+		        calc_draw_rect_in_pixels(canvas_size_px));
+
+		if (sdl.rendering_backend == RenderingBackend::Texture) {
+			SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
+		}
+#if C_OPENGL
+		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+			glViewport(sdl.draw_rect_px.x,
+			           sdl.draw_rect_px.y,
+			           sdl.draw_rect_px.w,
+			           sdl.draw_rect_px.h);
+		}
+
+		maybe_auto_switch_shader();
+#endif
+		notify_new_mouse_screen_params();
+		return true;
+	}
+#endif
+
+	case SDL_WINDOWEVENT_SIZE_CHANGED: {
+		// LOG_DEBUG("SDL: The window size has changed");
+
+		// The window size has changed either as a result of an API call
+		// or through the system or user changing the window size.
+		const auto new_width  = event.window.data1;
+		const auto new_height = event.window.data2;
+		handle_video_resize(new_width, new_height);
+
+		finalise_window_state();
+
+		maybe_auto_switch_shader();
+		return true;
+	}
+
+	case SDL_WINDOWEVENT_MINIMIZED:
+		// LOG_DEBUG("SDL: Window has been minimized");
+		apply_inactive_settings();
+		return false;
+
+	case SDL_WINDOWEVENT_MAXIMIZED:
+		// LOG_DEBUG("SDL: Window has been maximized");
+		return true;
+
+	case SDL_WINDOWEVENT_CLOSE:
+		// LOG_DEBUG("SDL: The window manager requests that the window
+		// be closed");
+		GFX_RequestExit(true);
+		return false;
+
+	case SDL_WINDOWEVENT_TAKE_FOCUS:
+		focus_input();
+		apply_active_settings();
+		return true;
+
+	case SDL_WINDOWEVENT_HIT_TEST:
+		// LOG_DEBUG("SDL: Window had a hit test that wasn't
+		// SDL_HITTEST_NORMAL");
+		return true;
+
+	default: return false;
+	}
+}
+
 bool GFX_Events()
 {
 #if defined(MACOSX)
@@ -4076,348 +4364,16 @@ bool GFX_Events()
 			};
 			break;
 
-		case SDL_WINDOWEVENT:
-			switch (event.window.event) {
-			case SDL_WINDOWEVENT_RESTORED:
-				// LOG_DEBUG("SDL: Window has been restored");
-				/* We may need to re-create a texture
-				 * and more on Android. Another case:
-				 * Update surface while using X11.
-				 */
-				GFX_ResetScreen();
-
-#if C_OPENGL && defined(MACOSX)
-				// TODO check if this workaround is still needed
-	
-				// LOG_DEBUG("SDL: Reset macOS's GL viewport
-				// after window-restore");
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-#endif
-				focus_input();
-				continue;
-
-			case SDL_WINDOWEVENT_RESIZED: {
-				// TODO pixels or logical unit?
-				// LOG_DEBUG("SDL: Window has been resized to
-				// %dx%d",
-				//           event.window.data1,
-				//           event.window.data2);
-
-				// When going from an initial fullscreen to
-				// windowed state, this event will be called
-				// moments before SDL's windowed mode is
-				// engaged, so simply ensure the window size has
-				// already been established:
-				assert(sdl.desktop.window.width > 0 &&
-				       sdl.desktop.window.height > 0);
-
-				// SDL_WINDOWEVENT_RESIZED events are sent twice
-				// on macOS when resizing the window, so we're
-				// only logging the display settings if there is
-				// a change since the last window resized event.
-				static int prev_width  = 0;
-				static int prev_height = 0;
-
-				const auto new_width  = event.window.data1;
-				const auto new_height = event.window.data2;
-
-				if (prev_width != new_width ||
-				    prev_height != new_height) {
-					log_display_properties(
-					        sdl.draw.render_width_px,
-					        sdl.draw.render_height_px,
-					        sdl.maybe_video_mode,
-					        sdl.rendering_backend);
-				}
-
-				prev_width  = new_width;
-				prev_height = new_height;
-			}
-				continue;
-
-			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				apply_active_settings();
-				[[fallthrough]];
-			case SDL_WINDOWEVENT_EXPOSED:
-				// LOG_DEBUG("SDL: Window has been exposed "
-				//               "and should be redrawn");
-
-				/* TODO: below is not consistently true :(
-				 * seems incorrect on KDE and sometimes on MATE
-				 *
-				 * Note that on Windows/Linux-X11/Wayland/macOS,
-				 * event is fired after toggling between full vs
-				 * windowed modes. However this is never fired
-				 * on the Raspberry Pi (when rendering to the
-				 * Framebuffer); therefore we rely on the
-				 * FOCUS_GAINED event to catch window startup
-				 * and size toggles.
-				 */
-				// LOG_DEBUG("SDL: Window has gained
-				// keyboard focus");
-				if (sdl.draw.callback) {
-					sdl.draw.callback(GFX_CallbackRedraw);
-				}
-				focus_input();
-				continue;
-
-			case SDL_WINDOWEVENT_FOCUS_LOST:
-				// LOG_DEBUG("SDL: Window has lost keyboard
-				// focus");
-#ifdef WIN32
-				if (sdl.desktop.fullscreen) {
-					VGA_KillDrawing();
-					GFX_ForceFullscreenExit();
-				}
-#endif
-				apply_inactive_settings();
-				GFX_LosingFocus();
-				break;
-
-			case SDL_WINDOWEVENT_ENTER:
-				// LOG_DEBUG("SDL: Window has gained mouse focus");
-				continue;
-
-			case SDL_WINDOWEVENT_LEAVE:
-				// LOG_DEBUG("SDL: Window has lost mouse focus");
-				continue;
-
-			case SDL_WINDOWEVENT_SHOWN:
-				// LOG_DEBUG("SDL: Window has been shown");
-				maybe_auto_switch_shader();
-				continue;
-
-			case SDL_WINDOWEVENT_HIDDEN:
-				// LOG_DEBUG("SDL: Window has been hidden");
-				continue;
-
-#if C_OPENGL && defined(MACOSX)
-			// TODO check if this workaround is still needed
-			case SDL_WINDOWEVENT_MOVED:
-				// LOG_DEBUG("SDL: Window has been moved to %d,
-				// %d",
-				//               event.window.data1,
-				//               event.window.data2);
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-				continue;
-#endif
-
-#if SDL_VERSION_ATLEAST(2, 0, 18)
-			case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
-				// New display might have a different resolution
-				// and DPI scaling set, so recalculate that and
-				// set viewport
-				check_and_handle_dpi_change(sdl.window,
-				                            sdl.rendering_backend);
-
-				SDL_Rect display_bounds = {};
-				SDL_GetDisplayBounds(event.window.data1,
-				                     &display_bounds);
-				sdl.desktop.full.width  = display_bounds.w;
-				sdl.desktop.full.height = display_bounds.h;
-
-				sdl.display_number = event.window.data1;
-
-				const auto canvas_size_px = get_canvas_size_in_pixels(
-				        sdl.rendering_backend);
-
-				sdl.draw_rect_px = to_sdl_rect(
-				        calc_draw_rect_in_pixels(canvas_size_px));
-
-				if (sdl.rendering_backend == RenderingBackend::Texture) {
-					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.draw_rect_px);
-				}
-#	if C_OPENGL
-				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.draw_rect_px.x,
-					           sdl.draw_rect_px.y,
-					           sdl.draw_rect_px.w,
-					           sdl.draw_rect_px.h);
-				}
-
-				maybe_auto_switch_shader();
-#	endif
-				notify_new_mouse_screen_params();
-				continue;
-			}
-#endif
-
-			case SDL_WINDOWEVENT_SIZE_CHANGED: {
-				// LOG_DEBUG("SDL: The window size has changed");
-
-				// The window size has changed either as a
-				// result of an API call or through the system
-				// or user changing the window size.
-				const auto new_width  = event.window.data1;
-				const auto new_height = event.window.data2;
-				handle_video_resize(new_width, new_height);
-
-				finalise_window_state();
-
-				maybe_auto_switch_shader();
+		case SDL_WINDOWEVENT: {
+			auto handling_finished = handle_sdl_windowevent(event);
+			if (handling_finished) {
 				continue;
 			}
 
-			case SDL_WINDOWEVENT_MINIMIZED:
-				// LOG_DEBUG("SDL: Window has been minimized");
-				apply_inactive_settings();
-				break;
-
-			case SDL_WINDOWEVENT_MAXIMIZED:
-				// LOG_DEBUG("SDL: Window has been maximized");
-				continue;
-
-			case SDL_WINDOWEVENT_CLOSE:
-				// LOG_DEBUG("SDL: The window manager "
-				//               "requests that the window be "
-				//               "closed");
-				GFX_RequestExit(true);
-				break;
-
-			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				focus_input();
-				apply_active_settings();
-				continue;
-
-			case SDL_WINDOWEVENT_HIT_TEST:
-				// LOG_DEBUG("SDL: Window had a hit test that "
-				//               "wasn't SDL_HITTEST_NORMAL");
-				continue;
-
-			default: break;
-			}
-
-			/* Non-focus priority is set to pause; check to see if
-			 * we've lost window or input focus i.e. has the window
-			 * been minimised or made inactive?
-			 */
 			if (sdl.pause_when_inactive) {
-				if ((event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) ||
-				    (event.window.event == SDL_WINDOWEVENT_MINIMIZED)) {
-					/* Window has lost focus, pause the
-					 * emulator. This is similar to what
-					 * PauseDOSBox() does, but the exit
-					 * criteria is different. Instead of
-					 * waiting for the user to hit
-					 * Alt+Break, we wait for the window to
-					 * regain window or input focus.
-					 */
-					apply_inactive_settings();
-					SDL_Event ev;
-
-					KEYBOARD_ClrBuffer();
-					//					Delay(500);
-					//					while
-					//(SDL_PollEvent(&ev)) {
-					// flush event queue.
-					//					}
-
-					bool paused = true;
-
-					// Prevent the mixer from running while
-					// in our pause loop Muting is not ideal
-					// for some sound devices such as GUS
-					// that loop samples This also saves CPU
-					// time by not rendering samples we're
-					// not going to play anyway
-					MIXER_LockMixerThread();
-
-					while (paused && !shutdown_requested) {
-						// WaitEvent waits for an event
-						// rather than polling, so CPU
-						// usage drops to zero
-						SDL_WaitEvent(&ev);
-
-						switch (ev.type) {
-						case SDL_QUIT:
-							GFX_RequestExit(true);
-							break;
-						case SDL_WINDOWEVENT: // wait
-						                      // until
-						                      // we get
-						                      // window
-						                      // focus
-						                      // back
-							if ((ev.window.event ==
-							     SDL_WINDOWEVENT_FOCUS_LOST) ||
-							    (ev.window.event ==
-							     SDL_WINDOWEVENT_MINIMIZED) ||
-							    (ev.window.event ==
-							     SDL_WINDOWEVENT_FOCUS_GAINED) ||
-							    (ev.window.event ==
-							     SDL_WINDOWEVENT_RESTORED) ||
-							    (ev.window.event ==
-							     SDL_WINDOWEVENT_EXPOSED)) {
-								// We've got
-								// focus back,
-								// so unpause
-								// and break out
-								// of the loop
-								if ((ev.window.event ==
-								     SDL_WINDOWEVENT_FOCUS_GAINED) ||
-								    (ev.window.event ==
-								     SDL_WINDOWEVENT_RESTORED) ||
-								    (ev.window.event ==
-								     SDL_WINDOWEVENT_EXPOSED)) {
-									sdl.is_paused = false;
-									GFX_RefreshTitle();
-									if (ev.window
-									            .event ==
-									    SDL_WINDOWEVENT_FOCUS_GAINED) {
-										paused = false;
-										apply_active_settings();
-									}
-								}
-
-								/* Now poke a
-								 * "release ALT"
-								 * command into
-								 * the keyboard
-								 * buffer we
-								 * have to do
-								 * this,
-								 * otherwise ALT
-								 * will 'stick'
-								 * and cause
-								 * problems with
-								 * the app
-								 * running in
-								 * the DOSBox.
-								 */
-								KEYBOARD_AddKey(KBD_leftalt,
-								                false);
-								KEYBOARD_AddKey(KBD_rightalt,
-								                false);
-								if (ev.window.event ==
-								    SDL_WINDOWEVENT_RESTORED) {
-									// We may
-									// need
-									// to
-									// re-create
-									// a
-									// texture
-									// and more
-									GFX_ResetScreen();
-								}
-							}
-							break;
-						}
-					}
-					MIXER_UnlockMixerThread();
-				}
+				handle_pause_when_inactive(event);
 			}
-			break; // end of SDL_WINDOWEVENT
+		} break;
 
 		case SDL_MOUSEMOTION: handle_mouse_motion(&event.motion); break;
 		case SDL_MOUSEWHEEL: handle_mouse_wheel(&event.wheel); break;
