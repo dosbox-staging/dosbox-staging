@@ -287,9 +287,9 @@ static bool init_shader_gl()
 		if (sdl.opengl.program_object == 0) {
 			GLuint vertexShader, fragmentShader;
 
-			if (!load_shader(sdl.opengl.shader_source,
-			                 &vertexShader,
-			                 &fragmentShader)) {
+			if (!load_shader_gl(sdl.opengl.shader_source,
+			                    &vertexShader,
+			                    &fragmentShader)) {
 
 				LOG_ERR("OPENGL: Failed to compile shader");
 				return false;
@@ -1871,7 +1871,7 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
-static bool load_shader(const std::string& source, GLuint* vertex, GLuint* fragment)
+static bool load_shader_gl(const std::string& source, GLuint* vertex, GLuint* fragment)
 {
 	if (source.empty()) {
 		return false;
@@ -2018,14 +2018,10 @@ static bool present_frame_gl()
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count,
-			            sdl.opengl.actual_frame_count++);
+		glUniform1i(sdl.opengl.ruby.frame_count,
+		            sdl.opengl.actual_frame_count++);
 
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		if (CAPTURE_IsCapturingPostRenderImage()) {
 			// glReadPixels() implicitly blocks until all pipelined
@@ -2256,13 +2252,11 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			goto fallback_texture;
 		}
 
-		if (sdl.opengl.use_shader) {
-			if (!init_shader_gl()) {
-				goto fallback_texture;
-			}
+		if (!init_shader_gl()) {
+			goto fallback_texture;
 		}
 
-		// Create the texture and display list
+		// Create the texture
 		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
 		                               render_height_px * MAX_BYTES_PER_PIXEL;
 
@@ -2404,62 +2398,21 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
 
-		if (sdl.opengl.program_object) {
-			// Set shader variables
-			glUniform2f(sdl.opengl.ruby.texture_size,
-			            (GLfloat)texsize_w_px,
-			            (GLfloat)texsize_h_px);
+		// Set shader variables
+		glUniform2f(sdl.opengl.ruby.texture_size,
+		            (GLfloat)texsize_w_px,
+		            (GLfloat)texsize_h_px);
 
-			glUniform2f(sdl.opengl.ruby.input_size,
-			            (GLfloat)render_width_px,
-			            (GLfloat)render_height_px);
+		glUniform2f(sdl.opengl.ruby.input_size,
+		            (GLfloat)render_width_px,
+		            (GLfloat)render_height_px);
 
-			glUniform2f(sdl.opengl.ruby.output_size,
-			            (GLfloat)sdl.draw_rect_px.w,
-			            (GLfloat)sdl.draw_rect_px.h);
+		glUniform2f(sdl.opengl.ruby.output_size,
+		            (GLfloat)sdl.draw_rect_px.w,
+		            (GLfloat)sdl.draw_rect_px.h);
 
-			// The following uniform is *not* set right now
-			sdl.opengl.actual_frame_count = 0;
-
-		} else {
-			GLfloat tex_width = ((GLfloat)render_width_px /
-			                     (GLfloat)texsize_w_px);
-
-			GLfloat tex_height = ((GLfloat)render_height_px /
-			                      (GLfloat)texsize_h_px);
-
-			glShadeModel(GL_FLAT);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-
-			if (glIsList(sdl.opengl.displaylist)) {
-				glDeleteLists(sdl.opengl.displaylist, 1);
-			}
-
-			sdl.opengl.displaylist = glGenLists(1);
-			glNewList(sdl.opengl.displaylist, GL_COMPILE);
-
-			// Create one huge triangle and only display a portion.
-			// When using a quad, there was scaling bug (certain
-			// resolutions on Nvidia chipsets) in the seam
-			//
-			glBegin(GL_TRIANGLES);
-
-			// upper left
-			glTexCoord2f(0, 0);
-			glVertex2f(-1.0f, 1.0f);
-
-			// lower left
-			glTexCoord2f(0, tex_height * 2);
-			glVertex2f(-1.0f, -3.0f);
-
-			// upper right
-			glTexCoord2f(tex_width * 2, 0);
-			glVertex2f(3.0f, 1.0f);
-			glEnd();
-
-			glEndList();
-		}
+		// The following uniform is *not* set right now
+		sdl.opengl.actual_frame_count = 0;
 
 		maybe_log_opengl_error("End of setsize");
 
@@ -2541,9 +2494,6 @@ void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
 	sdl.opengl.shader_info   = shader_info;
 	sdl.opengl.shader_source = shader_source;
 
-	if (!sdl.opengl.use_shader) {
-		return;
-	}
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;
@@ -3546,9 +3496,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         glUniform2f && glUniform1i && glUseProgram &&
 			         glVertexAttribPointer);
 
-			sdl.opengl.framebuf    = nullptr;
-			sdl.opengl.texture     = 0;
-			sdl.opengl.displaylist = 0;
+			sdl.opengl.framebuf = nullptr;
+			sdl.opengl.texture  = 0;
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
