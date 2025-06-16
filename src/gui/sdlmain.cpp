@@ -2633,9 +2633,11 @@ static void focus_input()
 // is it still needed on current SDL?
 
 STICKYKEYS stick_keys = {sizeof(STICKYKEYS), 0};
-void sticky_keys(bool restore)
+
+static void sticky_keys(bool restore)
 {
 	static bool inited = false;
+
 	if (!inited) {
 		inited = true;
 		SystemParametersInfo(SPI_GETSTICKYKEYS,
