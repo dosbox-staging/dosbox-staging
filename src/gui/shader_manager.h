@@ -132,8 +132,11 @@ struct ShaderInfo {
 //
 class ShaderManager {
 public:
-	ShaderManager()  = default;
-	~ShaderManager() = default;
+	static ShaderManager& GetInstance()
+	{
+		static ShaderManager instance;
+		return instance;
+	}
 
 	// Generate a human-readable shader inventory message (one list element
 	// per line).
@@ -152,12 +155,15 @@ public:
 
 	void ReloadCurrentShader();
 
+private:
+	ShaderManager()  = default;
+	~ShaderManager() = default;
+
 	// prevent copying
 	ShaderManager(const ShaderManager&) = delete;
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
-private:
 	void LoadShader(const std::string& shader_name);
 	bool ReadShaderSource(const std::string& shader_name, std::string& source);
 
