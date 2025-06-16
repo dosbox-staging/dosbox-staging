@@ -1660,24 +1660,6 @@ static bool is_using_kmsdrm_driver()
 	return driver_str == "kmsdrm";
 }
 
-static int check_kmsdrm_setting()
-{
-	// Simple pre-check to see if we're using kmsdrm
-	if (!is_using_kmsdrm_driver())
-		return 0;
-
-	// Do we have read access to the event subsystem
-	if (auto f = fopen("/dev/input/event0", "r"); f) {
-		fclose(f);
-		return 0;
-	}
-
-	// We're using KMSDRM, but we don't have read access to the event subsystem
-	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
-	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
-	return 1;
-}
-
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
@@ -4820,6 +4802,22 @@ static void init_logger(const CommandLineArguments* args, int argc, char* argv[]
 	loguru::init(argc, argv);
 }
 
+static bool check_kmsdrm_setting()
+{
+	// Simple pre-check to see if we're using kmsdrm
+	if (!is_using_kmsdrm_driver()) {
+		return true;
+	}
+
+	// Do we have read access to the event subsystem
+	if (auto f = fopen("/dev/input/event0", "r"); f) {
+		fclose(f);
+		return true;
+	}
+
+	// We're using KMSDRM, but we don't have read access to the event subsystem
+	return false;
+}
 int sdl_main(int argc, char* argv[])
 {
 	// Ensure we perform SDL cleanup and restore console settings
