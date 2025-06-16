@@ -1624,9 +1624,9 @@ static void clean_up_sdl_resources()
 	}
 }
 
-static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
-                                 const int width, const int height,
-                                 const bool fullscreen)
+static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
+                                   const int width, const int height,
+                                   const bool fullscreen)
 {
 	if (sdl.window && sdl.resizing_window) {
 		return sdl.window;
@@ -1880,10 +1880,10 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 		window_height = iround(sdl.draw.render_height_px * draw_scale_y);
 	}
 
-	sdl.window = SetWindowMode(rendering_backend,
-	                           window_width,
-	                           window_height,
-	                           sdl.desktop.fullscreen);
+	sdl.window = set_window_mode(rendering_backend,
+	                             window_width,
+	                             window_height,
+	                             sdl.desktop.fullscreen);
 
 	return sdl.window;
 }
@@ -3072,18 +3072,18 @@ static SDL_Window* set_default_window_mode()
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
 
-		return SetWindowMode(sdl.want_rendering_backend,
-		                     sdl.desktop.full.width,
-		                     sdl.desktop.full.height,
-		                     sdl.desktop.fullscreen);
+		return set_window_mode(sdl.want_rendering_backend,
+		                       sdl.desktop.full.width,
+		                       sdl.desktop.full.height,
+		                       sdl.desktop.fullscreen);
 	}
 
 	sdl.desktop.lazy_init_window_size = false;
 
-	return SetWindowMode(sdl.want_rendering_backend,
-	                     sdl.desktop.window.width,
-	                     sdl.desktop.window.height,
-	                     sdl.desktop.fullscreen);
+	return set_window_mode(sdl.want_rendering_backend,
+	                       sdl.desktop.window.width,
+	                       sdl.desktop.window.height,
+	                       sdl.desktop.fullscreen);
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
