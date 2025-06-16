@@ -272,8 +272,8 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
-/* Create a GLSL shader object, load the shader source, and compile the shader. */
-static GLuint BuildShader(GLenum type, const std::string& source)
+// Create a GLSL shader object, load the shader source, and compile the shader.
+static GLuint build_shader_gl(GLenum type, const std::string& source)
 {
 	GLuint shader            = 0;
 	GLint is_shader_compiled = 0;
@@ -349,10 +349,12 @@ static bool LoadGLShaders(const std::string& source, GLuint* vertex, GLuint* fra
 	assert(vertex);
 	assert(fragment);
 
-	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
+	GLuint s = build_shader_gl(GL_VERTEX_SHADER, source);
 	if (s) {
 		*vertex = s;
-		s       = BuildShader(GL_FRAGMENT_SHADER, source);
+
+		s = build_shader_gl(GL_FRAGMENT_SHADER, source);
+
 		if (s) {
 			*fragment = s;
 			return true;
