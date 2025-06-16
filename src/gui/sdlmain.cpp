@@ -340,7 +340,7 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
-static bool LoadGLShaders(const std::string& source, GLuint* vertex, GLuint* fragment)
+static bool load_shader_gl(const std::string& source, GLuint* vertex, GLuint* fragment)
 {
 	if (source.empty()) {
 		return false;
@@ -392,9 +392,9 @@ static bool init_opengl_shader()
 		if (sdl.opengl.program_object == 0) {
 			GLuint vertexShader, fragmentShader;
 
-			if (!LoadGLShaders(sdl.opengl.shader_source,
-			                   &vertexShader,
-			                   &fragmentShader)) {
+			if (!load_shader_gl(sdl.opengl.shader_source,
+			                    &vertexShader,
+			                    &fragmentShader)) {
 
 				LOG_ERR("OPENGL: Failed to compile shader");
 				return false;
