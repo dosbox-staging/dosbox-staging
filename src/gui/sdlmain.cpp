@@ -259,6 +259,109 @@ static void get_opengl_proc_addresses()
 	        "glVertexAttribPointer");
 }
 
+// A safe wrapper around that returns the default result on failure
+static const char* safe_gl_get_string(const GLenum requested_name,
+                                      const char* default_result = "")
+{
+	// the result points to a static string but can be null
+	const auto result = glGetString(requested_name);
+
+	// the default, howeever, needs to be valid
+	assert(default_result);
+
+	return result ? reinterpret_cast<const char*>(result) : default_result;
+}
+
+/* Create a GLSL shader object, load the shader source, and compile the shader. */
+static GLuint BuildShader(GLenum type, const std::string& source)
+{
+	GLuint shader            = 0;
+	GLint is_shader_compiled = 0;
+
+	assert(source.length());
+
+	const char* shaderSrc      = source.c_str();
+	const char* src_strings[2] = {nullptr, nullptr};
+	std::string top;
+
+	// look for "#version" because it has to occur first
+	const char* ver = strstr(shaderSrc, "#version ");
+	if (ver) {
+		const char* endline = strchr(ver + 9, '\n');
+		if (endline) {
+			top.assign(shaderSrc, endline - shaderSrc + 1);
+			shaderSrc = endline + 1;
+		}
+	}
+
+	top += (type == GL_VERTEX_SHADER) ? "#define VERTEX 1\n"
+	                                  : "#define FRAGMENT 1\n";
+
+	src_strings[0] = top.c_str();
+	src_strings[1] = shaderSrc;
+
+	// Create the shader object
+	shader = glCreateShader(type);
+	if (shader == 0) {
+		return 0;
+	}
+
+	// Load the shader source
+	glShaderSource(shader, 2, src_strings, nullptr);
+
+	// Compile the shader
+	glCompileShader(shader);
+
+	// Check the compile status
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
+
+	GLint info_len = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+
+	// The info log might contain warnings and info messages even if the
+	// compilation was successful, so we'll always log it if it's non-empty.
+	if (info_len > 1) {
+		std::vector<GLchar> info_log(info_len);
+		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
+
+		if (is_shader_compiled) {
+			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
+		} else {
+			LOG_ERR("OPENGL: Error compiling shader: %s",
+			        info_log.data());
+		}
+	}
+
+	if (is_shader_compiled) {
+		return shader;
+	} else {
+		glDeleteShader(shader);
+		return 0;
+	}
+}
+
+static bool LoadGLShaders(const std::string& source, GLuint* vertex, GLuint* fragment)
+{
+	if (source.empty()) {
+		return false;
+	}
+
+	assert(vertex);
+	assert(fragment);
+
+	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
+	if (s) {
+		*vertex = s;
+		s       = BuildShader(GL_FRAGMENT_SHADER, source);
+		if (s) {
+			*fragment = s;
+			return true;
+		}
+		glDeleteShader(*vertex);
+	}
+	return false;
+}
+
 #endif // C_OPENGL
 
 #ifdef WIN32
@@ -1644,112 +1747,6 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 
 	return sdl.window;
 }
-
-#if C_OPENGL
-
-// A safe wrapper around that returns the default result on failure
-static const char* safe_gl_get_string(const GLenum requested_name,
-                                      const char* default_result = "")
-{
-	// the result points to a static string but can be null
-	const auto result = glGetString(requested_name);
-
-	// the default, howeever, needs to be valid
-	assert(default_result);
-
-	return result ? reinterpret_cast<const char*>(result) : default_result;
-}
-
-/* Create a GLSL shader object, load the shader source, and compile the shader. */
-static GLuint BuildShader(GLenum type, const std::string& source)
-{
-	GLuint shader            = 0;
-	GLint is_shader_compiled = 0;
-
-	assert(source.length());
-
-	const char* shaderSrc      = source.c_str();
-	const char* src_strings[2] = {nullptr, nullptr};
-	std::string top;
-
-	// look for "#version" because it has to occur first
-	const char* ver = strstr(shaderSrc, "#version ");
-	if (ver) {
-		const char* endline = strchr(ver + 9, '\n');
-		if (endline) {
-			top.assign(shaderSrc, endline - shaderSrc + 1);
-			shaderSrc = endline + 1;
-		}
-	}
-
-	top += (type == GL_VERTEX_SHADER) ? "#define VERTEX 1\n"
-	                                  : "#define FRAGMENT 1\n";
-
-	src_strings[0] = top.c_str();
-	src_strings[1] = shaderSrc;
-
-	// Create the shader object
-	shader = glCreateShader(type);
-	if (shader == 0) {
-		return 0;
-	}
-
-	// Load the shader source
-	glShaderSource(shader, 2, src_strings, nullptr);
-
-	// Compile the shader
-	glCompileShader(shader);
-
-	// Check the compile status
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
-
-	GLint info_len = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
-
-	// The info log might contain warnings and info messages even if the
-	// compilation was successful, so we'll always log it if it's non-empty.
-	if (info_len > 1) {
-		std::vector<GLchar> info_log(info_len);
-		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
-
-		if (is_shader_compiled) {
-			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
-		} else {
-			LOG_ERR("OPENGL: Error compiling shader: %s",
-			        info_log.data());
-		}
-	}
-
-	if (is_shader_compiled) {
-		return shader;
-	} else {
-		glDeleteShader(shader);
-		return 0;
-	}
-}
-
-static bool LoadGLShaders(const std::string& source, GLuint* vertex, GLuint* fragment)
-{
-	if (source.empty()) {
-		return false;
-	}
-
-	assert(vertex);
-	assert(fragment);
-
-	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
-	if (s) {
-		*vertex = s;
-		s       = BuildShader(GL_FRAGMENT_SHADER, source);
-		if (s) {
-			*fragment = s;
-			return true;
-		}
-		glDeleteShader(*vertex);
-	}
-	return false;
-}
-#endif
 
 static bool is_using_kmsdrm_driver()
 {
