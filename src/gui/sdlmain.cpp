@@ -4805,17 +4805,18 @@ static int edit_primary_config()
 extern void DEBUG_ShutDown(Section* /*sec*/);
 #endif
 
-static void remove_waitpid(std::vector<std::string> &parameters)
+static void remove_waitpid(std::vector<std::string>& parameters)
 {
 	auto it = parameters.begin();
 	while (it != parameters.end()) {
 		if (*it == "-waitpid" || *it == "--waitpid") {
 			it = parameters.erase(it);
 			if (it != parameters.end()) {
-				auto &pid = *it;
+				auto& pid = *it;
 				if (!pid.empty() && std::isdigit(pid[0])) {
-					// The integer value should be the next element following "--waitpid".
-					// If we found an integer, remove it as well.
+					// The integer value should be the next
+					// element following "--waitpid". If we
+					// found an integer, remove it as well.
 					it = parameters.erase(it);
 				}
 			}
@@ -4916,16 +4917,17 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #else
 	int ret = fork();
 	switch (ret) {
-		case -1:
-			LOG_ERR("Restart failed: fork failed: %s", strerror(errno));
-			break;
-		case 0:
-			// Newly created child process immediately executes a new instance of DOSBox.
-			// It is not safe for a child process in a multi-threaded program to do much else.
-			if (execvp(newargs[0], newargs) == -1) {
-				E_Exit("Restart failed: execvp failed: %s", strerror(errno));
-			}
-			break;
+	case -1:
+		LOG_ERR("Restart failed: fork failed: %s", strerror(errno));
+		break;
+	case 0:
+		// Newly created child process immediately executes a new
+		// instance of DOSBox. It is not safe for a child process in a
+		// multi-threaded program to do much else.
+		if (execvp(newargs[0], newargs) == -1) {
+			E_Exit("Restart failed: execvp failed: %s", strerror(errno));
+		}
+		break;
 	}
 
 	// Original (parent) process continues execution here.
