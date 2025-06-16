@@ -44,12 +44,6 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-static ShaderManager& get_shader_manager()
-{
-	static auto shader_manager = ShaderManager();
-	return shader_manager;
-}
-
 const char* to_string(const PixelFormat pf)
 {
 	switch (pf) {
@@ -421,9 +415,11 @@ static void render_reset()
 		gfx_flags |= GFX_DBL_W;
 	}
 
+	auto& shader_manager = ShaderManager::GetInstance();
+
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
-		              get_shader_manager().GetCurrentShaderSource());
+		GFX_SetShader(shader_manager.GetCurrentShaderInfo(),
+		              shader_manager.GetCurrentShaderSource());
 	}
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -566,7 +562,7 @@ static void setup_scan_and_pixel_doubling()
 	} break;
 
 	case RenderingBackend::OpenGl: {
-		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
+		const auto shader_info = ShaderManager::GetInstance().GetCurrentShaderInfo();
 		force_vga_single_scan = shader_info.settings.force_single_scan;
 		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
 	} break;
@@ -590,10 +586,10 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 		return false;
 	}
 
-	get_shader_manager().NotifyRenderParametersChanged(canvas_size_px, video_mode);
+	auto& shader_manager = ShaderManager::GetInstance();
+	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
-	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
-
+	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 	const auto changed_shader = (new_shader_name != render.current_shader_name);
 
 	if (changed_shader) {
@@ -638,7 +634,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 {
-	return get_shader_manager().GenerateShaderInventoryMessage();
+	return ShaderManager::GetInstance().GenerateShaderInventoryMessage();
 }
 
 void RENDER_AddMessages()
@@ -1299,13 +1295,18 @@ void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 	set_section_property_value("render", "monochrome_palette", to_string(palette));
 }
 
+const std::string RENDER_GetShaderSource()
+{
+	return ShaderManager::GetInstance().GetCurrentShaderSource();
+}
+
 static bool handle_shader_changes()
 {
 	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
 		return false;
 	}
 
-	auto& shader_manager = get_shader_manager();
+	auto& shader_manager = ShaderManager::GetInstance();
 
 	constexpr auto glshader_setting_name = "glshader";
 
