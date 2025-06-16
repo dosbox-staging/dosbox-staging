@@ -160,6 +160,8 @@ public:
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
 	static void AddMessages();
 
+	// Map legacy shader names to current shaders names (plus log a warning),
+	// and handle shader aliases (e.g., 'sharp' for 'interpolation/sharp').
 	std::string MapShaderName(const std::string& name) const;
 
 	void NotifyGlshaderSettingChanged(const std::string& shader_name);
