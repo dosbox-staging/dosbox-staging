@@ -290,8 +290,6 @@ static bool init_shader_gl()
 			if (!load_shader_gl(sdl.opengl.shader_source,
 			                    &vertexShader,
 			                    &fragmentShader)) {
-
-				LOG_ERR("OPENGL: Failed to compile shader");
 				return false;
 			}
 
@@ -1884,27 +1882,27 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 //
 // Returns a ready to use OpenGL shader program, or zero on failure.
 //
-static bool load_shader_gl(const std::string& source, GLuint* vertex, GLuint* fragment)
+static bool load_shader_gl(const std::string& source, GLuint* vertex_shader,
+                           GLuint* fragment_shader)
 {
 	if (source.empty()) {
+		LOG_ERR("OPENGL: No shader source present");
 		return false;
 	}
 
-	assert(vertex);
-	assert(fragment);
-
-	GLuint s = build_shader_gl(GL_VERTEX_SHADER, source);
-	if (s) {
-		*vertex = s;
-
-		s = build_shader_gl(GL_FRAGMENT_SHADER, source);
-
-		if (s) {
-			*fragment = s;
-			return true;
-		}
-		glDeleteShader(*vertex);
+	*vertex_shader = build_shader_gl(GL_VERTEX_SHADER, source);
+	if (!*vertex_shader) {
+		LOG_ERR("OPENGL: Failed to compile vertex shader");
+		return false;
 	}
+
+	*fragment_shader = build_gl_shader(GL_FRAGMENT_SHADER, source);
+	if (!*fragment_shader) {
+		LOG_ERR("OPENGL: Failed to compile fragment shader");
+		glDeleteShader(vertex_shader);
+		return false;
+	}
+
 	return false;
 }
 #endif
