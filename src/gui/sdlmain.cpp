@@ -364,7 +364,7 @@ static bool load_shader_gl(const std::string& source, GLuint* vertex, GLuint* fr
 	return false;
 }
 
-static bool init_opengl_shader()
+static bool init_shader_gl()
 {
 	GLuint prog = 0;
 
@@ -2368,7 +2368,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		}
 
 		if (sdl.opengl.use_shader) {
-			if (!init_opengl_shader()) {
+			if (!init_shader_gl()) {
 				goto fallback_texture;
 			}
 		}
