@@ -123,26 +123,36 @@ typedef GLuint(APIENTRYP PFNGLCREATESHADERPROC)(GLenum type);
 typedef void(APIENTRYP PFNGLDELETEPROGRAMPROC)(GLuint program);
 typedef void(APIENTRYP PFNGLDELETESHADERPROC)(GLuint shader);
 typedef void(APIENTRYP PFNGLENABLEVERTEXATTRIBARRAYPROC)(GLuint index);
+
 typedef GLint(APIENTRYP PFNGLGETATTRIBLOCATIONPROC)(GLuint program,
                                                     const GLchar* name);
+
 typedef void(APIENTRYP PFNGLGETPROGRAMIVPROC)(GLuint program, GLenum pname,
                                               GLint* params);
+
 typedef void(APIENTRYP PFNGLGETPROGRAMINFOLOGPROC)(GLuint program, GLsizei bufSize,
                                                    GLsizei* length, GLchar* infoLog);
+
 typedef void(APIENTRYP PFNGLGETSHADERIVPROC)(GLuint shader, GLenum pname,
                                              GLint* params);
+
 typedef void(APIENTRYP PFNGLGETSHADERINFOLOGPROC)(GLuint shader, GLsizei bufSize,
                                                   GLsizei* length, GLchar* infoLog);
+
 typedef GLint(APIENTRYP PFNGLGETUNIFORMLOCATIONPROC)(GLuint program,
                                                      const GLchar* name);
+
 typedef void(APIENTRYP PFNGLLINKPROGRAMPROC)(GLuint program);
+
 // Change to NP, as Khronos changes include guard :(
 typedef void(APIENTRYP PFNGLSHADERSOURCEPROC_NP)(GLuint shader, GLsizei count,
                                                  const GLchar** string,
                                                  const GLint* length);
+
 typedef void(APIENTRYP PFNGLUNIFORM2FPROC)(GLint location, GLfloat v0, GLfloat v1);
 typedef void(APIENTRYP PFNGLUNIFORM1IPROC)(GLint location, GLint v0);
 typedef void(APIENTRYP PFNGLUSEPROGRAMPROC)(GLuint program);
+
 typedef void(APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC)(GLuint index, GLint size,
                                                      GLenum type, GLboolean normalized,
                                                      GLsizei stride,
@@ -340,6 +350,7 @@ bool GFX_HaveDesktopEnvironment()
 
 	static bool already_checked          = false;
 	static bool have_desktop_environment = false;
+
 	if (!already_checked) {
 		constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
 		                                "XDG_SESSION_DESKTOP",
@@ -349,7 +360,8 @@ bool GFX_HaveDesktopEnvironment()
 		have_desktop_environment = std::any_of(std::begin(vars),
 		                                       std::end(vars),
 		                                       std::getenv);
-		already_checked          = true;
+
+		already_checked = true;
 	}
 
 	return have_desktop_environment;
@@ -1102,6 +1114,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 	// TODO but why is this important? needs explanation.
 	const auto host_rate = get_host_refresh_rate();
 	VGA_SetHostRate(host_rate);
+
 	const auto dos_rate = VGA_GetPreferredRate();
 
 	// Calculate the maximum number of duplicate frames before presenting.
@@ -1155,7 +1168,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 #if 0
 		// TODO some of these log statements seem to be wrong and
 		// not reflect actual reality, we'll need to revisit them
-	
+
 		LOG_MSG("SDL: Auto presentation mode conditions:");
 		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
 		if (has_bench_rate) {
@@ -1335,6 +1348,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
+
 			if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 				LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 				        SDL_GetError());
@@ -1349,10 +1363,12 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		// restoring the window by WM.
 		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
 		        sdl.display_number);
+
 		const auto pos = get_initial_window_position_or_default(default_val);
 
 		assert(sdl.window == nullptr); // enusre we don't leak
 		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+
 		if (!sdl.window && rendering_backend == RenderingBackend::Texture &&
 		    (flags & SDL_WINDOW_OPENGL)) {
 			// opengl_driver_crash_workaround() call above
@@ -1362,6 +1378,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			// SDL_CreateWindow(). If we failed to create the
 			// window, try again without it.
 			flags &= ~SDL_WINDOW_OPENGL;
+
 			sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
 		}
 		if (!sdl.window) {
@@ -1381,6 +1398,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 			assert(sdl.renderer == nullptr);
 			sdl.renderer = SDL_CreateRenderer(sdl.window, -1, 0);
+
 			if (!sdl.renderer) {
 				LOG_ERR("SDL: Failed to create renderer: %s",
 				        SDL_GetError());
@@ -1396,6 +1414,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 			assert(sdl.opengl.context == nullptr);
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+
 			if (sdl.opengl.context == nullptr) {
 				LOG_ERR("OPENGL: Can't create context: %s",
 				        SDL_GetError());
@@ -1425,6 +1444,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 	if (fullscreen) {
 		SDL_DisplayMode displayMode;
 		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
+
 		displayMode.w = width;
 		displayMode.h = height;
 
@@ -1549,6 +1569,7 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 {
 	int window_width;
 	int window_height;
+
 	if (sdl.desktop.fullscreen) {
 		window_width = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
 		window_height = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
@@ -1595,6 +1616,7 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	GLint is_shader_compiled = 0;
 
 	assert(source.length());
+
 	const char* shaderSrc      = source.c_str();
 	const char* src_strings[2] = {nullptr, nullptr};
 	std::string top;
@@ -1708,6 +1730,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	SDL_GetWindowSize(sdl_window, &current_size.x, &current_size.y);
 	SDL_Point bounded_size = {std::max(requested_size.x, requested_min_size.x),
 	                          std::max(requested_size.y, requested_min_size.y)};
+
 	if (current_size != bounded_size) {
 		safe_set_window_size(bounded_size.x, bounded_size.y);
 		// TODO pixels or logical unit?
@@ -1861,6 +1884,7 @@ static bool present_frame_texture()
 			// rendering commands have finished, so we're guaranteed
 			// to read the contents of the up-to-date backbuffer
 			// here right before the buffer swap.
+			//
 			const auto image = get_rendered_output_from_backbuffer();
 			if (image) {
 				CAPTURE_AddPostRenderImage(*image);
@@ -1882,14 +1906,17 @@ static void update_frame_gl(const uint16_t* changedLines)
 	if (changedLines) {
 		const auto framebuf = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		const auto pitch = sdl.opengl.pitch;
-		int y            = 0;
-		size_t index     = 0;
+
+		int y        = 0;
+		size_t index = 0;
+
 		while (y < sdl.draw.render_height_px) {
 			if (!(index & 1)) {
 				y += changedLines[index];
 			} else {
 				const uint8_t* pixels = framebuf + y * pitch;
 				const int height_px   = changedLines[index];
+
 				glTexSubImage2D(GL_TEXTURE_2D,
 				                0,
 				                0,
@@ -1911,11 +1938,14 @@ static void update_frame_gl(const uint16_t* changedLines)
 static bool present_frame_gl()
 {
 	const auto is_presenting = render_pacer->CanRun();
+
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
+
 		if (sdl.opengl.program_object) {
 			glUniform1i(sdl.opengl.ruby.frame_count,
 			            sdl.opengl.actual_frame_count++);
+
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		} else {
 			glCallList(sdl.opengl.displaylist);
@@ -1926,6 +1956,7 @@ static bool present_frame_gl()
 			// rendering commands have finished, so we're
 			// guaranateed to read the contents of the up-to-date
 			// backbuffer here right before the buffer swap.
+			//
 			const auto image = get_rendered_output_from_backbuffer();
 			if (image) {
 				CAPTURE_AddPostRenderImage(*image);
@@ -1993,6 +2024,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		// Use renderer's default format
 		SDL_RendererInfo rinfo;
 		SDL_GetRendererInfo(sdl.renderer, &rinfo);
+
 		const auto texture_format = rinfo.texture_formats[0];
 
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
@@ -2013,7 +2045,9 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			SDL_FreeSurface(texture_input_surface);
 			texture_input_surface = nullptr;
 		}
+
 		assert(texture_input_surface == nullptr); // ensure we don't leak
+		                                          //
 		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
 		        0, render_width_px, render_height_px, 32, texture_format);
 		if (!texture_input_surface) {
@@ -2021,12 +2055,14 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		}
 
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+
 		uint32_t pixel_format;
 		assert(sdl.texture.texture);
 		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
 		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
 		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+
 		switch (SDL_BITSPERPIXEL(pixel_format)) {
 		case 8: retFlags = GFX_CAN_8; break;
 		case 15: retFlags = GFX_CAN_15; break;
@@ -2066,6 +2102,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		}
 		const auto canvas_size_px = get_canvas_size_in_pixels(
 		        sdl.want_rendering_backend);
+
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
@@ -2087,6 +2124,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 #if C_OPENGL
 		free(sdl.opengl.framebuf);
 		sdl.opengl.framebuf = nullptr;
+
 		if (!(flags & GFX_CAN_32)) {
 			goto fallback_texture;
 		}
@@ -2140,20 +2178,25 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		if (sdl.opengl.use_shader) {
 			GLuint prog = 0;
+
 			// reset error
 			glGetError();
 			glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prog);
+
 			// if there was an error this context doesn't support
 			// shaders
 			if (glGetError() == GL_NO_ERROR &&
 			    (sdl.opengl.program_object == 0 ||
 			     prog != sdl.opengl.program_object)) {
+
 				// check if existing program is valid
 				if (sdl.opengl.program_object) {
 					glUseProgram(sdl.opengl.program_object);
+
 					if (glGetError() != GL_NO_ERROR) {
-						// program is not usable (probably
-						// new context), purge it
+						// program is not usable
+						// (probably new context), purge
+						// it
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
 					}
@@ -2166,11 +2209,13 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 					if (!LoadGLShaders(sdl.opengl.shader_source,
 					                   &vertexShader,
 					                   &fragmentShader)) {
+
 						LOG_ERR("OPENGL: Failed to compile shader");
 						goto fallback_texture;
 					}
 
 					sdl.opengl.program_object = glCreateProgram();
+
 					if (!sdl.opengl.program_object) {
 						glDeleteShader(vertexShader);
 						glDeleteShader(fragmentShader);
@@ -2180,8 +2225,10 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 						        "falling back to texture");
 						goto fallback_texture;
 					}
+
 					glAttachShader(sdl.opengl.program_object,
 					               vertexShader);
+
 					glAttachShader(sdl.opengl.program_object,
 					               fragmentShader);
 
@@ -2239,12 +2286,15 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 					// upper left
 					sdl.opengl.vertex_data[0] = -1.0f;
 					sdl.opengl.vertex_data[1] = 1.0f;
+
 					// lower left
 					sdl.opengl.vertex_data[2] = -1.0f;
 					sdl.opengl.vertex_data[3] = -3.0f;
+
 					// upper right
 					sdl.opengl.vertex_data[4] = 3.0f;
 					sdl.opengl.vertex_data[5] = 1.0f;
+
 					// Load the vertex positions
 					glVertexAttribPointer(u,
 					                      2,
@@ -2252,6 +2302,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 					                      GL_FALSE,
 					                      0,
 					                      sdl.opengl.vertex_data);
+
 					glEnableVertexAttribArray(u);
 
 					u = glGetUniformLocation(sdl.opengl.program_object,
@@ -2261,12 +2312,15 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 					sdl.opengl.ruby.texture_size = glGetUniformLocation(
 					        sdl.opengl.program_object,
 					        "rubyTextureSize");
+
 					sdl.opengl.ruby.input_size = glGetUniformLocation(
 					        sdl.opengl.program_object,
 					        "rubyInputSize");
+
 					sdl.opengl.ruby.output_size = glGetUniformLocation(
 					        sdl.opengl.program_object,
 					        "rubyOutputSize");
+
 					sdl.opengl.ruby.frame_count = glGetUniformLocation(
 					        sdl.opengl.program_object,
 					        "rubyFrameCount");
@@ -2277,6 +2331,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		/* Create the texture and display list */
 		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
 		                               render_height_px * MAX_BYTES_PER_PIXEL;
+
 		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
 		sdl.opengl.pitch = render_width_px * 4;
 
@@ -2343,6 +2398,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		int is_double_buffering_enabled = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
 		                        &is_double_buffering_enabled)) {
+
 			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
 			            SDL_GetError());
 		} else {
@@ -2354,6 +2410,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		int is_framebuffer_srgb_capable = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
 		                        &is_framebuffer_srgb_capable)) {
+
 			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
 			            SDL_GetError());
 		}
@@ -2389,6 +2446,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		             GL_BGRA_EXT,
 		             GL_UNSIGNED_BYTE,
 		             emptytex);
+
 		delete[] emptytex;
 
 		if (sdl.opengl.framebuffer_is_srgb_encoded) {
@@ -2427,9 +2485,11 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
+
 		} else {
 			GLfloat tex_width  = ((GLfloat)render_width_px /
                                              (GLfloat)texsize_w_px);
+
 			GLfloat tex_height = ((GLfloat)render_height_px /
 			                      (GLfloat)texsize_h_px);
 
@@ -2440,19 +2500,24 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			if (glIsList(sdl.opengl.displaylist)) {
 				glDeleteLists(sdl.opengl.displaylist, 1);
 			}
+
 			sdl.opengl.displaylist = glGenLists(1);
 			glNewList(sdl.opengl.displaylist, GL_COMPILE);
 
 			// Create one huge triangle and only display a portion.
 			// When using a quad, there was scaling bug (certain
 			// resolutions on Nvidia chipsets) in the seam
+			//
 			glBegin(GL_TRIANGLES);
+
 			// upper left
 			glTexCoord2f(0, 0);
 			glVertex2f(-1.0f, 1.0f);
+
 			// lower left
 			glTexCoord2f(0, tex_height * 2);
 			glVertex2f(-1.0f, -3.0f);
+
 			// upper right
 			glTexCoord2f(tex_width * 2, 0);
 			glVertex2f(3.0f, 1.0f);
@@ -2471,6 +2536,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		assertm(false, "OpenGL is not supported by this executable");
 		LOG_ERR("SDL: OpenGL is not supported by this executable, "
 		        "falling back to texture output");
+
 		goto fallback_texture;
 
 #endif                 // C_OPENGL
@@ -2579,6 +2645,7 @@ void GFX_SetMouseRawInput(const bool requested_raw_input)
 	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
 	                            requested_raw_input ? "0" : "1",
 	                            SDL_HINT_OVERRIDE) != SDL_TRUE) {
+
 		LOG_WARNING("SDL: Failed to %s raw mouse input",
 		            requested_raw_input ? "enable" : "disable");
 	}
@@ -2589,6 +2656,7 @@ void GFX_SetMouseCapture(const bool requested_capture)
 	const auto param = requested_capture ? SDL_TRUE : SDL_FALSE;
 	if (SDL_SetRelativeMouseMode(param) != 0) {
 		SDL_ShowCursor(SDL_ENABLE);
+
 		E_Exit("SDL: Failed to %s relative-mode [SDL Bug]",
 		       requested_capture ? "put the mouse in"
 		                         : "take the mouse out of");
@@ -2614,7 +2682,6 @@ static void focus_input()
 	if (!sdl.desktop.fullscreen) {
 		return;
 	}
-
 	// Do we already have focus?
 	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_INPUT_FOCUS) {
 		return;
@@ -2647,6 +2714,7 @@ void sticky_keys(bool restore)
 	// Get current sticky keys layout:
 	STICKYKEYS s = {sizeof(STICKYKEYS), 0};
 	SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
+
 	if (!(s.dwFlags & SKF_STICKYKEYSON)) { // Not on already
 		s.dwFlags &= ~SKF_HOTKEYACTIVE;
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &s, 0);
@@ -2672,7 +2740,9 @@ void GFX_SwitchFullScreen()
 	sticky_keys(sdl.desktop.fullscreen);
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
+
 	GFX_ResetScreen();
+
 	focus_input();
 	setup_presentation_mode(sdl.frame.mode);
 
@@ -2705,19 +2775,25 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	switch (sdl.rendering_backend) {
 	case RenderingBackend::Texture:
 		assert(sdl.texture.input_surface);
+
 		pixels = static_cast<uint8_t*>(sdl.texture.input_surface->pixels);
-		pitch        = sdl.texture.input_surface->pitch;
+		pitch = sdl.texture.input_surface->pitch;
+
 		sdl.updating = true;
 		return true;
+
 	case RenderingBackend::OpenGl:
 #if C_OPENGL
 		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		maybe_log_opengl_error("end of start update");
+
 		if (pixels == nullptr) {
 			return false;
 		}
+
 		static_assert(std::is_same<decltype(pitch), decltype((sdl.opengl.pitch))>::value,
 		              "Our internal pitch types should be the same.");
+
 		pitch        = sdl.opengl.pitch;
 		sdl.updating = true;
 		return true;
@@ -2744,6 +2820,7 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 		// screenshots in sync (so they capture the exact same frame) in
 		// multi-output image capture modes.
 		sdl.frame.present();
+
 	} else {
 		// Helper lambda indicating whether the frame should be
 		// presented. Returns true if the frame has been updated or if
@@ -2800,6 +2877,7 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 	case RenderingBackend::Texture:
 		assert(sdl.texture.pixelFormat);
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
+
 	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
 	}
@@ -2822,7 +2900,9 @@ void GFX_Start()
 static void get_display_dimensions()
 {
 	SDL_Rect displayDimensions;
+
 	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
+
 	sdl.desktop.full.width  = displayDimensions.w;
 	sdl.desktop.full.height = displayDimensions.h;
 }
@@ -2894,30 +2974,38 @@ static void set_priority(PRIORITY_LEVELS level)
 	case PRIORITY_LEVEL_LOWEST:
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 		break;
+
 	case PRIORITY_LEVEL_LOWER:
 		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 		break;
+
 	case PRIORITY_LEVEL_NORMAL:
 		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 		break;
+
 	case PRIORITY_LEVEL_HIGHER:
 		SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 		break;
+
 	case PRIORITY_LEVEL_HIGHEST:
 		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 		break;
+
 #elif defined(HAVE_SETPRIORITY)
 		/* Linux use group as dosbox has mulitple threads under linux */
 	case PRIORITY_LEVEL_LOWEST: setpriority(PRIO_PGRP, 0, PRIO_MAX); break;
 	case PRIORITY_LEVEL_LOWER:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 3));
 		break;
+
 	case PRIORITY_LEVEL_NORMAL:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 2));
 		break;
+
 	case PRIORITY_LEVEL_HIGHER:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - ((3 * PRIO_TOTAL) / 5));
 		break;
+
 	case PRIORITY_LEVEL_HIGHEST:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - ((3 * PRIO_TOTAL) / 4));
 		break;
@@ -3000,9 +3088,11 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 
 	// SDL KMSDRM limitations:
 	if (is_using_kmsdrm_driver()) {
-		w           = desktop.w;
-		h           = desktop.h;
+		w = desktop.w;
+		h = desktop.h;
+
 		was_limited = true;
+
 		LOG_WARNING("DISPLAY: Limiting '%s' resolution to %dx%d to avoid kmsdrm issues",
 		            size_description,
 		            w,
@@ -3025,8 +3115,9 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 
 static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 {
-	int w                 = 0;
-	int h                 = 0;
+	int w = 0;
+	int h = 0;
+
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
 	const bool is_valid = (w >= FallbackWindowSize.x &&
@@ -3055,13 +3146,17 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 	const int percent = [&] {
 		if (pref.starts_with('s')) {
 			return SmallPercent;
+
 		} else if (pref.starts_with('m') || pref == "default" ||
 		           pref.empty()) {
 			return MediumPercent;
+
 		} else if (pref.starts_with('l')) {
 			return LargePercent;
+
 		} else if (pref == "desktop") {
 			return 100;
+
 		} else {
 			LOG_WARNING(
 			        "DISPLAY: Invalid 'windowresolution' setting: '%s', "
@@ -3136,6 +3231,7 @@ static void save_window_size(const int w, const int h)
 
 	// Initialize the window's canvas size if it hasn't yet been set.
 	auto& window_canvas_size = sdl.desktop.window.canvas_size;
+
 	if (window_canvas_size.w <= 0 || window_canvas_size.h <= 0) {
 		window_canvas_size.w = w;
 		window_canvas_size.h = h;
@@ -3164,6 +3260,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	SDL_Point coarse_size  = FallbackWindowSize;
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
+
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(pref);
 	} else {
@@ -3177,13 +3274,16 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
+
 	if (sdl.use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
 		refined_size = refine_window_size(coarse_size,
 		                                  wants_aspect_ratio_correction);
 	}
+
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
+
 	save_window_size(refined_size.x, refined_size.y);
 
 	// Let the user know the resulting window properties
@@ -3310,6 +3410,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	} else {
 		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
+
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
 
@@ -3323,6 +3424,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
+
 	if (sdl.render_driver != "auto") {
 		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
 		                sdl.render_driver.c_str()) == SDL_FALSE) {
@@ -3350,13 +3452,17 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			LOG_WARNING(
 			        "OPENGL: Could not create OpenGL window, "
 			        "using 'texture' output mode");
+
 			sdl.want_rendering_backend = RenderingBackend::Texture;
+
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+
 			if (sdl.opengl.context == nullptr) {
 				LOG_WARNING(
 				        "OPENGL: Could not create context, "
 				        "using 'texture' output mode");
+
 				sdl.want_rendering_backend = RenderingBackend::Texture;
 			}
 		}
@@ -3365,42 +3471,61 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
 			        "glAttachShader");
+
 			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
 			        "glCompileShader");
+
 			glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
 			        "glCreateProgram");
+
 			glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress(
 			        "glCreateShader");
+
 			glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
 			        "glDeleteProgram");
+
 			glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress(
 			        "glDeleteShader");
+
 			glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
 			        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+
 			glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)
 			        SDL_GL_GetProcAddress("glGetAttribLocation");
+
 			glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress(
 			        "glGetProgramiv");
+
 			glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)
 			        SDL_GL_GetProcAddress("glGetProgramInfoLog");
+
 			glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress(
 			        "glGetShaderiv");
+
 			glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)
 			        SDL_GL_GetProcAddress("glGetShaderInfoLog");
+
 			glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)
 			        SDL_GL_GetProcAddress("glGetUniformLocation");
+
 			glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress(
 			        "glLinkProgram");
+
 			glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
 			        "glShaderSource");
+
 			glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress(
 			        "glUniform2f");
+
 			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress(
 			        "glUniform1i");
+
 			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress(
 			        "glUseProgram");
+
 			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)
 			        SDL_GL_GetProcAddress("glVertexAttribPointer");
+
 			sdl.opengl.use_shader =
 			        (glAttachShader && glCompileShader &&
 			         glCreateProgram && glDeleteProgram &&
@@ -3415,6 +3540,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			sdl.opengl.framebuf    = nullptr;
 			sdl.opengl.texture     = 0;
 			sdl.opengl.displaylist = 0;
+
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
 			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
@@ -3451,6 +3577,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
+
 	SDL_SetWindowOpacity(sdl.window, alpha);
 	GFX_RefreshTitle();
 
@@ -3557,18 +3684,23 @@ static void read_gui_config(Section* sec)
 
 	if (!fullresolution.empty()) {
 		lowcase(fullresolution); // so x and X are allowed
+								 //
 		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
+
 			if (fullresolution != "desktop") { // desktop uses 0x0,
 				                           // below sets a
 				                           // custom WxH
 				std::vector<std::string> dimensions =
 				        split_with_empties(fullresolution, 'x');
+
 				if (dimensions.size() == 2) {
 					sdl.desktop.full.width =
 					        parse_int(dimensions[0]).value_or(0);
+
 					sdl.desktop.full.height =
 					        parse_int(dimensions[1]).value_or(0);
+
 					maybe_limit_requested_resolution(
 					        sdl.desktop.full.width,
 					        sdl.desktop.full.height,
@@ -3581,10 +3713,13 @@ static void read_gui_config(Section* sec)
 	const std::string host_rate_pref = section->Get_string("host_rate");
 	if (host_rate_pref == "auto") {
 		sdl.desktop.host_rate_mode = HostRateMode::Auto;
+
 	} else if (host_rate_pref == "sdi") {
 		sdl.desktop.host_rate_mode = HostRateMode::Sdi;
+
 	} else if (host_rate_pref == "vrr") {
 		sdl.desktop.host_rate_mode = HostRateMode::Vrr;
+
 	} else {
 		const auto rate = to_finite<double>(host_rate_pref);
 		if (std::isfinite(rate) && rate >= RefreshRateMin) {
@@ -3604,6 +3739,7 @@ static void read_gui_config(Section* sec)
 	                                       Pacer::LogLevel::TIMEOUTS);
 
 	const int display = section->Get_int("display");
+
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
 		sdl.display_number = display;
 	} else {
@@ -3615,10 +3751,13 @@ static void read_gui_config(Section* sec)
 	        "presentation_mode");
 	if (presentation_mode_pref == "auto") {
 		sdl.frame.desired_mode = FrameMode::Unset;
+
 	} else if (presentation_mode_pref == "cfr") {
 		sdl.frame.desired_mode = FrameMode::Cfr;
+
 	} else if (presentation_mode_pref == "vfr") {
 		sdl.frame.desired_mode = FrameMode::Vfr;
+
 	} else {
 		sdl.frame.desired_mode = FrameMode::Unset;
 		LOG_WARNING("SDL: Invalid 'presentation_mode' setting: '%s', using 'auto'",
@@ -3643,6 +3782,7 @@ static void read_gui_config(Section* sec)
 	                  PRIMARY_MOD | MMOD2,
 	                  "restart",
 	                  "Restart");
+
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
 	                  SDL_SCANCODE_F10,
 	                  PRIMARY_MOD,
@@ -3832,6 +3972,7 @@ static void finalise_window_state()
 	// decorations are rendered off-screen).
 	const auto default_val = SDL_WINDOWPOS_CENTERED_DISPLAY(sdl.display_number);
 	const auto pos = get_initial_window_position_or_default(default_val);
+
 	SDL_SetWindowPosition(sdl.window, pos.x, pos.y);
 
 	// In some cases (not always), leaving fullscreen breaks window content,
@@ -3874,10 +4015,12 @@ static bool is_user_event(const SDL_Event& event)
 static void handle_user_event(const SDL_Event& event)
 {
 	const auto id = event.common.type - sdl.start_event_id;
+
 	switch (static_cast<SDL_DosBoxEvents>(id)) {
 	case SDL_DosBoxEvents::RefreshAnimatedTitle:
 		GFX_RefreshAnimatedTitle();
 		break;
+
 	default: assert(false);
 	}
 }
@@ -3891,7 +4034,9 @@ bool GFX_Events()
 	// default max 500). Currently not implemented for all platforms, given
 	// the ALT-TAB stuff for WIN32.
 	static auto last_check = GetTicks();
+
 	auto current_check     = GetTicks();
+
 	if (GetTicksDiff(current_check, last_check) <= DB_POLLSKIP) {
 		return true;
 	}
@@ -3899,15 +4044,19 @@ bool GFX_Events()
 #endif
 
 	SDL_Event event;
+
 	static auto last_check_joystick = GetTicks();
 	auto current_check_joystick     = GetTicks();
+
 	if (GetTicksDiff(current_check_joystick, last_check_joystick) > 20) {
 		last_check_joystick = current_check_joystick;
+
 		if (MAPPER_IsUsingJoysticks()) {
 			SDL_JoystickUpdate();
 		}
 		MAPPER_UpdateJoysticks();
 	}
+
 	while (SDL_PollEvent(&event)) {
 #if C_DEBUG
 		if (is_debugger_event(event)) {
@@ -3919,6 +4068,7 @@ bool GFX_Events()
 			handle_user_event(event);
 			continue;
 		}
+
 		switch (event.type) {
 		case SDL_DISPLAYEVENT:
 			switch (event.display.event) {
@@ -3932,6 +4082,7 @@ bool GFX_Events()
 			default: break;
 			};
 			break;
+
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
@@ -3941,6 +4092,7 @@ bool GFX_Events()
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
+
 #if C_OPENGL && defined(MACOSX)
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
@@ -4195,10 +4347,12 @@ bool GFX_Events()
 						case SDL_QUIT:
 							GFX_RequestExit(true);
 							break;
-						case SDL_WINDOWEVENT: // wait until
+						case SDL_WINDOWEVENT: // wait
+						                      // until
 						                      // we get
 						                      // window
-						                      // focus back
+						                      // focus
+						                      // back
 							if ((ev.window.event ==
 							     SDL_WINDOWEVENT_FOCUS_LOST) ||
 							    (ev.window.event ==
@@ -4234,14 +4388,16 @@ bool GFX_Events()
 								 * "release ALT"
 								 * command into
 								 * the keyboard
-								 * buffer we have
-								 * to do this,
+								 * buffer we
+								 * have to do
+								 * this,
 								 * otherwise ALT
 								 * will 'stick'
 								 * and cause
 								 * problems with
-								 * the app running
-								 * in the DOSBox.
+								 * the app
+								 * running in
+								 * the DOSBox.
 								 */
 								KEYBOARD_AddKey(KBD_leftalt,
 								                false);
@@ -4358,10 +4514,13 @@ void GFX_ShowMsg(const char* format, ...)
 static std::vector<std::string> get_sdl_texture_renderers()
 {
 	const int n = SDL_GetNumRenderDrivers();
+
 	std::vector<std::string> drivers;
 	drivers.reserve(n + 1);
 	drivers.push_back("auto");
+
 	SDL_RendererInfo info;
+
 	for (int i = 0; i < n; i++) {
 		if (SDL_GetRenderDriverInfo(i, &info)) {
 			continue;
@@ -4700,6 +4859,7 @@ static int edit_primary_config()
 
 	// Loop until one succeeds
 	const auto arguments = &control->arguments;
+
 	if (arguments->editconf) {
 		for (const auto& editor : *arguments->editconf) {
 			replace_with_process(editor);
@@ -4761,7 +4921,9 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	parameters.emplace_back("--waitpid");
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
+
 	bool first               = true;
+
 	for (const auto& arg : parameters) {
 		if (!first) {
 			command_line.push_back(' ');
@@ -4939,12 +5101,14 @@ static int erase_mapper_file()
 	}
 
 	constexpr auto success = 0;
+
 	if (unlink(path.string().c_str()) != success) {
 		fprintf(stderr,
 		        "Cannot delete mapper file '%s'",
 		        path.string().c_str());
 		return 1;
 	}
+
 	printf("Mapper file '%s' deleted.\n", path.string().c_str());
 	return 0;
 }
@@ -4956,6 +5120,7 @@ static void set_wm_class()
 #else
 #if !defined(WIN32) && !defined(MACOSX)
 	constexpr int overwrite = 0; // don't overwrite
+								 //
 	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
 	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
 #endif
