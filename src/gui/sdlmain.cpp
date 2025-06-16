@@ -259,7 +259,7 @@ static void get_opengl_proc_addresses()
 	        "glVertexAttribPointer");
 }
 
-static bool init_opengl_shader()
+static bool init_shader_gl()
 {
 	GLuint prog = 0;
 
@@ -2257,7 +2257,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		}
 
 		if (sdl.opengl.use_shader) {
-			if (!init_opengl_shader()) {
+			if (!init_shader_gl()) {
 				goto fallback_texture;
 			}
 		}
