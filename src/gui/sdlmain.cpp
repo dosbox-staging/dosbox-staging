@@ -947,7 +947,7 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 }
 
-void GFX_ForceFullscreenExit()
+static void exit_fullscreen()
 {
 	sdl.desktop.fullscreen = false;
 	GFX_ResetScreen();
@@ -4184,7 +4184,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 #ifdef WIN32
 		if (sdl.desktop.fullscreen) {
 			VGA_KillDrawing();
-			GFX_ForceFullscreenExit();
+			exit_fullscreen();
 		}
 #endif
 		apply_inactive_settings();
