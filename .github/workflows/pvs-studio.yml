@@ -29,7 +29,7 @@ jobs:
           submodules: false
 
       - name: Setup CMake
-        uses: lukka/get-cmake@ea004816823209b8d1211e47b216185caee12cc5 # v4.0.2
+        uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
       - name: Configure PVS-Studio repository
         run: |
