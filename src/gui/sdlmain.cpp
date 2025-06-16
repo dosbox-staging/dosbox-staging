@@ -255,7 +255,14 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
-// Create a GLSL shader object, load the shader source, and compile the shader.
+// Create a GLSL shader object, load the shader source, and compile the
+// shader.
+//
+// `type` is an OpenGL shader stage enum, either GL_VERTEX_SHADER or
+// GL_FRAGMENT_SHADER. Other shader types are not supported.
+//
+// Returns the compiled shader object, or zero on failure.
+//
 static GLuint build_shader_gl(GLenum type, const std::string& source)
 {
 	GLuint shader            = 0;
@@ -323,6 +330,13 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
+// Assemble an OpenGL shader program.
+//
+// Input GLSL source must contain both vertex and fragment stages inside their
+// respective preprocessor definitions.
+//
+// Returns a ready to use OpenGL shader program, or zero on failure.
+//
 static bool load_shader_gl(const std::string& source, GLuint& vertex_out,
                            GLuint& fragment_out)
 {
