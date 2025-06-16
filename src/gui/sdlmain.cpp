@@ -1859,7 +1859,7 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
 	}
 }
 
-static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
+static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 {
 	int window_width;
 	int window_height;
@@ -2204,7 +2204,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	case RenderingBackend::Texture: {
 	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
 
-		if (!SetupWindowScaled(RenderingBackend::Texture)) {
+		if (!setup_scaled_window(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
 			E_Exit("SDL: Failed to create window");
 		}
@@ -2355,7 +2355,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		                         FallbackWindowSize.x,
 		                         FallbackWindowSize.y);
 
-		SetupWindowScaled(RenderingBackend::OpenGl);
+		setup_scaled_window(RenderingBackend::OpenGl);
 
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
