@@ -308,9 +308,12 @@ static Section_prop* get_render_section()
 	return render_section;
 }
 
+// forward declaration
+static void render_init(Section* sec);
+
 void RENDER_Reinit()
 {
-	RENDER_Init(get_render_section());
+	render_init(get_render_section());
 }
 
 static void render_reset()
@@ -581,12 +584,12 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 
 			// We can't set the new shader name here yet because
 			// then the "shader changed" reinit path wouldn't be
-			// trigger in RENDER_Init()
+			// trigger in render_init()
 		} else {
 			setup_scan_and_pixel_doubling();
 
 			// We must set the new shader name here as we're
-			// bypassing a full render reinit (RENDER_Init() is the
+			// bypassing a full render reinit (render_init() is the
 			// only other place where 'render.current_shader_name'
 			// can be set).
 			render.current_shader_name = new_shader_name;
@@ -1248,7 +1251,7 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto changeable_at_runtime = true;
 
 	Section_prop* sec = conf->AddSection_prop("render",
-	                                          &RENDER_Init,
+	                                          &render_init,
 	                                          changeable_at_runtime);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
@@ -1313,7 +1316,7 @@ static bool handle_shader_changes()
 	return shader_changed;
 }
 
-void RENDER_Init(Section* sec)
+static void render_init(Section* sec)
 {
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
