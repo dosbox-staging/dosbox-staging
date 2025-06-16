@@ -1634,9 +1634,8 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	clean_up_sdl_resources();
-
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
+		clean_up_sdl_resources();
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
