@@ -208,6 +208,57 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer         = nullptr;
 #define glUseProgram              gl2::glUseProgram
 #define glVertexAttribPointer     gl2::glVertexAttribPointer
 
+static void get_opengl_proc_addresses()
+{
+	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
+
+	glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
+	        "glCompileShader");
+
+	glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
+	        "glCreateProgram");
+
+	glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
+
+	glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
+	        "glDeleteProgram");
+
+	glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
+
+	glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
+	        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
+
+	glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress(
+	        "glGetAttribLocation");
+
+	glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
+
+	glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress(
+	        "glGetProgramInfoLog");
+
+	glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
+
+	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress(
+	        "glGetShaderInfoLog");
+
+	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress(
+	        "glGetUniformLocation");
+
+	glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
+
+	glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
+	        "glShaderSource");
+
+	glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
+
+	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
+
+	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
+
+	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress(
+	        "glVertexAttribPointer");
+}
+
 #endif // C_OPENGL
 
 #ifdef WIN32
@@ -3469,62 +3520,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 			sdl.opengl.program_object = 0;
-			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
-			        "glAttachShader");
 
-			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
-			        "glCompileShader");
-
-			glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glCreateProgram");
-
-			glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress(
-			        "glCreateShader");
-
-			glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glDeleteProgram");
-
-			glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress(
-			        "glDeleteShader");
-
-			glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
-			        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
-
-			glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)
-			        SDL_GL_GetProcAddress("glGetAttribLocation");
-
-			glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress(
-			        "glGetProgramiv");
-
-			glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)
-			        SDL_GL_GetProcAddress("glGetProgramInfoLog");
-
-			glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress(
-			        "glGetShaderiv");
-
-			glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)
-			        SDL_GL_GetProcAddress("glGetShaderInfoLog");
-
-			glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)
-			        SDL_GL_GetProcAddress("glGetUniformLocation");
-
-			glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glLinkProgram");
-
-			glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
-			        "glShaderSource");
-
-			glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress(
-			        "glUniform2f");
-
-			glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress(
-			        "glUniform1i");
-
-			glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress(
-			        "glUseProgram");
-
-			glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)
-			        SDL_GL_GetProcAddress("glVertexAttribPointer");
+			get_opengl_proc_addresses();
 
 			sdl.opengl.use_shader =
 			        (glAttachShader && glCompileShader &&
