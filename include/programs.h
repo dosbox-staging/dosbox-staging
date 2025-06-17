@@ -18,6 +18,7 @@
 #include "console.h"
 #include "dos_inc.h"
 #include "help_util.h"
+#include "string_utils.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 
@@ -136,7 +137,8 @@ public:
 			return;
 		}
 
-		CONSOLE_Write(format, args...);
+		const auto str = format_str(format, args...);
+		CONSOLE_Write(str);
 	}
 
 	// TODO Only used by the unit tests, try to get rid of it later

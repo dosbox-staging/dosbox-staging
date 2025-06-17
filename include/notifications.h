@@ -174,8 +174,9 @@ void display_message([[maybe_unused]] const Level level, const Source source,
 
 	if (source == Source::Console && is_console_initialised) {
 		const auto& format = MSG_Get(message_key);
+		const auto str = format_str(format, args...);
 
-		CONSOLE_Write(convert_ansi_markup(format), args...);
+		CONSOLE_Write(convert_ansi_markup(str));
 		CONSOLE_Write("\n\n");
 	}
 }
