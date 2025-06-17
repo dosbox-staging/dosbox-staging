@@ -990,9 +990,9 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	                                                    dirs_with_models);
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
-
-		caller->WriteOut("\n");
+		caller->WriteOut("%s%s\n\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_MODELS").c_str());
 		return;
 	}
 
@@ -1026,7 +1026,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	};
 
 	// Print available MT-32 ROMs
-	caller->WriteOut("%s%s", Indent, MSG_Get("MT32_ROMS_LABEL"));
+	caller->WriteOut("%s%s", Indent, MSG_Get("MT32_ROMS_LABEL").c_str());
 
 	for (const auto& model : mt32_model_list) {
 		const auto display_name = model->GetVersion();
@@ -1037,7 +1037,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	caller->WriteOut("\n");
 
 	// Print available CM-32L ROMs
-	caller->WriteOut("%s%s", Indent, MSG_Get("CM32L_ROMS_LABEL"));
+	caller->WriteOut("%s%s", Indent, MSG_Get("CM32L_ROMS_LABEL").c_str());
 
 	for (const auto& model : cm32_model_list) {
 		const auto display_name = (model->GetName() == cm32ln_100_model.GetName()
@@ -1055,12 +1055,12 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	if (model_and_dir) {
 		caller->WriteOut("%s%s%s (%s)\n",
 		                 Indent,
-		                 MSG_Get("MT32_ACTIVE_MODEL_LABEL"),
+		                 MSG_Get("MT32_ACTIVE_MODEL_LABEL").c_str(),
 		                 model_and_dir->first->GetName(),
 		                 device->GetRomInfo().control_rom_description);
 
 		// Print the loaded ROM's directory
-		const std::string dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
+		const auto dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
 
 		const auto dir_max_length = INT10_GetTextColumns() -
 		                            (dir_label.length() +
@@ -1076,7 +1076,7 @@ void MT32_ListDevices(MidiDeviceMt32* device, Program* caller)
 	} else {
 		caller->WriteOut("%s%s\n",
 		                 Indent,
-		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
+		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE").c_str());
 	}
 
 	caller->WriteOut("\n");

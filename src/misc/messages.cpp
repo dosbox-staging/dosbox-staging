@@ -723,10 +723,10 @@ void MSG_Add(const std::string& message_key, const std::string& message)
 	}
 }
 
-const char* MSG_Get(const std::string& message_key)
+std::string MSG_Get(const std::string& message_key)
 {
 	if (!check_message_exists(message_key)) {
-		return MsgNotFound.c_str();
+		return MsgNotFound;
 	}
 
 	// Try to return the translated message converted to the current DOS code
@@ -735,40 +735,40 @@ const char* MSG_Get(const std::string& message_key)
 	    dictionary_translated.contains(message_key) &&
 	    dictionary_translated.at(message_key).IsValid()) {
 
-		return dictionary_translated.at(message_key).Get().c_str();
+		return dictionary_translated.at(message_key).Get();
 	}
 
 	// Fall back to English if any errors
 	if (!dictionary_english.at(message_key).IsValid()) {
-		return MsgNotValid.c_str();
+		return MsgNotValid;
 	}
-	return dictionary_english.at(message_key).Get().c_str();
+	return dictionary_english.at(message_key).Get();
 }
 
-const char* MSG_GetEnglishRaw(const std::string& message_key)
+std::string MSG_GetEnglishRaw(const std::string& message_key)
 {
 	if (!check_message_exists(message_key)) {
-		return MsgNotFound.c_str();
+		return MsgNotFound;
 	}
 
 	// Return English original in UTF-8 with the ANSI tags intact
 	if (!dictionary_english.at(message_key).IsValid()) {
-		return MsgNotValid.c_str();
+		return MsgNotValid;
 	}
-	return dictionary_english.at(message_key).GetRaw().c_str();
+	return dictionary_english.at(message_key).GetRaw();
 }
 
-const char* MSG_GetTranslatedRaw(const std::string& message_key)
+std::string MSG_GetTranslatedRaw(const std::string& message_key)
 {
 	if (!check_message_exists(message_key)) {
-		return MsgNotFound.c_str();
+		return MsgNotFound;
 	}
 
 	// Try to return the translated message in UTF-8 with the ANSI tags intact
 	if (dictionary_translated.contains(message_key) &&
 	    dictionary_translated.at(message_key).IsValid()) {
 
-		return dictionary_translated.at(message_key).GetRaw().c_str();
+		return dictionary_translated.at(message_key).GetRaw();
 	}
 
 	// Fall back to the English message if any errors

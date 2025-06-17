@@ -9,7 +9,9 @@
 void COREAUDIO_ListDevices([[maybe_unused]] MidiDeviceCoreAudio* device,
                            [[maybe_unused]] Program* caller)
 {
-	caller->WriteOut("  %s\n\n", MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
+	caller->WriteOut("  ");
+	caller->WriteOut(MSG_Get("MIDI_DEVICE_LIST_NOT_SUPPORTED"));
+	caller->WriteOut("\n\n");
 }
 
 #endif // C_COREAUDIO

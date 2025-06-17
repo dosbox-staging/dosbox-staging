@@ -332,7 +332,7 @@ std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_config_name(propname))) {
-		std::string help_text = MSG_GetTranslatedRaw(create_config_name(propname));
+		auto help_text = MSG_GetTranslatedRaw(create_config_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -1113,7 +1113,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	}
 
 	// Print start of config file and add a return to improve readibility
-	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO"), DOSBOX_VERSION);
+	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
@@ -1173,7 +1173,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetTranslatedRaw(values_msg_key));
+					        MSG_GetTranslatedRaw(values_msg_key).c_str());
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -1208,7 +1208,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr   = MSG_GetTranslatedRaw(temp);
+			const char* helpstr   = MSG_GetTranslatedRaw(temp).c_str();
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
@@ -1807,7 +1807,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			pvars.insert(pvars.begin(), std::string(sec->GetName()));
 		} else {
 			safe_sprintf(return_msg,
-			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
 			             pvars[0].c_str());
 			return return_msg;
 		}
@@ -1833,7 +1833,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 				             std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
-				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
 				             pvars[0].c_str());
 				return return_msg;
 			}
@@ -1842,7 +1842,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			// still be gus have a look at the second parameter
 			if (pvars.size() < 2) {
 				safe_strcpy(return_msg,
-				            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
 				return return_msg;
 			}
 
@@ -1883,7 +1883,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	}
 
 	if (pvars.size() < 3) {
-		safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+		safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
 		return return_msg;
 	}
 
@@ -1891,7 +1891,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 	if (!sec2) {
 		safe_sprintf(return_msg,
-		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY").c_str(),
 		             pvars[1].c_str(),
 		             pvars[0].c_str());
 		return return_msg;

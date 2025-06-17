@@ -305,7 +305,7 @@ MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 void MoreOutputBase::ClearScreenIfRequested()
 {
 	if (has_option_clear) {
-		WriteOut(ansi_clear_screen.c_str());
+		WriteOut(ansi_clear_screen);
 		screen_line_counter = 0;
 	}
 }
@@ -327,6 +327,7 @@ MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
 		const bool use_short_prompt = max_columns < 80;
 		if (prompt_type_line_num) {
 			WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_LINE"), line_num);
+
 		} else if (has_multiple_files) {
 			WriteOut(MSG_Get(use_short_prompt
 			                         ? "PROGRAM_MORE_PROMPT_SHORT"
@@ -334,7 +335,7 @@ MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
 		} else {
 			if (lines_in_stream) {
 				const auto tmp = static_cast<float>(line_num) /
-			                     static_cast<float>(lines_in_stream);
+				                 static_cast<float>(lines_in_stream);
 				WriteOut(MSG_Get(use_short_prompt
 				                         ? "PROGRAM_MORE_PROMPT_SHORT_PERCENT"
 				                         : "PROGRAM_MORE_PROMPT_PERCENT"),
@@ -694,7 +695,7 @@ std::string MoreOutputFiles::GetShortPath(const std::string &file_path,
 	// We need to make sure the path and file name fits within
 	// the designated space - if not, we have to shorten it.
 
-	const auto max_len = GetMaxColumns() - std::strlen(MSG_Get(msg_id)) + 1;
+	const auto max_len = GetMaxColumns() - MSG_Get(msg_id).size() + 1;
 	return shorten_path(file_path, max_len);
 }
 
@@ -830,20 +831,6 @@ bool MoreOutputFiles::GetCharacterRaw(char& code, bool& is_last_character)
 
 MoreOutputStrings::MoreOutputStrings(Program &program) : MoreOutputBase(program)
 {}
-
-void MoreOutputStrings::AddString(const char *format, ...)
-{
-	constexpr size_t buf_len = 16 * 1024;
-
-	char buf[buf_len];
-	va_list msg;
-
-	va_start(msg, format);
-	vsnprintf(buf, buf_len - 1, format, msg);
-	va_end(msg);
-
-	input_strings += std::string(buf);
-}
 
 void MoreOutputStrings::ProcessEndOfLines()
 {

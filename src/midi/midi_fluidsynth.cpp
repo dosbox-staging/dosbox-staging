@@ -1053,7 +1053,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 			                               line.c_str(),
 			                               Reset);
 
-			caller->WriteOut(convert_ansi_markup(output).c_str());
+			caller->WriteOut(convert_ansi_markup(output));
 		} else {
 			caller->WriteOut("%s%s\n", Indent, line.c_str());
 		}
@@ -1097,7 +1097,9 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	          });
 
 	if (sf_files.empty()) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS"));
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS").c_str());
 	} else {
 		for (const auto& path : sf_files) {
 			write_line(path);

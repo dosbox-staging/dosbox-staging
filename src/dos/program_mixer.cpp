@@ -890,7 +890,7 @@ void MIXER::ShowMixerStatus()
 	                        const std::string& xfeed,
 	                        const std::string& reverb,
 	                        const std::string& chorus) {
-		WriteOut(column_layout.c_str(),
+		WriteOut(column_layout,
 		         name.c_str(),
 		         static_cast<double>(gain_to_percentage(volume_as_gain.left)),
 		         static_cast<double>(gain_to_percentage(volume_as_gain.right)),
@@ -902,7 +902,8 @@ void MIXER::ShowMixerStatus()
 		         chorus.c_str());
 	};
 
-	WriteOut("%s\n", MSG_Get("SHELL_CMD_MIXER_HEADER_LABELS"));
+	WriteOut(MSG_Get("SHELL_CMD_MIXER_HEADER_LABELS"));
+	WriteOut("\n");
 
 	const auto off_value      = MSG_Get("SHELL_CMD_MIXER_CHANNEL_OFF");
 	constexpr auto none_value = "-";

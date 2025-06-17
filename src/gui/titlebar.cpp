@@ -227,7 +227,7 @@ static std::string get_mouse_hint_full()
 
 	auto create_hint_str = [&](const char* requested_name) {
 		safe_sprintf(hint_buffer,
-		             MSG_GetTranslatedRaw(requested_name),
+		             MSG_GetTranslatedRaw(requested_name).c_str(),
 		             PRIMARY_MOD_NAME);
 		return hint_buffer;
 	};

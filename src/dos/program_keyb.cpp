@@ -99,7 +99,7 @@ void KEYB::ListKeyboardLayouts()
 	const auto message = DOS_GenerateListKeyboardLayoutsMessage(for_keyb_command);
 
 	MoreOutputStrings output(*this);
-	output.AddString(message.c_str());
+	output.AddString(message);
 	output.Display();
 }
 
@@ -215,7 +215,7 @@ void KEYB::WriteOutSuccess()
 
 	auto print_message = [&]() {
 		message += "\n";
-		WriteOut(convert_ansi_markup(message).c_str());
+		WriteOut(convert_ansi_markup(message));
 	};
 
 	const auto space_layout = show_layout ? layout.length() + 2 : 0;
