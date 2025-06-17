@@ -183,11 +183,14 @@ struct RenderedImage {
 
 	void free()
 	{
-		delete[] image_data;
-		image_data = nullptr;
-
-		delete[] palette_data;
-		palette_data = nullptr;
+		if (image_data) {
+			delete[] image_data;
+			image_data = nullptr;
+		}
+		if (palette_data) {
+			delete[] palette_data;
+			palette_data = nullptr;
+		}
 	}
 };
 
