@@ -558,7 +558,7 @@ static std::string get_output_header(const char* header_msg_id,
 	} else {
 		std::string header_str = MSG_GetForHost(header_msg_id);
 		return std::string("\n") + header_str.c_str() + "\n" +
-		       std::string(header_str.size(), '-') + "\n\n";
+		       std::string(length_utf8(header_str), '-') + "\n\n";
 	}
 }
 
