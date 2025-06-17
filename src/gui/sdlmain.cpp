@@ -1611,95 +1611,40 @@ static void update_frame_texture()
 	                  sdl.texture.last_framebuf->pitch);
 }
 
-static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
-{
-	// This should be impossible, but maybe the user is hitting the screen
-	// capture hotkey on startup even before DOS comes alive.
-	if (!sdl.maybe_video_mode) {
-		LOG_WARNING(
-		        "SDL: The DOS video mode needs to be set "
-		        "before we can get the rendered image");
-		return {};
-	}
-
-	RenderedImage image = {};
-
-	// The draw rect can extends beyond the bounds of the window or the
-	// screen in fullscreen when we're "zooming into" the DOS content in
-	// `relative` viewport mode. But rendered captures should always capture
-	// what we see on the screen, so only the visible part of the enlarged
-	// image. Therefore, we need to clip the draw rect to the bounds of the
-	// canvas (the total visible area of the window or screen), and only
-	// capture the resulting output rectangle.
-
-	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
-	canvas_rect_px.x    = 0.0f;
-	canvas_rect_px.y    = 0.0f;
-
-	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
-	        to_rect(sdl.draw_rect_px));
-
-	auto allocate_image = [&]() {
-		image.params.width              = iroundf(output_rect_px.w);
-		image.params.height             = iroundf(output_rect_px.h);
-		image.params.double_width       = false;
-		image.params.double_height      = false;
-		image.params.pixel_aspect_ratio = {1};
-		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
-
-		assert(sdl.maybe_video_mode);
-		image.params.video_mode = *sdl.maybe_video_mode;
-
-		image.is_flipped_vertically = false;
-
-		image.pitch = check_cast<uint16_t>(
-		        image.params.width *
-		        (get_bits_per_pixel(image.params.pixel_format) / 8));
-
-		image.palette_data = nullptr;
-
-		const auto image_size_bytes = check_cast<uint32_t>(
-		        image.params.height * image.pitch);
-		image.image_data = new uint8_t[image_size_bytes];
-	};
-
 #if C_OPENGL
-	// Get the OpenGL-renderer surface
-	// -------------------------------
-	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		glReadBuffer(GL_BACK);
+static bool read_backbuffer_gl(DosBox::Rect output_rect_px, RenderedImage& image_out)
+{
+	glReadBuffer(GL_BACK);
 
-		// Alignment is 4 by default which works fine when using the
-		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
-		// to be able to use the GL_BGR format in order to conserve
-		// memory. This should not cause any slowdowns whatsoever.
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	// Alignment is 4 by default which works fine when using the
+	// GL_BGRA pixel format with glReadPixels(). We need to set it 1
+	// to be able to use the GL_BGR format in order to conserve
+	// memory. This should not cause any slowdowns whatsoever.
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		allocate_image();
+	glReadPixels(iroundf(output_rect_px.x),
+	             iroundf(output_rect_px.y),
+	             image_out.params.width,
+	             image_out.params.height,
+	             GL_BGR,
+	             GL_UNSIGNED_BYTE,
+	             image_out.image_data);
 
-		glReadPixels(iroundf(output_rect_px.x),
-		             iroundf(output_rect_px.y),
-		             image.params.width,
-		             image.params.height,
-		             GL_BGR,
-		             GL_UNSIGNED_BYTE,
-		             image.image_data);
-
-		image.is_flipped_vertically = true;
-		return image;
-	}
+	image_out.is_flipped_vertically = true;
+	return true;
+}
 #endif
 
-	// Get the SDL texture-renderer surface
-	// ------------------------------------
+static bool read_backbuffer_sdl_texture(DosBox::Rect output_rect_px,
+                                        RenderedImage& image_out)
+{
+
 	const auto renderer = SDL_GetRenderer(sdl.window);
 	if (!renderer) {
 		LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
 		            SDL_GetError());
-		return {};
+		return false;
 	}
-
-	allocate_image();
 
 	// SDL2 pixel formats are a bit weird coming from OpenGL...
 	// You would think SDL_PIXELFORMAT_BGR888 is an alias of
@@ -1721,16 +1666,84 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	if (SDL_RenderReadPixels(renderer,
 	                         &read_rect_px,
 	                         SDL_PIXELFORMAT_BGR24,
-	                         image.image_data,
-	                         image.pitch) != 0) {
+	                         image_out.image_data,
+	                         image_out.pitch) != 0) {
 
 		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 		            SDL_GetError());
 
-		delete[] image.image_data;
+		return false;
+	}
+	return true;
+}
+
+static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
+{
+	// This should be impossible, but maybe the user is hitting the screen
+	// capture hotkey on startup even before DOS comes alive.
+	if (!sdl.maybe_video_mode) {
+		LOG_WARNING(
+		        "SDL: The DOS video mode needs to be set "
+		        "before we can get the rendered image");
 		return {};
 	}
-	return image;
+
+	// The draw rect can extends beyond the bounds of the window or the
+	// screen in fullscreen when we're "zooming into" the DOS content in
+	// `relative` viewport mode. But rendered captures should always capture
+	// what we see on the screen, so only the visible part of the enlarged
+	// image. Therefore, we need to clip the draw rect to the bounds of the
+	// canvas (the total visible area of the window or screen), and only
+	// capture the resulting output rectangle.
+
+	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	canvas_rect_px.x    = 0.0f;
+	canvas_rect_px.y    = 0.0f;
+
+	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
+	        to_rect(sdl.draw_rect_px));
+
+	RenderedImage image = {};
+
+	image.params.width              = iroundf(output_rect_px.w);
+	image.params.height             = iroundf(output_rect_px.h);
+	image.params.double_width       = false;
+	image.params.double_height      = false;
+	image.params.pixel_aspect_ratio = {1};
+	image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
+
+	assert(sdl.maybe_video_mode);
+	image.params.video_mode = *sdl.maybe_video_mode;
+
+	image.is_flipped_vertically = false;
+
+	image.pitch = image.params.width *
+	              (get_bits_per_pixel(image.params.pixel_format) / 8);
+
+	image.palette_data = nullptr;
+
+	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
+	                                                   image.pitch);
+	image.image_data            = new uint8_t[image_size_bytes];
+
+	switch (sdl.rendering_backend) {
+#if C_OPENGL
+	case RenderingBackend::OpenGl:
+		if (!read_backbuffer_gl(output_rect_px, image)) {
+			image.free();
+			return {};
+		}
+		return image;
+#endif
+	case RenderingBackend::Texture:
+		if (!read_backbuffer_sdl_texture(output_rect_px, image)) {
+			image.free();
+			return {};
+		}
+		return image;
+
+	default: assertm(false, "Invalid RenderingBackend value");
+	}
 }
 
 static void present_frame_texture()
