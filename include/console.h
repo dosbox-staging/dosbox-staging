@@ -25,20 +25,7 @@
 
 #include "string_utils.h"
 
-void CONSOLE_RawWrite(const std::string_view output);
-
-template <typename... Args>
-void CONSOLE_Write(const char* format, const Args&... args)
-{
-	const auto str = format_str(format, args...);
-	CONSOLE_RawWrite(str);
-}
-
-template <typename... Args>
-void CONSOLE_Write(const std::string& format, const Args&... args)
-{
-	CONSOLE_Write(format.c_str(), args...);
-}
+void CONSOLE_Write(const std::string_view output);
 
 void CONSOLE_ResetLastWrittenChar(char c);
 void CONSOLE_InjectMissingNewline();
