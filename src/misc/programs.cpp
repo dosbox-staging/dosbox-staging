@@ -212,7 +212,7 @@ void Program::WriteOut(const char* format, const char* arguments)
 	char buf[WriteOutBufSize];
 	std::snprintf(buf, WriteOutBufSize, format, arguments);
 
-	CONSOLE_RawWrite(buf);
+	CONSOLE_Write(buf);
 }
 
 void Program::WriteOut_NoParsing(const char* str)
@@ -221,7 +221,7 @@ void Program::WriteOut_NoParsing(const char* str)
 		return;
 	}
 
-	CONSOLE_RawWrite(str);
+	CONSOLE_Write(str);
 }
 
 bool Program::HelpRequested()
