@@ -359,7 +359,7 @@ void DOS_Shell::PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_
 				if (cat != HELP_Category::Dosbox || req_filter == HELP_Filter::Common) {
 					output.AddString("\n");
 				}
-				output.AddString(format_header, HELP_CategoryHeading(cat));
+				output.AddString(format_header, HELP_CategoryHeading(cat).c_str());
 				category_started = true;
 			}
 			std::string name(s.first);
@@ -1781,7 +1781,7 @@ void DOS_Shell::CMD_DATE(char *args)
 	reg_ah = 0x2a; // get system date
 	CALLBACK_RunRealInt(0x21);
 
-	const char *datestring = MSG_Get("SHELL_CMD_DATE_DAYS");
+	const char *datestring = MSG_Get("SHELL_CMD_DATE_DAYS").c_str();
 	uint32_t length;
 	char day[6] = {0};
 	if (sscanf(datestring, "%u", &length) && (length < 5) &&

@@ -42,7 +42,7 @@ void CLIP::Run()
 	DOS_SeekFile(input_handle, &input_size, DOS_SEEK_END);
 	if (input_size == 0) {
 		// We don't - print out the clipboard content and exit
-		WriteOut(CLIPBOARD_PasteText().c_str());
+		WriteOut(CLIPBOARD_PasteText());
 		return;
 	}
 

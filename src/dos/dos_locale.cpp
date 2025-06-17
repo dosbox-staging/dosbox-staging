@@ -552,9 +552,10 @@ std::string DOS_GenerateListCountriesMessage()
 	for (auto it = LocaleData::CountryInfo.begin();
 	     it != LocaleData::CountryInfo.end();
 	     ++it) {
-		message += format_str("  %-5d - %s\n",
-		                      enum_val(it->first),
-		                      MSG_GetTranslatedRaw(it->second.GetMsgName()));
+		message += format_str(
+		        "  %-5d - %s\n",
+		        enum_val(it->first),
+		        MSG_GetTranslatedRaw(it->second.GetMsgName()).c_str());
 	}
 
 	message += "\n";

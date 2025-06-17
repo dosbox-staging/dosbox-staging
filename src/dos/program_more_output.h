@@ -8,6 +8,8 @@
 
 #include <string>
 
+#include "string_utils.h"
+
 // ***************************************************************************
 // Base class, only for internal usage
 // ***************************************************************************
@@ -87,12 +89,12 @@ protected:
 	// Wrappers for Program:: methods
 
 	template <typename... Arguments>
-	void WriteOut(const char *format, Arguments... arguments)
+	void WriteOut(const std::string& format, Arguments... arguments)
 	{
 		program.WriteOut(format, arguments...);
 	}
 
-	bool SuppressWriteOut(const char *format)
+	bool SuppressWriteOut(const std::string& format)
 	{
 		return program.SuppressWriteOut(format);
 	}
@@ -173,7 +175,12 @@ class MoreOutputStrings final : public MoreOutputBase {
 public:
 	MoreOutputStrings(Program &program);
 
-	void AddString(const char *format, ...);
+	template <typename... Args>
+	void AddString(const std::string& format, const Args&... args)
+	{
+		input_strings += format_str(format, args...);
+	}
+
 	void Display() override;
 
 	// To be used when input comes from a potentially slow I/O, each next
