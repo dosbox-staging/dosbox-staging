@@ -1063,8 +1063,8 @@ bool Section_prop::HandleInputline(const std::string& line)
 			LOG_WARNING("CONFIG: %s",
 			            strip_ansi_markup(p->GetHelpForHost()).c_str());
 
-			CONSOLE_Write("%s\n\n",
-			              convert_ansi_markup(p->GetHelp()).c_str());
+			CONSOLE_Write(convert_ansi_markup(p->GetHelp()));
+			CONSOLE_Write("\n\n");
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;

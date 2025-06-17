@@ -26,7 +26,7 @@ CHECK_NARROWING();
 
 static uint8_t last_written_character = '\n';
 
-void CONSOLE_RawWrite(std::string_view output)
+void CONSOLE_Write(std::string_view output)
 {
 	dos.internal_output = true;
 
