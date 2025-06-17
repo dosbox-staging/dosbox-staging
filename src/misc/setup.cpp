@@ -82,7 +82,7 @@ bool Value::operator==(const Value& other) const
 	case V_DOUBLE: return _double == other._double;
 	case V_STRING: return _string == other._string;
 	default:
-		LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
+		LOG_ERR("CONFIG: Comparing stuff that doesn't make sense");
 		break;
 	}
 	return false;
@@ -115,7 +115,7 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 	case V_NONE:
 	case V_CURRENT:
 	default:
-		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
+		LOG_ERR("CONFIG: Unhandled type when setting value: '%s'",
 		        in.c_str());
 		is_valid = false;
 		break;
@@ -1772,7 +1772,7 @@ Verbosity Config::GetStartupVerbosity() const
 	}
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
-	                      "SETUP",
+	                      "CONFIG",
 	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "
 	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
 	                      user_choice.c_str());
