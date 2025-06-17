@@ -167,7 +167,9 @@ bool Value::SetBool(const std::string& in)
 	auto in_lowercase = in;
 	lowcase(in_lowercase);
 	const auto parsed = parse_bool_setting(in_lowercase);
-	_bool             = parsed ? *parsed : false;
+
+	_bool = parsed ? *parsed : false;
+
 	return parsed.has_value();
 }
 
@@ -641,7 +643,9 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		if (loc != std::string::npos) {
 			local.erase(0, loc);
 		}
-		loc            = local.find_first_of(separator);
+
+		loc = local.find_first_of(separator);
+
 		std::string in = "";
 
 		// When i == number_of_properties add the total line. (makes
@@ -1158,7 +1162,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 		Section_prop* sec = dynamic_cast<Section_prop*>(*tel);
 		if (sec) {
 			Property* p;
-			int i           = 0;
+			int i = 0;
+
 			size_t maxwidth = 0;
 
 			while ((p = sec->Get_prop(i++))) {
@@ -1206,7 +1211,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetTranslatedRaw(values_msg_key).c_str());
+					        MSG_GetTranslatedRaw(values_msg_key)
+					                .c_str());
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -1243,7 +1249,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr   = MSG_GetTranslatedRaw(temp).c_str();
+			const char* helpstr = MSG_GetTranslatedRaw(temp).c_str();
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
@@ -1281,7 +1287,9 @@ Section_prop* Config::AddInactiveSectionProp(const char* section_name)
 	        "Only letters and digits are allowed in section name");
 
 	constexpr bool inactive = false;
-	auto s        = std::make_unique<Section_prop>(section_name, inactive);
+
+	auto s = std::make_unique<Section_prop>(section_name, inactive);
+
 	auto* section = s.get();
 	sectionlist.push_back(s.release());
 	return section;
@@ -1331,12 +1339,13 @@ Config& Config::operator=(Config&& source) noexcept
 	}
 
 	// Move each member
-	cmdline              = std::move(source.cmdline);
-	sectionlist          = std::move(source.sectionlist);
-	_start_function      = std::move(source._start_function);
-	secure_mode          = std::move(source.secure_mode);
-	startup_params       = std::move(source.startup_params);
-	configfiles          = std::move(source.configfiles);
+	cmdline         = std::move(source.cmdline);
+	sectionlist     = std::move(source.sectionlist);
+	_start_function = std::move(source._start_function);
+	secure_mode     = std::move(source.secure_mode);
+	startup_params  = std::move(source.startup_params);
+	configfiles     = std::move(source.configfiles);
+
 	configFilesCanonical = std::move(source.configFilesCanonical);
 
 	overwritten_autoexec_section = std::move(source.overwritten_autoexec_section);
@@ -1647,7 +1656,8 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 			continue;
 		}
 
-		const std::string rest       = (env_var + 7);
+		const std::string rest = (env_var + 7);
+
 		const auto section_delimiter = rest.find('_');
 		if (section_delimiter == std::string::npos) {
 			continue;
@@ -1871,7 +1881,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 				             std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
-				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
+				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR")
+				                     .c_str(),
 				             pvars[0].c_str());
 				return return_msg;
 			}
@@ -1920,7 +1931,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	}
 
 	if (pvars.size() < 3) {
-		safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
+		safe_strcpy(return_msg,
+		            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
 		return return_msg;
 	}
 
@@ -1966,7 +1978,7 @@ void Config::ParseArguments()
 	arguments.lang    = cmdline->FindRemoveStringArgument("lang");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
-	arguments.socket = cmdline->FindRemoveIntArgument("socket");
+	arguments.socket   = cmdline->FindRemoveIntArgument("socket");
 	arguments.wait_pid = cmdline->FindRemoveIntArgument("waitpid");
 
 	arguments.conf = cmdline->FindRemoveVectorArgument("conf");
