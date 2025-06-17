@@ -522,18 +522,19 @@ std::unique_ptr<Config> specify_drive_conf()
 	auto conf = std::make_unique<Config>();
 
 	// Define the [drive] section
-	constexpr auto changeable_at_runtime = false;
-	const auto prop = conf->AddSection_prop("drive", nullptr, changeable_at_runtime);
+	constexpr auto ChangeableAtRuntime = false;
+	const AutoMountSettings defaults   = {};
+	const auto prop = conf->AddSection_prop("drive", nullptr, ChangeableAtRuntime);
 
 	// Define the allowed keys and types
-	constexpr auto on_startup = Property::Changeable::OnlyAtStart;
-	prop->Add_string("type", on_startup, "")
+	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
+	prop->Add_string("type", OnStartup, defaults.type.c_str())
 	        ->Set_values({"dir", "floppy", "cdrom", "overlay"});
-	prop->Add_string("label", on_startup, "");
-	prop->Add_string("path", on_startup, "");
-	prop->Add_string("override_drive", on_startup, "");
-	prop->Add_bool("verbose", on_startup, true);
-	prop->Add_bool("readonly", on_startup, false);
+	prop->Add_string("label", OnStartup, defaults.label.c_str());
+	prop->Add_string("path", OnStartup, defaults.path.c_str());
+	prop->Add_string("override_drive", OnStartup, defaults.override_drive.c_str());
+	prop->Add_bool("verbose", OnStartup, defaults.verbose);
+	prop->Add_bool("readonly", OnStartup, defaults.readonly);
 
 	return conf;
 }
