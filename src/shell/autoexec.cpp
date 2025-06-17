@@ -564,7 +564,7 @@ std::optional<AutoMountSettings> parse_drive_conf(const std_fs::path& conf_path)
 		settings.override_drive = override_drive;
 	} else if (!override_drive.empty()) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid",
-		        conf_path.c_str(),
+		        conf_path.string().c_str(),
 		        override_drive.c_str());
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
@@ -624,7 +624,7 @@ std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
 	for (const auto& entry : std_fs::directory_iterator(drive_path)) {
 		if (entry.exists() && entry.is_regular_file()) {
 			const auto& path = entry.path();
-			std::string ext  = path.extension();
+			std::string ext  = path.extension().string();
 			lowcase(ext);
 			if (std::ranges::find(extensions, ext) != extensions.end()) {
 				paths.push_back(path);
@@ -632,7 +632,9 @@ std::vector<std_fs::path> get_files_by_ext(const std_fs::path& drive_path,
 		}
 	}
 
-	std::ranges::sort(paths, natural_compare);
+	std::ranges::sort(paths, [](const std_fs::path& a, const std_fs::path& b) {
+		return natural_compare(a.filename().string(), b.filename().string());
+	});
 
 	return paths;
 }
