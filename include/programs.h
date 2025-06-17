@@ -130,7 +130,7 @@ public:
 
 	// printf to DOS stdout
 	template <typename... Args>
-	void WriteOut(const char* format, const Args&... args)
+	void WriteOut(const std::string& format, const Args&... args)
 	{
 		if (SuppressWriteOut(format)) {
 			return;
@@ -140,13 +140,13 @@ public:
 	}
 
 	// TODO Only used by the unit tests, try to get rid of it later
-	virtual void WriteOut(const char* format, const char* arguments);
+	virtual void WriteOut(const std::string& format, const char* arguments);
 
 	// Write string to DOS stdout
-	void WriteOut_NoParsing(const char* str);
+	void WriteOut_NoParsing(const std::string& str);
 
 	// Prevent writing to DOS stdout
-	bool SuppressWriteOut(const char* format);
+	bool SuppressWriteOut(const std::string& format) const;
 
 	void InjectMissingNewline();
 	void ChangeToLongCmd();

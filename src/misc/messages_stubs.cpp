@@ -10,17 +10,17 @@ void MSG_NotifyNewCodePage() {}
 
 void MSG_Add(const std::string&, const std::string&) {}
 
-const char* MSG_Get(const std::string&)
+std::string MSG_Get(const std::string&)
 {
 	return {};
 }
 
-const char* MSG_GetEnglishRaw(const std::string&)
+std::string MSG_GetEnglishRaw(const std::string&)
 {
 	return {};
 }
 
-const char* MSG_GetTranslatedRaw(const std::string&)
+std::string MSG_GetTranslatedRaw(const std::string&)
 {
 	return {};
 }

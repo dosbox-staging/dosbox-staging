@@ -29,7 +29,7 @@ void MSG_Add(const std::string& name, const std::string& message);
  *
  * Use `CONSOLE_Write()` to output the message to the DOS console.
  */
-const char* MSG_Get(const std::string& message_key);
+std::string MSG_Get(const std::string& message_key);
 
 /*
  * Get the original English message in UTF-8.
@@ -40,7 +40,7 @@ const char* MSG_Get(const std::string& message_key);
  *
  * Returns an error message if an error occured.
  */
-const char* MSG_GetEnglishRaw(const std::string& message_key);
+std::string MSG_GetEnglishRaw(const std::string& message_key);
 
 /*
  * Get the translated message in UTF-8.
@@ -52,7 +52,7 @@ const char* MSG_GetEnglishRaw(const std::string& message_key);
  *
  * Returns an error message if an error occured.
  */
-const char* MSG_GetTranslatedRaw(const std::string& message_key);
+std::string MSG_GetTranslatedRaw(const std::string& message_key);
 
 /*
  * Return true if a message with this key exists.

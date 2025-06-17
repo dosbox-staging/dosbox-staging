@@ -10,7 +10,7 @@
 
 Bitu ZDRIVE_NUM = 25;
 
-const char *UnmountHelper(char umount)
+std::string UnmountHelper(char umount)
 {
 	const char drive_id = toupper(umount);
 	const bool using_drive_number = (drive_id >= '0' && drive_id <= '3');

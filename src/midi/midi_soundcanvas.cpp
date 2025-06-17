@@ -695,7 +695,9 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	}
 
 	if (available_models.empty()) {
-		caller->WriteOut("%s%s\n\n", Indent, MSG_Get("MIDI_DEVICE_NO_MODELS"));
+		caller->WriteOut("%s%s\n\n",
+		                 Indent,
+		                 MSG_Get("MIDI_DEVICE_NO_MODELS").c_str());
 		return;
 	}
 
@@ -744,7 +746,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	};
 
 	// Print available Sound Canvas models
-	caller->WriteOut("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL"));
+	caller->WriteOut("%s%s", Indent, MSG_Get("SC55_MODELS_LABEL").c_str());
 
 	// Display order, from old to new
 	const std::vector<const SynthModel*> models_old_to_new = {&sc55_100_model,
@@ -769,12 +771,12 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	if (active_sc_model) {
 		caller->WriteOut("%s%s%s\n",
 		                 Indent,
-		                 MSG_Get("SOUNDCANVAS_ACTIVE_MODEL_LABEL"),
+		                 MSG_Get("SOUNDCANVAS_ACTIVE_MODEL_LABEL").c_str(),
 		                 (*active_sc_model)->display_name_long);
 	} else {
 		caller->WriteOut("%s%s\n",
 		                 Indent,
-		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE"));
+		                 MSG_Get("MIDI_DEVICE_NO_MODEL_ACTIVE").c_str());
 	}
 
 	caller->WriteOut("\n");

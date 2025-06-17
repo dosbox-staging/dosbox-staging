@@ -340,7 +340,7 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 	size_t indent_size_1 = 0;
 	size_t indent_size_2 = 0;
 	if (setver_table.is_global_version_set) {
-		indent_size_1 = strlen(MSG_Get("PROGRAM_SETVER_GLOBAL"));
+		indent_size_1 = MSG_Get("PROGRAM_SETVER_GLOBAL").length();
 	}
 	for (const auto& [name, version] : setver_table.by_file_name) {
 		indent_size_1 = std::max(indent_size_1, name.length());
@@ -373,7 +373,8 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 	if (setver_table.is_global_version_set) {
 		if (has_arg_batch) {
 			output.AddString(":: %s\n",
-			                 MSG_Get("PROGRAM_SETVER_BATCH_GLOBAL"));
+			                 MSG_Get("PROGRAM_SETVER_BATCH_GLOBAL").c_str());
+
 			output.AddString("%s%d.%02d /g /q\n",
 			                 setver_command.c_str(),
 			                 setver_table.version_global.major,
@@ -426,10 +427,11 @@ void SETVER::CommandPrintAll(const bool has_arg_batch, const bool has_arg_paged)
 
 	print(setver_table.by_file_name,
 	      indent_size_1,
-	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_NAME"));
+	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_NAME").c_str());
+
 	print(setver_table.by_file_path,
 	      indent_size_2,
-	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_PATH"));
+	      MSG_Get("PROGRAM_SETVER_BATCH_BY_FILE_PATH").c_str());
 
 	// Display the final result
 

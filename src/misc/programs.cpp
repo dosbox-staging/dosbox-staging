@@ -165,7 +165,7 @@ void Program::ChangeToLongCmd()
 	full_arguments.assign("");
 }
 
-bool Program::SuppressWriteOut(const char* format)
+bool Program::SuppressWriteOut(const std::string& format) const
 {
 	// Have we encountered an executable thus far?
 	static bool encountered_executable = false;
@@ -188,19 +188,19 @@ bool Program::SuppressWriteOut(const char* format)
 }
 
 // TODO Only used by the unit tests, try to get rid of it later
-void Program::WriteOut(const char* format, const char* arguments)
+void Program::WriteOut(const std::string& format, const char* arguments)
 {
 	if (SuppressWriteOut(format)) {
 		return;
 	}
 
 	char buf[WriteOutBufSize];
-	std::snprintf(buf, WriteOutBufSize, format, arguments);
+	std::snprintf(buf, WriteOutBufSize, format.c_str(), arguments);
 
 	CONSOLE_RawWrite(buf);
 }
 
-void Program::WriteOut_NoParsing(const char* str)
+void Program::WriteOut_NoParsing(const std::string& str)
 {
 	if (SuppressWriteOut(str)) {
 		return;
@@ -297,7 +297,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				         pvars[0].c_str());
 				return;
 			}
-			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+			pvars.emplace(pvars.begin(), sec->GetName());
 		}
 		break;
 	}
@@ -342,7 +342,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	if (psec == nullptr) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
-		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
+		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP").c_str());
 		output.AddString("\n");
 		output.Display();
 		return;
@@ -426,7 +426,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					output.AddString("\n");
 				}
 
-				output.AddString(p->GetHelp().c_str());
+				output.AddString(p->GetHelp());
 				output.AddString("\n\n");
 
 				auto write_last_newline = false;
