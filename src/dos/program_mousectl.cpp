@@ -210,13 +210,13 @@ const char *MOUSECTL::GetMapStatusStr(const MouseMapStatus map_status)
 {
 	switch (map_status) {
 	case MouseMapStatus::HostPointer:
-		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_HOST");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_HOST").c_str();
 	case MouseMapStatus::Mapped:
-		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED").c_str();
 	case MouseMapStatus::Disconnected:
-		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED").c_str();
 	case MouseMapStatus::Disabled:
-		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED");
+		return MSG_Get("PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED").c_str();
 	default:
 		assert(false); // missing implementation
 		return nullptr;
@@ -422,7 +422,7 @@ bool MOUSECTL::CmdMap()
 	WriteOut("\n\n");
 
 	for (const auto &interface_id : list_ids) {
-		WriteOut(convert_ansi_markup("[color=light-cyan]%-4s[reset]   ?").c_str(),
+		WriteOut(convert_ansi_markup("[color=light-cyan]%-4s[reset]   ?"),
 		         MouseControlAPI::GetInterfaceNameStr(interface_id).c_str());
 
 		uint8_t device_idx = 0;
@@ -435,7 +435,7 @@ bool MOUSECTL::CmdMap()
 		}
 
 		WriteOut("\b");
-		WriteOut(info_physical[device_idx].GetDeviceName().c_str());
+		WriteOut(info_physical[device_idx].GetDeviceName());
 		WriteOut("\n");
 	}
 

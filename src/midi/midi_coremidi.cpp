@@ -195,7 +195,9 @@ void COREMIDI_ListDevices([[maybe_unused]] MidiDeviceCoreMidi* device, Program* 
 	}
 
 	if (num_devices == 0) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("MIDI_DEVICE_NO_PORTS"));
+		caller->WriteOut(Indent);
+		caller->WriteOut(MSG_Get("MIDI_DEVICE_NO_PORTS"));
+		caller->WriteOut("\n");
 	}
 
 	caller->WriteOut("\n");

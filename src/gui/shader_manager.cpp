@@ -212,7 +212,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
 
-		const char* pattern = nullptr;
+		std::string pattern = {};
 		if (!dir_exists) {
 			pattern = MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
 		} else if (!dir_has_shaders) {
