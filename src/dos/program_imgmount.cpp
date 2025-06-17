@@ -59,7 +59,7 @@ void IMGMOUNT::ListImgMounts(void)
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 	print_row(header_drive, header_name, header_label, header_slot);
 	const std::string horizontal_divider(term_width, '-');
-	WriteOut_NoParsing(horizontal_divider.c_str());
+	WriteOut_NoParsing(horizontal_divider);
 
 	bool found_drives = false;
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
@@ -461,7 +461,7 @@ void IMGMOUNT::Run(void)
 		}
 		dos.dta(save_dta);
 
-		write_out_mount_status(MSG_Get("MOUNT_TYPE_FAT"), paths, drive);
+		write_out_mount_status(MSG_Get("MOUNT_TYPE_FAT").c_str(), paths, drive);
 
 		const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
 		        fat_images.front());
@@ -539,7 +539,7 @@ void IMGMOUNT::Run(void)
 		// Print status message (success)
 		WriteOut(MSG_Get("MSCDEX_SUCCESS"));
 
-		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO"), paths, drive);
+		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO").c_str(), paths, drive);
 
 	} else if (fstype == "none") {
 		FILE* new_disk = fopen_wrap_ro_fallback(temp_line, roflag);

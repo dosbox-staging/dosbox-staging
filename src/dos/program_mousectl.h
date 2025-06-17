@@ -30,7 +30,7 @@ private:
 	bool CheckMappingPossible();
 	void FinalizeMapping();
 
-	static const char *GetMapStatusStr(const MouseMapStatus map_status);
+	static std::string GetMapStatusStr(const MouseMapStatus map_status);
 
 	// Methods below exectute specific commands requested by the user,
 	// they return 'true' if DOS error code should indicate success,

@@ -165,7 +165,7 @@ void Program::ChangeToLongCmd()
 	full_arguments.assign("");
 }
 
-bool Program::SuppressWriteOut(const char* format)
+bool Program::SuppressWriteOut(const std::string& format) const
 {
 	// Have we encountered an executable thus far?
 	static bool encountered_executable = false;
@@ -188,19 +188,19 @@ bool Program::SuppressWriteOut(const char* format)
 }
 
 // TODO Only used by the unit tests, try to get rid of it later
-void Program::WriteOut(const char* format, const char* arguments)
+void Program::WriteOut(const std::string& format, const char* arguments)
 {
 	if (SuppressWriteOut(format)) {
 		return;
 	}
 
 	char buf[WriteOutBufSize];
-	std::snprintf(buf, WriteOutBufSize, format, arguments);
+	std::snprintf(buf, WriteOutBufSize, format.c_str(), arguments);
 
 	CONSOLE_Write(buf);
 }
 
-void Program::WriteOut_NoParsing(const char* str)
+void Program::WriteOut_NoParsing(const std::string& str)
 {
 	if (SuppressWriteOut(str)) {
 		return;
@@ -298,7 +298,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				         pvars[0].c_str());
 				return;
 			}
-			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+			pvars.emplace(pvars.begin(), sec->GetName());
 		}
 		break;
 	}
@@ -343,7 +343,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	if (psec == nullptr) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("PROGRAM_CONFIG_HLP_AUTOEXEC"),
-		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP"));
+		                 MSG_Get("AUTOEXEC_CONFIGFILE_HELP").c_str());
 		output.AddString("\n");
 		output.Display();
 		return;
@@ -427,7 +427,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 					output.AddString("\n");
 				}
 
-				output.AddString(p->GetHelp().c_str());
+				output.AddString(p->GetHelp());
 				output.AddString("\n\n");
 
 				auto write_last_newline = false;
@@ -746,7 +746,7 @@ void CONFIG::Run(void)
 					}
 					// it's a property name
 					const auto val_dos = utf8_to_dos(
-					        sec->GetPropValue(pvars[0].c_str()),
+					        sec->GetPropValue(pvars[0]),
 					        DosStringConvertMode::NoSpecialCharacters,
 					        UnicodeFallback::Simple);
 					WriteOut("%s", val_dos.c_str());
@@ -780,9 +780,7 @@ void CONFIG::Run(void)
 				        DosStringConvertMode::NoSpecialCharacters,
 				        UnicodeFallback::Simple);
 				WriteOut("%s\n", val_dos.c_str());
-				DOS_PSP(psp->GetParent())
-				        .SetEnvironmentValue("CONFIG",
-				                             val_dos.c_str());
+				DOS_PSP(psp->GetParent()).SetEnvironmentValue("CONFIG", val_dos);
 				break;
 			}
 			default:
@@ -866,7 +864,7 @@ void CONFIG::Run(void)
 				        inputline,
 				        DosStringConvertMode::NoSpecialCharacters);
 
-				tsec->HandleInputline(line_utf8.c_str());
+				tsec->HandleInputline(line_utf8);
 				tsec->ExecuteInit(false);
 			}
 			return;
