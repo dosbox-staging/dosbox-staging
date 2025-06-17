@@ -130,7 +130,8 @@ const std::string& Message::Get()
 
 	const auto current_code_page = get_utf8_code_page();
 	if (message_dos_ansi.empty() || code_page != current_code_page) {
-		code_page        = current_code_page;
+		code_page = current_code_page;
+
 		message_dos_ansi = utf8_to_dos(convert_ansi_markup(message_raw),
 		                               DosStringConvertMode::WithControlCodes,
 		                               UnicodeFallback::Box,
@@ -337,15 +338,15 @@ void Message::VerifyFormatStringAgainst(const std::string& message_key,
 	                                  english.format_specifiers.size());
 
 	for (size_t i = 0; i < index_limit; ++i) {
-		const auto& specifier         = format_specifiers[i];
+		const auto& specifier = format_specifiers[i];
+
 		const auto& specifier_english = english.format_specifiers[i];
 
 		if (!are_compatible(specifier.format, specifier_english.format) ||
 		    (specifier.width == "*" && specifier_english.width != "*") ||
 		    (specifier.width != "*" && specifier_english.width == "*") ||
 		    (specifier.precision == "*" && specifier_english.precision != "*") ||
-		    (specifier.precision != "*" &&
-		     specifier_english.precision == "*")) {
+		    (specifier.precision != "*" && specifier_english.precision == "*")) {
 
 			LOG_WARNING(
 			        "%s has format specifier '%s' "
@@ -467,10 +468,12 @@ static void check_code_page()
 	return;
 }
 
-static bool check_message_exists(const std::string& message_key) {
+static bool check_message_exists(const std::string& message_key)
+{
 	if (!dictionary_english.contains(message_key)) {
 		if (!already_warned_not_found.contains(message_key)) {
-			LOG_WARNING("LOCALE: Message '%s' not found", message_key.c_str());
+			LOG_WARNING("LOCALE: Message '%s' not found",
+			            message_key.c_str());
 			already_warned_not_found.insert(message_key);
 		}
 		return false;
@@ -723,7 +726,8 @@ void MSG_Add(const std::string& message_key, const std::string& message)
 	if (dictionary_english.contains(message_key)) {
 		if (dictionary_english.at(message_key).GetRaw() != message) {
 			dictionary_english.at(message_key).MarkInvalid();
-			LOG_ERR("LOCALE: Duplicate text for '%s'", message_key.c_str());
+			LOG_ERR("LOCALE: Duplicate text for '%s'",
+			        message_key.c_str());
 		}
 		return;
 	}
@@ -746,10 +750,9 @@ const char* MSG_Get(const std::string& message_key)
 		return MsgNotFound.c_str();
 	}
 
-	// Try to return the translated message converted to the current DOS code
-	// page and the ANSI tags converted to ANSI sequences
-	if (is_code_page_compatible &&
-	    dictionary_translated.contains(message_key) &&
+	// Try to return the translated message converted to the current DOS
+	// code page and the ANSI tags converted to ANSI sequences
+	if (is_code_page_compatible && dictionary_translated.contains(message_key) &&
 	    dictionary_translated.at(message_key).IsValid()) {
 
 		return dictionary_translated.at(message_key).Get().c_str();
