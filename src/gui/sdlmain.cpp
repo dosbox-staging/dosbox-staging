@@ -5135,15 +5135,13 @@ static void maybe_write_primary_config(const CommandLineArguments& args)
 }
 
 static std::optional<int> maybe_handle_command_line_output_only_actions(
-        const CommandLineArguments& args, char* argv[])
+        const CommandLineArguments& args, const char* program_name)
 {
 	if (args.version) {
 		printf(version_msg, DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 		return 0;
 	}
 	if (args.help) {
-		assert(argv && argv[0]);
-		const auto program_name = argv[0];
 		const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
 		                             program_name);
 		printf("%s", help.c_str());
@@ -5473,8 +5471,11 @@ int sdl_main(int argc, char* argv[])
 
 		// Handle command line options that don't start the emulator but
 		// only perform some actions and print the results to the console.
+		assert(argv && argv[0]);
+		const auto program_name = argv[0];
+
 		if (const auto return_code = maybe_handle_command_line_output_only_actions(
-		            *arguments, argv);
+		            *arguments, program_name);
 		    return_code) {
 			return *return_code;
 		}
