@@ -710,8 +710,8 @@ void CONFIG::Run(void)
 
 			// split on the ' '
 			if (spcpos != std::string::npos) {
-				pvars.insert(pvars.begin() + 1,
-				             pvars[0].substr(spcpos + 1));
+				pvars.emplace(pvars.begin() + 1,
+				              pvars[0].substr(spcpos + 1));
 				pvars[0].erase(spcpos);
 			}
 
