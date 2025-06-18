@@ -1249,7 +1249,9 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr = MSG_GetTranslatedRaw(temp).c_str();
+			const auto _helpstr = MSG_GetTranslatedRaw(temp);
+
+			const char* helpstr   = _helpstr.c_str();
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
@@ -1846,14 +1848,14 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	if ((equpos != std::string::npos) &&
 	    ((spcpos == std::string::npos) || (equpos < spcpos))) {
 		// If we have a '=' possibly before a ' ' split on the =
-		pvars.insert(pvars.begin() + 1, pvars[0].substr(equpos + 1));
+		pvars.emplace(pvars.begin() + 1, pvars[0].substr(equpos + 1));
 		pvars[0].erase(equpos);
 
 		// As we had a = the first thing must be a property now
 		Section* sec = GetSectionFromProperty(pvars[0].c_str());
 
 		if (sec) {
-			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+			pvars.emplace(pvars.begin(), std::string(sec->GetName()));
 		} else {
 			safe_sprintf(return_msg,
 			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
@@ -1865,7 +1867,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 		if ((spcpos != std::string::npos) &&
 		    ((equpos == std::string::npos) || (spcpos < equpos))) {
 			// ' ' before a possible '=', split on the ' '
-			pvars.insert(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
+			pvars.emplace(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
 			pvars[0].erase(spcpos);
 		}
 
@@ -1877,8 +1879,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			Section* secprop = GetSectionFromProperty(pvars[0].c_str());
 
 			if (secprop) {
-				pvars.insert(pvars.begin(),
-				             std::string(secprop->GetName()));
+				pvars.emplace(pvars.begin(),
+				              std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
 				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR")
@@ -1901,16 +1903,18 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			if ((equpos2 != std::string::npos) &&
 			    ((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
 				// Split on the =
-				pvars.insert(pvars.begin() + 2,
-				             pvars[1].substr(equpos2 + 1));
+				pvars.emplace(pvars.begin() + 2,
+				              pvars[1].substr(equpos2 + 1));
+
 				pvars[1].erase(equpos2);
 
 			} else if ((spcpos2 != std::string::npos) &&
 			           ((equpos2 == std::string::npos) ||
 			            (spcpos2 < equpos2))) {
 				// Split on the ' '
-				pvars.insert(pvars.begin() + 2,
-				             pvars[1].substr(spcpos2 + 1));
+				pvars.emplace(pvars.begin() + 2,
+				              pvars[1].substr(spcpos2 + 1));
+
 				pvars[1].erase(spcpos2);
 			}
 
@@ -1923,7 +1927,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 				        pvars[0].c_str());
 				if (sec3) {
 					// Section and property name are identical
-					pvars.insert(pvars.begin(), pvars[0]);
+					pvars.emplace(pvars.begin(), pvars[0]);
 				}
 				// else has been checked above already
 			}

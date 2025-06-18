@@ -678,7 +678,7 @@ std::string DOS_GenerateListCodePagesMessage()
 			max_column2_length = std::max(max_column2_length,
 			                              length_utf8(row.column2));
 
-			table.push_back(row);
+			table.emplace_back(row);
 		}
 	}
 
@@ -1044,20 +1044,20 @@ std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
         // which provides more national characters than the original MS-DOS one
         if ((code_page == 850 || code_page == 858) &&
             (keyboard_layout == "be" || keyboard_layout == "fr")) {
-                suggestions.push_back(859);
+                suggestions.emplace_back(859);
         }
 
         // Suggest replacing certain code pages with EUR currency variants
         if (populated.is_using_euro_currency) {
                 switch (code_page) {
-                case 819:  suggestions.push_back(61235); break;
-                case 850:  suggestions.push_back(858);   break;
-                case 855:  suggestions.push_back(872);   break;
-                case 866:  suggestions.push_back(808);   break;
-                case 914:  suggestions.push_back(58258); break;
-                case 921:  suggestions.push_back(901);   break;
-                case 922:  suggestions.push_back(902);   break;
-                case 1125: suggestions.push_back(848);   break;
+                case 819:  suggestions.emplace_back(61235); break;
+                case 850:  suggestions.emplace_back(858);   break;
+                case 855:  suggestions.emplace_back(872);   break;
+                case 866:  suggestions.emplace_back(808);   break;
+                case 914:  suggestions.emplace_back(58258); break;
+                case 921:  suggestions.emplace_back(901);   break;
+                case 922:  suggestions.emplace_back(902);   break;
+                case 1125: suggestions.emplace_back(848);   break;
                 default: break;
                 }
         }
@@ -1259,7 +1259,7 @@ static void preprocess_layouts_arabic(std::vector<KeyboardLayoutMaybeCodepage>& 
 		if (source.keyboard_layout == Ar470 && votes_ar462 > votes_ar470) {
 			processed.push_back({Ar462, source.code_page});
 		}
-		processed.push_back(source);
+		processed.emplace_back(source);
 	}
 
 	keyboard_layouts = processed;
@@ -1285,7 +1285,7 @@ static void preprocess_layouts_better_code_pages(
 				        {source.keyboard_layout, code_page});
 			}
 		}
-		processed.push_back(source);
+		processed.emplace_back(source);
 	}
 
 	keyboard_layouts = processed;
