@@ -80,12 +80,16 @@ compile_commit() {
 
 #-----------------------------------------------------------------------------
 
-if [ $# -ne 1 ]; then
-	echo "Usage: compile-commits.sh CMAKE_PRESET"
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+	echo "Usage: compile-commits.sh CMAKE_PRESET [FROM_HASH]"
+	echo
+	echo "If FROM_HASH is not specified, the script compiles all commits in the"
+	echo "current branch (assuming the parent branch is 'main')."
 	exit 1
 fi
 
 CMAKE_PRESET=$1
+FROM_HASH=$2
 BUILD_DIR=build
 echo
 
@@ -95,7 +99,11 @@ rm -rf "${BUILD_DIR:?}/$CMAKE_PRESET"
 PARENT_BRANCH=main
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-COMMITS=$(git log --format="%h" HEAD --not "$PARENT_BRANCH" --reverse)
+if [ -z "$FROM_HASH" ]; then
+	COMMITS=$(git log --format="%h" HEAD --not "$PARENT_BRANCH" --reverse)
+else
+	COMMITS=$(git log --format="%h" "$FROM_HASH"^.. --reverse)
+fi
 NUM_COMMITS=$(wc -w <<< "$COMMITS")
 
 COMMIT_NO=1
