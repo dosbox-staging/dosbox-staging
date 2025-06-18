@@ -5083,7 +5083,7 @@ static void set_wm_class()
 #endif
 }
 
-static void init_logger(const CommandLineArguments* args, int argc, char* argv[])
+static void init_logger(const CommandLineArguments& args, int argc, char* argv[])
 {
 	loguru::g_preamble_date    = true;
 	loguru::g_preamble_time    = true;
@@ -5093,9 +5093,9 @@ static void init_logger(const CommandLineArguments* args, int argc, char* argv[]
 	loguru::g_preamble_verbose = false;
 	loguru::g_preamble_pipe    = true;
 
-	if (args->version || args->help || args->printconf || args->editconf ||
-	    args->eraseconf || args->list_countries || args->list_layouts ||
-	    args->list_code_pages || args->list_glshaders || args->erasemapper) {
+	if (args.version || args.help || args.printconf || args.editconf ||
+	    args.eraseconf || args.list_countries || args.list_layouts ||
+	    args.list_code_pages || args.list_glshaders || args.erasemapper) {
 
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -5103,7 +5103,7 @@ static void init_logger(const CommandLineArguments* args, int argc, char* argv[]
 	loguru::init(argc, argv);
 }
 
-static void maybe_write_primary_config(const CommandLineArguments* args)
+static void maybe_write_primary_config(const CommandLineArguments& args)
 {
 	// Before loading any configs, write the default primary config if it
 	// doesn't exist when:
@@ -5116,7 +5116,7 @@ static void maybe_write_primary_config(const CommandLineArguments* args)
 	// - AND the primary config is NOT disabled with the
 	//   '--noprimaryconf' option.
 	//
-	if (!args->securemode && !args->noprimaryconf) {
+	if (!args.securemode && !args.noprimaryconf) {
 		const auto primary_config_path = GetPrimaryConfigPath();
 
 		if (!config_file_is_valid(primary_config_path)) {
@@ -5135,13 +5135,13 @@ static void maybe_write_primary_config(const CommandLineArguments* args)
 }
 
 static std::optional<int> maybe_handle_command_line_output_only_actions(
-        const CommandLineArguments* args, char* argv[])
+        const CommandLineArguments& args, char* argv[])
 {
-	if (args->version) {
+	if (args.version) {
 		printf(version_msg, DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 		return 0;
 	}
-	if (args->help) {
+	if (args.help) {
 		assert(argv && argv[0]);
 		const auto program_name = argv[0];
 		const auto help = format_str(MSG_GetForHost("DOSBOX_HELP"),
@@ -5149,31 +5149,31 @@ static std::optional<int> maybe_handle_command_line_output_only_actions(
 		printf("%s", help.c_str());
 		return 0;
 	}
-	if (args->editconf) {
+	if (args.editconf) {
 		return edit_primary_config();
 	}
-	if (args->eraseconf) {
+	if (args.eraseconf) {
 		return erase_primary_config_file();
 	}
-	if (args->erasemapper) {
+	if (args.erasemapper) {
 		return erase_mapper_file();
 	}
-	if (args->printconf) {
+	if (args.printconf) {
 		return print_primary_config_location();
 	}
-	if (args->list_countries) {
+	if (args.list_countries) {
 		list_countries();
 		return 0;
 	}
-	if (args->list_layouts) {
+	if (args.list_layouts) {
 		list_keyboard_layouts();
 		return 0;
 	}
-	if (args->list_code_pages) {
+	if (args.list_code_pages) {
 		list_code_pages();
 		return 0;
 	}
-	if (args->list_glshaders) {
+	if (args.list_glshaders) {
 		list_glshaders();
 		return 0;
 	}
@@ -5414,7 +5414,7 @@ int sdl_main(int argc, char* argv[])
 
 	// Set up logging after command line was parsed and trivial arguments
 	// have been handled
-	init_logger(arguments, argc, argv);
+	init_logger(*arguments, argc, argv);
 
 	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
@@ -5463,7 +5463,7 @@ int sdl_main(int argc, char* argv[])
 		// modules
 		DOSBOX_InitAllModuleConfigsAndMessages();
 
-		maybe_write_primary_config(arguments);
+		maybe_write_primary_config(*arguments);
 
 		// After DOSBOX_InitAllModuleConfigsAndMessages() is done, all
 		// the config sections have been registered, so we're ready to
@@ -5474,7 +5474,7 @@ int sdl_main(int argc, char* argv[])
 		// Handle command line options that don't start the emulator but
 		// only perform some actions and print the results to the console.
 		if (const auto return_code = maybe_handle_command_line_output_only_actions(
-		            arguments, argv);
+		            *arguments, argv);
 		    return_code) {
 			return *return_code;
 		}
