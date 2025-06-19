@@ -4225,7 +4225,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 18)
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
 		// New display might have a different resolution and DPI scaling set,
 		// so recalculate that and set viewport
@@ -4260,7 +4259,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		notify_new_mouse_screen_params();
 		return true;
 	}
-#endif
 
 	case SDL_WINDOWEVENT_SIZE_CHANGED: {
 		// LOG_DEBUG("SDL: The window size has changed");
