@@ -516,7 +516,7 @@ static void config_init(Section_prop& secprop)
 	        "  modern:     If provided, v7.0+ Microsoft mouse driver behaviour is emulated,\n"
 	        "              otherwise the v6.0 and earlier behaviour (the two are slightly\n"
 	        "              incompatible). Only Descent II with the official Voodoo patch has\n"
-	        "              been found to require the v7.0+ behaviour so far.\n");
+	        "              been found to require the v7.0+ behaviour so far.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", deprecated, false);
 	prop_bool->Set_help("Configure using 'builtin_dos_mouse_driver_options'.");
