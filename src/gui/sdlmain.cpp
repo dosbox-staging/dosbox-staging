@@ -4353,13 +4353,10 @@ bool GFX_Events()
 		switch (event.type) {
 		case SDL_DISPLAYEVENT:
 			switch (event.display.event) {
-#if (SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 14)
-			// Events added in SDL 2.0.14
 			case SDL_DISPLAYEVENT_CONNECTED:
 			case SDL_DISPLAYEVENT_DISCONNECTED:
 				notify_new_mouse_screen_params();
 				break;
-#endif
 			default: break;
 			};
 			break;
