@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,22 @@ typedef uint32_t PhysPt;
 typedef uint8_t* HostPt;
 typedef uint32_t RealPt;
 typedef int32_t MemHandle;
+
+using PhysAddress = struct PhysAddress {
+	PhysAddress(const uint16_t segment, const uint16_t offset)
+	        : segment(segment), offset(offset) {}
+
+	uint16_t segment = {};
+	uint16_t offset  = {};
+};
+
+using RealAddress = struct RealAddress {
+	RealAddress(const uint16_t segment, const uint16_t offset)
+	        : segment(segment), offset(offset) {}
+
+	uint16_t segment = {};
+	uint16_t offset  = {};
+};
 
 extern HostPt MemBase;
 HostPt GetMemBase();
@@ -245,10 +261,20 @@ static inline PhysPt PhysicalMake(uint16_t seg, uint16_t off)
 	return base + off;
 }
 
+static inline PhysPt PhysicalMake(const PhysAddress address)
+{
+	return PhysicalMake(address.segment, address.offset);
+}
+
 static inline RealPt RealMake(uint16_t seg, uint16_t off)
 {
 	const auto base = static_cast<uint32_t>(seg << 16);
 	return base + off;
+}
+
+static inline PhysPt RealMake(const RealAddress address)
+{
+	return RealMake(address.segment, address.offset);
 }
 
 static inline void RealSetVec(uint8_t vec, RealPt pt)
