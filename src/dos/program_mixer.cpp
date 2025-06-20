@@ -11,13 +11,58 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
-#include "notifications.h"
 #include "midi.h"
 #include "notifications.h"
 #include "program_more_output.h"
 #include "string_utils.h"
 
 CHECK_NARROWING();
+
+static bool is_global_channel(const std::string& channel_name)
+{
+	return channel_name == GlobalVirtualChannelName;
+}
+
+static bool is_master_channel(const std::string& channel_name)
+{
+	return channel_name == ChannelName::Master;
+}
+
+struct {
+	bool fm_message_shown   = false;
+	bool spkr_message_shown = false;
+} deprecation_warnings = {};
+
+static std::string map_deprecated_channel_name(const std::string& channel_name)
+{
+	if (channel_name == ChannelName::PcSpeakerDeprecated) {
+
+		if (!deprecation_warnings.spkr_message_shown) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MIXER",
+			                      "SHELL_CMD_MIXER_CHANNEL_DEPRECATED",
+			                      ChannelName::PcSpeakerDeprecated,
+			                      ChannelName::PcSpeaker);
+
+			deprecation_warnings.spkr_message_shown = true;
+		}
+		return ChannelName::PcSpeaker;
+
+	} else if (channel_name == ChannelName::OplDeprecated) {
+
+		if (!deprecation_warnings.fm_message_shown) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MIXER",
+			                      "SHELL_CMD_MIXER_CHANNEL_DEPRECATED",
+			                      ChannelName::OplDeprecated,
+			                      ChannelName::Opl);
+			deprecation_warnings.fm_message_shown = true;
+		}
+		return ChannelName::Opl;
+	}
+
+	return channel_name;
+}
 
 namespace MixerCommand {
 
@@ -154,16 +199,6 @@ static bool is_start_of_number(const char c)
 constexpr auto CrossfeedCommandPrefix = 'X';
 constexpr auto ReverbCommandPrefix    = 'R';
 constexpr auto ChorusCommandPrefix    = 'C';
-
-static bool is_global_channel(const std::string& channel_name)
-{
-	return channel_name == GlobalVirtualChannelName;
-}
-
-static bool is_master_channel(const std::string& channel_name)
-{
-	return channel_name == ChannelName::Master;
-}
 
 constexpr auto DecibelVolumeCommandPrefix = 'D';
 
@@ -485,7 +520,9 @@ std::variant<ErrorType, std::queue<Command>> ParseCommands(
 	commands.emplace(select_global_chan_cmd);
 
 	auto parse_select_channel_command =
-	        [&](const std::string& channel_name) -> std::optional<SelectChannel> {
+	        [&](const std::string& _channel_name) -> std::optional<SelectChannel> {
+		const auto channel_name = map_deprecated_channel_name(_channel_name);
+
 		if (channel_infos.HasChannel(channel_name)) {
 			const SelectChannel cmd = {channel_name};
 			return cmd;
@@ -493,7 +530,9 @@ std::variant<ErrorType, std::queue<Command>> ParseCommands(
 		return {};
 	};
 
-	auto is_valid_channel_name = [&](const std::string& channel_name) {
+	auto is_valid_channel_name = [&](const std::string& _channel_name) {
+		const auto channel_name = map_deprecated_channel_name(_channel_name);
+
 		for (const auto& name : all_channel_names) {
 			if (name == channel_name) {
 				return true;
@@ -684,8 +723,10 @@ ChannelInfos::ChannelInfos(const ChannelInfosMap& channel_infos)
 	                                channel_infos.end()); //-V837
 }
 
-bool ChannelInfos::HasChannel(const std::string& channel_name) const
+bool ChannelInfos::HasChannel(const std::string& _channel_name) const
 {
+	const auto channel_name = map_deprecated_channel_name(_channel_name);
+
 	return features_by_channel_name.contains(channel_name);
 }
 
@@ -714,7 +755,8 @@ void MIXER::Run()
 	}
 
 	constexpr auto remove = true;
-	auto show_status      = !cmd->FindExist("/NOSHOW", remove);
+
+	auto show_status = !cmd->FindExist("/NOSHOW", remove);
 
 	if (cmd->GetCount() == 0) {
 		if (show_status) {
@@ -724,6 +766,8 @@ void MIXER::Run()
 	}
 
 	const auto args = cmd->GetArguments();
+
+	deprecation_warnings = {};
 
 	auto result = MixerCommand::ParseCommands(args,
 	                                          create_channel_infos(),
@@ -854,6 +898,10 @@ void MIXER::AddMessages()
 	MSG_Add("SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND",
 	        "Invalid command for the [color=light-cyan]%s[reset] channel: "
 	        "[color=white]%s[reset]");
+
+	MSG_Add("SHELL_CMD_MIXER_CHANNEL_DEPRECATED",
+	        "Channel name [color=light-cyan]%s[reset] is deprecated, "
+	        "use [color=light-cyan]%s[reset] instead");
 }
 
 void MIXER::ShowMixerStatus()

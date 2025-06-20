@@ -754,29 +754,6 @@ MixerChannelPtr MIXER_FindChannel(const char* name)
 {
 	auto it = mixer.channels.find(name);
 
-	if (it == mixer.channels.end()) {
-		// Deprecated alias SPKR to PCSPEAKER
-		if (std::string_view(name) == "SPKR") {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "MIXER",
-			                      "MIXER_CHANNEL_DEPRECATED",
-			                      "SPKR",
-			                      ChannelName::PcSpeaker);
-
-			it = mixer.channels.find(ChannelName::PcSpeaker);
-
-			// Deprecated alias FM to OPL
-		} else if (std::string_view(name) == "FM") {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "MIXER",
-			                      "MIXER_CHANNEL_DEPRECATED",
-			                      "FM",
-			                      ChannelName::Opl);
-
-			it = mixer.channels.find(ChannelName::Opl);
-		}
-	}
-
 	const auto chan = (it != mixer.channels.end()) ? it->second : nullptr;
 
 	return chan;
@@ -3211,10 +3188,6 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 static void register_mixer_text_messages()
 {
-	MSG_Add("MIXER_CHANNEL_DEPRECATED",
-	        "Channel name [color=light-cyan]%s[reset] is deprecated, "
-	        "use [color=light-cyan]%s[reset] instead");
-
 	MSG_Add("MIXER_INVALID_CUSTOM_FILTER",
 	        "Invalid custom filter definition: [color=white]'%s'[reset].\n"
 	        "Must be specified in [color=light-cyan]"
