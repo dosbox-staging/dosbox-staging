@@ -30,9 +30,12 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "ansi_code_markup.h"
+#include "console.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "notifications.h"
 #include "string_utils.h"
 #include "support.h"
 #include "version.h"
@@ -94,14 +97,15 @@ bool Value::operator==(const Value& other) const
 	case V_DOUBLE: return _double == other._double;
 	case V_STRING: return _string == other._string;
 	default:
-		LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
+		LOG_ERR("CONFIG: Comparing stuff that doesn't make sense");
 		break;
 	}
 	return false;
 }
 
-bool Value::operator==(const Hex& other) const {
-    return this->_hex == other;
+bool Value::operator==(const Hex& other) const
+{
+	return this->_hex == other;
 }
 
 bool Value::operator<(const Value& other) const
@@ -126,7 +130,7 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 	case V_NONE:
 	case V_CURRENT:
 	default:
-		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
+		LOG_ERR("CONFIG: Unhandled type when setting value: '%s'",
 		        in.c_str());
 		is_valid = false;
 		break;
@@ -178,7 +182,9 @@ bool Value::SetBool(const std::string& in)
 	auto in_lowercase = in;
 	lowcase(in_lowercase);
 	const auto parsed = parse_bool_setting(in_lowercase);
+
 	_bool = parsed ? *parsed : false;
+
 	return parsed.has_value();
 }
 
@@ -232,10 +238,12 @@ bool Property::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -243,13 +251,16 @@ bool Property::IsValidValue(const Value& in)
 bool Property::IsValueDeprecated(const Value& val) const
 {
 	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
+
 	if (is_deprecated) {
-		LOG_WARNING("CONFIG: Setting '%s = %s' is deprecated, "
-		            "falling back to the alternate: '%s = %s'",
-		            propname.c_str(),
-		            val.ToString().c_str(),
-		            propname.c_str(),
-		            GetAlternateForDeprecatedValue(val).ToString().c_str());
+		NOTIFY_DisplayWarning(
+		        Notification::Source::Console,
+		        "CONFIG",
+		        "PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+		        propname.c_str(),
+		        val.ToString().c_str(),
+		        propname.c_str(),
+		        GetAlternateForDeprecatedValue(val).ToString().c_str());
 	}
 	return is_deprecated;
 }
@@ -337,7 +348,11 @@ std::string Property::GetHelp() const
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
+
 		return "No help available for '" + propname + "'\n";
 	}
 	return result;
@@ -347,7 +362,7 @@ std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_config_name(propname))) {
-		std::string help_text = MSG_GetForHost(create_config_name(propname));
+		auto help_text = MSG_GetTranslatedRaw(create_config_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -370,16 +385,19 @@ std::string Property::GetHelpForHost() const
 			}
 			if (iequals(val, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}))) {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, {})));
 			} else {
-				result.append(MSG_GetForHost(
+				result.append(MSG_GetTranslatedRaw(
 				        create_config_item_name(propname, val)));
 			}
 		}
 	}
 	if (result.empty()) {
-		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_NO_HELP",
+		                      propname.c_str());
 	}
 	return result;
 }
@@ -402,7 +420,8 @@ bool Prop_int::ValidateValue(const Value& in)
 	// Handle ranges if specified
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
 
 	// No ranges
 	if (mi == -1 && ma == -1) {
@@ -423,13 +442,14 @@ bool Prop_int::ValidateValue(const Value& in)
 		va = mi;
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
-	            "Value outside of the valid range %s-%s, using '%d'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            min_value.ToString().c_str(),
-	            max_value.ToString().c_str(),
-	            va);
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      std::to_string(va).c_str());
 
 	value = va;
 	return true;
@@ -445,7 +465,9 @@ bool Prop_int::IsValidValue(const Value& in)
 	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
 	const int ma = max_value;
-	int va       = static_cast<int>(Value(in));
+
+	int va = static_cast<int>(Value(in));
+
 	if (mi == -1 && ma == -1) {
 		return true;
 	}
@@ -453,14 +475,14 @@ bool Prop_int::IsValidValue(const Value& in)
 		return true;
 	}
 
-	LOG_WARNING(
-	        "CONFIG: Invalid '%s' setting: '%s'. "
-	        "Value outside of the valid range %s-%s, using '%s'",
-	        propname.c_str(),
-	        in.ToString().c_str(),
-	        min_value.ToString().c_str(),
-	        max_value.ToString().c_str(),
-	        default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_SETTING_OUTSIDE_VALID_RANGE",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      min_value.ToString().c_str(),
+	                      max_value.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -526,10 +548,12 @@ bool Prop_string::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-	            propname.c_str(),
-	            in.ToString().c_str(),
-	            default_value.ToString().c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_INVALID_SETTING",
+	                      propname.c_str(),
+	                      in.ToString().c_str(),
+	                      default_value.ToString().c_str());
 
 	return false;
 }
@@ -568,10 +592,12 @@ bool Prop_bool::SetValue(const std::string& input)
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
-		LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
-		            propname.c_str(),
-		            input.c_str(),
-		            default_value.ToString().c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "CONFIG",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      propname.c_str(),
+		                      input.c_str(),
+		                      default_value.ToString().c_str());
 	}
 	return is_valid;
 }
@@ -632,7 +658,9 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		if (loc != std::string::npos) {
 			local.erase(0, loc);
 		}
-		loc            = local.find_first_of(separator);
+
+		loc = local.find_first_of(separator);
+
 		std::string in = "";
 
 		// When i == number_of_properties add the total line. (makes
@@ -671,7 +699,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 		return false;
 	}
 
-	Value::Etype prevtype = Value::V_NONE;
+	Value::Etype prevtype    = Value::V_NONE;
 	std::string prevargument = "";
 
 	std::string::size_type loc = std::string::npos;
@@ -997,7 +1025,6 @@ Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
 	return nullptr;
 }
 
-
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
@@ -1047,9 +1074,16 @@ bool Section_prop::HandleInputline(const std::string& line)
 		}
 
 		if (p->IsDeprecated()) {
-			LOG_WARNING("CONFIG: Deprecated option '%s'\n\n%s\n",
-			            name.c_str(),
-			            p->GetHelpForHost().c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "CONFIG",
+			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
+			                      name.c_str());
+
+			LOG_WARNING("CONFIG: %s",
+			            strip_ansi_markup(p->GetHelpForHost()).c_str());
+
+			CONSOLE_Write(convert_ansi_markup(p->GetHelp()));
+			CONSOLE_Write("\n\n");
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
@@ -1059,7 +1093,10 @@ bool Section_prop::HandleInputline(const std::string& line)
 		return p->SetValue(val);
 	}
 
-	LOG_WARNING("CONFIG: Invalid option '%s'", name.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "PROGRAM_CONFIG_PROPERTY_ERROR",
+	                      name.c_str());
 	return false;
 }
 
@@ -1128,7 +1165,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	}
 
 	// Print start of config file and add a return to improve readibility
-	fprintf(outfile, MSG_GetForHost("CONFIGFILE_INTRO"), DOSBOX_VERSION);
+	fprintf(outfile, MSG_GetTranslatedRaw("CONFIGFILE_INTRO").c_str(), DOSBOX_VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
@@ -1140,7 +1177,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 		Section_prop* sec = dynamic_cast<Section_prop*>(*tel);
 		if (sec) {
 			Property* p;
-			int i           = 0;
+			int i = 0;
+
 			size_t maxwidth = 0;
 
 			while ((p = sec->Get_prop(i++))) {
@@ -1188,7 +1226,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetForHost(values_msg_key));
+					        MSG_GetTranslatedRaw(values_msg_key)
+					                .c_str());
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -1212,8 +1251,10 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					fprintf(outfile, ".");
 				};
 
-				print_values("CONFIG_VALID_VALUES", p->GetValues());
-				print_values("CONFIG_DEPRECATED_VALUES",
+				print_values("PROGRAM_CONFIG_VALID_VALUES",
+				             p->GetValues());
+
+				print_values("PROGRAM_CONFIG_DEPRECATED_VALUES",
 				             p->GetDeprecatedValues());
 
 				fprintf(outfile, "\n");
@@ -1223,7 +1264,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			upcase(temp);
 			strcat(temp, "_CONFIGFILE_HELP");
 
-			const char* helpstr   = MSG_GetForHost(temp);
+			const char* helpstr = MSG_GetTranslatedRaw(temp).c_str();
 			const char* linestart = helpstr;
 			char* helpwrite       = helpline;
 
@@ -1261,7 +1302,9 @@ Section_prop* Config::AddInactiveSectionProp(const char* section_name)
 	        "Only letters and digits are allowed in section name");
 
 	constexpr bool inactive = false;
+
 	auto s = std::make_unique<Section_prop>(section_name, inactive);
+
 	auto* section = s.get();
 	sectionlist.push_back(s.release());
 	return section;
@@ -1311,12 +1354,13 @@ Config& Config::operator=(Config&& source) noexcept
 	}
 
 	// Move each member
-	cmdline              = std::move(source.cmdline);
-	sectionlist          = std::move(source.sectionlist);
-	_start_function      = std::move(source._start_function);
-	secure_mode          = std::move(source.secure_mode);
-	startup_params       = std::move(source.startup_params);
-	configfiles          = std::move(source.configfiles);
+	cmdline         = std::move(source.cmdline);
+	sectionlist     = std::move(source.sectionlist);
+	_start_function = std::move(source._start_function);
+	secure_mode     = std::move(source.secure_mode);
+	startup_params  = std::move(source.startup_params);
+	configfiles     = std::move(source.configfiles);
+
 	configFilesCanonical = std::move(source.configFilesCanonical);
 
 	overwritten_autoexec_section = std::move(source.overwritten_autoexec_section);
@@ -1627,7 +1671,8 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 			continue;
 		}
 
-		const std::string rest       = (env_var + 7);
+		const std::string rest = (env_var + 7);
+
 		const auto section_delimiter = rest.find('_');
 		if (section_delimiter == std::string::npos) {
 			continue;
@@ -1653,16 +1698,16 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 std::optional<bool> parse_bool_setting(const std::string_view setting)
 {
 	static const std::unordered_map<std::string_view, bool> mapping{
-	        {"enabled", true},
-	        {"true", true},
-	        {"on", true},
-	        {"yes", true},
+	        { "enabled",  true},
+	        {    "true",  true},
+	        {      "on",  true},
+	        {     "yes",  true},
 
 	        {"disabled", false},
-	        {"false", false},
-	        {"off", false},
-	        {"no", false},
-	        {"none", false},
+	        {   "false", false},
+	        {     "off", false},
+	        {      "no", false},
+	        {    "none", false},
 	};
 
 	const auto it = mapping.find(setting);
@@ -1751,8 +1796,12 @@ Verbosity Config::GetStartupVerbosity() const
 		             : Verbosity::High;
 	}
 
-	LOG_WARNING("SETUP: Invalid 'startup_verbosity' setting: '%s', using 'high'",
-	            user_choice.c_str());
+	NOTIFY_DisplayWarning(Notification::Source::Console,
+	                      "CONFIG",
+	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "
+	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
+	                      user_choice.c_str());
+
 	return Verbosity::High;
 }
 
@@ -1812,17 +1861,17 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	if ((equpos != std::string::npos) &&
 	    ((spcpos == std::string::npos) || (equpos < spcpos))) {
 		// If we have a '=' possibly before a ' ' split on the =
-		pvars.insert(pvars.begin() + 1, pvars[0].substr(equpos + 1));
+		pvars.emplace(pvars.begin() + 1, pvars[0].substr(equpos + 1));
 		pvars[0].erase(equpos);
 
 		// As we had a = the first thing must be a property now
 		Section* sec = GetSectionFromProperty(pvars[0].c_str());
 
 		if (sec) {
-			pvars.insert(pvars.begin(), std::string(sec->GetName()));
+			pvars.emplace(pvars.begin(), std::string(sec->GetName()));
 		} else {
 			safe_sprintf(return_msg,
-			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
 			             pvars[0].c_str());
 			return return_msg;
 		}
@@ -1831,7 +1880,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 		if ((spcpos != std::string::npos) &&
 		    ((equpos == std::string::npos) || (spcpos < equpos))) {
 			// ' ' before a possible '=', split on the ' '
-			pvars.insert(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
+			pvars.emplace(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
 			pvars[0].erase(spcpos);
 		}
 
@@ -1840,15 +1889,15 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* secprop = GetSectionFromProperty(
-			        pvars[0].c_str());
+			Section* secprop = GetSectionFromProperty(pvars[0].c_str());
 
 			if (secprop) {
-				pvars.insert(pvars.begin(),
-				             std::string(secprop->GetName()));
+				pvars.emplace(pvars.begin(),
+				              std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
-				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR")
+				                     .c_str(),
 				             pvars[0].c_str());
 				return return_msg;
 			}
@@ -1857,7 +1906,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			// still be gus have a look at the second parameter
 			if (pvars.size() < 2) {
 				safe_strcpy(return_msg,
-				            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
 				return return_msg;
 			}
 
@@ -1867,22 +1916,23 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			if ((equpos2 != std::string::npos) &&
 			    ((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
 				// Split on the =
-				pvars.insert(pvars.begin() + 2,
-				             pvars[1].substr(equpos2 + 1));
+				pvars.emplace(pvars.begin() + 2,
+				              pvars[1].substr(equpos2 + 1));
+
 				pvars[1].erase(equpos2);
 
 			} else if ((spcpos2 != std::string::npos) &&
 			           ((equpos2 == std::string::npos) ||
 			            (spcpos2 < equpos2))) {
 				// Split on the ' '
-				pvars.insert(pvars.begin() + 2,
-				             pvars[1].substr(spcpos2 + 1));
+				pvars.emplace(pvars.begin() + 2,
+				              pvars[1].substr(spcpos2 + 1));
+
 				pvars[1].erase(spcpos2);
 			}
 
 			// Is this a property?
-			Section* sec2 = GetSectionFromProperty(
-			        pvars[1].c_str());
+			Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 
 			if (!sec2) {
 				// Not a property
@@ -1890,7 +1940,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 				        pvars[0].c_str());
 				if (sec3) {
 					// Section and property name are identical
-					pvars.insert(pvars.begin(), pvars[0]);
+					pvars.emplace(pvars.begin(), pvars[0]);
 				}
 				// else has been checked above already
 			}
@@ -1898,7 +1948,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	}
 
 	if (pvars.size() < 3) {
-		safe_strcpy(return_msg, MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+		safe_strcpy(return_msg,
+		            MSG_Get("PROGRAM_CONFIG_SET_SYNTAX").c_str());
 		return return_msg;
 	}
 
@@ -1906,7 +1957,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 	Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 	if (!sec2) {
 		safe_sprintf(return_msg,
-		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
+		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY").c_str(),
 		             pvars[1].c_str(),
 		             pvars[0].c_str());
 		return return_msg;
@@ -1928,8 +1979,8 @@ void Config::ParseArguments()
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
 	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");
-	arguments.securemode = cmdline->FindRemoveBoolArgument("securemode");
-	arguments.noautoexec = cmdline->FindRemoveBoolArgument("noautoexec");
+	arguments.securemode  = cmdline->FindRemoveBoolArgument("securemode");
+	arguments.noautoexec  = cmdline->FindRemoveBoolArgument("noautoexec");
 
 	arguments.eraseconf = cmdline->FindRemoveBoolArgument("eraseconf") ||
 	                      cmdline->FindRemoveBoolArgument("resetconf");
@@ -1938,13 +1989,13 @@ void Config::ParseArguments()
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
 	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') ||
-	                     cmdline->FindRemoveBoolArgument("help", '?'));
+                          cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
-	arguments.lang = cmdline->FindRemoveStringArgument("lang");
+	arguments.lang    = cmdline->FindRemoveStringArgument("lang");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
-	arguments.socket = cmdline->FindRemoveIntArgument("socket");
+	arguments.socket   = cmdline->FindRemoveIntArgument("socket");
 	arguments.wait_pid = cmdline->FindRemoveIntArgument("waitpid");
 
 	arguments.conf = cmdline->FindRemoveVectorArgument("conf");

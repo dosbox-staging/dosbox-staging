@@ -39,9 +39,15 @@
 #include "timer.h"
 
 callback_number_t call_shellstop = 0;
-/* Larger scope so shell_del autoexec can use it to
- * remove things from the environment */
+
+// Larger scope so shell_del autoexec can use it to
+// remove things from the environment
 DOS_Shell *first_shell = nullptr;
+
+DOS_Shell* DOS_GetFirstShell()
+{
+	return first_shell;
+}
 
 constexpr uint16_t InvalidFileHandle = DOS_FILES;
 

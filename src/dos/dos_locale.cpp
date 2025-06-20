@@ -556,7 +556,7 @@ static std::string get_output_header(const char* header_msg_id,
 		return Ansi::HighlightHeader + MSG_Get(header_msg_id) + ":" +
 		       Ansi::Reset + "\n\n";
 	} else {
-		std::string header_str = MSG_GetForHost(header_msg_id);
+		std::string header_str = MSG_GetTranslatedRaw(header_msg_id);
 		return std::string("\n") + header_str.c_str() + "\n" +
 		       std::string(length_utf8(header_str), '-') + "\n\n";
 	}
@@ -569,13 +569,14 @@ std::string DOS_GenerateListCountriesMessage()
 	for (auto it = LocaleData::CountryInfo.begin();
 	     it != LocaleData::CountryInfo.end();
 	     ++it) {
-		message += format_str("  %-5d - %s\n",
-		                      enum_val(it->first),
-		                      MSG_GetForHost(it->second.GetMsgName()));
+		message += format_str(
+		        "  %-5d - %s\n",
+		        enum_val(it->first),
+		        MSG_GetTranslatedRaw(it->second.GetMsgName()).c_str());
 	}
 
 	message += "\n";
-	message += MSG_GetForHost("DOSBOX_HELP_LIST_COUNTRIES_2");
+	message += MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_COUNTRIES_2");
 	message += "\n";
 
 	return message;
@@ -628,7 +629,7 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		if (for_keyb_command) {
 			column_2 = MSG_Get(entry.GetMsgName());
 		} else {
-			column_2 = MSG_GetForHost(entry.GetMsgName());
+			column_2 = MSG_GetTranslatedRaw(entry.GetMsgName());
 		}
 
 		table.push_back({column_1_ansi, column_2, highlight});
@@ -658,7 +659,7 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 		return convert_ansi_markup(message);
 	} else {
 		message += "\n";
-		message += MSG_GetForHost("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
+		message += MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2");
 		message += "\n";
 
 		return message;
@@ -688,13 +689,13 @@ std::string DOS_GenerateListCodePagesMessage()
 			Row row = {};
 
 			row.column1 = format_str("% 7d - ", entry.first);
-			row.column2 = MSG_GetForHost(page_msg_name);
-			row.column3 = MSG_GetForHost(script_msg_name);
+			row.column2 = MSG_GetTranslatedRaw(page_msg_name);
+			row.column3 = MSG_GetTranslatedRaw(script_msg_name);
 
 			max_column2_length = std::max(max_column2_length,
 			                              length_utf8(row.column2));
 
-			table.push_back(row);
+			table.emplace_back(row);
 		}
 	}
 
@@ -709,7 +710,7 @@ std::string DOS_GenerateListCodePagesMessage()
 	}
 
 	message += "\n";
-	message += MSG_GetForHost("DOSBOX_HELP_LIST_CODE_PAGES_2");
+	message += MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_CODE_PAGES_2");
 	message += "\n";
 
 	return message;
@@ -1060,20 +1061,20 @@ std::vector<uint16_t> DOS_SuggestBetterCodePages(const uint16_t code_page,
         // which provides more national characters than the original MS-DOS one
         if ((code_page == 850 || code_page == 858) &&
             (keyboard_layout == "be" || keyboard_layout == "fr")) {
-                suggestions.push_back(859);
+                suggestions.emplace_back(859);
         }
 
         // Suggest replacing certain code pages with EUR currency variants
         if (populated.is_using_euro_currency) {
                 switch (code_page) {
-                case 819:  suggestions.push_back(61235); break;
-                case 850:  suggestions.push_back(858);   break;
-                case 855:  suggestions.push_back(872);   break;
-                case 866:  suggestions.push_back(808);   break;
-                case 914:  suggestions.push_back(58258); break;
-                case 921:  suggestions.push_back(901);   break;
-                case 922:  suggestions.push_back(902);   break;
-                case 1125: suggestions.push_back(848);   break;
+                case 819:  suggestions.emplace_back(61235); break;
+                case 850:  suggestions.emplace_back(858);   break;
+                case 855:  suggestions.emplace_back(872);   break;
+                case 866:  suggestions.emplace_back(808);   break;
+                case 914:  suggestions.emplace_back(58258); break;
+                case 921:  suggestions.emplace_back(901);   break;
+                case 922:  suggestions.emplace_back(902);   break;
+                case 1125: suggestions.emplace_back(848);   break;
                 default: break;
                 }
         }
@@ -1275,7 +1276,7 @@ static void preprocess_layouts_arabic(std::vector<KeyboardLayoutMaybeCodepage>& 
 		if (source.keyboard_layout == Ar470 && votes_ar462 > votes_ar470) {
 			processed.push_back({Ar462, source.code_page});
 		}
-		processed.push_back(source);
+		processed.emplace_back(source);
 	}
 
 	keyboard_layouts = processed;
@@ -1301,7 +1302,7 @@ static void preprocess_layouts_better_code_pages(
 				        {source.keyboard_layout, code_page});
 			}
 		}
-		processed.push_back(source);
+		processed.emplace_back(source);
 	}
 
 	keyboard_layouts = processed;

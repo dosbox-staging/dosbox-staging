@@ -197,7 +197,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;
 	inventory.emplace_back("");
-	inventory.emplace_back(MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_1"));
+	inventory.emplace_back(MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_1"));
 	inventory.emplace_back("");
 
 	const std::string file_prefix = "        ";
@@ -212,13 +212,13 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
 
-		const char* pattern = nullptr;
+		std::string pattern = {};
 		if (!dir_exists) {
-			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
+			pattern = MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
 		} else if (!dir_has_shaders) {
-			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
+			pattern = MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
 		} else {
-			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_LIST");
+			pattern = MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_LIST");
 		}
 		inventory.emplace_back(format_str(pattern, dir.u8string().c_str()));
 
@@ -232,7 +232,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		}
 		inventory.emplace_back("");
 	}
-	inventory.emplace_back(MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_2"));
+	inventory.emplace_back(MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_2"));
 
 	return inventory;
 }

@@ -36,6 +36,7 @@
 #include "fs_utils.h"
 #include "math_utils.h"
 #include "mixer.h"
+#include "notifications.h"
 #include "pic.h"
 #include "programs.h"
 #include "string_utils.h"
@@ -54,32 +55,31 @@ constexpr const char* fsynth_dynlib_file = "libfluidsynth.3.dylib";
 constexpr const char* fsynth_dynlib_file = "libfluidsynth.so.3";
 #endif
 
-
-struct FSynthVersion
-{
+struct FSynthVersion {
 	int major = 0;
 	int minor = 0;
 	int micro = 0;
 
-	// Workaround for clang bug
-	#pragma clang diagnostic push
-	#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+// Workaround for clang bug
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
 	auto operator<=>(const FSynthVersion&) const = default;
-	#pragma clang diagnostic pop
+#pragma clang diagnostic pop
 };
 
-constexpr FSynthVersion min_fsynth_version = {2, 2, 3};
+constexpr FSynthVersion min_fsynth_version           = {2, 2, 3};
 constexpr FSynthVersion max_fsynth_version_exclusive = {3, 0, 0};
 
-namespace FluidSynth 
-{
+namespace FluidSynth {
 /**
  * FluidSynth dynamic library handle
  */
 static dynlib_handle fsynth_lib = {};
 
-// The following function pointers will be set to their corresponding symbols in the FluidSynth library
+// The following function pointers will be set to their corresponding symbols in
+// the FluidSynth library
 
+// clang-format off
 /**
  * A 'X-Macro' to generate a list of function pointers to symbols in the 
  * Fluidsynth library. While hacky, this ensures that all symbols will 
@@ -119,32 +119,34 @@ static dynlib_handle fsynth_lib = {};
 	FSFUNC(int, fluid_synth_pitch_bend, (fluid_synth_t *synth, int chan, int val)) \
 	FSFUNC(int, fluid_synth_sysex, (fluid_synth_t *synth, const char *data, int len, char *response, int *response_len, int *handled, int dryrun)) \
 	FSFUNC(int, fluid_synth_write_float, (fluid_synth_t *synth, int len, void *lout,  int loff, int lincr, void *rout, int roff, int rincr))
+// clang-format on
 
 /**
  * Macro to declare function pointers
  */
-#define FSYNTH_FUNC_DECLARE(ret_type, name, sig) \
-	ret_type (*name)sig = nullptr;
+#define FSYNTH_FUNC_DECLARE(ret_type, name, sig) ret_type(*name) sig = nullptr;
 
 FSYNTH_FUNC_LIST(FSYNTH_FUNC_DECLARE)
 
 } // namespace FluidSynth
 
 /**
- * A filthy macro to resolve fluidsynth symbols, and return from the 
+ * A filthy macro to resolve fluidsynth symbols, and return from the
  * calling function below on error.
  */
 #define FSYNTH_FUNC_GET_SYM(ret_type, name, sig) \
-	FluidSynth::name = (decltype(FluidSynth::name))dynlib_get_symbol(FluidSynth::fsynth_lib, #name); \
+	FluidSynth::name = (decltype(FluidSynth::name)) \
+	        dynlib_get_symbol(FluidSynth::fsynth_lib, #name); \
 	if (!FluidSynth::name) { \
 		dynlib_close(FluidSynth::fsynth_lib); \
-		err_str = "FSYNTH: Failed to get symbol: '" #ret_type " " #name #sig "'"; \
+		err_str = "FSYNTH: Failed to get symbol: '" #ret_type \
+		          " " #name #sig "'"; \
 		return DynLibResult::ResolveSymErr; \
 	}
 
 /**
  * Load the FluidSynth library and resolve all required symbols.
- * 
+ *
  * If the library is already loaded, does nothing.
  */
 static DynLibResult load_fsynth_dynlib(std::string& err_str)
@@ -157,10 +159,10 @@ static DynLibResult load_fsynth_dynlib(std::string& err_str)
 		}
 		FSYNTH_FUNC_LIST(FSYNTH_FUNC_GET_SYM)
 
-        // Keep ERR and PANIC logging only
-        for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
-            FluidSynth::fluid_set_log_function(level, nullptr, nullptr);
-        }
+		// Keep ERR and PANIC logging only
+		for (auto level : {FLUID_DBG, FLUID_INFO, FLUID_WARN}) {
+			FluidSynth::fluid_set_log_function(level, nullptr, nullptr);
+		}
 	}
 	return DynLibResult::Success;
 }
@@ -324,9 +326,8 @@ static std::vector<std_fs::path> get_data_dirs()
 			}
 		} else {
 			LOG_WARNING(
-			        "FSYNTH: Invalid `soundfont_dir` setting, "
-			        "cannot open directory '%s'; using ''",
-			        sf_dir.c_str());
+			        "Invalid 'soundfont_dir' setting; "
+			        "cannot open directory '%s', using ''");
 
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
@@ -359,8 +360,7 @@ static std_fs::path find_sf_file(const std::string& sf_name)
 				// bugs downstream when we use this path in
 				// comparisons.
 				std::error_code err = {};
-				const auto canonical_path =
-				        std_fs::canonical(sf, err);
+				const auto canonical_path = std_fs::canonical(sf, err);
 
 				if (err) {
 					return {};
@@ -404,21 +404,22 @@ static float validate_setting(const char* name, const std::string& str_val,
 	const auto val = atof(str_val.c_str());
 
 	if (val < min_val || val > max_val) {
-		LOG_WARNING(
-		        "FSYNTH: Invalid %s setting (%s), needs to be between "
-		        "%.2f and %.2f: using default (%.2f)",
-		        name,
-		        str_val.c_str(),
-		        min_val,
-		        max_val,
-		        def_val);
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "FSYNTH",
+		                      "FLUIDSYNTH_INVALID_SYNTH_PARAMETER",
+		                      name,
+		                      str_val.c_str(),
+		                      min_val,
+		                      max_val,
+		                      def_val);
 		return def_val;
 	}
 	return val;
 }
 
 static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
-{	assert(synth);
+{
+	assert(synth);
 
 	const auto section = get_fluidsynth_section();
 
@@ -472,18 +473,21 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 
-			} else if (chorus[4] != "sine") { // default is sine
-				LOG_WARNING(
-				        "FSYNTH: Invalid chorus modulation wave type ('%s'), "
-				        "needs to be 'sine' or 'triangle'",
-				        chorus[4].c_str());
+			} else if (chorus[4] != "sine") {
+				// default is sine
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "FSYNTH",
+				                      "FLUIDSYNTH_INVALID_CHORUS_WAVE",
+				                      chorus[4].c_str());
 			}
 
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom chorus settings (%d), "
-			        "should be five",
-			        static_cast<int>(chorus.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "FLUIDSYNTH_INVALID_NUM_CHORUS_PARAMS",
+			                      chorus.size());
+
+			set_section_property_value("fluidsynth", "fsynth_chorus", "auto");
 		}
 	}
 
@@ -493,16 +497,15 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 	// Applies setting to all groups
 	constexpr int FxGroup = -1;
 
-// Current API calls as of 2.2
+	// Current API calls as of 2.2
 	FluidSynth::fluid_synth_chorus_on(synth, FxGroup, chorus_enabled);
 	FluidSynth::fluid_synth_set_chorus_group_nr(synth, FxGroup, chorus_voice_count);
 	FluidSynth::fluid_synth_set_chorus_group_level(synth, FxGroup, chorus_level);
 	FluidSynth::fluid_synth_set_chorus_group_speed(synth, FxGroup, chorus_speed);
 	FluidSynth::fluid_synth_set_chorus_group_depth(synth, FxGroup, chorus_depth);
 
-	FluidSynth::fluid_synth_set_chorus_group_type(synth,
-	                                  FxGroup,
-	                                  static_cast<int>(chorus_mod_wave));
+	FluidSynth::fluid_synth_set_chorus_group_type(
+	        synth, FxGroup, static_cast<int>(chorus_mod_wave));
 
 	if (chorus_enabled) {
 		LOG_MSG("FSYNTH: Chorus enabled with %d voices at level %.2f, "
@@ -518,7 +521,8 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 }
 
 static void setup_reverb(fluid_synth_t* synth)
-{	assert(synth);
+{
+	assert(synth);
 
 	// Get the user's reverb settings
 	const auto reverb = split(
@@ -556,24 +560,27 @@ static void setup_reverb(fluid_synth_t* synth)
 			reverb_level = validate_setting(
 			        "reverb level", reverb[3], reverb_level, 0.0, 1.0);
 		} else {
-			LOG_WARNING(
-			        "FSYNTH: Invalid number of custom reverb settings (%d), "
-			        "should be four",
-			        static_cast<int>(reverb.size()));
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "FLUIDSYNTH_INVALID_NUM_REVERB_PARAMS",
+			                      reverb.size());
+
+			set_section_property_value("fluidsynth", "fsynth_reverb", "auto");
 		}
 	}
 
 	// Applies setting to all groups
 	constexpr int FxGroup = -1;
 
-// Current API calls as of 2.2
+	// Current API calls as of 2.2
 	FluidSynth::fluid_synth_reverb_on(synth, FxGroup, reverb_enabled);
-	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth, FxGroup, reverb_room_size);
+	FluidSynth::fluid_synth_set_reverb_group_roomsize(synth,
+	                                                  FxGroup,
+	                                                  reverb_room_size);
 
 	FluidSynth::fluid_synth_set_reverb_group_damp(synth, FxGroup, reverb_damping);
 	FluidSynth::fluid_synth_set_reverb_group_width(synth, FxGroup, reverb_width);
 	FluidSynth::fluid_synth_set_reverb_group_level(synth, FxGroup, reverb_level);
-
 
 	if (reverb_enabled) {
 		LOG_MSG("FSYNTH: Reverb enabled with a %.2f room size, "
@@ -590,26 +597,32 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	std::string sym_err_msg;
 	DynLibResult res = load_fsynth_dynlib(sym_err_msg);
 	switch (res) {
-		case DynLibResult::Success:
-			break;
-		case DynLibResult::LibOpenErr:
-		case DynLibResult::ResolveSymErr: {
-			LOG_ERR("%s", sym_err_msg.c_str());
-			throw std::runtime_error(sym_err_msg);
-			break;
-		}
+	case DynLibResult::Success: break;
+	case DynLibResult::LibOpenErr:
+	case DynLibResult::ResolveSymErr: {
+		LOG_ERR("%s", sym_err_msg.c_str());
+		throw std::runtime_error(sym_err_msg);
+		break;
+	}
 	}
 
 	FSynthVersion vers = {};
 	FluidSynth::fluid_version(&vers.major, &vers.minor, &vers.micro);
 	if (vers < min_fsynth_version || vers >= max_fsynth_version_exclusive) {
 		const auto msg = "FSYNTH: FluidSynth version must be at least 2.2.3 and less than 3.0.0";
-		LOG_ERR("%s. Version loaded is %d.%d.%d", msg, vers.major, vers.minor, vers.micro);
+		LOG_ERR("%s. Version loaded is %d.%d.%d",
+		        msg,
+		        vers.major,
+		        vers.minor,
+		        vers.micro);
 		throw std::runtime_error(msg);
 	} else {
-		LOG_MSG("FSYNTH: Successfully loaded FluidSynth %d.%d.%d", vers.major, vers.minor, vers.micro);
+		LOG_MSG("FSYNTH: Successfully loaded FluidSynth %d.%d.%d",
+		        vers.major,
+		        vers.minor,
+		        vers.micro);
 	}
-	
+
 	FluidSynthSettingsPtr fluid_settings(FluidSynth::new_fluid_settings(),
 	                                     FluidSynth::delete_fluid_settings);
 	if (!fluid_settings) {
@@ -630,8 +643,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
 	FluidSynth::fluid_settings_setnum(fluid_settings.get(),
-	                              "synth.sample-rate",
-	                              sample_rate_hz);
+	                                  "synth.sample-rate",
+	                                  sample_rate_hz);
 
 	FluidSynthPtr fluid_synth(FluidSynth::new_fluid_synth(fluid_settings.get()),
 	                          FluidSynth::delete_fluid_synth);
@@ -645,11 +658,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	const auto sf_name = section->Get_string("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
-	if (!sf_path.empty() && FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
+	if (!sf_path.empty() &&
+	    FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto ResetPresets = true;
 		FluidSynth::fluid_synth_sfload(fluid_synth.get(),
-								   sf_path.string().c_str(),
-								   ResetPresets);
+		                               sf_path.string().c_str(),
+		                               ResetPresets);
 	}
 
 	if (FluidSynth::fluid_synth_sfcount(fluid_synth.get()) == 0) {
@@ -662,7 +676,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	auto sf_volume_percent = section->Get_int("soundfont_volume");
 	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
-								 static_cast<float>(sf_volume_percent) / 100.0f);
+	                                 static_cast<float>(sf_volume_percent) /
+	                                         100.0f);
 
 	// Let the user know that the SoundFont was loaded
 	if (sf_volume_percent == 100) {
@@ -678,8 +693,8 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	// Use a 7th-order (highest) polynomial to generate MIDI channel waveforms
 	FluidSynth::fluid_synth_set_interp_method(fluid_synth.get(),
-	                                      FxGroup,
-	                                      FLUID_INTERP_HIGHEST);
+	                                          FxGroup,
+	                                          FLUID_INTERP_HIGHEST);
 
 	// Use reasonable chorus and reverb settings matching ScummVM's defaults
 
@@ -710,8 +725,12 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
-			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
-			            filter_prefs.c_str());
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "FSYNTH",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "fsynth_filter",
+			                      filter_prefs.c_str(),
+			                      "off");
 		}
 
 		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
@@ -958,13 +977,13 @@ void MidiDeviceFluidSynth::RenderAudioFramesToFifo(const int num_audio_frames)
 	}
 
 	FluidSynth::fluid_synth_write_float(synth.get(),
-									num_audio_frames,
-									&audio_frames[0][0],
-									0,
-									2,
-									&audio_frames[0][0],
-									1,
-									2);
+	                                    num_audio_frames,
+	                                    &audio_frames[0][0],
+	                                    0,
+	                                    2,
+	                                    &audio_frames[0][0],
+	                                    1,
+	                                    2);
 
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
 }
@@ -1070,7 +1089,7 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 			                               line.c_str(),
 			                               Reset);
 
-			caller->WriteOut(convert_ansi_markup(output).c_str());
+			caller->WriteOut(convert_ansi_markup(output));
 		} else {
 			caller->WriteOut("%s%s\n", Indent, line.c_str());
 		}
@@ -1114,7 +1133,9 @@ void FSYNTH_ListDevices(MidiDeviceFluidSynth* device, Program* caller)
 	          });
 
 	if (sf_files.empty()) {
-		caller->WriteOut("%s%s\n", Indent, MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS"));
+		caller->WriteOut("%s%s\n",
+		                 Indent,
+		                 MSG_Get("FLUIDSYNTH_NO_SOUNDFONTS").c_str());
 	} else {
 		for (const auto& path : sf_files) {
 			write_line(path);
@@ -1135,6 +1156,26 @@ static void fluidsynth_init([[maybe_unused]] Section* sec)
 static void register_fluidsynth_text_messages()
 {
 	MSG_Add("FLUIDSYNTH_NO_SOUNDFONTS", "No available SoundFonts");
+
+	MSG_Add("FLUIDSYNTH_INVALID_SYNTH_PARAMETER",
+	        "Invalid [color=light-green]'%s'[reset] synth parameter: "
+	        "[color=white]%s[reset];\n"
+	        "must be between %.2f and %.2f, using [color=white]%.2f[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_CHORUS_WAVE",
+	        "Invalid chorus modulation wave type: [color=white]'%s'[reset];\n"
+	        "must be [color=white]'sine'[reset] or "
+	        "[color=white]'triangle'[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_NUM_CHORUS_PARAMS",
+	        "Invalid number of [color=light-green]'fsynth_chorus'[reset] parameters: "
+	        "[color=white]%d[/reset];\n"
+	        "must be 5 space-separated values, using [color=white]'auto'[reset]");
+
+	MSG_Add("FLUIDSYNTH_INVALID_NUM_REVERB_PARAMS",
+	        "Invalid number of [color=light-green]'fsynth_reverb'[reset] parameters: "
+	        "[color=white]%d[/reset];\n"
+	        "must be 4 space-separated values, using [color=white]'auto'[reset]");
 }
 
 void FSYNTH_AddConfigSection(const ConfigPtr& conf)

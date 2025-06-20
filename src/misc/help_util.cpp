@@ -56,8 +56,8 @@ std::string HELP_GetShortHelp(const std::string &cmd_name)
 
 	// If it does not exist, extract first line of long help
 	auto extract = [](const std::string &long_key) {
-		const std::string str(MSG_Get(long_key));
-		const auto pos = str.find('\n');
+		const auto& str = MSG_Get(long_key);
+		const auto& pos = str.find('\n');
 		return str.substr(0, pos != std::string::npos ? pos + 1 : pos);
 	};
 	const std::string long_key_command = "SHELL_CMD_" + cmd_name + "_HELP_LONG";
@@ -75,11 +75,11 @@ std::string HELP_GetShortHelp(const std::string &cmd_name)
 const char *HELP_CategoryHeading(const HELP_Category category)
 {
 	switch (category) {
-	case HELP_Category::Dosbox: return MSG_Get("HELP_UTIL_CATEGORY_DOSBOX");
-	case HELP_Category::File: return MSG_Get("HELP_UTIL_CATEGORY_FILE");
-	case HELP_Category::Batch: return MSG_Get("HELP_UTIL_CATEGORY_BATCH");
-	case HELP_Category::Misc: return MSG_Get("HELP_UTIL_CATEGORY_MISC");
-	default: return MSG_Get("HELP_UTIL_CATEGORY_UNKNOWN");
+	case HELP_Category::Dosbox: return MSG_Get("HELP_UTIL_CATEGORY_DOSBOX").c_str();
+	case HELP_Category::File: return MSG_Get("HELP_UTIL_CATEGORY_FILE").c_str();
+	case HELP_Category::Batch: return MSG_Get("HELP_UTIL_CATEGORY_BATCH").c_str();
+	case HELP_Category::Misc: return MSG_Get("HELP_UTIL_CATEGORY_MISC").c_str();
+	default: return MSG_Get("HELP_UTIL_CATEGORY_UNKNOWN").c_str();
 	}
 }
 

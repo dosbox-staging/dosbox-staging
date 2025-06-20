@@ -2901,10 +2901,10 @@ Ważne: sekcja [autoexec] musi znajdować się na końcu pliku konfiguracyjnego!
 # Linie zaczynające się od # są komentarzami.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Możliwe wartości
 .
-:CONFIG_DEPRECATED_VALUES
+:CONFIG_DEPRECATION_WARNING
 Przestarzałe wartości
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -3041,7 +3041,7 @@ Ta operacja nie jest dozwolona w trybie bezpiecznym.
 Sekcja [%s] nie istnieje.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' nie jest poprawną wartością parametru '%s'.
 
 .

@@ -34,24 +34,24 @@ const char *UnmountHelper(char umount)
 	const bool using_drive_letter = (drive_id >= 'A' && drive_id <= 'Z');
 
 	if (!using_drive_number && !using_drive_letter)
-		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR");
+		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR").c_str();
 
 	const uint8_t i_drive = using_drive_number ? (drive_id - '0')
 	                                           : drive_index(drive_id);
 	assert(i_drive < DOS_DRIVES);
 
 	if (i_drive < MAX_DISK_IMAGES && !Drives[i_drive] && !imageDiskList[i_drive]) {
-		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED").c_str();
 	}
 
 	if (i_drive >= MAX_DISK_IMAGES && !Drives[i_drive]) {
-		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED").c_str();
 	}
 
 	if (Drives[i_drive]) {
 		switch (DriveManager::UnmountDrive(i_drive)) {
-			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
-			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
+			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL").c_str();
+			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS").c_str();
 		}
 		Drives[i_drive] = nullptr;
 		mem_writeb(RealToPhysical(dos.tables.mediaid)+i_drive*9,0);
@@ -65,7 +65,7 @@ const char *UnmountHelper(char umount)
 		imageDiskList[i_drive] = nullptr;
 	}
 
-	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
+	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS").c_str();
 }
 
 void AddCommonMountMessages() {
