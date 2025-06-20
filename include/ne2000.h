@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: LGPL-2.1-or-later
  *
- *  Copyright (C) 2021-2021  The DOSBox Staging Team
+ *  Copyright (C) 2021-2025  The DOSBox Staging Team
  *  Copyright (C) 2008-2010  Ralf Grillenberger <h-a-l-9000@users.sourceforge.net>
  *  Copyright (C) 2004-2008  Dean Beeler <canadacow@users.sourceforge.net>
  *  Copyright (C) 2001-2003  Peter Grehan <grehan@iprg.nokia.com>

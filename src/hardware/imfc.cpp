@@ -3,7 +3,7 @@
  *
  * In reverse chronological order:
  *
- *  Copyright (C) 2023-2024  The DOSBox Staging Team
+ *  Copyright (C) 2023-2025  The DOSBox Staging Team
  *    - Applied C++ modernization adjustments.
  *    - Fixed struct naming conflict with DOSBox generic type 'Fraction'
  *

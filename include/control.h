@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2024  The DOSBox Staging Team
+ *  Copyright (C) 2019-2025  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
