@@ -248,7 +248,6 @@ struct SDL_Block {
 		void* framebuf = nullptr;
 		GLuint texture;
 		GLint max_texsize;
-		bool npot_textures_supported = false;
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 

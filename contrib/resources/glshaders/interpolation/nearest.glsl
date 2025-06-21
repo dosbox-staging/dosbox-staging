@@ -5,7 +5,6 @@
 // SPDX-FileCopyrightText:  2020-2020 jmarsh <jmarsh@vogons.org>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#pragma use_npot_texture
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling

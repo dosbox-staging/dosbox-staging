@@ -342,10 +342,7 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 			std::smatch match = *next;
 			auto pragma       = match[1].str();
 
-			if (pragma == "use_npot_texture") {
-				settings.use_npot_texture = true;
-
-			} else if (pragma == "use_srgb_texture") {
+			if (pragma == "use_srgb_texture") {
 				settings.use_srgb_texture = true;
 
 			} else if (pragma == "use_srgb_framebuffer") {

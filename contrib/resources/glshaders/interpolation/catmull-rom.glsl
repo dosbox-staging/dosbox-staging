@@ -18,7 +18,6 @@
  *	more details
  */
 
-#pragma use_npot_texture
 #pragma use_srgb_texture
 #pragma use_srgb_framebuffer
 #pragma force_single_scan

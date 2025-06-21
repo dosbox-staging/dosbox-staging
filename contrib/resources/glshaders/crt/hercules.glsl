@@ -10,8 +10,6 @@
 // Ported from Libretro's GLSL shader crt-hyllian.glslp to DOSBox-compatible
 // format by Tyrells.
 
-#pragma use_npot_texture
-
 /*
 
 #pragma parameter BEAM_PROFILE "BEAM PROFILE (BP)" 0.0 0.0 2.0 1.0

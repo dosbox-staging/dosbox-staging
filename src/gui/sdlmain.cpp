@@ -2315,23 +2315,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		int texsize_w_px, texsize_h_px;
 
-		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
-		                              sdl.opengl.shader_info.settings.use_npot_texture;
-#if 0
-		if (use_npot_texture) {
-			LOG_MSG("OPENGL: Using NPOT texture");
-		} else {
-			LOG_MSG("OPENGL: Not using NPOT texture");
-		}
-#endif
-
-		if (use_npot_texture) {
-			texsize_w_px = render_width_px;
-			texsize_h_px = render_height_px;
-		} else {
-			texsize_w_px = 2 << int_log2(render_width_px);
-			texsize_h_px = 2 << int_log2(render_height_px);
-		}
+		texsize_w_px = render_width_px;
+		texsize_h_px = render_height_px;
 
 		if (texsize_w_px > sdl.opengl.max_texsize ||
 		    texsize_h_px > sdl.opengl.max_texsize) {
@@ -2405,11 +2390,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		// No borders
-		const auto wrap_parameter = use_npot_texture ? GL_CLAMP_TO_EDGE
-		                                             : GL_CLAMP_TO_BORDER;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 		const auto filter_mode = [&] {
 			switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
@@ -3471,16 +3453,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
 			                                                  "0.0.0");
-			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.npot_textures_supported =
-			        gl_version_major >= 2 ||
-			        SDL_GL_ExtensionSupported(
-			                "GL_ARB_texture_non_power_of_two");
-
-			std::string npot_support_msg = sdl.opengl.npot_textures_supported
-			                                     ? "supported"
-			                                     : "not supported";
 
 			LOG_INFO("OPENGL: Vendor: %s",
 			         safe_gl_get_string(GL_VENDOR, "unknown"));
@@ -3490,9 +3462,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			LOG_INFO("OPENGL: GLSL version: %s",
 			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
 			                            "unknown"));
-
-			LOG_INFO("OPENGL: NPOT textures %s",
-			         npot_support_msg.c_str());
 		}
 	}
 #endif // OPENGL

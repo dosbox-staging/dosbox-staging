@@ -10,7 +10,6 @@
 // Ported from Libretro's GLSL shader crt-hyllian.glslp to DOSBox-compatible
 // format by Tyrells.
 
-#pragma use_npot_texture
 #pragma force_single_scan
 #pragma force_no_pixel_doubling
 

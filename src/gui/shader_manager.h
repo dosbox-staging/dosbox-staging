@@ -97,7 +97,6 @@ enum TextureFilterMode {
 // The default setttings are important; these are the settings we get if the
 // shader doesn't override them via custom pragmas.
 struct ShaderSettings {
-	bool use_npot_texture     = false;
 	bool use_srgb_texture     = false;
 	bool use_srgb_framebuffer = false;
 

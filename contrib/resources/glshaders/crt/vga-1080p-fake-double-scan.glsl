@@ -3,7 +3,6 @@
 // SPDX-FileCopyrightText:  2020-2024 The DOSBox Staging Team
 // SPDX-License-Identifier: MIT
 
-#pragma use_npot_texture
 #pragma force_single_scan
 
 #define PHOSPHOR_LAYOUT       2.00
