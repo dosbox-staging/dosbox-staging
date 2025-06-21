@@ -5,8 +5,6 @@
 // SPDX-FileCopyrightText:  2020-2020 jmarsh <jmarsh@vogons.org>
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#pragma use_npot_texture
-
 varying vec2 v_texCoord;
 
 #if defined(VERTEX)
