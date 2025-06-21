@@ -2,7 +2,7 @@
 
 REM SPDX-License-Identifier: GPL-2.0-or-later
 REM
-REM Copyright (C) 2023-2023  The DOSBox Staging Team
+REM Copyright (C) 2023-2023 The DOSBox Staging Team
 
 REM This batch file converts GOG config files,
 REM which use the old 437 code page, to UTF-8.

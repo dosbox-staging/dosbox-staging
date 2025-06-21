@@ -2,9 +2,9 @@
 
 set -eu
 
+# SPDX-FileCopyrightText:  2020-2023 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2020-2023 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2020-2023  Patryk Obara <patryk.obara@gmail.com>
 
 SCRIPT=$(basename "$0")
 VERSION="1.0.2"

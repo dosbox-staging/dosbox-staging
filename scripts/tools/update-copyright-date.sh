@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2022-2024  The DOSBox Staging Team
-# Copyright (C) 2022       Patryk Obara <patryk.obara@gmail.com>
+# SPDX-FileCopyrightText:  2022-2024 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2022-2022 Patryk Obara <patryk.obara@gmail.com>
 
 # update-copyright-date.sh - Fix copyright lines in files touched this year and in metadata.
 

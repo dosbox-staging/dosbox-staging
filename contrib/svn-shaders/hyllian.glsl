@@ -1,7 +1,7 @@
 #version 120
 
 /*
-   Hyllian's CRT Shader
+  Hyllian's CRT Shader
 
    Copyright (C) 2011-2016 Hyllian - sergiogdb@gmail.com
 

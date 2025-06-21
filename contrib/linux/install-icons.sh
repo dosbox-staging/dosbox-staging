@@ -1,10 +1,7 @@
 #!/usr/bin/env sh
 
+# SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-3.0-or-later
-#
-# Copyright (C) 2023-2025  The DOSBox Staging Team
-#
-# Installs icon files and desktop shortcut.
 
 set -e
 

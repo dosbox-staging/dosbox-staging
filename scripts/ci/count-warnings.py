@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 # coding=utf-8
 
+# SPDX-FileCopyrightText:  2019-2021 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2019-2021 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2019-2021  Patryk Obara <patryk.obara@gmail.com>
 
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring

@@ -1,8 +1,8 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText:  2019-2021 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2019-2021 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2019-2021  Patryk Obara <patryk.obara@gmail.com>
 
 readonly svn_url=https://svn.code.sf.net/p/dosbox/code-0/dosbox
 
