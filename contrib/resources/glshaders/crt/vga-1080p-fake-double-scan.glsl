@@ -23,7 +23,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#pragma use_npot_texture
 #pragma force_single_scan
 
 #define PHOSPHOR_LAYOUT       2.00

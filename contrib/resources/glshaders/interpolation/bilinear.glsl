@@ -25,8 +25,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#pragma use_npot_texture
-
 varying vec2 v_texCoord;
 
 #if defined(VERTEX)
