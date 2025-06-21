@@ -26,7 +26,6 @@
    Incorporates some of the ideas from SABR shader. Thanks to Joshua Street.
 */
 
-#pragma use_npot_texture
 #pragma use_nearest_texture_filter
 #pragma force_single_scan
 #pragma force_no_pixel_doubling

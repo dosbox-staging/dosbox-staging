@@ -208,6 +208,28 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer         = nullptr;
 #define glUseProgram              gl2::glUseProgram
 #define glVertexAttribPointer     gl2::glVertexAttribPointer
 
+// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
+constexpr uint8_t MaxBytesPerPixel = 4;
+
+#ifdef DB_OPENGL_ERROR
+static void maybe_log_opengl_error(const char* message)
+{
+	GLenum r = glGetError();
+	if (r == GL_NO_ERROR) {
+		return;
+	}
+	LOG_ERR("OPENGL: Errors from %s", message);
+	do {
+		LOG_ERR("OPENGL: %X", r);
+	} while ((r = glGetError()) != GL_NO_ERROR);
+}
+#else
+static void maybe_log_opengl_error(const char*)
+{
+	return;
+}
+#endif
+
 static void get_opengl_proc_addresses()
 {
 	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
@@ -272,7 +294,14 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
-// Create a GLSL shader object, load the shader source, and compile the shader.
+// Create a GLSL shader object, load the shader source, and compile the
+// shader.
+//
+// `type` is an OpenGL shader stage enum, either GL_VERTEX_SHADER or
+// GL_FRAGMENT_SHADER. Other shader types are not supported.
+//
+// Returns the compiled shader object, or zero on failure.
+//
 static GLuint build_shader_gl(GLenum type, const std::string& source)
 {
 	GLuint shader            = 0;
@@ -315,14 +344,14 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	// Check the compile status
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
-	GLint info_len = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+	GLint log_length_bytes = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length_bytes);
 
 	// The info log might contain warnings and info messages even if the
 	// compilation was successful, so we'll always log it if it's non-empty.
-	if (info_len > 1) {
-		std::vector<GLchar> info_log(info_len);
-		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
+	if (log_length_bytes > 1) {
+		std::vector<GLchar> info_log(log_length_bytes);
+		glGetShaderInfoLog(shader, log_length_bytes, nullptr, info_log.data());
 
 		if (is_shader_compiled) {
 			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
@@ -340,26 +369,156 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
-static bool load_shader_gl(const std::string& source, GLuint& vertex_out,
-                           GLuint& fragment_out)
+// Build a OpenGL shader program.
+//
+// Input GLSL source must contain both vertex and fragment stages inside their
+// respective preprocessor definitions.
+//
+// Returns a ready to use OpenGL shader program, or zero on failure.
+//
+static GLuint build_shader_program(const std::string& source)
 {
 	if (source.empty()) {
-		return false;
+		LOG_ERR("OPENGL: No shader source present");
+		return 0;
 	}
 
-	GLuint s = build_shader_gl(GL_VERTEX_SHADER, source);
-	if (s) {
-		vertex_out = s;
+	auto vertex_shader = build_shader_gl(GL_VERTEX_SHADER, source);
+	if (!vertex_shader) {
+		LOG_ERR("OPENGL: Failed compiling vertex shader");
+		return 0;
+	}
 
-		s = build_shader_gl(GL_FRAGMENT_SHADER, source);
+	auto fragment_shader = build_shader_gl(GL_FRAGMENT_SHADER, source);
+	if (!fragment_shader) {
+		LOG_ERR("OPENGL: Failed compiling fragment shader");
+		glDeleteShader(vertex_shader);
+		return 0;
+	}
 
-		if (s) {
-			fragment_out = s;
-			return true;
+	const GLuint shader_program = glCreateProgram();
+
+	if (!shader_program) {
+		LOG_ERR("OPENGL: Failed creating shader program");
+		glDeleteShader(vertex_shader);
+		glDeleteShader(fragment_shader);
+		return 0;
+	}
+
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+
+	glLinkProgram(shader_program);
+
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	// Check the link status
+	GLint is_program_linked = GL_FALSE;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &is_program_linked);
+
+	// The info log might contain warnings and info messages even if the
+	// linking was successful, so we'll always log it if it's non-empty.
+	GLint log_length_bytes = 0;
+	glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length_bytes);
+
+	if (log_length_bytes > 1) {
+		std::vector<GLchar> info_log(static_cast<size_t>(log_length_bytes));
+
+		glGetProgramInfoLog(shader_program,
+		                    log_length_bytes,
+		                    nullptr,
+		                    info_log.data());
+
+		if (is_program_linked) {
+			LOG_WARNING("OPENGL: Program info log:\n %s",
+			            info_log.data());
+		} else {
+			LOG_ERR("OPENGL: Failed linking shader program:\n %s",
+			        info_log.data());
 		}
-		glDeleteShader(vertex_out);
 	}
-	return false;
+
+	if (!is_program_linked) {
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+
+	// Set vertex data. Vertices in counter-clockwise order.
+	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
+	                                                         "a_position");
+
+	if (vertex_attrib_location == -1) {
+		LOG_ERR("OPENGL: Failed to retrieve vertex position attribute location");
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+
+	// Lower left
+	sdl.opengl.vertex_data[0] = -1.0f;
+	sdl.opengl.vertex_data[1] = -1.0f;
+
+	// Lower right
+	sdl.opengl.vertex_data[2] = 3.0f;
+	sdl.opengl.vertex_data[3] = -1.0f;
+
+	// Upper left
+	sdl.opengl.vertex_data[4] = -1.0f;
+	sdl.opengl.vertex_data[5] = 3.0f;
+
+	// Load the vertices' positions
+	constexpr GLint NumComponents           = 2; // vec2(x, y)
+	constexpr GLenum ComponentDataType      = GL_FLOAT;
+	constexpr GLboolean NormalizeFixedPoint = GL_FALSE;
+	constexpr GLsizei DataStride            = 0;
+
+	glVertexAttribPointer(static_cast<GLuint>(vertex_attrib_location),
+	                      NumComponents,
+	                      ComponentDataType,
+	                      NormalizeFixedPoint,
+	                      DataStride,
+	                      sdl.opengl.vertex_data);
+
+	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
+
+	// Set texture slot
+	const GLint texture_uniform = glGetUniformLocation(shader_program,
+	                                                   "rubyTexture");
+	glUniform1i(texture_uniform, 0);
+
+	return shader_program;
+}
+
+static void get_uniform_locations_gl()
+{
+	sdl.opengl.ruby.texture_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                    "rubyTextureSize");
+
+	sdl.opengl.ruby.input_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                  "rubyInputSize");
+
+	sdl.opengl.ruby.output_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                   "rubyOutputSize");
+
+	sdl.opengl.ruby.frame_count = glGetUniformLocation(sdl.opengl.program_object,
+	                                                   "rubyFrameCount");
+}
+
+static void update_uniforms_gl()
+{
+	glUniform2f(sdl.opengl.ruby.texture_size,
+	            (GLfloat)sdl.opengl.texture_width_px,
+	            (GLfloat)sdl.opengl.texture_height_px);
+
+	glUniform2f(sdl.opengl.ruby.input_size,
+	            (GLfloat)sdl.draw.render_width_px,
+	            (GLfloat)sdl.draw.render_height_px);
+
+	glUniform2f(sdl.opengl.ruby.output_size,
+	            (GLfloat)sdl.draw_rect_px.w,
+	            (GLfloat)sdl.draw_rect_px.h);
+
+	glUniform1i(sdl.opengl.ruby.frame_count, sdl.opengl.actual_frame_count);
 }
 
 static bool init_shader_gl()
@@ -388,114 +547,17 @@ static bool init_shader_gl()
 
 		// does program need to be rebuilt?
 		if (sdl.opengl.program_object == 0) {
-			GLuint vertexShader, fragmentShader;
+			sdl.opengl.program_object = build_shader_program(
+			        sdl.opengl.shader_source);
 
-			if (!load_shader_gl(sdl.opengl.shader_source,
-			                    vertexShader,
-			                    fragmentShader)) {
-
+			if (sdl.opengl.program_object == 0) {
 				LOG_ERR("OPENGL: Failed to compile shader");
-				return false;
-			}
-
-			sdl.opengl.program_object = glCreateProgram();
-
-			if (!sdl.opengl.program_object) {
-				glDeleteShader(vertexShader);
-				glDeleteShader(fragmentShader);
-
-				LOG_WARNING(
-				        "OPENGL: Can't create program object, "
-				        "falling back to texture");
-				return false;
-			}
-
-			glAttachShader(sdl.opengl.program_object, vertexShader);
-			glAttachShader(sdl.opengl.program_object, fragmentShader);
-
-			// Link the program
-			glLinkProgram(sdl.opengl.program_object);
-
-			// Even if we *are* successful, we may delete the shader
-			// objects
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
-
-			// Check the link status
-			GLint is_program_linked = 0;
-			glGetProgramiv(sdl.opengl.program_object,
-			               GL_LINK_STATUS,
-			               &is_program_linked);
-
-			// The info log might contain warnings and info messages
-			// even if the linking was successful, so we'll always
-			// log it if it's non-empty.
-			GLint info_len = 0;
-
-			glGetProgramiv(sdl.opengl.program_object,
-			               GL_INFO_LOG_LENGTH,
-			               &info_len);
-
-			if (info_len > 1) {
-				std::vector<GLchar> info_log(info_len);
-
-				glGetProgramInfoLog(sdl.opengl.program_object,
-				                    info_len,
-				                    nullptr,
-				                    info_log.data());
-
-				if (is_program_linked) {
-					LOG_WARNING("OPENGL: Program info log:\n %s",
-					            info_log.data());
-				} else {
-					LOG_ERR("OPENGL: Error linking program:\n %s",
-					        info_log.data());
-				}
-			}
-
-			if (!is_program_linked) {
-				glDeleteProgram(sdl.opengl.program_object);
-				sdl.opengl.program_object = 0;
 				return false;
 			}
 
 			glUseProgram(sdl.opengl.program_object);
 
-			GLint u = glGetAttribLocation(sdl.opengl.program_object,
-			                              "a_position");
-			// upper left
-			sdl.opengl.vertex_data[0] = -1.0f;
-			sdl.opengl.vertex_data[1] = 1.0f;
-
-			// lower left
-			sdl.opengl.vertex_data[2] = -1.0f;
-			sdl.opengl.vertex_data[3] = -3.0f;
-
-			// upper right
-			sdl.opengl.vertex_data[4] = 3.0f;
-			sdl.opengl.vertex_data[5] = 1.0f;
-
-			// Load the vertex positions
-			glVertexAttribPointer(
-			        u, 2, GL_FLOAT, GL_FALSE, 0, sdl.opengl.vertex_data);
-
-			glEnableVertexAttribArray(u);
-
-			u = glGetUniformLocation(sdl.opengl.program_object,
-			                         "rubyTexture");
-			glUniform1i(u, 0);
-
-			sdl.opengl.ruby.texture_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyTextureSize");
-
-			sdl.opengl.ruby.input_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyInputSize");
-
-			sdl.opengl.ruby.output_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyOutputSize");
-
-			sdl.opengl.ruby.frame_count = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyFrameCount");
+			get_uniform_locations_gl();
 		}
 	}
 
@@ -582,31 +644,6 @@ SDL_Window* GFX_GetSDLWindow()
 {
 	return sdl.window;
 }
-#endif
-
-#if C_OPENGL
-
-// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
-constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
-
-#ifdef DB_OPENGL_ERROR
-static void maybe_log_opengl_error(const char* message)
-{
-	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) {
-		return;
-	}
-	LOG_ERR("OPENGL: Errors from %s", message);
-	do {
-		LOG_ERR("OPENGL: %X", r);
-	} while ((r = glGetError()) != GL_NO_ERROR);
-}
-#else
-static void maybe_log_opengl_error(const char*)
-{
-	return;
-}
-#endif
 #endif
 
 static void QuitSDL()
@@ -1632,9 +1669,8 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	clean_up_sdl_resources();
-
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
+		clean_up_sdl_resources();
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
@@ -2130,14 +2166,10 @@ static bool present_frame_gl()
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (sdl.opengl.program_object) {
-			glUniform1i(sdl.opengl.ruby.frame_count,
-			            sdl.opengl.actual_frame_count++);
+		sdl.opengl.actual_frame_count++;
+		update_uniforms_gl();
 
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-		} else {
-			glCallList(sdl.opengl.displaylist);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		if (CAPTURE_IsCapturingPostRenderImage()) {
 			// glReadPixels() implicitly blocks until all pipelined
@@ -2156,7 +2188,314 @@ static bool present_frame_gl()
 	render_pacer->Checkpoint();
 	return is_presenting;
 }
+
+std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
+                                        const int render_height_px)
+{
+	free(sdl.opengl.framebuf);
+	sdl.opengl.framebuf = nullptr;
+
+	if (!(flags & GFX_CAN_32)) {
+		return {};
+	}
+
+	sdl.opengl.texture_width_px  = render_width_px;
+	sdl.opengl.texture_height_px = render_height_px;
+
+	if (sdl.opengl.texture_width_px > sdl.opengl.max_texsize ||
+	    sdl.opengl.texture_height_px > sdl.opengl.max_texsize) {
+		LOG_WARNING(
+		        "OPENGL: No support for texture size of %dx%d pixels, "
+		        "falling back to texture",
+		        sdl.opengl.texture_width_px,
+		        sdl.opengl.texture_height_px);
+		return {};
+	}
+
+	// Re-apply the minimum bounds prior to clipping the OpenGL
+	// window because SDL invalidates the prior bounds in the above
+	// window changes.
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
+	setup_scaled_window(RenderingBackend::OpenGl);
+
+	// We may simply use SDL_BYTESPERPIXEL here rather than
+	// SDL_BITSPERPIXEL
+	if (!sdl.window ||
+	    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
+		LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
+		return {};
+	}
+
+	if (!init_shader_gl()) {
+		return {};
+	}
+
+	// Create the texture
+	const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
+	                               render_height_px * MaxBytesPerPixel;
+
+	sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
+	sdl.opengl.pitch    = render_width_px * 4;
+
+	// One-time initialize the window size
+	if (!sdl.desktop.window.adjusted_initial_size) {
+		initialize_sdl_window_size(sdl.window,
+		                           FallbackWindowSize,
+		                           {sdl.desktop.window.width,
+		                            sdl.desktop.window.height});
+
+		sdl.desktop.window.adjusted_initial_size = true;
+	}
+
+	const auto canvas_size_px = get_canvas_size_in_pixels(
+	        sdl.want_rendering_backend);
+
+	// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+	//         (canvas_size_px.w - sdl.clip.w) / 2,
+	//         (canvas_size_px.h - sdl.clip.h) / 2,
+	//         sdl.clip.w,
+	//         sdl.clip.h);
+
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
+
+	glViewport(sdl.draw_rect_px.x,
+	           sdl.draw_rect_px.y,
+	           sdl.draw_rect_px.w,
+	           sdl.draw_rect_px.h);
+
+	if (sdl.opengl.texture > 0) {
+		glDeleteTextures(1, &sdl.opengl.texture);
+	}
+	glGenTextures(1, &sdl.opengl.texture);
+	glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+
+	// No borders
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	const int filter_mode = [&] {
+		switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
+		case TextureFilterMode::Nearest: return GL_NEAREST;
+		case TextureFilterMode::Linear: return GL_LINEAR;
+		default: assertm(false, "Invalid TextureFilterMode"); return 0;
+		}
+	}();
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
+
+	const auto texture_area_bytes = static_cast<size_t>(
+	                                        sdl.opengl.texture_width_px) *
+	                                sdl.opengl.texture_height_px *
+	                                MaxBytesPerPixel;
+
+	uint8_t* emptytex = new uint8_t[texture_area_bytes];
+	assert(emptytex);
+
+	memset(emptytex, 0, texture_area_bytes);
+
+	int is_double_buffering_enabled = 0;
+	if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &is_double_buffering_enabled)) {
+
+		LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
+		            SDL_GetError());
+	} else {
+		if (!is_double_buffering_enabled) {
+			LOG_WARNING("OPENGL: Double buffering not enabled");
+		}
+	}
+
+	int is_framebuffer_srgb_capable = 0;
+	if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+	                        &is_framebuffer_srgb_capable)) {
+
+		LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
+		            SDL_GetError());
+	}
+
+	sdl.opengl.framebuffer_is_srgb_encoded =
+	        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+	        (is_framebuffer_srgb_capable > 0);
+
+	if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+	    !sdl.opengl.framebuffer_is_srgb_encoded) {
+		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
+	}
+
+	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
+	// with Mesa drivers on certain integrated Intel GPUs
+	const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
+	                                       sdl.opengl.framebuffer_is_srgb_encoded
+	                             ? GL_SRGB8_ALPHA8
+	                             : GL_RGB8;
+
+#if 0
+		if (texformat == GL_SRGB8_ALPHA8) {
+			LOG_MSG("OPENGL: Using sRGB texture");
+		}
 #endif
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,
+	             texformat,
+	             sdl.opengl.texture_width_px,
+	             sdl.opengl.texture_height_px,
+	             0,
+	             GL_BGRA_EXT,
+	             GL_UNSIGNED_BYTE,
+	             emptytex);
+
+	delete[] emptytex;
+
+	if (sdl.opengl.framebuffer_is_srgb_encoded) {
+		glEnable(GL_FRAMEBUFFER_SRGB);
+#if 0
+			LOG_MSG("OPENGL: Using sRGB framebuffer");
+#endif
+	} else {
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	SDL_GL_SwapWindow(sdl.window);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_2D);
+
+	sdl.opengl.actual_frame_count = 0;
+
+	// Set shader variables
+	update_uniforms_gl();
+
+	maybe_log_opengl_error("End of setsize");
+
+	sdl.frame.update  = update_frame_gl;
+	sdl.frame.present = present_frame_gl;
+
+	return GFX_CAN_32 | GFX_CAN_RANDOM;
+}
+
+#endif
+
+uint8_t init_sdl_texture_renderer()
+{
+	uint8_t flags = 0;
+
+	if (!setup_scaled_window(RenderingBackend::Texture)) {
+		LOG_ERR("DISPLAY: Can't initialise 'texture' window");
+		E_Exit("SDL: Failed to create window");
+	}
+
+	// Use renderer's default format
+	SDL_RendererInfo rinfo;
+	SDL_GetRendererInfo(sdl.renderer, &rinfo);
+
+	const auto texture_format = rinfo.texture_formats[0];
+
+	sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
+	                                        texture_format,
+	                                        SDL_TEXTUREACCESS_STREAMING,
+	                                        sdl.draw.render_width_px,
+	                                        sdl.draw.render_height_px);
+
+	if (!sdl.texture.texture) {
+		SDL_DestroyRenderer(sdl.renderer);
+		sdl.renderer = nullptr;
+		E_Exit("SDL: Failed to create texture");
+	}
+
+	// release the existing surface if needed
+	auto& texture_input_surface = sdl.texture.input_surface;
+	if (texture_input_surface) {
+		SDL_FreeSurface(texture_input_surface);
+		texture_input_surface = nullptr;
+	}
+
+	// ensure we don't leak
+	assert(texture_input_surface == nullptr);
+
+	texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
+	        0, sdl.draw.render_width_px, sdl.draw.render_height_px, 32, texture_format);
+
+	if (!texture_input_surface) {
+		E_Exit("SDL: Error while preparing texture input");
+	}
+
+	SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+
+	uint32_t pixel_format;
+	assert(sdl.texture.texture);
+	SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
+
+	// ensure we don't leak
+	assert(sdl.texture.pixelFormat == nullptr);
+	sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+
+	switch (SDL_BITSPERPIXEL(pixel_format)) {
+	case 8: flags = GFX_CAN_8; break;
+	case 15: flags = GFX_CAN_15; break;
+	case 16: flags = GFX_CAN_16; break;
+	case 24: // SDL_BYTESPERPIXEL is probably 4, though.
+	case 32: flags = GFX_CAN_32; break;
+	}
+
+	// Log changes to the rendering driver
+	static std::string render_driver = {};
+	if (render_driver != rinfo.name) {
+		LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
+		        rinfo.name,
+		        SDL_BITSPERPIXEL(pixel_format));
+		render_driver = rinfo.name;
+	}
+
+	if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
+		flags |= GFX_CAN_RANDOM;
+	}
+
+	// Re-apply the minimum bounds prior to clipping the
+	// texture-based window because SDL invalidates the prior bounds
+	// in the above changes.
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
+	// One-time intialize the window size
+	if (!sdl.desktop.window.adjusted_initial_size) {
+		initialize_sdl_window_size(sdl.window,
+		                           FallbackWindowSize,
+		                           {sdl.desktop.window.width,
+		                            sdl.desktop.window.height});
+
+		sdl.desktop.window.adjusted_initial_size = true;
+	}
+
+	const auto canvas_size_px = get_canvas_size_in_pixels(
+	        sdl.want_rendering_backend);
+
+	// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+	//         (canvas.w - sdl.clip.w) / 2,
+	//         (canvas.h - sdl.clip.h) / 2,
+	//         sdl.clip.w,
+	//         sdl.clip.h);
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
+
+	if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
+		LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
+	}
+
+	sdl.frame.update  = update_frame_texture;
+	sdl.frame.present = present_frame_texture;
+
+	return flags;
+}
 
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
@@ -2200,391 +2539,30 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		initialize_vsync_settings();
 	}
 
-	switch (sdl.want_rendering_backend) {
-	case RenderingBackend::Texture: {
-	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
-
-		if (!setup_scaled_window(RenderingBackend::Texture)) {
-			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("SDL: Failed to create window");
-		}
-
-		// Use renderer's default format
-		SDL_RendererInfo rinfo;
-		SDL_GetRendererInfo(sdl.renderer, &rinfo);
-
-		const auto texture_format = rinfo.texture_formats[0];
-
-		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
-		                                        texture_format,
-		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        render_width_px,
-		                                        render_height_px);
-
-		if (!sdl.texture.texture) {
-			SDL_DestroyRenderer(sdl.renderer);
-			sdl.renderer = nullptr;
-			E_Exit("SDL: Failed to create texture");
-		}
-
-		// release the existing surface if needed
-		auto& texture_input_surface = sdl.texture.input_surface;
-		if (texture_input_surface) {
-			SDL_FreeSurface(texture_input_surface);
-			texture_input_surface = nullptr;
-		}
-
-		assert(texture_input_surface == nullptr); // ensure we don't leak
-		                                          //
-		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, render_width_px, render_height_px, 32, texture_format);
-		if (!texture_input_surface) {
-			E_Exit("SDL: Error while preparing texture input");
-		}
-
-		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
-		uint32_t pixel_format;
-		assert(sdl.texture.texture);
-		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
-
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
-
-		switch (SDL_BITSPERPIXEL(pixel_format)) {
-		case 8: retFlags = GFX_CAN_8; break;
-		case 15: retFlags = GFX_CAN_15; break;
-		case 16: retFlags = GFX_CAN_16; break;
-		case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
-		case 32: retFlags = GFX_CAN_32; break;
-		}
-
-		// Log changes to the rendering driver
-		static std::string render_driver = {};
-		if (render_driver != rinfo.name) {
-			LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
-			        rinfo.name,
-			        SDL_BITSPERPIXEL(pixel_format));
-			render_driver = rinfo.name;
-		}
-
-		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
-			retFlags |= GFX_CAN_RANDOM;
-		}
-
-		// Re-apply the minimum bounds prior to clipping the
-		// texture-based window because SDL invalidates the prior bounds
-		// in the above changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FallbackWindowSize.x,
-		                         FallbackWindowSize.y);
-
-		// One-time intialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FallbackWindowSize,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-		const auto canvas_size_px = get_canvas_size_in_pixels(
-		        sdl.want_rendering_backend);
-
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas.w - sdl.clip.w) / 2,
-		//         (canvas.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-		sdl.draw_rect_px = to_sdl_rect(
-		        calc_draw_rect_in_pixels(canvas_size_px));
-
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
-			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
-		}
-
-		sdl.frame.update  = update_frame_texture;
-		sdl.frame.present = present_frame_texture;
-
-		break; // RenderingBackend::Texture
-	}
-
-	case RenderingBackend::OpenGl: {
+	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 #if C_OPENGL
-		free(sdl.opengl.framebuf);
-		sdl.opengl.framebuf = nullptr;
-
-		if (!(flags & GFX_CAN_32)) {
-			goto fallback_texture;
-		}
-
-		int texsize_w_px, texsize_h_px;
-
-		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
-		                              sdl.opengl.shader_info.settings.use_npot_texture;
-#if 0
-		if (use_npot_texture) {
-			LOG_MSG("OPENGL: Using NPOT texture");
+		if (const auto result = init_gl_renderer(flags,
+		                                         render_width_px,
+		                                         render_height_px);
+		    result) {
+			retFlags = *result;
 		} else {
-			LOG_MSG("OPENGL: Not using NPOT texture");
+			// Initialising OpenGL renderer failed; fallback to SDL
+			// texture
+			sdl.want_rendering_backend = RenderingBackend::Texture;
 		}
-#endif
-
-		if (use_npot_texture) {
-			texsize_w_px = render_width_px;
-			texsize_h_px = render_height_px;
-		} else {
-			texsize_w_px = 2 << int_log2(render_width_px);
-			texsize_h_px = 2 << int_log2(render_height_px);
-		}
-
-		if (texsize_w_px > sdl.opengl.max_texsize ||
-		    texsize_h_px > sdl.opengl.max_texsize) {
-			LOG_WARNING(
-			        "OPENGL: No support for texture size of %dx%d pixels, "
-			        "falling back to texture",
-			        texsize_w_px,
-			        texsize_h_px);
-			goto fallback_texture;
-		}
-
-		// Re-apply the minimum bounds prior to clipping the OpenGL
-		// window because SDL invalidates the prior bounds in the above
-		// window changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FallbackWindowSize.x,
-		                         FallbackWindowSize.y);
-
-		setup_scaled_window(RenderingBackend::OpenGl);
-
-		/* We may simply use SDL_BYTESPERPIXEL
-		here rather than SDL_BITSPERPIXEL   */
-		if (!sdl.window ||
-		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
-			LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
-			goto fallback_texture;
-		}
-
-		if (sdl.opengl.use_shader) {
-			if (!init_shader_gl()) {
-				goto fallback_texture;
-			}
-		}
-
-		/* Create the texture and display list */
-		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
-		                               render_height_px * MAX_BYTES_PER_PIXEL;
-
-		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = render_width_px * 4;
-
-		// One-time initialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FallbackWindowSize,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-
-		const auto canvas_size_px = get_canvas_size_in_pixels(
-		        sdl.want_rendering_backend);
-
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas_size_px.w - sdl.clip.w) / 2,
-		//         (canvas_size_px.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-
-		sdl.draw_rect_px = to_sdl_rect(
-		        calc_draw_rect_in_pixels(canvas_size_px));
-
-		glViewport(sdl.draw_rect_px.x,
-		           sdl.draw_rect_px.y,
-		           sdl.draw_rect_px.w,
-		           sdl.draw_rect_px.h);
-
-		if (sdl.opengl.texture > 0) {
-			glDeleteTextures(1, &sdl.opengl.texture);
-		}
-		glGenTextures(1, &sdl.opengl.texture);
-		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-		// No borders
-		const auto wrap_parameter = use_npot_texture ? GL_CLAMP_TO_EDGE
-		                                             : GL_CLAMP_TO_BORDER;
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
-
-		const auto filter_mode = [&] {
-			switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
-			case TextureFilterMode::Nearest: return GL_NEAREST;
-			case TextureFilterMode::Linear: return GL_LINEAR;
-			default:
-				assertm(false, "Invalid TextureFilterMode");
-				return 0;
-			}
-		}();
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
-
-		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
-		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
-		uint8_t* emptytex = new uint8_t[texture_area_bytes];
-		assert(emptytex);
-
-		memset(emptytex, 0, texture_area_bytes);
-
-		int is_double_buffering_enabled = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
-		                        &is_double_buffering_enabled)) {
-
-			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
-			            SDL_GetError());
-		} else {
-			if (!is_double_buffering_enabled) {
-				LOG_WARNING("OPENGL: Double buffering not enabled");
-			}
-		}
-
-		int is_framebuffer_srgb_capable = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &is_framebuffer_srgb_capable)) {
-
-			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
-			            SDL_GetError());
-		}
-
-		sdl.opengl.framebuffer_is_srgb_encoded =
-		        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		        (is_framebuffer_srgb_capable > 0);
-
-		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		    !sdl.opengl.framebuffer_is_srgb_encoded) {
-			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-		}
-
-		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
-		// with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
-		                                       sdl.opengl.framebuffer_is_srgb_encoded
-		                             ? GL_SRGB8_ALPHA8
-		                             : GL_RGB8;
-
-#if 0
-		if (texformat == GL_SRGB8_ALPHA8) {
-			LOG_MSG("OPENGL: Using sRGB texture");
-		}
-#endif
-
-		glTexImage2D(GL_TEXTURE_2D,
-		             0,
-		             texformat,
-		             texsize_w_px,
-		             texsize_h_px,
-		             0,
-		             GL_BGRA_EXT,
-		             GL_UNSIGNED_BYTE,
-		             emptytex);
-
-		delete[] emptytex;
-
-		if (sdl.opengl.framebuffer_is_srgb_encoded) {
-			glEnable(GL_FRAMEBUFFER_SRGB);
-#if 0
-			LOG_MSG("OPENGL: Using sRGB framebuffer");
-#endif
-		} else {
-			glDisable(GL_FRAMEBUFFER_SRGB);
-		}
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(sdl.window);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_TEXTURE_2D);
-
-		if (sdl.opengl.program_object) {
-			// Set shader variables
-			glUniform2f(sdl.opengl.ruby.texture_size,
-			            (GLfloat)texsize_w_px,
-			            (GLfloat)texsize_h_px);
-
-			glUniform2f(sdl.opengl.ruby.input_size,
-			            (GLfloat)render_width_px,
-			            (GLfloat)render_height_px);
-
-			glUniform2f(sdl.opengl.ruby.output_size,
-			            (GLfloat)sdl.draw_rect_px.w,
-			            (GLfloat)sdl.draw_rect_px.h);
-
-			// The following uniform is *not* set right now
-			sdl.opengl.actual_frame_count = 0;
-
-		} else {
-			GLfloat tex_width = ((GLfloat)render_width_px /
-			                     (GLfloat)texsize_w_px);
-
-			GLfloat tex_height = ((GLfloat)render_height_px /
-			                      (GLfloat)texsize_h_px);
-
-			glShadeModel(GL_FLAT);
-			glMatrixMode(GL_MODELVIEW);
-			glLoadIdentity();
-
-			if (glIsList(sdl.opengl.displaylist)) {
-				glDeleteLists(sdl.opengl.displaylist, 1);
-			}
-
-			sdl.opengl.displaylist = glGenLists(1);
-			glNewList(sdl.opengl.displaylist, GL_COMPILE);
-
-			// Create one huge triangle and only display a portion.
-			// When using a quad, there was scaling bug (certain
-			// resolutions on Nvidia chipsets) in the seam
-			//
-			glBegin(GL_TRIANGLES);
-
-			// upper left
-			glTexCoord2f(0, 0);
-			glVertex2f(-1.0f, 1.0f);
-
-			// lower left
-			glTexCoord2f(0, tex_height * 2);
-			glVertex2f(-1.0f, -3.0f);
-
-			// upper right
-			glTexCoord2f(tex_width * 2, 0);
-			glVertex2f(3.0f, 1.0f);
-			glEnd();
-
-			glEndList();
-		}
-
-		maybe_log_opengl_error("End of setsize");
-
-		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
-		sdl.frame.update  = update_frame_gl;
-		sdl.frame.present = present_frame_gl;
 #else
 		// Should never occur, but fallback to texture in release builds
 		assertm(false, "OpenGL is not supported by this executable");
 		LOG_ERR("SDL: OpenGL is not supported by this executable, "
-		        "falling back to texture output");
+		        "falling back to 'texture' output");
 
-		goto fallback_texture;
-
-#endif                 // C_OPENGL
-		break; // RenderingBackend::OpenGl
+		sdl.want_rendering_backend = RenderingBackend::Texture;
+#endif
 	}
+
+	if (sdl.want_rendering_backend == RenderingBackend::Texture) {
+		retFlags = init_sdl_texture_renderer();
 	}
 
 	// Ensure mouse emulation knows the current parameters
@@ -2649,9 +2627,6 @@ void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
 	sdl.opengl.shader_info   = shader_info;
 	sdl.opengl.shader_source = shader_source;
 
-	if (!sdl.opengl.use_shader) {
-		return;
-	}
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;
@@ -3460,14 +3435,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
 
-	const std::string screensaver = section->Get_string("screensaver");
-	if (screensaver == "allow") {
-		SDL_EnableScreenSaver();
-	}
-	if (screensaver == "block") {
-		SDL_DisableScreenSaver();
-	}
-
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
@@ -3490,10 +3457,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
-	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL
-		                                                         is
-		                                                         requested
-		                                                       */
+	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 		if (!set_default_window_mode()) {
 			LOG_WARNING(
 			        "OPENGL: Could not create OpenGL window, "
@@ -3518,35 +3482,14 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			get_opengl_proc_addresses();
 
-			sdl.opengl.use_shader =
-			        (glAttachShader && glCompileShader &&
-			         glCreateProgram && glDeleteProgram &&
-			         glDeleteShader && glEnableVertexAttribArray &&
-			         glGetAttribLocation && glGetProgramiv &&
-			         glGetProgramInfoLog && glGetShaderiv &&
-			         glGetShaderInfoLog && glGetUniformLocation &&
-			         glLinkProgram && glShaderSource &&
-			         glUniform2f && glUniform1i && glUseProgram &&
-			         glVertexAttribPointer);
-
-			sdl.opengl.framebuf    = nullptr;
-			sdl.opengl.texture     = 0;
-			sdl.opengl.displaylist = 0;
+			sdl.opengl.framebuf = nullptr;
+			sdl.opengl.texture  = 0;
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
 			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
 			                                                  "0.0.0");
 			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.npot_textures_supported =
-			        gl_version_major >= 2 ||
-			        SDL_GL_ExtensionSupported(
-			                "GL_ARB_texture_non_power_of_two");
-
-			std::string npot_support_msg = sdl.opengl.npot_textures_supported
-			                                     ? "supported"
-			                                     : "not supported";
 
 			LOG_INFO("OPENGL: Vendor: %s",
 			         safe_gl_get_string(GL_VENDOR, "unknown"));
@@ -3556,11 +3499,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			LOG_INFO("OPENGL: GLSL version: %s",
 			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
 			                            "unknown"));
-
-			LOG_INFO("OPENGL: NPOT textures %s",
-			         npot_support_msg.c_str());
 		}
-	} /* OPENGL is requested end */
+	}
 #endif // OPENGL
 
 	if (!set_default_window_mode()) {
@@ -3676,7 +3616,7 @@ static void read_gui_config(Section* sec)
 
 	if (!fullresolution.empty()) {
 		lowcase(fullresolution); // so x and X are allowed
-								 //
+		                         //
 		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
 
@@ -3764,6 +3704,14 @@ static void read_gui_config(Section* sec)
 	}
 
 	set_output(section, is_aspect_ratio_correction_enabled());
+
+	const std::string screensaver = section->Get_string("screensaver");
+	if (screensaver == "allow") {
+		SDL_EnableScreenSaver();
+	}
+	if (screensaver == "block") {
+		SDL_DisableScreenSaver();
+	}
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
@@ -3910,9 +3858,7 @@ static void handle_video_resize(int width, int height)
 		           sdl.draw_rect_px.w,
 		           sdl.draw_rect_px.h);
 
-		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.draw_rect_px.w,
-		            (GLfloat)sdl.draw_rect_px.h);
+		update_uniforms_gl();
 	}
 #endif // C_OPENGL
 
@@ -4226,8 +4172,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 #endif
 
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
-		// New display might have a different resolution and DPI scaling set,
-		// so recalculate that and set viewport
+		// New display might have a different resolution and DPI scaling
+		// set, so recalculate that and set viewport
 		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend);
 
 		SDL_Rect display_bounds = {};
@@ -4316,7 +4262,7 @@ bool GFX_Events()
 	// the ALT-TAB stuff for WIN32.
 	static auto last_check = GetTicks();
 
-	auto current_check     = GetTicks();
+	auto current_check = GetTicks();
 
 	if (GetTicksDiff(current_check, last_check) <= DB_POLLSKIP) {
 		return true;
@@ -4871,7 +4817,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 
-	bool first               = true;
+	bool first = true;
 
 	for (const auto& arg : parameters) {
 		if (!first) {
@@ -4883,7 +4829,9 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #else
 	parameters.emplace_back("--waitpid");
 	parameters.emplace_back(std::to_string(getpid()));
+
 	char** newargs = new char*[parameters.size() + 1];
+
 	// parameter 0 is the executable path
 	// contents of the vector follow
 	// last one is NULL
@@ -5068,8 +5016,8 @@ static void set_wm_class()
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
 #else
 #if !defined(WIN32) && !defined(MACOSX)
-	constexpr int overwrite = 0; // don't overwrite
-								 //
+	constexpr int overwrite = 0;
+
 	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
 	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
 #endif

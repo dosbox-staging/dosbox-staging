@@ -44,12 +44,6 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-static ShaderManager& get_shader_manager()
-{
-	static auto shader_manager = ShaderManager();
-	return shader_manager;
-}
-
 const char* to_string(const PixelFormat pf)
 {
 	switch (pf) {
@@ -331,9 +325,12 @@ static Section_prop* get_render_section()
 	return render_section;
 }
 
+// forward declaration
+static void render_init(Section* sec);
+
 void RENDER_Reinit()
 {
-	RENDER_Init(get_render_section());
+	render_init(get_render_section());
 }
 
 static void render_reset()
@@ -421,9 +418,11 @@ static void render_reset()
 		gfx_flags |= GFX_DBL_W;
 	}
 
+	auto& shader_manager = ShaderManager::GetInstance();
+
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
-		              get_shader_manager().GetCurrentShaderSource());
+		GFX_SetShader(shader_manager.GetCurrentShaderInfo(),
+		              shader_manager.GetCurrentShaderSource());
 	}
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -566,7 +565,7 @@ static void setup_scan_and_pixel_doubling()
 	} break;
 
 	case RenderingBackend::OpenGl: {
-		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
+		const auto shader_info = ShaderManager::GetInstance().GetCurrentShaderInfo();
 		force_vga_single_scan = shader_info.settings.force_single_scan;
 		force_no_pixel_doubling = shader_info.settings.force_no_pixel_doubling;
 	} break;
@@ -590,10 +589,10 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 		return false;
 	}
 
-	get_shader_manager().NotifyRenderParametersChanged(canvas_size_px, video_mode);
+	auto& shader_manager = ShaderManager::GetInstance();
+	shader_manager.NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
-	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
-
+	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 	const auto changed_shader = (new_shader_name != render.current_shader_name);
 
 	if (changed_shader) {
@@ -602,12 +601,12 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 
 			// We can't set the new shader name here yet because
 			// then the "shader changed" reinit path wouldn't be
-			// trigger in RENDER_Init()
+			// trigger in render_init()
 		} else {
 			setup_scan_and_pixel_doubling();
 
 			// We must set the new shader name here as we're
-			// bypassing a full render reinit (RENDER_Init() is the
+			// bypassing a full render reinit (render_init() is the
 			// only other place where 'render.current_shader_name'
 			// can be set).
 			render.current_shader_name = new_shader_name;
@@ -638,7 +637,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 {
-	return get_shader_manager().GenerateShaderInventoryMessage();
+	return ShaderManager::GetInstance().GenerateShaderInventoryMessage();
 }
 
 void RENDER_AddMessages()
@@ -1269,7 +1268,7 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto changeable_at_runtime = true;
 
 	Section_prop* sec = conf->AddSection_prop("render",
-	                                          &RENDER_Init,
+	                                          &render_init,
 	                                          changeable_at_runtime);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
@@ -1305,7 +1304,7 @@ static bool handle_shader_changes()
 		return false;
 	}
 
-	auto& shader_manager = get_shader_manager();
+	auto& shader_manager = ShaderManager::GetInstance();
 
 	constexpr auto glshader_setting_name = "glshader";
 
@@ -1334,7 +1333,7 @@ static bool handle_shader_changes()
 	return shader_changed;
 }
 
-void RENDER_Init(Section* sec)
+static void render_init(Section* sec)
 {
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);

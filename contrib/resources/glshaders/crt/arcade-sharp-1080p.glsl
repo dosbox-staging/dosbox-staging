@@ -30,7 +30,6 @@
 
 */
 
-#pragma use_npot_texture
 #pragma force_single_scan
 
 /*

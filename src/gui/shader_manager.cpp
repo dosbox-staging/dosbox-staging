@@ -214,9 +214,11 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 
 		const char* pattern = nullptr;
 		if (!dir_exists) {
-			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
+			pattern = MSG_GetForHost(
+			        "DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
 		} else if (!dir_has_shaders) {
-			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
+			pattern = MSG_GetForHost(
+			        "DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
 		} else {
 			pattern = MSG_GetForHost("DOSBOX_HELP_LIST_GLSHADERS_LIST");
 		}
@@ -357,10 +359,7 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 			std::smatch match = *next;
 			auto pragma       = match[1].str();
 
-			if (pragma == "use_npot_texture") {
-				settings.use_npot_texture = true;
-
-			} else if (pragma == "use_srgb_texture") {
+			if (pragma == "use_srgb_texture") {
 				settings.use_srgb_texture = true;
 
 			} else if (pragma == "use_srgb_framebuffer") {
