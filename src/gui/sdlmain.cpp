@@ -337,26 +337,28 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 //
 // Returns a ready to use OpenGL shader program, or zero on failure.
 //
-static bool load_shader_gl(const std::string& source, GLuint& vertex_out,
-                           GLuint& fragment_out)
+static bool load_shader_gl(const std::string& source, GLuint& vertex_shader_out,
+                           GLuint& fragment_shader_out)
 {
 	if (source.empty()) {
+		LOG_ERR("OPENGL: No shader source present");
 		return false;
 	}
 
-	GLuint s = build_shader_gl(GL_VERTEX_SHADER, source);
-	if (s) {
-		vertex_out = s;
-
-		s = build_shader_gl(GL_FRAGMENT_SHADER, source);
-
-		if (s) {
-			fragment_out = s;
-			return true;
-		}
-		glDeleteShader(vertex_out);
+	vertex_shader_out = build_shader_gl(GL_VERTEX_SHADER, source);
+	if (!vertex_shader_out) {
+		LOG_ERR("OPENGL: Failed compiling vertex shader");
+		return false;
 	}
-	return false;
+
+	fragment_shader_out = build_shader_gl(GL_FRAGMENT_SHADER, source);
+	if (!fragment_shader_out) {
+		LOG_ERR("OPENGL: Failed compiling fragment shader");
+		glDeleteShader(vertex_shader_out);
+		return false;
+	}
+
+	return true;
 }
 
 static void get_uniform_locations_gl()
