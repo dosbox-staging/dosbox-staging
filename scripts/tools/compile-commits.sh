@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-# SPDX-License-Identifier: GPL-2.0-or-later
-# Copyright (C) 2025-2025  The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+# SPDX-License-Identifier: MIT
 
-#
 # Compiles all commits in the current branch with the specified CMake preset.
 # Expects the branch you're running it on to be freshly rebased to the parent
 # branch.
-#
 
 #set -x
 

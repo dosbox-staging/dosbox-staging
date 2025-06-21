@@ -1,8 +1,7 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText:  2024-2024 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2024-2024	The DOSBox Staging Team
 
 # This script notarizes a macOS DMG produced from the CI builds by
 # extracting the DMG, signing the app bundle, using the rest of the files

@@ -1,5 +1,8 @@
 #!env /bin/bash
 
+# SPDX-FileCopyrightText:  2024-2024 The DOSBox Staging Team
+# SPDX-License-Identifier: MIT
+
 VCPKG=$VCPKG_ROOT/vcpkg
 
 if [ "$#" -ne 2 ]; then
