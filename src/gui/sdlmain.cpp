@@ -359,6 +359,21 @@ static bool load_shader_gl(const std::string& source, GLuint& vertex_out,
 	return false;
 }
 
+static void get_uniform_locations_gl()
+{
+	sdl.opengl.ruby.texture_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                    "rubyTextureSize");
+
+	sdl.opengl.ruby.input_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                  "rubyInputSize");
+
+	sdl.opengl.ruby.output_size = glGetUniformLocation(sdl.opengl.program_object,
+	                                                   "rubyOutputSize");
+
+	sdl.opengl.ruby.frame_count = glGetUniformLocation(sdl.opengl.program_object,
+	                                                   "rubyFrameCount");
+}
+
 static bool init_shader_gl()
 {
 	GLuint prog = 0;
@@ -478,21 +493,12 @@ static bool init_shader_gl()
 
 			glEnableVertexAttribArray(u);
 
+			// Set texture slot
 			u = glGetUniformLocation(sdl.opengl.program_object,
 			                         "rubyTexture");
 			glUniform1i(u, 0);
 
-			sdl.opengl.ruby.texture_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyTextureSize");
-
-			sdl.opengl.ruby.input_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyInputSize");
-
-			sdl.opengl.ruby.output_size = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyOutputSize");
-
-			sdl.opengl.ruby.frame_count = glGetUniformLocation(
-			        sdl.opengl.program_object, "rubyFrameCount");
+			get_uniform_locations_gl();
 		}
 	}
 
