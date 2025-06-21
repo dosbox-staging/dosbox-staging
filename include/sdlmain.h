@@ -251,6 +251,9 @@ struct SDL_Block {
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 
+		int texture_width_px  = 0;
+		int texture_height_px = 0;
+
 		ShaderInfo shader_info    = {};
 		std::string shader_source = {};
 
