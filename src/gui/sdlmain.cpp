@@ -305,14 +305,14 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	// Check the compile status
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
-	GLint info_len = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+	GLint log_length_bytes = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length_bytes);
 
 	// The info log might contain warnings and info messages even if the
 	// compilation was successful, so we'll always log it if it's non-empty.
-	if (info_len > 1) {
-		std::vector<GLchar> info_log(info_len);
-		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
+	if (log_length_bytes > 1) {
+		std::vector<GLchar> info_log(log_length_bytes);
+		glGetShaderInfoLog(shader, log_length_bytes, nullptr, info_log.data());
 
 		if (is_shader_compiled) {
 			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
@@ -330,35 +330,126 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
-// Assemble an OpenGL shader program.
+// Build a OpenGL shader program.
 //
 // Input GLSL source must contain both vertex and fragment stages inside their
 // respective preprocessor definitions.
 //
 // Returns a ready to use OpenGL shader program, or zero on failure.
 //
-static bool load_shader_gl(const std::string& source, GLuint& vertex_shader_out,
-                           GLuint& fragment_shader_out)
+static GLuint build_shader_program(const std::string& source)
 {
 	if (source.empty()) {
 		LOG_ERR("OPENGL: No shader source present");
-		return false;
+		return 0;
 	}
 
-	vertex_shader_out = build_shader_gl(GL_VERTEX_SHADER, source);
-	if (!vertex_shader_out) {
+	auto vertex_shader = build_shader_gl(GL_VERTEX_SHADER, source);
+	if (!vertex_shader) {
 		LOG_ERR("OPENGL: Failed compiling vertex shader");
-		return false;
+		return 0;
 	}
 
-	fragment_shader_out = build_shader_gl(GL_FRAGMENT_SHADER, source);
-	if (!fragment_shader_out) {
+	auto fragment_shader = build_shader_gl(GL_FRAGMENT_SHADER, source);
+	if (!fragment_shader) {
 		LOG_ERR("OPENGL: Failed compiling fragment shader");
-		glDeleteShader(vertex_shader_out);
-		return false;
+		glDeleteShader(vertex_shader);
+		return 0;
 	}
 
-	return true;
+	const GLuint shader_program = glCreateProgram();
+
+	if (!shader_program) {
+		LOG_ERR("OPENGL: Failed creating shader program");
+		glDeleteShader(vertex_shader);
+		glDeleteShader(fragment_shader);
+		return 0;
+	}
+
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+
+	glLinkProgram(shader_program);
+
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	// Check the link status
+	GLint is_program_linked = GL_FALSE;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &is_program_linked);
+
+	// The info log might contain warnings and info messages even if the
+	// linking was successful, so we'll always log it if it's non-empty.
+	GLint log_length_bytes = 0;
+	glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length_bytes);
+
+	if (log_length_bytes > 1) {
+		std::vector<GLchar> info_log(static_cast<size_t>(log_length_bytes));
+
+		glGetProgramInfoLog(shader_program,
+		                    log_length_bytes,
+		                    nullptr,
+		                    info_log.data());
+
+		if (is_program_linked) {
+			LOG_WARNING("OPENGL: Program info log:\n %s",
+			            info_log.data());
+		} else {
+			LOG_ERR("OPENGL: Failed linking shader program:\n %s",
+			        info_log.data());
+		}
+	}
+
+	if (!is_program_linked) {
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+
+	glUseProgram(shader_program);
+
+	// Set vertex data. Vertices in counter-clockwise order.
+	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
+	                                                         "a_position");
+
+	if (vertex_attrib_location == -1) {
+		LOG_ERR("OPENGL: Failed to retrieve vertex position attribute location");
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+
+	// Lower left
+	sdl.opengl.vertex_data[0] = -1.0f;
+	sdl.opengl.vertex_data[1] = -1.0f;
+
+	// Lower right
+	sdl.opengl.vertex_data[2] = 3.0f;
+	sdl.opengl.vertex_data[3] = -1.0f;
+
+	// Upper left
+	sdl.opengl.vertex_data[4] = -1.0f;
+	sdl.opengl.vertex_data[5] = 3.0f;
+
+	// Load the vertices' positions
+	constexpr GLint NumComponents           = 2; // vec2(x, y)
+	constexpr GLenum ComponentDataType      = GL_FLOAT;
+	constexpr GLboolean NormalizeFixedPoint = GL_FALSE;
+	constexpr GLsizei DataStride            = 0;
+
+	glVertexAttribPointer(static_cast<GLuint>(vertex_attrib_location),
+	                      NumComponents,
+	                      ComponentDataType,
+	                      NormalizeFixedPoint,
+	                      DataStride,
+	                      sdl.opengl.vertex_data);
+
+	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
+
+	// Set texture slot
+	const GLint texture_uniform = glGetUniformLocation(shader_program,
+	                                                   "rubyTexture");
+	glUniform1i(texture_uniform, 0);
+
+	return shader_program;
 }
 
 static void get_uniform_locations_gl()
@@ -419,103 +510,15 @@ static bool init_shader_gl()
 
 		// does program need to be rebuilt?
 		if (sdl.opengl.program_object == 0) {
-			GLuint vertexShader, fragmentShader;
+			sdl.opengl.program_object = build_shader_program(
+			        sdl.opengl.shader_source);
 
-			if (!load_shader_gl(sdl.opengl.shader_source,
-			                    vertexShader,
-			                    fragmentShader)) {
-
+			if (sdl.opengl.program_object == 0) {
 				LOG_ERR("OPENGL: Failed to compile shader");
 				return false;
 			}
 
-			sdl.opengl.program_object = glCreateProgram();
-
-			if (!sdl.opengl.program_object) {
-				glDeleteShader(vertexShader);
-				glDeleteShader(fragmentShader);
-
-				LOG_WARNING(
-				        "OPENGL: Can't create program object, "
-				        "falling back to texture");
-				return false;
-			}
-
-			glAttachShader(sdl.opengl.program_object, vertexShader);
-			glAttachShader(sdl.opengl.program_object, fragmentShader);
-
-			// Link the program
-			glLinkProgram(sdl.opengl.program_object);
-
-			// Even if we *are* successful, we may delete the shader
-			// objects
-			glDeleteShader(vertexShader);
-			glDeleteShader(fragmentShader);
-
-			// Check the link status
-			GLint is_program_linked = 0;
-			glGetProgramiv(sdl.opengl.program_object,
-			               GL_LINK_STATUS,
-			               &is_program_linked);
-
-			// The info log might contain warnings and info messages
-			// even if the linking was successful, so we'll always
-			// log it if it's non-empty.
-			GLint info_len = 0;
-
-			glGetProgramiv(sdl.opengl.program_object,
-			               GL_INFO_LOG_LENGTH,
-			               &info_len);
-
-			if (info_len > 1) {
-				std::vector<GLchar> info_log(info_len);
-
-				glGetProgramInfoLog(sdl.opengl.program_object,
-				                    info_len,
-				                    nullptr,
-				                    info_log.data());
-
-				if (is_program_linked) {
-					LOG_WARNING("OPENGL: Program info log:\n %s",
-					            info_log.data());
-				} else {
-					LOG_ERR("OPENGL: Error linking program:\n %s",
-					        info_log.data());
-				}
-			}
-
-			if (!is_program_linked) {
-				glDeleteProgram(sdl.opengl.program_object);
-				sdl.opengl.program_object = 0;
-				return false;
-			}
-
 			glUseProgram(sdl.opengl.program_object);
-
-			GLint u = glGetAttribLocation(sdl.opengl.program_object,
-			                              "a_position");
-			// upper left
-			sdl.opengl.vertex_data[0] = -1.0f;
-			sdl.opengl.vertex_data[1] = 1.0f;
-
-			// lower left
-			sdl.opengl.vertex_data[2] = -1.0f;
-			sdl.opengl.vertex_data[3] = -3.0f;
-
-			// upper right
-			sdl.opengl.vertex_data[4] = 3.0f;
-			sdl.opengl.vertex_data[5] = 1.0f;
-
-			// Load the vertex positions
-			glVertexAttribPointer(
-			        u, 2, GL_FLOAT, GL_FALSE, 0, sdl.opengl.vertex_data);
-
-			glEnableVertexAttribArray(u);
-
-			// Set texture slot
-			u = glGetUniformLocation(sdl.opengl.program_object,
-			                         "rubyTexture");
-			glUniform1i(u, 0);
 
 			get_uniform_locations_gl();
 		}
