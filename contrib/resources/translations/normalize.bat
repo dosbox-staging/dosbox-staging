@@ -2,7 +2,7 @@
 
 REM SPDX-License-Identifier: GPL-2.0-or-later
 REM
-REM Copyright (C) 2023-2023  The DOSBox Staging Team
+REM Copyright (C) 2023-2023 The DOSBox Staging Team
 
 SET translation_dir=%~dp0
 PUSHD "%translation_dir%"

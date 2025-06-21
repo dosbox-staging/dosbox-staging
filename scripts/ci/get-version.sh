@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
+# SPDX-FileCopyrightText:  2024-2024 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Copyright (C) 2024-2024  The DOSBox Staging Team
 
 usage() {
     printf "%s\n" "\

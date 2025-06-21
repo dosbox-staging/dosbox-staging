@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
+# SPDX-FileCopyrightText:  2020-2021 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2020-2021 kcgen <kcgen@users.noreply.github.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2020-2021  kcgen <kcgen@users.noreply.github.com>
 
 """
 Count the number of issues found in an PVS-Studio report.

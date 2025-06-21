@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2022-2022  kcgen <kcgen@users.noreply.github.com>
+# Copyright (C) 2022-2022 kcgen <kcgen@users.noreply.github.com>
 
 # Bash strict-mode
 set -euo pipefail

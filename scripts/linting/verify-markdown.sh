@@ -1,9 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText:  2020-2021 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2020-2021 kcgen <kcgen@users.noreply.github.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2020-2021  kcgen <kcgen@users.noreply.github.com>
-#
+
 # This is a convenient helper to run mdl (markdownlint) on the
 # *.md files in the repo, except for those inside directories
 # that are likely to hold 3rd party documentation.
