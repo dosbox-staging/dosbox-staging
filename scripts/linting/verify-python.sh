@@ -1,12 +1,9 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText:  2019-2021 The DOSBox Staging Team
+# SPDX-FileCopyrightText:  2019-2021 Patryk Obara <patryk.obara@gmail.com>
 # SPDX-License-Identifier: GPL-2.0-or-later
-#
-# Copyright (C) 2019-2021  Patryk Obara <patryk.obara@gmail.com>
 
-# This script exists only to easily run python static checker on all files in
-# the repo.  You can pass additional parameters to this script itself, e.g.:
-#
 # $ ./verify-python.sh --disable=<msg_ids>
 #
 # This script uses exclusively python3 version of pylint; most distributions

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
+# SPDX-FileCopyrightText:  2023-2023 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-3.0-or-later
-#
-# Copyright (C) 2023-2023  The DOSBox Staging Team
-#
+
 # Compiles all branch commits from the current commit backward.
 # It Automatically uses the latest supported version of GCC and Clang,
 # building with both compilers if available.

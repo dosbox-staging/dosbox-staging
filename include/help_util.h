@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
+// SPDX-License-Identifier: GPL-2.0-or-later
+
 #ifndef HELP_UTIL_H
 #define HELP_UTIL_H
 
