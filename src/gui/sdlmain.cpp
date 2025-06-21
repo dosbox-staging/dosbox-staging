@@ -374,6 +374,23 @@ static void get_uniform_locations_gl()
 	                                                   "rubyFrameCount");
 }
 
+static void update_uniforms_gl()
+{
+	glUniform2f(sdl.opengl.ruby.texture_size,
+	            (GLfloat)sdl.opengl.texture_width_px,
+	            (GLfloat)sdl.opengl.texture_height_px);
+
+	glUniform2f(sdl.opengl.ruby.input_size,
+	            (GLfloat)sdl.draw.render_width_px,
+	            (GLfloat)sdl.draw.render_height_px);
+
+	glUniform2f(sdl.opengl.ruby.output_size,
+	            (GLfloat)sdl.draw_rect_px.w,
+	            (GLfloat)sdl.draw_rect_px.h);
+
+	glUniform1i(sdl.opengl.ruby.frame_count, sdl.opengl.actual_frame_count);
+}
+
 static bool init_shader_gl()
 {
 	GLuint prog = 0;
@@ -2135,8 +2152,8 @@ static bool present_frame_gl()
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUniform1i(sdl.opengl.ruby.frame_count,
-		            sdl.opengl.actual_frame_count++);
+		sdl.opengl.actual_frame_count++;
+		update_uniforms_gl();
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -2319,18 +2336,16 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			goto fallback_texture;
 		}
 
-		int texsize_w_px, texsize_h_px;
+		sdl.opengl.texture_width_px  = render_width_px;
+		sdl.opengl.texture_height_px = render_height_px;
 
-		texsize_w_px = render_width_px;
-		texsize_h_px = render_height_px;
-
-		if (texsize_w_px > sdl.opengl.max_texsize ||
-		    texsize_h_px > sdl.opengl.max_texsize) {
+		if (sdl.opengl.texture_width_px > sdl.opengl.max_texsize ||
+		    sdl.opengl.texture_height_px > sdl.opengl.max_texsize) {
 			LOG_WARNING(
 			        "OPENGL: No support for texture size of %dx%d pixels, "
 			        "falling back to texture",
-			        texsize_w_px,
-			        texsize_h_px);
+			        sdl.opengl.texture_width_px,
+			        sdl.opengl.texture_height_px);
 			goto fallback_texture;
 		}
 
@@ -2399,7 +2414,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		const auto filter_mode = [&] {
+		const int filter_mode = [&] {
 			switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
 			case TextureFilterMode::Nearest: return GL_NEAREST;
 			case TextureFilterMode::Linear: return GL_LINEAR;
@@ -2412,8 +2427,10 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
 
-		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
-		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
+		const auto texture_area_bytes =
+		        static_cast<size_t>(sdl.opengl.texture_width_px) *
+		        sdl.opengl.texture_height_px * MAX_BYTES_PER_PIXEL;
+
 		uint8_t* emptytex = new uint8_t[texture_area_bytes];
 		assert(emptytex);
 
@@ -2464,8 +2481,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glTexImage2D(GL_TEXTURE_2D,
 		             0,
 		             texformat,
-		             texsize_w_px,
-		             texsize_h_px,
+		             sdl.opengl.texture_width_px,
+		             sdl.opengl.texture_height_px,
 		             0,
 		             GL_BGRA_EXT,
 		             GL_UNSIGNED_BYTE,
@@ -2493,21 +2510,10 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
 
-		// Set shader variables
-		glUniform2f(sdl.opengl.ruby.texture_size,
-					(GLfloat)texsize_w_px,
-					(GLfloat)texsize_h_px);
-
-		glUniform2f(sdl.opengl.ruby.input_size,
-					(GLfloat)render_width_px,
-					(GLfloat)render_height_px);
-
-		glUniform2f(sdl.opengl.ruby.output_size,
-					(GLfloat)sdl.draw_rect_px.w,
-					(GLfloat)sdl.draw_rect_px.h);
-
-		// The following uniform is *not* set right now
 		sdl.opengl.actual_frame_count = 0;
+
+		// Set shader variables
+		update_uniforms_gl();
 
 		maybe_log_opengl_error("End of setsize");
 
@@ -3452,8 +3458,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			get_opengl_proc_addresses();
 
-			sdl.opengl.framebuf    = nullptr;
-			sdl.opengl.texture     = 0;
+			sdl.opengl.framebuf = nullptr;
+			sdl.opengl.texture  = 0;
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
@@ -3585,7 +3591,7 @@ static void read_gui_config(Section* sec)
 
 	if (!fullresolution.empty()) {
 		lowcase(fullresolution); // so x and X are allowed
-								 //
+		                         //
 		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
 
@@ -3819,9 +3825,7 @@ static void handle_video_resize(int width, int height)
 		           sdl.draw_rect_px.w,
 		           sdl.draw_rect_px.h);
 
-		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.draw_rect_px.w,
-		            (GLfloat)sdl.draw_rect_px.h);
+		update_uniforms_gl();
 	}
 #endif // C_OPENGL
 
@@ -4135,8 +4139,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 #endif
 
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
-		// New display might have a different resolution and DPI scaling set,
-		// so recalculate that and set viewport
+		// New display might have a different resolution and DPI scaling
+		// set, so recalculate that and set viewport
 		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend);
 
 		SDL_Rect display_bounds = {};
@@ -4225,7 +4229,7 @@ bool GFX_Events()
 	// the ALT-TAB stuff for WIN32.
 	static auto last_check = GetTicks();
 
-	auto current_check     = GetTicks();
+	auto current_check = GetTicks();
 
 	if (GetTicksDiff(current_check, last_check) <= DB_POLLSKIP) {
 		return true;
@@ -4784,7 +4788,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 
-	bool first               = true;
+	bool first = true;
 
 	for (const auto& arg : parameters) {
 		if (!first) {
@@ -4796,7 +4800,9 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #else
 	parameters.emplace_back("--waitpid");
 	parameters.emplace_back(std::to_string(getpid()));
+
 	char** newargs = new char*[parameters.size() + 1];
+
 	// parameter 0 is the executable path
 	// contents of the vector follow
 	// last one is NULL
@@ -4981,8 +4987,8 @@ static void set_wm_class()
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
 #else
 #if !defined(WIN32) && !defined(MACOSX)
-	constexpr int overwrite = 0; // don't overwrite
-								 //
+	constexpr int overwrite = 0;
+
 	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
 	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
 #endif
