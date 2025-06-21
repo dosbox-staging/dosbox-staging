@@ -2176,7 +2176,314 @@ static bool present_frame_gl()
 	render_pacer->Checkpoint();
 	return is_presenting;
 }
+
+std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
+                                        const int render_height_px)
+{
+	free(sdl.opengl.framebuf);
+	sdl.opengl.framebuf = nullptr;
+
+	if (!(flags & GFX_CAN_32)) {
+		return {};
+	}
+
+	sdl.opengl.texture_width_px  = render_width_px;
+	sdl.opengl.texture_height_px = render_height_px;
+
+	if (sdl.opengl.texture_width_px > sdl.opengl.max_texsize ||
+	    sdl.opengl.texture_height_px > sdl.opengl.max_texsize) {
+		LOG_WARNING(
+		        "OPENGL: No support for texture size of %dx%d pixels, "
+		        "falling back to texture",
+		        sdl.opengl.texture_width_px,
+		        sdl.opengl.texture_height_px);
+		return {};
+	}
+
+	// Re-apply the minimum bounds prior to clipping the OpenGL
+	// window because SDL invalidates the prior bounds in the above
+	// window changes.
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
+	setup_scaled_window(RenderingBackend::OpenGl);
+
+	// We may simply use SDL_BYTESPERPIXEL here rather than
+	// SDL_BITSPERPIXEL
+	if (!sdl.window ||
+	    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
+		LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
+		return {};
+	}
+
+	if (!init_shader_gl()) {
+		return {};
+	}
+
+	// Create the texture
+	const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
+	                               render_height_px * MaxBytesPerPixel;
+
+	sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
+	sdl.opengl.pitch    = render_width_px * 4;
+
+	// One-time initialize the window size
+	if (!sdl.desktop.window.adjusted_initial_size) {
+		initialize_sdl_window_size(sdl.window,
+		                           FallbackWindowSize,
+		                           {sdl.desktop.window.width,
+		                            sdl.desktop.window.height});
+
+		sdl.desktop.window.adjusted_initial_size = true;
+	}
+
+	const auto canvas_size_px = get_canvas_size_in_pixels(
+	        sdl.want_rendering_backend);
+
+	// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+	//         (canvas_size_px.w - sdl.clip.w) / 2,
+	//         (canvas_size_px.h - sdl.clip.h) / 2,
+	//         sdl.clip.w,
+	//         sdl.clip.h);
+
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
+
+	glViewport(sdl.draw_rect_px.x,
+	           sdl.draw_rect_px.y,
+	           sdl.draw_rect_px.w,
+	           sdl.draw_rect_px.h);
+
+	if (sdl.opengl.texture > 0) {
+		glDeleteTextures(1, &sdl.opengl.texture);
+	}
+	glGenTextures(1, &sdl.opengl.texture);
+	glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+
+	// No borders
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	const int filter_mode = [&] {
+		switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
+		case TextureFilterMode::Nearest: return GL_NEAREST;
+		case TextureFilterMode::Linear: return GL_LINEAR;
+		default: assertm(false, "Invalid TextureFilterMode"); return 0;
+		}
+	}();
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
+
+	const auto texture_area_bytes = static_cast<size_t>(
+	                                        sdl.opengl.texture_width_px) *
+	                                sdl.opengl.texture_height_px *
+	                                MaxBytesPerPixel;
+
+	uint8_t* emptytex = new uint8_t[texture_area_bytes];
+	assert(emptytex);
+
+	memset(emptytex, 0, texture_area_bytes);
+
+	int is_double_buffering_enabled = 0;
+	if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER, &is_double_buffering_enabled)) {
+
+		LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
+		            SDL_GetError());
+	} else {
+		if (!is_double_buffering_enabled) {
+			LOG_WARNING("OPENGL: Double buffering not enabled");
+		}
+	}
+
+	int is_framebuffer_srgb_capable = 0;
+	if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+	                        &is_framebuffer_srgb_capable)) {
+
+		LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
+		            SDL_GetError());
+	}
+
+	sdl.opengl.framebuffer_is_srgb_encoded =
+	        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+	        (is_framebuffer_srgb_capable > 0);
+
+	if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+	    !sdl.opengl.framebuffer_is_srgb_encoded) {
+		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
+	}
+
+	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
+	// with Mesa drivers on certain integrated Intel GPUs
+	const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
+	                                       sdl.opengl.framebuffer_is_srgb_encoded
+	                             ? GL_SRGB8_ALPHA8
+	                             : GL_RGB8;
+
+#if 0
+		if (texformat == GL_SRGB8_ALPHA8) {
+			LOG_MSG("OPENGL: Using sRGB texture");
+		}
 #endif
+
+	glTexImage2D(GL_TEXTURE_2D,
+	             0,
+	             texformat,
+	             sdl.opengl.texture_width_px,
+	             sdl.opengl.texture_height_px,
+	             0,
+	             GL_BGRA_EXT,
+	             GL_UNSIGNED_BYTE,
+	             emptytex);
+
+	delete[] emptytex;
+
+	if (sdl.opengl.framebuffer_is_srgb_encoded) {
+		glEnable(GL_FRAMEBUFFER_SRGB);
+#if 0
+			LOG_MSG("OPENGL: Using sRGB framebuffer");
+#endif
+	} else {
+		glDisable(GL_FRAMEBUFFER_SRGB);
+	}
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	SDL_GL_SwapWindow(sdl.window);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_TEXTURE_2D);
+
+	sdl.opengl.actual_frame_count = 0;
+
+	// Set shader variables
+	update_uniforms_gl();
+
+	maybe_log_opengl_error("End of setsize");
+
+	sdl.frame.update  = update_frame_gl;
+	sdl.frame.present = present_frame_gl;
+
+	return GFX_CAN_32 | GFX_CAN_RANDOM;
+}
+
+#endif
+
+uint8_t init_sdl_texture_renderer()
+{
+	uint8_t flags = 0;
+
+	if (!setup_scaled_window(RenderingBackend::Texture)) {
+		LOG_ERR("DISPLAY: Can't initialise 'texture' window");
+		E_Exit("SDL: Failed to create window");
+	}
+
+	// Use renderer's default format
+	SDL_RendererInfo rinfo;
+	SDL_GetRendererInfo(sdl.renderer, &rinfo);
+
+	const auto texture_format = rinfo.texture_formats[0];
+
+	sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
+	                                        texture_format,
+	                                        SDL_TEXTUREACCESS_STREAMING,
+	                                        sdl.draw.render_width_px,
+	                                        sdl.draw.render_height_px);
+
+	if (!sdl.texture.texture) {
+		SDL_DestroyRenderer(sdl.renderer);
+		sdl.renderer = nullptr;
+		E_Exit("SDL: Failed to create texture");
+	}
+
+	// release the existing surface if needed
+	auto& texture_input_surface = sdl.texture.input_surface;
+	if (texture_input_surface) {
+		SDL_FreeSurface(texture_input_surface);
+		texture_input_surface = nullptr;
+	}
+
+	// ensure we don't leak
+	assert(texture_input_surface == nullptr);
+
+	texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
+	        0, sdl.draw.render_width_px, sdl.draw.render_height_px, 32, texture_format);
+
+	if (!texture_input_surface) {
+		E_Exit("SDL: Error while preparing texture input");
+	}
+
+	SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+
+	uint32_t pixel_format;
+	assert(sdl.texture.texture);
+	SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
+
+	// ensure we don't leak
+	assert(sdl.texture.pixelFormat == nullptr);
+	sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+
+	switch (SDL_BITSPERPIXEL(pixel_format)) {
+	case 8: flags = GFX_CAN_8; break;
+	case 15: flags = GFX_CAN_15; break;
+	case 16: flags = GFX_CAN_16; break;
+	case 24: // SDL_BYTESPERPIXEL is probably 4, though.
+	case 32: flags = GFX_CAN_32; break;
+	}
+
+	// Log changes to the rendering driver
+	static std::string render_driver = {};
+	if (render_driver != rinfo.name) {
+		LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
+		        rinfo.name,
+		        SDL_BITSPERPIXEL(pixel_format));
+		render_driver = rinfo.name;
+	}
+
+	if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
+		flags |= GFX_CAN_RANDOM;
+	}
+
+	// Re-apply the minimum bounds prior to clipping the
+	// texture-based window because SDL invalidates the prior bounds
+	// in the above changes.
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
+	// One-time intialize the window size
+	if (!sdl.desktop.window.adjusted_initial_size) {
+		initialize_sdl_window_size(sdl.window,
+		                           FallbackWindowSize,
+		                           {sdl.desktop.window.width,
+		                            sdl.desktop.window.height});
+
+		sdl.desktop.window.adjusted_initial_size = true;
+	}
+
+	const auto canvas_size_px = get_canvas_size_in_pixels(
+	        sdl.want_rendering_backend);
+
+	// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
+	//         (canvas.w - sdl.clip.w) / 2,
+	//         (canvas.h - sdl.clip.h) / 2,
+	//         sdl.clip.w,
+	//         sdl.clip.h);
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
+
+	if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
+		LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
+	}
+
+	sdl.frame.update  = update_frame_texture;
+	sdl.frame.present = present_frame_texture;
+
+	return flags;
+}
 
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
@@ -2220,319 +2527,30 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		initialize_vsync_settings();
 	}
 
-	switch (sdl.want_rendering_backend) {
-	case RenderingBackend::Texture: {
-	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
-
-		if (!setup_scaled_window(RenderingBackend::Texture)) {
-			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("SDL: Failed to create window");
-		}
-
-		// Use renderer's default format
-		SDL_RendererInfo rinfo;
-		SDL_GetRendererInfo(sdl.renderer, &rinfo);
-
-		const auto texture_format = rinfo.texture_formats[0];
-
-		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
-		                                        texture_format,
-		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        render_width_px,
-		                                        render_height_px);
-
-		if (!sdl.texture.texture) {
-			SDL_DestroyRenderer(sdl.renderer);
-			sdl.renderer = nullptr;
-			E_Exit("SDL: Failed to create texture");
-		}
-
-		// release the existing surface if needed
-		auto& texture_input_surface = sdl.texture.input_surface;
-		if (texture_input_surface) {
-			SDL_FreeSurface(texture_input_surface);
-			texture_input_surface = nullptr;
-		}
-
-		assert(texture_input_surface == nullptr); // ensure we don't leak
-		                                          //
-		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, render_width_px, render_height_px, 32, texture_format);
-		if (!texture_input_surface) {
-			E_Exit("SDL: Error while preparing texture input");
-		}
-
-		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
-		uint32_t pixel_format;
-		assert(sdl.texture.texture);
-		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
-
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
-
-		switch (SDL_BITSPERPIXEL(pixel_format)) {
-		case 8: retFlags = GFX_CAN_8; break;
-		case 15: retFlags = GFX_CAN_15; break;
-		case 16: retFlags = GFX_CAN_16; break;
-		case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
-		case 32: retFlags = GFX_CAN_32; break;
-		}
-
-		// Log changes to the rendering driver
-		static std::string render_driver = {};
-		if (render_driver != rinfo.name) {
-			LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
-			        rinfo.name,
-			        SDL_BITSPERPIXEL(pixel_format));
-			render_driver = rinfo.name;
-		}
-
-		if (!(rinfo.flags & SDL_RENDERER_ACCELERATED)) {
-			retFlags |= GFX_CAN_RANDOM;
-		}
-
-		// Re-apply the minimum bounds prior to clipping the
-		// texture-based window because SDL invalidates the prior bounds
-		// in the above changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FallbackWindowSize.x,
-		                         FallbackWindowSize.y);
-
-		// One-time intialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FallbackWindowSize,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-		const auto canvas_size_px = get_canvas_size_in_pixels(
-		        sdl.want_rendering_backend);
-
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas.w - sdl.clip.w) / 2,
-		//         (canvas.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-		sdl.draw_rect_px = to_sdl_rect(
-		        calc_draw_rect_in_pixels(canvas_size_px));
-
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
-			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
-		}
-
-		sdl.frame.update  = update_frame_texture;
-		sdl.frame.present = present_frame_texture;
-
-		break; // RenderingBackend::Texture
-	}
-
-	case RenderingBackend::OpenGl: {
+	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 #if C_OPENGL
-		free(sdl.opengl.framebuf);
-		sdl.opengl.framebuf = nullptr;
-
-		if (!(flags & GFX_CAN_32)) {
-			goto fallback_texture;
-		}
-
-		sdl.opengl.texture_width_px  = render_width_px;
-		sdl.opengl.texture_height_px = render_height_px;
-
-		if (sdl.opengl.texture_width_px > sdl.opengl.max_texsize ||
-		    sdl.opengl.texture_height_px > sdl.opengl.max_texsize) {
-			LOG_WARNING(
-			        "OPENGL: No support for texture size of %dx%d pixels, "
-			        "falling back to texture",
-			        sdl.opengl.texture_width_px,
-			        sdl.opengl.texture_height_px);
-			goto fallback_texture;
-		}
-
-		// Re-apply the minimum bounds prior to clipping the OpenGL
-		// window because SDL invalidates the prior bounds in the above
-		// window changes.
-		SDL_SetWindowMinimumSize(sdl.window,
-		                         FallbackWindowSize.x,
-		                         FallbackWindowSize.y);
-
-		setup_scaled_window(RenderingBackend::OpenGl);
-
-		// We may simply use SDL_BYTESPERPIXEL here rather than
-		// SDL_BITSPERPIXEL
-		if (!sdl.window ||
-		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
-			LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
-			goto fallback_texture;
-		}
-
-		if (!init_shader_gl()) {
-			goto fallback_texture;
-		}
-
-		// Create the texture
-		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
-		                               render_height_px * MaxBytesPerPixel;
-
-		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = render_width_px * 4;
-
-		// One-time initialize the window size
-		if (!sdl.desktop.window.adjusted_initial_size) {
-			initialize_sdl_window_size(sdl.window,
-			                           FallbackWindowSize,
-			                           {sdl.desktop.window.width,
-			                            sdl.desktop.window.height});
-
-			sdl.desktop.window.adjusted_initial_size = true;
-		}
-
-		const auto canvas_size_px = get_canvas_size_in_pixels(
-		        sdl.want_rendering_backend);
-
-		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas_size_px.w - sdl.clip.w) / 2,
-		//         (canvas_size_px.h - sdl.clip.h) / 2,
-		//         sdl.clip.w,
-		//         sdl.clip.h);
-
-		sdl.draw_rect_px = to_sdl_rect(
-		        calc_draw_rect_in_pixels(canvas_size_px));
-
-		glViewport(sdl.draw_rect_px.x,
-		           sdl.draw_rect_px.y,
-		           sdl.draw_rect_px.w,
-		           sdl.draw_rect_px.h);
-
-		if (sdl.opengl.texture > 0) {
-			glDeleteTextures(1, &sdl.opengl.texture);
-		}
-		glGenTextures(1, &sdl.opengl.texture);
-		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-		// No borders
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		const int filter_mode = [&] {
-			switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
-			case TextureFilterMode::Nearest: return GL_NEAREST;
-			case TextureFilterMode::Linear: return GL_LINEAR;
-			default:
-				assertm(false, "Invalid TextureFilterMode");
-				return 0;
-			}
-		}();
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter_mode);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter_mode);
-
-		const auto texture_area_bytes =
-		        static_cast<size_t>(sdl.opengl.texture_width_px) *
-		        sdl.opengl.texture_height_px * MaxBytesPerPixel;
-
-		uint8_t* emptytex = new uint8_t[texture_area_bytes];
-		assert(emptytex);
-
-		memset(emptytex, 0, texture_area_bytes);
-
-		int is_double_buffering_enabled = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
-		                        &is_double_buffering_enabled)) {
-
-			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
-			            SDL_GetError());
+		if (const auto result = init_gl_renderer(flags,
+		                                         render_width_px,
+		                                         render_height_px);
+		    result) {
+			retFlags = *result;
 		} else {
-			if (!is_double_buffering_enabled) {
-				LOG_WARNING("OPENGL: Double buffering not enabled");
-			}
+			// Initialising OpenGL renderer failed; fallback to SDL
+			// texture
+			sdl.want_rendering_backend = RenderingBackend::Texture;
 		}
-
-		int is_framebuffer_srgb_capable = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &is_framebuffer_srgb_capable)) {
-
-			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
-			            SDL_GetError());
-		}
-
-		sdl.opengl.framebuffer_is_srgb_encoded =
-		        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		        (is_framebuffer_srgb_capable > 0);
-
-		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-		    !sdl.opengl.framebuffer_is_srgb_encoded) {
-			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-		}
-
-		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
-		// with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
-		                                       sdl.opengl.framebuffer_is_srgb_encoded
-		                             ? GL_SRGB8_ALPHA8
-		                             : GL_RGB8;
-
-#if 0
-		if (texformat == GL_SRGB8_ALPHA8) {
-			LOG_MSG("OPENGL: Using sRGB texture");
-		}
-#endif
-
-		glTexImage2D(GL_TEXTURE_2D,
-		             0,
-		             texformat,
-		             sdl.opengl.texture_width_px,
-		             sdl.opengl.texture_height_px,
-		             0,
-		             GL_BGRA_EXT,
-		             GL_UNSIGNED_BYTE,
-		             emptytex);
-
-		delete[] emptytex;
-
-		if (sdl.opengl.framebuffer_is_srgb_encoded) {
-			glEnable(GL_FRAMEBUFFER_SRGB);
-#if 0
-			LOG_MSG("OPENGL: Using sRGB framebuffer");
-#endif
-		} else {
-			glDisable(GL_FRAMEBUFFER_SRGB);
-		}
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-		SDL_GL_SwapWindow(sdl.window);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_LIGHTING);
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_TEXTURE_2D);
-
-		sdl.opengl.actual_frame_count = 0;
-
-		// Set shader variables
-		update_uniforms_gl();
-
-		maybe_log_opengl_error("End of setsize");
-
-		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
-		sdl.frame.update  = update_frame_gl;
-		sdl.frame.present = present_frame_gl;
 #else
 		// Should never occur, but fallback to texture in release builds
 		assertm(false, "OpenGL is not supported by this executable");
 		LOG_ERR("SDL: OpenGL is not supported by this executable, "
-		        "falling back to texture output");
+		        "falling back to 'texture' output");
 
-		goto fallback_texture;
-
-#endif                 // C_OPENGL
-		break; // RenderingBackend::OpenGl
+		sdl.want_rendering_backend = RenderingBackend::Texture;
+#endif
 	}
+
+	if (sdl.want_rendering_backend == RenderingBackend::Texture) {
+		retFlags = init_sdl_texture_renderer();
 	}
 
 	// Ensure mouse emulation knows the current parameters
