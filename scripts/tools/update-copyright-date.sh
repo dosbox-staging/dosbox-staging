@@ -2,6 +2,7 @@
 
 # SPDX-FileCopyrightText:  2022-2024 The DOSBox Staging Team
 # SPDX-FileCopyrightText:  2022-2022 Patryk Obara <patryk.obara@gmail.com>
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # update-copyright-date.sh - Fix copyright lines in files touched this year and in metadata.
 
@@ -9,14 +10,18 @@ pushd "$(git rev-parse --show-toplevel)" > /dev/null || exit
 
 year=$(date +%Y)
 team="The DOSBox Staging Team"
-code_sed_script="s|Copyright (C) \([0-9]\+\)\(-\([0-9]\+\)\)\?  $team|Copyright (C) \1-$year  $team|"
+code_sed_script="s|SPDX-FileCopyrightText:  \([0-9]\+\)\(-\([0-9]\+\)\)\?  $team|SPDX-FileCopyrightText:  \1-$year $team|"
 
-find_c_cpp_files () {
+find_files () {
 	find {src,include,tests} -type f \( \
+		-name '*.bat' -o \
 		-name '*.cpp' -o \
 		-name '*.c' -o \
+		-name '*.glsl' -o \
 		-name '*.h' -o \
-		-name '*.in' \
+		-name '*.in' -o \
+		-name '*.py' -o \
+		-name '*.txt' \
 		\)
 }
 
@@ -30,7 +35,7 @@ filter_new_files () {
 }
 
 # C, C++, headers, meson template inputs
-find_c_cpp_files | filter_new_files | xargs sed -i "$code_sed_script"
+find_files | filter_new_files | xargs sed -i "$code_sed_script"
 
 # Metadata files and dates visible to end users
 sed -i "$code_sed_script" src/gui/gui_msg.h
