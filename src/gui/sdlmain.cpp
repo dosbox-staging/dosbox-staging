@@ -3408,14 +3408,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
 
-	const std::string screensaver = section->Get_string("screensaver");
-	if (screensaver == "allow") {
-		SDL_EnableScreenSaver();
-	}
-	if (screensaver == "block") {
-		SDL_DisableScreenSaver();
-	}
-
 	sdl.render_driver = section->Get_string("texture_renderer");
 	lowcase(sdl.render_driver);
 
@@ -3684,6 +3676,14 @@ static void read_gui_config(Section* sec)
 	}
 
 	set_output(section, is_aspect_ratio_correction_enabled());
+
+	const std::string screensaver = section->Get_string("screensaver");
+	if (screensaver == "allow") {
+		SDL_EnableScreenSaver();
+	}
+	if (screensaver == "block") {
+		SDL_DisableScreenSaver();
+	}
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
