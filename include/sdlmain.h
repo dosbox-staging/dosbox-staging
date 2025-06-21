@@ -247,10 +247,8 @@ struct SDL_Block {
 		int pitch      = 0;
 		void* framebuf = nullptr;
 		GLuint texture;
-		GLuint displaylist;
 		GLint max_texsize;
 		bool npot_textures_supported = false;
-		bool use_shader;
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 
