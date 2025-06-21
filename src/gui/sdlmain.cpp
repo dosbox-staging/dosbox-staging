@@ -191,6 +191,28 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer         = nullptr;
 #define glUseProgram              gl2::glUseProgram
 #define glVertexAttribPointer     gl2::glVertexAttribPointer
 
+// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
+constexpr uint8_t MaxBytesPerPixel = 4;
+
+#ifdef DB_OPENGL_ERROR
+static void maybe_log_opengl_error(const char* message)
+{
+	GLenum r = glGetError();
+	if (r == GL_NO_ERROR) {
+		return;
+	}
+	LOG_ERR("OPENGL: Errors from %s", message);
+	do {
+		LOG_ERR("OPENGL: %X", r);
+	} while ((r = glGetError()) != GL_NO_ERROR);
+}
+#else
+static void maybe_log_opengl_error(const char*)
+{
+	return;
+}
+#endif
+
 static void get_opengl_proc_addresses()
 {
 	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
@@ -607,31 +629,6 @@ SDL_Window* GFX_GetSDLWindow()
 {
 	return sdl.window;
 }
-#endif
-
-#if C_OPENGL
-
-// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
-constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
-
-#ifdef DB_OPENGL_ERROR
-static void maybe_log_opengl_error(const char* message)
-{
-	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) {
-		return;
-	}
-	LOG_ERR("OPENGL: Errors from %s", message);
-	do {
-		LOG_ERR("OPENGL: %X", r);
-	} while ((r = glGetError()) != GL_NO_ERROR);
-}
-#else
-static void maybe_log_opengl_error(const char*)
-{
-	return;
-}
-#endif
 #endif
 
 static void QuitSDL()
@@ -2377,7 +2374,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		// Create the texture
 		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
-		                               render_height_px * MAX_BYTES_PER_PIXEL;
+		                               render_height_px * MaxBytesPerPixel;
 
 		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
 		sdl.opengl.pitch = render_width_px * 4;
@@ -2434,7 +2431,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		const auto texture_area_bytes =
 		        static_cast<size_t>(sdl.opengl.texture_width_px) *
-		        sdl.opengl.texture_height_px * MAX_BYTES_PER_PIXEL;
+		        sdl.opengl.texture_height_px * MaxBytesPerPixel;
 
 		uint8_t* emptytex = new uint8_t[texture_area_bytes];
 		assert(emptytex);
