@@ -1241,6 +1241,7 @@ endif
 subdir('src/misc')
 subdir('src/libs/zmbv')
 subdir('src/libs/tal-chorus')
+subdir('src/libs/glad')
 
 # A list of DOSBox's bundled 3rd party dependencies,
 # as defined by the above subdir includes. Used for
@@ -1251,6 +1252,7 @@ third_party_deps = [
     sdl2_dep,
     threads_dep,
     ghc_dep,
+    libglad_dep,
     libiir_dep,
     libloguru_dep,
     tracy_dep,

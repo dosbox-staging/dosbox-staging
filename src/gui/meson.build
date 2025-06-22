@@ -14,6 +14,7 @@ libgui = static_library(
     include_directories: incdir,
     dependencies: [
         ghc_dep,
+        libglad_dep,
         libiir_dep,
         libloguru_dep,
         opengl_dep,

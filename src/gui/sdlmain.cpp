@@ -24,12 +24,17 @@
 #ifdef WIN32
 #include <process.h>
 #include <windows.h>
-#endif
+#endif // WIN32
 
-#include <SDL.h>
 #if C_OPENGL
+// Glad must be included before SDL
+#include "glad/gl.h"
+#include <SDL.h>
 #include <SDL_opengl.h>
-#endif
+
+#else
+#include <SDL.h>
+#endif // C_OPENGL
 
 #include "../capture/capture.h"
 #include "../dos/dos_locale.h"
@@ -87,113 +92,6 @@ static void restore_console_encoding()
 // Define to report opengl errors
 // #define DB_OPENGL_ERROR
 
-#ifndef APIENTRY
-#define APIENTRY
-#endif
-
-#ifndef APIENTRYP
-#define APIENTRYP APIENTRY*
-#endif
-
-/* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these
- * typedefs. If they're already defined they should match these definitions, so
- * no conflicts.
- */
-typedef void(APIENTRYP PFNGLATTACHSHADERPROC)(GLuint program, GLuint shader);
-typedef void(APIENTRYP PFNGLCOMPILESHADERPROC)(GLuint shader);
-typedef GLuint(APIENTRYP PFNGLCREATEPROGRAMPROC)();
-typedef GLuint(APIENTRYP PFNGLCREATESHADERPROC)(GLenum type);
-typedef void(APIENTRYP PFNGLDELETEPROGRAMPROC)(GLuint program);
-typedef void(APIENTRYP PFNGLDELETESHADERPROC)(GLuint shader);
-typedef void(APIENTRYP PFNGLENABLEVERTEXATTRIBARRAYPROC)(GLuint index);
-
-typedef GLint(APIENTRYP PFNGLGETATTRIBLOCATIONPROC)(GLuint program,
-                                                    const GLchar* name);
-
-typedef void(APIENTRYP PFNGLGETPROGRAMIVPROC)(GLuint program, GLenum pname,
-                                              GLint* params);
-
-typedef void(APIENTRYP PFNGLGETPROGRAMINFOLOGPROC)(GLuint program, GLsizei bufSize,
-                                                   GLsizei* length, GLchar* infoLog);
-
-typedef void(APIENTRYP PFNGLGETSHADERIVPROC)(GLuint shader, GLenum pname,
-                                             GLint* params);
-
-typedef void(APIENTRYP PFNGLGETSHADERINFOLOGPROC)(GLuint shader, GLsizei bufSize,
-                                                  GLsizei* length, GLchar* infoLog);
-
-typedef GLint(APIENTRYP PFNGLGETUNIFORMLOCATIONPROC)(GLuint program,
-                                                     const GLchar* name);
-
-typedef void(APIENTRYP PFNGLLINKPROGRAMPROC)(GLuint program);
-
-// Change to NP, as Khronos changes include guard :(
-typedef void(APIENTRYP PFNGLSHADERSOURCEPROC_NP)(GLuint shader, GLsizei count,
-                                                 const GLchar** string,
-                                                 const GLint* length);
-
-typedef void(APIENTRYP PFNGLUNIFORM2FPROC)(GLint location, GLfloat v0, GLfloat v1);
-typedef void(APIENTRYP PFNGLUNIFORM1IPROC)(GLint location, GLint v0);
-typedef void(APIENTRYP PFNGLUSEPROGRAMPROC)(GLuint program);
-
-typedef void(APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC)(GLuint index, GLint size,
-                                                     GLenum type, GLboolean normalized,
-                                                     GLsizei stride,
-                                                     const GLvoid* pointer);
-
-/* Apple defines these functions in their GL header (as core functions)
- * so we can't use their names as function pointers. We can't link
- * directly as some platforms may not have them. So they get their own
- * namespace here to keep the official names but avoid collisions.
- */
-namespace gl2 {
-PFNGLATTACHSHADERPROC glAttachShader                       = nullptr;
-PFNGLCOMPILESHADERPROC glCompileShader                     = nullptr;
-PFNGLCREATEPROGRAMPROC glCreateProgram                     = nullptr;
-PFNGLCREATESHADERPROC glCreateShader                       = nullptr;
-PFNGLDELETEPROGRAMPROC glDeleteProgram                     = nullptr;
-PFNGLDELETESHADERPROC glDeleteShader                       = nullptr;
-PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
-PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation             = nullptr;
-PFNGLGETPROGRAMIVPROC glGetProgramiv                       = nullptr;
-PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog             = nullptr;
-PFNGLGETSHADERIVPROC glGetShaderiv                         = nullptr;
-PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog               = nullptr;
-PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation           = nullptr;
-PFNGLLINKPROGRAMPROC glLinkProgram                         = nullptr;
-PFNGLSHADERSOURCEPROC_NP glShaderSource                    = nullptr;
-PFNGLUNIFORM2FPROC glUniform2f                             = nullptr;
-PFNGLUNIFORM1IPROC glUniform1i                             = nullptr;
-PFNGLUSEPROGRAMPROC glUseProgram                           = nullptr;
-PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer         = nullptr;
-} // namespace gl2
-
-/* "using" is meant to hide identical names declared in outer scope
- * but is unreliable, so just redefine instead.
- */
-#define glAttachShader            gl2::glAttachShader
-#define glCompileShader           gl2::glCompileShader
-#define glCreateProgram           gl2::glCreateProgram
-#define glCreateShader            gl2::glCreateShader
-#define glDeleteProgram           gl2::glDeleteProgram
-#define glDeleteShader            gl2::glDeleteShader
-#define glEnableVertexAttribArray gl2::glEnableVertexAttribArray
-#define glGetAttribLocation       gl2::glGetAttribLocation
-#define glGetProgramiv            gl2::glGetProgramiv
-#define glGetProgramInfoLog       gl2::glGetProgramInfoLog
-#define glGetShaderiv             gl2::glGetShaderiv
-#define glGetShaderInfoLog        gl2::glGetShaderInfoLog
-#define glGetUniformLocation      gl2::glGetUniformLocation
-#define glLinkProgram             gl2::glLinkProgram
-#define glShaderSource            gl2::glShaderSource
-#define glUniform2f               gl2::glUniform2f
-#define glUniform1i               gl2::glUniform1i
-#define glUseProgram              gl2::glUseProgram
-#define glVertexAttribPointer     gl2::glVertexAttribPointer
-
-// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
-constexpr uint8_t MaxBytesPerPixel = 4;
-
 #ifdef DB_OPENGL_ERROR
 static void maybe_log_opengl_error(const char* message)
 {
@@ -213,56 +111,8 @@ static void maybe_log_opengl_error(const char*)
 }
 #endif
 
-static void get_opengl_proc_addresses()
-{
-	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
-
-	glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
-	        "glCompileShader");
-
-	glCreateProgram = (PFNGLCREATEPROGRAMPROC)SDL_GL_GetProcAddress(
-	        "glCreateProgram");
-
-	glCreateShader = (PFNGLCREATESHADERPROC)SDL_GL_GetProcAddress("glCreateShader");
-
-	glDeleteProgram = (PFNGLDELETEPROGRAMPROC)SDL_GL_GetProcAddress(
-	        "glDeleteProgram");
-
-	glDeleteShader = (PFNGLDELETESHADERPROC)SDL_GL_GetProcAddress("glDeleteShader");
-
-	glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC)
-	        SDL_GL_GetProcAddress("glEnableVertexAttribArray");
-
-	glGetAttribLocation = (PFNGLGETATTRIBLOCATIONPROC)SDL_GL_GetProcAddress(
-	        "glGetAttribLocation");
-
-	glGetProgramiv = (PFNGLGETPROGRAMIVPROC)SDL_GL_GetProcAddress("glGetProgramiv");
-
-	glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC)SDL_GL_GetProcAddress(
-	        "glGetProgramInfoLog");
-
-	glGetShaderiv = (PFNGLGETSHADERIVPROC)SDL_GL_GetProcAddress("glGetShaderiv");
-
-	glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)SDL_GL_GetProcAddress(
-	        "glGetShaderInfoLog");
-
-	glGetUniformLocation = (PFNGLGETUNIFORMLOCATIONPROC)SDL_GL_GetProcAddress(
-	        "glGetUniformLocation");
-
-	glLinkProgram = (PFNGLLINKPROGRAMPROC)SDL_GL_GetProcAddress("glLinkProgram");
-
-	glShaderSource = (PFNGLSHADERSOURCEPROC_NP)SDL_GL_GetProcAddress(
-	        "glShaderSource");
-
-	glUniform2f = (PFNGLUNIFORM2FPROC)SDL_GL_GetProcAddress("glUniform2f");
-
-	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
-
-	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
-
-	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress(
-	        "glVertexAttribPointer");
-}
+// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
+constexpr uint8_t MaxBytesPerPixel = 4;
 
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
@@ -3468,24 +3318,20 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 			sdl.opengl.program_object = 0;
 
-			get_opengl_proc_addresses();
+			const auto version = gladLoadGL(
+			        (GLADloadfunc)SDL_GL_GetProcAddress);
 
-			sdl.opengl.framebuf = nullptr;
-			sdl.opengl.texture  = 0;
+			LOG_INFO("OPENGL: Version: %d.%d, GLSL version: %s, vendor: %s",
+			         GLAD_VERSION_MAJOR(version),
+			         GLAD_VERSION_MINOR(version),
+			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
+			                            "unknown"),
+			         safe_gl_get_string(GL_VENDOR, "unknown"));
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
-			                                                  "0.0.0");
-
-			LOG_INFO("OPENGL: Vendor: %s",
-			         safe_gl_get_string(GL_VENDOR, "unknown"));
-
-			LOG_INFO("OPENGL: Version: %s", gl_version_string);
-
-			LOG_INFO("OPENGL: GLSL version: %s",
-			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
-			                            "unknown"));
+			sdl.opengl.framebuf = nullptr;
+			sdl.opengl.texture  = 0;
 		}
 	}
 #endif // OPENGL
@@ -5165,7 +5011,7 @@ static void init_sdl()
 	SDL_version sdl_version = {};
 	SDL_GetVersion(&sdl_version);
 
-	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
+	LOG_MSG("SDL: Version %d.%d.%d initialised (%s video and %s audio)",
 	        sdl_version.major,
 	        sdl_version.minor,
 	        sdl_version.patch,
