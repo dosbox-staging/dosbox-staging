@@ -1511,18 +1511,38 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
 
-		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
-		flags |= SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+		uint32_t flags = 0;
 #if C_OPENGL
 		if (rendering_backend == RenderingBackend::OpenGl) {
-			flags |= SDL_WINDOW_OPENGL;
+			// TODO Maybe check for failures?
+
+			// Request 24-bits sRGB framebuffer, don't care about depth buffer
+			SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+			SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+			SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+			SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 			if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 				LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 				        SDL_GetError());
 			}
+
+			// Explicitly request an OpenGL 2.1 compatibility context
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+								SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+
+			// Request an OpenGL-ready window
+			flags |= SDL_WINDOW_OPENGL;
+
 		}
 #endif
+		flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+		flags |= opengl_driver_crash_workaround(rendering_backend);
+
 		if (!sdl.desktop.window.show_decorations) {
 			flags |= SDL_WINDOW_BORDERLESS;
 		}
@@ -4377,8 +4397,8 @@ static void init_sdl_config_section()
 	        "opengl_default",
 	        "Rendering backend to use for graphics output ('opengl' by default).\n"
 	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
-	        "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
-	        "non-existent OpenGL drivers (this is extremely rare).");
+	        "The 'texture' backend is a last resort fallback for graphics cards without\n"
+	        "functional OpenGL 2.1 support (this is extremely rare).");
 
 	pstring->SetOptionHelp("texture_default",
 	                       "Rendering backend to use for graphics output ('texture' by default).");
