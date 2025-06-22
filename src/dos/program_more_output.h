@@ -94,7 +94,7 @@ protected:
 		program.WriteOut(format, arguments...);
 	}
 
-	bool SuppressWriteOut(const std::string& format)
+	bool SuppressWriteOut(const std::string& format) const
 	{
 		return program.SuppressWriteOut(format);
 	}
