@@ -102,7 +102,7 @@ static bool add_wildcard_paths(const std::string& path_arg,
 	}
 
 	// Move the expanded paths out
-	paths.insert(paths.end(),
+	paths.insert(paths.end(), //-V823
 	             std::make_move_iterator(expanded_paths.begin()),
 	             std::make_move_iterator(expanded_paths.end()));
 

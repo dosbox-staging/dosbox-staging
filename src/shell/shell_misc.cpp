@@ -360,7 +360,7 @@ static std::vector<std::string> get_completions(const std::string_view command)
 
 	dos.dta(save_dta);
 
-	files.insert(files.end(),
+	files.insert(files.end(), //-V823
 	             std::make_move_iterator(non_executables.begin()),
 	             std::make_move_iterator(non_executables.end()));
 	return files;
@@ -551,7 +551,7 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 
 		prefixes.insert(prefixes.end(),
 		                std::make_move_iterator(path_directories.begin()),
-		                std::make_move_iterator(path_directories.end()));
+		                std::make_move_iterator(path_directories.end())); //-V823
 	}
 
 	const bool has_extension = !get_executable_extension(name).empty();
