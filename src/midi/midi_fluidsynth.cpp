@@ -359,8 +359,8 @@ static std::vector<std_fs::path> get_data_dirs()
 
 			LOG_WARNING(
 			        "Invalid 'soundfont_dir' setting; "
-			        "cannot open directory '%s', "
-			        "using ''");
+			        "cannot open directory '%s', using ''",
+			        sf_dir.c_str());
 
 			set_section_property_value("fluidsynth", "soundfont_dir", "");
 		}
