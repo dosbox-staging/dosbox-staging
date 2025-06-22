@@ -615,7 +615,7 @@ std::string DOS_GenerateListKeyboardLayoutsMessage(const bool for_keyb_command)
 			column_2 = MSG_GetTranslatedRaw(entry.GetMsgName());
 		}
 
-		table.push_back({column_1_ansi, column_2, highlight});
+		table.emplace_back(Row{column_1_ansi, column_2, highlight});
 	}
 
 	const size_t column_1_highlighted_width = Ansi::HighlightSelection.size() +
@@ -1252,12 +1252,15 @@ static void preprocess_layouts_arabic(std::vector<KeyboardLayoutMaybeCodepage>& 
 
 	// Propose layout swapping
 	std::vector<KeyboardLayoutMaybeCodepage> processed = {};
+
 	for (const auto& source : keyboard_layouts) {
 		if (source.keyboard_layout == Ar462 && votes_ar470 > votes_ar462) {
-			processed.push_back({Ar470, source.code_page});
+			processed.emplace_back(
+			        KeyboardLayoutMaybeCodepage{Ar470, source.code_page});
 		}
 		if (source.keyboard_layout == Ar470 && votes_ar462 > votes_ar470) {
-			processed.push_back({Ar462, source.code_page});
+			processed.emplace_back(
+			        KeyboardLayoutMaybeCodepage{Ar462, source.code_page});
 		}
 		processed.emplace_back(source);
 	}
@@ -1276,13 +1279,15 @@ static void preprocess_layouts_better_code_pages(
 	// will be evaluated later/
 
 	std::vector<KeyboardLayoutMaybeCodepage> processed = {};
+
 	for (const auto& source : keyboard_layouts) {
 		if (source.code_page) {
 			for (const auto code_page :
 			     DOS_SuggestBetterCodePages(*source.code_page,
 			                                source.keyboard_layout)) {
-				processed.push_back(
-				        {source.keyboard_layout, code_page});
+
+				processed.emplace_back(KeyboardLayoutMaybeCodepage{
+				        source.keyboard_layout, code_page});
 			}
 		}
 		processed.emplace_back(source);
@@ -1540,7 +1545,7 @@ static void load_keyboard_layout()
 		keyboard_layouts = get_detected_keyboard_layouts();
 		using_detected   = true;
 	} else {
-		keyboard_layouts.push_back({tokens[0]});
+		keyboard_layouts.emplace_back(KeyboardLayoutMaybeCodepage{tokens[0]});
 		if (tokens.size() == 2) {
 			const auto result = parse_int(tokens[1]);
 			if (!result || *result < 1 || *result > UINT16_MAX) {
