@@ -1,4 +1,5 @@
 add_subdirectory(decoders)
+add_subdirectory(glad)
 add_subdirectory(ESFMu)
 add_subdirectory(loguru)
 add_subdirectory(manymouse)
