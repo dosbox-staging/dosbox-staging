@@ -4413,8 +4413,8 @@ static void init_sdl_config_section()
 	        "opengl_default",
 	        "Rendering backend to use for graphics output ('opengl' by default).\n"
 	        "Only the 'opengl' backend has shader support and is thus the preferred option.\n"
-	        "The 'texture' backend is a last resort fallback for graphics cards without\n"
-	        "functional OpenGL 2.1 support (this is extremely rare).");
+	        "The 'texture' backend is only provided as a last resort fallback for buggy or\n"
+	        "non-existent OpenGL 2.1+ drivers (this is extremely rare).");
 
 	pstring->SetOptionHelp("texture_default",
 	                       "Rendering backend to use for graphics output ('texture' by default).");
