@@ -4788,7 +4788,11 @@ static int edit_primary_config()
 	}
 
 	auto replace_with_process = [&](const std::string& prog) {
+#ifdef WIN32
+		_execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
+#else
 		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
+#endif
 	};
 
 	// Loop until one succeeds
