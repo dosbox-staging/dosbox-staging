@@ -930,11 +930,13 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 }
 
+#ifdef WIN32
 static void exit_fullscreen()
 {
 	sdl.desktop.fullscreen = false;
 	GFX_ResetScreen();
 }
+#endif
 
 [[maybe_unused]] static int int_log2(int val)
 {
