@@ -7,11 +7,11 @@
 #include <map>
 #include <string>
 
-enum class HELP_Filter : uint8_t { All, Common };
+enum class HELP_Filter { All, Common };
 
-enum class HELP_Category : uint8_t { Misc, File, Dosbox, Batch };
+enum class HELP_Category { Misc, File, Dosbox, Batch };
 
-enum class HELP_CmdType : uint8_t { Shell, Program };
+enum class HELP_CmdType { Shell, Program };
 
 struct HELP_Detail {
 	HELP_Filter filter     = HELP_Filter::All;
