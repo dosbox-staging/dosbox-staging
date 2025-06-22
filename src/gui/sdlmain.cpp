@@ -1554,8 +1554,11 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 
 		const auto pos = get_initial_window_position_or_default(default_val);
 
-		assert(sdl.window == nullptr); // enusre we don't leak
-		sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+		// ensure we don't leak
+		assert(sdl.window == nullptr);
+
+		sdl.window = SDL_CreateWindow(
+		        "DOSBox Staging", pos.x, pos.y, width, height, flags);
 
 		if (!sdl.window && rendering_backend == RenderingBackend::Texture &&
 		    (flags & SDL_WINDOW_OPENGL)) {
@@ -1567,8 +1570,10 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 			// window, try again without it.
 			flags &= ~SDL_WINDOW_OPENGL;
 
-			sdl.window = SDL_CreateWindow("", pos.x, pos.y, width, height, flags);
+			sdl.window = SDL_CreateWindow(
+			        "DOSBox Staging", pos.x, pos.y, width, height, flags);
 		}
+
 		if (!sdl.window) {
 			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
