@@ -5255,7 +5255,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 				value.erase(0, 1);
 			}
 
-			for (auto i = 3; i < pvars.size(); i++) {
+			for (size_t i = 3; i < pvars.size(); i++) {
 				value += (std::string(" ") + pvars[i]);
 			}
 
