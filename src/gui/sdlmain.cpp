@@ -1498,6 +1498,79 @@ static void clean_up_sdl_resources()
 	}
 }
 
+static SDL_Window* create_window(const RenderingBackend rendering_backend,
+                                 const int width, const int height)
+{
+	uint32_t flags = 0;
+#if C_OPENGL
+	if (rendering_backend == RenderingBackend::OpenGl) {
+		// TODO Maybe check for failures?
+
+		// Request 24-bits sRGB framebuffer, don't care about depth buffer
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+		if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
+					SDL_GetError());
+		}
+
+		// Explicitly request an OpenGL 2.1 compatibility context
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+							SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+
+		// Request an OpenGL-ready window
+		flags |= SDL_WINDOW_OPENGL;
+
+	}
+#endif
+	flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+	flags |= opengl_driver_crash_workaround(rendering_backend);
+
+	if (!sdl.desktop.window.show_decorations) {
+		flags |= SDL_WINDOW_BORDERLESS;
+	}
+
+	// Using undefined position will take care of placing and
+	// restoring the window by WM.
+	const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
+			sdl.display_number);
+
+	const auto pos = get_initial_window_position_or_default(default_val);
+
+	// ensure we don't leak
+	assert(sdl.window == nullptr);
+
+	sdl.window = SDL_CreateWindow(DOSBOX_NAME, pos.x, pos.y, width, height, flags);
+
+	if (!sdl.window && rendering_backend == RenderingBackend::Texture &&
+	    (flags & SDL_WINDOW_OPENGL)) {
+		// opengl_driver_crash_workaround() call above
+		// conditionally sets SDL_WINDOW_OPENGL. It sometimes
+		// gets this wrong (ex. SDL_VIDEODRIVER=dummy). This can
+		// only be determined reliably by trying
+		// SDL_CreateWindow(). If we failed to create the
+		// window, try again without it.
+		flags &= ~SDL_WINDOW_OPENGL;
+
+		sdl.window = SDL_CreateWindow(
+		        DOSBOX_NAME, pos.x, pos.y, width, height, flags);
+	}
+
+	if (!sdl.window) {
+		LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
+		return nullptr;
+	}
+
+	return sdl.window;
+}
+
 static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
                                    const int width, const int height,
                                    const bool fullscreen)
@@ -1511,71 +1584,8 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
 
-		uint32_t flags = 0;
-#if C_OPENGL
-		if (rendering_backend == RenderingBackend::OpenGl) {
-			// TODO Maybe check for failures?
-
-			// Request 24-bits sRGB framebuffer, don't care about depth buffer
-			SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-			SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-			SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-			SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-			SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-			if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-				LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
-				        SDL_GetError());
-			}
-
-			// Explicitly request an OpenGL 2.1 compatibility context
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-								SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-
-			// Request an OpenGL-ready window
-			flags |= SDL_WINDOW_OPENGL;
-
-		}
-#endif
-		flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
-		flags |= opengl_driver_crash_workaround(rendering_backend);
-
-		if (!sdl.desktop.window.show_decorations) {
-			flags |= SDL_WINDOW_BORDERLESS;
-		}
-
-		// Using undefined position will take care of placing and
-		// restoring the window by WM.
-		const auto default_val = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-		        sdl.display_number);
-
-		const auto pos = get_initial_window_position_or_default(default_val);
-
-		// ensure we don't leak
-		assert(sdl.window == nullptr);
-
-		sdl.window = SDL_CreateWindow(
-		        "DOSBox Staging", pos.x, pos.y, width, height, flags);
-
-		if (!sdl.window && rendering_backend == RenderingBackend::Texture &&
-		    (flags & SDL_WINDOW_OPENGL)) {
-			// opengl_driver_crash_workaround() call above
-			// conditionally sets SDL_WINDOW_OPENGL. It sometimes
-			// gets this wrong (ex. SDL_VIDEODRIVER=dummy). This can
-			// only be determined reliably by trying
-			// SDL_CreateWindow(). If we failed to create the
-			// window, try again without it.
-			flags &= ~SDL_WINDOW_OPENGL;
-
-			sdl.window = SDL_CreateWindow(
-			        "DOSBox Staging", pos.x, pos.y, width, height, flags);
-		}
-
+		sdl.window = create_window(rendering_backend, width, height);
 		if (!sdl.window) {
-			LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 			return nullptr;
 		}
 
@@ -1629,6 +1639,7 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 			goto finish;
 		}
 	}
+
 	/* Fullscreen mode switching has its limits, and is also problematic on
 	 * some window managers. For now, the following may work up to some
 	 * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
