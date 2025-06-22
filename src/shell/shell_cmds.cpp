@@ -2671,7 +2671,7 @@ void DOS_Shell::CMD_FOR(char* args)
 			}
 
 			auto files = search_files(parameter);
-			expanded_parameters.insert(
+			expanded_parameters.insert( //-V823
 			        expanded_parameters.end(),
 			        std::make_move_iterator(files.begin()),
 			        std::make_move_iterator(files.end()));
