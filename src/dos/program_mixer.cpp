@@ -680,7 +680,8 @@ ChannelInfos::ChannelInfos(const ChannelInfosMap& channel_infos)
 
 	features_by_channel_name[ChannelName::Master] = {ChannelFeature::Stereo};
 
-	features_by_channel_name.insert(channel_infos.begin(), channel_infos.end());
+	features_by_channel_name.insert(channel_infos.begin(),
+	                                channel_infos.end()); //-V837
 }
 
 bool ChannelInfos::HasChannel(const std::string& channel_name) const
