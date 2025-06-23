@@ -1037,6 +1037,10 @@ static int nearest_common_rate(const double rate)
 	return nearest_rate;
 }
 
+// Callers:
+//
+//   GFX_SetSize()
+//
 static void set_vsync(const VsyncMode mode)
 {
 	if (mode == VsyncMode::Off) {
@@ -1547,6 +1551,24 @@ static void exit_fullscreen()
 	}
 }
 
+// Callers:
+//
+//   setup_scaled_window()
+//	   init_gl_renderer()
+//	     GFX_SetSize()
+//     init_sdl_texture_renderer()
+//       GFX_SetSize()
+//
+//   set_default_window_mode()
+//     set_output()
+//       read_gui_config()
+//         read_config()
+//           init_sdl_config_section()
+//             sdl_main()
+//       GFX_RegenerateWindow()
+//         sdl_main()
+//		   MAPPER_StartUp() (from sdl_mapper.cpp)
+//
 static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
                                    const int width, const int height,
                                    const bool is_fullscreen)
@@ -1725,6 +1747,14 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
 	}
 }
 
+// Callers:
+//
+//   init_gl_renderer()
+//	   GFX_SetSize()
+//
+//   init_sdl_texture_renderer()
+//	   GFX_SetSize()
+//
 static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 {
 	int window_width  = 0;
@@ -1780,6 +1810,11 @@ bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 	return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
+// Callers:
+//
+//   initialize_sdl_window_size()
+//   finalise_window_state()
+//
 static void initialize_sdl_window_size(SDL_Window* sdl_window,
                                        const SDL_Point requested_min_size,
                                        const SDL_Point requested_size)
@@ -2026,6 +2061,10 @@ static bool present_frame_gl()
 	return is_presenting;
 }
 
+// Callers:
+//
+//   GFX_SetSize()
+//
 std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
                                         const int render_height_px)
 {
@@ -2224,6 +2263,10 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 
 #endif
 
+// Callers:
+//
+//   GFX_SetSize()
+//
 uint8_t init_sdl_texture_renderer()
 {
 	uint8_t flags = 0;
@@ -2799,6 +2842,17 @@ static void set_priority(PRIORITY_LEVELS level)
 	}
 }
 
+// Callers:
+//
+//   set_output()
+//     read_gui_config()
+//       read_config()
+//         init_sdl_config_section()
+//           sdl_main()
+//     GFX_RegenerateWindow()
+//       sdl_main()
+//	   MAPPER_StartUp() (from sdl_mapper.cpp)
+//
 static SDL_Window* set_default_window_mode()
 {
 	if (sdl.window) {
@@ -2859,6 +2913,24 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	return FallbackWindowSize;
 }
 
+// Callers:
+//
+//   parse_window_resolution_from_conf()
+//     setup_window_sizes_from_conf()
+//       set_output()
+//         read_gui_config()
+//           read_config()
+//             init_sdl_config_section()
+//               sdl_main()
+//         GFX_RegenerateWindow()
+//           sdl_main()
+//		     MAPPER_StartUp() (from sdl_mapper.cpp)
+//
+//   read_gui_config()
+//     read_config()
+//       init_sdl_config_section()
+//         sdl_main()
+//
 static void maybe_limit_requested_resolution(int& w, int& h,
                                              const char* size_description)
 {
@@ -2898,6 +2970,10 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 	}
 }
 
+// Callers:
+//
+//   setup_window_sizes_from_conf()
+//
 static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 {
 	int w = 0;
@@ -2921,6 +2997,18 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 	return FallbackWindowSize;
 }
 
+// Callers:
+//
+//    setup_window_sizes_from_conf()
+//    set_output()
+//       read_gui_config()
+//         read_config()
+//           init_sdl_config_section()
+//             sdl_main()
+//       GFX_RegenerateWindow()
+//         sdl_main()
+//	         MAPPER_StartUp() (from sdl_mapper.cpp)
+//
 static SDL_Point window_bounds_from_label(const std::string& pref,
                                           const SDL_Rect desktop)
 {
@@ -3085,6 +3173,17 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 	return sdl.texture.interpolation_mode;
 }
 
+// Callers:
+//
+//   read_gui_config()
+//     read_config()
+//       init_sdl_config_section()
+//         sdl_main()
+//
+//   GFX_RegenerateWindow()
+//     sdl_main()
+//     MAPPER_StartUp() (from sdl_mapper.cpp)
+//
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
 	const auto section = static_cast<const SectionProp*>(sec);
@@ -3425,6 +3524,12 @@ static void read_gui_config(Section* sec)
 	MOUSE_NotifyReadyGFX();
 }
 
+// Callers:
+//
+//   read_config()
+//     init_sdl_config_section()
+//       sdl_main()
+//
 static void read_config(Section* sec)
 {
 	assert(sec);
@@ -4169,6 +4274,10 @@ static void add_command_line_help_message()
 	        "  -V, --version            Print version information and exit.\n");
 }
 
+// Callers:
+//
+//   sdl_main()
+//
 static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
