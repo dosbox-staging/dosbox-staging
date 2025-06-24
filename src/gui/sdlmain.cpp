@@ -456,16 +456,6 @@ static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
-static const char* to_string(const VsyncMode mode)
-{
-	switch (mode) {
-	case VsyncMode::On: return "on";
-	case VsyncMode::Off: return "off";
-	case VsyncMode::Adaptive: return "adaptive";
-	default: assertm(false, "Invalid VsyncMode"); return "";
-	}
-}
-
 #if C_DEBUG
 extern SDL_Window* pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
@@ -644,37 +634,27 @@ static double get_host_refresh_rate()
 	return refresh_rate;
 }
 
-// Reset and populate the vsync settings from the config. This is
-// called on-demand after startup and on output mode changes (e.g., switching
-// from the 'texture' backend to 'opengl').
+// Reset and populate the vsync settings from the config. This is called
+// on-demand after startup and on output mode changes (e.g., switching from
+// the 'texture' backend to 'opengl').
 //
 static void initialize_vsync_settings()
 {
 	const std::string vsync_pref = get_sdl_section()->GetString("vsync");
 
-	if (const auto vsync_enabled_opt = parse_bool_setting(vsync_pref);
-	    vsync_enabled_opt) {
+	if (has_false(vsync_pref)) {
+		sdl.vsync.windowed   = false;
+		sdl.vsync.fullscreen = false;
 
-		if (const auto enabled = *vsync_enabled_opt; enabled) {
-			sdl.vsync.windowed = VsyncMode::On;
-			sdl.vsync.fullscreen = VsyncMode::On;
-		} else {
-			sdl.vsync.windowed = VsyncMode::Off;
-			sdl.vsync.fullscreen = VsyncMode::Off;
-		}
-
-	} else if (vsync_pref == "adaptive") {
-		sdl.vsync.windowed = VsyncMode::Adaptive;
-		sdl.vsync.fullscreen = VsyncMode::Adaptive;
+	} else if (has_true(vsync_pref)) {
+		sdl.vsync.windowed   = true;
+		sdl.vsync.fullscreen = true;
 
 	} else {
-		LOG_WARNING("DISPLAY: Invalid 'vsync' setting: '%s', using 'off'",
-		            vsync_pref.c_str());
+		assert(vsync_pref == "fullscreen-only");
 
-		sdl.vsync.windowed = VsyncMode::Off;
-		sdl.vsync.fullscreen = VsyncMode::Off;
-
-		set_section_property_value("sdl", "vsync", "off");
+		sdl.vsync.windowed   = false;
+		sdl.vsync.fullscreen = true;
 	}
 }
 
@@ -993,7 +973,7 @@ static void safe_set_window_size(const int w, const int h)
 	std::swap(sdl.draw.callback, saved_callback);
 }
 
-static VsyncMode get_vsync_setting()
+static bool is_vsync_enabled()
 {
 	return sdl.desktop.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
 }
@@ -1109,9 +1089,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 	constexpr uint16_t MinRateHz = 10;
 	sdl.frame.max_dupe_frames    = static_cast<float>(dos_rate) / MinRateHz;
 
-	// Consider any vsync mode that isn't explicitly 'Off' as having some
-	// level of vsync enforcement as 'On'.
-	const auto vsync_is_on = (get_vsync_setting() != VsyncMode::Off);
+	const auto vsync_is_on = is_vsync_enabled();
 
 	auto mode = FrameMode::Unset;
 
@@ -1984,61 +1962,24 @@ static bool present_frame_gl()
 	return is_presenting;
 }
 
-static void set_vsync_gl(const VsyncMode mode)
+static void set_vsync_gl(const bool is_enabled)
 {
 	assert(sdl.opengl.context);
 
-	const auto swap_interval = [&] {
-		switch (mode) {
-		case VsyncMode::Adaptive:
-			LOG_INFO("OPENGL: Enabled adaptive vsync");
-			return -1;
-
-		case VsyncMode::Off:
-			LOG_INFO("OPENGL: Disabled vsync");
-			return 0;
-
-		case VsyncMode::On:
-			LOG_INFO("OPENGL: Enabled vsync");
-			return 1;
-
-		default: assertm(false, "Invalid VsyncMode"); return 0;
-		}
-	}();
+	const auto swap_interval = is_enabled ? 1 : 0;
 
 	if (SDL_GL_SetSwapInterval(swap_interval) != 0) {
-
 		// The requested swap_interval is not supported
-		LOG_WARNING(
-				"OPENGL: Failed setting the vsync mode to '%s' "
-				"(swap interval: %d): %s",
-				to_string(mode),
-				swap_interval,
-				SDL_GetError());
-
-		// Per SDL's recommendation: If an application requests adaptive
-		// vsync and the system does not support it, this function will
-		// fail and return -1. In such a case, you should probably retry
-		// the call with 1 for the swap_interval.
-		if (swap_interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
-			LOG_WARNING(
-					"OPENGL: Tried enabling vsync, but it still failed: %s",
-					SDL_GetError());
-			return;
+		LOG_WARNING("OPENGL: Failed %s vsync: %s",
+		            (is_enabled ? "enabling" : "disabling"),
+		            SDL_GetError());
+		return;
 	}
 
-	switch (mode) {
-	case VsyncMode::Adaptive:
-		LOG_INFO("OPENGL: Enabled adaptive vsync");
-
-	case VsyncMode::Off:
-		LOG_INFO("OPENGL: Disabled vsync");
-
-	case VsyncMode::On:
+	if (is_enabled) {
 		LOG_INFO("OPENGL: Enabled vsync");
-
-	default: assertm(false, "Invalid VsyncMode");
-	}
+	} else {
+		LOG_INFO("OPENGL: Disabled vsync");
 	}
 }
 
@@ -2234,7 +2175,7 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	// Set shader variables
 	update_uniforms_gl();
 
-	set_vsync_gl(get_vsync_setting());
+	set_vsync_gl(is_vsync_enabled());
 
 	maybe_log_opengl_error("End of setsize");
 
@@ -2246,38 +2187,24 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 
 #endif
 
-static void set_vsync_sdl_texture(const VsyncMode mode)
+static void set_vsync_sdl_texture(const bool is_enabled)
 {
 	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
 	// set to "1", "0", adapative is currently not supported, so we
 	// also treat it as "1"
-	const auto hint_str = (mode == VsyncMode::On || mode == VsyncMode::Adaptive)
-								? "1"
-								: "0";
+	const auto hint_str = is_enabled ? "1" : "0";
 
 	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_FALSE) {
-		LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
-					to_string(mode),
-					hint_str,
-					SDL_GetError());
+		LOG_WARNING("SDL: Failed %s vsync: %s",
+		            (is_enabled ? "enabling" : "disabling"),
+		            SDL_GetError());
 		return;
 	}
 
-	switch (mode) {
-	// TODO should not happen
-	case VsyncMode::Adaptive:
-		LOG_INFO("SDL: Enabled adaptive vsync");
-		break;
-
-	case VsyncMode::Off:
-		LOG_INFO("SDL: Disabled vsync");
-		break;
-
-	case VsyncMode::On:
+	if (is_enabled) {
 		LOG_INFO("SDL: Enabled vsync");
-		break;
-
-	default: assertm(false, "Invalid VsyncMode");
+	} else {
+		LOG_INFO("SDL: Disabled vsync");
 	}
 }
 
@@ -2391,7 +2318,7 @@ uint8_t init_sdl_texture_renderer()
 		LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 	}
 
-	set_vsync_sdl_texture(get_vsync_setting());
+	set_vsync_sdl_texture(is_vsync_enabled());
 
 	sdl.frame.update  = update_frame_texture;
 	sdl.frame.present = present_frame_texture;
@@ -4455,17 +4382,32 @@ static void init_sdl_config_section()
 	pstring = sdl_sec->AddString("vsync", always, "off");
 	pstring->SetHelp(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
-	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
-	        "             the risk of tearing in some games (default).\n"
-	        "  on:        Enable vsync. This can prevent tearing in some games but will\n"
-	        "             impact performance or drop frames when the DOS rate exceeds the\n"
-	        "             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).\n"
-	        "  adaptive:  Enables vsync when the frame rate is higher than the host rate,\n"
-	        "             but disables it when the frame rate drops below the host rate.\n"
-	        "             This is a reasonable alternative on macOS instead of 'on'.\n"
-	        "             Note: only valid in OpenGL output modes; otherwise treated as\n"
-	        "             'on'.");
-	pstring->SetValues({"off", "on", "adaptive"});
+	        "  off:              Disable vsync in both windowed and fullscreen mode\n"
+	        "                    (default). This is the best option on variable refresh rate\n"
+	        "                    (VRR) monitors running in VRR mode to get perfect frame\n"
+	        "                    pacing, no tearing, and low input lag. On fixed refresh rate\n"
+	        "                    monitors (or VRR monitors in fixed refresh mode), disabling\n"
+	        "                    vsync might cause visible tearing in fast-paced games.\n"
+	        "  on:               Enable vsync in both windowed and fullscreen mode. This can\n"
+	        "                    prevent tearing in fast-paced games but will increase input\n"
+	        "                    lag. It might also impact performance (e.g., introduce audio\n"
+	        "                    glitches in some 70 Hz VGA games running on a 60 Hz fixed\n"
+	        "                    refresh rate monitor).\n"
+	        "  fullscreen-only:  Enable vsync in fullscreen mode only. This might be useful\n"
+	        "                    if your operating system enforces vsync in windowed mode and\n"
+	        "                    the 'on' setting causes audio glitches or other issues in\n"
+	        "                    windowed mode only.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams\n"
+	        "    and Epic Pinball), you'll need a VRR monitor running in VRR mode and vsync\n"
+	        "    disabled. The scrolling in 70 Hz VGA games will always appear juddery on\n"
+	        "    60 Hz fixed refresh rate monitors even with vsync enabled.\n"
+	        "  - Usually, you'll only get perfectly smooth 2D scrolling in fullscreen mode,\n"
+	        "    even on a VRR monitor.\n"
+	        "  - For the best results, disable all frame cappers and global vsync overrides\n"
+	        "    in your video driver settings.");
+	pstring->SetValues({"off", "on", "fullscreen-only"});
 
 	pint = sdl_sec->AddInt("vsync_skip", on_start, 0);
 	pint->SetHelp(
