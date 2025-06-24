@@ -124,8 +124,6 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncMode { Off, On, Adaptive };
-
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
 	PRIORITY_LEVEL_LOWEST,
@@ -217,8 +215,8 @@ struct SDL_Block {
 	} desktop = {};
 
 	struct {
-		VsyncMode windowed   = {};
-		VsyncMode fullscreen = {};
+		bool windowed   = false;
+		bool fullscreen = false;
 
 		int skip_us = 0;
 	} vsync = {};
