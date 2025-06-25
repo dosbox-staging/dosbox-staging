@@ -258,7 +258,6 @@ struct SDL_Block {
 		void* framebuf = nullptr;
 		GLuint texture;
 		GLint max_texsize;
-		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
 
 		int texture_width_px  = 0;
