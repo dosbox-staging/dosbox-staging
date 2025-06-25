@@ -2294,19 +2294,21 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 		            SDL_GetError());
 	}
 
-	sdl.opengl.framebuffer_is_srgb_encoded =
-	        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-	        (is_framebuffer_srgb_capable > 0);
-
-	if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
-	    !sdl.opengl.framebuffer_is_srgb_encoded) {
-		LOG_WARNING("OPENGL: sRGB framebuffer not supported");
-	}
+	const auto use_srgb_framebuffer = [&] {
+		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer) {
+			if (is_framebuffer_srgb_capable > 0) {
+				return true;
+			} else {
+				LOG_WARNING("OPENGL: sRGB framebuffer not supported");
+			}
+		}
+		return false;
+	}();
 
 	// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
 	// with Mesa drivers on certain integrated Intel GPUs
 	const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
-	                                       sdl.opengl.framebuffer_is_srgb_encoded
+	                                       use_srgb_framebuffer
 	                             ? GL_SRGB8_ALPHA8
 	                             : GL_RGB8;
 
@@ -2328,7 +2330,7 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 
 	delete[] emptytex;
 
-	if (sdl.opengl.framebuffer_is_srgb_encoded) {
+	if (use_srgb_framebuffer) {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 #if 0
 			LOG_MSG("OPENGL: Using sRGB framebuffer");
