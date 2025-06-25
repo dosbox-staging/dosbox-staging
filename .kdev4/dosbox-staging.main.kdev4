@@ -1,0 +1,56 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
+
+[Cppcheck]
+useSystemIncludes=true
+
+[CustomDefinesAndIncludes][ProjectPath0]
+Path=.
+parseAmbiguousAsCPP=true
+parserArguments=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c++2a
+parserArgumentsC=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c99
+parserArgumentsCuda=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -std=c++11
+parserArgumentsOpenCL=-ferror-limit=100 -fspell-checking -Wdocumentation -Wunused-parameter -Wunreachable-code -Wall -cl-std=CL1.1
+
+[CustomDefinesAndIncludes][ProjectPath0][Compiler]
+Name=GCC
+
+[CustomDefinesAndIncludes][ProjectPath0][Includes]
+1=/home/roman/GIT-DOS/integration/dosbox-staging.main/include/
+2=/lib/gcc/x86_64-pc-linux-gnu/14/include/g++-v14
+3=/home/roman/GIT-DOS/integration/dosbox-staging.main/src/libs/manymouse
+
+[Launch]
+Launch Configurations=Launch Configuration 0
+
+[Launch][Launch Configuration 0]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=New Compiled Binary Launcher
+Type=Native Application
+
+[Launch][Launch Configuration 0][Data]
+Arguments=
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x00)
+Dependency Action=Nothing
+EnvironmentGroup=
+Executable=file:///home/roman/GIT-DOS/integration/dosbox-staging.main
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+Kill Before Executing Again=4194304
+Project Target=dosbox-staging.main,dosbox
+Use External Terminal=false
+Working Directory=
+isExecutable=false
+
+[MesonManager]
+Current Build Directory Index=0
+Number of Build Directories=1
+
+[MesonManager][BuildDir 0]
+Additional meson arguments=
+Build Directory Path=/home/roman/GIT-DOS/integration/dosbox-staging.main/build
+Meson Generator Backend=ninja
+Meson executable=/usr/bin/meson
+
+[Project]
+VersionControlSupport=kdevgit

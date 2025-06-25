@@ -9,7 +9,13 @@
 #include "bit_view.h"
 #include "mixer.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include "YM7128B_emu/YM7128B_emu.h"
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 class SurroundProcessor {
 public:
