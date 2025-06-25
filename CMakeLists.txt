@@ -214,10 +214,11 @@ set(NOMINMAX ON)
 set(C_HAS_BUILTIN_EXPECT OFF)
 
 # TODO Check other functions
-check_symbol_exists(strnlen  "string.h"   HAVE_STRNLEN)
-check_symbol_exists(mprotect "sys/mman.h" HAVE_MPROTECT)
-check_symbol_exists(mmap     "sys/mman.h" HAVE_MMAP)
-check_symbol_exists(MAP_JIT  "sys/mman.h" HAVE_MAP_JIT)
+check_symbol_exists(strnlen       "string.h"   HAVE_STRNLEN)
+check_symbol_exists(mprotect      "sys/mman.h" HAVE_MPROTECT)
+check_symbol_exists(mmap          "sys/mman.h" HAVE_MMAP)
+check_symbol_exists(MAP_JIT       "sys/mman.h" HAVE_MAP_JIT)
+check_symbol_exists(clock_gettime "time.h"     HAVE_CLOCK_GETTIME)
 
 check_symbol_exists(
   pthread_jit_write_protect_np "pthread.h" HAVE_PTHREAD_WRITE_PROTECT_NP
