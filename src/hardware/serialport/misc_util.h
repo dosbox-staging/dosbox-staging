@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_MISC_UTIL_H
@@ -43,7 +43,13 @@
 
 #include <SDL_net.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
 #include "enet/include/enet.h"
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 enum class SocketType {
 	Tcp  = 0, // +SOCK0 modem command
