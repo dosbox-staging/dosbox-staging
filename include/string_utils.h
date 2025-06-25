@@ -299,6 +299,8 @@ std::string format_str(const std::string& format, const Args&... args) noexcept
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-security"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
 
 	// Perform a non-writing format to determine the size
 	const auto required_size = std::snprintf(nullptr, 0, format.c_str(), args...);
@@ -315,6 +317,8 @@ std::string format_str(const std::string& format, const Args&... args) noexcept
 	std::string result(out_size, '\0');
 
 	std::snprintf(result.data(), result.size(), format.c_str(), args...);
+
+#pragma GCC diagnostic pop
 #pragma clang diagnostic pop
 
 	// The buffer should now have the determined output length plus the
