@@ -116,14 +116,6 @@
 // Define to 1 to enable ALSA MIDI support
 #mesondefine C_ALSA
 
-/* Compiler features and extensions
- *
- * These are defines for compiler features we can't reliably verify during
- * compilation time.
- */
-
-#mesondefine C_HAS_BUILTIN_EXPECT
-
 /* Defines for checking availability of standard functions and structs.
  *
  * Sometimes available functions, structs, or struct fields differ slightly
