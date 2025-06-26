@@ -12,8 +12,9 @@
 // uniqueness (e.g., da3c5, c22ef8)
 #define BUILD_GIT_HASH "${BUILD_GIT_HASH}"
 
-/* Operating System
- */
+
+// Operating System
+//
 
 // Defined if compiling for OS from BSD family
 #cmakedefine BSD
@@ -29,10 +30,10 @@
 #cmakedefine WIN32
 #endif
 
-/* CPU and FPU emulation
- *
- * These defines are mostly relevant to modules src/cpu/ and src/fpu/
- */
+
+// CPU and FPU emulation
+//
+// These defines are mostly relevant to modules src/cpu/ and src/fpu/
 
 // The type of cpu this target has
 #cmakedefine C_TARGETCPU @C_TARGETCPU@
@@ -60,12 +61,12 @@
 // TODO Define to 1 to use inlined memory functions in cpu core
 #define C_CORE_INLINE 1
 
-/* Emulator features
- *
- * Turn on or off optional emulator features that depend on external libraries.
- * This way it's easier to port or package on a new platform, where these
- * libraries might be missing.
- */
+
+// Emulator features
+//
+// Turn on or off optional emulator features that depend on external libraries.
+// This way it's easier to port or package on a new platform, where these
+// libraries might be missing.
 
 // Define to 1 to enable internal modem emulation (using SDL2_net)
 #cmakedefine01 C_MODEM
@@ -115,22 +116,17 @@
 // Define to 1 to enable ALSA MIDI support
 #cmakedefine01 C_ALSA
 
-/* Compiler features and extensions
- *
- * These are defines for compiler features we can't reliably verify during
- * compilation time.
- */
 
-#cmakedefine01 C_HAS_BUILTIN_EXPECT
-
-/* Defines for checking availability of standard functions and structs.
- *
- * Sometimes available functions, structs, or struct fields differ slightly
- * between operating systems.
- */
+// Defines for checking availability of standard functions and structs.
+//
+// Sometimes available functions, structs, or struct fields differ slightly
+// between operating systems.
 
 // Define to 1 when zlib-ng support is provided by the system
 #cmakedefine01 C_SYSTEM_ZLIB_NG
+
+// Defined if synchronous I/O multiplexing is available
+#cmakedefine HAVE_FD_ZERO
 
 // Defined if function clock_gettime is available
 #cmakedefine HAVE_CLOCK_GETTIME
@@ -170,23 +166,22 @@
 #cmakedefine HAVE_STRUCT_DIRENT_D_TYPE
 
 
-
-/* Available headers
- *
- * Checks for non-POSIX headers and POSIX headers not supported on Windows.
- */
+// Available headers
+//
+// Checks for non-POSIX headers and POSIX headers not supported on Windows.
 
 #cmakedefine HAVE_LIBGEN_H
 #cmakedefine HAVE_NETINET_IN_H
 #cmakedefine HAVE_PWD_H
-#define HAVE_STDLIB_H
+#cmakedefine HAVE_STDLIB_H
 #cmakedefine HAVE_STRINGS_H
 #cmakedefine HAVE_SYS_SOCKET_H
-#define HAVE_SYS_TYPES_H
+#cmakedefine HAVE_SYS_TYPES_H
 #cmakedefine HAVE_SYS_XATTR_H
 
-/* Hardware-related defines
- */
+
+// Hardware-related defines
+//
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #cmakedefine WORDS_BIGENDIAN
@@ -194,8 +189,9 @@
 // Non-4K page size (only on selected architectures)
 #cmakedefine PAGESIZE
 
-/* Windows-related defines
- */
+
+// Windows-related defines
+//
 
 // Prevent <windows.h> from clobbering std::min and std::max
 #cmakedefine NOMINMAX 1
@@ -211,5 +207,6 @@
 // be used as a fallback if the user hasn't populated their
 // XDG_DATA_HOME or XDG_DATA_DIRS to include the --datadir.
 #cmakedefine CUSTOM_DATADIR
+
 
 #endif

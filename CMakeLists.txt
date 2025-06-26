@@ -55,6 +55,11 @@ else()
   message(FATAL_ERROR "Unknown system ${CMAKE_SYSTEM_NAME}")
 endif()
 
+# Check host endianness
+if (CMAKE_CXX_BYTE_ORDER STREQUAL BIG_ENDIAN)
+  set(WORDS_BIGENDIAN ON)
+endif()
+
 # Enable color output for certain compilers
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
@@ -83,12 +88,10 @@ endif()
 # by Enet, slirp, and ManyMouse's X11 interface. Unfortunately these
 # routines aren't universally available.
 if(DOSBOX_PLATFORM_WINDOWS)
-  check_symbol_exists(FD_ZERO  "winsock2.h"    HAVE_FD_ZERO)
+  check_symbol_exists(FD_ZERO "winsock2.h"   HAVE_FD_ZERO)
 else()
-  check_symbol_exists(FD_ZERO  "sys/select.h"  HAVE_FD_ZERO)
+  check_symbol_exists(FD_ZERO "sys/select.h" HAVE_FD_ZERO)
 endif()
-
-### config.h shenanigans
 
 set(TEST_CODE_BUILTIN_AVAILABLE "
 int main() {
@@ -137,7 +140,19 @@ else()
   message(FATAL_ERROR "Unknown processor ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-check_include_file("sys/xattr.h" HAVE_SYS_XATTR_H)
+check_include_file("libgen.h"     HAVE_LIBGEN_H)
+check_include_file("netinet/in.h" HAVE_NETINET_IN_H)
+check_include_file("pwd.h"        HAVE_PWD_H)
+check_include_file("stdlib.h"     HAVE_STDLIB_H)
+check_include_file("strings.h"    HAVE_STRINGS_H)
+check_include_file("sys/types.h"  HAVE_SYS_TYPES_H)
+check_include_file("sys/xattr.h"  HAVE_SYS_XATTR_H)
+
+check_symbol_exists(getpeername  sys/socket.h  HAVE_GETPEERNAME)
+check_symbol_exists(getsockname  sys/socket.h  HAVE_GETSOCKNAME)
+if(HAVE_GETPEERNAME AND HAVE_GETSOCKNAME)
+  set(HAVE_SYS_SOCKET_H ON)
+endif()
 
 set(C_PER_PAGE_W_OR_X ON)
 set(C_FPU ON)
@@ -208,18 +223,23 @@ set(C_CORESERVICES   "${DOSBOX_PLATFORM_MACOS}")
 set(C_ALSA "${DOSBOX_PLATFORM_LINUX}")
 
 # Windows
-set(NOMINMAX ON)
+if(DOSBOX_PLATFORM_WINDOWS)
+  # Prevent <windows.h> from clobbering std::min and std::max
+  set(NOMINMAX ON)
+  # Enable mathematical constants (such as M_PI) in Windows math.h header
+  set(_USE_MATH_DEFINES ON)
+endif()
 
-# TODO Needs porting to `[[likely]]` and friends?
-set(C_HAS_BUILTIN_EXPECT OFF)
+check_symbol_exists(strnlen       "string.h"       HAVE_STRNLEN)
+check_symbol_exists(clock_gettime "time.h"         HAVE_CLOCK_GETTIME)
+check_symbol_exists(mprotect      "sys/mman.h"     HAVE_MPROTECT)
+check_symbol_exists(mmap          "sys/mman.h"     HAVE_MMAP)
+check_symbol_exists(MAP_JIT       "sys/mman.h"     HAVE_MAP_JIT)
+check_symbol_exists(setpriority   "sys/resource.h" HAVE_SETPRIORITY)
 
-# TODO Check other functions
-check_symbol_exists(strnlen       "string.h"   HAVE_STRNLEN)
-check_symbol_exists(mprotect      "sys/mman.h" HAVE_MPROTECT)
-check_symbol_exists(mmap          "sys/mman.h" HAVE_MMAP)
-check_symbol_exists(MAP_JIT       "sys/mman.h" HAVE_MAP_JIT)
-check_symbol_exists(clock_gettime "time.h"     HAVE_CLOCK_GETTIME)
-
+check_symbol_exists(
+  pthread_setname_np "pthread.h" HAVE_PTHREAD_SETNAME_NP
+)
 check_symbol_exists(
   pthread_jit_write_protect_np "pthread.h" HAVE_PTHREAD_WRITE_PROTECT_NP
 )
@@ -227,7 +247,8 @@ check_symbol_exists(
   sys_icache_invalidate "libkern/OSCacheControl.h" HAVE_SYS_ICACHE_INVALIDATE
 )
 
-set(_USE_MATH_DEFINES ON)
+# TODO: Detect PAGESIZE using contrib/pagesize/*_.pagesize.c
+
 set(CUSTOM_DATADIR " ")
 
 set(project_name "${PROJECT_NAME}")
@@ -236,8 +257,6 @@ set(version      "${PROJECT_VERSION}")
 configure_file(
   src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
 )
-
-### end of config.h ###
 
 # Allow dynamically loading externalised vcpkg dependencies at runtime
 # from the $EXE_DIR/lib directory (must be set before 'add_executable')
