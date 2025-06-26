@@ -43,14 +43,14 @@ jobs:
             cmake_preset: release-linux-vcpkg
             cc:  gcc
             cxx: g++
-            max_warnings: 14
+            max_warnings: 0
 
           - name: Clang 15, Ubuntu 22.04
             os: ubuntu-22.04
             cmake_preset: release-linux-vcpkg
             cc:  clang
             cxx: clang++
-            max_warnings: 14
+            max_warnings: 0
 
           - name: GCC 12, Ubuntu 22.04, debugger build
             os: ubuntu-22.04
@@ -58,7 +58,7 @@ jobs:
             cmake_flags: -DOPT_HEAVY_DEBUG=ON
             cc:  gcc
             cxx: g++
-            max_warnings: 14
+            max_warnings: 0
 
           # TODO turn this into a minimal build target once we have CMake
           # feature toggling implemented
@@ -67,7 +67,7 @@ jobs:
             cmake_preset: release-linux-vcpkg
             cc:  gcc
             cxx: g++
-            max_warnings: 14
+            max_warnings: 0
 
     steps:
       - name: Checkout repository
