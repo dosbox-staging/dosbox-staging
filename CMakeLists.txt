@@ -21,12 +21,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `include/checks.h` for details.
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244")
+  add_compile_options("/wd4244")
   
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-conversion -Wno-narrowing")
+  add_compile_options("-Wno-conversion" "-Wno-narrowing")
 endif()
 
 option(OPT_DEBUG "Enable debugging" OFF)
