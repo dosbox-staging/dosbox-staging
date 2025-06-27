@@ -1922,60 +1922,64 @@ static CJAxisEvent* AddJAxisButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                                    const char* const title, Bitu stick, Bitu axis,
                                    bool positive, CJAxisEvent* opposite_axis)
 {
-	char buf[64];
-	sprintf(buf, "jaxis_%d_%d%s",
-	        static_cast<int>(stick),
-	        static_cast<int>(axis),
-	        positive ? "+" : "-");
-	CJAxisEvent	* event=new CJAxisEvent(buf,stick,axis,positive,opposite_axis);
-	new CEventButton(x,y,dx,dy,title,event);
+	const auto buf = format_str("jaxis_%d_%d%s",
+	                            static_cast<int>(stick),
+	                            static_cast<int>(axis),
+	                            positive ? "+" : "-");
+
+	CJAxisEvent* event = new CJAxisEvent(buf.c_str(), stick, axis, positive, opposite_axis);
+
+	new CEventButton(x, y, dx, dy, title, event);
 	return event;
 }
-static CJAxisEvent * AddJAxisButton_hidden(Bitu stick,Bitu axis,bool positive,CJAxisEvent * opposite_axis) {
-	char buf[64];
-	sprintf(buf, "jaxis_%d_%d%s",
-	        static_cast<int>(stick),
-	        static_cast<int>(axis),
-	        positive ? "+" : "-");
-	return new CJAxisEvent(buf,stick,axis,positive,opposite_axis);
+static CJAxisEvent* AddJAxisButton_hidden(Bitu stick, Bitu axis, bool positive,
+                                          CJAxisEvent* opposite_axis)
+{
+	const auto buf = format_str("jaxis_%d_%d%s",
+	                            static_cast<int>(stick),
+	                            static_cast<int>(axis),
+	                            positive ? "+" : "-");
+
+	return new CJAxisEvent(buf.c_str(), stick, axis, positive, opposite_axis);
 }
 
 static void AddJButtonButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                              const char* const title, Bitu stick, Bitu button)
 {
-	char buf[64];
-	sprintf(buf, "jbutton_%d_%d",
-	        static_cast<int>(stick),
-	        static_cast<int>(button));
-	CJButtonEvent * event=new CJButtonEvent(buf,stick,button);
-	new CEventButton(x,y,dx,dy,title,event);
+	const auto buf = format_str("jbutton_%d_%d",
+	                            static_cast<int>(stick),
+	                            static_cast<int>(button));
+
+	CJButtonEvent* event = new CJButtonEvent(buf.c_str(), stick, button);
+	new CEventButton(x, y, dx, dy, title, event);
 }
-static void AddJButtonButton_hidden(Bitu stick,Bitu button) {
-	char buf[64];
-	sprintf(buf, "jbutton_%d_%d",
-	        static_cast<int>(stick),
-	        static_cast<int>(button));
-	new CJButtonEvent(buf,stick,button);
+static void AddJButtonButton_hidden(Bitu stick, Bitu button)
+{
+	const auto buf = format_str("jbutton_%d_%d",
+	                            static_cast<int>(stick),
+	                            static_cast<int>(button));
+
+	new CJButtonEvent(buf.c_str(), stick, button);
 }
 
 static void AddJHatButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                           const char* const title, Bitu _stick, Bitu _hat, Bitu _dir)
 {
-	char buf[64];
-	sprintf(buf, "jhat_%d_%d_%d",
-	        static_cast<int>(_stick),
-	        static_cast<int>(_hat),
-	        static_cast<int>(_dir));
-	CJHatEvent * event=new CJHatEvent(buf,_stick,_hat,_dir);
-	new CEventButton(x,y,dx,dy,title,event);
+	const auto buf = format_str("jhat_%d_%d_%d",
+	                            static_cast<int>(_stick),
+	                            static_cast<int>(_hat),
+	                            static_cast<int>(_dir));
+
+	CJHatEvent* event = new CJHatEvent(buf.c_str(), _stick, _hat, _dir);
+	new CEventButton(x, y, dx, dy, title, event);
 }
 
 static void AddModButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                          const char* const title, int mod)
 {
-	char buf[64];
-	sprintf(buf, "mod_%d", mod);
-	CModEvent *event = new CModEvent(buf, mod);
+	const auto buf = format_str("mod_%d", mod);
+
+	CModEvent* event = new CModEvent(buf.c_str(), mod);
 	new CEventButton(x, y, dx, dy, title, event);
 }
 
