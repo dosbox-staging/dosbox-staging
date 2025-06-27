@@ -437,7 +437,7 @@ La ruta '%s' no tiene shaders.
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 La ruta '%s' tiene:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 No existe la sección o propiedad: %s
 
 .

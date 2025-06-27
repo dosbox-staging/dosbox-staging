@@ -1272,7 +1272,7 @@ Il percorso '%s' non contiene shader
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Il percorso '%s' contiene:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Sezione o proprietà non trovata: %s
 
 .

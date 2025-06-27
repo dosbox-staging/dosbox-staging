@@ -1268,7 +1268,7 @@ Pad '%s' heeft geen shaders
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Pad '%s' heeft:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Geen dergelijke sectie of eigenschap: %s
 
 .
