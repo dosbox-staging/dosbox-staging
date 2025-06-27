@@ -15,7 +15,7 @@
 
 constexpr auto Megabyte = 1024 * 1024;
 
-constexpr auto PagesPerMegabyte = Megabyte / dos_pagesize;
+constexpr auto PagesPerMegabyte = Megabyte / DosPageSize;
 
 constexpr auto MinMegabytes = static_cast<uint16_t>(1);
 constexpr auto MaxMegabytes = static_cast<uint16_t>(PciMemoryBase / Megabyte);
@@ -26,7 +26,7 @@ constexpr auto SafeMegabytesWin98 = 512;
 
 static struct MemoryBlock {
 	struct page_t {
-		uint8_t bytes[dos_pagesize] = {};
+		uint8_t bytes[DosPageSize] = {};
 	};
 	std::vector<page_t> pages           = {};
 	std::vector<PageHandler*> phandlers = {};
@@ -459,7 +459,7 @@ void MEM_A20_Enable(bool enabled) {
 	if (memory.a20.enabled == enabled) {
 		return;
 	}
-	constexpr uint32_t a20_base_page = Megabyte / dos_pagesize;
+	constexpr uint32_t a20_base_page = Megabyte / DosPageSize;
 
 	const uint32_t phys_base_page = enabled ? a20_base_page : 0;
 

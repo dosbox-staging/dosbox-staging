@@ -547,41 +547,6 @@ if host_machine.endian() == 'big'
 endif
 
 
-# Get host page size
-# ~~~~~~~~~~~~~~~~~~
-# When detecting the page size, we use Meson's configured
-# compiler to make a system call because Meson will build and run
-# it via the cross compiler (if one is in use), which is
-# particularly important we get the destiantion machine's page
-# size as opposed to the local build machine's page size.
-#
-pagesize = 4096
-pagesize_option = get_option('pagesize')
-if pagesize_option > 0
-    # User has provided the page size
-    pagesize = pagesize_option
-else
-    # Detect the page size using a syscall via the cross compiler
-    pagesize_api = os_family_name == 'WIN32' ? 'windows' : 'posix'
-    pagesize_src = files('contrib/pagesize' / pagesize_api + '_pagesize.c')
-    pagesize_cmd = cc.run(
-        pagesize_src,
-        name: 'Query host page size',
-    )
-    if pagesize_cmd.returncode() == 0
-        pagesize = pagesize_cmd.stdout().strip().to_int()
-    else
-        error('''Unable to detect the host's page size''')
-    endif
-endif
-conf_data.set('PAGESIZE', pagesize)
-summary(
-    'Host page size (bytes)',
-    pagesize.to_string(),
-    section: 'Build Summary',
-)
-
-
 set_prio_code = '''
 #include <sys/resource.h>
 int main() {

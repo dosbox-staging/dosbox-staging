@@ -247,8 +247,6 @@ check_symbol_exists(
   sys_icache_invalidate "libkern/OSCacheControl.h" HAVE_SYS_ICACHE_INVALIDATE
 )
 
-# TODO: Detect PAGESIZE using contrib/pagesize/*_.pagesize.c
-
 set(CUSTOM_DATADIR " ")
 
 set(project_name "${PROJECT_NAME}")

@@ -178,14 +178,13 @@
 #define HAVE_SYS_TYPES_H 1
 #mesondefine HAVE_SYS_XATTR_H
 
+
 /* Hardware-related defines
  */
 
 // Define to 1 when host/target processor uses big endian byte ordering
 #mesondefine WORDS_BIGENDIAN
 
-// Non-4K page size (only on selected architectures)
-#mesondefine PAGESIZE
 
 /* Windows-related defines
  */

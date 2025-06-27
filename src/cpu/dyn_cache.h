@@ -840,33 +840,33 @@ static void cache_block_before_close();
 static void cache_block_closing(const uint8_t *block_start, Bitu block_size);
 #endif
 
-static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + host_pagesize - 1 + host_pagesize;
+static constexpr size_t cache_code_size = CACHE_TOTAL + CACHE_MAXSIZE + HostPageSize - 1 + HostPageSize;
 constexpr bool is_64bit_platform = sizeof(void *) == 8;
 
 static inline void dyn_mem_adjust(void *&ptr, size_t &size)
 {
-#if (PAGESIZE == 65536)
+#if (HostPageSize == 65536)
 	// Use different code on 64K page systems (currently just ppc64le).
 	// The other code will sometimes underrun our pointer into unmapped
 	// memory and mprotect() will then fail.
 	const uintptr_t p = reinterpret_cast<uintptr_t>(ptr);
-	const auto align_adjust = p % host_pagesize;
+	const auto align_adjust = p % HostPageSize;
 	const auto p_aligned = p - align_adjust;
-	assert((p_aligned % host_pagesize) == 0);
+	assert((p_aligned % HostPageSize) == 0);
 
 	const auto new_size = size + align_adjust;
-	const auto new_size_adjust = new_size % host_pagesize;
-	if (new_size <= host_pagesize) {
-		size = host_pagesize;
+	const auto new_size_adjust = new_size % HostPageSize;
+	if (new_size <= HostPageSize) {
+		size = HostPageSize;
 	} else if (new_size_adjust) {
-		size = (new_size - new_size_adjust) + host_pagesize;
-		assert((size % host_pagesize) == 0);
+		size = (new_size - new_size_adjust) + HostPageSize;
+		assert((size % HostPageSize) == 0);
 	}
 #else
 	// Align to page boundary and adjust size. The -1/+1 voodoo
 	// is required to avoid segfaults on 32-bit builds.
 	const auto p = reinterpret_cast<uintptr_t>(ptr) - 1;
-	const auto align_adjust = p % host_pagesize;
+	const auto align_adjust = p % HostPageSize;
 	const auto p_aligned = p - align_adjust;
 	size += align_adjust + 1;
 #endif
@@ -998,10 +998,10 @@ static void cache_init(bool enable) {
 			// align the cache at a page boundary
 			cache_code = reinterpret_cast<uint8_t *>(
 			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
-			    static_cast<size_t>(host_pagesize) - 1) & ~(static_cast<size_t>(host_pagesize) - 1));
+			    static_cast<size_t>(HostPageSize) - 1) & ~(static_cast<size_t>(HostPageSize) - 1));
 
 			cache_code_link_blocks=cache_code;
-			cache_code=cache_code+host_pagesize;
+			cache_code=cache_code+HostPageSize;
 			CacheBlock *block = cache_getblock();
 			cache.block.first=block;
 			cache.block.active=block;
@@ -1039,14 +1039,14 @@ static void cache_init(bool enable) {
 		cache.pos = &cache_code_link_blocks[0];
 		using generate_run_code_f = decltype(&generate_run_code);
 		core_dynrec.runcode = (generate_run_code_f)cache.pos;
-		dyn_run_code(); // writes up to host_pagesize - 64 bytes
+		dyn_run_code(); // writes up to HostPageSize - 64 bytes
 
 		cache_block_before_close();
 		cache_block_closing(cache_code_link_blocks,
 		                    cache.pos - cache_code_link_blocks);
 
-		close_link_block_num_at_code_pos(0, host_pagesize - 64);
-		close_link_block_num_at_code_pos(1, host_pagesize - 32);
+		close_link_block_num_at_code_pos(0, HostPageSize - 64);
+		close_link_block_num_at_code_pos(1, HostPageSize - 32);
 #endif
 
 		dyn_mem_execute(cache_addr, cache_bytes);

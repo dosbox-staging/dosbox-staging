@@ -960,7 +960,7 @@ static Bitu INT67_Handler(void) {
 				break;
 				}
 			case 0x02:		/* VCPI Maximum Physical Address */
-				reg_edx=((MEM_TotalPages()*dos_pagesize)-1)&0xfffff000;
+				reg_edx=((MEM_TotalPages()*DosPageSize)-1)&0xfffff000;
 				reg_ah=EMM_NO_ERROR;
 				break;
 			case 0x03:		/* VCPI Get Number of Free Pages */

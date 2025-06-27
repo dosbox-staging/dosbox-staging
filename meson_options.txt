@@ -137,13 +137,6 @@ option(
     description: 'Select the dynamic core implementation.',
 )
 
-option(
-    'pagesize',
-    type: 'integer',
-    value: 0,
-    description: 'Set host memory pagesize in bytes (skip detection)',
-)
-
 # Per-page write-or-execute (W^X) permissions
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # This option lets packagers control if dynamic core memory pages are flagged
