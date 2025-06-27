@@ -974,7 +974,7 @@ MAC-адрес карты NE2000.
 :PROGRAM_CONFIG_VALID_VALUES
 Возможные значения
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Нет такого раздела или свойства: %s
 
 .

@@ -432,7 +432,7 @@ Pfad '%s' enthält keine Shader
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Pfad '%s' enthält:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Kein solcher Abschnitt oder Eigenschaft: %s
 
 .

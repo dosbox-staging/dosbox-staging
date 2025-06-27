@@ -818,7 +818,7 @@ Vous pouvez mettre vos commandes MOUNT ici.
 :PROGRAM_CONFIG_VALID_VALUES
 Valeurs possibles
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Aucune section ou propriété..
 
 .
