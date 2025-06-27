@@ -74,8 +74,8 @@ bool Overlay_Drive::RemoveDir(const char * dir) {
 		safe_strcpy(odir, overlaydir);
 		safe_strcat(odir, dir);
 		CROSS_FILENAME(odir);
-		int temp = rmdir(odir);
-		if (temp == 0) {
+		const auto result_ok = remove_dir(odir);
+		if (result_ok) {
 			remove_DOSdir_from_cache(dir);
 			char newdir[CROSS_LEN];
 			safe_strcpy(newdir, basedir);
@@ -84,7 +84,7 @@ bool Overlay_Drive::RemoveDir(const char * dir) {
 			dirCache.DeleteEntry(newdir,true);
 			update_cache(false);
 		}
-		return (temp == 0);
+		return result_ok;
 	} else {
 		uint16_t olderror = dos.errorcode; // FindFirst/Next always set
 		                                   // an errorcode, while RemoveDir
@@ -965,7 +965,7 @@ bool Overlay_Drive::FileUnlink(const char * name) {
 	safe_strcat(overlayname, name);
 	CROSS_FILENAME(overlayname);
 	//	char *fullname = dirCache.GetExpandNameAndNormaliseCase(newname);
-	if (unlink(overlayname)) {
+	if (!delete_file(overlayname)) {
 		//Unlink failed for some reason try finding it.
 		struct stat buffer;
 		if(stat(overlayname,&buffer)) {
@@ -1088,7 +1088,9 @@ void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const cha
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name.c_str());
 	CROSS_FILENAME(overlayname);
-	if(unlink(overlayname) != 0) E_Exit("Failed removal of %s",overlayname);
+	if (!delete_file(overlayname)) {
+		E_Exit("Failed removal of %s", overlayname);
+	}
 }
 
 std::string Overlay_Drive::create_filename_of_special_operation(const char* dosname, const char* operation) {
