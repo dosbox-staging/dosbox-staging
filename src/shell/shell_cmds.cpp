@@ -1802,16 +1802,20 @@ void DOS_Shell::CMD_DATE(char *args)
 	}
 }
 
-void DOS_Shell::CMD_TIME(char * args) {
-	char format[9], example[9];
+void DOS_Shell::CMD_TIME(char* args)
+{
 	const char time_separator = DOS_GetLocaleTimeSeparator();
-	sprintf(format, "hh%cmm%css", time_separator, time_separator);
-	sprintf(example, "13%c14%c15", time_separator, time_separator);
+
+	const auto format  = format_str("hh%cmm%css", time_separator, time_separator);
+	const auto example = format_str("13%c14%c15", time_separator, time_separator);
+
 	if (scan_and_remove_cmdline_switch(args, "?")) {
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP"));
 		output.AddString("\n");
-		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP_LONG"), format, example);
+		output.AddString(MSG_Get("SHELL_CMD_TIME_HELP_LONG"),
+		                 format.c_str(),
+		                 example.c_str());
 		output.Display();
 		return;
 	}
@@ -1864,7 +1868,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	} else {
 		WriteOut(MSG_Get("SHELL_CMD_TIME_NOW"));
 		WriteOut("%s\n", format_time(reg_ch, reg_cl, reg_dh, reg_dl, true));
-		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"), format);
+		WriteOut(MSG_Get("SHELL_CMD_TIME_SETHLP"), format.c_str());
 	}
 }
 
