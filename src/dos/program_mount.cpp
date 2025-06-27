@@ -140,14 +140,19 @@ void MOUNT::Run(void) {
 			uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 			if (type=="floppy") {
 				// freesize in kb
-				sprintf(teststr,"512,1,2880,%d",freesize*1024/(512*1));
+				safe_sprintf(teststr,
+				             "512,1,2880,%d",
+				             freesize * 1024 / (512 * 1));
 			} else {
 				uint32_t total_size_cyl=32765;
 				uint32_t free_size_cyl=(uint32_t)freesize*1024*1024/(512*32);
 				if (free_size_cyl>65534) free_size_cyl=65534;
 				if (total_size_cyl<free_size_cyl) total_size_cyl=free_size_cyl+10;
 				if (total_size_cyl>65534) total_size_cyl=65534;
-				sprintf(teststr,"512,32,%d,%d",total_size_cyl,free_size_cyl);
+				safe_sprintf(teststr,
+				             "512,32,%d,%d",
+				             total_size_cyl,
+				             free_size_cyl);
 			}
 			str_size=teststr;
 		}
