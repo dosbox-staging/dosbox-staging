@@ -186,9 +186,6 @@
 // Define to 1 when host/target processor uses big endian byte ordering
 #cmakedefine WORDS_BIGENDIAN
 
-// Non-4K page size (only on selected architectures)
-#cmakedefine PAGESIZE
-
 
 // Windows-related defines
 //

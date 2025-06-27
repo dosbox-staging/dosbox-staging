@@ -38,14 +38,15 @@
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
-#ifdef PAGESIZE
-// Some platforms like ppc64 have page sizes of 64K, so uint16_t isn't enough.
-constexpr uint32_t host_pagesize = {PAGESIZE};
+// Typical values - do not rely on this, use for optimizations only. If you need
+// to be 100% certain, use the OS specific detection routines.
+#if C_TARGETCPU == ARMV8LE
+constexpr uint16_t HostPageSize = 16384;
 #else
-constexpr uint16_t host_pagesize = 4096;
+constexpr uint16_t HostPageSize = 4096;
 #endif
 
-constexpr uint16_t dos_pagesize = 4096;
+constexpr uint16_t DosPageSize = 4096;
 
 // Some C functions operate on characters but return integers,
 // such as 'toupper'. This function asserts that a given int

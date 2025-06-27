@@ -18,7 +18,7 @@
 std::unique_ptr<DmaController> primary   = {};
 std::unique_ptr<DmaController> secondary = {};
 
-#define EMM_PAGEFRAME4K ((0xE000 * 16) / dos_pagesize)
+#define EMM_PAGEFRAME4K ((0xE000 * 16) / DosPageSize)
 uint32_t ems_board_mapping[LINK_START];
 
 // Constants
@@ -68,10 +68,10 @@ static void perform_dma_io(const DmaDirection direction, const PhysPt spage,
 		}
 
 		// Calculate the offset within the page
-		const auto pos_in_page       = mem_address & (dos_pagesize - 1);
+		const auto pos_in_page       = mem_address & (DosPageSize - 1);
 		const auto bytes_to_page_end = check_cast<uint16_t>(
-		        dos_pagesize - pos_in_page);
-		const auto chunk_start = check_cast<PhysPt>(page * dos_pagesize +
+		        DosPageSize - pos_in_page);
+		const auto chunk_start = check_cast<PhysPt>(page * DosPageSize +
 		                                            pos_in_page);
 
 		// Determine how many bytes to transfer within this page
