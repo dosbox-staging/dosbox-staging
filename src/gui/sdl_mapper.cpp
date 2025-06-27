@@ -2488,60 +2488,64 @@ static void CreateDefaultBinds()
 	char buffer[512];
 	Bitu i=0;
 	while (DefaultKeys[i].eventend) {
-		sprintf(buffer, "key_%s \"key %d\"",
-		        DefaultKeys[i].eventend,
-		        static_cast<int>(DefaultKeys[i].key));
+		safe_sprintf(buffer, "key_%s \"key %d\"",
+		             DefaultKeys[i].eventend,
+		             static_cast<int>(DefaultKeys[i].key));
 		CreateStringBind(buffer);
 		i++;
 	}
-	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_RCTRL);
+
+	safe_sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_RCTRL);
 	CreateStringBind(buffer);
-	sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_LCTRL);
+	safe_sprintf(buffer, "mod_1 \"key %d\"", SDL_SCANCODE_LCTRL);
 	CreateStringBind(buffer);
-	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
+	safe_sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_RALT);
 	CreateStringBind(buffer);
-	sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
+	safe_sprintf(buffer, "mod_2 \"key %d\"", SDL_SCANCODE_LALT);
 	CreateStringBind(buffer);
-	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_RGUI);
+	safe_sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_RGUI);
 	CreateStringBind(buffer);
-	sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_LGUI);
+	safe_sprintf(buffer, "mod_3 \"key %d\"", SDL_SCANCODE_LGUI);
 	CreateStringBind(buffer);
+
 	for (const auto &handler_event : handlergroup) {
 		handler_event->MakeDefaultBind(buffer);
 		CreateStringBind(buffer);
 	}
 
 	/* joystick1, buttons 1-6 */
-	sprintf(buffer,"jbutton_0_0 \"stick_0 button 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_0_1 \"stick_0 button 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_0_2 \"stick_0 button 2\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_0_3 \"stick_0 button 3\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_0_4 \"stick_0 button 4\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_0_5 \"stick_0 button 5\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_0 \"stick_0 button 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_1 \"stick_0 button 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_2 \"stick_0 button 2\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_3 \"stick_0 button 3\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_4 \"stick_0 button 4\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_0_5 \"stick_0 button 5\" ");CreateStringBind(buffer);
 	/* joystick2, buttons 1-2 */
-	sprintf(buffer,"jbutton_1_0 \"stick_1 button 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jbutton_1_1 \"stick_1 button 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_1_0 \"stick_1 button 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jbutton_1_1 \"stick_1 button 1\" ");CreateStringBind(buffer);
 
 	/* joystick1, axes 1-4 */
-	sprintf(buffer,"jaxis_0_0- \"stick_0 axis 0 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_0+ \"stick_0 axis 0 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_1- \"stick_0 axis 1 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_1+ \"stick_0 axis 1 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_2- \"stick_0 axis 2 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_2+ \"stick_0 axis 2 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_3- \"stick_0 axis 3 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_0_3+ \"stick_0 axis 3 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_0- \"stick_0 axis 0 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_0+ \"stick_0 axis 0 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_1- \"stick_0 axis 1 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_1+ \"stick_0 axis 1 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_2- \"stick_0 axis 2 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_2+ \"stick_0 axis 2 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_3- \"stick_0 axis 3 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_0_3+ \"stick_0 axis 3 1\" ");CreateStringBind(buffer);
+
 	/* joystick2, axes 1-2 */
-	sprintf(buffer,"jaxis_1_0- \"stick_1 axis 0 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_1_0+ \"stick_1 axis 0 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_1_1- \"stick_1 axis 1 0\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jaxis_1_1+ \"stick_1 axis 1 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_1_0- \"stick_1 axis 0 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_1_0+ \"stick_1 axis 0 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_1_1- \"stick_1 axis 1 0\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jaxis_1_1+ \"stick_1 axis 1 1\" ");CreateStringBind(buffer);
 
 	/* joystick1, hat */
-	sprintf(buffer,"jhat_0_0_0 \"stick_0 hat 0 1\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jhat_0_0_1 \"stick_0 hat 0 2\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jhat_0_0_2 \"stick_0 hat 0 4\" ");CreateStringBind(buffer);
-	sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jhat_0_0_0 \"stick_0 hat 0 1\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jhat_0_0_1 \"stick_0 hat 0 2\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jhat_0_0_2 \"stick_0 hat 0 4\" ");CreateStringBind(buffer);
+	safe_sprintf(buffer,"jhat_0_0_3 \"stick_0 hat 0 8\" ");CreateStringBind(buffer);
+
 	LOG_MSG("MAPPER: Loaded default key bindings");
 }
 
