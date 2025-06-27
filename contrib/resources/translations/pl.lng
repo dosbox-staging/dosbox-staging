@@ -1257,7 +1257,7 @@ w dokładnie takiej postaci, w jakiej zostały wypisane. Nie ma potrzeby dodawan
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Ścieżka '%s' zawiera:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Brak sekcji lub parametru: '%s'
 
 .

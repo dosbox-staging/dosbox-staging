@@ -241,10 +241,9 @@ bool Property::IsValueDeprecated(const Value& val) const
 		NOTIFY_DisplayWarning(
 		        Notification::Source::Console,
 		        "CONFIG",
-		        "PROGRAM_CONFIG_DEPRECATED_FALLBACK",
+		        "PROGRAM_CONFIG_DEPRECATED_SETTING_VALUE",
 		        propname.c_str(),
 		        val.ToString().c_str(),
-		        propname.c_str(),
 		        GetAlternateForDeprecatedValue(val).ToString().c_str());
 	}
 	return is_deprecated;
@@ -1080,7 +1079,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      "CONFIG",
-	                      "PROGRAM_CONFIG_PROPERTY_ERROR",
+	                      "PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND",
 	                      name.c_str());
 	return false;
 }
@@ -1858,7 +1857,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 			pvars.emplace(pvars.begin(), std::string(sec->GetName()));
 		} else {
 			safe_sprintf(return_msg,
-			             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR").c_str(),
+			             MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND")
+			                     .c_str(),
 			             pvars[0].c_str());
 			return return_msg;
 		}
@@ -1867,7 +1867,8 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 		if ((spcpos != std::string::npos) &&
 		    ((equpos == std::string::npos) || (spcpos < equpos))) {
 			// ' ' before a possible '=', split on the ' '
-			pvars.emplace(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
+			pvars.emplace(pvars.begin() + 1,
+			              pvars[0].substr(spcpos + 1));
 			pvars[0].erase(spcpos);
 		}
 
@@ -1883,7 +1884,7 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 				              std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
-				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR")
+				             MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND")
 				                     .c_str(),
 				             pvars[0].c_str());
 				return return_msg;
