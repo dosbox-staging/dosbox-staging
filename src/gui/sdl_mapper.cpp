@@ -229,11 +229,23 @@ public:
 	CBind(const CBind&) = delete; // prevent copy
 	CBind& operator=(const CBind&) = delete; // prevent assignment
 
-	void AddFlags(char * buf) {
-		if (mods & BMOD_Mod1) strcat(buf," mod1");
-		if (mods & BMOD_Mod2) strcat(buf," mod2");
-		if (mods & BMOD_Mod3) strcat(buf," mod3");
-		if (flags & BFLG_Hold) strcat(buf," hold");
+	std::string GetFlags() {
+		std::string result = {};
+
+		if (mods & BMOD_Mod1) {
+			result += " mod1";
+		}
+		if (mods & BMOD_Mod2) {
+			result += " mod2";
+		}
+		if (mods & BMOD_Mod3) {
+			result += " mod3";
+		}
+		if (flags & BFLG_Hold) {
+			result += " hold";
+		}
+
+		return result;
 	}
 
 	void SetFlags(char *buf)
@@ -292,7 +304,7 @@ public:
 			event->DeActivateEvent(ev_trigger);
 		}
 	}
-	virtual void ConfigName(char * buf)=0;
+	virtual std::string GetConfigName() const = 0;
 
 	virtual std::string GetBindName() const = 0;
 
@@ -384,9 +396,9 @@ public:
 		return sdl_scancode_name;
 	}
 
-	void ConfigName(char *buf) override
+	std::string GetConfigName() const override
 	{
-		sprintf(buf, "key %d", key);
+		return format_str("key %d", key);
 	}
 
 public:
@@ -480,12 +492,12 @@ public:
 	CJAxisBind(const CJAxisBind&) = delete; // prevent copy
 	CJAxisBind& operator=(const CJAxisBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf) override
+	std::string GetConfigName() const override
 	{
-		sprintf(buf, "%s axis %d %d",
-		        group->ConfigStart(),
-		        axis,
-		        positive ? 1 : 0);
+		return format_str("%s axis %d %d",
+		                  group->ConfigStart(),
+		                  axis,
+		                  positive ? 1 : 0);
 	}
 
 	std::string GetBindName() const override
@@ -513,9 +525,9 @@ public:
 	CJButtonBind(const CJButtonBind&) = delete; // prevent copy
 	CJButtonBind& operator=(const CJButtonBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf) override
+	std::string GetConfigName() const override
 	{
-		sprintf(buf, "%s button %d", group->ConfigStart(), button);
+		return format_str("%s button %d", group->ConfigStart(), button);
 	}
 
 	std::string GetBindName() const override
@@ -555,10 +567,10 @@ public:
 	CJHatBind(const CJHatBind&) = delete; // prevent copy
 	CJHatBind& operator=(const CJHatBind&) = delete; // prevent assignment
 
-	void ConfigName(char *buf) override
+	std::string GetConfigName() const override
 	{
-		sprintf(buf,"%s hat %" PRIu8 " %" PRIu8,
-		        group->ConfigStart(), hat, dir);
+		return format_str("%s hat %" PRIu8 " %" PRIu8,
+		                  group->ConfigStart(), hat, dir);
 	}
 
 	std::string GetBindName() const override
@@ -2559,14 +2571,12 @@ static void MAPPER_SaveBinds() {
 		LOG_MSG("MAPPER: Can't open %s for saving the key bindings", filename);
 		return;
 	}
-	char buf[128];
 	for (const auto& event : events) {
 		fprintf(savefile,"%s ",event->GetName());
 		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
 			CBind * bind=*(bind_it);
-			bind->ConfigName(buf);
-			bind->AddFlags(buf);
-			fprintf(savefile,"\"%s\" ",buf);
+			const auto buffer = bind->GetConfigName() + bind->GetFlags();
+			fprintf(savefile, "\"%s\" ", buffer.c_str());
 		}
 		fprintf(savefile,"\n");
 	}
