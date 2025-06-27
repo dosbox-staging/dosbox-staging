@@ -2680,6 +2680,11 @@ ImageInfo setup_drawing()
 			render_width  = video_mode.width;
 			render_height = video_mode.height;
 
+			if (vga.seq.clocking_mode.is_pixel_doubling &&
+			    !vga.draw.pixel_doubling_allowed) {
+				render_pixel_aspect_ratio *= 2;
+			}
+
 			VGA_DrawLine = draw_text_line_from_dac_palette;
 
 		} else { // M_EGA
