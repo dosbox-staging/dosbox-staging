@@ -422,7 +422,7 @@ Path '%s' has no shaders.
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Path '%s' has:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 No such section or property: %s
 
 .

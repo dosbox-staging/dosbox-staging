@@ -294,7 +294,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 			// Could be a property
 			sec = control->GetSectionFromProperty(pvars[0].c_str());
 			if (!sec || !sec->IsActive()) {
-				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 				         pvars[0].c_str());
 				return;
 			}
@@ -312,12 +312,12 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
 
 		if (!sec || !sec->IsActive()) {
-			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 			         pvars[0].c_str());
 			return;
 
 		} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
-			WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+			WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 			         pvars[1].c_str());
 			return;
 		}
@@ -332,7 +332,8 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 	Section* sec = control->GetSection(pvars[0]);
 
 	if (sec == nullptr || !sec->IsActive()) {
-		WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+		WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
+		         pvars[0].c_str());
 		return;
 	}
 
@@ -740,7 +741,7 @@ void CONFIG::Run(void)
 					sec = control->GetSectionFromProperty(
 					        pvars[0].c_str());
 					if (!sec) {
-						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+						WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 						         pvars[0].c_str());
 						return;
 					}
@@ -814,7 +815,7 @@ void CONFIG::Run(void)
 				auto* tsec = dynamic_cast<Section_prop*>(
 				        control->GetSection(pvars[0]));
 				if (!tsec) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 					         pvars[0].c_str());
 					return;
 				}
@@ -822,7 +823,7 @@ void CONFIG::Run(void)
 				auto* property = tsec->Get_prop(pvars[1]);
 
 				if (!property) {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
+					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
 					         pvars[1].c_str());
 					return;
 				}
@@ -1087,8 +1088,8 @@ void PROGRAMS_AddMessages()
 	MSG_Add("PROGRAM_CONFIG_NO_HELP",
 	        "No help available for the setting [color=light-green]'%s'[reset].");
 
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
-	        "No such section or property: [color=light-green]'%s'[reset]\n");
+	MSG_Add("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND",
+	        "No config section or setting exists with the name [color=light-green]'%s'[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_SETTING",
 	        "Deprecated setting [color=light-green]'%s'[reset]");
