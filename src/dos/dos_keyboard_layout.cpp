@@ -318,10 +318,8 @@ KeyboardLayoutResult KeyboardLayout::ReadKeyboardFile(const std::string& keyboar
 	uint32_t read_buf_size, read_buf_pos, bytes_read;
 	uint32_t start_pos=5;
 
-	char nbuf[512];
 	read_buf_size = 0;
-	sprintf(nbuf, "%s.kl", keyboard_layout.c_str());
-	auto tempfile = open_layout_file(nbuf);
+	auto tempfile = open_layout_file(keyboard_layout + ".kl");
 
 	if (!tempfile) {
 		const auto result = load_builtin_keyboard_layouts(keyboard_layout,
@@ -676,13 +674,11 @@ uint16_t KeyboardLayout::ExtractCodePage(const std::string& keyboard_layout)
 	static uint8_t read_buf[65535];
 	uint32_t start_pos=5;
 
-	char nbuf[512];
 	// TODO: this at least needs to be documented at least in KEYB command
 	//       help; preferably the command should be extended to allow
 	//       specifying the .SYS or .KL file, this will force a re-design
 	//       here; and .KL file loading shouldn't happen during the startup
-	sprintf(nbuf, "%s.kl", keyboard_layout.c_str());
-	auto tempfile = open_layout_file(nbuf);
+	auto tempfile = open_layout_file(keyboard_layout + ".kl");
 
 	if (!tempfile) {
 		const auto result = load_builtin_keyboard_layouts(keyboard_layout,
