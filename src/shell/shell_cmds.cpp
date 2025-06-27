@@ -715,16 +715,16 @@ char *format_date(const uint16_t year, const uint8_t month, const uint8_t day)
 	int result;
 	switch (date_format) {
 	case DosDateFormat::DayMonthYear:
-		result = sprintf(format_string, "D%cM%cY", date_separator,
-		                 date_separator);
+		result = safe_sprintf(format_string, "D%cM%cY", date_separator,
+		                      date_separator);
 		break;
 	case DosDateFormat::YearMonthDay:
-		result = sprintf(format_string, "Y%cM%cD", date_separator,
-		                 date_separator);
+		result = safe_sprintf(format_string, "Y%cM%cD", date_separator,
+		                      date_separator);
 		break;
 	default: // DosDateFormat::MonthDayYear
-		result = sprintf(format_string, "M%cD%cY", date_separator,
-		                 date_separator);
+		result = safe_sprintf(format_string, "M%cD%cY", date_separator,
+		                      date_separator);
 	}
 	if (result < 0)
 		return return_date_buffer;
