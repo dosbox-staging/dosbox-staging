@@ -12,17 +12,17 @@ void MSG_Add(const std::string&, const std::string&) {}
 
 const char* MSG_Get(const std::string&)
 {
-	return "";
+	return {};
 }
 
 const char* MSG_GetEnglishRaw(const std::string&)
 {
-	return "";
+	return {};
 }
 
 const char* MSG_GetTranslatedRaw(const std::string&)
 {
-	return "";
+	return {};
 }
 
 bool MSG_Exists(const std::string&)
