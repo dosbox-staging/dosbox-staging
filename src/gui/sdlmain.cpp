@@ -4842,8 +4842,7 @@ static int erase_primary_config_file()
 		return 1;
 	}
 
-	constexpr auto success = 0;
-	if (unlink(path.string().c_str()) != success) {
+	if (!delete_file(path)) {
 		fprintf(stderr,
 		        "Cannot delete primary config '%s'",
 		        path.string().c_str());
@@ -4870,9 +4869,7 @@ static int erase_mapper_file()
 		       "a custom mapper file.\n");
 	}
 
-	constexpr auto success = 0;
-
-	if (unlink(path.string().c_str()) != success) {
+	if (!delete_file(path)) {
 		fprintf(stderr,
 		        "Cannot delete mapper file '%s'",
 		        path.string().c_str());
