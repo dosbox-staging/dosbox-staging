@@ -30,7 +30,7 @@ int create_dir(const std_fs::path& path, [[maybe_unused]] uint32_t mode,
                uint32_t flags) noexcept
 {
 	const auto path_str = path.string();
-	const int err       = mkdir(path_str.c_str());
+	const int err       = _mkdir(path_str.c_str());
 	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {
 		struct _stat pstat;
 		if ((_stat(path_str.c_str(), &pstat) == 0) &&
