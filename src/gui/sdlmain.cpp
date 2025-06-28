@@ -1036,81 +1036,6 @@ static int nearest_common_rate(const double rate)
 	return nearest_rate;
 }
 
-// Callers:
-//
-//   GFX_SetSize()
-//
-static void set_vsync(const VsyncMode mode)
-{
-	if (mode == VsyncMode::Off) {
-		return;
-	}
-#if C_OPENGL
-	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		assert(sdl.opengl.context);
-
-		const auto swap_interval = [&] {
-			switch (mode) {
-			case VsyncMode::Adaptive:
-				LOG_INFO("OPENGL: Enabled adaptive vsync");
-				return -1;
-
-			case VsyncMode::Off:
-				LOG_INFO("OPENGL: Disabled vsync");
-				return 0;
-
-			case VsyncMode::On:
-				LOG_INFO("OPENGL: Enabled non-adaptive vsync");
-				return 1;
-
-			default: assertm(false, "Invalid VsyncMode"); return 0;
-			}
-		}();
-
-		if (SDL_GL_SetSwapInterval(swap_interval) == 0) {
-			return;
-		}
-
-		// The requested swap_interval is not supported
-		LOG_WARNING(
-		        "OPENGL: Failed setting the vsync mode to '%s' "
-		        "(swap interval: %d): %s",
-		        to_string(mode),
-		        swap_interval,
-		        SDL_GetError());
-
-		// Per SDL's recommendation: If an application requests adaptive
-		// vsync and the system does not support it, this function will
-		// fail and return -1. In such a case, you should probably retry
-		// the call with 1 for the swap_interval.
-		if (swap_interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
-			LOG_WARNING(
-			        "OPENGL: Tried enabling non-adaptive vsync, "
-			        "but it still failed: %s",
-			        SDL_GetError());
-		}
-		return;
-	}
-
-#endif
-	assert(sdl.rendering_backend == RenderingBackend::Texture);
-	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
-	// set to "1", "0", adapative is currently not supported, so we
-	// also treat it as "1"
-	const auto hint_str = (mode == VsyncMode::On || mode == VsyncMode::Adaptive)
-	                            ? "1"
-	                            : "0";
-
-	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE) {
-		return;
-	}
-
-	LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
-	            to_string(mode),
-	            hint_str,
-	            SDL_GetError());
-}
-
 static void remove_window()
 {
 	if (sdl.window) {
@@ -2059,6 +1984,64 @@ static bool present_frame_gl()
 	return is_presenting;
 }
 
+static void set_vsync_gl(const VsyncMode mode)
+{
+	assert(sdl.opengl.context);
+
+	const auto swap_interval = [&] {
+		switch (mode) {
+		case VsyncMode::Adaptive:
+			LOG_INFO("OPENGL: Enabled adaptive vsync");
+			return -1;
+
+		case VsyncMode::Off:
+			LOG_INFO("OPENGL: Disabled vsync");
+			return 0;
+
+		case VsyncMode::On:
+			LOG_INFO("OPENGL: Enabled vsync");
+			return 1;
+
+		default: assertm(false, "Invalid VsyncMode"); return 0;
+		}
+	}();
+
+	if (SDL_GL_SetSwapInterval(swap_interval) != 0) {
+
+		// The requested swap_interval is not supported
+		LOG_WARNING(
+				"OPENGL: Failed setting the vsync mode to '%s' "
+				"(swap interval: %d): %s",
+				to_string(mode),
+				swap_interval,
+				SDL_GetError());
+
+		// Per SDL's recommendation: If an application requests adaptive
+		// vsync and the system does not support it, this function will
+		// fail and return -1. In such a case, you should probably retry
+		// the call with 1 for the swap_interval.
+		if (swap_interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
+			LOG_WARNING(
+					"OPENGL: Tried enabling vsync, but it still failed: %s",
+					SDL_GetError());
+			return;
+	}
+
+	switch (mode) {
+	case VsyncMode::Adaptive:
+		LOG_INFO("OPENGL: Enabled adaptive vsync");
+
+	case VsyncMode::Off:
+		LOG_INFO("OPENGL: Disabled vsync");
+
+	case VsyncMode::On:
+		LOG_INFO("OPENGL: Enabled vsync");
+
+	default: assertm(false, "Invalid VsyncMode");
+	}
+	}
+}
+
 // Callers:
 //
 //   GFX_SetSize()
@@ -2251,6 +2234,8 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	// Set shader variables
 	update_uniforms_gl();
 
+	set_vsync_gl(get_vsync_setting());
+
 	maybe_log_opengl_error("End of setsize");
 
 	sdl.frame.update  = update_frame_gl;
@@ -2260,6 +2245,41 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 }
 
 #endif
+
+static void set_vsync_sdl_texture(const VsyncMode mode)
+{
+	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
+	// set to "1", "0", adapative is currently not supported, so we
+	// also treat it as "1"
+	const auto hint_str = (mode == VsyncMode::On || mode == VsyncMode::Adaptive)
+								? "1"
+								: "0";
+
+	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_FALSE) {
+		LOG_WARNING("SDL: Failed setting vsync mode to %s (%s): %s",
+					to_string(mode),
+					hint_str,
+					SDL_GetError());
+		return;
+	}
+
+	switch (mode) {
+	// TODO should not happen
+	case VsyncMode::Adaptive:
+		LOG_INFO("SDL: Enabled adaptive vsync");
+		break;
+
+	case VsyncMode::Off:
+		LOG_INFO("SDL: Disabled vsync");
+		break;
+
+	case VsyncMode::On:
+		LOG_INFO("SDL: Enabled vsync");
+		break;
+
+	default: assertm(false, "Invalid VsyncMode");
+	}
+}
 
 // Callers:
 //
@@ -2371,6 +2391,8 @@ uint8_t init_sdl_texture_renderer()
 		LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 	}
 
+	set_vsync_sdl_texture(get_vsync_setting());
+
 	sdl.frame.update  = update_frame_texture;
 	sdl.frame.present = present_frame_texture;
 
@@ -2443,8 +2465,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	if (sdl.draw.has_changed) {
 		maybe_log_display_properties();
 	}
-
-	set_vsync(get_vsync_setting());
 
 	if (retFlags) {
 		GFX_Start();
