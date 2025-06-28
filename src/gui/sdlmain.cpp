@@ -3590,6 +3590,8 @@ static void read_gui_config(Section* sec)
 	// Get keyboard state of NumLock and CapsLock
 	SDL_Keymod keystate = SDL_GetModState();
 
+	// TODO is this still needed on current SDL?
+	//
 	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
 	// NumLock and CapsLock states on startup. Instead, these states must
 	// be toggled by the user /after/ starting DOSBox.
