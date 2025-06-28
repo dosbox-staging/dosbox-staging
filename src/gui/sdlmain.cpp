@@ -2143,7 +2143,7 @@ static bool present_frame_gl()
 		if (CAPTURE_IsCapturingPostRenderImage()) {
 			// glReadPixels() implicitly blocks until all pipelined
 			// rendering commands have finished, so we're
-			// guaranateed to read the contents of the up-to-date
+			// guaranteed to read the contents of the up-to-date
 			// backbuffer here right before the buffer swap.
 			//
 			const auto image = get_rendered_output_from_backbuffer();
@@ -2952,7 +2952,7 @@ static void set_priority(PRIORITY_LEVELS level)
 		break;
 
 #elif defined(HAVE_SETPRIORITY)
-		/* Linux use group as dosbox has mulitple threads under linux */
+	// Linux use group as dosbox has mulitple threads under Linux
 	case PRIORITY_LEVEL_LOWEST: setpriority(PRIO_PGRP, 0, PRIO_MAX); break;
 	case PRIORITY_LEVEL_LOWER:
 		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 3));
@@ -3563,7 +3563,6 @@ static void read_gui_config(Section* sec)
 		SDL_DisableScreenSaver();
 	}
 
-	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen_handler, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
@@ -3580,7 +3579,8 @@ static void read_gui_config(Section* sec)
 	                  "Cap Mouse");
 
 #if C_DEBUGGER
-/* Pause binds with activate-debugger */
+// Pause binds with activate-debugger
+
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
 	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD, "pause", "Pause Emu.");
@@ -3588,11 +3588,11 @@ static void read_gui_config(Section* sec)
 	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
 	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2, "pause", "Pause Emu.");
 #endif
-	/* Get Keyboard state of numlock and capslock */
+	// Get keyboard state of NumLock and CapsLock
 	SDL_Keymod keystate = SDL_GetModState();
 
 	// A long-standing SDL1 and SDL2 bug prevents it from detecting the
-	// numlock and capslock states on startup. Instead, these states must
+	// NumLock and CapsLock states on startup. Instead, these states must
 	// be toggled by the user /after/ starting DOSBox.
 	startup_state_numlock  = keystate & KMOD_NUM;
 	startup_state_capslock = keystate & KMOD_CAPS;
@@ -3684,12 +3684,13 @@ void GFX_RegenerateWindow(Section* sec)
 
 static void handle_video_resize(int width, int height)
 {
-	/* Maybe a screen rotation has just occurred, so we simply resize.
-	There may be a different cause for a forced resized, though.    */
+	// Maybe a screen rotation has just occurred, so we simply resize.
+	// There may be a different cause for a forced resized, though.
 	if (sdl.desktop.is_fullscreen) {
-		/* Note: We should not use get_display_dimensions()
-		(SDL_GetDisplayBounds) on Android after a screen rotation:
-		The older values from application startup are returned. */
+
+		// Note: We should not use get_display_dimensions()
+		// (SDL_GetDisplayBounds) on Android after a screen rotation:
+		// The older values from application startup are returned.
 		sdl.desktop.fullscreen.width  = width;
 		sdl.desktop.fullscreen.height = height;
 	}
@@ -3723,17 +3724,16 @@ static void handle_video_resize(int width, int height)
 	notify_new_mouse_screen_params();
 }
 
-/* TODO: Properly set window parameters and remove this routine.
- *
- * This function is triggered after window is shown to fixup sdl.window
- * properties in predictable manner on all platforms.
- *
- * In specific usecases, certain sdl.window properties might be left unitialized
- * when starting in fullscreen, which might trigger severe problems for end
- * users (e.g. placing window partially off-screen, or using fullscreen
- * resolution for window size).
- */
-
+// TODO: Properly set window parameters and remove this routine.
+//
+// This function is triggered after window is shown to fixup sdl.window
+// properties in predictable manner on all platforms.
+//
+// In specific usecases, certain sdl.window properties might be left unitialized
+// when starting in fullscreen, which might trigger severe problems for end
+// users (e.g. placing window partially off-screen, or using fullscreen
+// resolution for window size).
+//
 static void finalise_window_state()
 {
 	assert(sdl.window);
@@ -4219,14 +4219,15 @@ static BOOL WINAPI console_event_handler(DWORD event)
 	case CTRL_CLOSE_EVENT:
 	case CTRL_BREAK_EVENT: raise(SIGTERM); return TRUE;
 	case CTRL_C_EVENT:
-	default: // pass to the next handler
+	default:
+		// pass to the next handler
 		return FALSE;
 	}
 }
 #endif
 
-/* static variable to show wether there is not a valid stdout.
- * Fixes some bugs when -noconsole is used in a read only directory */
+// Static variable to show wether there is not a valid stdout.
+// Fixes some bugs when -noconsole is used in a read only directory
 static bool no_stdout = false;
 
 void GFX_ShowMsg(const char* format, ...)
