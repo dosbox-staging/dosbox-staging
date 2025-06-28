@@ -39,8 +39,8 @@ std::string HELP_GetShortHelp(const std::string &cmd_name)
 
 	// If it does not exist, extract first line of long help
 	auto extract = [](const std::string &long_key) {
-		const std::string str(MSG_Get(long_key));
-		const auto pos = str.find('\n');
+		const auto& str = MSG_Get(long_key);
+		const auto& pos = str.find('\n');
 		return str.substr(0, pos != std::string::npos ? pos + 1 : pos);
 	};
 	const std::string long_key_command = "SHELL_CMD_" + cmd_name + "_HELP_LONG";
@@ -55,7 +55,7 @@ std::string HELP_GetShortHelp(const std::string &cmd_name)
 	return "No help available\n";
 }
 
-const char *HELP_CategoryHeading(const HELP_Category category)
+std::string HELP_CategoryHeading(const HELP_Category category)
 {
 	switch (category) {
 	case HELP_Category::Dosbox: return MSG_Get("HELP_UTIL_CATEGORY_DOSBOX");

@@ -437,7 +437,7 @@ La ruta '%s' no tiene shaders.
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 La ruta '%s' tiene:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 No existe la sección o propiedad: %s
 
 .
@@ -2012,7 +2012,7 @@ Puede colocar aquí sus líneas MOUNT.
 # Las líneas que comienzan con el carácter '#' son comentarios.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valores posibles
 .
 :CONFIG_DEPRECATED_VALUES
@@ -2157,7 +2157,7 @@ Esta operación no está permitida en el modo seguro.
 La sección [%s] no existe.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' no es un valor válido para la propiedad '%s'.
 
 .

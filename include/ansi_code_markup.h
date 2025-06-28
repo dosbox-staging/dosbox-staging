@@ -8,7 +8,9 @@
 
 // Convert marked up strings to strings with ANSI codes
 std::string convert_ansi_markup(const char* str);
-std::string convert_ansi_markup(const std::string &str);
+std::string convert_ansi_markup(const std::string& str);
+
+std::string strip_ansi_markup(const std::string& str);
 
 // Pre-defined markups to help creating strings
 namespace Ansi {
