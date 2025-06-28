@@ -329,6 +329,7 @@ struct SDL_Block {
 	SDL_EventType raltstate = SDL_KEYUP;
 };
 
+// TODO should be private; introduce SDL_* API calls instead
 extern SDL_Block sdl;
 
 constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
