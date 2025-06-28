@@ -35,6 +35,9 @@ constexpr auto StereoOn1Dac         = "STON1";
 constexpr auto TandyDac             = "TANDYDAC";
 constexpr auto TandyPsg             = "TANDY";
 
+constexpr auto OplDeprecated        = "FM";
+constexpr auto PcSpeakerDeprecated  = "SPKR";
+
 } // namespace ChannelName
 
 // A list of all possible mixer channel names (for enhancements only;
