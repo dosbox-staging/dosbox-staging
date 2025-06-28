@@ -200,22 +200,26 @@
     {
       "name": "debug-macos",
       "configurePreset" : "debug-macos",
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "nativeToolOptions": ["-quiet"]
     },
     {
       "name": "release-macos",
       "configurePreset" : "release-macos",
-      "configuration": "Release"
+      "configuration": "Release",
+      "nativeToolOptions": ["-quiet"]
     },
     {
       "name": "release-macos-arm64",
       "configurePreset" : "release-macos-arm64",
-      "configuration": "Release"
+      "configuration": "Release",
+      "nativeToolOptions": ["-quiet"]
     },
     {
       "name": "release-macos-x86_64",
       "configurePreset" : "release-macos-x86_64",
-      "configuration": "Release"
+      "configuration": "Release",
+      "nativeToolOptions": ["-quiet"]
     },
     {
       "name": "debug-windows",
