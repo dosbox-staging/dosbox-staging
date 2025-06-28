@@ -3150,8 +3150,6 @@ static void save_window_size(const int w, const int h)
 // This function returns a refined size and additionally populates the
 // following struct members:
 //
-//  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
-//     not take into account scaling or aspect correction.
 //  - 'sdl.desktop.window', with the refined size.
 //  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 //
@@ -3172,9 +3170,6 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 
 		coarse_size = window_bounds_from_label(pref, desktop);
 	}
-
-	// Save the coarse bounds in the SDL struct for future sizing events
-	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
 
 	// Refine the coarse resolution and save it in the SDL struct.
 	auto refined_size = coarse_size;
