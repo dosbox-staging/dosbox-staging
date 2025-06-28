@@ -1560,10 +1560,9 @@ static void exit_fullscreen()
 //
 //   set_default_window_mode()
 //     set_output()
-//       read_gui_config()
-//         read_config()
-//           init_sdl_config_section()
-//             sdl_main()
+//       sdl_section_init()
+//         init_sdl_config_section()
+//           sdl_main()
 //       GFX_RegenerateWindow()
 //         sdl_main()
 //		   MAPPER_StartUp() (from sdl_mapper.cpp)
@@ -2842,10 +2841,9 @@ static void set_priority(PRIORITY_LEVELS level)
 // Callers:
 //
 //   set_output()
-//     read_gui_config()
-//       read_config()
-//         init_sdl_config_section()
-//           sdl_main()
+//     sdl_section_init()
+//       init_sdl_config_section()
+//         sdl_main()
 //     GFX_RegenerateWindow()
 //       sdl_main()
 //	   MAPPER_StartUp() (from sdl_mapper.cpp)
@@ -2915,18 +2913,16 @@ static SDL_Point refine_window_size(const SDL_Point size,
 //   parse_window_resolution_from_conf()
 //     setup_window_sizes_from_conf()
 //       set_output()
-//         read_gui_config()
-//           read_config()
-//             init_sdl_config_section()
-//               sdl_main()
+//         sdl_section_init()
+//           init_sdl_config_section()
+//             sdl_main()
 //         GFX_RegenerateWindow()
 //           sdl_main()
 //		     MAPPER_StartUp() (from sdl_mapper.cpp)
 //
-//   read_gui_config()
-//     read_config()
-//       init_sdl_config_section()
-//         sdl_main()
+//   sdl_section_init()
+//     init_sdl_config_section()
+//       sdl_main()
 //
 static void maybe_limit_requested_resolution(int& w, int& h,
                                              const char* size_description)
@@ -2998,10 +2994,9 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 //
 //    setup_window_sizes_from_conf()
 //    set_output()
-//       read_gui_config()
-//         read_config()
-//           init_sdl_config_section()
-//             sdl_main()
+//       sdl_section_init()
+//         init_sdl_config_section()
+//           sdl_main()
 //       GFX_RegenerateWindow()
 //         sdl_main()
 //	         MAPPER_StartUp() (from sdl_mapper.cpp)
@@ -3172,10 +3167,9 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 
 // Callers:
 //
-//   read_gui_config()
-//     read_config()
-//       init_sdl_config_section()
-//         sdl_main()
+//   sdl_section_init()
+//     init_sdl_config_section()
+//       sdl_main()
 //
 //   GFX_RegenerateWindow()
 //     sdl_main()
@@ -3521,13 +3515,7 @@ static void read_gui_config(Section* sec)
 	MOUSE_NotifyReadyGFX();
 }
 
-// Callers:
-//
-//   read_config()
-//     init_sdl_config_section()
-//       sdl_main()
-//
-static void read_config(Section* sec)
+static void sdl_section_init(Section* sec)
 {
 	assert(sec);
 	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
@@ -4293,7 +4281,7 @@ static void init_sdl_config_section()
 	constexpr bool changeable_at_runtime = true;
 
 	Section_prop* sdl_sec = control->AddSection_prop("sdl",
-	                                                 &read_config,
+	                                                 &sdl_section_init,
 	                                                 changeable_at_runtime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 
