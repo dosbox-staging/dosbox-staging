@@ -219,11 +219,6 @@ struct SDL_Block {
 			SDL_Rect canvas_size = {};
 		} window = {};
 
-		struct {
-			int width  = 0;
-			int height = 0;
-		} requested_window_bounds = {};
-
 		PixelFormat pixel_format = {};
 
 		float dpi_scale = 1.0f;
