@@ -3369,8 +3369,17 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 	DOSBOX_Restart();
 }
 
-static void read_gui_config(Section* sec)
+static void sdl_section_init(Section* sec)
 {
+	assert(sec);
+
+	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	assert(conf);
+
+	if (!conf) {
+		return;
+	}
+
 	sec->AddDestroyFunction(&shutdown_gui);
 	Section_prop* section = static_cast<Section_prop*>(sec);
 
@@ -3539,22 +3548,6 @@ static void read_gui_config(Section* sec)
 
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
-}
-
-static void sdl_section_init(Section* sec)
-{
-	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
-	assert(conf);
-	if (!conf) {
-		return;
-	}
-
-	static bool first_time = true;
-	if (first_time) {
-		read_gui_config(sec);
-		first_time = false;
-	}
 
 	TITLEBAR_ReadConfig(*conf);
 }
