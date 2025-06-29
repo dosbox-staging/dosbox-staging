@@ -12,7 +12,6 @@ target_sources(libdosboxcommon PRIVATE
   host_locale_macos.cpp
   host_locale_posix.cpp
   host_locale_win32.cpp
-  pacer.cpp
   programs.cpp
   rwqueue.cpp
   string_utils.cpp
