@@ -400,4 +400,6 @@ float GFX_GetDpiScaleFactor();
 
 RenderingBackend GFX_GetRenderingBackend();
 
+double GFX_GetHostRefreshRate();
+
 #endif
