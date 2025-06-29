@@ -87,16 +87,16 @@
 
 // Texture buffer and presentation functions and type-defines
 using update_frame_buffer_f = void(const uint16_t*);
-using present_frame_f       = bool();
+using present_frame_f       = void();
 
 constexpr void update_frame_noop([[maybe_unused]] const uint16_t*)
 {
 	// no-op
 }
 
-static inline bool present_frame_noop()
+static inline void present_frame_noop()
 {
-	return true;
+	// no-op
 }
 
 enum class FrameMode {
@@ -207,8 +207,6 @@ struct SDL_Block {
 	struct {
 		bool windowed   = false;
 		bool fullscreen = false;
-
-		int skip_us = 0;
 	} vsync = {};
 
 #if C_OPENGL
