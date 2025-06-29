@@ -210,49 +210,44 @@ void VGA_StartResizeAfter(const uint16_t delay_ms)
 	}
 }
 
-void VGA_SetHostRate(const double refresh_hz)
-{
-	// may come from user content, so always clamp it
-	constexpr auto min_rate = static_cast<double>(RefreshRateMin);
-	constexpr auto max_rate = static_cast<double>(RefreshRateMax);
-	vga.draw.host_refresh_hz = clamp(refresh_hz,min_rate, max_rate);
-}
-
-void VGA_SetRatePreference(const std::string &pref)
+void VGA_SetRefreshRateMode(const std::string &pref)
 {
 	if (pref == "default") {
 		vga.draw.dos_rate_mode = VgaRateMode::Default;
-		LOG_MSG("VIDEO: Using the DOS video mode's frame rate");
+		LOG_MSG("VIDEO: Using the DOS video modes' refresh rate");
 
 	} else if (pref == "host") {
-		vga.draw.dos_rate_mode = VgaRateMode::Host;
-		LOG_MSG("VIDEO: Matching the DOS graphical frame rate to the host");
+		vga.draw.dos_rate_mode = VgaRateMode::Custom;
+		vga.draw.custom_refresh_hz = GFX_GetHostRefreshRate();
+
+		LOG_MSG("VIDEO: Using host refresh rate of %.3g Hz",
+		        vga.draw.custom_refresh_hz);
 
 	} else if (const auto rate = to_finite<double>(pref); std::isfinite(rate)) {
 		vga.draw.dos_rate_mode = VgaRateMode::Custom;
+
 		constexpr auto min_rate = static_cast<double>(RefreshRateMin);
 		constexpr auto max_rate = static_cast<double>(RefreshRateMax);
+
 		vga.draw.custom_refresh_hz = clamp(rate, min_rate, max_rate);
-		LOG_MSG("VIDEO: Using a custom DOS graphical frame rate of %.3g Hz",
+
+		LOG_MSG("VIDEO: Using custom DOS refresh rate of %.3g Hz",
 		        vga.draw.custom_refresh_hz);
 
 	} else {
 		vga.draw.dos_rate_mode = VgaRateMode::Default;
-		LOG_WARNING("VIDEO: Unknown frame rate setting: '%s', using 'default'",
+		LOG_WARNING("VIDEO: Unknown refresh rate setting: '%s', using 'default'",
 		            pref.c_str());
 	}
 }
 
-double VGA_GetPreferredRate()
+double VGA_GetRefreshRate()
 {
 	switch (vga.draw.dos_rate_mode) {
 	case VgaRateMode::Default:
 		// If another device is overriding our VGA card, then use its rate
 		return vga.draw.vga_override ? vga.draw.override_refresh_hz
 		                             : vga.draw.dos_refresh_hz;
-	case VgaRateMode::Host:
-		assert(vga.draw.host_refresh_hz > RefreshRateMin);
-		return vga.draw.host_refresh_hz;
 	case VgaRateMode::Custom:
 		assert(vga.draw.custom_refresh_hz >= RefreshRateMin);
 		assert(vga.draw.custom_refresh_hz <= RefreshRateMax);
