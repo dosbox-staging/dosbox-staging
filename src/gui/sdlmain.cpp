@@ -859,17 +859,14 @@ static void log_display_properties(const int render_width_px,
 
 	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
-	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
-
-	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
-
-	const char* frame_mode = nullptr;
-	switch (sdl.frame.mode) {
-	case FrameMode::Cfr: frame_mode = "CFR"; break;
-	case FrameMode::Vfr: frame_mode = "VFR"; break;
-	default: assertm(false, "Invalid FrameMode");
-	}
+	const char* frame_mode = [&] {
+		switch (sdl.frame.mode) {
+		case FrameMode::Cfr: return "CFR"; break;
+		case FrameMode::SyncedCfr: return "synced CFR"; break;
+		case FrameMode::Vfr: return "VFR"; break;
+		default: assertm(false, "Invalid FrameMode"); return "";
+		}
+	}();
 
 	const auto refresh_rate = VGA_GetRefreshRate();
 
@@ -894,6 +891,11 @@ static void log_display_properties(const int render_width_px,
 	}
 
 #if 0
+	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
+
+	const auto one_per_render_pixel_aspect = scale_y / scale_x;
+
 	LOG_MSG("DISPLAY: render_width_px: %d, render_height_px: %d, "
 	        "render pixel aspect ratio: 1:%1.3g",
 	        render_width_px,
@@ -963,14 +965,13 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 {
 	// State tracking across runs
 	static bool last_frame_presented = false;
-	static int64_t last_sync_time    = 0;
+	static int64_t last_present_time = 0;
 
 	const auto now = GetTicksUs();
+	const auto frame_time_us = GetTicksDiff(now, last_present_time);
 
-	const auto scheduler_arrival = GetTicksDiff(now, last_sync_time);
-
-	const auto on_time = scheduler_arrival > sdl.frame.period_us_early &&
-	                     scheduler_arrival < sdl.frame.period_us_late;
+	const auto on_time = frame_time_us > sdl.frame.period_us_early &&
+	                     frame_time_us < sdl.frame.period_us_late;
 
 	const auto should_present = on_time || (present_if_last_skipped &&
 	                                        !last_frame_presented);
@@ -978,10 +979,10 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	if (should_present) {
 		sdl.frame.present();
 		last_frame_presented = true;
-		last_sync_time       = GetTicksUs();
+		last_present_time    = GetTicksUs();
 	} else {
 		last_frame_presented = false;
-		last_sync_time       = now;
+		last_present_time    = now;
 	}
 }
 
@@ -997,6 +998,7 @@ static void schedule_synced([[maybe_unused]] const uint32_t event_id = 0)
 static void setup_presentation_mode()
 {
 	if (sdl.frame.desired_mode == FrameMode::Cfr) {
+		// TODO auto-switch to synced CFR
 		auto dos_rate = VGA_GetRefreshRate();
 		// TODO
 		if (dos_rate < 50) {
@@ -2400,7 +2402,11 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 
 		switch (sdl.frame.mode) {
 		case FrameMode::Cfr:
-			// CFR is started when the presetation mode is set up
+			maybe_present_synced(sdl.updating);
+			break;
+
+		case FrameMode::SyncedCfr:
+			// Syned CFR is started when the presetation mode is set up
 			break;
 
 		case FrameMode::Vfr:
@@ -2413,6 +2419,7 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 
 	// Adjust "ticks done" counter by the time it took to present the frame
 	const auto elapsed_us = GetTicksUsSince(start_us);
+	LOG_TRACE("%d", elapsed_us);
 	cumulative_time_rendered_us += elapsed_us;
 
 	constexpr auto MicrosInMillisecond = 1000;
@@ -3250,13 +3257,13 @@ static void sdl_section_init(Section* sec)
 	const std::string presentation_mode_pref = section->Get_string(
 	        "presentation_mode");
 
+	initialize_vsync_settings();
+
 	if (presentation_mode_pref == "cfr") {
 		sdl.frame.desired_mode = FrameMode::Cfr;
 	} else {
 		sdl.frame.desired_mode = FrameMode::Vfr;
 	}
-
-	initialize_vsync_settings();
 
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed &&
 	                               (!sdl.desktop.full.width ||
