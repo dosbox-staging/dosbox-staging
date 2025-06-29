@@ -51,7 +51,6 @@
 #include "math_utils.h"
 #include "mixer.h"
 #include "mouse.h"
-#include "pacer.h"
 #include "pic.h"
 #include "rect.h"
 #include "render.h"
@@ -952,8 +951,6 @@ static void save_rate_to_frame_period(const double rate_hz)
 	sdl.frame.period_us_late  = ifloor(145 * period_us / 100);
 }
 
-static std::unique_ptr<Pacer> render_pacer = {};
-
 static void remove_window()
 {
 	if (sdl.window) {
@@ -978,9 +975,14 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	const auto should_present = on_time || (present_if_last_skipped &&
 	                                        !last_frame_presented);
 
-	last_frame_presented = should_present ? sdl.frame.present() : false;
-
-	last_sync_time = should_present ? GetTicksUs() : now;
+	if (should_present) {
+		sdl.frame.present();
+		last_frame_presented = true;
+		last_sync_time       = GetTicksUs();
+	} else {
+		last_frame_presented = false;
+		last_sync_time       = now;
+	}
 }
 
 static void setup_presentation_mode()
@@ -1002,11 +1004,6 @@ static void setup_presentation_mode()
 
 		// Frames will be presented at the DOS rate.
 		save_rate_to_frame_period(refresh_rate);
-
-		// Because we don't have proof that the host actually supports
-		// the requested rates, we use the frame pacer to inform the
-		// user when the host is hitting the vsync limit.
-		render_pacer->SetTimeout(vsync_is_on ? sdl.vsync.skip_us : 0);
 	}
 }
 
@@ -1334,11 +1331,6 @@ finish:
 		sdl.draw.callback(GFX_CallbackRedraw);
 	}
 
-	// Ensure the time to change window modes isn't counted against
-	// our paced timing. This is a rare event that depends on host
-	// latency (and not the rendering pipeline).
-	render_pacer->Reset();
-
 	sdl.rendering_backend = rendering_backend;
 	return sdl.window;
 }
@@ -1634,29 +1626,24 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	return image;
 }
 
-static bool present_frame_texture()
+static void present_frame_texture()
 {
-	const auto is_presenting = render_pacer->CanRun();
-	if (is_presenting) {
-		SDL_RenderClear(sdl.renderer);
-		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
+	SDL_RenderClear(sdl.renderer);
+	SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
 
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined
-			// rendering commands have finished, so we're guaranteed
-			// to read the contents of the up-to-date backbuffer
-			// here right before the buffer swap.
-			//
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
+	if (CAPTURE_IsCapturingPostRenderImage()) {
+		// glReadPixels() implicitly blocks until all pipelined
+		// rendering commands have finished, so we're guaranteed
+		// to read the contents of the up-to-date backbuffer
+		// here right before the buffer swap.
+		//
+		const auto image = get_rendered_output_from_backbuffer();
+		if (image) {
+			CAPTURE_AddPostRenderImage(*image);
 		}
-
-		SDL_RenderPresent(sdl.renderer);
 	}
-	render_pacer->Checkpoint();
-	return is_presenting;
+
+	SDL_RenderPresent(sdl.renderer);
 }
 
 #if C_OPENGL
@@ -1697,34 +1684,28 @@ static void update_frame_gl(const uint16_t* changedLines)
 	}
 }
 
-static bool present_frame_gl()
+static void present_frame_gl()
 {
-	const auto is_presenting = render_pacer->CanRun();
+	glClear(GL_COLOR_BUFFER_BIT);
 
-	if (is_presenting) {
-		glClear(GL_COLOR_BUFFER_BIT);
+	sdl.opengl.actual_frame_count++;
+	update_uniforms_gl();
 
-		sdl.opengl.actual_frame_count++;
-		update_uniforms_gl();
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		if (CAPTURE_IsCapturingPostRenderImage()) {
-			// glReadPixels() implicitly blocks until all pipelined
-			// rendering commands have finished, so we're
-			// guaranateed to read the contents of the up-to-date
-			// backbuffer here right before the buffer swap.
-			//
-			const auto image = get_rendered_output_from_backbuffer();
-			if (image) {
-				CAPTURE_AddPostRenderImage(*image);
-			}
+	if (CAPTURE_IsCapturingPostRenderImage()) {
+		// glReadPixels() implicitly blocks until all pipelined
+		// rendering commands have finished, so we're
+		// guaranateed to read the contents of the up-to-date
+		// backbuffer here right before the buffer swap.
+		//
+		const auto image = get_rendered_output_from_backbuffer();
+		if (image) {
+			CAPTURE_AddPostRenderImage(*image);
 		}
-
-		SDL_GL_SwapWindow(sdl.window);
 	}
-	render_pacer->Checkpoint();
-	return is_presenting;
+
+	SDL_GL_SwapWindow(sdl.window);
 }
 
 static void set_vsync_gl(const bool is_enabled)
@@ -3237,12 +3218,6 @@ static void sdl_section_init(Section* sec)
 		}
 	}
 
-	sdl.vsync.skip_us = section->Get_int("vsync_skip");
-
-	render_pacer = std::make_unique<Pacer>("Render",
-	                                       sdl.vsync.skip_us,
-	                                       Pacer::LogLevel::TIMEOUTS);
-
 	const int display = section->Get_int("display");
 
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
@@ -4223,13 +4198,6 @@ static void init_sdl_config_section()
 	        "  - For the best results, disable all frame cappers and do not force any\n"
 	        "    specific vsync mode in your graphics adapter's driver settings (choose\n"
 	        "    the \"let the application decide\" vsync option).");
-
-	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
-	pint->Set_help(
-	        "Number of microseconds to allow rendering to block before skipping the\n"
-	        "next frame. For example, a value of 7000 is roughly half the frame time\n"
-	        "at 70 Hz. 0 disables this and will always render (default).");
-	pint->SetMinMax(0, 14000);
 
 	pstring = sdl_sec->Add_string("presentation_mode", always, "vfr");
 	pstring->Set_help(
