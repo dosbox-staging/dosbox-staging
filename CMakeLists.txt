@@ -31,7 +31,6 @@ endif()
 
 option(OPT_DEBUG "Enable debugging" OFF)
 option(OPT_HEAVY_DEBUG "Enable heavy debugging" OFF)
-
 if(OPT_HEAVY_DEBUG)
   set(OPT_DEBUG ON CACHE INTERNAL "")
 endif()
@@ -53,6 +52,50 @@ elseif(LINUX)
 
 else()
   message(FATAL_ERROR "Unknown system ${CMAKE_SYSTEM_NAME}")
+endif()
+
+# Sanitizers
+option(OPT_SANITIZER        "Enable general sanitizer checks")
+option(OPT_THREAD_SANITIZER "Enable thread sanitizer")
+
+if(OPT_SANITIZER AND OPT_THREAD_SANITIZER)
+  message(FATAL_ERROR
+          "-DOPT_SANITIZER and -DOPT_THREAD_SANITIZER are mutually exclusive")
+endif()
+
+if(OPT_SANITIZER)
+  if(DOSBOX_PLATFORM_MACOS)
+    set(SANITIZER_FLAGS "address,pointer-compare,pointer-subtract,undefined")
+  else()
+    set(SANITIZER_FLAGS "address,pointer-compare,pointer-subtract,leak,undefined")
+  endif()
+elseif(OPT_THREAD_SANITIZER)
+  if(DOSBOX_PLATFORM_MACOS)
+    message(WARNING "Thread sanitizer does not work well on macOS")
+  endif()
+  set(SANITIZER_FLAGS "thread")
+endif()
+
+if(OPT_SANITIZER OR OPT_THREAD_SANITIZER)
+  if(MSVC)
+    message(FATAL_ERROR "Sanitizers are only supported for CLANG and GCC compilers")
+  endif()
+
+  if(DOSBOX_PLATFORM_WINDOWS)
+    message(WARNING "Sanitizers were not tested on Windows")
+  endif()
+
+  # Disable optimizations, increase amount of debug info
+  add_compile_options("-O0")
+  add_compile_options("-fno-omit-frame-pointer")
+  add_compile_options("-g")
+
+  # Enable selected sanitizer mechanisms
+  add_compile_options("-fsanitize=${SANITIZER_FLAGS}")
+  add_link_options("-fsanitize=${SANITIZER_FLAGS}")
+
+  # Ask to recover sanitizer output
+  add_compile_options("-fsanitize-recover=all")
 endif()
 
 # Check host endianness
