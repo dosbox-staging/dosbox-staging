@@ -122,17 +122,9 @@ constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
 // Refresh rate constants
-constexpr auto RefreshRateMin            = 23;
-constexpr auto RefreshRateHostVrrLfc     = 48;
-constexpr auto RefreshRateHostDefault    = 60;
-constexpr auto RefreshRateDosDefault     = 70;
-#if defined(MACOSX)
-// MacBook Pro models with ProMotion support 120Hz VRR
-constexpr auto InterpolatingVrrMinRateHz = 120;
-#else
-constexpr auto InterpolatingVrrMinRateHz = 140;
-#endif
-constexpr auto RefreshRateMax            = 1000;
+constexpr auto RefreshRateMin        = 23;
+constexpr auto RefreshRateDosDefault = 70;
+constexpr auto RefreshRateMax        = 1000;
 
 // Ref: https://en.wikipedia.org/wiki/Crystal_oscillator_frequencies
 //
@@ -218,7 +210,7 @@ struct VgaConfig {
 
 enum Drawmode { PART, DRAWLINE, EGALINE };
 
-enum class VgaRateMode { Default, Host, Custom };
+enum class VgaRateMode { Default, Custom };
 
 enum PixelsPerChar : int8_t {
 	Eight = 8,
@@ -271,8 +263,7 @@ struct VgaDraw {
 		double per_line_ms = 0;
 	} delay = {};
 
-	double host_refresh_hz    = RefreshRateHostDefault;
-	double dos_refresh_hz     = RefreshRateDosDefault;
+	double dos_refresh_hz = RefreshRateDosDefault;
 
 	// The override rate corresponds to the override VGA mode where another
 	// device can take over video output in place of the VGA card, such as
@@ -1144,10 +1135,8 @@ struct VideoModeBlock;
 
 void VGA_SetClock(Bitu which, uint32_t target);
 
-// Save, get, and limit refresh and clock functions
-void VGA_SetHostRate(const double refresh_hz);
-void VGA_SetRatePreference(const std::string& pref);
-double VGA_GetPreferredRate();
+void VGA_SetRefreshRateMode(const std::string& pref);
+double VGA_GetRefreshRate();
 
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
