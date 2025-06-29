@@ -1742,7 +1742,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 	const auto vert  = timings.vert;
 	const auto horiz = timings.horiz;
 
-	const auto fps     = VGA_GetPreferredRate();
+	const auto fps     = VGA_GetRefreshRate();
 	const auto f_clock = fps * vert.total * horiz.total;
 
 	// Horizontal total (that's how long a line takes with whistles and bells)
@@ -2946,7 +2946,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	// need to change the vertical timing?
 	bool fps_changed = false;
-	const auto fps   = VGA_GetPreferredRate();
+	const auto fps   = VGA_GetRefreshRate();
 
 	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
 		fps_changed = true;
