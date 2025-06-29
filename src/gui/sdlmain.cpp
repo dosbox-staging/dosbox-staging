@@ -813,11 +813,6 @@ static void maybe_log_display_properties()
 
 	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(draw_size_px.w) / sdl.draw.render_width_px;
-	const auto scale_y = static_cast<double>(draw_size_px.h) / sdl.draw.render_height_px;
-
-	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
-
 	const auto refresh_rate = VGA_GetRefreshRate();
 
 	if (sdl.maybe_video_mode) {
@@ -870,6 +865,11 @@ static void maybe_log_display_properties()
 	}
 
 #if 0
+	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
+
+	const auto one_per_render_pixel_aspect = scale_y / scale_x;
+
 	LOG_MSG("DISPLAY: render_width_px: %d, render_height_px: %d, "
 	        "render pixel aspect ratio: 1:%1.3g",
 	        render_width_px,
