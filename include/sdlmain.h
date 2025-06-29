@@ -107,18 +107,6 @@ enum class FrameMode {
 	Vfr
 };
 
-enum class HostRateMode {
-	Auto,
-
-	// Serial digital interface
-	Sdi,
-
-	// Variable refresh rate
-	Vrr,
-
-	Custom,
-};
-
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
 enum PRIORITY_LEVELS {
@@ -214,9 +202,6 @@ struct SDL_Block {
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
-
-		HostRateMode host_rate_mode = HostRateMode::Auto;
-		double preferred_host_rate  = 0.0;
 	} desktop = {};
 
 	struct {

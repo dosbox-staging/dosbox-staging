@@ -540,9 +540,9 @@ bool GFX_HaveDesktopEnvironment()
 #endif
 }
 
-static double get_host_refresh_rate()
+double GFX_GetHostRefreshRate()
 {
-	auto get_sdl_rate = []() {
+	auto refresh_rate = [] {
 		SDL_DisplayMode mode = {};
 
 		auto& sdl_rate = mode.refresh_rate;
@@ -550,87 +550,28 @@ static double get_host_refresh_rate()
 		assert(sdl.window);
 		const auto display_in_use = SDL_GetWindowDisplayIndex(sdl.window);
 
+		constexpr auto DefaultHostRefreshRateHz = 60;
+
 		if (display_in_use < 0) {
 			LOG_ERR("SDL: Could not get the current window index: %s",
 			        SDL_GetError());
-			return RefreshRateHostDefault;
+			return DefaultHostRefreshRateHz;
 		}
 		if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
 			LOG_ERR("SDL: Could not get the current display mode: %s",
 			        SDL_GetError());
-			return RefreshRateHostDefault;
+			return DefaultHostRefreshRateHz;
 		}
 		if (sdl_rate < RefreshRateMin) {
 			LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
 			            sdl_rate);
-			return RefreshRateHostDefault;
+			return DefaultHostRefreshRateHz;
 		}
 
 		assert(sdl_rate >= RefreshRateMin);
 		return sdl_rate;
-	};
+	}();
 
-	auto get_vrr_rate = [](const int sdl_rate) {
-		constexpr auto VrrBackoffHz = 3;
-		return sdl_rate - VrrBackoffHz;
-	};
-
-	auto get_sdi_rate = [](const int sdl_rate) {
-		// TODO needs explanation - what are we even calculating here?
-		const auto is_odd           = sdl_rate % 2 != 0;
-		const auto not_div_by_5     = sdl_rate % 5 != 0;
-		const auto next_is_div_by_3 = (sdl_rate + 1) % 3 == 0;
-
-		const bool should_adjust = is_odd && not_div_by_5 && next_is_div_by_3;
-		constexpr auto sdi_factor = 1.0 - 1.0 / 1000.0;
-
-		return should_adjust ? (sdl_rate + 1) * sdi_factor : sdl_rate;
-	};
-
-	// To be populated in the switch
-	auto refresh_rate            = 0.0;
-	const char* rate_description = "";
-
-	switch (sdl.desktop.host_rate_mode) {
-	case HostRateMode::Auto:
-		if (const auto sdl_rate = get_sdl_rate();
-		    sdl.desktop.is_fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
-			refresh_rate     = get_vrr_rate(sdl_rate);
-			rate_description = "VRR-adjusted (auto)";
-		} else {
-			refresh_rate     = get_sdi_rate(sdl_rate);
-			rate_description = "standard SDI (auto)";
-		}
-		break;
-
-	case HostRateMode::Sdi:
-		refresh_rate     = get_sdi_rate(get_sdl_rate());
-		rate_description = "standard SDI";
-		break;
-
-	case HostRateMode::Vrr:
-		refresh_rate     = get_vrr_rate(get_sdl_rate());
-		rate_description = "VRR-adjusted";
-		break;
-
-	case HostRateMode::Custom:
-		assert(sdl.desktop.preferred_host_rate >= RefreshRateMin);
-		refresh_rate     = sdl.desktop.preferred_host_rate;
-		rate_description = "custom";
-		break;
-	}
-	assert(refresh_rate >= RefreshRateMin);
-
-	// Log if changed
-	static auto last_int_rate = 0;
-	const auto int_rate       = ifloor(refresh_rate);
-
-	if (last_int_rate != int_rate) {
-		last_int_rate = int_rate;
-		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
-		        rate_description,
-		        refresh_rate);
-	}
 	return refresh_rate;
 }
 
@@ -878,7 +819,7 @@ static void maybe_log_display_properties()
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
-	const auto refresh_rate = VGA_GetPreferredRate();
+	const auto refresh_rate = VGA_GetRefreshRate();
 
 	if (sdl.maybe_video_mode) {
 		const auto video_mode = *sdl.maybe_video_mode;
@@ -990,28 +931,6 @@ static void save_rate_to_frame_period(const double rate_hz)
 
 static std::unique_ptr<Pacer> render_pacer = {};
 
-static int nearest_common_rate(const double rate)
-{
-	constexpr int common_rates[] = {
-	        24, 30, 50, 60, 70, 71, 72, 75, 80, 85, 90, 100, 120, 144, 165, 240};
-
-	int nearest_rate   = 0;
-	int min_difference = INT_MAX;
-
-	// Find the nearest refresh rate
-	for (int common_rate : common_rates) {
-		int difference = std::abs(iround(rate) - common_rate);
-		if (difference <= min_difference) {
-			min_difference = difference;
-			nearest_rate   = common_rate;
-			continue;
-		}
-		break;
-	}
-	assert(nearest_rate != 0);
-	return nearest_rate;
-}
-
 static void remove_window()
 {
 	if (sdl.window) {
@@ -1043,18 +962,11 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 
 static void setup_presentation_mode()
 {
-	// Always get the reported refresh rate and hint the emulated VGA side
-	// with it. This ensures the VGA side always has the host's rate
-	// prior to the next mode change.
-	// TODO but why is this important? needs explanation.
-	const auto host_rate = get_host_refresh_rate();
-	VGA_SetHostRate(host_rate);
-
-	const auto dos_rate = VGA_GetPreferredRate();
+	const auto refresh_rate = VGA_GetRefreshRate();
 
 	// Calculate the maximum number of duplicate frames before presenting.
 	constexpr uint16_t MinRateHz = 10;
-	sdl.frame.max_dupe_frames    = static_cast<float>(dos_rate) / MinRateHz;
+	sdl.frame.max_dupe_frames    = static_cast<float>(refresh_rate) / MinRateHz;
 
 	const auto vsync_is_on = is_vsync_enabled();
 
@@ -1066,7 +978,7 @@ static void setup_presentation_mode()
 		mode = sdl.frame.desired_mode;
 
 		// Frames will be presented at the DOS rate.
-		save_rate_to_frame_period(dos_rate);
+		save_rate_to_frame_period(refresh_rate);
 
 		// Because we don't have proof that the host actually supports
 		// the requested rates, we use the frame pacer to inform the
@@ -3280,28 +3192,6 @@ static void sdl_section_init(Section* sec)
 
 	set_fullscreen_mode();
 
-	const std::string host_rate_pref = section->GetString("host_rate");
-	if (host_rate_pref == "auto") {
-		sdl.desktop.host_rate_mode = HostRateMode::Auto;
-
-	} else if (host_rate_pref == "sdi") {
-		sdl.desktop.host_rate_mode = HostRateMode::Sdi;
-
-	} else if (host_rate_pref == "vrr") {
-		sdl.desktop.host_rate_mode = HostRateMode::Vrr;
-
-	} else {
-		const auto rate = to_finite<double>(host_rate_pref);
-		if (std::isfinite(rate) && rate >= RefreshRateMin) {
-			sdl.desktop.host_rate_mode      = HostRateMode::Custom;
-			sdl.desktop.preferred_host_rate = rate;
-		} else {
-			LOG_WARNING("SDL: Invalid 'host_rate' setting: '%s', using 'auto'",
-			            host_rate_pref.c_str());
-			sdl.desktop.host_rate_mode = HostRateMode::Auto;
-		}
-	}
-
 	sdl.vsync.skip_us = section->GetInt("vsync_skip");
 
 	render_pacer = std::make_unique<Pacer>("Render",
@@ -4268,18 +4158,6 @@ static void init_sdl_config_section()
 	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
-
-	pstring = sdl_sec->AddString("host_rate", on_start, "auto");
-	pstring->SetHelp(
-	        "Set the host's refresh rate:\n"
-	        "  auto:      Use SDI rates, or VRR rates when in fullscreen on a high-refresh\n"
-	        "             rate display (default).\n"
-	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
-	        "             adjustment.\n"
-	        "  vrr:       Deduct 3 Hz from the reported rate (best practice for VRR\n"
-	        "             displays).\n"
-	        "  N:         Specify custom refresh rate in Hz (decimal values are allowed;\n"
-	        "             23.000 is the allowed minimum).");
 
 	pstring = sdl_sec->AddString("vsync", always, "off");
 	pstring->SetHelp(

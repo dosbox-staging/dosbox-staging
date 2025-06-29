@@ -546,7 +546,7 @@ static void DOSBOX_RealInit(Section* sec)
 		int10.vesa_modes = VesaModes::All;
 	}
 
-	VGA_SetRatePreference(section->GetString("dos_rate"));
+	VGA_SetRefreshRateMode(section->GetString("dos_rate"));
 
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section->GetString("hard_disk_speed");
@@ -732,12 +732,24 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	pstring = secprop->AddString("dos_rate", when_idle, "default");
 	pstring->SetHelp(
-	        "Customize the emulated video mode's frame rate.\n"
-	        "  default:  The DOS video mode determines the rate (default).\n"
-	        "  host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
-	        "  <value>:  Sets the rate to an exact value in between 24.000 and 1000.000 Hz.\n"
-	        "Note: We recommend the 'default' rate, otherwise test and set on a per-game\n"
-	        "      basis.");
+	        "Override the emulated DOS video mode's refresh rate with a custom rate.\n"
+	        "  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
+	        "            (default).\n"
+	        "  host:     Override the refresh rate of all DOS video modes with the refresh\n"
+	        "            rate of your monitor. This might allow you to play some 70 Hz VGA\n"
+	        "            games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
+	        "            'vsync' for further details).\n"
+	        "  <value>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
+	        "            specified in Hz (valid range is from 24.000 to 1000.000). This is a\n"
+	        "            niche option for a select few fast-paced mid to late 1990s 3D games\n"
+	        "            for high refresh rate gaming.\n"
+			"\n"
+	        "Note: Many games will misbehave when overriding the DOS video mode's refresh\n"
+	        "      rate with non-standard values. This can manifest in glitchy video,\n"
+	        "      sped-up or slowed-down audio, jerky mouse movement, mouse button presses\n"
+	        "      not being registered, and even gameplay bugs. Overriding the DOS refresh\n"
+	        "      rate is a hack that only works acceptably with a small subset of all DOS\n"
+			"      games (typically mid to late 1990s games).");
 
 	pstring = secprop->AddString("vesa_modes", only_at_start, "compatible");
 	pstring->SetValues({"compatible", "all", "halfline"});

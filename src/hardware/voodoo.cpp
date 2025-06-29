@@ -7450,7 +7450,7 @@ static void Voodoo_UpdateScreen()
 		//
 		VGA_SetOverride(true, VoodooDefaultRefreshRateHz);
 
-		v->draw.frame_period_ms = 1000.0 / VGA_GetPreferredRate();
+		v->draw.frame_period_ms = 1000.0 / VGA_GetRefreshRate();
 		//
 		// The user's 'dos_rate' preference controls the preferred rate.
 		// When set to 'auto', we'll get back the Voodoo default rate.
