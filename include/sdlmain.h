@@ -124,6 +124,7 @@ enum class HostRateMode {
 	Custom,
 };
 
+<<<<<<< HEAD
 enum class VsyncMode { Unset, Off, On, Adaptive };
 
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
@@ -141,6 +142,9 @@ struct VsyncSettings {
 	// to select the auto-determined vsync mode.
 	int benchmarked_rate = 0;
 };
+=======
+enum class VsyncMode { Off, On, Adaptive };
+>>>>>>> fd02369e6 (Remove `auto` option from the `vsync` setting)
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
@@ -241,9 +245,10 @@ struct SDL_Block {
 	} desktop = {};
 
 	struct {
-		VsyncSettings when_windowed   = {};
-		VsyncSettings when_fullscreen = {};
-		int skip_us                   = 0;
+		VsyncMode windowed   = {};
+		VsyncMode fullscreen = {};
+
+		int skip_us = 0;
 	} vsync = {};
 
 #if C_OPENGL
