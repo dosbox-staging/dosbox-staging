@@ -12,7 +12,6 @@ add_library(libmisc STATIC
   host_locale_posix.cpp
   host_locale_win32.cpp
   messages.cpp
-  pacer.cpp
   programs.cpp
   rwqueue.cpp
   setup.cpp
