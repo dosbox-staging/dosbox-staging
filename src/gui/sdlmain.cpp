@@ -859,17 +859,13 @@ static void log_display_properties(const int render_width_px,
 
 	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
-	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
-
-	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
-
-	const char* frame_mode = nullptr;
-	switch (sdl.frame.mode) {
-	case FrameMode::Cfr: frame_mode = "CFR"; break;
-	case FrameMode::Vfr: frame_mode = "VFR"; break;
-	default: assertm(false, "Invalid FrameMode");
-	}
+	const char* frame_mode = [&] {
+		switch (sdl.frame.mode) {
+		case FrameMode::Cfr: return "CFR"; break;
+		case FrameMode::Vfr: return "VFR"; break;
+		default: assertm(false, "Invalid FrameMode"); return "";
+		}
+	}();
 
 	const auto refresh_rate = VGA_GetRefreshRate();
 
@@ -894,6 +890,11 @@ static void log_display_properties(const int render_width_px,
 	}
 
 #if 0
+	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
+
+	const auto one_per_render_pixel_aspect = scale_y / scale_x;
+
 	LOG_MSG("DISPLAY: render_width_px: %d, render_height_px: %d, "
 	        "render pixel aspect ratio: 1:%1.3g",
 	        render_width_px,
