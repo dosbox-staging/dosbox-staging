@@ -985,25 +985,42 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	}
 }
 
+static void schedule_synced([[maybe_unused]] const uint32_t event_id = 0)
+{
+	constexpr bool PresentIfLastSkipped = false;
+	maybe_present_synced(PresentIfLastSkipped);
+
+	PIC_RemoveEvents(schedule_synced);
+	PIC_AddEvent(schedule_synced, sdl.frame.period_ms);
+}
+
 static void setup_presentation_mode()
 {
-	const auto refresh_rate = VGA_GetRefreshRate();
+	if (sdl.frame.desired_mode == FrameMode::Cfr) {
+		auto dos_rate = VGA_GetRefreshRate();
+		// TODO
+		if (dos_rate < 50) {
+			dos_rate *= 2;
+		}
+		const auto host_rate = GFX_GetHostRefreshRate();
 
-	// Calculate the maximum number of duplicate frames before presenting.
-	constexpr uint16_t MinRateHz = 10;
-	sdl.frame.max_dupe_frames    = static_cast<float>(refresh_rate) / MinRateHz;
+		const auto lesser_rate = std::min(host_rate, dos_rate);
+		save_rate_to_frame_period(lesser_rate);
 
-	const auto vsync_is_on = is_vsync_enabled();
+		// Start synced presentation
+		schedule_synced();
 
-	FrameMode mode = {};
+	} else {
+		assert(sdl.frame.desired_mode == FrameMode::Vfr);
 
-	// Manual CFR or VFR modes
-	if (sdl.frame.desired_mode == FrameMode::Cfr ||
-	    sdl.frame.desired_mode == FrameMode::Vfr) {
-		mode = sdl.frame.desired_mode;
+		const auto dos_rate = VGA_GetRefreshRate();
 
-		// Frames will be presented at the DOS rate.
-		save_rate_to_frame_period(refresh_rate);
+		// Calculate the maximum number of duplicate frames before
+		// presenting.
+		constexpr auto MinVfrRateHz = 50.0f;
+		sdl.frame.max_dupe_frames = static_cast<float>(dos_rate) / MinVfrRateHz;
+
+		save_rate_to_frame_period(dos_rate);
 	}
 }
 
@@ -2382,7 +2399,10 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 		};
 
 		switch (sdl.frame.mode) {
-		case FrameMode::Cfr: maybe_present_synced(sdl.updating); break;
+		case FrameMode::Cfr:
+			// CFR is started when the presetation mode is set up
+			break;
+
 		case FrameMode::Vfr:
 			if (vfr_should_present()) {
 				sdl.frame.present();
@@ -2391,10 +2411,10 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 		}
 	}
 
+	// Adjust "ticks done" counter by the time it took to present the frame
 	const auto elapsed_us = GetTicksUsSince(start_us);
 	cumulative_time_rendered_us += elapsed_us;
 
-	// Update "ticks done" with the rendering time
 	constexpr auto MicrosInMillisecond = 1000;
 
 	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
