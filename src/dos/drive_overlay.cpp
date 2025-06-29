@@ -1076,7 +1076,9 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 		Sync_leading_dirs(dosname);
 		f = fopen(overlayname,"wb+");
 	}
-	if (!f) E_Exit("Failed creation of %s",overlayname);
+	if (!f) {
+		LOG_ERR("DOS: Failed to create overlay file '%s'", overlayname);
+	}
 	char buf[5] = {'e','m','p','t','y'};
 	fwrite(buf,5,1,f);
 	fclose(f);
@@ -1089,7 +1091,7 @@ void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const cha
 	safe_strcat(overlayname, name.c_str());
 	CROSS_FILENAME(overlayname);
 	if (!delete_file(overlayname)) {
-		E_Exit("Failed removal of %s", overlayname);
+		LOG_ERR("DOS: Failed to remove overlay file '%s'", overlayname);
 	}
 }
 
