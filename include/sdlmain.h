@@ -332,18 +332,4 @@ struct SDL_Block {
 // TODO should be private; introduce SDL_* API calls instead
 extern SDL_Block sdl;
 
-constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
-{
-	return (version.major << 16) + (version.minor << 8) + version.patch;
-}
-
-inline bool is_runtime_sdl_version_at_least(const SDL_version min_version)
-{
-	SDL_version version = {};
-	SDL_GetVersion(&version);
-	const auto curr_version = sdl_version_to_uint32(version);
-
-	return curr_version >= sdl_version_to_uint32(min_version);
-}
-
 #endif
