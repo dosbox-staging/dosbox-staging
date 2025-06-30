@@ -150,9 +150,9 @@ struct MixerSettings {
 
 	std::thread thread = {};
 
-	// The default master gain is -6dB (50% volume) to minimise the change
+	// The default master gain is -6dB (50% volume) to minimize the change
 	// for clipping.
-	AudioFrame master_gain = {Minus6db, Minus6db};
+	std::atomic<AudioFrame> master_gain = AudioFrame(Minus6db, Minus6db);
 
 	// Output by mix_samples, to be enqueud into the final_output queue
 	std::vector<AudioFrame> output_buffer = {};
@@ -836,12 +836,12 @@ void MixerChannel::SetAppVolume(const AudioFrame gain)
 
 const AudioFrame MIXER_GetMasterVolume()
 {
-	return mixer.master_gain;
+	return mixer.master_gain.load(std::memory_order_relaxed);
 }
 
 void MIXER_SetMasterVolume(const AudioFrame gain)
 {
-	mixer.master_gain = gain;
+	mixer.master_gain.store(gain, std::memory_order_relaxed);
 }
 
 void MixerChannel::SetChannelMap(const StereoLine map)
@@ -2481,8 +2481,9 @@ static void mix_samples(const int frames_requested)
 	}
 
 	// Apply master gain
+	const auto gain = mixer.master_gain.load(std::memory_order_relaxed);
 	for (auto& frame : mixer.output_buffer) {
-		frame *= mixer.master_gain;
+		frame *= gain;
 	}
 
 	if (mixer.do_compressor) {
