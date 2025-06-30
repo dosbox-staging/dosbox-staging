@@ -222,6 +222,27 @@ sudo port install gsed
 ln -s /opt/local/bin/gsed ~/bin/sed
 ```
 
+### Sanitizer build (CMake)
+
+There are two (mutually exclusive) sanitizer settings available:
+- `OPT_SANITIZER` - detects memory errors and undefined behaviors
+- `OPT_THREAD_SANITIZER` - data race detector
+
+To use any of these, pass the appropriate option when configuring the sources,
+for example:
+
+```bash
+cmake -DOPT_SANITIZER=ON --preset=release-macos
+cmake --build --preset=release-macos
+```
+
+For more information about sanitizers check the `clang` documentation on the
+`-fsanitize` option.
+
+As sanitizer availability and performance are highly dependent on the concrete
+platform (CPU, OS, compiler), you might need to manually adapt the
+`SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
+
 ## Using FluidSynth and Slirp during local development
 
 FluidSynth and Slirp are difficult and time-consuming to build, therefore they
