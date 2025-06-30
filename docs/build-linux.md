@@ -395,3 +395,24 @@ cmake --build --preset=release-linux-vcpkg
 ```bash
 ./build/release-linux/dosbox
 ```
+
+### Sanitizer build
+
+There are two (mutually exclusive) sanitizer settings available:
+- `OPT_SANITIZER` - detects memory errors and undefined behaviors
+- `OPT_THREAD_SANITIZER` - data race detector
+
+To use any of these, pass the appropriate option when configuring the sources,
+for example:
+
+```bash
+cmake -DOPT_SANITIZER=ON --preset=release-linux
+cmake --build --preset=release-linux
+```
+
+For more information about sanitizers check the `GCC` or `clang` documentation
+on the `-fsanitize` option.
+
+As sanitizer availability and performance are highly dependent on the concrete
+platform (CPU, OS, compiler), you might need to manually adapt the
+`SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
