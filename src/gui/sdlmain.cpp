@@ -3708,24 +3708,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 bool GFX_Events()
 {
-#if defined(MACOSX)
-	// TODO check if this workaround is still needed
-	//
-	// Don't poll too often. This can be heavy on the OS, especially Macs.
-	// In idle mode 3000-4000 polls are done per second without this check.
-	// Macs, with this code,  max 250 polls per second. (non-macs unused
-	// default max 500). Currently not implemented for all platforms, given
-	// the ALT-TAB stuff for WIN32.
-	static auto last_check = GetTicks();
-
-	auto current_check = GetTicks();
-
-	if (GetTicksDiff(current_check, last_check) <= DB_POLLSKIP) {
-		return true;
-	}
-	last_check = current_check;
-#endif
-
 	SDL_Event event;
 
 	static auto last_check_joystick = GetTicks();
