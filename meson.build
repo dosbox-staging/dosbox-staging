@@ -557,34 +557,11 @@ if cc.compiles(set_prio_code, name: 'test for setpriority support')
     conf_data.set10('HAVE_SETPRIORITY', true)
 endif
 
-atomic_code = '''
-  #include <atomic>
-  #include <cstdint>
- int main() {
-  std::atomic<std::int32_t> x32 = 1;
-  std::atomic<std::int64_t> x64 = 1;
-  return static_cast<int>(x64.load() - x32.load());
- }
- '''
-
-atomic_external_dep = dependency('atomic', required: false)
-atomic_internal_dep = declare_dependency(link_args: '-latomic')
-
-if cxx.links(
-    atomic_code,
-    dependencies: atomic_external_dep,
-    name: 'compiler supports atomic types using external library',
-)
-    atomic_dep = atomic_external_dep
-elif cxx.links(
-    atomic_code,
-    dependencies: atomic_internal_dep,
-    name: 'compiler supports atomic types using internal library',
-)
-    atomic_dep = atomic_internal_dep
-else
-    atomic_dep = dependency('atomic')
-endif
+# libatomic is part of the GCC runtime library.
+# This is used by GCC and Clang by default on Linux.
+# Mac and Windows don't need this except for maybe MSYS2.
+# This is required for Linux to use all features of std::atomic.
+atomic_dep = cxx.find_library('atomic', required:false)
 
 # Gather external dependencies
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
