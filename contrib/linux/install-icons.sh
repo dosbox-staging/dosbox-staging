@@ -3,8 +3,6 @@
 # SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-set -e
-
 DEST_PATH="$HOME/.local/share"
 REMOVE=false
 USAGE=false
