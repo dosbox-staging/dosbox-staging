@@ -3703,7 +3703,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 }
 
-bool GFX_Events()
+// Returns:
+//   true  - event loop can keep running
+//   false - event loop wants to quit
+bool DOSBOX_PollAndHandleEvents()
 {
 	SDL_Event event;
 
