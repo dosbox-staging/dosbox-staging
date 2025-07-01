@@ -1633,9 +1633,9 @@ static void present_frame_texture()
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
-		// rendering commands have finished, so we're guaranteed
-		// to read the contents of the up-to-date backbuffer
-		// here right before the buffer swap.
+		// rendering commands have finished, so we're guaranteed to read
+		// the contents of the up-to-date backbuffer here right before
+		// the buffer swap.
 		//
 		const auto image = get_rendered_output_from_backbuffer();
 		if (image) {
@@ -1695,9 +1695,9 @@ static void present_frame_gl()
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
-		// rendering commands have finished, so we're
-		// guaranateed to read the contents of the up-to-date
-		// backbuffer here right before the buffer swap.
+		// rendering commands have finished, so we're guaranateed to
+		// read the contents of the up-to-date backbuffer here right
+		// before the buffer swap.
 		//
 		const auto image = get_rendered_output_from_backbuffer();
 		if (image) {
