@@ -100,10 +100,14 @@ static inline void present_frame_noop()
 }
 
 enum class FrameMode {
-	// Constant frame rate, as defined by the emulated system
+	// Constant frame rate, always at the emulated DOS rate
 	Cfr,
 
-	// Variable frame rate, as defined by the emulated system
+	// Constant frame rate, synced to the host rate
+	SyncedCfr,
+
+	// Variable frame rate, up to the emulated DOS rate. Frames are only
+	// presented if there's a change in the emulated output.
 	Vfr
 };
 
