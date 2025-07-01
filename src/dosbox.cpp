@@ -168,7 +168,7 @@ static Bitu Normal_Loop()
 			}
 #endif
 		} else {
-			if (!GFX_Events()) {
+			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
 			}
 			if (ticks.remain > 0) {
