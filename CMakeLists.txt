@@ -296,6 +296,16 @@ if(WIN32)
   target_sources(dosbox PRIVATE src/winres.rc)
 endif()
 
+# libatomic is part of the GCC runtime library.
+# This is used by GCC and Clang by default on Linux.
+# Mac and Windows don't need this except for maybe MSYS2.
+# This is required for Linux to use all features of std::atomic.
+find_library(LIBATOMIC libatomic.so.1)
+
+if(LIBATOMIC)
+  target_link_libraries(dosbox PRIVATE ${LIBATOMIC})
+endif()
+
 target_link_libraries(dosbox PRIVATE
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
