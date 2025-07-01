@@ -6,6 +6,8 @@
 
 #include "messages.h"
 
+void MSG_NotifyNewCodePage() {}
+
 void MSG_Add(const std::string&, const std::string&) {}
 
 const char* MSG_Get(const std::string&)
