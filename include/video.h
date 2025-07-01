@@ -323,10 +323,8 @@ constexpr uint8_t GFX_DBL_H      = 1 << 4; // double-width  flag
 constexpr uint8_t GFX_DBL_W      = 1 << 5; // double-height flag
 constexpr uint8_t GFX_CAN_RANDOM = 1 << 6; // interface can also do random acces
 
-// return code of:
-// - true means event loop can keep running.
-// - false means event loop wants to quit.
-bool GFX_Events();
+// TODO this hardly belongs to `video.h`...
+bool DOSBOX_PollAndHandleEvents();
 
 // Let the presentation layer safely call no-op functions.
 // Useful during output initialization or transitions.
