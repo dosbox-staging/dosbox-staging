@@ -2405,13 +2405,10 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	return false;
 }
 
-void GFX_EndUpdate(const uint16_t* changedLines)
-{
+static void maybe_present_frame() {
 	static int64_t cumulative_time_rendered_us = 0;
 
 	const auto start_us = GetTicksUs();
-
-	sdl.frame.update(changedLines);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// Always present the frame if we want to capture the next
@@ -2461,6 +2458,14 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 		// Keep the fractional microseconds part
 		cumulative_time_rendered_us %= MicrosInMillisecond;
 	}
+}
+
+void GFX_EndUpdate(const uint16_t* changedLines)
+{
+	sdl.frame.update(changedLines);
+	// TODO(JN) flush gfx
+
+	maybe_present_frame();
 
 	sdl.updating = false;
 
