@@ -366,3 +366,6 @@ target_link_libraries(dosbox PRIVATE
   libmisc
   libshell
 )
+
+enable_testing()
+add_subdirectory(tests)
