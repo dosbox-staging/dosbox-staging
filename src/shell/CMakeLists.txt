@@ -1,14 +1,10 @@
-add_library(libshell STATIC
+target_sources(libdosboxcommon PRIVATE
   autoexec.cpp
   command_line.cpp
   file_reader.cpp
   shell.cpp
   shell_batch.cpp
-  shell_cmds.cpp
   shell_history.cpp
-  shell_misc.cpp
-)
+  shell_misc.cpp)
 
-target_link_libraries(libshell PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+target_sources(dosbox PRIVATE shell_cmds.cpp)

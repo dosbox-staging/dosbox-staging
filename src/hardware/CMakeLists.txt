@@ -1,4 +1,4 @@
-add_library(libhardware STATIC
+target_sources(libdosboxcommon PRIVATE 
   input/intel8042.cpp
   input/intel8255.cpp
   input/keyboard.cpp
@@ -37,7 +37,6 @@ add_library(libhardware STATIC
   innovation.cpp
   imfc.cpp
   iohandler.cpp
-  iohandler_containers.cpp
   ipx.cpp
   ipxserver.cpp
   joystick.cpp
@@ -79,32 +78,18 @@ add_library(libhardware STATIC
   virtualbox.cpp
 
   vmware.cpp
-  voodoo.cpp
-)
+  voodoo.cpp)
 
-pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
+target_sources(dosbox PRIVATE iohandler_containers.cpp)
 
-find_package(iir REQUIRED)
-target_link_libraries(libhardware PRIVATE
-  $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
-)
-
-find_package(SDL2_net REQUIRED)
-target_link_libraries(libhardware PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>
-)
-
-target_link_libraries(libhardware PRIVATE
-  libaudio
+target_link_libraries(libdosboxcommon PRIVATE
   libesfmu
   libresidfp
   libym7128bemu
   libtalchorus
   $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
-  libints
-  libgui
-  libmidi
-  libshell
   PkgConfig::SPEEXDSP
+  $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>
 )
+
