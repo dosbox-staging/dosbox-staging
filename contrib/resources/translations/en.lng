@@ -422,7 +422,7 @@ Path '%s' has no shaders.
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Path '%s' has:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 No such section or property: %s
 
 .
@@ -1812,7 +1812,7 @@ You can put your MOUNT lines here.
 # Lines starting with a '#' character are comments.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Possible values
 .
 :CONFIG_DEPRECATED_VALUES
@@ -1956,7 +1956,7 @@ This operation is not permitted in secure mode.
 Section [%s] doesn't exist.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' is not a valid value for property '%s'.
 
 .
