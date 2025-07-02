@@ -1,4 +1,4 @@
-add_library(libaudio STATIC
+target_sources(libdosboxcommon PRIVATE
   clap/event_list.cpp
   clap/library.cpp
   clap/plugin.cpp
@@ -6,15 +6,4 @@ add_library(libaudio STATIC
 
   compressor.cpp
   envelope.cpp
-  noise_gate.cpp
-)
-
-find_package(iir REQUIRED)
-target_link_libraries(
-  libaudio PRIVATE $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
-)
-
-target_link_libraries(libaudio PRIVATE
-  loguru
-)
-
+  noise_gate.cpp)
