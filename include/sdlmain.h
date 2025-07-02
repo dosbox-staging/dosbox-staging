@@ -260,11 +260,8 @@ struct SDL_Block {
 		FrameMode desired_mode        = {};
 		FrameMode mode                = {};
 
-		// in ms, for use with PIC timers
-		double period_ms      = 0.0;
 		float max_vfr_no_present_frame_count = 0.0f;
 
-		// same but in us, for use with chrono
 		int period_us       = 0;
 		int period_us_early = 0;
 		int period_us_late  = 0;

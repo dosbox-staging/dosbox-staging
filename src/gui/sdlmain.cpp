@@ -942,14 +942,12 @@ static void save_rate_to_frame_period(const double rate_hz)
 {
 	assert(rate_hz > 0);
 
-	// Back off by one-onethousandth to avoid hitting the vsync edge
-	sdl.frame.period_ms  = 1'001.0 / rate_hz;
-	const auto period_us = sdl.frame.period_ms * 1'000;
-	sdl.frame.period_us  = ifloor(period_us);
+	const auto period_ms = 1000.0 / rate_hz;
+	sdl.frame.period_us  = ifloor(period_ms * 1000.0);
 
 	// Permit the frame period to be off by up to 90% before "out of sync"
-	sdl.frame.period_us_early = ifloor(55 * period_us / 100);
-	sdl.frame.period_us_late  = ifloor(145 * period_us / 100);
+	sdl.frame.period_us_early = ifloor(55.0 * sdl.frame.period_us / 100);
+	sdl.frame.period_us_late  = ifloor(145.0 * sdl.frame.period_us / 100);
 }
 
 static void remove_window()
