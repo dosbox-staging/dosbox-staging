@@ -1498,7 +1498,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 // Texture update and presentation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines)
+static void update_frame_texture([[maybe_unused]] const uint16_t* num_changed_lines)
 {
 	SDL_UpdateTexture(sdl.texture.texture,
 	                  nullptr, // update entire texture
@@ -1651,9 +1651,9 @@ static void present_frame_texture()
 
 // OpenGL frame-based update and presentation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-static void update_frame_gl(const uint16_t* changedLines)
+static void update_frame_gl(const uint16_t* num_changed_lines)
 {
-	if (changedLines) {
+	if (num_changed_lines) {
 		const auto framebuf = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		const auto pitch = sdl.opengl.pitch;
 
@@ -1662,10 +1662,10 @@ static void update_frame_gl(const uint16_t* changedLines)
 
 		while (y < sdl.draw.render_height_px) {
 			if (!(index & 1)) {
-				y += changedLines[index];
+				y += num_changed_lines[index];
 			} else {
 				const uint8_t* pixels = framebuf + y * pitch;
-				const int height_px   = changedLines[index];
+				const int height_px = num_changed_lines[index];
 
 				glTexSubImage2D(GL_TEXTURE_2D,
 				                0,
@@ -2407,9 +2407,9 @@ static void maybe_present_frame() {
 	}
 }
 
-void GFX_EndUpdate(const uint16_t* changedLines)
+void GFX_EndUpdate(const uint16_t* num_changed_lines)
 {
-	sdl.frame.update(changedLines);
+	sdl.frame.update(num_changed_lines);
 	// TODO(JN) flush gfx
 
 	maybe_present_frame();
