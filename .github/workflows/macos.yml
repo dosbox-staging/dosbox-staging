@@ -72,6 +72,11 @@ jobs:
           cmake --preset release-macos-${{ matrix.conf.arch }}
           cmake --build --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee build.log
 
+      - name: Run tests
+        run: |
+          set -xo pipefail
+          ctest --preset release-macos-${{ matrix.conf.arch }} 2>&1 | tee tests.log
+
       - name: Dump workspace contents
         run: find $RUNNER_WORKSPACE
 
