@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -72,11 +73,11 @@ union PpiPortB {
 	bit_view<0, 2> timer2_gating_and_speaker_out;
 };
 
-const char *pit_mode_to_string(const PitMode mode);
+const char* pit_mode_to_string(const PitMode mode);
 
 // PC speaker functions, tightly related to the timer functions
 void PCSPEAKER_SetCounter(const int count, const PitMode pit_mode);
-void PCSPEAKER_SetType(const PpiPortB &port_b);
+void PCSPEAKER_SetType(const PpiPortB& port_b);
 void PCSPEAKER_SetPITControl(const PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
