@@ -34,3 +34,5 @@ bool MSG_WriteToFile(const std::string&)
 }
 
 void MSG_LoadMessages() {}
+
+void MSG_NotifyNewCodePage() {}
