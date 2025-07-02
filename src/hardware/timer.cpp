@@ -18,14 +18,15 @@
 const std::chrono::steady_clock::time_point system_start_time =
         std::chrono::steady_clock::now();
 
-/*
- Bit 4 and 5    Access mode :
-                0 0 = Latch count value command
-                0 1 = Access mode: lobyte only
-                1 0 = Access mode: hibyte only
-                1 1 = Access mode: lobyte/hibyte
-Ref: https://wiki.osdev.org/Programmable_Interval_Timer
-*/
+//
+// Bit 4 and 5    Access mode :
+//                0 0 = Latch count value command
+//                0 1 = Access mode: lobyte only
+//                1 0 = Access mode: hibyte only
+//                1 1 = Access mode: lobyte/hibyte
+//
+// Ref: https://wiki.osdev.org/Programmable_Interval_Timer
+//
 enum class AccessMode : uint8_t {
 	Latch = 0b0'0,
 	Low   = 0b0'1,
@@ -266,7 +267,7 @@ static void status_latch(PIT_Block& channel)
 }
 static void counter_latch(PIT_Block& channel)
 {
-	/* Fill the read_latch of the selected counter with current count */
+	// Fill the read_latch of the selected counter with current count
 	channel.go_read_latch = false;
 
 	// If gate2 is disabled don't update the read_latch
@@ -301,7 +302,7 @@ static void counter_latch(PIT_Block& channel)
 	switch (channel.mode) {
 	case PitMode::SoftwareStrobe:
 	case PitMode::InterruptOnTerminalCount:
-		/* Counter keeps on counting after passing terminal count */
+		// Counter keeps on counting after passing terminal count
 		if (elapsed_ms > channel.delay) {
 			elapsed_ms -= channel.delay;
 			if (channel.bcd) {
@@ -414,7 +415,7 @@ static void write_latch(io_port_t port, io_val_t value, io_width_t)
 		update_channel_delay(channel);
 
 		switch (channel_num) {
-		case 0: /* Timer hooked to IRQ 0 */
+		case 0: // Timer hooked to IRQ 0
 			if (channel.mode_changed ||
 			    channel.mode == PitMode::InterruptOnTerminalCount) {
 				if (channel.mode ==
@@ -468,23 +469,34 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 		}
 
 		switch (channel.read_mode) {
-		case AccessMode::Latch: /* read MSB & return to state 3 */
+		case AccessMode::Latch:
+			// read MSB & return to state 3
 			ret               = (channel.read_latch >> 8) & 0xff;
 			channel.read_mode = AccessMode::Both;
 			channel.go_read_latch = true;
 			break;
-		case AccessMode::Low: /* read LSB */
-			ret                   = channel.read_latch & 0xff;
+
+		case AccessMode::Low:
+			// read LSB
+			ret = channel.read_latch & 0xff;
+
 			channel.go_read_latch = true;
 			break;
-		case AccessMode::High: /* read MSB */
+
+		case AccessMode::High:
+			// read MSB
 			ret = (channel.read_latch >> 8) & 0xff;
+
 			channel.go_read_latch = true;
 			break;
-		case AccessMode::Both: /* read LSB followed by MSB */
-			ret               = channel.read_latch & 0xff;
+
+		case AccessMode::Both:
+			// read LSB followed by MSB
+			ret = channel.read_latch & 0xff;
+
 			channel.read_mode = AccessMode::Latch;
 			break;
+
 		default: E_Exit("Timer.cpp: error in readlatch"); break;
 		}
 
@@ -495,27 +507,27 @@ static uint8_t read_latch(io_port_t port, io_width_t)
 	return ret;
 }
 
-/*
-Read Back Status Byte
-Bit/s        Usage
-7            Output pin state
-6            Null count flags
-4 and 5      Access mode :
-                0 0 = Latch count value command
-                0 1 = Access mode: lobyte only
-                1 0 = Access mode: hibyte only
-                1 1 = Access mode: lobyte/hibyte
-1 to 3       Operating mode :
-                0 0 0 = Mode 0 (interrupt on terminal count)
-                0 0 1 = Mode 1 (hardware re-triggerable one-shot)
-                0 1 0 = Mode 2 (rate generator)
-                0 1 1 = Mode 3 (square wave generator)
-                1 0 0 = Mode 4 (software triggered strobe)
-                1 0 1 = Mode 5 (hardware triggered strobe)
-                1 1 0 = Mode 2 (rate generator, same as 010b)
-                1 1 1 = Mode 3 (square wave generator, same as 011b)
-0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
-*/
+//
+// Read Back Status Byte
+// Bit/s        Usage
+// 7            Output pin state
+// 6            Null count flags
+// 4 and 5      Access mode :
+//                 0 0 = Latch count value command
+//                 0 1 = Access mode: lobyte only
+//                 1 0 = Access mode: hibyte only
+//                 1 1 = Access mode: lobyte/hibyte
+// 1 to 3       Operating mode :
+//                 0 0 0 = Mode 0 (interrupt on terminal count)
+//                 0 0 1 = Mode 1 (hardware re-triggerable one-shot)
+//                 0 1 0 = Mode 2 (rate generator)
+//                 0 1 1 = Mode 3 (square wave generator)
+//                 1 0 0 = Mode 4 (software triggered strobe)
+//                 1 0 1 = Mode 5 (hardware triggered strobe)
+//                 1 1 0 = Mode 2 (rate generator, same as 010b)
+//                 1 1 1 = Mode 3 (square wave generator, same as 011b)
+// 0            BCD/Binary mode: 0 = 16-bit binary, 1 = four-digit BCD
+//
 union ReadBackStatus {
 	uint8_t data = {0};
 	bit_view<0, 1> bcd_state;
@@ -534,10 +546,10 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 		return;
 	}
 
-	// save output status to be used with timer 0 irq
+	// Save output status to be used with timer 0 irq
 	const bool old_output = counter_output(channel_0);
-	// save the current count value to be re-used in
-	// undocumented newmode
+
+	// Save the current count value to be re-used in undocumented newmode
 	counter_latch(channel);
 	channel.bcd = rbs.bcd_state;
 	if (channel.bcd) {
@@ -557,14 +569,14 @@ static void latch_single_channel(const uint8_t channel_num, const uint8_t val)
 	channel.write_mode    = static_cast<AccessMode>(rbs.access_mode.val());
 	channel.mode          = static_cast<PitMode>(rbs.pit_mode.val());
 
-	/* If the line goes from low to up => generate irq.
-	 * ( BUT needs to stay up until acknowlegded by the
-	 * cpu!!! therefore: ) If the line goes to low =>
-	 * disable irq. Mode 0 starts with a low line. (so
-	 * always disable irq) Mode 2,3 start with a high line.
-	 * counter_output tells if the current counter is high
-	 * or low So actually a mode 3 timer enables and
-	 * disables irq al the time. (not handled) */
+	// If the line goes from low to up => generate irq.
+	// ( BUT needs to stay up until acknowlegded by the
+	// cpu!!! therefore: ) If the line goes to low =>
+	// disable irq. Mode 0 starts with a low line. (so
+	// always disable irq) Mode 2,3 start with a high line.
+	// counter_output tells if the current counter is high
+	// or low So actually a mode 3 timer enables and
+	// disables irq al the time. (not handled) */
 
 	if (channel_num == 0) {
 		PIC_RemoveEvents(PIT0_Event);
@@ -599,8 +611,10 @@ static void latch_all_channels(const uint8_t val)
 			counter_latch(channel_2);
 		}
 	}
-	// status and values can be latched simultaneously
-	if ((val & 0x10) == 0) { /* Latch status words */
+
+	// Status and values can be latched simultaneously
+	if ((val & 0x10) == 0) {
+		// Latch status words
 		// but only 1 status can be latched simultaneously
 		if (val & 0x02) {
 			status_latch(channel_0);
