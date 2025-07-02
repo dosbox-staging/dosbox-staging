@@ -15,7 +15,6 @@ find_package(PNG REQUIRED)
 target_link_libraries(libcapture PRIVATE PNG::PNG)
 
 target_link_libraries(libcapture PRIVATE
-  loguru
   zmbv
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )

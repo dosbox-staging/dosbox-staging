@@ -14,5 +14,4 @@ target_link_libraries(libgui PRIVATE OpenGL::GL)
 target_link_libraries(libgui PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
   $<IF:$<BOOL:${C_OPENGL}>,libglad,>
-  libmisc
 )

@@ -1,4 +1,4 @@
-add_library(libhardware STATIC
+add_library(libhardwarecore STATIC
   input/intel8042.cpp
   input/intel8255.cpp
   input/keyboard.cpp
@@ -36,7 +36,7 @@ add_library(libhardware STATIC
   innovation.cpp
   imfc.cpp
   iohandler.cpp
-  iohandler_containers.cpp
+
   ipx.cpp
   ipxserver.cpp
   joystick.cpp
@@ -84,26 +84,24 @@ add_library(libhardware STATIC
 pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
 
 find_package(iir REQUIRED)
-target_link_libraries(libhardware PRIVATE
+target_link_libraries(libhardwarecore PRIVATE
   $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
 )
 
 find_package(SDL2_net REQUIRED)
-target_link_libraries(libhardware PRIVATE
+target_link_libraries(libhardwarecore PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2_net::SDL2_net>,SDL2_net::SDL2_net,SDL2_net::SDL2_net-static>
 )
 
-target_link_libraries(libhardware PRIVATE
-  libaudio
+target_link_libraries(libhardwarecore PRIVATE
   libesfmu
   libresidfp
   libym7128bemu
   libtalchorus
   $<IF:$<BOOL:${C_MANYMOUSE}>,libmanymouse,>
   libnuked
-  libints
-  libgui
-  libmidi
-  libshell
   PkgConfig::SPEEXDSP
 )
+
+add_library(libhardware iohandler_containers.cpp)
+target_link_libraries(libhardware PRIVATE libhardwarecore)

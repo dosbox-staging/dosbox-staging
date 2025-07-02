@@ -1,4 +1,4 @@
-add_library(libdos STATIC
+add_library(libdoscore STATIC
   cdrom.cpp
   cdrom_image.cpp
   cdrom_ioctl_linux.cpp
@@ -8,7 +8,6 @@ add_library(libdos STATIC
   dos_code_page.cpp
   dos_devices.cpp
   dos_execute.cpp
-  dos_files.cpp
   dos_ioctl.cpp
   dos_keyboard_layout.cpp
   dos_locale.cpp
@@ -55,8 +54,9 @@ add_library(libdos STATIC
   program_tree.cpp
 )
 
-target_link_libraries(libdos PRIVATE
-  libhardware
-  libdecoders
+target_link_libraries(libdoscore PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
+
+add_library(libdos dos_files.cpp)
+target_link_libraries(libdos PRIVATE libdoscore)
