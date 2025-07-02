@@ -15,6 +15,8 @@ set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+enable_testing()
+
 # TODO Enable certain warnings-as-errors for at least MSVC, Clang & GCC
 
 # Disable the noisy narrowing and conversion warnings by default. Use the
@@ -344,6 +346,9 @@ include_directories(
 
 add_library(libdosboxcommon STATIC)
 
+# Add tests before src so that the dosbox_tests target is 
+# available for target_sources()
+add_subdirectory(tests)
 add_subdirectory(src)
 
 if(WIN32)
@@ -366,7 +371,7 @@ target_link_libraries(libdosboxcommon PRIVATE
   libdecoders
 )
 
-target_link_libraries(dosbox PRIVATE
+target_link_libraries(dosbox PRIVATE 
   libdosboxcommon
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
