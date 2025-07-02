@@ -141,7 +141,7 @@ void Null_Init([[maybe_unused]] Section *sec) {
 // forward declaration
 static void increase_ticks();
 
-static Bitu Normal_Loop()
+static Bitu normal_loop()
 {
 	Bits ret;
 
@@ -155,9 +155,9 @@ static Bitu Normal_Loop()
 				if (ret >= CB_MAX) {
 					return 0;
 				}
-				Bitu blah = (*Callback_Handlers[ret])();
-				if (blah) {
-					return blah;
+				Bitu result = (*Callback_Handlers[ret])();
+				if (result) {
+					return result;
 				}
 			}
 #if C_DEBUG
@@ -416,12 +416,14 @@ const char* DOSBOX_GetDetailedVersion() noexcept
 	return version;
 }
 
-void DOSBOX_SetLoop(LoopHandler * handler) {
-	loop=handler;
+void DOSBOX_SetLoop(LoopHandler* handler)
+{
+	loop = handler;
 }
 
-void DOSBOX_SetNormalLoop() {
-	loop=Normal_Loop;
+void DOSBOX_SetNormalLoop()
+{
+	loop = normal_loop;
 }
 
 void DOSBOX_RunMachine()
@@ -517,7 +519,7 @@ static void DOSBOX_RealInit(Section* sec)
 	ticks.last   = GetTicks();
 	ticks.locked = false;
 
-	DOSBOX_SetLoop(&Normal_Loop);
+	DOSBOX_SetNormalLoop();
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");
 
