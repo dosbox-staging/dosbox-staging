@@ -262,7 +262,7 @@ struct SDL_Block {
 
 		// in ms, for use with PIC timers
 		double period_ms      = 0.0;
-		float max_dupe_frames = 0.0f;
+		float max_vfr_no_present_frame_count = 0.0f;
 
 		// same but in us, for use with chrono
 		int period_us       = 0;

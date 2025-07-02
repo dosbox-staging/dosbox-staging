@@ -992,7 +992,8 @@ static void setup_presentation_mode()
 
 	// Calculate the maximum number of duplicate frames before presenting.
 	constexpr uint16_t MinRateHz = 10;
-	sdl.frame.max_dupe_frames    = static_cast<float>(refresh_rate) / MinRateHz;
+	sdl.frame.max_vfr_no_present_frame_count = static_cast<float>(refresh_rate) /
+	                                           MinRateHz;
 
 	const auto vsync_is_on = is_vsync_enabled();
 
@@ -2366,14 +2367,13 @@ static void maybe_present_frame() {
 		sdl.frame.present();
 
 	} else {
-		// Helper lambda indicating whether the frame should be
-		// presented. Returns true if the frame has been updated or if
-		// the limit of sequentially skipped duplicate frames has been
-		// reached.
+		// Returns true if the frame has been updated or if the limit of
+		// sequentially skipped duplicate frames has been reached.
 		auto vfr_should_present = []() {
-			static uint16_t dupe_tally = 0;
-			if (sdl.updating || ++dupe_tally > sdl.frame.max_dupe_frames) {
-				dupe_tally = 0;
+			static int no_present_frame_count = 0;
+			if (sdl.updating || ++no_present_frame_count >
+										sdl.frame.max_vfr_no_present_frame_count) {
+				no_present_frame_count = 0;
 				return true;
 			}
 			return false;
