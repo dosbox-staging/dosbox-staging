@@ -1,4 +1,4 @@
-add_library(libints STATIC
+target_sources(libdosboxcommon PRIVATE
   bios.cpp
   bios_disk.cpp
   bios_keyboard.cpp
@@ -14,9 +14,4 @@ add_library(libints STATIC
   int10_vesa.cpp
   int10_video_state.cpp
   int10_vptable.cpp
-  xms.cpp
-)
-
-target_link_libraries(libints PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+  xms.cpp)

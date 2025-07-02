@@ -1,9 +1,11 @@
-add_library(libdebug STATIC
+set(DEBUGGER_SRC
   debug.cpp
   debug_disasm.cpp
-  debug_gui.cpp
-)
+  debug_gui.cpp)
 
-target_link_libraries(libdebug PRIVATE
-  libpdcurses $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+target_sources(libdosboxcommon PRIVATE
+  debug.cpp
+  debug_disasm.cpp
+  debug_gui.cpp)
+  
+target_link_libraries(libdosboxcommon PRIVATE libpdcurses)

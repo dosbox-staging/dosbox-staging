@@ -1,4 +1,4 @@
-add_library(libcapture STATIC
+target_sources(libdosboxcommon PRIVATE 
   capture.cpp
   capture_audio.cpp
   capture_midi.cpp
@@ -8,14 +8,8 @@ add_library(libcapture STATIC
   image/image_decoder.cpp
   image/image_saver.cpp
   image/image_scaler.cpp
-  image/png_writer.cpp
-)
+  image/png_writer.cpp)
 
-find_package(PNG REQUIRED)
-target_link_libraries(libcapture PRIVATE PNG::PNG)
-
-target_link_libraries(libcapture PRIVATE
-  loguru
+target_link_libraries(libdosboxcommon PRIVATE 
   zmbv
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+  PNG::PNG)

@@ -1,4 +1,4 @@
-add_library(libmisc STATIC
+target_sources(libdosboxcommon PRIVATE
   ansi_code_markup.cpp
   cross.cpp
   ethernet.cpp
@@ -11,18 +11,16 @@ add_library(libmisc STATIC
   host_locale_macos.cpp
   host_locale_posix.cpp
   host_locale_win32.cpp
-  messages.cpp
   pacer.cpp
   programs.cpp
   rwqueue.cpp
   setup.cpp
   string_utils.cpp
   support.cpp
-  unicode.cpp
-)
+  unicode.cpp)
 
-target_include_directories(libmisc PRIVATE ../libs/include)
+target_sources(dosbox PRIVATE messages.cpp)
 
-target_link_libraries(libmisc PRIVATE
-  libwhereami $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-)
+target_include_directories(libdosboxcommon PRIVATE ../libs/include)
+target_link_libraries(libdosboxcommon PRIVATE libwhereami)
+

@@ -1,1 +1,1 @@
-add_library(libfpu STATIC fpu.cpp)
+target_sources(libdosboxcommon PRIVATE fpu.cpp)

@@ -1,4 +1,4 @@
-add_library(libcpu STATIC
+target_sources(libdosboxcommon PRIVATE 
   callback.cpp
   core_dyn_x86.cpp
   core_dynrec.cpp
@@ -10,14 +10,6 @@ add_library(libcpu STATIC
   flags.cpp
   mmx.cpp
   modrm.cpp
-  paging.cpp
-)
+  paging.cpp)
 
-target_link_libraries(libcpu PRIVATE
-  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-  simde
-)
-
-if (C_DEBUG)
-	target_link_libraries(libcpu PRIVATE libdebug)
-endif()
+target_link_libraries(libdosboxcommon PRIVATE simde)
