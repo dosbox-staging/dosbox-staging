@@ -109,8 +109,10 @@ jobs:
           cmake ${{ matrix.conf.cmake_flags }} --preset ${{ matrix.conf.cmake_preset }}
           cmake --build --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee build.log
 
-#      - name: Run tests
-#        run:  TODO
+      - name: Run tests
+        run: |
+          set -xo pipefail
+          ctest --preset ${{ matrix.conf.cmake_preset }} 2>&1 | tee tests.log
 
       - name: Summarize warnings
         env:
