@@ -65,7 +65,7 @@ constexpr char TEST_DIR[] = "tests/files/no_path";
 struct CreateDirTest : public testing::Test {
 	~CreateDirTest() {
 		if (path_exists(TEST_DIR))
-			rmdir(TEST_DIR);
+			remove_dir(TEST_DIR);
 	}
 };
 
