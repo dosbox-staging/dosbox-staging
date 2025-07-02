@@ -122,9 +122,15 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
-	bool initialized     = false;
-	bool active          = false; // If this isn't set don't draw
-	bool updating        = false;
+	bool initialized = false;
+
+	// If this isn't set don't draw
+	bool active = false;
+
+	// It seems this is only set to true when updating the emulated
+	// framebuffer has been completed, so it's time to present the frame.
+	bool updating = false;
+
 	bool resizing_window = false;
 	bool wait_on_error   = false;
 
