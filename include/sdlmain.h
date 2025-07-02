@@ -86,10 +86,10 @@
 #define SDL_NOFRAME 0x00000020
 
 // Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void(const uint16_t*);
+using update_frame_buffer_f = void();
 using present_frame_f       = void();
 
-constexpr void update_frame_noop([[maybe_unused]] const uint16_t*)
+constexpr void update_frame_noop()
 {
 	// no-op
 }
@@ -98,14 +98,6 @@ static inline void present_frame_noop()
 {
 	// no-op
 }
-
-enum class FrameMode {
-	// Constant frame rate, as defined by the emulated system
-	Cfr,
-
-	// Variable frame rate, as defined by the emulated system
-	Vfr
-};
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
@@ -127,8 +119,8 @@ struct SDL_Block {
 	// If this isn't set don't draw
 	bool active = false;
 
-	// It seems this is only set to true when updating the emulated
-	// framebuffer has been completed, so it's time to present the frame.
+	// True when the contents of the framebuffer has been changed in the current frame.
+	// E.g., we only need to upload new texture data when this flag is true in GFX_EndUpdate().
 	bool updating = false;
 
 	bool resizing_window = false;
@@ -257,18 +249,12 @@ struct SDL_Block {
 	struct {
 		present_frame_f* present      = present_frame_noop;
 		update_frame_buffer_f* update = update_frame_noop;
-		FrameMode desired_mode        = {};
-		FrameMode mode                = {};
 
-		// in ms, for use with PIC timers
-		double period_ms      = 0.0;
-		float max_dupe_frames = 0.0f;
+		PresentationMode mode = {};
 
-		// same but in us, for use with chrono
-		int period_us       = 0;
-		int period_us_early = 0;
-		int period_us_late  = 0;
-	} frame = {};
+		int frame_time_us           = 0;
+		int early_present_window_us = 0;
+	} presentation = {};
 
 	bool use_exact_window_resolution = false;
 
