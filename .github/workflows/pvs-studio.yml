@@ -74,7 +74,7 @@ jobs:
           # - https://pvs-studio.com/en/docs/manual/0036/
           # - https://github.com/viva64/pvs-studio-cmake-examples
           #
-          pvs-studio-analyzer trace -- cmake --build --preset debug-linux-vcpkg
+          pvs-studio-analyzer trace -- cmake --build --preset debug-linux-vcpkg --target dosbox
 
       - name: Analyze
         run: |
