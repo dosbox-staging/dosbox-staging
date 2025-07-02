@@ -82,19 +82,18 @@ jobs:
           echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
           echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
 
-      # TODO run tests
-      #- name:  Build release
-      #  if:    ${{ !matrix.conf.debugger }}
-      #  shell: pwsh
-      #  run: |
-      #    TODO
-
       - name:  Build release
         if:    ${{ !matrix.conf.debugger }}
         shell: pwsh
         run: |
           cmake --preset release-windows
           cmake --build --preset release-windows 2>&1 | Tee-Object -FilePath build.log
+
+      - name:  Run tests
+        if:    ${{ !matrix.conf.debugger }}
+        shell: pwsh
+        run: |
+          ctest --preset release-windows 2>&1 | Tee-Object -FilePath test.log
 
       - name:  Build release with debugger
         if:    ${{ matrix.conf.debugger }}
