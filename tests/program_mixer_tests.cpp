@@ -43,7 +43,7 @@ static void assert_success(const std::vector<std::string>& args,
 
 	if (auto error = std::get_if<Error>(&result); error) {
 		printf("*** TEST FAILED: ");
-		printf(error->message.c_str());
+		printf("%s", error->message.c_str());
 		printf("\n");
 		FAIL();
 	} else {
@@ -61,7 +61,7 @@ static void assert_failure(const std::vector<std::string>& args,
 	                                  AllChannelNames);
 
 	if (auto error = std::get_if<Error>(&result); error) {
-		LOG_WARNING(error->message.c_str());
+		LOG_WARNING("%s", error->message.c_str());
 		EXPECT_EQ(error->type, expected_error_type);
 	} else {
 		printf("*** TEST FAILED: No error reported");
