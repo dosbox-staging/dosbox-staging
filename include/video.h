@@ -85,6 +85,15 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
+// TODO update descriptions
+enum class PresentationMode {
+	// Constant frame rate, always at the emulated DOS rate
+	DosRate,
+
+	// Constant frame rate, synced to the host rate
+	HostRate
+};
+
 // Graphics standards ordered by time of introduction (and roughly by
 // their capabilities)
 enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
@@ -375,8 +384,14 @@ void GFX_RequestExit(const bool requested);
 void GFX_Start(void);
 void GFX_Stop(void);
 void GFX_SwitchFullScreen(void);
+
+// Called at the start of every unique frame (when there have been changes to the framebuffer).
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
+
+// Called at the end of every frame, regardless of whether there have been changes to
+// the framebuffer or not.
 void GFX_EndUpdate( const uint16_t *changedLines );
+
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
 
@@ -425,5 +440,8 @@ float GFX_GetDpiScaleFactor();
 RenderingBackend GFX_GetRenderingBackend();
 
 double GFX_GetHostRefreshRate();
+
+PresentationMode GFX_GetPresentationMode();
+void GFX_MaybePresentFrame();
 
 #endif
