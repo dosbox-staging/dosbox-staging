@@ -1553,57 +1553,59 @@ static Bitu int33_handler()
 	MouseDriverState state(*state_segment);
 
 	switch (reg_ax) {
-	// MS MOUSE v1.0+ - reset driver and read status
 	case 0x00:
+		// MS MOUSE v1.0+ - reset driver and read status
 		reset_hardware();
 		[[fallthrough]];
-	// MS MOUSE v6.0+ - software reset
 	case 0x21:
+		// MS MOUSE v6.0+ - software reset
 		reg_ax = 0xffff; // mouse driver installed
 		reg_bx = (get_num_buttons() == 2) ? 0xffff : get_num_buttons();
 		reset();
 		break;
-	// MS MOUSE v1.0+ - show mouse cursor
-	case 0x01: {
-		const auto hidden = state.GetHidden();
-		if (hidden) {
-			state.SetHidden(hidden - 1);
+	case 0x01:
+		// MS MOUSE v1.0+ - show mouse cursor
+		{
+			const auto hidden = state.GetHidden();
+			if (hidden) {
+				state.SetHidden(hidden - 1);
+			}
+			state.SetUpdateRegionY(1, -1); // offscreen
+			draw_cursor();
+			break;
 		}
-		state.SetUpdateRegionY(1, -1); // offscreen
-		draw_cursor();
-		break;
-	}
-	// MS MOUSE v1.0+ - hide mouse cursor
 	case 0x02:
+		// MS MOUSE v1.0+ - hide mouse cursor
 		restore_cursor_background();
 		state.SetHidden(state.GetHidden() + 1);
-
 		break;
-	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button state
 	case 0x03:
+		// MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button state
 		reg_bl = state.GetButtons()._data;
-		reg_bh = get_reset_wheel_8bit(); // CuteMouse clears wheel
-		                                 // counter too
+		// CuteMouse clears the wheel counter too
+		reg_bh = get_reset_wheel_8bit();
 		reg_cx = get_pos_x();
 		reg_dx = get_pos_y();
 		break;
-	// MS MOUSE v1.0+ - position mouse cursor
-	case 0x04: {
-		// If position isn't different from current position, don't
-		// change it. (position is rounded so numbers get lost when the
-		// rounded number is set) (arena/simulation Wolf)
-		if (reg_to_signed16(reg_cx) != get_pos_x()) {
-			state.SetPosX(static_cast<float>(reg_cx));
+	case 0x04:
+		// MS MOUSE v1.0+ - position mouse cursor
+		{
+			// If position isn't different from current position,
+			// don't change it.
+			// Position is rounded so numbers get lost when the
+			// rounded number is set (arena/simulation Wolf)
+			if (reg_to_signed16(reg_cx) != get_pos_x()) {
+				state.SetPosX(static_cast<float>(reg_cx));
+			}
+			if (reg_to_signed16(reg_dx) != get_pos_y()) {
+				state.SetPosY(static_cast<float>(reg_dx));
+			}
+			limit_coordinates();
+			draw_cursor();
+			break;
 		}
-		if (reg_to_signed16(reg_dx) != get_pos_y()) {
-			state.SetPosY(static_cast<float>(reg_dx));
-		}
-		limit_coordinates();
-		draw_cursor();
-		break;
-	}
-	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel data
 	case 0x05: {
+		// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button press / wheel data
 		const uint16_t idx = reg_bx; // button index
 		if (idx == 0xffff && state.GetWheelApi() && has_wheel()) {
 			// 'magic' index for checking wheel instead of button
@@ -1627,110 +1629,116 @@ static Bitu int33_handler()
 		}
 		break;
 	}
-	// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button release / wheel data
-	case 0x06: {
-		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.GetWheelApi() && has_wheel()) {
-			// 'magic' index for checking wheel instead of button
-			reg_bx = get_reset_wheel_16bit();
-			reg_cx = state.GetLastWheelMovedX();
-			reg_dx = state.GetLastWheelMovedY();
-		} else if (idx < get_num_buttons()) {
-			reg_ax = state.GetButtons()._data;
-			reg_bx = state.GetTimesReleased(idx);
-			reg_cx = state.GetLastReleasedX(idx);
-			reg_dx = state.GetLastReleasedY(idx);
+	case 0x06:
+		// MS MOUSE v1.0+ / WheelAPI v1.0+ - get button release / wheel data
+		{
+			const uint16_t idx = reg_bx; // button index
+			if (idx == 0xffff && state.GetWheelApi() && has_wheel()) {
+				// 'magic' index for checking wheel instead of button
+				reg_bx = get_reset_wheel_16bit();
+				reg_cx = state.GetLastWheelMovedX();
+				reg_dx = state.GetLastWheelMovedY();
+			} else if (idx < get_num_buttons()) {
+				reg_ax = state.GetButtons()._data;
+				reg_bx = state.GetTimesReleased(idx);
+				reg_cx = state.GetLastReleasedX(idx);
+				reg_dx = state.GetLastReleasedY(idx);
 
-			state.SetTimesReleased(idx, 0);
-		} else {
-			// unsupported - try to do something sane
-			// TODO: Check the real driver behavior
-			reg_ax = state.GetButtons()._data;
-			reg_bx = 0;
-			reg_cx = 0;
-			reg_dx = 0;
+				state.SetTimesReleased(idx, 0);
+			} else {
+				// unsupported - try to do something sane
+				// TODO: Check the real driver behavior
+				reg_ax = state.GetButtons()._data;
+				reg_bx = 0;
+				reg_cx = 0;
+				reg_dx = 0;
+			}
+			break;
 		}
-		break;
-	}
-	// MS MOUSE v1.0+ - define horizontal cursor range
-	case 0x07: {
-		// Lemmings set 1-640 and wants that. Iron Seed set 0-640. but
-		// doesn't like 640. Iron Seed works if newvideo mode with mode
-		// 13 sets 0-639. Larry 6 actually wants newvideo mode with mode
-		// 13 to set it to 0-319.
-		const auto min = std::min(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
-		const auto max = std::max(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
+	case 0x07:
+		// MS MOUSE v1.0+ - define horizontal cursor range
+		{
+			// Lemmings set 1-640 and wants that. Iron Seed set
+			// 0-640, but doesn't like 640. Iron Seed works if new
+			// video mode with mode 13 sets 0-639. Larry 6 actually
+			// wants new video mode with mode 13 to set it to 0-319.
+			const auto min = std::min(reg_to_signed16(reg_cx),
+			                          reg_to_signed16(reg_dx));
+			const auto max = std::max(reg_to_signed16(reg_cx),
+			                          reg_to_signed16(reg_dx));
 
-		state.SetMinPosX(min);
-		state.SetMaxPosX(max);
-		// Battle Chess wants this
-		auto pos_x = state.GetPosX();
-		pos_x = std::clamp(pos_x,
-                                   static_cast<float>(min),
-                                   static_cast<float>(max));
-		// Or alternatively this:
-		// pos_x = (max - min + 1) / 2;
-		state.SetPosX(pos_x);
-		break;
-	}
-	// MS MOUSE v1.0+ - define vertical cursor range
-	case 0x08: {
-		// not sure what to take instead of the CurMode (see case 0x07
-		// as well) especially the cases where sheight= 400 and we set
-		// it with the mouse_reset to 200 disabled it at the moment.
-		// Seems to break syndicate who want 400 in mode 13
-		const auto min = std::min(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
-		const auto max = std::max(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
-
-		state.SetMinPosY(min);
-		state.SetMaxPosY(max);
-		// Battle Chess wants this
-		auto pos_y = state.GetPosY();
-		pos_y = std::clamp(pos_y,
-                                   static_cast<float>(min),
-                                   static_cast<float>(max));
-		// Or alternatively this:
-		// pos_x = (max - min + 1) / 2;
-		state.SetPosY(pos_y);
-		break;
-	}
-	// MS MOUSE v3.0+ - define GFX cursor
-	case 0x09: {
-		auto clamp_hot = [](const uint16_t reg, const int cursor_size) {
-			return std::clamp(reg_to_signed16(reg),
-			                  static_cast<int16_t>(-cursor_size),
-			                  static_cast<int16_t>(cursor_size));
-		};
-
-		uint16_t tmp[CursorSize] = {0};
-
-		PhysPt src = SegPhys(es) + reg_dx;
-		MEM_BlockRead(src, tmp, CursorSize * 2);
-		for (auto idx = 0; idx < CursorSize; ++idx) {
-			state.SetUserDefScreenMask(idx, tmp[idx]);
+			state.SetMinPosX(min);
+			state.SetMaxPosX(max);
+			// Battle Chess wants this
+			auto pos_x = state.GetPosX();
+			pos_x = std::clamp(pos_x,
+	                                   static_cast<float>(min),
+	                                   static_cast<float>(max));
+			// Or alternatively this:
+			// pos_x = (max - min + 1) / 2;
+			state.SetPosX(pos_x);
+			break;
 		}
+	case 0x08:
+		// MS MOUSE v1.0+ - define vertical cursor range
+		{
+			// Not sure what to take instead of the CurMode (see
+			// case 0x07 as well) especially the cases where
+			// sheight=400 and we set it with the mouse_reset to 200
+			// disabled it at the moment.
+			// Seems to break Syndicate who want 400 in mode 13
+			const auto min = std::min(reg_to_signed16(reg_cx),
+			                          reg_to_signed16(reg_dx));
+			const auto max = std::max(reg_to_signed16(reg_cx),
+			                          reg_to_signed16(reg_dx));
 
-		src += CursorSize * 2;
-		MEM_BlockRead(src, tmp, CursorSize * 2);
-		for (auto idx = 0; idx < CursorSize; ++idx) {
-			state.SetUserDefCursorMask(idx, tmp[idx]);
+			state.SetMinPosY(min);
+			state.SetMaxPosY(max);
+			// Battle Chess wants this
+			auto pos_y = state.GetPosY();
+			pos_y = std::clamp(pos_y,
+	                                   static_cast<float>(min),
+	                                   static_cast<float>(max));
+			// Or alternatively this:
+			// pos_x = (max - min + 1) / 2;
+			state.SetPosY(pos_y);
+			break;
 		}
+	case 0x09: 
+		// MS MOUSE v3.0+ - define GFX cursor
+		{
+			auto clamp_hot = [](const uint16_t reg, const int cursor_size) {
+				return std::clamp(reg_to_signed16(reg),
+				                  static_cast<int16_t>(-cursor_size),
+				                  static_cast<int16_t>(cursor_size));
+			};
 
-		state.SetUserScreenMask(true);
-		state.SetUserCursorMask(true);
-		state.SetHotX(clamp_hot(reg_bx, CursorSize));
-		state.SetHotY(clamp_hot(reg_cx, CursorSize));
-		state.SetCursorType(MouseCursor::Text);
+			uint16_t tmp[CursorSize] = {0};
 
-		draw_cursor();
-		break;
-	}
-	// MS MOUSE v3.0+ - define text cursor
+			PhysPt src = SegPhys(es) + reg_dx;
+			MEM_BlockRead(src, tmp, CursorSize * 2);
+			for (auto idx = 0; idx < CursorSize; ++idx) {
+				state.SetUserDefScreenMask(idx, tmp[idx]);
+			}
+
+			src += CursorSize * 2;
+			MEM_BlockRead(src, tmp, CursorSize * 2);
+			for (auto idx = 0; idx < CursorSize; ++idx) {
+				state.SetUserDefCursorMask(idx, tmp[idx]);
+			}
+
+			state.SetUserScreenMask(true);
+			state.SetUserCursorMask(true);
+			state.SetHotX(clamp_hot(reg_bx, CursorSize));
+			state.SetHotY(clamp_hot(reg_cx, CursorSize));
+			state.SetCursorType(MouseCursor::Text);
+
+			draw_cursor();
+			break;
+		}
 	case 0x0a:
+		// MS MOUSE v3.0+ - define text cursor	
+		//
 		// TODO: shouldn't we use MouseCursor::Text, not
 		// MouseCursor::Software?
 		state.SetCursorType(reg_bx ? MouseCursor::Hardware
@@ -1742,54 +1750,56 @@ static Bitu int33_handler()
 		}
 		draw_cursor();
 		break;
-	// MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
 	case 0x27:
+		// MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
 		reg_ax = state.GetTextAndMask();
 		reg_bx = state.GetTextXorMask();
 		[[fallthrough]];
-	// MS MOUSE v1.0+ - read motion data
 	case 0x0b:
+		// MS MOUSE v1.0+ - read motion data
 		reg_cx = mickey_counter_to_reg16(state.GetMickeyCounterX());
 		reg_dx = mickey_counter_to_reg16(state.GetMickeyCounterY());
 		// TODO: We might be losing partial mickeys, to be investigated
 		state.SetMickeyCounterX(0.0f);
 		state.SetMickeyCounterY(0.0f);
 		break;
-	// MS MOUSE v1.0+ - define user callback parameters
 	case 0x0c:
+		// MS MOUSE v1.0+ - define user callback parameters
 		state.SetUserCallbackMask(reg_cx);
 		state.SetUserCallbackSegment(SegValue(es));
 		state.SetUserCallbackOffset(reg_dx);
 		update_driver_active();
 		break;
-	// MS MOUSE v1.0+ - light pen emulation on
 	case 0x0d:
+		// MS MOUSE v1.0+ - light pen emulation on
+		//
 		// Both buttons down = pen pressed, otherwise pen considered
 		// off-screen
 		// TODO: maybe implement light pen using SDL touch events?
 		LOG_WARNING("MOUSE (DOS): Light pen emulation not implemented");
 		break;
-	// MS MOUSE v1.0+ - light pen emulation off
 	case 0x0e:
+		// MS MOUSE v1.0+ - light pen emulation off
+		//
 		// Although light pen emulation is not implemented, it is OK for
 		// the application to only disable it (like 'The Settlers' game
 		// is doing during initialization)
 		break;
-	// MS MOUSE v1.0+ - define mickey/pixel rate
 	case 0x0f:
+		// MS MOUSE v1.0+ - define mickey/pixel rate
 		set_mickey_pixel_rate(reg_to_signed16(reg_cx),
 		                      reg_to_signed16(reg_dx));
 		break;
-	// MS MOUSE v1.0+ - define screen region for updating
 	case 0x10:
+		// MS MOUSE v1.0+ - define screen region for updating
 		state.SetUpdateRegionX(0, reg_to_signed16(reg_cx));
 		state.SetUpdateRegionY(0, reg_to_signed16(reg_dx));
 		state.SetUpdateRegionX(1, reg_to_signed16(reg_si));
 		state.SetUpdateRegionY(1, reg_to_signed16(reg_di));
 		draw_cursor();
 		break;
-	// WheelAPI v1.0+ / Genius Mouse - get mouse capabilities
 	case 0x11:
+		// WheelAPI v1.0+ / Genius Mouse - get mouse capabilities
 		if (is_win386_mode && WINDOWS_GetVmId() == WindowsKernelVmId) {
 			// The only software, which probes for the wheel API
 			// while running in the context of Microsoft Windows
@@ -1821,89 +1831,94 @@ static Bitu int33_handler()
 			reg_bx = get_num_buttons();
 		}
 		break;
-	// MS MOUSE - set large graphics cursor block
 	case 0x12:
+		// MS MOUSE - set large graphics cursor block
 		LOG_WARNING("MOUSE (DOS): Large graphics cursor block not implemented");
 		break;
-	// MS MOUSE v5.0+ - set double-speed threshold
 	case 0x13:
+		// MS MOUSE v5.0+ - set double-speed threshold
 		set_double_speed_threshold(reg_bx);
 		break;
-	// MS MOUSE v3.0+ - exchange event-handler
-	case 0x14: {
-		const auto old_segment = state.GetUserCallbackSegment();
-		const auto old_offset  = state.GetUserCallbackOffset();
-		const auto old_mask    = state.GetUserCallbackMask();
-		// Set new values
-		state.SetUserCallbackMask(reg_cx);
-		state.SetUserCallbackSegment(SegValue(es));
-		state.SetUserCallbackOffset(reg_dx);
-		update_driver_active();
-		// Return old values
-		reg_cx = old_mask;
-		reg_dx = old_offset;
-		SegSet16(es, old_segment);
-		break;
-	}
-	// MS MOUSE v6.0+ - get driver storage space requirements
+	case 0x14:
+		// MS MOUSE v3.0+ - exchange event-handler
+		{
+			const auto old_segment = state.GetUserCallbackSegment();
+			const auto old_offset  = state.GetUserCallbackOffset();
+			const auto old_mask    = state.GetUserCallbackMask();
+			// Set new values
+			state.SetUserCallbackMask(reg_cx);
+			state.SetUserCallbackSegment(SegValue(es));
+			state.SetUserCallbackOffset(reg_dx);
+			update_driver_active();
+			// Return old values
+			reg_cx = old_mask;
+			reg_dx = old_offset;
+			SegSet16(es, old_segment);
+			break;
+		}
 	case 0x15:
+		// MS MOUSE v6.0+ - get driver storage space requirements
 		reg_bx = MouseDriverState::GetSize();
 		break;
-	// MS MOUSE v6.0+ - save driver state
-	case 0x16: {
-		const auto tmp = state.ReadBinaryData();
-		MEM_BlockWrite(SegPhys(es) + reg_dx, tmp.data(), tmp.size());
-		break;
-	}
-	// MS MOUSE v6.0+ - load driver state
-	case 0x17: {
-		std::vector<uint8_t> tmp = {};
-		tmp.resize(MouseDriverState::GetSize());
-		MEM_BlockRead(SegPhys(es) + reg_dx, tmp.data(), tmp.size());
-		state.WriteBinaryData(tmp);
+	case 0x16:
+		// MS MOUSE v6.0+ - save driver state
+		{
+			const auto tmp = state.ReadBinaryData();
+			MEM_BlockWrite(SegPhys(es) + reg_dx, tmp.data(), tmp.size());
+			break;
+		}
+	case 0x17:
+		// MS MOUSE v6.0+ - load driver state
+		{
+			std::vector<uint8_t> tmp = {};
+			tmp.resize(MouseDriverState::GetSize());
+			MEM_BlockRead(SegPhys(es) + reg_dx, tmp.data(), tmp.size());
+			state.WriteBinaryData(tmp);
 
-		pending.ResetCounters();
-		update_driver_active();
-		set_sensitivity(state.GetSensitivityX(),
-		                state.GetSensitivityY(),
-		                state.GetUnknownValue01());
-		// TODO: we should probably also fake an event for mouse
-		// movement, redraw cursor, etc.
-		break;
-	}
-	// MS MOUSE v6.0+ - set alternate mouse user handler
+			pending.ResetCounters();
+			update_driver_active();
+			set_sensitivity(state.GetSensitivityX(),
+			                state.GetSensitivityY(),
+			                state.GetUnknownValue01());
+			// TODO: we should probably also fake an event for mouse
+			// movement, redraw cursor, etc.
+			break;
+		}
 	case 0x18:
 	case 0x19:
+		// MS MOUSE v6.0+ - set alternate mouse user handler
 		LOG_WARNING("MOUSE (DOS): Alternate mouse user handler not implemented");
 		break;
-	// MS MOUSE v6.0+ - set mouse sensitivity
 	case 0x1a:
+		// MS MOUSE v6.0+ - set mouse sensitivity
+		//
 		// NOTE: Ralf Brown Interrupt List (and some other sources)
 		// claim, that this should duplicate functions 0x0f and 0x13 -
 		// this is not true at least for Mouse Systems driver v8.00 and
 		// IBM/Microsoft driver v8.20
 		set_sensitivity(reg_bx, reg_cx, reg_dx);
 		break;
-	//  MS MOUSE v6.0+ - get mouse sensitivity
 	case 0x1b:
+		//  MS MOUSE v6.0+ - get mouse sensitivity
 		reg_bx = state.GetSensitivityX();
 		reg_cx = state.GetSensitivityY();
 		reg_dx = state.GetUnknownValue01();
 		break;
-	// MS MOUSE v6.0+ - set interrupt rate
 	case 0x1c:
+		// MS MOUSE v6.0+ - set interrupt rate
 		set_interrupt_rate(reg_bx);
 		break;
-	// MS MOUSE v6.0+ - set display page number
 	case 0x1d:
+		// MS MOUSE v6.0+ - set display page number
 		state.SetPage(reg_bl);
 		break;
-	// MS MOUSE v6.0+ - get display page number
 	case 0x1e:
+		// MS MOUSE v6.0+ - get display page number
 		reg_bx = state.GetPage();
 		break;
-	// MS MOUSE v6.0+ - disable mouse driver
 	case 0x1f:
+		// MS MOUSE v6.0+ - disable mouse driver
+		//
 		// ES:BX old mouse driver Zero at the moment TODO
 		reg_bx = 0;
 		SegSet16(es, 0);
@@ -1920,8 +1935,8 @@ static Bitu int33_handler()
 		// - 3rd party drivers I tested (A4Tech 8.04a, Genius 9.20,
 		//   Mouse Systems 8.00, DR-DOS driver 1.1) never return anything
 		break;
-	// MS MOUSE v6.0+ - enable mouse driver
 	case 0x20:
+		// MS MOUSE v6.0+ - enable mouse driver
 		state.SetEnabled(true);
 		state.SetOldHidden(state.GetHidden());
 		if (mouse_config.dos_driver_modern) {
@@ -1930,52 +1945,58 @@ static Bitu int33_handler()
 			reg_ax = 0xffff;
 		}
 		break;
-	// MS MOUSE v6.0+ - set language for messages
 	case 0x22:
+		// MS MOUSE v6.0+ - set language for messages
+		//
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
 		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
 		// Italian
 		state.SetLanguage(reg_bx);
 		break;
-	// MS MOUSE v6.0+ - get language for messages
-	case 0x23: reg_bx = state.GetLanguage(); break;
-	// MS MOUSE v6.26+ - get software version, mouse type, and IRQ number
+	case 0x23:
+		// MS MOUSE v6.0+ - get language for messages
+		reg_bx = state.GetLanguage();
+		break;
 	case 0x24:
+		// MS MOUSE v6.26+ - get software version, mouse type, and IRQ
+		// number
 		reg_bh = DriverVersionMajor;
 		reg_bl = DriverVersionMinor;
 		// 1 = bus, 2 = serial, 3 = inport, 4 = PS/2, 5 = HP
 		reg_ch = 0x04; // PS/2
 		reg_cl = 0; // PS/2 mouse; for others it would be an IRQ number
 		break;
-	// MS MOUSE v6.26+ - get general driver information
-	case 0x25: {
-		// See https://github.com/FDOS/mouse/blob/master/int33.lst
-		// AL = count of currently-active Mouse Display Drivers (MDDs)
-		reg_al = 1;
-		// AH - bits 0-3: interrupt rate
-		//    - bits 4-5: current cursor type
-		//    - bit 6: 1 = driver is newer integrated type
-		//    - bit 7: 1 = loaded as device driver rather than TSR
-		constexpr auto IntegratedDriver = (1 << 6);
-		const auto cursor_type = enum_val(state.GetCursorType());
-		reg_ah = static_cast<uint8_t>(IntegratedDriver | (cursor_type << 4) |
-		                              get_interrupt_rate());
-		// BX - cursor lock flag for OS/2 to prevent reentrancy problems
-		// CX - mouse code active flag (for OS/2)
-		// DX - mouse driver busy flag (for OS/2)
-		reg_bx = 0;
-		reg_cx = 0;
-		reg_dx = 0;
-		break;
-	}
-	// MS MOUSE v6.26+ - get maximum virtual coordinates
+	case 0x25:
+		// MS MOUSE v6.26+ - get general driver information
+		{
+			// See https://github.com/FDOS/mouse/blob/master/int33.lst
+			// AL = count of currently-active Mouse Display Drivers (MDDs)
+			reg_al = 1;
+			// AH - bits 0-3: interrupt rate
+			//    - bits 4-5: current cursor type
+			//    - bit 6: 1 = driver is newer integrated type
+			//    - bit 7: 1 = loaded as device driver rather than TSR
+			constexpr auto IntegratedDriver = (1 << 6);
+			const auto cursor_type = enum_val(state.GetCursorType());
+			reg_ah = static_cast<uint8_t>(IntegratedDriver | (cursor_type << 4) |
+			                              get_interrupt_rate());
+			// BX - cursor lock flag for OS/2 to prevent reentrancy problems
+			// CX - mouse code active flag (for OS/2)
+			// DX - mouse driver busy flag (for OS/2)
+			reg_bx = 0;
+			reg_cx = 0;
+			reg_dx = 0;
+			break;
+		}
 	case 0x26:
+		// MS MOUSE v6.26+ - get maximum virtual coordinates
 		reg_bx = (state.IsEnabled() ? 0x0000 : 0xffff);
 		reg_cx = signed_to_reg16(state.GetMaxPosX());
 		reg_dx = signed_to_reg16(state.GetMaxPosY());
 		break;
-	// MS MOUSE v7.0+ - set video mode
 	case 0x28:
+		// MS MOUSE v7.0+ - set video mode
+		//
 		// TODO: According to PC sourcebook
 		//       Entry:
 		//       CX = Requested video mode
@@ -1985,8 +2006,9 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Set video mode not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	// MS MOUSE v7.0+ - enumerate video modes
 	case 0x29:
+		// MS MOUSE v7.0+ - enumerate video modes
+		//
 		// TODO: According to PC sourcebook
 		//       Entry:
 		//       CX = 0 for first, != 0 for next
@@ -1996,8 +2018,9 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Enumerate video modes not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	// MS MOUSE v7.01+ - get cursor hot spot
 	case 0x2a:
+		// MS MOUSE v7.01+ - get cursor hot spot
+		//
 		// Microsoft uses a negative byte counter
 		// for cursor visibility
 		reg_al = static_cast<uint8_t>(-state.GetHidden());
@@ -2005,16 +2028,17 @@ static Bitu int33_handler()
 		reg_cx = signed_to_reg16(state.GetHotY());
 		reg_dx = 0x04; // PS/2 mouse type
 		break;
-	// MS MOUSE v7.0+ - load acceleration profiles
 	case 0x2b:
-	// MS MOUSE v7.0+ - get acceleration profiles
+		// MS MOUSE v7.0+ - load acceleration profiles
 	case 0x2c:
-	// MS MOUSE v7.0+ - select acceleration profile
+		// MS MOUSE v7.0+ - get acceleration profiles
 	case 0x2d:
-	// MS MOUSE v8.10+ - set acceleration profile names
+		// MS MOUSE v7.0+ - select acceleration profile
 	case 0x2e:
-	// MS MOUSE v7.05+ - get/switch accelleration profile
+		// MS MOUSE v8.10+ - set acceleration profile names
 	case 0x33:
+		// MS MOUSE v7.05+ - get/switch accelleration profile
+		//
 		// Input: CX = buffer length, ES:DX = buffer address
 		// Output: CX = bytes in buffer; buffer content:
 		//     offset 0x00 - mouse type and port
@@ -2036,25 +2060,25 @@ static Bitu int33_handler()
 		LOG_WARNING("MOUSE (DOS): Custom acceleration profiles not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	// MS MOUSE v7.02+ - mouse hardware reset
 	case 0x2f:
+		// MS MOUSE v7.02+ - mouse hardware reset
 		LOG_WARNING("MOUSE (DOS): Hardware reset not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	// MS MOUSE v7.04+ - get/set BallPoint information
 	case 0x30:
+		// MS MOUSE v7.04+ - get/set BallPoint information
 		LOG_WARNING("MOUSE (DOS): Get/set BallPoint information not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
-	// MS MOUSE v7.05+ - get current min/max virtual coordinates
 	case 0x31:
+		// MS MOUSE v7.05+ - get current min/max virtual coordinates
 		reg_ax = signed_to_reg16(state.GetMinPosX());
 		reg_bx = signed_to_reg16(state.GetMinPosY());
 		reg_cx = signed_to_reg16(state.GetMaxPosX());
 		reg_dx = signed_to_reg16(state.GetMaxPosY());
 		break;
-	// MS MOUSE v7.05+ - get active advanced functions
 	case 0x32:
+		// MS MOUSE v7.05+ - get active advanced functions
 		reg_ax = 0;
 		reg_bx = 0; // unused
 		reg_cx = 0; // unused
@@ -2078,50 +2102,53 @@ static Bitu int33_handler()
 		bit::set(reg_ah, b6); // function 0x26 supported
 		bit::set(reg_ah, b7); // function 0x25 supported
 		break;
-	// MS MOUSE v8.0+ - get initialization file
 	case 0x34:
+		// MS MOUSE v8.0+ - get initialization file
 		SegSet16(es, info_segment);
 		reg_dx = info_offset_ini_file;
 		break;
-	// MS MOUSE v8.10+ - LCD screen large pointer support
 	case 0x35:
+		// MS MOUSE v8.10+ - LCD screen large pointer support
 		LOG_WARNING("MOUSE (DOS): LCD screen large pointer support not implemented");
 		break;
-	// MS MOUSE - return pointer to copyright string
 	case 0x4d:
+		// MS MOUSE - return pointer to copyright string
 		SegSet16(es, info_segment);
 		reg_di = info_offset_copyright;
 		break;
-	// MS MOUSE - get version string
 	case 0x6d:
+		// MS MOUSE - get version string
 		SegSet16(es, info_segment);
 		reg_di = info_offset_version;
 		break;
-	// Mouse Systems - installation check
 	case 0x70:
-	// Mouse Systems 7.01+ - unknown functionality
-	// Genius Mouse 9.06+  - unknown functionality
+		// Mouse Systems - installation check
 	case 0x72:
-	// Mouse Systems 7.01+ - get button assignments
-	// VBADOS driver       - get driver info
+		// Mouse Systems 7.01+ - unknown functionality
+		// Genius Mouse 9.06+  - unknown functionality
 	case 0x73:
-	// Logitech CyberMan - get 3D position, orientation, and button status
+		// Mouse Systems 7.01+ - get button assignments
+		// VBADOS driver       - get driver info
 	case 0x5301:
-	// Logitech CyberMan - generate tactile feedback
+		// Logitech CyberMan - get 3D position, orientation, and button
+		// status
 	case 0x5330:
-	// Logitech CyberMan - exchange event handlers
+		// Logitech CyberMan - generate tactile feedback
 	case 0x53c0:
-	// Logitech CyberMan - get static device data and driver support status
-	case 0x53c1:		
-	// Logitech CyberMan - get dynamic device data
+		// Logitech CyberMan - exchange event handlers
+	case 0x53c1:	
+		// Logitech CyberMan - get static device data and driver support
+		// status	
 	case 0x53c2:
+		// Logitech CyberMan - get dynamic device data
+
 		// Do not print out any warnings for known 3rd party oem driver
 		// extensions - every software (except the one bound to the
 		// particular driver) should continue working correctly even if
 		// we completely ignore the call
 		break;
-	// Unknown function
 	default:
+		// Unknown function
 		LOG_WARNING("MOUSE (DOS): Interrupt 0x33 function 0x%04x not implemented",
 		            reg_ax);
 		break;
