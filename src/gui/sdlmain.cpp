@@ -3749,18 +3749,18 @@ static void maybe_present()
 	const auto curr_frame_time_us = GetTicksDiff(now_us, last_present_time_us);
 
 	// DOS rate, vsync off
-	if (curr_frame_time_us < sdl.frame.frame_time_us + 5000) {
-		const auto present_threshold_us = sdl.frame.frame_time_us - 3000;
+//	if (curr_frame_time_us < sdl.frame.frame_time_us + 5000) {
+//		const auto present_threshold_us = sdl.frame.frame_time_us - 3000;
 
-//	if (curr_frame_time_us < sdl.frame.frame_time_us - 500) {
-//
-//		auto over = curr_frame_time_us - sdl.frame.frame_time_us;
-//		if (over < 0) {
-//			over = 0;
-//		}
-//		while (GetTicksUsSince(last_present_time_us) < sdl.frame.frame_time_us + over) {
-//			;
-//		}
+	if (curr_frame_time_us < sdl.frame.frame_time_us - 1000) {
+
+		auto over = curr_frame_time_us - sdl.frame.frame_time_us;
+		if (over < 0) {
+			over = 0;
+		}
+		while (GetTicksUsSince(last_present_time_us) < sdl.frame.frame_time_us + over) {
+			;
+		}
 
 	// host rate, vsync off
 //	if (curr_frame_time_us < sdl.frame.frame_time_us + 500) {
@@ -3770,7 +3770,7 @@ static void maybe_present()
 //	if (curr_frame_time_us < sdl.frame.frame_time_us + 0) {
 //		const auto present_threshold_us = sdl.frame.frame_time_us - 3500;
 
-		if (curr_frame_time_us >= present_threshold_us) {
+//		if (curr_frame_time_us >= present_threshold_us) {
 			const auto t0 = GetTicksUs();
 			sdl.frame.present();
 			const auto t1 = GetTicksUs();
@@ -3784,7 +3784,7 @@ static void maybe_present()
 			}
 
 			last_present_time_us = t1;
-		}
+//		}
 	} else {
 		LOG_ERR("dropped 2");
 		last_present_time_us = now_us;
