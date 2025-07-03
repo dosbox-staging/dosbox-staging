@@ -769,3 +769,91 @@ void TIMER_Init(Section* sec)
 	test = new TIMER(sec);
 	sec->AddDestroyFunction(&TIMER_Destroy);
 }
+
+// Adapted from Boris Radovanovic's precise cross-platform sleep functions.
+// Ref: https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
+
+#if 0
+void precise_sleep(double seconds)
+{
+	static HANDLE timer = CreateWaitableTimerA(NULL, FALSE, NULL);
+
+	static double estimate = 5e-3;
+	static double mean     = 5e-3;
+	static double m2       = 0;
+	static int64_t count   = 1;
+
+	// SetWaitableTimerEx expects the timeout in 100 nanosecond intervals.
+	constexpr auto TimerGranularityNs = 100;
+
+	while (seconds - estimate > 1e-7) {
+		double to_wait = seconds - estimate;
+
+		// Negative values indicate relative time.
+		LARGE_INTEGER due;
+		due.QuadPart = -int64_t(to_wait * 1e7);
+
+		SetWaitableTimerEx(timer, &due, 0, NULL, NULL, NULL, 0);
+
+		auto t0 = std::chrono::high_resolution_clock::now();
+		WaitForSingleObject(timer, INFINITE);
+
+		auto t1 = std::chrono::high_resolution_clock::now();
+
+		double observed = (t1 - t0).count() / 1e9;
+		seconds -= observed;
+
+		// Calculate mean duration and the standard deviation of the random
+		// jitter of the observed sleep compared to what we asked for using
+		// Welford's algorithm.
+		// Ref: https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Welford%27s_online_algorithm
+		++count;
+		double error = observed - to_wait;
+		double delta = error - mean;
+		mean += delta / count;
+		m2 += delta * (error - mean);
+
+		double stddev = sqrt(m2 / (count - 1));
+
+		estimate = mean + stddev;
+	}
+
+	// spin lock
+	auto t0 = std::chrono::high_resolution_clock::now();
+	while ((std::chrono::high_resolution_clock::now() - t0).count() / 1e9 < seconds) {
+		;
+	}
+}
+
+void precise_sleep(double seconds)
+{
+	static double estimate = 5e-3;
+	static double mean     = 5e-3;
+	static double m2       = 0;
+	static int64_t count   = 1;
+
+	while (seconds > estimate) {
+		auto start = std::chrono::high_resolution_clock::now();
+		this_thread::sleep_for(milliseconds(1));
+		auto end = std::chrono::high_resolution_clock::now();
+
+		double observed = (end - start).count() / 1e9;
+		seconds -= observed;
+
+		++count;
+		double delta = observed - mean;
+		mean += delta / count;
+		m2 += delta * (observed - mean);
+		double stddev = sqrt(m2 / (count - 1));
+
+		estimate = mean + stddev;
+	}
+
+	// spin lock
+	auto start = std::chrono::high_resolution_clock::now();
+	while ((std::chrono::high_resolution_clock::now() - start).count() / 1e9 < seconds) {
+		;
+	}
+}
+
+#endif
