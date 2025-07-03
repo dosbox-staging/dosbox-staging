@@ -2330,6 +2330,8 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	return false;
 }
 
+static void maybe_present();
+
 void GFX_EndUpdate(const uint16_t* num_changed_lines)
 {
 	sdl.frame.update(num_changed_lines);
@@ -3743,20 +3745,20 @@ static void maybe_present()
 	static int64_t last_present_time_us = 0;
 
 	const auto now_us = GetTicksUs();
+
 	const auto curr_frame_time_us = GetTicksDiff(now_us, last_present_time_us);
 
 	if (curr_frame_time_us < sdl.frame.frame_time_us + 5000) {
-		const auto present_threshold_us = sdl.frame.frame_time_us - 4000;
-//		const auto present_threshold_us = sdl.frame.frame_time_us - 500;
+		const auto present_threshold_us = sdl.frame.frame_time_us - 3000;
 
 		if (curr_frame_time_us > present_threshold_us) {
 			const auto t0 = GetTicksUs();
 			sdl.frame.present();
 			const auto t1 = GetTicksUs();
-			LOG_WARNING("present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
+//			LOG_WARNING("present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
 
 			const auto frame_time_us = GetTicksDiff(t1, last_present_time_us);
-			LOG_ERR("frame_time_ms: %2.4f", 0.001 * frame_time_us);
+//			LOG_ERR("frame_time_ms: %2.4f", 0.001 * frame_time_us);
 
 			last_present_time_us = t1;
 		}
