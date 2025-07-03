@@ -168,7 +168,8 @@ static Bitu normal_loop()
 			}
 #endif
 		} else {
-			GFX_MaybePresentFrame();
+// for host-rate
+//			GFX_MaybePresentFrame();
 
 			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
