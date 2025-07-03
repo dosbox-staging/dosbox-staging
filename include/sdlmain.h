@@ -99,16 +99,16 @@ static inline void present_frame_noop()
 	// no-op
 }
 
-enum class FrameMode {
+enum class PresentationMode {
 	// Constant frame rate, always at the emulated DOS rate
-	Cfr,
+	DosRate,
 
 	// Constant frame rate, synced to the host rate
-	SyncedCfr,
+	HostRate,
 
 	// Variable frame rate, up to the emulated DOS rate. Frames are only
 	// presented if there's a change in the emulated output.
-	Vfr
+	DosRateDeduped
 };
 
 enum PRIORITY_LEVELS {
@@ -261,8 +261,7 @@ struct SDL_Block {
 	struct {
 		present_frame_f* present      = present_frame_noop;
 		update_frame_buffer_f* update = update_frame_noop;
-		FrameMode desired_mode        = {};
-		FrameMode mode                = {};
+		PresentationMode mode         = {};
 
 		float max_vfr_no_present_frame_count = 0.0f;
 

@@ -861,9 +861,10 @@ static void log_display_properties(const int render_width_px,
 
 	const char* frame_mode = [&] {
 		switch (sdl.frame.mode) {
-		case FrameMode::Cfr: return "CFR"; break;
-		case FrameMode::Vfr: return "VFR"; break;
-		default: assertm(false, "Invalid FrameMode"); return "";
+		case PresentationMode::DosRate: return "DOS rate"; break;
+		case PresentationMode::HostRate: return "host rate"; break;
+		case PresentationMode::DosRateDeduped: return "DOS rate (deduped)"; break;
+		default: assertm(false, "Invalid PresentationMode"); return "";
 		}
 	}();
 
@@ -986,29 +987,38 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 
 static void setup_presentation_mode()
 {
-	if (sdl.frame.desired_mode == FrameMode::Cfr) {
+	switch (sdl.frame.mode) {
+	case PresentationMode::DosRate: {
 		auto dos_rate = VGA_GetRefreshRate();
-		// TODO
+		// TODO needed?
 		if (dos_rate < 50) {
 			dos_rate *= 2;
 		}
 		const auto host_rate = GFX_GetHostRefreshRate();
 
-		const auto lesser_rate = std::min(host_rate, dos_rate);
-		save_rate_to_frame_period(lesser_rate);
+		// TODO vsync?
+		save_rate_to_frame_period(dos_rate);
+	} break;
 
-	} else {
-		assert(sdl.frame.desired_mode == FrameMode::Vfr);
+	case PresentationMode::HostRate: {
+		const auto host_rate = GFX_GetHostRefreshRate();
 
+		// TODO vsync?
+
+		save_rate_to_frame_period(host_rate);
+	} break;
+
+	case PresentationMode::DosRateDeduped: {
 		const auto dos_rate = VGA_GetRefreshRate();
 
 		// Calculate the maximum number of duplicate frames before
 		// presenting.
 		constexpr auto MinVfrRateHz = 50.0f;
-		sdl.frame.max_vfr_no_present_frame_count =
-			static_cast<float>(dos_rate) / MinVfrRateHz;
+		sdl.frame.max_vfr_no_present_frame_count = static_cast<float>(dos_rate) /
+		                                           MinVfrRateHz;
 
 		save_rate_to_frame_period(dos_rate);
+	} break;
 	}
 }
 
@@ -2383,8 +2393,8 @@ static void maybe_present_frame() {
 		};
 
 		switch (sdl.frame.mode) {
-		case FrameMode::Cfr: maybe_present_synced(sdl.updating); break;
-		case FrameMode::Vfr:
+		case PresentationMode::DosRate: maybe_present_synced(sdl.updating); break;
+		case PresentationMode::DosRateDeduped:
 			if (vfr_should_present()) {
 				sdl.frame.present();
 			}
@@ -3239,10 +3249,12 @@ static void sdl_section_init(Section* sec)
 	const std::string presentation_mode_pref = section->Get_string(
 	        "presentation_mode");
 
-	if (presentation_mode_pref == "cfr") {
-		sdl.frame.desired_mode = FrameMode::Cfr;
+	if (presentation_mode_pref == "dos-rate") {
+		sdl.frame.mode = PresentationMode::DosRate;
+	} else if (presentation_mode_pref == "dos-rate-deduped") {
+		sdl.frame.mode = PresentationMode::DosRateDeduped;
 	} else {
-		sdl.frame.desired_mode = FrameMode::Vfr;
+		sdl.frame.mode = PresentationMode::HostRate;
 	}
 
 	initialize_vsync_settings();
@@ -4196,9 +4208,9 @@ static void init_sdl_config_section()
 	pstring = sdl_sec->Add_string("presentation_mode", always, "vfr");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
-	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
-	        "  vfr:   Always present changed DOS frames at a variable frame rate (default).");
-	pstring->Set_values({"cfr", "vfr"});
+	        "  dos-rate:   Always present DOS frames at a constant frame rate.\n"
+	        "  host-rate:   Always present changed DOS frames at a variable frame rate (default).");
+	pstring->Set_values({"dos-rate", "host-rate", "dos-rate-deduped"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
