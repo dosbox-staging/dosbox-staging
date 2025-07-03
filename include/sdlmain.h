@@ -263,11 +263,9 @@ struct SDL_Block {
 		update_frame_buffer_f* update = update_frame_noop;
 		PresentationMode mode         = {};
 
-		float max_vfr_no_present_frame_count = 0.0f;
+		float max_dupe_count = 0.0f;
 
-		int period_us       = 0;
-		int period_us_early = 0;
-		int period_us_late  = 0;
+		int frame_time_us = 0;
 	} frame = {};
 
 	bool use_exact_window_resolution = false;

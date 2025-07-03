@@ -426,4 +426,6 @@ RenderingBackend GFX_GetRenderingBackend();
 
 double GFX_GetHostRefreshRate();
 
+void GFX_MaybePresentFrame();
+
 #endif
