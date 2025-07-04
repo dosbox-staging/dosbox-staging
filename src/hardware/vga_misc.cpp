@@ -111,9 +111,15 @@ static uint8_t read_p3c2(io_port_t, io_width_t)
 {
 	uint8_t retval = 0;
 
-	if (machine==MCH_EGA) retval = 0x0F;
-	else if (IS_VGA_ARCH) retval = 0x60;
-	if ((machine==MCH_VGA) || (((vga.misc_output>>2)&3)==0) || (((vga.misc_output>>2)&3)==3)) {
+	if (is_machine_ega()) {
+		retval = 0x0f;
+	} else if (is_machine_vga_or_better()) {
+		retval = 0x60;
+	}
+
+	if (is_machine_vga_or_better() ||
+	    (((vga.misc_output >> 2) & 3) == 0) ||
+	    (((vga.misc_output >> 2) & 3) == 3)) {
 		retval |= 0x10;
 	}
 
@@ -133,18 +139,19 @@ static uint8_t read_p3c2(io_port_t, io_width_t)
 	*/
 }
 
-void VGA_SetupMisc(void) {
-	if (IS_EGAVGA_ARCH) {
+void VGA_SetupMisc()
+{
+	if (is_machine_ega_or_better()) {
 		vga.draw.vret_triggered=false;
 		IO_RegisterReadHandler(0x3c2, read_p3c2, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3c2, write_p3c2, io_width_t::byte);
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			IO_RegisterReadHandler(0x3ca, read_p3ca, io_width_t::byte);
 			IO_RegisterReadHandler(0x3cc, read_p3cc, io_width_t::byte);
 		} else {
 			IO_RegisterReadHandler(0x3c8, read_p3c8, io_width_t::byte);
 		}
-	} else if (machine==MCH_CGA || IS_TANDY_ARCH) {
+	} else if (is_machine_cga() || is_machine_pcjr_or_tandy()) {
 		IO_RegisterReadHandler(0x3da, vga_read_p3da, io_width_t::byte);
 	}
 }

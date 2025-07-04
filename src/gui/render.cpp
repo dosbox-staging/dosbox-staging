@@ -602,7 +602,7 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 {
 	// If we're getting these notifications on non-VGA cards, that's a
 	// programming error.
-	assert(machine == MCH_VGA);
+	assert(is_machine_vga_or_better());
 
 	auto video_mode = VGA_GetCurrentVideoMode();
 

@@ -1219,11 +1219,11 @@ struct SVGA_Driver {
 
 extern SVGA_Driver svga;
 
-void SVGA_Setup_S3Trio();
-void SVGA_Setup_TsengET4K(void);
-void SVGA_Setup_TsengET3K(void);
-void SVGA_Setup_ParadisePVGA1A(void);
-void SVGA_Setup_Driver(void);
+void SVGA_Setup_S3();
+void SVGA_Setup_TsengEt4k();
+void SVGA_Setup_TsengEt3k();
+void SVGA_Setup_Paradise();
+void SVGA_Setup_Driver();
 
 // Amount of video memory required for a mode, implemented in int10_modes.cpp
 uint32_t VideoModeMemSize(uint16_t mode);

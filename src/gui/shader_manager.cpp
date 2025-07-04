@@ -560,21 +560,21 @@ std::string ShaderManager::FindShaderAutoMachine() const
 
 	// DOSBOX_RealInit may have not been run yet.
 	// If not, go ahead and set the globals from the config.
-	if (machine == MCH_INVALID) {
+	if (machine == MachineType::None) {
 		DOSBOX_SetMachineTypeFromConfig(
 		        static_cast<Section_prop*>(control->GetSection("dosbox")));
 	}
 
 	switch (machine) {
-	case MCH_HERC: return GetHerculesShader();
+	case MachineType::Hercules: return GetHerculesShader();
 
-	case MCH_CGA:
-	case MCH_PCJR: return GetCgaShader();
+	case MachineType::Cga:
+	case MachineType::Pcjr: return GetCgaShader();
 
-	case MCH_TANDY:
-	case MCH_EGA: return GetEgaShader();
+	case MachineType::Tandy:
+	case MachineType::Ega: return GetEgaShader();
 
-	case MCH_VGA: return GetVgaShader();
+	case MachineType::Vga: return GetVgaShader();
 	default: assertm(false, "Invalid MachineType value"); return {};
 	};
 }

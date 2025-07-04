@@ -405,7 +405,8 @@ bool AcceptsMode_ET4K(Bitu mode) {
 //	return mode != 0x3d;
 }
 
-void SVGA_Setup_TsengET4K(void) {
+void SVGA_Setup_TsengEt4k()
+{
     svga.write_p3d5 = &write_p3d5_et4k;
 	svga.read_p3d5 = &read_p3d5_et4k;
 	svga.write_p3c5 = &write_p3c5_et4k;
@@ -772,7 +773,8 @@ bool AcceptsMode_ET3K(Bitu mode) {
 	return mode <= 0x37 && mode != 0x2f && VideoModeMemSize(mode) < vga.vmemsize;
 }
 
-void SVGA_Setup_TsengET3K(void) {
+void SVGA_Setup_TsengEt3k()
+{
 	svga.write_p3d5 = &write_p3d5_et3k;
 	svga.read_p3d5 = &read_p3d5_et3k;
 	svga.write_p3c5 = &write_p3c5_et3k;

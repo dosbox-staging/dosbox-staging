@@ -11,13 +11,23 @@
 
 Bitu INT10_VideoState_GetSize(Bitu state) {
 	// state: bit0=hardware, bit1=bios data, bit2=color regs/dac state
-	if ((state&7)==0) return 0;
+	if ((state & 7) == 0) {
+		return 0;
+	}
 
-	Bitu size=0x20;
-	if (state&1) size+=0x46;
-	if (state&2) size+=0x3a;
-	if (state&4) size+=0x303;
-	if ((svgaCard==SVGA_S3Trio) && (state&8)) size+=0x43;
+	Bitu size = 0x20;
+	if (state & 1) {
+		size += 0x46;
+	}
+	if (state & 2) {
+		size += 0x3a;
+	}
+	if (state & 4) {
+		size += 0x303;
+	}
+	if ((svga_type == SvgaType::S3) && (state & 8)) {
+		size += 0x43;
+	}
 	assert(size > 0);
 	return (size - 1) / 64 + 1;
 }
@@ -158,7 +168,7 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 		base_dest+=0x303;
 	}
 
-	if ((svgaCard==SVGA_S3Trio) && (state&8))  {
+	if ((svga_type == SvgaType::S3) && (state & 8)) {
 		real_writew(base_seg,RealOffset(buffer)+6,base_dest);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
@@ -312,7 +322,7 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 		}
 	}
 
-	if ((svgaCard==SVGA_S3Trio) && (state&8))  {
+	if ((svga_type == SvgaType::S3) && (state & 8))  {
 		base_dest=real_readw(base_seg,RealOffset(buffer)+6);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);

@@ -64,7 +64,7 @@ void VGA_DetermineMode(void) {
 	switch (vga.s3.misc_control_2 >> 4) {
 	case 0:
 		if (vga.attr.mode_control.is_graphics_enabled) {
-			if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) {
+			if (is_machine_vga_or_better() && (vga.gfx.mode & 0x40)) {
 				// access above 256k?
 				if (vga.s3.reg_31 & 0x8) VGA_SetMode(M_LIN8);
 				else VGA_SetMode(M_VGA);
@@ -352,7 +352,7 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 
 void VGA_AllowVgaScanDoubling(const bool allow)
 {
-	if (machine != MCH_VGA) {
+	if (!is_machine_vga_or_better()) {
 		return;
 	}
 	if (allow && !vga.draw.scan_doubling_allowed) {
@@ -446,18 +446,18 @@ void VGA_Init(Section* sec)
 void SVGA_Setup_Driver(void) {
 	memset(&svga, 0, sizeof(SVGA_Driver));
 
-	switch(svgaCard) {
-	case SVGA_S3Trio:
-		SVGA_Setup_S3Trio();
+	switch(svga_type) {
+	case SvgaType::S3:
+		SVGA_Setup_S3();
 		break;
-	case SVGA_TsengET4K:
-		SVGA_Setup_TsengET4K();
+	case SvgaType::TsengEt3k:
+		SVGA_Setup_TsengEt3k();
 		break;
-	case SVGA_TsengET3K:
-		SVGA_Setup_TsengET3K();
+	case SvgaType::TsengEt4k:
+		SVGA_Setup_TsengEt4k();
 		break;
-	case SVGA_ParadisePVGA1A:
-		SVGA_Setup_ParadisePVGA1A();
+	case SvgaType::Paradise:
+		SVGA_Setup_Paradise();
 		break;
 	default:
 		vga.vmemsize = vga.vmemwrap = 256*1024;

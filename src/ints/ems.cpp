@@ -1402,7 +1402,7 @@ public:
 		ems_type=GetEMSType(section);
 		if (ems_type<=0) return;
 
-		if (machine==MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			ems_type=0;
 			LOG_MSG("EMS disabled for PCJr machine");
 			return;

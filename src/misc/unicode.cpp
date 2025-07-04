@@ -2137,7 +2137,7 @@ uint16_t get_utf8_code_page()
 	constexpr uint16_t RomCodePage = 437; // United States
 
 	// Below EGA it wasn't possible to change the character set
-	const uint16_t code_page = IS_EGAVGA_ARCH
+	const uint16_t code_page = is_machine_ega_or_better()
 	                                 ? deduplicate_code_page(dos.loaded_codepage)
 	                                 : RomCodePage;
 

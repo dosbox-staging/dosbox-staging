@@ -2132,7 +2132,7 @@ static void load_default_screen_font()
 
 bool DOS_CanLoadScreenFonts()
 {
-	return machine == MCH_EGA || machine == MCH_VGA;
+	return is_machine_ega_or_better();
 }
 
 KeyboardLayoutResult DOS_LoadScreenFont(const uint16_t code_page,

@@ -57,11 +57,12 @@ static void write_crtc_data_other(io_port_t, io_val_t value, io_width_t)
 		vga.other.hsyncp = val;
 		break;
 	case 0x03:		//Horizontal sync width
-		if (machine == MCH_TANDY)
+		if (is_machine_tandy()) {
 			vga.other.vsyncw = val >> 4;
-		else
+		} else {
 			// The MC6845 has a fixed v-sync width of 16 lines
 			vga.other.vsyncw = 16;
+		}
 		vga.other.hsyncw = val & 0xf;
 		break;
 	case 0x04:		//Vertical total
@@ -141,10 +142,11 @@ static uint8_t read_crtc_data_other(io_port_t, io_width_t)
 		// hsyncw and vsyncw should only be populated with their lower 4-bits
 		assert(vga.other.hsyncw >> 4 == 0);
 		assert(vga.other.vsyncw >> 4 == 0);
-		if (machine == MCH_TANDY)
+		if (is_machine_tandy()) {
 			return static_cast<uint8_t>(vga.other.hsyncw | (vga.other.vsyncw << 4));
-		else
+		} else {
 			return vga.other.hsyncw;
+		}
 	case 0x04:		//Vertical total
 		return vga.other.vtotal;
 	case 0x05:		//Vertical display adjust
@@ -329,7 +331,7 @@ static constexpr float get_rgbi_coefficient(const bool is_new_cga,
 
 static void update_cga16_color_pcjr()
 {
-	assert(machine == MCH_PCJR);
+	assert(is_machine_pcjr());
 
 	// First composite algorithm based on code by reenigne updated by
 	// NewRisingSun and tailored for PCjr-only composite modes (for DOSBox
@@ -675,8 +677,9 @@ static void select_next_crt_knob(bool pressed)
 	auto next_knob = static_cast<uint8_t>(crt_knob) + 1;
 
 	// PCjr doesn't have a convergence knob
-	if (machine == MCH_PCJR && next_knob >= CRT_KNOB::CONVERGENCE)
+	if (is_machine_pcjr() && next_knob >= CRT_KNOB::CONVERGENCE) {
 		next_knob++;
+	}
 
 	crt_knob = static_cast<CRT_KNOB>(next_knob % CRT_KNOB::ENUM_END);
 
@@ -733,7 +736,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 				     !mono_cga)) {
 
 					// composite ntsc 640x200 16 color mode
-					if (machine == MCH_PCJR) {
+					if (is_machine_pcjr()) {
 						VGA_SetMode(M_CGA16);
 					} else {
 						VGA_SetMode(M_CGA2_COMPOSITE);
@@ -745,13 +748,13 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 			} else {							// lowres mode
 				if (cga_comp == COMPOSITE_STATE::ON) {
 					// composite ntsc 640x200 16 color mode
-					if (machine == MCH_PCJR) {
+					if (is_machine_pcjr()) {
 						VGA_SetMode(M_CGA16);
 					} else {
 						VGA_SetMode(M_CGA4_COMPOSITE);
 						update_cga16_color();
 					}
-				} else if (machine != MCH_PCJR) {
+				} else if (!is_machine_pcjr()) {
 					VGA_SetMode(M_TANDY4);
 				}
 			}
@@ -778,14 +781,14 @@ static void PCJr_FindMode();
 static void apply_composite_state()
 {
 	// Switch RGB and Composite if in graphics mode
-	if (machine == MCH_PCJR && vga.tandy.mode.is_graphics_enabled) {
+	if (is_machine_pcjr() && vga.tandy.mode.is_graphics_enabled) {
 		PCJr_FindMode();
 	} else {
 		write_cga(0x3d8, vga.tandy.mode.data, io_width_t::byte);
 	}
 
 /* 	if (vga.tandy.mode.is_graphics_enabled) {
-		if (machine == MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			PCJr_FindMode();
 		} else {
 			write_cga(0x3d8, vga.tandy.mode.data, io_width_t::byte);
@@ -822,7 +825,7 @@ static void tandy_update_palette() {
 	using namespace bit::literals;
 
 	// TODO mask off bits if needed
-	if (machine == MCH_TANDY) {
+	if (is_machine_tandy()) {
 		switch (vga.mode) {
 		case M_TANDY2:
 			VGA_SetCGA2Table(vga.attr.palette[0],
@@ -870,10 +873,11 @@ static void tandy_update_palette() {
 		default:
 			break;
 		}
-		if (machine == MCH_PCJR)
+		if (is_machine_pcjr()) {
 			update_cga16_color_pcjr();
-		else
+		} else {
 			update_cga16_color();
+		}
 	}
 }
 
@@ -921,7 +925,8 @@ static void TANDY_FindMode()
 
 static void PCJr_FindMode()
 {
-	assert(machine == MCH_PCJR);
+	assert(is_machine_pcjr());
+
 	if (vga.tandy.mode.is_graphics_enabled) {
 		if (vga.tandy.mode.is_pcjr_16_color_graphics) {
 			if (vga.mode == M_TANDY4) {
@@ -980,7 +985,7 @@ static void write_tandy_reg(uint8_t val)
 	// only receives 8-bit data per its IO port registration
 	switch (vga.tandy.reg_index) {
 	case 0x0:
-		if (machine==MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			vga.tandy.mode.data = val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
@@ -1002,8 +1007,11 @@ static void write_tandy_reg(uint8_t val)
 		break;
 	case 0x3:	/* More control */
 		vga.tandy.mode_control.data = val;
-		if (machine==MCH_TANDY) TANDY_FindMode();
-		else PCJr_FindMode();
+		if (is_machine_tandy()) {
+			TANDY_FindMode();
+		} else {
+			PCJr_FindMode();
+		}
 		break;
 	case 0x5:	/* Extended ram page register */
 		// Bit 0 enables extended ram
@@ -1141,11 +1149,11 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 
 void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
-	if (machine == MCH_HERC) {
+	if (is_machine_hercules()) {
 		hercules_palette = _palette;
 		VGA_SetHerculesPalette();
 
-	} else if (machine == MCH_CGA && mono_cga) {
+	} else if (is_machine_cga() && mono_cga) {
 		mono_cga_palette = _palette;
 		VGA_SetMonochromeCgaPalette();
 	}
@@ -1334,18 +1342,18 @@ void VGA_SetupOther()
 	vga.tandy.line_mask = 3;
 	vga.tandy.line_shift = 13;
 
-	if (machine==MCH_CGA || IS_TANDY_ARCH) {
+	if (is_machine_cga() || is_machine_pcjr_or_tandy()) {
 		extern uint8_t int10_font_08[256 * 8];
 		for (int i = 0; i < 256; ++i) {
 			memcpy(&vga.draw.font[i * 32], &int10_font_08[i * 8], 8);
 		}
 		vga.draw.font_tables[0] = vga.draw.font_tables[1] = vga.draw.font;
 	}
-	if (machine==MCH_CGA || IS_TANDY_ARCH || machine==MCH_HERC) {
+	if (is_machine_hercules() || is_machine_cga() || is_machine_pcjr_or_tandy()) {
 		IO_RegisterWriteHandler(0x3db, write_lightpen, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3dc, write_lightpen, io_width_t::byte);
 	}
-	if (machine==MCH_HERC) {
+	if (is_machine_hercules()) {
 		extern uint8_t int10_font_14[256 * 14];
 		for (int i = 0; i < 256; ++i) {
 			memcpy(&vga.draw.font[i * 32], &int10_font_14[i * 14], 14);
@@ -1354,7 +1362,7 @@ void VGA_SetupOther()
 		MAPPER_AddHandler(cycle_hercules_palette, SDL_SCANCODE_F11, 0,
 		                  "hercpal", "Herc Pal");
 	}
-	if (machine==MCH_CGA) {
+	if (is_machine_cga()) {
 		IO_RegisterWriteHandler(0x3d8, write_cga, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d9, write_cga, io_width_t::byte);
 		if (mono_cga) {
@@ -1365,7 +1373,7 @@ void VGA_SetupOther()
 			                  "Mono CGA Pal");
 		}
 	}
-	if (machine==MCH_TANDY) {
+	if (is_machine_tandy()) {
 		write_tandy(0x3df, 0x0, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d8, write_tandy, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d9, write_tandy, io_width_t::byte);
@@ -1373,15 +1381,14 @@ void VGA_SetupOther()
 		IO_RegisterWriteHandler(0x3de, write_tandy, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3df, write_tandy, io_width_t::byte);
 	}
-	if (machine == MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		//write_pcjr will setup base address
 		write_pcjr(0x3df, 0x7 | (0x7 << 3), io_width_t::byte);
 		IO_RegisterWriteHandler(0x3da, write_pcjr, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3df, write_pcjr, io_width_t::byte);
 	}
 	// Add composite hotkeys for CGA, Tandy, and PCjr
-	if ((machine == MCH_CGA && !mono_cga) || machine == MCH_TANDY ||
-	    machine == MCH_PCJR) {
+	if ((is_machine_cga() && !mono_cga) || is_machine_pcjr_or_tandy()) {
 		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
 		                  "select", "Sel Knob");
 		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,
@@ -1404,7 +1411,7 @@ void VGA_SetupOther()
 		}
 	};
 
-	if (machine == MCH_HERC) {
+	if (is_machine_hercules()) {
 		vga.herc.enable_bits = 0;
 		vga.herc.mode_control = 0xa; // first mode written will be text mode
 		vga.crtc.underline_location = 13;
@@ -1412,7 +1419,7 @@ void VGA_SetupOther()
 		IO_RegisterWriteHandler(0x3bf, write_hercules, io_width_t::byte);
 		IO_RegisterReadHandler(0x3ba, read_herc_status, io_width_t::byte);
 		register_crtc_port_handlers_at_base(0x3b0);
-	} else if (!IS_EGAVGA_ARCH) {
+	} else if (!is_machine_ega_or_better()) {
 		register_crtc_port_handlers_at_base(0x3d0);
 	}
 }
@@ -1440,7 +1447,7 @@ static void composite_init(Section *sec)
 
 	const std::string era_choice = conf->Get_string("era");
 	is_composite_new_era = era_choice == "new" ||
-	                       (machine == MCH_PCJR && era_choice == "auto");
+	                       (is_machine_pcjr() && era_choice == "auto");
 
 	hue.set(conf->Get_int("hue"));
 	saturation.set(conf->Get_int("saturation"));
@@ -1513,10 +1520,12 @@ static void turn_crt_knob(bool pressed, const int amount)
 	case CRT_KNOB::CONVERGENCE: convergence.turn(amount); break;
 	case CRT_KNOB::ENUM_END: assertm(false, "Should not reach CRT knob end marker"); break;
 	}
-	if (machine == MCH_PCJR)
+
+	if (is_machine_pcjr()) {
 		update_cga16_color_pcjr();
-	else
+	} else {
 		update_cga16_color();
+	}
 
 	log_crt_knob_value();
 }

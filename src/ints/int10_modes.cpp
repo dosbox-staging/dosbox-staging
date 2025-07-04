@@ -728,20 +728,20 @@ void INT10_SetCurMode(void)
 		bool mode_changed = false;
 
 		switch (machine) {
-		case MCH_CGA:
+		case MachineType::Cga:
 			if (bios_mode < 7) {
 				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
 			}
 			break;
 
-		case MCH_PCJR:
-		case MCH_TANDY:
+		case MachineType::Pcjr:
+		case MachineType::Tandy:
 			if (bios_mode != 7 && bios_mode <= 0xa) {
 				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
 			}
 			break;
 
-		case MCH_HERC:
+		case MachineType::Hercules:
 			if (bios_mode < 7) {
 				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
 			} else if (bios_mode == 7) {
@@ -750,22 +750,22 @@ void INT10_SetCurMode(void)
 			}
 			break;
 
-		case MCH_EGA:
+		case MachineType::Ega:
 			mode_changed = set_cur_mode(ModeList_EGA, bios_mode);
 			break;
 
-		case MCH_VGA:
-			switch (svgaCard) {
-			case SVGA_TsengET4K:
-			case SVGA_TsengET3K:
+		case MachineType::Vga:
+			switch (svga_type) {
+			case SvgaType::TsengEt3k:
+			case SvgaType::TsengEt4k:
 				mode_changed = set_cur_mode(ModeList_VGA_Tseng,
 				                            bios_mode);
 				break;
-			case SVGA_ParadisePVGA1A:
+			case SvgaType::Paradise:
 				mode_changed = set_cur_mode(ModeList_VGA_Paradise,
 				                            bios_mode);
 				break;
-			case SVGA_S3Trio:
+			case SvgaType::S3:
 				if (bios_mode >= 0x68 &&
 				    CurMode->mode == (bios_mode + 0x98)) {
 					break;
@@ -814,7 +814,7 @@ static void finish_set_mode(bool clearmem) {
 		case M_TANDY16:
 		case M_CGA4:
 		case M_CGA16:
-			if ((machine==MCH_PCJR) && (CurMode->mode >= 9)) {
+			if (is_machine_pcjr() && (CurMode->mode >= 9)) {
 				// PCJR cannot access the full 32k at 0xb800
 				for (uint16_t ct=0;ct<16*1024;ct++) {
 					// 0x1800 is the last 32k block in 128k, as set in the CRTCPU_PAGE register
@@ -867,13 +867,15 @@ static void finish_set_mode(bool clearmem) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE,(uint16_t)CurMode->plength);
 	real_writew(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS,((CurMode->mode==7 )|| (CurMode->mode==0x0f)) ? 0x3b4 : 0x3d4);
 
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		real_writeb(BIOSMEM_SEG,BIOSMEM_NB_ROWS,(uint8_t)(CurMode->theight-1));
 		real_writew(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,(uint16_t)CurMode->cheight);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60|(clearmem?0:0x80)));
 		real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
 		// this is an index into the dcc table:
-		if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x0b);
+		if (is_machine_vga_or_better()) {
+			real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX, 0x0b);
+		}
 
 		//  Set font pointer
 		if (CurMode->mode<=3 || CurMode->mode==7)
@@ -907,12 +909,12 @@ static void finish_set_mode(bool clearmem) {
 static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 {
 	switch (machine) {
-	case MCH_CGA:
+	case MachineType::Cga:
 		if (mode > 6)
 			return false;
 		[[fallthrough]];
-	case MCH_PCJR:
-	case MCH_TANDY:
+	case MachineType::Pcjr:
+	case MachineType::Tandy:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on invalid mode 7
 		if (!set_cur_mode(ModeList_OTHER, mode)) {
@@ -921,7 +923,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		}
 		break;
 
-	case MCH_HERC:
+	case MachineType::Hercules:
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
 			if (!set_cur_mode(ModeList_OTHER, mode)) {
@@ -935,10 +937,10 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		mode=7; // in case the video parameter table is modified
 		break;
 
-	case MCH_EGA:
-	case MCH_VGA:
-		// This code should be unreachable, as MCH_EGA and MCH_VGA are
-		// handled in function INT10_SetVideoMode.
+	case MachineType::Ega:
+	case MachineType::Vga:
+		// This code should be unreachable, as EGA and VGA are handled
+		// in function INT10_SetVideoMode.
 		assert(false);
 		break;
 
@@ -948,7 +950,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	//  Setup the VGA to the correct mode
 	//	VGA_SetMode(CurMode->type);
 	//  Setup the CRTC
-	Bitu crtc_base = machine == MCH_HERC ? 0x3b4 : 0x3d4;
+	Bitu crtc_base = is_machine_hercules() ? 0x3b4 : 0x3d4;
 	//Horizontal total
 	IO_WriteW(crtc_base,0x00 | (CurMode->htotal) << 8);
 	//Horizontal displayed
@@ -969,8 +971,11 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	uint8_t scanline;
 	switch (CurMode->type) {
 	case M_TEXT:
-		if (machine==MCH_HERC) scanline=14;
-		else scanline=8;
+		if (is_machine_hercules()) {
+			scanline = 14;
+		} else {
+			scanline = 8;
+		}
 		break;
 	case M_CGA2:
 		scanline=2;
@@ -1010,14 +1015,14 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	uint8_t mode_control,color_select;
 	uint8_t crtpage;
 	switch (machine) {
-	case MCH_HERC:
+	case MachineType::Hercules:
 		IO_WriteB(0x3b8,0x28);	// TEXT mode and blinking characters
 
 		VGA_SetHerculesPalette();
 
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29); // attribute controls blinking
 		break;
-	case MCH_CGA:
+	case MachineType::Cga:
 		mode_control=mode_control_list[CurMode->mode];
 		if (CurMode->mode == 0x6) color_select=0x3f;
 		else color_select=0x30;
@@ -1030,7 +1035,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 			VGA_SetMonochromeCgaPalette();
 		}
 		break;
-	case MCH_TANDY:
+	case MachineType::Tandy:
 		//  Init some registers
 		IO_WriteB(0x3da,0x1);IO_WriteB(0x3de,0xf);		//Palette mask always 0xf
 		IO_WriteB(0x3da,0x2);IO_WriteB(0x3de,0x0);		//black border
@@ -1069,7 +1074,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 		break;
-	case MCH_PCJR:
+	case MachineType::Pcjr:
 		//  Init some registers
 		IO_ReadB(0x3da);
 		IO_WriteB(0x3da,0x1);IO_WriteB(0x3da,0xf);		//Palette mask always 0xf
@@ -1096,10 +1101,10 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		INT10_SetColorSelect(1);
 		INT10_SetBackgroundBorder(0);
 		break;
-	case MCH_EGA:
-	case MCH_VGA:
-		// This code should be unreachable, as MCH_EGA and MCH_VGA are
-		// handled in function INT10_SetVideoMode.
+	case MachineType::Ega:
+	case MachineType::Vga:
+		// This code should be unreachable, as EGA and VGA are handled
+		// in function INT10_SetVideoMode.
 		assert(false);
 		break;
 
@@ -1166,8 +1171,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 	int10.vesa_setmode=0xffff;
 	// LOG_MSG("INT10H: Setting BIOS video mode %02Xh", mode);
 
-	if (!IS_EGAVGA_ARCH)
+	if (!is_machine_ega_or_better()) {
 		return INT10_SetVideoMode_OTHER(mode, clearmem);
+	}
 
 	//  First read mode setup settings from bios area
 	//	uint8_t video_ctl=real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL);
@@ -1175,21 +1181,21 @@ bool INT10_SetVideoMode(uint16_t mode)
 	const BiosVgaFlagsRec vga_flags_rec = {
 	        real_readb(BiosDataArea::Segment, BiosDataArea::VgaFlagsRecOffset)};
 
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		if (svga.accepts_mode) {
 			if (!svga.accepts_mode(mode)) return false;
 		}
 
-		switch(svgaCard) {
-		case SVGA_TsengET4K:
-		case SVGA_TsengET3K:
+		switch(svga_type) {
+		case SvgaType::TsengEt3k:
+		case SvgaType::TsengEt4k:
 			if (!set_cur_mode(ModeList_VGA_Tseng, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
 
-		case SVGA_ParadisePVGA1A:
+		case SvgaType::Paradise:
 			if (!set_cur_mode(ModeList_VGA_Paradise, mode)) {
 				log_invalid_video_mode_error(mode);
 				return false;
@@ -1219,7 +1225,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	if (mono_mode) crtc_base=0x3b4;
 	else crtc_base=0x3d4;
 
-	if (IS_VGA_ARCH && (svgaCard == SVGA_S3Trio)) {
+	if (svga_type == SvgaType::S3) {
 		// Disable MMIO here so we can read / write memory
 		IO_Write(crtc_base,0x53);
 		IO_Write(crtc_base+1,0x0);
@@ -1228,7 +1234,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  Setup MISC Output Register
 	uint8_t misc_output=0x2 | (mono_mode ? 0x0 : 0x1);
 
-	if (machine==MCH_EGA) {
+	if (is_machine_ega()) {
 		// 16MHz clock for 350-line EGA modes except mode F
 		if ((CurMode->vdispend==350) && (mode!=0xf)) misc_output|=0x4;
 	} else {
@@ -1260,7 +1266,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	if (CurMode->special & EGA_HALF_CLOCK)
 		seq_data[1] |= 0x08; // Check for half clock
-	if ((machine == MCH_EGA) && (CurMode->special & EGA_HALF_CLOCK))
+	if (is_machine_ega() && (CurMode->special & EGA_HALF_CLOCK))
 		seq_data[1] |= 0x02;
 	seq_data[4] |= 0x02; // More than 64kb
 	switch (CurMode->type) {
@@ -1268,21 +1274,28 @@ bool INT10_SetVideoMode(uint16_t mode)
 		if (CurMode->cwidth==9) seq_data[1] &= ~1;
 		seq_data[2]|=0x3;				//Enable plane 0 and 1
 		seq_data[4]|=0x01;				//Alpanumeric
-		if (IS_VGA_ARCH) seq_data[4]|=0x04;				//odd/even enabled
+		if (is_machine_vga_or_better()) {
+			seq_data[4] |= 0x04; // odd/even enabled
+		}
 		break;
 	case M_CGA2:
 		// Enable plane 0 (this was 0xf, which is all planes)
 		seq_data[2] |= 0x01;
-		if (machine == MCH_EGA)
+		if (is_machine_ega()) {
 			seq_data[4] |= 0x04; // odd/even enabled
+		}
 		break;
 	case M_CGA4:
-		if (machine==MCH_EGA) seq_data[2]|=0x03;		//Enable plane 0 and 1
+		if (is_machine_ega()) {
+			seq_data[2] |= 0x03; //Enable plane 0 and 1
+		}
 		break;
 	case M_LIN4:
 	case M_EGA:
 		seq_data[2]|=0xf;				//Enable all planes for writing
-		if (machine==MCH_EGA) seq_data[4]|=0x04;		//odd/even enabled
+		if (is_machine_ega()) {
+			seq_data[4] |= 0x04; // odd/even enabled
+		}
 		break;
 	case M_LIN8:						//Seems to have the same reg layout from testing
 	case M_LIN15:
@@ -1305,7 +1318,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
-		// with MCH_EGA and MCH_VGA.
+		// with EGA and VGA.
 		assert(false);
 		break;
 	}
@@ -1375,7 +1388,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	ver_overflow|=((CurMode->vtotal-2) & 0x400) >> 10;
 
 	Bitu vretrace;
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		switch (CurMode->vdispend) {
 		case 400: vretrace=CurMode->vdispend+12;
 				break;
@@ -1409,7 +1422,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	ver_overflow|=((CurMode->vdispend-1) & 0x400) >> 9;
 
 	Bitu vblank_trim;
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		switch (CurMode->vdispend) {
 		case 400: vblank_trim=6;
 				break;
@@ -1446,7 +1459,9 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	//  Maximum scanline / Underline Location
 	if (CurMode->special & EGA_LINE_DOUBLE) {
-		if (machine!=MCH_EGA) max_scanline|=0x80;
+		if (!is_machine_ega()) {
+			max_scanline |= 0x80;
+		}
 	}
 	switch (CurMode->type) {
 	case M_TEXT:
@@ -1479,7 +1494,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	//  OverFlow
 	IO_Write(crtc_base,0x07);IO_Write(crtc_base+1,overflow);
 
-	if (svgaCard == SVGA_S3Trio) {
+	if (svga_type == SvgaType::S3) {
 		//  Extended Horizontal Overflow
 		IO_Write(crtc_base,0x5d);IO_Write(crtc_base+1,hor_overflow);
 		//  Extended Vertical Overflow
@@ -1511,7 +1526,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	IO_Write(crtc_base,0x13);
 	IO_Write(crtc_base + 1,offset & 0xff);
 
-	if (svgaCard == SVGA_S3Trio) {
+	if (svga_type == SvgaType::S3) {
 		//  Extended System Control 2 Register
 		//  This register actually has more bits but only use the
 		//  extended offset ones
@@ -1542,7 +1557,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			// so.. 0x11 or 0x0f a one off?
 			mode_control = 0xc3;
 		} else {
-			if (machine == MCH_EGA) {
+			if (is_machine_ega()) {
 				if (CurMode->special & EGA_LINE_DOUBLE) {
 					mode_control = 0xc3;
 				} else {
@@ -1580,7 +1595,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
-		// with MCH_EGA and MCH_VGA.
+		// with EGA and VGA.
 		assert(false);
 		break;
 	}
@@ -1590,7 +1605,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	IO_Write(crtc_base,0x11);
 	IO_Write(crtc_base+1,IO_Read(crtc_base+1)|0x80);
 
-	if (svgaCard == SVGA_S3Trio) {
+	if (svga_type == SvgaType::S3) {
 		//  Setup the correct clock
 		if (CurMode->mode >= MinVesaBiosModeNumber) {
 			if (CurMode->vdispend>480)
@@ -1696,13 +1711,13 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 		// graphics mode at B800-BFFF
 		gfx_data[0x6]|=0x0f;
-		if (machine == MCH_EGA) {
+		if (is_machine_ega()) {
 			gfx_data[0x5] |= 0x10;
 		}
 		break;
 
 	case M_CGA2:
-		if (machine == MCH_EGA) {
+		if (is_machine_ega()) {
 			// graphics mode at B800-BFFF
 			gfx_data[0x6] |= 0x0d;
 		} else {
@@ -1722,7 +1737,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
-		// with MCH_EGA and MCH_VGA.
+		// with EGA and VGA.
 		assert(false);
 		break;
 	}
@@ -1779,7 +1794,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_TANDY16:
 		// TODO: TANDY_16 seems like an oversight here, as
 		//       this function is supposed to deal with
-		//       MCH_EGA and MCH_VGA only.
+		//       EGA and VGA only.
 
 		// Color Graphics
 		att_data[0x10] = 0x01;
@@ -1873,7 +1888,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
-		// with MCH_EGA and MCH_VGA.
+		// with EGA and VGA.
 		assert(false);
 		break;
 	}
@@ -1932,8 +1947,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		case M_CGA4:
 		case M_TANDY16:
 			// TODO: TANDY_16 seems like an oversight here, as this
-			// function is supposed to deal with MCH_EGA and MCH_VGA
-			// only.
+			// function is supposed to deal with EGA and VGA only.
 			write_palette_dac_data(palette.cga64);
 			break;
 
@@ -1941,7 +1955,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			if (CurMode->mode == 7) {
 				// Non-standard 80x25 (720x350) monochrome text
 				// mode on VGA
-				if ((IS_VGA_ARCH) && (svgaCard == SVGA_S3Trio)) {
+				if (svga_type == SvgaType::S3) {
 					write_palette_dac_data(palette.mono_text_s3);
 				} else {
 					write_palette_dac_data(palette.mono_text);
@@ -1976,12 +1990,12 @@ bool INT10_SetVideoMode(uint16_t mode)
 		case M_HERC_GFX:
 		case M_ERROR:
 			// This code should be unreachable, as this function
-			// deals only with MCH_EGA and MCH_VGA.
+			// deals only with EGA and VGA.
 			assert(false);
 			break;
 		}
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			if (vga_flags_rec.is_grayscale_summing_enabled) {
 				constexpr auto StartReg = 0;
 				INT10_PerformGrayScaleSumming(StartReg, NumVgaColors);
@@ -2054,7 +2068,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		break;
 	}
 
-	if (svgaCard == SVGA_S3Trio) {
+	if (svga_type == SvgaType::S3) {
 		//  Set up the CPU Window
 		IO_Write(crtc_base, 0x6a);
 		IO_Write(crtc_base + 1, 0);
@@ -2187,23 +2201,27 @@ bool INT10_SetVideoMode(uint16_t mode)
 	return true;
 }
 
-uint32_t VideoModeMemSize(uint16_t mode) {
-	if (!IS_VGA_ARCH) {
+uint32_t VideoModeMemSize(uint16_t mode)
+{
+	if (!is_machine_vga_or_better()) {
 		return 0;
 	}
 
 	// Lambda function to return a reference to the modelist based on the
-	// svgaCard switch
-	auto get_mode_list = [](SVGACards card) -> const std::vector<VideoModeBlock> & {
+	// svga_type switch
+	auto get_mode_list = [](SvgaType card) -> const std::vector<VideoModeBlock> & {
 		switch (card) {
-		case SVGA_TsengET4K:
-		case SVGA_TsengET3K: return ModeList_VGA_Tseng;
-		case SVGA_ParadisePVGA1A: return ModeList_VGA_Paradise;
-		default: return ModeList_VGA;
+		case SvgaType::TsengEt3k:
+		case SvgaType::TsengEt4k:
+			return ModeList_VGA_Tseng;
+		case SvgaType::Paradise:
+			return ModeList_VGA_Paradise;
+		default:
+			return ModeList_VGA;
 		}
 
 	};
-	const auto &modelist = get_mode_list(svgaCard);
+	const auto &modelist = get_mode_list(svga_type);
 	auto vmodeBlock = modelist.end();
 
 	for (auto it = modelist.begin(); it != modelist.end(); ++it) {

@@ -74,7 +74,7 @@ bool device_CON::Read(uint8_t* data, uint16_t* size)
 		readcache = 0;
 	}
 	while (*size > count) {
-		reg_ah = (IS_EGAVGA_ARCH) ? 0x10 : 0x0;
+		reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
 
 		CALLBACK_RunRealInt(0x16);
 		switch (reg_al) {
@@ -318,7 +318,7 @@ bool device_CON::Write(uint8_t* data, uint16_t* size)
 				LOG(LOG_IOCTL, LOG_WARN)("ANSI SEQUENCES USED");
 			}
 			ncols = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-			nrows = IS_EGAVGA_ARCH
+			nrows = is_machine_ega_or_better()
 			              ? (real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
 			              : 25;
 			// Turn them into positions that are on the screen
@@ -358,7 +358,7 @@ bool device_CON::Write(uint8_t* data, uint16_t* size)
 		case 'B': // Cursor Down
 			col      = CURSOR_POS_COL(page);
 			row      = CURSOR_POS_ROW(page);
-			nrows    = IS_EGAVGA_ARCH
+			nrows    = is_machine_ega_or_better()
 			                 ? (real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
 			                 : 25;
 			tempdata = (ansi.data[0] ? ansi.data[0] : 1);
@@ -441,7 +441,7 @@ bool device_CON::Write(uint8_t* data, uint16_t* size)
 		case 'M': // Delete line (NANSI)
 			row   = CURSOR_POS_ROW(page);
 			ncols = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-			nrows = IS_EGAVGA_ARCH
+			nrows = is_machine_ega_or_better()
 			              ? (real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
 			              : 25;
 			INT10_ScrollWindow(row,

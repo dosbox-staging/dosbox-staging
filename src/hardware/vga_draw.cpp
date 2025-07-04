@@ -904,7 +904,7 @@ static void VGA_ProcessSplit()
 		// In text mode only the characters are shifted by panning, not
 		// the address; this is done in the text line draw function.
 		vga.draw.address = vga.draw.byte_panning_shift * vga.draw.bytes_skip;
-		if ((vga.mode != M_TEXT) && (machine != MCH_EGA)) {
+		if ((vga.mode != M_TEXT) && !is_machine_ega()) {
 			vga.draw.address += vga.draw.panning;
 		}
 	}
@@ -916,11 +916,11 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 {
 	if (vga.attr.disabled) {
 		switch(machine) {
-		case MCH_PCJR:
+		case MachineType::Pcjr:
 			// Displays the border color when screen is disabled
 			bg_color_index = vga.tandy.border_color;
 			break;
-		case MCH_TANDY:
+		case MachineType::Tandy:
 			// Either the PCJr way or the CGA way
 			if (vga.tandy.mode_control.is_tandy_border_enabled) {
 				bg_color_index = vga.tandy.border_color;
@@ -928,12 +928,12 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 				bg_color_index = vga.attr.palette[0];
 			else bg_color_index = 0;
 			break;
-		case MCH_CGA:
+		case MachineType::Cga:
 			// the background color
 			bg_color_index = vga.attr.overscan_color;
 			break;
-		case MCH_EGA:
-		case MCH_VGA:
+		case MachineType::Ega:
+		case MachineType::Vga:
 			// DoWhackaDo, Alien Carnage, TV sports Football
 			// when disabled by attribute index bit 5:
 			//  ET3000, ET4000, Paradise display the border color
@@ -1115,7 +1115,7 @@ static void VGA_VertInterrupt(uint32_t /*val*/)
 	if ((!vga.draw.vret_triggered) &&
 	    ((vga.crtc.vertical_retrace_end & 0x30) == 0x10)) {
 		vga.draw.vret_triggered=true;
-		if (machine == MCH_EGA) {
+		if (is_machine_ega()) {
 			PIC_ActivateIRQ(9);
 		}
 	}
@@ -1145,20 +1145,20 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	PIC_AddEvent(VGA_VerticalTimer, vga.draw.delay.vtotal);
 
 	switch(machine) {
-	case MCH_PCJR:
-	case MCH_TANDY:
+	case MachineType::Pcjr:
+	case MachineType::Tandy:
 		// PCJr: Vsync is directly connected to the IRQ controller
 		// Some earlier Tandy models are said to have a vsync interrupt too
 		PIC_AddEvent(VGA_Other_VertInterrupt, vga.draw.delay.vrstart, 1);
 		PIC_AddEvent(VGA_Other_VertInterrupt, vga.draw.delay.vrend, 0);
 		// fall-through
-	case MCH_CGA:
-	case MCH_HERC:
+	case MachineType::Cga:
+	case MachineType::Hercules:
 		// MC6845-powered graphics: Loading the display start latch happens somewhere
 		// after vsync off and before first visible scanline, so probably here
 		VGA_DisplayStartLatch(0);
 		break;
-	case MCH_VGA:
+	case MachineType::Vga:
 		PIC_AddEvent(VGA_DisplayStartLatch, vga.draw.delay.vrstart);
 		PIC_AddEvent(VGA_PanningLatch, vga.draw.delay.vrend);
 		// EGA: 82c435 datasheet: interrupt happens at display end
@@ -1167,7 +1167,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		// the last drawpart has already fired
 		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005);
 		break;
-	case MCH_EGA:
+	case MachineType::Ega:
 		PIC_AddEvent(VGA_DisplayStartLatch, vga.draw.delay.vrend);
 		PIC_AddEvent(VGA_VertInterrupt, vga.draw.delay.vdend + 0.005);
 		break;
@@ -1184,9 +1184,11 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	}
 
 	vga.draw.address_line = vga.config.hlines_skip;
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		vga.draw.split_line = (vga.config.line_compare + 1) / vga.draw.lines_scaled;
-		if ((svgaCard==SVGA_S3Trio) && (vga.config.line_compare==0)) vga.draw.split_line=0;
+		if ((svga_type == SvgaType::S3) && (vga.config.line_compare == 0)) {
+			vga.draw.split_line = 0;
+		}
 		vga.draw.split_line -= vga.draw.vblank_skip;
 	} else {
 		vga.draw.split_line = 0x10000;	// don't care
@@ -1194,13 +1196,13 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	vga.draw.address = vga.config.real_start;
 	vga.draw.byte_panning_shift = 0;
 	// go figure...
-	if (machine == MCH_EGA) {
+	if (is_machine_ega()) {
 		if (vga.draw.image_info.double_height) { // Spacepigs EGA Megademo
 			vga.draw.split_line *= 2;
 		}
 		++vga.draw.split_line; // EGA adds one buggy scanline
 	}
-//	if (machine==MCH_EGA) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
+//	if (is_machine_ega()) vga.draw.split_line = ((((vga.config.line_compare&0x5ff)+1)*2-1)/vga.draw.lines_scaled);
 #ifdef VGA_KEEP_CHANGES
 	bool startaddr_changed=false;
 #endif
@@ -1216,7 +1218,9 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		vga.draw.byte_panning_shift = 8;
 		vga.draw.address += vga.draw.bytes_skip;
 		vga.draw.address *= vga.draw.byte_panning_shift;
-		if (machine!=MCH_EGA) vga.draw.address += vga.draw.panning;
+		if (!is_machine_ega()) {
+			vga.draw.address += vga.draw.panning;
+		}
 #ifdef VGA_KEEP_CHANGES
 		startaddr_changed=true;
 #endif
@@ -1250,9 +1254,13 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	case M_TANDY_TEXT:
 	case M_CGA_TEXT_COMPOSITE:
 	case M_HERC_TEXT:
-		if (machine==MCH_HERC) vga.draw.linear_mask = 0xfff; // 1 page
-		else if (IS_EGAVGA_ARCH) vga.draw.linear_mask = 0x7fff; // 8 pages
-		else vga.draw.linear_mask = 0x3fff; // CGA, Tandy 4 pages
+		if (is_machine_hercules()) {
+			vga.draw.linear_mask = 0xfff; // 1 page
+		} else if (is_machine_ega_or_better()) {
+			vga.draw.linear_mask = 0x7fff; // 8 pages
+		} else {
+			vga.draw.linear_mask = 0x3fff; // CGA, Tandy 4 pages
+		}
 		vga.draw.cursor.address=vga.config.cursor_start*2;
 		vga.draw.address *= 2;
 
@@ -1347,7 +1355,7 @@ void VGA_CheckScanLength(void) {
 	case M_CGA4:
 	case M_CGA16: vga.draw.address_add = 80; break;
 	case M_TANDY2:
-		if (machine == MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			vga.draw.address_add = vga.draw.blocks / 4;
 			break;
 		}
@@ -1549,7 +1557,7 @@ static VgaTimings calculate_vga_timings()
 	DisplayTimings horiz = {};
 	DisplayTimings vert  = {};
 
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		horiz.total          = vga.crtc.horizontal_total;
 		horiz.display_end    = vga.crtc.horizontal_display_end;
 		horiz.blanking_end   = vga.crtc.end_horizontal_blanking & 0x1F;
@@ -1568,7 +1576,7 @@ static VgaTimings calculate_vga_timings()
 		vert.retrace_start = vga.crtc.vertical_retrace_start +
 		                     ((vga.crtc.overflow & 0x04) << 6);
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			// Additional bits only present on VGA cards
 			horiz.total |= (vga.s3.ex_hor_overflow & 0x1) << 8;
 			horiz.total += 3;
@@ -1637,13 +1645,11 @@ static VgaTimings calculate_vga_timings()
 		} else {
 			switch ((vga.misc_output >> 2) & 3) {
 			case 0:
-				clock = (machine == MCH_EGA) ? CgaPixelClockHz
-				                             : Vga640PixelClockHz;
+				clock = is_machine_ega() ? CgaPixelClockHz : Vga640PixelClockHz;
 				break;
 			case 1:
 			default:
-				clock = (machine == MCH_EGA) ? EgaPixelClockHz
-				                             : Vga720PixelClockHz;
+				clock = is_machine_ega() ? EgaPixelClockHz : Vga720PixelClockHz;
 				break;
 			}
 		}
@@ -1682,15 +1688,15 @@ static VgaTimings calculate_vga_timings()
 		vert.blanking_end   = vert.total;
 
 		switch (machine) {
-		case MCH_CGA:
-		case MCH_PCJR:
-		case MCH_TANDY:
+		case MachineType::Cga:
+		case MachineType::Pcjr:
+		case MachineType::Tandy:
 			clock = ((vga.tandy.mode.is_high_bandwidth)
 			                 ? CgaPixelClockHz
 			                 : (CgaPixelClockHz / 2)) /
 			        8;
 			break;
-		case MCH_HERC:
+		case MachineType::Hercules:
 			if (vga.herc.mode_control & 0x2) {
 				clock = 16000000 / 16;
 			} else {
@@ -1767,7 +1773,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 	auto horiz_display_end = horiz.display_end;
 
 	uint32_t vblank_skip = 0;
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		// Others need more investigation
 		if (vert.blanking_start < vert.total) {
 			// There will be no blanking at all otherwise
@@ -1820,7 +1826,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 	if (horiz.blanking_start < horiz.display_end) {
 		horiz_display_end = horiz.blanking_start;
 	}
-	if ((!IS_VGA_ARCH) && (vert.blanking_start < vert_display_end)) {
+	if (!is_machine_vga_or_better() && (vert.blanking_start < vert_display_end)) {
 		vert_display_end = vert.blanking_start;
 	}
 
@@ -1847,7 +1853,8 @@ static bool is_vga_scan_doubling_bit_set()
 	//
 	// We're only checking for method #1 here.
 	//
-	return IS_VGA_ARCH && vga.crtc.maximum_scan_line.is_scan_doubling_enabled;
+	return is_machine_vga_or_better() &&
+	       vga.crtc.maximum_scan_line.is_scan_doubling_enabled;
 }
 
 static constexpr auto display_aspect_ratio = Fraction(4, 3);
@@ -1892,14 +1899,14 @@ ImageInfo setup_drawing()
 {
 	// Set the drawing mode
 	switch (machine) {
-	case MCH_CGA:
-	case MCH_PCJR:
-	case MCH_TANDY: vga.draw.mode = DRAWLINE; break;
-	case MCH_EGA:
+	case MachineType::Cga:
+	case MachineType::Pcjr:
+	case MachineType::Tandy: vga.draw.mode = DRAWLINE; break;
+	case MachineType::Ega:
 		// Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
 		break;
-	case MCH_VGA:
+	case MachineType::Vga:
 	default: vga.draw.mode = PART; break;
 	}
 
@@ -1907,7 +1914,7 @@ ImageInfo setup_drawing()
 	// state on VGA before calling calculate_vga_timings(). Then we can
 	// divide address_line_total later if we decide to do "fake"
 	// scan doubling only.
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		vga.draw.address_line_total = vga.crtc.maximum_scan_line.maximum_scan_line +
 		                              1;
 	} else {
@@ -1928,7 +1935,7 @@ ImageInfo setup_drawing()
 		}
 	}
 
-	if (!IS_EGAVGA_ARCH) {
+	if (!is_machine_ega_or_better()) {
 		// in milliseconds
 		vga.draw.delay.hdend = static_cast<double>(
 		                               vga_timings.horiz.display_end) *
@@ -1943,7 +1950,7 @@ ImageInfo setup_drawing()
 	const auto updated_timings = update_vga_timings(vga_timings);
 
 	// EGA frequency dependent monitor palette
-	if (machine == MCH_EGA) {
+	if (is_machine_ega()) {
 		if (vga.misc_output & 1) {
 			// EGA card is in color mode
 			if ((1.0 / vga.draw.delay.htotal) > 19.0) {
@@ -2043,8 +2050,7 @@ ImageInfo setup_drawing()
 	video_mode.bios_mode_number = bios_mode_number;
 
 	auto pcjr_or_tga = [=]() {
-		return (machine == MCH_PCJR) ? GraphicsStandard::Pcjr
-		                             : GraphicsStandard::Tga;
+		return is_machine_pcjr() ? GraphicsStandard::Pcjr : GraphicsStandard::Tga;
 	};
 
 	auto cga_pcjr_or_tga = [=]() {
@@ -2082,7 +2088,7 @@ ImageInfo setup_drawing()
 			video_mode.color_depth = ColorDepth::IndexedColor256;
 
 			if (is_pixel_doubling ||
-			    (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a & 0x10))) {
+			    (svga_type == SvgaType::S3 && !(vga.s3.reg_3a & 0x10))) {
 				video_mode.width = horiz_end * 4;
 			} else {
 				video_mode.width = horiz_end * 8;
@@ -2280,7 +2286,7 @@ ImageInfo setup_drawing()
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
 		               vga.draw.pixel_doubling_allowed;
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
 
@@ -2332,7 +2338,7 @@ ImageInfo setup_drawing()
 			        render_width, render_height, double_width, double_height);
 		}
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			pixel_format = PixelFormat::BGRX32_ByteArray;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
@@ -2350,8 +2356,7 @@ ImageInfo setup_drawing()
 		video_mode.color_depth       = ColorDepth::IndexedColor16;
 
 		if (vga.tandy.mode.is_high_bandwidth) {
-			if (machine == MCH_TANDY &&
-			    vga.tandy.mode.is_tandy_640_dot_graphics) {
+			if (is_machine_tandy() && vga.tandy.mode.is_tandy_640_dot_graphics) {
 				vga.draw.blocks  = horiz_end * 4;
 				video_mode.width = horiz_end * 8;
 				render_width     = video_mode.width;
@@ -2399,7 +2404,7 @@ ImageInfo setup_drawing()
 		        simple 'width < 640' check will suffice instead
 		        until someone investigates this...
 
-		        if (machine == MCH_TANDY) {
+		        if (is_machine_tandy()) {
 		                double_width =
 		   (vga.tandy.mode.is_tand_640_dot_graphics) == 0; } else {
 		   double_width = (vga.tandy.mode.is_high_bandwidth) == 0;
@@ -2417,9 +2422,9 @@ ImageInfo setup_drawing()
 
 		// TODO this seems like overkill; could be probably simplified a
 		// lot
-		if ((machine == MCH_TANDY &&
+		if ((is_machine_tandy() &&
 		     vga.tandy.mode_control.is_tandy_640x200_4_color_graphics) ||
-		    (machine == MCH_PCJR &&
+		    (is_machine_pcjr() &&
 		     (vga.tandy.mode.is_high_bandwidth && vga.tandy.mode.is_graphics_enabled &&
 		      !vga.tandy.mode.is_black_and_white_mode &&
 		      vga.tandy.mode.is_video_enabled &&
@@ -2438,7 +2443,7 @@ ImageInfo setup_drawing()
 		video_mode.color_depth       = mono_cga ? ColorDepth::Monochrome
 		                                        : ColorDepth::IndexedColor2;
 
-		if (machine == MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			vga.draw.blocks = horiz_end * (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics
 			                                       ? 8
 			                                       : 4);
@@ -2495,7 +2500,7 @@ ImageInfo setup_drawing()
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
 		               vga.draw.pixel_doubling_allowed;
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			video_mode.is_double_scanned_mode = true;
 
 			video_mode.height = vert_end / 2;
@@ -2625,10 +2630,10 @@ ImageInfo setup_drawing()
 		video_mode.is_graphics_mode = false;
 
 		switch (machine) {
-		case MCH_EGA:
+		case MachineType::Ega:
 			video_mode.graphics_standard = GraphicsStandard::Ega;
 			break;
-		case MCH_VGA: {
+		case MachineType::Vga: {
 			constexpr auto max_vga_text_mode_number = 0x07;
 			if (bios_mode_number <= max_vga_text_mode_number) {
 				video_mode.graphics_standard = GraphicsStandard::Vga;
@@ -2649,7 +2654,7 @@ ImageInfo setup_drawing()
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
 		               vga.draw.pixel_doubling_allowed;
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
@@ -2787,7 +2792,8 @@ ImageInfo setup_drawing()
 	VGA_CheckScanLength();
 
 	auto vblank_skip = updated_timings.vblank_skip;
-	if (IS_VGA_ARCH && (vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
+	if (is_machine_vga_or_better() &&
+	    (vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
 		vblank_skip /= 2;
 	}
 

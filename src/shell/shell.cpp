@@ -450,7 +450,7 @@ void DOS_Shell::Run()
 #if C_DEBUG
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
-			if (machine == MCH_CGA) {
+			if (is_machine_cga()) {
 				if (mono_cga)
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA_MONO"),
 					         MMOD2_NAME);
@@ -458,8 +458,9 @@ void DOS_Shell::Run()
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA"),
 					         MMOD2_NAME);
 			}
-			if (machine == MCH_HERC)
+			if (is_machine_hercules()) {
 				WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
+			}
 			WriteOut(MSG_Get("SHELL_STARTUP_END"));
 		}
 		safe_strcpy(input_line, line.c_str());

@@ -156,9 +156,9 @@ union BiosVgaFlagsRec {
 #define VGAMEM_CTEXT 0xB800
 #define VGAMEM_MTEXT 0xB000
 
-#define BIOS_NCOLS uint16_t ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
-#define BIOS_NROWS uint16_t nrows=IS_EGAVGA_ARCH?((uint16_t)real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1):25;
-#define BIOS_CHEIGHT uint8_t cheight=IS_EGAVGA_ARCH?real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT):8;
+#define BIOS_NCOLS uint16_t ncols = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+#define BIOS_NROWS uint16_t nrows = is_machine_ega_or_better() ? ((uint16_t) real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS) + 1) : 25;
+#define BIOS_CHEIGHT uint8_t cheight = is_machine_ega_or_better() ? real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT) : 8;
 
 uint16_t INT10_GetTextColumns();
 uint16_t INT10_GetTextRows();

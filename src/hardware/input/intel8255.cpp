@@ -53,7 +53,7 @@ static void write_p61(io_port_t, io_val_t value, io_width_t)
 	// Update the state
 	port_b.data = new_port_b.data;
 
-	if (machine < MCH_EGA && port_b.xt_clear_keyboard) {
+	if (!is_machine_ega_or_better() && port_b.xt_clear_keyboard) {
 		// On XT only, bit 7 is a request to clear keyboard. This is
 		// only a pulse, and is normally kept at 0. We "ack" the
 		// request by switching the bit back normal (0) state. However,
@@ -94,7 +94,7 @@ static uint8_t read_p61(io_port_t, io_width_t)
 	port_b.read_toggle.flip();
 
 	// On PC/AT systems, bit 5 sets the timer 2 output status
-	if (is_machine(MCH_EGA | MCH_VGA)) {
+	if (is_machine_ega_or_better()) {
 		port_b.timer2_gating_alias = TIMER_GetOutput2();
 	} else {
 		// On XT systems always toggle bit 5 (Spellicopter CGA)
@@ -137,7 +137,7 @@ void I8255_Init()
 {
 	IO_RegisterWriteHandler(port_num_i8255_1, write_p61, io_width_t::byte);
 	IO_RegisterReadHandler(port_num_i8255_1, read_p61, io_width_t::byte);
-	if (machine == MCH_CGA || machine == MCH_HERC) {
+	if (is_machine_cga() || is_machine_hercules()) {
 		IO_RegisterReadHandler(port_num_i8255_2,
 		                       read_p62,
 		                       io_width_t::byte);
