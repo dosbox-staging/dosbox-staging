@@ -52,7 +52,6 @@ First-time users and people migrating from other DOSBox variants should start by
 | -------------------------- | -------------------------------     |
 | **Version control**        | Git                                 |
 | **Language**               | C++20                               |
-| **SDL**                    | >= 2.34.2                           |
 | **Logging**                | Loguru for C++<sup>[3]</sup>        |
 | **Build system**           | CMake + Ninja or Visual Studio 2022 |
 | **Dependency manager**     | vcpkg                               |
