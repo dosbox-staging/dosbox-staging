@@ -824,6 +824,7 @@ void precise_sleep(double seconds)
 		;
 	}
 }
+#endif
 
 void precise_sleep(double seconds)
 {
@@ -834,26 +835,34 @@ void precise_sleep(double seconds)
 
 	while (seconds > estimate) {
 		auto start = std::chrono::high_resolution_clock::now();
-		this_thread::sleep_for(milliseconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
 		auto end = std::chrono::high_resolution_clock::now();
 
 		double observed = (end - start).count() / 1e9;
 		seconds -= observed;
 
 		++count;
-		double delta = observed - mean;
+		const auto delta = observed - mean;
 		mean += delta / count;
 		m2 += delta * (observed - mean);
-		double stddev = sqrt(m2 / (count - 1));
+		const auto stddev = sqrt(m2 / (count - 1));
 
 		estimate = mean + stddev;
 	}
 
 	// spin lock
 	auto start = std::chrono::high_resolution_clock::now();
-	while ((std::chrono::high_resolution_clock::now() - start).count() / 1e9 < seconds) {
-		;
+	while ((std::chrono::high_resolution_clock::now() - start).count() / 1e9 <
+	       seconds) {
+			// On x86, this maps to a “PAUSE” to reduce contention
+			// TODO _mm_pause() maybe?
+//            std::atomic_signal_fence(std::memory_order_seq_cst);
+//
+//          // ref:
+//          // https://github.com/gstrauss/plasma/blob/master/plasma_spin.h
+
+			asm volatile("isb");
 	}
 }
 
-#endif

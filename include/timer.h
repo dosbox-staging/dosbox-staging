@@ -132,4 +132,6 @@ static inline void DelayUs(const int64_t microseconds)
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
 
+void precise_sleep(double seconds);
+
 #endif

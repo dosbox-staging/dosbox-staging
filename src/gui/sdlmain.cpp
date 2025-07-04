@@ -3750,17 +3750,17 @@ static void maybe_present()
 
 	// DOS rate, vsync off
 //	if (curr_frame_time_us < sdl.frame.frame_time_us + 5000) {
-//		const auto present_threshold_us = sdl.frame.frame_time_us - 3000;
+		const auto present_threshold_us = sdl.frame.frame_time_us - 10000;
 
-	if (curr_frame_time_us < sdl.frame.frame_time_us - 1000) {
+		if (curr_frame_time_us >= present_threshold_us) {
 
-		auto over = curr_frame_time_us - sdl.frame.frame_time_us;
-		if (over < 0) {
-			over = 0;
-		}
-		while (GetTicksUsSince(last_present_time_us) < sdl.frame.frame_time_us + over) {
-			;
-		}
+			auto wait_s = (sdl.frame.frame_time_us - curr_frame_time_us) * 0.001 * 0.001;
+
+			if (wait_s > 0) {
+				precise_sleep(wait_s);
+			} else {
+				LOG_WARNING("wait %2.6f ms", wait_s);
+			}
 
 	// host rate, vsync off
 //	if (curr_frame_time_us < sdl.frame.frame_time_us + 500) {
@@ -3777,18 +3777,18 @@ static void maybe_present()
 //			LOG_WARNING("present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
 
 			const auto frame_time_us = GetTicksDiff(t1, last_present_time_us);
-//			LOG_ERR("frame_time_ms: %2.4f", 0.001 * frame_time_us);
+			LOG_ERR("frame_time_ms: %2.4f", 0.001 * frame_time_us);
 
-			if (frame_time_us > sdl.frame.frame_time_us * 1.5) {
-				LOG_ERR("missed vsync (dropped vsynced frame)");
-			}
+//			if (frame_time_us > sdl.frame.frame_time_us * 1.5) {
+//				LOG_ERR("missed vsync (dropped vsynced frame)");
+//			}
 
 			last_present_time_us = t1;
-//		}
-	} else {
-		LOG_ERR("dropped 2");
-		last_present_time_us = now_us;
-	}
+		}
+//	} else {
+//		LOG_ERR("dropped 2");
+//		last_present_time_us = now_us;
+//	}
 }
 
 void GFX_MaybePresentFrame()
