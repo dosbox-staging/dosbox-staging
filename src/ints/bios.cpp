@@ -462,9 +462,13 @@ static Bitu INT8_Handler(void) {
 
 	/* decrement FDD motor timeout counter; roll over on earlier PC, stop at zero on later PC */
 	uint8_t val = mem_readb(BIOS_DISK_MOTOR_TIMEOUT);
-	if (val || !IS_EGAVGA_ARCH) mem_writeb(BIOS_DISK_MOTOR_TIMEOUT,val-1);
+	if (val || !is_machine_ega_or_better()) {
+		mem_writeb(BIOS_DISK_MOTOR_TIMEOUT, val - 1);
+	}
 	/* clear FDD motor bits when counter reaches zero */
-	if (val == 1) mem_writeb(BIOS_DRIVE_RUNNING,mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
+	if (val == 1) {
+		mem_writeb(BIOS_DRIVE_RUNNING, mem_readb(BIOS_DRIVE_RUNNING) & 0xF0);
+	}
 	return CBRET_NONE;
 }
 #undef DOSBOX_CLOCKSYNC
@@ -652,8 +656,8 @@ static Bitu INT15_Handler(void) {
 		mem_writew(data, 8); // 8 Bytes following
 
 		// Tandy and IBM PCjr
-		if (IS_TANDY_ARCH) {
-			if (machine == MCH_TANDY) {
+		if (is_machine_pcjr_or_tandy()) {
+			if (is_machine_tandy()) {
 				mem_writeb(data + 2, 0xFF); // Model ID (Tandy)
 			} else {
 				mem_writeb(data + 2, 0xFD); // Model ID (PCjr)
@@ -955,7 +959,7 @@ static Bitu INT15_Handler(void) {
 		LOG(LOG_BIOS,LOG_ERROR)("INT15:Unknown call %4X",reg_ax);
 		reg_ah=0x86;
 		CALLBACK_SCF(true);
-		if ((IS_EGAVGA_ARCH) || (machine==MCH_CGA)) {
+		if (is_machine_ega_or_better() || is_machine_cga()) {
 			/* relict from comparisons, as int15 exits with a retf2 instead of an iret */
 			CALLBACK_SZF(false);
 		}
@@ -1070,10 +1074,14 @@ static Bitu reboot_handler()
 	return CBRET_NONE;
 }
 
-void BIOS_SetEquipment(uint16_t equipment) {
-	mem_writew(BIOS_CONFIGURATION,equipment);
-	if (IS_EGAVGA_ARCH) equipment &= ~0x30; //EGA/VGA startup display mode differs in CMOS
-	CMOS_SetRegister(0x14,(uint8_t)(equipment&0xff)); //Should be updated on changes
+void BIOS_SetEquipment(uint16_t equipment)
+{
+	mem_writew(BIOS_CONFIGURATION, equipment);
+	if (is_machine_ega_or_better()) {
+		// EGA/VGA startup display mode differs in CMOS
+		equipment &= ~0x30;
+	}
+	CMOS_SetRegister(0x14, (uint8_t) (equipment & 0xff)); //Should be updated on changes
 }
 
 void BIOS_ZeroExtendedSize(bool in) {
@@ -1256,12 +1264,12 @@ public:
 		/* INT 12 Memory Size default at 640 kb */
 		callback[2].Install(&INT12_Handler,CB_IRET,"Int 12 Memory");
 		callback[2].Set_RealVec(0x12);
-		if (machine == MCH_TANDY) {
+		if (is_machine_tandy()) {
 			/* reduce reported memory size for the Tandy (32k graphics memory
 			   at the end of the conventional 640k) */
 			mem_writew(BIOS_MEMORY_SIZE, 624);
 			mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
-		} else if (machine == MCH_PCJR) {
+		} else if (is_machine_pcjr()) {
 			const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
 			assert(section);
 			const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
@@ -1360,9 +1368,15 @@ public:
 		phys_writeb(RealToPhysical(BIOS_DEFAULT_HANDLER_LOCATION),0xcf);	/* bios default interrupt vector location -> IRET */
 		phys_writew(RealToPhysical(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
 
-		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
-		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
-		else phys_writeb(0xffffe,0xfc);	/* PC */
+		if (is_machine_tandy()) {
+			// Tandy model
+			phys_writeb(0xffffe, 0xff);
+		} else if (is_machine_pcjr()) {
+			// PCJr model
+			phys_writeb(0xffffe, 0xfd);
+		} else {
+			phys_writeb(0xffffe, 0xfc);
+		}
 
 		// System BIOS identification
 		uint16_t i = 0;
@@ -1380,7 +1394,7 @@ public:
 			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
 
 		// write machine signature
-		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
+		const uint8_t machine_signature = is_machine_tandy() ? 0xff : 0x55;
 		phys_writeb(BiosMachineSignatureAddress, machine_signature);
 
 		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks can also be
@@ -1453,15 +1467,15 @@ public:
 		config|=0x2;
 #endif
 		switch (machine) {
-		case MCH_HERC:
+		case MachineType::Hercules:
 			//Startup monochrome
 			config|=0x30;
 			break;
-		case MCH_CGA:
-		case MCH_PCJR:
-		case MCH_TANDY:
-		case MCH_EGA:
-		case MCH_VGA:
+		case MachineType::Cga:
+		case MachineType::Pcjr:
+		case MachineType::Tandy:
+		case MachineType::Ega:
+		case MachineType::Vga:
 			//Startup 80x25 color
 			config|=0x20;
 			break;
@@ -1473,7 +1487,9 @@ public:
 		// PS2 mouse
 		config |= 0x04;
 		// DMA *not* supported - Ancient Art of War CGA uses this to identify PCjr
-		if (machine==MCH_PCJR) config |= 0x100;
+		if (is_machine_pcjr()) {
+			config |= 0x100;
+		}
 		// Gameport
 		config |= 0x1000;
 		BIOS_SetEquipment(config);

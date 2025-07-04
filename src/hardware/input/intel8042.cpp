@@ -364,7 +364,7 @@ static uint8_t get_irq_mouse()
 
 static uint8_t get_irq_keyboard()
 {
-	if (machine == MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		return IrqNumKbdPcjr;
 	} else {
 		return IrqNumKbdIbmPc;
@@ -542,7 +542,7 @@ static uint8_t get_input_port() // aka port P1
 
 	} port;
 
-	port.lacks_cga = (machine < MCH_CGA);
+	port.lacks_cga = !is_machine_cga_or_better();
 
 	return port.data;
 }

@@ -501,8 +501,9 @@ static uint8_t video_parameter_table_ega[0x40*0x17]={
 };
 
 
-uint16_t INT10_SetupVideoParameterTable(PhysPt basepos) {
-	if (IS_VGA_ARCH) {
+uint16_t INT10_SetupVideoParameterTable(PhysPt basepos)
+{
+	if (is_machine_vga_or_better()) {
 		for (Bitu i=0;i<0x40*0x1d;i++) {
 			phys_writeb(basepos+i,video_parameter_table_vga[i]);
 		}
@@ -519,12 +520,12 @@ void INT10_SetupBasicVideoParameterTable(void) {
 	/* video parameter table at F000:F0A4 */
 	RealSetVec(0x1d,RealMake(0xF000, 0xF0A4));
 	switch (machine) {
-	case MCH_TANDY:
+	case MachineType::Tandy:
 		for (uint16_t i = 0; i < sizeof(vparams_tandy); i++) {
 			phys_writeb(0xFF0A4+i,vparams_tandy[i]);
 		}
 		break;
-	case MCH_PCJR:
+	case MachineType::Pcjr:
 		for (uint16_t i = 0; i < sizeof(vparams_pcjr); i++) {
 			phys_writeb(0xFF0A4+i,vparams_pcjr[i]);
 		}
@@ -539,7 +540,7 @@ void INT10_SetupBasicVideoParameterTable(void) {
 
 #if 0
 void INT10_GenerateVideoParameterTable(void) {
-	if (!IS_VGA_ARCH) E_Exit("Be sure that all graphics registers are readable!");
+	if (!is_machine_vga_or_better()) E_Exit("Be sure that all graphics registers are readable!");
 	Bitu i;
 	for (i=0; i<4; i++) {
 		LOG_MSG("// video parameter table for mode %x (cga emulation)",i);
@@ -663,7 +664,7 @@ void INT10_GenerateVideoParameterTable(void) {
 			gfx_regs[0x04],gfx_regs[0x05],gfx_regs[0x06],gfx_regs[0x07],gfx_regs[0x08]);
 	}
 	for (i=0; i<4; i++) {
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			LOG_MSG("// video parameter table for mode %x (350 lines)",i);
 			LOG_MSG("  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,");
 			LOG_MSG("  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,");
@@ -720,7 +721,7 @@ void INT10_GenerateVideoParameterTable(void) {
 				gfx_regs[0x04],gfx_regs[0x05],gfx_regs[0x06],gfx_regs[0x07],gfx_regs[0x08]);
 		}
 	}
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		for (i=0x0e; i<0x14; i++) {
 			Bitu ct=i;
 			if (i==0x0e) ct=1;

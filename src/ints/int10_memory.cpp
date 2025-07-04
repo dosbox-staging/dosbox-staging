@@ -180,8 +180,8 @@ void INT10_ReloadFont()
 		                    int10.rom.font_16
 	);
 
-	const auto is_vga_9dot_font = (IS_VGA_ARCH &&
-	                               !vga.seq.clocking_mode.is_eight_dot_mode);
+	const auto is_vga_9dot_font = is_machine_vga_or_better() &&
+	                              !vga.seq.clocking_mode.is_eight_dot_mode;
 
 	const auto load_alternate_chars = (is_vga_9dot_font && char_height != 8);
 
@@ -193,7 +193,7 @@ void INT10_SetupRomMemory(void) {
 	PhysPt rom_base=PhysicalMake(0xc000,0);
 	Bitu i;
 	int10.rom.used=3;
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		// set up the start of the ROM
 		phys_writew(rom_base+0,0xaa55);
 		phys_writeb(rom_base+2,0x40);		// Size of ROM: 64 512-blocks = 32KB
@@ -202,10 +202,10 @@ void INT10_SetupRomMemory(void) {
 		phys_writeb(rom_base+0x20,0x4d);
 		phys_writeb(rom_base+0x21,0x20);
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			// SVGA card-specific ROM signatures
-			switch (svgaCard) {
-			case SVGA_S3Trio:
+			switch (svga_type) {
+			case SvgaType::S3:
 				phys_writeb(rom_base+0x003f,'S');
 				phys_writeb(rom_base+0x0040,'3');
 				phys_writeb(rom_base+0x0041,' ');
@@ -216,8 +216,8 @@ void INT10_SetupRomMemory(void) {
 				phys_writeb(rom_base+0x0046,'6');
 				phys_writeb(rom_base+0x0047,'4');
 				break;
-			case SVGA_TsengET4K:
-			case SVGA_TsengET3K:
+			case SvgaType::TsengEt3k:
+			case SvgaType::TsengEt4k:
 				phys_writeb(rom_base+0x0075,' ');
 				phys_writeb(rom_base+0x0076,'T');
 				phys_writeb(rom_base+0x0077,'s');
@@ -226,7 +226,7 @@ void INT10_SetupRomMemory(void) {
 				phys_writeb(rom_base+0x007a,'g');
 				phys_writeb(rom_base+0x007b,' ');
 				break;
-			case SVGA_ParadisePVGA1A:
+			case SvgaType::Paradise:
 				phys_writeb(rom_base+0x0048,' ');
 				phys_writeb(rom_base+0x0049,'W');
 				phys_writeb(rom_base+0x004a,'E');
@@ -241,7 +241,7 @@ void INT10_SetupRomMemory(void) {
 				phys_writeb(rom_base+0x007f,'A');
 				phys_writeb(rom_base+0x0080,'=');
 				break;
-			case SVGA_None:
+			case SvgaType::None:
 				LOG_ERR("INT10: Invalid VGA card with the VGA machine type");
 				break;
 			}
@@ -249,7 +249,9 @@ void INT10_SetupRomMemory(void) {
 		int10.rom.used=0x100;
 	}
 
-	if (IS_VGA_ARCH && svgaCard==SVGA_S3Trio) INT10_SetupVESA();
+	if (svga_type == SvgaType::S3) {
+		INT10_SetupVESA();
+	}
 
 	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
@@ -284,11 +286,11 @@ void INT10_SetupRomMemory(void) {
 	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
 
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		int10.rom.video_parameter_table=RealMake(0xC000,int10.rom.used);
 		int10.rom.used+=INT10_SetupVideoParameterTable(rom_base+int10.rom.used);
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			int10.rom.video_dcc_table=RealMake(0xC000,int10.rom.used);
 			phys_writeb(rom_base+int10.rom.used++,0x10);	// number of entries
 			phys_writeb(rom_base+int10.rom.used++,1);		// version number
@@ -335,7 +337,7 @@ void INT10_SetupRomMemory(void) {
 		int10.rom.used+=4;
 		phys_writed(rom_base+int10.rom.used,0);		// graphics character set override
 		int10.rom.used+=4;
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			phys_writed(rom_base+int10.rom.used,int10.rom.video_save_pointer_table);
 		} else {
 			phys_writed(rom_base+int10.rom.used,0);		// secondary save pointer table
@@ -348,8 +350,8 @@ void INT10_SetupRomMemory(void) {
 	INT10_SetupBasicVideoParameterTable();
 	INT10_SetupRomMemoryChecksum();
 
-	if (IS_TANDY_ARCH) {
-		RealSetVec(0x44,RealMake(0xf000,0xfa6e));
+	if (is_machine_pcjr_or_tandy()) {
+		RealSetVec(0x44, RealMake(0xf000, 0xfa6e));
 	}
 }
 
@@ -386,7 +388,7 @@ void INT10_ReloadRomFonts(void)
 void INT10_SetupRomMemoryChecksum(void)
 {
 	// EGA/VGA. Just to be safe
-	if (IS_EGAVGA_ARCH) {
+	if (is_machine_ega_or_better()) {
 		// Sum of all bytes in rom module 256 should be 0
 		uint8_t sum     = 0;
 		PhysPt rom_base = PhysicalMake(0xc000, 0);

@@ -113,7 +113,7 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 	// Fortunately, no commercial game developers seemed to use such
 	// horrible practices.
 	//
-	if (machine == MCH_VGA && !INT10_VideoModeChangeInProgress() &&
+	if (is_machine_vga_or_better() && !INT10_VideoModeChangeInProgress() &&
 	    !vga.ega_mode_with_vga_colors) {
 
 		// Even thought the video mode change has been completed at this
@@ -334,7 +334,7 @@ void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
 		// Mimic the legacy palette behaviour when emulating the Paradise
 		// card (the oldest SVGA card we emulate). This fixes the wrong
 		// colours appearing in some rare titles (e.g., Spell It Plus).
-		if (svgaCard == SVGA_ParadisePVGA1A) {
+		if (svga_type == SvgaType::Paradise) {
 			break;
 		}
 		[[fallthrough]];
@@ -368,7 +368,7 @@ void VGA_SetupDAC(void)
 	vga.dac.read_index  = 0;
 	vga.dac.write_index = 0;
 
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		// Set up the DAC IO port handlers
 		IO_RegisterWriteHandler(0x3c6, write_p3c6, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c6, read_p3c6, io_width_t::byte);

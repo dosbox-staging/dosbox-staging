@@ -33,7 +33,7 @@ void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color) {
 		} else {
 			// a 32k mode: PCJr special case (see M_TANDY16)
 			uint16_t seg;
-			if (machine==MCH_PCJR) {
+			if (is_machine_pcjr()) {
 				Bitu cpupage =
 					(real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
 				seg = cpupage << 10; // A14-16 to addr bits 14-16
@@ -78,7 +78,7 @@ void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color) {
 
 		uint16_t segment, offset;
 		if (is_32k) {
-			if (machine==MCH_PCJR) {
+			if (is_machine_pcjr()) {
 				Bitu cpupage =
 					(real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
 				segment = cpupage << 10; // A14-16 to addr bits 14-16
@@ -114,8 +114,8 @@ void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color) {
 	}
 	break;
 	case M_LIN4:
-		if ((machine!=MCH_VGA) || (svgaCard!=SVGA_TsengET4K) ||
-				(CurMode->swidth>800)) {
+		if (!is_machine_vga_or_better() || svga_type != SvgaType::TsengEt4k ||
+		    (CurMode->swidth > 800)) {
 			// the ET4000 BIOS supports text output in 800x600 SVGA
 			// (Gateway 2)
 			putpixelwarned = true;
@@ -214,7 +214,7 @@ void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color) {
 			bool is_32k = (real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE) >= 9)?true:false;
 			uint16_t segment, offset;
 			if (is_32k) {
-				if (machine==MCH_PCJR) {
+				if (is_machine_pcjr()) {
 					Bitu cpupage = (real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
 					segment = cpupage << 10;
 				} else segment = 0xb800;

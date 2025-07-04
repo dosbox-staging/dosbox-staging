@@ -45,8 +45,9 @@
 #include "video.h"
 
 bool shutdown_requested = false;
-MachineType machine;
-SVGACards svgaCard;
+
+MachineType machine   = MachineType::None;
+SvgaType    svga_type = SvgaType::None;
 
 void LOG_StartUp();
 void MEM_Init(Section *);
@@ -467,40 +468,49 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 		                         arguments->machine);
 	}
 
-	std::string mtype = section->Get_string("machine");
-	svgaCard = SVGA_None;
-	machine = MCH_VGA;
-	int10.vesa_nolfb = false;
+	const auto machine_str = section->Get_string("machine");
+
+	svga_type = SvgaType::None;
+	machine   = MachineType::Vga;
+
+	int10.vesa_nolfb  = false;
 	int10.vesa_oldvbe = false;
-	if      (mtype == "cga")      { machine = MCH_CGA; mono_cga = false; }
-	else if (mtype == "cga_mono") { machine = MCH_CGA; mono_cga = true; }
-	else if (mtype == "tandy")    { machine = MCH_TANDY; }
-	else if (mtype == "pcjr")     { machine = MCH_PCJR;
-	} else if (mtype == "hercules") {
-		machine = MCH_HERC;
-	} else if (mtype == "ega") {
-		machine = MCH_EGA;
-	} else if (mtype == "svga_s3") {
-		svgaCard = SVGA_S3Trio;
-	} else if (mtype == "vesa_nolfb") {
-		svgaCard = SVGA_S3Trio;
+
+	if (machine_str == "cga") {
+		machine = MachineType::Cga;
+		mono_cga = false;
+	} else if (machine_str == "cga_mono") {
+		machine = MachineType::Cga;
+		mono_cga = true;
+	} else if (machine_str == "tandy") {
+		machine = MachineType::Tandy;
+	} else if (machine_str == "pcjr") {
+		machine = MachineType::Pcjr;
+	} else if (machine_str == "hercules") {
+		machine = MachineType::Hercules;
+	} else if (machine_str == "ega") {
+		machine = MachineType::Ega;
+	} else if (machine_str == "svga_s3") {
+		svga_type = SvgaType::S3;
+	} else if (machine_str == "vesa_nolfb") {
+		svga_type = SvgaType::S3;
 		int10.vesa_nolfb = true;
-	} else if (mtype == "vesa_oldvbe") {
-		svgaCard = SVGA_S3Trio;
+	} else if (machine_str == "vesa_oldvbe") {
+		svga_type = SvgaType::S3;
 		int10.vesa_oldvbe = true;
-	} else if (mtype == "svga_et4000") {
-		svgaCard = SVGA_TsengET4K;
-	} else if (mtype == "svga_et3000") {
-		svgaCard = SVGA_TsengET3K;
-	} else if (mtype == "svga_paradise") {
-		svgaCard = SVGA_ParadisePVGA1A;
+	} else if (machine_str == "svga_et3000") {
+		svga_type = SvgaType::TsengEt3k;
+	} else if (machine_str == "svga_et4000") {
+		svga_type = SvgaType::TsengEt4k;
+	} else if (machine_str == "svga_paradise") {
+		svga_type = SvgaType::Paradise;
 	} else {
-		E_Exit("DOSBOX: Invalid machine type '%s'", mtype.c_str());
+		E_Exit("DOSBOX: Invalid machine type '%s'", machine_str.c_str());
 	}
 
 	// VGA-type machine needs an valid SVGA card and vice-versa
-	assert((machine == MCH_VGA && svgaCard != SVGA_None) ||
-	       (machine != MCH_VGA && svgaCard == SVGA_None));
+	assert((machine == MachineType::Vga && svga_type != SvgaType::None) ||
+	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
 static void DOSBOX_RealInit(Section* sec)

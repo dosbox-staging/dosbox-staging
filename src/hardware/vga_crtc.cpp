@@ -147,7 +147,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 		vga.crtc.preset_row_scan  = val;
 		vga.config.hlines_skip = val & 31;
 
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			vga.config.bytes_skip = (val >> 5) & 3;
 		} else {
 			vga.config.bytes_skip = 0;
@@ -162,7 +162,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 		break;
 
 	case 0x09: {
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			vga.config.line_compare = (vga.config.line_compare & 0x5ff) |
 			                          (val & 0x40) << 3;
 		}
@@ -186,7 +186,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 	case 0x0a: // Cursor Start Register
 		vga.crtc.cursor_start    = val;
 		vga.draw.cursor.sline = val & 0x1f;
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			vga.draw.cursor.enabled = !(val & 0x20);
 		} else {
 			vga.draw.cursor.enabled = true;
@@ -250,13 +250,13 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 	case 0x11: // Vertical Retrace End Register
 		vga.crtc.vertical_retrace_end = val;
 
-		if (IS_EGAVGA_ARCH && !(val & 0x10)) {
+		if (is_machine_ega_or_better() && !(val & 0x10)) {
 			vga.draw.vret_triggered = false;
-			if (machine == MCH_EGA) {
+			if (is_machine_ega()) {
 				PIC_DeActivateIRQ(9);
 			}
 		}
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			vga.crtc.read_only = (val & 128) > 0;
 		} else {
 			vga.crtc.read_only = false;
@@ -310,7 +310,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 
 	case 0x14: // Underline Location Register
 		vga.crtc.underline_location = val;
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			// Byte,word,dword mode
 			if (vga.crtc.underline_location & 0x20) {
 				vga.config.addr_shift = 2;

@@ -433,7 +433,7 @@ static struct {
 
 static void save_vga_registers()
 {
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		for (uint8_t i = 0; i < 9; i++) {
 			IO_Write(VGAREG_GRDC_ADDRESS, i);
 			vga_regs.grdc_address[i] = IO_Read(VGAREG_GRDC_DATA);
@@ -451,7 +451,7 @@ static void save_vga_registers()
 		IO_Write(VGAREG_SEQU_ADDRESS, 2);
 		vga_regs.sequ_data = IO_Read(VGAREG_SEQU_DATA);
 		IO_Write(VGAREG_SEQU_DATA, 0xF);
-	} else if (machine == MCH_EGA) {
+	} else if (is_machine_ega()) {
 		// Set Map to all planes.
 		IO_Write(VGAREG_SEQU_ADDRESS, 2);
 		IO_Write(VGAREG_SEQU_DATA, 0xF);
@@ -460,7 +460,7 @@ static void save_vga_registers()
 
 static void restore_vga_registers()
 {
-	if (IS_VGA_ARCH) {
+	if (is_machine_vga_or_better()) {
 		for (uint8_t i = 0; i < 9; i++) {
 			IO_Write(VGAREG_GRDC_ADDRESS, i);
 			IO_Write(VGAREG_GRDC_DATA, vga_regs.grdc_address[i]);
@@ -979,7 +979,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 
 	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
 
-	const bool is_svga_mode = IS_VGA_ARCH &&
+	const bool is_svga_mode = is_machine_vga_or_better() &&
 	                          (bios_screen_mode > LastNonSvgaModeNumber);
 	const bool is_svga_text = is_svga_mode && INT10_IsTextMode(*CurMode);
 

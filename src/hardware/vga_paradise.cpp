@@ -192,7 +192,7 @@ bool AcceptsMode_PVGA1A(Bitu mode) {
 	return VideoModeMemSize(mode) < vga.vmemsize;
 }
 
-void SVGA_Setup_ParadisePVGA1A(void) {
+void SVGA_Setup_Paradise(void) {
 	svga.write_p3cf = &write_p3cf_pvga1a;
 	svga.read_p3cf = &read_p3cf_pvga1a;
 

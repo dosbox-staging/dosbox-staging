@@ -270,7 +270,7 @@ void BOOT::Run(void)
 	        ->Read_Sector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
 	if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
 	    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
-		if (machine != MCH_PCJR) {
+		if (!is_machine_pcjr()) {
 			WriteOut(MSG_Get("PROGRAM_BOOT_CART_WO_PCJR"));
 		} else {
 			uint8_t rombuf[65536];
@@ -489,7 +489,7 @@ void BOOT::Run(void)
 			real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
 
 		/* create appearance of floppy drive DMA usage (Demon's Forge) */
-		if (!IS_TANDY_ARCH && floppysize != 0)
+		if (!is_machine_pcjr_or_tandy() && floppysize != 0)
 			DMA_GetChannel(2)->has_reached_terminal_count = true;
 
 		/* revector some dos-allocated interrupts */

@@ -123,8 +123,9 @@ uint32_t PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 std::atomic<double> atomic_pic_index = 0.0;
 
-void PIC_Controller::set_imr(uint8_t val) {
-	if (machine == MCH_PCJR) {
+void PIC_Controller::set_imr(uint8_t val)
+{
+	if (is_machine_pcjr()) {
 		//irq 6 is a NMI on the PCJR
 		if (this == &primary_controller)
 			val &= ~(1 << (6));
@@ -655,12 +656,12 @@ public:
 		// Ref: https://dosdays.co.uk/topics/io_addresses_irq_dma.php
 		// If present, the MPU-401 activates and uses IRQ 9.
 		//
-		if (IS_EGAVGA_ARCH) {
+		if (is_machine_ega_or_better()) {
 			PIC_SetIRQMask(9, false);
 			PIC_DeActivateIRQ(9);
 		}
 
-		if (machine == MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			/* Enable IRQ6 (replacement for the NMI for PCJr) */
 			PIC_SetIRQMask(6,false);
 		}

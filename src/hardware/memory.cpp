@@ -754,7 +754,7 @@ public:
 		install_rom_page_handlers(pc_rom_range);
 
 		// Setup PCjr Cartridge ROM page handlers between 0xe0000-0xf0000
-		if (machine == MCH_PCJR) {
+		if (is_machine_pcjr()) {
 			constexpr page_range_t pcjr_rom_range = {0xe0, 0xf0};
 			install_rom_page_handlers(pcjr_rom_range);
 		}

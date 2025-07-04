@@ -812,7 +812,7 @@ void filter_compatible_s3_vesa_modes()
 	CurMode = std::prev(ModeList_VGA.end());
 }
 
-void SVGA_Setup_S3Trio()
+void SVGA_Setup_S3()
 {
 	svga.write_p3d5 = &SVGA_S3_WriteCRTC;
 	svga.read_p3d5  = &SVGA_S3_ReadCRTC;

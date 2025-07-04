@@ -63,37 +63,85 @@ int64_t DOSBOX_GetTicksDone();
 void DOSBOX_SetTicksDone(const int64_t ticks_done);
 void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
 
-enum SVGACards {
-	SVGA_None,
-	SVGA_S3Trio,
-	SVGA_TsengET4K,
-	SVGA_TsengET3K,
-	SVGA_ParadisePVGA1A
-}; 
+enum class MachineType {
+	// Value not set yet
+	None,
 
-extern SVGACards svgaCard;
-extern bool mono_cga;
+	// PC XT with Hercules
+	Hercules,
 
-enum MachineType {
-	// In rough age-order: Hercules is the oldest and VGA is the newest
-	// (Tandy started out as a clone of the PCjr, so PCjr came first)
-	MCH_INVALID = 0,
-	MCH_HERC    = 1 << 0,
-	MCH_CGA     = 1 << 1,
-	MCH_TANDY   = 1 << 2,
-	MCH_PCJR    = 1 << 3,
-	MCH_EGA     = 1 << 4,
-	MCH_VGA     = 1 << 5,
+	// PC XT with CGA
+	Cga,
+	// IBM PCjr
+	Pcjr,
+	// Tandy 1000
+	Tandy,
+
+	// PC AT with EGA
+	Ega,
+	// PC AT with VGA or SVGA
+	Vga
 };
 
-extern MachineType machine;
+enum class SvgaType {
+	// Non-SVGA card
+	None,
+	// S3 Graphics series (emulated card is mostly Trio64 compatible)
+	S3,
+	// Tseng Labs ET3000
+	TsengEt3k,
+	// Tseng Labs ET4000
+	TsengEt4k,
+	// Paradise Systems PVGA1A
+	Paradise
+}; 
 
-inline bool is_machine(const int type) {
-	return machine & type;
+extern MachineType machine;
+extern SvgaType    svga_type;
+
+extern bool mono_cga;
+
+inline bool is_machine_svga() {
+	return svga_type != SvgaType::None;
 }
-#define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
-#define IS_EGAVGA_ARCH ((machine==MCH_EGA) || (machine==MCH_VGA))
-#define IS_VGA_ARCH (machine==MCH_VGA)
+
+inline bool is_machine_vga_or_better() {
+	return machine == MachineType::Vga;
+}
+
+inline bool is_machine_ega() {
+	return machine == MachineType::Ega;	
+}
+
+inline bool is_machine_ega_or_better() {
+	return is_machine_ega() || is_machine_vga_or_better();
+}
+
+inline bool is_machine_tandy() {
+	return machine == MachineType::Tandy;
+}
+
+inline bool is_machine_pcjr() {
+	return machine == MachineType::Pcjr;
+}
+
+inline bool is_machine_pcjr_or_tandy() {
+	return is_machine_pcjr() || is_machine_tandy();
+}
+
+inline bool is_machine_cga() {
+	return machine == MachineType::Cga;
+}
+
+inline bool is_machine_cga_or_better() {
+	return is_machine_cga() ||
+               is_machine_pcjr_or_tandy() ||
+               is_machine_ega_or_better();
+}
+
+inline bool is_machine_hercules() {
+	return machine == MachineType::Hercules;
+}
 
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"

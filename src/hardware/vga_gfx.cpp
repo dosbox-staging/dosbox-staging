@@ -210,15 +210,15 @@ static uint8_t read_p3cf(io_port_t port, io_width_t)
 	return 0;	/* Compiler happy */
 }
 
-void VGA_SetupGFX(void) {
-	if (IS_EGAVGA_ARCH) {
+void VGA_SetupGFX()
+{
+	if (is_machine_ega_or_better()) {
 		IO_RegisterWriteHandler(0x3ce, write_p3ce, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3cf, write_p3cf, io_width_t::byte);
-		if (IS_VGA_ARCH) {
-			IO_RegisterReadHandler(0x3ce, read_p3ce, io_width_t::byte);
-			IO_RegisterReadHandler(0x3cf, read_p3cf, io_width_t::byte);
-		}
+	}
+
+	if (is_machine_vga_or_better()) {
+		IO_RegisterReadHandler(0x3ce, read_p3ce, io_width_t::byte);
+		IO_RegisterReadHandler(0x3cf, read_p3cf, io_width_t::byte);
 	}
 }
-
-

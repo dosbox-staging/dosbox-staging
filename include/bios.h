@@ -83,8 +83,8 @@
 
 #define BIOS_WAIT_FLAG_POINTER          0x498
 #define BIOS_WAIT_FLAG_COUNT	        0x49c		
-#define BIOS_WAIT_FLAG_ACTIVE			0x4a0
-#define BIOS_WAIT_FLAG_TEMP				0x4a1
+#define BIOS_WAIT_FLAG_ACTIVE		0x4a0
+#define BIOS_WAIT_FLAG_TEMP		0x4a1
 
 
 #define BIOS_PRINT_SCREEN_FLAG          0x500
@@ -92,12 +92,12 @@
 #define BIOS_VIDEO_SAVEPTR              0x4a8
 
 
-#define BIOS_DEFAULT_HANDLER_LOCATION	(RealMake(0xf000,0xff53))
-#define BIOS_DEFAULT_INT5_LOCATION		(RealMake(0xf000,0xff54))
-#define BIOS_DEFAULT_IRQ0_LOCATION		(RealMake(0xf000,0xfea5))
-#define BIOS_DEFAULT_IRQ1_LOCATION		(RealMake(0xf000,0xe987))
-#define BIOS_DEFAULT_IRQ2_LOCATION		(RealMake(0xf000,0xff55))
-#define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,(machine==MCH_PCJR)?0x0043:0xe05b))
+#define BIOS_DEFAULT_HANDLER_LOCATION	(RealMake(0xf000, 0xff53))
+#define BIOS_DEFAULT_INT5_LOCATION	(RealMake(0xf000, 0xff54))
+#define BIOS_DEFAULT_IRQ0_LOCATION	(RealMake(0xf000, 0xfea5))
+#define BIOS_DEFAULT_IRQ1_LOCATION	(RealMake(0xf000, 0xe987))
+#define BIOS_DEFAULT_IRQ2_LOCATION	(RealMake(0xf000, 0xff55))
+#define BIOS_DEFAULT_RESET_LOCATION	(RealMake(0xf000, is_machine_pcjr() ? 0x0043 : 0xe05b))
 
 // The maximum "normal key" scancode value handled by keyboard bios routines.
 // This should match the maximum return value set in KEYBOARD_AddKey()'s switch

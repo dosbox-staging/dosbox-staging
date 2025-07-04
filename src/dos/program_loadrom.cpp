@@ -60,7 +60,7 @@ void LOADROM::Run(void)
 		if (data_read >= 0x4000 && rom_buffer[0] == 0x55 &&
 		    rom_buffer[1] == 0xaa && (rom_buffer[3] & 0xfc) == 0xe8 &&
 		    strncmp((char*)(&rom_buffer[0x1e]), "IBM", 3) == 0) {
-			if (!IS_EGAVGA_ARCH) {
+			if (!is_machine_ega_or_better()) {
 				WriteOut(MSG_Get("PROGRAM_LOADROM_INCOMPATIBLE"));
 				return;
 			}

@@ -1512,8 +1512,11 @@ uint32_t XGA_Read(io_port_t port, io_width_t width)
 	return 0xffffffff;
 }
 
-void VGA_SetupXGA(void) {
-	if (!IS_VGA_ARCH) return;
+void VGA_SetupXGA()
+{
+	if (!is_machine_vga_or_better()) {
+		return;
+	}
 
 	memset(&xga, 0, sizeof(XGAStatus));
 

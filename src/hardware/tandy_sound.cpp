@@ -647,7 +647,7 @@ void TANDYSOUND_Init(Section* section)
 	const auto prop = static_cast<Section_prop*>(section);
 	const auto pref = prop->Get_string("tandy");
 
-	if (has_false(pref) || (!IS_TANDY_ARCH && pref == "auto")) {
+	if (has_false(pref) || (!is_machine_pcjr_or_tandy() && pref == "auto")) {
 		BIOS_ConfigureTandyDacCallbacks(false);
 		return;
 	}
@@ -655,8 +655,8 @@ void TANDYSOUND_Init(Section* section)
 	ConfigProfile cfg;
 
 	switch (machine) {
-	case MCH_PCJR: cfg = ConfigProfile::PcjrSystem; break;
-	case MCH_TANDY: cfg = ConfigProfile::TandySystem; break;
+	case MachineType::Pcjr:  cfg = ConfigProfile::PcjrSystem; break;
+	case MachineType::Tandy: cfg = ConfigProfile::TandySystem; break;
 	default: cfg = ConfigProfile::SoundCardOnly; break;
 	}
 
@@ -666,7 +666,7 @@ void TANDYSOUND_Init(Section* section)
 	//
 	DMA_ShutdownSecondaryController();
 
-	const auto wants_dac = has_true(pref) || (IS_TANDY_ARCH && pref == "auto");
+	const auto wants_dac = has_true(pref) || (is_machine_pcjr_or_tandy() && pref == "auto");
 	if (wants_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
 		        cfg, prop->Get_string("tandy_dac_filter"));

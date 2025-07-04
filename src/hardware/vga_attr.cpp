@@ -139,7 +139,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		case 0x10: { // Mode Control Register (EGA & VGA)
 			// Not really correct, but should do it
 			AttributeModeControlRegister new_value = {val};
-			if (!IS_VGA_ARCH) {
+			if (!is_machine_vga_or_better()) {
 				new_value.is_pixel_panning_enabled = 0;
 				new_value.is_8bit_color_enabled    = 0;
 				new_value.palette_bits_5_4_select  = 0;
@@ -229,7 +229,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			case M_LIN16:
 			default: vga.config.pel_panning = (val & 0x7);
 			}
-			if (machine == MCH_EGA) {
+			if (is_machine_ega()) {
 				// On the EGA panning can be programmed for
 				// every scanline:
 				vga.draw.panning = vga.config.pel_panning;
@@ -244,7 +244,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			break;
 
 		case 0x14: // Color Select Register (VGA only)
-			if (!IS_VGA_ARCH) {
+			if (!is_machine_vga_or_better()) {
 				vga.attr.color_select = 0;
 				break;
 			}
@@ -323,20 +323,20 @@ static uint8_t read_p3c1(io_port_t, io_width_t)
 
 void VGA_SetupAttr()
 {
+	if (!is_machine_ega_or_better()) {
+		return;
+	}
+
 	// The Attribute Control Registers can be written on port 3C0h on EGA
 	// and VGA.
-	if (machine == MCH_EGA || machine == MCH_VGA) {
-		IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
-	}
+	IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
 
-	if (machine == MCH_EGA) {
-		IO_RegisterWriteHandler(0x3c1, write_p3c0, io_width_t::byte);
-	}
-
-	if (machine == MCH_VGA) {
+	if (is_machine_vga_or_better()) {
 		// The Attribute Control Registers canbe also read from port
 		// 3C1h on VGA only.
 		IO_RegisterReadHandler(0x3c1, read_p3c1, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c0, read_p3c0, io_width_t::byte);
+	} else {
+		IO_RegisterWriteHandler(0x3c1, write_p3c0, io_width_t::byte);
 	}
 }

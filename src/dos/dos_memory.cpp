@@ -374,8 +374,9 @@ bool DOS_FreeMemory(uint16_t segment) {
 }
 
 
-void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
-	if (umb_active  && (!IS_TANDY_ARCH)) {
+void DOS_BuildUMBChain(bool umb_active, bool ems_active)
+{
+	if (umb_active && !is_machine_pcjr_or_tandy()) {
 		uint16_t first_umb_seg = 0xd000;
 		uint16_t first_umb_size = 0x2000;
 		if(ems_active) first_umb_size = 0x1000;
@@ -497,14 +498,14 @@ void DOS_SetupMemory(void) {
 	mcb_sizes+=17;
 	tempmcb2.SetType(middle_mcb_type);
 
-	if (machine==MCH_TANDY) {
+	if (is_machine_tandy()) {
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
 		DOS_MCB free_block((uint16_t)DOS_MEM_START+mcb_sizes);
 		free_block.SetPSPSeg(MCB_FREE);
 		free_block.SetType(ending_mcb_type);
 		free_block.SetSize(0x9BFF - DOS_MEM_START - mcb_sizes);
-	} else if (machine==MCH_PCJR) {
+	} else if (is_machine_pcjr()) {
 		const auto pcjr_start = DOS_MEM_START + mcb_sizes;
 		constexpr auto mcb_entry_size = 1;
 

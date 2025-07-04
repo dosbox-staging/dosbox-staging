@@ -166,7 +166,7 @@ static const KeyCodes& get_key_codes_for(const uint8_t scan_code)
 bool BIOS_AddKeyToBuffer(uint16_t code) {
 	if (mem_readb(BIOS_KEYBOARD_FLAGS2)&8) return true;
 	uint16_t start,end,head,tail,ttail;
-	if (machine==MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		/* should be done for cga and others as well, to be tested */
 		start=0x1e;
 		end=0x3e;
@@ -194,7 +194,7 @@ static void add_key(uint16_t code) {
 
 static bool get_key(uint16_t &code) {
 	uint16_t start,end,head,tail,thead;
-	if (machine==MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		/* should be done for cga and others as well, to be tested */
 		start=0x1e;
 		end=0x3e;
@@ -645,7 +645,7 @@ void BIOS_SetupKeyboard(void) {
 	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,RealToPhysical(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
 	RealSetVec(0x09,BIOS_DEFAULT_IRQ1_LOCATION);
 
-	if (machine==MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		call_irq6=CALLBACK_Allocate();
 		CALLBACK_Setup(call_irq6,nullptr,CB_IRQ6_PCJR,"PCJr kb irq");
 		RealSetVec(0x0e,CALLBACK_RealPointer(call_irq6));

@@ -7887,8 +7887,7 @@ static void voodoo_init(Section* sec)
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
 	// Only activate on SVGA machines and when requested
-	if (machine != MCH_VGA || svgaCard == SVGA_None || !section ||
-	    !section->Get_bool("voodoo")) {
+	if (!is_machine_svga() || !section || !section->Get_bool("voodoo")) {
 		return;
 	}
 	//

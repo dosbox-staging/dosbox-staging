@@ -101,7 +101,7 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 	}
 
 	switch (machine) {
-	case MCH_HERC:
+	case MachineType::Hercules:
 		if (mode_str == "80x25") {
 			INT10_SetVideoMode(0x07);
 		} else {
@@ -110,9 +110,9 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 		}
 		break;
 
-	case MCH_CGA:
-	case MCH_TANDY:
-	case MCH_PCJR:
+	case MachineType::Cga:
+	case MachineType::Tandy:
+	case MachineType::Pcjr:
 		if (mode_str == "40x25") {
 			INT10_SetVideoMode(0x01);
 
@@ -125,7 +125,7 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 		}
 		break;
 
-	case MCH_EGA:
+	case MachineType::Ega:
 		if (mode_str == "40x25") {
 			INT10_SetVideoMode(0x01);
 
@@ -142,8 +142,8 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 		}
 		break;
 
-	case MCH_VGA:
-		if (svgaCard == SVGA_S3Trio) {
+	case MachineType::Vga:
+		if (svga_type == SvgaType::S3) {
 			if (const auto it = video_mode_map_svga_s3.find(mode_str);
 			    it != video_mode_map_svga_s3.end()) {
 

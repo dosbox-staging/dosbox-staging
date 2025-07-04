@@ -348,7 +348,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		uint16_t minsize,maxsize;uint16_t maxfree=0xffff;DOS_AllocateMemory(&pspseg,&maxfree);
 		if (iscom) {
 			minsize=0x1000;maxsize=0xffff;
-			if (machine==MCH_PCJR) {
+			if (is_machine_pcjr()) {
 				/* try to load file into memory below 96k */ 
 				pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 				uint16_t dataread=0x1800;
@@ -380,7 +380,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		if (maxfree<maxsize) memsize=maxfree;
 		else memsize=maxsize;
 		if (!DOS_AllocateMemory(&pspseg,&memsize)) E_Exit("DOS:Exec error in memory");
-		if (iscom && (machine==MCH_PCJR) && (pspseg<0x2000)) {
+		if (iscom && is_machine_pcjr() && (pspseg < 0x2000)) {
 			maxsize=0xffff;
 			/* resize to full extent of memory block */
 			DOS_ResizeMemory(pspseg,&maxsize);

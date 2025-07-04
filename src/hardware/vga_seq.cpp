@@ -29,7 +29,7 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 
 		// If the user is forcing the clocking mode's 8/9-dot-mode bit high,
 		// then adjust the incoming value before processing it.
-		if (vga.seq.wants_vga_8dot_font && IS_VGA_ARCH) {
+		if (vga.seq.wants_vga_8dot_font && is_machine_vga_or_better()) {
 			auto reg = ClockingModeRegister{val};
 			reg.is_eight_dot_mode = true;
 			val = reg.data;
@@ -73,12 +73,14 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 		{
 			seq(character_map_select)=val;
 		        auto font1 = static_cast<uint8_t>((val & 0x3) << 1);
-		        if (IS_VGA_ARCH)
+		        if (is_machine_vga_or_better()) {
 			        font1 |= (val & 0x10) >> 4;
+		        }
 		        vga.draw.font_tables[0] = &vga.draw.font[font1 * 8 * 1024];
 		        uint8_t font2 = ((val & 0xc) >> 1);
-		        if (IS_VGA_ARCH)
+		        if (is_machine_vga_or_better()) {
 			        font2 |= (val & 0x20) >> 5;
+		        }
 		        vga.draw.font_tables[1] = &vga.draw.font[font2 * 8 * 1024];
 	}
 	/*
@@ -100,7 +102,7 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 		                rather than the Map Mask and Read Map Select Registers.
 		*/
 		seq(memory_mode)=val;
-		if (IS_VGA_ARCH) {
+		if (is_machine_vga_or_better()) {
 			/* Changing this means changing the VGA Memory Read/Write Handler */
 			if (val&0x08) vga.config.chained=true;
 			else vga.config.chained=false;
@@ -134,12 +136,13 @@ uint8_t read_p3c5(io_port_t, io_width_t)
 	return 0;
 }
 
-void VGA_SetupSEQ(void) {
-	if (IS_EGAVGA_ARCH) {
+void VGA_SetupSEQ()
+{
+	if (is_machine_ega_or_better()) {
 		IO_RegisterWriteHandler(0x3c4, write_p3c4, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3c5, write_p3c5, io_width_t::byte);
-		if (IS_VGA_ARCH) {
 
+		if (is_machine_vga_or_better()) {
 			// Let the user force the clocking mode's 8/9-dot-mode bit high
 			const auto conf    = control->GetSection("dosbox");
 			const auto section = static_cast<Section_prop*>(conf);

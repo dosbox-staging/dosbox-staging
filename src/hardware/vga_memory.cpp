@@ -964,13 +964,13 @@ void VGA_SetupHandlers(void) {
 
 	PageHandler *newHandler;
 	switch (machine) {
-	case MCH_CGA:
-	case MCH_PCJR:
+	case MachineType::Cga:
+	case MachineType::Pcjr:
 		MEM_SetPageHandler( VGA_PAGE_A0, 16, &vgaph.empty );
 		MEM_SetPageHandler( VGA_PAGE_B0, 8, &vgaph.empty );
 		MEM_SetPageHandler( VGA_PAGE_B8, 8, &vgaph.pcjr );
 		goto range_done;
-	case MCH_HERC:
+	case MachineType::Hercules:
 		MEM_SetPageHandler( VGA_PAGE_A0, 16, &vgaph.empty );
 		vgapages.base=VGA_PAGE_B0;
 		if (vga.herc.enable_bits & 0x2) {
@@ -987,7 +987,7 @@ void VGA_SetupHandlers(void) {
 			MEM_SetPageHandler(VGA_PAGE_B8,8,&vgaph.empty);
 		}
 		goto range_done;
-	case MCH_TANDY:
+	case MachineType::Tandy:
 		/* Always map 0xa000 - 0xbfff, might overwrite 0xb800 */
 		vgapages.base=VGA_PAGE_A0;
 		vgapages.mask=0x1ffff;
@@ -1004,11 +1004,12 @@ void VGA_SetupHandlers(void) {
 		}
 		goto range_done;
 //		MEM_SetPageHandler(vga.tandy.mem_bank<<2,vga.tandy.is_32k_mode ? 0x08 : 0x04,range_handler);
-	case MCH_EGA:
-	case MCH_VGA:
+	case MachineType::Ega:
+	case MachineType::Vga:
 		break;
 	default:
-		LOG_MSG("Illegal machine type %d", machine );
+		// Illegal machine type
+		assert(false);
 		return;
 	}
 
@@ -1064,12 +1065,12 @@ void VGA_SetupHandlers(void) {
 	switch ((vga.gfx.miscellaneous >> 2) & 3) {
 	case 0:
 		vgapages.base = VGA_PAGE_A0;
-		switch (svgaCard) {
-		case SVGA_TsengET3K:
-		case SVGA_TsengET4K:
+		switch (svga_type) {
+		case SvgaType::TsengEt3k:
+		case SvgaType::TsengEt4k:
 			vgapages.mask = 0xffff;
 			break;
-		case SVGA_S3Trio:
+		case SvgaType::S3:
 		default:
 			vgapages.mask = 0x1ffff;
 			break;
@@ -1097,8 +1098,9 @@ void VGA_SetupHandlers(void) {
 		MEM_SetPageHandler( VGA_PAGE_B0, 8, &vgaph.empty );
 		break;
 	}
-	if(svgaCard == SVGA_S3Trio && (vga.s3.ext_mem_ctrl & 0x10))
+	if (svga_type == SvgaType::S3 && (vga.s3.ext_mem_ctrl & 0x10)) {
 		MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
+	}
 range_done:
 	PAGING_ClearTLB();
 }
@@ -1218,7 +1220,7 @@ void VGA_SetupMemory(Section* sec)
 
 	sec->AddDestroyFunction(&VGA_Memory_ShutDown);
 
-	if (machine==MCH_PCJR) {
+	if (is_machine_pcjr()) {
 		/* PCJr does not have dedicated graphics memory but uses
 		   conventional memory below 128k */
 		//TODO map?	
