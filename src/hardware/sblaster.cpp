@@ -990,7 +990,11 @@ static std::vector<AudioFrame>& maybe_silence(const T* samples,
 		                          ? left
 		                          : to_float(samples[i * 2 + 1]);
 
-		frames.emplace_back(left, right);
+		if (sb.type == SbType::SBPro1 || sb.type == SbType::SBPro2) {
+			frames.emplace_back(right, left);
+		} else {
+			frames.emplace_back(left, right);
+		}
 	}
 
 	return frames;
