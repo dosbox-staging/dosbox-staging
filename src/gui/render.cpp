@@ -888,7 +888,6 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 			return {};
 		}
 		if (!is_within_bounds(height_scale)) {
-			LOG_TRACE("****1");
 			const auto extra_info = format_str(
 			        "Vertical scale must be within the %g-%g%% range",
 			        MinRelativeScaleFactor * 100.0f,
