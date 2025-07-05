@@ -140,9 +140,10 @@ struct SbInfo {
 	uint32_t freq_hz = 0;
 
 	struct {
-		bool stereo   = false;
-		bool sign     = false;
-		bool autoinit = false;
+		bool stereo         = false;
+		bool sign           = false;
+		bool autoinit       = false;
+		bool first_transfer = true;
 
 		DmaMode mode = {};
 
@@ -1244,6 +1245,16 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 	// Sanity check
 	assertm(frames <= samples, "Frames should never exceed samples");
 
+	// If the first DMA transfer after a reset contains a single sample, it should be ignored.
+	// Quake and SBTEST.EXE have this behavior. If not ignored, the channels will be incorrectly reversed.
+	// https://github.com/dosbox-staging/dosbox-staging/issues/2942
+	// https://www.vogons.org/viewtopic.php?p=536104#p536104
+	if (sb.dma.first_transfer && samples == 1) {
+		// Forget any "dangling sample" that would otherwise be carried over to the next transfer.
+		sb.dma.remain_size = 0;
+	}
+	sb.dma.first_transfer = false;
+
 	// Deduct the DMA bytes read from the remaining to still read
 	sb.dma.left -= bytes_read;
 
@@ -1658,14 +1669,15 @@ static void dsp_reset()
 
 	PIC_RemoveEvents(dsp_finish_reset);
 
-	sb.dma.left        = 0;
-	sb.dma.singlesize  = 0;
-	sb.dma.autosize    = 0;
-	sb.dma.stereo      = false;
-	sb.dma.sign        = false;
-	sb.dma.autoinit    = false;
-	sb.dma.mode        = DmaMode::None;
-	sb.dma.remain_size = 0;
+	sb.dma.left           = 0;
+	sb.dma.singlesize     = 0;
+	sb.dma.autosize       = 0;
+	sb.dma.stereo         = false;
+	sb.dma.sign           = false;
+	sb.dma.autoinit       = false;
+	sb.dma.first_transfer = true;
+	sb.dma.mode           = DmaMode::None;
+	sb.dma.remain_size    = 0;
 
 	if (sb.dma.chan) {
 		sb.dma.chan->ClearRequest();
