@@ -253,7 +253,8 @@ bool DOS_ChildPSP(uint16_t segment, uint16_t size) {
 	return true;
 }
 
-static void SetupPSP(uint16_t pspseg,uint16_t memsize,uint16_t envseg) {
+static void setup_psp(uint16_t pspseg, uint16_t memsize, uint16_t envseg)
+{
 	/* Fix the PSP for psp and environment MCB's */
 	DOS_MCB mcb((uint16_t)(pspseg-1));
 	mcb.SetPSPSeg(pspseg);
@@ -263,16 +264,20 @@ static void SetupPSP(uint16_t pspseg,uint16_t memsize,uint16_t envseg) {
 	DOS_PSP psp(pspseg);
 	psp.MakeNew(memsize);
 	psp.SetEnvironment(envseg);
-
-	/* Copy file handles */
-	DOS_PSP oldpsp(dos.psp());
-	psp.CopyFileTable(&oldpsp,true);
-
 }
 
-static void SetupCMDLine(uint16_t pspseg,DOS_ParamBlock & block) {
+static void copy_file_handles(uint16_t pspseg)
+{
 	DOS_PSP psp(pspseg);
-	// if cmdtail==0 it will inited as empty in SetCommandTail
+
+	DOS_PSP oldpsp(dos.psp());
+	psp.CopyFileTable(&oldpsp, true);
+}
+
+static void setup_command_line(const uint16_t pspseg, const DOS_ParamBlock& block)
+{
+	DOS_PSP psp(pspseg);
+	// If cmdtail is 0, empty PSP tail is going to be created
 	psp.SetCommandTail(block.exec.cmdtail);
 }
 
@@ -427,8 +432,9 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 	/* Setup a psp */
 	if (flags!=OVERLAY) {
 		// Create psp after closing exe, to avoid dead file handle of exe in copied psp
-		SetupPSP(pspseg,memsize,envseg);
-		SetupCMDLine(pspseg,block);
+		setup_psp(pspseg, memsize, envseg);
+		copy_file_handles(pspseg);
+		setup_command_line(pspseg, block);
 	};
 	CALLBACK_SCF(false);		/* Carry flag cleared for caller if successfull */
 	if (flags==OVERLAY) {
@@ -555,4 +561,73 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		return true;
 	}
 	return false;
+}
+
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
+                                              const bool force_low_memory)
+{
+	constexpr uint16_t StackNeeded = 0x80;
+	constexpr uint16_t PspSegments = 0x10;
+
+	constexpr uint32_t MaxTsrSizeBytes = 512 * 1024;
+
+	constexpr uint16_t CommandTailSegment   = 0x08;
+	constexpr uint16_t CommandTailSizeBytes = 0x80;
+
+	// Try to matche the smallest block
+	const uint8_t MemAllocStrategy = force_low_memory
+		? DosMemAllocStrategy::LowMemoryBestFit
+		: DosMemAllocStrategy::BestFit;
+
+	if (bytes == 0 || bytes > MaxTsrSizeBytes || reg_sp <= StackNeeded) {
+		return {};
+	}
+
+	// Get current DOS PSP
+	const auto app_psp_segment = dos.psp();
+	DOS_PSP psp(app_psp_segment);
+
+	// Reserve stack space for the fake process
+	reg_sp -= StackNeeded;
+
+	// Set empty DOS parameter block
+	DOS_ParamBlock param_block(SegPhys(ss) + reg_sp);
+	param_block.Clear();
+
+	// Calculate number of memory blocks to allocate
+	uint16_t blocks = PspSegments;
+	blocks += (bytes + RealSegmentSize - 1) / RealSegmentSize;
+
+	// Allocate memory
+	uint16_t tsr_psp_segment = 0;
+	const auto old_strategy = DOS_GetMemAllocStrategy();
+	DOS_SetMemAllocStrategy(MemAllocStrategy);
+	const auto result = DOS_AllocateMemory(&tsr_psp_segment, &blocks);
+	DOS_SetMemAllocStrategy(old_strategy);
+
+	if (!result) {
+		// Memory allocation failed
+		reg_sp += StackNeeded;
+		return {};
+	}
+
+	// Setup the PSP
+	setup_psp(tsr_psp_segment, blocks, 0);
+
+	// Copy the command tail
+	MEM_BlockCopy(PhysicalMake(tsr_psp_segment + CommandTailSegment, 0),
+	              PhysicalMake(app_psp_segment + CommandTailSegment, 0),
+	              CommandTailSizeBytes);
+
+	// Clear the TSR memory
+	const auto start_segment = tsr_psp_segment + PspSegments;
+	for (auto idx = start_segment; idx < blocks - PspSegments; idx++) {
+		// 16 bytes to clear, use two 8-byte writes
+		mem_writeq(PhysicalMake(idx, sizeof(uint64_t) * 0), 0);
+		mem_writeq(PhysicalMake(idx, sizeof(uint64_t) * 1), 0);
+	}
+
+	// Clean up and return the free space start segment
+	reg_sp += StackNeeded;
+	return start_segment;
 }

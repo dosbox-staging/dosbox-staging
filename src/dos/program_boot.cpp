@@ -11,6 +11,7 @@
 #include "callback.h"
 #include "control.h"
 #include "dma.h"
+#include "dos_windows.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "mapper.h"
@@ -518,6 +519,7 @@ void BOOT::NotifyBooting()
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
 	VMWARE_NotifyBooting();
+	WINDOWS_NotifyBooting();
 }
 
 void BOOT::AddMessages()

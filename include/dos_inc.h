@@ -255,6 +255,31 @@ bool DOS_Execute(char * name,PhysPt block,uint8_t flags);
 void DOS_Terminate(const uint16_t psp_seg, const bool is_terminate_and_stay_resident,
                    const uint8_t exit_code);
 
+// Creates a fake TSR memory area for the currently running command, initializes
+// the TSR memory area with 0's.
+// Returns start segment if memory allocation succeeded.
+std::optional<uint16_t> DOS_CreateFakeTsrArea(const uint32_t bytes,
+                                              const bool force_low_memory = false);
+
+// Constants for memory allocation strategy
+namespace DosMemAllocStrategy {
+
+	// Tries low (conventional) memory
+	constexpr uint16_t LowMemoryFirstFit  = 0x00;
+	constexpr uint16_t LowMemoryBestFit   = 0x01;
+	constexpr uint16_t LowMemoryLastFit   = 0x02;
+
+	// Tries UMB memory
+	constexpr uint16_t UmbMemoryFirstFit = 0x40;
+	constexpr uint16_t UmbMemoryBestFit  = 0x41;
+	constexpr uint16_t UmbMemoryLastFit  = 0x42;
+
+	// Tries UMB first, then low (conventional) memory
+	constexpr uint16_t FirstFit = 0x80;
+	constexpr uint16_t BestFit  = 0x81;
+	constexpr uint16_t LastFit  = 0x82;
+}
+
 /* Memory Handling Routines */
 void DOS_SetupMemory(void);
 bool DOS_AllocateMemory(uint16_t * segment,uint16_t * blocks);
@@ -360,24 +385,58 @@ constexpr PhysPt assert_macro_args_ok()
 	return 0;
 }
 
-#define VERIFY_SSET_ARGS(n, s, f, v)                                           \
+#define VERIFY_SSET_ARGS(n, s, f, v) \
 	assert_macro_args_ok<n, s, decltype(s::f), decltype(v)>()
-#define VERIFY_SGET_ARGS(n, s, f)                                              \
+#define VERIFY_SGET_ARGS(n, s, f) \
 	assert_macro_args_ok<n, s, decltype(s::f)>()
 
-#define SSET_BYTE(s, f, v)                                                     \
+#define SSET_BYTE(s, f, v) \
 	mem_writeb(VERIFY_SSET_ARGS(1, s, f, v) + pt + offsetof(s, f), v)
-#define SSET_WORD(s, f, v)                                                     \
+#define SSET_WORD(s, f, v) \
 	mem_writew(VERIFY_SSET_ARGS(2, s, f, v) + pt + offsetof(s, f), v)
-#define SSET_DWORD(s, f, v)                                                    \
+#define SSET_DWORD(s, f, v) \
 	mem_writed(VERIFY_SSET_ARGS(4, s, f, v) + pt + offsetof(s, f), v)
 
-#define SGET_BYTE(s, f)                                                        \
+#define SGET_BYTE(s, f) \
 	mem_readb(VERIFY_SGET_ARGS(1, s, f) + pt + offsetof(s, f))
-#define SGET_WORD(s, f)                                                        \
+#define SGET_WORD(s, f) \
 	mem_readw(VERIFY_SGET_ARGS(2, s, f) + pt + offsetof(s, f))
-#define SGET_DWORD(s, f)                                                       \
+#define SGET_DWORD(s, f) \
 	mem_readd(VERIFY_SGET_ARGS(4, s, f) + pt + offsetof(s, f))
+
+/* Macros SSET_*_ARRAY and SGET_*_ARRAY are similar to SSET_* and SGET_*, but
+ * they are to be used for arrays. Index range is not being checked.
+ *
+ * Example usage:
+ *
+ *   SSET_WORD_ARRAY(dos-structure-name, field-name, array-index, value);
+ *   uint16_t x = SGET_WORD_ARRAY(dos-structure-name, field-name, array-index);
+ */
+
+#define VERIFY_SSET_ARRAY_ARGS(n, s, f, v) \
+	assert_macro_args_ok<n, s, decltype(*s::f), decltype(v)>()
+#define VERIFY_SGET_ARRAY_ARGS(n, s, f) \
+	assert_macro_args_ok<n, s, decltype(*s::f)>()
+
+#define SSET_BYTE_ARRAY(s, f, i, v) \
+	mem_writeb(VERIFY_SSET_ARRAY_ARGS(1, s, f, v) + \
+	           static_cast<uint32_t>(pt + offsetof(s, f) + 1 * i), v)
+#define SSET_WORD_ARRAY(s, f, i, v) \
+	mem_writew(VERIFY_SSET_ARRAY_ARGS(2, s, f, v) + \
+	           static_cast<uint32_t>(pt + offsetof(s, f) + 2 * i), v)
+#define SSET_DWORD_ARRAY(s, f, i, v) \
+	mem_writed(VERIFY_SSET_ARRAY_ARGS(4, s, f, v) + \
+	           static_cast<uint32_t>(pt + offsetof(s, f) + 4 * i), v)
+
+#define SGET_BYTE_ARRAY(s, f, i) \
+	mem_readb(VERIFY_SGET_ARRAY_ARGS(1, s, f) + \
+	          static_cast<uint32_t>(pt + offsetof(s, f) + 1 * i))
+#define SGET_WORD_ARRAY(s, f, i) \
+	mem_readw(VERIFY_SGET_ARRAY_ARGS(2, s, f) + \
+	          static_cast<uint32_t>(pt + offsetof(s, f) + 2 * i))
+#define SGET_DWORD_ARRAY(s, f, i) \
+	mem_readd(VERIFY_SGET_ARRAY_ARGS(4, s, f) + \
+	          static_cast<uint32_t>(pt + offsetof(s, f) + 4 * i))
 
 class MemStruct {
 public:

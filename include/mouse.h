@@ -138,8 +138,24 @@ bool MOUSEPS2_SendPacket();
 // DOS mouse driver
 // ***************************************************************************
 
+bool MOUSEDOS_NeedsAutoexecEntry();
+
+bool MOUSEDOS_IsDriverStarted();
+bool MOUSEDOS_StartDriver(const bool force_low_memory = false);
+
 void MOUSEDOS_BeforeNewVideoMode();
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing);
+
+// Handle communication of the simulated DOS driver with Windows via multiplex
+// functions 0x1605/0x1606//0x1607
+void MOUSEDOS_HandleWindowsStartup();
+void MOUSEDOS_HandleWindowsShutdown();
+void MOUSEDOS_HandleWindowsCallout();
+
+// Notify if Windows goes to the background, DOS instance goes fullscreen
+void MOUSEDOS_NotifyWindowsBackground();
+// Notify if Windows goes to the foreground back again
+void MOUSEDOS_NotifyWindowsForeground();
 
 // ***************************************************************************
 // Virtual Machine Manager (VMware/VirtualBox) PS/2 mouse protocol extensions

@@ -154,6 +154,7 @@ public:
 	virtual void UpdateInputType();
 	virtual void RegisterListener(CSerialMouse& listener_object);
 	virtual void UnRegisterListener();
+	virtual void NotifyDosDriverStartup();
 
 protected:
 	static constexpr uint8_t idx_host_pointer = UINT8_MAX;
