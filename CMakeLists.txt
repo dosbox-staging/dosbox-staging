@@ -15,13 +15,15 @@ set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+enable_testing()
+
 # TODO Enable certain warnings-as-errors for at least MSVC, Clang & GCC
 
 # Disable the noisy narrowing and conversion warnings by default. Use the
 # CHECK_NARROWING() macro to opt-in these checks on a per-file basis. See
 # `include/checks.h` for details.
 if(MSVC)
-  add_compile_options("/wd4244")
+  add_compile_options("/wd4244" "/MP")
   
   # Disable cl/clangcl warnings about insecure C functions
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
@@ -308,6 +310,19 @@ else()
 endif()
 set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 
+# Find common external dependencies
+find_package(PkgConfig REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(SDL2_net REQUIRED)
+find_package(iir REQUIRED)
+find_package(PNG REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(MT32Emu REQUIRED)
+if (C_ALSA)
+  find_package(ALSA REQUIRED)
+endif()
+pkg_check_modules(SPEEXDSP REQUIRED IMPORTED_TARGET speexdsp)
+
 add_executable(dosbox src/main.cpp src/dosbox.cpp)
 target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
@@ -322,10 +337,6 @@ add_custom_target(copy_assets ALL
 )
 add_dependencies(dosbox copy_assets)
 
-find_package(PkgConfig REQUIRED)
-
-find_package(SDL2 CONFIG REQUIRED)
-
 #find_package(Tracy CONFIG REQUIRED)
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
@@ -333,6 +344,11 @@ include_directories(
   include src/libs src/gui ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
+add_library(libdosboxcommon STATIC)
+
+# Add tests before src so that the dosbox_tests target is 
+# available for target_sources()
+add_subdirectory(tests)
 add_subdirectory(src)
 
 if(WIN32)
@@ -346,15 +362,17 @@ endif()
 find_library(LIBATOMIC libatomic.so.1)
 
 if(LIBATOMIC)
-  target_link_libraries(dosbox PRIVATE ${LIBATOMIC})
+  target_link_libraries(libdosboxcommon PRIVATE ${LIBATOMIC})
 endif()
 
-target_link_libraries(dosbox PRIVATE
+target_link_libraries(libdosboxcommon PRIVATE
+  $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
+  loguru
+  libdecoders
+)
+
+target_link_libraries(dosbox PRIVATE 
+  libdosboxcommon
   $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-  libcapture
-  libmisc
-  libcpu
-  libdos
-  libfpu
 )
