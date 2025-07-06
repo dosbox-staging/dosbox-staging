@@ -4464,9 +4464,7 @@ static void init_sdl_config_section()
 	        "settings (0 by default).");
 
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	pbool->Set_help(
-	        "Start directly in fullscreen ('off' by default).\n"
-	        "Run INTRO and see Special Keys for window control hotkeys.");
+	pbool->Set_help("Start in fullscreen mode ('off' by default).");
 
 	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
 	pstring->Set_help(
