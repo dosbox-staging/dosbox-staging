@@ -4491,7 +4491,7 @@ static void init_sdl_config_section()
 	pstring->Set_help(
 	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
-	        "  X,Y:       Set window position in X,Y format (e.g., 250,100).\n"
+	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
 	pbool = sdl_sec->Add_bool("window_decorations", always, true);
