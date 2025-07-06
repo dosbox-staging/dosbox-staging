@@ -3024,7 +3024,7 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 	}
 
 	LOG_WARNING(
-	        "DISPLAY: Invalid 'windowresolution' setting: '%s', "
+	        "DISPLAY: Invalid 'window_size' setting: '%s', "
 	        "using 'default'",
 	        pref.c_str());
 
@@ -3054,7 +3054,7 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 
 		} else {
 			LOG_WARNING(
-			        "DISPLAY: Invalid 'windowresolution' setting: '%s', "
+			        "DISPLAY: Invalid 'window_size' setting: '%s', "
 			        "using 'default'",
 			        pref.c_str());
 			return MediumPercent;
@@ -3134,7 +3134,7 @@ static void save_window_size(const int w, const int h)
 }
 
 // Takes in:
-//  - The user's windowresolution: default, WxH, small, medium, large,
+//  - The user's window_size setting: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
 //  - If aspect correction is requested.
 //
@@ -3327,7 +3327,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
 
-	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
+	setup_window_sizes_from_conf(section->Get_string("window_size").c_str(),
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
@@ -4473,9 +4473,12 @@ static void init_sdl_config_section()
 	        "What resolution to use for fullscreen: 'original', 'desktop'\n"
 	        "or a fixed size, e.g. 1024x768 ('desktop' by default).");
 
-	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
+	pstring = sdl_sec->Add_string("windowresolution", deprecated, "");
+	pstring->Set_help("Renamed to 'window_size'.");
+
+	pstring = sdl_sec->Add_string("window_size", on_start, "default");
 	pstring->Set_help(
-	        "Set intial window size for windowed mode. You can still resize the window\n"
+	        "Set initial window size for windowed mode. You can still resize the window\n"
 	        "after startup.\n"
 	        "  default:   Select the best option based on your environment and other\n"
 	        "             settings (such as whether aspect ratio correction is enabled).\n"
