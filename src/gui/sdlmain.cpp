@@ -819,14 +819,6 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 }
 
-#ifdef WIN32
-static void exit_fullscreen()
-{
-	sdl.desktop.is_fullscreen = false;
-	GFX_ResetScreen();
-}
-#endif
-
 [[maybe_unused]] static int int_log2(int val)
 {
 	int log = 0;
@@ -980,15 +972,16 @@ static void log_display_properties(const int render_width_px,
 #endif
 }
 
-static SDL_Point get_initial_window_position_or_default(int default_val)
+static SDL_Point get_initial_window_position_or_default(const int default_val)
 {
 	int x, y;
-	if (sdl.desktop.window.initial_x_pos >= 0 &&
-	    sdl.desktop.window.initial_y_pos >= 0) {
-		x = sdl.desktop.window.initial_x_pos;
-		y = sdl.desktop.window.initial_y_pos;
+	if (sdl.desktop.window.x_pos != SDL_WINDOWPOS_UNDEFINED &&
+	    sdl.desktop.window.y_pos != SDL_WINDOWPOS_UNDEFINED) {
+		x = sdl.desktop.window.x_pos;
+		y = sdl.desktop.window.y_pos;
 	} else {
-		x = y = default_val;
+		x = default_val;
+		y = default_val;
 	}
 	return {x, y};
 }
@@ -1571,9 +1564,102 @@ static SDL_Window* create_window(const RenderingBackend rendering_backend,
 	return sdl.window;
 }
 
+static void enter_fullscreen(const int width, const int height)
+{
+	if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+
+		// enter_fullscreen() can be called multiple times in a row by
+		// the existing code while still in fullscreen mode. That would
+		// throw off the window state restoring logic of the forced
+		// borderless mode. This a long-standing issue and needs to be
+		// fixed, eventually, but it's not so simple. In the meantime,
+		// the easy solution to make borderless fullscreen work
+		// correctly is to maintain its own fullscreen state flag.
+		//
+		// Once enter_fullscreen() and exit_fullscreen() are always
+		// called in pairs, this workaround can be removed.
+		//
+		if (sdl.desktop.fullscreen.is_forced_borderless_fullscreen) {
+			return;
+		}
+
+		// "Emulate" SDL's built-in borderless fullscreen mode by
+		// turning off window decorations and resizing the window to
+		// cover the entire desktop. But this would trigger exclusive
+		// fullscreen on Windows so we'd be no better off -- the trick
+		// is to size the window one pixel wider than the desktop so
+		// fullscreen optimisation won't kick in.
+		//
+		SDL_GetWindowSize(sdl.window,
+		                  &sdl.desktop.fullscreen.prev_window.width,
+		                  &sdl.desktop.fullscreen.prev_window.height);
+
+		SDL_GetWindowPosition(sdl.window,
+		                      &sdl.desktop.fullscreen.prev_window.x_pos,
+		                      &sdl.desktop.fullscreen.prev_window.y_pos);
+
+		SDL_SetWindowBordered(sdl.window, SDL_FALSE);
+		SDL_SetWindowResizable(sdl.window, SDL_FALSE);
+		SDL_SetWindowPosition(sdl.window, 0, 0);
+
+		safe_set_window_size(sdl.desktop.fullscreen.width + 1,
+		                     sdl.desktop.fullscreen.height);
+
+		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
+
+	} else {
+		SDL_DisplayMode display_mode;
+		SDL_GetWindowDisplayMode(sdl.window, &display_mode);
+
+		display_mode.w = width;
+		display_mode.h = height;
+
+		// TODO pixels or logical unit?
+		if (SDL_SetWindowDisplayMode(sdl.window, &display_mode) != 0) {
+			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
+			            display_mode.w,
+			            display_mode.h,
+			            display_mode.refresh_rate);
+		}
+		SDL_SetWindowFullscreen(sdl.window,
+		                        sdl.desktop.fullscreen.mode ==
+		                                        FullscreenMode::Standard
+		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
+		                                : enum_val(SDL_WINDOW_FULLSCREEN));
+	}
+}
+
+static void exit_fullscreen()
+{
+	if (sdl.desktop.switching_fullscreen) {
+		if (sdl.desktop.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+			// Restore the previous window state when exiting our "fake"
+			// borderless fullscreen mode.
+			if (sdl.desktop.window.show_decorations) {
+				SDL_SetWindowBordered(sdl.window, SDL_TRUE);
+			}
+			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
+
+			safe_set_window_size(sdl.desktop.fullscreen.prev_window.width,
+			                     sdl.desktop.fullscreen.prev_window.height);
+
+			SDL_SetWindowPosition(sdl.window,
+			                      sdl.desktop.fullscreen.prev_window.x_pos,
+			                      sdl.desktop.fullscreen.prev_window.y_pos);
+
+			sdl.desktop.fullscreen.is_forced_borderless_fullscreen = false;
+
+		} else {
+			// Let SDL restore the previous window size
+			constexpr auto WindowedMode = 0;
+			SDL_SetWindowFullscreen(sdl.window, WindowedMode);
+		}
+	}
+}
+
 static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
                                    const int width, const int height,
-                                   const bool fullscreen)
+                                   const bool is_fullscreen)
 {
 	if (sdl.window && sdl.resizing_window) {
 		return sdl.window;
@@ -1635,40 +1721,20 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 
 		SDL_RaiseWindow(sdl.window);
 
-		if (!fullscreen) {
+		if (!is_fullscreen) {
 			goto finish;
 		}
 	}
 
-	/* Fullscreen mode switching has its limits, and is also problematic on
-	 * some window managers. For now, the following may work up to some
-	 * level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
-	 * although it has its own issues.
-	 */
-	if (fullscreen) {
-		SDL_DisplayMode display_mode;
-		SDL_GetWindowDisplayMode(sdl.window, &display_mode);
-
-		display_mode.w = width;
-		display_mode.h = height;
-
-		// TODO pixels or logical unit?
-		if (SDL_SetWindowDisplayMode(sdl.window, &display_mode) != 0) {
-			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
-			            display_mode.w,
-			            display_mode.h,
-			            display_mode.refresh_rate);
-		}
-		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.fullscreen.mode == FullscreenMode::Standard
-		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
-		                                : enum_val(SDL_WINDOW_FULLSCREEN));
+	// Fullscreen mode switching has its limits, and is also problematic on
+	// some window managers. For now, the following may work up to some
+	// level. On X11, SDL_VIDEO_X11_LEGACY_FULLSCREEN=1 can also help,
+	// although it has its own issues.
+	//
+	if (is_fullscreen) {
+		enter_fullscreen(width, height);
 	} else {
-		// We're switching down from fullscreen, so let SDL use the
-		// previously-set window size
-		if (sdl.desktop.switching_fullscreen) {
-			SDL_SetWindowFullscreen(sdl.window, 0);
-		}
+		exit_fullscreen();
 	}
 
 	// Maybe some requested fullscreen resolution is unsupported?
@@ -1776,6 +1842,7 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 
 	switch (sdl.desktop.fullscreen.mode) {
 	case FullscreenMode::Standard:
+	case FullscreenMode::ForcedBorderless:
 		if (sdl.desktop.is_fullscreen) {
 			window_width  = sdl.desktop.fullscreen.width;
 			window_height = sdl.desktop.fullscreen.height;
@@ -1784,13 +1851,16 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 			window_height = sdl.desktop.window.height;
 		}
 		break;
+
 	case FullscreenMode::Original: {
 		const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-				sdl.draw.render_pixel_aspect_ratio);
+		        sdl.draw.render_pixel_aspect_ratio);
 
 		window_width = iround(sdl.draw.render_width_px * draw_scale_x);
 		window_height = iround(sdl.draw.render_height_px * draw_scale_y);
 	} break;
+
+	default: assertm(false, "Invalid FullscreenMode value");
 	}
 
 	sdl.window = set_window_mode(rendering_backend,
@@ -3069,8 +3139,8 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 
 static void setup_initial_window_position_from_conf(const std::string& window_position_val)
 {
-	sdl.desktop.window.initial_x_pos = -1;
-	sdl.desktop.window.initial_y_pos = -1;
+	sdl.desktop.window.x_pos = SDL_WINDOWPOS_UNDEFINED;
+	sdl.desktop.window.y_pos = SDL_WINDOWPOS_UNDEFINED;
 
 	if (window_position_val == "auto") {
 		return;
@@ -3102,8 +3172,8 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 		return;
 	}
 
-	sdl.desktop.window.initial_x_pos = x;
-	sdl.desktop.window.initial_y_pos = y;
+	sdl.desktop.window.x_pos = x;
+	sdl.desktop.window.y_pos = y;
 }
 
 // Writes to the window-size member should be done via this function
@@ -3137,7 +3207,6 @@ static void save_window_size(const int w, const int h)
 //  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
 //     not take into account scaling or aspect correction.
 //  - 'sdl.desktop.window', with the refined size.
-//  - 'sdl.desktop.want_resizable_window', if the window can be resized.
 //
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
                                          const bool wants_aspect_ratio_correction)
@@ -3450,53 +3519,25 @@ static void set_fullscreen_mode()
 	const std::string fullscreen_mode_pref = get_sdl_section()->Get_string(
 	        "fullscreen_mode");
 
-	auto set_standard_mode = [&] {
+	auto set_screen_bounds = [&] {
 		SDL_Rect bounds;
 		SDL_GetDisplayBounds(sdl.display_number, &bounds);
 
-		sdl.desktop.fullscreen.mode   = FullscreenMode::Standard;
 		sdl.desktop.fullscreen.width  = bounds.w;
 		sdl.desktop.fullscreen.height = bounds.h;
 	};
 
 	if (fullscreen_mode_pref == "standard") {
-		set_standard_mode();
+		set_screen_bounds();
+		sdl.desktop.fullscreen.mode = FullscreenMode::Standard;
+
+	} else if (fullscreen_mode_pref == "forced-borderless") {
+		set_screen_bounds();
+		sdl.desktop.fullscreen.mode = FullscreenMode::ForcedBorderless;
 
 	} else if (fullscreen_mode_pref == "original") {
-		SDL_Rect bounds;
-		SDL_GetDisplayBounds(sdl.display_number, &bounds);
-
-		sdl.desktop.fullscreen.mode   = FullscreenMode::Original;
-		sdl.desktop.fullscreen.width  = bounds.w;
-		sdl.desktop.fullscreen.height = bounds.h;
-
-	} else {
-		const auto parts = split_with_empties(fullscreen_mode_pref, 'x');
-		if (parts.size() == 2) {
-			const auto maybe_width  = parse_int(parts[0]);
-			const auto maybe_height = parse_int(parts[1]);
-
-			if (maybe_width && maybe_height) {
-				sdl.desktop.fullscreen.mode   = FullscreenMode::Original;
-				sdl.desktop.fullscreen.width  = *maybe_width;
-				sdl.desktop.fullscreen.height = *maybe_height;
-
-				maybe_limit_requested_resolution(
-				        sdl.desktop.fullscreen.width,
-				        sdl.desktop.fullscreen.height,
-				        "fullscreen");
-
-				// Success
-				return;
-			}
-		}
-
-		// Failure
-		LOG_WARNING("DISPLAY: Invalid 'fullscreen_mode' setting: '%s'; using 'standard'",
-		            fullscreen_mode_pref.c_str());
-
-		set_standard_mode();
-		set_section_property_value("sdl", "fullscreen_mode", "standard");
+		set_screen_bounds();
+		sdl.desktop.fullscreen.mode = FullscreenMode::Original;
 	}
 }
 
@@ -4008,9 +4049,13 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// LOG_DEBUG("SDL: Window has lost keyboard
 		// focus");
 #ifdef WIN32
+		// TODO is this still needed?
 		if (sdl.desktop.is_fullscreen) {
 			VGA_KillDrawing();
-			exit_fullscreen();
+
+			// Force-exit fullscreen
+			sdl.desktop.is_fullscreen = false;
+			GFX_ResetScreen();
 		}
 #endif
 		apply_inactive_settings();
@@ -4091,10 +4136,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// or through the system or user changing the window size.
 		const auto new_width  = event.window.data1;
 		const auto new_height = event.window.data2;
+
 		handle_video_resize(new_width, new_height);
-
 		finalise_window_state();
-
 		maybe_auto_switch_shader();
 		return true;
 	}
@@ -4479,9 +4523,32 @@ static void init_sdl_config_section()
 	pstring->Set_help("Please use 'fullscreen_mode' instead.");
 
 	pstring = sdl_sec->Add_string("fullscreen_mode", always, "standard");
-	pstring->Set_help(
-	        "What resolution to use for fullscreen: 'original', 'standard'\n"
-	        "or a fixed size, e.g. 1024x768 ('standard' by default).");
+	pstring->Set_help("Set the fullscreen mode ('standard' by default):");
+
+	pstring->SetOptionHelp("standard",
+	                       "  standard:           Use the standard fullscreen mode of your operating system\n"
+	                       "                      (default).");
+
+	pstring->SetOptionHelp(
+	        "forced-borderless",
+	        "  forced-borderless:  Force borderless fullscreen operation if your graphics\n"
+	        "                      card driver decides to disable fullscreen optimisation\n"
+	        "                      on Windows, resulting in exclusive fullscreen. Forcing\n"
+	        "                      borderless mode might result in decreased performance\n"
+	        "                      and slightly worse frame pacing.");
+
+	pstring->SetOptionHelp("original",
+	                       "  original:           Exclusive fullscreen mode at the game's original\n"
+		                   "                      resolution, or at the closest available resolution. This\n"
+		                   "                      is a niche option for using DOSBox Staging with a CRT\n"
+		                   "                      monitor. Toggling fullscreen might result in janky\n"
+		                   "                      behaviour in this mode.");
+	
+	pstring->Set_values({"standard",
+#if WIN32
+	                     "forced-borderless",
+#endif
+	                     "original"});
 
 	pstring = sdl_sec->Add_string("windowresolution", deprecated, "");
 	pstring->Set_help("Renamed to 'window_size'.");
