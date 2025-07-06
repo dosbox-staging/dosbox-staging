@@ -591,7 +591,7 @@ static double get_host_refresh_rate()
 	switch (sdl.desktop.host_rate_mode) {
 	case HostRateMode::Auto:
 		if (const auto sdl_rate = get_sdl_rate();
-		    sdl.desktop.fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
+		    sdl.desktop.is_fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
 			refresh_rate     = get_vrr_rate(sdl_rate);
 			rate_description = "VRR-adjusted (auto)";
 		} else {
@@ -822,7 +822,7 @@ void GFX_ResetScreen()
 #ifdef WIN32
 static void exit_fullscreen()
 {
-	sdl.desktop.fullscreen = false;
+	sdl.desktop.is_fullscreen = false;
 	GFX_ResetScreen();
 }
 #endif
@@ -1016,8 +1016,8 @@ static VsyncSettings& get_vsync_settings()
 	    sdl.vsync.when_windowed.requested == VsyncMode::Unset) {
 		initialize_vsync_settings();
 	}
-	return sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
-	                              : sdl.vsync.when_windowed;
+	return sdl.desktop.is_fullscreen ? sdl.vsync.when_fullscreen
+	                                 : sdl.vsync.when_windowed;
 }
 
 // Benchmarks are run in each vsync'd mode as part of the vsync detection
@@ -1330,7 +1330,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 		// performs frame interpolation, then we prefer to use a
 		// constant rate.
 		const auto conditions_prefer_constant_rate =
-		        (sdl.desktop.fullscreen && vsync_is_on &&
+		        (sdl.desktop.is_fullscreen && vsync_is_on &&
 		         display_might_be_interpolating);
 
 #if 0
@@ -1399,7 +1399,7 @@ static void notify_new_mouse_screen_params()
 	params.x_abs = check_cast<int32_t>(abs_x);
 	params.y_abs = check_cast<int32_t>(abs_y);
 
-	params.is_fullscreen    = sdl.desktop.fullscreen;
+	params.is_fullscreen    = sdl.desktop.is_fullscreen;
 	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -1774,7 +1774,7 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 	int window_width;
 	int window_height;
 
-	if (sdl.desktop.fullscreen) {
+	if (sdl.desktop.is_fullscreen) {
 		window_width = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
 		window_height = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
 	} else {
@@ -1793,7 +1793,7 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 	sdl.window = set_window_mode(rendering_backend,
 	                             window_width,
 	                             window_height,
-	                             sdl.desktop.fullscreen);
+	                             sdl.desktop.is_fullscreen);
 
 	return sdl.window;
 }
@@ -2572,7 +2572,7 @@ static void focus_input()
 #endif
 
 	// Ensure we have input focus when in fullscreen
-	if (!sdl.desktop.fullscreen) {
+	if (!sdl.desktop.is_fullscreen) {
 		return;
 	}
 	// Do we already have focus?
@@ -2622,19 +2622,19 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = true;
 
 	// Record the window's current canvas size if we're departing window-mode
-	if (!sdl.desktop.fullscreen) {
+	if (!sdl.desktop.is_fullscreen) {
 		sdl.desktop.window.canvas_size = to_sdl_rect(
 		        get_canvas_size_in_pixels(sdl.rendering_backend));
 	}
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
-	// (ie: opposite of whatever sdl.desktop.fullscreen holds).
+	// (ie: opposite of whatever sdl.desktop.is_fullscreen holds).
 	// Sticky-keys should be set to the opposite of fullscreen,
 	// so we simply apply the bool of the mode we're switching out-of.
-	sticky_keys(sdl.desktop.fullscreen);
+	sticky_keys(sdl.desktop.is_fullscreen);
 #endif
-	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
+	sdl.desktop.is_fullscreen = !sdl.desktop.is_fullscreen;
 
 	GFX_ResetScreen();
 
@@ -2810,7 +2810,7 @@ static void get_display_dimensions()
  */
 void GFX_UpdateDisplayDimensions(int width, int height)
 {
-	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
+	if (sdl.desktop.full.display_res && sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
@@ -2920,13 +2920,13 @@ static SDL_Window* set_default_window_mode()
 	sdl.draw.render_width_px  = FallbackWindowSize.x;
 	sdl.draw.render_height_px = FallbackWindowSize.y;
 
-	if (sdl.desktop.fullscreen) {
+	if (sdl.desktop.is_fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
 
 		return set_window_mode(sdl.want_rendering_backend,
 		                       sdl.desktop.full.width,
 		                       sdl.desktop.full.height,
-		                       sdl.desktop.fullscreen);
+		                       sdl.desktop.is_fullscreen);
 	}
 
 	sdl.desktop.lazy_init_window_size = false;
@@ -2934,7 +2934,7 @@ static SDL_Window* set_default_window_mode()
 	return set_window_mode(sdl.want_rendering_backend,
 	                       sdl.desktop.window.width,
 	                       sdl.desktop.window.height,
-	                       sdl.desktop.fullscreen);
+	                       sdl.desktop.is_fullscreen);
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
@@ -3511,8 +3511,8 @@ static void read_gui_config(Section* sec)
 	sdl.resizing_window = false;
 	sdl.wait_on_error   = section->Get_bool("waitonerror");
 
-	sdl.desktop.fullscreen = control->arguments.fullscreen ||
-	                         section->Get_bool("fullscreen");
+	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
+	                            section->Get_bool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
 	set_priority_levels(priority_conf->Get_string("active"),
@@ -3696,7 +3696,7 @@ void GFX_LosingFocus()
 
 bool GFX_IsFullscreen()
 {
-	return sdl.desktop.fullscreen;
+	return sdl.desktop.is_fullscreen;
 }
 
 void GFX_RegenerateWindow(Section* sec)
@@ -3722,7 +3722,7 @@ static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
-	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
+	if (sdl.desktop.full.display_res && sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
@@ -3748,7 +3748,7 @@ static void handle_video_resize(int width, int height)
 	}
 #endif // C_OPENGL
 
-	if (!sdl.desktop.fullscreen) {
+	if (!sdl.desktop.is_fullscreen) {
 		// If the window was resized, it might have been
 		// triggered by the OS setting DPI scale, so recalculate
 		// that based on the incoming logical width.
@@ -3780,7 +3780,7 @@ static void finalise_window_state()
 
 	// Don't change window position or size when state changed to
 	// fullscreen.
-	if (sdl.desktop.fullscreen) {
+	if (sdl.desktop.is_fullscreen) {
 		return;
 	}
 
@@ -4016,7 +4016,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// LOG_DEBUG("SDL: Window has lost keyboard
 		// focus");
 #ifdef WIN32
-		if (sdl.desktop.fullscreen) {
+		if (sdl.desktop.is_fullscreen) {
 			VGA_KillDrawing();
 			exit_fullscreen();
 		}

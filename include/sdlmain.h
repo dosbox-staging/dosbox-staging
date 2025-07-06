@@ -218,7 +218,7 @@ struct SDL_Block {
 
 		float dpi_scale = 1.0f;
 
-		bool fullscreen = false;
+		bool is_fullscreen = false;
 
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
