@@ -194,7 +194,7 @@ struct SDL_Block {
 			int height       = 0;
 			bool fixed       = false;
 			bool display_res = false;
-		} full = {};
+		} fullscreen = {};
 
 		struct {
 			// User-configured window size
