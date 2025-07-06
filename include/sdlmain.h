@@ -126,7 +126,7 @@ enum class HostRateMode {
 
 enum class VsyncMode { Unset, Off, On, Adaptive, Yield };
 
-enum class FullscreenMode { Standard, Original };
+enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
 struct VsyncSettings {
 	// The vsync mode the user asked for.
@@ -196,16 +196,26 @@ struct SDL_Block {
 
 			int width  = 0;
 			int height = 0;
+
+			bool is_forced_borderless_fullscreen = false;
+
+			struct {
+				int width     = 0;
+				int height    = 0;
+				int x_pos     = 0;
+				int y_pos     = 0;
+			} prev_window;
 		} fullscreen = {};
 
 		struct {
 			// User-configured window size
-			int width                  = 0;
-			int height                 = 0;
+			int width  = 0;
+			int height = 0;
+			int x_pos  = SDL_WINDOWPOS_UNDEFINED;
+			int y_pos  = SDL_WINDOWPOS_UNDEFINED;
+
 			bool show_decorations      = true;
 			bool adjusted_initial_size = false;
-			int initial_x_pos          = -1;
-			int initial_y_pos          = -1;
 
 			// Instantaneous canvas size of the window
 			SDL_Rect canvas_size = {};
