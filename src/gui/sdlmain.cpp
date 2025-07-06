@@ -1660,7 +1660,7 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 			            displayMode.refresh_rate);
 		}
 		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.full.display_res
+		                        sdl.desktop.fullscreen.display_res
 		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
 		                                : enum_val(SDL_WINDOW_FULLSCREEN));
 	} else {
@@ -1775,8 +1775,13 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 	int window_height;
 
 	if (sdl.desktop.is_fullscreen) {
-		window_width = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
-		window_height = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
+		window_width  = sdl.desktop.fullscreen.fixed
+		                      ? sdl.desktop.fullscreen.width
+		                      : 0;
+
+		window_height = sdl.desktop.fullscreen.fixed
+		                      ? sdl.desktop.fullscreen.height
+		                      : 0;
 	} else {
 		window_width  = sdl.desktop.window.width;
 		window_height = sdl.desktop.window.height;
@@ -2798,8 +2803,8 @@ static void get_display_dimensions()
 
 	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
 
-	sdl.desktop.full.width  = displayDimensions.w;
-	sdl.desktop.full.height = displayDimensions.h;
+	sdl.desktop.fullscreen.width  = displayDimensions.w;
+	sdl.desktop.fullscreen.height = displayDimensions.h;
 }
 
 /* Manually update display dimensions in case of a window resize,
@@ -2810,12 +2815,12 @@ static void get_display_dimensions()
  */
 void GFX_UpdateDisplayDimensions(int width, int height)
 {
-	if (sdl.desktop.full.display_res && sdl.desktop.is_fullscreen) {
+	if (sdl.desktop.fullscreen.display_res && sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width  = width;
-		sdl.desktop.full.height = height;
+		sdl.desktop.fullscreen.width  = width;
+		sdl.desktop.fullscreen.height = height;
 	}
 }
 
@@ -2924,8 +2929,8 @@ static SDL_Window* set_default_window_mode()
 		sdl.desktop.lazy_init_window_size = true;
 
 		return set_window_mode(sdl.want_rendering_backend,
-		                       sdl.desktop.full.width,
-		                       sdl.desktop.full.height,
+		                       sdl.desktop.fullscreen.width,
+		                       sdl.desktop.fullscreen.height,
 		                       sdl.desktop.is_fullscreen);
 	}
 
@@ -3458,18 +3463,18 @@ static void set_fullscreen_mode()
 	        "fullscreen_mode");
 
 	auto set_desktop_mode = [&] {
-		sdl.desktop.full.fixed  = true;
-		sdl.desktop.full.width  = 0;
-		sdl.desktop.full.height = 0;
+		sdl.desktop.fullscreen.fixed  = true;
+		sdl.desktop.fullscreen.width  = 0;
+		sdl.desktop.fullscreen.height = 0;
 	};
 
 	if (fullscreen_mode_pref == "desktop") {
 		set_desktop_mode();
 
 	} else if (fullscreen_mode_pref == "original") {
-		sdl.desktop.full.fixed  = false;
-		sdl.desktop.full.width  = 0;
-		sdl.desktop.full.height = 0;
+		sdl.desktop.fullscreen.fixed  = false;
+		sdl.desktop.fullscreen.width  = 0;
+		sdl.desktop.fullscreen.height = 0;
 
 	} else {
 		const auto parts = split_with_empties(fullscreen_mode_pref, 'x');
@@ -3478,13 +3483,13 @@ static void set_fullscreen_mode()
 			const auto maybe_height = parse_int(parts[1]);
 
 			if (maybe_width && maybe_height) {
-				sdl.desktop.full.fixed  = true;
-				sdl.desktop.full.width  = *maybe_width;
-				sdl.desktop.full.height = *maybe_height;
+				sdl.desktop.fullscreen.fixed  = true;
+				sdl.desktop.fullscreen.width  = *maybe_width;
+				sdl.desktop.fullscreen.height = *maybe_height;
 
 				maybe_limit_requested_resolution(
-				        sdl.desktop.full.width,
-				        sdl.desktop.full.height,
+				        sdl.desktop.fullscreen.width,
+				        sdl.desktop.fullscreen.height,
 				        "fullscreen");
 
 				// Success
@@ -3582,10 +3587,11 @@ static void read_gui_config(Section* sec)
 		            presentation_mode_pref.c_str());
 	}
 
-	sdl.desktop.full.display_res = sdl.desktop.full.fixed &&
-	                               (!sdl.desktop.full.width ||
-	                                !sdl.desktop.full.height);
-	if (sdl.desktop.full.display_res) {
+	sdl.desktop.fullscreen.display_res = sdl.desktop.fullscreen.fixed &&
+	                                     (!sdl.desktop.fullscreen.width ||
+	                                      !sdl.desktop.fullscreen.height);
+
+	if (sdl.desktop.fullscreen.display_res) {
 		get_display_dimensions();
 	}
 
@@ -3722,12 +3728,12 @@ static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
-	if (sdl.desktop.full.display_res && sdl.desktop.is_fullscreen) {
+	if (sdl.desktop.fullscreen.display_res && sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width  = width;
-		sdl.desktop.full.height = height;
+		sdl.desktop.fullscreen.width  = width;
+		sdl.desktop.fullscreen.height = height;
 	}
 
 	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
@@ -4064,8 +4070,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		SDL_Rect display_bounds = {};
 		SDL_GetDisplayBounds(event.window.data1, &display_bounds);
-		sdl.desktop.full.width  = display_bounds.w;
-		sdl.desktop.full.height = display_bounds.h;
+		sdl.desktop.fullscreen.width  = display_bounds.w;
+		sdl.desktop.fullscreen.height = display_bounds.h;
 
 		sdl.display_number = event.window.data1;
 
