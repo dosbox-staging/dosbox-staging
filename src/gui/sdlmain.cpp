@@ -946,7 +946,6 @@ static void remove_window()
 
 static void setup_presentation_mode()
 {
-	LOG_TRACE("setup_presentation_mode");
 	auto update_frame_time = [&](const double rate_hz) {
 		assert(rate_hz > 0);
 
@@ -961,14 +960,12 @@ static void setup_presentation_mode()
 	} break;
 
 	case PresentationMode::HostRate: {
-		if (GFX_GetHostRefreshRate() >= VGA_GetRefreshRate() - 0.5) {
-			sdl.presentation.early_present_window_us = sdl.presentation.frame_time_us;
-		} else {
-			sdl.presentation.early_present_window_us = 400;
-		}
+		sdl.presentation.early_present_window_us = 3000;
 		update_frame_time(GFX_GetHostRefreshRate());
 	} break;
 	}
+
+	sdl.presentation.last_present_time_us = 0;
 }
 
 PresentationMode GFX_GetPresentationMode()
@@ -1624,7 +1621,7 @@ static void update_frame_gl()
 					sdl.draw.render_height_px,
 					GL_BGRA_EXT,
 					GL_UNSIGNED_INT_8_8_8_8_REV,
-					static_cast<uint8_t*>(sdl.opengl.framebuf));
+					static_cast<uint8_t*>(sdl.opengl.framebuf[1]));
 
 	++sdl.opengl.actual_frame_count;
 }
@@ -1681,8 +1678,10 @@ static void set_vsync_gl(const bool is_enabled)
 std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
                                         const int render_height_px)
 {
-	free(sdl.opengl.framebuf);
-	sdl.opengl.framebuf = nullptr;
+	free(sdl.opengl.framebuf[0]);
+	free(sdl.opengl.framebuf[1]);
+	sdl.opengl.framebuf[0] = nullptr;
+	sdl.opengl.framebuf[1] = nullptr;
 
 	if (!(flags & GFX_CAN_32)) {
 		return {};
@@ -1723,10 +1722,11 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	}
 
 	// Create the texture
-	const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
+	sdl.opengl.framebuffer_bytes = static_cast<size_t>(render_width_px) *
 	                               render_height_px * MaxBytesPerPixel;
 
-	sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
+	sdl.opengl.framebuf[0] = malloc(sdl.opengl.framebuffer_bytes); // 32 bit colour
+	sdl.opengl.framebuf[1] = malloc(sdl.opengl.framebuffer_bytes); // 32 bit colour
 	sdl.opengl.pitch    = render_width_px * 4;
 
 	// One-time initialize the window size
@@ -2276,7 +2276,8 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 	case RenderingBackend::OpenGl:
 #if C_OPENGL
-		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
+
+		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf[0]);
 		maybe_log_opengl_error("end of start update");
 
 		if (pixels == nullptr) {
@@ -2297,13 +2298,13 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	return false;
 }
 
-void GFX_EndUpdate(const uint16_t* num_changed_lines)
+void GFX_EndUpdate(const uint16_t* num_changed_linespick)
 {
 	if (sdl.updating) {
-		// This is only true when the contents of the framebuffer has been changed in this frame.
-		// There's no need to upload the same texture over and over again if static content is
-		// being displayed; this saves some GPU bandwidth.
-		sdl.presentation.update();
+		auto src = sdl.opengl.framebuf[0];
+		auto dest = sdl.opengl.framebuf[1];
+		memcpy(dest, src, sdl.opengl.framebuffer_bytes);
+		sdl.presentation.has_unpresented_frame = true;
 	}
 
 	if (sdl.presentation.mode != PresentationMode::HostRate) {
@@ -2806,7 +2807,7 @@ DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	};
 
 	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.h * 4) /
+		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
 		                            iroundf(render_size_px.h);
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
@@ -2966,7 +2967,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			sdl.opengl.framebuf = nullptr;
+			sdl.opengl.framebuf[0] = nullptr;
+			sdl.opengl.framebuf[1] = nullptr;
 			sdl.opengl.texture  = 0;
 		}
 	}
@@ -3702,8 +3704,6 @@ static void adjust_ticks_after_present_frame(int64_t elapsed_us)
 
 void GFX_MaybePresentFrame()
 {
-	const auto start_us = GetTicksUs();
-
 	// TODO probably it's only needed for VFR
 //	if (CAPTURE_IsCapturingPostRenderImage()) {
 //		// Always present the frame if we want to capture the next
@@ -3713,37 +3713,35 @@ void GFX_MaybePresentFrame()
 //		// multi-output image capture modes.
 //		sdl.presentation.present();
 
-	static int64_t last_present_time_us = 0;
-
 	const auto now_us = GetTicksUs();
-	const auto curr_frame_time_us = GetTicksDiff(now_us, last_present_time_us);
+	const auto curr_frame_time_us = GetTicksDiff(now_us, sdl.presentation.last_present_time_us);
 
 	// Frame-timing can always fluctuate due to load spikes within DOSBox itself
 	// and at the OS level, so allow frames to be late by twice the ideal frame time.
-	if (curr_frame_time_us < sdl.presentation.frame_time_us * 2) {
+	if (curr_frame_time_us < sdl.presentation.frame_time_us * 2.0) {
 		if (curr_frame_time_us >= sdl.presentation.frame_time_us - sdl.presentation.early_present_window_us) {
 
 			const auto t0 = GetTicksUs();
+	  		sdl.presentation.update();
 			sdl.presentation.present();
 			const auto t1 = GetTicksUs();
-
 //			LOG_WARNING("present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
 
-			const auto measured_frame_time_us = GetTicksDiff(t1, last_present_time_us);
+			const auto measured_frame_time_us = GetTicksDiff(t1, sdl.presentation.last_present_time_us);
 //			LOG_ERR("frame_time_ms: %2.4f", 0.001 * measured_frame_time_us);
 //			if (measured_frame_time_us > sdl.presentation.frame_time_us * 1.5) {
 //				LOG_ERR("missed vsync (long frame)");
 //			}
 
-			last_present_time_us = t1;
+			sdl.presentation.last_present_time_us = t1;
 		}
 	} else {
 //		LOG_ERR("dropped frame (arrived too late)");
-		last_present_time_us = now_us;
+		sdl.presentation.last_present_time_us = now_us;
 	}
 
 	// Adjust "ticks done" counter by the time it took to present the frame
-	adjust_ticks_after_present_frame(GetTicksUsSince(start_us));
+//	adjust_ticks_after_present_frame(GetTicksUsSince(now_us));
 }
 
 // Returns:

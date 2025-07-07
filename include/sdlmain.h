@@ -201,7 +201,8 @@ struct SDL_Block {
 	struct {
 		SDL_GLContext context;
 		int pitch      = 0;
-		void* framebuf = nullptr;
+		void* framebuf[2] = {};
+		size_t framebuffer_bytes = 0;
 		GLuint texture;
 		GLint max_texsize;
 		GLuint program_object;
@@ -251,9 +252,12 @@ struct SDL_Block {
 		update_frame_buffer_f* update = update_frame_noop;
 
 		PresentationMode mode = {};
+		
+		bool has_unpresented_frame = false;
 
 		int frame_time_us           = 0;
 		int early_present_window_us = 0;
+		int last_present_time_us    = 0;
 	} presentation = {};
 
 	bool use_exact_window_resolution = false;
