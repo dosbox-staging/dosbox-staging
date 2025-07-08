@@ -88,7 +88,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 		                                     new_video_mode.height *
 		                                             double_scan};
 
-		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		const auto draw_rect_px = RENDER_CalcDrawRectInPixels(
 		        new_canvas_size_px,
 		        render_size_px,
 		        new_video_mode.pixel_aspect_ratio);
@@ -102,7 +102,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 		const DosBox::Rect render_size_px = {new_video_mode.width,
 		                                     new_video_mode.height};
 
-		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		const auto draw_rect_px = RENDER_CalcDrawRectInPixels(
 		        new_canvas_size_px,
 		        render_size_px,
 		        new_video_mode.pixel_aspect_ratio);

@@ -869,9 +869,9 @@ static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
 	const DosBox::Rect render_size_px = {sdl.draw.render_width_px,
 	                                     sdl.draw.render_height_px};
 
-	const auto r = GFX_CalcDrawRectInPixels(canvas_size_px,
-	                                        render_size_px,
-	                                        sdl.draw.render_pixel_aspect_ratio);
+	const auto r = RENDER_CalcDrawRectInPixels(canvas_size_px,
+	                                           render_size_px,
+	                                           sdl.draw.render_pixel_aspect_ratio);
 
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
@@ -3239,90 +3239,6 @@ static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correctio
 	        refined_size.x,
 	        refined_size.y,
 	        sdl.display_number);
-}
-
-DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
-                                      const DosBox::Rect& render_size_px,
-                                      const Fraction& render_pixel_aspect_ratio)
-{
-	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(
-	        canvas_size_px);
-
-	const auto draw_size_fit_px =
-	        render_size_px.Copy()
-	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
-	                .ScaleSizeToFit(viewport_px);
-
-	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
-		                            iroundf(render_size_px.w);
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			return draw_size_fit_px;
-		} else {
-			const auto vert_scale =
-			        render_pixel_aspect_ratio.Inverse().ToFloat();
-
-			return render_size_px.Copy()
-			        .ScaleSize(integer_scale_factor)
-			        .ScaleHeight(vert_scale);
-		}
-	};
-
-	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
-		                            iroundf(render_size_px.h);
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			return draw_size_fit_px;
-		} else {
-			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
-
-			return render_size_px.Copy()
-			        .ScaleSize(integer_scale_factor)
-			        .ScaleWidth(horiz_scale);
-		}
-	};
-
-	auto draw_size_px = [&] {
-		switch (sdl.integer_scaling_mode) {
-		case IntegerScalingMode::Off: return draw_size_fit_px;
-
-		case IntegerScalingMode::Auto:
-#if C_OPENGL
-			if (sdl.rendering_backend == RenderingBackend::OpenGl &&
-			    sdl.opengl.shader_info.is_adaptive) {
-				return calc_vert_integer_scaling_dims_in_pixels();
-			} else {
-				return draw_size_fit_px;
-			}
-#else
-			return draw_size_fit_px;
-#endif
-
-		case IntegerScalingMode::Horizontal:
-			return calc_horiz_integer_scaling_dims_in_pixels();
-
-		case IntegerScalingMode::Vertical:
-			return calc_vert_integer_scaling_dims_in_pixels();
-
-		default:
-			assertm(false, "Invalid IntegerScalingMode value");
-			return DosBox::Rect{};
-		}
-	}();
-
-	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
-}
-
-IntegerScalingMode GFX_GetIntegerScalingMode()
-{
-	return sdl.integer_scaling_mode;
-}
-
-void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
-{
-	sdl.integer_scaling_mode = mode;
 }
 
 InterpolationMode GFX_GetTextureInterpolationMode()
