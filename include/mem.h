@@ -141,6 +141,14 @@ static inline void phys_writeq(PhysPt addr, uint64_t val)
 	host_writeq(MemBase + addr, val);
 }
 
+static inline void phys_writes(PhysPt addr, const std::string& string)
+{
+	auto destination = MemBase + addr;
+	for (auto character : string) {
+		host_writeb(destination++, character);
+	}
+}
+
 static inline uint8_t phys_readb(PhysPt addr)
 {
 	return host_readb(MemBase + addr);
