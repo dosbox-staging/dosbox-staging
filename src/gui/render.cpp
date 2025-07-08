@@ -24,7 +24,7 @@
 #include "vga.h"
 #include "video.h"
 
-Render_t render;
+Render render;
 ScalerLineHandler_t RENDER_DrawLine;
 
 const char* to_string(const PixelFormat pf)
@@ -976,6 +976,79 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 	}
 }
 
+DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                         const DosBox::Rect& render_size_px,
+                                         const Fraction& render_pixel_aspect_ratio)
+{
+	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(
+	        canvas_size_px);
+
+	const auto draw_size_fit_px =
+	        render_size_px.Copy()
+	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
+	                .ScaleSizeToFit(viewport_px);
+
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
+		                            iroundf(render_size_px.w);
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return draw_size_fit_px;
+		} else {
+			const auto vert_scale =
+			        render_pixel_aspect_ratio.Inverse().ToFloat();
+
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleHeight(vert_scale);
+		}
+	};
+
+	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
+		                            iroundf(render_size_px.h);
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return draw_size_fit_px;
+		} else {
+			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
+
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleWidth(horiz_scale);
+		}
+	};
+
+	auto draw_size_px = [&] {
+		switch (render.integer_scaling_mode) {
+		case IntegerScalingMode::Off: return draw_size_fit_px;
+
+		case IntegerScalingMode::Auto: {
+			const auto shader_info =
+			        ShaderManager::GetInstance().GetCurrentShaderInfo();
+
+			if (!shader_info.name.empty() && shader_info.is_adaptive) {
+				return calc_vert_integer_scaling_dims_in_pixels();
+			}
+			return draw_size_fit_px;
+		}
+
+		case IntegerScalingMode::Horizontal:
+			return calc_horiz_integer_scaling_dims_in_pixels();
+
+		case IntegerScalingMode::Vertical:
+			return calc_vert_integer_scaling_dims_in_pixels();
+
+		default:
+			assertm(false, "Invalid IntegerScalingMode value");
+			return DosBox::Rect{};
+		}
+	}();
+
+	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
+}
+
+
 std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->Get_string("cga_colors");
@@ -1303,6 +1376,8 @@ static bool handle_shader_changes()
 	}
 	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 
+	render.integer_scaling_mode = get_integer_scaling_mode_setting();
+
 	const auto shader_changed = render.force_reload_shader ||
 	                            (new_shader_name != render.current_shader_name);
 
@@ -1328,7 +1403,7 @@ static void render_init(Section* sec)
 	const auto prev_scale_size              = render.scale.size;
 	const auto prev_force_vga_single_scan   = force_vga_single_scan;
 	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
-	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
+	const auto prev_integer_scaling_mode    = render.integer_scaling_mode;
 	const auto prev_viewport_settings       = viewport_settings;
 	const auto prev_aspect_ratio_correction_mode = aspect_ratio_correction_mode;
 
@@ -1355,8 +1430,6 @@ static void render_init(Section* sec)
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
-	GFX_SetIntegerScalingMode(get_integer_scaling_mode_setting());
-
 	auto shader_changed = handle_shader_changes();
 
 	setup_scan_and_pixel_doubling();
@@ -1365,7 +1438,7 @@ static void render_init(Section* sec)
 	        ((aspect_ratio_correction_mode != prev_aspect_ratio_correction_mode) ||
 	         (viewport_settings != prev_viewport_settings) ||
 	         (render.scale.size != prev_scale_size) ||
-	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
+	         (render.integer_scaling_mode != prev_integer_scaling_mode) ||
 	         shader_changed ||
 	         (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
