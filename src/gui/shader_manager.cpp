@@ -81,7 +81,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 	// 1) Calculate vertical scale factor for the standard output resolution
 	// (i.e., always double scanning on VGA).
 	//
-	pixels_per_scanline = [&] {
+	pixels_per_scanline.double_scan = [&] {
 		const auto double_scan = new_video_mode.is_double_scanned_mode ? 2 : 1;
 
 		const DosBox::Rect render_size_px = {new_video_mode.width * double_scan,
@@ -107,10 +107,10 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_
 		        render_size_px,
 		        new_video_mode.pixel_aspect_ratio);
 
-		pixels_per_scanline_force_single_scan = iroundf(draw_rect_px.h) /
-		                                        iroundf(render_size_px.h);
+		pixels_per_scanline.forced_single_scan = iroundf(draw_rect_px.h) /
+		                                         iroundf(render_size_px.h);
 	} else {
-		pixels_per_scanline_force_single_scan = pixels_per_scanline;
+		pixels_per_scanline.forced_single_scan = pixels_per_scanline.double_scan;
 	}
 
 	video_mode = new_video_mode;
@@ -389,19 +389,35 @@ void ShaderManager::MaybeAutoSwitchShader()
 
 		switch (mode) {
 		case ShaderMode::AutoGraphicsStandard:
+			pixels_per_scanline.curr_video_mode =
+			        (video_mode.graphics_standard < GraphicsStandard::Vga)
+			                ? pixels_per_scanline.forced_single_scan
+			                : pixels_per_scanline.double_scan;
+
 			shader_changed = maybe_load_shader(
 			        FindShaderAutoGraphicsStandard());
 			break;
 
 		case ShaderMode::AutoMachine:
+			pixels_per_scanline.curr_video_mode =
+			        (machine == MCH_VGA)
+			                ? pixels_per_scanline.double_scan
+			                : pixels_per_scanline.forced_single_scan;
+
 			shader_changed = maybe_load_shader(FindShaderAutoMachine());
 			break;
 
 		case ShaderMode::AutoArcade:
+			pixels_per_scanline.curr_video_mode =
+			        pixels_per_scanline.forced_single_scan;
+
 			shader_changed = maybe_load_shader(FindShaderAutoArcade());
 			break;
 
 		case ShaderMode::AutoArcadeSharp:
+			pixels_per_scanline.curr_video_mode =
+			        pixels_per_scanline.forced_single_scan;
+
 			shader_changed = maybe_load_shader(
 			        FindShaderAutoArcadeSharp());
 			break;
@@ -434,16 +450,19 @@ std::string ShaderManager::GetCgaShader() const
 			return "crt/monochrome-hires";
 		}
 	}
-	if (pixels_per_scanline_force_single_scan >= 8) {
+
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 8) {
 		return "crt/cga-4k";
 	}
-	if (pixels_per_scanline_force_single_scan >= 5) {
+	if (p >= 5) {
 		return "crt/cga-1440p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 4) {
+	if (p >= 4) {
 		return "crt/cga-1080p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 3) {
+	if (p >= 3) {
 		return "crt/cga-720p";
 	}
 	return SharpShaderName;
@@ -451,13 +470,15 @@ std::string ShaderManager::GetCgaShader() const
 
 std::string ShaderManager::GetCompositeShader() const
 {
-	if (pixels_per_scanline >= 8) {
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 8) {
 		return "crt/composite-4k";
 	}
-	if (pixels_per_scanline >= 5) {
+	if (p >= 5) {
 		return "crt/composite-1440p";
 	}
-	if (pixels_per_scanline >= 3) {
+	if (p >= 3) {
 		return "crt/composite-1080p";
 	}
 	return SharpShaderName;
@@ -465,16 +486,18 @@ std::string ShaderManager::GetCompositeShader() const
 
 std::string ShaderManager::GetEgaShader() const
 {
-	if (pixels_per_scanline_force_single_scan >= 8) {
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 8) {
 		return "crt/ega-4k";
 	}
-	if (pixels_per_scanline_force_single_scan >= 5) {
+	if (p >= 5) {
 		return "crt/ega-1440p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 4) {
+	if (p >= 4) {
 		return "crt/ega-1080p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 3) {
+	if (p >= 3) {
 		return "crt/ega-720p";
 	}
 	return SharpShaderName;
@@ -482,13 +505,15 @@ std::string ShaderManager::GetEgaShader() const
 
 std::string ShaderManager::GetVgaShader() const
 {
-	if (pixels_per_scanline >= 4) {
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 4) {
 		return "crt/vga-4k";
 	}
-	if (pixels_per_scanline >= 3) {
+	if (p >= 3) {
 		return "crt/vga-1440p";
 	}
-	if (pixels_per_scanline >= 2) {
+	if (p >= 2) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
 		// displayed with 5x vertical scaling on 1080p screens in
 		// fullscreen with forced single scanning and a "fake
@@ -581,13 +606,15 @@ std::string ShaderManager::FindShaderAutoMachine() const
 
 std::string ShaderManager::FindShaderAutoArcade() const
 {
-	if (pixels_per_scanline_force_single_scan >= 8) {
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 8) {
 		return "crt/arcade-4k";
 	}
-	if (pixels_per_scanline_force_single_scan >= 5) {
+	if (p >= 5) {
 		return "crt/arcade-1440p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 3) {
+	if (p >= 3) {
 		return "crt/arcade-1080p";
 	}
 	return SharpShaderName;
@@ -595,14 +622,22 @@ std::string ShaderManager::FindShaderAutoArcade() const
 
 std::string ShaderManager::FindShaderAutoArcadeSharp() const
 {
-	if (pixels_per_scanline_force_single_scan >= 8) {
+	const auto p = pixels_per_scanline.curr_video_mode;
+
+	if (p >= 8) {
 		return "crt/arcade-sharp-4k";
 	}
-	if (pixels_per_scanline_force_single_scan >= 5) {
+	if (p >= 5) {
 		return "crt/arcade-sharp-1440p";
 	}
-	if (pixels_per_scanline_force_single_scan >= 3) {
+	if (p >= 3) {
 		return "crt/arcade-sharp-1080p";
 	}
 	return SharpShaderName;
+}
+
+float ShaderManager::GetAutoIntegerScalingFactor() const
+{
+	std::vector<float> scaling_factors = {1.0f, 2.0f, 3.0f, 3.5f, 4.0f, 4.50f, 5.00f};
+	return 0;
 }

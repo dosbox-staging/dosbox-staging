@@ -183,6 +183,8 @@ private:
 	std::string GetEgaShader() const;
 	std::string GetVgaShader() const;
 
+	float GetAutoIntegerScalingFactor() const;
+
 	ShaderMode mode = ShaderMode::Single;
 
 	struct {
@@ -192,8 +194,11 @@ private:
 
 	std::string shader_name_from_config = {};
 
-	int pixels_per_scanline                   = 1;
-	int pixels_per_scanline_force_single_scan = 1;
+	struct {
+		int double_scan        = 1;
+		int forced_single_scan = 1;
+		int curr_video_mode    = 1;
+	} pixels_per_scanline = {};
 
 	VideoMode video_mode = {};
 };
