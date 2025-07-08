@@ -377,7 +377,6 @@ void GFX_ResetScreen(void);
 void GFX_RequestExit(const bool requested);
 void GFX_Start(void);
 void GFX_Stop(void);
-void GFX_SwitchFullScreen(void);
 bool GFX_StartUpdate(uint8_t * &pixels, int &pitch);
 void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_LosingFocus();
