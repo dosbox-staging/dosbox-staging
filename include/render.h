@@ -52,6 +52,21 @@ enum class IntegerScalingMode {
 	Vertical,
 };
 
+enum class AspectRatioCorrectionMode {
+	// Calculate the pixel aspect ratio from the display timings on VGA, and
+	// from heuristics & hardcoded values on all other adapters.
+	Auto,
+
+	// Always force square pixels (1:1 pixel aspect ratio).
+	SquarePixels,
+
+	// Use a 4:3 display aspect ratio viewport as the starting point, then
+	// apply user-defined horizontal and vertical scale factors to it. Stretch
+	// all video modes into the resulting viewport and derive the pixel aspect
+	// ratios from that.
+	Stretch
+};
+
 struct RenderPal_t {
 	struct {
 		uint8_t red    = 0;
