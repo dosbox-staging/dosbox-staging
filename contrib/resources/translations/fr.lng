@@ -1899,50 +1899,59 @@ Luminosité de l'image, de sombre à claire.
 Convergence des éléments sous-pixels, de flou à net (CGA et Tandy uniquement).
 .
 :CONFIG_CORE
-Type of CPU emulation core to use ('auto' by default).
-  auto:     'normal' core for real mode programs, 'dynamic' core for protected
-            mode programs (default). Most programs will run correctly with this
-            setting.
-  normal:   The DOS program is interpreted instruction by instruction. This
-            yields the most accurate timings, but puts 3-5 times more load on
-            the host CPU compared to the 'dynamic' core. Therefore, it's
-            generally only recommended for real mode programs that don't need
-            a fast emulated CPU or are timing-sensitive. The 'normal' core is
-            also necessary for programs that self-modify their code.
-  simple:   The 'normal' core optimised for old real mode programs; it might
-            give you slightly better compatibility with older games. Auto-
-            switches to the 'normal' core in protected mode.
-  dynamic:  The instructions of the DOS program are translated to host CPU
-            instructions in blocks and are then executed directly. This puts
-            3-5 times less load on the host CPU compared to the 'normal' core,
-            but the timings might be less accurate. The 'dynamic' core is a
-            necessity for demanding DOS programs (e.g., 3D SVGA games).
-            Programs that self-modify their code might misbehave or crash on
-            the 'dynamic' core; use the 'normal' core for such programs.
+Type de cœur d'émulation CPU à utiliser ('auto' par défaut).
+  auto:     Cœur 'normal' pour les programmes en mode réel, cœur 'dynamic' pour
+            les programmes en mode protégé (par défaut). La plupart des 
+            programmes fonctionneront correctement avec ce paramètre.
+  normal:   Le programme DOS est interprété instruction par instruction. Cela
+            donne les chronométrages les plus précis, mais met 3 à 5 fois plus
+            de charge sur le CPU hôte par rapport au cœur 'dynamic'. Par
+            conséquent, il est généralement recommandé uniquement pour les
+            programmes en mode réel qui n'ont pas besoin d'un CPU émulé rapide
+            ou qui sont sensibles au temps d'exécution des instructions.
+            Le cœur 'normal' est également nécessaire pour les programmes qui
+            modifient leur propre code.
+  simple:   Le cœur 'normal' optimisé pour les anciens programmes en mode réel;
+            il pourrait vous donner une compatibilité légèrement meilleure avec
+            les jeux plus anciens. Bascule automatiquement vers le cœur
+            'normal' en mode protégé.
+  dynamic:  Les instructions du programme DOS sont traduites en instructions CPU
+            hôte par blocs et sont ensuite exécutées directement. Cela met 3 à
+            5 fois moins de charge sur le CPU hôte par rapport au cœur 'normal',
+            mais les temps d'exécution pourraient être moins précis. Le cœur
+            'dynamic' est une nécessité pour les programmes DOS exigeants
+            (par exemple, les jeux SVGA 3D). Les programmes qui auto-modifient
+            leur code pourraient mal se comporter ou planter sur le cœur
+            'dynamic'; utilisez le cœur 'normal' pour de tels programmes.
 .
 :CONFIG_CPUTYPE
-CPU type to emulate ('auto' by default).
-You should only change this if the program doesn't run correctly on 'auto'.
-  auto:          The fastest and most compatible setting (default).
-                 Technically, this is '386_fast' plus 486 CPUID, 486 CR
-                 register behaviour, and extra 486 instructions.
-  386:           386 CPUID and 386 specific page access level calculation.
-  386_fast:      Same as '386' but with loose page privilege checks which is
-                 much faster.
-  386_prefetch:  Same as '386_fast' plus accurate CPU prefetch queue emulation.
-                 Requires 'core = normal'. This setting is necessary for
-                 programs that self-modify their code or employ anti-debugging
-                 tricks. Games that require '386_prefetch' include Contra, FIFA
-                 International Soccer (1994), Terminator 1, and X-Men: Madness
-                 in The Murderworld.
-  486:           486 CPUID, 486+ specific page access level calculation, 486 CR
-                 register behaviour, and extra 486 instructions.
-  pentium:       Same as '486' but with Pentium CPUID, Pentium CR register
-                 behaviour, and RDTSC instruction support. Recommended for
-                 Windows 3.x games (e.g., Betrayal in Antara).
-  pentium_mmx:   Same as 'pentium' plus MMX instruction set support. Very few
-                 games use MMX instructions; it's mostly only useful for
-                 demoscene productions.
+Type de CPU à émuler ('auto' par défaut).
+Ne changez ce paramètre que si le programme ne fonctionne pas correctement
+avec 'auto'.
+  auto:          Réglage le plus rapide et compatible (par défaut).
+                 Techniquement, c'est '386_fast' plus CPUID 486,
+                 comportement des registres CR 486 et instructions 486
+                 supplémentaires.
+  386:           CPUID 386 et calcul précis du niveau d'accès aux pages
+                 386.
+  386_fast:      Identique à '386' mais avec des vérifications de privilèges
+                 de page moins strictes, ce qui est beaucoup plus rapide.
+  386_prefetch:  Identique à '386_fast', plus émulation précise de la file
+                 d'attente de préchargement des instructions CPU.
+                 Nécessite 'core = normal'. Ce paramètre est nécessaire pour
+                 les programmes qui modifient leur propre code ou utilisent
+                 des techniques anti-débogage. Les jeux nécessitant
+                 '386_prefetch' incluent Contra, FIFA International Soccer
+                 (1994), Terminator 1 et X-Men: Madness in Murderworld.
+  486:           CPUID 486, calcul spécifique du niveau d'accès aux pages 486+
+                 , comportement des registres CR 486 et instructions 486
+                 supplémentaires.
+  pentium:       Identique à '486' mais avec CPUID Pentium, comportement des
+                 registres CR Pentium et support de l'instruction RDTSC.
+                 Recommandé pour les jeux Windows 3.x (ex: Betrayal in Antara).
+  pentium_mmx:   Identique à 'pentium' plus support des instructions MMX. Très
+                 peu de jeux utilisent les instructions MMX; c'est surtout
+                 utile pour les démos.
 .
 :CONFIG_CYCLES
 Nombre d'instructions que DOSBox essaye d'émuler à chaque milliseconde.
