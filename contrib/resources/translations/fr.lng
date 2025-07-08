@@ -1984,17 +1984,17 @@ Remarques :
     DOSBox ne fait pas d'émulation stricte des cycles CPU,
     il faut donc considérer ces valeurs comme des points de départ,
     puis les ajuster en fonction du jeu.
-      8088 (4,77 MHz) 300
-      286-8 700
-      286-12 1500
-      386SX-20 3000
-      386DX-33 6000
-      386DX-40 8000
-      486DX-33 12000
-      486DX/2-66 25000
-      Pentium 90 50000
-      Pentium MMX-166 100000
-      Pentium II 300 200000
+      8088 (4.77 MHz)     300
+      286-8               700
+      286-12             1500
+      386SX-20           3000
+      386DX-33           6000
+      386DX-40           8000
+      486DX-33          12000
+      486DX/2-66        25000
+      Pentium 90        50000
+      Pentium MMX-166  100000
+      Pentium II 300   200000
 .
 :CONFIG_CPU_CYCLES_PROTECTED
 Vitesse du CPU émulé pour les programmes en mode protégé uniquement
