@@ -29,6 +29,20 @@ add_executable(dosbox_tests
     support_tests.cpp
 )
 
+# Disable some warnings for deliberately flawed test cases
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
+    target_compile_options(dosbox_tests PRIVATE
+        "-Wno-effc++"
+        "-Wno-gnu-zero-variadic-macro-arguments"
+    )
+    # Clang does not support -Wno-format-overflow
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(dosbox_tests PRIVATE
+            "-Wno-format-overflow"
+        )
+    endif()
+endif()
+
 target_link_libraries(dosbox_tests PRIVATE
     GTest::gmock_main
     libdosboxcommon
