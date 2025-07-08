@@ -2622,7 +2622,7 @@ static void sticky_keys(bool restore)
 }
 #endif
 
-void GFX_SwitchFullScreen()
+static void switch_fullscreen()
 {
 	sdl.desktop.switching_fullscreen = true;
 
@@ -2649,10 +2649,10 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = false;
 }
 
-static void switch_fullscreen(bool pressed)
+static void switch_fullscreen_handler(bool pressed)
 {
 	if (pressed) {
-		GFX_SwitchFullScreen();
+		switch_fullscreen();
 	}
 }
 
@@ -3608,7 +3608,7 @@ static void read_gui_config(Section* sec)
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD, "shutdown", "Shutdown");
 
-	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(switch_fullscreen_handler, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
 	MAPPER_AddHandler(restart_hotkey_handler,
 	                  SDL_SCANCODE_HOME,
 	                  PRIMARY_MOD | MMOD2,
