@@ -188,70 +188,57 @@ void INT10_ReloadFont()
 	load_font(font_data, Reload, NumChars, FirstChar, FontBlock, char_height, load_alternate_chars);
 }
 
-void INT10_SetupRomMemory(void) {
-/* This should fill up certain structures inside the Video Bios Rom Area */
-	PhysPt rom_base=PhysicalMake(0xc000,0);
-	Bitu i;
-	int10.rom.used=3;
-	if (is_machine_ega_or_better()) {
-		// set up the start of the ROM
-		phys_writew(rom_base+0,0xaa55);
-		phys_writeb(rom_base+2,0x40);		// Size of ROM: 64 512-blocks = 32KB
-		phys_writeb(rom_base+0x1e,0x49);	// IBM string
-		phys_writeb(rom_base+0x1f,0x42);
-		phys_writeb(rom_base+0x20,0x4d);
-		phys_writeb(rom_base+0x21,0x20);
-
-		if (is_machine_vga_or_better()) {
-			// SVGA card-specific ROM signatures
-			switch (svga_type) {
-			case SvgaType::S3:
-				phys_writeb(rom_base+0x003f,'S');
-				phys_writeb(rom_base+0x0040,'3');
-				phys_writeb(rom_base+0x0041,' ');
-				phys_writeb(rom_base+0x0042,'8');
-				phys_writeb(rom_base+0x0043,'6');
-				phys_writeb(rom_base+0x0044,'C');
-				phys_writeb(rom_base+0x0045,'7');
-				phys_writeb(rom_base+0x0046,'6');
-				phys_writeb(rom_base+0x0047,'4');
-				break;
-			case SvgaType::TsengEt3k:
-			case SvgaType::TsengEt4k:
-				phys_writeb(rom_base+0x0075,' ');
-				phys_writeb(rom_base+0x0076,'T');
-				phys_writeb(rom_base+0x0077,'s');
-				phys_writeb(rom_base+0x0078,'e');
-				phys_writeb(rom_base+0x0079,'n');
-				phys_writeb(rom_base+0x007a,'g');
-				phys_writeb(rom_base+0x007b,' ');
-				break;
-			case SvgaType::Paradise:
-				phys_writeb(rom_base+0x0048,' ');
-				phys_writeb(rom_base+0x0049,'W');
-				phys_writeb(rom_base+0x004a,'E');
-				phys_writeb(rom_base+0x004b,'S');
-				phys_writeb(rom_base+0x004c,'T');
-				phys_writeb(rom_base+0x004d,'E');
-				phys_writeb(rom_base+0x004e,'R');
-				phys_writeb(rom_base+0x004f,'N');
-				phys_writeb(rom_base+0x0050,' ');
-				phys_writeb(rom_base+0x007d,'V');
-				phys_writeb(rom_base+0x007e,'G');
-				phys_writeb(rom_base+0x007f,'A');
-				phys_writeb(rom_base+0x0080,'=');
-				break;
-			case SvgaType::None:
-				LOG_ERR("INT10: Invalid VGA card with the VGA machine type");
-				break;
-			}
-		}
-		int10.rom.used=0x100;
+static void setup_card_rom_signature(const PhysPt rom_base)
+{
+	if (!is_machine_ega_or_better()) {
+		return;
 	}
+
+	int10.rom.used = 0x100;
+
+	// Set up the start of the ROM
+	phys_writew(rom_base + 0, 0xaa55);
+	// Size of ROM: 64 512-blocks = 32KB
+	phys_writeb(rom_base + 2, 0x40);
+
+	// IBM string
+	phys_writes(rom_base + 0x1e, "IBM ");
+
+	if (!is_machine_vga_or_better()) {
+		return;
+	}
+
+	// SVGA card specific signatures
+	switch (svga_type) {
+	case SvgaType::S3:
+		phys_writes(rom_base + 0x003f, "S3 86C764");
+		break;
+	case SvgaType::TsengEt3k:
+	case SvgaType::TsengEt4k:
+		phys_writes(rom_base + 0x0075, " Tseng ");
+		break;
+	case SvgaType::Paradise:
+		phys_writes(rom_base + 0x0048, " WESTERN VGA=");
+		break;
+	default:
+		assert(false);
+		break;
+	}
+}
+
+void INT10_SetupRomMemory()
+{
+	const auto rom_base = PhysicalMake(0xc000, 0);
+
+	int10.rom.used = 3;
+
+	setup_card_rom_signature(rom_base);
 
 	if (svga_type == SvgaType::S3) {
 		INT10_SetupVESA();
 	}
+
+	Bitu i = {};
 
 	int10.rom.font_8_first=RealMake(0xC000,int10.rom.used);
 	for (i=0;i<128*8;i++) {
