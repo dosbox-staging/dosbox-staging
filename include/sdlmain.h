@@ -174,8 +174,6 @@ struct SDL_Block {
 	RenderingBackend rendering_backend      = RenderingBackend::Texture;
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
 
-	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
-
 	struct {
 		int render_width_px                = 0;
 		int render_height_px               = 0;

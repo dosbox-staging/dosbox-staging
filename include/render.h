@@ -45,6 +45,13 @@ struct ViewportSettings {
 	}
 };
 
+enum class IntegerScalingMode {
+	Off,
+	Auto,
+	Horizontal,
+	Vertical,
+};
+
 struct RenderPal_t {
 	struct {
 		uint8_t red    = 0;
@@ -64,7 +71,7 @@ struct RenderPal_t {
 	uint32_t last         = 0;
 };
 
-struct Render_t {
+struct Render {
 	ImageInfo src = {};
 	uint32_t src_start   = 0;
 
@@ -101,6 +108,8 @@ struct Render_t {
 
 	std::string current_shader_name = {};
 	bool force_reload_shader        = false;
+
+	IntegerScalingMode integer_scaling_mode = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
@@ -167,7 +176,7 @@ struct RenderedImage {
 	}
 };
 
-extern Render_t render;
+extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
 void RENDER_Reinit();
@@ -178,6 +187,9 @@ AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px);
 
+DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                         const DosBox::Rect& render_size_px,
+                                         const Fraction& render_pixel_aspect_ratio);
 std::string RENDER_GetCgaColorsSetting();
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
