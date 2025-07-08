@@ -63,13 +63,6 @@ typedef enum {
 	GFX_CallbackRedraw
 } GFX_CallbackFunctions_t;
 
-enum class IntegerScalingMode {
-	Off,
-	Auto,
-	Horizontal,
-	Vertical,
-};
-
 enum class AspectRatioCorrectionMode {
 	// Calculate the pixel aspect ratio from the display timings on VGA, and
 	// from heuristics & hardcoded values on all other adapters.
@@ -360,9 +353,6 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
 struct ShaderInfo;
 
 void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
-
-void GFX_SetIntegerScalingMode(const IntegerScalingMode mode);
-IntegerScalingMode GFX_GetIntegerScalingMode();
 
 InterpolationMode GFX_GetTextureInterpolationMode();
 
