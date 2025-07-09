@@ -126,6 +126,8 @@ enum class HostRateMode {
 
 enum class VsyncMode { Unset, Off, On, Adaptive, Yield };
 
+enum class FullscreenMode { Standard, Original };
+
 struct VsyncSettings {
 	// The vsync mode the user asked for.
 	VsyncMode requested = VsyncMode::Unset;
@@ -190,10 +192,10 @@ struct SDL_Block {
 
 	struct {
 		struct {
-			int width        = 0;
-			int height       = 0;
-			bool fixed       = false;
-			bool display_res = false;
+			FullscreenMode mode = {};
+
+			int width  = 0;
+			int height = 0;
 		} fullscreen = {};
 
 		struct {
