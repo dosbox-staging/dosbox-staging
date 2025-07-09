@@ -8,6 +8,7 @@ add_executable(dosbox_tests
     bitops_tests.cpp
     cmd_move_tests.cpp
     dos_files_tests.cpp
+    dos_memory_struct_tests.cpp
     dosbox_test_fixture.h
     drives_tests.cpp
     fraction_tests.cpp
