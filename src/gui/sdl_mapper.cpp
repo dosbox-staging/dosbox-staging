@@ -1880,7 +1880,6 @@ static void SetActiveEvent(CEvent * event) {
 }
 
 extern SDL_Window* GFX_GetWindow();
-extern void GFX_UpdateDisplayDimensions(int width, int height);
 
 static void DrawButtons() {
 	SDL_SetRenderDrawColor(mapper.renderer,
@@ -2760,8 +2759,6 @@ void BIND_MappingEvents()
 			 */
 			if ((event.window.event == SDL_WINDOWEVENT_RESIZED) ||
 			    (event.window.event == SDL_WINDOWEVENT_RESTORED)) {
-				GFX_UpdateDisplayDimensions(event.window.data1,
-				                            event.window.data2);
 				SDL_RenderSetLogicalSize(mapper.renderer, 640, 480);
 				mapper.redraw = true;
 			}
