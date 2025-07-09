@@ -2865,23 +2865,6 @@ void GFX_Start()
 	sdl.active = true;
 }
 
-/* Manually update display dimensions in case of a window resize,
- * IF there is the need for that ("yes" on Android, "no" otherwise).
- * Used for the mapper UI on Android.
- * Reason is the usage of GFX_GetSDLSurfaceSubwindowDims, as well as a
- * mere notification of the fact that the window's dimensions are modified.
- */
-void GFX_UpdateDisplayDimensions(int width, int height)
-{
-	if (sdl.desktop.is_fullscreen) {
-		/* Note: We should not use get_display_dimensions()
-		(SDL_GetDisplayBounds) on Android after a screen rotation:
-		The older values from application startup are returned. */
-		sdl.desktop.fullscreen.width  = width;
-		sdl.desktop.fullscreen.height = height;
-	}
-}
-
 static void shutdown_gui(Section*)
 {
 	GFX_Stop();
