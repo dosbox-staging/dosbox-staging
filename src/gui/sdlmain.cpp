@@ -1646,25 +1646,25 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 	 * although it has its own issues.
 	 */
 	if (fullscreen) {
-		SDL_DisplayMode displayMode;
-		SDL_GetWindowDisplayMode(sdl.window, &displayMode);
+		SDL_DisplayMode display_mode;
+		SDL_GetWindowDisplayMode(sdl.window, &display_mode);
 
-		displayMode.w = width;
-		displayMode.h = height;
+		display_mode.w = width;
+		display_mode.h = height;
 
 		// TODO pixels or logical unit?
-		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
+		if (SDL_SetWindowDisplayMode(sdl.window, &display_mode) != 0) {
 			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
-			            displayMode.w,
-			            displayMode.h,
-			            displayMode.refresh_rate);
+			            display_mode.w,
+			            display_mode.h,
+			            display_mode.refresh_rate);
 		}
 		SDL_SetWindowFullscreen(sdl.window,
-		                        sdl.desktop.fullscreen.display_res
+		                        sdl.desktop.fullscreen.mode == FullscreenMode::Standard
 		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
 		                                : enum_val(SDL_WINDOW_FULLSCREEN));
 	} else {
-		// we're switching down from fullscreen, so let SDL use the
+		// We're switching down from fullscreen, so let SDL use the
 		// previously-set window size
 		if (sdl.desktop.switching_fullscreen) {
 			SDL_SetWindowFullscreen(sdl.window, 0);
@@ -1774,25 +1774,23 @@ static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 	int window_width;
 	int window_height;
 
-	if (sdl.desktop.is_fullscreen) {
-		window_width  = sdl.desktop.fullscreen.fixed
-		                      ? sdl.desktop.fullscreen.width
-		                      : 0;
+	switch (sdl.desktop.fullscreen.mode) {
+	case FullscreenMode::Standard:
+		if (sdl.desktop.is_fullscreen) {
+			window_width  = sdl.desktop.fullscreen.width;
+			window_height = sdl.desktop.fullscreen.height;
+		} else {
+			window_width  = sdl.desktop.window.width;
+			window_height = sdl.desktop.window.height;
+		}
+		break;
+	case FullscreenMode::Original: {
+		const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
+				sdl.draw.render_pixel_aspect_ratio);
 
-		window_height = sdl.desktop.fullscreen.fixed
-		                      ? sdl.desktop.fullscreen.height
-		                      : 0;
-	} else {
-		window_width  = sdl.desktop.window.width;
-		window_height = sdl.desktop.window.height;
-	}
-
-	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-	        sdl.draw.render_pixel_aspect_ratio);
-
-	if (window_width == 0 && window_height == 0) {
 		window_width = iround(sdl.draw.render_width_px * draw_scale_x);
 		window_height = iround(sdl.draw.render_height_px * draw_scale_y);
+	} break;
 	}
 
 	sdl.window = set_window_mode(rendering_backend,
@@ -2797,16 +2795,6 @@ void GFX_Start()
 	sdl.active = true;
 }
 
-static void get_display_dimensions()
-{
-	SDL_Rect displayDimensions;
-
-	SDL_GetDisplayBounds(sdl.display_number, &displayDimensions);
-
-	sdl.desktop.fullscreen.width  = displayDimensions.w;
-	sdl.desktop.fullscreen.height = displayDimensions.h;
-}
-
 /* Manually update display dimensions in case of a window resize,
  * IF there is the need for that ("yes" on Android, "no" otherwise).
  * Used for the mapper UI on Android.
@@ -2815,7 +2803,7 @@ static void get_display_dimensions()
  */
 void GFX_UpdateDisplayDimensions(int width, int height)
 {
-	if (sdl.desktop.fullscreen.display_res && sdl.desktop.is_fullscreen) {
+	if (sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
@@ -3462,19 +3450,25 @@ static void set_fullscreen_mode()
 	const std::string fullscreen_mode_pref = get_sdl_section()->Get_string(
 	        "fullscreen_mode");
 
-	auto set_desktop_mode = [&] {
-		sdl.desktop.fullscreen.fixed  = true;
-		sdl.desktop.fullscreen.width  = 0;
-		sdl.desktop.fullscreen.height = 0;
+	auto set_standard_mode = [&] {
+		SDL_Rect bounds;
+		SDL_GetDisplayBounds(sdl.display_number, &bounds);
+
+		sdl.desktop.fullscreen.mode   = FullscreenMode::Standard;
+		sdl.desktop.fullscreen.width  = bounds.w;
+		sdl.desktop.fullscreen.height = bounds.h;
 	};
 
-	if (fullscreen_mode_pref == "desktop") {
-		set_desktop_mode();
+	if (fullscreen_mode_pref == "standard") {
+		set_standard_mode();
 
 	} else if (fullscreen_mode_pref == "original") {
-		sdl.desktop.fullscreen.fixed  = false;
-		sdl.desktop.fullscreen.width  = 0;
-		sdl.desktop.fullscreen.height = 0;
+		SDL_Rect bounds;
+		SDL_GetDisplayBounds(sdl.display_number, &bounds);
+
+		sdl.desktop.fullscreen.mode   = FullscreenMode::Original;
+		sdl.desktop.fullscreen.width  = bounds.w;
+		sdl.desktop.fullscreen.height = bounds.h;
 
 	} else {
 		const auto parts = split_with_empties(fullscreen_mode_pref, 'x');
@@ -3483,7 +3477,7 @@ static void set_fullscreen_mode()
 			const auto maybe_height = parse_int(parts[1]);
 
 			if (maybe_width && maybe_height) {
-				sdl.desktop.fullscreen.fixed  = true;
+				sdl.desktop.fullscreen.mode   = FullscreenMode::Original;
 				sdl.desktop.fullscreen.width  = *maybe_width;
 				sdl.desktop.fullscreen.height = *maybe_height;
 
@@ -3498,11 +3492,11 @@ static void set_fullscreen_mode()
 		}
 
 		// Failure
-		LOG_WARNING("DISPLAY: Invalid 'fullscreen_mode' setting: '%s'; using 'desktop'",
+		LOG_WARNING("DISPLAY: Invalid 'fullscreen_mode' setting: '%s'; using 'standard'",
 		            fullscreen_mode_pref.c_str());
 
-		set_desktop_mode();
-		set_section_property_value("sdl", "fullscreen_mode", "desktop");
+		set_standard_mode();
+		set_section_property_value("sdl", "fullscreen_mode", "standard");
 	}
 }
 
@@ -3585,14 +3579,6 @@ static void read_gui_config(Section* sec)
 		sdl.frame.desired_mode = FrameMode::Unset;
 		LOG_WARNING("SDL: Invalid 'presentation_mode' setting: '%s', using 'auto'",
 		            presentation_mode_pref.c_str());
-	}
-
-	sdl.desktop.fullscreen.display_res = sdl.desktop.fullscreen.fixed &&
-	                                     (!sdl.desktop.fullscreen.width ||
-	                                      !sdl.desktop.fullscreen.height);
-
-	if (sdl.desktop.fullscreen.display_res) {
-		get_display_dimensions();
 	}
 
 	set_output(section, is_aspect_ratio_correction_enabled());
@@ -3728,7 +3714,7 @@ static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
-	if (sdl.desktop.fullscreen.display_res && sdl.desktop.is_fullscreen) {
+	if (sdl.desktop.is_fullscreen) {
 		/* Note: We should not use get_display_dimensions()
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
@@ -4492,10 +4478,10 @@ static void init_sdl_config_section()
 	pstring = sdl_sec->Add_string("fullresolution", deprecated, "");
 	pstring->Set_help("Please use 'fullscreen_mode' instead.");
 
-	pstring = sdl_sec->Add_string("fullscreen_mode", always, "desktop");
+	pstring = sdl_sec->Add_string("fullscreen_mode", always, "standard");
 	pstring->Set_help(
-	        "What resolution to use for fullscreen: 'original', 'desktop'\n"
-	        "or a fixed size, e.g. 1024x768 ('desktop' by default).");
+	        "What resolution to use for fullscreen: 'original', 'standard'\n"
+	        "or a fixed size, e.g. 1024x768 ('standard' by default).");
 
 	pstring = sdl_sec->Add_string("windowresolution", deprecated, "");
 	pstring->Set_help("Renamed to 'window_size'.");
