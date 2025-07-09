@@ -3452,6 +3452,55 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 	DOSBOX_Restart();
 }
 
+static void set_fullscreen_mode()
+{
+	const std::string fullscreen_mode_pref = get_sdl_section()->Get_string(
+	        "fullscreen_mode");
+
+	auto set_desktop_mode = [&] {
+		sdl.desktop.full.fixed  = true;
+		sdl.desktop.full.width  = 0;
+		sdl.desktop.full.height = 0;
+	};
+
+	if (fullscreen_mode_pref == "desktop") {
+		set_desktop_mode();
+
+	} else if (fullscreen_mode_pref == "original") {
+		sdl.desktop.full.fixed  = false;
+		sdl.desktop.full.width  = 0;
+		sdl.desktop.full.height = 0;
+
+	} else {
+		const auto parts = split_with_empties(fullscreen_mode_pref, 'x');
+		if (parts.size() == 2) {
+			const auto maybe_width  = parse_int(parts[0]);
+			const auto maybe_height = parse_int(parts[1]);
+
+			if (maybe_width && maybe_height) {
+				sdl.desktop.full.fixed  = true;
+				sdl.desktop.full.width  = *maybe_width;
+				sdl.desktop.full.height = *maybe_height;
+
+				maybe_limit_requested_resolution(
+				        sdl.desktop.full.width,
+				        sdl.desktop.full.height,
+				        "fullscreen");
+
+				// Success
+				return;
+			}
+		}
+
+		// Failure
+		LOG_WARNING("DISPLAY: Invalid 'fullscreen_mode' setting: '%s'; using 'desktop'",
+		            fullscreen_mode_pref.c_str());
+
+		set_desktop_mode();
+		set_section_property_value("sdl", "fullscreen_mode", "desktop");
+	}
+}
+
 static void read_gui_config(Section* sec)
 {
 	sec->AddDestroyFunction(&shutdown_gui);
@@ -3477,39 +3526,7 @@ static void read_gui_config(Section* sec)
 	// Assume focus on startup
 	apply_active_settings();
 
-	std::string fullresolution = section->Get_string("fullresolution");
-
-	sdl.desktop.full.fixed  = false;
-	sdl.desktop.full.width  = 0;
-	sdl.desktop.full.height = 0;
-
-	if (!fullresolution.empty()) {
-		lowcase(fullresolution); // so x and X are allowed
-		                         //
-		if (fullresolution != "original") {
-			sdl.desktop.full.fixed = true;
-
-			if (fullresolution != "desktop") { // desktop uses 0x0,
-				                           // below sets a
-				                           // custom WxH
-				std::vector<std::string> dimensions =
-				        split_with_empties(fullresolution, 'x');
-
-				if (dimensions.size() == 2) {
-					sdl.desktop.full.width =
-					        parse_int(dimensions[0]).value_or(0);
-
-					sdl.desktop.full.height =
-					        parse_int(dimensions[1]).value_or(0);
-
-					maybe_limit_requested_resolution(
-					        sdl.desktop.full.width,
-					        sdl.desktop.full.height,
-					        "fullscreen");
-				}
-			}
-		}
-	}
+	set_fullscreen_mode();
 
 	const std::string host_rate_pref = section->Get_string("host_rate");
 	if (host_rate_pref == "auto") {
@@ -4466,7 +4483,10 @@ static void init_sdl_config_section()
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	pbool->Set_help("Start in fullscreen mode ('off' by default).");
 
-	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
+	pstring = sdl_sec->Add_string("fullresolution", deprecated, "");
+	pstring->Set_help("Please use 'fullscreen_mode' instead.");
+
+	pstring = sdl_sec->Add_string("fullscreen_mode", always, "desktop");
 	pstring->Set_help(
 	        "What resolution to use for fullscreen: 'original', 'desktop'\n"
 	        "or a fixed size, e.g. 1024x768 ('desktop' by default).");
