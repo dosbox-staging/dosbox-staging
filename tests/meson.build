@@ -86,6 +86,7 @@ unit_tests = [
     {'name': 'bitops', 'deps': []},
     {'name': 'cmd_move', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
+    {'name': 'dos_memory_struct', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'fraction', 'deps': []},
     {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
