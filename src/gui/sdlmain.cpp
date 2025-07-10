@@ -3506,8 +3506,14 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 
 static void set_fullscreen_mode()
 {
-	const std::string fullscreen_mode_pref = get_sdl_section()->Get_string(
-	        "fullscreen_mode");
+	const auto fullscreen_mode_pref = [&] {
+		auto legacy_pref = get_sdl_section()->Get_string("fullresolution");
+		if (!legacy_pref.empty()) {
+			set_section_property_value("sdl", "fullresolution", "");
+			set_section_property_value("sdl", "fullscreen_mode", legacy_pref);
+		}
+		return get_sdl_section()->Get_string("fullscreen_mode");
+	}();
 
 	auto set_screen_bounds = [&] {
 		SDL_Rect bounds;
@@ -4510,8 +4516,10 @@ static void init_sdl_config_section()
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
 	pbool->Set_help("Start in fullscreen mode ('off' by default).");
 
-	pstring = sdl_sec->Add_string("fullresolution", deprecated, "");
-	pstring->Set_help("Please use 'fullscreen_mode' instead.");
+	pstring = sdl_sec->Add_string("fullresolution", deprecated_but_allowed, "");
+	pstring->Set_help(
+	        "The 'fullresolution' setting is deprecated but still accepted;\n"
+	        "please use 'fullscreen_mode' instead.");
 
 	pstring = sdl_sec->Add_string("fullscreen_mode", always, "standard");
 	pstring->Set_help("Set the fullscreen mode ('standard' by default):");
@@ -4540,6 +4548,9 @@ static void init_sdl_config_section()
 	                     "forced-borderless",
 #endif
 	                     "original"});
+
+	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
+
 
 	pstring = sdl_sec->Add_string("windowresolution", deprecated_but_allowed, "");
 	pstring->Set_help(
