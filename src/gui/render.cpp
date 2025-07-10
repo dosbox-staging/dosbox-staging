@@ -1004,9 +1004,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		}
 	};
 
-	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
-		                            iroundf(render_size_px.h);
+	auto calc_vert_integer_scaling_dims_in_pixels = [&](const float integer_scale_factor) {
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return draw_size_fit_px;
@@ -1019,25 +1017,67 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		}
 	};
 
+	auto handle_auto_mode = [&] {
+		// The 'auto' mode is special:
+		//
+		// - it enables vertical integer scaling for the adaptive CRT
+		//   shaders if the viewport is large enough (otherwise it falls
+		//   back to the 'sharp' shader with no integer scaling),
+		// - it allows the 3.5x and 4.5x half steps,
+		// - and it disables integer scaling above 5.0x scaling.
+		//
+		// The half-steps and no scaling above 5.0x result in no moire
+		// artifacts in 99% of cases, so it's very much worth it for
+		// better viewport utilisation.
+		//
+		if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+			return draw_size_fit_px;
+		}
+
+		if (ShaderManager::GetInstance().GetCurrentShaderInfo().is_adaptive) {
+			auto integer_scale_factor = [&] {
+				const auto factor = draw_size_fit_px.h /
+				                    render_size_px.h;
+				if (factor >= 5.0) {
+					// Disable integer scaling above 5.0x
+					// vertical scaling
+					return factor;
+				}
+				if (factor >= 3.0) {
+					// Allow 3.5x and 4.5x half steps in
+					// the 3.0x to 5.0x vertical scaling range
+					return floorf(factor * 2) / 2;
+				}
+				// Allow only integer steps below 3.0x vertical
+				// scaling
+				return floorf(factor);
+			}();
+
+			return calc_vert_integer_scaling_dims_in_pixels(
+			        integer_scale_factor);
+		}
+
+		// Handles the `sharp` shader fallback when the viewport is
+		// is too small for CRT shaders; integer scaling is then disabled.
+		return draw_size_fit_px;
+	};
+
 	auto draw_size_px = [&] {
 		switch (render.integer_scaling_mode) {
 		case IntegerScalingMode::Off: return draw_size_fit_px;
 
-		case IntegerScalingMode::Auto: {
-			const auto shader_info =
-			        ShaderManager::GetInstance().GetCurrentShaderInfo();
-
-			if (!shader_info.name.empty() && shader_info.is_adaptive) {
-				return calc_vert_integer_scaling_dims_in_pixels();
-			}
-			return draw_size_fit_px;
-		}
+		case IntegerScalingMode::Auto:
+			return handle_auto_mode();
 
 		case IntegerScalingMode::Horizontal:
 			return calc_horiz_integer_scaling_dims_in_pixels();
 
-		case IntegerScalingMode::Vertical:
-			return calc_vert_integer_scaling_dims_in_pixels();
+		case IntegerScalingMode::Vertical: {
+			auto integer_scale_factor = floorf(draw_size_fit_px.h /
+			                                   render_size_px.h);
+			return calc_vert_integer_scaling_dims_in_pixels(
+			        integer_scale_factor);
+		}
 
 		default:
 			assertm(false, "Invalid IntegerScalingMode value");
@@ -1144,11 +1184,13 @@ static void init_render_settings(Section_prop& secprop)
 	        "'viewport' settings, which may result in a non-integer scaling factor in the\n"
 	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
 	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
-	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only\n"
-	        "               (see 'glshader'), otherwise 'off' (default).\n"
+	        "  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
+	        "               shaders (see `glshader`). This mode has refinements over standard\n"
+	        "               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
+	        "               allowed, and integer scaling is disabled above 5.0x scaling.\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
-	        "               This is the recommended setting for CRT shaders to avoid uneven\n"
-	        "               scanlines and interference artifacts.\n"
+	        "               This is the recommended setting for third-party shaders to avoid\n"
+	        "               uneven scanlines and interference artifacts.\n"
 	        "  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
@@ -1447,6 +1489,7 @@ static void render_init(Section* sec)
 		render_callback(GFX_CallbackReset);
 		VGA_SetupDrawing(0);
 	}
+
 	if (!running) {
 		render.updating = true;
 	}
