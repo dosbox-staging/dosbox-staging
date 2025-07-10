@@ -3191,22 +3191,30 @@ static void save_window_size(const int w, const int h)
 //     not take into account scaling or aspect correction.
 //  - 'sdl.desktop.window', with the refined size.
 //
-static void setup_window_sizes_from_conf(const char* windowresolution_val,
-                                         const bool wants_aspect_ratio_correction)
+static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correction)
 {
+
+	const auto window_size_pref = [&]() {
+		const auto legacy_pref = get_sdl_section()->Get_string("windowresolution");
+		if (!legacy_pref.empty()) {
+			set_section_property_value("sdl", "windowresolution", "");
+			set_section_property_value("sdl", "window_size", legacy_pref);
+		}
+		return get_sdl_section()->Get_string("window_size");
+	}();
+
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
-	const std::string pref = windowresolution_val;
 	SDL_Point coarse_size  = FallbackWindowSize;
 
-	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
+	sdl.use_exact_window_resolution = window_size_pref.find('x') != std::string::npos;
 
 	if (sdl.use_exact_window_resolution) {
-		coarse_size = parse_window_resolution_from_conf(pref);
+		coarse_size = parse_window_resolution_from_conf(window_size_pref);
 	} else {
 		const auto desktop = get_desktop_size();
 
-		coarse_size = window_bounds_from_label(pref, desktop);
+		coarse_size = window_bounds_from_label(window_size_pref, desktop);
 	}
 
 	// Save the coarse bounds in the SDL struct for future sizing events
@@ -3372,8 +3380,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
 
-	setup_window_sizes_from_conf(section->Get_string("window_size").c_str(),
-	                             wants_aspect_ratio_correction);
+	setup_window_sizes_from_conf(wants_aspect_ratio_correction);
 
 #if C_OPENGL
 	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
@@ -4436,7 +4443,8 @@ static void init_sdl_config_section()
 
 	constexpr auto always     = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
-	constexpr auto on_start   = Property::Changeable::OnlyAtStart;
+	constexpr auto deprecated_but_allowed = Property::Changeable::DeprecatedButAllowed;
+	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 #if C_OPENGL
 	const std::string default_output = "opengl";
@@ -4533,8 +4541,10 @@ static void init_sdl_config_section()
 #endif
 	                     "original"});
 
-	pstring = sdl_sec->Add_string("windowresolution", deprecated, "");
-	pstring->Set_help("Renamed to 'window_size'.");
+	pstring = sdl_sec->Add_string("windowresolution", deprecated_but_allowed, "");
+	pstring->Set_help(
+	        "The 'windowresolution' setting is deprecated but still accepted;\n"
+	        "please use 'window_size' instead.");
 
 	pstring = sdl_sec->Add_string("window_size", on_start, "default");
 	pstring->Set_help(
