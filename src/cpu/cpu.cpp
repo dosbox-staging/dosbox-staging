@@ -3296,9 +3296,8 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	                                               DeprecatedButAllowed,
 	                                               " ");
 	pmulti_remain->Set_help(
-	        "The 'cycles' setting is deprecated but still accepted; please use the\n"
-	        "'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' settings instead as\n"
-	        "support will be removed in the future.");
+	        "The 'cycles' setting is deprecated but still accepted;\n"
+	        "please use 'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' instead.");
 
 	pstring = pmulti_remain->GetSection()->Add_string("type", Always, "auto");
 	pmulti_remain->SetValue(" ");
