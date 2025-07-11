@@ -12,4 +12,6 @@ add_subdirectory(midi)
 add_subdirectory(misc)
 add_subdirectory(shell)
 
-target_sources(dosbox_tests PRIVATE dosbox.cpp)
+if(OPT_TESTS)
+    target_sources(dosbox_tests PRIVATE dosbox.cpp)
+endif()

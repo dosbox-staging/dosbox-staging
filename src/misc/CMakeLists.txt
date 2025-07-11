@@ -20,7 +20,10 @@ target_sources(libdosboxcommon PRIVATE
   unicode.cpp)
 
 target_sources(dosbox PRIVATE messages.cpp)
-target_sources(dosbox_tests PRIVATE messages_stubs.cpp)
+
+if(OPT_TESTS)
+  target_sources(dosbox_tests PRIVATE messages_stubs.cpp)
+endif()
 
 target_include_directories(libdosboxcommon PRIVATE ../libs/include)
 target_link_libraries(libdosboxcommon PRIVATE libwhereami)
