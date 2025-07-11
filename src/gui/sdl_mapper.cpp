@@ -459,7 +459,7 @@ private:
 	const char * BindStart() override {
 		return "Key";
 	}
-protected:
+
 	const char *configname = "key";
 	CBindList *lists = nullptr;
 	Bitu keys = 0;
@@ -508,7 +508,7 @@ public:
 		return buf;
 	}
 
-protected:
+private:
 	CBindGroup *group;
 	int axis;
 	bool positive;
@@ -537,7 +537,7 @@ public:
 		return buf;
 	}
 
-protected:
+private:
 	CBindGroup *group;
 	int button;
 };
@@ -584,7 +584,7 @@ public:
 		return buf;
 	}
 
-protected:
+private:
 	CBindGroup *group;
 	uint8_t hat;
 	uint8_t dir;
@@ -1172,7 +1172,7 @@ public:
 		JOYSTICK_Button(1,1,(bt_state&1)==0);
 	}
 
-protected:
+private:
 	uint16_t button_state = 0;
 };
 
@@ -1415,7 +1415,7 @@ public:
 		SetActiveEvent(event);
 		last_clicked=this;
 	}
-protected:
+private:
 	CEvent * event = nullptr;
 };
 
@@ -1432,7 +1432,7 @@ public:
 		if (!enabled) return;
 		DrawText(rect.x + 2, rect.y + 2, caption, color);
 	}
-protected:
+private:
 	char caption[128] = {};
 };
 
@@ -1492,7 +1492,7 @@ public:
 			break;
 		}
 	}
-protected:
+private:
 	BB_Types type;
 };
 
@@ -1556,7 +1556,7 @@ public:
 		}
 		mapper.redraw=true;
 	}
-protected:
+private:
 	BC_Types type;
 };
 
@@ -1619,7 +1619,7 @@ public:
 		/* caring for joystick movement into the opposite direction */
 		opposite_axis->Active(true);
 	}
-protected:
+private:
 	void SetOppositeAxis(CJAxisEvent * _opposite_axis) {
 		opposite_axis=_opposite_axis;
 	}
@@ -1641,7 +1641,7 @@ public:
 		virtual_joysticks[stick].button_pressed[button]=pressed;
 	}
 
-protected:
+private:
 	Bitu stick,button;
 };
 
@@ -1659,7 +1659,7 @@ public:
 		virtual_joysticks[stick].hat_pressed[(hat<<2)+dir]=pressed;
 	}
 
-protected:
+private:
 	Bitu stick,hat,dir;
 };
 
@@ -1678,7 +1678,7 @@ public:
 			mapper.mods &= ~(static_cast<Bitu>(1) << (wmod-1));
 	}
 
-protected:
+private:
 	int wmod;
 };
 
@@ -1715,7 +1715,7 @@ public:
 		        defmod & MMOD3 ? " mod3" : "");
 	}
 
-protected:
+private:
 	SDL_Scancode defkey;
 	uint32_t defmod;
 	MAPPER_Handler * handler;
