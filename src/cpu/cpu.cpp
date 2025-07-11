@@ -948,7 +948,6 @@ do_interrupt:
 			       gate.Type(), num);
 		}
 	}
-	assert(1);
 	return ; // make compiler happy
 }
 
@@ -1253,7 +1252,6 @@ CODE_jmp:
 			E_Exit("JMP Illegal descriptor type 0x%x", desc.Type());
 		}
 	}
-	assert(1);
 }
 
 
@@ -1490,7 +1488,6 @@ call_code:
 			E_Exit("CALL:Descriptor type 0x%x unsupported", call.Type());
 		}
 	}
-	assert(1);
 }
 
 
