@@ -123,7 +123,7 @@ public:
 	virtual Bits RemoveRef() { return --refCtr; }
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
-	uint8_t GetDrive(void) { return hdrive;}
+	uint8_t GetDrive() const { return hdrive;}
 	uint8_t flags    = 0;
 	uint16_t time    = 0;
 	uint16_t date    = 0;
