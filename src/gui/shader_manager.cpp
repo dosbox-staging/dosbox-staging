@@ -568,7 +568,8 @@ std::string ShaderManager::FindShaderAutoMachine() const
 	switch (machine) {
 	case MachineType::Hercules: return GetHerculesShader();
 
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 	case MachineType::Pcjr: return GetCgaShader();
 
 	case MachineType::Tandy:

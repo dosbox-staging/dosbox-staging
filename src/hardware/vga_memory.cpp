@@ -964,7 +964,8 @@ void VGA_SetupHandlers(void) {
 
 	PageHandler *newHandler;
 	switch (machine) {
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 	case MachineType::Pcjr:
 		MEM_SetPageHandler( VGA_PAGE_A0, 16, &vgaph.empty );
 		MEM_SetPageHandler( VGA_PAGE_B0, 8, &vgaph.empty );

@@ -110,7 +110,8 @@ void MODE::HandleSetDisplayMode(const std::string& _mode_str)
 		}
 		break;
 
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 	case MachineType::Tandy:
 	case MachineType::Pcjr:
 		if (mode_str == "40x25") {

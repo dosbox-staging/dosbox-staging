@@ -451,12 +451,13 @@ void DOS_Shell::Run()
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
 			if (is_machine_cga()) {
-				if (mono_cga)
+				if (is_machine_cga_mono()) {
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA_MONO"),
 					         MMOD2_NAME);
-				else
+				} else {
 					WriteOut(MSG_Get("SHELL_STARTUP_CGA"),
 					         MMOD2_NAME);
+				}
 			}
 			if (is_machine_hercules()) {
 				WriteOut(MSG_Get("SHELL_STARTUP_HERC"));

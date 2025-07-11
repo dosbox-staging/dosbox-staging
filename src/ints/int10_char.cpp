@@ -450,8 +450,9 @@ void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 	case M_TANDY16:
 		split_chr = true;
 		switch (machine) {
-		case MachineType::Cga:
 		case MachineType::Hercules:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 			fontdata = RealMake(0xf000, 0xfa6e);
 			break;
 		case MachineType::Pcjr:
@@ -544,8 +545,9 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 			break;
 		}
 		switch (machine) {
-		case MachineType::Cga:
 		case MachineType::Hercules:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 			fontdata = RealMake(0xf000, 0xfa6e);
 			break;
 		case MachineType::Pcjr:
@@ -688,7 +690,8 @@ void write_char(const uint8_t chr, const uint8_t attr, uint8_t page,
 				}
 				break;
 
-			case MachineType::Cga:
+		        case MachineType::CgaMono:
+		        case MachineType::CgaColor:
 			case MachineType::Pcjr:
 				page    = 0;
 				pospage = 0;
