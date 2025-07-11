@@ -1171,9 +1171,6 @@ public:
 		JOYSTICK_Button(1,0,(bt_state&2)==0);
 		JOYSTICK_Button(1,1,(bt_state&1)==0);
 	}
-
-private:
-	uint16_t button_state = 0;
 };
 
 
