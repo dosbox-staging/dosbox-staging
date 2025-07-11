@@ -463,7 +463,7 @@ void AutoExecModule::ProcessConfigFile(const Section_line& section,
 		}
 
 		lowcase(tmp);
-		if (tmp.substr(0, 4) != "echo" || !tmp.ends_with("off")) {
+		if (!tmp.starts_with("echo") || !tmp.ends_with("off")) {
 			return false;
 		}
 
