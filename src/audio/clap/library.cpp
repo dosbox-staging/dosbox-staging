@@ -31,7 +31,7 @@ namespace Clap {
 		}
 	}
 
-	if (files.size() == 0) {
+	if (files.empty()) {
 		return {};
 	}
 

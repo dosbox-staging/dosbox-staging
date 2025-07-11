@@ -591,7 +591,7 @@ void CONFIG::Run(void)
 			if (CheckSecureMode()) {
 				return;
 			}
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				DOSBOX_Restart();
 			} else {
 				std::vector<std::string> restart_params;
@@ -635,7 +635,7 @@ void CONFIG::Run(void)
 				}
 			}
 
-			if (control->startup_params.size() > 0) {
+			if (!control->startup_params.empty()) {
 				std::string test;
 				for (size_t k = 0; k < control->startup_params.size();
 				     ++k) {
@@ -654,7 +654,7 @@ void CONFIG::Run(void)
 			if (CheckSecureMode()) {
 				return;
 			}
-			if (pvars.size() > 0) {
+			if (!pvars.empty()) {
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
@@ -711,7 +711,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_AUTOEXEC_ADD: {
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
@@ -762,7 +762,7 @@ void CONFIG::Run(void)
 			// "property"
 			// "section"
 			// "section" "property"
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
 				return;
 			}
@@ -864,7 +864,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_SETPROP: {
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
 			}
