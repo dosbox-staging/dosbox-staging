@@ -188,7 +188,7 @@ public:
 	std::vector<Value> GetDeprecatedValues() const;
 	const Value& GetAlternateForDeprecatedValue(const Value& value) const;
 
-	Value::Etype Get_type()
+	Value::Etype Get_type() const
 	{
 		return default_value.type;
 	}
