@@ -78,7 +78,8 @@ void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val)
 		break;
 
 	case MachineType::Hercules:
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		break;
 
 	default: assertm(false, "Invalid MachineType value");
@@ -104,7 +105,8 @@ void INT10_SetOverscanBorderColor(uint8_t val)
 		break;
 
 	case MachineType::Hercules:
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		break;
 
 	default: assertm(false, "Invalid MachineType value");
@@ -142,7 +144,8 @@ void INT10_SetAllPaletteRegisters(PhysPt data)
 		break;
 
 	case MachineType::Hercules:
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		break;
 
 	default: assertm(false, "Invalid MachineType value");
@@ -333,9 +336,10 @@ void INT10_SetBackgroundBorder(uint8_t val)
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 
 	switch (machine) {
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		// only write the color select register
-		IO_Write(0x3d9,color_select);
+		IO_Write(0x3d9, color_select);
 		break;
 
 	case MachineType::Tandy:

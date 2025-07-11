@@ -928,7 +928,8 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 				bg_color_index = vga.attr.palette[0];
 			else bg_color_index = 0;
 			break;
-		case MachineType::Cga:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 			// the background color
 			bg_color_index = vga.attr.overscan_color;
 			break;
@@ -1152,10 +1153,12 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		PIC_AddEvent(VGA_Other_VertInterrupt, vga.draw.delay.vrstart, 1);
 		PIC_AddEvent(VGA_Other_VertInterrupt, vga.draw.delay.vrend, 0);
 		// fall-through
-	case MachineType::Cga:
 	case MachineType::Hercules:
-		// MC6845-powered graphics: Loading the display start latch happens somewhere
-		// after vsync off and before first visible scanline, so probably here
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
+		// MC6845-powered graphics: Loading the display start latch
+		// happens somewhere after vsync off and before first visible
+		// scanline, so probably here
 		VGA_DisplayStartLatch(0);
 		break;
 	case MachineType::Vga:
@@ -1688,7 +1691,8 @@ static VgaTimings calculate_vga_timings()
 		vert.blanking_end   = vert.total;
 
 		switch (machine) {
-		case MachineType::Cga:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 		case MachineType::Pcjr:
 		case MachineType::Tandy:
 			clock = ((vga.tandy.mode.is_high_bandwidth)
@@ -1899,15 +1903,20 @@ ImageInfo setup_drawing()
 {
 	// Set the drawing mode
 	switch (machine) {
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 	case MachineType::Pcjr:
-	case MachineType::Tandy: vga.draw.mode = DRAWLINE; break;
+	case MachineType::Tandy:
+		vga.draw.mode = DRAWLINE;
+		break;
 	case MachineType::Ega:
 		// Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
 		break;
 	case MachineType::Vga:
-	default: vga.draw.mode = PART; break;
+	default:
+		vga.draw.mode = PART;
+		break;
 	}
 
 	// We need to set the address_line_total according to the scan doubling
@@ -2389,8 +2398,9 @@ ImageInfo setup_drawing()
 
 		video_mode.is_graphics_mode  = true;
 		video_mode.graphics_standard = cga_pcjr_or_tga();
-		video_mode.color_depth       = mono_cga ? ColorDepth::Monochrome
-		                                        : ColorDepth::IndexedColor4;
+		video_mode.color_depth       = is_machine_cga_mono()
+		                                     ? ColorDepth::Monochrome
+		                                     : ColorDepth::IndexedColor4;
 
 		vga.draw.blocks = horiz_end * 2;
 
@@ -2440,8 +2450,9 @@ ImageInfo setup_drawing()
 
 		video_mode.is_graphics_mode  = true;
 		video_mode.graphics_standard = cga_pcjr_or_tga();
-		video_mode.color_depth       = mono_cga ? ColorDepth::Monochrome
-		                                        : ColorDepth::IndexedColor2;
+		video_mode.color_depth       = is_machine_cga_mono()
+		                                     ? ColorDepth::Monochrome
+		                                     : ColorDepth::IndexedColor2;
 
 		if (is_machine_pcjr()) {
 			vga.draw.blocks = horiz_end * (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics
@@ -2484,7 +2495,7 @@ ImageInfo setup_drawing()
 		video_mode.is_graphics_mode  = true;
 		video_mode.graphics_standard = GraphicsStandard::Cga;
 
-		if (mono_cga) {
+		if (is_machine_cga_mono()) {
 			video_mode.color_depth = ColorDepth::Monochrome;
 		} else {
 			video_mode.color_depth = (vga.mode == M_CGA2)
@@ -2715,8 +2726,9 @@ ImageInfo setup_drawing()
 		// CGA, Tandy & PCjr text modes
 		video_mode.is_graphics_mode  = false;
 		video_mode.graphics_standard = cga_pcjr_or_tga();
-		video_mode.color_depth       = mono_cga ? ColorDepth::Monochrome
-		                                        : ColorDepth::IndexedColor16;
+		video_mode.color_depth       = is_machine_cga_mono()
+		                                     ? ColorDepth::Monochrome
+		                                     : ColorDepth::IndexedColor16;
 
 		vga.draw.blocks = horiz_end;
 

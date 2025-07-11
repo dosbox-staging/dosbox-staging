@@ -733,7 +733,7 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 				if (cga_comp == COMPOSITE_STATE::ON ||
 				    ((cga_comp == COMPOSITE_STATE::AUTO &&
 				      !(val & 0x4)) &&
-				     !mono_cga)) {
+				     !is_machine_cga_mono())) {
 
 					// composite ntsc 640x200 16 color mode
 					if (is_machine_pcjr()) {
@@ -1153,7 +1153,7 @@ void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 		hercules_palette = _palette;
 		VGA_SetHerculesPalette();
 
-	} else if (is_machine_cga() && mono_cga) {
+	} else if (is_machine_cga_mono()) {
 		mono_cga_palette = _palette;
 		VGA_SetMonochromeCgaPalette();
 	}
@@ -1365,7 +1365,7 @@ void VGA_SetupOther()
 	if (is_machine_cga()) {
 		IO_RegisterWriteHandler(0x3d8, write_cga, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d9, write_cga, io_width_t::byte);
-		if (mono_cga) {
+		if (is_machine_cga_mono()) {
 			MAPPER_AddHandler(cycle_mono_cga_palette,
 			                  SDL_SCANCODE_F11,
 			                  0,
@@ -1388,7 +1388,7 @@ void VGA_SetupOther()
 		IO_RegisterWriteHandler(0x3df, write_pcjr, io_width_t::byte);
 	}
 	// Add composite hotkeys for CGA, Tandy, and PCjr
-	if ((is_machine_cga() && !mono_cga) || is_machine_pcjr_or_tandy()) {
+	if (is_machine_cga_color() || is_machine_pcjr_or_tandy()) {
 		MAPPER_AddHandler(select_next_crt_knob, SDL_SCANCODE_F10, 0,
 		                  "select", "Sel Knob");
 		MAPPER_AddHandler(turn_crt_knob_positive, SDL_SCANCODE_F11, 0,

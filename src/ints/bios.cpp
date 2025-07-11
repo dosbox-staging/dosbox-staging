@@ -1471,7 +1471,8 @@ public:
 			//Startup monochrome
 			config|=0x30;
 			break;
-		case MachineType::Cga:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 		case MachineType::Pcjr:
 		case MachineType::Tandy:
 		case MachineType::Ega:

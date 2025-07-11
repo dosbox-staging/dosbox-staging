@@ -728,7 +728,8 @@ void INT10_SetCurMode(void)
 		bool mode_changed = false;
 
 		switch (machine) {
-		case MachineType::Cga:
+		case MachineType::CgaMono:
+		case MachineType::CgaColor:
 			if (bios_mode < 7) {
 				mode_changed = set_cur_mode(ModeList_OTHER, bios_mode);
 			}
@@ -909,7 +910,8 @@ static void finish_set_mode(bool clearmem) {
 static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 {
 	switch (machine) {
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		if (mode > 6)
 			return false;
 		[[fallthrough]];
@@ -1022,7 +1024,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x29); // attribute controls blinking
 		break;
-	case MachineType::Cga:
+	case MachineType::CgaMono:
+	case MachineType::CgaColor:
 		mode_control=mode_control_list[CurMode->mode];
 		if (CurMode->mode == 0x6) color_select=0x3f;
 		else color_select=0x30;
@@ -1031,7 +1034,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
 
-		if (mono_cga) {
+		if (is_machine_cga_mono()) {
 			VGA_SetMonochromeCgaPalette();
 		}
 		break;

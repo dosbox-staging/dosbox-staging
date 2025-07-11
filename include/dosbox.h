@@ -70,8 +70,10 @@ enum class MachineType {
 	// PC XT with Hercules
 	Hercules,
 
-	// PC XT with CGA
-	Cga,
+	// PC XT with CGA and monochrome monitor
+	CgaMono,
+	// PC XT with CGA and color monitor
+	CgaColor,
 	// IBM PCjr
 	Pcjr,
 	// Tandy 1000
@@ -98,8 +100,6 @@ enum class SvgaType {
 
 extern MachineType machine;
 extern SvgaType    svga_type;
-
-extern bool mono_cga;
 
 inline bool is_machine_svga() {
 	return svga_type != SvgaType::None;
@@ -129,8 +129,17 @@ inline bool is_machine_pcjr_or_tandy() {
 	return is_machine_pcjr() || is_machine_tandy();
 }
 
-inline bool is_machine_cga() {
-	return machine == MachineType::Cga;
+inline bool is_machine_cga_mono() {
+	return machine == MachineType::CgaMono;
+}
+
+inline bool is_machine_cga_color() {
+	return machine == MachineType::CgaColor;
+}
+
+inline bool is_machine_cga()
+{
+	return is_machine_cga_mono() || is_machine_cga_color();
 }
 
 inline bool is_machine_cga_or_better() {

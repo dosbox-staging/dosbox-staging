@@ -135,8 +135,6 @@ void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
 	ticks.scheduled = ticks_scheduled;
 }
 
-bool mono_cga = false;
-
 void Null_Init([[maybe_unused]] Section *sec) {
 	// do nothing
 }
@@ -477,11 +475,9 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 	int10.vesa_oldvbe = false;
 
 	if (machine_str == "cga") {
-		machine = MachineType::Cga;
-		mono_cga = false;
+		machine = MachineType::CgaColor;
 	} else if (machine_str == "cga_mono") {
-		machine = MachineType::Cga;
-		mono_cga = true;
+		machine = MachineType::CgaMono;
 	} else if (machine_str == "tandy") {
 		machine = MachineType::Tandy;
 	} else if (machine_str == "pcjr") {
