@@ -100,7 +100,7 @@ public:
 
 	constexpr Fraction operator-(const Fraction& that) const
 	{
-		return {num * that.denom - that.num * denom, denom * that.denom};;
+		return {num * that.denom - that.num * denom, denom * that.denom};
 	}
 
 	// Multiplication
@@ -123,7 +123,7 @@ public:
 
 	constexpr Fraction operator*(const Fraction& that) const
 	{
-		return {num * that.num, denom * that.denom};;
+		return {num * that.num, denom * that.denom};
 	}
 
 	// Division

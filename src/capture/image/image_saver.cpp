@@ -124,7 +124,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 			return;
 		}
 		break;
-	};
+	}
 
 	auto rows_to_write = image_scaler.GetOutputHeight();
 	while (rows_to_write--) {
@@ -167,7 +167,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		                             src.video_mode,
 		                             image.palette_data)) {
 			return;
-		};
+		}
 	} else {
 		if (!png_writer.InitRgb888(outfile,
 		                           output_width,
@@ -175,7 +175,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		                           pixel_aspect_ratio,
 		                           src.video_mode)) {
 			return;
-		};
+		}
 	}
 
 	constexpr uint8_t MaxBytesPerPixel = 3;
@@ -243,7 +243,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 	                           square_pixel_aspect_ratio,
 	                           src.video_mode)) {
 		return;
-	};
+	}
 
 	// We always write the final rendered image displayed on the host monitor
 	// as-is.
