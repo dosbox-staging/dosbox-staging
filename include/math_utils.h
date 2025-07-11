@@ -36,7 +36,7 @@ constexpr int wrap(int val, const int lower_bound, const int upper_bound)
 
 // Unsigned-only integer division with ceiling
 template<typename T1, typename T2>
-inline constexpr T1 ceil_udivide(const T1 x, const T2 y) noexcept {
+constexpr T1 ceil_udivide(const T1 x, const T2 y) noexcept {
 	static_assert(std::is_unsigned<T1>::value, "First parameter should be unsigned");
 	static_assert(std::is_unsigned<T2>::value, "Second parameter should be unsigned");
 	return (x != 0) ? 1 + ((x - 1) / y) : 0;
@@ -45,7 +45,7 @@ inline constexpr T1 ceil_udivide(const T1 x, const T2 y) noexcept {
 
 // Signed-only integer division with ceiling
 template<typename T1, typename T2>
-inline constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
+constexpr T1 ceil_sdivide(const T1 x, const T2 y) noexcept {
 	static_assert(std::is_signed<T1>::value, "First parameter should be signed");
 	static_assert(std::is_signed<T2>::value, "Second parameter should be signed.");
 	return x / y + (((x < 0) ^ (y > 0)) && (x % y));
