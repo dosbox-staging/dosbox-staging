@@ -69,8 +69,9 @@ public:
 	}
 	void clear() {
 		pos = used = 0;
-		if (data.size() > 0)
+		if (!data.empty()) {
 			std::fill(data.begin(), data.end(), 0);
+		}
 	}
 
 	bool addb(uint8_t val)
