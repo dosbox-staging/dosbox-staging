@@ -18,11 +18,11 @@ public:
 	                 {ChannelFeature::Stereo})
 	{}
 
-	void BindToPort(const io_port_t lpt_port) final;
-	void ConfigureFilters(const FilterState state) final;
+	void BindToPort(const io_port_t lpt_port) override;
+	void ConfigureFilters(const FilterState state) override;
 
 protected:
-	AudioFrame Render() final;
+	AudioFrame Render() override;
 	void WriteData(const io_port_t, const io_val_t value, const io_width_t);
 	uint8_t ReadStatus(const io_port_t, const io_width_t);
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);

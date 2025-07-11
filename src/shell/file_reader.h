@@ -13,14 +13,14 @@ class FileReader final : public LineReader {
 public:
 	static std::unique_ptr<FileReader> GetFileReader(const std::string& file);
 
-	void Reset() final;
-	std::optional<std::string> Read() final;
+	void Reset() override;
+	std::optional<std::string> Read() override;
 
 	FileReader(const FileReader&)            = delete;
 	FileReader& operator=(const FileReader&) = delete;
 	FileReader(FileReader&&)                 = default;
 	FileReader& operator=(FileReader&&)      = default;
-	~FileReader() final                      = default;
+	~FileReader() override                   = default;
 
 private:
 	explicit FileReader(std::string filename);
