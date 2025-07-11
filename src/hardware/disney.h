@@ -15,13 +15,13 @@
 class Disney final : public LptDac {
 public:
 	Disney();
-	~Disney() final;
+	~Disney() override;
 
-	void BindToPort(const io_port_t lpt_port) final;
-	void ConfigureFilters(const FilterState state) final;
+	void BindToPort(const io_port_t lpt_port) override;
+	void ConfigureFilters(const FilterState state) override;
 
 protected:
-	AudioFrame Render() final;
+	AudioFrame Render() override;
 
 private:
 	bool IsFifoFull() const;

@@ -16,14 +16,14 @@
 class PcSpeakerImpulse final : public PcSpeaker {
 public:
 	PcSpeakerImpulse();
-	~PcSpeakerImpulse() final;
+	~PcSpeakerImpulse() override;
 
-	void SetFilterState(const FilterState filter_state) final;
-	bool TryParseAndSetCustomFilter(const std::string& filter_choice) final;
-	void SetCounter(const int cntr, const PitMode pit_mode) final;
-	void SetPITControl(const PitMode pit_mode) final;
-	void SetType(const PpiPortB& port_b) final;
-	void PicCallback(const int requested_frames) final;
+	void SetFilterState(const FilterState filter_state) override;
+	bool TryParseAndSetCustomFilter(const std::string& filter_choice) override;
+	void SetCounter(const int cntr, const PitMode pit_mode) override;
+	void SetPITControl(const PitMode pit_mode) override;
+	void SetType(const PpiPortB& port_b) override;
+	void PicCallback(const int requested_frames) override;
 
 private:
 	void AddImpulse(float index, const int16_t amplitude);
