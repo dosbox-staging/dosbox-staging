@@ -1837,8 +1837,8 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
 
 static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 {
-	int window_width;
-	int window_height;
+	int window_width  = 0;
+	int window_height = 0;
 
 	switch (sdl.desktop.fullscreen.mode) {
 	case FullscreenMode::Standard:
