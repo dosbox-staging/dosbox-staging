@@ -236,7 +236,6 @@ class PCI final : public Module_base {
 private:
 	bool initialized = false;
 
-protected:
 	IO_WriteHandleObject PCI_WriteHandler[5];
 	IO_ReadHandleObject PCI_ReadHandler[5];
 

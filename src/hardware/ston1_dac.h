@@ -21,13 +21,12 @@ public:
 	void BindToPort(const io_port_t lpt_port) override;
 	void ConfigureFilters(const FilterState state) override;
 
-protected:
+private:
 	AudioFrame Render() override;
 	void WriteData(const io_port_t, const io_val_t value, const io_width_t);
 	uint8_t ReadStatus(const io_port_t, const io_width_t);
 	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 
-private:
 	static constexpr auto SampleRateHz = 30000;
 
 	uint8_t stereo_data[2] = {data_reg, data_reg};

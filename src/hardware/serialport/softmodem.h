@@ -203,7 +203,7 @@ public:
 	std::unique_ptr<CFifo> rqueue;
 	std::unique_ptr<CFifo> tqueue;
 
-protected:
+private:
 	// The AT command line can consist of a 99-character command sequence
 	// including the AT prefix followed by "D<phone/hostname>", where the
 	// hostname can reach a length of up to 253 characters.
