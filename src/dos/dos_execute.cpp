@@ -78,7 +78,7 @@ void DOS_UpdateCurrentProgramName()
 	// Retrieve canonical program name, if possible
 	std::string canonical_name = {};
 	if (!PAGING_Enabled()) {
-		if (psp_to_canonical_map.count(psp_segment)) {
+		if (psp_to_canonical_map.contains(psp_segment)) {
 			canonical_name = psp_to_canonical_map.at(psp_segment);
 		}
 	}
