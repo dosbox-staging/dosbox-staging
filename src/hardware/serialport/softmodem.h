@@ -224,7 +224,6 @@ private:
 	uint8_t waiting_tx_character = 0;
 	uint32_t cmdpause = 0;
 	int32_t ringtimer = 0;
-	int32_t ringcount = 0;
 	uint32_t plusinc = 0;
 	uint32_t cmdpos = 0;
 	uint32_t flowcontrol = 0;
