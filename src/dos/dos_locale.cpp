@@ -1703,22 +1703,20 @@ void DOS_Locale_AddMessages()
 	for (auto it = LocaleData::CountryInfo.begin();
 	     it != LocaleData::CountryInfo.end();
 	     ++it) {
-		MSG_Add(it->second.GetMsgName().c_str(),
-		        it->second.country_name.c_str());
+		MSG_Add(it->second.GetMsgName(), it->second.country_name);
 	}
 
 	// Add strings with code page descriptions
 	for (const auto& pack : LocaleData::CodePageInfo) {
 		for (const auto& entry : pack) {
-			MSG_Add(entry.second.GetMsgName(entry.first).c_str(),
-			        entry.second.description.c_str());
+			MSG_Add(CodePageInfoEntry::GetMsgName(entry.first),
+			        entry.second.description);
 		}
 	}
 
 	// Add strings with script names
 	for (const auto& entry : LocaleData::ScriptInfo) {
-		MSG_Add(entry.second.GetMsgName().c_str(),
-		        entry.second.script_name.c_str());
+		MSG_Add(entry.second.GetMsgName(), entry.second.script_name);
 	}
 
 	MSG_Add("SCRIPT_PROPERTY_PHONETIC", "phonetic");

@@ -120,7 +120,7 @@ void SERIAL::Run()
 			commandLineString.append(" ");
 		}
 		CommandLine *commandLine = new CommandLine("SERIAL.COM",
-		                                           commandLineString.c_str());
+		                                           commandLineString);
 		// Remove existing port.
 		delete serialports[port_index];
 		// Recreate the port with the new type.
