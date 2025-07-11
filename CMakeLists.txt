@@ -15,8 +15,6 @@ set(DOSBOX_VERSION ${PROJECT_VERSION}-alpha)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-enable_testing()
-
 # TODO Enable certain warnings-as-errors for at least MSVC, Clang & GCC
 
 # Disable the noisy narrowing and conversion warnings by default. Use the
@@ -258,6 +256,13 @@ if (OPT_MANYMOUSE)
   endif()
 endif()
 
+# Tests
+option(OPT_TESTS "Enable tests" ON)
+
+if(OPT_TESTS)
+  enable_testing()
+endif()
+
 # macOS
 set(C_COREAUDIO      "${DOSBOX_PLATFORM_MACOS}")
 set(C_COREMIDI       "${DOSBOX_PLATFORM_MACOS}")
@@ -346,9 +351,13 @@ include_directories(
 
 add_library(libdosboxcommon STATIC)
 
+
 # Add tests before src so that the dosbox_tests target is 
 # available for target_sources()
-add_subdirectory(tests)
+if(OPT_TESTS)
+  add_subdirectory(tests)
+endif()
+
 add_subdirectory(src)
 
 if(WIN32)
