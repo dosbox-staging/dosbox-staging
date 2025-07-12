@@ -24,9 +24,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  VCPKG_ROOT: C:\vcpkg
-
 jobs:
   build_windows_release:
     name: Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
@@ -54,8 +51,8 @@ jobs:
         with:
           submodules: false
 
-      - name: Set up vcpkg cache
-        uses: ./.github/actions/cache-vcpkg
+      - name: Set up vcpkg
+        uses: ./.github/actions/setup-vcpkg
         with:
           name_os: "windows"
           arch: "${{ matrix.conf.arch }}"

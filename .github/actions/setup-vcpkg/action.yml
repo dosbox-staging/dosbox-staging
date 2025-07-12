@@ -1,4 +1,4 @@
-name: Cache vcpkg binaries
+name: Set up vcpkg
 
 inputs:
   name_os:
@@ -19,22 +19,24 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set vcpkg cache env variable
+    - name: Set vcpkg env variables
       if: ${{ runner.os != 'Windows'}}
       shell: bash
       run: |
+        echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> $GITHUB_ENV
         echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> $GITHUB_ENV
     
     - name: Set vcpkg cache env variable (Windows)
       if: ${{ runner.os == 'Windows'}}
       shell: pwsh
       run: |
+        Write-Output "VCPKG_ROOT=$Env:VCPKG_INSTALLATION_ROOT" >> $Env:GITHUB_ENV
         Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
 
     - name: Get vcpkg commit
       shell: bash
       run: |
-        cd ${VCPKG_ROOT}
+        cd "${VCPKG_ROOT}"
         echo "VCPKG_SHORT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
     
     - name:  Set vcpkg binary cache key

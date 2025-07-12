@@ -19,8 +19,6 @@ jobs:
   pvs_studio_analyzer:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-22.04
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
     steps:
       - name: Checkout repository
@@ -44,16 +42,8 @@ jobs:
           sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
           sudo apt-get install pvs-studio
 
-      - name: Clone vcpkg
-        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
-
-      - name: Bootstrap vcpkg
-        run: |
-          cd $VCPKG_ROOT
-          ./bootstrap-vcpkg.sh
-
-      - name: Set up vcpkg cache
-        uses: ./.github/actions/cache-vcpkg
+      - name: Set up vcpkg
+        uses: ./.github/actions/setup-vcpkg
         with:
           name_os: pvs
           arch: "x64"
