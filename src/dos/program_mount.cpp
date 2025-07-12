@@ -49,7 +49,7 @@ void MOUNT::ListMounts()
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
 			print_row(std::string{drive_letter(d)},
-			          Drives[d]->GetInfoString().c_str(),
+			          Drives[d]->GetInfoString(),
 			          To_Label(Drives[d]->GetLabel()));
 		}
 	}

@@ -43,10 +43,10 @@ bool MOUSECTL::ParseAndRun()
 	};
 
 	// CmdShow
-	if (list_ids.size() == 0 && params.empty()) {
+	if (list_ids.empty() && params.empty()) {
 		return CmdShow(false);
         }
-	if (list_ids.size() == 0 && params.size() == 1) {
+	if (list_ids.empty() && params.size() == 1) {
 		if (param_equal(0, "-all")) {
 			return CmdShow(true);
                 }

@@ -59,7 +59,7 @@ void DEBUG_ShowMsg(const char* format, ...)
 struct LOG
 {
 	inline LOG(LOG_TYPES, LOG_SEVERITIES){ }
-	inline void operator()(const char*, ...) {}
+	inline void operator()(const char*, ...) const {}
 }; //add missing operators to here
 
 	//try to avoid anything smaller than bit32...

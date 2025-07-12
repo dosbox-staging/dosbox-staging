@@ -354,8 +354,9 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
 	save_dir = nullptr;
 }
 
-bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir) {
-	return (curDir->isOverlayDir || curDir->fileList.size()>0);
+bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir)
+{
+	return curDir->isOverlayDir || !curDir->fileList.empty();
 }
 
 
@@ -673,7 +674,7 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		}
 
 		// keep list sorted for CreateShortNameID to work correctly
-		if (curDir->longNameList.size()>0) {
+		if (!curDir->longNameList.empty()) {
 			if (!(strcmp(info->shortname,curDir->longNameList.back()->shortname)<0)) {
 				// append at end of list
 				curDir->longNameList.push_back(info);
@@ -841,7 +842,7 @@ void DOS_Drive_Cache::CreateEntry(CFileInfo* dir, const char* name, bool is_dire
 	bool found = false;
 
 	// keep list sorted (so GetLongName works correctly, used by CreateShortName in this routine)
-	if (dir->fileList.size()>0) {
+	if (!dir->fileList.empty()) {
 		if (!(strcmp(info->shortname,dir->fileList.back()->shortname)<0)) {
 			// append at end of list
 			dir->fileList.push_back(info);

@@ -290,7 +290,7 @@ bool ManyMouseGlue::ProbeForMapping(uint8_t &physical_device_idx)
 
 uint8_t ManyMouseGlue::GetIdx(const std::regex &regex)
 {
-	assert(max_mice < UINT8_MAX);
+	static_assert(max_mice < UINT8_MAX);
 
 	// Try to match the mouse name which is not mapped yet
 

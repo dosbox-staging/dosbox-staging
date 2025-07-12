@@ -176,7 +176,7 @@ void DOS_ExecuteRegisteredCallbacks(DiskType disk_type)
 		return;
 	}
 
-	if (io_callbacks.size() > 0) {
+	if (!io_callbacks.empty()) {
 		for (auto& callback : io_callbacks) {
 			callback();
 		}

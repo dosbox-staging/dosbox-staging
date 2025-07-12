@@ -251,7 +251,7 @@ struct VirtualBox_MousePointer_1_01 {
 static void warn_unsupported_request(const VBoxRequestType request_type)
 {
 	static std::set<VBoxRequestType> already_warned = {};
-	if (already_warned.find(request_type) != already_warned.end()) {
+	if (already_warned.contains(request_type)) {
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d",
 		            enum_val(request_type));
 		already_warned.insert(request_type);
@@ -262,8 +262,7 @@ static void warn_unsupported_struct_version(const RequestHeader& header)
 {
 	static std::map<VBoxRequestType, std::set<uint32_t>> already_warned = {};
 	auto& already_warned_set = already_warned[header.request_type];
-	if (already_warned_set.find(header.struct_version) !=
-	    already_warned_set.end()) {
+	if (already_warned_set.contains(header.struct_version)) {
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d structure v%d.%02d",
 		            enum_val(header.request_type),
 		            header.struct_version >> 16,

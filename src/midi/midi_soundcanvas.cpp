@@ -728,8 +728,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 		constexpr auto green    = "[color=light-green]";
 		constexpr auto reset    = "[reset]";
 
-		const bool is_missing = (available_models.find(model) ==
-		                         available_models.end());
+		const bool is_missing = !available_models.contains(model);
 
 		const auto is_active = active_sc_model && *active_sc_model == model;
 

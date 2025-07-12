@@ -16,14 +16,14 @@
 class PcSpeakerDiscrete final : public PcSpeaker {
 public:
 	PcSpeakerDiscrete();
-	~PcSpeakerDiscrete() final;
+	~PcSpeakerDiscrete() override;
 
-	void SetFilterState(const FilterState filter_state) final;
-	bool TryParseAndSetCustomFilter(const std::string& filter_choice) final;
-	void SetCounter(const int cntr, const PitMode m) final;
-	void SetPITControl(const PitMode) final {}
-	void SetType(const PpiPortB& b) final;
-	void PicCallback(const int requested_frames) final;
+	void SetFilterState(const FilterState filter_state) override;
+	bool TryParseAndSetCustomFilter(const std::string& filter_choice) override;
+	void SetCounter(const int cntr, const PitMode m) override;
+	void SetPITControl(const PitMode) override {}
+	void SetType(const PpiPortB& b) override;
+	void PicCallback(const int requested_frames) override;
 
 private:
 	void AddDelayEntry(const float index, float vol);

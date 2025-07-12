@@ -1837,8 +1837,8 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
 
 static SDL_Window* setup_scaled_window(const RenderingBackend rendering_backend)
 {
-	int window_width;
-	int window_height;
+	int window_width  = 0;
+	int window_height = 0;
 
 	switch (sdl.desktop.fullscreen.mode) {
 	case FullscreenMode::Standard:
@@ -5180,8 +5180,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 
 			std::string inputline = pvars[1] + "=" + value;
 
-			bool change_success = tsec->HandleInputline(
-			        inputline.c_str());
+			bool change_success = tsec->HandleInputline(inputline);
 
 			if (!change_success && !value.empty()) {
 				LOG_WARNING("CONFIG: Cannot set '%s'",

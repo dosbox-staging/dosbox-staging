@@ -55,10 +55,10 @@ public:
 	{
 		assert(n <= SERIAL_MAX_FIFO_SIZE);
 	}
-	size_t getFree() { return size - used; }
-	bool isEmpty() { return used == 0; }
-	bool isFull() { return (size - used) == 0; }
-	size_t getUsage() { return used; }
+	size_t getFree() const { return size - used; }
+	bool isEmpty() const { return used == 0; }
+	bool isFull() const { return (size - used) == 0; }
+	size_t getUsage() const { return used; }
 	void setSize(size_t n)
 	{
 		assert(n <= SERIAL_MAX_FIFO_SIZE);
@@ -69,8 +69,9 @@ public:
 	}
 	void clear() {
 		pos = used = 0;
-		if (data.size() > 0)
+		if (!data.empty()) {
 			std::fill(data.begin(), data.end(), 0);
+		}
 	}
 
 	bool addb(uint8_t val)

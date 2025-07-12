@@ -337,7 +337,7 @@ void IMGMOUNT::Run(void)
 		}
 		paths.push_back(temp_line);
 	}
-	if (paths.size() == 0) {
+	if (paths.empty()) {
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_FILE"));
 		return;
 	}

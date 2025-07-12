@@ -194,7 +194,7 @@ void Program::ChangeToLongCmd()
 
 	if (/*control->SecureMode() ||*/ cmd->Get_arglength() > 100) {
 		CommandLine* temp = new CommandLine(cmd->GetFileName(),
-		                                    full_arguments.c_str());
+		                                    full_arguments);
 		delete cmd;
 		cmd = temp;
 	}
@@ -591,7 +591,7 @@ void CONFIG::Run(void)
 			if (CheckSecureMode()) {
 				return;
 			}
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				DOSBOX_Restart();
 			} else {
 				std::vector<std::string> restart_params;
@@ -635,7 +635,7 @@ void CONFIG::Run(void)
 				}
 			}
 
-			if (control->startup_params.size() > 0) {
+			if (!control->startup_params.empty()) {
 				std::string test;
 				for (size_t k = 0; k < control->startup_params.size();
 				     ++k) {
@@ -654,7 +654,7 @@ void CONFIG::Run(void)
 			if (CheckSecureMode()) {
 				return;
 			}
-			if (pvars.size() > 0) {
+			if (!pvars.empty()) {
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
@@ -711,7 +711,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_AUTOEXEC_ADD: {
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
@@ -762,7 +762,7 @@ void CONFIG::Run(void)
 			// "property"
 			// "section"
 			// "section" "property"
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_GET_SYNTAX"));
 				return;
 			}
@@ -820,13 +820,12 @@ void CONFIG::Run(void)
 						return;
 					}
 					// it's a property name
-					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0].c_str()),
+					const auto val_dos = utf8_to_dos(sec->GetPropValue(pvars[0]),
 					                                 DosStringConvertMode::NoSpecialCharacters,
 					                                 UnicodeFallback::Simple);
 					WriteOut("%s", val_dos.c_str());
 					DOS_PSP(psp->GetParent())
-					        .SetEnvironmentValue("CONFIG",
-					                             val_dos.c_str());
+					        .SetEnvironmentValue("CONFIG", val_dos);
 				}
 				break;
 			}
@@ -853,7 +852,7 @@ void CONFIG::Run(void)
 				                                 UnicodeFallback::Simple);
 				WriteOut("%s\n", val_dos.c_str());
 				DOS_PSP(psp->GetParent())
-				        .SetEnvironmentValue("CONFIG", val_dos.c_str());
+				        .SetEnvironmentValue("CONFIG", val_dos);
 				break;
 			}
 			default:
@@ -864,7 +863,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_SETPROP: {
-			if (pvars.size() == 0) {
+			if (pvars.empty()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
 			}
@@ -928,8 +927,7 @@ void CONFIG::Run(void)
 				const auto line_utf8 = dos_to_utf8(inputline,
 					                           DosStringConvertMode::NoSpecialCharacters);
 
-				bool change_success = tsec->HandleInputline(
-				        line_utf8.c_str());
+				bool change_success = tsec->HandleInputline(line_utf8);
 
 				if (!change_success) {
 					trim(value);

@@ -699,8 +699,7 @@ ChannelInfos::ChannelInfos(const ChannelInfosMap& channel_infos)
 
 bool ChannelInfos::HasChannel(const std::string& channel_name) const
 {
-	return features_by_channel_name.find(channel_name) !=
-	       features_by_channel_name.end();
+	return features_by_channel_name.contains(channel_name);
 }
 
 bool ChannelInfos::HasFeature(const std::string& channel_name,
@@ -709,7 +708,7 @@ bool ChannelInfos::HasFeature(const std::string& channel_name,
 	if (auto it = features_by_channel_name.find(channel_name);
 	    it != features_by_channel_name.end()) {
 		const auto [_, features] = *it;
-		return (features.find(feature) != features.end());
+		return features.contains(feature);
 	}
 	return false;
 }

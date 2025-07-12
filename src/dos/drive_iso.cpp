@@ -68,7 +68,7 @@ bool isoFile::Read(uint8_t *data, uint16_t *size) {
 		}
 	}
 
-	static_assert(ISO_FRAMESIZE <= UINT16_MAX, "");
+	static_assert(ISO_FRAMESIZE <= UINT16_MAX);
 	auto sectorPos = static_cast<uint16_t>(filePos % ISO_FRAMESIZE);
 
 	while (nowSize < *size) {

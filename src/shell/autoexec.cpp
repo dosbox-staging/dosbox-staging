@@ -463,7 +463,7 @@ void AutoExecModule::ProcessConfigFile(const Section_line& section,
 		}
 
 		lowcase(tmp);
-		if (tmp.substr(0, 4) != "echo" || !tmp.ends_with("off")) {
+		if (tmp.starts_with("echo") || !tmp.ends_with("off")) {
 			return false;
 		}
 
@@ -747,7 +747,7 @@ void AUTOEXEC_SetVariable(const std::string& name, const std::string& value)
 
 	// If shell is already running, refresh variable content
 	if (first_shell) {
-		first_shell->SetEnv(name_upcase.c_str(), value.c_str());
+		first_shell->SetEnv(name_upcase, value);
 	}
 
 	// Update our internal list of variables to set in AUTOEXEC.BAT

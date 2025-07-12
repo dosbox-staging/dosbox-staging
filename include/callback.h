@@ -113,10 +113,10 @@ public:
 
 	//Only allocate a callback number
 	void Allocate(Callback_Handler handler,const char* description=nullptr);
-	uint16_t Get_callback() {
+	uint16_t Get_callback() const {
 		return m_cb_number;
 	}
-	RealPt Get_RealPointer() {
+	RealPt Get_RealPointer() const {
 		return CALLBACK_RealPointer(m_cb_number);
 	}
 	void Set_RealVec(uint8_t vec);

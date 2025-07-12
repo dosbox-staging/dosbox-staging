@@ -468,7 +468,7 @@ void Grapheme::Decompose()
 		return;
 	}
 
-	while (decomposition_rules.count(code_point) > 0) {
+	while (decomposition_rules.contains(code_point)) {
 		const auto& rule = decomposition_rules.at(code_point);
 		code_point       = rule.code_point;
 		for (const auto mark : rule.marks) {
@@ -775,7 +775,7 @@ static std::string wide_to_utf8(const wide_string& str)
 static void warn_code_point(const uint16_t code_point)
 {
 	static std::set<uint16_t> already_warned;
-	if (already_warned.count(code_point) > 0) {
+	if (already_warned.contains(code_point)) {
 		return;
 	}
 	already_warned.insert(code_point);
@@ -785,7 +785,7 @@ static void warn_code_point(const uint16_t code_point)
 static void warn_code_page(const uint16_t code_page)
 {
 	static std::set<uint16_t> already_warned;
-	if (already_warned.count(code_page) > 0) {
+	if (already_warned.contains(code_page)) {
 		return;
 	}
 	already_warned.insert(code_page);
@@ -863,7 +863,7 @@ static std::string wide_to_dos(const wide_string& str,
 		}
 
 		const auto code_point = grapheme.GetCodePoint();
-		if (mapping_box->count(code_point) == 0) {
+		if (!mapping_box->contains(code_point)) {
 			return false; // not a box drawing character
 		}
 
@@ -1013,8 +1013,8 @@ static wide_string dos_to_wide(const std::string& str,
 			// Take from code page mapping
 			auto& mappings = per_code_page_mappings[code_page];
 
-			if ((per_code_page_mappings.count(code_page) == 0) ||
-			    (mappings.grapheme_to_dos.count(byte) == 0)) {
+			if (!per_code_page_mappings.contains(code_page) ||
+			    !mappings.grapheme_to_dos.contains(byte)) {
 				str_out.push_back(UnknownCharacter);
 			} else {
 				mappings.grapheme_to_dos[byte].PushInto(str_out);
@@ -1426,8 +1426,8 @@ static void import_config_main(const std_fs::path& path_root)
 
 		} else if (tokens[0] == "CODEPAGE") {
 			auto check_no_code_page = [&](const uint16_t code_page) {
-				if ((new_config_mappings.find(code_page) != new_config_mappings.end() && new_config_mappings[code_page].valid) ||
-				    new_config_duplicates.find(code_page) != new_config_duplicates.end()) {
+				if ((new_config_mappings.contains(code_page) && new_config_mappings[code_page].valid) ||
+				    new_config_duplicates.contains(code_page)) {
 					error_code_page_defined(file_name, line_num);
 					return false;
 				}
@@ -1716,8 +1716,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 			}
 
 			// Make sure there are no repetitions
-			if ((all_lowercase.count(code_point_lower) > 0) ||
-			    (all_uppercase.count(code_point_lower) > 0)) {
+			if (all_lowercase.contains(code_point_lower) ||
+			    all_uppercase.contains(code_point_lower)) {
 				        error_code_point_found_twice(code_point_lower,
 				                                     file_name,
 				                                     line_num);
@@ -1737,8 +1737,8 @@ static void import_mapping_case(const std_fs::path& path_root)
 			}
 
 			// Make sure there are no repetitions
-			if ((all_lowercase.count(code_point_upper) > 0) ||
-			    (all_uppercase.count(code_point_upper) > 0)) {
+			if (all_lowercase.contains(code_point_upper) ||
+			    all_uppercase.contains(code_point_upper)) {
 				        error_code_point_found_twice(code_point_upper,
 				                                     file_name,
 				                                     line_num);
@@ -1758,15 +1758,15 @@ static void import_mapping_case(const std_fs::path& path_root)
 		}
 
 		// Make sure there are no repetitions
-		if ((all_lowercase.count(code_point_lower) > 0) ||
-		    (all_uppercase.count(code_point_lower) > 0)) {
+		if (all_lowercase.contains(code_point_lower) ||
+		    all_uppercase.contains(code_point_lower)) {
 			error_code_point_found_twice(code_point_lower,
 			                             file_name,
 			                             line_num);
 			return;
 		}
-		if ((all_lowercase.count(code_point_upper) > 0) ||
-		    (all_uppercase.count(code_point_upper) > 0)) {
+		if (all_lowercase.contains(code_point_upper) ||
+		    all_uppercase.contains(code_point_upper)) {
 			error_code_point_found_twice(code_point_upper,
 			                             file_name,
 			                             line_num);
@@ -1825,7 +1825,7 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 		// to be adapted due to missing characters in the given
 		// code page
 		for (const auto& [from, target] : out_box_code_points) {
-			if (code_page_mapping.count(target) == 0) {
+			if (!code_page_mapping.contains(target)) {
 				return true;
 			}
 		}
@@ -1847,12 +1847,12 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 					continue;
 				}
 
-				if (code_page_mapping.count(alias.second) == 0) {
+				if (!code_page_mapping.contains(alias.second)) {
 					// We cannot apply this alias group
 					return false;
 				}
 
-				if (code_page_mapping.count(target) == 0) {
+				if (!code_page_mapping.contains(target)) {
 					is_group_profitable = true;
 				}
 			}
@@ -1907,7 +1907,7 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 	// Last resort fallback - use 7-bit ASCII fallback for everything
 	out_box_code_points.clear();
 	for (const auto& code_point : BoxDrawingSetRegular) {
-		if (mapping_ascii.count(code_point) > 0) {
+		if (mapping_ascii.contains(code_point)) {
 			out_box_code_points[code_point] = mapping_ascii.at(code_point);
 		} else {
 			out_box_code_points[code_point] = UnknownCharacter;
@@ -1922,7 +1922,7 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 	out_map_case.resize(UINT8_MAX + 1);
 	for (uint16_t idx = 0; idx < UINT8_MAX + 1; ++idx) {
 		if (idx < DecodeThresholdNonAscii &&
-		    (map_case_global.count(idx) > 0)) {
+		    map_case_global.contains(idx)) {
 			out_map_case[idx] = static_cast<uint8_t>(
 			        map_case_global.at(idx));
 		} else {
@@ -1931,7 +1931,7 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 	}
 
 	for (const auto& [grapheme, character_code] : code_page_mapping) {
-		if (map_case_global.count(grapheme.GetCodePoint()) == 0) {
+		if (!map_case_global.contains(grapheme.GetCodePoint())) {
 			// No information how to switch case for this code point
 			continue;
 		}
@@ -1940,7 +1940,7 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 			grapheme.GetCodePoint());
 		grapheme_switched.CopyMarksFrom(grapheme);
 
-		if (code_page_mapping.count(grapheme_switched) == 0) {
+		if (!code_page_mapping.contains(grapheme_switched)) {
 			// Code page does not contain switched case character
 			continue;
 		}
@@ -1955,12 +1955,12 @@ static bool construct_mapping(const uint16_t code_page)
 	// also protect against circular dependencies
 
 	static std::set<uint16_t> already_tried;
-	if (already_tried.count(code_page) > 0) {
+	if (already_tried.contains(code_page)) {
 		return false;
 	}
 	already_tried.insert(code_page);
 
-	assert(per_code_page_mappings.count(code_page) == 0);
+	assert(!per_code_page_mappings.contains(code_page));
 
 	// First apply mapping found in main config file
 
@@ -2058,8 +2058,8 @@ static void construct_aliases(const uint16_t code_page)
 
 	auto add_alias = [&](const alias_t& alias) {
 		const auto found_it = mapping_normalized.find(alias.second);
-		if ((mapping_normalized.count(alias.first) == 0) &&
-		    (aliases_normalized.count(alias.first) == 0) &&
+		if (!mapping_normalized.contains(alias.first) &&
+		    !aliases_normalized.contains(alias.first) &&
 		    (found_it != mapping_normalized.end())) {
 			aliases_normalized[alias.first] = found_it->second;
 		}
@@ -2080,11 +2080,11 @@ static void construct_aliases(const uint16_t code_page)
 
 static bool prepare_code_page(const uint16_t code_page)
 {
-	if (per_code_page_mappings.count(code_page) > 0) {
+	if (per_code_page_mappings.contains(code_page)) {
 		return true; // code page already prepared
 	}
 
-	if ((config_mappings.count(code_page) == 0) || !construct_mapping(code_page)) {
+	if (!config_mappings.contains(code_page) || !construct_mapping(code_page)) {
 		// Unsupported code page or error
 		per_code_page_mappings.erase(code_page);
 		return false;

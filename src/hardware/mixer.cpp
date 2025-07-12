@@ -307,7 +307,7 @@ MixerChannel::MixerChannel(MIXER_Handler _handler, const char* _name,
 bool MixerChannel::HasFeature(const ChannelFeature feature)
 {
 	std::lock_guard lock(mutex);
-	return features.find(feature) != features.end();
+	return features.contains(feature);
 }
 
 std::set<ChannelFeature> MixerChannel::GetFeatures()
@@ -713,8 +713,7 @@ MixerChannelPtr MIXER_AddChannel(MIXER_Handler handler,
 	}
 
 	// Try to restore saved channel settings from the cache first.
-	if (mixer.channel_settings_cache.find(name) !=
-	    mixer.channel_settings_cache.end()) {
+	if (mixer.channel_settings_cache.contains(name)) {
 		chan->SetSettings(mixer.channel_settings_cache[name]);
 	} else {
 		// If no saved settings exist, set the defaults.
