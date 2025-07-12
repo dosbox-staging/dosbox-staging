@@ -40,15 +40,10 @@ void MORE::Run()
 
 bool MORE::ParseCommandLine(MoreOutputFiles &output)
 {
-	// Check (and remove if found) all the simple arguments
-	auto has_arg = [&](const char* arg) {
-		constexpr bool remove_if_found = true;
-		return cmd->FindExist(arg, remove_if_found);
-	};
-	output.SetOptionClear(has_arg("/c"));
-	output.SetOptionExtendedMode(has_arg("/e"));
-	output.SetOptionExpandFormFeed(has_arg("/p"));
-	output.SetOptionSquish(has_arg("/s"));
+	output.SetOptionClear(cmd->FindExistRemoveAll("/c"));
+	output.SetOptionExtendedMode(cmd->FindExistRemoveAll("/e"));
+	output.SetOptionExpandFormFeed(cmd->FindExistRemoveAll("/p"));
+	output.SetOptionSquish(cmd->FindExistRemoveAll("/s"));
 
 	std::string tmp_str;
 
