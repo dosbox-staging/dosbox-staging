@@ -35,14 +35,38 @@ Windows builds can be created using:
 
 3. Follow instructions in [README.md](/README.md).
 
-### Create a Debugger build using Visual Studio
+### Create a debugger build using Visual Studio
 
 Note that the debugger imposes a significant runtime performance penalty.
 If you're not planning to use the debugger then the steps above will help
 you build a binary optimized for gaming.
 
-1. Edit `src\platform\visualc\config.h` and enable `C_DEBUG` and optionally
-  `C_HEAVY_DEBUG` by setting them to `1` instead of `0`.
+## Build using Visual Studio with CMake
 
-2. Select a **Release** build type in Visual Studio, and run the build.
+### Importing the CMake project
 
+1. Remove any existing DOSBox Staging projects from Visual Studio.
+
+2. Exit Visual Studio, then delete the `.vs` folder from your local copy of
+   the DOSBox Staging repository if it exists.
+
+3. Start Visual Studio, then import your local DOSBox Staging repository
+   folder by selecting the **Open a local folder** item in the startup screen,
+   or by selecting the **File / Open / Folder** in the top menu.
+
+4. You'll be greeted by a CMake splash screen, then after the CMake project
+   setup has been completed, you'll see the list of available CMake
+   configurations in the second dropdown below the menu bar, next to **Local
+   Machine**.
+
+5. Select either the **debug-windows** or **release-windows** configuration,
+   then select **Build / Build All** or press **F7** to build the project.
+   You'll need to do this twice for the first time, and probably after
+   changing the CMakeList.txt files.
+
+> **Tip**
+>
+> If the CMake configurations disappear after updating Visual Studio or the
+> local DOSBox Staging repository, just repeat the above steps. Removing the
+> `.vs` folder inside the local repo folder is usually the important bit, that
+> will trigger re-importing the CMake configs.
