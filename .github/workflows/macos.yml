@@ -31,7 +31,6 @@ jobs:
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.conf.minimum_deployment }}
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
     strategy:
       matrix:
@@ -55,16 +54,8 @@ jobs:
       - name: Setup CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
-      - name: Clone vcpkg
-        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
-
-      - name: Bootstrap vcpkg
-        run: |
-          cd $VCPKG_ROOT
-          ./bootstrap-vcpkg.sh
-
-      - name: Set up vcpkg cache
-        uses: ./.github/actions/cache-vcpkg
+      - name: Set up vcpkg
+        uses: ./.github/actions/setup-vcpkg
         with:
           name_os: "${{ matrix.conf.host }}"
           arch: "${{ matrix.conf.arch }}"

@@ -24,9 +24,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-
 jobs:
   build_linux:
     name:    ${{ matrix.conf.name }} ${{ matrix.arch }}
@@ -84,16 +81,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
-      - name: Clone vcpkg
-        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
-
-      - name: Bootstrap vcpkg
-        run: |
-          cd $VCPKG_ROOT
-          ./bootstrap-vcpkg.sh
-
-      - name: Set up vcpkg cache
-        uses: ./.github/actions/cache-vcpkg
+      - name: Set up vcpkg
+        uses: ./.github/actions/setup-vcpkg
         with:
           name_os: linux
           arch: "${{ matrix.arch }}"
@@ -146,16 +135,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y $(cat packages/ubuntu-22.04-apt.txt)
 
-      - name: Clone vcpkg
-        run: git clone https://github.com/microsoft/vcpkg.git $VCPKG_ROOT
-
-      - name: Bootstrap vcpkg
-        run: |
-          cd $VCPKG_ROOT
-          ./bootstrap-vcpkg.sh
-
-      - name: Set up vcpkg cache
-        uses: ./.github/actions/cache-vcpkg
+      - name: Set up vcpkg
+        uses: ./.github/actions/setup-vcpkg
         with:
           name_os: linux
           arch: "x64"
