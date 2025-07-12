@@ -349,7 +349,7 @@ uint16_t CommandLine::Get_arglength()
 	}
 
 	if (total_length > UINT16_MAX) {
-		LOG_WARNING("SETUP: Command line length too long, truncating");
+		LOG_WARNING("CONFIG: Command line length too long, truncating");
 		total_length = UINT16_MAX;
 	}
 

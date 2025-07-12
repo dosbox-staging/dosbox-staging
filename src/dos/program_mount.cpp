@@ -44,7 +44,7 @@ void MOUNT::ListMounts()
 	WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_1"));
 	print_row(header_drive, header_type, header_label);
 	const std::string horizontal_divider(term_width, '-');
-	WriteOut_NoParsing(horizontal_divider.c_str());
+	WriteOut_NoParsing(horizontal_divider);
 
 	for (uint8_t d = 0; d < DOS_DRIVES; d++) {
 		if (Drives[d]) {
@@ -130,7 +130,7 @@ void MOUNT::Run(void) {
 			str_size="2048,1,65535,0";
 			mediaid=0xF8;		/* Hard Disk */
 		} else {
-			WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"),type.c_str());
+			WriteOut(MSG_Get("PROGAM_MOUNT_ILL_TYPE"), type.c_str());
 			return;
 		}
 		/* Parse the free space in mb's (kb's for floppies) */

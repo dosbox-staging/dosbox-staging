@@ -1272,7 +1272,7 @@ Il percorso '%s' non contiene shader
 :DOSBOX_HELP_LIST_GLSHADERS_LIST
 Il percorso '%s' contiene:
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
+:PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND
 Sezione o proprietà non trovata: %s
 
 .
@@ -3193,10 +3193,10 @@ del file di configurazione!
 # Le righe che iniziano con il carattere '#' sono commenti.
 
 .
-:CONFIG_VALID_VALUES
+:PROGRAM_CONFIG_VALID_VALUES
 Valori possibili
 .
-:CONFIG_DEPRECATED_VALUES
+:CONFIG_DEPRECATION_WARNING
 Valori deprecati
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -3343,7 +3343,7 @@ Operazione non consentita in modalità sicura.
 La sezione [%s] non esiste.
 
 .
-:PROGRAM_CONFIG_VALUE_ERROR
+:PROGRAM_CONFIG_INVALID_SETTING
 '%s' non è un valore valido per l'opzione '%s'.
 
 .

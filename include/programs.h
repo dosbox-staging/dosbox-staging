@@ -15,8 +15,10 @@
 #include <string>
 #include <vector>
 
+#include "console.h"
 #include "dos_inc.h"
 #include "help_util.h"
+#include "string_utils.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 
@@ -115,16 +117,27 @@ public:
 	DOS_PSP* psp          = nullptr;
 
 	virtual void Run(void) = 0;
-	virtual void WriteOut(const char* format, const char* arguments);
 
 	// printf to DOS stdout
-	virtual void WriteOut(const char* format, ...);
+	template <typename... Args>
+	void WriteOut(const std::string& format, const Args&... args)
+	{
+		if (SuppressWriteOut(format)) {
+			return;
+		}
+
+		const auto str = format_str(format, args...);
+		CONSOLE_Write(str);
+	}
+
+	// TODO Only used by the unit tests, try to get rid of it later
+	virtual void WriteOut(const std::string& format, const char* arguments);
 
 	// Write string to DOS stdout
-	void WriteOut_NoParsing(const char* str);
+	void WriteOut_NoParsing(const std::string& str);
 
 	// Prevent writing to DOS stdout
-	bool SuppressWriteOut(const char* format);
+	bool SuppressWriteOut(const std::string& format) const;
 
 	void InjectMissingNewline();
 	void ChangeToLongCmd();
@@ -137,6 +150,9 @@ public:
 protected:
 	HELP_Detail help_detail{};
 };
+
+void PROGRAMS_AddMessages();
+void PROGRAMS_Init(Section* sec);
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
 

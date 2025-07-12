@@ -11,9 +11,9 @@ void PLACEHOLDER::Run()
 {
 	const auto command = cmd->GetFileName();
 
-	LOG_WARNING("%s: %s", command, MSG_Get("PROGRAM_PLACEHOLDER_HELP"));
-	LOG_WARNING("%s: %s", command, MSG_Get("VISIT_FOR_MORE_HELP"));
-	LOG_WARNING("%s: %s/%s", command, MSG_Get("WIKI_URL"), "Add-Utilities");
+	LOG_WARNING("%s: %s", command, MSG_Get("PROGRAM_PLACEHOLDER_HELP").c_str());
+	LOG_WARNING("%s: %s", command, MSG_Get("VISIT_FOR_MORE_HELP").c_str());
+	LOG_WARNING("%s: %s/%s", command, MSG_Get("WIKI_URL").c_str(), "Add-Utilities");
 
 	MoreOutputStrings output(*this);
 	output.AddString(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command);

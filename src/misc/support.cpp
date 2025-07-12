@@ -437,7 +437,7 @@ std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
 		                                       files_ext,
 		                                       only_regular_files);
 
-		paths_and_files.emplace(std::move(res_path), std::move(res_files));
+		paths_and_files.emplace(std::move(res_path), std::move(res_files)); //-V823
 	}
 
 	return paths_and_files;
