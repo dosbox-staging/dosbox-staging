@@ -36,6 +36,17 @@ public:
 
 	bool FindExistRemoveAll(const std::string& name);
 
+	// Removes all the supplied arguments from the list, returns 'true' if
+	// at least one of them was found. Use it if argument has aliases, for
+	// example if '/a' and '/all' request the same action.
+	template <typename... Names>
+	bool FindExistRemoveAll(const std::string& name, Names... names)
+	{
+		const auto found_1 = FindExistRemoveAll(name);
+		const auto found_2 = FindExistRemoveAll(names...);
+		return found_1 || found_2;
+	}
+
 	bool FindInt(const std::string& name, int& value, bool remove = false);
 
 	bool FindString(const std::string& name, std::string& value,
