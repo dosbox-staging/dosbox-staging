@@ -1281,10 +1281,10 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("scaler", deprecated, "none");
 	string_prop->Set_help(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, set the desired 'windowresolution'\n"
-	        "    or 'viewport' instead, or consider using 'integer_scaling'.\n"
-	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
-	        "    options instead.");
+	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
+	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
+	        "    or 'viewport' size.\n"
+	        "  - If you used an advanced scaler, consider one of the 'glshader' options.");
 }
 
 enum { Horiz, Vert };
