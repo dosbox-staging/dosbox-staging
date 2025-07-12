@@ -1,0 +1,59 @@
+name: Cache vcpkg binaries
+
+inputs:
+  name_os:
+    description: "Name or OS"
+    required: true
+  arch:
+    description: "Architecture"
+    required: true
+  compiler:
+    description: "Compiler"
+    required: false
+    default: ""
+  compiler_vers:
+    description: "Compiler version"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set vcpkg cache env variable
+      if: ${{ runner.os != 'Windows'}}
+      shell: bash
+      run: |
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> $GITHUB_ENV
+    
+    - name: Set vcpkg cache env variable (Windows)
+      if: ${{ runner.os == 'Windows'}}
+      shell: pwsh
+      run: |
+        Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
+    
+    - name:  Set vcpkg binary cache key
+      id:    vcpkg_bin_cache_key
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.compiler }}" ]; then INPUTS_COMPILER="${{ inputs.compiler }}-"; fi
+        if [ -n "${{ inputs.compiler_vers }}" ]; then INPUTS_COMPILER_VERS="${{ inputs.compiler_vers }}-"; fi
+        echo "cacheKey=vcpkg-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERS}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+    
+    - name: Restore vcpkg binary cache
+      uses: actions/cache@v4
+      id:   vcpkg_bin_cache
+      with:
+        path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+        key:  ${{ steps.vcpkg_bin_cache_key.outputs.cacheKey }}
+
+    - name: Create binary cache directory
+      if: ${{ steps.vcpkg_bin_cache.outputs.cache-hit != 'true' && runner.os != 'Windows'}}
+      shell: bash
+      run: |
+        mkdir "${VCPKG_DEFAULT_BINARY_CACHE}"
+
+    - name: Create binary cache directory (Windows)
+      if: ${{ steps.vcpkg_bin_cache.outputs.cache-hit != 'true' && runner.os == 'Windows'}}
+      shell: pwsh
+      run: |
+        New-Item -Path "${Env:VCPKG_DEFAULT_BINARY_CACHE}" -ItemType Directory
