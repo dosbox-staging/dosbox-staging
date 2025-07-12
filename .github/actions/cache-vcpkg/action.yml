@@ -30,6 +30,12 @@ runs:
       shell: pwsh
       run: |
         Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
+
+    - name: Get vcpkg commit
+      shell: bash
+      run: |
+        cd ${VCPKG_ROOT}
+        echo "VCPKG_SHORT_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
     
     - name:  Set vcpkg binary cache key
       id:    vcpkg_bin_cache_key
@@ -37,7 +43,7 @@ runs:
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then INPUTS_COMPILER="${{ inputs.compiler }}-"; fi
         if [ -n "${{ inputs.compiler_vers }}" ]; then INPUTS_COMPILER_VERS="${{ inputs.compiler_vers }}-"; fi
-        echo "cacheKey=vcpkg-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERS}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERS}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
     
     - name: Restore vcpkg binary cache
       uses: actions/cache@v4
