@@ -64,6 +64,12 @@ jobs:
           git -c advice.detachedHead=false checkout $baseline
           bootstrap-vcpkg.bat -disableMetrics
 
+      - name: Set up vcpkg cache
+        uses: ./.github/actions/cache-vcpkg
+        with:
+          name_os: "windows"
+          arch: "${{ matrix.conf.arch }}"
+
       - name: Setup CMake
         uses: lukka/get-cmake@v4.0.3
 

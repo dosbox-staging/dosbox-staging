@@ -24,14 +24,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+
 jobs:
   build_linux:
     name:    ${{ matrix.conf.name }} ${{ matrix.arch }}
     runs-on: ${{ matrix.conf.os }}${{ matrix.arch == 'arm64' && '-arm' || '' }}
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-
     strategy:
       matrix:
 #       TODO enable arm64 builds
@@ -92,6 +92,13 @@ jobs:
           cd $VCPKG_ROOT
           ./bootstrap-vcpkg.sh
 
+      - name: Set up vcpkg cache
+        uses: ./.github/actions/cache-vcpkg
+        with:
+          name_os: linux
+          arch: "${{ matrix.arch }}"
+          compiler: "${{ matrix.conf.cc }}"
+
       - name: Log environment
         run: ./scripts/ci/log-env.sh
 
@@ -124,9 +131,6 @@ jobs:
     name:    Release build
     runs-on: ubuntu-22.04
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -149,6 +153,13 @@ jobs:
         run: |
           cd $VCPKG_ROOT
           ./bootstrap-vcpkg.sh
+
+      - name: Set up vcpkg cache
+        uses: ./.github/actions/cache-vcpkg
+        with:
+          name_os: linux
+          arch: "x64"
+          compiler: "gcc"
 
       - name: Log environment
         run: ./scripts/ci/log-env.sh

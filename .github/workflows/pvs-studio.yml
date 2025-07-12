@@ -52,6 +52,13 @@ jobs:
           cd $VCPKG_ROOT
           ./bootstrap-vcpkg.sh
 
+      - name: Set up vcpkg cache
+        uses: ./.github/actions/cache-vcpkg
+        with:
+          name_os: pvs
+          arch: "x64"
+          compiler: "gcc"
+
       - name: Log environment
         run:  ./scripts/ci/log-env.sh
 

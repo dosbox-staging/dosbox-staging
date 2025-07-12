@@ -63,6 +63,12 @@ jobs:
           cd $VCPKG_ROOT
           ./bootstrap-vcpkg.sh
 
+      - name: Set up vcpkg cache
+        uses: ./.github/actions/cache-vcpkg
+        with:
+          name_os: "${{ matrix.conf.host }}"
+          arch: "${{ matrix.conf.arch }}"
+      
       - name: Log environment
         run: arch -arch=${{ matrix.conf.arch }} ./scripts/ci/log-env.sh
 
