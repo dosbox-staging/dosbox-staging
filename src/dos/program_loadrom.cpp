@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "callback.h"
+#include "dos_windows.h"
 #include "drives.h"
 #include "program_more_output.h"
 #include "regs.h"
@@ -25,6 +26,13 @@ void LOADROM::Run(void)
 		output.Display();
 		return;
 	}
+
+	// Loading the ROM when Windows is running is asking for trouble
+	if (WINDOWS_IsStarted()) {
+		WriteOut(MSG_Get("SHELL_CANT_RUN_UNDER_WINDOWS"));
+		return;
+	}
+
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
 	if (!DOS_MakeName(temp_line.c_str(), fullname, &drive)) {

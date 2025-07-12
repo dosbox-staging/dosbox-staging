@@ -173,6 +173,13 @@ void BOOT::Run(void)
 		output.Display();
 		return;
 	}
+
+	// Booting would have terminated the running Windows, don't do it
+	if (WINDOWS_IsStarted()) {
+		WriteOut(MSG_Get("SHELL_CANT_RUN_UNDER_WINDOWS"));
+		return;
+	}
+
 	if (cmd->GetCount() == 1) {
 		if (cmd->FindCommand(1, temp_line)) {
 			if (temp_line.length() == 2 && toupper(temp_line[0]) >= 'A' &&
