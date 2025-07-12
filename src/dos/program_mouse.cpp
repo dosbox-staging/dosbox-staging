@@ -84,7 +84,6 @@ void MOUSE::Run()
 		return;
 	}
 
-	// Check if Windows is running
 	if (WINDOWS_IsStarted()) {
 		WriteOut(MSG_Get("SHELL_CANT_RUN_UNDER_WINDOWS"));
 		return;

@@ -13,6 +13,7 @@
 #include "cdrom.h"
 #include "control.h"
 #include "cross.h"
+#include "dos_windows.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "ide.h"
@@ -134,6 +135,12 @@ void IMGMOUNT::Run(void)
 		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG_GENERIC"));
 
 		output.Display();
+		return;
+	}
+
+	// Windows does not like drives to suddenly appear/disappear
+	if (WINDOWS_IsStarted()) {
+		WriteOut(MSG_Get("SHELL_CANT_RUN_UNDER_WINDOWS"));
 		return;
 	}
 
