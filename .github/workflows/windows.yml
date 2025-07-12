@@ -54,16 +54,6 @@ jobs:
         with:
           submodules: false
 
-      - name:  Checkout vcpkg baseline
-        shell: pwsh
-        run: |
-          $baseline = (Get-Content vcpkg.json | ConvertFrom-Json).'builtin-baseline'
-          cd $env:VCPKG_INSTALLATION_ROOT
-          git fetch
-          rm vcpkg.exe
-          git -c advice.detachedHead=false checkout $baseline
-          bootstrap-vcpkg.bat -disableMetrics
-
       - name: Set up vcpkg cache
         uses: ./.github/actions/cache-vcpkg
         with:
