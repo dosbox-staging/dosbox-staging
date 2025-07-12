@@ -869,9 +869,9 @@ static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
 	const DosBox::Rect render_size_px = {sdl.draw.render_width_px,
 	                                     sdl.draw.render_height_px};
 
-	const auto r = GFX_CalcDrawRectInPixels(canvas_size_px,
-	                                        render_size_px,
-	                                        sdl.draw.render_pixel_aspect_ratio);
+	const auto r = RENDER_CalcDrawRectInPixels(canvas_size_px,
+	                                           render_size_px,
+	                                           sdl.draw.render_pixel_aspect_ratio);
 
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
@@ -911,52 +911,69 @@ static DosBox::Rect get_canvas_size_in_pixels(
 	return r;
 }
 
-// Logs the source and target resolution including describing scaling method
-// and pixel aspect ratio. Note that this function deliberately doesn't use
-// any global structs to disentangle it from the existing sdl-main design.
-//
-static void log_display_properties(const int render_width_px,
-                                   const int render_height_px,
-                                   const std::optional<VideoMode>& maybe_video_mode,
-                                   const RenderingBackend rendering_backend)
+static void maybe_log_display_properties()
 {
-	assert(render_width_px > 0 && render_height_px > 0);
+	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
-	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 	const auto draw_size_px = calc_draw_rect_in_pixels(canvas_size_px);
 
 	assert(draw_size_px.HasPositiveSize());
 
-	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
-	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
+	const auto scale_x = static_cast<double>(draw_size_px.w) / sdl.draw.render_width_px;
+	const auto scale_y = static_cast<double>(draw_size_px.h) / sdl.draw.render_height_px;
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
-	const char* frame_mode = nullptr;
-	switch (sdl.frame.mode) {
-	case FrameMode::Cfr: frame_mode = "CFR"; break;
-	case FrameMode::Vfr: frame_mode = "VFR"; break;
-	case FrameMode::ThrottledVfr: frame_mode = "throttled VFR"; break;
-	case FrameMode::Unset: frame_mode = "Unset frame mode"; break;
-	default: assertm(false, "Invalid FrameMode");
-	}
-
 	const auto refresh_rate = VGA_GetPreferredRate();
 
-	if (maybe_video_mode) {
-		const auto video_mode_desc = to_string(*maybe_video_mode);
-		const auto& pixel_aspect_ratio = maybe_video_mode->pixel_aspect_ratio;
+	if (sdl.maybe_video_mode) {
+		const auto video_mode = *sdl.maybe_video_mode;
 
-		LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
-		        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
-		        video_mode_desc.c_str(),
-		        refresh_rate,
-		        frame_mode,
-		        iroundf(draw_size_px.w),
-		        iroundf(draw_size_px.h),
-		        pixel_aspect_ratio.Inverse().ToDouble(),
-		        static_cast<int32_t>(pixel_aspect_ratio.Num()),
-		        static_cast<int32_t>(pixel_aspect_ratio.Denom()));
+		static VideoMode last_video_mode      = {};
+		static double last_refresh_rate       = 0.0;
+		static FrameMode last_frame_mode      = {};
+		static DosBox::Rect last_draw_size_px = {};
+
+		if (last_video_mode != video_mode ||
+		    last_refresh_rate != refresh_rate ||
+		    last_frame_mode != sdl.frame.mode ||
+		    last_draw_size_px.w != draw_size_px.w ||
+		    last_draw_size_px.h != draw_size_px.h) {
+
+			const auto frame_mode = [] {
+				switch (sdl.frame.mode) {
+				case FrameMode::Cfr: return "CFR";
+				case FrameMode::Vfr: return "VFR";
+				case FrameMode::ThrottledVfr:
+					return "throttled VFR";
+				case FrameMode::Unset:
+					return "Unset frame mode";
+				default:
+					assertm(false, "Invalid FrameMode");
+					return "";
+				}
+			}();
+
+			const auto& par = video_mode.pixel_aspect_ratio;
+
+			LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
+			        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
+			        to_string(video_mode).c_str(),
+			        refresh_rate,
+			        frame_mode,
+			        iroundf(draw_size_px.w),
+			        iroundf(draw_size_px.h),
+			        par.Inverse().ToDouble(),
+			        static_cast<int32_t>(par.Num()),
+			        static_cast<int32_t>(par.Denom()));
+
+			last_video_mode   = video_mode;
+			last_refresh_rate = refresh_rate;
+			last_frame_mode   = sdl.frame.mode;
+			last_draw_size_px = draw_size_px;
+		}
+
 	} else {
 		LOG_MSG("SDL: Window size initialized to %dx%d pixels",
 		        iroundf(draw_size_px.w),
@@ -1607,6 +1624,8 @@ static void enter_fullscreen(const int width, const int height)
 
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
 
+		maybe_log_display_properties();
+
 	} else {
 		SDL_DisplayMode display_mode;
 		SDL_GetWindowDisplayMode(sdl.window, &display_mode);
@@ -1648,6 +1667,8 @@ static void exit_fullscreen()
 			                      sdl.desktop.fullscreen.prev_window.y_pos);
 
 			sdl.desktop.fullscreen.is_forced_borderless_fullscreen = false;
+
+			maybe_log_display_properties();
 
 		} else {
 			// Let SDL restore the previous window size
@@ -2517,10 +2538,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	update_vsync_mode();
 
 	if (sdl.draw.has_changed) {
-		log_display_properties(sdl.draw.render_width_px,
-		                       sdl.draw.render_height_px,
-		                       sdl.maybe_video_mode,
-		                       sdl.rendering_backend);
+		maybe_log_display_properties();
 	}
 
 #if C_OPENGL
@@ -3241,90 +3259,6 @@ static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correctio
 	        sdl.display_number);
 }
 
-DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
-                                      const DosBox::Rect& render_size_px,
-                                      const Fraction& render_pixel_aspect_ratio)
-{
-	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(
-	        canvas_size_px);
-
-	const auto draw_size_fit_px =
-	        render_size_px.Copy()
-	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
-	                .ScaleSizeToFit(viewport_px);
-
-	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
-		                            iroundf(render_size_px.w);
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			return draw_size_fit_px;
-		} else {
-			const auto vert_scale =
-			        render_pixel_aspect_ratio.Inverse().ToFloat();
-
-			return render_size_px.Copy()
-			        .ScaleSize(integer_scale_factor)
-			        .ScaleHeight(vert_scale);
-		}
-	};
-
-	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
-		                            iroundf(render_size_px.h);
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			return draw_size_fit_px;
-		} else {
-			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
-
-			return render_size_px.Copy()
-			        .ScaleSize(integer_scale_factor)
-			        .ScaleWidth(horiz_scale);
-		}
-	};
-
-	auto draw_size_px = [&] {
-		switch (sdl.integer_scaling_mode) {
-		case IntegerScalingMode::Off: return draw_size_fit_px;
-
-		case IntegerScalingMode::Auto:
-#if C_OPENGL
-			if (sdl.rendering_backend == RenderingBackend::OpenGl &&
-			    sdl.opengl.shader_info.is_adaptive) {
-				return calc_vert_integer_scaling_dims_in_pixels();
-			} else {
-				return draw_size_fit_px;
-			}
-#else
-			return draw_size_fit_px;
-#endif
-
-		case IntegerScalingMode::Horizontal:
-			return calc_horiz_integer_scaling_dims_in_pixels();
-
-		case IntegerScalingMode::Vertical:
-			return calc_vert_integer_scaling_dims_in_pixels();
-
-		default:
-			assertm(false, "Invalid IntegerScalingMode value");
-			return DosBox::Rect{};
-		}
-	}();
-
-	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
-}
-
-IntegerScalingMode GFX_GetIntegerScalingMode()
-{
-	return sdl.integer_scaling_mode;
-}
-
-void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
-{
-	sdl.integer_scaling_mode = mode;
-}
-
 InterpolationMode GFX_GetTextureInterpolationMode()
 {
 	return sdl.texture.interpolation_mode;
@@ -3995,25 +3929,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// established:
 		assert(sdl.desktop.window.width > 0 && sdl.desktop.window.height > 0);
 
-		// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
-		// resizing the window, so we're only logging the display
-		// settings if there is a change since the last window resized
-		// event.
-		static int prev_width  = 0;
-		static int prev_height = 0;
-
-		const auto new_width  = event.window.data1;
-		const auto new_height = event.window.data2;
-
-		if (prev_width != new_width || prev_height != new_height) {
-			log_display_properties(sdl.draw.render_width_px,
-			                       sdl.draw.render_height_px,
-			                       sdl.maybe_video_mode,
-			                       sdl.rendering_backend);
-		}
-
-		prev_width  = new_width;
-		prev_height = new_height;
+		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
+		// the window, but maybe_log_display_properties() will only output
+		// a log entry if the image dimensions have actually changed.
+		maybe_log_display_properties();
 		return true;
 	}
 

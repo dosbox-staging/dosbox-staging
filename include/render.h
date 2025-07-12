@@ -45,6 +45,28 @@ struct ViewportSettings {
 	}
 };
 
+enum class IntegerScalingMode {
+	Off,
+	Auto,
+	Horizontal,
+	Vertical,
+};
+
+enum class AspectRatioCorrectionMode {
+	// Calculate the pixel aspect ratio from the display timings on VGA, and
+	// from heuristics & hardcoded values on all other adapters.
+	Auto,
+
+	// Always force square pixels (1:1 pixel aspect ratio).
+	SquarePixels,
+
+	// Use a 4:3 display aspect ratio viewport as the starting point, then
+	// apply user-defined horizontal and vertical scale factors to it. Stretch
+	// all video modes into the resulting viewport and derive the pixel aspect
+	// ratios from that.
+	Stretch
+};
+
 struct RenderPal_t {
 	struct {
 		uint8_t red    = 0;
@@ -64,7 +86,7 @@ struct RenderPal_t {
 	uint32_t last         = 0;
 };
 
-struct Render_t {
+struct Render {
 	ImageInfo src = {};
 	uint32_t src_start   = 0;
 
@@ -101,6 +123,8 @@ struct Render_t {
 
 	std::string current_shader_name = {};
 	bool force_reload_shader        = false;
+
+	IntegerScalingMode integer_scaling_mode = {};
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
@@ -167,7 +191,7 @@ struct RenderedImage {
 	}
 };
 
-extern Render_t render;
+extern Render render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
 void RENDER_Reinit();
@@ -178,6 +202,9 @@ AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px);
 
+DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                         const DosBox::Rect& render_size_px,
+                                         const Fraction& render_pixel_aspect_ratio);
 std::string RENDER_GetCgaColorsSetting();
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);

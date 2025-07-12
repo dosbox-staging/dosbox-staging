@@ -24,7 +24,7 @@
 #include "vga.h"
 #include "video.h"
 
-Render_t render;
+Render render;
 ScalerLineHandler_t RENDER_DrawLine;
 
 const char* to_string(const PixelFormat pf)
@@ -976,6 +976,116 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 	}
 }
 
+DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
+                                         const DosBox::Rect& render_size_px,
+                                         const Fraction& render_pixel_aspect_ratio)
+{
+	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(
+	        canvas_size_px);
+
+	const auto draw_size_fit_px =
+	        render_size_px.Copy()
+	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
+	                .ScaleSizeToFit(viewport_px);
+
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
+		                            iroundf(render_size_px.w);
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return draw_size_fit_px;
+		} else {
+			const auto vert_scale =
+			        render_pixel_aspect_ratio.Inverse().ToFloat();
+
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleHeight(vert_scale);
+		}
+	};
+
+	auto calc_vert_integer_scaling_dims_in_pixels = [&](const float integer_scale_factor) {
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return draw_size_fit_px;
+		} else {
+			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
+
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleWidth(horiz_scale);
+		}
+	};
+
+	auto handle_auto_mode = [&] {
+		// The 'auto' mode is special:
+		//
+		// - it enables vertical integer scaling for the adaptive CRT
+		//   shaders if the viewport is large enough (otherwise it falls
+		//   back to the 'sharp' shader with no integer scaling),
+		// - it allows the 3.5x and 4.5x half steps,
+		// - and it disables integer scaling above 5.0x scaling.
+		//
+		// The half-steps and no scaling above 5.0x result in no moire
+		// artifacts in 99% of cases, so it's very much worth it for
+		// better viewport utilisation.
+		//
+		const auto shader_info =
+		        ShaderManager::GetInstance().GetCurrentShaderInfo();
+
+		if (!shader_info.name.empty() && shader_info.is_adaptive) {
+			auto integer_scale_factor = [&] {
+				const auto factor = draw_size_fit_px.h /
+				                    render_size_px.h;
+				if (factor >= 5.0) {
+					// Disable integer scaling
+					return factor;
+				}
+				if (factor >= 3.0) {
+					// Allow 3.5x and 4.5x half steps in
+					// the 3.0-5.0 range
+					return floorf(factor * 2) / 2;
+				}
+				// Only whole integer steps
+				return floorf(factor);
+			}();
+
+			return calc_vert_integer_scaling_dims_in_pixels(
+			        integer_scale_factor);
+		}
+
+		// Handles the `sharp` shader fallback when the viewport is
+		// is too small for CRT shaders; integer scaling is then disabled.
+		return draw_size_fit_px;
+	};
+
+	auto draw_size_px = [&] {
+		switch (render.integer_scaling_mode) {
+		case IntegerScalingMode::Off: return draw_size_fit_px;
+
+		case IntegerScalingMode::Auto:
+			return handle_auto_mode();
+
+		case IntegerScalingMode::Horizontal:
+			return calc_horiz_integer_scaling_dims_in_pixels();
+
+		case IntegerScalingMode::Vertical: {
+			auto integer_scale_factor = floorf(draw_size_fit_px.h /
+			                                   render_size_px.h);
+			return calc_vert_integer_scaling_dims_in_pixels(
+			        integer_scale_factor);
+		}
+
+		default:
+			assertm(false, "Invalid IntegerScalingMode value");
+			return DosBox::Rect{};
+		}
+	}();
+
+	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
+}
+
+
 std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->Get_string("cga_colors");
@@ -995,39 +1105,43 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
-	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
-	        "                          how people experienced the game at the time of\n"
-	        "                          release (default). The appropriate shader variant is\n"
-	        "                          automatically selected based the graphics standard of\n"
-	        "                          the current video mode and the viewport size,\n"
-	        "                          irrespective of the 'machine' setting. This means\n"
-	        "                          that even on an emulated VGA card you'll get\n"
-	        "                          authentic single-scanned EGA monitor emulation with\n"
-	        "                          visible \"thick scanlines\" in EGA games.\n"
-	        "  crt-auto-machine:       Similar to 'crt-auto', but this picks a fixed CRT\n"
-	        "                          monitor appropriate for the video adapter configured\n"
-	        "                          via the 'machine' setting. E.g., CGA and EGA games\n"
-	        "                          will appear double-scanned on an emulated VGA\n"
-	        "                          adapter.\n"
-	        "  crt-auto-arcade:        Emulation of an arcade or home computer monitor less\n"
-	        "                          sharp than a typical PC monitor with thick scanlines\n"
-	        "                          in low-resolution modes. This fantasy option does not\n"
-	        "                          exist in real life, but it can be a lot of fun,\n"
-	        "                          especially with DOS ports of Amiga games.\n"
-	        "  crt-auto-arcade-sharp:  A sharper variant of the arcade shader for those who\n"
-	        "                          like the thick scanlines but want to retain the\n"
-	        "                          horizontal sharpness of a typical PC monitor.\n"
+	        "  crt-auto:               Adaptive CRT shader that prioritises developer intent\n"
+	        "                          and how people experienced the games at the time of\n"
+	        "                          release (default). An appropriate shader variant is\n"
+	        "                          auto-selected based the graphics standard of the\n"
+	        "                          current video mode and the viewport size, irrespective\n"
+	        "                          of the 'machine' setting. This means you'll get the\n"
+	        "                          authentic single-scanned CGA and EGA monitor look with\n"
+	        "                          visible scanlines in CGA and EGA games even on an\n"
+	        "                          emulated VGA adapter. The sharp shader is used below\n"
+	        "                          3.0x vertical scaling.\n"
+	        "  crt-auto-machine:       A variation of 'crt-auto'; this emulates a fixed CRT\n"
+	        "                          monitor for the video adapter configured via the\n"
+	        "                          'machine' setting. E.g., CGA and EGA games will appear\n"
+	        "                          double-scanned on an emulated VGA adapter.\n"
+	        "  crt-auto-arcade:        Emulation of an arcade or home computer monitor with\n"
+	        "                          a less sharp image and thick scanlines in low-\n"
+	        "                          resolution video modes. This is a fantasy option that\n"
+	        "                          never existed in real life, but it can be a lot of\n"
+	        "                          fun, especially with DOS ports of Amiga games.\n"
+	        "  crt-auto-arcade-sharp:  A sharper arcade shader variant for those who like the\n"
+	        "                          thick scanlines but want to retain the sharpness of a\n"
+	        "                          typical PC monitor.\n"
 	        "\n"
 	        "Other shader options include (non-exhaustive list):\n"
-	        "  sharp:                  Upscale the image treating the pixels as rectangles.\n"
-	        "                          Results in a sharp image with minimum blur.\n"
+	        "  sharp:                  Upscale the image treating the pixels as small\n"
+	        "                          rectangles, resulting in a sharp image with minimum\n"
+	        "                          blur while maintaining the correct pixel aspect ratio.\n"
+	        "                          This is the recommended option for those who don't\n"
+	        "                          want to use the adaptive CRT shaders.\n"
 	        "  bilinear:               Upscale the image using bilinear interpolation\n"
 	        "                          (results in a blurry image).\n"
 	        "  nearest:                Upscale the image using nearest-neighbour\n"
-	        "                          interpolation (also known as \"no bilinear\"). Results\n"
-	        "                          in the sharpest possible image at the expense of\n"
-	        "                          uneven pixels (this is less of an issue on high\n"
-	        "                          resolution screens).\n"
+	        "                          interpolation (also known as \"no bilinear\"). This\n"
+	        "                          results in the sharpest possible image at the expense\n"
+	        "                          of uneven pixels, especially with non-square pixel\n"
+	        "                          aspect ratios (this is less of an issue on high\n"
+	        "                          resolution monitors).\n"
 	        "\n"
 	        "Start DOSBox Staging with the '--list-glshaders' command line option to see the\n"
 	        "full list of available shaders. You can also use an absolute or relative path to\n"
@@ -1044,19 +1158,19 @@ static void init_render_settings(Section_prop& secprop)
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
-	        "                       ratio CRT monitor the majority of DOS games were\n"
-	        "                       designed for. This setting only affects video modes that\n"
-	        "                       use non-square pixels, such as 320x200 or 640x400;.\n"
-	        "                       square-pixelmodes (e.g., 320x240, 640x480, and 800x600),\n"
-	        "                       are displayed as-is.\n"
+	        "                       ratio CRT monitor the majority of DOS games were designed\n"
+	        "                       for. This setting only affects video modes that use non-\n"
+	        "                       square pixels, such as 320x200 or 640x400; square pixel\n"
+	        "                       modes (e.g., 320x240, 640x480, and 800x600), are\n"
+	        "                       displayed as-is.\n"
 	        "  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes\n"
-	        "                       are displayed with square pixels. Most 320x200 games\n"
+	        "                       will be displayed with square pixels. Most 320x200 games\n"
 	        "                       will appear squashed, but a minority of titles (e.g.,\n"
 	        "                       DOS ports of PAL Amiga games) need square pixels to\n"
 	        "                       appear as the artists intended.\n"
 	        "  stretch:             Calculate the aspect ratio from the viewport's\n"
-	        "                       dimensions. Combined with 'viewport', this mode is\n"
-	        "                       useful to force arbitrary aspect ratios (e.g.,\n"
+	        "                       dimensions. Combined with the 'viewport' setting, this\n"
+	        "                       mode is useful to force arbitrary aspect ratios (e.g.,\n"
 	        "                       stretching DOS games to fullscreen on 16:9 displays) and\n"
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
@@ -1071,11 +1185,13 @@ static void init_render_settings(Section_prop& secprop)
 	        "'viewport' settings, which may result in a non-integer scaling factor in the\n"
 	        "other dimension. If the image is larger than the viewport, the integer scaling\n"
 	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
-	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only\n"
-	        "               (see 'glshader'), otherwise 'off' (default).\n"
+	        "  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
+	        "               shaders (see `glshader`). This mode has refinements over standard\n"
+	        "               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
+	        "               allowed, and integer scaling is disabled above 5.0x scaling.\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
-	        "               This is the recommended setting for CRT shaders to avoid uneven\n"
-	        "               scanlines and interference artifacts.\n"
+	        "               This is the recommended setting for third-party shaders to avoid\n"
+	        "               uneven scanlines and interference artifacts.\n"
 	        "  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
@@ -1087,23 +1203,24 @@ static void init_render_settings(Section_prop& secprop)
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
 	        "configured aspect ratio into account (see 'aspect'). Possible values:\n"
-	        "  fit:             Fit the viewport into the available window/screen (default).\n"
-	        "                   There might be padding (black areas) around the image with\n"
-	        "                   'integer_scaling' enabled.\n"
-	        "  WxH:             Set a fixed viewport size in WxH format in logical units\n"
-	        "                   (e.g., 960x720). The specified size must not be larger than\n"
-	        "                   the desktop. If it's larger than the window size, it's\n"
-	        "                   scaled to fit within the window.\n"
-	        "  N%%:              Similar to 'WxH' but the size is specified as a percentage\n"
-	        "                   of the desktop size.\n"
-	        "  relative H%% V%%:  The viewport is set to a 4:3 aspect ratio rectangle fit into\n"
-	        "                   the available window/screen, then it's scaled by the H and V\n"
-	        "                   horizontal and vertical scaling factors (valid range is from\n"
-	        "                   20%% to 300%%). The resulting viewport is allowed to extend\n"
-	        "                   beyond the window/screen. Useful to force arbitrary display\n"
-	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
-	        "                   image. This effectively emulates the horizontal and vertical\n"
-	        "                   stretch controls of CRT monitors.\n"
+	        "  fit:               Fit the viewport into the available window/screen\n"
+	        "                     (default). There might be padding (black areas) around the\n"
+	        "                     image with 'integer_scaling' enabled.\n"
+	        "  WxH:               Set a fixed viewport size in WxH format in logical units\n"
+	        "                     (e.g., 960x720). The specified size must not be larger than\n"
+	        "                     the desktop. If it's larger than the window size, it will\n"
+	        "                     be scaled to fit within the window.\n"
+	        "  N%%:                Similar to 'WxH', but the size is specified as a percentage\n"
+	        "                     of the desktop size.\n"
+	        "  relative H%% V%%:    The viewport is set to a 4:3 aspect ratio rectangle fit\n"
+	        "                     into the available window or screen, then is scaled by\n"
+	        "                     the H and V horizontal and vertical scaling factors (valid\n"
+	        "                     range is from 20%% to 300%%). The resulting viewport is\n"
+	        "                     allowed to extend beyond the bounds of the window or\n"
+	        "                     screen. Useful to force arbitrary display aspect ratios\n"
+	        "                     with 'aspect = stretch' and to \"zoom\" into the image.\n"
+	        "                     This effectively emulates the horizontal and vertical\n"
+	        "                     stretch controls of CRT monitors.\n"
 	        "Notes:\n"
 	        "  - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
 	        "    surprising (but correct) results.\n"
@@ -1161,10 +1278,10 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("scaler", deprecated, "none");
 	string_prop->Set_help(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, set the desired 'windowresolution'\n"
-	        "    or 'viewport' instead, or consider using 'integer_scaling'.\n"
-	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
-	        "    options instead.");
+	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
+	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
+	        "    or 'viewport' size.\n"
+	        "  - If you used an advanced scaler, consider one of the 'glshader' options.");
 }
 
 enum { Horiz, Vert };
@@ -1303,6 +1420,8 @@ static bool handle_shader_changes()
 	}
 	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 
+	render.integer_scaling_mode = get_integer_scaling_mode_setting();
+
 	const auto shader_changed = render.force_reload_shader ||
 	                            (new_shader_name != render.current_shader_name);
 
@@ -1328,7 +1447,7 @@ static void render_init(Section* sec)
 	const auto prev_scale_size              = render.scale.size;
 	const auto prev_force_vga_single_scan   = force_vga_single_scan;
 	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
-	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
+	const auto prev_integer_scaling_mode    = render.integer_scaling_mode;
 	const auto prev_viewport_settings       = viewport_settings;
 	const auto prev_aspect_ratio_correction_mode = aspect_ratio_correction_mode;
 
@@ -1355,8 +1474,6 @@ static void render_init(Section* sec)
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
-	GFX_SetIntegerScalingMode(get_integer_scaling_mode_setting());
-
 	auto shader_changed = handle_shader_changes();
 
 	setup_scan_and_pixel_doubling();
@@ -1365,7 +1482,7 @@ static void render_init(Section* sec)
 	        ((aspect_ratio_correction_mode != prev_aspect_ratio_correction_mode) ||
 	         (viewport_settings != prev_viewport_settings) ||
 	         (render.scale.size != prev_scale_size) ||
-	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
+	         (render.integer_scaling_mode != prev_integer_scaling_mode) ||
 	         shader_changed ||
 	         (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
