@@ -900,10 +900,6 @@ static void maybe_log_display_properties()
 				switch (sdl.frame.mode) {
 				case FrameMode::Cfr: return "CFR";
 				case FrameMode::Vfr: return "VFR";
-				case FrameMode::ThrottledVfr:
-					return "throttled VFR";
-				case FrameMode::Unset:
-					return "Unset frame mode";
 				default:
 					assertm(false, "Invalid FrameMode");
 					return "";
@@ -1026,35 +1022,6 @@ static void remove_window()
 	}
 }
 
-// The throttled presenter skips frames that have inter-frame spacing narrower
-// than the allowed frame period (sdl.frame.period_us). When a frame is skipped,
-// the presenter still tries to present it at its next oppourtunity.
-//
-static void maybe_present_throttled(const bool frame_is_new)
-{
-	static int64_t last_present_time  = 0;
-	static auto was_new_and_throttled = false;
-
-	const auto now     = GetTicksUs();
-	const auto elapsed = now - last_present_time;
-
-	if (elapsed >= sdl.frame.period_us) {
-		// If we waited beyond this frame's refresh period, then credit
-		// this extra wait back by deducting it from the recorded time.
-		const auto wait_overage = elapsed % sdl.frame.period_us;
-		last_present_time       = now - (9 * wait_overage / 10);
-
-		if (frame_is_new || was_new_and_throttled) {
-			sdl.frame.present();
-		}
-	}
-	// Otherwise we've had to throttle the frame, however if the frame was
-	// new, we'll record it as such and try to present it next time.
-	else {
-		was_new_and_throttled = frame_is_new;
-	}
-}
-
 static void maybe_present_synced(const bool present_if_last_skipped)
 {
 	// State tracking across runs
@@ -1076,7 +1043,7 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	last_sync_time = should_present ? GetTicksUs() : now;
 }
 
-static void setup_presentation_mode(FrameMode& previous_mode)
+static void setup_presentation_mode()
 {
 	// Always get the reported refresh rate and hint the emulated VGA side
 	// with it. This ensures the VGA side always has the host's rate
@@ -1093,7 +1060,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 
 	const auto vsync_is_on = is_vsync_enabled();
 
-	auto mode = FrameMode::Unset;
+	FrameMode mode = {};
 
 	// Manual CFR or VFR modes
 	if (sdl.frame.desired_mode == FrameMode::Cfr ||
@@ -1107,61 +1074,7 @@ static void setup_presentation_mode(FrameMode& previous_mode)
 		// the requested rates, we use the frame pacer to inform the
 		// user when the host is hitting the vsync limit.
 		render_pacer->SetTimeout(vsync_is_on ? sdl.vsync.skip_us : 0);
-
-	} else {
-		// Automatic CFR or VFR modes
-		const auto display_might_be_interpolating = (host_rate >=
-		                                             InterpolatingVrrMinRateHz);
-
-		// If we're fullscreen, vsynced, and using a VRR display that
-		// performs frame interpolation, then we prefer to use a
-		// constant rate.
-		const auto conditions_prefer_constant_rate =
-		        (sdl.desktop.is_fullscreen && vsync_is_on &&
-		         display_might_be_interpolating);
-
-#if 0
-		// TODO some of these log statements seem to be wrong and
-		// not reflect actual reality, we'll need to revisit them
-
-		LOG_MSG("SDL: Auto presentation mode conditions:");
-		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
-		if (has_bench_rate) {
-		        LOG_MSG("SDL:   - Host renders at %d FPS", *has_bench_rate);
-		}
-		LOG_MSG("SDL:   - Display refresh rate is %.3f Hz", host_rate);
-		LOG_MSG("SDL:   - %s",
-		        host_rate >= dos_rate
-		                ? "Host can handle the full DOS rate"
-		                : "Host cannot handle the DOS rate");
-		LOG_MSG("SDL:   - %s",
-		        conditions_prefer_constant_rate
-		                ? "CFR selected because we're fullscreen, "
-		                  "vsync'd, and display is 140+Hz"
-		                : "VFR selected because we're not "
-		                  "fullscreen, nor vsync'd, nor < 140Hz");
-#endif
-
-		if (host_rate >= dos_rate) {
-			mode = conditions_prefer_constant_rate ? FrameMode::Cfr
-			                                       : FrameMode::Vfr;
-			save_rate_to_frame_period(dos_rate);
-		} else {
-			mode = FrameMode::ThrottledVfr;
-			save_rate_to_frame_period(nearest_common_rate(host_rate));
-		}
-
-		// In auto-mode, the presentation rate doesn't exceed the
-		// supported rate, so we disable the pacer.
-		render_pacer->SetTimeout(0);
 	}
-
-	// If the mode is unchanged, do nothing.
-	assert(mode != FrameMode::Unset);
-	if (previous_mode == mode) {
-		return;
-	}
-	previous_mode = mode;
 }
 
 static void notify_new_mouse_screen_params()
@@ -1556,7 +1469,7 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
 finish:
 
 	if (sdl.draw.has_changed) {
-		setup_presentation_mode(sdl.frame.mode);
+		setup_presentation_mode();
 	}
 
 	// Force redraw after changing the window
@@ -2550,7 +2463,7 @@ static void switch_fullscreen()
 	GFX_ResetScreen();
 
 	focus_input();
-	setup_presentation_mode(sdl.frame.mode);
+	setup_presentation_mode();
 
 	sdl.desktop.switching_fullscreen = false;
 }
@@ -2648,10 +2561,6 @@ void GFX_EndUpdate(const uint16_t* changedLines)
 				sdl.frame.present();
 			}
 			break;
-		case FrameMode::ThrottledVfr:
-			maybe_present_throttled(vfr_should_present());
-			break;
-		case FrameMode::Unset: break;
 		}
 	}
 
@@ -3412,19 +3321,12 @@ static void sdl_section_init(Section* sec)
 
 	const std::string presentation_mode_pref = section->GetString(
 	        "presentation_mode");
-	if (presentation_mode_pref == "auto") {
-		sdl.frame.desired_mode = FrameMode::Unset;
 
-	} else if (presentation_mode_pref == "cfr") {
+	if (presentation_mode_pref == "cfr") {
 		sdl.frame.desired_mode = FrameMode::Cfr;
 
 	} else if (presentation_mode_pref == "vfr") {
 		sdl.frame.desired_mode = FrameMode::Vfr;
-
-	} else {
-		sdl.frame.desired_mode = FrameMode::Unset;
-		LOG_WARNING("SDL: Invalid 'presentation_mode' setting: '%s', using 'auto'",
-		            presentation_mode_pref.c_str());
 	}
 
 	initialize_vsync_settings();
@@ -4418,14 +4320,12 @@ static void init_sdl_config_section()
 	        "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
-	pstring = sdl_sec->AddString("presentation_mode", always, "auto");
+	pstring = sdl_sec->AddString("presentation_mode", always, "vfr");
 	pstring->SetHelp(
 	        "Select the frame presentation mode:\n"
-	        "  auto:  Intelligently time and drop frames to prevent emulation stalls,\n"
-	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
-	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
-	pstring->SetValues({"auto", "cfr", "vfr"});
+	        "  vfr:   Always present changed DOS frames at a variable frame rate (default).");
+	pstring->SetValues({"auto", "cfr"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	pmulti->SetHelp(
