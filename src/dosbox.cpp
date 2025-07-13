@@ -167,6 +167,11 @@ static Bitu normal_loop()
 			}
 #endif
 		} else {
+			// TODO explanation
+			if (GFX_GetPresentationMode() == PresentationMode::HostRate) {
+				GFX_MaybePresentFrame();
+			}
+
 			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
 			}
