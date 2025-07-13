@@ -100,16 +100,11 @@ static inline bool present_frame_noop()
 }
 
 enum class FrameMode {
-	Unset,
-
 	// Constant frame rate, as defined by the emulated system
 	Cfr,
 
 	// Variable frame rate, as defined by the emulated system
-	Vfr,
-
-	// Variable frame rate, throttled to the display's rate
-	ThrottledVfr,
+	Vfr
 };
 
 enum class HostRateMode {
@@ -283,8 +278,8 @@ struct SDL_Block {
 	struct {
 		present_frame_f* present      = present_frame_noop;
 		update_frame_buffer_f* update = update_frame_noop;
-		FrameMode desired_mode        = FrameMode::Unset;
-		FrameMode mode                = FrameMode::Unset;
+		FrameMode desired_mode        = {};
+		FrameMode mode                = {};
 
 		// in ms, for use with PIC timers
 		double period_ms      = 0.0;
