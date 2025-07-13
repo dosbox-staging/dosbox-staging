@@ -212,8 +212,9 @@ struct SDL_Block {
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
-		int pitch      = 0;
-		void* framebuf = nullptr;
+		int pitch                = 0;
+		void* framebuf[2]        = {};
+		size_t framebuffer_bytes = 0;
 		GLuint texture;
 		GLint max_texsize;
 		GLuint program_object;
@@ -263,6 +264,7 @@ struct SDL_Block {
 
 		int frame_time_us           = 0;
 		int early_present_window_us = 0;
+		int last_present_time_us    = 0;
 	} presentation = {};
 
 	bool use_exact_window_resolution = false;
