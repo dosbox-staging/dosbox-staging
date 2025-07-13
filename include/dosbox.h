@@ -98,8 +98,35 @@ enum class SvgaType {
 	Paradise
 }; 
 
+enum class S3Type {
+	// S3 86C928, usually an ISA card
+	Old86C928,
+
+	// S3 Vision864
+	Vision864,
+	// S3 Vision868
+	Vision868,
+	// S3 Vision964
+	Vision964,
+	// S3 Vision968
+	Vision968,
+
+	// S3 Trio32	
+	Trio32,
+	// S3 Trio64
+	Trio64,
+	// S3 Trio64V+
+	Trio64V,
+
+	// S3 ViRGE
+	S3_Virge,
+	// S3 ViRGE VX	
+	S3_VirgeVx
+};
+
 extern MachineType machine;
 extern SvgaType    svga_type;
+extern S3Type      s3_type;
 
 inline bool is_machine_svga() {
 	return svga_type != SvgaType::None;
