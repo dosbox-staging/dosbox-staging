@@ -48,6 +48,7 @@ bool shutdown_requested = false;
 
 MachineType machine   = MachineType::None;
 SvgaType    svga_type = SvgaType::None;
+S3Type      s3_type   = S3Type::Trio64;
 
 void LOG_StartUp();
 void MEM_Init(Section *);

@@ -18,6 +18,76 @@
 
 void PCI_AddSVGAS3_Device();
 
+static uint16_t get_s3_device_id()
+{
+	switch (s3_type) {
+	case S3Type::Old86C928:
+		// FIXME: Datasheet does not list PCI info at all.
+		// @TC1995 suggests the PCI version return 0xb0 for CR30,
+		// so this is probably the same here.
+		return 0x88B0;
+	case S3Type::Vision864:
+		// 0x88C0 or 0x88C1
+		return 0x88C0;
+	case S3Type::Vision868:
+		// 0x8880 or 0x8881
+		// S3 didn't list this in their datasheet, but Windows 95 IN
+		// files listed it anyway.
+		return 0x8880;
+	case S3Type::Vision964:
+		// 0x88d0, 0x88d1, 0x88d2 or 0x88d3
+		return 0x88d0;
+	case S3Type::Vision968:
+		// 0x88f0, 0x88f1, 0x88f2 or 0x88f3
+		return 0x88f0;
+	case S3Type::Trio32:
+		// 0x8810 or 0x8811
+		return 0x8810;
+	case S3Type::Trio64:
+	case S3Type::Trio64V:
+		// Trio64 (rev 00h) / Trio64V+ (rev 40h)
+		return 0x8811;
+	case S3Type::S3_Virge:
+		return 0x5631;
+	case S3Type::S3_VirgeVx:
+		return 0x883D;
+	default:
+		assert(false);
+		// Trio64 - same value as DOSBox SVN
+		return 0x8811;
+	}
+}
+
+static uint16_t get_s3_revision_id()
+{
+	if (s3_type == S3Type::Trio64V) {
+		// Trio64V+ datasheet, page 280, PCI "class code".
+		// "Hardwired to 0300004xh" (revision is 40h or more)
+		return 0x40;
+	}
+
+	// Trio32/Trio64 datasheet, page 242, PCI "class code".
+	// "Hardwired to 03000000h"
+	return 0x00;
+}
+
+static void update_xga_color_mode()
+{
+	switch (vga.s3.reg_50 & S3_XGA_CMASK) {
+		case S3_XGA_32BPP: vga.s3.xga_color_mode = M_LIN32; break;
+		case S3_XGA_16BPP: vga.s3.xga_color_mode = M_LIN16; break;
+		case S3_XGA_8BPP:
+			// FIXME: 4/8bpp packed is controlled by the advanced
+			// function control register (0x4AE8) bit 2 which is not
+			// yet emulated here
+			vga.s3.xga_color_mode = M_LIN8;
+			if ((vga.s3.misc_control_2 >> 4) == 0xf /*hacked 4bpp*/) {
+				vga.s3.xga_color_mode = M_LIN4; // XXX check how this value is handled
+			}
+			break;
+	}
+}
+
 static bool SVGA_S3_HWCursorActive()
 {
 	return (vga.s3.hgc.curmode & 0x1) != 0;
@@ -86,6 +156,18 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 	case 0x41:  /* CR41 BIOS flags */
 		vga.s3.reg_41 = val;
 		break;
+	case 0x42:  /* CR42 Mode Control */
+		if ((val ^ vga.s3.reg_42) & 0x20) {
+			vga.s3.reg_42= (uint8_t)val;
+			VGA_StartResize();
+		} else vga.s3.reg_42= (uint8_t)val;
+		/*
+		3d4h index 42h (R/W):  CR42 Mode Control
+		bit  0-3  DCLK Select. These bits are effective when the VGA Clock Select
+		          (3C2h/3CCh bit 2-3) is 3.
+		       5  Interlaced Mode if set.
+		*/
+		break;
 	case 0x43:	/* CR43 Extended Mode */
 		vga.s3.reg_43=val & ~0x4;
 		if (((val & 0x4) ^ (vga.config.scan_len >> 6)) & 0x4) {
@@ -151,11 +233,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 		break;
 	case 0x50:  // Extended System Control 1
 		vga.s3.reg_50 = val;
-		switch (val & S3_XGA_CMASK) {
-			case S3_XGA_32BPP: vga.s3.xga_color_mode = M_LIN32; break;
-			case S3_XGA_16BPP: vga.s3.xga_color_mode = M_LIN16; break;
-			case S3_XGA_8BPP: vga.s3.xga_color_mode = M_LIN8; break;
-		}
+		update_xga_color_mode();
 		switch (val & S3_XGA_WMASK) {
 		case S3_XGA_640: vga.s3.xga_screen_width = 640; break;
 		case S3_XGA_800: vga.s3.xga_screen_width = 800; break;
@@ -239,6 +317,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 		*/
 	case 0x58:	/* Linear Address Window Control */
 		vga.s3.reg_58=val;
+		VGA_StartUpdateLFB();
 		break;
 		/*
 			0-1	Linear Address Window Size. Must be less than or equal to video
@@ -269,7 +348,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 			VGA_StartUpdateLFB();
 		}
 		break;
-	case 0x5D:	/* Extended Horizontal Overflow */
+	case 0x5d:	/* Extended Horizontal Overflow */
 		if ((val ^ vga.s3.ex_hor_overflow) & 3) {
 			vga.s3.ex_hor_overflow=val;
 			VGA_StartResize();
@@ -339,6 +418,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 					13  (732/764) 32bit (1 pixel/VCLK)
 		*/
 		vga.s3.misc_control_2=val;
+		update_xga_color_mode();
 		VGA_DetermineMode();
 		break;
 	case 0x69:	/* Extended System Control 3 */
@@ -368,12 +448,29 @@ uint8_t SVGA_S3_ReadCRTC(io_port_t reg, io_width_t)
 	case 0x26:
 		return ((vga.attr.disabled & 1)?0x00:0x20) | (vga.attr.index & 0x1f);
 	case 0x2d:	/* Extended Chip ID (high byte of PCI device ID) */
-		return 0x88;
+		if (s3_type == S3Type::Old86C928) {
+			// Not mentioned in datasheet, does not exist
+			return 0x00;
+		}
+		// Windows 98 S3 drivers will refuse to talk to the card if
+		// value does not match the PCI ID
+		return get_s3_device_id() / 0x100;
 	case 0x2e:	/* New Chip ID  (low byte of PCI device ID) */
-		return 0x11;	// Trio64
+		if (s3_type == S3Type::Old86C928) {
+			// Not mentioned in datasheet, does not exist
+			return 0x00;
+		}
+		// Windows 98 S3 drivers will refuse to talk to the card if
+		// value does not match the PCI ID
+		return get_s3_device_id() % 0x100;
 	case 0x2f:	/* Revision */
-		return 0x00;	// Trio64 (exact value?)
-//		return 0x44;	// Trio64 V+
+		if (s3_type == S3Type::Old86C928) {
+			// Not mentioned in datasheet, does not exist
+			return 0x00;
+		}
+		// Windows 98 S3 drivers will refuse to talk to the card if
+		// value does not match the card specification
+		return get_s3_revision_id();
 	case 0x30:	/* CR30 Chip ID/REV register */
 		return 0xe1;	// Trio+ dual byte
 	case 0x31:	/* CR31 Memory Configuration */
@@ -902,10 +999,8 @@ void SVGA_Setup_S3()
 
 struct PCI_VGADevice : public PCI_Device {
 	enum { vendor = 0x5333 }; // S3
-	enum { device = 0x8811 }; // trio64
-	//enum { device = 0x8810 }; // trio32
 
-	PCI_VGADevice():PCI_Device(vendor,device) { }
+	PCI_VGADevice() : PCI_Device(vendor, get_s3_device_id()) { }
 
 	Bits ParseReadRegister(uint8_t regnum) override
 	{
@@ -950,11 +1045,9 @@ struct PCI_VGADevice : public PCI_Device {
 	bool InitializeRegisters(uint8_t registers[256]) override
 	{
 		// init (S3 graphics card)
-		//registers[0x08] = 0x44;	// revision ID (s3 trio64v+)
-		registers[0x08] = 0x00;	// revision ID
+		registers[0x08] = get_s3_revision_id();
 		registers[0x09] = 0x00;	// interface
 		registers[0x0a] = 0x00;	// subclass type (vga compatible)
-		//registers[0x0a] = 0x01;	// subclass type (xga device)
 		registers[0x0b] = 0x03;	// class type (display controller)
 		registers[0x0c] = 0x00;	// cache line size
 		registers[0x0d] = 0x00;	// latency timer
