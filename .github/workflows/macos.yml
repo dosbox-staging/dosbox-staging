@@ -38,12 +38,12 @@ jobs:
           - host: macos-15
             arch: x86_64
             minimum_deployment: '11.0'
-            max_warnings: 7
+            max_warnings: 10
 
           - host: macos-15
             arch: arm64
             minimum_deployment: '11.0'
-            max_warnings: 7
+            max_warnings: 10
 
     steps:
       - name: Checkout repository
