@@ -51,4 +51,14 @@ target_link_libraries(dosbox_tests PRIVATE
 )
 
 include(GoogleTest)
-gtest_discover_tests(dosbox_tests WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
+# `DISCOVERY_MODE PRE_TEST` is needed for local builds on macOS for test
+# discovery to work, otherwise the build will just fail with an error.
+#
+# Probably related to:
+# https://gitlab.kitware.com/cmake/cmake/-/issues/21845
+#
+gtest_discover_tests(
+  dosbox_tests WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  DISCOVERY_MODE PRE_TEST
+)
