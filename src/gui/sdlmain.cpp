@@ -3384,8 +3384,17 @@ static void set_fullscreen_mode()
 	}
 }
 
-static void read_gui_config(Section* sec)
+static void sdl_section_init(Section* sec)
 {
+	assert(sec);
+
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
+	assert(conf);
+
+	if (!conf) {
+		return;
+	}
+
 	sec->AddDestroyFunction(&shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
@@ -3515,22 +3524,6 @@ static void read_gui_config(Section* sec)
 
 	// Notify MOUSE subsystem that it can start now
 	MOUSE_NotifyReadyGFX();
-}
-
-static void sdl_section_init(Section* sec)
-{
-	assert(sec);
-	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
-	assert(conf);
-	if (!conf) {
-		return;
-	}
-
-	static bool first_time = true;
-	if (first_time) {
-		read_gui_config(sec);
-		first_time = false;
-	}
 
 	TITLEBAR_ReadConfig(*conf);
 }
