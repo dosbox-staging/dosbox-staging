@@ -46,12 +46,12 @@ jobs:
             max_warnings: 10
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
       - name: Set up vcpkg
@@ -63,7 +63,7 @@ jobs:
       - name: Log environment
         run: arch -arch=${{ matrix.conf.arch }} ./scripts/ci/log-env.sh
 
-      - name: Setup and build release
+      - name: Build release
         run: |
           set -xo pipefail
           cmake --preset release-macos-${{ matrix.conf.arch }}
@@ -107,7 +107,7 @@ jobs:
     needs:   build_macos_release
     runs-on: macos-15
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
@@ -149,7 +149,7 @@ jobs:
           cp vcpkg-deps/release/* "$LIB_DIR"
 
 
-      - name: Create dmg
+      - name: Create DMG disk image
         run: |
           ln -s /Applications dist/
 
@@ -161,7 +161,7 @@ jobs:
               -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
 
 
-      - name: Upload disk image
+      - name: Upload DMG disk image
         uses: actions/upload-artifact@v4
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.

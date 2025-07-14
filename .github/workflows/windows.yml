@@ -57,7 +57,7 @@ jobs:
           name_os: "windows"
           arch: "${{ matrix.conf.arch }}"
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: lukka/get-cmake@v4.0.3
 
       - name:  Log environment

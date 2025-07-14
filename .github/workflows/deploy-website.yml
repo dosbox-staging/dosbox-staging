@@ -84,7 +84,7 @@ jobs:
           cp -R $MKDOCS_SRC_PATH/docs/.well-known $DEST_PATH
           touch $DEST_PATH/.nojekyll
 
-      - name: Setup Git config
+      - name: Set up Git config
         run: |
           cd dosbox-staging.github.io
           git config user.name "GitHub Actions Bot"
