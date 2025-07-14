@@ -212,9 +212,11 @@ struct SDL_Block {
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
-		int pitch                = 0;
-		void* framebuf[2]        = {};
-		size_t framebuffer_bytes = 0;
+		int pitch = 0;
+
+		std::vector<uint8_t> curr_framebuf = {};
+		std::vector<uint8_t> last_framebuf = {};
+
 		GLuint texture;
 		GLint max_texsize;
 		GLuint program_object;

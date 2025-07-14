@@ -1716,7 +1716,7 @@ static void update_frame_gl(const uint16_t* changedLines)
 	                sdl.draw.render_height_px,
 	                GL_BGRA_EXT,
 	                GL_UNSIGNED_INT_8_8_8_8_REV,
-	                static_cast<uint8_t*>(sdl.opengl.framebuf[1]));
+	                reinterpret_cast<uint8_t*>(sdl.opengl.last_framebuf.data()));
 
 	++sdl.opengl.actual_frame_count++;
 }
@@ -1773,11 +1773,6 @@ static void set_vsync_gl(const bool is_enabled)
 std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
                                         const int render_height_px)
 {
-	free(sdl.opengl.framebuf[0]);
-	free(sdl.opengl.framebuf[1]);
-	sdl.opengl.framebuf[0] = nullptr;
-	sdl.opengl.framebuf[1] = nullptr;
-
 	if (!(flags & GFX_CAN_32)) {
 		return {};
 	}
@@ -1817,14 +1812,13 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	}
 
 	// Create the texture
-	sdl.opengl.framebuffer_bytes = static_cast<size_t>(render_width_px) *
-	                               render_height_px * MaxBytesPerPixel;
+	const auto framebuf_bytes = static_cast<size_t>(render_width_px) *
+	                            render_height_px * MaxBytesPerPixel;
 
-	sdl.opengl.framebuf[0] = malloc(sdl.opengl.framebuffer_bytes);
-	sdl.opengl.framebuf[1] = malloc(sdl.opengl.framebuffer_bytes);
+	sdl.opengl.curr_framebuf.resize(framebuf_bytes);
+	sdl.opengl.last_framebuf.resize(framebuf_bytes);
 
-	// 32-bit BGRA
-	sdl.opengl.pitch = render_width_px * 4;
+	sdl.opengl.pitch = render_width_px * MaxBytesPerPixel;
 
 	// One-time initialize the window size
 	if (!sdl.desktop.window.adjusted_initial_size) {
@@ -2371,7 +2365,7 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 	case RenderingBackend::OpenGl:
 #if C_OPENGL
-		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf[0]);
+		pixels = reinterpret_cast<uint8_t*>(sdl.opengl.curr_framebuf.data());
 		maybe_log_opengl_error("end of start update");
 
 		if (pixels == nullptr) {
@@ -2395,10 +2389,7 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 void GFX_EndUpdate(const uint16_t* num_changed_lines)
 {
 	if (sdl.updating) {
-		auto src  = sdl.opengl.framebuf[0];
-		auto dest = sdl.opengl.framebuf[1];
-		memcpy(dest, src, sdl.opengl.framebuffer_bytes);
-		sdl.presentation.has_unpresented_frame = true;
+		sdl.opengl.last_framebuf = sdl.opengl.curr_framebuf;
 	}
 
 	if (sdl.presentation.mode != PresentationMode::HostRate) {
@@ -2951,9 +2942,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			sdl.opengl.framebuf[0] = nullptr;
-			sdl.opengl.framebuf[1] = nullptr;
-			sdl.opengl.texture  = 0;
+			sdl.opengl.texture = 0;
 		}
 	}
 #endif // OPENGL
@@ -4144,19 +4133,18 @@ static void init_sdl_config_section()
 	        "        rate (VRR) monitors running in VRR mode to get perfect frame-pacing,\n"
 	        "        no tearing, and low input lag. On fixed refresh rate monitors (or VRR\n"
 	        "        monitors in fixed-refresh mode), disabling vsync might cause visible\n"
-	        "        tearing in fast-paced games but will yield better input lag than\n"
+	        "        tearing in fast-paced games but will result in better input lag than\n"
 	        "        enabling vsync.\n"
 	        "  on:   Enable vsync. This can prevent tearing in fast-paced games but will\n"
 	        "        increase input lag. It might also impact performance (e.g., introduce\n"
 	        "        audio glitches) in 70 Hz VGA games running on a 60 Hz fixed refresh\n"
-	        "        rate monitor on certain systems (this is very much OS, GPU, and driver\n"
-	        "        dependent).\n"
+	        "        rate monitor (this is system dependent).\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - For perfectly smooth scrolling in 2D games (e.g., in Pinball Dreams\n"
-	        "    and Epic Pinball), you need a VRR monitor running in VRR mode and vsync\n"
-	        "    disabled. The scrolling in a 70 Hz VGA game will always appear juddery\n"
-	        "    on a 60 Hz fixed refresh rate monitor even with vsync enabled.\n"
+	        "    and Epic Pinball), a VRR monitor running in VRR mode and vsync\n"
+	        "    disabled is recommended. The scrolling in 70 Hz VGA games will appear\n"
+	        "    juddery on fixed 60 Hz monitors even with vsync enabled.\n"
 	        "  - For the best results, disable all frame cappers and do not force any\n"
 	        "    specific vsync mode in your graphics adapter's driver settings (choose\n"
 	        "    the \"let the application decide\" vsync option).");
@@ -4164,10 +4152,11 @@ static void init_sdl_config_section()
 	// TODO update
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
-		"Select the frame presentation mode:\n"
+		"Select the frame presentation mode ('auto' by default):\n"
+		"  auto:       \n"
 		"  dos-rate:   Present frames at the refresh rate of the emulated DOS video mode.\n"
 		"  host-rate:  Present frames at the refresh rate of the host.");
-	pstring->Set_values({"dos-rate", "host-rate"});
+	pstring->Set_values({"auto", "dos-rate", "host-rate"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
