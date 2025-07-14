@@ -72,7 +72,7 @@ jobs:
         with:
           submodules: false
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
       - name: Install dependencies
@@ -97,7 +97,7 @@ jobs:
           VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Setup and build
+      - name: Build
         run: |
           set -xo pipefail
           export CC=${{ matrix.conf.cc }}
@@ -121,12 +121,12 @@ jobs:
     runs-on: ubuntu-22.04
     if:      github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
       - name: Install all dependencies
@@ -151,7 +151,7 @@ jobs:
           VERSION=$(./scripts/ci/get-version.sh version-and-hash)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Setup and build
+      - name: Build release
         run: |
           set -x
           cmake --preset release-linux-vcpkg

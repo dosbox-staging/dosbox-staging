@@ -21,12 +21,12 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           submodules: false
 
-      - name: Setup CMake
+      - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
       - name: Configure PVS-Studio repository
@@ -57,7 +57,7 @@ jobs:
           set -xeu
           pvs-studio-analyzer credentials "${{ secrets.PvsStudioName }}" "${{ secrets.PvsStudioKey }}"
 
-      - name: Setup and build
+      - name: Build
         run: |
           set -x
           export CC=clang
