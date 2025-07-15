@@ -240,13 +240,13 @@ jobs:
         shell: bash
         run: |
           set -x
-          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
-          PACKAGE_INFO="release ${VERSION}"
+          DOSBOX_VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
+          PACKAGE_INFO="release ${DOSBOX_VERSION}"
 
           mkdir -p out/program
 
           sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|${VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
+          sed -i "s|DOSBOX-STAGING-VERSION|${DOSBOX_VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
 
           cp extras/windows-installer/*                    out
           cp extras/icons/windows/dosbox-staging.ico      out
