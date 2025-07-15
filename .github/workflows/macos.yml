@@ -149,6 +149,20 @@ jobs:
           cp vcpkg-deps/release/* "$LIB_DIR"
 
 
+      - name:  Inject Nuked-SC55-CLAP plugin
+        run: |
+          set -x
+          NUKED_SC55_CLAP_VERSION=v0.7.0
+          ZIP_NAME=Nuked-SC55-CLAP-macOS-$NUKED_SC55_CLAP_VERSION.zip
+
+          curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
+          unzip $ZIP_NAME -d nuked-sc55-clap
+
+          PLUGINS_DIR="dist/DOSBox Staging.app/Contents/Resources/plugins"
+          mkdir "$PLUGINS_DIR"
+          cp -R nuked-sc55-clap/* "$PLUGINS_DIR"
+
+
       - name: Create DMG disk image
         run: |
           ln -s /Applications dist/
