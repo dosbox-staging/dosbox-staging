@@ -143,6 +143,22 @@ jobs:
           cp vcpkg-deps/release/* ${{ steps.set_vars.outputs.pkg_dir }}
 
 
+      - name:  Inject Nuked-SC55-CLAP plugin
+        if:    ${{ !matrix.conf.debugger }}
+        shell: bash
+        run: |
+          set -x
+          NUKED_SC55_CLAP_VERSION=v0.7.0
+          ZIP_NAME=Nuked-SC55-CLAP-windows-${{ matrix.conf.arch }}-$NUKED_SC55_CLAP_VERSION.zip
+
+          curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
+          unzip $ZIP_NAME -d nuked-sc55-clap
+
+          PLUGINS_DIR="${{ steps.set_vars.outputs.pkg_dir }}/resources/plugins"
+          mkdir $PLUGINS_DIR
+          cp nuked-sc55-clap/* $PLUGINS_DIR
+
+
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
