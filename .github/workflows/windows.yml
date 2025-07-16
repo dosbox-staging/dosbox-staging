@@ -49,6 +49,17 @@ jobs:
         with:
           submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
+          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
+
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
         with:
@@ -61,18 +72,6 @@ jobs:
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\ci\log-env.ps1
-
-      - name:  Set variables
-        id:    set_vars
-        shell: bash
-        run: |
-          set -x
-          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
-
-          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
-          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
-
 
       - name:  Build release
         if:    ${{ !matrix.conf.debugger }}
@@ -130,10 +129,9 @@ jobs:
         shell: bash
         run: |
           set -x
-          EXT_DEPS_VERSION=v0.83.0-1
           ZIP_NAME=dosbox-vcpkg-deps-windows-${{ matrix.conf.arch }}.zip
 
-          curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$EXT_DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
+          curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
           cp vcpkg-deps/release/* "$PACKAGE_DIR"
@@ -144,7 +142,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          NUKED_SC55_CLAP_VERSION=v0.7.0
           ZIP_NAME=Nuked-SC55-CLAP-windows-${{ matrix.conf.arch }}-$NUKED_SC55_CLAP_VERSION.zip
 
           curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
@@ -200,22 +197,13 @@ jobs:
         with:
           submodules: false
 
-      - name:  Set variables
-        id:    set_vars
-        shell: bash
-        run: |
-          set -x
-          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
-
-          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
-          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
-
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
 
       - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v4
         with:
-          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION }}
+          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION_AND_HASH }}
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
           delete-merged: 'true'
 
@@ -238,35 +226,38 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
       - name:  Set variables
         id:    set_vars
         shell: bash
         run: |
           set -x
-          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
+          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.arch }}-$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
 
-          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
-          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
-
+      - name: Dump workspace contents
+        shell: bash
+        run: find $RUNNER_WORKSPACE
 
       - name: Prepare Windows installer
         shell: bash
         run: |
           set -x
-          PACKAGE_INFO="release ${DOSBOX_VERSION}"
+          PACKAGE_INFO="release $DOSBOX_VERSION_AND_HASH"
 
           mkdir -p out/program
 
-          sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
-          sed -i "s|DOSBOX-STAGING-VERSION|${DOSBOX_VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
+          sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" \
+              docs/README.template >out/setup_preamble.txt
+
+          sed -i "s|DOSBOX-STAGING-VERSION|${DOSBOX_VERSION_AND_HASH}|" \
+              extras/windows-installer/DOSBox-Staging-setup.iss
 
           cp extras/windows-installer/*                   out
           cp extras/icons/windows/dosbox-staging.ico      out
           cp extras/icons/windows/dosbox-staging.bmp      out
           cp extras/icons/windows/dosbox-staging-side.bmp out
-
-          PACKAGE_DIR="dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}"
 
           mv $PACKAGE_DIR/*          out/program
           mv out/program/dosbox*.exe out

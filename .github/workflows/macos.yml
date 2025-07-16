@@ -51,6 +51,9 @@ jobs:
         with:
           submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
       - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
@@ -86,7 +89,7 @@ jobs:
         run: |
           set -x
           otool -l build/release-macos-${{ matrix.conf.arch }}/Release/dosbox \
-            | grep "path @executable_path/lib"
+              | grep "path @executable_path/lib"
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -102,6 +105,7 @@ jobs:
           path: build/release-macos-${{ matrix.conf.arch }}/Resources
           overwrite: true
 
+
   publish_universal_build:
     name:    Publish universal build
     needs:   build_macos_release
@@ -112,11 +116,8 @@ jobs:
         with:
           submodules: false
 
-      - name: Inject version string
-        run: |
-          set -x
-          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
 
       - name: Install brew depedencies
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
@@ -128,20 +129,18 @@ jobs:
         run: |
           mv Resources ../
           ./scripts/packaging/create-package.sh \
-            -p macos \
-            -v "${{ env.VERSION }}" \
-            -f \
-            "$(pwd)" \
-            "$(pwd)"
-
+              -p macos \
+              -v $DOSBOX_VERSION_AND_HASH \
+              -f \
+              "$(pwd)" \
+              "$(pwd)"
 
       - name: Inject external vcpkg dependencies
         run: |
           set -x
-          EXT_DEPS_VERSION=v0.83.0-1
           ZIP_NAME=dosbox-vcpkg-deps-macos-universal.zip
 
-          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$EXT_DEPS_VERSION/$ZIP_NAME
+          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
           LIB_DIR="dist/DOSBox Staging.app/Contents/MacOS/lib"
@@ -152,7 +151,6 @@ jobs:
       - name:  Inject Nuked-SC55-CLAP plugin
         run: |
           set -x
-          NUKED_SC55_CLAP_VERSION=v0.7.0
           ZIP_NAME=Nuked-SC55-CLAP-macOS-$NUKED_SC55_CLAP_VERSION.zip
 
           curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
@@ -172,7 +170,8 @@ jobs:
           hdiutil create \
               -volname "DOSBox Staging" \
               -srcfolder dist \
-              -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
+              -ov \
+              -format UDZO "dosbox-staging-macOS-universal-$DOSBOX_VERSION_AND_HASH.dmg"
 
 
       - name: Upload DMG disk image
@@ -180,5 +179,5 @@ jobs:
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal-${{ env.VERSION }}
-          path: dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg
+          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}
+          path: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
