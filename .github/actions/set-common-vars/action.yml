@@ -1,0 +1,17 @@
+name: Set common env vars
+
+# Assumes the repo has already been checked out
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set version vars
+      shell: bash
+      run: |
+        set -x
+
+        DOSBOX_VERSION_AND_HASH=$(./scripts/ci/get-version.sh version-and-hash)
+        echo "DOSBOX_VERSION_AND_HASH=$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
+
+        echo "VCPKG_EXT_DEPS_VERSION=v0.83.0-1" >> $GITHUB_ENV
+        echo "NUKED_SC55_CLAP_VERSION=v0.7.0" >> $GITHUB_ENV

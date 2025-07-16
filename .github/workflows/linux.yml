@@ -72,6 +72,9 @@ jobs:
         with:
           submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
       - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
@@ -90,12 +93,6 @@ jobs:
 
       - name: Log environment
         run: ./scripts/ci/log-env.sh
-
-      - name: Inject version string
-        run: |
-          set -x
-          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build
         run: |
@@ -126,6 +123,9 @@ jobs:
         with:
           submodules: false
 
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
       - name: Set up CMake
         uses: lukka/get-cmake@6b3e96a9bc9976b8b546346fdd102effedae0ca8 # v4.0.3
 
@@ -144,12 +144,6 @@ jobs:
 
       - name: Log environment
         run: ./scripts/ci/log-env.sh
-
-      - name: Inject version string
-        run: |
-          set -x
-          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build release
         run: |
@@ -171,21 +165,20 @@ jobs:
           ldd build/release-linux/dosbox
 
           ./scripts/packaging/create-package.sh \
-            -p linux \
-            build/release-linux \
-            "dosbox-staging-linux-x86_64-$VERSION"
+              -p linux \
+              build/release-linux \
+              "dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH"
 
 
       - name: Inject external vcpkg dependencies
         run: |
           set -x
-          EXT_DEPS_VERSION=v0.83.0-1
           ZIP_NAME=dosbox-vcpkg-deps-linux-x86_64.zip
 
-          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$EXT_DEPS_VERSION/$ZIP_NAME
+          wget -nv https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$VCPKG_EXT_DEPS_VERSION/$ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
-          LIB_DIR="dosbox-staging-linux-x86_64-$VERSION/lib"
+          LIB_DIR="dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH/lib"
           mkdir $LIB_DIR
           cp vcpkg-deps/release/* $LIB_DIR
 
@@ -193,21 +186,20 @@ jobs:
       - name:  Inject Nuked-SC55-CLAP plugin
         run: |
           set -x
-          NUKED_SC55_CLAP_VERSION=v0.7.0
           ZIP_NAME=Nuked-SC55-CLAP-linux-x86_64-$NUKED_SC55_CLAP_VERSION.zip
 
           curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d nuked-sc55-clap
 
-          PLUGINS_DIR="dosbox-staging-linux-x86_64-$VERSION/resources/plugins"
+          PLUGINS_DIR="dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH/resources/plugins"
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
 
       - name: Create tarball
         run: |
-          tar -cJf "dosbox-staging-linux-x86_64-$VERSION.tar.xz" \
-            "dosbox-staging-linux-x86_64-$VERSION"
+          tar -cJf "dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH.tar.xz" \
+              "dosbox-staging-linux-x86_64-$DOSBOX_VERSION_AND_HASH"
 
       - name: Upload tarball
         uses: actions/upload-artifact@v4
@@ -215,5 +207,5 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64-${{ env.VERSION }}
-          path: dosbox-staging-linux-x86_64-${{ env.VERSION }}.tar.xz
+          name: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}
+          path: dosbox-staging-linux-x86_64-${{ env.DOSBOX_VERSION_AND_HASH }}.tar.xz
