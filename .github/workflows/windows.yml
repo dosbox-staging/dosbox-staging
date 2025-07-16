@@ -28,8 +28,6 @@ jobs:
   build_windows_release:
     name: Release ${{ matrix.conf.debugger && 'w/ debugger' || '' }} (${{ matrix.conf.arch }})
     if:   github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    outputs:
-      dosbox_version: ${{ steps.set_vars.outputs.dosbox_version }}
 
     runs-on: windows-2022
     strategy:
@@ -69,11 +67,12 @@ jobs:
         shell: bash
         run: |
           set -x
-          echo "build_dir=build/release-windows/Release" >> $GITHUB_OUTPUT
+          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
+          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
 
-          VERSION=$(./scripts/ci/get-version.sh version-and-hash)
-          echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${VERSION}" >> $GITHUB_OUTPUT
-          echo "dosbox_version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
+          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
+
 
       - name:  Build release
         if:    ${{ !matrix.conf.debugger }}
@@ -123,10 +122,7 @@ jobs:
           fi
 
           # Package
-          ./scripts/packaging/create-package.sh \
-            -p windows \
-            ${{ steps.set_vars.outputs.build_dir }} \
-            ${{ steps.set_vars.outputs.pkg_dir }}
+          ./scripts/packaging/create-package.sh -p windows "$BUILD_DIR" "$PACKAGE_DIR"
 
 
       - name:  Inject external vcpkg dependencies
@@ -140,7 +136,7 @@ jobs:
           curl -L https://github.com/dosbox-staging/dosbox-staging-ext/releases/download/$EXT_DEPS_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d vcpkg-deps
 
-          cp vcpkg-deps/release/* ${{ steps.set_vars.outputs.pkg_dir }}
+          cp vcpkg-deps/release/* "$PACKAGE_DIR"
 
 
       - name:  Inject Nuked-SC55-CLAP plugin
@@ -154,7 +150,7 @@ jobs:
           curl -L https://github.com/johnnovak/Nuked-SC55-CLAP/releases/download/$NUKED_SC55_CLAP_VERSION/$ZIP_NAME -o $ZIP_NAME
           unzip $ZIP_NAME -d nuked-sc55-clap
 
-          PLUGINS_DIR="${{ steps.set_vars.outputs.pkg_dir }}/resources/plugins"
+          PLUGINS_DIR="$PACKAGE_DIR/resources/plugins"
           mkdir $PLUGINS_DIR
           cp nuked-sc55-clap/* $PLUGINS_DIR
 
@@ -163,8 +159,8 @@ jobs:
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_vars.outputs.pkg_dir }}-without-debugger
-          path: ${{ steps.set_vars.outputs.pkg_dir }}
+          name: ${{ env.PACKAGE_DIR }}-without-debugger
+          path: ${{ env.PACKAGE_DIR }}
           overwrite: true
 
       - name:  Package debugger build
@@ -172,25 +168,23 @@ jobs:
         shell: bash
         run: |
           set -x
-          mkdir -p ${{ steps.set_vars.outputs.pkg_dir }}
+          mkdir -p "$PACKAGE_DIR"
           # Move the debugger build into the release area
-          ls ${{ steps.set_vars.outputs.build_dir }}
-          cp ${{ steps.set_vars.outputs.build_dir }}/dosbox.exe ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          ls "$BUILD_DIR"
+          cp "$BUILD_DIR/dosbox.exe" "$PACKAGE_DIR/dosbox_with_debugger.exe"
 
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_vars.outputs.pkg_dir }}-with-debugger
-          path: ${{ steps.set_vars.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          name: ${{ env.PACKAGE_DIR }}-with-debugger
+          path: ${{ env.PACKAGE_DIR }}/dosbox_with_debugger.exe
           overwrite: true
 
 
   merge_artifacts:
     name: Merge release & debugger artifacts (${{ matrix.arch }} )
     needs: build_windows_release
-    outputs:
-      dosbox_version: ${{ needs.build_windows_release.outputs.dosbox_version }}
 
     runs-on: ubuntu-latest
     strategy:
@@ -201,10 +195,27 @@ jobs:
         arch: [x64]
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name:  Set variables
+        id:    set_vars
+        shell: bash
+        run: |
+          set -x
+          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
+          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
+
+          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
+          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
+
+
       - name: Merge artifacts (${{ matrix.arch }} )
         uses: actions/upload-artifact/merge@v4
         with:
-          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ needs.build_windows_release.outputs.dosbox_version }}
+          name:    dosbox-staging-windows-${{ matrix.arch }}-${{ env.DOSBOX_VERSION }}
           pattern: dosbox-staging-windows-${{ matrix.arch }}-*
           delete-merged: 'true'
 
@@ -232,15 +243,17 @@ jobs:
         shell: bash
         run: |
           set -x
-          VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
-          echo "pkg_dir=dosbox-staging-windows-${{ matrix.arch }}-${VERSION}" >> $GITHUB_OUTPUT
+          DOSBOX_VERSION=$(./scripts/ci/get-version.sh version-and-hash)
+          echo "DOSBOX_VERSION=${DOSBOX_VERSION}" >> $GITHUB_ENV
+
+          echo "BUILD_DIR=build/release-windows/Release" >> $GITHUB_ENV
+          echo "PACKAGE_DIR=dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}" >> $GITHUB_ENV
 
 
       - name: Prepare Windows installer
         shell: bash
         run: |
           set -x
-          DOSBOX_VERSION=${{ needs.merge_artifacts.outputs.dosbox_version }}
           PACKAGE_INFO="release ${DOSBOX_VERSION}"
 
           mkdir -p out/program
@@ -248,13 +261,15 @@ jobs:
           sed -e "s|%PACKAGE_INFORMATION%|${PACKAGE_INFO}|;s|%GITHUB_REPO%|${{ github.repository }}|" docs/README.template >out/setup_preamble.txt
           sed -i "s|DOSBOX-STAGING-VERSION|${DOSBOX_VERSION}|" extras/windows-installer/DOSBox-Staging-setup.iss
 
-          cp extras/windows-installer/*                    out
+          cp extras/windows-installer/*                   out
           cp extras/icons/windows/dosbox-staging.ico      out
           cp extras/icons/windows/dosbox-staging.bmp      out
           cp extras/icons/windows/dosbox-staging-side.bmp out
 
-          mv ${{ steps.set_vars.outputs.pkg_dir }}/*       out/program
-          mv out/program/dosbox*.exe                       out
+          PACKAGE_DIR="dosbox-staging-windows-${{ matrix.conf.arch }}-${DOSBOX_VERSION}"
+
+          mv $PACKAGE_DIR/*          out/program
+          mv out/program/dosbox*.exe out
 
 
       - name: Build Windows installer
@@ -267,6 +282,6 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_vars.outputs.pkg_dir }}-setup
-          path: ${{ github.workspace }}\out\${{ steps.set_vars.outputs.pkg_dir }}-setup.exe
+          name: ${{ env.PACKAGE_DIR }}-setup
+          path: ${{ github.workspace }}\out\${{ env.PACKAGE_DIR }}-setup.exe
           overwrite: true
