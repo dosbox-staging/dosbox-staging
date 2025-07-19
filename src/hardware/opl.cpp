@@ -972,7 +972,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	pint->SetHelp("The OPL output is now transparently resampled to the mixer's sample rate.");
 
 	auto pstring = secprop.Add_string("oplmode", when_idle, "auto");
-	pstring->Set_values(
+	pstring->SetValues(
 	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
 	pstring->SetHelp(
 	        "OPL model to emulate ('auto' by default).\n"
@@ -1026,7 +1026,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	pstring = secprop.Add_string("cms", when_idle, "auto");
-	pstring->Set_values({"on", "off", "auto"});
+	pstring->SetValues({"on", "off", "auto"});
 	pstring->SetHelp(
 	        "Enable CMS emulation ('auto' by default).\n"
 	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"

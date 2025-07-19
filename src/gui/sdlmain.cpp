@@ -4389,7 +4389,7 @@ static void init_sdl_config_section()
 	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
 	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
-	pstring->Set_values({
+	pstring->SetValues({
 #if C_OPENGL
 	        "opengl",
 #endif
@@ -4411,7 +4411,7 @@ static void init_sdl_config_section()
 	pstring->SetHelp(
 	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
 	        "Use 'texture_renderer = auto' for an automatic choice.");
-	pstring->Set_values(get_sdl_texture_renderers());
+	pstring->SetValues(get_sdl_texture_renderers());
 
 	auto pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->SetHelp(
@@ -4448,7 +4448,7 @@ static void init_sdl_config_section()
 		                   "                      monitor. Toggling fullscreen might result in janky\n"
 		                   "                      behaviour in this mode.");
 	
-	pstring->Set_values({"standard",
+	pstring->SetValues({"standard",
 #if WIN32
 	                     "forced-borderless",
 #endif
@@ -4528,7 +4528,7 @@ static void init_sdl_config_section()
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
-	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
+	pstring->SetValues({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
 	pint->SetHelp(
@@ -4544,7 +4544,7 @@ static void init_sdl_config_section()
 	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
-	pstring->Set_values({"auto", "cfr", "vfr"});
+	pstring->SetValues({"auto", "cfr", "vfr"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	pmulti->SetHelp(
@@ -4573,9 +4573,9 @@ static void init_sdl_config_section()
 
 	auto psection = pmulti->GetSection();
 	psection->Add_string("active", always, "auto")
-	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
 	psection->Add_string("inactive", always, "auto")
-	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
@@ -4603,7 +4603,7 @@ static void init_sdl_config_section()
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
-	pstring->Set_values({"auto", "allow", "block"});
+	pstring->SetValues({"auto", "allow", "block"});
 }
 
 static int edit_primary_config()

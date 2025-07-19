@@ -3153,7 +3153,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "Notes:\n"
 	        "  - Use the MIXER command to apply crossfeed to other audio channels as well\n"
 	        "    and to fine-tune the crossfeed strength per channel.");
-	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
+	string_prop->SetValues({"off", "on", "light", "normal", "strong"});
 
 	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
 	string_prop->SetHelp(
@@ -3176,7 +3176,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "    (except for synths with built-in reverb; e.g., the Roland MT-32), and a\n"
 	        "    subtle amount to the digital audio channels.\n"
 	        "  - Use the MIXER command to fine-tune the reverb levels per channel.");
-	string_prop->Set_values(
+	string_prop->SetValues(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
 	string_prop = sec_prop.Add_string("chorus", WhenIdle, "off");
@@ -3193,7 +3193,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  - The presets apply the chorus effect to the synth channels only (except\n"
 	        "    for synths with built-in chorus; e.g. the Roland MT-32).\n"
 	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
-	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
+	string_prop->SetValues({"off", "on", "light", "normal", "strong"});
 
 	bool_prop = sec_prop.Add_bool("denoiser", WhenIdle, DefaultOn);
 	bool_prop->SetHelp(

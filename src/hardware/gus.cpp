@@ -1586,18 +1586,18 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 
 	auto* hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
-	hex_prop->Set_values({"210", "220", "230", "240", "250", "260"});
+	hex_prop->SetValues({"210", "220", "230", "240", "250", "260"});
 	hex_prop->SetHelp(
 	        "The IO base address of the Gravis UltraSound (240 by default).");
 
 	auto* int_prop = secprop.Add_int("gusirq", when_idle, 5);
 	assert(int_prop);
-	int_prop->Set_values({"2", "3", "5", "7", "11", "12", "15"});
+	int_prop->SetValues({"2", "3", "5", "7", "11", "12", "15"});
 	int_prop->SetHelp("The IRQ number of the Gravis UltraSound (5 by default).");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
 	assert(int_prop);
-	int_prop->Set_values({"1", "3", "5", "6", "7"});
+	int_prop->SetValues({"1", "3", "5", "6", "7"});
 	int_prop->SetHelp("The DMA channel of the Gravis UltraSound (3 by default).");
 
 	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "on");

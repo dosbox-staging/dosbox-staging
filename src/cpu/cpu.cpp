@@ -3225,7 +3225,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
 
 	auto pstring = secprop.Add_string("core", WhenIdle, "auto");
-	pstring->Set_values({
+	pstring->SetValues({
 		"auto",
 #if C_DYNAMIC_X86 || C_DYNREC
 		"dynamic",
@@ -3256,7 +3256,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "            the 'dynamic' core; use the 'normal' core for such programs.");
 
 	pstring = secprop.Add_string("cputype", Always, "auto");
-	pstring->Set_values(
+	pstring->SetValues(
 	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 
 	pstring->SetHelp(
@@ -3298,7 +3298,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 
 	pstring = pmulti_remain->GetSection()->Add_string("type", Always, "auto");
 	pmulti_remain->SetValue(" ");
-	pstring->Set_values({"auto", "fixed", "max", "%u"});
+	pstring->SetValues({"auto", "fixed", "max", "%u"});
 
 	pmulti_remain->GetSection()->Add_string("parameters", Always, "");
 

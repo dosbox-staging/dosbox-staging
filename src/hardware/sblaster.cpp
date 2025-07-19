@@ -3726,7 +3726,7 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto pstring = secprop.Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values(
+	pstring->SetValues(
 	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
 	pstring->SetHelp(
 	        "Sound Blaster model to emulate ('sb16' by default).\n"
@@ -3748,19 +3748,19 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "    Blaster digital sound.");
 
 	auto phex = secprop.Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
+	phex->SetValues({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
 	phex->SetHelp("The IO address of the Sound Blaster (220 by default).");
 
 	auto pint = secprop.Add_int("irq", when_idle, 7);
-	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
+	pint->SetValues({"3", "5", "7", "9", "10", "11", "12"});
 	pint->SetHelp("The IRQ number of the Sound Blaster (7 by default).");
 
 	pint = secprop.Add_int("dma", when_idle, 1);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
+	pint->SetValues({"0", "1", "3", "5", "6", "7"});
 	pint->SetHelp("The DMA channel of the Sound Blaster (1 by default).");
 
 	pint = secprop.Add_int("hdma", when_idle, 5);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
+	pint->SetValues({"0", "1", "3", "5", "6", "7"});
 	pint->SetHelp("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
 	auto pbool = secprop.Add_bool("sbmixer", when_idle, true);

@@ -824,7 +824,7 @@ void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	deprecated_and_alternate_values[deprecated_value] = alternate_value;
 }
 
-void Property::Set_values(const std::vector<std::string>& in)
+void Property::SetValues(const std::vector<std::string>& in)
 {
 	Value::Etype type = default_value.type;
 	for (auto& str : in) {
