@@ -410,8 +410,6 @@ public:
 	PropHex* AddHex(const std::string& _propname,
 	                Property::Changeable::Value when, Hex _value = 0);
 
-	//	void Add_double(const char * _propname, double _value=0.0);
-	//
 	PropMultiVal* AddMultiVal(const std::string& _propname,
 	                          Property::Changeable::Value when,
 	                          const std::string& sep);
