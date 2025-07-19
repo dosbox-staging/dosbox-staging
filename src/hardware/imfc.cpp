@@ -13441,23 +13441,23 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const auto bool_prop = secprop.Add_bool("imfc", when_idle, false);
+	const auto bool_prop = secprop.AddBool("imfc", when_idle, false);
 	assert(bool_prop);
 	bool_prop->SetHelp("Enable the IBM Music Feature Card ('off' by default).");
 
-	const auto hex_prop = secprop.Add_hex("imfc_base", when_idle, 0x2A20);
+	const auto hex_prop = secprop.AddHex("imfc_base", when_idle, 0x2A20);
 	assert(hex_prop);
 	hex_prop->SetValues({"2A20", "2A30"});
 	hex_prop->SetHelp(
 	        "The IO base address of the IBM Music Feature Card ('2A20' by default).");
 
-	const auto int_prop = secprop.Add_int("imfc_irq", when_idle, 3);
+	const auto int_prop = secprop.AddInt("imfc_irq", when_idle, 3);
 	assert(int_prop);
 	int_prop->SetValues({"2", "3", "4", "5", "6", "7"});
 	int_prop->SetHelp(
 	        "The IRQ number of the IBM Music Feature Card (3 by default).");
 
-	const auto str_prop = secprop.Add_string("imfc_filter", when_idle, "on");
+	const auto str_prop = secprop.AddString("imfc_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->SetHelp(
 	        "Filter for the IBM Music Feature Card output:\n"

@@ -650,14 +650,14 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* path_prop = secprop.Add_path("capture_dir", when_idle, "capture");
+	auto* path_prop = secprop.AddPath("capture_dir", when_idle, "capture");
 	path_prop->SetHelp(
 	        "Directory where the various captures are saved, such as audio, video, MIDI\n"
 	        "and screenshot captures. ('capture' in the current working directory by\n"
 	        "default).");
 	assert(path_prop);
 
-	auto* str_prop = secprop.Add_string("default_image_capture_formats",
+	auto* str_prop = secprop.AddString("default_image_capture_formats",
 	                                    when_idle,
 	                                    "upscaled");
 	str_prop->SetHelp(

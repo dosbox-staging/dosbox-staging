@@ -3068,14 +3068,14 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto bool_prop = sec_prop.Add_bool("nosound", OnlyAtStart, false);
+	auto bool_prop = sec_prop.AddBool("nosound", OnlyAtStart, false);
 	assert(bool_prop);
 	bool_prop->SetHelp(
 	        "Enable silent mode ('off' by default).\n"
 	        "Sound is still emulated in silent mode, but DOSBox outputs no sound to the host.\n"
 	        "Capturing the emulated audio output to a WAV file works in silent mode.");
 
-	auto int_prop = sec_prop.Add_int("rate", OnlyAtStart, DefaultSampleRateHz);
+	auto int_prop = sec_prop.AddInt("rate", OnlyAtStart, DefaultSampleRateHz);
 	assert(int_prop);
 	int_prop->SetMinMax(8000, 96000);
 	int_prop->SetHelp(
@@ -3085,7 +3085,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "you have good reason to change it. The OS will most likely resample non-standard\n"
 	        "sample rates to 48000 Hz anyway.");
 
-	int_prop = sec_prop.Add_int("blocksize", OnlyAtStart, DefaultBlocksize);
+	int_prop = sec_prop.AddInt("blocksize", OnlyAtStart, DefaultBlocksize);
 	int_prop->SetMinMax(64, 8192);
 	int_prop->SetHelp(
 	        "Block size of the host audio device in sample frames (%s by default).\n"
@@ -3093,28 +3093,28 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "512, 1024, etc.) Larger values might help with sound stuttering but will\n"
 	        "introduce more latency. Also see 'negotiate'.");
 
-	int_prop = sec_prop.Add_int("prebuffer", OnlyAtStart, DefaultPrebufferMs);
+	int_prop = sec_prop.AddInt("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
 	int_prop->SetHelp(
 	        "How many milliseconds of sound to render in advance on top of 'blocksize'\n"
 	        "(%s by default). Larger values might help with sound stuttering but will\n"
 	        "introduce more latency.");
 
-	bool_prop = sec_prop.Add_bool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
+	bool_prop = sec_prop.AddBool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
 	bool_prop->SetHelp(
 	        "Negotiate a possibly better 'blocksize' setting (%s by default).\n"
 	        "Enable it if you're not getting audio or the sound is stuttering with your\n"
 	        "'blocksize' setting. Disable it to force the manually set 'blocksize' value.");
 
 	constexpr auto DefaultOn = true;
-	bool_prop = sec_prop.Add_bool("compressor", WhenIdle, DefaultOn);
+	bool_prop = sec_prop.AddBool("compressor", WhenIdle, DefaultOn);
 	bool_prop->SetHelp(
 	        "Enable the auto-leveling compressor on the master channel to prevent clipping\n"
 	        "of the audio output:\n"
 	        "  off:  Disable compressor.\n"
 	        "  on:   Enable compressor (default).");
 
-	auto string_prop = sec_prop.Add_string("crossfeed", WhenIdle, "off");
+	auto string_prop = sec_prop.AddString("crossfeed", WhenIdle, "off");
 	string_prop->SetHelp(
 	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels. Many games pan\n"
 	        "the instruments 100%% left and 100%% right in the stereo field on these audio\n"
@@ -3132,7 +3132,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "    and to fine-tune the crossfeed strength per channel.");
 	string_prop->SetValues({"off", "on", "light", "normal", "strong"});
 
-	string_prop = sec_prop.Add_string("reverb", WhenIdle, "off");
+	string_prop = sec_prop.AddString("reverb", WhenIdle, "off");
 	string_prop->SetHelp(
 	        "Reverb effect that adds a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
@@ -3156,7 +3156,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	string_prop->SetValues(
 	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
-	string_prop = sec_prop.Add_string("chorus", WhenIdle, "off");
+	string_prop = sec_prop.AddString("chorus", WhenIdle, "off");
 	string_prop->SetHelp(
 	        "Chorus effect that adds a sense of stereo movement to the sound:\n"
 	        "  off:     No chorus (default).\n"
@@ -3172,7 +3172,7 @@ static void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  - Use the MIXER command to fine-tune the chorus levels per channel.");
 	string_prop->SetValues({"off", "on", "light", "normal", "strong"});
 
-	bool_prop = sec_prop.Add_bool("denoiser", WhenIdle, DefaultOn);
+	bool_prop = sec_prop.AddBool("denoiser", WhenIdle, DefaultOn);
 	bool_prop->SetHelp(
 	        "Remove low-level residual noise from the output of the OPL synth and the Roland\n"
 	        "Sound Canvas. The emulation of these devices is accurate to the original\n"

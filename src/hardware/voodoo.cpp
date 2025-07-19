@@ -7922,7 +7922,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 
-	auto* bool_prop = secprop.Add_bool("voodoo", WhenIdle, true);
+	auto* bool_prop = secprop.AddBool("voodoo", WhenIdle, true);
 	bool_prop->SetHelp(
 	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
 	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
@@ -7932,7 +7932,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "A small number of games integrate the Glide driver into their code, so they\n"
 	        "don't need 'GLIDE2X.OVL'.");
 
-	auto* str_prop = secprop.Add_string("voodoo_memsize", OnlyAtStart, "4");
+	auto* str_prop = secprop.AddString("voodoo_memsize", OnlyAtStart, "4");
 	str_prop->SetValues({"4", "12"});
 	str_prop->SetHelp(
 	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
@@ -7941,10 +7941,10 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
 	// Deprecate the boolean Voodoo multithreading setting
-	bool_prop = secprop.Add_bool("voodoo_multithreading", Deprecated, false);
+	bool_prop = secprop.AddBool("voodoo_multithreading", Deprecated, false);
 	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
 
-	str_prop = secprop.Add_string("voodoo_threads", OnlyAtStart, "auto");
+	str_prop = secprop.AddString("voodoo_threads", OnlyAtStart, "auto");
 	str_prop->SetHelp(
 	        "Use threads to improve 3dfx Voodoo performance:\n"
 	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
@@ -7955,7 +7955,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
 	        "      let us know how it goes.");
 
-	bool_prop = secprop.Add_bool("voodoo_bilinear_filtering", OnlyAtStart, true);
+	bool_prop = secprop.AddBool("voodoo_bilinear_filtering", OnlyAtStart, true);
 	bool_prop->SetHelp(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
 	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
