@@ -367,7 +367,7 @@ public:
 		return sectionname.c_str();
 	}
 
-	virtual std::string GetPropValue(const std::string& property) const = 0;
+	virtual std::string GetPropertyValue(const std::string& property) const = 0;
 
 	virtual bool HandleInputline(const std::string& line) = 0;
 
@@ -415,8 +415,8 @@ public:
 	                                      Property::Changeable::Value when,
 	                                      const std::string& sep);
 
-	Property* GetProp(int index);
-	Property* GetProp(const std::string_view propname);
+	Property* GetProperty(int index);
+	Property* GetProperty(const std::string_view propname);
 
 	const_it begin() const
 	{
@@ -451,7 +451,7 @@ public:
 
 	void PrintData(FILE* outfile) const override;
 
-	std::string GetPropValue(const std::string& property) const override;
+	std::string GetPropertyValue(const std::string& property) const override;
 };
 
 class PropMultiVal : public Property {
@@ -512,7 +512,7 @@ public:
 		ExecuteDestroy(true);
 	}
 
-	std::string GetPropValue(const std::string& property) const override;
+	std::string GetPropertyValue(const std::string& property) const override;
 	bool HandleInputline(const std::string& line) override;
 	void PrintData(FILE* outfile) const override;
 

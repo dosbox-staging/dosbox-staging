@@ -358,7 +358,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 		while (true) {
 			// List the properties
-			Property* p = psec->GetProp(i++);
+			Property* p = psec->GetProperty(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -378,7 +378,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 
 		while (true) {
-			Property* p = psec->GetProp(i++);
+			Property* p = psec->GetProperty(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -723,7 +723,7 @@ void CONFIG::Run(void)
 					}
 					while (true) {
 						// list the properties
-						Property* p = psec->GetProp(i++);
+						Property* p = psec->GetProperty(i++);
 						if (p == nullptr) {
 							break;
 						}
@@ -747,7 +747,7 @@ void CONFIG::Run(void)
 					}
 					// it's a property name
 					const auto val_dos = utf8_to_dos(
-					        sec->GetPropValue(pvars[0]),
+					        sec->GetPropertyValue(pvars[0]),
 					        DosStringConvertMode::NoSpecialCharacters,
 					        UnicodeFallback::Simple);
 
@@ -768,7 +768,7 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				const std::string val_utf8 = sec->GetPropValue(
+				const std::string val_utf8 = sec->GetPropertyValue(
 				        prop_name);
 				if (val_utf8 == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
@@ -820,7 +820,7 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				auto* property = tsec->GetProp(pvars[1]);
+				auto* property = tsec->GetProperty(pvars[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
