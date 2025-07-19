@@ -1279,7 +1279,7 @@ class SERIALPORTS final : public ModuleBase {
 public:
 	SERIALPORTS (Section * configuration):ModuleBase (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
-		Section_prop *section = static_cast <Section_prop*>(configuration);
+		SectionProp *section = static_cast <SectionProp*>(configuration);
 
 #if C_MODEM
 		const PropPath *pbFilename = section->GetPath("phonebookfile");

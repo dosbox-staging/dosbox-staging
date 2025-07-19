@@ -775,7 +775,7 @@ private:
 public:
 	MPU401(Section* configuration) : ModuleBase(configuration)
 	{
-		Section_prop* section = dynamic_cast<Section_prop*>(configuration);
+		SectionProp* section = dynamic_cast<SectionProp*>(configuration);
 		if (!section) {
 			return;
 		}
@@ -833,11 +833,11 @@ public:
 
 static std::unique_ptr<MPU401> mpu401 = nullptr;
 
-static Section_prop* get_midi_section()
+static SectionProp* get_midi_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
 	assert(sec);
 
 	return sec;

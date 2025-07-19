@@ -7063,7 +7063,7 @@ static int get_num_total_threads()
 	constexpr auto SettingName = "voodoo_threads";
 	constexpr auto AutoSetting = "auto";
 
-	const auto sec = dynamic_cast<Section_prop*>(control->GetSection(SectionName));
+	const auto sec = dynamic_cast<SectionProp*>(control->GetSection(SectionName));
 	const auto user_setting = sec ? sec->GetString(SettingName) : AutoSetting;
 
 	if (const auto maybe_int = parse_int(user_setting)) {
@@ -7884,7 +7884,7 @@ static void voodoo_destroy(Section* /*sec*/) {
 
 static void voodoo_init(Section* sec)
 {
-	auto* section = dynamic_cast<Section_prop*>(sec);
+	auto* section = dynamic_cast<SectionProp*>(sec);
 
 	// Only activate on SVGA machines and when requested
 	if (!is_machine_svga() || !section || !section->GetBool("voodoo")) {
@@ -7916,7 +7916,7 @@ static void voodoo_init(Section* sec)
 	        (voodoo_bilinear_filtering ? "" : "no "));
 }
 
-static void init_voodoo_dosbox_settings(Section_prop& secprop)
+static void init_voodoo_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto Deprecated  = Property::Changeable::Deprecated;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
@@ -7966,7 +7966,7 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	Section_prop* sec = conf->AddSection_prop("voodoo", &voodoo_init);
+	SectionProp* sec = conf->AddSectionProp("voodoo", &voodoo_init);
 	assert(sec);
 	init_voodoo_dosbox_settings(*sec);
 }

@@ -1537,7 +1537,7 @@ static void gus_destroy([[maybe_unused]] Section* sec)
 static void gus_init(Section* sec)
 {
 	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
 	if (!conf || !conf->GetBool("gus")) {
 		return;
 	}
@@ -1564,7 +1564,7 @@ static void gus_init(Section* sec)
 	sec->AddDestroyFunction(&gus_destroy, changeable_at_runtime);
 }
 
-void init_gus_dosbox_settings(Section_prop& secprop)
+void init_gus_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -1624,7 +1624,7 @@ void GUS_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("gus", &gus_init, changeable_at_runtime);
+	SectionProp* sec = conf->AddSectionProp("gus", &gus_init, changeable_at_runtime);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }

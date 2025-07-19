@@ -3168,7 +3168,7 @@ static void MAPPER_Destroy([[maybe_unused]] Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-static bool should_skip_unchanged_titlebar(const Section_prop* section)
+static bool should_skip_unchanged_titlebar(const SectionProp* section)
 {
 	// Filter out unneeded calls - do not execute MAPPER_BindKeys if only
 	// window titlebar setting has changed, to avoid flicker
@@ -3187,7 +3187,7 @@ static bool should_skip_unchanged_titlebar(const Section_prop* section)
 
 void MAPPER_BindKeys(Section* sec)
 {
-	const auto section = static_cast<const Section_prop*>(sec);
+	const auto section = static_cast<const SectionProp*>(sec);
 	if (should_skip_unchanged_titlebar(section)) {
 		return;
 	}
@@ -3248,7 +3248,7 @@ std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {
 void MAPPER_StartUp(Section* sec)
 {
 	assert(sec);
-	Section_prop* section = static_cast<Section_prop*>(sec);
+	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	// Runs after this function ends and for subsequent `config -set "sdl
 	// mapperfile=file.map"` commands

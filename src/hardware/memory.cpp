@@ -712,7 +712,7 @@ public:
 	MEMORY(Section *configuration) : ModuleBase(configuration)
 	{
 		// Get the users memory size preference
-		const auto section = static_cast<Section_prop*>(configuration);
+		const auto section = static_cast<SectionProp*>(configuration);
 		const auto num_megabytes = section->GetInt("memsize");
 		check_num_megabytes(num_megabytes);
 

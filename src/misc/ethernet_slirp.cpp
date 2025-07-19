@@ -256,7 +256,7 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 
 	slirp = LibSlirp::slirp_new(&config, &slirp_callbacks, this);
 	if (slirp) {
-		const auto section = static_cast<Section_prop *>(dosbox_config);
+		const auto section = static_cast<SectionProp *>(dosbox_config);
 		assert(section);
 
 		bool is_udp = false;

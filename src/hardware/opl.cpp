@@ -813,7 +813,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	opl.mode = _opl_mode;
 
-	Section_prop* section = static_cast<Section_prop*>(configuration);
+	SectionProp* section = static_cast<SectionProp*>(configuration);
 	const auto base = static_cast<uint16_t>(section->GetHex("sbbase"));
 
 	ctrl.mixer_enabled = section->GetBool("sbmixer");
@@ -963,7 +963,7 @@ Opl::~Opl()
 	MIXER_UnlockMixerThread();
 }
 
-static void init_opl_dosbox_settings(Section_prop& secprop)
+static void init_opl_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto when_idle  = Property::Changeable::WhenIdle;
@@ -1059,7 +1059,7 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 void OPL_AddConfigSettings(const ConfigPtr& conf)
 {
 	assert(conf);
-	auto secprop = static_cast<Section_prop*>(conf->GetSection("sblaster"));
+	auto secprop = static_cast<SectionProp*>(conf->GetSection("sblaster"));
 
 	assert(secprop);
 	init_opl_dosbox_settings(*secprop);

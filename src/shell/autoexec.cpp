@@ -268,7 +268,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	AddMessages();
 
 	// Get the [dosbox] conf section
-	const auto sec = static_cast<Section_prop*>(control->GetSection("dosbox"));
+	const auto sec = static_cast<SectionProp*>(control->GetSection("dosbox"));
 	assert(sec);
 
 	// Start mouse driver
@@ -518,7 +518,7 @@ std::unique_ptr<Config> specify_drive_conf()
 	// Define the [drive] section
 	constexpr auto ChangeableAtRuntime = false;
 	const AutoMountSettings defaults   = {};
-	const auto prop = conf->AddSection_prop("drive", nullptr, ChangeableAtRuntime);
+	const auto prop = conf->AddSectionProp("drive", nullptr, ChangeableAtRuntime);
 
 	// Define the allowed keys and types
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
@@ -551,7 +551,7 @@ std::optional<AutoMountSettings> parse_drive_conf(const std_fs::path& conf_path)
 		return settings;
 	}
 
-	const auto section = static_cast<Section_prop*>(conf->GetSection("drive"));
+	const auto section = static_cast<SectionProp*>(conf->GetSection("drive"));
 
 	const auto override_drive = section->GetString("override_drive");
 	if (override_drive.length() == 1 && override_drive[0] >= 'a' &&

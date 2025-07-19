@@ -1354,7 +1354,7 @@ static Bitu INT4B_Handler() {
 	return CBRET_NONE;
 }
 
-Bitu GetEMSType(Section_prop * section) {
+Bitu GetEMSType(SectionProp * section) {
 	Bitu rtype = 0;
 	const std::string ems_pref = section->GetString("ems");
 
@@ -1398,7 +1398,7 @@ public:
 		vcpi.enabled=false;
 		GEMMIS_seg=0;
 
-		Section_prop * section=static_cast<Section_prop *>(configuration);
+		SectionProp * section=static_cast<SectionProp *>(configuration);
 		ems_type=GetEMSType(section);
 		if (ems_type<=0) return;
 

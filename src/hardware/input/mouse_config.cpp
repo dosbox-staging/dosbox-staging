@@ -360,7 +360,7 @@ static void set_sensitivity(const std::string_view sensitivity_str)
 static void config_read(Section* section)
 {
 	assert(section);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(section);
+	const SectionProp* conf = dynamic_cast<SectionProp*>(section);
 	assert(conf);
 	if (!conf) {
 		return;
@@ -424,7 +424,7 @@ static void config_read(Section* section)
 	MOUSE_StartupIfReady();
 }
 
-static void config_init(Section_prop& secprop)
+static void config_init(SectionProp& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
@@ -638,7 +638,7 @@ void MOUSE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("mouse",
+	SectionProp* sec = conf->AddSectionProp("mouse",
 	                                          &config_read,
 	                                          changeable_at_runtime);
 	assert(sec);

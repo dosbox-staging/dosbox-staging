@@ -3364,7 +3364,7 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 
 static bool is_cms_enabled(const SbType sbtype)
 {
-	const auto* sect = static_cast<Section_prop*>(
+	const auto* sect = static_cast<SectionProp*>(
 	        control->GetSection(SblasterSectionName));
 	assert(sect);
 
@@ -3480,7 +3480,7 @@ SBLASTER::SBLASTER(Section* conf)
 {
 	assert(conf);
 
-	Section_prop* section = static_cast<Section_prop*>(conf);
+	SectionProp* section = static_cast<SectionProp*>(conf);
 
 	sb.hw.base = section->GetHex("sbbase");
 	sb.hw.irq  = static_cast<uint8_t>(section->GetInt("irq"));
@@ -3721,7 +3721,7 @@ void SBLASTER_NotifyUnlockMixer()
 	}
 }
 
-void init_sblaster_dosbox_settings(Section_prop& secprop)
+void init_sblaster_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -3854,7 +3854,7 @@ void SB_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto changeable_at_runtime = true;
 
 	assert(conf);
-	Section_prop* secprop = conf->AddSection_prop(SblasterSectionName,
+	SectionProp* secprop = conf->AddSectionProp(SblasterSectionName,
 	                                              &init_sblaster,
 	                                              changeable_at_runtime);
 	assert(secprop);

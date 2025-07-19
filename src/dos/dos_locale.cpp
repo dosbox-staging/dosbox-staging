@@ -1625,7 +1625,7 @@ public:
 
 DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 {
-	auto section = static_cast<Section_prop*>(configuration);
+	auto section = static_cast<SectionProp*>(configuration);
 	assert(section);
 
 	if (!config.is_config_loaded) {

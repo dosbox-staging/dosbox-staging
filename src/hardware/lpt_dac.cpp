@@ -151,7 +151,7 @@ void LPT_DAC_Init(Section* section)
 
 	// Get the user's LPT DAC choices
 	assert(section);
-	const auto prop = static_cast<Section_prop*>(section);
+	const auto prop = static_cast<SectionProp*>(section);
 
 	const std::string dac_choice = prop->GetString("lpt_dac");
 

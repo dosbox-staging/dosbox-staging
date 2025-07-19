@@ -2923,7 +2923,7 @@ static void init_denoiser(bool enabled)
 
 void MIXER_Init(Section* sec)
 {
-	Section_prop* secprop = static_cast<Section_prop*>(sec);
+	SectionProp* secprop = static_cast<SectionProp*>(sec);
 	assert(secprop);
 
 	MIXER_LockMixerThread();
@@ -3073,7 +3073,7 @@ static void handle_toggle_mute(const bool was_pressed)
 	};
 }
 
-static void init_mixer_dosbox_settings(Section_prop& sec_prop)
+static void init_mixer_dosbox_settings(SectionProp& sec_prop)
 {
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
@@ -3249,7 +3249,7 @@ void MIXER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("mixer",
+	SectionProp* sec = conf->AddSectionProp("mixer",
 	                                          &MIXER_Init,
 	                                          ChangeableAtRuntime);
 	assert(sec);

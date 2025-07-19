@@ -588,11 +588,11 @@ bool MIDI_IsAvailable()
 	return (midi.device != nullptr);
 }
 
-static Section_prop* get_midi_section()
+static SectionProp* get_midi_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
 	assert(sec);
 
 	return sec;
@@ -796,7 +796,7 @@ void MIDI_Init()
 	midi_init(get_midi_section());
 }
 
-static void init_mididevice_settings(Section_prop& secprop)
+static void init_mididevice_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
@@ -848,7 +848,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
 }
 
-static void init_midiconfig_settings(Section_prop& secprop)
+static void init_midiconfig_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
@@ -899,7 +899,7 @@ static void init_midiconfig_settings(Section_prop& secprop)
 	});
 }
 
-void init_midi_dosbox_settings(Section_prop& secprop)
+void init_midi_dosbox_settings(SectionProp& secprop)
 {
 	init_mididevice_settings(secprop);
 	init_midiconfig_settings(secprop);
@@ -938,7 +938,7 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("midi", &midi_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSectionProp("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
 
 	init_midi_dosbox_settings(*sec);

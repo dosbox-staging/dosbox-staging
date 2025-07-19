@@ -565,7 +565,7 @@ std::string ShaderManager::FindShaderAutoMachine() const
 	// If not, go ahead and set the globals from the config.
 	if (machine == MachineType::None) {
 		DOSBOX_SetMachineTypeFromConfig(
-		        static_cast<Section_prop*>(control->GetSection("dosbox")));
+		        static_cast<SectionProp*>(control->GetSection("dosbox")));
 	}
 
 	switch (machine) {

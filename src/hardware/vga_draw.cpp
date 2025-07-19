@@ -1449,7 +1449,7 @@ PixelFormat VGA_ActivateHardwareCursor()
 static void setup_line_drawing_delays(const uint32_t total_lines)
 {
 	const auto conf    = control->GetSection("dosbox");
-	const auto section = static_cast<Section_prop*>(conf);
+	const auto section = static_cast<SectionProp*>(conf);
 	assert(section);
 
 	if (vga.draw.mode == PART && !section->GetBool("vga_render_per_scanline")) {

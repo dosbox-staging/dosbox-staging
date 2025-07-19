@@ -840,7 +840,7 @@ void Property::SetEnabledOptions(const std::vector<std::string>& in)
 	enabled_options = in;
 }
 
-PropInt* Section_prop::AddInt(const std::string& _propname,
+PropInt* SectionProp::AddInt(const std::string& _propname,
                                 Property::Changeable::Value when, int _value)
 {
 	PropInt* test = new PropInt(_propname, when, _value);
@@ -848,7 +848,7 @@ PropInt* Section_prop::AddInt(const std::string& _propname,
 	return test;
 }
 
-PropString* Section_prop::AddString(const std::string& _propname,
+PropString* SectionProp::AddString(const std::string& _propname,
                                       Property::Changeable::Value when,
                                       const char* _value)
 {
@@ -857,7 +857,7 @@ PropString* Section_prop::AddString(const std::string& _propname,
 	return test;
 }
 
-PropPath* Section_prop::AddPath(const std::string& _propname,
+PropPath* SectionProp::AddPath(const std::string& _propname,
                                   Property::Changeable::Value when, const char* _value)
 {
 	PropPath* test = new PropPath(_propname, when, _value);
@@ -865,7 +865,7 @@ PropPath* Section_prop::AddPath(const std::string& _propname,
 	return test;
 }
 
-PropBool* Section_prop::AddBool(const std::string& _propname,
+PropBool* SectionProp::AddBool(const std::string& _propname,
                                   Property::Changeable::Value when, bool _value)
 {
 	PropBool* test = new PropBool(_propname, when, _value);
@@ -873,7 +873,7 @@ PropBool* Section_prop::AddBool(const std::string& _propname,
 	return test;
 }
 
-PropHex* Section_prop::AddHex(const std::string& _propname,
+PropHex* SectionProp::AddHex(const std::string& _propname,
                                 Property::Changeable::Value when, Hex _value)
 {
 	PropHex* test = new PropHex(_propname, when, _value);
@@ -881,7 +881,7 @@ PropHex* Section_prop::AddHex(const std::string& _propname,
 	return test;
 }
 
-PropMultiVal* Section_prop::AddMultiVal(const std::string& _propname,
+PropMultiVal* SectionProp::AddMultiVal(const std::string& _propname,
                                         Property::Changeable::Value when,
                                         const std::string& sep)
 {
@@ -890,7 +890,7 @@ PropMultiVal* Section_prop::AddMultiVal(const std::string& _propname,
 	return test;
 }
 
-PropMultiValRemain* Section_prop::AddMultiValRemain(const std::string& _propname,
+PropMultiValRemain* SectionProp::AddMultiValRemain(const std::string& _propname,
                                                     Property::Changeable::Value when,
                                                     const std::string& sep)
 {
@@ -899,7 +899,7 @@ PropMultiValRemain* Section_prop::AddMultiValRemain(const std::string& _propname
 	return test;
 }
 
-int Section_prop::GetInt(const std::string& _propname) const
+int SectionProp::GetInt(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -909,7 +909,7 @@ int Section_prop::GetInt(const std::string& _propname) const
 	return 0;
 }
 
-bool Section_prop::GetBool(const std::string& _propname) const
+bool SectionProp::GetBool(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -919,7 +919,7 @@ bool Section_prop::GetBool(const std::string& _propname) const
 	return false;
 }
 
-double Section_prop::GetDouble(const std::string& _propname) const
+double SectionProp::GetDouble(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -929,7 +929,7 @@ double Section_prop::GetDouble(const std::string& _propname) const
 	return 0.0;
 }
 
-PropPath* Section_prop::GetPath(const std::string& _propname) const
+PropPath* SectionProp::GetPath(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -944,7 +944,7 @@ PropPath* Section_prop::GetPath(const std::string& _propname) const
 	return nullptr;
 }
 
-PropMultiVal* Section_prop::GetMultiVal(const std::string& _propname) const
+PropMultiVal* SectionProp::GetMultiVal(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -959,7 +959,7 @@ PropMultiVal* Section_prop::GetMultiVal(const std::string& _propname) const
 	return nullptr;
 }
 
-PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname) const
+PropMultiValRemain* SectionProp::GetMultiValRemain(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -975,7 +975,7 @@ PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname
 	return nullptr;
 }
 
-Property* Section_prop::GetProp(int index)
+Property* SectionProp::GetProp(int index)
 {
 	for (it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (!index--) {
@@ -985,7 +985,7 @@ Property* Section_prop::GetProp(int index)
 	return nullptr;
 }
 
-Property* Section_prop::GetProp(const std::string_view propname)
+Property* SectionProp::GetProp(const std::string_view propname)
 {
 	for (Property* property : properties) {
 		if (iequals(property->propname, propname)) {
@@ -995,7 +995,7 @@ Property* Section_prop::GetProp(const std::string_view propname)
 	return nullptr;
 }
 
-std::string Section_prop::GetString(const std::string& _propname) const
+std::string SectionProp::GetString(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (iequals((*tel)->propname, _propname)) {
@@ -1005,7 +1005,7 @@ std::string Section_prop::GetString(const std::string& _propname) const
 	return "";
 }
 
-PropBool* Section_prop::GetBoolProp(const std::string& propname) const
+PropBool* SectionProp::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
 		if (iequals(property->propname, propname)) {
@@ -1015,7 +1015,7 @@ PropBool* Section_prop::GetBoolProp(const std::string& propname) const
 	return nullptr;
 }
 
-PropString* Section_prop::GetStringProp(const std::string& propname) const
+PropString* SectionProp::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
 		if (iequals(property->propname, propname)) {
@@ -1025,7 +1025,7 @@ PropString* Section_prop::GetStringProp(const std::string& propname) const
 	return nullptr;
 }
 
-Hex Section_prop::GetHex(const std::string& _propname) const
+Hex SectionProp::GetHex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (iequals((*tel)->propname, _propname)) {
@@ -1035,7 +1035,7 @@ Hex Section_prop::GetHex(const std::string& _propname) const
 	return 0;
 }
 
-bool Section_prop::HandleInputline(const std::string& line)
+bool SectionProp::HandleInputline(const std::string& line)
 {
 	std::string::size_type loc = line.find('=');
 
@@ -1088,7 +1088,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 	return false;
 }
 
-void Section_prop::PrintData(FILE* outfile) const
+void SectionProp::PrintData(FILE* outfile) const
 {
 	// Now print out the individual section entries
 
@@ -1112,7 +1112,7 @@ void Section_prop::PrintData(FILE* outfile) const
 	}
 }
 
-std::string Section_prop::GetPropValue(const std::string& _property) const
+std::string SectionProp::GetPropValue(const std::string& _property) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (!strcasecmp((*tel)->propname.c_str(), _property.c_str())) {
@@ -1162,7 +1162,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 		lowcase(temp);
 		fprintf(outfile, "[%s]\n", temp);
 
-		Section_prop* sec = dynamic_cast<Section_prop*>(*tel);
+		SectionProp* sec = dynamic_cast<SectionProp*>(*tel);
 		if (sec) {
 			Property* p;
 			int i = 0;
@@ -1286,33 +1286,33 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-Section_prop* Config::AddInactiveSectionProp(const char* section_name)
+SectionProp* Config::AddInactiveSectionProp(const char* section_name)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	constexpr bool inactive = false;
 
-	auto s = std::make_unique<Section_prop>(section_name, inactive);
+	auto s = std::make_unique<SectionProp>(section_name, inactive);
 
 	auto* section = s.get();
 	sectionlist.push_back(s.release());
 	return section;
 }
 
-Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction func,
+SectionProp* Config::AddSectionProp(const char* section_name, SectionFunction func,
                                       bool changeable_at_runtime)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
-	Section_prop* s = new Section_prop(section_name);
+	SectionProp* s = new SectionProp(section_name);
 	s->AddInitFunction(func, changeable_at_runtime);
 	sectionlist.push_back(s);
 	return s;
 }
 
-Section_prop::~Section_prop()
+SectionProp::~SectionProp()
 {
 	// ExecuteDestroy should be here else the destroy functions use
 	// destroyed properties
@@ -1609,7 +1609,7 @@ bool Config::ParseConfigFile(const std::string& type,
 void Config::ApplyQueuedValuesToCli(std::vector<std::string>& args) const
 {
 	for (const auto section : sectionlist) {
-		const auto properties = dynamic_cast<Section_prop*>(section);
+		const auto properties = dynamic_cast<SectionProp*>(section);
 		if (!properties) {
 			continue;
 		}
@@ -1720,7 +1720,7 @@ void set_section_property_value(const std::string_view section_name,
                                 const std::string_view property_name,
                                 const std::string_view property_value)
 {
-	auto* sect_updater = static_cast<Section_prop*>(
+	auto* sect_updater = static_cast<SectionProp*>(
 	        control->GetSection(section_name));
 	assertm(sect_updater, "Invalid section name");
 
@@ -2022,27 +2022,27 @@ bool config_file_is_valid(const std_fs::path& path)
 }
 
 // Get up-to-date in-memory model of a config section
-Section_prop* get_section(const char* section_name)
+SectionProp* get_section(const char* section_name)
 {
 	assert(control);
 
-	const auto sec = static_cast<Section_prop*>(control->GetSection(section_name));
+	const auto sec = static_cast<SectionProp*>(control->GetSection(section_name));
 	assert(sec);
 
 	return sec;
 }
 
-Section_prop* get_joystick_section()
+SectionProp* get_joystick_section()
 {
 	return get_section("joystick");
 }
 
-Section_prop* get_sdl_section()
+SectionProp* get_sdl_section()
 {
 	return get_section("sdl");
 }
 
-Section_prop* get_mixer_section()
+SectionProp* get_mixer_section()
 {
 	return get_section("mixer");
 }

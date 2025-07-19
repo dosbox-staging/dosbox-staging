@@ -7,7 +7,7 @@
 #include "setup.h"
 
 void TITLEBAR_AddMessages();
-void TITLEBAR_AddConfig(Section_prop& secprop);
-void TITLEBAR_ReadConfig(const Section_prop& secprop);
+void TITLEBAR_AddConfig(SectionProp& secprop);
+void TITLEBAR_ReadConfig(const SectionProp& secprop);
 
 #endif // DOSBOX_TITLEBAR_H

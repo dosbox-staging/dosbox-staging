@@ -1427,7 +1427,7 @@ void VGA_SetupOther()
 static void composite_init(Section *sec)
 {
 	assert(sec);
-	const auto conf = static_cast<Section_prop *>(sec);
+	const auto conf = static_cast<SectionProp *>(sec);
 	assert(conf);
 	const std::string state = conf->GetString("composite");
 
@@ -1463,7 +1463,7 @@ static void composite_init(Section *sec)
 	}
 }
 
-static void composite_settings(Section_prop& secprop)
+static void composite_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -1534,7 +1534,7 @@ void VGA_AddCompositeSettings(Config& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 
-	auto sec = conf.AddSection_prop("composite",
+	auto sec = conf.AddSectionProp("composite",
 	                                &composite_init,
 	                                changeable_at_runtime);
 	assert(sec);

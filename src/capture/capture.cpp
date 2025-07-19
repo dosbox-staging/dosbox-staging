@@ -576,7 +576,7 @@ static void capture_destroy(Section* /*sec*/)
 static void capture_init(Section* sec)
 {
 	assert(sec);
-	const Section_prop* secprop = dynamic_cast<Section_prop*>(sec);
+	const SectionProp* secprop = dynamic_cast<SectionProp*>(sec);
 	if (!secprop) {
 		return;
 	}
@@ -646,7 +646,7 @@ static void init_key_mappings()
 	                  "Rec. Video");
 }
 
-static void init_capture_dosbox_settings(Section_prop& secprop)
+static void init_capture_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -690,7 +690,7 @@ void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("capture",
+	SectionProp* sec = conf->AddSectionProp("capture",
 	                                          &capture_init,
 	                                          changeable_at_runtime);
 	assert(sec);

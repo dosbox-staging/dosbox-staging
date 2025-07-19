@@ -1091,7 +1091,7 @@ public:
 		isIpxServer = false;
 		isIpxConnected = false;
 
-		Section_prop *section = static_cast<Section_prop *>(configuration);
+		SectionProp *section = static_cast<SectionProp *>(configuration);
 		if (section && !section->GetBool("ipx"))
 			return;
 
@@ -1153,7 +1153,7 @@ public:
 	}
 
 	~IPX() {
-		Section_prop * section = static_cast<Section_prop *>(m_configuration);
+		SectionProp * section = static_cast<SectionProp *>(m_configuration);
 		PIC_RemoveEvents(IPX_AES_EventHandler);
 		if(!section->GetBool("ipx")) return;
 

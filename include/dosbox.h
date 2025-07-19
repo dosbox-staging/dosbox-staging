@@ -42,7 +42,7 @@ extern bool shutdown_requested;
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
 class Section;
-class Section_prop;
+class SectionProp;
 
 typedef Bitu (LoopHandler)(void);
 
@@ -57,7 +57,7 @@ void DOSBOX_SetNormalLoop();
 
 void DOSBOX_InitAllModuleConfigsAndMessages(void);
 
-void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
+void DOSBOX_SetMachineTypeFromConfig(SectionProp* section);
 
 int64_t DOSBOX_GetTicksDone();
 void DOSBOX_SetTicksDone(const int64_t ticks_done);

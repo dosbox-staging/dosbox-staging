@@ -256,7 +256,7 @@ static void innovation_destroy([[maybe_unused]] Section *sec)
 static void innovation_init(Section *sec)
 {
 	assert(sec);
-	Section_prop *conf = static_cast<Section_prop *>(sec);
+	SectionProp *conf = static_cast<SectionProp *>(sec);
 
 	const auto model_choice          = conf->GetString("sidmodel");
 	const auto clock_choice          = conf->GetString("sidclock");
@@ -276,7 +276,7 @@ static void innovation_init(Section *sec)
 	sec->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
 }
 
-static void init_innovation_dosbox_settings(Section_prop& sec_prop)
+static void init_innovation_dosbox_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -334,7 +334,7 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	constexpr auto changeable_at_runtime = true;
-	Section_prop* sec = conf->AddSection_prop("innovation",
+	SectionProp* sec = conf->AddSectionProp("innovation",
 	                                          &innovation_init,
 	                                          changeable_at_runtime);
 	assert(sec);

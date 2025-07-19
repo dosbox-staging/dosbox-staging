@@ -13360,7 +13360,7 @@ void imfc_destroy(Section* /*sec*/)
 static void imfc_init(Section* sec)
 {
 	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
 	if (!conf || !conf->GetBool("imfc")) {
 		return;
 	}
@@ -13437,7 +13437,7 @@ static void imfc_init(Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-void init_imfc_dosbox_settings(Section_prop& secprop)
+void init_imfc_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -13472,7 +13472,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("imfc",
+	SectionProp* sec = conf->AddSectionProp("imfc",
 	                                          &imfc_init,
 	                                          changeable_at_runtime);
 	assert(sec);
