@@ -204,8 +204,8 @@ protected:
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
 
-	Value default_value                                    = {};
-	const Changeable::Value change                         = {};
+	Value default_value            = {};
+	const Changeable::Value change = {};
 	typedef std::vector<Value>::const_iterator const_iter;
 
 private:
@@ -340,7 +340,10 @@ private:
 
 public:
 	Section() = default;
-	Section(const std::string& name, const bool active = true) : sectionname(name), active(active) {}
+	Section(const std::string& name, const bool active = true)
+	        : sectionname(name),
+	          active(active)
+	{}
 
 	// Construct and assign by std::move
 	Section(Section&& other)            = default;
@@ -384,26 +387,28 @@ private:
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	SectionProp(const std::string& name, bool active = true) : Section(name, active) {}
+	SectionProp(const std::string& name, bool active = true)
+	        : Section(name, active)
+	{}
 
 	~SectionProp() override;
 
 	PropInt* AddInt(const std::string& _propname,
-	                  Property::Changeable::Value when, int _value = 0);
+	                Property::Changeable::Value when, int _value = 0);
 
 	PropString* AddString(const std::string& _propname,
-	                        Property::Changeable::Value when,
-	                        const char* _value = nullptr);
+	                      Property::Changeable::Value when,
+	                      const char* _value = nullptr);
 
 	PropPath* AddPath(const std::string& _propname,
-	                    Property::Changeable::Value when,
-	                    const char* _value = nullptr);
+	                  Property::Changeable::Value when,
+	                  const char* _value = nullptr);
 
 	PropBool* AddBool(const std::string& _propname,
-	                    Property::Changeable::Value when, bool _value = false);
+	                  Property::Changeable::Value when, bool _value = false);
 
 	PropHex* AddHex(const std::string& _propname,
-	                  Property::Changeable::Value when, Hex _value = 0);
+	                Property::Changeable::Value when, Hex _value = 0);
 
 	//	void Add_double(const char * _propname, double _value=0.0);
 	//
@@ -527,7 +532,7 @@ protected:
 public:
 	ModuleBase(Section* conf_section) : m_configuration(conf_section) {}
 
-	ModuleBase(const ModuleBase&) = delete;            // prevent copying
+	ModuleBase(const ModuleBase&)            = delete; // prevent copying
 	ModuleBase& operator=(const ModuleBase&) = delete; // prevent assignment
 
 	virtual ~ModuleBase() = default;
