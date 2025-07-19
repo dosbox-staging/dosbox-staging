@@ -301,8 +301,7 @@ std::string Property::GetHelp() const
 	std::string result = {};
 	if (MSG_Exists(create_setting_help_msg_name(propname))) {
 
-		auto help_text = MSG_Get(
-		        create_setting_help_msg_name(propname));
+		auto help_text = MSG_Get(create_setting_help_msg_name(propname));
 
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
@@ -629,7 +628,7 @@ bool PropMultiValRemain::SetValue(const std::string& _value)
 	bool is_valid = ValidateValue(val);
 
 	std::string local(_value);
-	int i = 0;
+	int i                    = 0;
 	int number_of_properties = 0;
 
 	Property* p = section->GetProperty(0);
@@ -847,7 +846,7 @@ void Property::SetEnabledOptions(const std::vector<std::string>& options)
 }
 
 PropInt* SectionProp::AddInt(const std::string& _propname,
-                                Property::Changeable::Value when, int _value)
+                             Property::Changeable::Value when, int _value)
 {
 	PropInt* test = new PropInt(_propname, when, _value);
 	properties.push_back(test);
@@ -855,8 +854,8 @@ PropInt* SectionProp::AddInt(const std::string& _propname,
 }
 
 PropString* SectionProp::AddString(const std::string& _propname,
-                                      Property::Changeable::Value when,
-                                      const char* _value)
+                                   Property::Changeable::Value when,
+                                   const char* _value)
 {
 	PropString* test = new PropString(_propname, when, _value);
 	properties.push_back(test);
@@ -864,7 +863,7 @@ PropString* SectionProp::AddString(const std::string& _propname,
 }
 
 PropPath* SectionProp::AddPath(const std::string& _propname,
-                                  Property::Changeable::Value when, const char* _value)
+                               Property::Changeable::Value when, const char* _value)
 {
 	PropPath* test = new PropPath(_propname, when, _value);
 	properties.push_back(test);
@@ -872,7 +871,7 @@ PropPath* SectionProp::AddPath(const std::string& _propname,
 }
 
 PropBool* SectionProp::AddBool(const std::string& _propname,
-                                  Property::Changeable::Value when, bool _value)
+                               Property::Changeable::Value when, bool _value)
 {
 	PropBool* test = new PropBool(_propname, when, _value);
 	properties.push_back(test);
@@ -880,7 +879,7 @@ PropBool* SectionProp::AddBool(const std::string& _propname,
 }
 
 PropHex* SectionProp::AddHex(const std::string& _propname,
-                                Property::Changeable::Value when, Hex _value)
+                             Property::Changeable::Value when, Hex _value)
 {
 	PropHex* test = new PropHex(_propname, when, _value);
 	properties.push_back(test);
@@ -888,8 +887,8 @@ PropHex* SectionProp::AddHex(const std::string& _propname,
 }
 
 PropMultiVal* SectionProp::AddMultiVal(const std::string& _propname,
-                                        Property::Changeable::Value when,
-                                        const std::string& sep)
+                                       Property::Changeable::Value when,
+                                       const std::string& sep)
 {
 	PropMultiVal* test = new PropMultiVal(_propname, when, sep);
 	properties.push_back(test);
@@ -897,8 +896,8 @@ PropMultiVal* SectionProp::AddMultiVal(const std::string& _propname,
 }
 
 PropMultiValRemain* SectionProp::AddMultiValRemain(const std::string& _propname,
-                                                    Property::Changeable::Value when,
-                                                    const std::string& sep)
+                                                   Property::Changeable::Value when,
+                                                   const std::string& sep)
 {
 	PropMultiValRemain* test = new PropMultiValRemain(_propname, when, sep);
 	properties.push_back(test);
@@ -1307,7 +1306,7 @@ SectionProp* Config::AddInactiveSectionProp(const char* section_name)
 }
 
 SectionProp* Config::AddSectionProp(const char* section_name, SectionFunction func,
-                                      bool changeable_at_runtime)
+                                    bool changeable_at_runtime)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
