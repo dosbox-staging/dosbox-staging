@@ -831,7 +831,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
-	str_prop->Set_values({
+	str_prop->SetValues({
 		MidiDevicePortPref,
 #if C_COREAUDIO
 		        MidiDeviceName::CoreAudio,
@@ -907,7 +907,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	auto str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
-	str_prop->Set_values({"intelligent", "uart", "none"});
+	str_prop->SetValues({"intelligent", "uart", "none"});
 	str_prop->SetHelp("MPU-401 mode to emulate ('intelligent' by default).");
 
 	auto bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);

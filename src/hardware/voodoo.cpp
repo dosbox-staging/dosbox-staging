@@ -7933,7 +7933,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "don't need 'GLIDE2X.OVL'.");
 
 	auto* str_prop = secprop.Add_string("voodoo_memsize", OnlyAtStart, "4");
-	str_prop->Set_values({"4", "12"});
+	str_prop->SetValues({"4", "12"});
 	str_prop->SetHelp(
 	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
 	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"

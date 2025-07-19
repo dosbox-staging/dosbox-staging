@@ -343,7 +343,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
 
 	// Listed in resolution priority order
-	str_prop->Set_values({"auto",
+	str_prop->SetValues({"auto",
 	                      BestModelAlias::Cm32l,
 	                      cm32l_102_model.GetName(),
 	                      cm32l_100_model.GetName(),

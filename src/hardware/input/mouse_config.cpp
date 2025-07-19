@@ -437,7 +437,7 @@ static void config_init(Section_prop& secprop)
 
 	prop_str = secprop.Add_string("mouse_capture", always, OptionCaptureType::OnClick);
 	assert(prop_str);
-	prop_str->Set_values({
+	prop_str->SetValues({
 		OptionCaptureType::Seamless,
 		OptionCaptureType::OnClick,
 		OptionCaptureType::OnStart,
@@ -491,7 +491,7 @@ static void config_init(Section_prop& secprop)
 	                              only_at_start,
 	                              OptionBuiltInDosDriver::On);
 	assert(prop_str);
-	prop_str->Set_values({
+	prop_str->SetValues({
 		OptionBuiltInDosDriver::Off,
 		OptionBuiltInDosDriver::On,
 		OptionBuiltInDosDriver::NoTsr
@@ -527,7 +527,7 @@ static void config_init(Section_prop& secprop)
 	                              always,
 	                              OptionModelDos::TwoButton);
 	assert(prop_str);
-	prop_str->Set_values({
+	prop_str->SetValues({
 		OptionModelDos::TwoButton,
 		OptionModelDos::ThreeButton,
 		OptionModelDos::Wheel
@@ -573,7 +573,7 @@ static void config_init(Section_prop& secprop)
 	                              only_at_start,
 	                              OptionModelPs2::Explorer);
 	assert(prop_str);
-	prop_str->Set_values({
+	prop_str->SetValues({
 		OptionModelPs2::Standard,
 		OptionModelPs2::Intellimouse,
 		OptionModelPs2::Explorer,
@@ -592,7 +592,7 @@ static void config_init(Section_prop& secprop)
 	                              only_at_start,
 	                              OptionModelCom::WheelMsm);
 	assert(prop_str);
-	prop_str->Set_values({
+	prop_str->SetValues({
 		OptionModelCom::TwoButton,
 		OptionModelCom::ThreeButton,
 		OptionModelCom::Wheel,

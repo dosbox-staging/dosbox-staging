@@ -791,7 +791,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	auto* str_prop = sec_prop.Add_string("soundcanvas_model", when_idle, "auto");
 
 	// Listed in resolution priority order
-	str_prop->Set_values({"auto",
+	str_prop->SetValues({"auto",
 	                      SoundCanvas::BestModelAlias::Sc55,
 	                      sc55_121_model.config_name,
 	                      sc55_120_model.config_name,

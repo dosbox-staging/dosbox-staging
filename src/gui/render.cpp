@@ -1178,7 +1178,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	string_prop->Set_values({"auto", "on", "square-pixels", "off", "stretch"});
+	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->SetHelp(
@@ -1199,7 +1199,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
 
-	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
+	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = secprop.Add_string("viewport", always, "fit");
 	string_prop->SetHelp(
@@ -1238,7 +1238,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	string_prop->Set_values({MonochromePaletteAmber,
+	string_prop->SetValues({MonochromePaletteAmber,
 	                         MonochromePaletteGreen,
 	                         MonochromePaletteWhite,
 	                         MonochromePalettePaperwhite});
