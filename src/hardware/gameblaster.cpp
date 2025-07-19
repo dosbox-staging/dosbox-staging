@@ -306,7 +306,7 @@ void CMS_Init(Section* conf)
 {
 	assert(conf);
 
-	Section_prop* section = static_cast<Section_prop*>(conf);
+	SectionProp* section = static_cast<SectionProp*>(conf);
 	gameblaster.Open(section->GetHex("sbbase"),
 	                 section->GetString("sbtype"),
 	                 section->GetString("cms_filter"));

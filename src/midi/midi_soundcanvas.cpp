@@ -231,7 +231,7 @@ SoundCanvas::SynthModel MidiDeviceSoundCanvas::GetModel() const
 	return model;
 }
 
-static Section_prop* get_soundcanvas_section()
+static SectionProp* get_soundcanvas_section()
 {
 	return get_section("soundcanvas");
 }
@@ -782,7 +782,7 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
+static void init_soundcanvas_dosbox_settings(SectionProp& sec_prop)
 {
 	using namespace SoundCanvas;
 
@@ -855,7 +855,7 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("soundcanvas",
+	SectionProp* sec_prop = conf->AddSectionProp("soundcanvas",
 	                                               &soundcanvas_init,
 	                                               ChangeableAtRuntime);
 	assert(sec_prop);

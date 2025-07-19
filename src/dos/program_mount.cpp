@@ -106,7 +106,7 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	const Section_prop* section = static_cast<Section_prop*>(
+	const SectionProp* section = static_cast<SectionProp*>(
 	        control->GetSection("dosbox"));
 	assert(section);
 

@@ -897,7 +897,7 @@ static void set_fcode(const int fps_code_choice)
 void ReelMagic_InitPlayer(Section* sec)
 {
 	assert(sec);
-	const auto section = static_cast<Section_prop*>(sec);
+	const auto section = static_cast<SectionProp*>(sec);
 	set_magic_key(section->GetString("reelmagic_key"));
 
 	set_fcode(section->GetInt("reelmagic_fcode"));

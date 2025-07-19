@@ -337,7 +337,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		return;
 	}
 
-	Section_prop* psec = dynamic_cast<Section_prop*>(sec);
+	SectionProp* psec = dynamic_cast<SectionProp*>(sec);
 
 	// Special [autoexec] section handling (if has no properties like all
 	// the other sections).
@@ -709,8 +709,8 @@ void CONFIG::Run(void)
 				if (sec) {
 					// list properties in section
 					auto i = 0;
-					Section_prop* psec =
-					        dynamic_cast<Section_prop*>(sec);
+					SectionProp* psec =
+					        dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
 						// autoexec section
@@ -812,7 +812,7 @@ void CONFIG::Run(void)
 				WriteOut(result);
 
 			} else {
-				auto* tsec = dynamic_cast<Section_prop*>(
+				auto* tsec = dynamic_cast<SectionProp*>(
 				        control->GetSection(pvars[0]));
 				if (!tsec) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),

@@ -145,7 +145,7 @@ void VGA_SetupSEQ()
 		if (is_machine_vga_or_better()) {
 			// Let the user force the clocking mode's 8/9-dot-mode bit high
 			const auto conf    = control->GetSection("dosbox");
-			const auto section = static_cast<Section_prop*>(conf);
+			const auto section = static_cast<SectionProp*>(conf);
 			assert(section);
 			vga.seq.wants_vga_8dot_font = section->GetBool("vga_8dot_font");
 

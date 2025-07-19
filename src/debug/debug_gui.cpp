@@ -211,7 +211,7 @@ static void LOG_Destroy(Section*) {
 }
 
 static void LOG_Init(Section * sec) {
-	Section_prop * sect = static_cast<Section_prop *>(sec);
+	SectionProp * sect = static_cast<SectionProp *>(sec);
 	std::string blah = sect->GetString("logfile");
 	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
 		;
@@ -262,7 +262,7 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	Section_prop* sect   = control->AddSection_prop("log", LOG_Init);
+	SectionProp* sect   = control->AddSectionProp("log", LOG_Init);
 	PropString* pstring = sect->AddString("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");

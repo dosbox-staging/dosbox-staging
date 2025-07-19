@@ -377,16 +377,16 @@ public:
 class PropMultiVal;
 class PropMultiValRemain;
 
-class Section_prop final : public Section {
+class SectionProp final : public Section {
 private:
 	std::deque<Property*> properties = {};
 	typedef std::deque<Property*>::iterator it;
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(const std::string& name, bool active = true) : Section(name, active) {}
+	SectionProp(const std::string& name, bool active = true) : Section(name, active) {}
 
-	~Section_prop() override;
+	~SectionProp() override;
 
 	PropInt* AddInt(const std::string& _propname,
 	                  Property::Changeable::Value when, int _value = 0);
@@ -456,7 +456,7 @@ public:
 
 class PropMultiVal : public Property {
 protected:
-	std::unique_ptr<Section_prop> section;
+	std::unique_ptr<SectionProp> section;
 	std::string separator;
 
 	void MakeDefaultValue();
@@ -465,18 +465,18 @@ public:
 	PropMultiVal(const std::string& name, Changeable::Value when,
 	             const std::string& sep)
 	        : Property(name, when),
-	          section(new Section_prop("")),
+	          section(new SectionProp("")),
 	          separator(sep)
 	{
 		default_value = "";
 		value         = "";
 	}
 
-	Section_prop* GetSection()
+	SectionProp* GetSection()
 	{
 		return section.get();
 	}
-	const Section_prop* GetSection() const
+	const SectionProp* GetSection() const
 	{
 		return section.get();
 	}
@@ -542,10 +542,10 @@ bool config_file_is_valid(const std_fs::path& path);
 
 // Helper functions for retrieving configuration sections
 
-Section_prop* get_section(const char* section_name);
+SectionProp* get_section(const char* section_name);
 
-Section_prop* get_joystick_section();
-Section_prop* get_sdl_section();
-Section_prop* get_mixer_section();
+SectionProp* get_joystick_section();
+SectionProp* get_sdl_section();
+SectionProp* get_mixer_section();
 
 #endif

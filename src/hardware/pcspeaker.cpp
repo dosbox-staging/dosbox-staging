@@ -37,7 +37,7 @@ void PCSPEAKER_Init(Section *section)
 	PCSPEAKER_ShutDown(nullptr);
 
 	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	const auto prop = static_cast<SectionProp *>(section);
 
 	// Get the user's PC speaker model choice
 	const std::string model_choice = prop->GetString("pcspeaker");

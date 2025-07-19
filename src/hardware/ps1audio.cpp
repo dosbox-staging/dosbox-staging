@@ -564,14 +564,14 @@ bool PS1AUDIO_IsEnabled()
 {
 	const auto section = control->GetSection("speaker");
 	assert(section);
-	const auto properties = static_cast<Section_prop*>(section);
+	const auto properties = static_cast<SectionProp*>(section);
 	return properties->GetBool("ps1audio");
 }
 
 void PS1AUDIO_Init(Section* section)
 {
 	assert(section);
-	const auto prop = static_cast<Section_prop*>(section);
+	const auto prop = static_cast<SectionProp*>(section);
 
 	if (!PS1AUDIO_IsEnabled()) {
 		return;

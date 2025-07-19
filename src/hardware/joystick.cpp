@@ -376,7 +376,7 @@ double JOYSTICK_GetMove_Y(uint8_t which)
 void JOYSTICK_ParseConfiguredType()
 {
 	const auto conf    = get_joystick_section();
-	const auto section = static_cast<Section_prop *>(conf);
+	const auto section = static_cast<SectionProp *>(conf);
 	const auto type = section->GetString("joysticktype");
 
 	if (type == "disabled")
@@ -503,7 +503,7 @@ static void activate_calibration_hotkeys()
 	// clang-format off
 }
 
-static void configure_calibration(const Section_prop &settings)
+static void configure_calibration(const SectionProp &settings)
 {
 	if (settings.GetBool("use_joy_calibration_hotkeys"))
 		activate_calibration_hotkeys();
@@ -547,7 +547,7 @@ public:
 			return;
 
 		// Get the [joystock] conf section
-		const auto section = static_cast<Section_prop *>(configuration);
+		const auto section = static_cast<SectionProp *>(configuration);
 		assert(section);
 
 		// Get and apply configuration settings

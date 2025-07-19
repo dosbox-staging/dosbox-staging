@@ -2732,7 +2732,7 @@ public:
 
 	~Cpu() = default;
 
-	void ConfigureCyclesModern(Section_prop* secprop)
+	void ConfigureCyclesModern(SectionProp* secprop)
 	{
 		modern_cycles_config = {};
 
@@ -2901,7 +2901,7 @@ public:
 	//   auto 12000 max 90%
 	//   auto 12000 max 90% limit 50000
 	//
-	void ConfigureCyclesLegacy(Section_prop* secprop)
+	void ConfigureCyclesLegacy(SectionProp* secprop)
 	{
 		// Sets the value if the string in within the min and max values
 		auto set_if_in_range = [](const std::string& str,
@@ -3147,7 +3147,7 @@ public:
 		CPU_Cycles          = 0;
 		auto_determine_mode = {};
 
-		Section_prop* secprop = static_cast<Section_prop*>(sec);
+		SectionProp* secprop = static_cast<SectionProp*>(sec);
 
 		const std::string cpu_core = secprop->GetString("core");
 		const std::string cpu_type = secprop->GetString("cputype");
@@ -3218,7 +3218,7 @@ static void cpu_init(Section* sec)
 	sec->AddDestroyFunction(&cpu_shutdown, ChangeableAtRuntime);
 }
 
-void init_cpu_dosbox_settings(Section_prop& secprop)
+void init_cpu_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto Always   = Property::Changeable::Always;
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
@@ -3385,7 +3385,7 @@ void CPU_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("cpu", &cpu_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSectionProp("cpu", &cpu_init, ChangeableAtRuntime);
 	assert(sec);
 	init_cpu_dosbox_settings(*sec);
 }

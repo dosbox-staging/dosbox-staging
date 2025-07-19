@@ -853,7 +853,7 @@ static std::optional<std::string> get_new_language_file()
 		const auto section = control->GetSection("dosbox");
 		assert(section);
 
-		language_file = static_cast<const Section_prop*>(section)->GetString(
+		language_file = static_cast<const SectionProp*>(section)->GetString(
 		        "language");
 	}
 

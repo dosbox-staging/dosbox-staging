@@ -456,7 +456,7 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	}
 }
 
-void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
+void DOSBOX_SetMachineTypeFromConfig(SectionProp* section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
@@ -510,7 +510,7 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 
 static void DOSBOX_RealInit(Section* sec)
 {
-	Section_prop* section = static_cast<Section_prop*>(sec);
+	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	// Initialize some dosbox internals
 	ticks.remain = 0;
@@ -596,7 +596,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 {
 	// Note the [sdl] section is initialised in sdlmain.cpp
 	
-	Section_prop* secprop             = nullptr;
+	SectionProp* secprop             = nullptr;
 	PropBool* pbool                  = nullptr;
 	PropInt* pint                    = nullptr;
 	PropHex* phex                    = nullptr;
@@ -613,7 +613,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	/* Setup all the different modules making up DOSBox */
 
-	secprop = control->AddSection_prop("dosbox",
+	secprop = control->AddSectionProp("dosbox",
 	                                   &DOSBOX_ConfigChanged,
 	                                   changeable_at_runtime);
 	pstring = secprop->AddString("language", always, "auto");
@@ -892,7 +892,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	MIDI_AddConfigSection(control);
 
 #if C_DEBUG
-	secprop = control->AddSection_prop("debug", &DEBUG_Init);
+	secprop = control->AddSectionProp("debug", &DEBUG_Init);
 #endif
 
 	// Configure Sound Blaster and ESS
@@ -915,7 +915,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	DISKNOISE_AddConfigSection(control);
 
 	// PC speaker emulation
-	secprop = control->AddSection_prop("speaker",
+	secprop = control->AddSectionProp("speaker",
 	                                   &PCSPEAKER_Init,
 	                                   changeable_at_runtime);
 
@@ -1020,7 +1020,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// ReelMagic Emulator
-	secprop = control->AddSection_prop("reelmagic",
+	secprop = control->AddSectionProp("reelmagic",
 	                                   &ReelMagic_Init,
 	                                   changeable_at_runtime);
 
@@ -1047,7 +1047,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop = control->AddSection_prop("joystick", &BIOS_Init);
+	secprop = control->AddSectionProp("joystick", &BIOS_Init);
 
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses
@@ -1125,7 +1125,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring->SetHelp(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	secprop = control->AddSection_prop("serial", &SERIAL_Init, changeable_at_runtime);
+	secprop = control->AddSectionProp("serial", &SERIAL_Init, changeable_at_runtime);
 	const std::vector<std::string> serials = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
 
@@ -1178,7 +1178,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
 
-	secprop = control->AddSection_prop("dos", &DOS_Init);
+	secprop = control->AddSectionProp("dos", &DOS_Init);
 	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
 	pbool = secprop->AddBool("xms", when_idle, true);
 	pbool->SetHelp("Enable XMS support ('on' by default).");
@@ -1288,7 +1288,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	secprop->AddInitFunction(&CDROM_Image_Init);
 
 #if C_IPX
-	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
+	secprop = control->AddSectionProp("ipx", &IPX_Init, changeable_at_runtime);
 #else
 	secprop = control->AddInactiveSectionProp("ipx");
 #endif
@@ -1298,7 +1298,7 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
-	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
+	secprop = control->AddSectionProp("ethernet", &NE2K_Init, changeable_at_runtime);
 
 	pbool = secprop->AddBool("ne2000", when_idle, false);
 	pbool->SetOptionHelp(

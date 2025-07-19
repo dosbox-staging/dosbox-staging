@@ -1435,7 +1435,7 @@ public:
 	        : ModuleBase(configuration),
 	          load_success(true)
 	{
-		Section_prop *section = static_cast<Section_prop *>(configuration);
+		SectionProp *section = static_cast<SectionProp *>(configuration);
 		if (!section->GetBool("ne2000")) {
 			load_success = false;
 			return;

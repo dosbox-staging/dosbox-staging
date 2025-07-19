@@ -3266,7 +3266,7 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
-	const auto section = static_cast<const Section_prop*>(sec);
+	const auto section = static_cast<const SectionProp*>(sec);
 	std::string output = section->GetString("output");
 
 	GFX_DisengageRendering();
@@ -3474,7 +3474,7 @@ static void set_fullscreen_mode()
 static void read_gui_config(Section* sec)
 {
 	sec->AddDestroyFunction(&shutdown_gui);
-	Section_prop* section = static_cast<Section_prop*>(sec);
+	SectionProp* section = static_cast<SectionProp*>(sec);
 
 	sdl.active          = false;
 	sdl.updating        = false;
@@ -3603,7 +3603,7 @@ static void read_gui_config(Section* sec)
 static void read_config(Section* sec)
 {
 	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
 	assert(conf);
 	if (!conf) {
 		return;
@@ -4347,7 +4347,7 @@ static void init_sdl_config_section()
 {
 	constexpr bool changeable_at_runtime = true;
 
-	Section_prop* sdl_sec = control->AddSection_prop("sdl",
+	SectionProp* sdl_sec = control->AddSectionProp("sdl",
 	                                                 &read_config,
 	                                                 changeable_at_runtime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);

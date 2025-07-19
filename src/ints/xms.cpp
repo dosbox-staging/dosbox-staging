@@ -712,7 +712,7 @@ static Bitu XMS_Handler()
 // Module object
 // ***************************************************************************
 
-Bitu GetEMSType(Section_prop* section);
+Bitu GetEMSType(SectionProp* section);
 
 class XMS final : public ModuleBase {
 private:
@@ -725,7 +725,7 @@ public:
 
 XMS::XMS(Section* configuration) : ModuleBase(configuration), callbackhandler{}
 {
-	Section_prop* section = static_cast<Section_prop*>(configuration);
+	SectionProp* section = static_cast<SectionProp*>(configuration);
 
 	umb = {};
 	a20 = {};

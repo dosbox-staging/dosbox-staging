@@ -297,11 +297,11 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	return linesadded;
 }
 
-static Section_prop* get_render_section()
+static SectionProp* get_render_section()
 {
 	assert(control);
 
-	auto render_section = static_cast<Section_prop*>(
+	auto render_section = static_cast<SectionProp*>(
 	        control->GetSection("render"));
 	assert(render_section);
 
@@ -1094,7 +1094,7 @@ std::string RENDER_GetCgaColorsSetting()
 	return get_render_section()->GetString("cga_colors");
 }
 
-static void init_render_settings(Section_prop& secprop)
+static void init_render_settings(SectionProp& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto deprecated    = Property::Changeable::Deprecated;
@@ -1370,7 +1370,7 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("render",
+	SectionProp* sec = conf->AddSectionProp("render",
 	                                          &render_init,
 	                                          changeable_at_runtime);
 
@@ -1440,7 +1440,7 @@ static bool handle_shader_changes()
 
 static void render_init(Section* sec)
 {
-	Section_prop* section = static_cast<Section_prop*>(sec);
+	SectionProp* section = static_cast<SectionProp*>(sec);
 	assert(section);
 
 	// For restarting the renderer

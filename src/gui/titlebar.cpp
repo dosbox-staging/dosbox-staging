@@ -695,14 +695,14 @@ static void parse_config(const std::string& new_setting_str)
 	}
 }
 
-void TITLEBAR_ReadConfig(const Section_prop& secprop)
+void TITLEBAR_ReadConfig(const SectionProp& secprop)
 {
 	parse_config(secprop.GetString("window_titlebar"));
 
 	GFX_RefreshTitle();
 }
 
-void TITLEBAR_AddConfig(Section_prop& secprop)
+void TITLEBAR_AddConfig(SectionProp& secprop)
 {
 	constexpr auto always = Property::Changeable::Always;
 

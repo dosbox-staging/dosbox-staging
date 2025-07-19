@@ -644,7 +644,7 @@ void TANDYSOUND_Init(Section* section)
 {
 	assert(section);
 
-	const auto prop = static_cast<Section_prop*>(section);
+	const auto prop = static_cast<SectionProp*>(section);
 	const auto pref = prop->GetString("tandy");
 
 	if (has_false(pref) || (!is_machine_pcjr_or_tandy() && pref == "auto")) {

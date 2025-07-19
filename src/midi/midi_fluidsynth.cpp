@@ -193,7 +193,7 @@ constexpr ReverbParameters DefaultReverbParameters = {
 };
 // clang-format on
 
-static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
+static void init_fluidsynth_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
@@ -325,11 +325,11 @@ static std::vector<std_fs::path> get_platform_data_dirs()
 
 #endif
 
-static Section_prop* get_fluidsynth_section()
+static SectionProp* get_fluidsynth_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("fluidsynth"));
 	assert(sec);
 
 	return sec;
@@ -1297,7 +1297,7 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec = conf->AddSection_prop("fluidsynth",
+	SectionProp* sec = conf->AddSectionProp("fluidsynth",
 	                                          &fluidsynth_init,
 	                                          ChangeableAtRuntime);
 	assert(sec);

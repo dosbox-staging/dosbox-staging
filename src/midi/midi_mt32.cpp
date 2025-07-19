@@ -336,7 +336,7 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
-static void init_mt32_dosbox_settings(Section_prop& sec_prop)
+static void init_mt32_dosbox_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -452,7 +452,7 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 
 static std::deque<std_fs::path> get_rom_dirs()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
 
 	// Get potential ROM directories from the environment and/or system
@@ -475,7 +475,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::string get_model_setting()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
 	return section->GetString("model");
 }
@@ -708,7 +708,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
 
 	const std::string filter_prefs = section->GetString("mt32_filter");
@@ -1107,7 +1107,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("mt32",
+	SectionProp* sec_prop = conf->AddSectionProp("mt32",
 	                                               &mt32_init,
 	                                               ChangeableAtRuntime);
 	assert(sec_prop);
