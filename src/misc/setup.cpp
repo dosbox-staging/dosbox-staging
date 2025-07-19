@@ -1063,11 +1063,9 @@ bool Section_prop::HandleInputline(const std::string& line)
 			                      "PROGRAM_CONFIG_DEPRECATED_SETTING",
 			                      name.c_str());
 
-			LOG_WARNING("CONFIG: %s",
-			            strip_ansi_markup(p->GetHelpForHost()).c_str());
-
-			CONSOLE_Write(convert_ansi_markup(p->GetHelp()));
-			CONSOLE_Write("\n\n");
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "CONFIG",
+			                      create_config_name(name));
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
