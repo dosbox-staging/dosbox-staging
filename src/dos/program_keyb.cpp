@@ -284,6 +284,7 @@ void KEYB::WriteOutSuccess()
 	assert(script1); // main script should be available, always
 
 	std::vector<std::pair<std::string, std::string>> table = {};
+	table.reserve(3);
 
 	if (script1) {
 		table.emplace_back(DOS_GetKeyboardScriptName(*script1),
