@@ -344,7 +344,7 @@ std::string Property::GetHelp() const
 	return result;
 }
 
-std::string Property::GetHelpForHost() const
+std::string Property::GetHelpRaw() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_setting_help_msg_name(propname))) {
@@ -1189,7 +1189,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 					continue;
 				}
 
-				auto help = p->GetHelpForHost();
+				auto help = p->GetHelpRaw();
 
 				std::string::size_type pos = std::string::npos;
 
@@ -1204,6 +1204,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 				// WriteOut()). So we need to de-escape them
 				// before writing them into the config.
 				auto s = format_str(help);
+
+				s = strip_ansi_markup(s);
 
 				fprintf(outfile,
 				        "# %*s: %s",
