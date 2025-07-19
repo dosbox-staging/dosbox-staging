@@ -270,9 +270,9 @@ static std::string create_setting_help_msg_name(const std::string& propname)
 	return result;
 }
 
-void Property::Set_help(const std::string& in)
+void Property::Set_help(const std::string& help_text)
 {
-	MSG_Add(create_setting_help_msg_name(propname), in);
+	MSG_Add(create_setting_help_msg_name(propname), help_text);
 }
 
 static std::string create_config_item_name(const std::string& propname,
@@ -286,21 +286,24 @@ static std::string create_config_item_name(const std::string& propname,
 	return result;
 }
 
-void Property::SetOptionHelp(const std::string& option, const std::string& in)
+void Property::SetOptionHelp(const std::string& option, const std::string& help_text)
 {
-	MSG_Add(create_config_item_name(propname, option), in);
+	MSG_Add(create_config_item_name(propname, option), help_text);
 }
 
-void Property::SetOptionHelp(const std::string& in)
+void Property::SetOptionHelp(const std::string& help_text)
 {
-	MSG_Add(create_config_item_name(propname, {}), in);
+	MSG_Add(create_config_item_name(propname, {}), help_text);
 }
 
 std::string Property::GetHelp() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_setting_help_msg_name(propname))) {
-		std::string help_text = MSG_Get(create_setting_help_msg_name(propname));
+
+		auto help_text = MSG_Get(
+		        create_setting_help_msg_name(propname));
+
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -346,7 +349,10 @@ std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
 	if (MSG_Exists(create_setting_help_msg_name(propname))) {
-		auto help_text = MSG_GetTranslatedRaw(create_setting_help_msg_name(propname));
+
+		auto help_text = MSG_GetTranslatedRaw(
+		        create_setting_help_msg_name(propname));
+
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,

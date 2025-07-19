@@ -135,10 +135,10 @@ public:
 	// The string may contain a single '%s' marker. If present, it will be
 	// substitued with the settings's default value (see `GetHelp()` and
 	// `GetHelpUtf8()`).
-	void Set_help(const std::string& str);
+	void Set_help(const std::string& help_text);
 
-	void SetOptionHelp(const std::string& option, const std::string& in);
-	void SetOptionHelp(const std::string& in);
+	void SetOptionHelp(const std::string& option, const std::string& help_text);
+	void SetOptionHelp(const std::string& help_text);
 
 	// If the setting's help text contains a '%s' marker, the `GetHelp`
 	// functions will substitute it with the setting's default value.
