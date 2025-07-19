@@ -38,7 +38,7 @@ private:
 
 public:
 	Hex() : value(0) {}
-	Hex(int in) : value(in) {}
+	Hex(int _value) : value(_value) {}
 
 	bool operator==(const Hex& other) const
 	{
@@ -73,19 +73,19 @@ public:
 	// Constructors
 	Value() = default;
 
-	Value(const Hex& in) : _hex(in), type(V_HEX) {}
-	Value(int in) : _int(in), type(V_INT) {}
-	Value(bool in) : _bool(in), type(V_BOOL) {}
-	Value(double in) : _double(in), type(V_DOUBLE) {}
+	Value(const Hex& _value) : _hex(_value), type(V_HEX) {}
+	Value(int _value) : _int(_value), type(V_INT) {}
+	Value(bool _value) : _bool(_value), type(V_BOOL) {}
+	Value(double _value) : _double(_value), type(V_DOUBLE) {}
 
-	Value(const std::string& in, Etype t)
+	Value(const std::string& _value, Etype _type)
 	{
-		SetValue(in, t);
+		SetValue(_value, _type);
 	}
 
-	Value(const std::string& in) : _string(in), type(V_STRING) {}
+	Value(const std::string& _value) : _string(_value), type(V_STRING) {}
 
-	Value(const char* const in) : _string(in), type(V_STRING) {}
+	Value(const char* const _value) : _string(_value), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
 	bool operator==(const Hex& other) const;
@@ -97,16 +97,16 @@ public:
 	operator double() const;
 	operator std::string() const;
 
-	bool SetValue(const std::string& in, Etype _type = V_CURRENT);
+	bool SetValue(const std::string& value, Etype type = V_CURRENT);
 
 	std::string ToString() const;
 
 private:
-	bool SetHex(const std::string& in);
-	bool SetInt(const std::string& in);
-	bool SetBool(const std::string& in);
-	void SetString(const std::string& in);
-	bool SetDouble(const std::string& in);
+	bool SetHex(const std::string& value);
+	bool SetInt(const std::string& value);
+	bool SetBool(const std::string& value);
+	void SetString(const std::string& value);
+	bool SetDouble(const std::string& value);
 };
 
 class Property {
@@ -127,8 +127,8 @@ public:
 
 	virtual ~Property() = default;
 
-	void SetValues(const std::vector<std::string>& in);
-	void SetEnabledOptions(const std::vector<std::string>& in);
+	void SetValues(const std::vector<std::string>& values);
+	void SetEnabledOptions(const std::vector<std::string>& options);
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);
 
@@ -165,7 +165,7 @@ public:
 		return !valid_values.empty();
 	}
 
-	virtual bool IsValidValue(const Value& in);
+	virtual bool IsValidValue(const Value& value);
 	virtual bool IsValueDeprecated(const Value& value) const;
 
 	Changeable::Value GetChange() const
@@ -194,7 +194,7 @@ public:
 	}
 
 protected:
-	virtual bool ValidateValue(const Value& in);
+	virtual bool ValidateValue(const Value& value);
 
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
@@ -214,13 +214,13 @@ private:
 
 class PropInt final : public Property {
 public:
-	PropInt(const std::string& name, Changeable::Value when, int val)
+	PropInt(const std::string& name, Changeable::Value when, int _value)
 	        : Property(name, when),
 	          min_value(-1),
 	          max_value(-1)
 	{
-		default_value = val;
-		value         = val;
+		default_value = _value;
+		value         = _value;
 	}
 
 	~PropInt() override = default;
@@ -240,11 +240,11 @@ public:
 		max_value = max;
 	}
 
-	bool SetValue(const std::string& in) override;
-	bool IsValidValue(const Value& in) override;
+	bool SetValue(const std::string& value) override;
+	bool IsValidValue(const Value& value) override;
 
 protected:
-	bool ValidateValue(const Value& in) override;
+	bool ValidateValue(const Value& value) override;
 
 private:
 	Value min_value;
@@ -258,7 +258,7 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& input) override;
+	bool SetValue(const std::string& value) override;
 	~PropDouble() override = default;
 };
 
@@ -269,7 +269,7 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in) override;
+	bool SetValue(const std::string& value) override;
 	~PropBool() override = default;
 };
 
@@ -284,8 +284,8 @@ public:
 
 	~PropString() override = default;
 
-	bool SetValue(const std::string& in) override;
-	bool IsValidValue(const Value& in) override;
+	bool SetValue(const std::string& value) override;
+	bool IsValidValue(const Value& value) override;
 };
 
 class PropPath final : public PropString {
@@ -298,7 +298,7 @@ public:
 
 	~PropPath() override = default;
 
-	bool SetValue(const std::string& in) override;
+	bool SetValue(const std::string& value) override;
 
 	std_fs::path realpath = {};
 };
@@ -310,7 +310,7 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in) override;
+	bool SetValue(const std::string& value) override;
 	~PropHex() override = default;
 };
 
