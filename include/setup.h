@@ -498,16 +498,16 @@ public:
 	bool SetValue(const std::string& input) override;
 };
 
-class Section_line final : public Section {
+class SectionLine final : public Section {
 public:
-	Section_line() = default;
-	Section_line(const std::string& name) : Section(name), data() {}
+	SectionLine() = default;
+	SectionLine(const std::string& name) : Section(name), data() {}
 
 	// Construct and assign by std::move
-	Section_line(Section_line&& other)            = default;
-	Section_line& operator=(Section_line&& other) = default;
+	SectionLine(SectionLine&& other)            = default;
+	SectionLine& operator=(SectionLine&& other) = default;
 
-	~Section_line() override
+	~SectionLine() override
 	{
 		ExecuteDestroy(true);
 	}

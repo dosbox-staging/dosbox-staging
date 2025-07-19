@@ -1122,7 +1122,7 @@ std::string Section_prop::GetPropValue(const std::string& _property) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool Section_line::HandleInputline(const std::string& line)
+bool SectionLine::HandleInputline(const std::string& line)
 {
 	if (!data.empty()) {
 		// Add return to previous line in buffer
@@ -1132,12 +1132,12 @@ bool Section_line::HandleInputline(const std::string& line)
 	return true;
 }
 
-void Section_line::PrintData(FILE* outfile) const
+void SectionLine::PrintData(FILE* outfile) const
 {
 	fprintf(outfile, "%s", data.c_str());
 }
 
-std::string Section_line::GetPropValue(const std::string&) const
+std::string SectionLine::GetPropValue(const std::string&) const
 {
 	return NO_SUCH_PROPERTY;
 }
@@ -1324,12 +1324,12 @@ Section_prop::~Section_prop()
 	}
 }
 
-Section_line* Config::AddSection_line(const char* section_name, SectionFunction func)
+SectionLine* Config::AddSectionLine(const char* section_name, SectionFunction func)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
-	Section_line* blah = new Section_line(section_name);
+	SectionLine* blah = new SectionLine(section_name);
 	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
 
@@ -1483,7 +1483,7 @@ const std::string& Config::GetOverwrittenAutoexecConf() const
 	return overwritten_autoexec_conf;
 }
 
-const Section_line& Config::GetOverwrittenAutoexecSection() const
+const SectionLine& Config::GetOverwrittenAutoexecSection() const
 {
 	return overwritten_autoexec_section;
 }
