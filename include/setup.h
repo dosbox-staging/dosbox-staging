@@ -531,11 +531,6 @@ public:
 	ModuleBase& operator=(const ModuleBase&) = delete; // prevent assignment
 
 	virtual ~ModuleBase() = default;
-
-	virtual bool Change_Config(Section* /*newconfig*/)
-	{
-		return false;
-	}
 };
 
 bool config_file_is_valid(const std_fs::path& path);
