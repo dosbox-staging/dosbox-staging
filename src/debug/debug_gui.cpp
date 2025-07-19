@@ -263,7 +263,7 @@ void LOG_StartUp(void) {
 	
 	/* Register the log section */
 	Section_prop* sect   = control->AddSection_prop("log", LOG_Init);
-	Prop_string* pstring = sect->AddString("logfile",
+	PropString* pstring = sect->AddString("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");
 	pstring->SetHelp("Path of the log file.");
@@ -271,7 +271,7 @@ void LOG_StartUp(void) {
 	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		Prop_bool* pbool = sect->AddBool(buf,
+		PropBool* pbool = sect->AddBool(buf,
 		                                  Property::Changeable::Always,
 		                                  true);
 		pbool->SetHelp("Enable/disable logging of this type.");

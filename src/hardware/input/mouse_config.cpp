@@ -430,8 +430,8 @@ static void config_init(Section_prop& secprop)
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto deprecated    = Property::Changeable::Deprecated;
 
-	Prop_bool* prop_bool  = nullptr;
-	Prop_string* prop_str = nullptr;
+	PropBool* prop_bool  = nullptr;
+	PropString* prop_str = nullptr;
 
 	// General configuration
 

@@ -212,9 +212,9 @@ private:
 	void MaybeSetBoolValid(const std::string_view value);
 };
 
-class Prop_int final : public Property {
+class PropInt final : public Property {
 public:
-	Prop_int(const std::string& name, Changeable::Value when, int val)
+	PropInt(const std::string& name, Changeable::Value when, int val)
 	        : Property(name, when),
 	          min_value(-1),
 	          max_value(-1)
@@ -223,7 +223,7 @@ public:
 		value         = val;
 	}
 
-	~Prop_int() override = default;
+	~PropInt() override = default;
 
 	int GetMin() const
 	{
@@ -251,67 +251,67 @@ private:
 	Value max_value;
 };
 
-class Prop_double final : public Property {
+class PropDouble final : public Property {
 public:
-	Prop_double(const std::string& _propname, Changeable::Value when, double _value)
+	PropDouble(const std::string& _propname, Changeable::Value when, double _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
 	bool SetValue(const std::string& input) override;
-	~Prop_double() override = default;
+	~PropDouble() override = default;
 };
 
-class Prop_bool final : public Property {
+class PropBool final : public Property {
 public:
-	Prop_bool(const std::string& _propname, Changeable::Value when, bool _value)
+	PropBool(const std::string& _propname, Changeable::Value when, bool _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
 	bool SetValue(const std::string& in) override;
-	~Prop_bool() override = default;
+	~PropBool() override = default;
 };
 
-class Prop_string : public Property {
+class PropString : public Property {
 public:
-	Prop_string(const std::string& name, Changeable::Value when, const char* val)
+	PropString(const std::string& name, Changeable::Value when, const char* val)
 	        : Property(name, when)
 	{
 		default_value = val;
 		value         = val;
 	}
 
-	~Prop_string() override = default;
+	~PropString() override = default;
 
 	bool SetValue(const std::string& in) override;
 	bool IsValidValue(const Value& in) override;
 };
 
-class Prop_path final : public Prop_string {
+class PropPath final : public PropString {
 public:
-	Prop_path(const std::string& name, Changeable::Value when, const char* val)
-	        : Prop_string(name, when, val)
+	PropPath(const std::string& name, Changeable::Value when, const char* val)
+	        : PropString(name, when, val)
 	{
 		SetValue(val);
 	}
 
-	~Prop_path() override = default;
+	~PropPath() override = default;
 
 	bool SetValue(const std::string& in) override;
 
 	std_fs::path realpath = {};
 };
 
-class Prop_hex final : public Property {
+class PropHex final : public Property {
 public:
-	Prop_hex(const std::string& _propname, Changeable::Value when, Hex _value)
+	PropHex(const std::string& _propname, Changeable::Value when, Hex _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
 	bool SetValue(const std::string& in) override;
-	~Prop_hex() override = default;
+	~PropHex() override = default;
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
@@ -388,21 +388,21 @@ public:
 
 	~Section_prop() override;
 
-	Prop_int* AddInt(const std::string& _propname,
+	PropInt* AddInt(const std::string& _propname,
 	                  Property::Changeable::Value when, int _value = 0);
 
-	Prop_string* AddString(const std::string& _propname,
+	PropString* AddString(const std::string& _propname,
 	                        Property::Changeable::Value when,
 	                        const char* _value = nullptr);
 
-	Prop_path* AddPath(const std::string& _propname,
+	PropPath* AddPath(const std::string& _propname,
 	                    Property::Changeable::Value when,
 	                    const char* _value = nullptr);
 
-	Prop_bool* AddBool(const std::string& _propname,
+	PropBool* AddBool(const std::string& _propname,
 	                    Property::Changeable::Value when, bool _value = false);
 
-	Prop_hex* AddHex(const std::string& _propname,
+	PropHex* AddHex(const std::string& _propname,
 	                  Property::Changeable::Value when, Hex _value = 0);
 
 	//	void Add_double(const char * _propname, double _value=0.0);
@@ -432,8 +432,8 @@ public:
 
 	std::string GetString(const std::string& _propname) const;
 
-	Prop_bool* GetBoolProp(const std::string& propname) const;
-	Prop_string* GetStringProp(const std::string& propname) const;
+	PropBool* GetBoolProp(const std::string& propname) const;
+	PropString* GetStringProp(const std::string& propname) const;
 
 	bool GetBool(const std::string& _propname) const;
 
@@ -441,7 +441,7 @@ public:
 
 	double GetDouble(const std::string& _propname) const;
 
-	Prop_path* GetPath(const std::string& _propname) const;
+	PropPath* GetPath(const std::string& _propname) const;
 
 	PropMultiVal* GetMultiVal(const std::string& _propname) const;
 

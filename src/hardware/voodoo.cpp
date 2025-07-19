@@ -7071,7 +7071,7 @@ static int get_num_total_threads()
 
 		// Use a property to test and warn if the value's outside the range
 		constexpr auto always_changeable = Property::Changeable::Always;
-		auto range_property = Prop_int(SettingName, always_changeable, valid_int);
+		auto range_property = PropInt(SettingName, always_changeable, valid_int);
 		range_property.SetMinMax(MinThreads, MaxThreads);
 
 		if (!range_property.IsValidValue(*maybe_int)) {

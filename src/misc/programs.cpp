@@ -394,7 +394,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				} else if (p->GetType() == Value::V_INT) {
 					// Print min & max for integer values if
 					// used
-					Prop_int* pint = dynamic_cast<Prop_int*>(p);
+					PropInt* pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
 					if (pint->GetMin() != pint->GetMax()) {
