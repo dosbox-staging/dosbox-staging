@@ -597,10 +597,10 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	// Note the [sdl] section is initialised in sdlmain.cpp
 	
 	Section_prop* secprop             = nullptr;
-	Prop_bool* pbool                  = nullptr;
-	Prop_int* pint                    = nullptr;
-	Prop_hex* phex                    = nullptr;
-	Prop_string* pstring              = nullptr;
+	PropBool* pbool                  = nullptr;
+	PropInt* pint                    = nullptr;
+	PropHex* phex                    = nullptr;
+	PropString* pstring              = nullptr;
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed

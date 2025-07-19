@@ -581,7 +581,7 @@ static void capture_init(Section* sec)
 		return;
 	}
 
-	Prop_path* capture_path = secprop->GetPath("capture_dir");
+	PropPath* capture_path = secprop->GetPath("capture_dir");
 	assert(capture_path);
 
 	// We can safely change the capture output path even if capturing of any

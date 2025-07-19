@@ -706,7 +706,7 @@ void TITLEBAR_AddConfig(Section_prop& secprop)
 {
 	constexpr auto always = Property::Changeable::Always;
 
-	Prop_string* prop_str = nullptr;
+	PropString* prop_str = nullptr;
 
 	prop_str = secprop.AddString("window_titlebar",
 	                              always,

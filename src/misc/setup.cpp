@@ -34,7 +34,7 @@ extern char** environ;
 // Commonly accessed global that holds configuration records
 ConfigPtr control = {};
 
-// Set by parseconfigfile so Prop_path can use it to construct the realpath
+// Set by parseconfigfile so PropPath can use it to construct the realpath
 static std_fs::path current_config_dir;
 
 Value::operator bool() const
@@ -392,7 +392,7 @@ std::string Property::GetHelpForHost() const
 	return result;
 }
 
-bool Prop_int::ValidateValue(const Value& in)
+bool PropInt::ValidateValue(const Value& in)
 {
 	if (IsRestrictedValue()) {
 		if (IsValueDeprecated(in)) {
@@ -445,7 +445,7 @@ bool Prop_int::ValidateValue(const Value& in)
 	return true;
 }
 
-bool Prop_int::IsValidValue(const Value& in)
+bool PropInt::IsValidValue(const Value& in)
 {
 	if (IsRestrictedValue()) {
 		return Property::IsValidValue(in);
@@ -477,7 +477,7 @@ bool Prop_int::IsValidValue(const Value& in)
 	return false;
 }
 
-bool Prop_double::SetValue(const std::string& input)
+bool PropDouble::SetValue(const std::string& input)
 {
 	Value val;
 	if (!val.SetValue(input, Value::V_DOUBLE)) {
@@ -486,7 +486,7 @@ bool Prop_double::SetValue(const std::string& input)
 	return ValidateValue(val);
 }
 
-bool Prop_int::SetValue(const std::string& input)
+bool PropInt::SetValue(const std::string& input)
 {
 	Value val;
 	if (!val.SetValue(input, Value::V_INT)) {
@@ -496,7 +496,7 @@ bool Prop_int::SetValue(const std::string& input)
 	return is_valid;
 }
 
-bool Prop_string::SetValue(const std::string& input)
+bool PropString::SetValue(const std::string& input)
 {
 	std::string temp(input);
 
@@ -510,7 +510,7 @@ bool Prop_string::SetValue(const std::string& input)
 	return ValidateValue(val);
 }
 
-bool Prop_string::IsValidValue(const Value& in)
+bool PropString::IsValidValue(const Value& in)
 {
 	if (!IsRestrictedValue()) {
 		return true;
@@ -548,7 +548,7 @@ bool Prop_string::IsValidValue(const Value& in)
 	return false;
 }
 
-bool Prop_path::SetValue(const std::string& input)
+bool PropPath::SetValue(const std::string& input)
 {
 	// Special version to merge realpath with it
 
@@ -576,7 +576,7 @@ bool Prop_path::SetValue(const std::string& input)
 	return is_valid;
 }
 
-bool Prop_bool::SetValue(const std::string& input)
+bool PropBool::SetValue(const std::string& input)
 {
 	auto is_valid = value.SetValue(input, Value::V_BOOL);
 	if (!is_valid) {
@@ -592,7 +592,7 @@ bool Prop_bool::SetValue(const std::string& input)
 	return is_valid;
 }
 
-bool Prop_hex::SetValue(const std::string& input)
+bool PropHex::SetValue(const std::string& input)
 {
 	Value val;
 	val.SetValue(input, Value::V_HEX);
@@ -840,43 +840,43 @@ void Property::SetEnabledOptions(const std::vector<std::string>& in)
 	enabled_options = in;
 }
 
-Prop_int* Section_prop::AddInt(const std::string& _propname,
+PropInt* Section_prop::AddInt(const std::string& _propname,
                                 Property::Changeable::Value when, int _value)
 {
-	Prop_int* test = new Prop_int(_propname, when, _value);
+	PropInt* test = new PropInt(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_string* Section_prop::AddString(const std::string& _propname,
+PropString* Section_prop::AddString(const std::string& _propname,
                                       Property::Changeable::Value when,
                                       const char* _value)
 {
-	Prop_string* test = new Prop_string(_propname, when, _value);
+	PropString* test = new PropString(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_path* Section_prop::AddPath(const std::string& _propname,
+PropPath* Section_prop::AddPath(const std::string& _propname,
                                   Property::Changeable::Value when, const char* _value)
 {
-	Prop_path* test = new Prop_path(_propname, when, _value);
+	PropPath* test = new PropPath(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_bool* Section_prop::AddBool(const std::string& _propname,
+PropBool* Section_prop::AddBool(const std::string& _propname,
                                   Property::Changeable::Value when, bool _value)
 {
-	Prop_bool* test = new Prop_bool(_propname, when, _value);
+	PropBool* test = new PropBool(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
 
-Prop_hex* Section_prop::AddHex(const std::string& _propname,
+PropHex* Section_prop::AddHex(const std::string& _propname,
                                 Property::Changeable::Value when, Hex _value)
 {
-	Prop_hex* test = new Prop_hex(_propname, when, _value);
+	PropHex* test = new PropHex(_propname, when, _value);
 	properties.push_back(test);
 	return test;
 }
@@ -929,11 +929,11 @@ double Section_prop::GetDouble(const std::string& _propname) const
 	return 0.0;
 }
 
-Prop_path* Section_prop::GetPath(const std::string& _propname) const
+PropPath* Section_prop::GetPath(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
-			Prop_path* val = dynamic_cast<Prop_path*>((*tel));
+			PropPath* val = dynamic_cast<PropPath*>((*tel));
 			if (val) {
 				return val;
 			} else {
@@ -1005,21 +1005,21 @@ std::string Section_prop::GetString(const std::string& _propname) const
 	return "";
 }
 
-Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
+PropBool* Section_prop::GetBoolProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
 		if (iequals(property->propname, propname)) {
-			return dynamic_cast<Prop_bool*>(property);
+			return dynamic_cast<PropBool*>(property);
 		}
 	}
 	return nullptr;
 }
 
-Prop_string* Section_prop::GetStringProp(const std::string& propname) const
+PropString* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {
 		if (iequals(property->propname, propname)) {
-			return dynamic_cast<Prop_string*>(property);
+			return dynamic_cast<PropString*>(property);
 		}
 	}
 	return nullptr;

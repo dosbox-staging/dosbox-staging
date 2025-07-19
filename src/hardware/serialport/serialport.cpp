@@ -1282,7 +1282,7 @@ public:
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 
 #if C_MODEM
-		const Prop_path *pbFilename = section->GetPath("phonebookfile");
+		const PropPath *pbFilename = section->GetPath("phonebookfile");
 		MODEM_ReadPhonebook(pbFilename->realpath);
 #endif
 
