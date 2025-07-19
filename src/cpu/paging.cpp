@@ -998,9 +998,9 @@ bool PAGING_Enabled()
 	return paging.enabled;
 }
 
-class PAGING final : public Module_base{
+class PAGING final : public ModuleBase{
 public:
-	PAGING(Section* configuration):Module_base(configuration){
+	PAGING(Section* configuration):ModuleBase(configuration){
 		/* Setup default Page Directory, force it to update */
 		paging.enabled=false;
 		PAGING_InitTLB();

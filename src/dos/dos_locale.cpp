@@ -1617,13 +1617,13 @@ static void load_keyboard_layout()
 // Lifecycle
 // ***************************************************************************
 
-class DOS_Locale final : public Module_base {
+class DOS_Locale final : public ModuleBase {
 public:
 	DOS_Locale(Section* configuration);
 	~DOS_Locale();
 };
 
-DOS_Locale::DOS_Locale(Section* configuration) : Module_base(configuration)
+DOS_Locale::DOS_Locale(Section* configuration) : ModuleBase(configuration)
 {
 	auto section = static_cast<Section_prop*>(configuration);
 	assert(section);

@@ -232,7 +232,7 @@ static const Bitu max_rqueued_devices=16;
 static Bitu num_rqueued_devices=0;
 static PCI_Device* rqueued_devices[max_rqueued_devices];
 
-class PCI final : public Module_base {
+class PCI final : public ModuleBase {
 private:
 	bool initialized = false;
 
@@ -378,7 +378,7 @@ public:
 			pci_devices_installed=last_active_device+1;
 	}
 
-	PCI(Section* configuration) : Module_base(configuration), callback_pci{}
+	PCI(Section* configuration) : ModuleBase(configuration), callback_pci{}
 	{
 		pci_devices_installed = 0;
 

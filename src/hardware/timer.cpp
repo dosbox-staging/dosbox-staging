@@ -615,12 +615,12 @@ bool TIMER_GetOutput2()
 	return counter_output(channel_2);
 }
 
-class TIMER final : public Module_base{
+class TIMER final : public ModuleBase{
 private:
 	IO_ReadHandleObject ReadHandler[4];
 	IO_WriteHandleObject WriteHandler[4];
 public:
-	TIMER(Section* configuration):Module_base(configuration){
+	TIMER(Section* configuration):ModuleBase(configuration){
 		WriteHandler[0].Install(0x40, write_latch, io_width_t::byte);
 		//	WriteHandler[1].Install(0x41,write_latch,io_width_t::byte);
 		WriteHandler[2].Install(0x42, write_latch, io_width_t::byte);

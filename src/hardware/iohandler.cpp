@@ -359,9 +359,9 @@ uint32_t IO_ReadD(io_port_t port)
 }
 
 
-class IO final : public Module_base {
+class IO final : public ModuleBase {
 public:
-	IO(Section* configuration):Module_base(configuration){
+	IO(Section* configuration):ModuleBase(configuration){
 		iof_queue.used = 0;
 	}
 	~IO()

@@ -1372,7 +1372,7 @@ Bitu GetEMSType(Section_prop * section) {
 	return rtype;
 }
 
-class EMS final : public Module_base {
+class EMS final : public ModuleBase {
 private:
 	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;
@@ -1384,7 +1384,7 @@ private:
 
 public:
 	EMS(Section *configuration)
-	        : Module_base(configuration),
+	        : ModuleBase(configuration),
 	          call_vdma(),
 	          call_vcpi(),
 	          call_v86mon()

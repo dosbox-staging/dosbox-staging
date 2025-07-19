@@ -1421,7 +1421,7 @@ static void NE2000_Poller(void) {
 	});
 }
 
-class NE2K final : public Module_base {
+class NE2K final : public ModuleBase {
 private:
 	// Data
 	IO_ReadHandleObject ReadHandler8[0x20];
@@ -1432,7 +1432,7 @@ private:
 public:
 	bool load_success;
 	NE2K(Section *configuration)
-	        : Module_base(configuration),
+	        : ModuleBase(configuration),
 	          load_success(true)
 	{
 		Section_prop *section = static_cast<Section_prop *>(configuration);

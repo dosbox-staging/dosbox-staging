@@ -766,14 +766,14 @@ static void MPU401_Reset()
 	}
 }
 
-class MPU401 final : public Module_base {
+class MPU401 final : public ModuleBase {
 private:
 	IO_ReadHandleObject ReadHandler[2]   = {};
 	IO_WriteHandleObject WriteHandler[2] = {};
 	bool is_installed                    = false;
 
 public:
-	MPU401(Section* configuration) : Module_base(configuration)
+	MPU401(Section* configuration) : ModuleBase(configuration)
 	{
 		Section_prop* section = dynamic_cast<Section_prop*>(configuration);
 		if (!section) {
