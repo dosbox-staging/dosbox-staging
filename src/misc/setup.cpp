@@ -263,7 +263,7 @@ bool Property::ValidateValue(const Value& in)
 	}
 }
 
-static std::string create_config_name(const std::string& propname)
+static std::string create_setting_help_msg_name(const std::string& propname)
 {
 	std::string result = "CONFIG_" + propname;
 	upcase(result);
@@ -272,7 +272,7 @@ static std::string create_config_name(const std::string& propname)
 
 void Property::Set_help(const std::string& in)
 {
-	MSG_Add(create_config_name(propname), in);
+	MSG_Add(create_setting_help_msg_name(propname), in);
 }
 
 static std::string create_config_item_name(const std::string& propname,
@@ -299,8 +299,8 @@ void Property::SetOptionHelp(const std::string& in)
 std::string Property::GetHelp() const
 {
 	std::string result = {};
-	if (MSG_Exists(create_config_name(propname))) {
-		std::string help_text = MSG_Get(create_config_name(propname));
+	if (MSG_Exists(create_setting_help_msg_name(propname))) {
+		std::string help_text = MSG_Get(create_setting_help_msg_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -345,8 +345,8 @@ std::string Property::GetHelp() const
 std::string Property::GetHelpForHost() const
 {
 	std::string result = {};
-	if (MSG_Exists(create_config_name(propname))) {
-		auto help_text = MSG_GetTranslatedRaw(create_config_name(propname));
+	if (MSG_Exists(create_setting_help_msg_name(propname))) {
+		auto help_text = MSG_GetTranslatedRaw(create_setting_help_msg_name(propname));
 		// Fill in the default value if the help text contains '%s'.
 		if (help_text.find("%s") != std::string::npos) {
 			help_text = format_str(help_text,
@@ -1065,7 +1065,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "CONFIG",
-			                      create_config_name(name));
+			                      create_setting_help_msg_name(name));
 
 			if (!p->IsDeprecatedButAllowed()) {
 				return false;
