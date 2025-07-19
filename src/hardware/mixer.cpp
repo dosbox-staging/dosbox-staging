@@ -2909,7 +2909,7 @@ void MIXER_Init(Section* sec)
 		// Initialize the 8-bit to 16-bit lookup table
 		fill_8to16_lut();
 
-		const auto mixer_state = secprop->Get_bool("nosound")
+		const auto mixer_state = secprop->GetBool("nosound")
 		                               ? MixerState::NoSound
 		                               : MixerState::On;
 
@@ -2921,16 +2921,16 @@ void MIXER_Init(Section* sec)
 			mixer.state = MixerState::NoSound;
 		};
 
-		mixer.sample_rate_hz = secprop->Get_int("rate");
-		mixer.blocksize      = secprop->Get_int("blocksize");
+		mixer.sample_rate_hz = secprop->GetInt("rate");
+		mixer.blocksize      = secprop->GetInt("blocksize");
 
 		if (mixer_state == MixerState::NoSound) {
 			set_no_sound();
 
 		} else {
-			if (init_sdl_sound(secprop->Get_int("rate"),
-			                   secprop->Get_int("blocksize"),
-			                   secprop->Get_bool("negotiate"))) {
+			if (init_sdl_sound(secprop->GetInt("rate"),
+			                   secprop->GetInt("blocksize"),
+			                   secprop->GetBool("negotiate"))) {
 
 				// This also unpauses the audio device which is
 				// opened in paused mode by SDL.
@@ -2940,7 +2940,7 @@ void MIXER_Init(Section* sec)
 			}
 		}
 
-		const auto requested_prebuffer_ms = secprop->Get_int("prebuffer");
+		const auto requested_prebuffer_ms = secprop->GetInt("prebuffer");
 		mixer.prebuffer_ms = clamp(requested_prebuffer_ms, 1, MaxPrebufferMs);
 
 		const auto prebuffer_frames = (mixer.sample_rate_hz *
@@ -2962,7 +2962,7 @@ void MIXER_Init(Section* sec)
 
 	// Initialise crossfeed
 	const auto new_crossfeed_preset = crossfeed_pref_to_preset(
-	        secprop->Get_string("crossfeed"));
+	        secprop->GetString("crossfeed"));
 
 	if (mixer.crossfeed.preset != new_crossfeed_preset) {
 		MIXER_SetCrossfeedPreset(new_crossfeed_preset);
@@ -2970,7 +2970,7 @@ void MIXER_Init(Section* sec)
 
 	// Initialise reverb
 	const auto new_reverb_preset = reverb_pref_to_preset(
-	        secprop->Get_string("reverb"));
+	        secprop->GetString("reverb"));
 
 	if (mixer.reverb.preset != new_reverb_preset) {
 		MIXER_SetReverbPreset(new_reverb_preset);
@@ -2978,19 +2978,19 @@ void MIXER_Init(Section* sec)
 
 	// Initialise chorus
 	const auto new_chorus_preset = chorus_pref_to_preset(
-	        secprop->Get_string("chorus"));
+	        secprop->GetString("chorus"));
 
 	if (mixer.chorus.preset != new_chorus_preset) {
 		MIXER_SetChorusPreset(new_chorus_preset);
 	}
 
 	// Init per-channel denoisers
-	init_denoiser(secprop->Get_bool("denoiser"));
+	init_denoiser(secprop->GetBool("denoiser"));
 
 	init_master_highpass_filter();
 
 	// Initialise master compressor
-	init_compressor(secprop->Get_bool("compressor"));
+	init_compressor(secprop->GetBool("compressor"));
 
 	MIXER_UnlockMixerThread();
 }

@@ -13361,7 +13361,7 @@ static void imfc_init(Section* sec)
 {
 	assert(sec);
 	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
-	if (!conf || !conf->Get_bool("imfc")) {
+	if (!conf || !conf->GetBool("imfc")) {
 		return;
 	}
 
@@ -13403,7 +13403,7 @@ static void imfc_init(Section* sec)
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	const std::string filter_choice = conf->Get_string("imfc_filter");
+	const std::string filter_choice = conf->GetString("imfc_filter");
 
 	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
 		if (*maybe_bool) {
@@ -13423,9 +13423,9 @@ static void imfc_init(Section* sec)
 		enable_filter();
 	}
 
-	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
+	const auto port = static_cast<io_port_t>(conf->GetHex("imfc_base"));
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
+	const auto irq = clamp(static_cast<uint8_t>(conf->GetInt("imfc_irq")),
 	                       MinIrqAddress,
 	                       MaxIrqAddress);
 

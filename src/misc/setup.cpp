@@ -665,7 +665,7 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 			local.clear();
 		}
 		// Test Value. If it fails set default
-		Value valtest(in, p->Get_type());
+		Value valtest(in, p->GetType());
 		if (!p->IsValidValue(valtest)) {
 			MakeDefaultValue();
 			return false;
@@ -714,10 +714,10 @@ bool PropMultiVal::SetValue(const std::string& input)
 			local.clear();
 		}
 
-		if (p->Get_type() == Value::V_STRING) {
+		if (p->GetType() == Value::V_STRING) {
 			// Strings are only checked against the valid values
 			// list. Test Value. If it fails set default
-			Value valtest(in, p->Get_type());
+			Value valtest(in, p->GetType());
 			if (!p->IsValidValue(valtest)) {
 				MakeDefaultValue();
 				return false;
@@ -729,7 +729,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 			// not enough (as invalid values as converted to 0)
 			bool r = p->SetValue(in);
 			if (!r) {
-				if (in.empty() && p->Get_type() == prevtype) {
+				if (in.empty() && p->GetType() == prevtype) {
 					// Nothing there, but same type of
 					// variable, so repeat it (sensitivity)
 					in = prevargument;
@@ -743,7 +743,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 			}
 		}
 
-		prevtype     = p->Get_type();
+		prevtype     = p->GetType();
 		prevargument = std::move(in);
 	}
 
@@ -899,7 +899,7 @@ PropMultiValRemain* Section_prop::AddMultiValRemain(const std::string& _propname
 	return test;
 }
 
-int Section_prop::Get_int(const std::string& _propname) const
+int Section_prop::GetInt(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -909,7 +909,7 @@ int Section_prop::Get_int(const std::string& _propname) const
 	return 0;
 }
 
-bool Section_prop::Get_bool(const std::string& _propname) const
+bool Section_prop::GetBool(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -919,7 +919,7 @@ bool Section_prop::Get_bool(const std::string& _propname) const
 	return false;
 }
 
-double Section_prop::Get_double(const std::string& _propname) const
+double Section_prop::GetDouble(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -929,7 +929,7 @@ double Section_prop::Get_double(const std::string& _propname) const
 	return 0.0;
 }
 
-Prop_path* Section_prop::Get_path(const std::string& _propname) const
+Prop_path* Section_prop::GetPath(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
@@ -995,7 +995,7 @@ Property* Section_prop::GetProp(const std::string_view propname)
 	return nullptr;
 }
 
-std::string Section_prop::Get_string(const std::string& _propname) const
+std::string Section_prop::GetString(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (iequals((*tel)->propname, _propname)) {
@@ -1025,7 +1025,7 @@ Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 	return nullptr;
 }
 
-Hex Section_prop::Get_hex(const std::string& _propname) const
+Hex Section_prop::GetHex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (iequals((*tel)->propname, _propname)) {

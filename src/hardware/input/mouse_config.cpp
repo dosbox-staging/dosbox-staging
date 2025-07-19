@@ -368,16 +368,16 @@ static void config_read(Section* section)
 
 	// Settings changeable during runtime
 
-	set_capture_type(conf->Get_string("mouse_capture"));
-	set_sensitivity(conf->Get_string("mouse_sensitivity"));
+	set_capture_type(conf->GetString("mouse_capture"));
+	set_sensitivity(conf->GetString("mouse_sensitivity"));
 
-	mouse_config.multi_display_aware = conf->Get_bool("mouse_multi_display_aware");
+	mouse_config.multi_display_aware = conf->GetBool("mouse_multi_display_aware");
 
-	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
-	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
+	mouse_config.middle_release = conf->GetBool("mouse_middle_release");
+	mouse_config.raw_input      = conf->GetBool("mouse_raw_input");
 
-	set_dos_driver_model(conf->Get_string("builtin_dos_mouse_driver_model"));
-	set_dos_driver_options(conf->Get_string("builtin_dos_mouse_driver_options"));
+	set_dos_driver_model(conf->GetString("builtin_dos_mouse_driver_model"));
+	set_dos_driver_options(conf->GetString("builtin_dos_mouse_driver_options"));
 
 	// Settings below should be read only once
 
@@ -395,17 +395,17 @@ static void config_read(Section* section)
 	}
 
 	// Built-in DOS driver configuration
-	set_dos_driver_mode(conf->Get_string("builtin_dos_mouse_driver"));
+	set_dos_driver_mode(conf->GetString("builtin_dos_mouse_driver"));
 
 	// PS/2 AUX port mouse configuration
-	set_ps2_mouse_model(conf->Get_string("ps2_mouse_model"));
+	set_ps2_mouse_model(conf->GetString("ps2_mouse_model"));
 
 	// COM port mouse configuration
-	set_serial_mouse_model(conf->Get_string("com_mouse_model"));
+	set_serial_mouse_model(conf->GetString("com_mouse_model"));
 
 	// VMM PCI interfaces
-	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
-	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
+	mouse_config.is_vmware_mouse_enabled = conf->GetBool("vmware_mouse");
+	mouse_config.is_virtualbox_mouse_enabled = conf->GetBool("virtualbox_mouse");
 
 	if (!GFX_HaveDesktopEnvironment() && mouse_config.is_virtualbox_mouse_enabled) {
 		// VirtualBox guest side driver is able to request us to re-use

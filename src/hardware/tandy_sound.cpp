@@ -645,7 +645,7 @@ void TANDYSOUND_Init(Section* section)
 	assert(section);
 
 	const auto prop = static_cast<Section_prop*>(section);
-	const auto pref = prop->Get_string("tandy");
+	const auto pref = prop->GetString("tandy");
 
 	if (has_false(pref) || (!is_machine_pcjr_or_tandy() && pref == "auto")) {
 		BIOS_ConfigureTandyDacCallbacks(false);
@@ -669,7 +669,7 @@ void TANDYSOUND_Init(Section* section)
 	const auto wants_dac = has_true(pref) || (is_machine_pcjr_or_tandy() && pref == "auto");
 	if (wants_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
-		        cfg, prop->Get_string("tandy_dac_filter"));
+		        cfg, prop->GetString("tandy_dac_filter"));
 		TIMER_AddTickHandler(TANDYSOUND_PicCallback);
 	}
 
@@ -679,8 +679,8 @@ void TANDYSOUND_Init(Section* section)
 
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
 	                                       wants_dac,
-	                                       prop->Get_string("tandy_fadeout"),
-	                                       prop->Get_string("tandy_filter"));
+	                                       prop->GetString("tandy_fadeout"),
+	                                       prop->GetString("tandy_filter"));
 
 	constexpr auto ChangeableAtRuntime = true;
 	section->AddDestroyFunction(&TANDYSOUND_ShutDown, ChangeableAtRuntime);

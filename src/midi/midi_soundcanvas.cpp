@@ -238,7 +238,7 @@ static Section_prop* get_soundcanvas_section()
 
 static std::string get_model_setting()
 {
-	return get_soundcanvas_section()->Get_string("soundcanvas_model");
+	return get_soundcanvas_section()->GetString("soundcanvas_model");
 }
 
 static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
@@ -347,11 +347,11 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	constexpr auto ReleaseTimeMs = 1000.0f;
 	mixer_channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
 
-	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	mixer_channel->EnableNoiseGate(denoiser_enabled);
 
 	// Set up channel filter
-	const auto filter_prefs = get_soundcanvas_section()->Get_string(
+	const auto filter_prefs = get_soundcanvas_section()->GetString(
 	        "soundcanvas_filter");
 
 	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {

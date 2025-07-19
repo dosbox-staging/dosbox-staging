@@ -73,7 +73,7 @@ void DOS_Shell::InputCommand(char* line)
 		return;
 	}
 
-	const std::string expand_shell_variable_pref = dos_section->Get_string(
+	const std::string expand_shell_variable_pref = dos_section->GetString(
 	        "expand_shell_variable");
 
 	const auto expand_shell_pref_has_bool = parse_bool_setting(

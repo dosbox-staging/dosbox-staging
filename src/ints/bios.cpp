@@ -1272,7 +1272,7 @@ public:
 		} else if (is_machine_pcjr()) {
 			const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
 			assert(section);
-			const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+			const std::string pcjr_memory_config = section->GetString("pcjr_memory_config");
 			if (pcjr_memory_config == "expanded") {
 				mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
 				mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);

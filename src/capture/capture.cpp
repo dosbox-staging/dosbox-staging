@@ -581,7 +581,7 @@ static void capture_init(Section* sec)
 		return;
 	}
 
-	Prop_path* capture_path = secprop->Get_path("capture_dir");
+	Prop_path* capture_path = secprop->GetPath("capture_dir");
 	assert(capture_path);
 
 	// We can safely change the capture output path even if capturing of any
@@ -593,7 +593,7 @@ static void capture_init(Section* sec)
 		capture.path = "capture";
 	}
 
-	const std::string prefs = secprop->Get_string("default_image_capture_formats");
+	const std::string prefs = secprop->GetString("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 

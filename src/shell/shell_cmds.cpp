@@ -125,7 +125,7 @@ bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::
 	trim(args);
 
 	assert(section_dosbox);
-	if (!section_dosbox->Get_bool("shell_config_shortcuts")) {
+	if (!section_dosbox->GetBool("shell_config_shortcuts")) {
 		return false;
 	}
 

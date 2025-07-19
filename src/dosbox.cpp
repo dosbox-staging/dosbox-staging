@@ -465,7 +465,7 @@ void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
 		                         arguments->machine);
 	}
 
-	const auto machine_str = section->Get_string("machine");
+	const auto machine_str = section->GetString("machine");
 
 	svga_type = SvgaType::None;
 	machine   = MachineType::Vga;
@@ -524,10 +524,10 @@ static void DOSBOX_RealInit(Section* sec)
 	DOSBOX_SetMachineTypeFromConfig(section);
 
 	// Set the user's prefered MCB fault handling strategy
-	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy").c_str());
+	DOS_SetMcbFaultStrategy(section->GetString("mcb_fault_strategy").c_str());
 
 	// Convert the users video memory in either MB or KB to bytes
-	const std::string vmemsize_string = section->Get_string("vmemsize");
+	const std::string vmemsize_string = section->GetString("vmemsize");
 
 	// If auto, then default to 0 and let the adapter's setup rountine set
 	// the size
@@ -537,7 +537,7 @@ static void DOSBOX_RealInit(Section* sec)
 	vmemsize *= (vmemsize <= 8) ? 1024 * 1024 : 1024;
 	vga.vmemsize = check_cast<uint32_t>(vmemsize);
 
-	const std::string pref = section->Get_string("vesa_modes");
+	const std::string pref = section->GetString("vesa_modes");
 	if (pref == "compatible") {
 		int10.vesa_modes = VesaModes::Compatible;
 	} else if (pref == "halfline") {
@@ -546,10 +546,10 @@ static void DOSBOX_RealInit(Section* sec)
 		int10.vesa_modes = VesaModes::All;
 	}
 
-	VGA_SetRatePreference(section->Get_string("dos_rate"));
+	VGA_SetRatePreference(section->GetString("dos_rate"));
 
 	// Set the disk IO data rate
-	const auto hdd_io_speed = section->Get_string("hard_disk_speed");
+	const auto hdd_io_speed = section->GetString("hard_disk_speed");
 	if (hdd_io_speed == "fast") {
 		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::HardDisk);
 	} else if (hdd_io_speed == "medium") {
@@ -561,7 +561,7 @@ static void DOSBOX_RealInit(Section* sec)
 	}
 
 	// Set the floppy disk IO data rate
-	const auto floppy_io_speed = section->Get_string("floppy_disk_speed");
+	const auto floppy_io_speed = section->GetString("floppy_disk_speed");
 	if (floppy_io_speed == "fast") {
 		DOS_SetDiskSpeed(DiskSpeed::Fast, DiskType::Floppy);
 	} else if (floppy_io_speed == "medium") {

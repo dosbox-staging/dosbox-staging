@@ -1356,7 +1356,7 @@ static Bitu INT4B_Handler() {
 
 Bitu GetEMSType(Section_prop * section) {
 	Bitu rtype = 0;
-	const std::string ems_pref = section->Get_string("ems");
+	const std::string ems_pref = section->GetString("ems");
 
 	const auto ems_pref_has_bool = parse_bool_setting(ems_pref);
 

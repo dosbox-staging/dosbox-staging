@@ -258,12 +258,12 @@ static void innovation_init(Section *sec)
 	assert(sec);
 	Section_prop *conf = static_cast<Section_prop *>(sec);
 
-	const auto model_choice          = conf->Get_string("sidmodel");
-	const auto clock_choice          = conf->Get_string("sidclock");
-	const auto port_choice           = conf->Get_hex("sidport");
-	const auto filter_strength_6581  = conf->Get_int("6581filter");
-	const auto filter_strength_8580  = conf->Get_int("8580filter");
-	const auto channel_filter_choice = conf->Get_string("innovation_filter");
+	const auto model_choice          = conf->GetString("sidmodel");
+	const auto clock_choice          = conf->GetString("sidclock");
+	const auto port_choice           = conf->GetHex("sidport");
+	const auto filter_strength_6581  = conf->GetInt("6581filter");
+	const auto filter_strength_8580  = conf->GetInt("8580filter");
+	const auto channel_filter_choice = conf->GetString("innovation_filter");
 
 	innovation.Open(model_choice,
 	                clock_choice,

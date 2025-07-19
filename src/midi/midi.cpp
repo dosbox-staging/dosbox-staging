@@ -600,7 +600,7 @@ static Section_prop* get_midi_section()
 
 static std::string get_mididevice_setting()
 {
-	return get_midi_section()->Get_string("mididevice");
+	return get_midi_section()->GetString("mididevice");
 }
 
 static auto MidiDevicePortPref    = "port";
@@ -624,9 +624,9 @@ public:
 		}
 
 		const auto section      = get_midi_section();
-		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
+		raw_midi_output_enabled = section->GetBool("raw_midi_output");
 
-		std::string midiconfig_prefs = section->Get_string("midiconfig");
+		std::string midiconfig_prefs = section->GetString("midiconfig");
 
 		if (midiconfig_prefs.find("delaysysex") != std::string::npos) {
 			midi.sysex.start_ms = GetTicks();

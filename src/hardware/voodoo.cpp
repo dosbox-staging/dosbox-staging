@@ -7064,7 +7064,7 @@ static int get_num_total_threads()
 	constexpr auto AutoSetting = "auto";
 
 	const auto sec = dynamic_cast<Section_prop*>(control->GetSection(SectionName));
-	const auto user_setting = sec ? sec->Get_string(SettingName) : AutoSetting;
+	const auto user_setting = sec ? sec->GetString(SettingName) : AutoSetting;
 
 	if (const auto maybe_int = parse_int(user_setting)) {
 		const auto valid_int = std::clamp(*maybe_int, MinThreads, MaxThreads);
@@ -7887,14 +7887,14 @@ static void voodoo_init(Section* sec)
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
 	// Only activate on SVGA machines and when requested
-	if (!is_machine_svga() || !section || !section->Get_bool("voodoo")) {
+	if (!is_machine_svga() || !section || !section->GetBool("voodoo")) {
 		return;
 	}
 	//
-	const std::string memsize_pref = section->Get_string("voodoo_memsize");
+	const std::string memsize_pref = section->GetString("voodoo_memsize");
 	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
-	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
+	voodoo_bilinear_filtering = section->GetBool("voodoo_bilinear_filtering");
 
 	sec->AddDestroyFunction(&voodoo_destroy, false);
 

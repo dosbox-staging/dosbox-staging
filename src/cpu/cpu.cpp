@@ -2761,7 +2761,7 @@ public:
 		};
 
 		// Real mode
-		const std::string cpu_cycles_pref = secprop->Get_string("cpu_cycles");
+		const std::string cpu_cycles_pref = secprop->GetString("cpu_cycles");
 
 		if (cpu_cycles_pref == "max") {
 			modern_cycles_config.real_mode = {};
@@ -2790,7 +2790,7 @@ public:
 		};
 
 		// Protected mode
-		const std::string cpu_cycles_protected_pref = secprop->Get_string(
+		const std::string cpu_cycles_protected_pref = secprop->GetString(
 		        "cpu_cycles_protected");
 
 		if (cpu_cycles_protected_pref == "auto") {
@@ -2852,7 +2852,7 @@ public:
 		}
 
 		// Throttling
-		modern_cycles_config.throttle = secprop->Get_bool("cpu_throttle");
+		modern_cycles_config.throttle = secprop->GetBool("cpu_throttle");
 	}
 
 	// The legacy 'cycles' config setting accepts all the following value
@@ -2922,9 +2922,9 @@ public:
 
 		PropMultiVal* p = secprop->GetMultiVal("cycles");
 
-		const std::string type = p->GetSection()->Get_string("type");
+		const std::string type = p->GetSection()->GetString("type");
 		std::string str;
-		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
+		CommandLine cmd("", p->GetSection()->GetString("parameters"));
 
 		constexpr auto MinPercent = 0;
 		constexpr auto MaxPercent = 100;
@@ -3149,13 +3149,13 @@ public:
 
 		Section_prop* secprop = static_cast<Section_prop*>(sec);
 
-		const std::string cpu_core = secprop->Get_string("core");
-		const std::string cpu_type = secprop->Get_string("cputype");
+		const std::string cpu_core = secprop->GetString("core");
+		const std::string cpu_type = secprop->GetString("cputype");
 
 		ConfigureCpuCore(cpu_core);
 		ConfigureCpuType(cpu_core, cpu_type);
 
-		auto cycles_pref = secprop->Get_string("cycles");
+		auto cycles_pref = secprop->GetString("cycles");
 		trim(cycles_pref);
 
 		if (!cycles_pref.empty()) {
@@ -3184,8 +3184,8 @@ public:
 			set_modern_cycles_config(CpuMode::Real);
 		}
 
-		cpu_cycle_up   = secprop->Get_int("cycleup");
-		cpu_cycle_down = secprop->Get_int("cycledown");
+		cpu_cycle_up   = secprop->GetInt("cycleup");
+		cpu_cycle_down = secprop->GetInt("cycledown");
 
 		GFX_NotifyCyclesChanged();
 

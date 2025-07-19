@@ -346,7 +346,7 @@ void MOUNT::Run(void) {
 				        sizes[3],
 				        mediaid,
 				        readonly,
-				        section->Get_bool(
+				        section->GetBool(
 				                "allow_write_protected_files"));
 			}
 		}

@@ -814,9 +814,9 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	opl.mode = _opl_mode;
 
 	Section_prop* section = static_cast<Section_prop*>(configuration);
-	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
+	const auto base = static_cast<uint16_t>(section->GetHex("sbbase"));
 
-	ctrl.mixer_enabled = section->Get_bool("sbmixer");
+	ctrl.mixer_enabled = section->GetBool("sbmixer");
 
 	std::set channel_features = {ChannelFeature::Sleep,
 	                             ChannelFeature::FadeOut,
@@ -891,15 +891,15 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	constexpr auto ReleaseTimeMs = 100.0f;
 	channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
 
-	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	channel->EnableNoiseGate(denoiser_enabled);
 
 	// Setup fadeout
-	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {
+	if (!channel->ConfigureFadeOut(section->GetString("opl_fadeout"))) {
 		set_section_property_value("sblaster", "opl_fadeout", "off");
 	}
 
-	ctrl.wants_dc_bias_removed = section->Get_bool("opl_remove_dc_bias");
+	ctrl.wants_dc_bias_removed = section->GetBool("opl_remove_dc_bias");
 	if (ctrl.wants_dc_bias_removed) {
 		LOG_MSG("%s: DC bias removal enabled", channel->GetName().c_str());
 	}

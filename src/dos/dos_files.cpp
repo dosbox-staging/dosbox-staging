@@ -1881,7 +1881,7 @@ void DOS_InitFileLocking(Section* sec)
 {
 	assert(sec);
 	const Section_prop* section = static_cast<Section_prop*>(sec);
-	emulate_file_locking = section->Get_bool("file_locking");
+	emulate_file_locking = section->GetBool("file_locking");
 }
 
 bool DOS_IsFileLocking()

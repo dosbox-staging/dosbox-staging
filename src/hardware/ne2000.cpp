@@ -1436,7 +1436,7 @@ public:
 	          load_success(true)
 	{
 		Section_prop *section = static_cast<Section_prop *>(configuration);
-		if (!section->Get_bool("ne2000")) {
+		if (!section->GetBool("ne2000")) {
 			load_success = false;
 			return;
 		}
@@ -1453,12 +1453,12 @@ public:
 		}
 
 		// get irq and base
-		auto irq = check_cast<uint8_t>(section->Get_int("nicirq"));
+		auto irq = check_cast<uint8_t>(section->GetInt("nicirq"));
 		if(!(irq==3 || irq==4  || irq==5  || irq==6 ||irq==7 ||
 			irq==9 || irq==10 || irq==11 || irq==12 ||irq==14 ||irq==15)) {
 			irq=3;
 		}
-		auto base = static_cast<io_port_t>(section->Get_hex("nicbase"));
+		auto base = static_cast<io_port_t>(section->GetHex("nicbase"));
 		if(!(base==0x260||base==0x280||base==0x300||base==0x320||base==0x340||base==0x380)) {
 			base=0x300;
 		}
@@ -1466,7 +1466,7 @@ public:
         LOG_MSG("NE2000: Initialised on port %xh and IRQ %u", base, irq);
 
 		// mac address
-		std::string macstring = section->Get_string("macaddr");
+		std::string macstring = section->GetString("macaddr");
 		unsigned int macint[6];
 		uint8_t mac[6];
 		if(sscanf(macstring.c_str(),"%02x:%02x:%02x:%02x:%02x:%02x",

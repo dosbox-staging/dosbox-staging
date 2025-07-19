@@ -515,7 +515,7 @@ void DOS_SetupMemory(void) {
 
 		const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
 		assert(section);
-		const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+		const std::string pcjr_memory_config = section->GetString("pcjr_memory_config");
 		if (pcjr_memory_config == "expanded") {
 			// With expanded memory, reserve the lower memory up to video memory.
 			// This makes application memory contiguous in order to prevent crashes.

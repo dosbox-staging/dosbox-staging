@@ -686,7 +686,7 @@ static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 
 static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 {
-	const std::string mode = get_render_section()->Get_string("aspect");
+	const std::string mode = get_render_section()->GetString("aspect");
 
 	if (has_true(mode) || mode == "auto") {
 		return AspectRatioCorrectionMode::Auto;
@@ -711,7 +711,7 @@ AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 
 static IntegerScalingMode get_integer_scaling_mode_setting()
 {
-	const std::string mode = get_render_section()->Get_string("integer_scaling");
+	const std::string mode = get_render_section()->GetString("integer_scaling");
 
 	if (has_false(mode)) {
 		return IntegerScalingMode::Off;
@@ -1091,7 +1091,7 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 
 std::string RENDER_GetCgaColorsSetting()
 {
-	return get_render_section()->Get_string("cga_colors");
+	return get_render_section()->GetString("cga_colors");
 }
 
 static void init_render_settings(Section_prop& secprop)
@@ -1414,7 +1414,7 @@ static bool handle_shader_changes()
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
 		const auto section     = get_render_section();
 		const auto shader_name = shader_manager.MapShaderName(
-		        section->Get_string(glshader_setting_name));
+		        section->GetString(glshader_setting_name));
 
 		shader_manager.NotifyGlshaderSettingChanged(shader_name);
 
@@ -1461,7 +1461,7 @@ static void render_init(Section* sec)
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
 
 	if (const auto& settings = parse_viewport_settings(
-	            section->Get_string("viewport"));
+	            section->GetString("viewport"));
 	    settings) {
 		viewport_settings = *settings;
 	} else {
@@ -1471,7 +1471,7 @@ static void render_init(Section* sec)
 
 	// Set monochrome palette
 	const auto mono_palette = to_monochrome_palette_enum(
-	        section->Get_string("monochrome_palette").c_str());
+	        section->GetString("monochrome_palette").c_str());
 	VGA_SetMonochromePalette(mono_palette);
 
 	// Only use the default 1x rendering scaler

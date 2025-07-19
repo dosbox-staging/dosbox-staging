@@ -527,7 +527,7 @@ std_fs::path SETVER::GetTableFilePath()
 		return {};
 	}
 
-	const Prop_path* file_path = section->Get_path("setver_table_file");
+	const Prop_path* file_path = section->GetPath("setver_table_file");
 	if (!file_path) {
 		return {};
 	}

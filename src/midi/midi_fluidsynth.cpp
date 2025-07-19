@@ -339,7 +339,7 @@ static std::vector<std_fs::path> get_data_dirs()
 {
 	auto dirs = get_platform_data_dirs();
 
-	auto sf_dir = get_fluidsynth_section()->Get_string("soundfont_dir");
+	auto sf_dir = get_fluidsynth_section()->GetString("soundfont_dir");
 	if (!sf_dir.empty()) {
 		// The user-provided SoundFont dir might use a different casing
 		// of the actual path on Linux & Windows, so we need to
@@ -536,7 +536,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 {
 	assert(synth);
 
-	const auto chorus_pref = get_fluidsynth_section()->Get_string(ChorusSettingName);
+	const auto chorus_pref = get_fluidsynth_section()->GetString(ChorusSettingName);
 	const auto chorus_enabled_opt = parse_bool_setting(chorus_pref);
 
 	auto enable_chorus = [&](const bool enabled) {
@@ -562,7 +562,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 			        "FSYNTH: Chorus auto-disabled due to known issues with "
 			        "the '%s' soundfont",
 			        get_fluidsynth_section()
-			                ->Get_string("soundfont")
+			                ->GetString("soundfont")
 			                .c_str());
 		} else {
 			set_chorus_params(synth, DefaultChorusParameters);
@@ -665,7 +665,7 @@ static void setup_reverb(fluid_synth_t* synth)
 {
 	assert(synth);
 
-	const auto reverb_pref = get_fluidsynth_section()->Get_string(ReverbSettingName);
+	const auto reverb_pref = get_fluidsynth_section()->GetString(ReverbSettingName);
 	const auto reverb_enabled_opt = parse_bool_setting(reverb_pref);
 
 	auto enable_reverb = [&](const bool enabled) {
@@ -772,7 +772,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	const auto sf_name = section->Get_string("soundfont");
+	const auto sf_name = section->GetString("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
 	if (!sf_path.empty() &&
@@ -791,7 +791,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	auto sf_volume_percent = section->Get_int("soundfont_volume");
+	auto sf_volume_percent = section->GetInt("soundfont_volume");
 	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
 	                                 static_cast<float>(sf_volume_percent) /
 	                                         100.0f);
@@ -838,7 +838,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	// its 0db level.
 	fluidsynth_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const std::string filter_prefs = section->Get_string("fsynth_filter");
+	const std::string filter_prefs = section->GetString("fsynth_filter");
 
 	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {

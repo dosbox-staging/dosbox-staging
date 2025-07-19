@@ -277,7 +277,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 
 	// Auto-mount drives (except for DOSBox's Z:) prior to [autoexec]
-	if (sec->Get_bool("automount")) {
+	if (sec->GetBool("automount")) {
 		for (char letter = 'a'; letter < 'z'; ++letter) {
 			AutoMountDetectedDrive({letter});
 		}
@@ -293,7 +293,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	const bool has_option_no_autoexec = arguments->noautoexec;
 
 	// Should autoexec sections be joined or overwritten?
-	const std::string section_pref   = sec->Get_string("autoexec_section");
+	const std::string section_pref   = sec->GetString("autoexec_section");
 	const bool should_join_autoexecs = (section_pref == "join");
 
 	// Check to see for extra command line options to be added
@@ -553,7 +553,7 @@ std::optional<AutoMountSettings> parse_drive_conf(const std_fs::path& conf_path)
 
 	const auto section = static_cast<Section_prop*>(conf->GetSection("drive"));
 
-	const auto override_drive = section->Get_string("override_drive");
+	const auto override_drive = section->GetString("override_drive");
 	if (override_drive.length() == 1 && override_drive[0] >= 'a' &&
 	    override_drive[0] <= 'y') {
 		settings.override_drive = override_drive;
@@ -564,11 +564,11 @@ std::optional<AutoMountSettings> parse_drive_conf(const std_fs::path& conf_path)
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
-	settings.readonly = section->Get_bool("readonly");
-	settings.label    = section->Get_string("label");
-	settings.type     = section->Get_string("type");
-	settings.path     = section->Get_string("path");
-	settings.verbose  = section->Get_bool("verbose");
+	settings.readonly = section->GetBool("readonly");
+	settings.label    = section->GetString("label");
+	settings.type     = section->GetString("type");
+	settings.path     = section->GetString("path");
+	settings.verbose  = section->GetBool("verbose");
 
 	return settings;
 }

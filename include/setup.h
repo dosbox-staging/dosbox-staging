@@ -188,7 +188,7 @@ public:
 	std::vector<Value> GetDeprecatedValues() const;
 	const Value& GetAlternateForDeprecatedValue(const Value& value) const;
 
-	Value::Etype Get_type() const
+	Value::Etype GetType() const
 	{
 		return default_value.type;
 	}
@@ -428,20 +428,20 @@ public:
 		return properties.end();
 	}
 
-	int Get_int(const std::string& _propname) const;
+	int GetInt(const std::string& _propname) const;
 
-	std::string Get_string(const std::string& _propname) const;
+	std::string GetString(const std::string& _propname) const;
 
 	Prop_bool* GetBoolProp(const std::string& propname) const;
 	Prop_string* GetStringProp(const std::string& propname) const;
 
-	bool Get_bool(const std::string& _propname) const;
+	bool GetBool(const std::string& _propname) const;
 
-	Hex Get_hex(const std::string& _propname) const;
+	Hex GetHex(const std::string& _propname) const;
 
-	double Get_double(const std::string& _propname) const;
+	double GetDouble(const std::string& _propname) const;
 
-	Prop_path* Get_path(const std::string& _propname) const;
+	Prop_path* GetPath(const std::string& _propname) const;
 
 	PropMultiVal* GetMultiVal(const std::string& _propname) const;
 

@@ -3173,7 +3173,7 @@ static bool should_skip_unchanged_titlebar(const Section_prop* section)
 	// Filter out unneeded calls - do not execute MAPPER_BindKeys if only
 	// window titlebar setting has changed, to avoid flicker
 
-	const std::string curr_titlebar = section->Get_string("window_titlebar");
+	const std::string curr_titlebar = section->GetString("window_titlebar");
 
 	static std::optional<std::string> prev_titlebar = {};
 	if (prev_titlebar && curr_titlebar != *prev_titlebar) {
@@ -3193,8 +3193,8 @@ void MAPPER_BindKeys(Section* sec)
 	}
 
 	// Get the mapper file set by the user
-	const auto mapperfile_value = section->Get_string("mapperfile");
-	const auto property         = section->Get_path("mapperfile");
+	const auto mapperfile_value = section->GetString("mapperfile");
+	const auto property         = section->GetPath("mapperfile");
 
 	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();

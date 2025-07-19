@@ -1452,7 +1452,7 @@ static void setup_line_drawing_delays(const uint32_t total_lines)
 	const auto section = static_cast<Section_prop*>(conf);
 	assert(section);
 
-	if (vga.draw.mode == PART && !section->Get_bool("vga_render_per_scanline")) {
+	if (vga.draw.mode == PART && !section->GetBool("vga_render_per_scanline")) {
 		// Render the screen in 4 parts; this was the legacy DOSBox behaviour.
 		// A few games needs this (e.g., Deus, Ishar 3, Robinson's Requiem,
 		// Time Travelers) and would crash at startup with per-scanline

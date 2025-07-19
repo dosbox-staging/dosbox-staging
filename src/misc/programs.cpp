@@ -388,10 +388,10 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				std::string possible_values;
 				std::vector<Value> pv = p->GetValues();
 
-				if (p->Get_type() == Value::V_BOOL) {
+				if (p->GetType() == Value::V_BOOL) {
 					possible_values += "on, off";
 
-				} else if (p->Get_type() == Value::V_INT) {
+				} else if (p->GetType() == Value::V_INT) {
 					// Print min & max for integer values if
 					// used
 					Prop_int* pint = dynamic_cast<Prop_int*>(p);
