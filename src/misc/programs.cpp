@@ -358,7 +358,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 		while (true) {
 			// List the properties
-			Property* p = psec->Get_prop(i++);
+			Property* p = psec->GetProp(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -378,7 +378,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 
 		while (true) {
-			Property* p = psec->Get_prop(i++);
+			Property* p = psec->GetProp(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -723,7 +723,7 @@ void CONFIG::Run(void)
 					}
 					while (true) {
 						// list the properties
-						Property* p = psec->Get_prop(i++);
+						Property* p = psec->GetProp(i++);
 						if (p == nullptr) {
 							break;
 						}
@@ -820,7 +820,7 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				auto* property = tsec->Get_prop(pvars[1]);
+				auto* property = tsec->GetProp(pvars[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),

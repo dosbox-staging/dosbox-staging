@@ -415,8 +415,8 @@ public:
 	                                      Property::Changeable::Value when,
 	                                      const std::string& sep);
 
-	Property* Get_prop(int index);
-	Property* Get_prop(const std::string_view propname);
+	Property* GetProp(int index);
+	Property* GetProp(const std::string_view propname);
 
 	const_it begin() const
 	{
