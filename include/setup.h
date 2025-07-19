@@ -133,17 +133,32 @@ public:
 	                                     const char* alternate_value);
 
 	// The string may contain a single '%s' marker. If present, it will be
-	// substitued with the settings's default value (see `GetHelp()` and
-	// `GetHelpUtf8()`).
+	// substitued with the settings's default value (e.g., `blocksize`,
+	// `prebuffer`, etc.)
 	void SetHelp(const std::string& help_text);
 
 	void SetOptionHelp(const std::string& option, const std::string& help_text);
 	void SetOptionHelp(const std::string& help_text);
 
-	// If the setting's help text contains a '%s' marker, the `GetHelp`
-	// functions will substitute it with the setting's default value.
+	// Returns the translated help message, or the English help message if
+	// no translation exists for the current language, adapted to the
+	// currently active DOS code page with markup tags converted to ANSI
+	// escape codes.
+	//
+	// If the setting's help text contains a '%s' marker, it will be
+	// substituted with the setting's default value. (e.g., `blocksize`,
+	// `prebuffer`, etc.)
+	//
 	std::string GetHelp() const;
-	std::string GetHelpForHost() const;
+
+	// Returns the help text in UTF-8 without any DOS code page or ANSI
+	// markup tags conversions applied.
+	//
+	// If the setting's help text contains a '%s' marker, it will be
+	// substituted with the setting's default value. (e.g., `blocksize`,
+	// `prebuffer`, etc.)
+	//
+	std::string GetHelpRaw() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
 
