@@ -256,14 +256,14 @@ static void innovation_destroy([[maybe_unused]] Section *sec)
 static void innovation_init(Section *sec)
 {
 	assert(sec);
-	Section_prop *conf = static_cast<Section_prop *>(sec);
+	SectionProp *conf = static_cast<SectionProp *>(sec);
 
-	const auto model_choice          = conf->Get_string("sidmodel");
-	const auto clock_choice          = conf->Get_string("sidclock");
-	const auto port_choice           = conf->Get_hex("sidport");
-	const auto filter_strength_6581  = conf->Get_int("6581filter");
-	const auto filter_strength_8580  = conf->Get_int("8580filter");
-	const auto channel_filter_choice = conf->Get_string("innovation_filter");
+	const auto model_choice          = conf->GetString("sidmodel");
+	const auto clock_choice          = conf->GetString("sidclock");
+	const auto port_choice           = conf->GetHex("sidport");
+	const auto filter_strength_6581  = conf->GetInt("6581filter");
+	const auto filter_strength_8580  = conf->GetInt("8580filter");
+	const auto channel_filter_choice = conf->GetString("innovation_filter");
 
 	innovation.Open(model_choice,
 	                clock_choice,
@@ -276,14 +276,14 @@ static void innovation_init(Section *sec)
 	sec->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
 }
 
-static void init_innovation_dosbox_settings(Section_prop& sec_prop)
+static void init_innovation_dosbox_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	// Chip type
-	auto* str_prop = sec_prop.Add_string("sidmodel", when_idle, "none");
-	str_prop->Set_values({"auto", "6581", "8580", "none"});
-	str_prop->Set_help(
+	auto* str_prop = sec_prop.AddString("sidmodel", when_idle, "none");
+	str_prop->SetValues({"auto", "6581", "8580", "none"});
+	str_prop->SetHelp(
 	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
 	        "  auto:  Use the 6581 chip.\n"
 	        "  6581:  The original chip, known for its bassy and rich character.\n"
@@ -293,9 +293,9 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  none:  Disable the card (default).");
 
 	// Chip clock frequency
-	str_prop = sec_prop.Add_string("sidclock", when_idle, "default");
-	str_prop->Set_values({"default", "c64ntsc", "c64pal", "hardsid"});
-	str_prop->Set_help(
+	str_prop = sec_prop.AddString("sidclock", when_idle, "default");
+	str_prop->SetValues({"default", "c64ntsc", "c64pal", "hardsid"});
+	str_prop->SetHelp(
 	        "The SID chip's clock frequency, which is jumperable on reproduction cards:\n"
 	        "  default:  0.895 MHz, per the original SSI-2001 card (default).\n"
 	        "  c64ntsc:  1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
@@ -303,27 +303,27 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  hardsid:  1.000 MHz, available on the DuoSID.");
 
 	// IO Address
-	auto* hex_prop          = sec_prop.Add_hex("sidport", when_idle, 0x280);
-	hex_prop->Set_values({"240", "260", "280", "2a0", "2c0"});
-	hex_prop->Set_help(
+	auto* hex_prop          = sec_prop.AddHex("sidport", when_idle, 0x280);
+	hex_prop->SetValues({"240", "260", "280", "2a0", "2c0"});
+	hex_prop->SetHelp(
 	        "The IO port address of the Innovation SSI-2001 (280 by default).");
 
 	// Filter strengths
-	auto* int_prop = sec_prop.Add_int("6581filter", when_idle, 50);
+	auto* int_prop = sec_prop.AddInt("6581filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->Set_help(
+	int_prop->SetHelp(
 	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100\n"
 	        "(50 by default). The SID's analog filtering meant that each chip was\n"
 	        "physically unique.");
 
-	int_prop = sec_prop.Add_int("8580filter", when_idle, 50);
+	int_prop = sec_prop.AddInt("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->Set_help("Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
+	int_prop->SetHelp("Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
 	                   "(50 by default).");
 
-	str_prop = sec_prop.Add_string("innovation_filter", when_idle, "off");
+	str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Innovation audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
@@ -334,7 +334,7 @@ void INNOVATION_AddConfigSection(const ConfigPtr& conf)
 	assert(conf);
 
 	constexpr auto changeable_at_runtime = true;
-	Section_prop* sec = conf->AddSection_prop("innovation",
+	SectionProp* sec = conf->AddSectionProp("innovation",
 	                                          &innovation_init,
 	                                          changeable_at_runtime);
 	assert(sec);

@@ -1377,10 +1377,10 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 void ReelMagic_Init(Section* sec)
 {
 	assert(sec);
-	const auto section = static_cast<Section_prop*>(sec);
+	const auto section = static_cast<SectionProp*>(sec);
 
 	// Does the user want ReelMagic emulation?
-	const auto reelmagic_choice = section->Get_string("reelmagic");
+	const auto reelmagic_choice = section->GetString("reelmagic");
 
 	const auto wants_card_only = (reelmagic_choice == "cardonly");
 

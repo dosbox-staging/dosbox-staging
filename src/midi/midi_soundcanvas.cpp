@@ -231,14 +231,14 @@ SoundCanvas::SynthModel MidiDeviceSoundCanvas::GetModel() const
 	return model;
 }
 
-static Section_prop* get_soundcanvas_section()
+static SectionProp* get_soundcanvas_section()
 {
 	return get_section("soundcanvas");
 }
 
 static std::string get_model_setting()
 {
-	return get_soundcanvas_section()->Get_string("soundcanvas_model");
+	return get_soundcanvas_section()->GetString("soundcanvas_model");
 }
 
 static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
@@ -347,11 +347,11 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	constexpr auto ReleaseTimeMs = 1000.0f;
 	mixer_channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
 
-	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	mixer_channel->EnableNoiseGate(denoiser_enabled);
 
 	// Set up channel filter
-	const auto filter_prefs = get_soundcanvas_section()->Get_string(
+	const auto filter_prefs = get_soundcanvas_section()->GetString(
 	        "soundcanvas_filter");
 
 	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
@@ -782,16 +782,16 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, Program* caller)
 	caller->WriteOut("\n");
 }
 
-static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
+static void init_soundcanvas_dosbox_settings(SectionProp& sec_prop)
 {
 	using namespace SoundCanvas;
 
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = sec_prop.Add_string("soundcanvas_model", when_idle, "auto");
+	auto* str_prop = sec_prop.AddString("soundcanvas_model", when_idle, "auto");
 
 	// Listed in resolution priority order
-	str_prop->Set_values({"auto",
+	str_prop->SetValues({"auto",
 	                      SoundCanvas::BestModelAlias::Sc55,
 	                      sc55_121_model.config_name,
 	                      sc55_120_model.config_name,
@@ -803,7 +803,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	                      sc55mk2_100.config_name,
 	                      sc55mk2_101.config_name});
 
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "The Roland Sound Canvas model to use.\n"
 	        "One or more CLAP audio plugins that implement the supported Sound Canvas\n"
 	        "models must be present in the 'plugins' directory in your DOSBox installation\n"
@@ -815,9 +815,9 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
 
-	str_prop = sec_prop.Add_string("soundcanvas_filter", when_idle, "on");
+	str_prop = sec_prop.AddString("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Roland Sound Canvas audio output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
@@ -855,7 +855,7 @@ void SOUNDCANVAS_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("soundcanvas",
+	SectionProp* sec_prop = conf->AddSectionProp("soundcanvas",
 	                                               &soundcanvas_init,
 	                                               ChangeableAtRuntime);
 	assert(sec_prop);

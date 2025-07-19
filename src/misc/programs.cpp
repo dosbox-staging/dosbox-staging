@@ -337,7 +337,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		return;
 	}
 
-	Section_prop* psec = dynamic_cast<Section_prop*>(sec);
+	SectionProp* psec = dynamic_cast<SectionProp*>(sec);
 
 	// Special [autoexec] section handling (if has no properties like all
 	// the other sections).
@@ -358,7 +358,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 		while (true) {
 			// List the properties
-			Property* p = psec->Get_prop(i++);
+			Property* p = psec->GetProperty(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -378,7 +378,7 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 		auto i = 0;
 
 		while (true) {
-			Property* p = psec->Get_prop(i++);
+			Property* p = psec->GetProperty(i++);
 			if (p == nullptr) {
 				break;
 			}
@@ -388,13 +388,13 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				std::string possible_values;
 				std::vector<Value> pv = p->GetValues();
 
-				if (p->Get_type() == Value::V_BOOL) {
+				if (p->GetType() == Value::V_BOOL) {
 					possible_values += "on, off";
 
-				} else if (p->Get_type() == Value::V_INT) {
+				} else if (p->GetType() == Value::V_INT) {
 					// Print min & max for integer values if
 					// used
-					Prop_int* pint = dynamic_cast<Prop_int*>(p);
+					PropInt* pint = dynamic_cast<PropInt*>(p);
 					assert(pint);
 
 					if (pint->GetMin() != pint->GetMax()) {
@@ -625,7 +625,7 @@ void CONFIG::Run(void)
 		case P_HELP3: HandleHelpCommand(pvars); return;
 
 		case P_AUTOEXEC_CLEAR: {
-			Section_line* sec = dynamic_cast<Section_line*>(
+			SectionLine* sec = dynamic_cast<SectionLine*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -640,7 +640,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_MISSINGPARAM"));
 				return;
 			}
-			Section_line* sec = dynamic_cast<Section_line*>(
+			SectionLine* sec = dynamic_cast<SectionLine*>(
 			        control->GetSection(std::string("autoexec")));
 			if (!sec) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
@@ -655,7 +655,7 @@ void CONFIG::Run(void)
 		}
 
 		case P_AUTOEXEC_TYPE: {
-			Section_line* sec = dynamic_cast<Section_line*>(
+			SectionLine* sec = dynamic_cast<SectionLine*>(
 			        control->GetSection(std::string("autoexec")));
 
 			if (!sec) {
@@ -709,13 +709,13 @@ void CONFIG::Run(void)
 				if (sec) {
 					// list properties in section
 					auto i = 0;
-					Section_prop* psec =
-					        dynamic_cast<Section_prop*>(sec);
+					SectionProp* psec =
+					        dynamic_cast<SectionProp*>(sec);
 
 					if (psec == nullptr) {
 						// autoexec section
-						Section_line* pline =
-						        dynamic_cast<Section_line*>(sec);
+						SectionLine* pline =
+						        dynamic_cast<SectionLine*>(sec);
 						assert(pline);
 
 						WriteOut("%s", pline->data.c_str());
@@ -723,7 +723,7 @@ void CONFIG::Run(void)
 					}
 					while (true) {
 						// list the properties
-						Property* p = psec->Get_prop(i++);
+						Property* p = psec->GetProperty(i++);
 						if (p == nullptr) {
 							break;
 						}
@@ -747,7 +747,7 @@ void CONFIG::Run(void)
 					}
 					// it's a property name
 					const auto val_dos = utf8_to_dos(
-					        sec->GetPropValue(pvars[0]),
+					        sec->GetPropertyValue(pvars[0]),
 					        DosStringConvertMode::NoSpecialCharacters,
 					        UnicodeFallback::Simple);
 
@@ -768,7 +768,7 @@ void CONFIG::Run(void)
 					         sec_name);
 					return;
 				}
-				const std::string val_utf8 = sec->GetPropValue(
+				const std::string val_utf8 = sec->GetPropertyValue(
 				        prop_name);
 				if (val_utf8 == NO_SUCH_PROPERTY) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
@@ -812,7 +812,7 @@ void CONFIG::Run(void)
 				WriteOut(result);
 
 			} else {
-				auto* tsec = dynamic_cast<Section_prop*>(
+				auto* tsec = dynamic_cast<SectionProp*>(
 				        control->GetSection(pvars[0]));
 				if (!tsec) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),
@@ -820,7 +820,7 @@ void CONFIG::Run(void)
 					return;
 				}
 
-				auto* property = tsec->Get_prop(pvars[1]);
+				auto* property = tsec->GetProperty(pvars[1]);
 
 				if (!property) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_OR_SETTING_NOT_FOUND"),

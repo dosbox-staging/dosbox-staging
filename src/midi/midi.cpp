@@ -588,11 +588,11 @@ bool MIDI_IsAvailable()
 	return (midi.device != nullptr);
 }
 
-static Section_prop* get_midi_section()
+static SectionProp* get_midi_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
 	assert(sec);
 
 	return sec;
@@ -600,7 +600,7 @@ static Section_prop* get_midi_section()
 
 static std::string get_mididevice_setting()
 {
-	return get_midi_section()->Get_string("mididevice");
+	return get_midi_section()->GetString("mididevice");
 }
 
 static auto MidiDevicePortPref    = "port";
@@ -624,9 +624,9 @@ public:
 		}
 
 		const auto section      = get_midi_section();
-		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
+		raw_midi_output_enabled = section->GetBool("raw_midi_output");
 
-		std::string midiconfig_prefs = section->Get_string("midiconfig");
+		std::string midiconfig_prefs = section->GetString("midiconfig");
 
 		if (midiconfig_prefs.find("delaysysex") != std::string::npos) {
 			midi.sysex.start_ms = GetTicks();
@@ -796,12 +796,12 @@ void MIDI_Init()
 	midi_init(get_midi_section());
 }
 
-static void init_mididevice_settings(Section_prop& secprop)
+static void init_mididevice_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto str_prop = secprop.Add_string("mididevice", WhenIdle, DefaultMidiDevicePref);
-	str_prop->Set_help(
+	auto str_prop = secprop.AddString("mididevice", WhenIdle, DefaultMidiDevicePref);
+	str_prop->SetHelp(
 	        format_str("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	                   "('%s' by default):",
 	                   DefaultMidiDevicePref));
@@ -831,7 +831,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
-	str_prop->Set_values({
+	str_prop->SetValues({
 		MidiDevicePortPref,
 #if C_COREAUDIO
 		        MidiDeviceName::CoreAudio,
@@ -848,12 +848,12 @@ static void init_mididevice_settings(Section_prop& secprop)
 	str_prop->SetDeprecatedWithAlternateValue("win32", DefaultMidiDevicePref);
 }
 
-static void init_midiconfig_settings(Section_prop& secprop)
+static void init_midiconfig_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
-	str_prop->Set_help(
+	auto str_prop = secprop.AddString("midiconfig", WhenIdle, "");
+	str_prop->SetHelp(
 	        "Configuration options for the selected MIDI device (unset by default).\n"
 	        "Notes:");
 
@@ -899,19 +899,19 @@ static void init_midiconfig_settings(Section_prop& secprop)
 	});
 }
 
-void init_midi_dosbox_settings(Section_prop& secprop)
+void init_midi_dosbox_settings(SectionProp& secprop)
 {
 	init_mididevice_settings(secprop);
 	init_midiconfig_settings(secprop);
 
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
-	str_prop->Set_values({"intelligent", "uart", "none"});
-	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
+	auto str_prop = secprop.AddString("mpu401", WhenIdle, "intelligent");
+	str_prop->SetValues({"intelligent", "uart", "none"});
+	str_prop->SetHelp("MPU-401 mode to emulate ('intelligent' by default).");
 
-	auto bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
-	bool_prop->Set_help(
+	auto bool_prop = secprop.AddBool("raw_midi_output", WhenIdle, false);
+	bool_prop->SetHelp(
 	        "Enable raw, unaltered MIDI output ('off' by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
 	        "which makes editing the MIDI recordings of these games very error-prone and\n"
@@ -938,7 +938,7 @@ void MIDI_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = true;
 
-	Section_prop* sec = conf->AddSection_prop("midi", &midi_init, ChangeableAtRuntime);
+	SectionProp* sec = conf->AddSectionProp("midi", &midi_init, ChangeableAtRuntime);
 	assert(sec);
 
 	init_midi_dosbox_settings(*sec);

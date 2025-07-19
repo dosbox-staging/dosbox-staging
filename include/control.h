@@ -60,7 +60,7 @@ public:
 
 private:
 	std::deque<Section*> sectionlist          = {};
-	Section_line overwritten_autoexec_section = {};
+	SectionLine overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf     = {};
 
 	void (*_start_function)(void) = nullptr;
@@ -94,13 +94,13 @@ public:
 
 	~Config();
 
-	Section_prop* AddEarlySectionProp(const char* name, SectionFunction func,
+	SectionProp* AddEarlySectionProp(const char* name, SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 
-	Section_line* AddSection_line(const char* section_name, SectionFunction func);
+	SectionLine* AddSectionLine(const char* section_name, SectionFunction func);
 
-	Section_prop* AddInactiveSectionProp(const char* section_name);
-	Section_prop* AddSection_prop(const char* section_name, SectionFunction func,
+	SectionProp* AddInactiveSectionProp(const char* section_name);
+	SectionProp* AddSectionProp(const char* section_name, SectionFunction func,
 	                              bool changeable_at_runtime = false);
 
 	auto begin()
@@ -116,7 +116,7 @@ public:
 	Section* GetSectionFromProperty(const char* prop) const;
 
 	void OverwriteAutoexec(const std::string& conf, const std::string& line);
-	const Section_line& GetOverwrittenAutoexecSection() const;
+	const SectionLine& GetOverwrittenAutoexecSection() const;
 	const std::string& GetOverwrittenAutoexecConf() const;
 
 	void ApplyQueuedValuesToCli(std::vector<std::string>& args) const;

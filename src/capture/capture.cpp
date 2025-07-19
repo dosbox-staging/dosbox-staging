@@ -576,12 +576,12 @@ static void capture_destroy(Section* /*sec*/)
 static void capture_init(Section* sec)
 {
 	assert(sec);
-	const Section_prop* secprop = dynamic_cast<Section_prop*>(sec);
+	const SectionProp* secprop = dynamic_cast<SectionProp*>(sec);
 	if (!secprop) {
 		return;
 	}
 
-	Prop_path* capture_path = secprop->Get_path("capture_dir");
+	PropPath* capture_path = secprop->GetPath("capture_dir");
 	assert(capture_path);
 
 	// We can safely change the capture output path even if capturing of any
@@ -593,7 +593,7 @@ static void capture_init(Section* sec)
 		capture.path = "capture";
 	}
 
-	const std::string prefs = secprop->Get_string("default_image_capture_formats");
+	const std::string prefs = secprop->GetString("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 
@@ -646,21 +646,21 @@ static void init_key_mappings()
 	                  "Rec. Video");
 }
 
-static void init_capture_dosbox_settings(Section_prop& secprop)
+static void init_capture_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* path_prop = secprop.Add_path("capture_dir", when_idle, "capture");
-	path_prop->Set_help(
+	auto* path_prop = secprop.AddPath("capture_dir", when_idle, "capture");
+	path_prop->SetHelp(
 	        "Directory where the various captures are saved, such as audio, video, MIDI\n"
 	        "and screenshot captures. ('capture' in the current working directory by\n"
 	        "default).");
 	assert(path_prop);
 
-	auto* str_prop = secprop.Add_string("default_image_capture_formats",
+	auto* str_prop = secprop.AddString("default_image_capture_formats",
 	                                    when_idle,
 	                                    "upscaled");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Set the capture format of the default screenshot action ('upscaled' by\n"
 	        "default):\n"
 	        "  upscaled:  The image is bilinear-sharp upscaled and the correct aspect\n"
@@ -690,7 +690,7 @@ void CAPTURE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("capture",
+	SectionProp* sec = conf->AddSectionProp("capture",
 	                                          &capture_init,
 	                                          changeable_at_runtime);
 	assert(sec);

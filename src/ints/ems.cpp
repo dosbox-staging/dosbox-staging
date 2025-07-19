@@ -1354,9 +1354,9 @@ static Bitu INT4B_Handler() {
 	return CBRET_NONE;
 }
 
-Bitu GetEMSType(Section_prop * section) {
+Bitu GetEMSType(SectionProp * section) {
 	Bitu rtype = 0;
-	const std::string ems_pref = section->Get_string("ems");
+	const std::string ems_pref = section->GetString("ems");
 
 	const auto ems_pref_has_bool = parse_bool_setting(ems_pref);
 
@@ -1372,7 +1372,7 @@ Bitu GetEMSType(Section_prop * section) {
 	return rtype;
 }
 
-class EMS final : public Module_base {
+class EMS final : public ModuleBase {
 private:
 	uint16_t ems_baseseg = 0;
 	DOS_Device *emm_device = nullptr;
@@ -1384,7 +1384,7 @@ private:
 
 public:
 	EMS(Section *configuration)
-	        : Module_base(configuration),
+	        : ModuleBase(configuration),
 	          call_vdma(),
 	          call_vcpi(),
 	          call_v86mon()
@@ -1398,7 +1398,7 @@ public:
 		vcpi.enabled=false;
 		GEMMIS_seg=0;
 
-		Section_prop * section=static_cast<Section_prop *>(configuration);
+		SectionProp * section=static_cast<SectionProp *>(configuration);
 		ems_type=GetEMSType(section);
 		if (ems_type<=0) return;
 

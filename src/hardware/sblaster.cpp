@@ -3364,13 +3364,13 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 
 static bool is_cms_enabled(const SbType sbtype)
 {
-	const auto* sect = static_cast<Section_prop*>(
+	const auto* sect = static_cast<SectionProp*>(
 	        control->GetSection(SblasterSectionName));
 	assert(sect);
 
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
-		if (sect->Get_string("oplmode") == "cms") {
+		if (sect->GetString("oplmode") == "cms") {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "OPL",
 			                      "SBLASTER_CMS_OPLMODE_DEPRECATED");
@@ -3378,7 +3378,7 @@ static bool is_cms_enabled(const SbType sbtype)
 			return true;
 
 		} else {
-			const auto cms_str = sect->Get_string("cms");
+			const auto cms_str = sect->GetString("cms");
 			const auto cms_enabled_opt = parse_bool_setting(cms_str);
 
 			if (cms_enabled_opt) {
@@ -3480,21 +3480,21 @@ SBLASTER::SBLASTER(Section* conf)
 {
 	assert(conf);
 
-	Section_prop* section = static_cast<Section_prop*>(conf);
+	SectionProp* section = static_cast<SectionProp*>(conf);
 
-	sb.hw.base = section->Get_hex("sbbase");
-	sb.hw.irq  = static_cast<uint8_t>(section->Get_int("irq"));
+	sb.hw.base = section->GetHex("sbbase");
+	sb.hw.irq  = static_cast<uint8_t>(section->GetInt("irq"));
 
-	sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
+	sb.dsp.cold_warmup_ms = section->GetInt("sbwarmup");
 
 	// Magic 32 divisor was probably the result of experimentation
 	sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
 
-	sb.mixer.enabled = section->Get_bool("sbmixer");
+	sb.mixer.enabled = section->GetBool("sbmixer");
 
 	sb.mixer.stereo_enabled = false;
 
-	const auto sbtype_pref = section->Get_string("sbtype");
+	const auto sbtype_pref = section->GetString("sbtype");
 
 	sb.type     = determine_sb_type(sbtype_pref);
 	sb.ess_type = determine_ess_type(sbtype_pref);
@@ -3508,7 +3508,7 @@ SBLASTER::SBLASTER(Section* conf)
 		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
 	}
 
-	oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type, sb.ess_type);
+	oplmode = determine_oplmode(section->GetString("oplmode"), sb.type, sb.ess_type);
 
 	// Init OPL
 	switch (oplmode) {
@@ -3527,7 +3527,7 @@ SBLASTER::SBLASTER(Section* conf)
 		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 		assert(opl_channel);
 
-		const std::string opl_filter_str = section->Get_string("opl_filter");
+		const std::string opl_filter_str = section->GetString("opl_filter");
 		configure_opl_filter(opl_channel, opl_filter_str, sb.type);
 	} break;
 	}
@@ -3540,7 +3540,7 @@ SBLASTER::SBLASTER(Section* conf)
 	const auto has_dac = (sb.type != SbType::None &&
 	                      sb.type != SbType::GameBlaster);
 
-	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma")) : 0;
+	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->GetInt("dma")) : 0;
 
 	// Configure the BIOS DAC callbacks as soon as the card's access
 	// ports ( port, IRQ, and potential 8-bit DMA address) are
@@ -3568,7 +3568,7 @@ SBLASTER::SBLASTER(Section* conf)
 
 	// Only Sound Blaster 16 uses a 16-bit DMA channel.
 	if (sb.type == SbType::SB16) {
-		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+		sb.hw.dma16 = static_cast<uint8_t>(section->GetInt("hdma"));
 
 		// Reserve the second DMA channel only if it's unique.
 		if (sb.hw.dma16 != sb.hw.dma8) {
@@ -3598,9 +3598,9 @@ SBLASTER::SBLASTER(Section* conf)
 	                           ChannelName::SoundBlasterDac,
 	                           channel_features);
 
-	const std::string sb_filter_prefs = section->Get_string("sb_filter");
+	const std::string sb_filter_prefs = section->GetString("sb_filter");
 
-	const auto sb_filter_always_on = section->Get_bool("sb_filter_always_on");
+	const auto sb_filter_always_on = section->GetBool("sb_filter_always_on");
 
 	configure_sb_filter(channel, sb_filter_prefs, sb_filter_always_on, sb.type);
 
@@ -3721,14 +3721,14 @@ void SBLASTER_NotifyUnlockMixer()
 	}
 }
 
-void init_sblaster_dosbox_settings(Section_prop& secprop)
+void init_sblaster_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto pstring = secprop.Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values(
+	auto pstring = secprop.AddString("sbtype", when_idle, "sb16");
+	pstring->SetValues(
 	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Sound Blaster model to emulate ('sb16' by default).\n"
 	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
 	        "  gb:        Game Blaster          - CMS\n"
@@ -3747,24 +3747,24 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "    card is Sound Blaster Pro compatible; just configure the game for Sound\n"
 	        "    Blaster digital sound.");
 
-	auto phex = secprop.Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
-	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
+	auto phex = secprop.AddHex("sbbase", when_idle, 0x220);
+	phex->SetValues({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
+	phex->SetHelp("The IO address of the Sound Blaster (220 by default).");
 
-	auto pint = secprop.Add_int("irq", when_idle, 7);
-	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
-	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
+	auto pint = secprop.AddInt("irq", when_idle, 7);
+	pint->SetValues({"3", "5", "7", "9", "10", "11", "12"});
+	pint->SetHelp("The IRQ number of the Sound Blaster (7 by default).");
 
-	pint = secprop.Add_int("dma", when_idle, 1);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
+	pint = secprop.AddInt("dma", when_idle, 1);
+	pint->SetValues({"0", "1", "3", "5", "6", "7"});
+	pint->SetHelp("The DMA channel of the Sound Blaster (1 by default).");
 
-	pint = secprop.Add_int("hdma", when_idle, 5);
-	pint->Set_values({"0", "1", "3", "5", "6", "7"});
-	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
+	pint = secprop.AddInt("hdma", when_idle, 5);
+	pint->SetValues({"0", "1", "3", "5", "6", "7"});
+	pint->SetHelp("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
-	auto pbool = secprop.Add_bool("sbmixer", when_idle, true);
-	pbool->Set_help(
+	auto pbool = secprop.AddBool("sbmixer", when_idle, true);
+	pbool->SetHelp(
 	        "Allow the Sound Blaster mixer to modify volume levels ('on' by default).\n"
 	        "Sound Blaster Pro 1 and later cards allow programs to set the volume of the\n"
 	        "digital audio (DAC), FM synth, and CD Audio output. These correspond to the\n"
@@ -3776,15 +3776,15 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "      volume when speech is playing); it's best to leave 'sbmixer' enabled for\n"
 	        "      such games.");
 
-	pint = secprop.Add_int("sbwarmup", when_idle, 100);
-	pint->Set_help(
+	pint = secprop.AddInt("sbwarmup", when_idle, 100);
+	pint->SetHelp(
 	        "Silence initial DMA audio after card power-on, in milliseconds\n"
 	        "(100 by default). This mitigates pops heard when starting many SB-based games.\n"
 	        "Reduce this if you notice intial playback is missing audio.");
 	pint->SetMinMax(0, 100);
 
-	pstring = secprop.Add_string("sb_filter", when_idle, "modern");
-	pstring->Set_help(
+	pstring = secprop.AddString("sb_filter", when_idle, "modern");
+	pstring->SetHelp(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
@@ -3801,8 +3801,8 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "                lpf 2 12000\n"
 	        "                hpf 3 120 lfp 1 6500");
 
-	pbool = secprop.Add_bool("sb_filter_always_on", when_idle, false);
-	pbool->Set_help(
+	pbool = secprop.AddBool("sb_filter_always_on", when_idle, false);
+	pbool->SetHelp(
 	        "Force the Sound Blaster Pro 2 filter to be always on ('off' by default).\n"
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
 }
@@ -3854,7 +3854,7 @@ void SB_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto changeable_at_runtime = true;
 
 	assert(conf);
-	Section_prop* secprop = conf->AddSection_prop(SblasterSectionName,
+	SectionProp* secprop = conf->AddSectionProp(SblasterSectionName,
 	                                              &init_sblaster,
 	                                              changeable_at_runtime);
 	assert(secprop);

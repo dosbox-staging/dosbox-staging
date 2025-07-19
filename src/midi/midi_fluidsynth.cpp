@@ -193,14 +193,14 @@ constexpr ReverbParameters DefaultReverbParameters = {
 };
 // clang-format on
 
-static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
+static void init_fluidsynth_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	// Name 'default.sf2' picks the default SoundFont if it's installed
 	// in the OS (usually "Fluid_R3").
-	auto str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
-	str_prop->Set_help(
+	auto str_prop = secprop.AddString("soundfont", WhenIdle, "default.sf2");
+	str_prop->SetHelp(
 	        "Name or path of SoundFont file to use ('default.sf2' by default).\n"
 	        "The SoundFont will be looked up in the following locations in order:\n"
 	        "  - The user-defined SoundFont directory (see 'soundfont_dir').\n"
@@ -210,8 +210,8 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "locations or absolute paths as well.\n"
 	        "Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.");
 
-	str_prop = secprop.Add_string("soundfont_dir", WhenIdle, "");
-	str_prop->Set_help(
+	str_prop = secprop.AddString("soundfont_dir", WhenIdle, "");
+	str_prop->SetHelp(
 	        "Extra user-defined SoundFont directory (unset by default).\n"
 	        "If this is set, SoundFonts are looked up in this directory first, then in the\n"
 	        "the standard system locations.");
@@ -220,9 +220,9 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	constexpr auto MinVolume     = 1;
 	constexpr auto MaxVolume     = 800;
 
-	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
+	auto int_prop = secprop.AddInt("soundfont_volume", WhenIdle, DefaultVolume);
 	int_prop->SetMinMax(MinVolume, MaxVolume);
-	int_prop->Set_help(
+	int_prop->SetHelp(
 	        format_str("Set the SoundFont's volume as a percentage (%d by default).\n"
 	                   "This is useful for normalising the volume of different SoundFonts.\n"
 	                   "The percentage value can range from %d to %d.",
@@ -230,8 +230,8 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	                   MinVolume,
 	                   MaxVolume));
 
-	str_prop = secprop.Add_string(ChorusSettingName, WhenIdle, DefaultChorusSetting);
-	str_prop->Set_help(
+	str_prop = secprop.AddString(ChorusSettingName, WhenIdle, DefaultChorusSetting);
+	str_prop->SetHelp(
 	        "Configure the FluidSynth chorus. Possible values:\n"
 	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
 	        "  on:        Always enable chorus.\n"
@@ -248,9 +248,9 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
 	        "      chorus settings being used.");
 
-	str_prop = secprop.Add_string(ReverbSettingName, WhenIdle, DefaultReverbSetting);
+	str_prop = secprop.AddString(ReverbSettingName, WhenIdle, DefaultReverbSetting);
 	;
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Configure the FluidSynth reverb. Possible values:\n"
 	        "  auto:      Enable reverb (default).\n"
 	        "  on:        Enable reverb.\n"
@@ -266,9 +266,9 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
 	        "      reverb settings being used.");
 
-	str_prop = secprop.Add_string("fsynth_filter", WhenIdle, "off");
+	str_prop = secprop.AddString("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the FluidSynth audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
@@ -325,11 +325,11 @@ static std::vector<std_fs::path> get_platform_data_dirs()
 
 #endif
 
-static Section_prop* get_fluidsynth_section()
+static SectionProp* get_fluidsynth_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("fluidsynth"));
 	assert(sec);
 
 	return sec;
@@ -339,7 +339,7 @@ static std::vector<std_fs::path> get_data_dirs()
 {
 	auto dirs = get_platform_data_dirs();
 
-	auto sf_dir = get_fluidsynth_section()->Get_string("soundfont_dir");
+	auto sf_dir = get_fluidsynth_section()->GetString("soundfont_dir");
 	if (!sf_dir.empty()) {
 		// The user-provided SoundFont dir might use a different casing
 		// of the actual path on Linux & Windows, so we need to
@@ -536,7 +536,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 {
 	assert(synth);
 
-	const auto chorus_pref = get_fluidsynth_section()->Get_string(ChorusSettingName);
+	const auto chorus_pref = get_fluidsynth_section()->GetString(ChorusSettingName);
 	const auto chorus_enabled_opt = parse_bool_setting(chorus_pref);
 
 	auto enable_chorus = [&](const bool enabled) {
@@ -562,7 +562,7 @@ static void setup_chorus(fluid_synth_t* synth, const std_fs::path& sf_path)
 			        "FSYNTH: Chorus auto-disabled due to known issues with "
 			        "the '%s' soundfont",
 			        get_fluidsynth_section()
-			                ->Get_string("soundfont")
+			                ->GetString("soundfont")
 			                .c_str());
 		} else {
 			set_chorus_params(synth, DefaultChorusParameters);
@@ -665,7 +665,7 @@ static void setup_reverb(fluid_synth_t* synth)
 {
 	assert(synth);
 
-	const auto reverb_pref = get_fluidsynth_section()->Get_string(ReverbSettingName);
+	const auto reverb_pref = get_fluidsynth_section()->GetString(ReverbSettingName);
 	const auto reverb_enabled_opt = parse_bool_setting(reverb_pref);
 
 	auto enable_reverb = [&](const bool enabled) {
@@ -772,7 +772,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	}
 
 	// Load the requested SoundFont or quit if none provided
-	const auto sf_name = section->Get_string("soundfont");
+	const auto sf_name = section->GetString("soundfont");
 	const auto sf_path = find_sf_file(sf_name);
 
 	if (!sf_path.empty() &&
@@ -791,7 +791,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 		throw std::runtime_error(msg);
 	}
 
-	auto sf_volume_percent = section->Get_int("soundfont_volume");
+	auto sf_volume_percent = section->GetInt("soundfont_volume");
 	FluidSynth::fluid_synth_set_gain(fluid_synth.get(),
 	                                 static_cast<float>(sf_volume_percent) /
 	                                         100.0f);
@@ -838,7 +838,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	// its 0db level.
 	fluidsynth_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const std::string filter_prefs = section->Get_string("fsynth_filter");
+	const std::string filter_prefs = section->GetString("fsynth_filter");
 
 	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
@@ -1297,7 +1297,7 @@ void FSYNTH_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec = conf->AddSection_prop("fluidsynth",
+	SectionProp* sec = conf->AddSectionProp("fluidsynth",
 	                                          &fluidsynth_init,
 	                                          ChangeableAtRuntime);
 	assert(sec);

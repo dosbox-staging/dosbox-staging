@@ -1427,9 +1427,9 @@ void VGA_SetupOther()
 static void composite_init(Section *sec)
 {
 	assert(sec);
-	const auto conf = static_cast<Section_prop *>(sec);
+	const auto conf = static_cast<SectionProp *>(sec);
 	assert(conf);
-	const std::string state = conf->Get_string("composite");
+	const std::string state = conf->GetString("composite");
 
 	if (state == "auto") {
 		cga_comp = COMPOSITE_STATE::AUTO;
@@ -1445,15 +1445,15 @@ static void composite_init(Section *sec)
 		}
 	}
 
-	const std::string era_choice = conf->Get_string("era");
+	const std::string era_choice = conf->GetString("era");
 	is_composite_new_era = era_choice == "new" ||
 	                       (is_machine_pcjr() && era_choice == "auto");
 
-	hue.set(conf->Get_int("hue"));
-	saturation.set(conf->Get_int("saturation"));
-	contrast.set(conf->Get_int("contrast"));
-	brightness.set(conf->Get_int("brightness"));
-	convergence.set(conf->Get_int("convergence"));
+	hue.set(conf->GetInt("hue"));
+	saturation.set(conf->GetInt("saturation"));
+	contrast.set(conf->GetInt("contrast"));
+	brightness.set(conf->GetInt("brightness"));
+	convergence.set(conf->GetInt("convergence"));
 
 	if (cga_comp == COMPOSITE_STATE::ON) {
 		LOG_MSG("COMPOSITE: %s-era enabled with settings: hue %d, saturation %d,"
@@ -1463,47 +1463,47 @@ static void composite_init(Section *sec)
 	}
 }
 
-static void composite_settings(Section_prop& secprop)
+static void composite_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
-	str_prop->Set_values({"auto", "on", "off"});
-	str_prop->Set_help(
+	auto str_prop = secprop.AddString("composite", when_idle, "auto");
+	str_prop->SetValues({"auto", "on", "off"});
+	str_prop->SetHelp(
 	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
 	        "types; 'auto' by default). 'auto' lets the program decide.\n"
 	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
 	        "      then copy the new settings from the logs into your config.");
 
-	str_prop           = secprop.Add_string("era", when_idle, "auto");
-	str_prop->Set_values({"auto", "old", "new"});
-	str_prop->Set_help("Era of composite technology ('auto' by default).\n"
+	str_prop           = secprop.AddString("era", when_idle, "auto");
+	str_prop->SetValues({"auto", "old", "new"});
+	str_prop->SetHelp("Era of composite technology ('auto' by default).\n"
 	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 
-	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
+	auto int_prop = secprop.AddInt("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->Set_help(format_str("Hue of the RGB palette (%d by default).\n"
+	int_prop->SetHelp(format_str("Hue of the RGB palette (%d by default).\n"
 	                                 "For example, adjust until the sky is blue.",
 	                                 hue.get_default()));
 
-	int_prop = secprop.Add_int("saturation", when_idle, saturation.get_default());
+	int_prop = secprop.AddInt("saturation", when_idle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
-	int_prop->Set_help(format_str("Intensity of colors, from washed out to vivid (%d by default).",
+	int_prop->SetHelp(format_str("Intensity of colors, from washed out to vivid (%d by default).",
 	                                 saturation.get_default()));
 
-	int_prop = secprop.Add_int("contrast", when_idle, contrast.get_default());
+	int_prop = secprop.AddInt("contrast", when_idle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
-	int_prop->Set_help(format_str("Ratio between the dark and light area (%d by default).",
+	int_prop->SetHelp(format_str("Ratio between the dark and light area (%d by default).",
 	                                 contrast.get_default()));
 
-	int_prop = secprop.Add_int("brightness", when_idle, brightness.get_default());
+	int_prop = secprop.AddInt("brightness", when_idle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
-	int_prop->Set_help(format_str("Luminosity of the image, from dark to light (%d by default).",
+	int_prop->SetHelp(format_str("Luminosity of the image, from dark to light (%d by default).",
 	                                 brightness.get_default()));
 
-	int_prop = secprop.Add_int("convergence", when_idle, convergence.get_default());
+	int_prop = secprop.AddInt("convergence", when_idle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
-	int_prop->Set_help(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
+	int_prop->SetHelp(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
 	                                 convergence.get_default()));
 }
 
@@ -1534,7 +1534,7 @@ void VGA_AddCompositeSettings(Config& conf)
 {
 	constexpr auto changeable_at_runtime = true;
 
-	auto sec = conf.AddSection_prop("composite",
+	auto sec = conf.AddSectionProp("composite",
 	                                &composite_init,
 	                                changeable_at_runtime);
 	assert(sec);

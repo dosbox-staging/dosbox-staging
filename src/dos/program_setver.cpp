@@ -522,12 +522,12 @@ std_fs::path SETVER::GetTableFilePath()
 	// Original SETVER.EXE stores the version table in its own executable;
 	// this is not feasible in DOSBox, therefore we are using external file
 
-	const auto section = static_cast<Section_prop*>(control->GetSection("dos"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("dos"));
 	if (!section) {
 		return {};
 	}
 
-	const Prop_path* file_path = section->Get_path("setver_table_file");
+	const PropPath* file_path = section->GetPath("setver_table_file");
 	if (!file_path) {
 		return {};
 	}

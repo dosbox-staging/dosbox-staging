@@ -1127,10 +1127,10 @@ static void VGA_Memory_ShutDown(Section * /*sec*/) {
 
 static uint32_t determine_vmem_delay_ns()
 {
-	const auto sect = static_cast<Section_prop*>(control->GetSection("dosbox"));
+	const auto sect = static_cast<SectionProp*>(control->GetSection("dosbox"));
 	assert(sect);
 
-	const auto vmem_delay_str = sect->Get_string("vmem_delay");
+	const auto vmem_delay_str = sect->GetString("vmem_delay");
 
 	constexpr auto MinDelayNs = 0;
 	constexpr auto MaxDelayNs = 20000;

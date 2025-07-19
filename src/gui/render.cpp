@@ -297,11 +297,11 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	return linesadded;
 }
 
-static Section_prop* get_render_section()
+static SectionProp* get_render_section()
 {
 	assert(control);
 
-	auto render_section = static_cast<Section_prop*>(
+	auto render_section = static_cast<SectionProp*>(
 	        control->GetSection("render"));
 	assert(render_section);
 
@@ -686,7 +686,7 @@ static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
 
 static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 {
-	const std::string mode = get_render_section()->Get_string("aspect");
+	const std::string mode = get_render_section()->GetString("aspect");
 
 	if (has_true(mode) || mode == "auto") {
 		return AspectRatioCorrectionMode::Auto;
@@ -711,7 +711,7 @@ AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
 
 static IntegerScalingMode get_integer_scaling_mode_setting()
 {
-	const std::string mode = get_render_section()->Get_string("integer_scaling");
+	const std::string mode = get_render_section()->GetString("integer_scaling");
 
 	if (has_false(mode)) {
 		return IntegerScalingMode::Off;
@@ -1091,20 +1091,20 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 
 std::string RENDER_GetCgaColorsSetting()
 {
-	return get_render_section()->Get_string("cga_colors");
+	return get_render_section()->GetString("cga_colors");
 }
 
-static void init_render_settings(Section_prop& secprop)
+static void init_render_settings(SectionProp& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto deprecated    = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	auto* int_prop = secprop.Add_int("frameskip", deprecated, 0);
-	int_prop->Set_help(
+	auto* int_prop = secprop.AddInt("frameskip", deprecated, 0);
+	int_prop->SetHelp(
 	        "Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = secprop.Add_string("glshader", always, "crt-auto");
+	auto* string_prop = secprop.AddString("glshader", always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
@@ -1155,8 +1155,8 @@ static void init_render_settings(Section_prop& secprop)
 #endif
 	});
 
-	string_prop = secprop.Add_string("aspect", always, "auto");
-	string_prop->Set_help(
+	string_prop = secprop.AddString("aspect", always, "auto");
+	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
@@ -1178,10 +1178,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	string_prop->Set_values({"auto", "on", "square-pixels", "off", "stretch"});
+	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 
-	string_prop = secprop.Add_string("integer_scaling", always, "auto");
-	string_prop->Set_help(
+	string_prop = secprop.AddString("integer_scaling", always, "auto");
+	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
 	        "configured aspect ratio is always maintained according to the 'aspect' and\n"
@@ -1199,10 +1199,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
 
-	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
+	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
-	string_prop = secprop.Add_string("viewport", always, "fit");
-	string_prop->Set_help(
+	string_prop = secprop.AddString("viewport", always, "fit");
+	string_prop->SetHelp(
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
 	        "configured aspect ratio into account (see 'aspect'). Possible values:\n"
@@ -1230,21 +1230,21 @@ static void init_render_settings(Section_prop& secprop)
 	        "  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
 	        "    actions to set the stretch in 'relative' mode in real-time.");
 
-	string_prop = secprop.Add_string("monochrome_palette",
+	string_prop = secprop.AddString("monochrome_palette",
 	                                 always,
 	                                 MonochromePaletteAmber);
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	string_prop->Set_values({MonochromePaletteAmber,
+	string_prop->SetValues({MonochromePaletteAmber,
 	                         MonochromePaletteGreen,
 	                         MonochromePaletteWhite,
 	                         MonochromePalettePaperwhite});
 
-	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
-	string_prop->Set_help(
+	string_prop = secprop.AddString("cga_colors", only_at_start, "default");
+	string_prop->SetHelp(
 	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
 	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
@@ -1278,8 +1278,8 @@ static void init_render_settings(Section_prop& secprop)
 	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
 	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
 
-	string_prop = secprop.Add_string("scaler", deprecated, "none");
-	string_prop->Set_help(
+	string_prop = secprop.AddString("scaler", deprecated, "none");
+	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
 	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
@@ -1370,7 +1370,7 @@ void RENDER_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("render",
+	SectionProp* sec = conf->AddSectionProp("render",
 	                                          &render_init,
 	                                          changeable_at_runtime);
 
@@ -1414,7 +1414,7 @@ static bool handle_shader_changes()
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
 		const auto section     = get_render_section();
 		const auto shader_name = shader_manager.MapShaderName(
-		        section->Get_string(glshader_setting_name));
+		        section->GetString(glshader_setting_name));
 
 		shader_manager.NotifyGlshaderSettingChanged(shader_name);
 
@@ -1440,7 +1440,7 @@ static bool handle_shader_changes()
 
 static void render_init(Section* sec)
 {
-	Section_prop* section = static_cast<Section_prop*>(sec);
+	SectionProp* section = static_cast<SectionProp*>(sec);
 	assert(section);
 
 	// For restarting the renderer
@@ -1461,7 +1461,7 @@ static void render_init(Section* sec)
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
 
 	if (const auto& settings = parse_viewport_settings(
-	            section->Get_string("viewport"));
+	            section->GetString("viewport"));
 	    settings) {
 		viewport_settings = *settings;
 	} else {
@@ -1471,7 +1471,7 @@ static void render_init(Section* sec)
 
 	// Set monochrome palette
 	const auto mono_palette = to_monochrome_palette_enum(
-	        section->Get_string("monochrome_palette").c_str());
+	        section->GetString("monochrome_palette").c_str());
 	VGA_SetMonochromePalette(mono_palette);
 
 	// Only use the default 1x rendering scaler

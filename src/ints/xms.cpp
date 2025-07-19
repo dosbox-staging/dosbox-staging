@@ -712,9 +712,9 @@ static Bitu XMS_Handler()
 // Module object
 // ***************************************************************************
 
-Bitu GetEMSType(Section_prop* section);
+Bitu GetEMSType(SectionProp* section);
 
-class XMS final : public Module_base {
+class XMS final : public ModuleBase {
 private:
 	CALLBACK_HandlerObject callbackhandler;
 
@@ -723,14 +723,14 @@ public:
 	~XMS() override;
 };
 
-XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
+XMS::XMS(Section* configuration) : ModuleBase(configuration), callbackhandler{}
 {
-	Section_prop* section = static_cast<Section_prop*>(configuration);
+	SectionProp* section = static_cast<SectionProp*>(configuration);
 
 	umb = {};
 	a20 = {};
 
-	if (!section->Get_bool("xms")) {
+	if (!section->GetBool("xms")) {
 		return;
 	}
 
@@ -779,9 +779,9 @@ XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
 	xms.handles[0].is_free = false;
 
 	// Set up UMB chain
-	umb.is_available = section->Get_bool("umb");
+	umb.is_available = section->GetBool("umb");
 	const bool ems_available = GetEMSType(section) > 0;
-	DOS_BuildUMBChain(section->Get_bool("umb"), ems_available);
+	DOS_BuildUMBChain(section->GetBool("umb"), ems_available);
 
 	// TODO: If implementing CP/M compatibility, mirror the JMP
 	//       instruction in HMA

@@ -13360,8 +13360,8 @@ void imfc_destroy(Section* /*sec*/)
 static void imfc_init(Section* sec)
 {
 	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
-	if (!conf || !conf->Get_bool("imfc")) {
+	const SectionProp* conf = dynamic_cast<SectionProp*>(sec);
+	if (!conf || !conf->GetBool("imfc")) {
 		return;
 	}
 
@@ -13403,7 +13403,7 @@ static void imfc_init(Section* sec)
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	const std::string filter_choice = conf->Get_string("imfc_filter");
+	const std::string filter_choice = conf->GetString("imfc_filter");
 
 	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
 		if (*maybe_bool) {
@@ -13423,9 +13423,9 @@ static void imfc_init(Section* sec)
 		enable_filter();
 	}
 
-	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
+	const auto port = static_cast<io_port_t>(conf->GetHex("imfc_base"));
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
+	const auto irq = clamp(static_cast<uint8_t>(conf->GetInt("imfc_irq")),
 	                       MinIrqAddress,
 	                       MaxIrqAddress);
 
@@ -13437,29 +13437,29 @@ static void imfc_init(Section* sec)
 	MIXER_UnlockMixerThread();
 }
 
-void init_imfc_dosbox_settings(Section_prop& secprop)
+void init_imfc_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const auto bool_prop = secprop.Add_bool("imfc", when_idle, false);
+	const auto bool_prop = secprop.AddBool("imfc", when_idle, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable the IBM Music Feature Card ('off' by default).");
+	bool_prop->SetHelp("Enable the IBM Music Feature Card ('off' by default).");
 
-	const auto hex_prop = secprop.Add_hex("imfc_base", when_idle, 0x2A20);
+	const auto hex_prop = secprop.AddHex("imfc_base", when_idle, 0x2A20);
 	assert(hex_prop);
-	hex_prop->Set_values({"2A20", "2A30"});
-	hex_prop->Set_help(
+	hex_prop->SetValues({"2A20", "2A30"});
+	hex_prop->SetHelp(
 	        "The IO base address of the IBM Music Feature Card ('2A20' by default).");
 
-	const auto int_prop = secprop.Add_int("imfc_irq", when_idle, 3);
+	const auto int_prop = secprop.AddInt("imfc_irq", when_idle, 3);
 	assert(int_prop);
-	int_prop->Set_values({"2", "3", "4", "5", "6", "7"});
-	int_prop->Set_help(
+	int_prop->SetValues({"2", "3", "4", "5", "6", "7"});
+	int_prop->SetHelp(
 	        "The IRQ number of the IBM Music Feature Card (3 by default).");
 
-	const auto str_prop = secprop.Add_string("imfc_filter", when_idle, "on");
+	const auto str_prop = secprop.AddString("imfc_filter", when_idle, "on");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the IBM Music Feature Card output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
@@ -13472,7 +13472,7 @@ void IMFC_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("imfc",
+	SectionProp* sec = conf->AddSectionProp("imfc",
 	                                          &imfc_init,
 	                                          changeable_at_runtime);
 	assert(sec);

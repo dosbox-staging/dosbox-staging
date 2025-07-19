@@ -118,14 +118,14 @@ bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
 bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::string _args)
 {
 	assert(control);
-	const auto section_dosbox = static_cast<Section_prop*>(
+	const auto section_dosbox = static_cast<SectionProp*>(
 	        control->GetSection("dosbox"));
 
 	auto args = _args;
 	trim(args);
 
 	assert(section_dosbox);
-	if (!section_dosbox->Get_bool("shell_config_shortcuts")) {
+	if (!section_dosbox->GetBool("shell_config_shortcuts")) {
 		return false;
 	}
 
@@ -135,7 +135,7 @@ bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::
 	}
 
 	if (args.empty()) {
-		std::string val = section->GetPropValue(property_name);
+		std::string val = section->GetPropertyValue(property_name);
 		if (val != NO_SUCH_PROPERTY) {
 			WriteOut("%s\n", val.c_str());
 		}

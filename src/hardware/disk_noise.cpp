@@ -496,10 +496,10 @@ static void disknoise_init(Section* section)
 	constexpr auto MaxNumSeekSamples = 9;
 
 	assert(section);
-	const auto prop = static_cast<Section_prop*>(section);
+	const auto prop = static_cast<SectionProp*>(section);
 
-	const bool enable_floppy_disk_noise = prop->Get_bool("floppy_disk_noise");
-	const bool enable_hard_disk_noise = prop->Get_bool("hard_disk_noise");
+	const bool enable_floppy_disk_noise = prop->GetBool("floppy_disk_noise");
+	const bool enable_hard_disk_noise = prop->GetBool("hard_disk_noise");
 
 	const auto spin_up                        = "hdd_spinup.flac";
 	const auto spin                           = "hdd_spin.flac";
@@ -528,18 +528,18 @@ static void disknoise_init(Section* section)
 	section->AddDestroyFunction(&disknoise_destroy, changeable_at_runtime);
 }
 
-static void init_disknoise_dosbox_settings(Section_prop& secprop)
+static void init_disknoise_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto* bool_prop = secprop.Add_bool("hard_disk_noise", OnlyAtStart, false);
-	bool_prop->Set_help(
+	auto* bool_prop = secprop.AddBool("hard_disk_noise", OnlyAtStart, false);
+	bool_prop->SetHelp(
 	        "Enable emulated hard disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
 	        "set 'hard_disk_speed' to lower than 'maximum' for an authentic experience.");
 
-	bool_prop = secprop.Add_bool("floppy_disk_noise", OnlyAtStart, false);
-	bool_prop->Set_help(
+	bool_prop = secprop.AddBool("floppy_disk_noise", OnlyAtStart, false);
+	bool_prop->SetHelp(
 	        "Enable emulated floppy disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
 	        "set 'floppy_disk_speed' to lower than 'maximum' for an authentic experience.");
@@ -551,7 +551,7 @@ void DISKNOISE_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto ChangeableAtRuntime = false;
 
-	Section_prop* sec = conf->AddSection_prop("disknoise",
+	SectionProp* sec = conf->AddSectionProp("disknoise",
 	                                          &disknoise_init,
 	                                          ChangeableAtRuntime);
 	assert(sec);

@@ -766,21 +766,21 @@ static void MPU401_Reset()
 	}
 }
 
-class MPU401 final : public Module_base {
+class MPU401 final : public ModuleBase {
 private:
 	IO_ReadHandleObject ReadHandler[2]   = {};
 	IO_WriteHandleObject WriteHandler[2] = {};
 	bool is_installed                    = false;
 
 public:
-	MPU401(Section* configuration) : Module_base(configuration)
+	MPU401(Section* configuration) : ModuleBase(configuration)
 	{
-		Section_prop* section = dynamic_cast<Section_prop*>(configuration);
+		SectionProp* section = dynamic_cast<SectionProp*>(configuration);
 		if (!section) {
 			return;
 		}
 
-		const std::string mpu_choice = section->Get_string("mpu401");
+		const std::string mpu_choice = section->GetString("mpu401");
 
 		if (const auto has_bool = parse_bool_setting(mpu_choice);
 		    has_bool && *has_bool == false) {
@@ -833,11 +833,11 @@ public:
 
 static std::unique_ptr<MPU401> mpu401 = nullptr;
 
-static Section_prop* get_midi_section()
+static SectionProp* get_midi_section()
 {
 	assert(control);
 
-	auto sec = static_cast<Section_prop*>(control->GetSection("midi"));
+	auto sec = static_cast<SectionProp*>(control->GetSection("midi"));
 	assert(sec);
 
 	return sec;

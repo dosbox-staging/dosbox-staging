@@ -813,10 +813,10 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	opl.mode = _opl_mode;
 
-	Section_prop* section = static_cast<Section_prop*>(configuration);
-	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
+	SectionProp* section = static_cast<SectionProp*>(configuration);
+	const auto base = static_cast<uint16_t>(section->GetHex("sbbase"));
 
-	ctrl.mixer_enabled = section->Get_bool("sbmixer");
+	ctrl.mixer_enabled = section->GetBool("sbmixer");
 
 	std::set channel_features = {ChannelFeature::Sleep,
 	                             ChannelFeature::FadeOut,
@@ -891,15 +891,15 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	constexpr auto ReleaseTimeMs = 100.0f;
 	channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
 
-	const auto denoiser_enabled = get_mixer_section()->Get_bool("denoiser");
+	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	channel->EnableNoiseGate(denoiser_enabled);
 
 	// Setup fadeout
-	if (!channel->ConfigureFadeOut(section->Get_string("opl_fadeout"))) {
+	if (!channel->ConfigureFadeOut(section->GetString("opl_fadeout"))) {
 		set_section_property_value("sblaster", "opl_fadeout", "off");
 	}
 
-	ctrl.wants_dc_bias_removed = section->Get_bool("opl_remove_dc_bias");
+	ctrl.wants_dc_bias_removed = section->GetBool("opl_remove_dc_bias");
 	if (ctrl.wants_dc_bias_removed) {
 		LOG_MSG("%s: DC bias removal enabled", channel->GetName().c_str());
 	}
@@ -963,18 +963,18 @@ Opl::~Opl()
 	MIXER_UnlockMixerThread();
 }
 
-static void init_opl_dosbox_settings(Section_prop& secprop)
+static void init_opl_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto when_idle  = Property::Changeable::WhenIdle;
 
-	auto pint = secprop.Add_int("oplrate", deprecated, false);
-	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.");
+	auto pint = secprop.AddInt("oplrate", deprecated, false);
+	pint->SetHelp("The OPL output is now transparently resampled to the mixer's sample rate.");
 
-	auto pstring = secprop.Add_string("oplmode", when_idle, "auto");
-	pstring->Set_values(
+	auto pstring = secprop.AddString("oplmode", when_idle, "auto");
+	pstring->SetValues(
 	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "OPL model to emulate ('auto' by default).\n"
 	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
 	        "  opl2:      Yamaha OPL2 (YM3812, mono).\n"
@@ -990,8 +990,8 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to\n"
 	        "    get ESFM-flavoured OPL with original Sound Blaster models.");
 
-	pstring = secprop.Add_string("opl_fadeout", when_idle, "off");
-	pstring->Set_help(
+	pstring = secprop.AddString("opl_fadeout", when_idle, "off");
+	pstring->SetHelp(
 	        "Fade out hanging notes on the OPL synth:\n"
 	        "  off:       Don't fade out hanging notes (default).\n"
 	        "  fade:      Fade out hanging notes. You should only enable this in games that\n"
@@ -1005,19 +1005,19 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "               300 200   (wait 300 ms before fading out over a 200 ms period)\n"
 	        "               1000 3000 (wait 1 second before fading out over 3 seconds)");
 
-	auto pbool = secprop.Add_bool("opl_remove_dc_bias", when_idle, false);
-	pbool->Set_help(
+	auto pbool = secprop.AddBool("opl_remove_dc_bias", when_idle, false);
+	pbool->SetHelp(
 	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
 	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
 	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
 	        "(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other\n"
 	        "affected games.");
 
-	pstring = secprop.Add_string("oplemu", deprecated, "");
-	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
+	pstring = secprop.AddString("oplemu", deprecated, "");
+	pstring->SetHelp("Only 'nuked' OPL emulation is supported now.");
 
-	pstring = secprop.Add_string("opl_filter", when_idle, "auto");
-	pstring->Set_help(
+	pstring = secprop.AddString("opl_filter", when_idle, "auto");
+	pstring->SetHelp(
 	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
@@ -1025,16 +1025,16 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
-	pstring = secprop.Add_string("cms", when_idle, "auto");
-	pstring->Set_values({"on", "off", "auto"});
-	pstring->Set_help(
+	pstring = secprop.AddString("cms", when_idle, "auto");
+	pstring->SetValues({"on", "off", "auto"});
+	pstring->SetHelp(
 	        "Enable CMS emulation ('auto' by default).\n"
 	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
 	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
 	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
 
-	pstring = secprop.Add_string("cms_filter", when_idle, "on");
-	pstring->Set_help(
+	pstring = secprop.AddString("cms_filter", when_idle, "on");
+	pstring->SetHelp(
 	        "Filter for the Sound Blaster CMS output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
@@ -1059,7 +1059,7 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 void OPL_AddConfigSettings(const ConfigPtr& conf)
 {
 	assert(conf);
-	auto secprop = static_cast<Section_prop*>(conf->GetSection("sblaster"));
+	auto secprop = static_cast<SectionProp*>(conf->GetSection("sblaster"));
 
 	assert(secprop);
 	init_opl_dosbox_settings(*secprop);

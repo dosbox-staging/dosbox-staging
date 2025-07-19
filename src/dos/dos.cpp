@@ -1720,11 +1720,11 @@ DOS_Version DOS_ParseVersion(const char *word, const char *args)
 	return new_version;
 }
 
-class DOS:public Module_base{
+class DOS:public ModuleBase{
 private:
 	CALLBACK_HandlerObject callback[7];
 public:
-	DOS(Section* configuration):Module_base(configuration){
+	DOS(Section* configuration):ModuleBase(configuration){
 		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 
@@ -1772,8 +1772,8 @@ public:
 		dos.direct_output=false;
 		dos.internal_output=false;
 
-		const Section_prop* section = static_cast<Section_prop*>(configuration);
-		std::string args = section->Get_string("ver");
+		const SectionProp* section = static_cast<SectionProp*>(configuration);
+		std::string args = section->GetString("ver");
 		std::string word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
 		if (new_version.major || new_version.minor) {

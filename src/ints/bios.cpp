@@ -1226,12 +1226,12 @@ bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-class BIOS final : public Module_base{
+class BIOS final : public ModuleBase{
 private:
 	CALLBACK_HandlerObject callback[11];
 	void AddMessages();
 public:
-	BIOS(Section* configuration) : Module_base(configuration)
+	BIOS(Section* configuration) : ModuleBase(configuration)
 	{
 		AddMessages();
 
@@ -1270,9 +1270,9 @@ public:
 			mem_writew(BIOS_MEMORY_SIZE, 624);
 			mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
 		} else if (is_machine_pcjr()) {
-			const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
+			const SectionProp* section = static_cast<SectionProp*>(control->GetSection("dos"));
 			assert(section);
-			const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+			const std::string pcjr_memory_config = section->GetString("pcjr_memory_config");
 			if (pcjr_memory_config == "expanded") {
 				mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
 				mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);

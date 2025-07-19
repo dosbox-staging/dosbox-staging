@@ -1075,7 +1075,7 @@ Bitu IPX_ESRHandler(void) {
 
 bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
-class IPX final : public Module_base {
+class IPX final : public ModuleBase {
 private:
 	CALLBACK_HandlerObject callback_ipx = {};
 	CALLBACK_HandlerObject callback_esr = {};
@@ -1084,15 +1084,15 @@ private:
 	static uint16_t dospage;
 
 public:
-	IPX(Section *configuration) : Module_base(configuration)
+	IPX(Section *configuration) : ModuleBase(configuration)
 	{
 		ECBList = nullptr;
 		ESRList = nullptr;
 		isIpxServer = false;
 		isIpxConnected = false;
 
-		Section_prop *section = static_cast<Section_prop *>(configuration);
-		if (section && !section->Get_bool("ipx"))
+		SectionProp *section = static_cast<SectionProp *>(configuration);
+		if (section && !section->GetBool("ipx"))
 			return;
 
 		if (!NetWrapper_InitializeSDLNet())
@@ -1153,9 +1153,9 @@ public:
 	}
 
 	~IPX() {
-		Section_prop * section = static_cast<Section_prop *>(m_configuration);
+		SectionProp * section = static_cast<SectionProp *>(m_configuration);
 		PIC_RemoveEvents(IPX_AES_EventHandler);
-		if(!section->Get_bool("ipx")) return;
+		if(!section->GetBool("ipx")) return;
 
 		if(isIpxServer) {
 			isIpxServer = false;

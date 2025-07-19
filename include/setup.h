@@ -38,7 +38,7 @@ private:
 
 public:
 	Hex() : value(0) {}
-	Hex(int in) : value(in) {}
+	Hex(int _value) : value(_value) {}
 
 	bool operator==(const Hex& other) const
 	{
@@ -73,19 +73,19 @@ public:
 	// Constructors
 	Value() = default;
 
-	Value(const Hex& in) : _hex(in), type(V_HEX) {}
-	Value(int in) : _int(in), type(V_INT) {}
-	Value(bool in) : _bool(in), type(V_BOOL) {}
-	Value(double in) : _double(in), type(V_DOUBLE) {}
+	Value(const Hex& _value) : _hex(_value), type(V_HEX) {}
+	Value(int _value) : _int(_value), type(V_INT) {}
+	Value(bool _value) : _bool(_value), type(V_BOOL) {}
+	Value(double _value) : _double(_value), type(V_DOUBLE) {}
 
-	Value(const std::string& in, Etype t)
+	Value(const std::string& _value, Etype _type)
 	{
-		SetValue(in, t);
+		SetValue(_value, _type);
 	}
 
-	Value(const std::string& in) : _string(in), type(V_STRING) {}
+	Value(const std::string& _value) : _string(_value), type(V_STRING) {}
 
-	Value(const char* const in) : _string(in), type(V_STRING) {}
+	Value(const char* const _value) : _string(_value), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
 	bool operator==(const Hex& other) const;
@@ -97,16 +97,16 @@ public:
 	operator double() const;
 	operator std::string() const;
 
-	bool SetValue(const std::string& in, Etype _type = V_CURRENT);
+	bool SetValue(const std::string& value, Etype type = V_CURRENT);
 
 	std::string ToString() const;
 
 private:
-	bool SetHex(const std::string& in);
-	bool SetInt(const std::string& in);
-	bool SetBool(const std::string& in);
-	void SetString(const std::string& in);
-	bool SetDouble(const std::string& in);
+	bool SetHex(const std::string& value);
+	bool SetInt(const std::string& value);
+	bool SetBool(const std::string& value);
+	void SetString(const std::string& value);
+	bool SetDouble(const std::string& value);
 };
 
 class Property {
@@ -127,23 +127,38 @@ public:
 
 	virtual ~Property() = default;
 
-	void Set_values(const std::vector<std::string>& in);
-	void SetEnabledOptions(const std::vector<std::string>& in);
+	void SetValues(const std::vector<std::string>& values);
+	void SetEnabledOptions(const std::vector<std::string>& options);
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);
 
 	// The string may contain a single '%s' marker. If present, it will be
-	// substitued with the settings's default value (see `GetHelp()` and
-	// `GetHelpUtf8()`).
-	void Set_help(const std::string& str);
+	// substitued with the settings's default value (e.g., `blocksize`,
+	// `prebuffer`, etc.)
+	void SetHelp(const std::string& help_text);
 
-	void SetOptionHelp(const std::string& option, const std::string& in);
-	void SetOptionHelp(const std::string& in);
+	void SetOptionHelp(const std::string& option, const std::string& help_text);
+	void SetOptionHelp(const std::string& help_text);
 
-	// If the setting's help text contains a '%s' marker, the `GetHelp`
-	// functions will substitute it with the setting's default value.
+	// Returns the translated help message, or the English help message if
+	// no translation exists for the current language, adapted to the
+	// currently active DOS code page with markup tags converted to ANSI
+	// escape codes.
+	//
+	// If the setting's help text contains a '%s' marker, it will be
+	// substituted with the setting's default value. (e.g., `blocksize`,
+	// `prebuffer`, etc.)
+	//
 	std::string GetHelp() const;
-	std::string GetHelpForHost() const;
+
+	// Returns the help text in UTF-8 without any DOS code page or ANSI
+	// markup tags conversions applied.
+	//
+	// If the setting's help text contains a '%s' marker, it will be
+	// substituted with the setting's default value. (e.g., `blocksize`,
+	// `prebuffer`, etc.)
+	//
+	std::string GetHelpRaw() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
 
@@ -165,7 +180,7 @@ public:
 		return !valid_values.empty();
 	}
 
-	virtual bool IsValidValue(const Value& in);
+	virtual bool IsValidValue(const Value& value);
 	virtual bool IsValueDeprecated(const Value& value) const;
 
 	Changeable::Value GetChange() const
@@ -188,13 +203,13 @@ public:
 	std::vector<Value> GetDeprecatedValues() const;
 	const Value& GetAlternateForDeprecatedValue(const Value& value) const;
 
-	Value::Etype Get_type() const
+	Value::Etype GetType() const
 	{
 		return default_value.type;
 	}
 
 protected:
-	virtual bool ValidateValue(const Value& in);
+	virtual bool ValidateValue(const Value& value);
 
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
@@ -204,26 +219,26 @@ protected:
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
 
-	Value default_value                                    = {};
-	const Changeable::Value change                         = {};
+	Value default_value            = {};
+	const Changeable::Value change = {};
 	typedef std::vector<Value>::const_iterator const_iter;
 
 private:
 	void MaybeSetBoolValid(const std::string_view value);
 };
 
-class Prop_int final : public Property {
+class PropInt final : public Property {
 public:
-	Prop_int(const std::string& name, Changeable::Value when, int val)
+	PropInt(const std::string& name, Changeable::Value when, int _value)
 	        : Property(name, when),
 	          min_value(-1),
 	          max_value(-1)
 	{
-		default_value = val;
-		value         = val;
+		default_value = _value;
+		value         = _value;
 	}
 
-	~Prop_int() override = default;
+	~PropInt() override = default;
 
 	int GetMin() const
 	{
@@ -240,78 +255,78 @@ public:
 		max_value = max;
 	}
 
-	bool SetValue(const std::string& in) override;
-	bool IsValidValue(const Value& in) override;
+	bool SetValue(const std::string& value) override;
+	bool IsValidValue(const Value& value) override;
 
 protected:
-	bool ValidateValue(const Value& in) override;
+	bool ValidateValue(const Value& value) override;
 
 private:
 	Value min_value;
 	Value max_value;
 };
 
-class Prop_double final : public Property {
+class PropDouble final : public Property {
 public:
-	Prop_double(const std::string& _propname, Changeable::Value when, double _value)
+	PropDouble(const std::string& _propname, Changeable::Value when, double _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& input) override;
-	~Prop_double() override = default;
+	bool SetValue(const std::string& value) override;
+	~PropDouble() override = default;
 };
 
-class Prop_bool final : public Property {
+class PropBool final : public Property {
 public:
-	Prop_bool(const std::string& _propname, Changeable::Value when, bool _value)
+	PropBool(const std::string& _propname, Changeable::Value when, bool _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in) override;
-	~Prop_bool() override = default;
+	bool SetValue(const std::string& value) override;
+	~PropBool() override = default;
 };
 
-class Prop_string : public Property {
+class PropString : public Property {
 public:
-	Prop_string(const std::string& name, Changeable::Value when, const char* val)
+	PropString(const std::string& name, Changeable::Value when, const char* val)
 	        : Property(name, when)
 	{
 		default_value = val;
 		value         = val;
 	}
 
-	~Prop_string() override = default;
+	~PropString() override = default;
 
-	bool SetValue(const std::string& in) override;
-	bool IsValidValue(const Value& in) override;
+	bool SetValue(const std::string& value) override;
+	bool IsValidValue(const Value& value) override;
 };
 
-class Prop_path final : public Prop_string {
+class PropPath final : public PropString {
 public:
-	Prop_path(const std::string& name, Changeable::Value when, const char* val)
-	        : Prop_string(name, when, val)
+	PropPath(const std::string& name, Changeable::Value when, const char* val)
+	        : PropString(name, when, val)
 	{
 		SetValue(val);
 	}
 
-	~Prop_path() override = default;
+	~PropPath() override = default;
 
-	bool SetValue(const std::string& in) override;
+	bool SetValue(const std::string& value) override;
 
 	std_fs::path realpath = {};
 };
 
-class Prop_hex final : public Property {
+class PropHex final : public Property {
 public:
-	Prop_hex(const std::string& _propname, Changeable::Value when, Hex _value)
+	PropHex(const std::string& _propname, Changeable::Value when, Hex _value)
 	        : Property(_propname, when)
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in) override;
-	~Prop_hex() override = default;
+	bool SetValue(const std::string& value) override;
+	~PropHex() override = default;
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
@@ -340,7 +355,10 @@ private:
 
 public:
 	Section() = default;
-	Section(const std::string& name, const bool active = true) : sectionname(name), active(active) {}
+	Section(const std::string& name, const bool active = true)
+	        : sectionname(name),
+	          active(active)
+	{}
 
 	// Construct and assign by std::move
 	Section(Section&& other)            = default;
@@ -367,7 +385,7 @@ public:
 		return sectionname.c_str();
 	}
 
-	virtual std::string GetPropValue(const std::string& property) const = 0;
+	virtual std::string GetPropertyValue(const std::string& property) const = 0;
 
 	virtual bool HandleInputline(const std::string& line) = 0;
 
@@ -377,36 +395,36 @@ public:
 class PropMultiVal;
 class PropMultiValRemain;
 
-class Section_prop final : public Section {
+class SectionProp final : public Section {
 private:
 	std::deque<Property*> properties = {};
 	typedef std::deque<Property*>::iterator it;
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(const std::string& name, bool active = true) : Section(name, active) {}
+	SectionProp(const std::string& name, bool active = true)
+	        : Section(name, active)
+	{}
 
-	~Section_prop() override;
+	~SectionProp() override;
 
-	Prop_int* Add_int(const std::string& _propname,
-	                  Property::Changeable::Value when, int _value = 0);
+	PropInt* AddInt(const std::string& _propname,
+	                Property::Changeable::Value when, int _value = 0);
 
-	Prop_string* Add_string(const std::string& _propname,
-	                        Property::Changeable::Value when,
-	                        const char* _value = nullptr);
+	PropString* AddString(const std::string& _propname,
+	                      Property::Changeable::Value when,
+	                      const char* _value = nullptr);
 
-	Prop_path* Add_path(const std::string& _propname,
-	                    Property::Changeable::Value when,
-	                    const char* _value = nullptr);
+	PropPath* AddPath(const std::string& _propname,
+	                  Property::Changeable::Value when,
+	                  const char* _value = nullptr);
 
-	Prop_bool* Add_bool(const std::string& _propname,
-	                    Property::Changeable::Value when, bool _value = false);
+	PropBool* AddBool(const std::string& _propname,
+	                  Property::Changeable::Value when, bool _value = false);
 
-	Prop_hex* Add_hex(const std::string& _propname,
-	                  Property::Changeable::Value when, Hex _value = 0);
+	PropHex* AddHex(const std::string& _propname,
+	                Property::Changeable::Value when, Hex _value = 0);
 
-	//	void Add_double(const char * _propname, double _value=0.0);
-	//
 	PropMultiVal* AddMultiVal(const std::string& _propname,
 	                          Property::Changeable::Value when,
 	                          const std::string& sep);
@@ -415,8 +433,8 @@ public:
 	                                      Property::Changeable::Value when,
 	                                      const std::string& sep);
 
-	Property* Get_prop(int index);
-	Property* Get_prop(const std::string_view propname);
+	Property* GetProperty(int index);
+	Property* GetProperty(const std::string_view propname);
 
 	const_it begin() const
 	{
@@ -428,20 +446,20 @@ public:
 		return properties.end();
 	}
 
-	int Get_int(const std::string& _propname) const;
+	int GetInt(const std::string& _propname) const;
 
-	std::string Get_string(const std::string& _propname) const;
+	std::string GetString(const std::string& _propname) const;
 
-	Prop_bool* GetBoolProp(const std::string& propname) const;
-	Prop_string* GetStringProp(const std::string& propname) const;
+	PropBool* GetBoolProp(const std::string& propname) const;
+	PropString* GetStringProp(const std::string& propname) const;
 
-	bool Get_bool(const std::string& _propname) const;
+	bool GetBool(const std::string& _propname) const;
 
-	Hex Get_hex(const std::string& _propname) const;
+	Hex GetHex(const std::string& _propname) const;
 
-	double Get_double(const std::string& _propname) const;
+	double GetDouble(const std::string& _propname) const;
 
-	Prop_path* Get_path(const std::string& _propname) const;
+	PropPath* GetPath(const std::string& _propname) const;
 
 	PropMultiVal* GetMultiVal(const std::string& _propname) const;
 
@@ -451,12 +469,12 @@ public:
 
 	void PrintData(FILE* outfile) const override;
 
-	std::string GetPropValue(const std::string& property) const override;
+	std::string GetPropertyValue(const std::string& property) const override;
 };
 
 class PropMultiVal : public Property {
 protected:
-	std::unique_ptr<Section_prop> section;
+	std::unique_ptr<SectionProp> section;
 	std::string separator;
 
 	void MakeDefaultValue();
@@ -465,18 +483,18 @@ public:
 	PropMultiVal(const std::string& name, Changeable::Value when,
 	             const std::string& sep)
 	        : Property(name, when),
-	          section(new Section_prop("")),
+	          section(new SectionProp("")),
 	          separator(sep)
 	{
 		default_value = "";
 		value         = "";
 	}
 
-	Section_prop* GetSection()
+	SectionProp* GetSection()
 	{
 		return section.get();
 	}
-	const Section_prop* GetSection() const
+	const SectionProp* GetSection() const
 	{
 		return section.get();
 	}
@@ -498,21 +516,21 @@ public:
 	bool SetValue(const std::string& input) override;
 };
 
-class Section_line final : public Section {
+class SectionLine final : public Section {
 public:
-	Section_line() = default;
-	Section_line(const std::string& name) : Section(name), data() {}
+	SectionLine() = default;
+	SectionLine(const std::string& name) : Section(name), data() {}
 
 	// Construct and assign by std::move
-	Section_line(Section_line&& other)            = default;
-	Section_line& operator=(Section_line&& other) = default;
+	SectionLine(SectionLine&& other)            = default;
+	SectionLine& operator=(SectionLine&& other) = default;
 
-	~Section_line() override
+	~SectionLine() override
 	{
 		ExecuteDestroy(true);
 	}
 
-	std::string GetPropValue(const std::string& property) const override;
+	std::string GetPropertyValue(const std::string& property) const override;
 	bool HandleInputline(const std::string& line) override;
 	void PrintData(FILE* outfile) const override;
 
@@ -520,32 +538,27 @@ public:
 };
 
 // Base for all hardware and software "devices"
-class Module_base {
+class ModuleBase {
 protected:
 	Section* m_configuration;
 
 public:
-	Module_base(Section* conf_section) : m_configuration(conf_section) {}
+	ModuleBase(Section* conf_section) : m_configuration(conf_section) {}
 
-	Module_base(const Module_base&) = delete;            // prevent copying
-	Module_base& operator=(const Module_base&) = delete; // prevent assignment
+	ModuleBase(const ModuleBase&)            = delete; // prevent copying
+	ModuleBase& operator=(const ModuleBase&) = delete; // prevent assignment
 
-	virtual ~Module_base() = default;
-
-	virtual bool Change_Config(Section* /*newconfig*/)
-	{
-		return false;
-	}
+	virtual ~ModuleBase() = default;
 };
 
 bool config_file_is_valid(const std_fs::path& path);
 
 // Helper functions for retrieving configuration sections
 
-Section_prop* get_section(const char* section_name);
+SectionProp* get_section(const char* section_name);
 
-Section_prop* get_joystick_section();
-Section_prop* get_sdl_section();
-Section_prop* get_mixer_section();
+SectionProp* get_joystick_section();
+SectionProp* get_sdl_section();
+SectionProp* get_mixer_section();
 
 #endif

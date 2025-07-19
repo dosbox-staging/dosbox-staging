@@ -564,22 +564,22 @@ bool PS1AUDIO_IsEnabled()
 {
 	const auto section = control->GetSection("speaker");
 	assert(section);
-	const auto properties = static_cast<Section_prop*>(section);
-	return properties->Get_bool("ps1audio");
+	const auto properties = static_cast<SectionProp*>(section);
+	return properties->GetBool("ps1audio");
 }
 
 void PS1AUDIO_Init(Section* section)
 {
 	assert(section);
-	const auto prop = static_cast<Section_prop*>(section);
+	const auto prop = static_cast<SectionProp*>(section);
 
 	if (!PS1AUDIO_IsEnabled()) {
 		return;
 	}
 
-	ps1_dac = std::make_unique<Ps1Dac>(prop->Get_string("ps1audio_dac_filter"));
+	ps1_dac = std::make_unique<Ps1Dac>(prop->GetString("ps1audio_dac_filter"));
 
-	ps1_synth = std::make_unique<Ps1Synth>(prop->Get_string("ps1audio_filter"));
+	ps1_synth = std::make_unique<Ps1Synth>(prop->GetString("ps1audio_filter"));
 
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
 

@@ -256,16 +256,16 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 
 	slirp = LibSlirp::slirp_new(&config, &slirp_callbacks, this);
 	if (slirp) {
-		const auto section = static_cast<Section_prop *>(dosbox_config);
+		const auto section = static_cast<SectionProp *>(dosbox_config);
 		assert(section);
 
 		bool is_udp = false;
 		ClearPortForwards(is_udp, forwarded_tcp_ports);
-		forwarded_tcp_ports = SetupPortForwards(is_udp, section->Get_string("tcp_port_forwards"));
+		forwarded_tcp_ports = SetupPortForwards(is_udp, section->GetString("tcp_port_forwards"));
 
 		is_udp = true;
 		ClearPortForwards(is_udp, forwarded_udp_ports);
-		forwarded_udp_ports = SetupPortForwards(is_udp, section->Get_string("udp_port_forwards"));
+		forwarded_udp_ports = SetupPortForwards(is_udp, section->GetString("udp_port_forwards"));
 
 		LOG_MSG("SLIRP: Successfully initialized");
 		return true;

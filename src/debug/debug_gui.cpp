@@ -211,8 +211,8 @@ static void LOG_Destroy(Section*) {
 }
 
 static void LOG_Init(Section * sec) {
-	Section_prop * sect = static_cast<Section_prop *>(sec);
-	std::string blah = sect->Get_string("logfile");
+	SectionProp * sect = static_cast<SectionProp *>(sec);
+	std::string blah = sect->GetString("logfile");
 	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
 		;
 	} else {
@@ -223,7 +223,7 @@ static void LOG_Init(Section * sec) {
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		loggrp[i].enabled=sect->Get_bool(buf);
+		loggrp[i].enabled=sect->GetBool(buf);
 	}
 }
 
@@ -262,19 +262,19 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	Section_prop* sect   = control->AddSection_prop("log", LOG_Init);
-	Prop_string* pstring = sect->Add_string("logfile",
+	SectionProp* sect   = control->AddSectionProp("log", LOG_Init);
+	PropString* pstring = sect->AddString("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");
-	pstring->Set_help("Path of the log file.");
+	pstring->SetHelp("Path of the log file.");
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		Prop_bool* pbool = sect->Add_bool(buf,
+		PropBool* pbool = sect->AddBool(buf,
 		                                  Property::Changeable::Always,
 		                                  true);
-		pbool->Set_help("Enable/disable logging of this type.");
+		pbool->SetHelp("Enable/disable logging of this type.");
 	}
 	//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }

@@ -1275,14 +1275,14 @@ uint32_t CSerial::GetPortBaudRate() const {
 	return SerialMaxBaudRate / baud_divider;
 }
 
-class SERIALPORTS final : public Module_base {
+class SERIALPORTS final : public ModuleBase {
 public:
-	SERIALPORTS (Section * configuration):Module_base (configuration) {
+	SERIALPORTS (Section * configuration):ModuleBase (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
-		Section_prop *section = static_cast <Section_prop*>(configuration);
+		SectionProp *section = static_cast <SectionProp*>(configuration);
 
 #if C_MODEM
-		const Prop_path *pbFilename = section->Get_path("phonebookfile");
+		const PropPath *pbFilename = section->GetPath("phonebookfile");
 		MODEM_ReadPhonebook(pbFilename->realpath);
 #endif
 
@@ -1291,8 +1291,8 @@ public:
 			// get the configuration property
 			s_property[6] = '1' + static_cast<char>(i);
 			PropMultiVal* p = section->GetMultiVal(s_property);
-			std::string type = p->GetSection()->Get_string("type");
-			CommandLine cmd("", p->GetSection()->Get_string("parameters"));
+			std::string type = p->GetSection()->GetString("type");
+			CommandLine cmd("", p->GetSection()->GetString("parameters"));
 			
 			// detect the type
 			if (type=="dummy") {

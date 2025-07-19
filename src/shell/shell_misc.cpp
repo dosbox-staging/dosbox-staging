@@ -66,14 +66,14 @@ void DOS_Shell::InputCommand(char* line)
 
 	history->Append(command, get_utf8_code_page());
 
-	const auto* const dos_section = dynamic_cast<Section_prop*>(
+	const auto* const dos_section = dynamic_cast<SectionProp*>(
 	        control->GetSection("dos"));
 	if (dos_section == nullptr) {
 		assert(false);
 		return;
 	}
 
-	const std::string expand_shell_variable_pref = dos_section->Get_string(
+	const std::string expand_shell_variable_pref = dos_section->GetString(
 	        "expand_shell_variable");
 
 	const auto expand_shell_pref_has_bool = parse_bool_setting(

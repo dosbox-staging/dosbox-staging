@@ -7063,15 +7063,15 @@ static int get_num_total_threads()
 	constexpr auto SettingName = "voodoo_threads";
 	constexpr auto AutoSetting = "auto";
 
-	const auto sec = dynamic_cast<Section_prop*>(control->GetSection(SectionName));
-	const auto user_setting = sec ? sec->Get_string(SettingName) : AutoSetting;
+	const auto sec = dynamic_cast<SectionProp*>(control->GetSection(SectionName));
+	const auto user_setting = sec ? sec->GetString(SettingName) : AutoSetting;
 
 	if (const auto maybe_int = parse_int(user_setting)) {
 		const auto valid_int = std::clamp(*maybe_int, MinThreads, MaxThreads);
 
 		// Use a property to test and warn if the value's outside the range
 		constexpr auto always_changeable = Property::Changeable::Always;
-		auto range_property = Prop_int(SettingName, always_changeable, valid_int);
+		auto range_property = PropInt(SettingName, always_changeable, valid_int);
 		range_property.SetMinMax(MinThreads, MaxThreads);
 
 		if (!range_property.IsValidValue(*maybe_int)) {
@@ -7884,17 +7884,17 @@ static void voodoo_destroy(Section* /*sec*/) {
 
 static void voodoo_init(Section* sec)
 {
-	auto* section = dynamic_cast<Section_prop*>(sec);
+	auto* section = dynamic_cast<SectionProp*>(sec);
 
 	// Only activate on SVGA machines and when requested
-	if (!is_machine_svga() || !section || !section->Get_bool("voodoo")) {
+	if (!is_machine_svga() || !section || !section->GetBool("voodoo")) {
 		return;
 	}
 	//
-	const std::string memsize_pref = section->Get_string("voodoo_memsize");
+	const std::string memsize_pref = section->GetString("voodoo_memsize");
 	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
-	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
+	voodoo_bilinear_filtering = section->GetBool("voodoo_bilinear_filtering");
 
 	sec->AddDestroyFunction(&voodoo_destroy, false);
 
@@ -7916,14 +7916,14 @@ static void voodoo_init(Section* sec)
 	        (voodoo_bilinear_filtering ? "" : "no "));
 }
 
-static void init_voodoo_dosbox_settings(Section_prop& secprop)
+static void init_voodoo_dosbox_settings(SectionProp& secprop)
 {
 	constexpr auto Deprecated  = Property::Changeable::Deprecated;
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 
-	auto* bool_prop = secprop.Add_bool("voodoo", WhenIdle, true);
-	bool_prop->Set_help(
+	auto* bool_prop = secprop.AddBool("voodoo", WhenIdle, true);
+	bool_prop->SetHelp(
 	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
 	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
 	        "powerful CPU. Most games need the DOS Glide driver called 'GLIDE2X.OVL' to be\n"
@@ -7932,20 +7932,20 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "A small number of games integrate the Glide driver into their code, so they\n"
 	        "don't need 'GLIDE2X.OVL'.");
 
-	auto* str_prop = secprop.Add_string("voodoo_memsize", OnlyAtStart, "4");
-	str_prop->Set_values({"4", "12"});
-	str_prop->Set_help(
+	auto* str_prop = secprop.AddString("voodoo_memsize", OnlyAtStart, "4");
+	str_prop->SetValues({"4", "12"});
+	str_prop->SetHelp(
 	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
 	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"
 	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
 	// Deprecate the boolean Voodoo multithreading setting
-	bool_prop = secprop.Add_bool("voodoo_multithreading", Deprecated, false);
-	bool_prop->Set_help("Renamed to 'voodoo_threads'");
+	bool_prop = secprop.AddBool("voodoo_multithreading", Deprecated, false);
+	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
 
-	str_prop = secprop.Add_string("voodoo_threads", OnlyAtStart, "auto");
-	str_prop->Set_help(
+	str_prop = secprop.AddString("voodoo_threads", OnlyAtStart, "auto");
+	str_prop->SetHelp(
 	        "Use threads to improve 3dfx Voodoo performance:\n"
 	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
 	        "  <value>:  Set a specific number of threads between 1 and 128.\n"
@@ -7955,8 +7955,8 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "      on a many-core CPU. If you have a Threadripper or similar CPU, please\n"
 	        "      let us know how it goes.");
 
-	bool_prop = secprop.Add_bool("voodoo_bilinear_filtering", OnlyAtStart, true);
-	bool_prop->Set_help(
+	bool_prop = secprop.AddBool("voodoo_bilinear_filtering", OnlyAtStart, true);
+	bool_prop->SetHelp(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
 	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
 	        "try turning it off if you're not getting adequate performance.");
@@ -7966,7 +7966,7 @@ void VOODOO_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);
 
-	Section_prop* sec = conf->AddSection_prop("voodoo", &voodoo_init);
+	SectionProp* sec = conf->AddSectionProp("voodoo", &voodoo_init);
 	assert(sec);
 	init_voodoo_dosbox_settings(*sec);
 }

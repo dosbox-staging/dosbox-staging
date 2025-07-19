@@ -336,14 +336,14 @@ constexpr auto Mt32New = "mt32_new";
 constexpr auto Cm32l   = "cm32l";
 } // namespace BestModelAlias
 
-static void init_mt32_dosbox_settings(Section_prop& sec_prop)
+static void init_mt32_dosbox_settings(SectionProp& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	auto* str_prop = sec_prop.AddString("model", when_idle, "auto");
 
 	// Listed in resolution priority order
-	str_prop->Set_values({"auto",
+	str_prop->SetValues({"auto",
 	                      BestModelAlias::Cm32l,
 	                      cm32l_102_model.GetName(),
 	                      cm32l_100_model.GetName(),
@@ -362,7 +362,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	                      mt32_206_model.GetName(),
 	                      mt32_204_model.GetName(),
 	                      mt32_203_model.GetName()});
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "The Roland MT-32/CM-32ML model to use.\n"
 	        "You must have the ROM files for the selected model available (see 'romdir').\n"
 	        "The lookup for the best models is performed in order as listed.\n"
@@ -377,8 +377,8 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  - This is *NOT* a General MIDI compatible MIDI device; only use it if the\n"
 	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
-	str_prop = sec_prop.Add_string("romdir", when_idle, "");
-	str_prop->Set_help(
+	str_prop = sec_prop.AddString("romdir", when_idle, "");
+	str_prop->SetHelp(
 	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
 	        "'mt32-roms' directory in your DOSBox configuration directory. Other common\n"
@@ -388,9 +388,9 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "    by their checksums.\n"
 	        "  - Both interleaved and non-interlaved ROM files are supported.");
 
-	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
+	str_prop = sec_prop.AddString("mt32_filter", when_idle, "off");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Roland MT-32/CM-32L audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
@@ -452,14 +452,14 @@ static std::deque<std_fs::path> get_platform_rom_dirs()
 
 static std::deque<std_fs::path> get_rom_dirs()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
 
 	// Get potential ROM directories from the environment and/or system
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = section->Get_string("romdir");
+	std::string selected_romdir = section->GetString("romdir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultMt32RomsDir;
@@ -475,9 +475,9 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::string get_model_setting()
 {
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
-	return section->Get_string("model");
+	return section->GetString("model");
 }
 
 static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
@@ -708,10 +708,10 @@ MidiDeviceMt32::MidiDeviceMt32()
 	// ask the channel to scale all the samples up to its 0db level.
 	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
-	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
+	const auto section = static_cast<SectionProp*>(control->GetSection("mt32"));
 	assert(section);
 
-	const std::string filter_prefs = section->Get_string("mt32_filter");
+	const std::string filter_prefs = section->GetString("mt32_filter");
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
@@ -1107,7 +1107,7 @@ void MT32_AddConfigSection(const ConfigPtr& conf)
 	constexpr auto ChangeableAtRuntime = true;
 
 	assert(conf);
-	Section_prop* sec_prop = conf->AddSection_prop("mt32",
+	SectionProp* sec_prop = conf->AddSectionProp("mt32",
 	                                               &mt32_init,
 	                                               ChangeableAtRuntime);
 	assert(sec_prop);

@@ -323,12 +323,12 @@ void CMOS_SetRegister(Bitu regNr, uint8_t val) {
 }
 
 
-class CMOS final : public Module_base{
+class CMOS final : public ModuleBase{
 private:
 	IO_ReadHandleObject ReadHandler[2];
 	IO_WriteHandleObject WriteHandler[2];
 public:
-	CMOS(Section* configuration):Module_base(configuration){
+	CMOS(Section* configuration):ModuleBase(configuration){
 		constexpr io_port_t port_0x70 = 0x70;
 		constexpr io_port_t port_0x71 = 0x71;
 
