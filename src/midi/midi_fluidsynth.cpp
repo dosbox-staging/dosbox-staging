@@ -200,7 +200,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	// Name 'default.sf2' picks the default SoundFont if it's installed
 	// in the OS (usually "Fluid_R3").
 	auto str_prop = secprop.Add_string("soundfont", WhenIdle, "default.sf2");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Name or path of SoundFont file to use ('default.sf2' by default).\n"
 	        "The SoundFont will be looked up in the following locations in order:\n"
 	        "  - The user-defined SoundFont directory (see 'soundfont_dir').\n"
@@ -211,7 +211,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	        "Note: Run `MIXER /LISTMIDI` to see the list of available SoundFonts.");
 
 	str_prop = secprop.Add_string("soundfont_dir", WhenIdle, "");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Extra user-defined SoundFont directory (unset by default).\n"
 	        "If this is set, SoundFonts are looked up in this directory first, then in the\n"
 	        "the standard system locations.");
@@ -222,7 +222,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 	auto int_prop = secprop.Add_int("soundfont_volume", WhenIdle, DefaultVolume);
 	int_prop->SetMinMax(MinVolume, MaxVolume);
-	int_prop->Set_help(
+	int_prop->SetHelp(
 	        format_str("Set the SoundFont's volume as a percentage (%d by default).\n"
 	                   "This is useful for normalising the volume of different SoundFonts.\n"
 	                   "The percentage value can range from %d to %d.",
@@ -231,7 +231,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 	                   MaxVolume));
 
 	str_prop = secprop.Add_string(ChorusSettingName, WhenIdle, DefaultChorusSetting);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Configure the FluidSynth chorus. Possible values:\n"
 	        "  auto:      Enable chorus, except for known problematic SoundFonts (default).\n"
 	        "  on:        Always enable chorus.\n"
@@ -250,7 +250,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 	str_prop = secprop.Add_string(ReverbSettingName, WhenIdle, DefaultReverbSetting);
 	;
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Configure the FluidSynth reverb. Possible values:\n"
 	        "  auto:      Enable reverb (default).\n"
 	        "  on:        Enable reverb.\n"
@@ -268,7 +268,7 @@ static void init_fluidsynth_dosbox_settings(Section_prop& secprop)
 
 	str_prop = secprop.Add_string("fsynth_filter", WhenIdle, "off");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the FluidSynth audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

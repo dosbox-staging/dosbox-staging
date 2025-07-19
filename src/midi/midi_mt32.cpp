@@ -362,7 +362,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	                      mt32_206_model.GetName(),
 	                      mt32_204_model.GetName(),
 	                      mt32_203_model.GetName()});
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "The Roland MT-32/CM-32ML model to use.\n"
 	        "You must have the ROM files for the selected model available (see 'romdir').\n"
 	        "The lookup for the best models is performed in order as listed.\n"
@@ -378,7 +378,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
 	        "'mt32-roms' directory in your DOSBox configuration directory. Other common\n"
@@ -390,7 +390,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 
 	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Roland MT-32/CM-32L audio output:\n"
 	        "  off:       Don't filter the output (default).\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");

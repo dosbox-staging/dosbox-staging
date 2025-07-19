@@ -3233,7 +3233,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 		"normal", "simple"
 	});
 
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Type of CPU emulation core to use ('auto' by default).\n"
 	        "  auto:     'normal' core for real mode programs, 'dynamic' core for protected\n"
 	        "            mode programs (default). Most programs will run correctly with this\n"
@@ -3259,7 +3259,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	pstring->Set_values(
 	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "CPU type to emulate ('auto' by default).\n"
 	        "You should only change this if the program doesn't run correctly on 'auto'.\n"
 	        "  auto:          The fastest and most compatible setting (default).\n"
@@ -3292,7 +3292,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	auto pmulti_remain = secprop.AddMultiValRemain("cycles",
 	                                               DeprecatedButAllowed,
 	                                               " ");
-	pmulti_remain->Set_help(
+	pmulti_remain->SetHelp(
 	        "The 'cycles' setting is deprecated but still accepted;\n"
 	        "please use 'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' instead.");
 
@@ -3306,7 +3306,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	const auto cpu_cycles_default = format_str("%d", CpuCyclesRealModeDefault);
 
 	pstring = secprop.Add_string("cpu_cycles", Always, cpu_cycles_default.c_str());
-	pstring->Set_help(format_str(
+	pstring->SetHelp(format_str(
 	        "Speed of the emulated CPU ('%d' by default). If 'cpu_cycles_protected' is on\n"
 	        "'auto', this sets the cycles for both real and protected mode programs.\n"
 	        "  <number>:  Emulate a fixed number of cycles per millisecond (roughly\n"
@@ -3342,7 +3342,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	pstring = secprop.Add_string("cpu_cycles_protected",
 	                             Always,
 	                             cpu_cycles_protected_default.c_str());
-	pstring->Set_help(format_str(
+	pstring->SetHelp(format_str(
 	        "Speed of the emulated CPU for protected mode programs only\n"
 	        "('%d' by default).\n"
 	        "  auto:      Use the `cpu_cycles' setting.\n"
@@ -3357,7 +3357,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        CpuCyclesMax));
 
 	auto pbool = secprop.Add_bool("cpu_throttle", Always, CpuThrottleDefault);
-	pbool->Set_help(format_str(
+	pbool->SetHelp(format_str(
 	        "Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
 	        "cannot keep up (%s by default).\n"
 	        "Only affects fixed cycles settings. When enabled, the number of cycles per\n"
@@ -3366,14 +3366,14 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 
 	auto pint = secprop.Add_int("cycleup", Always, DefaultCpuCycleUp);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
-	pint->Set_help(
+	pint->SetHelp(
 	        format_str("Number of cycles to add with the 'Inc Cycles' hotkey (%d by default).\n"
 	                   "Values lower than 100 are treated as a percentage increase.",
 	                   DefaultCpuCycleUp));
 
 	pint = secprop.Add_int("cycledown", Always, DefaultCpuCycleDown);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
-	pint->Set_help(
+	pint->SetHelp(
 	        format_str("Number of cycles to subtract with the 'Dec Cycles' hotkey (%d by default).\n"
 	                   "Values lower than 100 are treated as a percentage decrease.",
 	                   DefaultCpuCycleDown));

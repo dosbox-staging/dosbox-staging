@@ -803,7 +803,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	                      sc55mk2_100.config_name,
 	                      sc55mk2_101.config_name});
 
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "The Roland Sound Canvas model to use.\n"
 	        "One or more CLAP audio plugins that implement the supported Sound Canvas\n"
 	        "models must be present in the 'plugins' directory in your DOSBox installation\n"
@@ -817,7 +817,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 
 	str_prop = sec_prop.Add_string("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Roland Sound Canvas audio output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"

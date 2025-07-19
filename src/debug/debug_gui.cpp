@@ -266,7 +266,7 @@ void LOG_StartUp(void) {
 	Prop_string* pstring = sect->Add_string("logfile",
 	                                        Property::Changeable::Always,
 	                                        "");
-	pstring->Set_help("Path of the log file.");
+	pstring->SetHelp("Path of the log file.");
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);
@@ -274,7 +274,7 @@ void LOG_StartUp(void) {
 		Prop_bool* pbool = sect->Add_bool(buf,
 		                                  Property::Changeable::Always,
 		                                  true);
-		pbool->Set_help("Enable/disable logging of this type.");
+		pbool->SetHelp("Enable/disable logging of this type.");
 	}
 	//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }

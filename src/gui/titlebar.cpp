@@ -711,7 +711,7 @@ void TITLEBAR_AddConfig(Section_prop& secprop)
 	prop_str = secprop.Add_string("window_titlebar",
 	                              always,
 	                              "program=name dosbox=auto cycles=on mouse=full");
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Space separated list of information to be displayed in the window's titlebar\n"
 	        "('program=name dosbox=auto cycles=on mouse=full' by default). If a parameter\n"
 	        "is not specified, its default value is used.\n"

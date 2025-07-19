@@ -1101,7 +1101,7 @@ static void init_render_settings(Section_prop& secprop)
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
 	auto* int_prop = secprop.Add_int("frameskip", deprecated, 0);
-	int_prop->Set_help(
+	int_prop->SetHelp(
 	        "Consider capping frame rates using the 'host_rate' setting.");
 
 	auto* string_prop = secprop.Add_string("glshader", always, "crt-auto");
@@ -1156,7 +1156,7 @@ static void init_render_settings(Section_prop& secprop)
 	});
 
 	string_prop = secprop.Add_string("aspect", always, "auto");
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
@@ -1181,7 +1181,7 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop->Set_values({"auto", "on", "square-pixels", "off", "stretch"});
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
 	        "configured aspect ratio is always maintained according to the 'aspect' and\n"
@@ -1202,7 +1202,7 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = secprop.Add_string("viewport", always, "fit");
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
 	        "configured aspect ratio into account (see 'aspect'). Possible values:\n"
@@ -1233,7 +1233,7 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("monochrome_palette",
 	                                 always,
 	                                 MonochromePaletteAmber);
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
@@ -1244,7 +1244,7 @@ static void init_render_settings(Section_prop& secprop)
 	                         MonochromePalettePaperwhite});
 
 	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
 	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
 	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
@@ -1279,7 +1279,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
 
 	string_prop = secprop.Add_string("scaler", deprecated, "none");
-	string_prop->Set_help(
+	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
 	        "    with `glshader = sharp` and optionally setting the desired 'window_size'\n"
