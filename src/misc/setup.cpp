@@ -601,7 +601,7 @@ bool Prop_hex::SetValue(const std::string& input)
 
 void PropMultiVal::MakeDefaultValue()
 {
-	Property* p = section->Get_prop(0);
+	Property* p = section->GetProp(0);
 	if (!p) {
 		return;
 	}
@@ -610,7 +610,7 @@ void PropMultiVal::MakeDefaultValue()
 
 	std::string result = p->GetDefaultValue().ToString();
 
-	while ((p = section->Get_prop(i++))) {
+	while ((p = section->GetProp(i++))) {
 		std::string props = p->GetDefaultValue().ToString();
 		if (props.empty()) {
 			continue;
@@ -630,19 +630,19 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 
 	std::string local(input);
 	int i = 0, number_of_properties = 0;
-	Property* p = section->Get_prop(0);
+	Property* p = section->GetProp(0);
 	// No properties in this section. do nothing
 	if (!p) {
 		return false;
 	}
 
-	while ((section->Get_prop(number_of_properties))) {
+	while ((section->GetProp(number_of_properties))) {
 		number_of_properties++;
 	}
 
 	std::string::size_type loc = std::string::npos;
 
-	while ((p = section->Get_prop(i++))) {
+	while ((p = section->GetProp(i++))) {
 		// trim leading separators
 		loc = local.find_first_not_of(separator);
 		if (loc != std::string::npos) {
@@ -683,7 +683,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 	std::string local(input);
 	int i = 0;
 
-	Property* p = section->Get_prop(0);
+	Property* p = section->GetProp(0);
 	if (!p) {
 		// No properties in this section; do nothing
 		return false;
@@ -693,7 +693,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 	std::string prevargument = "";
 
 	std::string::size_type loc = std::string::npos;
-	while ((p = section->Get_prop(i++))) {
+	while ((p = section->GetProp(i++))) {
 		// Trim leading separators
 		loc = local.find_first_not_of(separator);
 		if (loc != std::string::npos) {
@@ -785,14 +785,14 @@ const Value& Property::GetAlternateForDeprecatedValue(const Value& val) const
 
 const std::vector<Value>& PropMultiVal::GetValues() const
 {
-	Property* p = section->Get_prop(0);
+	Property* p = section->GetProp(0);
 
 	// No properties in this section. do nothing
 	if (!p) {
 		return valid_values;
 	}
 	int i = 0;
-	while ((p = section->Get_prop(i++))) {
+	while ((p = section->GetProp(i++))) {
 		std::vector<Value> v = p->GetValues();
 		if (!v.empty()) {
 			return p->GetValues();
@@ -975,7 +975,7 @@ PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname
 	return nullptr;
 }
 
-Property* Section_prop::Get_prop(int index)
+Property* Section_prop::GetProp(int index)
 {
 	for (it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (!index--) {
@@ -985,7 +985,7 @@ Property* Section_prop::Get_prop(int index)
 	return nullptr;
 }
 
-Property* Section_prop::Get_prop(const std::string_view propname)
+Property* Section_prop::GetProp(const std::string_view propname)
 {
 	for (Property* property : properties) {
 		if (iequals(property->propname, propname)) {
@@ -1169,7 +1169,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 
 			size_t maxwidth = 0;
 
-			while ((p = sec->Get_prop(i++))) {
+			while ((p = sec->GetProp(i++))) {
 				maxwidth = std::max(maxwidth, p->propname.length());
 			}
 
@@ -1179,7 +1179,7 @@ bool Config::WriteConfig(const std_fs::path& path) const
 			int intmaxwidth = std::min<int>(60, check_cast<int>(maxwidth));
 			safe_sprintf(prefix, "\n# %*s  ", intmaxwidth, "");
 
-			while ((p = sec->Get_prop(i++))) {
+			while ((p = sec->GetProp(i++))) {
 				if (p->IsDeprecated()) {
 					continue;
 				}
@@ -1724,7 +1724,7 @@ void set_section_property_value(const std::string_view section_name,
 	        control->GetSection(section_name));
 	assertm(sect_updater, "Invalid section name");
 
-	auto* property = sect_updater->Get_prop(property_name);
+	auto* property = sect_updater->GetProp(property_name);
 	assertm(property, "Invalid property name");
 
 	property->SetValue(std::string(property_value));
