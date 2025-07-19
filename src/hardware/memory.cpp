@@ -703,13 +703,13 @@ HostPt GetMemBase(void)
 	return MemBase;
 }
 
-class MEMORY final : public Module_base {
+class MEMORY final : public ModuleBase {
 private:
 	IO_ReadHandleObject ReadHandler   = {};
 	IO_WriteHandleObject WriteHandler = {};
 
 public:
-	MEMORY(Section *configuration) : Module_base(configuration)
+	MEMORY(Section *configuration) : ModuleBase(configuration)
 	{
 		// Get the users memory size preference
 		const auto section = static_cast<Section_prop*>(configuration);

@@ -1275,9 +1275,9 @@ uint32_t CSerial::GetPortBaudRate() const {
 	return SerialMaxBaudRate / baud_divider;
 }
 
-class SERIALPORTS final : public Module_base {
+class SERIALPORTS final : public ModuleBase {
 public:
-	SERIALPORTS (Section * configuration):Module_base (configuration) {
+	SERIALPORTS (Section * configuration):ModuleBase (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
 		Section_prop *section = static_cast <Section_prop*>(configuration);
 

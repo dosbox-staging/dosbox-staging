@@ -532,13 +532,13 @@ static void configure_calibration(const Section_prop &settings)
 	calibrated_axis_rates.y = axis_rates_from_pref(y_cal_pref, default_axis_rates.y);
 }
 
-class JOYSTICK final : public Module_base {
+class JOYSTICK final : public ModuleBase {
 private:
 	IO_ReadHandleObject ReadHandler = {};
 	IO_WriteHandleObject WriteHandler = {};
 
 public:
-	JOYSTICK(Section *configuration) : Module_base(configuration)
+	JOYSTICK(Section *configuration) : ModuleBase(configuration)
 	{
 		JOYSTICK_ParseConfiguredType();
 

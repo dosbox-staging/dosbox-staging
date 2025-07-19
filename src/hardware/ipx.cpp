@@ -1075,7 +1075,7 @@ Bitu IPX_ESRHandler(void) {
 
 bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
-class IPX final : public Module_base {
+class IPX final : public ModuleBase {
 private:
 	CALLBACK_HandlerObject callback_ipx = {};
 	CALLBACK_HandlerObject callback_esr = {};
@@ -1084,7 +1084,7 @@ private:
 	static uint16_t dospage;
 
 public:
-	IPX(Section *configuration) : Module_base(configuration)
+	IPX(Section *configuration) : ModuleBase(configuration)
 	{
 		ECBList = nullptr;
 		ESRList = nullptr;

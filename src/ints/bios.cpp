@@ -1226,12 +1226,12 @@ bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 void BIOS_SetupKeyboard(void);
 void BIOS_SetupDisks(void);
 
-class BIOS final : public Module_base{
+class BIOS final : public ModuleBase{
 private:
 	CALLBACK_HandlerObject callback[11];
 	void AddMessages();
 public:
-	BIOS(Section* configuration) : Module_base(configuration)
+	BIOS(Section* configuration) : ModuleBase(configuration)
 	{
 		AddMessages();
 

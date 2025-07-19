@@ -1720,11 +1720,11 @@ DOS_Version DOS_ParseVersion(const char *word, const char *args)
 	return new_version;
 }
 
-class DOS:public Module_base{
+class DOS:public ModuleBase{
 private:
 	CALLBACK_HandlerObject callback[7];
 public:
-	DOS(Section* configuration):Module_base(configuration){
+	DOS(Section* configuration):ModuleBase(configuration){
 		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
 		callback[0].Set_RealVec(0x20);
 

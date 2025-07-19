@@ -714,7 +714,7 @@ static Bitu XMS_Handler()
 
 Bitu GetEMSType(Section_prop* section);
 
-class XMS final : public Module_base {
+class XMS final : public ModuleBase {
 private:
 	CALLBACK_HandlerObject callbackhandler;
 
@@ -723,7 +723,7 @@ public:
 	~XMS() override;
 };
 
-XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
+XMS::XMS(Section* configuration) : ModuleBase(configuration), callbackhandler{}
 {
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 

@@ -520,17 +520,17 @@ public:
 };
 
 // Base for all hardware and software "devices"
-class Module_base {
+class ModuleBase {
 protected:
 	Section* m_configuration;
 
 public:
-	Module_base(Section* conf_section) : m_configuration(conf_section) {}
+	ModuleBase(Section* conf_section) : m_configuration(conf_section) {}
 
-	Module_base(const Module_base&) = delete;            // prevent copying
-	Module_base& operator=(const Module_base&) = delete; // prevent assignment
+	ModuleBase(const ModuleBase&) = delete;            // prevent copying
+	ModuleBase& operator=(const ModuleBase&) = delete; // prevent assignment
 
-	virtual ~Module_base() = default;
+	virtual ~ModuleBase() = default;
 
 	virtual bool Change_Config(Section* /*newconfig*/)
 	{

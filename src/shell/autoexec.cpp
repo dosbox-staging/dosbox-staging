@@ -227,7 +227,7 @@ static void create_autoexec_bat_bin(const uint16_t code_page)
 // AUTOEXEC class declaration and implementation
 // ***************************************************************************
 
-class AutoExecModule final : public Module_base {
+class AutoExecModule final : public ModuleBase {
 public:
 	AutoExecModule(Section* configuration);
 
@@ -263,7 +263,7 @@ struct AutoMountSettings {
 };
 
 AutoExecModule::AutoExecModule(Section* configuration)
-        : Module_base(configuration)
+        : ModuleBase(configuration)
 {
 	AddMessages();
 
