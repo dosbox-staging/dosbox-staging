@@ -4423,8 +4423,8 @@ static void init_sdl_config_section()
 
 	pstring = sdl_sec->AddString("fullresolution", deprecated_but_allowed, "");
 	pstring->SetHelp(
-	        "The 'fullresolution' setting is deprecated but still accepted;\n"
-	        "please use 'fullscreen_mode' instead.");
+	        "The [color=light-green]'fullresolution'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'fullscreen_mode'[reset] instead.");
 
 	pstring = sdl_sec->AddString("fullscreen_mode", always, "standard");
 	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
@@ -4459,8 +4459,8 @@ static void init_sdl_config_section()
 
 	pstring = sdl_sec->AddString("windowresolution", deprecated_but_allowed, "");
 	pstring->SetHelp(
-	        "The 'windowresolution' setting is deprecated but still accepted;\n"
-	        "please use 'window_size' instead.");
+	        "The [color=light-green]'windowresolution'[reset] setting is deprecated but still accepted;\n"
+	        "please use [color=light-green]'window_size'[reset] instead.");
 
 	pstring = sdl_sec->AddString("window_size", on_start, "default");
 	pstring->SetHelp(
