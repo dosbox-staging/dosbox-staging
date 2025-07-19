@@ -7923,7 +7923,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	constexpr auto WhenIdle    = Property::Changeable::WhenIdle;
 
 	auto* bool_prop = secprop.Add_bool("voodoo", WhenIdle, true);
-	bool_prop->Set_help(
+	bool_prop->SetHelp(
 	        "Enable 3dfx Voodoo emulation ('on' by default). This is authentic low-level\n"
 	        "emulation of the Voodoo card without any OpenGL passthrough, so it requires a\n"
 	        "powerful CPU. Most games need the DOS Glide driver called 'GLIDE2X.OVL' to be\n"
@@ -7934,7 +7934,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 
 	auto* str_prop = secprop.Add_string("voodoo_memsize", OnlyAtStart, "4");
 	str_prop->Set_values({"4", "12"});
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Set the amount of video memory for 3dfx Voodoo graphics. The memory is used by\n"
 	        "the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU) as follows:\n"
 	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
@@ -7942,10 +7942,10 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 
 	// Deprecate the boolean Voodoo multithreading setting
 	bool_prop = secprop.Add_bool("voodoo_multithreading", Deprecated, false);
-	bool_prop->Set_help("Renamed to 'voodoo_threads'");
+	bool_prop->SetHelp("Renamed to 'voodoo_threads'");
 
 	str_prop = secprop.Add_string("voodoo_threads", OnlyAtStart, "auto");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Use threads to improve 3dfx Voodoo performance:\n"
 	        "  auto:     Use up to 16 threads based on available CPU cores (default).\n"
 	        "  <value>:  Set a specific number of threads between 1 and 128.\n"
@@ -7956,7 +7956,7 @@ static void init_voodoo_dosbox_settings(Section_prop& secprop)
 	        "      let us know how it goes.");
 
 	bool_prop = secprop.Add_bool("voodoo_bilinear_filtering", OnlyAtStart, true);
-	bool_prop->Set_help(
+	bool_prop->SetHelp(
 	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
 	        "('on' by default). Bilinear filtering can impact frame rates on slower systems;\n"
 	        "try turning it off if you're not getting adequate performance.");

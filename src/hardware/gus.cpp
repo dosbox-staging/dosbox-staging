@@ -1570,7 +1570,7 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 
 	auto* bool_prop = secprop.Add_bool("gus", when_idle, false);
 	assert(bool_prop);
-	bool_prop->Set_help(
+	bool_prop->SetHelp(
 	        "Enable Gravis UltraSound emulation ('off' by default).\n"
 	        "Many games and all demos upload their own sounds, but some rely on the\n"
 	        "instrument patch files included with the GUS for MIDI playback (see 'ultradir'\n"
@@ -1587,22 +1587,22 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 	auto* hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
 	hex_prop->Set_values({"210", "220", "230", "240", "250", "260"});
-	hex_prop->Set_help(
+	hex_prop->SetHelp(
 	        "The IO base address of the Gravis UltraSound (240 by default).");
 
 	auto* int_prop = secprop.Add_int("gusirq", when_idle, 5);
 	assert(int_prop);
 	int_prop->Set_values({"2", "3", "5", "7", "11", "12", "15"});
-	int_prop->Set_help("The IRQ number of the Gravis UltraSound (5 by default).");
+	int_prop->SetHelp("The IRQ number of the Gravis UltraSound (5 by default).");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
 	assert(int_prop);
 	int_prop->Set_values({"1", "3", "5", "6", "7"});
-	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
+	int_prop->SetHelp("The DMA channel of the Gravis UltraSound (3 by default).");
 
 	auto* str_prop = secprop.Add_string("gus_filter", when_idle, "on");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Filter for the Gravis UltraSound audio output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"
@@ -1610,7 +1610,7 @@ void init_gus_dosbox_settings(Section_prop& secprop)
 
 	str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");
 	assert(str_prop);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Path to the UltraSound directory ('C:\\ULTRASND' by default).\n"
 	        "This should have a 'MIDI' subdirectory containing the patches (instrument\n"
 	        "files) required by some games for MIDI music playback. Not all games need these\n"

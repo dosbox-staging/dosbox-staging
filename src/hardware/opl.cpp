@@ -969,12 +969,12 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	constexpr auto when_idle  = Property::Changeable::WhenIdle;
 
 	auto pint = secprop.Add_int("oplrate", deprecated, false);
-	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.");
+	pint->SetHelp("The OPL output is now transparently resampled to the mixer's sample rate.");
 
 	auto pstring = secprop.Add_string("oplmode", when_idle, "auto");
 	pstring->Set_values(
 	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "OPL model to emulate ('auto' by default).\n"
 	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
 	        "  opl2:      Yamaha OPL2 (YM3812, mono).\n"
@@ -991,7 +991,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "    get ESFM-flavoured OPL with original Sound Blaster models.");
 
 	pstring = secprop.Add_string("opl_fadeout", when_idle, "off");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Fade out hanging notes on the OPL synth:\n"
 	        "  off:       Don't fade out hanging notes (default).\n"
 	        "  fade:      Fade out hanging notes. You should only enable this in games that\n"
@@ -1006,7 +1006,7 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "               1000 3000 (wait 1 second before fading out over 3 seconds)");
 
 	auto pbool = secprop.Add_bool("opl_remove_dc_bias", when_idle, false);
-	pbool->Set_help(
+	pbool->SetHelp(
 	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
 	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
 	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
@@ -1014,10 +1014,10 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 	        "affected games.");
 
 	pstring = secprop.Add_string("oplemu", deprecated, "");
-	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
+	pstring->SetHelp("Only 'nuked' OPL emulation is supported now.");
 
 	pstring = secprop.Add_string("opl_filter", when_idle, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Type of filter to emulate for the Sound Blaster OPL output:\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype' (default).\n"
 	        "  sb1, sb2, sbpro1, sbpro2, sb16:\n"
@@ -1027,14 +1027,14 @@ static void init_opl_dosbox_settings(Section_prop& secprop)
 
 	pstring = secprop.Add_string("cms", when_idle, "auto");
 	pstring->Set_values({"on", "off", "auto"});
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Enable CMS emulation ('auto' by default).\n"
 	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
 	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
 	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
 
 	pstring = secprop.Add_string("cms_filter", when_idle, "on");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Filter for the Sound Blaster CMS output:\n"
 	        "  on:        Filter the output (default).\n"
 	        "  off:       Don't filter the output.\n"

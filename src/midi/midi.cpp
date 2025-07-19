@@ -801,7 +801,7 @@ static void init_mididevice_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	auto str_prop = secprop.Add_string("mididevice", WhenIdle, DefaultMidiDevicePref);
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        format_str("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	                   "('%s' by default):",
 	                   DefaultMidiDevicePref));
@@ -853,7 +853,7 @@ static void init_midiconfig_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
 	auto str_prop = secprop.Add_string("midiconfig", WhenIdle, "");
-	str_prop->Set_help(
+	str_prop->SetHelp(
 	        "Configuration options for the selected MIDI device (unset by default).\n"
 	        "Notes:");
 
@@ -908,10 +908,10 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 
 	auto str_prop = secprop.Add_string("mpu401", WhenIdle, "intelligent");
 	str_prop->Set_values({"intelligent", "uart", "none"});
-	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
+	str_prop->SetHelp("MPU-401 mode to emulate ('intelligent' by default).");
 
 	auto bool_prop = secprop.Add_bool("raw_midi_output", WhenIdle, false);
-	bool_prop->Set_help(
+	bool_prop->SetHelp(
 	        "Enable raw, unaltered MIDI output ('off' by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
 	        "which makes editing the MIDI recordings of these games very error-prone and\n"

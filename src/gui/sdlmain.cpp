@@ -4408,26 +4408,26 @@ static void init_sdl_config_section()
 	});
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Render driver to use in 'texture' output mode ('auto' by default).\n"
 	        "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(get_sdl_texture_renderers());
 
 	auto pint = sdl_sec->Add_int("display", on_start, 0);
-	pint->Set_help(
+	pint->SetHelp(
 	        "Number of display to use; values depend on OS and user "
 	        "settings (0 by default).");
 
 	auto pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	pbool->Set_help("Start in fullscreen mode ('off' by default).");
+	pbool->SetHelp("Start in fullscreen mode ('off' by default).");
 
 	pstring = sdl_sec->Add_string("fullresolution", deprecated_but_allowed, "");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "The 'fullresolution' setting is deprecated but still accepted;\n"
 	        "please use 'fullscreen_mode' instead.");
 
 	pstring = sdl_sec->Add_string("fullscreen_mode", always, "standard");
-	pstring->Set_help("Set the fullscreen mode ('standard' by default):");
+	pstring->SetHelp("Set the fullscreen mode ('standard' by default):");
 
 	pstring->SetOptionHelp("standard",
 	                       "  standard:           Use the standard fullscreen mode of your operating system\n"
@@ -4458,12 +4458,12 @@ static void init_sdl_config_section()
 
 
 	pstring = sdl_sec->Add_string("windowresolution", deprecated_but_allowed, "");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "The 'windowresolution' setting is deprecated but still accepted;\n"
 	        "please use 'window_size' instead.");
 
 	pstring = sdl_sec->Add_string("window_size", on_start, "default");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Set initial window size for windowed mode. You can still resize the window\n"
 	        "after startup.\n"
 	        "  default:   Select the best option based on your environment and other\n"
@@ -4474,34 +4474,34 @@ static void init_sdl_config_section()
 	        "             (e.g., 1024x768).");
 
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
 	pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	pbool->Set_help("Enable window decorations in windowed mode ('on' by default).");
+	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
 
 	TITLEBAR_AddConfig(*sdl_sec);
 
 	pint = sdl_sec->Add_int("transparency", always, 0);
-	pint->Set_help(
+	pint->SetHelp(
 	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_string("max_resolution", deprecated, "");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
 	pstring = sdl_sec->Add_string("viewport_resolution", deprecated, "");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Moved to [color=light-cyan][render][reset] section "
 	        "and renamed to [color=light-green]'viewport'[reset].");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Set the host's refresh rate:\n"
 	        "  auto:      Use SDI rates, or VRR rates when in fullscreen on a high-refresh\n"
 	        "             rate display (default).\n"
@@ -4513,7 +4513,7 @@ static void init_sdl_config_section()
 	        "             23.000 is the allowed minimum).");
 
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  auto:      Limit vsync to beneficial cases, such as when using an\n"
 	        "             interpolating VRR display in fullscreen (default).\n"
@@ -4531,14 +4531,14 @@ static void init_sdl_config_section()
 	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
-	pint->Set_help(
+	pint->SetHelp(
 	        "Number of microseconds to allow rendering to block before skipping the\n"
 	        "next frame. For example, a value of 7000 is roughly half the frame time\n"
 	        "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Select the frame presentation mode:\n"
 	        "  auto:  Intelligently time and drop frames to prevent emulation stalls,\n"
 	        "         based on host and DOS frame rates (default).\n"
@@ -4547,26 +4547,26 @@ static void init_sdl_config_section()
 	pstring->Set_values({"auto", "cfr", "vfr"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
-	pmulti->Set_help(
+	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_capture'[reset].");
 
 	pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	pmulti->Set_help(
+	pmulti->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_sensitivity'[reset].");
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
-	pbool->Set_help(
+	pbool->SetHelp(
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_raw_input'[reset].");
 
 	pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	pbool->Set_help("Keep the console open if an error has occurred ('on' by default).");
+	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
 
 	pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	pmulti->SetValue("auto auto");
-	pmulti->Set_help(
+	pmulti->SetHelp(
 	        "Priority levels to apply when active and inactive, respectively.\n"
 	        "('auto auto' by default)\n"
 	        "'auto' lets the host operating system manage the priority.");
@@ -4578,20 +4578,20 @@ static void init_sdl_config_section()
 	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
-	pbool->Set_help("Mute the sound when the window is inactive ('off' by default).");
+	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
 
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
-	pbool->Set_help("Pause emulation when the window is inactive ('off' by default).");
+	pbool->SetHelp("Pause emulation when the window is inactive ('off' by default).");
 
 	pbool = sdl_sec->Add_bool("keyboard_capture", always, false);
-	pbool->Set_help(
+	pbool->SetHelp(
 	        "Capture system keyboard shortcuts ('off' by default).\n"
 	        "When enabled, most system shortcuts such as Alt+Tab are captured and sent to\n"
 	        "DOSBox Staging. This is useful for Windows 3.1x and some DOS programs with\n"
 	        "unchangeable keyboard shortcuts that conflict with system shortcuts.");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
 	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
@@ -4599,7 +4599,7 @@ static void init_sdl_config_section()
 	        "      file.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
-	pstring->Set_help(
+	pstring->SetHelp(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");

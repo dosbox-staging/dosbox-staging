@@ -443,7 +443,7 @@ static void config_init(Section_prop& secprop)
 		OptionCaptureType::OnStart,
 		OptionCaptureType::NoMouse
 	});
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Set the mouse capture behaviour:\n"
 	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
 	        "             (default).\n"
@@ -457,12 +457,12 @@ static void config_init(Section_prop& secprop)
 	        "For touch-screen control, use 'seamless'.");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
-	prop_bool->Set_help(
+	prop_bool->SetHelp(
 	        "Release the captured mouse by middle-clicking, and also capture it in\n"
 	        "seamless mode ('on' by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
-	prop_bool->Set_help(
+	prop_bool->SetHelp(
 	        "Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
 	        "mode on systems with more than one display ('on' by default).\n"
 	        "Note: You should disable this if it incorrectly detects multiple displays\n"
@@ -471,7 +471,7 @@ static void config_init(Section_prop& secprop)
 	        "      audio-only listening.");
 
 	prop_str = secprop.Add_string("mouse_sensitivity", always, "100");
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
 	        "(100 by default). Values can be separated by spaces, commas, or semicolons\n"
 	        "(i.e. 100,150). Negative values invert the axis, zero disables it.\n"
@@ -480,7 +480,7 @@ static void config_init(Section_prop& secprop)
 	        "MOUSECTL.COM tool available on the Z drive.");
 
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
-	prop_bool->Set_help(
+	prop_bool->SetHelp(
 	        "Enable to bypass your operating system's mouse acceleration and sensitivity\n"
 	        "settings ('on' by default). Works in fullscreen or when the mouse is captured\n"
 	        "in windowed mode.");
@@ -496,7 +496,7 @@ static void config_init(Section_prop& secprop)
 		OptionBuiltInDosDriver::On,
 		OptionBuiltInDosDriver::NoTsr
 	});
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Built-in DOS mouse driver mode ('on' by default). It bypasses the PS/2 and\n"
 	        "serial (COM) ports and communicates with the mouse directly. This results in\n"
 	        "lower input lag, smoother movement, and increased mouse responsiveness, so only\n"
@@ -521,7 +521,7 @@ static void config_init(Section_prop& secprop)
 	        "    driver.\n");
 
 	prop_bool = secprop.Add_bool("dos_mouse_driver", deprecated, true);
-	prop_bool->Set_help("Renamed to 'builtin_dos_mouse_driver'.");
+	prop_bool->SetHelp("Renamed to 'builtin_dos_mouse_driver'.");
 
 	prop_str = secprop.Add_string("builtin_dos_mouse_driver_model",
 	                              always,
@@ -532,7 +532,7 @@ static void config_init(Section_prop& secprop)
 		OptionModelDos::ThreeButton,
 		OptionModelDos::Wheel
 	});
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Set the mouse model to be simulated by the built-in DOS mouse driver ('2button'\n"
 	        "by default).\n"
 	        "  2button:  2 buttons, the safest option for most games. The majority of DOS\n"
@@ -548,7 +548,7 @@ static void config_init(Section_prop& secprop)
 	                              always,
 	                              DefaultBuiltinDosMouseDriverOptions);
 	assert(prop_str);
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Additional built-in DOS mouse driver settings as a list of space or comma\n"
 	        "separated options (unset by default).\n"
 	        "  immediate:  Update mouse movement counters immediately, without waiting for\n"
@@ -564,7 +564,7 @@ static void config_init(Section_prop& secprop)
 	        "              been found to require the v7.0+ behaviour so far.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", deprecated, false);
-	prop_bool->Set_help("Configure using 'builtin_dos_mouse_driver_options'.");
+	prop_bool->SetHelp("Configure using 'builtin_dos_mouse_driver_options'.");
 
 	// Physical mice configuration
 
@@ -579,7 +579,7 @@ static void config_init(Section_prop& secprop)
 		OptionModelPs2::Explorer,
 		OptionModelPs2::NoMouse
 	});
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Set the PS/2 AUX port mouse model, or in other words, the type of the virtual\n"
 	        "mouse plugged into the emulated PS/2 mouse port ('explorer' by default).\n"
 	        "The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').\n"
@@ -601,7 +601,7 @@ static void config_init(Section_prop& secprop)
 		OptionModelCom::ThreeButtonMsm,
 		OptionModelCom::WheelMsm
 	});
-	prop_str->Set_help(
+	prop_str->SetHelp(
 	        "Set the default COM (serial) mouse model, or in other words, the type of the\n"
 	        "virtual mouse plugged into the emulated COM ports ('wheel+msm' by default).\n"
 	        "The setting has no effect on the built-in mouse driver (see 'dos_mouse_driver').\n"
@@ -620,13 +620,13 @@ static void config_init(Section_prop& secprop)
 	// VMM interfaces
 
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
-	prop_bool->Set_help(
+	prop_bool->SetHelp(
 	        "VMware mouse interface ('on' by default).\n"
 	        "with experimental 3rd party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");
 
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
-	prop_bool->Set_help(
+	prop_bool->SetHelp(
 	        "VirtualBox mouse interface ('on' by default).\n"
 	        "Fully compatible only with 3rd party Windows 3.1x driver.\n"
 	        "Note: Requires PS/2 mouse to be enabled.");

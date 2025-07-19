@@ -270,7 +270,7 @@ static std::string create_setting_help_msg_name(const std::string& propname)
 	return result;
 }
 
-void Property::Set_help(const std::string& help_text)
+void Property::SetHelp(const std::string& help_text)
 {
 	MSG_Add(create_setting_help_msg_name(propname), help_text);
 }
