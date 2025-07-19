@@ -212,7 +212,7 @@ static void LOG_Destroy(Section*) {
 
 static void LOG_Init(Section * sec) {
 	Section_prop * sect = static_cast<Section_prop *>(sec);
-	std::string blah = sect->Get_string("logfile");
+	std::string blah = sect->GetString("logfile");
 	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
 		;
 	} else {
@@ -223,7 +223,7 @@ static void LOG_Init(Section * sec) {
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		loggrp[i].enabled=sect->Get_bool(buf);
+		loggrp[i].enabled=sect->GetBool(buf);
 	}
 }
 

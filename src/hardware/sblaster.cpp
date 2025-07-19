@@ -3370,7 +3370,7 @@ static bool is_cms_enabled(const SbType sbtype)
 
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
-		if (sect->Get_string("oplmode") == "cms") {
+		if (sect->GetString("oplmode") == "cms") {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "OPL",
 			                      "SBLASTER_CMS_OPLMODE_DEPRECATED");
@@ -3378,7 +3378,7 @@ static bool is_cms_enabled(const SbType sbtype)
 			return true;
 
 		} else {
-			const auto cms_str = sect->Get_string("cms");
+			const auto cms_str = sect->GetString("cms");
 			const auto cms_enabled_opt = parse_bool_setting(cms_str);
 
 			if (cms_enabled_opt) {
@@ -3482,19 +3482,19 @@ SBLASTER::SBLASTER(Section* conf)
 
 	Section_prop* section = static_cast<Section_prop*>(conf);
 
-	sb.hw.base = section->Get_hex("sbbase");
-	sb.hw.irq  = static_cast<uint8_t>(section->Get_int("irq"));
+	sb.hw.base = section->GetHex("sbbase");
+	sb.hw.irq  = static_cast<uint8_t>(section->GetInt("irq"));
 
-	sb.dsp.cold_warmup_ms = section->Get_int("sbwarmup");
+	sb.dsp.cold_warmup_ms = section->GetInt("sbwarmup");
 
 	// Magic 32 divisor was probably the result of experimentation
 	sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms / 32;
 
-	sb.mixer.enabled = section->Get_bool("sbmixer");
+	sb.mixer.enabled = section->GetBool("sbmixer");
 
 	sb.mixer.stereo_enabled = false;
 
-	const auto sbtype_pref = section->Get_string("sbtype");
+	const auto sbtype_pref = section->GetString("sbtype");
 
 	sb.type     = determine_sb_type(sbtype_pref);
 	sb.ess_type = determine_ess_type(sbtype_pref);
@@ -3508,7 +3508,7 @@ SBLASTER::SBLASTER(Section* conf)
 		sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
 	}
 
-	oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type, sb.ess_type);
+	oplmode = determine_oplmode(section->GetString("oplmode"), sb.type, sb.ess_type);
 
 	// Init OPL
 	switch (oplmode) {
@@ -3527,7 +3527,7 @@ SBLASTER::SBLASTER(Section* conf)
 		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 		assert(opl_channel);
 
-		const std::string opl_filter_str = section->Get_string("opl_filter");
+		const std::string opl_filter_str = section->GetString("opl_filter");
 		configure_opl_filter(opl_channel, opl_filter_str, sb.type);
 	} break;
 	}
@@ -3540,7 +3540,7 @@ SBLASTER::SBLASTER(Section* conf)
 	const auto has_dac = (sb.type != SbType::None &&
 	                      sb.type != SbType::GameBlaster);
 
-	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma")) : 0;
+	sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->GetInt("dma")) : 0;
 
 	// Configure the BIOS DAC callbacks as soon as the card's access
 	// ports ( port, IRQ, and potential 8-bit DMA address) are
@@ -3568,7 +3568,7 @@ SBLASTER::SBLASTER(Section* conf)
 
 	// Only Sound Blaster 16 uses a 16-bit DMA channel.
 	if (sb.type == SbType::SB16) {
-		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+		sb.hw.dma16 = static_cast<uint8_t>(section->GetInt("hdma"));
 
 		// Reserve the second DMA channel only if it's unique.
 		if (sb.hw.dma16 != sb.hw.dma8) {
@@ -3598,9 +3598,9 @@ SBLASTER::SBLASTER(Section* conf)
 	                           ChannelName::SoundBlasterDac,
 	                           channel_features);
 
-	const std::string sb_filter_prefs = section->Get_string("sb_filter");
+	const std::string sb_filter_prefs = section->GetString("sb_filter");
 
-	const auto sb_filter_always_on = section->Get_bool("sb_filter_always_on");
+	const auto sb_filter_always_on = section->GetBool("sb_filter_always_on");
 
 	configure_sb_filter(channel, sb_filter_prefs, sb_filter_always_on, sb.type);
 

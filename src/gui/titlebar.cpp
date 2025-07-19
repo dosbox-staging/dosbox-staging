@@ -697,7 +697,7 @@ static void parse_config(const std::string& new_setting_str)
 
 void TITLEBAR_ReadConfig(const Section_prop& secprop)
 {
-	parse_config(secprop.Get_string("window_titlebar"));
+	parse_config(secprop.GetString("window_titlebar"));
 
 	GFX_RefreshTitle();
 }

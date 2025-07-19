@@ -459,7 +459,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 	auto rom_dirs = get_platform_rom_dirs();
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
-	std::string selected_romdir = section->Get_string("romdir");
+	std::string selected_romdir = section->GetString("romdir");
 
 	if (selected_romdir.empty()) { // already trimmed
 		selected_romdir = DefaultMt32RomsDir;
@@ -477,7 +477,7 @@ static std::string get_model_setting()
 {
 	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
 	assert(section);
-	return section->Get_string("model");
+	return section->GetString("model");
 }
 
 static std::set<const LASynthModel*> find_models(MT32Emu::Service& service,
@@ -711,7 +711,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	const auto section = static_cast<Section_prop*>(control->GetSection("mt32"));
 	assert(section);
 
-	const std::string filter_prefs = section->Get_string("mt32_filter");
+	const std::string filter_prefs = section->GetString("mt32_filter");
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {

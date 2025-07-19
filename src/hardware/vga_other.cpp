@@ -1429,7 +1429,7 @@ static void composite_init(Section *sec)
 	assert(sec);
 	const auto conf = static_cast<Section_prop *>(sec);
 	assert(conf);
-	const std::string state = conf->Get_string("composite");
+	const std::string state = conf->GetString("composite");
 
 	if (state == "auto") {
 		cga_comp = COMPOSITE_STATE::AUTO;
@@ -1445,15 +1445,15 @@ static void composite_init(Section *sec)
 		}
 	}
 
-	const std::string era_choice = conf->Get_string("era");
+	const std::string era_choice = conf->GetString("era");
 	is_composite_new_era = era_choice == "new" ||
 	                       (is_machine_pcjr() && era_choice == "auto");
 
-	hue.set(conf->Get_int("hue"));
-	saturation.set(conf->Get_int("saturation"));
-	contrast.set(conf->Get_int("contrast"));
-	brightness.set(conf->Get_int("brightness"));
-	convergence.set(conf->Get_int("convergence"));
+	hue.set(conf->GetInt("hue"));
+	saturation.set(conf->GetInt("saturation"));
+	contrast.set(conf->GetInt("contrast"));
+	brightness.set(conf->GetInt("brightness"));
+	convergence.set(conf->GetInt("convergence"));
 
 	if (cga_comp == COMPOSITE_STATE::ON) {
 		LOG_MSG("COMPOSITE: %s-era enabled with settings: hue %d, saturation %d,"

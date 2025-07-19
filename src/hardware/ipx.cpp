@@ -1092,7 +1092,7 @@ public:
 		isIpxConnected = false;
 
 		Section_prop *section = static_cast<Section_prop *>(configuration);
-		if (section && !section->Get_bool("ipx"))
+		if (section && !section->GetBool("ipx"))
 			return;
 
 		if (!NetWrapper_InitializeSDLNet())
@@ -1155,7 +1155,7 @@ public:
 	~IPX() {
 		Section_prop * section = static_cast<Section_prop *>(m_configuration);
 		PIC_RemoveEvents(IPX_AES_EventHandler);
-		if(!section->Get_bool("ipx")) return;
+		if(!section->GetBool("ipx")) return;
 
 		if(isIpxServer) {
 			isIpxServer = false;

@@ -1538,24 +1538,24 @@ static void gus_init(Section* sec)
 {
 	assert(sec);
 	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
-	if (!conf || !conf->Get_bool("gus")) {
+	if (!conf || !conf->GetBool("gus")) {
 		return;
 	}
 
 	// Read the GUS config settings
-	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
+	const auto port = static_cast<uint16_t>(conf->GetHex("gusbase"));
 
-	const auto dma = static_cast<uint8_t>(conf->Get_int("gusdma"));
+	const auto dma = static_cast<uint8_t>(conf->GetInt("gusdma"));
 	// The conf system handles invalid settings, so just assert validity
 	assert(contains(DmaAddresses, dma));
 
-	auto irq = static_cast<uint8_t>(conf->Get_int("gusirq"));
+	auto irq = static_cast<uint8_t>(conf->GetInt("gusirq"));
 	// The conf system handles invalid settings, so just assert validity
 	assert(contains(IrqAddresses, irq));
 
-	const std::string ultradir = conf->Get_string("ultradir");
+	const std::string ultradir = conf->GetString("ultradir");
 
-	const std::string filter_prefs = conf->Get_string("gus_filter");
+	const std::string filter_prefs = conf->GetString("gus_filter");
 
 	// Instantiate the GUS with the settings
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);

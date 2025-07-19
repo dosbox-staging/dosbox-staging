@@ -1773,7 +1773,7 @@ public:
 		dos.internal_output=false;
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
-		std::string args = section->Get_string("ver");
+		std::string args = section->GetString("ver");
 		std::string word = strip_word(args);
 		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
 		if (new_version.major || new_version.minor) {

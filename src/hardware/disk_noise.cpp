@@ -498,8 +498,8 @@ static void disknoise_init(Section* section)
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
 
-	const bool enable_floppy_disk_noise = prop->Get_bool("floppy_disk_noise");
-	const bool enable_hard_disk_noise = prop->Get_bool("hard_disk_noise");
+	const bool enable_floppy_disk_noise = prop->GetBool("floppy_disk_noise");
+	const bool enable_hard_disk_noise = prop->GetBool("hard_disk_noise");
 
 	const auto spin_up                        = "hdd_spinup.flac";
 	const auto spin                           = "hdd_spin.flac";

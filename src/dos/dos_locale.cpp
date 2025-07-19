@@ -1636,7 +1636,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : Module_base(configuration)
 
 	LocalePeriod locale_period = {};
 
-	const auto period_str = section->Get_string("locale_period");
+	const auto period_str = section->GetString("locale_period");
 	if (period_str == "native") {
 		locale_period = LocalePeriod::Native;
 	} else if (period_str == "modern") {
@@ -1648,7 +1648,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : Module_base(configuration)
 	}
 
 	// Apply country and locale period
-	const auto country_str = section->Get_string("country");
+	const auto country_str = section->GetString("country");
 	if (!config.is_config_loaded || country_str != config.country_str) {
 		config.country_str   = country_str;
 		config.locale_period = locale_period;
@@ -1663,7 +1663,7 @@ DOS_Locale::DOS_Locale(Section* configuration) : Module_base(configuration)
 		// Has to be done after the country is detected and set up,
 		// as the usage of EUR currency might affect code page
 		// selection
-		config.keyboard_str = section->Get_string("keyboard_layout");
+		config.keyboard_str = section->GetString("keyboard_layout");
 		load_keyboard_layout();
 	}
 

@@ -639,7 +639,7 @@ static void initialize_vsync_settings()
 {
 	sdl.vsync = {};
 
-	const std::string user_pref = get_sdl_section()->Get_string("vsync");
+	const std::string user_pref = get_sdl_section()->GetString("vsync");
 
 	if (has_true(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncMode::On;
@@ -3213,12 +3213,12 @@ static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correctio
 {
 
 	const auto window_size_pref = [&]() {
-		const auto legacy_pref = get_sdl_section()->Get_string("windowresolution");
+		const auto legacy_pref = get_sdl_section()->GetString("windowresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "windowresolution", "");
 			set_section_property_value("sdl", "window_size", legacy_pref);
 		}
-		return get_sdl_section()->Get_string("window_size");
+		return get_sdl_section()->GetString("window_size");
 	}();
 
 	// Get the coarse resolution from the users setting, and adjust
@@ -3267,7 +3267,7 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
 	const auto section = static_cast<const Section_prop*>(sec);
-	std::string output = section->Get_string("output");
+	std::string output = section->GetString("output");
 
 	GFX_DisengageRendering();
 	// it's the job of everything after this to re-engage it.
@@ -3296,7 +3296,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
 
-	sdl.render_driver = section->Get_string("texture_renderer");
+	sdl.render_driver = section->GetString("texture_renderer");
 	lowcase(sdl.render_driver);
 
 	if (sdl.render_driver != "auto") {
@@ -3309,10 +3309,10 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		}
 	}
 
-	sdl.desktop.window.show_decorations = section->Get_bool("window_decorations");
+	sdl.desktop.window.show_decorations = section->GetBool("window_decorations");
 
 	setup_initial_window_position_from_conf(
-	        section->Get_string("window_position"));
+	        section->GetString("window_position"));
 
 	setup_window_sizes_from_conf(wants_aspect_ratio_correction);
 
@@ -3362,7 +3362,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
 	}
 
-	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
+	const auto transparency = clamp(section->GetInt("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 
 	SDL_SetWindowOpacity(sdl.window, alpha);
@@ -3383,7 +3383,7 @@ static void apply_active_settings()
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
 	if (sdl.window) {
-		const auto capture_keyboard = get_sdl_section()->Get_bool(
+		const auto capture_keyboard = get_sdl_section()->GetBool(
 		        "keyboard_capture");
 
 		SDL_SetWindowKeyboardGrab(sdl.window,
@@ -3441,12 +3441,12 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 static void set_fullscreen_mode()
 {
 	const auto fullscreen_mode_pref = [&] {
-		auto legacy_pref = get_sdl_section()->Get_string("fullresolution");
+		auto legacy_pref = get_sdl_section()->GetString("fullresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "fullresolution", "");
 			set_section_property_value("sdl", "fullscreen_mode", legacy_pref);
 		}
-		return get_sdl_section()->Get_string("fullscreen_mode");
+		return get_sdl_section()->GetString("fullscreen_mode");
 	}();
 
 	auto set_screen_bounds = [&] {
@@ -3479,26 +3479,26 @@ static void read_gui_config(Section* sec)
 	sdl.active          = false;
 	sdl.updating        = false;
 	sdl.resizing_window = false;
-	sdl.wait_on_error   = section->Get_bool("waitonerror");
+	sdl.wait_on_error   = section->GetBool("waitonerror");
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
-	                            section->Get_bool("fullscreen");
+	                            section->GetBool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
-	set_priority_levels(priority_conf->Get_string("active"),
-	                    priority_conf->Get_string("inactive"));
+	set_priority_levels(priority_conf->GetString("active"),
+	                    priority_conf->GetString("inactive"));
 
-	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
+	sdl.pause_when_inactive = section->GetBool("pause_when_inactive");
 
 	sdl.mute_when_inactive = (!sdl.pause_when_inactive) &&
-	                         section->Get_bool("mute_when_inactive");
+	                         section->GetBool("mute_when_inactive");
 
 	// Assume focus on startup
 	apply_active_settings();
 
 	set_fullscreen_mode();
 
-	const std::string host_rate_pref = section->Get_string("host_rate");
+	const std::string host_rate_pref = section->GetString("host_rate");
 	if (host_rate_pref == "auto") {
 		sdl.desktop.host_rate_mode = HostRateMode::Auto;
 
@@ -3520,13 +3520,13 @@ static void read_gui_config(Section* sec)
 		}
 	}
 
-	sdl.vsync.skip_us = section->Get_int("vsync_skip");
+	sdl.vsync.skip_us = section->GetInt("vsync_skip");
 
 	render_pacer = std::make_unique<Pacer>("Render",
 	                                       sdl.vsync.skip_us,
 	                                       Pacer::LogLevel::TIMEOUTS);
 
-	const int display = section->Get_int("display");
+	const int display = section->GetInt("display");
 
 	if ((display >= 0) && (display < SDL_GetNumVideoDisplays())) {
 		sdl.display_number = display;
@@ -3535,7 +3535,7 @@ static void read_gui_config(Section* sec)
 		sdl.display_number = 0;
 	}
 
-	const std::string presentation_mode_pref = section->Get_string(
+	const std::string presentation_mode_pref = section->GetString(
 	        "presentation_mode");
 	if (presentation_mode_pref == "auto") {
 		sdl.frame.desired_mode = FrameMode::Unset;
@@ -3554,7 +3554,7 @@ static void read_gui_config(Section* sec)
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 
-	const std::string screensaver = section->Get_string("screensaver");
+	const std::string screensaver = section->GetString("screensaver");
 	if (screensaver == "allow") {
 		SDL_EnableScreenSaver();
 	}

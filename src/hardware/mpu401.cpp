@@ -780,7 +780,7 @@ public:
 			return;
 		}
 
-		const std::string mpu_choice = section->Get_string("mpu401");
+		const std::string mpu_choice = section->GetString("mpu401");
 
 		if (const auto has_bool = parse_bool_setting(mpu_choice);
 		    has_bool && *has_bool == false) {

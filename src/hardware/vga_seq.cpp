@@ -147,7 +147,7 @@ void VGA_SetupSEQ()
 			const auto conf    = control->GetSection("dosbox");
 			const auto section = static_cast<Section_prop*>(conf);
 			assert(section);
-			vga.seq.wants_vga_8dot_font = section->Get_bool("vga_8dot_font");
+			vga.seq.wants_vga_8dot_font = section->GetBool("vga_8dot_font");
 
 			IO_RegisterReadHandler(0x3c4, read_p3c4, io_width_t::byte);
 			IO_RegisterReadHandler(0x3c5, read_p3c5, io_width_t::byte);

@@ -307,9 +307,9 @@ void CMS_Init(Section* conf)
 	assert(conf);
 
 	Section_prop* section = static_cast<Section_prop*>(conf);
-	gameblaster.Open(section->Get_hex("sbbase"),
-	                 section->Get_string("sbtype"),
-	                 section->Get_string("cms_filter"));
+	gameblaster.Open(section->GetHex("sbbase"),
+	                 section->GetString("sbtype"),
+	                 section->GetString("cms_filter"));
 
 	constexpr auto ChangeableAtRuntime = true;
 	section->AddDestroyFunction(&CMS_ShutDown, ChangeableAtRuntime);

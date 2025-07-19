@@ -117,7 +117,7 @@ static std_fs::path get_shell_history_path()
 	const auto* section = dynamic_cast<Section_prop*>(control->GetSection("dos"));
 	assert(section);
 
-	const auto* path = section->Get_path("shell_history_file"); //-V522
+	const auto* path = section->GetPath("shell_history_file"); //-V522
 	if (path == nullptr) {
 		return {};
 	}

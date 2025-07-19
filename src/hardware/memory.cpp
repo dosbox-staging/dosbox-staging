@@ -713,7 +713,7 @@ public:
 	{
 		// Get the users memory size preference
 		const auto section = static_cast<Section_prop*>(configuration);
-		const auto num_megabytes = section->Get_int("memsize");
+		const auto num_megabytes = section->GetInt("memsize");
 		check_num_megabytes(num_megabytes);
 
 		const auto num_pages = num_megabytes * PagesPerMegabyte;

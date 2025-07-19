@@ -377,7 +377,7 @@ void JOYSTICK_ParseConfiguredType()
 {
 	const auto conf    = get_joystick_section();
 	const auto section = static_cast<Section_prop *>(conf);
-	const auto type = section->Get_string("joysticktype");
+	const auto type = section->GetString("joysticktype");
 
 	if (type == "disabled")
 		joytype = JOY_DISABLED;
@@ -505,7 +505,7 @@ static void activate_calibration_hotkeys()
 
 static void configure_calibration(const Section_prop &settings)
 {
-	if (settings.Get_bool("use_joy_calibration_hotkeys"))
+	if (settings.GetBool("use_joy_calibration_hotkeys"))
 		activate_calibration_hotkeys();
 
 	auto axis_rates_from_pref = [](const std::string& pref,
@@ -525,10 +525,10 @@ static void configure_calibration(const Section_prop &settings)
 			            pref.c_str());
 		return default_rates;
 	};
-	const auto x_cal_pref   = settings.Get_string("joy_x_calibration");
+	const auto x_cal_pref   = settings.GetString("joy_x_calibration");
 	calibrated_axis_rates.x = axis_rates_from_pref(x_cal_pref, default_axis_rates.x);
 
-	const auto y_cal_pref   = settings.Get_string("joy_y_calibration");
+	const auto y_cal_pref   = settings.GetString("joy_y_calibration");
 	calibrated_axis_rates.y = axis_rates_from_pref(y_cal_pref, default_axis_rates.y);
 }
 
@@ -551,11 +551,11 @@ public:
 		assert(section);
 
 		// Get and apply configuration settings
-		autofire = section->Get_bool("autofire");
-		button_wrapping_enabled = section->Get_bool("buttonwrap");
-		stick[0].deadzone = section->Get_int("deadzone");
-		swap34 = section->Get_bool("swap34");
-		stick[0].mapstate = section->Get_bool("circularinput") ? MovementType::JOYMAP_CIRCLE
+		autofire = section->GetBool("autofire");
+		button_wrapping_enabled = section->GetBool("buttonwrap");
+		stick[0].deadzone = section->GetInt("deadzone");
+		swap34 = section->GetBool("swap34");
+		stick[0].mapstate = section->GetBool("circularinput") ? MovementType::JOYMAP_CIRCLE
 		                                                       : MovementType::JOYMAP_SQUARE;
 		configure_calibration(*section);
 
@@ -580,7 +580,7 @@ public:
 		// Setup the joystick IO port handlers, which lets DOS games
 		// detect and use them
 		if (is_visible) {
-			const bool wants_timed = section->Get_bool("timed");
+			const bool wants_timed = section->GetBool("timed");
 			ReadHandler.Install(0x201,
 			                    wants_timed ? read_p201_timed : read_p201,
 			                    io_width_t::byte);
