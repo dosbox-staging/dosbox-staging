@@ -135,7 +135,7 @@ bool DOS_Shell::ExecuteConfigChange(const char* const property_name, const std::
 	}
 
 	if (args.empty()) {
-		std::string val = section->GetPropValue(property_name);
+		std::string val = section->GetPropertyValue(property_name);
 		if (val != NO_SUCH_PROPERTY) {
 			WriteOut("%s\n", val.c_str());
 		}
