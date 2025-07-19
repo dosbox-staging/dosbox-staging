@@ -340,7 +340,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
+	auto* str_prop = sec_prop.AddString("model", when_idle, "auto");
 
 	// Listed in resolution priority order
 	str_prop->SetValues({"auto",
@@ -377,7 +377,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "  - This is *NOT* a General MIDI compatible MIDI device; only use it if the\n"
 	        "    game is known to support Roland MT-32 MIDI (which predates General MIDI).\n");
 
-	str_prop = sec_prop.Add_string("romdir", when_idle, "");
+	str_prop = sec_prop.AddString("romdir", when_idle, "");
 	str_prop->SetHelp(
 	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
 	        "The directory can be absolute or relative, or leave it unset to use the\n"
@@ -388,7 +388,7 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	        "    by their checksums.\n"
 	        "  - Both interleaved and non-interlaved ROM files are supported.");
 
-	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
+	str_prop = sec_prop.AddString("mt32_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
 	        "Filter for the Roland MT-32/CM-32L audio output:\n"

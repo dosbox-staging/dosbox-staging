@@ -708,7 +708,7 @@ void TITLEBAR_AddConfig(Section_prop& secprop)
 
 	Prop_string* prop_str = nullptr;
 
-	prop_str = secprop.Add_string("window_titlebar",
+	prop_str = secprop.AddString("window_titlebar",
 	                              always,
 	                              "program=name dosbox=auto cycles=on mouse=full");
 	prop_str->SetHelp(

@@ -840,7 +840,7 @@ void Property::SetEnabledOptions(const std::vector<std::string>& in)
 	enabled_options = in;
 }
 
-Prop_int* Section_prop::Add_int(const std::string& _propname,
+Prop_int* Section_prop::AddInt(const std::string& _propname,
                                 Property::Changeable::Value when, int _value)
 {
 	Prop_int* test = new Prop_int(_propname, when, _value);
@@ -848,7 +848,7 @@ Prop_int* Section_prop::Add_int(const std::string& _propname,
 	return test;
 }
 
-Prop_string* Section_prop::Add_string(const std::string& _propname,
+Prop_string* Section_prop::AddString(const std::string& _propname,
                                       Property::Changeable::Value when,
                                       const char* _value)
 {
@@ -857,7 +857,7 @@ Prop_string* Section_prop::Add_string(const std::string& _propname,
 	return test;
 }
 
-Prop_path* Section_prop::Add_path(const std::string& _propname,
+Prop_path* Section_prop::AddPath(const std::string& _propname,
                                   Property::Changeable::Value when, const char* _value)
 {
 	Prop_path* test = new Prop_path(_propname, when, _value);
@@ -865,7 +865,7 @@ Prop_path* Section_prop::Add_path(const std::string& _propname,
 	return test;
 }
 
-Prop_bool* Section_prop::Add_bool(const std::string& _propname,
+Prop_bool* Section_prop::AddBool(const std::string& _propname,
                                   Property::Changeable::Value when, bool _value)
 {
 	Prop_bool* test = new Prop_bool(_propname, when, _value);
@@ -873,7 +873,7 @@ Prop_bool* Section_prop::Add_bool(const std::string& _propname,
 	return test;
 }
 
-Prop_hex* Section_prop::Add_hex(const std::string& _propname,
+Prop_hex* Section_prop::AddHex(const std::string& _propname,
                                 Property::Changeable::Value when, Hex _value)
 {
 	Prop_hex* test = new Prop_hex(_propname, when, _value);

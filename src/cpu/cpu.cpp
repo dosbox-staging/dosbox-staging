@@ -3224,7 +3224,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 	constexpr auto DeprecatedButAllowed = Property::Changeable::DeprecatedButAllowed;
 
-	auto pstring = secprop.Add_string("core", WhenIdle, "auto");
+	auto pstring = secprop.AddString("core", WhenIdle, "auto");
 	pstring->SetValues({
 		"auto",
 #if C_DYNAMIC_X86 || C_DYNREC
@@ -3255,7 +3255,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "            Programs that self-modify their code might misbehave or crash on\n"
 	        "            the 'dynamic' core; use the 'normal' core for such programs.");
 
-	pstring = secprop.Add_string("cputype", Always, "auto");
+	pstring = secprop.AddString("cputype", Always, "auto");
 	pstring->SetValues(
 	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 
@@ -3296,16 +3296,16 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "The 'cycles' setting is deprecated but still accepted;\n"
 	        "please use 'cpu_cycles', 'cpu_cycles_protected' and 'cpu_throttle' instead.");
 
-	pstring = pmulti_remain->GetSection()->Add_string("type", Always, "auto");
+	pstring = pmulti_remain->GetSection()->AddString("type", Always, "auto");
 	pmulti_remain->SetValue(" ");
 	pstring->SetValues({"auto", "fixed", "max", "%u"});
 
-	pmulti_remain->GetSection()->Add_string("parameters", Always, "");
+	pmulti_remain->GetSection()->AddString("parameters", Always, "");
 
 	// Revised CPU cycles related settings
 	const auto cpu_cycles_default = format_str("%d", CpuCyclesRealModeDefault);
 
-	pstring = secprop.Add_string("cpu_cycles", Always, cpu_cycles_default.c_str());
+	pstring = secprop.AddString("cpu_cycles", Always, cpu_cycles_default.c_str());
 	pstring->SetHelp(format_str(
 	        "Speed of the emulated CPU ('%d' by default). If 'cpu_cycles_protected' is on\n"
 	        "'auto', this sets the cycles for both real and protected mode programs.\n"
@@ -3339,7 +3339,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	const auto cpu_cycles_protected_default =
 	        format_str("%d", CpuCyclesProtectedModeDefault);
 
-	pstring = secprop.Add_string("cpu_cycles_protected",
+	pstring = secprop.AddString("cpu_cycles_protected",
 	                             Always,
 	                             cpu_cycles_protected_default.c_str());
 	pstring->SetHelp(format_str(
@@ -3356,7 +3356,7 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        CpuCyclesMin,
 	        CpuCyclesMax));
 
-	auto pbool = secprop.Add_bool("cpu_throttle", Always, CpuThrottleDefault);
+	auto pbool = secprop.AddBool("cpu_throttle", Always, CpuThrottleDefault);
 	pbool->SetHelp(format_str(
 	        "Throttle down the number of emulated CPU cycles dynamically if your host CPU\n"
 	        "cannot keep up (%s by default).\n"
@@ -3364,14 +3364,14 @@ void init_cpu_dosbox_settings(Section_prop& secprop)
 	        "millisecond can vary; this might cause issues in some DOS programs.",
 	        (CpuThrottleDefault ? "'on'" : "'off'")));
 
-	auto pint = secprop.Add_int("cycleup", Always, DefaultCpuCycleUp);
+	auto pint = secprop.AddInt("cycleup", Always, DefaultCpuCycleUp);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
 	pint->SetHelp(
 	        format_str("Number of cycles to add with the 'Inc Cycles' hotkey (%d by default).\n"
 	                   "Values lower than 100 are treated as a percentage increase.",
 	                   DefaultCpuCycleUp));
 
-	pint = secprop.Add_int("cycledown", Always, DefaultCpuCycleDown);
+	pint = secprop.AddInt("cycledown", Always, DefaultCpuCycleDown);
 	pint->SetMinMax(CpuCycleStepMin, CpuCycleStepMax);
 	pint->SetHelp(
 	        format_str("Number of cycles to subtract with the 'Dec Cycles' hotkey (%d by default).\n"

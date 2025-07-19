@@ -788,7 +788,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto* str_prop = sec_prop.Add_string("soundcanvas_model", when_idle, "auto");
+	auto* str_prop = sec_prop.AddString("soundcanvas_model", when_idle, "auto");
 
 	// Listed in resolution priority order
 	str_prop->SetValues({"auto",
@@ -815,7 +815,7 @@ static void init_soundcanvas_dosbox_settings(Section_prop& sec_prop)
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
 
-	str_prop = sec_prop.Add_string("soundcanvas_filter", when_idle, "on");
+	str_prop = sec_prop.AddString("soundcanvas_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->SetHelp(
 	        "Filter for the Roland Sound Canvas audio output:\n"

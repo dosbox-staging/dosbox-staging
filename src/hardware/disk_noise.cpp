@@ -532,13 +532,13 @@ static void init_disknoise_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto OnlyAtStart = Property::Changeable::OnlyAtStart;
 
-	auto* bool_prop = secprop.Add_bool("hard_disk_noise", OnlyAtStart, false);
+	auto* bool_prop = secprop.AddBool("hard_disk_noise", OnlyAtStart, false);
 	bool_prop->SetHelp(
 	        "Enable emulated hard disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"
 	        "set 'hard_disk_speed' to lower than 'maximum' for an authentic experience.");
 
-	bool_prop = secprop.Add_bool("floppy_disk_noise", OnlyAtStart, false);
+	bool_prop = secprop.AddBool("floppy_disk_noise", OnlyAtStart, false);
 	bool_prop->SetHelp(
 	        "Enable emulated floppy disk noises ('off' by default).\n"
 	        "Plays spinning disk and seek noise sounds when enabled. It's recommended to\n"

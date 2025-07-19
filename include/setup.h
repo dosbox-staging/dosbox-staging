@@ -388,21 +388,21 @@ public:
 
 	~Section_prop() override;
 
-	Prop_int* Add_int(const std::string& _propname,
+	Prop_int* AddInt(const std::string& _propname,
 	                  Property::Changeable::Value when, int _value = 0);
 
-	Prop_string* Add_string(const std::string& _propname,
+	Prop_string* AddString(const std::string& _propname,
 	                        Property::Changeable::Value when,
 	                        const char* _value = nullptr);
 
-	Prop_path* Add_path(const std::string& _propname,
+	Prop_path* AddPath(const std::string& _propname,
 	                    Property::Changeable::Value when,
 	                    const char* _value = nullptr);
 
-	Prop_bool* Add_bool(const std::string& _propname,
+	Prop_bool* AddBool(const std::string& _propname,
 	                    Property::Changeable::Value when, bool _value = false);
 
-	Prop_hex* Add_hex(const std::string& _propname,
+	Prop_hex* AddHex(const std::string& _propname,
 	                  Property::Changeable::Value when, Hex _value = 0);
 
 	//	void Add_double(const char * _propname, double _value=0.0);

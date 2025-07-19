@@ -281,7 +281,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	// Chip type
-	auto* str_prop = sec_prop.Add_string("sidmodel", when_idle, "none");
+	auto* str_prop = sec_prop.AddString("sidmodel", when_idle, "none");
 	str_prop->SetValues({"auto", "6581", "8580", "none"});
 	str_prop->SetHelp(
 	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
@@ -293,7 +293,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  none:  Disable the card (default).");
 
 	// Chip clock frequency
-	str_prop = sec_prop.Add_string("sidclock", when_idle, "default");
+	str_prop = sec_prop.AddString("sidclock", when_idle, "default");
 	str_prop->SetValues({"default", "c64ntsc", "c64pal", "hardsid"});
 	str_prop->SetHelp(
 	        "The SID chip's clock frequency, which is jumperable on reproduction cards:\n"
@@ -303,25 +303,25 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  hardsid:  1.000 MHz, available on the DuoSID.");
 
 	// IO Address
-	auto* hex_prop          = sec_prop.Add_hex("sidport", when_idle, 0x280);
+	auto* hex_prop          = sec_prop.AddHex("sidport", when_idle, 0x280);
 	hex_prop->SetValues({"240", "260", "280", "2a0", "2c0"});
 	hex_prop->SetHelp(
 	        "The IO port address of the Innovation SSI-2001 (280 by default).");
 
 	// Filter strengths
-	auto* int_prop = sec_prop.Add_int("6581filter", when_idle, 50);
+	auto* int_prop = sec_prop.AddInt("6581filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
 	int_prop->SetHelp(
 	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100\n"
 	        "(50 by default). The SID's analog filtering meant that each chip was\n"
 	        "physically unique.");
 
-	int_prop = sec_prop.Add_int("8580filter", when_idle, 50);
+	int_prop = sec_prop.AddInt("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
 	int_prop->SetHelp("Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
 	                   "(50 by default).");
 
-	str_prop = sec_prop.Add_string("innovation_filter", when_idle, "off");
+	str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
 	        "Filter for the Innovation audio output:\n"

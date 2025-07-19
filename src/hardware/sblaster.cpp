@@ -3725,7 +3725,7 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	auto pstring = secprop.Add_string("sbtype", when_idle, "sb16");
+	auto pstring = secprop.AddString("sbtype", when_idle, "sb16");
 	pstring->SetValues(
 	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
 	pstring->SetHelp(
@@ -3747,23 +3747,23 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "    card is Sound Blaster Pro compatible; just configure the game for Sound\n"
 	        "    Blaster digital sound.");
 
-	auto phex = secprop.Add_hex("sbbase", when_idle, 0x220);
+	auto phex = secprop.AddHex("sbbase", when_idle, 0x220);
 	phex->SetValues({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
 	phex->SetHelp("The IO address of the Sound Blaster (220 by default).");
 
-	auto pint = secprop.Add_int("irq", when_idle, 7);
+	auto pint = secprop.AddInt("irq", when_idle, 7);
 	pint->SetValues({"3", "5", "7", "9", "10", "11", "12"});
 	pint->SetHelp("The IRQ number of the Sound Blaster (7 by default).");
 
-	pint = secprop.Add_int("dma", when_idle, 1);
+	pint = secprop.AddInt("dma", when_idle, 1);
 	pint->SetValues({"0", "1", "3", "5", "6", "7"});
 	pint->SetHelp("The DMA channel of the Sound Blaster (1 by default).");
 
-	pint = secprop.Add_int("hdma", when_idle, 5);
+	pint = secprop.AddInt("hdma", when_idle, 5);
 	pint->SetValues({"0", "1", "3", "5", "6", "7"});
 	pint->SetHelp("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
-	auto pbool = secprop.Add_bool("sbmixer", when_idle, true);
+	auto pbool = secprop.AddBool("sbmixer", when_idle, true);
 	pbool->SetHelp(
 	        "Allow the Sound Blaster mixer to modify volume levels ('on' by default).\n"
 	        "Sound Blaster Pro 1 and later cards allow programs to set the volume of the\n"
@@ -3776,14 +3776,14 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "      volume when speech is playing); it's best to leave 'sbmixer' enabled for\n"
 	        "      such games.");
 
-	pint = secprop.Add_int("sbwarmup", when_idle, 100);
+	pint = secprop.AddInt("sbwarmup", when_idle, 100);
 	pint->SetHelp(
 	        "Silence initial DMA audio after card power-on, in milliseconds\n"
 	        "(100 by default). This mitigates pops heard when starting many SB-based games.\n"
 	        "Reduce this if you notice intial playback is missing audio.");
 	pint->SetMinMax(0, 100);
 
-	pstring = secprop.Add_string("sb_filter", when_idle, "modern");
+	pstring = secprop.AddString("sb_filter", when_idle, "modern");
 	pstring->SetHelp(
 	        "Type of filter to emulate for the Sound Blaster digital sound output:\n"
 	        "  auto:      Use the appropriate filter determined by 'sbtype'.\n"
@@ -3801,7 +3801,7 @@ void init_sblaster_dosbox_settings(Section_prop& secprop)
 	        "                lpf 2 12000\n"
 	        "                hpf 3 120 lfp 1 6500");
 
-	pbool = secprop.Add_bool("sb_filter_always_on", when_idle, false);
+	pbool = secprop.AddBool("sb_filter_always_on", when_idle, false);
 	pbool->SetHelp(
 	        "Force the Sound Blaster Pro 2 filter to be always on ('off' by default).\n"
 	        "Other Sound Blaster models don't allow toggling the filter in software.");
