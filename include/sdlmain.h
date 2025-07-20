@@ -124,23 +124,9 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class VsyncMode { Unset, Off, On, Adaptive };
-
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
-struct VsyncSettings {
-	// The vsync mode the user asked for.
-	VsyncMode requested = VsyncMode::Unset;
-
-	// What the auto-determined state is after setting the requested vsync state.
-	// The video driver may honor the requested vsync mode, ignore it, change
-	// it, or be outright buggy.
-	VsyncMode auto_determined  = VsyncMode::Unset;
-
-	// The actual frame rate after setting the requested vsync mode; it's used
-	// to select the auto-determined vsync mode.
-	int benchmarked_rate = 0;
-};
+enum class VsyncMode { Off, On, Adaptive };
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
@@ -241,9 +227,10 @@ struct SDL_Block {
 	} desktop = {};
 
 	struct {
-		VsyncSettings when_windowed   = {};
-		VsyncSettings when_fullscreen = {};
-		int skip_us                   = 0;
+		VsyncMode windowed   = {};
+		VsyncMode fullscreen = {};
+
+		int skip_us = 0;
 	} vsync = {};
 
 #if C_OPENGL
