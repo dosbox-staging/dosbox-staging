@@ -1020,7 +1020,7 @@ static void update_fallback_dimensions(const double dpi_scale)
 
 	FallbackWindowSize = {iround(fallback_width), iround(fallback_height)};
 
-	// TODO pixels or logical unit?
+	// TODO pixels or logical units?
 	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
 	//          FallbackWindowSize.x,
 	//          FallbackWindowSize.y);
@@ -1037,7 +1037,7 @@ static void update_fallback_dimensions(const double dpi_scale)
 	                         FallbackWindowSize.x,
 	                         FallbackWindowSize.y);
 
-	// TODO pixels or logical unit?
+	// TODO pixels or logical units?
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
@@ -1217,7 +1217,7 @@ static void enter_fullscreen(const int width, const int height)
 		display_mode.w = width;
 		display_mode.h = height;
 
-		// TODO pixels or logical unit?
+		// TODO pixels or logical units?
 		if (SDL_SetWindowDisplayMode(sdl.window, &display_mode) != 0) {
 			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
 			            display_mode.w,
@@ -1534,7 +1534,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 
 	if (current_size != bounded_size) {
 		safe_set_window_size(bounded_size.x, bounded_size.y);
-		// TODO pixels or logical unit?
+		// TODO pixels or logical units?
 		// LOG_MSG("SDL: Initialized the window size to %dx%d",
 		//         bounded_size.x,
 		//         bounded_size.y);
@@ -3539,7 +3539,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_RESIZED: {
-		// TODO pixels or logical unit?
+		// TODO pixels or logical units?
 		// LOG_DEBUG("SDL: Window has been resized to %dx%d",
 		// event.window.data1, event.window.data2);
 
