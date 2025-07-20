@@ -3316,6 +3316,7 @@ void init_cpu_dosbox_settings(SectionProp& secprop)
 	        "  max:       Emulate as many cycles as your host CPU can handle on a single\n"
 	        "             core. The number of cycles per millisecond can vary; this might\n"
 	        "             cause issues in some DOS programs.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Setting the CPU speed to 'max' or to high fixed values may result in sound\n"
 	        "    drop-outs and general lagginess.\n"

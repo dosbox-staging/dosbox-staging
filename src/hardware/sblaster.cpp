@@ -3739,6 +3739,7 @@ void init_sblaster_dosbox_settings(SectionProp& secprop)
 	        "  sb16:      Sound Blaster 16      - OPL3 (default)\n"
 	        "  ess:       ESS ES1688 AudioDrive - ESFM\n"
 	        "  none/off:  Disable Sound Blaster emulation.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - Creative Music System was later rebranded to Game Blaster; they are the\n"
 	        "    same card.\n"

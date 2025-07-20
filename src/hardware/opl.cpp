@@ -984,6 +984,7 @@ static void init_opl_dosbox_settings(SectionProp& secprop)
 	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
 	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).\n"
 	        "  none/off:  Disable OPL emulation.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
 	        "  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;\n"

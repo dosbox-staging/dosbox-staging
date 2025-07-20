@@ -510,6 +510,7 @@ static void config_init(SectionProp& secprop)
 	        "           know if it fixes any software not working with the 'on' setting.\n"
 	        "  off:     Disable the built-in mouse driver. You can still start it at runtime\n"
 	        "           by executing the bundled MOUSE.COM from drive Z.\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - The `ps2_mouse_model` and `com_mouse_model` settings have no effect on the\n"
 	        "    built-in driver.\n"
