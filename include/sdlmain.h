@@ -86,10 +86,10 @@
 #define SDL_NOFRAME 0x00000020
 
 // Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void(const uint16_t*);
+using update_frame_buffer_f = void();
 using present_frame_f       = void();
 
-constexpr void update_frame_noop([[maybe_unused]] const uint16_t*)
+constexpr void update_frame_noop()
 {
 	// no-op
 }
@@ -98,14 +98,6 @@ static inline void present_frame_noop()
 {
 	// no-op
 }
-
-enum class FrameMode {
-	// Constant frame rate, as defined by the emulated system
-	Cfr,
-
-	// Variable frame rate, as defined by the emulated system
-	Vfr
-};
 
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
@@ -124,9 +116,16 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
-	bool initialized     = false;
-	bool active          = false; // If this isn't set don't draw
-	bool updating        = false;
+	bool initialized = false;
+
+	// If this isn't set don't draw
+	bool active = false;
+
+	// True when the contents of the framebuffer has been changed in the
+	// current frame. We only need to upload new texture data when this flag
+	// is true in GFX_EndUpdate().
+	bool updating = false;
+
 	bool resizing_window = false;
 	bool wait_on_error   = false;
 
@@ -211,12 +210,20 @@ struct SDL_Block {
 
 #if C_OPENGL
 	struct {
-		SDL_GLContext context;
-		int pitch      = 0;
-		void* framebuf = nullptr;
-		GLuint texture;
-		GLint max_texsize;
-		GLuint program_object;
+		SDL_GLContext context = {};
+
+		int pitch = 0;
+
+		// The current framebuffer the emulation is rendering the video
+		// output into (contains the "work-in-progress" next frame).
+		std::vector<uint8_t> curr_framebuf = {};
+
+		// Contains the last fully rendered frame, waiting to be presented.
+		std::vector<uint8_t> last_framebuf = {};
+
+		GLuint texture        = 0;
+		GLint max_texsize     = 0;
+		GLuint program_object = 0;
 
 		int texture_width_px  = 0;
 		int texture_height_px = 0;
@@ -225,14 +232,14 @@ struct SDL_Block {
 		std::string shader_source = {};
 
 		struct {
-			GLint texture_size;
-			GLint input_size;
-			GLint output_size;
-			GLint frame_count;
+			GLint texture_size = 0;
+			GLint input_size   = 0;
+			GLint output_size  = 0;
+			GLint frame_count  = 0;
 		} ruby = {};
 
-		GLuint actual_frame_count;
-		GLfloat vertex_data[2 * 3];
+		GLuint actual_frame_count  = 0;
+		GLfloat vertex_data[2 * 3] = {};
 	} opengl = {};
 #endif // C_OPENGL
 
@@ -259,20 +266,16 @@ struct SDL_Block {
 	} texture = {};
 
 	struct {
-		present_frame_f* present      = present_frame_noop;
-		update_frame_buffer_f* update = update_frame_noop;
-		FrameMode desired_mode        = {};
-		FrameMode mode                = {};
+		PresentationMode windowed_mode =   {};
+		PresentationMode fullscreen_mode = {};
 
-		// in ms, for use with PIC timers
-		double period_ms      = 0.0;
-		float max_dupe_frames = 0.0f;
+		int frame_time_us           = 0;
+		int early_present_window_us = 0;
+		int last_present_time_us    = 0;
 
-		// same but in us, for use with chrono
-		int period_us       = 0;
-		int period_us_early = 0;
-		int period_us_late  = 0;
-	} frame = {};
+        present_frame_f* present      = present_frame_noop;
+        update_frame_buffer_f* update = update_frame_noop;
+	} presentation = {};
 
 	bool use_exact_window_resolution = false;
 

@@ -166,6 +166,12 @@ static Bitu normal_loop()
 			}
 #endif
 		} else {
+			// In 'host-rate' presentation mode, this effectively accomplishes
+			// polling at the sub-millisecond level for presenting the frame.
+			if (GFX_GetPresentationMode() == PresentationMode::HostRate) {
+				GFX_MaybePresentFrame();
+			}
+
 			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
 			}
