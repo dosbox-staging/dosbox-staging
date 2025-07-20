@@ -1475,36 +1475,38 @@ static void composite_settings(SectionProp& secprop)
 	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
 	        "      then copy the new settings from the logs into your config.");
 
-	str_prop           = secprop.AddString("era", when_idle, "auto");
+	str_prop = secprop.AddString("era", when_idle, "auto");
 	str_prop->SetValues({"auto", "old", "new"});
-	str_prop->SetHelp("Era of composite technology ('auto' by default).\n"
-	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
+	str_prop->SetHelp(
+	        "Era of composite technology ('auto' by default).\n"
+	        "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 
 	auto int_prop = secprop.AddInt("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->SetHelp(format_str("Hue of the RGB palette (%d by default).\n"
-	                                 "For example, adjust until the sky is blue.",
-	                                 hue.get_default()));
+	int_prop->SetHelp(
+	        format_str("Hue of the RGB palette (%d by default).\n"
+	                   "For example, adjust until the sky is blue.",
+	                   hue.get_default()));
 
 	int_prop = secprop.AddInt("saturation", when_idle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
 	int_prop->SetHelp(format_str("Intensity of colors, from washed out to vivid (%d by default).",
-	                                 saturation.get_default()));
+	                             saturation.get_default()));
 
 	int_prop = secprop.AddInt("contrast", when_idle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
 	int_prop->SetHelp(format_str("Ratio between the dark and light area (%d by default).",
-	                                 contrast.get_default()));
+	                             contrast.get_default()));
 
 	int_prop = secprop.AddInt("brightness", when_idle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
 	int_prop->SetHelp(format_str("Luminosity of the image, from dark to light (%d by default).",
-	                                 brightness.get_default()));
+	                             brightness.get_default()));
 
 	int_prop = secprop.AddInt("convergence", when_idle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
 	int_prop->SetHelp(format_str("Convergence of subpixel elements, from blurry to sharp (%d by default).",
-	                                 convergence.get_default()));
+	                             convergence.get_default()));
 }
 
 static void turn_crt_knob(bool pressed, const int amount)
