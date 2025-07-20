@@ -166,6 +166,25 @@ static Bitu normal_loop()
 			}
 #endif
 		} else {
+			// In 'host-rate' presentation mode, this effectively
+			// accomplishes polling at the sub-millisecond level for
+			// presenting the frame.
+			//
+			// We're effectively implementing cooperative
+			// multitasking here to present the frame at roughly the
+			// right time as `GFX_MaybePresentFrame()` is called
+			// around 2-5 times per tick (1 ms) depending on the
+			// cycles setting.
+			//
+			// This is a good-enough alternative to moving the
+			// entire emulation off the main thread and then
+			// presenting the last-rendered frame at regular
+			// intervals from the main thread.
+			//
+			if (GFX_GetPresentationMode() == PresentationMode::HostRate) {
+				GFX_MaybePresentFrame();
+			}
+
 			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
 			}
