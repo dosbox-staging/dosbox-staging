@@ -585,6 +585,32 @@ static void initialize_vsync_settings()
 	}
 }
 
+static void initialize_presentation_mode_settings()
+{
+	const std::string presentation_mode_pref = get_sdl_section()->GetString(
+	        "presentation_mode");
+
+	if (presentation_mode_pref == "dos-rate") {
+		sdl.presentation.windowed_mode   = PresentationMode::DosRate;
+		sdl.presentation.fullscreen_mode = PresentationMode::DosRate;
+
+	} else if (presentation_mode_pref == "host-rate") {
+		sdl.presentation.windowed_mode   = PresentationMode::HostRate;
+		sdl.presentation.fullscreen_mode = PresentationMode::HostRate;
+
+	} else {
+		assert(presentation_mode_pref == "auto");
+
+		sdl.presentation.windowed_mode = sdl.vsync.windowed
+		                                       ? PresentationMode::HostRate
+		                                       : PresentationMode::DosRate;
+
+		sdl.presentation.fullscreen_mode = sdl.vsync.fullscreen
+		                                         ? PresentationMode::HostRate
+		                                         : PresentationMode::DosRate;
+	}
+}
+
 void GFX_RequestExit(const bool pressed)
 {
 	shutdown_requested = pressed;
@@ -683,8 +709,8 @@ static bool is_command_pressed(const SDL_Event event)
 // Useful during output initialization or transitions.
 void GFX_DisengageRendering()
 {
-	sdl.frame.update  = update_frame_noop;
-	sdl.frame.present = present_frame_noop;
+	sdl.presentation.update  = update_frame_noop;
+	sdl.presentation.present = present_frame_noop;
 }
 
 void GFX_ResetScreen()
@@ -791,6 +817,17 @@ static DosBox::Rect get_canvas_size_in_pixels(
 	return r;
 }
 
+static bool is_vsync_enabled()
+{
+	return sdl.desktop.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
+}
+
+PresentationMode GFX_GetPresentationMode()
+{
+	return sdl.desktop.is_fullscreen ? sdl.presentation.fullscreen_mode
+	                                 : sdl.presentation.windowed_mode;
+}
+
 static void maybe_log_display_properties()
 {
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
@@ -805,44 +842,49 @@ static void maybe_log_display_properties()
 	if (sdl.maybe_video_mode) {
 		const auto video_mode = *sdl.maybe_video_mode;
 
-		static VideoMode last_video_mode      = {};
-		static double last_refresh_rate       = 0.0;
-		static FrameMode last_frame_mode      = {};
-		static DosBox::Rect last_draw_size_px = {};
+		static VideoMode last_video_mode               = {};
+		static double last_refresh_rate                = 0.0;
+		static PresentationMode last_presentation_mode = {};
+		static DosBox::Rect last_draw_size_px          = {};
 
 		if (last_video_mode != video_mode ||
 		    last_refresh_rate != refresh_rate ||
-		    last_frame_mode != sdl.frame.mode ||
+		    last_presentation_mode != GFX_GetPresentationMode() ||
 		    last_draw_size_px.w != draw_size_px.w ||
 		    last_draw_size_px.h != draw_size_px.h) {
 
-			const auto frame_mode = [] {
-				switch (sdl.frame.mode) {
-				case FrameMode::Cfr: return "CFR";
-				case FrameMode::Vfr: return "VFR";
-				default:
-					assertm(false, "Invalid FrameMode");
-					return "";
-				}
-			}();
-
 			const auto& par = video_mode.pixel_aspect_ratio;
 
-			LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
-			        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
+			LOG_MSG("DISPLAY: %s at %2.5g Hz, scaled to %dx%d pixels "
+			        "with 1:%1.6g (%d:%d) pixel aspect ratio",
 			        to_string(video_mode).c_str(),
 			        refresh_rate,
-			        frame_mode,
 			        iroundf(draw_size_px.w),
 			        iroundf(draw_size_px.h),
 			        par.Inverse().ToDouble(),
 			        static_cast<int32_t>(par.Num()),
 			        static_cast<int32_t>(par.Denom()));
 
-			last_video_mode   = video_mode;
-			last_refresh_rate = refresh_rate;
-			last_frame_mode   = sdl.frame.mode;
-			last_draw_size_px = draw_size_px;
+			const auto presentation_rate = []() -> std::string {
+				switch (GFX_GetPresentationMode()) {
+				case PresentationMode::DosRate:
+					return "DOS rate";
+				case PresentationMode::HostRate:
+					return format_str("%2.5g Hz host rate", GFX_GetHostRefreshRate());
+				default:
+					assertm(false, "Invalid PresentationMode");
+					return "";
+				}
+			}();
+
+			LOG_MSG("DISPLAY: Presenting at %s %s vsync",
+			        presentation_rate.c_str(),
+			        (is_vsync_enabled() ? "with" : "without"));
+
+			last_video_mode        = video_mode;
+			last_refresh_rate      = refresh_rate;
+			last_presentation_mode = GFX_GetPresentationMode();
+			last_draw_size_px      = draw_size_px;
 		}
 
 	} else {
@@ -896,25 +938,6 @@ static void safe_set_window_size(const int w, const int h)
 	std::swap(sdl.draw.callback, saved_callback);
 }
 
-static bool is_vsync_enabled()
-{
-	return sdl.desktop.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
-}
-
-static void save_rate_to_frame_period(const double rate_hz)
-{
-	assert(rate_hz > 0);
-
-	// Back off by one-onethousandth to avoid hitting the vsync edge
-	sdl.frame.period_ms  = 1'001.0 / rate_hz;
-	const auto period_us = sdl.frame.period_ms * 1'000;
-	sdl.frame.period_us  = ifloor(period_us);
-
-	// Permit the frame period to be off by up to 90% before "out of sync"
-	sdl.frame.period_us_early = ifloor(55 * period_us / 100);
-	sdl.frame.period_us_late  = ifloor(145 * period_us / 100);
-}
-
 static void remove_window()
 {
 	if (sdl.window) {
@@ -923,52 +946,48 @@ static void remove_window()
 	}
 }
 
-static void maybe_present_synced(const bool present_if_last_skipped)
-{
-	// State tracking across runs
-	static bool last_frame_presented = false;
-	static int64_t last_sync_time    = 0;
-
-	const auto now = GetTicksUs();
-
-	const auto scheduler_arrival = GetTicksDiff(now, last_sync_time);
-
-	const auto on_time = scheduler_arrival > sdl.frame.period_us_early &&
-	                     scheduler_arrival < sdl.frame.period_us_late;
-
-	const auto should_present = on_time || (present_if_last_skipped &&
-	                                        !last_frame_presented);
-
-	if (should_present) {
-		sdl.frame.present();
-		last_frame_presented = true;
-		last_sync_time       = GetTicksUs();
-	} else {
-		last_frame_presented = false;
-		last_sync_time       = now;
-	}
-}
-
 static void setup_presentation_mode()
 {
-	const auto refresh_rate = VGA_GetRefreshRate();
+	auto update_frame_time = [](const double rate_hz) {
+		assert(rate_hz > 0);
 
-	// Calculate the maximum number of duplicate frames before presenting.
-	constexpr uint16_t MinRateHz = 10;
-	sdl.frame.max_dupe_frames    = static_cast<float>(refresh_rate) / MinRateHz;
+		const auto frame_time_ms       = 1000.0 / rate_hz;
+		sdl.presentation.frame_time_us = ifloor(frame_time_ms * 1000.0);
+	};
 
-	const auto vsync_is_on = is_vsync_enabled();
+	switch (GFX_GetPresentationMode()) {
+	case PresentationMode::DosRate: {
+		update_frame_time(VGA_GetRefreshRate());
 
-	FrameMode mode = {};
+		// In 'dos-rate' mode, we just present the frame whenever it's
+		// ready, so the duration of the window doesn't matter if it's
+		// large enough to allow for the frame time jitter.
+		//
+		sdl.presentation.early_present_window_us = sdl.presentation.frame_time_us;
+	} break;
 
-	// Manual CFR or VFR modes
-	if (sdl.frame.desired_mode == FrameMode::Cfr ||
-	    sdl.frame.desired_mode == FrameMode::Vfr) {
-		mode = sdl.frame.desired_mode;
+	case PresentationMode::HostRate: {
+		update_frame_time(GFX_GetHostRefreshRate());
 
-		// Frames will be presented at the DOS rate.
-		save_rate_to_frame_period(refresh_rate);
+		// The primary use case for the 'host-rate' mode is a fixed refresh
+		// rate monitor running at 60 Hz with vsync enabled (with vsync off,
+		// we might as well just use 'dos-rate'). In this scenario, we need to
+		// present the frame a bit before the vsync happens, otherwise we'd
+		// "miss the train" and would have to wait for an extra frame period.
+		// This would increase latency and possibly cause audio glitches
+		// because it's a blocking wait, so it's better to be a bit generous
+		// with the time window.
+		//
+		// This value was determined by experimentation on our supported
+		// OSes. We might turn this a config setting if there's enough
+		// evidence that no single single value works well on all
+		// systems, but so far it seems to do the job.
+		//
+		sdl.presentation.early_present_window_us = 3000;
+	} break;
 	}
+
+	sdl.presentation.last_present_time_us = 0;
 }
 
 static void notify_new_mouse_screen_params()
@@ -1544,7 +1563,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 // Texture update and presentation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines)
+static void update_frame_texture()
 {
 	SDL_UpdateTexture(sdl.texture.texture,
 	                  nullptr, // update entire texture
@@ -1679,11 +1698,6 @@ static void present_frame_texture()
 	SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
-		// glReadPixels() implicitly blocks until all pipelined
-		// rendering commands have finished, so we're guaranteed to read
-		// the contents of the up-to-date backbuffer here right before
-		// the buffer swap.
-		//
 		const auto image = get_rendered_output_from_backbuffer();
 		if (image) {
 			CAPTURE_AddPostRenderImage(*image);
@@ -1696,39 +1710,20 @@ static void present_frame_texture()
 #if C_OPENGL
 
 // OpenGL frame-based update and presentation
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-static void update_frame_gl(const uint16_t* changedLines)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+static void update_frame_gl()
 {
-	if (changedLines) {
-		const auto framebuf = static_cast<uint8_t*>(sdl.opengl.framebuf);
-		const auto pitch = sdl.opengl.pitch;
+	glTexSubImage2D(GL_TEXTURE_2D,
+	                0,
+	                0,
+	                0,
+	                sdl.draw.render_width_px,
+	                sdl.draw.render_height_px,
+	                GL_BGRA_EXT,
+	                GL_UNSIGNED_INT_8_8_8_8_REV,
+	                sdl.opengl.last_framebuf.data());
 
-		int y        = 0;
-		size_t index = 0;
-
-		while (y < sdl.draw.render_height_px) {
-			if (!(index & 1)) {
-				y += changedLines[index];
-			} else {
-				const uint8_t* pixels = framebuf + y * pitch;
-				const int height_px   = changedLines[index];
-
-				glTexSubImage2D(GL_TEXTURE_2D,
-				                0,
-				                0,
-				                y,
-				                sdl.draw.render_width_px,
-				                height_px,
-				                GL_BGRA_EXT,
-				                GL_UNSIGNED_INT_8_8_8_8_REV,
-				                pixels);
-				y += height_px;
-			}
-			index++;
-		}
-	} else {
-		sdl.opengl.actual_frame_count++;
-	}
+	++sdl.opengl.actual_frame_count;
 }
 
 static void present_frame_gl()
@@ -1742,7 +1737,7 @@ static void present_frame_gl()
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
 		// glReadPixels() implicitly blocks until all pipelined
-		// rendering commands have finished, so we're guaranateed to
+		// rendering commands have finished, so we're guaranteed to
 		// read the contents of the up-to-date backbuffer here right
 		// before the buffer swap.
 		//
@@ -1768,12 +1763,6 @@ static void set_vsync_gl(const bool is_enabled)
 		            SDL_GetError());
 		return;
 	}
-
-	if (is_enabled) {
-		LOG_INFO("OPENGL: Enabled vsync");
-	} else {
-		LOG_INFO("OPENGL: Disabled vsync");
-	}
 }
 
 // Callers:
@@ -1783,9 +1772,6 @@ static void set_vsync_gl(const bool is_enabled)
 std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_width_px,
                                         const int render_height_px)
 {
-	free(sdl.opengl.framebuf);
-	sdl.opengl.framebuf = nullptr;
-
 	if (!(flags & GFX_CAN_32)) {
 		return {};
 	}
@@ -1825,11 +1811,13 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	}
 
 	// Create the texture
-	const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
-	                               render_height_px * MaxBytesPerPixel;
+	const auto framebuf_bytes = static_cast<size_t>(render_width_px) *
+	                            render_height_px * MaxBytesPerPixel;
 
-	sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-	sdl.opengl.pitch    = render_width_px * 4;
+	sdl.opengl.curr_framebuf.resize(framebuf_bytes);
+	sdl.opengl.last_framebuf.resize(framebuf_bytes);
+
+	sdl.opengl.pitch = render_width_px * MaxBytesPerPixel;
 
 	// One-time initialize the window size
 	if (!sdl.desktop.window.adjusted_initial_size) {
@@ -1972,8 +1960,8 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 
 	maybe_log_opengl_error("End of setsize");
 
-	sdl.frame.update  = update_frame_gl;
-	sdl.frame.present = present_frame_gl;
+	sdl.presentation.update  = update_frame_gl;
+	sdl.presentation.present = present_frame_gl;
 
 	return GFX_CAN_32 | GFX_CAN_RANDOM;
 }
@@ -1992,12 +1980,6 @@ static void set_vsync_sdl_texture(const bool is_enabled)
 		            (is_enabled ? "enabling" : "disabling"),
 		            SDL_GetError());
 		return;
-	}
-
-	if (is_enabled) {
-		LOG_INFO("SDL: Enabled vsync");
-	} else {
-		LOG_INFO("SDL: Disabled vsync");
 	}
 }
 
@@ -2113,8 +2095,8 @@ uint8_t init_sdl_texture_renderer()
 
 	set_vsync_sdl_texture(is_vsync_enabled());
 
-	sdl.frame.update  = update_frame_texture;
-	sdl.frame.present = present_frame_texture;
+	sdl.presentation.update  = update_frame_texture;
+	sdl.presentation.present = present_frame_texture;
 
 	return flags;
 }
@@ -2381,7 +2363,7 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 	case RenderingBackend::OpenGl:
 #if C_OPENGL
-		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
+		pixels = sdl.opengl.curr_framebuf.data();
 		maybe_log_opengl_error("end of start update");
 
 		if (pixels == nullptr) {
@@ -2402,68 +2384,59 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 	return false;
 }
 
-static void maybe_present_frame() {
-	static int64_t cumulative_time_rendered_us = 0;
-
-	const auto start_us = GetTicksUs();
-
-	if (CAPTURE_IsCapturingPostRenderImage()) {
-		// Always present the frame if we want to capture the next
-		// rendered frame, regardless of the presentation mode. This is
-		// necessary to keep the contents of rendered and raw/upscaled
-		// screenshots in sync (so they capture the exact same frame) in
-		// multi-output image capture modes.
-		sdl.frame.present();
-
-	} else {
-		// Helper lambda indicating whether the frame should be
-		// presented. Returns true if the frame has been updated or if
-		// the limit of sequentially skipped duplicate frames has been
-		// reached.
-		auto vfr_should_present = []() {
-			static uint16_t dupe_tally = 0;
-			if (sdl.updating || ++dupe_tally > sdl.frame.max_dupe_frames) {
-				dupe_tally = 0;
-				return true;
-			}
-			return false;
-		};
-
-		switch (sdl.frame.mode) {
-		case FrameMode::Cfr: maybe_present_synced(sdl.updating); break;
-		case FrameMode::Vfr:
-			if (vfr_should_present()) {
-				sdl.frame.present();
-			}
-			break;
-		}
-	}
-
-	const auto elapsed_us = GetTicksUsSince(start_us);
-	cumulative_time_rendered_us += elapsed_us;
-
-	// Update "ticks done" with the rendering time
-	constexpr auto MicrosInMillisecond = 1000;
-
-	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
-		// 1 tick == 1 millisecond
-		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
-		                                       MicrosInMillisecond;
-
-		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
-
-		// Keep the fractional microseconds part
-		cumulative_time_rendered_us %= MicrosInMillisecond;
-	}
-}
-
-void GFX_EndUpdate(const uint16_t* changedLines)
+void GFX_EndUpdate([[maybe_unused]] const uint16_t* num_changed_lines)
 {
-	sdl.frame.update(changedLines);
-	// TODO(JN) flush gfx
+	if (sdl.updating) {
+		// `sdl.updating` is true when the contents of the framebuffer
+		// has been changed in the current frame.
+		//
+		// We're making a copy of the framebuffer as we might present it
+		// a bit later in 'host-rate' mode, otherwise the VGA emulation
+		// could partially overwrite it by the time we present it (this
+		// would introduce tearing even with vsync enabled!)
+		//
+		// Also, we're not updating the texture here yet because if
+		// frames are skiped due to host vs DOS refresh mismatch, we
+		// don't want to upload the texture for the skipped frames.
+		//
+		sdl.opengl.last_framebuf = sdl.opengl.curr_framebuf;
+	}
 
-	maybe_present_frame();
+	if (GFX_GetPresentationMode() == PresentationMode::DosRate) {
 
+		// In 'dos-rate' presentation mode, we present the frames as
+		// soon as they're ready. This caters for the VRR monitor use
+		// case where effectively our present rate controls the refresh
+		// rate of the monitor.
+		//
+		// The `GFX_EndUpdate` is called at the end of each frame, so at
+		// regular intervals close to the refresh rate of the emulated
+		// DOS video mode. There is some jitter in the 1-5 ms range, but
+		// the timing seems to work well enough in practice on VRR
+		// monitors (we can certainly achieve 100% smooth scrolling on
+		// better VRR displays).
+		//
+		// However, this jitter might cause flicker and less than
+		// perfect smooth scrolling on some VRR monitor & driver
+		// combinations. We should try to get as close as possible to
+		// the DOS rate in the future, down to microsecond accuracy
+		// (e.g., by tightening the timing accuracy of the PIC timers as
+		// VGA updates are timed by abusing the emulated PIC timers,
+		// then we might need to do some additional sleep & busy waiting
+		// before present to hit the exact time).
+		//
+		// Updating the new texture to the GPU also takes some non-zero
+		// time, so we'll probably need to introduce an extra fixed
+		// latency to account for this delay, and possibly make
+		// adjustments in the audio emulation layer to keep the video
+		// and audio in perfect sync.
+		//
+		GFX_MaybePresentFrame();
+	}
+
+	// 'host-rate' present is handled in `normal_loop()` in `dosbox.cpp` in
+	// a "cooperative-multitasking" fashion at the end of each emulated 1ms
+	// tick.
 	sdl.updating = false;
 
 	FrameMark;
@@ -2628,7 +2601,7 @@ static SDL_Point refine_window_size(const SDL_Point size,
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
-	// ratio is 1:1 for 640x480 games both with 'aspect = on` and 'aspect =
+	// ratio is 1:1 for 640x480 games both with 'aspect = on' and 'aspect =
 	// off'.
 	constexpr SDL_Point RatiosForStretchedPixels = {4, 3};
 	constexpr SDL_Point RatiosForSquarePixels    = {8, 5};
@@ -3010,8 +2983,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			sdl.opengl.framebuf = nullptr;
-			sdl.opengl.texture  = 0;
+			sdl.opengl.texture = 0;
 		}
 	}
 #endif // OPENGL
@@ -3174,17 +3146,8 @@ static void sdl_section_init(Section* sec)
 		sdl.display_number = 0;
 	}
 
-	const std::string presentation_mode_pref = section->GetString(
-	        "presentation_mode");
-
-	if (presentation_mode_pref == "cfr") {
-		sdl.frame.desired_mode = FrameMode::Cfr;
-
-	} else if (presentation_mode_pref == "vfr") {
-		sdl.frame.desired_mode = FrameMode::Vfr;
-	}
-
 	initialize_vsync_settings();
+	initialize_presentation_mode_settings();
 
 	set_output(section, is_aspect_ratio_correction_enabled());
 
@@ -3708,6 +3671,87 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 }
 
+static void adjust_ticks_after_present_frame(int64_t elapsed_us)
+{
+	static int64_t cumulative_time_rendered_us = 0;
+	cumulative_time_rendered_us += elapsed_us;
+
+	constexpr auto MicrosInMillisecond = 1000;
+
+	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
+		// 1 tick == 1 millisecond
+		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
+			                               MicrosInMillisecond;
+
+		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
+
+		// Keep the fractional microseconds part
+		cumulative_time_rendered_us %= MicrosInMillisecond;
+	}
+}
+
+void GFX_MaybePresentFrame()
+{
+	const auto start_us = GetTicksUs();
+
+	// Always present the frame if we want to capture the next
+	// rendered frame, regardless of the presentation mode. This is
+	// necessary to keep the contents of rendered and raw/upscaled
+	// screenshots in sync (so they capture the exact same frame) in
+	// multi-output image capture modes.
+	const auto force_present = CAPTURE_IsCapturingPostRenderImage();
+
+	const auto curr_frame_time_us =
+	        GetTicksDiff(start_us, sdl.presentation.last_present_time_us);
+
+	// Frame-timing always fluctuates due to load spikes within DOSBox
+	// itself and at the OS level, so allow frames to be late by twice the
+	// ideal frame time.
+	const auto max_frame_time_us = sdl.presentation.frame_time_us * 2.0;
+
+	if (force_present || (curr_frame_time_us < max_frame_time_us)) {
+
+		const auto present_window_start_us = sdl.presentation.frame_time_us -
+		                                     sdl.presentation.early_present_window_us;
+
+		if (force_present || (curr_frame_time_us >= present_window_start_us)) {
+
+			[[maybe_unused]] const auto t0 = GetTicksUs();
+
+			sdl.presentation.update();
+			sdl.presentation.present();
+
+			const auto t1 = GetTicksUs();
+#if 0
+			LOG_TRACE("DISPLAY: present took %2.4f ms", 0.001 * GetTicksDiff(t1, t0));
+
+			const auto measured_frame_time_us = GetTicksDiff(
+				t1, sdl.presentation.last_present_time_us);
+
+			LOG_TRACE("DISPLAY: frame time: %2.4f ms", 0.001 * measured_frame_time_us);
+
+			if (measured_frame_time_us >
+			    sdl.presentation.frame_time_us * 1.5) {
+				LOG_WARNING("DISPLAY: missed vsync (long frame)");
+			}
+#endif
+			sdl.presentation.last_present_time_us = t1;
+		}
+	} else {
+#if 0
+		LOG_TRACE("DISPLAY: frame time: %2.4f ms, curr frame time: %2.4f ms",
+		          0.001 * sdl.presentation.frame_time_us,
+		          0.001 * curr_frame_time_us);
+
+		LOG_WARNING("DISPLAY: dropped frame (arrived too late)");
+#endif
+		sdl.presentation.last_present_time_us = start_us;
+	}
+
+	// Adjust "ticks done" counter by the time it took to present the frame
+	adjust_ticks_after_present_frame(GetTicksUsSince(start_us));
+}
+
 // Returns:
 //   true  - event loop can keep running
 //   false - event loop wants to quit
@@ -4055,7 +4099,6 @@ static void init_sdl_config_section()
 		                   "                      is a niche option for using DOSBox Staging with a CRT\n"
 		                   "                      monitor. Toggling fullscreen might result in janky\n"
 		                   "                      behaviour in this mode.");
-	
 	pstring->SetValues({"standard",
 #if WIN32
 	                     "forced-borderless",
@@ -4138,12 +4181,18 @@ static void init_sdl_config_section()
 	        "    in your video driver settings.");
 	pstring->SetValues({"off", "on", "fullscreen-only"});
 
-	pstring = sdl_sec->AddString("presentation_mode", Always, "vfr");
+	pstring = sdl_sec->AddString("presentation_mode", Always, "auto");
 	pstring->SetHelp(
-	        "Select the frame presentation mode:\n"
-	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
-	        "  vfr:   Always present changed DOS frames at a variable frame rate (default).");
-	pstring->SetValues({"auto", "cfr"});
+	        "Select the frame presentation mode ('auto' by default):\n"
+	        "  auto:       Use 'host-rate' if vsync is enabled, otherwise use 'dos-rate'\n"
+	        "              (default).\n"
+	        "  dos-rate:   Present frames at the refresh rate of the emulated DOS video mode.\n"
+	        "              This is the best option on variable refresh rate (VRR) monitors\n"
+	        "              with vsync disabled (see 'vsync' for further details).\n"
+	        "  host-rate:  Present frames at the refresh rate of the host. Use this with\n"
+	        "              vsync enabled on fixed refresh monitor for fast-paced games where\n"
+	        "              tearing is a problem (see 'vsync').");
+	pstring->SetValues({"auto", "dos-rate", "host-rate"});
 
 	auto pmulti = sdl_sec->AddMultiVal("capture_mouse", Deprecated, ",");
 	pmulti->SetHelp(
