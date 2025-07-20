@@ -668,7 +668,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "                  framebuffer\" hack (needed only by a few games).");
 
 	pstring = secprop->AddPath("captures", deprecated, "capture");
-	pstring->SetHelp("Moved to [capture] section and renamed to 'capture_dir'.");
+	pstring->SetHelp(
+	        "Moved to [color=light-cyan][capture][reset] section and "
+	        "renamed to [color=light-green]'capture_dir'[reset].");
 
 #if C_DEBUG
 	LOG_StartUp();
