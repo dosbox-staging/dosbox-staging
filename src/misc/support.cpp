@@ -13,7 +13,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <fstream>
 #include <functional>
 #include <iterator>
@@ -275,9 +274,9 @@ const std_fs::path& get_executable_path()
 	return exe_path;
 }
 
-static const std::deque<std_fs::path>& GetResourceParentPaths()
+static const std::vector<std_fs::path>& GetResourceParentPaths()
 {
-	static std::deque<std_fs::path> paths = {};
+	static std::vector<std_fs::path> paths = {};
 	if (!paths.empty()) {
 		return paths;
 	}
