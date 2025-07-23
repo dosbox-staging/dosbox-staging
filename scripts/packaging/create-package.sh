@@ -62,6 +62,7 @@ install_doc()
             install_file licenses/GPL-2.0.txt      "${pkg_dir}/doc/licenses/GPL-2.0.txt"
             install_file licenses/LGPL-2.1.txt     "${pkg_dir}/doc/licenses/LGPL-2.1.txt"
             install_file licenses/MIT.txt          "${pkg_dir}/doc/licenses/MIT.txt"
+            install_file licenses/UNICODE.txt      "${pkg_dir}/doc/licenses/UNICODE.txt"
             install_file licenses/Zlib.txt         "${pkg_dir}/doc/licenses/Zlib.txt"
             readme_tmpl="${pkg_dir}/README"
             ;;
@@ -74,6 +75,7 @@ install_doc()
             install_file licenses/GPL-2.0.txt      "${macos_content_dir}/doc/licenses/GPL-2.0.txt"
             install_file licenses/LGPL-2.1.txt     "${macos_content_dir}/doc/licenses/LGPL-2.1.txt"
             install_file licenses/MIT.txt          "${macos_content_dir}/doc/licenses/MIT.txt"
+            install_file licenses/UNICODE.txt      "${macos_content_dir}/doc/licenses/UNICODE.txt"
             install_file licenses/Zlib.txt         "${macos_content_dir}/doc/licenses/Zlib.txt"
             readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
@@ -86,6 +88,7 @@ install_doc()
             install_file licenses/GPL-2.0.txt      "${pkg_dir}/doc/licenses/GPL-2.0.txt"
             install_file licenses/LGPL-2.1.txt     "${pkg_dir}/doc/licenses/LGPL-2.1.txt"
             install_file licenses/MIT.txt          "${pkg_dir}/doc/licenses/MIT.txt"
+            install_file licenses/UNICODE.txt      "${pkg_dir}/doc/licenses/UNICODE.txt"
             install_file licenses/Zlib.txt         "${pkg_dir}/doc/licenses/Zlib.txt"
             readme_tmpl="${pkg_dir}/README.txt"
             ;;

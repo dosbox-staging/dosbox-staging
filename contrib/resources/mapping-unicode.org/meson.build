@@ -25,5 +25,4 @@ resource_files = [
     'CP_1256.TXT',
     'CP_1257.TXT',
     'CP_1258.TXT',
-    'license.txt',
 ]
