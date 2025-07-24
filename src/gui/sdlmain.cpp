@@ -1870,7 +1870,7 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	const int filter_mode = [&] {
+	const int filter_mode = [] {
 		switch (sdl.opengl.shader_info.settings.texture_filter_mode) {
 		case TextureFilterMode::Nearest: return GL_NEAREST;
 		case TextureFilterMode::Linear: return GL_LINEAR;
@@ -2866,7 +2866,7 @@ static void save_window_size(const int w, const int h)
 static void setup_window_sizes_from_conf(const bool wants_aspect_ratio_correction)
 {
 
-	const auto window_size_pref = [&]() {
+	const auto window_size_pref = []() {
 		const auto legacy_pref = get_sdl_section()->GetString("windowresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "windowresolution", "");
@@ -3101,7 +3101,7 @@ static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 
 static void set_fullscreen_mode()
 {
-	const auto fullscreen_mode_pref = [&] {
+	const auto fullscreen_mode_pref = [] {
 		auto legacy_pref = get_sdl_section()->GetString("fullresolution");
 		if (!legacy_pref.empty()) {
 			set_section_property_value("sdl", "fullresolution", "");
@@ -3110,7 +3110,7 @@ static void set_fullscreen_mode()
 		return get_sdl_section()->GetString("fullscreen_mode");
 	}();
 
-	auto set_screen_bounds = [&] {
+	auto set_screen_bounds = [] {
 		SDL_Rect bounds;
 		SDL_GetDisplayBounds(sdl.display_number, &bounds);
 
