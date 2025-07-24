@@ -305,8 +305,9 @@ static const std::vector<std_fs::path>& GetResourceParentPaths()
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
 
-	// Third priority is a potentially customized --datadir specified at
-	// compile time.
+	// Third priority is the install path set at compile time.
+	// In CMake this is the CMAKE_INSTALL_DATADIR variable.
+	// In Meson it is set by --datadir.
 	add_if_exists(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME);
 
 	// Fourth priority is the user and system XDG data specification
