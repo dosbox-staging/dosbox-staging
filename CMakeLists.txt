@@ -333,14 +333,33 @@ target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
-# TODO This happens on every execution, better to have a target with
-# dependencies instead
-add_custom_target(copy_assets ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/contrib/resources"
-    "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}"
-)
-add_dependencies(dosbox copy_assets)
+# Add contrib directory to make the list of resource files available
+add_subdirectory(contrib)
+
+# Generate list of resource files with destination paths
+foreach(RESOURCE_FILE ${RESOURCE_FILES})
+  set(DESTINATION ${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}/${RESOURCE_FILE})
+  list(APPEND RESOURCE_DESTINATION_FILES ${DESTINATION})
+endforeach()
+
+# Create initial (dummy) command for copying the resource files
+add_custom_command(OUTPUT ${RESOURCE_DESTINATION_FILES})
+
+# Add a copy command for each resource file
+foreach(RESOURCE_FILE ${RESOURCE_FILES})
+  set(SOURCE      ${CMAKE_CURRENT_SOURCE_DIR}/contrib/resources/${RESOURCE_FILE})
+  set(DESTINATION ${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}/${RESOURCE_FILE})
+  add_custom_command(
+    OUTPUT  ${RESOURCE_DESTINATION_FILES}
+    DEPENDS ${SOURCE}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SOURCE} ${DESTINATION}
+    APPEND
+  )
+endforeach()
+
+# Add a target to copy the resource files to the build directory
+add_custom_target(copy_resources ALL DEPENDS ${RESOURCE_DESTINATION_FILES})
+add_dependencies(dosbox copy_resources)
 
 #find_package(Tracy CONFIG REQUIRED)
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
@@ -359,7 +378,6 @@ if(OPT_TESTS)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(contrib)
 
 if(WIN32)
   target_sources(dosbox PRIVATE src/winres.rc)
