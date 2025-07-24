@@ -298,7 +298,6 @@ static const std::vector<std_fs::path>& GetResourceParentPaths()
 #if defined(MACOSX)
 	constexpr auto macos_resource_dir_name = "Resources";
 	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
-	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
 #else
 	add_if_exists(get_executable_path() / resource_dir_name);
 	add_if_exists(get_executable_path() / ".." / resource_dir_name);
