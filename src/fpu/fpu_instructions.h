@@ -206,55 +206,89 @@ static Real64 FPU_FLD80(const PhysPt addr)
 	int64_t sign   = (test.begin & 0x8000) ? 1 : 0;
 
 	const int64_t result_ll = (sign << 63) | (exp64final << 52) | mant64;
-	double result;
-	memcpy(&result, &result_ll, sizeof(result_ll));
+	const double result = std::bit_cast<double>(result_ll);
 
 	return result;
 }
 
+struct Float80 {
+    uint64_t frac; // 64-bit significand (bit63 is the explicit integer bit)
+    uint16_t se;   // sign(1) | exponent(15)
+};
+
 static void FPU_ST80(const PhysPt addr, const int reg)
 {
-	// Handle special cases explicitly
-	if (std::isnan(fpu.regs[reg].d)) {
-		mem_writeq(addr, 0xC000000000000000ULL);
-		mem_writew(addr + 8, 0x7FFF);
-		return;
-	}
+    const double d = fpu.regs[reg].d;
+    const int cls = std::fpclassify(d);
+    const bool sign = std::signbit(d);
 
-	if (std::isinf(fpu.regs[reg].d)) {
-		mem_writeq(addr, 0x8000000000000000ULL);
-		mem_writew(addr + 8, fpu.regs[reg].d > 0 ? 0x7FFF : 0xFFFF);
-		return;
-	}
+    auto write80 = [&](const Float80 v) {
+        mem_writeq(addr, v.frac);
+        mem_writew(addr + 8, v.se);
+    };
 
-	if (fpu.regs[reg].d == 0.0) {
-		mem_writeq(addr, 0);
-		mem_writew(addr + 8, std::signbit(fpu.regs[reg].d) ? 0x8000 : 0);
-		return;
-	}
+    switch (cls) {
+    case FP_NAN: {
+        write80({0xC000000000000000ULL, 0x7FFF});
+        return;
+    }
+    case FP_INFINITE: {
+        write80({0x8000000000000000ULL, static_cast<uint16_t>((sign ? 1 : 0) << 15) | 0x7FFF});
+        return;
+    }
+    case FP_ZERO: {
+        write80({0x0000000000000000ULL, static_cast<uint16_t>((sign ? 1 : 0) << 15) | 0x0000});
+        return;
+    }
+    case FP_SUBNORMAL:
+    case FP_NORMAL:
+        break;
+    default:
+        // Should never happen, but fall back to zero
+        write80({0, static_cast<uint16_t>((sign ? 1 : 0) << 15)});
+        return;
+    }
 
-	struct {
-		int16_t begin = 0;
-		int64_t eind  = 0;
-	} test = {};
+    // Handle NORMAL and SUBNORMAL via bit twiddling
+    const uint64_t bits   = std::bit_cast<uint64_t>(d);
+    const uint64_t e64    = (bits >> 52) & 0x7FFu;
+    const uint64_t m64    =  bits & 0x000F'FFFF'FFFF'FFFFULL; // 52-bit mantissa
 
-	int64_t sign80 = (fpu.regs[reg].ll & LONGTYPE(0x8000000000000000)) ? 1 : 0;
-	int64_t exp80       = fpu.regs[reg].ll & LONGTYPE(0x7ff0000000000000);
-	int64_t exp80final  = (exp80 >> 52);
-	int64_t mant80      = fpu.regs[reg].ll & LONGTYPE(0x000fffffffffffff);
-	int64_t mant80final = (mant80 << 11);
+    Float80 out{};
+    uint16_t exp80;
+    uint64_t frac80;
 
-	// Elvira wants the 8 and tcalc doesn't
-	mant80final |= LONGTYPE(0x8000000000000000);
-	// Ca-cyber doesn't like this when result is zero.
-	exp80final += (BIAS80 - BIAS64);
+    if (cls == FP_NORMAL) {
+        // For normal doubles, implicit leading 1.
+        // Move 52-bit mantissa to MSBs of frac80's lower 63 bits
+        frac80 = (m64 << 11) | (1ULL << 63);
+        exp80  = static_cast<uint16_t>(e64 - BIAS64 + BIAS80);
+    } else {
+        // Subnormal double: exponent=0, mantissa !=0
+        // Normalize mantissa and set exponent accordingly OR store as x87 denormal (exp=0, int bit=0).
+        // x87 denormal has exponent=0 and *no* integer bit.
+        // We'll keep it denormal to be faithful to extended format.
 
-	test.begin = (static_cast<int16_t>(sign80) << 15) |
-	             static_cast<int16_t>(exp80final);
-	test.eind = mant80final;
+        // Shift mantissa so the top bit of frac80 lands just under the integer bit (bit62)
+        // We need 63 fractional bits (integer bit=0 for denormals). m64 is 52 bits.
+        // Just shift left to align it so that the highest set bit (within 52) is near bit62.
+        // Easiest: find the leading 1 within 52 bits, shift so it lands at bit62.
 
-	mem_writeq(addr, static_cast<uint64_t>(test.eind));
-	mem_writew(addr + 8, static_cast<uint64_t>(test.begin));
+        const uint64_t m = m64;
+        const int leading = 63 - std::countl_zero(m);   // position (0-based) of highest set bit
+        // For a 52-bit field, leading is between 0 and 51. We want that bit at pos 62.
+        const int shift = 62 - leading;
+        frac80 = (shift >= 0) ? (m << shift) : (m >> -shift);
+
+        // integer bit=0 => ensure bit63 is clear
+        frac80 &= ~(1ULL << 63);
+
+        exp80 = 0; // denormal in x87
+    }
+
+    out.frac = frac80;
+    out.se   = static_cast<uint16_t>((sign ? 1 : 0) << 15) | exp80;
+    write80(out);
 }
 
 static void FPU_FLD_F32(const PhysPt addr, const int store_to)
