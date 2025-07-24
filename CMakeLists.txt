@@ -39,6 +39,7 @@ include(CheckIncludeFile)
 include(CheckIncludeFiles)
 include(CheckCXXSourceCompiles)
 include(CheckSymbolExists)
+include(GNUInstallDirs)
 
 if(WIN32)
   set(DOSBOX_PLATFORM_WINDOWS ON)
@@ -297,7 +298,7 @@ check_symbol_exists(
   sys_icache_invalidate "libkern/OSCacheControl.h" HAVE_SYS_ICACHE_INVALIDATE
 )
 
-set(CUSTOM_DATADIR " ")
+set(CUSTOM_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}")
 
 set(project_name "${PROJECT_NAME}")
 set(version      "${PROJECT_VERSION}")
