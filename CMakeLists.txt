@@ -334,14 +334,24 @@ target_include_directories(
   dosbox PUBLIC include ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
-# TODO This happens on every execution, better to have a target with
-# dependencies instead
-add_custom_target(copy_assets ALL
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/contrib/resources"
-    "${CMAKE_CURRENT_BINARY_DIR}${RESOURCE_COPY_PATH}"
-)
-add_dependencies(dosbox copy_assets)
+# Bundle licenses, but skip the ones that are not relevant for
+# binary distribution or allow us to not distribute the license text.
+set(LICENSE_FILES
+    licenses/BSD-2-Clause.txt
+    licenses/BSD-3-Clause.txt
+    licenses/DEBUG.COM.txt
+    licenses/GPL-2.0.txt
+    licenses/LGPL-2.1.txt
+    licenses/MIT.txt
+    licenses/UNICODE.txt
+    licenses/Zlib.txt)
+
+# Set the directory with resources to bundle
+set(RESOURCES_PATH "contrib/resources")
+
+# Generate asset copy commands and add them as a dependency
+include(cmake/add_copy_assets.cmake)
+add_copy_assets()
 
 #find_package(Tracy CONFIG REQUIRED)
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
@@ -360,7 +370,6 @@ if(OPT_TESTS)
 endif()
 
 add_subdirectory(src)
-add_subdirectory(contrib)
 
 if(WIN32)
   target_sources(dosbox PRIVATE src/winres.rc)
@@ -388,64 +397,6 @@ target_link_libraries(dosbox PRIVATE
   $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
 )
 
-# Installation rules - Linux only for now
-
-if (DOSBOX_PLATFORM_LINUX)
-  set(INSTALL_DIR_DOC       "${CMAKE_INSTALL_DOCDIR}")
-  set(INSTALL_DIR_MAN       "${CMAKE_INSTALL_MANDIR}")
-  set(INSTALL_DIR_RESOURCES "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
-  set(INSTALL_DIR_DESKTOP   "${CMAKE_INSTALL_DATADIR}/applications")
-  set(INSTALL_DIR_ICONS     "${CMAKE_INSTALL_DATADIR}/icons/hicolor")
-  set(INSTALL_DIR_METAINFO  "${CMAKE_INSTALL_DATADIR}/metainfo")
-
-  set(INSTALL_ICON_NAME "org.dosbox_staging.dosbox_staging")
-
-  # Install the application binary
-  install(TARGETS dosbox RUNTIME)
-
-  # System manual page
-  install(FILES "docs/dosbox.1"
-    DESTINATION "${INSTALL_DIR_MAN}/man1")
-
-  # Application menu entry
-  install(FILES "contrib/linux/${INSTALL_ICON_NAME}.desktop"
-    DESTINATION "${INSTALL_DIR_DESKTOP}")
-
-  # Software component information
-  install(FILES "contrib/linux/${INSTALL_ICON_NAME}.metainfo.xml"
-    DESTINATION "${INSTALL_DIR_METAINFO}")  
-
-  # Scalable icon
-  install(FILES "extras/icons/svg/dosbox-staging.svg"
-    DESTINATION "${INSTALL_DIR_ICONS}/scalable/apps"
-    RENAME "${INSTALL_ICON_NAME}.svg")
-
-  # Bitmap icons
-  foreach(PX IN ITEMS 16 22 24 32 48 96 128 256 512 1024)
-  install(FILES "extras/icons/png/icon_${PX}.png"
-      DESTINATION "${INSTALL_DIR_ICONS}/${PX}x${PX}/apps"
-      RENAME "${INSTALL_ICON_NAME}.png")
-  endforeach()
-
-  # Install the resources
-  foreach(RESOURCE_FILE ${RESOURCE_FILES})
-    cmake_path(REMOVE_FILENAME RESOURCE_FILE OUTPUT_VARIABLE RESOURCE_PATH)
-    install(FILES "contrib/resources/${RESOURCE_FILE}"
-            DESTINATION "${INSTALL_DIR_RESOURCES}/${RESOURCE_PATH}")
-  endforeach()
-
-  # Bundle licenses, but skip the ones that are not relevant for
-  # binary distribution or allow us to not distribute the license text.
-  install(FILES
-          licenses/BSD-2-Clause.txt
-          licenses/BSD-3-Clause.txt
-          licenses/DEBUG.COM.txt
-          licenses/GPL-2.0.txt
-          licenses/LGPL-2.1.txt
-          licenses/MIT.txt
-          licenses/UNICODE.txt
-          licenses/Zlib.txt
-          DESTINATION "${INSTALL_DIR_DOC}/licenses")
-  install(FILES LICENSE DESTINATION "${INSTALL_DIR_DOC}")
-
-endif()
+# Add installation rules
+include(cmake/add_install_rules.cmake)
+add_install_rules()
