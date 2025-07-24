@@ -284,7 +284,15 @@ static const std::vector<std_fs::path>& GetResourceParentPaths()
 	auto add_if_exists = [&](const std_fs::path& p) {
 		std::error_code ec = {};
 		if (std_fs::is_directory(p, ec)) {
-			paths.emplace_back(p);
+			// Filter out duplicates by first canonicalizing the path
+			// and then checking if it already exists in the paths vector.
+			// Ex: /usr/share/dosbox-staging and get_executable_path() /../share can point to the same location
+			const auto canonical_path = std_fs::canonical(p, ec);
+			if (ec) {
+				LOG_ERR("RESOURCE: Failed to canonicalize path '%s': %s", p.string().c_str(), ec.message().c_str());
+			} else if (std::find(paths.begin(), paths.end(), canonical_path) == paths.end()) {
+				paths.emplace_back(std::move(canonical_path));
+			}
 		}
 	};
 
