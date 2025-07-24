@@ -92,7 +92,7 @@ static void FPU_PREP_PUSH(void)
 	fpu.tags[TOP] = TAG_Valid;
 }
 
-static void FPU_PUSH(double in)
+static void FPU_PUSH(const double in)
 {
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = in;
@@ -167,7 +167,7 @@ static double FROUND(double in)
 #define BIAS80 16383
 #define BIAS64 1023
 
-static Real64 FPU_FLD80(PhysPt addr)
+static Real64 FPU_FLD80(const PhysPt addr)
 {
 	const auto raw_mantissa = mem_readq(addr);
 	const auto raw_exponent = mem_readw(addr + 8);
@@ -212,7 +212,7 @@ static Real64 FPU_FLD80(PhysPt addr)
 	return result;
 }
 
-static void FPU_ST80(PhysPt addr, Bitu reg)
+static void FPU_ST80(const PhysPt addr, const int reg)
 {
 	// Handle special cases explicitly
 	if (std::isnan(fpu.regs[reg].d)) {
@@ -257,7 +257,7 @@ static void FPU_ST80(PhysPt addr, Bitu reg)
 	mem_writew(addr + 8, static_cast<uint64_t>(test.begin));
 }
 
-static void FPU_FLD_F32(PhysPt addr, Bitu store_to)
+static void FPU_FLD_F32(const PhysPt addr, const int store_to)
 {
 	const auto mem_val = mem_readd(addr);
 	float f;
@@ -265,29 +265,29 @@ static void FPU_FLD_F32(PhysPt addr, Bitu store_to)
 	fpu.regs[store_to].d = static_cast<Real64>(f);
 }
 
-static void FPU_FLD_F64(PhysPt addr, Bitu store_to)
+static void FPU_FLD_F64(const PhysPt addr, const int store_to)
 {
 	fpu.regs[store_to].ll = static_cast<int64_t>(mem_readq(addr));
 }
 
-static void FPU_FLD_F80(PhysPt addr)
+static void FPU_FLD_F80(const PhysPt addr)
 {
 	fpu.regs[TOP].d = FPU_FLD80(addr);
 }
 
-static void FPU_FLD_I16(PhysPt addr, Bitu store_to)
+static void FPU_FLD_I16(const PhysPt addr, const int store_to)
 {
 	const auto mem_val   = static_cast<int16_t>(mem_readw(addr));
 	fpu.regs[store_to].d = static_cast<Real64>(mem_val);
 }
 
-static void FPU_FLD_I32(PhysPt addr, Bitu store_to)
+static void FPU_FLD_I32(const PhysPt addr, const int store_to)
 {
 	const auto mem_val   = static_cast<int32_t>(mem_readd(addr));
 	fpu.regs[store_to].d = static_cast<Real64>(mem_val);
 }
 
-static void FPU_FLD_I64(PhysPt addr, Bitu store_to)
+static void FPU_FLD_I64(const PhysPt addr, const int store_to)
 {
 	const int64_t val = mem_readq(addr);
 
@@ -302,7 +302,7 @@ static void FPU_FLD_I64(PhysPt addr, Bitu store_to)
 	fpu.regs_memcpy[store_to] = val;
 }
 
-static void FPU_FBLD(PhysPt addr, Bitu store_to)
+static void FPU_FBLD(const PhysPt addr, const int store_to)
 {
 	uint64_t val  = 0;
 	uint8_t in    = 0;
@@ -329,24 +329,24 @@ static void FPU_FBLD(PhysPt addr, Bitu store_to)
 	fpu.regs[store_to].d = temp;
 }
 
-static inline void FPU_FLD_F32_EA(PhysPt addr)
+static inline void FPU_FLD_F32_EA(const PhysPt addr)
 {
 	FPU_FLD_F32(addr, 8);
 }
-static inline void FPU_FLD_F64_EA(PhysPt addr)
+static inline void FPU_FLD_F64_EA(const PhysPt addr)
 {
 	FPU_FLD_F64(addr, 8);
 }
-static inline void FPU_FLD_I32_EA(PhysPt addr)
+static inline void FPU_FLD_I32_EA(const PhysPt addr)
 {
 	FPU_FLD_I32(addr, 8);
 }
-static inline void FPU_FLD_I16_EA(PhysPt addr)
+static inline void FPU_FLD_I16_EA(const PhysPt addr)
 {
 	FPU_FLD_I16(addr, 8);
 }
 
-static void FPU_FST_F32(PhysPt addr)
+static void FPU_FST_F32(const PhysPt addr)
 {
 	// should depend on rounding method
 	const auto f = static_cast<float>(fpu.regs[TOP].d);
@@ -355,17 +355,17 @@ static void FPU_FST_F32(PhysPt addr)
 	mem_writed(addr, l);
 }
 
-static void FPU_FST_F64(PhysPt addr)
+static void FPU_FST_F64(const PhysPt addr)
 {
 	mem_writeq(addr, static_cast<uint64_t>(fpu.regs[TOP].ll));
 }
 
-static void FPU_FST_F80(PhysPt addr)
+static void FPU_FST_F80(const PhysPt addr)
 {
 	FPU_ST80(addr, TOP);
 }
 
-static void FPU_FST_I16(PhysPt addr)
+static void FPU_FST_I16(const PhysPt addr)
 {
 	const auto val = FROUND(fpu.regs[TOP].d);
 	mem_writew(addr,
@@ -373,7 +373,7 @@ static void FPU_FST_I16(PhysPt addr)
 	                                              : 0x8000);
 }
 
-static void FPU_FST_I32(PhysPt addr)
+static void FPU_FST_I32(const PhysPt addr)
 {
 	const auto val = FROUND(fpu.regs[TOP].d);
 	mem_writed(addr,
@@ -382,7 +382,7 @@ static void FPU_FST_I32(PhysPt addr)
 	                   : 0x80000000);
 }
 
-static void FPU_FST_I64(PhysPt addr)
+static void FPU_FST_I64(const PhysPt addr)
 {
 	constexpr double MaxInt64Value = 9223372036854775808.0;
 
@@ -434,7 +434,7 @@ static void FPU_FBST(PhysPt addr)
 	// flags? C1 should indicate if value was rounded up
 }
 
-static void FPU_FADD(Bitu op1, Bitu op2)
+static void FPU_FADD(const int op1, const int op2)
 {
 	fpu.regs[op1].d += fpu.regs[op2].d;
 	// flags and such :)
@@ -493,10 +493,10 @@ static void FPU_FPTAN(void)
 	return;
 }
 
-static void FPU_FDIV(Bitu st, Bitu other)
+static void FPU_FDIV(const int st, const int other)
 {
 	auto& st0 = fpu.regs[st].d;
-	auto& sti = fpu.regs[other].d;
+	const auto& sti = fpu.regs[other].d;
 
 	const bool zero_denom = sti == 0.0;
 	const bool inf_denom  = std::isinf(sti);
@@ -521,10 +521,10 @@ static void FPU_FDIV(Bitu st, Bitu other)
 	// flags and such :)
 }
 
-static void FPU_FDIVR(Bitu st, Bitu other)
+static void FPU_FDIVR(const int st, const int other)
 {
 	auto& st0 = fpu.regs[st].d;
-	auto& sti = fpu.regs[other].d;
+	const auto& sti = fpu.regs[other].d;
 
 	const bool zero_denom = st0 == 0.0;
 	const bool inf_denom  = std::isinf(st0);
@@ -550,28 +550,28 @@ static void FPU_FDIVR(Bitu st, Bitu other)
 	// flags and such :)
 }
 
-static void FPU_FMUL(Bitu st, Bitu other)
+static void FPU_FMUL(const int st, const int other)
 {
 	fpu.regs[st].d *= fpu.regs[other].d;
 	// flags and such :)
 	return;
 }
 
-static void FPU_FSUB(Bitu st, Bitu other)
+static void FPU_FSUB(const int st, const int other)
 {
 	fpu.regs[st].d = fpu.regs[st].d - fpu.regs[other].d;
 	// flags and such :)
 	return;
 }
 
-static void FPU_FSUBR(Bitu st, Bitu other)
+static void FPU_FSUBR(const int st, const int other)
 {
 	fpu.regs[st].d = fpu.regs[other].d - fpu.regs[st].d;
 	// flags and such :)
 	return;
 }
 
-static void FPU_FXCH(Bitu st, Bitu other)
+static void FPU_FXCH(const int st, const int other)
 {
 	const auto tag         = fpu.tags[other];
 	const auto reg         = fpu.regs[other];
@@ -584,14 +584,14 @@ static void FPU_FXCH(Bitu st, Bitu other)
 	fpu.regs_memcpy[st]    = reg_memcpy;
 }
 
-static void FPU_FST(Bitu st, Bitu other)
+static void FPU_FST(const int st, const int other)
 {
 	fpu.tags[other]        = fpu.tags[st];
 	fpu.regs[other]        = fpu.regs[st];
 	fpu.regs_memcpy[other] = fpu.regs_memcpy[st];
 }
 
-static void FPU_FCOM(Bitu st, Bitu other)
+static void FPU_FCOM(const int st, const int other)
 {
 	const bool tags_are_invalid =
 	        ((fpu.tags[st] != TAG_Valid && fpu.tags[st] != TAG_Zero) ||
@@ -617,7 +617,7 @@ static void FPU_FCOM(Bitu st, Bitu other)
 	}
 }
 
-static void FPU_FUCOM(Bitu st, Bitu other)
+static void FPU_FUCOM(const int st, const int other)
 {
 	// does atm the same as fcom
 	FPU_FCOM(st, other);
@@ -739,7 +739,7 @@ static void FPU_FSCALE(void){
 	return; //2^x where x is chopped.
 }
 
-static void FPU_FSTENV(PhysPt addr)
+static void FPU_FSTENV(const PhysPt addr)
 {
 	FPU_SET_TOP(TOP);
 
@@ -754,10 +754,9 @@ static void FPU_FSTENV(PhysPt addr)
 	}
 }
 
-static void FPU_FLDENV(PhysPt addr)
+static void FPU_FLDENV(const PhysPt addr)
 {
 	uint16_t tag;
-	uint32_t tagbig;
 	uint16_t cw;
 	uint16_t sw;
 
@@ -766,10 +765,10 @@ static void FPU_FLDENV(PhysPt addr)
 		sw  = mem_readw(addr + 2);
 		tag = mem_readw(addr + 4);
 	} else {
-		cw     = mem_readd(addr + 0);
-		sw     = static_cast<uint16_t>(mem_readd(addr + 4));
-		tagbig = mem_readd(addr + 8);
-		tag    = static_cast<uint16_t>(tagbig);
+		cw              = mem_readd(addr + 0);
+		sw              = static_cast<uint16_t>(mem_readd(addr + 4));
+		const auto tagbig = mem_readd(addr + 8);
+		tag             = static_cast<uint16_t>(tagbig);
 	}
 
 	FPU_SetTag(tag);
@@ -778,7 +777,7 @@ static void FPU_FLDENV(PhysPt addr)
 	TOP = FPU_GET_TOP();
 }
 
-static void FPU_FSAVE(PhysPt addr)
+static void FPU_FSAVE(const PhysPt addr)
 {
 	FPU_FSTENV(addr);
 	PhysPt start = (cpu.code.big ? 28 : 14);
@@ -791,7 +790,7 @@ static void FPU_FSAVE(PhysPt addr)
 	FPU_FINIT();
 }
 
-static void FPU_FRSTOR(PhysPt addr)
+static void FPU_FRSTOR(const PhysPt addr)
 {
 	FPU_FLDENV(addr);
 	PhysPt start = (cpu.code.big ? 28 : 14);
@@ -881,31 +880,31 @@ static void FPU_FLDZ(void)
 	fpu.tags[TOP]   = TAG_Zero;
 }
 
-static inline void FPU_FADD_EA(Bitu op1)
+static inline void FPU_FADD_EA(const int op1)
 {
 	FPU_FADD(op1, 8);
 }
-static inline void FPU_FMUL_EA(Bitu op1)
+static inline void FPU_FMUL_EA(const int op1)
 {
 	FPU_FMUL(op1, 8);
 }
-static inline void FPU_FSUB_EA(Bitu op1)
+static inline void FPU_FSUB_EA(const int op1)
 {
 	FPU_FSUB(op1, 8);
 }
-static inline void FPU_FSUBR_EA(Bitu op1)
+static inline void FPU_FSUBR_EA(const int op1)
 {
 	FPU_FSUBR(op1, 8);
 }
-static inline void FPU_FDIV_EA(Bitu op1)
+static inline void FPU_FDIV_EA(const int op1)
 {
 	FPU_FDIV(op1, 8);
 }
-static inline void FPU_FDIVR_EA(Bitu op1)
+static inline void FPU_FDIVR_EA(const int op1)
 {
 	FPU_FDIVR(op1, 8);
 }
-static inline void FPU_FCOM_EA(Bitu op1)
+static inline void FPU_FCOM_EA(const int op1)
 {
 	FPU_FCOM(op1, 8);
 }
