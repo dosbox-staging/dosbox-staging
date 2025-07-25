@@ -291,7 +291,7 @@ static void maybe_add_path(const std_fs::path& path, std::vector<std_fs::path>& 
 	}
 }
 
-static const std::vector<std_fs::path>& GetResourceParentPaths()
+static const std::vector<std_fs::path>& get_resource_parent_paths()
 {
 	static std::vector<std_fs::path> paths = {};
 	if (!paths.empty()) {
@@ -380,7 +380,7 @@ std_fs::path get_resource_path(const std_fs::path& name)
 	}
 
 	// Try the resource paths
-	for (const auto& parent : GetResourceParentPaths()) {
+	for (const auto& parent : get_resource_parent_paths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
 			return resource;
@@ -440,7 +440,7 @@ std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
 {
 	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
 
-	for (const auto& parent : GetResourceParentPaths()) {
+	for (const auto& parent : get_resource_parent_paths()) {
 		auto res_path  = parent / res_name;
 		auto res_files = get_directory_entries(res_path,
 		                                       files_ext,
@@ -473,7 +473,7 @@ std::vector<std::string> get_resource_lines(const std_fs::path& name,
 	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 	        name.string().c_str());
 
-	for (const auto& path : GetResourceParentPaths()) {
+	for (const auto& path : get_resource_parent_paths()) {
 		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
 
@@ -505,7 +505,7 @@ std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
 		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 		        name.string().c_str());
 
-		for (const auto& path : GetResourceParentPaths()) {
+		for (const auto& path : get_resource_parent_paths()) {
 			LOG_WARNING("RESOURCE:  - '%s'",
 			            (path / name).string().c_str());
 		}
