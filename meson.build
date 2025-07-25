@@ -58,6 +58,7 @@ install_data(
     'licenses/GPL-2.0.txt',
     'licenses/LGPL-2.1.txt',
     'licenses/MIT.txt',
+    'licenses/UNICODE.txt',
     'licenses/Zlib.txt',
     install_dir: licenses_dir,
 )
