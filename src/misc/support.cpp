@@ -291,7 +291,7 @@ static void maybe_add_path(const std_fs::path& path, std::vector<std_fs::path>& 
 	}
 }
 
-static const std::vector<std_fs::path>& get_resource_parent_paths()
+const std::vector<std_fs::path>& get_resource_parent_paths()
 {
 	static std::vector<std_fs::path> paths = {};
 	if (!paths.empty()) {
@@ -394,9 +394,9 @@ std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& n
 	return get_resource_path(subdir / name);
 }
 
-static std::vector<std_fs::path> get_directory_entries(
+std::vector<std_fs::path> get_directory_entries(
         const std_fs::path& dir, const std::string_view files_ext,
-        const bool only_regular_files = true)
+        const bool only_regular_files)
 {
 	using namespace std_fs;
 	std::vector<std_fs::path> files = {};
