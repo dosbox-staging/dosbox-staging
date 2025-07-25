@@ -256,6 +256,11 @@ int64_t stdio_num_sectors(FILE* f);
 const std_fs::path& get_executable_path();
 std_fs::path get_resource_path(const std_fs::path& name);
 std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
+const std::vector<std_fs::path>& get_resource_parent_paths();
+
+std::vector<std_fs::path> get_directory_entries(
+        const std_fs::path& dir, const std::string_view files_ext,
+        const bool only_regular_files);
 
 std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
         const std_fs::path& res_name, const std::string_view files_ext,
