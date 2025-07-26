@@ -257,6 +257,7 @@ const std_fs::path& get_executable_path();
 std_fs::path get_resource_path(const std_fs::path& name);
 std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& name);
 const std::vector<std_fs::path>& get_resource_parent_paths();
+std::vector<std_fs::path> get_plugin_paths();
 
 std::vector<std_fs::path> get_directory_entries(
         const std_fs::path& dir, const std::string_view files_ext,
