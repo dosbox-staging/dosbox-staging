@@ -188,8 +188,9 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 
 	constexpr auto OnlyRegularFiles = true;
 
-	for (auto& [dir, shaders] :
-	     get_files_in_resource(GlShadersDir, ".glsl", OnlyRegularFiles)) {
+	for (const auto& parent : get_resource_parent_paths()) {
+		const auto dir = parent / GlShadersDir;
+		auto shaders = get_directory_entries(dir, ".glsl", OnlyRegularFiles);
 
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
@@ -220,6 +221,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		}
 		inventory.emplace_back("");
 	}
+
 	inventory.emplace_back(MSG_GetTranslatedRaw("DOSBOX_HELP_LIST_GLSHADERS_2"));
 
 	return inventory;
