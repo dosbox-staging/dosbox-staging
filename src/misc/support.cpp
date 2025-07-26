@@ -13,11 +13,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <deque>
 #include <fstream>
 #include <functional>
 #include <iterator>
-#include <map>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -275,47 +273,57 @@ const std_fs::path& get_executable_path()
 	return exe_path;
 }
 
-static const std::deque<std_fs::path>& GetResourceParentPaths()
+static void maybe_add_path(const std_fs::path& path, std::vector<std_fs::path>& paths)
 {
-	static std::deque<std_fs::path> paths = {};
+	std::error_code ec = {};
+	if (!std_fs::is_directory(path, ec)) {
+		return;
+	}
+	// Filter out duplicates by first canonicalizing the path
+	// and then checking if it already exists in the paths vector.
+	// Ex: /usr/share/dosbox-staging and get_executable_path() /../share can point to the same location
+	const auto canonical_path = std_fs::canonical(path, ec);
+	if (ec) {
+		LOG_ERR("RESOURCE: Failed to canonicalize path '%s': %s", path.string().c_str(), ec.message().c_str());
+	} else if (std::find(paths.begin(), paths.end(), canonical_path) == paths.end()) {
+		paths.emplace_back(std::move(canonical_path));
+	}
+}
+
+const std::vector<std_fs::path>& get_resource_parent_paths()
+{
+	static std::vector<std_fs::path> paths = {};
 	if (!paths.empty()) {
 		return paths;
 	}
 
-	auto add_if_exists = [&](const std_fs::path& p) {
-		std::error_code ec = {};
-		if (std_fs::is_directory(p, ec)) {
-			paths.emplace_back(p);
-		}
-	};
-
 	// First prioritize is local
 	// These resources are provided directly off the working path
-	add_if_exists(std_fs::path("."));
+	maybe_add_path(std_fs::path("."), paths);
 	constexpr auto resource_dir_name = "resources";
-	add_if_exists(std_fs::path(resource_dir_name));
+	maybe_add_path(std_fs::path(resource_dir_name), paths);
 
 	// Second priority are resources packaged with the executable
 #if defined(MACOSX)
 	constexpr auto macos_resource_dir_name = "Resources";
-	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
-	add_if_exists(get_executable_path() / ".." / macos_resource_dir_name);
+	maybe_add_path(get_executable_path() / ".." / macos_resource_dir_name, paths);
 #else
-	add_if_exists(get_executable_path() / resource_dir_name);
-	add_if_exists(get_executable_path() / ".." / resource_dir_name);
+	maybe_add_path(get_executable_path() / resource_dir_name, paths);
+	maybe_add_path(get_executable_path() / ".." / resource_dir_name, paths);
 #endif
 	// macOS, POSIX, and even MinGW/MSYS2/Cygwin:
 
-	// Third priority is a potentially customized --datadir specified at
-	// compile time.
-	add_if_exists(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME);
+	// Third priority is the install path set at compile time.
+	// In CMake this is the CMAKE_INSTALL_DATADIR variable.
+	// In Meson it is set by --datadir.
+	maybe_add_path(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME, paths);
 
 	// Fourth priority is the user and system XDG data specification
 #if !defined(WIN32) && !defined(MACOSX)
-	add_if_exists(get_xdg_data_home() / DOSBOX_PROJECT_NAME);
+	maybe_add_path(get_xdg_data_home() / DOSBOX_PROJECT_NAME, paths);
 
 	for (const auto& data_dir : get_xdg_data_dirs()) {
-		add_if_exists(data_dir / DOSBOX_PROJECT_NAME);
+		maybe_add_path(data_dir / DOSBOX_PROJECT_NAME, paths);
 	}
 #endif
 
@@ -325,10 +333,39 @@ static const std::deque<std_fs::path>& GetResourceParentPaths()
 	// portability of the install tree (do not replace this with --prefix,
 	// which would destroy this portable aspect).
 	//
-	add_if_exists(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME);
+	maybe_add_path(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME, paths);
 
 	// Last priority is the user's configuration directory
-	add_if_exists(GetConfigDir());
+	maybe_add_path(GetConfigDir(), paths);
+
+	return paths;
+}
+
+// Searches mostly the same parent paths as get_resource_parent_paths()
+std::vector<std_fs::path> get_plugin_paths()
+{
+	// Intentionally not using the static cache as this function only gets called once.
+	std::vector<std_fs::path> paths = {};
+
+	// Current working directory
+	maybe_add_path(std_fs::path(PluginsDir), paths);
+
+	maybe_add_path(get_executable_path() / PluginsDir, paths);
+	maybe_add_path(get_executable_path() / ".." / PluginsDir, paths);
+
+	maybe_add_path(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+
+	#if !defined(WIN32) && !defined(MACOSX)
+	maybe_add_path(get_xdg_data_home() / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		maybe_add_path(data_dir / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+	}
+	#endif
+
+	maybe_add_path(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+
+	maybe_add_path(GetConfigDir() / PluginsDir, paths);
 
 	return paths;
 }
@@ -371,7 +408,7 @@ std_fs::path get_resource_path(const std_fs::path& name)
 	}
 
 	// Try the resource paths
-	for (const auto& parent : GetResourceParentPaths()) {
+	for (const auto& parent : get_resource_parent_paths()) {
 		const auto resource = parent / name;
 		if (std_fs::exists(resource, ec)) {
 			return resource;
@@ -385,9 +422,9 @@ std_fs::path get_resource_path(const std_fs::path& subdir, const std_fs::path& n
 	return get_resource_path(subdir / name);
 }
 
-static std::vector<std_fs::path> get_directory_entries(
+std::vector<std_fs::path> get_directory_entries(
         const std_fs::path& dir, const std::string_view files_ext,
-        const bool only_regular_files = true)
+        const bool only_regular_files)
 {
 	using namespace std_fs;
 	std::vector<std_fs::path> files = {};
@@ -425,24 +462,6 @@ static std::vector<std_fs::path> get_directory_entries(
 	return files;
 }
 
-std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
-        const std_fs::path& res_name, const std::string_view files_ext,
-        const bool only_regular_files = true)
-{
-	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
-
-	for (const auto& parent : GetResourceParentPaths()) {
-		auto res_path  = parent / res_name;
-		auto res_files = get_directory_entries(res_path,
-		                                       files_ext,
-		                                       only_regular_files);
-
-		paths_and_files.emplace(std::move(res_path), std::move(res_files)); //-V823
-	}
-
-	return paths_and_files;
-}
-
 // Get resource lines from a text file
 std::vector<std::string> get_resource_lines(const std_fs::path& name,
                                             const ResourceImportance importance)
@@ -464,7 +483,7 @@ std::vector<std::string> get_resource_lines(const std_fs::path& name,
 	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 	        name.string().c_str());
 
-	for (const auto& path : GetResourceParentPaths()) {
+	for (const auto& path : get_resource_parent_paths()) {
 		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
 
@@ -496,7 +515,7 @@ std::vector<uint8_t> load_resource_blob(const std_fs::path& name,
 		LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 		        name.string().c_str());
 
-		for (const auto& path : GetResourceParentPaths()) {
+		for (const auto& path : get_resource_parent_paths()) {
 			LOG_WARNING("RESOURCE:  - '%s'",
 			            (path / name).string().c_str());
 		}

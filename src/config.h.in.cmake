@@ -200,10 +200,10 @@
 // Modern MSVC provides POSIX-like routines, so prefer that over built-in
 #cmakedefine HAVE_STRNLEN
 
-// Holds the "--datadir" specified during project setup. This can
+// Holds the CMAKE_INSTALL_DATADIR specified during project setup. This can
 // be used as a fallback if the user hasn't populated their
-// XDG_DATA_HOME or XDG_DATA_DIRS to include the --datadir.
-#cmakedefine CUSTOM_DATADIR
+// XDG_DATA_HOME or XDG_DATA_DIRS.
+#cmakedefine CUSTOM_DATADIR "@CUSTOM_DATADIR@"
 
 
 #endif
