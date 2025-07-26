@@ -342,6 +342,38 @@ const std::vector<std_fs::path>& get_resource_parent_paths()
 	return paths;
 }
 
+// Searches mostly the same parent paths as get_resource_parent_paths()
+std::vector<std_fs::path> get_plugin_paths()
+{
+	// Intentionally not using the static cache as this function only gets called once.
+	std::vector<std_fs::path> paths = {};
+
+	// Current working directory
+	maybe_add_path(std_fs::path(PluginsDir), paths);
+
+	maybe_add_path(get_executable_path() / PluginsDir, paths);
+
+	// This will also resolve `$APP_BUNDLE/Contents/PlugIns` on macOS,
+	// as the filesystem is case-preserving.
+	maybe_add_path(get_executable_path() / ".." / PluginsDir, paths);
+
+	maybe_add_path(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+
+#if !defined(WIN32) && !defined(MACOSX)
+	maybe_add_path(get_xdg_data_home() / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		maybe_add_path(data_dir / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+	}
+
+	maybe_add_path(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME / PluginsDir, paths);
+#endif
+
+	maybe_add_path(GetConfigDir() / PluginsDir, paths);
+
+	return paths;
+}
+
 // Select either an integer or real-based uniform distribution
 template <typename T>
 using uniform_distributor_t =

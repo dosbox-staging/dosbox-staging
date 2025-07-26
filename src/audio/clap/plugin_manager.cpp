@@ -49,13 +49,9 @@ void PluginManager::EnumeratePlugins()
 
 	constexpr auto OnlyRegularFiles = false;
 
-	for (const auto& [dir, plugin_names] :
-	     get_files_in_resource(PluginsDir, ".clap", OnlyRegularFiles)) {
-
-		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'",
-		          dir.string().c_str());
-
-		for (const auto& name : plugin_names) {
+	for (const auto& dir : get_plugin_paths()) {
+		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'", dir.string().c_str());
+		for (const auto& name : get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
 			auto library_path = dir / name;
 
 			LOG_DEBUG("CLAP: Trying to load plugin library '%s'",
