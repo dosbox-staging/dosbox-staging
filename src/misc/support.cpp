@@ -16,7 +16,6 @@
 #include <fstream>
 #include <functional>
 #include <iterator>
-#include <map>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -464,24 +463,6 @@ std::vector<std_fs::path> get_directory_entries(
 
 	std::sort(files.begin(), files.end());
 	return files;
-}
-
-std::map<std_fs::path, std::vector<std_fs::path>> get_files_in_resource(
-        const std_fs::path& res_name, const std::string_view files_ext,
-        const bool only_regular_files = true)
-{
-	std::map<std_fs::path, std::vector<std_fs::path>> paths_and_files;
-
-	for (const auto& parent : get_resource_parent_paths()) {
-		auto res_path  = parent / res_name;
-		auto res_files = get_directory_entries(res_path,
-		                                       files_ext,
-		                                       only_regular_files);
-
-		paths_and_files.emplace(std::move(res_path), std::move(res_files)); //-V823
-	}
-
-	return paths_and_files;
 }
 
 // Get resource lines from a text file
