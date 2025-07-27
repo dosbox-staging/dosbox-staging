@@ -133,6 +133,7 @@ static void maybe_log_opengl_error(const char*)
 // SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
 constexpr uint8_t MaxBytesPerPixel = 4;
 
+// TODO(OPENGL)
 // A safe wrapper around that returns the default result on failure
 static const char* safe_gl_get_string(const GLenum requested_name,
                                       const char* default_result = "")
@@ -146,6 +147,7 @@ static const char* safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char*>(result) : default_result;
 }
 
+// TODO(OPENGL)
 // Create a GLSL shader object, load the shader source, and compile the
 // shader.
 //
@@ -221,6 +223,7 @@ static GLuint build_shader_gl(GLenum type, const std::string& source)
 	}
 }
 
+// TODO(OPENGL)
 // Build a OpenGL shader program.
 //
 // Input GLSL source must contain both vertex and fragment stages inside their
@@ -343,6 +346,7 @@ static GLuint build_shader_program(const std::string& source)
 	return shader_program;
 }
 
+// TODO(OPENGL)
 static void get_uniform_locations_gl()
 {
 	sdl.opengl.ruby.texture_size = glGetUniformLocation(sdl.opengl.program_object,
@@ -358,6 +362,7 @@ static void get_uniform_locations_gl()
 	                                                   "rubyFrameCount");
 }
 
+// TODO(OPENGL)
 static void update_uniforms_gl()
 {
 	glUniform2f(sdl.opengl.ruby.texture_size,
@@ -375,6 +380,7 @@ static void update_uniforms_gl()
 	glUniform1i(sdl.opengl.ruby.frame_count, sdl.opengl.actual_frame_count);
 }
 
+// TODO(OPENGL)
 static bool init_shader_gl()
 {
 	GLuint prog = 0;
@@ -533,6 +539,7 @@ bool GFX_HaveDesktopEnvironment()
 #endif
 }
 
+// TODO(BASE)
 double GFX_GetHostRefreshRate()
 {
 	auto refresh_rate = [] {
@@ -587,6 +594,7 @@ static void validate_vsync_and_presentation_mode_settings()
 	}
 }
 
+// TODO(BASE)
 // Reset and populate the vsync settings from the config. This is called
 // on-demand after startup and on output mode changes (e.g., switching from
 // the 'texture' backend to 'opengl').
@@ -611,6 +619,7 @@ static void init_vsync_settings()
 	}
 }
 
+// TODO(BASE)
 static void init_presentation_mode_settings()
 {
 	const std::string presentation_mode_pref = get_sdl_section()->GetString(
@@ -759,6 +768,7 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 }
 
+// TODO(OPENGL)
 // This is a hack to prevent SDL2 from re-creating window internally. Prevents
 // crashes on Windows and Linux, and prevents initial window from being visibly
 // destroyed (for window managers that show animations while creating window,
@@ -807,6 +817,9 @@ static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
+// TODO(BASE)
+// TODO(OPENGL)
+// TODO(TEXTURE)
 // Returns the actual output size in pixels.
 // Needed for DPI-scaled windows, when logical window and actual output sizes
 // might not match.
@@ -842,17 +855,20 @@ static DosBox::Rect get_canvas_size_in_pixels(
 	return r;
 }
 
+// TODO(BASE)
 static bool is_vsync_enabled()
 {
 	return sdl.desktop.is_fullscreen ? sdl.vsync.fullscreen : sdl.vsync.windowed;
 }
 
+// TODO(BASE)
 PresentationMode GFX_GetPresentationMode()
 {
 	return sdl.desktop.is_fullscreen ? sdl.presentation.fullscreen_mode
 	                                 : sdl.presentation.windowed_mode;
 }
 
+// TODO(BASE)
 static void maybe_log_display_properties()
 {
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
@@ -971,6 +987,7 @@ static void remove_window()
 	}
 }
 
+// TODO(BASE)
 static void setup_presentation_mode()
 {
 	auto update_frame_time = [](const double rate_hz) {
@@ -1122,6 +1139,7 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	apply_new_dpi_scale(new_dpi_scale);
 }
 
+// TODO(TEXTURE)
 static void clean_up_sdl_resources()
 {
 	if (sdl.texture.last_framebuf) {
@@ -1142,6 +1160,9 @@ static void clean_up_sdl_resources()
 	}
 }
 
+// TODO(OPENGL)
+// TODO(BASE)
+// TODO(TEXTURE)
 static SDL_Window* create_window(const RenderingBackend rendering_backend,
                                  const int width, const int height)
 {
@@ -1312,6 +1333,9 @@ static void exit_fullscreen()
 	}
 }
 
+// TODO(OPENGL)
+// TODO(TEXTURE)
+// TODO(BASE)
 // Callers:
 //
 //   setup_scaled_window()
@@ -1432,6 +1456,7 @@ DosBox::Rect GFX_GetCanvasSizeInPixels()
 	return get_canvas_size_in_pixels(sdl.rendering_backend);
 }
 
+// TODO(BASE)
 RenderingBackend GFX_GetRenderingBackend()
 {
 	return sdl.rendering_backend;
@@ -1664,6 +1689,7 @@ static bool read_backbuffer_sdl_texture(DosBox::Rect output_rect_px,
 	return true;
 }
 
+// TODO(BASE)
 static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
 	// This should be impossible, but maybe the user is hitting the screen
@@ -1806,6 +1832,7 @@ static void set_vsync_gl(const bool is_enabled)
 	}
 }
 
+// TODO(OPENGL)
 // Callers:
 //
 //   GFX_SetSize()
@@ -2018,6 +2045,7 @@ static void set_vsync_sdl_texture(const bool is_enabled)
 	}
 }
 
+// TODO(TEXTURE)
 // Callers:
 //
 //   GFX_SetSize()
@@ -2142,6 +2170,9 @@ uint8_t init_sdl_texture_renderer()
 	return flags;
 }
 
+// TODO(OPENGL)
+// TODO(BASE)
+// TODO(TEXTURE)
 uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_Callback_t callback)
@@ -2376,6 +2407,9 @@ static void switch_fullscreen_handler(bool pressed)
 	}
 }
 
+// TODO(BASE)
+// TODO(OPENGL)
+// TODO(TEXTURE)
 // This function returns write'able buffer for user to draw upon. Successful
 // return depends on properly initialized SDL_Block structure (which generally
 // can be achieved via GFX_SetSize call), and specifically - properly
@@ -2501,6 +2535,9 @@ void GFX_EndUpdate([[maybe_unused]] const uint16_t* num_changed_lines)
 	FrameMark;
 }
 
+// TODO(BASE)
+// TODO(OPENGL)
+// TODO(TEXTURE)
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
 	switch (sdl.rendering_backend) {
@@ -2946,6 +2983,9 @@ InterpolationMode GFX_GetTextureInterpolationMode()
 	return sdl.texture.interpolation_mode;
 }
 
+// TODO(BASE)
+// TODO(OPENGL)
+// TODO(TEXTURE)
 // Callers:
 //
 //   sdl_section_init()
@@ -3556,6 +3596,9 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 	}
 }
 
+// TODO(OPENGL)
+// TODO(BASE)
+// TODO(TEXTURE)
 static bool handle_sdl_windowevent(const SDL_Event& event)
 {
 	switch (event.window.event) {
