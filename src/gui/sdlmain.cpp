@@ -759,15 +759,6 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 }
 
-[[maybe_unused]] static int int_log2(int val)
-{
-	int log = 0;
-	while ((val >>= 1) != 0) {
-		log++;
-	}
-	return log;
-}
-
 // This is a hack to prevent SDL2 from re-creating window internally. Prevents
 // crashes on Windows and Linux, and prevents initial window from being visibly
 // destroyed (for window managers that show animations while creating window,
