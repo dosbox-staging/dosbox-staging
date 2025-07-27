@@ -101,6 +101,7 @@ static void restore_console_encoding()
 #endif
 }
 
+// TODO(OPENGL)
 #if C_OPENGL
 // Define to report opengl errors
 // #define DB_OPENGL_ERROR
