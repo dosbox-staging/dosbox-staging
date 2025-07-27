@@ -1,10 +1,12 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef _RENDER_SCALERS_H
 #define _RENDER_SCALERS_H
 
-//#include "gui/render.h"
+#include "gui/render/render.h"
+
 #include "misc/video.h"
 
 // Allow double-width and double-height scaling for low resolution modes

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/video/vga.h"
 #include "utils/rect.h"
 

@@ -320,7 +320,7 @@ template class RWQueue<AudioFrame>;
 #include "midi/midi.h"
 template class RWQueue<MidiWork>;
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 template class RWQueue<SaveImageTask>;
 
 //PC Speaker
