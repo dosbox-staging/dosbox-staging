@@ -326,7 +326,6 @@ const std::vector<std_fs::path>& get_resource_parent_paths()
 	for (const auto& data_dir : get_xdg_data_dirs()) {
 		maybe_add_path(data_dir / DOSBOX_PROJECT_NAME, paths);
 	}
-#endif
 
 	// Fifth priority is a best-effort fallback for --prefix installations
 	// into paths not pointed to by the system's XDG_DATA_ variables. Note
@@ -335,6 +334,7 @@ const std::vector<std_fs::path>& get_resource_parent_paths()
 	// which would destroy this portable aspect).
 	//
 	maybe_add_path(get_executable_path() / "../share" / DOSBOX_PROJECT_NAME, paths);
+#endif
 
 	// Last priority is the user's configuration directory
 	maybe_add_path(GetConfigDir(), paths);
