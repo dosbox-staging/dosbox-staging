@@ -15,7 +15,7 @@
 #include <exception>
 #include <string>
 
-#include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "../../gui/render/scaler/scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "rgb565.h"
 #include "setup.h"
 #include "video.h"

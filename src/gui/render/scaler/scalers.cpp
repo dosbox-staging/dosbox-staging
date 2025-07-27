@@ -84,80 +84,80 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 /* Include the different rendering routines */
 #define SBPP 8
 #define DBPP 8
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 
 /* SBPP 9 is a special case with palette check support */
 #define SBPP 9
 #define DBPP 8
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 
 #define SBPP 15
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 
 #define SBPP 16
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 
 #define SBPP 24
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 
 #define SBPP 32
 #define DBPP 15
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 16
-#include "render_templates.h"
+#include "templates.h"
 #undef DBPP
 #define DBPP 32
-#include "render_templates.h"
+#include "templates.h"
 #undef SBPP
 #undef DBPP
 

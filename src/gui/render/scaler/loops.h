@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -107,6 +108,6 @@ lastagain:
 
 #if !defined(SCALERLINEAR) 
 #define SCALERLINEAR 1
-#include "render_loops.h"
+#include "loops.h"
 #undef SCALERLINEAR
 #endif
