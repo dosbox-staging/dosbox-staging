@@ -510,13 +510,13 @@ bool GFX_HaveDesktopEnvironment()
 	static bool have_desktop_environment = false;
 
 	if (!already_checked) {
-		constexpr const char* vars[] = {"XDG_CURRENT_DESKTOP",
-		                                "XDG_SESSION_DESKTOP",
-		                                "DESKTOP_SESSION",
-		                                "GDMSESSION"};
+		constexpr const char* EnvVars[] = {"XDG_CURRENT_DESKTOP",
+		                                   "XDG_SESSION_DESKTOP",
+		                                   "DESKTOP_SESSION",
+		                                   "GDMSESSION"};
 
-		have_desktop_environment = std::any_of(std::begin(vars),
-		                                       std::end(vars),
+		have_desktop_environment = std::any_of(std::begin(EnvVars),
+		                                       std::end(EnvVars),
 		                                       std::getenv);
 
 		already_checked = true;
@@ -2633,12 +2633,12 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
 	// ratio is 1:1 for 640x480 games both with 'aspect = on` and 'aspect =
 	// off'.
-	constexpr SDL_Point ratios_for_stretched_pixels = {4, 3};
-	constexpr SDL_Point ratios_for_square_pixels    = {8, 5};
+	constexpr SDL_Point RatiosForStretchedPixels = {4, 3};
+	constexpr SDL_Point RatiosForSquarePixels    = {8, 5};
 
 	const auto image_aspect = wants_aspect_ratio_correction
-	                                ? ratios_for_stretched_pixels
-	                                : ratios_for_square_pixels;
+	                                ? RatiosForStretchedPixels
+	                                : RatiosForSquarePixels;
 
 	const auto window_aspect = static_cast<double>(size.x) / size.y;
 	const auto game_aspect   = static_cast<double>(image_aspect.x) /
@@ -3409,10 +3409,10 @@ static bool maybe_auto_switch_shader()
 		return false;
 	}
 
-	constexpr auto reinit_render = true;
+	constexpr auto ReinitRender = true;
 	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
 	                                    *sdl.maybe_video_mode,
-	                                    reinit_render);
+	                                    ReinitRender);
 }
 
 static bool is_user_event(const SDL_Event& event)
@@ -3959,11 +3959,11 @@ static void add_command_line_help_message()
 //
 static void init_sdl_config_section()
 {
-	constexpr bool changeable_at_runtime = true;
+	constexpr bool ChangeableAtRuntime = true;
 
 	SectionProp* sdl_sec = control->AddSectionProp("sdl",
 	                                               &sdl_section_init,
-	                                               changeable_at_runtime);
+	                                               ChangeableAtRuntime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 
 	constexpr auto always     = Property::Changeable::Always;
@@ -4490,10 +4490,10 @@ static void set_wm_class()
 	SDL_SetHint(SDL_HINT_APP_ID, DOSBOX_APP_ID);
 #else
 #if !defined(WIN32) && !defined(MACOSX)
-	constexpr int overwrite = 0;
+	constexpr int Overwrite = 0;
 
-	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, overwrite);
-	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_APP_ID, Overwrite);
+	setenv("SDL_VIDEO_WAYLAND_WMCLASS", DOSBOX_APP_ID, Overwrite);
 #endif
 #endif
 }
