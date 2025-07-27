@@ -4,10 +4,11 @@
 
 #include "capture.h"
 
+#include "private/capture_video.h"
+
 #include <cassert>
 #include <cmath>
 
-#include "gui/render.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
 #include "utils/math_utils.h"

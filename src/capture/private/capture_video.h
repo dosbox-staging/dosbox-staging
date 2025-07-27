@@ -5,7 +5,7 @@
 #ifndef DOSBOX_CAPTURE_VIDEO_H
 #define DOSBOX_CAPTURE_VIDEO_H
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 
 void capture_video_add_frame(const RenderedImage& image,
                              const float frames_per_second);

@@ -8,7 +8,7 @@
 
 #include "vga.h"
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/memory.h"
 #include "hardware/port.h"
 #include "hardware/video/reelmagic/reelmagic.h"

@@ -18,7 +18,7 @@
 #endif
 
 #include "gui/common.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "misc/video.h"
 #include "utils/fraction.h"
 #include "utils/rect.h"
