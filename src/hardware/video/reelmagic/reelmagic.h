@@ -7,8 +7,8 @@
 #include "dosbox.h"
 
 #include "dos/dos_inc.h"
+#include "gui/render/render.h"
 #include "utils/fraction.h"
-#include "gui/render.h"
 
 //
 // video mixer stuff

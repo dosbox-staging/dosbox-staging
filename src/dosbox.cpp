@@ -26,7 +26,7 @@
 #include "dos/programs.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/hardware.h"
 #include "hardware/input/mouse.h"
 #include "hardware/network/ne2000.h"

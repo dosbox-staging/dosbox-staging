@@ -77,7 +77,7 @@
 #include "config/setup.h"
 #include "cpu/paging.h"
 #include "gui/common.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/memory.h"
 #include "hardware/pci_bus.h"
 #include "hardware/pic.h"

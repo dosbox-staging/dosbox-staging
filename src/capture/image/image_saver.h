@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "image_decoder.h"
 #include "image_scaler.h"
 #include "misc/std_filesystem.h"

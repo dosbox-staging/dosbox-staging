@@ -47,7 +47,6 @@
 #include "debugger/debugger.h"
 #include "dos/dos_locale.h"
 #include "gui/mapper.h"
-#include "gui/render.h"
 #include "gui/titlebar.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"

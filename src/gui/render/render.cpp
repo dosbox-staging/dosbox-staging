@@ -4,7 +4,7 @@
 
 #include "dosbox.h"
 
-#include "private/shader_manager.h"
+#include "gui/private/shader_manager.h"
 
 #include <cassert>
 #include <cmath>
@@ -17,7 +17,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "misc/video.h"

@@ -7,7 +7,7 @@
 #include <cassert>
 #include <vector>
 
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/video/vga.h"
 #include "misc/support.h"
 #include "utils/byteorder.h"
