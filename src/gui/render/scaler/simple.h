@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -104,6 +105,6 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 
 #if !defined(SCALERLINEAR) 
 #define SCALERLINEAR 1
-#include "render_simple.h"
+#include "simple.h"
 #undef SCALERLINEAR
 #endif

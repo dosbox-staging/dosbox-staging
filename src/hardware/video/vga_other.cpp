@@ -13,7 +13,7 @@
 
 #include "config/config.h"
 #include "gui/mapper.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"

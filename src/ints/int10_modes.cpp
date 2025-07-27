@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "config/setup.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/pci_bus.h"
 #include "hardware/port.h"
 #include "hardware/video/vga.h"
