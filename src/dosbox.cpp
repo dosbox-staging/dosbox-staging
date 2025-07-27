@@ -29,7 +29,7 @@
 #include "fpu/fpu.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "hardware/audio/gus.h"
 #include "hardware/audio/imfc.h"
 #include "hardware/audio/innovation.h"

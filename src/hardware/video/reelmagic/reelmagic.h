@@ -9,7 +9,7 @@
 
 #include "config/config.h"
 #include "dos/dos.h"
-#include "gui/render.h"
+#include "gui/render/render.h"
 #include "utils/fraction.h"
 
 //
