@@ -103,8 +103,6 @@ void GFX_EndUpdate(const uint16_t* changed_lines);
 // Useful during output initialization or transitions.
 void GFX_DisengageRendering();
 
-void GFX_RegenerateWindow(Section* sec);
-
 DosBox::Rect GFX_GetDesktopSize();
 
 float GFX_GetDpiScaleFactor();
