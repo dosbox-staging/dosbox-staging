@@ -190,16 +190,6 @@ struct SDL_Block {
 
 		bool is_fullscreen = false;
 
-		// This flag indicates, that we are in the process of switching
-		// between fullscreen or window (as oppososed to changing
-		// rendering size due to rotating screen, emulation state, or
-		// user resizing the window).
-		bool switching_fullscreen = false;
-
-		// Lazy window size init triggers updating window size and
-		// position when leaving fullscreen for the first time.
-		// See FinalizeWindowState function for details.
-		bool lazy_init_window_size = false;
 	} desktop = {};
 
 	struct {
@@ -255,6 +245,7 @@ struct SDL_Block {
 	SDL_Renderer* renderer    = nullptr;
 	std::string render_driver = "";
 	int display_number        = 0;
+	uint8_t gfx_flags         = 0;
 
 	struct {
 		SDL_Surface* input_surface   = nullptr;
