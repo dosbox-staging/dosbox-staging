@@ -1333,10 +1333,6 @@ static SDL_Window* set_window_mode(const RenderingBackend rendering_backend,
                                    const int width, const int height,
                                    const bool is_fullscreen)
 {
-	if (sdl.window && sdl.resizing_window) {
-		return sdl.window;
-	}
-
 	clean_up_sdl_resources();
 
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
@@ -3178,10 +3174,9 @@ static void sdl_section_init(Section* sec)
 	sec->AddDestroyFunction(&shutdown_gui);
 	SectionProp* section = static_cast<SectionProp*>(sec);
 
-	sdl.active          = false;
-	sdl.updating        = false;
-	sdl.resizing_window = false;
-	sdl.wait_on_error   = section->GetBool("waitonerror");
+	sdl.active        = false;
+	sdl.updating      = false;
+	sdl.wait_on_error = section->GetBool("waitonerror");
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
