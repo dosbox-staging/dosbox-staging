@@ -192,16 +192,6 @@ struct SDL_Block {
 
 		bool is_fullscreen = false;
 
-		// This flag indicates, that we are in the process of switching
-		// between fullscreen or window (as oppososed to changing
-		// rendering size due to rotating screen, emulation state, or
-		// user resizing the window).
-		bool switching_fullscreen = false;
-
-		// Lazy window size init triggers updating window size and
-		// position when leaving fullscreen for the first time.
-		// See FinalizeWindowState function for details.
-		bool lazy_init_window_size = false;
 	} desktop = {};
 
 	struct {
@@ -222,12 +212,12 @@ struct SDL_Block {
 		// Contains the last fully rendered frame, waiting to be presented.
 		std::vector<uint8_t> last_framebuf = {};
 
-		GLuint texture        = 0;
-		GLint max_texsize     = 0;
-		GLuint program_object = 0;
+		bool is_framebuffer_srgb_capable = false;
 
-		int texture_width_px  = 0;
-		int texture_height_px = 0;
+		GLuint texture            = 0;
+		GLint max_texture_size_px = 0;
+
+		GLuint program_object = 0;
 
 		ShaderInfo shader_info    = {};
 		std::string shader_source = {};
@@ -257,6 +247,7 @@ struct SDL_Block {
 	SDL_Renderer* renderer    = nullptr;
 	std::string render_driver = "";
 	int display_number        = 0;
+	uint8_t gfx_flags         = 0;
 
 	struct {
 		SDL_Surface* curr_framebuf   = nullptr;
