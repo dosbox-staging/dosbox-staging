@@ -126,8 +126,7 @@ struct SDL_Block {
 	// is true in GFX_EndUpdate().
 	bool updating = false;
 
-	bool resizing_window = false;
-	bool wait_on_error   = false;
+	bool wait_on_error = false;
 
 	uint32_t start_event_id = UINT32_MAX;
 
