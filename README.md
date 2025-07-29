@@ -44,7 +44,7 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Test builds & development snapshots
 
-[Development builds].
+[Development builds]
 
 ## Key features for developers
 
