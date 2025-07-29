@@ -53,43 +53,28 @@ install_doc()
     # Install common documentation files
     case $platform in
         linux)
-            install_file docs/README.template      "${pkg_dir}/README"
-            install_file LICENSE                   "${pkg_dir}/LICENSE"
-            install_file docs/dosbox.1             "${pkg_dir}/man/dosbox.1"
-            install_file licenses/BSD-2-Clause.txt "${pkg_dir}/doc/licenses/BSD-2-Clause.txt"
-            install_file licenses/BSD-3-Clause.txt "${pkg_dir}/doc/licenses/BSD-3-Clause.txt"
-            install_file licenses/DEBUG.COM.txt    "${pkg_dir}/doc/licenses/DEBUG.COM.txt"
-            install_file licenses/GPL-2.0.txt      "${pkg_dir}/doc/licenses/GPL-2.0.txt"
-            install_file licenses/LGPL-2.1.txt     "${pkg_dir}/doc/licenses/LGPL-2.1.txt"
-            install_file licenses/MIT.txt          "${pkg_dir}/doc/licenses/MIT.txt"
-            install_file licenses/UNICODE.txt      "${pkg_dir}/doc/licenses/UNICODE.txt"
-            install_file licenses/Zlib.txt         "${pkg_dir}/doc/licenses/Zlib.txt"
+            for filename in ${build_dir}/doc/licenses/*; do
+            	install_file "${filename}" "${pkg_dir}/doc/licenses/$(basename ${filename})"
+            done
+            install_file "${build_dir}/doc/LICENSE" "${pkg_dir}/LICENSE"
+            install_file docs/dosbox.1              "${pkg_dir}/man/dosbox.1"
+            install_file docs/README.template       "${pkg_dir}/README"
             readme_tmpl="${pkg_dir}/README"
             ;;
         macos)
-            install_file docs/README.template      "${macos_content_dir}/SharedSupport/README"
-            install_file LICENSE                   "${macos_content_dir}/SharedSupport/LICENSE"
-            install_file licenses/BSD-2-Clause.txt "${macos_content_dir}/doc/licenses/BSD-2-Clause.txt"
-            install_file licenses/BSD-3-Clause.txt "${macos_content_dir}/doc/licenses/BSD-3-Clause.txt"
-            install_file licenses/DEBUG.COM.txt    "${macos_content_dir}/doc/licenses/DEBUG.COM.txt"
-            install_file licenses/GPL-2.0.txt      "${macos_content_dir}/doc/licenses/GPL-2.0.txt"
-            install_file licenses/LGPL-2.1.txt     "${macos_content_dir}/doc/licenses/LGPL-2.1.txt"
-            install_file licenses/MIT.txt          "${macos_content_dir}/doc/licenses/MIT.txt"
-            install_file licenses/UNICODE.txt      "${macos_content_dir}/doc/licenses/UNICODE.txt"
-            install_file licenses/Zlib.txt         "${macos_content_dir}/doc/licenses/Zlib.txt"
+            for filename in ${build_dir}/licenses/*; do
+            	install_file "${filename}" "${macos_content_dir}/doc/licenses/$(basename ${filename})"
+            done
+            install_file "${build_dir}/LICENSE" "${macos_content_dir}/SharedSupport/LICENSE"
+            install_file docs/README.template       "${macos_content_dir}/SharedSupport/README"
             readme_tmpl="${macos_content_dir}/SharedSupport/README"
             ;;
         windows)
-            install_file docs/README.template      "${pkg_dir}/README.txt"
-            install_file LICENSE                   "${pkg_dir}/LICENSE.txt"
-            install_file licenses/BSD-2-Clause.txt "${pkg_dir}/doc/licenses/BSD-2-Clause.txt"
-            install_file licenses/BSD-3-Clause.txt "${pkg_dir}/doc/licenses/BSD-3-Clause.txt"
-            install_file licenses/DEBUG.COM.txt    "${pkg_dir}/doc/licenses/DEBUG.COM.txt"
-            install_file licenses/GPL-2.0.txt      "${pkg_dir}/doc/licenses/GPL-2.0.txt"
-            install_file licenses/LGPL-2.1.txt     "${pkg_dir}/doc/licenses/LGPL-2.1.txt"
-            install_file licenses/MIT.txt          "${pkg_dir}/doc/licenses/MIT.txt"
-            install_file licenses/UNICODE.txt      "${pkg_dir}/doc/licenses/UNICODE.txt"
-            install_file licenses/Zlib.txt         "${pkg_dir}/doc/licenses/Zlib.txt"
+            for filename in ${build_dir}/../doc/licenses/*; do
+            	install_file "${filename}" "${pkg_dir}/doc/licenses/$(basename ${filename})"
+            done
+            install_file "${build_dir}/../doc/LICENSE" "${pkg_dir}/LICENSE.txt"
+            install_file docs/README.template       "${pkg_dir}/README.txt"
             readme_tmpl="${pkg_dir}/README.txt"
             ;;
     esac
