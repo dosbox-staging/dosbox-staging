@@ -4093,20 +4093,20 @@ static void init_sdl_config_section()
 	        "                      borderless mode might result in decreased performance\n"
 	        "                      and slightly worse frame pacing.");
 
-	pstring->SetOptionHelp("original",
-	                       "  original:           Exclusive fullscreen mode at the game's original\n"
-		                   "                      resolution, or at the closest available resolution. This\n"
-		                   "                      is a niche option for using DOSBox Staging with a CRT\n"
-		                   "                      monitor. Toggling fullscreen might result in janky\n"
-		                   "                      behaviour in this mode.");
+	pstring->SetOptionHelp(
+	        "original",
+	        "  original:           Exclusive fullscreen mode at the game's original\n"
+	        "                      resolution, or at the closest available resolution. This\n"
+	        "                      is a niche option for using DOSBox Staging with a CRT\n"
+	        "                      monitor. Toggling fullscreen might result in janky\n"
+	        "                      behaviour in this mode.");
 	pstring->SetValues({"standard",
 #if WIN32
-	                     "forced-borderless",
+	                    "forced-borderless",
 #endif
-	                     "original"});
+	                    "original"});
 
 	pstring->SetDeprecatedWithAlternateValue("desktop", "standard");
-
 
 	pstring = sdl_sec->AddString("windowresolution", DeprecatedButAllowed, "");
 	pstring->SetHelp(
