@@ -4091,7 +4091,8 @@ static void init_sdl_config_section()
 	        "                      card driver decides to disable fullscreen optimisation\n"
 	        "                      on Windows, resulting in exclusive fullscreen. Forcing\n"
 	        "                      borderless mode might result in decreased performance\n"
-	        "                      and slightly worse frame pacing.");
+	        "                      and slightly worse frame pacing (e.g., scrolling in 2D\n"
+	        "                      games not appearing perfectly smooth).");
 
 	pstring->SetOptionHelp(
 	        "original",
