@@ -2594,6 +2594,10 @@ static void switch_fullscreen()
 #endif
 	sdl.desktop.is_fullscreen = !sdl.desktop.is_fullscreen;
 
+	set_section_property_value("sdl",
+	                           "fullscreen",
+	                           sdl.desktop.is_fullscreen ? "on" : "off");
+
 	GFX_ResetScreen();
 
 	focus_input();
@@ -3880,6 +3884,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 			// Force-exit fullscreen
 			sdl.desktop.is_fullscreen = false;
+			set_section_property_value("sdl", "fullscreen", "off");
 			GFX_ResetScreen();
 		}
 #endif
