@@ -86,61 +86,20 @@
 #define SDL_NOFRAME 0x00000020
 
 // Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void(const uint16_t*);
-using present_frame_f       = bool();
+using update_frame_buffer_f = void();
+using present_frame_f       = void();
 
-constexpr void update_frame_noop([[maybe_unused]] const uint16_t*)
+constexpr void update_frame_noop()
 {
 	// no-op
 }
 
-static inline bool present_frame_noop()
+static inline void present_frame_noop()
 {
-	return true;
+	// no-op
 }
 
-enum class FrameMode {
-	Unset,
-
-	// Constant frame rate, as defined by the emulated system
-	Cfr,
-
-	// Variable frame rate, as defined by the emulated system
-	Vfr,
-
-	// Variable frame rate, throttled to the display's rate
-	ThrottledVfr,
-};
-
-enum class HostRateMode {
-	Auto,
-
-	// Serial digital interface
-	Sdi,
-
-	// Variable refresh rate
-	Vrr,
-
-	Custom,
-};
-
-enum class VsyncMode { Unset, Off, On, Adaptive, Yield };
-
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
-
-struct VsyncSettings {
-	// The vsync mode the user asked for.
-	VsyncMode requested = VsyncMode::Unset;
-
-	// What the auto-determined state is after setting the requested vsync state.
-	// The video driver may honor the requested vsync mode, ignore it, change
-	// it, or be outright buggy.
-	VsyncMode auto_determined  = VsyncMode::Unset;
-
-	// The actual frame rate after setting the requested vsync mode; it's used
-	// to select the auto-determined vsync mode.
-	int benchmarked_rate = 0;
-};
 
 enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_AUTO,
@@ -157,9 +116,16 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
-	bool initialized     = false;
-	bool active          = false; // If this isn't set don't draw
-	bool updating        = false;
+	bool initialized = false;
+
+	// If this isn't set don't draw
+	bool active = false;
+
+	// True when the contents of the framebuffer has been changed in the
+	// current frame. We only need to upload new texture data when this flag
+	// is true in GFX_EndUpdate().
+	bool updating = false;
+
 	bool resizing_window = false;
 	bool wait_on_error   = false;
 
@@ -219,11 +185,6 @@ struct SDL_Block {
 			SDL_Rect canvas_size = {};
 		} window = {};
 
-		struct {
-			int width  = 0;
-			int height = 0;
-		} requested_window_bounds = {};
-
 		PixelFormat pixel_format = {};
 
 		float dpi_scale = 1.0f;
@@ -240,26 +201,29 @@ struct SDL_Block {
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
-
-		HostRateMode host_rate_mode = HostRateMode::Auto;
-		double preferred_host_rate  = 0.0;
 	} desktop = {};
 
 	struct {
-		VsyncSettings when_windowed   = {};
-		VsyncSettings when_fullscreen = {};
-		int skip_us                   = 0;
+		bool windowed   = false;
+		bool fullscreen = false;
 	} vsync = {};
 
 #if C_OPENGL
 	struct {
-		SDL_GLContext context;
-		int pitch      = 0;
-		void* framebuf = nullptr;
-		GLuint texture;
-		GLint max_texsize;
-		bool framebuffer_is_srgb_encoded;
-		GLuint program_object;
+		SDL_GLContext context = {};
+
+		int pitch = 0;
+
+		// The current framebuffer the emulation is rendering the video
+		// output into (contains the "work-in-progress" next frame).
+		std::vector<uint8_t> curr_framebuf = {};
+
+		// Contains the last fully rendered frame, waiting to be presented.
+		std::vector<uint8_t> last_framebuf = {};
+
+		GLuint texture        = 0;
+		GLint max_texsize     = 0;
+		GLuint program_object = 0;
 
 		int texture_width_px  = 0;
 		int texture_height_px = 0;
@@ -268,14 +232,14 @@ struct SDL_Block {
 		std::string shader_source = {};
 
 		struct {
-			GLint texture_size;
-			GLint input_size;
-			GLint output_size;
-			GLint frame_count;
+			GLint texture_size = 0;
+			GLint input_size   = 0;
+			GLint output_size  = 0;
+			GLint frame_count  = 0;
 		} ruby = {};
 
-		GLuint actual_frame_count;
-		GLfloat vertex_data[2 * 3];
+		GLuint actual_frame_count  = 0;
+		GLfloat vertex_data[2 * 3] = {};
 	} opengl = {};
 #endif // C_OPENGL
 
@@ -302,20 +266,16 @@ struct SDL_Block {
 	} texture = {};
 
 	struct {
-		present_frame_f* present      = present_frame_noop;
-		update_frame_buffer_f* update = update_frame_noop;
-		FrameMode desired_mode        = FrameMode::Unset;
-		FrameMode mode                = FrameMode::Unset;
+		PresentationMode windowed_mode =   {};
+		PresentationMode fullscreen_mode = {};
 
-		// in ms, for use with PIC timers
-		double period_ms      = 0.0;
-		float max_dupe_frames = 0.0f;
+		int frame_time_us           = 0;
+		int early_present_window_us = 0;
+		int last_present_time_us    = 0;
 
-		// same but in us, for use with chrono
-		int period_us       = 0;
-		int period_us_early = 0;
-		int period_us_late  = 0;
-	} frame = {};
+        present_frame_f* present      = present_frame_noop;
+        update_frame_buffer_f* update = update_frame_noop;
+	} presentation = {};
 
 	bool use_exact_window_resolution = false;
 
@@ -329,20 +289,7 @@ struct SDL_Block {
 	SDL_EventType raltstate = SDL_KEYUP;
 };
 
+// TODO should be private; introduce SDL_* API calls instead
 extern SDL_Block sdl;
-
-constexpr uint32_t sdl_version_to_uint32(const SDL_version version)
-{
-	return (version.major << 16) + (version.minor << 8) + version.patch;
-}
-
-inline bool is_runtime_sdl_version_at_least(const SDL_version min_version)
-{
-	SDL_version version = {};
-	SDL_GetVersion(&version);
-	const auto curr_version = sdl_version_to_uint32(version);
-
-	return curr_version >= sdl_version_to_uint32(min_version);
-}
 
 #endif

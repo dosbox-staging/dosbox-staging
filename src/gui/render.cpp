@@ -316,6 +316,11 @@ void RENDER_Reinit()
 	render_init(get_render_section());
 }
 
+static uint8_t get_best_mode(const uint8_t flags)
+{
+	return (flags & GFX_CAN_32) & ~(GFX_CAN_8 | GFX_CAN_15 | GFX_CAN_16);
+}
+
 static void render_reset()
 {
 	static std::mutex render_reset_mutex;
@@ -381,7 +386,7 @@ static void render_reset()
 		break;
 	}
 
-	gfx_flags = GFX_GetBestMode(gfx_flags);
+	gfx_flags = get_best_mode(gfx_flags);
 
 	if (!gfx_flags) {
 		if (simpleBlock == &ScaleNormal1x) {
@@ -883,7 +888,6 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 			return {};
 		}
 		if (!is_within_bounds(height_scale)) {
-			LOG_TRACE("****1");
 			const auto extra_info = format_str(
 			        "Vertical scale must be within the %g-%g%% range",
 			        MinRelativeScaleFactor * 100.0f,
@@ -1096,15 +1100,13 @@ std::string RENDER_GetCgaColorsSetting()
 
 static void init_render_settings(SectionProp& secprop)
 {
-	constexpr auto always        = Property::Changeable::Always;
-	constexpr auto deprecated    = Property::Changeable::Deprecated;
-	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
+	using enum Property::Changeable::Value;
 
-	auto* int_prop = secprop.AddInt("frameskip", deprecated, 0);
+	auto* int_prop = secprop.AddInt("frameskip", Deprecated, 0);
 	int_prop->SetHelp(
 	        "Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = secprop.AddString("glshader", always, "crt-auto");
+	auto* string_prop = secprop.AddString("glshader", Always, "crt-auto");
 	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes ('crt-auto' by default). Adaptive CRT shader options:\n"
@@ -1155,7 +1157,7 @@ static void init_render_settings(SectionProp& secprop)
 #endif
 	});
 
-	string_prop = secprop.AddString("aspect", always, "auto");
+	string_prop = secprop.AddString("aspect", Always, "auto");
 	string_prop->SetHelp(
 	        "Set the aspect ratio correction mode ('auto' by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
@@ -1180,7 +1182,7 @@ static void init_render_settings(SectionProp& secprop)
 
 	string_prop->SetValues({"auto", "on", "square-pixels", "off", "stretch"});
 
-	string_prop = secprop.AddString("integer_scaling", always, "auto");
+	string_prop = secprop.AddString("integer_scaling", Always, "auto");
 	string_prop->SetHelp(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport ('auto' by default). The\n"
@@ -1201,7 +1203,7 @@ static void init_render_settings(SectionProp& secprop)
 
 	string_prop->SetValues({"auto", "vertical", "horizontal", "off"});
 
-	string_prop = secprop.AddString("viewport", always, "fit");
+	string_prop = secprop.AddString("viewport", Always, "fit");
 	string_prop->SetHelp(
 	        "Set the viewport size ('fit' by default). This is the maximum drawable area;\n"
 	        "the video output is always contained within the viewport while taking the\n"
@@ -1231,7 +1233,7 @@ static void init_render_settings(SectionProp& secprop)
 	        "    actions to set the stretch in 'relative' mode in real-time.");
 
 	string_prop = secprop.AddString("monochrome_palette",
-	                                 always,
+	                                 Always,
 	                                 MonochromePaletteAmber);
 	string_prop->SetHelp(
 	        "Set the palette for monochrome display emulation ('amber' by default).\n"
@@ -1243,7 +1245,7 @@ static void init_render_settings(SectionProp& secprop)
 	                         MonochromePaletteWhite,
 	                         MonochromePalettePaperwhite});
 
-	string_prop = secprop.AddString("cga_colors", only_at_start, "default");
+	string_prop = secprop.AddString("cga_colors", OnlyAtStart, "default");
 	string_prop->SetHelp(
 	        "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
 	        "machine types capable of displaying CGA or better graphics. Built-in presets:\n"
@@ -1278,7 +1280,7 @@ static void init_render_settings(SectionProp& secprop)
 	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
 	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
 
-	string_prop = secprop.AddString("scaler", deprecated, "none");
+	string_prop = secprop.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, consider using 'integer_scaling'\n"
