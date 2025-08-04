@@ -21,6 +21,7 @@ struct PluginInfo {
 	std::string id          = {};
 	std::string name        = {};
 	std::string description = {};
+	std::string version     = {};
 };
 
 // Encapsulates a dynamically-loaded CLAP library and manages its lifecycle.

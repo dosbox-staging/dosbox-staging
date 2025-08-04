@@ -134,7 +134,8 @@ std::vector<PluginInfo> Library::GetPluginInfos() const
 			const PluginInfo info = {library_path,
 			                         desc->id,
 			                         desc->name,
-			                         desc->description};
+			                         desc->description,
+			                         desc->version};
 
 			plugin_infos.emplace_back(info);
 		}

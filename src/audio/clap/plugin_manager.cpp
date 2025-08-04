@@ -228,6 +228,10 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 		return {};
 	}
 
+	LOG_INFO("CLAP: Plugin '%s' loaded (version %s)",
+	         plugin_info.name.c_str(),
+	         plugin_info.version.c_str());
+
 	return std::make_unique<Plugin>(library, plugin);
 }
 
