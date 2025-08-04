@@ -1,0 +1,245 @@
+US keyboard - international layout ("UX")
+=========================================
+
+Linedraw, block and shade characters as well as the soft  hyphen  and  the
+non-breaking space characters are not available.
+
+Below is the drawing of the enhanced alphanumeric block.
+
+                 зддддддддддддддддддддддддддддддддддд©
+                 Ё <Shift>     <Shift> + <Right_Alt> Ё
+                 Ё <Normal>    <Right_Alt>           Ё
+                 юддддддддддддддддддддддддддддддддддды
+
+When used with codepage 437:
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ~ Ё !   Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё (   Ё ) · Ё_ Я Ё+ Ж Ё
+Ё ` Ё 1 ╜ Ё 2 Щ Ё 3   Ё 4   Ё 5   Ё 6 ╛ Ё 7 ╚ Ё 8   Ё 9 ╕ Ё 0 ╖ Ё- ² Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q ▌ Ё W ▐ Ё E ░ Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O   Ё P ≥ Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё   ё Ё   ║ Ё   ╒ Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A   Ё S   Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё : Ь Ё"   Ё|   Ё
+      Ё   ═ Ё   А Ё     Ё   ÷ Ё     Ё     Ё     Ё     Ё     Ё ;   Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z ▓ Ё X   Ё C   Ё V   Ё B   Ё N ╔ Ё M   Ё < ─ Ё >   Ё ?   Ё
+       Ё     Ё     Ё   ⌡ Ё     Ё     Ё     Ё   Ф Ё ,   Ё . З Ё / ╗ Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <a, e, i, o, u>
+    <~> for <N>
+    <^> for <a, e, i, o, u>
+    Acute: <'> for <a, E, i, o, u>
+    Diaeresis: <"> for <A, e, i, O, U, y>
+
+To have the apostrophe and the quotation mark, "combine" them with <Space>.
+
+Most capital accented letters (and the Euro sign) are not available.
+Peseta currency sign is available on cp437 but not on cp850/858/859.
+
+
+When used with codepage 850/858:
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё~  Ё ! Ш Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё (   Ё )   Ё_ Я Ё+ Ж Ё
+Ё` НЁ 1 ╜ Ё 2 Щ Ё 3 Э Ё 4 о Ё 5   Ё 6 ╛ Ё 7 ╚ Ё 8 С Ё 9 ╕ Ё 0 ╖ Ё- ╬ Ё= · Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q ▌ Ё W ▐ Ё E ░ Ё R   Ё T Х Ё Y   Ё U И Ё I ж Ё O Ю Ё P ≥ Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё   ╘ Ё     Ё     Ё     Ё     Ё     Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ╣ Ё S У Ё D я Ё F   Ё G   Ё H   Ё J   Ё K   Ё L ² Ё : Ь Ё" Ы Ё| щ Ё
+      Ё     Ё   А Ё     Ё   ÷ Ё     Ё     Ё   у Ё   В Ё     Ё ; Т Ё' О Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z ▓ Ё X   Ё C ╫ Ё V   Ё B   Ё N ╔ Ё M   Ё < ─ Ё >   Ё ?   Ё
+       Ё     Ё     Ё   ╦ Ё     Ё     Ё     Ё   Ф Ё ,   Ё . З Ё / ╗ Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, I, O, U>
+    Acute: <'> for <A, E, I, O, U, Y>
+    Diaeresis: <"> for <A, E, I, O, U, y> (Capital-Y not available)
+
+To have the apostrophe and the quotation mark, "combine" them with <Space>.
+
+
+When used with codepage 859:
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё~  Ё ! Ш Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё (   Ё )   Ё_ Я Ё+ Ж Ё
+Ё` НЁ 1 ╜ Ё 2 Щ Ё 3 Э Ё 4 о Ё 5   Ё 6   Ё 7   Ё 8   Ё 9 ╕ Ё 0 ╖ Ё- ╬ Ё= · Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q ▌ Ё W ▐ Ё E ░ Ё R   Ё T Х Ё Y   Ё U И Ё I ж Ё O Ю Ё P ≥ Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё   ╘ Ё     Ё     Ё     Ё     Ё     Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ╣ Ё S У Ё D я Ё F   Ё G   Ё H   Ё J   Ё K   Ё L ² Ё : Ь Ё"   Ё|   Ё
+      Ё     Ё   А Ё     Ё   ÷ Ё     Ё     Ё     Ё     Ё     Ё ; Т Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z ▓ Ё X ╛ Ё C ╫ Ё V   Ё B   Ё N ╔ Ё M   Ё < ─ Ё >   Ё ?   Ё
+       Ё     Ё     Ё   ╦ Ё     Ё     Ё     Ё   Ф Ё ,   Ё . З Ё / ╗ Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, I, O, U, S, Z> (S, Z with caron)
+    Acute: <'> for <A, E, I, O, U, Y>
+    Diaeresis: <"> for <A, E, I, O, U, Y>
+
+To have the apostrophe and the quotation mark, "combine" them with <Space>.
+
+
+
+Variations
+==========
+
+* Official languages on Oceania
+  French, Fijian, Marshallese, Kiribati, Chuuk, Kosraean, Ponapean, Ulithian,
+  Yapese, Nauruan, Palauan,  Sonsoralese,  Tobian,  Angaur,  Samoan,  Tongan,
+  Tuvaluan and Bislama
+
+  Codepage 30021
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ~ Ё !   Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё (   Ё )   Ё_   Ё+   Ё
+Ё ` Ё 1   Ё 2   Ё 3   Ё 4 о Ё 5 у Ё 6   Ё 7   Ё 8   Ё 9   Ё 0   Ё- ╬ Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q   Ё W ▐ Ё E ░ Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё   ╘ Ё     Ё     Ё     Ё     Ё     Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ▓ Ё S У Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё : Ь Ё" Ы Ё| щ Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ; Т Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z   Ё X   Ё C ╫ Ё V   Ё B   Ё N   Ё M   Ё <   Ё >   Ё ?   Ё
+       Ё     Ё     Ё   ╦ Ё     Ё     Ё     Ё   Ф Ё ,   Ё .   Ё /   Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+    
+    Deadkeys:
+    <`> for <A, E, U>
+    <~> for <A, N, O, U>
+    <^> for <A, E, I, O, U>
+    Diaeresis: <"> for <E, I, U, Y>
+    Macron: <[> for <A, E, I, N, O, U>
+    Cedilla: <]> for <C, L, M, N, O>
+
+
+* Official and co-official languages on Southern Africa
+  Afrikaans, Fanagalo, Khoe, Lobedu, Nama, Ndebele (Northern/Southern), 
+  Pluthi, San, Sotho (Northern/Southern), Swati, Tsonga, Tswana, Venda,
+  Xhosa, Zulu, Chichewa, French, Malagasy, Portuguese, Shikomor, Nyanja
+  and French Patois.
+  Widely spoken: German.
+
+  Codepage: 30023
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ~ Ё ! Ш Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё (   Ё )   Ё_ Я Ё+ Ж Ё
+Ё ` Ё 1   Ё 2 Щ Ё 3 Э Ё 4 о Ё 5 у Ё 6   Ё 7   Ё 8   Ё 9 ╕ Ё 0 ╖ Ё- ╬ Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q   Ё W   Ё E   Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ▓ Ё S У Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё : Ь Ё"   Ё|   Ё
+      Ё     Ё   А Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ; Т Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z   Ё X   Ё C ─ Ё V   Ё B   Ё N Н Ё M   Ё <   Ё >   Ё ?   Ё
+       Ё     Ё     Ё     Ё     Ё   Р Ё     Ё   Ф Ё ,   Ё .   Ё /   Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    Acute: <'> for <A, E, I, O, U>
+    Diaeresis: <"> for <A, E, I, N, O, U, Y>
+    Circumflex (above/below)/Caron: <^> for <A, E, I, O, U, W, D, L, N, T, S>
+
+
+* Official languages on Northern and Eastern Africa
+  French, Fula, Soninke, Wolof, Kirundi, Swahili,  Kinyarwanda,  Somali,
+  French Patois and Portuguese.
+  Widely spoken: Spanish, Italian, Dinka, Nuer, Afar, Oromo and Luganda.
+
+  Codepage: 30024
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ~ Ё !   Ё @   Ё #   Ё $   Ё %   Ё ^   Ё &   Ё *   Ё ( ╝ Ё ) ╞ Ё_   Ё+   Ё
+Ё ` Ё 1 ╜ Ё 2   Ё 3   Ё 4   Ё 5 у Ё 6   Ё 7   Ё 8   Ё 9 ╕ Ё 0 ╖ Ё-   Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q   Ё W   Ё E Ш Ё R   Ё T   Ё Y М Ё U   Ё I   Ё O ╛ Ё P   Ё▐ { Ё² } Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё  [ Ё  ] Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ▓ Ё S   Ё D я Ё F   Ё G ╦ Ё H   Ё J   Ё K   Ё L   Ё : Ь Ё"   Ё|   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ;   Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z   Ё X   Ё C ─ Ё V   Ё B Х Ё N У Ё M ╬ Ё <   Ё >   Ё ?   Ё
+       Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ,   Ё .   Ё / ╗ Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, I, O, U>
+    Acute: <'> for <A, E, I, O, U>
+    Diaeresis: <"> for <A, E, ▐, I, O, ², U, Y>
+    Macron below: <╙> for <A, I, O, ²>
+
+
+* Official languages on Western Africa
+  French, Portuguese, Wolof, Mandinka, Fula, Dagbani, Gonja, Ga,  Dangbe,
+  Dagaari, Kasem, Nzema, Ewe, Twi, Badiu, Maio, Fogo, Brava, Sфo Nicolau,
+  Criol d'Soncente, Sal, Boavista and Santo Antфo.
+  Widely spoken: Dioula, Moore, Bambara, Zarma, Krio and Kanuri.
+
+  Codepage: 30025
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ~ Ё !   Ё @   Ё #   Ё $   Ё %   Ё ^   Ё &   Ё *   Ё (   Ё )   Ё_   Ё+   Ё
+Ё ` Ё 1   Ё 2   Ё 3   Ё 4 о Ё 5 у Ё 6   Ё 7   Ё 8   Ё 9 ╕ Ё 0 ╖ Ё-   Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q   Ё W ≥ Ё E ▐ Ё R Ф Ё T   Ё Y М Ё U щ Ё I ▌ Ё O ² Ё P ╛ Ё{   Ё}   Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё[ ╝ Ё] ╞ Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ▓ Ё S У Ё D я Ё F · Ё G ╦ Ё H   Ё J О Ё K   Ё L   Ё : Ь Ё"   Ё|   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ;   Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z   Ё X Ш Ё C ─ Ё V Н Ё B Х Ё N ╜ Ё M ╬ Ё <   Ё >   Ё ?   Ё
+       Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ,   Ё .   Ё /   Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, E, I, N, O, U>
+    <^> for <A, E, I, O, U>
+    Acute: <'> for <A, E, I, O, U>
+    Diaeresis: <"> for <E, I, U, Y>
+
+
+* Official languages on Central Africa
+  French, Portuguese, Spanish, Swahili, Lingala, Sango, Tshiluba, Kikongo,
+  Forro, Angolar and Principense.
+
+  Codepage: 30026
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё~  Ё !   Ё @   Ё #   Ё $ ° Ё %   Ё ^   Ё &   Ё *   Ё ( ╝ Ё ) ╞ Ё_   Ё+   Ё
+Ё` НЁ 1 ╜ Ё 2   Ё 3   Ё 4 о Ё 5 у Ё 6   Ё 7   Ё 8   Ё 9 ╕ Ё 0 ╖ Ё-   Ё=   Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё Q   Ё W   Ё E   Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   Ё▐ { Ё² } Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё  [ Ё  ] Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё A ▓ Ё S У Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё : Ь Ё"   Ё|   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё ;   Ё'   Ё\ ╙ Ё
+      юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+       Ё Z   Ё X   Ё C ─ Ё V   Ё B   Ё N   Ё M   Ё <   Ё >   Ё ?   Ё
+       Ё     Ё     Ё     Ё     Ё     Ё     Ё   Ф Ё ,   Ё .   Ё / ╗ Ё
+       юдддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, ▐, I, O, ², U>
+    Acute: <'> for <A, E, ▐, I, O, ², U>
+    Diaeresis: <"> for <A, E, I, O, U, Y>
+    Caron: <Н> for <A, E, ▐, I, O, ², S, Z>

@@ -1,0 +1,131 @@
+French keyboard - international layout ("FX")
+=============================================
+
+Linedraw, block and shade characters, the soft hyphen  and  the  non-breaking
+space characters are not available.
+
+Below is the drawing of the enhanced alphanumeric block.
+
+                 зддддддддддддддддддддддддддддддддддд©
+                 Ё <Shift>     <Shift> + <Right_Alt> Ё
+                 Ё <Normal>    <Right_Alt>           Ё
+                 юддддддддддддддддддддддддддддддддддды
+
+Variations
+==========
+
+* Official languages on Oceania
+  French, Fijian, Marshallese, Kiribati, Chuuk, Kosraean, Ponapean, Ulithian,
+  Yapese, Nauruan, Palauan,  Sonsoralese,  Tobian,  Angaur,  Samoan,  Tongan,
+  Tuvaluan and Bislama
+
+  Codepage 30021
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё   Ё 1   Ё 2   Ё 3   Ё 4   Ё 5   Ё 6 щ Ё 7   Ё 8   Ё 9   Ё 0   ЁЬ   Ё+ ╙ Ё
+Ёs2 Ё &   Ё ┌ ~ Ё " # Ё ' { Ё ( [ Ё - | Ё ┼ ` Ё _ \ Ё ┤ ^ Ё ┘ @ Ё) ] Ё= } Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A ▓ Ё Z   Ё E ░ Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   ЁЫ   Ё° у Ё
+     Ё     Ё     Ё     Ё   ╘ Ё     Ё   ╬ Ё     Ё     Ё     Ё   Т Ё^   Ё$ о Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q ▐ Ё S   Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё M   Ё%   ЁФ   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈   Ё*   Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё > Ё W   Ё X   Ё C ╫ Ё V   Ё B   Ё N   Ё ?   Ё . ╝ Ё / ╞ Ё У   Ё
+   Ё < Ё     Ё     Ё   ╦ Ё     Ё     Ё     Ё ,   Ё ; < Ё : > Ё !   Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, U>
+    <~> for <A, N, O, U>
+    <^> for <A, E, I, O, U>
+    <Ы> for <E, I, U, Y>
+    Macron: <s2> (superscript-2) for <A, E, I, N, O, U>
+    Cedilla: <Shift>+<s2> for <C, L, M, N, O>
+
+
+* Official languages on Northern and Eastern Africa
+  French, Fula, Soninke, Wolof, Kirundi, Swahili,  Kinyarwanda,  Somali,
+  French Patois and Portuguese.
+  Widely spoken: Spanish, Italian, Dinka, Nuer, Afar, Oromo and Luganda.
+
+  Codepage: 30024
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ▐ Ё 1   Ё 2   Ё 3   Ё 4   Ё 5 ╕ Ё 6   Ё 7   Ё 8   Ё 9   Ё 0   ЁЬ ╖ Ё+ ╙ Ё
+Ё   Ё &   Ё ┌ ~ Ё " # Ё ' { Ё ( [ Ё - | Ё ┼ ` Ё _ \ Ё ┤ ^ Ё ┘ @ Ё) ] Ё= } Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A о Ё Z ▓ Ё E Ш Ё R   Ё T   Ё Y М Ё U   Ё I Ж Ё O Н Ё P ╛ Ё"   Ё  у Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё^   Ё$   Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q   Ё S   Ё D я Ё F   Ё G ╦ Ё H   Ё J ╬ Ё K   Ё L Щ Ё M   Ё%   Ё    Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈   Ё*   Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё > Ё W   Ё X   Ё C ─ Ё V   Ё B Х Ё N У Ё ? ╗ Ё . ╝ Ё / ╞ Ё ²  Ё
+   Ё < Ё     Ё     Ё     Ё     Ё     Ё     Ё , ╜ Ё ; < Ё : > Ё   ! Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, I, O, U, S, Z> (S, Z with caron)
+    Diaeresis for <A, E, I, O, U, Y, ▐, ²>
+    Acute: <'> for <A, E, I, O, U>
+
+
+* Official languages on Western Africa
+  French, Portuguese, Wolof, Mandinka, Fula, Dagbani, Gonja, Ga,  Dangbe,
+  Dagaari, Kasem, Nzema, Ewe, Twi, Badiu, Maio, Fogo, Brava, Sфo Nicolau,
+  Criol d'Soncente, Sal, Boavista and Santo Antфo.
+  Widely spoken: Dioula, Moore, Bambara, Zarma, Krio and Kanuri.
+
+  Codepage: 30025
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ▐ Ё 1   Ё 2   Ё 3   Ё 4   Ё 5 ╕ Ё 6   Ё 7   Ё 8   Ё 9   Ё 0   ЁЬ ╖ Ё+ ╙ Ё
+Ё   Ё &   Ё ┌ ~ Ё " # Ё ' { Ё ( [ Ё - | Ё ┼ ` Ё _ \ Ё ┤ ^ Ё ┘ @ Ё) ] Ё= } Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A ▓ Ё Z   Ё E ≥ Ё R Ф Ё T   Ё Y М Ё U щ Ё I ▌ Ё O ╛ Ё P   Ё"   Ё  у Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё^   Ё$ о Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q   Ё S Ш Ё D я Ё F · Ё G ╦ Ё H ╬ Ё J О Ё K   Ё L   Ё M   Ё%   Ё    Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈   Ё*   Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё > Ё W   Ё X   Ё C ─ Ё V Н Ё B Х Ё N ╜ Ё ?   Ё . ╝ Ё / ╞ Ё ²  Ё
+   Ё < Ё     Ё     Ё     Ё     Ё     Ё     Ё ,   Ё ; < Ё : > Ё   ! Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, E, I, N, O, U>
+    <^> for <A, E, I, O, U>
+    Diaeresis for <E, I, U, Y>
+    Acute: <'> for <A, E, I, O, U>
+
+* Official languages on Central Africa
+  French, Portuguese, Spanish, Swahili, Lingala, Sango, Tshiluba, Kikongo,
+  Forro, Angolar and Principense.
+
+  Codepage: 30026
+
+здддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбдддддбддддбдддд©
+Ё ▐ Ё 1   Ё 2   Ё 3   Ё 4   Ё 5 ╕ Ё 6   Ё 7   Ё 8 Н Ё 9   Ё 0   ЁЬ ╖ Ё+ ╙ Ё
+Ё   Ё &   Ё ┌ ~ Ё " # Ё ' { Ё ( [ Ё - | Ё ┼ ` Ё _ \ Ё ┤ ^ Ё ┘ @ Ё) ] Ё= } Ё
+юдддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+     Ё A ▓ Ё Z   Ё E ░ Ё R   Ё T   Ё Y   Ё U   Ё I   Ё O ╛ Ё P   Ё"   Ё° у Ё
+     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё^   Ё$ о Ё
+     юбддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддабддда©
+      Ё Q   Ё S   Ё D   Ё F   Ё G   Ё H   Ё J   Ё K   Ё L   Ё M   Ё%   ЁФ   Ё
+      Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё     Ё≈   Ё*   Ё
+   зддабддддабддддабддддабддддабддддабддддабддддабддддабддддабддддабдддадддды
+   Ё > Ё W   Ё X   Ё C ─ Ё V   Ё B   Ё N   Ё ? ╗ Ё . ╝ Ё / ╞ Ё ²  Ё
+   Ё < Ё     Ё     Ё     Ё     Ё     Ё     Ё , ╜ Ё ; < Ё : > Ё   ! Ё
+   юдддадддддадддддадддддадддддадддддадддддадддддадддддадддддаддддды
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> for <A, E, ▐, I, O, ², U>
+    Diaeresis for <A, E, I, O, U, Y>
+    Acute: <'> for <A, E, ▐, I, O, ², U>
+    Caron: <AltGr>+<┤> for <A, E, ▐, I, O, ², S, Z>

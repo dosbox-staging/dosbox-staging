@@ -1,0 +1,42 @@
+Italian keyboard - international layout ("IX")
+==============================================
+
+Linedraw, block and shade characters, the soft hyphen  and  the  non-breaking
+space characters are not available.
+
+Below is the drawing of the enhanced alphanumeric block.
+
+                 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+                 ³ <Shift>     <Shift> + <Right_Alt> ³
+                 ³ <Normal>    <Right_Alt>           ³
+                 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+* Official languages on Northern and Eastern Africa
+  French, Fula, Soninke, Wolof, Kirundi, Swahili,  Kinyarwanda,  Somali,
+  French Patois and Portuguese.
+  Widely spoken: Spanish, Italian, Dinka, Nuer, Afar, Oromo and Luganda.
+
+  Codepage: 30024
+
+ÚÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÄÂÄÄÄÄÂÄÄÄÄ¿
+³ |³ !   ³ "   ³     ³ $   ³ %   ³ &   ³ /   ³ ( ¦ ³ ) § ³ =   ³?   ³^   ³
+³  \³ 1 ­ ³ 2   ³ 3 # ³ 4   ³ 5 Õ ³ 6 ª ³ 7 { ³ 8 [ ³ 9 ] ³ 0 } ³' ¨ ³ ~ ³
+ÀÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÁÂÄÄÄÁ¿
+     ³ Q   ³ W   ³ E û ³ R   ³ T   ³ Y í ³ U   ³ I   ³ O ¬ ³ P   ³‚ { ³* } ³
+     ³   @ ³     ³     ³     ³     ³     ³     ³     ³     ³     ³Š [ ³+ ] ³
+     ÀÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÁÂÄÄÄÁ¿
+      ³ A ’ ³ S   ³ D Ñ ³ F   ³ G ¸ ³ H   ³ J   ³ K   ³ L   ³ ‡   ³ø   ³    ³
+      ³     ³     ³     ³     ³     ³     ³     ³     ³     ³ • @ ³… # ³— ` ³
+   ÚÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÄÁÂÄÄÄÁÄÄÄÄÙ
+   ³ > ³ Z   ³ X   ³ C € ³ V   ³ B è ³ N õ ³ M ¾ ³ ; ® ³ : ¯ ³  _ ³
+   ³ < ³     ³     ³     ³     ³     ³     ³     ³ , < ³ . > ³   - ³
+   ÀÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÁÄÄÄÄÄÙ
+
+    Deadkeys:
+    <`> for <A, E, I, O, U>
+    <~> for <A, N, O>
+    <^> <A, E, I, O, U, S, Z> (Caron for S, Z)
+    Acute: <'> for <A, E, I, O, U>
+    Diaeresis: <"> for <A, E, , I, O, , U, Y>
+    Underline: <Shift>+<3> for <A, I, O, >
+

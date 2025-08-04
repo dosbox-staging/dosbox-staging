@@ -67,6 +67,8 @@ The following 3rd party binaries are shipped with DOSBox Staging:
 - FreeDOS keyboard layout files in contrib/resources/freedos-keyboard are GPL-2.0 licensed;
   source code: https://gitlab.com/FreeDOS/base/keyb_lay
 
+The documentation of the binaries above is stored in the docs/FreeDOS directory.
+
 
 Individual Source File Licenses 
 -------------------------------
