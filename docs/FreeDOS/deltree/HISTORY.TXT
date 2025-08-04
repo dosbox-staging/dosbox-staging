@@ -1,0 +1,124 @@
+ VERSION LOG:
+ ============
+
+ Charles Dye (original author):
+ ------------------------------
+
+ v0.90    1998-03-13    4,086 bytes                         2C8EBD68  2C4E
+   Initial beta release.
+
+ v0.91    1998-03-15    3,900 bytes                         AFB852A6  B4A7
+   Changed two-pass parser to one-pass, removing 31-filespec limit.  Moved
+   fnbuf to uninitialized data area.
+
+ v0.92    1998-03-26    3,968 bytes
+   Allow Q for 'quit' in addition to Y and N responses.  Q will abort with
+   errorlevel 3 like Control-C or Control-Break, but will print any /V
+   summary first.  Adds version and copyright strings for Mark Aitchison's
+   VERSION.EXE program.  Includes newer address for the Free Software
+   Foundation.
+
+ v0.93    1998-03-30    3,970 bytes
+   Fixed sloppy calculations involving stack bottom and top addresses, and
+   program size.  Should not make a bit of difference in program operation.
+
+ v1.00    1998-08-05    4,042 bytes
+   Workaround for a serious issue with earlier releases of the DOS-C kernel.
+   21/4301 could convert subdirectories into files....  The filespec cleanup
+   routine now removes any duplicated backslashes from the filespec.  Syntax
+   message now mentions /D (guess I won't delete the debug code after all.)
+
+ v1.00a   1998-08-13    4,050 bytes                         0961803F  93C4
+   Fixes an incompatibility with 8086 and 8088 CPUs (logical shifts with
+   immediate count values.)
+
+ v1.01    1999-01-17    4,318 bytes                         B62CB7DF  3DBA
+   Added a safety check:  If items in the root directory are to be deleted
+   and /Y is specified, the user will be prompted anyhow.  Also, new debug
+   switch /X prevents the program from actually deleting anything.
+
+ v1.02    1999-05-19    4,220 bytes                         EB86016F  FE99
+   Fix for a problem with redirection of stdin under FreeDOS.  The Y-or-N
+   keystroke is now read using the keyboard BIOS instead of via DOS.  New
+   error handler with inline arguments makes the program slightly smaller.
+
+ v1.02a   1999-05-23    4,250 bytes                         3E1DFD07  3EFE
+   Disabled the root-safety check on removable drives.
+
+ v1.02b   1999-07-27    4,220 bytes                         6228F0D7  5149
+   Rewritten for NASM.  Fixed a trivial bug (incorrect return code when no
+   filespec specified.)  Minor bumming.  Added %defines to control assembly
+   of /Y, /V, and /D code.
+
+ v1.02c   2000-04-24    4,210 bytes                         8B60E5F5  CF56
+   Expanded the filespec buffers to 260 bytes to handle the super-long
+   pathnames permitted under Windows 95/98.
+
+ v1.02e   2003-06-22    4,478 bytes                         2186E74C  E851
+   Compile-time option to permit switches to appear anywhere on the command
+   line.  (The default behavior is still to permit switches only before the
+   first filespec, mimicking Microsoft's.)  Tweaks to the syntax text to
+   make it more informative.  /X is now documented.  All dates are now in
+   ISO format.
+
+
+ Eric Auer:
+ ----------
+
+ v1.02f   2005-04-06
+   Removed a now inappropriate bug-bug compatibility mode for old FreeDOS
+   kernels: OEM version 0fdh, CX 0 or -1, but CX 0 has to be used by NEW
+   kernels as well, to work-around a 32RTM bug. Most DOS kernels use CX 0.
+   For reference: This un-does the "DOS-C" workaround introduced in 1.00!
+   Shortened some "switches before filespecs" / GPL / error messages.
+   Found COMPILE TIME OPTIONS in 1.02e to be: Y, V, D, munga check all on,
+   arbitrary argument order off. In 1.02e deltree2: Same: V, D on, but
+   Y and munga check off. Arbitrary argument order off.
+
+
+ MR-LEGO (maintainer):
+ ---------------------
+
+ v1.02g   2013-03-30
+   - Renamed the source file from "DELTREE.S" to "DELTREE.ASM"
+   - Fixed the error in the the "ROOT-SAFETY-CHECK"-warning-message: After printing the
+     string a never ending and strange chain of characters was displayed.
+     The PC seems to be frozen. Fixed by adding a "$" at the end of the
+     "ROOT-SAFETY-CHECK"-message-string. Many thanks to Mr Eric Auer for his help!
+   - Added the call to the 'y/n/q'-prompt-message after the "ROOT-SAFETY-CHECK"-message.
+     Because it was missing.
+   - Fixed the call of the "ROOT-SAFETY-CHECK". Because this prompt was displayed
+     even the specified file or directory was not found.
+   - Added the error-message "File or Directory was not found!". If a specified file
+     or directory was not found, this message will be displayed now instead
+     of nothing. The errorlevel is set to 1 instead of 0 now.
+   - Fixed the filelist-BUG: At the end of the filelist (EOF) at least a "CARRIAGE RETURN",
+     "LINE FEED" or a "SPACE" was needed otherwise the last filename-entry wasn't
+     handled correctly.
+   - If a filelist was not found the errorlevel is set to 1 instead of 0 now.
+   - Added a check and an error-message if the specified commandline is longer than
+     126 characters. This check could be excluded. Then an alternate fix for the end of
+     the commandline buffer is included. This is necessary because commandline-processors
+     which allows more than 126 characters do exist!
+   - Removed "length-check" of reading filespec from commandline, because it gets maximal
+     126 characters from commandline and so the filespec-buffer can't be overflowed.
+   - Added the message: "DELTREE is in TEST-mode" if the "/X"-switch is given
+   - Only in the [DEFAULT-BUILD]: Added the message "DEFAULT-BUILD of DELTREE"
+   - Only in the [DEFANGED-BUILD]: Added the message "DEFANGED-BUILD of DELTREE"
+   - Only in the [DANGER-BUILD]: Added the message "DANGER-BUILD of DELTREE"     
+   - Include %ifdef ... %endif for the X-switch to exclude it if you need.
+   - Moved the complete "version log" from the source file into the file "HISTORY.TXT"
+   - Added constants for the "version-number", "date of build", "name of the maintainer"
+     and the "e-mail-address" at the begin of the source code. Now it's used instead of
+     hard coded strings in the syntax help.
+   - For a better overview, deleted lines in the source file, that are surplus now.
+   - Improvements to reduce code, take messages nicer, better overview in the source code
+   - Added the file "CONTENT.TXT" that describes the content of this package
+   - Added paths into the package-file
+   - Built and added the binary DELTREE!.COM ("DANGER-BUILD") to the package.
+     Without the "ROOT-SAFETY-CHECK"! So it's like the Microsoft-DELTREE.
+     
+     WARNING!!!
+     It's the most dangerous version of DELTREE!!! NO WARRANTY! USE IT ON YOUR OWN RISK!
+     DON'T BLAME ME FOR ANY DATALOSS AND DAMAGES!!!
+     IF YOU AREN'T SURE WHAT YOU DO, DON'T USE IT!!!

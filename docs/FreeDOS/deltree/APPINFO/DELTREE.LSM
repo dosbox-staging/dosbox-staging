@@ -1,0 +1,15 @@
+Begin3
+Title:          DELTREE
+Version:        1.02g.mrlg
+Entered-date:   2013-03-30
+Description:    Delete files and directories
+Summary:        Delete files and directories with all included files and subdirectories.
+Keywords:       freedos, delete, tree
+Author:         Charles Dye, cdye -at- unm.edu
+Maintained-by:  MR-LEGO, MR-LEGO.SW -at- web.de
+Defunct-site:   http://www.unm.edu/~cdye/
+Platforms:      DOS, FreeDOS
+Copying-policy: GNU General Public License, Version 2
+Wiki-site:      http://wiki.freedos.org/wiki/index.php/Deltree
+Modified-date:  2025-05-27.3
+End

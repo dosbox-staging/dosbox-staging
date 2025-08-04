@@ -1,0 +1,327 @@
+
+     ----------------------------------------------------------------------
+     DELTREE.COM   v1.02g  2013-03-30,   MR-LEGO,    MR-LEGO.SW -at- web.de
+        Freeware.  Copyright 1998-2003,  Charles Dye.   NO WARRANTY!
+     ----------------------------------------------------------------------
+
+                                ------------
+                                DISTRIBUTION
+                                ------------
+
+This program is licensed under the terms of the Free Software Foundation's
+GNU General Public license.  You may freely distribute it under the terms of
+version 2 of that License, or at your option, any later version thereof.
+
+You should have received a copy of the GNU General Public License with this
+program, as a file named "COPYING".  If you did not receive a copy of the
+License, one is available from:
+
+     Free Software Foundation, Inc.
+     59 Temple Place - Suite 330
+     Boston, MA  02111-1307, USA
+
+
+                                -----------
+                                DESCRIPTION
+                                -----------
+
+FreeDOS DELTREE.COM is a freeware clone of Microsoft's DELTREE.EXE, a utility for
+quickly deleting files and directories with all included files and subdirectories.
+
+DELTREE doesn't care any file attributes, it does its job even files and directories
+have read-only, hidden or system-attributes!
+
+  WARNING:  DELTREE is a very dangerous program, because it can delete your
+  ========  entire disk-drives very quickly!!!
+
+  USE IT AT YOUR OWN RISK!!!
+  I WILL NOT BE RESPONSIBLE FOR ANY LOSS OF DATA OR DAMAGE TO HARDWARE, WHETHER
+  CAUSED BY PROGRAM ERROR, PROGRAMMER ERROR OR USER ERROR!!!
+  IF YOU AREN'T SURE WHAT YOU DO, DON'T USE IT!!!
+
+DELTREE.COM is meant to be freely distributed, for the benefit of DOS users
+everywhere.  See the section "Distribution" below for the legalities.
+
+
+                               --------------
+                               GENERAL SYNTAX
+                               --------------
+
+DELTREE [/?] [/Y] [/V] [/D] [/X] filespec [filespec...] [@filelist]
+
+  /?    Show the syntax-help
+  /Y    Delete specified items without prompting.
+  /V    Report counts and totals when finished.
+  /D    Display debug info.
+  /X    For testing: Don't actually delete anything.
+
+   @    FLAG to indicate the specified file as a "DR-DOS-type" filelist.
+
+Options may be uppercase or lowercase, and may begin with a slash or a minus
+sign.  There must be at least one filespec, and there may be more than one.
+Note that any options must be specified at the start of the command line,
+before any filespecs.  This syntax is different from many DOS utilities, but
+compatible with Microsoft's DELTREE.EXE.
+
+Filespecs may name files, directories, or DR-DOS-type "filelists".  You may
+use wildcards: all matching files and directories will be targeted.
+
+Files will be deleted regardless of their attributes.  Directories will be
+deleted with all their contents.
+
+
+Switches:
+=========
+
+Unless "/Y" is not specified, DELTREE will prompt you before deleting each item
+specified on the command line.  Press [Y] to delete the item indicated, [N] to
+let it live, or [Q] or [CTRL]+[C] or [CTRL]+[BREAK] to quit DELTREE immediately.
+
+If "/Y" is specified, DELTREE doesn't prompt anything! -- WARNING! USE THIS OPTION WITH CAUTION!
+
+If "/V" is specified, DELTREE will report the total number of files deleted and
+subdirectories removed when it finishes.  If any files were deleted, the
+total of the files' sizes will also be reported in bytes and in kilobytes or
+megabytes.  The fractional part of the kilobytes or megabytes may be off by
+plus-or-minus one in the least significant digit.  The total size does not
+take cluster size into account; the amount of disk space freed may be greater
+than the size reported.
+
+If "/D" is specified, DELTREE will display additional (debug) information.
+It's the DEBUG-mode of DELTREE.
+
+If "/X" is specified, DELTREE will display all files and directories which could be deleted.
+But DELTREE doesn't delete anything! It's the TEST-mode of DELTREE.
+
+If "/?" is specified, the syntax-help will be displayed.
+
+
+DELTREE.COM:
+============
+
+[DEFAULT-BUILD] of DELTREE: Includes the "ROOT-SAFETY-CHECK". If you call DELTREE with
+"/Y"-switch in the root-directory of a non-removal drive, for each delete action a
+warning-message is displayed and you always have to prompt it.
+
+
+DELTREE2.COM:
+=============
+
+[DEFANGED-BUILD]: The "/Y"-switch will be ignored, you will always asked before
+deleting anything. So it's the safest build of DELTREE.
+
+
+DELTREE!.COM:
+=============
+
+[DANGER-BUILD]: Without the "ROOT-SAFETY-CHECK"! So it's like the Microsoft-DELTREE.
+     
+WARNING!!!
+It's the most dangerous version of DELTREE!!! NO WARRANTY! USE IT ON YOUR OWN RISK!
+DON'T BLAME ME FOR ANY DATALOSS AND DAMAGES!!!
+IF YOU AREN'T SURE WHAT YOU DO, DON'T USE IT!!!
+
+
+                           ----------------------
+                           DR-DOS-type "filelist"
+                           ----------------------
+
+A "filelist" is a text file containing filespecs, one per line. If you have a list of items
+to be deleted in a file FILELIST.TXT, type: 
+						DELTREE @FILELIST.TXT
+
+(Note that the "@"-sign is not part of the filename, just a flag to indicate a
+file list.)
+
+
+Examples of a "filelist":
+=========================
+
+Example 1:
+----------
+
+123.txt
+abc.doc
+NOP.PNG
+
+
+Example 2:
+----------
+
+123.txt abc.doc NOP.PNG
+
+
+If you want to comment your filelists, comments have to start with a ";"-sign:
+
+
+Example 3:
+----------
+
+;This is a filelist example
+123.txt ;Example file
+
+
+If you want to delete a file or directory beginning with an "@"-sign,
+enclose the name in quotes:
+				DELTREE "@FILELIST.TXT"
+
+
+                             ------------------
+                             ERRORLEVEL RETURNS
+                             ------------------
+
+               00   Success. All is well.
+               01   Something could not be deleted or a filelist could not be opened.
+               03   User abort ([Q] or [CONTROL]+[C] or [CONTROL]+[BREAK] was pressed.).
+               16   General syntax error, or buffer overflow
+               17   Not enough memory
+               18   DOS 3.0 or better required.
+               19   Problem with filelist
+               20   Internal buffer overflow
+               21   Error resolving directory name (dots_fix)
+
+
+               ----------------------------------------------
+               INCOMPATIBILITIES WITH MICROSOFT'S DELTREE.EXE
+               ----------------------------------------------
+
+This section contains technical trivia.  Most users can ignore it.
+
+These are the known differences between Microsoft's DELTREE.EXE (I'll just
+call it MS's) and my own DELTREE.COM (which I'll call "mine") :
+
+Mine will offer an additional safety prompt if items in the root directory of
+a non-removable drive are to be deleted and /Y was specified.  This is a
+deliberate incompatibility with Microsoft's utility.  There is no option to
+disable this check; you must reassemble the program if you wish to remove it.
+See the customization section below.
+
+MS's DELTREE, as far as I can tell, does no error checking at all!  According
+to HELP, DELTREE returns Errorlevel 0 for success -- and there are no other
+return codes.  Even if you do totally foolish things like DELTREE CLOCK$ or
+trying to remove the current directory, MS's utility reports success.  Mine
+will check for failures, and print an error message if something doesn't
+work.  Mine also returns different documented Errorlevel codes.
+
+Mine will complain if a specified file or directory was not found. Microsoft's utility
+doesn't do it!
+
+MS's will sometimes call a directory a file.  Specifically, this happens when
+you delete a directory with any attributes set.  MS's utility will still
+delete the directory correctly, but this bug may confuse users.  The error
+appears to have been fixed in the Win95 version of DELTREE, and I don't
+emulate it in mine.
+
+MS's does not deal gracefully with I/O redirection when /Y is not specified.
+Redirecting STDOUT makes the prompts invisible, and redirecting STDIN keeps
+them from working altogether.  Mine disallows I/O redirection if /Y is not
+specified (maps STDIN and STDOUT back to the console for user interaction.)
+
+Mine accepts DR DOS-style file lists.  MS's does not.  If you want to delete
+a file or directory beginning with an "@"-sign, enclose the name in quotes:
+DELTREE "@FILELIST.TXT"  -- this syntax is legal for both MS's and mine.
+
+MS's will try to delete character devices, and happily assume success.  Mine
+will ignore device names.
+
+MS's may display relative filenames (like "foo" or "..\subdir")  Mine will
+always display absolute filenames ("c:\bin\a86\foo" or "a:\subdir")
+
+MS's allows you to enclose options in quotes (huh?)  So DELTREE "-Y" FOO
+will delete FOO without prompting.  Mine interprets anything inside quotes as
+a filename, so DELTREE "-Y" FOO will prompt you before deleting -Y and FOO.
+
+MS's does not support /V /D or /X.
+
+Mine is smaller, and has a different filename (.COM versus .EXE)  If you keep
+both utilities in the same directory, typing the command DELTREE (with no
+extension) will start my DELTREE instead of Microsoft's.
+
+MS's supports long filenames under Windows.  Mine does not.
+
+If you're writing a batch file that needs to be compatible with MS-DOS
+DELTREE, check the following:  Don't use file lists, /V /D or /X.  Don't
+rely on Errorlevel.  Don't redirect output unless you specify /Y.  Don't
+ever redirect input.
+
+
+                              --------------------
+                              CUSTOMIZATION BUILDS
+                              --------------------
+
+The source file DELTREE.ASM contains a few definitions to make it easier to
+remove certain options or behaviors.  Comment these out (i.e. place a
+semicolon at the start of the line before the respective %define) and
+reassemble with the command: NASM DELTREE.ASM -O DELTREE.COM
+
+-- Removing this --           -- Does this --
+%define Enable_Sw_Y           removes the /Y option: suppress the delete-prompt
+%define Enable_Sw_V           removes the /V option: code and strings of the delete-report
+%define Enable_Sw_D           removes the /D option: code and strings of the DEBUG-mode
+%define Enable_Sw_X           removes the /X option: code and strings of the TEST-mode
+%define MungaBunga            removes the code and strings of the"ROOT-SAFETY-CHECK"
+%define CMDLength	      removes the code and strings of the commandline-length-check
+%define SwitchesOnlyAtStart   allows options after filespecs
+
+
+                           ---------------------------
+                           SUNDRIES, CREDITS & CONTACT
+                           ---------------------------
+
+Charles Dye (original author):	cdye -at- unm.edu		http://www.unm.edu/~cdye/
+
+Eric Auer:			e.auer -at- jpberlin.de
+
+MR-LEGO (new maintainer):  	MR-LEGO.SW -at- web.de
+
+
+If you find a bug or you have a question please contact me at:	  MR-LEGO.SW -at- web.de
+
+
+This program was originally created using Eric Isaacson's shareware assembler
+A86.
+
+Current versions are assembled using the Netwide Assembler, available from:
+	http://nasm.sourceforge.net/
+
+I compress the binaries in the distribution using UPX.  Visit:
+	http://upx.sourceforge.net/
+
+Tom Dalton suggested including a "DEFANGED-BUILD" (DELTREE2.COM) in the
+archive. The /Y -switch is ignored by DELTREE2.COM!
+
+
+                                -----------
+                                WHAT'S NEW?
+                                -----------
+
+The complete version log and history you can find in the file "HISTORY.TXT"!
+
+1.02g   2013-03-30    MR-LEGO (maintainer):
+		      ---------------------
+		      - Several BUGs fixed in the "ROOT-SAFETY-CHECK".
+		      - BUG fixed in the filelist handling.
+		      - Added a message, if a specified file or directory was not found.
+		      - Added a message: "DELTREE is in TEST-mode" if the "/X"-switch is set.
+		      - Added a message which BUILD of DELTREE is used.
+		      - Added a check if the specified commandline is longer than
+		        126 characters.
+		      - Added the binary DELTREE!.COM ("DANGER-BUILD") to the package.
+			Without "ROOT-SAFETY-CHECK"! NO WARRANTY! USE IT ON YOUR OWN RISK!
+
+1.02f   2005-04-06    Eric Auer:
+		      ----------
+		      - Removed now inappropriate "old FreeDOS kernel" support.
+
+1.02e   2003-06-22    Charles Dye (original author):
+		      ------------------------------
+		      4,478 bytes                              2186E74C  E851
+
+		      - Added a compile-time option to permit options to appear anywhere on the
+		        command line.  (The default behavior still mimics Microsoft's.)
+		      - Tweaks to the syntax text; the requirement for options to come before
+		        filespecs is more clearly explained (unless this requirement has been
+		        removed.)
+		      - All options are explicitly listed in the syntax text,
+		        including the formerly neglected /X.
+		      - All dates are now in ISO format.
