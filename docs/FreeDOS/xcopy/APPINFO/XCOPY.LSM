@@ -1,0 +1,15 @@
+Begin3
+Title:                  XCopy
+Version:                1.9a
+Entered-date:           2025-04-07
+Description:            Copies files and directory trees
+Keywords:               freedos, copy, xcopy, kitten
+Author:                 Rene Ableidinger <rene.ableidinger@gmx.at>
+Maintained-by:          FreeDOS developers
+Primary-site:           https://github.com/FDOS/xcopy
+Platforms:              DOS
+Copying-policy:         GNU General Public License, Version 2
+Defunct-Alternate-Site: http://www.coli.uni-saarland.de/~eric/stuff/soft/by-others/
+Defunct-Wiki-Site:      http://wiki.freedos.org/wiki/index.php/XCopy
+Summary: Copies files and directory trees.
+End

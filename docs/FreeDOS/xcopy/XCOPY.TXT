@@ -1,0 +1,103 @@
+FreeDOS XCOPY command version 1.9
+---------------------------------
+Copies files and directory trees.
+
+XCOPY source [destination] [/switches]
+
+  source       Specifies the directory and/or name of file(s) to copy.
+  destination  Specifies the location and/or name of new file(s).
+  /A           Copies only files with the archive attribute set and doesn't
+               change the attribute.
+  /C           Continues copying even if errors occur.
+  /D[:M/D/Y]   Copies only files which have been changed on or after the
+               specified date. When no date is specified, only files which are
+               newer than existing destination files will be copied.
+  /E           Copies any subdirectories, even if empty.
+  /F           Display full source and destination name.
+  /H           Copies hidden and system files as well as unprotected files.
+  /I           If destination does not exist and copying more than one file,
+               assume destination is a directory.
+  /L           List files without copying them. (simulates copying)
+  /M           Copies only files with the archive attribute set and turns off
+               the archive attribute of the source files after copying them.
+  /N           Suppresses prompting to confirm you want to overwrite an
+               existing destination file and skips these files.
+  /P           Prompts for confirmation before creating each destination file.
+  /Q           Quiet mode, don't show copied filenames.
+  /R           Overwrite read-only files as well as unprotected files.
+  /S           Copies directories and subdirectories except empty ones.
+  /T           Creates directory tree without copying files. Empty directories
+               will not be copied. To copy them add switch /E.
+  /V           Verifies each new file.
+  /W           Waits for a keypress before beginning.
+  /Y           Suppresses prompting to confirm you want to overwrite an
+               existing destination file and overwrites these files.
+  /-Y          Causes prompting to confirm you want to overwrite an existing
+               destination file.
+
+The switch /Y or /N may be preset in the COPYCMD environment variable.
+This may be overridden with /-Y on the command line.
+
+
+Exit codes
+----------
+ 0   No error
+     XCOPY successfully copied the files.
+ 1   File not found
+     XCOPY could not find the source file(s).
+ 4   Path not found
+     XCOPY could not find the source or destination path.
+     Format invalid
+     The user used the wrong syntax on the command line.
+ 5   Access denied
+     The user does not have access to the source or destination files.
+ 8   Insufficient memory
+     There is insufficient system memory to carry out the command.
+     (Not implemented because not possible to handle in a high level
+     language like C!)
+29   Write fault
+     XCOPY could not write a destination file or directory.
+30   Read fault
+     XCOPY could not read a source file.
+39   Insufficient disk space
+     There is insufficient disk space in the destination path.
+
+
+Compiling the source code
+-------------------------
+Compiling the source code is possible with the following compilers:
+- Borland C++ (tm) 3.0 or higher
+- Borland Turbo C++ (tm) 3.0 or higher
+Version 1.2 and newer can also be compiled with the now freeware
+- Borland Turbo C 2.01 compiler :-)
+Version 1.5 and newer
+- Open Watcom C/C++ 1.9/2.0pre (includes portions of tcc2wat)
+
+Reporting bugs and questions
+----------------------------
+Please email FreeDOS mailing list for questions and comments
+Or create an issue on GitHub at https://github.com/FDOS/xcopy or
+fill a bug report on FreeDOS home at https://www.freedos.org/bugs/
+
+Contacting the author
+---------------------
+e-mail address: rene.ableidinger@gmx.at
+
+
+Copyright
+---------
+(C)opyright 2001 by Rene Ableidinger
+(with patches 2005: Eric Auer
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin St, Fifth Floor, Boston, MA 02110, USA
