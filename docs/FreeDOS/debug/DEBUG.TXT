@@ -1,0 +1,1222 @@
+
+ Contents
+
+  1. About
+  2. DEBUG command line
+  3. DEBUG commands
+  4. Format of Displays by Trace, Proceed, Register Commands
+  5. Unassemble Format
+  6. Instruction Operands
+  7. DEBUG Statements in Assembly Mode
+  8. Debugging with DebugX
+  9. Installing and Initializing DebugB
+ 10. DebugR Basics
+ 11. DEBUG Scripts
+
+
+ 1. About
+ --------
+
+ This text is based upon a "quick and dirty DEBUG tutorial", written
+ by Michael Webster 2004, Public Domain.
+
+ Note: MS-Debug means the original Debug written by Microsoft.
+       DebugX   means all DebugX variants (DebugX, DebugXv, ...).
+       Debug/X  means the "clone" variants (both Debug and DebugX).
+       DEBUG    means both MS-Debug and Debug/X.
+       Enhancements for Debug/X are marked: [ENH:...].
+
+ MS-Debug was developed originally by Tim Paterson as a tool to aid in
+ his development of the 16-bit x86 OS that eventually became MS-DOS
+ Version 1.0
+
+ A version of MS-Debug was included with every version of MS-DOS (and
+ PC-DOS, Compaq DOS, etc) and with every version of Windows through
+ Windows XP.
+
+ DEBUG supports the 8086/8088 and 8087 registers and instruction sets.
+
+ [ENH: Debug/X supports the 80386 registers and instruction sets
+ up to the Pentium Pro, including Floating Point instructions. The MMX
+ instruction set is missing, however. It is planned - and partially 
+ implemented - for DebugX].
+
+
+ 2. DEBUG command line
+ ---------------------
+
+ For the version of MS-Debug that is included with Windows 98 SE, the
+ command line "DEBUG /?" returns:
+
+   Runs Debug, a program testing and editing tool.
+
+   DEBUG [option] [[drive:][path]filename [testfile-parameters]]
+
+    [drive:][path]filename Specifies the file you want to test.
+    testfile-parameters    Specifies command-line information required
+                           by the file you want to test.
+
+   options are:
+    /? : display cmdline format help.
+
+[ENH:
+ DebugX accepts these additional options:
+  /2 : use an alternate (monochrome) adapter if available.
+  /s : debugger won't use hardware breakpoints.
+  /v : debugger may use hardware breakpoints even in v86-mode.
+ DebugR(L|V) accepts these additional options:
+  /m : don't assume exceptions and IRQ0-7 do overlap.
+ DebugRV accepts this additional option:
+  /b : assume v86-monitor bp is ARPL (default is HLT).
+]
+
+
+ 3. DEBUG commands
+ -----------------
+
+ 3.1 Command Mode & Command Prompt 
+
+ This section deals with the commands that DEBUG recognizes
+ while in command mode. Command mode, indicated by the presence of the
+ DEBUG command prompt (a hyphen), is the mode that DEBUG starts in.
+
+ [ENH:
+  Debug/X changes the command prompt if the debuggee has been stopped
+ inside DOS - a '!' will precede the default prompt ('!-' instead of
+ just '-'). DebugX changes the prompt to '#' if debuggee is in protected-
+ mode. Prompt '!#', which means "inside DOS" AND "in protected-mode",
+ is also possible, if the debuggee has been stopped in a so-called
+ DPMI real-mode callback that's called from inside DOS.
+
+  The DebugR variants don't "know" about DOS and hence there's never a 
+ '!' prompt prefix. In protected-mode, a '#' prompt is displayed, just
+ like DebugX does. DebugRV, however, also supports v86-mode - and will
+ change the prompt to '>' if this mode is active.
+ ]
+
+ For the more recent versions of DEBUG, you can cause DEBUG to display
+ a list of the commands and their parameters by entering a "?" at the
+ DEBUG command prompt.
+
+
+ 3.2 Initial Values of CPU Register Variables
+
+ DEBUG maintains a set of variables that it uses to store a target
+ program's CPU registers. DEBUG initializes these variables each time
+ it is started. The variables for the AX, DX, BP, SI, and DI registers
+ are set to 0. If a target program or other file is loaded, the
+ variables for the BX and CX registers are set to the size of the
+ program or file. Otherwise, the variables for the BX and CX registers
+ are set to 0. If a target program is loaded, the variables for the
+ segment, IP, and SP registers are set to values appropriate for the
+ loaded program. Otherwise, the variables for the segment registers
+ are set to the segment address of the area of memory that DEBUG uses
+ to store the output from the Assemble command, the variable for IP
+ is set to 100h, and the variable for SP is set to FFFEh.
+
+ [ENH: Debug/X supports the 32bit registers introduced with 
+  the 80386. The high-words of these registers are initialized to zero
+  on program start.]
+
+ Note that any DEBUG command that accepts a CPU register as a parameter
+ is actually using one of these variables. For the remainder of this
+ section, all register names refer to the associated variable.
+
+
+ 3.3 Entering Addresses and Ranges
+
+  An address consists of a segment and an offset part, separated by a
+ colon (:). The segment part may be omitted - then a default value is
+ assumed, either CS or DS, depending on the context.
+  For the commands that accept a range parameter, the parameter can be
+ used to specify a starting address, or a starting and ending address,
+ or a starting address and a length. To differentiate a length
+ parameter from an ending address, the length parameter must be
+ preceded with an "L". The starting address parameter can include a
+ segment register or a segment address constant, separated from the
+ offset address with a colon. Some examples using the Dump command:
+
+ -D 0
+ -D CS:0
+ -D F000:FFF6
+ -D 0 F
+ -D DS:100 102
+ -D SS:20 L 4
+
+ Note that DEBUG recognizes only hex numbers (without a trailing "H").
+
+ [ENH:
+ If debuggee is in protected-mode, the segment part of an address is
+ a selector. If the selector has a limit beyond 64k, the offset parts
+ of the starting and ending address - as well as the length - can be
+ 32bit. Examples:
+
+ #D DS:110000 110FFF
+ #D CS:400000 L 20000
+
+ Segment modifiers '$' and '#': For the variants that may handle both
+ real-mode and protected-mode, those modifiers are implemented to make
+ the debugger change its segment interpretation:
+ 
+ '$'-modifier:
+
+ DebugX: if debuggee is in protected-mode, a '$' before the segment part
+ will tell DebugX to interpret the address as a real-mode address. However,
+ this should be used sparsely, since DPMI function 0002 is used to convert
+ the segment - the selector returned cannot be released anymore.
+
+ DebugR: the '$' modifier is accepted for commands 'a' and 'u' only.
+
+ '#'-modifier:
+ 
+ DebugRV: if debuggee is in v86-mode, a '#' just before the segment part
+ of an address will tell DebugRV to interpret the segment as a selector.
+
+ Offset modfifier '%':
+
+ DebugR: if an address is entered without segment part, prefix '%' will
+ tell the debugger to interpret the offset value as linear address.
+ ]
+
+ ---
+
+ The Assemble command (A) is used to enter assembly mode. In assembly
+ mode, DEBUG prompts for each assembly language statement and converts
+ the statement into machine code that is then stored in memory. The
+ optional start address specifies the address at which to assemble the
+ first instruction. The default start address is 100h. A blank line
+ entered at the prompt causes DEBUG to exit assembly mode.
+
+ Syntax: A [address]
+
+ ---
+[ENH:
+  The Breakpoint commands (BP/BC) are activated for DebugB, DebugXg, DebugXv
+ and DebugR(L|V); optionally they may be activated for all Debug variants.
+ The commands use the 80386+ debug capabilities to set up to 4 "permanent"
+ breakpoints. If not all 4 are used, the rest may be used internally by the
+ G, T and P commands to set temporary breakpoints.
+  The feature is not available on all platforms - on NT platforms and DosEmu,
+ it's generally inactive. As a rule of thumb one can say that if DOS is running
+ on emulators, the debug registers are NOT available, while on virtualizers
+ they usually are. So to be sure, debug register usage may be switched off by
+ cmdline option /s. Else it will be active in protected-mode and real-mode; in
+ v86-mode, however, the feature isn't active as default, since support of the
+ v86 monitor programs may be unreliable. To make the debugger use it even then,
+ cmdline option /v is supplied.
+  Without argument, BP will display the currently active breakpoints. Although
+ the breakpoints may be entered in the usual format ( segment:offset ), they
+ are stored internally just as linear addresses, and so BP will display this
+ linear address only.
+
+ Syntax: BP [[address] type]
+
+ The type argument is a byte value, actually a field of bits: __SS__TT;
+ bits 0-1 define the breakpoint's type and translate to:
+
+  0 code breakpoint
+  1 write watchpoint
+  2 I/O watchpoint ( not specified by DPMI v0.9/v1.0 )
+  3 read/write watchpoint
+
+ while bits 4-5 set the size ( watchpoints only ):
+
+  0 byte access
+  1 word access
+  3 dword access
+
+ Bits 2-3 and 6-7 are ignored and masked out.
+  If no type argument is given, a code breakpoint is assumed. Note that I/O
+ watchpoints may be rejected by the DPMI host; in any case they require
+ bit DE to be set in register CR4.
+  To be able to continue the program after a breakpoint has been hit (without
+ to clear the breakpoint), the debugger will set the Resume flag ( bit 16 in
+ the EFlags register ). Be aware that not all DPMI hosts will reliably preserve
+ that flag when an interrupt occurs, thus making it appear as if the program
+ cannot continue.
+
+ ---
+
+ Command BC is used to clear a previously set breakpoint.
+ 
+ Syntax: BC bp#
+
+ ---]
+
+ The Compare command (C) compares two memory regions. All differences will be
+ listed, both addresses are displayed, with their respective data bytes.
+ Note that the default for the segment part of both range and address is DS.
+ Example:
+
+ -C 0100 l 2 0200
+ 1234:0100  E9  65  1234:0200
+ 1234:0101  01  02  1234:0201
+
+ Syntax: C range address
+
+ ---
+
+ The Dump command (D), when used without a parameter, causes DEBUG
+ to display the contents of the 128-byte block of memory starting at
+ CS:IP if a target program is loaded, or starting at CS:100h if no
+ target program is loaded. The optional range parameter can be used
+ to specify a starting address, or a starting and ending address, or
+ a starting address and a length. Subsequent Dump commands without a
+ parameter cause DEBUG to display the contents of the 128-byte block
+ of memory following the block displayed by the previous Dump command.
+
+ [ENH: there is a autorepeat function implemented for D. If the last
+  command entered was Dump, pressing a single ENTER will count as a
+  subsequent Dump command.]
+
+ Syntax: D [range]
+
+ [ENH:
+ ---
+
+ DebugR(L/V) only: the Dump GDT (DG) command displays the GDT.
+ 
+ Syntax: DG selector [count]
+
+ ---
+
+ The Dump Interrupt (DI) command displays interrupt vectors (DebugX/
+ DebugR(L/V) only).
+ 
+ DebugX: the format depends on the current mode. In real/v86-mode, it's
+ the interrupt vector table (IVT) that is displayed. In protected-mode, it's
+ the (virtual) IDT and the exception vectors that are displayed.
+
+  -DI 0     ; Interrupt 00 in real-mode:
+  00 02F8:03F8
+
+  #DI 8 4   ; Interrupt and exception vectors 08-0B in 32bit protected-mode:
+  08 00C7:00000D28 00C7:00001228
+  09 00C7:00000D2D 00C7:0000122D
+  0A 00C7:00000D32 00C7:00001232
+  0B 00C7:00000D37 00C7:00001237
+
+ DebugR(L): the (real) IDT is displayed.
+
+  #DI 10 2  ; IDT vectors 10-11
+  10 0008:00110338 at=EE00
+  11 0008:00110340 at=EE00
+
+ DebugRV: besides the IDT, the IVT vector is displayed.
+ 
+  #DI 10 2  ; IDT and IVT vectors 10-11
+  10 0008:00110338 at=EE00 iv=C000:1234
+  11 0008:00110340 at=EE00 iv=0123:0023
+
+ Syntax: DI vector [count]
+
+ ---
+
+ The Dump LDT descriptor (DL) command displays LDT descriptors (DebugX/
+ DebugR(L/V) only). Example:
+
+ #dl 84 2
+ 0084 base=00110800 limit=0000014F attr=00F2
+ 008C base=00110000 limit=000007FF attr=00F3
+
+ DebugX: DL can also be used to display limit and attributes of those GDT 
+ descriptors which are accessible by the client. Example:
+
+ #dl 18 3
+ 0018 base=???????? limit=FFFFFFFF attr=CFFB
+ 0020 base=???????? limit=FFFFFFFF attr=CFF3
+ 0028 base=???????? limit=???????? attr=????
+
+ DebugR(L/V): call gates in LDT are displayed in gate format.
+
+ Syntax: DL selector [count]
+
+ ---
+
+ The Dump MCBs (DM) command displays the current DOS PSP and the DOS
+ Memory Control Block (MCB) chain.
+ Example:
+
+ PSP:1A27
+ 0219 4D 0008 04D6 SD
+ 06F0 4D 06F1 00BA COMMAND
+ 07AB 4D 0000 0007 
+ 07B3 4D 06F1 0047 COMMAND
+ 07FB 4D 0000 0039 
+ ...
+
+ First value is the segment address of the MCB, followed by 4D/5A, the
+ owner and size of the MCB and finally the 8-byte name of the owner.
+ An owner of 0000 means that this MCB describes a free memory block.
+
+ Syntax: DM
+
+ ---
+
+ DebugR(L|V) only: The Dump Task State Segment (DT) command displays some
+ information of the current TSS: the TR register, the ring0 SS:ESP and the
+ address of the IO Permission Bitmap (IOPB). Optionally, one may display ports
+ that are trapped if the debuggee is either in V86-mode or in non-priviledged
+ protected mode and IOPL is 0.
+
+ Syntax: DT [port count]
+
+ ---
+
+ The Dump eXtended memory command (DX) allows to examine the full range of
+ memory (DebugX only). It uses interrupt 15h, AH=87h for extended memory
+ access. It should be noted that, when running under a Expanded Memory
+ Manager (EMM), Interrupt 15h, AH=87h behaves slightly inconsistent:
+ addresses below 110000h are regarded as linear, while addresses >= 110000h
+ are regarded as physical.
+
+ Inside a Windows "DOS-Box", or other virtual DOS VMs, interrupt 15, AH=87h
+ is emulated only, that is, what is displayed usually hasn't much to do with
+ physical addresses. And there's a good "chance" that when an "invalid"
+ address is entered, the VM is instantly closed "abnormally".
+
+ Syntax: DX [address]
+ ]
+ ---
+
+ The Enter command (E) is used to enter data into memory. The required
+ address parameter specifies the starting location at which to enter
+ the data. If the address parameter does not specify a segment, DEBUG
+ uses DS. If the optional list parameter is not included, DEBUG
+ displays the byte value at the specified address and prompts for a
+ new value. The spacebar or minus key can be used to move to the next
+ or previous byte. Pressing the Enter key without entering a value
+ terminates the command. If the list parameter is included, it can
+ contain up to 8 byte values separated by spaces, commas, or tabs,
+ and/or a case significant string enclosed in single or double quotes.
+
+ Examples:
+
+ -E 100 01 02 03
+ -E 100 'ABC'
+ -E 100 'ABC' 0
+
+ Syntax: E address [list]
+
+ ---
+
+ The Fill command (F) fills a memory regions with a byte pattern.
+ To fill for example the first 8000h bytes of current data segment
+ with pattern 55 AA, enter:
+
+ -F 0 L 8000 55 AA
+
+ Syntax: F range list
+
+ ---
+
+ The Go command (G), when used without a parameter, causes DEBUG to
+ copy the contents of the register variables to the actual CPU
+ registers and effectively jump to the instruction at CS:IP, giving
+ full control to the program being debugged. DEBUG will reassert
+ control when the program terminates normally, a debug exception
+ (exception 01) or a hard-coded breakpoint (INT 03) is reached.
+  The optional address parameter can be used to specify the starting
+ address. The optional breakpoint list can be used to specify up to
+ 10 temporary breakpoint addresses. To differentiate the address 
+ parameter from the breakpoint list, the address parameter must be
+ preceded with an "=". Note that the breakpoint addresses must coincide
+ with the start of a valid instruction. To resume execution after a
+ breakpoint, use the Go command without a parameter.
+
+ Syntax: G [=address] [break0 break1...]
+
+ [ENH: Debug/X will additionally gain control in all modes if an
+ exception 00 (divide error) occurs. DebugX will additionally gain
+ control if exceptions 0Ch, 0Dh or 0Eh occur in protected-mode. Be
+ aware, however, that Debug/X doesn't check if the debuggee modifies
+ any of those vectors on its own - if this is the case, the debugger
+ won't be notified.
+  If available, DebugX will use debug watchpoints to set breakpoints.
+ This feature may be generally switched off by the /s cmdline option; on
+ Windows NT platforms and DosEmu it's always off. If enabled, it should
+ always work in real-mode; in protected-mode it has to be supported by
+ the DPMI host; in v86-mode, it's inactive, but may be explicitely switched
+ on by cmdline option /v.
+  Finally, Debug/X accepts more than 10 temporary breakpoints - they're
+ limited just by the max. line length.
+ ]
+ ---
+
+ The Hex command (H) computes the sum and difference of two hex
+ numbers.
+
+ Syntax: H value1 value2
+
+ [ENH: MS-Debug will handle WORD values only, Debug/X will accept
+  DWORD values.]
+
+ ---
+
+ The Input command (I) causes DEBUG to read and display the value
+ from the 8-bit I/O port specified by the required port parameter.
+
+ Syntax: I port
+
+ [ENH: besides I there exists IW/ID to read a WORD/DWORD from
+  a 16-bit/32-bit port. ID is available on machines with a 80386+ cpu
+  only.]
+
+ ---
+
+ The Load command (L) is used to load a file into memory. The file to
+ load is specified with the Name command (N). The optional address
+ parameter specifies the load address. The default load address is
+ CS:100 for all files other than EXE files, for which information in
+ the file header determines the load address. After DEBUG loads the
+ file it sets BX:CX to the file size in bytes.
+  A load address can be specified if the file extension is not .COM
+ or .EXE. Note that if a debuggee is active when a L command is about
+ to run, and the file extension is .COM/.EXE, the debuggee will be
+ terminated.
+
+ Syntax: L [address]
+
+ The Load command can also be used to load one or more logical sectors
+ from a disk drive into DEBUG's memory. The drive should be specified
+ as 0=A, 1=B, 2=C etc.
+
+ Syntax: L address drive startsector numberofsectors
+
+ [ENH: L with logical sectors on Windows XP will work for DebugX only
+  and requires a socalled VDD (Virtual DOS Driver) named DEBXXVDD.DLL
+  to be loaded.
+   While in protected-mode, loading non-program files is rejected;
+  if sectors are to be loaded, DEBUG will accept the command only if a
+  DOS extender is active.
+ ]
+ ---
+
+ The Move command (M) copies a memory region to another location. If
+ source and destination overlap, parts of the source will be overwritten.
+ Note that the default for the segment part of both range and address is DS.
+
+ Syntax: M range address
+
+ [ENH:
+  if M is entered without - or with one - argument, it is regarded as 'Mode'
+ command, which displays - or sets - the current CPU mode.
+
+ Syntax: M [mode]
+
+ 'mode' is 0 for a 8086/8088, 1 for a 80186, ... 6 for a 80686 (Pentium=80586,
+ Pentium Pro=80686).
+
+ ---
+
+ The MC command allows to set the FPU mode. This is for the A and D 
+ commands only. To display the current FPU mode, use the M command.
+
+ Syntax: MC [N|2]
+
+ MC without argument will enable and MC N will disable the FPU. MC 2 will
+ set the FPU to 80287 - this is accepted only if the current cpu is a 80386.
+ ]
+ ---
+
+ The Name command (N) is used to input a filename (actually, a file
+ specification that can include a drive and a path) for a subsequent
+ Load or Write command. Because the Name command uses the simulated 
+ PSP as a buffer, it can also be used to enter command line arguments
+ and/or switches for the program being debugged.
+
+ Be aware that the N command alters the value of the AX register, even
+ if entered without arguments. Also, Debug converts the input to uppercase,
+ and the size of filespec + arguments is limited to 79 characters.
+
+ Syntax: N filespec [arguments]
+
+ [ENH: Debug/X allows 126 characters for filespec + arguments. The input
+ buffer is larger, but anything entered beyond char 126 is truncated.
+  Generally, Debug/X's N cmd works a bit differently than MS Debug's: the
+ command modifies the debugger's PSP only. The command tail is copied
+ by DOS to the debuggee's PSP when DOS function "load program" is executed.
+ If a file with an extension other than .COM or .EXE is loaded, the
+ command tail won't be copied.
+ ]
+ ---
+
+ The Output command (O) causes DEBUG to write the byte specified by
+ the required byte parameter to the 8-bit I/O port specified by the
+ required port parameter (O port byte)
+
+ Syntax: O port byte
+
+ [ENH: besides O there exists OW/OD to write a WORD/DWORD to
+  a 16-bit/32-bit port. OD is available on machines with a 80386+ cpu
+  only.]
+
+ ---
+
+ The Proceed command (P) functions like the Trace command (T) for all
+ instructions other than the repeat (REP) string, LOOP, procedure
+ CALL, and interrupt call (INT) instructions. For a repeat string
+ instruction, DEBUG executes the instruction to completion. For a
+ LOOP instruction, DEBUG executes the entire loop to completion.
+ For a procedure CALL or an interrupt call instruction, DEBUG
+ executes the entire call up to and including the return instruction.
+ After execution is complete, DEBUG continues as it does for the
+ Trace command.
+
+ Syntax: P [=address] [number]
+
+ [DebugX: see the remark at the T(race) command about DebugX's possible
+  usage of the 80386 debug registers in protected-mode and real-mode. As
+  for regaining control, see the remarks at the G(o) command.
+ ]
+
+ ---
+
+ The Quit command (Q) should be a no-brainer.
+
+ Syntax: Q
+
+ [DebugX: If the debuggee is in protected-mode ( indicated by the
+  '#' prompt ), Q will just make the debuggee to terminate and
+  leave protected-mode. DebugX's real-mode prompt '-' should then
+  appear. Entering 'q' again should now quit the debugger.
+   If 'Q' doesn't leave protected-mode, then there's a problem
+  with the debuggee or the DPMI host. In this case command variant
+  'QQ' may be tried. It forces an exit, although it might prevent
+  the debuggee from doing protected-mode clean-up work.
+
+   Note: Once a DPMI client program has done an initial switch to
+  protected-mode, it must be terminated by an int 21h, ah=4Ch call
+  in this mode. If the debugger becomes active in real-mode while
+  the debuggee is still running in protected-mode, the Q command
+  should not be used, since the DPMI host won't be able to do the
+  necessary clean-up work.
+ ]
+ ---
+
+ The Register command (R), when used without a parameter, causes
+ DEBUG to display the contents of the target program's CPU registers.
+ The optional register parameter will cause DEBUG to display the
+ contents of the register and prompt for a new value. When DEBUG
+ displays the contents of the registers, it encodes the processor
+ flags as follows:
+
+    Flag              Set   Clear
+    -----------------------------
+    Overflow          OV    NV
+    Direction         DN    UP
+    Interrupt         EI    DI
+    Sign              NG    PL
+    Zero              ZR    NZ
+    Auxiliary Carry   AC    NA
+    Parity            PE    PO
+    Carry             CY    NC
+
+ Syntax: R [register]
+
+ [ENH: if the register argument is given, it can be immediately
+  followed by the new value . No prompt will appear then.
+
+ Syntax: R [register] [value]
+
+ The processor flags can be changed in two ways. The first syntax changes
+ individual flags:
+
+ -R F [OV|NV|DN|UP|EI|DI|NG|PL|ZR|NZ|AC|NA|PE|PO|CY|NC]
+
+ the other syntax will set the [E]FL register:
+
+ -R [E]FL <[d]word value>
+
+ ---
+
+ DebugX only: The RM command displays MMX registers.
+ The content is displayed from low to high bytes!
+
+ Syntax: RM
+
+ ---
+
+ The RN command display the content of the floating point registers. DebugX
+ renders the content of these registers in "readable" floating point format,
+ DEBUG displays the content in raw hex format (because the rendering code
+ requires quite some space and DEBUG is intended to be kept small in size).
+
+ Syntax: RN
+
+ ---
+
+ The RX command is active if the current cpu is a 80386 or better. Then 
+ RX will toggle between the simple 16bit register display (which is the 
+ default) and the full 32bit register display.
+
+ Syntax: RX
+
+ ---
+ ]
+
+ Search (S) is  used  to find the occurrence of a specific byte or series
+ of bytes within a segment. For example, to find all occurrences of 'CD 21'
+ in memory region DS:100-1FF, enter:
+
+ -S 100 l 100 CD 21
+  1234:0122
+  1234:01EC
+
+ Or, to find all strings "hello" in DS:0100-FFFF, enter
+
+ -S 100 FFFF 'hello'
+  1234:0122
+  1234:1221
+  1234:EADC
+
+ Syntax: S range list
+
+ ---
+
+ The Trace command (T), when used without a parameter, causes DEBUG
+ to execute the instruction at CS:IP. Before the instruction is
+ executed, the contents of the register variables are copied to the
+ actual CPU registers. After the instruction has executed, and updated
+ the actual CPU registers (including IP), the contents of the actual
+ CPU registers are copied back to the register variables and the
+ contents of these variables are displayed. The optional address
+ parameter can be used to specify the starting address. The optional
+ count parameter can be used to specify the number of instructions to
+ execute. To differentiate the address parameter from the count
+ parameter, the address parameter must be preceded with an "=". Note
+ that the first byte at the specified address must be the start of a
+ valid instruction.
+
+ Syntax: T [=address] [number]
+
+ [ENH: if the current CS:IP points to an INT opcode, Debug/X's
+  behaviour depends on the current value of the TM option. If it
+  is 0 (the default), the debugger will regain control when the
+  INT has been processed. If TM is 1, the debugger will step "into"
+  the INT.
+  Furthermore, autorepeat is active for T. That is, if the last
+  command was T, a single ENTER will count as a repeated T command.
+
+  DebugX: the Trace command - internally, on certain conditions - has to
+  set a breakpoint. This may be achieved by 2 ways - either write an
+  INT 3 opcode to the code address or - if the cpu is at least an 80386 -
+  use a "hardware debug register". The first approach fails if the memory
+  cannot be written - in protected-mode a "page fault" will occur.
+  Therefore - if the DPMI host supports the feature - DebugX will prefer
+  to use the second method in protected-mode and true real-mode. This
+  feature may be suppressed by the /s cmdline option.
+ ]
+ ---
+
+ The Unassemble command (U), when used without any parameter, causes
+ DEBUG to read approximately 32 bytes of memory starting at the initial
+ CS:IP values specified in the file header if an EXE file is loaded,
+ or starting at CS:100h if any other type of file or no file is loaded.
+ For each instruction in this memory, DEBUG disassembles (translates
+ from machine code to assembly language) the instruction and displays
+ the address, the machine code, and the corresponding assembly language.
+ The optional range parameter can be used to specify a starting address,
+ or a starting and ending address, or a starting address and a length.
+ Subsequent Unassemble commands without any parameter cause DEBUG to
+ start at the instruction following the last instruction processed by
+ the previous Unassemble command.
+
+ [ENH:  Autorepeat is active for U. That is, if the last command
+  was U, a single ENTER will count as a repeated U command.]
+
+ Syntax: U [range]
+
+ ---
+
+ The Write command (W) causes DEBUG to write BX:CX bytes to the output
+ file. The optional address parameter specifies the starting source
+ address. The default starting source address is 100h. Note that
+ loading a file from the DEBUG command line or with the Load command
+ will set BX:CX to the size of the file, a feature clearly intended
+ to aid in the patching of executables. DEBUG rejects to write .EXE
+ ( or .HEX ) files, since it would write it in invalid format without
+ header, but this security check is based just upon the file extension,
+ which isn't fool-proved at all.
+
+ Syntax: W [address]
+
+ ---
+
+ The Write command can also be used to write one or more logical
+ sectors to a disk drive. The drive should be specified as for
+ the Load command.
+
+ Syntax: W address drive startsector numberofsectors
+
+ WARNING: You should know what you are doing when using this command.
+ If used inappropriately, W can cause severe data losses.
+
+ [ENH: W with logical sectors on Windows XP will work for DebugX only,
+  with the help of VDD DEBXXVDD.DLL.
+   While in protected-mode, writing files is rejected; if sectors are
+  to be written, DEBUG checks if a DOS extender is active and if yes,
+  the command is executed.
+ ]
+ ---
+
+
+ 4. Format of Displays by Trace, Proceed, Register Commands
+ ----------------------------------------------------------
+
+ For the Trace, Proceed, and Register commands, after DEBUG completes
+ the operations described above, it disassembles the next instruction
+ and displays the address of the instruction, the machine code, and
+ the corresponding assembly language. For the Trace and Proceed
+ commands, if the instruction contains a memory operand, DEBUG displays
+ the address that the operand refers to and the contents of that
+ address. The segment register specified in the address is the default
+ segment register for the instruction, or the segment register
+ specified by a segment override.
+
+ One perhaps non-obvious use for the Register command would be to
+ control the starting address for the next Trace or Proceed command
+ by loading a new value into CS and/or IP. And along the same lines,
+ non-obvious uses for the Assemble and Enter commands would be to
+ alter the instructions and/or data for the program being debugged.
+
+
+ 5. Unassemble Format
+ --------------------
+
+ When DEBUG processes a Trace, Proceed, Register, or Unassemble command,
+ it displays assembly language (as described above) for any byte value
+ or sequence of byte values that it recognizes as a valid instruction.
+ For any other byte value, DEBUG displays the DB pseudoinstruction
+ followed by the byte value. DEBUG may fail to recognize a byte value
+ as part of a valid instruction for any of the following reasons:
+
+    The byte is part of an instruction that is specific to a later
+    generation x86 processor.
+
+    The disassembly process did not start at the first byte of a
+    valid instruction.
+
+    The byte is data.
+
+ Note that DEBUG's ability to execute an instruction (for the Trace
+ and Proceed commands) does not depend on its ability to recognize the
+ instruction.
+
+
+ 6. Instruction operands
+ -----------------------
+
+ The instruction operands are the objects on which the instruction
+ "operates". For DEBUG, these objects can be constants, registers, or
+ memory. A memory operand specifies the offset address of the data to
+ operate on. To differentiate memory operands from constants, memory
+ operands must be enclosed in square brackets.
+
+ For a direct memory operand, the offset address of the data is
+ specified in the operand. For an indirect memory operand, the offset
+ address of the data is calculated at run-time using the contents of
+ one or two registers and an optional displacement. In 16bit code, the
+ registers can be a base register (BX or BP) or an index register (SI or DI),
+ or one of each. The following examples illustrate the differences
+ between constant operands, register operands, direct memory operands,
+ and indirect memory operands:
+
+    MOV   AX,100   ; Moves the value 100 into AX
+    MOV   AX,BX    ; Copies the value in BX to AX 
+    MOV   AX,[100] ; Copies the word at DS:100 to AX
+    MOV   AL,[BP+2]; Copies the byte at SS:BP+2 to AL
+
+    JMP   100      ; Destination offset is 100
+    JMP   AX       ; Destination offset is the value in AX
+    JMP   [100]    ; Destination offset is the word at DS:100
+    JMP   [BX]     ; Destination offset is the word at DS:BX
+    JMP   [BX+4]   ; Destination offset is the word at DS:BX+4
+
+    ; Near calls work just like the jump instructions above.
+
+
+ 7. DEBUG statements in Assembly Mode
+ ------------------------------------
+
+ This section deals with the statements that DEBUG recognizes while
+ in assembly mode.
+
+ Each statement occupies a single line. For each statement, the first
+ character that is not a space or a tab must be a semicolon or the
+ start of a valid instruction mnemonic. A semicolon, at the start of
+ a statement or anywhere within a statement, causes DEBUG to ignore
+ the remainder of the line.
+
+ As previously noted, DEBUG recognizes only hex numbers (without a
+ trailing "H").
+
+ As previously noted, memory operands must be enclosed in square
+ brackets.
+
+ Segment override prefixes must be placed on the line preceding the 
+ prefixed instruction. For example:
+
+    ES:
+    MOV AX,[100]
+    
+ [ENH: the following syntax is also accepted:
+
+    SEG ES
+    MOV AX,[100]
+
+ or
+
+    MOV AX,ES:[100]
+ ]
+
+ In addition to the items detailed above, DEBUG statements can include
+ the following:
+
+    The CPU register names (other than IP):
+       AX BX CX DX
+       AL AH BL BH CL CH DL DH
+       SP BP
+       SI DI
+       CS ES DS SS
+       
+    [ENH: if cpu is 80386 or better, the extended registers are
+     recognised as well: EAX, EBX, ECX, EDX, ESP, EBP, ESI, EDI.
+     Furthermore, there are 2 new segment registers, FS and GS.]
+
+    The words NEAR (or NE) and FAR, optionally followed by PTR,
+    which are used to override the default forms of the CALL and JMP
+    instructions. The default form of a JMP instruction can be short,
+    near, or far, depending on the destination. The default form of a
+    CALL instruction can be near or far, depending on the destination.
+    Note that DEBUG will default to far only if the destination is
+    recognizable as a far address, which means that it must be a
+    constant of the form segment:offset (for example, "JMP F000:FFF0").
+    If the destination is specified by a memory operand (for example,
+    "JMP  [100]"), DEBUG will default to near. The optional PTR has
+    no effect on the assembly process.
+
+    The words BYTE (or BY) and WORD (or WO) [ENH: and DWORD (or DW)],
+    optionally followed by PTR, which are used to specify the type for
+    memory data. For instructions that take two operands, DEBUG will
+    assume that the type for the data specified by a memory operand matches
+    the type for the other operand. For instructions that take one operand,
+    the type must be specified. The optional PTR has no effect on
+    the assembly process.
+
+    [ENH: for floating point opcodes, there exist 3 additional memory
+    types, FLOAT (or FL), DOUBLE (or DO) and TBYTE (or TB):
+        FLD  FLOAT [100]
+        FSTP DOUBLE [100]
+        FSTP TBYTE [100]
+    ]
+
+    The DB / DW pseudoinstructions, which are used to assemble byte / word
+    values [ENH: DD for dword values] . These pseudoinstructions are
+    normally used to set aside space for and initialize data. They can also
+    be used to synthesize instructions that DEBUG cannot assemble. Note
+    that DEBUG will not allow a trailing comment on the same line as one of
+    these pseudoinstructions.
+
+    The word ORG, used to set (or change) the starting address for the
+    assembly of instructions. Note that ORG may not be supported by
+    early versions of MS-Debug.
+
+    DEBUG checks for errors as it assembles each statement. If an error
+    is detected, DEBUG stops assembling the statement and displays
+    "^ Error" on the line following the statement. The position of the
+    caret indicates the location in the statement where DEBUG detected
+    the error.
+
+
+ 8. Debugging with DebugX
+ ------------------------
+
+  DebugX is able to debug both standard real-mode and DPMI protected-mode
+ applications. The DPMI applications may be either 16-bit or 32-bit.
+ For this to achieve DebugX has to intrude into the DPMI host's address
+ space when a new DPMI client starts. This is the first obstacle for
+ DebugX and whether it works smoothly depends on the DPMI host. NT's
+ DOSX.EXE works pretty well; the same is true for HDPMI or CWSDPMI. Less
+ good work the hosts implemented in Windows 9X or DOSEMU; on those platforms
+ it's required that DebugX traces through the initial switch to protected-
+ mode, else it will loose control of its debuggee.
+
+  Another problem may arise in true DOS: a protected-mode application
+ may launch its DPMI host on the fly during startup. To allow DebugX to
+ intrude in such a host, it has to intercept interrupt 2Fh AFTER the
+ DPMI host has been installed, but BEFORE the debuggee inquires the
+ DPMI host's entry point. This is pretty advanced stuff and to avoid
+ those quirks it's usually the best option to install the DPMI host
+ before DebugX is started.
+
+  During debugging, DebugX may become active in both protected-mode and
+ real-mode - it is a bimodal application, in this regard rather unique.
+ While the debugger is active in protected-mode, it may display faults
+ that happen when one tries to display memory that is inaccessible; 
+ such faults usually can be safely ignored. However, on NT platforms
+ the debugger isn't notified of page faults - instead, the DOS session
+ usually just will be terminated.
+ 
+  As it has been mentioned at the Q command: when the debuggee is in
+ protected-mode, the behavior of DebugX's Q command differs from that
+ in real-mode: it won't exit the debugger session, but just exit
+ protected-mde, that is, terminate the DPMI client and fall back to
+ the real-mode prompt. Another Q cmd will then quit the debugger.
+ Sometimes Q may not work to exit protected-mode, then one can try
+ to forcably terminate the debuggee with the command variant QQ.
+
+  If a second video adapter is available, DebugX may be told to display
+ its output to that device via the /2 cmdline option. This gives DebugX
+ the ability to debug graphics applications.
+
+  Some DOS extenders may set code section pages to readonly. Up to v2.50
+ this did pretty reliably prevent DebugX from setting its breakpoints. Since
+ v2.50, Debug/X may prefer to use hardware breakpoints - and thus avoid
+ such problems.
+
+
+ 9. Installing and Initializing DebugB
+ -------------------------------------
+
+  DebugB is a variant of DEBUG that can be used to debug boot code and DOS
+ during its initialization ( actually, because it doesn't depend on any DOS
+ interrupts, this variant is not restricted to DOS ) . Since the debugger has
+ to be in memory before the OS is loaded, there's a problem: since no file
+ system is available yet, how to load the debugger itself? There are two
+ approaches:
+
+  1) the DebugB file is stored somewhere on disk where it can be loaded
+     rather comfortably by the bootstrap code ( of either the MBR or the
+     partition's boot sector ), without using a file system. For FAT file
+     systems, this could be the "reserved" region, just behind the FAT boot
+     sector(s). With this approach, the bootstrap code itself has to be
+     modified - it has to load the debugger and then issue a far call to
+     initialize it.
+      The size of the DebugB binary may vary depending on what features are
+     activated, usually it's about 20 kB or 40 sectors of 512 bytes.
+
+  2) the debugger is loaded into memory above conventional memory just before
+     the system does a (soft) reboot. This requires that 
+     a) the system can be put in an initial state without resetting the cpu.
+        Esspecially DOS must be able to restore some of the interrupt vectors
+        it has modified. This is true for MS-DOS, DR-DOS and FreeDOS.
+     b) conventional memory used by DOS is reduced to make room for the
+        debugger code.
+
+  All in all the second approach is probably easier to follow, since the
+ bootstrap code doesn't need modification and no low-level disk writes are
+ necessary.
+
+  Initialization of the debugger is simple: it's a far call to the
+ address the debugger has been loaded, with an offset of 0000 ( so it's a 
+ "call 0800h:0000" if the debugger has been loaded at linear address 08000h ).
+ The call will preserve contents of all segment registers and registers SP & BP.
+ The address to load the debugger may vary - if the debugger is loaded into
+ DOS memory, it will relocate itself just above conventional memory and adjust
+ the BIOS variable at 0040h:0013h; else it will assume that the loader has
+ already done that. 
+
+  Once the debugger is initialized, running an INT 1 or INT 3 will activate it.
+ DebugB has 2 functions that are particularly usefull in this context: the
+ L command allows to read sectors ( unlike the "normal" variants of DEBUG,
+ DebugB's L command works with physical disks ), the DP command may be used to
+ list the partitions of a disk ( currently MBR-partitioned disks only ). So
+ it's possible to load the boot sector of any partition on the HDs and execute
+ it.
+
+  During their initialization, most DOS variants will sooner or later modify
+ interrupt vectors 1 and 3, thus virtually deactivating DebugB. This may
+ require to patch the relevant code in the DOS kernel file - unless DOS
+ can be convinced to desist from changing the vectors. This is true for MS-DOS
+ 7.1 at least.
+
+  For DebugB there's no cmdline to scan. This implies that there's no /s option
+ to tell the debugger not to use hardware breakpoints. So if DebugB is to be
+ used in environments with unreliable emulation of such features, the simplest
+ "fix" is to create an DebugB variant without hw breakpoint support.
+
+  Currently there are problems when the boot loader GRUB has to swap disk
+ numbers - to achieve this it intrudes into conventional memory, but that's
+ done in such a way that other programs can't reliably modify BIOS variable
+ 0040h:0013h anymore.
+
+  Some commands aren't available in DebugB: Q(uit), N(ame), W(rite), DM and
+ the EMS branch. OTOH, unlike DEBUG, it understands the DI & DX commands.
+
+
+ 10. DebugR Basics
+ -----------------
+
+  DebugR, DebugRL and DebugRV are variants of DEBUG that run in ring-0
+ (privileged) protected-mode. DebugR and DebugRV run in "legacy" mode, while
+ DebugRL runs in long mode. For DebugR(V), a 80386 or better CPU is required,
+ while DebugRL needs a 64-bit CPU. All variants are plain binaries that have
+ to be loaded and initialized (in protected-mode!) by some kind of "loader"
+ code. Unlike DebugX, the DebugR(L|V) binaries aren't bimodal ( meaning to be
+ able to run in both real-mode and protected-mode ). Exceptions in v86-mode,
+ which are reported if DebugR(V) runs in the context of a v86-monitor program
+ like Jemm386, are ignored by DebugR - DebugRV is able to handle them.
+  DebugR(L|V) don't use DOS and actually don't use any BIOS calls at all. For
+ their tty i/o they call out to the "loader" program, which is responsible to
+ route those calls to the OS or handle them on its own.
+ 
+  Once loaded, DebugR(L|V) can debug programs running in both ring-0 and ring-3
+ protected-mode. Since they don't use DOS or BIOS, a few commands implemented
+ in the standard Debug/X aren't available: DM, DX, L, N, Q, W, Xx. OTOH, some
+ "dump" variants are activated: DG, DI, DL, DT, as well as BC and BP. A few
+ commands very specific to DebugR(L|V) are:
+ 
+ SK: Skip handling of current exception, hand it over to previous handler.
+ VC vector [0|3]: untrap vector, optionally specific for ring 0 or 3.
+ VL: list (un)trapped vectors. Shows the vectors and in what ring they are
+    trapped.
+ VT vector [0|3]: trap vector, optionally specific for ring 0 or 3; what
+    vectors can be trapped depends on how DebugR(L|V) was assembled: 
+    supported are exceptions 0, 1, 2, 3, 6, 7, 0Ch, 0Dh and 0Eh; among those
+    exceptions 2 (NMI), 7 and 0Ch are optional.
+ 
+ Commands G, T and P: since support for 80386+ hardware debug registers is
+ active, it may be used by those commands in case a breakpoint is to be set. 
+ If no more free breakpoints are available - of if cmdline option -s has been
+ set -, the debugger will switch back to "soft" breakpoints. As for DebugR and
+ DebugRL, setting a breakpoint that may be triggered in real/v86-mode is
+ somewhat problematic, since these variants don't know how to handle those
+ modes and hence are unable to stop in such cases!
+
+  For the a(ssemble and u(nassemble) commands, one may precede the segment part
+ of the range argument with a '$' to make DebugR(L) interpret it as real-mode
+ address and translate the segment to a selector.
+
+  Some GPFs occuring in non-privileged code are not handled by DebugR(L|V):
+ CLI/STI executed by programs with IOPL 0; trapped IN/INS/OUT/OUTS instructions;
+ INT XX with DPL==0 in the IDT. DebugRV: "breakpoint" instructions used by the
+ V86 monitor program to exit V86 mode.
+ 
+  DebugR(L|V) understand commandline option -m, that will instruct it to assume
+ that exception and IRQ vectors ( interrupts 08-0Fh ) do not overlap.
+
+  If exception 02 (NMI) is trapped, the debugger may break into a program even
+ if interrupts are disabled. To trigger an NMI requires additional hardware on
+ real machines, but if the debugger runs in a VM it may be just a monitor
+ command.
+
+
+ 11. DEBUG Scripts
+ -----------------
+
+ Because DEBUG uses the standard input and output devices, and because
+ these devices can be redirected, DEBUG can be made to input from
+ and/or output to a text file. This makes it possible to place DEBUG
+ commands and statements in a text file, a so-called DEBUG script, and
+ submit the file to DEBUG for processing. This batch file can be used
+ to automate the process:
+
+ ASM.BAT:
+ @echo off
+ if "%1" == "" goto noarg
+ if exist %1.txt goto defext
+ if "%2" == "l" goto list1
+ if "%2" == "L" goto list1
+ debug < %1 | more
+ goto end
+ :list1
+ debug < %1 > %1.LST
+ goto end
+ :defext
+ if "%2" == "l" goto list2
+ if "%2" == "L" goto list2
+ debug < %1.txt | more
+ goto end
+ :list2
+ debug < %1.txt > %1.LST
+ goto end
+ :noarg
+ echo.
+ echo Assembles DEBUG script files
+ echo.
+ echo Usage:
+ echo.
+ echo   ASM filename[.extension] [L]
+ echo.
+ echo Extension defaults to .TXT
+ echo L sends output to filename.LST
+ :end
+
+ ---
+
+ This is an example script for a Hello World program (in this
+ and the following examples, the leading Name commands are used
+ to place comments in the script outside of assembly mode without
+ causing DEBUG to return an error):
+
+ N HELLO.TXT
+ N
+ N This is a DEBUG script that will generate HELLO.COM.
+ N
+ N HELLO.COM
+ A
+    mov ah,9
+    mov dx,109
+    int 21
+    int 20
+    db 'Hello World$'
+
+ RCX
+ 015
+ W
+ Q
+
+ ---
+
+ Because DEBUG is not a symbolic assembler, you must code all operands
+ that represent memory addresses manually. These memory addresses
+ include data addresses and jump, loop, and call destination addresses.
+ To do this reasonably you must assemble your code twice. In the script
+ file for the first assembly, use a place holder value for each of
+ these operands. Note that the placeholder values must be selected
+ such that all displacements will be within the allowable range.
+ Using the output from the first (error free) assembly, replace the
+ placeholders in the script file with the actual addresses, and do the
+ final assembly.
+
+ This is the output for the first assembly of the Hello World program,
+ using place holder values that were essentially guesses:
+
+ -N HELLO.TXT
+ -N
+ -N This is a DEBUG script that will generate HELLO.COM.
+ -N
+ -N HELLO.COM
+ -A
+ 1078:0100         mov     ah,9
+ 1078:0102         mov     dx,109
+ 1078:0105         int     21
+ 1078:0107         int     20
+ 1078:0109         db      'Hello World$'
+ 1078:0115
+ -RCX
+ CX 0000
+ :020
+ -W
+ Writing 00020 bytes
+ -Q
+
+ ---
+
+ This is another DEBUG script that can be used to write a boot
+ sector to a diskette:
+
+ N LOADIT.TXT
+ N This is a DEBUG script that will copy BOOTCODE.BIN
+ N to the first sector of drive A. Note that this will
+ N work only if the OS recognizes the diskette as
+ N having a valid format.
+ N BOOTCODE.BIN
+ L 100
+ W 100 0 0 1
+ Q
+
+ ---
+
+ 
