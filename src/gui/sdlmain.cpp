@@ -3897,7 +3897,7 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "The [color=light-green]'windowresolution'[reset] setting is deprecated but still accepted;\n"
 	        "please use [color=light-green]'window_size'[reset] instead.");
 
-	pstring = section.AddString("window_size", OnlyAtStart, "default");
+	pstring = section.AddString("window_size", Always, "default");
 	pstring->SetHelp(
 	        "Set initial window size for windowed mode. You can still resize the window\n"
 	        "after startup.\n"
