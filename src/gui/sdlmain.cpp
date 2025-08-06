@@ -701,7 +701,7 @@ void GFX_DisengageRendering()
 
 static void gfx_stop()
 {
-	if (sdl.updating) {
+	if (sdl.updating_framebuffer) {
 		GFX_EndUpdate(nullptr);
 	}
 	sdl.active = false;
@@ -2021,7 +2021,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 {
 	auto ret_flags = sdl.gfx_flags;
 
-	if (sdl.updating) {
+	if (sdl.updating_framebuffer) {
 		GFX_EndUpdate(nullptr);
 	}
 
@@ -2277,7 +2277,7 @@ static void switch_fullscreen_handler(bool pressed)
 //
 bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 {
-	if (!sdl.active || sdl.updating) {
+	if (!sdl.active || sdl.updating_framebuffer) {
 		return false;
 	}
 
@@ -2288,7 +2288,7 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 		pixels = static_cast<uint8_t*>(sdl.texture.curr_framebuf->pixels);
 		pitch = sdl.texture.curr_framebuf->pitch;
 
-		sdl.updating = true;
+		sdl.updating_framebuffer = true;
 		return true;
 
 	case RenderingBackend::OpenGl:
@@ -2304,7 +2304,7 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 		              "Our internal pitch types should be the same.");
 		pitch = sdl.opengl.pitch;
 
-		sdl.updating = true;
+		sdl.updating_framebuffer = true;
 		return true;
 #else
 		// Should never occur
@@ -2316,9 +2316,9 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 void GFX_EndUpdate([[maybe_unused]] const uint16_t* num_changed_lines)
 {
-	if (sdl.updating) {
-		// `sdl.updating` is true when the contents of the framebuffer
-		// has been changed in the current frame.
+	if (sdl.updating_framebuffer) {
+		// `sdl.updating_framebuffer` is true when the contents of the
+		// framebuffer has been changed in the current frame.
 		//
 		// We're making a copy of the framebuffer as we might present it
 		// a bit later in 'host-rate' mode, otherwise the VGA emulation
@@ -2384,7 +2384,7 @@ void GFX_EndUpdate([[maybe_unused]] const uint16_t* num_changed_lines)
 	// 'host-rate' present is handled in `normal_loop()` in `dosbox.cpp` in
 	// a "cooperative-multitasking" fashion at the end of each emulated 1ms
 	// tick.
-	sdl.updating = false;
+	sdl.updating_framebuffer = false;
 
 	FrameMark;
 }
@@ -2987,9 +2987,9 @@ static void sdl_section_init()
 {
 	auto section = get_section("sdl");
 
-	sdl.active        = false;
-	sdl.updating      = false;
-	sdl.wait_on_error = section->GetBool("waitonerror");
+	sdl.active               = false;
+	sdl.updating_framebuffer = false;
+	sdl.wait_on_error        = section->GetBool("waitonerror");
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
