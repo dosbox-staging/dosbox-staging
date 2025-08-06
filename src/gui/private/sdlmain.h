@@ -118,8 +118,6 @@ enum class SDL_DosBoxEvents : uint8_t {
 };
 
 struct SDL_Block {
-	bool initialized = false;
-
 	// If this isn't set don't draw
 	bool active = false;
 
