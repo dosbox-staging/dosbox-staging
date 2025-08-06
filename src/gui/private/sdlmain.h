@@ -124,7 +124,7 @@ struct SDL_Block {
 	// True when the contents of the framebuffer has been changed in the
 	// current frame. We only need to upload new texture data when this flag
 	// is true in GFX_EndUpdate().
-	bool updating = false;
+	bool updating_framebuffer = false;
 
 	bool wait_on_error = false;
 
