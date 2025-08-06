@@ -1172,6 +1172,14 @@ static SDL_Window* create_window()
 		                          flags);
 	}
 
+#if defined(MACOSX)
+	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
+	// work on macOS
+	if (!sdl.desktop.window.show_decorations) {
+		SDL_SetWindowBordered(sdl.window, SDL_FALSE);
+	}
+#endif
+
 	if (!window) {
 		LOG_ERR("SDL: Failed to create window: %s", SDL_GetError());
 		return nullptr;
