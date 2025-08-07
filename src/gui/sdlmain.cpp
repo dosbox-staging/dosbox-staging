@@ -2874,7 +2874,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
 	}
 
-	const auto transparency = clamp(section->GetInt("transparency"), 0, 90);
+	const auto transparency = clamp(section->GetInt("window_transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 
 	SDL_SetWindowOpacity(sdl.window, alpha);
@@ -3920,9 +3920,12 @@ static void init_sdl_config_section()
 
 	TITLEBAR_AddConfig(*sdl_sec);
 
-	pint = sdl_sec->AddInt("transparency", Always, 0);
+	pint = sdl_sec->AddInt("transparency", Deprecated, 0);
+	pint->SetHelp("Renamed to [color=light-green]'window_transparency'[reset].");
+
+	pint = sdl_sec->AddInt("window_transparency", Always, 0);
 	pint->SetHelp(
-	        "Set the transparency of the DOSBox Staging screen (0 by default).\n"
+	        "Set the transparency of the DOSBox Staging window (0 by default).\n"
 	        "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->AddString("max_resolution", Deprecated, "");
