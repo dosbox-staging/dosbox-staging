@@ -3363,20 +3363,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// LOG_DEBUG("SDL: Window has been hidden");
 		return true;
 
-#if C_OPENGL && defined(MACOSX)
-	// TODO check if this workaround is still needed
 	case SDL_WINDOWEVENT_MOVED:
 		// LOG_DEBUG("SDL: Window has been moved to %d, %d",
 		// event.window.data1, event.window.data2);
-
-		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-			glViewport(sdl.draw_rect_px.x,
-			           sdl.draw_rect_px.y,
-			           sdl.draw_rect_px.w,
-			           sdl.draw_rect_px.h);
-		}
 		return true;
-#endif
 
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
 		// New display might have a different resolution and DPI scaling
