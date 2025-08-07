@@ -174,7 +174,7 @@ bool Program::SuppressWriteOut(const std::string& format) const
 		return false;
 	}
 
-	if (control->GetStartupVerbosity() >= Verbosity::Low) {
+	if (control->GetStartupVerbosity() >= StartupVerbosity::Low) {
 		return false;
 	}
 

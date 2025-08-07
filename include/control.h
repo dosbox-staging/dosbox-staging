@@ -17,12 +17,14 @@
 #include "setup.h"
 #include "std_filesystem.h"
 
-enum class Verbosity : int8_t {
-	//                Welcome | Early Stdout |
-	Quiet, //   no    |    no        |
-	Low,   //   no    |    yes       |
-	High,  //   yes   |    yes       |
+// clang-format off
+enum class StartupVerbosity {
+	//        Welcome | Early Stdout |
+	Quiet, //   no    |     no       |
+	Low,   //   no    |     yes      |
+	High,  //   yes   |     yes      |
 };
+// clang-format on
 
 struct CommandLineArguments {
 	bool printconf;
@@ -146,7 +148,7 @@ public:
 		secure_mode = true;
 	}
 
-	Verbosity GetStartupVerbosity() const;
+	StartupVerbosity GetStartupVerbosity() const;
 };
 
 using ConfigPtr = std::unique_ptr<Config>;
