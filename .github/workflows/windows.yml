@@ -224,7 +224,7 @@ jobs:
           submodules: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
 
       - name: Set common vars
         uses: ./.github/actions/set-common-vars
