@@ -2259,10 +2259,6 @@ Examples:
   [color=light-green]exit[reset]
 
 .
-:SHELL_CMD_EXIT_TOO_SOON
-Preventing an early 'exit' call from terminating.
-
-.
 :SHELL_CMD_HELP_HELP_LONG
 Usage:
   [color=light-green]help[reset]
