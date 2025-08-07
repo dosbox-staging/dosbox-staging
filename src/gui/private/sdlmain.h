@@ -103,15 +103,6 @@ static inline void present_frame_noop()
 
 enum class FullscreenMode { Standard, Original, ForcedBorderless };
 
-enum PRIORITY_LEVELS {
-	PRIORITY_LEVEL_AUTO,
-	PRIORITY_LEVEL_LOWEST,
-	PRIORITY_LEVEL_LOWER,
-	PRIORITY_LEVEL_NORMAL,
-	PRIORITY_LEVEL_HIGHER,
-	PRIORITY_LEVEL_HIGHEST
-};
-
 enum class SDL_DosBoxEvents : uint8_t {
 	RefreshAnimatedTitle,
 	NumEvents // dummy, keep last, do not use
@@ -231,11 +222,6 @@ struct SDL_Block {
 		GLfloat vertex_data[2 * 3] = {};
 	} opengl = {};
 #endif // C_OPENGL
-
-	struct {
-		PRIORITY_LEVELS active   = PRIORITY_LEVEL_AUTO;
-		PRIORITY_LEVELS inactive = PRIORITY_LEVEL_AUTO;
-	} priority = {};
 
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
