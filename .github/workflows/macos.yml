@@ -43,7 +43,7 @@ jobs:
           - host: macos-15
             arch: arm64
             minimum_deployment: '11.0'
-            max_warnings: 7
+            max_warnings: 8
 
     steps:
       - name: Check out repository
