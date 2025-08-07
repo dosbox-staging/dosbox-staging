@@ -387,12 +387,6 @@ static void update_uniforms_gl()
 #define STDERR_FILE "stderr.txt"
 #endif
 
-#if defined(HAVE_SETPRIORITY)
-#include <sys/resource.h>
-
-#define PRIO_TOTAL (PRIO_MAX - PRIO_MIN)
-#endif
-
 SDL_Block sdl;
 
 static SDL_Point FallbackWindowSize = {640, 480};
@@ -2439,69 +2433,6 @@ static void sdl_section_destroy()
 	MAPPER_Destroy();
 }
 
-static void set_priority(PRIORITY_LEVELS level)
-{
-	// Just let the OS scheduler manage priority
-	if (level == PRIORITY_LEVEL_AUTO) {
-		return;
-	}
-
-	// TODO replace platform-specific API with SDL_SetThreadPriority
-#if defined(HAVE_SETPRIORITY)
-	// If the priorities are different, do nothing unless the user is root,
-	// since priority can always be lowered but requires elevated rights
-	// to increase
-
-	if ((sdl.priority.active != sdl.priority.inactive) && (getuid() != 0)) {
-		return;
-	}
-
-#endif
-	switch (level) {
-#ifdef WIN32
-	case PRIORITY_LEVEL_LOWEST:
-		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
-		break;
-
-	case PRIORITY_LEVEL_LOWER:
-		SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
-		break;
-
-	case PRIORITY_LEVEL_NORMAL:
-		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
-		break;
-
-	case PRIORITY_LEVEL_HIGHER:
-		SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
-		break;
-
-	case PRIORITY_LEVEL_HIGHEST:
-		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-		break;
-
-#elif defined(HAVE_SETPRIORITY)
-	// Linux use group as dosbox has mulitple threads under Linux
-	case PRIORITY_LEVEL_LOWEST: setpriority(PRIO_PGRP, 0, PRIO_MAX); break;
-	case PRIORITY_LEVEL_LOWER:
-		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 3));
-		break;
-
-	case PRIORITY_LEVEL_NORMAL:
-		setpriority(PRIO_PGRP, 0, PRIO_MAX - (PRIO_TOTAL / 2));
-		break;
-
-	case PRIORITY_LEVEL_HIGHER:
-		setpriority(PRIO_PGRP, 0, PRIO_MAX - ((3 * PRIO_TOTAL) / 5));
-		break;
-
-	case PRIORITY_LEVEL_HIGHEST:
-		setpriority(PRIO_PGRP, 0, PRIO_MAX - ((3 * PRIO_TOTAL) / 4));
-		break;
-#endif
-	default: break;
-	}
-}
-
 static SDL_Point refine_window_size(const SDL_Point size,
                                     const bool wants_aspect_ratio_correction)
 {
@@ -2891,7 +2822,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 static void apply_active_settings()
 {
-	set_priority(sdl.priority.active);
 	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
@@ -2911,44 +2841,11 @@ static void apply_active_settings()
 
 static void apply_inactive_settings()
 {
-	set_priority(sdl.priority.inactive);
 	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive) {
 		MIXER_Mute();
 	}
-}
-
-static void set_priority_levels(const std::string& active_pref,
-                                const std::string& inactive_pref)
-{
-	auto to_level = [](const std::string& pref) {
-		if (pref == "auto") {
-			return PRIORITY_LEVEL_AUTO;
-		}
-		if (pref == "lowest") {
-			return PRIORITY_LEVEL_LOWEST;
-		}
-		if (pref == "lower") {
-			return PRIORITY_LEVEL_LOWER;
-		}
-		if (pref == "normal") {
-			return PRIORITY_LEVEL_NORMAL;
-		}
-		if (pref == "higher") {
-			return PRIORITY_LEVEL_HIGHER;
-		}
-		if (pref == "highest") {
-			return PRIORITY_LEVEL_HIGHEST;
-		}
-		LOG_WARNING("SDL: Invalid 'priority' setting: '%s', using 'auto'",
-		            pref.c_str());
-
-		return PRIORITY_LEVEL_AUTO;
-	};
-
-	sdl.priority.active   = to_level(active_pref);
-	sdl.priority.inactive = to_level(inactive_pref);
 }
 
 static void restart_hotkey_handler([[maybe_unused]] bool pressed)
@@ -2999,10 +2896,6 @@ static void sdl_section_init()
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
-
-	auto priority_conf = section->GetMultiVal("priority")->GetSection();
-	set_priority_levels(priority_conf->GetString("active"),
-	                    priority_conf->GetString("inactive"));
 
 	sdl.pause_when_inactive = section->GetBool("pause_when_inactive");
 
@@ -4000,18 +3893,9 @@ static void init_sdl_config_settings(SectionProp& section)
 	pbool = section.AddBool("waitonerror", Always, true);
 	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
 
-	pmulti = section.AddMultiVal("priority", Always, " ");
-	pmulti->SetValue("auto auto");
-	pmulti->SetHelp(
-	        "Priority levels to apply when active and inactive, respectively.\n"
-	        "('auto auto' by default)\n"
-	        "'auto' lets the host operating system manage the priority.");
-
-	auto psection = pmulti->GetSection();
-	psection->AddString("active", Always, "auto")
-	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
-	psection->AddString("inactive", Always, "auto")
-	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	pstring = section.AddString("priority", Deprecated, "");
+	pstring->SetHelp(
+	        "The [color=light-green]'priority'[reset] setting has been removed.");
 
 	pbool = section.AddBool("mute_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
