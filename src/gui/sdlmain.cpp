@@ -1698,9 +1698,15 @@ static void exit_fullscreen()
 		maybe_log_display_properties();
 
 	} else {
-		// Let SDL restore the previous window size
 		constexpr auto WindowedMode = 0;
 		SDL_SetWindowFullscreen(sdl.window, WindowedMode);
+
+		// On macOS, SDL_SetWindowSize() calls in fullscreen mode are no-ops,
+		// so we need to set the potentially changed window size when exiting
+		// fullscreen mode.
+		SDL_SetWindowSize(sdl.window,
+		                  sdl.desktop.window.width,
+		                  sdl.desktop.window.height);
 	}
 
 	sdl.desktop.is_fullscreen = false;
@@ -3310,29 +3316,24 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_RESIZED: {
-		// TODO pixels or logical units?
-		LOG_DEBUG("SDL: Window has been resized to %dx%d",
-		          event.window.data1,
-		          event.window.data2);
-
-		static int last_width  = 0;
-		static int last_height = 0;
-
+		// Window dimensions in logical coordinates
 		const auto width  = event.window.data1;
 		const auto height = event.window.data2;
 
+		LOG_DEBUG("SDL: Window has been resized to %dx%d", width, height);
+
 		// SDL_WINDOWEVENT_RESIZED events are sent twice when resizing
-		// the window.
-		if (width != last_width && height != last_height) {
-			maybe_log_display_properties();
+		// the window, but maybe_log_display_properties() will only
+		// output a log entry if the image dimensions have actually
+		// changed.
+		maybe_log_display_properties();
 
-			// Needed for aspect & viewport mode combinations where the
-			// pixel aspect ratio or viewport size is sized relatively
-			// to the window size.
-			VGA_SetupDrawing(0);
+		if (!sdl.desktop.is_fullscreen) {
+			save_window_size(width, height);
 
-			last_width  = width;
-			last_height = height;
+			set_section_property_value("sdl",
+			                           "window_size",
+			                           format_str("%dx%d", width, height));
 		}
 		return true;
 	}
