@@ -3130,14 +3130,6 @@ void GFX_RegenerateWindow(Section* sec)
 	GFX_ResetScreen();
 }
 
-// TODO check if this workaround is still needed
-#if defined(MACOSX)
-#define DB_POLLSKIP 3
-#else
-// Not used yet, see comment below
-#define DB_POLLSKIP 1
-#endif
-
 static bool maybe_auto_switch_shader()
 {
 	// The shaders need the OpenGL backend
