@@ -3342,10 +3342,14 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 #if C_OPENGL && defined(MACOSX)
-	// TODO check if this workaround is still needed
-	case SDL_WINDOWEVENT_MOVED:
-		// LOG_DEBUG("SDL: Window has been moved to %d, %d",
-		// event.window.data1, event.window.data2);
+	// TODO This workaround is still needed on macOS 15.6. We'll be able to
+	// remove it once we always set the viewport to covert the full window
+	// (supporting overlay images and the OSD will necessitate this).
+	case SDL_WINDOWEVENT_MOVED: {
+		const auto x = event.window.data1;
+		const auto y = event.window.data2;
+
+		// LOG_DEBUG("SDL: Window has been moved to %d, %d", x, y);
 
 		if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 			glViewport(sdl.draw_rect_px.x,
@@ -3353,7 +3357,16 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 			           sdl.draw_rect_px.w,
 			           sdl.draw_rect_px.h);
 		}
+
+		// We don't allow negative values for 'window_position', so this
+		// is the best we can do to keep things in sync.
+		set_section_property_value("sdl",
+		                           "window_position",
+		                           format_str("%d,%d",
+		                                      std::max(x, 0),
+		                                      std::max(y, 0)));
 		return true;
+	}
 #endif
 
 	case SDL_WINDOWEVENT_DISPLAY_CHANGED: {
