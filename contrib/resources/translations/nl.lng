@@ -5076,10 +5076,6 @@ Voorbeelden:
   [color=light-green]exit[reset]
 
 .
-:SHELL_CMD_EXIT_TOO_SOON
-Voorkomen dat een vroegtijdig 'exit' wordt beëindigd.
-
-.
 :SHELL_CMD_HELP_HELP
 Toont help-informatie voor DOS-commando's.
 

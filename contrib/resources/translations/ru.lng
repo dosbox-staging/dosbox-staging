@@ -2494,10 +2494,6 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
   [color=light-green]exit[reset]
 
 .
-:SHELL_CMD_EXIT_TOO_SOON
-Предотвращение раннего вызова 'exit' от прерывания.
-
-.
 :SHELL_CMD_HELP_HELP_LONG
 Использование:
   [color=light-green]help[reset]

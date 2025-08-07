@@ -819,7 +819,6 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]exit[reset]\n");
-	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 
 	MSG_Add("SHELL_CMD_HELP_HELP",
 	        "Display help information for DOS commands.\n");

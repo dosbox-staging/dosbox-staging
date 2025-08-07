@@ -458,29 +458,7 @@ void DOS_Shell::CMD_ECHO(char * args){
 void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
-
-	assert(control);
-	const bool wants_force_exit = control->arguments.exit;
-
-	assert(control->cmdline);
-	const auto is_instant_launch = control->cmdline->HasExecutableName();
-
-	// Check if this is an early-exit situation, in which case we avoid
-	// exiting because the user might have a configuration problem and we
-	// should let them see any errors in their console.
-	constexpr auto early_exit_seconds = 1.5;
-	const auto exiting_after_seconds  = DOSBOX_GetUptime();
-
-	const auto not_early_exit = exiting_after_seconds > early_exit_seconds;
-
-	if (wants_force_exit || is_instant_launch || not_early_exit) {
-		exit_cmd_called = true;
-		return;
-	}
-
-	WriteOut(MSG_Get("SHELL_CMD_EXIT_TOO_SOON"));
-	LOG_WARNING("SHELL: Exit blocked because program quit after only %.1f seconds",
-	            exiting_after_seconds);
+	exit_cmd_called = true;
 }
 
 void DOS_Shell::CMD_CHDIR(char * args) {
