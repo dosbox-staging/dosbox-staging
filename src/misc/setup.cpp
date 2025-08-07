@@ -1770,25 +1770,25 @@ void Config::StartUp()
 	(*_start_function)();
 }
 
-Verbosity Config::GetStartupVerbosity() const
+StartupVerbosity Config::GetStartupVerbosity() const
 {
 	const Section* s = GetSection("dosbox");
 	assert(s);
 	const std::string user_choice = s->GetPropertyValue("startup_verbosity");
 
 	if (user_choice == "high") {
-		return Verbosity::High;
+		return StartupVerbosity::High;
 	}
 	if (user_choice == "low") {
-		return Verbosity::Low;
+		return StartupVerbosity::Low;
 	}
 	if (user_choice == "quiet") {
-		return Verbosity::Quiet;
+		return StartupVerbosity::Quiet;
 	}
 	if (user_choice == "auto") {
 		return (cmdline->HasDirectory() || cmdline->HasExecutableName())
-		             ? Verbosity::Low
-		             : Verbosity::High;
+		             ? StartupVerbosity::Low
+		             : StartupVerbosity::High;
 	}
 
 	NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -1797,7 +1797,7 @@ Verbosity Config::GetStartupVerbosity() const
 	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
 	                      user_choice.c_str());
 
-	return Verbosity::High;
+	return StartupVerbosity::High;
 }
 
 const std::string& Config::GetArgumentLanguage()
