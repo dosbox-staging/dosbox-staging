@@ -1368,6 +1368,8 @@ static void decrease_viewport_stretch(const bool pressed)
 
 void RENDER_AddConfigSection(const ConfigPtr& conf)
 {
+	LOG_DEBUG("*** RENDER_AddConfigSection");
+
 	assert(conf);
 
 	constexpr auto changeable_at_runtime = true;

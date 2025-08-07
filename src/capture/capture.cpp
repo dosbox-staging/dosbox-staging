@@ -382,6 +382,8 @@ void CAPTURE_StopVideoCapture()
 
 void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second)
 {
+	LOG_DEBUG("CAPTURE_AddFrame");
+
 	if (image_capturer) {
 		image_capturer->MaybeCaptureImage(image);
 	}

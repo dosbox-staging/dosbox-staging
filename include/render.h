@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-#include "../src/gui/render_scalers.h"
+#include "../src/gui/render/scaler/scalers.h"
 #include "fraction.h"
 #include "rect.h"
 #include "vga.h"
@@ -183,11 +183,14 @@ struct RenderedImage {
 
 	void free()
 	{
-		delete[] image_data;
-		image_data = nullptr;
-
-		delete[] palette_data;
-		palette_data = nullptr;
+		if (image_data) {
+			delete[] image_data;
+			image_data = nullptr;
+		}
+		if (palette_data) {
+			delete[] palette_data;
+			palette_data = nullptr;
+		}
 	}
 };
 

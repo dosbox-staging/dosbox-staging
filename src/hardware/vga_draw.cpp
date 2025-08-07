@@ -10,7 +10,7 @@
 #include <cstring>
 #include <utility>
 
-#include "../gui/render_scalers.h"
+#include "../gui/render/scaler/scalers.h"
 #include "../ints/int10.h"
 #include "bitops.h"
 #include "math_utils.h"

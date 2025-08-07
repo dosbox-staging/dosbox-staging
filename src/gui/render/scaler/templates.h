@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -218,7 +219,7 @@
 #	define SCALERWIDTH  1
 #	define SCALERHEIGHT 1
 #	define SCALERFUNC   line0[0] = P;
-#	include "render_simple.h"
+#	include "simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -233,7 +234,7 @@
        line0[1] = P; \
        line1[0] = P;                                                           \
        line1[1] = P;
-#	include "render_simple.h"
+#	include "simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -246,7 +247,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line0[1] = P;
-#	include "render_simple.h"
+#	include "simple.h"
 
 #	undef SCALERNAME
 #	undef SCALERWIDTH
@@ -259,7 +260,7 @@
 #	define SCALERFUNC \
 		line0[0] = P; \
 		line1[0] = P;
-#	include "render_simple.h"
+#	include "simple.h"
 #	undef SCALERNAME
 #	undef SCALERWIDTH
 #	undef SCALERHEIGHT
