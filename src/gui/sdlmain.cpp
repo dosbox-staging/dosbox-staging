@@ -2913,38 +2913,6 @@ static void apply_inactive_settings()
 	}
 }
 
-static void set_priority_levels(const std::string& active_pref,
-                                const std::string& inactive_pref)
-{
-	auto to_level = [](const std::string& pref) {
-		if (pref == "auto") {
-			return PRIORITY_LEVEL_AUTO;
-		}
-		if (pref == "lowest") {
-			return PRIORITY_LEVEL_LOWEST;
-		}
-		if (pref == "lower") {
-			return PRIORITY_LEVEL_LOWER;
-		}
-		if (pref == "normal") {
-			return PRIORITY_LEVEL_NORMAL;
-		}
-		if (pref == "higher") {
-			return PRIORITY_LEVEL_HIGHER;
-		}
-		if (pref == "highest") {
-			return PRIORITY_LEVEL_HIGHEST;
-		}
-		LOG_WARNING("SDL: Invalid 'priority' setting: '%s', using 'auto'",
-		            pref.c_str());
-
-		return PRIORITY_LEVEL_AUTO;
-	};
-
-	sdl.priority.active   = to_level(active_pref);
-	sdl.priority.inactive = to_level(inactive_pref);
-}
-
 static void restart_hotkey_handler([[maybe_unused]] bool pressed)
 {
 	DOSBOX_Restart();
@@ -2993,10 +2961,6 @@ static void sdl_section_init()
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
-
-	auto priority_conf = section->GetMultiVal("priority")->GetSection();
-	set_priority_levels(priority_conf->GetString("active"),
-	                    priority_conf->GetString("inactive"));
 
 	sdl.pause_when_inactive = section->GetBool("pause_when_inactive");
 
@@ -3990,18 +3954,9 @@ static void init_sdl_config_settings(SectionProp& section)
 	pbool = section.AddBool("waitonerror", Always, true);
 	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
 
-	pmulti = section.AddMultiVal("priority", Always, " ");
-	pmulti->SetValue("auto auto");
-	pmulti->SetHelp(
-	        "Priority levels to apply when active and inactive, respectively.\n"
-	        "('auto auto' by default)\n"
-	        "'auto' lets the host operating system manage the priority.");
-
-	auto psection = pmulti->GetSection();
-	psection->AddString("active", Always, "auto")
-	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
-	psection->AddString("inactive", Always, "auto")
-	        ->SetValues({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	pstring = section.AddString("priority", Deprecated, "");
+	pstring->SetHelp(
+	        "The [color=light-green]'priority'[reset] setting has been removed.");
 
 	pbool = section.AddBool("mute_when_inactive", OnlyAtStart, false);
 	pbool->SetHelp("Mute the sound when the window is inactive ('off' by default).");
