@@ -3292,9 +3292,12 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_WINDOWEVENT_RESIZED: {
-		// TODO pixels or logical units?
-		// LOG_DEBUG("SDL: Window has been resized to %dx%d",
-		// event.window.data1, event.window.data2);
+		// Window dimensions in logical coordinates
+		const auto width  = event.window.data1;
+		const auto height = event.window.data2;
+
+		// LOG_DEBUG("SDL: Window has been resized to %dx%d", width,
+		// height);
 
 		// When going from an initial fullscreen to windowed state, this
 		// event will be called moments before SDL's windowed mode is
@@ -3306,6 +3309,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// the window, but maybe_log_display_properties() will only output
 		// a log entry if the image dimensions have actually changed.
 		maybe_log_display_properties();
+
+		set_section_property_value("sdl",
+		                           "window_size",
+		                           format_str("%dx%d", width, height));
 		return true;
 	}
 
