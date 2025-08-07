@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include "control.h"
+#include "command_line.h"
 #include "debug.h"
 #include "lazyflags.h"
 #include "mapper.h"

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText:  2023-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+#include "command_line.h"
+
 #include "fs_utils.h"
 #include "programs.h"
 #include "string_utils.h"
