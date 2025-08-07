@@ -422,9 +422,14 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& pvars_in)
 				                 p->propname.c_str(),
 				                 sec->GetName());
 
-				if (p->IsDeprecated()) {
+				if (p->IsDeprecatedButAllowed()) {
 					output.AddString(MSG_Get(
-					        "PROGRAM_CONFIG_DEPRECATION_WARNING"));
+					        "PROGRAM_CONFIG_DEPRECATED_BUT_ALLOWED_WARNING"));
+					output.AddString("\n");
+
+				} else if (p->IsDeprecated()) {
+					output.AddString(MSG_Get(
+					        "PROGRAM_CONFIG_DEPRECATED_WARNING"));
 					output.AddString("\n");
 				}
 
@@ -1059,11 +1064,15 @@ void PROGRAMS_AddMessages()
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
 	        "restart hotkey.\n");
 
-	MSG_Add("PROGRAM_CONFIG_DEPRECATION_WARNING",
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_BUT_ALLOWED_WARNING",
 	        "[color=light-red]This is a deprecated setting only kept for "
 	        "compatibility with old configs.\n"
 	        "Please use the suggested alternatives; support will be removed "
 	        "in the future.[reset]\n");
+
+	MSG_Add("PROGRAM_CONFIG_DEPRECATED_WARNING",
+	        "[color=light-red]This setting is no longer available; "
+	        "please use the suggested alternatives.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
 	        "There is no property [color=light-green]'%s'[reset] in section "
