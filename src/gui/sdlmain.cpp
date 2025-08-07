@@ -2892,7 +2892,6 @@ static void sdl_section_init()
 
 	sdl.active               = false;
 	sdl.updating_framebuffer = false;
-	sdl.wait_on_error        = section->GetBool("waitonerror");
 
 	sdl.desktop.is_fullscreen = control->arguments.fullscreen ||
 	                            section->GetBool("fullscreen");
@@ -3890,8 +3889,8 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "Moved to [color=light-cyan][mouse][reset] section and "
 	        "renamed to [color=light-green]'mouse_raw_input'[reset].");
 
-	pbool = section.AddBool("waitonerror", Always, true);
-	pbool->SetHelp("Keep the console open if an error has occurred ('on' by default).");
+	pbool = section.AddBool("waitonerror", Deprecated, true);
+	pbool->SetHelp("The [color=light-green]'waitonerror'[reset] setting has been removed.");
 
 	pstring = section.AddString("priority", Deprecated, "");
 	pstring->SetHelp(
@@ -4659,33 +4658,18 @@ int sdl_main(int argc, char* argv[])
 		DOSBOX_DestroyModules();
 
 	} catch (char* error) {
+		// TODO Maybe show popup dialog with the error in addition to
+		// logging it (use the tiny osdialog lib).
+		LOG_ERR("Unexpected error: %s", error);
 		return_code = 1;
 
-		// TODO Show warning popup dialog with the error (use the tiny
-		// osdialog lib) with console log fallback
-		GFX_ShowMsg("Exit to error: %s", error);
-
-		fflush(nullptr);
-
-		if (sdl.wait_on_error) {
-			// TODO Maybe look for some way to show message in linux?
-#if (C_DEBUGGER)
-			GFX_ShowMsg("Press enter to continue");
-
-			fflush(nullptr);
-			fgetc(stdin);
-
-#elif defined(WIN32)
-			// TODO not needed once we should the popup dialog
-			Sleep(5000);
-#endif
-		}
 	} catch (const std::exception& e) {
-		// Catch all exceptions that derive from the standard library
+		// TODO Maybe show popup dialog with the error in addition to
+		// logging it (use the tiny osdialog lib).
 		LOG_ERR("Standard library exception: %s", e.what());
 		return_code = 1;
+
 	} catch (...) {
-		// Just exit
 		return_code = 1;
 	}
 
