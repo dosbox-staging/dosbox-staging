@@ -258,9 +258,11 @@ struct SDL_Block {
 	int display_number        = 0;
 
 	struct {
-		SDL_Surface* input_surface   = nullptr;
-		SDL_Texture* texture         = nullptr;
-		SDL_PixelFormat* pixelFormat = nullptr;
+		SDL_Surface* curr_framebuf   = nullptr;
+		SDL_Surface* last_framebuf   = nullptr;
+
+		SDL_PixelFormat* pixel_format = nullptr;
+		SDL_Texture* texture          = nullptr;
 
 		InterpolationMode interpolation_mode = InterpolationMode::Bilinear;
 	} texture = {};

@@ -1097,17 +1097,21 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 
 static void clean_up_sdl_resources()
 {
-	if (sdl.texture.pixelFormat) {
-		SDL_FreeFormat(sdl.texture.pixelFormat);
-		sdl.texture.pixelFormat = nullptr;
+	if (sdl.texture.last_framebuf) {
+		SDL_FreeSurface(sdl.texture.last_framebuf);
+		sdl.texture.last_framebuf = nullptr;
+	}
+	if (sdl.texture.curr_framebuf) {
+		SDL_FreeSurface(sdl.texture.curr_framebuf);
+		sdl.texture.curr_framebuf = nullptr;
+	}
+	if (sdl.texture.pixel_format) {
+		SDL_FreeFormat(sdl.texture.pixel_format);
+		sdl.texture.pixel_format = nullptr;
 	}
 	if (sdl.texture.texture) {
 		SDL_DestroyTexture(sdl.texture.texture);
 		sdl.texture.texture = nullptr;
-	}
-	if (sdl.texture.input_surface) {
-		SDL_FreeSurface(sdl.texture.input_surface);
-		sdl.texture.input_surface = nullptr;
 	}
 }
 
@@ -1566,9 +1570,9 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 static void update_frame_texture()
 {
 	SDL_UpdateTexture(sdl.texture.texture,
-	                  nullptr, // update entire texture
-	                  sdl.texture.input_surface->pixels,
-	                  sdl.texture.input_surface->pitch);
+	                  nullptr, // entire texture
+	                  sdl.texture.last_framebuf->pixels,
+	                  sdl.texture.last_framebuf->pitch);
 }
 
 static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
@@ -1970,16 +1974,10 @@ std::optional<uint8_t> init_gl_renderer(const uint8_t flags, const int render_wi
 
 static void set_vsync_sdl_texture(const bool is_enabled)
 {
-	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
-	// set to "1", "0", adapative is currently not supported, so we
-	// also treat it as "1"
-	const auto hint_str = is_enabled ? "1" : "0";
-
-	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_FALSE) {
+	if (SDL_RenderSetVSync(sdl.renderer, (is_enabled ? 1 : 0))) {
 		LOG_WARNING("SDL: Failed %s vsync: %s",
 		            (is_enabled ? "enabling" : "disabling"),
 		            SDL_GetError());
-		return;
 	}
 }
 
@@ -2014,21 +2012,28 @@ uint8_t init_sdl_texture_renderer()
 		E_Exit("SDL: Failed to create texture");
 	}
 
-	// release the existing surface if needed
-	auto& texture_input_surface = sdl.texture.input_surface;
-	if (texture_input_surface) {
-		SDL_FreeSurface(texture_input_surface);
-		texture_input_surface = nullptr;
+	// Free the existing framebuffers
+	if (sdl.texture.curr_framebuf) {
+		SDL_FreeSurface(sdl.texture.curr_framebuf);
+		sdl.texture.curr_framebuf = nullptr;
+	}
+	if (sdl.texture.last_framebuf) {
+		SDL_FreeSurface(sdl.texture.last_framebuf);
+		sdl.texture.last_framebuf = nullptr;
 	}
 
-	// ensure we don't leak
-	assert(texture_input_surface == nullptr);
-
-	texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
+	sdl.texture.curr_framebuf = SDL_CreateRGBSurfaceWithFormat(
 	        0, sdl.draw.render_width_px, sdl.draw.render_height_px, 32, texture_format);
 
-	if (!texture_input_surface) {
-		E_Exit("SDL: Error while preparing texture input");
+	if (!sdl.texture.curr_framebuf) {
+		E_Exit("SDL: Error creating surface");
+	}
+
+	sdl.texture.last_framebuf = SDL_CreateRGBSurfaceWithFormat(
+	        0, sdl.draw.render_width_px, sdl.draw.render_height_px, 32, texture_format);
+
+	if (!sdl.texture.last_framebuf) {
+		E_Exit("SDL: Error creating surface");
 	}
 
 	SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -2037,9 +2042,8 @@ uint8_t init_sdl_texture_renderer()
 	assert(sdl.texture.texture);
 	SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
-	// ensure we don't leak
-	assert(sdl.texture.pixelFormat == nullptr);
-	sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+	assert(sdl.texture.pixel_format == nullptr);
+	sdl.texture.pixel_format = SDL_AllocFormat(pixel_format);
 
 	switch (SDL_BITSPERPIXEL(pixel_format)) {
 	case 8: flags = GFX_CAN_8; break;
@@ -2353,10 +2357,10 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 
 	switch (sdl.rendering_backend) {
 	case RenderingBackend::Texture:
-		assert(sdl.texture.input_surface);
+		assert(sdl.texture.curr_framebuf);
 
-		pixels = static_cast<uint8_t*>(sdl.texture.input_surface->pixels);
-		pitch = sdl.texture.input_surface->pitch;
+		pixels = static_cast<uint8_t*>(sdl.texture.curr_framebuf->pixels);
+		pitch = sdl.texture.curr_framebuf->pitch;
 
 		sdl.updating = true;
 		return true;
@@ -2373,7 +2377,8 @@ bool GFX_StartUpdate(uint8_t*& pixels, int& pitch)
 		static_assert(std::is_same<decltype(pitch), decltype((sdl.opengl.pitch))>::value,
 		              "Our internal pitch types should be the same.");
 
-		pitch        = sdl.opengl.pitch;
+		pitch = sdl.opengl.pitch;
+
 		sdl.updating = true;
 		return true;
 #else
@@ -2399,7 +2404,24 @@ void GFX_EndUpdate([[maybe_unused]] const uint16_t* num_changed_lines)
 		// frames are skiped due to host vs DOS refresh mismatch, we
 		// don't want to upload the texture for the skipped frames.
 		//
-		sdl.opengl.last_framebuf = sdl.opengl.curr_framebuf;
+		switch (sdl.rendering_backend) {
+		case RenderingBackend::OpenGl:
+			sdl.opengl.last_framebuf = sdl.opengl.curr_framebuf;
+			break;
+
+		case RenderingBackend::Texture: {
+			// TODO Couldn't get SDL_BlitSurface to work... If you
+			// can, feel free to use that here, but this works
+			// perfectly fine.
+			std::memcpy(sdl.texture.last_framebuf->pixels,
+			            sdl.texture.curr_framebuf->pixels,
+			            (sdl.texture.curr_framebuf->h *
+			             sdl.texture.curr_framebuf->pitch));
+
+		} break;
+
+		default: assertm(false, "Invalid RenderingBackend");
+		}
 	}
 
 	if (GFX_GetPresentationMode() == PresentationMode::DosRate) {
@@ -2446,8 +2468,8 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
 	switch (sdl.rendering_backend) {
 	case RenderingBackend::Texture:
-		assert(sdl.texture.pixelFormat);
-		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
+		assert(sdl.texture.pixel_format);
+		return SDL_MapRGB(sdl.texture.pixel_format, red, green, blue);
 
 	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
