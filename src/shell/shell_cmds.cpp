@@ -24,6 +24,7 @@
 #include "bios.h"
 #include "callback.h"
 #include "control.h"
+#include "command_line.h"
 #include "cross.h"
 #include "dos_inc.h"
 #include "drives.h"

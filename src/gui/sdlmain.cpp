@@ -42,6 +42,7 @@
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
+#include "command_line.h"
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"

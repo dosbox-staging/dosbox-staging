@@ -13,6 +13,7 @@
 #include "serialmouse.h"
 
 #include "checks.h"
+#include "command_line.h"
 #include "math_utils.h"
 
 #include "../input/mouse_interfaces.h"

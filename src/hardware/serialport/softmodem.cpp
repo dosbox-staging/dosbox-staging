@@ -12,6 +12,7 @@
 #include <sstream>
 #include <utility>
 
+#include "command_line.h"
 #include "string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
