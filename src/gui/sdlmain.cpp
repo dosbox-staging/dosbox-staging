@@ -1596,24 +1596,6 @@ static void update_viewport()
 	}
 }
 
-// A safer way to call SDL_SetWindowSize because it ensures the event-callback
-// is disabled during the resize event. This prevents the event callback from
-// firing before the window is resized in which case an endless loop can occur
-//
-static void safe_set_window_size(const int w, const int h)
-{
-	decltype(sdl.draw.callback) saved_callback = nullptr;
-
-	// Swap and save the callback with a a no-op
-	std::swap(sdl.draw.callback, saved_callback);
-
-	assert(sdl.window);
-	SDL_SetWindowSize(sdl.window, w, h);
-
-	// Swap the saved callback back in
-	std::swap(sdl.draw.callback, saved_callback);
-}
-
 static void set_window_transparency(const int transparency)
 {
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
@@ -1659,8 +1641,9 @@ static void enter_fullscreen()
 		SDL_SetWindowResizable(sdl.window, SDL_FALSE);
 		SDL_SetWindowPosition(sdl.window, 0, 0);
 
-		safe_set_window_size(sdl.desktop.fullscreen.width + 1,
-		                     sdl.desktop.fullscreen.height);
+		SDL_SetWindowSize(sdl.window,
+		                  sdl.desktop.fullscreen.width + 1,
+		                  sdl.desktop.fullscreen.height);
 
 		sdl.desktop.fullscreen.is_forced_borderless_fullscreen = true;
 
@@ -1690,8 +1673,9 @@ static void exit_fullscreen()
 		}
 		SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 
-		safe_set_window_size(sdl.desktop.fullscreen.prev_window.width,
-		                     sdl.desktop.fullscreen.prev_window.height);
+		SDL_SetWindowSize(sdl.window,
+		                  sdl.desktop.fullscreen.prev_window.width,
+		                  sdl.desktop.fullscreen.prev_window.height);
 
 		SDL_SetWindowPosition(sdl.window,
 		                      sdl.desktop.fullscreen.prev_window.x_pos,
