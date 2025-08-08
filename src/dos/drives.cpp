@@ -6,7 +6,7 @@
 #include <string_view>
 
 #include "bios_disk.h"
-#include "ide.h"
+#include "hardware/ide.h"
 #include "string_utils.h"
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
