@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "audio/mixer.h"
-#include "dma.h"
+#include "hardware/dma.h"
 #include "rwqueue.h"
 
 #include <queue>

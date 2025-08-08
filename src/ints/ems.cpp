@@ -8,18 +8,18 @@
 #include <cstring>
 #include <cstdlib>
 
+#include "bios.h"
 #include "callback.h"
+#include "cpu.h"
+#include "dos_inc.h"
+#include "hardware/dma.h"
+#include "inout.h"
+#include "keyboard.h"
 #include "mem.h"
 #include "paging.h"
-#include "bios.h"
-#include "keyboard.h"
 #include "regs.h"
-#include "inout.h"
-#include "dos_inc.h"
 #include "setup.h"
 #include "support.h"
-#include "cpu.h"
-#include "dma.h"
 
 #define EMM_PAGEFRAME	0xE000
 #define EMM_PAGEFRAME4K	((EMM_PAGEFRAME*16)/4096)

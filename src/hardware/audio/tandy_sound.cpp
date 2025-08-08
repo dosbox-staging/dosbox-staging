@@ -32,7 +32,7 @@
 #include "audio/channel_names.h"
 #include "bios.h"
 #include "checks.h"
-#include "dma.h"
+#include "hardware/dma.h"
 #include "hardware.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
