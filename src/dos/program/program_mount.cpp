@@ -8,8 +8,8 @@
 #include "dosbox.h"
 
 #include "bios_disk.h"
-#include "cdrom.h"
 #include "config.h"
+#include "dos/cdrom.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "ints/int10.h"
