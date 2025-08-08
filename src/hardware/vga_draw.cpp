@@ -10,9 +10,9 @@
 #include <cstring>
 #include <utility>
 
-#include "../gui/render_scalers.h"
-#include "../ints/int10.h"
 #include "bitops.h"
+#include "gui/render_scalers.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"

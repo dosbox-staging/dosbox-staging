@@ -6,7 +6,7 @@
 #include "inout.h"
 #include "vga.h"
 
-#include "../ints/int10.h"
+#include "ints/int10.h"
 
 static void update_palette_mappings()
 {

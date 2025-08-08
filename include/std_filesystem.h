@@ -4,6 +4,6 @@
 #ifndef DOSBOX_FILESYSTEM_H
 #define DOSBOX_FILESYSTEM_H
 
-#include "../src/libs/ghc/ghc/fs_std_fwd.hpp"
+#include "ghc/ghc/fs_std_fwd.hpp"
 
 #endif

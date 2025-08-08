@@ -11,11 +11,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../ints/int10.h"
 #include "autoexec.h"
 #include "bios.h"
 #include "checks.h"
 #include "dos_locale.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "mem.h"
 #include "string_utils.h"

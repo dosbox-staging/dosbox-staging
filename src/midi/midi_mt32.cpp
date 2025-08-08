@@ -15,12 +15,12 @@
 
 #include <SDL_endian.h>
 
-#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "channel_names.h"
 #include "config.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"

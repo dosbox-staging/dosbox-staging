@@ -14,14 +14,13 @@
 #include "byteorder.h"
 #include "callback.h"
 #include "checks.h"
-#include "dosbox_config.h"
 #include "cpu.h"
 #include "dos_inc.h"
+#include "dosbox_config.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
-
-#include "../../ints/int10.h"
 
 CHECK_NARROWING();
 

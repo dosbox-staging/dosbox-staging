@@ -18,6 +18,7 @@
 #include "debug.h"
 #include "cross.h" //snprintf
 #include "cpu.h"
+#include "cpu/lazyflags.h"
 #include "video.h"
 #include "pic.h"
 #include "mapper.h"
@@ -32,7 +33,6 @@
 #include "shell.h"
 #include "programs.h"
 #include "debug_inc.h"
-#include "../cpu/lazyflags.h"
 #include "keyboard.h"
 #include "setup.h"
 #include "std_filesystem.h"

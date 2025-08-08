@@ -358,7 +358,11 @@ add_copy_assets()
 #target_link_libraries(dosbox PRIVATE Tracy::TracyClient)
 
 include_directories(
-  include src/libs src/gui ${CMAKE_CURRENT_BINARY_DIR}/include
+  include
+  src
+  src/gui
+  src/libs
+  ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 add_library(libdosboxcommon STATIC)

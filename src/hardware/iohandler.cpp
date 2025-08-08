@@ -9,10 +9,10 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "setup.h"
-#include "cpu.h"
-#include "../src/cpu/lazyflags.h"
 #include "callback.h"
+#include "cpu.h"
+#include "cpu/lazyflags.h"
+#include "setup.h"
 
 //#define ENABLE_PORTLOG
 

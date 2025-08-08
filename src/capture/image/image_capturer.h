@@ -9,7 +9,7 @@
 
 #include "std_filesystem.h"
 
-#include "../capture.h"
+#include "capture/capture.h"
 #include "image_saver.h"
 #include "render.h"
 

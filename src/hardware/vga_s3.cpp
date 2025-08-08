@@ -9,8 +9,8 @@
 #include <string>
 #include <map>
 
-#include "../ints/int10.h"
 #include "inout.h"
+#include "ints/int10.h"
 #include "mem.h"
 #include "pci_bus.h"
 #include "support.h"

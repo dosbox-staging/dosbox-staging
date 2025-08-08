@@ -11,6 +11,7 @@
 #include "cpu.h"
 #include "debug.h"
 #include "dos_inc.h"
+#include "hardware/vmware.h"
 #include "mem.h"
 #include "paging.h"
 #include "program_setver.h"
@@ -18,8 +19,6 @@
 #include "regs.h"
 #include "string_utils.h"
 #include "video.h"
-
-#include "../hardware/vmware.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

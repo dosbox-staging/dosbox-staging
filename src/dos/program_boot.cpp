@@ -14,15 +14,14 @@
 #include "dos_windows.h"
 #include "drives.h"
 #include "fs_utils.h"
+#include "hardware/virtualbox.h"
+#include "hardware/vmware.h"
 #include "mapper.h"
 #include "mouse.h"
 #include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
 #include "video.h"
-
-#include "../hardware/virtualbox.h"
-#include "../hardware/vmware.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
                               uint32_t* bsize, uint8_t* error)

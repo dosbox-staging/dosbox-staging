@@ -4,7 +4,7 @@
 
 #include "dosbox.h"
 
-#include "../dos/dos_locale.h"
+#include "dos/dos_locale.h"
 #include "ansi_code_markup.h"
 #include "checks.h"
 #include "config.h"

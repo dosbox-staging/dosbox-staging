@@ -5,11 +5,11 @@
 
 #include <map>
 
-#include "../hardware/serialport/directserial.h"
-#include "../hardware/serialport/serialdummy.h"
-#include "../hardware/serialport/softmodem.h"
-#include "../hardware/serialport/nullmodem.h"
-#include "../hardware/serialport/serialmouse.h"
+#include "hardware/serialport/directserial.h"
+#include "hardware/serialport/nullmodem.h"
+#include "hardware/serialport/serialdummy.h"
+#include "hardware/serialport/serialmouse.h"
+#include "hardware/serialport/softmodem.h"
 
 #include "command_line.h"
 #include "program_more_output.h"
