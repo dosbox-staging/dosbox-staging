@@ -15,8 +15,8 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
-#include "../audio/compressor.h"
-#include "../capture/capture.h"
+#include "audio/compressor.h"
+#include "capture/capture.h"
 #include "channel_names.h"
 #include "checks.h"
 #include "config.h"

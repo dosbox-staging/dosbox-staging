@@ -7,12 +7,12 @@
 
 #include "dosbox.h"
 
-#include "../ints/int10.h"
 #include "bios_disk.h"
 #include "cdrom.h"
 #include "config.h"
 #include "drives.h"
 #include "fs_utils.h"
+#include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell.h"
 #include "string_utils.h"

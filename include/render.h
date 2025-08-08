@@ -9,7 +9,7 @@
 #include <optional>
 #include <string>
 
-#include "../src/gui/render_scalers.h"
+#include "gui/render_scalers.h"
 #include "fraction.h"
 #include "rect.h"
 #include "vga.h"

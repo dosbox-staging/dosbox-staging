@@ -19,9 +19,9 @@
 #include <stack>
 #include <string>
 
-#include "../../dos/program_more_output.h"
 #include "callback.h"
 #include "channel_names.h"
+#include "dos/program_more_output.h"
 #include "dos_inc.h"
 #include "dos_system.h"
 #include "mapper.h"

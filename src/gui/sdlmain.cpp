@@ -36,16 +36,16 @@
 #include <SDL.h>
 #endif // C_OPENGL
 
-#include "../capture/capture.h"
-#include "../dos/dos_locale.h"
-#include "../ints/int10.h"
+#include "capture/capture.h"
+#include "command_line.h"
 #include "config.h"
 #include "cpu.h"
 #include "cross.h"
-#include "command_line.h"
 #include "debug.h"
+#include "dos/dos_locale.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "ints/int10.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"

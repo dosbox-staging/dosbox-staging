@@ -16,11 +16,10 @@
 #include "checks.h"
 #include "cpu.h"
 #include "intel8042.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "regs.h"
-
-#include "../../ints/int10.h"
 
 CHECK_NARROWING();
 

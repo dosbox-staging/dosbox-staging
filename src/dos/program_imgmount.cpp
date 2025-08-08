@@ -8,7 +8,6 @@
 
 #include <vector>
 
-#include "../ints/int10.h"
 #include "bios_disk.h"
 #include "cdrom.h"
 #include "config.h"
@@ -16,6 +15,7 @@
 #include "drives.h"
 #include "fs_utils.h"
 #include "ide.h"
+#include "ints/int10.h"
 #include "mapper.h"
 #include "program_more_output.h"
 #include "program_mount_common.h"

@@ -11,12 +11,12 @@
 #include <tuple>
 #include <vector>
 
-#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "channel_names.h"
 #include "config.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "ints/int10.h"
 #include "math_utils.h"
 #include "mixer.h"
 #include "notifications.h"

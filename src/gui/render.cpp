@@ -10,7 +10,7 @@
 #include <memory>
 #include <mutex>
 
-#include "../capture/capture.h"
+#include "capture/capture.h"
 #include "config.h"
 #include "fraction.h"
 #include "mapper.h"

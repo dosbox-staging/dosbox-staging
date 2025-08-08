@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "../src/hardware/iohandler_containers.cpp"
+#include "hardware/iohandler_containers.cpp"
 
 #include <cassert>
 #include <cstdint>

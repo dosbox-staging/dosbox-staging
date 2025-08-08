@@ -8,10 +8,10 @@
 #include <cstring>
 #include <memory>
 
-#include "../ints/int10.h"
 #include "callback.h"
 #include "clipboard.h"
 #include "file_reader.h"
+#include "ints/int10.h"
 #include "keyboard.h"
 #include "regs.h"
 #include "unicode.h"

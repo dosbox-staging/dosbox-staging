@@ -13,9 +13,9 @@
 #include <string>
 #include <vector>
 
-#include "../libs/decoders/dr_flac.h"
 #include "channel_names.h"
 #include "checks.h"
+#include "decoders/dr_flac.h"
 #include "mixer.h"
 #include "setup.h"
 #include "timer.h"

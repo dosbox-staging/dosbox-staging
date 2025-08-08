@@ -32,7 +32,7 @@
 #include "string_utils.h"
 
 #include "dosbox_test_fixture.h"
-#include "../src/dos/dos_files.cpp"
+#include "dos/dos_files.cpp"
 
 namespace {
 

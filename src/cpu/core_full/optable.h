@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "../string_ops.h"
+#include "cpu/string_ops.h"
 
 /* Big ass opcode table normal,double, 66 normal, 66 double */
 static OpCode OpCodeTable[1024]={

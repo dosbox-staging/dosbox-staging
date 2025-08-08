@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "../capture/capture.h"
+#include "capture/capture.h"
 #include "byteorder.h"
 #include "checks.h"
 

@@ -3,11 +3,11 @@
 
 #include "program_more_output.h"
 
-#include "../ints/int10.h"
 #include "ascii.h"
 #include "callback.h"
 #include "checks.h"
 #include "dos_inc.h"
+#include "ints/int10.h"
 #include "shell.h"
 #include "string_utils.h"
 

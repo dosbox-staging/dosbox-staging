@@ -25,7 +25,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "../src/shell/shell_cmds.cpp"
+#include "shell/shell_cmds.cpp"
 #include "dosbox_test_fixture.h"
 #include "string_utils.h"
 

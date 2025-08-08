@@ -9,8 +9,8 @@
 #include <memory>
 #include <optional>
 
-#include "../audio/clap/event_list.h"
-#include "../audio/clap/plugin.h"
+#include "audio/clap/event_list.h"
+#include "audio/clap/plugin.h"
 #include "mixer.h"
 #include "rwqueue.h"
 

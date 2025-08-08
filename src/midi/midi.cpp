@@ -14,8 +14,8 @@
 
 #include <SDL.h>
 
-#include "../capture/capture.h"
 #include "ansi_code_markup.h"
+#include "capture/capture.h"
 #include "config.h"
 #include "cross.h"
 #include "mapper.h"

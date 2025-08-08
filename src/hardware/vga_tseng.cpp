@@ -6,11 +6,11 @@
 
 #include <cstdlib>
 
+#include "inout.h"
+#include "ints/int10.h"
+#include "mem.h"
 #include "setup.h"
 #include "vga.h"
-#include "inout.h"
-#include "mem.h"
-#include "../ints/int10.h"
 
 // Tseng ET4K data
 typedef struct {

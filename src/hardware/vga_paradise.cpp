@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
+#include "inout.h"
+#include "ints/int10.h"
+#include "mem.h"
 #include "setup.h"
 #include "vga.h"
-#include "inout.h"
-#include "mem.h"
-#include "../ints/int10.h"
 
 struct SVGA_PVGA1A_DATA {
 	uint8_t PR0A = 0;

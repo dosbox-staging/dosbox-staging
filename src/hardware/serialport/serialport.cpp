@@ -10,12 +10,12 @@
 #include <cstring>
 #include <tuple>
 
-#include "../../capture/capture.h"
+#include "bios.h"					// SetComPorts(..)
+#include "callback.h"				// CALLBACK_Idle
+#include "capture/capture.h"
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
-#include "bios.h"					// SetComPorts(..)
-#include "callback.h"				// CALLBACK_Idle
 #include "string_utils.h"
 
 #include "serialport.h"

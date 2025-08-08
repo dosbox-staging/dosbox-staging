@@ -18,16 +18,16 @@
 #include <string>
 #include <vector>
 
-#include "../dos/program_more_output.h"
-#include "../ints/int10.h"
 #include "ansi_code_markup.h"
 #include "bios.h"
 #include "callback.h"
-#include "config.h"
 #include "command_line.h"
+#include "config.h"
 #include "cross.h"
+#include "dos/program_more_output.h"
 #include "dos_inc.h"
 #include "drives.h"
+#include "ints/int10.h"
 #include "paging.h"
 #include "regs.h"
 #include "string_utils.h"

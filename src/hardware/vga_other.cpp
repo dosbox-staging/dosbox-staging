@@ -9,11 +9,11 @@
 #include <cstdint>
 #include <cstring>
 
-#include "../ints/int10.h"
 #include "bitops.h"
 #include "checks.h"
 #include "config.h"
 #include "inout.h"
+#include "ints/int10.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"

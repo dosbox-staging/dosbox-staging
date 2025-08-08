@@ -8,7 +8,7 @@
 #include <string>
 #include <utility>
 
-#include "../ints/int10.h"
+#include "ints/int10.h"
 #include "logging.h"
 #include "math_utils.h"
 #include "pic.h"
