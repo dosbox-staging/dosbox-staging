@@ -12,7 +12,7 @@
 #include "dosbox_config.h"
 #include "inout.h"
 #include "mem.h"
-#include "pic.h"
+#include "hardware/pic.h"
 
 CHECK_NARROWING();
 

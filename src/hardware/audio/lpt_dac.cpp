@@ -8,7 +8,7 @@
 
 #include "hardware/timer.h"
 #include "math_utils.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "support.h"
 

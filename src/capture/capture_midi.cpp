@@ -11,7 +11,7 @@
 #include <cstring>
 
 #include "midi/midi.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "support.h"
 
 static struct {

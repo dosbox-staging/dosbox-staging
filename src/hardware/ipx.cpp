@@ -13,21 +13,21 @@
 #include <cstring>
 #include <ctime>
 
-#include "cross.h"
-#include "string_utils.h"
-#include "cpu.h"
-#include "regs.h"
-#include "inout.h"
-#include "setup.h"
-#include "debug.h"
 #include "callback.h"
+#include "cpu.h"
+#include "cross.h"
+#include "debug.h"
 #include "dos_system.h"
-#include "mem.h"
+#include "inout.h"
 #include "ipx.h"
 #include "ipxserver.h"
-#include "timer.h"
-#include "programs.h"
+#include "mem.h"
 #include "pic.h"
+#include "programs.h"
+#include "regs.h"
+#include "setup.h"
+#include "string_utils.h"
+#include "timer.h"
 
 #define SOCKTABLESIZE	150 // DOS IPX driver was limited to 150 open sockets
 

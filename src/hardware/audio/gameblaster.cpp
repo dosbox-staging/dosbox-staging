@@ -7,7 +7,7 @@
 #include "audio/channel_names.h"
 #include "checks.h"
 #include "notifications.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 
 CHECK_NARROWING();

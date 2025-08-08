@@ -40,7 +40,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "rwqueue.h"
 #include "setup.h"
 #include "tandy_sound.h"

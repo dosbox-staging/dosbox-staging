@@ -5,7 +5,7 @@
 #include "inout.h"
 #include "cpu.h"
 #include "callback.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "timer.h"
 #include "setup.h"
 

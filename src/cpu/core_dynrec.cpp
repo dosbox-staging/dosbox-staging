@@ -39,7 +39,7 @@
 #include "mem.h"
 #include "mmx.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "regs.h"
 #include "tracy.h"
 

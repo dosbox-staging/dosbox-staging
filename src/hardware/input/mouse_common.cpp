@@ -7,7 +7,7 @@
 
 #include "checks.h"
 #include "math_utils.h"
-#include "pic.h"
+#include "hardware/pic.h"
 
 CHECK_NARROWING();
 

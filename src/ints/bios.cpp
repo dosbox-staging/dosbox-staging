@@ -17,7 +17,7 @@
 #include "math_utils.h"
 #include "mem.h"
 #include "mouse.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"

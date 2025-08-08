@@ -80,7 +80,7 @@
 #include "mem.h"
 #include "paging.h"
 #include "pci_bus.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "render.h"
 #include "setup.h"
 #include "simde/x86/sse2.h"

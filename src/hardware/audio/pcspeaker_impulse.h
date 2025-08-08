@@ -9,7 +9,7 @@
 
 #include "audio/channel_names.h"
 #include "inout.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "support.h"
 

@@ -17,7 +17,7 @@
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb888.h"

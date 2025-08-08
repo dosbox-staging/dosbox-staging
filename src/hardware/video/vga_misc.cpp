@@ -4,7 +4,7 @@
 
 #include "dosbox.h"
 #include "inout.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "vga.h"
 #include <cmath>
 

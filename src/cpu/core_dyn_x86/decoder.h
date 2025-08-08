@@ -341,7 +341,7 @@ static void dyn_check_bool_exception_al(void) {
 	++used_save_info;
 }
 
-#include "pic.h"
+#include "hardware/pic.h"
 
 static void dyn_check_irqrequest(void) {
 	gen_load_host(&PIC_IRQCheck,DREG(TMPB),4);

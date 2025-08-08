@@ -13,7 +13,7 @@
 #include "mem.h"
 #include "mem_host.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "vga.h"
 

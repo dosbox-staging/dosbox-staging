@@ -9,7 +9,7 @@
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
 #include "hardware/timer.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "support.h"
 

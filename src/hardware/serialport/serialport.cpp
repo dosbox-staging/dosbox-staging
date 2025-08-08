@@ -14,7 +14,7 @@
 #include "callback.h"				// CALLBACK_Idle
 #include "capture/capture.h"
 #include "inout.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "string_utils.h"
 
