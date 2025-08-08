@@ -14,7 +14,7 @@
 #include <variant>
 #include <vector>
 
-#include "audio_frame.h"
+#include "audio/audio_frame.h"
 #include "audio/mixer.h"
 
 constexpr auto GlobalVirtualChannelName = "*";
