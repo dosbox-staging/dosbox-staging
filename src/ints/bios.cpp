@@ -13,13 +13,13 @@
 #include "hardware.h"
 #include "hardware/joystick.h"
 #include "hardware/pic.h"
+#include "hardware/serialport/serialport.h"
 #include "inout.h"
 #include "int10.h"
 #include "math_utils.h"
 #include "mem.h"
 #include "mouse.h"
 #include "regs.h"
-#include "serialport.h"
 #include "setup.h"
 
 #include <ctime>
