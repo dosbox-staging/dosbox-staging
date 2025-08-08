@@ -7,7 +7,6 @@ target_sources(libdosboxcommon PRIVATE
   audio/imfc.cpp
   audio/innovation.cpp
   audio/lpt_dac.cpp
-  audio/mpu401.cpp
   audio/opl.cpp
   audio/pcspeaker.cpp
   audio/pcspeaker_discrete.cpp
@@ -55,6 +54,7 @@ target_sources(libdosboxcommon PRIVATE
   ipxserver.cpp
   joystick.cpp
   memory.cpp
+  mpu401.cpp
   ne2000.cpp
   pci_bus.cpp
   pic.cpp
