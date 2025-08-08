@@ -3,7 +3,7 @@
 
 #include "libserial.h"
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #ifdef WIN32
 // clang-format off

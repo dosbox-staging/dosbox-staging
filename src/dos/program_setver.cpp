@@ -6,8 +6,8 @@
 #include "program_more_output.h"
 
 #include "checks.h"
-#include "config.h"
 #include "control.h"
+#include "dosbox_config.h"
 #include "setup.h"
 #include "std_filesystem.h"
 #include "string_utils.h"

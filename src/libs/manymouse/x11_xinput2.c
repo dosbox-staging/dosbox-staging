@@ -13,7 +13,7 @@
  */
 
 /* Let the project (maybe) define SUPPORT_XINPUT2 via common header */
-#include "config.h"
+#include "dosbox_config.h"
 
 #include "manymouse.h"
 

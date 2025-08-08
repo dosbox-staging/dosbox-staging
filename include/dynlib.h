@@ -4,7 +4,7 @@
 #ifndef DOSBOX_DYNLIB_H
 #define DOSBOX_DYNLIB_H
 
-#include "config.h"
+#include "dosbox_config.h"
 #include "logging.h"
 #include "std_filesystem.h"
 
