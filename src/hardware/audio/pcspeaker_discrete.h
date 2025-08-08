@@ -8,10 +8,10 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
+#include "hardware/timer.h"
 #include "pic.h"
 #include "setup.h"
 #include "support.h"
-#include "timer.h"
 
 class PcSpeakerDiscrete final : public PcSpeaker {
 public:

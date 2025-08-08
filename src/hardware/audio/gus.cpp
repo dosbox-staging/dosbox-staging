@@ -18,13 +18,13 @@
 #include "config.h"
 #include "gus.h"
 #include "hardware.h"
+#include "hardware/timer.h"
 #include "math_utils.h"
 #include "notifications.h"
 #include "pic.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"
-#include "timer.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging
 

@@ -19,13 +19,13 @@
 #include "config.h"
 #include "cross.h"
 #include "hardware/mpu401.h"
+#include "hardware/timer.h"
 #include "mapper.h"
 #include "midi_device.h"
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "timer.h"
 
 // #define DEBUG_MIDI
 

@@ -34,11 +34,11 @@
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
 #include "dos_system.h"
+#include "hardware/timer.h"
 #include "logging.h"
 #include "player.h"
 #include "rwqueue.h"
 #include "setup.h"
-#include "timer.h"
 
 // bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION

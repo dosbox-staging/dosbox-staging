@@ -11,11 +11,11 @@
 #include "checks.h"
 #include "config.h"
 #include "cpu.h"
+#include "hardware/timer.h"
 #include "intel8042.h"
 #include "intel8255.h"
 #include "pic.h"
 #include "support.h"
-#include "timer.h"
 
 CHECK_NARROWING();
 

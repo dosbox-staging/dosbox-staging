@@ -11,7 +11,7 @@
 
 #include <cassert>
 
-#include "timer.h"
+#include "hardware/timer.h"
 
 // Constants
 constexpr int connection_timeout_ms = 5000;

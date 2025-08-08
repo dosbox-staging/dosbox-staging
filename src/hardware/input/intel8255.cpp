@@ -8,8 +8,8 @@
 #include "audio/mixer.h"
 #include "bitops.h"
 #include "checks.h"
+#include "hardware/timer.h"
 #include "inout.h"
-#include "timer.h"
 
 CHECK_NARROWING();
 

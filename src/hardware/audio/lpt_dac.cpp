@@ -6,11 +6,11 @@
 
 #include "dosbox.h"
 
+#include "hardware/timer.h"
 #include "math_utils.h"
 #include "pic.h"
 #include "setup.h"
 #include "support.h"
-#include "timer.h"
 
 #include "covox.h"
 #include "disney.h"
