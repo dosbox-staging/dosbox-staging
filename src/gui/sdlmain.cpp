@@ -36,6 +36,7 @@
 #include <SDL.h>
 #endif // C_OPENGL
 
+
 #include "audio/mixer.h"
 #include "capture/capture.h"
 #include "command_line.h"
@@ -46,16 +47,16 @@
 #include "dos/dos_locale.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "hardware/joystick.h"
+#include "hardware/pic.h"
 #include "hardware/timer.h"
 #include "hardware/video/vga.h"
 #include "ints/int10.h"
-#include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "mouse.h"
 #include "pacer.h"
-#include "hardware/pic.h"
 #include "rect.h"
 #include "render.h"
 #include "sdlmain.h"
