@@ -46,6 +46,22 @@ libhardware_sources = files(
     'serialport/serialport.cpp',
     'serialport/softmodem.cpp',
 
+    'video/vga.cpp',
+    'video/vga_attr.cpp',
+    'video/vga_crtc.cpp',
+    'video/vga_dac.cpp',
+    'video/vga_draw.cpp',
+    'video/vga_gfx.cpp',
+    'video/vga_memory.cpp',
+    'video/vga_misc.cpp',
+    'video/vga_other.cpp',
+    'video/vga_paradise.cpp',
+    'video/vga_s3.cpp',
+    'video/vga_seq.cpp',
+    'video/vga_tseng.cpp',
+    'video/vga_xga.cpp',
+    'video/voodoo.cpp',
+
     'cmos.cpp',
     'dma.cpp',
     'ide.cpp',
@@ -59,25 +75,8 @@ libhardware_sources = files(
     'pci_bus.cpp',
     'pic.cpp',
     'timer.cpp',
-
-    'vga.cpp',
-    'vga_attr.cpp',
-    'vga_crtc.cpp',
-    'vga_dac.cpp',
-    'vga_draw.cpp',
-    'vga_gfx.cpp',
-    'vga_memory.cpp',
-    'vga_misc.cpp',
-    'vga_other.cpp',
-    'vga_paradise.cpp',
-    'vga_s3.cpp',
-    'vga_seq.cpp',
-    'vga_tseng.cpp',
-    'vga_xga.cpp',
-
     'virtualbox.cpp',
     'vmware.cpp',
-    'voodoo.cpp',
 )
 
 libhardware = static_library(
