@@ -31,8 +31,8 @@
 #include <string>
 #include <vector>
 
+#include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "channel_names.h"
 #include "dos_system.h"
 #include "logging.h"
 #include "player.h"

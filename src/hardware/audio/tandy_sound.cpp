@@ -29,8 +29,8 @@
 #include <queue>
 #include <string_view>
 
+#include "audio/channel_names.h"
 #include "bios.h"
-#include "channel_names.h"
 #include "checks.h"
 #include "dma.h"
 #include "hardware.h"

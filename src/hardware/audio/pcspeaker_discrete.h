@@ -6,8 +6,8 @@
 #include <queue>
 #include <string>
 
+#include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "channel_names.h"
 #include "pic.h"
 #include "setup.h"
 #include "support.h"

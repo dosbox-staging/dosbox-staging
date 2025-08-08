@@ -9,7 +9,7 @@
 #include <memory>
 #include <queue>
 
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "checks.h"
 #include "config.h"
 #include "dma.h"

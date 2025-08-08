@@ -4,6 +4,7 @@
 #ifndef DOSBOX_CHANNEL_NAMES_H
 #define DOSBOX_CHANNEL_NAMES_H
 
+#include <string>
 #include <vector>
 
 namespace ChannelName {

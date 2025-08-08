@@ -11,9 +11,9 @@
 #include <tuple>
 #include <vector>
 
+#include "audio/channel_names.h"
 #include "ansi_code_markup.h"
 #include "audio/mixer.h"
-#include "channel_names.h"
 #include "config.h"
 #include "cross.h"
 #include "fs_utils.h"

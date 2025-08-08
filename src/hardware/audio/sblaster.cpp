@@ -11,11 +11,11 @@
 #include <string>
 #include <tuple>
 
+#include "audio/channel_names.h"
 #include "autoexec.h"
 #include "bios.h"
 #include "bit_view.h"
 #include "bitops.h"
-#include "channel_names.h"
 #include "config.h"
 #include "dma.h"
 #include "hardware.h"

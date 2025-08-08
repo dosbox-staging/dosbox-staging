@@ -7,7 +7,7 @@
 #include <deque>
 #include <string>
 
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
