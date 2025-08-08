@@ -19,6 +19,7 @@
 #include <stack>
 #include <string>
 
+#include "audio/mixer.h"
 #include "callback.h"
 #include "channel_names.h"
 #include "dos/program/program_more_output.h"
@@ -26,7 +27,6 @@
 #include "dos_system.h"
 #include "mapper.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "programs.h"
 #include "regs.h"
 #include "setup.h"

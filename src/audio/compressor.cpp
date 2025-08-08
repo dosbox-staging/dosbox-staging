@@ -8,8 +8,8 @@
 #include <cassert>
 #include <cmath>
 
+#include "audio/mixer.h"
 #include "checks.h"
-#include "mixer.h"
 
 CHECK_NARROWING();
 

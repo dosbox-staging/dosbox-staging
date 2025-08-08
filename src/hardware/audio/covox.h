@@ -6,10 +6,10 @@
 
 #include "dosbox.h"
 
+#include "audio/mixer.h"
 #include "channel_names.h"
 #include "inout.h"
 #include "lpt_dac.h"
-#include "mixer.h"
 
 class Covox final : public LptDac {
 public:

@@ -13,6 +13,7 @@
 #include <thread>
 #include <unistd.h>
 
+#include "audio/mixer.h"
 #include "callback.h"
 #include "capture/capture.h"
 #include "config.h"
@@ -29,7 +30,6 @@
 #include "math_utils.h"
 #include "memory.h"
 #include "midi.h"
-#include "mixer.h"
 #include "mouse.h"
 #include "ne2000.h"
 #include "pci_bus.h"

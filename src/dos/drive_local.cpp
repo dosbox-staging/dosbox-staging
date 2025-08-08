@@ -17,11 +17,11 @@
 #include <limits>
 #include <sys/types.h>
 
+#include "audio/disk_noise.h"
 #include "cross.h"
 #include "dos_inc.h"
 #include "dos_mscdex.h"
 #include "fs_utils.h"
-#include "hardware/disk_noise.h"
 #include "inout.h"
 #include "string_utils.h"
 

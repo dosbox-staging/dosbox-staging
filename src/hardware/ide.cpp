@@ -13,6 +13,7 @@
 #include <cmath>
 #include <cassert>
 
+#include "audio/mixer.h"
 #include "bios_disk.h"
 #include "callback.h"
 #include "config.h"
@@ -21,7 +22,6 @@
 #include "ide.h"
 #include "inout.h"
 #include "mem.h"
-#include "mixer.h"
 #include "pic.h"
 #include "setup.h"
 #include "string_utils.h"

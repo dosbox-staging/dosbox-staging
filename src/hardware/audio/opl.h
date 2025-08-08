@@ -10,10 +10,10 @@
 #include <memory>
 #include <queue>
 
+#include "audio/mixer.h"
 #include "adlib_gold.h"
 #include "hardware.h"
 #include "inout.h"
-#include "mixer.h"
 #include "pic.h"
 #include "setup.h"
 

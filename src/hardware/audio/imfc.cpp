@@ -51,12 +51,12 @@
 #include <thread>
 #include <utility>
 
+#include "audio/mixer.h"
 #include "channel_names.h"
 #include "config.h"
 #include "dma.h"
 #include "inout.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "notifications.h"
 #include "pic.h"
 #include "regs.h"

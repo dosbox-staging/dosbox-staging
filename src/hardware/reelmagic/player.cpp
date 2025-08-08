@@ -31,10 +31,10 @@
 #include <string>
 #include <vector>
 
+#include "audio/mixer.h"
 #include "channel_names.h"
 #include "dos_system.h"
 #include "logging.h"
-#include "mixer.h"
 #include "player.h"
 #include "rwqueue.h"
 #include "setup.h"

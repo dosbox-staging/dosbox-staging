@@ -5,8 +5,8 @@
 #ifndef TANDY_SOUND_H
 #define TANDY_SOUND_H
 
+#include "audio/mixer.h"
 #include "dma.h"
-#include "mixer.h"
 #include "rwqueue.h"
 
 enum class ConfigProfile {

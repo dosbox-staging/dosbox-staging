@@ -16,10 +16,10 @@
 #include <string>
 #include <vector>
 
-#include "support.h"
+#include "audio/mixer.h"
 #include "mem.h"
-#include "mixer.h"
 #include "rwqueue.h"
+#include "support.h"
 
 #include "decoders/SDL_sound.h"
 

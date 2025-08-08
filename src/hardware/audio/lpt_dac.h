@@ -10,9 +10,9 @@
 #include <set>
 #include <string_view>
 
+#include "audio/mixer.h"
 #include "inout.h"
 #include "lpt.h"
-#include "mixer.h"
 #include "rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices

@@ -13,8 +13,8 @@
 #include <thread>
 #include <vector>
 
+#include "audio/mixer.h"
 #include "dynlib.h"
-#include "mixer.h"
 #include "rwqueue.h"
 #include "std_filesystem.h"
 

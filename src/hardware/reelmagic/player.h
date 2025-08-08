@@ -19,7 +19,7 @@
 #ifndef REELMAGIC_PLAYER_H
 #define REELMAGIC_PLAYER_H
 
-#include "mixer.h"
+#include "audio/mixer.h"
 #include "rwqueue.h"
 
 struct ReelMagicAudio {

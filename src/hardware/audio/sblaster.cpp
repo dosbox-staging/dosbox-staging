@@ -23,7 +23,6 @@
 #include "math_utils.h"
 #include "messages.h"
 #include "midi.h"
-#include "mixer.h"
 #include "notifications.h"
 #include "pic.h"
 #include "rwqueue.h"

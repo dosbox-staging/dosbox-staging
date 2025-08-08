@@ -20,7 +20,7 @@
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
 
-#include "mixer.h"
+#include "audio/mixer.h"
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
