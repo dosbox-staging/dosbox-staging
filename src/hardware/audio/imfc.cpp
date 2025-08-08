@@ -58,7 +58,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "notifications.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "regs.h"
 #include "setup.h"
 #include "shell.h"

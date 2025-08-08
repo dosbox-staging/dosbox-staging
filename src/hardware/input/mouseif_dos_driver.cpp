@@ -19,7 +19,7 @@
 #include "dosbox_config.h"
 #include "ints/int10.h"
 #include "math_utils.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "regs.h"
 
 CHECK_NARROWING();

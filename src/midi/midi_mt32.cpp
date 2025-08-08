@@ -26,7 +26,7 @@
 #include "math_utils.h"
 #include "midi.h"
 #include "midi_lasynth_model.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "string_utils.h"
 #include "support.h"
 

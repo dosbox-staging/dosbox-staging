@@ -55,7 +55,7 @@
 #include "math_utils.h"
 #include "mouse.h"
 #include "pacer.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "rect.h"
 #include "render.h"
 #include "sdlmain.h"

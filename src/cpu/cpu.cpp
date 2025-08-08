@@ -16,7 +16,7 @@
 #include "math_utils.h"
 #include "memory.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "programs.h"
 #include "setup.h"
 #include "string_utils.h"

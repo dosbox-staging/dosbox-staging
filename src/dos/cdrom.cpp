@@ -10,7 +10,7 @@
 #include "audio/channel_names.h"
 #include "callback.h"
 #include "dosbox.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "string_utils.h"
 
 namespace CDROM {

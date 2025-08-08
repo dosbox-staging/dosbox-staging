@@ -13,7 +13,7 @@
 #include "mem.h"
 #include "mmx.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "tracy.h"
 
 #include "simde/x86/mmx.h"

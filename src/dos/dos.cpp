@@ -17,7 +17,7 @@
 #include "dos_windows.h"
 #include "drives.h"
 #include "mem.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "program/program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"

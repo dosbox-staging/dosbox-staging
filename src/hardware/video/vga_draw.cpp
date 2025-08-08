@@ -15,7 +15,7 @@
 #include "ints/int10.h"
 #include "math_utils.h"
 #include "mem_unaligned.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb565.h"

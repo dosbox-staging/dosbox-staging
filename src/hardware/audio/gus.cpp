@@ -21,7 +21,7 @@
 #include "hardware/timer.h"
 #include "math_utils.h"
 #include "notifications.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 #include "shell.h"
 #include "string_utils.h"

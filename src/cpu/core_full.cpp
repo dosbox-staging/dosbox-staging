@@ -10,7 +10,7 @@
 #include "inout.h"
 #include "lazyflags.h"
 #include "paging.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "regs.h"
 #include "tracy.h"
 

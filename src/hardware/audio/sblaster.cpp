@@ -25,7 +25,7 @@
 #include "messages.h"
 #include "midi/midi.h"
 #include "notifications.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "rwqueue.h"
 #include "sblaster.h"
 #include "setup.h"

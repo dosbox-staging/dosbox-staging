@@ -14,7 +14,7 @@
 #include "adlib_gold.h"
 #include "hardware.h"
 #include "inout.h"
-#include "pic.h"
+#include "hardware/pic.h"
 #include "setup.h"
 
 #include "ESFMu/esfm.h"

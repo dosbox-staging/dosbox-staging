@@ -9,7 +9,7 @@
 #include "dosbox.h"
 #include "cpu.h"
 #include "lazyflags.h"
-#include "pic.h"
+#include "hardware/pic.h"
 
 LazyFlags lflags;
 
