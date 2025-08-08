@@ -6,7 +6,7 @@
 
 #include "bitops.h"
 #include "callback.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "dosbox.h"
 #include "dos_memory.h"

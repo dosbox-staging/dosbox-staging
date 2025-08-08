@@ -11,7 +11,7 @@
 #include "../ints/int10.h"
 #include "bios_disk.h"
 #include "cdrom.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "drives.h"
 #include "fs_utils.h"

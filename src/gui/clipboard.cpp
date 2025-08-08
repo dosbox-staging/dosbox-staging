@@ -4,7 +4,7 @@
 #include "clipboard.h"
 
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "logging.h"
 #include "string_utils.h"
 #include "unicode.h"

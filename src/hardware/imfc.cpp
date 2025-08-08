@@ -52,7 +52,7 @@
 #include <utility>
 
 #include "channel_names.h"
-#include "control.h"
+#include "config.h"
 #include "dma.h"
 #include "inout.h"
 #include "math_utils.h"

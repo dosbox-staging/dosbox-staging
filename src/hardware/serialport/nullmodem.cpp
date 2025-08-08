@@ -7,7 +7,7 @@
 #if C_MODEM
 
 #include "command_line.h"
-#include "control.h"
+#include "config.h"
 #include "serialport.h"
 #include "nullmodem.h"
 

@@ -12,7 +12,7 @@
 
 #include "bgrx8888.h"
 #include "bit_view.h"
-#include "control.h"
+#include "config.h"
 #include "fraction.h"
 #include "inout.h"
 #include "rgb666.h"

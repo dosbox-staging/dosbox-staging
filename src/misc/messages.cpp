@@ -7,7 +7,7 @@
 #include "../dos/dos_locale.h"
 #include "ansi_code_markup.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "fs_utils.h"
 #include "host_locale.h"

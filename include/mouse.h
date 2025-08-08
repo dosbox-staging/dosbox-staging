@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "control.h"
+#include "config.h"
 #include "rect.h"
 
 // ***************************************************************************

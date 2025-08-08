@@ -11,7 +11,7 @@
 
 #define SDL_MAIN_HANDLED
 
-#include "control.h"
+#include "config.h"
 #include "video.h"
 
 class DOSBoxTestFixture : public ::testing::Test {

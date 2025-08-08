@@ -2,8 +2,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_CONTROL_H
-#define DOSBOX_CONTROL_H
+#ifndef DOSBOX_CONFIG_H
+#define DOSBOX_CONFIG_H
 
 #include "dosbox.h"
 
@@ -156,4 +156,4 @@ extern ConfigPtr control;
 
 void DOSBOX_Restart(std::vector<std::string> &parameters = control->startup_params);
 
-#endif
+#endif // DOSBOX_CONFIG_H

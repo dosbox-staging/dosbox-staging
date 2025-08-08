@@ -9,7 +9,7 @@
 
 #include "bitops.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "intel8042.h"
 #include "intel8255.h"

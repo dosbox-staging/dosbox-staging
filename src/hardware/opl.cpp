@@ -12,7 +12,7 @@
 
 #include "channel_names.h"
 #include "checks.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "math_utils.h"
 #include "mapper.h"

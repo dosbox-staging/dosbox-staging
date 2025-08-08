@@ -15,7 +15,7 @@
 #include "../dos/program_setver.h"
 #include "autoexec.h"
 #include "callback.h"
-#include "control.h"
+#include "config.h"
 #include "fs_utils.h"
 #include "mapper.h"
 #include "regs.h"

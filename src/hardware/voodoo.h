@@ -4,7 +4,7 @@
 #ifndef DOSBOX_VOODOO_H
 #define DOSBOX_VOODOO_H
 
-#include "control.h"
+#include "config.h"
 
 void VOODOO_AddConfigSection(const ConfigPtr& conf);
 

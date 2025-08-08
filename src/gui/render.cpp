@@ -11,7 +11,7 @@
 #include <mutex>
 
 #include "../capture/capture.h"
-#include "control.h"
+#include "config.h"
 #include "fraction.h"
 #include "mapper.h"
 #include "math_utils.h"
