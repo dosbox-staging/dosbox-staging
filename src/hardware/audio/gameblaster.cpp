@@ -4,7 +4,7 @@
 
 #include "gameblaster.h"
 
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "checks.h"
 #include "notifications.h"
 #include "pic.h"

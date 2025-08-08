@@ -24,7 +24,7 @@
 #include <cstring>
 #endif
 
-#include "channel_names.h"
+#include "audio/channel_names.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "math_utils.h"

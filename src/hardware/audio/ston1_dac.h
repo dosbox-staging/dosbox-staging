@@ -6,8 +6,8 @@
 
 #include "dosbox.h"
 
+#include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "channel_names.h"
 #include "inout.h"
 #include "lpt_dac.h"
 
