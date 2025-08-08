@@ -1,5 +1,6 @@
 add_subdirectory(audio)
 add_subdirectory(capture)
+add_subdirectory(config)
 add_subdirectory(cpu)
 add_subdirectory(debug)
 add_subdirectory(dos)
