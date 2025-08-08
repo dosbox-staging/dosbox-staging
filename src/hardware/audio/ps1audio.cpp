@@ -12,7 +12,7 @@
 #include "audio/channel_names.h"
 #include "checks.h"
 #include "config.h"
-#include "dma.h"
+#include "hardware/dma.h"
 #include "hardware/mame/emu.h"
 #include "hardware/mame/sn76496.h"
 #include "hardware/timer.h"
