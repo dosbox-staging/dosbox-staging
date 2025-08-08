@@ -9,6 +9,7 @@ libaudio_sources = files(
     'envelope.cpp',
     'mixer.cpp',
     'noise_gate.cpp',
+    'opl_capture.cpp',
 )
 
 libaudio = static_library(

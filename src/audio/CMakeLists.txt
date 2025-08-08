@@ -9,4 +9,5 @@ target_sources(libdosboxcommon PRIVATE
   envelope.cpp
   mixer.cpp
   noise_gate.cpp
+  opl_capture.cpp
 )
