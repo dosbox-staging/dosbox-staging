@@ -18,7 +18,6 @@
 #include "softmodem.h"
 #include "math_utils.h"
 #include "misc_util.h"
-#include "version.h"
 
 class PhonebookEntry {
 public:

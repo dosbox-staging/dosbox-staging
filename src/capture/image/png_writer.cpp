@@ -5,10 +5,10 @@
 
 #include "png_writer.h"
 
+#include "config.h"
 #include "checks.h"
 #include "string_utils.h"
 #include "support.h"
-#include "version.h"
 
 #include <zlib.h>
 
