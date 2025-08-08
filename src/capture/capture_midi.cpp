@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "midi.h"
+#include "midi/midi.h"
 #include "pic.h"
 #include "support.h"
 
