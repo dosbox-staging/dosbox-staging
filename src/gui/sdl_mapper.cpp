@@ -17,12 +17,12 @@
 
 #include <SDL.h>
 
+#include "audio/mixer.h"
 #include "config.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "mouse.h"
 #include "pic.h"
 #include "rgb888.h"

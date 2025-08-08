@@ -8,7 +8,7 @@
 
 #include <string_view>
 
-#include "mixer.h"
+#include "audio/mixer.h"
 #include "rwqueue.h"
 #include "timer.h"
 

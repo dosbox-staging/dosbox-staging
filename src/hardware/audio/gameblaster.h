@@ -12,14 +12,13 @@
 #include <string>
 #include <vector>
 
+#include "audio/mixer.h"
 #include "audio_frame.h"
+#include "hardware/mame/emu.h"
+#include "hardware/mame/saa1099.h"
 #include "inout.h"
 #include "math_utils.h"
-#include "mixer.h"
 #include "support.h"
-
-#include "mame/emu.h"
-#include "mame/saa1099.h"
 
 class GameBlaster {
 public:
