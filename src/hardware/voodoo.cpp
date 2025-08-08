@@ -73,7 +73,7 @@
 
 #include "bitops.h"
 #include "byteorder.h"
-#include "control.h"
+#include "config.h"
 #include "cross.h"
 #include "fraction.h"
 #include "math_utils.h"

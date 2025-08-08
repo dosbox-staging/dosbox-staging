@@ -17,7 +17,7 @@
 
 #include <SDL.h>
 
-#include "control.h"
+#include "config.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"

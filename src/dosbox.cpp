@@ -15,7 +15,7 @@
 
 #include "callback.h"
 #include "capture/capture.h"
-#include "control.h"
+#include "config.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"

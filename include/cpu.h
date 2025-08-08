@@ -7,7 +7,7 @@
 
 #include "dosbox.h"
 
-#include "control.h"
+#include "config.h"
 #include "support.h"
 
 #ifndef DOSBOX_REGS_H
