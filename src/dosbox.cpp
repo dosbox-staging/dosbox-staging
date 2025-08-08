@@ -141,7 +141,7 @@ void Null_Init([[maybe_unused]] Section *sec) {
 // forward declaration
 static void increase_ticks();
 
-static Bitu Normal_Loop()
+static Bitu normal_loop()
 {
 	Bits ret;
 
@@ -155,9 +155,9 @@ static Bitu Normal_Loop()
 				if (ret >= CB_MAX) {
 					return 0;
 				}
-				Bitu blah = (*Callback_Handlers[ret])();
-				if (blah) {
-					return blah;
+				Bitu result = (*Callback_Handlers[ret])();
+				if (result) {
+					return result;
 				}
 			}
 #if C_DEBUG
@@ -166,7 +166,26 @@ static Bitu Normal_Loop()
 			}
 #endif
 		} else {
-			if (!GFX_Events()) {
+			// In 'host-rate' presentation mode, this effectively
+			// accomplishes polling at the sub-millisecond level for
+			// presenting the frame.
+			//
+			// We're effectively implementing cooperative
+			// multitasking here to present the frame at roughly the
+			// right time as `GFX_MaybePresentFrame()` is called
+			// around 2-5 times per tick (1 ms) depending on the
+			// cycles setting.
+			//
+			// This is a good-enough alternative to moving the
+			// entire emulation off the main thread and then
+			// presenting the last-rendered frame at regular
+			// intervals from the main thread.
+			//
+			if (GFX_GetPresentationMode() == PresentationMode::HostRate) {
+				GFX_MaybePresentFrame();
+			}
+
+			if (!DOSBOX_PollAndHandleEvents()) {
 				return 0;
 			}
 			if (ticks.remain > 0) {
@@ -416,12 +435,14 @@ const char* DOSBOX_GetDetailedVersion() noexcept
 	return version;
 }
 
-void DOSBOX_SetLoop(LoopHandler * handler) {
-	loop=handler;
+void DOSBOX_SetLoop(LoopHandler* handler)
+{
+	loop = handler;
 }
 
-void DOSBOX_SetNormalLoop() {
-	loop=Normal_Loop;
+void DOSBOX_SetNormalLoop()
+{
+	loop = normal_loop;
 }
 
 void DOSBOX_RunMachine()
@@ -517,7 +538,7 @@ static void DOSBOX_RealInit(Section* sec)
 	ticks.last   = GetTicks();
 	ticks.locked = false;
 
-	DOSBOX_SetLoop(&Normal_Loop);
+	DOSBOX_SetNormalLoop();
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");
 
@@ -546,7 +567,7 @@ static void DOSBOX_RealInit(Section* sec)
 		int10.vesa_modes = VesaModes::All;
 	}
 
-	VGA_SetRatePreference(section->GetString("dos_rate"));
+	VGA_SetRefreshRateMode(section->GetString("dos_rate"));
 
 	// Set the disk IO data rate
 	const auto hdd_io_speed = section->GetString("hard_disk_speed");
@@ -595,12 +616,12 @@ double DOSBOX_GetUptime()
 void DOSBOX_InitAllModuleConfigsAndMessages()
 {
 	// Note the [sdl] section is initialised in sdlmain.cpp
-	
-	SectionProp* secprop             = nullptr;
-	PropBool* pbool                  = nullptr;
-	PropInt* pint                    = nullptr;
-	PropHex* phex                    = nullptr;
-	PropString* pstring              = nullptr;
+
+	SectionProp* secprop              = nullptr;
+	PropBool* pbool                   = nullptr;
+	PropInt* pint                     = nullptr;
+	PropHex* phex                     = nullptr;
+	PropString* pstring               = nullptr;
 	PropMultiValRemain* pmulti_remain = nullptr;
 
 	// Specifies if and when a setting can be changed
@@ -614,8 +635,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	/* Setup all the different modules making up DOSBox */
 
 	secprop = control->AddSectionProp("dosbox",
-	                                   &DOSBOX_ConfigChanged,
-	                                   changeable_at_runtime);
+	                                  &DOSBOX_ConfigChanged,
+	                                  changeable_at_runtime);
 	pstring = secprop->AddString("language", always, "auto");
 	pstring->SetHelp(
 	        "Select the DOS messages language:\n"
@@ -629,17 +650,17 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	pstring = secprop->AddString("machine", only_at_start, "svga_s3");
 	pstring->SetValues({"hercules",
-	                     "cga_mono",
-	                     "cga",
-	                     "pcjr",
-	                     "tandy",
-	                     "ega",
-	                     "svga_s3",
-	                     "svga_et3000",
-	                     "svga_et4000",
-	                     "svga_paradise",
-	                     "vesa_nolfb",
-	                     "vesa_oldvbe"});
+	                    "cga_mono",
+	                    "cga",
+	                    "pcjr",
+	                    "tandy",
+	                    "ega",
+	                    "svga_s3",
+	                    "svga_et3000",
+	                    "svga_et4000",
+	                    "svga_paradise",
+	                    "vesa_nolfb",
+	                    "vesa_oldvbe"});
 
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->SetHelp(
@@ -700,18 +721,18 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	pstring = secprop->AddString("vmemsize", only_at_start, "auto");
 
 	pstring->SetValues({"auto",
-	                     // values in MB
-	                     "1",
-	                     "2",
-	                     "4",
-	                     "8",
-	                     // values in KB
-	                     "256",
-	                     "512",
-	                     "1024",
-	                     "2048",
-	                     "4096",
-	                     "8192"});
+	                    // values in MB
+	                    "1",
+	                    "2",
+	                    "4",
+	                    "8",
+	                    // values in KB
+	                    "256",
+	                    "512",
+	                    "1024",
+	                    "2048",
+	                    "4096",
+	                    "8192"});
 	pstring->SetHelp(
 	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
@@ -732,12 +753,24 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	pstring = secprop->AddString("dos_rate", when_idle, "default");
 	pstring->SetHelp(
-	        "Customize the emulated video mode's frame rate.\n"
-	        "  default:  The DOS video mode determines the rate (default).\n"
-	        "  host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
-	        "  <value>:  Sets the rate to an exact value in between 24.000 and 1000.000 Hz.\n"
-	        "Note: We recommend the 'default' rate, otherwise test and set on a per-game\n"
-	        "      basis.");
+	        "Override the emulated DOS video mode's refresh rate with a custom rate.\n"
+	        "  default:  Don't override; use the emulated DOS video mode's refresh rate\n"
+	        "            (default).\n"
+	        "  host:     Override the refresh rate of all DOS video modes with the refresh\n"
+	        "            rate of your monitor. This might allow you to play some 70 Hz VGA\n"
+	        "            games with perfect vsync on a 60 Hz fixed refresh rate monitor (see\n"
+	        "            'vsync' for further details).\n"
+	        "  <value>:  Override the refresh rate of all DOS video modes with a fixed rate\n"
+	        "            specified in Hz (valid range is from 24.000 to 1000.000). This is a\n"
+	        "            niche option for a select few fast-paced mid to late 1990s 3D games\n"
+	        "            for high refresh rate gaming.\n"
+	        "\n"
+	        "Note: Many games will misbehave when overriding the DOS video mode's refresh\n"
+	        "      rate with non-standard values. This can manifest in glitchy video,\n"
+	        "      sped-up or slowed-down audio, jerky mouse movement, mouse button presses\n"
+	        "      not being registered, and even gameplay bugs. Overriding the DOS refresh\n"
+	        "      rate is a hack that only works acceptably with a small subset of all DOS\n"
+	        "      games (typically mid to late 1990s games).");
 
 	pstring = secprop->AddString("vesa_modes", only_at_start, "compatible");
 	pstring->SetValues({"compatible", "all", "halfline"});
@@ -887,8 +920,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// The MIDI section must be added *after* the FluidSynth, MT-32 and
 	// SoundCanvas MIDI device sections. If the MIDI section is intialised
-	// before these, these devices would be double-initialised if selected at
-	// startup time (e.g., by having `mididevice = mt32` in the config).
+	// before these, these devices would be double-initialised if selected
+	// at startup time (e.g., by having `mididevice = mt32` in the config).
 	MIDI_AddConfigSection(control);
 
 #if C_DEBUG
@@ -916,8 +949,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// PC speaker emulation
 	secprop = control->AddSectionProp("speaker",
-	                                   &PCSPEAKER_Init,
-	                                   changeable_at_runtime);
+	                                  &PCSPEAKER_Init,
+	                                  changeable_at_runtime);
 
 	pstring = secprop->AddString("pcspeaker", when_idle, "impulse");
 	pstring->SetHelp(
@@ -1021,8 +1054,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 
 	// ReelMagic Emulator
 	secprop = control->AddSectionProp("reelmagic",
-	                                   &ReelMagic_Init,
-	                                   changeable_at_runtime);
+	                                  &ReelMagic_Init,
+	                                  changeable_at_runtime);
 
 	pstring = secprop->AddString("reelmagic", when_idle, "off");
 	pstring->SetHelp(
@@ -1258,8 +1291,8 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
 	pstring = secprop->AddPath("shell_history_file",
-	                            only_at_start,
-	                            "shell_history.txt");
+	                           only_at_start,
+	                           "shell_history.txt");
 
 	pstring->SetHelp(
 	        "File containing persistent command line history ('shell_history.txt'\n"
