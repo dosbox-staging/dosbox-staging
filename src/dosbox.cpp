@@ -29,7 +29,7 @@
 #include "mapper.h"
 #include "math_utils.h"
 #include "memory.h"
-#include "midi.h"
+#include "midi/midi.h"
 #include "mouse.h"
 #include "ne2000.h"
 #include "pci_bus.h"

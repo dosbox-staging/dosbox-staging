@@ -317,7 +317,7 @@ template class RWQueue<std::vector<int16_t>>;
 #include "audio_frame.h"
 template class RWQueue<AudioFrame>;
 
-#include "midi.h"
+#include "midi/midi.h"
 template class RWQueue<MidiWork>;
 
 #include "render.h"

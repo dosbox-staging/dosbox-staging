@@ -8,7 +8,7 @@
 #include "cpu.h"
 #include "inout.h"
 #include "math_utils.h"
-#include "midi.h"
+#include "midi/midi.h"
 #include "pic.h"
 #include "setup.h"
 

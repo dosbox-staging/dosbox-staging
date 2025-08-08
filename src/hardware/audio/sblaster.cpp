@@ -22,7 +22,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "messages.h"
-#include "midi.h"
+#include "midi/midi.h"
 #include "notifications.h"
 #include "pic.h"
 #include "rwqueue.h"

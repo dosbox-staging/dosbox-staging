@@ -25,7 +25,7 @@
 #include "mapper.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "midi.h"
+#include "midi/midi.h"
 #include "notifications.h"
 #include "pic.h"
 #include "ring_buffer.h"

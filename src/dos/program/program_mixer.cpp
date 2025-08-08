@@ -11,7 +11,7 @@
 #include "channel_names.h"
 #include "checks.h"
 #include "math_utils.h"
-#include "midi.h"
+#include "midi/midi.h"
 #include "notifications.h"
 #include "program_more_output.h"
 #include "string_utils.h"
