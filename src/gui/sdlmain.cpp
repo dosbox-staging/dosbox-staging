@@ -46,6 +46,7 @@
 #include "dos/dos_locale.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
+#include "hardware/video/vga.h"
 #include "ints/int10.h"
 #include "joystick.h"
 #include "keyboard.h"
@@ -62,7 +63,6 @@
 #include "timer.h"
 #include "titlebar.h"
 #include "tracy.h"
-#include "vga.h"
 #include "video.h"
 
 static void switch_console_to_utf8()

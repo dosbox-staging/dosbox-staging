@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
+#include "hardware/video/vga.h"
 #include "rect.h"
 #include "render.h"
-#include "vga.h"
 
 // forward references
 class Fraction;

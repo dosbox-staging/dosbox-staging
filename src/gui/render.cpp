@@ -13,6 +13,7 @@
 #include "capture/capture.h"
 #include "config.h"
 #include "fraction.h"
+#include "hardware/video/vga.h"
 #include "mapper.h"
 #include "math_utils.h"
 #include "render.h"
@@ -21,7 +22,6 @@
 #include "shell.h"
 #include "string_utils.h"
 #include "support.h"
-#include "vga.h"
 #include "video.h"
 
 Render render;
