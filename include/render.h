@@ -9,10 +9,10 @@
 #include <optional>
 #include <string>
 
-#include "gui/render_scalers.h"
 #include "fraction.h"
+#include "gui/render_scalers.h"
+#include "hardware/video/vga.h"
 #include "rect.h"
-#include "vga.h"
 
 enum class ViewportMode { Fit, Relative };
 

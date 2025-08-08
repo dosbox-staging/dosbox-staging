@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "bitops.h"
+#include "hardware/video/vga.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "pci_bus.h"
@@ -20,7 +21,6 @@
 #include "rgb888.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "vga.h"
 #include "video.h"
 
 // clang-format off
