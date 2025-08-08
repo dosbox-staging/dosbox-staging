@@ -4,7 +4,7 @@
 #ifndef DOSBOX_COMPILER_H
 #define DOSBOX_COMPILER_H
 
-#include "config.h"
+#include "dosbox_config.h"
 
 // This header wraps compiler-specific features, so they won't need to
 // be hacked into the buildsystem.

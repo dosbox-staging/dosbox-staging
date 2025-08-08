@@ -304,7 +304,8 @@ set(project_name "${PROJECT_NAME}")
 set(version      "${PROJECT_VERSION}")
 
 configure_file(
-  src/config.h.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/include/config.h
+  src/dosbox_config.h.in.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/include/dosbox_config.h
 )
 
 # Allow dynamically loading externalised vcpkg dependencies at runtime

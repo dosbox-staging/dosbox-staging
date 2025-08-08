@@ -9,7 +9,7 @@
 #include <functional>
 #include <string>
 
-#include "config.h"
+#include "dosbox_config.h"
 
 /** A virtual Ethernet connection
  * While emulated Ethernet adapters provide the ability for the guest OS to

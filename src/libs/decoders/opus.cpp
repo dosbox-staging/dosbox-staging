@@ -19,7 +19,7 @@
 
 // #define DEBUG_CHATTER 1
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #include <cassert>
 #include <cinttypes>

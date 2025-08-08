@@ -16,7 +16,7 @@
  * bswap_16), to avoid conflicts.
  */
 
-#include "config.h"
+#include "dosbox_config.h"
 
 #include <cstdint>
 #include <cstdlib>

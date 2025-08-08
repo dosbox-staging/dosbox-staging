@@ -12,7 +12,7 @@
 
 #include <slirp/libslirp.h>
 
-#include "config.h"
+#include "dosbox_config.h"
 #include "ethernet.h"
 
 /*
