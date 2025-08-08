@@ -13,12 +13,12 @@
 #include <string>
 #include <vector>
 
-#include "mixer.h"
 #include "channel_names.h"
 #include "checks.h"
 #include "decoders/dr_flac.h"
+#include "hardware/timer.h"
+#include "mixer.h"
 #include "setup.h"
-#include "timer.h"
 
 CHECK_NARROWING();
 

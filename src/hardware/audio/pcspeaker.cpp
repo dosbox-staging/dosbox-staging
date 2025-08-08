@@ -4,10 +4,9 @@
 // NOTE: a lot of this code assumes that the callback is called every emulated
 // millisecond
 
+#include "math_utils.h"
 #include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
-#include "math_utils.h"
-#include "timer.h"
 
 // The PC speaker managed pointer
 std::unique_ptr<PcSpeaker> pc_speaker = {};

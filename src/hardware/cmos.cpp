@@ -8,11 +8,11 @@
 
 #include "bios_disk.h"
 #include "cross.h"
+#include "timer.h"
 #include "inout.h"
 #include "mem.h"
 #include "pic.h"
 #include "setup.h"
-#include "timer.h"
 
 static struct {
 	uint8_t regs[0x40];

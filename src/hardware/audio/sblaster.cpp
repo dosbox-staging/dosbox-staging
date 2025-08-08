@@ -19,6 +19,7 @@
 #include "config.h"
 #include "dma.h"
 #include "hardware.h"
+#include "hardware/timer.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "messages.h"
@@ -31,7 +32,6 @@
 #include "shell.h"
 #include "string_utils.h"
 #include "support.h"
-#include "timer.h"
 
 constexpr uint8_t MixerIndex = 0x04;
 constexpr uint8_t MixerData  = 0x05;

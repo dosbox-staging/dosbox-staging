@@ -23,6 +23,7 @@
 #include "dos/dos_locale.h"
 #include "dos_inc.h"
 #include "hardware.h"
+#include "hardware/timer.h"
 #include "hardware/video/voodoo.h"
 #include "inout.h"
 #include "ints/int10.h"
@@ -40,7 +41,6 @@
 #include "setup.h"
 #include "shell.h"
 #include "support.h"
-#include "timer.h"
 #include "tracy.h"
 #include "video.h"
 

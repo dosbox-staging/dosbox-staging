@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "timer.h"
+#include "hardware/timer.h"
 
 /*
 Pacer Class

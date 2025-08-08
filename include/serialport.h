@@ -14,7 +14,7 @@
 #include "inout.h"
 #endif
 #ifndef DOSBOX_TIMER_H
-#include "timer.h"
+#include "hardware/timer.h"
 #endif
 #ifndef DOSBOX_DOS_INC_H
 #include "dos_inc.h"

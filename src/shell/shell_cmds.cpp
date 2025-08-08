@@ -27,12 +27,12 @@
 #include "dos/program/program_more_output.h"
 #include "dos_inc.h"
 #include "drives.h"
+#include "hardware/timer.h"
 #include "ints/int10.h"
 #include "paging.h"
 #include "regs.h"
 #include "string_utils.h"
 #include "support.h"
-#include "timer.h"
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {

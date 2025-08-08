@@ -19,6 +19,7 @@
 
 #include "audio/mixer.h"
 #include "config.h"
+#include "hardware/timer.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
@@ -28,7 +29,6 @@
 #include "rgb888.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "timer.h"
 #include "video.h"
 
 //  Status Colors
