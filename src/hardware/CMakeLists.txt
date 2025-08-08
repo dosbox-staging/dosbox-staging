@@ -9,7 +9,6 @@ target_sources(libdosboxcommon PRIVATE
   audio/lpt_dac.cpp
   audio/mpu401.cpp
   audio/opl.cpp
-  audio/opl_capture.cpp
   audio/pcspeaker.cpp
   audio/pcspeaker_discrete.cpp
   audio/pcspeaker_impulse.cpp

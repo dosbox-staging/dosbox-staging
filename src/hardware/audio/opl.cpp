@@ -11,13 +11,13 @@
 #include <sys/types.h>
 
 #include "audio/channel_names.h"
+#include "audio/opl_capture.h"
 #include "checks.h"
 #include "config.h"
 #include "cpu.h"
 #include "math_utils.h"
 #include "mapper.h"
 #include "mem.h"
-#include "opl_capture.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
