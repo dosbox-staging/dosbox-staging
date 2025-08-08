@@ -1193,6 +1193,7 @@ endif
 # internal libs
 subdir('src/audio')
 subdir('src/capture')
+subdir('src/config')
 subdir('src/cpu')
 subdir('src/dos')
 subdir('src/fpu')
