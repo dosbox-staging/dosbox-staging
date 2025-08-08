@@ -18,7 +18,7 @@
 #include "drives.h"
 #include "mem.h"
 #include "pic.h"
-#include "program_mount_common.h"
+#include "program/program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"

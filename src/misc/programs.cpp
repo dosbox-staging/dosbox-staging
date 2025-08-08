@@ -19,7 +19,7 @@
 #include "capture/capture.h"
 #include "config.h"
 #include "cross.h"
-#include "dos/program_more_output.h"
+#include "dos/program/program_more_output.h"
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"

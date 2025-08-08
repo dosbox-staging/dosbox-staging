@@ -7,7 +7,7 @@
 
 #include "programs.h"
 
-#include "dos_keyboard_layout.h"
+#include "dos/dos_keyboard_layout.h"
 
 class KEYB final : public Program {
 public:

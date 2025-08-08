@@ -24,7 +24,7 @@
 #include "command_line.h"
 #include "config.h"
 #include "cross.h"
-#include "dos/program_more_output.h"
+#include "dos/program/program_more_output.h"
 #include "dos_inc.h"
 #include "drives.h"
 #include "ints/int10.h"

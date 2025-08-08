@@ -14,7 +14,7 @@
 #include "hardware/vmware.h"
 #include "mem.h"
 #include "paging.h"
-#include "program_setver.h"
+#include "program/program_setver.h"
 #include "programs.h"
 #include "regs.h"
 #include "string_utils.h"

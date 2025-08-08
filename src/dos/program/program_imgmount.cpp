@@ -9,9 +9,9 @@
 #include <vector>
 
 #include "bios_disk.h"
-#include "cdrom.h"
 #include "config.h"
 #include "cross.h"
+#include "dos/cdrom.h"
 #include "drives.h"
 #include "fs_utils.h"
 #include "ide.h"
