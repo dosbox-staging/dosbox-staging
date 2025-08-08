@@ -6,7 +6,6 @@
 #define DOSBOX_MAPPER_H
 
 #include "dosbox.h"
-#include "version.h"
 
 #include <string>
 #include <vector>

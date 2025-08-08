@@ -23,7 +23,6 @@
 #include "notifications.h"
 #include "string_utils.h"
 #include "support.h"
-#include "version.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))
 _CRTIMP extern char** _environ;
