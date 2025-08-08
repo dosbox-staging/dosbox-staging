@@ -360,7 +360,6 @@ add_copy_assets()
 include_directories(
   include
   src
-  src/gui
   src/libs
   ${CMAKE_CURRENT_BINARY_DIR}/include
 )
