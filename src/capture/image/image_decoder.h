@@ -7,7 +7,7 @@
 #include <cassert>
 #include <vector>
 
-#include "byteorder.h"
+#include "util/byteorder.h"
 #include "util/checks.h"
 #include "hardware/video/vga.h"
 #include "render.h"

@@ -16,7 +16,7 @@
 
 #include <cstdint>
 
-#include "byteorder.h"
+#include "util/byteorder.h"
 #include "util/mem_unaligned.h"
 
 /* Use host_read* functions to replace endian branching and byte swapping code,
