@@ -17,7 +17,7 @@
 #include "pci_bus.h"
 #include "render.h"
 #include "util/rgb888.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/math_utils.h"
 #include "util/rgb666.h"
 #include "util/string_utils.h"

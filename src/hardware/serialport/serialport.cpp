@@ -15,7 +15,7 @@
 #include "capture/capture.h"
 #include "inout.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 
 #include "serialport.h"

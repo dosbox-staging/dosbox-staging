@@ -18,7 +18,7 @@
 #include "paging.h"
 #include "hardware/pic.h"
 #include "programs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "video.h"

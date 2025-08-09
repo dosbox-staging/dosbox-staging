@@ -15,7 +15,7 @@
 #include "hardware.h"
 #include "inout.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 
 #include "ESFMu/esfm.h"
 #include "nuked/opl3.h"

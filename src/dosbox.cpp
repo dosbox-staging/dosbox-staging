@@ -38,7 +38,7 @@
 #include "programs.h"
 #include "reelmagic.h"
 #include "render.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shell.h"
 #include "support.h"
 #include "tracy.h"

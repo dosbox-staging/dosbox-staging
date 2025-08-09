@@ -12,7 +12,7 @@
 #include "inout.h"
 #include "hardware/memory.h"
 #include "pic.h"
-#include "setup.h"
+#include "config/setup.h"
 
 static struct {
 	uint8_t regs[0x40];

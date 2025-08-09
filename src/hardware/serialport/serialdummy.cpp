@@ -5,7 +5,7 @@
 #include "dosbox.h"
 
 #include "command_line.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "serialdummy.h"
 #include "serialport.h"
 

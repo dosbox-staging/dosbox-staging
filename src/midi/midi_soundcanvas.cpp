@@ -14,7 +14,7 @@
 #include "audio/clap/plugin_manager.h"
 #include "util/checks.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "std_filesystem.h"
 #include "util/string_utils.h"
 

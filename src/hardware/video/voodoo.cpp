@@ -82,7 +82,7 @@
 #include "pci_bus.h"
 #include "hardware/pic.h"
 #include "render.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "simde/x86/sse2.h"
 #include "support.h"
 #include "vga.h"

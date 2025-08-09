@@ -60,7 +60,7 @@
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "regs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shell.h"
 
 #include "SDL_thread.h"

@@ -21,7 +21,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "ps1audio.h"
-#include "setup.h"
+#include "config/setup.h"
 
 CHECK_NARROWING();
 

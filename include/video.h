@@ -9,7 +9,7 @@
 
 #include "util/fraction.h"
 #include "util/rect.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "types.h"
 
 // Pixels and logical units

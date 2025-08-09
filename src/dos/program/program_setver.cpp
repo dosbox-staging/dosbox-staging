@@ -8,7 +8,7 @@
 #include "util/checks.h"
 #include "config.h"
 #include "dosbox_config.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "std_filesystem.h"
 #include "util/string_utils.h"
 

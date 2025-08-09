@@ -17,7 +17,7 @@
 #include "regs.h"
 #include "drives.h"
 #include "cross.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "support.h"
 

@@ -42,7 +42,7 @@
 #include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "util/rwqueue.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "tandy_sound.h"
 
 CHECK_NARROWING();

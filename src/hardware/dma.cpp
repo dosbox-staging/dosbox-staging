@@ -13,7 +13,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "paging.h"
-#include "setup.h"
+#include "config/setup.h"
 
 std::unique_ptr<DmaController> primary   = {};
 std::unique_ptr<DmaController> secondary = {};

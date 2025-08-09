@@ -7,7 +7,7 @@
 #include "callback.h"
 #include "hardware/pic.h"
 #include "timer.h"
-#include "setup.h"
+#include "config/setup.h"
 
 // PIC Controllers
 // ~~~~~~~~~~~~~~~

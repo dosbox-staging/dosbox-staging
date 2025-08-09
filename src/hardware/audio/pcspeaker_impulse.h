@@ -10,7 +10,7 @@
 #include "audio/channel_names.h"
 #include "inout.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 class PcSpeakerImpulse final : public PcSpeaker {

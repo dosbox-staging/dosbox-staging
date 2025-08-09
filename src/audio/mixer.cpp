@@ -30,7 +30,7 @@
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "util/rwqueue.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "tracy.h"
 #include "video.h"

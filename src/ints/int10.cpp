@@ -10,7 +10,7 @@
 #include "inout.h"
 #include "int10.h"
 #include "mouse.h"
-#include "setup.h"
+#include "config/setup.h"
 
 Int10Data int10;
 static callback_number_t call_10 = 0;

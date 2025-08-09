@@ -10,7 +10,7 @@
 #include "audio/mixer.h"
 #include "hardware/timer.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 class PcSpeakerDiscrete final : public PcSpeaker {

@@ -23,7 +23,7 @@
 #include "inout.h"
 #include "hardware/memory.h"
 #include "pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "timer.h"
 

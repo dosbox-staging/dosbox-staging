@@ -27,7 +27,7 @@
 #include "util/math_utils.h"
 #include "mouse.h"
 #include "util/rgb888.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 #include "video.h"
 

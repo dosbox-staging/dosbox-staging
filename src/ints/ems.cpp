@@ -18,7 +18,7 @@
 #include "hardware/memory.h"
 #include "paging.h"
 #include "regs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 #define EMM_PAGEFRAME	0xE000

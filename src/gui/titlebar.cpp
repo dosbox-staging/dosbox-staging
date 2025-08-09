@@ -9,7 +9,7 @@
 #include "dosbox.h"
 #include "mapper.h"
 #include "sdlmain.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 #include "unicode.h"
 #include "video.h"

@@ -10,7 +10,7 @@
 #include "util/fs_utils.h"
 #include "keyboard.h"
 #include "mouse.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shell.h"
 #include "util/string_utils.h"
 #include "unicode.h"

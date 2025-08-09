@@ -8,7 +8,7 @@
 #include "inout.h"
 #include "mouse.h"
 #include "pci_bus.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 #include <map>

@@ -14,7 +14,7 @@
 #include "lazyflags.h"
 #include "cpu.h"
 #include "debug.h"
-#include "setup.h"
+#include "config/setup.h"
 
 #define LINK_TOTAL		(64*1024)
 

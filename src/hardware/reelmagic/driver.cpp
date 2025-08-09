@@ -29,7 +29,7 @@
 #include "util/math_utils.h"
 #include "programs.h"
 #include "regs.h"
-#include "setup.h"
+#include "config/setup.h"
 
 // note: Reported ReelMagic driver version 2.21 seems to be the most common...
 static const uint8_t REELMAGIC_DRIVER_VERSION_MAJOR = 2;
