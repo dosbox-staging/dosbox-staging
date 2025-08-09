@@ -15,7 +15,7 @@
 #include "util/checks.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 #include "util/string_utils.h"
 
 CHECK_NARROWING();
