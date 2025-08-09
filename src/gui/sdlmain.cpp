@@ -39,7 +39,7 @@
 
 #include "audio/mixer.h"
 #include "capture/capture.h"
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "config/config.h"
 #include "cpu/cpu.h"
 #include "misc/cross.h"

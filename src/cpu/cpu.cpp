@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "config/config.h"
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "debug.h"
 #include "lazyflags.h"
 #include "gui/mapper.h"

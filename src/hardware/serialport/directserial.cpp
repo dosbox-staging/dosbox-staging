@@ -10,7 +10,7 @@
 #include "misc_util.h"
 #include "hardware/pic.h"
 
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "libserial.h"
 
 /* This is a serial passthrough class.  Its amazingly simple to */
