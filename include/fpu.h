@@ -16,7 +16,7 @@
 #include "hardware/memory.h"
 #endif
 
-#include "mmx.h"
+#include "cpu/mmx.h"
 
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
