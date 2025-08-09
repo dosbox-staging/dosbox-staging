@@ -14,7 +14,7 @@
 
 #include "util/checks.h"
 #include "dos_inc.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 CHECK_NARROWING();
 

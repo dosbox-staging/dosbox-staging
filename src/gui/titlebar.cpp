@@ -11,7 +11,7 @@
 #include "sdlmain.h"
 #include "config/setup.h"
 #include "misc/support.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 #include "video.h"
 
 #include <SDL.h>

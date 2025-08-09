@@ -10,7 +10,7 @@
 #include "dos_inc.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 #include <algorithm>
 #include <initializer_list>

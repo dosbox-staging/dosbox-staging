@@ -24,7 +24,7 @@
 #include "regs.h"
 #include "shell.h"
 #include "misc/support.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 callback_number_t call_program = 0;
 

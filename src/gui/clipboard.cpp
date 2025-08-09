@@ -7,7 +7,7 @@
 #include "config/config.h"
 #include "misc/logging.h"
 #include "util/string_utils.h"
-#include "unicode.h"
+#include "misc/unicode.h"
 
 #include <SDL.h>
 
