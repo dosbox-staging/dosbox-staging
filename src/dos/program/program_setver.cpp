@@ -9,7 +9,7 @@
 #include "config/config.h"
 #include "dosbox_config.h"
 #include "config/setup.h"
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 #include "util/string_utils.h"
 
 #include <fstream>

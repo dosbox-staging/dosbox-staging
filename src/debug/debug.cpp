@@ -32,7 +32,7 @@
 #include "programs.h"
 #include "config/setup.h"
 #include "shell.h"
-#include "std_filesystem.h"
+#include "misc/std_filesystem.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "video.h"
