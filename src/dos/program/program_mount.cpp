@@ -10,7 +10,7 @@
 #include "ints/bios_disk.h"
 #include "config/config.h"
 #include "dos/cdrom.h"
-#include "drives.h"
+#include "dos/drives.h"
 #include "util/fs_utils.h"
 #include "ints/int10.h"
 #include "program_more_output.h"
