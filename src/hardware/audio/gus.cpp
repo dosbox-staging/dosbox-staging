@@ -17,7 +17,7 @@
 #include "util/bit_view.h"
 #include "config/config.h"
 #include "gus.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/timer.h"
 #include "util/math_utils.h"
 #include "misc/notifications.h"

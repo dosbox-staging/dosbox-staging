@@ -10,7 +10,7 @@
 #include "cpu/cpu.h"
 #include "dos/dos_memory.h"
 #include "dosbox.h"
-#include "hardware.h"
+#include "hardware/hardware.h"
 #include "hardware/joystick.h"
 #include "hardware/pic.h"
 #include "hardware/serialport/serialport.h"
