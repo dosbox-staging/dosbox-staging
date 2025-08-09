@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_FPU_H
-#include "fpu.h"
+#include "fpu/fpu.h"
 #endif
 
 // #define WEAK_EXCEPTIONS
