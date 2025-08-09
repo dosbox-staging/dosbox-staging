@@ -27,7 +27,7 @@
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "midi/midi.h"
-#include "notifications.h"
+#include "misc/notifications.h"
 #include "hardware/pic.h"
 #include "util/rwqueue.h"
 #include "config/setup.h"

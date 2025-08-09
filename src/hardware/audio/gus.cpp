@@ -20,7 +20,7 @@
 #include "hardware.h"
 #include "hardware/timer.h"
 #include "util/math_utils.h"
-#include "notifications.h"
+#include "misc/notifications.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
 #include "shell.h"

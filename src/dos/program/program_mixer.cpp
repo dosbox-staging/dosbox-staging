@@ -12,7 +12,7 @@
 #include "util/checks.h"
 #include "util/math_utils.h"
 #include "midi/midi.h"
-#include "notifications.h"
+#include "misc/notifications.h"
 #include "program_more_output.h"
 #include "util/string_utils.h"
 
