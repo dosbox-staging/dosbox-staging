@@ -23,7 +23,7 @@
 #include "misc/notifications.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 
 #define LOG_GUS 0 // set to 1 for detailed logging

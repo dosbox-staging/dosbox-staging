@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2024-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <fstream>
 
@@ -117,7 +117,7 @@ static std_fs::path get_shell_history_path()
 	const auto* section = dynamic_cast<SectionProp*>(control->GetSection("dos"));
 	assert(section);
 
-	const auto* path = section->GetPath("shell_history_file"); //-V522
+	const auto* path = section->GetPath("shell/shell.history_file"); //-V522
 	if (path == nullptr) {
 		return {};
 	}

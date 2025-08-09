@@ -19,7 +19,7 @@
 #include "gui/render.h"
 #include "config/setup.h"
 #include "shader_manager.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 #include "misc/video.h"

@@ -39,7 +39,7 @@
 #include "hardware/reelmagic/reelmagic.h"
 #include "gui/render.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "misc/support.h"
 #include "tracy.h"
 #include "misc/video.h"
@@ -1257,9 +1257,9 @@ void DOSBOX_InitAllModuleConfigsAndMessages()
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
-	pstring = secprop->AddPath("shell_history_file",
+	pstring = secprop->AddPath("shell/shell.history_file",
 	                            only_at_start,
-	                            "shell_history.txt");
+	                            "shell/shell.history.txt");
 
 	pstring->SetHelp(
 	        "File containing persistent command line history ('shell_history.txt'\n"
