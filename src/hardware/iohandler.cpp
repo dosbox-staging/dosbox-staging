@@ -12,7 +12,7 @@
 #include "callback.h"
 #include "cpu.h"
 #include "cpu/lazyflags.h"
-#include "setup.h"
+#include "config/setup.h"
 
 //#define ENABLE_PORTLOG
 

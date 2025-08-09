@@ -5,7 +5,7 @@
 #ifndef DOSBOX_AUTOEXEC_H
 #define DOSBOX_AUTOEXEC_H
 
-#include "setup.h"
+#include "config/setup.h"
 
 #include <string>
 

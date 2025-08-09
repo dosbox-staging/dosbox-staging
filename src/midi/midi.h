@@ -11,7 +11,7 @@
 #include <cassert>
 
 #include "config.h"
-#include "setup.h"
+#include "config/setup.h"
 
 class Program;
 

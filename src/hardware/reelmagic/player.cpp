@@ -38,7 +38,7 @@
 #include "logging.h"
 #include "player.h"
 #include "util/rwqueue.h"
-#include "setup.h"
+#include "config/setup.h"
 
 // bring in the MPEG-1 decoder library...
 #define PL_MPEG_IMPLEMENTATION

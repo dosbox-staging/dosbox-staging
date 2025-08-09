@@ -28,7 +28,7 @@
 #include "drives.h"
 #include "util/fs_utils.h"
 #include "util/math_utils.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 
 // String maximums, local to this file

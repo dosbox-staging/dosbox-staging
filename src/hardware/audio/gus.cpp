@@ -22,7 +22,7 @@
 #include "util/math_utils.h"
 #include "notifications.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "shell.h"
 #include "util/string_utils.h"
 

@@ -10,7 +10,7 @@
 #include "util/math_utils.h"
 #include "midi/midi.h"
 #include "pic.h"
-#include "setup.h"
+#include "config/setup.h"
 
 static void MPU401_Event(uint32_t);
 static void MPU401_Reset();

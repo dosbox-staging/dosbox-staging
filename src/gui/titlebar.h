@@ -4,7 +4,7 @@
 #ifndef DOSBOX_TITLEBAR_H
 #define DOSBOX_TITLEBAR_H
 
-#include "setup.h"
+#include "config/setup.h"
 
 void TITLEBAR_AddMessages();
 void TITLEBAR_AddConfig(SectionProp& secprop);

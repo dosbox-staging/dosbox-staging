@@ -9,7 +9,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "hardware/memory.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "vga.h"
 
 // Tseng ET4K data

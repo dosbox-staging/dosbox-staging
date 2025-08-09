@@ -24,7 +24,7 @@
 #include "midi_device.h"
 #include "hardware/pic.h"
 #include "programs.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "util/string_utils.h"
 
 // #define DEBUG_MIDI

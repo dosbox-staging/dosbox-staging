@@ -9,7 +9,7 @@
 #include "hardware/timer.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
-#include "setup.h"
+#include "config/setup.h"
 #include "support.h"
 
 #include "covox.h"
