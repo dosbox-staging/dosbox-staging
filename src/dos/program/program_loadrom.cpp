@@ -12,7 +12,7 @@
 #include "dos_windows.h"
 #include "drives.h"
 #include "program_more_output.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 void LOADROM::Run(void)
 {

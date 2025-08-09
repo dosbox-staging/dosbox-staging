@@ -10,7 +10,7 @@
 #include <memory>
 
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "lazyflags.h"
 #include "cpu/cpu.h"
 #include "debug.h"

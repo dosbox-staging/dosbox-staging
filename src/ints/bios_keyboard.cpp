@@ -7,7 +7,7 @@
 #include "cpu/callback.h"
 #include "hardware/memory.h"
 #include "keyboard.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "inout.h"
 #include "dos_inc.h"
 

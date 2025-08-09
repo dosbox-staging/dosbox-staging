@@ -9,7 +9,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "pci_bus.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "misc/support.h"
 
 CHECK_NARROWING();

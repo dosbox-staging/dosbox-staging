@@ -13,7 +13,7 @@
 #include "inout.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "misc/support.h"
 

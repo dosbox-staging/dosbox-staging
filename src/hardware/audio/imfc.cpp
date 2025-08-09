@@ -59,7 +59,7 @@
 #include "util/math_utils.h"
 #include "misc/notifications.h"
 #include "hardware/pic.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "shell.h"
 

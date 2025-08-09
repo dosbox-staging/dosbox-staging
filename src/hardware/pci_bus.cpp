@@ -12,7 +12,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "misc/support.h"
 

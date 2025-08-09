@@ -17,7 +17,7 @@
 #include "keyboard.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "misc/support.h"
 

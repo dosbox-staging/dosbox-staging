@@ -13,7 +13,7 @@
 #include "file_reader.h"
 #include "ints/int10.h"
 #include "keyboard.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "misc/unicode.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);

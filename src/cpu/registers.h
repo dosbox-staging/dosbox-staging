@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef DOSBOX_REGS_H
-#define DOSBOX_REGS_H
+#ifndef DOSBOX_REGISTERS_H
+#define DOSBOX_REGISTERS_H
 
 #ifndef DOSBOX_MEM_H
 #include "hardware/memory.h"
@@ -295,4 +295,5 @@ inline constexpr uint32_t &reg_eip = cpu_regs.ip.dword[DW_INDEX];
 
 #define reg_flags cpu_regs.flags
 
-#endif
+#endif // DOSBOX_REGISTERS_H
+

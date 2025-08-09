@@ -11,7 +11,7 @@
 #include "inout.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 static void CGA2_CopyRow(uint8_t cleft,uint8_t cright,uint8_t rold,uint8_t rnew,PhysPt base) {
 	BIOS_CHEIGHT;

@@ -8,7 +8,7 @@
 #include "cpu/cpu.h"
 #include "misc/logging.h"
 #include "mouse.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 CHECK_NARROWING();
 

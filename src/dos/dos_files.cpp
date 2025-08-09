@@ -14,7 +14,7 @@
 #include "dosbox.h"
 #include "ints/bios.h"
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "drives.h"
 #include "misc/cross.h"
 #include "config/setup.h"

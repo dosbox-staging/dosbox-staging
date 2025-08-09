@@ -6,7 +6,7 @@
 #include "dos_inc.h"
 #include "dosbox.h"
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include <cstring>
 
 bool DOS_IOCTL(void) {

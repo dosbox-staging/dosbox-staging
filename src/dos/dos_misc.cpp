@@ -8,7 +8,7 @@
 
 #include "cpu/callback.h"
 #include "hardware/memory.h"
-#include "regs.h"
+#include "cpu/registers.h"
 
 RealPt fake_sft_table = 0;
 

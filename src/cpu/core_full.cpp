@@ -11,7 +11,7 @@
 #include "lazyflags.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "tracy.h"
 
 typedef PhysPt EAPoint;

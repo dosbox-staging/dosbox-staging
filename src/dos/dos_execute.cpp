@@ -16,7 +16,7 @@
 #include "cpu/paging.h"
 #include "program/program_setver.h"
 #include "programs.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "util/string_utils.h"
 #include "misc/video.h"
 

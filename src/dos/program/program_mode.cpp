@@ -12,7 +12,7 @@
 #include "ints/int10.h"
 #include "util/math_utils.h"
 #include "program_more_output.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "shell.h"
 #include "util/string_utils.h"
 

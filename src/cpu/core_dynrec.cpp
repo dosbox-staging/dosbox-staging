@@ -40,7 +40,7 @@
 #include "cpu/mmx.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)

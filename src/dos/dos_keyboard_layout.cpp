@@ -17,7 +17,7 @@
 #include "ints/int10.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 

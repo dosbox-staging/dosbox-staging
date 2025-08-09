@@ -19,7 +19,7 @@
 #include "util/fs_utils.h"
 #include "hardware/timer.h"
 #include "mapper.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

@@ -7,7 +7,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "mouse.h"
-#include "regs.h"
+#include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
