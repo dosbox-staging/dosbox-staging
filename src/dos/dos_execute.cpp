@@ -15,7 +15,7 @@
 #include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "program/program_setver.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "cpu/registers.h"
 #include "util/string_utils.h"
 #include "misc/video.h"

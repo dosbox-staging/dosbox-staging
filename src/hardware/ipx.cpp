@@ -23,7 +23,7 @@
 #include "ipxserver.h"
 #include "hardware/memory.h"
 #include "pic.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

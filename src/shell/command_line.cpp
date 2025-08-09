@@ -4,7 +4,7 @@
 #include "shell/command_line.h"
 
 #include "util/fs_utils.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "util/string_utils.h"
 
 bool CommandLine::FindExist(const std::string& name, bool remove)

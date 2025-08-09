@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_MOUNT_H
 #define DOSBOX_PROGRAM_MOUNT_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class MOUNT final : public Program {
     public:

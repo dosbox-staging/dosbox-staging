@@ -21,7 +21,7 @@
 #include "util/math_utils.h"
 #include "misc/notifications.h"
 #include "hardware/pic.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

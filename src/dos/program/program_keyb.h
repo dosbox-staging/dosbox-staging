@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_KEYB_H
 #define DOSBOX_PROGRAM_KEYB_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include "dos/dos_keyboard_layout.h"
 

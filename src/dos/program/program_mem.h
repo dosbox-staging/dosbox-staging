@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_MEM_H
 #define DOSBOX_PROGRAM_MEM_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class MEM final : public Program {
 public:

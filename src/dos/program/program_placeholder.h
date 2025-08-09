@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_PLACEHOLDER_H
 #define DOSBOX_PROGRAM_PLACEHOLDER_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class PLACEHOLDER final : public Program {
 public:

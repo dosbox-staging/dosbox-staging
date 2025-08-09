@@ -23,7 +23,7 @@
 #include "gui/mapper.h"
 #include "midi_device.h"
 #include "hardware/pic.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 

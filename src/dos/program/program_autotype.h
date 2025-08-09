@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_AUTOTYPE_H
 #define DOSBOX_PROGRAM_AUTOTYPE_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include <string>
 

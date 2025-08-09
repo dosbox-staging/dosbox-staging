@@ -13,7 +13,7 @@
 #include <string>
 
 #include "cpu/callback.h"
-#include "programs.h"
+#include "dos/programs.h"
 
 class DOS_Shell;
 

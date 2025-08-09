@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_INTRO_H
 #define DOSBOX_PROGRAM_INTRO_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class INTRO final : public Program {
 public:

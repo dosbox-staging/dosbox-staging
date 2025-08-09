@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_CLIP_H
 #define DOSBOX_PROGRAM_CLIP_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class CLIP final : public Program {
 public:

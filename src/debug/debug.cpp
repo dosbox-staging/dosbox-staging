@@ -29,7 +29,7 @@
 #include "gui/mapper.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "config/setup.h"
 #include "shell.h"
 #include "misc/std_filesystem.h"

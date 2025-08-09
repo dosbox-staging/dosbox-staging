@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_IMGMOUNT_H
 #define DOSBOX_PROGRAM_IMGMOUNT_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class IMGMOUNT final : public Program {
 public:

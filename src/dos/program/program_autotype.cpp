@@ -15,7 +15,7 @@
 #include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "program_more_output.h"
-#include "programs.h"
+#include "dos/programs.h"
 
 // Prints the key-names for the mapper's currently-bound events.
 void AUTOTYPE::PrintKeys()
