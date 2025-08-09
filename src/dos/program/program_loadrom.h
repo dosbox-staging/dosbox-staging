@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_LOADROM_H
 #define DOSBOX_PROGRAM_LOADROM_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class LOADROM final : public Program {
     public:

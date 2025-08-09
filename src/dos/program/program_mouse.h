@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_MOUSE_H
 #define DOSBOX_PROGRAM_MOUSE_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class MOUSE final : public Program {
 public:

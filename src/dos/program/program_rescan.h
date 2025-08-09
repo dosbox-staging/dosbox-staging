@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_RESCAN_H
 #define DOSBOX_PROGRAM_RESCAN_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class RESCAN final : public Program {
 public:

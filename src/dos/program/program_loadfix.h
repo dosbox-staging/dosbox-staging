@@ -5,7 +5,7 @@
 #ifndef DOSBOX_PROGRAM_LOADFIX_H
 #define DOSBOX_PROGRAM_LOADFIX_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 class LOADFIX final : public Program {
 public:

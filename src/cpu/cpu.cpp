@@ -17,7 +17,7 @@
 #include "util/math_utils.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
-#include "programs.h"
+#include "dos/programs.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "misc/support.h"

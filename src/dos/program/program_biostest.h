@@ -5,7 +5,7 @@
 #define DOSBOX_PROGRAM_BIOSTEST_H
 
 #include "dosbox.h"
-#include "programs.h"
+#include "dos/programs.h"
 
 class BIOSTEST final : public Program {
     public:

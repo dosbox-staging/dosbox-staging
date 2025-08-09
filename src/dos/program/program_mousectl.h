@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_MOUSECTL_H
 #define DOSBOX_PROGRAM_MOUSECTL_H
 
-#include "programs.h"
+#include "dos/programs.h"
 
 #include "hardware/input/mouse.h"
 
