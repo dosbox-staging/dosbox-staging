@@ -41,7 +41,7 @@
 #include "config/setup.h"
 #include "shell/shell.h"
 #include "misc/support.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 #include "misc/video.h"
 
 bool shutdown_requested = false;

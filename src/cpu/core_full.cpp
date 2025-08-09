@@ -12,7 +12,7 @@
 #include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "cpu/registers.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 
 typedef PhysPt EAPoint;
 #define SegBase(c)	SegPhys(c)

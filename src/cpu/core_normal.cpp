@@ -14,7 +14,7 @@
 #include "cpu/mmx.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 
 #include "simde/x86/mmx.h"
 
