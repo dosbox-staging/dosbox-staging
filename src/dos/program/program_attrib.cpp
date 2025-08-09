@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 
 void ATTRIB::Run()

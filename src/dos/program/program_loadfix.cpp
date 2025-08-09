@@ -5,7 +5,7 @@
 
 #include "dosbox.h"
 #include "program_more_output.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 
 void LOADFIX::Run(void)

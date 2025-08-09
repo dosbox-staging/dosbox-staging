@@ -7,7 +7,7 @@
 #include <optional>
 #include <string>
 
-#include "shell.h"
+#include "shell/shell.h"
 
 class FileReader final : public LineReader {
 public:

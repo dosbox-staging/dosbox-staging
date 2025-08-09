@@ -39,7 +39,7 @@
 #include "hardware/reelmagic/reelmagic.h"
 #include "gui/render.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "misc/support.h"
 #include "misc/tracy.h"
 #include "misc/video.h"

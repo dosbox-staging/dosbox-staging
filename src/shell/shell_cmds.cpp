@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dos/dos_system.h"
-#include "shell.h"
+#include "shell/shell.h"
 
 #include <algorithm>
 #include <cassert>

@@ -31,7 +31,7 @@
 #include "hardware/pic.h"
 #include "dos/programs.h"
 #include "config/setup.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "misc/std_filesystem.h"
 #include "util/string_utils.h"
 #include "misc/support.h"

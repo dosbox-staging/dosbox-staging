@@ -14,7 +14,7 @@
 #include "util/fs_utils.h"
 #include "ints/int10.h"
 #include "program_more_output.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 
 

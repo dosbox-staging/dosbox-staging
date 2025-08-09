@@ -8,7 +8,7 @@
 #include "dos/dos_inc.h"
 #include "dos/drives.h"
 #include "ints/int10.h"
-#include "shell.h"
+#include "shell/shell.h"
 #include "misc/unicode.h"
 
 CHECK_NARROWING();

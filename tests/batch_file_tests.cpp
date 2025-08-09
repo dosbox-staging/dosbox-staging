@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <unordered_map>
 
-#include "shell.h"
+#include "shell/shell.h"
 #include "util/string_utils.h"
 
 class FakeReader final : public LineReader {
