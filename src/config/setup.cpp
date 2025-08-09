@@ -16,7 +16,7 @@
 #include <unordered_map>
 
 #include "misc/ansi_code_markup.h"
-#include "console.h"
+#include "misc/console.h"
 #include "config/config.h"
 #include "misc/cross.h"
 #include "util/fs_utils.h"
