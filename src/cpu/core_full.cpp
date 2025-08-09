@@ -5,7 +5,7 @@
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "fpu.h"
 #include "inout.h"
 #include "lazyflags.h"

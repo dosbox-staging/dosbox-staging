@@ -11,7 +11,7 @@
 
 #include "config/config.h"
 #include "shell/command_line.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "lazyflags.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"

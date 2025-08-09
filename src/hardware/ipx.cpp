@@ -16,7 +16,7 @@
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
 #include "misc/cross.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "dos_system.h"
 #include "inout.h"
 #include "ipx.h"

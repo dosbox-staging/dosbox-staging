@@ -21,7 +21,7 @@
 #include <string>
 
 #include "misc/cross.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "util/fs_utils.h"
 #include "util/string_utils.h"
 #include "misc/video.h"

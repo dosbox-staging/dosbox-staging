@@ -13,7 +13,7 @@
 #include "cpu/registers.h"
 #include "lazyflags.h"
 #include "cpu/cpu.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "config/setup.h"
 
 #define LINK_TOTAL		(64*1024)

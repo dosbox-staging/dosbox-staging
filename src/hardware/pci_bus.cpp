@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "cpu/callback.h"
-#include "debug.h"
+#include "debug/debug.h"
 #include "dosbox.h"
 #include "inout.h"
 #include "hardware/memory.h"
