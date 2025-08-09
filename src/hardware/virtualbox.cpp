@@ -7,7 +7,7 @@
 #include "dosbox.h"
 #include "port.h"
 #include "mouse.h"
-#include "pci_bus.h"
+#include "hardware/pci_bus.h"
 #include "config/setup.h"
 #include "misc/support.h"
 
