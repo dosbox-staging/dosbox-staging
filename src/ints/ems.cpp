@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 #include "ints/bios.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "dos_inc.h"
 #include "hardware/dma.h"

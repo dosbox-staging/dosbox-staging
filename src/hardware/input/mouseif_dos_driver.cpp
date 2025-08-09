@@ -12,7 +12,7 @@
 #include "ints/bios.h"
 #include "util/bitops.h"
 #include "util/byteorder.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "cpu.h"
 #include "dos_inc.h"

@@ -7,7 +7,7 @@
 #include "int10.h"
 
 #include "ints/bios.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "inout.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"

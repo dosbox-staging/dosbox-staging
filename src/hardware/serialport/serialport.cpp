@@ -11,7 +11,7 @@
 #include <tuple>
 
 #include "ints/bios.h"					// SetComPorts(..)
-#include "callback.h"				// CALLBACK_Idle
+#include "cpu/callback.h"				// CALLBACK_Idle
 #include "capture/capture.h"
 #include "inout.h"
 #include "hardware/pic.h"

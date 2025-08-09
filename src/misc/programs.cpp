@@ -15,7 +15,7 @@
 #include <sstream>
 #include <vector>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "capture/capture.h"
 #include "config/config.h"
 #include "misc/cross.h"

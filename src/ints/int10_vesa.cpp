@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <cstring>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_inc.h"
 #include "inout.h"
 #include "util/math_utils.h"

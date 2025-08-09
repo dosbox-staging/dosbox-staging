@@ -7,7 +7,7 @@
 #include <limits>
 #include <string>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "dosbox.h"
 #include "util/math_utils.h"

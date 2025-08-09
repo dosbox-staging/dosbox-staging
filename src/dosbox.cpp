@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 #include "audio/mixer.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "capture/capture.h"
 #include "config/config.h"
 #include "cpu.h"

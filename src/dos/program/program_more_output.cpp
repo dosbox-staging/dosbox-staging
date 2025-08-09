@@ -4,7 +4,7 @@
 #include "program_more_output.h"
 
 #include "util/ascii.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "dos_inc.h"
 #include "ints/int10.h"

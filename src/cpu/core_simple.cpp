@@ -5,7 +5,7 @@
 // Needed for std::isnan in simde
 #include <cmath>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "cpu.h"
 #include "fpu.h"
 #include "inout.h"

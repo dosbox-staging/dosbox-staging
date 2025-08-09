@@ -9,7 +9,7 @@
 #include <string_view>
 
 #include "ints/bios_disk.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_code_page.h"
 #include "dos_inc.h"
 #include "dos_locale.h"

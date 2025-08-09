@@ -4,7 +4,7 @@
 
 #include "program_mem.h"
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "program_more_output.h"
 #include "regs.h"
 

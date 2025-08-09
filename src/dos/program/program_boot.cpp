@@ -8,7 +8,7 @@
 #include <limits>
 
 #include "ints/bios_disk.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "config/config.h"
 #include "dos_windows.h"
 #include "drives.h"

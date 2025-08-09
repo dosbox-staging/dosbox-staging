@@ -4,7 +4,7 @@
 
 #include "ints/bios.h"
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "hardware/memory.h"
 #include "keyboard.h"
 #include "regs.h"

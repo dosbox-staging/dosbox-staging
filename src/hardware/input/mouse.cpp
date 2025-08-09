@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "callback.h"
+#include "cpu/callback.h"
 #include "util/checks.h"
 #include "cpu.h"
 #include "util/math_utils.h"

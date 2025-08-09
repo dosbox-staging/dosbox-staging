@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "dosbox.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "regs.h"
 #include "hardware/memory.h"
 #include "ints/bios.h"

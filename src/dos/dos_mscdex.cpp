@@ -13,7 +13,7 @@
 
 #include "compiler.h"
 #include "regs.h"
-#include "callback.h"
+#include "cpu/callback.h"
 #include "dos_system.h"
 #include "dos_inc.h"
 #include "util/fs_utils.h"
