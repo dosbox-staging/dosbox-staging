@@ -56,7 +56,7 @@
 #include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "hardware/input/mouse.h"
-#include "pacer.h"
+#include "misc/pacer.h"
 #include "util/rect.h"
 #include "gui/render.h"
 #include "gui/sdlmain.h"
