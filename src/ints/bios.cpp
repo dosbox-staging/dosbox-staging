@@ -8,7 +8,7 @@
 #include "cpu/callback.h"
 #include "config/config.h"
 #include "cpu/cpu.h"
-#include "dos_memory.h"
+#include "dos/dos_memory.h"
 #include "dosbox.h"
 #include "hardware.h"
 #include "hardware/joystick.h"

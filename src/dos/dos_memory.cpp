@@ -5,7 +5,7 @@
 
 #include "config/config.h"
 #include "dos_inc.h"
-#include "dos_memory.h"
+#include "dos/dos_memory.h"
 #include "hardware/memory.h"
 #include "misc/support.h"
 
