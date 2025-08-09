@@ -29,7 +29,6 @@
 #include "midi/midi.h"
 #include "notifications.h"
 #include "hardware/pic.h"
-#include "ring_buffer.h"
 #include "rwqueue.h"
 #include "setup.h"
 #include "util/string_utils.h"
