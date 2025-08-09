@@ -37,7 +37,7 @@
 #include "hardware/timer.h"
 #include "logging.h"
 #include "player.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 #include "setup.h"
 
 // bring in the MPEG-1 decoder library...

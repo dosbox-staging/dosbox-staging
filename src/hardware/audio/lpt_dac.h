@@ -13,7 +13,7 @@
 #include "audio/mixer.h"
 #include "inout.h"
 #include "lpt.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 
 // Provides mandatory scafolding for derived LPT DAC devices
 class LptDac {

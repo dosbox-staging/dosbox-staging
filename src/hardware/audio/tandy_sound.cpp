@@ -41,7 +41,7 @@
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"
-#include "rwqueue.h"
+#include "util/rwqueue.h"
 #include "setup.h"
 #include "tandy_sound.h"
 
