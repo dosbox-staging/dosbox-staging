@@ -14,7 +14,7 @@
 #include "dos/dos_inc.h"
 #include "hardware/dma.h"
 #include "hardware/port.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "hardware/memory.h"
 #include "cpu/paging.h"
 #include "cpu/registers.h"

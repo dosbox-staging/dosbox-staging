@@ -25,7 +25,7 @@
 #include "debug_inc.h"
 #include "hardware/timer.h"
 #include "hardware/port.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 #include "gui/mapper.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dosbox.h"
-#include "keyboard.h"
+#include "hardware/input/keyboard.h"
 
 #include "util/checks.h"
 
