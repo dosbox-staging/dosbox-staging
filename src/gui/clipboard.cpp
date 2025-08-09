@@ -3,7 +3,7 @@
 
 #include "clipboard.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "logging.h"
 #include "util/string_utils.h"

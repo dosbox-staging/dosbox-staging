@@ -10,7 +10,7 @@
 #include "mouse_config.h"
 #include "mouse_manymouse.h"
 
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

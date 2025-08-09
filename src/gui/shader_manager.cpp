@@ -14,7 +14,7 @@
 
 #include <SDL.h>
 
-#include "checks.h"
+#include "util/checks.h"
 #include "cross.h"
 #include "dosbox.h"
 #include "util/math_utils.h"

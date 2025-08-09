@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_inc.h"
 #include "unicode.h"
 

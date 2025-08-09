@@ -12,7 +12,7 @@
 #include "ansi_code_markup.h"
 #include "audio/channel_names.h"
 #include "audio/clap/plugin_manager.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "hardware/pic.h"
 #include "setup.h"
 #include "std_filesystem.h"

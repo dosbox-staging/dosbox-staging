@@ -6,7 +6,7 @@
 #include "program_more_output.h"
 
 #include "callback.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_inc.h"
 #include "ints/int10.h"
 #include "util/string_utils.h"

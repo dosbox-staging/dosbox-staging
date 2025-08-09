@@ -9,7 +9,7 @@
 #include "ansi_code_markup.h"
 #include "audio/audio_frame.h"
 #include "audio/channel_names.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "util/math_utils.h"
 #include "midi/midi.h"
 #include "notifications.h"

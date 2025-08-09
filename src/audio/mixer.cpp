@@ -18,7 +18,7 @@
 #include "audio/compressor.h"
 #include "capture/capture.h"
 #include "channel_names.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "cross.h"
 #include "hardware.h"

@@ -8,7 +8,7 @@
 #include <string>
 
 #include "ansi_code_markup.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"
 #include "program_more_output.h"

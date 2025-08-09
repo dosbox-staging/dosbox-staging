@@ -5,7 +5,7 @@
 
 #if defined(WIN32)
 
-#include "checks.h"
+#include "util/checks.h"
 #include "util/string_utils.h"
 
 #include <stringapiset.h>

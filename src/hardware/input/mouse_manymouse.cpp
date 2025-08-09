@@ -6,7 +6,7 @@
 #include "mouse_config.h"
 
 #include "callback.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_inc.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"

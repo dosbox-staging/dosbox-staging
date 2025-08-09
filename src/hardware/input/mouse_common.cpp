@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include "checks.h"
+#include "util/checks.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
 

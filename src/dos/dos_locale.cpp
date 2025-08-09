@@ -10,7 +10,7 @@
 
 #include "ansi_code_markup.h"
 #include "util/bitops.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
 #include "logging.h"

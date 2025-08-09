@@ -8,7 +8,7 @@
 #include <array>
 
 #include "util/bitops.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "config.h"
 #include "cpu.h"
 #include "hardware/timer.h"

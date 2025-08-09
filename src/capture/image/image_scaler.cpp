@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "byteorder.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "support.h"
 #include "util/math_utils.h"
 #include "util/rgb.h"

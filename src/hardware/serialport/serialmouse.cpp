@@ -12,7 +12,7 @@
 
 #include "serialmouse.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "command_line.h"
 #include "util/math_utils.h"
 

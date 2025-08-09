@@ -3,7 +3,7 @@
 
 #include "vmware.h"
 
-#include "checks.h"
+#include "util/checks.h"
 #include "dosbox.h"
 #include "inout.h"
 #include "mouse.h"

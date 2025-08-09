@@ -9,7 +9,7 @@
 #include <cmath>
 
 #include "audio/mixer.h"
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

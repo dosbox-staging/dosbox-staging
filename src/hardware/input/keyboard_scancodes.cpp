@@ -5,7 +5,7 @@
 #include "dosbox.h"
 #include "keyboard.h"
 
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 

@@ -9,7 +9,7 @@
 #include "image_saver.h"
 
 #include "capture/capture.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "png_writer.h"
 #include "support.h"
 

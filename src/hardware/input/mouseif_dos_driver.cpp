@@ -13,7 +13,7 @@
 #include "util/bitops.h"
 #include "byteorder.h"
 #include "callback.h"
-#include "checks.h"
+#include "util/checks.h"
 #include "cpu.h"
 #include "dos_inc.h"
 #include "dosbox_config.h"

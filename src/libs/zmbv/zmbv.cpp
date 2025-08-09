@@ -12,7 +12,7 @@
 #include "util/math_utils.h"
 #include "util/mem_unaligned.h"
 #include "support.h"
-#include "checks.h"
+#include "util/checks.h"
 
 CHECK_NARROWING();
 
