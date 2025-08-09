@@ -6,7 +6,7 @@
 #include "cpu/callback.h"
 #include "util/checks.h"
 #include "dos/dos_inc.h"
-#include "dos_windows.h"
+#include "dos/dos_windows.h"
 #include "hardware/input/mouse.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"
