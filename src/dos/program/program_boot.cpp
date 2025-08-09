@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <limits>
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "callback.h"
 #include "config/config.h"
 #include "dos_windows.h"

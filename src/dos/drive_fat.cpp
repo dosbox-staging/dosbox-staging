@@ -9,7 +9,7 @@
 #include <ctime>
 
 #include "ints/bios.h"
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "dos_inc.h"
 #include "util/string_utils.h"
 #include "misc/support.h"

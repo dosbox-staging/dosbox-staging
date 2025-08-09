@@ -8,7 +8,7 @@
 #include <memory>
 #include <string_view>
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "callback.h"
 #include "dos_code_page.h"
 #include "dos_inc.h"

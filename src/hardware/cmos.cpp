@@ -6,7 +6,7 @@
 #include <cmath>
 #include <ctime>
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "misc/cross.h"
 #include "timer.h"
 #include "inout.h"

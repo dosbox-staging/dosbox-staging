@@ -19,7 +19,7 @@
 #include "util/fs_utils.h"
 #include "config/setup.h"
 #include "misc/support.h"
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "cpu.h"
 #include "cdrom.h"
 #include "util/math_utils.h"

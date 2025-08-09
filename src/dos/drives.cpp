@@ -5,7 +5,7 @@
 
 #include <string_view>
 
-#include "bios_disk.h"
+#include "ints/bios_disk.h"
 #include "hardware/ide.h"
 #include "util/string_utils.h"
 
