@@ -12,7 +12,7 @@
 
 #include "util/checks.h"
 #include "dos/dos_inc.h"
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "misc/std_filesystem.h"
 
 CHECK_NARROWING();

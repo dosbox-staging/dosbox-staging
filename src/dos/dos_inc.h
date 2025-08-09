@@ -14,7 +14,7 @@
 #include <string>
 #include <type_traits>
 
-#include "dos_system.h"
+#include "dos/dos_system.h"
 #include "hardware/memory.h"
 
 #define EXT_DEVICE_BIT 0x0200
