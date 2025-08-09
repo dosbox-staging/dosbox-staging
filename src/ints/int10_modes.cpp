@@ -21,7 +21,7 @@
 #include "util/math_utils.h"
 #include "util/rgb666.h"
 #include "util/string_utils.h"
-#include "video.h"
+#include "misc/video.h"
 
 // clang-format off
 

@@ -16,7 +16,7 @@
 #include "util/fraction.h"
 #include "inout.h"
 #include "util/rgb666.h"
-#include "video.h"
+#include "misc/video.h"
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
