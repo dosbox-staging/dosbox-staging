@@ -7,7 +7,7 @@
 #include "cpu/cpu.h"
 #include "debug/debug.h"
 #include "fpu.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "lazyflags.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"

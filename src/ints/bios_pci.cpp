@@ -7,7 +7,7 @@
 #include "cpu/callback.h"
 #include "util/checks.h"
 #include "dosbox.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "pci_bus.h"
 #include "cpu/registers.h"
 #include "misc/support.h"

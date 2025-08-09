@@ -1311,7 +1311,7 @@ static bool RMDEV_SYS_int2fHandler()
 	return false;
 }
 
-// #include "inout.h"
+// #include "hardware/inout.h"
 // static IO_ReadHandleObject   _readHandler;
 // static IO_WriteHandleObject  _writeHandler;
 // static Bitu read_rm(Bitu port, Bitu /*iolen*/) {

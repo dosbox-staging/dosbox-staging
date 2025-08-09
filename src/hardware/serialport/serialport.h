@@ -11,7 +11,7 @@
 #include <vector>
 
 #ifndef DOSBOX_INOUT_H
-#include "inout.h"
+#include "hardware/inout.h"
 #endif
 #ifndef DOSBOX_TIMER_H
 #include "hardware/timer.h"

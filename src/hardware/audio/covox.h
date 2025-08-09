@@ -8,7 +8,7 @@
 
 #include "audio/channel_names.h"
 #include "audio/mixer.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "lpt_dac.h"
 
 class Covox final : public LptDac {

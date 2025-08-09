@@ -5,7 +5,7 @@
 #define SBLASTER_H
 
 #include "audio/mixer.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "util/rwqueue.h"
 
 class SBLASTER final {

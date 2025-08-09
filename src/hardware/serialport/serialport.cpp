@@ -13,7 +13,7 @@
 #include "ints/bios.h"					// SetComPorts(..)
 #include "cpu/callback.h"				// CALLBACK_Idle
 #include "capture/capture.h"
-#include "inout.h"
+#include "hardware/inout.h"
 #include "hardware/pic.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
