@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "misc/console.h"
 #include "dos_inc.h"
 #include "misc/help_util.h"

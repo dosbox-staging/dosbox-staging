@@ -11,7 +11,7 @@
 //     don't need command line parsing functionality as their inputs
 //     are defined in the unit test function bodies.
 
-#include "command_line.h"
+#include "shell/command_line.h"
 
 bool CommandLine::HasDirectory() const
 {

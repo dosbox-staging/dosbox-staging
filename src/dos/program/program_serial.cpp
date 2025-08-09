@@ -11,7 +11,7 @@
 #include "hardware/serialport/serialmouse.h"
 #include "hardware/serialport/softmodem.h"
 
-#include "command_line.h"
+#include "shell/command_line.h"
 #include "program_more_output.h"
 
 // Map the serial port type enums to printable names
