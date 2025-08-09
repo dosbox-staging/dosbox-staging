@@ -3,7 +3,7 @@
 
 #include "program_more_output.h"
 
-#include "ascii.h"
+#include "util/ascii.h"
 #include "callback.h"
 #include "checks.h"
 #include "dos_inc.h"

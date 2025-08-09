@@ -10,7 +10,7 @@
 #include <ctime>
 #include <array>
 
-#include "ascii.h"
+#include "util/ascii.h"
 #include "bios.h"
 #include "callback.h"
 #include "dos_locale.h"
