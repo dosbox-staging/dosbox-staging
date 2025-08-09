@@ -11,7 +11,7 @@
 #include "cross.h"
 #include "dos_inc.h"
 #include "drives.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 int fileInfoCounter = 0;

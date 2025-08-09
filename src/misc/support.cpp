@@ -23,7 +23,7 @@
 #include "cross.h"
 #include "debug.h"
 #include "fs_utils.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 #include "whereami.h"

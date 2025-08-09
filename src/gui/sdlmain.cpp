@@ -61,7 +61,7 @@
 #include "render.h"
 #include "sdlmain.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "titlebar.h"
 #include "tracy.h"
 #include "video.h"

@@ -20,7 +20,7 @@
 #include "hardware/timer.h"
 #include "inout.h"
 #include "std_filesystem.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #define OVERLAY_DIR 1
 bool logoverlay = false;

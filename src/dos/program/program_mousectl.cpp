@@ -6,7 +6,7 @@
 #include "ansi_code_markup.h"
 #include "checks.h"
 #include "program_more_output.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <set>
 

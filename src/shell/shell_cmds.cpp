@@ -31,7 +31,7 @@
 #include "ints/int10.h"
 #include "paging.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 // clang-format off

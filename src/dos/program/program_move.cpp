@@ -6,7 +6,7 @@
 #include <string>
 
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 void MOVE::Run()
 {

@@ -28,7 +28,7 @@
 #include "mouse.h"
 #include "rgb888.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 //  Status Colors

@@ -13,7 +13,7 @@
 #include "dos_inc.h"
 #include "fs_utils.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 constexpr auto default_date = DOS_PackDate(2002, 10, 1);

@@ -22,7 +22,7 @@
 #include "program/program_mount_common.h"
 #include "regs.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #if defined(WIN32)

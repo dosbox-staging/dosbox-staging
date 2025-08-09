@@ -18,7 +18,7 @@
 #include "ints/int10.h"
 #include "util/math_utils.h"
 #include "mem.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 #include "unicode.h"
 

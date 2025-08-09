@@ -20,7 +20,7 @@
 #include "rgb666.h"
 #include "rgb888.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 // clang-format off

@@ -17,7 +17,7 @@
 #include "program/program_setver.h"
 #include "programs.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 #ifdef _MSC_VER

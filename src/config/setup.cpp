@@ -21,7 +21,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "notifications.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #if defined(_MSC_VER) || (defined(__MINGW32__) && defined(__clang__))

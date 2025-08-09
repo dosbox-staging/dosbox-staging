@@ -11,7 +11,7 @@
 #include "bios.h"
 #include "bios_disk.h"
 #include "dos_inc.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #define IMGTYPE_FLOPPY 0

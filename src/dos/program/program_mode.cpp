@@ -14,7 +14,7 @@
 #include "program_more_output.h"
 #include "regs.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

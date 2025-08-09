@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 // ***************************************************************************
 // Base class, only for internal usage

@@ -23,7 +23,7 @@
 #include "dos_mscdex.h"
 #include "fs_utils.h"
 #include "inout.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 bool localDrive::FileIsReadOnly(const char* name)
 {

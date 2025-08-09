@@ -15,7 +15,7 @@
 #include "mem.h"
 #include "pci_bus.h"
 #include "regs.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01

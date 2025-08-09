@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #include "ansi_code_markup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 // Pre-defined markups to help creating strings

@@ -15,7 +15,7 @@
 #include "ethernet_slirp.h"
 #include "hardware/timer.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 /**
  * Platform specific libslirp shared library name

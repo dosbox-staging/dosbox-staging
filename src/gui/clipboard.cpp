@@ -6,7 +6,7 @@
 #include "checks.h"
 #include "config.h"
 #include "logging.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "unicode.h"
 
 #include <SDL.h>

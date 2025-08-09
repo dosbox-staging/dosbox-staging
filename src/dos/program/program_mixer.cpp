@@ -14,7 +14,7 @@
 #include "midi/midi.h"
 #include "notifications.h"
 #include "program_more_output.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 

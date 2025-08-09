@@ -12,7 +12,7 @@
 #include "dosbox.h"
 #include "fs_utils.h"
 #include "std_filesystem.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <cstdio>
 #include <fstream>

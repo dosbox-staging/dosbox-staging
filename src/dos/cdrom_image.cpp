@@ -29,7 +29,7 @@
 #include "fs_utils.h"
 #include "util/math_utils.h"
 #include "setup.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 // String maximums, local to this file
 #define MAX_LINE_LENGTH 512

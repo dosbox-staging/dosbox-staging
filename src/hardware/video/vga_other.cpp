@@ -21,7 +21,7 @@
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb888.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "vga.h"
 
 // CHECK_NARROWING();

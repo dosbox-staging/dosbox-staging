@@ -6,7 +6,7 @@
 #if defined(WIN32)
 
 #include "checks.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <stringapiset.h>
 #include <unordered_map>

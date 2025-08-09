@@ -18,7 +18,7 @@
 #include "cross.h"
 #include "dosbox.h"
 #include "util/math_utils.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "video.h"
 
 CHECK_NARROWING();

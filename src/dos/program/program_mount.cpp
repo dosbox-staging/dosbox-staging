@@ -15,7 +15,7 @@
 #include "ints/int10.h"
 #include "program_more_output.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 
 void MOUNT::ListMounts()

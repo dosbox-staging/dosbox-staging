@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <gtest/gtest.h>
 

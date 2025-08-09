@@ -16,7 +16,7 @@
 #include "logging.h"
 #include "mapper.h"
 #include "misc/host_locale.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "unicode.h"
 
 CHECK_NARROWING();

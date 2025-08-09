@@ -9,7 +9,7 @@
 #include "dos_inc.h"
 #include "ints/int10.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 #include <algorithm>
 #include <array>

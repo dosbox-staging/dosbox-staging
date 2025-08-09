@@ -20,7 +20,7 @@
 #include "setup.h"
 #include "shader_manager.h"
 #include "shell.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 #include "video.h"
 

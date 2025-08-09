@@ -9,7 +9,7 @@
 #include "cdrom.h"
 #include "dos_mscdex.h"
 #include "dos_system.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 #include "support.h"
 
 #define FLAGS1	((iso) ? de.fileFlags : de.timeZone)

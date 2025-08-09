@@ -16,7 +16,7 @@
 #include "hardware/pic.h"
 #include "setup.h"
 #include "std_filesystem.h"
-#include "string_utils.h"
+#include "util/string_utils.h"
 
 CHECK_NARROWING();
 
