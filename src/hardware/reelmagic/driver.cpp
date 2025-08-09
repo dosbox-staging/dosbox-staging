@@ -25,7 +25,7 @@
 #include "dos/program/program_more_output.h"
 #include "dos_inc.h"
 #include "dos_system.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "programs.h"
 #include "cpu/registers.h"

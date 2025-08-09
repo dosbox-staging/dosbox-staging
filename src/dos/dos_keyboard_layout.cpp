@@ -15,7 +15,7 @@
 #include "dos_locale.h"
 #include "drives.h"
 #include "ints/int10.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "cpu/registers.h"
 #include "config/setup.h"

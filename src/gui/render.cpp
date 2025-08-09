@@ -14,7 +14,7 @@
 #include "config/config.h"
 #include "util/fraction.h"
 #include "hardware/video/vga.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "gui/render.h"
 #include "config/setup.h"

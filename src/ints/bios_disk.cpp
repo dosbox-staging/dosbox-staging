@@ -12,7 +12,7 @@
 #include "hardware/memory.h"
 #include "dos_inc.h" /* for Drives[] */
 #include "drives.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/string_utils.h"
 
 diskGeo DiskGeometryList[] = {

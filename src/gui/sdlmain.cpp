@@ -53,7 +53,7 @@
 #include "hardware/video/vga.h"
 #include "ints/int10.h"
 #include "keyboard.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "mouse.h"
 #include "pacer.h"

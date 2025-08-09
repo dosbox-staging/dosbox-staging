@@ -18,7 +18,7 @@
 #include "dos/program/program_setver.h"
 #include "util/fs_utils.h"
 #include "hardware/timer.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "cpu/registers.h"
 #include "util/string_utils.h"
 #include "misc/support.h"

@@ -4,7 +4,7 @@
 
 #include "program_intro.h"
 
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "program_more_output.h"
 
 void INTRO::WriteOutProgramIntroSpecial()

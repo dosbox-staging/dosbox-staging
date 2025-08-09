@@ -10,7 +10,7 @@
 #include "config/config.h"
 #include "inout.h"
 #include "util/math_utils.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "pic.h"
 //TODO: higher axis can't be mapped. Find out why again
 

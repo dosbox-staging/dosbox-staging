@@ -16,7 +16,7 @@
 #include "hardware/dma.h"
 #include "hardware/virtualbox.h"
 #include "hardware/vmware.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "mouse.h"
 #include "program_more_output.h"
 #include "cpu/registers.h"

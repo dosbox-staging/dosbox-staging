@@ -14,7 +14,7 @@
 #include "config/config.h"
 #include "inout.h"
 #include "ints/int10.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
 #include "hardware/pic.h"

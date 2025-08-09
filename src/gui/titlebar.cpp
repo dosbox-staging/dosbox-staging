@@ -7,7 +7,7 @@
 #include "config/config.h"
 #include "cpu/cpu.h"
 #include "dosbox.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "gui/sdlmain.h"
 #include "config/setup.h"
 #include "misc/support.h"

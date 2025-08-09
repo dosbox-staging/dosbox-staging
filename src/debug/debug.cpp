@@ -26,7 +26,7 @@
 #include "hardware/timer.h"
 #include "inout.h"
 #include "keyboard.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "programs.h"
