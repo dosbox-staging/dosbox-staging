@@ -71,7 +71,7 @@
 #include <SDL.h>
 #include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
 
-#include "bitops.h"
+#include "util/bitops.h"
 #include "byteorder.h"
 #include "config.h"
 #include "cross.h"

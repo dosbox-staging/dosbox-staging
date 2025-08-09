@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "bios.h"
-#include "bitops.h"
+#include "util/bitops.h"
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"

@@ -9,7 +9,7 @@
 #include <cstdio>
 #include <cstring>
 
-#include "bitops.h"
+#include "util/bitops.h"
 #include "callback.h"
 #include "cpu.h"		// for 0x3da delay
 #include "inout.h"

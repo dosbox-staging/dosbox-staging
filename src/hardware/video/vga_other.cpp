@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "bitops.h"
+#include "util/bitops.h"
 #include "checks.h"
 #include "config.h"
 #include "inout.h"

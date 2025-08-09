@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "bios.h"
-#include "bitops.h"
+#include "util/bitops.h"
 #include "byteorder.h"
 #include "callback.h"
 #include "checks.h"

@@ -11,7 +11,7 @@
 #include <optional>
 #include <vector>
 
-#include "bitops.h"
+#include "util/bitops.h"
 #include "hardware/video/vga.h"
 #include "inout.h"
 #include "pci_bus.h"

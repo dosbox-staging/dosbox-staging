@@ -15,7 +15,7 @@
 #include "autoexec.h"
 #include "bios.h"
 #include "util/bit_view.h"
-#include "bitops.h"
+#include "util/bitops.h"
 #include "config.h"
 #include "hardware.h"
 #include "hardware/dma.h"
