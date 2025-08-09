@@ -17,7 +17,7 @@
 
 #include "util/checks.h"
 #include "misc/cross.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "misc/support.h"
 
 CHECK_NARROWING();

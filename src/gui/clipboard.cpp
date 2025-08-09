@@ -5,7 +5,7 @@
 
 #include "util/checks.h"
 #include "config/config.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "util/string_utils.h"
 #include "unicode.h"
 

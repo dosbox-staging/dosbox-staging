@@ -9,7 +9,7 @@
 #include "clap/all.h"
 
 #include "util/checks.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 

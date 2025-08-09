@@ -13,7 +13,7 @@
 #include <sstream>
 #include <string>
 
-#include "logging.h"
+#include "misc/logging.h"
 #include "programs.h"
 #include "util/string_utils.h"
 

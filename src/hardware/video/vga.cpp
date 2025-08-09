@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "ints/int10.h"
-#include "logging.h"
+#include "misc/logging.h"
 #include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "util/string_utils.h"

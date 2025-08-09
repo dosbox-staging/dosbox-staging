@@ -153,7 +153,7 @@ inline bool is_machine_hercules() {
 }
 
 #ifndef DOSBOX_LOGGING_H
-#include "logging.h"
+#include "misc/logging.h"
 #endif // the logging system.
 
 constexpr auto DefaultMt32RomsDir   = "mt32-roms";
