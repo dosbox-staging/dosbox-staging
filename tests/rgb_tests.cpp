@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "bgrx8888.h"
-#include "rgb.h"
 #include "rgb565.h"
 #include "rgb888.h"
+#include "util/rgb.h"
 
 #include <gtest/gtest.h>
 
