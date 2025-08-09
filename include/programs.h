@@ -13,7 +13,7 @@
 #include "command_line.h"
 #include "console.h"
 #include "dos_inc.h"
-#include "help_util.h"
+#include "misc/help_util.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 

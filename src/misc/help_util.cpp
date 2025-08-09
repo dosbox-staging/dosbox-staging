@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 
-#include "help_util.h"
+#include "misc/help_util.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
 
