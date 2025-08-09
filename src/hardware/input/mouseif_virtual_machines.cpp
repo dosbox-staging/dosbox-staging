@@ -8,7 +8,7 @@
 #include <algorithm>
 
 #include "checks.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 
 CHECK_NARROWING();
 

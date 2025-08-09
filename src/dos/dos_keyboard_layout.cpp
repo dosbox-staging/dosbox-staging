@@ -16,7 +16,7 @@
 #include "drives.h"
 #include "ints/int10.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "regs.h"
 #include "setup.h"
 #include "string_utils.h"

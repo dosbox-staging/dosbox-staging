@@ -16,7 +16,7 @@
 #include "string_utils.h"
 #include "serialport.h"
 #include "softmodem.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "misc_util.h"
 
 class PhonebookEntry {

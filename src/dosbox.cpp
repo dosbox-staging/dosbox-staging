@@ -30,7 +30,7 @@
 #include "inout.h"
 #include "ints/int10.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "memory.h"
 #include "midi/midi.h"
 #include "mouse.h"

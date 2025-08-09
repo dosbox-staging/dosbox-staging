@@ -19,7 +19,7 @@
 #include "gus.h"
 #include "hardware.h"
 #include "hardware/timer.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "setup.h"

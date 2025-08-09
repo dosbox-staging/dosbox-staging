@@ -9,7 +9,7 @@
 #include <bit>
 #include <cstdint>
 
-#include "math_utils.h"
+#include "util/math_utils.h"
 
 // Simple ring buffer implementation that basically wraps `std:array` and adds
 // iterators with "wrap-around" properties.

@@ -10,7 +10,7 @@
 #include "audio/audio_frame.h"
 #include "audio/channel_names.h"
 #include "checks.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "midi/midi.h"
 #include "notifications.h"
 #include "program_more_output.h"

@@ -17,7 +17,7 @@
 #include "hardware/mame/emu.h"
 #include "hardware/mame/saa1099.h"
 #include "inout.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "support.h"
 
 class GameBlaster {

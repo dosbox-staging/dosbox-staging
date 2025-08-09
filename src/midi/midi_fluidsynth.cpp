@@ -18,7 +18,7 @@
 #include "cross.h"
 #include "fs_utils.h"
 #include "ints/int10.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "programs.h"
