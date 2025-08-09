@@ -10,7 +10,7 @@
 
 #include "ints/int10.h"
 #include "logging.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "string_utils.h"
 #include "video.h"

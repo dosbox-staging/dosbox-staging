@@ -10,7 +10,7 @@
 #include "ansi_code_markup.h"
 #include "checks.h"
 #include "ints/int10.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "program_more_output.h"
 #include "regs.h"
 #include "shell.h"

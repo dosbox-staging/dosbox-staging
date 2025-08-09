@@ -14,7 +14,7 @@
 
 #include "checks.h"
 #include "command_line.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 
 #include "hardware/input/mouse_interfaces.h"
 

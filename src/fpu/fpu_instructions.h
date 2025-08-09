@@ -5,7 +5,7 @@
 #include "fpu.h"
 #endif
 
-#include "math_utils.h"
+#include "util/math_utils.h"
 
 static constexpr uint16_t PrecisionModeMask = 0x0300;
 

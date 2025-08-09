@@ -16,7 +16,7 @@
 #include "hardware/serialport/serialport.h"
 #include "inout.h"
 #include "int10.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "mouse.h"
 #include "regs.h"

@@ -4,7 +4,7 @@
 // NOTE: a lot of this code assumes that the callback is called every emulated
 // millisecond
 
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
 

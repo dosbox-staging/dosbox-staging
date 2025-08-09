@@ -15,7 +15,7 @@
 #include "fraction.h"
 #include "hardware/video/vga.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "render.h"
 #include "setup.h"
 #include "shader_manager.h"

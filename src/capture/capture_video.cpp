@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "render.h"
 #include "support.h"

@@ -22,7 +22,7 @@
 #include "bios_disk.h"
 #include "cpu.h"
 #include "cdrom.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "string_utils.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)

@@ -5,7 +5,7 @@
 #define PS1AUDIO_H
 
 #include "audio/mixer.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "rwqueue.h"
 
 struct Ps1Registers {

@@ -14,7 +14,7 @@
 #include "bitops.h"
 #include "hardware/video/vga.h"
 #include "inout.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "pci_bus.h"
 #include "render.h"
 #include "rgb666.h"

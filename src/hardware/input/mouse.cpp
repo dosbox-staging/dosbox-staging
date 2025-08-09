@@ -16,7 +16,7 @@
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "video.h"
 

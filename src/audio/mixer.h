@@ -22,7 +22,7 @@
 #include "audio/noise_gate.h"
 #include "audio_frame.h"
 #include "config.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 
 #include <Iir.h>
 

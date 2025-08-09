@@ -7,7 +7,7 @@
 
 #include "byteorder.h"
 #include "checks.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "rgb.h"
 #include "support.h"
 

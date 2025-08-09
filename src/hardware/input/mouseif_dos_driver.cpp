@@ -18,7 +18,7 @@
 #include "dos_inc.h"
 #include "dosbox_config.h"
 #include "ints/int10.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "regs.h"
 

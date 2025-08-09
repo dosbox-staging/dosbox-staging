@@ -26,7 +26,7 @@
 #include "dos_inc.h"
 #include "dos_system.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "programs.h"
 #include "regs.h"
 #include "setup.h"

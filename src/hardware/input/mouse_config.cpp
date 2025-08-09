@@ -7,7 +7,7 @@
 
 #include "checks.h"
 #include "config.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"

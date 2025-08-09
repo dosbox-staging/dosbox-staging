@@ -38,7 +38,7 @@
 #include "hardware/mame/sn76496.h"
 #include "hardware/timer.h"
 #include "inout.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "hardware/pic.h"
 #include "rwqueue.h"

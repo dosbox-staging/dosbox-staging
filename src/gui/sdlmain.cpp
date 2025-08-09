@@ -54,7 +54,7 @@
 #include "ints/int10.h"
 #include "keyboard.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mouse.h"
 #include "pacer.h"
 #include "rect.h"

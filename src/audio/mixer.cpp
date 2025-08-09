@@ -24,7 +24,7 @@
 #include "hardware.h"
 #include "hardware/timer.h"
 #include "mapper.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "mem.h"
 #include "midi/midi.h"
 #include "notifications.h"

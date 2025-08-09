@@ -56,7 +56,7 @@
 #include "config.h"
 #include "hardware/dma.h"
 #include "inout.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "notifications.h"
 #include "hardware/pic.h"
 #include "regs.h"

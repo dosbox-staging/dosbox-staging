@@ -7,7 +7,7 @@
 #include "dosbox.h"
 
 #include "hardware/timer.h"
-#include "math_utils.h"
+#include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "setup.h"
 #include "support.h"
