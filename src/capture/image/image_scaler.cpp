@@ -7,9 +7,9 @@
 
 #include "byteorder.h"
 #include "checks.h"
-#include "util/math_utils.h"
-#include "rgb.h"
 #include "support.h"
+#include "util/math_utils.h"
+#include "util/rgb.h"
 
 CHECK_NARROWING();
 
