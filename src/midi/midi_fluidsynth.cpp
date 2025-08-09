@@ -15,7 +15,7 @@
 #include "ansi_code_markup.h"
 #include "audio/mixer.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "util/fs_utils.h"
 #include "ints/int10.h"
 #include "util/math_utils.h"

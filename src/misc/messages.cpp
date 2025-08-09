@@ -8,7 +8,7 @@
 #include "ansi_code_markup.h"
 #include "util/checks.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "util/fs_utils.h"
 #include "host_locale.h"
 #include "config/setup.h"

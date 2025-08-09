@@ -20,7 +20,7 @@
 #include "channel_names.h"
 #include "util/checks.h"
 #include "config/config.h"
-#include "cross.h"
+#include "misc/cross.h"
 #include "hardware.h"
 #include "hardware/timer.h"
 #include "mapper.h"

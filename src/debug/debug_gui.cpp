@@ -12,7 +12,7 @@
 #include <cstring>
 #include <curses.h>
 
-#include "cross.h"
+#include "misc/cross.h"
 #include "util/string_utils.h"
 #include "support.h"
 #include "regs.h"
