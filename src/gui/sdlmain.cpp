@@ -55,7 +55,7 @@
 #include "hardware/input/keyboard.h"
 #include "gui/mapper.h"
 #include "util/math_utils.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "pacer.h"
 #include "util/rect.h"
 #include "gui/render.h"

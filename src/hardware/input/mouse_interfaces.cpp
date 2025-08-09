@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "mouse_common.h"
 #include "mouse_config.h"
 #include "mouse_manymouse.h"

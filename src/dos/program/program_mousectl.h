@@ -6,7 +6,7 @@
 
 #include "programs.h"
 
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 
 class MOUSECTL final : public Program {
 public:

@@ -6,7 +6,7 @@
 #include "util/checks.h"
 #include "dosbox.h"
 #include "port.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
 #include "util/string_utils.h"

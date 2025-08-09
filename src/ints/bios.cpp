@@ -18,7 +18,7 @@
 #include "int10.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "cpu/registers.h"
 #include "config/setup.h"
 

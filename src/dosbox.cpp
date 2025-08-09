@@ -33,7 +33,7 @@
 #include "gui/mapper.h"
 #include "util/math_utils.h"
 #include "midi/midi.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "hardware/pci_bus.h"
 #include "programs.h"
 #include "hardware/reelmagic/reelmagic.h"

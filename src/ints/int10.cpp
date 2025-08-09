@@ -9,7 +9,7 @@
 #include "cpu/registers.h"
 #include "hardware/port.h"
 #include "int10.h"
-#include "mouse.h"
+#include "hardware/input/mouse.h"
 #include "config/setup.h"
 
 Int10Data int10;
