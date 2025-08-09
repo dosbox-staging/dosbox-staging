@@ -32,7 +32,7 @@
 #include "util/rwqueue.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 #include "misc/video.h"
 
 #include "mverb/MVerb.h"

@@ -41,7 +41,7 @@
 #include "cpu/paging.h"
 #include "hardware/pic.h"
 #include "cpu/registers.h"
-#include "tracy.h"
+#include "misc/tracy.h"
 
 #define CACHE_MAXSIZE	(4096*2)
 #define CACHE_TOTAL		(1024*1024*8)
