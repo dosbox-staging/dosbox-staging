@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 #include <sstream>
+#include <memory>
 
 #include "config.h"
 #include "command_line.h"
@@ -14,7 +15,6 @@
 #include "lazyflags.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "memory.h"
 #include "paging.h"
 #include "hardware/pic.h"
 #include "programs.h"

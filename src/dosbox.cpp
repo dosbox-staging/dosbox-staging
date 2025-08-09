@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <thread>
 #include <unistd.h>
 
@@ -31,7 +32,6 @@
 #include "ints/int10.h"
 #include "mapper.h"
 #include "util/math_utils.h"
-#include "memory.h"
 #include "midi/midi.h"
 #include "mouse.h"
 #include "pci_bus.h"
