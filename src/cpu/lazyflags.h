@@ -4,7 +4,7 @@
 #ifndef DOSBOX_LAZYFLAGS_H
 #define DOSBOX_LAZYFLAGS_H
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 
 #include <cassert>
 

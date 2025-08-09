@@ -5,7 +5,7 @@
 #include "dosbox.h"
 #if C_FPU
 
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "misc/cross.h"
 #include "fpu.h"
 #include "hardware/memory.h"

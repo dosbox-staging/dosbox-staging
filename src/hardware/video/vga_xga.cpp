@@ -11,7 +11,7 @@
 
 #include "util/bitops.h"
 #include "cpu/callback.h"
-#include "cpu.h"		// for 0x3da delay
+#include "cpu/cpu.h"		// for 0x3da delay
 #include "inout.h"
 #include "vga.h"
 

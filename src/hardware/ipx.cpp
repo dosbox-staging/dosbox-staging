@@ -14,7 +14,7 @@
 #include <ctime>
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "misc/cross.h"
 #include "debug.h"
 #include "dos_system.h"

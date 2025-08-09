@@ -125,7 +125,7 @@ static uint16_t DOS_GetAmount(void) {
 #ifdef DATA_TRANSFERS_TAKE_CYCLES
 
 #ifndef DOSBOX_CPU_H
-#include "cpu.h"
+#include "cpu/cpu.h"
 #endif
 
 void DOS_SetDiskSpeed(DiskSpeed disk_speed, DiskType disk_type)
@@ -382,7 +382,7 @@ static inline void modify_cycles(Bits /* value */) {
 #define DOS_OVERHEAD 1
 #ifdef DOS_OVERHEAD
 #ifndef DOSBOX_CPU_H
-#include "cpu.h"
+#include "cpu/cpu.h"
 #endif
 
 static inline void overhead() {

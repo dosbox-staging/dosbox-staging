@@ -5,7 +5,7 @@
 
 #include "util/checks.h"
 #include "config/config.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "dosbox.h"
 #include "mapper.h"
 #include "sdlmain.h"

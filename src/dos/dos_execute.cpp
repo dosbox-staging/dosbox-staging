@@ -8,7 +8,7 @@
 #include <cstring>
 
 #include "cpu/callback.h"
-#include "cpu.h"
+#include "cpu/cpu.h"
 #include "debug.h"
 #include "dos_inc.h"
 #include "hardware/vmware.h"
