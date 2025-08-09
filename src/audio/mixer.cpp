@@ -33,7 +33,7 @@
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "tracy.h"
-#include "video.h"
+#include "misc/video.h"
 
 #include "mverb/MVerb.h"
 #include "tal-chorus/ChorusEngine.h"

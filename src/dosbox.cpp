@@ -42,7 +42,7 @@
 #include "shell.h"
 #include "misc/support.h"
 #include "tracy.h"
-#include "video.h"
+#include "misc/video.h"
 
 bool shutdown_requested = false;
 

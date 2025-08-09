@@ -20,7 +20,7 @@
 #include "util/math_utils.h"
 #include "util/rgb565.h"
 #include "vga.h"
-#include "video.h"
+#include "misc/video.h"
 
 // #define DEBUG_VGA_DRAW
 

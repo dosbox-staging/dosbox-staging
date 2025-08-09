@@ -13,7 +13,7 @@
 #include "util/math_utils.h"
 #include "hardware/pic.h"
 #include "util/string_utils.h"
-#include "video.h"
+#include "misc/video.h"
 
 VgaType vga;
 SVGA_Driver svga;

@@ -11,7 +11,7 @@
 #include "config/setup.h"
 #include "util/string_utils.h"
 #include "misc/support.h"
-#include "video.h"
+#include "misc/video.h"
 
 #include <cmath>
 

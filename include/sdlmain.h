@@ -19,7 +19,7 @@
 #include "gui/shader_manager.h"
 #include "util/rect.h"
 #include "render.h"
-#include "video.h"
+#include "misc/video.h"
 
 // The image rendered in the emulated computer's raw framebuffer as raw pixels
 // goes through a number of transformations until it gets shown on the host

@@ -24,7 +24,7 @@
 #include "debug.h"
 #include "util/fs_utils.h"
 #include "util/string_utils.h"
-#include "video.h"
+#include "misc/video.h"
 
 #include "whereami.h"
 

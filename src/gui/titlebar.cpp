@@ -12,7 +12,7 @@
 #include "config/setup.h"
 #include "misc/support.h"
 #include "misc/unicode.h"
-#include "video.h"
+#include "misc/video.h"
 
 #include <SDL.h>
 #include <map>

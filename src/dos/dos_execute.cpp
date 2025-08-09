@@ -18,7 +18,7 @@
 #include "programs.h"
 #include "regs.h"
 #include "util/string_utils.h"
-#include "video.h"
+#include "misc/video.h"
 
 #ifdef _MSC_VER
 #pragma pack(1)

@@ -18,7 +18,7 @@
 #include "gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "config/setup.h"
 #include "util/rgb565.h"
-#include "video.h"
+#include "misc/video.h"
 
 namespace {
 // XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this

@@ -29,7 +29,7 @@
 #include "util/rgb888.h"
 #include "config/setup.h"
 #include "util/string_utils.h"
-#include "video.h"
+#include "misc/video.h"
 
 //  Status Colors
 //  ~~~~~~~~~~~~~
