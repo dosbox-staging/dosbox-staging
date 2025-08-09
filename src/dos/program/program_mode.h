@@ -4,7 +4,7 @@
 #ifndef DOSBOX_PROGRAM_MODE_H
 #define DOSBOX_PROGRAM_MODE_H
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "programs.h"
 
 #include <string>

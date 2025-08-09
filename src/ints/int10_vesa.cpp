@@ -9,7 +9,7 @@
 #include <cstring>
 
 #include "cpu/callback.h"
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "hardware/port.h"
 #include "util/math_utils.h"
 #include "hardware/memory.h"

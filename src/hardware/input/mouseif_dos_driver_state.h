@@ -4,7 +4,7 @@
 #ifndef DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
 #define DOSBOX_MOUSEIF_DOS_DRIVER_STATE_H
 
-#include "dos_inc.h"
+#include "dos/dos_inc.h"
 #include "dos_windows.h"
 #include "mouse_common.h"
 
