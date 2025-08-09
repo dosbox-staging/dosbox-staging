@@ -8,7 +8,7 @@
 #include <map>
 #include <vector>
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "util/bitops.h"
 #include "util/checks.h"
 #include "dos_keyboard_layout.h"

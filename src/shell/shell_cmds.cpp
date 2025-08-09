@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "ansi_code_markup.h"
+#include "misc/ansi_code_markup.h"
 #include "bios.h"
 #include "callback.h"
 #include "command_line.h"
