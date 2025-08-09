@@ -14,7 +14,7 @@
 #include "dos_keyboard_layout.h"
 #include "dos_locale.h"
 #include "misc/logging.h"
-#include "mapper.h"
+#include "gui/mapper.h"
 #include "misc/host_locale.h"
 #include "util/string_utils.h"
 #include "misc/unicode.h"
